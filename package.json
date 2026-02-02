@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@tamagui/config": "^2.0.0-rc.0",
     "@tamagui/core": "^2.0.0-rc.0",
     "@tamagui/font-inter": "^2.0.0-rc.0",
