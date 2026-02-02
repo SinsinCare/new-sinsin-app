@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { Button, GlassmorphicCard, LoadingScreen, ErrorMessage } from '../../src/shared/components'
 import { aiService } from '../../src/services'
 import { useAuthStore } from '../../src/stores'
-import { Camera, ImageIcon } from '@tamagui/lucide-icons'
+import { Camera, Image as ImageLucide } from '@tamagui/lucide-icons'
 import type { FoodAnalysisResponse } from '../../src/types'
 
 export default function FoodScreen() {
@@ -93,7 +93,7 @@ export default function FoodScreen() {
               justifyContent="center"
               alignItems="center"
             >
-              <ImageIcon size={48} color="$colorSubtle" />
+              <ImageLucide size={48} color="$colorSubtle" />
               <Text color="$colorSubtle" marginTop="$2">사진을 선택해주세요</Text>
             </YStack>
           )}
@@ -107,7 +107,7 @@ export default function FoodScreen() {
             </Button>
             <Button flex={1} variant="outline" onPress={() => pickImage(false)}>
               <XStack gap="$2" alignItems="center">
-                <ImageIcon size={20} color="$primary" />
+                <ImageLucide size={20} color="$primary" />
                 <Text color="$primary">갤러리</Text>
               </XStack>
             </Button>

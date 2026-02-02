@@ -1,5 +1,5 @@
 import { Input, Label, YStack, Text, styled, InputProps } from 'tamagui'
-import { forwardRef, useState } from 'react'
+import { useState } from 'react'
 
 const StyledInput = styled(Input, {
   name: 'SinsinInput',
@@ -31,35 +31,30 @@ interface TextFieldProps extends Omit<InputProps, 'size'> {
   helper?: string
 }
 
-export const TextField = forwardRef<typeof StyledInput, TextFieldProps>(
-  ({ label, error, helper, ...props }, ref) => {
-    const [isFocused, setIsFocused] = useState(false)
+export function TextField({ label, error, helper, ...props }: TextFieldProps) {
+  const [isFocused, setIsFocused] = useState(false)
 
-    return (
-      <YStack gap="$1.5">
-        {label && (
-          <Label
-            fontSize={14}
-            color={error ? '$danger' : isFocused ? '$primary' : '$color'}
-          >
-            {label}
-          </Label>
-        )}
-        <StyledInput
-          ref={ref}
-          error={!!error}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          {...props}
-        />
-        {(error || helper) && (
-          <Text fontSize={12} color={error ? '$danger' : '$colorSubtle'}>
-            {error || helper}
-          </Text>
-        )}
-      </YStack>
-    )
-  }
-)
-
-TextField.displayName = 'TextField'
+  return (
+    <YStack gap="$1.5">
+      {label && (
+        <Label
+          fontSize={14}
+          color={error ? '$danger' : isFocused ? '$primary' : '$color'}
+        >
+          {label}
+        </Label>
+      )}
+      <StyledInput
+        error={!!error}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        {...props}
+      />
+      {(error || helper) && (
+        <Text fontSize={12} color={error ? '$danger' : '$colorSubtle'}>
+          {error || helper}
+        </Text>
+      )}
+    </YStack>
+  )
+}

@@ -148,7 +148,7 @@ export default function ConsultationScreen() {
             value={inputText}
             onChangeText={setInputText}
             onSubmitEditing={() => sendMessage(inputText)}
-            editable={!isLoading}
+            disabled={isLoading}
           />
           <Button
             variant="primary"

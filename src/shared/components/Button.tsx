@@ -1,5 +1,4 @@
 import { Button as TamaguiButton, styled, Spinner, XStack, Text } from 'tamagui'
-import { forwardRef } from 'react'
 
 const StyledButton = styled(TamaguiButton, {
   name: 'SinsinButton',
@@ -73,26 +72,21 @@ interface ButtonProps {
   flex?: number
 }
 
-export const Button = forwardRef<typeof StyledButton, ButtonProps>(
-  ({ children, loading, disabled, ...props }, ref) => {
-    return (
-      <StyledButton
-        ref={ref}
-        disabled={disabled || loading}
-        opacity={disabled ? 0.5 : 1}
-        {...props}
-      >
-        {loading ? (
-          <XStack gap="$2" alignItems="center">
-            <Spinner size="small" color="white" />
-            <Text color="white">{children}</Text>
-          </XStack>
-        ) : (
-          children
-        )}
-      </StyledButton>
-    )
-  }
-)
-
-Button.displayName = 'Button'
+export function Button({ children, loading, disabled, ...props }: ButtonProps) {
+  return (
+    <StyledButton
+      disabled={disabled || loading}
+      opacity={disabled ? 0.5 : 1}
+      {...props}
+    >
+      {loading ? (
+        <XStack gap="$2" alignItems="center">
+          <Spinner size="small" color="white" />
+          <Text color="white">{children}</Text>
+        </XStack>
+      ) : (
+        children
+      )}
+    </StyledButton>
+  )
+}
