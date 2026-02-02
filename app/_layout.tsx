@@ -50,7 +50,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TamaguiProvider config={config}>
+      <TamaguiProvider config={config} defaultTheme="light">
         <RootLayoutNav />
       </TamaguiProvider>
     </QueryClientProvider>
