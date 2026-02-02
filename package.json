@@ -13,6 +13,7 @@
     "@tamagui/config": "^2.0.0-rc.0",
     "@tamagui/core": "^2.0.0-rc.0",
     "@tamagui/font-inter": "^2.0.0-rc.0",
+    "@tamagui/lucide-icons": "^2.0.0-rc.0",
     "@tanstack/react-query": "^5.90.20",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
