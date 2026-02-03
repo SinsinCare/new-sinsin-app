@@ -36,12 +36,11 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 npm start          # Expo 개발 서버 시작
 npm run android    # Android에서 실행
 npm run ios        # iOS에서 실행
-npm run web        # 웹에서 실행
 ```
 
 ## 환경 변수 설정
 
-`.env.example`을 참고하여 `.env` 파일을 생성하세요:
+`.env.example`을 참고하여 `.env` 파일을 생성하세요 :)
 
 ```bash
 cp .env.example .env
@@ -66,3 +65,32 @@ src/
 ├── stores/            # Zustand 스토어
 └── types/             # TypeScript 타입 정의
 ```
+
+## 커밋 컨벤션
+
+이 프로젝트는 [Conventional Commits](https://www.conventionalcommits.org/ko/v1.0.0/) 스타일을 권장합니다.
+
+- **기본 포맷:**  
+  ```
+  <type>[optional scope]: <description>
+  ```
+
+- **예시**
+  - `feat: 음식 추천 탭 추가`
+  - `fix(auth): 토큰 갱신 오류 수정`
+  - `chore: 패키지 버전 업데이트`
+  - `docs: README 커밋 규칙 추가`
+  - `refactor: 상태 관리 로직 개선`
+
+- **주요 type**
+  - `feat`: 새로운 기능
+  - `fix`: 버그 수정
+  - `refactor`: 리팩터링 (기능 변화 없이 구조 개선)
+  - `docs`: 문서 수정
+  - `chore`: 빌드/설정/환경 수정
+  - `test`: 테스트 코드 변경/추가
+  - `style`: 코드 포맷팅, 세미콜론 등 스타일 변화
+
+- **권장 사항**
+  - 한글로도 작성 가능 (팀의 주요 커뮤니케이션 언어에 따라)
+  - 가능하다면 상세한 설명을 본문(본문은 한 줄 개행 후)으로 추가
