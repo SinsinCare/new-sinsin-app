@@ -1,52 +1,56 @@
-import { Tabs } from 'expo-router'
-import { Home, Utensils, MessageCircle, User } from '@tamagui/lucide-icons'
+import { Tabs } from 'expo-router';
+import React from 'react';
+
+import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
-        tabBarStyle: {
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0.1,
-        },
-        headerStyle: {
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        },
-        headerShadowVisible: false,
-      }}
-    >
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerShown: false,
+        tabBarButton: HapticTab,
+      }}>
       <Tabs.Screen
         name="home"
         options={{
           title: '홈',
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="food"
+        name="consult"
         options={{
-          title: '식단',
-          tabBarIcon: ({ color, size }) => <Utensils color={color} size={size} />,
+          title: '상담',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bubble.left.and.bubble.right.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="consultation"
+        name="recipe"
         options={{
-          title: 'AI 상담',
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
+          title: '레시피',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="fork.knife" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="restaurant"
         options={{
-          title: '설정',
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          title: '식당',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="all"
+        options={{
+          title: '전체',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="line.3.horizontal" color={color} />,
         }}
       />
     </Tabs>
-  )
+  );
 }
