@@ -1,46 +1,69 @@
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithCredential,
-  User,
-} from 'firebase/auth'
-import { auth } from './firebase'
+import type { IAuthService, AppUser } from './types/serviceTypes'
+import { isMockMode } from '../config/appConfig'
 
-export const authService = {
-  // 이메일/비밀번호 로그인
-  async signInWithEmail(email: string, password: string): Promise<User> {
-    const result = await signInWithEmailAndPassword(auth, email, password)
-    return result.user
-  },
+function getRealAuthService(): IAuthService {
+  // Lazy import - Mock 모드가 아닐 때만 Firebase 로드
+  const {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut: firebaseSignOut,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    signInWithCredential,
+  } = require('firebase/auth')
+  const { auth } = require('./firebase')
 
-  // 이메일/비밀번호 회원가입
-  async signUpWithEmail(email: string, password: string): Promise<User> {
-    const result = await createUserWithEmailAndPassword(auth, email, password)
-    return result.user
-  },
+  return {
+    async signInWithEmail(email: string, password: string): Promise<AppUser> {
+      const result = await signInWithEmailAndPassword(auth, email, password)
+      return result.user
+    },
 
-  // Google 로그인 (idToken 필요)
-  async signInWithGoogle(idToken: string): Promise<User> {
-    const credential = GoogleAuthProvider.credential(idToken)
-    const result = await signInWithCredential(auth, credential)
-    return result.user
-  },
+    async signUpWithEmail(email: string, password: string): Promise<AppUser> {
+      const result = await createUserWithEmailAndPassword(auth, email, password)
+      return result.user
+    },
 
-  // 로그아웃
-  async signOut(): Promise<void> {
-    await firebaseSignOut(auth)
-  },
+    async signInWithGoogle(idToken: string): Promise<AppUser> {
+      const credential = GoogleAuthProvider.credential(idToken)
+      const result = await signInWithCredential(auth, credential)
+      return result.user
+    },
 
-  // 현재 사용자
-  getCurrentUser(): User | null {
-    return auth.currentUser
-  },
+    async signOut(): Promise<void> {
+      await firebaseSignOut(auth)
+    },
 
-  // 인증 상태 변경 리스너
-  onAuthStateChange(callback: (user: User | null) => void): () => void {
-    return onAuthStateChanged(auth, callback)
-  },
+    getCurrentUser(): AppUser | null {
+      return auth.currentUser
+    },
+
+    onAuthStateChange(callback: (user: AppUser | null) => void): () => void {
+      return onAuthStateChanged(auth, callback)
+    },
+  }
+}
+
+let cachedService: IAuthService | null = null
+
+function getAuthService(): IAuthService {
+  if (cachedService) return cachedService
+
+  if (isMockMode()) {
+    const { mockAuthService } = require('./mock')
+    cachedService = mockAuthService
+  } else {
+    cachedService = getRealAuthService()
+  }
+
+  return cachedService!
+}
+
+export const authService: IAuthService = {
+  signInWithEmail: (email, password) => getAuthService().signInWithEmail(email, password),
+  signUpWithEmail: (email, password) => getAuthService().signUpWithEmail(email, password),
+  signInWithGoogle: (idToken) => getAuthService().signInWithGoogle(idToken),
+  signOut: () => getAuthService().signOut(),
+  getCurrentUser: () => getAuthService().getCurrentUser(),
+  onAuthStateChange: (callback) => getAuthService().onAuthStateChange(callback),
 }
