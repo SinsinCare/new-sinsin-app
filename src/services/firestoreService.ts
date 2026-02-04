@@ -1,4 +1,11 @@
-import type { UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog } from '../types'
+import type {
+  UserProfile,
+  HealthRecord,
+  FoodRecord,
+  ChatConversation,
+  ChatMessage,
+  DailyHealthLog,
+} from '../types'
 import type { IFirestoreService } from './types/serviceTypes'
 import { isMockMode } from '../config/appConfig'
 
@@ -211,7 +218,8 @@ export const firestoreService: IFirestoreService = {
   getUserProfile: (userId) => getFirestoreService().getUserProfile(userId),
   setUserProfile: (profile) => getFirestoreService().setUserProfile(profile),
   updateUserProfile: (userId, updates) => getFirestoreService().updateUserProfile(userId, updates),
-  getHealthRecords: (userId, limitCount) => getFirestoreService().getHealthRecords(userId, limitCount),
+  getHealthRecords: (userId, limitCount) =>
+    getFirestoreService().getHealthRecords(userId, limitCount),
   addHealthRecord: (record) => getFirestoreService().addHealthRecord(record),
   getFoodRecords: (userId, date) => getFirestoreService().getFoodRecords(userId, date),
   addFoodRecord: (record) => getFirestoreService().addFoodRecord(record),

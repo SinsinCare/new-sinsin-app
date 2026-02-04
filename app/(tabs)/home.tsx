@@ -1,15 +1,17 @@
-import { Image } from 'expo-image';
-import { StyleSheet, Pressable, View } from 'react-native';
+import { Image } from 'expo-image'
+import { StyleSheet, Pressable, View } from 'react-native'
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ThemedText } from '@/components/themed-text'
+import { ThemedView } from '@/components/themed-view'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <ThemedView
+      style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+    >
       <View style={styles.characterContainer}>
         <Image
           source={require('@/assets/images/kidney-character.png')}
@@ -22,17 +24,14 @@ export default function HomeScreen() {
 
       <View style={styles.buttonContainer}>
         <Pressable
-          style={({ pressed }) => [
-            styles.mainButton,
-            pressed && styles.mainButtonPressed
-          ]}
+          style={({ pressed }) => [styles.mainButton, pressed && styles.mainButtonPressed]}
           onPress={() => console.log('식단 기록하기 pressed')}
         >
           <ThemedText style={styles.buttonText}>식단 기록하기</ThemedText>
         </Pressable>
       </View>
     </ThemedView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -82,4 +81,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-});
+})

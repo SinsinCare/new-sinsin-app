@@ -74,11 +74,7 @@ interface ButtonProps {
 
 export function Button({ children, loading, disabled, ...props }: ButtonProps) {
   return (
-    <StyledButton
-      disabled={disabled || loading}
-      opacity={disabled ? 0.5 : 1}
-      {...props}
-    >
+    <StyledButton disabled={disabled || loading} opacity={disabled ? 0.5 : 1} {...props}>
       {loading ? (
         <XStack gap="$2" alignItems="center">
           <Spinner size="small" color="white" />

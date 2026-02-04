@@ -7,6 +7,7 @@
 React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분석과 건강 상담 기능을 제공합니다.
 
 ### 주요 기능
+
 - CKD 단계별(1-5단계) 건강 추적 및 투석 상태 관리
 - AI 기반 음식 사진 분석 (신장 건강 안전도 평가)
 - AI 건강 상담 챗봇
@@ -14,11 +15,11 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 
 ## 관련 프로젝트
 
-| 프로젝트 | 경로 | 기술 스택 |
-|----------|------|-----------|
-| iOS 네이티브 앱 | `../sinsin-ios-app/` | Swift, SwiftUI |
-| Android 네이티브 앱 | `../sinsin-android-app/` | Kotlin, Jetpack Compose |
-| **React Native 앱 (현재)** | `./` | Expo, React Native |
+| 프로젝트                   | 경로                     | 기술 스택               |
+| -------------------------- | ------------------------ | ----------------------- |
+| iOS 네이티브 앱            | `../sinsin-ios-app/`     | Swift, SwiftUI          |
+| Android 네이티브 앱        | `../sinsin-android-app/` | Kotlin, Jetpack Compose |
+| **React Native 앱 (현재)** | `./`                     | Expo, React Native      |
 
 > 이 React Native 프로젝트는 iOS/Android 네이티브 앱을 통합하는 마이그레이션 대상입니다.
 
@@ -47,6 +48,7 @@ cp .env.example .env
 ```
 
 필수 환경 변수:
+
 - `EXPO_PUBLIC_FIREBASE_*` - Firebase 인증 정보
 - `EXPO_PUBLIC_BACKEND_URL` - AI 백엔드 URL
 
@@ -70,7 +72,8 @@ src/
 
 이 프로젝트는 [Conventional Commits](https://www.conventionalcommits.org/ko/v1.0.0/) 스타일을 권장합니다.
 
-- **기본 포맷:**  
+- **기본 포맷:**
+
   ```
   <type>[optional scope]: <description>
   ```
