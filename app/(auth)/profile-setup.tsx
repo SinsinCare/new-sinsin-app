@@ -19,7 +19,7 @@ export default function ProfileSetupScreen() {
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
   const [ckdStage, setCkdStage] = useState<1 | 2 | 3 | 4 | 5>(3)
-  const [onDialysis, setOnDialysis] = useState(false)
+  const [onDialysis] = useState(false)
 
   const handleSaveProfile = async () => {
     if (!user) return
