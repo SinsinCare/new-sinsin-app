@@ -21,7 +21,7 @@ export function useAuth() {
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [setUser, setProfile, resetProfile])
 
   const signInWithEmail = async (email: string, password: string) => {
     setLoading(true)
