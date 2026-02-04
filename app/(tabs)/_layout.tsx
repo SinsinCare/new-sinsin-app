@@ -28,7 +28,7 @@ export default function TabLayout() {
         name="consult"
         options={{
           title: '상담',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="message.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="message.fill" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -49,9 +49,7 @@ export default function TabLayout() {
         name="all"
         options={{
           title: '전체',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="line.3.horizontal" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="line.3.horizontal" color={color} />,
         }}
       />
     </Tabs>
