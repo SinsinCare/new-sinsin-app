@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mediology.sinsin",
+      "deploymentTarget": "14.0",
       "infoPlist": {
         "NSHealthShareUsageDescription": "건강 데이터를 읽어 맞춤형 건강 관리를 제공합니다.",
         "NSHealthUpdateUsageDescription": "건강 데이터를 기록합니다."
@@ -30,6 +31,8 @@
       },
       "package": "com.mediology.sinsin",
       "edgeToEdgeEnabled": true,
+      "minSdkVersion": 23,
+      "targetSdkVersion": 34,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
