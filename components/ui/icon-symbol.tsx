@@ -18,7 +18,12 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
-} as IconMapping
+  // 탭 바 아이콘
+  'message.fill': 'message',
+  'book.fill': 'menu-book',
+  'fork.knife': 'restaurant',
+  'line.3.horizontal': 'menu',
+} as IconMapping;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
