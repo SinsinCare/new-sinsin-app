@@ -13,23 +13,35 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 - AI 건강 상담 챗봇
 - 일일 건강 기록 및 영양소 추적
 
-## 관련 프로젝트
-
-| 프로젝트                   | 경로                     | 기술 스택               |
-| -------------------------- | ------------------------ | ----------------------- |
-| iOS 네이티브 앱            | `../sinsin-ios-app/`     | Swift, SwiftUI          |
-| Android 네이티브 앱        | `../sinsin-android-app/` | Kotlin, Jetpack Compose |
-| **React Native 앱 (현재)** | `./`                     | Expo, React Native      |
-
-> 이 React Native 프로젝트는 iOS/Android 네이티브 앱을 통합하는 마이그레이션 대상입니다.
-
 ## 기술 스택
 
 - **Framework:** Expo ~54.0, React Native 0.81
 - **Routing:** Expo Router (파일 기반 라우팅)
-- **UI:** Tamagui v2 (glassmorphic 디자인)
+- **UI:** Tamagui v2
 - **State:** Zustand (클라이언트) + React Query (서버)
 - **Backend:** Firebase (Auth, Firestore) + AI Backend API
+
+## 코드 품질 도구
+
+### ESLint + Prettier
+
+```bash
+npm run lint          # ESLint 검사
+npm run lint:fix      # ESLint 자동 수정
+npm run format        # Prettier 포맷팅
+npm run format:check  # Prettier 포맷 검사
+```
+
+**ESLint 설정:** `eslint.config.js` - Expo 기본 설정 + Prettier 연동
+**Prettier 설정:** `.prettierrc`
+
+| 옵션           | 값    |
+| -------------- | ----- |
+| Semi           | false |
+| Single Quote   | true  |
+| Tab Width      | 2     |
+| Trailing Comma | es5   |
+| Print Width    | 100   |
 
 ## 개발 명령어
 
