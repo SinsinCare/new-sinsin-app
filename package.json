@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
+    "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
@@ -60,4 +60,5 @@
     "typescript": "~5.9.2"
   },
   "private": true
+  }
 }
