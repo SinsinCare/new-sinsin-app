@@ -19,7 +19,7 @@ export default function ProfileSetupScreen() {
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
   const [ckdStage, setCkdStage] = useState<1 | 2 | 3 | 4 | 5>(3)
-  const [onDialysis, setOnDialysis] = useState(false)
+  const [onDialysis] = useState(false)
 
   const handleSaveProfile = async () => {
     if (!user) return
@@ -123,7 +123,10 @@ export default function ProfileSetupScreen() {
 
           <YStack gap="$2">
             <Label>만성신장병 단계</Label>
-            <RadioGroup value={String(ckdStage)} onValueChange={(v) => setCkdStage(Number(v) as 1 | 2 | 3 | 4 | 5)}>
+            <RadioGroup
+              value={String(ckdStage)}
+              onValueChange={(v) => setCkdStage(Number(v) as 1 | 2 | 3 | 4 | 5)}
+            >
               <XStack flexWrap="wrap" gap="$3">
                 {[1, 2, 3, 4, 5].map((stage) => (
                   <XStack key={stage} alignItems="center" gap="$2">

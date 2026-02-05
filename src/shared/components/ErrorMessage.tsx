@@ -9,12 +9,7 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
-    <YStack
-      backgroundColor="$dangerBackground"
-      borderRadius="$3"
-      padding="$4"
-      gap="$3"
-    >
+    <YStack backgroundColor="$dangerBackground" borderRadius="$3" padding="$4" gap="$3">
       <XStack gap="$2" alignItems="center">
         <AlertCircle size={20} color="$danger" />
         <Text color="$danger" fontWeight="600">

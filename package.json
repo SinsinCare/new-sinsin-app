@@ -7,12 +7,12 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "prepare": "husky"
-  },
-  "lint-staged": {
+    "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -33,6 +33,7 @@
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
+    "expo-symbols": "~1.0.8",
     "firebase": "^12.8.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -50,6 +51,10 @@
     "@types/react": "~19.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "eslint": "^9.39.2",
+    "eslint-config-expo": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   },

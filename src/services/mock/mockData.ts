@@ -1,4 +1,11 @@
-import type { UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog } from '../../types'
+import type {
+  UserProfile,
+  HealthRecord,
+  FoodRecord,
+  ChatConversation,
+  ChatMessage,
+  DailyHealthLog,
+} from '../../types'
 import { DEFAULT_MOCK_USER } from './mockUser'
 
 // CKD 3기 환자 프로필
@@ -76,7 +83,8 @@ export const MOCK_MESSAGES: ChatMessage[] = [
     id: 'msg-002',
     conversationId: 'conv-001',
     role: 'assistant',
-    content: '만성신장병 3기 환자분의 경우 하루 나트륨 섭취량을 2,000mg 이하로 제한하는 것이 권장됩니다.',
+    content:
+      '만성신장병 3기 환자분의 경우 하루 나트륨 섭취량을 2,000mg 이하로 제한하는 것이 권장됩니다.',
     createdAt: new Date('2024-11-20T10:00:30'),
   },
 ]
