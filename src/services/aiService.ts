@@ -1,7 +1,9 @@
 import type { FoodAnalysisRequest, FoodAnalysisResponse, ChatRequest, ChatResponse } from '../types'
 import axios from 'axios';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '<backend-api-base-url>'
+const BACKEND_URL =
+  process.env.EXPO_PUBLIC_BACKEND_URL ||
+  '<backend-api-base-url>'
 
 export const aiService = {
   async analyzeFoodImage(request: FoodAnalysisRequest): Promise<FoodAnalysisResponse> {

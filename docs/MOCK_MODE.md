@@ -11,6 +11,7 @@ Mock 모드는 환경 변수로 제어되며, Firebase 초기화를 완전히 �
 ### Mock 모드 사용 (Firebase 없이 실행)
 
 `.env` 파일:
+
 ```bash
 EXPO_PUBLIC_USE_MOCK_AUTH=true
 ```
@@ -18,6 +19,7 @@ EXPO_PUBLIC_USE_MOCK_AUTH=true
 ### 실제 Firebase 사용
 
 `.env` 파일:
+
 ```bash
 EXPO_PUBLIC_USE_MOCK_AUTH=false
 
@@ -32,13 +34,13 @@ EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
 
 ## 테스트 계정 (Mock 모드)
 
-| 항목 | 값 |
-|------|-----|
-| Email | `test@sinsin.dev` |
-| Password | `test1234` |
-| 이름 | 김철수 |
-| CKD Stage | 3기 |
-| 투석 여부 | 없음 |
+| 항목      | 값                |
+| --------- | ----------------- |
+| Email     | `test@sinsin.dev` |
+| Password  | `test1234`        |
+| 이름      | 김철수            |
+| CKD Stage | 3기               |
+| 투석 여부 | 없음              |
 
 Google 로그인 버튼 → 자동으로 위 계정으로 로그인
 
@@ -100,6 +102,7 @@ src/
 ### 1. 환경 변수 설정
 
 `.env` 파일 수정:
+
 ```bash
 EXPO_PUBLIC_USE_MOCK_AUTH=false
 EXPO_PUBLIC_FIREBASE_API_KEY=실제값
@@ -113,6 +116,7 @@ EXPO_PUBLIC_FIREBASE_APP_ID=실제값
 ### 2. 코드 수정 불필요
 
 환경 변수만 변경하면 자동으로 실제 Firebase 사용:
+
 - `authService.ts` - 자동 전환
 - `firestoreService.ts` - 자동 전환
 - `authStore.ts` - `AppUser` 타입이 Firebase User와 호환
@@ -128,17 +132,26 @@ EXPO_PUBLIC_FIREBASE_APP_ID=실제값
 ### 테스트 계정 추가
 
 `src/services/mock/mockAuthService.ts`:
+
 ```typescript
 const mockUsers = new Map([
   ['test@sinsin.dev', { email: 'test@sinsin.dev', password: 'test1234', user: DEFAULT_MOCK_USER }],
   // 새 계정 추가
-  ['newuser@test.com', { email: 'newuser@test.com', password: 'password123', user: new MockUser('mock-user-002', 'newuser@test.com', '홍길동') }],
+  [
+    'newuser@test.com',
+    {
+      email: 'newuser@test.com',
+      password: 'password123',
+      user: new MockUser('mock-user-002', 'newuser@test.com', '홍길동'),
+    },
+  ],
 ])
 ```
 
 ### Mock 데이터 수정
 
 `src/services/mock/mockData.ts`:
+
 - `MOCK_USER_PROFILE` - 사용자 프로필
 - `MOCK_HEALTH_RECORDS` - 건강 기록
 - `MOCK_FOOD_RECORDS` - 음식 기록

@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
-import { useAuthStore } from '../stores'
+import { useAuthStore, useUserStore } from '../stores'
 import { authService } from '../services/authService'
 import { firestoreService } from '../services/firestoreService'
-import { useUserStore } from '../stores'
 
 export function useAuth() {
   const { user, isLoading, isAuthenticated, setUser, setLoading } = useAuthStore()
@@ -22,7 +21,7 @@ export function useAuth() {
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [setUser, setProfile, resetProfile])
 
   const signInWithEmail = async (email: string, password: string) => {
     setLoading(true)

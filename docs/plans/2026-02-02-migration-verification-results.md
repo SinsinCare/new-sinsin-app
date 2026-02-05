@@ -14,18 +14,18 @@ The React Native migration of 신신당부 (Sinsin Dangbu) has successfully impl
 
 ## Overall Verification Results
 
-| Area | Score | Status |
-|------|-------|--------|
-| Project Configuration | 100% | ✅ PASS |
-| Authentication Flow | 96% | ✅ PASS (1 minor issue) |
-| Home Dashboard | 25% | ⚠️ Partial |
-| Food Recognition | 79% | ⚠️ Partial |
-| AI Consultation | 85% | ⚠️ Partial |
-| Settings Screen | 75% | ⚠️ Partial |
-| Firestore Service | 100% | ✅ PASS |
-| Data Models | 100% | ✅ PASS |
-| UI Components | 100% | ✅ PASS |
-| Build & Bundle | 100% | ✅ PASS |
+| Area                  | Score | Status                  |
+| --------------------- | ----- | ----------------------- |
+| Project Configuration | 100%  | ✅ PASS                 |
+| Authentication Flow   | 96%   | ✅ PASS (1 minor issue) |
+| Home Dashboard        | 25%   | ⚠️ Partial              |
+| Food Recognition      | 79%   | ⚠️ Partial              |
+| AI Consultation       | 85%   | ⚠️ Partial              |
+| Settings Screen       | 75%   | ⚠️ Partial              |
+| Firestore Service     | 100%  | ✅ PASS                 |
+| Data Models           | 100%  | ✅ PASS                 |
+| UI Components         | 100%  | ✅ PASS                 |
+| Build & Bundle        | 100%  | ✅ PASS                 |
 
 **Overall Migration Score: ~70%**
 
@@ -36,6 +36,7 @@ The React Native migration of 신신당부 (Sinsin Dangbu) has successfully impl
 ### 1. Project Configuration ✅ PASS
 
 All verified:
+
 - [x] Expo 54.0.33, React Native 0.81.5
 - [x] Firebase 12.8.0, React Query 5.90.20, Zustand 5.0.11, Tamagui 2.0.0-rc.0
 - [x] All environment variables defined in .env.example
@@ -44,21 +45,25 @@ All verified:
 - [x] Deep linking scheme: sinsin
 
 **Issue Fixed During Verification:**
+
 - Installed missing peer dependencies: react-native-svg, react-native-safe-area-context, react-native-screens, react-native-worklets
 - Fixed Firebase auth import for React Native persistence
 
 ### 2. Authentication Flow ✅ PASS (1 minor issue)
 
 **Login Screen:** 6/6 ✅
+
 - [x] Email field, Password field, Sign In button
 - [x] Link to signup, Error handling, Loading state
 
 **Signup Screen:** 7/7 ✅
+
 - [x] Email, Password, Confirm password fields
 - [x] Sign Up button, Link to login
 - [x] Password validation (6+ chars), Error handling
 
 **Profile Setup Screen:** 7/8 ⚠️
+
 - [x] Full name, Birth date, Gender selection
 - [x] Height, Weight inputs
 - [x] CKD stage selection (1-5)
@@ -71,12 +76,14 @@ All verified:
 ### 3. Home Dashboard ⚠️ Partial (25%)
 
 **Implemented (4 items):**
+
 - [x] Greeting with user name
 - [x] Simple health summary card
 - [x] Nutrition intake bars (Na, K, P with correct limits)
 - [x] Quick action buttons (non-functional)
 
 **Missing vs iOS (16 items):**
+
 - [ ] GFR circular gauge with trend indicator
 - [ ] Creatinine card with historical chart
 - [ ] Potassium semi-circular gauge
@@ -97,6 +104,7 @@ All verified:
 ### 4. Food Recognition Screen ⚠️ Partial (79%)
 
 **Implemented (15/19):**
+
 - [x] Camera capture, Gallery selection, Image preview
 - [x] API call to /analyze-food, Loading state, Error handling
 - [x] Food name, Calories, Protein
@@ -105,6 +113,7 @@ All verified:
 - [x] Warning messages, Recommendations
 
 **Missing:**
+
 - [ ] Carbohydrates display (type supports, UI omits)
 - [ ] Fat display (type supports, UI omits)
 - [ ] Follow-up questions (portion, people count, broth)
@@ -114,6 +123,7 @@ All verified:
 ### 5. AI Consultation Screen ⚠️ Partial (85%)
 
 **Implemented:**
+
 - [x] All 6 categories (Diet, Medicine, Dialysis, Checkup, Transplant, Welfare)
 - [x] Chat interface with message bubbles
 - [x] Message input and send button
@@ -123,6 +133,7 @@ All verified:
 - [x] Error handling
 
 **Missing:**
+
 - [ ] Chat history/sessions management
 - [ ] Load/resume previous conversations
 - [ ] Conversation persistence to Firestore
@@ -131,12 +142,14 @@ All verified:
 ### 6. Settings Screen ⚠️ Partial (75%)
 
 **Implemented:**
+
 - [x] User avatar/initials, name, email
 - [x] CKD stage and dialysis status display
 - [x] Menu items (Profile, Notifications, Privacy, App Info) - UI only
 - [x] Sign out button with proper state clearing
 
 **Missing:**
+
 - [ ] Actual navigation to sub-screens (all menu items log to console)
 - [ ] AppInfoView, NotificationSettingsView, PrivacyManagementView sub-screens
 - [ ] Website link (sinsin.care)
@@ -146,6 +159,7 @@ All verified:
 ### 7. Firestore Service ✅ PASS (100%)
 
 All 12 operations verified:
+
 - [x] user_profiles: getUserProfile, setUserProfile, updateUserProfile
 - [x] health_records: getHealthRecords, addHealthRecord
 - [x] food_records: getFoodRecords, addFoodRecord
@@ -180,40 +194,40 @@ All 12 operations verified:
 
 ### Critical (Blocks Launch)
 
-| Gap | Impact | Recommendation |
-|-----|--------|----------------|
+| Gap                                             | Impact                                         | Recommendation              |
+| ----------------------------------------------- | ---------------------------------------------- | --------------------------- |
 | Dialysis status toggle missing in profile setup | Users on dialysis cannot indicate their status | Add Switch/Toggle component |
-| Firebase TypeScript error | Prevented compilation | ✅ FIXED |
-| Missing peer dependencies | Could cause crashes | ✅ FIXED |
+| Firebase TypeScript error                       | Prevented compilation                          | ✅ FIXED                    |
+| Missing peer dependencies                       | Could cause crashes                            | ✅ FIXED                    |
 
 ### High Priority (Should Fix Before Beta)
 
-| Gap | Impact | Effort |
-|-----|--------|--------|
-| Food save to diary not implemented | Food analysis can't be saved | Medium |
-| Chat history not persisted | Users lose conversation history | Medium |
-| Settings sub-screens not implemented | Menu items don't navigate | Medium |
-| Carbs/Fat not displayed in food analysis | Incomplete nutrition info | Low |
+| Gap                                      | Impact                          | Effort |
+| ---------------------------------------- | ------------------------------- | ------ |
+| Food save to diary not implemented       | Food analysis can't be saved    | Medium |
+| Chat history not persisted               | Users lose conversation history | Medium |
+| Settings sub-screens not implemented     | Menu items don't navigate       | Medium |
+| Carbs/Fat not displayed in food analysis | Incomplete nutrition info       | Low    |
 
 ### Medium Priority (Can Defer to v1.1)
 
-| Gap | Impact | Effort |
-|-----|--------|--------|
-| Home dashboard data integration | Shows hardcoded zeros | High |
-| Health charts and gauges | Less visual health tracking | High |
+| Gap                                  | Impact                           | Effort |
+| ------------------------------------ | -------------------------------- | ------ |
+| Home dashboard data integration      | Shows hardcoded zeros            | High   |
+| Health charts and gauges             | Less visual health tracking      | High   |
 | Follow-up questions in food analysis | Less accurate nutrition tracking | Medium |
-| Recent food records on home | Quick review not possible | Medium |
+| Recent food records on home          | Quick review not possible        | Medium |
 
 ### Low Priority (Future Enhancement)
 
-| Gap | Notes |
-|-----|-------|
-| Recipe View | Not implemented in Android either |
-| Restaurant Finder | Not implemented in Android either |
-| OCR Lab Results | Complex, iOS-only feature |
-| Community Meal Posts | Social feature, not core |
-| Health Tips Carousel | Nice to have |
-| Meal Tiles | Convenience feature |
+| Gap                  | Notes                             |
+| -------------------- | --------------------------------- |
+| Recipe View          | Not implemented in Android either |
+| Restaurant Finder    | Not implemented in Android either |
+| OCR Lab Results      | Complex, iOS-only feature         |
+| Community Meal Posts | Social feature, not core          |
+| Health Tips Carousel | Nice to have                      |
+| Meal Tiles           | Convenience feature               |
 
 ---
 
@@ -258,6 +272,7 @@ All 12 operations verified:
 ## Conclusion
 
 The React Native migration has achieved **functional parity** for core user journeys:
+
 - Users can sign up, create profiles, and log in
 - Users can analyze food photos and see kidney safety
 - Users can chat with AI for health consultation

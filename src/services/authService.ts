@@ -2,6 +2,7 @@ import type { IAuthService, AppUser } from './types/serviceTypes'
 import { isMockMode } from '../config/appConfig'
 
 function getRealAuthService(): IAuthService {
+  /* eslint-disable @typescript-eslint/no-require-imports */
   // Lazy import - Mock 모드가 아닐 때만 Firebase 로드
   const {
     signInWithEmailAndPassword,
@@ -12,6 +13,7 @@ function getRealAuthService(): IAuthService {
     signInWithCredential,
   } = require('firebase/auth')
   const { auth } = require('./firebase')
+  /* eslint-enable @typescript-eslint/no-require-imports */
 
   return {
     async signInWithEmail(email: string, password: string): Promise<AppUser> {
@@ -50,7 +52,7 @@ function getAuthService(): IAuthService {
   if (cachedService) return cachedService
 
   if (isMockMode()) {
-    const { mockAuthService } = require('./mock')
+    const { mockAuthService } = require('./mock') // eslint-disable-line @typescript-eslint/no-require-imports
     cachedService = mockAuthService
   } else {
     cachedService = getRealAuthService()

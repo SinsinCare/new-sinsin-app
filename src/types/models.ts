@@ -55,13 +55,7 @@ export interface ChatConversation {
   updatedAt: Date
 }
 
-export type ChatCategory =
-  | 'diet'
-  | 'medicine'
-  | 'dialysis'
-  | 'checkup'
-  | 'transplant'
-  | 'welfare'
+export type ChatCategory = 'diet' | 'medicine' | 'dialysis' | 'checkup' | 'transplant' | 'welfare'
 
 // 채팅 메시지
 export interface ChatMessage {
@@ -88,8 +82,8 @@ export interface DailyHealthLog {
 
 // 영양 한계치 (신장 환자용)
 export const KIDNEY_SAFE_LIMITS = {
-  sodium: 2000,      // mg
-  potassium: 2000,   // mg
-  phosphorus: 1000,  // mg
-  protein: 0.8,      // g per kg body weight
+  sodium: 2000, // mg
+  potassium: 2000, // mg
+  phosphorus: 1000, // mg
+  protein: 0.8, // g per kg body weight
 } as const

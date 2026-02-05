@@ -38,6 +38,7 @@ export function TextField({ label, error, helper, ...props }: TextFieldProps) {
     <YStack gap="$1.5">
       {label && (
         <Label
+          size="$4"
           fontSize={14}
           color={error ? '$danger' : isFocused ? '$primary' : '$color'}
         >
@@ -45,6 +46,7 @@ export function TextField({ label, error, helper, ...props }: TextFieldProps) {
         </Label>
       )}
       <StyledInput
+        size="$4"
         error={!!error}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
