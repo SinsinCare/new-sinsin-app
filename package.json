@@ -7,6 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
@@ -47,6 +49,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "eslint": "^9.39.2",
     "eslint-config-expo": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
