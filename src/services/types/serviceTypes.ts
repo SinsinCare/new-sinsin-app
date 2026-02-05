@@ -1,4 +1,11 @@
-import type { UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog } from '../../types'
+import type {
+  UserProfile,
+  HealthRecord,
+  FoodRecord,
+  ChatConversation,
+  ChatMessage,
+  DailyHealthLog,
+} from '../../types'
 
 // Firebase User와 MockUser 모두 호환되는 최소 인터페이스
 export interface AppUser {

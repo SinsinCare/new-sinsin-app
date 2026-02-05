@@ -34,7 +34,7 @@ const StyledButton = styled(TamaguiButton, {
         color: 'white',
       },
     },
-    size: {
+    buttonSize: {
       small: {
         height: 36,
         paddingHorizontal: '$3',
@@ -57,14 +57,14 @@ const StyledButton = styled(TamaguiButton, {
 
   defaultVariants: {
     variant: 'primary',
-    size: 'medium',
+    buttonSize: 'medium',
   },
 })
 
 interface ButtonProps {
   children: React.ReactNode
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-  size?: 'small' | 'medium' | 'large'
+  buttonSize?: 'small' | 'medium' | 'large'
   fullWidth?: boolean
   loading?: boolean
   disabled?: boolean
@@ -75,6 +75,7 @@ interface ButtonProps {
 export function Button({ children, loading, disabled, ...props }: ButtonProps) {
   return (
     <StyledButton
+      size="$4"
       disabled={disabled || loading}
       opacity={disabled ? 0.5 : 1}
       {...props}

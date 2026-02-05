@@ -1,4 +1,11 @@
-import type { UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog } from '../types'
+import type {
+  UserProfile,
+  HealthRecord,
+  FoodRecord,
+  ChatConversation,
+  ChatMessage,
+  DailyHealthLog,
+} from '../types'
 import type { IFirestoreService } from './types/serviceTypes'
 import { isMockMode } from '../config/appConfig'
 
@@ -13,6 +20,7 @@ const COLLECTIONS = {
 } as const
 
 function getRealFirestoreService(): IFirestoreService {
+  /* eslint-disable @typescript-eslint/no-require-imports */
   // Lazy import - Mock 모드가 아닐 때만 Firebase 로드
   const {
     collection,
@@ -28,6 +36,7 @@ function getRealFirestoreService(): IFirestoreService {
     Timestamp,
   } = require('firebase/firestore')
   const { db } = require('./firebase')
+  /* eslint-enable @typescript-eslint/no-require-imports */
 
   // 날짜 변환 헬퍼
   const toDate = (timestamp: any): Date => {
@@ -198,7 +207,7 @@ function getFirestoreService(): IFirestoreService {
   if (cachedService) return cachedService
 
   if (isMockMode()) {
-    const { mockFirestoreService } = require('./mock')
+    const { mockFirestoreService } = require('./mock') // eslint-disable-line @typescript-eslint/no-require-imports
     cachedService = mockFirestoreService
   } else {
     cachedService = getRealFirestoreService()
@@ -211,7 +220,8 @@ export const firestoreService: IFirestoreService = {
   getUserProfile: (userId) => getFirestoreService().getUserProfile(userId),
   setUserProfile: (profile) => getFirestoreService().setUserProfile(profile),
   updateUserProfile: (userId, updates) => getFirestoreService().updateUserProfile(userId, updates),
-  getHealthRecords: (userId, limitCount) => getFirestoreService().getHealthRecords(userId, limitCount),
+  getHealthRecords: (userId, limitCount) =>
+    getFirestoreService().getHealthRecords(userId, limitCount),
   addHealthRecord: (record) => getFirestoreService().addHealthRecord(record),
   getFoodRecords: (userId, date) => getFirestoreService().getFoodRecords(userId, date),
   addFoodRecord: (record) => getFirestoreService().addFoodRecord(record),

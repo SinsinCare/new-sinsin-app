@@ -14,28 +14,29 @@
 
 Based on exploration of all three codebases, here's the feature comparison:
 
-| Feature | iOS | Android | React Native | Status |
-|---------|-----|---------|--------------|--------|
-| Email/Password Auth | ✅ | ✅ | ✅ | Verified |
-| Apple Sign-In | ✅ | ❌ | ❌ | Not in scope (iOS only) |
-| Google Sign-In | ⚠️ Placeholder | ⚠️ Placeholder | ❌ | Gap - Not critical |
-| Profile Setup | ✅ | ✅ | ✅ | Needs verification |
-| Home Dashboard | ✅ Full | ⚠️ Placeholder | ✅ Partial | Needs verification |
-| Food Recognition (AI) | ✅ | ⚠️ Routes only | ✅ | Needs verification |
-| AI Consultation Chat | ✅ | ⚠️ Routes only | ✅ | Needs verification |
-| Recipe View | ✅ | ⚠️ Placeholder | ❌ | Gap |
-| Restaurant Finder | ✅ | ⚠️ Placeholder | ❌ | Gap |
-| Settings/Logout | ✅ | ⚠️ Placeholder | ✅ | Needs verification |
-| OCR Lab Results | ✅ | ❌ | ❌ | Gap |
-| Community Meal Posts | ✅ | ❌ | ❌ | Gap |
-| Health Record Persistence | ✅ | ✅ | ✅ | Needs verification |
-| Daily Health Log | ✅ | ✅ | ✅ | Needs verification |
+| Feature                   | iOS            | Android        | React Native | Status                  |
+| ------------------------- | -------------- | -------------- | ------------ | ----------------------- |
+| Email/Password Auth       | ✅             | ✅             | ✅           | Verified                |
+| Apple Sign-In             | ✅             | ❌             | ❌           | Not in scope (iOS only) |
+| Google Sign-In            | ⚠️ Placeholder | ⚠️ Placeholder | ❌           | Gap - Not critical      |
+| Profile Setup             | ✅             | ✅             | ✅           | Needs verification      |
+| Home Dashboard            | ✅ Full        | ⚠️ Placeholder | ✅ Partial   | Needs verification      |
+| Food Recognition (AI)     | ✅             | ⚠️ Routes only | ✅           | Needs verification      |
+| AI Consultation Chat      | ✅             | ⚠️ Routes only | ✅           | Needs verification      |
+| Recipe View               | ✅             | ⚠️ Placeholder | ❌           | Gap                     |
+| Restaurant Finder         | ✅             | ⚠️ Placeholder | ❌           | Gap                     |
+| Settings/Logout           | ✅             | ⚠️ Placeholder | ✅           | Needs verification      |
+| OCR Lab Results           | ✅             | ❌             | ❌           | Gap                     |
+| Community Meal Posts      | ✅             | ❌             | ❌           | Gap                     |
+| Health Record Persistence | ✅             | ✅             | ✅           | Needs verification      |
+| Daily Health Log          | ✅             | ✅             | ✅           | Needs verification      |
 
 ---
 
 ## Task 1: Verify Project Configuration
 
 **Files:**
+
 - Read: `package.json`
 - Read: `app.json`
 - Read: `.env.example`
@@ -51,6 +52,7 @@ Expected: All packages listed with versions
 Run: `cat .env.example`
 
 Expected: Should list:
+
 - EXPO_PUBLIC_FIREBASE_API_KEY
 - EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN
 - EXPO_PUBLIC_FIREBASE_PROJECT_ID
@@ -62,6 +64,7 @@ Expected: Should list:
 **Step 3: Verify app.json is properly configured**
 
 Check for:
+
 - name, slug, version
 - ios bundle identifier
 - android package name
@@ -76,6 +79,7 @@ Create verification checklist in scratchpad.
 ## Task 2: Verify Authentication Flow
 
 **Files:**
+
 - Read: `app/(auth)/login.tsx`
 - Read: `app/(auth)/signup.tsx`
 - Read: `app/(auth)/profile-setup.tsx`
@@ -86,6 +90,7 @@ Create verification checklist in scratchpad.
 **Step 1: Verify login screen matches native apps**
 
 Compare with iOS `AuthView.swift` and Android `AuthScreen.kt`:
+
 - [ ] Email field present
 - [ ] Password field present
 - [ ] Sign In button present
@@ -106,6 +111,7 @@ Compare with iOS `AuthView.swift` and Android `AuthScreen.kt`:
 **Step 3: Verify profile setup screen matches native apps**
 
 Compare fields with iOS and Android:
+
 - [ ] Full name input
 - [ ] Birth date input
 - [ ] Gender selection (male/female)
@@ -138,12 +144,14 @@ Compare fields with iOS and Android:
 ## Task 3: Verify Home Dashboard
 
 **Files:**
+
 - Read: `app/(tabs)/home.tsx`
 - Compare: iOS `HomeView.swift`
 
 **Step 1: Verify UI elements present**
 
 iOS Home has:
+
 - [ ] Greeting with user name
 - [ ] GFR gauge (can be simplified)
 - [ ] Creatinine card with chart
@@ -155,6 +163,7 @@ iOS Home has:
 - [ ] Nutrient tracking quick link
 
 RN Home should have at minimum:
+
 - [ ] Greeting with user name
 - [ ] Health summary card
 - [ ] Nutrition intake overview (Sodium, Potassium, Phosphorus)
@@ -163,6 +172,7 @@ RN Home should have at minimum:
 **Step 2: Document gaps**
 
 List features in iOS not in RN:
+
 - GFR circular gauge with trend
 - Creatinine chart
 - Health tips carousel
@@ -174,6 +184,7 @@ List features in iOS not in RN:
 ## Task 4: Verify Food Recognition Screen
 
 **Files:**
+
 - Read: `app/(tabs)/food.tsx`
 - Read: `src/services/aiService.ts`
 - Compare: iOS `FoodRecognitionView.swift`
@@ -210,6 +221,7 @@ List features in iOS not in RN:
 **Step 5: Document gaps with iOS**
 
 iOS has additional:
+
 - Follow-up questions (portion, people count, broth)
 - Editable analysis form
 - Save to food diary with image
@@ -219,6 +231,7 @@ iOS has additional:
 ## Task 5: Verify AI Consultation Screen
 
 **Files:**
+
 - Read: `app/(tabs)/consultation.tsx`
 - Read: `src/services/aiService.ts`
 - Compare: iOS `ConsultationView.swift`
@@ -226,6 +239,7 @@ iOS has additional:
 **Step 1: Verify consultation categories**
 
 iOS has 6 categories:
+
 - [ ] Diet (식이요법)
 - [ ] Medicine (약물)
 - [ ] Dialysis (투석)
@@ -251,6 +265,7 @@ iOS has 6 categories:
 **Step 4: Document gaps with iOS**
 
 iOS has additional:
+
 - Suggested prompts per category
 - Chat history/sessions management
 - Load/resume previous conversations
@@ -260,6 +275,7 @@ iOS has additional:
 ## Task 6: Verify Settings Screen
 
 **Files:**
+
 - Read: `app/(tabs)/settings.tsx`
 - Compare: iOS `SettingsView.swift`
 
@@ -287,6 +303,7 @@ iOS has additional:
 **Step 4: Document gaps**
 
 iOS has additional:
+
 - Website link
 - Customer support
 - Debug mode indicator
@@ -296,6 +313,7 @@ iOS has additional:
 ## Task 7: Verify Firestore Service
 
 **Files:**
+
 - Read: `src/services/firestoreService.ts`
 - Compare: iOS `FirebaseManager.swift`
 - Compare: Android repositories
@@ -303,27 +321,33 @@ iOS has additional:
 **Step 1: Verify collection operations**
 
 user_profiles collection:
+
 - [ ] getUserProfile(userId)
 - [ ] setUserProfile(profile)
 - [ ] updateUserProfile(profile)
 
 health_records collection:
+
 - [ ] getHealthRecords(userId, limit)
 - [ ] addHealthRecord(record)
 
 food_records collection:
+
 - [ ] getFoodRecords(userId, startDate, endDate)
 - [ ] addFoodRecord(record)
 
 conversations collection:
+
 - [ ] getConversations(userId)
 - [ ] createConversation(conversation)
 
 messages collection:
+
 - [ ] getMessages(conversationId)
 - [ ] addMessage(message)
 
 daily_health_logs collection:
+
 - [ ] getDailyLog(userId, date)
 - [ ] setDailyLog(log)
 
@@ -332,6 +356,7 @@ daily_health_logs collection:
 ## Task 8: Verify Data Models
 
 **Files:**
+
 - Read: `src/types/models.ts`
 - Read: `src/types/api.ts`
 - Compare: iOS `Models.swift`, `PersistentModels.swift`
@@ -393,6 +418,7 @@ daily_health_logs collection:
 ## Task 9: Verify UI Components
 
 **Files:**
+
 - Read: `src/shared/components/Button.tsx`
 - Read: `src/shared/components/TextField.tsx`
 - Read: `src/shared/components/GlassmorphicCard.tsx`
@@ -448,6 +474,7 @@ Expected: Expo dev server starts without errors
 Run: `npm run ios` (or press `i` in Expo)
 
 Manual test checklist:
+
 - [ ] App loads without crash
 - [ ] Auth flow works (if Firebase configured)
 - [ ] Tab navigation works
@@ -470,6 +497,7 @@ Note any crashes, rendering issues, or functionality gaps.
 **Step 1: Compile all verification results**
 
 Create a summary document with:
+
 - Overall migration status
 - Feature parity percentage
 - Critical gaps that need addressing
@@ -479,19 +507,23 @@ Create a summary document with:
 **Step 2: Categorize gaps by priority**
 
 **Critical (blocks launch):**
+
 - Any auth issues
 - Core screen crashes
 - Data not persisting
 
 **High Priority (should fix):**
+
 - Missing features from iOS that users expect
 - UI/UX inconsistencies
 
 **Medium Priority (can defer):**
+
 - Features that were placeholders in native apps too
 - Polish items
 
 **Low Priority:**
+
 - Nice-to-have features
 - Future enhancements
 

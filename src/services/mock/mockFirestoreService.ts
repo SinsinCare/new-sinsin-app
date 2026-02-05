@@ -1,17 +1,31 @@
 import type { IFirestoreService } from '../types/serviceTypes'
-import type { UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog } from '../../types'
-import { MOCK_USER_PROFILE, MOCK_HEALTH_RECORDS, MOCK_FOOD_RECORDS, MOCK_CONVERSATIONS, MOCK_MESSAGES, MOCK_DAILY_LOG } from './mockData'
+import type {
+  UserProfile,
+  HealthRecord,
+  FoodRecord,
+  ChatConversation,
+  ChatMessage,
+  DailyHealthLog,
+} from '../../types'
+import {
+  MOCK_USER_PROFILE,
+  MOCK_HEALTH_RECORDS,
+  MOCK_FOOD_RECORDS,
+  MOCK_CONVERSATIONS,
+  MOCK_MESSAGES,
+  MOCK_DAILY_LOG,
+} from './mockData'
 
 const userProfiles = new Map<string, UserProfile>([[MOCK_USER_PROFILE.uid, MOCK_USER_PROFILE]])
-const healthRecords = new Map<string, HealthRecord>(MOCK_HEALTH_RECORDS.map(r => [r.id, r]))
-const foodRecords = new Map<string, FoodRecord>(MOCK_FOOD_RECORDS.map(r => [r.id, r]))
-const conversations = new Map<string, ChatConversation>(MOCK_CONVERSATIONS.map(c => [c.id, c]))
-const messages = new Map<string, ChatMessage>(MOCK_MESSAGES.map(m => [m.id, m]))
+const healthRecords = new Map<string, HealthRecord>(MOCK_HEALTH_RECORDS.map((r) => [r.id, r]))
+const foodRecords = new Map<string, FoodRecord>(MOCK_FOOD_RECORDS.map((r) => [r.id, r]))
+const conversations = new Map<string, ChatConversation>(MOCK_CONVERSATIONS.map((c) => [c.id, c]))
+const messages = new Map<string, ChatMessage>(MOCK_MESSAGES.map((m) => [m.id, m]))
 const dailyLogs = new Map<string, DailyHealthLog>([[MOCK_DAILY_LOG.id, MOCK_DAILY_LOG]])
 
 let idCounter = 1000
 const generateId = (prefix: string) => `${prefix}-${++idCounter}`
-const delay = (ms = 50) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export const mockFirestoreService: IFirestoreService = {
   async getUserProfile(userId: string) {
@@ -35,7 +49,7 @@ export const mockFirestoreService: IFirestoreService = {
   async getHealthRecords(userId: string, limitCount = 10) {
     await delay()
     return Array.from(healthRecords.values())
-      .filter(r => r.userId === userId)
+      .filter((r) => r.userId === userId)
       .sort((a, b) => b.recordDate.getTime() - a.recordDate.getTime())
       .slice(0, limitCount)
   },
@@ -49,10 +63,13 @@ export const mockFirestoreService: IFirestoreService = {
 
   async getFoodRecords(userId: string, date: Date) {
     await delay()
-    const startOfDay = new Date(date); startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(date); endOfDay.setHours(23, 59, 59, 999)
-    return Array.from(foodRecords.values())
-      .filter(r => r.userId === userId && r.recordDate >= startOfDay && r.recordDate <= endOfDay)
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+    return Array.from(foodRecords.values()).filter(
+      (r) => r.userId === userId && r.recordDate >= startOfDay && r.recordDate <= endOfDay
+    )
   },
 
   async addFoodRecord(record: Omit<FoodRecord, 'id'>) {
@@ -65,7 +82,7 @@ export const mockFirestoreService: IFirestoreService = {
   async getConversations(userId: string) {
     await delay()
     return Array.from(conversations.values())
-      .filter(c => c.userId === userId)
+      .filter((c) => c.userId === userId)
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
   },
 
@@ -73,14 +90,19 @@ export const mockFirestoreService: IFirestoreService = {
     await delay()
     const id = generateId('conv')
     const now = new Date()
-    conversations.set(id, { ...conversation, id, createdAt: now, updatedAt: now } as ChatConversation)
+    conversations.set(id, {
+      ...conversation,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    } as ChatConversation)
     return id
   },
 
   async getMessages(conversationId: string) {
     await delay()
     return Array.from(messages.values())
-      .filter(m => m.conversationId === conversationId)
+      .filter((m) => m.conversationId === conversationId)
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
   },
 

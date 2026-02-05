@@ -11,8 +11,9 @@ interface UserState {
 export const useUserStore = create<UserState>((set) => ({
   profile: null,
   setProfile: (profile) => set({ profile }),
-  updateProfile: (updates) => set((state) => ({
-    profile: state.profile ? { ...state.profile, ...updates } : null
-  })),
+  updateProfile: (updates) =>
+    set((state) => ({
+      profile: state.profile ? { ...state.profile, ...updates } : null,
+    })),
   reset: () => set({ profile: null }),
 }))

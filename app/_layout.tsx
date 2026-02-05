@@ -24,7 +24,7 @@ function RootLayoutNav() {
     } else if (isAuthenticated && inAuthGroup) {
       router.replace('/(tabs)/home')
     }
-  }, [isAuthenticated, isLoading, segments])
+  }, [isAuthenticated, isLoading, segments, router])
 
   if (isLoading) {
     return <LoadingScreen message="앱을 불러오는 중..." />
