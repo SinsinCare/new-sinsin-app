@@ -1,11 +1,12 @@
 import type { IAuthService, AppUser } from '../types/serviceTypes'
 import { MockUser, DEFAULT_MOCK_USER } from './mockUser'
+import { appConfig } from '../../config/appConfig'
 
 const mockUsers = new Map<string, { email: string; password: string; user: MockUser }>([
   ['test@sinsin.dev', { email: 'test@sinsin.dev', password: 'test1234', user: DEFAULT_MOCK_USER }],
 ])
 
-let currentUser: MockUser | null = DEFAULT_MOCK_USER
+let currentUser: MockUser | null = appConfig.mockNoUser ? null : DEFAULT_MOCK_USER
 let authStateListeners: ((user: AppUser | null) => void)[] = []
 
 function notifyListeners(user: AppUser | null) {

@@ -1,9 +1,12 @@
 import { Pressable } from 'react-native'
 import { YStack, XStack, Text, Separator } from 'tamagui'
 import { Link, router } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons, FontAwesome } from '@expo/vector-icons'
 
 export default function LoginScreen() {
+  const insets = useSafeAreaInsets()
+
   const handleEmailLogin = () => {
     router.push('/(auth)/email-login')
   }
@@ -26,12 +29,12 @@ export default function LoginScreen() {
       backgroundColor="#131416"
       justifyContent="flex-end"
       alignItems="center"
-      paddingBottom="$8"
-      paddingHorizontal="$4"
-      gap="$6"
+      paddingBottom={insets.bottom + 24}
+      paddingHorizontal={20}
+      gap={24}
     >
       {/* Login buttons */}
-      <YStack width="100%" maxWidth={350} gap={12}>
+      <YStack width={350} alignSelf="center" gap={12}>
         {/* 이메일 로그인 */}
         <Pressable onPress={handleEmailLogin}>
           <YStack
@@ -47,6 +50,7 @@ export default function LoginScreen() {
               fontSize={16}
               fontWeight="500"
               letterSpacing={-0.3}
+              lineHeight={20}
             >
               이메일 로그인
             </Text>
@@ -64,13 +68,14 @@ export default function LoginScreen() {
             justifyContent="center"
           >
             <YStack position="absolute" left={16}>
-              <FontAwesome name="comment" size={24} color="#000000" />
+              <FontAwesome name="comment" size={28} color="#000000" />
             </YStack>
             <Text
               color="#000000"
               fontSize={16}
               fontWeight="500"
               letterSpacing={-0.3}
+              lineHeight={20}
             >
               카카오로 시작하기
             </Text>
@@ -88,13 +93,14 @@ export default function LoginScreen() {
             justifyContent="center"
           >
             <YStack position="absolute" left={16}>
-              <Ionicons name="logo-apple" size={24} color="#FFFFFF" />
+              <Ionicons name="logo-apple" size={28} color="#FFFFFF" />
             </YStack>
             <Text
               color="#FFFFFF"
               fontSize={16}
               fontWeight="500"
               letterSpacing={-0.3}
+              lineHeight={20}
             >
               애플로 시작하기
             </Text>
@@ -106,7 +112,12 @@ export default function LoginScreen() {
       <YStack alignItems="center" width="100%" gap={20}>
         {/* 회원가입 */}
         <XStack alignItems="center" gap={8}>
-          <Text color="#C5C8CE" fontSize={13} letterSpacing={-0.26}>
+          <Text
+            color="#C5C8CE"
+            fontSize={13}
+            letterSpacing={-0.26}
+            lineHeight={16.9}
+          >
             아직 헬시어 회원이 아니신가요?
           </Text>
           <Link href="/(auth)/signup" asChild>
@@ -114,6 +125,7 @@ export default function LoginScreen() {
               color="#C5C8CE"
               fontSize={14}
               letterSpacing={-0.28}
+              lineHeight={18.2}
               textDecorationLine="underline"
             >
               회원가입하기
@@ -126,7 +138,12 @@ export default function LoginScreen() {
 
         {/* 나중에 로그인 */}
         <YStack alignItems="center" gap={8}>
-          <Text color="#787C83" fontSize={14} letterSpacing={-0.28}>
+          <Text
+            color="#787C83"
+            fontSize={14}
+            letterSpacing={-0.28}
+            lineHeight={18.2}
+          >
             나중에 로그인 하시겠어요?
           </Text>
           <Pressable onPress={handleSkipLogin}>
@@ -143,6 +160,7 @@ export default function LoginScreen() {
                 color="#787C83"
                 fontSize={12}
                 letterSpacing={-0.3}
+                lineHeight={14}
               >
                 홈 둘러보기
               </Text>
