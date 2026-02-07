@@ -80,6 +80,38 @@ src/
 └── types/             # TypeScript 타입 정의
 ```
 
+## 브랜치 전략
+
+```
+main (프로덕션)  ← PR →  dev (개발/검증)  ← PR →  feature/* (기능 개발)
+```
+
+### 브랜치 구조
+
+| 브랜치 | 역할 | 머지 방식 |
+|--------|------|-----------|
+| `main` | 프로덕션 배포 브랜치 | `dev`에서 PR 머지 |
+| `dev` | 개발 통합 및 검증 브랜치 | `feature/*`에서 PR 머지 |
+| `feature/*` | 기능 개발 브랜치 | `dev`로 PR 생성 |
+
+### 작업 흐름
+
+1. `dev` 브랜치에서 `feature/기능명` 브랜치 생성
+2. 기능 개발 완료 후 `dev`로 PR 생성 (CI 통과 필수 - 설정 예정)
+3. 코드 리뷰 (필수 X) 후 `dev`에 머지
+4. `dev`에서 검증 완료 후 `main`으로 PR 생성
+5. `main` 머지 시 자동 배포 (배포 전략 협의 필요.)
+
+### 브랜치 네이밍 예시
+
+```
+feature/login          # 새 기능
+feature/food-analysis  # 새 기능
+fix/auth-token         # 버그 수정
+chore/update-deps      # 설정/환경 변경
+refactor/state-mgmt    # 리팩토링
+```
+
 ## 커밋 컨벤션
 
 이 프로젝트는 [Conventional Commits](https://www.conventionalcommits.org/ko/v1.0.0/) 스타일을 권장합니다.
