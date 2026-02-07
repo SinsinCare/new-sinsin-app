@@ -12,14 +12,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#007AFF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mediology.sinsin",
+      "bundleIdentifier": "com.mediology.sinsin-care",
       "deploymentTarget": "14.0",
+      "buildNumber": "2",
       "infoPlist": {
         "NSHealthShareUsageDescription": "건강 데이터를 읽어 맞춤형 건강 관리를 제공합니다.",
-        "NSHealthUpdateUsageDescription": "건강 데이터를 기록합니다."
+        "NSHealthUpdateUsageDescription": "건강 데이터를 기록합니다.",
+        "NSMicrophoneUsageDescription": "AI 상담원과의 음성 대화를 위해 마이크 접근 권한이 필요합니다.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -27,7 +32,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#007AFF"
       },
-      "package": "com.mediology.sinsin",
+      "package": "com.mediology.sinsin-care",
       "edgeToEdgeEnabled": true,
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
@@ -36,7 +41,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.health.READ_STEPS",
         "android.permission.health.READ_SLEEP",
-        "android.permission.health.READ_HYDRATION"
+        "android.permission.health.READ_HYDRATION",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -61,6 +67,12 @@
     "scheme": "sinsin",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "40c02a9a-5bfa-42f1-84db-85faa562f011"
+      }
     }
   }
 }
