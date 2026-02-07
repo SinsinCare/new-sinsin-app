@@ -1,30 +1,26 @@
 import { createTamagui } from '@tamagui/core'
-import { config } from '@tamagui/config/v3'
+import { tokens } from './src/theme/tokens'
+import { bodyFont, headingFont } from './src/theme/fonts'
+import { lightTheme, darkTheme } from './src/theme/themes'
 
 const appConfig = createTamagui({
-  ...config,
+  tokens,
+  fonts: {
+    body: bodyFont,
+    heading: headingFont,
+  },
   themes: {
-    ...config.themes,
-    light: {
-      ...config.themes.light,
-      primary: '#007AFF',
-      secondary: '#5856D6',
-      success: '#34C759',
-      warning: '#FF9500',
-      danger: '#FF3B30',
-      background: '#F2F2F7',
-      cardBackground: 'rgba(255, 255, 255, 0.7)',
-    },
-    dark: {
-      ...config.themes.dark,
-      primary: '#0A84FF',
-      secondary: '#5E5CE6',
-      success: '#30D158',
-      warning: '#FF9F0A',
-      danger: '#FF453A',
-      background: '#000000',
-      cardBackground: 'rgba(30, 30, 30, 0.7)',
-    },
+    light: lightTheme,
+    dark: darkTheme,
+  },
+  media: {
+    sm: { maxWidth: 860 },
+    gtSm: { minWidth: 861 },
+    short: { maxHeight: 820 },
+    tall: { minHeight: 821 },
+  },
+  settings: {
+    styleCompat: 'react-native',
   },
 })
 

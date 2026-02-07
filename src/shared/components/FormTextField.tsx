@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Pressable, TextInput, type KeyboardTypeOptions } from 'react-native'
 import { YStack, XStack, Text, Input } from 'tamagui'
+import { tokens } from '../../theme/tokens'
 import { Controller, type Control, type FieldValues, type Path, type RegisterOptions } from 'react-hook-form'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -43,14 +44,14 @@ export function FormTextField<T extends FieldValues>({
 
   const hasError = (error: any) => !!error
   const getBorderColor = (error: any) => {
-    if (hasError(error)) return '#FF3B30'
-    if (isFocused) return '#5464F2'
-    return 'rgba(218,223,230,0.6)'
+    if (hasError(error)) return '$danger'
+    if (isFocused) return '$primary'
+    return '$borderColor'
   }
   const getLabelColor = (error: any) => {
-    if (hasError(error)) return '#FF3B30'
-    if (isFocused) return '#5464F2'
-    return '#17191C'
+    if (hasError(error)) return '$danger'
+    if (isFocused) return '$primary'
+    return '$color'
   }
 
   return (
@@ -96,7 +97,7 @@ export function FormTextField<T extends FieldValues>({
               height={50}
               paddingHorizontal={0}
               fontSize={16}
-              color="#17191C"
+              color="$color"
               letterSpacing={-0.3}
               onFocus={() => setIsFocused(true)}
               onBlur={() => {
@@ -113,14 +114,14 @@ export function FormTextField<T extends FieldValues>({
                 hitSlop={8}
                 style={{ padding: 4 }}
               >
-                <Ionicons name="close-circle" size={20} color="#787C83" />
+                <Ionicons name="close-circle" size={20} color={tokens.color.grey5.val} />
               </Pressable>
             )}
           </XStack>
           {error?.message && (
             <Text
               fontSize={12}
-              color="#FF3B30"
+              color="$danger"
               letterSpacing={-0.3}
               paddingTop={6}
             >
