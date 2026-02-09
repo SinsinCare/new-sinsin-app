@@ -18,7 +18,7 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
       </XStack>
       <Text color="$danger">{message}</Text>
       {onRetry && (
-        <Button variant="outline" size="small" onPress={onRetry}>
+        <Button variant="outline" buttonSize="small" onPress={onRetry}>
           다시 시도
         </Button>
       )}

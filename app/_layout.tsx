@@ -1,13 +1,16 @@
-import { useEffect } from 'react'
-import { TamaguiProvider } from '@tamagui/core'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { useFonts } from 'expo-font'
-import { Stack, useRouter, useSegments } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
-import config from '../tamagui.config'
-import { queryClient } from '../src/services/queryClient'
-import { useAuth } from '../src/hooks'
-import { LoadingScreen } from '../src/shared/components'
+import "@tamagui/native/setup-teleport"
+
+import { useEffect } from "react"
+import { TamaguiProvider } from "tamagui"
+import { PortalProvider } from "@tamagui/portal"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { useFonts } from "expo-font"
+import { Stack, useRouter, useSegments } from "expo-router"
+import { StatusBar } from "expo-status-bar"
+import config from "../tamagui.config"
+import { queryClient } from "../src/services/queryClient"
+import { useAuth } from "../src/hooks"
+import { LoadingScreen } from "../src/shared/components"
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -17,12 +20,12 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return
 
-    const inAuthGroup = segments[0] === '(auth)'
+    const inAuthGroup = segments[0] === "(auth)"
 
     if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/(auth)/login')
+      router.replace("/(auth)/login")
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)/home')
+      router.replace("/(tabs)/home")
     }
   }, [isAuthenticated, isLoading, segments, router])
 
@@ -36,6 +39,8 @@ function RootLayoutNav() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="create-post" />
+        <Stack.Screen name="post/[id]" />
       </Stack>
     </>
   )
@@ -43,10 +48,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    'Pretendard-Regular': require('../assets/fonts/Pretendard-Regular.otf'),
-    'Pretendard-Medium': require('../assets/fonts/Pretendard-Medium.otf'),
-    'Pretendard-SemiBold': require('../assets/fonts/Pretendard-SemiBold.otf'),
-    'Pretendard-Bold': require('../assets/fonts/Pretendard-Bold.otf'),
+    "Pretendard-Regular": require("../assets/fonts/Pretendard-Regular.otf"),
+    "Pretendard-Medium": require("../assets/fonts/Pretendard-Medium.otf"),
+    "Pretendard-SemiBold": require("../assets/fonts/Pretendard-SemiBold.otf"),
+    "Pretendard-Bold": require("../assets/fonts/Pretendard-Bold.otf"),
   })
 
   if (!loaded) return null
@@ -54,7 +59,9 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <TamaguiProvider config={config} defaultTheme="light">
-        <RootLayoutNav />
+        <PortalProvider shouldAddRootHost>
+          <RootLayoutNav />
+        </PortalProvider>
       </TamaguiProvider>
     </QueryClientProvider>
   )
