@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useState, useCallback } from "react"
 import { ScrollView } from "react-native"
 import { YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -13,16 +13,18 @@ import { ConsultHeader } from "@/src/features/consultation/components/ConsultHea
 import { CategorySection } from "@/src/features/consultation/components/CategorySection"
 import { FaqSection } from "@/src/features/consultation/components/FaqSection"
 import { HistorySection } from "@/src/features/consultation/components/HistorySection"
+import { FaqDetailSheet } from "@/src/features/consultation/components/FaqDetailSheet"
 
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
+  const [selectedFaq, setSelectedFaq] = useState<FaqItem | null>(null)
 
   const handleCategoryPress = useCallback((key: ChatCategory) => {
     console.log("Category selected:", key)
   }, [])
 
   const handleFaqPress = useCallback((item: FaqItem) => {
-    console.log("FAQ selected:", item.question)
+    setSelectedFaq(item)
   }, [])
 
   const handleHistoryPress = useCallback((id: string) => {
@@ -50,6 +52,12 @@ export default function ConsultScreen() {
           />
         </YStack>
       </ScrollView>
+
+      <FaqDetailSheet
+        item={selectedFaq}
+        open={selectedFaq !== null}
+        onClose={() => setSelectedFaq(null)}
+      />
     </YStack>
   )
 }

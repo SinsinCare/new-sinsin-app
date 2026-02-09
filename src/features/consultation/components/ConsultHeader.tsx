@@ -3,7 +3,7 @@ import { YStack, Text } from "tamagui"
 export function ConsultHeader() {
   return (
     <YStack
-      paddingHorizontal="$4"
+      paddingHorizontal="$5"
       paddingBottom="$3"
       borderBottomWidth={1}
       borderBottomColor="$borderColor"

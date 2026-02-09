@@ -16,7 +16,7 @@ export function HistorySection({
   onSeeAll,
 }: HistorySectionProps) {
   return (
-    <YStack paddingHorizontal="$4" gap="$3">
+    <YStack paddingHorizontal="$5" gap="$3">
       <XStack justifyContent="space-between" alignItems="center">
         <Text fontSize="$5" fontWeight="700" color="$grey3">
           이전 대화

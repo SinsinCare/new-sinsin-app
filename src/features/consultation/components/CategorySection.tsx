@@ -9,7 +9,7 @@ interface CategorySectionProps {
 
 export function CategorySection({ onCategoryPress }: CategorySectionProps) {
   return (
-    <YStack paddingHorizontal="$4" gap="$3">
+    <YStack paddingHorizontal="$5" gap="$3">
       <Text fontSize="$5" fontWeight="700" color="$grey3">
         상담 카테고리
       </Text>
@@ -18,8 +18,8 @@ export function CategorySection({ onCategoryPress }: CategorySectionProps) {
         {CATEGORY_LIST.map((category) => (
           <YStack
             key={category.key}
-            flexBasis="48%"
-            flexGrow={0}
+            width="47%"
+            flexGrow={1}
             flexShrink={0}
           >
             <CategoryCard category={category} onPress={onCategoryPress} />

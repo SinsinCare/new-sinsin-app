@@ -16,7 +16,7 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
       <XStack
         justifyContent="space-between"
         alignItems="center"
-        paddingHorizontal="$4"
+        paddingHorizontal="$5"
       >
         <Text fontSize="$5" fontWeight="700" color="$grey3">
           자주 하는 질문
@@ -41,7 +41,7 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
         contentContainerStyle={{
           flexDirection: "row",
           gap: 12,
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
         }}
       >
         {items.map((item) => (

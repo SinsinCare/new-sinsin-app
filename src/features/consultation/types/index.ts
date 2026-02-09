@@ -13,6 +13,7 @@ export interface FaqItem {
   id: string
   category: ChatCategory
   question: string
+  answer: string
 }
 
 export interface ConsultHistoryItem {
