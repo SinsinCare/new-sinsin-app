@@ -1,4 +1,5 @@
-import type { CategoryMeta, FaqItem, ConsultHistoryItem } from "../types"
+import type { ChatCategory } from "@/src/types/models"
+import type { CategoryMeta, FaqItem, ConsultHistoryItem, QuickQuestion } from "../types"
 
 export const CATEGORY_LIST: CategoryMeta[] = [
   {
@@ -164,6 +165,39 @@ export const MOCK_HISTORY_LIST: ConsultHistoryItem[] = [
     timestamp: sixDaysAgo,
   },
 ]
+
+export const QUICK_QUESTIONS: Record<ChatCategory, QuickQuestion[]> = {
+  diet: [
+    { id: "qd-1", category: "diet", text: "오늘 뭐 먹으면 좋을까요?" },
+    { id: "qd-2", category: "diet", text: "칼륨 낮은 과일 추천해주세요" },
+    { id: "qd-3", category: "diet", text: "하루 단백질 섭취량은?" },
+  ],
+  medicine: [
+    { id: "qm-1", category: "medicine", text: "혈압약 복용 시간이 궁금해요" },
+    { id: "qm-2", category: "medicine", text: "약 부작용이 걱정돼요" },
+    { id: "qm-3", category: "medicine", text: "영양제 같이 먹어도 되나요?" },
+  ],
+  dialysis: [
+    { id: "qdl-1", category: "dialysis", text: "투석 후 피로감 줄이는 법" },
+    { id: "qdl-2", category: "dialysis", text: "수분 섭취 기준이 궁금해요" },
+    { id: "qdl-3", category: "dialysis", text: "투석 중 식사는 어떻게?" },
+  ],
+  checkup: [
+    { id: "qc-1", category: "checkup", text: "GFR 수치 해석 방법" },
+    { id: "qc-2", category: "checkup", text: "혈액검사 항목이 궁금해요" },
+    { id: "qc-3", category: "checkup", text: "다음 검사 준비사항은?" },
+  ],
+  transplant: [
+    { id: "qt-1", category: "transplant", text: "이식 후 식단 관리법" },
+    { id: "qt-2", category: "transplant", text: "면역억제제 복용 주의사항" },
+    { id: "qt-3", category: "transplant", text: "이식 대기 중 관리법" },
+  ],
+  welfare: [
+    { id: "qw-1", category: "welfare", text: "의료비 지원 제도가 있나요?" },
+    { id: "qw-2", category: "welfare", text: "장애등급 신청 방법" },
+    { id: "qw-3", category: "welfare", text: "보험 혜택 알려주세요" },
+  ],
+}
 
 /** 카테고리 key로 메타 정보 조회 */
 export function getCategoryMeta(key: string): CategoryMeta | undefined {

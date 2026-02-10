@@ -23,3 +23,9 @@ export interface ConsultHistoryItem {
   firstAnswer: string
   timestamp: Date
 }
+
+export interface QuickQuestion {
+  id: string
+  category: ChatCategory
+  text: string
+}
