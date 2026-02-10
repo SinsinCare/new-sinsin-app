@@ -20,5 +20,6 @@ export interface ConsultHistoryItem {
   id: string
   category: ChatCategory
   firstQuestion: string
+  firstAnswer: string
   timestamp: Date
 }

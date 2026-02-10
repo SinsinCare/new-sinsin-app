@@ -41,6 +41,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="create-post" />
         <Stack.Screen name="post/[id]" />
+        <Stack.Screen name="consultation-history" />
       </Stack>
     </>
   )

@@ -7,6 +7,7 @@ import type { ConsultHistoryItem } from "../types"
 interface HistoryCardProps {
   item: ConsultHistoryItem
   onPress: (id: string) => void
+  showAnswer?: boolean
 }
 
 function formatTimestamp(date: Date): string {
@@ -32,7 +33,11 @@ function formatTimestamp(date: Date): string {
   return `${diffDays}일 전`
 }
 
-export function HistoryCard({ item, onPress }: HistoryCardProps) {
+export function HistoryCard({
+  item,
+  onPress,
+  showAnswer = false,
+}: HistoryCardProps) {
   const meta = getCategoryMeta(item.category)
 
   return (
@@ -41,8 +46,31 @@ export function HistoryCard({ item, onPress }: HistoryCardProps) {
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
       <GlassmorphicCard variant="flat" padding="$3" borderColor="$borderColor">
-        <YStack gap="$1">
+        <YStack gap="$2">
           <XStack justifyContent="space-between" alignItems="center">
+            <Text
+              fontWeight="600"
+              fontSize="$4"
+              color="$color"
+              flex={1}
+              numberOfLines={1}
+            >
+              {item.firstQuestion}
+            </Text>
+            <Text fontSize="$3" color="$grey6" marginLeft="$2">
+              {formatTimestamp(item.timestamp)}
+            </Text>
+          </XStack>
+          {showAnswer && item.firstAnswer ? (
+            <Text
+              fontSize="$3"
+              color="$grey5"
+              numberOfLines={2}
+              lineHeight={18}
+            >
+              {item.firstAnswer}
+            </Text>
+          ) : (
             <XStack gap="$2" alignItems="center">
               <View
                 style={{
@@ -52,17 +80,11 @@ export function HistoryCard({ item, onPress }: HistoryCardProps) {
                   backgroundColor: meta?.color ?? "#999",
                 }}
               />
-              <Text fontWeight="600" fontSize="$4" color="$color">
+              <Text fontSize="$3" color="$grey5">
                 {meta?.label ?? item.category}
               </Text>
             </XStack>
-            <Text fontSize="$3" color="$grey6">
-              {formatTimestamp(item.timestamp)}
-            </Text>
-          </XStack>
-          <Text fontSize="$4" color="$grey4" numberOfLines={1}>
-            {item.firstQuestion}
-          </Text>
+          )}
         </YStack>
       </GlassmorphicCard>
     </Pressable>

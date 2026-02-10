@@ -2,6 +2,7 @@ import { useState, useCallback } from "react"
 import { ScrollView } from "react-native"
 import { YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useRouter } from "expo-router"
 
 import type { ChatCategory } from "@/src/types/models"
 import type { FaqItem } from "@/src/features/consultation/types"
@@ -17,6 +18,7 @@ import { FaqDetailSheet } from "@/src/features/consultation/components/FaqDetail
 
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
   const [selectedFaq, setSelectedFaq] = useState<FaqItem | null>(null)
 
   const handleCategoryPress = useCallback((key: ChatCategory) => {
@@ -32,8 +34,8 @@ export default function ConsultScreen() {
   }, [])
 
   const handleSeeAll = useCallback(() => {
-    console.log("See all history")
-  }, [])
+    router.push("/consultation-history")
+  }, [router])
 
   return (
     <YStack flex={1} backgroundColor="$background" paddingTop={insets.top}>
