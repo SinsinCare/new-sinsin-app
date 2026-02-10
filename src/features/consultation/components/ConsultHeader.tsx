@@ -15,7 +15,7 @@ export function ConsultHeader() {
         color="$color"
         textAlign="center"
       >
-        AI 기반 상담
+        상담
       </Text>
     </YStack>
   )

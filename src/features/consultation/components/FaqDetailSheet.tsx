@@ -3,6 +3,7 @@ import { ScrollView, Pressable, View } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useRouter } from "expo-router"
 import { tokens } from "@/src/theme/tokens"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
 import { Button } from "@/src/shared/components"
@@ -17,6 +18,7 @@ interface FaqDetailSheetProps {
 
 export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
 
   if (!item) return null
 
@@ -132,7 +134,16 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
             <Button
               variant="primary"
               fullWidth
-              onPress={() => console.log("Start chat for FAQ:", item.id)}
+              onPress={() => {
+                onClose()
+                router.push({
+                  pathname: "/chat",
+                  params: {
+                    category: item.category,
+                    initialMessage: item.question,
+                  },
+                })
+              }}
             >
               <XStack alignItems="center" gap="$2">
                 <Ionicons name="chatbubble" size={18} color="white" />

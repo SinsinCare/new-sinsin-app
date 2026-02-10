@@ -21,9 +21,12 @@ export default function ConsultScreen() {
   const router = useRouter()
   const [selectedFaq, setSelectedFaq] = useState<FaqItem | null>(null)
 
-  const handleCategoryPress = useCallback((key: ChatCategory) => {
-    console.log("Category selected:", key)
-  }, [])
+  const handleCategoryPress = useCallback(
+    (key: ChatCategory) => {
+      router.push({ pathname: "/chat", params: { category: key } })
+    },
+    [router],
+  )
 
   const handleFaqPress = useCallback((item: FaqItem) => {
     setSelectedFaq(item)
