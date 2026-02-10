@@ -1,4 +1,4 @@
-import { tokens } from './tokens'
+import { tokens } from "./tokens"
 
 export const lightTheme = {
   background: tokens.color.pureWhite,
@@ -6,13 +6,13 @@ export const lightTheme = {
   backgroundPress: tokens.color.grey7,
   backgroundFocus: tokens.color.grey8,
   backgroundStrong: tokens.color.white,
-  backgroundTransparent: 'rgba(255, 255, 255, 0)',
+  backgroundTransparent: "rgba(255, 255, 255, 0)",
 
   color: tokens.color.black,
   colorHover: tokens.color.grey1,
   colorPress: tokens.color.grey2,
   colorFocus: tokens.color.grey1,
-  colorTransparent: 'rgba(0, 0, 0, 0)',
+  colorTransparent: "rgba(0, 0, 0, 0)",
   colorSubtle: tokens.color.grey5,
 
   borderColor: tokens.color.grey8,
@@ -21,7 +21,7 @@ export const lightTheme = {
   borderColorPress: tokens.color.grey7,
 
   placeholderColor: tokens.color.grey6,
-  outlineColor: 'rgba(238, 97, 69, 0.3)',
+  outlineColor: "rgba(238, 97, 69, 0.3)",
 
   // Semantic - Primary (coral/red)
   primary: tokens.color.primary7,
@@ -52,13 +52,13 @@ export const darkTheme: typeof lightTheme = {
   backgroundPress: tokens.color.grey2,
   backgroundFocus: tokens.color.grey1,
   backgroundStrong: tokens.color.grey1,
-  backgroundTransparent: 'rgba(0, 0, 0, 0)',
+  backgroundTransparent: "rgba(0, 0, 0, 0)",
 
   color: tokens.color.white,
   colorHover: tokens.color.grey8,
   colorPress: tokens.color.grey7,
   colorFocus: tokens.color.grey8,
-  colorTransparent: 'rgba(255, 255, 255, 0)',
+  colorTransparent: "rgba(255, 255, 255, 0)",
   colorSubtle: tokens.color.grey6,
 
   borderColor: tokens.color.grey3,
@@ -67,7 +67,7 @@ export const darkTheme: typeof lightTheme = {
   borderColorPress: tokens.color.grey4,
 
   placeholderColor: tokens.color.grey5,
-  outlineColor: 'rgba(238, 97, 69, 0.3)',
+  outlineColor: "rgba(238, 97, 69, 0.3)",
 
   // Semantic - Primary
   primary: tokens.color.primary6,

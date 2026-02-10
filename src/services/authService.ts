@@ -1,5 +1,5 @@
-import type { IAuthService, AppUser } from './types/serviceTypes'
-import { isMockMode } from '../config/appConfig'
+import type { IAuthService, AppUser } from "./types/serviceTypes"
+import { isMockMode } from "../config/appConfig"
 
 function getRealAuthService(): IAuthService {
   /* eslint-disable @typescript-eslint/no-require-imports */
@@ -11,8 +11,8 @@ function getRealAuthService(): IAuthService {
     onAuthStateChanged,
     GoogleAuthProvider,
     signInWithCredential,
-  } = require('firebase/auth')
-  const { auth } = require('./firebase')
+  } = require("firebase/auth")
+  const { auth } = require("./firebase")
   /* eslint-enable @typescript-eslint/no-require-imports */
 
   return {
@@ -52,7 +52,7 @@ function getAuthService(): IAuthService {
   if (cachedService) return cachedService
 
   if (isMockMode()) {
-    const { mockAuthService } = require('./mock') // eslint-disable-line @typescript-eslint/no-require-imports
+    const { mockAuthService } = require("./mock") // eslint-disable-line @typescript-eslint/no-require-imports
     cachedService = mockAuthService
   } else {
     cachedService = getRealAuthService()
@@ -62,8 +62,10 @@ function getAuthService(): IAuthService {
 }
 
 export const authService: IAuthService = {
-  signInWithEmail: (email, password) => getAuthService().signInWithEmail(email, password),
-  signUpWithEmail: (email, password) => getAuthService().signUpWithEmail(email, password),
+  signInWithEmail: (email, password) =>
+    getAuthService().signInWithEmail(email, password),
+  signUpWithEmail: (email, password) =>
+    getAuthService().signUpWithEmail(email, password),
   signInWithGoogle: (idToken) => getAuthService().signInWithGoogle(idToken),
   signOut: () => getAuthService().signOut(),
   getCurrentUser: () => getAuthService().getCurrentUser(),

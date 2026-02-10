@@ -1,4 +1,4 @@
-import { createFont } from '@tamagui/core'
+import { createFont } from "@tamagui/core"
 
 // Tamagui key → 디자인 시스템 매핑:
 // key 3  = Body 3  (12px, lineHeight 22, SemiBold)
@@ -11,7 +11,7 @@ import { createFont } from '@tamagui/core'
 // key 10 = Heading 1 (28px, lineHeight 40, SemiBold)
 
 export const bodyFont = createFont({
-  family: 'Pretendard-Regular',
+  family: "Pretendard-Regular",
   size: {
     1: 10,
     2: 11,
@@ -39,11 +39,11 @@ export const bodyFont = createFont({
     true: 24,
   },
   weight: {
-    1: '400',
-    2: '500',
-    3: '600',
-    4: '700',
-    true: '400',
+    1: "400",
+    2: "500",
+    3: "600",
+    4: "700",
+    true: "400",
   },
   letterSpacing: {
     1: 0,
@@ -54,25 +54,25 @@ export const bodyFont = createFont({
   },
   // Android에서 fontWeight 적용에 필수
   face: {
-    400: { normal: 'Pretendard-Regular' },
-    500: { normal: 'Pretendard-Medium' },
-    600: { normal: 'Pretendard-SemiBold' },
-    700: { normal: 'Pretendard-Bold' },
+    400: { normal: "Pretendard-Regular" },
+    500: { normal: "Pretendard-Medium" },
+    600: { normal: "Pretendard-SemiBold" },
+    700: { normal: "Pretendard-Bold" },
   },
 })
 
 export const headingFont = createFont({
   ...bodyFont,
-  family: 'Pretendard-SemiBold',
+  family: "Pretendard-SemiBold",
   weight: {
-    1: '600',
-    2: '600',
-    3: '700',
-    4: '700',
-    true: '600',
+    1: "600",
+    2: "600",
+    3: "700",
+    4: "700",
+    true: "600",
   },
   face: {
-    600: { normal: 'Pretendard-SemiBold' },
-    700: { normal: 'Pretendard-Bold' },
+    600: { normal: "Pretendard-SemiBold" },
+    700: { normal: "Pretendard-Bold" },
   },
 })

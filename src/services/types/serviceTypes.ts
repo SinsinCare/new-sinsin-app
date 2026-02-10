@@ -5,7 +5,7 @@ import type {
   ChatConversation,
   ChatMessage,
   DailyHealthLog,
-} from '../../types'
+} from "../../types"
 
 // Firebase User와 MockUser 모두 호환되는 최소 인터페이스
 export interface AppUser {
@@ -28,15 +28,20 @@ export interface IAuthService {
 export interface IFirestoreService {
   getUserProfile(userId: string): Promise<UserProfile | null>
   setUserProfile(profile: UserProfile): Promise<void>
-  updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<void>
+  updateUserProfile(
+    userId: string,
+    updates: Partial<UserProfile>,
+  ): Promise<void>
   getHealthRecords(userId: string, limitCount?: number): Promise<HealthRecord[]>
-  addHealthRecord(record: Omit<HealthRecord, 'id'>): Promise<string>
+  addHealthRecord(record: Omit<HealthRecord, "id">): Promise<string>
   getFoodRecords(userId: string, date: Date): Promise<FoodRecord[]>
-  addFoodRecord(record: Omit<FoodRecord, 'id'>): Promise<string>
+  addFoodRecord(record: Omit<FoodRecord, "id">): Promise<string>
   getConversations(userId: string): Promise<ChatConversation[]>
-  createConversation(conversation: Omit<ChatConversation, 'id'>): Promise<string>
+  createConversation(
+    conversation: Omit<ChatConversation, "id">,
+  ): Promise<string>
   getMessages(conversationId: string): Promise<ChatMessage[]>
-  addMessage(message: Omit<ChatMessage, 'id'>): Promise<string>
+  addMessage(message: Omit<ChatMessage, "id">): Promise<string>
   getDailyLog(userId: string, date: Date): Promise<DailyHealthLog | null>
-  setDailyLog(log: Omit<DailyHealthLog, 'id'>): Promise<void>
+  setDailyLog(log: Omit<DailyHealthLog, "id">): Promise<void>
 }

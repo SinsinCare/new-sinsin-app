@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
-import { useAuthStore, useUserStore } from '../stores'
-import { authService } from '../services/authService'
-import { firestoreService } from '../services/firestoreService'
+import { useEffect } from "react"
+import { useAuthStore, useUserStore } from "../stores"
+import { authService } from "../services/authService"
+import { firestoreService } from "../services/firestoreService"
 
 export function useAuth() {
-  const { user, isLoading, isAuthenticated, setUser, setLoading } = useAuthStore()
+  const { user, isLoading, isAuthenticated, setUser, setLoading } =
+    useAuthStore()
   const { setProfile, reset: resetProfile } = useUserStore()
 
   useEffect(() => {

@@ -27,7 +27,7 @@ export interface NutritionInfo {
 }
 
 export interface KidneyAssessment {
-  overallSafety: 'safe' | 'caution' | 'warning'
+  overallSafety: "safe" | "caution" | "warning"
   warnings: string[]
   recommendations: string[]
 }

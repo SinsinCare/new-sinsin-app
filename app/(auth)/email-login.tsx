@@ -1,11 +1,11 @@
-import { Pressable } from 'react-native'
-import { YStack, XStack, Text, Separator } from 'tamagui'
-import { router } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useForm } from 'react-hook-form'
-import { Ionicons } from '@expo/vector-icons'
-import { useAuth } from '../../src/hooks'
-import { FormTextField, ErrorMessage } from '../../src/shared/components'
+import { Pressable } from "react-native"
+import { YStack, XStack, Text, Separator } from "tamagui"
+import { router } from "expo-router"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useForm } from "react-hook-form"
+import { Ionicons } from "@expo/vector-icons"
+import { useAuth } from "../../src/hooks"
+import { FormTextField, ErrorMessage } from "../../src/shared/components"
 
 interface LoginForm {
   email: string
@@ -16,15 +16,19 @@ export default function EmailLoginScreen() {
   const { signInWithEmail, isLoading } = useAuth()
   const insets = useSafeAreaInsets()
 
-  const { control, handleSubmit, formState: { isValid, errors } } = useForm<LoginForm>({
-    defaultValues: { email: '', password: '' },
-    mode: 'onChange',
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<LoginForm>({
+    defaultValues: { email: "", password: "" },
+    mode: "onChange",
   })
 
   const onSubmit = async (data: LoginForm) => {
     try {
       await signInWithEmail(data.email, data.password)
-      router.replace('/(tabs)/home')
+      router.replace("/(tabs)/home")
     } catch (e: any) {
       // TODO: 서버 에러 처리
     }
@@ -36,7 +40,7 @@ export default function EmailLoginScreen() {
       <YStack height={56} justifyContent="center">
         <Pressable
           onPress={() => router.back()}
-          style={{ position: 'absolute', left: 9, padding: 4 }}
+          style={{ position: "absolute", left: 9, padding: 4 }}
         >
           <Ionicons name="chevron-back" size={24} color="#17191C" />
         </Pressable>
@@ -64,10 +68,10 @@ export default function EmailLoginScreen() {
               placeholder="이메일 주소를 입력해주세요"
               inputType="email"
               rules={{
-                required: '이메일을 입력해주세요.',
+                required: "이메일을 입력해주세요.",
                 pattern: {
                   value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: '올바른 이메일 형식이 아닙니다.',
+                  message: "올바른 이메일 형식이 아닙니다.",
                 },
               }}
             />
@@ -79,7 +83,7 @@ export default function EmailLoginScreen() {
               placeholder="비밀번호를 입력해주세요"
               inputType="password"
               rules={{
-                required: '비밀번호를 입력해주세요.',
+                required: "비밀번호를 입력해주세요.",
               }}
             />
           </YStack>
@@ -92,7 +96,7 @@ export default function EmailLoginScreen() {
             disabled={!isValid || isLoading}
           >
             <YStack
-              backgroundColor={isValid ? '#5464F2' : '#5464F247'}
+              backgroundColor={isValid ? "#5464F2" : "#5464F247"}
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}
