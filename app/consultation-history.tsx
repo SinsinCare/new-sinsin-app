@@ -67,7 +67,7 @@ export default function ConsultationHistoryScreen() {
           flex={1}
           textAlign="center"
         >
-          상담 내역
+          이전 대화
         </Text>
         {/* Temporary empty view to balance the header - TODO: Search button  */}
         <View style={{ width: 24 }} />
