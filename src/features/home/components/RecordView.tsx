@@ -9,19 +9,10 @@ interface RecordViewProps {
 }
 
 const RecordView = ({ selectedDate }: RecordViewProps) => {
-  const isToday = selectedDate.toDateString() === new Date().toDateString()
-
-  const dateLabel = isToday
-    ? "오늘"
-    : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`
-
   return (
     <>
       <View style={styles.characterContainer}>
-        <CharacterSection />
-        <ThemedText style={styles.welcomeText}>
-          {isToday ? "오늘 하루도 건강하게!" : `${dateLabel}의 기록`}
-        </ThemedText>
+        <CharacterSection selectedDate={selectedDate} />
       </View>
       <View style={styles.buttonContainer}>
         <Pressable
