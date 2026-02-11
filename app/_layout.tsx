@@ -1,5 +1,3 @@
-import "@tamagui/native/setup-teleport"
-
 import { useEffect } from "react"
 import { TamaguiProvider } from "tamagui"
 import { PortalProvider } from "@tamagui/portal"
@@ -63,7 +61,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <TamaguiProvider config={config} defaultTheme="light">
-        <PortalProvider shouldAddRootHost>
+        <PortalProvider>
           <RootLayoutNav />
         </PortalProvider>
       </TamaguiProvider>
