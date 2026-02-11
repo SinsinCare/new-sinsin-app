@@ -4,6 +4,7 @@ import CharacterSection from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../types"
 import HydrationTracker from "./HydrationTracker"
+import WeightEdemaTracker from "./WeightEdemaTracker"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -28,6 +29,8 @@ const RecordView = ({
       />
 
       <HydrationTracker />
+
+      <WeightEdemaTracker />
     </ScrollView>
   )
 }

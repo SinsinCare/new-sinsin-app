@@ -1,0 +1,30 @@
+import React, { ReactNode } from "react"
+import { Text, XStack, YStack } from "tamagui"
+
+interface RecordCardProps {
+  icon: ReactNode
+  title: string
+  children: ReactNode
+}
+
+const RecordCard = ({ icon, title, children }: RecordCardProps) => {
+  return (
+    <XStack
+      backgroundColor="$backgroundFocus"
+      borderRadius="$6"
+      paddingVertical="$4"
+      paddingHorizontal="$4"
+      gap="$3"
+    >
+      {icon}
+      <YStack flex={1} gap="$2">
+        <Text fontSize="$4" fontWeight="600" color="$gray12">
+          {title}
+        </Text>
+        {children}
+      </YStack>
+    </XStack>
+  )
+}
+
+export default RecordCard
