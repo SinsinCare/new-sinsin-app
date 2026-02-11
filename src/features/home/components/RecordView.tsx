@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/themed-text"
 import { Image } from "expo-image"
 import { Pressable, StyleSheet } from "react-native"
 import { View } from "tamagui"
+import CharacterSection from "./CharacterSection"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -17,12 +18,7 @@ const RecordView = ({ selectedDate }: RecordViewProps) => {
   return (
     <>
       <View style={styles.characterContainer}>
-        <Image
-          source={require("@/assets/images/kidney-character.png")}
-          style={styles.characterImage}
-          contentFit="contain"
-          transition={500}
-        />
+        <CharacterSection />
         <ThemedText style={styles.welcomeText}>
           {isToday ? "오늘 하루도 건강하게!" : `${dateLabel}의 기록`}
         </ThemedText>
