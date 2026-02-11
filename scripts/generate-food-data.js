@@ -5,25 +5,25 @@
  * Run: node scripts/generate-food-data.js
  */
 
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs")
+const path = require("path")
 
-const csvPath = path.join(__dirname, '..', 'assets', '식품성분표 - Sheet1.csv')
+const csvPath = path.join(__dirname, "..", "assets", "식품성분표 - Sheet1.csv")
 const outputPath = path.join(
   __dirname,
-  '..',
-  'src',
-  'features',
-  'recipe',
-  'data',
-  'generatedFoodData.ts',
+  "..",
+  "src",
+  "features",
+  "recipe",
+  "data",
+  "generatedFoodData.ts",
 )
 
-const csvText = fs.readFileSync(csvPath, 'utf-8')
+const csvText = fs.readFileSync(csvPath, "utf-8")
 
 function parseCSV(text) {
   const rows = []
-  let current = ''
+  let current = ""
   let inQuotes = false
   let row = []
 
@@ -44,16 +44,16 @@ function parseCSV(text) {
     } else {
       if (ch === '"') {
         inQuotes = true
-      } else if (ch === ',') {
+      } else if (ch === ",") {
         row.push(current.trim())
-        current = ''
-      } else if (ch === '\n' || ch === '\r') {
-        if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') {
+        current = ""
+      } else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && i + 1 < text.length && text[i + 1] === "\n") {
           i++
         }
         row.push(current.trim())
-        current = ''
-        if (row.length > 1 || (row.length === 1 && row[0] !== '')) {
+        current = ""
+        if (row.length > 1 || (row.length === 1 && row[0] !== "")) {
           rows.push(row)
         }
         row = []
@@ -65,7 +65,7 @@ function parseCSV(text) {
 
   if (current || row.length > 0) {
     row.push(current.trim())
-    if (row.length > 1 || (row.length === 1 && row[0] !== '')) {
+    if (row.length > 1 || (row.length === 1 && row[0] !== "")) {
       rows.push(row)
     }
   }
@@ -74,8 +74,8 @@ function parseCSV(text) {
 }
 
 function parseNumber(value) {
-  if (!value || value === '-' || value === '') return null
-  const cleaned = value.replace(/,/g, '')
+  if (!value || value === "-" || value === "") return null
+  const cleaned = value.replace(/,/g, "")
   const num = parseFloat(cleaned)
   return isNaN(num) ? null : num
 }
@@ -83,7 +83,7 @@ function parseNumber(value) {
 const rows = parseCSV(csvText)
 console.log(`Parsed ${rows.length} rows (including header)`)
 console.log(`Header fields: ${rows[0].length}`)
-console.log(`Header: ${rows[0].join(' | ')}`)
+console.log(`Header: ${rows[0].join(" | ")}`)
 
 const foods = []
 for (let i = 1; i < rows.length; i++) {
@@ -150,5 +150,5 @@ export interface RawFoodRow {
 export const RAW_FOOD_DATA: RawFoodRow[] = ${JSON.stringify(foods)}
 `
 
-fs.writeFileSync(outputPath, tsContent, 'utf-8')
+fs.writeFileSync(outputPath, tsContent, "utf-8")
 console.log(`Written to ${outputPath}`)

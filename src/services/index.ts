@@ -1,4 +1,6 @@
-export { authService } from './authService'
-export { firestoreService } from './firestoreService'
-export { aiService } from './aiService'
-export { queryClient } from './queryClient'
+export { authService } from "./authService"
+export { firestoreService } from "./firestoreService"
+export { aiService } from "./aiService"
+export { emailService } from "./emailService"
+export { nicknameService } from "./nicknameService"
+export { queryClient } from "./queryClient"

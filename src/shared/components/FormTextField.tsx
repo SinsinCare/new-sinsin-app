@@ -1,22 +1,51 @@
-import { useState, useRef } from 'react'
-import { Pressable, TextInput, type KeyboardTypeOptions } from 'react-native'
-import { YStack, XStack, Text, Input } from 'tamagui'
-import { tokens } from '../../theme/tokens'
-import { Controller, type Control, type FieldValues, type Path, type RegisterOptions } from 'react-hook-form'
-import { Ionicons } from '@expo/vector-icons'
+import { useState, useRef } from "react"
+import { Pressable, TextInput, type KeyboardTypeOptions } from "react-native"
+import { YStack, XStack, Text, Input } from "tamagui"
+import { tokens } from "../../theme/tokens"
+import {
+  Controller,
+  type Control,
+  type FieldValues,
+  type Path,
+  type RegisterOptions,
+} from "react-hook-form"
+import { Ionicons } from "@expo/vector-icons"
 
-type InputType = 'text' | 'email' | 'password' | 'number' | 'phone'
+type InputType = "text" | "email" | "password" | "number" | "phone"
 
-const INPUT_TYPE_CONFIG: Record<InputType, {
-  keyboardType: KeyboardTypeOptions
-  autoCapitalize: 'none' | 'sentences' | 'words' | 'characters'
-  secureTextEntry: boolean
-}> = {
-  text: { keyboardType: 'default', autoCapitalize: 'sentences', secureTextEntry: false },
-  email: { keyboardType: 'email-address', autoCapitalize: 'none', secureTextEntry: false },
-  password: { keyboardType: 'default', autoCapitalize: 'none', secureTextEntry: true },
-  number: { keyboardType: 'numeric', autoCapitalize: 'none', secureTextEntry: false },
-  phone: { keyboardType: 'phone-pad', autoCapitalize: 'none', secureTextEntry: false },
+const INPUT_TYPE_CONFIG: Record<
+  InputType,
+  {
+    keyboardType: KeyboardTypeOptions
+    autoCapitalize: "none" | "sentences" | "words" | "characters"
+    secureTextEntry: boolean
+  }
+> = {
+  text: {
+    keyboardType: "default",
+    autoCapitalize: "sentences",
+    secureTextEntry: false,
+  },
+  email: {
+    keyboardType: "email-address",
+    autoCapitalize: "none",
+    secureTextEntry: false,
+  },
+  password: {
+    keyboardType: "default",
+    autoCapitalize: "none",
+    secureTextEntry: true,
+  },
+  number: {
+    keyboardType: "numeric",
+    autoCapitalize: "none",
+    secureTextEntry: false,
+  },
+  phone: {
+    keyboardType: "phone-pad",
+    autoCapitalize: "none",
+    secureTextEntry: false,
+  },
 }
 
 interface FormTextFieldProps<T extends FieldValues> {
@@ -27,6 +56,7 @@ interface FormTextFieldProps<T extends FieldValues> {
   placeholder?: string
   inputType?: InputType
   clearable?: boolean
+  autoFocus?: boolean
 }
 
 export function FormTextField<T extends FieldValues>({
@@ -35,8 +65,9 @@ export function FormTextField<T extends FieldValues>({
   rules,
   label,
   placeholder,
-  inputType = 'text',
+  inputType = "text",
   clearable = true,
+  autoFocus = false,
 }: FormTextFieldProps<T>) {
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<TextInput>(null)
@@ -44,14 +75,14 @@ export function FormTextField<T extends FieldValues>({
 
   const hasError = (error: any) => !!error
   const getBorderColor = (error: any) => {
-    if (hasError(error)) return '$danger'
-    if (isFocused) return '$primary'
-    return '$borderColor'
+    if (hasError(error)) return "$danger"
+    if (isFocused) return "$primary"
+    return "$borderColor"
   }
   const getLabelColor = (error: any) => {
-    if (hasError(error)) return '$danger'
-    if (isFocused) return '$primary'
-    return '$color'
+    if (hasError(error)) return "$danger"
+    if (isFocused) return "$primary"
+    return "$color"
   }
 
   return (
@@ -59,7 +90,10 @@ export function FormTextField<T extends FieldValues>({
       name={name}
       control={control}
       rules={rules}
-      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+      render={({
+        field: { onChange, onBlur, value },
+        fieldState: { error },
+      }) => (
         <YStack>
           {label && (
             <Text
@@ -86,12 +120,13 @@ export function FormTextField<T extends FieldValues>({
             <Input
               ref={inputRef as any}
               flex={1}
-              value={value ?? ''}
+              value={value ?? ""}
               onChangeText={onChange}
               placeholder={placeholder}
               keyboardType={config.keyboardType}
               autoCapitalize={config.autoCapitalize}
               secureTextEntry={config.secureTextEntry}
+              autoFocus={autoFocus}
               backgroundColor="transparent"
               borderWidth={0}
               height={50}
@@ -108,13 +143,17 @@ export function FormTextField<T extends FieldValues>({
             {value && isFocused && clearable && (
               <Pressable
                 onPress={() => {
-                  onChange('')
+                  onChange("")
                   inputRef.current?.focus()
                 }}
                 hitSlop={8}
                 style={{ padding: 4 }}
               >
-                <Ionicons name="close-circle" size={20} color={tokens.color.grey5.val} />
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={tokens.color.grey5.val}
+                />
               </Pressable>
             )}
           </XStack>

@@ -17,8 +17,7 @@ function getCkdSafetyLabel(score: number): {
   text: string
   color: string
 } {
-  if (score >= 80)
-    return { text: "3기 안전", color: tokens.color.sub7.val }
+  if (score >= 80) return { text: "3기 안전", color: tokens.color.sub7.val }
   if (score >= 60)
     return {
       text: "보통 — 주의 필요",
@@ -204,10 +203,7 @@ export function FoodDetailSheet({ item, open, onClose }: FoodDetailSheetProps) {
               전체 영양 성분
             </Text>
             <XStack gap="$2">
-              <NutritionGridItem
-                label="칼로리"
-                value={`${food.energy} kcal`}
-              />
+              <NutritionGridItem label="칼로리" value={`${food.energy} kcal`} />
               <NutritionGridItem label="수분" value={fmt(food.water, "g")} />
             </XStack>
             <XStack gap="$2">
@@ -218,14 +214,14 @@ export function FoodDetailSheet({ item, open, onClose }: FoodDetailSheetProps) {
               <NutritionGridItem label="지방" value={fmt(food.fat, "g")} />
             </XStack>
             <XStack gap="$2">
-              <NutritionGridItem label="식이섬유" value={fmt(food.fiber, "g")} />
+              <NutritionGridItem
+                label="식이섬유"
+                value={fmt(food.fiber, "g")}
+              />
               <NutritionGridItem label="당류" value={fmt(food.sugar, "g")} />
             </XStack>
             <XStack gap="$2">
-              <NutritionGridItem
-                label="칼슘"
-                value={fmt(food.calcium, "mg")}
-              />
+              <NutritionGridItem label="칼슘" value={fmt(food.calcium, "mg")} />
               <NutritionGridItem label="철분" value={fmt(food.iron, "mg")} />
             </XStack>
             <XStack gap="$2">

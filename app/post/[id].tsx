@@ -69,11 +69,7 @@ export default function PostDetailScreen() {
             alignItems="center"
             justifyContent="center"
           >
-            <Ionicons
-              name="person"
-              size={22}
-              color={tokens.color.grey5.val}
-            />
+            <Ionicons name="person" size={22} color={tokens.color.grey5.val} />
           </YStack>
           <YStack flex={1}>
             <Text fontSize="$5" fontWeight="600" color="$color">
@@ -105,7 +101,11 @@ export default function PostDetailScreen() {
         </YStack>
 
         {/* Divider */}
-        <YStack height={1} backgroundColor="$borderColor" marginHorizontal="$4" />
+        <YStack
+          height={1}
+          backgroundColor="$borderColor"
+          marginHorizontal="$4"
+        />
 
         {/* Actions */}
         <XStack padding="$4" justifyContent="space-between" alignItems="center">

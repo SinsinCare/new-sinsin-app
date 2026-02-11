@@ -1,43 +1,43 @@
-import { createTokens } from '@tamagui/core'
+import { createTokens } from "@tamagui/core"
 
 export const tokens = createTokens({
   color: {
     // Base
-    black: '#0D0D0D',
-    white: '#F4F4F4',
-    pureWhite: '#FFFFFF',
+    black: "#0D0D0D",
+    white: "#F4F4F4",
+    pureWhite: "#FFFFFF",
 
     // Primary (coral/red)
-    primary1: '#FFF5ED',
-    primary2: '#FFE2CB',
-    primary3: '#F9CFAD',
-    primary4: '#F1A89B',
-    primary5: '#E78D7C',
-    primary6: '#E77661',
-    primary7: '#EE6145',
-    primary8: '#F24D2D',
-    primary9: '#F82F08',
+    primary1: "#FFF5ED",
+    primary2: "#FFE2CB",
+    primary3: "#F9CFAD",
+    primary4: "#F1A89B",
+    primary5: "#E78D7C",
+    primary6: "#E77661",
+    primary7: "#EE6145",
+    primary8: "#F24D2D",
+    primary9: "#F82F08",
 
     // Sub (teal/green)
-    sub1: '#E0FFF7',
-    sub2: '#C7FFF1',
-    sub3: '#A3F0DE',
-    sub4: '#7FE6CC',
-    sub5: '#5BC5AB',
-    sub6: '#44AF94',
-    sub7: '#1D9A7A',
-    sub8: '#0D896A',
-    sub9: '#028A67',
+    sub1: "#E0FFF7",
+    sub2: "#C7FFF1",
+    sub3: "#A3F0DE",
+    sub4: "#7FE6CC",
+    sub5: "#5BC5AB",
+    sub6: "#44AF94",
+    sub7: "#1D9A7A",
+    sub8: "#0D896A",
+    sub9: "#028A67",
 
     // Greyscale
-    grey1: '#171717',
-    grey2: '#252525',
-    grey3: '#333333',
-    grey4: '#525252',
-    grey5: '#757575',
-    grey6: '#999999',
-    grey7: '#B3B3B3',
-    grey8: '#EDEDED',
+    grey1: "#171717",
+    grey2: "#252525",
+    grey3: "#333333",
+    grey4: "#525252",
+    grey5: "#757575",
+    grey6: "#999999",
+    grey7: "#B3B3B3",
+    grey8: "#EDEDED",
   },
 
   space: {
@@ -57,10 +57,10 @@ export const tokens = createTokens({
     9: 36,
     10: 40,
     true: 16,
-    '-1': -4,
-    '-2': -8,
-    '-3': -12,
-    '-4': -16,
+    "-1": -4,
+    "-2": -8,
+    "-3": -12,
+    "-4": -16,
   },
 
   size: {

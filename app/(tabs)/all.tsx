@@ -1,11 +1,11 @@
-import React from 'react'
-import { StyleSheet, View, ScrollView, Pressable, Platform } from 'react-native'
-import { Image } from 'expo-image'
-import { Ionicons } from '@expo/vector-icons'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import React from "react"
+import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
+import { Image } from "expo-image"
+import { Ionicons } from "@expo/vector-icons"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-import { ThemedText } from '@/components/themed-text'
-import { ThemedView } from '@/components/themed-view'
+import { ThemedText } from "@/components/themed-text"
+import { ThemedView } from "@/components/themed-view"
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap
@@ -15,9 +15,18 @@ interface MenuItemProps {
   showChevron?: boolean
 }
 
-const MenuItem = ({ icon, title, value, onPress, showChevron = true }: MenuItemProps) => (
+const MenuItem = ({
+  icon,
+  title,
+  value,
+  onPress,
+  showChevron = true,
+}: MenuItemProps) => (
   <Pressable
-    style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+    style={({ pressed }) => [
+      styles.menuItem,
+      pressed && styles.menuItemPressed,
+    ]}
     onPress={onPress}
   >
     <View style={styles.menuItemLeft}>
@@ -26,7 +35,9 @@ const MenuItem = ({ icon, title, value, onPress, showChevron = true }: MenuItemP
     </View>
     <View style={styles.menuItemRight}>
       {value && <ThemedText style={styles.menuValue}>{value}</ThemedText>}
-      {showChevron && <Ionicons name="chevron-forward" size={18} color="#CCC" />}
+      {showChevron && (
+        <Ionicons name="chevron-forward" size={18} color="#CCC" />
+      )}
     </View>
   </Pressable>
 )
@@ -46,7 +57,7 @@ export default function AllScreen() {
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <Image
-            source={require('@/assets/images/kidney-character.png')}
+            source={require("@/assets/images/kidney-character.png")}
             style={styles.avatar}
             contentFit="cover"
           />
@@ -65,8 +76,16 @@ export default function AllScreen() {
           <View style={styles.sectionContent}>
             <MenuItem icon="notifications-outline" title="알림 설정" />
             <MenuItem icon="lock-closed-outline" title="개인정보 관리" />
-            <MenuItem icon="information-circle-outline" title="앱 정보 및 고객센터" />
-            <MenuItem icon="star-outline" title="앱 버전" value="v1.0.0" showChevron={false} />
+            <MenuItem
+              icon="information-circle-outline"
+              title="앱 정보 및 고객센터"
+            />
+            <MenuItem
+              icon="star-outline"
+              title="앱 버전"
+              value="v1.0.0"
+              showChevron={false}
+            />
           </View>
         </View>
 
@@ -82,7 +101,9 @@ export default function AllScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <ThemedText style={styles.copyright}>(c) 2026 mediology</ThemedText>
-          <ThemedText style={styles.copyright}>(c) 2026 주식회사 메디올로지</ThemedText>
+          <ThemedText style={styles.copyright}>
+            (c) 2026 주식회사 메디올로지
+          </ThemedText>
         </View>
       </ScrollView>
     </ThemedView>
@@ -92,21 +113,21 @@ export default function AllScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   scrollContent: {
     paddingHorizontal: 20,
   },
   profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
     padding: 20,
     borderRadius: 20,
     marginBottom: 24,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 10,
@@ -120,7 +141,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: "#F0F0F0",
   },
   profileInfo: {
     flex: 1,
@@ -128,43 +149,43 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#111',
+    fontWeight: "700",
+    color: "#111",
   },
   userEmail: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
     marginTop: 2,
   },
   editButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: "#F0F0F0",
   },
   editButtonText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: "600",
+    color: "#555",
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
+    fontWeight: "600",
+    color: "#999",
     marginLeft: 4,
     marginBottom: 8,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   sectionContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 10,
@@ -175,20 +196,20 @@ const styles = StyleSheet.create({
     }),
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: "#F0F0F0",
   },
   menuItemPressed: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: "#F9F9F9",
   },
   menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   menuIcon: {
     width: 24,
@@ -196,26 +217,26 @@ const styles = StyleSheet.create({
   },
   menuTitle: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
   },
   menuItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   menuValue: {
     fontSize: 14,
-    color: '#AAA',
+    color: "#AAA",
     marginRight: 8,
   },
   footer: {
     marginTop: 20,
-    alignItems: 'center',
+    alignItems: "center",
     paddingBottom: 20,
   },
   copyright: {
     fontSize: 12,
-    color: '#CCC',
+    color: "#CCC",
     marginBottom: 4,
   },
 })

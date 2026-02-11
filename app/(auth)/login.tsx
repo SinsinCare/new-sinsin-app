@@ -1,14 +1,14 @@
-import { Pressable } from 'react-native'
-import { YStack, XStack, Text, Separator } from 'tamagui'
-import { Link, router } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Ionicons, FontAwesome } from '@expo/vector-icons'
+import { Pressable } from "react-native"
+import { YStack, XStack, Text, Separator } from "tamagui"
+import { Link, router } from "expo-router"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { Ionicons, FontAwesome } from "@expo/vector-icons"
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets()
 
   const handleEmailLogin = () => {
-    router.push('/(auth)/email-login')
+    router.push("/(auth)/email-login")
   }
 
   const handleKakaoLogin = () => {
@@ -20,7 +20,7 @@ export default function LoginScreen() {
   }
 
   const handleSkipLogin = () => {
-    router.replace('/(tabs)/home')
+    router.replace("/(tabs)/home")
   }
 
   return (
@@ -120,7 +120,7 @@ export default function LoginScreen() {
           >
             아직 헬시어 회원이 아니신가요?
           </Text>
-          <Link href="/(auth)/signup" asChild>
+          <Link href="/(auth)/terms-agreement" asChild>
             <Text
               color="#C5C8CE"
               fontSize={14}

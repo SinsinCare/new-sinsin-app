@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import type { AppUser } from '../services/types/serviceTypes'
+import { create } from "zustand"
+import type { AppUser } from "../services/types/serviceTypes"
 
 interface AuthState {
   user: AppUser | null

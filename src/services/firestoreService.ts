@@ -5,18 +5,18 @@ import type {
   ChatConversation,
   ChatMessage,
   DailyHealthLog,
-} from '../types'
-import type { IFirestoreService } from './types/serviceTypes'
-import { isMockMode } from '../config/appConfig'
+} from "../types"
+import type { IFirestoreService } from "./types/serviceTypes"
+import { isMockMode } from "../config/appConfig"
 
 // 컬렉션 이름
 const COLLECTIONS = {
-  USERS: 'user_profiles',
-  HEALTH_RECORDS: 'health_records',
-  FOOD_RECORDS: 'food_records',
-  CONVERSATIONS: 'conversations',
-  MESSAGES: 'messages',
-  DAILY_LOGS: 'daily_health_logs',
+  USERS: "user_profiles",
+  HEALTH_RECORDS: "health_records",
+  FOOD_RECORDS: "food_records",
+  CONVERSATIONS: "conversations",
+  MESSAGES: "messages",
+  DAILY_LOGS: "daily_health_logs",
 } as const
 
 function getRealFirestoreService(): IFirestoreService {
@@ -34,8 +34,8 @@ function getRealFirestoreService(): IFirestoreService {
     orderBy,
     limit,
     Timestamp,
-  } = require('firebase/firestore')
-  const { db } = require('./firebase')
+  } = require("firebase/firestore")
+  const { db } = require("./firebase")
   /* eslint-enable @typescript-eslint/no-require-imports */
 
   // 날짜 변환 헬퍼
@@ -66,7 +66,10 @@ function getRealFirestoreService(): IFirestoreService {
       })
     },
 
-    async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
+    async updateUserProfile(
+      userId: string,
+      updates: Partial<UserProfile>,
+    ): Promise<void> {
       const docRef = doc(db, COLLECTIONS.USERS, userId)
       await updateDoc(docRef, {
         ...updates,
@@ -74,12 +77,15 @@ function getRealFirestoreService(): IFirestoreService {
       })
     },
 
-    async getHealthRecords(userId: string, limitCount = 10): Promise<HealthRecord[]> {
+    async getHealthRecords(
+      userId: string,
+      limitCount = 10,
+    ): Promise<HealthRecord[]> {
       const q = query(
         collection(db, COLLECTIONS.HEALTH_RECORDS),
-        where('userId', '==', userId),
-        orderBy('recordDate', 'desc'),
-        limit(limitCount)
+        where("userId", "==", userId),
+        orderBy("recordDate", "desc"),
+        limit(limitCount),
       )
       const snapshot = await getDocs(q)
       return snapshot.docs.map((d: any) => ({
@@ -90,7 +96,7 @@ function getRealFirestoreService(): IFirestoreService {
       })) as HealthRecord[]
     },
 
-    async addHealthRecord(record: Omit<HealthRecord, 'id'>): Promise<string> {
+    async addHealthRecord(record: Omit<HealthRecord, "id">): Promise<string> {
       const docRef = doc(collection(db, COLLECTIONS.HEALTH_RECORDS))
       await setDoc(docRef, {
         ...record,
@@ -108,10 +114,10 @@ function getRealFirestoreService(): IFirestoreService {
 
       const q = query(
         collection(db, COLLECTIONS.FOOD_RECORDS),
-        where('userId', '==', userId),
-        where('recordDate', '>=', Timestamp.fromDate(startOfDay)),
-        where('recordDate', '<=', Timestamp.fromDate(endOfDay)),
-        orderBy('recordDate', 'asc')
+        where("userId", "==", userId),
+        where("recordDate", ">=", Timestamp.fromDate(startOfDay)),
+        where("recordDate", "<=", Timestamp.fromDate(endOfDay)),
+        orderBy("recordDate", "asc"),
       )
       const snapshot = await getDocs(q)
       return snapshot.docs.map((d: any) => ({
@@ -121,7 +127,7 @@ function getRealFirestoreService(): IFirestoreService {
       })) as FoodRecord[]
     },
 
-    async addFoodRecord(record: Omit<FoodRecord, 'id'>): Promise<string> {
+    async addFoodRecord(record: Omit<FoodRecord, "id">): Promise<string> {
       const docRef = doc(collection(db, COLLECTIONS.FOOD_RECORDS))
       await setDoc(docRef, {
         ...record,
@@ -133,8 +139,8 @@ function getRealFirestoreService(): IFirestoreService {
     async getConversations(userId: string): Promise<ChatConversation[]> {
       const q = query(
         collection(db, COLLECTIONS.CONVERSATIONS),
-        where('userId', '==', userId),
-        orderBy('updatedAt', 'desc')
+        where("userId", "==", userId),
+        orderBy("updatedAt", "desc"),
       )
       const snapshot = await getDocs(q)
       return snapshot.docs.map((d: any) => ({
@@ -145,7 +151,9 @@ function getRealFirestoreService(): IFirestoreService {
       })) as ChatConversation[]
     },
 
-    async createConversation(conversation: Omit<ChatConversation, 'id'>): Promise<string> {
+    async createConversation(
+      conversation: Omit<ChatConversation, "id">,
+    ): Promise<string> {
       const docRef = doc(collection(db, COLLECTIONS.CONVERSATIONS))
       await setDoc(docRef, {
         ...conversation,
@@ -158,8 +166,8 @@ function getRealFirestoreService(): IFirestoreService {
     async getMessages(conversationId: string): Promise<ChatMessage[]> {
       const q = query(
         collection(db, COLLECTIONS.MESSAGES),
-        where('conversationId', '==', conversationId),
-        orderBy('createdAt', 'asc')
+        where("conversationId", "==", conversationId),
+        orderBy("createdAt", "asc"),
       )
       const snapshot = await getDocs(q)
       return snapshot.docs.map((d: any) => ({
@@ -169,7 +177,7 @@ function getRealFirestoreService(): IFirestoreService {
       })) as ChatMessage[]
     },
 
-    async addMessage(message: Omit<ChatMessage, 'id'>): Promise<string> {
+    async addMessage(message: Omit<ChatMessage, "id">): Promise<string> {
       const docRef = doc(collection(db, COLLECTIONS.MESSAGES))
       await setDoc(docRef, {
         ...message,
@@ -178,8 +186,11 @@ function getRealFirestoreService(): IFirestoreService {
       return docRef.id
     },
 
-    async getDailyLog(userId: string, date: Date): Promise<DailyHealthLog | null> {
-      const dateStr = date.toISOString().split('T')[0]
+    async getDailyLog(
+      userId: string,
+      date: Date,
+    ): Promise<DailyHealthLog | null> {
+      const dateStr = date.toISOString().split("T")[0]
       const docRef = doc(db, COLLECTIONS.DAILY_LOGS, `${userId}_${dateStr}`)
       const docSnap = await getDoc(docRef)
       if (!docSnap.exists()) return null
@@ -190,8 +201,8 @@ function getRealFirestoreService(): IFirestoreService {
       } as DailyHealthLog
     },
 
-    async setDailyLog(log: Omit<DailyHealthLog, 'id'>): Promise<void> {
-      const dateStr = log.date.toISOString().split('T')[0]
+    async setDailyLog(log: Omit<DailyHealthLog, "id">): Promise<void> {
+      const dateStr = log.date.toISOString().split("T")[0]
       const docRef = doc(db, COLLECTIONS.DAILY_LOGS, `${log.userId}_${dateStr}`)
       await setDoc(docRef, {
         ...log,
@@ -207,7 +218,7 @@ function getFirestoreService(): IFirestoreService {
   if (cachedService) return cachedService
 
   if (isMockMode()) {
-    const { mockFirestoreService } = require('./mock') // eslint-disable-line @typescript-eslint/no-require-imports
+    const { mockFirestoreService } = require("./mock") // eslint-disable-line @typescript-eslint/no-require-imports
     cachedService = mockFirestoreService
   } else {
     cachedService = getRealFirestoreService()
@@ -219,16 +230,19 @@ function getFirestoreService(): IFirestoreService {
 export const firestoreService: IFirestoreService = {
   getUserProfile: (userId) => getFirestoreService().getUserProfile(userId),
   setUserProfile: (profile) => getFirestoreService().setUserProfile(profile),
-  updateUserProfile: (userId, updates) => getFirestoreService().updateUserProfile(userId, updates),
+  updateUserProfile: (userId, updates) =>
+    getFirestoreService().updateUserProfile(userId, updates),
   getHealthRecords: (userId, limitCount) =>
     getFirestoreService().getHealthRecords(userId, limitCount),
   addHealthRecord: (record) => getFirestoreService().addHealthRecord(record),
-  getFoodRecords: (userId, date) => getFirestoreService().getFoodRecords(userId, date),
+  getFoodRecords: (userId, date) =>
+    getFirestoreService().getFoodRecords(userId, date),
   addFoodRecord: (record) => getFirestoreService().addFoodRecord(record),
   getConversations: (userId) => getFirestoreService().getConversations(userId),
   createConversation: (conv) => getFirestoreService().createConversation(conv),
   getMessages: (convId) => getFirestoreService().getMessages(convId),
   addMessage: (message) => getFirestoreService().addMessage(message),
-  getDailyLog: (userId, date) => getFirestoreService().getDailyLog(userId, date),
+  getDailyLog: (userId, date) =>
+    getFirestoreService().getDailyLog(userId, date),
   setDailyLog: (log) => getFirestoreService().setDailyLog(log),
 }
