@@ -12,10 +12,7 @@ const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
   const [weight, setWeight] = useState("")
 
   return (
-    <RecordCard
-      icon={<Scale size={24} color="$blue10" />}
-      title="오늘의 체중을 기록해주세요."
-    >
+    <RecordCard icon={<Scale size={24} />} title="오늘의 체중을 기록해주세요.">
       <XStack alignItems="center" gap="$3">
         <XStack alignItems="baseline" gap="$1" flex={1}>
           <Text fontSize="$4" color="$gray10">
@@ -33,6 +30,8 @@ const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
               borderBottomWidth: 1,
               borderBottomColor: "#d1d5db",
               paddingVertical: 4,
+              paddingRight: 4,
+              textAlign: "right",
             }}
           />
           <Text fontSize="$4" fontWeight="600" color="$gray12">

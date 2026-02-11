@@ -16,7 +16,7 @@ const RecordCard = ({ icon, title, children }: RecordCardProps) => {
       paddingHorizontal="$4"
       gap="$3"
     >
-      {icon}
+      <XStack marginTop={-3}>{icon}</XStack>
       <YStack flex={1} gap="$2">
         <Text fontSize="$4" fontWeight="600" color="$gray12">
           {title}
