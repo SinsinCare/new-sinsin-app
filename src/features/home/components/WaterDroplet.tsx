@@ -21,7 +21,7 @@ export function WaterDroplet({ percentage }: WaterDropletProps) {
   const waterLevel = getWaterLevel(percentage)
 
   return (
-    <Svg width={90} height={95} viewBox="30 15 140 170">
+    <Svg width={90} height={95} viewBox="10 0 180 200">
       <Defs>
         <ClipPath id="dropletClip">
           <Path d={DROPLET_PATH} />
@@ -31,6 +31,49 @@ export function WaterDroplet({ percentage }: WaterDropletProps) {
           <Stop offset="100%" stopColor={WATER_COLORS.gradientEnd} />
         </LinearGradient>
       </Defs>
+
+      {/* Blurred shadow - all directions */}
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.015)"
+        transform="translate(-8, -8) scale(1.08)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.015)"
+        transform="translate(8, -8) scale(1.08)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.015)"
+        transform="translate(-8, 8) scale(1.08)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.015)"
+        transform="translate(8, 8) scale(1.08)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.02)"
+        transform="translate(-5, 0) scale(1.05)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.02)"
+        transform="translate(5, 0) scale(1.05)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.02)"
+        transform="translate(0, -5) scale(1.05)"
+      />
+      <Path
+        d={DROPLET_PATH}
+        fill="rgba(0,0,0,0.02)"
+        transform="translate(0, 5) scale(1.05)"
+      />
+      <Path d={DROPLET_PATH} fill="rgba(0,0,0,0.04)" transform="scale(1.03)" />
 
       <Path
         d={DROPLET_PATH}
