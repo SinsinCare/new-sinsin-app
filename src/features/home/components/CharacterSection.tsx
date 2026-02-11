@@ -32,7 +32,7 @@ const CharacterSection = ({ selectedDate }: CharacterSectionProps) => {
             fontSize="$4"
             fontWeight="600"
             backgroundColor="$cardBackground"
-            paddingHorizontal="10"
+            paddingHorizontal="18"
             paddingVertical="5"
             borderRadius="$6"
           >

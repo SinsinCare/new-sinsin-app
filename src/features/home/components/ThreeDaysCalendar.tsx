@@ -38,9 +38,11 @@ export function ThreeDaysCalendar({
               <XStack
                 alignItems="center"
                 justifyContent="center"
-                paddingHorizontal="$3"
+                paddingHorizontal={10}
                 paddingVertical="$2"
                 borderRadius="$10"
+                border="0.7"
+                borderColor="$borderColor"
                 backgroundColor={isSelected ? "$primary" : "transparent"}
               >
                 <Text

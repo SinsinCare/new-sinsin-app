@@ -21,7 +21,6 @@ const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
           <TextInput
             value={weight}
             onChangeText={setWeight}
-            placeholder="______"
             keyboardType="decimal-pad"
             style={{
               fontSize: 18,

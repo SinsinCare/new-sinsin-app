@@ -1,37 +1,41 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
-import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 
 interface HomeHeaderProps {
   mainTab: MainTab
   onChangeTab: (tab: MainTab) => void
-  selectedDate: Date
-  onSelectDate: (date: Date) => void
+  topInset?: number
 }
 
 export function HomeHeader({
   mainTab,
   onChangeTab,
-  selectedDate,
-  onSelectDate,
+  topInset = 0,
 }: HomeHeaderProps) {
   return (
-    <YStack>
+    <YStack
+      backgroundColor="#DFDFDF"
+      paddingTop={topInset}
+      marginHorizontal={-16}
+      paddingHorizontal="$4"
+    >
       <XStack
-        paddingHorizontal="$4"
         paddingVertical="$3"
         justifyContent="space-between"
         alignItems="center"
       >
-        <XStack gap="$3">
+        <XStack>
           {(["record", "stats"] as MainTab[]).map((tab) => (
             <Text
               key={tab}
               fontSize="$5"
               fontWeight="700"
-              color={mainTab === tab ? "$primaryPress" : "$color"}
+              backgroundColor={mainTab === tab ? "$white" : "$colorTransparent"}
+              paddingHorizontal={12}
+              paddingVertical={6}
               onPress={() => onChangeTab(tab)}
+              borderRadius="$5"
             >
               {tab === "record" ? "기록" : "통계"}
             </Text>
@@ -43,10 +47,6 @@ export function HomeHeader({
           <Ionicons name="notifications-outline" size={22} />
         </XStack>
       </XStack>
-      <ThreeDaysCalendar
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-      />
     </YStack>
   )
 }

@@ -11,9 +11,9 @@ export function MealButton({ mealType, onPress, isSelected }: MealButtonProps) {
   return (
     <TouchableOpacity onPress={onPress}>
       <XStack
-        backgroundColor={isSelected ? "$primaryPress" : "$background"}
+        backgroundColor={isSelected ? "$primary" : "$background"}
         borderWidth={1}
-        borderColor={isSelected ? "$primaryPress" : "$borderColor"}
+        borderColor={isSelected ? "$primary" : "$borderColor"}
         paddingVertical="$8"
         paddingHorizontal="$4"
         borderRadius="$6"

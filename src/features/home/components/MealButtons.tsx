@@ -15,7 +15,7 @@ export function MealButtons({
 
   return (
     <YStack paddingHorizontal="$4" paddingVertical="$3" gap="$3">
-      <Text fontSize="$6" fontWeight="600">
+      <Text fontSize="$6" fontWeight="700">
         식이 기록하기
       </Text>
       <XStack width="100%" gap="$3">

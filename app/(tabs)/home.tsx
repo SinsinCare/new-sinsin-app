@@ -24,21 +24,20 @@ export default function HomeScreen() {
       style={[
         styles.container,
         {
-          paddingTop: insets.top,
           paddingBottom: insets.bottom,
         },
       ]}
     >
       <HomeHeader
+        topInset={insets.top}
         mainTab={mainTab}
         onChangeTab={setMainTab}
-        selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
       />
 
       {mainTab === "record" ? (
         <RecordView
           selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
           selectedMealType={selectedMealType}
           onSelectMealType={handleSelectMealType}
         />

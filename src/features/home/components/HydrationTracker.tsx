@@ -23,12 +23,12 @@ export default function HydrationTracker() {
 
   return (
     <YStack paddingHorizontal="$3" paddingVertical="$3" gap="$3">
-      <Text fontSize="$6" fontWeight="600">
+      <Text fontSize="$6" fontWeight="700">
         수분섭취 기록하기
       </Text>
 
       <XStack
-        backgroundColor="$backgroundFocus"
+        backgroundColor="#F3F3F3"
         borderRadius="$6"
         paddingVertical="$4"
         paddingHorizontal="$5"
