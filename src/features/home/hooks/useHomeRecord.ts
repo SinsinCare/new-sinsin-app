@@ -30,7 +30,7 @@ export const useHomeRecord = (): UseHomeRecordReturn => {
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
 
   // TODO: Firestore 연동 시 날짜별 어제 체중 조회로 교체
-  const yesterdayWeight: number | null = null
+  const yesterdayWeight: number | null = 60.4
 
   const handleSetEdemaLevel = useCallback((level: EdemaLevel) => {
     setEdemaLevel(level)

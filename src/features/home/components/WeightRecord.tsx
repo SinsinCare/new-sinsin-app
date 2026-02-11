@@ -42,7 +42,7 @@ export function WeightRecord({
         </XStack>
 
         {yesterdayWeight != null && (
-          <Text fontSize="$3" color="$gray9">
+          <Text fontSize={13} color="$colorSubtle" paddingRight={2}>
             어제:{yesterdayWeight}kg
           </Text>
         )}
