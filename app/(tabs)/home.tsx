@@ -9,6 +9,7 @@ import { StyleSheet } from "react-native"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const insets = useSafeAreaInsets()
 
   return (
@@ -18,9 +19,18 @@ export default function HomeScreen() {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <HomeHeader mainTab={mainTab} onChangeTab={setMainTab} />
+      <HomeHeader
+        mainTab={mainTab}
+        onChangeTab={setMainTab}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+      />
 
-      {mainTab === "record" ? <RecordView /> : <StatusView />}
+      {mainTab === "record" ? (
+        <RecordView selectedDate={selectedDate} />
+      ) : (
+        <StatusView selectedDate={selectedDate} />
+      )}
     </ThemedView>
   )
 }

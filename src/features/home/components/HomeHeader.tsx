@@ -6,9 +6,16 @@ import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 interface HomeHeaderProps {
   mainTab: MainTab
   onChangeTab: (tab: MainTab) => void
+  selectedDate: Date
+  onSelectDate: (date: Date) => void
 }
 
-export function HomeHeader({ mainTab, onChangeTab }: HomeHeaderProps) {
+export function HomeHeader({
+  mainTab,
+  onChangeTab,
+  selectedDate,
+  onSelectDate,
+}: HomeHeaderProps) {
   return (
     <YStack>
       <XStack
@@ -36,7 +43,10 @@ export function HomeHeader({ mainTab, onChangeTab }: HomeHeaderProps) {
           <Ionicons name="notifications-outline" size={22} />
         </XStack>
       </XStack>
-      <ThreeDaysCalendar />
+      <ThreeDaysCalendar
+        selectedDate={selectedDate}
+        onSelectDate={onSelectDate}
+      />
     </YStack>
   )
 }
