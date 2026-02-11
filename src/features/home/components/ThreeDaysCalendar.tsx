@@ -19,7 +19,7 @@ export function ThreeDaysCalendar({
     a.getDate() === b.getDate()
 
   return (
-    <XStack justifyContent="space-between" paddingHorizontal="$4">
+    <XStack justifyContent="space-between" paddingHorizontal="$4" gap="$4">
       {days.map((day) => {
         const month = day.date.getMonth() + 1
         const date = day.date.getDate()
