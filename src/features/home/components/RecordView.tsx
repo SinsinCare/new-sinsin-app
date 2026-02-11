@@ -3,7 +3,17 @@ import { Image } from "expo-image"
 import { Pressable, StyleSheet } from "react-native"
 import { View } from "tamagui"
 
-const RecordView = () => {
+interface RecordViewProps {
+  selectedDate: Date
+}
+
+const RecordView = ({ selectedDate }: RecordViewProps) => {
+  const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  const dateLabel = isToday
+    ? "오늘"
+    : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`
+
   return (
     <>
       <View style={styles.characterContainer}>
@@ -14,7 +24,7 @@ const RecordView = () => {
           transition={500}
         />
         <ThemedText style={styles.welcomeText}>
-          오늘 하루도 건강하게!
+          {isToday ? "오늘 하루도 건강하게!" : `${dateLabel}의 기록`}
         </ThemedText>
       </View>
       <View style={styles.buttonContainer}>

@@ -1,6 +1,10 @@
 import React from "react"
 
-const StatusView = () => {
+interface StatusViewProps {
+  selectedDate: Date
+}
+
+const StatusView = ({ selectedDate }: StatusViewProps) => {
   return <></>
 }
 
