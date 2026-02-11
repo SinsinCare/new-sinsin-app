@@ -26,7 +26,6 @@ export default function HomeScreen() {
         {
           paddingTop: insets.top,
           paddingBottom: insets.bottom,
-          paddingHorizontal: 16,
         },
       ]}
     >
@@ -53,5 +52,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     justifyContent: "flex-start",
+    paddingHorizontal: 16,
   },
 })

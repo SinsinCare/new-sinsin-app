@@ -11,17 +11,31 @@ const CharacterSection = ({ selectedDate }: CharacterSectionProps) => {
   const messages = getMessagesForDate(selectedDate)
 
   return (
-    <YStack borderRadius="$6" padding="$4" gap="$10" alignItems="center">
-      <XStack background="$backgroundTransparent">
+    <YStack
+      borderRadius="$6"
+      padding="$5"
+      gap="$7"
+      alignItems="center"
+      backgroundColor="$backgroundFocus"
+    >
+      <XStack>
         <Image
           source={require("@/assets/images/character.png")}
           style={{ width: 200, height: 200 }}
           contentFit="contain"
         />
       </XStack>
-      <YStack gap="$2" background="$white">
+      <YStack gap="$2">
         {messages.map((msg, i) => (
-          <Text key={i} fontSize="$4" fontWeight="600">
+          <Text
+            key={i}
+            fontSize="$4"
+            fontWeight="600"
+            backgroundColor="$cardBackground"
+            paddingHorizontal="10"
+            paddingVertical="5"
+            borderRadius="$6"
+          >
             {msg}
           </Text>
         ))}

@@ -18,7 +18,10 @@ const RecordView = ({
   onSelectMealType,
 }: RecordViewProps) => {
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
       <View style={styles.characterContainer}>
         <CharacterSection selectedDate={selectedDate} />
       </View>
@@ -38,8 +41,11 @@ const RecordView = ({
 export default RecordView
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingTop: 20,
+    paddingBottom: 45,
+  },
   characterContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 6,
   },
 })
