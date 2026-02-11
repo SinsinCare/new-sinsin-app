@@ -1,8 +1,9 @@
-import { StyleSheet } from "react-native"
+import { ScrollView, StyleSheet } from "react-native"
 import { View } from "tamagui"
 import CharacterSection from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../types"
+import HydrationTracker from "./HydrationTracker"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -16,7 +17,7 @@ const RecordView = ({
   onSelectMealType,
 }: RecordViewProps) => {
   return (
-    <>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.characterContainer}>
         <CharacterSection selectedDate={selectedDate} />
       </View>
@@ -25,7 +26,9 @@ const RecordView = ({
         onSelectMealType={onSelectMealType}
         selectedMealType={selectedMealType}
       />
-    </>
+
+      <HydrationTracker />
+    </ScrollView>
   )
 }
 
