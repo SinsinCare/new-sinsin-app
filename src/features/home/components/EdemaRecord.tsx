@@ -1,12 +1,15 @@
-import React, { useState } from "react"
-import { Text, useTheme, XStack } from "tamagui"
+import { Text, XStack, useTheme } from "tamagui"
 import { TouchableOpacity } from "react-native"
 import { Droplets } from "@tamagui/lucide-icons"
-import RecordCard from "./RecordCard"
+import { RecordCard } from "./RecordCard"
 import { EDEMA_OPTIONS, EdemaLevel } from "../data/EdemaConstants"
 
-const EdemaRecord = () => {
-  const [selected, setSelected] = useState<EdemaLevel | null>(null)
+interface EdemaRecordProps {
+  selected: EdemaLevel | null
+  onSelect: (level: EdemaLevel) => void
+}
+
+export function EdemaRecord({ selected, onSelect }: EdemaRecordProps) {
   const theme = useTheme()
 
   return (
@@ -18,12 +21,10 @@ const EdemaRecord = () => {
         {EDEMA_OPTIONS.map((option) => (
           <TouchableOpacity
             key={option}
-            onPress={() => setSelected(option)}
+            onPress={() => onSelect(option)}
             style={{
               backgroundColor:
-                selected === option
-                  ? theme.primary.val
-                  : theme.backgroundFocus.val,
+                selected === option ? theme.primary.val : theme.pureWhite.val,
               paddingVertical: 6,
               paddingHorizontal: 12,
               borderRadius: 8,
@@ -45,5 +46,3 @@ const EdemaRecord = () => {
     </RecordCard>
   )
 }
-
-export default EdemaRecord

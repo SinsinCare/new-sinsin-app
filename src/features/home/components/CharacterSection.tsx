@@ -1,5 +1,4 @@
 import { Image } from "expo-image"
-import React from "react"
 import { Text, XStack, YStack } from "tamagui"
 import { getMessagesForDate } from "../utils/getMessagesForDate"
 
@@ -7,7 +6,7 @@ interface CharacterSectionProps {
   selectedDate: Date
 }
 
-const CharacterSection = ({ selectedDate }: CharacterSectionProps) => {
+export function CharacterSection({ selectedDate }: CharacterSectionProps) {
   const messages = getMessagesForDate(selectedDate)
 
   return (
@@ -32,8 +31,8 @@ const CharacterSection = ({ selectedDate }: CharacterSectionProps) => {
             fontSize="$4"
             fontWeight="600"
             backgroundColor="$cardBackground"
-            paddingHorizontal="18"
-            paddingVertical="5"
+            paddingHorizontal={18}
+            paddingVertical={5}
             borderRadius="$6"
           >
             {msg}
@@ -43,5 +42,3 @@ const CharacterSection = ({ selectedDate }: CharacterSectionProps) => {
     </YStack>
   )
 }
-
-export default CharacterSection

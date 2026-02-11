@@ -15,7 +15,7 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   return (
     <YStack
-      backgroundColor="#DFDFDF"
+      backgroundColor="$backgroundFocus"
       paddingTop={topInset}
       marginHorizontal={-16}
       paddingHorizontal="$4"
@@ -31,7 +31,7 @@ export function HomeHeader({
               key={tab}
               fontSize="$5"
               fontWeight="700"
-              backgroundColor={mainTab === tab ? "$white" : "$colorTransparent"}
+              backgroundColor={mainTab === tab ? "white" : "$colorTransparent"}
               paddingHorizontal={12}
               paddingVertical={6}
               onPress={() => onChangeTab(tab)}

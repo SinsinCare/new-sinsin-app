@@ -4,6 +4,8 @@ export interface DayItem {
   isToday: boolean
 }
 
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"]
+
 export function getThreeDays(baseDate = new Date()): DayItem[] {
   const days = [-1, 0, 1]
 
@@ -16,21 +18,7 @@ export function getThreeDays(baseDate = new Date()): DayItem[] {
     return {
       date: d,
       isToday,
-      label: isToday
-        ? "오늘"
-        : d.getDay() === 0
-          ? "일"
-          : d.getDay() === 1
-            ? "월"
-            : d.getDay() === 2
-              ? "화"
-              : d.getDay() === 3
-                ? "수"
-                : d.getDay() === 4
-                  ? "목"
-                  : d.getDay() === 5
-                    ? "금"
-                    : "토",
+      label: isToday ? "오늘" : DAY_LABELS[d.getDay()],
     }
   })
 }

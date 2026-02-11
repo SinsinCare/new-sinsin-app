@@ -1,11 +1,12 @@
 import { ScrollView, StyleSheet } from "react-native"
 import { View } from "tamagui"
-import CharacterSection from "./CharacterSection"
+import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../types"
-import HydrationTracker from "./HydrationTracker"
-import WeightEdemaTracker from "./WeightEdemaTracker"
+import { HydrationTracker } from "./HydrationTracker"
+import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
+import { useHomeRecord } from "../hooks/useHomeRecord"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -14,12 +15,14 @@ interface RecordViewProps {
   onSelectMealType: (mealType: MealType) => void
 }
 
-const RecordView = ({
+export function RecordView({
   selectedDate,
   onSelectDate,
   selectedMealType,
   onSelectMealType,
-}: RecordViewProps) => {
+}: RecordViewProps) {
+  const record = useHomeRecord()
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -43,14 +46,25 @@ const RecordView = ({
         selectedMealType={selectedMealType}
       />
 
-      <HydrationTracker />
+      <HydrationTracker
+        intake={record.intake}
+        dailyGoal={record.dailyGoal}
+        percentage={record.percentage}
+        remaining={record.remaining}
+        isGoalAchieved={record.isGoalAchieved}
+        addWater={record.addWater}
+      />
 
-      <WeightEdemaTracker />
+      <WeightEdemaTracker
+        weight={record.weight}
+        onChangeWeight={record.setWeight}
+        yesterdayWeight={record.yesterdayWeight}
+        edemaLevel={record.edemaLevel}
+        onSelectEdema={record.setEdemaLevel}
+      />
     </ScrollView>
   )
 }
-
-export default RecordView
 
 const styles = StyleSheet.create({
   scrollContent: {

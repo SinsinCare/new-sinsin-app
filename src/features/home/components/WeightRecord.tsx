@@ -1,16 +1,19 @@
-import React, { useState } from "react"
 import { Text, XStack } from "tamagui"
 import { TextInput } from "react-native"
 import { Scale } from "@tamagui/lucide-icons"
-import RecordCard from "./RecordCard"
+import { RecordCard } from "./RecordCard"
 
 interface WeightRecordProps {
-  yesterdayWeight?: number
+  weight: string
+  onChangeWeight: (value: string) => void
+  yesterdayWeight?: number | null
 }
 
-const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
-  const [weight, setWeight] = useState("")
-
+export function WeightRecord({
+  weight,
+  onChangeWeight,
+  yesterdayWeight,
+}: WeightRecordProps) {
   return (
     <RecordCard icon={<Scale size={24} />} title="오늘의 체중을 기록해주세요.">
       <XStack alignItems="center" gap="$3">
@@ -20,7 +23,7 @@ const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
           </Text>
           <TextInput
             value={weight}
-            onChangeText={setWeight}
+            onChangeText={onChangeWeight}
             keyboardType="decimal-pad"
             style={{
               fontSize: 18,
@@ -38,7 +41,7 @@ const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
           </Text>
         </XStack>
 
-        {yesterdayWeight && (
+        {yesterdayWeight != null && (
           <Text fontSize="$3" color="$gray9">
             어제:{yesterdayWeight}kg
           </Text>
@@ -47,5 +50,3 @@ const WeightRecord = ({ yesterdayWeight }: WeightRecordProps) => {
     </RecordCard>
   )
 }
-
-export default WeightRecord
