@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet } from "react-native"
 import { ThreeDaysCalendar } from "../record/ThreeDaysCalendar"
 import { IntakeSummary } from "./IntakeSummary"
+import { DietaryGuide } from "./DietaryGuide"
 
 interface StatisticsViewProps {
   selectedDate: Date
@@ -23,6 +24,7 @@ export function StatisticsView({
       />
 
       <IntakeSummary />
+      <DietaryGuide />
     </ScrollView>
   )
 }
