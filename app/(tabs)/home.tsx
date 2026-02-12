@@ -42,7 +42,10 @@ export default function HomeScreen() {
           onSelectMealType={handleSelectMealType}
         />
       ) : (
-        <StatisticsView selectedDate={selectedDate} />
+        <StatisticsView
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       )}
     </ThemedView>
   )
