@@ -17,8 +17,8 @@ export function HomeHeader({
     <YStack
       backgroundColor="$backgroundFocus"
       paddingTop={topInset}
-      marginHorizontal={-16}
-      paddingHorizontal="$4"
+      marginHorizontal={-25}
+      paddingHorizontal={25}
     >
       <XStack
         paddingVertical="$3"
