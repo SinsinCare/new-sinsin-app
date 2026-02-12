@@ -4,8 +4,8 @@ import { HomeHeader } from "@/src/features/home/components/HomeHeader"
 import { useState } from "react"
 import { MainTab, MealType } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/RecordView"
-import { StatusView } from "@/src/features/home/components/StatusView"
 import { StyleSheet } from "react-native"
+import { StatisticsView } from "@/src/features/home/components/StatisticsView"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
@@ -42,7 +42,7 @@ export default function HomeScreen() {
           onSelectMealType={handleSelectMealType}
         />
       ) : (
-        <StatusView selectedDate={selectedDate} />
+        <StatisticsView selectedDate={selectedDate} />
       )}
     </ThemedView>
   )
