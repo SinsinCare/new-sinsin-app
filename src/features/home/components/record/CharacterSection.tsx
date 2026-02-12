@@ -1,6 +1,6 @@
 import { Image } from "expo-image"
 import { Text, XStack, YStack } from "tamagui"
-import { getMessagesForDate } from "../utils/getMessagesForDate"
+import { getMessagesForDate } from "../../utils/getMessagesForDate"
 
 interface CharacterSectionProps {
   selectedDate: Date

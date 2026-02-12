@@ -1,6 +1,6 @@
 import { XStack, Text } from "tamagui"
 import { Pressable } from "react-native"
-import { CalendarMode, getThreeDays } from "../utils/getThreeDays"
+import { CalendarMode, getThreeDays } from "../../utils/getThreeDays"
 
 interface ThreeDaysCalendarProps {
   selectedDate: Date

@@ -1,7 +1,7 @@
 import { Text, YStack } from "tamagui"
 import { EdemaRecord } from "./EdemaRecord"
 import { WeightRecord } from "./WeightRecord"
-import { EdemaLevel } from "../data/EdemaConstants"
+import { EdemaLevel } from "../../data/EdemaConstants"
 
 interface WeightEdemaTrackerProps {
   weight: string

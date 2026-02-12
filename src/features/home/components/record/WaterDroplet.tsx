@@ -7,8 +7,8 @@ import Svg, {
   Stop,
   G,
 } from "react-native-svg"
-import { WATER_COLORS } from "../data/hydrationConstants"
-import { getWaterLevel } from "../utils/getWaterLevel"
+import { WATER_COLORS } from "../../data/hydrationConstants"
+import { getWaterLevel } from "../../utils/getWaterLevel"
 
 const DROPLET_PATH =
   "M100,20 C100,20 40,80 40,120 C40,153.137 66.863,180 100,180 C133.137,180 160,153.137 160,120 C160,80 100,20 100,20 Z"

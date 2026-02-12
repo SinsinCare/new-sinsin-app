@@ -3,9 +3,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { HomeHeader } from "@/src/features/home/components/HomeHeader"
 import { useState } from "react"
 import { MainTab, MealType } from "@/src/features/home/types"
-import { RecordView } from "@/src/features/home/components/RecordView"
+import { RecordView } from "@/src/features/home/components/record/RecordView"
+import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
 import { StyleSheet } from "react-native"
-import { StatisticsView } from "@/src/features/home/components/StatisticsView"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")

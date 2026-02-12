@@ -1,5 +1,5 @@
 import { TouchableOpacity } from "react-native"
-import { MealType } from "../types"
+import { MealType } from "../../types"
 import { Text, XStack } from "tamagui"
 
 interface MealButtonProps {

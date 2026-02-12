@@ -2,11 +2,11 @@ import { ScrollView, StyleSheet } from "react-native"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
-import { MealType } from "../types"
+import { MealType } from "../../types"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
-import { useHomeRecord } from "../hooks/useHomeRecord"
+import { useHomeRecord } from "../../hooks/useHomeRecord"
 
 interface RecordViewProps {
   selectedDate: Date

@@ -1,6 +1,6 @@
 import { Text, View, XStack, YStack } from "tamagui"
 import { TouchableOpacity } from "react-native"
-import { QUICK_ADD_OPTIONS, WATER_COLORS } from "../data/hydrationConstants"
+import { QUICK_ADD_OPTIONS, WATER_COLORS } from "../../data/hydrationConstants"
 import { WaterDroplet } from "./WaterDroplet"
 
 interface HydrationTrackerProps {
