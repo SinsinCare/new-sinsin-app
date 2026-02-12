@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet } from "react-native"
 import { ThreeDaysCalendar } from "../record/ThreeDaysCalendar"
+import { IntakeSummary } from "./IntakeSummary"
 
 interface StatisticsViewProps {
   selectedDate: Date
@@ -20,6 +21,8 @@ export function StatisticsView({
         onSelectDate={onSelectDate}
         mode="statistics"
       />
+
+      <IntakeSummary />
     </ScrollView>
   )
 }
