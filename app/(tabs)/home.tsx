@@ -51,6 +51,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     justifyContent: "flex-start",
-    paddingHorizontal: 16,
+    paddingHorizontal: 25,
   },
 })
