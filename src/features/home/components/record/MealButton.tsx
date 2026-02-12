@@ -21,7 +21,7 @@ export function MealButton({ mealType, onPress, isSelected }: MealButtonProps) {
         alignItems="center"
       >
         <Text
-          fontSize="$5"
+          fontSize={22}
           fontWeight="500"
           color={isSelected ? "white" : "$color"}
         >

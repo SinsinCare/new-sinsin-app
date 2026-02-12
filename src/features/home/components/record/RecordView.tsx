@@ -35,9 +35,7 @@ export function RecordView({
 
       <View height={15} />
 
-      <View style={styles.characterContainer}>
-        <CharacterSection selectedDate={selectedDate} />
-      </View>
+      <CharacterSection selectedDate={selectedDate} />
 
       <View height={10} />
 
@@ -70,8 +68,5 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 20,
     paddingBottom: 75,
-  },
-  characterContainer: {
-    paddingHorizontal: 6,
   },
 })
