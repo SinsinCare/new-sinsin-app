@@ -17,6 +17,6 @@ export const MOCK_CURRENT_INTAKE: Record<string, number> = {
   단백질: 32,
   나트륨: 1200,
   칼륨: 1800,
-  인: 650,
+  인: 1200,
   수분: 1000,
 }

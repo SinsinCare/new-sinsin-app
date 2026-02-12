@@ -46,9 +46,9 @@ export function NutrientGraph({
         >
           <View
             height="100%"
-            backgroundColor={isOver ? "$backgroundTransparent" : "$primary"}
+            backgroundColor="$primary"
             borderRadius="$true"
-            width={`${percentage}%`}
+            width={isOver ? "100%" : `${percentage}%`}
           />
         </View>
 
