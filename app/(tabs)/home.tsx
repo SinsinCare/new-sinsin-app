@@ -3,8 +3,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { HomeHeader } from "@/src/features/home/components/HomeHeader"
 import { useState } from "react"
 import { MainTab, MealType } from "@/src/features/home/types"
-import { RecordView } from "@/src/features/home/components/RecordView"
-import { StatusView } from "@/src/features/home/components/StatusView"
+import { RecordView } from "@/src/features/home/components/record/RecordView"
+import { StatusView } from "@/src/features/home/components/statistics/StatusView"
 import { StyleSheet } from "react-native"
 
 export default function HomeScreen() {

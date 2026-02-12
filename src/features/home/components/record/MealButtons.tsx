@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from "tamagui"
-import { MealType } from "../types"
+import { MealType } from "../../types"
 import { MealButton } from "./MealButton"
 
 interface MealButtonsProps {

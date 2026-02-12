@@ -2,7 +2,7 @@ import { Text, XStack, useTheme } from "tamagui"
 import { TouchableOpacity } from "react-native"
 import { Droplets } from "@tamagui/lucide-icons"
 import { RecordCard } from "./RecordCard"
-import { EDEMA_OPTIONS, EdemaLevel } from "../data/EdemaConstants"
+import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
 
 interface EdemaRecordProps {
   selected: EdemaLevel | null
