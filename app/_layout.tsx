@@ -9,11 +9,17 @@ import config from "../tamagui.config"
 import { queryClient } from "../src/services/queryClient"
 import { useAuth } from "../src/hooks"
 import { useSignupStore } from "../src/stores/signupStore"
+import { useOnboardingStore } from "../src/stores/onboardingStore"
+import { useUserStore } from "../src/stores/userStore"
 import { LoadingScreen } from "../src/shared/components"
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth()
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
+  const isOnboardingInProgress = useOnboardingStore(
+    (s) => s.isOnboardingInProgress,
+  )
+  const profile = useUserStore((s) => s.profile)
   const segments = useSegments()
   const router = useRouter()
 
@@ -21,14 +27,36 @@ function RootLayoutNav() {
     if (isLoading) return
 
     const inAuthGroup = segments[0] === "(auth)"
+    const inOnboarding = segments[0] === "onboarding"
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/login")
     } else if (isAuthenticated && inAuthGroup && !isSignupInProgress) {
       // 회원가입 진행 중이면 auth 그룹에 유지
-      router.replace("/(tabs)/home")
+      if (profile?.onboardingCompleted === false) {
+        router.replace("/onboarding")
+      } else {
+        router.replace("/(tabs)/home")
+      }
+    } else if (
+      isAuthenticated &&
+      !inAuthGroup &&
+      !inOnboarding &&
+      !isOnboardingInProgress &&
+      profile?.onboardingCompleted === false
+    ) {
+      // 온보딩 미완료 유저가 다른 화면에 있으면 온보딩으로 이동
+      router.replace("/onboarding")
     }
-  }, [isAuthenticated, isLoading, segments, router, isSignupInProgress])
+  }, [
+    isAuthenticated,
+    isLoading,
+    segments,
+    router,
+    isSignupInProgress,
+    isOnboardingInProgress,
+    profile,
+  ])
 
   if (isLoading) {
     return <LoadingScreen message="앱을 불러오는 중..." />
@@ -43,6 +71,10 @@ function RootLayoutNav() {
         <Stack.Screen name="create-post" />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="consultation-history" />
+        <Stack.Screen
+          name="onboarding"
+          options={{ gestureEnabled: false }}
+        />
       </Stack>
     </>
   )

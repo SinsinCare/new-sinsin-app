@@ -20,6 +20,7 @@ export const MOCK_USER_PROFILE: UserProfile = {
   weight: 68,
   ckdStage: 3,
   onDialysis: false,
+  onboardingCompleted: false,
   createdAt: new Date("2024-01-15"),
   updatedAt: new Date("2024-12-01"),
 }

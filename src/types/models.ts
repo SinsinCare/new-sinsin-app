@@ -10,6 +10,7 @@ export interface UserProfile {
   weight: number
   ckdStage: 1 | 2 | 3 | 4 | 5
   onDialysis: boolean
+  onboardingCompleted?: boolean
   referralCode?: string
   createdAt: Date
   updatedAt: Date
