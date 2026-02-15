@@ -53,12 +53,12 @@ export function NutrientGraph({
         </View>
 
         <XStack justifyContent="space-between">
-          <Text fontSize={9} color="$primary" fontWeight="500">
+          <Text fontSize={10} color="$primary" fontWeight="500">
             나의 하루 섭취량: {current}
             {unit}
           </Text>
-          <Text fontSize={9}>
-            제한량 최대: {max}
+          <Text fontSize={10}>
+            제한량: {max}
             {unit}
           </Text>
         </XStack>
