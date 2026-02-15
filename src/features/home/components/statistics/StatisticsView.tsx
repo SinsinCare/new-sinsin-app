@@ -4,6 +4,7 @@ import { IntakeSummary } from "./IntakeSummary"
 import { DietaryGuide } from "./DietaryGuide"
 import { DietaryRecord } from "./DietaryRecord"
 import { MealType } from "../../types"
+import { WeightEdemaResult } from "./WeightEdemaResult"
 
 interface StatisticsViewProps {
   selectedDate: Date
@@ -36,6 +37,8 @@ export function StatisticsView({
         selectedMealType={selectedMealType}
         onSelectMealType={onSelectMealType}
       />
+
+      <WeightEdemaResult />
     </ScrollView>
   )
 }
