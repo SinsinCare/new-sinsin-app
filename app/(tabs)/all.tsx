@@ -70,8 +70,8 @@ export default function AllScreen() {
           </Pressable>
         </View>
 
-        {/* Settings Section */}
-        <View style={styles.section}>
+        {/* Settings Section (TODO: Add settings) */}
+        {/* <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>설정</ThemedText>
           <View style={styles.sectionContent}>
             <MenuItem icon="notifications-outline" title="알림 설정" />
@@ -87,7 +87,7 @@ export default function AllScreen() {
               showChevron={false}
             />
           </View>
-        </View>
+        </View> */}
 
         {/* Support Section */}
         <View style={styles.section}>
