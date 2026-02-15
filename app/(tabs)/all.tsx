@@ -3,6 +3,7 @@ import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -44,6 +45,7 @@ const MenuItem = ({
 
 export default function AllScreen() {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
 
   return (
     <ThemedView style={styles.container}>
@@ -65,17 +67,18 @@ export default function AllScreen() {
             <ThemedText style={styles.userName}>신신이</ThemedText>
             <ThemedText style={styles.userEmail}>user@mediology.com</ThemedText>
           </View>
-          <Pressable style={styles.editButton}>
+          {/* <Pressable style={styles.editButton}>
             <ThemedText style={styles.editButtonText}>편집</ThemedText>
-          </Pressable>
+          </Pressable> */}
         </View>
 
-        {/* Settings Section (TODO: Add settings) */}
-        {/* <View style={styles.section}>
+        {/* Settings Section */}
+        <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>설정</ThemedText>
           <View style={styles.sectionContent}>
-            <MenuItem icon="notifications-outline" title="알림 설정" />
-            <MenuItem icon="lock-closed-outline" title="개인정보 관리" />
+            {/* @TODO: Add notifications settings */}
+            {/* <MenuItem icon="notifications-outline" title="알림 설정" /> */}
+            <MenuItem icon="lock-closed-outline" title="개인정보 관리" onPress={() => router.push("/privacy-settings")} />
             <MenuItem
               icon="information-circle-outline"
               title="앱 정보 및 고객센터"
@@ -87,16 +90,16 @@ export default function AllScreen() {
               showChevron={false}
             />
           </View>
-        </View> */}
+        </View>
 
-        {/* Support Section */}
-        <View style={styles.section}>
+        {/* Support Section - @TODO: Add support */}
+        {/* <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>지원</ThemedText>
           <View style={styles.sectionContent}>
             <MenuItem icon="globe-outline" title="웹사이트" />
             <MenuItem icon="chatbubble-ellipses-outline" title="고객 지원" />
           </View>
-        </View>
+        </View> */}
 
         {/* Footer */}
         <View style={styles.footer}>
