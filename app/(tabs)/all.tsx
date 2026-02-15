@@ -3,9 +3,11 @@ import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { useUserStore } from "@/src/stores/userStore"
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap
@@ -44,6 +46,8 @@ const MenuItem = ({
 
 export default function AllScreen() {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
+  const profile = useUserStore((s) => s.profile)
 
   return (
     <ThemedView style={styles.container}>
@@ -62,23 +66,33 @@ export default function AllScreen() {
             contentFit="cover"
           />
           <View style={styles.profileInfo}>
-            <ThemedText style={styles.userName}>신신이</ThemedText>
-            <ThemedText style={styles.userEmail}>user@mediology.com</ThemedText>
+            <ThemedText style={styles.userName}>
+              {profile?.nickname ?? "사용자"}
+            </ThemedText>
+            <ThemedText style={styles.userEmail}>
+              {profile?.email ?? ""}
+            </ThemedText>
           </View>
-          <Pressable style={styles.editButton}>
+          {/* <Pressable style={styles.editButton}>
             <ThemedText style={styles.editButtonText}>편집</ThemedText>
-          </Pressable>
+          </Pressable> */}
         </View>
 
         {/* Settings Section */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>설정</ThemedText>
           <View style={styles.sectionContent}>
-            <MenuItem icon="notifications-outline" title="알림 설정" />
-            <MenuItem icon="lock-closed-outline" title="개인정보 관리" />
+            {/* @TODO: Add notifications settings */}
+            {/* <MenuItem icon="notifications-outline" title="알림 설정" /> */}
+            <MenuItem
+              icon="lock-closed-outline"
+              title="개인정보 관리"
+              onPress={() => router.push("/privacy-settings")}
+            />
             <MenuItem
               icon="information-circle-outline"
               title="앱 정보 및 고객센터"
+              onPress={() => router.push("/app-info")}
             />
             <MenuItem
               icon="star-outline"
@@ -89,22 +103,14 @@ export default function AllScreen() {
           </View>
         </View>
 
-        {/* Support Section */}
-        <View style={styles.section}>
+        {/* Support Section - @TODO: Add support */}
+        {/* <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>지원</ThemedText>
           <View style={styles.sectionContent}>
             <MenuItem icon="globe-outline" title="웹사이트" />
             <MenuItem icon="chatbubble-ellipses-outline" title="고객 지원" />
           </View>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <ThemedText style={styles.copyright}>(c) 2026 mediology</ThemedText>
-          <ThemedText style={styles.copyright}>
-            (c) 2026 주식회사 메디올로지
-          </ThemedText>
-        </View>
+        </View> */}
       </ScrollView>
     </ThemedView>
   )
@@ -228,15 +234,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#AAA",
     marginRight: 8,
-  },
-  footer: {
-    marginTop: 20,
-    alignItems: "center",
-    paddingBottom: 20,
-  },
-  copyright: {
-    fontSize: 12,
-    color: "#CCC",
-    marginBottom: 4,
   },
 })

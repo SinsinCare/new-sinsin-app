@@ -71,10 +71,8 @@ function RootLayoutNav() {
         <Stack.Screen name="create-post" />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="consultation-history" />
-        <Stack.Screen
-          name="onboarding"
-          options={{ gestureEnabled: false }}
-        />
+        <Stack.Screen name="(settings)" />
+        <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
       </Stack>
     </>
   )
