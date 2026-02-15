@@ -3,12 +3,14 @@ export interface UserProfile {
   uid: string
   email: string
   displayName: string
+  nickname: string
   birthDate: string
-  gender: 'male' | 'female'
+  gender: "male" | "female"
   height: number
   weight: number
   ckdStage: 1 | 2 | 3 | 4 | 5
   onDialysis: boolean
+  referralCode?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -40,7 +42,7 @@ export interface FoodRecord {
   phosphorus: number
   hasBroth: boolean
   brothConsumed: boolean
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  mealType: "breakfast" | "lunch" | "dinner" | "snack"
   recordDate: Date
   imageUrl?: string
 }
@@ -55,13 +57,19 @@ export interface ChatConversation {
   updatedAt: Date
 }
 
-export type ChatCategory = 'diet' | 'medicine' | 'dialysis' | 'checkup' | 'transplant' | 'welfare'
+export type ChatCategory =
+  | "diet"
+  | "medicine"
+  | "dialysis"
+  | "checkup"
+  | "transplant"
+  | "welfare"
 
 // 채팅 메시지
 export interface ChatMessage {
   id: string
   conversationId: string
-  role: 'user' | 'assistant'
+  role: "user" | "assistant"
   content: string
   createdAt: Date
 }

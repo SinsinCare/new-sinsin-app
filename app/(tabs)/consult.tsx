@@ -1,223 +1,68 @@
-import React, { useState, useRef } from 'react'
+import { useState, useCallback } from "react"
+import { ScrollView } from "react-native"
+import { YStack } from "tamagui"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useRouter } from "expo-router"
+
+import type { ChatCategory } from "@/src/types/models"
+import type { FaqItem } from "@/src/features/consultation/types"
 import {
-  View,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
-import { ThemedText } from '@/components/themed-text'
-import { ThemedView } from '@/components/themed-view'
-
-type Message = {
-  id: string
-  text: string
-  sender: 'user' | 'bot'
-  timestamp: Date
-}
+  MOCK_FAQ_LIST,
+  MOCK_HISTORY_LIST,
+} from "@/src/features/consultation/data/mockData"
+import { ConsultHeader } from "@/src/features/consultation/components/ConsultHeader"
+import { CategorySection } from "@/src/features/consultation/components/CategorySection"
+import { FaqSection } from "@/src/features/consultation/components/FaqSection"
+import { HistorySection } from "@/src/features/consultation/components/HistorySection"
+import { FaqDetailSheet } from "@/src/features/consultation/components/FaqDetailSheet"
 
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
-  const scrollViewRef = useRef<ScrollView>(null)
-  const [inputText, setInputText] = useState('')
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: '안녕하세요! 신신 AI 상담원입니다. 오늘 식단이나 건강에 대해 궁금한 점이 있으신가요?',
-      sender: 'bot',
-      timestamp: new Date(),
+  const router = useRouter()
+  const [selectedFaq, setSelectedFaq] = useState<FaqItem | null>(null)
+
+  const handleCategoryPress = useCallback(
+    (key: ChatCategory) => {
+      router.push({ pathname: "/chat", params: { category: key } })
     },
-  ])
+    [router],
+  )
 
-  const handleSend = () => {
-    if (inputText.trim().length === 0) return
+  const handleFaqPress = useCallback((item: FaqItem) => {
+    setSelectedFaq(item)
+  }, [])
 
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText,
-      sender: 'user',
-      timestamp: new Date(),
-    }
+  const handleHistoryPress = useCallback((id: string) => {
+    console.log("History selected:", id)
+  }, [])
 
-    setMessages([...messages, newUserMessage])
-    setInputText('')
-
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: '궁금하신 내용에 대해 분석 중입니다. 잠시만 기다려 주세요!',
-        sender: 'bot',
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, botResponse])
-    }, 1000)
-  }
+  const handleSeeAll = useCallback(() => {
+    router.push("/consultation-history")
+  }, [router])
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => console.log('Sidebar toggle pressed')}
-        >
-          <Ionicons name="menu" size={24} color="#333" />
-        </TouchableOpacity>
-        <ThemedText type="subtitle" style={styles.headerTitle}>
-          AI 상담원
-        </ThemedText>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => {
-            setMessages([
-              {
-                id: Date.now().toString(),
-                text: '새로운 대화를 시작합니다. 궁금한 점을 말씀해 주세요!',
-                sender: 'bot',
-                timestamp: new Date(),
-              },
-            ])
-          }}
-        >
-          <Ionicons name="add" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-
+    <YStack flex={1} backgroundColor="$background" paddingTop={insets.top}>
       <ScrollView
-        ref={scrollViewRef}
-        style={styles.messageList}
-        contentContainerStyle={styles.messageListContent}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+        showsVerticalScrollIndicator={false}
       >
-        {messages.map((message) => (
-          <View
-            key={message.id}
-            style={[
-              styles.messageBubble,
-              message.sender === 'user' ? styles.userBubble : styles.botBubble,
-            ]}
-          >
-            <ThemedText
-              style={[
-                styles.messageText,
-                message.sender === 'user' ? styles.userText : styles.botText,
-              ]}
-            >
-              {message.text}
-            </ThemedText>
-          </View>
-        ))}
+        <YStack paddingTop="$3" gap="$6">
+          <ConsultHeader />
+          <CategorySection onCategoryPress={handleCategoryPress} />
+          <FaqSection items={MOCK_FAQ_LIST} onFaqPress={handleFaqPress} />
+          <HistorySection
+            items={MOCK_HISTORY_LIST}
+            onItemPress={handleHistoryPress}
+            onSeeAll={handleSeeAll}
+          />
+        </YStack>
       </ScrollView>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 10 }]}>
-          <TextInput
-            style={styles.input}
-            placeholder="메시지를 입력하세요..."
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-            <Ionicons name="send" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </ThemedView>
+      <FaqDetailSheet
+        item={selectedFaq}
+        open={selectedFaq !== null}
+        onClose={() => setSelectedFaq(null)}
+      />
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  messageList: {
-    flex: 1,
-  },
-  messageListContent: {
-    padding: 20,
-    gap: 12,
-  },
-  messageBubble: {
-    maxWidth: '80%',
-    padding: 12,
-    borderRadius: 20,
-    marginBottom: 8,
-  },
-  userBubble: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#0a7ea4',
-    borderBottomRightRadius: 4,
-  },
-  botBubble: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E9ECEF',
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  userText: {
-    color: '#fff',
-  },
-  botText: {
-    color: '#333',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#F1F3F5',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    maxHeight: 100,
-    marginRight: 10,
-  },
-  sendButton: {
-    backgroundColor: '#0a7ea4',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-})

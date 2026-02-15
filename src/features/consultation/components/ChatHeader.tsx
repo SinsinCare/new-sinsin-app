@@ -1,0 +1,40 @@
+import { Pressable, View } from "react-native"
+import { XStack, Text } from "tamagui"
+import { Ionicons } from "@expo/vector-icons"
+import { useRouter } from "expo-router"
+import { tokens } from "@/src/theme/tokens"
+
+interface ChatHeaderProps {
+  title: string
+}
+
+export function ChatHeader({ title }: ChatHeaderProps) {
+  const router = useRouter()
+
+  return (
+    <>
+      <XStack paddingHorizontal="$4" paddingVertical="$3" alignItems="center">
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={tokens.color.grey1.val}
+          />
+        </Pressable>
+        <Text
+          fontSize="$5"
+          fontWeight="700"
+          color="$color"
+          flex={1}
+          textAlign="center"
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+        {/* Spacer to balance back button */}
+        <View style={{ width: 24 }} />
+      </XStack>
+      <View style={{ height: 1, backgroundColor: tokens.color.grey8.val }} />
+    </>
+  )
+}

@@ -1,8 +1,8 @@
-const { getDefaultConfig } = require('@expo/metro-config')
+const { getDefaultConfig } = require("@expo/metro-config")
 
 const config = getDefaultConfig(__dirname)
 
-// Support .cjs files (used by Firebase and other packages)
-config.resolver.sourceExts.push('cjs')
+// Support .cjs and .mjs files (Firebase, react-hook-form 등)
+config.resolver.sourceExts = [...config.resolver.sourceExts, "cjs", "mjs"]
 
 module.exports = config

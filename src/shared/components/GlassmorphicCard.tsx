@@ -1,13 +1,13 @@
-import { styled, YStack, YStackProps } from 'tamagui'
+import { styled, YStack, YStackProps } from "tamagui"
 
 export const GlassmorphicCard = styled(YStack, {
-  name: 'GlassmorphicCard',
-  backgroundColor: '$cardBackground',
-  borderRadius: '$4',
-  padding: '$4',
+  name: "GlassmorphicCard",
+  backgroundColor: "$cardBackground",
+  borderRadius: "$4",
+  padding: "$4",
   borderWidth: 1,
-  borderColor: 'rgba(255, 255, 255, 0.2)',
-  shadowColor: '#000',
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shadowColor: "#000",
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.1,
   shadowRadius: 8,
@@ -29,10 +29,10 @@ export const GlassmorphicCard = styled(YStack, {
   } as const,
 
   defaultVariants: {
-    variant: 'default',
+    variant: "default",
   },
 })
 
 export type GlassmorphicCardProps = YStackProps & {
-  variant?: 'default' | 'elevated' | 'flat'
+  variant?: "default" | "elevated" | "flat"
 }

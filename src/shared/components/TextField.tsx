@@ -1,31 +1,31 @@
-import { Input, Label, YStack, Text, styled, InputProps } from 'tamagui'
-import { useState } from 'react'
+import { Input, Label, YStack, Text, styled, InputProps } from "tamagui"
+import { useState } from "react"
 
 const StyledInput = styled(Input, {
-  name: 'SinsinInput',
-  backgroundColor: '$cardBackground',
+  name: "SinsinInput",
+  backgroundColor: "$cardBackground",
   borderWidth: 1,
-  borderColor: '$borderColor',
-  borderRadius: '$3',
+  borderColor: "$borderColor",
+  borderRadius: "$3",
   height: 48,
-  paddingHorizontal: '$3',
+  paddingHorizontal: "$3",
   fontSize: 16,
 
   focusStyle: {
-    borderColor: '$primary',
+    borderColor: "$primary",
     borderWidth: 2,
   },
 
   variants: {
     error: {
       true: {
-        borderColor: '$danger',
+        borderColor: "$danger",
       },
     },
   } as const,
 })
 
-interface TextFieldProps extends Omit<InputProps, 'size'> {
+interface TextFieldProps extends Omit<InputProps, "size"> {
   label?: string
   error?: string
   helper?: string
@@ -40,7 +40,7 @@ export function TextField({ label, error, helper, ...props }: TextFieldProps) {
         <Label
           size="$4"
           fontSize={14}
-          color={error ? '$danger' : isFocused ? '$primary' : '$color'}
+          color={error ? "$danger" : isFocused ? "$primary" : "$color"}
         >
           {label}
         </Label>
@@ -53,7 +53,7 @@ export function TextField({ label, error, helper, ...props }: TextFieldProps) {
         {...props}
       />
       {(error || helper) && (
-        <Text fontSize={12} color={error ? '$danger' : '$colorSubtle'}>
+        <Text fontSize={12} color={error ? "$danger" : "$colorSubtle"}>
           {error || helper}
         </Text>
       )}

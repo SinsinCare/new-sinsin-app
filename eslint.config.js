@@ -1,7 +1,7 @@
-const { defineConfig } = require('eslint/config')
-const expoConfig = require('eslint-config-expo/flat')
-const prettier = require('eslint-plugin-prettier')
-const prettierConfig = require('eslint-config-prettier')
+const { defineConfig } = require("eslint/config")
+const expoConfig = require("eslint-config-expo/flat")
+const prettier = require("eslint-plugin-prettier")
+const prettierConfig = require("eslint-config-prettier")
 
 module.exports = defineConfig([
   expoConfig,
@@ -11,10 +11,17 @@ module.exports = defineConfig([
       prettier,
     },
     rules: {
-      'prettier/prettier': 'warn',
+      "prettier/prettier": "warn",
     },
   },
   {
-    ignores: ['node_modules/', 'dist/', '.expo/', 'web-build/', 'ios/', 'android/'],
+    ignores: [
+      "node_modules/",
+      "dist/",
+      ".expo/",
+      "web-build/",
+      "ios/",
+      "android/",
+    ],
   },
 ])
