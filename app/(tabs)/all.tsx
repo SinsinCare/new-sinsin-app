@@ -86,6 +86,7 @@ export default function AllScreen() {
             <MenuItem
               icon="information-circle-outline"
               title="앱 정보 및 고객센터"
+              onPress={() => router.push("/app-info")}
             />
             <MenuItem
               icon="star-outline"
@@ -104,14 +105,6 @@ export default function AllScreen() {
             <MenuItem icon="chatbubble-ellipses-outline" title="고객 지원" />
           </View>
         </View> */}
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <ThemedText style={styles.copyright}>(c) 2026 mediology</ThemedText>
-          <ThemedText style={styles.copyright}>
-            (c) 2026 주식회사 메디올로지
-          </ThemedText>
-        </View>
       </ScrollView>
     </ThemedView>
   )
@@ -235,15 +228,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#AAA",
     marginRight: 8,
-  },
-  footer: {
-    marginTop: 20,
-    alignItems: "center",
-    paddingBottom: 20,
-  },
-  copyright: {
-    fontSize: 12,
-    color: "#CCC",
-    marginBottom: 4,
   },
 })
