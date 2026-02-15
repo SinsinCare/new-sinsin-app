@@ -7,6 +7,7 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { useUserStore } from "@/src/stores/userStore"
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap
@@ -46,6 +47,7 @@ const MenuItem = ({
 export default function AllScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const profile = useUserStore((s) => s.profile)
 
   return (
     <ThemedView style={styles.container}>
@@ -64,8 +66,12 @@ export default function AllScreen() {
             contentFit="cover"
           />
           <View style={styles.profileInfo}>
-            <ThemedText style={styles.userName}>신신이</ThemedText>
-            <ThemedText style={styles.userEmail}>user@mediology.com</ThemedText>
+            <ThemedText style={styles.userName}>
+              {profile?.nickname ?? "사용자"}
+            </ThemedText>
+            <ThemedText style={styles.userEmail}>
+              {profile?.email ?? ""}
+            </ThemedText>
           </View>
           {/* <Pressable style={styles.editButton}>
             <ThemedText style={styles.editButtonText}>편집</ThemedText>
