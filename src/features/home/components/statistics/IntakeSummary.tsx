@@ -7,7 +7,7 @@ import {
 
 export function IntakeSummary() {
   return (
-    <YStack paddingVertical="$3" paddingTop={18} gap="$3">
+    <YStack paddingVertical="$3" gap="$3">
       <Text fontSize="$6" fontWeight="700">
         섭취량 한눈에 보기
       </Text>
