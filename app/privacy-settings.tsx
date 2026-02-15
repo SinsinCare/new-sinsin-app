@@ -36,9 +36,7 @@ const MenuItem = ({
         color={danger ? "#E53E3E" : "#555"}
         style={styles.menuIcon}
       />
-      <ThemedText
-        style={[styles.menuTitle, danger && styles.menuTitleDanger]}
-      >
+      <ThemedText style={[styles.menuTitle, danger && styles.menuTitleDanger]}>
         {title}
       </ThemedText>
     </View>
@@ -57,12 +55,7 @@ export default function PrivacySettingsScreen() {
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top + 8 },
-        ]}
-      >
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color="#333" />
         </Pressable>
@@ -81,8 +74,16 @@ export default function PrivacySettingsScreen() {
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>약관 및 정책</ThemedText>
           <View style={styles.sectionContent}>
-            <MenuItem icon="document-text-outline" title="개인정보 처리방침" />
-            <MenuItem icon="reader-outline" title="서비스 이용약관" />
+            <MenuItem
+              icon="document-text-outline"
+              title="개인정보 처리방침"
+              onPress={() => router.push("/legal-document?type=privacy-policy")}
+            />
+            <MenuItem
+              icon="reader-outline"
+              title="서비스 이용약관"
+              onPress={() => router.push("/legal-document?type=terms-of-use")}
+            />
           </View>
         </View>
 
@@ -90,11 +91,7 @@ export default function PrivacySettingsScreen() {
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>계정 관리</ThemedText>
           <View style={styles.sectionContent}>
-            <MenuItem
-              icon="trash-outline"
-              title="계정 삭제"
-              danger
-            />
+            <MenuItem icon="trash-outline" title="계정 삭제" danger />
           </View>
         </View>
       </ScrollView>

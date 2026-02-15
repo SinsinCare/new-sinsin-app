@@ -78,7 +78,11 @@ export default function AllScreen() {
           <View style={styles.sectionContent}>
             {/* @TODO: Add notifications settings */}
             {/* <MenuItem icon="notifications-outline" title="알림 설정" /> */}
-            <MenuItem icon="lock-closed-outline" title="개인정보 관리" onPress={() => router.push("/privacy-settings")} />
+            <MenuItem
+              icon="lock-closed-outline"
+              title="개인정보 관리"
+              onPress={() => router.push("/privacy-settings")}
+            />
             <MenuItem
               icon="information-circle-outline"
               title="앱 정보 및 고객센터"
