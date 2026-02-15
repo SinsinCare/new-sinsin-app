@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { TouchableOpacity } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
@@ -6,9 +5,15 @@ import { RecordResultCard } from "./RecordResultCard"
 
 const YESTERDAY_EDEMA = EDEMA_OPTIONS[0]
 
-export function EdemaRecordResult() {
-  const [selected, setSelected] = useState<EdemaLevel | null>(null)
+interface EdemaRecordResultProps {
+  selected: EdemaLevel | null
+  onSelect: (level: EdemaLevel) => void
+}
 
+export function EdemaRecordResult({
+  selected,
+  onSelect,
+}: EdemaRecordResultProps) {
   return (
     <RecordResultCard
       type="edema"
@@ -17,7 +22,7 @@ export function EdemaRecordResult() {
     >
       <YStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (
-          <TouchableOpacity key={option} onPress={() => setSelected(option)}>
+          <TouchableOpacity key={option} onPress={() => onSelect(option)}>
             <XStack
               backgroundColor={selected === option ? "$primary" : "$pureWhite"}
               paddingVertical="$2.5"

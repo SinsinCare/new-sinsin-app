@@ -1,25 +1,30 @@
-import { useState } from "react"
 import { TouchableOpacity } from "react-native"
 import { Text, XStack } from "tamagui"
 import { RecordResultCard } from "./RecordResultCard"
-import { MOCK_YESTERDAY_WEIGHT } from "../../data/weightConstants"
-import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
 
-export function WeigthRecordResult() {
-  const [weight, setWeight] = useState(MOCK_YESTERDAY_WEIGHT)
+interface WeigthRecordResultProps {
+  weight: number
+  yesterdayWeight: number
+  onDecrease: () => void
+  onIncrease: () => void
+  onReset: () => void
+}
 
-  const decrease = () => setWeight((prev) => decreaseWeight(prev))
-  const increase = () => setWeight((prev) => increaseWeight(prev))
-  const reset = () => setWeight(MOCK_YESTERDAY_WEIGHT)
-
+export function WeigthRecordResult({
+  weight,
+  yesterdayWeight,
+  onDecrease,
+  onIncrease,
+  onReset,
+}: WeigthRecordResultProps) {
   return (
     <RecordResultCard
       type="weight"
       title="오늘의 체중을 기록해 주세요."
-      onReset={reset}
+      onReset={onReset}
     >
       <Text fontSize="$3" color="$color.grey5">
-        어제: {MOCK_YESTERDAY_WEIGHT}kg
+        어제: {yesterdayWeight}kg
       </Text>
       <XStack
         alignItems="center"
@@ -27,7 +32,7 @@ export function WeigthRecordResult() {
         gap="$3"
         paddingTop="$4"
       >
-        <TouchableOpacity onPress={decrease}>
+        <TouchableOpacity onPress={onDecrease}>
           <XStack
             backgroundColor="$pureWhite"
             paddingVertical="$2"
@@ -49,7 +54,7 @@ export function WeigthRecordResult() {
             {weight.toFixed(1)}kg
           </Text>
         </XStack>
-        <TouchableOpacity onPress={increase}>
+        <TouchableOpacity onPress={onIncrease}>
           <XStack
             backgroundColor="$pureWhite"
             paddingVertical="$2"
