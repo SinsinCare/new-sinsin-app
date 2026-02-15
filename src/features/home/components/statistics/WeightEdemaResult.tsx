@@ -1,5 +1,6 @@
 import { Text, YStack } from "tamagui"
 import { WeigthRecordResult } from "./WeigthRecordResult"
+import { EdemaRecordResult } from "./EdemaRecordResult"
 
 export function WeightEdemaResult() {
   return (
@@ -8,6 +9,7 @@ export function WeightEdemaResult() {
         체중·부종 기록
       </Text>
       <WeigthRecordResult />
+      <EdemaRecordResult />
     </YStack>
   )
 }
