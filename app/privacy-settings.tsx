@@ -1,5 +1,5 @@
 import React from "react"
-import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Platform, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -91,7 +91,21 @@ export default function PrivacySettingsScreen() {
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>계정 관리</ThemedText>
           <View style={styles.sectionContent}>
-            <MenuItem icon="trash-outline" title="계정 삭제" danger />
+            <MenuItem
+              icon="trash-outline"
+              title="계정 삭제"
+              danger
+              onPress={() =>
+                Alert.alert(
+                  "계정 삭제",
+                  "계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다. 정말 삭제하시겠습니까?",
+                  [
+                    { text: "취소", style: "cancel" },
+                    { text: "삭제", style: "destructive" },
+                  ],
+                )
+              }
+            />
           </View>
         </View>
       </ScrollView>
