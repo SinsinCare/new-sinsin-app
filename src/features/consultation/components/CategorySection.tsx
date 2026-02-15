@@ -16,12 +16,7 @@ export function CategorySection({ onCategoryPress }: CategorySectionProps) {
 
       <XStack flexWrap="wrap" gap="$3">
         {CATEGORY_LIST.map((category) => (
-          <YStack
-            key={category.key}
-            width="47%"
-            flexGrow={1}
-            flexShrink={0}
-          >
+          <YStack key={category.key} width="47%" flexGrow={1} flexShrink={0}>
             <CategoryCard category={category} onPress={onCategoryPress} />
           </YStack>
         ))}

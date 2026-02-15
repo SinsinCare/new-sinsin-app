@@ -64,6 +64,20 @@ cp .env.example .env
 - `EXPO_PUBLIC_FIREBASE_*` - Firebase 인증 정보
 - `EXPO_PUBLIC_BACKEND_URL` - AI 백엔드 URL
 
+### EAS 프로덕션 빌드 (TestFlight/스토어)
+
+`eas build` 시 `.env`는 번들에 포함되지 않습니다. **반드시** [Expo Dashboard](https://expo.dev) → 프로젝트 → Secrets에서 다음 변수를 production 환경에 설정하세요:
+
+- `EXPO_PUBLIC_FIREBASE_API_KEY`
+- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
+- `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `EXPO_PUBLIC_FIREBASE_APP_ID`
+- `EXPO_PUBLIC_BACKEND_URL`
+
+> 환경 변수 미설정 시 앱이 Firebase 초기화 실패로 크래시할 수 있습니다. 현재 코드는 설정 누락 시 Mock 모드로 폴백합니다.
+
 ## 프로젝트 구조
 
 ```
@@ -138,6 +152,7 @@ refactor/state-mgmt    # 리팩토링
   - `test`: 테스트 코드 변경/추가
   - `style`: 코드 포맷팅, 세미콜론 등 스타일 변화
 
-- **권장 사항**
-  - 한글로도 작성 가능 (팀의 주요 커뮤니케이션 언어에 따라)
-  - 가능하다면 상세한 설명을 본문(본문은 한 줄 개행 후)으로 추가
+- 앱스토어 배포
+```
+eas submit --platform ios --latest --profile production
+```

@@ -1,5 +1,10 @@
 import type { ChatCategory } from "@/src/types/models"
-import type { CategoryMeta, FaqItem, ConsultHistoryItem, QuickQuestion } from "../types"
+import type {
+  CategoryMeta,
+  FaqItem,
+  ConsultHistoryItem,
+  QuickQuestion,
+} from "../types"
 
 export const CATEGORY_LIST: CategoryMeta[] = [
   {

@@ -1,4 +1,8 @@
-import type { ChatConversation, ChatMessage, ChatCategory } from "@/src/types/models"
+import type {
+  ChatConversation,
+  ChatMessage,
+  ChatCategory,
+} from "@/src/types/models"
 import { CATEGORY_LIST } from "../data/mockData"
 
 let nextConvId = 1
@@ -40,7 +44,11 @@ class ChatService {
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
   }
 
-  addMessage(conversationId: string, role: "user" | "assistant", content: string): ChatMessage {
+  addMessage(
+    conversationId: string,
+    role: "user" | "assistant",
+    content: string,
+  ): ChatMessage {
     const msg: ChatMessage = {
       id: makeMsgId(),
       conversationId,
