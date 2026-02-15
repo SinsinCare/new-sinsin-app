@@ -45,6 +45,8 @@ export default function HomeScreen() {
         <StatisticsView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
+          selectedMealType={selectedMealType}
+          onSelectMealType={handleSelectMealType}
         />
       )}
     </ThemedView>

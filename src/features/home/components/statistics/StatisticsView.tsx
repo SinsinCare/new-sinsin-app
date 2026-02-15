@@ -2,15 +2,21 @@ import { ScrollView, StyleSheet } from "react-native"
 import { ThreeDaysCalendar } from "../record/ThreeDaysCalendar"
 import { IntakeSummary } from "./IntakeSummary"
 import { DietaryGuide } from "./DietaryGuide"
+import { DietaryRecord } from "./DietaryRecord"
+import { MealType } from "../../types"
 
 interface StatisticsViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
+  selectedMealType: MealType | null
+  onSelectMealType: (mealType: MealType) => void
 }
 
 export function StatisticsView({
   selectedDate,
   onSelectDate,
+  selectedMealType,
+  onSelectMealType,
 }: StatisticsViewProps) {
   return (
     <ScrollView
@@ -25,6 +31,11 @@ export function StatisticsView({
 
       <IntakeSummary />
       <DietaryGuide />
+
+      <DietaryRecord
+        selectedMealType={selectedMealType}
+        onSelectMealType={onSelectMealType}
+      />
     </ScrollView>
   )
 }
