@@ -1,6 +1,4 @@
 import { YStack, XStack, Text } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
-import { tokens } from "@/src/theme/tokens"
 import { CommunityMealPost } from "../types"
 import { CommunityPostCard } from "./CommunityPostCard"
 import { EmptyPostsPlaceholder } from "./EmptyPostsPlaceholder"
@@ -26,11 +24,12 @@ export function CommunitySection({
         <Text fontSize="$6" fontWeight="700" color="$color">
           커뮤니티
         </Text>
-        <Ionicons
+        {/* @TODO: Add more actions */}
+        {/* <Ionicons
           name="ellipsis-horizontal"
           size={20}
           color={tokens.color.grey5.val}
-        />
+        /> */}
       </XStack>
 
       {!isLoading && posts.length === 0 ? (

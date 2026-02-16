@@ -42,11 +42,12 @@ export function RecipeHeader({
           fontSize="$4"
           paddingHorizontal="$2"
         />
-        <Ionicons
+        {/* @TODO: Add more actions */}
+        {/* <Ionicons
           name="options-outline"
           size={20}
           color={tokens.color.grey5.val}
-        />
+        /> */}
       </XStack>
     </YStack>
   )

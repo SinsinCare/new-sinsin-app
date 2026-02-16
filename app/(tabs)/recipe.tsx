@@ -42,7 +42,7 @@ export default function RecipeScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
         showsVerticalScrollIndicator={false}
       >
-        <YStack paddingTop="$3" gap="$8">
+        <YStack paddingTop="$3" gap="$4">
           <RecipeHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}

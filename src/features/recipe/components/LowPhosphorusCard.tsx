@@ -13,13 +13,18 @@ export function LowPhosphorusCard({ item, onPress }: LowPhosphorusCardProps) {
   return (
     <Pressable onPress={() => onPress(item)}>
       <XStack
-        backgroundColor="$backgroundFocus"
+        backgroundColor="#ffffff"
         borderRadius="$6"
         padding="$3"
         gap="$3"
         alignItems="center"
       >
-        <ScoreGauge score={item.score} size={56} strokeWidth={4} />
+        <ScoreGauge
+          score={item.score}
+          size={56}
+          strokeWidth={5}
+          fontSize="$5"
+        />
         <YStack flex={1} gap="$1">
           <Text fontSize="$4" fontWeight="600" color="$color" numberOfLines={1}>
             {item.food.name}
