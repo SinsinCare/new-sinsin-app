@@ -4,10 +4,8 @@ import { YStack, XStack, Text, Input } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
-import { onboardingService } from "../src/services/onboardingService"
-import { firestoreService } from "../src/services/firestoreService"
+import { onboardingService } from "../src/services/data/onboardingService"
 import { useOnboardingStore } from "../src/stores/onboardingStore"
-import { useUserStore } from "../src/stores/userStore"
 import { useAuthStore } from "../src/stores/authStore"
 import { Checkbox, LoadingScreen } from "../src/shared/components"
 import type { OnboardingStep } from "../src/types"
@@ -19,7 +17,7 @@ export default function OnboardingScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const user = useAuthStore((s) => s.user)
-  const updateProfile = useUserStore((s) => s.updateProfile)
+  const setAccountState = useAuthStore((s) => s.setAccountState)
   const {
     currentStepIndex,
     answers,
@@ -103,10 +101,7 @@ export default function OnboardingScreen() {
         userId: user.uid,
         answers: getAnswersArray(),
       })
-      await firestoreService.updateUserProfile(user.uid, {
-        onboardingCompleted: true,
-      })
-      updateProfile({ onboardingCompleted: true })
+      setAccountState("ACTIVE")
       resetOnboarding()
       router.replace("/(tabs)/home")
     } catch {
@@ -134,10 +129,7 @@ export default function OnboardingScreen() {
     if (!user) return
     setIsSubmitting(true)
     try {
-      await firestoreService.updateUserProfile(user.uid, {
-        onboardingCompleted: true,
-      })
-      updateProfile({ onboardingCompleted: true })
+      setAccountState("ACTIVE")
       resetOnboarding()
       router.replace("/(tabs)/home")
     } catch {
@@ -213,12 +205,7 @@ export default function OnboardingScreen() {
           >
             {currentStep.title}
           </Text>
-          <Text
-            fontSize={15}
-            lineHeight={18}
-            color="#787C83"
-            marginBottom={32}
-          >
+          <Text fontSize={15} lineHeight={18} color="#787C83" marginBottom={32}>
             {currentStep.subTitle}
           </Text>
 
@@ -356,11 +343,7 @@ export default function OnboardingScreen() {
                       }
                     />
                     {field.unit && (
-                      <Text
-                        fontSize={16}
-                        color="#787C83"
-                        marginLeft={8}
-                      >
+                      <Text fontSize={16} color="#787C83" marginLeft={8}>
                         {field.unit}
                       </Text>
                     )}
@@ -394,11 +377,7 @@ export default function OnboardingScreen() {
                 letterSpacing={-0.3}
                 lineHeight={20}
               >
-                {isSubmitting
-                  ? "처리 중..."
-                  : isLastStep
-                    ? "완료"
-                    : "다음"}
+                {isSubmitting ? "처리 중..." : isLastStep ? "완료" : "다음"}
               </Text>
             </YStack>
           </Pressable>

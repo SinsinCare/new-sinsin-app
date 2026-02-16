@@ -1,5 +1,5 @@
-import type { OnboardingStep, OnboardingSubmitRequest } from "../types"
-import { isMockMode } from "../config/appConfig"
+import type { OnboardingStep, OnboardingSubmitRequest } from "../../types"
+import { isMockMode } from "../../config/appConfig"
 
 export const onboardingService = {
   async getSteps(): Promise<OnboardingStep[]> {

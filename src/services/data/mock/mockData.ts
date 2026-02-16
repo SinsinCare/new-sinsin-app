@@ -5,8 +5,8 @@ import type {
   ChatConversation,
   ChatMessage,
   DailyHealthLog,
-} from "../../types"
-import { DEFAULT_MOCK_USER } from "./mockUser"
+} from "../../../types"
+import { DEFAULT_MOCK_USER } from "../../auth/mock/mockUser"
 
 // CKD 3기 환자 프로필
 export const MOCK_USER_PROFILE: UserProfile = {

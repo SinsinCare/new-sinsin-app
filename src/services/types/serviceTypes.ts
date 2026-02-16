@@ -5,9 +5,10 @@ import type {
   ChatConversation,
   ChatMessage,
   DailyHealthLog,
+  SignupRequest,
 } from "../../types"
 
-// Firebase User와 MockUser 모두 호환되는 최소 인터페이스
+// 앱 사용자 최소 인터페이스
 export interface AppUser {
   uid: string
   email: string | null
@@ -16,12 +17,13 @@ export interface AppUser {
 
 // 인증 서비스 인터페이스
 export interface IAuthService {
-  signInWithEmail(email: string, password: string): Promise<AppUser>
-  signUpWithEmail(email: string, password: string): Promise<AppUser>
-  signInWithGoogle(idToken: string): Promise<AppUser>
+  signInWithEmail(
+    email: string,
+    password: string,
+  ): Promise<{ user: AppUser; accountState: string }>
+  signup(request: SignupRequest): Promise<AppUser>
   signOut(): Promise<void>
-  getCurrentUser(): AppUser | null
-  onAuthStateChange(callback: (user: AppUser | null) => void): () => void
+  restoreSession(): Promise<{ user: AppUser; accountState: string } | null>
 }
 
 // Firestore 서비스 인터페이스

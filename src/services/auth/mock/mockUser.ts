@@ -1,4 +1,4 @@
-import type { AppUser } from "../types/serviceTypes"
+import type { AppUser } from "../../types/serviceTypes"
 
 export class MockUser implements AppUser {
   constructor(

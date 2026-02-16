@@ -1,4 +1,4 @@
-import type { IFirestoreService } from "../types/serviceTypes"
+import type { IFirestoreService } from "../../types/serviceTypes"
 import type {
   UserProfile,
   HealthRecord,
@@ -6,7 +6,7 @@ import type {
   ChatConversation,
   ChatMessage,
   DailyHealthLog,
-} from "../../types"
+} from "../../../types"
 import {
   MOCK_USER_PROFILE,
   MOCK_HEALTH_RECORDS,

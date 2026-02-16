@@ -3,7 +3,7 @@ import type {
   FoodAnalysisResponse,
   ChatRequest,
   ChatResponse,
-} from "../types"
+} from "../../types"
 import axios from "axios"
 
 const BACKEND_URL =

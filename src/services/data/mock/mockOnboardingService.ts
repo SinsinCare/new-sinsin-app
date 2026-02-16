@@ -1,4 +1,4 @@
-import type { OnboardingStep, OnboardingSubmitRequest } from "../../types"
+import type { OnboardingStep, OnboardingSubmitRequest } from "../../../types"
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -6,8 +6,7 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
   {
     step: 1,
     title: "현재 신장 상태를 알려주세요",
-    subTitle: "잘 모르셔도 괜찮아요\n" +
-      "나중에 언제든지 수정할 수 있어요",
+    subTitle: "잘 모르셔도 괜찮아요\n" + "나중에 언제든지 수정할 수 있어요",
     type: "only",
     values: [
       { key: "1", value: "1기 (eGFR 90이상)" },
@@ -15,10 +14,10 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
       { key: "3-a", value: "3a기 (eGFR 45~59)" },
       { key: "3-b", value: "3b기 (eGFR 30~44)" },
       { key: "4", value: "4기 (eGFR 15~29)" },
-      { key: "5", value: "5기 (eGFR 15미만)"},
-      { key: "ing", value: "현재 투석중이에요"},
-      { key: "have", value: "신장 결석이 있어요 (만성 질환은 아니에요)"},
-      { key: "unknown", value: "잘 모르겠어요"}
+      { key: "5", value: "5기 (eGFR 15미만)" },
+      { key: "ing", value: "현재 투석중이에요" },
+      { key: "have", value: "신장 결석이 있어요 (만성 질환은 아니에요)" },
+      { key: "unknown", value: "잘 모르겠어요" },
     ],
   },
   {
@@ -37,8 +36,8 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
   {
     step: 3,
     title: "함께 관리중인 질환이 있나요?",
-    subTitle: "영양소 제한에 영향을 줄 수 있어요\n" +
-      "해당되는 것에 모두 체크해주세요",
+    subTitle:
+      "영양소 제한에 영향을 줄 수 있어요\n" + "해당되는 것에 모두 체크해주세요",
     type: "multi",
     values: [
       { key: "당뇨", value: "당뇨병" },
@@ -61,8 +60,7 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     step: 5,
-    title: "신장 식이에 대해 \n" +
-      "얼마나 알고 계신가요?",
+    title: "신장 식이에 대해 \n" + "얼마나 알고 계신가요?",
     subTitle: "교육 콘텐츠를 맞춤 제공하는데에 도움이 돼요",
     type: "only",
     values: [
@@ -74,8 +72,7 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     step: 6,
-    title: "신장 식이 관리에서 어려운점은\n" +
-      "무엇인가요?",
+    title: "신장 식이 관리에서 어려운점은\n" + "무엇인가요?",
     subTitle: "(복수 선택)",
     type: "multi",
     values: [
