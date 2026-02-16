@@ -22,7 +22,7 @@ export function HistorySection({
           이전 대화
         </Text>
         <Pressable onPress={onSeeAll}>
-          <Text fontSize="$4" color={tokens.color.sub7.val}>
+          <Text fontSize="$4" color="#4db6ac">
             전체보기
           </Text>
         </Pressable>

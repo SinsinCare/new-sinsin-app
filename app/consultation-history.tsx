@@ -50,7 +50,7 @@ export default function ConsultationHistoryScreen() {
   }, [])
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
       {/* Header */}
       <XStack paddingHorizontal="$4" paddingVertical="$3" alignItems="center">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -99,10 +99,8 @@ export default function ConsultationHistoryScreen() {
             paddingVertical="$1.5"
             borderRadius="$10"
             backgroundColor={
-              selectedCategory === null ? "$primary7" : "$background"
+              selectedCategory === null ? "#44af94" : "$background"
             }
-            borderWidth={1}
-            borderColor={selectedCategory === null ? "$primary7" : "$grey8"}
           >
             <Text
               fontSize="$3"
@@ -120,11 +118,7 @@ export default function ConsultationHistoryScreen() {
               paddingVertical="$1.5"
               borderRadius="$10"
               backgroundColor={
-                selectedCategory === cat.key ? "$primary7" : "$background"
-              }
-              borderWidth={1}
-              borderColor={
-                selectedCategory === cat.key ? "$primary7" : "$grey8"
+                selectedCategory === cat.key ? "#44af94" : "$background"
               }
             >
               <Text

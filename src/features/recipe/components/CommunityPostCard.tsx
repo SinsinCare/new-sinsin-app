@@ -1,4 +1,4 @@
-import { XStack, YStack, Text } from "tamagui"
+import { XStack, YStack, Text, Separator } from "tamagui"
 import { Pressable } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
@@ -36,29 +36,18 @@ export function CommunityPostCard({
 }: CommunityPostCardProps) {
   return (
     <Pressable onPress={() => onPress(post.id)}>
-      <YStack
-        backgroundColor="$cardBackground"
-        borderRadius="$4"
-        overflow="hidden"
-        borderWidth={1}
-        borderColor="$borderColor"
-        shadowColor="#000"
-        shadowOffset={{ width: 0, height: 1 }}
-        shadowOpacity={0.08}
-        shadowRadius={4}
-        elevation={2}
-      >
+      <YStack backgroundColor="#ffffff" borderRadius="$6" overflow="hidden">
         {/* Author header */}
         <XStack padding="$3" alignItems="center" gap="$2">
           <YStack
-            width={36}
-            height={36}
+            width={40}
+            height={40}
             borderRadius="$12"
             backgroundColor="$backgroundStrong"
             alignItems="center"
             justifyContent="center"
           >
-            <Ionicons name="person" size={18} color={tokens.color.grey5.val} />
+            <Ionicons name="person" size={20} color={tokens.color.grey5.val} />
           </YStack>
           <YStack flex={1}>
             <Text fontSize="$4" fontWeight="600" color="$color">
@@ -89,10 +78,13 @@ export function CommunityPostCard({
           </Text>
         </YStack>
 
+        {/* Divider */}
+        <Separator marginHorizontal="$3" borderColor="$borderColor" />
+
         {/* Actions */}
         <XStack
           paddingHorizontal="$3"
-          paddingBottom="$3"
+          paddingVertical="$3"
           justifyContent="space-between"
           alignItems="center"
         >
@@ -100,9 +92,13 @@ export function CommunityPostCard({
             <Pressable onPress={() => onLike(post.id)}>
               <XStack gap="$1" alignItems="center">
                 <Ionicons
-                  name="heart"
+                  name={post.liked ? "heart" : "heart-outline"}
                   size={18}
-                  color={tokens.color.primary7.val}
+                  color={
+                    post.liked
+                      ? tokens.color.primary7.val
+                      : tokens.color.grey5.val
+                  }
                 />
                 <Text fontSize="$3" color="$colorSubtle">
                   {formatCount(post.likes)}

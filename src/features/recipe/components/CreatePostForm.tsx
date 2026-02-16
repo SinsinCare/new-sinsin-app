@@ -56,7 +56,7 @@ export function CreatePostForm({
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
       {/* Header */}
       <XStack
         paddingHorizontal="$4"

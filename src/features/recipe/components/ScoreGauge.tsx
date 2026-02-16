@@ -7,6 +7,7 @@ interface ScoreGaugeProps {
   score: number
   size?: number
   strokeWidth?: number
+  fontSize?: string
 }
 
 function getScoreColor(score: number): string {
@@ -19,11 +20,11 @@ export function ScoreGauge({
   score,
   size = 80,
   strokeWidth = 6,
+  fontSize = "$7",
 }: ScoreGaugeProps) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const progress = (score / 100) * circumference
-  const color = getScoreColor(score)
 
   return (
     <YStack
@@ -39,7 +40,7 @@ export function ScoreGauge({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={tokens.color.grey8.val}
+            stroke={"#e5e7eb"}
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -48,7 +49,7 @@ export function ScoreGauge({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={color}
+            stroke={"#4db6ac"}
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={`${progress} ${circumference - progress}`}
@@ -57,7 +58,7 @@ export function ScoreGauge({
           />
         </Svg>
       </View>
-      <Text fontSize="$7" fontWeight="700" color="$color">
+      <Text fontSize={fontSize} fontWeight="700" color="$color">
         {score}
       </Text>
     </YStack>

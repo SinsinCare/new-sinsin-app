@@ -47,11 +47,7 @@ function KidneyMetricRow({
       paddingVertical="$2"
       paddingHorizontal="$3"
       backgroundColor={
-        isLow
-          ? "$secondaryLight"
-          : isMed
-            ? "$primaryLight"
-            : "$dangerBackground"
+        isLow ? "#f0fdfa" : isMed ? "$primaryLight" : "$dangerBackground"
       }
       borderRadius="$3"
     >
@@ -161,7 +157,12 @@ export function FoodDetailSheet({ item, open, onClose }: FoodDetailSheetProps) {
           contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
         >
           <YStack alignItems="center" gap="$2" paddingVertical="$3">
-            <ScoreGauge score={score} size={120} strokeWidth={8} />
+            <ScoreGauge
+              score={score}
+              size={120}
+              strokeWidth={8}
+              fontSize="$10"
+            />
             <Text fontSize="$3" color="$colorSubtle">
               /100
             </Text>

@@ -19,14 +19,17 @@ export function CommunitySection({
   onBookmark,
 }: CommunitySectionProps) {
   return (
-    <YStack gap="$3" paddingHorizontal="$4" paddingTop="$4">
+    <YStack gap="$3" paddingHorizontal="$4" paddingTop="$3">
       <XStack justifyContent="space-between" alignItems="center">
         <Text fontSize="$6" fontWeight="700" color="$color">
-          커뮤니티 레시피
+          커뮤니티
         </Text>
-        <Text fontSize="$5" color="$colorSubtle">
-          ···
-        </Text>
+        {/* @TODO: Add more actions */}
+        {/* <Ionicons
+          name="ellipsis-horizontal"
+          size={20}
+          color={tokens.color.grey5.val}
+        /> */}
       </XStack>
 
       {!isLoading && posts.length === 0 ? (

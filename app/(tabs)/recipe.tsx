@@ -37,12 +37,12 @@ export default function RecipeScreen() {
   )
 
   return (
-    <YStack flex={1} backgroundColor="$background" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor="#f8f9fa" paddingTop={insets.top}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
         showsVerticalScrollIndicator={false}
       >
-        <YStack paddingTop="$3" gap="$3">
+        <YStack paddingTop="$3" gap="$4">
           <RecipeHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 4,
   },
 })

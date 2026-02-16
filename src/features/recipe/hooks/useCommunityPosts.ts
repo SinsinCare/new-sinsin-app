@@ -20,7 +20,7 @@ export function useCommunityPosts() {
     mutationFn: (
       post: Omit<
         CommunityMealPost,
-        "id" | "likes" | "comments" | "bookmarked" | "createdAt"
+        "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
       >,
     ) => {
       const newPost = communityPostService.createPost(post)
@@ -41,7 +41,9 @@ export function useCommunityPosts() {
       const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
       queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) =>
         (old ?? []).map((p) =>
-          p.id === postId ? { ...p, likes: p.likes > 0 ? p.likes - 1 : 1 } : p,
+          p.id === postId
+            ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
+            : p,
         ),
       )
       return { prev }

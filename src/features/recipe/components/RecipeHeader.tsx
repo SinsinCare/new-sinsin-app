@@ -24,13 +24,11 @@ export function RecipeHeader({
       </Text>
 
       <XStack
-        backgroundColor="$backgroundStrong"
-        borderRadius="$4"
+        backgroundColor={tokens.color.pureWhite.val}
+        borderRadius="$6"
         paddingHorizontal="$3"
         alignItems="center"
         height={44}
-        borderWidth={1}
-        borderColor="$borderColor"
       >
         <Ionicons name="search" size={20} color={tokens.color.grey5.val} />
         <Input
@@ -44,11 +42,12 @@ export function RecipeHeader({
           fontSize="$4"
           paddingHorizontal="$2"
         />
-        <Ionicons
+        {/* @TODO: Add more actions */}
+        {/* <Ionicons
           name="options-outline"
           size={20}
           color={tokens.color.grey5.val}
-        />
+        /> */}
       </XStack>
     </YStack>
   )
