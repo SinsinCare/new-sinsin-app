@@ -37,12 +37,12 @@ export default function RecipeScreen() {
   )
 
   return (
-    <YStack flex={1} backgroundColor="$background" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor="#f8f9fa" paddingTop={insets.top}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
         showsVerticalScrollIndicator={false}
       >
-        <YStack paddingTop="$3" gap="$3">
+        <YStack paddingTop="$3" gap="$8">
           <RecipeHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}

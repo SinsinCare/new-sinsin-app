@@ -47,11 +47,7 @@ function KidneyMetricRow({
       paddingVertical="$2"
       paddingHorizontal="$3"
       backgroundColor={
-        isLow
-          ? "$secondaryLight"
-          : isMed
-            ? "$primaryLight"
-            : "$dangerBackground"
+        isLow ? "#f0fdfa" : isMed ? "$primaryLight" : "$dangerBackground"
       }
       borderRadius="$3"
     >

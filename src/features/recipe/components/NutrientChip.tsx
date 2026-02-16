@@ -13,7 +13,7 @@ export function NutrientChip({
 
   return (
     <XStack
-      backgroundColor={isPenalty ? "$primaryLight" : "$secondaryLight"}
+      backgroundColor={isPenalty ? "$primaryLight" : "#edf8f7"}
       paddingHorizontal="$2"
       paddingVertical="$1"
       borderRadius="$10"
@@ -22,7 +22,7 @@ export function NutrientChip({
     >
       <Text
         fontSize="$3"
-        color={isPenalty ? "$primary" : "$secondary"}
+        color={isPenalty ? "$primary" : "#4db6ac"}
         fontWeight="500"
       >
         {isPenalty ? "●" : "✓"} {label}

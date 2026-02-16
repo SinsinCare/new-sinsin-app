@@ -39,7 +39,7 @@ export function ScoreGauge({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={tokens.color.grey8.val}
+            stroke={"#e5e7eb"}
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -48,7 +48,7 @@ export function ScoreGauge({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={color}
+            stroke={"#4db6ac"}
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={`${progress} ${circumference - progress}`}

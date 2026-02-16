@@ -47,16 +47,16 @@ export function KidneyFoodCard({ item, onPress }: KidneyFoodCardProps) {
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <YStack
-          backgroundColor="$backgroundFocus"
-          padding="$3"
-          paddingTop="$3.5"
+          backgroundColor="#ffffff"
+          padding="$4"
+          paddingTop="$4"
           paddingBottom="$3"
           alignItems="center"
           gap="$2.5"
-          width={148}
+          width={170}
           borderRadius="$6"
         >
-          <ScoreGauge score={item.score} size={68} strokeWidth={4.5} />
+          <ScoreGauge score={item.score} size={80} strokeWidth={8} />
 
           <YStack alignItems="center" gap="$1">
             <Text
@@ -65,7 +65,7 @@ export function KidneyFoodCard({ item, onPress }: KidneyFoodCardProps) {
               color="$color"
               numberOfLines={1}
               textAlign="center"
-              width={124}
+              width={138}
             >
               {item.food.name}
             </Text>

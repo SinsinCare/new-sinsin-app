@@ -49,6 +49,7 @@ export interface CommunityMealPost {
   title: string
   description: string
   likes: number
+  liked: boolean
   comments: number
   bookmarked: boolean
   createdAt: Date
@@ -60,7 +61,7 @@ export interface ICommunityPostService {
   createPost(
     post: Omit<
       CommunityMealPost,
-      "id" | "likes" | "comments" | "bookmarked" | "createdAt"
+      "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
     >,
   ): CommunityMealPost
   toggleLike(postId: string): void

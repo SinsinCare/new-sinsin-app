@@ -24,7 +24,7 @@ export function RecipeHeader({
       </Text>
 
       <XStack
-        backgroundColor="$backgroundFocus"
+        backgroundColor={tokens.color.pureWhite.val}
         borderRadius="$6"
         paddingHorizontal="$3"
         alignItems="center"

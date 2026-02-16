@@ -28,7 +28,7 @@ export function KidneyNutritionSection({
         </Text>
         <Text
           fontSize="$4"
-          color="$colorSubtle"
+          color="#4db6ac"
           fontWeight="500"
           onPress={onViewAll}
         >
