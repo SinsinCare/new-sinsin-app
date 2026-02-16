@@ -1,17 +1,19 @@
 import { XStack, Text } from "tamagui"
 import { Pressable } from "react-native"
-import { getThreeDays } from "../../utils/getThreeDays"
+import { CalendarMode, getThreeDays } from "../../utils/getThreeDays"
 
 interface ThreeDaysCalendarProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
+  mode?: CalendarMode
 }
 
 export function ThreeDaysCalendar({
   selectedDate,
   onSelectDate,
+  mode = "record",
 }: ThreeDaysCalendarProps) {
-  const days = getThreeDays()
+  const days = getThreeDays(new Date(), mode)
 
   const isSameDay = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() &&

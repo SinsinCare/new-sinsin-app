@@ -4,7 +4,7 @@ import { HomeHeader } from "@/src/features/home/components/HomeHeader"
 import { useState } from "react"
 import { MainTab, MealType } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
-import { StatusView } from "@/src/features/home/components/statistics/StatusView"
+import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
 import { StyleSheet } from "react-native"
 
 export default function HomeScreen() {
@@ -42,7 +42,12 @@ export default function HomeScreen() {
           onSelectMealType={handleSelectMealType}
         />
       ) : (
-        <StatusView selectedDate={selectedDate} />
+        <StatisticsView
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          selectedMealType={selectedMealType}
+          onSelectMealType={handleSelectMealType}
+        />
       )}
     </ThemedView>
   )
