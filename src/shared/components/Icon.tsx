@@ -1,3 +1,7 @@
+/**
+ * SVG 아이콘 래퍼. assets/icons/ 의 SVG는 stroke/fill에 "currentColor"를
+ * 사용해야 color prop으로 런타임 색상 변경이 가능합니다.
+ */
 import { SvgProps } from "react-native-svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 
