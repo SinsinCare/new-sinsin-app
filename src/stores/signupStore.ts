@@ -3,6 +3,11 @@ import { create } from "zustand"
 interface SignupState {
   isSignupInProgress: boolean
   email: string
+  signupToken: string
+  password: string
+  termsOfServiceAgree: boolean
+  privacyPolicyAgree: boolean
+  marketingAgree: boolean
   name: string
   birthYear: string
   birthMonth: string
@@ -12,6 +17,11 @@ interface SignupState {
   nickname: string
   setSignupInProgress: (v: boolean) => void
   setEmail: (email: string) => void
+  setSignupToken: (token: string) => void
+  setPassword: (password: string) => void
+  setTermsOfServiceAgree: (v: boolean) => void
+  setPrivacyPolicyAgree: (v: boolean) => void
+  setMarketingAgree: (v: boolean) => void
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
   setGender: (gender: "male" | "female" | "") => void
@@ -23,6 +33,11 @@ interface SignupState {
 const initialState = {
   isSignupInProgress: false,
   email: "",
+  signupToken: "",
+  password: "",
+  termsOfServiceAgree: false,
+  privacyPolicyAgree: false,
+  marketingAgree: false,
   name: "",
   birthYear: "",
   birthMonth: "",
@@ -36,6 +51,11 @@ export const useSignupStore = create<SignupState>((set) => ({
   ...initialState,
   setSignupInProgress: (isSignupInProgress) => set({ isSignupInProgress }),
   setEmail: (email) => set({ email }),
+  setSignupToken: (signupToken) => set({ signupToken }),
+  setPassword: (password) => set({ password }),
+  setTermsOfServiceAgree: (termsOfServiceAgree) => set({ termsOfServiceAgree }),
+  setPrivacyPolicyAgree: (privacyPolicyAgree) => set({ privacyPolicyAgree }),
+  setMarketingAgree: (marketingAgree) => set({ marketingAgree }),
   setName: (name) => set({ name }),
   setBirth: (birthYear, birthMonth, birthDay) =>
     set({ birthYear, birthMonth, birthDay }),
