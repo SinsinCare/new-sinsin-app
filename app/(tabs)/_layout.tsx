@@ -2,14 +2,15 @@ import { Tabs } from "expo-router"
 import React from "react"
 
 import { HapticTab } from "@/components/haptic-tab"
-import { IconSymbol } from "@/components/ui/icon-symbol"
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons"
 import { tokens } from "@/src/theme/tokens"
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: tokens.color.primary7.val,
+        tabBarActiveTintColor: tokens.color.grey1.val,
+        tabBarInactiveTintColor: tokens.color.grey7.val,
         headerShown: false,
         tabBarButton: HapticTab,
       }}
@@ -19,7 +20,11 @@ export default function TabLayout() {
         options={{
           title: "홈",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <MaterialCommunityIcons
+              size={26}
+              name="home-outline"
+              color={color}
+            />
           ),
         }}
       />
@@ -28,7 +33,11 @@ export default function TabLayout() {
         options={{
           title: "상담",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="message.fill" color={color} />
+            <MaterialCommunityIcons
+              size={24}
+              name="chat-processing-outline"
+              color={color}
+            />
           ),
         }}
       />
@@ -37,7 +46,11 @@ export default function TabLayout() {
         options={{
           title: "레시피",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="book.fill" color={color} />
+            <MaterialCommunityIcons
+              size={26}
+              name="chef-hat-outline"
+              color={color}
+            />
           ),
         }}
       />
@@ -46,7 +59,11 @@ export default function TabLayout() {
         options={{
           title: "식당",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="fork.knife" color={color} />
+            <MaterialCommunityIcons
+              size={26}
+              name="map-marker-outline"
+              color={color}
+            />
           ),
         }}
       />
@@ -55,7 +72,7 @@ export default function TabLayout() {
         options={{
           title: "전체",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="line.3.horizontal" color={color} />
+            <MaterialCommunityIcons size={24} name="menu" color={color} />
           ),
         }}
       />
