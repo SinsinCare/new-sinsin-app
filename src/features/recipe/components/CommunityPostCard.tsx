@@ -37,16 +37,9 @@ export function CommunityPostCard({
   return (
     <Pressable onPress={() => onPress(post.id)}>
       <YStack
-        backgroundColor="$cardBackground"
-        borderRadius="$4"
+        backgroundColor="$backgroundFocus"
+        borderRadius="$6"
         overflow="hidden"
-        borderWidth={1}
-        borderColor="$borderColor"
-        shadowColor="#000"
-        shadowOffset={{ width: 0, height: 1 }}
-        shadowOpacity={0.08}
-        shadowRadius={4}
-        elevation={2}
       >
         {/* Author header */}
         <XStack padding="$3" alignItems="center" gap="$2">

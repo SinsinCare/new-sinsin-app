@@ -47,7 +47,7 @@ export function KidneyFoodCard({ item, onPress }: KidneyFoodCardProps) {
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <YStack
-          backgroundColor="$cardBackground"
+          backgroundColor="$backgroundFocus"
           padding="$3"
           paddingTop="$3.5"
           paddingBottom="$3"
@@ -55,8 +55,6 @@ export function KidneyFoodCard({ item, onPress }: KidneyFoodCardProps) {
           gap="$2.5"
           width={148}
           borderRadius="$6"
-          borderWidth={3}
-          borderColor="$borderColor"
         >
           <ScoreGauge score={item.score} size={68} strokeWidth={4.5} />
 

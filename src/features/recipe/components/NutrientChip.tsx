@@ -16,7 +16,7 @@ export function NutrientChip({
       backgroundColor={isPenalty ? "$primaryLight" : "$secondaryLight"}
       paddingHorizontal="$2"
       paddingVertical="$1"
-      borderRadius="$3"
+      borderRadius="$10"
       alignItems="center"
       gap="$1"
     >

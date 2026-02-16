@@ -19,7 +19,7 @@ export function CommunitySection({
   onBookmark,
 }: CommunitySectionProps) {
   return (
-    <YStack gap="$3" paddingHorizontal="$4" paddingTop="$4">
+    <YStack gap="$3" paddingHorizontal="$4" paddingTop="$3">
       <XStack justifyContent="space-between" alignItems="center">
         <Text fontSize="$6" fontWeight="700" color="$color">
           커뮤니티 레시피

@@ -28,8 +28,8 @@ export function KidneyNutritionSection({
         </Text>
         <Text
           fontSize="$4"
-          color="$secondary"
-          fontWeight="600"
+          color="$colorSubtle"
+          fontWeight="500"
           onPress={onViewAll}
         >
           전체보기
