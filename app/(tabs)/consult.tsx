@@ -41,7 +41,7 @@ export default function ConsultScreen() {
   }, [router])
 
   return (
-    <YStack flex={1} backgroundColor="$background" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor="#f8f9fa" paddingTop={insets.top}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
         showsVerticalScrollIndicator={false}

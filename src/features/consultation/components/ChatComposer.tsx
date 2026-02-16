@@ -56,8 +56,8 @@ export function ChatComposer({
         gap="$2"
         alignItems="flex-end"
       >
-        {/* Plus Button */}
-        <Pressable
+        {/* Plus Button - @TODO: Add more actions */}
+        {/* <Pressable
           onPress={() => {}}
           style={{
             width: 36,
@@ -70,7 +70,7 @@ export function ChatComposer({
           }}
         >
           <Ionicons name="add" size={22} color={tokens.color.grey4.val} />
-        </Pressable>
+        </Pressable> */}
 
         {/* Text Input */}
         <View
