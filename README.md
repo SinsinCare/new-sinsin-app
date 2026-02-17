@@ -153,6 +153,9 @@ refactor/state-mgmt    # 리팩토링
   - `style`: 코드 포맷팅, 세미콜론 등 스타일 변화
 
 - 앱스토어 배포
+app.json expo ios build_number 수정
 ```
+eas build --platform ios --profile production
+
 eas submit --platform ios --latest --profile production
 ```

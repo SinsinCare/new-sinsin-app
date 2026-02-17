@@ -1,6 +1,7 @@
 import React from "react"
 import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
 import { Image } from "expo-image"
+import Constants from "expo-constants"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -48,6 +49,8 @@ export default function AllScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const profile = useUserStore((s) => s.profile)
+  const appVersion =
+    Constants.expoConfig?.version ?? Constants.nativeApplicationVersion ?? "1.0.0"
 
   return (
     <ThemedView style={styles.container}>
@@ -97,7 +100,7 @@ export default function AllScreen() {
             <MenuItem
               icon="star-outline"
               title="앱 버전"
-              value="v1.0.0"
+              value={`v${appVersion}`}
               showChevron={false}
             />
           </View>
