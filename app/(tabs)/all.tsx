@@ -1,5 +1,12 @@
 import React from "react"
-import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Pressable,
+  Platform,
+  Alert,
+} from "react-native"
 import { Image } from "expo-image"
 import Constants from "expo-constants"
 import { Ionicons } from "@expo/vector-icons"
@@ -9,6 +16,7 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { useUserStore } from "@/src/stores/userStore"
+import { useAuth } from "@/src/hooks/useAuth"
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap
@@ -49,8 +57,11 @@ export default function AllScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const profile = useUserStore((s) => s.profile)
+  const { signOut } = useAuth()
   const appVersion =
-    Constants.expoConfig?.version ?? Constants.nativeApplicationVersion ?? "1.0.0"
+    Constants.expoConfig?.version ??
+    Constants.nativeApplicationVersion ??
+    "1.0.0"
 
   return (
     <ThemedView style={styles.container}>
@@ -114,6 +125,37 @@ export default function AllScreen() {
             <MenuItem icon="chatbubble-ellipses-outline" title="고객 지원" />
           </View>
         </View> */}
+
+        {/* Logout */}
+        <View style={styles.section}>
+          <View style={styles.sectionContent}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuItem,
+                { borderBottomWidth: 0, justifyContent: "center" },
+                pressed && styles.menuItemPressed,
+              ]}
+              onPress={() =>
+                Alert.alert("로그아웃", "정말 로그아웃하시겠습니까?", [
+                  { text: "취소", style: "cancel" },
+                  { text: "로그아웃", style: "destructive", onPress: signOut },
+                ])
+              }
+            >
+              <View style={styles.menuItemLeft}>
+                <Ionicons
+                  name="log-out-outline"
+                  size={22}
+                  color="#F82F08"
+                  style={styles.menuIcon}
+                />
+                <ThemedText style={[styles.menuTitle, styles.logoutText]}>
+                  로그아웃
+                </ThemedText>
+              </View>
+            </Pressable>
+          </View>
+        </View>
       </ScrollView>
     </ThemedView>
   )
@@ -237,5 +279,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#AAA",
     marginRight: 8,
+  },
+  logoutText: {
+    color: "#F82F08",
   },
 })
