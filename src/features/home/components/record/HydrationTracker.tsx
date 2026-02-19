@@ -1,7 +1,18 @@
-import { Text, View, XStack, YStack } from "tamagui"
-import { TouchableOpacity } from "react-native"
-import { QUICK_ADD_OPTIONS, WATER_COLORS } from "../../data/hydrationConstants"
-import { WaterDroplet } from "./WaterDroplet"
+import { Text, XStack, YStack } from "tamagui"
+import { TouchableOpacity, StyleSheet } from "react-native"
+import { Ionicons } from "@expo/vector-icons"
+import Svg, { Text as SvgText, Defs, ClipPath, Rect } from "react-native-svg"
+import {
+  CAP_H,
+  FONT_SIZE,
+  PCT_X,
+  QUICK_ADD_OPTIONS,
+  SVG_HEIGHT,
+  SVG_WIDTH,
+  TEXT_BASELINE,
+  WATER_COLORS,
+} from "../../data/hydrationConstants"
+import { tokens } from "@/src/theme/tokens"
 
 interface HydrationTrackerProps {
   intake: number
@@ -10,6 +21,7 @@ interface HydrationTrackerProps {
   remaining: number
   isGoalAchieved: boolean
   addWater: (amount: number) => void
+  onReset: () => void
 }
 
 export function HydrationTracker({
@@ -19,76 +31,135 @@ export function HydrationTracker({
   remaining,
   isGoalAchieved,
   addWater,
+  onReset,
 }: HydrationTrackerProps) {
+  const fillRatio = Math.min(percentage, 100) / 100
+  const waterY = TEXT_BASELINE - fillRatio * CAP_H
+
   return (
     <YStack paddingVertical="$3" gap="$3">
-      <Text fontSize="$6" fontWeight="700">
-        수분섭취 기록하기
-      </Text>
+      <XStack justifyContent="space-between">
+        <Text fontSize={22} fontWeight="700">
+          수분 섭취 기록
+        </Text>
+
+        <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
+          <XStack marginTop={6} gap={4}>
+            <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+              되돌리기
+            </Text>
+            <Ionicons
+              name="refresh-outline"
+              size={14}
+              color={tokens.color.grey5.val}
+            />
+          </XStack>
+        </TouchableOpacity>
+      </XStack>
 
       <XStack
-        backgroundColor="$backgroundFocus"
+        backgroundColor="$cardBackground"
         borderRadius="$6"
         paddingVertical="$4"
-        paddingHorizontal="$5"
+        paddingHorizontal="$4"
         alignItems="center"
-        gap="$5"
       >
-        <WaterDroplet percentage={percentage} />
-
-        <YStack flex={1} gap="$2">
-          <XStack alignItems="baseline" gap="$1">
-            <Text fontSize={32} fontWeight="700" color="$gray12">
+        {/* Left: intake info */}
+        <YStack gap="$2" flex={1}>
+          <XStack alignItems="baseline" gap={2}>
+            <Text fontSize={32} fontWeight="700">
               {intake}
             </Text>
-            <Text fontSize="$4" color="$gray10">
+            <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
               /{dailyGoal}ml
             </Text>
           </XStack>
-
-          <View
-            backgroundColor={WATER_COLORS.backgroundLight}
-            paddingHorizontal={8}
-            paddingVertical={5}
-            borderRadius="$4"
-            alignSelf="flex-start"
-          >
-            {!isGoalAchieved ? (
-              <Text fontSize="$3" fontWeight="600">
-                {remaining}ml 남았어요
-              </Text>
-            ) : (
-              <Text fontSize="$3" fontWeight="700">
-                목표 달성!
-              </Text>
-            )}
-          </View>
-
-          <XStack gap="$2" flexWrap="wrap">
-            {QUICK_ADD_OPTIONS.map((amount) => (
-              <TouchableOpacity
-                key={amount}
-                onPress={() => addWater(amount)}
-                style={{
-                  backgroundColor: WATER_COLORS.backgroundLight,
-                  paddingVertical: 5,
-                  paddingHorizontal: 6,
-                  borderRadius: 8,
-                }}
-                activeOpacity={0.7}
-              >
-                <Text
-                  color={WATER_COLORS.buttonText}
-                  fontWeight="600"
-                  fontSize="$2"
-                >
-                  +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </XStack>
+          <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
+            {isGoalAchieved ? "목표 달성!" : `${remaining}ml 남았어요`}
+          </Text>
         </YStack>
+
+        {/* Right: water-fill % text + droplet icon (same row) */}
+        <XStack alignItems="center" flexShrink={0} gap={2}>
+          <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
+            <Defs>
+              <ClipPath id="percentClip">
+                {/* number grows leftward from PCT_X */}
+                <SvgText
+                  x={PCT_X}
+                  y={TEXT_BASELINE}
+                  fontSize={FONT_SIZE}
+                  fontWeight="800"
+                  textAnchor="end"
+                >
+                  {Math.round(percentage)}
+                </SvgText>
+                {/* "%" fixed at PCT_X */}
+                <SvgText
+                  x={PCT_X}
+                  y={TEXT_BASELINE}
+                  fontSize={FONT_SIZE}
+                  fontWeight="800"
+                  textAnchor="start"
+                >
+                  %
+                </SvgText>
+              </ClipPath>
+            </Defs>
+
+            {/* Unfilled (gray) layer */}
+            <Rect
+              x={0}
+              y={0}
+              width={SVG_WIDTH}
+              height={SVG_HEIGHT}
+              fill={tokens.color.grey6.val}
+              clipPath="url(#percentClip)"
+            />
+
+            {/* Water fill (blue) — rises from bottom */}
+            <Rect
+              x={0}
+              y={waterY}
+              width={SVG_WIDTH}
+              height={SVG_HEIGHT - waterY}
+              fill={WATER_COLORS.gradientStart}
+              clipPath="url(#percentClip)"
+            />
+          </Svg>
+          <Ionicons
+            name="water"
+            size={18}
+            color={WATER_COLORS.gradientEnd}
+            style={{ marginBottom: 18 }}
+          />
+        </XStack>
+      </XStack>
+
+      {/* Quick add + reset buttons */}
+      <XStack gap="$3" justifyContent="center" flexWrap="wrap">
+        {QUICK_ADD_OPTIONS.map((amount) => (
+          <TouchableOpacity
+            key={amount}
+            onPress={() => addWater(amount)}
+            style={styles.chip}
+            activeOpacity={0.7}
+          >
+            <Text fontSize={17} color="$color">
+              +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </XStack>
     </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  chip: {
+    backgroundColor: tokens.color.pureWhite.val,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+})
