@@ -6,6 +6,7 @@ import { MainTab, MealType } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
 import { StyleSheet } from "react-native"
+import { useTheme } from "tamagui"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
@@ -14,6 +15,7 @@ export default function HomeScreen() {
     null,
   )
   const insets = useSafeAreaInsets()
+  const theme = useTheme()
 
   const handleSelectMealType = (mealType: MealType) => {
     setSelectedMealType(mealType)
@@ -21,6 +23,8 @@ export default function HomeScreen() {
 
   return (
     <ThemedView
+      lightColor={theme.backgroundFocus.val}
+      darkColor={theme.backgroundFocus.val}
       style={[
         styles.container,
         {
