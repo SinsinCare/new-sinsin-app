@@ -1,33 +1,71 @@
-import { TouchableOpacity } from "react-native"
+import { TouchableOpacity, Image, StyleSheet } from "react-native"
 import { MealType } from "../../types"
-import { Text, XStack } from "tamagui"
+import { Text, YStack, View } from "tamagui"
+import { Ionicons } from "@expo/vector-icons"
+import { tokens } from "@/src/theme/tokens"
 
 interface MealButtonProps {
   mealType: MealType
   onPress: () => void
   isSelected?: boolean
+  imageUri?: string | null
 }
-export function MealButton({ mealType, onPress, isSelected }: MealButtonProps) {
+
+export function MealButton({
+  mealType,
+  onPress,
+  isSelected,
+  imageUri,
+}: MealButtonProps) {
   return (
     <TouchableOpacity onPress={onPress}>
-      <XStack
-        backgroundColor={isSelected ? "$primary" : "$backgroundFocus"}
-        borderWidth={1}
-        borderColor={isSelected ? "$primary" : "$borderColor"}
-        paddingVertical="$8"
-        paddingHorizontal="$4"
+      <YStack
+        backgroundColor={isSelected ? "$primary" : "$white"}
+        borderWidth={0.5}
+        borderColor="$borderColorHover"
+        width={78}
+        height={100}
         borderRadius="$6"
-        justifyContent="space-between"
-        alignItems="center"
+        overflow="hidden"
+        justifyContent="flex-end"
       >
-        <Text
-          fontSize={22}
-          fontWeight="500"
-          color={isSelected ? "white" : "$color"}
-        >
-          {mealType}
-        </Text>
-      </XStack>
+        {imageUri ? (
+          <Image
+            source={{ uri: imageUri }}
+            style={StyleSheet.absoluteFillObject}
+            resizeMode="cover"
+          />
+        ) : (
+          <View position="absolute" top={6} right={6}>
+            <Ionicons
+              name="add"
+              size={22}
+              color={
+                isSelected ? tokens.color.pureWhite.val : tokens.color.grey5.val
+              }
+            />
+          </View>
+        )}
+
+        <YStack padding="$2">
+          <Text
+            fontSize="$4"
+            fontWeight="500"
+            color={imageUri || isSelected ? "white" : "$color"}
+          >
+            {mealType}
+          </Text>
+          {!imageUri && (
+            <Text
+              fontSize="$3"
+              fontWeight="400"
+              color={isSelected ? "white" : "$colorSubtle"}
+            >
+              기록 전
+            </Text>
+          )}
+        </YStack>
+      </YStack>
     </TouchableOpacity>
   )
 }
