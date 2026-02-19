@@ -39,7 +39,7 @@ export function HydrationTracker({
   return (
     <YStack paddingVertical="$3" gap="$3">
       <XStack justifyContent="space-between">
-        <Text fontSize="$6" fontWeight="700">
+        <Text fontSize={22} fontWeight="700">
           수분 섭취 기록
         </Text>
 
@@ -79,9 +79,8 @@ export function HydrationTracker({
           </Text>
         </YStack>
 
-        {/* Right: droplet icon + water-fill % text */}
-        <YStack alignItems="flex-end" flexShrink={0} width={SVG_WIDTH}>
-          <Ionicons name="water" size={20} color={WATER_COLORS.gradientEnd} />
+        {/* Right: water-fill % text + droplet icon (same row) */}
+        <XStack alignItems="center" flexShrink={0} gap={2}>
           <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
             <Defs>
               <ClipPath id="percentClip">
@@ -128,7 +127,13 @@ export function HydrationTracker({
               clipPath="url(#percentClip)"
             />
           </Svg>
-        </YStack>
+          <Ionicons
+            name="water"
+            size={18}
+            color={WATER_COLORS.gradientEnd}
+            style={{ marginBottom: 18 }}
+          />
+        </XStack>
       </XStack>
 
       {/* Quick add + reset buttons */}
@@ -140,7 +145,7 @@ export function HydrationTracker({
             style={styles.chip}
             activeOpacity={0.7}
           >
-            <Text fontSize={17} fontWeight={500} color="$color">
+            <Text fontSize={17} color="$color">
               +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
             </Text>
           </TouchableOpacity>

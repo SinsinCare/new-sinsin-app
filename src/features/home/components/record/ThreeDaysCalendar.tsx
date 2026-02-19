@@ -27,7 +27,7 @@ export function ThreeDaysCalendar({
 
   return (
     <View style={styles.wrapper}>
-      <XStack justifyContent="space-between" paddingHorizontal="$4">
+      <XStack justifyContent="space-between" paddingHorizontal="$2">
         {days.map((day) => {
           const month = day.date.getMonth() + 1
           const date = day.date.getDate()

@@ -22,7 +22,7 @@ export function MealButtons({
 
   return (
     <YStack paddingVertical="$3" gap="$4">
-      <Text fontSize="$6" fontWeight="700">
+      <Text fontSize={22} fontWeight="700">
         식이 기록
       </Text>
       <XStack width="100%" justifyContent="center" gap="$2">

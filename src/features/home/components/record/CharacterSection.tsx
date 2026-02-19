@@ -22,7 +22,7 @@ export function CharacterSection({
     : "영양소 제한조건을 지켜 식사해요"
 
   return (
-    <YStack borderRadius="$6" padding="$5" gap="$7" alignItems="center">
+    <YStack borderRadius="$6" padding="$7" gap="$7" alignItems="center">
       <XStack>
         <Image
           source={require("@/assets/images/character.png")}
@@ -30,7 +30,7 @@ export function CharacterSection({
           contentFit="contain"
         />
       </XStack>
-      <YStack gap="$1">
+      <YStack>
         <XStack
           alignItems="center"
           justifyContent="center"
