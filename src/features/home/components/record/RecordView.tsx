@@ -105,20 +105,14 @@ export function RecordView({
 
       <View height={10} />
 
-      <WeightEdemaTracker
-        weight={record.weight}
-        onChangeWeight={record.setWeight}
-        yesterdayWeight={record.yesterdayWeight}
-        edemaLevel={record.edemaLevel}
-        onSelectEdema={record.setEdemaLevel}
-      />
+      <WeightEdemaTracker />
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingTop: 8,
-    paddingBottom: 75,
+    paddingTop: 10,
+    paddingBottom: 100,
   },
 })

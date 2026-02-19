@@ -45,7 +45,7 @@ export function HydrationTracker({
 
         <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
           <XStack marginTop={6} gap={4}>
-            <Text fontSize="$4" fontWeight="500" color="$colorSubtle">
+            <Text fontSize={14} fontWeight="500" color="$colorSubtle">
               되돌리기
             </Text>
             <Ionicons

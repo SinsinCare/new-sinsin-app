@@ -2,7 +2,7 @@ import { TouchableOpacity } from "react-native"
 import { Text, XStack } from "tamagui"
 import { RecordResultCard } from "./RecordResultCard"
 
-interface WeigthRecordResultProps {
+interface WeightRecordResultProps {
   weight: number
   yesterdayWeight: number
   onDecrease: () => void
@@ -10,13 +10,13 @@ interface WeigthRecordResultProps {
   onReset: () => void
 }
 
-export function WeigthRecordResult({
+export function WeightRecordResult({
   weight,
   yesterdayWeight,
   onDecrease,
   onIncrease,
   onReset,
-}: WeigthRecordResultProps) {
+}: WeightRecordResultProps) {
   return (
     <RecordResultCard
       type="weight"

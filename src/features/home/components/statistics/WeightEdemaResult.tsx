@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { Text, YStack } from "tamagui"
-import { WeigthRecordResult } from "./WeigthRecordResult"
 import { EdemaRecordResult } from "./EdemaRecordResult"
 import { MOCK_YESTERDAY_WEIGHT } from "../../data/weightConstants"
 import { EdemaLevel } from "../../data/EdemaConstants"
 import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
+import { WeightRecordResult } from "./WeightRecordResult"
 
 export function WeightEdemaResult() {
   const [weight, setWeight] = useState(MOCK_YESTERDAY_WEIGHT)
@@ -15,7 +15,7 @@ export function WeightEdemaResult() {
       <Text fontSize="$6" fontWeight="700">
         체중·부종 기록
       </Text>
-      <WeigthRecordResult
+      <WeightRecordResult
         weight={weight}
         yesterdayWeight={MOCK_YESTERDAY_WEIGHT}
         onDecrease={() => setWeight((prev) => decreaseWeight(prev))}
