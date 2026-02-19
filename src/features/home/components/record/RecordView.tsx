@@ -15,6 +15,14 @@ interface RecordViewProps {
   onSelectMealType: (mealType: MealType) => void
 }
 
+// TODO: Firestore 연동 시 실제 기록된 날짜 목록으로 교체
+const MOCK_RECORDED_DATES: Date[] = [new Date()]
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate()
+
 export function RecordView({
   selectedDate,
   onSelectDate,
@@ -22,6 +30,10 @@ export function RecordView({
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord()
+
+  const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
+    isSameDay(d, selectedDate),
+  )
 
   return (
     <ScrollView
@@ -31,12 +43,15 @@ export function RecordView({
       <ThreeDaysCalendar
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
-        recordedDates={[new Date()]}
+        recordedDates={MOCK_RECORDED_DATES}
       />
 
       <View height={15} />
 
-      <CharacterSection selectedDate={selectedDate} />
+      <CharacterSection
+        selectedDate={selectedDate}
+        hasRecord={hasSelectedDateRecord}
+      />
 
       <View height={10} />
 
