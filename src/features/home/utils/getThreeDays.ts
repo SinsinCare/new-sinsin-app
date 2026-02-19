@@ -23,7 +23,7 @@ export function getThreeDays(
     return {
       date: d,
       isToday,
-      label: isToday ? "오늘" : DAY_LABELS[d.getDay()],
+      label: DAY_LABELS[d.getDay()],
     }
   })
 }

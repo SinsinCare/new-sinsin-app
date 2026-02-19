@@ -31,6 +31,7 @@ export function RecordView({
       <ThreeDaysCalendar
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
+        recordedDates={[new Date()]}
       />
 
       <View height={15} />
@@ -66,7 +67,7 @@ export function RecordView({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingTop: 20,
+    paddingTop: 8,
     paddingBottom: 75,
   },
 })
