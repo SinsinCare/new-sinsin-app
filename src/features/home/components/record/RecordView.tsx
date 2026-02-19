@@ -100,6 +100,7 @@ export function RecordView({
         remaining={record.remaining}
         isGoalAchieved={record.isGoalAchieved}
         addWater={record.addWater}
+        onReset={record.resetHydration}
       />
 
       <View height={10} />
