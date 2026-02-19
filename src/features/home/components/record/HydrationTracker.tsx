@@ -80,7 +80,7 @@ export function HydrationTracker({
         </YStack>
 
         {/* Right: droplet icon + water-fill % text */}
-        <YStack alignItems="flex-end" gap={2} flexShrink={0} width={SVG_WIDTH}>
+        <YStack alignItems="flex-end" flexShrink={0} width={SVG_WIDTH}>
           <Ionicons name="water" size={20} color={WATER_COLORS.gradientEnd} />
           <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
             <Defs>
@@ -140,7 +140,7 @@ export function HydrationTracker({
             style={styles.chip}
             activeOpacity={0.7}
           >
-            <Text fontSize="$4" fontWeight="500" color="$color">
+            <Text fontSize={17} fontWeight={500} color="$color">
               +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
             </Text>
           </TouchableOpacity>
