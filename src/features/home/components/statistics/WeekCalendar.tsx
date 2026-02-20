@@ -21,7 +21,11 @@ export function WeekCalendar({
   const days = getWeekDays(selectedDate, recordedDates)
 
   return (
-    <XStack justifyContent="space-between" paddingHorizontal="$2">
+    <XStack
+      justifyContent="space-between"
+      paddingHorizontal="$2"
+      paddingBottom="$3"
+    >
       {days.map((day) => {
         const isSelected = isSameDay(day.date, selectedDate)
 
@@ -32,10 +36,9 @@ export function WeekCalendar({
           >
             <YStack
               alignItems="center"
-              gap="$1"
               backgroundColor={isSelected ? "rgba(0,0,0,0.06)" : "transparent"}
               borderRadius="$5"
-              paddingBottom={4}
+              paddingBottom={10}
             >
               <YStack
                 width={36}
@@ -48,10 +51,12 @@ export function WeekCalendar({
                 </Text>
               </YStack>
               <YStack
-                width={6}
-                height={6}
+                width={7}
+                height={7}
                 borderRadius={3}
-                backgroundColor={day.hasRecord ? "$primary" : "transparent"}
+                backgroundColor={
+                  day.hasRecord ? "$primary" : "$backgroundPress"
+                }
               />
             </YStack>
           </Pressable>

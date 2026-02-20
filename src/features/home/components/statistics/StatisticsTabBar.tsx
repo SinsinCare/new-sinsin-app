@@ -52,7 +52,7 @@ export function StatisticsTabBar({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 10,
+    gap: 7,
   },
   tab: {
     paddingVertical: 8,

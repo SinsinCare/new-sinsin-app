@@ -19,7 +19,7 @@ export function DietaryGuide() {
         </Text>
       </DietaryGuideContainer>
 
-      <Text fontSize={15} fontWeight="500" color="$colorSubtle">
+      <Text fontSize={15} fontWeight="500" color="$colorSubtle" paddingTop="$3">
         주의할 음식
       </Text>
 
