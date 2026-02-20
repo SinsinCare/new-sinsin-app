@@ -15,8 +15,10 @@ export const CKD_NUTRIENT_LIMITS: NutrientLimit[] = [
 // TODO: 실제 데이터 연결 시 제거
 export const MOCK_CURRENT_INTAKE: Record<string, number> = {
   단백질: 32,
-  나트륨: 1200,
-  칼륨: 1800,
-  인: 1200,
-  수분: 1000,
+  나트륨: 2000, // 제한량과 동일 (at limit)
+  칼륨: 4800, // 초과 (limit: 3000)
+  인: 0, // 미섭취
+  수분: 3000, // 초과 (limit: 1500)
 }
+
+export const CIRCLE_SIZE = 12
