@@ -37,6 +37,8 @@ export function WeightRecordResult({
             backgroundColor="$pureWhite"
             paddingVertical="$2"
             paddingHorizontal="$3"
+            borderColor="$borderColor"
+            borderWidth={1}
             borderRadius="$4"
           >
             <Text fontSize="$4" fontWeight="500">
@@ -59,6 +61,8 @@ export function WeightRecordResult({
             backgroundColor="$pureWhite"
             paddingVertical="$2"
             paddingHorizontal="$3"
+            borderColor="$borderColor"
+            borderWidth={1}
             borderRadius="$4"
           >
             <Text fontSize="$4" fontWeight="500">

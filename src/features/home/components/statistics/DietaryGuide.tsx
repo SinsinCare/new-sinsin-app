@@ -4,15 +4,12 @@ import {
   MOCK_SUMMARY,
   MOCK_CAUTION_FOODS,
   NUTRIENT_TAG_COLORS,
-  NutrientCategory,
 } from "../../data/dietaryGuideConstants"
 
 export function DietaryGuide() {
-  const categories = Object.keys(NUTRIENT_TAG_COLORS) as NutrientCategory[]
-
   return (
     <YStack paddingVertical="$3" gap="$3">
-      <Text fontSize="$6" fontWeight="700">
+      <Text fontSize={22} fontWeight="700">
         식이 가이드
       </Text>
 
@@ -22,15 +19,20 @@ export function DietaryGuide() {
         </Text>
       </DietaryGuideContainer>
 
-      <DietaryGuideContainer title="내가 주의할 음식">
+      <Text fontSize={15} fontWeight="500" color="$colorSubtle" paddingTop="$3">
+        주의할 음식
+      </Text>
+
+      <DietaryGuideContainer title="나트륨 과다 식품">
         <XStack flexWrap="wrap" gap="$2">
           {MOCK_CAUTION_FOODS.map((food) => (
             <Text
               key={food.name}
-              fontSize="$3"
+              fontSize={13}
               fontWeight="600"
-              backgroundColor={NUTRIENT_TAG_COLORS[food.category]}
-              paddingHorizontal="$3"
+              backgroundColor={NUTRIENT_TAG_COLORS["나트륨"][0]}
+              color={NUTRIENT_TAG_COLORS["나트륨"][1]}
+              paddingHorizontal="$2"
               paddingVertical="$1.5"
               borderRadius="$4"
             >
@@ -38,17 +40,40 @@ export function DietaryGuide() {
             </Text>
           ))}
         </XStack>
-        <XStack gap="$2" justifyContent="flex-end">
-          {categories.map((category) => (
-            <XStack key={category} alignItems="center" gap="$1">
-              <YStack
-                width={8}
-                height={8}
-                borderRadius="$true"
-                backgroundColor={NUTRIENT_TAG_COLORS[category]}
-              />
-              <Text fontSize={10}>{category} 과다 식품</Text>
-            </XStack>
+      </DietaryGuideContainer>
+      <DietaryGuideContainer title="칼륨 과다 식품">
+        <XStack flexWrap="wrap" gap="$2">
+          {MOCK_CAUTION_FOODS.map((food) => (
+            <Text
+              key={food.name}
+              fontSize={13}
+              fontWeight="600"
+              backgroundColor={NUTRIENT_TAG_COLORS["칼륨"][0]}
+              color={NUTRIENT_TAG_COLORS["칼륨"][1]}
+              paddingHorizontal="$2"
+              paddingVertical="$1.5"
+              borderRadius="$4"
+            >
+              {food.name}
+            </Text>
+          ))}
+        </XStack>
+      </DietaryGuideContainer>
+      <DietaryGuideContainer title="인 과다 식품">
+        <XStack flexWrap="wrap" gap="$2">
+          {MOCK_CAUTION_FOODS.map((food) => (
+            <Text
+              key={food.name}
+              fontSize={13}
+              fontWeight="600"
+              backgroundColor={NUTRIENT_TAG_COLORS["인"][0]}
+              color={NUTRIENT_TAG_COLORS["인"][1]}
+              paddingHorizontal="$2"
+              paddingVertical="$1.5"
+              borderRadius="$4"
+            >
+              {food.name}
+            </Text>
           ))}
         </XStack>
       </DietaryGuideContainer>

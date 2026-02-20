@@ -11,24 +11,17 @@ export function DietaryGuideContainer({
 }: DietaryGuideContainerProps) {
   return (
     <YStack
-      backgroundColor="$backgroundFocus"
+      backgroundColor="$cardBackground"
       borderRadius="$6"
       paddingHorizontal="$5"
-      paddingVertical="$4"
+      paddingVertical="$5"
       gap="$3"
     >
       <Text
-        fontSize={14}
-        fontWeight="bold"
-        backgroundColor="$background"
-        paddingHorizontal="$3"
-        paddingVertical="$1.5"
-        borderRadius="$4"
-        alignSelf="flex-start"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.18}
-        shadowRadius={6}
-        elevation={4}
+        fontSize={title === "한줄평" ? 14 : 16}
+        fontWeight={600}
+        paddingVertical="$1"
+        color={title === "한줄평" ? "$colorSubtle" : "$color"}
       >
         {title}
       </Text>

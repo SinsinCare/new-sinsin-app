@@ -27,7 +27,7 @@ export function RecordResultCard({
       gap="$1"
     >
       <XStack justifyContent="space-between" alignItems="center">
-        <Text fontSize="$4" fontWeight="600" color="$gray12">
+        <Text fontSize={18} fontWeight="600" color="$gray12">
           {title}
         </Text>
         {onReset && (
@@ -42,7 +42,7 @@ export function RecordResultCard({
         )}
       </XStack>
       {subtitle && (
-        <Text fontSize="$3" color="$color.grey5">
+        <Text fontSize={13} color="$color.grey5">
           {subtitle}
         </Text>
       )}
@@ -52,7 +52,7 @@ export function RecordResultCard({
   if (isHorizontal) {
     return (
       <XStack
-        backgroundColor="$backgroundFocus"
+        backgroundColor="$cardBackground"
         borderRadius="$6"
         paddingVertical="$4"
         paddingHorizontal="$5"
@@ -66,7 +66,7 @@ export function RecordResultCard({
 
   return (
     <XStack
-      backgroundColor="$backgroundFocus"
+      backgroundColor="$cardBackground"
       borderRadius="$6"
       paddingVertical="$4"
       paddingHorizontal="$4"

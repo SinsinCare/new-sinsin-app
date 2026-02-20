@@ -1,4 +1,6 @@
-import { XStack, YStack, View, Text } from "tamagui"
+import { YStack } from "tamagui"
+import { NutrientBarSection } from "./NutrientBarSection"
+import { NutrientGraphHeader } from "./NutrientGraphHeader"
 
 interface NutrientGraphProps {
   nutrient: string
@@ -13,56 +15,33 @@ export function NutrientGraph({
   max,
   unit,
 }: NutrientGraphProps) {
-  const percentage = Math.min((current / max) * 100, 100)
   const isOver = current > max
+  const isEmpty = current === 0
+  const atLimit = current === max && current > 0
+
+  const totalMax = Math.max(current, max)
+  const fillPct = totalMax > 0 ? (current / totalMax) * 100 : 0
+  const limitPct = totalMax > 0 ? (max / totalMax) * 100 : 100
 
   return (
-    <XStack
-      alignItems="center"
-      gap="$3"
-      backgroundColor="$background"
-      borderRadius="$5"
-      padding="$2"
-    >
-      <View
-        backgroundColor="$backgroundPress"
-        paddingHorizontal="$3"
-        paddingVertical="$2"
-        borderRadius="$5"
-        minWidth={56}
-        alignItems="center"
-      >
-        <Text fontSize={12} fontWeight="bold">
-          {nutrient}
-        </Text>
-      </View>
-      <YStack flex={1} gap="$1" paddingTop="$1">
-        <View
-          height={6}
-          backgroundColor="$backgroundFocus"
-          borderRadius="$true"
-          width="100%"
-          overflow="hidden"
-        >
-          <View
-            height="100%"
-            backgroundColor="$primary"
-            borderRadius="$true"
-            width={isOver ? "100%" : `${percentage}%`}
-          />
-        </View>
-
-        <XStack justifyContent="space-between">
-          <Text fontSize={10} color="$primary" fontWeight="500">
-            나의 하루 섭취량: {current}
-            {unit}
-          </Text>
-          <Text fontSize={10}>
-            제한량: {max}
-            {unit}
-          </Text>
-        </XStack>
-      </YStack>
-    </XStack>
+    <YStack backgroundColor="white" borderRadius={12} padding={16} gap={5}>
+      <NutrientGraphHeader
+        nutrient={nutrient}
+        current={current}
+        max={max}
+        unit={unit}
+        isOver={isOver}
+      />
+      <NutrientBarSection
+        isOver={isOver}
+        isEmpty={isEmpty}
+        atLimit={atLimit}
+        fillPct={fillPct}
+        limitPct={limitPct}
+        current={current}
+        max={max}
+        unit={unit}
+      />
+    </YStack>
   )
 }

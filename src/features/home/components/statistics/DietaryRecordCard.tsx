@@ -16,11 +16,11 @@ export function DietaryRecordCard({
   return (
     <TouchableOpacity onPress={onPress}>
       <YStack
-        backgroundColor={isSelected ? "$primary" : "$backgroundFocus"}
-        borderWidth={1}
-        borderColor={isSelected ? "$primary" : "$borderColor"}
-        width={75}
-        height={95}
+        backgroundColor="$white"
+        borderWidth={0.5}
+        borderColor="$borderColorHover"
+        width={78}
+        height={100}
         borderRadius="$6"
         overflow="hidden"
         justifyContent="flex-end"
@@ -28,7 +28,7 @@ export function DietaryRecordCard({
         {mealData.imageUri && (
           <Image
             source={{ uri: mealData.imageUri }}
-            style={{ position: "absolute", width: 75, height: 95 }}
+            style={{ position: "absolute", width: 78, height: 100 }}
             resizeMode="cover"
           />
         )}
@@ -43,7 +43,7 @@ export function DietaryRecordCard({
           <Text
             fontSize="$3"
             fontWeight="500"
-            color={mealData.imageUri || isSelected ? "white" : "$color"}
+            color={mealData.imageUri || isSelected ? "white" : "$colorSubtle"}
           >
             {mealData.time ?? "기록 없음"}
           </Text>

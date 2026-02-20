@@ -11,8 +11,8 @@ export function WeightEdemaResult() {
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
 
   return (
-    <YStack paddingVertical="$3" gap="$3">
-      <Text fontSize="$6" fontWeight="700">
+    <YStack paddingVertical="$4" gap="$3">
+      <Text fontSize={22} fontWeight="700">
         체중·부종 기록
       </Text>
       <WeightRecordResult

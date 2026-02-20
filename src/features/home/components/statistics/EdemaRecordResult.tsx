@@ -1,4 +1,4 @@
-import { TouchableOpacity } from "react-native"
+import { TouchableOpacity, StyleSheet } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
 import { RecordResultCard } from "./RecordResultCard"
@@ -29,6 +29,7 @@ export function EdemaRecordResult({
               paddingHorizontal="$7"
               borderRadius="$4"
               justifyContent="center"
+              style={styles.optionButton}
             >
               <Text
                 fontSize={15}
@@ -44,3 +45,13 @@ export function EdemaRecordResult({
     </RecordResultCard>
   )
 }
+
+const styles = StyleSheet.create({
+  optionButton: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+})
