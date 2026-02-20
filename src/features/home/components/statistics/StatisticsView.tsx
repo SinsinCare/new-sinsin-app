@@ -163,7 +163,7 @@ export function StatisticsView({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingTop: 8,
-    paddingBottom: 75,
+    paddingTop: 10,
+    paddingBottom: 100,
   },
 })
