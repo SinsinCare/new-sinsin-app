@@ -33,9 +33,9 @@ export function WeekCalendar({
             <YStack
               alignItems="center"
               gap="$1"
-              backgroundColor={isSelected ? "$backgroundHover" : "transparent"}
+              backgroundColor={isSelected ? "rgba(0,0,0,0.06)" : "transparent"}
               borderRadius="$5"
-              paddingBottom={8}
+              paddingBottom={4}
             >
               <YStack
                 width={36}
