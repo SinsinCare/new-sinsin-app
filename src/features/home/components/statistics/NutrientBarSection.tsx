@@ -58,7 +58,7 @@ export function NutrientBarSection({
           {intakePctValue !== null &&
             (intakeAtRightEdge ? (
               // 초과/제한도달: 오른쪽 정렬
-              <View style={[styles.absChip, { right: 0 }]}>
+              <View style={[styles.absChip, { right: -10 }]}>
                 <View
                   onLayout={(e) => setIntakeChipW(e.nativeEvent.layout.width)}
                 >
@@ -98,7 +98,7 @@ export function NutrientBarSection({
             showLimitChip &&
             (limitChipAtRightEdge ? (
               // 비초과: 오른쪽 정렬
-              <View style={[styles.absChip, { right: 0 }]}>
+              <View style={[styles.absChip, { right: -10 }]}>
                 <View
                   onLayout={(e) => setLimitChipW(e.nativeEvent.layout.width)}
                 >
