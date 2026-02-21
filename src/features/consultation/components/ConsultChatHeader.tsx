@@ -1,0 +1,44 @@
+import { Pressable, View } from "react-native"
+import { XStack, Text } from "tamagui"
+import { useRouter } from "expo-router"
+import { tokens } from "@/src/theme/tokens"
+import { Icon } from "@/src/shared/components"
+
+export function ConsultChatHeader() {
+  const router = useRouter()
+
+  return (
+    <>
+      <XStack
+        paddingHorizontal="$4"
+        paddingVertical="$3"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <Pressable
+          onPress={() => router.push("/consultation-history")}
+          hitSlop={8}
+        >
+          <Icon name="history" size={24} color={tokens.color.grey1.val} />
+        </Pressable>
+
+        <Text
+          fontSize="$5"
+          fontWeight="700"
+          color="$color"
+          numberOfLines={1}
+        >
+          신신당부 상담
+        </Text>
+
+        <Pressable
+          onPress={() => router.navigate("/(tabs)/home")}
+          hitSlop={8}
+        >
+          <Icon name="x" size={24} color={tokens.color.grey1.val} />
+        </Pressable>
+      </XStack>
+      <View style={{ height: 1, backgroundColor: tokens.color.grey8.val }} />
+    </>
+  )
+}
