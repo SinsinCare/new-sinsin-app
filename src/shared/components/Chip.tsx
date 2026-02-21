@@ -27,7 +27,13 @@ export function Chip({ icon, label, isSelected = false, onPress }: ChipProps) {
   const colors = isSelected ? palette.selected : palette.default
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isSelected }}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
       <XStack
         alignItems="center"
         gap="$1.5"
