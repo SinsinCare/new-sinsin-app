@@ -15,12 +15,7 @@ export function ConsultChatHeader() {
         alignItems="center"
         justifyContent="space-between"
       >
-        <Pressable
-          onPress={() => router.push("/consultation-history")}
-          hitSlop={8}
-        >
-          <Icon name="history" size={24} color={tokens.color.grey1.val} />
-        </Pressable>
+        <Icon name="history" size={24} color={tokens.color.grey1.val} />
 
         <Text fontSize="$5" fontWeight="700" color="$color" numberOfLines={1}>
           신신당부 상담

@@ -59,12 +59,11 @@ export interface ChatConversation {
 }
 
 export type ChatCategory =
-  | "diet"
-  | "medicine"
-  | "dialysis"
-  | "checkup"
-  | "transplant"
-  | "welfare"
+  | "diet" // 음식/식단
+  | "medicine" // 약/영양제
+  | "lifestyle" // 생활관리
+  | "symptom" // 증상
+  | "checkup" // 검사/수치해석
 
 // 채팅 메시지
 export interface ChatMessage {
