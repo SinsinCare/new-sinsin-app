@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router"
+import { Tabs, useRouter } from "expo-router"
 import React from "react"
 
 import { HapticTab } from "@/components/haptic-tab"
@@ -6,6 +6,8 @@ import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
 
 export default function TabLayout() {
+  const router = useRouter()
+
   return (
     <Tabs
       screenOptions={{
@@ -28,6 +30,12 @@ export default function TabLayout() {
         options={{
           title: "상담",
           tabBarIcon: ({ color }) => <Icon name="chat" color={color} />,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault()
+            router.push({ pathname: "/chat", params: { fromTab: "true" } })
+          },
         }}
       />
       <Tabs.Screen

@@ -7,6 +7,7 @@ import type { ChatCategory } from "@/src/types/models"
 import { getCategoryMeta } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 import { ChatHeader } from "@/src/features/consultation/components/ChatHeader"
+import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
 import { ChatMessageBubble } from "@/src/features/consultation/components/ChatMessageBubble"
 import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
 import { ChatComposer } from "@/src/features/consultation/components/ChatComposer"
@@ -15,7 +16,9 @@ export default function ChatScreen() {
   const params = useLocalSearchParams<{
     category: ChatCategory
     initialMessage?: string
+    fromTab?: string
   }>()
+  const fromTab = params.fromTab === "true"
   const category = params.category ?? "diet"
   const meta = getCategoryMeta(category)
   const scrollRef = useRef<ScrollView>(null)
@@ -35,7 +38,7 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#f8f9fa" }}
+      style={{ flex: 1, backgroundColor: "#F3F3F3" }}
       edges={["top"]}
     >
       <KeyboardAvoidingView
@@ -43,7 +46,11 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={0}
       >
-        <ChatHeader title={meta?.label ?? category} />
+        {fromTab ? (
+          <ConsultChatHeader />
+        ) : (
+          <ChatHeader title={meta?.label ?? category} />
+        )}
 
         {/* Chat Messages */}
         <ScrollView
