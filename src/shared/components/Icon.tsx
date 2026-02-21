@@ -6,26 +6,32 @@ import { SvgProps } from "react-native-svg"
 import Chat from "@/assets/icons/chat.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import FlyChat from "@/assets/icons/fly-chat.svg"
+import ForkKnife from "@/assets/icons/fork-knife.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
+import Pill from "@/assets/icons/pill.svg"
 import Plus from "@/assets/icons/plus.svg"
 import Recipe from "@/assets/icons/recipe.svg"
+import Water from "@/assets/icons/water.svg"
 import X from "@/assets/icons/x.svg"
 
 const icons = {
   chat: Chat,
   "chevron-right": ChevronRight,
   "fly-chat": FlyChat,
+  "fork-knife": ForkKnife,
   history: History,
   home: Home,
   location: Location,
   menu: Menu,
   notification: Notification,
+  pill: Pill,
   plus: Plus,
   recipe: Recipe,
+  water: Water,
   x: X,
 } as const
 
