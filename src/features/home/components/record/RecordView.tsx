@@ -12,6 +12,9 @@ import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
+import { foodCameraService } from "@/src/services/data"
+import type { FoodCameraAnalyzeResult } from "@/src/types"
+import { FoodAnalysisResult } from "./FoodAnalysisResult"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -38,10 +41,22 @@ export function RecordView({
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
   >({})
+  const [analysisResult, setAnalysisResult] =
+    useState<FoodCameraAnalyzeResult | null>(null)
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
   )
+
+  const analyzeImage = async (uri: string) => {
+    try {
+      const result = await foodCameraService.analyze(uri)
+      setAnalysisResult(result)
+    } catch (error) {
+      console.error("analyzeImage error:", error)
+      Alert.alert("분석 실패", "음식 분석 중 오류가 발생했습니다.")
+    }
+  }
 
   const handleRecord = () => {
     if (!selectedMealType) return
@@ -50,16 +65,20 @@ export function RecordView({
         text: "카메라",
         onPress: async () => {
           const uri = await takePhoto()
-          if (uri)
+          if (uri) {
             setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
+            analyzeImage(uri)
+          }
         },
       },
       {
         text: "갤러리",
         onPress: async () => {
           const uri = await pickImageFromGallery()
-          if (uri)
+          if (uri) {
             setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
+            analyzeImage(uri)
+          }
         },
       },
       { text: "취소", style: "cancel" },
@@ -90,6 +109,8 @@ export function RecordView({
         mealImages={mealImages}
         onRecord={handleRecord}
       />
+
+      {analysisResult && <FoodAnalysisResult result={analysisResult} />}
 
       <View height={10} />
 
