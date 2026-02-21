@@ -5,6 +5,7 @@
 import { SvgProps } from "react-native-svg"
 import Chat from "@/assets/icons/chat.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
+import FlyChat from "@/assets/icons/fly-chat.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
@@ -17,6 +18,7 @@ import X from "@/assets/icons/x.svg"
 const icons = {
   chat: Chat,
   "chevron-right": ChevronRight,
+  "fly-chat": FlyChat,
   history: History,
   home: Home,
   location: Location,
