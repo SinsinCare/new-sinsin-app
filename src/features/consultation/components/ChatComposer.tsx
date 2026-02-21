@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react"
 import { TextInput, Pressable, View } from "react-native"
 import { XStack, YStack } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import { Icon } from "@/src/shared/components"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
 import type { ChatCategory } from "@/src/types/models"
@@ -39,94 +39,69 @@ export function ChatComposer({
     <YStack
       borderTopWidth={1}
       borderTopColor="$borderColor"
-      backgroundColor="$background"
+      backgroundColor="transparent"
       paddingBottom={insets.bottom}
     >
-      {/* Quick Question Chips */}
       <QuickQuestionChips
         category={category}
         onSelect={handleChipSelect}
         disabled={disabled}
       />
 
-      {/* Input Row */}
-      <XStack
-        paddingHorizontal="$3"
-        paddingVertical="$2"
-        gap="$2"
-        alignItems="flex-end"
+      <View
+        style={{
+          marginHorizontal: 16,
+          marginBottom: 8,
+          borderRadius: 20,
+          backgroundColor: tokens.color.pureWhite.val,
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 10,
+        }}
       >
-        {/* Plus Button - @TODO: Add more actions */}
-        {/* <Pressable
-          onPress={() => {}}
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          placeholder="상담 내용을 작성하세요"
+          placeholderTextColor={tokens.color.grey6.val}
+          multiline
           style={{
-            width: 36,
-            height: 36,
-            marginBottom: 0,
-            borderRadius: 18,
-            backgroundColor: tokens.color.grey8.val,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="add" size={22} color={tokens.color.grey4.val} />
-        </Pressable> */}
-
-        {/* Text Input */}
-        <View
-          style={{
-            flex: 1,
-            minHeight: 36,
+            fontSize: 16,
+            color: tokens.color.grey1.val,
             maxHeight: 120,
-            borderRadius: 18,
-            borderWidth: 1,
-            borderColor: tokens.color.grey8.val,
-            backgroundColor: tokens.color.pureWhite.val,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
+            lineHeight: 22,
+            padding: 0,
+            marginBottom: 8,
           }}
-        >
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            placeholder="메시지를 입력하세요"
-            placeholderTextColor={tokens.color.grey6.val}
-            multiline
-            style={{
-              fontSize: 14,
-              color: tokens.color.grey1.val,
-              maxHeight: 100,
-              lineHeight: 20,
-              padding: 0,
-            }}
-            editable={!disabled}
-          />
-        </View>
+          editable={!disabled}
+        />
 
-        {/* Send Button */}
-        <Pressable
-          onPress={handleSend}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor:
-              text.trim() && !disabled
-                ? tokens.color.primary7.val
-                : tokens.color.grey8.val,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons
-            name="arrow-up"
-            size={20}
-            color={
-              text.trim() && !disabled ? "#FFFFFF" : tokens.color.grey6.val
-            }
-          />
-        </Pressable>
-      </XStack>
+        <XStack justifyContent="space-between" alignItems="center">
+          <Pressable onPress={() => {}} hitSlop={8}>
+            <Icon name="plus" size={22} color={tokens.color.grey4.val} />
+          </Pressable>
+          <Pressable
+            onPress={handleSend}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor:
+                text.trim() && !disabled
+                  ? tokens.color.grey2.val
+                  : tokens.color.grey7.val,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon
+              name="fly-chat"
+              size={20}
+              color={tokens.color.pureWhite.val}
+            />
+          </Pressable>
+        </XStack>
+      </View>
     </YStack>
   )
 }
