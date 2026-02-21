@@ -3,7 +3,7 @@ import { XStack, Text, useThemeName } from "tamagui"
 import { Icon, type IconName } from "./Icon"
 
 interface ChipProps {
-  icon: IconName
+  icon?: IconName
   label: string
   isSelected?: boolean
   onPress?: () => void
@@ -42,7 +42,7 @@ export function Chip({ icon, label, isSelected = false, onPress }: ChipProps) {
         borderRadius="$12"
         backgroundColor={colors.bg}
       >
-        <Icon name={icon} size={16} color={colors.fg} />
+        {icon && <Icon name={icon} size={16} color={colors.fg} />}
         <Text fontSize={12} lineHeight={16} color={colors.fg} fontWeight="500">
           {label}
         </Text>
