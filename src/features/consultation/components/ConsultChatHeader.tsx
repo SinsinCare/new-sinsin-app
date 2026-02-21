@@ -1,12 +1,15 @@
 import { Pressable } from "react-native"
 import { XStack, Text } from "tamagui"
-import { useRouter } from "expo-router"
 import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
 
-export function ConsultChatHeader() {
-  const router = useRouter()
-
+export function ConsultChatHeader({
+  onHistoryPress,
+  onClosePress,
+}: {
+  onHistoryPress: () => void
+  onClosePress: () => void
+}) {
   return (
     <>
       <XStack
@@ -15,13 +18,15 @@ export function ConsultChatHeader() {
         alignItems="center"
         justifyContent="space-between"
       >
-        <Icon name="history" size={24} color={tokens.color.grey1.val} />
+        <Pressable onPress={onHistoryPress} hitSlop={8}>
+          <Icon name="history" size={24} color={tokens.color.grey1.val} />
+        </Pressable>
 
         <Text fontSize="$5" fontWeight="700" color="$color" numberOfLines={1}>
           신신당부 상담
         </Text>
 
-        <Pressable onPress={() => router.navigate("/(tabs)/home")} hitSlop={8}>
+        <Pressable onPress={onClosePress} hitSlop={8}>
           <Icon name="x" size={24} color={tokens.color.grey1.val} />
         </Pressable>
       </XStack>
