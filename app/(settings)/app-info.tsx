@@ -98,8 +98,7 @@ export default function AppInfoScreen() {
             (03176) 서울특별시 종로구 경희궁길27 블루코브스퀘어 3F
           </ThemedText>
           <ThemedText style={styles.footerText}>
-            Copyright © 2026 Mediology Co., Ltd. 신신당부. All Rights
-            reserved.
+            Copyright © 2026 Mediology Co., Ltd. 신신당부. All Rights reserved.
           </ThemedText>
         </View>
       </ScrollView>

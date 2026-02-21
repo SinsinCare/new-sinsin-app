@@ -1,4 +1,4 @@
-import type { OnboardingStep, OnboardingSubmitRequest } from "../../../types"
+import type { OnboardingStep } from "@/src/types"
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -120,7 +120,7 @@ export const mockOnboardingService = {
     return MOCK_ONBOARDING_STEPS
   },
 
-  async submitAnswers(_request: OnboardingSubmitRequest): Promise<void> {
+  async submitAnswers(): Promise<void> {
     await delay(300)
     // Mock: 답변 제출 성공
   },

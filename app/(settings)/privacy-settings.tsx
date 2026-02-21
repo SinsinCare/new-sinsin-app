@@ -1,5 +1,12 @@
 import React from "react"
-import { StyleSheet, View, ScrollView, Pressable, Platform, Alert } from "react-native"
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Pressable,
+  Platform,
+  Alert,
+} from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"

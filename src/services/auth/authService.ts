@@ -7,8 +7,7 @@ import type {
   TokenRefreshResult,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
-import { publicApi } from "@/src/services"
-import { tokenService } from "@/src/services"
+import { publicApi, tokenService } from "@/src/services"
 
 function getRealAuthService(): IAuthService {
   return {

@@ -8,8 +8,7 @@ import { StatusBar } from "expo-status-bar"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
-import { useSignupStore } from "@/src/stores"
-import { useOnboardingStore } from "@/src/stores"
+import { useSignupStore, useOnboardingStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 
 function RootLayoutNav() {

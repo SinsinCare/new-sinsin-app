@@ -7,4 +7,4 @@ export {
   ProfileSetupScreen,
   NicknameSetupScreen,
   SignupCompleteScreen,
-} from "./components"
+} from "./views"
