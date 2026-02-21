@@ -1,3 +1,4 @@
+import { IconName } from "@/src/shared/components"
 import type { ChatCategory } from "@/src/types/models"
 
 export type { ChatCategory }
@@ -5,7 +6,7 @@ export type { ChatCategory }
 export interface CategoryMeta {
   key: ChatCategory
   label: string
-  icon: string
+  icon: IconName
   color: string
 }
 

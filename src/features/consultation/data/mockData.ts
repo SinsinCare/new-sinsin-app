@@ -9,39 +9,33 @@ import type {
 export const CATEGORY_LIST: CategoryMeta[] = [
   {
     key: "diet",
-    label: "식단 및 영양제",
-    icon: "restaurant-outline",
+    label: "음식·식단",
+    icon: "fork-knife",
     color: "#4A90D9",
   },
   {
     key: "medicine",
-    label: "의약품 및 진료",
-    icon: "medical-outline",
+    label: "약·영양제",
+    icon: "pill",
     color: "#4CAF50",
   },
   {
-    key: "dialysis",
-    label: "신부전 및 투석",
-    icon: "water-outline",
+    key: "lifestyle",
+    label: "생활관리",
+    icon: "water",
     color: "#5C7AB5",
   },
   {
-    key: "checkup",
-    label: "검사 및 진단",
-    icon: "clipboard-outline",
-    color: "#9C6ADE",
-  },
-  {
-    key: "transplant",
-    label: "신장 이식",
-    icon: "heart-outline",
+    key: "symptom",
+    label: "증상",
+    icon: "water",
     color: "#FF8C42",
   },
   {
-    key: "welfare",
-    label: "복지 및 지원",
-    icon: "people-outline",
-    color: "#26A69A",
+    key: "checkup",
+    label: "검사·수치해석",
+    icon: "water",
+    color: "#9C6ADE",
   },
 ]
 
@@ -69,7 +63,7 @@ export const MOCK_FAQ_LIST: FaqItem[] = [
   },
   {
     id: "faq-4",
-    category: "dialysis",
+    category: "lifestyle",
     question: "투석 환자의 수분 섭취 기준은?",
     answer:
       "혈액투석 환자의 수분 섭취 기준은 하루 소변량 + 500~700ml입니다. 소변이 거의 나오지 않는 경우 하루 총 수분 섭취를 700~1,000ml로 제한합니다. 수분에는 물뿐만 아니라 국, 죽, 과일, 아이스크림 등에 포함된 수분도 포함됩니다. 투석 간 체중 증가가 건체중의 3~5% 이내가 되도록 관리하세요. 복막투석 환자는 상대적으로 제한이 덜하지만 주치의 지시를 따르세요.",
@@ -123,7 +117,7 @@ export const MOCK_HISTORY_LIST: ConsultHistoryItem[] = [
   },
   {
     id: "hist-2",
-    category: "dialysis",
+    category: "lifestyle",
     firstQuestion: "커피가 수분 섭취에 미치는 영향은?",
     firstAnswer:
       "커피는 이뇨 작용이 있지만 혈액투석 환자의 수분 섭취량에 포함됩니다. 하루 1~2잔 이내로 제한하세요.",
@@ -155,7 +149,7 @@ export const MOCK_HISTORY_LIST: ConsultHistoryItem[] = [
   },
   {
     id: "hist-6",
-    category: "dialysis",
+    category: "lifestyle",
     firstQuestion: "투석 후 피로감을 줄이는 방법은?",
     firstAnswer:
       "투석 후 피로감은 흔한 증상입니다. 충분한 수면, 가벼운 산책, 투석 중 혈압 관리가 도움이 됩니다.",
@@ -182,25 +176,20 @@ export const QUICK_QUESTIONS: Record<ChatCategory, QuickQuestion[]> = {
     { id: "qm-2", category: "medicine", text: "약 부작용이 걱정돼요" },
     { id: "qm-3", category: "medicine", text: "영양제 같이 먹어도 되나요?" },
   ],
-  dialysis: [
-    { id: "qdl-1", category: "dialysis", text: "투석 후 피로감 줄이는 법" },
-    { id: "qdl-2", category: "dialysis", text: "수분 섭취 기준이 궁금해요" },
-    { id: "qdl-3", category: "dialysis", text: "투석 중 식사는 어떻게?" },
+  lifestyle: [
+    { id: "qdl-1", category: "lifestyle", text: "투석 후 피로감 줄이는 법" },
+    { id: "qdl-2", category: "lifestyle", text: "수분 섭취 기준이 궁금해요" },
+    { id: "qdl-3", category: "lifestyle", text: "투석 중 식사는 어떻게?" },
   ],
   checkup: [
     { id: "qc-1", category: "checkup", text: "GFR 수치 해석 방법" },
     { id: "qc-2", category: "checkup", text: "혈액검사 항목이 궁금해요" },
     { id: "qc-3", category: "checkup", text: "다음 검사 준비사항은?" },
   ],
-  transplant: [
-    { id: "qt-1", category: "transplant", text: "이식 후 식단 관리법" },
-    { id: "qt-2", category: "transplant", text: "면역억제제 복용 주의사항" },
-    { id: "qt-3", category: "transplant", text: "이식 대기 중 관리법" },
-  ],
-  welfare: [
-    { id: "qw-1", category: "welfare", text: "의료비 지원 제도가 있나요?" },
-    { id: "qw-2", category: "welfare", text: "장애등급 신청 방법" },
-    { id: "qw-3", category: "welfare", text: "보험 혜택 알려주세요" },
+  symptom: [
+    { id: "qt-1", category: "symptom", text: "이식 후 식단 관리법" },
+    { id: "qt-2", category: "symptom", text: "면역억제제 복용 주의사항" },
+    { id: "qt-3", category: "symptom", text: "이식 대기 중 관리법" },
   ],
 }
 
