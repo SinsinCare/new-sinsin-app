@@ -5,11 +5,14 @@
 import { SvgProps } from "react-native-svg"
 import Chat from "@/assets/icons/chat.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
+import Cross from "@/assets/icons/cross.svg"
 import FlyChat from "@/assets/icons/fly-chat.svg"
 import ForkKnife from "@/assets/icons/fork-knife.svg"
+import HeartText from "@/assets/icons/heart-text.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
+import Mail from "@/assets/icons/mail.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
 import Pill from "@/assets/icons/pill.svg"
@@ -21,11 +24,14 @@ import X from "@/assets/icons/x.svg"
 const icons = {
   chat: Chat,
   "chevron-right": ChevronRight,
+  cross: Cross,
   "fly-chat": FlyChat,
   "fork-knife": ForkKnife,
+  "heart-text": HeartText,
   history: History,
   home: Home,
   location: Location,
+  mail: Mail,
   menu: Menu,
   notification: Notification,
   pill: Pill,
