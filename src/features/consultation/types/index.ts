@@ -29,3 +29,10 @@ export interface QuickQuestion {
   category: ChatCategory
   text: string
 }
+
+export interface FaqCardEntry {
+  id: string
+  category: ChatCategory
+  title: string
+  description: string
+}

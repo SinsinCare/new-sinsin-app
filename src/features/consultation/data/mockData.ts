@@ -4,6 +4,7 @@ import type {
   FaqItem,
   ConsultHistoryItem,
   QuickQuestion,
+  FaqCardEntry,
 } from "../types"
 
 export const CATEGORY_LIST: CategoryMeta[] = [
@@ -188,7 +189,7 @@ export const QUICK_QUESTIONS: Record<ChatCategory, QuickQuestion[]> = {
   ],
 }
 
-export const FREQUENTLY_ASKED_QUESTIONS = [
+export const FREQUENTLY_ASKED_QUESTIONS: FaqCardEntry[] = [
   {
     id: "faq-1",
     category: "diet",
