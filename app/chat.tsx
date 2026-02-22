@@ -1,5 +1,15 @@
 import { useRef, useEffect, useState } from "react"
-import { ScrollView, KeyboardAvoidingView, Platform, LayoutAnimation, UIManager } from "react-native"
+import {
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  LayoutAnimation,
+  UIManager,
+  View,
+  TextInput,
+  Pressable,
+  StyleSheet,
+} from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
 
@@ -11,12 +21,13 @@ import {
 } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 
-import { YStack, Text } from "tamagui"
+import { YStack, Text, XStack } from "tamagui"
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
 import { ChatMessageBubble } from "@/src/features/consultation/components/ChatMessageBubble"
 import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
-import { ChatTextInput } from "@/src/features/consultation/components/ChatTextInput"
 import { Chip } from "@/src/shared/components/Chip"
+import { tokens } from "@/src/theme/tokens"
+import { Icon } from "@/src/shared/components/Icon"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -128,18 +139,77 @@ export default function ChatScreen() {
               </ScrollView>
             </>
           )}
-          <ChatTextInput
-            placeholder="상담 내용을 작성하세요"
-            value={message}
-            onChangeText={setMessage}
-            isInputDisabled={isTyping}
-            isSendDisabled={isSending || isTyping}
-            onPressSend={() => sendMessage(message)}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          />
+
+          <View
+            style={{
+              ...styles.inputContainer,
+            }}
+          >
+            <TextInput
+              value={message}
+              onChangeText={setMessage}
+              placeholder="상담 내용을 작성하세요"
+              placeholderTextColor={tokens.color.grey6.val}
+              multiline
+              style={{
+                ...styles.input,
+              }}
+              editable={!isTyping}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+            />
+
+            <XStack justifyContent="space-between" alignItems="center">
+              <Pressable onPress={() => {}} hitSlop={8}>
+                <Icon name="plus" size={24} color={tokens.color.grey4.val} />
+              </Pressable>
+              <Pressable
+                onPress={() => sendMessage(message)}
+                disabled={!message.trim() || isTyping}
+                style={{
+                  ...styles.sendButton,
+                  backgroundColor:
+                    (message.trim() && !isTyping) || isSending
+                      ? tokens.color.grey2.val
+                      : tokens.color.grey7.val,
+                }}
+              >
+                <Icon
+                  name="fly-chat"
+                  size={24}
+                  color={tokens.color.pureWhite.val}
+                />
+              </Pressable>
+            </XStack>
+          </View>
         </YStack>
       </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
+
+const styles = StyleSheet.create({
+  input: {
+    fontSize: 16,
+    color: tokens.color.grey1.val,
+    maxHeight: 120,
+    lineHeight: 22,
+    padding: 0,
+    marginBottom: 8,
+  },
+  inputContainer: {
+    marginBottom: 8,
+    borderRadius: 20,
+    backgroundColor: tokens.color.pureWhite.val,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+  },
+  sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+})

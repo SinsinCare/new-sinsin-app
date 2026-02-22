@@ -11,31 +11,26 @@ export const CATEGORY_LIST: CategoryMeta[] = [
     key: "diet",
     label: "음식·식단",
     icon: "fork-knife",
-    color: "#4A90D9",
   },
   {
     key: "medicine",
     label: "약·영양제",
     icon: "pill",
-    color: "#4CAF50",
   },
   {
     key: "lifestyle",
     label: "생활관리",
-    icon: "water",
-    color: "#5C7AB5",
+    icon: "heart-text",
   },
   {
     key: "symptom",
     label: "증상",
-    icon: "water",
-    color: "#FF8C42",
+    icon: "cross",
   },
   {
     key: "checkup",
     label: "검사·수치해석",
-    icon: "water",
-    color: "#9C6ADE",
+    icon: "mail",
   },
 ]
 
@@ -192,6 +187,14 @@ export const QUICK_QUESTIONS: Record<ChatCategory, QuickQuestion[]> = {
     { id: "qt-3", category: "symptom", text: "이식 대기 중 관리법" },
   ],
 }
+
+export const FREQUENTLY_ASKED_QUESTIONS = [
+  {
+    id: "faq-1",
+    category: "diet",
+    title: "만성신장질환에서 하루 육류 적정 섭취량은?",
+  },
+]
 
 /** 카테고리 key로 메타 정보 조회 */
 export function getCategoryMeta(key: string): CategoryMeta | undefined {
