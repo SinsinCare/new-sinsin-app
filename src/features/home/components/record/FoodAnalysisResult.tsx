@@ -31,20 +31,20 @@ function getRestrictionStyle(level: string): {
     case "safe":
       return {
         label: "안전해요",
-        bg: "$secondarySoft",
+        bg: "$secondaryLight",
         color: "$secondary",
       }
     case "caution":
       return {
         label: "주의 필요",
-        bg: "$primaryLight",
-        color: "$warning",
+        bg: "$primary2",
+        color: "$primaryHover",
       }
     case "restricted":
       return {
         label: "제한 필요",
-        bg: "$primarySoft",
-        color: "$primaryPress",
+        bg: tokens.color.restrictionBg.val,
+        color: tokens.color.restrictionText.val,
       }
     default:
       return {
@@ -304,7 +304,7 @@ export function FoodAnalysisResult({
                     justifyContent="space-between"
                     paddingBottom={8}
                   >
-                    <XStack alignItems="baseline" gap="$2">
+                    <XStack alignItems="baseline" gap="$1">
                       <Text fontSize="$4" fontWeight="600" color="$color">
                         {food.name}
                       </Text>
