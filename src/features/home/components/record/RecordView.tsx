@@ -43,15 +43,23 @@ export function RecordView({
   >({})
   const [analysisResult, setAnalysisResult] =
     useState<FoodCameraAnalyzeResult | null>(null)
+  const [isResultOpen, setIsResultOpen] = useState(false)
+  const [analyzedMealType, setAnalyzedMealType] = useState<MealType | null>(
+    null,
+  )
+  const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
   )
 
-  const analyzeImage = async (uri: string) => {
+  const analyzeImage = async (uri: string, mealType: MealType) => {
     try {
+      setAnalyzedImageUri(uri)
+      setAnalyzedMealType(mealType)
       const result = await foodCameraService.analyze(uri)
       setAnalysisResult(result)
+      setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeImage error:", error)
       Alert.alert("분석 실패", "음식 분석 중 오류가 발생했습니다.")
@@ -67,7 +75,7 @@ export function RecordView({
           const uri = await takePhoto()
           if (uri) {
             setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
-            analyzeImage(uri)
+            analyzeImage(uri, selectedMealType)
           }
         },
       },
@@ -77,7 +85,7 @@ export function RecordView({
           const uri = await pickImageFromGallery()
           if (uri) {
             setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
-            analyzeImage(uri)
+            analyzeImage(uri, selectedMealType)
           }
         },
       },
@@ -110,7 +118,13 @@ export function RecordView({
         onRecord={handleRecord}
       />
 
-      {analysisResult && <FoodAnalysisResult result={analysisResult} />}
+      <FoodAnalysisResult
+        result={analysisResult}
+        open={isResultOpen}
+        onClose={() => setIsResultOpen(false)}
+        imageUri={analyzedImageUri ?? undefined}
+        mealType={analyzedMealType ?? undefined}
+      />
 
       <View height={10} />
 
