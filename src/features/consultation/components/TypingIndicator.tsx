@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react"
 import { Animated, Easing, View } from "react-native"
-import { XStack } from "tamagui"
-
-const DARK_COLOR = "#2A2E38"
-const LIGHT_COLOR = "#A5A5AF"
-const AVATAR_COLOR = "#D9D9DF"
+import { useTheme, XStack } from "tamagui"
 
 export function TypingIndicator() {
+  const theme = useTheme()
+  const darkColor = theme.color?.val ?? "#2A2E38"
+  const lightColor = theme.colorSubtle?.val ?? "#A5A5AF"
+  const avatarColor = theme.borderColor?.val ?? "#D9D9DF"
+
   const colorAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -28,11 +29,11 @@ export function TypingIndicator() {
     )
     animation.start()
     return () => animation.stop()
-  }, [colorAnim])
+  }, [colorAnim, darkColor, lightColor])
 
   const animatedColor = colorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [DARK_COLOR, LIGHT_COLOR],
+    outputRange: [darkColor, lightColor],
   })
 
   return (
@@ -42,12 +43,13 @@ export function TypingIndicator() {
           width: 40,
           height: 40,
           borderRadius: 20,
-          backgroundColor: AVATAR_COLOR,
+          backgroundColor: avatarColor,
         }}
       />
       <Animated.Text
         style={{
           fontSize: 14,
+          lineHeight: 22,
           fontFamily: "PretendardKR-Medium",
           color: animatedColor,
         }}
