@@ -14,22 +14,23 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
 
 import type { ChatCategory } from "@/src/types/models"
+import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import {
   CATEGORY_LIST,
-  getCategoryMeta,
+  // getCategoryMeta,
 } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 
 import { YStack, Text, XStack } from "tamagui"
-import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
-import { ChatMessageBubble } from "@/src/features/consultation/components/ChatMessageBubble"
-import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
 import { Chip } from "@/src/shared/components/Chip"
 import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components/Icon"
-import { ChatEmptyState } from "@/src/features/consultation/components/ChatEmptyState"
-import type { FaqCardEntry } from "@/src/features/consultation/types"
+
+import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
+import { ChatMessageBubble } from "@/src/features/consultation/components/ChatMessageBubble"
+import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
+import { FaqCarousel } from "@/src/features/consultation/components/FaqCarousel"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -51,7 +52,7 @@ export default function ChatScreen() {
   const [isInputFocused, setIsInputFocused] = useState(false)
 
   const category = params.category ?? "diet"
-  const meta = getCategoryMeta(category)
+  // const meta = getCategoryMeta(category)
   const scrollRef = useRef<ScrollView>(null)
   const { messages, isTyping, sendMessage, isSending } = useChat({
     category,
@@ -102,7 +103,18 @@ export default function ChatScreen() {
         />
 
         {messages.length === 0 && !isTyping ? (
-          <ChatEmptyState onFaqPress={handleFaqPress} />
+          <YStack flex={1} justifyContent="center" gap="$5">
+            <Text
+              textAlign="center"
+              fontSize="18"
+              lineHeight={20}
+              fontWeight="600"
+              color="$grey2"
+            >
+              {"신신당부 AI에게\n무엇이든 물어보세요"}
+            </Text>
+            {!isInputFocused && <FaqCarousel onFaqPress={handleFaqPress} />}
+          </YStack>
         ) : (
           <ScrollView
             ref={scrollRef}
