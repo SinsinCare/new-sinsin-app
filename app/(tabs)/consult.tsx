@@ -28,7 +28,7 @@ import { Chip } from "@/src/shared/components/Chip"
 import { Icon } from "@/src/shared/components/Icon"
 
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
-import { ChatMessageBubble } from "@/src/features/consultation/components/ChatMessageBubble"
+import { UserBubble, AssistantBubble } from "@/src/features/consultation/components/ChatMessageBubble"
 import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
 import { FaqCarousel } from "@/src/features/consultation/components/FaqCarousel"
 
@@ -56,10 +56,11 @@ export default function ConsultScreen() {
   const category = params.category ?? "diet"
   // const meta = getCategoryMeta(category)
   const scrollRef = useRef<ScrollView>(null)
-  const { messages, isTyping, sendMessage, isSending, regenerateLastMessage } = useChat({
-    category,
-    initialMessage: params.initialMessage,
-  })
+  const { messages, isTyping, sendMessage, isSending, regenerateLastMessage } =
+    useChat({
+      category,
+      initialMessage: params.initialMessage,
+    })
 
   const router = useRouter()
   const handleHistoryPress = () => {}
@@ -125,15 +126,21 @@ export default function ConsultScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {(() => {
-              const lastAssistantIdx = messages.findLastIndex((m) => m.role === "assistant")
-              return messages.map((msg, index) => (
-                <ChatMessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isLastAssistant={msg.role === "assistant" && index === lastAssistantIdx}
-                  onRegenerate={regenerateLastMessage}
-                />
-              ))
+              const lastAssistantIdx = messages.findLastIndex(
+                (m) => m.role === "assistant",
+              )
+              return messages.map((msg, index) =>
+                msg.role === "user" ? (
+                  <UserBubble key={msg.id} message={msg} />
+                ) : (
+                  <AssistantBubble
+                    key={msg.id}
+                    message={msg}
+                    isLastAssistant={index === lastAssistantIdx}
+                    onRegenerate={regenerateLastMessage}
+                  />
+                ),
+              )
             })()}
             {isTyping && <TypingIndicator />}
           </ScrollView>
