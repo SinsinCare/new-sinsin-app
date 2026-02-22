@@ -8,6 +8,7 @@ import {
   View,
   TextInput,
   Pressable,
+  Keyboard,
   StyleSheet,
   useColorScheme,
 } from "react-native"
@@ -131,18 +132,20 @@ export default function ConsultScreen() {
         />
 
         {messages.length === 0 && !isTyping ? (
-          <YStack flex={1} justifyContent="center" gap="$5">
-            <Text
-              textAlign="center"
-              fontSize="18"
-              lineHeight={20}
-              fontWeight="600"
-              color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
-            >
-              {"신신당부 AI에게\n무엇이든 물어보세요"}
-            </Text>
-            {!isInputFocused && <FaqCarousel onFaqPress={handleFaqPress} />}
-          </YStack>
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+            <YStack flex={1} justifyContent="center" gap="$5">
+              <Text
+                textAlign="center"
+                fontSize="18"
+                lineHeight={20}
+                fontWeight="600"
+                color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+              >
+                {"신신당부 AI에게\n무엇이든 물어보세요"}
+              </Text>
+              {!isInputFocused && <FaqCarousel onFaqPress={handleFaqPress} />}
+            </YStack>
+          </Pressable>
         ) : (
           <ScrollView
             ref={scrollRef}
@@ -150,6 +153,7 @@ export default function ConsultScreen() {
             contentContainerStyle={{ paddingVertical: 16, gap: 16 }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
             {(() => {
               const lastAssistantIdx = messages.findLastIndex(
