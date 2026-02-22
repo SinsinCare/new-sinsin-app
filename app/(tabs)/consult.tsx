@@ -257,7 +257,10 @@ export default function ConsultScreen() {
           </View>
         </YStack>
       </KeyboardAvoidingView>
-      <ChatHistorySheet.Layout isOpen={historyOpen}>
+      <ChatHistorySheet.Layout
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      >
         <ChatHistorySheet.Header
           onNewChat={handleNewChat}
           onClose={() => setHistoryOpen(false)}

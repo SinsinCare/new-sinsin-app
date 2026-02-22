@@ -1,14 +1,26 @@
+import { useRef, useMemo } from "react"
 import { Sheet } from "@tamagui/sheet"
-import { Pressable, useColorScheme, useWindowDimensions } from "react-native"
+import {
+  PanResponder,
+  Pressable,
+  ScrollView,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from "react-native"
 import { XStack, Text, YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 
+const DRAG_DISMISS_THRESHOLD = 60
+
 const ChatHistorySheetLayout = ({
   isOpen,
+  onClose,
   children,
 }: {
   isOpen: boolean
+  onClose: () => void
   children: React.ReactNode
 }) => {
   const insets = useSafeAreaInsets()
@@ -20,8 +32,32 @@ const ChatHistorySheetLayout = ({
     ((screenHeight - insets.top) / screenHeight) * 100,
   )
 
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dy > DRAG_DISMISS_THRESHOLD) {
+            onCloseRef.current()
+          }
+        },
+      }),
+    [],
+  )
+
   return (
-    <Sheet modal open={isOpen} snapPoints={[snapPoint]} disableDrag>
+    <Sheet
+      modal
+      open={isOpen}
+      onOpenChange={(open: boolean) => {
+        if (!open) onClose()
+      }}
+      snapPoints={[snapPoint]}
+      disableDrag
+    >
       <Sheet.Overlay
         style={{
           backgroundColor: isDarkMode ? "rgba(0,0,0,0.70)" : "rgba(0,0,0,0.20)",
@@ -34,13 +70,19 @@ const ChatHistorySheetLayout = ({
         borderTopRightRadius={20}
         backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
       >
-        <Sheet.Handle
-          marginTop={8}
-          backgroundColor={isDarkMode ? "#36363E" : "#D9D9DF"}
-          alignSelf="center"
-          height={4}
-          width="40"
-        />
+        <View
+          {...panResponder.panHandlers}
+          style={{ paddingVertical: 12, alignItems: "center" }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: isDarkMode ? "#36363E" : "#D9D9DF",
+            }}
+          />
+        </View>
         {children}
       </Sheet.Frame>
     </Sheet>
@@ -111,8 +153,8 @@ const ChatHistoryContentLayout = ({
 }) => {
   const insets = useSafeAreaInsets()
   return (
-    <Sheet.ScrollView
-      flex={1}
+    <ScrollView
+      style={{ flex: 1 }}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         paddingHorizontal: 16,
@@ -120,7 +162,7 @@ const ChatHistoryContentLayout = ({
       }}
     >
       <YStack gap={16}>{children}</YStack>
-    </Sheet.ScrollView>
+    </ScrollView>
   )
 }
 
