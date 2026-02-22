@@ -75,9 +75,11 @@ export default function ConsultScreen() {
   const showCategoryChip = messages.length === 0
 
   const handleHistoryPress = () => {
+    Keyboard.dismiss()
     setHistoryOpen(true)
   }
   const handleSharePress = () => {
+    Keyboard.dismiss()
     // @TODO: Implement share functionality
     // 채팅 초기화 방법 X
   }
