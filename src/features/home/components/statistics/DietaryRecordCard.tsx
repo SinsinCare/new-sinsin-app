@@ -17,8 +17,8 @@ export function DietaryRecordCard({
     <TouchableOpacity onPress={onPress}>
       <YStack
         backgroundColor="$white"
-        borderWidth={0.5}
-        borderColor="$borderColorHover"
+        borderWidth={2}
+        borderColor="$borderColor"
         width={78}
         height={100}
         borderRadius="$6"
