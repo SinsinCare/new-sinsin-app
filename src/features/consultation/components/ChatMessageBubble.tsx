@@ -4,6 +4,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
 import * as Clipboard from "expo-clipboard"
 import type { ChatMessage } from "@/src/types/models"
+import { showCopyToast } from "@/src/lib/toast"
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
@@ -73,6 +74,7 @@ export function AssistantBubble({
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(message.content)
+    showCopyToast()
   }
 
   return (
