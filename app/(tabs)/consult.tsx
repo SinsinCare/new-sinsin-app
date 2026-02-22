@@ -37,7 +37,7 @@ import { TypingIndicator } from "@/src/features/consultation/components/TypingIn
 import { FaqCarousel } from "@/src/features/consultation/components/FaqCarousel"
 import { CopyToast } from "@/src/features/consultation/components/CopyToast"
 import { ChatHistorySheet } from "@/src/features/consultation/components/ChatHistorySheet"
-import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCpoyToClipboard"
+import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCopyToClipboard"
 import { ChatHistoryCard } from "@/src/features/consultation/components/ChatHistoryCard"
 
 if (Platform.OS === "android") {
