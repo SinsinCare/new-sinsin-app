@@ -14,9 +14,10 @@ import { useEffect, useState } from "react"
 interface TextRecordProps {
   open: boolean
   onClose: () => void
+  onSubmit: (text: string) => void
 }
 
-export function TextRecord({ open, onClose }: TextRecordProps) {
+export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
   const [text, setText] = useState("")
   const [keyboardHeight, setKeyboardHeight] = useState(0)
 
@@ -92,7 +93,7 @@ export function TextRecord({ open, onClose }: TextRecordProps) {
         </YStack>
 
         <TouchableOpacity
-          onPress={() => {}}
+          onPress={() => onSubmit(text)}
           style={[
             styles.button,
             { marginBottom: keyboardHeight > 0 ? keyboardHeight + 12 : 40 },

@@ -82,6 +82,28 @@ export function RecordView({
     }
   }
 
+  const analyzeText = async (text: string) => {
+    if (!selectedMealType) return
+    setIsTextRecordOpen(false)
+    setAnalyzedMealType(selectedMealType)
+    setAnalyzedImageUri(null)
+    try {
+      setIsAnalyzing(true)
+      const result = await foodCameraService.analyzeText(text)
+      setAnalysisResult(result)
+      setIsResultOpen(true)
+    } catch (error) {
+      console.error("analyzeText error:", error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "음식 분석 중 오류가 발생했습니다."
+      Alert.alert("분석 실패", message)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   const handleRecord = () => {
     if (!selectedMealType) return
     Alert.alert("사진 첨부", "방법을 선택하세요", [
@@ -150,6 +172,7 @@ export function RecordView({
       <TextRecord
         open={isTextRecordOpen}
         onClose={() => setIsTextRecordOpen(false)}
+        onSubmit={analyzeText}
       />
 
       <FoodAnalysisResult
