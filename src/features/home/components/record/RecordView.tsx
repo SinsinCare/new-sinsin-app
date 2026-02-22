@@ -1,5 +1,11 @@
-import { ScrollView, StyleSheet, Alert } from "react-native"
-import { View } from "tamagui"
+import {
+  ScrollView,
+  StyleSheet,
+  Alert,
+  Modal,
+  ActivityIndicator,
+} from "react-native"
+import { View, Text } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../../types"
@@ -48,6 +54,7 @@ export function RecordView({
     null,
   )
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
@@ -57,12 +64,15 @@ export function RecordView({
     try {
       setAnalyzedImageUri(uri)
       setAnalyzedMealType(mealType)
+      setIsAnalyzing(true)
       const result = await foodCameraService.analyze(uri)
       setAnalysisResult(result)
       setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeImage error:", error)
       Alert.alert("분석 실패", "음식 분석 중 오류가 발생했습니다.")
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -118,6 +128,15 @@ export function RecordView({
         onRecord={handleRecord}
       />
 
+      <Modal visible={isAnalyzing} transparent animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="white" />
+          <Text fontSize="$4" fontWeight="600" color="white" marginTop="$3">
+            식단 분석 중...
+          </Text>
+        </View>
+      </Modal>
+
       <FoodAnalysisResult
         result={analysisResult}
         open={isResultOpen}
@@ -149,5 +168,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 10,
     paddingBottom: 100,
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 })
