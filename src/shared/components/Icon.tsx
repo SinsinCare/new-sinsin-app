@@ -21,6 +21,8 @@ import Plus from "@/assets/icons/plus.svg"
 import Recipe from "@/assets/icons/recipe.svg"
 import Reset from "@/assets/icons/reset.svg"
 import Water from "@/assets/icons/water.svg"
+import Pencil from "@/assets/icons/pencil.svg"
+import Trashcan from "@/assets/icons/trashcan.svg"
 import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
 
@@ -38,10 +40,12 @@ const icons = {
   mail: Mail,
   menu: Menu,
   notification: Notification,
+  pencil: Pencil,
   pill: Pill,
   plus: Plus,
   recipe: Recipe,
   reset: Reset,
+  trashcan: Trashcan,
   upload: Upload,
   water: Water,
   x: X,
