@@ -1,9 +1,16 @@
-import { YStack, Text } from "tamagui"
-import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
+import { Pressable } from "react-native"
+import { YStack, Text, XStack, View } from "tamagui"
+import { useColorScheme } from "@/hooks/use-color-scheme"
+import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
+import * as Clipboard from "expo-clipboard"
 import type { ChatMessage } from "@/src/types/models"
 
 interface ChatMessageBubbleProps {
   message: ChatMessage
+  /** Whether this is the last assistant message (show action buttons) */
+  isLastAssistant?: boolean
+  onRegenerate?: () => void
 }
 
 function formatTime(date: Date): string {
@@ -14,18 +21,36 @@ function formatTime(date: Date): string {
   })
 }
 
+function AssistantAvatar() {
+  return (
+    <View
+      width={36}
+      height={36}
+      borderRadius={18}
+      backgroundColor="$grey8"
+      marginTop="$1"
+    />
+  )
+}
+
 function UserBubble({ message }: { message: ChatMessage }) {
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === "dark"
   return (
     <YStack alignItems="flex-end" paddingHorizontal="$4">
       <YStack
-        backgroundColor="$primary7"
-        borderRadius="$5"
-        borderBottomRightRadius="$1"
+        backgroundColor={isDarkMode ? "#2E2E34" : "#FDFDFD"}
+        borderRadius="$6"
+        borderBottomRightRadius="1"
         paddingHorizontal="$3"
         paddingVertical="$2.5"
         maxWidth="80%"
       >
-        <Text fontSize="$4" color="white" lineHeight={22}>
+        <Text
+          fontSize="$4"
+          color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+          lineHeight={22}
+        >
           {message.content}
         </Text>
       </YStack>
@@ -36,24 +61,62 @@ function UserBubble({ message }: { message: ChatMessage }) {
   )
 }
 
-function AssistantBubble({ message }: { message: ChatMessage }) {
+function AssistantBubble({
+  message,
+  isLastAssistant,
+  onRegenerate,
+}: {
+  message: ChatMessage
+  isLastAssistant?: boolean
+  onRegenerate?: () => void
+}) {
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === "dark"
+  const iconColor = isDarkMode ? "#66666B" : "#A5A5AF"
+
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(message.content)
+  }
+
   return (
-    <YStack alignItems="flex-start" paddingHorizontal="$4" maxWidth="85%">
-      <GlassmorphicCard variant="flat" borderColor="$borderColor" padding="$3">
-        <Text fontSize="$4" color="$color" lineHeight={22}>
+    <XStack paddingHorizontal="$4" gap="$2.5" alignItems="flex-start">
+      <AssistantAvatar />
+      <YStack flex={1} gap="$2">
+        <Text
+          fontSize="$4"
+          color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+          lineHeight={22}
+        >
           {message.content}
         </Text>
-      </GlassmorphicCard>
-      <Text fontSize={11} color="$grey6" marginTop="$1" paddingLeft="$1">
-        {formatTime(message.createdAt)}
-      </Text>
-    </YStack>
+        {isLastAssistant && (
+          <XStack gap="$3">
+            <Pressable onPress={handleCopy} hitSlop={8}>
+              <Icon name="copy" size={20} color={iconColor} />
+            </Pressable>
+            <Pressable onPress={onRegenerate} hitSlop={8}>
+              <Icon name="reset" size={20} color={iconColor} />
+            </Pressable>
+          </XStack>
+        )}
+      </YStack>
+    </XStack>
   )
 }
 
-export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
+export function ChatMessageBubble({
+  message,
+  isLastAssistant,
+  onRegenerate,
+}: ChatMessageBubbleProps) {
   if (message.role === "user") {
     return <UserBubble message={message} />
   }
-  return <AssistantBubble message={message} />
+  return (
+    <AssistantBubble
+      message={message}
+      isLastAssistant={isLastAssistant}
+      onRegenerate={onRegenerate}
+    />
+  )
 }
