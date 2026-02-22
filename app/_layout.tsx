@@ -67,6 +67,7 @@ function RootLayoutNav() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="chat" />
         <Stack.Screen name="create-post" />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="(settings)" />
