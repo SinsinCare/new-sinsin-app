@@ -189,6 +189,7 @@ export default function ConsultScreen() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingVertical: 8, gap: 8 }}
+                keyboardShouldPersistTaps="always"
               >
                 {CATEGORY_LIST.map((category) => (
                   <Chip
