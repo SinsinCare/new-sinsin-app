@@ -65,4 +65,24 @@ export const foodCameraService = {
 
     return result
   },
+
+  async analyzeText(text: string): Promise<FoodCameraAnalyzeResult> {
+    let result: FoodCameraAnalyzeResult
+
+    if (isMockMode()) {
+      const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
+      result = await mockFoodCameraService.analyze()
+    } else {
+      try {
+        const response = await api.post("/food-camera/analyze-text", { text })
+        result = response.data.result as FoodCameraAnalyzeResult
+      } catch (err) {
+        if (isAxiosError(err) && err.response?.data?.message) {
+          throw new Error(err.response.data.message)
+        }
+        throw err
+      }
+    }
+    return result
+  },
 }

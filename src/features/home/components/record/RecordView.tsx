@@ -13,14 +13,14 @@ import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
+import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useState } from "react"
 import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
-import { foodCameraService } from "@/src/services/data"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { FoodAnalysisResult } from "./FoodAnalysisResult"
+import { TextRecord } from "./TextRecord"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -44,41 +44,25 @@ export function RecordView({
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord()
+  const {
+    isAnalyzing,
+    isResultOpen,
+    analysisResult,
+    analyzedMealType,
+    analyzedImageUri,
+    analyzeImage,
+    analyzeText,
+    closeResult,
+  } = useFoodAnalysis()
+
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
   >({})
-  const [analysisResult, setAnalysisResult] =
-    useState<FoodCameraAnalyzeResult | null>(null)
-  const [isResultOpen, setIsResultOpen] = useState(false)
-  const [analyzedMealType, setAnalyzedMealType] = useState<MealType | null>(
-    null,
-  )
-  const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
   )
-
-  const analyzeImage = async (uri: string, mealType: MealType) => {
-    try {
-      setAnalyzedImageUri(uri)
-      setAnalyzedMealType(mealType)
-      setIsAnalyzing(true)
-      const result = await foodCameraService.analyze(uri)
-      setAnalysisResult(result)
-      setIsResultOpen(true)
-    } catch (error) {
-      console.error("analyzeImage error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "음식 분석 중 오류가 발생했습니다."
-      Alert.alert("분석 실패", message)
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }
 
   const handleRecord = () => {
     if (!selectedMealType) return
@@ -102,6 +86,10 @@ export function RecordView({
             analyzeImage(uri, selectedMealType)
           }
         },
+      },
+      {
+        text: "직접 입력",
+        onPress: () => setIsTextRecordOpen(true),
       },
       { text: "취소", style: "cancel" },
     ])
@@ -141,10 +129,20 @@ export function RecordView({
         </View>
       </Modal>
 
+      <TextRecord
+        open={isTextRecordOpen}
+        onClose={() => setIsTextRecordOpen(false)}
+        onSubmit={(text) => {
+          if (!selectedMealType) return
+          setIsTextRecordOpen(false)
+          analyzeText(text, selectedMealType)
+        }}
+      />
+
       <FoodAnalysisResult
         result={analysisResult}
         open={isResultOpen}
-        onClose={() => setIsResultOpen(false)}
+        onClose={closeResult}
         imageUri={analyzedImageUri ?? undefined}
         mealType={analyzedMealType ?? undefined}
       />
