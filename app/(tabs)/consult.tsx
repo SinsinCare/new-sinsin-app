@@ -12,7 +12,7 @@ import {
   useColorScheme,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
 
 import type { ChatCategory } from "@/src/types/models"
 import type { FaqCardEntry } from "@/src/features/consultation/types"
@@ -55,7 +55,7 @@ export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
-  const [message, setMessage] = useState("")
+  const [inputMessage, setInputMessage] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<ChatCategory | null>(
     null,
   )
@@ -64,13 +64,15 @@ export default function ConsultScreen() {
 
   const category = params.category ?? "diet"
   // const meta = getCategoryMeta(category)
+
   const scrollRef = useRef<ScrollView>(null)
   const { messages, isTyping, sendMessage, regenerateLastMessage } = useChat({
     category,
     initialMessage: params.initialMessage,
   })
 
-  const router = useRouter()
+  const showCategoryChip = messages.length > 0
+
   const handleHistoryPress = () => {
     setHistoryOpen(true)
   }
@@ -174,7 +176,7 @@ export default function ConsultScreen() {
           paddingHorizontal="16"
         >
           {showToast && <CopyToast message="답변을 복사했습니다." />}
-          {isInputFocused && (
+          {showCategoryChip && isInputFocused && (
             <>
               <Text fontSize="12" color="#81818d" lineHeight={16}>
                 카테고리
@@ -204,8 +206,8 @@ export default function ConsultScreen() {
             }}
           >
             <TextInput
-              value={message}
-              onChangeText={setMessage}
+              value={inputMessage}
+              onChangeText={setInputMessage}
               placeholder="상담 내용을 작성하세요"
               placeholderTextColor={isDarkMode ? "#66666B" : "#81818D"}
               multiline
@@ -227,12 +229,12 @@ export default function ConsultScreen() {
                 />
               </Pressable>
               <Pressable
-                onPress={() => sendMessage(message)}
-                disabled={!message.trim() || isTyping}
+                onPress={() => sendMessage(inputMessage)}
+                disabled={!inputMessage.trim() || isTyping}
                 style={{
                   ...styles.sendButton,
                   backgroundColor:
-                    message.trim() && !isTyping
+                    inputMessage.trim() && !isTyping
                       ? isDarkMode
                         ? "#ABABB4"
                         : "#474758"
