@@ -16,7 +16,7 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   return (
     <YStack
-      backgroundColor="$backgroundFocus"
+      backgroundColor="$appBg"
       paddingTop={topInset}
       marginHorizontal={-25}
       paddingHorizontal={25}

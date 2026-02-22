@@ -29,6 +29,9 @@ export const tokens = createTokens({
     sub8: "#0D896A",
     sub9: "#028A67",
 
+    // App screen background
+    appBg: "#F3F3F3",
+
     // Greyscale
     grey1: "#171717",
     grey2: "#252525",
