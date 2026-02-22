@@ -4,11 +4,12 @@ import {
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Pressable,
 } from "react-native"
-import { XStack, YStack, View } from "tamagui"
+import { XStack, YStack, View, Text } from "tamagui"
 import { FREQUENTLY_ASKED_QUESTIONS } from "../data/mockData"
-import { FaqCarouselCard } from "./FaqCarouselCard"
 import type { FaqCardEntry } from "../types"
+import { tokens } from "@/src/theme/tokens"
 
 const CARDS_PER_PAGE = 4
 const HORIZONTAL_PADDING = 20
@@ -59,12 +60,39 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
             {/* Row 1 */}
             <XStack gap={CARD_GAP}>
               {pageItems.slice(0, 2).map((faq) => (
-                <FaqCarouselCard
+                <Pressable
                   key={faq.id}
-                  title={faq.title}
-                  description={faq.description}
                   onPress={() => onFaqPress(faq)}
-                />
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.7 : 1,
+                    flex: 1,
+                  })}
+                >
+                  <YStack
+                    backgroundColor="$pureWhite"
+                    borderRadius={16}
+                    padding="16"
+                    gap="$2"
+                    minHeight={120}
+                  >
+                    <Text
+                      fontSize="18"
+                      fontWeight="700"
+                      color={tokens.color.grey1.val}
+                      numberOfLines={1}
+                    >
+                      {faq.title}
+                    </Text>
+                    <Text
+                      fontSize="14"
+                      color={tokens.color.grey4.val}
+                      lineHeight={18}
+                      numberOfLines={3}
+                    >
+                      {faq.description}
+                    </Text>
+                  </YStack>
+                </Pressable>
               ))}
               {pageItems.length < 2 && <View flex={1} />}
             </XStack>
@@ -72,12 +100,39 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
             {pageItems.length > 2 && (
               <XStack gap={CARD_GAP}>
                 {pageItems.slice(2, 4).map((faq) => (
-                  <FaqCarouselCard
+                  <Pressable
                     key={faq.id}
-                    title={faq.title}
-                    description={faq.description}
                     onPress={() => onFaqPress(faq)}
-                  />
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.7 : 1,
+                      flex: 1,
+                    })}
+                  >
+                    <YStack
+                      backgroundColor="$pureWhite"
+                      borderRadius={16}
+                      padding="16"
+                      gap="$2"
+                      minHeight={120}
+                    >
+                      <Text
+                        fontSize="18"
+                        fontWeight="700"
+                        color={tokens.color.grey1.val}
+                        numberOfLines={1}
+                      >
+                        {faq.title}
+                      </Text>
+                      <Text
+                        fontSize="14"
+                        color={tokens.color.grey4.val}
+                        lineHeight={18}
+                        numberOfLines={3}
+                      >
+                        {faq.description}
+                      </Text>
+                    </YStack>
+                  </Pressable>
                 ))}
                 {pageItems.length < 4 && <View flex={1} />}
               </XStack>
