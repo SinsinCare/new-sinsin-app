@@ -114,7 +114,11 @@ export default function ConsultScreen() {
 
   return (
     <View
-      style={{ flex: 1, backgroundColor: "#F3F3F3", paddingTop: insets.top }}
+      style={{
+        flex: 1,
+        backgroundColor: isDarkMode ? "#1F1F21" : "#F3F3F3",
+        paddingTop: insets.top,
+      }}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
