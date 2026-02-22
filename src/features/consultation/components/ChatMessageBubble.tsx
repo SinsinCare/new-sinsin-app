@@ -5,13 +5,6 @@ import { Icon } from "@/src/shared/components/Icon"
 import * as Clipboard from "expo-clipboard"
 import type { ChatMessage } from "@/src/types/models"
 
-interface ChatMessageBubbleProps {
-  message: ChatMessage
-  /** Whether this is the last assistant message (show action buttons) */
-  isLastAssistant?: boolean
-  onRegenerate?: () => void
-}
-
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
     hour: "numeric",
@@ -32,7 +25,7 @@ function AssistantAvatar() {
   )
 }
 
-function UserBubble({ message }: { message: ChatMessage }) {
+export function UserBubble({ message }: { message: ChatMessage }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   return (
@@ -65,7 +58,7 @@ function UserBubble({ message }: { message: ChatMessage }) {
   )
 }
 
-function AssistantBubble({
+export function AssistantBubble({
   message,
   isLastAssistant,
   onRegenerate,
@@ -105,22 +98,5 @@ function AssistantBubble({
         )}
       </YStack>
     </XStack>
-  )
-}
-
-export function ChatMessageBubble({
-  message,
-  isLastAssistant,
-  onRegenerate,
-}: ChatMessageBubbleProps) {
-  if (message.role === "user") {
-    return <UserBubble message={message} />
-  }
-  return (
-    <AssistantBubble
-      message={message}
-      isLastAssistant={isLastAssistant}
-      onRegenerate={onRegenerate}
-    />
   )
 }
