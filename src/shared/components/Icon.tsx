@@ -19,6 +19,7 @@ import Pill from "@/assets/icons/pill.svg"
 import Plus from "@/assets/icons/plus.svg"
 import Recipe from "@/assets/icons/recipe.svg"
 import Water from "@/assets/icons/water.svg"
+import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
 
 const icons = {
@@ -37,6 +38,7 @@ const icons = {
   pill: Pill,
   plus: Plus,
   recipe: Recipe,
+  upload: Upload,
   water: Water,
   x: X,
 } as const

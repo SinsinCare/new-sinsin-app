@@ -5,6 +5,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Pressable,
+  useColorScheme,
 } from "react-native"
 import { XStack, YStack, View, Text } from "tamagui"
 import { FREQUENTLY_ASKED_QUESTIONS } from "../data/mockData"
@@ -28,6 +29,8 @@ interface FaqCarouselProps {
 }
 
 export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === "dark"
   const { width: screenWidth } = useWindowDimensions()
   const [activeIndex, setActiveIndex] = useState(0)
   const pages = chunkArray(FREQUENTLY_ASKED_QUESTIONS, CARDS_PER_PAGE)
@@ -69,7 +72,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                   })}
                 >
                   <YStack
-                    backgroundColor="$pureWhite"
+                    backgroundColor={isDarkMode ? "#252529" : "#FCFCFC"}
                     borderRadius={16}
                     padding="16"
                     gap="$2"
@@ -78,14 +81,14 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                     <Text
                       fontSize="18"
                       fontWeight="700"
-                      color={tokens.color.grey1.val}
+                      color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
                       numberOfLines={1}
                     >
                       {faq.title}
                     </Text>
                     <Text
                       fontSize="14"
-                      color={tokens.color.grey4.val}
+                      color={isDarkMode ? "#ABABB4" : "#474758"}
                       lineHeight={18}
                       numberOfLines={3}
                     >
@@ -109,7 +112,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                     })}
                   >
                     <YStack
-                      backgroundColor="$pureWhite"
+                      backgroundColor={isDarkMode ? "#252529" : "#FCFCFC"}
                       borderRadius={16}
                       padding="16"
                       gap="$2"
@@ -118,14 +121,14 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                       <Text
                         fontSize="18"
                         fontWeight="700"
-                        color={tokens.color.grey1.val}
+                        color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
                         numberOfLines={1}
                       >
                         {faq.title}
                       </Text>
                       <Text
                         fontSize="14"
-                        color={tokens.color.grey4.val}
+                        color={isDarkMode ? "#ABABB4" : "#474758"}
                         lineHeight={18}
                         numberOfLines={3}
                       >
@@ -149,7 +152,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
             width={8}
             height={8}
             borderRadius={4}
-            backgroundColor={index === activeIndex ? "$sub5" : "$grey7"}
+            backgroundColor={index === activeIndex ? "#44af94" : "$grey7"}
           />
         ))}
       </XStack>

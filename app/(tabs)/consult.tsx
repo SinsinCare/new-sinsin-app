@@ -9,6 +9,7 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
+  useColorScheme,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
@@ -45,6 +46,8 @@ export default function ConsultScreen() {
   }>()
 
   const insets = useSafeAreaInsets()
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === "dark"
   const [message, setMessage] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<ChatCategory | null>(
     null,
@@ -108,7 +111,7 @@ export default function ConsultScreen() {
               fontSize="18"
               lineHeight={20}
               fontWeight="600"
-              color="$grey2"
+              color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
             >
               {"신신당부 AI에게\n무엇이든 물어보세요"}
             </Text>
@@ -134,7 +137,7 @@ export default function ConsultScreen() {
           borderTopWidth={1}
           borderTopColor="$borderColor"
           backgroundColor="transparent"
-          paddingBottom={insets.bottom}
+          paddingVertical="8"
           paddingHorizontal="16"
         >
           {isInputFocused && (
@@ -163,16 +166,18 @@ export default function ConsultScreen() {
           <View
             style={{
               ...styles.inputContainer,
+              backgroundColor: isDarkMode ? "#2E2E34" : "#FDFDFD",
             }}
           >
             <TextInput
               value={message}
               onChangeText={setMessage}
               placeholder="상담 내용을 작성하세요"
-              placeholderTextColor={tokens.color.grey6.val}
+              placeholderTextColor={isDarkMode ? "#66666B" : "#81818D"}
               multiline
               style={{
                 ...styles.input,
+                color: isDarkMode ? "#E7E7EE" : "#2A2A37",
               }}
               editable={!isTyping}
               onFocus={handleInputFocus}
@@ -181,7 +186,11 @@ export default function ConsultScreen() {
 
             <XStack justifyContent="space-between" alignItems="center">
               <Pressable onPress={() => {}} hitSlop={8}>
-                <Icon name="plus" size={24} color={tokens.color.grey4.val} />
+                <Icon
+                  name="plus"
+                  size={24}
+                  color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                />
               </Pressable>
               <Pressable
                 onPress={() => sendMessage(message)}
@@ -189,15 +198,19 @@ export default function ConsultScreen() {
                 style={{
                   ...styles.sendButton,
                   backgroundColor:
-                    (message.trim() && !isTyping) || isSending
-                      ? tokens.color.grey2.val
-                      : tokens.color.grey7.val,
+                    message.trim() && !isTyping
+                      ? isDarkMode
+                        ? "#ABABB4"
+                        : "#474758"
+                      : isDarkMode
+                        ? "#4E4F55"
+                        : "#CACBD5",
                 }}
               >
                 <Icon
                   name="fly-chat"
                   size={24}
-                  color={tokens.color.pureWhite.val}
+                  color={isDarkMode ? "#E7E7EE" : "#FDFDFD"}
                 />
               </Pressable>
             </XStack>
@@ -211,7 +224,6 @@ export default function ConsultScreen() {
 const styles = StyleSheet.create({
   input: {
     fontSize: 16,
-    color: tokens.color.grey1.val,
     maxHeight: 120,
     lineHeight: 22,
     padding: 0,
@@ -220,7 +232,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 8,
     borderRadius: 20,
-    backgroundColor: tokens.color.pureWhite.val,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 10,
