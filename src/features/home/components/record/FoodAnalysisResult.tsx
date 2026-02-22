@@ -330,7 +330,7 @@ export function FoodAnalysisResult({
         >
           <YStack
             backgroundColor={tokens.color.primary7.val}
-            borderRadius={14}
+            borderRadius={30}
             height={54}
             alignItems="center"
             justifyContent="center"

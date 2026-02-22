@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 20,
     paddingVertical: 16,
-    borderRadius: 100,
+    borderRadius: 30,
   },
   buttonActive: {
     backgroundColor: tokens.color.primary7.val,
