@@ -10,7 +10,6 @@ import {
 import { XStack, YStack, View, Text } from "tamagui"
 import { FREQUENTLY_ASKED_QUESTIONS } from "../data/mockData"
 import type { FaqCardEntry } from "../types"
-import { tokens } from "@/src/theme/tokens"
 
 const CARDS_PER_PAGE = 4
 const HORIZONTAL_PADDING = 20

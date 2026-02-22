@@ -1,6 +1,5 @@
 import { Pressable, useColorScheme } from "react-native"
 import { XStack, Text } from "tamagui"
-import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
 
 export function ConsultChatHeader({

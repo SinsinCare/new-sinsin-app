@@ -25,7 +25,6 @@ import { useChat } from "@/src/features/consultation/hooks/useChat"
 
 import { YStack, Text, XStack } from "tamagui"
 import { Chip } from "@/src/shared/components/Chip"
-import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components/Icon"
 
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
