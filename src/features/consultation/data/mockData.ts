@@ -192,7 +192,74 @@ export const FREQUENTLY_ASKED_QUESTIONS = [
   {
     id: "faq-1",
     category: "diet",
-    title: "만성신장질환에서 하루 육류 적정 섭취량은?",
+    title: "고기 섭취",
+    description: "고기(수육, 오리 등)을 먹어도 되나요?",
+  },
+  {
+    id: "faq-2",
+    category: "diet",
+    title: "과일 섭취량",
+    description: "과일(방울토마토, 사과, 수박 등)은 몇 개까지 되나요?",
+  },
+  {
+    id: "faq-3",
+    category: "diet",
+    title: "채소 칼륨 제거",
+    description: "칼륨을 줄이려면 물에 채소를 얼마나 담궈뒀야 하나요?",
+  },
+  {
+    id: "faq-4",
+    category: "diet",
+    title: "보리차/허브티",
+    description: "맹물 대신 보리차나 허브티를 마셔도 되나요?",
+  },
+  {
+    id: "faq-5",
+    category: "medicine",
+    title: "영양제 복용",
+    description: "오메가3, 마그네슘, 비타민 D 먹어도 되나요?",
+  },
+  {
+    id: "faq-6",
+    category: "medicine",
+    title: "진통제 선택",
+    description: "두통약으로 타이레놀 말고 다른 건 안 되나요?",
+  },
+  {
+    id: "faq-7",
+    category: "checkup",
+    title: "수치 해석",
+    description: "크레아티닌은 높은데 시스타틴C는 정상인 경우 어떤 뜻인가요?",
+  },
+  {
+    id: "faq-8",
+    category: "medicine",
+    title: "타과 진료/수술",
+    description: "치과나 정형외과 처방약을 신장내과 확인 없이 먹어도 되나요?",
+  },
+  {
+    id: "faq-9",
+    category: "symptom",
+    title: "요독 증상",
+    description: "입에서 암모니아 냄새가 나고 미식거리는데 투석 신호인가요?",
+  },
+  {
+    id: "faq-10",
+    category: "symptom",
+    title: "동정맥루 수술",
+    description: "자가혈관과 인조혈관 중 뭐가 좋고 관리는 어떻게 하나요?",
+  },
+  {
+    id: "faq-11",
+    category: "diet",
+    title: "단백뇨와 계란",
+    description: "단백뇨가 있는데 계란 노른자와 흰자 중 뭐가 낫나요?",
+  },
+  {
+    id: "faq-12",
+    category: "diet",
+    title: "외식 메뉴",
+    description: "신장 환자에게 좋은 외식 메뉴(샤브샤브, 비빔밥 등) 알려주세요",
   },
 ]
 
