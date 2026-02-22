@@ -32,7 +32,7 @@ const ChatHistorySheetLayout = ({
       <Sheet.Frame
         borderTopLeftRadius={20}
         borderTopRightRadius={20}
-        backgroundColor={isDarkMode ? "#1C1C1E" : "#F3F3F3"}
+        backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
       >
         <Sheet.Handle
           marginTop={8}

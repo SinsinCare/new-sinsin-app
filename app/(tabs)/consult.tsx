@@ -19,6 +19,7 @@ import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import {
   CATEGORY_LIST,
+  MOCK_HISTORY_LIST,
   // getCategoryMeta,
 } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
@@ -35,7 +36,9 @@ import {
 import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
 import { FaqCarousel } from "@/src/features/consultation/components/FaqCarousel"
 import { CopyToast } from "@/src/features/consultation/components/CopyToast"
+import { ChatHistorySheet } from "@/src/features/consultation/components/ChatHistorySheet"
 import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCpoyToClipboard"
+import { ChatHistoryCard } from "@/src/features/consultation/components/ChatHistoryCard"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -57,6 +60,7 @@ export default function ConsultScreen() {
     null,
   )
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const category = params.category ?? "diet"
   // const meta = getCategoryMeta(category)
@@ -67,10 +71,19 @@ export default function ConsultScreen() {
   })
 
   const router = useRouter()
-  const handleHistoryPress = () => {}
+  const handleHistoryPress = () => {
+    setHistoryOpen(true)
+  }
   const handleSharePress = () => {
     // @TODO: Implement share functionality
     // 채팅 초기화 방법 X
+  }
+  const handleNewChat = () => {
+    setHistoryOpen(false)
+    // @TODO: Reset conversation
+  }
+  const handleSelectHistory = (_id: string) => {
+    // @TODO: Load selected conversation
   }
 
   const { handleCopy, showToast } = useCopyToClipboard()
@@ -238,6 +251,26 @@ export default function ConsultScreen() {
           </View>
         </YStack>
       </KeyboardAvoidingView>
+      <ChatHistorySheet.Layout isOpen={historyOpen}>
+        <ChatHistorySheet.Header
+          onNewChat={handleNewChat}
+          onClose={() => setHistoryOpen(false)}
+        />
+        <ChatHistorySheet.ContentLayout>
+          {MOCK_HISTORY_LIST.map((item) => (
+            <ChatHistoryCard
+              key={item.id}
+              summary={item.summary}
+              content={item.content}
+              timestamp={item.timestamp.toISOString()}
+              onPress={() => handleSelectHistory(item.id)}
+              onRename={() => {}}
+              onDelete={() => {}}
+              onShare={() => {}}
+            />
+          ))}
+        </ChatHistorySheet.ContentLayout>
+      </ChatHistorySheet.Layout>
     </View>
   )
 }

@@ -19,8 +19,8 @@ export interface FaqItem {
 export interface ConsultHistoryItem {
   id: string
   category: ChatCategory
-  firstQuestion: string
-  firstAnswer: string
+  summary: string
+  content: string
   timestamp: Date
 }
 

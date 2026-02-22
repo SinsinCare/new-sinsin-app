@@ -100,8 +100,8 @@ export const MOCK_HISTORY_LIST: ConsultHistoryItem[] = [
   {
     id: "hist-1",
     category: "diet",
-    firstQuestion: "하루 육류 적정 섭취량이 궁금합니다",
-    firstAnswer:
+    summary: "하루 육류 적정 섭취량이 궁금합니다",
+    content:
       "만성신장질환 환자의 하루 육류 섭취량은 CKD 단계에 따라 다릅니다. 일반적으로 체중 1kg당 0.6~0.8g의 단백질이 권장됩니다.",
     timestamp: new Date(
       now.getFullYear(),
@@ -114,48 +114,48 @@ export const MOCK_HISTORY_LIST: ConsultHistoryItem[] = [
   {
     id: "hist-2",
     category: "lifestyle",
-    firstQuestion: "커피가 수분 섭취에 미치는 영향은?",
-    firstAnswer:
+    summary: "커피가 수분 섭취에 미치는 영향은?",
+    content:
       "커피는 이뇨 작용이 있지만 혈액투석 환자의 수분 섭취량에 포함됩니다. 하루 1~2잔 이내로 제한하세요.",
     timestamp: yesterday,
   },
   {
     id: "hist-3",
     category: "checkup",
-    firstQuestion: "GFR 수치 해석 방법이 궁금합니다",
-    firstAnswer:
+    summary: "GFR 수치 해석 방법이 궁금합니다",
+    content:
       "GFR(사구체여과율)은 신장 기능을 나타내는 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
     timestamp: twoDaysAgo,
   },
   {
     id: "hist-4",
     category: "diet",
-    firstQuestion: "칼륨 수치가 높을 때 과일 섭취 제한은?",
-    firstAnswer:
+    summary: "칼륨 수치가 높을 때 과일 섭취 제한은?",
+    content:
       "고칼륨혈증 시 바나나, 멜론, 키위 등을 피하고, 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하세요.",
     timestamp: threeDaysAgo,
   },
   {
     id: "hist-5",
     category: "medicine",
-    firstQuestion: "혈압약 복용 시간과 식사의 관계는?",
-    firstAnswer:
+    summary: "혈압약 복용 시간과 식사의 관계는?",
+    content:
       "혈압약은 매일 같은 시간에 복용하는 것이 중요합니다. 일부 약물은 공복 시 흡수율이 높으므로 주치의 지시를 따르세요.",
     timestamp: fourDaysAgo,
   },
   {
     id: "hist-6",
     category: "lifestyle",
-    firstQuestion: "투석 후 피로감을 줄이는 방법은?",
-    firstAnswer:
+    summary: "투석 후 피로감을 줄이는 방법은?",
+    content:
       "투석 후 피로감은 흔한 증상입니다. 충분한 수면, 가벼운 산책, 투석 중 혈압 관리가 도움이 됩니다.",
     timestamp: fiveDaysAgo,
   },
   {
     id: "hist-7",
     category: "diet",
-    firstQuestion: "저인식이에서 유제품 대체 식품은?",
-    firstAnswer:
+    summary: "저인식이에서 유제품 대체 식품은?",
+    content:
       "유제품 대신 쌀 우유, 아몬드 우유, 코코넛 밀크 등을 활용하세요. 가공식품의 인산염 첨가물은 특히 주의가 필요합니다.",
     timestamp: sixDaysAgo,
   },
