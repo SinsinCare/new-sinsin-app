@@ -1,19 +1,34 @@
 import { Tabs } from "expo-router"
-import React from "react"
+import React, { useMemo } from "react"
 
 import { HapticTab } from "@/components/haptic-tab"
-import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
+import { useColorScheme } from "react-native"
 
 export default function TabLayout() {
+  const isDarkMode = useColorScheme() === "dark"
+  const styles = useMemo(
+    () => ({
+      activeColor: isDarkMode ? "#E7E7EE" : "#2A2A37",
+      inactiveColor: isDarkMode ? "#595960" : "#A5A5AF",
+      backgroundColor: isDarkMode ? "#1f1f21" : "#FDFDFD",
+      borderColor: isDarkMode ? "#313138" : "#EAEAF0",
+    }),
+    [isDarkMode],
+  )
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: tokens.color.grey1.val,
-        tabBarInactiveTintColor: tokens.color.grey7.val,
+        tabBarActiveTintColor: styles.activeColor,
+        tabBarInactiveTintColor: styles.inactiveColor,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: { paddingHorizontal: 25 },
+        tabBarStyle: {
+          backgroundColor: styles.backgroundColor,
+          paddingHorizontal: 25,
+          borderTopWidth: 1,
+          borderTopColor: styles.borderColor,
+        },
       }}
     >
       <Tabs.Screen
