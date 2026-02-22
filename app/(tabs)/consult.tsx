@@ -56,7 +56,7 @@ export default function ConsultScreen() {
   const category = params.category ?? "diet"
   // const meta = getCategoryMeta(category)
   const scrollRef = useRef<ScrollView>(null)
-  const { messages, isTyping, sendMessage, isSending } = useChat({
+  const { messages, isTyping, sendMessage, isSending, regenerateLastMessage } = useChat({
     category,
     initialMessage: params.initialMessage,
   })
@@ -124,9 +124,17 @@ export default function ConsultScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {messages.map((msg) => (
-              <ChatMessageBubble key={msg.id} message={msg} />
-            ))}
+            {(() => {
+              const lastAssistantIdx = messages.findLastIndex((m) => m.role === "assistant")
+              return messages.map((msg, index) => (
+                <ChatMessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isLastAssistant={msg.role === "assistant" && index === lastAssistantIdx}
+                  onRegenerate={regenerateLastMessage}
+                />
+              ))
+            })()}
             {isTyping && <TypingIndicator />}
           </ScrollView>
         )}
