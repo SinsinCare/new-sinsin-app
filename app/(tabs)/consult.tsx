@@ -28,9 +28,14 @@ import { Chip } from "@/src/shared/components/Chip"
 import { Icon } from "@/src/shared/components/Icon"
 
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
-import { UserBubble, AssistantBubble } from "@/src/features/consultation/components/ChatMessageBubble"
+import {
+  UserBubble,
+  AssistantBubble,
+} from "@/src/features/consultation/components/ChatMessageBubble"
 import { TypingIndicator } from "@/src/features/consultation/components/TypingIndicator"
 import { FaqCarousel } from "@/src/features/consultation/components/FaqCarousel"
+import { CopyToast } from "@/src/features/consultation/components/CopyToast"
+import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCpoyToClipboard"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -56,11 +61,10 @@ export default function ConsultScreen() {
   const category = params.category ?? "diet"
   // const meta = getCategoryMeta(category)
   const scrollRef = useRef<ScrollView>(null)
-  const { messages, isTyping, sendMessage, isSending, regenerateLastMessage } =
-    useChat({
-      category,
-      initialMessage: params.initialMessage,
-    })
+  const { messages, isTyping, sendMessage, regenerateLastMessage } = useChat({
+    category,
+    initialMessage: params.initialMessage,
+  })
 
   const router = useRouter()
   const handleHistoryPress = () => {}
@@ -68,6 +72,8 @@ export default function ConsultScreen() {
     // @TODO: Implement share functionality
     // 채팅 초기화 방법 X
   }
+
+  const { handleCopy, showToast } = useCopyToClipboard()
 
   const handleInputFocus = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
@@ -138,6 +144,7 @@ export default function ConsultScreen() {
                     key={msg.id}
                     message={msg}
                     isLastAssistant={index === lastAssistantIdx}
+                    onCopy={() => handleCopy(msg.content)}
                     onRegenerate={regenerateLastMessage}
                   />
                 ),
@@ -149,12 +156,11 @@ export default function ConsultScreen() {
 
         {/* Bottom Composer */}
         <YStack
-          borderTopWidth={1}
-          borderTopColor="$borderColor"
           backgroundColor="transparent"
           paddingVertical="8"
           paddingHorizontal="16"
         >
+          {showToast && <CopyToast message="답변을 복사했습니다." />}
           {isInputFocused && (
             <>
               <Text fontSize="12" color="#81818d" lineHeight={16}>

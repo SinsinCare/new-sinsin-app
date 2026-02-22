@@ -2,9 +2,7 @@ import { Pressable } from "react-native"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
-import * as Clipboard from "expo-clipboard"
 import type { ChatMessage } from "@/src/types/models"
-import { showCopyToast } from "@/src/lib/toast"
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
@@ -62,20 +60,17 @@ export function UserBubble({ message }: { message: ChatMessage }) {
 export function AssistantBubble({
   message,
   isLastAssistant,
+  onCopy,
   onRegenerate,
 }: {
   message: ChatMessage
   isLastAssistant?: boolean
+  onCopy?: () => void
   onRegenerate?: () => void
 }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   const iconColor = isDarkMode ? "#66666B" : "#A5A5AF"
-
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(message.content)
-    showCopyToast()
-  }
 
   return (
     <XStack paddingHorizontal="$4" gap="$2.5" alignItems="flex-start">
@@ -90,7 +85,7 @@ export function AssistantBubble({
         </Text>
         {isLastAssistant && (
           <XStack gap="$3">
-            <Pressable onPress={handleCopy} hitSlop={8}>
+            <Pressable onPress={onCopy} hitSlop={8}>
               <Icon name="copy" size={20} color={iconColor} />
             </Pressable>
             <Pressable onPress={onRegenerate} hitSlop={8}>
