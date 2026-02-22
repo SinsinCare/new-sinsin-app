@@ -21,6 +21,7 @@ import {
 import { foodCameraService } from "@/src/services/data"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { FoodAnalysisResult } from "./FoodAnalysisResult"
+import { TextRecord } from "./TextRecord"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -55,6 +56,7 @@ export function RecordView({
   )
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
@@ -103,6 +105,10 @@ export function RecordView({
           }
         },
       },
+      {
+        text: "직접 입력",
+        onPress: () => setIsTextRecordOpen(true),
+      },
       { text: "취소", style: "cancel" },
     ])
   }
@@ -140,6 +146,11 @@ export function RecordView({
           </Text>
         </View>
       </Modal>
+
+      <TextRecord
+        open={isTextRecordOpen}
+        onClose={() => setIsTextRecordOpen(false)}
+      />
 
       <FoodAnalysisResult
         result={analysisResult}
