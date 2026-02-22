@@ -64,8 +64,9 @@ export default function ConsultScreen() {
 
   const router = useRouter()
   const handleHistoryPress = () => {}
-  const handleClosePress = () => {
-    router.navigate("/(tabs)/home")
+  const handleSharePress = () => {
+    // @TODO: Implement share functionality
+    // 채팅 초기화 방법 X
   }
 
   const handleInputFocus = () => {
@@ -101,7 +102,7 @@ export default function ConsultScreen() {
       >
         <ConsultChatHeader
           onHistoryPress={handleHistoryPress}
-          onClosePress={handleClosePress}
+          onSharePress={handleSharePress}
         />
 
         {messages.length === 0 && !isTyping ? (

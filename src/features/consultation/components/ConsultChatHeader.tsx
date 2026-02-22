@@ -4,10 +4,10 @@ import { Icon } from "@/src/shared/components"
 
 export function ConsultChatHeader({
   onHistoryPress,
-  onClosePress,
+  onSharePress,
 }: {
   onHistoryPress: () => void
-  onClosePress: () => void
+  onSharePress: () => void
 }) {
   const colorScheme = useColorScheme()
   const headerColor = colorScheme === "dark" ? "#E7E7EE" : "#2A2A37"
@@ -33,7 +33,7 @@ export function ConsultChatHeader({
           신신당부 상담
         </Text>
 
-        <Pressable onPress={onClosePress} hitSlop={8}>
+        <Pressable onPress={onSharePress} hitSlop={8}>
           <Icon name="upload" size={24} color={headerColor} />
         </Pressable>
       </XStack>
