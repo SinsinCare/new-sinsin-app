@@ -1,7 +1,8 @@
-import { XStack, YStack, Text, View, useTheme } from "tamagui"
+import { XStack, YStack, Text, View } from "tamagui"
 import { Pressable, StyleSheet } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { CalendarMode, getThreeDays } from "../../utils/getThreeDays"
+import { tokens } from "@/src/theme/tokens"
 
 interface ThreeDaysCalendarProps {
   selectedDate: Date
@@ -17,8 +18,7 @@ export function ThreeDaysCalendar({
   recordedDates = [],
 }: ThreeDaysCalendarProps) {
   const days = getThreeDays(new Date(), mode)
-  const theme = useTheme()
-  const bgColor = theme.backgroundFocus.val
+  const bgColor = tokens.color.appBg.val
 
   const isSameDay = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() &&
