@@ -28,6 +28,8 @@ import { TypingIndicator } from "@/src/features/consultation/components/TypingIn
 import { Chip } from "@/src/shared/components/Chip"
 import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components/Icon"
+import { ChatEmptyState } from "@/src/features/consultation/components/ChatEmptyState"
+import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -72,6 +74,10 @@ export default function ChatScreen() {
     setIsInputFocused(false)
   }
 
+  const handleFaqPress = (entry: FaqCardEntry) => {
+    sendMessage(entry.description)
+  }
+
   // Auto-scroll to bottom when new messages arrive or typing starts
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -95,19 +101,22 @@ export default function ChatScreen() {
           onClosePress={handleClosePress}
         />
 
-        {/* Chat Messages */}
-        <ScrollView
-          ref={scrollRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingVertical: 16, gap: 16 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {messages.map((msg) => (
-            <ChatMessageBubble key={msg.id} message={msg} />
-          ))}
-          {isTyping && <TypingIndicator />}
-        </ScrollView>
+        {messages.length === 0 && !isTyping ? (
+          <ChatEmptyState onFaqPress={handleFaqPress} />
+        ) : (
+          <ScrollView
+            ref={scrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingVertical: 16, gap: 16 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {messages.map((msg) => (
+              <ChatMessageBubble key={msg.id} message={msg} />
+            ))}
+            {isTyping && <TypingIndicator />}
+          </ScrollView>
+        )}
 
         {/* Bottom Composer */}
         <YStack
