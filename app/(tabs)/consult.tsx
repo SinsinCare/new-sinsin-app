@@ -71,7 +71,7 @@ export default function ConsultScreen() {
     initialMessage: params.initialMessage,
   })
 
-  const showCategoryChip = messages.length > 0
+  const showCategoryChip = messages.length === 0
 
   const handleHistoryPress = () => {
     setHistoryOpen(true)
