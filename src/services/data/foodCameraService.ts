@@ -1,6 +1,7 @@
 import type { FoodCameraAnalyzeResult } from "../../types"
 import { isMockMode } from "../../config/appConfig"
 import { api } from "@/src/services"
+import { isAxiosError } from "axios"
 
 export const foodCameraService = {
   async analyze(imageUri: string): Promise<FoodCameraAnalyzeResult> {
@@ -17,12 +18,18 @@ export const foodCameraService = {
         type: "image/jpeg",
       } as unknown as Blob)
 
-      const response = await api.post("/food-camera/analyze", formData, {
-        headers: { "Content-Type": undefined },
-        transformRequest: (data) => data,
-      })
-
-      result = response.data.result as FoodCameraAnalyzeResult
+      try {
+        const response = await api.post("/food-camera/analyze", formData, {
+          headers: { "Content-Type": undefined },
+          transformRequest: (data) => data,
+        })
+        result = response.data.result as FoodCameraAnalyzeResult
+      } catch (err) {
+        if (isAxiosError(err) && err.response?.data?.message) {
+          throw new Error(err.response.data.message)
+        }
+        throw err
+      }
     }
 
     return result

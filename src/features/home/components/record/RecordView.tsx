@@ -70,7 +70,11 @@ export function RecordView({
       setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeImage error:", error)
-      Alert.alert("분석 실패", "음식 분석 중 오류가 발생했습니다.")
+      const message =
+        error instanceof Error
+          ? error.message
+          : "음식 분석 중 오류가 발생했습니다."
+      Alert.alert("분석 실패", message)
     } finally {
       setIsAnalyzing(false)
     }
