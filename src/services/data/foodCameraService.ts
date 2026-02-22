@@ -3,18 +3,33 @@ import { isMockMode } from "../../config/appConfig"
 import { api } from "@/src/services"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
+import * as FileSystem from "expo-file-system/legacy"
 
 async function compressImage(uri: string): Promise<string> {
-  const context = ImageManipulator.manipulate(uri)
-  context.resize({ width: 1024 })
-  const image = await context.renderAsync()
-  const result = await image.saveAsync({
-    format: SaveFormat.JPEG,
-    compress: 0.5,
-  })
-  context.release()
-  image.release()
-  return result.uri
+  try {
+    let sourceUri = uri
+
+    // file:// 카메라 URI는 expo-image-manipulator 접근 권한 문제로
+    // 캐시 디렉토리에 복사 후 처리
+    if (uri.startsWith("file://")) {
+      const dest = `${FileSystem.cacheDirectory}food_tmp_${Date.now()}.jpg`
+      await FileSystem.copyAsync({ from: uri, to: dest })
+      sourceUri = dest
+    }
+
+    const context = ImageManipulator.manipulate(sourceUri)
+    context.resize({ width: 1024 })
+    const image = await context.renderAsync()
+    const result = await image.saveAsync({
+      format: SaveFormat.JPEG,
+      compress: 0.5,
+    })
+    context.release()
+    image.release()
+    return result.uri
+  } catch {
+    return uri
+  }
 }
 
 export const foodCameraService = {
