@@ -1,80 +1,59 @@
 import { useEffect, useRef } from "react"
-import { Animated, Easing } from "react-native"
-import { XStack, YStack, Text } from "tamagui"
-import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
+import { Animated, Easing, View } from "react-native"
+import { XStack } from "tamagui"
+
+const DARK_COLOR = "#2A2E38"
+const LIGHT_COLOR = "#A5A5AF"
+const AVATAR_COLOR = "#D9D9DF"
 
 export function TypingIndicator() {
-  const dot1 = useRef(new Animated.Value(0)).current
-  const dot2 = useRef(new Animated.Value(0)).current
-  const dot3 = useRef(new Animated.Value(0)).current
+  const colorAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    const createDotAnimation = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 400,
-            easing: Easing.ease,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 400,
-            easing: Easing.ease,
-            useNativeDriver: true,
-          }),
-        ]),
-      )
-
-    const anim = Animated.parallel([
-      createDotAnimation(dot1, 0),
-      createDotAnimation(dot2, 150),
-      createDotAnimation(dot3, 300),
-    ])
-    anim.start()
-    return () => anim.stop()
-  }, [dot1, dot2, dot3])
-
-  const dotStyle = (anim: Animated.Value) => ({
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#B3B3B3",
-    transform: [
-      {
-        translateY: anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -4],
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(colorAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
         }),
-      },
-    ],
-    opacity: anim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.4, 1],
-    }),
+        Animated.timing(colorAnim, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+      ]),
+    )
+    animation.start()
+    return () => animation.stop()
+  }, [colorAnim])
+
+  const animatedColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [DARK_COLOR, LIGHT_COLOR],
   })
 
   return (
-    <YStack alignItems="flex-start" paddingHorizontal="$4" gap="$1.5">
-      <GlassmorphicCard
-        variant="flat"
-        borderColor="$borderColor"
-        paddingHorizontal="$4"
-        paddingVertical="$3"
+    <XStack alignItems="center" paddingHorizontal="$4" gap="$3">
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: AVATAR_COLOR,
+        }}
+      />
+      <Animated.Text
+        style={{
+          fontSize: 14,
+          fontFamily: "PretendardKR-Medium",
+          color: animatedColor,
+        }}
       >
-        <XStack gap="$2" alignItems="center">
-          <XStack gap={6} alignItems="center">
-            <Animated.View style={dotStyle(dot1)} />
-            <Animated.View style={dotStyle(dot2)} />
-            <Animated.View style={dotStyle(dot3)} />
-          </XStack>
-        </XStack>
-      </GlassmorphicCard>
-      <Text fontSize={11} color="$grey6" paddingLeft="$1">
-        답변을 신중하게 고민중입니다...
-      </Text>
-    </YStack>
+        답변을 신중하게 고민하고 있어요
+      </Animated.Text>
+    </XStack>
   )
 }
