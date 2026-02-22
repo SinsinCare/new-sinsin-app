@@ -1,10 +1,12 @@
-import { Modal, ScrollView, Pressable, Image, StyleSheet } from "react-native"
+import { Modal, ScrollView, Image } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../../types"
+import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
+import { MacroBar } from "./MacroBar"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -22,118 +24,16 @@ const MEAL_TYPE_ICON: Record<MealType, string> = {
   간식: "cafe-outline",
 }
 
-function getRestrictionStyle(level: string): {
-  label: string
-  bg: string
-  color: string
-} {
-  switch (level.toLowerCase()) {
-    case "safe":
-      return {
-        label: "안전해요",
-        bg: "$secondaryLight",
-        color: "$secondary",
-      }
-    case "caution":
-      return {
-        label: "주의 필요",
-        bg: "$primary2",
-        color: "$primaryHover",
-      }
-    case "restricted":
-      return {
-        label: "제한 필요",
-        bg: tokens.color.restrictionBg.val,
-        color: tokens.color.restrictionText.val,
-      }
-    default:
-      return {
-        label: level,
-        bg: "$colorSubtle" + "1A",
-        color: "$colorPress",
-      }
-  }
-}
-
-function MacroBar({
-  carbs,
-  protein,
-  fat,
-}: {
-  carbs: number
-  protein: number
-  fat: number
-}) {
-  const carbKcal = carbs * 4
-  const proteinKcal = protein * 4
-  const fatKcal = fat * 9
-  const total = carbKcal + proteinKcal + fatKcal || 1
-
-  const carbPct = Math.round((carbKcal / total) * 100)
-  const proteinPct = Math.round((proteinKcal / total) * 100)
-  const fatPct = 100 - carbPct - proteinPct
-
-  return (
-    <YStack gap="$2">
-      <XStack gap="$3">
-        {[
-          { label: "탄수화물", value: `${carbs}g`, color: "$sub9" },
-          { label: "단백질", value: `${protein}g`, color: "$sub6" },
-          { label: "지방", value: `${fat}g`, color: "$sub4" },
-        ].map(({ label, value, color }) => (
-          <XStack key={label} alignItems="center" gap="$1.5">
-            <View
-              width={8}
-              height={8}
-              borderRadius={4}
-              backgroundColor={color}
-            />
-            <Text fontSize="$3" color="$colorSubtle">
-              {label} {value}
-            </Text>
-          </XStack>
-        ))}
-      </XStack>
-      <XStack height={28} borderRadius={4} overflow="hidden">
-        <View
-          flex={carbPct}
-          backgroundColor="$sub9"
-          borderTopLeftRadius={4}
-          borderBottomLeftRadius={4}
-          alignItems="center"
-          justifyContent="center"
-        >
-          {carbPct >= 8 && <Text style={styles.macroBarLabel}>{carbPct}%</Text>}
-        </View>
-        <View
-          flex={proteinPct}
-          backgroundColor="$sub6"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {proteinPct >= 8 && (
-            <Text style={styles.macroBarLabel}>{proteinPct}%</Text>
-          )}
-        </View>
-        <View
-          flex={fatPct}
-          backgroundColor="$sub4"
-          borderTopRightRadius={4}
-          borderBottomRightRadius={4}
-          alignItems="center"
-          justifyContent="center"
-        >
-          {fatPct >= 8 && <Text style={styles.macroBarLabel}>{fatPct}%</Text>}
-        </View>
-      </XStack>
-    </YStack>
-  )
-}
-
 function NutrientCell({ label, value }: { label: string; value: string }) {
   return (
     <YStack flex={1} alignItems="center">
-      <View style={styles.nutrientIcon} />
+      <View
+        width={30}
+        height={30}
+        borderRadius={5}
+        backgroundColor="$grey7"
+        marginBottom={2}
+      />
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
@@ -167,8 +67,14 @@ export function FoodAnalysisResult({
     >
       <YStack flex={1} backgroundColor={tokens.color.appBg.val}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={{ width: 40 }} />
+        <XStack
+          alignItems="center"
+          paddingHorizontal={12}
+          paddingTop={30}
+          paddingBottom={10}
+          backgroundColor={tokens.color.appBg.val}
+        >
+          <View width={40} />
           <Text
             fontSize="$5"
             fontWeight="600"
@@ -178,17 +84,24 @@ export function FoodAnalysisResult({
           >
             식단 분석
           </Text>
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <XStack
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            onPress={onClose}
+            pressStyle={{ opacity: 0.7 }}
+          >
             <Ionicons name="close" size={22} color={tokens.color.grey3.val} />
-          </Pressable>
-        </View>
+          </XStack>
+        </XStack>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + 100 },
-          ]}
+          contentContainerStyle={{
+            paddingTop: 4,
+            paddingBottom: insets.bottom + 100,
+          }}
         >
           {/* 음식 제목 + 식사 타입 */}
           <XStack
@@ -230,12 +143,28 @@ export function FoodAnalysisResult({
 
           {/* 음식 이미지 */}
           {imageUri && (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: imageUri }} style={styles.foodImage} />
-              <Pressable style={styles.editButton}>
+            <View marginHorizontal="$4" borderRadius={16} overflow="hidden">
+              <Image
+                source={{ uri: imageUri }}
+                style={{ width: "100%", height: 220, resizeMode: "cover" }}
+              />
+              <XStack
+                position="absolute"
+                bottom={10}
+                right={10}
+                alignItems="center"
+                backgroundColor="rgba(0,0,0,0.55)"
+                borderRadius={16}
+                paddingHorizontal={10}
+                paddingVertical={5}
+                gap={4}
+                pressStyle={{ opacity: 0.7 }}
+              >
                 <Ionicons name="pencil" size={12} color="white" />
-                <Text style={styles.editButtonText}>식단 수정</Text>
-              </Pressable>
+                <Text color="white" fontSize={12} fontWeight="500">
+                  식단 수정
+                </Text>
+              </XStack>
             </View>
           )}
 
@@ -366,166 +295,57 @@ export function FoodAnalysisResult({
           )}
 
           {/* 식사에 대해 질문하기 */}
-          <Pressable style={styles.chatButton}>
+          <XStack
+            alignItems="center"
+            justifyContent="center"
+            gap={6}
+            marginTop={24}
+            paddingVertical={12}
+            marginHorizontal={15}
+            backgroundColor="#EAEAF0"
+            borderRadius={20}
+            pressStyle={{ opacity: 0.7 }}
+          >
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={18}
               color={tokens.color.grey3.val}
             />
-            <Text style={styles.chatButtonText}>식사에 대해 질문하기</Text>
-          </Pressable>
+            <Text fontSize={16} fontWeight="500">
+              식사에 대해 질문하기
+            </Text>
+          </XStack>
         </ScrollView>
 
         {/* 하단 고정 버튼 */}
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
-          <Pressable
-            style={styles.addButton}
+        <YStack
+          position="absolute"
+          bottom={0}
+          left={0}
+          right={0}
+          backgroundColor={tokens.color.appBg.val}
+          paddingHorizontal={16}
+          paddingTop={12}
+          paddingBottom={insets.bottom + 12}
+        >
+          <YStack
+            backgroundColor={tokens.color.primary7.val}
+            borderRadius={14}
+            height={54}
+            alignItems="center"
+            justifyContent="center"
             onPress={() => {
               onAddToRecord?.()
               onClose()
             }}
+            pressStyle={{ opacity: 0.8 }}
           >
-            <Text style={styles.addButtonText}>기록에 추가하기</Text>
-          </Pressable>
-        </View>
+            <Text color="white" fontSize={16} fontWeight="700">
+              기록에 추가하기
+            </Text>
+          </YStack>
+        </YStack>
       </YStack>
     </Modal>
   )
 }
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingTop: 30,
-    paddingBottom: 10,
-    backgroundColor: tokens.color.appBg.val,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scrollContent: {
-    paddingTop: 4,
-  },
-  imageContainer: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    overflow: "hidden",
-    position: "relative",
-  },
-  foodImage: {
-    width: "100%",
-    height: 220,
-    resizeMode: "cover",
-  },
-  foodLabel: {
-    position: "absolute",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.65)",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    gap: 4,
-  },
-  foodLabelNum: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  foodLabelText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  editButton: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    gap: 4,
-  },
-  editButtonText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  macroBarContainer: {
-    flexDirection: "row",
-    height: 28,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  macroBarSegment: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  macroBarLabel: {
-    color: "white",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  nutrientIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 5,
-    backgroundColor: tokens.color.grey7.val,
-    marginBottom: 2,
-  },
-  restrictionBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  restrictionText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  chatButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    marginTop: 24,
-    paddingVertical: 12,
-    marginHorizontal: 15,
-    backgroundColor: "#EAEAF0",
-    borderRadius: 20,
-  },
-  chatButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: tokens.color.appBg.val,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: tokens.color.grey5.val,
-  },
-  addButton: {
-    backgroundColor: tokens.color.primary7.val,
-    borderRadius: 14,
-    height: 54,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-})
