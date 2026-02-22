@@ -2,7 +2,6 @@ import { Pressable } from "react-native"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
-import { tokens } from "@/src/theme/tokens"
 import * as Clipboard from "expo-clipboard"
 import type { ChatMessage } from "@/src/types/models"
 
@@ -37,14 +36,22 @@ function UserBubble({ message }: { message: ChatMessage }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   return (
-    <YStack alignItems="flex-end" paddingHorizontal="$4">
+    <XStack
+      justifyContent="flex-end"
+      alignItems="flex-end"
+      paddingHorizontal="$4"
+      gap="$1.5"
+    >
+      <Text fontSize={11} color="$grey6">
+        {formatTime(message.createdAt)}
+      </Text>
       <YStack
         backgroundColor={isDarkMode ? "#2E2E34" : "#FDFDFD"}
         borderRadius="$6"
         borderBottomRightRadius="1"
         paddingHorizontal="$3"
         paddingVertical="$2.5"
-        maxWidth="80%"
+        maxWidth="70%"
       >
         <Text
           fontSize="$4"
@@ -54,10 +61,7 @@ function UserBubble({ message }: { message: ChatMessage }) {
           {message.content}
         </Text>
       </YStack>
-      <Text fontSize={11} color="$grey6" marginTop="$1" paddingRight="$1">
-        {formatTime(message.createdAt)}
-      </Text>
-    </YStack>
+    </XStack>
   )
 }
 
