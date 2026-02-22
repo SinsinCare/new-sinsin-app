@@ -90,10 +90,38 @@ export function useChat({ category, initialMessage }: UseChatOptions) {
     [conversationId, isSending, category],
   )
 
+  const regenerateLastMessage = useCallback(() => {
+    if (!conversationId || isSending) return
+
+    // Find the last user message to re-send
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
+    if (!lastUserMsg) return
+
+    // Remove the last assistant message
+    setMessages((prev) => {
+      const lastAssistantIdx = prev.findLastIndex((m) => m.role === "assistant")
+      if (lastAssistantIdx === -1) return prev
+      return prev.filter((_, i) => i !== lastAssistantIdx)
+    })
+
+    // Re-generate
+    setIsTyping(true)
+    setIsSending(true)
+    const delay = 1000 + Math.random() * 1000
+    setTimeout(() => {
+      const reply = mockAssistantReply(lastUserMsg.content, category)
+      const assistantMsg = chatService.addMessage(conversationId, "assistant", reply)
+      setMessages((prev) => [...prev, assistantMsg])
+      setIsTyping(false)
+      setIsSending(false)
+    }, delay)
+  }, [conversationId, isSending, messages, category])
+
   return {
     messages,
     isTyping,
     sendMessage,
     isSending,
+    regenerateLastMessage,
   }
 }

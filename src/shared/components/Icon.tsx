@@ -4,26 +4,50 @@
  */
 import { SvgProps } from "react-native-svg"
 import Chat from "@/assets/icons/chat.svg"
+import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
+import Cross from "@/assets/icons/cross.svg"
+import FlyChat from "@/assets/icons/fly-chat.svg"
+import ForkKnife from "@/assets/icons/fork-knife.svg"
+import HeartText from "@/assets/icons/heart-text.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
+import Mail from "@/assets/icons/mail.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
+import Pill from "@/assets/icons/pill.svg"
 import Plus from "@/assets/icons/plus.svg"
 import Recipe from "@/assets/icons/recipe.svg"
+import Reset from "@/assets/icons/reset.svg"
+import Water from "@/assets/icons/water.svg"
+import Pencil from "@/assets/icons/pencil.svg"
+import Trashcan from "@/assets/icons/trashcan.svg"
+import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
 
 const icons = {
   chat: Chat,
   "chevron-right": ChevronRight,
+  copy: Copy,
+  cross: Cross,
+  "fly-chat": FlyChat,
+  "fork-knife": ForkKnife,
+  "heart-text": HeartText,
   history: History,
   home: Home,
   location: Location,
+  mail: Mail,
   menu: Menu,
   notification: Notification,
+  pencil: Pencil,
+  pill: Pill,
   plus: Plus,
   recipe: Recipe,
+  reset: Reset,
+  trashcan: Trashcan,
+  upload: Upload,
+  water: Water,
   x: X,
 } as const
 

@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native"
+import { Pressable, useColorScheme, View } from "react-native"
 import { XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
@@ -10,6 +10,9 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ title }: ChatHeaderProps) {
   const router = useRouter()
+  const colorScheme = useColorScheme()
+  const iconColor =
+    colorScheme === "dark" ? "#e7e7ee" : tokens.color.grey1.val
 
   return (
     <>
@@ -18,7 +21,7 @@ export function ChatHeader({ title }: ChatHeaderProps) {
           <Ionicons
             name="chevron-back"
             size={24}
-            color={tokens.color.grey1.val}
+            color={iconColor}
           />
         </Pressable>
         <Text

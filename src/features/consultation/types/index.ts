@@ -1,3 +1,4 @@
+import { IconName } from "@/src/shared/components"
 import type { ChatCategory } from "@/src/types/models"
 
 export type { ChatCategory }
@@ -5,8 +6,7 @@ export type { ChatCategory }
 export interface CategoryMeta {
   key: ChatCategory
   label: string
-  icon: string
-  color: string
+  icon: IconName
 }
 
 export interface FaqItem {
@@ -19,8 +19,8 @@ export interface FaqItem {
 export interface ConsultHistoryItem {
   id: string
   category: ChatCategory
-  firstQuestion: string
-  firstAnswer: string
+  summary: string
+  content: string
   timestamp: Date
 }
 
@@ -28,4 +28,11 @@ export interface QuickQuestion {
   id: string
   category: ChatCategory
   text: string
+}
+
+export interface FaqCardEntry {
+  id: string
+  category: ChatCategory
+  title: string
+  description: string
 }
