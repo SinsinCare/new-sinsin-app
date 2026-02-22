@@ -7,6 +7,7 @@ import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
 import { StyleSheet } from "react-native"
 import { useTheme } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
@@ -23,7 +24,7 @@ export default function HomeScreen() {
 
   return (
     <ThemedView
-      lightColor={theme.backgroundFocus.val}
+      lightColor={tokens.color.appBg.val}
       darkColor={theme.backgroundFocus.val}
       style={[
         styles.container,

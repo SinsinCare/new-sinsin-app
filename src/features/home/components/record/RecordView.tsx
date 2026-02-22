@@ -1,5 +1,11 @@
-import { ScrollView, StyleSheet, Alert } from "react-native"
-import { View } from "tamagui"
+import {
+  ScrollView,
+  StyleSheet,
+  Alert,
+  Modal,
+  ActivityIndicator,
+} from "react-native"
+import { View, Text } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../../types"
@@ -12,6 +18,9 @@ import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
+import { foodCameraService } from "@/src/services/data"
+import type { FoodCameraAnalyzeResult } from "@/src/types"
+import { FoodAnalysisResult } from "./FoodAnalysisResult"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -38,10 +47,38 @@ export function RecordView({
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
   >({})
+  const [analysisResult, setAnalysisResult] =
+    useState<FoodCameraAnalyzeResult | null>(null)
+  const [isResultOpen, setIsResultOpen] = useState(false)
+  const [analyzedMealType, setAnalyzedMealType] = useState<MealType | null>(
+    null,
+  )
+  const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
   )
+
+  const analyzeImage = async (uri: string, mealType: MealType) => {
+    try {
+      setAnalyzedImageUri(uri)
+      setAnalyzedMealType(mealType)
+      setIsAnalyzing(true)
+      const result = await foodCameraService.analyze(uri)
+      setAnalysisResult(result)
+      setIsResultOpen(true)
+    } catch (error) {
+      console.error("analyzeImage error:", error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "음식 분석 중 오류가 발생했습니다."
+      Alert.alert("분석 실패", message)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
 
   const handleRecord = () => {
     if (!selectedMealType) return
@@ -50,16 +87,20 @@ export function RecordView({
         text: "카메라",
         onPress: async () => {
           const uri = await takePhoto()
-          if (uri)
+          if (uri) {
             setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
+            analyzeImage(uri, selectedMealType)
+          }
         },
       },
       {
         text: "갤러리",
         onPress: async () => {
           const uri = await pickImageFromGallery()
-          if (uri)
+          if (uri) {
             setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
+            analyzeImage(uri, selectedMealType)
+          }
         },
       },
       { text: "취소", style: "cancel" },
@@ -91,6 +132,23 @@ export function RecordView({
         onRecord={handleRecord}
       />
 
+      <Modal visible={isAnalyzing} transparent animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="white" />
+          <Text fontSize="$4" fontWeight="600" color="white" marginTop="$3">
+            식단 분석 중...
+          </Text>
+        </View>
+      </Modal>
+
+      <FoodAnalysisResult
+        result={analysisResult}
+        open={isResultOpen}
+        onClose={() => setIsResultOpen(false)}
+        imageUri={analyzedImageUri ?? undefined}
+        mealType={analyzedMealType ?? undefined}
+      />
+
       <View height={10} />
 
       <HydrationTracker
@@ -114,5 +172,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 10,
     paddingBottom: 100,
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 })
