@@ -25,6 +25,10 @@ import Pencil from "@/assets/icons/pencil.svg"
 import Trashcan from "@/assets/icons/trashcan.svg"
 import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
+import Sodium from "@/assets/icons/sodium.svg"
+import Potassium from "@/assets/icons/potassium.svg"
+import Phosphorus from "@/assets/icons/phosphorus.svg"
+import Protein from "@/assets/icons/protein.svg"
 
 const icons = {
   chat: Chat,
@@ -49,6 +53,10 @@ const icons = {
   upload: Upload,
   water: Water,
   x: X,
+  sodium: Sodium,
+  potassium: Potassium,
+  phosphorus: Phosphorus,
+  protein: Protein,
 } as const
 
 export type IconName = keyof typeof icons

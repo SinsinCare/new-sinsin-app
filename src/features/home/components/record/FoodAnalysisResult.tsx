@@ -7,6 +7,7 @@ import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../../types"
 import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
 import { MacroBar } from "./MacroBar"
+import { Icon, type IconName } from "@/src/shared/components/Icon"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -24,16 +25,18 @@ const MEAL_TYPE_ICON: Record<MealType, string> = {
   간식: "cafe-outline",
 }
 
-function NutrientCell({ label, value }: { label: string; value: string }) {
+function NutrientCell({
+  label,
+  value,
+  icon,
+}: {
+  label: string
+  value: string
+  icon: IconName
+}) {
   return (
     <YStack flex={1} alignItems="center">
-      <View
-        width={30}
-        height={30}
-        borderRadius={5}
-        backgroundColor="$grey7"
-        marginBottom={2}
-      />
+      <Icon name={icon} size={30} />
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
@@ -258,10 +261,26 @@ export function FoodAnalysisResult({
                   </XStack>
 
                   <XStack gap="$2">
-                    <NutrientCell label="나트륨" value={`${food.sodium}mg`} />
-                    <NutrientCell label="칼륨" value={`${food.potassium}mg`} />
-                    <NutrientCell label="인" value={`${food.phosphorus}mg`} />
-                    <NutrientCell label="단백질" value={`${food.protein}g`} />
+                    <NutrientCell
+                      label="나트륨"
+                      value={`${food.sodium}mg`}
+                      icon="sodium"
+                    />
+                    <NutrientCell
+                      label="칼륨"
+                      value={`${food.potassium}mg`}
+                      icon="potassium"
+                    />
+                    <NutrientCell
+                      label="인"
+                      value={`${food.phosphorus}mg`}
+                      icon="phosphorus"
+                    />
+                    <NutrientCell
+                      label="단백질"
+                      value={`${food.protein}g`}
+                      icon="protein"
+                    />
                   </XStack>
                 </YStack>
               )
