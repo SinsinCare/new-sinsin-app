@@ -106,9 +106,10 @@ export function mapConversationSummary(
   }
 }
 
-export function mapConversationDetail(
-  dto: ConversationDetailDto,
-): { conversation: Conversation; messages: Message[] } {
+export function mapConversationDetail(dto: ConversationDetailDto): {
+  conversation: Conversation
+  messages: Message[]
+} {
   return {
     conversation: {
       id: dto.conversationId,
@@ -134,9 +135,10 @@ export function mapMessage(dto: MessageDto, conversationId: number): Message {
   }
 }
 
-export function mapConversationCreate(
-  dto: ConversationCreateDto,
-): { conversation: Conversation; greetingMessage: Message } {
+export function mapConversationCreate(dto: ConversationCreateDto): {
+  conversation: Conversation
+  greetingMessage: Message
+} {
   return {
     conversation: {
       id: dto.conversationId,
@@ -153,13 +155,21 @@ export function mapConversationCreate(
 
 export interface IChatApiService {
   /** 대화 목록 조회 */
-  getConversations(): Promise<{ conversations: Conversation[]; totalCount: number }>
+  getConversations(): Promise<{
+    conversations: Conversation[]
+    totalCount: number
+  }>
 
   /** 새 대화 생성 (인사 메시지 포함) */
-  createConversation(): Promise<{ conversation: Conversation; greetingMessage: Message }>
+  createConversation(): Promise<{
+    conversation: Conversation
+    greetingMessage: Message
+  }>
 
   /** 대화 상세 조회 (메시지 포함) */
-  getConversationDetail(conversationId: number): Promise<{ conversation: Conversation; messages: Message[] }>
+  getConversationDetail(
+    conversationId: number,
+  ): Promise<{ conversation: Conversation; messages: Message[] }>
 
   /** 대화 삭제 (소프트 삭제) */
   deleteConversation(conversationId: number): Promise<void>
@@ -171,5 +181,7 @@ export interface IChatApiService {
   sendMessage(conversationId: number, content: string): Promise<Message>
 
   /** 대화 요약 생성 */
-  generateSummary(conversationId: number): Promise<{ conversationId: number; summary: string }>
+  generateSummary(
+    conversationId: number,
+  ): Promise<{ conversationId: number; summary: string }>
 }

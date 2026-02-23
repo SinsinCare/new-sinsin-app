@@ -19,8 +19,9 @@ import { api } from "../core"
 function createRealChatService(): IChatApiService {
   return {
     async getConversations() {
-      const { data } =
-        await api.get<ApiResponse<ConversationListDto>>("/chat/conversations")
+      const { data } = await api.get<ApiResponse<ConversationListDto>>(
+        "/chat/conversations",
+      )
       return {
         conversations: data.result.conversations.map(mapConversationSummary),
         totalCount: data.result.totalCount,
@@ -28,16 +29,16 @@ function createRealChatService(): IChatApiService {
     },
 
     async createConversation() {
-      const { data } =
-        await api.post<ApiResponse<ConversationCreateDto>>("/chat/conversations")
+      const { data } = await api.post<ApiResponse<ConversationCreateDto>>(
+        "/chat/conversations",
+      )
       return mapConversationCreate(data.result)
     },
 
     async getConversationDetail(conversationId: number) {
-      const { data } =
-        await api.get<ApiResponse<ConversationDetailDto>>(
-          `/chat/conversations/${conversationId}`,
-        )
+      const { data } = await api.get<ApiResponse<ConversationDetailDto>>(
+        `/chat/conversations/${conversationId}`,
+      )
       return mapConversationDetail(data.result)
     },
 
@@ -46,27 +47,24 @@ function createRealChatService(): IChatApiService {
     },
 
     async getMessages(conversationId: number) {
-      const { data } =
-        await api.get<ApiResponse<MessageDto[]>>(
-          `/chat/conversations/${conversationId}/messages`,
-        )
+      const { data } = await api.get<ApiResponse<MessageDto[]>>(
+        `/chat/conversations/${conversationId}/messages`,
+      )
       return data.result.map((m) => mapMessage(m, conversationId))
     },
 
     async sendMessage(conversationId: number, content: string) {
-      const { data } =
-        await api.post<ApiResponse<MessageDto>>(
-          `/chat/conversations/${conversationId}/messages`,
-          { content },
-        )
+      const { data } = await api.post<ApiResponse<MessageDto>>(
+        `/chat/conversations/${conversationId}/messages`,
+        { content },
+      )
       return mapMessage(data.result, conversationId)
     },
 
     async generateSummary(conversationId: number) {
-      const { data } =
-        await api.post<ApiResponse<SummaryDto>>(
-          `/chat/conversations/${conversationId}/summary`,
-        )
+      const { data } = await api.post<ApiResponse<SummaryDto>>(
+        `/chat/conversations/${conversationId}/summary`,
+      )
       return {
         conversationId: data.result.conversationId,
         summary: data.result.summary,
