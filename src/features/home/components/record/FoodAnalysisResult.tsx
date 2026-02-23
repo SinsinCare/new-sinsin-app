@@ -7,7 +7,20 @@ import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../../types"
 import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
 import { MacroBar } from "./MacroBar"
-import { Icon, type IconName } from "@/src/shared/components/Icon"
+import SodiumSvg from "@/assets/icons/sodium.svg"
+import PotassiumSvg from "@/assets/icons/potassium.svg"
+import PhosphorusSvg from "@/assets/icons/phosphorus.svg"
+import ProteinSvg from "@/assets/icons/protein.svg"
+import { SvgProps } from "react-native-svg"
+
+type NutrientSvgComponent = React.FC<SvgProps>
+
+const NUTRIENT_SVG: Record<string, NutrientSvgComponent> = {
+  나트륨: SodiumSvg,
+  칼륨: PotassiumSvg,
+  인: PhosphorusSvg,
+  단백질: ProteinSvg,
+}
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -25,18 +38,11 @@ const MEAL_TYPE_ICON: Record<MealType, string> = {
   간식: "cafe-outline",
 }
 
-function NutrientCell({
-  label,
-  value,
-  icon,
-}: {
-  label: string
-  value: string
-  icon: IconName
-}) {
+function NutrientCell({ label, value }: { label: string; value: string }) {
+  const SvgIcon = NUTRIENT_SVG[label]
   return (
     <YStack flex={1} alignItems="center">
-      <Icon name={icon} size={30} />
+      {SvgIcon && <SvgIcon width={30} height={30} />}
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
@@ -261,26 +267,10 @@ export function FoodAnalysisResult({
                   </XStack>
 
                   <XStack gap="$2">
-                    <NutrientCell
-                      label="나트륨"
-                      value={`${food.sodium}mg`}
-                      icon="sodium"
-                    />
-                    <NutrientCell
-                      label="칼륨"
-                      value={`${food.potassium}mg`}
-                      icon="potassium"
-                    />
-                    <NutrientCell
-                      label="인"
-                      value={`${food.phosphorus}mg`}
-                      icon="phosphorus"
-                    />
-                    <NutrientCell
-                      label="단백질"
-                      value={`${food.protein}g`}
-                      icon="protein"
-                    />
+                    <NutrientCell label="나트륨" value={`${food.sodium}mg`} />
+                    <NutrientCell label="칼륨" value={`${food.potassium}mg`} />
+                    <NutrientCell label="인" value={`${food.phosphorus}mg`} />
+                    <NutrientCell label="단백질" value={`${food.protein}g`} />
                   </XStack>
                 </YStack>
               )

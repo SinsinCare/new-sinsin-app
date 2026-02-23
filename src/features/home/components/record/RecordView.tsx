@@ -1,10 +1,4 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Alert,
-  Modal,
-  ActivityIndicator,
-} from "react-native"
+import { ScrollView, StyleSheet, Alert, Modal } from "react-native"
 import { View, Text } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
@@ -14,13 +8,23 @@ import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from "react-native-reanimated"
 import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
 import { FoodAnalysisResult } from "./FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
+import LoadingSvg from "@/assets/icons/loading.svg"
+import { tokens } from "@/src/theme/tokens"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -60,6 +64,31 @@ export function RecordView({
     Partial<Record<MealType, string>>
   >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
+  const [dots, setDots] = useState(".")
+
+  const floatY = useSharedValue(0)
+  const floatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatY.value }],
+  }))
+
+  useEffect(() => {
+    if (isAnalyzing) {
+      floatY.value = withRepeat(
+        withSequence(
+          withTiming(-10, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+      )
+      const interval = setInterval(() => {
+        setDots((d) => (d.length >= 3 ? "." : d + "."))
+      }, 500)
+      return () => clearInterval(interval)
+    } else {
+      floatY.value = 0
+      setDots(".")
+    }
+  }, [isAnalyzing, floatY])
 
   const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
     isSameDay(d, selectedDate),
@@ -129,9 +158,11 @@ export function RecordView({
 
       <Modal visible={isAnalyzing} transparent animationType="fade">
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="white" />
-          <Text fontSize="$4" fontWeight="600" color="white" marginTop="$3">
-            식단 분석 중...
+          <Animated.View style={floatStyle}>
+            <LoadingSvg width={55} height={55} />
+          </Animated.View>
+          <Text fontSize={18} fontWeight="600" marginTop="$4">
+            {`식단을 분석하고 있어요${dots}`}
           </Text>
         </View>
       </Modal>
@@ -181,7 +212,7 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.65)",
+    backgroundColor: tokens.color.appBg.val,
     alignItems: "center",
     justifyContent: "center",
   },
