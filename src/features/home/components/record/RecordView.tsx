@@ -52,6 +52,7 @@ export function RecordView({
     analyzedImageUri,
     analyzeImage,
     analyzeText,
+    registerDiary,
     closeResult,
   } = useFoodAnalysis()
 
@@ -64,6 +65,14 @@ export function RecordView({
     isSameDay(d, selectedDate),
   )
 
+  const handleAddToRecord = () => {
+    registerDiary(selectedDate, (mealType, imageUri) => {
+      if (imageUri) {
+        setMealImages((prev) => ({ ...prev, [mealType]: imageUri }))
+      }
+    })
+  }
+
   const handleRecord = () => {
     if (!selectedMealType) return
     Alert.alert("사진 첨부", "방법을 선택하세요", [
@@ -72,7 +81,6 @@ export function RecordView({
         onPress: async () => {
           const uri = await takePhoto()
           if (uri) {
-            setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
             analyzeImage(uri, selectedMealType)
           }
         },
@@ -82,7 +90,6 @@ export function RecordView({
         onPress: async () => {
           const uri = await pickImageFromGallery()
           if (uri) {
-            setMealImages((prev) => ({ ...prev, [selectedMealType]: uri }))
             analyzeImage(uri, selectedMealType)
           }
         },
@@ -145,6 +152,7 @@ export function RecordView({
         onClose={closeResult}
         imageUri={analyzedImageUri ?? undefined}
         mealType={analyzedMealType ?? undefined}
+        onAddToRecord={handleAddToRecord}
       />
 
       <View height={10} />

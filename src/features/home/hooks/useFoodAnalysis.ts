@@ -4,6 +4,13 @@ import { foodCameraService } from "@/src/services/data"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { MealType } from "../types"
 
+const MEAL_TYPE_API: Record<MealType, string> = {
+  아침: "BREAKFAST",
+  점심: "LUNCH",
+  저녁: "DINNER",
+  간식: "SNACK",
+}
+
 export function useFoodAnalysis() {
   const [analysisResult, setAnalysisResult] =
     useState<FoodCameraAnalyzeResult | null>(null)
@@ -54,6 +61,36 @@ export function useFoodAnalysis() {
     }
   }
 
+  const registerDiary = async (
+    selectedDate: Date,
+    onSuccess: (mealType: MealType, imageUri: string | null) => void,
+  ) => {
+    if (!analysisResult || !analyzedMealType) return
+    const date = selectedDate.toISOString().split("T")[0]
+    const mealType = MEAL_TYPE_API[analyzedMealType]
+    try {
+      console.log("registerDiary request:", {
+        foodAnalysisResultId: analysisResult.foodAnalysisResultId,
+        date,
+        mealType,
+      })
+      const result = await foodCameraService.registerDiary(
+        analysisResult.foodAnalysisResultId,
+        date,
+        mealType,
+      )
+      console.log("registerDiary success:", result)
+      onSuccess(analyzedMealType, analyzedImageUri)
+    } catch (error) {
+      console.error("registerDiary error:", error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "다이어리 등록 중 오류가 발생했습니다."
+      Alert.alert("등록 실패", message)
+    }
+  }
+
   return {
     isAnalyzing,
     isResultOpen,
@@ -62,6 +99,7 @@ export function useFoodAnalysis() {
     analyzedImageUri,
     analyzeImage,
     analyzeText,
+    registerDiary,
     closeResult: () => setIsResultOpen(false),
   }
 }
