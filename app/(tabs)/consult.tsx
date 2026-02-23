@@ -12,6 +12,7 @@ import {
   StyleSheet,
   useColorScheme,
 } from "react-native"
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams } from "expo-router"
 
@@ -145,7 +146,14 @@ export default function ConsultScreen() {
               >
                 {"신신당부 AI에게\n무엇이든 물어보세요"}
               </Text>
-              {!isInputFocused && <FaqCarousel onFaqPress={handleFaqPress} />}
+              {!isInputFocused && (
+                <Animated.View
+                  entering={FadeIn.duration(300)}
+                  exiting={FadeOut.duration(200)}
+                >
+                  <FaqCarousel onFaqPress={handleFaqPress} />
+                </Animated.View>
+              )}
             </YStack>
           </Pressable>
         ) : (
