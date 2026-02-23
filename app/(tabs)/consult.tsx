@@ -14,15 +14,12 @@ import {
 } from "react-native"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useLocalSearchParams } from "expo-router"
 
-import type { ChatCategory } from "@/src/types/models"
 import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import {
   CATEGORY_LIST,
   MOCK_HISTORY_LIST,
-  // getCategoryMeta,
 } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 
@@ -49,31 +46,28 @@ if (Platform.OS === "android") {
 }
 
 export default function ConsultScreen() {
-  const params = useLocalSearchParams<{
-    category: ChatCategory
-    initialMessage?: string
-  }>()
-
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [inputMessage, setInputMessage] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<ChatCategory | null>(
-    null,
-  )
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
 
-  const category = params.category ?? "diet"
-  // const meta = getCategoryMeta(category)
-
   const scrollRef = useRef<ScrollView>(null)
-  const { messages, isTyping, sendMessage, regenerateLastMessage } = useChat({
+  const {
+    messages,
+    isTyping,
+    isSending,
     category,
-    initialMessage: params.initialMessage,
-  })
+    setCategory,
+    sendMessage,
+    loadConversation,
+    resetChat,
+    regenerateLastMessage,
+  } = useChat()
 
-  const showCategoryChip = messages.length === 0
+  const isIdle = messages.length === 0 && !isTyping
+  const canSend = !!inputMessage.trim() && !!category && !isTyping && !isSending
 
   const handleHistoryPress = () => {
     Keyboard.dismiss()
@@ -81,15 +75,16 @@ export default function ConsultScreen() {
   }
   const handleSharePress = () => {
     Keyboard.dismiss()
-    // @TODO: Implement share functionality
-    // 채팅 초기화 방법 X
   }
   const handleNewChat = () => {
     setHistoryOpen(false)
-    // @TODO: Reset conversation
+    setInputMessage("")
+    resetChat()
   }
-  const handleSelectHistory = (_id: string) => {
-    // @TODO: Load selected conversation
+  const handleSelectHistory = (id: number) => {
+    setHistoryOpen(false)
+    setInputMessage("")
+    loadConversation(id)
   }
 
   const { handleCopy, showToast } = useCopyToClipboard()
@@ -105,7 +100,13 @@ export default function ConsultScreen() {
   }
 
   const handleFaqPress = (entry: FaqCardEntry) => {
+    setCategory(entry.category)
     sendMessage(entry.description)
+  }
+
+  const handleSend = () => {
+    sendMessage(inputMessage)
+    setInputMessage("")
   }
 
   // Auto-scroll to bottom when new messages arrive or typing starts
@@ -134,7 +135,7 @@ export default function ConsultScreen() {
           onSharePress={handleSharePress}
         />
 
-        {messages.length === 0 && !isTyping ? (
+        {isIdle ? (
           <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
             <YStack flex={1} justifyContent="center" gap="$5">
               <Text
@@ -194,7 +195,7 @@ export default function ConsultScreen() {
           paddingHorizontal="16"
         >
           {showToast && <CopyToast message="답변을 복사했습니다." />}
-          {showCategoryChip && isInputFocused && (
+          {isIdle && isInputFocused && (
             <>
               <Text fontSize="12" color="#81818d" lineHeight={16}>
                 카테고리
@@ -205,13 +206,13 @@ export default function ConsultScreen() {
                 contentContainerStyle={{ paddingVertical: 8, gap: 8 }}
                 keyboardShouldPersistTaps="always"
               >
-                {CATEGORY_LIST.map((category) => (
+                {CATEGORY_LIST.map((cat) => (
                   <Chip
-                    key={category.key}
-                    icon={category.icon}
-                    label={category.label}
-                    onPress={() => setSelectedCategory(category.key)}
-                    isSelected={category.key === selectedCategory}
+                    key={cat.key}
+                    icon={cat.icon}
+                    label={cat.label}
+                    onPress={() => setCategory(cat.key)}
+                    isSelected={cat.key === category}
                   />
                 ))}
               </ScrollView>
@@ -248,18 +249,17 @@ export default function ConsultScreen() {
                 />
               </Pressable>
               <Pressable
-                onPress={() => sendMessage(inputMessage)}
-                disabled={!inputMessage.trim() || isTyping}
+                onPress={handleSend}
+                disabled={!canSend}
                 style={{
                   ...styles.sendButton,
-                  backgroundColor:
-                    inputMessage.trim() && !isTyping
-                      ? isDarkMode
-                        ? "#ABABB4"
-                        : "#474758"
-                      : isDarkMode
-                        ? "#4E4F55"
-                        : "#CACBD5",
+                  backgroundColor: canSend
+                    ? isDarkMode
+                      ? "#ABABB4"
+                      : "#474758"
+                    : isDarkMode
+                      ? "#4E4F55"
+                      : "#CACBD5",
                 }}
               >
                 <Icon
@@ -287,7 +287,7 @@ export default function ConsultScreen() {
               summary={item.summary}
               content={item.content}
               timestamp={item.timestamp.toISOString()}
-              onPress={() => handleSelectHistory(item.id)}
+              onPress={() => handleSelectHistory(Number(item.id.split("-")[1]))}
               onRename={() => {}}
               onDelete={() => {}}
               onShare={() => {}}
