@@ -2,7 +2,7 @@ import { Pressable } from "react-native"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
-import type { ChatMessage } from "@/src/types/models"
+import type { Message } from "@/src/types/chat"
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
@@ -24,7 +24,7 @@ function AssistantAvatar() {
   )
 }
 
-export function UserBubble({ message }: { message: ChatMessage }) {
+export function UserBubble({ message }: { message: Message }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   return (
@@ -63,7 +63,7 @@ export function AssistantBubble({
   onCopy,
   onRegenerate,
 }: {
-  message: ChatMessage
+  message: Message
   isLastAssistant?: boolean
   onCopy?: () => void
   onRegenerate?: () => void
