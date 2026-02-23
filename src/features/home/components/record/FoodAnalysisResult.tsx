@@ -14,7 +14,7 @@ interface FoodAnalysisResultProps {
   onClose: () => void
   imageUri?: string
   mealType?: MealType
-  onAddToRecord?: () => void
+  onAddToRecord: () => void
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -335,7 +335,7 @@ export function FoodAnalysisResult({
             alignItems="center"
             justifyContent="center"
             onPress={() => {
-              onAddToRecord?.()
+              onAddToRecord()
               onClose()
             }}
             pressStyle={{ opacity: 0.8 }}

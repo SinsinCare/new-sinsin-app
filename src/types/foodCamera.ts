@@ -46,3 +46,10 @@ export interface FoodCameraAnalyzeResult {
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation
 }
+
+export interface FoodCameraDiaryRegisterResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  timestamp: string
+}
