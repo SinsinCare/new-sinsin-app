@@ -63,6 +63,9 @@ export function RecordView({
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
   >({})
+  const [recordedMeals, setRecordedMeals] = useState<
+    Partial<Record<MealType, boolean>>
+  >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [dots, setDots] = useState(".")
 
@@ -96,6 +99,7 @@ export function RecordView({
 
   const handleAddToRecord = () => {
     registerDiary(selectedDate, (mealType, imageUri) => {
+      setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
       if (imageUri) {
         setMealImages((prev) => ({ ...prev, [mealType]: imageUri }))
       }
@@ -153,6 +157,7 @@ export function RecordView({
         onSelectMealType={onSelectMealType}
         selectedMealType={selectedMealType}
         mealImages={mealImages}
+        recordedMeals={recordedMeals}
         onRecord={handleRecord}
       />
 

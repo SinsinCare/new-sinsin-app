@@ -9,6 +9,7 @@ interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
   selectedMealType?: MealType | null
   mealImages?: Partial<Record<MealType, string>>
+  recordedMeals?: Partial<Record<MealType, boolean>>
   onRecord: () => void
 }
 
@@ -16,6 +17,7 @@ export function MealButtons({
   onSelectMealType,
   selectedMealType,
   mealImages = {},
+  recordedMeals = {},
   onRecord,
 }: MealButtonsProps) {
   const mealTypes: MealType[] = ["아침", "점심", "저녁", "간식"]
@@ -33,6 +35,7 @@ export function MealButtons({
             onPress={() => onSelectMealType(type)}
             isSelected={selectedMealType === type}
             imageUri={mealImages[type]}
+            isRecorded={recordedMeals[type] ?? false}
           />
         ))}
       </XStack>

@@ -9,6 +9,7 @@ interface MealButtonProps {
   onPress: () => void
   isSelected?: boolean
   imageUri?: string | null
+  isRecorded?: boolean
 }
 
 export function MealButton({
@@ -16,6 +17,7 @@ export function MealButton({
   onPress,
   isSelected,
   imageUri,
+  isRecorded,
 }: MealButtonProps) {
   return (
     <TouchableOpacity onPress={onPress}>
@@ -35,13 +37,23 @@ export function MealButton({
             style={StyleSheet.absoluteFillObject}
             resizeMode="cover"
           />
-        ) : (
+        ) : !isRecorded ? (
           <View position="absolute" top={6} right={6}>
             <Ionicons
               name="add"
               size={22}
               color={
                 isSelected ? tokens.color.pureWhite.val : tokens.color.grey5.val
+              }
+            />
+          </View>
+        ) : (
+          <View position="absolute" top={6} right={6}>
+            <Ionicons
+              name="checkmark-circle"
+              size={18}
+              color={
+                isSelected ? tokens.color.pureWhite.val : tokens.color.sub6.val
               }
             />
           </View>
@@ -55,7 +67,7 @@ export function MealButton({
           >
             {mealType}
           </Text>
-          {!imageUri && (
+          {!imageUri && !isRecorded && (
             <Text
               fontSize="$3"
               fontWeight="400"
