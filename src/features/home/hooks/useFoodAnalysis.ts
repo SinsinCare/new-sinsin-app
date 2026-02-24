@@ -8,7 +8,7 @@ const MEAL_TYPE_API: Record<MealType, string> = {
   아침: "BREAKFAST",
   점심: "LUNCH",
   저녁: "DINNER",
-  간식: "SNACK",
+  간식: "SNACKS",
 }
 
 export function useFoodAnalysis() {
