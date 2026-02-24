@@ -9,6 +9,7 @@ import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useState, useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,14 +35,6 @@ interface RecordViewProps {
   onSelectMealType: (mealType: MealType) => void
 }
 
-// TODO: Firestore 연동 시 실제 기록된 날짜 목록으로 교체
-const MOCK_RECORDED_DATES: Date[] = [new Date()]
-
-const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate()
-
 export function RecordView({
   selectedDate,
   onSelectDate,
@@ -60,7 +53,8 @@ export function RecordView({
     registerDiary,
     closeResult,
   } = useFoodAnalysis()
-  const { data, isLoading, error } = useDateAnalysis(selectedDate)
+  const { data } = useDateAnalysis(selectedDate)
+  const queryClient = useQueryClient()
 
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
@@ -70,6 +64,11 @@ export function RecordView({
   >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [dots, setDots] = useState(".")
+
+  useEffect(() => {
+    setMealImages({})
+    setRecordedMeals({})
+  }, [selectedDate])
 
   const floatY = useSharedValue(0)
   const floatStyle = useAnimatedStyle(() => ({
@@ -95,9 +94,20 @@ export function RecordView({
     }
   }, [isAnalyzing, floatY])
 
-  const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
-    isSameDay(d, selectedDate),
-  )
+  const apiDiets = data?.result.diets ?? []
+  const apiMealImages = Object.fromEntries(
+    apiDiets.map((d) => [d.mealType, d.imageUrl]),
+  ) as Partial<Record<MealType, string>>
+  const apiRecordedMeals = Object.fromEntries(
+    apiDiets.map((d) => [d.mealType, true]),
+  ) as Partial<Record<MealType, boolean>>
+
+  const mergedMealImages = { ...apiMealImages, ...mealImages }
+  const mergedRecordedMeals = { ...apiRecordedMeals, ...recordedMeals }
+
+  const hasSelectedDateRecord =
+    apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
+  const recordedDates = hasSelectedDateRecord ? [selectedDate] : []
 
   const handleAddToRecord = () => {
     registerDiary(selectedDate, (mealType, imageUri) => {
@@ -105,6 +115,7 @@ export function RecordView({
       if (imageUri) {
         setMealImages((prev) => ({ ...prev, [mealType]: imageUri }))
       }
+      queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
     })
   }
 
@@ -145,7 +156,7 @@ export function RecordView({
       <ThreeDaysCalendar
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
-        recordedDates={MOCK_RECORDED_DATES}
+        recordedDates={recordedDates}
       />
 
       <View height={15} />
@@ -158,8 +169,8 @@ export function RecordView({
       <MealButtons
         onSelectMealType={onSelectMealType}
         selectedMealType={selectedMealType}
-        mealImages={mealImages}
-        recordedMeals={recordedMeals}
+        mealImages={mergedMealImages}
+        recordedMeals={mergedRecordedMeals}
         onRecord={handleRecord}
       />
 

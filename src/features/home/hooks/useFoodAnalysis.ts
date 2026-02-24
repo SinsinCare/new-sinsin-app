@@ -59,7 +59,8 @@ export function useFoodAnalysis() {
     onSuccess: (mealType: MealType, imageUri: string | null) => void,
   ) => {
     if (!analysisResult || !analyzedMealType) return
-    const date = selectedDate.toISOString().split("T")[0]
+    const pad = (n: number) => String(n).padStart(2, "0")
+    const date = `${selectedDate.getFullYear()}-${pad(selectedDate.getMonth() + 1)}-${pad(selectedDate.getDate())}`
     try {
       await foodCameraService.registerDiary(
         analysisResult.foodAnalysisResultId,
