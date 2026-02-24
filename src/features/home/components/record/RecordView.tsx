@@ -25,6 +25,7 @@ import { FoodAnalysisResult } from "./FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
 import LoadingSvg from "@/assets/icons/loading.svg"
 import { tokens } from "@/src/theme/tokens"
+import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -59,6 +60,7 @@ export function RecordView({
     registerDiary,
     closeResult,
   } = useFoodAnalysis()
+  const { data, isLoading, error } = useDateAnalysis(selectedDate)
 
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>

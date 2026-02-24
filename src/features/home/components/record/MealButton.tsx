@@ -1,5 +1,12 @@
 import { TouchableOpacity, Image, StyleSheet } from "react-native"
 import { MealType } from "../../types"
+
+const MEAL_LABEL: Record<MealType, string> = {
+  BREAKFAST: "아침",
+  LUNCH: "점심",
+  DINNER: "저녁",
+  SNACKS: "간식",
+}
 import { Text, YStack, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -65,7 +72,7 @@ export function MealButton({
             fontWeight="500"
             color={imageUri || isSelected ? "white" : "$color"}
           >
-            {mealType}
+            {MEAL_LABEL[mealType]}
           </Text>
           {!imageUri && !isRecorded && (
             <Text
