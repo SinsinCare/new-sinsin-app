@@ -7,6 +7,20 @@ import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../../types"
 import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
 import { MacroBar } from "./MacroBar"
+import SodiumSvg from "@/assets/icons/sodium.svg"
+import PotassiumSvg from "@/assets/icons/potassium.svg"
+import PhosphorusSvg from "@/assets/icons/phosphorus.svg"
+import ProteinSvg from "@/assets/icons/protein.svg"
+import { SvgProps } from "react-native-svg"
+
+type NutrientSvgComponent = React.FC<SvgProps>
+
+const NUTRIENT_SVG: Record<string, NutrientSvgComponent> = {
+  나트륨: SodiumSvg,
+  칼륨: PotassiumSvg,
+  인: PhosphorusSvg,
+  단백질: ProteinSvg,
+}
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -14,7 +28,7 @@ interface FoodAnalysisResultProps {
   onClose: () => void
   imageUri?: string
   mealType?: MealType
-  onAddToRecord?: () => void
+  onAddToRecord: () => void
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -25,15 +39,10 @@ const MEAL_TYPE_ICON: Record<MealType, string> = {
 }
 
 function NutrientCell({ label, value }: { label: string; value: string }) {
+  const SvgIcon = NUTRIENT_SVG[label]
   return (
     <YStack flex={1} alignItems="center">
-      <View
-        width={30}
-        height={30}
-        borderRadius={5}
-        backgroundColor="$grey7"
-        marginBottom={2}
-      />
+      {SvgIcon && <SvgIcon width={30} height={30} />}
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
@@ -335,7 +344,7 @@ export function FoodAnalysisResult({
             alignItems="center"
             justifyContent="center"
             onPress={() => {
-              onAddToRecord?.()
+              onAddToRecord()
               onClose()
             }}
             pressStyle={{ opacity: 0.8 }}

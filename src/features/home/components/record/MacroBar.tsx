@@ -21,9 +21,21 @@ export function MacroBar({ carbs, protein, fat }: MacroBarProps) {
     <YStack gap="$2">
       <XStack gap="$3">
         {[
-          { label: "탄수화물", value: `${carbs}g`, color: "$sub9" },
-          { label: "단백질", value: `${protein}g`, color: "$sub6" },
-          { label: "지방", value: `${fat}g`, color: "$sub4" },
+          {
+            label: "탄수화물",
+            value: `${Math.round(carbs * 10) / 10}g`,
+            color: "$sub9",
+          },
+          {
+            label: "단백질",
+            value: `${Math.round(protein * 10) / 10}g`,
+            color: "$sub6",
+          },
+          {
+            label: "지방",
+            value: `${Math.round(fat * 10) / 10}g`,
+            color: "$sub4",
+          },
         ].map(({ label, value, color }) => (
           <XStack key={label} alignItems="center" gap="$1.5">
             <View

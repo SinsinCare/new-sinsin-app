@@ -1,4 +1,7 @@
-import type { FoodCameraAnalyzeResult } from "../../types"
+import type {
+  FoodCameraAnalyzeResult,
+  FoodCameraDiaryRegisterResponse,
+} from "../../types"
 import { isMockMode } from "../../config/appConfig"
 import { api } from "@/src/services"
 import { isAxiosError } from "axios"
@@ -62,7 +65,6 @@ export const foodCameraService = {
         throw err
       }
     }
-
     return result
   },
 
@@ -84,5 +86,24 @@ export const foodCameraService = {
       }
     }
     return result
+  },
+
+  async registerDiary(
+    foodAnalysisResultId: number,
+    date: string,
+    mealType: string,
+  ): Promise<FoodCameraDiaryRegisterResponse> {
+    try {
+      const response = await api.post(
+        `/food-camera/analysis-results/${foodAnalysisResultId}/diary`,
+        { date, mealType },
+      )
+      return response.data as FoodCameraDiaryRegisterResponse
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
   },
 }
