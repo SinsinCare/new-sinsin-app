@@ -69,17 +69,11 @@ export function useFoodAnalysis() {
     const date = selectedDate.toISOString().split("T")[0]
     const mealType = MEAL_TYPE_API[analyzedMealType]
     try {
-      console.log("registerDiary request:", {
-        foodAnalysisResultId: analysisResult.foodAnalysisResultId,
-        date,
-        mealType,
-      })
-      const result = await foodCameraService.registerDiary(
+      await foodCameraService.registerDiary(
         analysisResult.foodAnalysisResultId,
         date,
         mealType,
       )
-      console.log("registerDiary success:", result)
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
       console.error("registerDiary error:", error)
