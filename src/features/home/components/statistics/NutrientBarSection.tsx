@@ -295,7 +295,10 @@ export function NutrientBarSection({
                 {unit}
               </Text>
             </View>
-            <View style={styles.scaleAbsRight}>
+            <View
+              style={styles.scaleAbsRight}
+              onLayout={(e) => setMaxValW(e.nativeEvent.layout.width)}
+            >
               <Text fontSize={11} color="$colorSubtle">
                 {fmt(max)}
                 {unit}

@@ -4,13 +4,6 @@ import { foodCameraService } from "@/src/services/data"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { MealType } from "../types"
 
-const MEAL_TYPE_API: Record<MealType, string> = {
-  아침: "BREAKFAST",
-  점심: "LUNCH",
-  저녁: "DINNER",
-  간식: "SNACKS",
-}
-
 export function useFoodAnalysis() {
   const [analysisResult, setAnalysisResult] =
     useState<FoodCameraAnalyzeResult | null>(null)
@@ -66,13 +59,13 @@ export function useFoodAnalysis() {
     onSuccess: (mealType: MealType, imageUri: string | null) => void,
   ) => {
     if (!analysisResult || !analyzedMealType) return
-    const date = selectedDate.toISOString().split("T")[0]
-    const mealType = MEAL_TYPE_API[analyzedMealType]
+    const pad = (n: number) => String(n).padStart(2, "0")
+    const date = `${selectedDate.getFullYear()}-${pad(selectedDate.getMonth() + 1)}-${pad(selectedDate.getDate())}`
     try {
       await foodCameraService.registerDiary(
         analysisResult.foodAnalysisResultId,
         date,
-        mealType,
+        analyzedMealType,
       )
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {

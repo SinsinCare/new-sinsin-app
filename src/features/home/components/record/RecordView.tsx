@@ -6,9 +6,11 @@ import { MealType } from "../../types"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
+import { getThreeDays } from "../../utils/getThreeDays"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,6 +27,7 @@ import { FoodAnalysisResult } from "./FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
 import LoadingSvg from "@/assets/icons/loading.svg"
 import { tokens } from "@/src/theme/tokens"
+import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -32,14 +35,6 @@ interface RecordViewProps {
   selectedMealType: MealType | null
   onSelectMealType: (mealType: MealType) => void
 }
-
-// TODO: Firestore 연동 시 실제 기록된 날짜 목록으로 교체
-const MOCK_RECORDED_DATES: Date[] = [new Date()]
-
-const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate()
 
 export function RecordView({
   selectedDate,
@@ -59,6 +54,12 @@ export function RecordView({
     registerDiary,
     closeResult,
   } = useFoodAnalysis()
+  const { data } = useDateAnalysis(selectedDate)
+  const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
+  const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
+  const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
+  const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
+  const queryClient = useQueryClient()
 
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
@@ -68,6 +69,11 @@ export function RecordView({
   >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [dots, setDots] = useState(".")
+
+  useEffect(() => {
+    setMealImages({})
+    setRecordedMeals({})
+  }, [selectedDate])
 
   const floatY = useSharedValue(0)
   const floatStyle = useAnimatedStyle(() => ({
@@ -93,9 +99,34 @@ export function RecordView({
     }
   }, [isAnalyzing, floatY])
 
-  const hasSelectedDateRecord = MOCK_RECORDED_DATES.some((d) =>
-    isSameDay(d, selectedDate),
-  )
+  const apiDiets = data?.result.diets ?? []
+  const apiMealImages = Object.fromEntries(
+    apiDiets.map((d) => [d.mealType, d.imageUrl]),
+  ) as Partial<Record<MealType, string>>
+  const apiRecordedMeals = Object.fromEntries(
+    apiDiets.map((d) => [d.mealType, true]),
+  ) as Partial<Record<MealType, boolean>>
+
+  const mergedMealImages = { ...apiMealImages, ...mealImages }
+  const mergedRecordedMeals = { ...apiRecordedMeals, ...recordedMeals }
+
+  const hasSelectedDateRecord =
+    apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
+
+  const calendarDataList = [dataDay0, dataDay1, dataDay2]
+  const recordedDates = calendarDays
+    .filter((day, i) => {
+      const diets = calendarDataList[i]?.result.diets ?? []
+      const isSameAsSelected =
+        day.date.getFullYear() === selectedDate.getFullYear() &&
+        day.date.getMonth() === selectedDate.getMonth() &&
+        day.date.getDate() === selectedDate.getDate()
+      return (
+        diets.length > 0 ||
+        (isSameAsSelected && Object.values(recordedMeals).some(Boolean))
+      )
+    })
+    .map((day) => day.date)
 
   const handleAddToRecord = () => {
     registerDiary(selectedDate, (mealType, imageUri) => {
@@ -103,6 +134,7 @@ export function RecordView({
       if (imageUri) {
         setMealImages((prev) => ({ ...prev, [mealType]: imageUri }))
       }
+      queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
     })
   }
 
@@ -143,7 +175,7 @@ export function RecordView({
       <ThreeDaysCalendar
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
-        recordedDates={MOCK_RECORDED_DATES}
+        recordedDates={recordedDates}
       />
 
       <View height={15} />
@@ -156,8 +188,8 @@ export function RecordView({
       <MealButtons
         onSelectMealType={onSelectMealType}
         selectedMealType={selectedMealType}
-        mealImages={mealImages}
-        recordedMeals={recordedMeals}
+        mealImages={mergedMealImages}
+        recordedMeals={mergedRecordedMeals}
         onRecord={handleRecord}
       />
 
@@ -205,7 +237,7 @@ export function RecordView({
 
       <View height={10} />
 
-      <WeightEdemaTracker />
+      <WeightEdemaTracker bodyRecords={data?.result.bodyRecords} />
     </ScrollView>
   )
 }

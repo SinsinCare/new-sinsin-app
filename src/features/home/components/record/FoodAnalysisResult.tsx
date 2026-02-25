@@ -32,10 +32,17 @@ interface FoodAnalysisResultProps {
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
-  아침: "sunny-outline",
-  점심: "partly-sunny-outline",
-  저녁: "moon-outline",
-  간식: "cafe-outline",
+  BREAKFAST: "sunny-outline",
+  LUNCH: "partly-sunny-outline",
+  DINNER: "moon-outline",
+  SNACKS: "cafe-outline",
+}
+
+const MEAL_LABEL: Record<MealType, string> = {
+  BREAKFAST: "아침",
+  LUNCH: "점심",
+  DINNER: "저녁",
+  SNACKS: "간식",
 }
 
 function NutrientCell({ label, value }: { label: string; value: string }) {
@@ -144,7 +151,7 @@ export function FoodAnalysisResult({
                   color={tokens.color.grey3.val}
                 />
                 <Text fontSize={14} color="$colorSubtle" fontWeight="700">
-                  {mealType}
+                  {MEAL_LABEL[mealType]}
                 </Text>
               </XStack>
             )}

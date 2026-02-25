@@ -20,7 +20,7 @@ export function MealButtons({
   recordedMeals = {},
   onRecord,
 }: MealButtonsProps) {
-  const mealTypes: MealType[] = ["아침", "점심", "저녁", "간식"]
+  const mealTypes: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
 
   return (
     <YStack paddingVertical="$3" gap="$4">

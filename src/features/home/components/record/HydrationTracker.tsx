@@ -42,19 +42,6 @@ export function HydrationTracker({
         <Text fontSize={22} fontWeight="700">
           수분 섭취 기록
         </Text>
-
-        <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
-          <XStack marginTop={6} gap={4}>
-            <Text fontSize={14} fontWeight="500" color="$colorSubtle">
-              되돌리기
-            </Text>
-            <Ionicons
-              name="refresh-outline"
-              size={14}
-              color={tokens.color.grey5.val}
-            />
-          </XStack>
-        </TouchableOpacity>
       </XStack>
 
       <XStack
@@ -136,20 +123,38 @@ export function HydrationTracker({
         </XStack>
       </XStack>
 
-      {/* Quick add + reset buttons */}
-      <XStack gap="$3" justifyContent="center" flexWrap="wrap">
-        {QUICK_ADD_OPTIONS.map((amount) => (
-          <TouchableOpacity
-            key={amount}
-            onPress={() => addWater(amount)}
-            style={styles.chip}
-            activeOpacity={0.7}
-          >
-            <Text fontSize={17} color="$color">
-              +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
+      <XStack
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+      >
+        {/* Quick add + reset buttons */}
+        <XStack gap={5}>
+          {QUICK_ADD_OPTIONS.map((amount) => (
+            <TouchableOpacity
+              key={amount}
+              onPress={() => addWater(amount)}
+              style={styles.chip}
+              activeOpacity={0.7}
+            >
+              <Text fontSize={15} color="$color">
+                +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </XStack>
+        <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
+          <XStack gap={2}>
+            <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+              되돌리기
             </Text>
-          </TouchableOpacity>
-        ))}
+            <Ionicons
+              name="refresh-outline"
+              size={14}
+              color={tokens.color.grey5.val}
+            />
+          </XStack>
+        </TouchableOpacity>
       </XStack>
     </YStack>
   )
@@ -158,8 +163,13 @@ export function HydrationTracker({
 const styles = StyleSheet.create({
   chip: {
     backgroundColor: tokens.color.pureWhite.val,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
 })

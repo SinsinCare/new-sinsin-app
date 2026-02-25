@@ -1,16 +1,43 @@
 import { Text, YStack } from "tamagui"
 import { EdemaRecord } from "./EdemaRecord"
 import { WeightRecord } from "./WeightRecord"
-import { EdemaLevel } from "../../data/EdemaConstants"
-import { useState } from "react"
+import { EdemaLevel, EDEMA_OPTIONS } from "../../data/EdemaConstants"
+import { useState, useEffect } from "react"
 import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
+import type { DateAnalysisBodyRecord } from "@/src/types"
+import type { EdemaLevel as ApiEdemaLevel } from "../../types"
 
-// TODO: 백엔드에서 어제 체중 조회 — 데이터 없으면 null
-const MOCK_YESTERDAY_WEIGHT: number | null = null
+const EDEMA_LEVEL_TO_LABEL: Record<ApiEdemaLevel, EdemaLevel> = {
+  NONE: EDEMA_OPTIONS[0],
+  SLIGHT: EDEMA_OPTIONS[1],
+  SEVERE: EDEMA_OPTIONS[2],
+}
 
-export function WeightEdemaTracker() {
+interface WeightEdemaTrackerProps {
+  bodyRecords?: {
+    today: DateAnalysisBodyRecord | null
+    previous: DateAnalysisBodyRecord | null
+  }
+}
+
+export function WeightEdemaTracker({ bodyRecords }: WeightEdemaTrackerProps) {
   const [weight, setWeight] = useState<string>("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
+
+  useEffect(() => {
+    const today = bodyRecords?.today ?? null
+    setWeight(today?.weightKg != null ? String(today.weightKg) : "")
+    setEdemaLevel(
+      today?.edemaLevel
+        ? (EDEMA_LEVEL_TO_LABEL[today.edemaLevel] ?? null)
+        : null,
+    )
+  }, [bodyRecords])
+
+  const yesterdayWeight = bodyRecords?.previous?.weightKg ?? null
+  const yesterdayEdema = bodyRecords?.previous?.edemaLevel
+    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
+    : null
 
   const handleDecrease = () => {
     const current = parseFloat(weight) || 0
@@ -30,14 +57,18 @@ export function WeightEdemaTracker() {
 
       <WeightRecord
         weight={weight}
-        yesterdayWeight={MOCK_YESTERDAY_WEIGHT}
+        yesterdayWeight={yesterdayWeight}
         onChangeWeight={setWeight}
         onDecrease={handleDecrease}
         onIncrease={handleIncrease}
         onReset={() => setWeight("")}
       />
 
-      <EdemaRecord selected={edemaLevel} onSelect={setEdemaLevel} />
+      <EdemaRecord
+        selected={edemaLevel}
+        onSelect={setEdemaLevel}
+        yesterdayEdema={yesterdayEdema}
+      />
     </YStack>
   )
 }

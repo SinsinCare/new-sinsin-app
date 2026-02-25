@@ -11,7 +11,7 @@ export interface MealRecord {
 export const mockDailyMealRecords: MealRecord[] = [
   {
     id: "meal-1",
-    mealType: "아침",
+    mealType: "BREAKFAST",
     label: "아침",
     time: "08:30",
     imageUri:
@@ -19,7 +19,7 @@ export const mockDailyMealRecords: MealRecord[] = [
   },
   {
     id: "meal-2",
-    mealType: "점심",
+    mealType: "LUNCH",
     label: "점심",
     time: "13:00",
     imageUri:
@@ -27,14 +27,14 @@ export const mockDailyMealRecords: MealRecord[] = [
   },
   {
     id: "meal-3",
-    mealType: "저녁",
+    mealType: "DINNER",
     label: "저녁",
     time: null,
     imageUri: null,
   },
   {
     id: "meal-4",
-    mealType: "간식",
+    mealType: "SNACKS",
     label: "간식",
     time: null,
     imageUri: null,
