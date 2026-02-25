@@ -27,7 +27,10 @@ export function DietaryRecord({
   const mealRecords: MealRecord[] = ALL_MEAL_TYPES.map((mealType) => {
     const diet = diets.find((d) => d.mealType === mealType)
     const time = diet
-      ? (diet.createdAt.split("T")[1]?.slice(0, 5) ?? null)
+      ? (() => {
+          const d = new Date(diet.createdAt + "Z")
+          return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+        })()
       : null
     return {
       id: `meal-${mealType}`,
