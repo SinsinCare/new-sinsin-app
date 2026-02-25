@@ -93,7 +93,8 @@ export default function ConsultScreen() {
   }
 
   const handleRenamePress = (id: string, summary: string) => {
-    setRenameTarget({ id, summary })
+    setHistoryOpen(false)
+    setTimeout(() => setRenameTarget({ id, summary }), 300)
   }
 
   const handleRenameConfirm = (newName: string) => {
