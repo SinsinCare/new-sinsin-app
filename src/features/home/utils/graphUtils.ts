@@ -11,7 +11,7 @@ export function clampTranslateX(
   itemWidth: number,
   barWidth: number,
   rightItemWidth: number,
-  gap: number = 6,
+  gap: number = 5,
 ): number {
   const rawT = -(itemWidth / 2)
   if (barWidth === 0) return rawT
