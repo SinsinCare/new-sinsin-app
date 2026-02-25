@@ -6,9 +6,10 @@ import { MealType } from "../../types"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
+import { getThreeDays } from "../../utils/getThreeDays"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import Animated, {
   useSharedValue,
@@ -54,6 +55,10 @@ export function RecordView({
     closeResult,
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
+  const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
+  const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
+  const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
+  const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
   const queryClient = useQueryClient()
 
   const [mealImages, setMealImages] = useState<
@@ -107,7 +112,21 @@ export function RecordView({
 
   const hasSelectedDateRecord =
     apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
-  const recordedDates = hasSelectedDateRecord ? [selectedDate] : []
+
+  const calendarDataList = [dataDay0, dataDay1, dataDay2]
+  const recordedDates = calendarDays
+    .filter((day, i) => {
+      const diets = calendarDataList[i]?.result.diets ?? []
+      const isSameAsSelected =
+        day.date.getFullYear() === selectedDate.getFullYear() &&
+        day.date.getMonth() === selectedDate.getMonth() &&
+        day.date.getDate() === selectedDate.getDate()
+      return (
+        diets.length > 0 ||
+        (isSameAsSelected && Object.values(recordedMeals).some(Boolean))
+      )
+    })
+    .map((day) => day.date)
 
   const handleAddToRecord = () => {
     registerDiary(selectedDate, (mealType, imageUri) => {
