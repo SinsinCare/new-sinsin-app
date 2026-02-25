@@ -1,5 +1,5 @@
 import { IconName } from "@/src/shared/components"
-import type { ChatCategory } from "@/src/types/models"
+import type { ChatCategory } from "@/src/types/chat"
 
 export type { ChatCategory }
 

@@ -1,23 +1,17 @@
-import type { ChatCategory } from "./models"
-
 // === API DTO Types (match backend response exactly) ===
 
 export type ConversationStatus = "ACTIVE" | "ARCHIVED"
 
 export type MessageRole = "USER" | "ASSISTANT" | "SYSTEM"
 
-export type AiMessageCategory =
-  | "DIET_POTASSIUM"
-  | "DIET_SODIUM"
-  | "DIET_PROTEIN"
-  | "MEDICATION"
-  | "SYMPTOMS"
+export type ChatCategory =
+  | "DIET"
+  | "MEDICINE"
   | "LIFESTYLE"
-  | "DIALYSIS"
-  | "GENERAL"
-  | "OTHER"
+  | "SYMPTOM"
+  | "CHECKUP"
 
-export interface ConversationSummaryDto {
+export interface ConversationSummary {
   conversationId: number
   title: string
   summary: string | null
@@ -27,7 +21,7 @@ export interface ConversationSummaryDto {
   updatedAt: string
 }
 
-export interface ConversationCreateDto {
+export interface ConversationCreate {
   conversationId: number
   title: string
   createdAt: string
@@ -45,7 +39,7 @@ export interface ConversationDetailDto {
 }
 
 export interface ConversationListDto {
-  conversations: ConversationSummaryDto[]
+  conversations: ConversationSummary[]
   totalCount: number
 }
 
@@ -53,7 +47,7 @@ export interface MessageDto {
   messageId: number
   role: MessageRole
   content: string
-  category: AiMessageCategory | null
+  category: ChatCategory | null
   categoryLabel: string | null
   createdAt: string
 }
@@ -85,16 +79,14 @@ export interface Message {
   conversationId: number
   role: "user" | "assistant" | "system"
   content: string
-  aiCategory?: AiMessageCategory
+  aiCategory?: ChatCategory
   aiCategoryLabel?: string
   createdAt: Date
 }
 
 // === Mapper Functions ===
 
-export function mapConversationSummary(
-  dto: ConversationSummaryDto,
-): Conversation {
+export function mapConversationSummary(dto: ConversationSummary): Conversation {
   return {
     id: dto.conversationId,
     title: dto.title,
@@ -135,7 +127,7 @@ export function mapMessage(dto: MessageDto, conversationId: number): Message {
   }
 }
 
-export function mapConversationCreate(dto: ConversationCreateDto): {
+export function mapConversationCreate(dto: ConversationCreate): {
   conversation: Conversation
   greetingMessage: Message
 } {

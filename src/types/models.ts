@@ -48,32 +48,6 @@ export interface FoodRecord {
   imageUrl?: string
 }
 
-// 채팅 대화
-export interface ChatConversation {
-  id: string
-  userId: string
-  title: string
-  category: ChatCategory
-  createdAt: Date
-  updatedAt: Date
-}
-
-export type ChatCategory =
-  | "diet" // 음식/식단
-  | "medicine" // 약/영양제
-  | "lifestyle" // 생활관리
-  | "symptom" // 증상
-  | "checkup" // 검사/수치해석
-
-// 채팅 메시지
-export interface ChatMessage {
-  id: string
-  conversationId: string
-  role: "user" | "assistant"
-  content: string
-  createdAt: Date
-}
-
 // 일일 건강 로그
 export interface DailyHealthLog {
   id: string

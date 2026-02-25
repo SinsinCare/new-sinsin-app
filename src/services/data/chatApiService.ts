@@ -1,7 +1,7 @@
 import type {
   IChatApiService,
   ConversationListDto,
-  ConversationCreateDto,
+  ConversationCreate,
   ConversationDetailDto,
   MessageDto,
   SummaryDto,
@@ -29,7 +29,7 @@ function createRealChatService(): IChatApiService {
     },
 
     async createConversation() {
-      const { data } = await api.post<ApiResponse<ConversationCreateDto>>(
+      const { data } = await api.post<ApiResponse<ConversationCreate>>(
         "/chat/conversations",
       )
       return mapConversationCreate(data.result)
