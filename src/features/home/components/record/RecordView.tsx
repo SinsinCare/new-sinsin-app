@@ -237,7 +237,7 @@ export function RecordView({
 
       <View height={10} />
 
-      <WeightEdemaTracker />
+      <WeightEdemaTracker bodyRecords={data?.result.bodyRecords} />
     </ScrollView>
   )
 }
