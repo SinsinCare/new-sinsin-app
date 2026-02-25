@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react"
-import { Text, YStack } from "tamagui"
-import { EdemaRecordResult } from "./EdemaRecordResult"
+import { Text, XStack, YStack } from "tamagui"
 import { EdemaLevel } from "../../data/EdemaConstants"
-import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
-import { WeightRecordResult } from "./WeightRecordResult"
 import { DateAnalysisBodyRecord } from "@/src/types"
 
 interface WeightEdemaResultProps {
@@ -33,18 +30,57 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
       <Text fontSize={22} fontWeight="700">
         체중·부종 기록
       </Text>
-      <WeightRecordResult
-        weight={weight}
-        yesterdayWeight={previousWeight}
-        onDecrease={() => setWeight((prev) => decreaseWeight(prev))}
-        onIncrease={() => setWeight((prev) => increaseWeight(prev))}
-        onReset={() => setWeight(todayWeight)}
-      />
-      <EdemaRecordResult
-        selected={edemaLevel}
-        onSelect={setEdemaLevel}
-        yesterdayEdema={previousEdema}
-      />
+
+      <XStack
+        backgroundColor="$cardBackground"
+        borderRadius="$6"
+        paddingVertical="$4"
+        paddingHorizontal="$5"
+        position="relative"
+      >
+        <YStack
+          position="absolute"
+          top="$2"
+          bottom="$2"
+          left="55%"
+          width={1}
+          backgroundColor="$borderColor"
+        />
+
+        <YStack width="55%" gap="$1.5">
+          <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
+            체중
+          </Text>
+          <Text fontSize={18} fontWeight="600">
+            {weight > 0 ? `${weight}kg` : "기록 없음"}
+          </Text>
+          <Text
+            paddingVertical="$1"
+            fontSize={14}
+            fontWeight="500"
+            color="$colorSubtle"
+          >
+            전날: {previousWeight > 0 ? `${previousWeight}kg` : "기록 없음"}
+          </Text>
+        </YStack>
+
+        <YStack flex={1} gap="$1.5">
+          <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
+            붓기
+          </Text>
+          <Text fontSize={18} fontWeight="600">
+            {edemaLevel ?? "기록 없음"}
+          </Text>
+          <Text
+            paddingVertical="$1"
+            fontSize={14}
+            fontWeight="500"
+            color="$colorSubtle"
+          >
+            전날: {previousEdema ?? "기록 없음"}
+          </Text>
+        </YStack>
+      </XStack>
     </YStack>
   )
 }
