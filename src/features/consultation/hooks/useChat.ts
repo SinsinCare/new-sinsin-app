@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from "react"
-import type { ChatCategory } from "@/src/types/models"
-import type { Message } from "@/src/types/chat"
+import type { ChatCategory, Message } from "@/src/types/chat"
 import { chatApiService } from "@/src/services"
 
 let optimisticMsgId = -1
@@ -23,14 +22,12 @@ export function useChat() {
       try {
         let activeConvId = convIdRef.current
 
-        // 첫 메시지: 대화 생성
+        // 첫 메시지: 대화 생성 (greeting은 표시하지 않음 — 유저 메시지가 먼저)
         if (activeConvId === null) {
-          const { conversation, greetingMessage } =
-            await chatApiService.createConversation()
+          const { conversation } = await chatApiService.createConversation()
           activeConvId = conversation.id
           convIdRef.current = activeConvId
           setConversationId(activeConvId)
-          setMessages([greetingMessage])
         }
 
         // Optimistic user message
