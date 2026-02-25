@@ -47,15 +47,15 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
           backgroundColor="$borderColor"
         />
 
-        <YStack width="55%" gap="$1.5">
-          <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
+        <YStack width="55%" gap="$1">
+          <Text fontSize={15} color="$colorSubtle" fontWeight="600">
             체중
           </Text>
           <Text fontSize={18} fontWeight="600">
             {weight > 0 ? `${weight}kg` : "기록 없음"}
           </Text>
           <Text
-            paddingVertical="$1"
+            paddingTop="$1"
             fontSize={14}
             fontWeight="500"
             color="$colorSubtle"
@@ -64,15 +64,15 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
           </Text>
         </YStack>
 
-        <YStack flex={1} gap="$1.5">
-          <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
+        <YStack flex={1} gap="$1">
+          <Text fontSize={15} color="$colorSubtle" fontWeight="600">
             붓기
           </Text>
           <Text fontSize={18} fontWeight="600">
             {edemaLevel ?? "기록 없음"}
           </Text>
           <Text
-            paddingVertical="$1"
+            paddingTop="$1"
             fontSize={14}
             fontWeight="500"
             color="$colorSubtle"
