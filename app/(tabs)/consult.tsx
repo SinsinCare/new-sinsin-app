@@ -38,6 +38,7 @@ import { CopyToast } from "@/src/features/consultation/components/CopyToast"
 import { ChatHistorySheet } from "@/src/features/consultation/components/ChatHistorySheet"
 import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCopyToClipboard"
 import { ChatHistoryCard } from "@/src/features/consultation/components/ChatHistoryCard"
+import { RenameModal } from "@/src/features/consultation/components/RenameModal"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -52,6 +53,10 @@ export default function ConsultScreen() {
   const [inputMessage, setInputMessage] = useState("")
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [renameTarget, setRenameTarget] = useState<{
+    id: string
+    summary: string
+  } | null>(null)
 
   const scrollRef = useRef<ScrollView>(null)
   const {
@@ -85,6 +90,15 @@ export default function ConsultScreen() {
     setHistoryOpen(false)
     setInputMessage("")
     loadConversation(id)
+  }
+
+  const handleRenamePress = (id: string, summary: string) => {
+    setRenameTarget({ id, summary })
+  }
+
+  const handleRenameConfirm = (newName: string) => {
+    // TODO: call API to rename conversation when backend is ready
+    setRenameTarget(null)
   }
 
   const { handleCopy, showToast } = useCopyToClipboard()
@@ -288,13 +302,19 @@ export default function ConsultScreen() {
               content={item.content}
               timestamp={item.timestamp.toISOString()}
               onPress={() => handleSelectHistory(Number(item.id.split("-")[1]))}
-              onRename={() => {}}
+              onRename={() => handleRenamePress(item.id, item.summary)}
               onDelete={() => {}}
               onShare={() => {}}
             />
           ))}
         </ChatHistorySheet.ContentLayout>
       </ChatHistorySheet.Layout>
+      <RenameModal
+        visible={renameTarget !== null}
+        currentName={renameTarget?.summary ?? ""}
+        onConfirm={handleRenameConfirm}
+        onCancel={() => setRenameTarget(null)}
+      />
     </View>
   )
 }
