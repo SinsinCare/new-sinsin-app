@@ -15,7 +15,10 @@ import {
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-import type { FaqCardEntry } from "@/src/features/consultation/types"
+import type {
+  ConsultHistoryItem,
+  FaqCardEntry,
+} from "@/src/features/consultation/types"
 
 import {
   CATEGORY_LIST,
@@ -53,10 +56,9 @@ export default function ConsultScreen() {
   const [inputMessage, setInputMessage] = useState("")
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [renameTarget, setRenameTarget] = useState<{
-    id: string
-    summary: string
-  } | null>(null)
+  const [renameTarget, setRenameTarget] = useState<ConsultHistoryItem | null>(
+    null,
+  )
 
   const scrollRef = useRef<ScrollView>(null)
   const {
@@ -92,9 +94,8 @@ export default function ConsultScreen() {
     loadConversation(id)
   }
 
-  const handleRenamePress = (id: string, summary: string) => {
-    setHistoryOpen(false)
-    setTimeout(() => setRenameTarget({ id, summary }), 300)
+  const handleRenamePress = (item: ConsultHistoryItem) => {
+    setRenameTarget(item)
   }
 
   const handleRenameConfirm = (newName: string) => {
@@ -131,6 +132,7 @@ export default function ConsultScreen() {
     }, 100)
     return () => clearTimeout(timer)
   }, [messages.length, isTyping])
+
 
   return (
     <View
@@ -303,19 +305,19 @@ export default function ConsultScreen() {
               content={item.content}
               timestamp={item.timestamp.toISOString()}
               onPress={() => handleSelectHistory(Number(item.id.split("-")[1]))}
-              onRename={() => handleRenamePress(item.id, item.summary)}
+              onRename={() => handleRenamePress(item)}
               onDelete={() => {}}
               onShare={() => {}}
             />
           ))}
         </ChatHistorySheet.ContentLayout>
+        <RenameModal
+          visible={renameTarget !== null}
+          currentName={renameTarget?.summary ?? ""}
+          onConfirm={handleRenameConfirm}
+          onCancel={() => setRenameTarget(null)}
+        />
       </ChatHistorySheet.Layout>
-      <RenameModal
-        visible={renameTarget !== null}
-        currentName={renameTarget?.summary ?? ""}
-        onConfirm={handleRenameConfirm}
-        onCancel={() => setRenameTarget(null)}
-      />
     </View>
   )
 }

@@ -1,5 +1,6 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
 import {
+  GestureResponderEvent,
   Pressable,
   useColorScheme,
   Modal,
@@ -45,16 +46,11 @@ export function ChatHistoryCard({
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 })
-  const ellipsisRef = useRef<View>(null)
 
-  const handleEllipsisPress = () => {
-    ellipsisRef.current?.measureInWindow((x, y, width, height) => {
-      setMenuPosition({
-        top: y + height + 4,
-        right: 16,
-      })
-      setMenuOpen(true)
-    })
+  const handleEllipsisPress = (e: GestureResponderEvent) => {
+    const { pageY } = e.nativeEvent
+    setMenuPosition({ top: pageY + 14, right: 16 })
+    setMenuOpen(true)
   }
 
   const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
@@ -84,19 +80,17 @@ export function ChatHistoryCard({
             >
               {summary}
             </Text>
-            <View ref={ellipsisRef} collapsable={false}>
-              <Pressable
-                onPress={handleEllipsisPress}
-                hitSlop={8}
-                style={{ marginLeft: 8 }}
-              >
-                <Ionicons
-                  name="ellipsis-horizontal"
-                  size={20}
-                  color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
-                />
-              </Pressable>
-            </View>
+            <Pressable
+              onPress={handleEllipsisPress}
+              hitSlop={8}
+              style={{ marginLeft: 8 }}
+            >
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={20}
+                color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+              />
+            </Pressable>
           </XStack>
 
           <Text
@@ -171,7 +165,6 @@ export function ChatHistoryCard({
               </Text>
               <Icon name="pencil" size={20} color={textColor} />
             </Pressable>
-
 
             {/* 삭제하기 */}
             <Pressable

@@ -5,6 +5,7 @@ import {
   TextInput,
   StyleSheet,
   useColorScheme,
+  View,
 } from "react-native"
 import { Text, XStack } from "tamagui"
 
@@ -41,11 +42,9 @@ export function RenameModal({
 
   const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
   const secondaryTextColor = isDarkMode ? "#ABABB4" : "#81818D"
-  const cardBg = isDarkMode ? "#2E2E34" : "#FFFFFF"
-  const inputBorderColor = isDarkMode ? "#4E4F55" : "#D9D9DE"
-  const backdropBg = isDarkMode
-    ? "rgba(0, 0, 0, 0.7)"
-    : "rgba(0, 0, 0, 0.3)"
+  const cardBg = isDarkMode ? "#1F1F21" : "#FFFFFF"
+  const borderColor = isDarkMode ? "#313138" : "#EAEAF0"
+  const backdropBg = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.3)"
 
   return (
     <Modal
@@ -55,37 +54,43 @@ export function RenameModal({
       onRequestClose={onCancel}
       onShow={() => inputRef.current?.focus()}
     >
-      <Pressable style={[styles.backdrop, { backgroundColor: backdropBg }]} onPress={onCancel}>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: backdropBg }]}
+        onPress={onCancel}
+      >
         <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
-          <Text
-            fontSize={16}
-            fontWeight="600"
-            color={textColor}
-            textAlign="center"
-            marginBottom={16}
-          >
-            제목 바꾸기
-          </Text>
+          <View style={styles.cardContent}>
+            <Text
+              fontSize={16}
+              lineHeight={20}
+              fontWeight="600"
+              color={textColor}
+              textAlign="center"
+              marginBottom={16}
+            >
+              제목 바꾸기
+            </Text>
 
-          <TextInput
-            ref={inputRef}
-            value={name}
-            onChangeText={setName}
-            placeholder="대화 요약"
-            placeholderTextColor={secondaryTextColor}
-            style={[
-              styles.input,
-              {
-                color: textColor,
-                borderColor: inputBorderColor,
-              },
-            ]}
-            maxLength={50}
-            returnKeyType="done"
-            onSubmitEditing={handleConfirm}
-          />
+            <TextInput
+              ref={inputRef}
+              value={name}
+              onChangeText={setName}
+              placeholder="대화 요약"
+              placeholderTextColor={secondaryTextColor}
+              style={[
+                styles.input,
+                {
+                  color: textColor,
+                  borderColor: borderColor,
+                },
+              ]}
+              maxLength={50}
+              returnKeyType="done"
+              onSubmitEditing={handleConfirm}
+            />
+          </View>
 
-          <XStack marginTop={16}>
+          <XStack borderTopWidth={1} borderColor={borderColor}>
             <Pressable
               onPress={onCancel}
               style={({ pressed }) => ({
@@ -94,14 +99,17 @@ export function RenameModal({
               })}
             >
               <Text
-                fontSize={15}
+                fontSize={14}
+                lineHeight={20}
                 fontWeight="500"
-                color={secondaryTextColor}
+                color={textColor}
                 textAlign="center"
               >
                 취소
               </Text>
             </Pressable>
+
+            <View style={{ width: 1, backgroundColor: borderColor }} />
 
             <Pressable
               onPress={handleConfirm}
@@ -111,7 +119,8 @@ export function RenameModal({
               })}
             >
               <Text
-                fontSize={15}
+                fontSize={14}
+                lineHeight={20}
                 fontWeight="500"
                 color={textColor}
                 textAlign="center"
@@ -136,19 +145,23 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     borderRadius: 14,
+    overflow: "hidden",
+  },
+  cardContent: {
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 16,
+    paddingBottom: 20,
   },
   input: {
     fontSize: 15,
-    borderBottomWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: "center",
   },
 })
