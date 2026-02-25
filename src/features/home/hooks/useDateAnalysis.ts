@@ -10,10 +10,8 @@ export function useDateAnalysis(date: Date) {
   return useQuery({
     queryKey: ["dateAnalysis", dateStr],
     queryFn: async () => {
-      console.log("[useDateAnalysis] fetching:", dateStr)
       try {
         const result = await foodCameraService.fetchDateAnalysis(dateStr)
-        console.log("[useDateAnalysis] result:", JSON.stringify(result))
         return result
       } catch (e) {
         console.error("[useDateAnalysis] error:", e)
