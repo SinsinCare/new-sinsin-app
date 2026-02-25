@@ -11,6 +11,9 @@ import {
   Keyboard,
   StyleSheet,
   useColorScheme,
+  Dimensions,
+  Modal,
+  GestureResponderEvent,
 } from "react-native"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -59,6 +62,8 @@ export default function ConsultScreen() {
   const [renameTarget, setRenameTarget] = useState<ConsultHistoryItem | null>(
     null,
   )
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false)
+  const [attachMenuPosition, setAttachMenuPosition] = useState({ bottom: 0, left: 0 })
 
   const scrollRef = useRef<ScrollView>(null)
   const {
@@ -75,6 +80,7 @@ export default function ConsultScreen() {
 
   const isIdle = messages.length === 0 && !isTyping
   const canSend = !!inputMessage.trim() && !!category && !isTyping && !isSending
+  const menuTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
 
   const handleHistoryPress = () => {
     Keyboard.dismiss()
@@ -101,6 +107,13 @@ export default function ConsultScreen() {
   const handleRenameConfirm = (newName: string) => {
     // TODO: call API to rename conversation when backend is ready
     setRenameTarget(null)
+  }
+
+  const handlePlusPress = (e: GestureResponderEvent) => {
+    const { pageY } = e.nativeEvent
+    const screenHeight = Dimensions.get("window").height
+    setAttachMenuPosition({ bottom: screenHeight - pageY + 8, left: 16 })
+    setAttachMenuOpen(true)
   }
 
   const { handleCopy, showToast } = useCopyToClipboard()
@@ -258,7 +271,7 @@ export default function ConsultScreen() {
             />
 
             <XStack justifyContent="space-between" alignItems="center">
-              <Pressable onPress={() => {}} hitSlop={8}>
+              <Pressable onPress={handlePlusPress} hitSlop={8}>
                 <Icon
                   name="plus"
                   size={24}
@@ -318,6 +331,63 @@ export default function ConsultScreen() {
           onCancel={() => setRenameTarget(null)}
         />
       </ChatHistorySheet.Layout>
+      <Modal
+        visible={attachMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAttachMenuOpen(false)}
+      >
+        <Pressable
+          style={attachStyles.backdrop}
+          onPress={() => setAttachMenuOpen(false)}
+        >
+          <View
+            style={[
+              attachStyles.menuCard,
+              {
+                bottom: attachMenuPosition.bottom,
+                left: attachMenuPosition.left,
+                backgroundColor: isDarkMode ? "#2E2E34" : "#FFFFFF",
+                shadowOpacity: isDarkMode ? 0.4 : 0.15,
+              },
+            ]}
+          >
+            {/* 사진 업로드 */}
+            <Pressable
+              onPress={() => {
+                setAttachMenuOpen(false)
+                // TODO: handle photo upload
+              }}
+              style={({ pressed }) => ({
+                ...attachStyles.menuItem,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={[attachStyles.menuItemText, { color: menuTextColor }]}>
+                사진 업로드
+              </Text>
+              <Icon name="gallery" size={20} color={menuTextColor} />
+            </Pressable>
+
+            {/* 파일 업로드 */}
+            <Pressable
+              onPress={() => {
+                setAttachMenuOpen(false)
+                // TODO: handle file upload
+              }}
+              style={({ pressed }) => ({
+                ...attachStyles.menuItem,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={[attachStyles.menuItemText, { color: menuTextColor }]}>
+                파일 업로드
+              </Text>
+              <Icon name="paperclip" size={20} color={menuTextColor} />
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
@@ -343,5 +413,31 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+  },
+})
+
+const attachStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+  },
+  menuCard: {
+    position: "absolute",
+    minWidth: 160,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    fontSize: 15,
+    fontWeight: "400",
   },
 })
