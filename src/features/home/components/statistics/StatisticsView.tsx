@@ -17,6 +17,7 @@ import { MealType, StatisticsTab } from "../../types"
 import { WeightEdemaResult } from "./WeightEdemaResult"
 import { StatisticsTabBar } from "./StatisticsTabBar"
 import { getWeekLabel } from "../../utils/getWeekDays"
+import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -38,6 +39,7 @@ export function StatisticsView({
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
+  const { data } = useDateAnalysis(selectedDate)
 
   const goToPrevWeek = () => {
     const prev = new Date(selectedDate)
@@ -131,14 +133,17 @@ export function StatisticsView({
           sectionOffsets.current.intake = e.nativeEvent.layout.y
         }}
       >
-        <IntakeSummary />
+        <IntakeSummary analysis={data?.result.analysis ?? null} />
       </View>
       <View
         onLayout={(e) => {
           sectionOffsets.current.guide = e.nativeEvent.layout.y
         }}
       >
-        <DietaryGuide />
+        <DietaryGuide
+          dietaryGuide={data?.result.analysis?.dietaryGuide}
+          cautionFoods={data?.result.analysis?.cautionFoods}
+        />
       </View>
       <View
         onLayout={(e) => {
@@ -146,6 +151,7 @@ export function StatisticsView({
         }}
       >
         <DietaryRecord
+          diets={data?.result.diets ?? []}
           selectedMealType={selectedMealType}
           onSelectMealType={onSelectMealType}
         />
@@ -155,7 +161,7 @@ export function StatisticsView({
           sectionOffsets.current.weight = e.nativeEvent.layout.y
         }}
       >
-        <WeightEdemaResult />
+        <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
       </View>
     </ScrollView>
   )

@@ -24,7 +24,7 @@ export function WeightRecordResult({
       onReset={onReset}
     >
       <Text fontSize="$3" color="$color.grey5">
-        어제: {yesterdayWeight}kg
+        어제: {yesterdayWeight > 0 ? `${yesterdayWeight}kg` : "기록 없음"}
       </Text>
       <XStack
         alignItems="center"

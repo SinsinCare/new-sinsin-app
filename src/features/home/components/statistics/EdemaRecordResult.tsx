@@ -3,22 +3,22 @@ import { Text, XStack, YStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
 import { RecordResultCard } from "./RecordResultCard"
 
-const YESTERDAY_EDEMA = EDEMA_OPTIONS[0]
-
 interface EdemaRecordResultProps {
   selected: EdemaLevel | null
+  yesterdayEdema: string | null
   onSelect: (level: EdemaLevel) => void
 }
 
 export function EdemaRecordResult({
   selected,
   onSelect,
+  yesterdayEdema,
 }: EdemaRecordResultProps) {
   return (
     <RecordResultCard
       type="edema"
       title={`몸이 붓는 \n느낌이 있나요?`}
-      subtitle={`어제: ${YESTERDAY_EDEMA}`}
+      subtitle={`어제: ${yesterdayEdema ?? "기록 없음"}`}
     >
       <YStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (
