@@ -6,6 +6,7 @@ import {
   View,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  useWindowDimensions,
 } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -26,6 +27,7 @@ interface StatisticsViewProps {
   onSelectDate: (date: Date) => void
   selectedMealType: MealType | null
   onSelectMealType: (mealType: MealType) => void
+  onGoToRecord: () => void
 }
 
 export function StatisticsView({
@@ -33,13 +35,17 @@ export function StatisticsView({
   onSelectDate,
   selectedMealType,
   onSelectMealType,
+  onGoToRecord,
 }: StatisticsViewProps) {
   const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
   const scrollRef = useRef<ScrollView>(null)
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
-  const { data } = useDateAnalysis(selectedDate)
+  const { data, isLoading } = useDateAnalysis(selectedDate)
+  const { height: windowHeight } = useWindowDimensions()
+
+  const isEmpty = !isLoading && (data?.result.diets.length ?? 0) === 0
 
   const goToPrevWeek = () => {
     const prev = new Date(selectedDate)
@@ -127,42 +133,70 @@ export function StatisticsView({
         <YStack height={1} backgroundColor="$gray4" />
       </YStack>
 
-      {/* 섹션 - 모두 렌더링, 탭은 스크롤 이동 */}
-      <View
-        onLayout={(e) => {
-          sectionOffsets.current.intake = e.nativeEvent.layout.y
-        }}
-      >
-        <IntakeSummary analysis={data?.result.analysis ?? null} />
-      </View>
-      <View
-        onLayout={(e) => {
-          sectionOffsets.current.guide = e.nativeEvent.layout.y
-        }}
-      >
-        <DietaryGuide
-          dietaryGuide={data?.result.analysis?.dietaryGuide}
-          cautionFoods={data?.result.analysis?.cautionFoods}
-        />
-      </View>
-      <View
-        onLayout={(e) => {
-          sectionOffsets.current.record = e.nativeEvent.layout.y
-        }}
-      >
-        <DietaryRecord
-          diets={data?.result.diets ?? []}
-          selectedMealType={selectedMealType}
-          onSelectMealType={onSelectMealType}
-        />
-      </View>
-      <View
-        onLayout={(e) => {
-          sectionOffsets.current.weight = e.nativeEvent.layout.y
-        }}
-      >
-        <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
-      </View>
+      {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
+      {isEmpty ? (
+        <YStack
+          minHeight={windowHeight * 0.45}
+          justifyContent="center"
+          alignItems="center"
+          gap="$4"
+        >
+          <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
+            아직 기록하지 않았어요.
+          </Text>
+          <TouchableOpacity onPress={onGoToRecord}>
+            <Text
+              fontSize="$4"
+              color="$colorSubtle"
+              fontWeight="600"
+              backgroundColor="$backgroundHover"
+              paddingHorizontal="$3"
+              paddingVertical="$3"
+              borderRadius="$8"
+            >
+              기록하러 가기
+            </Text>
+          </TouchableOpacity>
+        </YStack>
+      ) : (
+        <>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.intake = e.nativeEvent.layout.y
+            }}
+          >
+            <IntakeSummary analysis={data?.result.analysis ?? null} />
+          </View>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.guide = e.nativeEvent.layout.y
+            }}
+          >
+            <DietaryGuide
+              dietaryGuide={data?.result.analysis?.dietaryGuide}
+              cautionFoods={data?.result.analysis?.cautionFoods}
+            />
+          </View>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.record = e.nativeEvent.layout.y
+            }}
+          >
+            <DietaryRecord
+              diets={data?.result.diets ?? []}
+              selectedMealType={selectedMealType}
+              onSelectMealType={onSelectMealType}
+            />
+          </View>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.weight = e.nativeEvent.layout.y
+            }}
+          >
+            <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
+          </View>
+        </>
+      )}
     </ScrollView>
   )
 }

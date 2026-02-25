@@ -52,6 +52,7 @@ export default function HomeScreen() {
           onSelectDate={setSelectedDate}
           selectedMealType={selectedMealType}
           onSelectMealType={handleSelectMealType}
+          onGoToRecord={() => setMainTab("record")}
         />
       )}
     </ThemedView>
