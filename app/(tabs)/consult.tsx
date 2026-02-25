@@ -63,7 +63,10 @@ export default function ConsultScreen() {
     null,
   )
   const [attachMenuOpen, setAttachMenuOpen] = useState(false)
-  const [attachMenuPosition, setAttachMenuPosition] = useState({ bottom: 0, left: 0 })
+  const [attachMenuPosition, setAttachMenuPosition] = useState({
+    bottom: 0,
+    left: 0,
+  })
 
   const scrollRef = useRef<ScrollView>(null)
   const {
@@ -145,7 +148,6 @@ export default function ConsultScreen() {
     }, 100)
     return () => clearTimeout(timer)
   }, [messages.length, isTyping])
-
 
   return (
     <View
@@ -363,7 +365,9 @@ export default function ConsultScreen() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={[attachStyles.menuItemText, { color: menuTextColor }]}>
+              <Text
+                style={[attachStyles.menuItemText, { color: menuTextColor }]}
+              >
                 사진 업로드
               </Text>
               <Icon name="gallery" size={20} color={menuTextColor} />
@@ -380,7 +384,9 @@ export default function ConsultScreen() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={[attachStyles.menuItemText, { color: menuTextColor }]}>
+              <Text
+                style={[attachStyles.menuItemText, { color: menuTextColor }]}
+              >
                 파일 업로드
               </Text>
               <Icon name="paperclip" size={20} color={menuTextColor} />
