@@ -15,7 +15,7 @@
 앱의 기본 정보를 설정합니다.
 
 - `ios.bundleIdentifier`: `com.mediology.sinsin-care`
-- `android.package`: `com.mediology.sinsin-care`
+- `android.package`: `com.mediology.sinsin_care`
 - `version`: 앱 버전 (예: 1.0.0)
 - `ios.buildNumber`: 빌드 번호 (업로드 시마다 증가 필요)
 
@@ -25,7 +25,7 @@
 
 - `development`: 개발팀 내부 테스트용 (Development Client)
 - `preview`: 내부 공유 및 테스트용 (Ad-hoc)
-- `production`: 스토어 배포용 (Release)
+- `production`: 스토어 배포용 (Release, `autoIncrement: true`로 버전 코드 자동 증가)
 
 ## 3. 핵심 명령어
 
