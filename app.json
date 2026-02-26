@@ -31,7 +31,6 @@
         "backgroundColor": "#007AFF"
       },
       "package": "com.mediology.sinsin_care",
-      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
