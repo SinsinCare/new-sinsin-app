@@ -128,14 +128,15 @@ export function RecordView({
     })
     .map((day) => day.date)
 
-  const handleAddToRecord = () => {
-    registerDiary(selectedDate, (mealType, imageUri) => {
+  const handleAddToRecord = async () => {
+    await registerDiary(selectedDate, (mealType, imageUri) => {
       setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
       if (imageUri) {
         setMealImages((prev) => ({ ...prev, [mealType]: imageUri }))
       }
-      queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
     })
+    await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+    await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
   }
 
   const handleRecord = () => {
@@ -244,8 +245,7 @@ export function RecordView({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingTop: 10,
-    paddingBottom: 100,
+    paddingVertical: 10,
   },
   loadingOverlay: {
     flex: 1,

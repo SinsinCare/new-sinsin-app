@@ -20,5 +20,6 @@ export function useDateAnalysis(date: Date) {
     },
     enabled: isAuthenticated,
     retry: 0,
+    staleTime: 0,
   })
 }
