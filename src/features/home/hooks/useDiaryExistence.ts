@@ -3,10 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useAuthStore } from "@/src/stores/authStore"
 import { getWeekRange } from "../utils/getWeekRange"
 
-export function useDiaryExistence(
-  date: Date,
-  options?: { refetchOnMount?: boolean | "always" },
-) {
+export function useDiaryExistence(date: Date) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const { startDate, endDate } = getWeekRange(date)
 
@@ -15,7 +12,6 @@ export function useDiaryExistence(
     queryFn: () => foodCameraService.fetchDiaryExistence(startDate, endDate),
     enabled: isAuthenticated,
     retry: 0,
-    refetchOnMount: options?.refetchOnMount,
     select: (data) =>
       data.result
         .filter((item) => item.exists)

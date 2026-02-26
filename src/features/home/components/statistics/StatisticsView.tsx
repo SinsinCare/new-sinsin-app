@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   TouchableOpacity,
   ScrollView,
@@ -29,6 +29,7 @@ interface StatisticsViewProps {
   selectedMealType: MealType | null
   onSelectMealType: (mealType: MealType) => void
   onGoToRecord: () => void
+  isActive: boolean
 }
 
 export function StatisticsView({
@@ -37,21 +38,28 @@ export function StatisticsView({
   selectedMealType,
   onSelectMealType,
   onGoToRecord,
+  isActive,
 }: StatisticsViewProps) {
   const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
   const scrollRef = useRef<ScrollView>(null)
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
-  const { data, isLoading } = useDateAnalysis(selectedDate, {
-    refetchOnMount: "always",
-  })
-  const { data: recordedDates = [] } = useDiaryExistence(selectedDate, {
-    refetchOnMount: "always",
-  })
+  const { data, isLoading, isFetching, refetch } = useDateAnalysis(selectedDate)
+  const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
 
-  const isEmpty = !isLoading && (data?.result.diets.length ?? 0) === 0
+  const hasDiets = (data?.result.diets.length ?? 0) > 0
+
+  const isEmpty = !isLoading && !isFetching && !hasDiets
+
+  useEffect(() => {
+    if (!isActive) return
+
+    refetch()
+    const interval = setInterval(refetch, 5000)
+    return () => clearInterval(interval)
+  }, [isActive, refetch])
 
   const goToPrevWeek = () => {
     const prev = new Date(selectedDate)
@@ -209,7 +217,6 @@ export function StatisticsView({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingTop: 10,
-    paddingBottom: 100,
+    paddingVertical: 10,
   },
 })
