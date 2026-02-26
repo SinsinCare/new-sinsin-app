@@ -19,6 +19,7 @@ import { WeightEdemaResult } from "./WeightEdemaResult"
 import { StatisticsTabBar } from "./StatisticsTabBar"
 import { getWeekLabel } from "../../utils/getWeekDays"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
+import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -42,7 +43,12 @@ export function StatisticsView({
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
-  const { data, isLoading } = useDateAnalysis(selectedDate)
+  const { data, isLoading } = useDateAnalysis(selectedDate, {
+    refetchOnMount: "always",
+  })
+  const { data: recordedDates = [] } = useDiaryExistence(selectedDate, {
+    refetchOnMount: "always",
+  })
   const { height: windowHeight } = useWindowDimensions()
 
   const isEmpty = !isLoading && (data?.result.diets.length ?? 0) === 0
@@ -116,7 +122,7 @@ export function StatisticsView({
         <WeekCalendar
           selectedDate={selectedDate}
           onSelectDate={onSelectDate}
-          recordedDates={[13, 14, 15]}
+          recordedDates={recordedDates}
         />
       </YStack>
 

@@ -96,3 +96,16 @@ export interface DateAnalysisResponse {
   result: DateAnalysisResult
   timestamp: string
 }
+
+export interface DiaryExistenceItem {
+  date: string
+  exists: boolean
+}
+
+export interface DiaryExistenceResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: DiaryExistenceItem[]
+  timestamp: string
+}

@@ -1,5 +1,6 @@
 import type {
   DateAnalysisResponse,
+  DiaryExistenceResponse,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
 } from "../../types"
@@ -112,6 +113,24 @@ export const foodCameraService = {
     try {
       const response = await api.get(`/food-camera/date-analysis/${date}`)
       return response.data as DateAnalysisResponse
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async fetchDiaryExistence(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<DiaryExistenceResponse> {
+    try {
+      const response = await api.get(
+        `/food-camera/statistics/diary-existence`,
+        { params: { startDate, endDate } },
+      )
+      return response.data as DiaryExistenceResponse
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
