@@ -159,3 +159,10 @@ eas build --platform ios --profile production
 
 eas submit --platform ios --latest --profile production
 ```
+
+- 안드로이드
+```
+eas build --platform android --profile production
+
+eas submit --platform android --latest
+```
