@@ -3,7 +3,7 @@ import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { MealType } from "../types"
-import { toDateStr } from "@/src/utils/dateUtils"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export function useFoodAnalysis() {
   const [analysisResult, setAnalysisResult] =

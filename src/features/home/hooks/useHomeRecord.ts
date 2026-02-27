@@ -2,7 +2,7 @@ import { useState, useCallback } from "react"
 import { useHydration } from "./useHydration"
 import { useExtraWater } from "./useExtraWater"
 import { EdemaLevel } from "../data/EdemaConstants"
-import { toDateStr } from "@/src/utils/dateUtils"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export interface UseHomeRecordReturn {
   // Hydration

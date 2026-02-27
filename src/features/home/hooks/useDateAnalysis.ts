@@ -1,7 +1,7 @@
 import { foodCameraService } from "@/src/services/data"
 import { useQuery } from "@tanstack/react-query"
 import { useAuthStore } from "@/src/stores/authStore"
-import { toDateStr } from "@/src/utils/dateUtils"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export function useDateAnalysis(date: Date) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
