@@ -25,6 +25,12 @@ import Pencil from "@/assets/icons/pencil.svg"
 import Trashcan from "@/assets/icons/trashcan.svg"
 import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
+import Loading from "@/assets/icons/loading.svg"
+import WaterDrop from "@/assets/icons/water-drop.svg"
+import Sodium from "@/assets/icons/sodium.svg"
+import Potassium from "@/assets/icons/potassium.svg"
+import Phosphorus from "@/assets/icons/phosphorus.svg"
+import Protein from "@/assets/icons/protein.svg"
 
 const icons = {
   chat: Chat,
@@ -36,18 +42,24 @@ const icons = {
   "heart-text": HeartText,
   history: History,
   home: Home,
+  loading: Loading,
   location: Location,
   mail: Mail,
   menu: Menu,
   notification: Notification,
   pencil: Pencil,
+  phosphorus: Phosphorus,
   pill: Pill,
   plus: Plus,
+  potassium: Potassium,
+  protein: Protein,
   recipe: Recipe,
   reset: Reset,
+  sodium: Sodium,
   trashcan: Trashcan,
   upload: Upload,
   water: Water,
+  "water-drop": WaterDrop,
   x: X,
 } as const
 

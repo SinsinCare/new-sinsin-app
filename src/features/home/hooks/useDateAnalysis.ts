@@ -1,11 +1,11 @@
 import { foodCameraService } from "@/src/services/data"
 import { useQuery } from "@tanstack/react-query"
 import { useAuthStore } from "@/src/stores/authStore"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export function useDateAnalysis(date: Date) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const pad = (n: number) => String(n).padStart(2, "0")
-  const dateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+  const dateStr = toDateStr(date)
 
   return useQuery({
     queryKey: ["dateAnalysis", dateStr],

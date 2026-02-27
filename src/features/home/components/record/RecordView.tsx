@@ -25,7 +25,7 @@ import {
 } from "@/src/features/recipe/services/imagePickerService"
 import { FoodAnalysisResult } from "./FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
-import LoadingSvg from "@/assets/icons/loading.svg"
+import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 
@@ -42,7 +42,7 @@ export function RecordView({
   selectedMealType,
   onSelectMealType,
 }: RecordViewProps) {
-  const record = useHomeRecord()
+  const record = useHomeRecord(selectedDate)
   const {
     isAnalyzing,
     isResultOpen,
@@ -197,7 +197,7 @@ export function RecordView({
       <Modal visible={isAnalyzing} transparent animationType="fade">
         <View style={styles.loadingOverlay}>
           <Animated.View style={floatStyle}>
-            <LoadingSvg width={55} height={55} />
+            <Icon name="loading" size={55} />
           </Animated.View>
           <Text fontSize={18} fontWeight="600" marginTop="$4">
             {`식단을 분석하고 있어요${dots}`}

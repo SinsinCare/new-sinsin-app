@@ -3,6 +3,7 @@ import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { MealType } from "../types"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export function useFoodAnalysis() {
   const [analysisResult, setAnalysisResult] =
@@ -59,8 +60,7 @@ export function useFoodAnalysis() {
     onSuccess: (mealType: MealType, imageUri: string | null) => void,
   ) => {
     if (!analysisResult || !analyzedMealType) return
-    const pad = (n: number) => String(n).padStart(2, "0")
-    const date = `${selectedDate.getFullYear()}-${pad(selectedDate.getMonth() + 1)}-${pad(selectedDate.getDate())}`
+    const date = toDateStr(selectedDate)
     try {
       await foodCameraService.registerDiary(
         analysisResult.foodAnalysisResultId,

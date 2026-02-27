@@ -1,3 +1,5 @@
+import { tokens } from "@/src/theme/tokens"
+
 export const QUICK_ADD_OPTIONS: readonly number[] = [
   50, 100, 500, 1000,
 ] as const
@@ -13,10 +15,8 @@ export const CAP_H = Math.round(FONT_SIZE * 0.72) // 32
 export const DEFAULT_DAILY_GOAL: number = 1500
 
 export const WATER_COLORS = {
-  backgroundLight: "#e0f2fe",
-  gradientStart: "#6BDAFE",
-  gradientEnd: "#6BDAFE",
-  stroke: "#cbd5e1",
-  dropletFill: "#e0f2fe",
-  buttonText: "#1d4ed8",
+  percentBg: tokens.color.waterPercentBg.val,
+  percentBgDark: tokens.color.waterPercentBgDark.val,
+  gradientTop: tokens.color.waterFillTop.val,
+  gradientBottom: tokens.color.waterFillBottom.val,
 } as const

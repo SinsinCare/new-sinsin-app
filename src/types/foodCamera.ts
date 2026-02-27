@@ -109,3 +109,15 @@ export interface DiaryExistenceResponse {
   result: DiaryExistenceItem[]
   timestamp: string
 }
+
+export interface ExtraWaterUpdateItem {
+  extraWater: number
+}
+
+export interface ExtraWaterUpdateResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: ExtraWaterUpdateItem
+  timestamp: string
+}

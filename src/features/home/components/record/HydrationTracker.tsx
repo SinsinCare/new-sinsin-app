@@ -1,7 +1,15 @@
 import { Text, XStack, YStack } from "tamagui"
 import { TouchableOpacity, StyleSheet } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import Svg, { Text as SvgText, Defs, ClipPath, Rect } from "react-native-svg"
+import { Icon } from "@/src/shared/components/Icon"
+import Svg, {
+  Text as SvgText,
+  Defs,
+  ClipPath,
+  Rect,
+  LinearGradient,
+  Stop,
+} from "react-native-svg"
 import {
   CAP_H,
   FONT_SIZE,
@@ -67,7 +75,7 @@ export function HydrationTracker({
         </YStack>
 
         {/* Right: water-fill % text + droplet icon (same row) */}
-        <XStack alignItems="center" flexShrink={0} gap={2}>
+        <XStack alignItems="center" paddingBottom={5} flexShrink={0} gap={1}>
           <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
             <Defs>
               <ClipPath id="percentClip">
@@ -92,34 +100,40 @@ export function HydrationTracker({
                   %
                 </SvgText>
               </ClipPath>
+              <LinearGradient
+                id="waterGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={SVG_HEIGHT}
+                gradientUnits="userSpaceOnUse"
+              >
+                <Stop offset="0" stopColor={WATER_COLORS.gradientTop} />
+                <Stop offset="1" stopColor={WATER_COLORS.gradientBottom} />
+              </LinearGradient>
             </Defs>
 
-            {/* Unfilled (gray) layer */}
+            {/* Unfilled (bg) layer */}
             <Rect
               x={0}
               y={0}
               width={SVG_WIDTH}
               height={SVG_HEIGHT}
-              fill={tokens.color.grey6.val}
+              fill={WATER_COLORS.percentBg}
               clipPath="url(#percentClip)"
             />
 
-            {/* Water fill (blue) — rises from bottom */}
+            {/* Water fill — rises from bottom */}
             <Rect
               x={0}
               y={waterY}
               width={SVG_WIDTH}
               height={SVG_HEIGHT - waterY}
-              fill={WATER_COLORS.gradientStart}
+              fill="url(#waterGradient)"
               clipPath="url(#percentClip)"
             />
           </Svg>
-          <Ionicons
-            name="water"
-            size={18}
-            color={WATER_COLORS.gradientEnd}
-            style={{ marginBottom: 18 }}
-          />
+          <Icon name="water-drop" size={18} style={{ marginBottom: 18 }} />
         </XStack>
       </XStack>
 
