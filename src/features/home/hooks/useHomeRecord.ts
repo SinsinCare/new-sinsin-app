@@ -45,6 +45,12 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     [hydration, dateStr, updateExtraWater],
   )
 
+  const resetWithApi = useCallback(async () => {
+    const currentIntake = hydration.intake
+    hydration.reset()
+    await updateExtraWater(dateStr, -currentIntake)
+  }, [hydration, dateStr, updateExtraWater])
+
   const handleSetEdemaLevel = useCallback((level: EdemaLevel) => {
     setEdemaLevel(level)
   }, [])
@@ -58,7 +64,7 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     isGoalAchieved: hydration.isGoalAchieved,
     addWater: addWaterWithApi,
     subtractWater: hydration.subtractWater,
-    resetHydration: hydration.reset,
+    resetHydration: resetWithApi,
 
     // Weight
     weight,
