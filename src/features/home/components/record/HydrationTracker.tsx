@@ -1,7 +1,7 @@
 import { Text, XStack, YStack } from "tamagui"
 import { TouchableOpacity, StyleSheet } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import WaterDropIcon from "@/assets/icons/water-drop.svg"
+import { Icon } from "@/src/shared/components/Icon"
 import Svg, {
   Text as SvgText,
   Defs,
@@ -133,7 +133,7 @@ export function HydrationTracker({
               clipPath="url(#percentClip)"
             />
           </Svg>
-          <WaterDropIcon width={18} height={18} style={{ marginBottom: 18 }} />
+          <Icon name="water-drop" size={18} style={{ marginBottom: 18 }} />
         </XStack>
       </XStack>
 

@@ -7,19 +7,13 @@ import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../../types"
 import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
 import { MacroBar } from "./MacroBar"
-import SodiumSvg from "@/assets/icons/sodium.svg"
-import PotassiumSvg from "@/assets/icons/potassium.svg"
-import PhosphorusSvg from "@/assets/icons/phosphorus.svg"
-import ProteinSvg from "@/assets/icons/protein.svg"
-import { SvgProps } from "react-native-svg"
+import { Icon, IconName } from "@/src/shared/components/Icon"
 
-type NutrientSvgComponent = React.FC<SvgProps>
-
-const NUTRIENT_SVG: Record<string, NutrientSvgComponent> = {
-  나트륨: SodiumSvg,
-  칼륨: PotassiumSvg,
-  인: PhosphorusSvg,
-  단백질: ProteinSvg,
+const NUTRIENT_ICON: Record<string, IconName> = {
+  나트륨: "sodium",
+  칼륨: "potassium",
+  인: "phosphorus",
+  단백질: "protein",
 }
 
 interface FoodAnalysisResultProps {
@@ -46,10 +40,10 @@ const MEAL_LABEL: Record<MealType, string> = {
 }
 
 function NutrientCell({ label, value }: { label: string; value: string }) {
-  const SvgIcon = NUTRIENT_SVG[label]
+  const iconName = NUTRIENT_ICON[label]
   return (
     <YStack flex={1} alignItems="center">
-      {SvgIcon && <SvgIcon width={30} height={30} />}
+      {iconName && <Icon name={iconName} size={30} />}
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
