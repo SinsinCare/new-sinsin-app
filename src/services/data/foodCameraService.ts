@@ -1,6 +1,7 @@
 import type {
   DateAnalysisResponse,
   DiaryExistenceResponse,
+  ExtraWaterUpdateResponse,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
 } from "../../types"
@@ -131,6 +132,24 @@ export const foodCameraService = {
         { params: { startDate, endDate } },
       )
       return response.data as DiaryExistenceResponse
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async updateExtraWater(
+    date: string,
+    deltaWater: number,
+  ): Promise<ExtraWaterUpdateResponse> {
+    try {
+      const response = await api.patch(
+        `/food-camera/date-analysis/${date}/extra-water`,
+        { deltaWater },
+      )
+      return response.data as ExtraWaterUpdateResponse
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)

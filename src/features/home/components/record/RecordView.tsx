@@ -42,7 +42,7 @@ export function RecordView({
   selectedMealType,
   onSelectMealType,
 }: RecordViewProps) {
-  const record = useHomeRecord()
+  const record = useHomeRecord(selectedDate)
   const {
     isAnalyzing,
     isResultOpen,
