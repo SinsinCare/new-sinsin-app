@@ -1,5 +1,5 @@
 import type {
-  IChatApiService,
+  ChatService,
   ChatList,
   ChatCreate,
   ChatDetail,
@@ -16,7 +16,7 @@ import type { ApiResponse } from "../../types/api"
 import { isMockMode } from "../../config/appConfig"
 import { api } from "../core"
 
-function createRealChatService(): IChatApiService {
+function createRealChatService(): ChatService {
   return {
     async getChats() {
       const { data } = await api.get<ApiResponse<ChatList>>(
@@ -75,9 +75,9 @@ function createRealChatService(): IChatApiService {
 
 // --- Factory: mock/real switching ---
 
-let cached: IChatApiService | null = null
+let cached: ChatService | null = null
 
-function getChatApiService(): IChatApiService {
+function getChatApiService(): ChatService {
   if (cached) return cached
   if (isMockMode()) {
     const { createMockChatService } = require("./mock/mockChatService") // eslint-disable-line @typescript-eslint/no-require-imports
@@ -88,7 +88,7 @@ function getChatApiService(): IChatApiService {
   return cached!
 }
 
-export const chatApiService: IChatApiService = {
+export const chatApiService: ChatService = {
   getChats: () => getChatApiService().getChats(),
   createChat: () => getChatApiService().createChat(),
   getChatDetail: (id) => getChatApiService().getChatDetail(id),

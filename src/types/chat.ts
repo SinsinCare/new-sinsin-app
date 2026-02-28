@@ -145,7 +145,7 @@ export function mapChatCreate(dto: ChatCreate): {
 
 // === Service Interface ===
 
-export interface IChatApiService {
+export interface ChatService {
   /** 대화 목록 조회 */
   getChats(): Promise<{
     conversations: Chat[]
