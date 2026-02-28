@@ -84,8 +84,6 @@ export default function ConsultScreen() {
 
   const chatHistoryList: Chat[] = chats?.conversations ?? []
 
-  console.log("chatHistoryList", chatHistoryList)
-
   const isIdle = messages.length === 0 && !isTyping
   const canSend = !!inputMessage.trim() && !isTyping && !isSending
   const menuTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
@@ -136,10 +134,22 @@ export default function ConsultScreen() {
     setIsInputFocused(false)
   }
 
+  const [pendingFaqMessage, setPendingFaqMessage] = useState<string | null>(
+    null,
+  )
+
   const handleFaqPress = (entry: FaqCardEntry) => {
     setCategory(entry.category)
-    sendMessage(entry.description)
+    setPendingFaqMessage(entry.description)
   }
+
+  // category가 설정된 후 pending FAQ 메시지 전송
+  useEffect(() => {
+    if (pendingFaqMessage && category) {
+      sendMessage(pendingFaqMessage)
+      setPendingFaqMessage(null)
+    }
+  }, [pendingFaqMessage, category, sendMessage])
 
   const handleSend = () => {
     sendMessage(inputMessage)
