@@ -1,15 +1,15 @@
 import type {
   IChatApiService,
-  ConversationListDto,
-  ConversationCreate,
-  ConversationDetailDto,
-  MessageDto,
-  SummaryDto,
+  ChatList,
+  ChatCreate,
+  ChatDetail,
+  MessageData,
+  Summary,
 } from "../../types/chat"
 import {
-  mapConversationSummary,
-  mapConversationCreate,
-  mapConversationDetail,
+  mapChatSummary,
+  mapChatCreate,
+  mapChatDetail,
   mapMessage,
 } from "../../types/chat"
 import type { ApiResponse } from "../../types/api"
@@ -18,43 +18,43 @@ import { api } from "../core"
 
 function createRealChatService(): IChatApiService {
   return {
-    async getConversations() {
-      const { data } = await api.get<ApiResponse<ConversationListDto>>(
+    async getChats() {
+      const { data } = await api.get<ApiResponse<ChatList>>(
         "/chat/conversations",
       )
       return {
-        conversations: data.result.conversations.map(mapConversationSummary),
+        conversations: data.result.conversations.map(mapChatSummary),
         totalCount: data.result.totalCount,
       }
     },
 
-    async createConversation() {
-      const { data } = await api.post<ApiResponse<ConversationCreate>>(
+    async createChat() {
+      const { data } = await api.post<ApiResponse<ChatCreate>>(
         "/chat/conversations",
       )
-      return mapConversationCreate(data.result)
+      return mapChatCreate(data.result)
     },
 
-    async getConversationDetail(conversationId: number) {
-      const { data } = await api.get<ApiResponse<ConversationDetailDto>>(
+    async getChatDetail(conversationId: number) {
+      const { data } = await api.get<ApiResponse<ChatDetail>>(
         `/chat/conversations/${conversationId}`,
       )
-      return mapConversationDetail(data.result)
+      return mapChatDetail(data.result)
     },
 
-    async deleteConversation(conversationId: number) {
+    async deleteChat(conversationId: number) {
       await api.delete(`/chat/conversations/${conversationId}`)
     },
 
     async getMessages(conversationId: number) {
-      const { data } = await api.get<ApiResponse<MessageDto[]>>(
+      const { data } = await api.get<ApiResponse<MessageData[]>>(
         `/chat/conversations/${conversationId}/messages`,
       )
       return data.result.map((m) => mapMessage(m, conversationId))
     },
 
     async sendMessage(conversationId: number, content: string) {
-      const { data } = await api.post<ApiResponse<MessageDto>>(
+      const { data } = await api.post<ApiResponse<MessageData>>(
         `/chat/conversations/${conversationId}/messages`,
         { content },
       )
@@ -62,7 +62,7 @@ function createRealChatService(): IChatApiService {
     },
 
     async generateSummary(conversationId: number) {
-      const { data } = await api.post<ApiResponse<SummaryDto>>(
+      const { data } = await api.post<ApiResponse<Summary>>(
         `/chat/conversations/${conversationId}/summary`,
       )
       return {
@@ -89,10 +89,10 @@ function getChatApiService(): IChatApiService {
 }
 
 export const chatApiService: IChatApiService = {
-  getConversations: () => getChatApiService().getConversations(),
-  createConversation: () => getChatApiService().createConversation(),
-  getConversationDetail: (id) => getChatApiService().getConversationDetail(id),
-  deleteConversation: (id) => getChatApiService().deleteConversation(id),
+  getChats: () => getChatApiService().getChats(),
+  createChat: () => getChatApiService().createChat(),
+  getChatDetail: (id) => getChatApiService().getChatDetail(id),
+  deleteChat: (id) => getChatApiService().deleteChat(id),
   getMessages: (id) => getChatApiService().getMessages(id),
   sendMessage: (id, content) => getChatApiService().sendMessage(id, content),
   generateSummary: (id) => getChatApiService().generateSummary(id),

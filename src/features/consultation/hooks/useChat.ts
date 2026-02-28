@@ -24,7 +24,7 @@ export function useChat() {
 
         // 첫 메시지: 대화 생성 (greeting은 표시하지 않음 — 유저 메시지가 먼저)
         if (activeConvId === null) {
-          const { conversation } = await chatApiService.createConversation()
+          const { conversation } = await chatApiService.createChat()
           activeConvId = conversation.id
           convIdRef.current = activeConvId
           setConversationId(activeConvId)
@@ -62,7 +62,7 @@ export function useChat() {
 
       try {
         const { conversation, messages: loadedMessages } =
-          await chatApiService.getConversationDetail(targetConvId)
+          await chatApiService.getChatDetail(targetConvId)
         convIdRef.current = conversation.id
         setConversationId(conversation.id)
         setCategory(conversation.category ?? null)

@@ -1,6 +1,6 @@
 import type {
   IChatApiService,
-  Conversation,
+  Chat,
   Message,
   AiMessageCategory,
 } from "../../../types/chat"
@@ -46,11 +46,11 @@ const CATEGORY_LABELS: Record<AiMessageCategory, string> = {
 export function createMockChatService(): IChatApiService {
   let nextConvId = 1
   let nextMsgId = 1
-  const conversations: Conversation[] = []
+  const conversations: Chat[] = []
   const messagesStore: Map<number, Message[]> = new Map()
 
   return {
-    async getConversations() {
+    async getChats() {
       await delay()
       return {
         conversations: [...conversations].sort(
@@ -60,11 +60,11 @@ export function createMockChatService(): IChatApiService {
       }
     },
 
-    async createConversation() {
+    async createChat() {
       await delay()
       const convId = nextConvId++
       const now = new Date()
-      const conversation: Conversation = {
+      const conversation: Chat = {
         id: convId,
         title: "새 상담",
         status: "ACTIVE",
@@ -86,7 +86,7 @@ export function createMockChatService(): IChatApiService {
       return { conversation, greetingMessage }
     },
 
-    async getConversationDetail(conversationId: number) {
+    async getChatDetail(conversationId: number) {
       await delay()
       const conv = conversations.find((c) => c.id === conversationId)
       if (!conv) throw new Error(`Conversation ${conversationId} not found`)
@@ -97,7 +97,7 @@ export function createMockChatService(): IChatApiService {
       }
     },
 
-    async deleteConversation(conversationId: number) {
+    async deleteChat(conversationId: number) {
       await delay()
       const idx = conversations.findIndex((c) => c.id === conversationId)
       if (idx !== -1) conversations.splice(idx, 1)

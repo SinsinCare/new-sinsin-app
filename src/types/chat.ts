@@ -1,6 +1,6 @@
 // === API DTO Types (match backend response exactly) ===
 
-export type ConversationStatus = "ACTIVE" | "ARCHIVED"
+export type ChatStatus = "ACTIVE" | "ARCHIVED"
 
 export type MessageRole = "USER" | "ASSISTANT" | "SYSTEM"
 
@@ -11,39 +11,39 @@ export type ChatCategory =
   | "SYMPTOM"
   | "CHECKUP"
 
-export interface ConversationSummary {
+export interface ChatSummary {
   conversationId: number
   title: string
   summary: string | null
-  status: ConversationStatus
+  status: ChatStatus
   messageCount: number
   createdAt: string // ISO date-time
   updatedAt: string
 }
 
-export interface ConversationCreate {
+export interface ChatCreate {
   conversationId: number
   title: string
   createdAt: string
-  greetingMessage: MessageDto
+  greetingMessage: MessageData
 }
 
-export interface ConversationDetailDto {
+export interface ChatDetail {
   conversationId: number
   title: string
   summary: string | null
-  status: ConversationStatus
+  status: ChatStatus
   createdAt: string
   updatedAt: string
-  messages: MessageDto[]
+  messages: MessageData[]
 }
 
-export interface ConversationListDto {
-  conversations: ConversationSummary[]
+export interface ChatList {
+  conversations: ChatSummary[]
   totalCount: number
 }
 
-export interface MessageDto {
+export interface MessageData {
   messageId: number
   role: MessageRole
   content: string
@@ -52,22 +52,22 @@ export interface MessageDto {
   createdAt: string
 }
 
-export interface MessageSendRequestDto {
+export interface MessageSendRequest {
   content: string // max 5000 chars
 }
 
-export interface SummaryDto {
+export interface Summary {
   conversationId: number
   summary: string // JSON format
 }
 
 // === Domain Models (app-internal, Date objects, camelCase) ===
 
-export interface Conversation {
+export interface Chat {
   id: number
   title: string
   summary?: string
-  status: ConversationStatus
+  status: ChatStatus
   category?: ChatCategory // 상담 카테고리 — API에 추가 예정, 현재 undefined 허용
   messageCount?: number
   createdAt: Date
@@ -86,7 +86,7 @@ export interface Message {
 
 // === Mapper Functions ===
 
-export function mapConversationSummary(dto: ConversationSummary): Conversation {
+export function mapChatSummary(dto: ChatSummary): Chat {
   return {
     id: dto.conversationId,
     title: dto.title,
@@ -98,8 +98,8 @@ export function mapConversationSummary(dto: ConversationSummary): Conversation {
   }
 }
 
-export function mapConversationDetail(dto: ConversationDetailDto): {
-  conversation: Conversation
+export function mapChatDetail(dto: ChatDetail): {
+  conversation: Chat
   messages: Message[]
 } {
   return {
@@ -115,7 +115,7 @@ export function mapConversationDetail(dto: ConversationDetailDto): {
   }
 }
 
-export function mapMessage(dto: MessageDto, conversationId: number): Message {
+export function mapMessage(dto: MessageData, conversationId: number): Message {
   return {
     id: dto.messageId,
     conversationId,
@@ -127,8 +127,8 @@ export function mapMessage(dto: MessageDto, conversationId: number): Message {
   }
 }
 
-export function mapConversationCreate(dto: ConversationCreate): {
-  conversation: Conversation
+export function mapChatCreate(dto: ChatCreate): {
+  conversation: Chat
   greetingMessage: Message
 } {
   return {
@@ -147,24 +147,24 @@ export function mapConversationCreate(dto: ConversationCreate): {
 
 export interface IChatApiService {
   /** 대화 목록 조회 */
-  getConversations(): Promise<{
-    conversations: Conversation[]
+  getChats(): Promise<{
+    conversations: Chat[]
     totalCount: number
   }>
 
   /** 새 대화 생성 (인사 메시지 포함) */
-  createConversation(): Promise<{
-    conversation: Conversation
+  createChat(): Promise<{
+    conversation: Chat
     greetingMessage: Message
   }>
 
   /** 대화 상세 조회 (메시지 포함) */
-  getConversationDetail(
+  getChatDetail(
     conversationId: number,
-  ): Promise<{ conversation: Conversation; messages: Message[] }>
+  ): Promise<{ conversation: Chat; messages: Message[] }>
 
   /** 대화 삭제 (소프트 삭제) */
-  deleteConversation(conversationId: number): Promise<void>
+  deleteChat(conversationId: number): Promise<void>
 
   /** 메시지 목록 조회 */
   getMessages(conversationId: number): Promise<Message[]>
