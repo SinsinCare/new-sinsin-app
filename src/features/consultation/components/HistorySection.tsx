@@ -2,11 +2,11 @@ import { YStack, XStack, Text } from "tamagui"
 import { Pressable } from "react-native"
 import { tokens } from "@/src/theme/tokens"
 import { HistoryCard } from "./HistoryCard"
-import type { ConsultHistoryItem } from "../types"
+import type { Chat } from "@/src/types/chat"
 
 interface HistorySectionProps {
-  items: ConsultHistoryItem[]
-  onItemPress: (id: string) => void
+  items: Chat[]
+  onItemPress: (id: number) => void
   onSeeAll: () => void
 }
 

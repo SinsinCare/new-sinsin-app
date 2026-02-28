@@ -18,10 +18,8 @@ import {
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-import type {
-  ConsultHistoryItem,
-  FaqCardEntry,
-} from "@/src/features/consultation/types"
+import type { Chat } from "@/src/types/chat"
+import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import {
   CATEGORY_LIST,
@@ -59,9 +57,7 @@ export default function ConsultScreen() {
   const [inputMessage, setInputMessage] = useState("")
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [renameTarget, setRenameTarget] = useState<ConsultHistoryItem | null>(
-    null,
-  )
+  const [renameTarget, setRenameTarget] = useState<Chat | null>(null)
   const [attachMenuOpen, setAttachMenuOpen] = useState(false)
   const [attachMenuPosition, setAttachMenuPosition] = useState({
     bottom: 0,
@@ -82,7 +78,7 @@ export default function ConsultScreen() {
   } = useChat()
 
   const isIdle = messages.length === 0 && !isTyping
-  const canSend = !!inputMessage.trim() && !!category && !isTyping && !isSending
+  const canSend = !!inputMessage.trim() && !isTyping && !isSending
   const menuTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
 
   const handleHistoryPress = () => {
@@ -103,7 +99,7 @@ export default function ConsultScreen() {
     loadConversation(id)
   }
 
-  const handleRenamePress = (item: ConsultHistoryItem) => {
+  const handleRenamePress = (item: Chat) => {
     setRenameTarget(item)
   }
 
@@ -304,6 +300,7 @@ export default function ConsultScreen() {
           </View>
         </YStack>
       </KeyboardAvoidingView>
+      {/* Chat History Sheet */}
       <ChatHistorySheet.Layout
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
@@ -316,10 +313,10 @@ export default function ConsultScreen() {
           {MOCK_HISTORY_LIST.map((item) => (
             <ChatHistoryCard
               key={item.id}
-              summary={item.summary}
-              content={item.content}
-              timestamp={item.timestamp.toISOString()}
-              onPress={() => handleSelectHistory(Number(item.id.split("-")[1]))}
+              summary={item.title}
+              content={item.summary ?? ""}
+              timestamp={item.createdAt.toISOString()}
+              onPress={() => handleSelectHistory(item.id)}
               onRename={() => handleRenamePress(item)}
               onDelete={() => {}}
               onShare={() => {}}
@@ -328,11 +325,12 @@ export default function ConsultScreen() {
         </ChatHistorySheet.ContentLayout>
         <RenameModal
           visible={renameTarget !== null}
-          currentName={renameTarget?.summary ?? ""}
+          currentName={renameTarget?.title ?? ""}
           onConfirm={handleRenameConfirm}
           onCancel={() => setRenameTarget(null)}
         />
       </ChatHistorySheet.Layout>
+      {/* Attach Menu */}
       <Modal
         visible={attachMenuOpen}
         transparent

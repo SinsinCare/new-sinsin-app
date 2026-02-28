@@ -2,11 +2,11 @@ import { XStack, YStack, Text } from "tamagui"
 import { Pressable, View } from "react-native"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
 import { getCategoryMeta } from "../data/mockData"
-import type { ConsultHistoryItem } from "../types"
+import type { Chat } from "@/src/types/chat"
 
 interface HistoryCardProps {
-  item: ConsultHistoryItem
-  onPress: (id: string) => void
+  item: Chat
+  onPress: (id: number) => void
   showAnswer?: boolean
 }
 
@@ -38,7 +38,7 @@ export function HistoryCard({
   onPress,
   showAnswer = false,
 }: HistoryCardProps) {
-  const meta = getCategoryMeta(item.category)
+  const meta = getCategoryMeta(item.category ?? "")
 
   return (
     <Pressable
@@ -55,20 +55,20 @@ export function HistoryCard({
               flex={1}
               numberOfLines={1}
             >
-              {item.firstQuestion}
+              {item.title}
             </Text>
             <Text fontSize="$3" color="$grey6" marginLeft="$2">
-              {formatTimestamp(item.timestamp)}
+              {formatTimestamp(item.createdAt)}
             </Text>
           </XStack>
-          {showAnswer && item.firstAnswer ? (
+          {showAnswer && item.summary ? (
             <Text
               fontSize="$3"
               color="$grey5"
               numberOfLines={2}
               lineHeight={18}
             >
-              {item.firstAnswer}
+              {item.summary}
             </Text>
           ) : (
             <XStack gap="$2" alignItems="center">

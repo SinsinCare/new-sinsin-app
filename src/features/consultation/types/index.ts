@@ -16,14 +16,6 @@ export interface FaqItem {
   answer: string
 }
 
-export interface ConsultHistoryItem {
-  id: string
-  category: ChatCategory
-  summary: string
-  content: string
-  timestamp: Date
-}
-
 export interface QuickQuestion {
   id: string
   category: ChatCategory
