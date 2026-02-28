@@ -2,10 +2,9 @@ import type {
   UserProfile,
   HealthRecord,
   FoodRecord,
-  ChatConversation,
-  ChatMessage,
   DailyHealthLog,
 } from "../../../types"
+import type { Chat, Message } from "../../../types/chat"
 import { DEFAULT_MOCK_USER } from "../../auth/mock/mockUser"
 
 // CKD 3기 환자 프로필
@@ -61,35 +60,140 @@ export const MOCK_FOOD_RECORDS: FoodRecord[] = [
 ]
 
 // 채팅 대화
-export const MOCK_CONVERSATIONS: ChatConversation[] = [
+const now = new Date()
+const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+
+export const MOCK_CHATS: Chat[] = [
   {
-    id: "conv-001",
-    userId: DEFAULT_MOCK_USER.uid,
+    id: 1,
     title: "저염 식단 문의",
-    category: "diet",
-    createdAt: new Date("2024-11-20"),
-    updatedAt: new Date("2024-11-20"),
+    summary:
+      "만성신장병 3기 환자의 나트륨 섭취 제한 방법에 대해 상담한 내용입니다.",
+    status: "ACTIVE",
+    category: "DIET",
+    messageCount: 2,
+    createdAt: new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      10,
+      0,
+    ),
+    updatedAt: new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      10,
+      0,
+    ),
+  },
+  {
+    id: 2,
+    title: "칼륨 수치가 높을 때 과일 섭취 제한은?",
+    summary:
+      "고칼륨혈증 시 바나나, 멜론, 키위 등을 피하고, 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하세요.",
+    status: "ACTIVE",
+    category: "DIET",
+    messageCount: 2,
+    createdAt: yesterday,
+    updatedAt: yesterday,
+  },
+  {
+    id: 3,
+    title: "GFR 수치 해석 방법이 궁금합니다",
+    summary:
+      "GFR(사구체여과율)은 신장 기능을 나타내는 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
+    status: "ACTIVE",
+    category: "CHECKUP",
+    messageCount: 2,
+    createdAt: twoDaysAgo,
+    updatedAt: twoDaysAgo,
   },
 ]
 
 // 채팅 메시지
-export const MOCK_MESSAGES: ChatMessage[] = [
-  {
-    id: "msg-001",
-    conversationId: "conv-001",
-    role: "user",
-    content: "만성신장병 3기 환자인데 나트륨 섭취를 어떻게 줄일 수 있을까요?",
-    createdAt: new Date("2024-11-20T10:00:00"),
-  },
-  {
-    id: "msg-002",
-    conversationId: "conv-001",
-    role: "assistant",
-    content:
-      "만성신장병 3기 환자분의 경우 하루 나트륨 섭취량을 2,000mg 이하로 제한하는 것이 권장됩니다.",
-    createdAt: new Date("2024-11-20T10:00:30"),
-  },
-]
+export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
+  [
+    1,
+    [
+      {
+        id: 1,
+        conversationId: 1,
+        role: "user",
+        content: "만성신장병 3기 환자인데 나트륨 섭취를 어떻게 줄일 수 있을까요?",
+        createdAt: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          10,
+          0,
+        ),
+      },
+      {
+        id: 2,
+        conversationId: 1,
+        role: "assistant",
+        content:
+          "만성신장병 3기 환자분의 경우 하루 나트륨 섭취량을 2,000mg 이하로 제한하는 것이 권장됩니다. 소금 대신 레몬즙, 식초, 후추 등 천연 양념을 활용하세요.",
+        aiCategory: "DIET",
+        aiCategoryLabel: "음식·식단",
+        createdAt: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          10,
+          0,
+          30,
+        ),
+      },
+    ],
+  ],
+  [
+    2,
+    [
+      {
+        id: 3,
+        conversationId: 2,
+        role: "user",
+        content: "칼륨 수치가 높을 때 과일 섭취 제한은?",
+        createdAt: yesterday,
+      },
+      {
+        id: 4,
+        conversationId: 2,
+        role: "assistant",
+        content:
+          "고칼륨혈증이 있을 때는 바나나, 멜론, 키위, 오렌지를 피하세요. 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하는 것이 좋습니다.",
+        aiCategory: "DIET",
+        aiCategoryLabel: "음식·식단",
+        createdAt: yesterday,
+      },
+    ],
+  ],
+  [
+    3,
+    [
+      {
+        id: 5,
+        conversationId: 3,
+        role: "user",
+        content: "GFR 수치 해석 방법이 궁금합니다",
+        createdAt: twoDaysAgo,
+      },
+      {
+        id: 6,
+        conversationId: 3,
+        role: "assistant",
+        content:
+          "GFR(사구체여과율)은 신장 기능의 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
+        aiCategory: "CHECKUP",
+        aiCategoryLabel: "검사·수치해석",
+        createdAt: twoDaysAgo,
+      },
+    ],
+  ],
+])
 
 // 일일 건강 로그
 export const MOCK_DAILY_LOG: DailyHealthLog = {

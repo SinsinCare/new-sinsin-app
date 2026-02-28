@@ -2,8 +2,6 @@ import type {
   UserProfile,
   HealthRecord,
   FoodRecord,
-  ChatConversation,
-  ChatMessage,
   DailyHealthLog,
   SignupRequest,
 } from "../../types"
@@ -38,12 +36,6 @@ export interface IFirestoreService {
   addHealthRecord(record: Omit<HealthRecord, "id">): Promise<string>
   getFoodRecords(userId: string, date: Date): Promise<FoodRecord[]>
   addFoodRecord(record: Omit<FoodRecord, "id">): Promise<string>
-  getConversations(userId: string): Promise<ChatConversation[]>
-  createConversation(
-    conversation: Omit<ChatConversation, "id">,
-  ): Promise<string>
-  getMessages(conversationId: string): Promise<ChatMessage[]>
-  addMessage(message: Omit<ChatMessage, "id">): Promise<string>
   getDailyLog(userId: string, date: Date): Promise<DailyHealthLog | null>
   setDailyLog(log: Omit<DailyHealthLog, "id">): Promise<void>
 }

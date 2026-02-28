@@ -3,16 +3,12 @@ import type {
   UserProfile,
   HealthRecord,
   FoodRecord,
-  ChatConversation,
-  ChatMessage,
   DailyHealthLog,
 } from "../../../types"
 import {
   MOCK_USER_PROFILE,
   MOCK_HEALTH_RECORDS,
   MOCK_FOOD_RECORDS,
-  MOCK_CONVERSATIONS,
-  MOCK_MESSAGES,
   MOCK_DAILY_LOG,
 } from "./mockData"
 
@@ -24,12 +20,6 @@ const healthRecords = new Map<string, HealthRecord>(
 )
 const foodRecords = new Map<string, FoodRecord>(
   MOCK_FOOD_RECORDS.map((r) => [r.id, r]),
-)
-const conversations = new Map<string, ChatConversation>(
-  MOCK_CONVERSATIONS.map((c) => [c.id, c]),
-)
-const messages = new Map<string, ChatMessage>(
-  MOCK_MESSAGES.map((m) => [m.id, m]),
 )
 const dailyLogs = new Map<string, DailyHealthLog>([
   [MOCK_DAILY_LOG.id, MOCK_DAILY_LOG],
@@ -95,40 +85,6 @@ export const mockFirestoreService: IFirestoreService = {
     await delay()
     const id = generateId("fr")
     foodRecords.set(id, { ...record, id } as FoodRecord)
-    return id
-  },
-
-  async getConversations(userId: string) {
-    await delay()
-    return Array.from(conversations.values())
-      .filter((c) => c.userId === userId)
-      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-  },
-
-  async createConversation(conversation: Omit<ChatConversation, "id">) {
-    await delay()
-    const id = generateId("conv")
-    const now = new Date()
-    conversations.set(id, {
-      ...conversation,
-      id,
-      createdAt: now,
-      updatedAt: now,
-    } as ChatConversation)
-    return id
-  },
-
-  async getMessages(conversationId: string) {
-    await delay()
-    return Array.from(messages.values())
-      .filter((m) => m.conversationId === conversationId)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-  },
-
-  async addMessage(message: Omit<ChatMessage, "id">) {
-    await delay()
-    const id = generateId("msg")
-    messages.set(id, { ...message, id, createdAt: new Date() } as ChatMessage)
     return id
   },
 

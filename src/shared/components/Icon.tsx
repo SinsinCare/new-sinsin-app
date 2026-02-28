@@ -9,6 +9,7 @@ import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
 import FlyChat from "@/assets/icons/fly-chat.svg"
 import ForkKnife from "@/assets/icons/fork-knife.svg"
+import Gallery from "@/assets/icons/gallery.svg"
 import HeartText from "@/assets/icons/heart-text.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
@@ -16,6 +17,7 @@ import Location from "@/assets/icons/location.svg"
 import Mail from "@/assets/icons/mail.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
+import Paperclip from "@/assets/icons/paperclip.svg"
 import Pill from "@/assets/icons/pill.svg"
 import Plus from "@/assets/icons/plus.svg"
 import Recipe from "@/assets/icons/recipe.svg"
@@ -39,6 +41,7 @@ const icons = {
   cross: Cross,
   "fly-chat": FlyChat,
   "fork-knife": ForkKnife,
+  gallery: Gallery,
   "heart-text": HeartText,
   history: History,
   home: Home,
@@ -47,6 +50,7 @@ const icons = {
   mail: Mail,
   menu: Menu,
   notification: Notification,
+  paperclip: Paperclip,
   pencil: Pencil,
   phosphorus: Phosphorus,
   pill: Pill,

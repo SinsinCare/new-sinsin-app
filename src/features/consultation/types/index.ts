@@ -1,5 +1,5 @@
 import { IconName } from "@/src/shared/components"
-import type { ChatCategory } from "@/src/types/models"
+import type { ChatCategory } from "@/src/types/chat"
 
 export type { ChatCategory }
 
@@ -14,14 +14,6 @@ export interface FaqItem {
   category: ChatCategory
   question: string
   answer: string
-}
-
-export interface ConsultHistoryItem {
-  id: string
-  category: ChatCategory
-  summary: string
-  content: string
-  timestamp: Date
 }
 
 export interface QuickQuestion {
