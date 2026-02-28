@@ -24,10 +24,6 @@ export const firestoreService: IFirestoreService = {
   getFoodRecords: (userId, date) =>
     getFirestoreService().getFoodRecords(userId, date),
   addFoodRecord: (record) => getFirestoreService().addFoodRecord(record),
-  getConversations: (userId) => getFirestoreService().getConversations(userId),
-  createConversation: (conv) => getFirestoreService().createConversation(conv),
-  getMessages: (convId) => getFirestoreService().getMessages(convId),
-  addMessage: (message) => getFirestoreService().addMessage(message),
   getDailyLog: (userId, date) =>
     getFirestoreService().getDailyLog(userId, date),
   setDailyLog: (log) => getFirestoreService().setDailyLog(log),

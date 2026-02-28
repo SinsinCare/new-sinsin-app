@@ -1,9 +1,11 @@
 import type {
-  IChatApiService,
+  ChatService,
   Chat,
   Message,
-  AiMessageCategory,
+  ChatCategory,
+  ChatList,
 } from "../../../types/chat"
+import { MOCK_CHATS, MOCK_CHAT_MESSAGES } from "./mockData"
 
 const delay = (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -21,41 +23,43 @@ function pickMockReply(): string {
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
-function pickMockCategory(): AiMessageCategory {
-  const categories: AiMessageCategory[] = [
-    "DIET_POTASSIUM",
-    "DIET_SODIUM",
-    "GENERAL",
+function pickMockCategory(): ChatCategory {
+  const categories: ChatCategory[] = [
+    "DIET",
+    "MEDICINE",
     "LIFESTYLE",
+    "SYMPTOM",
+    "CHECKUP",
   ]
   return categories[Math.floor(Math.random() * categories.length)]
 }
 
-const CATEGORY_LABELS: Record<AiMessageCategory, string> = {
-  DIET_POTASSIUM: "식이-칼륨",
-  DIET_SODIUM: "식이-나트륨",
-  DIET_PROTEIN: "식이-단백질",
-  MEDICATION: "약물",
-  SYMPTOMS: "증상",
-  LIFESTYLE: "생활습관",
-  DIALYSIS: "투석",
-  GENERAL: "일반",
-  OTHER: "기타",
+const CATEGORY_LABELS: Record<ChatCategory, string> = {
+  DIET: "음식·식단",
+  MEDICINE: "약·영양제",
+  LIFESTYLE: "생활관리",
+  SYMPTOM: "증상",
+  CHECKUP: "검사·수치해석",
 }
 
-export function createMockChatService(): IChatApiService {
-  let nextConvId = 1
-  let nextMsgId = 1
-  const conversations: Chat[] = []
-  const messagesStore: Map<number, Message[]> = new Map()
+export function createMockChatService(): ChatService {
+  let nextConvId = MOCK_CHATS.length + 1
+  let nextMsgId =
+    Math.max(
+      ...[...MOCK_CHAT_MESSAGES.values()].flatMap((msgs) =>
+        msgs.map((m) => m.id),
+      ),
+    ) + 1
+  const conversations: Chat[] = [...MOCK_CHATS]
+  const messagesStore: Map<number, Message[]> = new Map(
+    [...MOCK_CHAT_MESSAGES.entries()].map(([k, v]) => [k, [...v]]),
+  )
 
   return {
     async getChats() {
       await delay()
       return {
-        conversations: [...conversations].sort(
-          (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-        ),
+        conversations: conversations,
         totalCount: conversations.length,
       }
     },
