@@ -3,7 +3,6 @@ import type {
   Chat,
   Message,
   ChatCategory,
-  ChatList,
 } from "../../../types/chat"
 import { MOCK_CHATS, MOCK_CHAT_MESSAGES } from "./mockData"
 

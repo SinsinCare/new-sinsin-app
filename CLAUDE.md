@@ -50,7 +50,6 @@ npm run ios-no-user                        # Mock mode without user profile
 - `authService.ts` - Custom API auth methods (signInWithEmail, signup, signOut, restoreSession)
 - `emailService.ts` - Email verification and OTP API endpoints
 - `firestoreService.ts` - Data CRUD (currently always uses mock, awaiting data API)
-- `aiService.ts` - Backend API calls to `/analyze-food` and `/chat` endpoints
 - `mock/` - Mock implementations for development (controlled by `src/config/appConfig.ts`: `isMockUser()` for auth, `isMockMode()` for data)
 
 ### Custom Hooks (`src/hooks/`)
