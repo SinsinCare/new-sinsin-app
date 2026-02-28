@@ -43,6 +43,9 @@ import { ChatHistorySheet } from "@/src/features/consultation/components/ChatHis
 import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCopyToClipboard"
 import { ChatHistoryCard } from "@/src/features/consultation/components/ChatHistoryCard"
 import { RenameModal } from "@/src/features/consultation/components/RenameModal"
+import { useQuery } from "@tanstack/react-query"
+import { chatHistoryQuery } from "@/src/features/consultation/data/queyOptions"
+import { ChatHistoryCardSkeleton } from "@/src/features/consultation/components/ChatHistoryCardSkeleton"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -76,6 +79,12 @@ export default function ConsultScreen() {
     resetChat,
     regenerateLastMessage,
   } = useChat()
+
+  const { data: chats, isFetching } = useQuery(chatHistoryQuery(historyOpen))
+
+  const chatHistoryList: Chat[] = chats?.conversations ?? []
+
+  console.log("chatHistoryList", chatHistoryList)
 
   const isIdle = messages.length === 0 && !isTyping
   const canSend = !!inputMessage.trim() && !isTyping && !isSending
@@ -310,18 +319,26 @@ export default function ConsultScreen() {
           onClose={() => setHistoryOpen(false)}
         />
         <ChatHistorySheet.ContentLayout>
-          {MOCK_HISTORY_LIST.map((item) => (
-            <ChatHistoryCard
-              key={item.id}
-              summary={item.title}
-              content={item.summary ?? ""}
-              timestamp={item.createdAt.toISOString()}
-              onPress={() => handleSelectHistory(item.id)}
-              onRename={() => handleRenamePress(item)}
-              onDelete={() => {}}
-              onShare={() => {}}
-            />
-          ))}
+          {isFetching ? (
+            <>
+              <ChatHistoryCardSkeleton />
+              <ChatHistoryCardSkeleton />
+              <ChatHistoryCardSkeleton />
+            </>
+          ) : (
+            chatHistoryList.map((item) => (
+              <ChatHistoryCard
+                key={item.id}
+                summary={item.title}
+                content={item.summary ?? ""}
+                timestamp={item.createdAt.toISOString()}
+                onPress={() => handleSelectHistory(item.id)}
+                onRename={() => handleRenamePress(item)}
+                onDelete={() => {}}
+                onShare={() => {}}
+              />
+            ))
+          )}
         </ChatHistorySheet.ContentLayout>
         <RenameModal
           visible={renameTarget !== null}
