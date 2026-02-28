@@ -1,4 +1,5 @@
 import { Pressable } from "react-native"
+import { Image } from "expo-image"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
@@ -13,14 +14,21 @@ function formatTime(date: Date): string {
 }
 
 function AssistantAvatar() {
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === "dark"
+
   return (
-    <View
-      width={36}
-      height={36}
-      borderRadius={18}
-      backgroundColor="$grey8"
-      marginTop="$1"
-    />
+    <View width={36} height={36} borderRadius={18} overflow="hidden" marginTop="$1">
+      <Image
+        source={
+          isDarkMode
+            ? require("@/assets/images/Sin_dark.png")
+            : require("@/assets/images/Sin_light.png")
+        }
+        style={{ width: 36, height: 36 }}
+        contentFit="cover"
+      />
+    </View>
   )
 }
 
