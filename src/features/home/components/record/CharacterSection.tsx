@@ -39,8 +39,8 @@ export function CharacterSection({
           paddingVertical={5}
           borderRadius="$6"
         >
-          <FireIcon width={16} height={16} />
-          <Text fontSize={18} fontWeight="600">
+          <FireIcon width={24} height={24} />
+          <Text fontSize={17} fontWeight="600">
             {streakText}
           </Text>
         </XStack>
@@ -53,8 +53,8 @@ export function CharacterSection({
           paddingVertical={5}
           borderRadius="$6"
         >
-          <CheckIcon width={16} height={16} />
-          <Text fontSize={18} fontWeight="600">
+          <CheckIcon width={24} height={24} />
+          <Text fontSize={17} fontWeight="600">
             {guideText}
           </Text>
         </XStack>

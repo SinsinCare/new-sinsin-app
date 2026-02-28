@@ -15,7 +15,7 @@
 앱의 기본 정보를 설정합니다.
 
 - `ios.bundleIdentifier`: `com.mediology.sinsin-care`
-- `android.package`: `com.mediology.sinsin-care`
+- `android.package`: `com.mediology.sinsin_care`
 - `version`: 앱 버전 (예: 1.0.0)
 - `ios.buildNumber`: 빌드 번호 (업로드 시마다 증가 필요)
 
@@ -25,7 +25,7 @@
 
 - `development`: 개발팀 내부 테스트용 (Development Client)
 - `preview`: 내부 공유 및 테스트용 (Ad-hoc)
-- `production`: 스토어 배포용 (Release)
+- `production`: 스토어 배포용 (Release, `autoIncrement: true` + `cli.appVersionSource: "remote"`로 Android `versionCode` 자동 증가)
 
 ## 3. 핵심 명령어
 
@@ -71,3 +71,4 @@ EAS는 Apple의 배포 인증서 및 프로비저닝 프로필을 자동으로 �
 - **빌드 로그 확인**: 빌드가 시작될 때 출력되는 URL(expo.dev/...)을 통해 전 세계 어디서든 빌드 과정을 모니터링할 수 있습니다.
 - **번들 ID 충돌**: 빌드 시 "Bundle identifier is not available" 에러가 발생하면, 선택한 Apple 팀에 해당 ID가 이미 등록되어 있는지 또는 다른 팀(Individual vs Company)을 선택했는지 확인하세요.
 - **Node.js 버전**: `.nvmrc` 파일의 버전을 참고하여 EAS 빌드 환경이 구성됩니다.
+- **Android 버전 코드 자동 증가**: `appVersionSource`가 `remote`이면 `app.json`의 `android.versionCode`는 사용되지 않습니다. 같은 `versionCode`를 재제출할 수 없으므로, 재제출 전에는 `eas build --platform android --profile production`으로 새 빌드를 먼저 생성하세요.

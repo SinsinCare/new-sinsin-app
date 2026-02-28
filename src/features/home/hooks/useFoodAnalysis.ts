@@ -3,6 +3,7 @@ import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import { MealType } from "../types"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export function useFoodAnalysis() {
   const [analysisResult, setAnalysisResult] =
@@ -54,6 +55,29 @@ export function useFoodAnalysis() {
     }
   }
 
+  const registerDiary = async (
+    selectedDate: Date,
+    onSuccess: (mealType: MealType, imageUri: string | null) => void,
+  ) => {
+    if (!analysisResult || !analyzedMealType) return
+    const date = toDateStr(selectedDate)
+    try {
+      await foodCameraService.registerDiary(
+        analysisResult.foodAnalysisResultId,
+        date,
+        analyzedMealType,
+      )
+      onSuccess(analyzedMealType, analyzedImageUri)
+    } catch (error) {
+      console.error("registerDiary error:", error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "다이어리 등록 중 오류가 발생했습니다."
+      Alert.alert("등록 실패", message)
+    }
+  }
+
   return {
     isAnalyzing,
     isResultOpen,
@@ -62,6 +86,7 @@ export function useFoodAnalysis() {
     analyzedImageUri,
     analyzeImage,
     analyzeText,
+    registerDiary,
     closeResult: () => setIsResultOpen(false),
   }
 }

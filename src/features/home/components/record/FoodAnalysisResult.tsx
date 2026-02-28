@@ -7,6 +7,14 @@ import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../../types"
 import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
 import { MacroBar } from "./MacroBar"
+import { Icon, IconName } from "@/src/shared/components/Icon"
+
+const NUTRIENT_ICON: Record<string, IconName> = {
+  나트륨: "sodium",
+  칼륨: "potassium",
+  인: "phosphorus",
+  단백질: "protein",
+}
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -14,26 +22,28 @@ interface FoodAnalysisResultProps {
   onClose: () => void
   imageUri?: string
   mealType?: MealType
-  onAddToRecord?: () => void
+  onAddToRecord: () => Promise<void> | void
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
-  아침: "sunny-outline",
-  점심: "partly-sunny-outline",
-  저녁: "moon-outline",
-  간식: "cafe-outline",
+  BREAKFAST: "sunny-outline",
+  LUNCH: "partly-sunny-outline",
+  DINNER: "moon-outline",
+  SNACKS: "cafe-outline",
+}
+
+const MEAL_LABEL: Record<MealType, string> = {
+  BREAKFAST: "아침",
+  LUNCH: "점심",
+  DINNER: "저녁",
+  SNACKS: "간식",
 }
 
 function NutrientCell({ label, value }: { label: string; value: string }) {
+  const iconName = NUTRIENT_ICON[label]
   return (
     <YStack flex={1} alignItems="center">
-      <View
-        width={30}
-        height={30}
-        borderRadius={5}
-        backgroundColor="$grey7"
-        marginBottom={2}
-      />
+      {iconName && <Icon name={iconName} size={30} />}
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
@@ -135,7 +145,7 @@ export function FoodAnalysisResult({
                   color={tokens.color.grey3.val}
                 />
                 <Text fontSize={14} color="$colorSubtle" fontWeight="700">
-                  {mealType}
+                  {MEAL_LABEL[mealType]}
                 </Text>
               </XStack>
             )}
@@ -334,8 +344,8 @@ export function FoodAnalysisResult({
             height={54}
             alignItems="center"
             justifyContent="center"
-            onPress={() => {
-              onAddToRecord?.()
+            onPress={async () => {
+              await onAddToRecord()
               onClose()
             }}
             pressStyle={{ opacity: 0.8 }}

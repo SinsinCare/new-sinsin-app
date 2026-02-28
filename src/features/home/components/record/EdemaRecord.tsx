@@ -3,19 +3,25 @@ import { Text, XStack, YStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
 import { RecordCard } from "./RecordCard"
 
-const YESTERDAY_EDEMA = EDEMA_OPTIONS[0]
-
 interface EdemaRecordProps {
   selected: EdemaLevel | null
   onSelect: (level: EdemaLevel) => void
+  yesterdayEdema?: string | null
 }
 
-export function EdemaRecord({ selected, onSelect }: EdemaRecordProps) {
+export function EdemaRecord({
+  selected,
+  onSelect,
+  yesterdayEdema,
+}: EdemaRecordProps) {
+  const subtitle =
+    yesterdayEdema != null ? `어제: ${yesterdayEdema}` : "이전 기록이 없어요"
+
   return (
     <RecordCard
       type="edema"
       title={`몸이 붓는 \n느낌이 있나요?`}
-      subtitle={`어제: ${YESTERDAY_EDEMA}`}
+      subtitle={subtitle}
     >
       <YStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (

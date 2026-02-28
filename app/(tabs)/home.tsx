@@ -5,7 +5,7 @@ import { useState } from "react"
 import { MainTab, MealType } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
-import { StyleSheet } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useTheme } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -26,12 +26,7 @@ export default function HomeScreen() {
     <ThemedView
       lightColor={tokens.color.appBg.val}
       darkColor={theme.backgroundFocus.val}
-      style={[
-        styles.container,
-        {
-          paddingBottom: insets.bottom,
-        },
-      ]}
+      style={styles.container}
     >
       <HomeHeader
         topInset={insets.top}
@@ -39,28 +34,38 @@ export default function HomeScreen() {
         onChangeTab={setMainTab}
       />
 
-      {mainTab === "record" ? (
+      <View style={[styles.tabContent, mainTab !== "record" && styles.hidden]}>
         <RecordView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           selectedMealType={selectedMealType}
           onSelectMealType={handleSelectMealType}
         />
-      ) : (
+      </View>
+      <View style={[styles.tabContent, mainTab !== "stats" && styles.hidden]}>
         <StatisticsView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           selectedMealType={selectedMealType}
           onSelectMealType={handleSelectMealType}
+          onGoToRecord={() => setMainTab("record")}
+          isActive={mainTab === "stats"}
         />
-      )}
+      </View>
     </ThemedView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     justifyContent: "flex-start",
     paddingHorizontal: 25,
+  },
+  tabContent: {
+    flex: 1,
+  },
+  hidden: {
+    display: "none",
   },
 })

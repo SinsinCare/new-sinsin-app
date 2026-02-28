@@ -1,3 +1,5 @@
+import { EdemaLevel, MealType } from "../features/home/types"
+
 export interface FoodCameraFood {
   name: string
   restrictionLevel: string
@@ -45,4 +47,77 @@ export interface FoodCameraAnalyzeResult {
   foods: FoodCameraFood[]
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation
+}
+
+export interface FoodCameraDiaryRegisterResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  timestamp: string
+}
+
+export interface DateAnalysisDiet {
+  diaryId: number
+  mealType: MealType
+  createdAt: string
+  imageUrl: string
+}
+
+export interface DateAnalysisBodyRecord {
+  weightKg: number
+  edemaLevel: EdemaLevel
+  recordDate: string
+}
+
+export interface DateAnalysis {
+  protein: number
+  sodium: number
+  potassium: number
+  phosphorus: number
+  water: number
+  extraWater: number
+  dietaryGuide: string
+  cautionFoods: string[]
+}
+
+export interface DateAnalysisResult {
+  analysis: DateAnalysis | null
+  diets: DateAnalysisDiet[]
+  bodyRecords: {
+    today: DateAnalysisBodyRecord | null
+    previous: DateAnalysisBodyRecord | null
+  }
+}
+
+export interface DateAnalysisResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: DateAnalysisResult
+  timestamp: string
+}
+
+export interface DiaryExistenceItem {
+  date: string
+  exists: boolean
+}
+
+export interface DiaryExistenceResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: DiaryExistenceItem[]
+  timestamp: string
+}
+
+export interface ExtraWaterUpdateItem {
+  extraWater: number
+}
+
+export interface ExtraWaterUpdateResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: ExtraWaterUpdateItem
+  timestamp: string
 }

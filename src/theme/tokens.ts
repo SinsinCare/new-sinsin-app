@@ -36,6 +36,12 @@ export const tokens = createTokens({
     restrictionBg: "#FCE1E1",
     restrictionText: "#E74E4E",
 
+    // Hydration
+    waterPercentBg: "#D2DFE3",
+    waterPercentBgDark: "#46616A",
+    waterFillTop: "#6BDAFE",
+    waterFillBottom: "#30C1F0",
+
     // Greyscale
     grey1: "#171717",
     grey2: "#252525",
