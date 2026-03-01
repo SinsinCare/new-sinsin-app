@@ -14,6 +14,7 @@ import HeartText from "@/assets/icons/heart-text.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
+import Magnifyingglass from "@/assets/icons/magnifyingglass.svg"
 import Mail from "@/assets/icons/mail.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
@@ -49,6 +50,7 @@ const icons = {
   home: Home,
   loading: Loading,
   location: Location,
+  magnifyingglass: Magnifyingglass,
   mail: Mail,
   menu: Menu,
   notification: Notification,
