@@ -11,12 +11,14 @@ import Filter from "@/assets/icons/filter.svg"
 import FlyChat from "@/assets/icons/fly-chat.svg"
 import ForkKnife from "@/assets/icons/fork-knife.svg"
 import Gallery from "@/assets/icons/gallery.svg"
+import HandsClap from "@/assets/icons/hands-clap.svg"
 import HeartText from "@/assets/icons/heart-text.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
 import Magnifyingglass from "@/assets/icons/magnifyingglass.svg"
 import Mail from "@/assets/icons/mail.svg"
+import Message from "@/assets/icons/message.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
 import Paperclip from "@/assets/icons/paperclip.svg"
@@ -47,6 +49,7 @@ const icons = {
   "fly-chat": FlyChat,
   "fork-knife": ForkKnife,
   gallery: Gallery,
+  "hands-clap": HandsClap,
   "heart-text": HeartText,
   history: History,
   home: Home,
@@ -55,6 +58,7 @@ const icons = {
   magnifyingglass: Magnifyingglass,
   mail: Mail,
   menu: Menu,
+  message: Message,
   notification: Notification,
   paperclip: Paperclip,
   pencil: Pencil,
