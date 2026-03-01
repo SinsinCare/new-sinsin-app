@@ -7,6 +7,7 @@ import Chat from "@/assets/icons/chat.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
+import Filter from "@/assets/icons/filter.svg"
 import FlyChat from "@/assets/icons/fly-chat.svg"
 import ForkKnife from "@/assets/icons/fork-knife.svg"
 import Gallery from "@/assets/icons/gallery.svg"
@@ -42,6 +43,7 @@ const icons = {
   "chevron-right": ChevronRight,
   copy: Copy,
   cross: Cross,
+  filter: Filter,
   "fly-chat": FlyChat,
   "fork-knife": ForkKnife,
   gallery: Gallery,
