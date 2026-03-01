@@ -21,17 +21,17 @@ const COLORS = {
   },
 } as const
 
-interface SearchBarProps extends Omit<
+interface SearchInputProps extends Omit<
   TextInputProps,
   "style" | "placeholderTextColor"
 > {
   placeholder?: string
 }
 
-export function SearchBar({
+export function SearchInput({
   placeholder = "레시피 검색하기",
   ...props
-}: SearchBarProps) {
+}: SearchInputProps) {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light

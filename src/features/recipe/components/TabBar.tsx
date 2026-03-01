@@ -103,7 +103,11 @@ export function TopTabBar<T extends string = string>({
               key={tab.key}
               onPress={() => handleTabPress(tab.key)}
               onLayout={(e) => handleTabLayout(tab.key, e)}
-              style={{ justifyContent: "center", height: "100%" }}
+              style={{
+                justifyContent: "center",
+                height: "100%",
+                paddingBottom: 12,
+              }}
               hitSlop={8}
             >
               <Text

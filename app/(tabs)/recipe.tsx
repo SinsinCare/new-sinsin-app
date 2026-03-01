@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Pressable, useColorScheme } from "react-native"
+import { Keyboard, Pressable, useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -7,6 +7,7 @@ import {
   type TabItem,
 } from "@/src/features/recipe/components/TabBar"
 import { Icon } from "@/src/shared/components/Icon"
+import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -20,29 +21,43 @@ export default function RecipeScreen() {
   const [activeTab, setActiveTab] = useState("recipe")
   const headerColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
 
-  return (
-    <YStack
-      flex={1}
-      backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
-      paddingTop={insets.top}
-    >
-      <TopTabBar
-        tabs={RECIPE_TABS}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        rightAction={
-          <Pressable hitSlop={8} onPress={() => {}}>
-            <Icon name="bookmark" size={24} color={headerColor} />
-          </Pressable>
-        }
-      />
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    Keyboard.dismiss()
+  }
 
-      {/* Tab content placeholder */}
-      <YStack flex={1} justifyContent="center" alignItems="center">
-        <Text color={headerColor} fontSize="$5">
-          {activeTab === "recipe" ? "레시피 컨텐츠" : "자유글 컨텐츠"}
-        </Text>
+  const [search, setSearch] = useState("")
+
+  return (
+    <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+      <YStack
+        flex={1}
+        backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
+        paddingTop={insets.top}
+      >
+        <TopTabBar
+          tabs={RECIPE_TABS}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          rightAction={
+            <Pressable hitSlop={8} onPress={() => {}}>
+              <Icon name="bookmark" size={24} color={headerColor} />
+            </Pressable>
+          }
+        />
+        {activeTab === "recipe" && (
+          <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
+            <SearchInput value={search} onChangeText={setSearch} />
+          </YStack>
+        )}
+        {activeTab === "free" && (
+          <YStack paddingHorizontal={16} paddingVertical={14}>
+            <Text color={headerColor} fontSize="$5">
+              자유글 컨텐츠
+            </Text>
+          </YStack>
+        )}
       </YStack>
-    </YStack>
+    </Pressable>
   )
 }
