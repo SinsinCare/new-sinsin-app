@@ -1,4 +1,5 @@
-import { Pressable } from "react-native"
+import { Pressable, StyleSheet, Platform } from "react-native"
+import Markdown from "react-native-markdown-display"
 import { Image } from "expo-image"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useColorScheme } from "@/hooks/use-color-scheme"
@@ -38,6 +39,49 @@ export function AssistantAvatar() {
   )
 }
 
+function createMarkdownStyles(isDarkMode: boolean) {
+  const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const fontFamily = Platform.select({
+    ios: "Pretendard-Regular",
+    android: "Pretendard-Regular",
+    default: "Pretendard-Regular",
+  })
+  const boldFamily = Platform.select({
+    ios: "Pretendard-Bold",
+    android: "Pretendard-Bold",
+    default: "Pretendard-Bold",
+  })
+
+  return StyleSheet.create({
+    body: {
+      fontSize: 14,
+      lineHeight: 22,
+      color: textColor,
+      fontFamily,
+    },
+    strong: {
+      fontFamily: boldFamily,
+      fontWeight: "700",
+    },
+    em: {
+      fontStyle: "italic",
+    },
+    bullet_list: {
+      marginVertical: 4,
+    },
+    ordered_list: {
+      marginVertical: 4,
+    },
+    list_item: {
+      marginVertical: 2,
+    },
+    paragraph: {
+      marginTop: 0,
+      marginBottom: 6,
+    },
+  })
+}
+
 export function UserBubble({ message }: { message: Message }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
@@ -73,7 +117,7 @@ export function UserBubble({ message }: { message: Message }) {
 
 export function AssistantBubble({
   message,
-  isLastAssistant,
+  // isLastAssistant,
   onCopy,
   onRegenerate,
 }: {
@@ -90,23 +134,19 @@ export function AssistantBubble({
     <XStack paddingHorizontal="$4" gap="$2.5" alignItems="flex-start">
       <AssistantAvatar />
       <YStack flex={1} gap="$2">
-        <Text
-          fontSize="$4"
-          color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
-          lineHeight={22}
-        >
+        <Markdown style={createMarkdownStyles(isDarkMode)}>
           {message.content}
-        </Text>
-        {isLastAssistant && (
-          <XStack gap="$3">
-            <Pressable onPress={onCopy} hitSlop={8}>
-              <Icon name="copy" size={20} color={iconColor} />
-            </Pressable>
-            <Pressable onPress={onRegenerate} hitSlop={8}>
-              <Icon name="reset" size={20} color={iconColor} />
-            </Pressable>
-          </XStack>
-        )}
+        </Markdown>
+        {/* {isLastAssistant && ( */}
+        <XStack gap="$3">
+          <Pressable onPress={onCopy} hitSlop={8}>
+            <Icon name="copy" size={20} color={iconColor} />
+          </Pressable>
+          <Pressable onPress={onRegenerate} hitSlop={8}>
+            <Icon name="reset" size={20} color={iconColor} />
+          </Pressable>
+        </XStack>
+        {/* )} */}
       </YStack>
     </XStack>
   )
