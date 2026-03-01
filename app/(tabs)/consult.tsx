@@ -241,24 +241,19 @@ export default function ConsultScreen() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           >
-            {(() => {
-              const lastAssistantIdx = messages.findLastIndex(
-                (m) => m.role === "assistant",
-              )
-              return messages.map((msg, index) =>
-                msg.role === "user" ? (
-                  <UserBubble key={msg.id} message={msg} />
-                ) : (
-                  <AssistantBubble
-                    key={msg.id}
-                    message={msg}
-                    isLastAssistant={index === lastAssistantIdx}
-                    onCopy={() => handleCopy(msg.content)}
-                    onRegenerate={regenerateLastMessage}
-                  />
-                ),
-              )
-            })()}
+            {messages.map((msg) =>
+              msg.role === "user" ? (
+                <UserBubble key={msg.id} message={msg} />
+              ) : (
+                <AssistantBubble
+                  key={msg.id}
+                  message={msg}
+                  // isLastAssistant={index === lastAssistantIdx}
+                  onCopy={() => handleCopy(msg.content)}
+                  onRegenerate={regenerateLastMessage}
+                />
+              ),
+            )}
             {isTyping && <TypingIndicator />}
           </ScrollView>
         )}
