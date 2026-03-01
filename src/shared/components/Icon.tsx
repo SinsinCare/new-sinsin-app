@@ -33,8 +33,10 @@ import Sodium from "@/assets/icons/sodium.svg"
 import Potassium from "@/assets/icons/potassium.svg"
 import Phosphorus from "@/assets/icons/phosphorus.svg"
 import Protein from "@/assets/icons/protein.svg"
+import Bookmark from "@/assets/icons/bookmark.svg"
 
 const icons = {
+  bookmark: Bookmark,
   chat: Chat,
   "chevron-right": ChevronRight,
   copy: Copy,
