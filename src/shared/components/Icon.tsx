@@ -7,6 +7,7 @@ import Chat from "@/assets/icons/chat.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
+import Filter from "@/assets/icons/filter.svg"
 import FlyChat from "@/assets/icons/fly-chat.svg"
 import ForkKnife from "@/assets/icons/fork-knife.svg"
 import Gallery from "@/assets/icons/gallery.svg"
@@ -14,6 +15,7 @@ import HeartText from "@/assets/icons/heart-text.svg"
 import History from "@/assets/icons/history.svg"
 import Home from "@/assets/icons/home.svg"
 import Location from "@/assets/icons/location.svg"
+import Magnifyingglass from "@/assets/icons/magnifyingglass.svg"
 import Mail from "@/assets/icons/mail.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
@@ -33,12 +35,15 @@ import Sodium from "@/assets/icons/sodium.svg"
 import Potassium from "@/assets/icons/potassium.svg"
 import Phosphorus from "@/assets/icons/phosphorus.svg"
 import Protein from "@/assets/icons/protein.svg"
+import Bookmark from "@/assets/icons/bookmark.svg"
 
 const icons = {
+  bookmark: Bookmark,
   chat: Chat,
   "chevron-right": ChevronRight,
   copy: Copy,
   cross: Cross,
+  filter: Filter,
   "fly-chat": FlyChat,
   "fork-knife": ForkKnife,
   gallery: Gallery,
@@ -47,6 +52,7 @@ const icons = {
   home: Home,
   loading: Loading,
   location: Location,
+  magnifyingglass: Magnifyingglass,
   mail: Mail,
   menu: Menu,
   notification: Notification,
