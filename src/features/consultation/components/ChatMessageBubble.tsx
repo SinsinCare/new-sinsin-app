@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Platform } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
 import Markdown from "react-native-markdown-display"
 import { Image } from "expo-image"
 import { YStack, Text, XStack, View } from "tamagui"
@@ -39,48 +39,63 @@ export function AssistantAvatar() {
   )
 }
 
-function createMarkdownStyles(isDarkMode: boolean) {
-  const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
-  const fontFamily = Platform.select({
-    ios: "Pretendard-Regular",
-    android: "Pretendard-Regular",
-    default: "Pretendard-Regular",
-  })
-  const boldFamily = Platform.select({
-    ios: "Pretendard-Bold",
-    android: "Pretendard-Bold",
-    default: "Pretendard-Bold",
-  })
+const markdownStylesLight = StyleSheet.create({
+  body: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#2A2A37",
+    fontFamily: "Pretendard-Regular",
+  },
+  strong: {
+    fontFamily: "Pretendard-Bold",
+    fontWeight: "700",
+  },
+  em: {
+    fontStyle: "italic",
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  ordered_list: {
+    marginVertical: 4,
+  },
+  list_item: {
+    marginVertical: 2,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 6,
+  },
+})
 
-  return StyleSheet.create({
-    body: {
-      fontSize: 14,
-      lineHeight: 22,
-      color: textColor,
-      fontFamily,
-    },
-    strong: {
-      fontFamily: boldFamily,
-      fontWeight: "700",
-    },
-    em: {
-      fontStyle: "italic",
-    },
-    bullet_list: {
-      marginVertical: 4,
-    },
-    ordered_list: {
-      marginVertical: 4,
-    },
-    list_item: {
-      marginVertical: 2,
-    },
-    paragraph: {
-      marginTop: 0,
-      marginBottom: 6,
-    },
-  })
-}
+const markdownStylesDark = StyleSheet.create({
+  body: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#E7E7EE",
+    fontFamily: "Pretendard-Regular",
+  },
+  strong: {
+    fontFamily: "Pretendard-Bold",
+    fontWeight: "700",
+  },
+  em: {
+    fontStyle: "italic",
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  ordered_list: {
+    marginVertical: 4,
+  },
+  list_item: {
+    marginVertical: 2,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 6,
+  },
+})
 
 export function UserBubble({ message }: { message: Message }) {
   const colorScheme = useColorScheme()
@@ -134,7 +149,7 @@ export function AssistantBubble({
     <XStack paddingHorizontal="$4" gap="$2.5" alignItems="flex-start">
       <AssistantAvatar />
       <YStack flex={1} gap="$2">
-        <Markdown style={createMarkdownStyles(isDarkMode)}>
+        <Markdown style={isDarkMode ? markdownStylesDark : markdownStylesLight}>
           {message.content}
         </Markdown>
         {/* {isLastAssistant && ( */}
