@@ -7,6 +7,7 @@ type FilterChipTheme = "default" | "primary" | "sub" | "tertiary"
 interface FilterChipProps {
   label: string
   theme?: FilterChipTheme
+  selected?: boolean
   onPress?: () => void
 }
 
@@ -29,14 +30,27 @@ const THEME_COLORS = {
   },
 } as const
 
+const SELECTED_COLORS = {
+  light: { border: "#EE6145", text: "#EE6145" },
+  dark: { border: "#E77661", text: "#E77661" },
+} as const
+
 export function FilterChip({
   label,
   theme = "default",
+  selected = false,
   onPress,
 }: FilterChipProps) {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
-  const palette = isDark ? THEME_COLORS[theme].dark : THEME_COLORS[theme].light
+
+  const palette = selected
+    ? isDark
+      ? SELECTED_COLORS.dark
+      : SELECTED_COLORS.light
+    : isDark
+      ? THEME_COLORS[theme].dark
+      : THEME_COLORS[theme].light
 
   return (
     <Pressable
