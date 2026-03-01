@@ -16,9 +16,9 @@ const RECIPE_TABS: TabItem[] = [
 ]
 
 const FILTER_CHIPS = [
-  { key: "low-salt", label: "#저염식" },
-  { key: "ckd3", label: "#CKD3" },
-  { key: "japanese", label: "#일식" },
+  { key: "low-salt", label: "#저염식", theme: "primary" as const },
+  { key: "ckd3", label: "#CKD3", theme: "sub" as const },
+  { key: "japanese", label: "#일식", theme: "tertiary" as const },
   { key: "low-protein", label: "#저단백" },
   { key: "low-potassium", label: "#저칼륨" },
 ]
@@ -79,7 +79,11 @@ export default function RecipeScreen() {
                   style={{ flex: 1 }}
                 >
                   {Object.values(FILTER_CHIPS).map((chip) => (
-                    <FilterChip key={chip.key} label={chip.label} />
+                    <FilterChip
+                      key={chip.key}
+                      label={chip.label}
+                      theme={"theme" in chip ? chip.theme : undefined}
+                    />
                   ))}
                 </ScrollView>
                 <Pressable
