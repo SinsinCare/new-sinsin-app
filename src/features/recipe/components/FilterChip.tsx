@@ -2,42 +2,61 @@
 import { Pressable, useColorScheme } from "react-native"
 import { XStack, Text } from "tamagui"
 
+type FilterChipTheme = "default" | "primary" | "sub" | "tertiary"
+
 interface FilterChipProps {
   label: string
-  isSelected?: boolean
+  theme?: FilterChipTheme
+  selected?: boolean
   onPress?: () => void
 }
 
-const COLORS = {
-  light: {
-    border: "#8686864D",
-    text: "#2A2A37",
-    selectedBorder: "#028A67",
-    selectedText: "#028A67",
+const THEME_COLORS = {
+  default: {
+    light: { border: "#8686864D", text: "#2A2A37" },
+    dark: { border: "#8686868F", text: "#E7E7EE" },
   },
-  dark: {
-    border: "#8686868F",
-    text: "#E7E7EE",
-    selectedBorder: "#42AF94",
-    selectedText: "#42AF94",
+  primary: {
+    light: { border: "#E78A63F2", text: "#E78A63" },
+    dark: { border: "#E78A63F2", text: "#E78A63" },
   },
+  sub: {
+    light: { border: "#37A589F2", text: "#37A589" },
+    dark: { border: "#37A589F2", text: "#37A589" },
+  },
+  tertiary: {
+    light: { border: "#9F9F9F", text: "#9F9F9F" },
+    dark: { border: "#9F9F9F", text: "#9F9F9F" },
+  },
+} as const
+
+const SELECTED_COLORS = {
+  light: { border: "#EE6145", text: "#EE6145" },
+  dark: { border: "#E77661", text: "#E77661" },
 } as const
 
 export function FilterChip({
   label,
-  isSelected = false,
+  theme = "default",
+  selected = false,
   onPress,
 }: FilterChipProps) {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
-  const palette = isDark ? COLORS.dark : COLORS.light
+
+  const palette = selected
+    ? isDark
+      ? SELECTED_COLORS.dark
+      : SELECTED_COLORS.light
+    : isDark
+      ? THEME_COLORS[theme].dark
+      : THEME_COLORS[theme].light
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ selected: isSelected }}
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
       <XStack
@@ -46,14 +65,14 @@ export function FilterChip({
         paddingVertical={3}
         borderRadius={13}
         borderWidth={1}
-        borderColor={isSelected ? palette.selectedBorder : palette.border}
+        borderColor={palette.border}
       >
         <Text
           fontSize={12}
           lineHeight={16}
           fontWeight="500"
           fontFamily="$body"
-          color={isSelected ? palette.selectedText : palette.text}
+          color={palette.text}
         >
           {label}
         </Text>

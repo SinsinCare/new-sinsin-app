@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
-import { YStack, Text, XStack, View, YGroup } from "tamagui"
+import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   TopTabBar,
@@ -9,6 +9,8 @@ import {
 import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
+import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
+import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -16,9 +18,9 @@ const RECIPE_TABS: TabItem[] = [
 ]
 
 const FILTER_CHIPS = [
-  { key: "low-salt", label: "#저염식" },
-  { key: "ckd3", label: "#CKD3" },
-  { key: "japanese", label: "#일식" },
+  { key: "low-salt", label: "#저염식", theme: "primary" as const },
+  { key: "ckd3", label: "#CKD3", theme: "sub" as const },
+  { key: "japanese", label: "#일식", theme: "tertiary" as const },
   { key: "low-protein", label: "#저단백" },
   { key: "low-potassium", label: "#저칼륨" },
 ]
@@ -49,6 +51,10 @@ export default function RecipeScreen() {
   }
 
   const [search, setSearch] = useState("")
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, Set<string>>
+  >({})
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
@@ -79,11 +85,15 @@ export default function RecipeScreen() {
                   style={{ flex: 1 }}
                 >
                   {Object.values(FILTER_CHIPS).map((chip) => (
-                    <FilterChip key={chip.key} label={chip.label} />
+                    <FilterChip
+                      key={chip.key}
+                      label={chip.label}
+                      theme={"theme" in chip ? chip.theme : undefined}
+                    />
                   ))}
                 </ScrollView>
                 <Pressable
-                  onPress={() => {}}
+                  onPress={() => setFilterSheetOpen(true)}
                   hitSlop={8}
                   style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                 >
@@ -95,6 +105,23 @@ export default function RecipeScreen() {
               height={6}
               backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
             />
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ padding: 16 }}
+            >
+              <RecipeCard
+                imageUri="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400"
+                likeCount={32}
+                commentCount={24}
+                tags={{
+                  nutrition: ["저염식"],
+                  stage: ["CKD3"],
+                  country: ["일식"],
+                }}
+                title="닭가슴살 카레"
+                onPress={() => console.log("RecipeCard pressed")}
+              />
+            </ScrollView>
           </>
         )}
         {activeTab === "free" && (
@@ -104,6 +131,12 @@ export default function RecipeScreen() {
             </Text>
           </YStack>
         )}
+        <CategoryFilterSheet
+          open={filterSheetOpen}
+          onOpenChange={setFilterSheetOpen}
+          selectedFilters={selectedFilters}
+          onApply={setSelectedFilters}
+        />
       </YStack>
     </Pressable>
   )
