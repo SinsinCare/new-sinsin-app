@@ -112,7 +112,7 @@ export function LoginScreen() {
             letterSpacing={-0.26}
             lineHeight={16.9}
           >
-            아직 헬시어 회원이 아니신가요?
+            아직 신신당부 회원이 아니신가요?
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
             <Text
