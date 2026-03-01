@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react"
 import {
+  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -41,7 +42,7 @@ import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCopyToC
 import { ChatHistoryCard } from "@/src/features/consultation/components/ChatHistoryCard"
 import { RenameModal } from "@/src/features/consultation/components/RenameModal"
 import { chatApiService } from "@/src/services"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { chatHistoryQuery } from "@/src/features/consultation/data/queyOptions"
 import { ChatHistoryCardSkeleton } from "@/src/features/consultation/components/ChatHistoryCardSkeleton"
 
@@ -67,6 +68,7 @@ export default function ConsultScreen() {
 
   const scrollRef = useRef<ScrollView>(null)
   const {
+    conversationId,
     messages,
     isTyping,
     isSending,
@@ -77,6 +79,7 @@ export default function ConsultScreen() {
     resetChat,
     regenerateLastMessage,
   } = useChat()
+  const queryClient = useQueryClient()
 
   const { data: chats, isFetching } = useQuery(chatHistoryQuery(historyOpen))
 
@@ -112,10 +115,32 @@ export default function ConsultScreen() {
     if (!renameTarget) return
     try {
       await chatApiService.renameChat(renameTarget.id, newName)
+      queryClient.invalidateQueries({ queryKey: ["chat", "history"] })
     } catch (err) {
       console.error("Failed to rename conversation:", err)
     }
     setRenameTarget(null)
+  }
+
+  const handleDeletePress = (item: Chat) => {
+    Alert.alert("상담 기록 삭제", "이 상담 기록을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await chatApiService.deleteChat(item.id)
+            queryClient.invalidateQueries({ queryKey: ["chat", "history"] })
+            if (item.id === conversationId) {
+              resetChat()
+            }
+          } catch (err) {
+            console.error("Failed to delete conversation:", err)
+          }
+        },
+      },
+    ])
   }
 
   const handlePlusPress = (e: GestureResponderEvent) => {
@@ -347,7 +372,7 @@ export default function ConsultScreen() {
                 timestamp={item.createdAt.toISOString()}
                 onPress={() => handleSelectHistory(item.id)}
                 onRename={() => handleRenamePress(item)}
-                onDelete={() => {}}
+                onDelete={() => handleDeletePress(item)}
                 onShare={() => {}}
               />
             ))
