@@ -35,6 +35,9 @@ export function FilterChip({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isSelected }}
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
       <XStack
