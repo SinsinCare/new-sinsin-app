@@ -21,10 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import type { Chat } from "@/src/types/chat"
 import type { FaqCardEntry } from "@/src/features/consultation/types"
 
-import {
-  CATEGORY_LIST,
-  MOCK_HISTORY_LIST,
-} from "@/src/features/consultation/data/mockData"
+import { CATEGORY_LIST } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 
 import { YStack, Text, XStack } from "tamagui"

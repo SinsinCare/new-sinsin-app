@@ -89,40 +89,36 @@ export function RecipeTopTabBar({
   }))
 
   return (
-    <XStack
-      paddingHorizontal="$5"
-      height={48}
-      alignItems="center"
-    >
-      {/* Tabs area */}
+    <XStack height={48} alignItems="center">
+      {/* Tabs area - each tab takes equal width */}
       <XStack flex={1} height="100%" position="relative">
-        <XStack gap="$6" height="100%" alignItems="center">
-          {TABS.map((tab) => (
-            <Pressable
-              key={tab.key}
-              onPress={() => handleTabPress(tab.key)}
-              onLayout={(e) => handleTabLayout(tab.key, e)}
-              hitSlop={8}
+        {TABS.map((tab) => (
+          <Pressable
+            key={tab.key}
+            onPress={() => handleTabPress(tab.key)}
+            onLayout={(e) => handleTabLayout(tab.key, e)}
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text
+              fontSize="$6"
+              fontWeight={activeTab === tab.key ? "700" : "400"}
+              color={activeTab === tab.key ? palette.active : palette.inactive}
             >
-              <Text
-                fontSize="$5"
-                fontWeight={activeTab === tab.key ? "700" : "400"}
-                color={
-                  activeTab === tab.key ? palette.active : palette.inactive
-                }
-              >
-                {tab.label}
-              </Text>
-            </Pressable>
-          ))}
-        </XStack>
+              {tab.label}
+            </Text>
+          </Pressable>
+        ))}
 
         {/* Animated underline indicator */}
         <Animated.View style={indicatorStyle} />
       </XStack>
 
       {/* Bookmark button */}
-      <Pressable onPress={onBookmarkPress} hitSlop={8}>
+      <Pressable
+        onPress={onBookmarkPress}
+        hitSlop={8}
+        style={{ paddingHorizontal: 20 }}
+      >
         <Icon name="bookmark" size={24} color={palette.active} />
       </Pressable>
     </XStack>
