@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
-import { YStack, Text, XStack, View, YGroup } from "tamagui"
+import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   TopTabBar,
@@ -9,6 +9,7 @@ import {
 import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
+import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -49,6 +50,10 @@ export default function RecipeScreen() {
   }
 
   const [search, setSearch] = useState("")
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, Set<string>>
+  >({})
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
@@ -87,7 +92,7 @@ export default function RecipeScreen() {
                   ))}
                 </ScrollView>
                 <Pressable
-                  onPress={() => {}}
+                  onPress={() => setFilterSheetOpen(true)}
                   hitSlop={8}
                   style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                 >
@@ -108,6 +113,12 @@ export default function RecipeScreen() {
             </Text>
           </YStack>
         )}
+        <CategoryFilterSheet
+          open={filterSheetOpen}
+          onOpenChange={setFilterSheetOpen}
+          selectedFilters={selectedFilters}
+          onApply={setSelectedFilters}
+        />
       </YStack>
     </Pressable>
   )
