@@ -34,25 +34,33 @@ export function useChat() {
         userCategory: ChatCategory
       }) => {
         const streamingMsgId = optimisticMsgId--
-        const streamingMsg: Message = {
-          id: streamingMsgId,
-          conversationId: convId,
-          role: "assistant",
-          content: "",
-          createdAt: new Date(),
-        }
-        setMessages((prev) => [...prev, streamingMsg])
+        let placeholderAdded = false
 
         const assistantMsg = await chatApiService.sendMessage(
           convId,
           content,
           userCategory,
           (accumulated) => {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === streamingMsgId ? { ...m, content: accumulated } : m,
-              ),
-            )
+            if (!placeholderAdded) {
+              placeholderAdded = true
+              setIsTyping(false)
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: streamingMsgId,
+                  conversationId: convId,
+                  role: "assistant",
+                  content: accumulated,
+                  createdAt: new Date(),
+                },
+              ])
+            } else {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamingMsgId ? { ...m, content: accumulated } : m,
+                ),
+              )
+            }
           },
         )
 
@@ -81,25 +89,33 @@ export function useChat() {
         userCategory: ChatCategory
       }) => {
         const streamingMsgId = optimisticMsgId--
-        const streamingMsg: Message = {
-          id: streamingMsgId,
-          conversationId: convIdRef.current!,
-          role: "assistant",
-          content: "",
-          createdAt: new Date(),
-        }
-        setMessages((prev) => [...prev, streamingMsg])
+        let placeholderAdded = false
 
         const assistantMsg = await chatApiService.sendMessage(
           convIdRef.current!,
           content,
           userCategory,
           (accumulated) => {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === streamingMsgId ? { ...m, content: accumulated } : m,
-              ),
-            )
+            if (!placeholderAdded) {
+              placeholderAdded = true
+              setIsTyping(false)
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: streamingMsgId,
+                  conversationId: convIdRef.current!,
+                  role: "assistant",
+                  content: accumulated,
+                  createdAt: new Date(),
+                },
+              ])
+            } else {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamingMsgId ? { ...m, content: accumulated } : m,
+                ),
+              )
+            }
           },
         )
 
@@ -124,26 +140,35 @@ export function useChat() {
       const trimmed = content.trim()
       if (!trimmed || isSending) return
 
-      let activeConvId = convIdRef.current
-
-      // 첫 메시지: 대화 생성
-      if (activeConvId === null) {
-        const conversation = await createChatMutate()
-        activeConvId = conversation.id
-        convIdRef.current = activeConvId
-        setConversationId(activeConvId)
-      }
-
-      // Optimistic user message
+      // Optimistic UI: 유저 버블 + 타이핑 표시를 즉시 보여줌
       const optimisticUserMsg: Message = {
         id: optimisticMsgId--,
-        conversationId: activeConvId,
+        conversationId: convIdRef.current ?? -1,
         role: "user",
         content: trimmed,
         createdAt: new Date(),
       }
       setMessages((prev) => [...prev, optimisticUserMsg])
       setIsTyping(true)
+
+      let activeConvId = convIdRef.current
+
+      // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
+      if (activeConvId === null) {
+        try {
+          const conversation = await createChatMutate()
+          activeConvId = conversation.id
+          convIdRef.current = activeConvId
+          setConversationId(activeConvId)
+        } catch {
+          // createChat 실패 시 optimistic UI 롤백
+          setMessages((prev) =>
+            prev.filter((m) => m.id !== optimisticUserMsg.id),
+          )
+          setIsTyping(false)
+          return
+        }
+      }
 
       await sendMsgMutate({
         conversationId: activeConvId,
