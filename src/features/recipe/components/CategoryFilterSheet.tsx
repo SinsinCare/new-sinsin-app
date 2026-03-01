@@ -129,7 +129,7 @@ export function CategoryFilterSheet({
       modal
       open={open}
       onOpenChange={onOpenChange}
-      snapPoints={[55]}
+      snapPoints={[38]}
       dismissOnSnapToBottom
       dismissOnOverlayPress
     >
