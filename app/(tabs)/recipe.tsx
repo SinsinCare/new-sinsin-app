@@ -1,108 +1,143 @@
-import { useState, useCallback } from "react"
-import { ScrollView, Pressable, StyleSheet } from "react-native"
-import { YStack } from "tamagui"
+import { useState } from "react"
+import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
+import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
-import { Ionicons } from "@expo/vector-icons"
-import { tokens } from "@/src/theme/tokens"
-import { KidneyRecommendedFood } from "@/src/features/recipe/types"
-import { useKidneyRecommendations } from "@/src/features/recipe/hooks/useKidneyRecommendations"
-import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
-import { RecipeHeader } from "@/src/features/recipe/components/RecipeHeader"
-import { KidneyNutritionSection } from "@/src/features/recipe/components/KidneyNutritionSection"
-import { LowPhosphorusSection } from "@/src/features/recipe/components/LowPhosphorusSection"
-import { CommunitySection } from "@/src/features/recipe/components/CommunitySection"
-import { FoodDetailSheet } from "@/src/features/recipe/components/FoodDetailSheet"
+import {
+  TopTabBar,
+  type TabItem,
+} from "@/src/features/recipe/components/TabBar"
+import { Icon } from "@/src/shared/components/Icon"
+import { SearchInput } from "@/src/features/recipe/components/SearchInput"
+import { FilterChip } from "@/src/features/recipe/components/FilterChip"
+import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
+import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
+
+const RECIPE_TABS: TabItem[] = [
+  { key: "recipe", label: "레시피" },
+  { key: "free", label: "자유글" },
+]
+
+const FILTER_CHIPS = [
+  { key: "low-salt", label: "#저염식", theme: "primary" as const },
+  { key: "ckd3", label: "#CKD3", theme: "sub" as const },
+  { key: "japanese", label: "#일식", theme: "tertiary" as const },
+  { key: "low-protein", label: "#저단백" },
+  { key: "low-potassium", label: "#저칼륨" },
+]
+
+const HEADER_BOOKMARK_COLORS = {
+  light: "#3C3C43",
+  dark: "#E7E7EE",
+} as const
+
+const ICON_COLORS = {
+  light: "#8E8E93",
+  dark: "#66666B",
+} as const
 
 export default function RecipeScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showAllFoods, setShowAllFoods] = useState(false)
-  const [selectedFood, setSelectedFood] =
-    useState<KidneyRecommendedFood | null>(null)
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === "dark"
+  const [activeTab, setActiveTab] = useState("recipe")
+  const headerColor = isDarkMode
+    ? HEADER_BOOKMARK_COLORS.dark
+    : HEADER_BOOKMARK_COLORS.light
+  const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light
 
-  const { recommendations } = useKidneyRecommendations(searchQuery)
-  const { posts, isLoading, toggleLike, toggleBookmark } = useCommunityPosts()
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    Keyboard.dismiss()
+  }
 
-  const handleFoodPress = useCallback((item: KidneyRecommendedFood) => {
-    setSelectedFood(item)
-  }, [])
-
-  const handlePostPress = useCallback(
-    (postId: string) => {
-      router.push(`/post/${postId}`)
-    },
-    [router],
-  )
+  const [search, setSearch] = useState("")
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, Set<string>>
+  >({})
 
   return (
-    <YStack flex={1} backgroundColor="#f8f9fa" paddingTop={insets.top}>
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
-        showsVerticalScrollIndicator={false}
+    <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+      <YStack
+        flex={1}
+        backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
+        paddingTop={insets.top}
       >
-        <YStack paddingTop="$3" gap="$4">
-          <RecipeHeader
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-
-          {showAllFoods ? (
-            <LowPhosphorusSection
-              recommendations={recommendations}
-              onFoodPress={handleFoodPress}
-              onClose={() => setShowAllFoods(false)}
+        <TopTabBar
+          tabs={RECIPE_TABS}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          rightAction={
+            <Pressable hitSlop={8} onPress={() => {}}>
+              <Icon name="bookmark" size={24} color={headerColor} />
+            </Pressable>
+          }
+        />
+        {activeTab === "recipe" && (
+          <>
+            <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
+              <SearchInput value={search} onChangeText={setSearch} />
+              <XStack alignItems="center" gap={12}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                  style={{ flex: 1 }}
+                >
+                  {Object.values(FILTER_CHIPS).map((chip) => (
+                    <FilterChip
+                      key={chip.key}
+                      label={chip.label}
+                      theme={"theme" in chip ? chip.theme : undefined}
+                    />
+                  ))}
+                </ScrollView>
+                <Pressable
+                  onPress={() => setFilterSheetOpen(true)}
+                  hitSlop={8}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <Icon name="filter" size={24} color={iconColor} />
+                </Pressable>
+              </XStack>
+            </YStack>
+            <View
+              height={6}
+              backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
             />
-          ) : (
-            <KidneyNutritionSection
-              recommendations={recommendations}
-              onFoodPress={handleFoodPress}
-              onViewAll={() => setShowAllFoods(true)}
-            />
-          )}
-
-          <CommunitySection
-            posts={posts}
-            isLoading={isLoading}
-            onPostPress={handlePostPress}
-            onLike={toggleLike}
-            onBookmark={toggleBookmark}
-          />
-        </YStack>
-      </ScrollView>
-
-      {/* FAB */}
-      <Pressable
-        style={[styles.fab, { bottom: insets.bottom + 16 }]}
-        onPress={() => router.push("/create-post")}
-      >
-        <Ionicons name="add" size={28} color="white" />
-      </Pressable>
-
-      <FoodDetailSheet
-        item={selectedFood}
-        open={selectedFood !== null}
-        onClose={() => setSelectedFood(null)}
-      />
-    </YStack>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ padding: 16 }}
+            >
+              <RecipeCard
+                imageUri="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400"
+                likeCount={32}
+                commentCount={24}
+                tags={{
+                  nutrition: ["저염식"],
+                  stage: ["CKD3"],
+                  country: ["일식"],
+                }}
+                title="닭가슴살 카레"
+                onPress={() => console.log("RecipeCard pressed")}
+              />
+            </ScrollView>
+          </>
+        )}
+        {activeTab === "free" && (
+          <YStack paddingHorizontal={16} paddingVertical={14}>
+            <Text color={headerColor} fontSize="$5">
+              자유글 컨텐츠
+            </Text>
+          </YStack>
+        )}
+        <CategoryFilterSheet
+          open={filterSheetOpen}
+          onOpenChange={setFilterSheetOpen}
+          selectedFilters={selectedFilters}
+          onApply={setSelectedFilters}
+        />
+      </YStack>
+    </Pressable>
   )
 }
-
-const styles = StyleSheet.create({
-  fab: {
-    position: "absolute",
-    right: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: tokens.color.sub7.val,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-})

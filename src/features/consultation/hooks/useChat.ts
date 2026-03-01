@@ -176,7 +176,7 @@ export function useChat() {
         userCategory: category ?? "NONE",
       })
     },
-    [category, isSending, createChatMutate, sendMsgMutate],
+    [isSending, createChatMutate, sendMsgMutate],
   )
 
   const loadConversation = useCallback(

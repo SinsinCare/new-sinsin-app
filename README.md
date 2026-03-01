@@ -166,3 +166,20 @@ eas build --platform android --profile production
 
 eas submit --platform android --latest
 ```
+
+
+
+# 로컬 아이폰에 빌드하기
+```
+npm install
+npx expo prebuild -p ios
+open ios/*.xcworkspace
+```
+Xcode 설정
+Targets > (앱 타겟) > Signing & Capabilities
+Team 선택
+Bundle Identifier를 고유하게 변경 (예: com.yourname.sinsin)
+아이폰 기기 선택 후 Run(▶)
+
+CLI 에서 바로 빌드
+npm run ios -- --device
