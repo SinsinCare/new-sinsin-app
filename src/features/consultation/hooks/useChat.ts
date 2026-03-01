@@ -122,7 +122,7 @@ export function useChat() {
   const sendMessage = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
-      if (!trimmed || !category || isSending) return
+      if (!trimmed || isSending) return
 
       let activeConvId = convIdRef.current
 
@@ -148,7 +148,7 @@ export function useChat() {
       await sendMsgMutate({
         conversationId: activeConvId,
         content: trimmed,
-        userCategory: category,
+        userCategory: category ?? "OTHER",
       })
     },
     [category, isSending, createChatMutate, sendMsgMutate],

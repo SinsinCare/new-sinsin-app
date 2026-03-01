@@ -13,12 +13,18 @@ function formatTime(date: Date): string {
   })
 }
 
-function AssistantAvatar() {
+export function AssistantAvatar() {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   return (
-    <View width={36} height={36} borderRadius={18} overflow="hidden" marginTop="$1">
+    <View
+      width={36}
+      height={36}
+      borderRadius={18}
+      overflow="hidden"
+      marginTop="$1"
+    >
       <Image
         source={
           isDarkMode
