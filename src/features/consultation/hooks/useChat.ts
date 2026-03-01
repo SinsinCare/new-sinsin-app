@@ -27,15 +27,41 @@ export function useChat() {
       mutationFn: async ({
         conversationId: convId,
         content,
+        userCategory,
       }: {
         conversationId: number
         content: string
+        userCategory: ChatCategory
       }) => {
-        const assistantMsg = await chatApiService.sendMessage(convId, content)
+        const streamingMsgId = optimisticMsgId--
+        const streamingMsg: Message = {
+          id: streamingMsgId,
+          conversationId: convId,
+          role: "assistant",
+          content: "",
+          createdAt: new Date(),
+        }
+        setMessages((prev) => [...prev, streamingMsg])
+
+        const assistantMsg = await chatApiService.sendMessage(
+          convId,
+          content,
+          userCategory,
+          (accumulated) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === streamingMsgId ? { ...m, content: accumulated } : m,
+              ),
+            )
+          },
+        )
+
+        // Replace streaming placeholder with final message
+        setMessages((prev) =>
+          prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m)),
+        )
+
         return assistantMsg
-      },
-      onSuccess: (assistantMsg) => {
-        setMessages((prev) => [...prev, assistantMsg])
       },
       onError: (err) => {
         console.error("Failed to send message:", err)
@@ -47,15 +73,41 @@ export function useChat() {
 
   const { mutateAsync: regenerateMutate, isPending: isRegenerating } =
     useMutation({
-      mutationFn: async (content: string) => {
+      mutationFn: async ({
+        content,
+        userCategory,
+      }: {
+        content: string
+        userCategory: ChatCategory
+      }) => {
+        const streamingMsgId = optimisticMsgId--
+        const streamingMsg: Message = {
+          id: streamingMsgId,
+          conversationId: convIdRef.current!,
+          role: "assistant",
+          content: "",
+          createdAt: new Date(),
+        }
+        setMessages((prev) => [...prev, streamingMsg])
+
         const assistantMsg = await chatApiService.sendMessage(
           convIdRef.current!,
           content,
+          userCategory,
+          (accumulated) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === streamingMsgId ? { ...m, content: accumulated } : m,
+              ),
+            )
+          },
         )
+
+        setMessages((prev) =>
+          prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m)),
+        )
+
         return assistantMsg
-      },
-      onSuccess: (assistantMsg) => {
-        setMessages((prev) => [...prev, assistantMsg])
       },
       onError: (err) => {
         console.error("Failed to regenerate message:", err)
@@ -93,7 +145,11 @@ export function useChat() {
       setMessages((prev) => [...prev, optimisticUserMsg])
       setIsTyping(true)
 
-      await sendMsgMutate({ conversationId: activeConvId, content: trimmed })
+      await sendMsgMutate({
+        conversationId: activeConvId,
+        content: trimmed,
+        userCategory: category,
+      })
     },
     [category, isSending, createChatMutate, sendMsgMutate],
   )
@@ -145,8 +201,11 @@ export function useChat() {
     })
 
     setIsTyping(true)
-    await regenerateMutate(lastUserMsg.content)
-  }, [isSending, messages, regenerateMutate])
+    await regenerateMutate({
+      content: lastUserMsg.content,
+      userCategory: category ?? "OTHER",
+    })
+  }, [category, isSending, messages, regenerateMutate])
 
   return {
     conversationId,

@@ -71,7 +71,7 @@ export const MOCK_CHATS: Chat[] = [
     summary:
       "만성신장병 3기 환자의 나트륨 섭취 제한 방법에 대해 상담한 내용입니다.",
     status: "ACTIVE",
-    category: "DIET",
+    category: "FOOD_DIET",
     messageCount: 2,
     createdAt: new Date(
       now.getFullYear(),
@@ -94,7 +94,7 @@ export const MOCK_CHATS: Chat[] = [
     summary:
       "고칼륨혈증 시 바나나, 멜론, 키위 등을 피하고, 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하세요.",
     status: "ACTIVE",
-    category: "DIET",
+    category: "FOOD_DIET",
     messageCount: 2,
     createdAt: yesterday,
     updatedAt: yesterday,
@@ -105,7 +105,7 @@ export const MOCK_CHATS: Chat[] = [
     summary:
       "GFR(사구체여과율)은 신장 기능을 나타내는 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
     status: "ACTIVE",
-    category: "CHECKUP",
+    category: "EXAM",
     messageCount: 2,
     createdAt: twoDaysAgo,
     updatedAt: twoDaysAgo,
@@ -121,7 +121,8 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         id: 1,
         conversationId: 1,
         role: "user",
-        content: "만성신장병 3기 환자인데 나트륨 섭취를 어떻게 줄일 수 있을까요?",
+        content:
+          "만성신장병 3기 환자인데 나트륨 섭취를 어떻게 줄일 수 있을까요?",
         createdAt: new Date(
           now.getFullYear(),
           now.getMonth(),
@@ -136,7 +137,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         role: "assistant",
         content:
           "만성신장병 3기 환자분의 경우 하루 나트륨 섭취량을 2,000mg 이하로 제한하는 것이 권장됩니다. 소금 대신 레몬즙, 식초, 후추 등 천연 양념을 활용하세요.",
-        aiCategory: "DIET",
+        aiCategory: "FOOD_DIET",
         aiCategoryLabel: "음식·식단",
         createdAt: new Date(
           now.getFullYear(),
@@ -165,7 +166,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         role: "assistant",
         content:
           "고칼륨혈증이 있을 때는 바나나, 멜론, 키위, 오렌지를 피하세요. 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하는 것이 좋습니다.",
-        aiCategory: "DIET",
+        aiCategory: "FOOD_DIET",
         aiCategoryLabel: "음식·식단",
         createdAt: yesterday,
       },
@@ -187,7 +188,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         role: "assistant",
         content:
           "GFR(사구체여과율)은 신장 기능의 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
-        aiCategory: "CHECKUP",
+        aiCategory: "EXAM",
         aiCategoryLabel: "검사·수치해석",
         createdAt: twoDaysAgo,
       },

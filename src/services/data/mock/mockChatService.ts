@@ -24,21 +24,23 @@ function pickMockReply(): string {
 
 function pickMockCategory(): ChatCategory {
   const categories: ChatCategory[] = [
-    "DIET",
-    "MEDICINE",
+    "FOOD_DIET",
+    "MEDICATION",
     "LIFESTYLE",
-    "SYMPTOM",
-    "CHECKUP",
+    "SYMPTOMS",
+    "EXAM",
+    "OTHER",
   ]
   return categories[Math.floor(Math.random() * categories.length)]
 }
 
 const CATEGORY_LABELS: Record<ChatCategory, string> = {
-  DIET: "음식·식단",
-  MEDICINE: "약·영양제",
+  FOOD_DIET: "음식·식단",
+  MEDICATION: "약·영양제",
   LIFESTYLE: "생활관리",
-  SYMPTOM: "증상",
-  CHECKUP: "검사·수치해석",
+  SYMPTOMS: "증상",
+  EXAM: "검사·수치해석",
+  OTHER: "기타",
 }
 
 export function createMockChatService(): ChatService {
@@ -112,7 +114,12 @@ export function createMockChatService(): ChatService {
       return [...(messagesStore.get(conversationId) ?? [])]
     },
 
-    async sendMessage(conversationId: number, content: string) {
+    async sendMessage(
+      conversationId: number,
+      content: string,
+      userCategory: ChatCategory,
+      onChunk?: (text: string) => void,
+    ) {
       await delay()
       const now = new Date()
       const msgs = messagesStore.get(conversationId) ?? []

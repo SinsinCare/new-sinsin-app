@@ -1,5 +1,6 @@
 import type {
   ChatService,
+  ChatCategory,
   ChatList,
   ChatCreate,
   ChatDetail,
@@ -14,7 +15,9 @@ import {
 } from "../../types/chat"
 import type { ApiResponse } from "../../types/api"
 import { isMockMode } from "../../config/appConfig"
-import { api } from "../core"
+import { api, tokenService } from "../core"
+
+const BASE_URL = "https://api.sinsin.mediology.ai/api/v1"
 
 function createRealChatService(): ChatService {
   return {
@@ -53,12 +56,90 @@ function createRealChatService(): ChatService {
       return data.result.map((m) => mapMessage(m, conversationId))
     },
 
-    async sendMessage(conversationId: number, content: string) {
-      const { data } = await api.post<ApiResponse<MessageData>>(
-        `/chat/conversations/${conversationId}/messages`,
-        { content },
-      )
-      return mapMessage(data.result, conversationId)
+    async sendMessage(
+      conversationId: number,
+      content: string,
+      userCategory: ChatCategory,
+      onChunk?: (text: string) => void,
+    ) {
+      const token = await tokenService.getAccessToken()
+
+      const formData = new FormData()
+      formData.append("content", content)
+      formData.append("messageType", "TEXT")
+      formData.append("userCategory", userCategory)
+
+      return new Promise<ReturnType<typeof mapMessage>>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open(
+          "POST",
+          `${BASE_URL}/chat/conversations/${conversationId}/messages`,
+        )
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`)
+        xhr.setRequestHeader("Accept", "text/event-stream")
+
+        let fullContent = ""
+        let messageId: number | null = null
+        let category: ChatCategory | null = null
+        let categoryLabel: string | null = null
+        let processedLength = 0
+
+        xhr.onprogress = () => {
+          const newData = xhr.responseText.substring(processedLength)
+          processedLength = xhr.responseText.length
+
+          const lines = newData.split("\n")
+          for (const line of lines) {
+            if (!line.startsWith("data:")) continue
+            const data = line.slice(5).trim()
+            if (data === "[DONE]") continue
+
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.content != null) {
+                fullContent += parsed.content
+                onChunk?.(fullContent)
+              }
+              if (parsed.messageId != null) messageId = parsed.messageId
+              if (parsed.category != null) category = parsed.category
+              if (parsed.categoryLabel != null)
+                categoryLabel = parsed.categoryLabel
+            } catch {
+              // plain text chunk
+              if (data && data !== "[DONE]") {
+                fullContent += data
+                onChunk?.(fullContent)
+              }
+            }
+          }
+        }
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(
+              mapMessage(
+                {
+                  messageId: messageId ?? -1,
+                  role: "ASSISTANT",
+                  content: fullContent,
+                  category,
+                  categoryLabel,
+                  createdAt: new Date().toISOString(),
+                },
+                conversationId,
+              ),
+            )
+          } else {
+            reject(new Error(`sendMessage failed: ${xhr.status}`))
+          }
+        }
+
+        xhr.onerror = () => {
+          reject(new Error("Network error during sendMessage"))
+        }
+
+        xhr.send(formData)
+      })
     },
 
     async generateSummary(conversationId: number) {
@@ -94,6 +175,7 @@ export const chatApiService: ChatService = {
   getChatDetail: (id) => getChatApiService().getChatDetail(id),
   deleteChat: (id) => getChatApiService().deleteChat(id),
   getMessages: (id) => getChatApiService().getMessages(id),
-  sendMessage: (id, content) => getChatApiService().sendMessage(id, content),
+  sendMessage: (id, content, userCategory, onChunk) =>
+    getChatApiService().sendMessage(id, content, userCategory, onChunk),
   generateSummary: (id) => getChatApiService().generateSummary(id),
 }

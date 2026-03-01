@@ -5,11 +5,12 @@ export type ChatStatus = "ACTIVE" | "ARCHIVED"
 export type MessageRole = "USER" | "ASSISTANT" | "SYSTEM"
 
 export type ChatCategory =
-  | "DIET"
-  | "MEDICINE"
+  | "FOOD_DIET"
+  | "MEDICATION"
   | "LIFESTYLE"
-  | "SYMPTOM"
-  | "CHECKUP"
+  | "SYMPTOMS"
+  | "EXAM"
+  | "OTHER"
 
 export interface ChatSummary {
   conversationId: number
@@ -52,8 +53,13 @@ export interface MessageData {
   createdAt: string
 }
 
+export type MessageType = "TEXT" | "IMAGE" | "MIXED"
+
 export interface MessageSendRequest {
   content: string // max 5000 chars
+  messageType: MessageType
+  userCategory: ChatCategory
+  files?: File[] // binary files for IMAGE/MIXED
 }
 
 export interface Summary {
@@ -169,8 +175,13 @@ export interface ChatService {
   /** 메시지 목록 조회 */
   getMessages(conversationId: number): Promise<Message[]>
 
-  /** 메시지 전송 → AI 응답 수신 */
-  sendMessage(conversationId: number, content: string): Promise<Message>
+  /** 메시지 전송 → AI 응답 SSE 수신 */
+  sendMessage(
+    conversationId: number,
+    content: string,
+    userCategory: ChatCategory,
+    onChunk?: (text: string) => void,
+  ): Promise<Message>
 
   /** 대화 요약 생성 */
   generateSummary(
