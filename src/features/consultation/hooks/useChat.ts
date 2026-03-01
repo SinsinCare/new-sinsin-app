@@ -13,8 +13,8 @@ export function useChat() {
   const convIdRef = useRef<number | null>(null)
 
   const { mutateAsync: createChatMutate, isPending: isCreating } = useMutation({
-    mutationFn: async () => {
-      const { conversation } = await chatApiService.createChat()
+    mutationFn: async (category: ChatCategory) => {
+      const { conversation } = await chatApiService.createChat(category)
       return conversation
     },
     onError: (err) => {
@@ -156,7 +156,7 @@ export function useChat() {
       // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
       if (activeConvId === null) {
         try {
-          const conversation = await createChatMutate()
+          const conversation = await createChatMutate(category ?? "NONE")
           activeConvId = conversation.id
           convIdRef.current = activeConvId
           setConversationId(activeConvId)
@@ -173,7 +173,7 @@ export function useChat() {
       await sendMsgMutate({
         conversationId: activeConvId,
         content: trimmed,
-        userCategory: category ?? "OTHER",
+        userCategory: category ?? "NONE",
       })
     },
     [category, isSending, createChatMutate, sendMsgMutate],
@@ -228,7 +228,7 @@ export function useChat() {
     setIsTyping(true)
     await regenerateMutate({
       content: lastUserMsg.content,
-      userCategory: category ?? "OTHER",
+      userCategory: category ?? "NONE",
     })
   }, [category, isSending, messages, regenerateMutate])
 

@@ -10,13 +10,15 @@ export type ChatCategory =
   | "LIFESTYLE"
   | "SYMPTOMS"
   | "EXAM"
-  | "OTHER"
+  | "NONE"
 
 export interface ChatSummary {
   conversationId: number
   title: string
   summary: string | null
   status: ChatStatus
+  category: ChatCategory | null
+  categoryLabel: string | null
   messageCount: number
   createdAt: string // ISO date-time
   updatedAt: string
@@ -25,13 +27,16 @@ export interface ChatSummary {
 export interface ChatCreate {
   conversationId: number
   title: string
+  category: ChatCategory | null
+  categoryLabel: string | null
   createdAt: string
-  greetingMessage: MessageData
 }
 
 export interface ChatDetail {
   conversationId: number
   title: string
+  category: ChatCategory | null
+  categoryLabel: string | null
   summary: string | null
   status: ChatStatus
   createdAt: string
@@ -74,7 +79,8 @@ export interface Chat {
   title: string
   summary?: string
   status: ChatStatus
-  category?: ChatCategory // 상담 카테고리 — API에 추가 예정, 현재 undefined 허용
+  category: ChatCategory | null
+  categoryLabel?: string
   messageCount?: number
   createdAt: Date
   updatedAt: Date
@@ -98,6 +104,8 @@ export function mapChatSummary(dto: ChatSummary): Chat {
     title: dto.title,
     summary: dto.summary ?? undefined,
     status: dto.status,
+    category: dto.category,
+    categoryLabel: dto.categoryLabel ?? undefined,
     messageCount: dto.messageCount,
     createdAt: new Date(dto.createdAt),
     updatedAt: new Date(dto.updatedAt),
@@ -114,6 +122,8 @@ export function mapChatDetail(dto: ChatDetail): {
       title: dto.title,
       summary: dto.summary ?? undefined,
       status: dto.status,
+      category: dto.category,
+      categoryLabel: dto.categoryLabel ?? undefined,
       createdAt: new Date(dto.createdAt),
       updatedAt: new Date(dto.updatedAt),
     },
@@ -133,19 +143,17 @@ export function mapMessage(dto: MessageData, conversationId: number): Message {
   }
 }
 
-export function mapChatCreate(dto: ChatCreate): {
-  conversation: Chat
-  greetingMessage: Message
-} {
+export function mapChatCreate(dto: ChatCreate): { conversation: Chat } {
   return {
     conversation: {
       id: dto.conversationId,
       title: dto.title,
       status: "ACTIVE",
+      category: dto.category,
+      categoryLabel: dto.categoryLabel ?? undefined,
       createdAt: new Date(dto.createdAt),
       updatedAt: new Date(dto.createdAt),
     },
-    greetingMessage: mapMessage(dto.greetingMessage, dto.conversationId),
   }
 }
 
@@ -158,11 +166,8 @@ export interface ChatService {
     totalCount: number
   }>
 
-  /** 새 대화 생성 (인사 메시지 포함) */
-  createChat(): Promise<{
-    conversation: Chat
-    greetingMessage: Message
-  }>
+  /** 새 대화 생성 */
+  createChat(category: ChatCategory): Promise<{ conversation: Chat }>
 
   /** 대화 상세 조회 (메시지 포함) */
   getChatDetail(
@@ -171,6 +176,9 @@ export interface ChatService {
 
   /** 대화 삭제 (소프트 삭제) */
   deleteChat(conversationId: number): Promise<void>
+
+  /** 상담기록 이름 변경 */
+  renameChat(conversationId: number, title: string): Promise<void>
 
   /** 메시지 목록 조회 */
   getMessages(conversationId: number): Promise<Message[]>

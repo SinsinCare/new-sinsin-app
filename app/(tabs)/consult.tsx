@@ -40,6 +40,7 @@ import { ChatHistorySheet } from "@/src/features/consultation/components/ChatHis
 import { useCopyToClipboard } from "@/src/features/consultation/hooks/useCopyToClipboard"
 import { ChatHistoryCard } from "@/src/features/consultation/components/ChatHistoryCard"
 import { RenameModal } from "@/src/features/consultation/components/RenameModal"
+import { chatApiService } from "@/src/services"
 import { useQuery } from "@tanstack/react-query"
 import { chatHistoryQuery } from "@/src/features/consultation/data/queyOptions"
 import { ChatHistoryCardSkeleton } from "@/src/features/consultation/components/ChatHistoryCardSkeleton"
@@ -107,8 +108,13 @@ export default function ConsultScreen() {
     setRenameTarget(item)
   }
 
-  const handleRenameConfirm = (newName: string) => {
-    // TODO: call API to rename conversation when backend is ready
+  const handleRenameConfirm = async (newName: string) => {
+    if (!renameTarget) return
+    try {
+      await chatApiService.renameChat(renameTarget.id, newName)
+    } catch (err) {
+      console.error("Failed to rename conversation:", err)
+    }
     setRenameTarget(null)
   }
 

@@ -29,7 +29,7 @@ function pickMockCategory(): ChatCategory {
     "LIFESTYLE",
     "SYMPTOMS",
     "EXAM",
-    "OTHER",
+    "NONE",
   ]
   return categories[Math.floor(Math.random() * categories.length)]
 }
@@ -40,7 +40,7 @@ const CATEGORY_LABELS: Record<ChatCategory, string> = {
   LIFESTYLE: "생활관리",
   SYMPTOMS: "증상",
   EXAM: "검사·수치해석",
-  OTHER: "기타",
+  NONE: "기타",
 }
 
 export function createMockChatService(): ChatService {
@@ -65,7 +65,7 @@ export function createMockChatService(): ChatService {
       }
     },
 
-    async createChat() {
+    async createChat(category: ChatCategory) {
       await delay()
       const convId = nextConvId++
       const now = new Date()
@@ -73,6 +73,7 @@ export function createMockChatService(): ChatService {
         id: convId,
         title: "새 상담",
         status: "ACTIVE",
+        category: category,
         createdAt: now,
         updatedAt: now,
       }
@@ -88,7 +89,7 @@ export function createMockChatService(): ChatService {
       }
       messagesStore.set(convId, [greetingMessage])
 
-      return { conversation, greetingMessage }
+      return { conversation }
     },
 
     async getChatDetail(conversationId: number) {
@@ -107,6 +108,12 @@ export function createMockChatService(): ChatService {
       const idx = conversations.findIndex((c) => c.id === conversationId)
       if (idx !== -1) conversations.splice(idx, 1)
       messagesStore.delete(conversationId)
+    },
+
+    async renameChat(conversationId: number, title: string) {
+      await delay()
+      const conv = conversations.find((c) => c.id === conversationId)
+      if (conv) conv.title = title
     },
 
     async getMessages(conversationId: number) {

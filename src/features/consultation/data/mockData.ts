@@ -33,7 +33,7 @@ export const CATEGORY_LIST: CategoryMeta[] = [
     icon: "mail",
   },
   {
-    key: "OTHER",
+    key: "NONE",
     label: "기타",
     icon: "chat",
   },
@@ -222,10 +222,10 @@ export const QUICK_QUESTIONS: Record<ChatCategory, QuickQuestion[]> = {
     { id: "qt-2", category: "SYMPTOMS", text: "면역억제제 복용 주의사항" },
     { id: "qt-3", category: "SYMPTOMS", text: "이식 대기 중 관리법" },
   ],
-  OTHER: [
-    { id: "qo-1", category: "OTHER", text: "신장 건강 관련 일반 질문" },
-    { id: "qo-2", category: "OTHER", text: "기타 궁금한 사항" },
-    { id: "qo-3", category: "OTHER", text: "생활 속 건강 팁" },
+  NONE: [
+    { id: "qo-1", category: "NONE", text: "신장 건강 관련 일반 질문" },
+    { id: "qo-2", category: "NONE", text: "기타 궁금한 사항" },
+    { id: "qo-3", category: "NONE", text: "생활 속 건강 팁" },
   ],
 }
 

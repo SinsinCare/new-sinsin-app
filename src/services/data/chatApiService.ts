@@ -31,9 +31,10 @@ function createRealChatService(): ChatService {
       }
     },
 
-    async createChat() {
+    async createChat(category: ChatCategory) {
       const { data } = await api.post<ApiResponse<ChatCreate>>(
         "/chat/conversations",
+        { category },
       )
       return mapChatCreate(data.result)
     },
@@ -47,6 +48,10 @@ function createRealChatService(): ChatService {
 
     async deleteChat(conversationId: number) {
       await api.delete(`/chat/conversations/${conversationId}`)
+    },
+
+    async renameChat(conversationId: number, title: string) {
+      await api.patch(`/chat/conversations/${conversationId}/title`, { title })
     },
 
     async getMessages(conversationId: number) {
@@ -171,9 +176,10 @@ function getChatApiService(): ChatService {
 
 export const chatApiService: ChatService = {
   getChats: () => getChatApiService().getChats(),
-  createChat: () => getChatApiService().createChat(),
+  createChat: (category) => getChatApiService().createChat(category),
   getChatDetail: (id) => getChatApiService().getChatDetail(id),
   deleteChat: (id) => getChatApiService().deleteChat(id),
+  renameChat: (id, title) => getChatApiService().renameChat(id, title),
   getMessages: (id) => getChatApiService().getMessages(id),
   sendMessage: (id, content, userCategory, onChunk) =>
     getChatApiService().sendMessage(id, content, userCategory, onChunk),
