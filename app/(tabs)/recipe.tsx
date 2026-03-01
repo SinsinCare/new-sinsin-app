@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { Keyboard, Pressable, useColorScheme } from "react-native"
-import { YStack, Text } from "tamagui"
+import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
+import { YStack, Text, XStack, View, YGroup } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   TopTabBar,
@@ -8,7 +8,7 @@ import {
 } from "@/src/features/recipe/components/TabBar"
 import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
-import { FilterChipRow } from "@/src/features/recipe/components/FilterChipRow"
+import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -23,12 +23,25 @@ const FILTER_CHIPS = [
   { key: "low-potassium", label: "#저칼륨" },
 ]
 
+const HEADER_BOOKMARK_COLORS = {
+  light: "#3C3C43",
+  dark: "#E7E7EE",
+} as const
+
+const ICON_COLORS = {
+  light: "#8E8E93",
+  dark: "#66666B",
+} as const
+
 export default function RecipeScreen() {
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [activeTab, setActiveTab] = useState("recipe")
-  const headerColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const headerColor = isDarkMode
+    ? HEADER_BOOKMARK_COLORS.dark
+    : HEADER_BOOKMARK_COLORS.light
+  const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
@@ -36,13 +49,6 @@ export default function RecipeScreen() {
   }
 
   const [search, setSearch] = useState("")
-  const [selectedChips, setSelectedChips] = useState<string[]>([])
-
-  const handleChipPress = (key: string) => {
-    setSelectedChips((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    )
-  }
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
@@ -62,15 +68,34 @@ export default function RecipeScreen() {
           }
         />
         {activeTab === "recipe" && (
-          <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
-            <SearchInput value={search} onChangeText={setSearch} />
-            <FilterChipRow
-              chips={FILTER_CHIPS}
-              selectedChips={selectedChips}
-              onChipPress={handleChipPress}
-              onFilterPress={() => {}}
+          <>
+            <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
+              <SearchInput value={search} onChangeText={setSearch} />
+              <XStack alignItems="center" gap={12}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                  style={{ flex: 1 }}
+                >
+                  {Object.values(FILTER_CHIPS).map((chip) => (
+                    <FilterChip key={chip.key} label={chip.label} />
+                  ))}
+                </ScrollView>
+                <Pressable
+                  onPress={() => {}}
+                  hitSlop={8}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <Icon name="filter" size={24} color={iconColor} />
+                </Pressable>
+              </XStack>
+            </YStack>
+            <View
+              height={6}
+              backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
             />
-          </YStack>
+          </>
         )}
         {activeTab === "free" && (
           <YStack paddingHorizontal={16} paddingVertical={14}>
