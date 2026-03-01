@@ -40,7 +40,7 @@ export default function RecipeScreen() {
 
   const handleChipPress = (key: string) => {
     setSelectedChips((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     )
   }
 
