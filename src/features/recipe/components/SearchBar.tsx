@@ -51,6 +51,7 @@ export function SearchBar({
       <TextInput
         style={{
           flex: 1,
+          fontFamily: "PretendardKR-Medium",
           fontWeight: "500",
           fontSize: 14,
           lineHeight: 20,
