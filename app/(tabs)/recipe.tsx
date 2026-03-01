@@ -10,6 +10,7 @@ import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
+import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -104,6 +105,23 @@ export default function RecipeScreen() {
               height={6}
               backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
             />
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ padding: 16 }}
+            >
+              <RecipeCard
+                imageUri="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400"
+                likeCount={32}
+                commentCount={24}
+                tags={{
+                  nutrition: ["저염식"],
+                  stage: ["CKD3"],
+                  country: ["일식"],
+                }}
+                title="닭가슴살 카레"
+                onPress={() => console.log("RecipeCard pressed")}
+              />
+            </ScrollView>
           </>
         )}
         {activeTab === "free" && (
