@@ -38,6 +38,8 @@ export function RecipeCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
       style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
       <YStack gap={10}>
