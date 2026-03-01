@@ -8,10 +8,19 @@ import {
 } from "@/src/features/recipe/components/TabBar"
 import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
+import { FilterChipRow } from "@/src/features/recipe/components/FilterChipRow"
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
   { key: "free", label: "자유글" },
+]
+
+const FILTER_CHIPS = [
+  { key: "low-salt", label: "#저염식" },
+  { key: "ckd3", label: "#CKD3" },
+  { key: "japanese", label: "#일식" },
+  { key: "low-protein", label: "#저단백" },
+  { key: "low-potassium", label: "#저칼륨" },
 ]
 
 export default function RecipeScreen() {
@@ -27,6 +36,13 @@ export default function RecipeScreen() {
   }
 
   const [search, setSearch] = useState("")
+  const [selectedChips, setSelectedChips] = useState<string[]>([])
+
+  const handleChipPress = (key: string) => {
+    setSelectedChips((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
@@ -48,6 +64,12 @@ export default function RecipeScreen() {
         {activeTab === "recipe" && (
           <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
             <SearchInput value={search} onChangeText={setSearch} />
+            <FilterChipRow
+              chips={FILTER_CHIPS}
+              selectedChips={selectedChips}
+              onChipPress={handleChipPress}
+              onFilterPress={() => {}}
+            />
           </YStack>
         )}
         {activeTab === "free" && (
