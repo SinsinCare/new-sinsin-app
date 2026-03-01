@@ -112,7 +112,7 @@ export function LoginScreen() {
             letterSpacing={-0.26}
             lineHeight={16.9}
           >
-            아직 신신당부 회원이 아니신가요?
+            신신당부가 처음이신가요? 가입하기
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
             <Text
