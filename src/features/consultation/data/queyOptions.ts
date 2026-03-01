@@ -7,4 +7,6 @@ export const chatHistoryQuery = (isEnabled: boolean) =>
     queryKey: ["chat", "history"],
     queryFn: () => chatApiService.getChats(),
     enabled: isEnabled,
+    staleTime: 0,
+    gcTime: 0,
   })

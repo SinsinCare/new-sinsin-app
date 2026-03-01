@@ -1,55 +1,72 @@
 import { useEffect, useRef } from "react"
-import { Animated, Easing, View } from "react-native"
-import { useTheme, XStack } from "tamagui"
+import { Animated, Easing, useColorScheme } from "react-native"
+import { XStack } from "tamagui"
+import Svg, {
+  Defs,
+  LinearGradient,
+  Stop,
+  Text as SvgText,
+} from "react-native-svg"
 import { AssistantAvatar } from "./ChatMessageBubble"
 
-export function TypingIndicator() {
-  const theme = useTheme()
-  const darkColor = theme.color?.val ?? "#2A2E38"
-  const lightColor = theme.colorSubtle?.val ?? "#A5A5AF"
-  const avatarColor = theme.borderColor?.val ?? "#D9D9DF"
+const AnimatedStop = Animated.createAnimatedComponent(Stop)
 
-  const colorAnim = useRef(new Animated.Value(0)).current
+export function TypingIndicator() {
+  const isDark = useColorScheme() === "dark"
+  // bg: dark #1F1F21, light #F3F3F3
+  const baseColor = isDark ? "#E0E0E0" : "#1A1A1A"
+  const sweepColor = isDark ? "#666666" : "#999999"
+
+  const anim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(colorAnim, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        }),
-        Animated.timing(colorAnim, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        }),
-      ]),
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }),
     )
     animation.start()
     return () => animation.stop()
-  }, [colorAnim, darkColor, lightColor])
+  }, [anim])
 
-  const animatedColor = colorAnim.interpolate({
+  // Highlight sweeps from fully off-left to fully off-right
+  // so the loop restart (1→0) is invisible (both states = base color)
+  const stop1 = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [darkColor, lightColor],
+    outputRange: [-0.6, 1.0],
+  })
+  const stop2 = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-0.3, 1.3],
+  })
+  const stop3 = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.0, 1.6],
   })
 
   return (
     <XStack alignItems="center" paddingHorizontal="$4" gap="$3">
       <AssistantAvatar />
-      <Animated.Text
-        style={{
-          fontSize: 14,
-          lineHeight: 22,
-          fontFamily: "PretendardKR-Medium",
-          color: animatedColor,
-        }}
-      >
-        답변을 신중하게 고민하고 있어요
-      </Animated.Text>
+      <Svg height={22} width={250}>
+        <Defs>
+          <LinearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
+            <AnimatedStop offset={stop1} stopColor={baseColor} />
+            <AnimatedStop offset={stop2} stopColor={sweepColor} />
+            <AnimatedStop offset={stop3} stopColor={baseColor} />
+          </LinearGradient>
+        </Defs>
+        <SvgText
+          fill="url(#shimmer)"
+          fontSize={14}
+          fontFamily="PretendardKR-Medium"
+          y={16}
+        >
+          답변을 신중하게 고민하고 있어요
+        </SvgText>
+      </Svg>
     </XStack>
   )
 }
