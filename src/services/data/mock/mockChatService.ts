@@ -24,21 +24,23 @@ function pickMockReply(): string {
 
 function pickMockCategory(): ChatCategory {
   const categories: ChatCategory[] = [
-    "DIET",
-    "MEDICINE",
+    "FOOD_DIET",
+    "MEDICATION",
     "LIFESTYLE",
-    "SYMPTOM",
-    "CHECKUP",
+    "SYMPTOMS",
+    "EXAM",
+    "NONE",
   ]
   return categories[Math.floor(Math.random() * categories.length)]
 }
 
 const CATEGORY_LABELS: Record<ChatCategory, string> = {
-  DIET: "음식·식단",
-  MEDICINE: "약·영양제",
+  FOOD_DIET: "음식·식단",
+  MEDICATION: "약·영양제",
   LIFESTYLE: "생활관리",
-  SYMPTOM: "증상",
-  CHECKUP: "검사·수치해석",
+  SYMPTOMS: "증상",
+  EXAM: "검사·수치해석",
+  NONE: "기타",
 }
 
 export function createMockChatService(): ChatService {
@@ -63,7 +65,7 @@ export function createMockChatService(): ChatService {
       }
     },
 
-    async createChat() {
+    async createChat(category: ChatCategory) {
       await delay()
       const convId = nextConvId++
       const now = new Date()
@@ -71,6 +73,7 @@ export function createMockChatService(): ChatService {
         id: convId,
         title: "새 상담",
         status: "ACTIVE",
+        category: category,
         createdAt: now,
         updatedAt: now,
       }
@@ -86,7 +89,7 @@ export function createMockChatService(): ChatService {
       }
       messagesStore.set(convId, [greetingMessage])
 
-      return { conversation, greetingMessage }
+      return { conversation }
     },
 
     async getChatDetail(conversationId: number) {
@@ -107,12 +110,23 @@ export function createMockChatService(): ChatService {
       messagesStore.delete(conversationId)
     },
 
+    async renameChat(conversationId: number, title: string) {
+      await delay()
+      const conv = conversations.find((c) => c.id === conversationId)
+      if (conv) conv.title = title
+    },
+
     async getMessages(conversationId: number) {
       await delay()
       return [...(messagesStore.get(conversationId) ?? [])]
     },
 
-    async sendMessage(conversationId: number, content: string) {
+    async sendMessage(
+      conversationId: number,
+      content: string,
+      userCategory: ChatCategory,
+      onChunk?: (text: string) => void,
+    ) {
       await delay()
       const now = new Date()
       const msgs = messagesStore.get(conversationId) ?? []

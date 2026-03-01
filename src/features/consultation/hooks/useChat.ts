@@ -13,8 +13,8 @@ export function useChat() {
   const convIdRef = useRef<number | null>(null)
 
   const { mutateAsync: createChatMutate, isPending: isCreating } = useMutation({
-    mutationFn: async () => {
-      const { conversation } = await chatApiService.createChat()
+    mutationFn: async (category: ChatCategory) => {
+      const { conversation } = await chatApiService.createChat(category)
       return conversation
     },
     onError: (err) => {
@@ -27,15 +27,49 @@ export function useChat() {
       mutationFn: async ({
         conversationId: convId,
         content,
+        userCategory,
       }: {
         conversationId: number
         content: string
+        userCategory: ChatCategory
       }) => {
-        const assistantMsg = await chatApiService.sendMessage(convId, content)
+        const streamingMsgId = optimisticMsgId--
+        let placeholderAdded = false
+
+        const assistantMsg = await chatApiService.sendMessage(
+          convId,
+          content,
+          userCategory,
+          (accumulated) => {
+            if (!placeholderAdded) {
+              placeholderAdded = true
+              setIsTyping(false)
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: streamingMsgId,
+                  conversationId: convId,
+                  role: "assistant",
+                  content: accumulated,
+                  createdAt: new Date(),
+                },
+              ])
+            } else {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamingMsgId ? { ...m, content: accumulated } : m,
+                ),
+              )
+            }
+          },
+        )
+
+        // Replace streaming placeholder with final message
+        setMessages((prev) =>
+          prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m)),
+        )
+
         return assistantMsg
-      },
-      onSuccess: (assistantMsg) => {
-        setMessages((prev) => [...prev, assistantMsg])
       },
       onError: (err) => {
         console.error("Failed to send message:", err)
@@ -47,15 +81,49 @@ export function useChat() {
 
   const { mutateAsync: regenerateMutate, isPending: isRegenerating } =
     useMutation({
-      mutationFn: async (content: string) => {
+      mutationFn: async ({
+        content,
+        userCategory,
+      }: {
+        content: string
+        userCategory: ChatCategory
+      }) => {
+        const streamingMsgId = optimisticMsgId--
+        let placeholderAdded = false
+
         const assistantMsg = await chatApiService.sendMessage(
           convIdRef.current!,
           content,
+          userCategory,
+          (accumulated) => {
+            if (!placeholderAdded) {
+              placeholderAdded = true
+              setIsTyping(false)
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: streamingMsgId,
+                  conversationId: convIdRef.current!,
+                  role: "assistant",
+                  content: accumulated,
+                  createdAt: new Date(),
+                },
+              ])
+            } else {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamingMsgId ? { ...m, content: accumulated } : m,
+                ),
+              )
+            }
+          },
         )
+
+        setMessages((prev) =>
+          prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m)),
+        )
+
         return assistantMsg
-      },
-      onSuccess: (assistantMsg) => {
-        setMessages((prev) => [...prev, assistantMsg])
       },
       onError: (err) => {
         console.error("Failed to regenerate message:", err)
@@ -70,23 +138,12 @@ export function useChat() {
   const sendMessage = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
-      // if (!trimmed || !category || isSending) return
       if (!trimmed || isSending) return
 
-      let activeConvId = convIdRef.current
-
-      // 첫 메시지: 대화 생성
-      if (activeConvId === null) {
-        const conversation = await createChatMutate()
-        activeConvId = conversation.id
-        convIdRef.current = activeConvId
-        setConversationId(activeConvId)
-      }
-
-      // Optimistic user message
+      // Optimistic UI: 유저 버블 + 타이핑 표시를 즉시 보여줌
       const optimisticUserMsg: Message = {
         id: optimisticMsgId--,
-        conversationId: activeConvId,
+        conversationId: convIdRef.current ?? -1,
         role: "user",
         content: trimmed,
         createdAt: new Date(),
@@ -94,7 +151,30 @@ export function useChat() {
       setMessages((prev) => [...prev, optimisticUserMsg])
       setIsTyping(true)
 
-      await sendMsgMutate({ conversationId: activeConvId, content: trimmed })
+      let activeConvId = convIdRef.current
+
+      // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
+      if (activeConvId === null) {
+        try {
+          const conversation = await createChatMutate(category ?? "NONE")
+          activeConvId = conversation.id
+          convIdRef.current = activeConvId
+          setConversationId(activeConvId)
+        } catch {
+          // createChat 실패 시 optimistic UI 롤백
+          setMessages((prev) =>
+            prev.filter((m) => m.id !== optimisticUserMsg.id),
+          )
+          setIsTyping(false)
+          return
+        }
+      }
+
+      await sendMsgMutate({
+        conversationId: activeConvId,
+        content: trimmed,
+        userCategory: category ?? "NONE",
+      })
     },
     [isSending, createChatMutate, sendMsgMutate],
   )
@@ -146,8 +226,11 @@ export function useChat() {
     })
 
     setIsTyping(true)
-    await regenerateMutate(lastUserMsg.content)
-  }, [isSending, messages, regenerateMutate])
+    await regenerateMutate({
+      content: lastUserMsg.content,
+      userCategory: category ?? "NONE",
+    })
+  }, [category, isSending, messages, regenerateMutate])
 
   return {
     conversationId,

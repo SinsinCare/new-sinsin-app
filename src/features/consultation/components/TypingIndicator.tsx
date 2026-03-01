@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import { Animated, Easing, View } from "react-native"
 import { useTheme, XStack } from "tamagui"
+import { AssistantAvatar } from "./ChatMessageBubble"
 
 export function TypingIndicator() {
   const theme = useTheme()
@@ -38,14 +39,7 @@ export function TypingIndicator() {
 
   return (
     <XStack alignItems="center" paddingHorizontal="$4" gap="$3">
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: avatarColor,
-        }}
-      />
+      <AssistantAvatar />
       <Animated.Text
         style={{
           fontSize: 14,
