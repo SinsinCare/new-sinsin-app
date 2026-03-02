@@ -1,5 +1,5 @@
 import React from "react"
-import { Pressable, ScrollView, useColorScheme } from "react-native"
+import { Pressable, ScrollView, useColorScheme, View } from "react-native"
 import { YStack, Text } from "tamagui"
 
 import WindowIcon from "@/assets/images/window.svg"
@@ -29,12 +29,14 @@ const TEXT_COLORS = {
 
 interface FoodCategoryBarProps {
   selectedCategories: Set<string>
-  onToggleCategory: (key: string) => void
+  onToggleCategory: (key: string, isSelected: boolean) => void
+  onToggleAllCategories: (isSelected: boolean) => void
 }
 
 export function FoodCategoryBar({
   selectedCategories,
   onToggleCategory,
+  onToggleAllCategories,
 }: FoodCategoryBarProps) {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
@@ -44,19 +46,25 @@ export function FoodCategoryBar({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+      contentContainerStyle={{ gap: 12 }}
     >
       {CATEGORIES.map(({ key, label, Icon }) => {
         const isAllButton = key === "all"
         const isActive = isAllButton
           ? selectedCategories.size === 0
           : selectedCategories.has(key)
-        const opacity = isActive ? 1 : 0.35
+        const opacity = isActive ? 1 : 0.5
 
         return (
           <Pressable
             key={key}
-            onPress={() => onToggleCategory(key)}
+            onPress={() => {
+              if (key === "all") {
+                onToggleAllCategories(isActive)
+              } else {
+                onToggleCategory(key, isActive)
+              }
+            }}
             accessibilityRole="button"
             accessibilityLabel={label}
             accessibilityState={{ selected: isActive }}
@@ -67,7 +75,16 @@ export function FoodCategoryBar({
             })}
           >
             <YStack alignItems="center" gap={6} opacity={opacity}>
-              <Icon width={38} height={38} />
+              <View
+                style={{
+                  width: 38,
+                  height: 38,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Icon height={34} />
+              </View>
               <Text
                 fontSize={13}
                 fontWeight="500"

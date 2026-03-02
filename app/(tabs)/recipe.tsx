@@ -118,10 +118,6 @@ export default function RecipeScreen() {
   )
 
   const handleToggleCategory = useCallback((key: string) => {
-    if (key === "all") {
-      setSelectedCategories(new Set())
-      return
-    }
     setSelectedCategories((prev) => {
       const next = new Set(prev)
       if (next.has(key)) {
@@ -131,6 +127,10 @@ export default function RecipeScreen() {
       }
       return next
     })
+  }, [])
+
+  const handleToggleAllCategories = useCallback((isSelected: boolean) => {
+    setSelectedCategories(isSelected ? new Set() : new Set())
   }, [])
 
   const [leftColumn, rightColumn] = useMemo(() => {
@@ -186,11 +186,12 @@ export default function RecipeScreen() {
                   <Icon name="filter" size={24} color={iconColor} />
                 </Pressable>
               </XStack>
+              <FoodCategoryBar
+                selectedCategories={selectedCategories}
+                onToggleCategory={handleToggleCategory}
+                onToggleAllCategories={handleToggleAllCategories}
+              />
             </YStack>
-            <FoodCategoryBar
-              selectedCategories={selectedCategories}
-              onToggleCategory={handleToggleCategory}
-            />
             <View
               height={6}
               backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
