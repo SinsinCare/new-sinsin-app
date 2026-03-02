@@ -3,7 +3,7 @@ import { Sheet } from "@tamagui/sheet"
 import { YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 
-type WriteType = "recipe" | "free"
+export type WriteType = "recipe" | "free"
 
 interface WriteTypeSheetProps {
   open: boolean
@@ -65,8 +65,8 @@ export function WriteTypeSheet({
   const isDark = colorScheme === "dark"
 
   const handleSelect = (type: WriteType) => {
-    onOpenChange(false)
     onSelect(type)
+    onOpenChange(false)
   }
 
   return (
