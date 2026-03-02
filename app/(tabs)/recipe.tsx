@@ -16,6 +16,7 @@ import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
+import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
 import {
   RecipeCard,
   type RecipeCardTags,
@@ -112,6 +113,26 @@ export default function RecipeScreen() {
     Record<string, Set<string>>
   >({})
 
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    new Set(),
+  )
+
+  const handleToggleCategory = (key: string) => {
+    if (key === "all") {
+      setSelectedCategories(new Set())
+      return
+    }
+    setSelectedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
+
   const [leftColumn, rightColumn] = useMemo(() => {
     const left: RecipeItem[] = []
     const right: RecipeItem[] = []
@@ -166,6 +187,10 @@ export default function RecipeScreen() {
                 </Pressable>
               </XStack>
             </YStack>
+            <FoodCategoryBar
+              selectedCategories={selectedCategories}
+              onToggleCategory={handleToggleCategory}
+            />
             <View
               height={6}
               backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
