@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react"
-import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
+import {
+  Keyboard,
+  Pressable,
+  ScrollView,
+  useColorScheme,
+  StyleSheet,
+} from "react-native"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -212,7 +218,36 @@ export default function RecipeScreen() {
           selectedFilters={selectedFilters}
           onApply={setSelectedFilters}
         />
+        <Pressable
+          onPress={() => console.log("글쓰기 pressed")}
+          style={({ pressed }) => ({
+            ...styles.writeButton,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Text
+            color="#1F1F21"
+            fontSize={16}
+            lineHeight={28}
+            fontWeight="600"
+            fontFamily="$body"
+          >
+            + 글쓰기
+          </Text>
+        </Pressable>
       </YStack>
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  writeButton: {
+    position: "absolute",
+    bottom: 26,
+    right: 16,
+    backgroundColor: "#FF7246",
+    borderRadius: 24,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+})
