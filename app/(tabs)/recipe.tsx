@@ -17,6 +17,7 @@ import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
 import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
+import { WriteTypeSheet } from "@/src/features/recipe/components/WriteTypeSheet"
 import {
   RecipeCard,
   type RecipeCardTags,
@@ -109,6 +110,7 @@ export default function RecipeScreen() {
 
   const [search, setSearch] = useState("")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [writeSheetOpen, setWriteSheetOpen] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
@@ -244,8 +246,13 @@ export default function RecipeScreen() {
           selectedFilters={selectedFilters}
           onApply={setSelectedFilters}
         />
+        <WriteTypeSheet
+          open={writeSheetOpen}
+          onOpenChange={setWriteSheetOpen}
+          onSelect={(type) => console.log("write type selected:", type)}
+        />
         <Pressable
-          onPress={() => console.log("글쓰기 pressed")}
+          onPress={() => setWriteSheetOpen(true)}
           style={({ pressed }) => ({
             ...styles.writeButton,
             opacity: pressed ? 0.85 : 1,
