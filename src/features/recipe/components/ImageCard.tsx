@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Image } from "react-native"
 import { XStack, YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components"
 
 const ICON_COLOR = "#E78A63D9"
 const PLACEHOLDER = require("@/assets/images/Sin_light.png")
+const DEFAULT_ASPECT_RATIO = 1
 
 interface ImageCardProps {
   imageUri: string
@@ -18,10 +19,21 @@ export function ImageCard({
   commentCount,
 }: ImageCardProps) {
   const [errored, setErrored] = useState(false)
+  const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO)
+
+  useEffect(() => {
+    if (imageUri) {
+      Image.getSize(
+        imageUri,
+        (w, h) => setAspectRatio(w / h),
+        () => setErrored(true)
+      )
+    }
+  }, [imageUri])
 
   return (
     <YStack borderRadius={10} overflow="hidden">
-      <YStack aspectRatio={1}>
+      <YStack aspectRatio={aspectRatio}>
         <Image
           source={errored ? PLACEHOLDER : { uri: imageUri }}
           onError={() => setErrored(true)}

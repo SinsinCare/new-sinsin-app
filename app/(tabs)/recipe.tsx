@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -10,7 +10,57 @@ import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
-import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
+import {
+  RecipeCard,
+  type RecipeCardTags,
+} from "@/src/features/recipe/components/RecipeCard"
+
+interface RecipeItem {
+  id: string
+  imageUri: string
+  likeCount: number
+  commentCount: number
+  tags: RecipeCardTags
+  title: string
+}
+
+const MOCK_RECIPES: RecipeItem[] = [
+  {
+    id: "1",
+    imageUri:
+      "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+  {
+    id: "2",
+    imageUri: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+  {
+    id: "3",
+    imageUri:
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+  {
+    id: "4",
+    imageUri:
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+]
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -55,6 +105,15 @@ export default function RecipeScreen() {
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
+
+  const [leftColumn, rightColumn] = useMemo(() => {
+    const left: RecipeItem[] = []
+    const right: RecipeItem[] = []
+    MOCK_RECIPES.forEach((item, i) => {
+      ;(i % 2 === 0 ? left : right).push(item)
+    })
+    return [left, right] as const
+  }, [])
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
@@ -109,18 +168,34 @@ export default function RecipeScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{ padding: 16 }}
             >
-              <RecipeCard
-                imageUri="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400"
-                likeCount={32}
-                commentCount={24}
-                tags={{
-                  nutrition: ["저염식"],
-                  stage: ["CKD3"],
-                  country: ["일식"],
-                }}
-                title="닭가슴살 카레"
-                onPress={() => console.log("RecipeCard pressed")}
-              />
+              <XStack gap={12}>
+                <YStack flex={1} gap={12}>
+                  {leftColumn.map((item) => (
+                    <RecipeCard
+                      key={item.id}
+                      imageUri={item.imageUri}
+                      likeCount={item.likeCount}
+                      commentCount={item.commentCount}
+                      tags={item.tags}
+                      title={item.title}
+                      onPress={() => console.log("RecipeCard pressed", item.id)}
+                    />
+                  ))}
+                </YStack>
+                <YStack flex={1} gap={12}>
+                  {rightColumn.map((item) => (
+                    <RecipeCard
+                      key={item.id}
+                      imageUri={item.imageUri}
+                      likeCount={item.likeCount}
+                      commentCount={item.commentCount}
+                      tags={item.tags}
+                      title={item.title}
+                      onPress={() => console.log("RecipeCard pressed", item.id)}
+                    />
+                  ))}
+                </YStack>
+              </XStack>
             </ScrollView>
           </>
         )}
