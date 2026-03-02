@@ -143,7 +143,16 @@ export function CategoryFilterSheet({
         borderTopRightRadius={20}
         backgroundColor={sheetBg}
       >
-        <Sheet.Handle />
+        <Sheet.Handle
+          marginHorizontal={"auto"}
+          marginVertical={12}
+          style={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: isDark ? "#858591" : "#D9D9DF",
+          }}
+        />
 
         {/* Header */}
         <XStack
