@@ -3,6 +3,7 @@
  * 사용해야 color prop으로 런타임 색상 변경이 가능합니다.
  */
 import { SvgProps } from "react-native-svg"
+import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
@@ -42,6 +43,7 @@ import Bookmark from "@/assets/icons/bookmark.svg"
 const icons = {
   bookmark: Bookmark,
   chat: Chat,
+  chef: Chef,
   "chevron-right": ChevronRight,
   copy: Copy,
   cross: Cross,
