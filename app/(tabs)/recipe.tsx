@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import {
   Keyboard,
   Pressable,
@@ -117,7 +117,7 @@ export default function RecipeScreen() {
     new Set(),
   )
 
-  const handleToggleCategory = (key: string) => {
+  const handleToggleCategory = useCallback((key: string) => {
     if (key === "all") {
       setSelectedCategories(new Set())
       return
@@ -131,7 +131,7 @@ export default function RecipeScreen() {
       }
       return next
     })
-  }
+  }, [])
 
   const [leftColumn, rightColumn] = useMemo(() => {
     const left: RecipeItem[] = []

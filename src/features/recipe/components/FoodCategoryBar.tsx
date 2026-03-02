@@ -12,14 +12,14 @@ import DessertIcon from "@/assets/images/dessert.svg"
 import DrinkIcon from "@/assets/images/drink.svg"
 
 const CATEGORIES = [
-  { key: "all", label: "\uC804\uCCB4", Icon: WindowIcon },
-  { key: "korean", label: "\uD55C\uC2DD", Icon: KoreanIcon },
-  { key: "chinese", label: "\uC911\uC2DD", Icon: ChineseIcon },
-  { key: "japanese", label: "\uC77C\uC2DD", Icon: JapaneseIcon },
-  { key: "american", label: "\uC591\uC2DD", Icon: AmericanIcon },
-  { key: "salad", label: "\uC0D0\uB7EC\uB4DC", Icon: SaladIcon },
-  { key: "dessert", label: "\uB514\uC800\uD2B8", Icon: DessertIcon },
-  { key: "drink", label: "\uC74C\uB8CC", Icon: DrinkIcon },
+  { key: "all", label: "전체", Icon: WindowIcon },
+  { key: "korean", label: "한식", Icon: KoreanIcon },
+  { key: "chinese", label: "중식", Icon: ChineseIcon },
+  { key: "japanese", label: "일식", Icon: JapaneseIcon },
+  { key: "american", label: "양식", Icon: AmericanIcon },
+  { key: "salad", label: "샐러드", Icon: SaladIcon },
+  { key: "dessert", label: "디저트", Icon: DessertIcon },
+  { key: "drink", label: "음료", Icon: DrinkIcon },
 ] as const
 
 const TEXT_COLORS = {
@@ -57,6 +57,9 @@ export function FoodCategoryBar({
           <Pressable
             key={key}
             onPress={() => onToggleCategory(key)}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ selected: isActive }}
             style={({ pressed }) => ({
               opacity: pressed ? 0.7 : 1,
               alignItems: "center",
