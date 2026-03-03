@@ -21,6 +21,7 @@ import Location from "@/assets/icons/location.svg"
 import Magnifyingglass from "@/assets/icons/magnifyingglass.svg"
 import Mail from "@/assets/icons/mail.svg"
 import Message from "@/assets/icons/message.svg"
+import MinusCircle from "@/assets/icons/minus-circle.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
 import Paperclip from "@/assets/icons/paperclip.svg"
@@ -70,6 +71,7 @@ const icons = {
   mail: Mail,
   menu: Menu,
   message: Message,
+  "minus-circle": MinusCircle,
   notification: Notification,
   paperclip: Paperclip,
   pencil: Pencil,
