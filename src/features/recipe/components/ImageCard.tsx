@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react"
-import { Image } from "react-native"
+import { Image, useColorScheme } from "react-native"
 import { XStack, YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components"
 
-const ICON_COLOR = "#E78A63D9"
+const ICON_COLOR = {
+  light: "#FF9775",
+  dark: "#E78A63D9",
+} as const
 const PLACEHOLDER = require("@/assets/images/Sin_light.png")
 const DEFAULT_ASPECT_RATIO = 1
 
@@ -18,6 +21,8 @@ export function ImageCard({
   likeCount,
   commentCount,
 }: ImageCardProps) {
+  const colorScheme = useColorScheme()
+  const isDark = colorScheme === "dark"
   const [errored, setErrored] = useState(false)
   const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO)
 
@@ -26,7 +31,7 @@ export function ImageCard({
       Image.getSize(
         imageUri,
         (w, h) => setAspectRatio(w / h),
-        () => setErrored(true)
+        () => setErrored(true),
       )
     }
   }, [imageUri])
@@ -49,13 +54,21 @@ export function ImageCard({
         gap="$3"
       >
         <XStack alignItems="center" gap="$1">
-          <Icon name="hands-clap" size={20} color={ICON_COLOR} />
+          <Icon
+            name="hands-clap"
+            size={20}
+            color={ICON_COLOR[isDark ? "dark" : "light"]}
+          />
           <Text fontSize={14} lineHeight={20} fontWeight="500" color="white">
             {likeCount}
           </Text>
         </XStack>
         <XStack alignItems="center" gap="$1">
-          <Icon name="message" size={20} color={ICON_COLOR} />
+          <Icon
+            name="message"
+            size={20}
+            color={ICON_COLOR[isDark ? "dark" : "light"]}
+          />
           <Text fontSize={14} lineHeight={20} fontWeight="500" color="white">
             {commentCount}
           </Text>

@@ -149,7 +149,7 @@ export default function RecipeScreen() {
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
       <YStack
         flex={1}
-        backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
+        backgroundColor={isDarkMode ? "#1F1F21" : "#FCFCFC"}
         paddingTop={insets.top}
       >
         <TopTabBar

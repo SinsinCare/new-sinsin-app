@@ -14,20 +14,22 @@ interface PopularPostCardProps {
 
 const CARD_COLORS = {
   light: {
-    background: "#F5F5F5",
-    category: "#37A589",
+    background: "#FDFDFD",
+    category: "#44AF94",
     title: "#2A2A37",
-    summary: "#8E8E93",
-    meta: "#8E8E93",
-    iconColor: "#8E8E93",
+    summary: "#474758",
+    meta: "#666677",
+    iconColor: "#E78A63D9",
+    iconTextColor: "#474758",
   },
   dark: {
-    background: "#2C2C2E",
+    background: "#36363E",
     category: "#5BC5AB",
     title: "#E7E7EE",
-    summary: "#8E8E93",
-    meta: "#8E8E93",
-    iconColor: "#8E8E93",
+    summary: "#ABABB4",
+    meta: "#858591",
+    iconTextColor: "#ABABB4",
+    iconColor: "#E78A63D9",
   },
 } as const
 
@@ -87,7 +89,11 @@ export function PopularPostCard({
           {summary}
         </Text>
 
-        <XStack alignItems="center" justifyContent="space-between" marginTop={4}>
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          marginTop={4}
+        >
           <Text
             fontSize={12}
             fontWeight="400"
@@ -103,7 +109,7 @@ export function PopularPostCard({
                 fontSize={12}
                 fontWeight="400"
                 fontFamily="$body"
-                color={colors.meta}
+                color={colors.iconTextColor}
               >
                 {likeCount}
               </Text>
@@ -114,7 +120,7 @@ export function PopularPostCard({
                 fontSize={12}
                 fontWeight="400"
                 fontFamily="$body"
-                color={colors.meta}
+                color={colors.iconTextColor}
               >
                 {commentCount}
               </Text>

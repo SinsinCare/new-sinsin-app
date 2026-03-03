@@ -15,17 +15,19 @@ interface PostListItemProps {
 const ITEM_COLORS = {
   light: {
     title: "#2A2A37",
-    summary: "#8E8E93",
+    summary: "#666677",
     meta: "#8E8E93",
-    iconColor: "#8E8E93",
-    divider: "#D4D4D4",
+    iconColor: "#E78A63D9",
+    iconTextColor: "#2A2A37",
+    divider: "#CACBD5",
   },
   dark: {
     title: "#E7E7EE",
-    summary: "#8E8E93",
-    meta: "#8E8E93",
-    iconColor: "#8E8E93",
-    divider: "#313138",
+    summary: "#858591",
+    meta: "#858591",
+    iconColor: "#E78A63D9",
+    iconTextColor: "#E7E7EE",
+    divider: "#4E4F55",
   },
 } as const
 
@@ -70,7 +72,11 @@ export function PostListItem({
           {summary}
         </Text>
 
-        <XStack alignItems="center" justifyContent="space-between" marginTop={4}>
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          marginTop={4}
+        >
           <Text
             fontSize={12}
             fontWeight="400"
@@ -86,7 +92,7 @@ export function PostListItem({
                 fontSize={12}
                 fontWeight="400"
                 fontFamily="$body"
-                color={colors.meta}
+                color={colors.iconTextColor}
               >
                 {likeCount}
               </Text>
@@ -97,7 +103,7 @@ export function PostListItem({
                 fontSize={12}
                 fontWeight="400"
                 fontFamily="$body"
-                color={colors.meta}
+                color={colors.iconTextColor}
               >
                 {commentCount}
               </Text>
@@ -106,9 +112,7 @@ export function PostListItem({
         </XStack>
       </YStack>
 
-      {showDivider && (
-        <View height={1} backgroundColor={colors.divider} />
-      )}
+      {showDivider && <View height={1} backgroundColor={colors.divider} />}
     </Pressable>
   )
 }
