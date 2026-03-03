@@ -4,9 +4,9 @@ import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
-import type { MealType } from "../../types"
-import { getRestrictionStyle } from "../../utils/getRestrictionStyle"
-import { MacroBar } from "./MacroBar"
+import type { MealType } from "../types"
+import { getRestrictionStyle } from "../utils/getRestrictionStyle"
+import { MacroBar } from "./record/MacroBar"
 import { Icon, IconName } from "@/src/shared/components/Icon"
 
 const NUTRIENT_ICON: Record<string, IconName> = {
@@ -22,7 +22,8 @@ interface FoodAnalysisResultProps {
   onClose: () => void
   imageUri?: string
   mealType?: MealType
-  onAddToRecord: () => Promise<void> | void
+  onAddToRecord?: () => Promise<void> | void
+  showAddButton?: boolean
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -60,6 +61,7 @@ export function FoodAnalysisResult({
   imageUri,
   mealType,
   onAddToRecord,
+  showAddButton = true,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
 
@@ -328,33 +330,35 @@ export function FoodAnalysisResult({
         </ScrollView>
 
         {/* 하단 고정 버튼 */}
-        <YStack
-          position="absolute"
-          bottom={0}
-          left={0}
-          right={0}
-          backgroundColor={tokens.color.appBg.val}
-          paddingHorizontal={16}
-          paddingTop={12}
-          paddingBottom={insets.bottom + 12}
-        >
+        {showAddButton && (
           <YStack
-            backgroundColor={tokens.color.primary7.val}
-            borderRadius={30}
-            height={54}
-            alignItems="center"
-            justifyContent="center"
-            onPress={async () => {
-              await onAddToRecord()
-              onClose()
-            }}
-            pressStyle={{ opacity: 0.8 }}
+            position="absolute"
+            bottom={0}
+            left={0}
+            right={0}
+            backgroundColor={tokens.color.appBg.val}
+            paddingHorizontal={16}
+            paddingTop={12}
+            paddingBottom={insets.bottom + 12}
           >
-            <Text color="white" fontSize={16} fontWeight="700">
-              기록에 추가하기
-            </Text>
+            <YStack
+              backgroundColor={tokens.color.primary7.val}
+              borderRadius={30}
+              height={54}
+              alignItems="center"
+              justifyContent="center"
+              onPress={async () => {
+                await onAddToRecord?.()
+                onClose()
+              }}
+              pressStyle={{ opacity: 0.8 }}
+            >
+              <Text color="white" fontSize={16} fontWeight="700">
+                기록에 추가하기
+              </Text>
+            </YStack>
           </YStack>
-        </YStack>
+        )}
       </YStack>
     </Modal>
   )

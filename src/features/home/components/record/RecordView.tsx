@@ -23,7 +23,7 @@ import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
-import { FoodAnalysisResult } from "./FoodAnalysisResult"
+import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -128,6 +128,11 @@ export function RecordView({
     })
     .map((day) => day.date)
 
+  const totalIntake = data?.result.analysis?.extraWater ?? 0
+  const dailyGoal = record.dailyGoal
+  const percentage = Math.min((totalIntake / dailyGoal) * 100, 100)
+  const remaining = Math.max(dailyGoal - totalIntake, 0)
+
   const handleAddToRecord = async () => {
     await registerDiary(selectedDate, (mealType, imageUri) => {
       setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
@@ -227,13 +232,19 @@ export function RecordView({
       <View height={10} />
 
       <HydrationTracker
-        intake={record.intake}
-        dailyGoal={record.dailyGoal}
-        percentage={record.percentage}
-        remaining={record.remaining}
-        isGoalAchieved={record.isGoalAchieved}
-        addWater={record.addWater}
-        onReset={record.resetHydration}
+        intake={totalIntake}
+        dailyGoal={dailyGoal}
+        percentage={percentage}
+        remaining={remaining}
+        isGoalAchieved={percentage >= 100}
+        addWater={async (amount) => {
+          await record.addWater(amount)
+          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        }}
+        onReset={async () => {
+          await record.resetHydration(data?.result.analysis?.extraWater ?? 0)
+          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        }}
       />
 
       <View height={10} />
