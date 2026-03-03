@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
+import { useRouter } from "expo-router"
 import {
   Keyboard,
   Pressable,
@@ -95,6 +96,7 @@ const ICON_COLORS = {
 } as const
 
 export default function RecipeScreen() {
+  const router = useRouter()
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
@@ -244,7 +246,7 @@ export default function RecipeScreen() {
         <WriteTypeSheet
           open={writeSheetOpen}
           onOpenChange={setWriteSheetOpen}
-          onSelect={(type) => console.log("write type selected:", type)}
+          onSelect={(type) => router.push(`/(write)/${type}/new`)}
         />
         <Pressable
           onPress={() => setWriteSheetOpen(true)}
@@ -254,7 +256,7 @@ export default function RecipeScreen() {
           })}
         >
           <Text
-            color="#1F1F21"
+            color={isDarkMode ? "#1F1F21" : "#FCFCFC"}
             fontSize={16}
             lineHeight={28}
             fontWeight="600"
