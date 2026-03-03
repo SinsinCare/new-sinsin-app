@@ -23,7 +23,7 @@ import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
-import { FoodAnalysisResult } from "./FoodAnalysisResult"
+import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"

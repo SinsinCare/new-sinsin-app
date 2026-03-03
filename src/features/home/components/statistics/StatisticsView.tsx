@@ -20,7 +20,7 @@ import { StatisticsTabBar } from "./StatisticsTabBar"
 import { getWeekLabel } from "../../utils/getWeekDays"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useDiaryExistence } from "../../hooks/useDiaryExistence"
-import { FoodAnalysisResult } from "../record/FoodAnalysisResult"
+import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import { foodCameraService } from "@/src/services/data"
 import type { DiaryAnalysisResult } from "@/src/types"
 
@@ -231,7 +231,7 @@ export function StatisticsView({
             onClose={() => setIsResultOpen(false)}
             imageUri={diaryResult?.imageUrl}
             mealType={resultMealType}
-            onAddToRecord={() => {}}
+            showAddButton={false}
           />
 
           <View
