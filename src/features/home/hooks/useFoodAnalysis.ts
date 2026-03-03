@@ -78,6 +78,19 @@ export function useFoodAnalysis() {
     }
   }
 
+  const fetchDiaryResult = async (diaryId: number) => {
+    try {
+      await foodCameraService.fetchDiaryResult(diaryId)
+    } catch (error) {
+      console.error("registerDiary error:", error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "다이어리 조회 중 오류가 발생했습니다."
+      Alert.alert("조회 실패", message)
+    }
+  }
+
   return {
     isAnalyzing,
     isResultOpen,

@@ -49,6 +49,18 @@ export interface FoodCameraAnalyzeResult {
   evaluation: FoodCameraEvaluation
 }
 
+export interface DiaryAnalysisResult extends FoodCameraAnalyzeResult {
+  imageUrl: string
+}
+
+export interface DiaryAnalysisResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: DiaryAnalysisResult
+  timestamp: string
+}
+
 export interface FoodCameraDiaryRegisterResponse {
   isSuccess: boolean
   code: string

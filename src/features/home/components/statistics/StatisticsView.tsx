@@ -20,6 +20,9 @@ import { StatisticsTabBar } from "./StatisticsTabBar"
 import { getWeekLabel } from "../../utils/getWeekDays"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useDiaryExistence } from "../../hooks/useDiaryExistence"
+import { FoodAnalysisResult } from "../record/FoodAnalysisResult"
+import { foodCameraService } from "@/src/services/data"
+import type { DiaryAnalysisResult } from "@/src/types"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -41,6 +44,11 @@ export function StatisticsView({
   isActive,
 }: StatisticsViewProps) {
   const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
+  const [diaryResult, setDiaryResult] = useState<DiaryAnalysisResult | null>(
+    null,
+  )
+  const [isResultOpen, setIsResultOpen] = useState(false)
+  const [resultMealType, setResultMealType] = useState<MealType | undefined>()
   const scrollRef = useRef<ScrollView>(null)
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
@@ -60,6 +68,20 @@ export function StatisticsView({
     const interval = setInterval(refetch, 5000)
     return () => clearInterval(interval)
   }, [isActive, refetch])
+
+  const handleDietCardPress = async (mealType: MealType) => {
+    onSelectMealType(mealType)
+    const diet = data?.result.diets.find((d) => d.mealType === mealType)
+    if (!diet) return
+    try {
+      const result = await foodCameraService.fetchDiaryResult(diet.diaryId)
+      setDiaryResult(result)
+      setResultMealType(mealType)
+      setIsResultOpen(true)
+    } catch {
+      // 조회 실패 시 모달 미표시
+    }
+  }
 
   const goToPrevWeek = () => {
     const prev = new Date(selectedDate)
@@ -199,9 +221,19 @@ export function StatisticsView({
             <DietaryRecord
               diets={data?.result.diets ?? []}
               selectedMealType={selectedMealType}
-              onSelectMealType={onSelectMealType}
+              onSelectMealType={handleDietCardPress}
             />
           </View>
+
+          <FoodAnalysisResult
+            result={diaryResult}
+            open={isResultOpen}
+            onClose={() => setIsResultOpen(false)}
+            imageUri={diaryResult?.imageUrl}
+            mealType={resultMealType}
+            onAddToRecord={() => {}}
+          />
+
           <View
             onLayout={(e) => {
               sectionOffsets.current.weight = e.nativeEvent.layout.y
