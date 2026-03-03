@@ -1,25 +1,235 @@
-import { useColorScheme } from "react-native"
-import { YStack, Text } from "tamagui"
+import { useState } from "react"
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  TextInput,
+  useColorScheme,
+  StyleSheet,
+} from "react-native"
+import { useRouter } from "expo-router"
+import { YStack, XStack, Text, View, ScrollView } from "tamagui"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { Icon } from "@/src/shared/components/Icon"
+import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
+import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
+
+const BG_COLOR = { light: "#FCFCFC", dark: "#1F1F21" } as const
+const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
+const REGISTER_ACTIVE_COLOR = { light: "#EE6145", dark: "#E77661" } as const
+const REGISTER_DISABLED_COLOR = { light: "#C7C7CC", dark: "#636366" } as const
+const CATEGORY_LABEL_COLOR = { light: "#8E8E93", dark: "#858591" } as const
+const CATEGORY_VALUE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
+const SELECT_BTN_BG = { light: "#F2F2F7", dark: "#3A3A3C" } as const
+const SELECT_BTN_TEXT = { light: "#8E8E93", dark: "#858591" } as const
+const DIVIDER_COLOR = { light: "#E5E5EA", dark: "#38383A" } as const
+const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
+const TITLE_PLACEHOLDER_COLOR = { light: "#EE6145", dark: "#E77661" } as const
+const BODY_PLACEHOLDER_COLOR = { light: "#C7C7CC", dark: "#636366" } as const
+const PRIMARY_BAR_COLOR = "#EE6145"
+
+const BODY_PLACEHOLDER = `식단을 건강하게 관리하고, 고민과 의견을 나눌 수 있도록\n다양한 이야기를 나누는 공간입니다.\n\n이런 글을 남겨보세요\nex) 오늘의 식단 인증, 식단 관리중의 고민사항들...\n\n상대방을 불쾌하게 하거나 배려 없는 의견은 삼가 주세요.\n게시판의 성격과 무관한 글, 타인 비방, 광고성 게시물은 사전 경고 없이 삭제될 수 있습니다.`
 
 export default function FreePostNewScreen() {
+  const router = useRouter()
+  const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
+
+  const [selectedCategory, setSelectedCategory] = useState(
+    FREE_POST_CATEGORIES[0].key,
+  )
+  const [title, setTitle] = useState("")
+  const [body, setBody] = useState("")
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false)
+
+  const selectedLabel =
+    FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? ""
+
+  const canSubmit = title.trim().length > 0 && body.trim().length > 0
+
+  const handleOpenCategorySheet = () => {
+    Keyboard.dismiss()
+    setCategorySheetOpen(true)
+  }
+
+  const handleSubmit = () => {
+    if (!canSubmit) return
+    console.log("Submit free post:", { selectedCategory, title, body })
+    router.back()
+  }
+
+  const registerColor = canSubmit
+    ? isDark
+      ? REGISTER_ACTIVE_COLOR.dark
+      : REGISTER_ACTIVE_COLOR.light
+    : isDark
+      ? REGISTER_DISABLED_COLOR.dark
+      : REGISTER_DISABLED_COLOR.light
 
   return (
     <YStack
       flex={1}
-      alignItems="center"
-      justifyContent="center"
-      backgroundColor={isDark ? "#1F1F21" : "#FCFCFC"}
+      backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
+      paddingTop={insets.top}
     >
-      <Text
-        fontSize={18}
-        fontWeight="600"
-        fontFamily="$body"
-        color={isDark ? "#E7E7EE" : "#2A2A37"}
+      {/* Header */}
+      <XStack
+        paddingHorizontal={16}
+        paddingVertical={12}
+        alignItems="center"
+        justifyContent="space-between"
       >
-        자유글 작성
-      </Text>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          <Icon
+            name="x"
+            size={24}
+            color={isDark ? HEADER_TEXT_COLOR.dark : HEADER_TEXT_COLOR.light}
+          />
+        </Pressable>
+        <Pressable
+          onPress={handleSubmit}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            opacity: pressed && canSubmit ? 0.7 : 1,
+          })}
+        >
+          <Text
+            fontSize={16}
+            fontWeight="600"
+            fontFamily="$body"
+            color={registerColor}
+          >
+            등록
+          </Text>
+        </Pressable>
+      </XStack>
+
+      {/* Category Selector */}
+      <YStack paddingHorizontal={16} paddingVertical={8} gap={4}>
+        <Text
+          fontSize={12}
+          fontWeight="400"
+          fontFamily="$body"
+          color={isDark ? CATEGORY_LABEL_COLOR.dark : CATEGORY_LABEL_COLOR.light}
+        >
+          카테고리 선택
+        </Text>
+        <XStack alignItems="center" justifyContent="space-between">
+          <Text
+            fontSize={16}
+            fontWeight="600"
+            fontFamily="$body"
+            color={isDark ? CATEGORY_VALUE_COLOR.dark : CATEGORY_VALUE_COLOR.light}
+          >
+            {selectedLabel}
+          </Text>
+          <Pressable
+            onPress={handleOpenCategorySheet}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.7 : 1,
+              backgroundColor: isDark ? SELECT_BTN_BG.dark : SELECT_BTN_BG.light,
+              borderRadius: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+            })}
+          >
+            <Text
+              fontSize={13}
+              fontWeight="500"
+              fontFamily="$body"
+              color={isDark ? SELECT_BTN_TEXT.dark : SELECT_BTN_TEXT.light}
+            >
+              선택
+            </Text>
+          </Pressable>
+        </XStack>
+      </YStack>
+
+      {/* Primary color divider bar */}
+      <View height={3} backgroundColor={PRIMARY_BAR_COLOR} />
+
+      {/* Title + Body inputs */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <YStack paddingHorizontal={16} paddingTop={20} flex={1}>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="제목을 입력해주세요"
+              placeholderTextColor={
+                isDark
+                  ? TITLE_PLACEHOLDER_COLOR.dark
+                  : TITLE_PLACEHOLDER_COLOR.light
+              }
+              style={[
+                styles.titleInput,
+                {
+                  color: isDark ? TITLE_COLOR.dark : TITLE_COLOR.light,
+                  borderBottomColor: isDark
+                    ? DIVIDER_COLOR.dark
+                    : DIVIDER_COLOR.light,
+                },
+              ]}
+            />
+            <TextInput
+              value={body}
+              onChangeText={setBody}
+              placeholder={BODY_PLACEHOLDER}
+              placeholderTextColor={
+                isDark
+                  ? BODY_PLACEHOLDER_COLOR.dark
+                  : BODY_PLACEHOLDER_COLOR.light
+              }
+              multiline
+              textAlignVertical="top"
+              style={[
+                styles.bodyInput,
+                {
+                  color: isDark ? TITLE_COLOR.dark : TITLE_COLOR.light,
+                },
+              ]}
+            />
+          </YStack>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Category Sheet */}
+      <PostCategorySheet
+        open={categorySheetOpen}
+        onOpenChange={setCategorySheetOpen}
+        categories={FREE_POST_CATEGORIES}
+        selectedKey={selectedCategory}
+        onSelect={setSelectedCategory}
+      />
     </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  titleInput: {
+    fontSize: 18,
+    fontWeight: "600",
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  bodyInput: {
+    fontSize: 15,
+    lineHeight: 22,
+    paddingTop: 16,
+    flex: 1,
+    minHeight: 200,
+  },
+})

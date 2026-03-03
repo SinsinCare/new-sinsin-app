@@ -4,15 +4,7 @@ import { YStack, Text } from "tamagui"
 import { FilterChip } from "./FilterChip"
 import { PopularPostCard } from "./PopularPostCard"
 import { PostListItem } from "./PostListItem"
-
-const FREE_POST_CATEGORIES = [
-  { key: "diet", label: "식단" },
-  { key: "numbers", label: "수치 변화" },
-  { key: "symptoms", label: "증상 상담" },
-  { key: "medicine", label: "약물" },
-  { key: "dining-out", label: "외식 후기" },
-  { key: "daily", label: "일상 공감" },
-] as const
+import { FREE_POST_CATEGORIES } from "../data/freePostCategories"
 
 interface FreePost {
   id: string
