@@ -177,7 +177,7 @@ export default function RecipeScreen() {
                     <FilterChip
                       key={chip.key}
                       label={chip.label}
-                      theme={"theme" in chip ? chip.theme : undefined}
+                      theme="default"
                     />
                   ))}
                 </ScrollView>

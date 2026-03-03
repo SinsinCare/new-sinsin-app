@@ -17,16 +17,16 @@ const THEME_COLORS = {
     dark: { border: "#8686868F", text: "#E7E7EE" },
   },
   primary: {
-    light: { border: "#FF9775", text: "#FF7246" },
-    dark: { border: "#E78A63F2", text: "#E78A63" },
+    light: { border: "#FF9D77B0", text: "#EE9A69" },
+    dark: { border: "#D0A5946E", text: "#BC8362" },
   },
   sub: {
-    light: { border: "#44AF94", text: "#44AF94" },
-    dark: { border: "#37A589F2", text: "#37A589" },
+    light: { border: "#4889784F", text: "#44AF94B0" },
+    dark: { border: "#4889784F", text: "#44AF94B0" },
   },
   tertiary: {
-    light: { border: "#8686868F", text: "#66666B" },
-    dark: { border: "#9F9F9F", text: "#9F9F9F" },
+    light: { border: "#ABABB4", text: "#858591" },
+    dark: { border: "#535356", text: "#858591" },
   },
   category: {
     light: { border: "#81818D", text: "#81818D" },
@@ -40,16 +40,16 @@ const SELECTED_COLORS = {
     dark: { border: "#E77661", text: "#E77661" },
   },
   primary: {
-    light: { border: "#EE6145", text: "#EE6145" },
-    dark: { border: "#E77661", text: "#E77661" },
+    light: { border: "#FF9775", text: "#FF7246" },
+    dark: { border: "#EB9E7F", text: "#E48D68" },
   },
   sub: {
-    light: { border: "#EE6145", text: "#EE6145" },
-    dark: { border: "#E77661", text: "#E77661" },
+    light: { border: "#488978", text: "#3FA68C" },
+    dark: { border: "#488978", text: "#3FA68C" },
   },
   tertiary: {
-    light: { border: "#EE6145", text: "#EE6145" },
-    dark: { border: "#E77661", text: "#E77661" },
+    light: { border: "#66666B", text: "#2E2E34" },
+    dark: { border: "#E7E7EE8A", text: "#E7E7EE" },
   },
   category: {
     light: { border: "#474758", text: "#2A2A37" },

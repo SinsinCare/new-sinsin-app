@@ -55,16 +55,23 @@ export function RecipeCard({
               key={`n-${label}`}
               label={`#${label}`}
               theme="primary"
+              selected
             />
           ))}
           {tags.stage?.map((label) => (
-            <FilterChip key={`s-${label}`} label={`#${label}`} theme="sub" />
+            <FilterChip
+              key={`s-${label}`}
+              label={`#${label}`}
+              theme="sub"
+              selected
+            />
           ))}
           {tags.country?.map((label) => (
             <FilterChip
               key={`c-${label}`}
               label={`#${label}`}
               theme="tertiary"
+              selected
             />
           ))}
         </XStack>
