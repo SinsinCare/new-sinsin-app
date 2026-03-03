@@ -22,6 +22,7 @@ import {
   RecipeCard,
   type RecipeCardTags,
 } from "@/src/features/recipe/components/RecipeCard"
+import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
 
 interface RecipeItem {
   id: string
@@ -233,13 +234,7 @@ export default function RecipeScreen() {
             </ScrollView>
           </>
         )}
-        {activeTab === "free" && (
-          <YStack paddingHorizontal={16} paddingVertical={14}>
-            <Text color={headerColor} fontSize="$5">
-              자유글 컨텐츠
-            </Text>
-          </YStack>
-        )}
+        {activeTab === "free" && <FreePostTab />}
         <CategoryFilterSheet
           open={filterSheetOpen}
           onOpenChange={setFilterSheetOpen}
