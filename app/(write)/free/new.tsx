@@ -15,19 +15,19 @@ import { Icon } from "@/src/shared/components/Icon"
 import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
 import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
 
-const BG_COLOR = { light: "#FCFCFC", dark: "#1F1F21" } as const
+const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
 const REGISTER_ACTIVE_COLOR = { light: "#EE6145", dark: "#E77661" } as const
 const REGISTER_DISABLED_COLOR = { light: "#C7C7CC", dark: "#636366" } as const
-const CATEGORY_LABEL_COLOR = { light: "#8E8E93", dark: "#858591" } as const
+const CATEGORY_LABEL_COLOR = { light: "#666677", dark: "#858591" } as const
 const CATEGORY_VALUE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
-const SELECT_BTN_BG = { light: "#F2F2F7", dark: "#3A3A3C" } as const
-const SELECT_BTN_TEXT = { light: "#8E8E93", dark: "#858591" } as const
-const DIVIDER_COLOR = { light: "#E5E5EA", dark: "#38383A" } as const
+const SELECT_BTN_BG = { light: "#EAEAF0", dark: "#2A2A30" } as const
+const SELECT_BTN_TEXT = { light: "#81818D", dark: "#C5C8CE" } as const
+const DIVIDER_COLOR = { light: "#E5E5EA", dark: "#1F1F21" } as const
 const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
-const TITLE_PLACEHOLDER_COLOR = { light: "#EE6145", dark: "#E77661" } as const
-const BODY_PLACEHOLDER_COLOR = { light: "#C7C7CC", dark: "#636366" } as const
-const PRIMARY_BAR_COLOR = "#EE6145"
+const TITLE_PLACEHOLDER_COLOR = { light: "#666677", dark: "#858591" } as const
+const BODY_PLACEHOLDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
+const PRIMARY_BAR_COLOR = { light: "#F1F1F3", dark: "#1F1F21" } as const
 
 const BODY_PLACEHOLDER = `식단을 건강하게 관리하고, 고민과 의견을 나눌 수 있도록\n다양한 이야기를 나누는 공간입니다.\n\n이런 글을 남겨보세요\nex) 오늘의 식단 인증, 식단 관리중의 고민사항들...\n\n상대방을 불쾌하게 하거나 배려 없는 의견은 삼가 주세요.\n게시판의 성격과 무관한 글, 타인 비방, 광고성 게시물은 사전 경고 없이 삭제될 수 있습니다.`
 
@@ -76,7 +76,7 @@ export default function FreePostNewScreen() {
     >
       {/* Header */}
       <XStack
-        paddingHorizontal={16}
+        paddingHorizontal={20}
         paddingVertical={12}
         alignItems="center"
         justifyContent="space-between"
@@ -111,12 +111,14 @@ export default function FreePostNewScreen() {
       </XStack>
 
       {/* Category Selector */}
-      <YStack paddingHorizontal={16} paddingVertical={8} gap={4}>
+      <YStack paddingHorizontal={20} paddingVertical={16} gap={4}>
         <Text
           fontSize={12}
           fontWeight="400"
           fontFamily="$body"
-          color={isDark ? CATEGORY_LABEL_COLOR.dark : CATEGORY_LABEL_COLOR.light}
+          color={
+            isDark ? CATEGORY_LABEL_COLOR.dark : CATEGORY_LABEL_COLOR.light
+          }
         >
           카테고리 선택
         </Text>
@@ -125,7 +127,9 @@ export default function FreePostNewScreen() {
             fontSize={16}
             fontWeight="600"
             fontFamily="$body"
-            color={isDark ? CATEGORY_VALUE_COLOR.dark : CATEGORY_VALUE_COLOR.light}
+            color={
+              isDark ? CATEGORY_VALUE_COLOR.dark : CATEGORY_VALUE_COLOR.light
+            }
           >
             {selectedLabel}
           </Text>
@@ -133,14 +137,17 @@ export default function FreePostNewScreen() {
             onPress={handleOpenCategorySheet}
             style={({ pressed }) => ({
               opacity: pressed ? 0.7 : 1,
-              backgroundColor: isDark ? SELECT_BTN_BG.dark : SELECT_BTN_BG.light,
+              backgroundColor: isDark
+                ? SELECT_BTN_BG.dark
+                : SELECT_BTN_BG.light,
               borderRadius: 6,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
+              paddingHorizontal: 10,
+              paddingVertical: 8,
             })}
           >
             <Text
-              fontSize={13}
+              fontSize={12}
+              lineHeight={14}
               fontWeight="500"
               fontFamily="$body"
               color={isDark ? SELECT_BTN_TEXT.dark : SELECT_BTN_TEXT.light}
@@ -152,7 +159,12 @@ export default function FreePostNewScreen() {
       </YStack>
 
       {/* Primary color divider bar */}
-      <View height={3} backgroundColor={PRIMARY_BAR_COLOR} />
+      <View
+        height={12}
+        backgroundColor={
+          isDark ? PRIMARY_BAR_COLOR.dark : PRIMARY_BAR_COLOR.light
+        }
+      />
 
       {/* Title + Body inputs */}
       <KeyboardAvoidingView
@@ -177,6 +189,7 @@ export default function FreePostNewScreen() {
               style={[
                 styles.titleInput,
                 {
+                  fontWeight: "500",
                   color: isDark ? TITLE_COLOR.dark : TITLE_COLOR.light,
                   borderBottomColor: isDark
                     ? DIVIDER_COLOR.dark
@@ -199,6 +212,9 @@ export default function FreePostNewScreen() {
                 styles.bodyInput,
                 {
                   color: isDark ? TITLE_COLOR.dark : TITLE_COLOR.light,
+                  fontSize: 16,
+                  lineHeight: 24,
+                  fontWeight: "400",
                 },
               ]}
             />
