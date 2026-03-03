@@ -1,7 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
+  Image,
   Keyboard,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   TextInput,
@@ -14,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
 import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
+import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
@@ -28,6 +31,12 @@ const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
 const TITLE_PLACEHOLDER_COLOR = { light: "#666677", dark: "#858591" } as const
 const BODY_PLACEHOLDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
 const PRIMARY_BAR_COLOR = { light: "#F1F1F3", dark: "#1F1F21" } as const
+const TOOLBAR_ICON_COLOR = { light: "#666677", dark: "#F5F6FA" } as const
+const TOOLBAR_BORDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
+const IMAGE_CLOSE_BG = "#F5F6FA"
+const IMAGE_CLOSE_ICON = "#0B0D0E"
+const MAX_IMAGES = 5
+const IMAGE_CARD_SIZE = 64
 
 const BODY_PLACEHOLDER = `식단을 건강하게 관리하고, 고민과 의견을 나눌 수 있도록\n다양한 이야기를 나누는 공간입니다.\n\n이런 글을 남겨보세요\nex) 오늘의 식단 인증, 식단 관리중의 고민사항들...\n\n상대방을 불쾌하게 하거나 배려 없는 의견은 삼가 주세요.\n게시판의 성격과 무관한 글, 타인 비방, 광고성 게시물은 사전 경고 없이 삭제될 수 있습니다.`
 
@@ -43,6 +52,28 @@ export default function FreePostNewScreen() {
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
   const [categorySheetOpen, setCategorySheetOpen] = useState(false)
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
+  const [images, setImages] = useState<string[]>([])
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow"
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide"
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setIsKeyboardVisible(true),
+    )
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setIsKeyboardVisible(false),
+    )
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
+  }, [])
+
+  const iconColor = isDark ? TOOLBAR_ICON_COLOR.dark : TOOLBAR_ICON_COLOR.light
 
   const selectedLabel =
     FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? ""
@@ -54,9 +85,23 @@ export default function FreePostNewScreen() {
     setCategorySheetOpen(true)
   }
 
+  const handlePickImages = async () => {
+    Keyboard.dismiss()
+    const remaining = MAX_IMAGES - images.length
+    if (remaining <= 0) return
+    const uris = await pickMultipleImages(remaining)
+    if (uris.length > 0) {
+      setImages((prev) => [...prev, ...uris].slice(0, MAX_IMAGES))
+    }
+  }
+
+  const handleRemoveImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = () => {
     if (!canSubmit) return
-    console.log("Submit free post:", { selectedCategory, title, body })
+    console.log("Submit free post:", { selectedCategory, title, body, images })
     router.back()
   }
 
@@ -220,6 +265,106 @@ export default function FreePostNewScreen() {
             />
           </YStack>
         </ScrollView>
+
+        {/* Image Strip */}
+        {images.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingVertical: 12,
+              gap: 12,
+            }}
+            style={{
+              flexGrow: 0,
+              flexShrink: 0,
+            }}
+          >
+            {images.map((uri, index) => (
+              <View key={uri + index} style={{ position: "relative" }}>
+                <Pressable onPress={() => setPreviewImage(uri)}>
+                  <Image
+                    source={{ uri }}
+                    style={{
+                      width: IMAGE_CARD_SIZE,
+                      height: IMAGE_CARD_SIZE,
+                      borderRadius: 8,
+                    }}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() => handleRemoveImage(index)}
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -6,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: IMAGE_CLOSE_BG,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon name="x" size={12} color={IMAGE_CLOSE_ICON} />
+                </Pressable>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+
+        {/* Bottom Toolbar */}
+        <XStack
+          paddingHorizontal={20}
+          paddingVertical={10}
+          paddingBottom={isKeyboardVisible ? 10 : 10 + insets.bottom}
+          alignItems="center"
+          borderTopWidth={StyleSheet.hairlineWidth}
+          borderTopColor={
+            isDark ? TOOLBAR_BORDER_COLOR.dark : TOOLBAR_BORDER_COLOR.light
+          }
+          backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
+        >
+          <XStack gap={20} flex={1}>
+            <Pressable
+              onPress={handlePickImages}
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Icon name="gallery" size={24} color={iconColor} />
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Keyboard.dismiss()
+                console.log("vote pressed")
+              }}
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Icon name="vote" size={24} color={iconColor} />
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Keyboard.dismiss()
+                console.log("hashtag pressed")
+              }}
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Icon name="hashtag" size={24} color={iconColor} />
+            </Pressable>
+          </XStack>
+          {isKeyboardVisible && (
+            <Pressable
+              onPress={() => Keyboard.dismiss()}
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Icon name="keyboard" size={24} color={iconColor} />
+            </Pressable>
+          )}
+        </XStack>
       </KeyboardAvoidingView>
 
       {/* Category Sheet */}
@@ -230,6 +375,33 @@ export default function FreePostNewScreen() {
         selectedKey={selectedCategory}
         onSelect={setSelectedCategory}
       />
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={previewImage !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewImage(null)}
+      >
+        <Pressable
+          onPress={() => setPreviewImage(null)}
+          style={styles.previewOverlay}
+        >
+          {previewImage && (
+            <Image
+              source={{ uri: previewImage }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          )}
+          <Pressable
+            onPress={() => setPreviewImage(null)}
+            style={styles.previewClose}
+          >
+            <Icon name="x" size={24} color="#FFFFFF" />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </YStack>
   )
 }
@@ -247,5 +419,21 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     flex: 1,
     minHeight: 200,
+  },
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewImage: {
+    width: "90%",
+    height: "70%",
+  },
+  previewClose: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    padding: 8,
   },
 })
