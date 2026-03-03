@@ -17,6 +17,10 @@ import { Icon } from "@/src/shared/components/Icon"
 import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
 import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
+import {
+  VoteSheet,
+  type VoteData,
+} from "@/src/features/recipe/components/VoteSheet"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
@@ -37,6 +41,9 @@ const IMAGE_CLOSE_BG = "#F5F6FA"
 const IMAGE_CLOSE_ICON = "#0B0D0E"
 const MAX_IMAGES = 5
 const IMAGE_CARD_SIZE = 64
+const VOTE_CARD_BG = { light: "#D9D9DF", dark: "#36363E" } as const
+const VOTE_CARD_TEXT = { light: "#474758", dark: "#F5F6FA" } as const
+const VOTE_CARD_ICON = { light: "#17191C", dark: "#17191C" } as const
 
 const BODY_PLACEHOLDER = `식단을 건강하게 관리하고, 고민과 의견을 나눌 수 있도록\n다양한 이야기를 나누는 공간입니다.\n\n이런 글을 남겨보세요\nex) 오늘의 식단 인증, 식단 관리중의 고민사항들...\n\n상대방을 불쾌하게 하거나 배려 없는 의견은 삼가 주세요.\n게시판의 성격과 무관한 글, 타인 비방, 광고성 게시물은 사전 경고 없이 삭제될 수 있습니다.`
 
@@ -55,6 +62,9 @@ export default function FreePostNewScreen() {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [votes, setVotes] = useState<VoteData[]>([])
+  const [voteSheetOpen, setVoteSheetOpen] = useState(false)
+  const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
 
   useEffect(() => {
     const showEvent =
@@ -99,9 +109,45 @@ export default function FreePostNewScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const handleOpenVoteSheet = () => {
+    Keyboard.dismiss()
+    setEditingVoteIndex(null)
+    setVoteSheetOpen(true)
+  }
+
+  const handleEditVote = (index: number) => {
+    Keyboard.dismiss()
+    setEditingVoteIndex(index)
+    setVoteSheetOpen(true)
+  }
+
+  const handleRemoveVote = (index: number) => {
+    setVotes((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleVoteComplete = (data: VoteData) => {
+    if (editingVoteIndex !== null) {
+      setVotes((prev) => {
+        const next = [...prev]
+        next[editingVoteIndex] = data
+        return next
+      })
+    } else {
+      setVotes((prev) => [...prev, data])
+    }
+    setVoteSheetOpen(false)
+    setEditingVoteIndex(null)
+  }
+
   const handleSubmit = () => {
     if (!canSubmit) return
-    console.log("Submit free post:", { selectedCategory, title, body, images })
+    console.log("Submit free post:", {
+      selectedCategory,
+      title,
+      body,
+      images,
+      votes,
+    })
     router.back()
   }
 
@@ -314,6 +360,59 @@ export default function FreePostNewScreen() {
           </ScrollView>
         )}
 
+        {/* Vote Attachment Cards */}
+        {votes.map((_, voteIndex) => (
+          <XStack
+            key={voteIndex}
+            marginHorizontal={20}
+            marginTop={voteIndex === 0 ? 8 : 0}
+            marginBottom={8}
+            paddingHorizontal={16}
+            paddingVertical={14}
+            borderRadius={10}
+            backgroundColor={isDark ? VOTE_CARD_BG.dark : VOTE_CARD_BG.light}
+            alignItems="center"
+            gap={10}
+          >
+            <Icon
+              name="vote"
+              size={20}
+              color={isDark ? VOTE_CARD_ICON.dark : VOTE_CARD_ICON.light}
+            />
+            <Text
+              flex={1}
+              fontSize={14}
+              fontWeight="500"
+              fontFamily="$body"
+              color={isDark ? VOTE_CARD_TEXT.dark : VOTE_CARD_TEXT.light}
+            >
+              투표가 첨부되었습니다.
+            </Text>
+            <Pressable
+              onPress={() => handleEditVote(voteIndex)}
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Icon
+                name="pencil"
+                size={20}
+                color={isDark ? VOTE_CARD_ICON.dark : VOTE_CARD_ICON.light}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => handleRemoveVote(voteIndex)}
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Icon
+                name="trashcan"
+                size={20}
+                color={isDark ? VOTE_CARD_ICON.dark : VOTE_CARD_ICON.light}
+              />
+            </Pressable>
+          </XStack>
+        ))}
+
         {/* Bottom Toolbar */}
         <XStack
           paddingHorizontal={20}
@@ -335,10 +434,7 @@ export default function FreePostNewScreen() {
               <Icon name="gallery" size={24} color={iconColor} />
             </Pressable>
             <Pressable
-              onPress={() => {
-                Keyboard.dismiss()
-                console.log("vote pressed")
-              }}
+              onPress={handleOpenVoteSheet}
               hitSlop={8}
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
@@ -375,6 +471,18 @@ export default function FreePostNewScreen() {
         selectedKey={selectedCategory}
         onSelect={setSelectedCategory}
       />
+
+      {/* Vote Sheet — conditional render so useState initializers pick up initialData */}
+      {voteSheetOpen && (
+        <VoteSheet
+          open
+          onClose={() => setVoteSheetOpen(false)}
+          onComplete={handleVoteComplete}
+          initialData={
+            editingVoteIndex !== null ? votes[editingVoteIndex] : null
+          }
+        />
+      )}
 
       {/* Image Preview Modal */}
       <Modal
