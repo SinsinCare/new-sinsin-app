@@ -41,6 +41,7 @@ import Phosphorus from "@/assets/icons/phosphorus.svg"
 import Protein from "@/assets/icons/protein.svg"
 import Bookmark from "@/assets/icons/bookmark.svg"
 import Hashtag from "@/assets/icons/hashtag.svg"
+import Info from "@/assets/icons/info.svg"
 import Keyboard from "@/assets/icons/keyboard.svg"
 import Vote from "@/assets/icons/vote.svg"
 
@@ -61,6 +62,7 @@ const icons = {
   "heart-text": HeartText,
   history: History,
   home: Home,
+  info: Info,
   keyboard: Keyboard,
   loading: Loading,
   location: Location,
