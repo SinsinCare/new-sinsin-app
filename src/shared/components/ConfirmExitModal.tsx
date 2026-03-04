@@ -1,4 +1,10 @@
-import { Modal, Pressable, StyleSheet, useColorScheme, View } from "react-native"
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native"
 import { Text, XStack } from "tamagui"
 
 interface ConfirmExitModalProps {
