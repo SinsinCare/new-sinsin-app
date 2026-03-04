@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "expo-router"
 import {
   Keyboard,
+  Modal,
   Pressable,
   ScrollView,
   useColorScheme,
@@ -24,6 +25,7 @@ import {
   type RecipeCardTags,
 } from "@/src/features/recipe/components/RecipeCard"
 import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
+import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 
 interface RecipeItem {
   id: string
@@ -114,6 +116,7 @@ export default function RecipeScreen() {
   const [search, setSearch] = useState("")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [writeSheetOpen, setWriteSheetOpen] = useState(false)
+  const [freePostModalOpen, setFreePostModalOpen] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
@@ -246,8 +249,21 @@ export default function RecipeScreen() {
         <WriteTypeSheet
           open={writeSheetOpen}
           onOpenChange={setWriteSheetOpen}
-          onSelect={(type) => router.push(`/(write)/${type}/new`)}
+          onSelect={(type) => {
+            if (type === "free") {
+              setFreePostModalOpen(true)
+            } else {
+              router.push(`/(write)/${type}/new`)
+            }
+          }}
         />
+        <Modal
+          visible={freePostModalOpen}
+          animationType="slide"
+          onRequestClose={() => setFreePostModalOpen(false)}
+        >
+          <FreePostEditor onClose={() => setFreePostModalOpen(false)} />
+        </Modal>
         <Pressable
           onPress={() => setWriteSheetOpen(true)}
           style={({ pressed }) => ({
