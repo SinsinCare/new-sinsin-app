@@ -23,11 +23,12 @@ import {
 } from "@/src/features/recipe/components/VoteSheet"
 import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
+import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
-const REGISTER_ACTIVE_COLOR = { light: "#EE6145", dark: "#E77661" } as const
-const REGISTER_DISABLED_COLOR = { light: "#C7C7CC", dark: "#636366" } as const
+const REGISTER_ACTIVE_COLOR = { light: "#44AF94", dark: "#44AF94" } as const
+const REGISTER_DISABLED_COLOR = { light: "#81818D", dark: "#81818D" } as const
 const CATEGORY_LABEL_COLOR = { light: "#666677", dark: "#858591" } as const
 const CATEGORY_VALUE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
 const SELECT_BTN_BG = { light: "#EAEAF0", dark: "#2A2A30" } as const
@@ -61,6 +62,7 @@ export default function FreePostNewScreen() {
   const [votes, setVotes] = useState<VoteData[]>([])
   const [voteSheetOpen, setVoteSheetOpen] = useState(false)
   const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
+  const [confirmExitVisible, setConfirmExitVisible] = useState(false)
 
   useEffect(() => {
     const showEvent =
@@ -89,6 +91,21 @@ export default function FreePostNewScreen() {
   const handleOpenCategorySheet = () => {
     Keyboard.dismiss()
     setCategorySheetOpen(true)
+  }
+
+  const hasContent =
+    title.trim().length > 0 ||
+    body.trim().length > 0 ||
+    images.length > 0 ||
+    votes.length > 0
+
+  const handleClose = () => {
+    Keyboard.dismiss()
+    if (hasContent) {
+      setConfirmExitVisible(true)
+    } else {
+      router.back()
+    }
   }
 
   const handlePickImages = async () => {
@@ -169,7 +186,7 @@ export default function FreePostNewScreen() {
         justifyContent="space-between"
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleClose}
           hitSlop={8}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
@@ -446,6 +463,20 @@ export default function FreePostNewScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Confirm Exit Modal */}
+      <ConfirmExitModal
+        visible={confirmExitVisible}
+        title={"게시글 작성을\n취소하시겠어요?"}
+        description="작성 중인 글은 저장되지 않습니다."
+        cancelLabel="유지"
+        confirmLabel="작성 취소"
+        onCancel={() => setConfirmExitVisible(false)}
+        onConfirm={() => {
+          setConfirmExitVisible(false)
+          router.back()
+        }}
+      />
     </YStack>
   )
 }
