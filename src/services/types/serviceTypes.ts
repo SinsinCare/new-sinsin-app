@@ -1,10 +1,4 @@
-import type {
-  UserProfile,
-  HealthRecord,
-  FoodRecord,
-  DailyHealthLog,
-  SignupRequest,
-} from "../../types"
+import type { SignupRequest } from "../../types"
 
 // 앱 사용자 최소 인터페이스
 export interface AppUser {
@@ -22,20 +16,4 @@ export interface IAuthService {
   signup(request: SignupRequest): Promise<AppUser>
   signOut(): Promise<void>
   restoreSession(): Promise<{ user: AppUser; accountState: string } | null>
-}
-
-// Firestore 서비스 인터페이스
-export interface IFirestoreService {
-  getUserProfile(userId: string): Promise<UserProfile | null>
-  setUserProfile(profile: UserProfile): Promise<void>
-  updateUserProfile(
-    userId: string,
-    updates: Partial<UserProfile>,
-  ): Promise<void>
-  getHealthRecords(userId: string, limitCount?: number): Promise<HealthRecord[]>
-  addHealthRecord(record: Omit<HealthRecord, "id">): Promise<string>
-  getFoodRecords(userId: string, date: Date): Promise<FoodRecord[]>
-  addFoodRecord(record: Omit<FoodRecord, "id">): Promise<string>
-  getDailyLog(userId: string, date: Date): Promise<DailyHealthLog | null>
-  setDailyLog(log: Omit<DailyHealthLog, "id">): Promise<void>
 }

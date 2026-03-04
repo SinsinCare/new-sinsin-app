@@ -49,7 +49,6 @@ npm run ios-no-user                        # Mock mode without user profile
 - `tokenService.ts` - AsyncStorage-based JWT token CRUD (accessToken, refreshToken)
 - `authService.ts` - Custom API auth methods (signInWithEmail, signup, signOut, restoreSession)
 - `emailService.ts` - Email verification and OTP API endpoints
-- `firestoreService.ts` - Data CRUD (currently always uses mock, awaiting data API)
 - `mock/` - Mock implementations for development (controlled by `src/config/appConfig.ts`: `isMockUser()` for auth, `isMockMode()` for data)
 
 ### Custom Hooks (`src/hooks/`)
@@ -128,7 +127,7 @@ Health app for CKD patients with:
 - AI food analysis with kidney safety assessment (safe/caution/warning)
 - AI consultation chat with health context
 - Kidney-safe food scoring algorithm (penalizes high phosphorus/potassium/sodium/protein, rewards water/magnesium/calcium/vitamin D)
-- Community recipe sharing with in-memory storage (future: Firestore backend)
+- Community recipe sharing with in-memory storage (future: backend API)
 
 ## Styling Conventions
 

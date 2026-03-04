@@ -41,7 +41,6 @@
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
     "expo-symbols": "~1.0.8",
-    "firebase": "12.8.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "7.71.1",
