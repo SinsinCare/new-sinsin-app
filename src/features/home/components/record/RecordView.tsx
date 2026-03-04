@@ -9,7 +9,7 @@ import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 import { getThreeDays } from "../../utils/getThreeDays"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import Animated, {
   useSharedValue,
@@ -68,6 +68,7 @@ export function RecordView({
     Partial<Record<MealType, boolean>>
   >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
+  const recordingMealTypeRef = useRef<MealType | null>(null)
   const [dots, setDots] = useState(".")
 
   useEffect(() => {
@@ -144,15 +145,14 @@ export function RecordView({
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
   }
 
-  const handleRecord = () => {
-    if (!selectedMealType) return
+  const handleRecord = (mealType: MealType) => {
     Alert.alert("사진 첨부", "방법을 선택하세요", [
       {
         text: "카메라",
         onPress: async () => {
           const uri = await takePhoto()
           if (uri) {
-            analyzeImage(uri, selectedMealType)
+            analyzeImage(uri, mealType)
           }
         },
       },
@@ -161,13 +161,16 @@ export function RecordView({
         onPress: async () => {
           const uri = await pickImageFromGallery()
           if (uri) {
-            analyzeImage(uri, selectedMealType)
+            analyzeImage(uri, mealType)
           }
         },
       },
       {
         text: "직접 입력",
-        onPress: () => setIsTextRecordOpen(true),
+        onPress: () => {
+          recordingMealTypeRef.current = mealType
+          setIsTextRecordOpen(true)
+        },
       },
       { text: "취소", style: "cancel" },
     ])
@@ -214,9 +217,10 @@ export function RecordView({
         open={isTextRecordOpen}
         onClose={() => setIsTextRecordOpen(false)}
         onSubmit={(text) => {
-          if (!selectedMealType) return
+          const mealType = recordingMealTypeRef.current
+          if (!mealType) return
           setIsTextRecordOpen(false)
-          analyzeText(text, selectedMealType)
+          analyzeText(text, mealType)
         }}
       />
 
