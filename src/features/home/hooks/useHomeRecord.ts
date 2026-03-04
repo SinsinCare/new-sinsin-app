@@ -11,9 +11,9 @@ export interface UseHomeRecordReturn {
   percentage: number
   remaining: number
   isGoalAchieved: boolean
-  addWater: (amount: number) => void
+  addWater: (amount: number) => Promise<void>
   subtractWater: (amount: number) => void
-  resetHydration: () => void
+  resetHydration: (serverExtraWater: number) => Promise<void>
 
   // Weight
   weight: string
@@ -45,11 +45,14 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     [hydration, dateStr, updateExtraWater],
   )
 
-  const resetWithApi = useCallback(async () => {
-    const currentIntake = hydration.intake
-    hydration.reset()
-    await updateExtraWater(dateStr, -currentIntake)
-  }, [hydration, dateStr, updateExtraWater])
+  // resetHydration이 extraWater를 받도록 변경
+  const resetWithApi = useCallback(
+    async (serverExtraWater: number) => {
+      hydration.reset()
+      await updateExtraWater(dateStr, -serverExtraWater)
+    },
+    [hydration, dateStr, updateExtraWater],
+  )
 
   const handleSetEdemaLevel = useCallback((level: EdemaLevel) => {
     setEdemaLevel(level)
@@ -65,8 +68,6 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     addWater: addWaterWithApi,
     subtractWater: hydration.subtractWater,
     resetHydration: resetWithApi,
-
-    // Weight
     weight,
     setWeight,
     yesterdayWeight,

@@ -1,5 +1,6 @@
 import type {
   DateAnalysisResponse,
+  DiaryAnalysisResult,
   DiaryExistenceResponse,
   ExtraWaterUpdateResponse,
   FoodCameraAnalyzeResult,
@@ -150,6 +151,18 @@ export const foodCameraService = {
         { deltaWater },
       )
       return response.data as ExtraWaterUpdateResponse
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async fetchDiaryResult(diaryId: number): Promise<DiaryAnalysisResult> {
+    try {
+      const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
+      return response.data.result as DiaryAnalysisResult
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)

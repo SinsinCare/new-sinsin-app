@@ -5,6 +5,7 @@ export const tokens = createTokens({
     // Base
     black: "#0D0D0D",
     white: "#F4F4F4",
+    offWhite: "#FCFCFC",
     pureWhite: "#FFFFFF",
 
     // Primary (coral/red)

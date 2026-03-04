@@ -45,6 +45,10 @@ import Hashtag from "@/assets/icons/hashtag.svg"
 import Info from "@/assets/icons/info.svg"
 import Keyboard from "@/assets/icons/keyboard.svg"
 import Vote from "@/assets/icons/vote.svg"
+import Morning from "@/assets/icons/morning.svg"
+import Noon from "@/assets/icons/noon.svg"
+import Evening from "@/assets/icons/evening.svg"
+import Dessert from "@/assets/icons/dessert.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -88,6 +92,10 @@ const icons = {
   vote: Vote,
   water: Water,
   "water-drop": WaterDrop,
+  morning: Morning,
+  noon: Noon,
+  evening: Evening,
+  dessert: Dessert,
   x: X,
 } as const
 

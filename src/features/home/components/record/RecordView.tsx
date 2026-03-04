@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Alert, Modal } from "react-native"
+import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View, Text } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
@@ -9,7 +10,7 @@ import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
 import { getThreeDays } from "../../utils/getThreeDays"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import Animated, {
   useSharedValue,
@@ -23,7 +24,7 @@ import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
-import { FoodAnalysisResult } from "./FoodAnalysisResult"
+import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import { TextRecord } from "./TextRecord"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -32,14 +33,12 @@ import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 interface RecordViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  selectedMealType: MealType | null
   onSelectMealType: (mealType: MealType) => void
 }
 
 export function RecordView({
   selectedDate,
   onSelectDate,
-  selectedMealType,
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord(selectedDate)
@@ -68,6 +67,8 @@ export function RecordView({
     Partial<Record<MealType, boolean>>
   >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
+  const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false)
+  const recordingMealTypeRef = useRef<MealType | null>(null)
   const [dots, setDots] = useState(".")
 
   useEffect(() => {
@@ -128,6 +129,11 @@ export function RecordView({
     })
     .map((day) => day.date)
 
+  const totalIntake = data?.result.analysis?.extraWater ?? 0
+  const dailyGoal = record.dailyGoal
+  const percentage = Math.min((totalIntake / dailyGoal) * 100, 100)
+  const remaining = Math.max(dailyGoal - totalIntake, 0)
+
   const handleAddToRecord = async () => {
     await registerDiary(selectedDate, (mealType, imageUri) => {
       setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
@@ -139,33 +145,41 @@ export function RecordView({
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
   }
 
-  const handleRecord = () => {
-    if (!selectedMealType) return
+  const handleRecord = (mealType: MealType) => {
+    recordingMealTypeRef.current = mealType
+    setIsOptionsSheetOpen(true)
+  }
+
+  const handleCameraPhoto = () => {
+    setIsOptionsSheetOpen(false)
+    const mealType = recordingMealTypeRef.current
+    if (!mealType) return
     Alert.alert("사진 첨부", "방법을 선택하세요", [
       {
         text: "카메라",
         onPress: async () => {
           const uri = await takePhoto()
-          if (uri) {
-            analyzeImage(uri, selectedMealType)
-          }
+          if (uri) analyzeImage(uri, mealType)
         },
       },
       {
         text: "갤러리",
         onPress: async () => {
           const uri = await pickImageFromGallery()
-          if (uri) {
-            analyzeImage(uri, selectedMealType)
-          }
+          if (uri) analyzeImage(uri, mealType)
         },
-      },
-      {
-        text: "직접 입력",
-        onPress: () => setIsTextRecordOpen(true),
       },
       { text: "취소", style: "cancel" },
     ])
+  }
+
+  const handleTextRecord = () => {
+    setIsOptionsSheetOpen(false)
+    setIsTextRecordOpen(true)
+  }
+
+  const handleRecipeLoad = () => {
+    setIsOptionsSheetOpen(false)
   }
 
   return (
@@ -188,7 +202,6 @@ export function RecordView({
 
       <MealButtons
         onSelectMealType={onSelectMealType}
-        selectedMealType={selectedMealType}
         mealImages={mergedMealImages}
         recordedMeals={mergedRecordedMeals}
         onRecord={handleRecord}
@@ -205,13 +218,22 @@ export function RecordView({
         </View>
       </Modal>
 
+      <RecordOptionsSheet
+        open={isOptionsSheetOpen}
+        onClose={() => setIsOptionsSheetOpen(false)}
+        onCameraPhoto={handleCameraPhoto}
+        onTextRecord={handleTextRecord}
+        onRecipeLoad={handleRecipeLoad}
+      />
+
       <TextRecord
         open={isTextRecordOpen}
         onClose={() => setIsTextRecordOpen(false)}
         onSubmit={(text) => {
-          if (!selectedMealType) return
+          const mealType = recordingMealTypeRef.current
+          if (!mealType) return
           setIsTextRecordOpen(false)
-          analyzeText(text, selectedMealType)
+          analyzeText(text, mealType)
         }}
       />
 
@@ -227,13 +249,19 @@ export function RecordView({
       <View height={10} />
 
       <HydrationTracker
-        intake={record.intake}
-        dailyGoal={record.dailyGoal}
-        percentage={record.percentage}
-        remaining={record.remaining}
-        isGoalAchieved={record.isGoalAchieved}
-        addWater={record.addWater}
-        onReset={record.resetHydration}
+        intake={totalIntake}
+        dailyGoal={dailyGoal}
+        percentage={percentage}
+        remaining={remaining}
+        isGoalAchieved={percentage >= 100}
+        addWater={async (amount) => {
+          await record.addWater(amount)
+          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        }}
+        onReset={async () => {
+          await record.resetHydration(data?.result.analysis?.extraWater ?? 0)
+          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        }}
       />
 
       <View height={10} />
