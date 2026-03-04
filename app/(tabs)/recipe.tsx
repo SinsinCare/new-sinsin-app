@@ -39,8 +39,7 @@ interface RecipeItem {
 const MOCK_RECIPES: RecipeItem[] = [
   {
     id: "1",
-    imageUri:
-      "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400",
+    imageUri: "http://app.demo.dev/dashboard",
     likeCount: 32,
     commentCount: 24,
     tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
@@ -48,7 +47,7 @@ const MOCK_RECIPES: RecipeItem[] = [
   },
   {
     id: "2",
-    imageUri: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+    imageUri: "http://app.demo.dev/dashboard",
     likeCount: 32,
     commentCount: 24,
     tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
@@ -56,8 +55,7 @@ const MOCK_RECIPES: RecipeItem[] = [
   },
   {
     id: "3",
-    imageUri:
-      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400",
+    imageUri: "http://app.demo.dev/dashboard",
     likeCount: 32,
     commentCount: 24,
     tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
@@ -65,8 +63,7 @@ const MOCK_RECIPES: RecipeItem[] = [
   },
   {
     id: "4",
-    imageUri:
-      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400",
+    imageUri: "http://app.demo.dev/dashboard",
     likeCount: 32,
     commentCount: 24,
     tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },

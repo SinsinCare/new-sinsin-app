@@ -7,7 +7,7 @@ const ICON_COLOR = {
   light: "#FF9775",
   dark: "#E78A63D9",
 } as const
-const PLACEHOLDER = require("@/assets/images/Sin_light.png")
+const PLACEHOLDER = require("@/assets/images/SIn_2.png")
 const DEFAULT_ASPECT_RATIO = 1
 
 interface ImageCardProps {
