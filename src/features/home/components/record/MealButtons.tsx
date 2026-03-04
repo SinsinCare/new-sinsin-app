@@ -1,6 +1,12 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Text, XStack, YStack, View } from "tamagui"
-import { TouchableOpacity, StyleSheet } from "react-native"
+import {
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  TouchableWithoutFeedback,
+  Dimensions,
+} from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { MealType } from "../../types"
 import { MealButton } from "./MealButton"
@@ -35,6 +41,25 @@ export function MealButtons({
 }: MealButtonsProps) {
   const mealTypes: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
   const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const [pickerBottom, setPickerBottom] = useState(0)
+  const buttonRef = useRef<React.ComponentRef<typeof TouchableOpacity>>(null)
+
+  const handleOpenPicker = () => {
+    buttonRef.current?.measure(
+      (
+        _x: number,
+        _y: number,
+        _w: number,
+        _h: number,
+        _pageX: number,
+        pageY: number,
+      ) => {
+        const screenHeight = Dimensions.get("window").height
+        setPickerBottom(screenHeight - pageY + 15)
+        setIsPickerOpen(true)
+      },
+    )
+  }
 
   const handleMealSelect = (mealType: MealType) => {
     setIsPickerOpen(false)
@@ -59,59 +84,66 @@ export function MealButtons({
         ))}
       </XStack>
 
-      <View style={{ position: "relative" }}>
-        {isPickerOpen && (
-          <View style={styles.pickerCard}>
-            <XStack>
-              {MEAL_OPTIONS.slice(0, 2).map((opt, i) => (
-                <TouchableOpacity
-                  key={opt.type}
-                  style={[styles.mealOption]}
-                  onPress={() => handleMealSelect(opt.type)}
-                >
-                  <Icon
-                    name={opt.icon}
-                    size={18}
-                    color={tokens.color.grey8.val}
-                  />
-                  <Text style={styles.mealLabel}>{opt.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </XStack>
-            <XStack>
-              {MEAL_OPTIONS.slice(2, 4).map((opt) => (
-                <TouchableOpacity
-                  key={opt.type}
-                  style={styles.mealOption}
-                  onPress={() => handleMealSelect(opt.type)}
-                >
-                  <Icon
-                    name={opt.icon}
-                    size={18}
-                    color={tokens.color.grey8.val}
-                  />
-                  <Text style={styles.mealLabel}>{opt.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </XStack>
-            <View style={styles.arrow} />
-          </View>
-        )}
+      <Modal
+        visible={isPickerOpen}
+        transparent
+        animationType="none"
+        onRequestClose={() => setIsPickerOpen(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setIsPickerOpen(false)}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.pickerCard, { bottom: pickerBottom }]}>
+          <XStack>
+            {MEAL_OPTIONS.slice(0, 2).map((opt) => (
+              <TouchableOpacity
+                key={opt.type}
+                style={styles.mealOption}
+                onPress={() => handleMealSelect(opt.type)}
+              >
+                <Icon
+                  name={opt.icon}
+                  size={18}
+                  color={tokens.color.grey8.val}
+                />
+                <Text style={styles.mealLabel}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </XStack>
+          <XStack>
+            {MEAL_OPTIONS.slice(2, 4).map((opt) => (
+              <TouchableOpacity
+                key={opt.type}
+                style={styles.mealOption}
+                onPress={() => handleMealSelect(opt.type)}
+              >
+                <Icon
+                  name={opt.icon}
+                  size={18}
+                  color={tokens.color.grey8.val}
+                />
+                <Text style={styles.mealLabel}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </XStack>
+          <View style={styles.arrow} />
+        </View>
+      </Modal>
 
-        <TouchableOpacity
-          style={styles.recordButton}
-          onPress={() => setIsPickerOpen((prev) => !prev)}
-        >
-          <Ionicons
-            name="camera-outline"
-            size={20}
-            color={tokens.color.pureWhite.val}
-          />
-          <Text color="white" fontSize="$4" fontWeight="600">
-            식이 기록하기
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        ref={buttonRef}
+        style={styles.recordButton}
+        onPress={handleOpenPicker}
+      >
+        <Ionicons
+          name="camera-outline"
+          size={20}
+          color={tokens.color.pureWhite.val}
+        />
+        <Text color="white" fontSize="$4" fontWeight="600">
+          식이 기록하기
+        </Text>
+      </TouchableOpacity>
     </YStack>
   )
 }
@@ -128,7 +160,6 @@ const styles = StyleSheet.create({
   },
   pickerCard: {
     position: "absolute",
-    bottom: 65,
     alignSelf: "center",
     width: 175,
     backgroundColor: "white",
@@ -165,5 +196,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 1, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
   },
 })
