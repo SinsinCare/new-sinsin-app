@@ -129,34 +129,38 @@ export function FoodAnalysisResult({
           <XStack
             paddingHorizontal="$4"
             paddingVertical="$3"
-            alignItems="center"
-            justifyContent="space-between"
+            alignItems="flex-start"
+            gap="$2"
           >
-            <XStack alignItems="baseline" gap="$1" flex={1}>
-              <Text fontSize={22} fontWeight="700" color="$color">
-                {foodTitle}
-              </Text>
+            <Text
+              fontSize={22}
+              fontWeight="700"
+              color="$color"
+              flexShrink={1}
+              flex={1}
+            >
+              {foodTitle}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
                 {servingsLabel}
               </Text>
-            </XStack>
+            </Text>
             {mealType && (
               <XStack
                 alignItems="center"
                 gap="$1"
-                backgroundColor="#EAEAF0"
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$4"
+                backgroundColor="$backgroundFocus"
+                paddingHorizontal="$3"
+                paddingVertical={6}
+                borderRadius="$8"
+                flexShrink={0}
               >
                 <Ionicons
                   name={
                     MEAL_TYPE_ICON[mealType] as keyof typeof Ionicons.glyphMap
                   }
-                  size={14}
-                  color={tokens.color.grey3.val}
+                  size={15}
                 />
-                <Text fontSize={14} color="$colorSubtle" fontWeight="700">
+                <Text fontSize={14} color="$color" fontWeight="500">
                   {MEAL_LABEL[mealType]}
                 </Text>
               </XStack>
