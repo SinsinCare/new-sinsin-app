@@ -22,6 +22,7 @@ import {
   type VoteData,
 } from "@/src/features/recipe/components/VoteSheet"
 import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
+import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
@@ -38,10 +39,7 @@ const BODY_PLACEHOLDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
 const PRIMARY_BAR_COLOR = { light: "#F1F1F3", dark: "#1F1F21" } as const
 const TOOLBAR_ICON_COLOR = { light: "#666677", dark: "#F5F6FA" } as const
 const TOOLBAR_BORDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
-const IMAGE_CLOSE_BG = "#F5F6FA"
-const IMAGE_CLOSE_ICON = "#0B0D0E"
 const MAX_IMAGES = 5
-const IMAGE_CARD_SIZE = 64
 
 const BODY_PLACEHOLDER = `식단을 건강하게 관리하고, 고민과 의견을 나눌 수 있도록\n다양한 이야기를 나누는 공간입니다.\n\n이런 글을 남겨보세요\nex) 오늘의 식단 인증, 식단 관리중의 고민사항들...\n\n상대방을 불쾌하게 하거나 배려 없는 의견은 삼가 주세요.\n게시판의 성격과 무관한 글, 타인 비방, 광고성 게시물은 사전 경고 없이 삭제될 수 있습니다.`
 
@@ -326,34 +324,12 @@ export default function FreePostNewScreen() {
             }}
           >
             {images.map((uri, index) => (
-              <View key={uri + index} style={{ position: "relative" }}>
-                <Pressable onPress={() => setPreviewImage(uri)}>
-                  <Image
-                    source={{ uri }}
-                    style={{
-                      width: IMAGE_CARD_SIZE,
-                      height: IMAGE_CARD_SIZE,
-                      borderRadius: 8,
-                    }}
-                  />
-                </Pressable>
-                <Pressable
-                  onPress={() => handleRemoveImage(index)}
-                  style={{
-                    position: "absolute",
-                    top: -6,
-                    right: -6,
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: IMAGE_CLOSE_BG,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon name="x" size={12} color={IMAGE_CLOSE_ICON} />
-                </Pressable>
-              </View>
+              <ImageThumbnailCard
+                key={uri + index}
+                uri={uri}
+                onPress={() => setPreviewImage(uri)}
+                onRemove={() => handleRemoveImage(index)}
+              />
             ))}
           </ScrollView>
         )}
