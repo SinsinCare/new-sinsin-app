@@ -199,7 +199,7 @@ export default function RecipeScreen() {
             </YStack>
             <View
               height={6}
-              backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
+              backgroundColor={isDarkMode ? "#313138" : "#E7E7EE"}
             />
             <ScrollView
               style={{ flex: 1 }}

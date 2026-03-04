@@ -9,7 +9,7 @@ const IMAGE_CLOSE_ICON = "#0B0D0E"
 interface ImageThumbnailCardProps {
   uri: string
   onPress: () => void
-  onRemove: () => void
+  onRemove?: () => void
 }
 
 export function ImageThumbnailCard({
@@ -29,9 +29,11 @@ export function ImageThumbnailCard({
           }}
         />
       </Pressable>
-      <Pressable onPress={onRemove} style={styles.closeButton}>
-        <Icon name="x" size={12} color={IMAGE_CLOSE_ICON} />
-      </Pressable>
+      {onRemove && (
+        <Pressable onPress={onRemove} style={styles.closeButton}>
+          <Icon name="x" size={12} color={IMAGE_CLOSE_ICON} />
+        </Pressable>
+      )}
     </View>
   )
 }
