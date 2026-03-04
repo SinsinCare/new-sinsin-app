@@ -1,4 +1,5 @@
 import { Modal, ScrollView, Image } from "react-native"
+import { useState } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -64,8 +65,17 @@ export function FoodAnalysisResult({
   showAddButton = true,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   if (!result) return null
+
+  const handleClosePress = () => {
+    if (showAddButton) {
+      setShowExitConfirm(true)
+    } else {
+      onClose()
+    }
+  }
 
   const foodTitle = result.foods.map((f) => f.name).join("와 ")
   const servingsLabel = `${result.servings}인분`
@@ -75,7 +85,7 @@ export function FoodAnalysisResult({
       visible={open}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={handleClosePress}
     >
       <YStack flex={1} backgroundColor={tokens.color.appBg.val}>
         {/* Header */}
@@ -101,7 +111,7 @@ export function FoodAnalysisResult({
             height={40}
             alignItems="center"
             justifyContent="center"
-            onPress={onClose}
+            onPress={handleClosePress}
             pressStyle={{ opacity: 0.7 }}
           >
             <Ionicons name="close" size={22} color={tokens.color.grey3.val} />
@@ -119,34 +129,38 @@ export function FoodAnalysisResult({
           <XStack
             paddingHorizontal="$4"
             paddingVertical="$3"
-            alignItems="center"
-            justifyContent="space-between"
+            alignItems="flex-start"
+            gap="$2"
           >
-            <XStack alignItems="baseline" gap="$1" flex={1}>
-              <Text fontSize={22} fontWeight="700" color="$color">
-                {foodTitle}
-              </Text>
+            <Text
+              fontSize={22}
+              fontWeight="700"
+              color="$color"
+              flexShrink={1}
+              flex={1}
+            >
+              {foodTitle}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
                 {servingsLabel}
               </Text>
-            </XStack>
+            </Text>
             {mealType && (
               <XStack
                 alignItems="center"
                 gap="$1"
-                backgroundColor="#EAEAF0"
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$4"
+                backgroundColor="$backgroundFocus"
+                paddingHorizontal="$3"
+                paddingVertical={6}
+                borderRadius="$8"
+                flexShrink={0}
               >
                 <Ionicons
                   name={
                     MEAL_TYPE_ICON[mealType] as keyof typeof Ionicons.glyphMap
                   }
-                  size={14}
-                  color={tokens.color.grey3.val}
+                  size={15}
                 />
-                <Text fontSize={14} color="$colorSubtle" fontWeight="700">
+                <Text fontSize={14} color="$color" fontWeight="500">
                   {MEAL_LABEL[mealType]}
                 </Text>
               </XStack>
@@ -360,6 +374,82 @@ export function FoodAnalysisResult({
           </YStack>
         )}
       </YStack>
+
+      {/* 나가기 확인 오버레이 */}
+      {showExitConfirm && (
+        <YStack
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          backgroundColor="rgba(0,0,0,0.3)"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <YStack
+            backgroundColor={tokens.color.offWhite.val}
+            borderRadius={15}
+            overflow="hidden"
+          >
+            <YStack
+              paddingHorizontal="$10"
+              paddingTop="$8"
+              paddingBottom="$6"
+              gap="$2"
+            >
+              <Text fontSize={16} fontWeight="600" textAlign="center">
+                아직 식단을 기록하지 않았어요.
+              </Text>
+              <Text
+                fontSize={14}
+                color="$colorSubtle"
+                textAlign="center"
+                lineHeight={22}
+              >
+                식단을 기록에 추가해 주세요.
+              </Text>
+            </YStack>
+
+            <View height={1} backgroundColor="#E5E5E5" />
+
+            <XStack>
+              <YStack
+                flex={1}
+                alignItems="center"
+                paddingVertical="$4"
+                onPress={() => {
+                  setShowExitConfirm(false)
+                  onClose()
+                }}
+                pressStyle={{ opacity: 0.6 }}
+              >
+                <Text
+                  color={tokens.color.primary9.val}
+                  fontSize={15}
+                  fontWeight="500"
+                >
+                  나가기
+                </Text>
+              </YStack>
+
+              <View width={1} backgroundColor="#E5E5E5" />
+
+              <YStack
+                flex={1}
+                alignItems="center"
+                paddingVertical="$4"
+                onPress={() => setShowExitConfirm(false)}
+                pressStyle={{ opacity: 0.8 }}
+              >
+                <Text fontSize={15} fontWeight="500">
+                  돌아가기
+                </Text>
+              </YStack>
+            </XStack>
+          </YStack>
+        </YStack>
+      )}
     </Modal>
   )
 }

@@ -38,7 +38,6 @@ export default function HomeScreen() {
         <RecordView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
-          selectedMealType={selectedMealType}
           onSelectMealType={handleSelectMealType}
         />
       </View>

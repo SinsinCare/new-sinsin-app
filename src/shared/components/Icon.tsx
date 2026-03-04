@@ -38,6 +38,10 @@ import Potassium from "@/assets/icons/potassium.svg"
 import Phosphorus from "@/assets/icons/phosphorus.svg"
 import Protein from "@/assets/icons/protein.svg"
 import Bookmark from "@/assets/icons/bookmark.svg"
+import Morning from "@/assets/icons/morning.svg"
+import Noon from "@/assets/icons/noon.svg"
+import Evening from "@/assets/icons/evening.svg"
+import Dessert from "@/assets/icons/dessert.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -74,6 +78,10 @@ const icons = {
   upload: Upload,
   water: Water,
   "water-drop": WaterDrop,
+  morning: Morning,
+  noon: Noon,
+  evening: Evening,
+  dessert: Dessert,
   x: X,
 } as const
 
