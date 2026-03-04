@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Alert, Modal } from "react-native"
+import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View, Text } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
@@ -66,6 +67,7 @@ export function RecordView({
     Partial<Record<MealType, boolean>>
   >({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
+  const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false)
   const recordingMealTypeRef = useRef<MealType | null>(null)
   const [dots, setDots] = useState(".")
 
@@ -144,34 +146,40 @@ export function RecordView({
   }
 
   const handleRecord = (mealType: MealType) => {
+    recordingMealTypeRef.current = mealType
+    setIsOptionsSheetOpen(true)
+  }
+
+  const handleCameraPhoto = () => {
+    setIsOptionsSheetOpen(false)
+    const mealType = recordingMealTypeRef.current
+    if (!mealType) return
     Alert.alert("사진 첨부", "방법을 선택하세요", [
       {
         text: "카메라",
         onPress: async () => {
           const uri = await takePhoto()
-          if (uri) {
-            analyzeImage(uri, mealType)
-          }
+          if (uri) analyzeImage(uri, mealType)
         },
       },
       {
         text: "갤러리",
         onPress: async () => {
           const uri = await pickImageFromGallery()
-          if (uri) {
-            analyzeImage(uri, mealType)
-          }
-        },
-      },
-      {
-        text: "직접 입력",
-        onPress: () => {
-          recordingMealTypeRef.current = mealType
-          setIsTextRecordOpen(true)
+          if (uri) analyzeImage(uri, mealType)
         },
       },
       { text: "취소", style: "cancel" },
     ])
+  }
+
+  const handleTextRecord = () => {
+    setIsOptionsSheetOpen(false)
+    setIsTextRecordOpen(true)
+  }
+
+  const handleRecipeLoad = () => {
+    setIsOptionsSheetOpen(false)
   }
 
   return (
@@ -209,6 +217,14 @@ export function RecordView({
           </Text>
         </View>
       </Modal>
+
+      <RecordOptionsSheet
+        open={isOptionsSheetOpen}
+        onClose={() => setIsOptionsSheetOpen(false)}
+        onCameraPhoto={handleCameraPhoto}
+        onTextRecord={handleTextRecord}
+        onRecipeLoad={handleRecipeLoad}
+      />
 
       <TextRecord
         open={isTextRecordOpen}
