@@ -55,7 +55,11 @@ export function MealButton({
         )}
 
         <YStack padding="$2" gap={3}>
-          <Text fontSize="$4" fontWeight="500">
+          <Text
+            fontSize="$4"
+            fontWeight="500"
+            color={isRecorded ? "$white" : "$color"}
+          >
             {MEAL_LABEL[mealType]}
           </Text>
           {!imageUri && !isRecorded && (
