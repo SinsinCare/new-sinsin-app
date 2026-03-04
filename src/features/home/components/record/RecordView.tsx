@@ -32,14 +32,12 @@ import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 interface RecordViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  selectedMealType: MealType | null
   onSelectMealType: (mealType: MealType) => void
 }
 
 export function RecordView({
   selectedDate,
   onSelectDate,
-  selectedMealType,
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord(selectedDate)
@@ -196,7 +194,6 @@ export function RecordView({
 
       <MealButtons
         onSelectMealType={onSelectMealType}
-        selectedMealType={selectedMealType}
         mealImages={mergedMealImages}
         recordedMeals={mergedRecordedMeals}
         onRecord={handleRecord}

@@ -22,7 +22,6 @@ const MEAL_OPTIONS: MealOptionConfig[] = [
 
 interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
-  selectedMealType?: MealType | null
   mealImages?: Partial<Record<MealType, string>>
   recordedMeals?: Partial<Record<MealType, boolean>>
   onRecord: (mealType: MealType) => void
@@ -30,7 +29,6 @@ interface MealButtonsProps {
 
 export function MealButtons({
   onSelectMealType,
-  selectedMealType,
   mealImages = {},
   recordedMeals = {},
   onRecord,
@@ -55,7 +53,6 @@ export function MealButtons({
             key={type}
             mealType={type}
             onPress={() => onSelectMealType(type)}
-            isSelected={selectedMealType === type}
             imageUri={mealImages[type]}
             isRecorded={recordedMeals[type] ?? false}
           />

@@ -14,7 +14,6 @@ const MEAL_LABEL: Record<MealType, string> = {
 interface MealButtonProps {
   mealType: MealType
   onPress: () => void
-  isSelected?: boolean
   imageUri?: string | null
   isRecorded?: boolean
 }
@@ -22,7 +21,6 @@ interface MealButtonProps {
 export function MealButton({
   mealType,
   onPress,
-  isSelected,
   imageUri,
   isRecorded,
 }: MealButtonProps) {
