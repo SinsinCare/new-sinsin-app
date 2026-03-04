@@ -79,7 +79,7 @@ export function ConfirmExitModal({
                 fontSize={14}
                 lineHeight={18}
                 fontWeight="400"
-                color={secondaryTextColor}
+                color={textColor}
                 textAlign="center"
               >
                 {cancelLabel}
