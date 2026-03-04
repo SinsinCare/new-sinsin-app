@@ -24,6 +24,7 @@ import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 
+
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
 const REGISTER_ACTIVE_COLOR = { light: "#44AF94", dark: "#44AF94" } as const

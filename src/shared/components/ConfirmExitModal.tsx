@@ -1,11 +1,45 @@
+import { useEffect, useRef, useState } from "react"
 import {
-  Modal,
+  Animated,
   Pressable,
   StyleSheet,
   useColorScheme,
   View,
 } from "react-native"
 import { Text, XStack } from "tamagui"
+
+/* ── useFadeVisibility hook ── */
+
+function useFadeVisibility(visible: boolean, duration: number) {
+  const opacity = useRef(new Animated.Value(0)).current
+  const wasVisible = useRef(false)
+  const [shouldRender, setShouldRender] = useState(false)
+
+  useEffect(() => {
+    if (visible) {
+      wasVisible.current = true
+      setShouldRender(true)
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration,
+        useNativeDriver: true,
+      }).start()
+    } else if (wasVisible.current) {
+      wasVisible.current = false
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) setShouldRender(false)
+      })
+    }
+  }, [visible, opacity, duration])
+
+  return { opacity, shouldRender }
+}
+
+/* ── ConfirmExitModal ── */
 
 interface ConfirmExitModalProps {
   visible: boolean
@@ -16,6 +50,8 @@ interface ConfirmExitModalProps {
   onCancel: () => void
   onConfirm: () => void
 }
+
+const FADE_DURATION = 200
 
 export function ConfirmExitModal({
   visible,
@@ -28,6 +64,7 @@ export function ConfirmExitModal({
 }: ConfirmExitModalProps) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
+  const { opacity, shouldRender } = useFadeVisibility(visible, FADE_DURATION)
 
   const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
   const secondaryTextColor = isDarkMode ? "#ABABB4" : "#81818D"
@@ -35,15 +72,19 @@ export function ConfirmExitModal({
   const borderColor = isDarkMode ? "#313138" : "#EAEAF0"
   const backdropBg = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.3)"
 
+  if (!shouldRender) return null
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
+    <Animated.View
+      style={[StyleSheet.absoluteFill, { opacity }]}
+      pointerEvents={visible ? "auto" : "none"}
     >
       <Pressable
-        style={[styles.backdrop, { backgroundColor: backdropBg }]}
+        style={[
+          StyleSheet.absoluteFill,
+          styles.backdrop,
+          { backgroundColor: backdropBg },
+        ]}
         onPress={onCancel}
       >
         <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
@@ -115,13 +156,12 @@ export function ConfirmExitModal({
           </XStack>
         </Pressable>
       </Pressable>
-    </Modal>
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
   backdrop: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 40,

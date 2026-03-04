@@ -44,7 +44,6 @@ export function PostCategorySheet({
 
   return (
     <Sheet
-      modal
       open={open}
       onOpenChange={onOpenChange}
       snapPoints={[35]}
