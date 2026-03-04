@@ -10,8 +10,7 @@ import {
   ScrollView,
   Switch,
 } from "react-native"
-import { YStack, XStack, Text, View } from "tamagui"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 
 export interface VoteData {
