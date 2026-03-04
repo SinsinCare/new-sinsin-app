@@ -3,7 +3,9 @@
  * 사용해야 color prop으로 런타임 색상 변경이 가능합니다.
  */
 import { SvgProps } from "react-native-svg"
+import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
+import CheckColor from "@/assets/icons/check-color.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
@@ -19,6 +21,7 @@ import Location from "@/assets/icons/location.svg"
 import Magnifyingglass from "@/assets/icons/magnifyingglass.svg"
 import Mail from "@/assets/icons/mail.svg"
 import Message from "@/assets/icons/message.svg"
+import MinusCircle from "@/assets/icons/minus-circle.svg"
 import Menu from "@/assets/icons/menu.svg"
 import Notification from "@/assets/icons/notification.svg"
 import Paperclip from "@/assets/icons/paperclip.svg"
@@ -38,6 +41,10 @@ import Potassium from "@/assets/icons/potassium.svg"
 import Phosphorus from "@/assets/icons/phosphorus.svg"
 import Protein from "@/assets/icons/protein.svg"
 import Bookmark from "@/assets/icons/bookmark.svg"
+import Hashtag from "@/assets/icons/hashtag.svg"
+import Info from "@/assets/icons/info.svg"
+import Keyboard from "@/assets/icons/keyboard.svg"
+import Vote from "@/assets/icons/vote.svg"
 import Morning from "@/assets/icons/morning.svg"
 import Noon from "@/assets/icons/noon.svg"
 import Evening from "@/assets/icons/evening.svg"
@@ -46,6 +53,8 @@ import Dessert from "@/assets/icons/dessert.svg"
 const icons = {
   bookmark: Bookmark,
   chat: Chat,
+  "check-color": CheckColor,
+  chef: Chef,
   "chevron-right": ChevronRight,
   copy: Copy,
   cross: Cross,
@@ -54,15 +63,19 @@ const icons = {
   "fork-knife": ForkKnife,
   gallery: Gallery,
   "hands-clap": HandsClap,
+  hashtag: Hashtag,
   "heart-text": HeartText,
   history: History,
   home: Home,
+  info: Info,
+  keyboard: Keyboard,
   loading: Loading,
   location: Location,
   magnifyingglass: Magnifyingglass,
   mail: Mail,
   menu: Menu,
   message: Message,
+  "minus-circle": MinusCircle,
   notification: Notification,
   paperclip: Paperclip,
   pencil: Pencil,
@@ -76,6 +89,7 @@ const icons = {
   sodium: Sodium,
   trashcan: Trashcan,
   upload: Upload,
+  vote: Vote,
   water: Water,
   "water-drop": WaterDrop,
   morning: Morning,

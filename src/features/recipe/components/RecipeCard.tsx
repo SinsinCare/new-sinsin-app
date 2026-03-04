@@ -51,13 +51,28 @@ export function RecipeCard({
 
         <XStack flexWrap="wrap" gap={6} paddingHorizontal={2}>
           {tags.nutrition?.map((label) => (
-            <FilterChip key={`n-${label}`} label={`#${label}`} theme="primary" />
+            <FilterChip
+              key={`n-${label}`}
+              label={`#${label}`}
+              theme="primary"
+              selected
+            />
           ))}
           {tags.stage?.map((label) => (
-            <FilterChip key={`s-${label}`} label={`#${label}`} theme="sub" />
+            <FilterChip
+              key={`s-${label}`}
+              label={`#${label}`}
+              theme="sub"
+              selected
+            />
           ))}
           {tags.country?.map((label) => (
-            <FilterChip key={`c-${label}`} label={`#${label}`} theme="tertiary" />
+            <FilterChip
+              key={`c-${label}`}
+              label={`#${label}`}
+              theme="tertiary"
+              selected
+            />
           ))}
         </XStack>
 

@@ -26,6 +26,17 @@ const CATEGORY_SECTIONS = [
     ],
   },
   {
+    key: "stage",
+    title: "병기별",
+    chips: [
+      { key: "ckd3", label: "CKD 3기" },
+      { key: "ckd4", label: "CKD 4기" },
+      { key: "ckd5", label: "CKD 5기" },
+      { key: "diabetes", label: "당뇨동반" },
+      { key: "hypertension", label: "고혈압동반" },
+    ],
+  },
+  {
     key: "country",
     title: "나라별",
     chips: [
@@ -38,18 +49,13 @@ const CATEGORY_SECTIONS = [
       { key: "beverage", label: "음료" },
     ],
   },
-  {
-    key: "stage",
-    title: "병기별",
-    chips: [
-      { key: "ckd3", label: "CKD 3기" },
-      { key: "ckd4", label: "CKD 4기" },
-      { key: "ckd5", label: "CKD 5기" },
-      { key: "diabetes", label: "당뇨동반" },
-      { key: "hypertension", label: "고혈압동반" },
-    ],
-  },
 ] as const
+
+const CHIP_THEME = {
+  nutrition: "primary",
+  country: "tertiary",
+  stage: "sub",
+} as const
 
 const HEADER_COLORS = {
   light: { close: "#3C3C43", title: "#3C3C43", apply: "#EE6145" },
@@ -143,7 +149,16 @@ export function CategoryFilterSheet({
         borderTopRightRadius={20}
         backgroundColor={sheetBg}
       >
-        <Sheet.Handle />
+        <Sheet.Handle
+          marginHorizontal={"auto"}
+          marginVertical={12}
+          style={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: isDark ? "#858591" : "#D9D9DF",
+          }}
+        />
 
         {/* Header */}
         <XStack
@@ -201,6 +216,7 @@ export function CategoryFilterSheet({
                   <FilterChip
                     key={chip.key}
                     label={chip.label}
+                    theme={CHIP_THEME[section.key]}
                     selected={tempFilters[section.key]?.has(chip.key) ?? false}
                     onPress={() => toggleChip(section.key, chip.key)}
                   />

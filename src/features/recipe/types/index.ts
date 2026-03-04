@@ -67,3 +67,8 @@ export interface ICommunityPostService {
   toggleLike(postId: string): void
   toggleBookmark(postId: string): void
 }
+
+export interface PostCategory {
+  key: string
+  label: string
+}

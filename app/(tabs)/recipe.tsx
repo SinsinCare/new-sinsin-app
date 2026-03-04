@@ -1,5 +1,13 @@
-import { useState } from "react"
-import { Keyboard, Pressable, ScrollView, useColorScheme } from "react-native"
+import { useCallback, useMemo, useState } from "react"
+import { useRouter } from "expo-router"
+import {
+  Keyboard,
+  Modal,
+  Pressable,
+  ScrollView,
+  useColorScheme,
+  StyleSheet,
+} from "react-native"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -10,7 +18,58 @@ import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
-import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
+import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
+import { WriteTypeSheet } from "@/src/features/recipe/components/WriteTypeSheet"
+import {
+  RecipeCard,
+  type RecipeCardTags,
+} from "@/src/features/recipe/components/RecipeCard"
+import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
+import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
+
+interface RecipeItem {
+  id: string
+  imageUri: string
+  likeCount: number
+  commentCount: number
+  tags: RecipeCardTags
+  title: string
+}
+
+const MOCK_RECIPES: RecipeItem[] = [
+  {
+    id: "1",
+    imageUri: "http://app.demo.dev/dashboard",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+  {
+    id: "2",
+    imageUri: "http://app.demo.dev/dashboard",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+  {
+    id: "3",
+    imageUri: "http://app.demo.dev/dashboard",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+  {
+    id: "4",
+    imageUri: "http://app.demo.dev/dashboard",
+    likeCount: 32,
+    commentCount: 24,
+    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
+    title: "닭가슴살 카레",
+  },
+]
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
@@ -36,6 +95,7 @@ const ICON_COLORS = {
 } as const
 
 export default function RecipeScreen() {
+  const router = useRouter()
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
@@ -52,15 +112,46 @@ export default function RecipeScreen() {
 
   const [search, setSearch] = useState("")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [writeSheetOpen, setWriteSheetOpen] = useState(false)
+  const [freePostModalOpen, setFreePostModalOpen] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
+
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    new Set(),
+  )
+
+  const handleToggleCategory = useCallback((key: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }, [])
+
+  const handleToggleAllCategories = useCallback((isSelected: boolean) => {
+    setSelectedCategories(isSelected ? new Set() : new Set())
+  }, [])
+
+  const [leftColumn, rightColumn] = useMemo(() => {
+    const left: RecipeItem[] = []
+    const right: RecipeItem[] = []
+    MOCK_RECIPES.forEach((item, i) => {
+      ;(i % 2 === 0 ? left : right).push(item)
+    })
+    return [left, right] as const
+  }, [])
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
       <YStack
         flex={1}
-        backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
+        backgroundColor={isDarkMode ? "#1F1F21" : "#FCFCFC"}
         paddingTop={insets.top}
       >
         <TopTabBar
@@ -88,7 +179,7 @@ export default function RecipeScreen() {
                     <FilterChip
                       key={chip.key}
                       label={chip.label}
-                      theme={"theme" in chip ? chip.theme : undefined}
+                      theme="default"
                     />
                   ))}
                 </ScrollView>
@@ -100,44 +191,106 @@ export default function RecipeScreen() {
                   <Icon name="filter" size={24} color={iconColor} />
                 </Pressable>
               </XStack>
+              <FoodCategoryBar
+                selectedCategories={selectedCategories}
+                onToggleCategory={handleToggleCategory}
+                onToggleAllCategories={handleToggleAllCategories}
+              />
             </YStack>
             <View
               height={6}
-              backgroundColor={isDarkMode ? "#313138" : "#D4D4D4"}
+              backgroundColor={isDarkMode ? "#313138" : "#E7E7EE"}
             />
             <ScrollView
               style={{ flex: 1 }}
               contentContainerStyle={{ padding: 16 }}
             >
-              <RecipeCard
-                imageUri="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400"
-                likeCount={32}
-                commentCount={24}
-                tags={{
-                  nutrition: ["저염식"],
-                  stage: ["CKD3"],
-                  country: ["일식"],
-                }}
-                title="닭가슴살 카레"
-                onPress={() => console.log("RecipeCard pressed")}
-              />
+              <XStack gap={12}>
+                <YStack flex={1} gap={12}>
+                  {leftColumn.map((item) => (
+                    <RecipeCard
+                      key={item.id}
+                      imageUri={item.imageUri}
+                      likeCount={item.likeCount}
+                      commentCount={item.commentCount}
+                      tags={item.tags}
+                      title={item.title}
+                      onPress={() => console.log("RecipeCard pressed", item.id)}
+                    />
+                  ))}
+                </YStack>
+                <YStack flex={1} gap={12}>
+                  {rightColumn.map((item) => (
+                    <RecipeCard
+                      key={item.id}
+                      imageUri={item.imageUri}
+                      likeCount={item.likeCount}
+                      commentCount={item.commentCount}
+                      tags={item.tags}
+                      title={item.title}
+                      onPress={() => console.log("RecipeCard pressed", item.id)}
+                    />
+                  ))}
+                </YStack>
+              </XStack>
             </ScrollView>
           </>
         )}
-        {activeTab === "free" && (
-          <YStack paddingHorizontal={16} paddingVertical={14}>
-            <Text color={headerColor} fontSize="$5">
-              자유글 컨텐츠
-            </Text>
-          </YStack>
-        )}
+        {activeTab === "free" && <FreePostTab />}
         <CategoryFilterSheet
           open={filterSheetOpen}
           onOpenChange={setFilterSheetOpen}
           selectedFilters={selectedFilters}
           onApply={setSelectedFilters}
         />
+        <WriteTypeSheet
+          open={writeSheetOpen}
+          onOpenChange={setWriteSheetOpen}
+          onSelect={(type) => {
+            if (type === "free") {
+              setFreePostModalOpen(true)
+            } else {
+              router.push(`/(write)/${type}/new`)
+            }
+          }}
+        />
+        <Modal
+          visible={freePostModalOpen}
+          animationType="slide"
+          onRequestClose={() => setFreePostModalOpen(false)}
+        >
+          <FreePostEditor onClose={() => setFreePostModalOpen(false)} />
+        </Modal>
+        <Pressable
+          onPress={() => setWriteSheetOpen(true)}
+          style={({ pressed }) => ({
+            ...styles.writeButton,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Text
+            color={isDarkMode ? "#1F1F21" : "#FCFCFC"}
+            fontSize={16}
+            lineHeight={28}
+            fontWeight="600"
+            fontFamily="$body"
+          >
+            + 글쓰기
+          </Text>
+        </Pressable>
       </YStack>
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  writeButton: {
+    position: "absolute",
+    bottom: 26,
+    right: 16,
+    backgroundColor: "#FF7246",
+    borderRadius: 24,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+})
