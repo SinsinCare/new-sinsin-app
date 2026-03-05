@@ -49,6 +49,7 @@ import Morning from "@/assets/icons/morning.svg"
 import Noon from "@/assets/icons/noon.svg"
 import Evening from "@/assets/icons/evening.svg"
 import Dessert from "@/assets/icons/dessert.svg"
+import Edit from "@/assets/icons/edit.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -96,6 +97,7 @@ const icons = {
   noon: Noon,
   evening: Evening,
   dessert: Dessert,
+  edit: Edit,
   x: X,
 } as const
 

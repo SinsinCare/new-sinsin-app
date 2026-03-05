@@ -179,15 +179,16 @@ export function FoodAnalysisResult({
                 bottom={10}
                 right={10}
                 alignItems="center"
-                backgroundColor="rgba(0,0,0,0.55)"
-                borderRadius={16}
-                paddingHorizontal={10}
-                paddingVertical={5}
-                gap={4}
-                pressStyle={{ opacity: 0.7 }}
+                backgroundColor="$offWhite"
+                borderRadius={8}
+                paddingHorizontal={9}
+                paddingVertical={7}
+                gap={3}
+                opacity={0.8}
+                pressStyle={{ opacity: 0.5 }}
               >
-                <Ionicons name="pencil" size={12} color="white" />
-                <Text color="white" fontSize={12} fontWeight="500">
+                <Icon name="edit" size={18} />
+                <Text fontSize={12} fontWeight="600" color="$color.grey4">
                   식단 수정
                 </Text>
               </XStack>
@@ -206,7 +207,7 @@ export function FoodAnalysisResult({
             <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
               한줄평
             </Text>
-            <Text fontSize="$4" color="$color" lineHeight={22}>
+            <Text fontSize="$4" color="$color" lineHeight={22} fontWeight="600">
               {result.evaluation.comment}
             </Text>
           </YStack>
@@ -317,7 +318,7 @@ export function FoodAnalysisResult({
                 backgroundColor="$cardBackground"
                 borderRadius="$4"
                 padding="$4"
-                gap="$4"
+                gap="$6"
               >
                 {result.evaluation.cautionFoods.map((item, i) => (
                   <YStack key={i} gap="$2">
@@ -339,7 +340,7 @@ export function FoodAnalysisResult({
             justifyContent="center"
             gap={6}
             marginTop={24}
-            paddingVertical={12}
+            paddingVertical={17}
             marginHorizontal={15}
             backgroundColor="#EAEAF0"
             borderRadius={20}
