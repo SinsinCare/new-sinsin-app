@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
 import type { DateAnalysisBodyRecord } from "@/src/types"
 import type { EdemaLevel as ApiEdemaLevel } from "../../types"
+import { useWeightRecord } from "../../hooks/useWeightRecord"
 
 const EDEMA_LEVEL_TO_LABEL: Record<ApiEdemaLevel, EdemaLevel> = {
   NONE: EDEMA_OPTIONS[0],
@@ -18,11 +19,16 @@ interface WeightEdemaTrackerProps {
     today: DateAnalysisBodyRecord | null
     previous: DateAnalysisBodyRecord | null
   }
+  selectedDate: Date
 }
 
-export function WeightEdemaTracker({ bodyRecords }: WeightEdemaTrackerProps) {
+export function WeightEdemaTracker({
+  bodyRecords,
+  selectedDate,
+}: WeightEdemaTrackerProps) {
   const [weight, setWeight] = useState<string>("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
+  const { updateWeight } = useWeightRecord()
 
   useEffect(() => {
     const today = bodyRecords?.today ?? null
@@ -39,14 +45,27 @@ export function WeightEdemaTracker({ bodyRecords }: WeightEdemaTrackerProps) {
     ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
     : null
 
+  const selectDate = selectedDate.toISOString().split("T")[0]
+
+  const handleSave = (weightStr: string) => {
+    const val = parseFloat(weightStr)
+    if (!isNaN(val) && val > 0) {
+      updateWeight(val, selectDate)
+    }
+  }
+
   const handleDecrease = () => {
     const current = parseFloat(weight) || 0
-    setWeight(decreaseWeight(current).toFixed(1))
+    const newVal = decreaseWeight(current).toFixed(1)
+    setWeight(newVal)
+    handleSave(newVal)
   }
 
   const handleIncrease = () => {
     const current = parseFloat(weight) || 0
-    setWeight(increaseWeight(current).toFixed(1))
+    const newVal = increaseWeight(current).toFixed(1)
+    setWeight(newVal)
+    handleSave(newVal)
   }
 
   return (
@@ -62,6 +81,7 @@ export function WeightEdemaTracker({ bodyRecords }: WeightEdemaTrackerProps) {
         onDecrease={handleDecrease}
         onIncrease={handleIncrease}
         onReset={() => setWeight("")}
+        onSave={handleSave}
       />
 
       <EdemaRecord

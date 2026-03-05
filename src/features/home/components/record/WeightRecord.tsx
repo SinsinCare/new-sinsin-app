@@ -9,6 +9,7 @@ interface WeightRecordProps {
   onDecrease: () => void
   onIncrease: () => void
   onReset: () => void
+  onSave: (weight: string) => void
 }
 
 export function WeightRecord({
@@ -18,6 +19,7 @@ export function WeightRecord({
   onDecrease,
   onIncrease,
   onReset,
+  onSave,
 }: WeightRecordProps) {
   const subtitle =
     yesterdayWeight !== null
@@ -67,6 +69,7 @@ export function WeightRecord({
             placeholderTextColor="#999999"
             value={weight}
             onChangeText={onChangeWeight}
+            onEndEditing={() => onSave(weight)}
             keyboardType="decimal-pad"
           />
           {!!weight && (

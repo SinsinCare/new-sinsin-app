@@ -266,7 +266,10 @@ export function RecordView({
 
       <View height={10} />
 
-      <WeightEdemaTracker bodyRecords={data?.result.bodyRecords} />
+      <WeightEdemaTracker
+        bodyRecords={data?.result.bodyRecords}
+        selectedDate={selectedDate}
+      />
     </ScrollView>
   )
 }
