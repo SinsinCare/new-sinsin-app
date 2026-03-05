@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react"
 import { Text, XStack, YStack } from "tamagui"
-import { EdemaLevel } from "../../data/EdemaConstants"
+import { EDEMA_LEVEL_TO_LABEL } from "../../data/EdemaConstants"
 import { DateAnalysisBodyRecord } from "@/src/types"
 
 interface WeightEdemaResultProps {
@@ -13,17 +12,12 @@ interface WeightEdemaResultProps {
 export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
   const todayWeight = bodyRecords?.today?.weightKg ?? 0
   const previousWeight = bodyRecords?.previous?.weightKg ?? 0
-  const todayEdema =
-    (bodyRecords?.today?.edemaLevel as EdemaLevel | undefined) ?? null
-  const previousEdema = bodyRecords?.previous?.edemaLevel ?? null
-
-  const [weight, setWeight] = useState(todayWeight)
-  const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(todayEdema)
-
-  useEffect(() => {
-    setWeight(todayWeight)
-    setEdemaLevel(todayEdema)
-  }, [bodyRecords])
+  const todayEdema = bodyRecords?.today?.edemaLevel
+    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.today.edemaLevel] ?? null)
+    : null
+  const previousEdema = bodyRecords?.previous?.edemaLevel
+    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
+    : null
 
   return (
     <YStack paddingVertical="$4" gap="$3">
@@ -52,7 +46,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             체중
           </Text>
           <Text fontSize={18} fontWeight="600">
-            {weight > 0 ? `${weight}kg` : "기록 없음"}
+            {todayWeight > 0 ? `${todayWeight}kg` : "기록 없음"}
           </Text>
           <Text
             paddingTop="$1"
@@ -69,7 +63,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             붓기
           </Text>
           <Text fontSize={18} fontWeight="600">
-            {edemaLevel ?? "기록 없음"}
+            {todayEdema ?? "기록 없음"}
           </Text>
           <Text
             paddingTop="$1"
