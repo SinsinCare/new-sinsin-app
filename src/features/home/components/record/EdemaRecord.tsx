@@ -5,14 +5,14 @@ import { RecordCard } from "./RecordCard"
 
 interface EdemaRecordProps {
   selected: EdemaLevel | null
-  onSelect: (level: EdemaLevel) => void
   yesterdayEdema?: string | null
+  onSave: (edemaLevel: EdemaLevel) => void
 }
 
 export function EdemaRecord({
   selected,
-  onSelect,
   yesterdayEdema,
+  onSave,
 }: EdemaRecordProps) {
   const subtitle =
     yesterdayEdema != null ? `어제: ${yesterdayEdema}` : "이전 기록이 없어요"
@@ -25,7 +25,7 @@ export function EdemaRecord({
     >
       <YStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (
-          <TouchableOpacity key={option} onPress={() => onSelect(option)}>
+          <TouchableOpacity key={option} onPress={() => onSave(option)}>
             <XStack
               backgroundColor={selected === option ? "$primary" : "$pureWhite"}
               paddingVertical="$2.5"
