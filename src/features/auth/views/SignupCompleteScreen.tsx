@@ -62,7 +62,7 @@ export function SignupCompleteScreen() {
                 letterSpacing={-0.3}
                 lineHeight={20}
               >
-                신신케어 시작하기
+                신신당부 케어 시작하기
               </Text>
             </YStack>
           </Pressable>
