@@ -258,12 +258,24 @@ export function FoodAnalysisResult({
                     alignItems="center"
                     justifyContent="space-between"
                     paddingBottom={8}
+                    gap="$2"
                   >
-                    <XStack alignItems="baseline" gap="$1">
-                      <Text fontSize="$4" fontWeight="600" color="$color">
+                    <XStack
+                      alignItems="baseline"
+                      gap="$1"
+                      flex={1}
+                      flexShrink={1}
+                    >
+                      <Text
+                        fontSize="$4"
+                        fontWeight="600"
+                        color="$color"
+                        numberOfLines={1}
+                        flexShrink={1}
+                      >
                         {food.name}
                       </Text>
-                      <Text fontSize="$3" color="$colorSubtle">
+                      <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
                         {food.servingSize}
                       </Text>
                     </XStack>
@@ -272,6 +284,7 @@ export function FoodAnalysisResult({
                       paddingVertical={4}
                       borderRadius={8}
                       backgroundColor={restriction.bg}
+                      flexShrink={0}
                     >
                       <Text
                         fontSize="$3"
