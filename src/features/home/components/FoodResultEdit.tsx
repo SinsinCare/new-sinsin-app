@@ -113,10 +113,10 @@ export function FoodResultEdit({
               <Text fontSize={18} fontWeight="600" paddingLeft="$1">
                 {mealName}{" "}
               </Text>
-              <Icon name="edit" size={20} onPress={handleNameEdit} />
+              <Icon name="edit" size={22} onPress={handleNameEdit} />
             </XStack>
 
-            <XStack justifyContent="space-between" alignItems="center" gap="$1">
+            <XStack justifyContent="space-between" alignItems="center" gap={4}>
               {MEAL_OPTIONS.map((opt) => {
                 const isSelected = mealType === opt.type
                 return (
@@ -133,8 +133,22 @@ export function FoodResultEdit({
                     }}
                   >
                     <XStack alignItems="center" gap={3}>
-                      <Icon name={opt.icon} size={16} />
-                      <Text fontSize={15}>{opt.label}</Text>
+                      <Icon
+                        name={opt.icon}
+                        size={16}
+                        color={
+                          isSelected
+                            ? tokens.color.grey1.val
+                            : tokens.color.grey6.val
+                        }
+                      />
+                      <Text
+                        fontSize={15}
+                        fontWeight={500}
+                        color={isSelected ? "$color" : "$colorSubtle"}
+                      >
+                        {opt.label}
+                      </Text>
                     </XStack>
                   </TouchableOpacity>
                 )
@@ -220,8 +234,8 @@ export function FoodResultEdit({
               식단 세부 수정
             </Text>
             <TouchableOpacity onPress={handleAddMenu}>
-              <XStack paddingRight="$1" gap="$1">
-                <Icon name="plus" size={16} />
+              <XStack paddingRight="$1" gap={3}>
+                <Icon name="plus" size={17} />
                 <Text fontSize={15} fontWeight={600} color="$colorSubtle">
                   메뉴 추가
                 </Text>
@@ -288,7 +302,7 @@ export function FoodResultEdit({
                         onPress={() => setNewMenuUnit(unit)}
                       >
                         <View
-                          width={60}
+                          width={65}
                           height={35}
                           alignItems="center"
                           justifyContent="center"
@@ -313,7 +327,7 @@ export function FoodResultEdit({
                 </YStack>
               )}
               {foods.map((f, i) => (
-                <XStack key={i} alignItems="center" gap="$3">
+                <XStack key={i} alignItems="center" gap="$2">
                   <Text fontWeight={500} fontSize={15} flex={1}>
                     {f.name}
                   </Text>
@@ -331,7 +345,11 @@ export function FoodResultEdit({
                       minWidth: 80,
                     }}
                   />
-                  <Text fontSize={15} width={14} textAlign="left">
+                  <Text
+                    fontSize={f.unit === "인분" ? 12 : 14}
+                    width={21}
+                    textAlign="center"
+                  >
                     {f.unit}
                   </Text>
                   <TouchableOpacity onPress={() => handleDelete(i)}>
@@ -339,14 +357,14 @@ export function FoodResultEdit({
                       width={20}
                       height={20}
                       borderRadius={12}
-                      backgroundColor="$backgroundPress"
+                      backgroundColor={tokens.color.deleteBg.val}
                       alignItems="center"
                       justifyContent="center"
                     >
                       <Text
                         fontSize={18}
                         lineHeight={20}
-                        color="$white"
+                        color="$pureWhite"
                         textAlign="center"
                       >
                         ×
@@ -366,7 +384,12 @@ export function FoodResultEdit({
           paddingHorizontal="$4"
           paddingVertical="$5"
         >
-          <Text fontSize={15} fontWeight={600} marginBottom="$4">
+          <Text
+            fontSize={16}
+            fontWeight={600}
+            marginBottom="$4"
+            paddingLeft={4}
+          >
             얼마나 드셨나요?
           </Text>
           <View
@@ -383,7 +406,7 @@ export function FoodResultEdit({
             <View
               style={{
                 height: 30,
-                backgroundColor: tokens.color.grey8.val,
+                backgroundColor: tokens.color.deleteBg.val,
                 borderRadius: 15,
               }}
             />
