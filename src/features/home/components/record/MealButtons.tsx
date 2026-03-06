@@ -11,20 +11,8 @@ import { Ionicons } from "@expo/vector-icons"
 import { MealType } from "../../types"
 import { MealButton } from "./MealButton"
 import { tokens } from "@/src/theme/tokens"
-import { Icon, IconName } from "@/src/shared/components"
-
-type MealOptionConfig = {
-  type: MealType
-  label: string
-  icon: IconName
-}
-
-const MEAL_OPTIONS: MealOptionConfig[] = [
-  { type: "BREAKFAST", label: "아침", icon: "morning" },
-  { type: "LUNCH", label: "점심", icon: "noon" },
-  { type: "DINNER", label: "저녁", icon: "evening" },
-  { type: "SNACKS", label: "간식", icon: "dessert" },
-]
+import { Icon } from "@/src/shared/components"
+import { MEAL_OPTIONS } from "../../data/mealConstants"
 
 interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
@@ -101,11 +89,7 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon
-                  name={opt.icon}
-                  size={18}
-                  color={tokens.color.grey8.val}
-                />
+                <Icon name={opt.icon} size={18} color="$black" />
                 <Text style={styles.mealLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
@@ -117,11 +101,7 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon
-                  name={opt.icon}
-                  size={18}
-                  color={tokens.color.grey8.val}
-                />
+                <Icon name={opt.icon} size={18} color="$black" />
                 <Text style={styles.mealLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}

@@ -52,6 +52,9 @@ export const tokens = createTokens({
     grey6: "#999999",
     grey7: "#B3B3B3",
     grey8: "#EDEDED",
+
+    // UI element backgrounds
+    deleteBg: "#D9D9DF",
   },
 
   space: {

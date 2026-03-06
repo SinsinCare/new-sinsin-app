@@ -1,9 +1,11 @@
 import { EdemaLevel, MealType } from "../features/home/types"
 
 export interface FoodCameraFood {
+  id?: number
   name: string
   restrictionLevel: string
-  servingSize: string
+  servingSizeValue: number | null
+  servingSizeUnit: string
   calories: number
   protein: number
   carbohydrates: number

@@ -10,7 +10,8 @@ const MOCK_FOOD_CAMERA_RESULT: FoodCameraAnalyzeResult = {
     {
       name: "김치찌개",
       restrictionLevel: "MODERATE",
-      servingSize: "1인분",
+      servingSizeValue: null,
+      servingSizeUnit: "1인분",
       calories: 350,
       protein: 18,
       carbohydrates: 20,
