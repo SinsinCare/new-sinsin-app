@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react"
 import {
   Animated,
   Image,
@@ -10,8 +9,14 @@ import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { FoodCameraAnalyzeResult } from "@/src/types"
 import { Icon } from "@/src/shared/components"
+import {
+  EATEN_STEPS,
+  THUMB_SIZE,
+  UNIT_OPTIONS,
+} from "../data/foodEditConstants"
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
+import { useFoodEdit } from "../hooks/useFoodEdit"
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -26,121 +31,37 @@ export function FoodResultEdit({
   onClose,
   mealType,
 }: FoodResultEditProps) {
-  const initialFoods = result?.foods ?? []
-  const [foods, setFoods] = useState(
-    initialFoods.map((f) => ({
-      ...f,
-      amount: String(f.servingSizeValue ?? ""),
-      unit: f.servingSizeUnit,
-    })),
-  )
-
-  const defaultMealName =
-    result?.foods
-      .slice(0, 2)
-      .map((f) => f.name)
-      .join("와 ") ?? ""
-  const [mealName, setMealName] = useState(defaultMealName)
-  const [isNameEdit, setIsNameEdit] = useState(false)
-  const [editingName, setEditingName] = useState("")
-  const nameEditInputRef = useRef<TextInput>(null)
-
-  const handleNameEdit = () => {
-    setEditingName("")
-    setIsNameEdit(true)
-    setTimeout(() => nameEditInputRef.current?.focus(), 100)
-  }
-
-  const handleNameConfirm = () => {
-    setMealName(editingName.trim() || mealName)
-    setIsNameEdit(false)
-  }
-
-  const handleAmountChange = (index: number, value: string) => {
-    setFoods((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, amount: value } : f)),
-    )
-  }
-
-  const EATEN_STEPS = ["조금 먹었어요", "반 정도", "3/4", "다 먹었어요"]
-  const initialEatenStep = Math.min(
-    3,
-    Math.max(
-      0,
-      Math.round((((result?.eatenPercentage ?? 1) - 0.25) / 0.75) * 3),
-    ),
-  )
-  const [eatenStep, setEatenStep] = useState(initialEatenStep)
-  const [trackWidth, setTrackWidth] = useState(0)
-  const THUMB_SIZE = 22
-
-  const handleTrackTouch = (locationX: number) => {
-    if (trackWidth === 0) return
-    setEatenStep(Math.min(3, Math.floor(locationX / (trackWidth / 4))))
-  }
-
-  const thumbAnim = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    if (trackWidth === 0) return
-    Animated.spring(thumbAnim, {
-      toValue: ((2 * eatenStep + 1) / 8) * trackWidth - THUMB_SIZE / 2,
-      useNativeDriver: true,
-      tension: 120,
-      friction: 10,
-    }).start()
-  }, [eatenStep, trackWidth, thumbAnim])
-
-  const [addStep, setAddStep] = useState<"idle" | "name" | "amount">("idle")
-  const [newMenuName, setNewMenuName] = useState("")
-  const [newMenuAmount, setNewMenuAmount] = useState("")
-  const [newMenuUnit, setNewMenuUnit] = useState("인분")
-  const nameInputRef = useRef<TextInput>(null)
-  const amountInputRef = useRef<TextInput>(null)
-
-  const UNIT_OPTIONS = ["인분", "g", "개", "잔"]
-
-  const handleDelete = (index: number) => {
-    setFoods((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleAddMenu = () => {
-    setAddStep("name")
-    setNewMenuName("")
-    setTimeout(() => nameInputRef.current?.focus(), 100)
-  }
-
-  const handleNameSubmit = () => {
-    if (!newMenuName.trim()) return
-    setAddStep("amount")
-    setNewMenuAmount("")
-    setTimeout(() => amountInputRef.current?.focus(), 100)
-  }
-
-  const handleAmountSubmit = () => {
-    setFoods((prev) => [
-      {
-        name: newMenuName.trim(),
-        amount: newMenuAmount,
-        unit: newMenuUnit,
-        restrictionLevel: "",
-        servingSizeValue: newMenuAmount ? Number(newMenuAmount) : null,
-        servingSizeUnit: newMenuUnit,
-        calories: 0,
-        protein: 0,
-        carbohydrates: 0,
-        fat: 0,
-        sodium: 0,
-        potassium: 0,
-        phosphorus: 0,
-        water: 0,
-      },
-      ...prev,
-    ])
-    setAddStep("idle")
-    setNewMenuName("")
-    setNewMenuAmount("")
-  }
+  const {
+    foods,
+    mealName,
+    isNameEdit,
+    editingName,
+    setEditingName,
+    setIsNameEdit,
+    eatenStep,
+    trackWidth,
+    setTrackWidth,
+    addStep,
+    newMenuName,
+    setNewMenuName,
+    newMenuAmount,
+    setNewMenuAmount,
+    newMenuUnit,
+    setNewMenuUnit,
+    nameEditInputRef,
+    nameInputRef,
+    amountInputRef,
+    thumbAnim,
+    defaultMealName,
+    handleNameEdit,
+    handleNameConfirm,
+    handleAmountChange,
+    handleDelete,
+    handleTrackTouch,
+    handleAddMenu,
+    handleNameSubmit,
+    handleAmountSubmit,
+  } = useFoodEdit(result, mealType)
 
   return (
     <YStack
@@ -262,7 +183,7 @@ export function FoodResultEdit({
                     style={{
                       fontSize: 14,
                       color: tokens.color.grey1.val,
-                      fontWeight: 500,
+                      fontWeight: "500",
                     }}
                   />
                 </View>
