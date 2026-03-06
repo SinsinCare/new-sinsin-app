@@ -89,11 +89,7 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon
-                  name={opt.icon}
-                  size={18}
-                  color={tokens.color.grey8.val}
-                />
+                <Icon name={opt.icon} size={18} color="$black" />
                 <Text style={styles.mealLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
@@ -105,11 +101,7 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon
-                  name={opt.icon}
-                  size={18}
-                  color={tokens.color.grey8.val}
-                />
+                <Icon name={opt.icon} size={18} color="$black" />
                 <Text style={styles.mealLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
