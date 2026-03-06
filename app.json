@@ -30,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#007AFF"
       },
-      "package": "com.mediology.sinsin_care",
+      "package": "com.mediology.sinsin",
       "edgeToEdgeEnabled": true,
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
