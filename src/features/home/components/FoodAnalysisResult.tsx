@@ -9,6 +9,7 @@ import type { MealType } from "../types"
 import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
 import { Icon, IconName } from "@/src/shared/components/Icon"
+import { FoodResultEdit } from "./FoodResultEdit"
 
 const NUTRIENT_ICON: Record<string, IconName> = {
   나트륨: "sodium",
@@ -66,8 +67,13 @@ export function FoodAnalysisResult({
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [isEdit, setIsEdit] = useState(false)
 
   if (!result) return null
+
+  const handleEditPress = () => {
+    setIsEdit(true)
+  }
 
   const handleClosePress = () => {
     if (showAddButton) {
@@ -77,7 +83,10 @@ export function FoodAnalysisResult({
     }
   }
 
-  const foodTitle = result.foods.map((f) => f.name).join("와 ")
+  const foodTitle = result.foods
+    .slice(0, 2)
+    .map((f) => f.name)
+    .join("와 ")
   const servingsLabel = `${result.servings}인분`
 
   return (
@@ -87,7 +96,7 @@ export function FoodAnalysisResult({
       presentationStyle="pageSheet"
       onRequestClose={handleClosePress}
     >
-      <YStack flex={1} backgroundColor={tokens.color.appBg.val}>
+      <YStack flex={1} backgroundColor="$appBg">
         {/* Header */}
         <XStack
           alignItems="center"
@@ -184,8 +193,9 @@ export function FoodAnalysisResult({
                 paddingHorizontal={9}
                 paddingVertical={7}
                 gap={3}
-                opacity={0.8}
+                opacity={0.9}
                 pressStyle={{ opacity: 0.5 }}
+                onPress={handleEditPress}
               >
                 <Icon name="edit" size={18} />
                 <Text fontSize={12} fontWeight="600" color="$color.grey4">
@@ -277,7 +287,7 @@ export function FoodAnalysisResult({
                         {food.name}
                       </Text>
                       <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
-                        {food.servingSize}
+                        {food.servingSizeUnit}
                       </Text>
                     </XStack>
                     <View
@@ -463,6 +473,14 @@ export function FoodAnalysisResult({
             </XStack>
           </YStack>
         </YStack>
+      )}
+      {isEdit && (
+        <FoodResultEdit
+          result={result}
+          imageUri={imageUri}
+          onClose={() => setIsEdit(false)}
+          mealType={mealType ?? null}
+        />
       )}
     </Modal>
   )
