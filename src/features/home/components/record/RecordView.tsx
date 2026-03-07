@@ -52,6 +52,7 @@ export function RecordView({
     analyzeText,
     registerDiary,
     closeResult,
+    updateFoodAnalysis,
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
   const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
@@ -244,6 +245,7 @@ export function RecordView({
         imageUri={analyzedImageUri ?? undefined}
         mealType={analyzedMealType ?? undefined}
         onAddToRecord={handleAddToRecord}
+        updateFoodAnalysis={updateFoodAnalysis}
       />
 
       <View height={10} />

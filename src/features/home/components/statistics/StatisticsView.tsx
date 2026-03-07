@@ -22,7 +22,11 @@ import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import { foodCameraService } from "@/src/services/data"
-import type { DiaryAnalysisResult } from "@/src/types"
+import type {
+  DiaryAnalysisResult,
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+} from "@/src/types"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -68,6 +72,30 @@ export function StatisticsView({
     const interval = setInterval(refetch, 5000)
     return () => clearInterval(interval)
   }, [isActive, refetch])
+
+  const updateFoodAnalysis = async (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ): Promise<FoodAnalysisUpdateResult | undefined> => {
+    try {
+      const updated = await foodCameraService.updateFoodAnalysis(
+        foodAnalysisResultId,
+        body,
+      )
+      setDiaryResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updated,
+              imageUrl: updated.imageUrl ?? prev.imageUrl,
+            }
+          : null,
+      )
+      return updated
+    } catch {
+      return undefined
+    }
+  }
 
   const handleDietCardPress = async (mealType: MealType) => {
     onSelectMealType(mealType)
@@ -232,6 +260,7 @@ export function StatisticsView({
             imageUri={diaryResult?.imageUrl}
             mealType={resultMealType}
             showAddButton={false}
+            updateFoodAnalysis={updateFoodAnalysis}
           />
 
           <View

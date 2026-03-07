@@ -4,7 +4,11 @@ import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
+import type {
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+} from "@/src/types"
 import type { MealType } from "../types"
 import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
@@ -26,6 +30,10 @@ interface FoodAnalysisResultProps {
   mealType?: MealType
   onAddToRecord?: () => Promise<void> | void
   showAddButton?: boolean
+  updateFoodAnalysis: (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ) => Promise<FoodAnalysisUpdateResult | undefined>
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -64,6 +72,7 @@ export function FoodAnalysisResult({
   mealType,
   onAddToRecord,
   showAddButton = true,
+  updateFoodAnalysis,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
@@ -480,6 +489,7 @@ export function FoodAnalysisResult({
           imageUri={imageUri}
           onClose={() => setIsEdit(false)}
           mealType={mealType ?? null}
+          updateFoodAnalysis={updateFoodAnalysis}
         />
       )}
     </Modal>

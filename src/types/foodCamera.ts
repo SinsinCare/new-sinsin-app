@@ -135,3 +135,28 @@ export interface ExtraWaterUpdateResponse {
   result: ExtraWaterUpdateItem
   timestamp: string
 }
+
+export interface FoodAnalysisUpdateFoodItem {
+  foodId?: number
+  name: string
+  servingSizeValue: number
+  servingSizeUnit: string
+}
+
+export interface FoodAnalysisUpdateRequest {
+  servings: number
+  eatenPercentage: number
+  foods: FoodAnalysisUpdateFoodItem[]
+}
+
+export interface FoodAnalysisUpdateResult extends FoodCameraAnalyzeResult {
+  imageUrl: string | null
+}
+
+export interface FoodAnalysisUpdateResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: FoodAnalysisUpdateResult
+  timestamp: string
+}

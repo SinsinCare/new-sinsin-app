@@ -7,7 +7,11 @@ import {
 } from "react-native"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
-import { FoodCameraAnalyzeResult } from "@/src/types"
+import {
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+} from "@/src/types"
 import { Icon } from "@/src/shared/components"
 import {
   EATEN_STEPS,
@@ -23,6 +27,10 @@ interface FoodResultEditProps {
   imageUri?: string
   onClose: () => void
   mealType: MealType | null
+  updateFoodAnalysis: (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ) => Promise<FoodAnalysisUpdateResult | undefined>
 }
 
 export function FoodResultEdit({
@@ -30,6 +38,7 @@ export function FoodResultEdit({
   imageUri,
   onClose,
   mealType,
+  updateFoodAnalysis,
 }: FoodResultEditProps) {
   const {
     foods,
@@ -63,6 +72,23 @@ export function FoodResultEdit({
     handleAmountSubmit,
   } = useFoodEdit(result, mealType)
 
+  const handleSubmit = async () => {
+    if (!result) return
+    const body: FoodAnalysisUpdateRequest = {
+      servings: result.servings,
+      eatenPercentage: (eatenStep + 1) * 25,
+      foods: foods.map((f) => ({
+        foodId: f.id,
+        name: f.name,
+        servingSizeValue: Number(f.amount) || 1,
+        servingSizeUnit: f.unit,
+      })),
+    }
+
+    const updated = await updateFoodAnalysis(result.foodAnalysisResultId, body)
+    if (updated) onClose()
+  }
+
   return (
     <YStack
       position="absolute"
@@ -86,7 +112,7 @@ export function FoodResultEdit({
         <Text fontSize={17} fontWeight={600}>
           식단 수정하기
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleSubmit}>
           <Text fontSize={16} fontWeight={500} color="$colorSubtle">
             완료
           </Text>

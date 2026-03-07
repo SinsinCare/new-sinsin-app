@@ -1,7 +1,11 @@
 import { useState } from "react"
 import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
+import type {
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+} from "@/src/types"
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
@@ -91,6 +95,27 @@ export function useFoodAnalysis() {
     }
   }
 
+  const updateFoodAnalysis = async (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ): Promise<FoodAnalysisUpdateResult | undefined> => {
+    try {
+      const updated = await foodCameraService.updateFoodAnalysis(
+        foodAnalysisResultId,
+        body,
+      )
+      setAnalysisResult(updated)
+      return updated
+    } catch (error) {
+      console.error("updateFoodAnalysis error:", error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "식이 결과 업데이트 중 오류가 발생했습니다."
+      Alert.alert("업데이트 실패", message)
+    }
+  }
+
   return {
     isAnalyzing,
     isResultOpen,
@@ -100,6 +125,8 @@ export function useFoodAnalysis() {
     analyzeImage,
     analyzeText,
     registerDiary,
+    fetchDiaryResult,
+    updateFoodAnalysis,
     closeResult: () => setIsResultOpen(false),
   }
 }
