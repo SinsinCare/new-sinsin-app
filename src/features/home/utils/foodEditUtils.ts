@@ -15,10 +15,9 @@ export function getDefaultMealName(
 export function getInitialEatenStep(
   eatenPercentage: number | undefined,
 ): number {
-  return Math.min(
-    3,
-    Math.max(0, Math.round((((eatenPercentage ?? 1) - 0.25) / 0.75) * 3)),
-  )
+  // eatenPercentage is 0–100 integer from the API
+  const pct = eatenPercentage ?? 100
+  return Math.min(3, Math.max(0, Math.round((pct / 100) * 4) - 1))
 }
 
 export function calcThumbPosition(step: number, trackWidth: number): number {
