@@ -244,7 +244,7 @@ export function FoodAnalysisResult({
             </Text>
             <XStack alignItems="baseline" gap="$1">
               <Text fontSize={30} fontWeight="600" color="$color">
-                {result.total.calories}
+                {Math.round(result.total.calories)}
               </Text>
               <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
                 Kcal
