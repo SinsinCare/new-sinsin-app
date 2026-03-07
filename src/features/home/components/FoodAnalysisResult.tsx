@@ -58,7 +58,7 @@ function NutrientCell({ label, value }: { label: string; value: string }) {
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
-        {value}
+        {value.includes(".") ? parseFloat(value).toFixed(1) : value}
       </Text>
     </YStack>
   )
@@ -295,9 +295,14 @@ export function FoodAnalysisResult({
                       >
                         {food.name}
                       </Text>
-                      <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
-                        {food.servingSizeUnit}
-                      </Text>
+                      <XStack paddingHorizontal={1}>
+                        <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
+                          {food.servingSizeValue}
+                        </Text>
+                        <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
+                          {food.servingSizeUnit}
+                        </Text>
+                      </XStack>
                     </XStack>
                     <View
                       paddingHorizontal={8}
