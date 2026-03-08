@@ -2,19 +2,13 @@ import { useEffect, useRef, useState } from "react"
 import { Animated, TextInput } from "react-native"
 import { FoodCameraAnalyzeResult } from "@/src/types"
 import { UNIT_OPTIONS, UnitOption } from "../data/foodEditConstants"
-import {
-  calcThumbPosition,
-  getDefaultMealName,
-  getInitialEatenStep,
-} from "../utils/foodEditUtils"
+import { calcThumbPosition, getInitialEatenStep } from "../utils/foodEditUtils"
 import { MealType } from "../types"
 
 export function useFoodEdit(
   result: FoodCameraAnalyzeResult | null,
   mealType: MealType | null,
 ) {
-  const defaultMealName = getDefaultMealName(result)
-
   // --- state ---
   const [foods, setFoods] = useState(
     (result?.foods ?? []).map((f) => ({
@@ -23,7 +17,6 @@ export function useFoodEdit(
       unit: f.servingSizeUnit,
     })),
   )
-  const [mealName, setMealName] = useState(defaultMealName)
   const [isNameEdit, setIsNameEdit] = useState(false)
   const [editingName, setEditingName] = useState("")
   const [eatenStep, setEatenStep] = useState(
@@ -60,7 +53,6 @@ export function useFoodEdit(
   }
 
   const handleNameConfirm = () => {
-    setMealName(editingName.trim() || mealName)
     setIsNameEdit(false)
   }
 
@@ -120,7 +112,6 @@ export function useFoodEdit(
   return {
     // state
     foods,
-    mealName,
     isNameEdit,
     editingName,
     setEditingName,
@@ -140,8 +131,6 @@ export function useFoodEdit(
     nameInputRef,
     amountInputRef,
     thumbAnim,
-    // derived
-    defaultMealName,
     // handlers
     handleNameEdit,
     handleNameConfirm,

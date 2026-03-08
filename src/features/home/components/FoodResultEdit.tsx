@@ -42,7 +42,6 @@ export function FoodResultEdit({
 }: FoodResultEditProps) {
   const {
     foods,
-    mealName,
     isNameEdit,
     editingName,
     setEditingName,
@@ -61,7 +60,6 @@ export function FoodResultEdit({
     nameInputRef,
     amountInputRef,
     thumbAnim,
-    defaultMealName,
     handleNameEdit,
     handleNameConfirm,
     handleAmountChange,
@@ -137,7 +135,7 @@ export function FoodResultEdit({
           <YStack gap="$2" justifyContent="center">
             <XStack>
               <Text fontSize={18} fontWeight="600" paddingLeft="$1">
-                {mealName}{" "}
+                {result?.title}{" "}
               </Text>
               <Icon name="edit" size={22} onPress={handleNameEdit} />
             </XStack>

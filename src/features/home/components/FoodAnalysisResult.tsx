@@ -92,10 +92,6 @@ export function FoodAnalysisResult({
     }
   }
 
-  const foodTitle = result.foods
-    .slice(0, 2)
-    .map((f) => f.name)
-    .join("와 ")
   const servingsLabel = `${result.servings}인분`
 
   return (
@@ -157,7 +153,7 @@ export function FoodAnalysisResult({
               flexShrink={1}
               flex={1}
             >
-              {foodTitle}{" "}
+              {result.title}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
                 {servingsLabel}
               </Text>

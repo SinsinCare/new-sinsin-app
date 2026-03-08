@@ -1,16 +1,4 @@
-import { FoodCameraAnalyzeResult } from "@/src/types"
 import { THUMB_SIZE } from "../data/foodEditConstants"
-
-export function getDefaultMealName(
-  result: FoodCameraAnalyzeResult | null,
-): string {
-  return (
-    result?.foods
-      .slice(0, 2)
-      .map((f) => f.name)
-      .join("와 ") ?? ""
-  )
-}
 
 export function getInitialEatenStep(
   eatenPercentage: number | undefined,
