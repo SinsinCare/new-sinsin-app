@@ -27,7 +27,6 @@ interface ChatHistoryCardProps {
   content: string
   timestamp: string
   onPress: () => void
-  onShare?: () => void
   onRename?: () => void
   onDelete?: () => void
 }
@@ -37,7 +36,6 @@ export function ChatHistoryCard({
   content,
   timestamp,
   onPress,
-  onShare,
   onRename,
   onDelete,
 }: ChatHistoryCardProps) {
@@ -132,23 +130,6 @@ export function ChatHistoryCard({
               },
             ]}
           >
-            {/* 공유하기 */}
-            <Pressable
-              onPress={() => {
-                setMenuOpen(false)
-                onShare?.()
-              }}
-              style={({ pressed }) => ({
-                ...styles.menuItem,
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Text style={[styles.menuItemText, { color: textColor }]}>
-                공유하기
-              </Text>
-              <Icon name="upload" size={20} color={textColor} />
-            </Pressable>
-
             {/* 제목 바꾸기 */}
             <Pressable
               onPress={() => {
