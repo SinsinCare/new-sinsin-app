@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { ScrollView, useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
+import { useRouter } from "expo-router"
 import { FilterChip } from "./FilterChip"
 import { PopularPostCard } from "./PopularPostCard"
 import { PostListItem } from "./PostListItem"
@@ -36,6 +37,7 @@ export function FreePostTab() {
     FREE_POST_CATEGORIES[0].key,
   )
 
+  const router = useRouter()
   const { posts } = useCommunityPosts()
 
   const popularPosts = useMemo(
@@ -91,7 +93,7 @@ export function FreePostTab() {
               viewCount={post.comments}
               likeCount={post.likes}
               commentCount={post.comments}
-              onPress={() => console.log("popular post pressed", post.id)}
+              onPress={() => router.push(`/post/${post.id}`)}
             />
           ))}
         </ScrollView>
@@ -134,7 +136,7 @@ export function FreePostTab() {
               likeCount={post.likes}
               commentCount={post.comments}
               showDivider={index < filteredPosts.length - 1}
-              onPress={() => console.log("post pressed", post.id)}
+              onPress={() => router.push(`/post/${post.id}`)}
             />
           ))}
         </YStack>
