@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import type {
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
@@ -29,11 +30,7 @@ export function useFoodAnalysis() {
       setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeImage error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "음식 분석 중 오류가 발생했습니다."
-      Alert.alert("분석 실패", message)
+      Alert.alert("분석 실패", getErrorMessage(error))
     } finally {
       setIsAnalyzing(false)
     }
@@ -49,11 +46,7 @@ export function useFoodAnalysis() {
       setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeText error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "음식 분석 중 오류가 발생했습니다."
-      Alert.alert("분석 실패", message)
+      Alert.alert("분석 실패", getErrorMessage(error))
     } finally {
       setIsAnalyzing(false)
     }
@@ -74,11 +67,7 @@ export function useFoodAnalysis() {
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
       console.error("registerDiary error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "다이어리 등록 중 오류가 발생했습니다."
-      Alert.alert("등록 실패", message)
+      Alert.alert("등록 실패", getErrorMessage(error))
     }
   }
 
@@ -86,12 +75,8 @@ export function useFoodAnalysis() {
     try {
       await foodCameraService.fetchDiaryResult(diaryId)
     } catch (error) {
-      console.error("registerDiary error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "다이어리 조회 중 오류가 발생했습니다."
-      Alert.alert("조회 실패", message)
+      console.error("fetchDiaryResult error:", error)
+      Alert.alert("조회 실패", getErrorMessage(error))
     }
   }
 
@@ -108,11 +93,7 @@ export function useFoodAnalysis() {
       return updated
     } catch (error) {
       console.error("updateFoodAnalysis error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "식이 결과 업데이트 중 오류가 발생했습니다."
-      Alert.alert("업데이트 실패", message)
+      Alert.alert("업데이트 실패", getErrorMessage(error))
     }
   }
 
