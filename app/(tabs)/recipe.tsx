@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from "react"
-import { useRouter } from "expo-router"
 import {
   Keyboard,
   Modal,
@@ -26,6 +25,7 @@ import {
 } from "@/src/features/recipe/components/RecipeCard"
 import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
 import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
+import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
 
 interface RecipeItem {
   id: string
@@ -95,7 +95,6 @@ const ICON_COLORS = {
 } as const
 
 export default function RecipeScreen() {
-  const router = useRouter()
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
@@ -114,6 +113,7 @@ export default function RecipeScreen() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [writeSheetOpen, setWriteSheetOpen] = useState(false)
   const [freePostModalOpen, setFreePostModalOpen] = useState(false)
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
@@ -250,7 +250,7 @@ export default function RecipeScreen() {
             if (type === "free") {
               setFreePostModalOpen(true)
             } else {
-              router.push(`/(write)/${type}/new`)
+              setRecipeModalOpen(true)
             }
           }}
         />
@@ -260,6 +260,13 @@ export default function RecipeScreen() {
           onRequestClose={() => setFreePostModalOpen(false)}
         >
           <FreePostEditor onClose={() => setFreePostModalOpen(false)} />
+        </Modal>
+        <Modal
+          visible={recipeModalOpen}
+          animationType="slide"
+          onRequestClose={() => setRecipeModalOpen(false)}
+        >
+          <RecipeEditor onClose={() => setRecipeModalOpen(false)} />
         </Modal>
         <Pressable
           onPress={() => setWriteSheetOpen(true)}

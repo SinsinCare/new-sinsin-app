@@ -72,3 +72,27 @@ export interface PostCategory {
   key: string
   label: string
 }
+
+// ── Block Editor Types ──
+
+export type ContentBlock =
+  | { type: "text"; content: string }
+  | {
+      type: "image"
+      localUri: string
+      imageUrl?: string
+      isUploading?: boolean
+      uploadFailed?: boolean
+    }
+
+export interface CreateRecipeRequest {
+  title: string
+  summary: string
+  authorInfo?: string
+  nutritionTags: string[]
+  stageTags: string[]
+  cuisineTags: string[]
+  description: ContentBlock[]
+  ingredients: ContentBlock[]
+  cookingSteps: ContentBlock[]
+}
