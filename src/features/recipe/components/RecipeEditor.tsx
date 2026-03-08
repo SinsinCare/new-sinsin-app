@@ -36,6 +36,9 @@ const REGISTER_DISABLED = { light: "#81818D", dark: "#81818D" }
 const DIVIDER = { light: "#E5E5EA", dark: "#1F1F21" }
 const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
 const PLACEHOLDER = { light: "#A5A5AF", dark: "#595960" }
+const LABEL_COLOR = { light: "#666677", dark: "#858591" }
+const SECTION_TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
+const INPUT_BORDER_COLOR = { light: "#A5A5AF", dark: "#858591" }
 const SECTION_LABEL = { light: "#2A2A37", dark: "#E7E7EE" }
 const PRIMARY_BAR = { light: "#F1F1F3", dark: "#1F1F21" }
 
@@ -185,6 +188,15 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         >
           <Icon name="x" size={24} color={HEADER_TEXT[scheme]} />
         </Pressable>
+        <Text
+          fontSize={16}
+          lineHeight={22}
+          fontWeight="500"
+          fontFamily="$body"
+          color={HEADER_TEXT[scheme]}
+        >
+          레시피 작성하기
+        </Text>
         <Pressable
           onPress={handleSubmit}
           hitSlop={8}
@@ -213,7 +225,15 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           keyboardShouldPersistTaps="handled"
         >
           {/* Title */}
-          <YStack paddingHorizontal={16} paddingTop={20}>
+          <YStack paddingHorizontal={16} paddingTop={20} gap={4}>
+            <Text
+              fontSize={12}
+              fontWeight="400"
+              fontFamily="$body"
+              color={LABEL_COLOR[scheme]}
+            >
+              제목
+            </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
@@ -238,10 +258,11 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           {/* Summary */}
           <YStack paddingHorizontal={16} paddingTop={16}>
             <Text
-              fontSize={12}
-              fontWeight="400"
+              fontWeight="500"
+              fontSize={14}
+              lineHeight={20}
               fontFamily="$body"
-              color={PLACEHOLDER[scheme]}
+              color={SECTION_TITLE_COLOR[scheme]}
               marginBottom={4}
             >
               한줄소개
@@ -256,7 +277,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
                 styles.fieldInput,
                 {
                   color: TITLE_COLOR[scheme],
-                  borderColor: DIVIDER[scheme],
+                  borderColor: INPUT_BORDER_COLOR[scheme],
                 },
               ]}
             />
@@ -265,10 +286,11 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           {/* Author Info */}
           <YStack paddingHorizontal={16} paddingTop={16}>
             <Text
-              fontSize={12}
-              fontWeight="400"
+              fontWeight="500"
+              fontSize={14}
+              lineHeight={20}
               fontFamily="$body"
-              color={PLACEHOLDER[scheme]}
+              color={SECTION_TITLE_COLOR[scheme]}
               marginBottom={4}
             >
               작성자 정보 (선택)
@@ -282,7 +304,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
                 styles.fieldInput,
                 {
                   color: TITLE_COLOR[scheme],
-                  borderColor: DIVIDER[scheme],
+                  borderColor: INPUT_BORDER_COLOR[scheme],
                 },
               ]}
             />

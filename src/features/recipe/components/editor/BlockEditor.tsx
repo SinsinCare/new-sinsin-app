@@ -3,8 +3,7 @@ import type { ContentBlock } from "@/src/features/recipe/types"
 import { TextBlock } from "./TextBlock"
 import { ImageBlock } from "./ImageBlock"
 
-const BORDER_COLOR = { light: "#E5E5EA", dark: "#1F1F21" }
-const BG_COLOR = { light: "#FFFFFF", dark: "#1F1F24" }
+const BORDER_COLOR = { light: "#A5A5AF", dark: "#858591" }
 
 interface BlockEditorProps {
   blocks: ContentBlock[]
@@ -33,8 +32,7 @@ export function BlockEditor({
 
   const hasNonEmptyContent = blocks.some(
     (b) =>
-      (b.type === "text" && b.content.trim().length > 0) ||
-      b.type === "image",
+      (b.type === "text" && b.content.trim().length > 0) || b.type === "image",
   )
 
   return (
@@ -43,7 +41,6 @@ export function BlockEditor({
         styles.container,
         {
           borderColor: BORDER_COLOR[scheme],
-          backgroundColor: BG_COLOR[scheme],
         },
       ]}
     >
@@ -60,7 +57,9 @@ export function BlockEditor({
                 onEditorFocus?.()
               }}
               onBlur={onEditorBlur}
-              placeholder={index === 0 && !hasNonEmptyContent ? placeholder : undefined}
+              placeholder={
+                index === 0 && !hasNonEmptyContent ? placeholder : undefined
+              }
             />
           )
         }
