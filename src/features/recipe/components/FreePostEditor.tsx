@@ -23,7 +23,7 @@ import {
 import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
-
+import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
@@ -66,6 +66,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [voteSheetOpen, setVoteSheetOpen] = useState(false)
   const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
+  const { createPost } = useCommunityPosts()
 
   useEffect(() => {
     const showEvent =
@@ -157,12 +158,13 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
 
   const handleSubmit = () => {
     if (!canSubmit) return
-    console.log("Submit free post:", {
-      selectedCategory,
+    createPost({
+      authorName: "나",
+      authorRole: "CKD 환자",
+      category: selectedCategory,
+      imageUri: images.length > 0 ? images[0] : null,
       title,
-      body,
-      images,
-      votes,
+      description: body,
     })
     onClose()
   }
