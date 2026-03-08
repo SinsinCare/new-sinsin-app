@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
 import type {
   FoodAnalysisUpdateRequest,
-  FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
 } from "@/src/types"
 import type { MealType } from "../types"
@@ -33,7 +32,7 @@ interface FoodAnalysisResultProps {
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
-  ) => Promise<FoodAnalysisUpdateResult | undefined>
+  ) => Promise<boolean>
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {

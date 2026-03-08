@@ -7,11 +7,7 @@ import {
 } from "react-native"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
-import {
-  FoodAnalysisUpdateRequest,
-  FoodAnalysisUpdateResult,
-  FoodCameraAnalyzeResult,
-} from "@/src/types"
+import { FoodAnalysisUpdateRequest, FoodCameraAnalyzeResult } from "@/src/types"
 import { Icon } from "@/src/shared/components"
 import {
   EATEN_STEPS,
@@ -30,7 +26,7 @@ interface FoodResultEditProps {
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
-  ) => Promise<FoodAnalysisUpdateResult | undefined>
+  ) => Promise<boolean>
 }
 
 export function FoodResultEdit({
@@ -42,6 +38,7 @@ export function FoodResultEdit({
 }: FoodResultEditProps) {
   const {
     foods,
+    mealName,
     isNameEdit,
     editingName,
     setEditingName,
@@ -75,6 +72,7 @@ export function FoodResultEdit({
     const body: FoodAnalysisUpdateRequest = {
       servings: result.servings,
       eatenPercentage: (eatenStep + 1) * 25,
+      title: mealName,
       foods: foods.map((f) => ({
         foodId: f.id,
         name: f.name,
@@ -83,8 +81,8 @@ export function FoodResultEdit({
       })),
     }
 
-    const updated = await updateFoodAnalysis(result.foodAnalysisResultId, body)
-    if (updated) onClose()
+    const success = await updateFoodAnalysis(result.foodAnalysisResultId, body)
+    if (success) onClose()
   }
 
   return (
@@ -135,7 +133,7 @@ export function FoodResultEdit({
           <YStack gap="$2" justifyContent="center">
             <XStack>
               <Text fontSize={18} fontWeight="600" paddingLeft="$1">
-                {result?.title}{" "}
+                {mealName}{" "}
               </Text>
               <Icon name="edit" size={22} onPress={handleNameEdit} />
             </XStack>
@@ -214,7 +212,7 @@ export function FoodResultEdit({
                     ref={nameEditInputRef}
                     value={editingName}
                     onChangeText={setEditingName}
-                    placeholder={defaultMealName}
+                    placeholder={result?.title}
                     placeholderTextColor={tokens.color.grey5.val}
                     returnKeyType="done"
                     onSubmitEditing={handleNameConfirm}

@@ -164,10 +164,6 @@ export const foodCameraService = {
   async fetchDiaryResult(diaryId: number): Promise<DiaryAnalysisResult> {
     try {
       const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
-      console.log(
-        "[fetchDiaryResult]",
-        JSON.stringify(response.data.result, null, 2),
-      )
       return response.data.result as DiaryAnalysisResult
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
@@ -182,14 +178,9 @@ export const foodCameraService = {
     body: FoodAnalysisUpdateRequest,
   ): Promise<FoodAnalysisUpdateResult> {
     try {
-      console.log("[updateFoodAnalysis] request", JSON.stringify(body, null, 2))
       const response = await api.patch(
         `/food-camera/analysis-results/${foodAnalysisResultId}`,
         body,
-      )
-      console.log(
-        "[updateFoodAnalysis] response",
-        JSON.stringify(response.data.result, null, 2),
       )
       return response.data.result as FoodAnalysisUpdateResult
     } catch (err) {
