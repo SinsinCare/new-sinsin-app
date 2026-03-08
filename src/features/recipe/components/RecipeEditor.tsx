@@ -64,6 +64,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const [activeEditor, setActiveEditor] = useState<"desc" | "ingred" | "steps">(
     "desc",
   )
+  const [editorFocused, setEditorFocused] = useState(false)
 
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
@@ -88,7 +89,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
 
   const totalImageCount =
     descEditor.imageCount + ingredEditor.imageCount + stepsEditor.imageCount
-  const imageDisabled = totalImageCount >= MAX_TOTAL_IMAGES
+  const imageDisabled = totalImageCount >= MAX_TOTAL_IMAGES || !editorFocused
 
   const canSubmit =
     title.trim().length > 0 &&
@@ -337,6 +338,8 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               onCursorPositionChange={descEditor.setCursorPosition}
               onUpdateTextBlock={descEditor.updateTextBlock}
               onDeleteImage={descEditor.deleteImage}
+              onEditorFocus={() => setEditorFocused(true)}
+              onEditorBlur={() => setEditorFocused(false)}
             />
           </YStack>
 
@@ -363,6 +366,8 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               onCursorPositionChange={ingredEditor.setCursorPosition}
               onUpdateTextBlock={ingredEditor.updateTextBlock}
               onDeleteImage={ingredEditor.deleteImage}
+              onEditorFocus={() => setEditorFocused(true)}
+              onEditorBlur={() => setEditorFocused(false)}
             />
           </YStack>
 
@@ -389,6 +394,8 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               onCursorPositionChange={stepsEditor.setCursorPosition}
               onUpdateTextBlock={stepsEditor.updateTextBlock}
               onDeleteImage={stepsEditor.deleteImage}
+              onEditorFocus={() => setEditorFocused(true)}
+              onEditorBlur={() => setEditorFocused(false)}
             />
           </YStack>
         </ScrollView>

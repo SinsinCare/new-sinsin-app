@@ -15,6 +15,7 @@ interface TextBlockProps {
   onChange: (text: string) => void
   onSelectionChange?: (position: number) => void
   onFocus?: () => void
+  onBlur?: () => void
   placeholder?: string
   autoFocus?: boolean
 }
@@ -24,6 +25,7 @@ export function TextBlock({
   onChange,
   onSelectionChange,
   onFocus,
+  onBlur,
   placeholder,
   autoFocus,
 }: TextBlockProps) {
@@ -42,6 +44,7 @@ export function TextBlock({
       onChangeText={onChange}
       onSelectionChange={handleSelectionChange}
       onFocus={onFocus}
+      onBlur={onBlur}
       placeholder={placeholder}
       placeholderTextColor={PLACEHOLDER_COLOR[scheme]}
       multiline

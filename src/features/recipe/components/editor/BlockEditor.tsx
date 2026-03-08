@@ -14,6 +14,8 @@ interface BlockEditorProps {
   onCursorPositionChange: (position: number) => void
   onUpdateTextBlock: (index: number, text: string) => void
   onDeleteImage: (index: number) => void
+  onEditorFocus?: () => void
+  onEditorBlur?: () => void
 }
 
 export function BlockEditor({
@@ -24,8 +26,16 @@ export function BlockEditor({
   onCursorPositionChange,
   onUpdateTextBlock,
   onDeleteImage,
+  onEditorFocus,
+  onEditorBlur,
 }: BlockEditorProps) {
   const scheme = useColorScheme() ?? "light"
+
+  const hasNonEmptyContent = blocks.some(
+    (b) =>
+      (b.type === "text" && b.content.trim().length > 0) ||
+      b.type === "image",
+  )
 
   return (
     <View
@@ -45,8 +55,12 @@ export function BlockEditor({
               content={block.content}
               onChange={(text) => onUpdateTextBlock(index, text)}
               onSelectionChange={(pos) => onCursorPositionChange(pos)}
-              onFocus={() => onFocusedIndexChange(index)}
-              placeholder={index === 0 ? placeholder : undefined}
+              onFocus={() => {
+                onFocusedIndexChange(index)
+                onEditorFocus?.()
+              }}
+              onBlur={onEditorBlur}
+              placeholder={index === 0 && !hasNonEmptyContent ? placeholder : undefined}
             />
           )
         }
