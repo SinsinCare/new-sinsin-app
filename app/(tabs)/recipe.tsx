@@ -19,69 +19,83 @@ import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
 import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
 import { WriteTypeSheet } from "@/src/features/recipe/components/WriteTypeSheet"
-import {
-  RecipeCard,
-  type RecipeCardTags,
-} from "@/src/features/recipe/components/RecipeCard"
+import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
 import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
 import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
+import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
+import type { RecipePostFilters } from "@/src/features/recipe/types"
 
-interface RecipeItem {
-  id: string
-  imageUri: string
-  likeCount: number
-  commentCount: number
-  tags: RecipeCardTags
-  title: string
+// Chip key → label mapping for CategoryFilterSheet
+const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
+  nutrition: {
+    "low-salt": "저염",
+    "low-protein": "저단백",
+    "low-potassium": "저칼륨",
+    "low-phosphorus": "저인",
+    "high-calorie": "고열량",
+  },
+  stage: {
+    ckd3: "CKD 3기",
+    ckd4: "CKD 4기",
+    ckd5: "CKD 5기",
+    diabetes: "당뇨동반",
+    hypertension: "고혈압동반",
+  },
+  country: {
+    korean: "한식",
+    chinese: "중식",
+    japanese: "일식",
+    western: "양식",
+    salad: "샐러드",
+    dessert: "디저트",
+    beverage: "음료",
+  },
 }
 
-const MOCK_RECIPES: RecipeItem[] = [
-  {
-    id: "1",
-    imageUri: "http://app.demo.dev/dashboard",
-    likeCount: 32,
-    commentCount: 24,
-    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
-    title: "닭가슴살 카레",
-  },
-  {
-    id: "2",
-    imageUri: "http://app.demo.dev/dashboard",
-    likeCount: 32,
-    commentCount: 24,
-    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
-    title: "닭가슴살 카레",
-  },
-  {
-    id: "3",
-    imageUri: "http://app.demo.dev/dashboard",
-    likeCount: 32,
-    commentCount: 24,
-    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
-    title: "닭가슴살 카레",
-  },
-  {
-    id: "4",
-    imageUri: "http://app.demo.dev/dashboard",
-    likeCount: 32,
-    commentCount: 24,
-    tags: { nutrition: ["저염식"], stage: ["CKD3"], country: ["일식"] },
-    title: "닭가슴살 카레",
-  },
+function filtersToRecipeFilters(
+  filters: Record<string, Set<string>>,
+): RecipePostFilters {
+  const result: RecipePostFilters = {}
+
+  if (filters.nutrition?.size) {
+    result.nutritionTags = [...filters.nutrition].map(
+      (k) => CHIP_KEY_TO_LABEL.nutrition[k] ?? k,
+    )
+  }
+  if (filters.stage?.size) {
+    result.stageTags = [...filters.stage].map(
+      (k) => CHIP_KEY_TO_LABEL.stage[k] ?? k,
+    )
+  }
+  if (filters.country?.size) {
+    result.cuisineTags = [...filters.country].map(
+      (k) => CHIP_KEY_TO_LABEL.country[k] ?? k,
+    )
+  }
+
+  return result
+}
+
+// All possible filter chips for nutrition + stage
+const ALL_FILTER_CHIPS = [
+  ...Object.entries(CHIP_KEY_TO_LABEL.nutrition).map(([key, label]) => ({
+    key,
+    label: `#${label}`,
+    theme: "primary" as const,
+    section: "nutrition",
+  })),
+  ...Object.entries(CHIP_KEY_TO_LABEL.stage).map(([key, label]) => ({
+    key,
+    label: `#${label}`,
+    theme: "sub" as const,
+    section: "stage",
+  })),
 ]
 
 const RECIPE_TABS: TabItem[] = [
   { key: "recipe", label: "레시피" },
   { key: "free", label: "자유글" },
-]
-
-const FILTER_CHIPS = [
-  { key: "low-salt", label: "#저염식", theme: "primary" as const },
-  { key: "ckd3", label: "#CKD3", theme: "sub" as const },
-  { key: "japanese", label: "#일식", theme: "tertiary" as const },
-  { key: "low-protein", label: "#저단백" },
-  { key: "low-potassium", label: "#저칼륨" },
 ]
 
 const HEADER_BOOKMARK_COLORS = {
@@ -118,34 +132,87 @@ export default function RecipeScreen() {
     Record<string, Set<string>>
   >({})
 
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
-    new Set(),
+  // Convert UI filters to service filters
+  const recipeFilters = useMemo(
+    () => filtersToRecipeFilters(selectedFilters),
+    [selectedFilters],
   )
 
+  const { posts: recipes } = useRecipePosts(
+    recipeFilters,
+    search.trim() || undefined,
+  )
+
+  // FoodCategoryBar uses selectedFilters.country directly
+  const selectedCategories = useMemo(() => {
+    return selectedFilters.country ?? new Set<string>()
+  }, [selectedFilters])
+
   const handleToggleCategory = useCallback((key: string) => {
-    setSelectedCategories((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) {
-        next.delete(key)
+    setSelectedFilters((prev) => {
+      const next: Record<string, Set<string>> = {}
+      for (const k of Object.keys(prev)) {
+        next[k] = new Set(prev[k])
+      }
+      if (!next.country) {
+        next.country = new Set()
+      }
+      if (next.country.has(key)) {
+        next.country.delete(key)
       } else {
-        next.add(key)
+        next.country.add(key)
       }
       return next
     })
   }, [])
 
-  const handleToggleAllCategories = useCallback((isSelected: boolean) => {
-    setSelectedCategories(isSelected ? new Set() : new Set())
+  const handleToggleAllCategories = useCallback((_isSelected: boolean) => {
+    setSelectedFilters((prev) => {
+      const next: Record<string, Set<string>> = {}
+      for (const k of Object.keys(prev)) {
+        next[k] = new Set(prev[k])
+      }
+      next.country = new Set()
+      return next
+    })
   }, [])
 
+  const handleToggleQuickFilter = useCallback(
+    (chipKey: string, section: string) => {
+      setSelectedFilters((prev) => {
+        const next: Record<string, Set<string>> = {}
+        for (const key of Object.keys(prev)) {
+          next[key] = new Set(prev[key])
+        }
+        if (!next[section]) {
+          next[section] = new Set()
+        }
+        if (next[section].has(chipKey)) {
+          next[section].delete(chipKey)
+        } else {
+          next[section].add(chipKey)
+        }
+        return next
+      })
+    },
+    [],
+  )
+
+  const isChipSelected = useCallback(
+    (chipKey: string, section: string) => {
+      return selectedFilters[section]?.has(chipKey) ?? false
+    },
+    [selectedFilters],
+  )
+
   const [leftColumn, rightColumn] = useMemo(() => {
-    const left: RecipeItem[] = []
-    const right: RecipeItem[] = []
-    MOCK_RECIPES.forEach((item, i) => {
+    const left: typeof recipes = []
+    const right: typeof recipes = []
+    recipes.forEach((item, i) => {
       ;(i % 2 === 0 ? left : right).push(item)
     })
     return [left, right] as const
-  }, [])
+  }, [recipes])
 
   return (
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
@@ -175,11 +242,17 @@ export default function RecipeScreen() {
                   contentContainerStyle={{ gap: 8 }}
                   style={{ flex: 1 }}
                 >
-                  {Object.values(FILTER_CHIPS).map((chip) => (
+                  {ALL_FILTER_CHIPS.filter((chip) =>
+                    isChipSelected(chip.key, chip.section),
+                  ).map((chip) => (
                     <FilterChip
                       key={chip.key}
                       label={chip.label}
-                      theme="default"
+                      theme={chip.theme}
+                      selected
+                      onPress={() =>
+                        handleToggleQuickFilter(chip.key, chip.section)
+                      }
                     />
                   ))}
                 </ScrollView>
@@ -210,10 +283,14 @@ export default function RecipeScreen() {
                   {leftColumn.map((item) => (
                     <RecipeCard
                       key={item.id}
-                      imageUri={item.imageUri}
-                      likeCount={item.likeCount}
-                      commentCount={item.commentCount}
-                      tags={item.tags}
+                      imageUri={item.imageUri ?? ""}
+                      likeCount={item.likes}
+                      commentCount={item.comments}
+                      tags={{
+                        nutrition: item.nutritionTags,
+                        stage: item.stageTags,
+                        country: item.cuisineTags,
+                      }}
                       title={item.title}
                       onPress={() => console.log("RecipeCard pressed", item.id)}
                     />
@@ -223,10 +300,14 @@ export default function RecipeScreen() {
                   {rightColumn.map((item) => (
                     <RecipeCard
                       key={item.id}
-                      imageUri={item.imageUri}
-                      likeCount={item.likeCount}
-                      commentCount={item.commentCount}
-                      tags={item.tags}
+                      imageUri={item.imageUri ?? ""}
+                      likeCount={item.likes}
+                      commentCount={item.comments}
+                      tags={{
+                        nutrition: item.nutritionTags,
+                        stage: item.stageTags,
+                        country: item.cuisineTags,
+                      }}
                       title={item.title}
                       onPress={() => console.log("RecipeCard pressed", item.id)}
                     />

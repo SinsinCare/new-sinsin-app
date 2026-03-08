@@ -21,6 +21,7 @@ import {
   TagSelector,
 } from "@/src/features/recipe/components/editor"
 import { useBlockEditor } from "@/src/features/recipe/hooks/useBlockEditor"
+import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 import {
   NUTRITION_TAGS,
@@ -59,6 +60,8 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const [nutritionTags, setNutritionTags] = useState<string[]>([])
   const [stageTags, setStageTags] = useState<string[]>([])
   const [cuisineTags, setCuisineTags] = useState<string[]>([])
+
+  const { createRecipe } = useRecipePosts()
 
   const descEditor = useBlockEditor()
   const ingredEditor = useBlockEditor()
@@ -151,7 +154,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
 
   const handleSubmit = () => {
     if (!canSubmit) return
-    const payload = {
+    createRecipe({
       title: title.trim(),
       summary: summary.trim(),
       authorInfo: authorInfo.trim() || undefined,
@@ -161,8 +164,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
       description: descEditor.blocks,
       ingredients: ingredEditor.blocks,
       cookingSteps: stepsEditor.blocks,
-    }
-    console.log("Recipe submit:", JSON.stringify(payload, null, 2))
+    })
     Alert.alert("레시피 등록", "레시피가 등록되었습니다.", [
       { text: "확인", onPress: onClose },
     ])
