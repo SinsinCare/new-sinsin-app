@@ -196,7 +196,7 @@ export default function ConsultScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: isDarkMode ? "#1F1F21" : "#F3F3F3",
+        backgroundColor: isDarkMode ? "#1F1F21" : "#FAFAFA",
         paddingTop: insets.top,
       }}
     >
@@ -311,13 +311,14 @@ export default function ConsultScreen() {
             />
 
             <XStack justifyContent="space-between" alignItems="center">
-              <Pressable onPress={handlePlusPress} hitSlop={8}>
+              {/* <Pressable onPress={handlePlusPress} hitSlop={8}>
                 <Icon
                   name="plus"
                   size={24}
                   color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
                 />
-              </Pressable>
+              </Pressable> */}
+              <View />
               <Pressable
                 onPress={handleSend}
                 disabled={!canSend}
