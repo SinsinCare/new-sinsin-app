@@ -17,6 +17,7 @@ export function useFoodEdit(
       unit: f.servingSizeUnit,
     })),
   )
+  const [mealName, setMealName] = useState(result?.title ?? "")
   const [isNameEdit, setIsNameEdit] = useState(false)
   const [editingName, setEditingName] = useState("")
   const [eatenStep, setEatenStep] = useState(
@@ -53,6 +54,7 @@ export function useFoodEdit(
   }
 
   const handleNameConfirm = () => {
+    if (editingName.trim()) setMealName(editingName.trim())
     setIsNameEdit(false)
   }
 
@@ -112,6 +114,7 @@ export function useFoodEdit(
   return {
     // state
     foods,
+    mealName,
     isNameEdit,
     editingName,
     setEditingName,

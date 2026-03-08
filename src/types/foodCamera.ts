@@ -147,6 +147,7 @@ export interface FoodAnalysisUpdateFoodItem {
 export interface FoodAnalysisUpdateRequest {
   servings: number
   eatenPercentage: number
+  title: string
   foods: FoodAnalysisUpdateFoodItem[]
 }
 
