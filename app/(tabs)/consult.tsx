@@ -93,9 +93,6 @@ export default function ConsultScreen() {
     Keyboard.dismiss()
     setHistoryOpen(true)
   }
-  const handleSharePress = () => {
-    Keyboard.dismiss()
-  }
   const handleNewChat = () => {
     setHistoryOpen(false)
     setInputMessage("")
@@ -207,7 +204,7 @@ export default function ConsultScreen() {
       >
         <ConsultChatHeader
           onHistoryPress={handleHistoryPress}
-          onSharePress={handleSharePress}
+          onNewChatPress={handleNewChat}
         />
 
         {isIdle ? (
@@ -369,7 +366,6 @@ export default function ConsultScreen() {
                 onPress={() => handleSelectHistory(item.id)}
                 onRename={() => handleRenamePress(item)}
                 onDelete={() => handleDeletePress(item)}
-                onShare={() => {}}
               />
             ))
           )}
