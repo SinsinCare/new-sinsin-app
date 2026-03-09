@@ -6,6 +6,9 @@ import { SvgProps } from "react-native-svg"
 import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
 import CheckColor from "@/assets/icons/check-color.svg"
+import CheckEmpty from "@/assets/icons/check-empty.svg"
+import FireColor from "@/assets/icons/fire-color.svg"
+import FireEmpty from "@/assets/icons/fire-empty.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
@@ -50,11 +53,17 @@ import Noon from "@/assets/icons/noon.svg"
 import Evening from "@/assets/icons/evening.svg"
 import Dessert from "@/assets/icons/dessert.svg"
 import Edit from "@/assets/icons/edit.svg"
+import CharacterExcellent from "@/assets/icons/character-excellent.svg"
+import CharacterGood from "@/assets/icons/character-good.svg"
+import CharacterCaution from "@/assets/icons/character-caution.svg"
 
 const icons = {
   bookmark: Bookmark,
   chat: Chat,
   "check-color": CheckColor,
+  "check-empty": CheckEmpty,
+  "fire-color": FireColor,
+  "fire-empty": FireEmpty,
   chef: Chef,
   "chevron-right": ChevronRight,
   copy: Copy,
@@ -99,6 +108,9 @@ const icons = {
   dessert: Dessert,
   edit: Edit,
   x: X,
+  "character-excellent": CharacterExcellent,
+  "character-good": CharacterGood,
+  "character-caution": CharacterCaution,
 } as const
 
 export type IconName = keyof typeof icons

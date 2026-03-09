@@ -3,6 +3,7 @@ import { MealType } from "../../types"
 import { Text, YStack, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
+import { Icon } from "@/src/shared/components"
 
 const MEAL_LABEL: Record<MealType, string> = {
   BREAKFAST: "아침",
@@ -27,7 +28,7 @@ export function MealButton({
   return (
     <TouchableOpacity onPress={onPress}>
       <YStack
-        backgroundColor={tokens.color.offWhite.val}
+        backgroundColor={isRecorded ? "$primary5" : "$appBg"}
         borderWidth={2}
         borderColor="$borderColor"
         width={78}
@@ -48,7 +49,7 @@ export function MealButton({
           </View>
         ) : (
           <View position="absolute" top={6} right={6}>
-            <Ionicons name="checkmark-circle" size={18} />
+            <Icon name="check-color" size={18} />
           </View>
         )}
 

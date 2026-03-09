@@ -28,30 +28,33 @@ export function ThreeDaysCalendar({
   return (
     <View style={styles.wrapper}>
       <XStack justifyContent="space-between" paddingHorizontal="$2">
-        {days.map((day) => {
+        {days.map((day, idx) => {
           const month = day.date.getMonth() + 1
           const date = day.date.getDate()
           const isSelected = isSameDay(day.date, selectedDate)
           const hasRecord = recordedDates.some((d) => isSameDay(d, day.date))
+          const isLast = idx === days.length - 1
 
           return (
             <Pressable
               key={day.date.toISOString()}
-              onPress={() => onSelectDate(day.date)}
+              onPress={() => !isLast && onSelectDate(day.date)}
+              disabled={isLast}
             >
               <YStack alignItems="center" gap={4}>
                 <Text
                   fontSize="$5"
-                  fontWeight={isSelected ? "700" : "600"}
+                  fontWeight={isSelected ? 600 : 500}
                   textAlign="center"
+                  color={isLast ? "$placeholderColor" : "$color"}
                 >
                   {month}.{date}({day.label})
                 </Text>
 
                 <View
-                  width={7}
-                  height={7}
-                  borderRadius={3}
+                  width={8}
+                  height={8}
+                  borderRadius={10}
                   backgroundColor={hasRecord ? "$primary" : "$grey7"}
                 />
               </YStack>
