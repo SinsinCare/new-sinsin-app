@@ -38,12 +38,13 @@ export function ThreeDaysCalendar({
           return (
             <Pressable
               key={day.date.toISOString()}
-              onPress={() => onSelectDate(day.date)}
+              onPress={() => !isLast && onSelectDate(day.date)}
+              disabled={isLast}
             >
               <YStack alignItems="center" gap={4}>
                 <Text
                   fontSize="$5"
-                  fontWeight={isSelected ? "700" : "600"}
+                  fontWeight={isSelected ? 600 : 500}
                   textAlign="center"
                   color={isLast ? "$placeholderColor" : "$color"}
                 >
@@ -51,9 +52,9 @@ export function ThreeDaysCalendar({
                 </Text>
 
                 <View
-                  width={7}
-                  height={7}
-                  borderRadius={3}
+                  width={8}
+                  height={8}
+                  borderRadius={10}
                   backgroundColor={hasRecord ? "$primary" : "$grey7"}
                 />
               </YStack>

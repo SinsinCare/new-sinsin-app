@@ -122,13 +122,13 @@ export function CharacterSection({
   }, [floatY, shadowScale])
 
   return (
-    <YStack borderRadius="$6" padding="$7" gap="$7" alignItems="center">
+    <YStack borderRadius="$6" padding="$7" gap="$1" alignItems="center">
       <YStack alignItems="center">
         <Animated.View style={{ transform: [{ translateY: floatY }] }}>
           <Icon name={characterType} size={200} />
         </Animated.View>
         <Animated.View
-          style={{ transform: [{ scaleX: shadowScale }], marginTop: -20 }}
+          style={{ transform: [{ scaleX: shadowScale }], marginTop: -12 }}
         >
           <ShadowEllipse dark={isDark} />
         </Animated.View>
@@ -139,11 +139,11 @@ export function CharacterSection({
           justifyContent="center"
           gap="$2"
           paddingHorizontal={18}
-          paddingVertical={5}
+          paddingVertical={4}
           borderRadius="$6"
         >
-          <FireIcon width={24} height={24} />
-          <Text fontSize={17} fontWeight="600">
+          <FireIcon width={26} height={26} />
+          <Text fontSize={18} fontWeight="600">
             {streakText}
           </Text>
         </XStack>
@@ -156,8 +156,8 @@ export function CharacterSection({
           paddingVertical={5}
           borderRadius="$6"
         >
-          <CheckIcon width={24} height={24} />
-          <Text fontSize={17} fontWeight="600">
+          <CheckIcon width={26} height={26} />
+          <Text fontSize={18} fontWeight="600">
             {guideText}
           </Text>
         </XStack>
