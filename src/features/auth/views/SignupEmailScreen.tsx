@@ -11,6 +11,8 @@ const BUTTON_WIDTH = 100
 export function SignupEmailScreen() {
   const {
     codeSent,
+    codeInputVisible,
+    sendError,
     codeVerified,
     timer,
     formattedTime,
@@ -96,7 +98,7 @@ export function SignupEmailScreen() {
           </XStack>
         </YStack>
 
-        {codeSent && !codeVerified && (
+        {codeInputVisible && !codeVerified && (
           <YStack>
             <XStack gap={8}>
               <YStack flex={1}>
@@ -117,9 +119,9 @@ export function SignupEmailScreen() {
                 />
               </YStack>
               <YStack width={BUTTON_WIDTH} justifyContent="flex-end">
-                <Pressable onPress={handleVerifyCode} disabled={verifyingCode}>
+                <Pressable onPress={handleVerifyCode} disabled={verifyingCode || !!sendError}>
                   <YStack
-                    backgroundColor="#5464F2"
+                    backgroundColor={sendError ? "#C5C8CE" : "#5464F2"}
                     borderRadius={8}
                     height={52}
                     justifyContent="center"
@@ -137,7 +139,17 @@ export function SignupEmailScreen() {
                 </Pressable>
               </YStack>
             </XStack>
-            {timer > 0 && (
+            {sendError && (
+              <Text
+                fontSize={13}
+                color="#FF3B30"
+                letterSpacing={-0.26}
+                paddingTop={8}
+              >
+                {sendError}
+              </Text>
+            )}
+            {!sendError && timer > 0 && (
               <Text
                 fontSize={13}
                 color="#FF3B30"
@@ -147,7 +159,7 @@ export function SignupEmailScreen() {
                 남은 시간 {formattedTime}
               </Text>
             )}
-            {timer === 0 && codeSent && (
+            {!sendError && timer === 0 && codeSent && (
               <Text
                 fontSize={13}
                 color="#FF3B30"

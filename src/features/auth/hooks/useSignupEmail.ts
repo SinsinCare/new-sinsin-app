@@ -17,6 +17,8 @@ export function useSignupEmail() {
   const setSignupToken = useSignupStore((s) => s.setSignupToken)
 
   const [codeSent, setCodeSent] = useState(false)
+  const [codeInputVisible, setCodeInputVisible] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
   const [codeVerified, setCodeVerified] = useState(false)
   const [timer, setTimer] = useState(0)
   const [sendingCode, setSendingCode] = useState(false)
@@ -45,10 +47,13 @@ export function useSignupEmail() {
 
   const sendCode = async (email: string) => {
     setSendingCode(true)
+    setSendError(null)
+    setCodeInputVisible(true)
     try {
       const available = await emailService.checkEmailAvailability(email)
       if (!available) {
         showErrorToast("이미 가입된 이메일입니다.")
+        setCodeInputVisible(false)
         return
       }
       await emailService.sendVerificationCode(email)
@@ -56,9 +61,7 @@ export function useSignupEmail() {
       setCodeVerified(false)
       startTimer()
     } catch (e: unknown) {
-      showErrorToast(
-        e instanceof Error ? e.message : "인증번호 전송에 실패했습니다.",
-      )
+      setSendError("인증번호 전송에 실패했습니다. 재전송해 주세요.")
     } finally {
       setSendingCode(false)
     }
@@ -91,6 +94,8 @@ export function useSignupEmail() {
 
   return {
     codeSent,
+    codeInputVisible,
+    sendError,
     codeVerified,
     timer,
     formattedTime,
