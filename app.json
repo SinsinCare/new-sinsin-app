@@ -14,7 +14,7 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.mediology.sinsin-care",
       "deploymentTarget": "14.0",
       "buildNumber": "5",
