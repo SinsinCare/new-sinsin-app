@@ -28,11 +28,12 @@ export function ThreeDaysCalendar({
   return (
     <View style={styles.wrapper}>
       <XStack justifyContent="space-between" paddingHorizontal="$2">
-        {days.map((day) => {
+        {days.map((day, idx) => {
           const month = day.date.getMonth() + 1
           const date = day.date.getDate()
           const isSelected = isSameDay(day.date, selectedDate)
           const hasRecord = recordedDates.some((d) => isSameDay(d, day.date))
+          const isLast = idx === days.length - 1
 
           return (
             <Pressable
@@ -44,6 +45,7 @@ export function ThreeDaysCalendar({
                   fontSize="$5"
                   fontWeight={isSelected ? "700" : "600"}
                   textAlign="center"
+                  color={isLast ? "$placeholderColor" : "$color"}
                 >
                   {month}.{date}({day.label})
                 </Text>
