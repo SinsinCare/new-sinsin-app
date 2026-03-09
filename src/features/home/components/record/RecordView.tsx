@@ -21,6 +21,7 @@ import { LoadingOverlay } from "../LoadingOverlay"
 import { TextRecord } from "./TextRecord"
 import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
+import { useStreak } from "../../hooks/useStreak"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -48,6 +49,7 @@ export function RecordView({
     updateFoodAnalysis,
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
+  const { data: streak = 0 } = useStreak()
   const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
   const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
   const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
@@ -177,6 +179,7 @@ export function RecordView({
         selectedDate={selectedDate}
         hasRecord={hasSelectedDateRecord}
         characterType={characterType}
+        streak={streak}
       />
 
       <MealButtons

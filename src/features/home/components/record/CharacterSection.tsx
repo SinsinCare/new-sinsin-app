@@ -65,16 +65,19 @@ interface CharacterSectionProps {
   selectedDate: Date
   hasRecord: boolean
   characterType: CharacterType
+  streak: number
 }
 
 export function CharacterSection({
   selectedDate: _selectedDate,
   hasRecord,
   characterType,
+  streak,
 }: CharacterSectionProps) {
   const FireIcon = hasRecord ? FireColor : FireEmpty
   const CheckIcon = hasRecord ? CheckColor : CheckEmpty
-  const streakText = hasRecord ? "연속 3일 기록중" : "오늘은 기록이 없어요"
+  const streakText =
+    streak > 0 ? `연속 ${streak}일 기록중` : "오늘은 기록이 없어요"
   const guideText = hasRecord
     ? "영양소 제한조건을 잘 지켰어요"
     : "영양소 제한조건을 지켜 식사해요"
