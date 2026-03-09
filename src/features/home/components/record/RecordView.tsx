@@ -82,6 +82,16 @@ export function RecordView({
   const hasSelectedDateRecord =
     apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
 
+  const recordedCount =
+    Object.values(mergedRecordedMeals).filter(Boolean).length
+  const recordRate = (recordedCount / 4) * 100
+  const characterType =
+    recordRate >= 85
+      ? "character_2"
+      : recordRate >= 70
+        ? "character_1"
+        : "character_3"
+
   const calendarDataList = [dataDay0, dataDay1, dataDay2]
   const recordedDates = calendarDays
     .filter((day, i) => {
@@ -166,6 +176,7 @@ export function RecordView({
       <CharacterSection
         selectedDate={selectedDate}
         hasRecord={hasSelectedDateRecord}
+        characterType={characterType}
       />
 
       <MealButtons

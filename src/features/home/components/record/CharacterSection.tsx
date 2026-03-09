@@ -1,18 +1,23 @@
-import { Image } from "expo-image"
 import { Text, XStack, YStack } from "tamagui"
 import FireEmpty from "@/assets/icons/fire-empty.svg"
 import CheckEmpty from "@/assets/icons/check-empty.svg"
 import FireColor from "@/assets/icons/fire-color.svg"
 import CheckColor from "@/assets/icons/check-color.svg"
+import ShadowLight from "@/assets/icons/shadow_light.svg"
+import { Icon } from "@/src/shared/components/Icon"
+
+type CharacterType = "character_1" | "character_2" | "character_3"
 
 interface CharacterSectionProps {
   selectedDate: Date
   hasRecord: boolean
+  characterType: CharacterType
 }
 
 export function CharacterSection({
   selectedDate: _selectedDate,
   hasRecord,
+  characterType,
 }: CharacterSectionProps) {
   const FireIcon = hasRecord ? FireColor : FireEmpty
   const CheckIcon = hasRecord ? CheckColor : CheckEmpty
@@ -23,13 +28,10 @@ export function CharacterSection({
 
   return (
     <YStack borderRadius="$6" padding="$7" gap="$7" alignItems="center">
-      <XStack>
-        <Image
-          source={require("@/assets/images/character.png")}
-          style={{ width: 200, height: 200 }}
-          contentFit="contain"
-        />
-      </XStack>
+      <YStack alignItems="center">
+        <Icon name={characterType} size={200} />
+        <ShadowLight width={119} height={32} style={{ marginTop: -16 }} />
+      </YStack>
       <YStack>
         <XStack
           alignItems="center"
