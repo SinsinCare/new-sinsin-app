@@ -20,8 +20,8 @@ import { StatisticsTabBar } from "./StatisticsTabBar"
 import { getWeekLabel } from "../../utils/getWeekDays"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useDiaryExistence } from "../../hooks/useDiaryExistence"
+import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
-import { foodCameraService } from "@/src/services/data"
 import type { DiaryAnalysisResult } from "@/src/types"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
@@ -56,6 +56,19 @@ export function StatisticsView({
   const { data, isLoading, isFetching, refetch } = useDateAnalysis(selectedDate)
   const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
+  const { updateFoodAnalysis, fetchDiaryResult, isUpdating } = useFoodAnalysis(
+    (updated) => {
+      setDiaryResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updated,
+              imageUrl: updated.imageUrl ?? prev.imageUrl,
+            }
+          : null,
+      )
+    },
+  )
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
 
@@ -73,13 +86,11 @@ export function StatisticsView({
     onSelectMealType(mealType)
     const diet = data?.result.diets.find((d) => d.mealType === mealType)
     if (!diet) return
-    try {
-      const result = await foodCameraService.fetchDiaryResult(diet.diaryId)
+    const result = await fetchDiaryResult(diet.diaryId)
+    if (result) {
       setDiaryResult(result)
       setResultMealType(mealType)
       setIsResultOpen(true)
-    } catch {
-      // 조회 실패 시 모달 미표시
     }
   }
 
@@ -232,6 +243,8 @@ export function StatisticsView({
             imageUri={diaryResult?.imageUrl}
             mealType={resultMealType}
             showAddButton={false}
+            isUpdating={isUpdating}
+            updateFoodAnalysis={updateFoodAnalysis}
           />
 
           <View

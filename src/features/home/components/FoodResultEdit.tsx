@@ -7,8 +7,13 @@ import {
 } from "react-native"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
-import { FoodCameraAnalyzeResult } from "@/src/types"
+import {
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+} from "@/src/types"
 import { Icon } from "@/src/shared/components"
+import { LoadingOverlay } from "./LoadingOverlay"
 import {
   EATEN_STEPS,
   THUMB_SIZE,
@@ -17,12 +22,18 @@ import {
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
 import { useFoodEdit } from "../hooks/useFoodEdit"
+import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
   imageUri?: string
   onClose: () => void
   mealType: MealType | null
+  isUpdating?: boolean
+  updateFoodAnalysis: (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ) => Promise<FoodAnalysisUpdateResult | undefined>
 }
 
 export function FoodResultEdit({
@@ -30,6 +41,8 @@ export function FoodResultEdit({
   imageUri,
   onClose,
   mealType,
+  isUpdating = false,
+  updateFoodAnalysis,
 }: FoodResultEditProps) {
   const {
     foods,
@@ -52,7 +65,6 @@ export function FoodResultEdit({
     nameInputRef,
     amountInputRef,
     thumbAnim,
-    defaultMealName,
     handleNameEdit,
     handleNameConfirm,
     handleAmountChange,
@@ -62,6 +74,31 @@ export function FoodResultEdit({
     handleNameSubmit,
     handleAmountSubmit,
   } = useFoodEdit(result, mealType)
+
+  const { updateFoodTitle } = useFoodAnalysis()
+
+  const handleTitleEdit = async () => {
+    const newTitle = editingName.trim() || mealName
+    handleNameConfirm()
+    updateFoodTitle(result!.foodAnalysisResultId, newTitle)
+  }
+
+  const handleSubmit = async () => {
+    if (!result) return
+    const body: FoodAnalysisUpdateRequest = {
+      servings: result.servings,
+      eatenPercentage: (eatenStep + 1) * 25,
+      foods: foods.map((f) => ({
+        foodId: f.id,
+        name: f.name,
+        servingSizeValue: Number(f.amount) || 1,
+        servingSizeUnit: f.unit,
+      })),
+    }
+
+    const updated = await updateFoodAnalysis(result.foodAnalysisResultId, body)
+    if (updated) onClose()
+  }
 
   return (
     <YStack
@@ -86,7 +123,7 @@ export function FoodResultEdit({
         <Text fontSize={17} fontWeight={600}>
           식단 수정하기
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleSubmit}>
           <Text fontSize={16} fontWeight={500} color="$colorSubtle">
             완료
           </Text>
@@ -190,7 +227,7 @@ export function FoodResultEdit({
                     ref={nameEditInputRef}
                     value={editingName}
                     onChangeText={setEditingName}
-                    placeholder={defaultMealName}
+                    placeholder={result?.title}
                     placeholderTextColor={tokens.color.grey5.val}
                     returnKeyType="done"
                     onSubmitEditing={handleNameConfirm}
@@ -217,7 +254,7 @@ export function FoodResultEdit({
                 <View width={1} backgroundColor="$borderColor" />
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, alignItems: "center" }}
-                  onPress={handleNameConfirm}
+                  onPress={handleTitleEdit}
                 >
                   <Text fontSize={16} fontWeight={600} color="$sub6">
                     확인
@@ -444,6 +481,8 @@ export function FoodResultEdit({
           </XStack>
         </View>
       </View>
+
+      <LoadingOverlay visible={isUpdating} message="식이를 수정하고 있어요" />
     </YStack>
   )
 }

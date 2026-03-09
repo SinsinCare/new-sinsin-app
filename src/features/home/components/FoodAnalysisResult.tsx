@@ -4,7 +4,11 @@ import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
+import type {
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+} from "@/src/types"
 import type { MealType } from "../types"
 import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
@@ -26,6 +30,11 @@ interface FoodAnalysisResultProps {
   mealType?: MealType
   onAddToRecord?: () => Promise<void> | void
   showAddButton?: boolean
+  isUpdating?: boolean
+  updateFoodAnalysis: (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ) => Promise<FoodAnalysisUpdateResult | undefined>
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -50,7 +59,7 @@ function NutrientCell({ label, value }: { label: string; value: string }) {
       <View height={10} />
       <Text fontSize="$3">{label}</Text>
       <Text fontSize={14} fontWeight="600">
-        {value}
+        {value.includes(".") ? parseFloat(value).toFixed(1) : value}
       </Text>
     </YStack>
   )
@@ -64,6 +73,8 @@ export function FoodAnalysisResult({
   mealType,
   onAddToRecord,
   showAddButton = true,
+  isUpdating = false,
+  updateFoodAnalysis,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
@@ -83,10 +94,6 @@ export function FoodAnalysisResult({
     }
   }
 
-  const foodTitle = result.foods
-    .slice(0, 2)
-    .map((f) => f.name)
-    .join("와 ")
   const servingsLabel = `${result.servings}인분`
 
   return (
@@ -148,7 +155,7 @@ export function FoodAnalysisResult({
               flexShrink={1}
               flex={1}
             >
-              {foodTitle}{" "}
+              {result.title}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
                 {servingsLabel}
               </Text>
@@ -235,7 +242,7 @@ export function FoodAnalysisResult({
             </Text>
             <XStack alignItems="baseline" gap="$1">
               <Text fontSize={30} fontWeight="600" color="$color">
-                {result.total.calories}
+                {Math.round(result.total.calories)}
               </Text>
               <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
                 Kcal
@@ -286,9 +293,14 @@ export function FoodAnalysisResult({
                       >
                         {food.name}
                       </Text>
-                      <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
-                        {food.servingSizeUnit}
-                      </Text>
+                      <XStack paddingHorizontal={1}>
+                        <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
+                          {food.servingSizeValue}
+                        </Text>
+                        <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
+                          {food.servingSizeUnit}
+                        </Text>
+                      </XStack>
                     </XStack>
                     <View
                       paddingHorizontal={8}
@@ -480,6 +492,8 @@ export function FoodAnalysisResult({
           imageUri={imageUri}
           onClose={() => setIsEdit(false)}
           mealType={mealType ?? null}
+          isUpdating={isUpdating}
+          updateFoodAnalysis={updateFoodAnalysis}
         />
       )}
     </Modal>

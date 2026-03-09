@@ -1,11 +1,20 @@
 import { useState } from "react"
 import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import type {
+  DiaryAnalysisResult,
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+  FoodTitleUpdateResponse,
+} from "@/src/types"
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
-export function useFoodAnalysis() {
+export function useFoodAnalysis(
+  onUpdateSuccess?: (updated: FoodAnalysisUpdateResult) => void,
+) {
   const [analysisResult, setAnalysisResult] =
     useState<FoodCameraAnalyzeResult | null>(null)
   const [isResultOpen, setIsResultOpen] = useState(false)
@@ -14,6 +23,7 @@ export function useFoodAnalysis() {
   )
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
     try {
@@ -25,11 +35,7 @@ export function useFoodAnalysis() {
       setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeImage error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "음식 분석 중 오류가 발생했습니다."
-      Alert.alert("분석 실패", message)
+      Alert.alert("분석 실패", getErrorMessage(error))
     } finally {
       setIsAnalyzing(false)
     }
@@ -45,11 +51,7 @@ export function useFoodAnalysis() {
       setIsResultOpen(true)
     } catch (error) {
       console.error("analyzeText error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "음식 분석 중 오류가 발생했습니다."
-      Alert.alert("분석 실패", message)
+      Alert.alert("분석 실패", getErrorMessage(error))
     } finally {
       setIsAnalyzing(false)
     }
@@ -70,29 +72,62 @@ export function useFoodAnalysis() {
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
       console.error("registerDiary error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "다이어리 등록 중 오류가 발생했습니다."
-      Alert.alert("등록 실패", message)
+      Alert.alert("등록 실패", getErrorMessage(error))
     }
   }
 
-  const fetchDiaryResult = async (diaryId: number) => {
+  const fetchDiaryResult = async (
+    diaryId: number,
+  ): Promise<DiaryAnalysisResult | undefined> => {
     try {
-      await foodCameraService.fetchDiaryResult(diaryId)
+      const response = await foodCameraService.fetchDiaryResult(diaryId)
+      return response
     } catch (error) {
-      console.error("registerDiary error:", error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : "다이어리 조회 중 오류가 발생했습니다."
-      Alert.alert("조회 실패", message)
+      console.error("fetchDiaryResult error:", error)
+      Alert.alert("조회 실패", getErrorMessage(error))
+    }
+  }
+
+  const updateFoodAnalysis = async (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ): Promise<FoodAnalysisUpdateResult | undefined> => {
+    try {
+      setIsUpdating(true)
+      const updated = await foodCameraService.updateFoodAnalysis(
+        foodAnalysisResultId,
+        body,
+      )
+      setAnalysisResult(updated)
+      onUpdateSuccess?.(updated)
+      return updated
+    } catch (error) {
+      console.error("updateFoodAnalysis error:", error)
+      Alert.alert("업데이트 실패", getErrorMessage(error))
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const updateFoodTitle = async (
+    foodAnalysisResultId: number,
+    title: string,
+  ): Promise<FoodTitleUpdateResponse | undefined> => {
+    try {
+      const response = await foodCameraService.updateFoodTitle(
+        foodAnalysisResultId,
+        title,
+      )
+      return response
+    } catch (error) {
+      console.error("updateFoodTitle error:", error)
+      Alert.alert("업데이트 실패", getErrorMessage(error))
     }
   }
 
   return {
     isAnalyzing,
+    isUpdating,
     isResultOpen,
     analysisResult,
     analyzedMealType,
@@ -100,6 +135,9 @@ export function useFoodAnalysis() {
     analyzeImage,
     analyzeText,
     registerDiary,
+    fetchDiaryResult,
+    updateFoodAnalysis,
+    updateFoodTitle,
     closeResult: () => setIsResultOpen(false),
   }
 }

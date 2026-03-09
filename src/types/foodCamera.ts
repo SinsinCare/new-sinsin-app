@@ -46,6 +46,7 @@ export interface FoodCameraAnalyzeResult {
   foodAnalysisResultId: number
   servings: number
   eatenPercentage: number
+  title: string
   foods: FoodCameraFood[]
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation
@@ -134,4 +135,42 @@ export interface ExtraWaterUpdateResponse {
   message: string
   result: ExtraWaterUpdateItem
   timestamp: string
+}
+
+export interface FoodAnalysisUpdateFoodItem {
+  foodId?: number
+  name: string
+  servingSizeValue: number
+  servingSizeUnit: string
+}
+
+export interface FoodAnalysisUpdateRequest {
+  servings: number
+  eatenPercentage: number
+  foods: FoodAnalysisUpdateFoodItem[]
+}
+
+export interface FoodAnalysisUpdateResult extends FoodCameraAnalyzeResult {
+  imageUrl: string | null
+}
+
+export interface FoodAnalysisUpdateResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: FoodAnalysisUpdateResult
+  timestamp: string
+}
+
+export interface FoodTitleUpdateResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: FoodTitleUpdateResult
+  timestamp: string
+}
+
+export interface FoodTitleUpdateResult {
+  foodAnalysisResultId: number
+  title: string
 }

@@ -3,8 +3,11 @@ import type {
   DiaryAnalysisResult,
   DiaryExistenceResponse,
   ExtraWaterUpdateResponse,
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
+  FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
 import { api } from "@/src/services"
@@ -163,6 +166,42 @@ export const foodCameraService = {
     try {
       const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
       return response.data.result as DiaryAnalysisResult
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async updateFoodAnalysis(
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ): Promise<FoodAnalysisUpdateResult> {
+    try {
+      const response = await api.patch(
+        `/food-camera/analysis-results/${foodAnalysisResultId}`,
+        body,
+      )
+      return response.data.result as FoodAnalysisUpdateResult
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async updateFoodTitle(
+    foodAnalysisResultId: number,
+    title: string,
+  ): Promise<FoodTitleUpdateResponse> {
+    try {
+      const response = await api.patch(
+        `/food-camera/analysis-results/${foodAnalysisResultId}/title`,
+        { title },
+      )
+      return response.data.result as FoodTitleUpdateResponse
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
