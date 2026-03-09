@@ -10,10 +10,6 @@ import {
   Svg,
 } from "react-native-svg"
 import { Text, XStack, YStack } from "tamagui"
-import FireEmpty from "@/assets/icons/fire-empty.svg"
-import CheckEmpty from "@/assets/icons/check-empty.svg"
-import FireColor from "@/assets/icons/fire-color.svg"
-import CheckColor from "@/assets/icons/check-color.svg"
 import { Icon } from "@/src/shared/components/Icon"
 
 function ShadowEllipse({ dark }: { dark?: boolean }) {
@@ -76,8 +72,8 @@ export function CharacterSection({
   streak,
   withinLimits,
 }: CharacterSectionProps) {
-  const FireIcon = hasRecord ? FireColor : FireEmpty
-  const CheckIcon = withinLimits ? CheckColor : CheckEmpty
+  const fireIconName = hasRecord ? "fire-color" : "fire-empty"
+  const checkIconName = withinLimits ? "check-color" : "check-empty"
   const streakText =
     streak > 0 ? `연속 ${streak}일 기록중` : "오늘은 기록이 없어요"
   const guideText = withinLimits
@@ -142,7 +138,7 @@ export function CharacterSection({
           paddingVertical={4}
           borderRadius="$6"
         >
-          <FireIcon width={26} height={26} />
+          <Icon name={fireIconName} size={26} />
           <Text fontSize={18} fontWeight="600">
             {streakText}
           </Text>
@@ -156,7 +152,7 @@ export function CharacterSection({
           paddingVertical={5}
           borderRadius="$6"
         >
-          <CheckIcon width={26} height={26} />
+          <Icon name={checkIconName} size={26} />
           <Text fontSize={18} fontWeight="600">
             {guideText}
           </Text>

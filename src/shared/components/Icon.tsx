@@ -6,6 +6,9 @@ import { SvgProps } from "react-native-svg"
 import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
 import CheckColor from "@/assets/icons/check-color.svg"
+import CheckEmpty from "@/assets/icons/check-empty.svg"
+import FireColor from "@/assets/icons/fire-color.svg"
+import FireEmpty from "@/assets/icons/fire-empty.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
@@ -58,6 +61,9 @@ const icons = {
   bookmark: Bookmark,
   chat: Chat,
   "check-color": CheckColor,
+  "check-empty": CheckEmpty,
+  "fire-color": FireColor,
+  "fire-empty": FireEmpty,
   chef: Chef,
   "chevron-right": ChevronRight,
   copy: Copy,
