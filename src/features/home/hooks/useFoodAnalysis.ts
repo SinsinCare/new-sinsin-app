@@ -3,6 +3,7 @@ import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import type {
+  DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
@@ -10,7 +11,9 @@ import type {
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
-export function useFoodAnalysis() {
+export function useFoodAnalysis(
+  onUpdateSuccess?: (updated: FoodAnalysisUpdateResult) => void,
+) {
   const [analysisResult, setAnalysisResult] =
     useState<FoodCameraAnalyzeResult | null>(null)
   const [isResultOpen, setIsResultOpen] = useState(false)
@@ -71,9 +74,12 @@ export function useFoodAnalysis() {
     }
   }
 
-  const fetchDiaryResult = async (diaryId: number) => {
+  const fetchDiaryResult = async (
+    diaryId: number,
+  ): Promise<DiaryAnalysisResult | undefined> => {
     try {
-      await foodCameraService.fetchDiaryResult(diaryId)
+      const response = await foodCameraService.fetchDiaryResult(diaryId)
+      return response
     } catch (error) {
       console.error("fetchDiaryResult error:", error)
       Alert.alert("조회 실패", getErrorMessage(error))
@@ -90,6 +96,7 @@ export function useFoodAnalysis() {
         body,
       )
       setAnalysisResult(updated)
+      onUpdateSuccess?.(updated)
       return updated
     } catch (error) {
       console.error("updateFoodAnalysis error:", error)

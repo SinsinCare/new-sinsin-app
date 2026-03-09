@@ -7,7 +7,11 @@ import {
 } from "react-native"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
-import { FoodAnalysisUpdateRequest, FoodCameraAnalyzeResult } from "@/src/types"
+import {
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
+} from "@/src/types"
 import { Icon } from "@/src/shared/components"
 import {
   EATEN_STEPS,
@@ -26,7 +30,7 @@ interface FoodResultEditProps {
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
-  ) => Promise<boolean>
+  ) => Promise<FoodAnalysisUpdateResult | undefined>
 }
 
 export function FoodResultEdit({
@@ -81,8 +85,8 @@ export function FoodResultEdit({
       })),
     }
 
-    const success = await updateFoodAnalysis(result.foodAnalysisResultId, body)
-    if (success) onClose()
+    const updated = await updateFoodAnalysis(result.foodAnalysisResultId, body)
+    if (updated) onClose()
   }
 
   return (
