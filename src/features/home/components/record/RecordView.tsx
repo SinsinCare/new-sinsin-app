@@ -1,6 +1,6 @@
-import { ScrollView, StyleSheet, Alert, Modal } from "react-native"
+import { ScrollView, StyleSheet, Alert } from "react-native"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
-import { View, Text } from "tamagui"
+import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../../types"
@@ -12,21 +12,13 @@ import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from "react-native-reanimated"
 import {
   pickImageFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
+import { LoadingOverlay } from "../LoadingOverlay"
 import { TextRecord } from "./TextRecord"
-import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 
@@ -44,6 +36,7 @@ export function RecordView({
   const record = useHomeRecord(selectedDate)
   const {
     isAnalyzing,
+    isUpdating,
     isResultOpen,
     analysisResult,
     analyzedMealType,
@@ -70,36 +63,10 @@ export function RecordView({
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false)
   const recordingMealTypeRef = useRef<MealType | null>(null)
-  const [dots, setDots] = useState(".")
-
   useEffect(() => {
     setMealImages({})
     setRecordedMeals({})
   }, [selectedDate])
-
-  const floatY = useSharedValue(0)
-  const floatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: floatY.value }],
-  }))
-
-  useEffect(() => {
-    if (isAnalyzing) {
-      floatY.value = withRepeat(
-        withSequence(
-          withTiming(-10, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-      )
-      const interval = setInterval(() => {
-        setDots((d) => (d.length >= 3 ? "." : d + "."))
-      }, 500)
-      return () => clearInterval(interval)
-    } else {
-      floatY.value = 0
-      setDots(".")
-    }
-  }, [isAnalyzing, floatY])
 
   const apiDiets = data?.result.diets ?? []
   const apiMealImages = Object.fromEntries(
@@ -208,17 +175,6 @@ export function RecordView({
         onRecord={handleRecord}
       />
 
-      <Modal visible={isAnalyzing} transparent animationType="fade">
-        <View style={styles.loadingOverlay}>
-          <Animated.View style={floatStyle}>
-            <Icon name="loading" size={55} />
-          </Animated.View>
-          <Text fontSize={18} fontWeight="600" marginTop="$4">
-            {`식단을 분석하고 있어요${dots}`}
-          </Text>
-        </View>
-      </Modal>
-
       <RecordOptionsSheet
         open={isOptionsSheetOpen}
         onClose={() => setIsOptionsSheetOpen(false)}
@@ -245,8 +201,11 @@ export function RecordView({
         imageUri={analyzedImageUri ?? undefined}
         mealType={analyzedMealType ?? undefined}
         onAddToRecord={handleAddToRecord}
+        isUpdating={isUpdating}
         updateFoodAnalysis={updateFoodAnalysis}
       />
+
+      <LoadingOverlay visible={isAnalyzing} message="식단을 분석하고 있어요" />
 
       <View height={10} />
 

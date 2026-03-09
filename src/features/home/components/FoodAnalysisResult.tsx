@@ -30,6 +30,7 @@ interface FoodAnalysisResultProps {
   mealType?: MealType
   onAddToRecord?: () => Promise<void> | void
   showAddButton?: boolean
+  isUpdating?: boolean
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
@@ -72,6 +73,7 @@ export function FoodAnalysisResult({
   mealType,
   onAddToRecord,
   showAddButton = true,
+  isUpdating = false,
   updateFoodAnalysis,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
@@ -490,6 +492,7 @@ export function FoodAnalysisResult({
           imageUri={imageUri}
           onClose={() => setIsEdit(false)}
           mealType={mealType ?? null}
+          isUpdating={isUpdating}
           updateFoodAnalysis={updateFoodAnalysis}
         />
       )}

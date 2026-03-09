@@ -22,6 +22,7 @@ export function useFoodAnalysis(
   )
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
     try {
@@ -91,6 +92,7 @@ export function useFoodAnalysis(
     body: FoodAnalysisUpdateRequest,
   ): Promise<FoodAnalysisUpdateResult | undefined> => {
     try {
+      setIsUpdating(true)
       const updated = await foodCameraService.updateFoodAnalysis(
         foodAnalysisResultId,
         body,
@@ -101,11 +103,14 @@ export function useFoodAnalysis(
     } catch (error) {
       console.error("updateFoodAnalysis error:", error)
       Alert.alert("업데이트 실패", getErrorMessage(error))
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   return {
     isAnalyzing,
+    isUpdating,
     isResultOpen,
     analysisResult,
     analyzedMealType,

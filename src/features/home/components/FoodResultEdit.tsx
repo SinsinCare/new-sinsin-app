@@ -13,6 +13,7 @@ import {
   FoodCameraAnalyzeResult,
 } from "@/src/types"
 import { Icon } from "@/src/shared/components"
+import { LoadingOverlay } from "./LoadingOverlay"
 import {
   EATEN_STEPS,
   THUMB_SIZE,
@@ -27,6 +28,7 @@ interface FoodResultEditProps {
   imageUri?: string
   onClose: () => void
   mealType: MealType | null
+  isUpdating?: boolean
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
@@ -38,6 +40,7 @@ export function FoodResultEdit({
   imageUri,
   onClose,
   mealType,
+  isUpdating = false,
   updateFoodAnalysis,
 }: FoodResultEditProps) {
   const {
@@ -469,6 +472,8 @@ export function FoodResultEdit({
           </XStack>
         </View>
       </View>
+
+      <LoadingOverlay visible={isUpdating} message="식이를 수정하고 있어요" />
     </YStack>
   )
 }

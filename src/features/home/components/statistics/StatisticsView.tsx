@@ -56,7 +56,7 @@ export function StatisticsView({
   const { data, isLoading, isFetching, refetch } = useDateAnalysis(selectedDate)
   const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
-  const { updateFoodAnalysis, fetchDiaryResult } = useFoodAnalysis(
+  const { updateFoodAnalysis, fetchDiaryResult, isUpdating } = useFoodAnalysis(
     (updated) => {
       setDiaryResult((prev) =>
         prev
@@ -243,6 +243,7 @@ export function StatisticsView({
             imageUri={diaryResult?.imageUrl}
             mealType={resultMealType}
             showAddButton={false}
+            isUpdating={isUpdating}
             updateFoodAnalysis={updateFoodAnalysis}
           />
 
