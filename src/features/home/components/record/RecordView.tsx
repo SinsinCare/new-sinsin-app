@@ -109,10 +109,10 @@ export function RecordView({
   const recordRate = (recordedCount / 4) * 100
   const characterType =
     recordRate >= 85
-      ? "character_2"
+      ? "character-excellent"
       : recordRate >= 70
-        ? "character_1"
-        : "character_3"
+        ? "character-good"
+        : "character-caution"
 
   const calendarDataList = [dataDay0, dataDay1, dataDay2]
   const recordedDates = calendarDays

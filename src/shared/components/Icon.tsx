@@ -53,9 +53,9 @@ import Noon from "@/assets/icons/noon.svg"
 import Evening from "@/assets/icons/evening.svg"
 import Dessert from "@/assets/icons/dessert.svg"
 import Edit from "@/assets/icons/edit.svg"
-import Character1 from "@/assets/icons/character_1.svg"
-import Character2 from "@/assets/icons/character_2.svg"
-import Character3 from "@/assets/icons/character_3.svg"
+import CharacterExcellent from "@/assets/icons/character-excellent.svg"
+import CharacterGood from "@/assets/icons/character-good.svg"
+import CharacterCaution from "@/assets/icons/character-caution.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -108,9 +108,9 @@ const icons = {
   dessert: Dessert,
   edit: Edit,
   x: X,
-  character_1: Character1,
-  character_2: Character2,
-  character_3: Character3,
+  "character-excellent": CharacterExcellent,
+  "character-good": CharacterGood,
+  "character-caution": CharacterCaution,
 } as const
 
 export type IconName = keyof typeof icons

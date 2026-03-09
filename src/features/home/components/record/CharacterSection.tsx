@@ -55,7 +55,10 @@ function ShadowEllipse({ dark }: { dark?: boolean }) {
   )
 }
 
-type CharacterType = "character_1" | "character_2" | "character_3"
+type CharacterType =
+  | "character-excellent"
+  | "character-good"
+  | "character-caution"
 
 interface CharacterSectionProps {
   selectedDate: Date
