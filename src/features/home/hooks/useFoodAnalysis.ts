@@ -7,6 +7,7 @@ import type {
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
+  FoodTitleUpdateResponse,
 } from "@/src/types"
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
@@ -108,6 +109,22 @@ export function useFoodAnalysis(
     }
   }
 
+  const updateFoodTitle = async (
+    foodAnalysisResultId: number,
+    title: string,
+  ): Promise<FoodTitleUpdateResponse | undefined> => {
+    try {
+      const response = await foodCameraService.updateFoodTitle(
+        foodAnalysisResultId,
+        title,
+      )
+      return response
+    } catch (error) {
+      console.error("updateFoodTitle error:", error)
+      Alert.alert("업데이트 실패", getErrorMessage(error))
+    }
+  }
+
   return {
     isAnalyzing,
     isUpdating,
@@ -120,6 +137,7 @@ export function useFoodAnalysis(
     registerDiary,
     fetchDiaryResult,
     updateFoodAnalysis,
+    updateFoodTitle,
     closeResult: () => setIsResultOpen(false),
   }
 }

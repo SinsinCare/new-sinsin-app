@@ -22,6 +22,7 @@ import {
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
 import { useFoodEdit } from "../hooks/useFoodEdit"
+import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -73,6 +74,14 @@ export function FoodResultEdit({
     handleNameSubmit,
     handleAmountSubmit,
   } = useFoodEdit(result, mealType)
+
+  const { updateFoodTitle } = useFoodAnalysis()
+
+  const handleTitleEdit = async () => {
+    const newTitle = editingName.trim() || mealName
+    handleNameConfirm()
+    updateFoodTitle(result!.foodAnalysisResultId, newTitle)
+  }
 
   const handleSubmit = async () => {
     if (!result) return
@@ -245,7 +254,7 @@ export function FoodResultEdit({
                 <View width={1} backgroundColor="$borderColor" />
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, alignItems: "center" }}
-                  onPress={handleNameConfirm}
+                  onPress={handleTitleEdit}
                 >
                   <Text fontSize={16} fontWeight={600} color="$sub6">
                     확인

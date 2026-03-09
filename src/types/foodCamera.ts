@@ -161,3 +161,16 @@ export interface FoodAnalysisUpdateResponse {
   result: FoodAnalysisUpdateResult
   timestamp: string
 }
+
+export interface FoodTitleUpdateResponse {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: FoodTitleUpdateResult
+  timestamp: string
+}
+
+export interface FoodTitleUpdateResult {
+  foodAnalysisResultId: number
+  title: string
+}

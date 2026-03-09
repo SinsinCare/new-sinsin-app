@@ -7,6 +7,7 @@ import type {
   FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
+  FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
 import { api } from "@/src/services"
@@ -183,6 +184,24 @@ export const foodCameraService = {
         body,
       )
       return response.data.result as FoodAnalysisUpdateResult
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async updateFoodTitle(
+    foodAnalysisResultId: number,
+    title: string,
+  ): Promise<FoodTitleUpdateResponse> {
+    try {
+      const response = await api.patch(
+        `/food-camera/analysis-results/${foodAnalysisResultId}/title`,
+        { title },
+      )
+      return response.data.result as FoodTitleUpdateResponse
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
