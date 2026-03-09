@@ -76,7 +76,6 @@ export function FoodResultEdit({
     const body: FoodAnalysisUpdateRequest = {
       servings: result.servings,
       eatenPercentage: (eatenStep + 1) * 25,
-      title: mealName,
       foods: foods.map((f) => ({
         foodId: f.id,
         name: f.name,
