@@ -66,6 +66,7 @@ interface CharacterSectionProps {
   hasRecord: boolean
   characterType: CharacterType
   streak: number
+  withinLimits: boolean
 }
 
 export function CharacterSection({
@@ -73,12 +74,13 @@ export function CharacterSection({
   hasRecord,
   characterType,
   streak,
+  withinLimits,
 }: CharacterSectionProps) {
   const FireIcon = hasRecord ? FireColor : FireEmpty
-  const CheckIcon = hasRecord ? CheckColor : CheckEmpty
+  const CheckIcon = withinLimits ? CheckColor : CheckEmpty
   const streakText =
     streak > 0 ? `연속 ${streak}일 기록중` : "오늘은 기록이 없어요"
-  const guideText = hasRecord
+  const guideText = withinLimits
     ? "영양소 제한조건을 잘 지켰어요"
     : "영양소 제한조건을 지켜 식사해요"
 

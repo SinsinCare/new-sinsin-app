@@ -22,6 +22,7 @@ import { TextRecord } from "./TextRecord"
 import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
+import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -83,6 +84,25 @@ export function RecordView({
 
   const hasSelectedDateRecord =
     apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
+
+  const analysis = data?.result.analysis ?? null
+  const withinLimits =
+    analysis !== null &&
+    CKD_NUTRIENT_LIMITS.every((limit) => {
+      const intake =
+        limit.nutrient === "수분"
+          ? (analysis.water ?? 0) + (analysis.extraWater ?? 0)
+          : limit.nutrient === "단백질"
+            ? (analysis.protein ?? 0)
+            : limit.nutrient === "나트륨"
+              ? (analysis.sodium ?? 0)
+              : limit.nutrient === "칼륨"
+                ? (analysis.potassium ?? 0)
+                : limit.nutrient === "인"
+                  ? (analysis.phosphorus ?? 0)
+                  : 0
+      return intake <= limit.max
+    })
 
   const recordedCount =
     Object.values(mergedRecordedMeals).filter(Boolean).length
@@ -180,6 +200,7 @@ export function RecordView({
         hasRecord={hasSelectedDateRecord}
         characterType={characterType}
         streak={streak}
+        withinLimits={withinLimits}
       />
 
       <MealButtons
