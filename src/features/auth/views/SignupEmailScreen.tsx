@@ -74,13 +74,19 @@ export function SignupEmailScreen() {
                 }}
               />
             </YStack>
-            <YStack width={BUTTON_WIDTH} justifyContent="flex-start" paddingTop={28}>
+            <YStack
+              width={BUTTON_WIDTH}
+              justifyContent="flex-start"
+              paddingTop={28}
+            >
               <Pressable
                 onPress={handleSendCode}
                 disabled={sendingCode || codeVerified}
               >
                 <YStack
-                  backgroundColor={codeVerified || sendingCode ? "#C5C8CE" : "#34D399"}
+                  backgroundColor={
+                    codeVerified || sendingCode ? "#C5C8CE" : "#34D399"
+                  }
                   borderRadius={8}
                   height={52}
                   justifyContent="center"
@@ -130,7 +136,11 @@ export function SignupEmailScreen() {
                   }}
                 />
               </YStack>
-              <YStack width={BUTTON_WIDTH} justifyContent="flex-start" paddingTop={28}>
+              <YStack
+                width={BUTTON_WIDTH}
+                justifyContent="flex-start"
+                paddingTop={28}
+              >
                 <Pressable
                   onPress={handleVerifyCode}
                   disabled={verifyingCode || !!sendError}
