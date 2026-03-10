@@ -53,6 +53,7 @@ import Noon from "@/assets/icons/noon.svg"
 import Evening from "@/assets/icons/evening.svg"
 import Dessert from "@/assets/icons/dessert.svg"
 import Edit from "@/assets/icons/edit.svg"
+import Spot from "@/assets/icons/spot.svg"
 import CharacterExcellent from "@/assets/icons/character-excellent.svg"
 import CharacterGood from "@/assets/icons/character-good.svg"
 import CharacterCaution from "@/assets/icons/character-caution.svg"
@@ -107,6 +108,7 @@ const icons = {
   evening: Evening,
   dessert: Dessert,
   edit: Edit,
+  spot: Spot,
   x: X,
   "character-excellent": CharacterExcellent,
   "character-good": CharacterGood,
