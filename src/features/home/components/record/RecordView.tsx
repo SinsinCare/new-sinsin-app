@@ -201,7 +201,7 @@ export function RecordView({
         recordedDates={recordedDates}
       />
 
-      <View height={15} />
+      <View height={10} />
 
       <CharacterSection
         selectedDate={selectedDate}
@@ -210,6 +210,8 @@ export function RecordView({
         streak={streak}
         withinLimits={withinLimits}
       />
+
+      <View height={5} />
 
       <MealButtons
         onSelectMealType={onSelectMealType}
