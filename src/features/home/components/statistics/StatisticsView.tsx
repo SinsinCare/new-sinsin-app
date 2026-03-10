@@ -23,6 +23,7 @@ import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import type { DiaryAnalysisResult } from "@/src/types"
+import { Icon } from "@/src/shared/components"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -53,7 +54,7 @@ export function StatisticsView({
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
-  const { data, isLoading, isFetching, refetch } = useDateAnalysis(selectedDate)
+  const { data, isLoading, refetch } = useDateAnalysis(selectedDate)
   const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
   const { updateFoodAnalysis, fetchDiaryResult, isUpdating } = useFoodAnalysis(
@@ -72,7 +73,7 @@ export function StatisticsView({
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
 
-  const isEmpty = !isLoading && !isFetching && !hasDiets
+  const isEmpty = !isLoading && !hasDiets
 
   useEffect(() => {
     if (!isActive) return
@@ -188,6 +189,7 @@ export function StatisticsView({
           alignItems="center"
           gap="$4"
         >
+          <Icon name="circle-character" size={40} />
           <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
             아직 기록하지 않았어요.
           </Text>
@@ -198,7 +200,7 @@ export function StatisticsView({
               fontWeight="600"
               backgroundColor="$backgroundHover"
               paddingHorizontal="$3"
-              paddingVertical="$3"
+              paddingVertical="$2.5"
               borderRadius="$8"
             >
               기록하러 가기

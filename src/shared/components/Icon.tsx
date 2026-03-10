@@ -60,6 +60,7 @@ import NoonFood from "@/assets/icons/noon_food.svg"
 import EveningFood from "@/assets/icons/evening_food.svg"
 import DessertFood from "@/assets/icons/dessert_food.svg"
 import CheckOrange from "@/assets/icons/check-orange.svg"
+import CircleCharacter from "@/assets/icons/circle-character.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -116,6 +117,7 @@ const icons = {
   "character-excellent": CharacterExcellent,
   "character-good": CharacterGood,
   "character-caution": CharacterCaution,
+  "circle-character": CircleCharacter,
   "morning-food": MorningFood,
   "noon-food": NoonFood,
   "evening-food": EveningFood,
