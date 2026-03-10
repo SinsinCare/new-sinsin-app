@@ -1,4 +1,4 @@
-import { Image, TouchableOpacity } from "react-native"
+import { Image, TouchableOpacity, StyleSheet } from "react-native"
 import { Text, YStack } from "tamagui"
 import { MealRecord } from "../../data/dietaryRecord"
 
@@ -14,12 +14,12 @@ export function DietaryRecordCard({
   isSelected,
 }: DietaryRecordCardProps) {
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
       <YStack
         backgroundColor="$white"
         borderWidth={2}
         borderColor="$borderColor"
-        width={78}
+        flex={1}
         height={100}
         borderRadius="$6"
         overflow="hidden"
@@ -28,7 +28,7 @@ export function DietaryRecordCard({
         {mealData.imageUri && (
           <Image
             source={{ uri: mealData.imageUri }}
-            style={{ position: "absolute", width: 78, height: 100 }}
+            style={StyleSheet.absoluteFillObject}
             resizeMode="cover"
           />
         )}

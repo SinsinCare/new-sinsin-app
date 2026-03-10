@@ -65,7 +65,7 @@ export function MealButtons({
           아래 카드를 눌러 오늘의 식사를 기록해보세요.
         </Text>
       </YStack>
-      <XStack width="100%" justifyContent="center" gap="$2">
+      <XStack gap="$2">
         {mealTypes.map((type) => (
           <MealButton
             key={type}
