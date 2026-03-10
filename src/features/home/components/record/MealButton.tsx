@@ -28,9 +28,9 @@ export function MealButton({
   return (
     <TouchableOpacity onPress={onPress}>
       <YStack
-        backgroundColor={isRecorded ? "$primary5" : "$appBg"}
-        borderWidth={2}
-        borderColor="$borderColor"
+        backgroundColor={isRecorded ? "$primary5" : "$cardBackground"}
+        borderWidth={1}
+        borderColor="$deleteBg"
         width={78}
         height={100}
         borderRadius="$6"

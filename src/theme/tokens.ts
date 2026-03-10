@@ -31,7 +31,7 @@ export const tokens = createTokens({
     sub9: "#028A67",
 
     // App screen background
-    appBg: "#F3F3F3",
+    appBg: "#FAFAFA",
 
     // Restriction level badge
     restrictionBg: "#FCE1E1",
