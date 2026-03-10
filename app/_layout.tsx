@@ -6,29 +6,56 @@ import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import config from "../tamagui.config"
-import { queryClient } from "../src/services/queryClient"
-import { useAuth } from "../src/hooks"
-import { useSignupStore } from "../src/stores/signupStore"
-import { LoadingScreen } from "../src/shared/components"
+import { queryClient } from "@/src/services"
+import { useAuth } from "@/src/hooks"
+import { useSignupStore, useOnboardingStore } from "@/src/stores"
+import { LoadingScreen, Toast } from "@/src/shared/components"
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, accountState } = useAuth()
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
+  const isOnboardingInProgress = useOnboardingStore(
+    (s) => s.isOnboardingInProgress,
+  )
   const segments = useSegments()
   const router = useRouter()
+
+  const needsOnboarding = accountState === "PENDING_ONBOARDING"
 
   useEffect(() => {
     if (isLoading) return
 
     const inAuthGroup = segments[0] === "(auth)"
+    const inOnboarding = segments[0] === "onboarding"
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/login")
     } else if (isAuthenticated && inAuthGroup && !isSignupInProgress) {
       // 회원가입 진행 중이면 auth 그룹에 유지
-      router.replace("/(tabs)/home")
+      if (needsOnboarding) {
+        router.replace("/onboarding")
+      } else {
+        router.replace("/(tabs)/home")
+      }
+    } else if (
+      isAuthenticated &&
+      !inAuthGroup &&
+      !inOnboarding &&
+      !isOnboardingInProgress &&
+      needsOnboarding
+    ) {
+      // 온보딩 미완료 유저가 다른 화면에 있으면 온보딩으로 이동
+      router.replace("/onboarding")
     }
-  }, [isAuthenticated, isLoading, segments, router, isSignupInProgress])
+  }, [
+    isAuthenticated,
+    isLoading,
+    segments,
+    router,
+    isSignupInProgress,
+    isOnboardingInProgress,
+    needsOnboarding,
+  ])
 
   if (isLoading) {
     return <LoadingScreen message="앱을 불러오는 중..." />
@@ -40,9 +67,9 @@ function RootLayoutNav() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="create-post" />
-        <Stack.Screen name="post/[id]" />
-        <Stack.Screen name="consultation-history" />
+        <Stack.Screen name="(settings)" />
+        <Stack.Screen name="(write)" />
+        <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
       </Stack>
     </>
   )
@@ -63,6 +90,7 @@ export default function RootLayout() {
       <TamaguiProvider config={config} defaultTheme="light">
         <PortalProvider>
           <RootLayoutNav />
+          <Toast />
         </PortalProvider>
       </TamaguiProvider>
     </QueryClientProvider>

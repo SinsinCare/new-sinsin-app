@@ -4,8 +4,10 @@ import { HomeHeader } from "@/src/features/home/components/HomeHeader"
 import { useState } from "react"
 import { MainTab, MealType } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
-import { StatusView } from "@/src/features/home/components/statistics/StatusView"
-import { StyleSheet } from "react-native"
+import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
+import { StyleSheet, View } from "react-native"
+import { useTheme } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
@@ -14,6 +16,7 @@ export default function HomeScreen() {
     null,
   )
   const insets = useSafeAreaInsets()
+  const theme = useTheme()
 
   const handleSelectMealType = (mealType: MealType) => {
     setSelectedMealType(mealType)
@@ -21,12 +24,9 @@ export default function HomeScreen() {
 
   return (
     <ThemedView
-      style={[
-        styles.container,
-        {
-          paddingBottom: insets.bottom,
-        },
-      ]}
+      lightColor={tokens.color.appBg.val}
+      darkColor={theme.backgroundFocus.val}
+      style={styles.container}
     >
       <HomeHeader
         topInset={insets.top}
@@ -34,23 +34,37 @@ export default function HomeScreen() {
         onChangeTab={setMainTab}
       />
 
-      {mainTab === "record" ? (
+      <View style={[styles.tabContent, mainTab !== "record" && styles.hidden]}>
         <RecordView
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          onSelectMealType={handleSelectMealType}
+        />
+      </View>
+      <View style={[styles.tabContent, mainTab !== "stats" && styles.hidden]}>
+        <StatisticsView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           selectedMealType={selectedMealType}
           onSelectMealType={handleSelectMealType}
+          onGoToRecord={() => setMainTab("record")}
+          isActive={mainTab === "stats"}
         />
-      ) : (
-        <StatusView selectedDate={selectedDate} />
-      )}
+      </View>
     </ThemedView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     justifyContent: "flex-start",
     paddingHorizontal: 25,
+  },
+  tabContent: {
+    flex: 1,
+  },
+  hidden: {
+    display: "none",
   },
 })

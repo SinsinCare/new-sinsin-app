@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-신신당부 (Sinsin Dangbu) - A Korean health management mobile app for chronic kidney disease (CKD) patients. Built with React Native/Expo, Firebase backend, and AI-powered food analysis.
+신신당부 (Sinsin Dangbu) - A Korean health management mobile app for chronic kidney disease (CKD) patients. Built with React Native/Expo, custom backend API, and AI-powered food analysis.
 
 ## Development Commands
 
@@ -18,11 +18,12 @@ npm run lint:fix   # ESLint auto-fix
 npm run format     # Prettier format all files
 ```
 
-Mock mode (skips Firebase auth):
+Mock mode: add mock data
 
 ```bash
-EXPO_PUBLIC_USE_MOCK_AUTH=true npm start
-npm run ios-no-user   # Mock mode without user profile
+EXPO_PUBLIC_USE_MOCK_AUTH=true npm start   # Mock auth (skips real login/signup API)
+EXPO_PUBLIC_USE_MOCK_MODE=true npm start   # Mock data services (onboarding, etc.)
+npm run ios-no-user                        # Mock mode without user profile
 ```
 
 ## Architecture
@@ -38,26 +39,27 @@ npm run ios-no-user   # Mock mode without user profile
 
 **Hybrid approach: Zustand (client) + React Query (server)**
 
-- `src/stores/authStore.ts` - Auth state (user, isAuthenticated, isLoading)
+- `src/stores/authStore.ts` - Auth state (user, accountState, isAuthenticated, isLoading)
 - `src/stores/userStore.ts` - User profile state
 - `src/services/queryClient.ts` - React Query config (5min staleTime, 30min gcTime)
 
 ### Service Layer (`src/services/`)
 
-- `firebase.ts` - Firebase initialization with AsyncStorage persistence
-- `authService.ts` - Firebase Auth methods (signIn, signUp, signOut)
-- `firestoreService.ts` - Firestore CRUD for collections: user_profiles, health_records, food_records, conversations, messages, daily_health_logs
-- `aiService.ts` - Backend API calls to `/analyze-food` and `/chat` endpoints
-- `mock/` - Mock implementations for development without Firebase (controlled by `src/config/appConfig.ts`)
+- `apiClient.ts` - Axios instances: `api` (authenticated, Bearer interceptor + 401 refresh) and `publicApi` (unauthenticated)
+- `tokenService.ts` - AsyncStorage-based JWT token CRUD (accessToken, refreshToken)
+- `authService.ts` - Custom API auth methods (signInWithEmail, signup, signOut, restoreSession)
+- `emailService.ts` - Email verification and OTP API endpoints
+- `mock/` - Mock implementations for development (controlled by `src/config/appConfig.ts`: `isMockUser()` for auth, `isMockMode()` for data)
 
 ### Custom Hooks (`src/hooks/`)
 
-- `useAuth()` - Manages auth lifecycle, listens to Firebase auth state, loads user profile on login
+- `useAuth()` - Manages auth lifecycle, token-based session restore, exposes signInWithEmail/signOut and accountState
 
 ### Type Definitions (`src/types/`)
 
 - `models.ts` - Domain types: UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog
 - `api.ts` - API request/response types
+- `auth.ts` - Auth API types: SignupRequest, LoginResult, SignupResult, TokenRefreshResult, OtpVerifyResult
 
 ### Design System (`src/theme/`)
 
@@ -94,26 +96,26 @@ Feature-based organization with types, data, services, hooks, and components per
 
 ## Key Technical Decisions
 
-| Aspect       | Choice                                     |
-| ------------ | ------------------------------------------ |
-| Framework    | Expo ~54.0 + React Native 0.81             |
-| Routing      | Expo Router (typed routes enabled)         |
-| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3) |
-| Font         | Pretendard KR (OTF, 4 weights)             |
-| State        | Zustand + React Query                      |
-| Forms        | react-hook-form                            |
-| Backend      | Firebase (Auth, Firestore) + Custom AI API |
-| Image Picker | expo-image-picker (gallery + camera)       |
-| Linting      | ESLint + Prettier + Husky pre-commit       |
-| Language     | App UI in Korean, code in English          |
+| Aspect       | Choice                                               |
+| ------------ | ---------------------------------------------------- |
+| Framework    | Expo ~54.0 + React Native 0.81                       |
+| Routing      | Expo Router (typed routes enabled)                   |
+| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3)   |
+| Font         | Pretendard KR (OTF, 4 weights)                       |
+| State        | Zustand + React Query                                |
+| Forms        | react-hook-form                                      |
+| Backend      | Custom Auth API (`api.sinsin.mediology.ai`) + AI API |
+| Image Picker | expo-image-picker (gallery + camera)                 |
+| Linting      | ESLint + Prettier + Husky pre-commit                 |
+| Language     | App UI in Korean, code in English                    |
 
 ## Environment Variables
 
 Required in `.env` (see `.env.example`):
 
-- `EXPO_PUBLIC_FIREBASE_*` - Firebase credentials
 - `EXPO_PUBLIC_BACKEND_URL` - AI backend URL
-- `EXPO_PUBLIC_USE_MOCK_AUTH` - Enable mock auth mode (`true`/`false`)
+- `EXPO_PUBLIC_USE_MOCK_AUTH` - Mock auth services: login/signup/email verification (`true`/`false`)
+- `EXPO_PUBLIC_USE_MOCK_MODE` - Mock data services: onboarding, etc. (`true`/`false`)
 - `EXPO_PUBLIC_MOCK_NO_USER` - Mock mode without user profile
 
 ## Domain Context
@@ -125,7 +127,7 @@ Health app for CKD patients with:
 - AI food analysis with kidney safety assessment (safe/caution/warning)
 - AI consultation chat with health context
 - Kidney-safe food scoring algorithm (penalizes high phosphorus/potassium/sodium/protein, rewards water/magnesium/calcium/vitamin D)
-- Community recipe sharing with in-memory storage (future: Firestore backend)
+- Community recipe sharing with in-memory storage (future: backend API)
 
 ## Styling Conventions
 

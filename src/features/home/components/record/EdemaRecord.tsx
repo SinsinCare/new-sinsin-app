@@ -1,48 +1,60 @@
-import { Text, XStack, useTheme } from "tamagui"
-import { TouchableOpacity } from "react-native"
-import { Droplets } from "@tamagui/lucide-icons"
-import { RecordCard } from "./RecordCard"
+import { TouchableOpacity, StyleSheet } from "react-native"
+import { Text, XStack, YStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
+import { RecordCard } from "./RecordCard"
 
 interface EdemaRecordProps {
   selected: EdemaLevel | null
-  onSelect: (level: EdemaLevel) => void
+  yesterdayEdema?: string | null
+  onSave: (edemaLevel: EdemaLevel) => void
 }
 
-export function EdemaRecord({ selected, onSelect }: EdemaRecordProps) {
-  const theme = useTheme()
+export function EdemaRecord({
+  selected,
+  yesterdayEdema,
+  onSave,
+}: EdemaRecordProps) {
+  const subtitle =
+    yesterdayEdema != null ? `어제: ${yesterdayEdema}` : "이전 기록이 없어요"
 
   return (
     <RecordCard
-      icon={<Droplets size={24} />}
-      title="오늘 몸이 붓는 느낌이 있나요?"
+      type="edema"
+      title={`몸이 붓는 \n느낌이 있나요?`}
+      subtitle={subtitle}
     >
-      <XStack gap="$2">
+      <YStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (
-          <TouchableOpacity
-            key={option}
-            onPress={() => onSelect(option)}
-            style={{
-              backgroundColor:
-                selected === option ? theme.primary.val : theme.pureWhite.val,
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 8,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            activeOpacity={0.7}
-          >
-            <Text
-              fontSize="$3"
-              fontWeight="600"
-              color={selected === option ? "white" : "$color"}
+          <TouchableOpacity key={option} onPress={() => onSave(option)}>
+            <XStack
+              backgroundColor={selected === option ? "$primary" : "$pureWhite"}
+              paddingVertical="$2.5"
+              paddingHorizontal="$7"
+              borderRadius="$4"
+              justifyContent="center"
+              style={styles.optionButton}
             >
-              {option}
-            </Text>
+              <Text
+                fontSize={15}
+                fontWeight="600"
+                color={selected === option ? "white" : "$color"}
+              >
+                {option}
+              </Text>
+            </XStack>
           </TouchableOpacity>
         ))}
-      </XStack>
+      </YStack>
     </RecordCard>
   )
 }
+
+const styles = StyleSheet.create({
+  optionButton: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+})

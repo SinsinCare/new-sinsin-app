@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
+import Profile from "@/assets/icons/profile.svg"
 
 interface HomeHeaderProps {
   mainTab: MainTab
@@ -15,7 +16,7 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   return (
     <YStack
-      backgroundColor="$backgroundFocus"
+      backgroundColor="$appBg"
       paddingTop={topInset}
       marginHorizontal={-25}
       paddingHorizontal={25}
@@ -29,10 +30,10 @@ export function HomeHeader({
           {(["record", "stats"] as MainTab[]).map((tab) => (
             <Text
               key={tab}
-              fontSize="$5"
+              fontSize="$6"
               fontWeight="700"
-              backgroundColor={mainTab === tab ? "white" : "$colorTransparent"}
-              paddingHorizontal={12}
+              color={mainTab === tab ? "$colorPress" : "$borderColorFocus"}
+              paddingHorizontal={8}
               paddingVertical={6}
               onPress={() => onChangeTab(tab)}
               borderRadius="$5"
@@ -43,8 +44,8 @@ export function HomeHeader({
         </XStack>
 
         <XStack gap="$4">
-          <Ionicons name="camera-outline" size={22} />
-          <Ionicons name="notifications-outline" size={22} />
+          <Profile width={28} height={28} />
+          <Ionicons name="notifications-outline" size={28} />
         </XStack>
       </XStack>
     </YStack>

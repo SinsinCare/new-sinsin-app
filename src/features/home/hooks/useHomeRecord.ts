@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react"
 import { useHydration } from "./useHydration"
+import { useExtraWater } from "./useExtraWater"
 import { EdemaLevel } from "../data/EdemaConstants"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 
 export interface UseHomeRecordReturn {
   // Hydration
@@ -9,9 +11,9 @@ export interface UseHomeRecordReturn {
   percentage: number
   remaining: number
   isGoalAchieved: boolean
-  addWater: (amount: number) => void
+  addWater: (amount: number) => Promise<void>
   subtractWater: (amount: number) => void
-  resetHydration: () => void
+  resetHydration: (serverExtraWater: number) => Promise<void>
 
   // Weight
   weight: string
@@ -23,14 +25,34 @@ export interface UseHomeRecordReturn {
   setEdemaLevel: (level: EdemaLevel) => void
 }
 
-export const useHomeRecord = (): UseHomeRecordReturn => {
+export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
   const hydration = useHydration()
+  const { updateExtraWater } = useExtraWater()
 
   const [weight, setWeight] = useState("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
 
   // TODO: Firestore 연동 시 날짜별 어제 체중 조회로 교체
   const yesterdayWeight: number | null = 60.4
+
+  const dateStr = toDateStr(selectedDate)
+
+  const addWaterWithApi = useCallback(
+    async (amount: number) => {
+      hydration.addWater(amount)
+      await updateExtraWater(dateStr, amount)
+    },
+    [hydration, dateStr, updateExtraWater],
+  )
+
+  // resetHydration이 extraWater를 받도록 변경
+  const resetWithApi = useCallback(
+    async (serverExtraWater: number) => {
+      hydration.reset()
+      await updateExtraWater(dateStr, -serverExtraWater)
+    },
+    [hydration, dateStr, updateExtraWater],
+  )
 
   const handleSetEdemaLevel = useCallback((level: EdemaLevel) => {
     setEdemaLevel(level)
@@ -43,11 +65,9 @@ export const useHomeRecord = (): UseHomeRecordReturn => {
     percentage: hydration.percentage,
     remaining: hydration.remaining,
     isGoalAchieved: hydration.isGoalAchieved,
-    addWater: hydration.addWater,
+    addWater: addWaterWithApi,
     subtractWater: hydration.subtractWater,
-    resetHydration: hydration.reset,
-
-    // Weight
+    resetHydration: resetWithApi,
     weight,
     setWeight,
     yesterdayWeight,

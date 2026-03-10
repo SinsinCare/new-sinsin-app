@@ -5,6 +5,7 @@ export const tokens = createTokens({
     // Base
     black: "#0D0D0D",
     white: "#F4F4F4",
+    offWhite: "#FCFCFC",
     pureWhite: "#FFFFFF",
 
     // Primary (coral/red)
@@ -29,6 +30,19 @@ export const tokens = createTokens({
     sub8: "#0D896A",
     sub9: "#028A67",
 
+    // App screen background
+    appBg: "#F3F3F3",
+
+    // Restriction level badge
+    restrictionBg: "#FCE1E1",
+    restrictionText: "#E74E4E",
+
+    // Hydration
+    waterPercentBg: "#D2DFE3",
+    waterPercentBgDark: "#46616A",
+    waterFillTop: "#6BDAFE",
+    waterFillBottom: "#30C1F0",
+
     // Greyscale
     grey1: "#171717",
     grey2: "#252525",
@@ -38,6 +52,9 @@ export const tokens = createTokens({
     grey6: "#999999",
     grey7: "#B3B3B3",
     grey8: "#EDEDED",
+
+    // UI element backgrounds
+    deleteBg: "#D9D9DF",
   },
 
   space: {

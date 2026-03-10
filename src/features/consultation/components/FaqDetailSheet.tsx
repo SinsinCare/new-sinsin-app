@@ -5,7 +5,6 @@ import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { tokens } from "@/src/theme/tokens"
-import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
 import { Button } from "@/src/shared/components"
 import { getCategoryMeta } from "../data/mockData"
 import type { FaqItem } from "../types"
@@ -100,34 +99,39 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
           }}
         >
           {/* Answer card */}
-          <GlassmorphicCard
-            variant="flat"
-            borderColor="$borderColor"
+          <YStack
+            backgroundColor={"#f3fffc"}
+            borderRadius="$4"
             padding="$4"
             gap="$3"
           >
-            <XStack alignItems="center" gap="$3">
+            <XStack alignItems="center" gap="$2">
               <View
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: tokens.color.grey8.val,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  backgroundColor: tokens.color.sub7.val,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Ionicons
-                  name="chatbox-ellipses"
-                  size={18}
-                  color={tokens.color.grey5.val}
-                />
+                <Text fontSize={12} fontWeight="700" color="white">
+                  A
+                </Text>
               </View>
-              <Text fontSize="$4" color="$grey3" flex={1} lineHeight={22}>
-                {item.answer}
+              <Text
+                fontSize="$3"
+                fontWeight="600"
+                color={tokens.color.sub7.val}
+              >
+                답변
               </Text>
             </XStack>
-          </GlassmorphicCard>
+            <Text fontSize="$4" color="$grey2" lineHeight={24}>
+              {item.answer}
+            </Text>
+          </YStack>
 
           {/* Bottom actions */}
           <YStack gap="$3">

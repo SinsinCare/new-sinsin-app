@@ -19,7 +19,7 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 - **Routing:** Expo Router (파일 기반 라우팅)
 - **UI:** Tamagui v2
 - **State:** Zustand (클라이언트) + React Query (서버)
-- **Backend:** Firebase (Auth, Firestore) + AI Backend API
+- **Backend:** Spring (Sinsin) + Nest (Food-Camera-API)
 
 ## 코드 품질 도구
 
@@ -61,22 +61,16 @@ cp .env.example .env
 
 필수 환경 변수:
 
-- `EXPO_PUBLIC_FIREBASE_*` - Firebase 인증 정보
-- `EXPO_PUBLIC_BACKEND_URL` - AI 백엔드 URL
+- `EXPO_PUBLIC_BACKEND_URL` - 백엔드 API URL
+- `EXPO_PUBLIC_USE_MOCK_AUTH` - Mock 인증 모드 (`true`/`false`)
+- `EXPO_PUBLIC_USE_MOCK_MODE` - Mock 데이터 모드 (`true`/`false`)
+- `EXPO_PUBLIC_MOCK_NO_USER` - 유저 프로필 없이 실행 (`true`/`false`)
 
 ### EAS 프로덕션 빌드 (TestFlight/스토어)
 
 `eas build` 시 `.env`는 번들에 포함되지 않습니다. **반드시** [Expo Dashboard](https://expo.dev) → 프로젝트 → Secrets에서 다음 변수를 production 환경에 설정하세요:
 
-- `EXPO_PUBLIC_FIREBASE_API_KEY`
-- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
-- `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`
-- `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-- `EXPO_PUBLIC_FIREBASE_APP_ID`
 - `EXPO_PUBLIC_BACKEND_URL`
-
-> 환경 변수 미설정 시 앱이 Firebase 초기화 실패로 크래시할 수 있습니다. 현재 코드는 설정 누락 시 Mock 모드로 폴백합니다.
 
 ## 프로젝트 구조
 
@@ -88,7 +82,7 @@ app/
 
 src/
 ├── hooks/             # 커스텀 훅 (useAuth 등)
-├── services/          # API, Firebase 서비스
+├── services/          # API 서비스
 ├── shared/components/ # 공통 UI 컴포넌트
 ├── stores/            # Zustand 스토어
 └── types/             # TypeScript 타입 정의
@@ -102,11 +96,11 @@ main (프로덕션)  ← PR →  dev (개발/검증)  ← PR →  feature/* (기
 
 ### 브랜치 구조
 
-| 브랜치 | 역할 | 머지 방식 |
-|--------|------|-----------|
-| `main` | 프로덕션 배포 브랜치 | `dev`에서 PR 머지 |
-| `dev` | 개발 통합 및 검증 브랜치 | `feature/*`에서 PR 머지 |
-| `feature/*` | 기능 개발 브랜치 | `dev`로 PR 생성 |
+| 브랜치      | 역할                     | 머지 방식               |
+| ----------- | ------------------------ | ----------------------- |
+| `main`      | 프로덕션 배포 브랜치     | `dev`에서 PR 머지       |
+| `dev`       | 개발 통합 및 검증 브랜치 | `feature/*`에서 PR 머지 |
+| `feature/*` | 기능 개발 브랜치         | `dev`로 PR 생성         |
 
 ### 작업 흐름
 
@@ -153,6 +147,35 @@ refactor/state-mgmt    # 리팩토링
   - `style`: 코드 포맷팅, 세미콜론 등 스타일 변화
 
 - 앱스토어 배포
+  app.json expo ios build_number 수정
+
 ```
+eas build --platform ios --profile production
+
 eas submit --platform ios --latest --profile production
 ```
+
+- 안드로이드
+
+```
+eas build --platform android --profile production
+
+eas submit --platform android --latest
+```
+
+# 로컬 아이폰에 빌드하기
+
+```
+npm install
+npx expo prebuild -p ios
+open ios/*.xcworkspace
+```
+
+Xcode 설정
+Targets > (앱 타겟) > Signing & Capabilities
+Team 선택
+Bundle Identifier를 고유하게 변경 (예: com.yourname.sinsin)
+아이폰 기기 선택 후 Run(▶)
+
+CLI 에서 바로 빌드
+npm run ios -- --device

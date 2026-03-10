@@ -1,80 +1,72 @@
 import { useEffect, useRef } from "react"
-import { Animated, Easing } from "react-native"
-import { XStack, YStack, Text } from "tamagui"
-import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
+import { Animated, Easing, useColorScheme } from "react-native"
+import { XStack } from "tamagui"
+import Svg, {
+  Defs,
+  LinearGradient,
+  Stop,
+  Text as SvgText,
+} from "react-native-svg"
+import { AssistantAvatar } from "./ChatMessageBubble"
+
+const AnimatedStop = Animated.createAnimatedComponent(Stop)
 
 export function TypingIndicator() {
-  const dot1 = useRef(new Animated.Value(0)).current
-  const dot2 = useRef(new Animated.Value(0)).current
-  const dot3 = useRef(new Animated.Value(0)).current
+  const isDark = useColorScheme() === "dark"
+  // bg: dark #1F1F21, light #F3F3F3
+  const baseColor = isDark ? "#E0E0E0" : "#1A1A1A"
+  const sweepColor = isDark ? "#666666" : "#999999"
+
+  const anim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    const createDotAnimation = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 400,
-            easing: Easing.ease,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 400,
-            easing: Easing.ease,
-            useNativeDriver: true,
-          }),
-        ]),
-      )
+    const animation = Animated.loop(
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }),
+    )
+    animation.start()
+    return () => animation.stop()
+  }, [anim])
 
-    const anim = Animated.parallel([
-      createDotAnimation(dot1, 0),
-      createDotAnimation(dot2, 150),
-      createDotAnimation(dot3, 300),
-    ])
-    anim.start()
-    return () => anim.stop()
-  }, [dot1, dot2, dot3])
-
-  const dotStyle = (anim: Animated.Value) => ({
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#B3B3B3",
-    transform: [
-      {
-        translateY: anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -4],
-        }),
-      },
-    ],
-    opacity: anim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.4, 1],
-    }),
+  // Highlight sweeps from fully off-left to fully off-right
+  // so the loop restart (1→0) is invisible (both states = base color)
+  const stop1 = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-0.6, 1.0],
+  })
+  const stop2 = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-0.3, 1.3],
+  })
+  const stop3 = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.0, 1.6],
   })
 
   return (
-    <YStack alignItems="flex-start" paddingHorizontal="$4" gap="$1.5">
-      <GlassmorphicCard
-        variant="flat"
-        borderColor="$borderColor"
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-      >
-        <XStack gap="$2" alignItems="center">
-          <XStack gap={6} alignItems="center">
-            <Animated.View style={dotStyle(dot1)} />
-            <Animated.View style={dotStyle(dot2)} />
-            <Animated.View style={dotStyle(dot3)} />
-          </XStack>
-        </XStack>
-      </GlassmorphicCard>
-      <Text fontSize={11} color="$grey6" paddingLeft="$1">
-        답변을 신중하게 고민중입니다...
-      </Text>
-    </YStack>
+    <XStack alignItems="center" paddingHorizontal="$4" gap="$3">
+      <AssistantAvatar />
+      <Svg height={22} width={250}>
+        <Defs>
+          <LinearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
+            <AnimatedStop offset={stop1} stopColor={baseColor} />
+            <AnimatedStop offset={stop2} stopColor={sweepColor} />
+            <AnimatedStop offset={stop3} stopColor={baseColor} />
+          </LinearGradient>
+        </Defs>
+        <SvgText
+          fill="url(#shimmer)"
+          fontSize={14}
+          fontFamily="PretendardKR-Medium"
+          y={16}
+        >
+          답변을 신중하게 고민하고 있어요
+        </SvgText>
+      </Svg>
+    </XStack>
   )
 }

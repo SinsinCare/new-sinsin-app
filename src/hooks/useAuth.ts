@@ -1,44 +1,45 @@
 import { useEffect } from "react"
 import { useAuthStore, useUserStore } from "../stores"
-import { authService } from "../services/authService"
-import { firestoreService } from "../services/firestoreService"
+import { authService } from "../services/auth/authService"
+import { tokenService } from "../services/core/tokenService"
 
 export function useAuth() {
-  const { user, isLoading, isAuthenticated, setUser, setLoading } =
-    useAuthStore()
-  const { setProfile, reset: resetProfile } = useUserStore()
+  const {
+    user,
+    accountState,
+    isLoading,
+    isAuthenticated,
+    setUser,
+    setAccountState,
+    setLoading,
+    reset: resetAuth,
+  } = useAuthStore()
+  const { reset: resetProfile } = useUserStore()
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChange(async (firebaseUser) => {
-      setUser(firebaseUser)
-
-      if (firebaseUser) {
-        // 사용자 프로필 로드
-        const profile = await firestoreService.getUserProfile(firebaseUser.uid)
-        setProfile(profile)
-      } else {
-        resetProfile()
+    const restore = async () => {
+      try {
+        const result = await authService.restoreSession()
+        if (result) {
+          setUser(result.user)
+          setAccountState(result.accountState)
+        } else {
+          setUser(null)
+        }
+      } catch {
+        setUser(null)
       }
-    })
-
-    return () => unsubscribe()
-  }, [setUser, setProfile, resetProfile])
+    }
+    restore()
+  }, [setUser, setAccountState])
 
   const signInWithEmail = async (email: string, password: string) => {
     setLoading(true)
     try {
-      const user = await authService.signInWithEmail(email, password)
-      return user
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const signUpWithEmail = async (email: string, password: string) => {
-    setLoading(true)
-    try {
-      const user = await authService.signUpWithEmail(email, password)
-      return user
+      const result = await authService.signInWithEmail(email, password)
+      setUser(result.user)
+      setAccountState(result.accountState)
+      return result
     } finally {
       setLoading(false)
     }
@@ -46,15 +47,17 @@ export function useAuth() {
 
   const signOut = async () => {
     await authService.signOut()
+    await tokenService.clearTokens()
     resetProfile()
+    resetAuth()
   }
 
   return {
     user,
+    accountState,
     isLoading,
     isAuthenticated,
     signInWithEmail,
-    signUpWithEmail,
     signOut,
   }
 }

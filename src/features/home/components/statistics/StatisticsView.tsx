@@ -1,0 +1,267 @@
+import { useState, useRef, useEffect } from "react"
+import {
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  View,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  useWindowDimensions,
+} from "react-native"
+import { Text, XStack, YStack } from "tamagui"
+import { Ionicons } from "@expo/vector-icons"
+import { IntakeSummary } from "./IntakeSummary"
+import { DietaryGuide } from "./DietaryGuide"
+import { DietaryRecord } from "./DietaryRecord"
+import { WeekCalendar } from "./WeekCalendar"
+import { MealType, StatisticsTab } from "../../types"
+import { WeightEdemaResult } from "./WeightEdemaResult"
+import { StatisticsTabBar } from "./StatisticsTabBar"
+import { getWeekLabel } from "../../utils/getWeekDays"
+import { useDateAnalysis } from "../../hooks/useDateAnalysis"
+import { useDiaryExistence } from "../../hooks/useDiaryExistence"
+import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
+import { FoodAnalysisResult } from "../FoodAnalysisResult"
+import type { DiaryAnalysisResult } from "@/src/types"
+
+const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
+
+interface StatisticsViewProps {
+  selectedDate: Date
+  onSelectDate: (date: Date) => void
+  selectedMealType: MealType | null
+  onSelectMealType: (mealType: MealType) => void
+  onGoToRecord: () => void
+  isActive: boolean
+}
+
+export function StatisticsView({
+  selectedDate,
+  onSelectDate,
+  selectedMealType,
+  onSelectMealType,
+  onGoToRecord,
+  isActive,
+}: StatisticsViewProps) {
+  const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
+  const [diaryResult, setDiaryResult] = useState<DiaryAnalysisResult | null>(
+    null,
+  )
+  const [isResultOpen, setIsResultOpen] = useState(false)
+  const [resultMealType, setResultMealType] = useState<MealType | undefined>()
+  const scrollRef = useRef<ScrollView>(null)
+  const tabBarHeight = useRef(0)
+  const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
+  const isProgrammaticScroll = useRef(false)
+  const { data, isLoading, isFetching, refetch } = useDateAnalysis(selectedDate)
+  const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
+  const { height: windowHeight } = useWindowDimensions()
+  const { updateFoodAnalysis, fetchDiaryResult, isUpdating } = useFoodAnalysis(
+    (updated) => {
+      setDiaryResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updated,
+              imageUrl: updated.imageUrl ?? prev.imageUrl,
+            }
+          : null,
+      )
+    },
+  )
+
+  const hasDiets = (data?.result.diets.length ?? 0) > 0
+
+  const isEmpty = !isLoading && !isFetching && !hasDiets
+
+  useEffect(() => {
+    if (!isActive) return
+
+    refetch()
+    const interval = setInterval(refetch, 5000)
+    return () => clearInterval(interval)
+  }, [isActive, refetch])
+
+  const handleDietCardPress = async (mealType: MealType) => {
+    onSelectMealType(mealType)
+    const diet = data?.result.diets.find((d) => d.mealType === mealType)
+    if (!diet) return
+    const result = await fetchDiaryResult(diet.diaryId)
+    if (result) {
+      setDiaryResult(result)
+      setResultMealType(mealType)
+      setIsResultOpen(true)
+    }
+  }
+
+  const goToPrevWeek = () => {
+    const prev = new Date(selectedDate)
+    prev.setDate(prev.getDate() - 7)
+    onSelectDate(prev)
+  }
+
+  const goToNextWeek = () => {
+    const next = new Date(selectedDate)
+    next.setDate(next.getDate() + 7)
+    onSelectDate(next)
+  }
+
+  const handleTabPress = (tab: StatisticsTab) => {
+    setSelectedTab(tab)
+    const offset = sectionOffsets.current[tab]
+    if (offset !== undefined) {
+      isProgrammaticScroll.current = true
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, offset - tabBarHeight.current),
+        animated: true,
+      })
+      setTimeout(() => {
+        isProgrammaticScroll.current = false
+      }, 500)
+    }
+  }
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (isProgrammaticScroll.current) return
+    const scrollY = event.nativeEvent.contentOffset.y
+    let activeTab: StatisticsTab = "intake"
+    for (let i = TAB_ORDER.length - 1; i >= 0; i--) {
+      const offset = sectionOffsets.current[TAB_ORDER[i]]
+      if (offset !== undefined && scrollY + tabBarHeight.current >= offset) {
+        activeTab = TAB_ORDER[i]
+        break
+      }
+    }
+    setSelectedTab(activeTab)
+  }
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+      stickyHeaderIndices={[1]}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+    >
+      {/* index 0: 헤더 (주간 네비 + 달력) */}
+      <YStack gap="$3" paddingBottom="$2">
+        <XStack justifyContent="center" alignItems="center" gap="$3">
+          <TouchableOpacity onPress={goToPrevWeek}>
+            <Ionicons name="chevron-back" size={18} color="#999" />
+          </TouchableOpacity>
+          <XStack alignItems="center" gap="$2">
+            <Text fontSize="$5" fontWeight="600">
+              {getWeekLabel(selectedDate)}
+            </Text>
+            <Ionicons name="calendar-outline" size={18} color="#999" />
+          </XStack>
+          <TouchableOpacity onPress={goToNextWeek}>
+            <Ionicons name="chevron-forward" size={18} color="#999" />
+          </TouchableOpacity>
+        </XStack>
+        <WeekCalendar
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+          recordedDates={recordedDates}
+        />
+      </YStack>
+
+      {/* index 1: sticky 탭바 */}
+      <YStack
+        onLayout={(e) => {
+          tabBarHeight.current = e.nativeEvent.layout.height
+        }}
+      >
+        <StatisticsTabBar
+          selectedTab={selectedTab}
+          onSelectTab={handleTabPress}
+        />
+        <YStack height={1} backgroundColor="$gray4" />
+      </YStack>
+
+      {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
+      {isEmpty ? (
+        <YStack
+          minHeight={windowHeight * 0.45}
+          justifyContent="center"
+          alignItems="center"
+          gap="$4"
+        >
+          <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
+            아직 기록하지 않았어요.
+          </Text>
+          <TouchableOpacity onPress={onGoToRecord}>
+            <Text
+              fontSize="$4"
+              color="$colorSubtle"
+              fontWeight="600"
+              backgroundColor="$backgroundHover"
+              paddingHorizontal="$3"
+              paddingVertical="$3"
+              borderRadius="$8"
+            >
+              기록하러 가기
+            </Text>
+          </TouchableOpacity>
+        </YStack>
+      ) : (
+        <>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.intake = e.nativeEvent.layout.y
+            }}
+          >
+            <IntakeSummary analysis={data?.result.analysis ?? null} />
+          </View>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.guide = e.nativeEvent.layout.y
+            }}
+          >
+            <DietaryGuide
+              dietaryGuide={data?.result.analysis?.dietaryGuide}
+              cautionFoods={data?.result.analysis?.cautionFoods}
+            />
+          </View>
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.record = e.nativeEvent.layout.y
+            }}
+          >
+            <DietaryRecord
+              diets={data?.result.diets ?? []}
+              selectedMealType={selectedMealType}
+              onSelectMealType={handleDietCardPress}
+            />
+          </View>
+
+          <FoodAnalysisResult
+            result={diaryResult}
+            open={isResultOpen}
+            onClose={() => setIsResultOpen(false)}
+            imageUri={diaryResult?.imageUrl}
+            mealType={resultMealType}
+            showAddButton={false}
+            isUpdating={isUpdating}
+            updateFoodAnalysis={updateFoodAnalysis}
+          />
+
+          <View
+            onLayout={(e) => {
+              sectionOffsets.current.weight = e.nativeEvent.layout.y
+            }}
+          >
+            <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
+          </View>
+        </>
+      )}
+    </ScrollView>
+  )
+}
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingVertical: 10,
+  },
+})

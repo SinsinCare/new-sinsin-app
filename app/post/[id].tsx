@@ -1,18 +1,30 @@
-import { ScrollView, Pressable } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Image } from "expo-image"
+import { Pressable, ScrollView, useColorScheme, StyleSheet } from "react-native"
+import { YStack, XStack, Text, View } from "tamagui"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { tokens } from "@/src/theme/tokens"
+import { Icon } from "@/src/shared/components/Icon"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { LoadingScreen } from "@/src/shared/components"
 
+const BG = { light: "#FCFCFC", dark: "#1F1F21" }
+const HEADER_ICON = { light: "#3C3C43", dark: "#E7E7EE" }
+const AUTHOR_NAME = { light: "#2A2A37", dark: "#E7E7EE" }
+const AUTHOR_SUB = { light: "#81818D", dark: "#858591" }
+const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
+const BODY_COLOR = { light: "#3C3C43", dark: "#C5C8CE" }
+const DIVIDER = { light: "#E5E5EA", dark: "#313138" }
+const LIKE_COLOR = { light: "#44AF94", dark: "#44AF94" }
+const MUTED_TEXT = { light: "#81818D", dark: "#858591" }
+const AVATAR_BG = { light: "#E7E7EE", dark: "#3A3A3C" }
+const NAV_LABEL = { light: "#A5A5AF", dark: "#595960" }
+const NAV_TITLE = { light: "#2A2A37", dark: "#E7E7EE" }
+
 function formatTimeAgo(date: Date): string {
-  const now = Date.now()
-  const diffMs = now - date.getTime()
+  const diffMs = Date.now() - date.getTime()
   const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return "방금 전"
   if (diffMin < 60) return `${diffMin}분 전`
   const diffHour = Math.floor(diffMin / 60)
   if (diffHour < 24) return `${diffHour}시간 전`
@@ -20,150 +32,282 @@ function formatTimeAgo(date: Date): string {
   return `${diffDay}일 전`
 }
 
-function formatCount(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
-  return String(n)
-}
-
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
+  const scheme = useColorScheme() ?? "light"
+
   const { post, isLoading } = usePostDetail(id!)
-  const { toggleLike, toggleBookmark } = useCommunityPosts()
+  const { posts, toggleLike, toggleBookmark } = useCommunityPosts()
 
   if (isLoading || !post) {
     return <LoadingScreen message="게시물을 불러오는 중..." />
   }
 
+  // Find previous/next posts
+  const currentIndex = posts.findIndex((p) => p.id === post.id)
+  const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null
+  const nextPost =
+    currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <YStack flex={1} backgroundColor={BG[scheme]} paddingTop={insets.top}>
       {/* Header */}
       <XStack
-        paddingHorizontal="$4"
-        paddingVertical="$3"
+        paddingHorizontal={16}
+        paddingVertical={12}
         alignItems="center"
-        gap="$3"
+        justifyContent="space-between"
       >
-        <Pressable onPress={() => router.back()}>
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={tokens.color.grey1.val}
-          />
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          <Ionicons name="chevron-back" size={24} color={HEADER_ICON[scheme]} />
         </Pressable>
-        <Text fontSize="$5" fontWeight="700" color="$color" flex={1}>
-          게시물
-        </Text>
+        <XStack gap={16} alignItems="center">
+          {/* <Pressable hitSlop={8}>
+            <Icon name="notification" size={24} color={HEADER_ICON[scheme]} />
+          </Pressable> */}
+          {/* <Pressable hitSlop={8}>
+            <Icon name="upload" size={24} color={HEADER_ICON[scheme]} />
+          </Pressable> */}
+          <Pressable hitSlop={8} onPress={() => toggleBookmark(post.id)}>
+            <Icon
+              name="bookmark"
+              size={24}
+              color={post.bookmarked ? LIKE_COLOR[scheme] : HEADER_ICON[scheme]}
+            />
+          </Pressable>
+          <Pressable hitSlop={8}>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={24}
+              color={HEADER_ICON[scheme]}
+            />
+          </Pressable>
+        </XStack>
       </XStack>
 
-      <YStack height={1} backgroundColor="$borderColor" />
-
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+      >
         {/* Author */}
-        <XStack padding="$4" alignItems="center" gap="$3">
-          <YStack
-            width={44}
-            height={44}
-            borderRadius="$12"
-            backgroundColor="$backgroundStrong"
+        <XStack
+          paddingHorizontal={20}
+          paddingTop={16}
+          gap={10}
+          alignItems="center"
+        >
+          <View
+            width={36}
+            height={36}
+            borderRadius={18}
+            backgroundColor={AVATAR_BG[scheme]}
             alignItems="center"
             justifyContent="center"
           >
-            <Ionicons name="person" size={22} color={tokens.color.grey5.val} />
-          </YStack>
-          <YStack flex={1}>
-            <Text fontSize="$5" fontWeight="600" color="$color">
+            <Ionicons name="person" size={18} color={MUTED_TEXT[scheme]} />
+          </View>
+          <YStack>
+            <Text
+              fontSize={15}
+              fontWeight="600"
+              fontFamily="$body"
+              color={AUTHOR_NAME[scheme]}
+            >
               {post.authorName}
             </Text>
-            <Text fontSize="$3" color="$colorSubtle">
-              {post.authorRole} · {formatTimeAgo(post.createdAt)}
+            <Text
+              fontSize={12}
+              fontWeight="400"
+              fontFamily="$body"
+              color={AUTHOR_SUB[scheme]}
+            >
+              {formatTimeAgo(post.createdAt)}
             </Text>
           </YStack>
         </XStack>
 
-        {/* Image */}
-        {post.imageUri && (
-          <Image
-            source={{ uri: post.imageUri }}
-            style={{ width: "100%", height: 300 }}
-            contentFit="cover"
-          />
-        )}
-
-        {/* Content */}
-        <YStack padding="$4" gap="$3">
-          <Text fontSize="$7" fontWeight="700" color="$color">
+        {/* Title */}
+        <YStack paddingHorizontal={20} paddingTop={16}>
+          <Text
+            fontSize={18}
+            fontWeight="700"
+            fontFamily="$body"
+            lineHeight={26}
+            color={TITLE_COLOR[scheme]}
+          >
             {post.title}
           </Text>
-          <Text fontSize="$4" color="$colorSubtle" lineHeight={22}>
+        </YStack>
+
+        {/* Description */}
+        <YStack paddingHorizontal={20} paddingTop={12} paddingBottom={20}>
+          <Text
+            fontSize={15}
+            fontWeight="400"
+            fontFamily="$body"
+            lineHeight={24}
+            color={BODY_COLOR[scheme]}
+          >
             {post.description}
           </Text>
         </YStack>
 
+        {/* Image */}
+        {post.imageUri && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              gap: 8,
+              paddingBottom: 20,
+            }}
+          >
+            <View style={styles.thumbnail} backgroundColor={AVATAR_BG[scheme]}>
+              <Ionicons name="image" size={24} color={MUTED_TEXT[scheme]} />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Engagement */}
+        <XStack
+          paddingHorizontal={20}
+          paddingBottom={16}
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Pressable
+            onPress={() => toggleLike(post.id)}
+            hitSlop={8}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <XStack gap={6} alignItems="center">
+              <Ionicons
+                name={post.liked ? "heart" : "heart-outline"}
+                size={20}
+                color={LIKE_COLOR[scheme]}
+              />
+              <Text
+                fontSize={14}
+                fontWeight="500"
+                fontFamily="$body"
+                color={LIKE_COLOR[scheme]}
+              >
+                좋아요
+              </Text>
+            </XStack>
+          </Pressable>
+          <Text
+            fontSize={14}
+            fontWeight="400"
+            fontFamily="$body"
+            color={MUTED_TEXT[scheme]}
+          >
+            조회 0
+          </Text>
+        </XStack>
+
         {/* Divider */}
-        <YStack
-          height={1}
-          backgroundColor="$borderColor"
-          marginHorizontal="$4"
+        <View
+          height={StyleSheet.hairlineWidth}
+          backgroundColor={DIVIDER[scheme]}
         />
 
-        {/* Actions */}
-        <XStack padding="$4" justifyContent="space-between" alignItems="center">
-          <XStack gap="$5" alignItems="center">
-            <Pressable onPress={() => toggleLike(post.id)}>
-              <XStack gap="$2" alignItems="center">
-                <Ionicons
-                  name="heart"
-                  size={22}
-                  color={tokens.color.primary7.val}
-                />
-                <Text fontSize="$4" color="$colorSubtle">
-                  {formatCount(post.likes)}
+        {/* Previous / Next Post Navigation */}
+        {prevPost && (
+          <>
+            <Pressable
+              onPress={() => router.replace(`/post/${prevPost.id}`)}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <XStack
+                paddingHorizontal={20}
+                paddingVertical={16}
+                gap={10}
+                alignItems="center"
+              >
+                <Text
+                  fontSize={13}
+                  fontWeight="400"
+                  fontFamily="$body"
+                  color={NAV_LABEL[scheme]}
+                >
+                  이전
+                </Text>
+                <Text
+                  fontSize={14}
+                  fontWeight="400"
+                  fontFamily="$body"
+                  color={NAV_TITLE[scheme]}
+                  numberOfLines={1}
+                  flex={1}
+                >
+                  {prevPost.title}
                 </Text>
               </XStack>
             </Pressable>
-            <XStack gap="$2" alignItems="center">
-              <Ionicons
-                name="chatbubble-outline"
-                size={20}
-                color={tokens.color.grey5.val}
-              />
-              <Text fontSize="$4" color="$colorSubtle">
-                {formatCount(post.comments)}
-              </Text>
-            </XStack>
-          </XStack>
-
-          <Pressable onPress={() => toggleBookmark(post.id)}>
-            <Ionicons
-              name={post.bookmarked ? "bookmark" : "bookmark-outline"}
-              size={22}
-              color={
-                post.bookmarked
-                  ? tokens.color.primary7.val
-                  : tokens.color.grey5.val
-              }
+            <View
+              height={StyleSheet.hairlineWidth}
+              backgroundColor={DIVIDER[scheme]}
             />
-          </Pressable>
-        </XStack>
-
-        {/* Comments placeholder */}
-        <YStack padding="$4" gap="$3">
-          <Text fontSize="$5" fontWeight="600" color="$color">
-            댓글 {post.comments}
-          </Text>
-          <YStack
-            padding="$4"
-            backgroundColor="$backgroundStrong"
-            borderRadius="$4"
-            alignItems="center"
-          >
-            <Text fontSize="$4" color="$colorSubtle">
-              댓글 기능은 준비 중입니다
-            </Text>
-          </YStack>
-        </YStack>
+          </>
+        )}
+        {nextPost && (
+          <>
+            <Pressable
+              onPress={() => router.replace(`/post/${nextPost.id}`)}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <XStack
+                paddingHorizontal={20}
+                paddingVertical={16}
+                gap={10}
+                alignItems="center"
+              >
+                <Text
+                  fontSize={13}
+                  fontWeight="400"
+                  fontFamily="$body"
+                  color={NAV_LABEL[scheme]}
+                >
+                  다음
+                </Text>
+                <Text
+                  fontSize={14}
+                  fontWeight="400"
+                  fontFamily="$body"
+                  color={NAV_TITLE[scheme]}
+                  numberOfLines={1}
+                  flex={1}
+                >
+                  {nextPost.title}
+                </Text>
+              </XStack>
+            </Pressable>
+            <View
+              height={StyleSheet.hairlineWidth}
+              backgroundColor={DIVIDER[scheme]}
+            />
+          </>
+        )}
       </ScrollView>
-    </SafeAreaView>
+    </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  thumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+})

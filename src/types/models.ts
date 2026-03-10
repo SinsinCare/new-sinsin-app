@@ -10,6 +10,7 @@ export interface UserProfile {
   weight: number
   ckdStage: 1 | 2 | 3 | 4 | 5
   onDialysis: boolean
+  onboardingCompleted?: boolean
   referralCode?: string
   createdAt: Date
   updatedAt: Date
@@ -45,33 +46,6 @@ export interface FoodRecord {
   mealType: "breakfast" | "lunch" | "dinner" | "snack"
   recordDate: Date
   imageUrl?: string
-}
-
-// 채팅 대화
-export interface ChatConversation {
-  id: string
-  userId: string
-  title: string
-  category: ChatCategory
-  createdAt: Date
-  updatedAt: Date
-}
-
-export type ChatCategory =
-  | "diet"
-  | "medicine"
-  | "dialysis"
-  | "checkup"
-  | "transplant"
-  | "welfare"
-
-// 채팅 메시지
-export interface ChatMessage {
-  id: string
-  conversationId: string
-  role: "user" | "assistant"
-  content: string
-  createdAt: Date
 }
 
 // 일일 건강 로그

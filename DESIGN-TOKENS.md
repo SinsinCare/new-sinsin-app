@@ -29,62 +29,62 @@
 
 ### 주요 테마 키
 
-| 키 | Light 값 | 용도 |
-|----|----------|------|
-| `$background` | #FFFFFF | 앱 배경 |
-| `$color` | #0D0D0D | 기본 텍스트 |
-| `$colorSubtle` | #757575 (Grey 05) | 보조 텍스트, 힌트 |
-| `$primary` | #EE6145 (Primary 07) | 주요 액션, 강조 |
-| `$primaryLight` | #FFF5ED (Primary 01) | 주요 색상 연한 배경 |
-| `$secondary` | #1D9A7A (Sub 07) | 보조 액션, 건강 관련 |
-| `$secondaryLight` | #E0FFF7 (Sub 01) | 보조 색상 연한 배경 |
-| `$danger` | #F82F08 (Primary 09) | 에러, 위험 |
-| `$dangerBackground` | #FFF5ED (Primary 01) | 에러 메시지 배경 |
-| `$success` | #1D9A7A (Sub 07) | 성공 상태 |
-| `$warning` | #E77661 (Primary 06) | 경고 상태 |
-| `$cardBackground` | #FFFFFF | 카드 배경 |
-| `$borderColor` | #EDEDED (Grey 08) | 기본 테두리 |
+| 키                  | Light 값             | 용도                 |
+| ------------------- | -------------------- | -------------------- |
+| `$background`       | #FFFFFF              | 앱 배경              |
+| `$color`            | #0D0D0D              | 기본 텍스트          |
+| `$colorSubtle`      | #757575 (Grey 05)    | 보조 텍스트, 힌트    |
+| `$primary`          | #EE6145 (Primary 07) | 주요 액션, 강조      |
+| `$primaryLight`     | #FFF5ED (Primary 01) | 주요 색상 연한 배경  |
+| `$secondary`        | #1D9A7A (Sub 07)     | 보조 액션, 건강 관련 |
+| `$secondaryLight`   | #E0FFF7 (Sub 01)     | 보조 색상 연한 배경  |
+| `$danger`           | #F82F08 (Primary 09) | 에러, 위험           |
+| `$dangerBackground` | #FFF5ED (Primary 01) | 에러 메시지 배경     |
+| `$success`          | #1D9A7A (Sub 07)     | 성공 상태            |
+| `$warning`          | #E77661 (Primary 06) | 경고 상태            |
+| `$cardBackground`   | #FFFFFF              | 카드 배경            |
+| `$borderColor`      | #EDEDED (Grey 08)    | 기본 테두리          |
 
 ### 고정 색상 (토큰 - 테마 무관)
 
 Tamagui 외부 컴포넌트(Ionicons 등)에서 색상이 필요할 때:
 
 ```tsx
-import { tokens } from '../theme/tokens'
+import { tokens } from "../theme/tokens"
 
 // .val로 실제 문자열 값 접근
-const iconColor = tokens.color.grey5.val  // '#757575'
+const iconColor = tokens.color.grey5.val // '#757575'
 ```
 
 ### 색상 스케일 참고
 
 **Primary (coral/red) - 숫자가 클수록 진함:**
 
-| 단계 | Hex | 용도 예시 |
-|------|-----|-----------|
+| 단계     | Hex     | 용도 예시                   |
+| -------- | ------- | --------------------------- |
 | primary1 | #FFF5ED | 연한 배경, dangerBackground |
-| primary3 | #F9CFAD | soft 강조 |
-| primary6 | #E77661 | warning |
-| primary7 | #EE6145 | primary (메인 액션 색상) |
-| primary9 | #F82F08 | danger (에러) |
+| primary3 | #F9CFAD | soft 강조                   |
+| primary6 | #E77661 | warning                     |
+| primary7 | #EE6145 | primary (메인 액션 색상)    |
+| primary9 | #F82F08 | danger (에러)               |
 
 **Sub (teal/green) - 숫자가 클수록 진함:**
 
-| 단계 | Hex | 용도 예시 |
-|------|-----|-----------|
-| sub1 | #E0FFF7 | 연한 배경 |
-| sub3 | #A3F0DE | soft 강조 |
+| 단계 | Hex     | 용도 예시          |
+| ---- | ------- | ------------------ |
+| sub1 | #E0FFF7 | 연한 배경          |
+| sub3 | #A3F0DE | soft 강조          |
 | sub7 | #1D9A7A | secondary, success |
-| sub9 | #028A67 | 가장 진한 green |
+| sub9 | #028A67 | 가장 진한 green    |
 
 **Greyscale (어두운 → 밝은):**
 
-| 단계 | Hex | 용도 예시 |
-|------|-----|-----------|
-| grey1 | #171717 | 가장 어두운 (dark 배경) |
-| grey2 | #252525 | dark 카드 배경 |
+| 단계  | Hex     | 용도 예시                |
+| ----- | ------- | ------------------------ |
+| grey1 | #171717 | 가장 어두운 (dark 배경)  |
+| grey2 | #252525 | dark 카드 배경           |
 | grey5 | #757575 | colorSubtle, 보조 텍스트 |
-| grey7 | #B3B3B3 | 비활성 상태 |
+| grey7 | #B3B3B3 | 비활성 상태              |
 | grey8 | #EDEDED | 밝은 테두리, light hover |
 
 ---
@@ -100,16 +100,16 @@ const iconColor = tokens.color.grey5.val  // '#757575'
 
 ### 타이포그래피 스케일
 
-| 디자인 타입 | fontSize | lineHeight | fontWeight | 용도 |
-|------------|----------|------------|------------|------|
-| Heading 1 | `$10` (28px) | 40 | 600 | 페이지 제목 |
-| Heading 2 | `$9` (26px) | 36 | 600 | 섹션 제목 |
-| Title 1 | `$8` (22px) | 34 | 600 | 큰 타이틀 |
-| Title 2 | `$7` (20px) | 32 | 600 | 중간 타이틀 |
-| Title 3 | `$6` (18px) | 30 | 600 | 작은 타이틀 |
-| Body 1 | `$5` (16px) | 26 | 500 | 기본 본문 |
-| Body 2 | `$4` (14px) | 24 | 500 | 보조 본문 |
-| Body 3 | `$3` (12px) | 22 | 600 | 캡션, 라벨 |
+| 디자인 타입 | fontSize     | lineHeight | fontWeight | 용도        |
+| ----------- | ------------ | ---------- | ---------- | ----------- |
+| Heading 1   | `$10` (28px) | 40         | 600        | 페이지 제목 |
+| Heading 2   | `$9` (26px)  | 36         | 600        | 섹션 제목   |
+| Title 1     | `$8` (22px)  | 34         | 600        | 큰 타이틀   |
+| Title 2     | `$7` (20px)  | 32         | 600        | 중간 타이틀 |
+| Title 3     | `$6` (18px)  | 30         | 600        | 작은 타이틀 |
+| Body 1      | `$5` (16px)  | 26         | 500        | 기본 본문   |
+| Body 2      | `$4` (14px)  | 24         | 500        | 보조 본문   |
+| Body 3      | `$3` (12px)  | 22         | 600        | 캡션, 라벨  |
 
 ### 사용 예시
 
@@ -142,21 +142,23 @@ const iconColor = tokens.color.grey5.val  // '#757575'
 `padding`, `margin`, `gap` 등에 사용:
 
 ```tsx
-<YStack padding="$4" gap="$3">  {/* padding: 16, gap: 12 */}
+<YStack padding="$4" gap="$3">
+  {" "}
+  {/* padding: 16, gap: 12 */}
   <Text>항목 1</Text>
   <Text>항목 2</Text>
 </YStack>
 ```
 
-| 토큰 | 값 | 용도 |
-|------|-----|------|
-| `$1` | 4px | 최소 간격 |
-| `$2` | 8px | 아이콘-텍스트 간격 |
-| `$3` | 12px | 요소 내부 간격 |
+| 토큰 | 값   | 용도                       |
+| ---- | ---- | -------------------------- |
+| `$1` | 4px  | 최소 간격                  |
+| `$2` | 8px  | 아이콘-텍스트 간격         |
+| `$3` | 12px | 요소 내부 간격             |
 | `$4` | 16px | 기본 패딩 (가장 많이 사용) |
-| `$5` | 20px | 섹션 간격 |
-| `$6` | 24px | 큰 섹션 간격 |
-| `$8` | 32px | 페이지 패딩 |
+| `$5` | 20px | 섹션 간격                  |
+| `$6` | 24px | 큰 섹션 간격               |
+| `$8` | 32px | 페이지 패딩                |
 
 ---
 
@@ -173,22 +175,22 @@ const iconColor = tokens.color.grey5.val  // '#757575'
 ## styled() 컴포넌트에서 사용
 
 ```tsx
-import { styled, YStack, Text } from 'tamagui'
+import { styled, YStack, Text } from "tamagui"
 
 const Card = styled(YStack, {
-  backgroundColor: '$cardBackground',
-  borderRadius: '$4',
-  padding: '$4',
+  backgroundColor: "$cardBackground",
+  borderRadius: "$4",
+  padding: "$4",
   borderWidth: 1,
-  borderColor: '$borderColor',
+  borderColor: "$borderColor",
 })
 
 const Title = styled(Text, {
-  fontFamily: '$heading',
-  fontSize: '$8',   // Title 1: 22px
+  fontFamily: "$heading",
+  fontSize: "$8", // Title 1: 22px
   lineHeight: 34,
-  fontWeight: '600',
-  color: '$color',
+  fontWeight: "600",
+  color: "$color",
 })
 ```
 

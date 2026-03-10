@@ -12,7 +12,7 @@ const StyledButton = styled(TamaguiButton, {
   variants: {
     variant: {
       primary: {
-        backgroundColor: "$primary",
+        backgroundColor: "#44af94",
         color: "white",
       },
       secondary: {
