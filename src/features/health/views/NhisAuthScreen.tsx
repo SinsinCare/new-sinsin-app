@@ -14,7 +14,7 @@ export function NhisAuthScreen() {
   const router = useRouter()
 
   const handleStart = () => {
-    // TODO: 건강보험공단 본인인증 연동
+    router.push("/(settings)/health-nhis-request")
   }
 
   return (
