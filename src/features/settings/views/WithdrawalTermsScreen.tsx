@@ -36,7 +36,11 @@ export function WithdrawalTermsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backButton}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={styles.backButton}
+        >
           <Ionicons name="chevron-back" size={24} color="#17191C" />
         </Pressable>
 
@@ -53,13 +57,21 @@ export function WithdrawalTermsScreen() {
           ))}
         </View>
 
-        <Pressable style={styles.agreementBox} onPress={() => setAgreed((v) => !v)}>
+        <Pressable
+          style={styles.agreementBox}
+          onPress={() => setAgreed((v) => !v)}
+        >
           <Ionicons
             name={agreed ? "checkbox" : "square-outline"}
             size={20}
             color={agreed ? "#17191C" : "#666677"}
           />
-          <ThemedText style={[styles.agreementText, agreed && styles.agreementTextChecked]}>
+          <ThemedText
+            style={[
+              styles.agreementText,
+              agreed && styles.agreementTextChecked,
+            ]}
+          >
             유의사항 숙지 후 탈퇴에 동의합니다.
           </ThemedText>
         </Pressable>

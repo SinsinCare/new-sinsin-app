@@ -53,7 +53,8 @@ export function NicknameEditScreen() {
     if (!isFormatValid || isLoading) return
     setIsLoading(true)
     try {
-      const available = await nicknameService.checkNicknameAvailability(nickname)
+      const available =
+        await nicknameService.checkNicknameAvailability(nickname)
       if (!available) {
         setServerError("이미 사용 중인 닉네임입니다")
         return
@@ -89,7 +90,9 @@ export function NicknameEditScreen() {
             {"앞으로 신신당부에서\n어떻게 불러드리면 좋을까요?"}
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            {"한글, 영문, 숫자만 가능합니다 (2~8자 이내)\n닉네임은 언제든지 변경할 수 있습니다"}
+            {
+              "한글, 영문, 숫자만 가능합니다 (2~8자 이내)\n닉네임은 언제든지 변경할 수 있습니다"
+            }
           </ThemedText>
 
           <ThemedText style={styles.inputLabel}>닉네임</ThemedText>
@@ -117,7 +120,13 @@ export function NicknameEditScreen() {
               <ActivityIndicator size="small" color="#94A3B8" />
             ) : (
               hasText && (
-                <Pressable onPress={() => { setNickname(""); setServerError(null) }} hitSlop={8}>
+                <Pressable
+                  onPress={() => {
+                    setNickname("")
+                    setServerError(null)
+                  }}
+                  hitSlop={8}
+                >
                   <Ionicons name="close-circle" size={20} color="#C5C8CE" />
                 </Pressable>
               )
@@ -125,7 +134,12 @@ export function NicknameEditScreen() {
           </View>
 
           {validationMessage && (
-            <ThemedText style={[styles.validationText, hasSuccess ? styles.validText : styles.invalidText]}>
+            <ThemedText
+              style={[
+                styles.validationText,
+                hasSuccess ? styles.validText : styles.invalidText,
+              ]}
+            >
               {validationMessage}
             </ThemedText>
           )}

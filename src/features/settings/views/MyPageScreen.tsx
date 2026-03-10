@@ -42,10 +42,14 @@ export function MyPageScreen() {
             <Ionicons name="person" size={28} color="#C5C8CE" />
           </View>
           <View style={styles.profileInfo}>
-            <ThemedText style={styles.userName}>{profile?.nickname ?? "사용자"}</ThemedText>
+            <ThemedText style={styles.userName}>
+              {profile?.nickname ?? "사용자"}
+            </ThemedText>
             {ageGenderLabel && (
               <View style={styles.infoLabel}>
-                <ThemedText style={styles.infoLabelText}>{ageGenderLabel}</ThemedText>
+                <ThemedText style={styles.infoLabelText}>
+                  {ageGenderLabel}
+                </ThemedText>
               </View>
             )}
           </View>
@@ -86,14 +90,33 @@ export function MyPageScreen() {
 
         {/* 메뉴 버튼 */}
         {[
-          { icon: "clipboard-outline" as const, title: "건강검진 데이터 불러오고 분석하기", onPress: () => router.push("/(settings)/health-data") },
-          { icon: "share-outline" as const, title: "나의 데이터 공유하기", onPress: () => {} },
-          { icon: "megaphone-outline" as const, title: "공지사항", onPress: () => router.push("/(settings)/announcements") },
-          { icon: "chatbubble-outline" as const, title: "1:1 문의", onPress: () => router.push("/(settings)/inquiry") },
+          {
+            icon: "clipboard-outline" as const,
+            title: "건강검진 데이터 불러오고 분석하기",
+            onPress: () => router.push("/(settings)/health-data"),
+          },
+          {
+            icon: "share-outline" as const,
+            title: "나의 데이터 공유하기",
+            onPress: () => {},
+          },
+          {
+            icon: "megaphone-outline" as const,
+            title: "공지사항",
+            onPress: () => router.push("/(settings)/announcements"),
+          },
+          {
+            icon: "chatbubble-outline" as const,
+            title: "1:1 문의",
+            onPress: () => router.push("/(settings)/inquiry"),
+          },
         ].map(({ icon, title, onPress }) => (
           <Pressable
             key={title}
-            style={({ pressed }) => [styles.navButton, pressed && styles.navButtonPressed]}
+            style={({ pressed }) => [
+              styles.navButton,
+              pressed && styles.navButtonPressed,
+            ]}
             onPress={onPress}
           >
             <Ionicons name={icon} size={24} color="#474758" />
@@ -101,7 +124,6 @@ export function MyPageScreen() {
             <Ionicons name="chevron-forward" size={20} color="#C4C4C4" />
           </Pressable>
         ))}
-
       </ScrollView>
     </ThemedView>
   )

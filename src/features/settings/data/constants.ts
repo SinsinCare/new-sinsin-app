@@ -1,12 +1,30 @@
 // CKD 병기 정보
-export const CKD_STAGE_INFO: Record<number, { label: string; description: string; color: string }> =
-  {
-    1: { label: "1단계", description: "신기능 정상 또는 증가 (GFR ≥ 90)", color: "#2DB87E" },
-    2: { label: "2단계", description: "신기능 경미한 감소 (GFR 60~89)", color: "#5BA8E0" },
-    3: { label: "3단계", description: "신기능 중등도 감소 (GFR 30~59)", color: "#F0A500" },
-    4: { label: "4단계", description: "신기능 심한 감소 (GFR 15~29)", color: "#E8622A" },
-    5: { label: "5단계", description: "신부전 (GFR < 15)", color: "#D94040" },
-  }
+export const CKD_STAGE_INFO: Record<
+  number,
+  { label: string; description: string; color: string }
+> = {
+  1: {
+    label: "1단계",
+    description: "신기능 정상 또는 증가 (GFR ≥ 90)",
+    color: "#2DB87E",
+  },
+  2: {
+    label: "2단계",
+    description: "신기능 경미한 감소 (GFR 60~89)",
+    color: "#5BA8E0",
+  },
+  3: {
+    label: "3단계",
+    description: "신기능 중등도 감소 (GFR 30~59)",
+    color: "#F0A500",
+  },
+  4: {
+    label: "4단계",
+    description: "신기능 심한 감소 (GFR 15~29)",
+    color: "#E8622A",
+  },
+  5: { label: "5단계", description: "신부전 (GFR < 15)", color: "#D94040" },
+}
 
 // 주 진단 원인 선택지
 export const DIAGNOSIS_CAUSES = [
@@ -22,7 +40,7 @@ export const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 export const CURRENT_YEAR = new Date().getFullYear()
 export const YEARS = Array.from(
   { length: CURRENT_YEAR - 1990 + 1 },
-  (_, i) => 1990 + i
+  (_, i) => 1990 + i,
 ).reverse()
 
 // 공지사항 mock 데이터

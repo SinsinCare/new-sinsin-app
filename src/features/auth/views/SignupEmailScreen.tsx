@@ -12,6 +12,7 @@ export function SignupEmailScreen() {
   const {
     codeSent,
     codeInputVisible,
+    emailError,
     sendError,
     codeVerified,
     timer,
@@ -47,7 +48,8 @@ export function SignupEmailScreen() {
 
   return (
     <AuthScreenLayout
-      title="이메일 인증"
+      title="이메일을 입력해주세요"
+      subtitle="이미 가입된 이메일로는 회원가입 할 수 없습니다"
       buttonLabel="다음 단계"
       buttonDisabled={!codeVerified}
       onSubmit={onNext}
@@ -72,13 +74,13 @@ export function SignupEmailScreen() {
                 }}
               />
             </YStack>
-            <YStack width={BUTTON_WIDTH} justifyContent="flex-end">
+            <YStack width={BUTTON_WIDTH} justifyContent="flex-start" paddingTop={28}>
               <Pressable
                 onPress={handleSendCode}
                 disabled={sendingCode || codeVerified}
               >
                 <YStack
-                  backgroundColor={codeVerified ? "#C5C8CE" : "#5464F2"}
+                  backgroundColor={codeVerified || sendingCode ? "#C5C8CE" : "#34D399"}
                   borderRadius={8}
                   height={52}
                   justifyContent="center"
@@ -96,6 +98,16 @@ export function SignupEmailScreen() {
               </Pressable>
             </YStack>
           </XStack>
+          {emailError && (
+            <Text
+              fontSize={12}
+              color="#FF3B30"
+              letterSpacing={-0.3}
+              paddingTop={6}
+            >
+              {emailError}
+            </Text>
+          )}
         </YStack>
 
         {codeInputVisible && !codeVerified && (
@@ -118,10 +130,13 @@ export function SignupEmailScreen() {
                   }}
                 />
               </YStack>
-              <YStack width={BUTTON_WIDTH} justifyContent="flex-end">
-                <Pressable onPress={handleVerifyCode} disabled={verifyingCode || !!sendError}>
+              <YStack width={BUTTON_WIDTH} justifyContent="flex-start" paddingTop={28}>
+                <Pressable
+                  onPress={handleVerifyCode}
+                  disabled={verifyingCode || !!sendError}
+                >
                   <YStack
-                    backgroundColor={sendError ? "#C5C8CE" : "#5464F2"}
+                    backgroundColor={sendError ? "#C5C8CE" : "#34D399"}
                     borderRadius={8}
                     height={52}
                     justifyContent="center"

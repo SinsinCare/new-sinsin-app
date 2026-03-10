@@ -76,12 +76,16 @@ export function KidneyProfileCard({
           <View style={styles.comorbiditySection}>
             <View style={styles.comorbidityHeader}>
               <Ionicons name="ellipse" size={11} color="#0D896A" />
-              <ThemedText style={styles.comorbidityTitle}>동반 질환 및 진단 원인</ThemedText>
+              <ThemedText style={styles.comorbidityTitle}>
+                동반 질환 및 진단 원인
+              </ThemedText>
             </View>
             <View style={styles.comorbidityChips}>
               {["당뇨병", "고혈압", "사구체신염"].map((item) => (
                 <View key={item} style={styles.comorbidityChip}>
-                  <ThemedText style={styles.comorbidityChipText}>{item}</ThemedText>
+                  <ThemedText style={styles.comorbidityChipText}>
+                    {item}
+                  </ThemedText>
                 </View>
               ))}
             </View>

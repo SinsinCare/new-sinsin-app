@@ -11,7 +11,12 @@ interface ScreenHeaderProps {
   rightElement?: React.ReactNode
 }
 
-export function ScreenHeader({ title, paddingTop = 0, onBack, rightElement }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  paddingTop = 0,
+  onBack,
+  rightElement,
+}: ScreenHeaderProps) {
   return (
     <View style={[styles.header, { paddingTop }]}>
       {onBack ? (
@@ -22,7 +27,11 @@ export function ScreenHeader({ title, paddingTop = 0, onBack, rightElement }: Sc
         <View style={styles.placeholder} />
       )}
       <ThemedText style={styles.headerTitle}>{title}</ThemedText>
-      {rightElement !== undefined ? rightElement : <View style={styles.placeholder} />}
+      {rightElement !== undefined ? (
+        rightElement
+      ) : (
+        <View style={styles.placeholder} />
+      )}
     </View>
   )
 }

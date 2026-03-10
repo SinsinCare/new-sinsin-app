@@ -11,18 +11,13 @@ interface ChatHeaderProps {
 export function ChatHeader({ title }: ChatHeaderProps) {
   const router = useRouter()
   const colorScheme = useColorScheme()
-  const iconColor =
-    colorScheme === "dark" ? "#e7e7ee" : tokens.color.grey1.val
+  const iconColor = colorScheme === "dark" ? "#e7e7ee" : tokens.color.grey1.val
 
   return (
     <>
       <XStack paddingHorizontal="$4" paddingVertical="$3" alignItems="center">
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={iconColor}
-          />
+          <Ionicons name="chevron-back" size={24} color={iconColor} />
         </Pressable>
         <Text
           fontSize="$5"

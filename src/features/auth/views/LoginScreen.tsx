@@ -1,8 +1,8 @@
 import { Pressable } from "react-native"
-import { YStack, XStack, Text, Separator } from "tamagui"
+import { YStack, XStack, Text } from "tamagui"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Ionicons, FontAwesome } from "@expo/vector-icons"
+// import { Ionicons, FontAwesome } from "@expo/vector-icons"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
@@ -11,17 +11,17 @@ export function LoginScreen() {
     router.push("/(auth)/email-login")
   }
 
-  const handleKakaoLogin = () => {
-    // TODO: Kakao 로그인 구현
-  }
+  // const handleKakaoLogin = () => {
+  //   // TODO: Kakao 로그인 구현
+  // }
 
-  const handleAppleLogin = () => {
-    // TODO: Apple 로그인 구현
-  }
+  // const handleAppleLogin = () => {
+  //   // TODO: Apple 로그인 구현
+  // }
 
-  const handleSkipLogin = () => {
-    router.replace("/(tabs)/home")
-  }
+  // const handleSkipLogin = () => {
+  //   router.replace("/(tabs)/home")
+  // }
 
   return (
     <YStack
@@ -36,7 +36,7 @@ export function LoginScreen() {
       <YStack width={350} alignSelf="center" gap={12}>
         <Pressable onPress={handleEmailLogin}>
           <YStack
-            backgroundColor="#5464F2"
+            backgroundColor="#34D399"
             paddingVertical={16}
             paddingHorizontal={24}
             borderRadius={8}
@@ -55,6 +55,7 @@ export function LoginScreen() {
           </YStack>
         </Pressable>
 
+        {/* 카카오 로그인 - 추후 오픈 예정
         <Pressable onPress={handleKakaoLogin}>
           <XStack
             backgroundColor="#FEE500"
@@ -78,7 +79,9 @@ export function LoginScreen() {
             </Text>
           </XStack>
         </Pressable>
+        */}
 
+        {/* 애플 로그인 - 추후 오픈 예정
         <Pressable onPress={handleAppleLogin}>
           <XStack
             backgroundColor="#000000"
@@ -102,6 +105,7 @@ export function LoginScreen() {
             </Text>
           </XStack>
         </Pressable>
+        */}
       </YStack>
 
       <YStack alignItems="center" width="100%" gap={20}>
@@ -112,7 +116,7 @@ export function LoginScreen() {
             letterSpacing={-0.26}
             lineHeight={16.9}
           >
-            신신당부가 처음이신가요? 가입하기
+            신신당부가 처음이신가요?
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
             <Text
@@ -127,6 +131,7 @@ export function LoginScreen() {
           </Link>
         </XStack>
 
+        {/* 홈 둘러보기 - 추후 오픈 예정
         <Separator borderColor="#1E2127" width="100%" />
 
         <YStack alignItems="center" gap={8}>
@@ -159,6 +164,7 @@ export function LoginScreen() {
             </YStack>
           </Pressable>
         </YStack>
+        */}
       </YStack>
     </YStack>
   )

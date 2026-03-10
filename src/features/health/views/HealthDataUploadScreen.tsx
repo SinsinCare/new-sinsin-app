@@ -80,7 +80,10 @@ export function HealthDataUploadScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 100 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ThemedText style={styles.title}>검사 결과를 가져올까요?</ThemedText>
@@ -109,7 +112,11 @@ export function HealthDataUploadScreen() {
             {files.map((uri, index) => (
               // 썸네일 wrapper는 overflow:visible 명시 — X버튼은 내부에 위치
               <View key={`${uri}-${index}`} style={styles.thumbWrapper}>
-                <Image source={{ uri }} style={styles.thumb} contentFit="cover" />
+                <Image
+                  source={{ uri }}
+                  style={styles.thumb}
+                  contentFit="cover"
+                />
                 {/* X버튼을 썸네일 내부 우상단에 배치 (bounds 안) */}
                 <Pressable
                   style={styles.removeBtn}
@@ -157,7 +164,10 @@ export function HealthDataUploadScreen() {
                 color={canAdd ? "#44AF94" : "#C5C8CE"}
               />
               <ThemedText
-                style={[styles.pickButtonText, !canAdd && styles.pickButtonTextDisabled]}
+                style={[
+                  styles.pickButtonText,
+                  !canAdd && styles.pickButtonTextDisabled,
+                ]}
               >
                 카메라로 촬영
               </ThemedText>
@@ -180,7 +190,10 @@ export function HealthDataUploadScreen() {
                 color={canAdd ? "#44AF94" : "#C5C8CE"}
               />
               <ThemedText
-                style={[styles.pickButtonText, !canAdd && styles.pickButtonTextDisabled]}
+                style={[
+                  styles.pickButtonText,
+                  !canAdd && styles.pickButtonTextDisabled,
+                ]}
               >
                 갤러리에서 선택
               </ThemedText>
@@ -189,7 +202,8 @@ export function HealthDataUploadScreen() {
 
           {!canAdd && (
             <ThemedText style={styles.maxReachedText}>
-              최대 {MAX_FILES}개까지 첨부할 수 있어요. 파일을 삭제 후 추가해주세요.
+              최대 {MAX_FILES}개까지 첨부할 수 있어요. 파일을 삭제 후
+              추가해주세요.
             </ThemedText>
           )}
         </View>
@@ -221,7 +235,11 @@ export function HealthDataUploadScreen() {
       <Modal visible={isAnalyzing} transparent animationType="fade">
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#44AF94" style={{ marginBottom: 16 }} />
+            <ActivityIndicator
+              size="large"
+              color="#44AF94"
+              style={{ marginBottom: 16 }}
+            />
             <ThemedText style={styles.loadingTitle}>
               검사결과를 불러오고 있습니다...
             </ThemedText>

@@ -45,7 +45,7 @@ export interface OnboardingAnswerRq {
 export interface OnboardingSubmitRq {
   hasCkd: boolean
   answers: {
-    step: number,
+    step: number
     values: OnboardingAnswerRq[]
   }[]
 }

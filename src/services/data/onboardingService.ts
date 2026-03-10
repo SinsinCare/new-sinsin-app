@@ -33,7 +33,7 @@ export const onboardingService = {
       return mockOnboardingService.submitAnswers()
     }
     const request = convertAnswersToSubmitRq(hasCkd, answers)
-    console.log('req', request)
+    console.log("req", request)
     await api.post(`/user/onboarding`, request)
   },
 }

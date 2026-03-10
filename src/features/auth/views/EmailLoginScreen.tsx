@@ -1,5 +1,6 @@
 import { Pressable } from "react-native"
 import { YStack, XStack, Text, Separator } from "tamagui"
+import { router } from "expo-router"
 import { useForm } from "react-hook-form"
 import { FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
@@ -7,7 +8,8 @@ import { useEmailLogin } from "../hooks"
 import type { LoginForm } from "../types"
 
 export function EmailLoginScreen() {
-  const { isLoading, submitLogin } = useEmailLogin()
+  const { isLoading, loginError, clearLoginError, submitLogin } =
+    useEmailLogin()
 
   const {
     control,
@@ -19,11 +21,7 @@ export function EmailLoginScreen() {
   })
 
   const onSubmit = async (data: LoginForm) => {
-    try {
-      await submitLogin(data)
-    } catch {
-      // TODO: 서버 에러 처리
-    }
+    await submitLogin(data)
   }
 
   return (
@@ -50,16 +48,29 @@ export function EmailLoginScreen() {
           }}
         />
 
-        <FormTextField<LoginForm>
-          name="password"
-          control={control}
-          label="비밀번호"
-          placeholder="비밀번호를 입력해주세요"
-          inputType="password"
-          rules={{
-            required: "비밀번호를 입력해주세요.",
-          }}
-        />
+        <YStack>
+          <FormTextField<LoginForm>
+            name="password"
+            control={control}
+            label="비밀번호"
+            placeholder="비밀번호를 입력해주세요"
+            inputType="password"
+            rules={{
+              required: "비밀번호를 입력해주세요.",
+              onChange: clearLoginError,
+            }}
+          />
+          {loginError && (
+            <Text
+              fontSize={12}
+              color="#FF3B30"
+              letterSpacing={-0.3}
+              paddingTop={6}
+            >
+              {loginError}
+            </Text>
+          )}
+        </YStack>
       </YStack>
 
       {/* Footer */}
@@ -74,13 +85,13 @@ export function EmailLoginScreen() {
         </Text>
         <XStack alignItems="center" justifyContent="center" gap={16}>
           <Pressable>
-            <Text fontSize={13} color="#007BD9" letterSpacing={-0.26}>
+            <Text fontSize={13} color="#787C83" letterSpacing={-0.26}>
               아이디찾기
             </Text>
           </Pressable>
-          <Separator vertical borderColor="#3F444F" height={14} />
-          <Pressable>
-            <Text fontSize={13} color="#007BD9" letterSpacing={-0.26}>
+          <Separator vertical borderColor="#D1D5DB" height={14} />
+          <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+            <Text fontSize={13} color="#787C83" letterSpacing={-0.26}>
               비밀번호 찾기
             </Text>
           </Pressable>

@@ -10,7 +10,12 @@ interface ToggleItemProps {
   onValueChange: (value: boolean) => void
 }
 
-export function ToggleItem({ title, description, value, onValueChange }: ToggleItemProps) {
+export function ToggleItem({
+  title,
+  description,
+  value,
+  onValueChange,
+}: ToggleItemProps) {
   return (
     <View style={styles.toggleItem}>
       <View style={styles.toggleItemLeft}>

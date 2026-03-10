@@ -10,13 +10,20 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { MOCK_LAB_RECORDS, AI_INSIGHT } from "@/src/features/health/data/mock"
 import type { LabResultStatus, LabRecord } from "@/src/features/health/types"
 
-const STATUS_CONFIG: Record<LabResultStatus, { label: string; color: string; bg: string }> = {
+const STATUS_CONFIG: Record<
+  LabResultStatus,
+  { label: string; color: string; bg: string }
+> = {
   normal: { label: "정상", color: "#0D896A", bg: "#F0FDF4" },
   caution: { label: "경계", color: "#D97706", bg: "#FFFBEB" },
   warning: { label: "주의", color: "#DC2626", bg: "#FEF2F2" },
 }
 
-function LabValueCard({ item }: { item: (typeof MOCK_LAB_RECORDS)[0]["values"][0] }) {
+function LabValueCard({
+  item,
+}: {
+  item: (typeof MOCK_LAB_RECORDS)[0]["values"][0]
+}) {
   const status = STATUS_CONFIG[item.status]
   return (
     <View style={cardStyles.container}>
@@ -36,7 +43,9 @@ function LabValueCard({ item }: { item: (typeof MOCK_LAB_RECORDS)[0]["values"][0
           {item.value}
           <ThemedText style={cardStyles.unit}> {item.unit}</ThemedText>
         </ThemedText>
-        <ThemedText style={cardStyles.normalRange}>정상 {item.normalRange}</ThemedText>
+        <ThemedText style={cardStyles.normalRange}>
+          정상 {item.normalRange}
+        </ThemedText>
       </View>
       {item.tags && item.tags.length > 0 && (
         <View style={cardStyles.tagsRow}>
@@ -51,14 +60,22 @@ function LabValueCard({ item }: { item: (typeof MOCK_LAB_RECORDS)[0]["values"][0
   )
 }
 
-function RecordRow({ record, selected, onToggle }: {
+function RecordRow({
+  record,
+  selected,
+  onToggle,
+}: {
   record: LabRecord
   selected: boolean
   onToggle: () => void
 }) {
   const allNormal = record.values.every((v) => v.status === "normal")
   const hasCaution = record.values.some((v) => v.status === "caution")
-  const status: LabResultStatus = allNormal ? "normal" : hasCaution ? "caution" : "warning"
+  const status: LabResultStatus = allNormal
+    ? "normal"
+    : hasCaution
+      ? "caution"
+      : "warning"
   const statusConf = STATUS_CONFIG[status]
 
   return (
@@ -66,14 +83,20 @@ function RecordRow({ record, selected, onToggle }: {
       style={({ pressed }) => [rowStyles.row, pressed && rowStyles.rowPressed]}
       onPress={onToggle}
     >
-      <View style={[rowStyles.checkbox, selected && rowStyles.checkboxSelected]}>
+      <View
+        style={[rowStyles.checkbox, selected && rowStyles.checkboxSelected]}
+      >
         {selected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
       </View>
       <View style={rowStyles.info}>
         <View style={rowStyles.titleRow}>
-          <ThemedText style={rowStyles.date}>{record.displayDate} {record.type}</ThemedText>
+          <ThemedText style={rowStyles.date}>
+            {record.displayDate} {record.type}
+          </ThemedText>
           <View style={[rowStyles.badge, { backgroundColor: statusConf.bg }]}>
-            <ThemedText style={[rowStyles.badgeText, { color: statusConf.color }]}>
+            <ThemedText
+              style={[rowStyles.badgeText, { color: statusConf.color }]}
+            >
               {statusConf.label}
             </ThemedText>
           </View>
@@ -85,7 +108,9 @@ function RecordRow({ record, selected, onToggle }: {
             </View>
           ))}
           {record.values.length > 3 && (
-            <ThemedText style={rowStyles.moreText}>+{record.values.length - 3}</ThemedText>
+            <ThemedText style={rowStyles.moreText}>
+              +{record.values.length - 3}
+            </ThemedText>
           )}
         </View>
       </View>
@@ -101,18 +126,21 @@ export function HealthDataResultListScreen() {
 
   const latestRecord = MOCK_LAB_RECORDS[0]
 
-  const recordsByYear = MOCK_LAB_RECORDS.reduce<Record<number, LabRecord[]>>((acc, record) => {
-    if (!acc[record.year]) acc[record.year] = []
-    acc[record.year].push(record)
-    return acc
-  }, {})
+  const recordsByYear = MOCK_LAB_RECORDS.reduce<Record<number, LabRecord[]>>(
+    (acc, record) => {
+      if (!acc[record.year]) acc[record.year] = []
+      acc[record.year].push(record)
+      return acc
+    },
+    {},
+  )
   const sortedYears = Object.keys(recordsByYear)
     .map(Number)
     .sort((a, b) => b - a)
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     )
   }
 
@@ -132,7 +160,12 @@ export function HealthDataResultListScreen() {
             style={[styles.tab, activeTab === tab && styles.tabActive]}
             onPress={() => setActiveTab(tab)}
           >
-            <ThemedText style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+            <ThemedText
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.tabTextActive,
+              ]}
+            >
               {tab === "recent" ? "최근 검사 보기" : "전체 결과 보기"}
             </ThemedText>
           </Pressable>
@@ -141,13 +174,19 @@ export function HealthDataResultListScreen() {
 
       {activeTab === "recent" ? (
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 40 },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           {/* 가져온 결과 수 */}
           <View style={styles.countRow}>
             <ThemedText style={styles.countText}>
-              가져온 결과 <ThemedText style={styles.countHighlight}>{MOCK_LAB_RECORDS.length}건</ThemedText>
+              가져온 결과{" "}
+              <ThemedText style={styles.countHighlight}>
+                {MOCK_LAB_RECORDS.length}건
+              </ThemedText>
             </ThemedText>
             <Pressable onPress={() => setActiveTab("all")}>
               <ThemedText style={styles.viewAllText}>전체 보기</ThemedText>
@@ -165,7 +204,9 @@ export function HealthDataResultListScreen() {
 
           {/* 최근 검사 날짜 */}
           <View style={styles.recordDateRow}>
-            <ThemedText style={styles.recordDate}>{latestRecord.date} 시점 데이터</ThemedText>
+            <ThemedText style={styles.recordDate}>
+              {latestRecord.date} 시점 데이터
+            </ThemedText>
           </View>
 
           {/* 개별 수치 카드 */}
@@ -176,7 +217,10 @@ export function HealthDataResultListScreen() {
       ) : (
         <>
           <ScrollView
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: insets.bottom + 80 },
+            ]}
             showsVerticalScrollIndicator={false}
           >
             {sortedYears.map((year) => (
@@ -197,7 +241,12 @@ export function HealthDataResultListScreen() {
           </ScrollView>
 
           {selectedIds.length > 0 && (
-            <View style={[styles.selectionBar, { paddingBottom: insets.bottom + 12 }]}>
+            <View
+              style={[
+                styles.selectionBar,
+                { paddingBottom: insets.bottom + 12 },
+              ]}
+            >
               <Pressable style={styles.selectionButton}>
                 <ThemedText style={styles.selectionButtonText}>
                   {selectedIds.length}개의 검사지 선택됨

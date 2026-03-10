@@ -24,17 +24,24 @@ export function AnnouncementDetailScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {announcement ? (
           <>
             <ThemedText style={styles.title}>{announcement.title}</ThemedText>
             <ThemedText style={styles.date}>{announcement.date}</ThemedText>
-            <ThemedText style={styles.content}>{announcement.content}</ThemedText>
+            <ThemedText style={styles.content}>
+              {announcement.content}
+            </ThemedText>
           </>
         ) : (
-          <ThemedText style={styles.empty}>공지사항을 찾을 수 없습니다.</ThemedText>
+          <ThemedText style={styles.empty}>
+            공지사항을 찾을 수 없습니다.
+          </ThemedText>
         )}
       </ScrollView>
     </ThemedView>
