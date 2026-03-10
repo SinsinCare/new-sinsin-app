@@ -15,15 +15,10 @@ const ALL_MEAL_TYPES: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
 
 interface DietaryRecordProps {
   diets: DateAnalysisDiet[]
-  selectedMealType: MealType | null
   onSelectMealType: (mealType: MealType) => void
 }
 
-export function DietaryRecord({
-  diets,
-  selectedMealType,
-  onSelectMealType,
-}: DietaryRecordProps) {
+export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
   const mealRecords: MealRecord[] = ALL_MEAL_TYPES.map((mealType) => {
     const diet = diets.find((d) => d.mealType === mealType)
     const time = diet
@@ -57,7 +52,6 @@ export function DietaryRecord({
             key={m.id}
             mealData={m}
             onPress={() => onSelectMealType(m.mealType)}
-            isSelected={selectedMealType === m.mealType}
           />
         ))}
       </XStack>

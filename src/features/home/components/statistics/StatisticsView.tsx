@@ -30,8 +30,6 @@ const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 interface StatisticsViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  selectedMealType: MealType | null
-  onSelectMealType: (mealType: MealType) => void
   onGoToRecord: () => void
   isActive: boolean
 }
@@ -39,8 +37,6 @@ interface StatisticsViewProps {
 export function StatisticsView({
   selectedDate,
   onSelectDate,
-  selectedMealType,
-  onSelectMealType,
   onGoToRecord,
   isActive,
 }: StatisticsViewProps) {
@@ -84,7 +80,6 @@ export function StatisticsView({
   }, [isActive, refetch])
 
   const handleDietCardPress = async (mealType: MealType) => {
-    onSelectMealType(mealType)
     const diet = data?.result.diets.find((d) => d.mealType === mealType)
     if (!diet) return
     const result = await fetchDiaryResult(diet.diaryId)
@@ -233,7 +228,6 @@ export function StatisticsView({
           >
             <DietaryRecord
               diets={data?.result.diets ?? []}
-              selectedMealType={selectedMealType}
               onSelectMealType={handleDietCardPress}
             />
           </View>

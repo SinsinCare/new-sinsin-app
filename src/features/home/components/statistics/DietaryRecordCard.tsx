@@ -5,13 +5,11 @@ import { MealRecord } from "../../data/dietaryRecord"
 interface DietaryRecordCardProps {
   mealData: MealRecord
   onPress: () => void
-  isSelected?: boolean
 }
 
 export function DietaryRecordCard({
   mealData,
   onPress,
-  isSelected,
 }: DietaryRecordCardProps) {
   return (
     <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
@@ -36,14 +34,14 @@ export function DietaryRecordCard({
           <Text
             fontSize="$4"
             fontWeight="500"
-            color={mealData.imageUri || isSelected ? "white" : "$color"}
+            color={mealData.imageUri ? "white" : "$color"}
           >
             {mealData.label}
           </Text>
           <Text
             fontSize="$3"
             fontWeight="500"
-            color={mealData.imageUri || isSelected ? "white" : "$colorSubtle"}
+            color={mealData.imageUri ? "white" : "$colorSubtle"}
           >
             {mealData.time ?? "기록 없음"}
           </Text>
