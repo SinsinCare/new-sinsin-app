@@ -44,10 +44,10 @@ export function DietaryRecord({
   return (
     <YStack paddingVertical="$4" gap="$3">
       <YStack gap="$1">
-        <Text fontSize={22} fontWeight="700">
+        <Text fontSize={20} fontWeight="600">
           식이 기록
         </Text>
-        <Text fontSize="$3.5" fontWeight="500" color="$color.grey5">
+        <Text fontSize={14} fontWeight="500" color="$colorSubtle">
           카드를 누르면 상세 분석 내용을 볼 수 있어요.
         </Text>
       </YStack>

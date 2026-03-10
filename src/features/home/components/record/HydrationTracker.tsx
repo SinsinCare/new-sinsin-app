@@ -47,7 +47,7 @@ export function HydrationTracker({
   return (
     <YStack paddingVertical="$3" gap="$3">
       <XStack justifyContent="space-between">
-        <Text fontSize={22} fontWeight="700">
+        <Text fontSize={20} fontWeight="600">
           수분 섭취 기록
         </Text>
       </XStack>

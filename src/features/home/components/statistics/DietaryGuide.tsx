@@ -12,7 +12,7 @@ export function DietaryGuide({
 }: DietaryGuideProps) {
   return (
     <YStack paddingVertical="$3" gap="$3">
-      <Text fontSize={22} fontWeight="700">
+      <Text fontSize={20} fontWeight="600">
         식이 가이드
       </Text>
 

@@ -57,9 +57,14 @@ export function MealButtons({
 
   return (
     <YStack paddingVertical="$3" gap="$4">
-      <Text fontSize={22} fontWeight="700">
-        식이 기록
-      </Text>
+      <YStack gap="$1">
+        <Text fontSize={20} fontWeight="600">
+          식이 기록
+        </Text>
+        <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+          아래 카드를 눌러 오늘의 식사를 기록해보세요.
+        </Text>
+      </YStack>
       <XStack width="100%" justifyContent="center" gap="$2">
         {mealTypes.map((type) => (
           <MealButton
