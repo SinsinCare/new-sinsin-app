@@ -18,6 +18,7 @@ interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
   mealImages?: Partial<Record<MealType, string>>
   recordedMeals?: Partial<Record<MealType, boolean>>
+  mealTimes?: Partial<Record<MealType, string>>
   onRecord: (mealType: MealType) => void
 }
 
@@ -25,6 +26,7 @@ export function MealButtons({
   onSelectMealType,
   mealImages = {},
   recordedMeals = {},
+  mealTimes = {},
   onRecord,
 }: MealButtonsProps) {
   const mealTypes: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
@@ -56,11 +58,16 @@ export function MealButtons({
   }
 
   return (
-    <YStack paddingVertical="$3" gap="$4">
-      <Text fontSize={22} fontWeight="700">
-        식이 기록
-      </Text>
-      <XStack width="100%" justifyContent="center" gap="$2">
+    <YStack paddingVertical="$1" gap="$3">
+      <YStack gap="$1">
+        <Text fontSize={20} fontWeight="600">
+          식이 기록
+        </Text>
+        <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+          아래 버튼을 눌러 오늘의 식사를 기록해보세요.
+        </Text>
+      </YStack>
+      <XStack gap="$2">
         {mealTypes.map((type) => (
           <MealButton
             key={type}
@@ -68,6 +75,7 @@ export function MealButtons({
             onPress={() => onSelectMealType(type)}
             imageUri={mealImages[type]}
             isRecorded={recordedMeals[type] ?? false}
+            time={mealTimes[type]}
           />
         ))}
       </XStack>
@@ -89,7 +97,11 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon name={opt.icon} size={18} color="$black" />
+                <Icon
+                  name={opt.icon}
+                  size={18}
+                  color={tokens.color.black.val}
+                />
                 <Text style={styles.mealLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
@@ -101,7 +113,11 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon name={opt.icon} size={18} color="$black" />
+                <Icon
+                  name={opt.icon}
+                  size={18}
+                  color={tokens.color.black.val}
+                />
                 <Text style={styles.mealLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}

@@ -21,7 +21,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
 
   return (
     <YStack paddingVertical="$4" gap="$3">
-      <Text fontSize={22} fontWeight="700">
+      <Text fontSize={20} fontWeight="600">
         체중·부종 기록
       </Text>
 

@@ -30,8 +30,8 @@ export function HomeHeader({
           {(["record", "stats"] as MainTab[]).map((tab) => (
             <Text
               key={tab}
-              fontSize="$6"
-              fontWeight="700"
+              fontSize={21}
+              fontWeight="600"
               color={mainTab === tab ? "$colorPress" : "$borderColorFocus"}
               paddingHorizontal={8}
               paddingVertical={6}

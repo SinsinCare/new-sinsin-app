@@ -78,6 +78,14 @@ export function RecordView({
   const apiRecordedMeals = Object.fromEntries(
     apiDiets.map((d) => [d.mealType, true]),
   ) as Partial<Record<MealType, boolean>>
+  const apiMealTimes = Object.fromEntries(
+    apiDiets.map((d) => {
+      const date = new Date(d.createdAt + "Z")
+      const h = String(date.getHours()).padStart(2, "0")
+      const m = String(date.getMinutes()).padStart(2, "0")
+      return [d.mealType, `${h}:${m}`]
+    }),
+  ) as Partial<Record<MealType, string>>
 
   const mergedMealImages = { ...apiMealImages, ...mealImages }
   const mergedRecordedMeals = { ...apiRecordedMeals, ...recordedMeals }
@@ -193,7 +201,7 @@ export function RecordView({
         recordedDates={recordedDates}
       />
 
-      <View height={15} />
+      <View height={10} />
 
       <CharacterSection
         selectedDate={selectedDate}
@@ -203,10 +211,13 @@ export function RecordView({
         withinLimits={withinLimits}
       />
 
+      <View height={5} />
+
       <MealButtons
         onSelectMealType={onSelectMealType}
         mealImages={mergedMealImages}
         recordedMeals={mergedRecordedMeals}
+        mealTimes={apiMealTimes}
         onRecord={handleRecord}
       />
 

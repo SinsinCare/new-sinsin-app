@@ -37,7 +37,6 @@ import Pencil from "@/assets/icons/pencil.svg"
 import Trashcan from "@/assets/icons/trashcan.svg"
 import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
-import Loading from "@/assets/icons/loading.svg"
 import WaterDrop from "@/assets/icons/water-drop.svg"
 import Sodium from "@/assets/icons/sodium.svg"
 import Potassium from "@/assets/icons/potassium.svg"
@@ -56,6 +55,12 @@ import Edit from "@/assets/icons/edit.svg"
 import CharacterExcellent from "@/assets/icons/character-excellent.svg"
 import CharacterGood from "@/assets/icons/character-good.svg"
 import CharacterCaution from "@/assets/icons/character-caution.svg"
+import MorningFood from "@/assets/icons/morning_food.svg"
+import NoonFood from "@/assets/icons/noon_food.svg"
+import EveningFood from "@/assets/icons/evening_food.svg"
+import DessertFood from "@/assets/icons/dessert_food.svg"
+import CheckOrange from "@/assets/icons/check-orange.svg"
+import CircleCharacter from "@/assets/icons/circle-character.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -64,6 +69,7 @@ const icons = {
   "check-empty": CheckEmpty,
   "fire-color": FireColor,
   "fire-empty": FireEmpty,
+  "check-orange": CheckOrange,
   chef: Chef,
   "chevron-right": ChevronRight,
   copy: Copy,
@@ -79,7 +85,7 @@ const icons = {
   home: Home,
   info: Info,
   keyboard: Keyboard,
-  loading: Loading,
+  loading: MorningFood,
   location: Location,
   magnifyingglass: Magnifyingglass,
   mail: Mail,
@@ -111,6 +117,11 @@ const icons = {
   "character-excellent": CharacterExcellent,
   "character-good": CharacterGood,
   "character-caution": CharacterCaution,
+  "circle-character": CircleCharacter,
+  "morning-food": MorningFood,
+  "noon-food": NoonFood,
+  "evening-food": EveningFood,
+  "dessert-food": DessertFood,
 } as const
 
 export type IconName = keyof typeof icons

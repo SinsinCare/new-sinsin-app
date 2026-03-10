@@ -47,7 +47,7 @@ export function HydrationTracker({
   return (
     <YStack paddingVertical="$3" gap="$3">
       <XStack justifyContent="space-between">
-        <Text fontSize={22} fontWeight="700">
+        <Text fontSize={20} fontWeight="600">
           수분 섭취 기록
         </Text>
       </XStack>
@@ -62,14 +62,14 @@ export function HydrationTracker({
         {/* Left: intake info */}
         <YStack gap="$2" flex={1}>
           <XStack alignItems="baseline" gap={2}>
-            <Text fontSize={32} fontWeight="700">
+            <Text fontSize={32} fontWeight="600">
               {intake}
             </Text>
-            <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
+            <Text fontSize="$4" color="$colorSubtle" fontWeight="500">
               /{dailyGoal}ml
             </Text>
           </XStack>
-          <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
+          <Text fontSize={13} color="$colorSubtle" fontWeight="500">
             {isGoalAchieved ? "목표 달성!" : `${remaining}ml 남았어요`}
           </Text>
         </YStack>
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 3,
     elevation: 2,
   },
