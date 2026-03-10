@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { useColorScheme } from "react-native"
-import { YStack } from "tamagui"
+import { YStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { RestaurantTabHeader } from "@/src/features/restaurant/components/RestaurantTabHeader"
 import { RestaurantSearchInput } from "@/src/features/restaurant/components/RestaurantSearchInput"
+import { KakaoMapWebView } from "@/src/features/restaurant/components/KakaoMapWebView"
 
 const TABS = [
   { key: "place", label: "장소" },
@@ -28,11 +29,13 @@ export default function RestaurantScreen() {
         onTabChange={setActiveTab}
       />
       <YStack paddingHorizontal={16}>
-        <RestaurantSearchInput
-          value={search}
-          onChangeText={setSearch}
-        />
+        <RestaurantSearchInput value={search} onChangeText={setSearch} />
       </YStack>
+      {activeTab === "place" && (
+        <View flex={1} marginTop={12}>
+          <KakaoMapWebView />
+        </View>
+      )}
     </YStack>
   )
 }
