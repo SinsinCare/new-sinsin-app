@@ -45,7 +45,7 @@ export function RestaurantTabHeader({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        paddingHorizontal: 16,
+        paddingHorizontal: 28,
         paddingVertical: 14,
       }}
     >
@@ -56,10 +56,12 @@ export function RestaurantTabHeader({
           hitSlop={8}
         >
           <Text
-            fontSize={22}
-            fontWeight={activeTab === tab.key ? "700" : "500"}
+            fontSize={18}
+            lineHeight={24}
+            fontWeight={"600"}
             fontFamily="$body"
             color={activeTab === tab.key ? palette.active : palette.inactive}
+            paddingVertical={10}
           >
             {tab.label}
           </Text>

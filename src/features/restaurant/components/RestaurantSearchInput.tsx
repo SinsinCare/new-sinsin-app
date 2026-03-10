@@ -11,7 +11,7 @@ const COLORS = {
     border: "#D4D4D4",
     text: "#3C3C43",
     placeholder: "#9A9A9A",
-    icon: "#3C3C43",
+    icon: "#2A2A37",
   },
   dark: {
     border: "#595960",
@@ -21,8 +21,10 @@ const COLORS = {
   },
 } as const
 
-interface RestaurantSearchInputProps
-  extends Omit<TextInputProps, "style" | "placeholderTextColor"> {
+interface RestaurantSearchInputProps extends Omit<
+  TextInputProps,
+  "style" | "placeholderTextColor"
+> {
   placeholder?: string
 }
 
@@ -41,18 +43,17 @@ export function RestaurantSearchInput({
         borderWidth: 1,
         borderColor: palette.border,
         borderRadius: 18,
-        paddingHorizontal: 16,
-        paddingVertical: 5,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
         gap: 8,
       }}
     >
-      <Icon name="magnifyingglass" size={20} color={palette.icon} />
+      <Icon name="magnifyingglass" size={14} color={palette.icon} />
       <TextInput
         style={{
           flex: 1,
-          fontFamily: "PretendardKR-Medium",
-          fontWeight: "500",
-          fontSize: 14,
+          fontWeight: "400",
+          fontSize: 15,
           lineHeight: 20,
           color: palette.text,
           padding: 0,
