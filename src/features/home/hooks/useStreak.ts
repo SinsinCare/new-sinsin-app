@@ -21,7 +21,7 @@ export function useStreak() {
       const existingDates = new Set(
         data.result
           .filter((item) => item.exists)
-          .map((item) => item.date.slice(0, 10)),
+          .map((item) => toDateStr(new Date(item.date))),
       )
 
       let streak = 0
