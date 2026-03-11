@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { RestaurantTabHeader } from "@/src/features/restaurant/components/RestaurantTabHeader"
 import { RestaurantSearchInput } from "@/src/features/restaurant/components/RestaurantSearchInput"
 import { KakaoMapWebView } from "@/src/features/restaurant/components/KakaoMapWebView"
+import { CurationTab } from "@/src/features/restaurant/components/CurationTab"
 
 const TABS = [
   { key: "place", label: "장소" },
@@ -28,12 +29,19 @@ export default function RestaurantScreen() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      <YStack paddingHorizontal={16}>
-        <RestaurantSearchInput value={search} onChangeText={setSearch} />
-      </YStack>
       {activeTab === "place" && (
-        <View flex={1} marginTop={12}>
-          <KakaoMapWebView />
+        <>
+          <YStack paddingHorizontal={16}>
+            <RestaurantSearchInput value={search} onChangeText={setSearch} />
+          </YStack>
+          <View flex={1} marginTop={12}>
+            <KakaoMapWebView />
+          </View>
+        </>
+      )}
+      {activeTab === "curation" && (
+        <View flex={1}>
+          <CurationTab />
         </View>
       )}
     </YStack>
