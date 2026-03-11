@@ -1,5 +1,6 @@
 import { Text, XStack, YStack } from "tamagui"
 import { DietaryGuideContainer } from "./DietaryGuideContainer"
+import { useColorScheme } from "react-native"
 
 interface DietaryGuideProps {
   dietaryGuide?: string
@@ -10,14 +11,24 @@ export function DietaryGuide({
   dietaryGuide,
   cautionFoods,
 }: DietaryGuideProps) {
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
     <YStack paddingVertical="$3" gap="$3">
-      <Text fontSize={20} fontWeight="600">
+      <Text
+        fontSize={20}
+        fontWeight="600"
+        color={isDarkMode ? "$textDark" : "$black"}
+      >
         식이 가이드
       </Text>
 
       <DietaryGuideContainer title="한줄평">
-        <Text fontSize={14} color="$gray11" lineHeight={18}>
+        <Text
+          fontSize={14}
+          color={isDarkMode ? "$textDark" : "$black"}
+          lineHeight={18}
+        >
           {dietaryGuide ?? "오늘의 식이 분석 데이터가 없어요."}
         </Text>
       </DietaryGuideContainer>

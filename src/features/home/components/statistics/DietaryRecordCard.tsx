@@ -1,4 +1,9 @@
-import { Image, TouchableOpacity, StyleSheet } from "react-native"
+import {
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  useColorScheme,
+} from "react-native"
 import { Text, YStack } from "tamagui"
 import { MealRecord } from "../../data/dietaryRecord"
 
@@ -11,11 +16,13 @@ export function DietaryRecordCard({
   mealData,
   onPress,
 }: DietaryRecordCardProps) {
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
     <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
       <YStack
-        backgroundColor="$white"
-        borderWidth={2}
+        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+        borderWidth={isDarkMode ? 0 : 2}
         borderColor="$borderColor"
         flex={1}
         height={100}
@@ -34,7 +41,9 @@ export function DietaryRecordCard({
           <Text
             fontSize="$4"
             fontWeight="500"
-            color={mealData.imageUri ? "white" : "$color"}
+            color={
+              mealData.imageUri ? "white" : isDarkMode ? "$textDark" : "$color"
+            }
           >
             {mealData.label}
           </Text>

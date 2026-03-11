@@ -1,3 +1,4 @@
+import { useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
 
 interface DietaryGuideContainerProps {
@@ -9,9 +10,11 @@ export function DietaryGuideContainer({
   title,
   children,
 }: DietaryGuideContainerProps) {
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
     <YStack
-      backgroundColor="$cardBackground"
+      backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
       borderRadius="$6"
       paddingHorizontal="$5"
       paddingVertical="$5"
@@ -21,7 +24,13 @@ export function DietaryGuideContainer({
         fontSize={title === "한줄평" ? 14 : 16}
         fontWeight={600}
         paddingVertical="$1"
-        color={title === "한줄평" ? "$colorSubtle" : "$color"}
+        color={
+          title === "한줄평"
+            ? "$colorSubtle"
+            : isDarkMode
+              ? "$textDark"
+              : "$color"
+        }
       >
         {title}
       </Text>
