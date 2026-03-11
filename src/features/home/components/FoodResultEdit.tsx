@@ -4,6 +4,7 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -82,6 +83,13 @@ export function FoodResultEdit({
     handleNameConfirm()
     updateFoodTitle(result!.foodAnalysisResultId, newTitle)
   }
+  const isDarkMode = useColorScheme() === "dark"
+  const textColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.grey1.val
+  const inputBg = isDarkMode
+    ? tokens.color.appBgDark.val
+    : tokens.color.grey8.val
 
   const handleSubmit = async () => {
     if (!result) return
@@ -107,7 +115,7 @@ export function FoodResultEdit({
       left={0}
       right={0}
       bottom={0}
-      backgroundColor={tokens.color.appBg.val}
+      backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
       zIndex={10}
     >
       <XStack
@@ -120,7 +128,11 @@ export function FoodResultEdit({
             취소
           </Text>
         </TouchableOpacity>
-        <Text fontSize={17} fontWeight={600}>
+        <Text
+          fontSize={17}
+          fontWeight={600}
+          color={isDarkMode ? "$textDark" : "$black"}
+        >
           식단 수정하기
         </Text>
         <TouchableOpacity onPress={handleSubmit}>
@@ -147,7 +159,12 @@ export function FoodResultEdit({
           )}
           <YStack gap="$2" justifyContent="center">
             <XStack>
-              <Text fontSize={18} fontWeight="600" paddingLeft="$1">
+              <Text
+                fontSize={18}
+                fontWeight="600"
+                paddingLeft="$1"
+                color={isDarkMode ? "$textDark" : "$black"}
+              >
                 {mealName}{" "}
               </Text>
               <Icon name="edit" size={22} onPress={handleNameEdit} />
@@ -175,14 +192,22 @@ export function FoodResultEdit({
                         size={16}
                         color={
                           isSelected
-                            ? tokens.color.grey1.val
+                            ? isDarkMode
+                              ? tokens.color.textDarkSub.val
+                              : tokens.color.grey1.val
                             : tokens.color.grey6.val
                         }
                       />
                       <Text
                         fontSize={15}
                         fontWeight={500}
-                        color={isSelected ? "$color" : "$colorSubtle"}
+                        color={
+                          isSelected
+                            ? isDarkMode
+                              ? "$textDarkSub"
+                              : "$color"
+                            : "$colorSubtle"
+                        }
                       >
                         {opt.label}
                       </Text>
@@ -207,18 +232,23 @@ export function FoodResultEdit({
             backgroundColor="rgba(0,0,0,0.4)"
           >
             <YStack
-              backgroundColor="$cardBackground"
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
               borderRadius="$5"
               width={280}
               overflow="hidden"
             >
               <YStack paddingHorizontal="$5" paddingVertical="$6" gap="$4">
-                <Text fontSize={16} fontWeight={600} textAlign="center">
+                <Text
+                  fontSize={16}
+                  fontWeight={600}
+                  textAlign="center"
+                  color={isDarkMode ? "$textDark" : "$black"}
+                >
                   식단 이름 수정
                 </Text>
                 <View
                   borderWidth={1}
-                  borderColor="$borderColor"
+                  borderColor={isDarkMode ? "$grey3" : "$borderColor"}
                   borderRadius="$5"
                   paddingHorizontal="$3"
                   paddingVertical="$2"
@@ -233,14 +263,17 @@ export function FoodResultEdit({
                     onSubmitEditing={handleNameConfirm}
                     style={{
                       fontSize: 14,
-                      color: tokens.color.grey1.val,
+                      color: textColor,
                       fontWeight: "500",
                     }}
                   />
                 </View>
               </YStack>
 
-              <View height={1} backgroundColor="$borderColor" />
+              <View
+                height={1}
+                backgroundColor={isDarkMode ? "$grey3" : "$borderColor"}
+              />
 
               <XStack>
                 <TouchableOpacity
@@ -251,7 +284,10 @@ export function FoodResultEdit({
                     취소
                   </Text>
                 </TouchableOpacity>
-                <View width={1} backgroundColor="$borderColor" />
+                <View
+                  width={1}
+                  backgroundColor={isDarkMode ? "$grey3" : "$borderColor"}
+                />
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, alignItems: "center" }}
                   onPress={handleTitleEdit}
@@ -267,7 +303,11 @@ export function FoodResultEdit({
 
         <YStack gap="$3">
           <XStack justifyContent="space-between" paddingHorizontal="$5">
-            <Text fontSize={17} fontWeight={600}>
+            <Text
+              fontSize={17}
+              fontWeight={600}
+              color={isDarkMode ? "$textDark" : "$black"}
+            >
               식단 세부 수정
             </Text>
             <TouchableOpacity onPress={handleAddMenu}>
@@ -281,7 +321,7 @@ export function FoodResultEdit({
           </XStack>
 
           <View
-            backgroundColor="$cardBackground"
+            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
             marginHorizontal="$4"
             borderRadius="$5"
             paddingHorizontal="$4"
@@ -303,6 +343,7 @@ export function FoodResultEdit({
                       paddingLeft: 1,
                       fontSize: 15,
                       fontWeight: "500",
+                      color: textColor,
                     }}
                   />
                 </XStack>
@@ -330,6 +371,7 @@ export function FoodResultEdit({
                       fontSize: 16,
                       fontWeight: "600",
                       textAlign: "center",
+                      color: textColor,
                     }}
                   />
                   <XStack gap="$2" justifyContent="center" paddingVertical="$2">
@@ -365,7 +407,12 @@ export function FoodResultEdit({
               )}
               {foods.map((f, i) => (
                 <XStack key={i} alignItems="center" gap="$2">
-                  <Text fontWeight={500} fontSize={15} flex={1}>
+                  <Text
+                    fontWeight={500}
+                    fontSize={15}
+                    flex={1}
+                    color={isDarkMode ? "$textDark" : "$black"}
+                  >
                     {f.name}
                   </Text>
                   <TextInput
@@ -373,19 +420,21 @@ export function FoodResultEdit({
                     onChangeText={(v) => handleAmountChange(i, v)}
                     keyboardType="numeric"
                     style={{
-                      backgroundColor: tokens.color.grey8.val,
+                      backgroundColor: inputBg,
                       borderRadius: 10,
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       fontSize: 15,
                       textAlign: "center",
                       minWidth: 80,
+                      color: textColor,
                     }}
                   />
                   <Text
                     fontSize={f.unit === "인분" ? 12 : 14}
                     width={21}
                     textAlign="center"
+                    color={isDarkMode ? "$textDark" : "$black"}
                   >
                     {f.unit}
                   </Text>
@@ -394,7 +443,7 @@ export function FoodResultEdit({
                       width={20}
                       height={20}
                       borderRadius={12}
-                      backgroundColor={tokens.color.deleteBg.val}
+                      backgroundColor={inputBg}
                       alignItems="center"
                       justifyContent="center"
                     >
@@ -415,7 +464,7 @@ export function FoodResultEdit({
         </YStack>
 
         <View
-          backgroundColor="$cardBackground"
+          backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
           marginHorizontal="$4"
           borderRadius="$5"
           paddingHorizontal="$4"
@@ -426,6 +475,7 @@ export function FoodResultEdit({
             fontWeight={600}
             marginBottom="$4"
             paddingLeft={4}
+            color={isDarkMode ? "$textDark" : "$black"}
           >
             얼마나 드셨나요?
           </Text>
@@ -472,7 +522,13 @@ export function FoodResultEdit({
                 <Text
                   fontSize={13}
                   fontWeight={i === eatenStep ? 500 : 400}
-                  color={i === eatenStep ? "$color" : "$colorSubtle"}
+                  color={
+                    i === eatenStep
+                      ? isDarkMode
+                        ? "$textDark"
+                        : "$color"
+                      : "$colorSubtle"
+                  }
                 >
                   {label}
                 </Text>
@@ -482,7 +538,7 @@ export function FoodResultEdit({
         </View>
       </View>
 
-      <LoadingOverlay visible={isUpdating} message="식이를 수정하고 있어요" />
+      <LoadingOverlay visible={isUpdating} message="식단을 수정하고 있어요" />
     </YStack>
   )
 }

@@ -7,6 +7,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   useWindowDimensions,
+  useColorScheme,
 } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -68,8 +69,8 @@ export function StatisticsView({
   )
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
-
   const isEmpty = !isLoading && !hasDiets
+  const isDarkMode = useColorScheme() === "dark"
 
   useEffect(() => {
     if (!isActive) return
@@ -147,7 +148,11 @@ export function StatisticsView({
             <Ionicons name="chevron-back" size={18} color="#999" />
           </TouchableOpacity>
           <XStack alignItems="center" gap="$2">
-            <Text fontSize="$5" fontWeight="600">
+            <Text
+              fontSize="$5"
+              fontWeight="600"
+              color={isDarkMode ? "$textDark" : "$black"}
+            >
               {getWeekLabel(selectedDate)}
             </Text>
             <Ionicons name="calendar-outline" size={18} color="#999" />
@@ -193,7 +198,7 @@ export function StatisticsView({
               fontSize="$4"
               color="$colorSubtle"
               fontWeight="600"
-              backgroundColor="$backgroundHover"
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$backgroundFocus"}
               paddingHorizontal="$3"
               paddingVertical="$2.5"
               borderRadius="$8"

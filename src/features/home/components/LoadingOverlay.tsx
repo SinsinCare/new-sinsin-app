@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Modal } from "react-native"
+import { Modal, useColorScheme } from "react-native"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,7 +9,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { Text, View } from "tamagui"
-import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
 
 interface LoadingOverlayProps {
@@ -23,6 +22,7 @@ export function LoadingOverlay({ visible, message }: LoadingOverlayProps) {
   const floatStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: floatY.value }],
   }))
+  const isDarkMode = useColorScheme() === "dark"
 
   useEffect(() => {
     if (visible) {
@@ -47,14 +47,19 @@ export function LoadingOverlay({ visible, message }: LoadingOverlayProps) {
     <Modal visible={visible} transparent animationType="fade">
       <View
         flex={1}
-        backgroundColor={tokens.color.appBg.val}
+        backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
         alignItems="center"
         justifyContent="center"
       >
         <Animated.View style={floatStyle}>
           <Icon name="loading" size={55} />
         </Animated.View>
-        <Text fontSize={18} fontWeight="600" marginTop="$4">
+        <Text
+          fontSize={18}
+          fontWeight="600"
+          marginTop="$4"
+          color={isDarkMode ? "$textDark" : "$black"}
+        >
           {`${message}${dots}`}
         </Text>
       </View>

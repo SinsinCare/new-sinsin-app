@@ -3,6 +3,7 @@ import { MealRecord } from "../../data/dietaryRecord"
 import { MealType } from "../../types"
 import { DateAnalysisDiet } from "@/src/types"
 import { Text, XStack, YStack } from "tamagui"
+import { useColorScheme } from "react-native"
 
 const MEAL_LABELS: Record<MealType, string> = {
   BREAKFAST: "아침",
@@ -35,11 +36,16 @@ export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
       imageUri: diet?.imageUrl ?? null,
     }
   })
+  const isDarkMode = useColorScheme() === "dark"
 
   return (
     <YStack paddingVertical="$4" gap="$3">
       <YStack gap="$1">
-        <Text fontSize={20} fontWeight="600">
+        <Text
+          fontSize={20}
+          fontWeight="600"
+          color={isDarkMode ? "$textDark" : "$black"}
+        >
           식이 기록
         </Text>
         <Text fontSize={14} fontWeight="500" color="$colorSubtle">

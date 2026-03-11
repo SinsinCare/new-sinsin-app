@@ -33,7 +33,7 @@ export const tokens = createTokens({
     // App screen background
     appBg: "#FAFAFA",
     appBgDark: "#1F1F21",
-    cardBgDark: "#252529",
+    cardBgDark: "#313138",
     textDark: "#E7E7EE",
     textDarkSub: "#ABABB4",
 
