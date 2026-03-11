@@ -6,19 +6,17 @@ import { MainTab } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
 import { StyleSheet, View } from "react-native"
-import { useTheme } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const insets = useSafeAreaInsets()
-  const theme = useTheme()
 
   return (
     <ThemedView
       lightColor={tokens.color.appBg.val}
-      darkColor={theme.backgroundFocus.val}
+      darkColor={tokens.color.appBgDark.val}
       style={styles.container}
     >
       <HomeHeader

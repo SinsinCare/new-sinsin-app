@@ -7,8 +7,10 @@ import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
 import CheckColor from "@/assets/icons/check-color.svg"
 import CheckEmpty from "@/assets/icons/check-empty.svg"
+import CheckDark from "@/assets/icons/check-dark.svg"
 import FireColor from "@/assets/icons/fire-color.svg"
 import FireEmpty from "@/assets/icons/fire-empty.svg"
+import FireDark from "@/assets/icons/fire-dark.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
@@ -61,6 +63,8 @@ import EveningFood from "@/assets/icons/evening_food.svg"
 import DessertFood from "@/assets/icons/dessert_food.svg"
 import CheckOrange from "@/assets/icons/check-orange.svg"
 import CircleCharacter from "@/assets/icons/circle-character.svg"
+import Profile from "@/assets/icons/profile.svg"
+import ProfileDark from "@/assets/icons/profile-dark.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -122,6 +126,10 @@ const icons = {
   "noon-food": NoonFood,
   "evening-food": EveningFood,
   "dessert-food": DessertFood,
+  profile: Profile,
+  "profile-dark": ProfileDark,
+  "fire-dark": FireDark,
+  "check-dark": CheckDark,
 } as const
 
 export type IconName = keyof typeof icons

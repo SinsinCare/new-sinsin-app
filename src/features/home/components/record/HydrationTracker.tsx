@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from "tamagui"
-import { TouchableOpacity, StyleSheet } from "react-native"
+import { TouchableOpacity, StyleSheet, useColorScheme } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components/Icon"
 import Svg, {
@@ -43,17 +43,25 @@ export function HydrationTracker({
 }: HydrationTrackerProps) {
   const fillRatio = Math.min(percentage, 100) / 100
   const waterY = TEXT_BASELINE - fillRatio * CAP_H
+  const isDarkMode = useColorScheme() === "dark"
+  const chipBg = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.pureWhite.val
 
   return (
     <YStack paddingVertical="$3" gap="$3">
       <XStack justifyContent="space-between">
-        <Text fontSize={20} fontWeight="600">
+        <Text
+          fontSize={20}
+          fontWeight="600"
+          color={isDarkMode ? "$textDark" : "$black"}
+        >
           수분 섭취 기록
         </Text>
       </XStack>
 
       <XStack
-        backgroundColor="$cardBackground"
+        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
         borderRadius="$6"
         paddingVertical="$4"
         paddingHorizontal="$4"
@@ -62,7 +70,11 @@ export function HydrationTracker({
         {/* Left: intake info */}
         <YStack gap="$2" flex={1}>
           <XStack alignItems="baseline" gap={2}>
-            <Text fontSize={32} fontWeight="600">
+            <Text
+              fontSize={32}
+              fontWeight="600"
+              color={isDarkMode ? "$textDark" : "$black"}
+            >
               {intake}
             </Text>
             <Text fontSize="$4" color="$colorSubtle" fontWeight="500">
@@ -148,10 +160,13 @@ export function HydrationTracker({
             <TouchableOpacity
               key={amount}
               onPress={() => addWater(amount)}
-              style={styles.chip}
+              style={[styles.chip, { backgroundColor: chipBg }]}
               activeOpacity={0.7}
             >
-              <Text fontSize={15} color="$color">
+              <Text
+                fontSize={15}
+                color={isDarkMode ? "$textDarkSub" : "$color"}
+              >
                 +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
               </Text>
             </TouchableOpacity>
@@ -176,7 +191,6 @@ export function HydrationTracker({
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: tokens.color.pureWhite.val,
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 10,

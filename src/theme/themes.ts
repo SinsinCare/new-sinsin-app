@@ -88,6 +88,6 @@ export const darkTheme: typeof lightTheme = {
   dangerBackground: tokens.color.grey2,
 
   // Card
-  cardBackground: tokens.color.grey2,
+  cardBackground: tokens.color.cardBgDark,
   cardBackgroundHover: tokens.color.grey3,
 }

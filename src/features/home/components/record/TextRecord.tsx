@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -20,6 +21,10 @@ interface TextRecordProps {
 export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
   const [text, setText] = useState("")
   const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const isDarkMode = useColorScheme() === "dark"
+  const inactiveBg = isDarkMode
+    ? tokens.color.grey3.val
+    : tokens.color.grey8.val
 
   useEffect(() => {
     if (!open) setText("")
@@ -48,14 +53,19 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <YStack flex={1} backgroundColor={tokens.color.appBg.val}>
+      <YStack flex={1} backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}>
         <XStack
           alignItems="center"
           justifyContent="center"
           paddingTop={30}
           paddingBottom={10}
         >
-          <Text fontSize={18} fontWeight="600" textAlign="center">
+          <Text
+            fontSize={18}
+            fontWeight="600"
+            textAlign="center"
+            color={isDarkMode ? "$textDark" : "$black"}
+          >
             직접 기록하기
           </Text>
           <XStack
@@ -81,7 +91,14 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
           gap="$4"
         >
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                color: isDarkMode
+                  ? tokens.color.textDark.val
+                  : tokens.color.black.val,
+              },
+            ]}
             value={text}
             onChangeText={setText}
             placeholder="음식 종류와 양을 알려주세요."
@@ -97,7 +114,7 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
           style={[
             styles.button,
             { marginBottom: keyboardHeight > 0 ? keyboardHeight + 12 : 40 },
-            text ? styles.buttonActive : styles.buttonInactive,
+            text ? styles.buttonActive : { backgroundColor: inactiveBg },
           ]}
           disabled={!text}
         >
