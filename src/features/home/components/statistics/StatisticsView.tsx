@@ -182,7 +182,7 @@ export function StatisticsView({
       </YStack>
 
       {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
-      {isEmpty ? (
+      {isEmpty || isLoading ? (
         <YStack
           minHeight={windowHeight * 0.45}
           justifyContent="center"
