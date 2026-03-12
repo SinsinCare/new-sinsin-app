@@ -24,6 +24,7 @@ import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
 import { useFoodEdit } from "../hooks/useFoodEdit"
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
+import { getInitialEatenStep } from "../utils/foodEditUtils"
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -93,6 +94,19 @@ export function FoodResultEdit({
 
   const handleSubmit = async () => {
     if (!result) return
+    const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
+    const eatenPercentageChanged = eatenStep !== initialEatenStep
+    const foodsChanged =
+      foods.length !== result.foods.length ||
+      foods.some((f, i) => {
+        const orig = result.foods[i]
+        return (
+          f.name !== orig.name ||
+          Number(f.amount) !== orig.servingSizeValue ||
+          f.unit !== orig.servingSizeUnit
+        )
+      })
+    if (!eatenPercentageChanged && !foodsChanged) return
     const body: FoodAnalysisUpdateRequest = {
       servings: result.servings,
       eatenPercentage: (eatenStep + 1) * 25,
