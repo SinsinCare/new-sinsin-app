@@ -13,3 +13,15 @@ export interface CurationSectionData {
   subtitle: string
   restaurants: Restaurant[]
 }
+
+export interface PlaceRestaurant {
+  id: string
+  name: string
+  tags: string[]
+  description: string
+  rating: number
+  reviewCount: number
+  distance: string
+  address: string
+  images: (string | number)[]
+}
