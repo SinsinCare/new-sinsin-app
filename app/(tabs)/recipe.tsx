@@ -98,11 +98,6 @@ const RECIPE_TABS: TabItem[] = [
   { key: "free", label: "자유글" },
 ]
 
-const HEADER_BOOKMARK_COLORS = {
-  light: "#3C3C43",
-  dark: "#E7E7EE",
-} as const
-
 const ICON_COLORS = {
   light: "#8E8E93",
   dark: "#66666B",
@@ -113,9 +108,6 @@ export default function RecipeScreen() {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [activeTab, setActiveTab] = useState("recipe")
-  const headerColor = isDarkMode
-    ? HEADER_BOOKMARK_COLORS.dark
-    : HEADER_BOOKMARK_COLORS.light
   const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light
 
   const handleTabChange = (tab: string) => {
@@ -225,22 +217,29 @@ export default function RecipeScreen() {
           tabs={RECIPE_TABS}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          rightAction={
-            <Pressable hitSlop={8} onPress={() => {}}>
-              <Icon name="bookmark" size={24} color={headerColor} />
-            </Pressable>
-          }
         />
         {activeTab === "recipe" && (
           <>
             <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
-              <SearchInput value={search} onChangeText={setSearch} />
               <XStack alignItems="center" gap={12}>
+                <View style={{ flex: 1 }}>
+                  <SearchInput value={search} onChangeText={setSearch} />
+                </View>
+                <Pressable
+                  onPress={() => setFilterSheetOpen(true)}
+                  hitSlop={8}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <Icon name="filter" size={24} color={iconColor} />
+                </Pressable>
+              </XStack>
+              {ALL_FILTER_CHIPS.some((chip) =>
+                isChipSelected(chip.key, chip.section),
+              ) && (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ gap: 8 }}
-                  style={{ flex: 1 }}
                 >
                   {ALL_FILTER_CHIPS.filter((chip) =>
                     isChipSelected(chip.key, chip.section),
@@ -256,14 +255,7 @@ export default function RecipeScreen() {
                     />
                   ))}
                 </ScrollView>
-                <Pressable
-                  onPress={() => setFilterSheetOpen(true)}
-                  hitSlop={8}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                >
-                  <Icon name="filter" size={24} color={iconColor} />
-                </Pressable>
-              </XStack>
+              )}
               <FoodCategoryBar
                 selectedCategories={selectedCategories}
                 onToggleCategory={handleToggleCategory}
