@@ -46,7 +46,7 @@ export function TopTabBar<T extends string = string>({
         alignItems: "center",
         gap: 12,
         paddingHorizontal: 28,
-        paddingVertical: 14,
+        paddingVertical: 5,
       }}
     >
       {tabs.map((tab) => (
