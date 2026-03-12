@@ -20,6 +20,9 @@ export function StatisticsTabBar({
   onSelectTab,
 }: StatisticsTabBarProps) {
   const isDarkMode = useColorScheme() === "dark"
+  const barBgColor = isDarkMode
+    ? tokens.color.appBgDark.val
+    : tokens.color.appBg.val
   const bgColor = isDarkMode ? tokens.color.cardBgDark.val : undefined
 
   return (
@@ -27,6 +30,7 @@ export function StatisticsTabBar({
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      style={{ backgroundColor: barBgColor }}
     >
       {TABS.map((tab) => {
         const isSelected = selectedTab === tab.key
@@ -63,6 +67,7 @@ export function StatisticsTabBar({
 
 const styles = StyleSheet.create({
   container: {
+    paddingBottom: 5,
     gap: 7,
   },
   tab: {
