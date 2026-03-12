@@ -1,13 +1,18 @@
 import { Pressable, StyleSheet, useColorScheme } from "react-native"
 import { Text, XStack } from "tamagui"
+import type { FilterTab } from "../types"
 
-const FILTERS = [
+const FILTERS: { key: FilterTab; label: string }[] = [
   { key: "region", label: "지역" },
   { key: "foodType", label: "음식 종류" },
   { key: "nutrient", label: "영양소 제한" },
 ]
 
-export function PlaceFilterChips() {
+interface PlaceFilterChipsProps {
+  onFilterPress?: (filterKey: FilterTab) => void
+}
+
+export function PlaceFilterChips({ onFilterPress }: PlaceFilterChipsProps) {
   const isDarkMode = useColorScheme() === "dark"
 
   const borderColor = isDarkMode ? "#36363E" : "#D9D9DF"
@@ -18,7 +23,7 @@ export function PlaceFilterChips() {
       {FILTERS.map((filter) => (
         <Pressable
           key={filter.key}
-          onPress={() => {}}
+          onPress={() => onFilterPress?.(filter.key)}
           style={[styles.chip, { borderColor }]}
         >
           <Text
