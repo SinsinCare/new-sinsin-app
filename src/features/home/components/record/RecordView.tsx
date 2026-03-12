@@ -24,6 +24,7 @@ import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
+import { MAX_WATER_INTAKE } from "../../data/hydrationConstants"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -297,6 +298,7 @@ export function RecordView({
         remaining={remaining}
         isGoalAchieved={percentage >= 100}
         addWater={async (amount) => {
+          if (totalIntake + amount > MAX_WATER_INTAKE) return
           await record.addWater(amount)
           await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
         }}

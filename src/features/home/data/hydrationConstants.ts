@@ -13,6 +13,7 @@ export const TEXT_BASELINE = SVG_HEIGHT - 8 // 52
 export const CAP_H = Math.round(FONT_SIZE * 0.72) // 32
 
 export const DEFAULT_DAILY_GOAL: number = 1500
+export const MAX_WATER_INTAKE: number = 5000
 
 export const WATER_COLORS = {
   percentBg: tokens.color.waterPercentBg.val,
