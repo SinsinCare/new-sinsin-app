@@ -124,6 +124,22 @@ export function MyPageScreen() {
             <Ionicons name="chevron-forward" size={20} color="#C4C4C4" />
           </Pressable>
         ))}
+
+        {/* 구분선 */}
+        <View style={styles.fullWidthDivider} />
+
+        {/* 의사에게 질문하기 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.navButton,
+            pressed && styles.navButtonPressed,
+          ]}
+          onPress={() => router.push("/(settings)/ask-doctor")}
+        >
+          <Ionicons name="medkit-outline" size={24} color="#474758" />
+          <ThemedText style={styles.navButtonText}>의사 연결하기</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color="#C4C4C4" />
+        </Pressable>
       </ScrollView>
     </ThemedView>
   )
