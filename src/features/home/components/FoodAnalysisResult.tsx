@@ -1,5 +1,6 @@
 import { Modal, ScrollView, Image, useColorScheme } from "react-native"
 import { useState } from "react"
+import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -421,6 +422,10 @@ export function FoodAnalysisResult({
             backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
             borderRadius={20}
             pressStyle={{ opacity: 0.7 }}
+            onPress={() => {
+              onClose()
+              router.push("/(tabs)/consult")
+            }}
           >
             <Ionicons
               name="chatbubble-ellipses-outline"
