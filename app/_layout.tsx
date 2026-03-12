@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { TamaguiProvider } from "tamagui"
 import { PortalProvider } from "@tamagui/portal"
 import { QueryClientProvider } from "@tanstack/react-query"
@@ -86,13 +87,15 @@ export default function RootLayout() {
   if (!loaded) return null
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TamaguiProvider config={config} defaultTheme="light">
-        <PortalProvider>
-          <RootLayoutNav />
-          <Toast />
-        </PortalProvider>
-      </TamaguiProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <TamaguiProvider config={config} defaultTheme="light">
+          <PortalProvider>
+            <RootLayoutNav />
+            <Toast />
+          </PortalProvider>
+        </TamaguiProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   )
 }

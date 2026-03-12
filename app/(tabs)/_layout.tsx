@@ -52,13 +52,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Icon name="recipe" color={color} />,
         }}
       />
-      {/* <Tabs.Screen
+      <Tabs.Screen
         name="restaurant"
         options={{
           title: "식당",
           tabBarIcon: ({ color }) => <Icon name="location" color={color} />,
         }}
-      /> */}
+      />
       <Tabs.Screen
         name="all"
         options={{
