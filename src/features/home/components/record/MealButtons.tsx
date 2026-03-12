@@ -21,6 +21,7 @@ interface MealButtonsProps {
   recordedMeals?: Partial<Record<MealType, boolean>>
   mealTimes?: Partial<Record<MealType, string>>
   onRecord: (mealType: MealType) => void
+  onViewResult: (mealType: MealType) => void
 }
 
 export function MealButtons({
@@ -29,6 +30,7 @@ export function MealButtons({
   recordedMeals = {},
   mealTimes = {},
   onRecord,
+  onViewResult,
 }: MealButtonsProps) {
   const mealTypes: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
   const [isPickerOpen, setIsPickerOpen] = useState(false)
@@ -85,7 +87,9 @@ export function MealButtons({
           <MealButton
             key={type}
             mealType={type}
-            onPress={handleOpenPicker}
+            onPress={
+              recordedMeals[type] ? () => onViewResult(type) : handleOpenPicker
+            }
             imageUri={mealImages[type]}
             isRecorded={recordedMeals[type] ?? false}
             time={mealTimes[type]}

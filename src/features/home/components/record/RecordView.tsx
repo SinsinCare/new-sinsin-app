@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Alert } from "react-native"
+import type { DiaryAnalysisResult } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
@@ -36,6 +37,13 @@ export function RecordView({
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord(selectedDate)
+  const [viewDiaryResult, setViewDiaryResult] =
+    useState<DiaryAnalysisResult | null>(null)
+  const [isViewResultOpen, setIsViewResultOpen] = useState(false)
+  const [viewResultMealType, setViewResultMealType] = useState<
+    MealType | undefined
+  >()
+
   const {
     isAnalyzing,
     isUpdating,
@@ -48,6 +56,7 @@ export function RecordView({
     registerDiary,
     closeResult,
     updateFoodAnalysis,
+    fetchDiaryResult,
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
@@ -190,6 +199,17 @@ export function RecordView({
     setIsOptionsSheetOpen(false)
   }
 
+  const handleViewMealResult = async (mealType: MealType) => {
+    const diet = data?.result.diets.find((d) => d.mealType === mealType)
+    if (!diet) return
+    const result = await fetchDiaryResult(diet.diaryId)
+    if (result) {
+      setViewDiaryResult(result)
+      setViewResultMealType(mealType)
+      setIsViewResultOpen(true)
+    }
+  }
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -219,6 +239,7 @@ export function RecordView({
         recordedMeals={mergedRecordedMeals}
         mealTimes={apiMealTimes}
         onRecord={handleRecord}
+        onViewResult={handleViewMealResult}
       />
 
       <RecordOptionsSheet
@@ -247,6 +268,17 @@ export function RecordView({
         imageUri={analyzedImageUri ?? undefined}
         mealType={analyzedMealType ?? undefined}
         onAddToRecord={handleAddToRecord}
+        isUpdating={isUpdating}
+        updateFoodAnalysis={updateFoodAnalysis}
+      />
+
+      <FoodAnalysisResult
+        result={viewDiaryResult}
+        open={isViewResultOpen}
+        onClose={() => setIsViewResultOpen(false)}
+        imageUri={viewDiaryResult?.imageUrl}
+        mealType={viewResultMealType}
+        showAddButton={false}
         isUpdating={isUpdating}
         updateFoodAnalysis={updateFoodAnalysis}
       />
