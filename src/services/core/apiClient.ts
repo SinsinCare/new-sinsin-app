@@ -145,3 +145,52 @@ api.interceptors.response.use(
 
 // api: 401 interceptor 이후에 에러 변환 등록
 addErrorInterceptor(api)
+
+// Request/Response logging interceptor (for development/debug)
+api.interceptors.request.use(
+  (config) => {
+    // 요청 정보 콘솔 출력
+    console.log("[API Request]", config.method?.toUpperCase(), config.url, {
+      headers: config.headers,
+      params: config.params,
+      data: config.data,
+    })
+    return config
+  },
+  (error) => {
+    console.log("[API Request Error]", error)
+    return Promise.reject(error)
+  },
+)
+
+api.interceptors.response.use(
+  (response) => {
+    // 응답 정보 콘솔 출력
+    console.log(
+      "[API Response]",
+      response.config?.method?.toUpperCase(),
+      response.config?.url,
+      {
+        status: response.status,
+        data: response.data,
+      },
+    )
+    return response
+  },
+  (error) => {
+    if (error.response) {
+      console.log(
+        "[API Response Error]",
+        error.config?.method?.toUpperCase(),
+        error.config?.url,
+        {
+          status: error.response.status,
+          data: error.response.data,
+        },
+      )
+    } else {
+      console.log("[API Response Error]", error)
+    }
+    return Promise.reject(error)
+  },
+)
