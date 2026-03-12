@@ -25,3 +25,12 @@ export interface PlaceRestaurant {
   address: string
   images: (string | number)[]
 }
+
+export interface FilterState {
+  region: string | null
+  subRegions: string[]
+  foodTypes: string[]
+  nutrients: string[]
+}
+
+export type FilterTab = "region" | "foodType" | "nutrient"
