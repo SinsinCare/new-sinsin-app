@@ -44,9 +44,9 @@ export function useFoodAnalysis(
   const analyzeText = async (text: string, mealType: MealType) => {
     try {
       setAnalyzedMealType(mealType)
-      setAnalyzedImageUri(null)
       setIsAnalyzing(true)
       const result = await foodCameraService.analyzeText(text)
+      setAnalyzedImageUri(result.imageUrl)
       setAnalysisResult(result)
       setIsResultOpen(true)
     } catch (error) {
