@@ -44,7 +44,7 @@ export function LoadingOverlay({ visible, message }: LoadingOverlayProps) {
       }, 500)
       const tipInterval = setInterval(() => {
         setTip(getRandomTip())
-      }, 4000)
+      }, 7000)
       return () => {
         clearInterval(dotsInterval)
         clearInterval(tipInterval)
