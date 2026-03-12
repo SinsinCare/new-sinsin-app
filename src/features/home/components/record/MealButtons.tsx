@@ -85,7 +85,7 @@ export function MealButtons({
           <MealButton
             key={type}
             mealType={type}
-            onPress={() => onSelectMealType(type)}
+            onPress={handleOpenPicker}
             imageUri={mealImages[type]}
             isRecorded={recordedMeals[type] ?? false}
             time={mealTimes[type]}
