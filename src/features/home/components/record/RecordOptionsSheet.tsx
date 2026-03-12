@@ -148,13 +148,9 @@ export function RecordOptionsSheet({
                 <Icon
                   name="recipe"
                   size={24}
-                  color={tokens.color.primary7.val}
+                  color={tokens.color.deleteBg.val}
                 />
-                <Text
-                  fontSize="$4"
-                  fontWeight="500"
-                  color={isDarkMode ? "$textDark" : "$color"}
-                >
+                <Text fontSize="$4" fontWeight="500" color="$colorSubtle">
                   레시피 불러오기
                 </Text>
               </XStack>
