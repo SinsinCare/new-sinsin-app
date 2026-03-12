@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Alert } from "react-native"
+import type { DiaryAnalysisResult } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
@@ -23,6 +24,7 @@ import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
+import { MAX_WATER_INTAKE } from "../../data/hydrationConstants"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -36,6 +38,13 @@ export function RecordView({
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord(selectedDate)
+  const [viewDiaryResult, setViewDiaryResult] =
+    useState<DiaryAnalysisResult | null>(null)
+  const [isViewResultOpen, setIsViewResultOpen] = useState(false)
+  const [viewResultMealType, setViewResultMealType] = useState<
+    MealType | undefined
+  >()
+
   const {
     isAnalyzing,
     isUpdating,
@@ -48,10 +57,14 @@ export function RecordView({
     registerDiary,
     closeResult,
     updateFoodAnalysis,
+    fetchDiaryResult,
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
+  const calendarDays = useMemo(
+    () => getThreeDays(selectedDate, "record"),
+    [selectedDate],
+  )
   const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
   const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
   const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
@@ -190,6 +203,17 @@ export function RecordView({
     setIsOptionsSheetOpen(false)
   }
 
+  const handleViewMealResult = async (mealType: MealType) => {
+    const diet = data?.result.diets.find((d) => d.mealType === mealType)
+    if (!diet) return
+    const result = await fetchDiaryResult(diet.diaryId)
+    if (result) {
+      setViewDiaryResult(result)
+      setViewResultMealType(mealType)
+      setIsViewResultOpen(true)
+    }
+  }
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -219,6 +243,7 @@ export function RecordView({
         recordedMeals={mergedRecordedMeals}
         mealTimes={apiMealTimes}
         onRecord={handleRecord}
+        onViewResult={handleViewMealResult}
       />
 
       <RecordOptionsSheet
@@ -251,6 +276,17 @@ export function RecordView({
         updateFoodAnalysis={updateFoodAnalysis}
       />
 
+      <FoodAnalysisResult
+        result={viewDiaryResult}
+        open={isViewResultOpen}
+        onClose={() => setIsViewResultOpen(false)}
+        imageUri={viewDiaryResult?.imageUrl}
+        mealType={viewResultMealType}
+        showAddButton={false}
+        isUpdating={isUpdating}
+        updateFoodAnalysis={updateFoodAnalysis}
+      />
+
       <LoadingOverlay visible={isAnalyzing} message="식단을 분석하고 있어요" />
 
       <View height={10} />
@@ -262,6 +298,7 @@ export function RecordView({
         remaining={remaining}
         isGoalAchieved={percentage >= 100}
         addWater={async (amount) => {
+          if (totalIntake + amount > MAX_WATER_INTAKE) return
           await record.addWater(amount)
           await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
         }}

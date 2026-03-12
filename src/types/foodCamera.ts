@@ -47,6 +47,7 @@ export interface FoodCameraAnalyzeResult {
   servings: number
   eatenPercentage: number
   title: string
+  imageUrl: string | null
   foods: FoodCameraFood[]
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation

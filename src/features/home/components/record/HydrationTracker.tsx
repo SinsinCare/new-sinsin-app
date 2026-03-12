@@ -90,27 +90,14 @@ export function HydrationTracker({
         <XStack alignItems="center" paddingBottom={5} flexShrink={0} gap={1}>
           <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
             <Defs>
-              <ClipPath id="percentClip">
-                {/* number grows leftward from PCT_X */}
-                <SvgText
-                  x={PCT_X}
-                  y={TEXT_BASELINE}
-                  fontSize={FONT_SIZE}
-                  fontWeight="800"
-                  textAnchor="end"
-                >
-                  {Math.round(percentage)}
-                </SvgText>
-                {/* "%" fixed at PCT_X */}
-                <SvgText
-                  x={PCT_X}
-                  y={TEXT_BASELINE}
-                  fontSize={FONT_SIZE}
-                  fontWeight="800"
-                  textAnchor="start"
-                >
-                  %
-                </SvgText>
+              {/* 물 채운 영역을 직사각형으로 자름 */}
+              <ClipPath id="waterClip">
+                <Rect
+                  x={0}
+                  y={waterY}
+                  width={SVG_WIDTH}
+                  height={SVG_HEIGHT - waterY}
+                />
               </ClipPath>
               <LinearGradient
                 id="waterGradient"
@@ -125,25 +112,51 @@ export function HydrationTracker({
               </LinearGradient>
             </Defs>
 
-            {/* Unfilled (bg) layer */}
-            <Rect
-              x={0}
-              y={0}
-              width={SVG_WIDTH}
-              height={SVG_HEIGHT}
+            {/* 배경 텍스트 (미채움 색) */}
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="end"
               fill={WATER_COLORS.percentBg}
-              clipPath="url(#percentClip)"
-            />
+            >
+              {Math.round(percentage)}
+            </SvgText>
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="start"
+              fill={WATER_COLORS.percentBg}
+            >
+              %
+            </SvgText>
 
-            {/* Water fill — rises from bottom */}
-            <Rect
-              x={0}
-              y={waterY}
-              width={SVG_WIDTH}
-              height={SVG_HEIGHT - waterY}
+            {/* 물 채운 텍스트 (그라디언트), 아래쪽 직사각형 영역만 보임 */}
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="end"
               fill="url(#waterGradient)"
-              clipPath="url(#percentClip)"
-            />
+              clipPath="url(#waterClip)"
+            >
+              {Math.round(percentage)}
+            </SvgText>
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="start"
+              fill="url(#waterGradient)"
+              clipPath="url(#waterClip)"
+            >
+              %
+            </SvgText>
           </Svg>
           <Icon name="water-drop" size={18} style={{ marginBottom: 18 }} />
         </XStack>
