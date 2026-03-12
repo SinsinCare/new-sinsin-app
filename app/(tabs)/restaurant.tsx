@@ -6,6 +6,7 @@ import { RestaurantTabHeader } from "@/src/features/restaurant/components/Restau
 import { RestaurantSearchInput } from "@/src/features/restaurant/components/RestaurantSearchInput"
 import { KakaoMapWebView } from "@/src/features/restaurant/components/KakaoMapWebView"
 import { CurationTab } from "@/src/features/restaurant/components/CurationTab"
+import { PlaceSheet } from "@/src/features/restaurant/components/PlaceSheet"
 
 const TABS = [
   { key: "place", label: "장소" },
@@ -36,6 +37,7 @@ export default function RestaurantScreen() {
           </YStack>
           <View flex={1} marginTop={12}>
             <KakaoMapWebView />
+            <PlaceSheet />
           </View>
         </>
       )}
