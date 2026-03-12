@@ -23,7 +23,7 @@ export function AskDoctorScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
 
-  const [patientCode, setPatientCode] = useState("")
+  const [doctorCode, setPatientCode] = useState("")
   const [agreed, setAgreed] = useState(false)
 
   const { mutate, isPending } = useMutation({
@@ -41,10 +41,10 @@ export function AskDoctorScreen() {
     },
   })
 
-  const canSubmit = patientCode.length === 6 && agreed && !isPending
+  const canSubmit = doctorCode.length === 6 && agreed && !isPending
 
   const handleSubmit = () => {
-    mutate(patientCode)
+    mutate(doctorCode)
   }
 
   return (
@@ -61,10 +61,10 @@ export function AskDoctorScreen() {
       >
         <View style={styles.content}>
           {/* 환자 코드 입력 */}
-          <ThemedText style={styles.fieldLabel}>환자 코드</ThemedText>
+          <ThemedText style={styles.fieldLabel}>의사 코드</ThemedText>
           <TextInput
             style={styles.codeInput}
-            value={patientCode}
+            value={doctorCode}
             onChangeText={(text) =>
               setPatientCode(text.replace(/[^0-9]/g, "").slice(0, 6))
             }
