@@ -28,6 +28,7 @@ export function ForgotPasswordScreen() {
   const [codeSent, setCodeSent] = useState(false)
   const [codeInputVisible, setCodeInputVisible] = useState(false)
   const [codeVerified, setCodeVerified] = useState(false)
+  const [resetLinkSent, setResetLinkSent] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [sendingCode, setSendingCode] = useState(false)
@@ -91,6 +92,8 @@ export function ForgotPasswordScreen() {
       if (result.verified) {
         setCodeVerified(true)
         if (timerRef.current) clearInterval(timerRef.current)
+        await emailService.resendVerificationCode(getValues("email"))
+        setResetLinkSent(true)
       }
     } catch {
       setSendError("인증에 실패했습니다. 다시 시도해주세요.")
@@ -99,7 +102,7 @@ export function ForgotPasswordScreen() {
     }
   }
 
-  const canProceed = codeVerified
+  const canProceed = resetLinkSent
 
   return (
     <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
@@ -273,23 +276,23 @@ export function ForgotPasswordScreen() {
               </YStack>
             )}
 
-            {codeVerified && (
+            {resetLinkSent && (
               <Text
                 fontSize={14}
                 color="#34C759"
                 fontWeight="500"
                 letterSpacing={-0.28}
               >
-                이메일 인증이 완료되었습니다.
+                비밀번호 재설정 링크가 이메일로 전송되었습니다.
               </Text>
             )}
           </YStack>
         </YStack>
 
-        {/* 다음 단계 버튼 */}
+        {/* 완료 버튼 */}
         <YStack paddingBottom={insets.bottom + 24}>
           <Pressable
-            onPress={() => router.push("/(auth)/reset-password")}
+            onPress={() => router.back()}
             disabled={!canProceed}
           >
             <YStack
@@ -307,7 +310,7 @@ export function ForgotPasswordScreen() {
                 letterSpacing={-0.3}
                 lineHeight={20}
               >
-                다음 단계
+                완료
               </Text>
             </YStack>
           </Pressable>

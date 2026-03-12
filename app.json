@@ -16,6 +16,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.mediology.sinsin-care",
       "deploymentTarget": "14.0",
+      "associatedDomains": ["applinks:sinsin.mediology.ai"],
       "infoPlist": {
         "NSHealthShareUsageDescription": "건강 데이터를 읽어 맞춤형 건강 관리를 제공합니다.",
         "NSHealthUpdateUsageDescription": "건강 데이터를 기록합니다.",
@@ -39,6 +40,20 @@
         "android.permission.health.READ_SLEEP",
         "android.permission.health.READ_HYDRATION",
         "android.permission.RECORD_AUDIO"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "sinsin.mediology.ai",
+              "pathPrefix": "/password-edit"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": { "favicon": "./assets/favicon.png" },

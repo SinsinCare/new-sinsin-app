@@ -9,6 +9,7 @@ interface EmailService {
     email: string,
     code: string,
   ): Promise<{ verified: boolean; signupToken?: string }>
+  resendVerificationCode(email: string): Promise<void>
 }
 
 function getRealEmailService(): EmailService {
@@ -44,6 +45,10 @@ function getRealEmailService(): EmailService {
         return { verified: false }
       }
     },
+
+    async resendVerificationCode(email: string): Promise<void> {
+      await publicApi.post<ApiResponse>("/auth/password/email/send", { email })
+    },
   }
 }
 
@@ -63,6 +68,10 @@ function getMockEmailService(): EmailService {
     ): Promise<{ verified: boolean; signupToken?: string }> {
       return { verified: true, signupToken: "mock-signup-token" }
     },
+
+    async resendVerificationCode(_email: string): Promise<void> {
+      // mock: 아무것도 하지 않음
+    },
   }
 }
 
@@ -80,4 +89,6 @@ export const emailService: EmailService = {
   sendVerificationCode: (email) =>
     getEmailService().sendVerificationCode(email),
   verifyCode: (email, code) => getEmailService().verifyCode(email, code),
+  resendVerificationCode: (email) =>
+    getEmailService().resendVerificationCode(email),
 }
