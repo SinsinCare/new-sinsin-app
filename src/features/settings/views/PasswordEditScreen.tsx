@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   StyleSheet,
   View,
@@ -15,7 +15,10 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { passwordService } from "@/src/services"
+
+const RESET_TOKEN_KEY = "@sinsin/passwordResetToken"
 
 // 영문 대/소문자, 숫자, 특수문자 포함 6~18자
 const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
@@ -31,6 +34,18 @@ export function PasswordEditScreen() {
   const [confirmFocused, setConfirmFocused] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [storedToken, setStoredToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!token) return
+    const save = async () => {
+      await AsyncStorage.setItem(RESET_TOKEN_KEY, token)
+      const saved = await AsyncStorage.getItem(RESET_TOKEN_KEY)
+      setStoredToken(saved)
+      console.log("[PasswordEdit] reset token:", saved)
+    }
+    save()
+  }, [token])
 
   const isPasswordValid = PASSWORD_REGEX.test(password)
   const hasConfirm = confirm.length > 0
@@ -155,6 +170,13 @@ export function PasswordEditScreen() {
               {confirmMessage}
             </ThemedText>
           )}
+
+          {/* DEBUG: token 확인용 */}
+          {storedToken && (
+            <ThemedText style={styles.debugText}>
+              [DEBUG] token: {storedToken}
+            </ThemedText>
+          )}
         </ScrollView>
 
         {submitError && (
@@ -251,5 +273,12 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     paddingHorizontal: 20,
     paddingBottom: 8,
+  },
+  debugText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: "#94A3B8",
+    marginTop: 16,
+    fontFamily: "monospace",
   },
 })
