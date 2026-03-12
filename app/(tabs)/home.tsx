@@ -13,6 +13,11 @@ export default function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const insets = useSafeAreaInsets()
 
+  const handleChangeTab = (tab: MainTab) => {
+    setMainTab(tab)
+    setSelectedDate(new Date())
+  }
+
   return (
     <ThemedView
       lightColor={tokens.color.appBg.val}
@@ -22,7 +27,7 @@ export default function HomeScreen() {
       <HomeHeader
         topInset={insets.top}
         mainTab={mainTab}
-        onChangeTab={setMainTab}
+        onChangeTab={handleChangeTab}
       />
 
       <View style={[styles.tabContent, mainTab !== "record" && styles.hidden]}>
