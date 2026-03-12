@@ -22,7 +22,7 @@ export function DietaryRecordCard({
     <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
       <YStack
         backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-        borderWidth={isDarkMode ? 0 : 2}
+        borderWidth={isDarkMode ? 0 : 1}
         borderColor="$borderColor"
         flex={1}
         height={100}
