@@ -60,7 +60,10 @@ export function RecordView({
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
+  const calendarDays = useMemo(
+    () => getThreeDays(selectedDate, "record"),
+    [selectedDate],
+  )
   const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
   const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
   const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
