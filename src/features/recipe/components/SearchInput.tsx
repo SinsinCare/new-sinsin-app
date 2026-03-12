@@ -8,10 +8,10 @@ import { Icon } from "@/src/shared/components/Icon"
 
 const COLORS = {
   light: {
-    border: "#D4D4D4",
+    border: "#ABABB4",
     text: "#3C3C43",
     placeholder: "#9A9A9A",
-    icon: "#9A9A9A",
+    icon: "#595960",
   },
   dark: {
     border: "#595960",
@@ -51,7 +51,6 @@ export function SearchInput({
       <TextInput
         style={{
           flex: 1,
-          fontFamily: "PretendardKR-Medium",
           fontWeight: "500",
           fontSize: 14,
           lineHeight: 20,
@@ -62,7 +61,9 @@ export function SearchInput({
         placeholderTextColor={palette.placeholder}
         {...props}
       />
-      <Icon name="magnifyingglass" size={26} color={palette.icon} />
+      <View>
+        <Icon name="magnifyingglass" size={22} color={palette.icon} />
+      </View>
     </View>
   )
 }

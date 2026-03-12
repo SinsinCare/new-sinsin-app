@@ -332,7 +332,7 @@ export default function ConsultScreen() {
               >
                 <Icon
                   name="fly-chat"
-                  size={24}
+                  size={16}
                   color={isDarkMode ? "#E7E7EE" : "#FDFDFD"}
                 />
               </Pressable>

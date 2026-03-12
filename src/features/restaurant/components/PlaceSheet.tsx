@@ -38,6 +38,7 @@ export function PlaceSheet() {
         snapPoints={snapPoints}
         backgroundStyle={[styles.background, { backgroundColor }]}
         handleIndicatorStyle={[styles.handle, { backgroundColor: handleColor }]}
+        enableContentPanningGesture={false}
       >
         <PlaceFilterChips onFilterPress={handleFilterPress} />
         <BottomSheetScrollView

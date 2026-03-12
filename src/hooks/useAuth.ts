@@ -11,7 +11,6 @@ export function useAuth() {
     isAuthenticated,
     setUser,
     setAccountState,
-    setLoading,
     reset: resetAuth,
   } = useAuthStore()
   const { reset: resetProfile } = useUserStore()
@@ -34,15 +33,10 @@ export function useAuth() {
   }, [setUser, setAccountState])
 
   const signInWithEmail = async (email: string, password: string) => {
-    setLoading(true)
-    try {
-      const result = await authService.signInWithEmail(email, password)
-      setUser(result.user)
-      setAccountState(result.accountState)
-      return result
-    } finally {
-      setLoading(false)
-    }
+    const result = await authService.signInWithEmail(email, password)
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
   }
 
   const signOut = async () => {

@@ -90,8 +90,8 @@ export function FilterChip({
         borderColor={palette.border}
       >
         <Text
-          fontSize={12}
-          lineHeight={16}
+          fontSize={14}
+          lineHeight={20}
           fontWeight="500"
           fontFamily="$body"
           color={palette.text}

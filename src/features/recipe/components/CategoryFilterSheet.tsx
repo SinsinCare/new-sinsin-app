@@ -1,6 +1,6 @@
 // src/features/recipe/components/CategoryFilterSheet.tsx
 import { useState, useEffect } from "react"
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable, ScrollView, useColorScheme } from "react-native"
 import { Sheet } from "@tamagui/sheet"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
@@ -211,7 +211,11 @@ export function CategoryFilterSheet({
               >
                 {section.title}
               </Text>
-              <XStack flexWrap="wrap" gap={8}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
                 {section.chips.map((chip) => (
                   <FilterChip
                     key={chip.key}
@@ -221,7 +225,7 @@ export function CategoryFilterSheet({
                     onPress={() => toggleChip(section.key, chip.key)}
                   />
                 ))}
-              </XStack>
+              </ScrollView>
             </YStack>
           ))}
         </YStack>
