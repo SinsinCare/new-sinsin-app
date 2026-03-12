@@ -1,5 +1,6 @@
 import { Text, XStack, YStack } from "tamagui"
 import { fmt } from "../../utils/graphUtils"
+import { useColorScheme } from "react-native"
 
 interface NutrientGraphHeaderProps {
   nutrient: string
@@ -16,12 +17,14 @@ export function NutrientGraphHeader({
   unit,
   isOver,
 }: NutrientGraphHeaderProps) {
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
     <YStack gap={3}>
       <Text
         fontSize={17}
         fontWeight="600"
-        color={isOver ? "$primary" : "$color"}
+        color={isOver ? "$primary" : isDarkMode ? "$textDark" : "$color"}
       >
         {nutrient}
       </Text>
@@ -29,7 +32,7 @@ export function NutrientGraphHeader({
         <Text
           fontSize={19}
           fontWeight="600"
-          color={isOver ? "$primary" : "$color"}
+          color={isOver ? "$primary" : isDarkMode ? "$textDark" : "$color"}
         >
           {fmt(current)}
           {unit}

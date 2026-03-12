@@ -1,4 +1,9 @@
-import { TouchableOpacity, Image, StyleSheet } from "react-native"
+import {
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  useColorScheme,
+} from "react-native"
 import { MealType } from "../../types"
 import { Text, YStack, View } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -36,12 +41,22 @@ export function MealButton({
   isRecorded,
   time,
 }: MealButtonProps) {
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
     <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
       <YStack
-        backgroundColor={isRecorded ? "$primary2" : "$cardBackground"}
+        backgroundColor={
+          isRecorded ? "$primary2" : isDarkMode ? "$cardBgDark" : "$pureWhite"
+        }
         borderWidth={1}
-        borderColor={!imageUri && isRecorded ? "$primary7" : "$deleteBg"}
+        borderColor={
+          !imageUri && isRecorded
+            ? "$primary7"
+            : isDarkMode
+              ? "#36363E"
+              : "$deleteBg"
+        }
         flex={1}
         height={100}
         borderRadius="$6"
@@ -83,7 +98,9 @@ export function MealButton({
             <Text
               fontSize={14}
               fontWeight="600"
-              color={isRecorded ? "$primary7" : "$color"}
+              color={
+                isRecorded ? "$primary7" : isDarkMode ? "$textDark" : "$color"
+              }
             >
               {MEAL_LABEL[mealType]}
             </Text>

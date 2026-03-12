@@ -10,6 +10,7 @@ import { useState, useEffect } from "react"
 import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
 import type { DateAnalysisBodyRecord } from "@/src/types"
 import { useWeightEdemaRecord } from "../../hooks/useWeightEdemaRecord"
+import { useColorScheme } from "react-native"
 
 interface WeightEdemaTrackerProps {
   bodyRecords?: {
@@ -26,6 +27,7 @@ export function WeightEdemaTracker({
   const [weight, setWeight] = useState<string>("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
   const { updateWeight, updateEdema } = useWeightEdemaRecord()
+  const isDarkMode = useColorScheme() === "dark"
 
   useEffect(() => {
     const today = bodyRecords?.today ?? null
@@ -72,7 +74,11 @@ export function WeightEdemaTracker({
 
   return (
     <YStack paddingVertical="$3" gap="$3">
-      <Text fontSize={20} fontWeight="600">
+      <Text
+        fontSize={20}
+        fontWeight="600"
+        color={isDarkMode ? "$textDark" : "$black"}
+      >
         체중·부종 기록
       </Text>
 

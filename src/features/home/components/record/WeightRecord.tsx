@@ -1,6 +1,12 @@
-import { TouchableOpacity, TextInput, StyleSheet } from "react-native"
+import {
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  useColorScheme,
+} from "react-native"
 import { Text, XStack } from "tamagui"
 import { RecordCard } from "./RecordCard"
+import { tokens } from "@/src/theme/tokens"
 
 interface WeightRecordProps {
   weight: string
@@ -25,6 +31,7 @@ export function WeightRecord({
     yesterdayWeight !== null
       ? `어제: ${yesterdayWeight}kg`
       : "이전 기록이 없어요"
+  const isDarkMode = useColorScheme() === "dark"
 
   return (
     <RecordCard
@@ -41,21 +48,25 @@ export function WeightRecord({
       >
         <TouchableOpacity onPress={onDecrease}>
           <XStack
-            backgroundColor="$pureWhite"
+            backgroundColor={isDarkMode ? "$appBgDark" : "$pureWhite"}
             paddingVertical="$2"
             paddingHorizontal="$3"
             borderColor="$borderColor"
-            borderWidth={1}
+            borderWidth={isDarkMode ? "0" : "1"}
             borderRadius="$4"
           >
-            <Text fontSize="$4" fontWeight="500">
+            <Text
+              fontSize="$4"
+              fontWeight="500"
+              color={isDarkMode ? "$textDarkSub" : "$black"}
+            >
               -0.1kg
             </Text>
           </XStack>
         </TouchableOpacity>
 
         <XStack
-          backgroundColor="$backgroundFocus"
+          backgroundColor={isDarkMode ? "$appBgDark" : "$backgroundFocus"}
           paddingVertical="$2"
           paddingHorizontal="$3"
           borderRadius="$4"
@@ -64,16 +75,23 @@ export function WeightRecord({
           justifyContent="center"
         >
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { color: isDarkMode ? tokens.color.textDarkSub.val : "#1a1a1a" },
+            ]}
             placeholder="눌러서 입력해요"
-            placeholderTextColor="#999999"
+            placeholderTextColor={isDarkMode ? "$textDark" : "#999999"}
             value={weight}
             onChangeText={onChangeWeight}
             onEndEditing={() => onSave(weight)}
             keyboardType="decimal-pad"
           />
           {!!weight && (
-            <Text fontSize="$4" fontWeight="600">
+            <Text
+              fontSize="$4"
+              fontWeight="600"
+              color={isDarkMode ? "$textDarkSub" : "$black"}
+            >
               kg
             </Text>
           )}
@@ -81,14 +99,18 @@ export function WeightRecord({
 
         <TouchableOpacity onPress={onIncrease}>
           <XStack
-            backgroundColor="$pureWhite"
+            backgroundColor={isDarkMode ? "$appBgDark" : "$pureWhite"}
             paddingVertical="$2"
             paddingHorizontal="$3"
             borderColor="$borderColor"
-            borderWidth={1}
+            borderWidth={isDarkMode ? "0" : "1"}
             borderRadius="$4"
           >
-            <Text fontSize="$4" fontWeight="500">
+            <Text
+              fontSize="$4"
+              fontWeight="500"
+              color={isDarkMode ? "$textDarkSub" : "$black"}
+            >
               +0.1kg
             </Text>
           </XStack>

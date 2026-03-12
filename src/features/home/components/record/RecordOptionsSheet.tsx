@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  useColorScheme,
 } from "react-native"
 import { useEffect, useRef, useState } from "react"
 import { Text, View, XStack, YStack } from "tamagui"
@@ -26,6 +27,7 @@ export function RecordOptionsSheet({
   onTextRecord,
   onRecipeLoad,
 }: RecordOptionsSheetProps) {
+  const isDarkMode = useColorScheme() === "dark"
   const [isVisible, setIsVisible] = useState(false)
   const translateY = useRef(new Animated.Value(300)).current
   const backdropOpacity = useRef(new Animated.Value(0)).current
@@ -86,7 +88,16 @@ export function RecordOptionsSheet({
         </Animated.View>
 
         <Animated.View style={{ transform: [{ translateY }] }}>
-          <YStack style={styles.sheet}>
+          <YStack
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: isDarkMode
+                  ? tokens.color.cardBgDark.val
+                  : tokens.color.appBg.val,
+              },
+            ]}
+          >
             <View style={styles.handle} />
 
             <TouchableOpacity
@@ -99,7 +110,11 @@ export function RecordOptionsSheet({
                   size={24}
                   color={tokens.color.primary7.val}
                 />
-                <Text fontSize="$4" fontWeight="500" color="$color">
+                <Text
+                  fontSize="$4"
+                  fontWeight="500"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
                   카메라/사진으로 기록하기
                 </Text>
               </XStack>
@@ -115,7 +130,11 @@ export function RecordOptionsSheet({
                   size={24}
                   color={tokens.color.primary7.val}
                 />
-                <Text fontSize="$4" fontWeight="500" color="$color">
+                <Text
+                  fontSize="$4"
+                  fontWeight="500"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
                   글로 기록하기
                 </Text>
               </XStack>
@@ -131,7 +150,11 @@ export function RecordOptionsSheet({
                   size={24}
                   color={tokens.color.primary7.val}
                 />
-                <Text fontSize="$4" fontWeight="500" color="$color">
+                <Text
+                  fontSize="$4"
+                  fontWeight="500"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
                   레시피 불러오기
                 </Text>
               </XStack>

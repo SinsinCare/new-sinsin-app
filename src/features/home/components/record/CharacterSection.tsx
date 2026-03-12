@@ -75,17 +75,22 @@ export function CharacterSection({
   streak,
   withinLimits,
 }: CharacterSectionProps) {
-  const fireIconName = hasRecord ? "fire-color" : "fire-empty"
-  const checkIconName = withinLimits ? "check-color" : "check-empty"
+  const isDarkMode = useColorScheme() === "dark"
+  const fireIconName = hasRecord
+    ? "fire-color"
+    : isDarkMode
+      ? "fire-dark"
+      : "fire-empty"
+  const checkIconName = withinLimits
+    ? "check-color"
+    : isDarkMode
+      ? "check-dark"
+      : "check-empty"
   const streakText =
     streak > 0 ? `연속 ${streak}일 기록중` : "오늘은 기록이 없어요"
   const guideText = withinLimits
     ? "영양소 제한조건을 잘 지켰어요"
     : "영양소 제한조건을 지켜 식사해요"
-
-  const colorScheme = useColorScheme()
-  const isDark = colorScheme === "dark"
-
   const floatY = useRef(new Animated.Value(0)).current
   const shadowScale = useRef(new Animated.Value(1)).current
 
@@ -129,7 +134,7 @@ export function CharacterSection({
         <Animated.View
           style={{ transform: [{ scaleX: shadowScale }], marginTop: -12 }}
         >
-          <ShadowEllipse dark={isDark} />
+          <ShadowEllipse dark={isDarkMode} />
         </Animated.View>
       </YStack>
       <YStack>
@@ -142,7 +147,11 @@ export function CharacterSection({
           borderRadius="$6"
         >
           <Icon name={fireIconName} size={26} />
-          <Text fontSize={18} fontWeight="600">
+          <Text
+            fontSize={18}
+            fontWeight="600"
+            color={isDarkMode ? "$textDark" : "black"}
+          >
             {streakText}
           </Text>
         </XStack>
@@ -156,7 +165,11 @@ export function CharacterSection({
           borderRadius="$6"
         >
           <Icon name={checkIconName} size={26} />
-          <Text fontSize={18} fontWeight="600">
+          <Text
+            fontSize={18}
+            fontWeight="600"
+            color={isDarkMode ? "$textDark" : "black"}
+          >
             {guideText}
           </Text>
         </XStack>

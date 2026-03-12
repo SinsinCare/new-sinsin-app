@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { TouchableOpacity } from "react-native"
+import { TouchableOpacity, useColorScheme } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 
@@ -19,6 +19,7 @@ export function RecordCard({
   children,
 }: RecordCardProps) {
   const isHorizontal = type === "edema"
+  const isDarkMode = useColorScheme() === "dark"
 
   const titleSection = (
     <YStack
@@ -27,7 +28,11 @@ export function RecordCard({
       gap="$1"
     >
       <XStack justifyContent="space-between" alignItems="center">
-        <Text fontSize={18} fontWeight="600" color="$gray12">
+        <Text
+          fontSize={18}
+          fontWeight="600"
+          color={isDarkMode ? "$textDark" : "$color"}
+        >
           {title}
         </Text>
         {onReset && (
@@ -52,7 +57,7 @@ export function RecordCard({
   if (isHorizontal) {
     return (
       <XStack
-        backgroundColor="$cardBackground"
+        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
         borderRadius="$6"
         paddingVertical="$4"
         paddingHorizontal="$5"
@@ -66,7 +71,7 @@ export function RecordCard({
 
   return (
     <XStack
-      backgroundColor="$cardBackground"
+      backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
       borderRadius="$6"
       paddingVertical="$4"
       paddingHorizontal="$4"

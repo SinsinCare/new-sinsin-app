@@ -1,4 +1,4 @@
-import { TouchableOpacity, StyleSheet } from "react-native"
+import { TouchableOpacity, StyleSheet, useColorScheme } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
 import { RecordCard } from "./RecordCard"
@@ -16,6 +16,7 @@ export function EdemaRecord({
 }: EdemaRecordProps) {
   const subtitle =
     yesterdayEdema != null ? `어제: ${yesterdayEdema}` : "이전 기록이 없어요"
+  const isDarkMode = useColorScheme() === "dark"
 
   return (
     <RecordCard
@@ -27,7 +28,13 @@ export function EdemaRecord({
         {EDEMA_OPTIONS.map((option) => (
           <TouchableOpacity key={option} onPress={() => onSave(option)}>
             <XStack
-              backgroundColor={selected === option ? "$primary" : "$pureWhite"}
+              backgroundColor={
+                selected === option
+                  ? "$primary"
+                  : isDarkMode
+                    ? "$appBgDark"
+                    : "$pureWhite"
+              }
               paddingVertical="$2.5"
               paddingHorizontal="$7"
               borderRadius="$4"
@@ -37,7 +44,13 @@ export function EdemaRecord({
               <Text
                 fontSize={15}
                 fontWeight="600"
-                color={selected === option ? "white" : "$color"}
+                color={
+                  selected === option
+                    ? "white"
+                    : isDarkMode
+                      ? "$textDarkSub"
+                      : "$color"
+                }
               >
                 {option}
               </Text>
