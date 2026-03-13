@@ -1,7 +1,7 @@
 import { WebView } from "react-native-webview"
 import { StyleSheet, type ViewStyle } from "react-native"
 
-const KAKAO_JS_APP_KEY = "9b91ca7f6d6e220ec6e749a05f827d84"
+const KAKAO_JS_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_JS_KEY
 
 interface KakaoMapWebViewProps {
   latitude?: number

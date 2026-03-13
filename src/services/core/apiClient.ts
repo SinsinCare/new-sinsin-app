@@ -2,7 +2,7 @@ import axios, { type AxiosInstance } from "axios"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
 
-const BASE_URL = "https://api.sinsin.mediology.ai/api/v1"
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL
 
 // 인증 불필요 엔드포인트용 (로그인, 회원가입, OTP 등)
 export const publicApi = axios.create({
