@@ -2,6 +2,7 @@ import {
   Animated,
   Image,
   Modal,
+  ScrollView,
   TextInput,
   TouchableOpacity,
   useColorScheme,
@@ -156,7 +157,7 @@ export function FoodResultEdit({
         </TouchableOpacity>
       </XStack>
 
-      <View gap="$8">
+      <ScrollView contentContainerStyle={{ gap: 32, paddingBottom: 60 }}>
         <XStack>
           {imageUri && (
             <View marginLeft={19} marginRight={13} overflow="hidden">
@@ -550,7 +551,7 @@ export function FoodResultEdit({
             ))}
           </XStack>
         </View>
-      </View>
+      </ScrollView>
 
       <LoadingOverlay visible={isUpdating} message="식단을 수정하고 있어요" />
     </YStack>
