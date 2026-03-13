@@ -36,6 +36,7 @@ export function PlaceSheet() {
       <BottomSheet
         index={0}
         snapPoints={snapPoints}
+        topInset={insets.top}
         backgroundStyle={[styles.background, { backgroundColor }]}
         handleIndicatorStyle={[styles.handle, { backgroundColor: handleColor }]}
         enableContentPanningGesture={false}
