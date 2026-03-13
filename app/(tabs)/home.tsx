@@ -13,6 +13,11 @@ export default function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const insets = useSafeAreaInsets()
 
+  const handleGoToRecord = () => {
+    setMainTab("record")
+    setSelectedDate(new Date())
+  }
+
   const handleChangeTab = (tab: MainTab) => {
     setMainTab(tab)
     setSelectedDate(new Date())
@@ -41,7 +46,7 @@ export default function HomeScreen() {
         <StatisticsView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
-          onGoToRecord={() => setMainTab("record")}
+          onGoToRecord={handleGoToRecord}
           isActive={mainTab === "stats"}
         />
       </View>
