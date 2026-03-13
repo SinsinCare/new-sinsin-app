@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from "tamagui"
-import { TouchableOpacity, StyleSheet, useColorScheme } from "react-native"
+import { Animated, Pressable, StyleSheet, useColorScheme } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components/Icon"
 import Svg, {
@@ -21,6 +21,7 @@ import {
   WATER_COLORS,
 } from "../../data/hydrationConstants"
 import { tokens } from "@/src/theme/tokens"
+import { useEffect, useRef, useState } from "react"
 
 interface HydrationTrackerProps {
   intake: number
@@ -41,9 +42,29 @@ export function HydrationTracker({
   addWater,
   onReset,
 }: HydrationTrackerProps) {
-  const fillRatio = Math.min(percentage, 100) / 100
-  const waterY = TEXT_BASELINE - fillRatio * CAP_H
   const isDarkMode = useColorScheme() === "dark"
+
+  const fillAnim = useRef(new Animated.Value(0)).current
+  const [animWaterY, setAnimWaterY] = useState(TEXT_BASELINE)
+  const [displayPct, setDisplayPct] = useState(0)
+
+  useEffect(() => {
+    const id = fillAnim.addListener(({ value }) => {
+      setAnimWaterY(TEXT_BASELINE - value * CAP_H)
+      setDisplayPct(Math.round(value * 100))
+    })
+    return () => fillAnim.removeListener(id)
+  }, [fillAnim])
+
+  useEffect(() => {
+    const target = Math.min(percentage, 100) / 100
+    Animated.spring(fillAnim, {
+      toValue: target,
+      useNativeDriver: false,
+      tension: 60,
+      friction: 10,
+    }).start()
+  }, [percentage, fillAnim])
   const chipBg = isDarkMode
     ? tokens.color.cardBgDark.val
     : tokens.color.pureWhite.val
@@ -90,13 +111,12 @@ export function HydrationTracker({
         <XStack alignItems="center" paddingBottom={5} flexShrink={0} gap={1}>
           <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
             <Defs>
-              {/* 물 채운 영역을 직사각형으로 자름 */}
               <ClipPath id="waterClip">
                 <Rect
                   x={0}
-                  y={waterY}
+                  y={animWaterY}
                   width={SVG_WIDTH}
-                  height={SVG_HEIGHT - waterY}
+                  height={SVG_HEIGHT - animWaterY}
                 />
               </ClipPath>
               <LinearGradient
@@ -121,7 +141,7 @@ export function HydrationTracker({
               textAnchor="end"
               fill={WATER_COLORS.percentBg}
             >
-              {Math.round(percentage)}
+              {displayPct}
             </SvgText>
             <SvgText
               x={PCT_X}
@@ -144,7 +164,7 @@ export function HydrationTracker({
               fill="url(#waterGradient)"
               clipPath="url(#waterClip)"
             >
-              {Math.round(percentage)}
+              {displayPct}
             </SvgText>
             <SvgText
               x={PCT_X}
@@ -170,11 +190,17 @@ export function HydrationTracker({
         {/* Quick add + reset buttons */}
         <XStack gap={5}>
           {QUICK_ADD_OPTIONS.map((amount) => (
-            <TouchableOpacity
+            <Pressable
               key={amount}
               onPress={() => addWater(amount)}
-              style={[styles.chip, { backgroundColor: chipBg }]}
-              activeOpacity={0.7}
+              style={({ pressed }) => [
+                styles.chip,
+                {
+                  backgroundColor: chipBg,
+                  transform: [{ scale: pressed ? 0.93 : 1 }],
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
             >
               <Text
                 fontSize={15}
@@ -182,10 +208,15 @@ export function HydrationTracker({
               >
                 +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </XStack>
-        <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
+        <Pressable
+          onPress={onReset}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.5 : 1,
+          })}
+        >
           <XStack gap={2}>
             <Text fontSize={14} fontWeight="500" color="$colorSubtle">
               되돌리기
@@ -196,7 +227,7 @@ export function HydrationTracker({
               color={tokens.color.grey5.val}
             />
           </XStack>
-        </TouchableOpacity>
+        </Pressable>
       </XStack>
     </YStack>
   )

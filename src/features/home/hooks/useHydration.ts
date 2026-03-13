@@ -7,6 +7,7 @@ export interface UseHydrationReturn {
   percentage: number
   remaining: number
   isGoalAchieved: boolean
+  setIntake: (amount: number) => void
   addWater: (amount: number) => void
   subtractWater: (amount: number) => void
   reset: () => void
@@ -15,26 +16,33 @@ export interface UseHydrationReturn {
 export const useHydration = (
   initialGoal: number = DEFAULT_DAILY_GOAL,
 ): UseHydrationReturn => {
-  const [intake, setIntake] = useState<number>(0)
+  const [intake, setIntakeState] = useState<number>(0)
   const [dailyGoal] = useState<number>(initialGoal)
 
   const percentage = Math.min((intake / dailyGoal) * 100, 100)
   const remaining = Math.max(dailyGoal - intake, 0)
   const isGoalAchieved = percentage >= 100
 
+  const setIntake = useCallback(
+    (amount: number): void => {
+      setIntakeState(Math.max(0, Math.min(amount, dailyGoal)))
+    },
+    [dailyGoal],
+  )
+
   const addWater = useCallback(
     (amount: number): void => {
-      setIntake((current) => Math.min(current + amount, dailyGoal))
+      setIntakeState((current) => Math.min(current + amount, dailyGoal))
     },
     [dailyGoal],
   )
 
   const subtractWater = useCallback((amount: number): void => {
-    setIntake((current) => Math.max(current - amount, 0))
+    setIntakeState((current) => Math.max(current - amount, 0))
   }, [])
 
   const reset = useCallback((): void => {
-    setIntake(0)
+    setIntakeState(0)
   }, [])
 
   return {
@@ -43,6 +51,7 @@ export const useHydration = (
     percentage,
     remaining,
     isGoalAchieved,
+    setIntake,
     addWater,
     subtractWater,
     reset,

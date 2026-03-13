@@ -150,10 +150,14 @@ export function RecordView({
     })
     .map((day) => day.date)
 
-  const totalIntake = data?.result.analysis?.extraWater ?? 0
-  const dailyGoal = record.dailyGoal
-  const percentage = Math.min((totalIntake / dailyGoal) * 100, 100)
-  const remaining = Math.max(dailyGoal - totalIntake, 0)
+  const serverExtraWater = data?.result.analysis?.extraWater ?? 0
+  const prevServerExtraWaterRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (prevServerExtraWaterRef.current !== serverExtraWater) {
+      prevServerExtraWaterRef.current = serverExtraWater
+      record.syncFromServer(serverExtraWater)
+    }
+  }, [serverExtraWater, record])
 
   const handleAddToRecord = async () => {
     await registerDiary(selectedDate, (mealType, imageUri) => {
@@ -292,17 +296,17 @@ export function RecordView({
       <View height={10} />
 
       <HydrationTracker
-        intake={totalIntake}
-        dailyGoal={dailyGoal}
-        percentage={percentage}
-        remaining={remaining}
-        isGoalAchieved={percentage >= 100}
+        intake={record.intake}
+        dailyGoal={record.dailyGoal}
+        percentage={record.percentage}
+        remaining={record.remaining}
+        isGoalAchieved={record.isGoalAchieved}
         addWater={(amount) => {
-          if (totalIntake + amount > MAX_WATER_INTAKE) return
+          if (record.intake + amount > MAX_WATER_INTAKE) return
           record.addWater(amount)
         }}
         onReset={() => {
-          record.resetHydration(data?.result.analysis?.extraWater ?? 0)
+          record.resetHydration(serverExtraWater)
         }}
       />
 

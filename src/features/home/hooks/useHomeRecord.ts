@@ -18,6 +18,7 @@ export interface UseHomeRecordReturn {
   addWater: (amount: number) => void
   subtractWater: (amount: number) => void
   resetHydration: (serverExtraWater: number) => void
+  syncFromServer: (serverExtraWater: number) => void
 
   // Weight
   weight: string
@@ -79,6 +80,14 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     [hydration, dateStr, flushPendingWater],
   )
 
+  const syncFromServer = useCallback(
+    (serverExtraWater: number) => {
+      hydration.setIntake(serverExtraWater)
+      pendingDeltaRef.current = 0
+    },
+    [hydration],
+  )
+
   const resetWithApi = useCallback(
     (serverExtraWater: number) => {
       // Cancel pending debounce
@@ -112,6 +121,7 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     addWater: addWaterWithApi,
     subtractWater: hydration.subtractWater,
     resetHydration: resetWithApi,
+    syncFromServer,
     weight,
     setWeight,
     yesterdayWeight,
