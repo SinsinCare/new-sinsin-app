@@ -23,6 +23,8 @@ export interface PlaceRestaurant {
   reviewCount: number
   distance: string
   address: string
+  latitude: number
+  longitude: number
   images: (string | number)[]
 }
 

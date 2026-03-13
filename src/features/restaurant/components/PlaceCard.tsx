@@ -1,4 +1,10 @@
-import { Image, Pressable, ScrollView, StyleSheet, useColorScheme } from "react-native"
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+} from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import type { PlaceRestaurant } from "../types"
 
@@ -8,20 +14,34 @@ interface PlaceCardProps {
 
 export function PlaceCard({ restaurant }: PlaceCardProps) {
   const isDarkMode = useColorScheme() === "dark"
+  const restaurantTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
   const borderColor = isDarkMode ? "#2A2A2E" : "#F0F0F0"
   const subTextColor = isDarkMode ? "#ABABB4" : "#8E8E93"
 
   return (
-    <Pressable onPress={() => {}} style={[styles.container, { borderBottomColor: borderColor }]}>
+    <Pressable
+      onPress={() => {}}
+      style={[styles.container, { borderBottomColor: borderColor }]}
+    >
       <YStack gap={4} paddingHorizontal={16} paddingVertical={12}>
         {/* Name + Tags */}
         <XStack alignItems="center" gap={8}>
-          <Text fontFamily="$body" fontWeight="700" fontSize={16}>
+          <Text
+            fontFamily="$body"
+            fontWeight="700"
+            fontSize={16}
+            color={restaurantTextColor}
+          >
             {restaurant.name}
           </Text>
           <XStack gap={4}>
             {restaurant.tags.map((tag, i) => (
-              <Text key={i} fontFamily="$body" fontSize={13} color={subTextColor}>
+              <Text
+                key={i}
+                fontFamily="$body"
+                fontSize={13}
+                color={subTextColor}
+              >
                 {tag}
               </Text>
             ))}
