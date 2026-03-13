@@ -1,7 +1,6 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
-import Profile from "@/assets/icons/profile.svg"
 import { useColorScheme } from "react-native"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
