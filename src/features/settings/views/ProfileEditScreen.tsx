@@ -7,12 +7,12 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
-import { useUserStore } from "@/src/stores/userStore"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const profile = useUserStore((s) => s.profile)
+  const { data: profile } = useMyPageProfile()
 
   return (
     <ThemedView style={styles.container}>
@@ -57,10 +57,10 @@ export function ProfileEditScreen() {
               <ThemedText
                 style={[
                   styles.fieldValue,
-                  !profile?.nickname && styles.fieldPlaceholder,
+                  !profile?.nickName && styles.fieldPlaceholder,
                 ]}
               >
-                {profile?.nickname || "닉네임을 설정해주세요"}
+                {profile?.nickName || "닉네임을 설정해주세요"}
               </ThemedText>
               <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
             </View>
