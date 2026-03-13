@@ -37,8 +37,8 @@ export default function RestaurantScreen() {
           </YStack>
           <View flex={1} marginTop={12}>
             <KakaoMapWebView />
-            <PlaceSheet />
           </View>
+          <PlaceSheet />
         </>
       )}
       {activeTab === "curation" && (
