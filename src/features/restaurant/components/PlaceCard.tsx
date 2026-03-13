@@ -1,10 +1,5 @@
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-} from "react-native"
+import { Image, Pressable, StyleSheet, useColorScheme } from "react-native"
+import { ScrollView } from "react-native-gesture-handler"
 import { Text, XStack, YStack } from "tamagui"
 import type { PlaceRestaurant } from "../types"
 
