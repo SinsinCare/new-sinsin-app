@@ -11,8 +11,8 @@ function getRealPasswordService(): PasswordService {
     async changePassword(newPassword: string, token?: string): Promise<void> {
       if (token) {
         await publicApi.post<ApiResponse>("/auth/password/reset", {
-          token,
-          newPassword,
+          resetToken: token,
+          password: newPassword,
         })
       } else {
         await api.put<ApiResponse>("/auth/password", { newPassword })
