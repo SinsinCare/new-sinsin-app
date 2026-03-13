@@ -297,14 +297,12 @@ export function RecordView({
         percentage={percentage}
         remaining={remaining}
         isGoalAchieved={percentage >= 100}
-        addWater={async (amount) => {
+        addWater={(amount) => {
           if (totalIntake + amount > MAX_WATER_INTAKE) return
-          await record.addWater(amount)
-          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+          record.addWater(amount)
         }}
-        onReset={async () => {
-          await record.resetHydration(data?.result.analysis?.extraWater ?? 0)
-          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        onReset={() => {
+          record.resetHydration(data?.result.analysis?.extraWater ?? 0)
         }}
       />
 
