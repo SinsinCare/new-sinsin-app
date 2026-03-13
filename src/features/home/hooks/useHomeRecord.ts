@@ -38,35 +38,48 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
   const [weight, setWeight] = useState("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
 
-  // TODO: Firestore 연동 시 날짜별 어제 체중 조회로 교체
-  const yesterdayWeight: number | null = 60.4
+  const yesterdayWeight: number | null = null
 
   const dateStr = toDateStr(selectedDate)
 
   // Debounce state for water intake
   const pendingDeltaRef = useRef(0)
+  const updateExtraWaterRef = useRef(updateExtraWater)
+  updateExtraWaterRef.current = updateExtraWater
 
+  // flushPendingWater은 stable — updateExtraWater ref로 접근해서 매 렌더 재생성 방지
   const flushPendingWater = useMemo(
     () =>
       debounce((flushDateStr: string) => {
         const delta = pendingDeltaRef.current
         if (delta === 0) return
         pendingDeltaRef.current = 0
-        updateExtraWater(flushDateStr, delta).then(() => {
+        updateExtraWaterRef.current(flushDateStr, delta).then(() => {
           queryClient.refetchQueries({
             queryKey: ["dateAnalysis", flushDateStr],
           })
         })
       }, DEBOUNCE_MS),
-    [updateExtraWater, queryClient],
+    [queryClient],
   )
 
-  // Cancel debounce on unmount or date change
+  const flushPendingWaterRef = useRef(flushPendingWater)
+  flushPendingWaterRef.current = flushPendingWater
+
+  // Reset hydration when date changes
+  const { setIntake: setHydrationIntake } = hydration
+  useEffect(() => {
+    flushPendingWaterRef.current.cancel()
+    pendingDeltaRef.current = 0
+    setHydrationIntake(0)
+  }, [dateStr, setHydrationIntake])
+
+  // Cancel debounce on unmount
   useEffect(() => {
     return () => {
-      flushPendingWater.cancel()
+      flushPendingWaterRef.current.cancel()
     }
-  }, [flushPendingWater, dateStr])
+  }, [])
 
   const addWaterWithApi = useCallback(
     (amount: number) => {

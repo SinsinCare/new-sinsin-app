@@ -151,13 +151,12 @@ export function RecordView({
     .map((day) => day.date)
 
   const serverExtraWater = data?.result.analysis?.extraWater ?? 0
-  const prevServerExtraWaterRef = useRef<number | null>(null)
+  const { syncFromServer } = record
+  const syncFromServerRef = useRef(syncFromServer)
+  syncFromServerRef.current = syncFromServer
   useEffect(() => {
-    if (prevServerExtraWaterRef.current !== serverExtraWater) {
-      prevServerExtraWaterRef.current = serverExtraWater
-      record.syncFromServer(serverExtraWater)
-    }
-  }, [serverExtraWater, record])
+    syncFromServerRef.current(serverExtraWater)
+  }, [serverExtraWater, selectedDate])
 
   const handleAddToRecord = async () => {
     await registerDiary(selectedDate, (mealType, imageUri) => {
