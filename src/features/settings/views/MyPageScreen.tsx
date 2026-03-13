@@ -9,11 +9,13 @@ import { ThemedView } from "@/components/themed-view"
 import { useUserStore } from "@/src/stores/userStore"
 import { KidneyProfileCard } from "@/src/features/settings/components"
 import { calculateAge } from "@/src/features/settings/data/helpers"
+import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 
 export function MyPageScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const profile = useUserStore((s) => s.profile)
+  const { data: kidneyProfile } = useKidneyProfile()
   const ageGenderLabel =
     profile?.birthDate && profile?.gender
       ? `${calculateAge(profile.birthDate)}세 · ${profile.gender === "male" ? "남" : "여"}`
@@ -65,7 +67,7 @@ export function MyPageScreen() {
         <View style={styles.divider} />
 
         {/* 신장 프로필 영역 */}
-        {!profile?.ckdStage ? (
+        {!kidneyProfile ? (
           <Pressable
             style={styles.kidneyEmptyButton}
             onPress={() => router.push("/(settings)/kidney-profile-edit")}
@@ -77,10 +79,10 @@ export function MyPageScreen() {
           </Pressable>
         ) : (
           <KidneyProfileCard
-            ckdStage={profile.ckdStage}
-            onDialysis={profile.onDialysis}
-            height={profile.height}
-            weight={profile.weight}
+            ckdStageLabel={kidneyProfile.ckdStageLabel}
+            isDialysis={kidneyProfile.isDialysis}
+            weightKg={kidneyProfile.weightKg}
+            diagnosisDate={kidneyProfile.weightRecordedAt}
             onEditPress={() => router.push("/(settings)/kidney-profile-edit")}
           />
         )}

@@ -4,24 +4,22 @@ import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons"
 
 import { ThemedText } from "@/components/themed-text"
-import { CKD_STAGE_INFO } from "@/src/features/settings/data/constants"
 
 interface KidneyProfileCardProps {
-  ckdStage: number
-  onDialysis: boolean
-  height: number
-  weight: number
+  ckdStageLabel: string
+  isDialysis: boolean
+  weightKg: number
+  diagnosisDate: string
   onEditPress: () => void
 }
 
 export function KidneyProfileCard({
-  ckdStage,
-  onDialysis,
-  height,
-  weight,
+  ckdStageLabel,
+  isDialysis,
+  weightKg,
+  diagnosisDate,
   onEditPress,
 }: KidneyProfileCardProps) {
-  const ckdInfo = CKD_STAGE_INFO[ckdStage]
 
   return (
     <View style={styles.shadowOuter}>
@@ -36,9 +34,9 @@ export function KidneyProfileCard({
           {/* 헤더 */}
           <View style={styles.header}>
             <ThemedText style={styles.title}>나의 신장 프로필</ThemedText>
-            <Pressable hitSlop={8} onPress={onEditPress}>
+            {/* <Pressable hitSlop={8} onPress={onEditPress}>
               <ThemedText style={styles.editButton}>수정하기</ThemedText>
-            </Pressable>
+            </Pressable> */}
           </View>
 
           {/* CKD 병기 */}
@@ -49,25 +47,23 @@ export function KidneyProfileCard({
             <View style={styles.ckdTextBlock}>
               <ThemedText style={styles.ckdLabel}>신장 병기 (CKD)</ThemedText>
               <ThemedText style={styles.ckdValue}>
-                {ckdStage}기{" "}
+                {ckdStageLabel}{" "}
                 <ThemedText style={styles.ckdDialysis}>
-                  ({onDialysis ? "투석 중" : "투석 안함"})
+                  ({isDialysis ? "투석 중" : "투석 안함"})
                 </ThemedText>
               </ThemedText>
             </View>
           </View>
 
-          {/* 키 / 체중 & 진단시기 */}
+          {/* 체중 & 진단시기 */}
           <View style={styles.infoBoxRow}>
             <View style={styles.infoBox}>
-              <ThemedText style={styles.infoBoxTitle}>키 / 체중</ThemedText>
-              <ThemedText style={styles.infoBoxValue}>
-                {height}cm / {weight}kg
-              </ThemedText>
+              <ThemedText style={styles.infoBoxTitle}>체중</ThemedText>
+              <ThemedText style={styles.infoBoxValue}>{weightKg}kg</ThemedText>
             </View>
             <View style={styles.infoBox}>
               <ThemedText style={styles.infoBoxTitle}>진단시기</ThemedText>
-              <ThemedText style={styles.infoBoxValue}>-</ThemedText>
+              <ThemedText style={styles.infoBoxValue}>{diagnosisDate}</ThemedText>
             </View>
           </View>
 
