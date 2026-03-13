@@ -34,6 +34,7 @@ function addIsSuccessInterceptor(instance: AxiosInstance) {
 // HTTP/네트워크 에러 → ApiError 변환 (가장 마지막에 등록)
 function addErrorInterceptor(instance: AxiosInstance) {
   instance.interceptors.response.use(undefined, (error) => {
+    console.log('error', error)
     if (error instanceof ApiError) {
       return Promise.reject(error)
     }
@@ -121,7 +122,7 @@ api.interceptors.response.use(
         throw new Error("No refresh token")
       }
 
-      const { data } = await publicApi.post("/api/v1/auth/tokens/refresh", {
+      const { data } = await publicApi.post("/auth/tokens/refresh", {
         refreshToken,
       })
 
