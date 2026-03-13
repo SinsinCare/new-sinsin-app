@@ -6,19 +6,18 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
-import { useUserStore } from "@/src/stores/userStore"
 import { KidneyProfileCard } from "@/src/features/settings/components"
-import { calculateAge } from "@/src/features/settings/data/helpers"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 
 export function MyPageScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const profile = useUserStore((s) => s.profile)
+  const { data: profile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
   const ageGenderLabel =
-    profile?.birthDate && profile?.gender
-      ? `${calculateAge(profile.birthDate)}세 · ${profile.gender === "male" ? "남" : "여"}`
+    profile?.age && profile?.gender
+      ? `${profile.age}세 · ${profile.gender === "male" ? "남" : "여"}`
       : null
 
   return (
@@ -45,7 +44,7 @@ export function MyPageScreen() {
           </View>
           <View style={styles.profileInfo}>
             <ThemedText style={styles.userName}>
-              {profile?.nickname ?? "사용자"}
+              {profile?.nickName ?? "사용자"}
             </ThemedText>
             {ageGenderLabel && (
               <View style={styles.infoLabel}>
