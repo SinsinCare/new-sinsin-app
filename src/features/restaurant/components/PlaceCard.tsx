@@ -79,6 +79,7 @@ export function PlaceCard({ restaurant }: PlaceCardProps) {
         {/* Image Gallery */}
         <ScrollView
           horizontal
+          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.imageGallery}
           style={styles.imageScroll}

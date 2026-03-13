@@ -2,6 +2,47 @@ import type { CurationSectionData, PlaceRestaurant } from "../types"
 
 const PLACEHOLDER_IMAGE = require("@/assets/images/SIn_2.png")
 
+// Restaurant images
+const CHOROK_GIMBAP = [
+  require("@/assets/images/restaurant/chorok-gimbap-1.jpg"),
+  require("@/assets/images/restaurant/chorok-gimbap-2.jpg"),
+  require("@/assets/images/restaurant/chorok-gimbap-3.jpg"),
+  require("@/assets/images/restaurant/chorok-gimbap-4.jpg"),
+]
+const SONGHWA = [
+  require("@/assets/images/restaurant/songhwa-1.jpg"),
+  require("@/assets/images/restaurant/songhwa-2.jpg"),
+  require("@/assets/images/restaurant/songhwa-3.jpg"),
+  require("@/assets/images/restaurant/songhwa-4.jpg"),
+]
+const MASHITJEOYEOM = [
+  require("@/assets/images/restaurant/mashitjeoyeom-1.jpg"),
+  require("@/assets/images/restaurant/mashitjeoyeom-2.jpg"),
+  require("@/assets/images/restaurant/mashitjeoyeom-3.jpg"),
+  require("@/assets/images/restaurant/mashitjeoyeom-4.jpg"),
+]
+const SONYEO_BANGATGAN = [
+  require("@/assets/images/restaurant/sonyeo-bangatgan-1.jpg"),
+  require("@/assets/images/restaurant/sonyeo-bangatgan-2.jpg"),
+  require("@/assets/images/restaurant/sonyeo-bangatgan-3.jpg"),
+  require("@/assets/images/restaurant/sonyeo-bangatgan-4.jpg"),
+  require("@/assets/images/restaurant/sonyeo-bangatgan-5.jpg"),
+  require("@/assets/images/restaurant/sonyeo-bangatgan-6.jpg"),
+]
+const JEONGHEE_GANGNAM = [
+  require("@/assets/images/restaurant/jeonghee-gangnam-1.jpg"),
+  require("@/assets/images/restaurant/jeonghee-gangnam-2.jpg"),
+  require("@/assets/images/restaurant/jeonghee-gangnam-3.jpg"),
+  require("@/assets/images/restaurant/jeonghee-gangnam-4.jpg"),
+]
+const CHOIGANE_SHABU = [
+  require("@/assets/images/restaurant/choigane-shabu-1.jpg"),
+  require("@/assets/images/restaurant/choigane-shabu-2.jpg"),
+  require("@/assets/images/restaurant/choigane-shabu-3.jpg"),
+  require("@/assets/images/restaurant/choigane-shabu-4.jpg"),
+  require("@/assets/images/restaurant/choigane-shabu-5.jpg"),
+]
+
 export const MAP_CENTER = {
   latitude: 37.5022,
   longitude: 127.0281,
@@ -100,7 +141,7 @@ export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
     address: "서울 강남구 강남대로98길 14",
     latitude: 37.5007624,
     longitude: 127.0277757,
-    images: [PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE],
+    images: CHOROK_GIMBAP,
   },
   {
     id: "p2",
@@ -113,12 +154,7 @@ export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
     address: "서울 강남구 강남대로94길 69",
     latitude: 37.5001365,
     longitude: 127.030754,
-    images: [
-      PLACEHOLDER_IMAGE,
-      PLACEHOLDER_IMAGE,
-      PLACEHOLDER_IMAGE,
-      PLACEHOLDER_IMAGE,
-    ],
+    images: SONGHWA,
   },
   {
     id: "p3",
@@ -131,7 +167,7 @@ export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
     address: "서울 강남구 선릉로93길 40",
     latitude: 37.5046606,
     longitude: 127.0462786,
-    images: [PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE],
+    images: MASHITJEOYEOM,
   },
   {
     id: "p4",
@@ -144,7 +180,7 @@ export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
     address: "서울 서초구 신반포로 194",
     latitude: 37.5049285,
     longitude: 127.0055927,
-    images: [PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE],
+    images: SONYEO_BANGATGAN,
   },
   {
     id: "p5",
@@ -157,12 +193,7 @@ export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
     address: "서울 강남구 강남대로102길 15",
     latitude: 37.5025765,
     longitude: 127.0274505,
-    images: [
-      PLACEHOLDER_IMAGE,
-      PLACEHOLDER_IMAGE,
-      PLACEHOLDER_IMAGE,
-      PLACEHOLDER_IMAGE,
-    ],
+    images: JEONGHEE_GANGNAM,
   },
   {
     id: "p6",
@@ -175,6 +206,6 @@ export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
     address: "서울 강남구 강남대로94길 20",
     latitude: 37.5001365,
     longitude: 127.030754,
-    images: [PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE],
+    images: CHOIGANE_SHABU,
   },
 ]
