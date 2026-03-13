@@ -156,7 +156,7 @@ export function RecordView({
   syncFromServerRef.current = syncFromServer
   useEffect(() => {
     syncFromServerRef.current(serverExtraWater)
-  }, [serverExtraWater, selectedDate])
+  }, [serverExtraWater])
 
   const handleAddToRecord = async () => {
     await registerDiary(selectedDate, (mealType, imageUri) => {

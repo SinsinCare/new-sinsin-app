@@ -95,8 +95,9 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
 
   const syncFromServer = useCallback(
     (serverExtraWater: number) => {
+      // 아직 안 보낸 pending이 있으면 optimistic 상태 유지 (덮어쓰지 않음)
+      if (pendingDeltaRef.current > 0) return
       hydration.setIntake(serverExtraWater)
-      pendingDeltaRef.current = 0
     },
     [hydration],
   )
