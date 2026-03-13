@@ -12,7 +12,8 @@ export const passwordRules: RegisterOptions<PasswordForm, "password"> = {
     message: "비밀번호는 18자 이하여야 합니다.",
   },
   validate: {
-    hasLetter: (v) => /[a-zA-Z]/.test(v) || "영문 대/소문자를 포함해주세요.",
+    hasUpperCase: (v) => /[A-Z]/.test(v) || "영문 대문자를 포함해주세요.",
+    hasLowerCase: (v) => /[a-z]/.test(v) || "영문 소문자를 포함해주세요.",
     hasNumber: (v) => /[0-9]/.test(v) || "숫자를 포함해주세요.",
     hasSpecialChar: (v) =>
       /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(v) ||

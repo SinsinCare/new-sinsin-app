@@ -20,8 +20,8 @@ import { passwordService } from "@/src/services"
 
 const RESET_TOKEN_KEY = "@sinsin/passwordResetToken"
 
-// 영문 대/소문자, 숫자, 특수문자 포함 6~18자
-const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
+// 영문 대문자, 소문자, 숫자, 특수문자 포함 6~18자
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
 
 export function PasswordEditScreen() {
   const insets = useSafeAreaInsets()
