@@ -81,6 +81,7 @@ export default function PostDetailScreen() {
               color={post.bookmarked ? LIKE_COLOR[scheme] : HEADER_ICON[scheme]}
             />
           </Pressable>
+          {/* TODO: 더보기 메뉴 기능 구현 후 복원 (App Store 2.1a 반려)
           <Pressable hitSlop={8}>
             <Ionicons
               name="ellipsis-horizontal"
@@ -88,6 +89,7 @@ export default function PostDetailScreen() {
               color={HEADER_ICON[scheme]}
             />
           </Pressable>
+          */}
         </XStack>
       </XStack>
 
