@@ -7,6 +7,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   useWindowDimensions,
+  useColorScheme,
 } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -23,14 +24,13 @@ import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import type { DiaryAnalysisResult } from "@/src/types"
+import { Icon } from "@/src/shared/components"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
 interface StatisticsViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  selectedMealType: MealType | null
-  onSelectMealType: (mealType: MealType) => void
   onGoToRecord: () => void
   isActive: boolean
 }
@@ -38,8 +38,6 @@ interface StatisticsViewProps {
 export function StatisticsView({
   selectedDate,
   onSelectDate,
-  selectedMealType,
-  onSelectMealType,
   onGoToRecord,
   isActive,
 }: StatisticsViewProps) {
@@ -53,7 +51,7 @@ export function StatisticsView({
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
-  const { data, isLoading, isFetching, refetch } = useDateAnalysis(selectedDate)
+  const { data, isLoading, refetch } = useDateAnalysis(selectedDate)
   const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
   const { updateFoodAnalysis, fetchDiaryResult, isUpdating } = useFoodAnalysis(
@@ -71,8 +69,8 @@ export function StatisticsView({
   )
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
-
-  const isEmpty = !isLoading && !isFetching && !hasDiets
+  const isEmpty = !isLoading && !hasDiets
+  const isDarkMode = useColorScheme() === "dark"
 
   useEffect(() => {
     if (!isActive) return
@@ -83,7 +81,6 @@ export function StatisticsView({
   }, [isActive, refetch])
 
   const handleDietCardPress = async (mealType: MealType) => {
-    onSelectMealType(mealType)
     const diet = data?.result.diets.find((d) => d.mealType === mealType)
     if (!diet) return
     const result = await fetchDiaryResult(diet.diaryId)
@@ -151,7 +148,11 @@ export function StatisticsView({
             <Ionicons name="chevron-back" size={18} color="#999" />
           </TouchableOpacity>
           <XStack alignItems="center" gap="$2">
-            <Text fontSize="$5" fontWeight="600">
+            <Text
+              fontSize="$5"
+              fontWeight="600"
+              color={isDarkMode ? "$textDark" : "$black"}
+            >
               {getWeekLabel(selectedDate)}
             </Text>
             <Ionicons name="calendar-outline" size={18} color="#999" />
@@ -181,13 +182,14 @@ export function StatisticsView({
       </YStack>
 
       {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
-      {isEmpty ? (
+      {isEmpty || isLoading ? (
         <YStack
           minHeight={windowHeight * 0.45}
           justifyContent="center"
           alignItems="center"
           gap="$4"
         >
+          <Icon name="circle-character" size={40} />
           <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
             아직 기록하지 않았어요.
           </Text>
@@ -196,9 +198,9 @@ export function StatisticsView({
               fontSize="$4"
               color="$colorSubtle"
               fontWeight="600"
-              backgroundColor="$backgroundHover"
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$backgroundFocus"}
               paddingHorizontal="$3"
-              paddingVertical="$3"
+              paddingVertical="$2.5"
               borderRadius="$8"
             >
               기록하러 가기
@@ -231,7 +233,6 @@ export function StatisticsView({
           >
             <DietaryRecord
               diets={data?.result.diets ?? []}
-              selectedMealType={selectedMealType}
               onSelectMealType={handleDietCardPress}
             />
           </View>

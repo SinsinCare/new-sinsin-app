@@ -34,7 +34,9 @@ export function ConfirmModal({
           <View style={styles.popupContent}>
             <ThemedText style={styles.popupTitle}>{title}</ThemedText>
             {description && (
-              <ThemedText style={styles.popupDescription}>{description}</ThemedText>
+              <ThemedText style={styles.popupDescription}>
+                {description}
+              </ThemedText>
             )}
           </View>
           <View style={styles.popupButtons}>
@@ -46,7 +48,9 @@ export function ConfirmModal({
               ]}
               onPress={onCancel}
             >
-              <ThemedText style={styles.popupButtonCancelText}>{cancelText}</ThemedText>
+              <ThemedText style={styles.popupButtonCancelText}>
+                {cancelText}
+              </ThemedText>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -55,7 +59,9 @@ export function ConfirmModal({
               ]}
               onPress={onConfirm}
             >
-              <ThemedText style={styles.popupButtonConfirmText}>{confirmText}</ThemedText>
+              <ThemedText style={styles.popupButtonConfirmText}>
+                {confirmText}
+              </ThemedText>
             </Pressable>
           </View>
         </View>

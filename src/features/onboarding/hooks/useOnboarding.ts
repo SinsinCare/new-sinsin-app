@@ -11,8 +11,14 @@ type Phase = "welcome" | "steps"
 export function useOnboarding() {
   const [phase, setPhase] = useState<Phase>("welcome")
   const [steps, setSteps] = useState<OnboardingStep[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  // hydration 완료 전까지 로딩 화면을 보여주기 위해 true로 시작
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // persist hydration 상태 추적
+  const [isStoreHydrated, setIsStoreHydrated] = useState(() =>
+    useOnboardingStore.persist.hasHydrated(),
+  )
 
   const user = useAuthStore((s) => s.user)
   const setAccountState = useAuthStore((s) => s.setAccountState)
@@ -28,6 +34,15 @@ export function useOnboarding() {
     reset: resetOnboarding,
   } = useOnboardingStore()
 
+  // AsyncStorage hydration 완료 대기
+  useEffect(() => {
+    if (isStoreHydrated) return
+    const unsub = useOnboardingStore.persist.onFinishHydration(() => {
+      setIsStoreHydrated(true)
+    })
+    return unsub
+  }, [isStoreHydrated])
+
   useEffect(() => {
     setOnboardingInProgress(true)
     return () => {
@@ -35,7 +50,7 @@ export function useOnboarding() {
     }
   }, [setOnboardingInProgress])
 
-  const loadSteps = async (isCkd: boolean) => {
+  const loadSteps = useCallback(async (isCkd: boolean) => {
     setIsLoading(true)
     try {
       const data = await onboardingService.getSteps(isCkd)
@@ -46,7 +61,22 @@ export function useOnboarding() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  // hydration 완료 후 저장된 진행 상태 복원
+  useEffect(() => {
+    if (!isStoreHydrated) return
+
+    if (hasCkd !== null) {
+      // 이전 진행 데이터가 있으면 해당 스텝으로 자동 복원
+      loadSteps(hasCkd)
+    } else {
+      // 처음 시작이면 welcome 화면 표시
+      setIsLoading(false)
+    }
+    // hasCkd 변화에 반응하지 않도록 hydration 시점에만 실행
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStoreHydrated])
 
   const handleWelcomeSelect = (isCkd: boolean) => {
     setHasCkd(isCkd)

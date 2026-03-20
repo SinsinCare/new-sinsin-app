@@ -71,7 +71,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                   })}
                 >
                   <YStack
-                    backgroundColor={isDarkMode ? "#252529" : "#FCFCFC"}
+                    backgroundColor={isDarkMode ? "#252529" : "#F3F3F3"}
                     borderRadius={16}
                     padding="16"
                     gap="$2"
@@ -111,7 +111,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                     })}
                   >
                     <YStack
-                      backgroundColor={isDarkMode ? "#252529" : "#FCFCFC"}
+                      backgroundColor={isDarkMode ? "#252529" : "#F3F3F3"}
                       borderRadius={16}
                       padding="16"
                       gap="$2"

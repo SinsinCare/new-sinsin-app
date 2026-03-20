@@ -6,17 +6,18 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
-import { useUserStore } from "@/src/stores/userStore"
 import { KidneyProfileCard } from "@/src/features/settings/components"
-import { calculateAge } from "@/src/features/settings/data/helpers"
+import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 
 export function MyPageScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const profile = useUserStore((s) => s.profile)
+  const { data: profile } = useMyPageProfile()
+  const { data: kidneyProfile } = useKidneyProfile()
   const ageGenderLabel =
-    profile?.birthDate && profile?.gender
-      ? `${calculateAge(profile.birthDate)}세 · ${profile.gender === "male" ? "남" : "여"}`
+    profile?.age && profile?.gender
+      ? `${profile.age}세 · ${profile.gender === "male" ? "남" : "여"}`
       : null
 
   return (
@@ -42,10 +43,14 @@ export function MyPageScreen() {
             <Ionicons name="person" size={28} color="#C5C8CE" />
           </View>
           <View style={styles.profileInfo}>
-            <ThemedText style={styles.userName}>{profile?.nickname ?? "사용자"}</ThemedText>
+            <ThemedText style={styles.userName}>
+              {profile?.nickName ?? "사용자"}
+            </ThemedText>
             {ageGenderLabel && (
               <View style={styles.infoLabel}>
-                <ThemedText style={styles.infoLabelText}>{ageGenderLabel}</ThemedText>
+                <ThemedText style={styles.infoLabelText}>
+                  {ageGenderLabel}
+                </ThemedText>
               </View>
             )}
           </View>
@@ -61,7 +66,7 @@ export function MyPageScreen() {
         <View style={styles.divider} />
 
         {/* 신장 프로필 영역 */}
-        {!profile?.ckdStage ? (
+        {!kidneyProfile ? (
           <Pressable
             style={styles.kidneyEmptyButton}
             onPress={() => router.push("/(settings)/kidney-profile-edit")}
@@ -73,10 +78,10 @@ export function MyPageScreen() {
           </Pressable>
         ) : (
           <KidneyProfileCard
-            ckdStage={profile.ckdStage}
-            onDialysis={profile.onDialysis}
-            height={profile.height}
-            weight={profile.weight}
+            ckdStageLabel={kidneyProfile.ckdStageLabel}
+            isDialysis={kidneyProfile.isDialysis}
+            weightKg={kidneyProfile.weightKg}
+            diagnosisDate={kidneyProfile.weightRecordedAt}
             onEditPress={() => router.push("/(settings)/kidney-profile-edit")}
           />
         )}
@@ -86,14 +91,33 @@ export function MyPageScreen() {
 
         {/* 메뉴 버튼 */}
         {[
-          { icon: "clipboard-outline" as const, title: "건강검진 데이터 불러오고 분석하기", onPress: () => router.push("/(settings)/health-data") },
-          { icon: "share-outline" as const, title: "나의 데이터 공유하기", onPress: () => {} },
-          { icon: "megaphone-outline" as const, title: "공지사항", onPress: () => router.push("/(settings)/announcements") },
-          { icon: "chatbubble-outline" as const, title: "1:1 문의", onPress: () => router.push("/(settings)/inquiry") },
+          {
+            icon: "clipboard-outline" as const,
+            title: "건강검진 데이터 불러오고 분석하기",
+            onPress: () => router.push("/(settings)/health-data"),
+          },
+          {
+            icon: "share-outline" as const,
+            title: "나의 데이터 공유하기",
+            onPress: () => {},
+          },
+          {
+            icon: "megaphone-outline" as const,
+            title: "공지사항",
+            onPress: () => router.push("/(settings)/announcements"),
+          },
+          {
+            icon: "chatbubble-outline" as const,
+            title: "1:1 문의",
+            onPress: () => router.push("/(settings)/inquiry"),
+          },
         ].map(({ icon, title, onPress }) => (
           <Pressable
             key={title}
-            style={({ pressed }) => [styles.navButton, pressed && styles.navButtonPressed]}
+            style={({ pressed }) => [
+              styles.navButton,
+              pressed && styles.navButtonPressed,
+            ]}
             onPress={onPress}
           >
             <Ionicons name={icon} size={24} color="#474758" />
@@ -102,6 +126,21 @@ export function MyPageScreen() {
           </Pressable>
         ))}
 
+        {/* 구분선 */}
+        <View style={styles.fullWidthDivider} />
+
+        {/* 의사에게 질문하기 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.navButton,
+            pressed && styles.navButtonPressed,
+          ]}
+          onPress={() => router.push("/(settings)/ask-doctor")}
+        >
+          <Ionicons name="medkit-outline" size={24} color="#474758" />
+          <ThemedText style={styles.navButtonText}>의사 연결하기</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color="#C4C4C4" />
+        </Pressable>
       </ScrollView>
     </ThemedView>
   )

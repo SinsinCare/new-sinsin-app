@@ -6,6 +6,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Dimensions,
+  useColorScheme,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { MealType } from "../../types"
@@ -18,19 +19,31 @@ interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
   mealImages?: Partial<Record<MealType, string>>
   recordedMeals?: Partial<Record<MealType, boolean>>
+  mealTimes?: Partial<Record<MealType, string>>
   onRecord: (mealType: MealType) => void
+  onViewResult: (mealType: MealType) => void
 }
 
 export function MealButtons({
   onSelectMealType,
   mealImages = {},
   recordedMeals = {},
+  mealTimes = {},
   onRecord,
+  onViewResult,
 }: MealButtonsProps) {
   const mealTypes: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [pickerBottom, setPickerBottom] = useState(0)
   const buttonRef = useRef<React.ComponentRef<typeof TouchableOpacity>>(null)
+  const isDarkMode = useColorScheme() === "dark"
+  const cardBg = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.pureWhite.val
+  const iconColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.black.val
+  const labelColor = isDarkMode ? tokens.color.textDark.val : "#2d2d2d"
 
   const handleOpenPicker = () => {
     buttonRef.current?.measure(
@@ -56,18 +69,30 @@ export function MealButtons({
   }
 
   return (
-    <YStack paddingVertical="$3" gap="$4">
-      <Text fontSize={22} fontWeight="700">
-        식이 기록
-      </Text>
-      <XStack width="100%" justifyContent="center" gap="$2">
+    <YStack paddingVertical="$1" gap="$3">
+      <YStack gap="$1">
+        <Text
+          fontSize={20}
+          fontWeight="600"
+          color={isDarkMode ? "$textDark" : "$color"}
+        >
+          식이 기록
+        </Text>
+        <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+          아래 버튼을 눌러 오늘의 식사를 기록해보세요.
+        </Text>
+      </YStack>
+      <XStack gap="$2">
         {mealTypes.map((type) => (
           <MealButton
             key={type}
             mealType={type}
-            onPress={() => onSelectMealType(type)}
+            onPress={
+              recordedMeals[type] ? () => onViewResult(type) : handleOpenPicker
+            }
             imageUri={mealImages[type]}
             isRecorded={recordedMeals[type] ?? false}
+            time={mealTimes[type]}
           />
         ))}
       </XStack>
@@ -81,7 +106,12 @@ export function MealButtons({
         <TouchableWithoutFeedback onPress={() => setIsPickerOpen(false)}>
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
-        <View style={[styles.pickerCard, { bottom: pickerBottom }]}>
+        <View
+          style={[
+            styles.pickerCard,
+            { bottom: pickerBottom, backgroundColor: cardBg },
+          ]}
+        >
           <XStack>
             {MEAL_OPTIONS.slice(0, 2).map((opt) => (
               <TouchableOpacity
@@ -89,8 +119,10 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon name={opt.icon} size={18} color="$black" />
-                <Text style={styles.mealLabel}>{opt.label}</Text>
+                <Icon name={opt.icon} size={18} color={iconColor} />
+                <Text style={[styles.mealLabel, { color: labelColor }]}>
+                  {opt.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </XStack>
@@ -101,12 +133,14 @@ export function MealButtons({
                 style={styles.mealOption}
                 onPress={() => handleMealSelect(opt.type)}
               >
-                <Icon name={opt.icon} size={18} color="$black" />
-                <Text style={styles.mealLabel}>{opt.label}</Text>
+                <Icon name={opt.icon} size={18} color={iconColor} />
+                <Text style={[styles.mealLabel, { color: labelColor }]}>
+                  {opt.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </XStack>
-          <View style={styles.arrow} />
+          <View style={[styles.arrow, { backgroundColor: cardBg }]} />
         </View>
       </Modal>
 
@@ -118,9 +152,13 @@ export function MealButtons({
         <Ionicons
           name="camera-outline"
           size={20}
-          color={tokens.color.pureWhite.val}
+          color={isDarkMode ? "black" : "white"}
         />
-        <Text color="white" fontSize="$4" fontWeight="600">
+        <Text
+          color={isDarkMode ? "$black" : "white"}
+          fontSize="$4"
+          fontWeight="600"
+        >
           식이 기록하기
         </Text>
       </TouchableOpacity>

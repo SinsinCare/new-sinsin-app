@@ -21,30 +21,45 @@ export function HealthDataEntryScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={styles.title}>{"검사 결과를\n어떻게 가져올까요?"}</ThemedText>
+        <ThemedText style={styles.title}>
+          {"검사 결과를\n어떻게 가져올까요?"}
+        </ThemedText>
         <ThemedText style={styles.subtitle}>
           {"최근 건강검진 결과를 불러와 신장 상태를\n쉽게 설명해드려요."}
         </ThemedText>
 
         {/* 건강보험공단에서 불러오기 */}
         <Pressable
-          style={({ pressed }) => [styles.optionCard, pressed && styles.optionCardPressed]}
+          style={({ pressed }) => [
+            styles.optionCard,
+            pressed && styles.optionCardPressed,
+          ]}
           onPress={() => router.push("/(settings)/health-nhis-auth")}
         >
-          <View style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}>
+          <View
+            style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}
+          >
             <Ionicons name="shield-checkmark" size={24} color="#44AF94" />
           </View>
           <View style={styles.optionContent}>
-            <ThemedText style={styles.optionTitle}>건강보험공단에서 불러오기</ThemedText>
+            <ThemedText style={styles.optionTitle}>
+              건강보험공단에서 불러오기
+            </ThemedText>
             <ThemedText style={styles.optionDesc}>
-              최근 10년간의 검진 기록을 한 번에 자동으로 가져옵니다. 간편인증이 필요합니다.
+              최근 10년간의 검진 기록을 한 번에 자동으로 가져옵니다. 간편인증이
+              필요합니다.
             </ThemedText>
             <View style={styles.recommendBadge}>
               <Ionicons name="flash" size={11} color="#0D896A" />
-              <ThemedText style={styles.recommendBadgeText}>가장 빠르고 정확해요</ThemedText>
+              <ThemedText style={styles.recommendBadgeText}>
+                가장 빠르고 정확해요
+              </ThemedText>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
@@ -52,14 +67,21 @@ export function HealthDataEntryScreen() {
 
         {/* 검사지 업로드하기 */}
         <Pressable
-          style={({ pressed }) => [styles.optionCard, pressed && styles.optionCardPressed]}
+          style={({ pressed }) => [
+            styles.optionCard,
+            pressed && styles.optionCardPressed,
+          ]}
           onPress={() => router.push("/(settings)/health-data-upload")}
         >
-          <View style={[styles.optionIconWrapper, styles.optionIconWrapperGray]}>
+          <View
+            style={[styles.optionIconWrapper, styles.optionIconWrapperGray]}
+          >
             <Ionicons name="camera-outline" size={24} color="#94A3B8" />
           </View>
           <View style={styles.optionContent}>
-            <ThemedText style={styles.optionTitle}>검사지 업로드하기</ThemedText>
+            <ThemedText style={styles.optionTitle}>
+              검사지 업로드하기
+            </ThemedText>
             <ThemedText style={styles.optionDesc}>
               가지고 계신 종이 검사지를 촬영하거나 PDF 파일을 직접 업로드합니다.
             </ThemedText>
@@ -84,7 +106,9 @@ export function HealthDataEntryScreen() {
             </View>
           </View>
           <ThemedText style={styles.trustText}>
-            {'"신신당부는 보건복지부 가이드라인을 준수하며\n여러분의 소중한 정보를 철저히 관리합니다."'}
+            {
+              '"신신당부는 보건복지부 가이드라인을 준수하며\n여러분의 소중한 정보를 철저히 관리합니다."'
+            }
           </ThemedText>
         </View>
       </ScrollView>

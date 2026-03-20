@@ -14,7 +14,7 @@ export function NhisAuthScreen() {
   const router = useRouter()
 
   const handleStart = () => {
-    // TODO: 건강보험공단 본인인증 연동
+    router.push("/(settings)/health-nhis-request")
   }
 
   return (
@@ -52,16 +52,23 @@ export function NhisAuthScreen() {
         {/* 텍스트 영역 */}
         <View style={styles.textSection}>
           <ThemedText style={styles.title}>
-            {"건강보험공단의\n검사 결과를 불러오기 위해\n본인인증이 필요합니다."}
+            {
+              "건강보험공단의\n검사 결과를 불러오기 위해\n본인인증이 필요합니다."
+            }
           </ThemedText>
           <ThemedText style={styles.description}>
-            {"신신당부는 소중한 정보를 안전하게 보호하며,\n인증 데이터는 암호화됩니다."}
+            {
+              "신신당부는 소중한 정보를 안전하게 보호하며,\n인증 데이터는 암호화됩니다."
+            }
           </ThemedText>
         </View>
 
         {/* 본인인증 시작 버튼 */}
         <Pressable
-          style={({ pressed }) => [styles.startButton, pressed && styles.startButtonPressed]}
+          style={({ pressed }) => [
+            styles.startButton,
+            pressed && styles.startButtonPressed,
+          ]}
           onPress={handleStart}
         >
           <ThemedText style={styles.startButtonText}>본인인증 시작</ThemedText>
@@ -71,12 +78,20 @@ export function NhisAuthScreen() {
         {/* 보안 배지 */}
         <View style={styles.badgeRow}>
           <View style={styles.securityBadge}>
-            <Ionicons name="shield-checkmark-outline" size={13} color="#44AF94" />
-            <ThemedText style={styles.securityBadgeText}>보안 인증 완료</ThemedText>
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={13}
+              color="#44AF94"
+            />
+            <ThemedText style={styles.securityBadgeText}>
+              보안 인증 완료
+            </ThemedText>
           </View>
           <View style={styles.securityBadge}>
             <Ionicons name="lock-closed-outline" size={13} color="#44AF94" />
-            <ThemedText style={styles.securityBadgeText}>데이터 암호화</ThemedText>
+            <ThemedText style={styles.securityBadgeText}>
+              데이터 암호화
+            </ThemedText>
           </View>
         </View>
       </View>

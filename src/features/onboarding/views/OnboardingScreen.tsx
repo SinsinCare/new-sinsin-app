@@ -47,6 +47,7 @@ export function OnboardingScreen() {
           totalSteps={0}
           onBack={() => {}}
           onSkip={handleSkip}
+          title="사용자 정보"
           showCounter={false}
           showBack={false}
         />
@@ -87,7 +88,7 @@ export function OnboardingScreen() {
               disabled={hasCkd === null}
             >
               <YStack
-                backgroundColor={hasCkd !== null ? "#5464F2" : "#5464F247"}
+                backgroundColor={hasCkd !== null ? "#34D399" : "#34D39940"}
                 paddingVertical={16}
                 paddingHorizontal={24}
                 borderRadius={8}
@@ -122,6 +123,7 @@ export function OnboardingScreen() {
         totalSteps={steps.length}
         onBack={handleBack}
         onSkip={handleSkip}
+        title="신장 정보"
       />
 
       <ProgressBar current={currentStepIndex} total={steps.length} />
@@ -178,7 +180,7 @@ export function OnboardingScreen() {
           >
             <YStack
               backgroundColor={
-                hasValidAnswer() && !isSubmitting ? "#5464F2" : "#5464F247"
+                hasValidAnswer() && !isSubmitting ? "#34D399" : "#34D39940"
               }
               paddingVertical={16}
               paddingHorizontal={24}

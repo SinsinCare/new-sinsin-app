@@ -1,4 +1,7 @@
 export { HealthDataEntryScreen } from "./HealthDataEntryScreen"
 export { HealthDataUploadScreen } from "./HealthDataUploadScreen"
 export { HealthDataResultListScreen } from "./HealthDataResultListScreen"
+export { HealthDataResultDetailScreen } from "./HealthDataResultDetailScreen"
 export { NhisAuthScreen } from "./NhisAuthScreen"
+export { NhisRequestScreen } from "./NhisRequestScreen"
+export { NhisConfirmScreen } from "./NhisConfirmScreen"

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { router } from "expo-router"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
-import { showErrorToast } from "@/src/lib/toast"
 
 const TIMER_DURATION = 180
 
@@ -18,6 +17,7 @@ export function useSignupEmail() {
 
   const [codeSent, setCodeSent] = useState(false)
   const [codeInputVisible, setCodeInputVisible] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [codeVerified, setCodeVerified] = useState(false)
   const [timer, setTimer] = useState(0)
@@ -48,11 +48,12 @@ export function useSignupEmail() {
   const sendCode = async (email: string) => {
     setSendingCode(true)
     setSendError(null)
+    setEmailError(null)
     setCodeInputVisible(true)
     try {
       const available = await emailService.checkEmailAvailability(email)
       if (!available) {
-        showErrorToast("이미 가입된 이메일입니다.")
+        setEmailError("이미 사용 중인 이메일입니다.")
         setCodeInputVisible(false)
         return
       }
@@ -60,7 +61,7 @@ export function useSignupEmail() {
       setCodeSent(true)
       setCodeVerified(false)
       startTimer()
-    } catch (e: unknown) {
+    } catch {
       setSendError("인증번호 전송에 실패했습니다. 재전송해 주세요.")
     } finally {
       setSendingCode(false)
@@ -95,6 +96,7 @@ export function useSignupEmail() {
   return {
     codeSent,
     codeInputVisible,
+    emailError,
     sendError,
     codeVerified,
     timer,

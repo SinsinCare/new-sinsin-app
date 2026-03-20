@@ -16,7 +16,9 @@ export function WithdrawalCompleteScreen() {
       <View style={[styles.content, { paddingTop: insets.top + 80 }]}>
         <ThemedText style={styles.title}>탈퇴가 완료되었습니다</ThemedText>
         <ThemedText style={styles.description}>
-          {"회원탈퇴 처리를 완료했습니다\n그동안 신신당부를 이용해 주셔서 감사합니다"}
+          {
+            "회원탈퇴 처리를 완료했습니다\n그동안 신신당부를 이용해 주셔서 감사합니다"
+          }
         </ThemedText>
       </View>
 

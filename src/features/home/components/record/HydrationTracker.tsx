@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from "tamagui"
-import { TouchableOpacity, StyleSheet } from "react-native"
+import { Animated, Pressable, StyleSheet, useColorScheme } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components/Icon"
 import Svg, {
@@ -21,6 +21,7 @@ import {
   WATER_COLORS,
 } from "../../data/hydrationConstants"
 import { tokens } from "@/src/theme/tokens"
+import { useEffect, useRef, useState } from "react"
 
 interface HydrationTrackerProps {
   intake: number
@@ -41,19 +42,47 @@ export function HydrationTracker({
   addWater,
   onReset,
 }: HydrationTrackerProps) {
-  const fillRatio = Math.min(percentage, 100) / 100
-  const waterY = TEXT_BASELINE - fillRatio * CAP_H
+  const isDarkMode = useColorScheme() === "dark"
+
+  const fillAnim = useRef(new Animated.Value(0)).current
+  const [animWaterY, setAnimWaterY] = useState(TEXT_BASELINE)
+  const [displayPct, setDisplayPct] = useState(0)
+
+  useEffect(() => {
+    const id = fillAnim.addListener(({ value }) => {
+      setAnimWaterY(TEXT_BASELINE - value * CAP_H)
+      setDisplayPct(Math.round(value * 100))
+    })
+    return () => fillAnim.removeListener(id)
+  }, [fillAnim])
+
+  useEffect(() => {
+    const target = Math.min(percentage, 100) / 100
+    Animated.spring(fillAnim, {
+      toValue: target,
+      useNativeDriver: false,
+      tension: 60,
+      friction: 10,
+    }).start()
+  }, [percentage, fillAnim])
+  const chipBg = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.pureWhite.val
 
   return (
     <YStack paddingVertical="$3" gap="$3">
       <XStack justifyContent="space-between">
-        <Text fontSize={22} fontWeight="700">
+        <Text
+          fontSize={20}
+          fontWeight="600"
+          color={isDarkMode ? "$textDark" : "$black"}
+        >
           수분 섭취 기록
         </Text>
       </XStack>
 
       <XStack
-        backgroundColor="$cardBackground"
+        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
         borderRadius="$6"
         paddingVertical="$4"
         paddingHorizontal="$4"
@@ -62,14 +91,18 @@ export function HydrationTracker({
         {/* Left: intake info */}
         <YStack gap="$2" flex={1}>
           <XStack alignItems="baseline" gap={2}>
-            <Text fontSize={32} fontWeight="700">
+            <Text
+              fontSize={32}
+              fontWeight="600"
+              color={isDarkMode ? "$textDark" : "$black"}
+            >
               {intake}
             </Text>
-            <Text fontSize="$4" color="$colorSubtle" fontWeight="600">
+            <Text fontSize="$4" color="$colorSubtle" fontWeight="500">
               /{dailyGoal}ml
             </Text>
           </XStack>
-          <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
+          <Text fontSize={13} color="$colorSubtle" fontWeight="500">
             {isGoalAchieved ? "목표 달성!" : `${remaining}ml 남았어요`}
           </Text>
         </YStack>
@@ -78,27 +111,13 @@ export function HydrationTracker({
         <XStack alignItems="center" paddingBottom={5} flexShrink={0} gap={1}>
           <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
             <Defs>
-              <ClipPath id="percentClip">
-                {/* number grows leftward from PCT_X */}
-                <SvgText
-                  x={PCT_X}
-                  y={TEXT_BASELINE}
-                  fontSize={FONT_SIZE}
-                  fontWeight="800"
-                  textAnchor="end"
-                >
-                  {Math.round(percentage)}
-                </SvgText>
-                {/* "%" fixed at PCT_X */}
-                <SvgText
-                  x={PCT_X}
-                  y={TEXT_BASELINE}
-                  fontSize={FONT_SIZE}
-                  fontWeight="800"
-                  textAnchor="start"
-                >
-                  %
-                </SvgText>
+              <ClipPath id="waterClip">
+                <Rect
+                  x={0}
+                  y={animWaterY}
+                  width={SVG_WIDTH}
+                  height={SVG_HEIGHT - animWaterY}
+                />
               </ClipPath>
               <LinearGradient
                 id="waterGradient"
@@ -113,25 +132,51 @@ export function HydrationTracker({
               </LinearGradient>
             </Defs>
 
-            {/* Unfilled (bg) layer */}
-            <Rect
-              x={0}
-              y={0}
-              width={SVG_WIDTH}
-              height={SVG_HEIGHT}
+            {/* 배경 텍스트 (미채움 색) */}
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="end"
               fill={WATER_COLORS.percentBg}
-              clipPath="url(#percentClip)"
-            />
+            >
+              {displayPct}
+            </SvgText>
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="start"
+              fill={WATER_COLORS.percentBg}
+            >
+              %
+            </SvgText>
 
-            {/* Water fill — rises from bottom */}
-            <Rect
-              x={0}
-              y={waterY}
-              width={SVG_WIDTH}
-              height={SVG_HEIGHT - waterY}
+            {/* 물 채운 텍스트 (그라디언트), 아래쪽 직사각형 영역만 보임 */}
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="end"
               fill="url(#waterGradient)"
-              clipPath="url(#percentClip)"
-            />
+              clipPath="url(#waterClip)"
+            >
+              {displayPct}
+            </SvgText>
+            <SvgText
+              x={PCT_X}
+              y={TEXT_BASELINE}
+              fontSize={FONT_SIZE}
+              fontWeight="800"
+              textAnchor="start"
+              fill="url(#waterGradient)"
+              clipPath="url(#waterClip)"
+            >
+              %
+            </SvgText>
           </Svg>
           <Icon name="water-drop" size={18} style={{ marginBottom: 18 }} />
         </XStack>
@@ -145,19 +190,33 @@ export function HydrationTracker({
         {/* Quick add + reset buttons */}
         <XStack gap={5}>
           {QUICK_ADD_OPTIONS.map((amount) => (
-            <TouchableOpacity
+            <Pressable
               key={amount}
               onPress={() => addWater(amount)}
-              style={styles.chip}
-              activeOpacity={0.7}
+              style={({ pressed }) => [
+                styles.chip,
+                {
+                  backgroundColor: chipBg,
+                  transform: [{ scale: pressed ? 0.93 : 1 }],
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
             >
-              <Text fontSize={15} color="$color">
+              <Text
+                fontSize={15}
+                color={isDarkMode ? "$textDarkSub" : "$color"}
+              >
                 +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </XStack>
-        <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
+        <Pressable
+          onPress={onReset}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.5 : 1,
+          })}
+        >
           <XStack gap={2}>
             <Text fontSize={14} fontWeight="500" color="$colorSubtle">
               되돌리기
@@ -168,7 +227,7 @@ export function HydrationTracker({
               color={tokens.color.grey5.val}
             />
           </XStack>
-        </TouchableOpacity>
+        </Pressable>
       </XStack>
     </YStack>
   )
@@ -176,13 +235,12 @@ export function HydrationTracker({
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: tokens.color.pureWhite.val,
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 3,
     elevation: 2,
   },

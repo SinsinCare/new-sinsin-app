@@ -1,6 +1,7 @@
-import { ScrollView, Pressable, StyleSheet } from "react-native"
+import { ScrollView, Pressable, StyleSheet, useColorScheme } from "react-native"
 import { Text } from "tamagui"
 import { StatisticsTab } from "../../types"
+import { tokens } from "@/src/theme/tokens"
 
 const TABS: { key: StatisticsTab; label: string }[] = [
   { key: "intake", label: "섭취량 통계" },
@@ -18,11 +19,18 @@ export function StatisticsTabBar({
   selectedTab,
   onSelectTab,
 }: StatisticsTabBarProps) {
+  const isDarkMode = useColorScheme() === "dark"
+  const barBgColor = isDarkMode
+    ? tokens.color.appBgDark.val
+    : tokens.color.appBg.val
+  const bgColor = isDarkMode ? tokens.color.cardBgDark.val : undefined
+
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      style={{ backgroundColor: barBgColor }}
     >
       {TABS.map((tab) => {
         const isSelected = selectedTab === tab.key
@@ -30,16 +38,23 @@ export function StatisticsTabBar({
           <Pressable
             key={tab.key}
             onPress={() => onSelectTab(tab.key)}
-            style={({ pressed }) => [
+            style={() => [
               styles.tab,
-              isSelected && styles.tabSelected,
-              pressed && !isSelected && styles.tabPressed,
+              isSelected && { backgroundColor: bgColor },
             ]}
           >
             <Text
               fontSize="$4"
               fontWeight="600"
-              color={isSelected ? "$color" : "$colorSubtle"}
+              color={
+                isSelected
+                  ? isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.black.val
+                  : isDarkMode
+                    ? tokens.color.textDarkSub.val
+                    : tokens.color.grey5.val
+              }
             >
               {tab.label}
             </Text>
@@ -52,17 +67,12 @@ export function StatisticsTabBar({
 
 const styles = StyleSheet.create({
   container: {
+    paddingBottom: 5,
     gap: 7,
   },
   tab: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
-  },
-  tabSelected: {
-    backgroundColor: "#ffffff",
-  },
-  tabPressed: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
   },
 })

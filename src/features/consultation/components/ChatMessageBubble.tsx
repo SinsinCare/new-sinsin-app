@@ -29,8 +29,8 @@ export function AssistantAvatar() {
       <Image
         source={
           isDarkMode
-            ? require("@/assets/images/Sin_dark.png")
-            : require("@/assets/images/Sin_light.png")
+            ? require("@/assets/images/Sin_dark.svg")
+            : require("@/assets/images/Sin_light.svg")
         }
         style={{ width: 36, height: 36 }}
         contentFit="cover"

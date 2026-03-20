@@ -24,7 +24,7 @@ export function TermsAgreementScreen() {
   return (
     <AuthScreenLayout
       title={`신신당부 서비스 이용약관에\n동의해주세요`}
-      buttonLabel="다음"
+      buttonLabel="동의하고 계속하기"
       buttonDisabled={!requiredChecked}
       onSubmit={handleNext}
     >

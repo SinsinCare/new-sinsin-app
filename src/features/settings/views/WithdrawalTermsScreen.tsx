@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -13,6 +13,7 @@ import {
   WITHDRAWAL_NOTICE,
   WITHDRAWAL_TERMS,
 } from "@/src/features/settings/data/constants"
+import { api } from "@/src/services/core/apiClient"
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
@@ -20,11 +21,19 @@ export function WithdrawalTermsScreen() {
 
   const [agreed, setAgreed] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleWithdraw = async () => {
     setModalVisible(false)
-    // TODO: 탈퇴 API 호출
-    router.push("/(settings)/withdrawal-complete")
+    setLoading(true)
+    try {
+      await api.delete("/user")
+      router.push("/(settings)/withdrawal-complete")
+    } catch {
+      Alert.alert("오류", "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -36,7 +45,11 @@ export function WithdrawalTermsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backButton}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={styles.backButton}
+        >
           <Ionicons name="chevron-back" size={24} color="#17191C" />
         </Pressable>
 
@@ -53,13 +66,21 @@ export function WithdrawalTermsScreen() {
           ))}
         </View>
 
-        <Pressable style={styles.agreementBox} onPress={() => setAgreed((v) => !v)}>
+        <Pressable
+          style={styles.agreementBox}
+          onPress={() => setAgreed((v) => !v)}
+        >
           <Ionicons
             name={agreed ? "checkbox" : "square-outline"}
             size={20}
             color={agreed ? "#17191C" : "#666677"}
           />
-          <ThemedText style={[styles.agreementText, agreed && styles.agreementTextChecked]}>
+          <ThemedText
+            style={[
+              styles.agreementText,
+              agreed && styles.agreementTextChecked,
+            ]}
+          >
             유의사항 숙지 후 탈퇴에 동의합니다.
           </ThemedText>
         </Pressable>
@@ -67,7 +88,7 @@ export function WithdrawalTermsScreen() {
 
       <BottomActionBar
         label="탈퇴하기"
-        disabled={!agreed}
+        disabled={!agreed || loading}
         paddingBottom={insets.bottom + 16}
         onPress={() => setModalVisible(true)}
       />

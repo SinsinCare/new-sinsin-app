@@ -53,12 +53,21 @@ export function SettingsScreen() {
 
         {/* 약관 */}
         {[
-          { title: "회원 이용약관", onPress: () => router.push("/legal-document") },
-          { title: "개인정보 처리방침", onPress: () => router.push("/privacy-settings") },
+          {
+            title: "회원 이용약관",
+            onPress: () => router.push("/legal-document"),
+          },
+          {
+            title: "개인정보 처리방침",
+            onPress: () => router.push("/privacy-settings"),
+          },
         ].map(({ title, onPress }) => (
           <Pressable
             key={title}
-            style={({ pressed }) => [styles.navItem, pressed && styles.navItemPressed]}
+            style={({ pressed }) => [
+              styles.navItem,
+              pressed && styles.navItemPressed,
+            ]}
             onPress={onPress}
           >
             <ThemedText style={styles.navItemTitle}>{title}</ThemedText>
@@ -70,14 +79,20 @@ export function SettingsScreen() {
 
         {/* 계정 */}
         <Pressable
-          style={({ pressed }) => [styles.navItem, pressed && styles.navItemPressed]}
+          style={({ pressed }) => [
+            styles.navItem,
+            pressed && styles.navItemPressed,
+          ]}
           onPress={() => setLogoutModalVisible(true)}
         >
           <ThemedText style={styles.navItemTitle}>로그아웃</ThemedText>
           <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
         </Pressable>
         <Pressable
-          style={({ pressed }) => [styles.navItem, pressed && styles.navItemPressed]}
+          style={({ pressed }) => [
+            styles.navItem,
+            pressed && styles.navItemPressed,
+          ]}
           onPress={() => router.push("/(settings)/withdrawal")}
         >
           <ThemedText style={styles.navItemTitle}>회원탈퇴</ThemedText>

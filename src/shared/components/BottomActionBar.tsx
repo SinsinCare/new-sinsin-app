@@ -23,7 +23,9 @@ export function BottomActionBar({
         disabled={disabled}
         onPress={onPress}
       >
-        <ThemedText style={[styles.buttonText, !disabled && styles.buttonTextActive]}>
+        <ThemedText
+          style={[styles.buttonText, !disabled && styles.buttonTextActive]}
+        >
           {label}
         </ThemedText>
       </Pressable>

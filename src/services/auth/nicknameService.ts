@@ -1,8 +1,16 @@
+import { publicApi } from "@/src/services/core/apiClient"
+import { ApiError } from "@/src/services/core/apiError"
+
 export const nicknameService = {
-  async checkNicknameAvailability(_nickname: string): Promise<boolean> {
-    // TODO: 백엔드 API 연동
-    // const response = await axios.get(`${BACKEND_URL}/check-nickname`, { params: { nickname } })
-    // return response.data.available
-    return true
+  async checkNicknameAvailability(nickname: string): Promise<boolean> {
+    try {
+      await publicApi.get(`/auth/signup/nickname/verify?nickName=${nickname}`)
+      return true
+    } catch (e) {
+      if (e instanceof ApiError && !e.isNetworkError) {
+        return false
+      }
+      throw e
+    }
   },
 }

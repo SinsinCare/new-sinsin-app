@@ -25,8 +25,8 @@ export function Checkbox({
           height={size}
           borderRadius={4}
           borderWidth={1.5}
-          borderColor={checked ? "#5464F2" : "#C5C8CE"}
-          backgroundColor={checked ? "#5464F2" : "white"}
+          borderColor={checked ? "#34D399" : "#C5C8CE"}
+          backgroundColor={checked ? "#34D399" : "white"}
           alignItems="center"
           justifyContent="center"
           opacity={disabled ? 0.5 : 1}

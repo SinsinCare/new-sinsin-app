@@ -12,21 +12,43 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
-import { useUserStore } from "@/src/stores/userStore"
 import { nicknameService } from "@/src/services/auth/nicknameService"
+import { api } from "@/src/services/core/apiClient"
+import { ApiError } from "@/src/services/core/apiError"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
+import { showErrorToast } from "@/src/lib/toast"
 
 const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,8}$/
+
+function getErrorMessage(e: unknown): string | null {
+  if (e instanceof ApiError) {
+    if (e.isNetworkError) return null // toast로 처리
+    switch (e.code) {
+      case "SIGNUP_ERROR_003":
+        return "이미 사용 중인 닉네임입니다."
+      case "TOKEN_ERROR_001":
+        return "인증 토큰이 유효하지 않습니다. 다시 로그인해주세요."
+      case "ONBOARDING_ERROR_002":
+        return "잘못된 값이 입력되었습니다."
+      default:
+        return e.message || "저장 중 오류가 발생했습니다."
+    }
+  }
+  return "저장 중 오류가 발생했습니다."
+}
 
 export function NicknameEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const profile = useUserStore((s) => s.profile)
+  const queryClient = useQueryClient()
+  const { data: profile } = useMyPageProfile()
 
-  const [nickname, setNickname] = useState(profile?.nickname ?? "")
+  const [nickname, setNickname] = useState(profile?.nickName ?? "")
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
@@ -55,13 +77,21 @@ export function NicknameEditScreen() {
     try {
       const available = await nicknameService.checkNicknameAvailability(nickname)
       if (!available) {
-        setServerError("이미 사용 중인 닉네임입니다")
+        setServerError("이미 사용 중인 닉네임입니다.")
         return
       }
-      // TODO: userStore 업데이트
+      await api.post("/user/profile/info", {
+        nickName: nickname,
+        gender: profile?.gender ?? "",
+      })
+      await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
-    } catch {
-      setServerError("닉네임 확인 중 오류가 발생했습니다")
+    } catch (e) {
+      if (e instanceof ApiError && e.isNetworkError) {
+        showErrorToast(e.message)
+        return
+      }
+      setServerError(getErrorMessage(e))
     } finally {
       setIsLoading(false)
     }
@@ -89,7 +119,9 @@ export function NicknameEditScreen() {
             {"앞으로 신신당부에서\n어떻게 불러드리면 좋을까요?"}
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            {"한글, 영문, 숫자만 가능합니다 (2~8자 이내)\n닉네임은 언제든지 변경할 수 있습니다"}
+            {
+              "한글, 영문, 숫자만 가능합니다 (2~8자 이내)\n닉네임은 언제든지 변경할 수 있습니다"
+            }
           </ThemedText>
 
           <ThemedText style={styles.inputLabel}>닉네임</ThemedText>
@@ -117,7 +149,13 @@ export function NicknameEditScreen() {
               <ActivityIndicator size="small" color="#94A3B8" />
             ) : (
               hasText && (
-                <Pressable onPress={() => { setNickname(""); setServerError(null) }} hitSlop={8}>
+                <Pressable
+                  onPress={() => {
+                    setNickname("")
+                    setServerError(null)
+                  }}
+                  hitSlop={8}
+                >
                   <Ionicons name="close-circle" size={20} color="#C5C8CE" />
                 </Pressable>
               )
@@ -125,7 +163,12 @@ export function NicknameEditScreen() {
           </View>
 
           {validationMessage && (
-            <ThemedText style={[styles.validationText, hasSuccess ? styles.validText : styles.invalidText]}>
+            <ThemedText
+              style={[
+                styles.validationText,
+                hasSuccess ? styles.validText : styles.invalidText,
+              ]}
+            >
               {validationMessage}
             </ThemedText>
           )}

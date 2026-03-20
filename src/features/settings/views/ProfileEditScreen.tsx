@@ -7,12 +7,12 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
-import { useUserStore } from "@/src/stores/userStore"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const profile = useUserStore((s) => s.profile)
+  const { data: profile } = useMyPageProfile()
 
   return (
     <ThemedView style={styles.container}>
@@ -23,7 +23,10 @@ export function ProfileEditScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* 아바타 */}
@@ -42,16 +45,22 @@ export function ProfileEditScreen() {
 
         {/* 닉네임 - 탭 가능 */}
         <Pressable
-          style={({ pressed }) => [styles.fieldRow, pressed && styles.fieldRowPressed]}
+          style={({ pressed }) => [
+            styles.fieldRow,
+            pressed && styles.fieldRowPressed,
+          ]}
           onPress={() => router.push("/(settings)/nickname-edit")}
         >
           <View style={styles.fieldContent}>
             <ThemedText style={styles.fieldLabel}>닉네임</ThemedText>
             <View style={styles.fieldValueRow}>
               <ThemedText
-                style={[styles.fieldValue, !profile?.nickname && styles.fieldPlaceholder]}
+                style={[
+                  styles.fieldValue,
+                  !profile?.nickName && styles.fieldPlaceholder,
+                ]}
               >
-                {profile?.nickname || "닉네임을 설정해주세요"}
+                {profile?.nickName || "닉네임을 설정해주세요"}
               </ThemedText>
               <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
             </View>
@@ -63,7 +72,10 @@ export function ProfileEditScreen() {
           <View style={styles.fieldContent}>
             <ThemedText style={styles.fieldLabel}>이름</ThemedText>
             <ThemedText
-              style={[styles.fieldValue, !profile?.displayName && styles.fieldPlaceholder]}
+              style={[
+                styles.fieldValue,
+                !profile?.displayName && styles.fieldPlaceholder,
+              ]}
             >
               {profile?.displayName || "홍길동"}
             </ThemedText>
@@ -75,7 +87,10 @@ export function ProfileEditScreen() {
           <View style={styles.fieldContent}>
             <ThemedText style={styles.fieldLabel}>이메일</ThemedText>
             <ThemedText
-              style={[styles.fieldValue, !profile?.email && styles.fieldPlaceholder]}
+              style={[
+                styles.fieldValue,
+                !profile?.email && styles.fieldPlaceholder,
+              ]}
             >
               {profile?.email || "abcd@naver.com"}
             </ThemedText>
@@ -86,7 +101,10 @@ export function ProfileEditScreen() {
 
         {/* 비밀번호 수정 */}
         <Pressable
-          style={({ pressed }) => [styles.navRow, pressed && styles.navRowPressed]}
+          style={({ pressed }) => [
+            styles.navRow,
+            pressed && styles.navRowPressed,
+          ]}
           onPress={() => router.push("/(settings)/password-edit")}
         >
           <ThemedText style={styles.navTitle}>비밀번호 수정하기</ThemedText>

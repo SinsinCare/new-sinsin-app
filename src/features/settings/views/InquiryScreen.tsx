@@ -49,7 +49,8 @@ export function InquiryScreen() {
   const tooltipOpacity = useRef(new Animated.Value(0)).current
   const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const isDirty = !!category || title.length > 0 || content.length > 0 || images.length > 0
+  const isDirty =
+    !!category || title.length > 0 || content.length > 0 || images.length > 0
   const canSubmit = !!category && title.length > 0 && content.length > 0
 
   const handleBack = () => {
@@ -63,11 +64,17 @@ export function InquiryScreen() {
   const showTooltip = () => {
     if (tooltipTimer.current) clearTimeout(tooltipTimer.current)
     setTooltipVisible(true)
-    Animated.timing(tooltipOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start()
+    Animated.timing(tooltipOpacity, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start()
     tooltipTimer.current = setTimeout(() => {
-      Animated.timing(tooltipOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(
-        () => setTooltipVisible(false)
-      )
+      Animated.timing(tooltipOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setTooltipVisible(false))
     }, 2500)
   }
 
@@ -110,7 +117,10 @@ export function InquiryScreen() {
         style={styles.flex}
       >
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 100 },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -122,7 +132,10 @@ export function InquiryScreen() {
                 <ThemedText style={styles.categoryValue}>{category}</ThemedText>
               )}
               <Pressable
-                style={({ pressed }) => [styles.selectButton, pressed && styles.selectButtonPressed]}
+                style={({ pressed }) => [
+                  styles.selectButton,
+                  pressed && styles.selectButtonPressed,
+                ]}
                 onPress={() => setShowCategorySheet(true)}
               >
                 <ThemedText style={styles.selectButtonText}>선택</ThemedText>
@@ -133,7 +146,9 @@ export function InquiryScreen() {
           <View style={styles.divider} />
 
           {/* 제목 */}
-          <ThemedText style={[styles.fieldLabel, { marginBottom: 10 }]}>제목</ThemedText>
+          <ThemedText style={[styles.fieldLabel, { marginBottom: 10 }]}>
+            제목
+          </ThemedText>
           <TextInput
             style={styles.titleInput}
             value={title}
@@ -171,14 +186,21 @@ export function InquiryScreen() {
             </ThemedText>
             <View style={styles.imageRow}>
               <Pressable
-                style={({ pressed }) => [styles.imageAddButton, pressed && styles.imageAddButtonPressed]}
+                style={({ pressed }) => [
+                  styles.imageAddButton,
+                  pressed && styles.imageAddButtonPressed,
+                ]}
                 onPress={handleAddImage}
               >
                 <Ionicons name="image-outline" size={24} color="#94A3B8" />
               </Pressable>
               {images.map((uri, index) => (
                 <View key={index} style={styles.imageThumbWrapper}>
-                  <Image source={{ uri }} style={styles.imageThumb} contentFit="cover" />
+                  <Image
+                    source={{ uri }}
+                    style={styles.imageThumb}
+                    contentFit="cover"
+                  />
                   <Pressable
                     style={styles.imageRemoveButton}
                     onPress={() => handleRemoveImage(index)}
@@ -192,9 +214,13 @@ export function InquiryScreen() {
 
             {/* 초과 첨부 툴팁 */}
             {tooltipVisible && (
-              <Animated.View style={[styles.tooltip, { opacity: tooltipOpacity }]}>
+              <Animated.View
+                style={[styles.tooltip, { opacity: tooltipOpacity }]}
+              >
                 <ThemedText style={styles.tooltipText}>
-                  {"파일은 최대 3개까지 첨부 할 수 있어요.\n첨부된 파일을 삭제하고 다시 시도해주세요."}
+                  {
+                    "파일은 최대 3개까지 첨부 할 수 있어요.\n첨부된 파일을 삭제하고 다시 시도해주세요."
+                  }
                 </ThemedText>
               </Animated.View>
             )}
@@ -216,10 +242,15 @@ export function InquiryScreen() {
         animationType="slide"
         onRequestClose={() => setShowCategorySheet(false)}
       >
-        <Pressable style={styles.sheetDim} onPress={() => setShowCategorySheet(false)}>
+        <Pressable
+          style={styles.sheetDim}
+          onPress={() => setShowCategorySheet(false)}
+        >
           <Pressable style={styles.sheet} onPress={() => {}}>
             <View style={styles.sheetHandle} />
-            <ThemedText style={styles.sheetTitle}>문의 카테고리를 선택해주세요</ThemedText>
+            <ThemedText style={styles.sheetTitle}>
+              문의 카테고리를 선택해주세요
+            </ThemedText>
             {INQUIRY_CATEGORIES.map((cat) => (
               <Pressable
                 key={cat}
@@ -233,7 +264,10 @@ export function InquiryScreen() {
                 }}
               >
                 <ThemedText
-                  style={[styles.sheetItemText, category === cat && styles.sheetItemTextSelected]}
+                  style={[
+                    styles.sheetItemText,
+                    category === cat && styles.sheetItemTextSelected,
+                  ]}
                 >
                   {cat}
                 </ThemedText>

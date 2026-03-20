@@ -10,28 +10,32 @@ import {
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useRouter, useLocalSearchParams } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { passwordService } from "@/src/services"
 
-// 영문 대/소문자, 숫자, 특수문자 포함 6~18자
-const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
+// 영문 대문자, 소문자, 숫자, 특수문자 포함 6~18자
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
 
 export function PasswordEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { token } = useLocalSearchParams<{ token?: string }>()
 
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [passwordFocused, setPasswordFocused] = useState(false)
   const [confirmFocused, setConfirmFocused] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const isPasswordValid = PASSWORD_REGEX.test(password)
   const hasConfirm = confirm.length > 0
   const isMatch = password === confirm
-  const canSubmit = isPasswordValid && hasConfirm && isMatch
+  const canSubmit = isPasswordValid && hasConfirm && isMatch && !isSubmitting
 
   const confirmMessage = hasConfirm
     ? isMatch
@@ -41,8 +45,23 @@ export function PasswordEditScreen() {
 
   const handleSave = async () => {
     if (!canSubmit) return
-    // TODO: 비밀번호 변경 API 호출
-    router.back()
+    setIsSubmitting(true)
+    setSubmitError(null)
+    try {
+      await passwordService.changePassword(password, token)
+      if (token) {
+        // deeplink 진입: 로그인 화면으로
+        router.replace("/(auth)/login")
+      } else {
+        router.back()
+      }
+    } catch (e: unknown) {
+      setSubmitError(
+        e instanceof Error ? e.message : "비밀번호 변경에 실패했습니다.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -63,7 +82,9 @@ export function PasswordEditScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ThemedText style={styles.title}>새 비밀번호를 입력해주세요</ThemedText>
+          <ThemedText style={styles.title}>
+            새 비밀번호를 입력해주세요
+          </ThemedText>
           <ThemedText style={styles.subtitle}>
             {"영문 대/소문자, 숫자, 특수문자 포함\n6~18자 이내로 입력해주세요"}
           </ThemedText>
@@ -96,7 +117,9 @@ export function PasswordEditScreen() {
           </View>
 
           {/* 비밀번호 확인 */}
-          <ThemedText style={[styles.inputLabel, { marginTop: 32 }]}>비밀번호 확인</ThemedText>
+          <ThemedText style={[styles.inputLabel, { marginTop: 32 }]}>
+            비밀번호 확인
+          </ThemedText>
           <View
             style={[
               styles.inputRow,
@@ -123,12 +146,22 @@ export function PasswordEditScreen() {
           </View>
 
           {confirmMessage && (
-            <ThemedText style={[styles.validationText, isMatch ? styles.validText : styles.invalidText]}>
+            <ThemedText
+              style={[
+                styles.validationText,
+                isMatch ? styles.validText : styles.invalidText,
+              ]}
+            >
               {confirmMessage}
             </ThemedText>
           )}
+
+
         </ScrollView>
 
+        {submitError && (
+          <ThemedText style={styles.errorText}>{submitError}</ThemedText>
+        )}
         <BottomActionBar
           label="수정 완료"
           disabled={!canSubmit}
@@ -213,5 +246,12 @@ const styles = StyleSheet.create({
   },
   invalidText: {
     color: "#EF4444",
+  },
+  errorText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#EF4444",
+    paddingHorizontal: 20,
+    paddingBottom: 8,
   },
 })

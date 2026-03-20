@@ -40,12 +40,13 @@ export function convertAnswersToSubmitRq(
     hasCkd,
     answers: answers.map((answer) => ({
       step: answer.step,
-      values: answer.type === "input"
-        ? Object.entries(answer.inputValues ?? {}).map(([key, value]) => ({
-            key,
-            value,
-          }))
-        : (answer.selectedKeys ?? []).map((key) => ({ key, value: key })),
+      values:
+        answer.type === "input"
+          ? Object.entries(answer.inputValues ?? {}).map(([key, value]) => ({
+              key,
+              value,
+            }))
+          : (answer.selectedKeys ?? []).map((key) => ({ key, value: key })),
     })),
   }
 }

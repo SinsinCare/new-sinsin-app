@@ -1,25 +1,30 @@
-import { Image, TouchableOpacity } from "react-native"
+import {
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  useColorScheme,
+} from "react-native"
 import { Text, YStack } from "tamagui"
 import { MealRecord } from "../../data/dietaryRecord"
 
 interface DietaryRecordCardProps {
   mealData: MealRecord
   onPress: () => void
-  isSelected?: boolean
 }
 
 export function DietaryRecordCard({
   mealData,
   onPress,
-  isSelected,
 }: DietaryRecordCardProps) {
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
       <YStack
-        backgroundColor="$white"
-        borderWidth={2}
+        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+        borderWidth={isDarkMode ? 0 : 1}
         borderColor="$borderColor"
-        width={78}
+        flex={1}
         height={100}
         borderRadius="$6"
         overflow="hidden"
@@ -28,7 +33,7 @@ export function DietaryRecordCard({
         {mealData.imageUri && (
           <Image
             source={{ uri: mealData.imageUri }}
-            style={{ position: "absolute", width: 78, height: 100 }}
+            style={StyleSheet.absoluteFillObject}
             resizeMode="cover"
           />
         )}
@@ -36,14 +41,16 @@ export function DietaryRecordCard({
           <Text
             fontSize="$4"
             fontWeight="500"
-            color={mealData.imageUri || isSelected ? "white" : "$color"}
+            color={
+              mealData.imageUri ? "white" : isDarkMode ? "$textDark" : "$color"
+            }
           >
             {mealData.label}
           </Text>
           <Text
             fontSize="$3"
             fontWeight="500"
-            color={mealData.imageUri || isSelected ? "white" : "$colorSubtle"}
+            color={mealData.imageUri ? "white" : "$colorSubtle"}
           >
             {mealData.time ?? "기록 없음"}
           </Text>

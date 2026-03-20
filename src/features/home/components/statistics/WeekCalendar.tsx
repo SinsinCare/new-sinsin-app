@@ -1,5 +1,6 @@
-import { Pressable } from "react-native"
+import { Pressable, useColorScheme } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { getWeekDays } from "../../utils/getWeekDays"
 
 interface WeekCalendarProps {
@@ -19,6 +20,7 @@ export function WeekCalendar({
   recordedDates = [],
 }: WeekCalendarProps) {
   const days = getWeekDays(selectedDate, recordedDates)
+  const isDarkMode = useColorScheme() === "dark"
 
   return (
     <XStack
@@ -36,7 +38,13 @@ export function WeekCalendar({
           >
             <YStack
               alignItems="center"
-              backgroundColor={isSelected ? "rgba(0,0,0,0.06)" : "transparent"}
+              backgroundColor={
+                isSelected
+                  ? isDarkMode
+                    ? tokens.color.cardBgDark.val
+                    : "rgba(0,0,0,0.06)"
+                  : "transparent"
+              }
               borderRadius="$5"
               paddingBottom={10}
             >
@@ -46,7 +54,15 @@ export function WeekCalendar({
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text fontSize="$4" fontWeight={500}>
+                <Text
+                  fontSize="$4"
+                  fontWeight={500}
+                  color={
+                    isDarkMode
+                      ? tokens.color.textDark.val
+                      : tokens.color.black.val
+                  }
+                >
                   {day.dayOfMonth}
                 </Text>
               </YStack>

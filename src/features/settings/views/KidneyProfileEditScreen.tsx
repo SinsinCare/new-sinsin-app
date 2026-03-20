@@ -23,18 +23,25 @@ export function KidneyProfileEditScreen() {
   const router = useRouter()
   const profile = useUserStore((s) => s.profile)
 
-  const [heightVal, setHeightVal] = useState(profile?.height ? String(profile.height) : "")
-  const [weightVal, setWeightVal] = useState(profile?.weight ? String(profile.weight) : "")
+  const [heightVal, setHeightVal] = useState(
+    profile?.height ? String(profile.height) : "",
+  )
+  const [weightVal, setWeightVal] = useState(
+    profile?.weight ? String(profile.weight) : "",
+  )
   const [ckdStage, setCkdStage] = useState<number>(profile?.ckdStage ?? 1)
   const [onDialysis, setOnDialysis] = useState(profile?.onDialysis ?? false)
-  const [diagnosisDate, setDiagnosisDate] = useState<{ year: number; month: number } | null>(null)
+  const [diagnosisDate, setDiagnosisDate] = useState<{
+    year: number
+    month: number
+  } | null>(null)
   const [datePickerVisible, setDatePickerVisible] = useState(false)
   const [selectedCauses, setSelectedCauses] = useState<number[]>([])
   const [otherCause, setOtherCause] = useState("")
 
   const toggleCause = (index: number) => {
     setSelectedCauses((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     )
   }
 
@@ -61,14 +68,19 @@ export function KidneyProfileEditScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <ThemedText style={styles.sectionLabel}>나의 신장 프로필</ThemedText>
 
         {/* 키 / 체중 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 20 }]}>기본 정보</ThemedText>
+        <ThemedText style={[styles.subsectionTitle, { marginTop: 20 }]}>
+          기본 정보
+        </ThemedText>
         <View style={styles.basicInfoRow}>
           <View style={styles.inputGroup}>
             <ThemedText style={styles.inputLabel}>키 (cm)</ThemedText>
@@ -97,13 +109,18 @@ export function KidneyProfileEditScreen() {
         {/* CKD 병기 */}
         <View style={[styles.subsectionRow, { marginTop: 24 }]}>
           <ThemedText style={styles.subsectionTitle}>CKD 병기</ThemedText>
-          <ThemedText style={styles.currentStageText}>현재: {ckdStage}기</ThemedText>
+          <ThemedText style={styles.currentStageText}>
+            현재: {ckdStage}기
+          </ThemedText>
         </View>
         <View style={[styles.stageButtonsRow, { marginTop: 8 }]}>
           {[1, 2, 3, 4, 5].map((stage) => (
             <Pressable
               key={stage}
-              style={[styles.stageButton, ckdStage === stage && styles.stageButtonSelected]}
+              style={[
+                styles.stageButton,
+                ckdStage === stage && styles.stageButtonSelected,
+              ]}
               onPress={() => setCkdStage(stage)}
             >
               <ThemedText
@@ -125,7 +142,9 @@ export function KidneyProfileEditScreen() {
           </View>
           <View style={styles.dialysisInfo}>
             <ThemedText style={styles.dialysisTitle}>현재 투석 여부</ThemedText>
-            <ThemedText style={styles.dialysisDescription}>투석 중이라면 체크해주세요</ThemedText>
+            <ThemedText style={styles.dialysisDescription}>
+              투석 중이라면 체크해주세요
+            </ThemedText>
           </View>
           <Switch
             value={onDialysis}
@@ -137,13 +156,18 @@ export function KidneyProfileEditScreen() {
         </View>
 
         {/* 진단 시기 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 36 }]}>진단 시기</ThemedText>
+        <ThemedText style={[styles.subsectionTitle, { marginTop: 36 }]}>
+          진단 시기
+        </ThemedText>
         <Pressable
           style={[styles.dateInputRow, { marginTop: 8 }]}
           onPress={() => setDatePickerVisible(true)}
         >
           <ThemedText
-            style={[styles.dateInputText, !diagnosisDate && styles.dateInputPlaceholder]}
+            style={[
+              styles.dateInputText,
+              !diagnosisDate && styles.dateInputPlaceholder,
+            ]}
           >
             {formattedDate || "mm/yyyy"}
           </ThemedText>
@@ -151,7 +175,9 @@ export function KidneyProfileEditScreen() {
         </Pressable>
 
         {/* 주 진단 원인 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 36 }]}>주 진단 원인</ThemedText>
+        <ThemedText style={[styles.subsectionTitle, { marginTop: 36 }]}>
+          주 진단 원인
+        </ThemedText>
         <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
           {DIAGNOSIS_CAUSES.map((cause, index) => (
             <Pressable
@@ -165,7 +191,8 @@ export function KidneyProfileEditScreen() {
               <ThemedText
                 style={[
                   styles.stageButtonText,
-                  selectedCauses.includes(index) && styles.stageButtonTextSelected,
+                  selectedCauses.includes(index) &&
+                    styles.stageButtonTextSelected,
                 ]}
               >
                 {cause}
@@ -183,7 +210,10 @@ export function KidneyProfileEditScreen() {
           textAlignVertical="top"
         />
 
-        <Pressable style={[styles.completeButton, { marginTop: 36 }]} onPress={handleSave}>
+        <Pressable
+          style={[styles.completeButton, { marginTop: 36 }]}
+          onPress={handleSave}
+        >
           <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
           <ThemedText style={styles.completeButtonText}>저장하기</ThemedText>
         </Pressable>

@@ -1,5 +1,6 @@
-import { Modal, ScrollView, Image } from "react-native"
+import { Modal, ScrollView, Image, useColorScheme } from "react-native"
 import { useState } from "react"
+import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -53,12 +54,20 @@ const MEAL_LABEL: Record<MealType, string> = {
 
 function NutrientCell({ label, value }: { label: string; value: string }) {
   const iconName = NUTRIENT_ICON[label]
+  const isDarkMode = useColorScheme() === "dark"
+
   return (
     <YStack flex={1} alignItems="center">
       {iconName && <Icon name={iconName} size={30} />}
       <View height={10} />
-      <Text fontSize="$3">{label}</Text>
-      <Text fontSize={14} fontWeight="600">
+      <Text fontSize="$3" color={isDarkMode ? "$textDark" : "$black"}>
+        {label}
+      </Text>
+      <Text
+        fontSize={14}
+        fontWeight="600"
+        color={isDarkMode ? "$textDark" : "$black"}
+      >
         {value.includes(".") ? parseFloat(value).toFixed(1) : value}
       </Text>
     </YStack>
@@ -79,6 +88,7 @@ export function FoodAnalysisResult({
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
+  const isDarkMode = useColorScheme() === "dark"
 
   if (!result) return null
 
@@ -103,20 +113,20 @@ export function FoodAnalysisResult({
       presentationStyle="pageSheet"
       onRequestClose={handleClosePress}
     >
-      <YStack flex={1} backgroundColor="$appBg">
+      <YStack flex={1} backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}>
         {/* Header */}
         <XStack
           alignItems="center"
           paddingHorizontal={12}
           paddingTop={30}
           paddingBottom={10}
-          backgroundColor={tokens.color.appBg.val}
+          backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
         >
           <View width={40} />
           <Text
             fontSize="$5"
             fontWeight="600"
-            color="$color"
+            color={isDarkMode ? "$textDark" : "$color"}
             textAlign="center"
             flex={1}
           >
@@ -130,7 +140,13 @@ export function FoodAnalysisResult({
             onPress={handleClosePress}
             pressStyle={{ opacity: 0.7 }}
           >
-            <Ionicons name="close" size={22} color={tokens.color.grey3.val} />
+            <Ionicons
+              name="close"
+              size={22}
+              color={
+                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
+              }
+            />
           </XStack>
         </XStack>
 
@@ -151,7 +167,7 @@ export function FoodAnalysisResult({
             <Text
               fontSize={22}
               fontWeight="700"
-              color="$color"
+              color={isDarkMode ? "$textDark" : "$color"}
               flexShrink={1}
               flex={1}
             >
@@ -164,7 +180,9 @@ export function FoodAnalysisResult({
               <XStack
                 alignItems="center"
                 gap="$1"
-                backgroundColor="$backgroundFocus"
+                backgroundColor={
+                  isDarkMode ? "$cardBgDark" : "$backgroundFocus"
+                }
                 paddingHorizontal="$3"
                 paddingVertical={6}
                 borderRadius="$8"
@@ -175,8 +193,17 @@ export function FoodAnalysisResult({
                     MEAL_TYPE_ICON[mealType] as keyof typeof Ionicons.glyphMap
                   }
                   size={15}
+                  color={
+                    isDarkMode
+                      ? tokens.color.textDark.val
+                      : tokens.color.black.val
+                  }
                 />
-                <Text fontSize={14} color="$color" fontWeight="500">
+                <Text
+                  fontSize={14}
+                  color={isDarkMode ? "$textDark" : "$color"}
+                  fontWeight="500"
+                >
                   {MEAL_LABEL[mealType]}
                 </Text>
               </XStack>
@@ -216,7 +243,7 @@ export function FoodAnalysisResult({
           <YStack
             marginHorizontal="$4"
             marginTop="$4"
-            backgroundColor="$cardBackground"
+            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
             borderRadius="$4"
             padding="$4"
             gap="$2"
@@ -224,7 +251,12 @@ export function FoodAnalysisResult({
             <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
               한줄평
             </Text>
-            <Text fontSize="$4" color="$color" lineHeight={22} fontWeight="600">
+            <Text
+              fontSize="$4"
+              color={isDarkMode ? "$textDark" : "$color"}
+              lineHeight={22}
+              fontWeight="600"
+            >
               {result.evaluation.comment}
             </Text>
           </YStack>
@@ -233,15 +265,23 @@ export function FoodAnalysisResult({
           <YStack
             marginHorizontal="$4"
             marginTop="$3"
-            backgroundColor="$cardBackground"
+            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
             borderRadius="$4"
             padding="$4"
           >
-            <Text fontSize="$4" fontWeight="600">
+            <Text
+              fontSize="$4"
+              fontWeight="600"
+              color={isDarkMode ? "$textDark" : "$color"}
+            >
               총 열량
             </Text>
             <XStack alignItems="baseline" gap="$1">
-              <Text fontSize={30} fontWeight="600" color="$color">
+              <Text
+                fontSize={30}
+                fontWeight="600"
+                color={isDarkMode ? "$textDark" : "$color"}
+              >
                 {Math.round(result.total.calories)}
               </Text>
               <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
@@ -258,7 +298,11 @@ export function FoodAnalysisResult({
 
           {/* 식단 세부 분석 */}
           <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
-            <Text fontSize={22} fontWeight="700" color="$color">
+            <Text
+              fontSize={22}
+              fontWeight="700"
+              color={isDarkMode ? "$textDark" : "$color"}
+            >
               식단 세부 분석
             </Text>
             {result.foods.map((food, i) => {
@@ -266,7 +310,9 @@ export function FoodAnalysisResult({
               return (
                 <YStack
                   key={i}
-                  backgroundColor="$cardBackground"
+                  backgroundColor={
+                    isDarkMode ? "$cardBgDark" : "$cardBackground"
+                  }
                   borderRadius="$4"
                   padding="$4"
                   paddingVertical="$5"
@@ -287,7 +333,7 @@ export function FoodAnalysisResult({
                       <Text
                         fontSize="$4"
                         fontWeight="600"
-                        color="$color"
+                        color={isDarkMode ? "$textDark" : "$color"}
                         numberOfLines={1}
                         flexShrink={1}
                       >
@@ -333,11 +379,15 @@ export function FoodAnalysisResult({
           {/* 더 건강하게 식사하는 법 */}
           {result.evaluation.cautionFoods.length > 0 && (
             <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
-              <Text fontSize={22} fontWeight="700" color="$color">
+              <Text
+                fontSize={22}
+                fontWeight="700"
+                color={isDarkMode ? "$textDark" : "$color"}
+              >
                 더 건강하게 식사하는 법
               </Text>
               <YStack
-                backgroundColor="$cardBackground"
+                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
                 borderRadius="$4"
                 padding="$4"
                 gap="$6"
@@ -347,7 +397,12 @@ export function FoodAnalysisResult({
                     <Text fontSize="$3" fontWeight="700" color="$colorSubtle">
                       주의해야 할 음식 {i + 1}: {item.food}
                     </Text>
-                    <Text fontSize={15} fontWeight="500" lineHeight={22}>
+                    <Text
+                      fontSize={15}
+                      fontWeight="500"
+                      lineHeight={22}
+                      color={isDarkMode ? "$textDark" : "$color"}
+                    >
                       {item.reason}
                     </Text>
                   </YStack>
@@ -364,16 +419,26 @@ export function FoodAnalysisResult({
             marginTop={24}
             paddingVertical={17}
             marginHorizontal={15}
-            backgroundColor="#EAEAF0"
+            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
             borderRadius={20}
             pressStyle={{ opacity: 0.7 }}
+            onPress={() => {
+              onClose()
+              router.push("/(tabs)/consult")
+            }}
           >
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={18}
-              color={tokens.color.grey3.val}
+              color={
+                isDarkMode ? tokens.color.appBg.val : tokens.color.grey3.val
+              }
             />
-            <Text fontSize={16} fontWeight="500">
+            <Text
+              fontSize={16}
+              fontWeight="500"
+              color={isDarkMode ? "$textDark" : "$color"}
+            >
               식사에 대해 질문하기
             </Text>
           </XStack>
@@ -386,7 +451,7 @@ export function FoodAnalysisResult({
             bottom={0}
             left={0}
             right={0}
-            backgroundColor={tokens.color.appBg.val}
+            backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
             paddingHorizontal={16}
             paddingTop={12}
             paddingBottom={insets.bottom + 12}

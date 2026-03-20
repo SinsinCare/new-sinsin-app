@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Alert } from "react-native"
+import type { DiaryAnalysisResult } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
@@ -23,6 +24,7 @@ import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
+import { MAX_WATER_INTAKE } from "../../data/hydrationConstants"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -36,6 +38,13 @@ export function RecordView({
   onSelectMealType,
 }: RecordViewProps) {
   const record = useHomeRecord(selectedDate)
+  const [viewDiaryResult, setViewDiaryResult] =
+    useState<DiaryAnalysisResult | null>(null)
+  const [isViewResultOpen, setIsViewResultOpen] = useState(false)
+  const [viewResultMealType, setViewResultMealType] = useState<
+    MealType | undefined
+  >()
+
   const {
     isAnalyzing,
     isUpdating,
@@ -48,10 +57,14 @@ export function RecordView({
     registerDiary,
     closeResult,
     updateFoodAnalysis,
+    fetchDiaryResult,
   } = useFoodAnalysis()
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const calendarDays = useMemo(() => getThreeDays(new Date(), "record"), [])
+  const calendarDays = useMemo(
+    () => getThreeDays(selectedDate, "record"),
+    [selectedDate],
+  )
   const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
   const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
   const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
@@ -78,6 +91,14 @@ export function RecordView({
   const apiRecordedMeals = Object.fromEntries(
     apiDiets.map((d) => [d.mealType, true]),
   ) as Partial<Record<MealType, boolean>>
+  const apiMealTimes = Object.fromEntries(
+    apiDiets.map((d) => {
+      const date = new Date(d.createdAt + "Z")
+      const h = String(date.getHours()).padStart(2, "0")
+      const m = String(date.getMinutes()).padStart(2, "0")
+      return [d.mealType, `${h}:${m}`]
+    }),
+  ) as Partial<Record<MealType, string>>
 
   const mergedMealImages = { ...apiMealImages, ...mealImages }
   const mergedRecordedMeals = { ...apiRecordedMeals, ...recordedMeals }
@@ -129,10 +150,13 @@ export function RecordView({
     })
     .map((day) => day.date)
 
-  const totalIntake = data?.result.analysis?.extraWater ?? 0
-  const dailyGoal = record.dailyGoal
-  const percentage = Math.min((totalIntake / dailyGoal) * 100, 100)
-  const remaining = Math.max(dailyGoal - totalIntake, 0)
+  const serverExtraWater = data?.result.analysis?.extraWater ?? 0
+  const { syncFromServer } = record
+  const syncFromServerRef = useRef(syncFromServer)
+  syncFromServerRef.current = syncFromServer
+  useEffect(() => {
+    syncFromServerRef.current(serverExtraWater)
+  }, [serverExtraWater])
 
   const handleAddToRecord = async () => {
     await registerDiary(selectedDate, (mealType, imageUri) => {
@@ -182,6 +206,17 @@ export function RecordView({
     setIsOptionsSheetOpen(false)
   }
 
+  const handleViewMealResult = async (mealType: MealType) => {
+    const diet = data?.result.diets.find((d) => d.mealType === mealType)
+    if (!diet) return
+    const result = await fetchDiaryResult(diet.diaryId)
+    if (result) {
+      setViewDiaryResult(result)
+      setViewResultMealType(mealType)
+      setIsViewResultOpen(true)
+    }
+  }
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -193,7 +228,7 @@ export function RecordView({
         recordedDates={recordedDates}
       />
 
-      <View height={15} />
+      <View height={10} />
 
       <CharacterSection
         selectedDate={selectedDate}
@@ -203,11 +238,15 @@ export function RecordView({
         withinLimits={withinLimits}
       />
 
+      <View height={5} />
+
       <MealButtons
         onSelectMealType={onSelectMealType}
         mealImages={mergedMealImages}
         recordedMeals={mergedRecordedMeals}
+        mealTimes={apiMealTimes}
         onRecord={handleRecord}
+        onViewResult={handleViewMealResult}
       />
 
       <RecordOptionsSheet
@@ -240,23 +279,33 @@ export function RecordView({
         updateFoodAnalysis={updateFoodAnalysis}
       />
 
+      <FoodAnalysisResult
+        result={viewDiaryResult}
+        open={isViewResultOpen}
+        onClose={() => setIsViewResultOpen(false)}
+        imageUri={viewDiaryResult?.imageUrl}
+        mealType={viewResultMealType}
+        showAddButton={false}
+        isUpdating={isUpdating}
+        updateFoodAnalysis={updateFoodAnalysis}
+      />
+
       <LoadingOverlay visible={isAnalyzing} message="식단을 분석하고 있어요" />
 
       <View height={10} />
 
       <HydrationTracker
-        intake={totalIntake}
-        dailyGoal={dailyGoal}
-        percentage={percentage}
-        remaining={remaining}
-        isGoalAchieved={percentage >= 100}
-        addWater={async (amount) => {
-          await record.addWater(amount)
-          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        intake={record.intake}
+        dailyGoal={record.dailyGoal}
+        percentage={record.percentage}
+        remaining={record.remaining}
+        isGoalAchieved={record.isGoalAchieved}
+        addWater={(amount) => {
+          if (record.intake + amount > MAX_WATER_INTAKE) return
+          record.addWater(amount)
         }}
-        onReset={async () => {
-          await record.resetHydration(data?.result.analysis?.extraWater ?? 0)
-          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+        onReset={() => {
+          record.resetHydration(serverExtraWater)
         }}
       />
 

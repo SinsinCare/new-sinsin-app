@@ -11,7 +11,12 @@ interface DatePickerModalProps {
   onSelect: (year: number, month: number) => void
 }
 
-export function DatePickerModal({ visible, selected, onClose, onSelect }: DatePickerModalProps) {
+export function DatePickerModal({
+  visible,
+  selected,
+  onClose,
+  onSelect,
+}: DatePickerModalProps) {
   const [tempYear, setTempYear] = useState(selected?.year ?? YEARS[0])
   const [tempMonth, setTempMonth] = useState(selected?.month ?? 1)
 
@@ -30,16 +35,25 @@ export function DatePickerModal({ visible, selected, onClose, onSelect }: DatePi
               <ThemedText style={styles.cancelText}>취소</ThemedText>
             </Pressable>
             <ThemedText style={styles.headerTitle}>진단 시기</ThemedText>
-            <Pressable onPress={() => onSelect(tempYear, tempMonth)} hitSlop={8}>
+            <Pressable
+              onPress={() => onSelect(tempYear, tempMonth)}
+              hitSlop={8}
+            >
               <ThemedText style={styles.confirmText}>확인</ThemedText>
             </Pressable>
           </View>
           <View style={styles.columns}>
-            <ScrollView style={styles.column} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.column}
+              showsVerticalScrollIndicator={false}
+            >
               {MONTHS.map((m) => (
                 <Pressable
                   key={m}
-                  style={[styles.pickerItem, tempMonth === m && styles.pickerItemSelected]}
+                  style={[
+                    styles.pickerItem,
+                    tempMonth === m && styles.pickerItemSelected,
+                  ]}
                   onPress={() => setTempMonth(m)}
                 >
                   <ThemedText
@@ -53,11 +67,17 @@ export function DatePickerModal({ visible, selected, onClose, onSelect }: DatePi
                 </Pressable>
               ))}
             </ScrollView>
-            <ScrollView style={styles.column} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.column}
+              showsVerticalScrollIndicator={false}
+            >
               {YEARS.map((y) => (
                 <Pressable
                   key={y}
-                  style={[styles.pickerItem, tempYear === y && styles.pickerItemSelected]}
+                  style={[
+                    styles.pickerItem,
+                    tempYear === y && styles.pickerItemSelected,
+                  ]}
                   onPress={() => setTempYear(y)}
                 >
                   <ThemedText

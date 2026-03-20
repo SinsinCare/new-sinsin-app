@@ -1,8 +1,12 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import { useHydration } from "./useHydration"
 import { useExtraWater } from "./useExtraWater"
 import { EdemaLevel } from "../data/EdemaConstants"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
+import { useQueryClient } from "@tanstack/react-query"
+import { debounce } from "lodash-es"
+
+const DEBOUNCE_MS = 500
 
 export interface UseHomeRecordReturn {
   // Hydration
@@ -11,9 +15,10 @@ export interface UseHomeRecordReturn {
   percentage: number
   remaining: number
   isGoalAchieved: boolean
-  addWater: (amount: number) => Promise<void>
+  addWater: (amount: number) => void
   subtractWater: (amount: number) => void
-  resetHydration: (serverExtraWater: number) => Promise<void>
+  resetHydration: (serverExtraWater: number) => void
+  syncFromServer: (serverExtraWater: number) => void
 
   // Weight
   weight: string
@@ -28,30 +33,92 @@ export interface UseHomeRecordReturn {
 export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
   const hydration = useHydration()
   const { updateExtraWater } = useExtraWater()
+  const queryClient = useQueryClient()
 
   const [weight, setWeight] = useState("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
 
-  // TODO: Firestore 연동 시 날짜별 어제 체중 조회로 교체
-  const yesterdayWeight: number | null = 60.4
+  const yesterdayWeight: number | null = null
 
   const dateStr = toDateStr(selectedDate)
 
-  const addWaterWithApi = useCallback(
-    async (amount: number) => {
-      hydration.addWater(amount)
-      await updateExtraWater(dateStr, amount)
-    },
-    [hydration, dateStr, updateExtraWater],
+  // Debounce state for water intake
+  const pendingDeltaRef = useRef(0)
+  const updateExtraWaterRef = useRef(updateExtraWater)
+  updateExtraWaterRef.current = updateExtraWater
+
+  // flushPendingWater은 stable — updateExtraWater ref로 접근해서 매 렌더 재생성 방지
+  const flushPendingWater = useMemo(
+    () =>
+      debounce((flushDateStr: string) => {
+        const delta = pendingDeltaRef.current
+        if (delta === 0) return
+        pendingDeltaRef.current = 0
+        updateExtraWaterRef.current(flushDateStr, delta).then(() => {
+          queryClient.refetchQueries({
+            queryKey: ["dateAnalysis", flushDateStr],
+          })
+        })
+      }, DEBOUNCE_MS),
+    [queryClient],
   )
 
-  // resetHydration이 extraWater를 받도록 변경
-  const resetWithApi = useCallback(
-    async (serverExtraWater: number) => {
-      hydration.reset()
-      await updateExtraWater(dateStr, -serverExtraWater)
+  const flushPendingWaterRef = useRef(flushPendingWater)
+  flushPendingWaterRef.current = flushPendingWater
+
+  // Reset hydration when date changes
+  const { setIntake: setHydrationIntake } = hydration
+  useEffect(() => {
+    flushPendingWaterRef.current.cancel()
+    pendingDeltaRef.current = 0
+    setHydrationIntake(0)
+  }, [dateStr, setHydrationIntake])
+
+  // Cancel debounce on unmount
+  useEffect(() => {
+    return () => {
+      flushPendingWaterRef.current.cancel()
+    }
+  }, [])
+
+  const addWaterWithApi = useCallback(
+    (amount: number) => {
+      // Optimistic: update local state immediately
+      hydration.addWater(amount)
+
+      // Accumulate delta and schedule debounced flush
+      pendingDeltaRef.current += amount
+      flushPendingWater(dateStr)
     },
-    [hydration, dateStr, updateExtraWater],
+    [hydration, dateStr, flushPendingWater],
+  )
+
+  const syncFromServer = useCallback(
+    (serverExtraWater: number) => {
+      // 아직 안 보낸 pending이 있으면 optimistic 상태 유지 (덮어쓰지 않음)
+      if (pendingDeltaRef.current > 0) return
+      hydration.setIntake(serverExtraWater)
+    },
+    [hydration],
+  )
+
+  const resetWithApi = useCallback(
+    (serverExtraWater: number) => {
+      // Cancel pending debounce
+      flushPendingWater.cancel()
+      pendingDeltaRef.current = 0
+
+      // Optimistic: reset local state immediately
+      hydration.reset()
+
+      // API call + refetch current date only
+      updateExtraWater(dateStr, -serverExtraWater).then(() => {
+        queryClient.refetchQueries({
+          queryKey: ["dateAnalysis", dateStr],
+        })
+      })
+    },
+    [hydration, dateStr, updateExtraWater, queryClient, flushPendingWater],
   )
 
   const handleSetEdemaLevel = useCallback((level: EdemaLevel) => {
@@ -68,6 +135,7 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     addWater: addWaterWithApi,
     subtractWater: hydration.subtractWater,
     resetHydration: resetWithApi,
+    syncFromServer,
     weight,
     setWeight,
     yesterdayWeight,

@@ -15,7 +15,10 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
-import { WITHDRAWAL_REASONS, WITHDRAWAL_OTHER_INDEX } from "@/src/features/settings/data/constants"
+import {
+  WITHDRAWAL_REASONS,
+  WITHDRAWAL_OTHER_INDEX,
+} from "@/src/features/settings/data/constants"
 
 export function WithdrawalScreen() {
   const insets = useSafeAreaInsets()
@@ -40,7 +43,11 @@ export function WithdrawalScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backButton}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={styles.backButton}
+          >
             <Ionicons name="chevron-back" size={24} color="#17191C" />
           </Pressable>
 

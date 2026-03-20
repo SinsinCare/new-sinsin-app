@@ -7,4 +7,5 @@ export {
   ProfileSetupScreen,
   NicknameSetupScreen,
   SignupCompleteScreen,
+  ForgotPasswordScreen,
 } from "./views"

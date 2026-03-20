@@ -7,8 +7,10 @@ import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
 import CheckColor from "@/assets/icons/check-color.svg"
 import CheckEmpty from "@/assets/icons/check-empty.svg"
+import CheckDark from "@/assets/icons/check-dark.svg"
 import FireColor from "@/assets/icons/fire-color.svg"
 import FireEmpty from "@/assets/icons/fire-empty.svg"
+import FireDark from "@/assets/icons/fire-dark.svg"
 import Copy from "@/assets/icons/copy.svg"
 import ChevronRight from "@/assets/icons/chevron-right.svg"
 import Cross from "@/assets/icons/cross.svg"
@@ -37,7 +39,6 @@ import Pencil from "@/assets/icons/pencil.svg"
 import Trashcan from "@/assets/icons/trashcan.svg"
 import Upload from "@/assets/icons/upload.svg"
 import X from "@/assets/icons/x.svg"
-import Loading from "@/assets/icons/loading.svg"
 import WaterDrop from "@/assets/icons/water-drop.svg"
 import Sodium from "@/assets/icons/sodium.svg"
 import Potassium from "@/assets/icons/potassium.svg"
@@ -53,9 +54,19 @@ import Noon from "@/assets/icons/noon.svg"
 import Evening from "@/assets/icons/evening.svg"
 import Dessert from "@/assets/icons/dessert.svg"
 import Edit from "@/assets/icons/edit.svg"
+import Spot from "@/assets/icons/spot.svg"
 import CharacterExcellent from "@/assets/icons/character-excellent.svg"
 import CharacterGood from "@/assets/icons/character-good.svg"
 import CharacterCaution from "@/assets/icons/character-caution.svg"
+import MorningFood from "@/assets/icons/morning_food.svg"
+import NoonFood from "@/assets/icons/noon_food.svg"
+import EveningFood from "@/assets/icons/evening_food.svg"
+import DessertFood from "@/assets/icons/dessert_food.svg"
+import CheckOrange from "@/assets/icons/check-orange.svg"
+import CircleCharacter from "@/assets/icons/circle-character.svg"
+import Sparkle from "@/assets/icons/sparkle.svg"
+import Profile from "@/assets/icons/profile.svg"
+import ProfileDark from "@/assets/icons/profile-dark.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -64,6 +75,7 @@ const icons = {
   "check-empty": CheckEmpty,
   "fire-color": FireColor,
   "fire-empty": FireEmpty,
+  "check-orange": CheckOrange,
   chef: Chef,
   "chevron-right": ChevronRight,
   copy: Copy,
@@ -79,7 +91,7 @@ const icons = {
   home: Home,
   info: Info,
   keyboard: Keyboard,
-  loading: Loading,
+  loading: MorningFood,
   location: Location,
   magnifyingglass: Magnifyingglass,
   mail: Mail,
@@ -107,10 +119,21 @@ const icons = {
   evening: Evening,
   dessert: Dessert,
   edit: Edit,
+  spot: Spot,
   x: X,
   "character-excellent": CharacterExcellent,
   "character-good": CharacterGood,
   "character-caution": CharacterCaution,
+  "circle-character": CircleCharacter,
+  sparkle: Sparkle,
+  "morning-food": MorningFood,
+  "noon-food": NoonFood,
+  "evening-food": EveningFood,
+  "dessert-food": DessertFood,
+  profile: Profile,
+  "profile-dark": ProfileDark,
+  "fire-dark": FireDark,
+  "check-dark": CheckDark,
 } as const
 
 export type IconName = keyof typeof icons

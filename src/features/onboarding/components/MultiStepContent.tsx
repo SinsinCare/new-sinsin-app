@@ -19,13 +19,16 @@ export function MultiStepContent({
       {options.map((option, index) => {
         const isSelected = selectedKeys.includes(option.key)
         return (
-          <Pressable key={`${index}-${option.key}`} onPress={() => onToggle(option.key)}>
+          <Pressable
+            key={`${index}-${option.key}`}
+            onPress={() => onToggle(option.key)}
+          >
             <XStack
               height={56}
               borderRadius={12}
               borderWidth={1.5}
-              borderColor={isSelected ? "#5464F2" : "rgba(218,223,230,0.6)"}
-              backgroundColor={isSelected ? "#F5F6FF" : "white"}
+              borderColor={isSelected ? "#34D399" : "rgba(218,223,230,0.6)"}
+              backgroundColor={isSelected ? "#F0FDF9" : "white"}
               alignItems="center"
               paddingHorizontal={16}
               gap={12}
@@ -37,7 +40,7 @@ export function MultiStepContent({
               <Text
                 fontSize={16}
                 fontWeight={isSelected ? "600" : "400"}
-                color={isSelected ? "#5464F2" : "#17191C"}
+                color={isSelected ? "#0D896A" : "#17191C"}
                 letterSpacing={-0.3}
                 flex={1}
               >
