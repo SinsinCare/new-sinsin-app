@@ -111,6 +111,11 @@ export function MyPageScreen() {
             title: "1:1 문의",
             onPress: () => router.push("/(settings)/inquiry"),
           },
+          {
+            icon: "book-outline" as const,
+            title: "의료 참고 문헌",
+            onPress: () => router.push("/(settings)/medical-reference"),
+          },
         ].map(({ icon, title, onPress }) => (
           <Pressable
             key={title}
