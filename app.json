@@ -15,6 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mediology.sinsin-care",
+      "appleTeamId": "HJJNV9Y5W8",
       "deploymentTarget": "14.0",
       "associatedDomains": ["applinks:sinsin.mediology.ai"],
       "infoPlist": {
