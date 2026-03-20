@@ -15,10 +15,10 @@ export function MyPageScreen() {
   const router = useRouter()
   const { data: profile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
-  const ageGenderLabel =
-    profile?.age && profile?.gender
-      ? `${profile.age}세 · ${profile.gender === "male" ? "남" : "여"}`
-      : null
+  const age = profile?.birthYear
+    ? new Date().getFullYear() - profile.birthYear
+    : null
+  const ageGenderLabel = age ? `${age}세` : null
 
   return (
     <ThemedView style={styles.container}>

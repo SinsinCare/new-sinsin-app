@@ -1,14 +1,18 @@
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/src/services/core/apiClient"
 
-interface MyPageProfile {
+export interface MyPageProfile {
+  email: string
   nickName: string
-  age: number
-  gender: string
+  name: string
+  birthYear: number
+  birthMonth: number
+  birthDay: number
+  accountState: string
 }
 
 async function fetchMyPageProfile(): Promise<MyPageProfile> {
-  const { data } = await api.get("/user/profile/info")
+  const { data } = await api.get("/user/profile")
   return data.result
 }
 

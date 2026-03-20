@@ -74,10 +74,10 @@ export function ProfileEditScreen() {
             <ThemedText
               style={[
                 styles.fieldValue,
-                !profile?.displayName && styles.fieldPlaceholder,
+                !profile?.name && styles.fieldPlaceholder,
               ]}
             >
-              {profile?.displayName || "홍길동"}
+              {profile?.name || "홍길동"}
             </ThemedText>
           </View>
         </View>
