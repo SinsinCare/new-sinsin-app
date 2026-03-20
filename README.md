@@ -179,3 +179,11 @@ eas submit --platform ios --latest --profile production
 eas build --platform android --profile production
 eas submit --platform android --latest
 ```
+
+---
+로컬에서 빌드
+expo prebuild → Xcode archive → Transporter 업로드
+```bash
+npx expo prebuild --platform ios --clean
+open ios/app.xcworkspace
+```
