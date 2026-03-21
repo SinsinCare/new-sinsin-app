@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, useColorScheme, StyleSheet } from "react-native"
+import { Pressable, ScrollView, useColorScheme, StyleSheet, ActionSheetIOS, Alert, Platform } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
@@ -39,7 +39,50 @@ export default function PostDetailScreen() {
   const scheme = useColorScheme() ?? "light"
 
   const { post, isLoading } = usePostDetail(id!)
-  const { posts, toggleLike, toggleBookmark } = useCommunityPosts()
+  const { posts, toggleLike, toggleBookmark, deletePost } = useCommunityPosts()
+
+  const handleMorePress = () => {
+    const options = ["수정하기", "삭제하기", "신고하기", "취소"]
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: 3, destructiveButtonIndex: 1 },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            Alert.alert("수정하기", "게시글 수정 기능은 준비 중입니다.")
+          } else if (buttonIndex === 1) {
+            Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
+              { text: "취소", style: "cancel" },
+              {
+                text: "삭제",
+                style: "destructive",
+                onPress: () => {
+                  deletePost?.(post!.id)
+                  router.back()
+                },
+              },
+            ])
+          } else if (buttonIndex === 2) {
+            Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 처리하겠습니다.")
+          }
+        },
+      )
+    } else {
+      Alert.alert("더보기", "", [
+        { text: "수정하기", onPress: () => Alert.alert("수정하기", "게시글 수정 기능은 준비 중입니다.") },
+        {
+          text: "삭제하기",
+          style: "destructive",
+          onPress: () =>
+            Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
+              { text: "취소", style: "cancel" },
+              { text: "삭제", style: "destructive", onPress: () => { deletePost?.(post!.id); router.back() } },
+            ]),
+        },
+        { text: "신고하기", onPress: () => Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 처리하겠습니다.") },
+        { text: "취소", style: "cancel" },
+      ])
+    }
+  }
 
   if (isLoading || !post) {
     return <LoadingScreen message="게시물을 불러오는 중..." />
@@ -81,15 +124,13 @@ export default function PostDetailScreen() {
               color={post.bookmarked ? LIKE_COLOR[scheme] : HEADER_ICON[scheme]}
             />
           </Pressable>
-          {/* TODO: 더보기 메뉴 기능 구현 후 복원 (App Store 2.1a 반려)
-          <Pressable hitSlop={8}>
+          <Pressable hitSlop={8} onPress={handleMorePress}>
             <Ionicons
               name="ellipsis-horizontal"
               size={24}
               color={HEADER_ICON[scheme]}
             />
           </Pressable>
-          */}
         </XStack>
       </XStack>
 

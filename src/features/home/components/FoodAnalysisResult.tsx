@@ -411,12 +411,38 @@ export function FoodAnalysisResult({
             </YStack>
           )}
 
+          {/* 의료 정보 출처 안내 */}
+          <YStack
+            marginHorizontal={15}
+            marginTop={16}
+            paddingVertical={12}
+            paddingHorizontal={16}
+            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+            borderRadius={12}
+            gap={4}
+          >
+            <Text fontSize={12} color="$colorSubtle" lineHeight={18}>
+              영양소 분석 기준: 한국영양학회 식품성분데이터베이스 · 대한신장학회 CKD 영양 권고안 · 한국보건산업진흥원
+            </Text>
+            <Text
+              fontSize={12}
+              color={isDarkMode ? "#5BC5AB" : "#0D896A"}
+              fontWeight="500"
+              onPress={() => {
+                onClose()
+                router.push("/(settings)/medical-reference")
+              }}
+            >
+              📚 참고 문헌 전체 보기 →
+            </Text>
+          </YStack>
+
           {/* 식사에 대해 질문하기 */}
           <XStack
             alignItems="center"
             justifyContent="center"
             gap={6}
-            marginTop={24}
+            marginTop={12}
             paddingVertical={17}
             marginHorizontal={15}
             backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}

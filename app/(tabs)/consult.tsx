@@ -17,6 +17,7 @@ import {
   GestureResponderEvent,
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
+import { useRouter } from "expo-router"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -55,6 +56,7 @@ if (Platform.OS === "android") {
 
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [inputMessage, setInputMessage] = useState("")
@@ -255,6 +257,24 @@ export default function ConsultScreen() {
                   <FaqCarousel onFaqPress={handleFaqPress} />
                 </Animated.View>
               )}
+              <YStack alignItems="center" gap={4} paddingHorizontal={24}>
+                <Text
+                  fontSize={11}
+                  color={isDarkMode ? "#595960" : "#A5A5AF"}
+                  textAlign="center"
+                  lineHeight={16}
+                >
+                  AI 답변은 참고용 정보입니다. 정확한 진단·치료는 반드시 전문 의료인과 상담하세요.
+                </Text>
+                <Text
+                  fontSize={11}
+                  color={isDarkMode ? "#5BC5AB" : "#0D896A"}
+                  fontWeight="500"
+                  onPress={() => router.push("/(settings)/medical-reference")}
+                >
+                  📚 의학 참고 문헌 보기
+                </Text>
+              </YStack>
             </YStack>
           </Pressable>
         ) : (
