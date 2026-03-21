@@ -4,8 +4,6 @@ import {
   View,
   ScrollView,
   Pressable,
-  Modal,
-  ActivityIndicator,
 } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
@@ -26,7 +24,6 @@ export function HealthDataUploadScreen() {
   const router = useRouter()
 
   const [files, setFiles] = useState<string[]>([])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const pickFromCamera = async () => {
     if (files.length >= MAX_FILES) return
@@ -61,12 +58,8 @@ export function HealthDataUploadScreen() {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true)
-    // TODO: 실제 API 호출
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsAnalyzing(false)
-    router.replace("/(settings)/health-results")
+  const handleAnalyze = () => {
+    router.replace("/(settings)/health-data-upload")
   }
 
   const canAdd = files.length < MAX_FILES
@@ -231,24 +224,6 @@ export function HealthDataUploadScreen() {
         onPress={handleAnalyze}
       />
 
-      {/* 분석 중 로딩 오버레이 */}
-      <Modal visible={isAnalyzing} transparent animationType="fade">
-        <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator
-              size="large"
-              color="#44AF94"
-              style={{ marginBottom: 16 }}
-            />
-            <ThemedText style={styles.loadingTitle}>
-              검사결과를 불러오고 있습니다...
-            </ThemedText>
-            <ThemedText style={styles.loadingSubtitle}>
-              데이터를 안전하게 전송 중입니다.
-            </ThemedText>
-          </View>
-        </View>
-      </Modal>
     </ThemedView>
   )
 }

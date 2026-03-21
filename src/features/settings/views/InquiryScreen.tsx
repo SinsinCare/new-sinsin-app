@@ -9,7 +9,9 @@ import {
   Platform,
   Modal,
   Animated,
+  Alert,
 } from "react-native"
+import { api } from "@/src/services/core/apiClient"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -43,6 +45,7 @@ export function InquiryScreen() {
   const [content, setContent] = useState("")
   const [images, setImages] = useState<string[]>([])
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCategorySheet, setShowCategorySheet] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [tooltipVisible, setTooltipVisible] = useState(false)
@@ -99,9 +102,20 @@ export function InquiryScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = () => {
-    // TODO: 문의 등록 API 호출
-    router.back()
+  const handleSubmit = async () => {
+    if (!canSubmit || isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      await api.post("/user/inquiries", {
+        subject: `[${category}] ${title}`,
+        content,
+      })
+      router.back()
+    } catch {
+      Alert.alert("오류", "문의 등록에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -229,8 +243,8 @@ export function InquiryScreen() {
       </KeyboardAvoidingView>
 
       <BottomActionBar
-        label="등록하기"
-        disabled={!canSubmit}
+        label={isSubmitting ? "등록 중..." : "등록하기"}
+        disabled={!canSubmit || isSubmitting}
         paddingBottom={insets.bottom + 16}
         onPress={handleSubmit}
       />

@@ -16,6 +16,7 @@ import {
   Modal,
   GestureResponderEvent,
 } from "react-native"
+import * as ImagePicker from "expo-image-picker"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -145,6 +146,33 @@ export default function ConsultScreen() {
     const screenHeight = Dimensions.get("window").height
     setAttachMenuPosition({ bottom: screenHeight - pageY + 8, left: 16 })
     setAttachMenuOpen(true)
+  }
+
+  const handlePhotoUpload = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== "granted") {
+      Alert.alert("권한 필요", "사진 접근 권한이 필요합니다.")
+      return
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+    })
+    if (!result.canceled && result.assets[0]) {
+      sendMessage(`[사진 첨부]\n${result.assets[0].uri}`)
+    }
+  }
+
+  const handleCameraUpload = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync()
+    if (status !== "granted") {
+      Alert.alert("권한 필요", "카메라 접근 권한이 필요합니다.")
+      return
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 })
+    if (!result.canceled && result.assets[0]) {
+      sendMessage(`[사진 첨부]\n${result.assets[0].uri}`)
+    }
   }
 
   const { handleCopy, showToast } = useCopyToClipboard()
@@ -403,7 +431,7 @@ export default function ConsultScreen() {
             <Pressable
               onPress={() => {
                 setAttachMenuOpen(false)
-                // TODO: handle photo upload
+                handlePhotoUpload()
               }}
               style={({ pressed }) => ({
                 ...attachStyles.menuItem,
@@ -418,11 +446,11 @@ export default function ConsultScreen() {
               <Icon name="gallery" size={20} color={menuTextColor} />
             </Pressable>
 
-            {/* 파일 업로드 */}
+            {/* 카메라 촬영 */}
             <Pressable
               onPress={() => {
                 setAttachMenuOpen(false)
-                // TODO: handle file upload
+                handleCameraUpload()
               }}
               style={({ pressed }) => ({
                 ...attachStyles.menuItem,
@@ -432,7 +460,7 @@ export default function ConsultScreen() {
               <Text
                 style={[attachStyles.menuItemText, { color: menuTextColor }]}
               >
-                파일 업로드
+                카메라 촬영
               </Text>
               <Icon name="paperclip" size={20} color={menuTextColor} />
             </Pressable>

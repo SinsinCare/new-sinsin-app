@@ -1,5 +1,5 @@
 import React from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Share } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -99,7 +99,11 @@ export function MyPageScreen() {
           {
             icon: "share-outline" as const,
             title: "나의 데이터 공유하기",
-            onPress: () => {},
+            onPress: () =>
+              Share.share({
+                title: "나의 신장 건강 데이터",
+                message: `[신신당부] ${profile?.nickName ?? "사용자"}님의 건강 데이터\n신신당부 앱에서 확인하세요.`,
+              }),
           },
           {
             icon: "megaphone-outline" as const,

@@ -6,10 +6,12 @@ import {
   Pressable,
   TextInput,
   Switch,
+  Alert,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -17,11 +19,14 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { DatePickerModal } from "@/src/features/settings/components"
 import { DIAGNOSIS_CAUSES } from "@/src/features/settings/data/constants"
 import { useUserStore } from "@/src/stores/userStore"
+import { api } from "@/src/services/core/apiClient"
 
 export function KidneyProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const profile = useUserStore((s) => s.profile)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [heightVal, setHeightVal] = useState(
     profile?.height ? String(profile.height) : "",
@@ -45,9 +50,31 @@ export function KidneyProfileEditScreen() {
     )
   }
 
-  const handleSave = () => {
-    // TODO: API 호출 및 userStore 업데이트
-    router.back()
+  const handleSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      // CKD 병기·투석 여부에 따른 영양소 권장 제한값 (대한신장학회 기준)
+      const proteinGPerKg = onDialysis ? 1.2 : ckdStage >= 4 ? 0.6 : 0.8
+      const potassiumMg = ckdStage >= 3 ? 2000 : null
+      const phosphorusMg = ckdStage >= 3 ? 1000 : null
+      const fluidMl = onDialysis ? 1000 : null
+
+      await api.patch("/user/profile/kidney", {
+        hasCkd: true,
+        sodiumMg: 2000,
+        proteinGPerKg,
+        potassiumMg,
+        phosphorusMg,
+        fluidMl,
+      })
+      queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
+      router.back()
+    } catch {
+      Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const formattedDate = diagnosisDate
@@ -61,8 +88,10 @@ export function KidneyProfileEditScreen() {
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
         rightElement={
-          <Pressable onPress={handleSave} hitSlop={8}>
-            <ThemedText style={styles.saveButtonText}>저장</ThemedText>
+          <Pressable onPress={handleSave} hitSlop={8} disabled={isSubmitting}>
+            <ThemedText style={[styles.saveButtonText, isSubmitting && { opacity: 0.5 }]}>
+              {isSubmitting ? "저장 중..." : "저장"}
+            </ThemedText>
           </Pressable>
         }
       />
@@ -211,8 +240,9 @@ export function KidneyProfileEditScreen() {
         />
 
         <Pressable
-          style={[styles.completeButton, { marginTop: 36 }]}
+          style={[styles.completeButton, { marginTop: 36 }, isSubmitting && { opacity: 0.6 }]}
           onPress={handleSave}
+          disabled={isSubmitting}
         >
           <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
           <ThemedText style={styles.completeButtonText}>저장하기</ThemedText>

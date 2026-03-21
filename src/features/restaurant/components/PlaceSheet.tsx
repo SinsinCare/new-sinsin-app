@@ -28,8 +28,33 @@ export function PlaceSheet() {
 
   const handleApplyFilters = useCallback((newFilters: FilterState) => {
     setFilters(newFilters)
-    // TODO: 필터링 로직 연결
   }, [])
+
+  const filteredRestaurants = useMemo(() => {
+    return MOCK_PLACE_RESTAURANTS.filter((restaurant) => {
+      if (filters.foodTypes.length > 0) {
+        const hasMatchingTag = filters.foodTypes.some((type) =>
+          restaurant.tags.includes(type),
+        )
+        if (!hasMatchingTag) return false
+      }
+      if (filters.subRegions.length > 0) {
+        const hasMatchingRegion = filters.subRegions.some((region) =>
+          restaurant.address.includes(region),
+        )
+        if (!hasMatchingRegion) return false
+      } else if (filters.region) {
+        if (!restaurant.address.includes(filters.region)) return false
+      }
+      if (filters.nutrients.length > 0) {
+        const hasMatchingNutrient = filters.nutrients.some((nutrient) =>
+          restaurant.tags.includes(nutrient),
+        )
+        if (!hasMatchingNutrient) return false
+      }
+      return true
+    })
+  }, [filters])
 
   return (
     <>
@@ -45,7 +70,7 @@ export function PlaceSheet() {
         <BottomSheetScrollView
           contentContainerStyle={{ paddingBottom: insets.bottom }}
         >
-          {MOCK_PLACE_RESTAURANTS.map((restaurant) => (
+          {filteredRestaurants.map((restaurant) => (
             <PlaceCard key={restaurant.id} restaurant={restaurant} />
           ))}
         </BottomSheetScrollView>
