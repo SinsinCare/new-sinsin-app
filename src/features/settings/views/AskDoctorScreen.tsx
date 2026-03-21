@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -65,9 +66,11 @@ export function AskDoctorScreen() {
           <TextInput
             style={styles.codeInput}
             value={doctorCode}
-            onChangeText={(text) =>
-              setPatientCode(text.replace(/[^0-9]/g, "").slice(0, 6))
-            }
+            onChangeText={(text) => {
+              const cleaned = text.replace(/[^0-9]/g, "").slice(0, 6)
+              setPatientCode(cleaned)
+              if (cleaned.length === 6) Keyboard.dismiss()
+            }}
             placeholder="6자리 코드를 입력해주세요"
             placeholderTextColor="#C5C8CE"
             keyboardType="number-pad"

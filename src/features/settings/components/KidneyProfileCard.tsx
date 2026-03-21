@@ -8,8 +8,9 @@ import { ThemedText } from "@/components/themed-text"
 interface KidneyProfileCardProps {
   ckdStageLabel: string
   isDialysis: boolean
-  weightKg: number
-  diagnosisDate: string
+  weightKg: number | null
+  diagnosisDate: string | null
+  comorbidities?: string[]
   onEditPress: () => void
 }
 
@@ -18,6 +19,7 @@ export function KidneyProfileCard({
   isDialysis,
   weightKg,
   diagnosisDate,
+  comorbidities,
   onEditPress,
 }: KidneyProfileCardProps) {
 
@@ -59,33 +61,38 @@ export function KidneyProfileCard({
           <View style={styles.infoBoxRow}>
             <View style={styles.infoBox}>
               <ThemedText style={styles.infoBoxTitle}>체중</ThemedText>
-              <ThemedText style={styles.infoBoxValue}>{weightKg}kg</ThemedText>
+              <ThemedText style={styles.infoBoxValue}>
+                {weightKg != null ? `${weightKg}kg` : "미입력"}
+              </ThemedText>
             </View>
             <View style={styles.infoBox}>
               <ThemedText style={styles.infoBoxTitle}>진단시기</ThemedText>
-              <ThemedText style={styles.infoBoxValue}>{diagnosisDate}</ThemedText>
+              <ThemedText style={styles.infoBoxValue}>
+                {diagnosisDate ?? "미입력"}
+              </ThemedText>
             </View>
           </View>
 
-          {/* 동반 질환 및 진단 원인 */}
-          {/* TODO: UserProfile에 comorbidities 필드 추가 후 실제 데이터 연결 */}
-          <View style={styles.comorbiditySection}>
-            <View style={styles.comorbidityHeader}>
-              <Ionicons name="ellipse" size={11} color="#0D896A" />
-              <ThemedText style={styles.comorbidityTitle}>
-                동반 질환 및 진단 원인
-              </ThemedText>
+          {/* 동반 질환 */}
+          {comorbidities && comorbidities.length > 0 && (
+            <View style={styles.comorbiditySection}>
+              <View style={styles.comorbidityHeader}>
+                <Ionicons name="ellipse" size={11} color="#0D896A" />
+                <ThemedText style={styles.comorbidityTitle}>
+                  동반 질환
+                </ThemedText>
+              </View>
+              <View style={styles.comorbidityChips}>
+                {comorbidities.map((item) => (
+                  <View key={item} style={styles.comorbidityChip}>
+                    <ThemedText style={styles.comorbidityChipText}>
+                      {item}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
             </View>
-            <View style={styles.comorbidityChips}>
-              {["당뇨병", "고혈압", "사구체신염"].map((item) => (
-                <View key={item} style={styles.comorbidityChip}>
-                  <ThemedText style={styles.comorbidityChipText}>
-                    {item}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-          </View>
+          )}
         </LinearGradient>
       </View>
     </View>

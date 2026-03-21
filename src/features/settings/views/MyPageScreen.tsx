@@ -82,6 +82,7 @@ export function MyPageScreen() {
             isDialysis={kidneyProfile.isDialysis}
             weightKg={kidneyProfile.weightKg}
             diagnosisDate={kidneyProfile.weightRecordedAt}
+            comorbidities={kidneyProfile.comorbidities}
             onEditPress={() => router.push("/(settings)/kidney-profile-edit")}
           />
         )}

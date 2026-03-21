@@ -135,6 +135,16 @@ export function KidneyProfileEditScreen() {
           </View>
         </View>
 
+        {/* 단백질 권장 섭취량 안내 */}
+        <View style={styles.proteinHintBox}>
+          <Ionicons name="information-circle-outline" size={15} color="#0D896A" />
+          <ThemedText style={styles.proteinHintText}>
+            {weightVal && !isNaN(parseFloat(weightVal))
+              ? `체중 ${weightVal}kg → 하루 단백질 ${Math.round(parseFloat(weightVal) * 0.8)}g 이내 권장 (1kg당 0.8g)`
+              : "CKD 환자 단백질 권장 섭취량: 체중 1kg당 0.8g"}
+          </ThemedText>
+        </View>
+
         {/* CKD 병기 */}
         <View style={[styles.subsectionRow, { marginTop: 24 }]}>
           <ThemedText style={styles.subsectionTitle}>CKD 병기</ThemedText>
@@ -320,6 +330,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 16,
     marginTop: 8,
+  },
+  proteinHintBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  proteinHintText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#0D896A",
   },
   inputGroup: {
     flex: 1,
