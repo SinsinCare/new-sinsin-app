@@ -17,7 +17,7 @@ import type { ApiResponse } from "../../types/api"
 import { isMockMode } from "../../config/appConfig"
 import { api, tokenService } from "../core"
 
-const BASE_URL = "https://api.sinsin.mediology.ai/api/v1"
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? "<backend-api-base-url>"
 
 function createRealChatService(): ChatService {
   return {

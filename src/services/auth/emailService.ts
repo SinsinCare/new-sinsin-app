@@ -10,6 +10,11 @@ interface EmailService {
     code: string,
   ): Promise<{ verified: boolean; signupToken?: string }>
   resendVerificationCode(email: string): Promise<void>
+  sendPasswordResetCode(email: string): Promise<void>
+  verifyPasswordResetCode(
+    email: string,
+    code: string,
+  ): Promise<{ verified: boolean; resetToken?: string }>
 }
 
 function getRealEmailService(): EmailService {
@@ -49,6 +54,25 @@ function getRealEmailService(): EmailService {
     async resendVerificationCode(email: string): Promise<void> {
       await publicApi.post<ApiResponse>("/auth/password/email/send", { email })
     },
+
+    async sendPasswordResetCode(email: string): Promise<void> {
+      await publicApi.post<ApiResponse>("/auth/password/email/otp/send", { email })
+    },
+
+    async verifyPasswordResetCode(
+      email: string,
+      code: string,
+    ): Promise<{ verified: boolean; resetToken?: string }> {
+      try {
+        const { data } = await publicApi.post<ApiResponse<{ resetToken: string }>>(
+          "/auth/password/email/otp/verify",
+          { email, authKey: code },
+        )
+        return { verified: true, resetToken: data.result.resetToken }
+      } catch {
+        return { verified: false }
+      }
+    },
   }
 }
 
@@ -72,6 +96,17 @@ function getMockEmailService(): EmailService {
     async resendVerificationCode(_email: string): Promise<void> {
       // mock: 아무것도 하지 않음
     },
+
+    async sendPasswordResetCode(_email: string): Promise<void> {
+      // mock: 아무것도 하지 않음
+    },
+
+    async verifyPasswordResetCode(
+      _email: string,
+      _code: string,
+    ): Promise<{ verified: boolean; resetToken?: string }> {
+      return { verified: true, resetToken: "mock-reset-token" }
+    },
   }
 }
 
@@ -91,4 +126,8 @@ export const emailService: EmailService = {
   verifyCode: (email, code) => getEmailService().verifyCode(email, code),
   resendVerificationCode: (email) =>
     getEmailService().resendVerificationCode(email),
+  sendPasswordResetCode: (email) =>
+    getEmailService().sendPasswordResetCode(email),
+  verifyPasswordResetCode: (email, code) =>
+    getEmailService().verifyPasswordResetCode(email, code),
 }

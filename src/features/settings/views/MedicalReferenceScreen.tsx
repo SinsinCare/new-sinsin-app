@@ -51,7 +51,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 2025.07",
         badge: "new",
         iconColor: "teal",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g2",
@@ -59,7 +59,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 2026.01",
         badge: "new",
         iconColor: "teal",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g3",
@@ -67,7 +67,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 2024.12",
         badge: "pdf",
         iconColor: "teal",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g4",
@@ -75,7 +75,15 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 2023",
         badge: "pdf",
         iconColor: "teal",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/bbs/?code=g_guideline",
+      },
+      {
+        id: "g5",
+        title: "신장학 용어집",
+        meta: "대한신장학회 · 2024.07",
+        badge: "pdf",
+        iconColor: "teal",
+        url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
     ],
   },
@@ -85,17 +93,17 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
     items: [
       {
         id: "i1",
-        title: "KDIGO 2025 ADPKD Guideline",
-        meta: "KDIGO · 2025 · 영문",
+        title: "KDIGO Guidelines",
+        meta: "KDIGO · 영문",
         badge: "kdigo",
         iconColor: "purple",
-        url: "https://kdigo.org",
+        url: "https://kdigo.org/guidelines/",
       },
     ],
   },
   {
     id: "patient",
-    header: "환자 교육 자료",
+    header: "환자 교육 자료 / 용어집 / 복지 정보",
     items: [
       {
         id: "p1",
@@ -103,7 +111,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 1권 환자용",
         badge: "pdf",
         iconColor: "blue",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p2",
@@ -111,7 +119,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 2권 환자용",
         badge: "pdf",
         iconColor: "blue",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p3",
@@ -119,7 +127,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 3권 환자용",
         badge: "pdf",
         iconColor: "blue",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p4",
@@ -127,7 +135,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 보호자·환아용",
         badge: "pdf",
         iconColor: "blue",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p5",
@@ -135,7 +143,7 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 일반인용",
         badge: "pdf",
         iconColor: "blue",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p6",
@@ -143,29 +151,15 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
         meta: "대한신장학회 · 일반인용",
         badge: "pdf",
         iconColor: "blue",
-        url: "https://www.ksn.or.kr",
-      },
-    ],
-  },
-  {
-    id: "misc",
-    header: "용어집 및 복지 정보",
-    items: [
-      {
-        id: "m1",
-        title: "신장학 용어집",
-        meta: "대한신장학회 · 2024.07",
-        badge: "pdf",
-        iconColor: "orange",
-        url: "https://www.ksn.or.kr",
+        url: "https://ksn.or.kr/general/ebook/",
       },
       {
-        id: "m2",
+        id: "p7",
         title: "만성콩팥병 환자 복지 정보",
-        meta: "2023년도 개정판",
+        meta: "대한신장학회 · 2023년도 개정판",
         badge: "pdf",
-        iconColor: "orange",
-        url: "https://www.ksn.or.kr",
+        iconColor: "blue",
+        url: "https://ksn.or.kr/general/ebook/",
       },
     ],
   },
@@ -369,23 +363,15 @@ export function MedicalReferenceScreen() {
           </ThemedText>
           <View style={styles.disclaimerLinks}>
             <Pressable
-              onPress={() => Linking.openURL("https://yourapp.com/privacy")}
+              onPress={() =>
+                Linking.openURL(
+                  "https://healthier.notion.site/2fe91d1eca7780a7877cfd2692b4be3f",
+                )
+              }
             >
               <ThemedText style={styles.disclaimerLink}>
                 개인정보 처리방침
               </ThemedText>
-            </Pressable>
-            <ThemedText style={styles.disclaimerSep}>·</ThemedText>
-            <Pressable
-              onPress={() => Linking.openURL("https://yourapp.com/terms")}
-            >
-              <ThemedText style={styles.disclaimerLink}>이용약관</ThemedText>
-            </Pressable>
-            <ThemedText style={styles.disclaimerSep}>·</ThemedText>
-            <Pressable
-              onPress={() => Linking.openURL("mailto:support@yourapp.com")}
-            >
-              <ThemedText style={styles.disclaimerLink}>문의하기</ThemedText>
             </Pressable>
           </View>
         </View>
