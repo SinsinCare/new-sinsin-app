@@ -1,3 +1,4 @@
+import axios from "axios"
 import type { IAuthService, AppUser } from "../types/serviceTypes"
 import type {
   SignupRequest,
@@ -81,8 +82,12 @@ function getRealAuthService(): IAuthService {
         }
 
         return { user, accountState }
-      } catch {
-        await tokenService.clearTokens()
+      } catch (error) {
+        // 401(인증 만료/무효)일 때만 토큰 삭제
+        // 네트워크 오류 등 일시적 에러는 토큰 유지 → 다음 실행 시 재시도
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          await tokenService.clearTokens()
+        }
         return null
       }
     },

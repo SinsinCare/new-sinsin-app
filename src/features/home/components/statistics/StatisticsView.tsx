@@ -25,6 +25,7 @@ import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import type { DiaryAnalysisResult } from "@/src/types"
 import { Icon } from "@/src/shared/components"
+import { MonthCalendarSheet } from "./MonthCalendarSheet"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -42,6 +43,7 @@ export function StatisticsView({
   isActive,
 }: StatisticsViewProps) {
   const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [diaryResult, setDiaryResult] = useState<DiaryAnalysisResult | null>(
     null,
   )
@@ -133,6 +135,7 @@ export function StatisticsView({
   }
 
   return (
+    <>
     <ScrollView
       ref={scrollRef}
       showsVerticalScrollIndicator={false}
@@ -147,16 +150,18 @@ export function StatisticsView({
           <TouchableOpacity onPress={goToPrevWeek}>
             <Ionicons name="chevron-back" size={18} color="#999" />
           </TouchableOpacity>
-          <XStack alignItems="center" gap="$2">
-            <Text
-              fontSize="$5"
-              fontWeight="600"
-              color={isDarkMode ? "$textDark" : "$black"}
-            >
-              {getWeekLabel(selectedDate)}
-            </Text>
-            <Ionicons name="calendar-outline" size={18} color="#999" />
-          </XStack>
+          <TouchableOpacity onPress={() => setIsCalendarOpen(true)}>
+            <XStack alignItems="center" gap="$2">
+              <Text
+                fontSize="$5"
+                fontWeight="600"
+                color={isDarkMode ? "$textDark" : "$black"}
+              >
+                {getWeekLabel(selectedDate)}
+              </Text>
+              <Ionicons name="calendar-outline" size={18} color="#999" />
+            </XStack>
+          </TouchableOpacity>
           <TouchableOpacity onPress={goToNextWeek}>
             <Ionicons name="chevron-forward" size={18} color="#999" />
           </TouchableOpacity>
@@ -258,6 +263,14 @@ export function StatisticsView({
         </>
       )}
     </ScrollView>
+
+    <MonthCalendarSheet
+      visible={isCalendarOpen}
+      selectedDate={selectedDate}
+      onSelectDate={onSelectDate}
+      onClose={() => setIsCalendarOpen(false)}
+    />
+    </>
   )
 }
 
