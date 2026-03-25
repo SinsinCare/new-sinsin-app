@@ -5,6 +5,7 @@ export interface MyPageProfile {
   email: string
   nickName: string
   name: string
+  gender?: "MALE" | "FEMALE" | "OTHER"
   birthYear: number
   birthMonth: number
   birthDay: number

@@ -20,13 +20,33 @@ import { DatePickerModal } from "@/src/features/settings/components"
 import { DIAGNOSIS_CAUSES } from "@/src/features/settings/data/constants"
 import { useUserStore } from "@/src/stores/userStore"
 import { api } from "@/src/services/core/apiClient"
+import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
+
+const COMORBIDITY_OPTIONS = [
+  { key: "DIABETES", label: "당뇨" },
+  { key: "HYPERTENSION", label: "고혈압" },
+  { key: "HEART_DISEASE", label: "심장질환" },
+  { key: "GOUT", label: "통풍" },
+  { key: "ANEMIA", label: "빈혈" },
+  { key: "BONE_MINERAL", label: "골미네랄 장애" },
+]
 
 export function KidneyProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const queryClient = useQueryClient()
   const profile = useUserStore((s) => s.profile)
+  const { data: kidneyProfile } = useKidneyProfile()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>(
+    kidneyProfile?.comorbidities ?? [],
+  )
+
+  const toggleComorbidity = (key: string) => {
+    setSelectedComorbidities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    )
+  }
 
   const [heightVal, setHeightVal] = useState(
     profile?.height ? String(profile.height) : "",
@@ -67,6 +87,7 @@ export function KidneyProfileEditScreen() {
         potassiumMg,
         phosphorusMg,
         fluidMl,
+        comorbidities: selectedComorbidities,
       })
       queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
       router.back()
@@ -248,6 +269,34 @@ export function KidneyProfileEditScreen() {
           placeholderTextColor="#C5C8CE"
           textAlignVertical="top"
         />
+
+        {/* 동반 질환 */}
+        <ThemedText style={[styles.subsectionTitle, { marginTop: 36 }]}>
+          동반 질환
+        </ThemedText>
+        <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
+          {COMORBIDITY_OPTIONS.map((opt) => (
+            <Pressable
+              key={opt.key}
+              style={[
+                styles.causeButton,
+                selectedComorbidities.includes(opt.key) &&
+                  styles.stageButtonSelected,
+              ]}
+              onPress={() => toggleComorbidity(opt.key)}
+            >
+              <ThemedText
+                style={[
+                  styles.stageButtonText,
+                  selectedComorbidities.includes(opt.key) &&
+                    styles.stageButtonTextSelected,
+                ]}
+              >
+                {opt.label}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
 
         <Pressable
           style={[styles.completeButton, { marginTop: 36 }, isSubmitting && { opacity: 0.6 }]}

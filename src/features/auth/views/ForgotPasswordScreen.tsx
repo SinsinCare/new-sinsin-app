@@ -211,7 +211,7 @@ export function ForgotPasswordScreen() {
                         backgroundColor={
                           sendingCode || (step === "otp" && timer > 0)
                             ? "#C5C8CE"
-                            : "#34D399"
+                            : "#44AF94"
                         }
                         borderRadius={8}
                         height={52}
@@ -259,7 +259,7 @@ export function ForgotPasswordScreen() {
                     >
                       <Pressable onPress={handleVerifyCode} disabled={verifyingCode}>
                         <YStack
-                          backgroundColor={verifyingCode ? "#C5C8CE" : "#34D399"}
+                          backgroundColor={verifyingCode ? "#C5C8CE" : "#44AF94"}
                           borderRadius={8}
                           height={52}
                           justifyContent="center"
@@ -345,8 +345,8 @@ export function ForgotPasswordScreen() {
               <YStack
                 backgroundColor={
                   passwordForm.formState.isValid && !resettingPassword
-                    ? "#34D399"
-                    : "#34D39940"
+                    ? "#44AF94"
+                    : "#44AF9440"
                 }
                 paddingVertical={16}
                 paddingHorizontal={24}

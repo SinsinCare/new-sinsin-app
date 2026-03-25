@@ -111,7 +111,7 @@ export function ProfileSetupScreen() {
         <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
           <Pressable onPress={handleSubmit(handleNext)} disabled={!isValid}>
             <YStack
-              backgroundColor={isValid ? "#5464F2" : "#5464F247"}
+              backgroundColor={isValid ? "#44AF94" : "#44AF9440"}
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}

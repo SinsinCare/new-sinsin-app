@@ -1,18 +1,53 @@
-import React from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import React, { useState, useEffect } from "react"
+import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
+import { api } from "@/src/services/core/apiClient"
+
+type Gender = "MALE" | "FEMALE" | "OTHER"
+
+const GENDER_OPTIONS: { key: Gender; label: string }[] = [
+  { key: "MALE", label: "남성" },
+  { key: "FEMALE", label: "여성" },
+  { key: "OTHER", label: "기타" },
+]
 
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
+  const [gender, setGender] = useState<Gender | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (profile?.gender) setGender(profile.gender)
+  }, [profile?.gender])
+
+  const handleSave = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    try {
+      await api.patch("/user/profile", {
+        nickName: profile?.nickName,
+        name: profile?.name,
+        ...(gender ? { gender } : {}),
+      })
+      queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
+      router.back()
+    } catch {
+      Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -20,6 +55,13 @@ export function ProfileEditScreen() {
         title="프로필 수정"
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
+        rightElement={
+          <Pressable onPress={handleSave} hitSlop={8} disabled={isSaving}>
+            <ThemedText style={[styles.saveButton, isSaving && { opacity: 0.5 }]}>
+              {isSaving ? "저장 중..." : "저장"}
+            </ThemedText>
+          </Pressable>
+        }
       />
 
       <ScrollView
@@ -83,7 +125,7 @@ export function ProfileEditScreen() {
         </View>
 
         {/* 이메일 - 읽기 전용 */}
-        <View style={[styles.fieldRow, styles.fieldRowNoBorder]}>
+        <View style={styles.fieldRow}>
           <View style={styles.fieldContent}>
             <ThemedText style={styles.fieldLabel}>이메일</ThemedText>
             <ThemedText
@@ -94,6 +136,34 @@ export function ProfileEditScreen() {
             >
               {profile?.email || "abcd@naver.com"}
             </ThemedText>
+          </View>
+        </View>
+
+        {/* 성별 */}
+        <View style={[styles.fieldRow, styles.fieldRowNoBorder]}>
+          <View style={styles.fieldContent}>
+            <ThemedText style={styles.fieldLabel}>성별</ThemedText>
+            <View style={styles.genderRow}>
+              {GENDER_OPTIONS.map((opt) => (
+                <Pressable
+                  key={opt.key}
+                  style={[
+                    styles.genderChip,
+                    gender === opt.key && styles.genderChipSelected,
+                  ]}
+                  onPress={() => setGender(opt.key)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.genderChipText,
+                      gender === opt.key && styles.genderChipTextSelected,
+                    ]}
+                  >
+                    {opt.label}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -214,5 +284,36 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "400",
     color: "#17191C",
+  },
+  saveButton: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "600",
+    color: "#44AF94",
+  },
+  genderRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  genderChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#E2E8F0",
+  },
+  genderChipSelected: {
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1.4,
+    borderColor: "#44AF94",
+  },
+  genderChipText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#0F172A",
+  },
+  genderChipTextSelected: {
+    color: "#0D896A",
   },
 })

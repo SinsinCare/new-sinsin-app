@@ -16,7 +16,7 @@ export function SignupCompleteScreen() {
             width={80}
             height={80}
             borderRadius={40}
-            backgroundColor="#5464F2"
+            backgroundColor="#44AF94"
             alignItems="center"
             justifyContent="center"
           >
@@ -48,7 +48,7 @@ export function SignupCompleteScreen() {
         <YStack paddingBottom={insets.bottom + 24}>
           <Pressable onPress={handleStart}>
             <YStack
-              backgroundColor="#5464F2"
+              backgroundColor="#44AF94"
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}

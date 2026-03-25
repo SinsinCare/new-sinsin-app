@@ -5,6 +5,19 @@ import { Ionicons } from "@expo/vector-icons"
 
 import { ThemedText } from "@/components/themed-text"
 
+const COMORBIDITY_LABEL: Record<string, string> = {
+  DIABETES: "당뇨",
+  HYPERTENSION: "고혈압",
+  HEART_DISEASE: "심장질환",
+  GOUT: "통풍",
+  ANEMIA: "빈혈",
+  BONE_MINERAL: "골미네랄 장애",
+}
+
+function localizeComorbidity(key: string): string {
+  return COMORBIDITY_LABEL[key] ?? COMORBIDITY_LABEL[key.toUpperCase()] ?? key
+}
+
 interface KidneyProfileCardProps {
   ckdStageLabel: string
   isDialysis: boolean
@@ -86,7 +99,7 @@ export function KidneyProfileCard({
                 {comorbidities.map((item) => (
                   <View key={item} style={styles.comorbidityChip}>
                     <ThemedText style={styles.comorbidityChipText}>
-                      {item}
+                      {localizeComorbidity(item)}
                     </ThemedText>
                   </View>
                 ))}

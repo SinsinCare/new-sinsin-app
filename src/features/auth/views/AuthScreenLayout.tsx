@@ -72,7 +72,7 @@ export function AuthScreenLayout({
           >
             <YStack
               backgroundColor={
-                !buttonDisabled && !buttonLoading ? "#34D399" : "#34D39940"
+                !buttonDisabled && !buttonLoading ? "#44AF94" : "#44AF9440"
               }
               paddingVertical={16}
               paddingHorizontal={24}

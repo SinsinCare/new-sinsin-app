@@ -30,15 +30,15 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             height={52}
             borderRadius={8}
             borderWidth={1}
-            borderColor={value === "male" ? "#5464F2" : "rgba(218,223,230,0.6)"}
-            backgroundColor={value === "male" ? "#F5F6FF" : "white"}
+            borderColor={value === "male" ? "#44AF94" : "rgba(218,223,230,0.6)"}
+            backgroundColor={value === "male" ? "#F0FDF4" : "white"}
             alignItems="center"
             justifyContent="center"
           >
             <Text
               fontSize={16}
               fontWeight={value === "male" ? "600" : "400"}
-              color={value === "male" ? "#5464F2" : "#17191C"}
+              color={value === "male" ? "#0D896A" : "#17191C"}
               letterSpacing={-0.3}
             >
               남자
@@ -51,16 +51,16 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             borderRadius={8}
             borderWidth={1}
             borderColor={
-              value === "female" ? "#5464F2" : "rgba(218,223,230,0.6)"
+              value === "female" ? "#44AF94" : "rgba(218,223,230,0.6)"
             }
-            backgroundColor={value === "female" ? "#F5F6FF" : "white"}
+            backgroundColor={value === "female" ? "#F0FDF4" : "white"}
             alignItems="center"
             justifyContent="center"
           >
             <Text
               fontSize={16}
               fontWeight={value === "female" ? "600" : "400"}
-              color={value === "female" ? "#5464F2" : "#17191C"}
+              color={value === "female" ? "#0D896A" : "#17191C"}
               letterSpacing={-0.3}
             >
               여자

@@ -85,7 +85,7 @@ export function SignupEmailScreen() {
               >
                 <YStack
                   backgroundColor={
-                    codeVerified || sendingCode ? "#C5C8CE" : "#34D399"
+                    codeVerified || sendingCode ? "#C5C8CE" : "#44AF94"
                   }
                   borderRadius={8}
                   height={52}
@@ -146,7 +146,7 @@ export function SignupEmailScreen() {
                   disabled={verifyingCode || !!sendError}
                 >
                   <YStack
-                    backgroundColor={sendError ? "#C5C8CE" : "#34D399"}
+                    backgroundColor={sendError ? "#C5C8CE" : "#44AF94"}
                     borderRadius={8}
                     height={52}
                     justifyContent="center"
@@ -200,7 +200,7 @@ export function SignupEmailScreen() {
         {codeVerified && (
           <Text
             fontSize={14}
-            color="#34C759"
+            color="#0D896A"
             fontWeight="500"
             letterSpacing={-0.28}
           >
