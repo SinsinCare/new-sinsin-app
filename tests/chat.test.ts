@@ -4,8 +4,9 @@ import {
   tokenStore,
   assertSuccess,
 } from "./helpers/client"
+import { describeAuth } from "./helpers/testCredentials"
 
-describe("Chat API", () => {
+describeAuth("Chat API", () => {
   let createdConversationId: number | null = null
 
   beforeAll(async () => {
@@ -110,6 +111,28 @@ describe("Chat API", () => {
       )
       expect(res.status).toBeGreaterThanOrEqual(200)
       expect(res.status).toBeLessThan(300)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 대화 요약 (앱 chatApiService.generateSummary)
+  // ────────────────────────────────────────────────
+  describe("POST /chat/conversations/:id/summary", () => {
+    it("대화 요약 요청 (빈 대화면 백엔드에 따라 실패할 수 있음)", async () => {
+      if (!createdConversationId) {
+        return
+      }
+      try {
+        const res = await authClient.post(
+          `/chat/conversations/${createdConversationId}/summary`,
+        )
+        expect(res.status).toBeGreaterThanOrEqual(200)
+        expect(res.status).toBeLessThan(300)
+      } catch (e: unknown) {
+        const err = e as { response?: { status?: number } }
+        expect(err.response?.status).toBeDefined()
+        expect(err.response!.status!).toBeGreaterThanOrEqual(400)
+      }
     })
   })
 

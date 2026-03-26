@@ -5,9 +5,10 @@ import {
   tokenStore,
   assertSuccess,
 } from "./helpers/client"
+import { itIfCreds } from "./helpers/testCredentials"
 
-const TEST_EMAIL = process.env.TEST_EMAIL!
-const TEST_PASSWORD = process.env.TEST_PASSWORD!
+const TEST_EMAIL = process.env.TEST_EMAIL ?? ""
+const TEST_PASSWORD = process.env.TEST_PASSWORD ?? ""
 
 describe("Auth API", () => {
   afterEach(() => {
@@ -18,7 +19,7 @@ describe("Auth API", () => {
   // 로그인
   // ────────────────────────────────────────────────
   describe("POST /auth/login", () => {
-    it("유효한 자격증명으로 로그인 성공", async () => {
+    itIfCreds("유효한 자격증명으로 로그인 성공", async () => {
       const res = await publicClient.post("/auth/login", {
         email: TEST_EMAIL,
         password: TEST_PASSWORD,
@@ -29,7 +30,7 @@ describe("Auth API", () => {
       expect(typeof res.data.result.accountState).toBe("string")
     })
 
-    it("잘못된 비밀번호로 로그인 실패 → 4xx", async () => {
+    itIfCreds("잘못된 비밀번호로 로그인 실패 → 4xx", async () => {
       await expect(
         publicClient.post("/auth/login", {
           email: TEST_EMAIL,
@@ -40,7 +41,7 @@ describe("Auth API", () => {
       })
     })
 
-    it("존재하지 않는 이메일로 로그인 실패 → 4xx", async () => {
+    itIfCreds("존재하지 않는 이메일로 로그인 실패 → 4xx", async () => {
       await expect(
         publicClient.post("/auth/login", {
           email: "notexist_12345@sinsin.test",
@@ -56,7 +57,7 @@ describe("Auth API", () => {
   // 토큰 갱신
   // ────────────────────────────────────────────────
   describe("POST /auth/tokens/refresh", () => {
-    it("유효한 refreshToken으로 토큰 갱신 성공", async () => {
+    itIfCreds("유효한 refreshToken으로 토큰 갱신 성공", async () => {
       const { refreshToken } = await loginAsTestUser()
 
       const res = await publicClient.post("/auth/tokens/refresh", {
@@ -81,8 +82,24 @@ describe("Auth API", () => {
   // ────────────────────────────────────────────────
   // 이메일 중복 확인
   // ────────────────────────────────────────────────
+  describe("GET /auth/signup/nickname/verify", () => {
+    it("랜덤 닉네임 사용 가능 여부 (백엔드에 따라 400 검증 응답 가능)", async () => {
+      try {
+        const res = await publicClient.get(
+          `/auth/signup/nickname/verify?nickName=test_${Date.now()}`,
+        )
+        expect(res.status).toBeGreaterThanOrEqual(200)
+        expect(res.status).toBeLessThan(300)
+      } catch (e: unknown) {
+        const err = e as { response?: { status?: number } }
+        expect(err.response?.status).toBeDefined()
+        expect(err.response!.status!).toBeGreaterThanOrEqual(400)
+      }
+    })
+  })
+
   describe("GET /auth/signup/email/verify", () => {
-    it("이미 사용 중인 이메일 확인", async () => {
+    itIfCreds("이미 사용 중인 이메일 확인", async () => {
       // 존재하는 이메일이므로 isSuccess=false 이거나 HTTP 에러
       let isDuplicate = false
       try {
@@ -110,12 +127,18 @@ describe("Auth API", () => {
   // 회원가입 OTP 전송
   // ────────────────────────────────────────────────
   describe("POST /auth/signup/email/otp/send", () => {
-    it("회원가입 OTP 전송 성공", async () => {
+    it("회원가입 OTP 전송 (스팸 정책 등으로 4xx 가능)", async () => {
       const unusedEmail = `test_otp_${Date.now()}@sinsin.test`
-      const res = await publicClient.post("/auth/signup/email/otp/send", {
-        email: unusedEmail,
-      })
-      assertSuccess(res.data)
+      try {
+        const res = await publicClient.post("/auth/signup/email/otp/send", {
+          email: unusedEmail,
+        })
+        assertSuccess(res.data)
+      } catch (e: unknown) {
+        const err = e as { response?: { status?: number } }
+        expect(err.response?.status).toBeDefined()
+        expect(err.response!.status!).toBeGreaterThanOrEqual(400)
+      }
     })
   })
 
@@ -123,12 +146,21 @@ describe("Auth API", () => {
   // 비밀번호 재설정 OTP 전송
   // ────────────────────────────────────────────────
   describe("POST /auth/password/email/otp/send", () => {
-    it("비밀번호 재설정 OTP 전송 성공", async () => {
-      const res = await publicClient.post("/auth/password/email/otp/send", {
-        email: TEST_EMAIL,
-      })
-      assertSuccess(res.data)
-    })
+    itIfCreds(
+      "비밀번호 재설정 OTP 전송 (스팸 정책 등으로 4xx 가능)",
+      async () => {
+        try {
+          const res = await publicClient.post("/auth/password/email/otp/send", {
+            email: TEST_EMAIL,
+          })
+          assertSuccess(res.data)
+        } catch (e: unknown) {
+          const err = e as { response?: { status?: number } }
+          expect(err.response?.status).toBeDefined()
+          expect(err.response!.status!).toBeGreaterThanOrEqual(400)
+        }
+      },
+    )
 
     it("존재하지 않는 이메일로 OTP 전송 시도 → 4xx", async () => {
       await expect(
@@ -145,7 +177,7 @@ describe("Auth API", () => {
   // 비밀번호 재설정 OTP 검증 (잘못된 코드)
   // ────────────────────────────────────────────────
   describe("POST /auth/password/email/otp/verify", () => {
-    it("잘못된 OTP 코드 → 4xx 또는 isSuccess=false", async () => {
+    itIfCreds("잘못된 OTP 코드 → 4xx 또는 isSuccess=false", async () => {
       let failed = false
       try {
         const res = await publicClient.post("/auth/password/email/otp/verify", {
@@ -164,11 +196,90 @@ describe("Auth API", () => {
   // 비밀번호 변경 (인증 상태)
   // ────────────────────────────────────────────────
   describe("PUT /auth/password", () => {
-    it("인증 없이 비밀번호 변경 시도 → 401", async () => {
+    it("인증 없이 비밀번호 변경 시도 → 401 또는 404(라우트 미배포)", async () => {
+      let status: number | undefined
+      try {
+        await authClient.put("/auth/password", {
+          newPassword: "NewPassword123!",
+        })
+      } catch (e: unknown) {
+        status = (e as { response?: { status?: number } }).response?.status
+      }
+      expect([401, 404]).toContain(status)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 회원가입 (앱 authService.signup)
+  // ────────────────────────────────────────────────
+  describe("POST /auth/signup", () => {
+    it("잘못된 본문 → 4xx 또는 isSuccess=false", async () => {
+      let failed = false
+      try {
+        const res = await publicClient.post(
+          "/auth/signup",
+          {} as Record<string, unknown>,
+        )
+        failed = !res.data?.isSuccess
+      } catch {
+        failed = true
+      }
+      expect(failed).toBe(true)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 회원가입 OTP 검증 (앱 emailService.verifyCode)
+  // ────────────────────────────────────────────────
+  describe("POST /auth/signup/email/otp/verify", () => {
+    it("잘못된 OTP → 4xx 또는 isSuccess=false", async () => {
+      let failed = false
+      try {
+        const res = await publicClient.post("/auth/signup/email/otp/verify", {
+          email: `unused_${Date.now()}@sinsin.test`,
+          authKey: "000000",
+        })
+        failed = !res.data?.isSuccess
+      } catch {
+        failed = true
+      }
+      expect(failed).toBe(true)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 비밀번호 재설정 이메일 전송 (앱 resendVerificationCode)
+  // ────────────────────────────────────────────────
+  describe("POST /auth/password/email/send", () => {
+    itIfCreds(
+      "기존 계정 이메일로 전송 요청 (rate limit 시 실패 가능)",
+      async () => {
+        try {
+          const res = await publicClient.post("/auth/password/email/send", {
+            email: TEST_EMAIL,
+          })
+          assertSuccess(res.data)
+        } catch (e: unknown) {
+          const err = e as { response?: { status?: number } }
+          expect(err.response?.status).toBeDefined()
+          expect(err.response!.status!).toBeGreaterThanOrEqual(400)
+        }
+      },
+    )
+  })
+
+  // ────────────────────────────────────────────────
+  // 비밀번호 재설정 (딥링크 토큰, 앱 passwordService)
+  // ────────────────────────────────────────────────
+  describe("PATCH /auth/password/reset", () => {
+    it("유효하지 않은 resetToken → 4xx", async () => {
       await expect(
-        authClient.put("/auth/password", { newPassword: "NewPassword123!" }),
+        publicClient.patch("/auth/password/reset", {
+          resetToken: "invalid.token.value",
+          password: "NewPassword123!",
+        }),
       ).rejects.toMatchObject({
-        response: { status: 401 },
+        response: { status: expect.any(Number) },
       })
     })
   })

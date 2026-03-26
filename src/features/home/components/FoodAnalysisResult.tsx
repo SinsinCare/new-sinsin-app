@@ -13,15 +13,9 @@ import type {
 import type { MealType } from "../types"
 import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
-import { Icon, IconName } from "@/src/shared/components/Icon"
+import { Icon } from "@/src/shared/components/Icon"
 import { FoodResultEdit } from "./FoodResultEdit"
-
-const NUTRIENT_ICON: Record<string, IconName> = {
-  나트륨: "sodium",
-  칼륨: "potassium",
-  인: "phosphorus",
-  단백질: "protein",
-}
+import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -50,28 +44,6 @@ const MEAL_LABEL: Record<MealType, string> = {
   LUNCH: "점심",
   DINNER: "저녁",
   SNACKS: "간식",
-}
-
-function NutrientCell({ label, value }: { label: string; value: string }) {
-  const iconName = NUTRIENT_ICON[label]
-  const isDarkMode = useColorScheme() === "dark"
-
-  return (
-    <YStack flex={1} alignItems="center">
-      {iconName && <Icon name={iconName} size={30} />}
-      <View height={10} />
-      <Text fontSize="$3" color={isDarkMode ? "$textDark" : "$black"}>
-        {label}
-      </Text>
-      <Text
-        fontSize={14}
-        fontWeight="600"
-        color={isDarkMode ? "$textDark" : "$black"}
-      >
-        {value.includes(".") ? parseFloat(value).toFixed(1) : value}
-      </Text>
-    </YStack>
-  )
 }
 
 export function FoodAnalysisResult({
@@ -305,6 +277,18 @@ export function FoodAnalysisResult({
             >
               식단 세부 분석
             </Text>
+            <XStack
+              alignItems="flex-start"
+              gap="$2"
+              paddingHorizontal={2}
+              marginTop={-4}
+            >
+              <Icon name="info" size={16} color={tokens.color.grey6.val} />
+              <Text fontSize="$3" color="$colorSubtle" flex={1} lineHeight={20}>
+                원 그래프의 %는 하루 권장 섭취 한도(나트륨·칼륨·인 1일 기준,
+                단백질은 체중 1kg당 0.8g) 대비 이 음식의 비율이에요.
+              </Text>
+            </XStack>
             {result.foods.map((food, i) => {
               const restriction = getRestrictionStyle(food.restrictionLevel)
               return (
@@ -365,12 +349,7 @@ export function FoodAnalysisResult({
                     </View>
                   </XStack>
 
-                  <XStack gap="$2">
-                    <NutrientCell label="나트륨" value={`${food.sodium}mg`} />
-                    <NutrientCell label="칼륨" value={`${food.potassium}mg`} />
-                    <NutrientCell label="인" value={`${food.phosphorus}mg`} />
-                    <NutrientCell label="단백질" value={`${food.protein}g`} />
-                  </XStack>
+                  <FoodNutrientDonuts food={food} />
                 </YStack>
               )
             })}
@@ -422,7 +401,8 @@ export function FoodAnalysisResult({
             gap={4}
           >
             <Text fontSize={12} color="$colorSubtle" lineHeight={18}>
-              영양소 분석 기준: 한국영양학회 식품성분데이터베이스 · 대한신장학회 CKD 영양 권고안 · 한국보건산업진흥원
+              영양소 분석 기준: 한국영양학회 식품성분데이터베이스 · 대한신장학회
+              CKD 영양 권고안 · 한국보건산업진흥원
             </Text>
             <Text
               fontSize={12}

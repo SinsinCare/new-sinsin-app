@@ -1,6 +1,8 @@
 import axios, { type AxiosInstance, type AxiosResponse } from "axios"
 
+/** 앱의 `EXPO_PUBLIC_BACKEND_URL`과 동일한 기준 URL 사용 */
 export const BASE_URL =
+  process.env.EXPO_PUBLIC_BACKEND_URL ||
   process.env.TEST_BASE_URL ||
   "<backend-api-base-url>"
 
@@ -56,7 +58,7 @@ export async function loginAsTestUser(): Promise<{
 
   if (!email || !password) {
     throw new Error(
-      "TEST_EMAIL, TEST_PASSWORD를 tests/.env.test 에 설정해주세요.",
+      "TEST_EMAIL, TEST_PASSWORD를 프로젝트 루트 .env 또는 tests/.env.test 에 설정해주세요. (tests/.env.test.example 참고)",
     )
   }
 

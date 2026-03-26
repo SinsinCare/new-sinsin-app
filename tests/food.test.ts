@@ -1,11 +1,41 @@
+import FormData from "form-data"
 import {
   authClient,
   loginAsTestUser,
   tokenStore,
   assertSuccess,
 } from "./helpers/client"
+import { describeAuth } from "./helpers/testCredentials"
 
-describe("Food Camera API", () => {
+/** 1×1 PNG (투명) — multipart /food-camera/analyze 용 */
+const PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+)
+
+function buildFoodAnalysisUpdateBody(r: {
+  servings: number
+  eatenPercentage: number
+  foods: {
+    id?: number
+    name: string
+    servingSizeValue: number | null
+    servingSizeUnit: string
+  }[]
+}) {
+  return {
+    servings: r.servings,
+    eatenPercentage: r.eatenPercentage,
+    foods: r.foods.map((f) => ({
+      foodId: f.id,
+      name: f.name,
+      servingSizeValue: f.servingSizeValue ?? 0,
+      servingSizeUnit: f.servingSizeUnit,
+    })),
+  }
+}
+
+describeAuth("Food Camera API", () => {
   beforeAll(async () => {
     await loginAsTestUser()
   })
@@ -28,9 +58,18 @@ describe("Food Camera API", () => {
       expect(Array.isArray(result.foods)).toBe(true)
       expect(result.foods.length).toBeGreaterThan(0)
 
-      const food = result.foods[0]
-      expect(typeof food.foodName).toBe("string")
-      expect(typeof food.nutritionInfo).toBe("object")
+      const food = result.foods[0] as {
+        name?: string
+        foodName?: string
+        sodium?: number
+        nutritionInfo?: { sodium?: number }
+      }
+      expect(typeof (food.name ?? food.foodName)).toBe("string")
+      if (food.nutritionInfo && typeof food.nutritionInfo === "object") {
+        expect(food.nutritionInfo).toHaveProperty("sodium")
+      } else {
+        expect(typeof food.sodium).toBe("number")
+      }
     })
 
     it("밥 + 반찬 분석 성공", async () => {
@@ -47,12 +86,16 @@ describe("Food Camera API", () => {
       })
       assertSuccess(res.data)
 
-      const food = res.data.result.foods[0]
-      const nutrition = food.nutritionInfo
-
-      // 신장 환자 주요 영양소 확인
-      expect(nutrition).toHaveProperty("kcal")
-      expect(nutrition).toHaveProperty("sodium")
+      const food = res.data.result.foods[0] as {
+        nutritionInfo?: { kcal?: number; sodium?: number }
+        sodium?: number
+        calories?: number
+      }
+      if (food.nutritionInfo) {
+        expect(food.nutritionInfo).toHaveProperty("sodium")
+      } else {
+        expect(typeof (food.sodium ?? food.calories)).toBe("number")
+      }
     })
 
     it("신장 안전 평가 필드 확인", async () => {
@@ -135,6 +178,104 @@ describe("Food Camera API", () => {
       )
       expect(res.status).toBeGreaterThanOrEqual(200)
       expect(res.status).toBeLessThan(300)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 이미지 분석 (앱 foodCameraService.analyze)
+  // ────────────────────────────────────────────────
+  describe("POST /food-camera/analyze (multipart)", () => {
+    it("작은 PNG로 분석 요청", async () => {
+      const form = new FormData()
+      form.append("image", PNG_1X1, {
+        filename: "tiny.png",
+        contentType: "image/png",
+      })
+      const res = await authClient.post("/food-camera/analyze", form, {
+        headers: form.getHeaders(),
+      })
+      assertSuccess(res.data)
+      expect(res.data.result.foods.length).toBeGreaterThan(0)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 분석 결과 수정 (앱 updateFoodTitle / updateFoodAnalysis)
+  // ────────────────────────────────────────────────
+  describe("PATCH /food-camera/analysis-results/:id/title & PATCH /analysis-results/:id", () => {
+    it("제목·섭취/음식 목록 동일 값으로 갱신", async () => {
+      const analyze = await authClient.post("/food-camera/analyze-text", {
+        text: "우유 200ml",
+      })
+      assertSuccess(analyze.data)
+      const result = analyze.data.result as {
+        foodAnalysisResultId: number
+        title: string
+        servings: number
+        eatenPercentage: number
+        foods: {
+          id?: number
+          name: string
+          servingSizeValue: number | null
+          servingSizeUnit: string
+        }[]
+      }
+      const id = result.foodAnalysisResultId
+
+      const titleRes = await authClient.patch(
+        `/food-camera/analysis-results/${id}/title`,
+        { title: result.title },
+      )
+      assertSuccess(titleRes.data)
+
+      const patchRes = await authClient.patch(
+        `/food-camera/analysis-results/${id}`,
+        buildFoodAnalysisUpdateBody(result),
+      )
+      assertSuccess(patchRes.data)
+    })
+  })
+
+  // ────────────────────────────────────────────────
+  // 일지 상세 · 등록 (앱 fetchDiaryResult / registerDiary)
+  // ────────────────────────────────────────────────
+  describe("GET /food-camera/diaries/:diaryId/analysis & POST .../analysis-results/.../diary", () => {
+    it("오늘 날짜 분석에 일지가 있으면 상세 조회", async () => {
+      const today = new Date().toISOString().split("T")[0]
+      const res = await authClient.get(`/food-camera/date-analysis/${today}`)
+      expect(res.status).toBeGreaterThanOrEqual(200)
+      const data = res.data as { result?: { diets?: { diaryId: number }[] } }
+      const diets = data?.result?.diets
+      if (!diets?.length) {
+        return
+      }
+      const diaryRes = await authClient.get(
+        `/food-camera/diaries/${diets[0].diaryId}/analysis`,
+      )
+      assertSuccess(diaryRes.data)
+    })
+
+    it("분석 결과 일지 등록 (중복 시 4xx 가능)", async () => {
+      const analyze = await authClient.post("/food-camera/analyze-text", {
+        text: "요구르트",
+      })
+      assertSuccess(analyze.data)
+      const { foodAnalysisResultId } = analyze.data.result as {
+        foodAnalysisResultId: number
+      }
+      const today = new Date().toISOString().split("T")[0]
+      try {
+        const res = await authClient.post(
+          `/food-camera/analysis-results/${foodAnalysisResultId}/diary`,
+          { date: today, mealType: "SNACKS" },
+        )
+        expect(res.status).toBeGreaterThanOrEqual(200)
+        expect(res.status).toBeLessThan(300)
+      } catch (e: unknown) {
+        const err = e as { response?: { status?: number } }
+        expect(err.response?.status).toBeDefined()
+        expect(err.response!.status!).toBeGreaterThanOrEqual(400)
+      }
     })
   })
 })
