@@ -40,6 +40,9 @@ yarn-error.*
 .env
 .env*.local
 
+# Google OAuth credentials
+*.apps.googleusercontent.com.plist
+
 # typescript
 *.tsbuildinfo
 

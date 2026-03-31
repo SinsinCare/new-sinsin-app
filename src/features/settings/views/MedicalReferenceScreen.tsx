@@ -14,10 +14,11 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
-// ─────────────────────────────────────────────
+// -----------------------------------------
 // 데이터 타입 정의
-// ─────────────────────────────────────────────
+// -----------------------------------------
 
 type BadgeType = "new" | "kdigo" | "pdf"
 
@@ -36,9 +37,9 @@ export interface ReferenceSection {
   items: ReferenceItem[]
 }
 
-// ─────────────────────────────────────────────
+// -----------------------------------------
 // 콘텐츠 데이터
-// ─────────────────────────────────────────────
+// -----------------------------------------
 
 const REFERENCE_SECTIONS: ReferenceSection[] = [
   {
@@ -167,9 +168,9 @@ const REFERENCE_SECTIONS: ReferenceSection[] = [
 
 const LAST_UPDATED = "2026.03.01"
 
-// ─────────────────────────────────────────────
+// -----------------------------------------
 // 서브 컴포넌트
-// ─────────────────────────────────────────────
+// -----------------------------------------
 
 const ICON_BG: Record<ReferenceItem["iconColor"], string> = {
   teal: "#E0FFF7",
@@ -219,7 +220,13 @@ function Badge({ type }: { type: BadgeType }) {
   )
 }
 
-function ReferenceRow({ item }: { item: ReferenceItem }) {
+function ReferenceRow({
+  item,
+  colors,
+}: {
+  item: ReferenceItem
+  colors: ReturnType<typeof useSettingsColors>
+}) {
   const handlePress = () => {
     if (item.url) Linking.openURL(item.url)
   }
@@ -228,35 +235,50 @@ function ReferenceRow({ item }: { item: ReferenceItem }) {
     <Pressable
       style={({ pressed }) => [
         styles.listItem,
-        pressed && styles.listItemPressed,
+        pressed && { backgroundColor: colors.inputBg },
       ]}
       onPress={handlePress}
     >
       <ItemIcon color={item.iconColor} />
       <View style={styles.itemBody}>
-        <ThemedText style={styles.itemTitle} numberOfLines={2}>
+        <ThemedText
+          style={[styles.itemTitle, { color: colors.text }]}
+          numberOfLines={2}
+        >
           {item.title}
         </ThemedText>
-        <ThemedText style={styles.itemMeta}>{item.meta}</ThemedText>
+        <ThemedText style={[styles.itemMeta, { color: colors.textMuted }]}>
+          {item.meta}
+        </ThemedText>
       </View>
       <View style={styles.itemRight}>
         <Badge type={item.badge} />
-        <Ionicons name="chevron-forward" size={16} color="#C5C8CE" />
+        <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
       </View>
     </Pressable>
   )
 }
 
-function SectionGroup({ section }: { section: ReferenceSection }) {
+function SectionGroup({
+  section,
+  colors,
+}: {
+  section: ReferenceSection
+  colors: ReturnType<typeof useSettingsColors>
+}) {
   return (
     <>
-      <ThemedText style={styles.sectionHeader}>{section.header}</ThemedText>
-      <View style={styles.listGroup}>
+      <ThemedText style={[styles.sectionHeader, { color: colors.textMuted }]}>
+        {section.header}
+      </ThemedText>
+      <View style={[styles.listGroup, { borderColor: colors.border }]}>
         {section.items.map((item, index) => (
           <View key={item.id}>
-            <ReferenceRow item={item} />
+            <ReferenceRow item={item} colors={colors} />
             {index < section.items.length - 1 && (
-              <View style={styles.divider} />
+              <View
+                style={[styles.divider, { backgroundColor: colors.inputBg }]}
+              />
             )}
           </View>
         ))}
@@ -265,13 +287,14 @@ function SectionGroup({ section }: { section: ReferenceSection }) {
   )
 }
 
-// ─────────────────────────────────────────────
+// -----------------------------------------
 // 메인 스크린
-// ─────────────────────────────────────────────
+// -----------------------------------------
 
 export function MedicalReferenceScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const c = useSettingsColors()
   const [searchQuery, setSearchQuery] = useState("")
 
   const filteredSections: ReferenceSection[] = REFERENCE_SECTIONS.map(
@@ -285,7 +308,7 @@ export function MedicalReferenceScreen() {
   ).filter((section) => section.items.length > 0)
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title="의료 참고 문헌"
         paddingTop={insets.top + 8}
@@ -300,7 +323,7 @@ export function MedicalReferenceScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* 안내 배너 */}
-        <View style={styles.infoBanner}>
+        <View style={[styles.infoBanner, { borderColor: c.border }]}>
           <View style={styles.infoIcon}>
             <Ionicons
               name="information-circle-outline"
@@ -309,10 +332,10 @@ export function MedicalReferenceScreen() {
             />
           </View>
           <View style={styles.infoTextWrap}>
-            <ThemedText style={styles.infoTitle}>
+            <ThemedText style={[styles.infoTitle, { color: c.text }]}>
               근거 기반 의료 정보 제공
             </ThemedText>
-            <ThemedText style={styles.infoDesc}>
+            <ThemedText style={[styles.infoDesc, { color: c.textSub }]}>
               이 앱의 모든 영양·의료 권고사항은 아래 공인 학회 지침 및
               진료지침을 기반으로 합니다. 개인 치료 결정은 반드시 담당 의료진과
               상의하세요.
@@ -321,12 +344,12 @@ export function MedicalReferenceScreen() {
         </View>
 
         {/* 검색바 */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={16} color="#94A3B8" />
+        <View style={[styles.searchBar, { borderColor: c.border }]}>
+          <Ionicons name="search-outline" size={16} color={c.textMuted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: c.text }]}
             placeholder="문헌 검색"
-            placeholderTextColor="#C5C8CE"
+            placeholderTextColor={c.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             clearButtonMode="while-editing"
@@ -336,19 +359,19 @@ export function MedicalReferenceScreen() {
         {/* 섹션 목록 */}
         {filteredSections.length > 0 ? (
           filteredSections.map((section) => (
-            <SectionGroup key={section.id} section={section} />
+            <SectionGroup key={section.id} section={section} colors={c} />
           ))
         ) : (
-          <ThemedText style={styles.emptyText}>
+          <ThemedText style={[styles.emptyText, { color: c.textMuted }]}>
             검색 결과가 없습니다.
           </ThemedText>
         )}
 
         {/* 업데이트 안내 */}
-        <View style={styles.updateNotice}>
+        <View style={[styles.updateNotice, { borderColor: c.border }]}>
           <View style={styles.updateDot} />
-          <ThemedText style={styles.updateText}>
-            <ThemedText style={styles.updateBold}>
+          <ThemedText style={[styles.updateText, { color: c.textSub }]}>
+            <ThemedText style={[styles.updateBold, { color: c.text }]}>
               문헌은 최신 학회 발표 기준으로 업데이트
             </ThemedText>
             됩니다. 마지막 갱신: {LAST_UPDATED}
@@ -356,8 +379,8 @@ export function MedicalReferenceScreen() {
         </View>
 
         {/* 면책 문구 */}
-        <View style={styles.disclaimer}>
-          <ThemedText style={styles.disclaimerText}>
+        <View style={[styles.disclaimer, { borderColor: c.border }]}>
+          <ThemedText style={[styles.disclaimerText, { color: c.textMuted }]}>
             이 앱의 정보는 의학적 진단이나 치료를 대체하지 않습니다.{"\n"}
             구체적인 치료 계획은 반드시 담당 의료진과 상의하세요.
           </ThemedText>
@@ -380,14 +403,13 @@ export function MedicalReferenceScreen() {
   )
 }
 
-// ─────────────────────────────────────────────
+// -----------------------------------------
 // 스타일
-// ─────────────────────────────────────────────
+// -----------------------------------------
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
 
   // 스크롤
@@ -402,7 +424,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
@@ -421,12 +442,10 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#17191C",
     marginBottom: 4,
   },
   infoDesc: {
     fontSize: 13,
-    color: "#64748B",
     lineHeight: 18,
   },
 
@@ -436,7 +455,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -445,7 +463,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: "#17191C",
     padding: 0,
   },
 
@@ -455,12 +472,10 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     fontSize: 13,
     fontWeight: "600",
-    color: "#94A3B8",
     letterSpacing: 0.3,
   },
   listGroup: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 12,
     overflow: "hidden",
   },
@@ -471,12 +486,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  listItemPressed: {
-    backgroundColor: "#F0F2F5",
-  },
   divider: {
     height: 1,
-    backgroundColor: "#F0F2F5",
     marginLeft: 60,
   },
 
@@ -501,12 +512,10 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#17191C",
     lineHeight: 20,
   },
   itemMeta: {
     fontSize: 12,
-    color: "#94A3B8",
     marginTop: 2,
   },
   itemRight: {
@@ -529,7 +538,6 @@ const styles = StyleSheet.create({
   // 빈 결과
   emptyText: {
     textAlign: "center",
-    color: "#94A3B8",
     fontSize: 14,
     marginTop: 40,
   },
@@ -541,7 +549,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 12,
     padding: 14,
   },
@@ -554,27 +561,23 @@ const styles = StyleSheet.create({
   updateText: {
     flex: 1,
     fontSize: 12,
-    color: "#64748B",
     lineHeight: 17,
   },
   updateBold: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#17191C",
   },
 
   // 면책 문구
   disclaimer: {
     marginTop: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 12,
     padding: 14,
     alignItems: "center",
   },
   disclaimerText: {
     fontSize: 12,
-    color: "#94A3B8",
     lineHeight: 17,
     textAlign: "center",
   },

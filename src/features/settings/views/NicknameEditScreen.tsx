@@ -22,6 +22,7 @@ import { api } from "@/src/services/core/apiClient"
 import { ApiError } from "@/src/services/core/apiError"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { showErrorToast } from "@/src/lib/toast"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,8}$/
 
@@ -47,6 +48,7 @@ export function NicknameEditScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
+  const c = useSettingsColors()
 
   const [nickname, setNickname] = useState(profile?.nickName ?? "")
   const [isFocused, setIsFocused] = useState(false)
@@ -98,7 +100,7 @@ export function NicknameEditScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
@@ -106,7 +108,7 @@ export function NicknameEditScreen() {
         {/* 헤더: 뒤로가기만 */}
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color="#17191C" />
+            <Ionicons name="chevron-back" size={24} color={c.text} />
           </Pressable>
         </View>
 
@@ -115,38 +117,41 @@ export function NicknameEditScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ThemedText style={styles.title}>
+          <ThemedText style={[styles.title, { color: c.text }]}>
             {"앞으로 신신당부에서\n어떻게 불러드리면 좋을까요?"}
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: c.textMuted }]}>
             {
               "한글, 영문, 숫자만 가능합니다 (2~8자 이내)\n닉네임은 언제든지 변경할 수 있습니다"
             }
           </ThemedText>
 
-          <ThemedText style={styles.inputLabel}>닉네임</ThemedText>
+          <ThemedText style={[styles.inputLabel, { color: c.textSub }]}>
+            닉네임
+          </ThemedText>
           <View
             style={[
               styles.inputRow,
+              { borderBottomColor: c.border },
               isFocused && styles.inputRowFocused,
               hasSuccess && styles.inputRowValid,
               hasError && styles.inputRowError,
             ]}
           >
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: c.text }]}
               value={nickname}
               onChangeText={handleChangeText}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder="별명을 적어주세요. 어떤 것이든 괜찮아요!"
-              placeholderTextColor="#C5C8CE"
+              placeholderTextColor={c.textTertiary}
               maxLength={8}
               autoFocus
               editable={!isLoading}
             />
             {isLoading ? (
-              <ActivityIndicator size="small" color="#94A3B8" />
+              <ActivityIndicator size="small" color={c.textMuted} />
             ) : (
               hasText && (
                 <Pressable
@@ -156,7 +161,7 @@ export function NicknameEditScreen() {
                   }}
                   hitSlop={8}
                 >
-                  <Ionicons name="close-circle" size={20} color="#C5C8CE" />
+                  <Ionicons name="close-circle" size={20} color={c.textTertiary} />
                 </Pressable>
               )
             )}
@@ -188,7 +193,6 @@ export function NicknameEditScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   flex: {
     flex: 1,
@@ -206,28 +210,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 32,
     fontWeight: "700",
-    color: "#17191C",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "400",
-    color: "#94A3B8",
     marginBottom: 40,
   },
   inputLabel: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#64748B",
     marginBottom: 8,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1.5,
-    borderBottomColor: "#E2E8F0",
     paddingBottom: 10,
     gap: 8,
   },
@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     lineHeight: 24,
-    color: "#17191C",
     padding: 0,
   },
   validationText: {

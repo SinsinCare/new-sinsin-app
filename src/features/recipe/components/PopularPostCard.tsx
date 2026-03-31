@@ -1,4 +1,4 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Alert, Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 
@@ -6,10 +6,12 @@ interface PopularPostCardProps {
   category: string
   title: string
   summary: string
+  authorName: string
   viewCount: number
   likeCount: number
   commentCount: number
   onPress?: () => void
+  onBlock?: (authorName: string) => void
 }
 
 const CARD_COLORS = {
@@ -18,7 +20,7 @@ const CARD_COLORS = {
     category: "#44AF94",
     title: "#2A2A37",
     summary: "#474758",
-    meta: "#666677",
+    meta: "#8E8E93",
     iconColor: "#E78A63D9",
     iconTextColor: "#474758",
   },
@@ -37,14 +39,40 @@ export function PopularPostCard({
   category,
   title,
   summary,
+  authorName,
   viewCount,
   likeCount,
   commentCount,
   onPress,
+  onBlock,
 }: PopularPostCardProps) {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const colors = isDark ? CARD_COLORS.dark : CARD_COLORS.light
+
+  const handleMorePress = () => {
+    Alert.alert(authorName, undefined, [
+      {
+        text: "이 사용자 차단하기",
+        style: "destructive",
+        onPress: () => {
+          Alert.alert(
+            "사용자 차단",
+            `${authorName}님을 차단하면 이 사용자의 게시글이 피드에서 즉시 제거됩니다.`,
+            [
+              { text: "취소", style: "cancel" },
+              {
+                text: "차단하기",
+                style: "destructive",
+                onPress: () => onBlock?.(authorName),
+              },
+            ],
+          )
+        },
+      },
+      { text: "취소", style: "cancel" },
+    ])
+  }
 
   return (
     <Pressable
@@ -60,14 +88,23 @@ export function PopularPostCard({
         padding={16}
         gap={8}
       >
-        <Text
-          fontSize={13}
-          fontWeight="600"
-          fontFamily="$body"
-          color={colors.category}
-        >
-          {category}
-        </Text>
+        <XStack alignItems="center" justifyContent="space-between">
+          <Text
+            fontSize={13}
+            fontWeight="600"
+            fontFamily="$body"
+            color={colors.category}
+          >
+            {category}
+          </Text>
+          <Pressable
+            onPress={handleMorePress}
+            hitSlop={8}
+            accessibilityLabel="더보기"
+          >
+            <Icon name="ellipsis-horizontal" size={16} color={colors.meta} />
+          </Pressable>
+        </XStack>
 
         <Text
           fontSize={15}

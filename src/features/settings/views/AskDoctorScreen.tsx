@@ -19,10 +19,12 @@ import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { enrollDoctor } from "@/src/services/doctorService"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 export function AskDoctorScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const c = useSettingsColors()
 
   const [doctorCode, setPatientCode] = useState("")
   const [agreed, setAgreed] = useState(false)
@@ -49,7 +51,7 @@ export function AskDoctorScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title="의사 연결하기"
         paddingTop={insets.top + 8}
@@ -62,9 +64,11 @@ export function AskDoctorScreen() {
       >
         <View style={styles.content}>
           {/* 환자 코드 입력 */}
-          <ThemedText style={styles.fieldLabel}>의사 코드</ThemedText>
+          <ThemedText style={[styles.fieldLabel, { color: c.textSub }]}>
+            의사 코드
+          </ThemedText>
           <TextInput
-            style={styles.codeInput}
+            style={[styles.codeInput, { color: c.text }]}
             value={doctorCode}
             onChangeText={(text) => {
               const cleaned = text.replace(/[^0-9]/g, "").slice(0, 6)
@@ -72,12 +76,14 @@ export function AskDoctorScreen() {
               if (cleaned.length === 6) Keyboard.dismiss()
             }}
             placeholder="6자리 코드를 입력해주세요"
-            placeholderTextColor="#C5C8CE"
+            placeholderTextColor={c.textTertiary}
             keyboardType="number-pad"
             maxLength={6}
           />
 
-          <View style={styles.divider} />
+          <View
+            style={[styles.divider, { backgroundColor: c.inputBg }]}
+          />
 
           {/* 동의 체크박스 */}
           <Pressable
@@ -87,9 +93,9 @@ export function AskDoctorScreen() {
             <Ionicons
               name={agreed ? "checkbox" : "square-outline"}
               size={22}
-              color={agreed ? "#44AF94" : "#C5C8CE"}
+              color={agreed ? "#44AF94" : c.textTertiary}
             />
-            <ThemedText style={styles.checkboxText}>
+            <ThemedText style={[styles.checkboxText, { color: c.text }]}>
               담당 의사에게 건강 데이터 열람 및 공유를 동의합니다
             </ThemedText>
           </Pressable>
@@ -109,7 +115,6 @@ export function AskDoctorScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   flex: {
     flex: 1,
@@ -122,20 +127,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#64748B",
     marginBottom: 10,
   },
   codeInput: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#17191C",
     paddingVertical: 12,
     padding: 0,
     letterSpacing: 4,
   },
   divider: {
     height: 1,
-    backgroundColor: "#F0F2F5",
     marginHorizontal: -20,
     marginVertical: 16,
   },
@@ -149,6 +151,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "400",
-    color: "#374151",
   },
 })

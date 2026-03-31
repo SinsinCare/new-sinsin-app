@@ -11,16 +11,28 @@
       "image": "./assets/splash.png",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
       "deploymentTarget": "14.0",
-      "associatedDomains": ["applinks:sinsin.mediology.ai"],
+      "associatedDomains": [
+        "applinks:sinsin.mediology.ai"
+      ],
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "AI 상담원과의 음성 대화를 위해 마이크 접근 권한이 필요합니다.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.926672692459-bu9prea2bmp18gmbmmjv6ul3290kvu7a"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -48,11 +60,16 @@
               "pathPrefix": "/password-edit"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
-    "web": { "favicon": "./assets/favicon.png" },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
       "expo-router",
       [
@@ -67,13 +84,19 @@
           "photosPermission": "음식 사진을 선택하기 위해 사진 접근이 필요합니다."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-apple-authentication",
+      "@react-native-google-signin/google-signin"
     ],
     "scheme": "sinsin",
-    "experiments": { "typedRoutes": true },
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
       "router": {},
-      "eas": { "projectId": "40c02a9a-5bfa-42f1-84db-85faa562f011" }
+      "eas": {
+        "projectId": "40c02a9a-5bfa-42f1-84db-85faa562f011"
+      }
     }
   }
 }

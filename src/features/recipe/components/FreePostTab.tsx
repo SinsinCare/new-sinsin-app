@@ -7,6 +7,7 @@ import { PopularPostCard } from "./PopularPostCard"
 import { PostListItem } from "./PostListItem"
 import { FREE_POST_CATEGORIES } from "../data/freePostCategories"
 import { useCommunityPosts } from "../hooks/useCommunityPosts"
+import { useBlockedUsers } from "../hooks/useBlockedUsers"
 
 const POPULAR_POST_SECTION_BG_COLOR = {
   light: "#F1F1F3",
@@ -39,15 +40,21 @@ export function FreePostTab() {
 
   const router = useRouter()
   const { posts } = useCommunityPosts()
+  const { blockedNickNames, blockUser } = useBlockedUsers()
+
+  const visiblePosts = useMemo(
+    () => posts.filter((p) => !blockedNickNames.includes(p.authorName)),
+    [posts, blockedNickNames],
+  )
 
   const popularPosts = useMemo(
-    () => [...posts].sort((a, b) => b.likes - a.likes).slice(0, 3),
-    [posts],
+    () => [...visiblePosts].sort((a, b) => b.likes - a.likes).slice(0, 3),
+    [visiblePosts],
   )
 
   const filteredPosts = useMemo(
-    () => posts.filter((p) => p.category === selectedCategory),
-    [posts, selectedCategory],
+    () => visiblePosts.filter((p) => p.category === selectedCategory),
+    [visiblePosts, selectedCategory],
   )
 
   const handleCategoryPress = useCallback((key: string) => {
@@ -90,10 +97,12 @@ export function FreePostTab() {
               }
               title={post.title}
               summary={post.description}
+              authorName={post.authorName}
               viewCount={post.comments}
               likeCount={post.likes}
               commentCount={post.comments}
               onPress={() => router.push(`/post/${post.id}`)}
+              onBlock={blockUser}
             />
           ))}
         </ScrollView>
@@ -132,11 +141,13 @@ export function FreePostTab() {
               key={post.id}
               title={post.title}
               summary={post.description}
+              authorName={post.authorName}
               viewCount={post.comments}
               likeCount={post.likes}
               commentCount={post.comments}
               showDivider={index < filteredPosts.length - 1}
               onPress={() => router.push(`/post/${post.id}`)}
+              onBlock={blockUser}
             />
           ))}
         </YStack>

@@ -10,18 +10,20 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { ToggleItem } from "@/src/features/settings/components"
 import { useAuth } from "@/src/hooks/useAuth"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { signOut } = useAuth()
+  const c = useSettingsColors()
 
   const [pushEnabled, setPushEnabled] = useState(false)
   const [marketingEnabled, setMarketingEnabled] = useState(false)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title="환경설정"
         paddingTop={insets.top + 8}
@@ -49,7 +51,7 @@ export function SettingsScreen() {
           onValueChange={setMarketingEnabled}
         />
 
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
 
         {/* 약관 */}
         {[
@@ -66,37 +68,37 @@ export function SettingsScreen() {
             key={title}
             style={({ pressed }) => [
               styles.navItem,
-              pressed && styles.navItemPressed,
+              pressed && { backgroundColor: c.pressedBg },
             ]}
             onPress={onPress}
           >
-            <ThemedText style={styles.navItemTitle}>{title}</ThemedText>
-            <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+            <ThemedText style={[styles.navItemTitle, { color: c.text }]}>{title}</ThemedText>
+            <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
           </Pressable>
         ))}
 
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
 
         {/* 계정 */}
         <Pressable
           style={({ pressed }) => [
             styles.navItem,
-            pressed && styles.navItemPressed,
+            pressed && { backgroundColor: c.pressedBg },
           ]}
           onPress={() => setLogoutModalVisible(true)}
         >
-          <ThemedText style={styles.navItemTitle}>로그아웃</ThemedText>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>로그아웃</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
         <Pressable
           style={({ pressed }) => [
             styles.navItem,
-            pressed && styles.navItemPressed,
+            pressed && { backgroundColor: c.pressedBg },
           ]}
           onPress={() => router.push("/(settings)/withdrawal")}
         >
-          <ThemedText style={styles.navItemTitle}>회원탈퇴</ThemedText>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>회원탈퇴</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
       </ScrollView>
 
@@ -117,14 +119,12 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
   },
   sectionDivider: {
     height: 12,
-    backgroundColor: "#F5F6FA",
     marginHorizontal: -20,
     marginVertical: 4,
   },
@@ -136,13 +136,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginHorizontal: -20,
   },
-  navItemPressed: {
-    backgroundColor: "#F9F9F9",
-  },
   navItemTitle: {
     fontSize: 16,
     lineHeight: 16 * 1.4,
     fontWeight: "400",
-    color: "#17191C",
   },
 })

@@ -1,8 +1,9 @@
 import React from "react"
-import { View, Pressable, StyleSheet } from "react-native"
+import { View, Pressable, StyleSheet, useColorScheme } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 
 import { ThemedText } from "@/components/themed-text"
+import { tokens } from "@/src/theme/tokens"
 
 interface ScreenHeaderProps {
   title: string
@@ -17,16 +18,21 @@ export function ScreenHeader({
   onBack,
   rightElement,
 }: ScreenHeaderProps) {
+  const isDark = useColorScheme() === "dark"
+  const textColor = isDark ? tokens.color.textDark.val : "#17191C"
+
   return (
     <View style={[styles.header, { paddingTop }]}>
       {onBack ? (
         <Pressable onPress={onBack} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color="#17191C" />
+          <Ionicons name="chevron-back" size={24} color={textColor} />
         </Pressable>
       ) : (
         <View style={styles.placeholder} />
       )}
-      <ThemedText style={styles.headerTitle}>{title}</ThemedText>
+      <ThemedText style={[styles.headerTitle, { color: textColor }]}>
+        {title}
+      </ThemedText>
       {rightElement !== undefined ? (
         rightElement
       ) : (
@@ -48,7 +54,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "600",
-    color: "#17191C",
   },
   placeholder: {
     width: 24,

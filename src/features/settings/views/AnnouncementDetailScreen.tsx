@@ -7,16 +7,18 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { ANNOUNCEMENTS } from "@/src/features/settings/data/constants"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 export function AnnouncementDetailScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
+  const c = useSettingsColors()
 
   const announcement = ANNOUNCEMENTS.find((a) => a.id === id)
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title="공지사항"
         paddingTop={insets.top + 8}
@@ -32,14 +34,18 @@ export function AnnouncementDetailScreen() {
       >
         {announcement ? (
           <>
-            <ThemedText style={styles.title}>{announcement.title}</ThemedText>
-            <ThemedText style={styles.date}>{announcement.date}</ThemedText>
-            <ThemedText style={styles.content}>
+            <ThemedText style={[styles.title, { color: c.text }]}>
+              {announcement.title}
+            </ThemedText>
+            <ThemedText style={[styles.date, { color: c.textMuted }]}>
+              {announcement.date}
+            </ThemedText>
+            <ThemedText style={[styles.content, { color: c.textSub }]}>
               {announcement.content}
             </ThemedText>
           </>
         ) : (
-          <ThemedText style={styles.empty}>
+          <ThemedText style={[styles.empty, { color: c.textMuted }]}>
             공지사항을 찾을 수 없습니다.
           </ThemedText>
         )}
@@ -51,7 +57,6 @@ export function AnnouncementDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -61,25 +66,21 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 30,
     fontWeight: "700",
-    color: "#17191C",
     marginBottom: 8,
   },
   date: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "400",
-    color: "#94A3B8",
     marginBottom: 24,
   },
   content: {
     fontSize: 15,
     lineHeight: 24,
     fontWeight: "400",
-    color: "#374151",
   },
   empty: {
     fontSize: 15,
-    color: "#94A3B8",
     textAlign: "center",
     marginTop: 60,
   },
