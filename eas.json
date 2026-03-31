@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-fastapi-926672692459.asia-northeast3.run.app/api/v1",
+        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
         "EXPO_PUBLIC_MOCK_NO_USER": "false"
@@ -17,7 +17,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-fastapi-926672692459.asia-northeast3.run.app/api/v1",
+        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
         "EXPO_PUBLIC_MOCK_NO_USER": "false"
@@ -27,7 +27,7 @@
       "node": "22.21.1",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-fastapi-926672692459.asia-northeast3.run.app/api/v1",
+        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
         "EXPO_PUBLIC_MOCK_NO_USER": "false"

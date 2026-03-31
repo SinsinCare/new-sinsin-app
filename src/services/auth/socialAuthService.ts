@@ -15,7 +15,7 @@ export interface SocialAuthResult {
 
 GoogleSignin.configure({
   iosClientId:
-    "926672692459-bu9prea2bmp18gmbmmjv6ul3290kvu7a.apps.googleusercontent.com",
+    "87899379852-tvnficl1ev04upalipqg9t5kkcknmigu.apps.googleusercontent.com",
 })
 
 export async function signInWithGoogle(): Promise<SocialAuthResult> {

@@ -47,13 +47,15 @@ npm run ios-no-user                        # Mock mode without user profile
 
 - `apiClient.ts` - Axios instances: `api` (authenticated, Bearer interceptor + 401 refresh) and `publicApi` (unauthenticated)
 - `tokenService.ts` - AsyncStorage-based JWT token CRUD (accessToken, refreshToken)
-- `authService.ts` - Custom API auth methods (signInWithEmail, signup, signOut, restoreSession)
+- `authService.ts` - Custom API auth methods (signInWithEmail, signInWithSocial, signup, signOut, restoreSession)
+- `socialAuthService.ts` - Google/Apple native sign-in (ID token acquisition)
 - `emailService.ts` - Email verification and OTP API endpoints
+- `blockService.ts` - User blocking API (block/unblock/list)
 - `mock/` - Mock implementations for development (controlled by `src/config/appConfig.ts`: `isMockUser()` for auth, `isMockMode()` for data)
 
 ### Custom Hooks (`src/hooks/`)
 
-- `useAuth()` - Manages auth lifecycle, token-based session restore, exposes signInWithEmail/signOut and accountState
+- `useAuth()` - Manages auth lifecycle, token-based session restore, exposes signInWithEmail/signInWithGoogle/signInWithApple/signOut and accountState
 
 ### Type Definitions (`src/types/`)
 
@@ -92,7 +94,12 @@ Feature-based organization with types, data, services, hooks, and components per
   - `services/` - In-memory community post service, image picker (expo-image-picker)
   - `hooks/` - useKidneyRecommendations (scored search), useCommunityPosts (React Query CRUD)
   - `components/` - RecipeHeader, KidneyNutritionSection, KidneyFoodCard, NutrientChip, LowPhosphorusSection, LowPhosphorusCard, FlowTags, CommunitySection, CommunityPostCard, CreatePostSheet, EmptyPostsPlaceholder
-- Other feature directories (`auth/`, `home/`, `food/`, `consultation/`, `restaurant/`, `settings/`, `health/`) have `.gitkeep` placeholders
+- **`settings/`** - MyPage & settings (fully implemented, dark mode supported)
+  - `hooks/` - useSettingsColors (dark mode color hook), useKidneyProfile, useMyPageProfile
+  - `views/` - MyPageScreen, SettingsScreen, ProfileEditScreen, KidneyProfileEditScreen, PasswordEditScreen, NicknameEditScreen, WithdrawalScreen, InquiryScreen, AskDoctorScreen, AnnouncementListScreen, MedicalReferenceScreen
+  - `components/` - KidneyProfileCard, ToggleItem, DotItem, DatePickerModal
+- **`auth/`** - Login with email, Google, Apple; signup flow with OTP verification
+- Other feature directories (`home/`, `food/`, `consultation/`, `restaurant/`, `health/`) have `.gitkeep` placeholders
 
 ## Key Technical Decisions
 
@@ -104,8 +111,10 @@ Feature-based organization with types, data, services, hooks, and components per
 | Font         | Pretendard KR (OTF, 4 weights)                       |
 | State        | Zustand + React Query                                |
 | Forms        | react-hook-form                                      |
-| Backend      | Custom Auth API (`api.sinsin.mediology.ai`) + AI API |
+| Backend      | Custom FastAPI (`<backend-base-url>`) |
+| Auth         | Email/password + Google Sign-In + Apple Sign-In      |
 | Image Picker | expo-image-picker (gallery + camera)                 |
+| Social Login | @react-native-google-signin/google-signin + expo-apple-authentication |
 | Linting      | ESLint + Prettier + Husky pre-commit                 |
 | Language     | App UI in Korean, code in English                    |
 
@@ -137,3 +146,17 @@ Health app for CKD patients with:
 - Font sizes: `$3`=12 captions, `$4`=14 body, `$5`=16 subheadline, `$7`=20 headline, `$8`=22 title
 - Use `GlassmorphicCard` for section containers
 - Color-coded NutrientChip: `variant="penalty"` (coral) for burden nutrients, `variant="beneficial"` (teal) for helpful nutrients
+
+### Dark Mode
+
+- Settings/MyPage screens: use `useSettingsColors()` hook from `src/features/settings/hooks/useSettingsColors.ts`
+- Home/Tamagui screens: use `useColorScheme() === "dark"` with `$tokenName` or `tokens.color.xxx.val`
+- Shared components (e.g. `ScreenHeader`): use `useColorScheme()` + `tokens.color.textDark.val`
+- Dark mode color tokens: `appBgDark` (#1F1F21), `cardBgDark` (#313138), `textDark` (#E7E7EE), `textDarkSub` (#ABABB4)
+- Green accent colors (#34D399, #0D896A, #44AF94) stay the same in both modes
+
+## Google Cloud / OAuth
+
+- GCP Project: `sinsin-486209`
+- Google OAuth iOS Client ID: `87899379852-tvnficl1ev04upalipqg9t5kkcknmigu.apps.googleusercontent.com`
+- OAuth plist files are gitignored (`*.apps.googleusercontent.com.plist`)
