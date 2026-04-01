@@ -1,3 +1,4 @@
+import { useColorScheme } from "react-native"
 import { YStack } from "tamagui"
 
 interface ProgressBarProps {
@@ -6,12 +7,15 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ current, total }: ProgressBarProps) {
+  const isDark = useColorScheme() === "dark"
+  const trackBg = isDark ? "#3A3A42" : "#F0F0F0"
+
   return (
     <YStack paddingHorizontal={20}>
       <YStack
         height={4}
         borderRadius={2}
-        backgroundColor="#F0F0F0"
+        backgroundColor={trackBg}
         overflow="hidden"
       >
         <YStack

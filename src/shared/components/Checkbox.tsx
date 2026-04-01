@@ -1,6 +1,7 @@
-import { Pressable } from "react-native"
+import { Pressable, useColorScheme } from "react-native"
 import { YStack, Text, XStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
+import { tokens } from "@/src/theme/tokens"
 
 interface CheckboxProps {
   checked: boolean
@@ -17,6 +18,11 @@ export function Checkbox({
   size = 22,
   disabled = false,
 }: CheckboxProps) {
+  const isDark = useColorScheme() === "dark"
+  const uncheckedBg = isDark ? tokens.color.cardBgDark.val : "white"
+  const uncheckedBorder = isDark ? "#6B7280" : "#C5C8CE"
+  const labelColor = isDark ? tokens.color.textDark.val : "#3F444F"
+
   return (
     <Pressable onPress={onToggle} disabled={disabled}>
       <XStack alignItems="center" gap={10}>
@@ -25,8 +31,8 @@ export function Checkbox({
           height={size}
           borderRadius={4}
           borderWidth={1.5}
-          borderColor={checked ? "#44AF94" : "#C5C8CE"}
-          backgroundColor={checked ? "#44AF94" : "white"}
+          borderColor={checked ? "#44AF94" : uncheckedBorder}
+          backgroundColor={checked ? "#44AF94" : uncheckedBg}
           alignItems="center"
           justifyContent="center"
           opacity={disabled ? 0.5 : 1}
@@ -36,7 +42,7 @@ export function Checkbox({
           )}
         </YStack>
         {label && (
-          <Text fontSize={14} color="#3F444F" letterSpacing={-0.28}>
+          <Text fontSize={14} color={labelColor} letterSpacing={-0.28}>
             {label}
           </Text>
         )}

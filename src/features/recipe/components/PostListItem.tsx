@@ -1,6 +1,8 @@
 import { Alert, Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { reportService } from "@/src/services/reportService"
+import type { ReportReason } from "@/src/services/reportService"
 
 interface PostListItemProps {
   title: string
@@ -48,8 +50,35 @@ export function PostListItem({
   const isDark = colorScheme === "dark"
   const colors = isDark ? ITEM_COLORS.dark : ITEM_COLORS.light
 
+  const handleReport = () => {
+    const reasons: { label: string; value: ReportReason }[] = [
+      { label: "스팸/광고", value: "SPAM" },
+      { label: "괴롭힘/혐오 표현", value: "HARASSMENT" },
+      { label: "부적절한 콘텐츠", value: "INAPPROPRIATE_CONTENT" },
+      { label: "거짓 정보", value: "FALSE_INFORMATION" },
+      { label: "기타", value: "OTHER" },
+    ]
+    Alert.alert("신고 사유를 선택해주세요", undefined, [
+      ...reasons.map((r) => ({
+        text: r.label,
+        onPress: () => {
+          reportService.reportUser({
+            targetNickName: authorName,
+            reason: r.value,
+          })
+          Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 조치하겠습니다.")
+        },
+      })),
+      { text: "취소", style: "cancel" as const },
+    ])
+  }
+
   const handleMorePress = () => {
     Alert.alert(authorName, undefined, [
+      {
+        text: "이 게시글 신고하기",
+        onPress: handleReport,
+      },
       {
         text: "이 사용자 차단하기",
         style: "destructive",

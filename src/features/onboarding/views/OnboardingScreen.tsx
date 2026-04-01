@@ -1,6 +1,7 @@
-import { Pressable, ScrollView } from "react-native"
+import { Pressable, useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { tokens } from "@/src/theme/tokens"
 import { LoadingScreen } from "@/src/shared/components"
 import { useOnboarding } from "../hooks"
 import {
@@ -14,6 +15,11 @@ import {
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
+  const isDark = useColorScheme() === "dark"
+  const bg = isDark ? tokens.color.appBgDark.val : "white"
+  const textColor = isDark ? tokens.color.textDark.val : "#17191C"
+  const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"
+
   const {
     phase,
     hasCkd,
@@ -41,7 +47,7 @@ export function OnboardingScreen() {
 
   if (phase === "welcome") {
     return (
-      <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
+      <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
         <OnboardingHeader
           currentStepIndex={-1}
           totalSteps={0}
@@ -53,14 +59,15 @@ export function OnboardingScreen() {
         />
 
         <YStack flex={1} justifyContent="space-between">
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 32 }}
+          <YStack
+            flex={1}
+            paddingHorizontal={20}
+            paddingTop={32}
           >
             <Text
               fontSize={22}
               fontWeight="600"
-              color="#17191C"
+              color={textColor}
               letterSpacing={-0.44}
               lineHeight={30.8}
               marginBottom={8}
@@ -70,7 +77,7 @@ export function OnboardingScreen() {
             <Text
               fontSize={15}
               lineHeight={18}
-              color="#787C83"
+              color={textSub}
               marginBottom={32}
             >
               맞춤 건강 관리를 위해 알려주세요
@@ -80,7 +87,7 @@ export function OnboardingScreen() {
               selectedValue={hasCkd}
               onSelect={handleWelcomeSelect}
             />
-          </ScrollView>
+          </YStack>
 
           <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
             <Pressable
@@ -117,7 +124,7 @@ export function OnboardingScreen() {
   }
 
   return (
-    <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
       <OnboardingHeader
         currentStepIndex={currentStepIndex}
         totalSteps={steps.length}
@@ -129,22 +136,22 @@ export function OnboardingScreen() {
       <ProgressBar current={currentStepIndex} total={steps.length} />
 
       <YStack flex={1} justifyContent="space-between">
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 32 }}
-          keyboardShouldPersistTaps="handled"
+        <YStack
+          flex={1}
+          paddingHorizontal={20}
+          paddingTop={32}
         >
           <Text
             fontSize={22}
             fontWeight="600"
-            color="#17191C"
+            color={textColor}
             letterSpacing={-0.44}
             lineHeight={30.8}
             marginBottom={8}
           >
             {currentStep.title}
           </Text>
-          <Text fontSize={15} lineHeight={18} color="#787C83" marginBottom={32}>
+          <Text fontSize={15} lineHeight={18} color={textSub} marginBottom={32}>
             {currentStep.subTitle}
           </Text>
 
@@ -171,7 +178,7 @@ export function OnboardingScreen() {
               onChange={handleInputChange}
             />
           )}
-        </ScrollView>
+        </YStack>
 
         <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
           <Pressable

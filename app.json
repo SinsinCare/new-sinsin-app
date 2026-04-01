@@ -25,14 +25,7 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "AI 상담원과의 음성 대화를 위해 마이크 접근 권한이 필요합니다.",
-        "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.87899379852-tvnficl1ev04upalipqg9t5kkcknmigu"
-            ]
-          }
-        ]
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -86,7 +79,12 @@
       ],
       "expo-font",
       "expo-apple-authentication",
-      "@react-native-google-signin/google-signin"
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4"
+        }
+      ]
     ],
     "scheme": "sinsin",
     "experiments": {
