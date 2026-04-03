@@ -1,6 +1,7 @@
-import axios, { type AxiosInstance } from "axios"
+import axios, { type AxiosInstance, isAxiosError } from "axios"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
+import { logger } from "@/src/lib/logger"
 
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL
 
@@ -34,7 +35,17 @@ function addIsSuccessInterceptor(instance: AxiosInstance) {
 // HTTP/네트워크 에러 → ApiError 변환 (가장 마지막에 등록)
 function addErrorInterceptor(instance: AxiosInstance) {
   instance.interceptors.response.use(undefined, (error) => {
-    console.log('error', error)
+    if (isAxiosError(error)) {
+      logger.debug(
+        "[api]",
+        error.config?.method?.toUpperCase(),
+        error.config?.url,
+        error.response?.status,
+        error.message,
+      )
+    } else {
+      logger.debug("[api] response error", error)
+    }
     if (error instanceof ApiError) {
       return Promise.reject(error)
     }

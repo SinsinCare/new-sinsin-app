@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 import { emailService } from "@/src/services"
 import { passwordService } from "@/src/services"
 import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import { useAuthColors } from "../hooks"
 
 const TIMER_DURATION = 180
 const BUTTON_WIDTH = 100
@@ -33,6 +34,7 @@ type Step = "email" | "otp" | "password"
 
 export function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets()
+  const colors = useAuthColors()
 
   const [step, setStep] = useState<Step>("email")
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -146,14 +148,14 @@ export function ForgotPasswordScreen() {
   }
 
   return (
-    <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       {/* Header */}
       <YStack height={56} justifyContent="center">
         <Pressable
           onPress={() => router.back()}
           style={{ position: "absolute", left: 9, padding: 4 }}
         >
-          <Ionicons name="chevron-back" size={24} color="#17191C" />
+          <Ionicons name="chevron-back" size={24} color={colors.icon} />
         </Pressable>
       </YStack>
 
@@ -162,14 +164,19 @@ export function ForgotPasswordScreen() {
           <Text
             fontSize={22}
             fontWeight="600"
-            color="#17191C"
+            color={colors.text}
             letterSpacing={-0.44}
             lineHeight={26.4}
             marginBottom={8}
           >
             비밀번호 찾기
           </Text>
-          <Text fontSize={15} lineHeight={18} color="#787C83" marginBottom={48}>
+          <Text
+            fontSize={15}
+            lineHeight={18}
+            color={colors.textSub}
+            marginBottom={48}
+          >
             {step === "password"
               ? "새로운 비밀번호를 입력해주세요"
               : "가입한 이메일로 인증번호를 전송해드립니다"}
@@ -204,13 +211,15 @@ export function ForgotPasswordScreen() {
                     paddingTop={28}
                   >
                     <Pressable
-                      onPress={step === "otp" ? handleResendCode : handleSendCode}
-                      disabled={sendingCode || step === "otp" && timer > 0}
+                      onPress={
+                        step === "otp" ? handleResendCode : handleSendCode
+                      }
+                      disabled={sendingCode || (step === "otp" && timer > 0)}
                     >
                       <YStack
                         backgroundColor={
                           sendingCode || (step === "otp" && timer > 0)
-                            ? "#C5C8CE"
+                            ? colors.disabledBtn
                             : "#44AF94"
                         }
                         borderRadius={8}
@@ -257,9 +266,14 @@ export function ForgotPasswordScreen() {
                       justifyContent="flex-start"
                       paddingTop={28}
                     >
-                      <Pressable onPress={handleVerifyCode} disabled={verifyingCode}>
+                      <Pressable
+                        onPress={handleVerifyCode}
+                        disabled={verifyingCode}
+                      >
                         <YStack
-                          backgroundColor={verifyingCode ? "#C5C8CE" : "#44AF94"}
+                          backgroundColor={
+                            verifyingCode ? colors.disabledBtn : "#44AF94"
+                          }
                           borderRadius={8}
                           height={52}
                           justifyContent="center"

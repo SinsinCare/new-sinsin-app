@@ -41,8 +41,27 @@ export interface KidneyRecommendedFood {
   tags: string[]
 }
 
+/** Backend / API payload before mapping to {@link CommunityMealPost}. */
+export interface CommunityMealPostApi {
+  id: string | number
+  authorId?: number
+  authorName: string
+  authorRole: string
+  category: string
+  imageUri?: string | null
+  title: string
+  description: string
+  likes: number
+  liked: boolean
+  comments: number
+  bookmarked: boolean
+  createdAt: string | number | Date
+  updatedAt?: string | number | Date
+}
+
 export interface CommunityMealPost {
   id: string
+  authorId?: number
   authorName: string
   authorRole: string
   category: string
@@ -54,19 +73,26 @@ export interface CommunityMealPost {
   comments: number
   bookmarked: boolean
   createdAt: Date
+  updatedAt?: Date
 }
 
 export interface ICommunityPostService {
-  getPosts(): CommunityMealPost[]
-  getPost(id: string): CommunityMealPost | undefined
+  getPosts(): Promise<CommunityMealPost[]>
+  getPost(id: string): Promise<CommunityMealPost | undefined>
   createPost(
     post: Omit<
       CommunityMealPost,
       "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
     >,
-  ): CommunityMealPost
-  toggleLike(postId: string): void
-  toggleBookmark(postId: string): void
+  ): Promise<CommunityMealPost>
+  updatePost(
+    id: string,
+    post: { category?: string; title?: string; description?: string; imageUri?: string | null },
+  ): Promise<CommunityMealPost>
+  deletePost(id: string): Promise<void>
+  toggleLike(postId: string): Promise<void>
+  toggleBookmark(postId: string): Promise<void>
+  reportPost(postId: string, reason: string, description?: string): Promise<void>
 }
 
 export interface PostCategory {

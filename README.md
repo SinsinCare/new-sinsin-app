@@ -180,10 +180,29 @@ eas build --platform android --profile production
 eas submit --platform android --latest
 ```
 
----
-로컬에서 빌드
-expo prebuild → Xcode archive → Transporter 업로드
+### 로컬에서 iOS 개발 빌드 (Xcode)
+
+**Debug로 Run(▶)할 때는 Metro가 반드시 있어야 합니다.**  
+그렇지 않으면 `No script URL provided...` / `unsanitizedScriptURLString = (null)` 오류가 납니다.
+
 ```bash
-npx expo prebuild --platform ios --clean
+# 터미널 1: 프로젝트 루트에서 Metro 실행
+npx expo start
+
+# Xcode에서 Run (Debug)
 open ios/app.xcworkspace
 ```
+
+한 번에 하려면 `npm run ios`(또는 `npx expo run:ios`)를 쓰면 Metro와 빌드가 같이 맞춰집니다.
+
+```bash
+npx expo prebuild --platform ios --clean   # 네이티브 폴더 재생성 시
+```
+
+**Metro 없이 로컬에서 돌리고 싶다면** Xcode Scheme의 Run을 **Release**로 바꾸거나:
+
+```bash
+npm run ios-release
+```
+
+(스토어 업로드: prebuild → Xcode **Archive** → Transporter)

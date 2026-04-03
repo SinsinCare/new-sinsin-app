@@ -7,11 +7,12 @@ import { Ionicons } from "@expo/vector-icons"
 import { FormTextField } from "@/src/shared/components"
 import { BirthDatePicker } from "../components/BirthDatePicker"
 import { GenderSelector } from "../components/GenderSelector"
-import { useProfileSetup } from "../hooks"
+import { useProfileSetup, useAuthColors } from "../hooks"
 import type { ProfileForm } from "../types"
 
 export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
+  const colors = useAuthColors()
   const {
     birthYear,
     birthMonth,
@@ -34,13 +35,13 @@ export function ProfileSetupScreen() {
     !!name && !!birthYear && !!birthMonth && !!birthDay && !!gender
 
   return (
-    <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack height={56} justifyContent="center">
         <Pressable
           onPress={() => router.back()}
           style={{ position: "absolute", left: 9, padding: 4 }}
         >
-          <Ionicons name="chevron-back" size={24} color="#17191C" />
+          <Ionicons name="chevron-back" size={24} color={colors.icon} />
         </Pressable>
       </YStack>
 
@@ -52,14 +53,19 @@ export function ProfileSetupScreen() {
           <Text
             fontSize={22}
             fontWeight="600"
-            color="#17191C"
+            color={colors.text}
             letterSpacing={-0.44}
             lineHeight={26.4}
             marginBottom={8}
           >
             필수정보를 입력해주세요.
           </Text>
-          <Text fontSize={15} lineHeight={18} color="#787C83" marginBottom={40}>
+          <Text
+            fontSize={15}
+            lineHeight={18}
+            color={colors.textSub}
+            marginBottom={40}
+          >
             서비스 이용을 위한 기본 정보를 입력해주세요
           </Text>
 
@@ -69,7 +75,7 @@ export function ProfileSetupScreen() {
                 <Text
                   fontSize={13}
                   fontWeight="500"
-                  color="#17191C"
+                  color={colors.text}
                   letterSpacing={-0.3}
                   lineHeight={18.2}
                 >

@@ -9,6 +9,7 @@ import MainTextLogo from "@/assets/images/main-text-logo.svg"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import { useAuth } from "@/src/hooks/useAuth"
 import { Ionicons } from "@expo/vector-icons"
+import { logger } from "@/src/lib/logger"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
@@ -28,7 +29,7 @@ export function LoginScreen() {
       if (!isUserCancelledError(error)) {
         const msg =
           error instanceof Error ? error.message : JSON.stringify(error)
-        console.error("[LoginScreen] Google 로그인 에러:", msg)
+        logger.debug("[LoginScreen] Google 로그인 에러", msg)
         Toast.show({
           type: "error",
           text1: "Google 로그인 실패",
@@ -50,7 +51,7 @@ export function LoginScreen() {
       if (!isUserCancelledError(error)) {
         const msg =
           error instanceof Error ? error.message : JSON.stringify(error)
-        console.error("[LoginScreen] Apple 로그인 에러:", msg)
+        logger.debug("[LoginScreen] Apple 로그인 에러", msg)
         Toast.show({
           type: "error",
           text1: "Apple 로그인 실패",

@@ -8,6 +8,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  useColorScheme,
 } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -42,8 +43,22 @@ export function BottomSheetPicker({
   const insets = useSafeAreaInsets()
   const translateY = useRef(new Animated.Value(SHEET_MAX_HEIGHT)).current
   const backdropOpacity = useRef(new Animated.Value(0)).current
+  const isDark = useColorScheme() === "dark"
 
   const selectedOption = options.find((o) => o.value === value)
+
+  const colors = {
+    label: isDark ? "#E7E7EE" : "#17191C",
+    placeholder: isDark ? "#6B7280" : "#A0A4A8",
+    inputBg: isDark ? "#2A2A32" : "white",
+    inputBorder: isDark ? "#3A3A42" : "rgba(218,223,230,0.6)",
+    chevron: isDark ? "#ABABB4" : "#787C83",
+    sheetBg: isDark ? "#2A2A32" : "white",
+    handle: isDark ? "#3A3A42" : "#E0E0E0",
+    selectedBg: isDark ? "#3A3A42" : "#F5F6FF",
+    selectedText: "#5464F2",
+    itemText: isDark ? "#E7E7EE" : "#17191C",
+  }
 
   useEffect(() => {
     if (visible) {
@@ -91,7 +106,7 @@ export function BottomSheetPicker({
           <Text
             fontSize={13}
             fontWeight="500"
-            color="#17191C"
+            color={colors.label}
             letterSpacing={-0.3}
             lineHeight={18.2}
           >
@@ -107,9 +122,9 @@ export function BottomSheetPicker({
       )}
       <Pressable onPress={() => setVisible(true)}>
         <XStack
-          backgroundColor="white"
+          backgroundColor={colors.inputBg}
           borderWidth={1}
-          borderColor="rgba(218,223,230,0.6)"
+          borderColor={colors.inputBorder}
           borderRadius={8}
           height={52}
           alignItems="center"
@@ -118,12 +133,12 @@ export function BottomSheetPicker({
         >
           <Text
             fontSize={16}
-            color={selectedOption ? "#17191C" : "#A0A4A8"}
+            color={selectedOption ? colors.label : colors.placeholder}
             letterSpacing={-0.3}
           >
             {selectedOption ? selectedOption.label : placeholder}
           </Text>
-          <Ionicons name="chevron-down" size={20} color="#787C83" />
+          <Ionicons name="chevron-down" size={20} color={colors.chevron} />
         </XStack>
       </Pressable>
 
@@ -149,14 +164,18 @@ export function BottomSheetPicker({
           <Animated.View
             style={[
               styles.sheet,
-              { transform: [{ translateY }], paddingBottom: insets.bottom },
+              {
+                transform: [{ translateY }],
+                paddingBottom: insets.bottom,
+                backgroundColor: colors.sheetBg,
+              },
             ]}
           >
             <YStack alignItems="center" paddingVertical={12}>
               <YStack
                 width={40}
                 height={4}
-                backgroundColor="#E0E0E0"
+                backgroundColor={colors.handle}
                 borderRadius={2}
               />
             </YStack>
@@ -180,21 +199,29 @@ export function BottomSheetPicker({
                     height={48}
                     paddingHorizontal={20}
                     backgroundColor={
-                      item.value === value ? "#F5F6FF" : "transparent"
+                      item.value === value ? colors.selectedBg : "transparent"
                     }
                     justifyContent="space-between"
                     alignItems="center"
                   >
                     <Text
                       fontSize={16}
-                      color={item.value === value ? "#5464F2" : "#17191C"}
+                      color={
+                        item.value === value
+                          ? colors.selectedText
+                          : colors.itemText
+                      }
                       fontWeight={item.value === value ? "600" : "400"}
                       letterSpacing={-0.3}
                     >
                       {item.label}
                     </Text>
                     {item.value === value && (
-                      <Ionicons name="checkmark" size={20} color="#5464F2" />
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={colors.selectedText}
+                      />
                     )}
                   </XStack>
                 </Pressable>
@@ -220,7 +247,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sheet: {
-    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: SHEET_MAX_HEIGHT,

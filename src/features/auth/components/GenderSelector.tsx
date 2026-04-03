@@ -1,5 +1,6 @@
-import { Pressable } from "react-native"
+import { Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 interface GenderSelectorProps {
   value: "male" | "female" | ""
@@ -7,13 +8,20 @@ interface GenderSelectorProps {
 }
 
 export function GenderSelector({ value, onChange }: GenderSelectorProps) {
+  const isDark = useColorScheme() === "dark"
+  const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
+  const unselectedBg = isDark ? "#2A2A32" : "white"
+  const unselectedText = isDark ? tokens.color.textDark.val : "#17191C"
+  const unselectedBorder = isDark ? "#3A3A42" : "rgba(218,223,230,0.6)"
+  const selectedBg = isDark ? "#0D896A20" : "#F0FDF4"
+
   return (
     <YStack>
       <XStack paddingBottom={10}>
         <Text
           fontSize={13}
           fontWeight="500"
-          color="#17191C"
+          color={labelColor}
           letterSpacing={-0.3}
           lineHeight={18.2}
         >
@@ -30,15 +38,15 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             height={52}
             borderRadius={8}
             borderWidth={1}
-            borderColor={value === "male" ? "#44AF94" : "rgba(218,223,230,0.6)"}
-            backgroundColor={value === "male" ? "#F0FDF4" : "white"}
+            borderColor={value === "male" ? "#44AF94" : unselectedBorder}
+            backgroundColor={value === "male" ? selectedBg : unselectedBg}
             alignItems="center"
             justifyContent="center"
           >
             <Text
               fontSize={16}
               fontWeight={value === "male" ? "600" : "400"}
-              color={value === "male" ? "#0D896A" : "#17191C"}
+              color={value === "male" ? "#0D896A" : unselectedText}
               letterSpacing={-0.3}
             >
               남자
@@ -50,17 +58,15 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             height={52}
             borderRadius={8}
             borderWidth={1}
-            borderColor={
-              value === "female" ? "#44AF94" : "rgba(218,223,230,0.6)"
-            }
-            backgroundColor={value === "female" ? "#F0FDF4" : "white"}
+            borderColor={value === "female" ? "#44AF94" : unselectedBorder}
+            backgroundColor={value === "female" ? selectedBg : unselectedBg}
             alignItems="center"
             justifyContent="center"
           >
             <Text
               fontSize={16}
               fontWeight={value === "female" ? "600" : "400"}
-              color={value === "female" ? "#0D896A" : "#17191C"}
+              color={value === "female" ? "#0D896A" : unselectedText}
               letterSpacing={-0.3}
             >
               여자

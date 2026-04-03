@@ -67,6 +67,7 @@ import CircleCharacter from "@/assets/icons/circle-character.svg"
 import Sparkle from "@/assets/icons/sparkle.svg"
 import Profile from "@/assets/icons/profile.svg"
 import ProfileDark from "@/assets/icons/profile-dark.svg"
+import EllipsisHorizontal from "@/assets/icons/ellipsis-horizontal.svg"
 
 const icons = {
   bookmark: Bookmark,
@@ -134,6 +135,7 @@ const icons = {
   "profile-dark": ProfileDark,
   "fire-dark": FireDark,
   "check-dark": CheckDark,
+  "ellipsis-horizontal": EllipsisHorizontal,
 } as const
 
 export type IconName = keyof typeof icons

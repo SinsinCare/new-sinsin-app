@@ -5,6 +5,7 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin"
 import * as AppleAuthentication from "expo-apple-authentication"
+import { logger } from "@/src/lib/logger"
 
 export interface SocialAuthResult {
   provider: "google" | "apple"
@@ -19,33 +20,33 @@ GoogleSignin.configure({
 })
 
 export async function signInWithGoogle(): Promise<SocialAuthResult> {
-  console.log("[Google SignIn] 시작")
+  logger.debug("[Google SignIn] 시작")
   try {
     await GoogleSignin.hasPlayServices()
-    console.log("[Google SignIn] hasPlayServices 통과")
+    logger.debug("[Google SignIn] hasPlayServices 통과")
   } catch (e) {
-    console.error("[Google SignIn] hasPlayServices 실패:", e)
+    logger.error("[Google SignIn] hasPlayServices 실패", e)
     throw e
   }
 
   let response
   try {
     response = await GoogleSignin.signIn()
-    console.log("[Google SignIn] signIn 응답:", JSON.stringify(response, null, 2))
+    logger.debug("[Google SignIn] signIn 완료")
   } catch (e) {
-    console.error("[Google SignIn] signIn 실패:", e)
+    logger.error("[Google SignIn] signIn 실패", e)
     if (isErrorWithCode(e)) {
-      console.error("[Google SignIn] 에러 코드:", e.code)
+      logger.debug("[Google SignIn] 에러 코드:", e.code)
     }
     throw e
   }
 
   if (!response.data?.idToken) {
-    console.error("[Google SignIn] idToken 없음. response.data:", response.data)
+    logger.error("[Google SignIn] idToken 없음")
     throw new Error("Google 로그인에서 ID 토큰을 받지 못했습니다.")
   }
 
-  console.log("[Google SignIn] 성공 - email:", response.data.user.email)
+  logger.debug("[Google SignIn] 성공")
   return {
     provider: "google",
     idToken: response.data.idToken,
@@ -55,7 +56,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
 }
 
 export async function signInWithApple(): Promise<SocialAuthResult> {
-  console.log("[Apple SignIn] 시작")
+  logger.debug("[Apple SignIn] 시작")
   if (Platform.OS !== "ios") {
     throw new Error("Apple 로그인은 iOS에서만 지원됩니다.")
   }
@@ -68,26 +69,17 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
         AppleAuthentication.AppleAuthenticationScope.EMAIL,
       ],
     })
-    console.log("[Apple SignIn] credential:", JSON.stringify({
-      user: credential.user,
-      email: credential.email,
-      fullName: credential.fullName,
-      hasIdentityToken: !!credential.identityToken,
-      authorizationCode: credential.authorizationCode ? "있음" : "없음",
-    }, null, 2))
+    logger.debug("[Apple SignIn] credential 수신", !!credential.identityToken)
   } catch (e) {
-    console.error("[Apple SignIn] signInAsync 실패:", e)
-    if (e instanceof Error) {
-      console.error("[Apple SignIn] 에러 메시지:", e.message)
-      if ("code" in e) {
-        console.error("[Apple SignIn] 에러 코드:", (e as { code: string }).code)
-      }
+    logger.error("[Apple SignIn] signInAsync 실패", e)
+    if (e instanceof Error && "code" in e) {
+      logger.debug("[Apple SignIn] 에러 코드:", (e as { code: string }).code)
     }
     throw e
   }
 
   if (!credential.identityToken) {
-    console.error("[Apple SignIn] identityToken 없음")
+    logger.error("[Apple SignIn] identityToken 없음")
     throw new Error("Apple 로그인에서 ID 토큰을 받지 못했습니다.")
   }
 
@@ -96,7 +88,7 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
       ? `${credential.fullName.familyName}${credential.fullName.givenName}`
       : null
 
-  console.log("[Apple SignIn] 성공 - email:", credential.email, "displayName:", displayName)
+  logger.debug("[Apple SignIn] 성공")
   return {
     provider: "apple",
     idToken: credential.identityToken,

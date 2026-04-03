@@ -4,6 +4,7 @@ import { YStack, Text } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
+import { useAuthColors } from "../hooks"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -31,16 +32,17 @@ export function AuthScreenLayout({
   scrollable = false,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
+  const colors = useAuthColors()
 
   return (
-    <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       {showHeader && (
         <YStack height={56} justifyContent="center">
           <Pressable
             onPress={onBack ?? (() => router.back())}
             style={{ position: "absolute", left: 9, padding: 4 }}
           >
-            <Ionicons name="chevron-back" size={24} color="#17191C" />
+            <Ionicons name="chevron-back" size={24} color={colors.icon} />
           </Pressable>
         </YStack>
       )}
@@ -50,7 +52,7 @@ export function AuthScreenLayout({
           <Text
             fontSize={22}
             fontWeight="600"
-            color="#17191C"
+            color={colors.text}
             letterSpacing={-0.44}
             lineHeight={26.4}
             marginBottom={subtitle ? 8 : 0}
@@ -58,7 +60,7 @@ export function AuthScreenLayout({
             {title}
           </Text>
           {subtitle && (
-            <Text fontSize={15} lineHeight={18} color="#787C83">
+            <Text fontSize={15} lineHeight={18} color={colors.textSub}>
               {subtitle}
             </Text>
           )}

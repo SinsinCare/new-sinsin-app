@@ -9,6 +9,7 @@ import {
   convertStepRsToSteps,
   convertAnswersToSubmitRq,
 } from "@/src/features/onboarding/data"
+import { logger } from "@/src/lib/logger"
 
 export const onboardingService = {
   async getSteps(hasCkd: boolean): Promise<OnboardingStep[]> {
@@ -33,7 +34,10 @@ export const onboardingService = {
       return mockOnboardingService.submitAnswers()
     }
     const request = convertAnswersToSubmitRq(hasCkd, answers)
-    console.log("req", request)
+    logger.debug(
+      "[onboardingService] submit payload keys",
+      Object.keys(request),
+    )
     await api.post(`/user/onboarding`, request)
   },
 }

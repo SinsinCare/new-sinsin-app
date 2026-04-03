@@ -9,17 +9,17 @@ import type {
 import { isMockUser } from "../../config/appConfig"
 import { publicApi, tokenService } from "@/src/services"
 import { ApiError } from "../core/apiError"
+import { logger } from "@/src/lib/logger"
 
 function getRealAuthService(): IAuthService {
   return {
-    // TODO: 백엔드 소셜 로그인 API 완성 후 TODO/로그 정리
     async signInWithSocial(
       provider: "google" | "apple",
       idToken: string,
       email?: string | null,
       displayName?: string | null,
     ): Promise<{ user: AppUser; accountState: string }> {
-      console.log(`[authService] signInWithSocial 시작 - provider: ${provider}, email: ${email}`)
+      logger.debug(`[authService] signInWithSocial`, provider)
 
       let data
       try {
@@ -28,22 +28,15 @@ function getRealAuthService(): IAuthService {
           { provider, idToken },
         )
         data = response.data
-        console.log("[authService] /auth/social-login 응답:", JSON.stringify({
-          accountState: data.result.accountState,
-          hasAccessToken: !!data.result.accessToken,
-          hasRefreshToken: !!data.result.refreshToken,
-        }))
+        logger.debug("[authService] social-login OK", data.result.accountState)
       } catch (error) {
-        console.error(`[authService] /auth/social-login 실패:`, error)
-        if (error instanceof ApiError) {
-          console.error(`[authService] statusCode: ${error.statusCode}, message: ${error.message}`)
-        }
+        logger.error("[authService] /auth/social-login 실패", error)
         throw error
       }
 
       const { accessToken, refreshToken, accountState } = data.result
       await tokenService.setTokens(accessToken, refreshToken)
-      console.log("[authService] 토큰 저장 완료")
+      logger.debug("[authService] 토큰 저장 완료")
 
       const user: AppUser = {
         uid: email ?? provider,
@@ -51,7 +44,7 @@ function getRealAuthService(): IAuthService {
         displayName: displayName ?? null,
       }
 
-      console.log(`[authService] signInWithSocial 완료 - accountState: ${accountState}`)
+      logger.debug("[authService] signInWithSocial 완료", accountState)
       return { user, accountState }
     },
 

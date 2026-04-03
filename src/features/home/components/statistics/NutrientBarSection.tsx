@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, StyleSheet } from "react-native"
+import { View, StyleSheet, useColorScheme } from "react-native"
 import { Text, useTheme } from "tamagui"
 import { tokens } from "../../../../theme/tokens"
 import { CIRCLE_SIZE } from "../../data/nutrientConstants"
@@ -34,10 +34,13 @@ export function NutrientBarSection({
   const [barWidth, setBarWidth] = useState(0)
 
   const theme = useTheme()
+  const isDark = useColorScheme() === "dark"
   const colorFillNormal = theme.secondary.val
   const colorFillOver = theme.warning.val
   const colorTrack = theme.borderColor.val
   const colorLimitTick = tokens.color.grey7.val
+  const circleBg = isDark ? tokens.color.appBgDark.val : "white"
+  const separatorColor = isDark ? tokens.color.appBgDark.val : "white"
 
   const intakeAtRightEdge = isOver || atLimit
   const showLimitChip = !atLimit
@@ -151,7 +154,7 @@ export function NutrientBarSection({
                 <View
                   style={{ flex: limitPct, backgroundColor: colorFillNormal }}
                 />
-                <View style={{ width: 2, backgroundColor: "white" }} />
+                <View style={{ width: 2, backgroundColor: separatorColor }} />
                 <View
                   style={{
                     flex: 100 - limitPct,
@@ -185,7 +188,10 @@ export function NutrientBarSection({
                 style={[styles.circleWrapper, { right: -(CIRCLE_SIZE / 10) }]}
               >
                 <View
-                  style={[styles.barCircle, { borderColor: circleColor }]}
+                  style={[
+                    styles.barCircle,
+                    { borderColor: circleColor, backgroundColor: circleBg },
+                  ]}
                 />
               </View>
             ) : (
@@ -200,7 +206,10 @@ export function NutrientBarSection({
                 ]}
               >
                 <View
-                  style={[styles.barCircle, { borderColor: circleColor }]}
+                  style={[
+                    styles.barCircle,
+                    { borderColor: circleColor, backgroundColor: circleBg },
+                  ]}
                 />
               </View>
             ))}

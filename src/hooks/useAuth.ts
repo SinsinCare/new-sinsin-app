@@ -7,6 +7,7 @@ import {
   isUserCancelledError,
 } from "../services/auth/socialAuthService"
 import { tokenService } from "../services/core/tokenService"
+import { logger } from "@/src/lib/logger"
 
 export function useAuth() {
   const {
@@ -45,32 +46,30 @@ export function useAuth() {
   }
 
   const signInWithGoogle = async () => {
-    console.log("[useAuth] signInWithGoogle 호출")
+    logger.debug("[useAuth] signInWithGoogle")
     const socialResult = await googleSignIn()
-    console.log("[useAuth] Google 인증 성공, 백엔드 호출 시작")
     const result = await authService.signInWithSocial(
       socialResult.provider,
       socialResult.idToken,
       socialResult.email,
       socialResult.displayName,
     )
-    console.log("[useAuth] Google 로그인 완료 - accountState:", result.accountState)
+    logger.debug("[useAuth] Google 로그인 완료", result.accountState)
     setUser(result.user)
     setAccountState(result.accountState)
     return result
   }
 
   const signInWithApple = async () => {
-    console.log("[useAuth] signInWithApple 호출")
+    logger.debug("[useAuth] signInWithApple")
     const socialResult = await appleSignIn()
-    console.log("[useAuth] Apple 인증 성공, 백엔드 호출 시작")
     const result = await authService.signInWithSocial(
       socialResult.provider,
       socialResult.idToken,
       socialResult.email,
       socialResult.displayName,
     )
-    console.log("[useAuth] Apple 로그인 완료 - accountState:", result.accountState)
+    logger.debug("[useAuth] Apple 로그인 완료", result.accountState)
     setUser(result.user)
     setAccountState(result.accountState)
     return result

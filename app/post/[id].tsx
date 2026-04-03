@@ -1,12 +1,21 @@
-import { Pressable, ScrollView, useColorScheme, StyleSheet, ActionSheetIOS, Alert, Platform } from "react-native"
+import {
+  Pressable,
+  ScrollView,
+  useColorScheme,
+  StyleSheet,
+  ActionSheetIOS,
+  Alert,
+  Platform,
+} from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter, type Href } from "expo-router"
 import { Icon } from "@/src/shared/components/Icon"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
-import { LoadingScreen } from "@/src/shared/components"
+import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 
 const BG = { light: "#FCFCFC", dark: "#1F1F21" }
 const HEADER_ICON = { light: "#3C3C43", dark: "#E7E7EE" }
@@ -38,8 +47,52 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets()
   const scheme = useColorScheme() ?? "light"
 
-  const { post, isLoading } = usePostDetail(id!)
-  const { posts, toggleLike, toggleBookmark, deletePost } = useCommunityPosts()
+  const { post, isLoading, isError, error, refetch } = usePostDetail(id!)
+  const { posts, toggleLike, toggleBookmark, deletePost, reportPost } =
+    useCommunityPosts()
+
+  const handleEdit = () => {
+    if (!post) return
+    const href = `/free/${post.id}` as Href
+    router.push(href)
+  }
+
+  const handleDelete = () => {
+    Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () => {
+          deletePost(post!.id)
+          router.back()
+        },
+      },
+    ])
+  }
+
+  const handleReport = () => {
+    const reasons: { label: string; value: string }[] = [
+      { label: "스팸/광고", value: "SPAM" },
+      { label: "괴롭힘/혐오 표현", value: "HARASSMENT" },
+      { label: "부적절한 콘텐츠", value: "INAPPROPRIATE_CONTENT" },
+      { label: "거짓 정보", value: "FALSE_INFORMATION" },
+      { label: "기타", value: "OTHER" },
+    ]
+    Alert.alert("신고 사유를 선택해주세요", undefined, [
+      ...reasons.map((r) => ({
+        text: r.label,
+        onPress: () => {
+          reportPost({ postId: post!.id, reason: r.value })
+          Alert.alert(
+            "신고 완료",
+            "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
+          )
+        },
+      })),
+      { text: "취소", style: "cancel" },
+    ])
+  }
 
   const handleMorePress = () => {
     const options = ["수정하기", "삭제하기", "신고하기", "취소"]
@@ -47,45 +100,62 @@ export default function PostDetailScreen() {
       ActionSheetIOS.showActionSheetWithOptions(
         { options, cancelButtonIndex: 3, destructiveButtonIndex: 1 },
         (buttonIndex) => {
-          if (buttonIndex === 0) {
-            Alert.alert("수정하기", "게시글 수정 기능은 준비 중입니다.")
-          } else if (buttonIndex === 1) {
-            Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
-              { text: "취소", style: "cancel" },
-              {
-                text: "삭제",
-                style: "destructive",
-                onPress: () => {
-                  deletePost?.(post!.id)
-                  router.back()
-                },
-              },
-            ])
-          } else if (buttonIndex === 2) {
-            Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 처리하겠습니다.")
-          }
+          if (buttonIndex === 0) handleEdit()
+          else if (buttonIndex === 1) handleDelete()
+          else if (buttonIndex === 2) handleReport()
         },
       )
     } else {
       Alert.alert("더보기", "", [
-        { text: "수정하기", onPress: () => Alert.alert("수정하기", "게시글 수정 기능은 준비 중입니다.") },
-        {
-          text: "삭제하기",
-          style: "destructive",
-          onPress: () =>
-            Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
-              { text: "취소", style: "cancel" },
-              { text: "삭제", style: "destructive", onPress: () => { deletePost?.(post!.id); router.back() } },
-            ]),
-        },
-        { text: "신고하기", onPress: () => Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 처리하겠습니다.") },
+        { text: "수정하기", onPress: handleEdit },
+        { text: "삭제하기", style: "destructive", onPress: handleDelete },
+        { text: "신고하기", onPress: handleReport },
         { text: "취소", style: "cancel" },
       ])
     }
   }
 
-  if (isLoading || !post) {
+  if (isError) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor={BG[scheme]}
+        paddingTop={insets.top}
+        paddingHorizontal={20}
+        justifyContent="center"
+      >
+        <ErrorMessage
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+        />
+      </YStack>
+    )
+  }
+
+  if (isLoading) {
     return <LoadingScreen message="게시물을 불러오는 중..." />
+  }
+
+  if (!post) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor={BG[scheme]}
+        paddingTop={insets.top}
+        paddingHorizontal={20}
+        justifyContent="center"
+        gap="$3"
+      >
+        <Text fontSize={16} fontFamily="$body" color={TITLE_COLOR[scheme]}>
+          게시글을 찾을 수 없습니다.
+        </Text>
+        <Pressable onPress={() => router.back()} accessibilityRole="button">
+          <Text fontSize={15} color={LIKE_COLOR[scheme]} fontWeight="600">
+            돌아가기
+          </Text>
+        </Pressable>
+      </YStack>
+    )
   }
 
   // Find previous/next posts

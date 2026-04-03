@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react"
 import type { ChatCategory, Message } from "@/src/types/chat"
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
+import { logger } from "@/src/lib/logger"
 
 let optimisticMsgId = -1
 
@@ -18,7 +19,7 @@ export function useChat() {
       return conversation
     },
     onError: (err) => {
-      console.error("Failed to create chat:", err)
+      logger.error("Failed to create chat", err)
     },
   })
 
@@ -72,7 +73,7 @@ export function useChat() {
         return assistantMsg
       },
       onError: (err) => {
-        console.error("Failed to send message:", err)
+        logger.error("Failed to send message", err)
       },
       onSettled: () => {
         setIsTyping(false)
@@ -126,7 +127,7 @@ export function useChat() {
         return assistantMsg
       },
       onError: (err) => {
-        console.error("Failed to regenerate message:", err)
+        logger.error("Failed to regenerate message", err)
       },
       onSettled: () => {
         setIsTyping(false)
@@ -159,7 +160,9 @@ export function useChat() {
       // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
       if (activeConvId === null) {
         try {
-          const conversation = await createChatMutate(categoryRef.current ?? "NONE")
+          const conversation = await createChatMutate(
+            categoryRef.current ?? "NONE",
+          )
           activeConvId = conversation.id
           convIdRef.current = activeConvId
           setConversationId(activeConvId)
@@ -194,7 +197,7 @@ export function useChat() {
         setCategory(conversation.category ?? null)
         setMessages(loadedMessages)
       } catch (err) {
-        console.error("Failed to load conversation:", err)
+        logger.error("Failed to load conversation", err)
       }
     },
     [isSending],
