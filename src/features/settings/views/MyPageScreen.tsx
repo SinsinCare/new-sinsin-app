@@ -1,5 +1,5 @@
-import React from "react"
-import { StyleSheet, View, ScrollView, Pressable, Share } from "react-native"
+import React, { useCallback } from "react"
+import { StyleSheet, View, ScrollView, Pressable, Share, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -10,6 +10,26 @@ import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { KIDNEY_SAFE_LIMITS } from "@/src/types/models"
+
+const APP_DOWNLOAD_URL =
+  "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
+
+const COMORBIDITY_LABEL: Record<string, string> = {
+  DIABETES: "당뇨",
+  HYPERTENSION: "고혈압",
+  HEART_DISEASE: "심장질환",
+  GOUT: "통풍",
+  ANEMIA: "빈혈",
+  BONE_MINERAL: "골미네랄 장애",
+}
+
+const MEAL_LABELS: Record<string, string> = {
+  BREAKFAST: "아침",
+  LUNCH: "점심",
+  DINNER: "저녁",
+  SNACKS: "간식",
+}
 
 export function MyPageScreen() {
   const insets = useSafeAreaInsets()
@@ -18,6 +38,99 @@ export function MyPageScreen() {
   const { data: profile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
   const { data: todayAnalysis } = useDateAnalysis(new Date())
+
+  const handleShareData = useCallback(async () => {
+    const hasData = kidneyProfile || todayAnalysis?.result?.analysis
+    if (!hasData) {
+      Alert.alert(
+        "공유할 데이터가 없습니다",
+        "신장 프로필을 입력하거나 오늘 식사를 기록한 후 공유해주세요.",
+      )
+      return
+    }
+
+    const today = new Date()
+    const dateLabel = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+
+    const lines: string[] = [
+      `[신신당부] ${profile?.nickName ?? "사용자"}님의 건강 데이터`,
+      `📅 ${dateLabel} 기준`,
+      "",
+    ]
+
+    if (kidneyProfile) {
+      lines.push("👤 신장 프로필")
+      lines.push(
+        `• ${kidneyProfile.ckdStageLabel}${kidneyProfile.isDialysis ? " | 투석 중" : ""}`,
+      )
+      if (kidneyProfile.weightKg) {
+        lines.push(`• 체중: ${kidneyProfile.weightKg}kg`)
+      }
+      if (kidneyProfile.comorbidities?.length) {
+        const labels = kidneyProfile.comorbidities.map(
+          (key) =>
+            COMORBIDITY_LABEL[key] ??
+            COMORBIDITY_LABEL[key.toUpperCase()] ??
+            key,
+        )
+        lines.push(`• 동반질환: ${labels.join(", ")}`)
+      }
+      lines.push("")
+    }
+
+    const analysis = todayAnalysis?.result
+    if (analysis?.diets?.length) {
+      const mealNames = analysis.diets.map(
+        (d) => MEAL_LABELS[d.mealType] ?? d.mealType,
+      )
+      lines.push("🍽️ 오늘 식사 기록")
+      lines.push(`• ${mealNames.join(", ")}`)
+      lines.push("")
+    }
+
+    if (analysis?.analysis) {
+      const a = analysis.analysis
+      const proteinLimit = kidneyProfile?.weightKg
+        ? Math.round(kidneyProfile.weightKg * KIDNEY_SAFE_LIMITS.protein)
+        : null
+      lines.push("📊 오늘 영양소 섭취")
+      lines.push(
+        `• 단백질: ${a.protein.toFixed(1)}g${proteinLimit ? ` / ${proteinLimit}g` : ""}`,
+      )
+      lines.push(
+        `• 나트륨: ${Math.round(a.sodium)}mg / ${KIDNEY_SAFE_LIMITS.sodium}mg`,
+      )
+      lines.push(
+        `• 칼륨: ${Math.round(a.potassium)}mg / ${KIDNEY_SAFE_LIMITS.potassium}mg`,
+      )
+      lines.push(
+        `• 인: ${Math.round(a.phosphorus)}mg / ${KIDNEY_SAFE_LIMITS.phosphorus}mg`,
+      )
+      lines.push(`• 수분: ${Math.round(a.water + a.extraWater)}ml`)
+      if (a.cautionFoods?.length) {
+        lines.push("")
+        lines.push(`⚠️ 주의 식품: ${a.cautionFoods.join(", ")}`)
+      }
+      if (a.dietaryGuide) {
+        lines.push("")
+        lines.push(`💬 ${a.dietaryGuide}`)
+      }
+      lines.push("")
+    }
+
+    lines.push("신신당부 앱에서 건강을 관리하세요.")
+    lines.push(`📲 다운로드: ${APP_DOWNLOAD_URL}`)
+
+    try {
+      await Share.share({
+        title: "나의 신장 건강 데이터",
+        message: lines.join("\n"),
+      })
+    } catch {
+      Alert.alert("공유 실패", "데이터 공유 중 오류가 발생했습니다.")
+    }
+  }, [profile, kidneyProfile, todayAnalysis])
+
   const age = profile?.birthYear
     ? new Date().getFullYear() - profile.birthYear
     : null
@@ -112,71 +225,7 @@ export function MyPageScreen() {
           {
             icon: "share-outline" as const,
             title: "나의 데이터 공유하기",
-            onPress: () => {
-              const today = new Date()
-              const dateLabel = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
-
-              const lines: string[] = [
-                `[신신당부] ${profile?.nickName ?? "사용자"}님의 건강 데이터`,
-                `📅 ${dateLabel} 기준`,
-                "",
-              ]
-
-              // 신장 프로필
-              if (kidneyProfile) {
-                lines.push("👤 신장 프로필")
-                lines.push(`• ${kidneyProfile.ckdStageLabel}${kidneyProfile.isDialysis ? " | 투석 중" : ""}`)
-                if (kidneyProfile.weightKg) {
-                  lines.push(`• 체중: ${kidneyProfile.weightKg}kg`)
-                }
-                if (kidneyProfile.comorbidities?.length) {
-                  lines.push(`• 동반질환: ${kidneyProfile.comorbidities.join(", ")}`)
-                }
-                lines.push("")
-              }
-
-              // 식사 기록
-              const analysis = todayAnalysis?.result
-              const MEAL_LABELS: Record<string, string> = {
-                BREAKFAST: "아침",
-                LUNCH: "점심",
-                DINNER: "저녁",
-                SNACKS: "간식",
-              }
-              if (analysis?.diets?.length) {
-                const mealNames = analysis.diets.map((d) => MEAL_LABELS[d.mealType] ?? d.mealType)
-                lines.push("🍽️ 오늘 식사 기록")
-                lines.push(`• ${mealNames.join(", ")}`)
-                lines.push("")
-              }
-
-              // 영양소 섭취량
-              if (analysis?.analysis) {
-                const a = analysis.analysis
-                lines.push("📊 오늘 영양소 섭취")
-                lines.push(`• 단백질: ${a.protein.toFixed(1)}g / 48g`)
-                lines.push(`• 나트륨: ${Math.round(a.sodium)}mg / 2000mg`)
-                lines.push(`• 칼륨: ${Math.round(a.potassium)}mg / 3000mg`)
-                lines.push(`• 인: ${Math.round(a.phosphorus)}mg / 1000mg`)
-                lines.push(`• 수분: ${Math.round(a.water + a.extraWater)}ml / 1500ml`)
-                if (analysis.analysis.cautionFoods?.length) {
-                  lines.push("")
-                  lines.push(`⚠️ 주의 식품: ${analysis.analysis.cautionFoods.join(", ")}`)
-                }
-                if (analysis.analysis.dietaryGuide) {
-                  lines.push("")
-                  lines.push(`💬 ${analysis.analysis.dietaryGuide}`)
-                }
-                lines.push("")
-              }
-
-              lines.push("신신당부 앱에서 건강을 관리하세요.")
-
-              Share.share({
-                title: "나의 신장 건강 데이터",
-                message: lines.join("\n"),
-              })
-            },
+            onPress: handleShareData,
           },
           {
             icon: "megaphone-outline" as const,
