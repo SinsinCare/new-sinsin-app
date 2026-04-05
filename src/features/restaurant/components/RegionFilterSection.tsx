@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { REGIONS, SUB_REGIONS } from "../data/filterData"
 
 interface RegionFilterSectionProps {
@@ -19,12 +20,12 @@ export function RegionFilterSection({
 }: RegionFilterSectionProps) {
   const isDarkMode = useColorScheme() === "dark"
 
-  const textColor = isDarkMode ? "#ABABB4" : "#474758"
-  const resetColor = isDarkMode ? "#ABABB4" : "#474758"
-  const defaultBorder = isDarkMode ? "#313138" : "#EAEAF0"
-  const selectedBorder = "#FF7246"
+  const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
+  const resetColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
+  const defaultBorder = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const selectedBorder = tokens.color.primaryAccent.val
   const selectedBg = isDarkMode ? "#D56E321A" : "#FCEBE1"
-  const headingColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const headingColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
 
   const subRegions = selectedRegion ? SUB_REGIONS[selectedRegion] || [] : []
 

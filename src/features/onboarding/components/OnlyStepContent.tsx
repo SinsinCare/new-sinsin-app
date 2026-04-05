@@ -54,7 +54,7 @@ export function OnlyStepContent({
               <Text
                 fontSize={16}
                 fontWeight={isSelected ? "600" : "400"}
-                color={isSelected ? "#0D896A" : unselectedText}
+                color={isSelected ? tokens.color.sub8.val : unselectedText}
                 letterSpacing={-0.3}
                 flex={1}
               >

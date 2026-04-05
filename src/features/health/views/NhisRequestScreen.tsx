@@ -13,6 +13,7 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { nhisService } from "@/src/services/data/nhisService"
 import type { AuthMethodRs } from "@/src/types/nhis"
@@ -195,7 +196,7 @@ export function NhisRequestScreen() {
           <ThemedText style={styles.sectionTitle}>간편인증 수단</ThemedText>
 
           {loadingMethods ? (
-            <ActivityIndicator color="#44AF94" style={{ marginTop: 12 }} />
+            <ActivityIndicator color={tokens.color.sub6.val} style={{ marginTop: 12 }} />
           ) : (
             <View style={styles.methodRow}>
               {authMethods.map((method) => {
@@ -264,7 +265,7 @@ export function NhisRequestScreen() {
 
         {requestId && (
           <View style={styles.pendingBox}>
-            <Ionicons name="phone-portrait-outline" size={20} color="#0D896A" />
+            <Ionicons name="phone-portrait-outline" size={20} color={tokens.color.sub8.val} />
             <ThemedText style={styles.pendingText}>
               {
                 "인증 앱에서 본인인증을 완료해 주세요.\n완료 후 아래 인증 완료 버튼을 눌러주세요."
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
   },
   methodCardSelected: {
-    borderColor: "#44AF94",
+    borderColor: tokens.color.sub6.val,
     backgroundColor: "#F0FDF9",
   },
   methodName: {
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   methodNameSelected: {
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   telecomRow: {
     flexDirection: "row",
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
   },
   telecomChipSelected: {
-    borderColor: "#44AF94",
+    borderColor: tokens.color.sub6.val,
     backgroundColor: "#F0FDF9",
   },
   telecomChipText: {
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   telecomChipTextSelected: {
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
     fontWeight: "600",
   },
   errorBox: {
@@ -440,7 +441,7 @@ const styles = StyleSheet.create({
   pendingText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
     flex: 1,
   },
   footer: {
@@ -451,14 +452,14 @@ const styles = StyleSheet.create({
     borderTopColor: "#F0F2F5",
   },
   requestButton: {
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   confirmButton: {
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",

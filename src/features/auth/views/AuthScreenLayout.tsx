@@ -5,6 +5,7 @@ import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
 import { useAuthColors } from "../hooks"
+import { tokens } from "@/src/theme/tokens"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -74,7 +75,7 @@ export function AuthScreenLayout({
           >
             <YStack
               backgroundColor={
-                !buttonDisabled && !buttonLoading ? "#44AF94" : "#44AF9440"
+                !buttonDisabled && !buttonLoading ? tokens.color.sub6.val : tokens.color.sub6.val + "40"
               }
               paddingVertical={16}
               paddingHorizontal={24}

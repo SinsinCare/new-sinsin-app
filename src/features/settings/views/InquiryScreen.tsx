@@ -24,6 +24,7 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 const MAX_IMAGES = 3
 const MAX_CONTENT = 100
@@ -310,7 +311,7 @@ export function InquiryScreen() {
                   {cat}
                 </ThemedText>
                 {category === cat && (
-                  <Ionicons name="checkmark" size={20} color="#44AF94" />
+                  <Ionicons name="checkmark" size={20} color={tokens.color.sub6.val} />
                 )}
               </Pressable>
             ))}
@@ -493,6 +494,6 @@ const styles = StyleSheet.create({
   },
   sheetItemTextSelected: {
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
 })

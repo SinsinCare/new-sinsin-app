@@ -6,6 +6,7 @@ import { FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useEmailLogin } from "../hooks"
 import type { LoginForm } from "../types"
+import { tokens } from "@/src/theme/tokens"
 
 export function EmailLoginScreen() {
   const { isLoading, loginError, clearLoginError, submitLogin } =
@@ -63,7 +64,7 @@ export function EmailLoginScreen() {
           {loginError && (
             <Text
               fontSize={12}
-              color="#FF3B30"
+              color={tokens.color.error.val}
               letterSpacing={-0.3}
               paddingTop={6}
             >

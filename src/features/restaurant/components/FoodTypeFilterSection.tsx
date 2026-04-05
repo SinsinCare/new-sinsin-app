@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, useColorScheme, useWindowDimensions, View } from "react-native"
 import { Text, YStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { FOOD_TYPES } from "../data/filterData"
 import KoreanIcon from "@/assets/images/korean.svg"
 import ChineseIcon from "@/assets/images/chinese.svg"
@@ -31,10 +32,10 @@ export function FoodTypeFilterSection({
   const isDarkMode = useColorScheme() === "dark"
   const { width: screenWidth } = useWindowDimensions()
 
-  const textColor = isDarkMode ? "#ABABB4" : "#474758"
-  const defaultBorder = isDarkMode ? "#313138" : "#EAEAF0"
-  const selectedBorder = "#FF7246"
-  const headingColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
+  const defaultBorder = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const selectedBorder = tokens.color.primaryAccent.val
+  const headingColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
 
   const availableWidth = screenWidth - HORIZONTAL_PADDING * 2
   const cardWidth = (availableWidth - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS

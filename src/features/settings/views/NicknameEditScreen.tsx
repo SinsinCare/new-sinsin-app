@@ -23,6 +23,7 @@ import { ApiError } from "@/src/services/core/apiError"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { showErrorToast } from "@/src/lib/toast"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,8}$/
 
@@ -235,10 +236,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "#94A3B8",
   },
   inputRowValid: {
-    borderBottomColor: "#44AF94",
+    borderBottomColor: tokens.color.sub6.val,
   },
   inputRowError: {
-    borderBottomColor: "#EF4444",
+    borderBottomColor: tokens.color.restrictionText.val,
   },
   textInput: {
     flex: 1,
@@ -253,9 +254,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   validText: {
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   invalidText: {
-    color: "#EF4444",
+    color: tokens.color.restrictionText.val,
   },
 })

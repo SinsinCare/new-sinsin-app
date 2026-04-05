@@ -1,15 +1,16 @@
 import { useCallback } from "react"
 import { Pressable, useColorScheme, View } from "react-native"
 import { Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 const COLORS = {
   light: {
-    active: "#2A2A37",
-    inactive: "#A5A5AF",
+    active: tokens.color.textLight.val,
+    inactive: tokens.color.textLightSub.val,
   },
   dark: {
-    active: "#E7E7EE",
-    inactive: "#595960",
+    active: tokens.color.textDark.val,
+    inactive: tokens.color.textLightMuted.val,
   },
 } as const
 

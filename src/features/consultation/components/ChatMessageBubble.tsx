@@ -4,6 +4,7 @@ import { Image } from "expo-image"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
 
 function formatTime(date: Date): string {
@@ -43,7 +44,7 @@ const markdownStylesLight = StyleSheet.create({
   body: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#2A2A37",
+    color: tokens.color.textLight.val,
     fontFamily: "Pretendard-Regular",
   },
   strong: {
@@ -72,7 +73,7 @@ const markdownStylesDark = StyleSheet.create({
   body: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#E7E7EE",
+    color: tokens.color.textDark.val,
     fontFamily: "Pretendard-Regular",
   },
   strong: {
@@ -111,7 +112,7 @@ export function UserBubble({ message }: { message: Message }) {
         {formatTime(message.createdAt)}
       </Text>
       <YStack
-        backgroundColor={isDarkMode ? "#2E2E34" : "#FDFDFD"}
+        backgroundColor={isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val}
         borderRadius="$6"
         borderBottomRightRadius="1"
         paddingHorizontal="$3"
@@ -120,7 +121,7 @@ export function UserBubble({ message }: { message: Message }) {
       >
         <Text
           fontSize="$4"
-          color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+          color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
           lineHeight={22}
         >
           {message.content}
@@ -143,7 +144,7 @@ export function AssistantBubble({
 }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
-  const iconColor = isDarkMode ? "#66666B" : "#A5A5AF"
+  const iconColor = isDarkMode ? "#66666B" : tokens.color.textLightSub.val
 
   return (
     <XStack paddingHorizontal="$4" gap="$2.5" alignItems="flex-start">

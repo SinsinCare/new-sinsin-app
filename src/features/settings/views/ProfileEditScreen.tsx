@@ -11,6 +11,7 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { api } from "@/src/services/core/apiClient"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 type Gender = "MALE" | "FEMALE" | "OTHER"
 
@@ -159,7 +160,7 @@ export function ProfileEditScreen() {
                     gender === opt.key && {
                       backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4",
                       borderWidth: 1.4,
-                      borderColor: "#44AF94",
+                      borderColor: tokens.color.sub6.val,
                     },
                   ]}
                   onPress={() => setGender(opt.key)}
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   genderRow: {
     flexDirection: "row",
@@ -301,6 +302,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   genderChipTextSelected: {
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
 })

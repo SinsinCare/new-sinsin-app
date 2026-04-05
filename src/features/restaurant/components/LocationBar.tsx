@@ -1,16 +1,17 @@
 import { useColorScheme } from "react-native"
 import { XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 import { useCurrentAddress } from "../hooks/useCurrentAddress"
 
 const COLORS = {
   light: {
-    border: "#E7E7EE",
-    text: "#2A2A37",
+    border: tokens.color.textDark.val,
+    text: tokens.color.textLight.val,
   },
   dark: {
-    border: "#313138",
-    text: "#E7E7EE",
+    border: tokens.color.cardBgDark.val,
+    text: tokens.color.textDark.val,
   },
 } as const
 

@@ -4,15 +4,16 @@ import React, { useMemo } from "react"
 import { HapticTab } from "@/components/haptic-tab"
 import { Icon } from "@/src/shared/components"
 import { useColorScheme } from "react-native"
+import { tokens } from "@/src/theme/tokens"
 
 export default function TabLayout() {
   const isDarkMode = useColorScheme() === "dark"
   const styles = useMemo(
     () => ({
-      activeColor: isDarkMode ? "#E7E7EE" : "#2A2A37",
-      inactiveColor: isDarkMode ? "#595960" : "#A5A5AF",
-      backgroundColor: isDarkMode ? "#1f1f21" : "#FDFDFD",
-      borderColor: isDarkMode ? "#313138" : "#EAEAF0",
+      activeColor: isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val,
+      inactiveColor: isDarkMode ? tokens.color.textLightMuted.val : tokens.color.textLightSub.val,
+      backgroundColor: isDarkMode ? tokens.color.appBgDark.val : tokens.color.offWhite.val,
+      borderColor: isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val,
     }),
     [isDarkMode],
   )

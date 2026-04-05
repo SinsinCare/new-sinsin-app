@@ -3,6 +3,7 @@
  * 사용해야 color prop으로 런타임 색상 변경이 가능합니다.
  */
 import { SvgProps } from "react-native-svg"
+import { tokens } from "@/src/theme/tokens"
 import Chef from "@/assets/icons/chef.svg"
 import Chat from "@/assets/icons/chat.svg"
 import CheckColor from "@/assets/icons/check-color.svg"
@@ -149,7 +150,7 @@ interface IconProps extends Omit<SvgProps, "width" | "height"> {
 export function Icon({
   name,
   size = 24,
-  color = "#A5A5AF",
+  color = tokens.color.textLightSub.val,
   ...props
 }: IconProps) {
   const SvgComponent = icons[name]

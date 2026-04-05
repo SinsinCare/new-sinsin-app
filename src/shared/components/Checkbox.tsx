@@ -31,8 +31,8 @@ export function Checkbox({
           height={size}
           borderRadius={4}
           borderWidth={1.5}
-          borderColor={checked ? "#44AF94" : uncheckedBorder}
-          backgroundColor={checked ? "#44AF94" : uncheckedBg}
+          borderColor={checked ? tokens.color.sub6.val : uncheckedBorder}
+          backgroundColor={checked ? tokens.color.sub6.val : uncheckedBg}
           alignItems="center"
           justifyContent="center"
           opacity={disabled ? 0.5 : 1}

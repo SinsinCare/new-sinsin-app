@@ -14,6 +14,7 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import type { PlaceRestaurant } from "../types"
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window")
@@ -21,7 +22,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window")
 const NUTRIENT_INFO: Record<string, { label: string; color: string; bg: string; desc: string }> = {
   저염: {
     label: "저염",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
     bg: "#F0FDF4",
     desc: "소디움 함량을 낮춰 신장 부담을 줄입니다",
   },
@@ -162,7 +163,7 @@ export function RestaurantDetailScreen({ restaurant }: Props) {
               <View style={styles.divider} />
               <View style={styles.healthSection}>
                 <View style={styles.healthHeader}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#0D896A" />
+                  <Ionicons name="shield-checkmark-outline" size={18} color={tokens.color.sub8.val} />
                   <ThemedText style={styles.healthTitle}>신장 건강 적합 정보</ThemedText>
                 </View>
                 {healthTags.map((tag) => {
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
   healthTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   healthCard: {
     flexDirection: "row",

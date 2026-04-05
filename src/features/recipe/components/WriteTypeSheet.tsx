@@ -2,6 +2,7 @@ import { Pressable, useColorScheme } from "react-native"
 import { Sheet } from "@tamagui/sheet"
 import { YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 
 export type WriteType = "recipe" | "free"
 
@@ -37,8 +38,8 @@ const ICON_COLOR = {
 } as const
 
 const TITLE_COLOR = {
-  light: "#2A2A37",
-  dark: "#E7E7EE",
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
 } as const
 
 const DESC_COLOR = {

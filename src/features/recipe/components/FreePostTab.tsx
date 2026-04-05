@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { ScrollView, useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { useRouter } from "expo-router"
 import { FilterChip } from "./FilterChip"
 import { PopularPostCard } from "./PopularPostCard"
@@ -15,13 +16,13 @@ const POPULAR_POST_SECTION_BG_COLOR = {
 } as const
 
 const SECTION_TITLE_COLORS = {
-  light: "#2A2A37",
-  dark: "#E7E7EE",
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
 } as const
 
 const CATEGORY_TITLE_COLORS = {
-  light: "#2A2A37",
-  dark: "#E7E7EE",
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
 } as const
 
 export function FreePostTab() {

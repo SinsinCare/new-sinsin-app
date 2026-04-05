@@ -1,5 +1,6 @@
 import { useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 export default function RecipeEditScreen() {
   const colorScheme = useColorScheme()
@@ -10,13 +11,13 @@ export default function RecipeEditScreen() {
       flex={1}
       alignItems="center"
       justifyContent="center"
-      backgroundColor={isDark ? "#1F1F21" : "#FCFCFC"}
+      backgroundColor={isDark ? tokens.color.appBgDark.val : tokens.color.offWhite.val}
     >
       <Text
         fontSize={18}
         fontWeight="600"
         fontFamily="$body"
-        color={isDark ? "#E7E7EE" : "#2A2A37"}
+        color={isDark ? tokens.color.textDark.val : tokens.color.textLight.val}
       >
         레시피 수정
       </Text>

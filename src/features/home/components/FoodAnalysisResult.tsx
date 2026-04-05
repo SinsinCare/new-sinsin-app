@@ -513,7 +513,7 @@ export function FoodAnalysisResult({
             </Text>
             <Text
               fontSize={12}
-              color={isDarkMode ? "#5BC5AB" : "#0D896A"}
+              color={isDarkMode ? "#5BC5AB" : tokens.color.sub8.val}
               fontWeight="500"
               onPress={() => {
                 onClose()

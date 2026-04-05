@@ -1,6 +1,7 @@
 import { Alert, Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 import { reportService } from "@/src/services/reportService"
 import type { ReportReason } from "@/src/services/reportService"
 
@@ -18,19 +19,19 @@ interface PostListItemProps {
 
 const ITEM_COLORS = {
   light: {
-    title: "#2A2A37",
+    title: tokens.color.textLight.val,
     summary: "#666677",
     meta: "#8E8E93",
     iconColor: "#E78A63D9",
-    iconTextColor: "#2A2A37",
+    iconTextColor: tokens.color.textLight.val,
     divider: "#CACBD5",
   },
   dark: {
-    title: "#E7E7EE",
+    title: tokens.color.textDark.val,
     summary: "#858591",
     meta: "#858591",
     iconColor: "#E78A63D9",
-    iconTextColor: "#E7E7EE",
+    iconTextColor: tokens.color.textDark.val,
     divider: "#4E4F55",
   },
 } as const

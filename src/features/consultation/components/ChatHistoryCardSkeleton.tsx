@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useColorScheme, View } from "react-native"
+import { tokens } from "@/src/theme/tokens"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,7 +35,7 @@ export function ChatHistoryCardSkeleton() {
   return (
     <View
       style={{
-        backgroundColor: isDarkMode ? "#2E2E34" : "#FDFDFD",
+        backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
         borderRadius: 16,
         paddingHorizontal: 20,
         paddingVertical: 14,

@@ -17,6 +17,7 @@ import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { passwordService } from "@/src/services"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 // 영문 대문자, 소문자, 숫자, 특수문자 포함 6~18자
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
@@ -219,10 +220,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   inputRowValid: {
-    borderBottomColor: "#44AF94",
+    borderBottomColor: tokens.color.sub6.val,
   },
   inputRowError: {
-    borderBottomColor: "#EF4444",
+    borderBottomColor: tokens.color.restrictionText.val,
   },
   textInput: {
     flex: 1,
@@ -237,15 +238,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   validText: {
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   invalidText: {
-    color: "#EF4444",
+    color: tokens.color.restrictionText.val,
   },
   errorText: {
     fontSize: 13,
     lineHeight: 18,
-    color: "#EF4444",
+    color: tokens.color.restrictionText.val,
     paddingHorizontal: 20,
     paddingBottom: 8,
   },

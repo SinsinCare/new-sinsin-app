@@ -1,20 +1,21 @@
 import { useColorScheme } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Image } from "expo-image"
+import { tokens } from "@/src/theme/tokens"
 import type { Restaurant } from "../types"
 
 const COLORS = {
   light: {
-    text: "#2A2A37",
+    text: tokens.color.textLight.val,
     description: "#8E8E93",
     tagBg: "#F2F2F7",
     tagText: "#636366",
   },
   dark: {
-    text: "#E7E7EE",
+    text: tokens.color.textDark.val,
     description: "#8E8E93",
-    tagBg: "#313138",
-    tagText: "#ABABB4",
+    tagBg: tokens.color.cardBgDark.val,
+    tagText: tokens.color.textDarkSub.val,
   },
 } as const
 

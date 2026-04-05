@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { UPLOAD_TIPS } from "@/src/features/health/data/mock"
@@ -154,7 +155,7 @@ export function HealthDataUploadScreen() {
               <Ionicons
                 name="camera-outline"
                 size={18}
-                color={canAdd ? "#44AF94" : "#C5C8CE"}
+                color={canAdd ? tokens.color.sub6.val : tokens.color.grey7.val}
               />
               <ThemedText
                 style={[
@@ -180,7 +181,7 @@ export function HealthDataUploadScreen() {
               <Ionicons
                 name="images-outline"
                 size={18}
-                color={canAdd ? "#44AF94" : "#C5C8CE"}
+                color={canAdd ? tokens.color.sub6.val : tokens.color.grey7.val}
               />
               <ThemedText
                 style={[
@@ -208,7 +209,7 @@ export function HealthDataUploadScreen() {
               <Ionicons
                 name="checkmark-circle"
                 size={16}
-                color="#44AF94"
+                color={tokens.color.sub6.val}
                 style={styles.tipIcon}
               />
               <ThemedText style={styles.tipText}>{tip}</ThemedText>
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   attachCount: {
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   clearAllText: {
     fontSize: 13,
@@ -357,10 +358,10 @@ const styles = StyleSheet.create({
   pickButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   pickButtonTextDisabled: {
-    color: "#C5C8CE",
+    color: tokens.color.grey7.val,
   },
   pickDivider: {
     width: 1,

@@ -3,6 +3,7 @@ import { View, Switch, StyleSheet, Platform } from "react-native"
 
 import { ThemedText } from "@/components/themed-text"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 interface ToggleItemProps {
   title: string
@@ -42,7 +43,7 @@ export function ToggleItem({
         onValueChange={onValueChange}
         trackColor={{
           false: c.isDark ? "#3A3A42" : "#E5E7EB",
-          true: "#0D896A",
+          true: tokens.color.sub8.val,
         }}
         thumbColor="#FFFFFF"
         ios_backgroundColor={c.isDark ? "#3A3A42" : "#E5E7EB"}

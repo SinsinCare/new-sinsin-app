@@ -20,13 +20,13 @@ import { tokens } from "@/src/theme/tokens"
 function useInfoColors() {
   const isDark = useColorScheme() === "dark"
   return {
-    bg: isDark ? tokens.color.appBgDark.val : "#F8F9FA",
+    bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
     cardBg: isDark ? tokens.color.cardBgDark.val : "#FFF",
     text: isDark ? tokens.color.textDark.val : "#111",
     textSub: isDark ? tokens.color.textDarkSub.val : "#999",
     textValue: isDark ? tokens.color.textDark.val : "#333",
     icon: isDark ? tokens.color.textDarkSub.val : "#333",
-    border: isDark ? "#3A3A42" : "#E0E0E0",
+    border: isDark ? tokens.color.borderDark.val : "#E0E0E0",
   }
 }
 

@@ -51,7 +51,7 @@ export function ChatHistoryCard({
     setMenuOpen(true)
   }
 
-  const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const textColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
   const deleteColor = tokens.color.primary9.val
 
   return (
@@ -60,7 +60,7 @@ export function ChatHistoryCard({
         onPress={onPress}
         style={({ pressed }) => ({
           opacity: pressed ? 0.7 : 1,
-          backgroundColor: isDarkMode ? "#2E2E34" : "#FDFDFD",
+          backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
           borderRadius: 16,
           paddingHorizontal: 20,
           paddingVertical: 14,
@@ -72,7 +72,7 @@ export function ChatHistoryCard({
               fontSize={15}
               lineHeight={20}
               fontWeight="600"
-              color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+              color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
               flex={1}
               numberOfLines={1}
             >
@@ -86,7 +86,7 @@ export function ChatHistoryCard({
               <Ionicons
                 name="ellipsis-horizontal"
                 size={20}
-                color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
               />
             </Pressable>
           </XStack>
@@ -95,7 +95,7 @@ export function ChatHistoryCard({
             fontSize={14}
             lineHeight={20}
             fontWeight="400"
-            color={isDarkMode ? "#ABABB4" : "#474758"}
+            color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
             numberOfLines={2}
           >
             {content}
@@ -125,7 +125,7 @@ export function ChatHistoryCard({
               {
                 top: menuPosition.top,
                 right: menuPosition.right,
-                backgroundColor: isDarkMode ? "#2E2E34" : "#FFFFFF",
+                backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.pureWhite.val,
                 shadowOpacity: isDarkMode ? 0.4 : 0.15,
               },
             ]}

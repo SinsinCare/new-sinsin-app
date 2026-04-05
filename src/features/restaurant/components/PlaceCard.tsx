@@ -2,6 +2,7 @@ import { Image, Pressable, StyleSheet, useColorScheme } from "react-native"
 import { ScrollView } from "react-native-gesture-handler"
 import { Text, XStack, YStack } from "tamagui"
 import { useRouter } from "expo-router"
+import { tokens } from "@/src/theme/tokens"
 import type { PlaceRestaurant } from "../types"
 
 interface PlaceCardProps {
@@ -11,9 +12,9 @@ interface PlaceCardProps {
 export function PlaceCard({ restaurant }: PlaceCardProps) {
   const isDarkMode = useColorScheme() === "dark"
   const router = useRouter()
-  const restaurantTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const restaurantTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
   const borderColor = isDarkMode ? "#2A2A2E" : "#F0F0F0"
-  const subTextColor = isDarkMode ? "#ABABB4" : "#8E8E93"
+  const subTextColor = isDarkMode ? tokens.color.textDarkSub.val : "#8E8E93"
 
   return (
     <Pressable

@@ -10,6 +10,7 @@ import { emailService } from "@/src/services"
 import { passwordService } from "@/src/services"
 import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
 import { useAuthColors } from "../hooks"
+import { tokens } from "@/src/theme/tokens"
 
 const TIMER_DURATION = 180
 const BUTTON_WIDTH = 100
@@ -220,7 +221,7 @@ export function ForgotPasswordScreen() {
                         backgroundColor={
                           sendingCode || (step === "otp" && timer > 0)
                             ? colors.disabledBtn
-                            : "#44AF94"
+                            : tokens.color.sub6.val
                         }
                         borderRadius={8}
                         height={52}
@@ -272,7 +273,7 @@ export function ForgotPasswordScreen() {
                       >
                         <YStack
                           backgroundColor={
-                            verifyingCode ? colors.disabledBtn : "#44AF94"
+                            verifyingCode ? colors.disabledBtn : tokens.color.sub6.val
                           }
                           borderRadius={8}
                           height={52}
@@ -294,7 +295,7 @@ export function ForgotPasswordScreen() {
                   {sendError && (
                     <Text
                       fontSize={13}
-                      color="#FF3B30"
+                      color={tokens.color.error.val}
                       letterSpacing={-0.26}
                       paddingTop={8}
                     >
@@ -304,7 +305,7 @@ export function ForgotPasswordScreen() {
                   {!sendError && timer > 0 && (
                     <Text
                       fontSize={13}
-                      color="#FF3B30"
+                      color={tokens.color.error.val}
                       letterSpacing={-0.26}
                       paddingTop={8}
                     >
@@ -314,7 +315,7 @@ export function ForgotPasswordScreen() {
                   {!sendError && timer === 0 && codeSent && (
                     <Text
                       fontSize={13}
-                      color="#FF3B30"
+                      color={tokens.color.error.val}
                       letterSpacing={-0.26}
                       paddingTop={8}
                     >
@@ -359,8 +360,8 @@ export function ForgotPasswordScreen() {
               <YStack
                 backgroundColor={
                   passwordForm.formState.isValid && !resettingPassword
-                    ? "#44AF94"
-                    : "#44AF9440"
+                    ? tokens.color.sub6.val
+                    : tokens.color.sub6.val + "40"
                 }
                 paddingVertical={16}
                 paddingHorizontal={24}

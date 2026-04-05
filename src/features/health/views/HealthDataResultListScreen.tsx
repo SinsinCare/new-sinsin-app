@@ -12,6 +12,7 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { nhisService } from "@/src/services/data/nhisService"
 import type { HealthCheckResultsRs } from "@/src/types/nhis"
@@ -110,7 +111,7 @@ export function HealthDataResultListScreen() {
 
       {loading && (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#44AF94" />
+          <ActivityIndicator size="large" color={tokens.color.sub6.val} />
         </View>
       )}
 
@@ -176,7 +177,7 @@ export function HealthDataResultListScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={14}
-                      color="#44AF94"
+                      color={tokens.color.sub6.val}
                     />
                   </View>
                 </Pressable>
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
   },
   tabActive: {
-    borderBottomColor: "#44AF94",
+    borderBottomColor: tokens.color.sub6.val,
   },
   tabText: {
     fontSize: 14,
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
   },
   tabTextActive: {
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
     fontWeight: "600",
   },
   center: {
@@ -281,11 +282,11 @@ const styles = StyleSheet.create({
   },
   countHighlight: {
     fontWeight: "700",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   viewAllText: {
     fontSize: 13,
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
     fontWeight: "500",
   },
   latestCard: {
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   latestBadge: {
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -331,7 +332,7 @@ const styles = StyleSheet.create({
   latestDetailText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   listSection: {
     gap: 0,

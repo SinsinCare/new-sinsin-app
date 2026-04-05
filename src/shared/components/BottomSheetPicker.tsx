@@ -13,6 +13,7 @@ import {
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { tokens } from "@/src/theme/tokens"
 
 const SCREEN_HEIGHT = Dimensions.get("window").height
 const SHEET_MAX_HEIGHT = SCREEN_HEIGHT * 0.5
@@ -48,16 +49,16 @@ export function BottomSheetPicker({
   const selectedOption = options.find((o) => o.value === value)
 
   const colors = {
-    label: isDark ? "#E7E7EE" : "#17191C",
+    label: isDark ? tokens.color.textDark.val : "#17191C",
     placeholder: isDark ? "#6B7280" : "#A0A4A8",
     inputBg: isDark ? "#2A2A32" : "white",
-    inputBorder: isDark ? "#3A3A42" : "rgba(218,223,230,0.6)",
-    chevron: isDark ? "#ABABB4" : "#787C83",
+    inputBorder: isDark ? tokens.color.borderDark.val : "rgba(218,223,230,0.6)",
+    chevron: isDark ? tokens.color.textDarkSub.val : "#787C83",
     sheetBg: isDark ? "#2A2A32" : "white",
-    handle: isDark ? "#3A3A42" : "#E0E0E0",
-    selectedBg: isDark ? "#3A3A42" : "#F5F6FF",
+    handle: isDark ? tokens.color.borderDark.val : "#E0E0E0",
+    selectedBg: isDark ? tokens.color.borderDark.val : "#F5F6FF",
     selectedText: "#5464F2",
-    itemText: isDark ? "#E7E7EE" : "#17191C",
+    itemText: isDark ? tokens.color.textDark.val : "#17191C",
   }
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export function BottomSheetPicker({
             {label}
           </Text>
           {required && (
-            <Text fontSize={13} fontWeight="500" color="#FF3B30">
+            <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
               {" "}
               *
             </Text>

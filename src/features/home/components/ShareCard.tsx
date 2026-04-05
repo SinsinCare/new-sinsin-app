@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 380,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: tokens.color.pureWhite.val,
     borderRadius: 20,
     padding: 22,
   },
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: tokens.color.grey1.val,
   },
   imageWrapper: {
     borderRadius: 14,
@@ -240,11 +240,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: tokens.color.grey1.val,
     flexShrink: 1,
   },
   mealBadge: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: tokens.color.grey8.val,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -252,17 +252,17 @@ const styles = StyleSheet.create({
   mealBadgeText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#4B5563",
+    color: tokens.color.grey4.val,
   },
   calorieValue: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: tokens.color.grey1.val,
   },
   calorieUnit: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#9CA3AF",
+    color: tokens.color.grey6.val,
   },
   macroDot: {
     width: 8,
@@ -272,29 +272,29 @@ const styles = StyleSheet.create({
   macroText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#6B7280",
+    color: tokens.color.grey5.val,
   },
   barSegment: {
     alignItems: "center",
     justifyContent: "center",
   },
   barLabel: {
-    color: "#FFFFFF",
+    color: tokens.color.pureWhite.val,
     fontSize: 10,
     fontWeight: "700",
   },
   nutrientLabel: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#9CA3AF",
+    color: tokens.color.grey6.val,
   },
   nutrientValue: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: tokens.color.grey1.val,
   },
   commentBox: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: tokens.color.appBg.val,
     borderRadius: 12,
     padding: 12,
     marginTop: 8,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#374151",
+    color: tokens.color.grey3.val,
     lineHeight: 20,
   },
   footerIcon: {
@@ -313,6 +313,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#9CA3AF",
+    color: tokens.color.grey6.val,
   },
 })

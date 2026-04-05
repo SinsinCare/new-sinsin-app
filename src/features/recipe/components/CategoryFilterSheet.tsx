@@ -4,6 +4,7 @@ import { Pressable, ScrollView, useColorScheme } from "react-native"
 import { Sheet } from "@tamagui/sheet"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 import { FilterChip } from "./FilterChip"
 
 interface CategoryFilterSheetProps {
@@ -59,12 +60,12 @@ const CHIP_THEME = {
 
 const HEADER_COLORS = {
   light: { close: "#3C3C43", title: "#3C3C43", apply: "#EE6145" },
-  dark: { close: "#E7E7EE", title: "#E7E7EE", apply: "#E77661" },
+  dark: { close: tokens.color.textDark.val, title: tokens.color.textDark.val, apply: "#E77661" },
 } as const
 
 const SECTION_TITLE_COLORS = {
-  light: "#2A2A37",
-  dark: "#E7E7EE",
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
 } as const
 
 const SHEET_BG = {

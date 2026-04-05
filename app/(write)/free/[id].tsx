@@ -19,22 +19,23 @@ import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { LoadingScreen } from "@/src/shared/components"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
+import { tokens } from "@/src/theme/tokens"
 
-const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
-const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: "#E7E7EE" } as const
+const BG_COLOR = { light: tokens.color.offWhite.val, dark: "#2A2A30" } as const
+const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: tokens.color.textDark.val } as const
 const REGISTER_ACTIVE_COLOR = { light: "#44AF94", dark: "#44AF94" } as const
 const REGISTER_DISABLED_COLOR = { light: "#81818D", dark: "#81818D" } as const
 const CATEGORY_LABEL_COLOR = { light: "#666677", dark: "#858591" } as const
-const CATEGORY_VALUE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
-const SELECT_BTN_BG = { light: "#EAEAF0", dark: "#2A2A30" } as const
+const CATEGORY_VALUE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val } as const
+const SELECT_BTN_BG = { light: tokens.color.borderLight.val, dark: "#2A2A30" } as const
 const SELECT_BTN_TEXT = { light: "#81818D", dark: "#C5C8CE" } as const
-const DIVIDER_COLOR = { light: "#E5E5EA", dark: "#1F1F21" } as const
-const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" } as const
+const DIVIDER_COLOR = { light: "#E5E5EA", dark: tokens.color.appBgDark.val } as const
+const TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val } as const
 const TITLE_PLACEHOLDER_COLOR = { light: "#666677", dark: "#858591" } as const
-const BODY_PLACEHOLDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
-const PRIMARY_BAR_COLOR = { light: "#F1F1F3", dark: "#1F1F21" } as const
+const BODY_PLACEHOLDER_COLOR = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val } as const
+const PRIMARY_BAR_COLOR = { light: "#F1F1F3", dark: tokens.color.appBgDark.val } as const
 const TOOLBAR_ICON_COLOR = { light: "#666677", dark: "#F5F6FA" } as const
-const TOOLBAR_BORDER_COLOR = { light: "#A5A5AF", dark: "#595960" } as const
+const TOOLBAR_BORDER_COLOR = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val } as const
 
 export default function FreePostEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()

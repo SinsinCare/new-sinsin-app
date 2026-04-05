@@ -25,6 +25,7 @@ import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
 import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
 import type { RecipePostFilters } from "@/src/features/recipe/types"
+import { tokens } from "@/src/theme/tokens"
 
 // Chip key → label mapping for CategoryFilterSheet
 const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
@@ -264,7 +265,7 @@ export default function RecipeScreen() {
             </YStack>
             <View
               height={6}
-              backgroundColor={isDarkMode ? "#313138" : "#E7E7EE"}
+              backgroundColor={isDarkMode ? tokens.color.cardBgDark.val : tokens.color.grey8.val}
             />
             <ScrollView
               style={{ flex: 1 }}
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 26,
     right: 16,
-    backgroundColor: "#FF7246",
+    backgroundColor: tokens.color.primaryAccent.val,
     borderRadius: 24,
     paddingHorizontal: 15,
     paddingVertical: 8,

@@ -27,7 +27,7 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
         >
           성별
         </Text>
-        <Text fontSize={13} fontWeight="500" color="#FF3B30">
+        <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
           {" "}
           *
         </Text>
@@ -38,7 +38,7 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             height={52}
             borderRadius={8}
             borderWidth={1}
-            borderColor={value === "male" ? "#44AF94" : unselectedBorder}
+            borderColor={value === "male" ? tokens.color.sub6.val : unselectedBorder}
             backgroundColor={value === "male" ? selectedBg : unselectedBg}
             alignItems="center"
             justifyContent="center"
@@ -46,7 +46,7 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             <Text
               fontSize={16}
               fontWeight={value === "male" ? "600" : "400"}
-              color={value === "male" ? "#0D896A" : unselectedText}
+              color={value === "male" ? tokens.color.sub8.val : unselectedText}
               letterSpacing={-0.3}
             >
               남자
@@ -58,7 +58,7 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             height={52}
             borderRadius={8}
             borderWidth={1}
-            borderColor={value === "female" ? "#44AF94" : unselectedBorder}
+            borderColor={value === "female" ? tokens.color.sub6.val : unselectedBorder}
             backgroundColor={value === "female" ? selectedBg : unselectedBg}
             alignItems="center"
             justifyContent="center"
@@ -66,7 +66,7 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
             <Text
               fontSize={16}
               fontWeight={value === "female" ? "600" : "400"}
-              color={value === "female" ? "#0D896A" : unselectedText}
+              color={value === "female" ? tokens.color.sub8.val : unselectedText}
               letterSpacing={-0.3}
             >
               여자

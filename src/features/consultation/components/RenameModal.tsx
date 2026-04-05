@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native"
 import { Text, XStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 interface RenameModalProps {
   visible: boolean
@@ -40,10 +41,10 @@ export function RenameModal({
     }
   }
 
-  const textColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
-  const secondaryTextColor = isDarkMode ? "#ABABB4" : "#81818D"
-  const cardBg = isDarkMode ? "#1F1F21" : "#FFFFFF"
-  const borderColor = isDarkMode ? "#313138" : "#EAEAF0"
+  const textColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const secondaryTextColor = isDarkMode ? tokens.color.textDarkSub.val : "#81818D"
+  const cardBg = isDarkMode ? tokens.color.appBgDark.val : tokens.color.pureWhite.val
+  const borderColor = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
   const backdropBg = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.3)"
 
   return (

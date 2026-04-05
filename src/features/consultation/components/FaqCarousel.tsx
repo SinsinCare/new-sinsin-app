@@ -8,6 +8,7 @@ import {
   useColorScheme,
 } from "react-native"
 import { XStack, YStack, View, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { FREQUENTLY_ASKED_QUESTIONS } from "../data/mockData"
 import type { FaqCardEntry } from "../types"
 
@@ -80,14 +81,14 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                     <Text
                       fontSize="18"
                       fontWeight="700"
-                      color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                      color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
                       numberOfLines={1}
                     >
                       {faq.title}
                     </Text>
                     <Text
                       fontSize="14"
-                      color={isDarkMode ? "#ABABB4" : "#474758"}
+                      color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
                       lineHeight={18}
                       numberOfLines={3}
                     >
@@ -120,14 +121,14 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                       <Text
                         fontSize="18"
                         fontWeight="700"
-                        color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                        color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
                         numberOfLines={1}
                       >
                         {faq.title}
                       </Text>
                       <Text
                         fontSize="14"
-                        color={isDarkMode ? "#ABABB4" : "#474758"}
+                        color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
                         lineHeight={18}
                         numberOfLines={3}
                       >
@@ -151,7 +152,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
             width={8}
             height={8}
             borderRadius={4}
-            backgroundColor={index === activeIndex ? "#44af94" : "$grey7"}
+            backgroundColor={index === activeIndex ? tokens.color.sub6.val : "$grey7"}
           />
         ))}
       </XStack>

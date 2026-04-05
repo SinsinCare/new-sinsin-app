@@ -22,6 +22,7 @@ import { useUserStore } from "@/src/stores/userStore"
 import { api } from "@/src/services/core/apiClient"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 const COMORBIDITY_OPTIONS = [
   { key: "DIABETES", label: "당뇨" },
@@ -162,7 +163,7 @@ export function KidneyProfileEditScreen() {
 
         {/* 단백질 권장 섭취량 안내 */}
         <View style={[styles.proteinHintBox, { backgroundColor: greenTintBg }]}>
-          <Ionicons name="information-circle-outline" size={15} color="#0D896A" />
+          <Ionicons name="information-circle-outline" size={15} color={tokens.color.sub8.val} />
           <ThemedText style={styles.proteinHintText}>
             {weightVal && !isNaN(parseFloat(weightVal))
               ? `체중 ${weightVal}kg → 하루 단백질 ${Math.round(parseFloat(weightVal) * 0.8)}g 이내 권장 (1kg당 0.8g)`
@@ -187,7 +188,7 @@ export function KidneyProfileEditScreen() {
                 ckdStage === stage && {
                   backgroundColor: greenTintBg,
                   borderWidth: 1.4,
-                  borderColor: "#44AF94",
+                  borderColor: tokens.color.sub6.val,
                 },
               ]}
               onPress={() => setCkdStage(stage)}
@@ -208,7 +209,7 @@ export function KidneyProfileEditScreen() {
         {/* 투석 여부 */}
         <View style={[styles.dialysisBox, { marginTop: 12, borderColor: c.isDark ? c.border : "#F1F5F9" }]}>
           <View style={[styles.dialysisIconContainer, { backgroundColor: greenTintBg }]}>
-            <Ionicons name="pulse-outline" size={24} color="#0D896A" />
+            <Ionicons name="pulse-outline" size={24} color={tokens.color.sub8.val} />
           </View>
           <View style={styles.dialysisInfo}>
             <ThemedText style={[styles.dialysisTitle, { color: c.text }]}>현재 투석 여부</ThemedText>
@@ -219,7 +220,7 @@ export function KidneyProfileEditScreen() {
           <Switch
             value={onDialysis}
             onValueChange={setOnDialysis}
-            trackColor={{ false: c.border, true: "#0D896A" }}
+            trackColor={{ false: c.border, true: tokens.color.sub8.val }}
             thumbColor="#FFFFFF"
             ios_backgroundColor={c.border}
           />
@@ -259,7 +260,7 @@ export function KidneyProfileEditScreen() {
                 selectedCauses.includes(index) && {
                   backgroundColor: greenTintBg,
                   borderWidth: 1.4,
-                  borderColor: "#44AF94",
+                  borderColor: tokens.color.sub6.val,
                 },
               ]}
               onPress={() => toggleCause(index)}
@@ -301,7 +302,7 @@ export function KidneyProfileEditScreen() {
                 selectedComorbidities.includes(opt.key) && {
                   backgroundColor: greenTintBg,
                   borderWidth: 1.4,
-                  borderColor: "#44AF94",
+                  borderColor: tokens.color.sub6.val,
                 },
               ]}
               onPress={() => toggleComorbidity(opt.key)}
@@ -351,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 16 * 1.4,
     fontWeight: "600",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   subsectionTitle: {
     fontSize: 14,
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   inputLabel: {
     fontSize: 12,
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     lineHeight: 17,
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   inputGroup: {
     flex: 1,
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   stageButtonTextSelected: {
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   dialysisBox: {
     flexDirection: "row",
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 8,
     paddingVertical: 16,
     paddingHorizontal: 24,

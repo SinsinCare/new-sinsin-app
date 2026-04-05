@@ -1,6 +1,7 @@
 import { Alert, Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 import { reportService } from "@/src/services/reportService"
 import type { ReportReason } from "@/src/services/reportService"
 
@@ -19,8 +20,8 @@ interface PopularPostCardProps {
 const CARD_COLORS = {
   light: {
     background: "#FDFDFD",
-    category: "#44AF94",
-    title: "#2A2A37",
+    category: tokens.color.sub6.val,
+    title: tokens.color.textLight.val,
     summary: "#474758",
     meta: "#8E8E93",
     iconColor: "#E78A63D9",
@@ -29,10 +30,10 @@ const CARD_COLORS = {
   dark: {
     background: "#36363E",
     category: "#5BC5AB",
-    title: "#E7E7EE",
-    summary: "#ABABB4",
+    title: tokens.color.textDark.val,
+    summary: tokens.color.textDarkSub.val,
     meta: "#858591",
-    iconTextColor: "#ABABB4",
+    iconTextColor: tokens.color.textDarkSub.val,
     iconColor: "#E78A63D9",
   },
 } as const

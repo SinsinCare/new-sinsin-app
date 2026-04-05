@@ -46,7 +46,7 @@ export function WelcomeStepContent({
               <Text
                 fontSize={17}
                 fontWeight={isSelected ? "700" : "500"}
-                color={isSelected ? "#0D896A" : unselectedText}
+                color={isSelected ? tokens.color.sub8.val : unselectedText}
                 letterSpacing={-0.3}
                 textAlign="center"
               >

@@ -3,6 +3,7 @@ import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
 import { useSignupComplete, useAuthColors } from "../hooks"
+import { tokens } from "@/src/theme/tokens"
 
 export function SignupCompleteScreen() {
   const insets = useSafeAreaInsets()
@@ -17,7 +18,7 @@ export function SignupCompleteScreen() {
             width={80}
             height={80}
             borderRadius={40}
-            backgroundColor="#44AF94"
+            backgroundColor={tokens.color.sub6.val}
             alignItems="center"
             justifyContent="center"
           >
@@ -49,7 +50,7 @@ export function SignupCompleteScreen() {
         <YStack paddingBottom={insets.bottom + 24}>
           <Pressable onPress={handleStart}>
             <YStack
-              backgroundColor="#44AF94"
+              backgroundColor={tokens.color.sub6.val}
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}

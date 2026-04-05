@@ -29,18 +29,19 @@ import {
   CUISINE_TAGS,
 } from "@/src/features/recipe/data/recipeTags"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
+import { tokens } from "@/src/theme/tokens"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" }
-const HEADER_TEXT = { light: "#3C3C43", dark: "#E7E7EE" }
-const REGISTER_ACTIVE = { light: "#44AF94", dark: "#44AF94" }
+const HEADER_TEXT = { light: "#3C3C43", dark: tokens.color.textDark.val }
+const REGISTER_ACTIVE = { light: tokens.color.sub6.val, dark: tokens.color.sub6.val }
 const REGISTER_DISABLED = { light: "#81818D", dark: "#81818D" }
 const DIVIDER = { light: "#E5E5EA", dark: "#1F1F21" }
-const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
-const PLACEHOLDER = { light: "#A5A5AF", dark: "#595960" }
+const TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const PLACEHOLDER = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
 const LABEL_COLOR = { light: "#666677", dark: "#858591" }
-const SECTION_TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
-const INPUT_BORDER_COLOR = { light: "#A5A5AF", dark: "#858591" }
-const SECTION_LABEL = { light: "#2A2A37", dark: "#E7E7EE" }
+const SECTION_TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const INPUT_BORDER_COLOR = { light: tokens.color.textLightSub.val, dark: "#858591" }
+const SECTION_LABEL = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
 const PRIMARY_BAR = { light: "#F1F1F3", dark: "#1F1F21" }
 
 const MAX_TOTAL_IMAGES = 10

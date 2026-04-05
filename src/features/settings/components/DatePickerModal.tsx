@@ -4,6 +4,7 @@ import { Modal, View, Pressable, ScrollView, StyleSheet } from "react-native"
 import { ThemedText } from "@/components/themed-text"
 import { MONTHS, YEARS } from "@/src/features/settings/data/constants"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 interface DatePickerModalProps {
   visible: boolean
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
   confirmText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   columns: {
     flexDirection: "row",
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   pickerItemTextSelected: {
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
     fontWeight: "600",
   },
 })

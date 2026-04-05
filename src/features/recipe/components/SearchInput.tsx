@@ -5,16 +5,17 @@ import {
   type TextInputProps,
 } from "react-native"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 
 const COLORS = {
   light: {
-    border: "#ABABB4",
+    border: tokens.color.textDarkSub.val,
     text: "#3C3C43",
     placeholder: "#9A9A9A",
-    icon: "#595960",
+    icon: tokens.color.textLightMuted.val,
   },
   dark: {
-    border: "#595960",
+    border: tokens.color.textLightMuted.val,
     text: "#72727A",
     placeholder: "#72727A",
     icon: "#72727A",

@@ -8,6 +8,7 @@ import { FormTextField } from "@/src/shared/components"
 import { BirthDatePicker } from "../components/BirthDatePicker"
 import { GenderSelector } from "../components/GenderSelector"
 import { useProfileSetup, useAuthColors } from "../hooks"
+import { tokens } from "@/src/theme/tokens"
 import type { ProfileForm } from "../types"
 
 export function ProfileSetupScreen() {
@@ -81,7 +82,7 @@ export function ProfileSetupScreen() {
                 >
                   이름
                 </Text>
-                <Text fontSize={13} fontWeight="500" color="#FF3B30">
+                <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
                   {" "}
                   *
                 </Text>
@@ -117,7 +118,7 @@ export function ProfileSetupScreen() {
         <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
           <Pressable onPress={handleSubmit(handleNext)} disabled={!isValid}>
             <YStack
-              backgroundColor={isValid ? "#44AF94" : "#44AF9440"}
+              backgroundColor={isValid ? tokens.color.sub6.val : tokens.color.sub6.val + "40"}
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}

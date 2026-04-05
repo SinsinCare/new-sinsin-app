@@ -2,6 +2,7 @@ import React from "react"
 import { View, Pressable, StyleSheet } from "react-native"
 
 import { ThemedText } from "@/components/themed-text"
+import { tokens } from "@/src/theme/tokens"
 
 interface BottomActionBarProps {
   label: string
@@ -39,14 +40,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   button: {
-    backgroundColor: "#44AF9459",
+    backgroundColor: `${tokens.color.sub6.val}59`,
     borderRadius: 8,
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: "center",
   },
   buttonActive: {
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
   },
   buttonText: {
     fontSize: 16,

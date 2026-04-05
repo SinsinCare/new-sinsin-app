@@ -30,6 +30,7 @@ import { useChat } from "@/src/features/consultation/hooks/useChat"
 import { YStack, Text, XStack } from "tamagui"
 import { Chip } from "@/src/shared/components/Chip"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
 import {
@@ -90,7 +91,7 @@ export default function ConsultScreen() {
 
   const isIdle = messages.length === 0 && !isTyping
   const canSend = !!inputMessage.trim() && !isTyping && !isSending
-  const menuTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const menuTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
 
   const handleHistoryPress = () => {
     Keyboard.dismiss()
@@ -223,7 +224,7 @@ export default function ConsultScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: isDarkMode ? "#1F1F21" : "#FAFAFA",
+        backgroundColor: isDarkMode ? tokens.color.appBgDark.val : tokens.color.appBg.val,
         paddingTop: insets.top,
       }}
     >
@@ -245,7 +246,7 @@ export default function ConsultScreen() {
                 fontSize="18"
                 lineHeight={20}
                 fontWeight="600"
-                color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
               >
                 {"신신당부 AI에게\n무엇이든 물어보세요"}
               </Text>
@@ -260,7 +261,7 @@ export default function ConsultScreen() {
               <YStack alignItems="center" gap={4} paddingHorizontal={24}>
                 <Text
                   fontSize={11}
-                  color={isDarkMode ? "#595960" : "#A5A5AF"}
+                  color={isDarkMode ? tokens.color.textLightMuted.val : tokens.color.textLightSub.val}
                   textAlign="center"
                   lineHeight={16}
                 >
@@ -337,7 +338,7 @@ export default function ConsultScreen() {
           <View
             style={{
               ...styles.inputContainer,
-              backgroundColor: isDarkMode ? "#2E2E34" : "#FDFDFD",
+              backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
             }}
           >
             <TextInput
@@ -348,7 +349,7 @@ export default function ConsultScreen() {
               multiline
               style={{
                 ...styles.input,
-                color: isDarkMode ? "#E7E7EE" : "#2A2A37",
+                color: isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val,
               }}
               editable={!isTyping}
               onFocus={handleInputFocus}
@@ -360,7 +361,7 @@ export default function ConsultScreen() {
                 <Icon
                   name="plus"
                   size={24}
-                  color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                  color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
                 />
               </Pressable> */}
               <View />
@@ -371,7 +372,7 @@ export default function ConsultScreen() {
                   ...styles.sendButton,
                   backgroundColor: canSend
                     ? isDarkMode
-                      ? "#ABABB4"
+                      ? tokens.color.textDarkSub.val
                       : "#474758"
                     : isDarkMode
                       ? "#4E4F55"
@@ -381,7 +382,7 @@ export default function ConsultScreen() {
                 <Icon
                   name="fly-chat"
                   size={16}
-                  color={isDarkMode ? "#E7E7EE" : "#FDFDFD"}
+                  color={isDarkMode ? tokens.color.textDark.val : tokens.color.offWhite.val}
                 />
               </Pressable>
             </XStack>
@@ -442,7 +443,7 @@ export default function ConsultScreen() {
               {
                 bottom: attachMenuPosition.bottom,
                 left: attachMenuPosition.left,
-                backgroundColor: isDarkMode ? "#2E2E34" : "#FFFFFF",
+                backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.pureWhite.val,
                 shadowOpacity: isDarkMode ? 0.4 : 0.15,
               },
             ]}

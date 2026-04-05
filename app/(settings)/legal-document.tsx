@@ -17,7 +17,7 @@ import { tokens } from "@/src/theme/tokens"
 function useLegalColors() {
   const isDark = useColorScheme() === "dark"
   return {
-    bg: isDark ? tokens.color.appBgDark.val : "#F8F9FA",
+    bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
     headerText: isDark ? tokens.color.textDark.val : "#111",
     heading: isDark ? tokens.color.textDark.val : "#111",
     heading2: isDark ? "#D4D4DA" : "#222",

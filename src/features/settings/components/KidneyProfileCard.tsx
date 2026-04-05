@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons"
 
 import { ThemedText } from "@/components/themed-text"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 const COMORBIDITY_LABEL: Record<string, string> = {
   DIABETES: "당뇨",
@@ -81,7 +82,7 @@ export function KidneyProfileCard({
                 { backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4" },
               ]}
             >
-              <Ionicons name="bar-chart-outline" size={24} color="#0D896A" />
+              <Ionicons name="bar-chart-outline" size={24} color={tokens.color.sub8.val} />
             </View>
             <View style={styles.ckdTextBlock}>
               <ThemedText style={[styles.ckdLabel, { color: c.textSub }]}>
@@ -130,7 +131,7 @@ export function KidneyProfileCard({
           {comorbidities && comorbidities.length > 0 && (
             <View style={styles.comorbiditySection}>
               <View style={styles.comorbidityHeader}>
-                <Ionicons name="ellipse" size={11} color="#0D896A" />
+                <Ionicons name="ellipse" size={11} color={tokens.color.sub8.val} />
                 <ThemedText style={styles.comorbidityTitle}>
                   동반 질환
                 </ThemedText>
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   ckdRow: {
     flexDirection: "row",
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   comorbidityChips: {
     flexDirection: "row",

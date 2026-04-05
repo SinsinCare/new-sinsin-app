@@ -1,9 +1,10 @@
 import { View, useColorScheme, StyleSheet } from "react-native"
 import type { ContentBlock } from "@/src/features/recipe/types"
+import { tokens } from "@/src/theme/tokens"
 import { TextBlock } from "./TextBlock"
 import { ImageBlock } from "./ImageBlock"
 
-const BORDER_COLOR = { light: "#A5A5AF", dark: "#858591" }
+const BORDER_COLOR = { light: tokens.color.textLightSub.val, dark: "#858591" }
 
 interface BlockEditorProps {
   blocks: ContentBlock[]

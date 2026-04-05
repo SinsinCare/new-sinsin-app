@@ -19,7 +19,7 @@ import { tokens } from "@/src/theme/tokens"
 function usePrivacyColors() {
   const isDark = useColorScheme() === "dark"
   return {
-    bg: isDark ? tokens.color.appBgDark.val : "#F8F9FA",
+    bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
     cardBg: isDark ? tokens.color.cardBgDark.val : "#FFF",
     text: isDark ? tokens.color.textDark.val : "#333",
     textSub: isDark ? tokens.color.textDarkSub.val : "#999",
@@ -27,7 +27,7 @@ function usePrivacyColors() {
     icon: isDark ? tokens.color.textDarkSub.val : "#555",
     iconChevron: isDark ? "#6B7280" : "#CCC",
     iconBack: isDark ? tokens.color.textDarkSub.val : "#333",
-    border: isDark ? "#3A3A42" : "#F0F0F0",
+    border: isDark ? tokens.color.borderDark.val : "#F0F0F0",
     pressedBg: isDark ? "#2A2A32" : "#F9F9F9",
   }
 }
@@ -61,11 +61,11 @@ const MenuItem = ({
       <Ionicons
         name={icon}
         size={22}
-        color={danger ? "#E53E3E" : colors.icon}
+        color={danger ? tokens.color.restrictionText.val : colors.icon}
         style={styles.menuIcon}
       />
       <ThemedText
-        style={[styles.menuTitle, { color: danger ? "#E53E3E" : colors.text }]}
+        style={[styles.menuTitle, { color: danger ? tokens.color.restrictionText.val : colors.text }]}
       >
         {title}
       </ThemedText>

@@ -15,6 +15,7 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 // -----------------------------------------
 // 데이터 타입 정의
@@ -180,7 +181,7 @@ const ICON_BG: Record<ReferenceItem["iconColor"], string> = {
 }
 
 const ICON_STROKE: Record<ReferenceItem["iconColor"], string> = {
-  teal: "#44AF94",
+  teal: tokens.color.sub6.val,
   blue: "#1E6FBF",
   orange: "#C47A1A",
   purple: "#7C5CBF",
@@ -328,7 +329,7 @@ export function MedicalReferenceScreen() {
             <Ionicons
               name="information-circle-outline"
               size={18}
-              color="#44AF94"
+              color={tokens.color.sub6.val}
             />
           </View>
           <View style={styles.infoTextWrap}>
@@ -556,7 +557,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
   },
   updateText: {
     flex: 1,
@@ -589,7 +590,7 @@ const styles = StyleSheet.create({
   },
   disclaimerLink: {
     fontSize: 12,
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   disclaimerSep: {
     fontSize: 12,
