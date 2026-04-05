@@ -1,4 +1,4 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Keyboard, Pressable, TouchableWithoutFeedback, useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -124,6 +124,7 @@ export function OnboardingScreen() {
   }
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
       <OnboardingHeader
         currentStepIndex={currentStepIndex}
@@ -209,5 +210,6 @@ export function OnboardingScreen() {
         </YStack>
       </YStack>
     </YStack>
+    </TouchableWithoutFeedback>
   )
 }
