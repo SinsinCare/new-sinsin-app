@@ -25,7 +25,8 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "AI 상담원과의 음성 대화를 위해 마이크 접근 권한이 필요합니다.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": ["instagram-stories", "instagram"]
       }
     },
     "android": {

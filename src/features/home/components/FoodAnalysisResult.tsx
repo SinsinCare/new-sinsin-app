@@ -1,9 +1,20 @@
-import { Modal, ScrollView, Image, useColorScheme } from "react-native"
-import { useState } from "react"
+import {
+  Modal,
+  ScrollView,
+  Image,
+  useColorScheme,
+  Alert,
+  ActionSheetIOS,
+  Platform,
+} from "react-native"
+import { useState, useRef, useCallback } from "react"
 import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import ViewShot, { captureRef } from "react-native-view-shot"
+import * as Sharing from "expo-sharing"
+import Share, { Social } from "react-native-share"
 import { tokens } from "@/src/theme/tokens"
 import type {
   FoodAnalysisUpdateRequest,
@@ -16,6 +27,7 @@ import { MacroBar } from "./record/MacroBar"
 import { Icon } from "@/src/shared/components/Icon"
 import { FoodResultEdit } from "./FoodResultEdit"
 import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
+import { ShareCard } from "./ShareCard"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -61,6 +73,86 @@ export function FoodAnalysisResult({
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
   const isDarkMode = useColorScheme() === "dark"
+  const shareCardRef = useRef<ViewShot>(null)
+  const FACEBOOK_APP_ID = "1306082818293951"
+
+  const handleShare = useCallback(async () => {
+    if (!shareCardRef.current) return
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["인스타그램 스토리에 공유", "다른 앱으로 공유", "취소"],
+          cancelButtonIndex: 2,
+        },
+        async (buttonIndex) => {
+          try {
+            if (buttonIndex === 0) {
+              // base64로 캡처하여 Instagram Stories에 직접 공유
+              const base64 = await captureRef(shareCardRef, {
+                format: "png",
+                quality: 1,
+                result: "base64",
+              })
+              await Share.shareSingle({
+                social: Social.InstagramStories,
+                appId: FACEBOOK_APP_ID,
+                stickerImage: `data:image/png;base64,${base64}`,
+                backgroundBottomColor: "#FFFFFF",
+                backgroundTopColor: "#FFFFFF",
+              })
+            } else if (buttonIndex === 1) {
+              // 파일로 캡처하여 시스템 공유 시트
+              const uri = await captureRef(shareCardRef, {
+                format: "png",
+                quality: 1,
+                result: "tmpfile",
+              })
+              if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(uri, {
+                  mimeType: "image/png",
+                  UTI: "public.png",
+                })
+              }
+            }
+          } catch {
+            Alert.alert(
+              "공유 실패",
+              "인스타그램이 설치되어 있는지 확인해주세요.",
+            )
+          }
+        },
+      )
+    } else {
+      // Android: Instagram Stories 시도 후 실패 시 일반 공유
+      try {
+        const base64 = await captureRef(shareCardRef, {
+          format: "png",
+          quality: 1,
+          result: "base64",
+        })
+        await Share.shareSingle({
+          social: Social.InstagramStories,
+          appId: FACEBOOK_APP_ID,
+          stickerImage: `data:image/png;base64,${base64}`,
+          backgroundBottomColor: "#FFFFFF",
+          backgroundTopColor: "#FFFFFF",
+        })
+      } catch {
+        const uri = await captureRef(shareCardRef, {
+          format: "png",
+          quality: 1,
+          result: "tmpfile",
+        })
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, {
+            mimeType: "image/png",
+            UTI: "public.png",
+          })
+        }
+      }
+    }
+  }, [])
 
   if (!result) return null
 
@@ -94,7 +186,22 @@ export function FoodAnalysisResult({
           paddingBottom={10}
           backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
         >
-          <View width={40} />
+          <XStack
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            onPress={handleShare}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <Ionicons
+              name="share-outline"
+              size={22}
+              color={
+                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
+              }
+            />
+          </XStack>
           <Text
             fontSize="$5"
             fontWeight="600"
@@ -481,6 +588,14 @@ export function FoodAnalysisResult({
           </YStack>
         )}
       </YStack>
+
+      {/* 공유 카드 (offscreen) */}
+      <ShareCard
+        ref={shareCardRef}
+        result={result}
+        imageUri={imageUri}
+        mealType={mealType}
+      />
 
       {/* 나가기 확인 오버레이 */}
       {showExitConfirm && (

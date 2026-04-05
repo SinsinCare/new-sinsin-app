@@ -1,6 +1,8 @@
-# sinsin-rn
+# 신신당부 (Sinsin Dangbu)
 
-신신당부 (Sinsin Dangbu) - 만성신장질환(CKD) 환자를 위한 한국어 건강관리 모바일 앱
+만성신장질환(CKD) 환자를 위한 건강관리 모바일 앱
+
+[![App Store](https://img.shields.io/badge/App_Store-available-blue?logo=apple&logoColor=white)](https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186)
 
 ## 프로젝트 개요
 
@@ -11,7 +13,16 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 - CKD 단계별(1-5단계) 건강 추적 및 투석 상태 관리
 - AI 기반 음식 사진 분석 (신장 건강 안전도 평가)
 - AI 건강 상담 챗봇
-- 일일 건강 기록 및 영양소 추적
+- 일일 건강 기록 및 영양소 추적 (나트륨, 칼륨, 인, 단백질)
+- 수분 섭취 및 체중/부종 관리
+- 신장 친화 레시피 커뮤니티
+- 인스타그램 스토리 공유 (식단 분석 결과 카드)
+
+### 다운로드
+
+<a href="https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186">
+  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40">
+</a>
 
 ## 기술 스택
 
