@@ -177,18 +177,40 @@ npx expo run:ios --device
 
 Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
 
-### EAS 빌드 (TestFlight / 스토어)
+### Android (에뮬레이터 및 실제 디바이스)
+
+1.  **폰 설정**: 실제 디바이스인 경우 '설정 > 휴대전화 정보 > 소프트웨어 정보'에서 '빌드 번호'를 연타하여 **개발자 옵션**을 활성화하고, **USB 디버깅**을 켭니다.
+2.  **명령어 실행**:
+    ```bash
+    npm run android
+    ```
+    *   또는 `npx expo run:android`를 사용하여 네이티브 빌드 후 실행할 수 있습니다.
+
+### EAS 빌드 (테스트용 / 스토어 배포)
 
 환경 변수는 `eas.json`에 프로파일별로 설정되어 있어 별도 작업 불필요.
 
+#### iOS
 ```bash
-# iOS
+# Production (App Store)
 eas build --platform ios --profile production
 eas submit --platform ios --latest --profile production
 
-# Android
+# Development Build
+eas build --platform ios --profile development
+```
+
+#### Android
+```bash
+# Production (Google Play Store)
 eas build --platform android --profile production
 eas submit --platform android --latest
+
+# Preview (설치용 APK 생성)
+eas build --platform android --profile preview
+
+# Development Build (개발용 앱 생성)
+eas build --platform android --profile development
 ```
 
 ### 로컬에서 iOS 개발 빌드 (Xcode)

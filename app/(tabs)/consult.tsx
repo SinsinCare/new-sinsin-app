@@ -243,7 +243,7 @@ export default function ConsultScreen() {
             <YStack flex={1} justifyContent="center" gap="$5">
               <Text
                 textAlign="center"
-                fontSize="18"
+                fontSize={18}
                 lineHeight={20}
                 fontWeight="600"
                 color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
@@ -307,13 +307,13 @@ export default function ConsultScreen() {
         {/* Bottom Composer */}
         <YStack
           backgroundColor="transparent"
-          paddingVertical="8"
-          paddingHorizontal="16"
+          paddingVertical={8}
+          paddingHorizontal={16}
         >
           {showToast && <CopyToast message="답변을 복사했습니다." />}
           {isIdle && isInputFocused && (
             <>
-              <Text fontSize="12" color="#81818d" lineHeight={16}>
+              <Text fontSize={12} color="#81818d" lineHeight={16}>
                 카테고리
               </Text>
               <ScrollView

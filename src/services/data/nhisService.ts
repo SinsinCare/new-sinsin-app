@@ -1,4 +1,4 @@
-import { api } from "@/src/services"
+import { api } from "../core"
 import {
   AuthMethodRs,
   HealthCheckConfirmRs,

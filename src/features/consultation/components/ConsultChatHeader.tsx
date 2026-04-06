@@ -16,7 +16,7 @@ export function ConsultChatHeader({
   return (
     <>
       <XStack
-        paddingHorizontal="20"
+        paddingHorizontal={20}
         paddingVertical="$3"
         alignItems="center"
         justifyContent="space-between"

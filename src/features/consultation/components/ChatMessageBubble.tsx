@@ -1,11 +1,11 @@
-import { Pressable, StyleSheet } from "react-native"
+import { Pressable, StyleSheet, useColorScheme } from "react-native"
 import Markdown from "react-native-markdown-display"
-import { Image } from "expo-image"
 import { YStack, Text, XStack, View } from "tamagui"
-import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
+import SinDark from "@/assets/images/Sin_dark.svg"
+import SinLight from "@/assets/images/Sin_light.svg"
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
@@ -19,6 +19,8 @@ export function AssistantAvatar() {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
 
+  const SvgComponent = isDarkMode ? SinDark : SinLight
+
   return (
     <View
       width={36}
@@ -27,15 +29,7 @@ export function AssistantAvatar() {
       overflow="hidden"
       marginTop="$1"
     >
-      <Image
-        source={
-          isDarkMode
-            ? require("@/assets/images/Sin_dark.svg")
-            : require("@/assets/images/Sin_light.svg")
-        }
-        style={{ width: 36, height: 36 }}
-        contentFit="cover"
-      />
+      <SvgComponent width={36} height={36} />
     </View>
   )
 }
@@ -114,7 +108,7 @@ export function UserBubble({ message }: { message: Message }) {
       <YStack
         backgroundColor={isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val}
         borderRadius="$6"
-        borderBottomRightRadius="1"
+        borderBottomRightRadius={1}
         paddingHorizontal="$3"
         paddingVertical="$2.5"
         maxWidth="70%"

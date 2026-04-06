@@ -30,8 +30,7 @@ export function FilterTabBar({ activeTab, onTabChange, onClose }: FilterTabBarPr
       paddingHorizontal={16}
       paddingTop={insets.top + 8}
       paddingBottom={12}
-      borderBottomWidth={1}
-      borderBottomColor={borderColor}
+      style={{ borderBottomWidth: 1, borderBottomColor: borderColor }}
     >
       <XStack flex={1} gap={16}>
         {TABS.map((tab) => {
@@ -44,8 +43,7 @@ export function FilterTabBar({ activeTab, onTabChange, onClose }: FilterTabBarPr
                 fontSize={16}
                 color={isActive ? activeTextColor : inactiveTextColor}
                 paddingBottom={8}
-                borderBottomWidth={isActive ? 2 : 0}
-                borderBottomColor={activeTextColor}
+                style={{ borderBottomWidth: isActive ? 2 : 0, borderBottomColor: activeTextColor }}
               >
                 {tab.label}
               </Text>

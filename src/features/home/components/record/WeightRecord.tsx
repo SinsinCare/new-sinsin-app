@@ -52,7 +52,7 @@ export function WeightRecord({
             paddingVertical="$2"
             paddingHorizontal="$3"
             borderColor="$borderColor"
-            borderWidth={isDarkMode ? "0" : "1"}
+            borderWidth={isDarkMode ? 0 : 1}
             borderRadius="$4"
           >
             <Text
@@ -103,7 +103,7 @@ export function WeightRecord({
             paddingVertical="$2"
             paddingHorizontal="$3"
             borderColor="$borderColor"
-            borderWidth={isDarkMode ? "0" : "1"}
+            borderWidth={isDarkMode ? 0 : 1}
             borderRadius="$4"
           >
             <Text

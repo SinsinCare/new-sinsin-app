@@ -378,10 +378,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
           paddingVertical={10}
           paddingBottom={isKeyboardVisible ? 10 : 10 + insets.bottom}
           alignItems="center"
-          borderTopWidth={StyleSheet.hairlineWidth}
-          borderTopColor={
-            isDark ? TOOLBAR_BORDER_COLOR.dark : TOOLBAR_BORDER_COLOR.light
-          }
+          style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: isDark ? TOOLBAR_BORDER_COLOR.dark : TOOLBAR_BORDER_COLOR.light }}
           backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
         >
           <XStack gap={20} flex={1}>

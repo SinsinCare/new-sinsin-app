@@ -74,12 +74,12 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                   <YStack
                     backgroundColor={isDarkMode ? "#252529" : "#F3F3F3"}
                     borderRadius={16}
-                    padding="16"
+                    padding={16}
                     gap="$2"
                     minHeight={120}
                   >
                     <Text
-                      fontSize="18"
+                      fontSize={18}
                       fontWeight="700"
                       color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
                       numberOfLines={1}
@@ -87,7 +87,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                       {faq.title}
                     </Text>
                     <Text
-                      fontSize="14"
+                      fontSize={14}
                       color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
                       lineHeight={18}
                       numberOfLines={3}
@@ -114,12 +114,12 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                     <YStack
                       backgroundColor={isDarkMode ? "#252529" : "#F3F3F3"}
                       borderRadius={16}
-                      padding="16"
+                      padding={16}
                       gap="$2"
                       minHeight={120}
                     >
                       <Text
-                        fontSize="18"
+                        fontSize={18}
                         fontWeight="700"
                         color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
                         numberOfLines={1}
@@ -127,7 +127,7 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
                         {faq.title}
                       </Text>
                       <Text
-                        fontSize="14"
+                        fontSize={14}
                         color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
                         lineHeight={18}
                         numberOfLines={3}

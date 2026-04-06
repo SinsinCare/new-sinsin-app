@@ -32,8 +32,7 @@ export function LocationBar() {
       gap={6}
       paddingHorizontal={16}
       paddingVertical={8}
-      borderBottomWidth={2}
-      borderBottomColor={color.border}
+      style={{ borderBottomWidth: 2, borderBottomColor: color.border }}
     >
       <Icon name="location" size={24} color={color.text} />
       <Text

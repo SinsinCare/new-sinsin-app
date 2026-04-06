@@ -7,7 +7,7 @@ import type {
   TokenRefreshResult,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
-import { publicApi, tokenService } from "@/src/services"
+import { publicApi, tokenService } from "../core"
 import { ApiError } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
 

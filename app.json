@@ -26,7 +26,10 @@
       "infoPlist": {
         "NSMicrophoneUsageDescription": "AI 상담원과의 음성 대화를 위해 마이크 접근 권한이 필요합니다.",
         "ITSAppUsesNonExemptEncryption": false,
-        "LSApplicationQueriesSchemes": ["instagram-stories", "instagram"]
+        "LSApplicationQueriesSchemes": [
+          "instagram-stories",
+          "instagram"
+        ]
       }
     },
     "android": {
@@ -84,6 +87,16 @@
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4"
+        }
+      ],
+      "expo-image",
+      "expo-sharing",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "newArchEnabled": false
+          }
         }
       ]
     ],

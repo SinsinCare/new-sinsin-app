@@ -29,6 +29,8 @@ export default function TabLayout() {
           paddingHorizontal: 25,
           borderTopWidth: 1,
           borderTopColor: styles.borderColor,
+          borderBottomWidth: 0,
+          elevation: 0,
         },
       }}
     >

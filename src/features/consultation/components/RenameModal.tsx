@@ -91,7 +91,7 @@ export function RenameModal({
             />
           </View>
 
-          <XStack borderTopWidth={1} borderColor={borderColor}>
+          <XStack style={{ borderTopWidth: 1, borderColor }}>
             <Pressable
               onPress={onCancel}
               style={({ pressed }) => ({

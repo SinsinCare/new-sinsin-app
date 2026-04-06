@@ -10,7 +10,7 @@ import type {
   FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
-import { api } from "@/src/services"
+import { api } from "../core"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"

@@ -28,8 +28,7 @@ export function EditorToolbar({
       paddingHorizontal={20}
       paddingVertical={10}
       paddingBottom={isKeyboardVisible ? 10 : 10 + insets.bottom}
-      borderTopWidth={StyleSheet.hairlineWidth}
-      borderTopColor={TOOLBAR_BORDER[scheme]}
+      style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: TOOLBAR_BORDER[scheme] }}
       backgroundColor={TOOLBAR_BG[scheme]}
       alignItems="center"
     >

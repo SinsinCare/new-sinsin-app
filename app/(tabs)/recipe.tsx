@@ -26,6 +26,7 @@ import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
 import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
 import type { RecipePostFilters } from "@/src/features/recipe/types"
 import { tokens } from "@/src/theme/tokens"
+import { MealRecommendationSection } from "@/src/features/meal-recommendation/components/MealRecommendationSection"
 
 // Chip key → label mapping for CategoryFilterSheet
 const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
@@ -271,6 +272,10 @@ export default function RecipeScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{ padding: 16 }}
             >
+              {/* 점메추/저메추 추천 섹션 */}
+              <YStack marginBottom={16}>
+                <MealRecommendationSection category="recipe" />
+              </YStack>
               <XStack gap={12}>
                 <YStack flex={1} gap={12}>
                   {leftColumn.map((item) => (

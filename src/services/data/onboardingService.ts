@@ -4,7 +4,7 @@ import type {
   OnboardingAnswer,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
-import { api } from "@/src/services"
+import { api } from "../core"
 import {
   convertStepRsToSteps,
   convertAnswersToSubmitRq,

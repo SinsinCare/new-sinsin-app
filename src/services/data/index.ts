@@ -1,6 +1,4 @@
 export { onboardingService } from "./onboardingService"
-export { foodCameraService } from "./foodCameraService"
 export { chatApiService } from "./chatApiService"
+export { foodCameraService } from "./foodCameraService"
 export { nhisService } from "./nhisService"
-export { kidneyProfileService } from "./kidneyProfileService"
-export type { KidneyProfile } from "./kidneyProfileService"
