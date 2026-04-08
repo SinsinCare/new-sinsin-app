@@ -16,6 +16,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",

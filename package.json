@@ -81,7 +81,10 @@
     "zustand": "5.0.11"
   },
   "overrides": {
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.0",
+    "zeego": {
+      "@react-native-menu/menu": "$@react-native-menu/menu"
+    }
   },
   "devDependencies": {
     "@types/form-data": "^2.2.1",
