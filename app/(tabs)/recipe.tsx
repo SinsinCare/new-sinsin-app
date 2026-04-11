@@ -209,6 +209,7 @@ export default function RecipeScreen() {
   }, [recipes])
 
   return (
+    <YStack flex={1}>
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
       <YStack
         flex={1}
@@ -366,6 +367,36 @@ export default function RecipeScreen() {
         </Pressable>
       </YStack>
     </Pressable>
+    {/* Coming soon overlay */}
+    <View
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      backgroundColor="rgba(0,0,0,0.55)"
+      alignItems="center"
+      justifyContent="center"
+      zIndex={999}
+    >
+      <View
+        backgroundColor="white"
+        borderRadius={20}
+        paddingHorizontal={32}
+        paddingVertical={24}
+        alignItems="center"
+        gap={10}
+      >
+        <Text fontSize={32}>🚧</Text>
+        <Text fontSize={17} fontWeight="700" color="#1F1F21" fontFamily="$body">
+          곧 출시 예정이에요
+        </Text>
+        <Text fontSize={13} color="#8E8E93" textAlign="center" fontFamily="$body">
+          더 나은 서비스를 준비하고 있어요
+        </Text>
+      </View>
+    </View>
+    </YStack>
   )
 }
 

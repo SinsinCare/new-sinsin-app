@@ -1,20 +1,32 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { useColorScheme } from "react-native"
-import { YStack, View } from "tamagui"
+import { YStack, View, Text, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { RestaurantTabHeader } from "@/src/features/restaurant/components/RestaurantTabHeader"
 import { RestaurantSearchInput } from "@/src/features/restaurant/components/RestaurantSearchInput"
 import { KakaoMapWebView } from "@/src/features/restaurant/components/KakaoMapWebView"
 import { CurationTab } from "@/src/features/restaurant/components/CurationTab"
 import { PlaceSheet } from "@/src/features/restaurant/components/PlaceSheet"
-import { MOCK_PLACE_RESTAURANTS, MAP_CENTER } from "@/src/features/restaurant/data/curationData"
+import { MAP_CENTER } from "@/src/features/restaurant/data/curationData"
 import { DEFAULT_FILTER_STATE } from "@/src/features/restaurant/data/filterData"
-import type { FilterState } from "@/src/features/restaurant/types"
+import {
+  restaurantService,
+  type NearbyRestaurantItem,
+} from "@/src/services/data/restaurantService"
+import type { FilterState, PlaceRestaurant } from "@/src/features/restaurant/types"
 
 const TABS = [
   { key: "place", label: "장소" },
   { key: "curation", label: "식당 큐레이션" },
 ]
+
+const CUISINE_TYPE_MAP: Record<string, string> = {
+  KOREAN: "한식",
+  JAPANESE: "일식",
+  CHINESE: "중식",
+  WESTERN: "양식",
+  ETC: "세계음식",
+}
 
 const REGION_COORDS: Record<string, { latitude: number; longitude: number; zoomLevel: number }> = {
   서울: { latitude: 37.5665, longitude: 126.9780, zoomLevel: 6 },
@@ -49,12 +61,48 @@ const SEOUL_SUBREGION_COORDS: Record<string, { latitude: number; longitude: numb
   "구로/관악/동작": { latitude: 37.4955, longitude: 126.9268 },
 }
 
+function toPlaceRestaurant(item: NearbyRestaurantItem): PlaceRestaurant {
+  const cuisineTag = CUISINE_TYPE_MAP[item.cuisineType] || "기타"
+  const tags = [cuisineTag]
+  if (item.safeMenuCount > 0) tags.push("저염")
+  if (item.highRiskMenuCount === 0 && item.menuCount > 0) tags.push("안심")
+
+  const distStr =
+    item.distanceKm < 1
+      ? `${Math.round(item.distanceKm * 1000)}m`
+      : `${item.distanceKm}km`
+
+  const parts: string[] = []
+  if (item.menuCount > 0) parts.push(`메뉴 ${item.menuCount}개`)
+  if (item.safeMenuCount > 0) parts.push(`안심 메뉴 ${item.safeMenuCount}개`)
+  const description = parts.length > 0 ? parts.join(" · ") : cuisineTag
+
+  return {
+    id: String(item.restaurantId),
+    name: item.name,
+    tags,
+    description,
+    distance: distStr,
+    address: item.address || "",
+    latitude: item.lat,
+    longitude: item.lng,
+    images: [],
+    cuisineType: item.cuisineType,
+    menuCount: item.menuCount,
+    safeMenuCount: item.safeMenuCount,
+    cautionMenuCount: item.cautionMenuCount,
+    highRiskMenuCount: item.highRiskMenuCount,
+  }
+}
+
 export default function RestaurantScreen() {
   const insets = useSafeAreaInsets()
   const isDarkMode = useColorScheme() === "dark"
   const [activeTab, setActiveTab] = useState("place")
   const [search, setSearch] = useState("")
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE)
+  const [restaurants, setRestaurants] = useState<PlaceRestaurant[]>([])
+  const [loading, setLoading] = useState(false)
 
   const mapCenter = useMemo(() => {
     if (filters.subRegions.length > 0) {
@@ -63,7 +111,6 @@ export default function RestaurantScreen() {
         const coords = SEOUL_SUBREGION_COORDS[specific]
         if (coords) return { ...coords, zoomLevel: 5 }
       }
-      // "서울 전체" selected
       return { latitude: 37.5665, longitude: 126.9780, zoomLevel: 6 }
     }
     if (filters.region) {
@@ -73,8 +120,43 @@ export default function RestaurantScreen() {
     return { latitude: MAP_CENTER.latitude, longitude: MAP_CENTER.longitude, zoomLevel: 5 }
   }, [filters.region, filters.subRegions])
 
+  const fetchRestaurants = useCallback(async () => {
+    setLoading(true)
+    try {
+      const foodTypeToApi: Record<string, string> = {
+        한식: "KOREAN",
+        중식: "CHINESE",
+        일식: "JAPANESE",
+        양식: "WESTERN",
+        세계음식: "ETC",
+      }
+      const cuisineType =
+        filters.foodTypes.length === 1
+          ? foodTypeToApi[filters.foodTypes[0]]
+          : undefined
+
+      const data = await restaurantService.fetchNearby(
+        mapCenter.latitude,
+        mapCenter.longitude,
+        3000,
+        cuisineType,
+      )
+      setRestaurants(data.map(toPlaceRestaurant))
+    } catch {
+      setRestaurants([])
+    } finally {
+      setLoading(false)
+    }
+  }, [mapCenter.latitude, mapCenter.longitude, filters.foodTypes])
+
+  useEffect(() => {
+    if (activeTab === "place") {
+      fetchRestaurants()
+    }
+  }, [activeTab, fetchRestaurants])
+
   const filteredRestaurants = useMemo(() => {
-    return MOCK_PLACE_RESTAURANTS.filter((r) => {
+    return restaurants.filter((r) => {
       if (search.trim()) {
         const q = search.trim().toLowerCase()
         const matches =
@@ -86,16 +168,9 @@ export default function RestaurantScreen() {
       }
       if (filters.foodTypes.length > 0 && !filters.foodTypes.some((t) => r.tags.includes(t)))
         return false
-      if (filters.subRegions.length > 0 && !filters.subRegions.includes("서울 전체")) {
-        if (!filters.subRegions.some((reg) => r.address.includes(reg))) return false
-      } else if (filters.region) {
-        if (!r.address.includes(filters.region)) return false
-      }
-      if (filters.nutrients.length > 0 && !filters.nutrients.some((n) => r.tags.includes(n)))
-        return false
       return true
     })
-  }, [search, filters])
+  }, [search, restaurants, filters.foodTypes])
 
   return (
     <YStack
@@ -114,12 +189,21 @@ export default function RestaurantScreen() {
             <RestaurantSearchInput value={search} onChangeText={setSearch} />
           </YStack>
           <View flex={1} marginTop={12}>
-            <KakaoMapWebView
-              latitude={mapCenter.latitude}
-              longitude={mapCenter.longitude}
-              zoomLevel={mapCenter.zoomLevel}
-              restaurants={filteredRestaurants}
-            />
+            {loading ? (
+              <YStack flex={1} alignItems="center" justifyContent="center">
+                <Spinner size="large" color="$primary" />
+                <Text fontSize={14} color="$colorSubtle" marginTop={8}>
+                  주변 식당을 검색하고 있어요
+                </Text>
+              </YStack>
+            ) : (
+              <KakaoMapWebView
+                latitude={mapCenter.latitude}
+                longitude={mapCenter.longitude}
+                zoomLevel={mapCenter.zoomLevel}
+                restaurants={filteredRestaurants}
+              />
+            )}
           </View>
           <PlaceSheet
             restaurants={filteredRestaurants}
@@ -133,6 +217,35 @@ export default function RestaurantScreen() {
           <CurationTab />
         </View>
       )}
+      {/* Coming soon overlay */}
+      <View
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        backgroundColor="rgba(0,0,0,0.55)"
+        alignItems="center"
+        justifyContent="center"
+        zIndex={999}
+      >
+        <View
+          backgroundColor="white"
+          borderRadius={20}
+          paddingHorizontal={32}
+          paddingVertical={24}
+          alignItems="center"
+          gap={10}
+        >
+          <Text fontSize={32}>🚧</Text>
+          <Text fontSize={17} fontWeight="700" color="#1F1F21" fontFamily="$body">
+            곧 출시 예정이에요
+          </Text>
+          <Text fontSize={13} color="#8E8E93" textAlign="center" fontFamily="$body">
+            더 나은 서비스를 준비하고 있어요
+          </Text>
+        </View>
+      </View>
     </YStack>
   )
 }

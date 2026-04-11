@@ -230,6 +230,8 @@ open ios/app.xcworkspace
 
 ```bash
 npx expo prebuild --platform ios --clean   # 네이티브 폴더 재생성 시
+
+open ios/app.xcworkspace
 ```
 
 **Metro 없이 로컬에서 돌리고 싶다면** Xcode Scheme의 Run을 **Release**로 바꾸거나:

@@ -43,6 +43,10 @@
         "ascAppId": "6758880186",
         "appleId": "sht06202@naver.com",
         "appleTeamId": "HJJNV9Y5W8"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-key.json",
+        "track": "internal"
       }
     }
   }

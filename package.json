@@ -63,6 +63,8 @@
     "react-hook-form": "7.71.1",
     "react-native": "0.83.4",
     "react-native-gesture-handler": "~2.30.0",
+    "react-native-ios-context-menu": "3.2.1",
+    "react-native-ios-utilities": "5.2.0",
     "react-native-markdown-display": "^7.0.2",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -82,6 +84,8 @@
   },
   "overrides": {
     "markdown-it": "^14.1.0",
+    "react-native-ios-context-menu": "3.2.1",
+    "react-native-ios-utilities": "5.2.0",
     "zeego": {
       "@react-native-menu/menu": "$@react-native-menu/menu"
     }

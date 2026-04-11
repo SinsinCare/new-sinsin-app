@@ -54,14 +54,18 @@ export function PlaceCard({ restaurant }: PlaceCardProps) {
         </Text>
 
         {/* Rating + Reviews */}
-        <XStack alignItems="center" gap={4}>
-          <Text fontFamily="$body" fontSize={13} color={subTextColor}>
-            ★ {restaurant.rating}
-          </Text>
-          <Text fontFamily="$body" fontSize={13} color={subTextColor}>
-            · 리뷰 {restaurant.reviewCount}
-          </Text>
-        </XStack>
+        {restaurant.rating != null && (
+          <XStack alignItems="center" gap={4}>
+            <Text fontFamily="$body" fontSize={13} color={subTextColor}>
+              ★ {restaurant.rating}
+            </Text>
+            {restaurant.reviewCount != null && (
+              <Text fontFamily="$body" fontSize={13} color={subTextColor}>
+                · 리뷰 {restaurant.reviewCount}
+              </Text>
+            )}
+          </XStack>
+        )}
 
         {/* Distance + Address */}
         <XStack alignItems="center" gap={4}>
