@@ -2,6 +2,7 @@ import axios, { type AxiosInstance, isAxiosError } from "axios"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
 import { logger } from "@/src/lib/logger"
+import { reportError } from "../errorService"
 
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL
 
@@ -60,6 +61,15 @@ function addErrorInterceptor(instance: AxiosInstance) {
       )
     }
     const { status, data } = error.response
+    if (status !== 401) {
+      reportError({
+        status_code: status,
+        method: error.config?.method?.toUpperCase(),
+        path: error.config?.url,
+        error_code: data?.code,
+        message: data?.message,
+      })
+    }
     return Promise.reject(
       new ApiError(
         data?.message || "서버 오류가 발생했습니다.",
