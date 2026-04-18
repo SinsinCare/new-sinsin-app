@@ -109,11 +109,22 @@ export function InquiryScreen() {
     if (!canSubmit || isSubmitting) return
     setIsSubmitting(true)
     try {
-      await api.post("/user/inquiries", {
-        subject: `[${category}] ${title}`,
-        content,
+      const formData = new FormData()
+      formData.append("subject", `[${category}] ${title}`)
+      formData.append("content", content)
+      images.forEach((uri, index) => {
+        formData.append("images", {
+          uri,
+          name: `image_${index}.jpg`,
+          type: "image/jpeg",
+        } as unknown as Blob)
       })
-      router.back()
+      await api.post("/user/inquiries", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      Alert.alert("문의 등록 완료", "문의가 성공적으로 등록되었습니다.", [
+        { text: "확인", onPress: () => router.back() },
+      ])
     } catch {
       Alert.alert("오류", "문의 등록에 실패했습니다. 다시 시도해주세요.")
     } finally {

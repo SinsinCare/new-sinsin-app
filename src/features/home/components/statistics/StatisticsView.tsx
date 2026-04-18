@@ -78,7 +78,7 @@ export function StatisticsView({
     if (!isActive) return
 
     refetch()
-    const interval = setInterval(refetch, 5000)
+    const interval = setInterval(refetch, 30000)
     return () => clearInterval(interval)
   }, [isActive, refetch])
 

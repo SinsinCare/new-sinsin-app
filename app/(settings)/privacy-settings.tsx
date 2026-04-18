@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   Platform,
-  Alert,
   useColorScheme,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
@@ -134,16 +133,7 @@ export default function PrivacySettingsScreen() {
               icon="trash-outline"
               title="계정 삭제"
               danger
-              onPress={() =>
-                Alert.alert(
-                  "계정 삭제",
-                  "계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다. 정말 삭제하시겠습니까?",
-                  [
-                    { text: "취소", style: "cancel" },
-                    { text: "삭제", style: "destructive" },
-                  ],
-                )
-              }
+              onPress={() => router.push("/(settings)/withdrawal")}
               colors={c}
             />
           </View>

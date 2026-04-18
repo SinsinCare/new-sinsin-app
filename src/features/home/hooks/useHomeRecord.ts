@@ -83,11 +83,17 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
 
   const addWaterWithApi = useCallback(
     (amount: number) => {
-      // Optimistic: update local state immediately
       hydration.addWater(amount)
-
-      // Accumulate delta and schedule debounced flush
       pendingDeltaRef.current += amount
+      flushPendingWater(dateStr)
+    },
+    [hydration, dateStr, flushPendingWater],
+  )
+
+  const subtractWaterWithApi = useCallback(
+    (amount: number) => {
+      hydration.subtractWater(amount)
+      pendingDeltaRef.current -= amount
       flushPendingWater(dateStr)
     },
     [hydration, dateStr, flushPendingWater],
@@ -133,7 +139,7 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     remaining: hydration.remaining,
     isGoalAchieved: hydration.isGoalAchieved,
     addWater: addWaterWithApi,
-    subtractWater: hydration.subtractWater,
+    subtractWater: subtractWaterWithApi,
     resetHydration: resetWithApi,
     syncFromServer,
     weight,

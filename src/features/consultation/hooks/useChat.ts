@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react"
+import { Alert } from "react-native"
 import type { ChatCategory, Message } from "@/src/types/chat"
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
@@ -176,11 +177,17 @@ export function useChat() {
         }
       }
 
-      await sendMsgMutate({
-        conversationId: activeConvId,
-        content: trimmed,
-        userCategory: categoryRef.current ?? "NONE",
-      })
+      try {
+        await sendMsgMutate({
+          conversationId: activeConvId,
+          content: trimmed,
+          userCategory: categoryRef.current ?? "NONE",
+        })
+      } catch {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMsg.id))
+        setIsTyping(false)
+        Alert.alert("전송 실패", "메시지 전송에 실패했습니다. 다시 시도해주세요.")
+      }
     },
     [isSending, createChatMutate, sendMsgMutate],
   )
