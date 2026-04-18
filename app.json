@@ -2,7 +2,7 @@
   "expo": {
     "name": "신신당부",
     "slug": "sinsin-rn",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -37,7 +37,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#007AFF"
       },
-      "package": "com.mediology.sinsincare",
+      "package": "com.mediology.sinsinapp",
       "edgeToEdgeEnabled": true,
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
@@ -69,6 +69,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FF5A5F",
+          "androidMode": "default",
+          "androidCollapsedTitle": "신신당부 알림"
+        }
+      ],
       [
         "expo-camera",
         {

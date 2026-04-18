@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -11,16 +11,36 @@ import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { ToggleItem } from "@/src/features/settings/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { useNotifications } from "@/src/hooks/useNotifications"
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const { signOut } = useAuth()
+  const { signOut, isAuthenticated } = useAuth()
   const c = useSettingsColors()
+  const { settings, updateSettings, requestAndEnable } = useNotifications(isAuthenticated)
 
-  const [pushEnabled, setPushEnabled] = useState(false)
+  const pushEnabled = settings.waterReminder.enabled || settings.mealReminder.enabled
   const [marketingEnabled, setMarketingEnabled] = useState(false)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
+
+  const handlePushToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestAndEnable()
+      if (!granted) {
+        Alert.alert(
+          "알림 권한 필요",
+          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        )
+        return
+      }
+    }
+    await updateSettings({
+      ...settings,
+      waterReminder: { ...settings.waterReminder, enabled: value },
+      mealReminder: { ...settings.mealReminder, enabled: value },
+    })
+  }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
@@ -40,9 +60,9 @@ export function SettingsScreen() {
         {/* 알림 설정 */}
         <ToggleItem
           title="앱 푸시 알림 동의"
-          description="서비스와 관련된 모든 알림을 수신해요."
+          description="수분 섭취 및 식사 기록 알림을 수신해요."
           value={pushEnabled}
-          onValueChange={setPushEnabled}
+          onValueChange={handlePushToggle}
         />
         <ToggleItem
           title="마케팅 알림 동의"

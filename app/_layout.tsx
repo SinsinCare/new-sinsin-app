@@ -11,9 +11,11 @@ import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
 import { useSignupStore, useOnboardingStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
+import { useNotifications } from "@/src/hooks/useNotifications"
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, accountState } = useAuth()
+  useNotifications(isAuthenticated)
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
     (s) => s.isOnboardingInProgress,

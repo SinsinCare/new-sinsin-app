@@ -1,9 +1,10 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
-import { useColorScheme } from "react-native"
+import { Pressable, useColorScheme } from "react-native"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
+import { useRouter } from "expo-router"
 
 interface HomeHeaderProps {
   mainTab: MainTab
@@ -17,6 +18,7 @@ export function HomeHeader({
   topInset = 0,
 }: HomeHeaderProps) {
   const isDarkMode = useColorScheme() === "dark"
+  const router = useRouter()
 
   return (
     <YStack
@@ -59,15 +61,20 @@ export function HomeHeader({
           ) : (
             <Icon name="profile" size={27} />
           )}
-          {isDarkMode ? (
-            <Ionicons
-              name="notifications-outline"
-              color={tokens.color.textDark.val}
-              size={28}
-            />
-          ) : (
-            <Ionicons name="notifications-outline" size={28} />
-          )}
+          <Pressable
+            onPress={() => router.push("/(settings)/index")}
+            hitSlop={8}
+          >
+            {isDarkMode ? (
+              <Ionicons
+                name="notifications-outline"
+                color={tokens.color.textDark.val}
+                size={28}
+              />
+            ) : (
+              <Ionicons name="notifications-outline" size={28} />
+            )}
+          </Pressable>
         </XStack>
       </XStack>
     </YStack>
