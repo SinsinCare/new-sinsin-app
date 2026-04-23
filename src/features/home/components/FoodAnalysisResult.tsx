@@ -605,12 +605,12 @@ export function FoodAnalysisResult({
           left={0}
           right={0}
           bottom={0}
-          backgroundColor="rgba(0,0,0,0.3)"
+          backgroundColor="rgba(0,0,0,0.5)"
           justifyContent="center"
           alignItems="center"
         >
           <YStack
-            backgroundColor={tokens.color.offWhite.val}
+            backgroundColor={isDarkMode ? tokens.color.cardBgDark.val : tokens.color.offWhite.val}
             borderRadius={15}
             overflow="hidden"
           >
@@ -620,7 +620,12 @@ export function FoodAnalysisResult({
               paddingBottom="$6"
               gap="$2"
             >
-              <Text fontSize={16} fontWeight="600" textAlign="center">
+              <Text
+                fontSize={16}
+                fontWeight="600"
+                textAlign="center"
+                color={isDarkMode ? "$textDark" : "$color"}
+              >
                 아직 식단을 기록하지 않았어요.
               </Text>
               <Text
@@ -633,7 +638,10 @@ export function FoodAnalysisResult({
               </Text>
             </YStack>
 
-            <View height={1} backgroundColor="#E5E5E5" />
+            <View
+              height={1}
+              backgroundColor={isDarkMode ? tokens.color.grey2.val : "#E5E5E5"}
+            />
 
             <XStack>
               <YStack
@@ -655,7 +663,10 @@ export function FoodAnalysisResult({
                 </Text>
               </YStack>
 
-              <View width={1} backgroundColor="#E5E5E5" />
+              <View
+                width={1}
+                backgroundColor={isDarkMode ? tokens.color.grey2.val : "#E5E5E5"}
+              />
 
               <YStack
                 flex={1}
@@ -664,7 +675,11 @@ export function FoodAnalysisResult({
                 onPress={() => setShowExitConfirm(false)}
                 pressStyle={{ opacity: 0.8 }}
               >
-                <Text fontSize={15} fontWeight="500">
+                <Text
+                  fontSize={15}
+                  fontWeight="500"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
                   돌아가기
                 </Text>
               </YStack>

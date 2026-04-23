@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
+import * as Notifications from "expo-notifications"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
@@ -24,6 +25,17 @@ function RootLayoutNav() {
   const router = useRouter()
 
   const needsOnboarding = accountState === "PENDING_ONBOARDING"
+
+  // 식단 분석 완료 알림 탭 시 홈 탭으로 이동 (RecordView가 pending 결과를 자동으로 엶)
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data
+      if (data?.type === "food_analysis_complete") {
+        router.push("/(tabs)/home")
+      }
+    })
+    return () => sub.remove()
+  }, [router])
 
   useEffect(() => {
     if (isLoading) return

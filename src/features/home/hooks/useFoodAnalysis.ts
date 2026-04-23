@@ -1,7 +1,9 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
+import { notificationService } from "@/src/services/notificationService"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import type {
   DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
@@ -25,36 +27,68 @@ export function useFoodAnalysis(
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
+  // 분석 도중 X 버튼으로 나갔는지 추적 (ref: async closure에서 최신값 보장)
+  const dismissedRef = useRef(false)
+
+  const setPending = usePendingAnalysisStore((s) => s.setPending)
+
   const analyzeImage = async (uri: string, mealType: MealType) => {
+    dismissedRef.current = false
     try {
       setAnalyzedImageUri(uri)
       setAnalyzedMealType(mealType)
       setIsAnalyzing(true)
       const result = await foodCameraService.analyze(uri)
+
+      if (dismissedRef.current) {
+        // 백그라운드 완료: 스토어에 저장 후 알림 발송
+        setPending({ result, mealType, imageUri: uri })
+        await notificationService.sendFoodAnalysisComplete()
+        return
+      }
+
       setAnalysisResult(result)
       setIsResultOpen(true)
     } catch (error) {
-      console.error("analyzeImage error:", error)
-      Alert.alert("분석 실패", getErrorMessage(error))
+      if (!dismissedRef.current) {
+        console.error("analyzeImage error:", error)
+        Alert.alert("분석 실패", getErrorMessage(error))
+      }
     } finally {
       setIsAnalyzing(false)
     }
   }
 
   const analyzeText = async (text: string, mealType: MealType) => {
+    dismissedRef.current = false
     try {
       setAnalyzedMealType(mealType)
       setIsAnalyzing(true)
       const result = await foodCameraService.analyzeText(text)
+
+      if (dismissedRef.current) {
+        setPending({ result, mealType, imageUri: result.imageUrl ?? null })
+        await notificationService.sendFoodAnalysisComplete()
+        return
+      }
+
       setAnalyzedImageUri(result.imageUrl)
       setAnalysisResult(result)
       setIsResultOpen(true)
     } catch (error) {
-      console.error("analyzeText error:", error)
-      Alert.alert("분석 실패", getErrorMessage(error))
+      if (!dismissedRef.current) {
+        console.error("analyzeText error:", error)
+        Alert.alert("분석 실패", getErrorMessage(error))
+      }
     } finally {
       setIsAnalyzing(false)
     }
+  }
+
+  // 로딩 중 X 버튼 탭 시 호출
+  const dismissAnalysis = () => {
+    dismissedRef.current = true
+    setIsAnalyzing(false)
   }
 
   const registerDiary = async (
@@ -134,6 +168,7 @@ export function useFoodAnalysis(
     analyzedImageUri,
     analyzeImage,
     analyzeText,
+    dismissAnalysis,
     registerDiary,
     fetchDiaryResult,
     updateFoodAnalysis,

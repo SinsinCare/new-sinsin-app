@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Alert } from "react-native"
-import type { DiaryAnalysisResult } from "@/src/types"
+import type { DiaryAnalysisResult, FoodAnalysisUpdateRequest, FoodAnalysisUpdateResult } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
@@ -25,6 +25,9 @@ import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
 import { MAX_WATER_INTAKE } from "../../data/hydrationConstants"
+import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
+import { foodCameraService } from "@/src/services/data"
+import { toDateStr } from "../../utils/dateUtils"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -54,11 +57,21 @@ export function RecordView({
     analyzedImageUri,
     analyzeImage,
     analyzeText,
+    dismissAnalysis,
     registerDiary,
     closeResult,
     updateFoodAnalysis,
     fetchDiaryResult,
   } = useFoodAnalysis()
+
+  const pending = usePendingAnalysisStore((s) => s.pending)
+  const setPending = usePendingAnalysisStore((s) => s.setPending)
+  const [isPendingOpen, setIsPendingOpen] = useState(false)
+  const [isPendingUpdating, setIsPendingUpdating] = useState(false)
+
+  useEffect(() => {
+    if (pending) setIsPendingOpen(true)
+  }, [pending])
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
   const calendarDays = useMemo(
@@ -167,6 +180,43 @@ export function RecordView({
     })
     await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+  }
+
+  const handlePendingAddToRecord = async () => {
+    if (!pending) return
+    try {
+      await foodCameraService.registerDiary(
+        pending.result.foodAnalysisResultId,
+        toDateStr(selectedDate),
+        pending.mealType,
+      )
+      setRecordedMeals((prev) => ({ ...prev, [pending.mealType]: true }))
+      if (pending.imageUri) {
+        setMealImages((prev) => ({ ...prev, [pending.mealType]: pending.imageUri! }))
+      }
+      await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+      await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+    } catch (error) {
+      console.error("handlePendingAddToRecord error:", error)
+      Alert.alert("등록 실패", "기록 추가에 실패했어요.")
+    }
+  }
+
+  const updatePendingFoodAnalysis = async (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ): Promise<FoodAnalysisUpdateResult | undefined> => {
+    try {
+      setIsPendingUpdating(true)
+      const updated = await foodCameraService.updateFoodAnalysis(foodAnalysisResultId, body)
+      if (pending) setPending({ ...pending, result: updated })
+      return updated
+    } catch (error) {
+      console.error("updatePendingFoodAnalysis error:", error)
+      Alert.alert("업데이트 실패", "수정에 실패했어요.")
+    } finally {
+      setIsPendingUpdating(false)
+    }
   }
 
   const handleRecord = (mealType: MealType) => {
@@ -290,7 +340,25 @@ export function RecordView({
         updateFoodAnalysis={updateFoodAnalysis}
       />
 
-      <LoadingOverlay visible={isAnalyzing} message="식단을 분석하고 있어요" />
+      <FoodAnalysisResult
+        result={pending?.result ?? null}
+        open={isPendingOpen}
+        onClose={() => {
+          setIsPendingOpen(false)
+          setPending(null)
+        }}
+        imageUri={pending?.imageUri ?? undefined}
+        mealType={pending?.mealType}
+        onAddToRecord={handlePendingAddToRecord}
+        isUpdating={isPendingUpdating}
+        updateFoodAnalysis={updatePendingFoodAnalysis}
+      />
+
+      <LoadingOverlay
+        visible={isAnalyzing}
+        message="식단을 분석하고 있어요"
+        onDismiss={dismissAnalysis}
+      />
 
       <View height={10} />
 
