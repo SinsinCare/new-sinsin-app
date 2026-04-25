@@ -18,6 +18,7 @@ interface MonthCalendarSheetProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
   onClose: () => void
+  disableFuture?: boolean
 }
 
 export function MonthCalendarSheet({
@@ -25,6 +26,7 @@ export function MonthCalendarSheet({
   selectedDate,
   onSelectDate,
   onClose,
+  disableFuture = false,
 }: MonthCalendarSheetProps) {
   const isDarkMode = useColorScheme() === "dark"
   const [viewYear, setViewYear] = useState(selectedDate.getFullYear())
@@ -91,6 +93,12 @@ export function MonthCalendarSheet({
     selectedDate.getMonth() === viewMonth &&
     selectedDate.getDate() === day
 
+  const isFutureDay = (day: number) => {
+    const d = new Date(viewYear, viewMonth, day)
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    return d > todayStart
+  }
+
   const cells = buildCalendarDays()
 
   return (
@@ -156,11 +164,13 @@ export function MonthCalendarSheet({
                 const selected = isSelected(day)
                 const isToday = isSameDay(day)
                 const hasRecord = recordedDays.has(day)
+                const disabled = disableFuture && isFutureDay(day)
 
                 return (
                   <TouchableOpacity
                     key={col}
                     style={styles.cell}
+                    disabled={disabled}
                     onPress={() =>
                       handleSelectDate(new Date(viewYear, viewMonth, day))
                     }
@@ -188,7 +198,9 @@ export function MonthCalendarSheet({
                           color={
                             selected
                               ? tokens.color.pureWhite.val
-                              : textColor
+                              : disabled
+                                ? tokens.color.grey7.val
+                                : textColor
                           }
                         >
                           {day}

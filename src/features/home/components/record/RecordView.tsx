@@ -8,10 +8,11 @@ import { MealType } from "../../types"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
-import { getThreeDays } from "../../utils/getThreeDays"
+import { MonthCalendarSheet } from "../statistics/MonthCalendarSheet"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
+import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
   pickImageFromGallery,
@@ -74,14 +75,10 @@ export function RecordView({
   }, [pending])
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const calendarDays = useMemo(
-    () => getThreeDays(selectedDate, "record"),
-    [selectedDate],
-  )
-  const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
-  const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
-  const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
+  const { data: diaryExistenceDays = [] } = useDiaryExistence(selectedDate)
   const queryClient = useQueryClient()
+
+  const [showCalendar, setShowCalendar] = useState(false)
 
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
@@ -148,20 +145,27 @@ export function RecordView({
         ? "character-good"
         : "character-caution"
 
-  const calendarDataList = [dataDay0, dataDay1, dataDay2]
-  const recordedDates = calendarDays
-    .filter((day, i) => {
-      const diets = calendarDataList[i]?.result.diets ?? []
-      const isSameAsSelected =
-        day.date.getFullYear() === selectedDate.getFullYear() &&
-        day.date.getMonth() === selectedDate.getMonth() &&
-        day.date.getDate() === selectedDate.getDate()
-      return (
-        diets.length > 0 ||
-        (isSameAsSelected && Object.values(recordedMeals).some(Boolean))
-      )
-    })
-    .map((day) => day.date)
+  // 주 단위 기록 유무: 서버 데이터 + 로컬 미저장 상태 병합
+  const isSameDayFn = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  const sunday = new Date(selectedDate)
+  sunday.setDate(selectedDate.getDate() - selectedDate.getDay())
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday)
+    d.setDate(sunday.getDate() + i)
+    return d
+  })
+
+  const recordedDates = weekDates.filter((d) => {
+    if (diaryExistenceDays.includes(d.getDate())) return true
+    return (
+      isSameDayFn(d, selectedDate) &&
+      Object.values(recordedMeals).some(Boolean)
+    )
+  })
 
   const serverExtraWater = data?.result.analysis?.extraWater ?? 0
   const { syncFromServer } = record
@@ -276,6 +280,18 @@ export function RecordView({
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         recordedDates={recordedDates}
+        onMonthPress={() => setShowCalendar(true)}
+      />
+
+      <MonthCalendarSheet
+        visible={showCalendar}
+        selectedDate={selectedDate}
+        onSelectDate={(date) => {
+          onSelectDate(date)
+          setShowCalendar(false)
+        }}
+        onClose={() => setShowCalendar(false)}
+        disableFuture
       />
 
       <View height={10} />
