@@ -14,6 +14,7 @@ import {
   CAP_H,
   FONT_SIZE,
   PCT_X,
+  QUICK_ADD_LABELS,
   QUICK_ADD_OPTIONS,
   SVG_HEIGHT,
   SVG_WIDTH,
@@ -206,7 +207,7 @@ export function HydrationTracker({
                 fontSize={15}
                 color={isDarkMode ? "$textDarkSub" : "$color"}
               >
-                +{amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`}
+                +{QUICK_ADD_LABELS[amount] ?? (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)}
               </Text>
             </Pressable>
           ))}

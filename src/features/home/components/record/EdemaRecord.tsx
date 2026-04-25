@@ -9,20 +9,13 @@ interface EdemaRecordProps {
   onSave: (edemaLevel: EdemaLevel) => void
 }
 
-export function EdemaRecord({
-  selected,
-  yesterdayEdema,
-  onSave,
-}: EdemaRecordProps) {
-  const subtitle =
-    yesterdayEdema != null ? `어제: ${yesterdayEdema}` : "이전 기록이 없어요"
+export function EdemaRecord({ selected, onSave }: EdemaRecordProps) {
   const isDarkMode = useColorScheme() === "dark"
 
   return (
     <RecordCard
       type="weight"
       title="몸이 붓는 느낌이 있나요?"
-      subtitle={subtitle}
       icon={require("@/assets/images/water-edema.png")}
     >
       <XStack gap="$2">

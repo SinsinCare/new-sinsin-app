@@ -59,14 +59,14 @@ export function WeightEdemaTracker({
   }
 
   const handleDecrease = () => {
-    const current = parseFloat(weight) || 0
+    const current = parseFloat(weight) || yesterdayWeight || 0
     const newVal = decreaseWeight(current).toFixed(1)
     setWeight(newVal)
     handleSave(newVal)
   }
 
   const handleIncrease = () => {
-    const current = parseFloat(weight) || 0
+    const current = parseFloat(weight) || yesterdayWeight || 0
     const newVal = increaseWeight(current).toFixed(1)
     setWeight(newVal)
     handleSave(newVal)
@@ -88,7 +88,6 @@ export function WeightEdemaTracker({
         onChangeWeight={setWeight}
         onDecrease={handleDecrease}
         onIncrease={handleIncrease}
-        onReset={() => setWeight("")}
         onSave={handleSave}
       />
 

@@ -1,8 +1,12 @@
 import { tokens } from "@/src/theme/tokens"
 
 export const QUICK_ADD_OPTIONS: readonly number[] = [
-  50, 100, 500, 1000,
+  50, 100, 250, 500,
 ] as const
+
+export const QUICK_ADD_LABELS: Record<number, string> = {
+  250: "1컵",
+}
 
 export const SVG_WIDTH = 135
 export const SVG_HEIGHT = 60
