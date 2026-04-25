@@ -10,11 +10,13 @@ import GoogleLogo from "@/assets/images/google-logo.svg"
 import { useAuth } from "@/src/hooks/useAuth"
 import { Ionicons } from "@expo/vector-icons"
 import { logger } from "@/src/lib/logger"
+import { useAuthColors } from "../hooks"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
   const { signInWithGoogle, signInWithApple, isUserCancelledError } = useAuth()
   const [socialLoading, setSocialLoading] = useState(false)
+  const colors = useAuthColors()
 
   const handleEmailLogin = () => {
     router.push("/(auth)/email-login")
@@ -67,7 +69,7 @@ export function LoginScreen() {
   return (
     <YStack
       flex={1}
-      backgroundColor="#131416"
+      backgroundColor={colors.bg}
       paddingTop={insets.top}
       paddingBottom={insets.bottom + 24}
       paddingHorizontal={20}
@@ -76,7 +78,7 @@ export function LoginScreen() {
       <YStack flex={1} justifyContent="center" alignItems="center" gap={24}>
         <YStack alignItems="center" gap={0}>
           <Text
-            color="#FDFDFD"
+            color={colors.text}
             fontSize={24}
             fontWeight="600"
             letterSpacing={-0.3}
@@ -115,11 +117,11 @@ export function LoginScreen() {
 
         {/* 구분선 */}
         <XStack alignItems="center" gap={12} marginVertical={4}>
-          <YStack flex={1} height={1} backgroundColor="#2A2C30" />
-          <Text color="#6B7280" fontSize={13}>
+          <YStack flex={1} height={1} backgroundColor={colors.border} />
+          <Text color={colors.textSub} fontSize={13}>
             또는
           </Text>
-          <YStack flex={1} height={1} backgroundColor="#2A2C30" />
+          <YStack flex={1} height={1} backgroundColor={colors.border} />
         </XStack>
 
         {/* Google 로그인 */}
@@ -182,7 +184,7 @@ export function LoginScreen() {
           marginTop={8}
         >
           <Text
-            color="#C5C8CE"
+            color={colors.textSub}
             fontSize={13}
             letterSpacing={-0.26}
             lineHeight={16.9}
@@ -191,7 +193,7 @@ export function LoginScreen() {
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
             <Text
-              color="#C5C8CE"
+              color={colors.textSub}
               fontSize={14}
               letterSpacing={-0.28}
               lineHeight={18.2}

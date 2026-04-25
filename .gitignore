@@ -3,6 +3,10 @@
 # Google Play service account key (sensitive)
 google-play-key.json
 
+# Android Keystore files (sensitive)
+*.jks
+*.keystore
+
 # Superpowers brainstorming
 .superpowers/
 

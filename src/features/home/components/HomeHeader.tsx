@@ -1,10 +1,11 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable, useColorScheme, View, StyleSheet } from "react-native"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import { useRouter } from "expo-router"
+import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
 
 interface HomeHeaderProps {
   mainTab: MainTab
@@ -19,6 +20,7 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   const isDarkMode = useColorScheme() === "dark"
   const router = useRouter()
+  const unreadCount = useNotificationHistoryStore((s) => s.unreadCount())
 
   return (
     <YStack
@@ -62,8 +64,9 @@ export function HomeHeader({
             <Icon name="profile" size={27} />
           )}
           <Pressable
-            onPress={() => router.push("/(settings)/index")}
+            onPress={() => router.push("/(settings)/notifications")}
             hitSlop={8}
+            style={styles.bellWrapper}
           >
             {isDarkMode ? (
               <Ionicons
@@ -74,9 +77,34 @@ export function HomeHeader({
             ) : (
               <Ionicons name="notifications-outline" size={28} />
             )}
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text fontSize={10} fontWeight="700" color="white" lineHeight={14}>
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </XStack>
       </XStack>
     </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  bellWrapper: {
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: tokens.color.primary7.val,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+})

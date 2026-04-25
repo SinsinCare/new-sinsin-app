@@ -3,6 +3,7 @@
 만성신장질환(CKD) 환자를 위한 건강관리 모바일 앱
 
 [![App Store](https://img.shields.io/badge/App_Store-available-blue?logo=apple&logoColor=white)](https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186)
+[![Google Play](https://img.shields.io/badge/Google_Play-available-green?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.mediology.sinsinapp)
 
 ## 프로젝트 개요
 
@@ -23,10 +24,13 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 <a href="https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186">
   <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40">
 </a>
+<a href="https://play.google.com/store/apps/details?id=com.mediology.sinsinapp">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="40">
+</a>
 
 ## 기술 스택
 
-- **Framework:** Expo ~54.0, React Native 0.81
+- **Framework:** Expo ~55.0, React Native 0.83.4
 - **Routing:** Expo Router (파일 기반 라우팅)
 - **UI:** Tamagui v2
 - **State:** Zustand (클라이언트) + React Query (서버)
@@ -202,9 +206,11 @@ eas build --platform ios --profile development
 
 #### Android
 ```bash
-# Production (Google Play Store)
-eas build --platform android --profile production
-eas submit --platform android --latest
+# Production (Google Play Store) - 로컬 빌드
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
+export ANDROID_HOME=$HOME/Library/Android/sdk
+eas build --platform android --profile production --local
+# 빌드 완료 후 생성된 .aab 파일을 Play Console에 수동 업로드
 
 # Preview (설치용 APK 생성)
 eas build --platform android --profile preview
@@ -212,6 +218,8 @@ eas build --platform android --profile preview
 # Development Build (개발용 앱 생성)
 eas build --platform android --profile development
 ```
+
+> **Google Play Store:** `com.mediology.sinsinapp` (계정: healthierwith@gmail.com)
 
 ### 로컬에서 iOS 개발 빌드 (Xcode)
 

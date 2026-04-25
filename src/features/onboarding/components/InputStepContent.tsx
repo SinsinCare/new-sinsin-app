@@ -20,6 +20,7 @@ export function InputStepContent({
   const borderColor = isDark
     ? "rgba(100,105,115,0.4)"
     : "rgba(218,223,230,0.6)"
+  const inputBg = isDark ? "#2A2A32" : "white"
 
   return (
     <YStack gap={16}>
@@ -41,6 +42,7 @@ export function InputStepContent({
             borderRadius={12}
             borderWidth={1}
             borderColor={borderColor}
+            backgroundColor={inputBg}
             alignItems="center"
             paddingHorizontal={16}
             focusStyle={{

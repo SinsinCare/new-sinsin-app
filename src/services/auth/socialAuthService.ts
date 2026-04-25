@@ -15,6 +15,8 @@ export interface SocialAuthResult {
 }
 
 GoogleSignin.configure({
+  webClientId:
+    "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
   iosClientId:
     "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
 })

@@ -4,6 +4,7 @@ import { foodCameraService } from "@/src/services/data"
 import { notificationService } from "@/src/services/notificationService"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
+import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
 import type {
   DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
@@ -31,6 +32,14 @@ export function useFoodAnalysis(
   const dismissedRef = useRef(false)
 
   const setPending = usePendingAnalysisStore((s) => s.setPending)
+  const addNotification = useNotificationHistoryStore((s) => s.addNotification)
+
+  const MEAL_LABELS: Record<string, string> = {
+    BREAKFAST: "아침",
+    LUNCH: "점심",
+    DINNER: "저녁",
+    SNACKS: "간식",
+  }
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
     dismissedRef.current = false
@@ -44,6 +53,11 @@ export function useFoodAnalysis(
         // 백그라운드 완료: 스토어에 저장 후 알림 발송
         setPending({ result, mealType, imageUri: uri })
         await notificationService.sendFoodAnalysisComplete()
+        addNotification({
+          type: "food_analysis",
+          title: "🍽️ 식단 분석 완료",
+          body: `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`,
+        })
         return
       }
 
@@ -69,6 +83,11 @@ export function useFoodAnalysis(
       if (dismissedRef.current) {
         setPending({ result, mealType, imageUri: result.imageUrl ?? null })
         await notificationService.sendFoodAnalysisComplete()
+        addNotification({
+          type: "food_analysis",
+          title: "🍽️ 식단 분석 완료",
+          body: `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`,
+        })
         return
       }
 

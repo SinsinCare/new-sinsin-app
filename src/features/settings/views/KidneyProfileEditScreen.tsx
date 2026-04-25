@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   StyleSheet,
   View,
@@ -18,8 +18,8 @@ import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { DatePickerModal } from "@/src/features/settings/components"
 import { DIAGNOSIS_CAUSES } from "@/src/features/settings/data/constants"
-import { useUserStore } from "@/src/stores/userStore"
 import { api } from "@/src/services/core/apiClient"
+import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
@@ -37,35 +37,47 @@ export function KidneyProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const profile = useUserStore((s) => s.profile)
   const { data: kidneyProfile } = useKidneyProfile()
   const c = useSettingsColors()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>(
-    kidneyProfile?.comorbidities ?? [],
-  )
+  const [initialized, setInitialized] = useState(false)
+
+  const [heightVal, setHeightVal] = useState("")
+  const [weightVal, setWeightVal] = useState("")
+  const [ckdStage, setCkdStage] = useState<number>(1)
+  const [onDialysis, setOnDialysis] = useState(false)
+  const [diagnosisDate, setDiagnosisDate] = useState<{ year: number; month: number } | null>(null)
+  const [datePickerVisible, setDatePickerVisible] = useState(false)
+  const [selectedCauses, setSelectedCauses] = useState<number[]>([])
+  const [otherCause, setOtherCause] = useState("")
+  const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!kidneyProfile || initialized) return
+    if (kidneyProfile.ckdStage === "DIALYSIS") {
+      setCkdStage(5)
+      setOnDialysis(true)
+    } else {
+      const num = parseInt(kidneyProfile.ckdStage.replace(/\D/g, "")) || 1
+      setCkdStage(num)
+      setOnDialysis(kidneyProfile.isDialysis)
+    }
+    if (kidneyProfile.diagnosisDate) {
+      const parts = kidneyProfile.diagnosisDate.split("-")
+      if (parts.length >= 2) {
+        setDiagnosisDate({ year: parseInt(parts[0]), month: parseInt(parts[1]) })
+      }
+    }
+    if (kidneyProfile.weightKg != null) setWeightVal(String(kidneyProfile.weightKg))
+    setSelectedComorbidities(kidneyProfile.comorbidities ?? [])
+    setInitialized(true)
+  }, [kidneyProfile, initialized])
 
   const toggleComorbidity = (key: string) => {
     setSelectedComorbidities((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     )
   }
-
-  const [heightVal, setHeightVal] = useState(
-    profile?.height ? String(profile.height) : "",
-  )
-  const [weightVal, setWeightVal] = useState(
-    profile?.weight ? String(profile.weight) : "",
-  )
-  const [ckdStage, setCkdStage] = useState<number>(profile?.ckdStage ?? 1)
-  const [onDialysis, setOnDialysis] = useState(profile?.onDialysis ?? false)
-  const [diagnosisDate, setDiagnosisDate] = useState<{
-    year: number
-    month: number
-  } | null>(null)
-  const [datePickerVisible, setDatePickerVisible] = useState(false)
-  const [selectedCauses, setSelectedCauses] = useState<number[]>([])
-  const [otherCause, setOtherCause] = useState("")
 
   const toggleCause = (index: number) => {
     setSelectedCauses((prev) =>
@@ -77,22 +89,26 @@ export function KidneyProfileEditScreen() {
     if (isSubmitting) return
     setIsSubmitting(true)
     try {
-      // CKD 병기·투석 여부에 따른 영양소 권장 제한값 (대한신장학회 기준)
-      const proteinGPerKg = onDialysis ? 1.2 : ckdStage >= 4 ? 0.6 : 0.8
-      const potassiumMg = ckdStage >= 3 ? 2000 : null
-      const phosphorusMg = ckdStage >= 3 ? 1000 : null
-      const fluidMl = onDialysis ? 1000 : null
+      const ckdStageStr = onDialysis ? "DIALYSIS" : `CKD${ckdStage}`
+      const diagnosisDateStr = diagnosisDate
+        ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
+        : null
 
       await api.patch("/user/profile/kidney", {
-        hasCkd: true,
-        sodiumMg: 2000,
-        proteinGPerKg,
-        potassiumMg,
-        phosphorusMg,
-        fluidMl,
+        ckdStage: ckdStageStr,
+        isDialysis: onDialysis,
+        ...(diagnosisDateStr !== null ? { diagnosisDate: diagnosisDateStr } : {}),
         comorbidities: selectedComorbidities,
       })
+
+      const weight = parseFloat(weightVal)
+      if (!isNaN(weight) && weight > 0) {
+        const today = new Date().toISOString().split("T")[0]
+        await weightEdemaService.updateWeight(weight, today)
+      }
+
       queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
+      queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
       router.back()
     } catch {
       Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")

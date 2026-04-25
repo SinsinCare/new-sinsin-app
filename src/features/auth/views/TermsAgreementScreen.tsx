@@ -2,7 +2,7 @@ import { Pressable, Linking } from "react-native"
 import { YStack, XStack, Text, Separator } from "tamagui"
 import { Checkbox } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
-import { useTermsAgreement } from "../hooks"
+import { useTermsAgreement, useAuthColors } from "../hooks"
 
 export function TermsAgreementScreen() {
   const {
@@ -14,6 +14,7 @@ export function TermsAgreementScreen() {
     toggleItem,
     handleNext,
   } = useTermsAgreement()
+  const colors = useAuthColors()
 
   const openTermsUrl = (url?: string) => {
     if (url) {
@@ -36,7 +37,7 @@ export function TermsAgreementScreen() {
           size={24}
         />
 
-        <Separator borderColor="#E8EAED" />
+        <Separator borderColor={colors.border} />
 
         <YStack gap={16}>
           {terms.map((term) => (
@@ -55,10 +56,10 @@ export function TermsAgreementScreen() {
                   style={{ flex: 1, marginLeft: 10 }}
                 >
                   <XStack alignItems="center" gap={4}>
-                    <Text fontSize={14} color="#787C83" letterSpacing={-0.28}>
+                    <Text fontSize={14} color={colors.textSub} letterSpacing={-0.28}>
                       {term.required ? "[필수]" : "[선택]"}
                     </Text>
-                    <Text fontSize={14} color="#3F444F" letterSpacing={-0.28}>
+                    <Text fontSize={14} color={colors.text} letterSpacing={-0.28}>
                       {term.label}
                     </Text>
                   </XStack>
@@ -68,7 +69,7 @@ export function TermsAgreementScreen() {
                 <Pressable onPress={() => openTermsUrl(term.url)} hitSlop={8}>
                   <Text
                     fontSize={13}
-                    color="#787C83"
+                    color={colors.textSub}
                     letterSpacing={-0.26}
                     textDecorationLine="underline"
                   >

@@ -173,11 +173,18 @@ const LAST_UPDATED = "2026.03.01"
 // 서브 컴포넌트
 // -----------------------------------------
 
-const ICON_BG: Record<ReferenceItem["iconColor"], string> = {
+const ICON_BG_LIGHT: Record<ReferenceItem["iconColor"], string> = {
   teal: "#E0FFF7",
   blue: "#E8F0FB",
   orange: "#FFF0E0",
   purple: "#F0EEFF",
+}
+
+const ICON_BG_DARK: Record<ReferenceItem["iconColor"], string> = {
+  teal: "#1A3A2E",
+  blue: "#1A2A3E",
+  orange: "#3A2A1A",
+  purple: "#2A1A3E",
 }
 
 const ICON_STROKE: Record<ReferenceItem["iconColor"], string> = {
@@ -187,18 +194,34 @@ const ICON_STROKE: Record<ReferenceItem["iconColor"], string> = {
   purple: "#7C5CBF",
 }
 
-const BADGE_STYLE: Record<
-  BadgeType,
-  { bg: string; color: string; label: string }
-> = {
-  new: { bg: "#E0FFF7", color: "#028A67", label: "최신" },
-  kdigo: { bg: "#F0EEFF", color: "#7C5CBF", label: "KDIGO" },
-  pdf: { bg: "#F0F2F5", color: "#64748B", label: "PDF" },
+const BADGE_LABEL: Record<BadgeType, string> = {
+  new: "최신",
+  kdigo: "KDIGO",
+  pdf: "PDF",
 }
 
-function ItemIcon({ color }: { color: ReferenceItem["iconColor"] }) {
+const BADGE_COLOR: Record<BadgeType, string> = {
+  new: "#028A67",
+  kdigo: "#7C5CBF",
+  pdf: "#64748B",
+}
+
+const BADGE_BG_LIGHT: Record<BadgeType, string> = {
+  new: "#E0FFF7",
+  kdigo: "#F0EEFF",
+  pdf: "#F0F2F5",
+}
+
+const BADGE_BG_DARK: Record<BadgeType, string> = {
+  new: "#1A3A2E",
+  kdigo: "#2A1A3E",
+  pdf: "#2A2A32",
+}
+
+function ItemIcon({ color, isDark }: { color: ReferenceItem["iconColor"]; isDark: boolean }) {
+  const bg = isDark ? ICON_BG_DARK[color] : ICON_BG_LIGHT[color]
   return (
-    <View style={[styles.itemIcon, { backgroundColor: ICON_BG[color] }]}>
+    <View style={[styles.itemIcon, { backgroundColor: bg }]}>
       <View
         style={[styles.iconBar1, { backgroundColor: ICON_STROKE[color] }]}
       />
@@ -212,8 +235,10 @@ function ItemIcon({ color }: { color: ReferenceItem["iconColor"] }) {
   )
 }
 
-function Badge({ type }: { type: BadgeType }) {
-  const { bg, color, label } = BADGE_STYLE[type]
+function Badge({ type, isDark }: { type: BadgeType; isDark: boolean }) {
+  const bg = isDark ? BADGE_BG_DARK[type] : BADGE_BG_LIGHT[type]
+  const color = BADGE_COLOR[type]
+  const label = BADGE_LABEL[type]
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       <ThemedText style={[styles.badgeText, { color }]}>{label}</ThemedText>
@@ -224,9 +249,11 @@ function Badge({ type }: { type: BadgeType }) {
 function ReferenceRow({
   item,
   colors,
+  isDark,
 }: {
   item: ReferenceItem
   colors: ReturnType<typeof useSettingsColors>
+  isDark: boolean
 }) {
   const handlePress = () => {
     if (item.url) Linking.openURL(item.url)
@@ -240,7 +267,7 @@ function ReferenceRow({
       ]}
       onPress={handlePress}
     >
-      <ItemIcon color={item.iconColor} />
+      <ItemIcon color={item.iconColor} isDark={isDark} />
       <View style={styles.itemBody}>
         <ThemedText
           style={[styles.itemTitle, { color: colors.text }]}
@@ -253,7 +280,7 @@ function ReferenceRow({
         </ThemedText>
       </View>
       <View style={styles.itemRight}>
-        <Badge type={item.badge} />
+        <Badge type={item.badge} isDark={isDark} />
         <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
       </View>
     </Pressable>
@@ -263,9 +290,11 @@ function ReferenceRow({
 function SectionGroup({
   section,
   colors,
+  isDark,
 }: {
   section: ReferenceSection
   colors: ReturnType<typeof useSettingsColors>
+  isDark: boolean
 }) {
   return (
     <>
@@ -275,7 +304,7 @@ function SectionGroup({
       <View style={[styles.listGroup, { borderColor: colors.border }]}>
         {section.items.map((item, index) => (
           <View key={item.id}>
-            <ReferenceRow item={item} colors={colors} />
+            <ReferenceRow item={item} colors={colors} isDark={isDark} />
             {index < section.items.length - 1 && (
               <View
                 style={[styles.divider, { backgroundColor: colors.inputBg }]}
@@ -296,6 +325,7 @@ export function MedicalReferenceScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
+  const { isDark } = c
   const [searchQuery, setSearchQuery] = useState("")
 
   const filteredSections: ReferenceSection[] = REFERENCE_SECTIONS.map(
@@ -325,7 +355,7 @@ export function MedicalReferenceScreen() {
       >
         {/* 안내 배너 */}
         <View style={[styles.infoBanner, { borderColor: c.border }]}>
-          <View style={styles.infoIcon}>
+          <View style={[styles.infoIcon, { backgroundColor: isDark ? "#1A3A2E" : "#E0FFF7" }]}>
             <Ionicons
               name="information-circle-outline"
               size={18}
@@ -360,7 +390,7 @@ export function MedicalReferenceScreen() {
         {/* 섹션 목록 */}
         {filteredSections.length > 0 ? (
           filteredSections.map((section) => (
-            <SectionGroup key={section.id} section={section} colors={c} />
+            <SectionGroup key={section.id} section={section} colors={c} isDark={isDark} />
           ))
         ) : (
           <ThemedText style={[styles.emptyText, { color: c.textMuted }]}>
@@ -433,7 +463,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: "#E0FFF7",
     alignItems: "center",
     justifyContent: "center",
   },

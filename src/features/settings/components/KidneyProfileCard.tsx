@@ -23,6 +23,7 @@ function localizeComorbidity(key: string): string {
 interface KidneyProfileCardProps {
   ckdStageLabel: string
   isDialysis: boolean
+  heightCm?: number | null
   weightKg: number | null
   diagnosisDate: string | null
   comorbidities?: string[]
@@ -32,6 +33,7 @@ interface KidneyProfileCardProps {
 export function KidneyProfileCard({
   ckdStageLabel,
   isDialysis,
+  heightCm,
   weightKg,
   diagnosisDate,
   comorbidities,
@@ -43,6 +45,12 @@ export function KidneyProfileCard({
     ? ["rgba(114, 223, 196, 0.08)", "rgba(49, 49, 56, 0.8)"]
     : ["rgba(114, 223, 196, 0.16)", "rgba(233, 250, 246, 0.16)"]
 
+  const heightWeightLabel = (() => {
+    if (heightCm != null && weightKg != null) return `${heightCm}cm / ${weightKg}kg`
+    if (weightKg != null) return `${weightKg}kg`
+    return "미입력"
+  })()
+
   return (
     <View
       style={[
@@ -51,12 +59,7 @@ export function KidneyProfileCard({
         c.isDark && styles.shadowOuterDark,
       ]}
     >
-      <View
-        style={[
-          styles.shadowInner,
-          { backgroundColor: c.cardBg },
-        ]}
-      >
+      <View style={[styles.shadowInner, { backgroundColor: c.cardBg }]}>
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0.511, y: 1 }}
@@ -67,6 +70,9 @@ export function KidneyProfileCard({
           {/* 헤더 */}
           <View style={styles.header}>
             <ThemedText style={styles.title}>나의 신장 프로필</ThemedText>
+            <Pressable onPress={onEditPress} hitSlop={8}>
+              <ThemedText style={styles.editBtn}>수정하기</ThemedText>
+            </Pressable>
           </View>
 
           {/* CKD 병기 */}
@@ -97,7 +103,7 @@ export function KidneyProfileCard({
             </View>
           </View>
 
-          {/* 체중 & 진단시기 */}
+          {/* 키·체중 & 진단 시기 */}
           <View style={styles.infoBoxRow}>
             <View
               style={[
@@ -106,10 +112,10 @@ export function KidneyProfileCard({
               ]}
             >
               <ThemedText style={[styles.infoBoxTitle, { color: c.textSub }]}>
-                체중
+                키 / 체중
               </ThemedText>
               <ThemedText style={[styles.infoBoxValue, { color: c.text }]}>
-                {weightKg != null ? `${weightKg}kg` : "미입력"}
+                {heightWeightLabel}
               </ThemedText>
             </View>
             <View
@@ -119,7 +125,7 @@ export function KidneyProfileCard({
               ]}
             >
               <ThemedText style={[styles.infoBoxTitle, { color: c.textSub }]}>
-                진단시기
+                진단 시기
               </ThemedText>
               <ThemedText style={[styles.infoBoxValue, { color: c.text }]}>
                 {diagnosisDate ?? "미입력"}
@@ -127,13 +133,13 @@ export function KidneyProfileCard({
             </View>
           </View>
 
-          {/* 동반 질환 */}
+          {/* 동반 질환 및 진단 원인 */}
           {comorbidities && comorbidities.length > 0 && (
             <View style={styles.comorbiditySection}>
               <View style={styles.comorbidityHeader}>
-                <Ionicons name="ellipse" size={11} color={tokens.color.sub8.val} />
+                <Ionicons name="grid-outline" size={14} color={tokens.color.sub8.val} />
                 <ThemedText style={styles.comorbidityTitle}>
-                  동반 질환
+                  동반 질환 및 진단 원인
                 </ThemedText>
               </View>
               <View style={styles.comorbidityChips}>
@@ -143,8 +149,8 @@ export function KidneyProfileCard({
                     style={[
                       styles.comorbidityChip,
                       {
-                        backgroundColor: c.isDark ? "#2A2A32" : "#FFFFFFBA",
-                        borderColor: "#51D1B0",
+                        backgroundColor: c.isDark ? "#2A2A32" : "#FFFFFF",
+                        borderColor: c.isDark ? "#3A3A42" : "#E0E0E0",
                       },
                     ]}
                   >
@@ -175,16 +181,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.122,
         shadowRadius: 7.6,
       },
-      android: {
-        elevation: 4,
-      },
+      android: { elevation: 4 },
     }),
   },
   shadowOuterDark: {
     ...Platform.select({
-      ios: {
-        shadowOpacity: 0.3,
-      },
+      ios: { shadowOpacity: 0.3 },
     }),
   },
   shadowInner: {
@@ -214,6 +216,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: tokens.color.sub8.val,
   },
+  editBtn: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: tokens.color.sub8.val,
+  },
   ckdRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -229,21 +236,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
-  ckdTextBlock: {
-    gap: 2,
-  },
-  ckdLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  ckdValue: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  ckdDialysis: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
+  ckdTextBlock: { gap: 2 },
+  ckdLabel: { fontSize: 12, fontWeight: "500" },
+  ckdValue: { fontSize: 18, fontWeight: "700" },
+  ckdDialysis: { fontSize: 14, fontWeight: "500" },
   infoBoxRow: {
     flexDirection: "row",
     gap: 14,
@@ -272,7 +268,7 @@ const styles = StyleSheet.create({
   comorbidityHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
   },
   comorbidityTitle: {
     fontSize: 14,
@@ -288,8 +284,8 @@ const styles = StyleSheet.create({
   comorbidityChip: {
     borderWidth: 1,
     borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 13,
   },
   comorbidityChipText: {
     fontSize: 14,

@@ -12,6 +12,13 @@ import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { KIDNEY_SAFE_LIMITS } from "@/src/types/models"
 
+function formatDiagnosisDate(iso: string | null): string | null {
+  if (!iso) return null
+  const [year, month] = iso.split("-")
+  if (!year || !month) return null
+  return `${year}년 ${parseInt(month)}월`
+}
+
 const APP_DOWNLOAD_URL =
   "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
 
@@ -201,7 +208,7 @@ export function MyPageScreen() {
             ckdStageLabel={kidneyProfile.ckdStageLabel}
             isDialysis={kidneyProfile.isDialysis}
             weightKg={kidneyProfile.weightKg}
-            diagnosisDate={kidneyProfile.weightRecordedAt}
+            diagnosisDate={formatDiagnosisDate(kidneyProfile.diagnosisDate)}
             comorbidities={kidneyProfile.comorbidities}
             onEditPress={() => router.push("/(settings)/kidney-profile-edit")}
           />

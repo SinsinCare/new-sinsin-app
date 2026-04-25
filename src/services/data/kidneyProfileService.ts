@@ -7,6 +7,7 @@ export interface KidneyProfile {
   isDialysis: boolean
   weightKg: number | null
   weightRecordedAt: string | null
+  diagnosisDate: string | null
   comorbidities?: string[]
 }
 
