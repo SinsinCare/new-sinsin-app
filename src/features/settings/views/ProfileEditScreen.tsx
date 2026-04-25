@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react"
-import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Pressable,
+  Alert,
+  TextInput,
+} from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -9,7 +16,9 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
+import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { api } from "@/src/services/core/apiClient"
+import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
 
@@ -21,18 +30,48 @@ const GENDER_OPTIONS: { key: Gender; label: string }[] = [
   { key: "OTHER", label: "기타" },
 ]
 
+const COMORBIDITY_OPTIONS = [
+  { key: "DIABETES", label: "당뇨" },
+  { key: "HYPERTENSION", label: "고혈압" },
+  { key: "HEART_DISEASE", label: "심장질환" },
+  { key: "GOUT", label: "통풍" },
+  { key: "ANEMIA", label: "빈혈" },
+  { key: "BONE_MINERAL", label: "골미네랄 장애" },
+]
+
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
+  const { data: kidneyProfile } = useKidneyProfile()
   const c = useSettingsColors()
+
   const [gender, setGender] = useState<Gender | null>(null)
+  const [weightVal, setWeightVal] = useState("")
+  const [ckdStage, setCkdStage] = useState<number>(1)
+  const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (profile?.gender) setGender(profile.gender)
   }, [profile?.gender])
+
+  useEffect(() => {
+    if (!kidneyProfile) return
+    const stageNum = parseInt((kidneyProfile.ckdStage ?? "").replace(/\D/g, "")) || 1
+    setCkdStage(stageNum)
+    setSelectedComorbidities(kidneyProfile.comorbidities ?? [])
+    if (kidneyProfile.weightKg != null) {
+      setWeightVal(String(kidneyProfile.weightKg))
+    }
+  }, [kidneyProfile])
+
+  const toggleComorbidity = (key: string) => {
+    setSelectedComorbidities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    )
+  }
 
   const handleSave = async () => {
     if (isSaving) return
@@ -43,7 +82,20 @@ export function ProfileEditScreen() {
         name: profile?.name,
         ...(gender ? { gender } : {}),
       })
+
+      await api.patch("/user/profile/kidney", {
+        ckdStage: `CKD${ckdStage}`,
+        comorbidities: selectedComorbidities,
+      })
+
+      const weight = parseFloat(weightVal)
+      if (!isNaN(weight) && weight > 0) {
+        const today = new Date().toISOString().split("T")[0]
+        await weightEdemaService.updateWeight(weight, today)
+      }
+
       queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
+      queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
       router.back()
     } catch {
       Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
@@ -51,6 +103,8 @@ export function ProfileEditScreen() {
       setIsSaving(false)
     }
   }
+
+  const greenTintBg = c.isDark ? "#1A3A2E" : "#F0FDF4"
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
@@ -60,7 +114,9 @@ export function ProfileEditScreen() {
         onBack={() => router.back()}
         rightElement={
           <Pressable onPress={handleSave} hitSlop={8} disabled={isSaving}>
-            <ThemedText style={[styles.saveButton, isSaving && { opacity: 0.5 }]}>
+            <ThemedText
+              style={[styles.saveButton, isSaving && { opacity: 0.5 }]}
+            >
               {isSaving ? "저장 중..." : "저장"}
             </ThemedText>
           </Pressable>
@@ -73,11 +129,14 @@ export function ProfileEditScreen() {
           { paddingBottom: insets.bottom + 40 },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* 아바타 */}
         <View style={styles.avatarSection}>
           <Pressable style={styles.avatarWrapper}>
-            <View style={[styles.avatarCircle, { backgroundColor: c.avatarBg }]}>
+            <View
+              style={[styles.avatarCircle, { backgroundColor: c.avatarBg }]}
+            >
               <Ionicons name="person" size={36} color={c.textTertiary} />
             </View>
             <View style={[styles.cameraButton, { borderColor: c.bg }]}>
@@ -88,7 +147,7 @@ export function ProfileEditScreen() {
 
         <View style={[styles.divider, { backgroundColor: c.inputBg }]} />
 
-        {/* 닉네임 - 탭 가능 */}
+        {/* 닉네임 */}
         <Pressable
           style={({ pressed }) => [
             styles.fieldRow,
@@ -98,7 +157,9 @@ export function ProfileEditScreen() {
           onPress={() => router.push("/(settings)/nickname-edit")}
         >
           <View style={styles.fieldContent}>
-            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>닉네임</ThemedText>
+            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+              닉네임
+            </ThemedText>
             <View style={styles.fieldValueRow}>
               <ThemedText
                 style={[
@@ -109,15 +170,21 @@ export function ProfileEditScreen() {
               >
                 {profile?.nickName || "닉네임을 설정해주세요"}
               </ThemedText>
-              <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={c.textTertiary}
+              />
             </View>
           </View>
         </Pressable>
 
-        {/* 이름 - 읽기 전용 */}
+        {/* 이름 */}
         <View style={[styles.fieldRow, { borderBottomColor: c.inputBg }]}>
           <View style={styles.fieldContent}>
-            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>이름</ThemedText>
+            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+              이름
+            </ThemedText>
             <ThemedText
               style={[
                 styles.fieldValue,
@@ -130,10 +197,12 @@ export function ProfileEditScreen() {
           </View>
         </View>
 
-        {/* 이메일 - 읽기 전용 */}
+        {/* 이메일 */}
         <View style={[styles.fieldRow, { borderBottomColor: c.inputBg }]}>
           <View style={styles.fieldContent}>
-            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>이메일</ThemedText>
+            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+              이메일
+            </ThemedText>
             <ThemedText
               style={[
                 styles.fieldValue,
@@ -149,7 +218,9 @@ export function ProfileEditScreen() {
         {/* 성별 */}
         <View style={[styles.fieldRow, styles.fieldRowNoBorder]}>
           <View style={styles.fieldContent}>
-            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>성별</ThemedText>
+            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+              성별
+            </ThemedText>
             <View style={styles.genderRow}>
               {GENDER_OPTIONS.map((opt) => (
                 <Pressable
@@ -158,7 +229,7 @@ export function ProfileEditScreen() {
                     styles.genderChip,
                     { borderColor: c.border },
                     gender === opt.key && {
-                      backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4",
+                      backgroundColor: greenTintBg,
                       borderWidth: 1.4,
                       borderColor: tokens.color.sub6.val,
                     },
@@ -180,7 +251,110 @@ export function ProfileEditScreen() {
           </View>
         </View>
 
-        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
+
+        {/* 체중 */}
+        <View style={styles.fieldContent}>
+          <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+            체중 (kg)
+          </ThemedText>
+          <TextInput
+            style={[
+              styles.textInput,
+              {
+                marginTop: 8,
+                borderColor: c.border,
+                color: c.text,
+                backgroundColor: c.bg,
+              },
+            ]}
+            value={weightVal}
+            onChangeText={setWeightVal}
+            keyboardType="decimal-pad"
+            placeholder="체중 입력"
+            placeholderTextColor={c.textTertiary}
+          />
+        </View>
+
+        {/* 신장 병기 */}
+        <View style={[styles.fieldContent, { paddingTop: 0 }]}>
+          <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+            신장 병기 (CKD)
+          </ThemedText>
+          <View style={[styles.stageButtonsRow, { marginTop: 8 }]}>
+            {[1, 2, 3, 4, 5].map((stage) => (
+              <Pressable
+                key={stage}
+                style={[
+                  styles.stageButton,
+                  { borderColor: c.border },
+                  ckdStage === stage && {
+                    backgroundColor: greenTintBg,
+                    borderWidth: 1.4,
+                    borderColor: tokens.color.sub6.val,
+                  },
+                ]}
+                onPress={() => setCkdStage(stage)}
+              >
+                <ThemedText
+                  style={[
+                    styles.stageButtonText,
+                    { color: c.text },
+                    ckdStage === stage && {
+                      color: tokens.color.sub8.val,
+                      fontWeight: "600",
+                    },
+                  ]}
+                >
+                  {stage}기
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* 기저질환 */}
+        <View style={[styles.fieldContent, { paddingTop: 0, paddingBottom: 20 }]}>
+          <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+            기저질환
+          </ThemedText>
+          <View style={[styles.chipWrap, { marginTop: 8 }]}>
+            {COMORBIDITY_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                style={[
+                  styles.chip,
+                  { borderColor: c.border },
+                  selectedComorbidities.includes(opt.key) && {
+                    backgroundColor: greenTintBg,
+                    borderWidth: 1.4,
+                    borderColor: tokens.color.sub6.val,
+                  },
+                ]}
+                onPress={() => toggleComorbidity(opt.key)}
+              >
+                <ThemedText
+                  style={[
+                    styles.chipText,
+                    { color: c.text },
+                    selectedComorbidities.includes(opt.key) && {
+                      color: tokens.color.sub8.val,
+                      fontWeight: "600",
+                    },
+                  ]}
+                >
+                  {opt.label}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
 
         {/* 비밀번호 수정 */}
         <Pressable
@@ -191,7 +365,9 @@ export function ProfileEditScreen() {
           ]}
           onPress={() => router.push("/(settings)/password-edit")}
         >
-          <ThemedText style={[styles.navTitle, { color: c.text }]}>비밀번호 수정하기</ThemedText>
+          <ThemedText style={[styles.navTitle, { color: c.text }]}>
+            비밀번호 수정하기
+          </ThemedText>
           <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
       </ScrollView>
@@ -264,7 +440,6 @@ const styles = StyleSheet.create({
   sectionDivider: {
     height: 12,
     marginHorizontal: -20,
-    marginVertical: 0,
   },
   navRow: {
     flexDirection: "row",
@@ -303,5 +478,46 @@ const styles = StyleSheet.create({
   },
   genderChipTextSelected: {
     color: tokens.color.sub8.val,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+  },
+  stageButtonsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  stageButton: {
+    flex: 1,
+    height: 44,
+    borderWidth: 2,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stageButtonText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    height: 40,
+    borderWidth: 2,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
 })

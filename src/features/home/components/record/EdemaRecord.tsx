@@ -1,5 +1,5 @@
 import { TouchableOpacity, StyleSheet, useColorScheme } from "react-native"
-import { Text, XStack, YStack } from "tamagui"
+import { Text, XStack } from "tamagui"
 import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
 import { RecordCard } from "./RecordCard"
 
@@ -20,14 +20,20 @@ export function EdemaRecord({
 
   return (
     <RecordCard
-      type="edema"
-      title={`몸이 붓는 \n느낌이 있나요?`}
+      type="weight"
+      title="몸이 붓는 느낌이 있나요?"
       subtitle={subtitle}
+      icon={require("@/assets/images/water-edema.png")}
     >
-      <YStack gap="$2">
+      <XStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (
-          <TouchableOpacity key={option} onPress={() => onSave(option)}>
+          <TouchableOpacity
+            key={option}
+            style={styles.buttonWrapper}
+            onPress={() => onSave(option)}
+          >
             <XStack
+              flex={1}
               backgroundColor={
                 selected === option
                   ? "$primary"
@@ -36,14 +42,16 @@ export function EdemaRecord({
                     : "$pureWhite"
               }
               paddingVertical="$2.5"
-              paddingHorizontal="$7"
+              paddingHorizontal="$2"
               borderRadius="$4"
               justifyContent="center"
+              alignItems="center"
               style={styles.optionButton}
             >
               <Text
-                fontSize={15}
+                fontSize={14}
                 fontWeight="600"
+                textAlign="center"
                 color={
                   selected === option
                     ? "white"
@@ -57,12 +65,15 @@ export function EdemaRecord({
             </XStack>
           </TouchableOpacity>
         ))}
-      </YStack>
+      </XStack>
     </RecordCard>
   )
 }
 
 const styles = StyleSheet.create({
+  buttonWrapper: {
+    flex: 1,
+  },
   optionButton: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
