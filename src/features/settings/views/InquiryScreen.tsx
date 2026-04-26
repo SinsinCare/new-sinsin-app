@@ -9,7 +9,9 @@ import {
   Platform,
   Modal,
   Animated,
+  Alert,
 } from "react-native"
+import { api } from "@/src/services/core/apiClient"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -21,6 +23,8 @@ import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 const MAX_IMAGES = 3
 const MAX_CONTENT = 100
@@ -37,12 +41,14 @@ const INQUIRY_CATEGORIES = [
 export function InquiryScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const c = useSettingsColors()
 
   const [category, setCategory] = useState<string | null>(null)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [images, setImages] = useState<string[]>([])
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCategorySheet, setShowCategorySheet] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [tooltipVisible, setTooltipVisible] = useState(false)
@@ -99,13 +105,35 @@ export function InquiryScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = () => {
-    // TODO: 문의 등록 API 호출
-    router.back()
+  const handleSubmit = async () => {
+    if (!canSubmit || isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      const formData = new FormData()
+      formData.append("subject", `[${category}] ${title}`)
+      formData.append("content", content)
+      images.forEach((uri, index) => {
+        formData.append("images", {
+          uri,
+          name: `image_${index}.jpg`,
+          type: "image/jpeg",
+        } as unknown as Blob)
+      })
+      await api.post("/user/inquiries", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      Alert.alert("문의 등록 완료", "문의가 성공적으로 등록되었습니다.", [
+        { text: "확인", onPress: () => router.back() },
+      ])
+    } catch {
+      Alert.alert("오류", "문의 등록에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title="1:1 문의"
         paddingTop={insets.top + 8}
@@ -126,73 +154,83 @@ export function InquiryScreen() {
         >
           {/* 카테고리 */}
           <View style={styles.categoryRow}>
-            <ThemedText style={styles.fieldLabel}>문의 카테고리</ThemedText>
+            <ThemedText style={[styles.fieldLabel, { color: c.textSub }]}>
+              문의 카테고리
+            </ThemedText>
             <View style={styles.categoryRight}>
               {category && (
-                <ThemedText style={styles.categoryValue}>{category}</ThemedText>
+                <ThemedText style={[styles.categoryValue, { color: c.text }]}>
+                  {category}
+                </ThemedText>
               )}
               <Pressable
                 style={({ pressed }) => [
                   styles.selectButton,
-                  pressed && styles.selectButtonPressed,
+                  { borderColor: c.border },
+                  pressed && { backgroundColor: c.pressedBg },
                 ]}
                 onPress={() => setShowCategorySheet(true)}
               >
-                <ThemedText style={styles.selectButtonText}>선택</ThemedText>
+                <ThemedText style={[styles.selectButtonText, { color: c.textSub }]}>
+                  선택
+                </ThemedText>
               </Pressable>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: c.inputBg }]} />
 
           {/* 제목 */}
-          <ThemedText style={[styles.fieldLabel, { marginBottom: 10 }]}>
+          <ThemedText
+            style={[styles.fieldLabel, { color: c.textSub, marginBottom: 10 }]}
+          >
             제목
           </ThemedText>
           <TextInput
-            style={styles.titleInput}
+            style={[styles.titleInput, { color: c.text }]}
             value={title}
             onChangeText={setTitle}
             placeholder="제목을 입력해주세요"
-            placeholderTextColor="#C5C8CE"
+            placeholderTextColor={c.textTertiary}
           />
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: c.inputBg }]} />
 
           {/* 문의 내용 */}
           <View style={styles.contentWrapper}>
             <TextInput
-              style={styles.contentInput}
+              style={[styles.contentInput, { color: c.text }]}
               value={content}
               onChangeText={(text) => setContent(text.slice(0, MAX_CONTENT))}
               placeholder={
                 "문의 내용을 입력해주세요.\n\n궁금한 점이 있다면 언제든 자유롭게 문의해 주세요.\n동일을 제외한 항목에는 최후 아래에 답변됩니다."
               }
-              placeholderTextColor="#C5C8CE"
+              placeholderTextColor={c.textTertiary}
               multiline
               textAlignVertical="top"
             />
-            <ThemedText style={styles.contentCount}>
+            <ThemedText style={[styles.contentCount, { color: c.textMuted }]}>
               {content.length}/{MAX_CONTENT}
             </ThemedText>
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: c.inputBg }]} />
 
           {/* 이미지 첨부 */}
           <View style={styles.imageSection}>
-            <ThemedText style={styles.imageHint}>
+            <ThemedText style={[styles.imageHint, { color: c.textMuted }]}>
               문의 사진은 최대 3장까지 첨부 할 수 있어요
             </ThemedText>
             <View style={styles.imageRow}>
               <Pressable
                 style={({ pressed }) => [
                   styles.imageAddButton,
-                  pressed && styles.imageAddButtonPressed,
+                  { borderColor: c.border, backgroundColor: c.secondaryBg },
+                  pressed && { backgroundColor: c.inputBg },
                 ]}
                 onPress={handleAddImage}
               >
-                <Ionicons name="image-outline" size={24} color="#94A3B8" />
+                <Ionicons name="image-outline" size={24} color={c.textMuted} />
               </Pressable>
               {images.map((uri, index) => (
                 <View key={index} style={styles.imageThumbWrapper}>
@@ -202,11 +240,14 @@ export function InquiryScreen() {
                     contentFit="cover"
                   />
                   <Pressable
-                    style={styles.imageRemoveButton}
+                    style={[
+                      styles.imageRemoveButton,
+                      { backgroundColor: c.bg },
+                    ]}
                     onPress={() => handleRemoveImage(index)}
                     hitSlop={4}
                   >
-                    <Ionicons name="close-circle" size={18} color="#374151" />
+                    <Ionicons name="close-circle" size={18} color={c.icon} />
                   </Pressable>
                 </View>
               ))}
@@ -229,8 +270,8 @@ export function InquiryScreen() {
       </KeyboardAvoidingView>
 
       <BottomActionBar
-        label="등록하기"
-        disabled={!canSubmit}
+        label={isSubmitting ? "등록 중..." : "등록하기"}
+        disabled={!canSubmit || isSubmitting}
         paddingBottom={insets.bottom + 16}
         onPress={handleSubmit}
       />
@@ -246,9 +287,12 @@ export function InquiryScreen() {
           style={styles.sheetDim}
           onPress={() => setShowCategorySheet(false)}
         >
-          <Pressable style={styles.sheet} onPress={() => {}}>
-            <View style={styles.sheetHandle} />
-            <ThemedText style={styles.sheetTitle}>
+          <Pressable
+            style={[styles.sheet, { backgroundColor: c.modalBg }]}
+            onPress={() => {}}
+          >
+            <View style={[styles.sheetHandle, { backgroundColor: c.border }]} />
+            <ThemedText style={[styles.sheetTitle, { color: c.text }]}>
               문의 카테고리를 선택해주세요
             </ThemedText>
             {INQUIRY_CATEGORIES.map((cat) => (
@@ -256,7 +300,12 @@ export function InquiryScreen() {
                 key={cat}
                 style={({ pressed }) => [
                   styles.sheetItem,
-                  pressed && styles.sheetItemPressed,
+                  { borderBottomColor: c.inputBg },
+                  pressed && {
+                    backgroundColor: c.pressedBg,
+                    marginHorizontal: -20,
+                    paddingHorizontal: 20,
+                  },
                 ]}
                 onPress={() => {
                   setCategory(cat)
@@ -266,13 +315,14 @@ export function InquiryScreen() {
                 <ThemedText
                   style={[
                     styles.sheetItemText,
+                    { color: c.text },
                     category === cat && styles.sheetItemTextSelected,
                   ]}
                 >
                   {cat}
                 </ThemedText>
                 {category === cat && (
-                  <Ionicons name="checkmark" size={20} color="#44AF94" />
+                  <Ionicons name="checkmark" size={20} color={tokens.color.sub6.val} />
                 )}
               </Pressable>
             ))}
@@ -299,7 +349,6 @@ export function InquiryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   flex: {
     flex: 1,
@@ -312,7 +361,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#64748B",
   },
   // 카테고리
   categoryRow: {
@@ -330,33 +378,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#17191C",
   },
   selectButton: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
-  selectButtonPressed: {
-    backgroundColor: "#F9F9F9",
-  },
   selectButtonText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#64748B",
   },
   divider: {
     height: 1,
-    backgroundColor: "#F0F2F5",
     marginHorizontal: -20,
   },
   // 제목
   titleInput: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#17191C",
     paddingVertical: 12,
     padding: 0,
   },
@@ -368,7 +408,6 @@ const styles = StyleSheet.create({
   contentInput: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#17191C",
     minHeight: 120,
     padding: 0,
   },
@@ -376,7 +415,6 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     fontSize: 12,
     lineHeight: 16,
-    color: "#94A3B8",
     marginTop: 6,
   },
   // 이미지
@@ -387,7 +425,6 @@ const styles = StyleSheet.create({
   imageHint: {
     fontSize: 12,
     lineHeight: 16,
-    color: "#94A3B8",
   },
   imageRow: {
     flexDirection: "row",
@@ -399,13 +436,8 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
-  },
-  imageAddButtonPressed: {
-    backgroundColor: "#F0F2F5",
   },
   imageThumbWrapper: {
     position: "relative",
@@ -419,7 +451,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -6,
     right: -6,
-    backgroundColor: "#FFFFFF",
     borderRadius: 9,
   },
   // 툴팁
@@ -442,7 +473,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
@@ -452,7 +482,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E2E8F0",
     alignSelf: "center",
     marginBottom: 16,
   },
@@ -460,7 +489,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     fontWeight: "600",
-    color: "#17191C",
     marginBottom: 8,
   },
   sheetItem: {
@@ -469,21 +497,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F2F5",
-  },
-  sheetItemPressed: {
-    backgroundColor: "#FAFAFA",
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
   },
   sheetItemText: {
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "400",
-    color: "#374151",
   },
   sheetItemTextSelected: {
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
 })

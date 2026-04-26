@@ -1,10 +1,11 @@
 import { useColorScheme } from "react-native"
 import { XStack, Text, YStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { FilterChip } from "../FilterChip"
 
 type ChipTheme = "primary" | "sub" | "tertiary"
 
-const LABEL_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
+const LABEL_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
 
 interface TagSelectorProps {
   tags: readonly string[]

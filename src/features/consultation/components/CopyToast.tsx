@@ -17,10 +17,10 @@ export function CopyToast({ message }: { message: string }) {
       >
         <Text
           color={"#FDFDFD"}
-          fontSize="14"
+          fontSize={14}
           fontFamily="$body"
           textAlign="center"
-          width="fit-content"
+          flexShrink={1}
         >
           {message}
         </Text>

@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet } from "react-native"
+import { Pressable, StyleSheet, useColorScheme } from "react-native"
 import Markdown from "react-native-markdown-display"
-import { Image } from "expo-image"
 import { YStack, Text, XStack, View } from "tamagui"
-import { useColorScheme } from "@/hooks/use-color-scheme"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
+import SinDark from "@/assets/images/Sin_dark.svg"
+import SinLight from "@/assets/images/Sin_light.svg"
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
@@ -18,6 +19,8 @@ export function AssistantAvatar() {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
 
+  const SvgComponent = isDarkMode ? SinDark : SinLight
+
   return (
     <View
       width={36}
@@ -26,15 +29,7 @@ export function AssistantAvatar() {
       overflow="hidden"
       marginTop="$1"
     >
-      <Image
-        source={
-          isDarkMode
-            ? require("@/assets/images/Sin_dark.svg")
-            : require("@/assets/images/Sin_light.svg")
-        }
-        style={{ width: 36, height: 36 }}
-        contentFit="cover"
-      />
+      <SvgComponent width={36} height={36} />
     </View>
   )
 }
@@ -43,7 +38,7 @@ const markdownStylesLight = StyleSheet.create({
   body: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#2A2A37",
+    color: tokens.color.textLight.val,
     fontFamily: "Pretendard-Regular",
   },
   strong: {
@@ -72,7 +67,7 @@ const markdownStylesDark = StyleSheet.create({
   body: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#E7E7EE",
+    color: tokens.color.textDark.val,
     fontFamily: "Pretendard-Regular",
   },
   strong: {
@@ -111,16 +106,16 @@ export function UserBubble({ message }: { message: Message }) {
         {formatTime(message.createdAt)}
       </Text>
       <YStack
-        backgroundColor={isDarkMode ? "#2E2E34" : "#FDFDFD"}
+        backgroundColor={isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val}
         borderRadius="$6"
-        borderBottomRightRadius="1"
+        borderBottomRightRadius={1}
         paddingHorizontal="$3"
         paddingVertical="$2.5"
         maxWidth="70%"
       >
         <Text
           fontSize="$4"
-          color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+          color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
           lineHeight={22}
         >
           {message.content}
@@ -143,7 +138,7 @@ export function AssistantBubble({
 }) {
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
-  const iconColor = isDarkMode ? "#66666B" : "#A5A5AF"
+  const iconColor = isDarkMode ? "#66666B" : tokens.color.textLightSub.val
 
   return (
     <XStack paddingHorizontal="$4" gap="$2.5" alignItems="flex-start">

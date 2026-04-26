@@ -25,6 +25,8 @@ import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
 import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
 import type { RecipePostFilters } from "@/src/features/recipe/types"
+import { tokens } from "@/src/theme/tokens"
+import { MealRecommendationSection } from "@/src/features/meal-recommendation/components/MealRecommendationSection"
 
 // Chip key → label mapping for CategoryFilterSheet
 const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
@@ -207,6 +209,7 @@ export default function RecipeScreen() {
   }, [recipes])
 
   return (
+    <YStack flex={1}>
     <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
       <YStack
         flex={1}
@@ -264,12 +267,16 @@ export default function RecipeScreen() {
             </YStack>
             <View
               height={6}
-              backgroundColor={isDarkMode ? "#313138" : "#E7E7EE"}
+              backgroundColor={isDarkMode ? tokens.color.cardBgDark.val : tokens.color.grey8.val}
             />
             <ScrollView
               style={{ flex: 1 }}
               contentContainerStyle={{ padding: 16 }}
             >
+              {/* 점메추/저메추 추천 섹션 */}
+              <YStack marginBottom={16}>
+                <MealRecommendationSection category="recipe" />
+              </YStack>
               <XStack gap={12}>
                 <YStack flex={1} gap={12}>
                   {leftColumn.map((item) => (
@@ -360,6 +367,36 @@ export default function RecipeScreen() {
         </Pressable>
       </YStack>
     </Pressable>
+    {/* Coming soon overlay */}
+    <View
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      backgroundColor="rgba(0,0,0,0.55)"
+      alignItems="center"
+      justifyContent="center"
+      zIndex={999}
+    >
+      <View
+        backgroundColor="white"
+        borderRadius={20}
+        paddingHorizontal={32}
+        paddingVertical={24}
+        alignItems="center"
+        gap={10}
+      >
+        <Text fontSize={32}>🚧</Text>
+        <Text fontSize={17} fontWeight="700" color="#1F1F21" fontFamily="$body">
+          곧 출시 예정이에요
+        </Text>
+        <Text fontSize={13} color="#8E8E93" textAlign="center" fontFamily="$body">
+          더 나은 서비스를 준비하고 있어요
+        </Text>
+      </View>
+    </View>
+    </YStack>
   )
 }
 
@@ -368,7 +405,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 26,
     right: 16,
-    backgroundColor: "#FF7246",
+    backgroundColor: tokens.color.primaryAccent.val,
     borderRadius: 24,
     paddingHorizontal: 15,
     paddingVertical: 8,

@@ -6,14 +6,17 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
+import * as Notifications from "expo-notifications"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
 import { useSignupStore, useOnboardingStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
+import { useNotifications } from "@/src/hooks/useNotifications"
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, accountState } = useAuth()
+  useNotifications(isAuthenticated)
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
     (s) => s.isOnboardingInProgress,
@@ -22,6 +25,17 @@ function RootLayoutNav() {
   const router = useRouter()
 
   const needsOnboarding = accountState === "PENDING_ONBOARDING"
+
+  // 식단 분석 완료 알림 탭 시 홈 탭으로 이동 (RecordView가 pending 결과를 자동으로 엶)
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data
+      if (data?.type === "food_analysis_complete") {
+        router.push("/(tabs)/home")
+      }
+    })
+    return () => sub.remove()
+  }, [router])
 
   useEffect(() => {
     if (isLoading) return
@@ -65,7 +79,7 @@ function RootLayoutNav() {
   return (
     <>
       <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, headerShadowVisible: false, headerStyle: { backgroundColor: "transparent" } }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(settings)" />

@@ -6,6 +6,7 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { nhisService } from "@/src/services/data/nhisService"
 
 type PollStatus = "polling" | "failed" | "timeout"
@@ -67,7 +68,7 @@ export function NhisConfirmScreen() {
         {status === "polling" ? (
           <>
             <View style={styles.spinnerWrapper}>
-              <Ionicons name="hourglass-outline" size={52} color="#44AF94" />
+              <Ionicons name="hourglass-outline" size={52} color={tokens.color.sub6.val} />
             </View>
             <ThemedText style={styles.title}>
               검사 결과를 불러오고 있습니다
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   retryButton: {
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",

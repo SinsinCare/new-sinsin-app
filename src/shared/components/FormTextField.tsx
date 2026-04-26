@@ -1,10 +1,15 @@
-import { useState, useRef } from "react"
-import { Pressable, TextInput, type KeyboardTypeOptions } from "react-native"
+import { useState, useRef, type ComponentRef } from "react"
+import {
+  Pressable,
+  useColorScheme,
+  type KeyboardTypeOptions,
+} from "react-native"
 import { YStack, XStack, Text, Input } from "tamagui"
 import { tokens } from "../../theme/tokens"
 import {
   Controller,
   type Control,
+  type FieldError,
   type FieldValues,
   type Path,
   type RegisterOptions,
@@ -70,17 +75,18 @@ export function FormTextField<T extends FieldValues>({
   autoFocus = false,
 }: FormTextFieldProps<T>) {
   const [isFocused, setIsFocused] = useState(false)
-  const inputRef = useRef<TextInput>(null)
+  const inputRef = useRef<ComponentRef<typeof Input>>(null)
   const config = INPUT_TYPE_CONFIG[inputType]
+  const isDark = useColorScheme() === "dark"
 
-  const hasError = (error: any) => !!error
-  const getBorderColor = (error: any) => {
-    if (hasError(error)) return "$danger"
+  const hasFieldError = (fieldError: FieldError | undefined) => !!fieldError
+  const getBorderColor = (fieldError: FieldError | undefined) => {
+    if (hasFieldError(fieldError)) return "$danger"
     if (isFocused) return "$primary"
     return "$borderColor"
   }
-  const getLabelColor = (error: any) => {
-    if (hasError(error)) return "$danger"
+  const getLabelColor = (fieldError: FieldError | undefined) => {
+    if (hasFieldError(fieldError)) return "$danger"
     if (isFocused) return "$primary"
     return "$color"
   }
@@ -108,7 +114,7 @@ export function FormTextField<T extends FieldValues>({
             </Text>
           )}
           <XStack
-            backgroundColor="white"
+            backgroundColor={isDark ? "#2A2A32" : "white"}
             borderWidth={1}
             borderColor={getBorderColor(error)}
             borderRadius={8}
@@ -118,7 +124,7 @@ export function FormTextField<T extends FieldValues>({
             paddingRight={value && isFocused && clearable ? 8 : 16}
           >
             <Input
-              ref={inputRef as any}
+              ref={inputRef}
               flex={1}
               value={value ?? ""}
               onChangeText={onChange}

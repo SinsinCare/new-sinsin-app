@@ -16,6 +16,8 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { passwordService } from "@/src/services"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 // 영문 대문자, 소문자, 숫자, 특수문자 포함 6~18자
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
@@ -24,6 +26,7 @@ export function PasswordEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { token } = useLocalSearchParams<{ token?: string }>()
+  const c = useSettingsColors()
 
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
@@ -65,7 +68,7 @@ export function PasswordEditScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
@@ -73,7 +76,7 @@ export function PasswordEditScreen() {
         {/* 헤더 */}
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color="#17191C" />
+            <Ionicons name="chevron-back" size={24} color={c.text} />
           </Pressable>
         </View>
 
@@ -82,65 +85,67 @@ export function PasswordEditScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ThemedText style={styles.title}>
+          <ThemedText style={[styles.title, { color: c.text }]}>
             새 비밀번호를 입력해주세요
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: c.textMuted }]}>
             {"영문 대/소문자, 숫자, 특수문자 포함\n6~18자 이내로 입력해주세요"}
           </ThemedText>
 
           {/* 비밀번호 */}
-          <ThemedText style={styles.inputLabel}>비밀번호</ThemedText>
+          <ThemedText style={[styles.inputLabel, { color: c.textSub }]}>비밀번호</ThemedText>
           <View
             style={[
               styles.inputRow,
-              passwordFocused && styles.inputRowFocused,
+              { borderBottomColor: c.border },
+              passwordFocused && { borderBottomColor: c.textMuted },
               password.length > 0 && isPasswordValid && styles.inputRowValid,
             ]}
           >
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: c.text }]}
               value={password}
               onChangeText={setPassword}
               onFocus={() => setPasswordFocused(true)}
               onBlur={() => setPasswordFocused(false)}
               placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-              placeholderTextColor="#C5C8CE"
+              placeholderTextColor={c.textTertiary}
               secureTextEntry
               autoFocus
             />
             {password.length > 0 && (
               <Pressable onPress={() => setPassword("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={20} color="#C5C8CE" />
+                <Ionicons name="close-circle" size={20} color={c.textTertiary} />
               </Pressable>
             )}
           </View>
 
           {/* 비밀번호 확인 */}
-          <ThemedText style={[styles.inputLabel, { marginTop: 32 }]}>
+          <ThemedText style={[styles.inputLabel, { marginTop: 32, color: c.textSub }]}>
             비밀번호 확인
           </ThemedText>
           <View
             style={[
               styles.inputRow,
-              confirmFocused && styles.inputRowFocused,
+              { borderBottomColor: c.border },
+              confirmFocused && { borderBottomColor: c.textMuted },
               hasConfirm && isMatch && styles.inputRowValid,
               hasConfirm && !isMatch && styles.inputRowError,
             ]}
           >
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: c.text }]}
               value={confirm}
               onChangeText={setConfirm}
               onFocus={() => setConfirmFocused(true)}
               onBlur={() => setConfirmFocused(false)}
               placeholder="입력한 비밀번호를 다시 입력해주세요"
-              placeholderTextColor="#C5C8CE"
+              placeholderTextColor={c.textTertiary}
               secureTextEntry
             />
             {confirm.length > 0 && (
               <Pressable onPress={() => setConfirm("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={20} color="#C5C8CE" />
+                <Ionicons name="close-circle" size={20} color={c.textTertiary} />
               </Pressable>
             )}
           </View>
@@ -176,7 +181,6 @@ export function PasswordEditScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   flex: {
     flex: 1,
@@ -194,45 +198,37 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 32,
     fontWeight: "700",
-    color: "#17191C",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "400",
-    color: "#94A3B8",
     marginBottom: 40,
   },
   inputLabel: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#64748B",
     marginBottom: 8,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1.5,
-    borderBottomColor: "#E2E8F0",
     paddingBottom: 10,
     gap: 8,
   },
-  inputRowFocused: {
-    borderBottomColor: "#94A3B8",
-  },
   inputRowValid: {
-    borderBottomColor: "#44AF94",
+    borderBottomColor: tokens.color.sub6.val,
   },
   inputRowError: {
-    borderBottomColor: "#EF4444",
+    borderBottomColor: tokens.color.restrictionText.val,
   },
   textInput: {
     flex: 1,
     fontSize: 18,
     lineHeight: 24,
-    color: "#17191C",
     padding: 0,
   },
   validationText: {
@@ -242,15 +238,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   validText: {
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   invalidText: {
-    color: "#EF4444",
+    color: tokens.color.restrictionText.val,
   },
   errorText: {
     fontSize: 13,
     lineHeight: 18,
-    color: "#EF4444",
+    color: tokens.color.restrictionText.val,
     paddingHorizontal: 20,
     paddingBottom: 8,
   },

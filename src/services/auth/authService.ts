@@ -7,10 +7,47 @@ import type {
   TokenRefreshResult,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
-import { publicApi, tokenService } from "@/src/services"
+import { publicApi, tokenService } from "../core"
+import { ApiError } from "../core/apiError"
+import { logger } from "@/src/lib/logger"
 
 function getRealAuthService(): IAuthService {
   return {
+    async signInWithSocial(
+      provider: "google" | "apple",
+      idToken: string,
+      email?: string | null,
+      displayName?: string | null,
+    ): Promise<{ user: AppUser; accountState: string }> {
+      logger.debug(`[authService] signInWithSocial`, provider)
+
+      let data
+      try {
+        const response = await publicApi.post<ApiResponse<LoginResult>>(
+          "/auth/social-login",
+          { provider, idToken },
+        )
+        data = response.data
+        logger.debug("[authService] social-login OK", data.result.accountState)
+      } catch (error) {
+        logger.error("[authService] /auth/social-login 실패", error)
+        throw error
+      }
+
+      const { accessToken, refreshToken, accountState } = data.result
+      await tokenService.setTokens(accessToken, refreshToken)
+      logger.debug("[authService] 토큰 저장 완료")
+
+      const user: AppUser = {
+        uid: email ?? provider,
+        email: email ?? null,
+        displayName: displayName ?? null,
+      }
+
+      logger.debug("[authService] signInWithSocial 완료", accountState)
+      return { user, accountState }
+    },
+
     async signInWithEmail(
       email: string,
       password: string,
@@ -81,8 +118,12 @@ function getRealAuthService(): IAuthService {
         }
 
         return { user, accountState }
-      } catch {
-        await tokenService.clearTokens()
+      } catch (error) {
+        // 401(인증 만료/무효)일 때만 토큰 삭제
+        // 네트워크 오류 등 일시적 에러는 토큰 유지 → 다음 실행 시 재시도
+        if (error instanceof ApiError && error.statusCode === 401) {
+          await tokenService.clearTokens()
+        }
         return null
       }
     },
@@ -107,6 +148,8 @@ function getAuthService(): IAuthService {
 export const authService: IAuthService = {
   signInWithEmail: (email, password) =>
     getAuthService().signInWithEmail(email, password),
+  signInWithSocial: (provider, idToken, email, displayName) =>
+    getAuthService().signInWithSocial(provider, idToken, email, displayName),
   signup: (request) => getAuthService().signup(request),
   signOut: () => getAuthService().signOut(),
   restoreSession: () => getAuthService().restoreSession(),

@@ -4,12 +4,14 @@ import { router } from "expo-router"
 import { useForm } from "react-hook-form"
 import { FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
-import { useEmailLogin } from "../hooks"
+import { useEmailLogin, useAuthColors } from "../hooks"
 import type { LoginForm } from "../types"
+import { tokens } from "@/src/theme/tokens"
 
 export function EmailLoginScreen() {
   const { isLoading, loginError, clearLoginError, submitLogin } =
     useEmailLogin()
+  const colors = useAuthColors()
 
   const {
     control,
@@ -63,7 +65,7 @@ export function EmailLoginScreen() {
           {loginError && (
             <Text
               fontSize={12}
-              color="#FF3B30"
+              color={tokens.color.error.val}
               letterSpacing={-0.3}
               paddingTop={6}
             >
@@ -78,20 +80,20 @@ export function EmailLoginScreen() {
         <Text
           fontSize={13}
           fontWeight="500"
-          color="#3F444F"
+          color={colors.text}
           letterSpacing={-0.26}
         >
           가입정보를 잊으셨나요?
         </Text>
         <XStack alignItems="center" justifyContent="center" gap={16}>
           <Pressable>
-            <Text fontSize={13} color="#787C83" letterSpacing={-0.26}>
+            <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
               아이디찾기
             </Text>
           </Pressable>
-          <Separator vertical borderColor="#D1D5DB" height={14} />
+          <Separator vertical borderColor={colors.border} height={14} />
           <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-            <Text fontSize={13} color="#787C83" letterSpacing={-0.26}>
+            <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
               비밀번호 찾기
             </Text>
           </Pressable>

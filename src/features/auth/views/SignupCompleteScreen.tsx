@@ -2,21 +2,23 @@ import { Pressable } from "react-native"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
-import { useSignupComplete } from "../hooks"
+import { useSignupComplete, useAuthColors } from "../hooks"
+import { tokens } from "@/src/theme/tokens"
 
 export function SignupCompleteScreen() {
   const insets = useSafeAreaInsets()
   const { nickname, handleStart } = useSignupComplete()
+  const colors = useAuthColors()
 
   return (
-    <YStack flex={1} backgroundColor="white" paddingTop={insets.top}>
+    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack flex={1} paddingHorizontal={20} justifyContent="space-between">
         <YStack flex={1} alignItems="center" justifyContent="center" gap={24}>
           <YStack
             width={80}
             height={80}
             borderRadius={40}
-            backgroundColor="#5464F2"
+            backgroundColor={tokens.color.sub6.val}
             alignItems="center"
             justifyContent="center"
           >
@@ -27,7 +29,7 @@ export function SignupCompleteScreen() {
             <Text
               fontSize={22}
               fontWeight="600"
-              color="#17191C"
+              color={colors.text}
               letterSpacing={-0.44}
               lineHeight={26.4}
               textAlign="center"
@@ -37,7 +39,7 @@ export function SignupCompleteScreen() {
             <Text
               fontSize={15}
               lineHeight={18}
-              color="#787C83"
+              color={colors.textSub}
               textAlign="center"
             >
               회원가입이 완료되었습니다
@@ -48,7 +50,7 @@ export function SignupCompleteScreen() {
         <YStack paddingBottom={insets.bottom + 24}>
           <Pressable onPress={handleStart}>
             <YStack
-              backgroundColor="#5464F2"
+              backgroundColor={tokens.color.sub6.val}
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}

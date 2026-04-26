@@ -6,6 +6,7 @@ import {
   Pressable,
   Platform,
   Linking,
+  useColorScheme,
 } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
@@ -14,41 +15,68 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 
-interface InfoRowProps {
-  label: string
-  value: string
-  onPress?: () => void
-  isLast?: boolean
+function useInfoColors() {
+  const isDark = useColorScheme() === "dark"
+  return {
+    bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
+    cardBg: isDark ? tokens.color.cardBgDark.val : "#FFF",
+    text: isDark ? tokens.color.textDark.val : "#111",
+    textSub: isDark ? tokens.color.textDarkSub.val : "#999",
+    textValue: isDark ? tokens.color.textDark.val : "#333",
+    icon: isDark ? tokens.color.textDarkSub.val : "#333",
+    border: isDark ? tokens.color.borderDark.val : "#E0E0E0",
+  }
 }
-
-const InfoRow = ({ label, value, onPress, isLast = false }: InfoRowProps) => (
-  <Pressable
-    style={({ pressed }) => [
-      styles.infoRow,
-      !isLast && styles.infoRowBorder,
-      pressed && onPress && styles.infoRowPressed,
-    ]}
-    onPress={onPress}
-    disabled={!onPress}
-  >
-    <ThemedText style={styles.infoLabel}>{label}</ThemedText>
-    <ThemedText style={styles.infoValue}>{value}</ThemedText>
-  </Pressable>
-)
 
 export default function AppInfoScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const c = useInfoColors()
+
+  const InfoRow = ({
+    label,
+    value,
+    onPress,
+    isLast = false,
+  }: {
+    label: string
+    value: string
+    onPress?: () => void
+    isLast?: boolean
+  }) => (
+    <Pressable
+      style={({ pressed }) => [
+        styles.infoRow,
+        !isLast && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: c.border,
+        },
+        pressed && onPress && styles.infoRowPressed,
+      ]}
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <ThemedText style={[styles.infoLabel, { color: c.textSub }]}>
+        {label}
+      </ThemedText>
+      <ThemedText style={[styles.infoValue, { color: c.textValue }]}>
+        {value}
+      </ThemedText>
+    </Pressable>
+  )
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
+          <Ionicons name="chevron-back" size={24} color={c.icon} />
         </Pressable>
-        <ThemedText style={styles.headerTitle}>앱 정보 및 고객센터</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: c.text }]}>
+          앱 정보 및 고객센터
+        </ThemedText>
         <View style={{ width: 24 }} />
       </View>
 
@@ -70,8 +98,10 @@ export default function AppInfoScreen() {
 
         {/* Customer Center Section */}
         <View style={styles.section}>
-          <View style={styles.sectionContent}>
-            <ThemedText style={styles.sectionTitle}>고객센터</ThemedText>
+          <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>
+            <ThemedText style={[styles.sectionTitle, { color: c.text }]}>
+              고객센터
+            </ThemedText>
             <InfoRow
               label="이메일"
               value="contact@mediology.ai"
@@ -88,16 +118,16 @@ export default function AppInfoScreen() {
 
         {/* Company Footer */}
         <View style={styles.footer}>
-          <ThemedText style={styles.footerCompany}>
+          <ThemedText style={[styles.footerCompany, { color: c.textValue }]}>
             주식회사 메디올로지
           </ThemedText>
-          <ThemedText style={styles.footerText}>
+          <ThemedText style={[styles.footerText, { color: c.textSub }]}>
             대표이사 정설아 | 사업자등록번호 520-87-03235
           </ThemedText>
-          <ThemedText style={styles.footerText}>
+          <ThemedText style={[styles.footerText, { color: c.textSub }]}>
             (03176) 서울특별시 종로구 경희궁길27 블루코브스퀘어 3F
           </ThemedText>
-          <ThemedText style={styles.footerText}>
+          <ThemedText style={[styles.footerText, { color: c.textSub }]}>
             Copyright © 2026 Mediology Co., Ltd. 신신당부. All Rights reserved.
           </ThemedText>
         </View>
@@ -109,7 +139,6 @@ export default function AppInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
   header: {
     flexDirection: "row",
@@ -121,7 +150,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -139,7 +167,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionContent: {
-    backgroundColor: "#FFF",
     borderRadius: 20,
     overflow: "hidden",
     paddingHorizontal: 20,
@@ -160,7 +187,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111",
     marginBottom: 16,
   },
   infoRow: {
@@ -169,21 +195,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 16,
   },
-  infoRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E0E0E0",
-  },
   infoRowPressed: {
     opacity: 0.6,
   },
   infoLabel: {
     fontSize: 16,
-    color: "#999",
   },
   infoValue: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#333",
   },
   footer: {
     alignItems: "center",
@@ -193,12 +213,10 @@ const styles = StyleSheet.create({
   footerCompany: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#333",
     marginBottom: 12,
   },
   footerText: {
     fontSize: 13,
-    color: "#999",
     textAlign: "center",
     lineHeight: 20,
   },

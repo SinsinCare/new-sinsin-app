@@ -1,6 +1,7 @@
 import { Pressable, useColorScheme } from "react-native"
 import { XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components"
+import { tokens } from "@/src/theme/tokens"
 
 export function ConsultChatHeader({
   onHistoryPress,
@@ -10,12 +11,12 @@ export function ConsultChatHeader({
   onNewChatPress: () => void
 }) {
   const colorScheme = useColorScheme()
-  const headerColor = colorScheme === "dark" ? "#E7E7EE" : "#2A2A37"
+  const headerColor = colorScheme === "dark" ? tokens.color.textDark.val : tokens.color.textLight.val
 
   return (
     <>
       <XStack
-        paddingHorizontal="20"
+        paddingHorizontal={20}
         paddingVertical="$3"
         alignItems="center"
         justifyContent="space-between"

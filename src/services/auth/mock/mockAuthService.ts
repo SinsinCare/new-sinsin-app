@@ -31,6 +31,22 @@ export const mockAuthService: IAuthService = {
     return { user: currentUser, accountState: "ACTIVE" }
   },
 
+  async signInWithSocial(
+    provider: "google" | "apple",
+    _idToken: string,
+    email?: string | null,
+    displayName?: string | null,
+  ): Promise<{ user: AppUser; accountState: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    const mockUser = new MockUser(
+      `mock-${provider}-${Date.now()}`,
+      email ?? null,
+      displayName ?? null,
+    )
+    currentUser = mockUser
+    return { user: currentUser, accountState: "PENDING_ONBOARDING" }
+  },
+
   async signup(request: SignupRequest): Promise<AppUser> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const newUser = new MockUser(

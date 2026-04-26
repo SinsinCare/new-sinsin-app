@@ -88,7 +88,7 @@ export function MealButtons({
             key={type}
             mealType={type}
             onPress={
-              recordedMeals[type] ? () => onViewResult(type) : handleOpenPicker
+              recordedMeals[type] ? () => onViewResult(type) : () => onRecord(type)
             }
             imageUri={mealImages[type]}
             isRecorded={recordedMeals[type] ?? false}
@@ -149,16 +149,8 @@ export function MealButtons({
         style={styles.recordButton}
         onPress={handleOpenPicker}
       >
-        <Ionicons
-          name="camera-outline"
-          size={20}
-          color={isDarkMode ? "black" : "white"}
-        />
-        <Text
-          color={isDarkMode ? "$black" : "white"}
-          fontSize="$4"
-          fontWeight="600"
-        >
+        <Ionicons name="camera-outline" size={20} color="white" />
+        <Text color="white" fontSize="$4" fontWeight="600">
           식이 기록하기
         </Text>
       </TouchableOpacity>
@@ -180,7 +172,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignSelf: "center",
     width: 175,
-    backgroundColor: "white",
     borderRadius: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -200,7 +191,6 @@ const styles = StyleSheet.create({
   mealLabel: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#2d2d2d",
   },
   arrow: {
     position: "absolute",
@@ -208,7 +198,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: 10,
     height: 12,
-    backgroundColor: "white",
     transform: [{ rotate: "45deg" }],
     shadowColor: "#000",
     shadowOffset: { width: 1, height: 1 },

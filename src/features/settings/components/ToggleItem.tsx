@@ -2,6 +2,8 @@ import React from "react"
 import { View, Switch, StyleSheet, Platform } from "react-native"
 
 import { ThemedText } from "@/components/themed-text"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 interface ToggleItemProps {
   title: string
@@ -16,18 +18,35 @@ export function ToggleItem({
   value,
   onValueChange,
 }: ToggleItemProps) {
+  const c = useSettingsColors()
+
   return (
-    <View style={styles.toggleItem}>
+    <View
+      style={[
+        styles.toggleItem,
+        Platform.OS === "android" && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: c.border,
+        },
+      ]}
+    >
       <View style={styles.toggleItemLeft}>
-        <ThemedText style={styles.toggleTitle}>{title}</ThemedText>
-        <ThemedText style={styles.toggleDescription}>{description}</ThemedText>
+        <ThemedText style={[styles.toggleTitle, { color: c.text }]}>
+          {title}
+        </ThemedText>
+        <ThemedText style={[styles.toggleDescription, { color: c.textTertiary }]}>
+          {description}
+        </ThemedText>
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: "#E5E7EB", true: "#0D896A" }}
+        trackColor={{
+          false: c.isDark ? "#3A3A42" : "#E5E7EB",
+          true: tokens.color.sub8.val,
+        }}
         thumbColor="#FFFFFF"
-        ios_backgroundColor="#E5E7EB"
+        ios_backgroundColor={c.isDark ? "#3A3A42" : "#E5E7EB"}
       />
     </View>
   )
@@ -39,12 +58,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 18,
-    ...Platform.select({
-      android: {
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: "#F0F0F0",
-      },
-    }),
   },
   toggleItemLeft: {
     flex: 1,
@@ -55,12 +68,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#17191C",
   },
   toggleDescription: {
     fontSize: 14,
     lineHeight: 18,
     fontWeight: "400",
-    color: "#C5C8CE",
   },
 })

@@ -1,4 +1,6 @@
+import { useColorScheme } from "react-native"
 import { YStack, XStack, Text, Input } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import type { OnboardingValueOption } from "../types"
 
 interface InputStepContentProps {
@@ -12,6 +14,14 @@ export function InputStepContent({
   values,
   onChange,
 }: InputStepContentProps) {
+  const isDark = useColorScheme() === "dark"
+  const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
+  const unitColor = isDark ? tokens.color.textDarkSub.val : "#787C83"
+  const borderColor = isDark
+    ? "rgba(100,105,115,0.4)"
+    : "rgba(218,223,230,0.6)"
+  const inputBg = isDark ? "#2A2A32" : "white"
+
   return (
     <YStack gap={16}>
       {fields.map((field, index) => (
@@ -20,7 +30,7 @@ export function InputStepContent({
             <Text
               fontSize={13}
               fontWeight="500"
-              color="#17191C"
+              color={labelColor}
               letterSpacing={-0.3}
               lineHeight={18.2}
             >
@@ -31,7 +41,8 @@ export function InputStepContent({
             height={52}
             borderRadius={12}
             borderWidth={1}
-            borderColor="rgba(218,223,230,0.6)"
+            borderColor={borderColor}
+            backgroundColor={inputBg}
             alignItems="center"
             paddingHorizontal={16}
             focusStyle={{
@@ -43,6 +54,7 @@ export function InputStepContent({
               flex={1}
               size="$4"
               fontSize={16}
+              color={labelColor}
               borderWidth={0}
               backgroundColor="transparent"
               paddingHorizontal={0}
@@ -53,7 +65,7 @@ export function InputStepContent({
               onChangeText={(text) => onChange(field.key, text)}
             />
             {field.unit && (
-              <Text fontSize={16} color="#787C83" marginLeft={8}>
+              <Text fontSize={16} color={unitColor} marginLeft={8}>
                 {field.unit}
               </Text>
             )}

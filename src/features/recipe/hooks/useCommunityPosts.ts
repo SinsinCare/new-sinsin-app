@@ -22,20 +22,50 @@ export function useCommunityPosts() {
         CommunityMealPost,
         "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
       >,
-    ) => {
-      const newPost = communityPostService.createPost(post)
-      return Promise.resolve(newPost)
-    },
+    ) => communityPostService.createPost(post),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: POSTS_KEY })
     },
   })
 
-  const toggleLikeMutation = useMutation({
-    mutationFn: (postId: string) => {
-      communityPostService.toggleLike(postId)
-      return Promise.resolve()
+  const updatePostMutation = useMutation({
+    mutationFn: ({
+      id,
+      ...data
+    }: {
+      id: string
+      category?: string
+      title?: string
+      description?: string
+      imageUri?: string | null
+    }) => communityPostService.updatePost(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: POSTS_KEY })
     },
+  })
+
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: string) => communityPostService.deletePost(postId),
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: POSTS_KEY })
+      const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
+      queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) =>
+        (old ?? []).filter((p) => p.id !== postId),
+      )
+      return { prev }
+    },
+    onError: (_err, _id, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(POSTS_KEY, context.prev)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: POSTS_KEY })
+    },
+  })
+
+  const toggleLikeMutation = useMutation({
+    mutationFn: (postId: string) => communityPostService.toggleLike(postId),
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: POSTS_KEY })
       const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
@@ -63,10 +93,7 @@ export function useCommunityPosts() {
   })
 
   const toggleBookmarkMutation = useMutation({
-    mutationFn: (postId: string) => {
-      communityPostService.toggleBookmark(postId)
-      return Promise.resolve()
-    },
+    mutationFn: (postId: string) => communityPostService.toggleBookmark(postId),
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: POSTS_KEY })
       const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
@@ -87,13 +114,24 @@ export function useCommunityPosts() {
     },
   })
 
+  const reportPostMutation = useMutation({
+    mutationFn: ({ postId, reason, description }: { postId: string; reason: string; description?: string }) =>
+      communityPostService.reportPost(postId, reason, description),
+  })
+
   return {
     posts,
     isLoading,
     refetch,
     createPost: createPostMutation.mutate,
     isCreating: createPostMutation.isPending,
+    updatePost: updatePostMutation.mutate,
+    isUpdating: updatePostMutation.isPending,
+    deletePost: deletePostMutation.mutate,
+    isDeleting: deletePostMutation.isPending,
     toggleLike: toggleLikeMutation.mutate,
     toggleBookmark: toggleBookmarkMutation.mutate,
+    reportPost: reportPostMutation.mutate,
+    isReporting: reportPostMutation.isPending,
   }
 }

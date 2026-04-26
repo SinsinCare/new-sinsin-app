@@ -11,6 +11,7 @@ import {
 import { XStack, Text, YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 
 const DRAG_DISMISS_THRESHOLD = 60
 
@@ -68,7 +69,7 @@ const ChatHistorySheetLayout = ({
       <Sheet.Frame
         borderTopLeftRadius={20}
         borderTopRightRadius={20}
-        backgroundColor={isDarkMode ? "#1F1F21" : "#F3F3F3"}
+        backgroundColor={isDarkMode ? tokens.color.appBgDark.val : "#F3F3F3"}
       >
         <View
           {...panResponder.panHandlers}
@@ -110,7 +111,7 @@ const ChatHistoryHeader = ({
       <XStack flex={1}>
         <Pressable onPress={onNewChat} hitSlop={8}>
           <XStack
-            backgroundColor={isDarkMode ? "#2E2E34" : "#FDFDFD"}
+            backgroundColor={isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val}
             paddingVertical={6}
             paddingHorizontal={12}
             borderRadius={12}
@@ -120,7 +121,7 @@ const ChatHistoryHeader = ({
             <Text
               fontSize={14}
               fontWeight="600"
-              color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+              color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
             >
               + 새 대화
             </Text>
@@ -132,14 +133,14 @@ const ChatHistoryHeader = ({
         fontSize={15}
         lineHeight={20}
         fontWeight="500"
-        color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+        color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
       >
         상담 기록
       </Text>
 
       <XStack flex={1} justifyContent="flex-end">
         <Pressable onPress={onClose} hitSlop={8}>
-          <Icon name="x" size={20} color={isDarkMode ? "#E7E7EE" : "#2A2A37"} />
+          <Icon name="x" size={20} color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val} />
         </Pressable>
       </XStack>
     </XStack>

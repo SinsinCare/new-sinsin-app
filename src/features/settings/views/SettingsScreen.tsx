@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -10,18 +10,40 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { ToggleItem } from "@/src/features/settings/components"
 import { useAuth } from "@/src/hooks/useAuth"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { useNotifications } from "@/src/hooks/useNotifications"
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const { signOut } = useAuth()
+  const { signOut, isAuthenticated } = useAuth()
+  const c = useSettingsColors()
+  const { settings, updateSettings, requestAndEnable } = useNotifications(isAuthenticated)
 
-  const [pushEnabled, setPushEnabled] = useState(false)
+  const pushEnabled = settings.waterReminder.enabled || settings.mealReminder.enabled
   const [marketingEnabled, setMarketingEnabled] = useState(false)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
 
+  const handlePushToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestAndEnable()
+      if (!granted) {
+        Alert.alert(
+          "알림 권한 필요",
+          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        )
+        return
+      }
+    }
+    await updateSettings({
+      ...settings,
+      waterReminder: { ...settings.waterReminder, enabled: value },
+      mealReminder: { ...settings.mealReminder, enabled: value },
+    })
+  }
+
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title="환경설정"
         paddingTop={insets.top + 8}
@@ -38,9 +60,9 @@ export function SettingsScreen() {
         {/* 알림 설정 */}
         <ToggleItem
           title="앱 푸시 알림 동의"
-          description="서비스와 관련된 모든 알림을 수신해요."
+          description="수분 섭취 및 식사 기록 알림을 수신해요."
           value={pushEnabled}
-          onValueChange={setPushEnabled}
+          onValueChange={handlePushToggle}
         />
         <ToggleItem
           title="마케팅 알림 동의"
@@ -49,7 +71,7 @@ export function SettingsScreen() {
           onValueChange={setMarketingEnabled}
         />
 
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
 
         {/* 약관 */}
         {[
@@ -66,37 +88,37 @@ export function SettingsScreen() {
             key={title}
             style={({ pressed }) => [
               styles.navItem,
-              pressed && styles.navItemPressed,
+              pressed && { backgroundColor: c.pressedBg },
             ]}
             onPress={onPress}
           >
-            <ThemedText style={styles.navItemTitle}>{title}</ThemedText>
-            <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+            <ThemedText style={[styles.navItemTitle, { color: c.text }]}>{title}</ThemedText>
+            <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
           </Pressable>
         ))}
 
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
 
         {/* 계정 */}
         <Pressable
           style={({ pressed }) => [
             styles.navItem,
-            pressed && styles.navItemPressed,
+            pressed && { backgroundColor: c.pressedBg },
           ]}
           onPress={() => setLogoutModalVisible(true)}
         >
-          <ThemedText style={styles.navItemTitle}>로그아웃</ThemedText>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>로그아웃</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
         <Pressable
           style={({ pressed }) => [
             styles.navItem,
-            pressed && styles.navItemPressed,
+            pressed && { backgroundColor: c.pressedBg },
           ]}
           onPress={() => router.push("/(settings)/withdrawal")}
         >
-          <ThemedText style={styles.navItemTitle}>회원탈퇴</ThemedText>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>회원탈퇴</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
       </ScrollView>
 
@@ -117,14 +139,12 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
   },
   sectionDivider: {
     height: 12,
-    backgroundColor: "#F5F6FA",
     marginHorizontal: -20,
     marginVertical: 4,
   },
@@ -136,13 +156,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginHorizontal: -20,
   },
-  navItemPressed: {
-    backgroundColor: "#F9F9F9",
-  },
   navItemTitle: {
     fontSize: 16,
     lineHeight: 16 * 1.4,
     fontWeight: "400",
-    color: "#17191C",
   },
 })

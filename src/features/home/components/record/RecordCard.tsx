@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { TouchableOpacity, useColorScheme } from "react-native"
+import { TouchableOpacity, useColorScheme, Image, ImageSourcePropType } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 
@@ -8,6 +8,7 @@ interface RecordCardProps {
   title: string
   subtitle?: string
   onReset?: () => void
+  icon?: ImageSourcePropType
   children: ReactNode
 }
 
@@ -16,42 +17,48 @@ export function RecordCard({
   title,
   subtitle,
   onReset,
+  icon,
   children,
 }: RecordCardProps) {
   const isHorizontal = type === "edema"
   const isDarkMode = useColorScheme() === "dark"
 
   const titleSection = (
-    <YStack
+    <XStack
       flex={isHorizontal ? 1 : undefined}
-      justifyContent="center"
-      gap="$1"
+      alignItems="center"
+      gap="$3"
     >
-      <XStack justifyContent="space-between" alignItems="center">
-        <Text
-          fontSize={18}
-          fontWeight="600"
-          color={isDarkMode ? "$textDark" : "$color"}
-        >
-          {title}
-        </Text>
-        {onReset && (
-          <TouchableOpacity onPress={onReset}>
-            <XStack alignItems="center" gap={2}>
-              <Text fontSize={14} color="$color.grey5">
-                되돌리기
-              </Text>
-              <Ionicons name="refresh" size={14} color="#999" />
-            </XStack>
-          </TouchableOpacity>
-        )}
-      </XStack>
-      {subtitle && (
-        <Text fontSize={13} color="$color.grey5">
-          {subtitle}
-        </Text>
+      {icon && (
+        <Image source={icon} style={{ width: 36, height: 36 }} />
       )}
-    </YStack>
+      <YStack flex={1} justifyContent="center" gap="$1">
+        <XStack justifyContent="space-between" alignItems="center">
+          <Text
+            fontSize={18}
+            fontWeight="600"
+            color={isDarkMode ? "$textDark" : "$color"}
+          >
+            {title}
+          </Text>
+          {onReset && (
+            <TouchableOpacity onPress={onReset}>
+              <XStack alignItems="center" gap={2}>
+                <Text fontSize={14} color="$grey5">
+                  되돌리기
+                </Text>
+                <Ionicons name="refresh" size={14} color="#999" />
+              </XStack>
+            </TouchableOpacity>
+          )}
+        </XStack>
+        {subtitle && (
+          <Text fontSize={13} color="$grey5">
+            {subtitle}
+          </Text>
+        )}
+      </YStack>
+    </XStack>
   )
 
   if (isHorizontal) {

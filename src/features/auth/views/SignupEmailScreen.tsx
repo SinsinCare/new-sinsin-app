@@ -5,6 +5,7 @@ import { FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useSignupEmail } from "../hooks"
 import type { EmailForm } from "../types"
+import { tokens } from "@/src/theme/tokens"
 
 const BUTTON_WIDTH = 100
 
@@ -85,7 +86,7 @@ export function SignupEmailScreen() {
               >
                 <YStack
                   backgroundColor={
-                    codeVerified || sendingCode ? "#C5C8CE" : "#34D399"
+                    codeVerified || sendingCode ? tokens.color.grey7.val : tokens.color.sub6.val
                   }
                   borderRadius={8}
                   height={52}
@@ -107,7 +108,7 @@ export function SignupEmailScreen() {
           {emailError && (
             <Text
               fontSize={12}
-              color="#FF3B30"
+              color={tokens.color.error.val}
               letterSpacing={-0.3}
               paddingTop={6}
             >
@@ -146,7 +147,7 @@ export function SignupEmailScreen() {
                   disabled={verifyingCode || !!sendError}
                 >
                   <YStack
-                    backgroundColor={sendError ? "#C5C8CE" : "#34D399"}
+                    backgroundColor={sendError ? tokens.color.grey7.val : tokens.color.sub6.val}
                     borderRadius={8}
                     height={52}
                     justifyContent="center"
@@ -167,7 +168,7 @@ export function SignupEmailScreen() {
             {sendError && (
               <Text
                 fontSize={13}
-                color="#FF3B30"
+                color={tokens.color.error.val}
                 letterSpacing={-0.26}
                 paddingTop={8}
               >
@@ -177,7 +178,7 @@ export function SignupEmailScreen() {
             {!sendError && timer > 0 && (
               <Text
                 fontSize={13}
-                color="#FF3B30"
+                color={tokens.color.error.val}
                 letterSpacing={-0.26}
                 paddingTop={8}
               >
@@ -187,7 +188,7 @@ export function SignupEmailScreen() {
             {!sendError && timer === 0 && codeSent && (
               <Text
                 fontSize={13}
-                color="#FF3B30"
+                color={tokens.color.error.val}
                 letterSpacing={-0.26}
                 paddingTop={8}
               >
@@ -200,7 +201,7 @@ export function SignupEmailScreen() {
         {codeVerified && (
           <Text
             fontSize={14}
-            color="#34C759"
+            color={tokens.color.sub8.val}
             fontWeight="500"
             letterSpacing={-0.28}
           >

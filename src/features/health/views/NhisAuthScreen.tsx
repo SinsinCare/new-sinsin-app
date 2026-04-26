@@ -8,6 +8,7 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 
 export function NhisAuthScreen() {
   const insets = useSafeAreaInsets()
@@ -81,14 +82,14 @@ export function NhisAuthScreen() {
             <Ionicons
               name="shield-checkmark-outline"
               size={13}
-              color="#44AF94"
+              color={tokens.color.sub6.val}
             />
             <ThemedText style={styles.securityBadgeText}>
               보안 인증 완료
             </ThemedText>
           </View>
           <View style={styles.securityBadge}>
-            <Ionicons name="lock-closed-outline" size={13} color="#44AF94" />
+            <Ionicons name="lock-closed-outline" size={13} color={tokens.color.sub6.val} />
             <ThemedText style={styles.securityBadgeText}>
               데이터 암호화
             </ThemedText>
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 14,
     paddingVertical: 18,
   },
@@ -213,6 +214,6 @@ const styles = StyleSheet.create({
   securityBadgeText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
 })

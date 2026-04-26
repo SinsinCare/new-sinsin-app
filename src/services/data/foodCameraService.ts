@@ -10,7 +10,8 @@ import type {
   FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
-import { api } from "@/src/services"
+import { api } from "../core"
+import { tokenService } from "../core/tokenService"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
@@ -59,18 +60,21 @@ export const foodCameraService = {
         type: "image/jpeg",
       } as unknown as Blob)
 
-      try {
-        const response = await api.post("/food-camera/analyze", formData, {
-          headers: { "Content-Type": undefined },
-          transformRequest: (data) => data,
-        })
-        result = response.data.result as FoodCameraAnalyzeResult
-      } catch (err) {
-        if (isAxiosError(err) && err.response?.data?.message) {
-          throw new Error(err.response.data.message)
-        }
-        throw err
+      const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
+      const token = await tokenService.getAccessToken()
+      const fetchResponse = await fetch(`${baseURL}/food-camera/analyze`, {
+        method: "POST",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+          Accept: "application/json",
+        },
+        body: formData,
+      })
+      const json = await fetchResponse.json()
+      if (!fetchResponse.ok || json?.isSuccess === false) {
+        throw new Error(json?.message || `HTTP ${fetchResponse.status}`)
       }
+      result = json.result as FoodCameraAnalyzeResult
     }
     return result
   },

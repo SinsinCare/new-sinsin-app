@@ -1,11 +1,32 @@
 import React from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Pressable,
+  useColorScheme,
+} from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
+
+function useLegalColors() {
+  const isDark = useColorScheme() === "dark"
+  return {
+    bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
+    headerText: isDark ? tokens.color.textDark.val : "#111",
+    heading: isDark ? tokens.color.textDark.val : "#111",
+    heading2: isDark ? "#D4D4DA" : "#222",
+    heading3: isDark ? "#BBBBC4" : "#333",
+    body: isDark ? tokens.color.textDarkSub.val : "#444",
+    note: isDark ? "#6B7280" : "#888",
+    icon: isDark ? tokens.color.textDarkSub.val : "#333",
+  }
+}
 
 const PRIVACY_POLICY = `주식회사 메디올로지(이하 "회사")는 「개인정보 보호법」 등 관련 법령을 준수하며, 이용자의 개인정보를 보호하고 권익을 보호하기 위하여 다음과 같은 개인정보 처리방침을 수립·공개한다.
 
@@ -265,7 +286,7 @@ const DOCUMENTS = {
 
 type DocumentType = keyof typeof DOCUMENTS
 
-function renderContent(content: string) {
+function renderContent(content: string, c: ReturnType<typeof useLegalColors>) {
   const lines = content.split("\n")
   const elements: React.ReactNode[] = []
   let key = 0
@@ -273,35 +294,41 @@ function renderContent(content: string) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    // Skip empty lines (spacing handled by marginBottom)
     if (line.trim() === "") continue
 
-    // ## Heading
     if (line.startsWith("## ")) {
       elements.push(
-        <ThemedText key={key++} style={styles.heading2}>
+        <ThemedText
+          key={key++}
+          style={[styles.heading2, { color: c.heading2 }]}
+        >
           {line.slice(3)}
         </ThemedText>,
       )
       continue
     }
 
-    // ### Sub-heading
     if (line.startsWith("### ")) {
       elements.push(
-        <ThemedText key={key++} style={styles.heading3}>
+        <ThemedText
+          key={key++}
+          style={[styles.heading3, { color: c.heading3 }]}
+        >
           {line.slice(4)}
         </ThemedText>,
       )
       continue
     }
 
-    // Numbered list with sub-items (3+ spaces indent with -)
     if (/^\s{3,}- /.test(line)) {
       elements.push(
         <View key={key++} style={styles.subListItem}>
-          <ThemedText style={styles.bodyText}>{"  - "}</ThemedText>
-          <ThemedText style={[styles.bodyText, styles.listText]}>
+          <ThemedText style={[styles.bodyText, { color: c.body }]}>
+            {"  - "}
+          </ThemedText>
+          <ThemedText
+            style={[styles.bodyText, styles.listText, { color: c.body }]}
+          >
             {line.trim().slice(2)}
           </ThemedText>
         </View>,
@@ -309,12 +336,15 @@ function renderContent(content: string) {
       continue
     }
 
-    // Bullet list (- item)
     if (line.startsWith("- ")) {
       elements.push(
         <View key={key++} style={styles.listItem}>
-          <ThemedText style={styles.bodyText}>{"- "}</ThemedText>
-          <ThemedText style={[styles.bodyText, styles.listText]}>
+          <ThemedText style={[styles.bodyText, { color: c.body }]}>
+            {"- "}
+          </ThemedText>
+          <ThemedText
+            style={[styles.bodyText, styles.listText, { color: c.body }]}
+          >
             {line.slice(2)}
           </ThemedText>
         </View>,
@@ -322,14 +352,17 @@ function renderContent(content: string) {
       continue
     }
 
-    // Numbered list (1. item)
     if (/^\d+\.\s/.test(line)) {
       const match = line.match(/^(\d+\.)\s(.*)/)
       if (match) {
         elements.push(
           <View key={key++} style={styles.listItem}>
-            <ThemedText style={styles.bodyText}>{match[1]} </ThemedText>
-            <ThemedText style={[styles.bodyText, styles.listText]}>
+            <ThemedText style={[styles.bodyText, { color: c.body }]}>
+              {match[1]}{" "}
+            </ThemedText>
+            <ThemedText
+              style={[styles.bodyText, styles.listText, { color: c.body }]}
+            >
               {match[2]}
             </ThemedText>
           </View>,
@@ -338,19 +371,17 @@ function renderContent(content: string) {
       }
     }
 
-    // Note line (※)
     if (line.startsWith("※")) {
       elements.push(
-        <ThemedText key={key++} style={styles.noteText}>
+        <ThemedText key={key++} style={[styles.noteText, { color: c.note }]}>
           {line}
         </ThemedText>,
       )
       continue
     }
 
-    // Regular paragraph
     elements.push(
-      <ThemedText key={key++} style={styles.bodyText}>
+      <ThemedText key={key++} style={[styles.bodyText, { color: c.body }]}>
         {line}
       </ThemedText>,
     )
@@ -363,21 +394,24 @@ export default function LegalDocumentScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { type } = useLocalSearchParams<{ type: DocumentType }>()
+  const c = useLegalColors()
 
   const doc = type && DOCUMENTS[type as DocumentType]
 
   if (!doc) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color="#333" />
+            <Ionicons name="chevron-back" size={24} color={c.icon} />
           </Pressable>
-          <ThemedText style={styles.headerTitle}>문서</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
+            문서
+          </ThemedText>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.emptyContainer}>
-          <ThemedText style={styles.bodyText}>
+          <ThemedText style={[styles.bodyText, { color: c.body }]}>
             문서를 찾을 수 없습니다.
           </ThemedText>
         </View>
@@ -386,13 +420,15 @@ export default function LegalDocumentScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
+          <Ionicons name="chevron-back" size={24} color={c.icon} />
         </Pressable>
-        <ThemedText style={styles.headerTitle}>{doc.title}</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
+          {doc.title}
+        </ThemedText>
         <View style={{ width: 24 }} />
       </View>
 
@@ -403,8 +439,10 @@ export default function LegalDocumentScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={styles.documentHeading}>{doc.heading}</ThemedText>
-        {renderContent(doc.content)}
+        <ThemedText style={[styles.documentHeading, { color: c.heading }]}>
+          {doc.heading}
+        </ThemedText>
+        {renderContent(doc.content, c)}
       </ScrollView>
     </ThemedView>
   )
@@ -413,7 +451,6 @@ export default function LegalDocumentScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
   header: {
     flexDirection: "row",
@@ -425,7 +462,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -439,34 +475,29 @@ const styles = StyleSheet.create({
   documentHeading: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111",
     marginBottom: 16,
   },
   heading2: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#222",
     marginTop: 24,
     marginBottom: 8,
   },
   heading3: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#333",
     marginTop: 16,
     marginBottom: 6,
   },
   bodyText: {
     fontSize: 14,
     fontWeight: "400",
-    color: "#444",
     lineHeight: 22,
     marginBottom: 4,
   },
   noteText: {
     fontSize: 13,
     fontWeight: "400",
-    color: "#888",
     lineHeight: 20,
     marginTop: 4,
     marginBottom: 4,

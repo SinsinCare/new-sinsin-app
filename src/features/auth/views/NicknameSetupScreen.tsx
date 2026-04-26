@@ -4,6 +4,7 @@ import { FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useNicknameSetup } from "../hooks"
 import type { NicknameForm } from "../types"
+import { tokens } from "@/src/theme/tokens"
 
 export function NicknameSetupScreen() {
   const { isLoading, error, handleSubmit: submitNickname } = useNicknameSetup()
@@ -52,7 +53,7 @@ export function NicknameSetupScreen() {
         {error ? (
           <Text
             fontSize={14}
-            color="#FF3B30"
+            color={tokens.color.error.val}
             letterSpacing={-0.28}
             marginTop={8}
           >

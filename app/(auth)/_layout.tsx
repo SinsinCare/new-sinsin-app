@@ -5,6 +5,7 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
+        headerShadowVisible: false,
         animation: "slide_from_right",
       }}
     >

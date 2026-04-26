@@ -13,6 +13,12 @@ export interface IAuthService {
     email: string,
     password: string,
   ): Promise<{ user: AppUser; accountState: string }>
+  signInWithSocial(
+    provider: "google" | "apple",
+    idToken: string,
+    email?: string | null,
+    displayName?: string | null,
+  ): Promise<{ user: AppUser; accountState: string }>
   signup(request: SignupRequest): Promise<AppUser>
   signOut(): Promise<void>
   restoreSession(): Promise<{ user: AppUser; accountState: string } | null>

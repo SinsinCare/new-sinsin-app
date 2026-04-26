@@ -1,139 +1,167 @@
-import { XStack, YStack, Text, View } from "tamagui"
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  useColorScheme,
-  useWindowDimensions,
-} from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { CalendarMode, getThreeDays } from "../../utils/getThreeDays"
+import { Pressable, StyleSheet, useColorScheme, PanResponder, View as RNView } from "react-native"
+import { Text, XStack, YStack, View } from "tamagui"
+import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
+
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"]
+
+function getSundayWeek(base: Date): Date[] {
+  const sunday = new Date(base)
+  sunday.setDate(base.getDate() - base.getDay())
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday)
+    d.setDate(sunday.getDate() + i)
+    return d
+  })
+}
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate()
 
 interface ThreeDaysCalendarProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  mode?: CalendarMode
   recordedDates?: Date[]
+  onMonthPress?: () => void
+  mode?: "record" | "statistics"
 }
 
 export function ThreeDaysCalendar({
   selectedDate,
   onSelectDate,
-  mode = "record",
   recordedDates = [],
+  onMonthPress,
 }: ThreeDaysCalendarProps) {
-  const days = getThreeDays(selectedDate, mode)
+  const isDark = useColorScheme() === "dark"
   const today = new Date()
-  const isDarkMode = useColorScheme() === "dark"
-  const bgColor = isDarkMode
-    ? tokens.color.appBgDark.val
-    : tokens.color.appBg.val
-  const { width } = useWindowDimensions()
+  const week = getSundayWeek(selectedDate)
 
-  const translateX = useRef(new Animated.Value(0)).current
-  const prevDateRef = useRef(selectedDate)
+  const month = selectedDate.getMonth() + 1
 
-  useEffect(() => {
-    const isForward = selectedDate > prevDateRef.current
-    prevDateRef.current = selectedDate
+  const recordBg = isDark ? "#3A3A3F" : "#EBEBED"
+  const recordText = isDark ? tokens.color.textDarkSub.val : "#555"
+  const regularText = isDark ? tokens.color.textDarkSub.val : "#999"
+  const futureText = isDark ? "#555" : "#CCC"
+  const labelText = isDark ? tokens.color.textDarkSub.val : "#999"
 
-    translateX.setValue(isForward ? width * 0.4 : -width * 0.4)
-    Animated.spring(translateX, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 120,
-      friction: 14,
-    }).start()
-  }, [selectedDate, translateX, width])
+  // refs so PanResponder closure always has latest values
+  const selectedDateRef = useRef(selectedDate)
+  selectedDateRef.current = selectedDate
+  const onSelectDateRef = useRef(onSelectDate)
+  onSelectDateRef.current = onSelectDate
 
-  const isSameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gs) =>
+        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 20,
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dx < -50) {
+          const next = new Date(selectedDateRef.current)
+          next.setDate(next.getDate() + 7)
+          onSelectDateRef.current(next)
+        } else if (gs.dx > 50) {
+          const prev = new Date(selectedDateRef.current)
+          prev.setDate(prev.getDate() - 7)
+          onSelectDateRef.current(prev)
+        }
+      },
+    }),
+  ).current
 
   return (
-    <View style={styles.wrapper}>
-      <Animated.View style={{ transform: [{ translateX }] }}>
-        <XStack justifyContent="space-between" paddingHorizontal="$2">
-          {days.map((day) => {
-            const month = day.date.getMonth() + 1
-            const date = day.date.getDate()
-            const isSelected = isSameDay(day.date, selectedDate)
-            const hasRecord = recordedDates.some((d) => isSameDay(d, day.date))
-            const isFuture = day.date > today && !isSameDay(day.date, today)
+    <RNView {...panResponder.panHandlers}>
+      <YStack gap="$2" paddingBottom="$1">
+        {/* 월 헤더 */}
+        <Pressable onPress={onMonthPress} hitSlop={8}>
+          <XStack alignItems="center" gap="$1" paddingHorizontal="$1">
+            <Text
+              fontSize={22}
+              fontWeight="700"
+              color={isDark ? "$textDark" : "$color"}
+            >
+              {month}월
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={isDark ? tokens.color.textDark.val : tokens.color.black.val}
+            />
+          </XStack>
+        </Pressable>
+
+        {/* 요일 레이블 */}
+        <XStack justifyContent="space-between" paddingHorizontal="$1">
+          {DAY_LABELS.map((label) => (
+            <View key={label} style={styles.cell}>
+              <Text fontSize={12} fontWeight="500" color={labelText}>
+                {label}
+              </Text>
+            </View>
+          ))}
+        </XStack>
+
+        {/* 날짜 행 */}
+        <XStack justifyContent="space-between" paddingHorizontal="$1">
+          {week.map((date) => {
+            const isSelected = isSameDay(date, selectedDate)
+            const hasRecord = recordedDates.some((r) => isSameDay(r, date))
+            const isFuture = date > today && !isSameDay(date, today)
+
+            const cellBg = isSelected
+              ? tokens.color.primary7.val
+              : hasRecord
+                ? recordBg
+                : "transparent"
+
+            const textColor = isSelected
+              ? "white"
+              : isFuture
+                ? futureText
+                : hasRecord
+                  ? recordText
+                  : regularText
 
             return (
               <Pressable
-                key={day.date.toISOString()}
-                onPress={() => !isFuture && onSelectDate(day.date)}
+                key={date.toISOString()}
+                onPress={() => !isFuture && onSelectDate(date)}
                 disabled={isFuture}
               >
-                <YStack alignItems="center" gap={4}>
+                <View
+                  style={[
+                    styles.cell,
+                    styles.dateCell,
+                    { backgroundColor: cellBg },
+                  ]}
+                >
                   <Text
-                    fontSize="$5"
-                    fontWeight={isSelected ? 600 : 500}
-                    textAlign="center"
-                    color={
-                      isDarkMode
-                        ? "$textDark"
-                        : isFuture
-                          ? "$placeholderColor"
-                          : "$color"
-                    }
+                    fontSize={16}
+                    fontWeight={isSelected ? "700" : "500"}
+                    style={{ color: textColor }}
                   >
-                    {month}.{date}({day.label})
+                    {date.getDate()}
                   </Text>
-
-                  <View
-                    width={8}
-                    height={8}
-                    borderRadius={10}
-                    backgroundColor={hasRecord ? "$primary" : "$grey7"}
-                  />
-                </YStack>
+                </View>
               </Pressable>
             )
           })}
         </XStack>
-      </Animated.View>
-
-      <LinearGradient
-        colors={[bgColor, `${bgColor}00`]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.fadeLeft}
-        pointerEvents="none"
-      />
-      <LinearGradient
-        colors={[`${bgColor}00`, bgColor]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.fadeRight}
-        pointerEvents="none"
-      />
-    </View>
+      </YStack>
+    </RNView>
   )
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: "relative",
-    overflow: "hidden",
+  cell: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  fadeLeft: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: 80,
-  },
-  fadeRight: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: 80,
+  dateCell: {
+    borderRadius: 12,
   },
 })

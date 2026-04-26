@@ -1,7 +1,13 @@
 import { useEffect } from "react"
 import { useAuthStore, useUserStore } from "../stores"
 import { authService } from "../services/auth/authService"
+import {
+  signInWithGoogle as googleSignIn,
+  signInWithApple as appleSignIn,
+  isUserCancelledError,
+} from "../services/auth/socialAuthService"
 import { tokenService } from "../services/core/tokenService"
+import { logger } from "@/src/lib/logger"
 
 export function useAuth() {
   const {
@@ -39,6 +45,36 @@ export function useAuth() {
     return result
   }
 
+  const signInWithGoogle = async () => {
+    logger.debug("[useAuth] signInWithGoogle")
+    const socialResult = await googleSignIn()
+    const result = await authService.signInWithSocial(
+      socialResult.provider,
+      socialResult.idToken,
+      socialResult.email,
+      socialResult.displayName,
+    )
+    logger.debug("[useAuth] Google 로그인 완료", result.accountState)
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
+  const signInWithApple = async () => {
+    logger.debug("[useAuth] signInWithApple")
+    const socialResult = await appleSignIn()
+    const result = await authService.signInWithSocial(
+      socialResult.provider,
+      socialResult.idToken,
+      socialResult.email,
+      socialResult.displayName,
+    )
+    logger.debug("[useAuth] Apple 로그인 완료", result.accountState)
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
   const signOut = async () => {
     await authService.signOut()
     await tokenService.clearTokens()
@@ -52,6 +88,9 @@ export function useAuth() {
     isLoading,
     isAuthenticated,
     signInWithEmail,
+    signInWithGoogle,
+    signInWithApple,
+    isUserCancelledError,
     signOut,
   }
 }

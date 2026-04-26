@@ -1,9 +1,20 @@
-import { Modal, ScrollView, Image, useColorScheme } from "react-native"
-import { useState } from "react"
+import {
+  Modal,
+  ScrollView,
+  Image,
+  useColorScheme,
+  Alert,
+  ActionSheetIOS,
+  Platform,
+} from "react-native"
+import { useState, useRef, useCallback } from "react"
 import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import ViewShot, { captureRef } from "react-native-view-shot"
+import * as Sharing from "expo-sharing"
+import Share, { Social } from "react-native-share"
 import { tokens } from "@/src/theme/tokens"
 import type {
   FoodAnalysisUpdateRequest,
@@ -13,15 +24,10 @@ import type {
 import type { MealType } from "../types"
 import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
-import { Icon, IconName } from "@/src/shared/components/Icon"
+import { Icon } from "@/src/shared/components/Icon"
 import { FoodResultEdit } from "./FoodResultEdit"
-
-const NUTRIENT_ICON: Record<string, IconName> = {
-  나트륨: "sodium",
-  칼륨: "potassium",
-  인: "phosphorus",
-  단백질: "protein",
-}
+import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
+import { ShareCard } from "./ShareCard"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -52,28 +58,6 @@ const MEAL_LABEL: Record<MealType, string> = {
   SNACKS: "간식",
 }
 
-function NutrientCell({ label, value }: { label: string; value: string }) {
-  const iconName = NUTRIENT_ICON[label]
-  const isDarkMode = useColorScheme() === "dark"
-
-  return (
-    <YStack flex={1} alignItems="center">
-      {iconName && <Icon name={iconName} size={30} />}
-      <View height={10} />
-      <Text fontSize="$3" color={isDarkMode ? "$textDark" : "$black"}>
-        {label}
-      </Text>
-      <Text
-        fontSize={14}
-        fontWeight="600"
-        color={isDarkMode ? "$textDark" : "$black"}
-      >
-        {value.includes(".") ? parseFloat(value).toFixed(1) : value}
-      </Text>
-    </YStack>
-  )
-}
-
 export function FoodAnalysisResult({
   result,
   open,
@@ -89,6 +73,86 @@ export function FoodAnalysisResult({
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
   const isDarkMode = useColorScheme() === "dark"
+  const shareCardRef = useRef<ViewShot>(null)
+  const FACEBOOK_APP_ID = "1306082818293951"
+
+  const handleShare = useCallback(async () => {
+    if (!shareCardRef.current) return
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["인스타그램 스토리에 공유", "다른 앱으로 공유", "취소"],
+          cancelButtonIndex: 2,
+        },
+        async (buttonIndex) => {
+          try {
+            if (buttonIndex === 0) {
+              // base64로 캡처하여 Instagram Stories에 직접 공유
+              const base64 = await captureRef(shareCardRef, {
+                format: "png",
+                quality: 1,
+                result: "base64",
+              })
+              await Share.shareSingle({
+                social: Social.InstagramStories,
+                appId: FACEBOOK_APP_ID,
+                stickerImage: `data:image/png;base64,${base64}`,
+                backgroundBottomColor: "#FFFFFF",
+                backgroundTopColor: "#FFFFFF",
+              })
+            } else if (buttonIndex === 1) {
+              // 파일로 캡처하여 시스템 공유 시트
+              const uri = await captureRef(shareCardRef, {
+                format: "png",
+                quality: 1,
+                result: "tmpfile",
+              })
+              if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(uri, {
+                  mimeType: "image/png",
+                  UTI: "public.png",
+                })
+              }
+            }
+          } catch {
+            Alert.alert(
+              "공유 실패",
+              "인스타그램이 설치되어 있는지 확인해주세요.",
+            )
+          }
+        },
+      )
+    } else {
+      // Android: Instagram Stories 시도 후 실패 시 일반 공유
+      try {
+        const base64 = await captureRef(shareCardRef, {
+          format: "png",
+          quality: 1,
+          result: "base64",
+        })
+        await Share.shareSingle({
+          social: Social.InstagramStories,
+          appId: FACEBOOK_APP_ID,
+          stickerImage: `data:image/png;base64,${base64}`,
+          backgroundBottomColor: "#FFFFFF",
+          backgroundTopColor: "#FFFFFF",
+        })
+      } catch {
+        const uri = await captureRef(shareCardRef, {
+          format: "png",
+          quality: 1,
+          result: "tmpfile",
+        })
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, {
+            mimeType: "image/png",
+            UTI: "public.png",
+          })
+        }
+      }
+    }
+  }, [])
 
   if (!result) return null
 
@@ -122,7 +186,22 @@ export function FoodAnalysisResult({
           paddingBottom={10}
           backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
         >
-          <View width={40} />
+          <XStack
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            onPress={handleShare}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <Ionicons
+              name="share-outline"
+              size={22}
+              color={
+                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
+              }
+            />
+          </XStack>
           <Text
             fontSize="$5"
             fontWeight="600"
@@ -305,6 +384,18 @@ export function FoodAnalysisResult({
             >
               식단 세부 분석
             </Text>
+            <XStack
+              alignItems="flex-start"
+              gap="$2"
+              paddingHorizontal={2}
+              marginTop={-4}
+            >
+              <Icon name="info" size={16} color={tokens.color.grey6.val} />
+              <Text fontSize="$3" color="$colorSubtle" flex={1} lineHeight={20}>
+                원 그래프의 %는 하루 권장 섭취 한도(나트륨·칼륨·인 1일 기준,
+                단백질은 체중 1kg당 0.8g) 대비 이 음식의 비율이에요.
+              </Text>
+            </XStack>
             {result.foods.map((food, i) => {
               const restriction = getRestrictionStyle(food.restrictionLevel)
               return (
@@ -365,12 +456,7 @@ export function FoodAnalysisResult({
                     </View>
                   </XStack>
 
-                  <XStack gap="$2">
-                    <NutrientCell label="나트륨" value={`${food.sodium}mg`} />
-                    <NutrientCell label="칼륨" value={`${food.potassium}mg`} />
-                    <NutrientCell label="인" value={`${food.phosphorus}mg`} />
-                    <NutrientCell label="단백질" value={`${food.protein}g`} />
-                  </XStack>
+                  <FoodNutrientDonuts food={food} />
                 </YStack>
               )
             })}
@@ -411,12 +497,39 @@ export function FoodAnalysisResult({
             </YStack>
           )}
 
+          {/* 의료 정보 출처 안내 */}
+          <YStack
+            marginHorizontal={15}
+            marginTop={16}
+            paddingVertical={12}
+            paddingHorizontal={16}
+            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+            borderRadius={12}
+            gap={4}
+          >
+            <Text fontSize={12} color="$colorSubtle" lineHeight={18}>
+              영양소 분석 기준: 한국영양학회 식품성분데이터베이스 · 대한신장학회
+              CKD 영양 권고안 · 한국보건산업진흥원
+            </Text>
+            <Text
+              fontSize={12}
+              color={isDarkMode ? "#5BC5AB" : tokens.color.sub8.val}
+              fontWeight="500"
+              onPress={() => {
+                onClose()
+                router.push("/(settings)/medical-reference")
+              }}
+            >
+              📚 참고 문헌 전체 보기 →
+            </Text>
+          </YStack>
+
           {/* 식사에 대해 질문하기 */}
           <XStack
             alignItems="center"
             justifyContent="center"
             gap={6}
-            marginTop={24}
+            marginTop={12}
             paddingVertical={17}
             marginHorizontal={15}
             backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
@@ -476,6 +589,14 @@ export function FoodAnalysisResult({
         )}
       </YStack>
 
+      {/* 공유 카드 (offscreen) */}
+      <ShareCard
+        ref={shareCardRef}
+        result={result}
+        imageUri={imageUri}
+        mealType={mealType}
+      />
+
       {/* 나가기 확인 오버레이 */}
       {showExitConfirm && (
         <YStack
@@ -484,12 +605,12 @@ export function FoodAnalysisResult({
           left={0}
           right={0}
           bottom={0}
-          backgroundColor="rgba(0,0,0,0.3)"
+          backgroundColor="rgba(0,0,0,0.5)"
           justifyContent="center"
           alignItems="center"
         >
           <YStack
-            backgroundColor={tokens.color.offWhite.val}
+            backgroundColor={isDarkMode ? tokens.color.cardBgDark.val : tokens.color.offWhite.val}
             borderRadius={15}
             overflow="hidden"
           >
@@ -499,7 +620,12 @@ export function FoodAnalysisResult({
               paddingBottom="$6"
               gap="$2"
             >
-              <Text fontSize={16} fontWeight="600" textAlign="center">
+              <Text
+                fontSize={16}
+                fontWeight="600"
+                textAlign="center"
+                color={isDarkMode ? "$textDark" : "$color"}
+              >
                 아직 식단을 기록하지 않았어요.
               </Text>
               <Text
@@ -512,7 +638,10 @@ export function FoodAnalysisResult({
               </Text>
             </YStack>
 
-            <View height={1} backgroundColor="#E5E5E5" />
+            <View
+              height={1}
+              backgroundColor={isDarkMode ? tokens.color.grey2.val : "#E5E5E5"}
+            />
 
             <XStack>
               <YStack
@@ -534,7 +663,10 @@ export function FoodAnalysisResult({
                 </Text>
               </YStack>
 
-              <View width={1} backgroundColor="#E5E5E5" />
+              <View
+                width={1}
+                backgroundColor={isDarkMode ? tokens.color.grey2.val : "#E5E5E5"}
+              />
 
               <YStack
                 flex={1}
@@ -543,7 +675,11 @@ export function FoodAnalysisResult({
                 onPress={() => setShowExitConfirm(false)}
                 pressStyle={{ opacity: 0.8 }}
               >
-                <Text fontSize={15} fontWeight="500">
+                <Text
+                  fontSize={15}
+                  fontWeight="500"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
                   돌아가기
                 </Text>
               </YStack>

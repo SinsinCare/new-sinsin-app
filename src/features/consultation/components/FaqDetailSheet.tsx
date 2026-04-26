@@ -140,13 +140,7 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
               fullWidth
               onPress={() => {
                 onClose()
-                router.push({
-                  pathname: "/chat",
-                  params: {
-                    category: item.category,
-                    initialMessage: item.question,
-                  },
-                })
+                router.push("/(tabs)/consult")
               }}
             >
               <XStack alignItems="center" gap="$2">

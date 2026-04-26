@@ -1,5 +1,12 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# Google Play service account key (sensitive)
+google-play-key.json
+
+# Android Keystore files (sensitive)
+*.jks
+*.keystore
+
 # Superpowers brainstorming
 .superpowers/
 
@@ -40,12 +47,12 @@ yarn-error.*
 .env
 .env*.local
 
+# Google OAuth credentials
+*.apps.googleusercontent.com.plist
+
 # typescript
 *.tsbuildinfo
 
 # generated native folders
 /ios
 /android
-
-/docs
-

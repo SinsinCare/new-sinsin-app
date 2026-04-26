@@ -1,6 +1,7 @@
-import { Pressable } from "react-native"
+import { Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
+import { tokens } from "@/src/theme/tokens"
 
 interface OnboardingHeaderProps {
   currentStepIndex: number
@@ -22,12 +23,15 @@ export function OnboardingHeader({
   showBack,
 }: OnboardingHeaderProps) {
   const shouldShowBack = showBack ?? currentStepIndex > 0
+  const isDark = useColorScheme() === "dark"
+  const textColor = isDark ? tokens.color.textDark.val : "#17191C"
+  const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"
 
   return (
     <XStack height={56} alignItems="center" paddingHorizontal={4}>
       {shouldShowBack ? (
         <Pressable onPress={onBack} style={{ padding: 8 }}>
-          <Ionicons name="chevron-back" size={24} color="#17191C" />
+          <Ionicons name="chevron-back" size={24} color={textColor} />
         </Pressable>
       ) : (
         <YStack width={40} />
@@ -37,7 +41,7 @@ export function OnboardingHeader({
           <Text
             fontSize={16}
             fontWeight="600"
-            color="#17191C"
+            color={textColor}
             letterSpacing={-0.3}
           >
             {title}
@@ -46,13 +50,13 @@ export function OnboardingHeader({
       </YStack>
       {showCounter && totalSteps > 0 ? (
         <YStack paddingHorizontal={8} alignItems="flex-end">
-          <Text fontSize={13} color="#787C83">
+          <Text fontSize={13} color={textSub}>
             {currentStepIndex + 1}/{totalSteps}
           </Text>
         </YStack>
       ) : (
         <Pressable onPress={onSkip} style={{ padding: 8 }}>
-          <Text fontSize={14} color="#787C83">
+          <Text fontSize={14} color={textSub}>
             건너뛰기
           </Text>
         </Pressable>

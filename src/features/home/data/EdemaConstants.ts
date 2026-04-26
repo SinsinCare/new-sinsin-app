@@ -1,4 +1,4 @@
-export const EDEMA_OPTIONS = ["붓기가 없어요", "약간 부었어요", "많이 부었어요"]
+export const EDEMA_OPTIONS = ["붓기\n없어요", "약간\n부었어요", "많이\n부었어요"]
 
 export type EdemaLevel = (typeof EDEMA_OPTIONS)[number]
 

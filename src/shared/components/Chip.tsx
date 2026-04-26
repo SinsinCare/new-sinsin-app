@@ -1,6 +1,7 @@
 import { Pressable } from "react-native"
 import { XStack, Text, useThemeName } from "tamagui"
 import { Icon, type IconName } from "./Icon"
+import { tokens } from "@/src/theme/tokens"
 
 interface ChipProps {
   icon?: IconName
@@ -11,12 +12,12 @@ interface ChipProps {
 
 const COLORS = {
   light: {
-    default: { bg: "#EAEAF0", fg: "#3C3C43" },
+    default: { bg: tokens.color.borderLight.val, fg: "#3C3C43" },
     selected: { bg: "#0D896C", fg: "#FFFFFF" },
   },
   dark: {
-    default: { bg: "#313138", fg: "#ABABB4" },
-    selected: { bg: "#42AF94", fg: "#2E2E34" },
+    default: { bg: tokens.color.cardBgDark.val, fg: tokens.color.textDarkSub.val },
+    selected: { bg: "#42AF94", fg: tokens.color.inputBgDark.val },
   },
 } as const
 

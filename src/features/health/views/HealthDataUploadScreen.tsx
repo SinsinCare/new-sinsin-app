@@ -4,8 +4,6 @@ import {
   View,
   ScrollView,
   Pressable,
-  Modal,
-  ActivityIndicator,
 } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
@@ -15,6 +13,7 @@ import * as ImagePicker from "expo-image-picker"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { UPLOAD_TIPS } from "@/src/features/health/data/mock"
@@ -26,7 +25,6 @@ export function HealthDataUploadScreen() {
   const router = useRouter()
 
   const [files, setFiles] = useState<string[]>([])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const pickFromCamera = async () => {
     if (files.length >= MAX_FILES) return
@@ -61,12 +59,8 @@ export function HealthDataUploadScreen() {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true)
-    // TODO: 실제 API 호출
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsAnalyzing(false)
-    router.replace("/(settings)/health-results")
+  const handleAnalyze = () => {
+    router.replace("/(settings)/health-data-upload")
   }
 
   const canAdd = files.length < MAX_FILES
@@ -161,7 +155,7 @@ export function HealthDataUploadScreen() {
               <Ionicons
                 name="camera-outline"
                 size={18}
-                color={canAdd ? "#44AF94" : "#C5C8CE"}
+                color={canAdd ? tokens.color.sub6.val : tokens.color.grey7.val}
               />
               <ThemedText
                 style={[
@@ -187,7 +181,7 @@ export function HealthDataUploadScreen() {
               <Ionicons
                 name="images-outline"
                 size={18}
-                color={canAdd ? "#44AF94" : "#C5C8CE"}
+                color={canAdd ? tokens.color.sub6.val : tokens.color.grey7.val}
               />
               <ThemedText
                 style={[
@@ -215,7 +209,7 @@ export function HealthDataUploadScreen() {
               <Ionicons
                 name="checkmark-circle"
                 size={16}
-                color="#44AF94"
+                color={tokens.color.sub6.val}
                 style={styles.tipIcon}
               />
               <ThemedText style={styles.tipText}>{tip}</ThemedText>
@@ -231,24 +225,6 @@ export function HealthDataUploadScreen() {
         onPress={handleAnalyze}
       />
 
-      {/* 분석 중 로딩 오버레이 */}
-      <Modal visible={isAnalyzing} transparent animationType="fade">
-        <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator
-              size="large"
-              color="#44AF94"
-              style={{ marginBottom: 16 }}
-            />
-            <ThemedText style={styles.loadingTitle}>
-              검사결과를 불러오고 있습니다...
-            </ThemedText>
-            <ThemedText style={styles.loadingSubtitle}>
-              데이터를 안전하게 전송 중입니다.
-            </ThemedText>
-          </View>
-        </View>
-      </Modal>
     </ThemedView>
   )
 }
@@ -298,7 +274,7 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   attachCount: {
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   clearAllText: {
     fontSize: 13,
@@ -382,10 +358,10 @@ const styles = StyleSheet.create({
   pickButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   pickButtonTextDisabled: {
-    color: "#C5C8CE",
+    color: tokens.color.grey7.val,
   },
   pickDivider: {
     width: 1,

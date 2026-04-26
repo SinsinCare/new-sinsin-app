@@ -6,9 +6,10 @@ import {
   useColorScheme,
   StyleSheet,
 } from "react-native"
+import { tokens } from "@/src/theme/tokens"
 
-const TEXT_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
-const PLACEHOLDER_COLOR = { light: "#A5A5AF", dark: "#595960" }
+const TEXT_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const PLACEHOLDER_COLOR = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
 
 interface TextBlockProps {
   content: string

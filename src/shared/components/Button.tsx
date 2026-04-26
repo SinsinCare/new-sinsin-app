@@ -1,4 +1,5 @@
 import { Button as TamaguiButton, styled, Spinner, XStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 const StyledButton = styled(TamaguiButton, {
   name: "SinsinButton",
@@ -12,7 +13,7 @@ const StyledButton = styled(TamaguiButton, {
   variants: {
     variant: {
       primary: {
-        backgroundColor: "#44af94",
+        backgroundColor: tokens.color.sub6.val,
         color: "white",
       },
       secondary: {

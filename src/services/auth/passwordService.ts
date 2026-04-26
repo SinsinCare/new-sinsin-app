@@ -10,7 +10,7 @@ function getRealPasswordService(): PasswordService {
   return {
     async changePassword(newPassword: string, token?: string): Promise<void> {
       if (token) {
-        await publicApi.post<ApiResponse>("/auth/password/reset", {
+        await publicApi.patch<ApiResponse>("/auth/password/reset", {
           resetToken: token,
           password: newPassword,
         })

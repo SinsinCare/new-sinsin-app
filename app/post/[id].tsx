@@ -1,25 +1,35 @@
-import { Pressable, ScrollView, useColorScheme, StyleSheet } from "react-native"
+import {
+  Pressable,
+  ScrollView,
+  useColorScheme,
+  StyleSheet,
+  ActionSheetIOS,
+  Alert,
+  Platform,
+} from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter, type Href } from "expo-router"
 import { Icon } from "@/src/shared/components/Icon"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
-import { LoadingScreen } from "@/src/shared/components"
+import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import { tokens } from "@/src/theme/tokens"
 
-const BG = { light: "#FCFCFC", dark: "#1F1F21" }
-const HEADER_ICON = { light: "#3C3C43", dark: "#E7E7EE" }
-const AUTHOR_NAME = { light: "#2A2A37", dark: "#E7E7EE" }
+const BG = { light: tokens.color.offWhite.val, dark: tokens.color.appBgDark.val }
+const HEADER_ICON = { light: "#3C3C43", dark: tokens.color.textDark.val }
+const AUTHOR_NAME = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
 const AUTHOR_SUB = { light: "#81818D", dark: "#858591" }
-const TITLE_COLOR = { light: "#2A2A37", dark: "#E7E7EE" }
+const TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
 const BODY_COLOR = { light: "#3C3C43", dark: "#C5C8CE" }
-const DIVIDER = { light: "#E5E5EA", dark: "#313138" }
+const DIVIDER = { light: "#E5E5EA", dark: tokens.color.cardBgDark.val }
 const LIKE_COLOR = { light: "#44AF94", dark: "#44AF94" }
 const MUTED_TEXT = { light: "#81818D", dark: "#858591" }
-const AVATAR_BG = { light: "#E7E7EE", dark: "#3A3A3C" }
-const NAV_LABEL = { light: "#A5A5AF", dark: "#595960" }
-const NAV_TITLE = { light: "#2A2A37", dark: "#E7E7EE" }
+const AVATAR_BG = { light: tokens.color.textDark.val, dark: "#3A3A3C" }
+const NAV_LABEL = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
+const NAV_TITLE = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
 
 function formatTimeAgo(date: Date): string {
   const diffMs = Date.now() - date.getTime()
@@ -38,11 +48,115 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets()
   const scheme = useColorScheme() ?? "light"
 
-  const { post, isLoading } = usePostDetail(id!)
-  const { posts, toggleLike, toggleBookmark } = useCommunityPosts()
+  const { post, isLoading, isError, error, refetch } = usePostDetail(id!)
+  const { posts, toggleLike, toggleBookmark, deletePost, reportPost } =
+    useCommunityPosts()
 
-  if (isLoading || !post) {
+  const handleEdit = () => {
+    if (!post) return
+    const href = `/free/${post.id}` as Href
+    router.push(href)
+  }
+
+  const handleDelete = () => {
+    Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () => {
+          deletePost(post!.id)
+          router.back()
+        },
+      },
+    ])
+  }
+
+  const handleReport = () => {
+    const reasons: { label: string; value: string }[] = [
+      { label: "스팸/광고", value: "SPAM" },
+      { label: "괴롭힘/혐오 표현", value: "HARASSMENT" },
+      { label: "부적절한 콘텐츠", value: "INAPPROPRIATE_CONTENT" },
+      { label: "거짓 정보", value: "FALSE_INFORMATION" },
+      { label: "기타", value: "OTHER" },
+    ]
+    Alert.alert("신고 사유를 선택해주세요", undefined, [
+      ...reasons.map((r) => ({
+        text: r.label,
+        onPress: () => {
+          reportPost({ postId: post!.id, reason: r.value })
+          Alert.alert(
+            "신고 완료",
+            "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
+          )
+        },
+      })),
+      { text: "취소", style: "cancel" },
+    ])
+  }
+
+  const handleMorePress = () => {
+    const options = ["수정하기", "삭제하기", "신고하기", "취소"]
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: 3, destructiveButtonIndex: 1 },
+        (buttonIndex) => {
+          if (buttonIndex === 0) handleEdit()
+          else if (buttonIndex === 1) handleDelete()
+          else if (buttonIndex === 2) handleReport()
+        },
+      )
+    } else {
+      Alert.alert("더보기", "", [
+        { text: "수정하기", onPress: handleEdit },
+        { text: "삭제하기", style: "destructive", onPress: handleDelete },
+        { text: "신고하기", onPress: handleReport },
+        { text: "취소", style: "cancel" },
+      ])
+    }
+  }
+
+  if (isError) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor={BG[scheme]}
+        paddingTop={insets.top}
+        paddingHorizontal={20}
+        justifyContent="center"
+      >
+        <ErrorMessage
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+        />
+      </YStack>
+    )
+  }
+
+  if (isLoading) {
     return <LoadingScreen message="게시물을 불러오는 중..." />
+  }
+
+  if (!post) {
+    return (
+      <YStack
+        flex={1}
+        backgroundColor={BG[scheme]}
+        paddingTop={insets.top}
+        paddingHorizontal={20}
+        justifyContent="center"
+        gap="$3"
+      >
+        <Text fontSize={16} fontFamily="$body" color={TITLE_COLOR[scheme]}>
+          게시글을 찾을 수 없습니다.
+        </Text>
+        <Pressable onPress={() => router.back()} accessibilityRole="button">
+          <Text fontSize={15} color={LIKE_COLOR[scheme]} fontWeight="600">
+            돌아가기
+          </Text>
+        </Pressable>
+      </YStack>
+    )
   }
 
   // Find previous/next posts
@@ -81,15 +195,13 @@ export default function PostDetailScreen() {
               color={post.bookmarked ? LIKE_COLOR[scheme] : HEADER_ICON[scheme]}
             />
           </Pressable>
-          {/* TODO: 더보기 메뉴 기능 구현 후 복원 (App Store 2.1a 반려)
-          <Pressable hitSlop={8}>
+          <Pressable hitSlop={8} onPress={handleMorePress}>
             <Ionicons
               name="ellipsis-horizontal"
               size={24}
               color={HEADER_ICON[scheme]}
             />
           </Pressable>
-          */}
         </XStack>
       </XStack>
 

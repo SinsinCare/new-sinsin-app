@@ -42,6 +42,11 @@ export function NutrientGraphHeader({
           {unit} 제한
         </Text>
       </XStack>
+      {nutrient === "단백질" && (
+        <Text fontSize={11} color="$colorSubtle" marginTop={1}>
+          체중 1kg당 0.8g 기준
+        </Text>
+      )}
     </YStack>
   )
 }

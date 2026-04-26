@@ -6,6 +6,7 @@ import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 
 export function HealthDataEntryScreen() {
@@ -45,7 +46,7 @@ export function HealthDataEntryScreen() {
           <View
             style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}
           >
-            <Ionicons name="shield-checkmark" size={24} color="#44AF94" />
+            <Ionicons name="shield-checkmark" size={24} color={tokens.color.sub6.val} />
           </View>
           <View style={styles.optionContent}>
             <ThemedText style={styles.optionTitle}>
@@ -56,7 +57,7 @@ export function HealthDataEntryScreen() {
               필요합니다.
             </ThemedText>
             <View style={styles.recommendBadge}>
-              <Ionicons name="flash" size={11} color="#0D896A" />
+              <Ionicons name="flash" size={11} color={tokens.color.sub8.val} />
               <ThemedText style={styles.recommendBadgeText}>
                 가장 빠르고 정확해요
               </ThemedText>
@@ -100,7 +101,7 @@ export function HealthDataEntryScreen() {
         {/* 신뢰 카드 */}
         <View style={styles.trustCard}>
           <View style={styles.trustIconWrapper}>
-            <Ionicons name="documents-outline" size={28} color="#44AF94" />
+            <Ionicons name="documents-outline" size={28} color={tokens.color.sub6.val} />
             <View style={styles.trustIconBadge}>
               <Ionicons name="checkmark" size={10} color="#FFFFFF" />
             </View>
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
   recommendBadgeText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
   // 보안 안내
   securityRow: {
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: "#44AF94",
+    backgroundColor: tokens.color.sub6.val,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,

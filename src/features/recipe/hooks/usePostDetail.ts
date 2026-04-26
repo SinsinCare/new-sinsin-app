@@ -7,7 +7,13 @@ const POSTS_KEY = ["community-posts"] as const
 export function usePostDetail(postId: string) {
   const queryClient = useQueryClient()
 
-  const { data: post, isLoading } = useQuery({
+  const {
+    data: post,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["community-post", postId],
     queryFn: () => communityPostService.getPost(postId),
     initialData: () => {
@@ -16,5 +22,5 @@ export function usePostDetail(postId: string) {
     },
   })
 
-  return { post, isLoading }
+  return { post, isLoading, isError, error, refetch }
 }

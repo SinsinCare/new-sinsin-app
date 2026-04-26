@@ -1,15 +1,16 @@
 import { ScrollView, useColorScheme } from "react-native"
 import { YStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { RestaurantCard } from "./RestaurantCard"
 import type { CurationSectionData } from "../types"
 
 const COLORS = {
   light: {
-    title: "#2A2A37",
+    title: tokens.color.textLight.val,
     subtitle: "#8E8E93",
   },
   dark: {
-    title: "#E7E7EE",
+    title: tokens.color.textDark.val,
     subtitle: "#8E8E93",
   },
 } as const

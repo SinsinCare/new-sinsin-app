@@ -1,0 +1,216 @@
+import { useColorScheme } from "react-native"
+import Svg, { Circle } from "react-native-svg"
+import { XStack, YStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
+import type { FoodCameraFood } from "@/src/types"
+import { KIDNEY_SAFE_LIMITS } from "@/src/types"
+import { useUserStore } from "@/src/stores/userStore"
+
+type NutrientKey = "sodium" | "potassium" | "phosphorus" | "protein"
+
+const NUTRIENT_KEYS: NutrientKey[] = [
+  "sodium",
+  "potassium",
+  "phosphorus",
+  "protein",
+]
+
+const LABELS: Record<NutrientKey, string> = {
+  sodium: "나트륨",
+  potassium: "칼륨",
+  phosphorus: "인",
+  protein: "단백질",
+}
+
+function dailyLimitFor(key: NutrientKey, weightKg: number): number {
+  switch (key) {
+    case "sodium":
+      return KIDNEY_SAFE_LIMITS.sodium
+    case "potassium":
+      return KIDNEY_SAFE_LIMITS.potassium
+    case "phosphorus":
+      return KIDNEY_SAFE_LIMITS.phosphorus
+    case "protein":
+      return Math.max(weightKg, 1) * KIDNEY_SAFE_LIMITS.protein
+  }
+}
+
+function valueFor(food: FoodCameraFood, key: NutrientKey): number {
+  switch (key) {
+    case "sodium":
+      return food.sodium
+    case "potassium":
+      return food.potassium
+    case "phosphorus":
+      return food.phosphorus
+    case "protein":
+      return food.protein
+  }
+}
+
+function formatAmount(key: NutrientKey, val: number): string {
+  if (key === "protein") {
+    const rounded = Math.round(val * 10) / 10
+    return Number.isInteger(rounded) ? `${rounded}g` : `${rounded.toFixed(1)}g`
+  }
+  return `${Math.round(val)}mg`
+}
+
+/** 일일 한도 대비 비율: 적절(초록) / 주의(노랑) / 과다(빨강) */
+function donutLevelColors(
+  percent: number,
+  isDark: boolean,
+): { stroke: string; centerColor: string } {
+  if (percent < 40) {
+    return {
+      stroke: isDark ? "#5BC5AB" : tokens.color.sub8.val,
+      centerColor: isDark ? "#A3F0DE" : tokens.color.sub8.val,
+    }
+  }
+  if (percent < 70) {
+    return {
+      stroke: isDark ? "#FBBF24" : "#D97706",
+      centerColor: isDark ? "#FCD34D" : "#B45309",
+    }
+  }
+  return {
+    stroke: isDark ? "#F87171" : tokens.color.restrictionText.val,
+    centerColor: isDark ? "#FCA5A5" : tokens.color.primary8.val,
+  }
+}
+
+const DONUT_SIZE = 60
+const STROKE = 5
+const RADIUS = (DONUT_SIZE - STROKE) / 2 - 1
+const CX = DONUT_SIZE / 2
+const CY = DONUT_SIZE / 2
+const CIRC = 2 * Math.PI * RADIUS
+
+function NutrientDonut({
+  label,
+  amountStr,
+  percent,
+  isDark,
+}: {
+  label: string
+  amountStr: string
+  percent: number
+  isDark: boolean
+}) {
+  const { stroke, centerColor } = donutLevelColors(percent, isDark)
+  const arcPercent = Math.min(Math.max(percent, 0), 100)
+  const dash = (arcPercent / 100) * CIRC
+  const displayPct =
+    percent >= 100 ? Math.round(percent) : Math.max(0, Math.round(percent))
+  const centerLabel =
+    displayPct > 999 ? "999%+" : `${Math.min(displayPct, 999)}%`
+
+  const trackColor = isDark
+    ? tokens.color.grey4.val + "66"
+    : tokens.color.grey8.val
+
+  return (
+    <YStack
+      flex={1}
+      alignItems="center"
+      paddingVertical="$1"
+      paddingHorizontal={2}
+      minWidth={0}
+    >
+      <YStack
+        position="relative"
+        width={DONUT_SIZE}
+        height={DONUT_SIZE}
+        alignSelf="center"
+      >
+        <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
+          <Circle
+            cx={CX}
+            cy={CY}
+            r={RADIUS}
+            stroke={trackColor}
+            strokeWidth={STROKE}
+            fill="none"
+          />
+          <Circle
+            cx={CX}
+            cy={CY}
+            r={RADIUS}
+            stroke={stroke}
+            strokeWidth={STROKE}
+            fill="none"
+            strokeDasharray={`${dash} ${CIRC}`}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${CX} ${CY})`}
+          />
+        </Svg>
+        <YStack
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          alignItems="center"
+          justifyContent="center"
+          pointerEvents="none"
+        >
+          <Text
+            fontSize={14}
+            lineHeight={18}
+            fontWeight="800"
+            color={centerColor}
+          >
+            {centerLabel}
+          </Text>
+        </YStack>
+      </YStack>
+      <Text
+        fontSize="$4"
+        fontWeight="600"
+        color={isDark ? "$textDark" : "$color"}
+        marginTop={6}
+        textAlign="center"
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+      <Text
+        fontSize="$5"
+        fontWeight="700"
+        color={isDark ? "$textDark" : "$color"}
+        textAlign="center"
+        numberOfLines={1}
+      >
+        {amountStr}
+      </Text>
+    </YStack>
+  )
+}
+
+interface FoodNutrientDonutsProps {
+  food: FoodCameraFood
+}
+
+export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
+  const isDark = useColorScheme() === "dark"
+  const weight = useUserStore((s) => s.profile?.weight ?? 60)
+
+  return (
+    <XStack gap="$2" alignItems="stretch">
+      {NUTRIENT_KEYS.map((key) => {
+        const limit = dailyLimitFor(key, weight)
+        const amount = valueFor(food, key)
+        const rawPct = limit > 0 ? (amount / limit) * 100 : 0
+        return (
+          <NutrientDonut
+            key={key}
+            label={LABELS[key]}
+            amountStr={formatAmount(key, amount)}
+            percent={rawPct}
+            isDark={isDark}
+          />
+        )
+      })}
+    </XStack>
+  )
+}

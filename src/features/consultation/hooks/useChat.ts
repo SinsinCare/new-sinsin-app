@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef } from "react"
+import { Alert } from "react-native"
 import type { ChatCategory, Message } from "@/src/types/chat"
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
+import { logger } from "@/src/lib/logger"
 
 let optimisticMsgId = -1
 
@@ -18,7 +20,7 @@ export function useChat() {
       return conversation
     },
     onError: (err) => {
-      console.error("Failed to create chat:", err)
+      logger.error("Failed to create chat", err)
     },
   })
 
@@ -72,7 +74,7 @@ export function useChat() {
         return assistantMsg
       },
       onError: (err) => {
-        console.error("Failed to send message:", err)
+        logger.error("Failed to send message", err)
       },
       onSettled: () => {
         setIsTyping(false)
@@ -126,7 +128,7 @@ export function useChat() {
         return assistantMsg
       },
       onError: (err) => {
-        console.error("Failed to regenerate message:", err)
+        logger.error("Failed to regenerate message", err)
       },
       onSettled: () => {
         setIsTyping(false)
@@ -134,6 +136,9 @@ export function useChat() {
     })
 
   const isSending = isCreating || isSendingMessage || isRegenerating
+
+  const categoryRef = useRef<ChatCategory | null>(null)
+  categoryRef.current = category
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -156,7 +161,9 @@ export function useChat() {
       // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
       if (activeConvId === null) {
         try {
-          const conversation = await createChatMutate(category ?? "NONE")
+          const conversation = await createChatMutate(
+            categoryRef.current ?? "NONE",
+          )
           activeConvId = conversation.id
           convIdRef.current = activeConvId
           setConversationId(activeConvId)
@@ -170,11 +177,17 @@ export function useChat() {
         }
       }
 
-      await sendMsgMutate({
-        conversationId: activeConvId,
-        content: trimmed,
-        userCategory: category ?? "NONE",
-      })
+      try {
+        await sendMsgMutate({
+          conversationId: activeConvId,
+          content: trimmed,
+          userCategory: categoryRef.current ?? "NONE",
+        })
+      } catch {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMsg.id))
+        setIsTyping(false)
+        Alert.alert("전송 실패", "메시지 전송에 실패했습니다. 다시 시도해주세요.")
+      }
     },
     [isSending, createChatMutate, sendMsgMutate],
   )
@@ -191,7 +204,7 @@ export function useChat() {
         setCategory(conversation.category ?? null)
         setMessages(loadedMessages)
       } catch (err) {
-        console.error("Failed to load conversation:", err)
+        logger.error("Failed to load conversation", err)
       }
     },
     [isSending],
@@ -228,9 +241,9 @@ export function useChat() {
     setIsTyping(true)
     await regenerateMutate({
       content: lastUserMsg.content,
-      userCategory: category ?? "NONE",
+      userCategory: categoryRef.current ?? "NONE",
     })
-  }, [category, isSending, messages, regenerateMutate])
+  }, [isSending, messages, regenerateMutate])
 
   return {
     conversationId,

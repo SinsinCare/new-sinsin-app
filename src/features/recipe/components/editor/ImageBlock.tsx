@@ -8,13 +8,14 @@ import {
   Alert,
 } from "react-native"
 import { Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 const DELETE_BTN_BG = "rgba(0,0,0,0.5)"
 const DELETE_BTN_ICON = "#FFFFFF"
 const OVERLAY_BG = "rgba(0,0,0,0.4)"
 const ERROR_BG = { light: "#FFF5ED", dark: "#3A2A20" }
 const ERROR_TEXT = { light: "#E77661", dark: "#E78D7C" }
-const RETRY_COLOR = { light: "#44AF94", dark: "#44AF94" }
+const RETRY_COLOR = { light: tokens.color.sub6.val, dark: tokens.color.sub6.val }
 
 interface ImageBlockProps {
   localUri: string

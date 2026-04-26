@@ -1,4 +1,4 @@
-import { api } from "@/src/services"
+import { api } from "../core"
 import {
   AuthMethodRs,
   HealthCheckConfirmRs,
@@ -26,7 +26,6 @@ export const nhisService = {
   async healthCheckRequest(
     authInfo: HealthCheckRequestRq,
   ): Promise<HealthCheckRequestRs> {
-    console.log('info', authInfo)
     const response = await api.post(`/health-check/request`, authInfo)
     return response.data.result
   },

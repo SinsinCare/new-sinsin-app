@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react"
 import { Modal, Pressable, ScrollView, StyleSheet, useColorScheme, View } from "react-native"
 import { Text, YStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { FilterTabBar } from "./FilterTabBar"
 import { RegionFilterSection } from "./RegionFilterSection"
@@ -37,7 +38,7 @@ export function PlaceFilterModal({
     nutrient: 0,
   })
 
-  const backgroundColor = isDarkMode ? "#1F1F21" : "#FDFDFD"
+  const backgroundColor = isDarkMode ? tokens.color.appBgDark.val : "#FDFDFD"
   const dividerColor = isDarkMode ? "#2A2A30" : "#FAFAFA"
 
   // Reset local state when modal opens
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   applyButton: {
-    backgroundColor: "#FF7246",
+    backgroundColor: tokens.color.primaryAccent.val,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",

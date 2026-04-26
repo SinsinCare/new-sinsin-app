@@ -5,6 +5,7 @@ import {
   generateMonthOptions,
   generateDayOptions,
 } from "../data/dateUtils"
+import { tokens } from "@/src/theme/tokens"
 
 interface BirthDatePickerProps {
   birthYear: string
@@ -35,7 +36,7 @@ export function BirthDatePicker({
         >
           생년월일
         </Text>
-        <Text fontSize={13} fontWeight="500" color="#FF3B30">
+        <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
           {" "}
           *
         </Text>

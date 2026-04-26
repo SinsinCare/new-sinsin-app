@@ -6,14 +6,35 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
+        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
+        "EXPO_PUBLIC_MOCK_NO_USER": "false"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
+        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
+        "EXPO_PUBLIC_MOCK_NO_USER": "false"
+      }
     },
     "production": {
       "node": "22.21.1",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
+        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
+        "EXPO_PUBLIC_MOCK_NO_USER": "false"
+      }
     }
   },
   "submit": {
@@ -22,6 +43,10 @@
         "ascAppId": "6758880186",
         "appleId": "sht06202@naver.com",
         "appleTeamId": "HJJNV9Y5W8"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-key.json",
+        "track": "internal"
       }
     }
   }

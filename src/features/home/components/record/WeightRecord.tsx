@@ -14,7 +14,6 @@ interface WeightRecordProps {
   onChangeWeight: (value: string) => void
   onDecrease: () => void
   onIncrease: () => void
-  onReset: () => void
   onSave: (weight: string) => void
 }
 
@@ -24,21 +23,17 @@ export function WeightRecord({
   onChangeWeight,
   onDecrease,
   onIncrease,
-  onReset,
   onSave,
 }: WeightRecordProps) {
-  const subtitle =
-    yesterdayWeight !== null
-      ? `어제: ${yesterdayWeight}kg`
-      : "이전 기록이 없어요"
   const isDarkMode = useColorScheme() === "dark"
+  const placeholder =
+    yesterdayWeight !== null ? `${yesterdayWeight}` : "직접 입력"
 
   return (
     <RecordCard
       type="weight"
       title="오늘의 체중을 기록해 주세요."
-      subtitle={subtitle}
-      onReset={onReset}
+      icon={require("@/assets/images/weight.png")}
     >
       <XStack
         alignItems="center"
@@ -52,7 +47,7 @@ export function WeightRecord({
             paddingVertical="$2"
             paddingHorizontal="$3"
             borderColor="$borderColor"
-            borderWidth={isDarkMode ? "0" : "1"}
+            borderWidth={isDarkMode ? 0 : 1}
             borderRadius="$4"
           >
             <Text
@@ -77,10 +72,10 @@ export function WeightRecord({
           <TextInput
             style={[
               styles.input,
-              { color: isDarkMode ? tokens.color.textDarkSub.val : "#1a1a1a" },
+              { color: isDarkMode ? tokens.color.textDark.val : "#1a1a1a" },
             ]}
-            placeholder="눌러서 입력해요"
-            placeholderTextColor={isDarkMode ? "$textDark" : "#999999"}
+            placeholder={placeholder}
+            placeholderTextColor={tokens.color.grey6.val}
             value={weight}
             onChangeText={onChangeWeight}
             onEndEditing={() => onSave(weight)}
@@ -103,7 +98,7 @@ export function WeightRecord({
             paddingVertical="$2"
             paddingHorizontal="$3"
             borderColor="$borderColor"
-            borderWidth={isDarkMode ? "0" : "1"}
+            borderWidth={isDarkMode ? 0 : 1}
             borderRadius="$4"
           >
             <Text

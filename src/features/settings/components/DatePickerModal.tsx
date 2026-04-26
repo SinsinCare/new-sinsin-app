@@ -3,6 +3,8 @@ import { Modal, View, Pressable, ScrollView, StyleSheet } from "react-native"
 
 import { ThemedText } from "@/components/themed-text"
 import { MONTHS, YEARS } from "@/src/features/settings/data/constants"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { tokens } from "@/src/theme/tokens"
 
 interface DatePickerModalProps {
   visible: boolean
@@ -19,6 +21,7 @@ export function DatePickerModal({
 }: DatePickerModalProps) {
   const [tempYear, setTempYear] = useState(selected?.year ?? YEARS[0])
   const [tempMonth, setTempMonth] = useState(selected?.month ?? 1)
+  const c = useSettingsColors()
 
   return (
     <Modal
@@ -29,12 +32,18 @@ export function DatePickerModal({
     >
       <View style={styles.overlay}>
         <Pressable style={styles.dimArea} onPress={onClose} />
-        <View style={styles.container}>
-          <View style={styles.header}>
+        <View style={[styles.container, { backgroundColor: c.modalBg }]}>
+          <View
+            style={[styles.header, { borderBottomColor: c.border }]}
+          >
             <Pressable onPress={onClose} hitSlop={8}>
-              <ThemedText style={styles.cancelText}>취소</ThemedText>
+              <ThemedText style={[styles.cancelText, { color: c.textMuted }]}>
+                취소
+              </ThemedText>
             </Pressable>
-            <ThemedText style={styles.headerTitle}>진단 시기</ThemedText>
+            <ThemedText style={[styles.headerTitle, { color: c.text }]}>
+              진단 시기
+            </ThemedText>
             <Pressable
               onPress={() => onSelect(tempYear, tempMonth)}
               hitSlop={8}
@@ -52,13 +61,16 @@ export function DatePickerModal({
                   key={m}
                   style={[
                     styles.pickerItem,
-                    tempMonth === m && styles.pickerItemSelected,
+                    tempMonth === m && {
+                      backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4",
+                    },
                   ]}
                   onPress={() => setTempMonth(m)}
                 >
                   <ThemedText
                     style={[
                       styles.pickerItemText,
+                      { color: c.textSub },
                       tempMonth === m && styles.pickerItemTextSelected,
                     ]}
                   >
@@ -76,13 +88,16 @@ export function DatePickerModal({
                   key={y}
                   style={[
                     styles.pickerItem,
-                    tempYear === y && styles.pickerItemSelected,
+                    tempYear === y && {
+                      backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4",
+                    },
                   ]}
                   onPress={() => setTempYear(y)}
                 >
                   <ThemedText
                     style={[
                       styles.pickerItemText,
+                      { color: c.textSub },
                       tempYear === y && styles.pickerItemTextSelected,
                     ]}
                   >
@@ -108,7 +123,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 32,
@@ -121,21 +135,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#17191C",
   },
   cancelText: {
     fontSize: 15,
-    color: "#94A3B8",
   },
   confirmText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#44AF94",
+    color: tokens.color.sub6.val,
   },
   columns: {
     flexDirection: "row",
@@ -148,15 +159,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
-  pickerItemSelected: {
-    backgroundColor: "#F0FDF4",
-  },
   pickerItemText: {
     fontSize: 16,
-    color: "#555",
   },
   pickerItemTextSelected: {
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
     fontWeight: "600",
   },
 })

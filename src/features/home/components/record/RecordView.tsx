@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Alert } from "react-native"
-import type { DiaryAnalysisResult } from "@/src/types"
+import type { DiaryAnalysisResult, FoodAnalysisUpdateRequest, FoodAnalysisUpdateResult } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
@@ -8,10 +8,11 @@ import { MealType } from "../../types"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
-import { getThreeDays } from "../../utils/getThreeDays"
+import { MonthCalendarSheet } from "../statistics/MonthCalendarSheet"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
+import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
   pickImageFromGallery,
@@ -25,6 +26,9 @@ import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
 import { MAX_WATER_INTAKE } from "../../data/hydrationConstants"
+import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
+import { foodCameraService } from "@/src/services/data"
+import { toDateStr } from "../../utils/dateUtils"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -54,21 +58,27 @@ export function RecordView({
     analyzedImageUri,
     analyzeImage,
     analyzeText,
+    dismissAnalysis,
     registerDiary,
     closeResult,
     updateFoodAnalysis,
     fetchDiaryResult,
   } = useFoodAnalysis()
+
+  const pending = usePendingAnalysisStore((s) => s.pending)
+  const setPending = usePendingAnalysisStore((s) => s.setPending)
+  const [isPendingOpen, setIsPendingOpen] = useState(false)
+  const [isPendingUpdating, setIsPendingUpdating] = useState(false)
+
+  useEffect(() => {
+    if (pending) setIsPendingOpen(true)
+  }, [pending])
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const calendarDays = useMemo(
-    () => getThreeDays(selectedDate, "record"),
-    [selectedDate],
-  )
-  const { data: dataDay0 } = useDateAnalysis(calendarDays[0].date)
-  const { data: dataDay1 } = useDateAnalysis(calendarDays[1].date)
-  const { data: dataDay2 } = useDateAnalysis(calendarDays[2].date)
+  const { data: diaryExistenceDays = [] } = useDiaryExistence(selectedDate)
   const queryClient = useQueryClient()
+
+  const [showCalendar, setShowCalendar] = useState(false)
 
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
@@ -135,20 +145,27 @@ export function RecordView({
         ? "character-good"
         : "character-caution"
 
-  const calendarDataList = [dataDay0, dataDay1, dataDay2]
-  const recordedDates = calendarDays
-    .filter((day, i) => {
-      const diets = calendarDataList[i]?.result.diets ?? []
-      const isSameAsSelected =
-        day.date.getFullYear() === selectedDate.getFullYear() &&
-        day.date.getMonth() === selectedDate.getMonth() &&
-        day.date.getDate() === selectedDate.getDate()
-      return (
-        diets.length > 0 ||
-        (isSameAsSelected && Object.values(recordedMeals).some(Boolean))
-      )
-    })
-    .map((day) => day.date)
+  // 주 단위 기록 유무: 서버 데이터 + 로컬 미저장 상태 병합
+  const isSameDayFn = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  const sunday = new Date(selectedDate)
+  sunday.setDate(selectedDate.getDate() - selectedDate.getDay())
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday)
+    d.setDate(sunday.getDate() + i)
+    return d
+  })
+
+  const recordedDates = weekDates.filter((d) => {
+    if (diaryExistenceDays.includes(d.getDate())) return true
+    return (
+      isSameDayFn(d, selectedDate) &&
+      Object.values(recordedMeals).some(Boolean)
+    )
+  })
 
   const serverExtraWater = data?.result.analysis?.extraWater ?? 0
   const { syncFromServer } = record
@@ -167,6 +184,43 @@ export function RecordView({
     })
     await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+  }
+
+  const handlePendingAddToRecord = async () => {
+    if (!pending) return
+    try {
+      await foodCameraService.registerDiary(
+        pending.result.foodAnalysisResultId,
+        toDateStr(selectedDate),
+        pending.mealType,
+      )
+      setRecordedMeals((prev) => ({ ...prev, [pending.mealType]: true }))
+      if (pending.imageUri) {
+        setMealImages((prev) => ({ ...prev, [pending.mealType]: pending.imageUri! }))
+      }
+      await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+      await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+    } catch (error) {
+      console.error("handlePendingAddToRecord error:", error)
+      Alert.alert("등록 실패", "기록 추가에 실패했어요.")
+    }
+  }
+
+  const updatePendingFoodAnalysis = async (
+    foodAnalysisResultId: number,
+    body: FoodAnalysisUpdateRequest,
+  ): Promise<FoodAnalysisUpdateResult | undefined> => {
+    try {
+      setIsPendingUpdating(true)
+      const updated = await foodCameraService.updateFoodAnalysis(foodAnalysisResultId, body)
+      if (pending) setPending({ ...pending, result: updated })
+      return updated
+    } catch (error) {
+      console.error("updatePendingFoodAnalysis error:", error)
+      Alert.alert("업데이트 실패", "수정에 실패했어요.")
+    } finally {
+      setIsPendingUpdating(false)
+    }
   }
 
   const handleRecord = (mealType: MealType) => {
@@ -226,6 +280,18 @@ export function RecordView({
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         recordedDates={recordedDates}
+        onMonthPress={() => setShowCalendar(true)}
+      />
+
+      <MonthCalendarSheet
+        visible={showCalendar}
+        selectedDate={selectedDate}
+        onSelectDate={(date) => {
+          onSelectDate(date)
+          setShowCalendar(false)
+        }}
+        onClose={() => setShowCalendar(false)}
+        disableFuture
       />
 
       <View height={10} />
@@ -290,7 +356,25 @@ export function RecordView({
         updateFoodAnalysis={updateFoodAnalysis}
       />
 
-      <LoadingOverlay visible={isAnalyzing} message="식단을 분석하고 있어요" />
+      <FoodAnalysisResult
+        result={pending?.result ?? null}
+        open={isPendingOpen}
+        onClose={() => {
+          setIsPendingOpen(false)
+          setPending(null)
+        }}
+        imageUri={pending?.imageUri ?? undefined}
+        mealType={pending?.mealType}
+        onAddToRecord={handlePendingAddToRecord}
+        isUpdating={isPendingUpdating}
+        updateFoodAnalysis={updatePendingFoodAnalysis}
+      />
+
+      <LoadingOverlay
+        visible={isAnalyzing}
+        message="식단을 분석하고 있어요"
+        onDismiss={dismissAnalysis}
+      />
 
       <View height={10} />
 

@@ -14,10 +14,12 @@ import {
   WITHDRAWAL_TERMS,
 } from "@/src/features/settings/data/constants"
 import { api } from "@/src/services/core/apiClient"
+import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const c = useSettingsColors()
 
   const [agreed, setAgreed] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -37,7 +39,7 @@ export function WithdrawalTermsScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -50,16 +52,18 @@ export function WithdrawalTermsScreen() {
           hitSlop={8}
           style={styles.backButton}
         >
-          <Ionicons name="chevron-back" size={24} color="#17191C" />
+          <Ionicons name="chevron-back" size={24} color={c.text} />
         </Pressable>
 
-        <ThemedText style={styles.title}>
+        <ThemedText style={[styles.title, { color: c.text }]}>
           {"신신당부를 떠나기 전에\n꼭 확인해주세요"}
         </ThemedText>
 
         <DotItem text={WITHDRAWAL_NOTICE} />
 
-        <ThemedText style={styles.sectionTitle}>탈퇴 약관</ThemedText>
+        <ThemedText style={[styles.sectionTitle, { color: c.text }]}>
+          탈퇴 약관
+        </ThemedText>
         <View style={styles.termsList}>
           {WITHDRAWAL_TERMS.map((term, i) => (
             <DotItem key={i} text={term} />
@@ -67,18 +71,19 @@ export function WithdrawalTermsScreen() {
         </View>
 
         <Pressable
-          style={styles.agreementBox}
+          style={[styles.agreementBox, { backgroundColor: c.secondaryBg }]}
           onPress={() => setAgreed((v) => !v)}
         >
           <Ionicons
             name={agreed ? "checkbox" : "square-outline"}
             size={20}
-            color={agreed ? "#17191C" : "#666677"}
+            color={agreed ? c.text : c.textSub}
           />
           <ThemedText
             style={[
               styles.agreementText,
-              agreed && styles.agreementTextChecked,
+              { color: c.textSub },
+              agreed && { color: c.text },
             ]}
           >
             유의사항 숙지 후 탈퇴에 동의합니다.
@@ -107,7 +112,6 @@ export function WithdrawalTermsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -120,14 +124,12 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 22 * 1.2,
     fontWeight: "600",
-    color: "#17191C",
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#17191C",
     marginTop: 24,
     marginBottom: 12,
   },
@@ -142,15 +144,10 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: "#F6F7FA",
   },
   agreementText: {
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "500",
-    color: "#666677",
-  },
-  agreementTextChecked: {
-    color: "#17191C",
   },
 })

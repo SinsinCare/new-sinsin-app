@@ -1,6 +1,9 @@
-# sinsin-rn
+# 신신당부 (Sinsin Dangbu)
 
-신신당부 (Sinsin Dangbu) - 만성신장질환(CKD) 환자를 위한 한국어 건강관리 모바일 앱
+만성신장질환(CKD) 환자를 위한 건강관리 모바일 앱
+
+[![App Store](https://img.shields.io/badge/App_Store-available-blue?logo=apple&logoColor=white)](https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186)
+[![Google Play](https://img.shields.io/badge/Google_Play-available-green?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.mediology.sinsinapp)
 
 ## 프로젝트 개요
 
@@ -11,15 +14,27 @@ React Native/Expo 기반의 크로스플랫폼 앱으로, AI 기반 음식 분�
 - CKD 단계별(1-5단계) 건강 추적 및 투석 상태 관리
 - AI 기반 음식 사진 분석 (신장 건강 안전도 평가)
 - AI 건강 상담 챗봇
-- 일일 건강 기록 및 영양소 추적
+- 일일 건강 기록 및 영양소 추적 (나트륨, 칼륨, 인, 단백질)
+- 수분 섭취 및 체중/부종 관리
+- 신장 친화 레시피 커뮤니티
+- 인스타그램 스토리 공유 (식단 분석 결과 카드)
+
+### 다운로드
+
+<a href="https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186">
+  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40">
+</a>
+<a href="https://play.google.com/store/apps/details?id=com.mediology.sinsinapp">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="40">
+</a>
 
 ## 기술 스택
 
-- **Framework:** Expo ~54.0, React Native 0.81
+- **Framework:** Expo ~55.0, React Native 0.83.4
 - **Routing:** Expo Router (파일 기반 라우팅)
 - **UI:** Tamagui v2
 - **State:** Zustand (클라이언트) + React Query (서버)
-- **Backend:** Spring (Sinsin) + Nest (Food-Camera-API)
+- **Backend:** FastAPI (Sinsin) + FastAPI (Food-Camera-API) — Cloud Run (asia-northeast3)
 
 ## 코드 품질 도구
 
@@ -66,11 +81,13 @@ cp .env.example .env
 - `EXPO_PUBLIC_USE_MOCK_MODE` - Mock 데이터 모드 (`true`/`false`)
 - `EXPO_PUBLIC_MOCK_NO_USER` - 유저 프로필 없이 실행 (`true`/`false`)
 
-### EAS 프로덕션 빌드 (TestFlight/스토어)
+### EAS 빌드 환경 변수
 
-`eas build` 시 `.env`는 번들에 포함되지 않습니다. **반드시** [Expo Dashboard](https://expo.dev) → 프로젝트 → Secrets에서 다음 변수를 production 환경에 설정하세요:
+환경 변수는 `eas.json`의 각 빌드 프로파일(`development`, `preview`, `production`) `env` 블록에 이미 설정되어 있습니다. 별도 작업 없이 `eas build` 실행 시 자동으로 적용됩니다.
 
-- `EXPO_PUBLIC_BACKEND_URL`
+카카오 JS 키처럼 민감한 값은 [Expo Dashboard](https://expo.dev) → 프로젝트 → Secrets에서 등록하세요:
+
+- `EXPO_PUBLIC_KAKAO_JS_KEY`
 
 ## 프로젝트 구조
 
@@ -146,36 +163,89 @@ refactor/state-mgmt    # 리팩토링
   - `test`: 테스트 코드 변경/추가
   - `style`: 코드 포맷팅, 세미콜론 등 스타일 변화
 
-- 앱스토어 배포
-  app.json expo ios build_number 수정
+# 로컬 빌드
 
+### iOS 시뮬레이터
+
+```bash
+npx expo run:ios
 ```
+
+### 실제 아이폰 디바이스
+
+```bash
+npx expo prebuild --platform ios
+cd ios && pod install && cd ..
+npx expo run:ios --device
+```
+
+Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
+
+### Android (에뮬레이터 및 실제 디바이스)
+
+1.  **폰 설정**: 실제 디바이스인 경우 '설정 > 휴대전화 정보 > 소프트웨어 정보'에서 '빌드 번호'를 연타하여 **개발자 옵션**을 활성화하고, **USB 디버깅**을 켭니다.
+2.  **명령어 실행**:
+    ```bash
+    npm run android
+    ```
+    *   또는 `npx expo run:android`를 사용하여 네이티브 빌드 후 실행할 수 있습니다.
+
+### EAS 빌드 (테스트용 / 스토어 배포)
+
+환경 변수는 `eas.json`에 프로파일별로 설정되어 있어 별도 작업 불필요.
+
+#### iOS
+```bash
+# Production (App Store)
 eas build --platform ios --profile production
-
 eas submit --platform ios --latest --profile production
+
+# Development Build
+eas build --platform ios --profile development
 ```
 
-- 안드로이드
+#### Android
+```bash
+# Production (Google Play Store) - 로컬 빌드
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
+export ANDROID_HOME=$HOME/Library/Android/sdk
+eas build --platform android --profile production --local
+# 빌드 완료 후 생성된 .aab 파일을 Play Console에 수동 업로드
 
+# Preview (설치용 APK 생성)
+eas build --platform android --profile preview
+
+# Development Build (개발용 앱 생성)
+eas build --platform android --profile development
 ```
-eas build --platform android --profile production
 
-eas submit --platform android --latest
+> **Google Play Store:** `com.mediology.sinsinapp` (계정: healthierwith@gmail.com)
+
+### 로컬에서 iOS 개발 빌드 (Xcode)
+
+**Debug로 Run(▶)할 때는 Metro가 반드시 있어야 합니다.**  
+그렇지 않으면 `No script URL provided...` / `unsanitizedScriptURLString = (null)` 오류가 납니다.
+
+```bash
+# 터미널 1: 프로젝트 루트에서 Metro 실행
+npx expo start
+
+# Xcode에서 Run (Debug)
+open ios/app.xcworkspace
 ```
 
-# 로컬 아이폰에 빌드하기
+한 번에 하려면 `npm run ios`(또는 `npx expo run:ios`)를 쓰면 Metro와 빌드가 같이 맞춰집니다.
 
+```bash
+npx expo prebuild --platform ios --clean   # 네이티브 폴더 재생성 시
+
+open ios/app.xcworkspace
 ```
-npm install
-npx expo prebuild -p ios
-open ios/*.xcworkspace
+
+**Metro 없이 로컬에서 돌리고 싶다면** Xcode Scheme의 Run을 **Release**로 바꾸거나:
+
+```bash
+npm run ios-release
 ```
 
-Xcode 설정
-Targets > (앱 타겟) > Signing & Capabilities
-Team 선택
-Bundle Identifier를 고유하게 변경 (예: com.yourname.sinsin)
-아이폰 기기 선택 후 Run(▶)
-
-CLI 에서 바로 빌드
-npm run ios -- --device
+(스토어 업로드: prebuild → Xcode **Archive** → Transporter)

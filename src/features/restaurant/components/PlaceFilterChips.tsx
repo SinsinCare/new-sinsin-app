@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, useColorScheme } from "react-native"
 import { Text, XStack } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import type { FilterTab } from "../types"
 
 const FILTERS: { key: FilterTab; label: string }[] = [
@@ -16,7 +17,7 @@ export function PlaceFilterChips({ onFilterPress }: PlaceFilterChipsProps) {
   const isDarkMode = useColorScheme() === "dark"
 
   const borderColor = isDarkMode ? "#36363E" : "#D9D9DF"
-  const textColor = isDarkMode ? "#ABABB4" : "#474758"
+  const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
 
   return (
     <XStack gap={8} paddingHorizontal={16} paddingVertical={12}>

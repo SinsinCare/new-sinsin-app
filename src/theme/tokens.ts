@@ -18,6 +18,7 @@ export const tokens = createTokens({
     primary7: "#EE6145",
     primary8: "#F24D2D",
     primary9: "#F82F08",
+    primaryAccent: "#FF7246",
 
     // Sub (teal/green)
     sub1: "#E0FFF7",
@@ -34,12 +35,23 @@ export const tokens = createTokens({
     appBg: "#FAFAFA",
     appBgDark: "#1F1F21",
     cardBgDark: "#313138",
+    inputBgDark: "#2E2E34",
+    borderDark: "#3A3A42",
     textDark: "#E7E7EE",
     textDarkSub: "#ABABB4",
+
+    // Light mode semantic
+    textLight: "#2A2A37",
+    textLightSub: "#A5A5AF",
+    textLightMuted: "#595960",
+    borderLight: "#EAEAF0",
 
     // Restriction level badge
     restrictionBg: "#FCE1E1",
     restrictionText: "#E74E4E",
+
+    // Error / validation
+    error: "#FF3B30",
 
     // Hydration
     waterPercentBg: "#D2DFE3",

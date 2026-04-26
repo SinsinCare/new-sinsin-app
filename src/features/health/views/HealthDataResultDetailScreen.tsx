@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
+import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { nhisService } from "@/src/services/data/nhisService"
 import type { HealthCheckResultDetailRs } from "@/src/types/nhis"
@@ -70,7 +71,7 @@ export function HealthDataResultDetailScreen() {
 
       {loading && (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#44AF94" />
+          <ActivityIndicator size="large" color={tokens.color.sub6.val} />
         </View>
       )}
 
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
   judgementText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#0D896A",
+    color: tokens.color.sub8.val,
   },
 })
 

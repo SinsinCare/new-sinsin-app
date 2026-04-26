@@ -19,13 +19,18 @@ export interface PlaceRestaurant {
   name: string
   tags: string[]
   description: string
-  rating: number
-  reviewCount: number
+  rating?: number
+  reviewCount?: number
   distance: string
   address: string
   latitude: number
   longitude: number
   images: (string | number)[]
+  cuisineType?: string
+  menuCount?: number
+  safeMenuCount?: number
+  cautionMenuCount?: number
+  highRiskMenuCount?: number
 }
 
 export interface FilterState {

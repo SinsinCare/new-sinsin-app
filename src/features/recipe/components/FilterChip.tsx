@@ -1,6 +1,7 @@
 // src/features/recipe/components/FilterChip.tsx
 import { Pressable, useColorScheme } from "react-native"
 import { XStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 
 type FilterChipTheme = "default" | "primary" | "sub" | "tertiary" | "category"
 
@@ -13,8 +14,8 @@ interface FilterChipProps {
 
 const THEME_COLORS = {
   default: {
-    light: { border: "#ABABB4", text: "#66666B" },
-    dark: { border: "#8686868F", text: "#E7E7EE" },
+    light: { border: tokens.color.textDarkSub.val, text: "#66666B" },
+    dark: { border: "#8686868F", text: tokens.color.textDark.val },
   },
   primary: {
     light: { border: "#FF9D77B0", text: "#EE9A69" },
@@ -25,7 +26,7 @@ const THEME_COLORS = {
     dark: { border: "#4889784F", text: "#44AF94B0" },
   },
   tertiary: {
-    light: { border: "#ABABB4", text: "#858591" },
+    light: { border: tokens.color.textDarkSub.val, text: "#858591" },
     dark: { border: "#535356", text: "#858591" },
   },
   category: {
@@ -40,7 +41,7 @@ const SELECTED_COLORS = {
     dark: { border: "#E77661", text: "#E77661" },
   },
   primary: {
-    light: { border: "#FF9775", text: "#FF7246" },
+    light: { border: "#FF9775", text: tokens.color.primaryAccent.val },
     dark: { border: "#EB9E7F", text: "#E48D68" },
   },
   sub: {
@@ -48,12 +49,12 @@ const SELECTED_COLORS = {
     dark: { border: "#488978", text: "#3FA68C" },
   },
   tertiary: {
-    light: { border: "#66666B", text: "#2E2E34" },
-    dark: { border: "#E7E7EE8A", text: "#E7E7EE" },
+    light: { border: "#66666B", text: tokens.color.inputBgDark.val },
+    dark: { border: "#E7E7EE8A", text: tokens.color.textDark.val },
   },
   category: {
-    light: { border: "#474758", text: "#2A2A37" },
-    dark: { border: "#E7E7EE8A", text: "#E7E7EE" },
+    light: { border: "#474758", text: tokens.color.textLight.val },
+    dark: { border: "#E7E7EE8A", text: tokens.color.textDark.val },
   },
 } as const
 

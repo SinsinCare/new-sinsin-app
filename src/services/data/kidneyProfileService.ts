@@ -5,8 +5,10 @@ export interface KidneyProfile {
   ckdStage: string
   ckdStageLabel: string
   isDialysis: boolean
-  weightKg: number
-  weightRecordedAt: string
+  weightKg: number | null
+  weightRecordedAt: string | null
+  diagnosisDate: string | null
+  comorbidities?: string[]
 }
 
 export const kidneyProfileService = {

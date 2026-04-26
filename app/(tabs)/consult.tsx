@@ -16,6 +16,8 @@ import {
   Modal,
   GestureResponderEvent,
 } from "react-native"
+import * as ImagePicker from "expo-image-picker"
+import { useRouter } from "expo-router"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -28,6 +30,7 @@ import { useChat } from "@/src/features/consultation/hooks/useChat"
 import { YStack, Text, XStack } from "tamagui"
 import { Chip } from "@/src/shared/components/Chip"
 import { Icon } from "@/src/shared/components/Icon"
+import { tokens } from "@/src/theme/tokens"
 
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
 import {
@@ -54,6 +57,7 @@ if (Platform.OS === "android") {
 
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
   const colorScheme = useColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [inputMessage, setInputMessage] = useState("")
@@ -87,7 +91,7 @@ export default function ConsultScreen() {
 
   const isIdle = messages.length === 0 && !isTyping
   const canSend = !!inputMessage.trim() && !isTyping && !isSending
-  const menuTextColor = isDarkMode ? "#E7E7EE" : "#2A2A37"
+  const menuTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
 
   const handleHistoryPress = () => {
     Keyboard.dismiss()
@@ -147,6 +151,33 @@ export default function ConsultScreen() {
     setAttachMenuOpen(true)
   }
 
+  const handlePhotoUpload = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== "granted") {
+      Alert.alert("권한 필요", "사진 접근 권한이 필요합니다.")
+      return
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+    })
+    if (!result.canceled && result.assets[0]) {
+      sendMessage(`[사진 첨부]\n${result.assets[0].uri}`)
+    }
+  }
+
+  const handleCameraUpload = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync()
+    if (status !== "granted") {
+      Alert.alert("권한 필요", "카메라 접근 권한이 필요합니다.")
+      return
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 })
+    if (!result.canceled && result.assets[0]) {
+      sendMessage(`[사진 첨부]\n${result.assets[0].uri}`)
+    }
+  }
+
   const { handleCopy, showToast } = useCopyToClipboard()
 
   const handleInputFocus = () => {
@@ -193,7 +224,7 @@ export default function ConsultScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: isDarkMode ? "#1F1F21" : "#FAFAFA",
+        backgroundColor: isDarkMode ? tokens.color.appBgDark.val : tokens.color.appBg.val,
         paddingTop: insets.top,
       }}
     >
@@ -212,10 +243,10 @@ export default function ConsultScreen() {
             <YStack flex={1} justifyContent="center" gap="$5">
               <Text
                 textAlign="center"
-                fontSize="18"
+                fontSize={18}
                 lineHeight={20}
                 fontWeight="600"
-                color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
               >
                 {"신신당부 AI에게\n무엇이든 물어보세요"}
               </Text>
@@ -227,6 +258,24 @@ export default function ConsultScreen() {
                   <FaqCarousel onFaqPress={handleFaqPress} />
                 </Animated.View>
               )}
+              <YStack alignItems="center" gap={4} paddingHorizontal={24}>
+                <Text
+                  fontSize={11}
+                  color={isDarkMode ? tokens.color.textLightMuted.val : tokens.color.textLightSub.val}
+                  textAlign="center"
+                  lineHeight={16}
+                >
+                  AI 답변은 참고용 정보입니다. 정확한 진단·치료는 반드시 전문 의료인과 상담하세요.
+                </Text>
+                <Text
+                  fontSize={11}
+                  color={isDarkMode ? "#5BC5AB" : "#0D896A"}
+                  fontWeight="500"
+                  onPress={() => router.push("/(settings)/medical-reference")}
+                >
+                  📚 의학 참고 문헌 보기
+                </Text>
+              </YStack>
             </YStack>
           </Pressable>
         ) : (
@@ -258,13 +307,13 @@ export default function ConsultScreen() {
         {/* Bottom Composer */}
         <YStack
           backgroundColor="transparent"
-          paddingVertical="8"
-          paddingHorizontal="16"
+          paddingVertical={8}
+          paddingHorizontal={16}
         >
           {showToast && <CopyToast message="답변을 복사했습니다." />}
           {isIdle && isInputFocused && (
             <>
-              <Text fontSize="12" color="#81818d" lineHeight={16}>
+              <Text fontSize={12} color="#81818d" lineHeight={16}>
                 카테고리
               </Text>
               <ScrollView
@@ -289,7 +338,7 @@ export default function ConsultScreen() {
           <View
             style={{
               ...styles.inputContainer,
-              backgroundColor: isDarkMode ? "#2E2E34" : "#FDFDFD",
+              backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
             }}
           >
             <TextInput
@@ -300,7 +349,7 @@ export default function ConsultScreen() {
               multiline
               style={{
                 ...styles.input,
-                color: isDarkMode ? "#E7E7EE" : "#2A2A37",
+                color: isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val,
               }}
               editable={!isTyping}
               onFocus={handleInputFocus}
@@ -312,7 +361,7 @@ export default function ConsultScreen() {
                 <Icon
                   name="plus"
                   size={24}
-                  color={isDarkMode ? "#E7E7EE" : "#2A2A37"}
+                  color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
                 />
               </Pressable> */}
               <View />
@@ -323,7 +372,7 @@ export default function ConsultScreen() {
                   ...styles.sendButton,
                   backgroundColor: canSend
                     ? isDarkMode
-                      ? "#ABABB4"
+                      ? tokens.color.textDarkSub.val
                       : "#474758"
                     : isDarkMode
                       ? "#4E4F55"
@@ -333,7 +382,7 @@ export default function ConsultScreen() {
                 <Icon
                   name="fly-chat"
                   size={16}
-                  color={isDarkMode ? "#E7E7EE" : "#FDFDFD"}
+                  color={isDarkMode ? tokens.color.textDark.val : tokens.color.offWhite.val}
                 />
               </Pressable>
             </XStack>
@@ -394,7 +443,7 @@ export default function ConsultScreen() {
               {
                 bottom: attachMenuPosition.bottom,
                 left: attachMenuPosition.left,
-                backgroundColor: isDarkMode ? "#2E2E34" : "#FFFFFF",
+                backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.pureWhite.val,
                 shadowOpacity: isDarkMode ? 0.4 : 0.15,
               },
             ]}
@@ -403,7 +452,7 @@ export default function ConsultScreen() {
             <Pressable
               onPress={() => {
                 setAttachMenuOpen(false)
-                // TODO: handle photo upload
+                handlePhotoUpload()
               }}
               style={({ pressed }) => ({
                 ...attachStyles.menuItem,
@@ -418,11 +467,11 @@ export default function ConsultScreen() {
               <Icon name="gallery" size={20} color={menuTextColor} />
             </Pressable>
 
-            {/* 파일 업로드 */}
+            {/* 카메라 촬영 */}
             <Pressable
               onPress={() => {
                 setAttachMenuOpen(false)
-                // TODO: handle file upload
+                handleCameraUpload()
               }}
               style={({ pressed }) => ({
                 ...attachStyles.menuItem,
@@ -432,7 +481,7 @@ export default function ConsultScreen() {
               <Text
                 style={[attachStyles.menuItemText, { color: menuTextColor }]}
               >
-                파일 업로드
+                카메라 촬영
               </Text>
               <Icon name="paperclip" size={20} color={menuTextColor} />
             </Pressable>

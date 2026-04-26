@@ -1,5 +1,6 @@
 import { Pressable, useColorScheme } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
+import { tokens } from "@/src/theme/tokens"
 import { ImageCard } from "./ImageCard"
 import { FilterChip } from "./FilterChip"
 
@@ -19,8 +20,8 @@ export interface RecipeCardProps {
 }
 
 const TITLE_COLORS = {
-  light: "#2A2A37",
-  dark: "#E7E7EE",
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
 } as const
 
 export function RecipeCard({
