@@ -1,17 +1,17 @@
-export const EDEMA_OPTIONS = ["붓기\n없어요", "약간\n부었어요", "많이\n부었어요"]
+import type { EdemaLevel } from "../types"
 
-export type EdemaLevel = (typeof EDEMA_OPTIONS)[number]
+export type { EdemaLevel }
 
-export type ApiEdemaLevel = "NONE" | "SLIGHT" | "SEVERE"
+export const EDEMA_OPTIONS: EdemaLevel[] = ["NONE", "SLIGHT", "SEVERE"]
 
-export const EDEMA_LEVEL_TO_LABEL: Record<ApiEdemaLevel, EdemaLevel> = {
-  NONE: EDEMA_OPTIONS[0],
-  SLIGHT: EDEMA_OPTIONS[1],
-  SEVERE: EDEMA_OPTIONS[2],
+export const EDEMA_BUTTON_LABEL: Record<EdemaLevel, string> = {
+  NONE: "붓기\n없어요",
+  SLIGHT: "약간\n부었어요",
+  SEVERE: "많이\n부었어요",
 }
 
-export const LABEL_TO_EDEMA_LEVEL: Record<EdemaLevel, ApiEdemaLevel> = {
-  [EDEMA_OPTIONS[0]]: "NONE",
-  [EDEMA_OPTIONS[1]]: "SLIGHT",
-  [EDEMA_OPTIONS[2]]: "SEVERE",
+export const EDEMA_DISPLAY_LABEL: Record<EdemaLevel, string> = {
+  NONE: "붓기 없어요",
+  SLIGHT: "약간 부었어요",
+  SEVERE: "많이 부었어요",
 }

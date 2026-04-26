@@ -1,5 +1,5 @@
 import { Text, XStack, YStack } from "tamagui"
-import { EDEMA_LEVEL_TO_LABEL } from "../../data/EdemaConstants"
+import { EDEMA_DISPLAY_LABEL } from "../../data/EdemaConstants"
 import { DateAnalysisBodyRecord } from "@/src/types"
 import { useColorScheme } from "react-native"
 
@@ -11,13 +11,13 @@ interface WeightEdemaResultProps {
 }
 
 export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
-  const todayWeight = bodyRecords?.today?.weightKg ?? 0
-  const previousWeight = bodyRecords?.previous?.weightKg ?? 0
+  const todayWeight = bodyRecords?.today?.weightKg ?? null
+  const previousWeight = bodyRecords?.previous?.weightKg ?? null
   const todayEdema = bodyRecords?.today?.edemaLevel
-    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.today.edemaLevel] ?? null)
+    ? (EDEMA_DISPLAY_LABEL[bodyRecords.today.edemaLevel] ?? null)
     : null
   const previousEdema = bodyRecords?.previous?.edemaLevel
-    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
+    ? (EDEMA_DISPLAY_LABEL[bodyRecords.previous.edemaLevel] ?? null)
     : null
   const isDarkMode = useColorScheme() === "dark"
 
@@ -56,7 +56,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "$black"}
           >
-            {todayWeight > 0 ? `${todayWeight}kg` : "기록 없음"}
+            {todayWeight != null ? `${todayWeight}kg` : "기록 없음"}
           </Text>
           <Text
             paddingTop="$2"
@@ -64,7 +64,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             fontWeight="500"
             color="$colorSubtle"
           >
-            전날: {previousWeight > 0 ? `${previousWeight}kg` : "기록 없음"}
+            전날: {previousWeight != null ? `${previousWeight}kg` : "기록 없음"}
           </Text>
         </YStack>
 

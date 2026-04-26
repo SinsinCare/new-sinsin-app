@@ -1,9 +1,4 @@
-import {
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
-  useColorScheme,
-} from "react-native"
+import { TouchableOpacity, TextInput, StyleSheet } from "react-native"
 import { Text, XStack } from "tamagui"
 import { RecordCard } from "./RecordCard"
 import { tokens } from "@/src/theme/tokens"
@@ -11,6 +6,8 @@ import { tokens } from "@/src/theme/tokens"
 interface WeightRecordProps {
   weight: string
   yesterdayWeight: number | null
+  isDarkMode: boolean
+  isLoading: boolean
   onChangeWeight: (value: string) => void
   onDecrease: () => void
   onIncrease: () => void
@@ -20,28 +17,30 @@ interface WeightRecordProps {
 export function WeightRecord({
   weight,
   yesterdayWeight,
+  isDarkMode,
+  isLoading,
   onChangeWeight,
   onDecrease,
   onIncrease,
   onSave,
 }: WeightRecordProps) {
-  const isDarkMode = useColorScheme() === "dark"
   const placeholder =
-    yesterdayWeight !== null ? `${yesterdayWeight}` : "직접 입력"
+    yesterdayWeight !== null ? `${yesterdayWeight}kg` : "직접 입력"
 
   return (
     <RecordCard
-      type="weight"
       title="오늘의 체중을 기록해 주세요."
       icon={require("@/assets/images/weight.png")}
+      isDarkMode={isDarkMode}
     >
       <XStack
         alignItems="center"
         justifyContent="flex-end"
         gap="$3"
         paddingTop="$7"
+        opacity={isLoading ? 0.5 : 1}
       >
-        <TouchableOpacity onPress={onDecrease}>
+        <TouchableOpacity onPress={onDecrease} disabled={isLoading}>
           <XStack
             backgroundColor={isDarkMode ? "$appBgDark" : "$pureWhite"}
             paddingVertical="$2"
@@ -80,6 +79,8 @@ export function WeightRecord({
             onChangeText={onChangeWeight}
             onEndEditing={() => onSave(weight)}
             keyboardType="decimal-pad"
+            returnKeyType="done"
+            editable={!isLoading}
           />
           {!!weight && (
             <Text
@@ -92,7 +93,7 @@ export function WeightRecord({
           )}
         </XStack>
 
-        <TouchableOpacity onPress={onIncrease}>
+        <TouchableOpacity onPress={onIncrease} disabled={isLoading}>
           <XStack
             backgroundColor={isDarkMode ? "$appBgDark" : "$pureWhite"}
             paddingVertical="$2"
@@ -119,7 +120,6 @@ const styles = StyleSheet.create({
   input: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1a1a1a",
     textAlign: "center",
     minWidth: 60,
   },
