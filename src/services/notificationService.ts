@@ -34,6 +34,23 @@ export const notificationService = {
 
     const promises: Promise<string>[] = []
 
+    if (settings.morningCheck.enabled) {
+      promises.push(
+        Notifications.scheduleNotificationAsync({
+          identifier: "morning-check",
+          content: {
+            title: "🐔 굿모닝",
+            body: "첫 소변 후 물 마시기 전 👆 혈압 ☑ 체중 체크✔ 기록해주세요!",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: settings.morningCheck.hour,
+            minute: 0,
+          },
+        }),
+      )
+    }
+
     if (settings.waterReminder.enabled) {
       const { intervalHours, startHour, endHour } = settings.waterReminder
       for (let h = startHour; h <= endHour; h += intervalHours) {

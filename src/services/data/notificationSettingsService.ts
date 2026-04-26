@@ -5,17 +5,28 @@ import { DEFAULT_NOTIFICATION_SETTINGS } from "@/src/types/notification"
 
 const STORAGE_KEY = "@sinsin/notification-settings"
 
+function mergeWithDefaults(partial: Partial<NotificationSettings>): NotificationSettings {
+  return {
+    ...DEFAULT_NOTIFICATION_SETTINGS,
+    ...partial,
+    morningCheck: { ...DEFAULT_NOTIFICATION_SETTINGS.morningCheck, ...partial.morningCheck },
+    waterReminder: { ...DEFAULT_NOTIFICATION_SETTINGS.waterReminder, ...partial.waterReminder },
+    mealReminder: { ...DEFAULT_NOTIFICATION_SETTINGS.mealReminder, ...partial.mealReminder },
+  }
+}
+
 export const notificationSettingsService = {
   async get(): Promise<NotificationSettings> {
     try {
       const res = await api.get("/user/notification-settings")
-      const settings = res.data.result ?? res.data.data
+      const raw = res.data.result ?? res.data.data
+      const settings = mergeWithDefaults(raw)
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
       return settings
     } catch {
       // 서버 미구현 또는 네트워크 오류 시 로컬 캐시 사용
       const cached = await AsyncStorage.getItem(STORAGE_KEY)
-      if (cached) return JSON.parse(cached)
+      if (cached) return mergeWithDefaults(JSON.parse(cached))
       return DEFAULT_NOTIFICATION_SETTINGS
     }
   },
