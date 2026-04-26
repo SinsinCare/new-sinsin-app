@@ -52,11 +52,14 @@ export function useFoodAnalysis(
       if (dismissedRef.current) {
         // 백그라운드 완료: 스토어에 저장 후 알림 발송
         setPending({ result, mealType, imageUri: uri })
-        await notificationService.sendFoodAnalysisComplete()
+        const notifBody = result.title
+          ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
+          : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`
+        await notificationService.sendFoodAnalysisComplete(result.title)
         addNotification({
           type: "food_analysis",
           title: "🍽️ 식단 분석 완료",
-          body: `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`,
+          body: notifBody,
         })
         return
       }
@@ -82,11 +85,14 @@ export function useFoodAnalysis(
 
       if (dismissedRef.current) {
         setPending({ result, mealType, imageUri: result.imageUrl ?? null })
-        await notificationService.sendFoodAnalysisComplete()
+        const notifBody = result.title
+          ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
+          : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`
+        await notificationService.sendFoodAnalysisComplete(result.title)
         addNotification({
           type: "food_analysis",
           title: "🍽️ 식단 분석 완료",
-          body: `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`,
+          body: notifBody,
         })
         return
       }

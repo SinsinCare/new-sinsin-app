@@ -97,11 +97,14 @@ export const notificationService = {
     await Notifications.cancelAllScheduledNotificationsAsync()
   },
 
-  async sendFoodAnalysisComplete(): Promise<void> {
+  async sendFoodAnalysisComplete(foodName?: string): Promise<void> {
+    const body = foodName
+      ? `${foodName} 드셨네요! 식단 분석 결과를 확인해보세요.`
+      : "식단 분석 결과를 확인해보세요!"
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "🍽️ 식단 분석 완료",
-        body: "분석 결과를 확인해보세요!",
+        body,
         data: { type: "food_analysis_complete" },
       },
       trigger: null,
