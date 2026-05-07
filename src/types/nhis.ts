@@ -11,27 +11,24 @@ export interface TelecomOptionsRs {
 }
 
 export interface HealthCheckRequestRq {
-  userName: string
-  phoneNo: string
-  identity: string
-  searchStartYear: string
-  searchEndYear: string
-  authMethod: string
-  telecomCode: string | null
+  loginOrgCd: string
+  resNm: string
+  resNo: string // 생년월일 YYYYMMDD
+  mobileNo: string
+  mobileCo: string | null // S: SKT, K: KT, L: LGT — PASS 필수
 }
 
 export interface HealthCheckRequestRs {
   requestId: string
   status: string
-  message: string
-  pollIntervalMs: number
+  message?: string
 }
 
 export interface HealthCheckConfirmRs {
   requestId: string
   status: string
-  message: string
-  resultId: number
+  message?: string
+  resultId?: number
 }
 
 export interface HealthCheckResultsRs {

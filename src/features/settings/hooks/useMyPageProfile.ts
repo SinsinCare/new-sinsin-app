@@ -10,6 +10,7 @@ export interface MyPageProfile {
   birthMonth: number
   birthDay: number
   accountState: string
+  profileImage?: string
 }
 
 async function fetchMyPageProfile(): Promise<MyPageProfile> {

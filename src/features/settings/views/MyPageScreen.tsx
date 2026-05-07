@@ -1,5 +1,5 @@
 import React, { useCallback } from "react"
-import { StyleSheet, View, ScrollView, Pressable, Share, Alert } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Share, Alert, Image } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -164,9 +164,16 @@ export function MyPageScreen() {
       >
         {/* 프로필 행 */}
         <View style={styles.profileRow}>
-          <View style={[styles.avatar, { backgroundColor: c.avatarBg }]}>
-            <Ionicons name="person" size={28} color={c.textTertiary} />
-          </View>
+          {profile?.profileImage ? (
+            <Image
+              source={{ uri: profile.profileImage }}
+              style={[styles.avatar, styles.avatarImage]}
+            />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: c.avatarBg }]}>
+              <Ionicons name="person" size={28} color={c.textTertiary} />
+            </View>
+          )}
           <View style={styles.profileInfo}>
             <ThemedText style={[styles.userName, { color: c.text }]}>
               {profile?.nickName ?? "사용자"}
@@ -324,6 +331,9 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+  },
+  avatarImage: {
+    overflow: "hidden",
   },
   profileInfo: {
     flex: 1,

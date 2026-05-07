@@ -18,9 +18,9 @@ export const nhisService = {
   },
 
   /*
-   * 건강검진 조회를 시작합니다. 간편인증(카카오/PASS)을 통해 1차 CODEF 요청을 발송합니다.
+   * 건강검진 조회를 시작합니다. 간편인증(카카오/PASS)을 통해 HYPHEN init 요청을 발송합니다.
    *
-   * status=PENDING: 앱에서 인증 완료 후 /confirm/{requestId}를 호출해주세요.
+   * status=PENDING: 인증 앱에서 인증 완료 후 /confirm/{requestId}를 호출해주세요.
    * status=SUCCESS: 즉시 조회 완료. /results에서 결과를 확인하세요.
    * */
   async healthCheckRequest(
@@ -31,12 +31,11 @@ export const nhisService = {
   },
 
   /*
-   * 앱에서 간편인증 완료 후 이 API를 호출합니다. 2차 CODEF 요청을 통해 결과를 가져옵니다.
+   * 인증 앱에서 간편인증 완료 후 이 API를 호출합니다. HYPHEN sign 요청을 통해 결과를 가져옵니다.
    *
    * status=SUCCESS: 조회 완료. resultId로 상세 조회 가능.
-   * status=PENDING: 아직 인증 미완료. 잠시 후 재시도.
    * status=FAILED: 인증 실패.
-   * status=TIMEOUT: 90초 초과.
+   * status=TIMEOUT: 5분 초과.
    * */
   async healthCheckConfirm(requestId: string): Promise<HealthCheckConfirmRs> {
     const response = await api.post(`/health-check/confirm/${requestId}`)
