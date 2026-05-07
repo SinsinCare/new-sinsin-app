@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   Alert,
-  TextInput,
   Image,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
@@ -18,9 +17,7 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
-import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { api } from "@/src/services/core/apiClient"
-import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
 
@@ -37,23 +34,15 @@ export function ProfileEditScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
-  const { data: kidneyProfile } = useKidneyProfile()
   const c = useSettingsColors()
 
   const [gender, setGender] = useState<Gender | null>(null)
-  const [weightVal, setWeightVal] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null)
 
   useEffect(() => {
     if (profile?.gender) setGender(profile.gender)
   }, [profile?.gender])
-
-  useEffect(() => {
-    if (kidneyProfile?.weightKg != null) {
-      setWeightVal(String(kidneyProfile.weightKg))
-    }
-  }, [kidneyProfile])
 
   const handlePickProfileImage = () => {
     Alert.alert("프로필 사진", "사진을 선택하세요", [
@@ -123,14 +112,7 @@ export function ProfileEditScreen() {
         })
       }
 
-      const weight = parseFloat(weightVal)
-      if (!isNaN(weight) && weight > 0) {
-        const today = new Date().toISOString().split("T")[0]
-        await weightEdemaService.updateWeight(weight, today)
-      }
-
       queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
-      queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
       router.back()
     } catch {
       Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
@@ -297,33 +279,6 @@ export function ProfileEditScreen() {
           style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
         />
 
-        {/* 체중 */}
-        <View style={styles.fieldContent}>
-          <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
-            체중 (kg)
-          </ThemedText>
-          <TextInput
-            style={[
-              styles.textInput,
-              {
-                marginTop: 8,
-                borderColor: c.border,
-                color: c.text,
-                backgroundColor: c.bg,
-              },
-            ]}
-            value={weightVal}
-            onChangeText={setWeightVal}
-            keyboardType="decimal-pad"
-            placeholder="체중 입력"
-            placeholderTextColor={c.textTertiary}
-          />
-        </View>
-
-        <View
-          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
         {/* 비밀번호 수정 */}
         <Pressable
           style={({ pressed }) => [
@@ -447,12 +402,5 @@ const styles = StyleSheet.create({
   },
   genderChipTextSelected: {
     color: tokens.color.sub8.val,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 16,
   },
 })

@@ -5,6 +5,7 @@ import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../../types"
+import { MEAL_OPTIONS } from "../../data/mealConstants"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
@@ -89,6 +90,7 @@ export function RecordView({
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false)
   const recordingMealTypeRef = useRef<MealType | null>(null)
+  const [recordingMealLabel, setRecordingMealLabel] = useState<string>("")
   useEffect(() => {
     setMealImages({})
     setRecordedMeals({})
@@ -225,7 +227,23 @@ export function RecordView({
 
   const handleRecord = (mealType: MealType) => {
     recordingMealTypeRef.current = mealType
+    const label = MEAL_OPTIONS.find((o) => o.type === mealType)?.label ?? ""
+    setRecordingMealLabel(label)
     setIsOptionsSheetOpen(true)
+  }
+
+  const handleSkipMeal = async () => {
+    const mealType = recordingMealTypeRef.current
+    if (!mealType) return
+    setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
+    try {
+      await foodCameraService.skipMeal(toDateStr(selectedDate), mealType)
+      await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+      await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+    } catch {
+      setRecordedMeals((prev) => ({ ...prev, [mealType]: false }))
+      Alert.alert("오류", "기록에 실패했습니다. 다시 시도해주세요.")
+    }
   }
 
   const handleCameraPhoto = () => {
@@ -317,10 +335,12 @@ export function RecordView({
 
       <RecordOptionsSheet
         open={isOptionsSheetOpen}
+        mealLabel={recordingMealLabel}
         onClose={() => setIsOptionsSheetOpen(false)}
         onCameraPhoto={handleCameraPhoto}
         onTextRecord={handleTextRecord}
         onRecipeLoad={handleRecipeLoad}
+        onSkipMeal={handleSkipMeal}
       />
 
       <TextRecord

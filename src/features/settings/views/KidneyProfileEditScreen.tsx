@@ -44,7 +44,7 @@ export function KidneyProfileEditScreen() {
 
   const [heightVal, setHeightVal] = useState("")
   const [weightVal, setWeightVal] = useState("")
-  const [ckdStage, setCkdStage] = useState<number>(1)
+  const [ckdStage, setCkdStage] = useState<number | null>(null)
   const [onDialysis, setOnDialysis] = useState(false)
   const [diagnosisDate, setDiagnosisDate] = useState<{ year: number; month: number } | null>(null)
   const [datePickerVisible, setDatePickerVisible] = useState(false)
@@ -58,8 +58,8 @@ export function KidneyProfileEditScreen() {
       setCkdStage(5)
       setOnDialysis(true)
     } else {
-      const num = parseInt(kidneyProfile.ckdStage.replace(/\D/g, "")) || 1
-      setCkdStage(num)
+      const num = parseInt((kidneyProfile.ckdStage ?? "").replace(/\D/g, ""))
+      setCkdStage(num || null)
       setOnDialysis(kidneyProfile.isDialysis)
     }
     if (kidneyProfile.diagnosisDate) {
@@ -85,20 +85,30 @@ export function KidneyProfileEditScreen() {
     )
   }
 
+  const CKD_STAGE_MAP: Record<number, string> = {
+    1: "STAGE_1",
+    2: "STAGE_2",
+    3: "STAGE_3A",
+    4: "STAGE_4",
+    5: "STAGE_5",
+  }
+
   const handleSave = async () => {
     if (isSubmitting) return
     setIsSubmitting(true)
     try {
-      const ckdStageStr = onDialysis ? "DIALYSIS" : `CKD${ckdStage}`
+      const ckdStageStr = onDialysis ? "DIALYSIS" : ckdStage != null ? (CKD_STAGE_MAP[ckdStage] ?? null) : null
       const diagnosisDateStr = diagnosisDate
         ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
         : null
+      const heightNum = parseFloat(heightVal)
 
       await api.patch("/user/profile/kidney", {
-        ckdStage: ckdStageStr,
+        ...(ckdStageStr !== null ? { ckdStage: ckdStageStr } : {}),
         isDialysis: onDialysis,
         ...(diagnosisDateStr !== null ? { diagnosisDate: diagnosisDateStr } : {}),
         comorbidities: selectedComorbidities,
+        ...(!isNaN(heightNum) && heightNum > 0 ? { heightCm: heightNum } : {}),
       })
 
       const weight = parseFloat(weightVal)
@@ -191,7 +201,7 @@ export function KidneyProfileEditScreen() {
         <View style={[styles.subsectionRow, { marginTop: 24 }]}>
           <ThemedText style={[styles.subsectionTitle, { color: c.textSub }]}>CKD 병기</ThemedText>
           <ThemedText style={styles.currentStageText}>
-            현재: {ckdStage}기
+            {ckdStage != null ? `현재: ${ckdStage}기` : ""}
           </ThemedText>
         </View>
         <View style={[styles.stageButtonsRow, { marginTop: 8 }]}>
@@ -220,6 +230,28 @@ export function KidneyProfileEditScreen() {
               </ThemedText>
             </Pressable>
           ))}
+          <Pressable
+            style={[
+              styles.stageButton,
+              { borderColor: c.border },
+              ckdStage === null && {
+                backgroundColor: greenTintBg,
+                borderWidth: 1.4,
+                borderColor: tokens.color.sub6.val,
+              },
+            ]}
+            onPress={() => setCkdStage(null)}
+          >
+            <ThemedText
+              style={[
+                styles.stageButtonText,
+                { color: c.text },
+                ckdStage === null && styles.stageButtonTextSelected,
+              ]}
+            >
+              없음
+            </ThemedText>
+          </Pressable>
         </View>
 
         {/* 투석 여부 */}

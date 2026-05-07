@@ -14,18 +14,22 @@ import { tokens } from "@/src/theme/tokens"
 
 interface RecordOptionsSheetProps {
   open: boolean
+  mealLabel?: string
   onClose: () => void
   onCameraPhoto: () => void
   onTextRecord: () => void
   onRecipeLoad: () => void
+  onSkipMeal: () => void
 }
 
 export function RecordOptionsSheet({
   open,
+  mealLabel,
   onClose,
   onCameraPhoto,
   onTextRecord,
   onRecipeLoad,
+  onSkipMeal,
 }: RecordOptionsSheetProps) {
   const isDarkMode = useColorScheme() === "dark"
   const [isVisible, setIsVisible] = useState(false)
@@ -152,6 +156,22 @@ export function RecordOptionsSheet({
                 />
                 <Text fontSize="$4" fontWeight="500" color="$colorSubtle">
                   레시피 불러오기
+                </Text>
+              </XStack>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.option}
+              onPress={() => handleSelect(onSkipMeal)}
+            >
+              <XStack alignItems="center" gap="$4">
+                <Ionicons
+                  name="close-circle-outline"
+                  size={24}
+                  color={tokens.color.grey7.val}
+                />
+                <Text fontSize="$4" fontWeight="500" color="$colorSubtle">
+                  {mealLabel ? `${mealLabel} 안 먹었어요` : "안 먹었어요"}
                 </Text>
               </XStack>
             </TouchableOpacity>
