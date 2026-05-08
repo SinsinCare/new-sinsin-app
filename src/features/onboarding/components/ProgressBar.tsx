@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -8,7 +8,7 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ current, total }: ProgressBarProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const trackBg = isDark ? tokens.color.borderDark.val : "#F0F0F0"
 
   return (

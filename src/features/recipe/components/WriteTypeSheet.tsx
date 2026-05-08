@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Sheet } from "@tamagui/sheet"
 import { YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
@@ -62,7 +63,7 @@ export function WriteTypeSheet({
   onOpenChange,
   onSelect,
 }: WriteTypeSheetProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const handleSelect = (type: WriteType) => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Image, useColorScheme } from "react-native"
+import { Image } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components"
 
@@ -21,7 +22,7 @@ export function ImageCard({
   likeCount,
   commentCount,
 }: ImageCardProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const [errored, setErrored] = useState(false)
   const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO)

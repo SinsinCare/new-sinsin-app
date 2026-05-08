@@ -3,12 +3,12 @@ import {
   Pressable,
   View,
   ActivityIndicator,
-  useColorScheme,
   StyleSheet,
   Alert,
 } from "react-native"
 import { Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 const DELETE_BTN_BG = "rgba(0,0,0,0.5)"
 const DELETE_BTN_ICON = "#FFFFFF"
@@ -34,7 +34,7 @@ export function ImageBlock({
   onRetry,
   onPress,
 }: ImageBlockProps) {
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
 
   const handleDelete = () => {
     Alert.alert("이미지 삭제", "이미지를 삭제하시겠습니까?", [

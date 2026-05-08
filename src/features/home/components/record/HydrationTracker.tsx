@@ -1,5 +1,6 @@
 import { Text, XStack, YStack } from "tamagui"
-import { Animated, Pressable, StyleSheet, useColorScheme } from "react-native"
+import { Animated, Pressable, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components/Icon"
 import Svg, {
@@ -43,7 +44,7 @@ export function HydrationTracker({
   addWater,
   onReset,
 }: HydrationTrackerProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   const fillAnim = useRef(new Animated.Value(0)).current
   const [animWaterY, setAnimWaterY] = useState(TEXT_BASELINE)

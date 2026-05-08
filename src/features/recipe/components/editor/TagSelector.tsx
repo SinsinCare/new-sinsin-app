@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { FilterChip } from "../FilterChip"
@@ -22,7 +22,7 @@ export function TagSelector({
   label,
   chipTheme = "primary",
 }: TagSelectorProps) {
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
 
   return (
     <YStack gap={10} marginBottom={16}>

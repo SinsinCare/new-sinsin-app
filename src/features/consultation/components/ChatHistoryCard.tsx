@@ -2,7 +2,6 @@ import { useState } from "react"
 import {
   GestureResponderEvent,
   Pressable,
-  useColorScheme,
   Modal,
   View,
   StyleSheet,
@@ -11,6 +10,7 @@ import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 function formatDate(timestamp: string): string {
   const date = new Date(timestamp)
@@ -39,7 +39,7 @@ export function ChatHistoryCard({
   onRename,
   onDelete,
 }: ChatHistoryCardProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   const [menuOpen, setMenuOpen] = useState(false)

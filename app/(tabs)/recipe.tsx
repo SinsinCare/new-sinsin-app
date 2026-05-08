@@ -4,9 +4,9 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  useColorScheme,
   StyleSheet,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -107,7 +107,7 @@ const ICON_COLORS = {
 
 export default function RecipeScreen() {
   const insets = useSafeAreaInsets()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [activeTab, setActiveTab] = useState("recipe")
   const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light

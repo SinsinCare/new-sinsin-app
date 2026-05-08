@@ -1,7 +1,6 @@
 import {
   Pressable,
   ScrollView,
-  useColorScheme,
   StyleSheet,
   ActionSheetIOS,
   Alert,
@@ -17,6 +16,7 @@ import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts
 import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 const BG = { light: tokens.color.offWhite.val, dark: tokens.color.appBgDark.val }
 const HEADER_ICON = { light: "#3C3C43", dark: tokens.color.textDark.val }
@@ -46,7 +46,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
 
   const { post, isLoading, isError, error, refetch } = usePostDetail(id!)
   const { posts, toggleLike, toggleBookmark, deletePost, reportPost } =

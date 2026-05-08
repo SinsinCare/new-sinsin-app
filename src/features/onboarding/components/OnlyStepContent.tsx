@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { OnboardingValueOption } from "../types"
@@ -14,7 +15,7 @@ export function OnlyStepContent({
   selectedKeys,
   onSelect,
 }: OnlyStepContentProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const unselectedBg = isDark ? tokens.color.cardBgDark.val : "white"
   const unselectedBorder = isDark
     ? "rgba(100,105,115,0.4)"

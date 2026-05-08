@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { Modal, TouchableOpacity, useColorScheme } from "react-native"
+import { Modal, TouchableOpacity } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -32,7 +33,7 @@ export function LoadingOverlay({ visible, message, onDismiss }: LoadingOverlayPr
   const floatStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: floatY.value }],
   }))
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {

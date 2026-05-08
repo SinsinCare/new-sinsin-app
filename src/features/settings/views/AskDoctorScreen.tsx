@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  useColorScheme,
   ScrollView,
   Modal,
 } from "react-native"
@@ -24,13 +23,14 @@ import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { enrollDoctor } from "@/src/services/doctorService"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 export function AskDoctorScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
 
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   const [doctorCode, setPatientCode] = useState("")

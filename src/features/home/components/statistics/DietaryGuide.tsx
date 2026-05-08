@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui"
 import { DietaryGuideContainer } from "./DietaryGuideContainer"
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 interface DietaryGuideProps {
   dietaryGuide?: string
@@ -11,7 +11,7 @@ export function DietaryGuide({
   dietaryGuide,
   cautionFoods,
 }: DietaryGuideProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <YStack paddingVertical="$3" gap="$3">

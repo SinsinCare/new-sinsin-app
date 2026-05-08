@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -10,7 +10,7 @@ interface AiRecommendationSummaryProps {
 export function AiRecommendationSummary({
   summary,
 }: AiRecommendationSummaryProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const bgColor = isDark ? "rgba(238,97,69,0.08)" : "rgba(238,97,69,0.06)"

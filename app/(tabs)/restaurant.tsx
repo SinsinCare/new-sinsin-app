@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react"
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, View, Text, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { RestaurantTabHeader } from "@/src/features/restaurant/components/RestaurantTabHeader"
@@ -97,7 +97,7 @@ function toPlaceRestaurant(item: NearbyRestaurantItem): PlaceRestaurant {
 
 export default function RestaurantScreen() {
   const insets = useSafeAreaInsets()
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const [activeTab, setActiveTab] = useState("place")
   const [search, setSearch] = useState("")
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE)

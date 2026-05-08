@@ -3,9 +3,9 @@ import {
   TextInput,
   type NativeSyntheticEvent,
   type TextInputSelectionChangeEventData,
-  useColorScheme,
   StyleSheet,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 
 const TEXT_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
@@ -30,7 +30,7 @@ export function TextBlock({
   placeholder,
   autoFocus,
 }: TextBlockProps) {
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
 
   const handleSelectionChange = useCallback(
     (e: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {

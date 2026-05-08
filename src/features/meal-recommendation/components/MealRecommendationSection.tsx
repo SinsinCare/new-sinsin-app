@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
-import { ScrollView, Pressable, useColorScheme, ActivityIndicator } from "react-native"
+import { ScrollView, Pressable, ActivityIndicator } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -25,7 +26,7 @@ function getDefaultMealType(): MealType {
 export function MealRecommendationSection({
   category = "all",
 }: MealRecommendationSectionProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const [mealType, setMealType] = useState<MealType>(getDefaultMealType)
 

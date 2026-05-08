@@ -4,10 +4,10 @@ import {
   PanResponder,
   Pressable,
   ScrollView,
-  useColorScheme,
   useWindowDimensions,
   View,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text, YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
@@ -26,7 +26,7 @@ const ChatHistorySheetLayout = ({
 }) => {
   const insets = useSafeAreaInsets()
   const { height: screenHeight } = useWindowDimensions()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   const snapPoint = Math.round(
@@ -97,7 +97,7 @@ const ChatHistoryHeader = ({
   onNewChat: () => void
   onClose: () => void
 }) => {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   return (

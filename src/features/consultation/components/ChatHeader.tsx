@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme, View } from "react-native"
+import { Pressable, View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
@@ -10,7 +11,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ title }: ChatHeaderProps) {
   const router = useRouter()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const iconColor = colorScheme === "dark" ? "#e7e7ee" : tokens.color.grey1.val
 
   return (

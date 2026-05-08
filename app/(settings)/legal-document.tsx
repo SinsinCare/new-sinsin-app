@@ -4,8 +4,8 @@ import {
   View,
   ScrollView,
   Pressable,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
@@ -15,7 +15,7 @@ import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 
 function useLegalColors() {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   return {
     bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
     headerText: isDark ? tokens.color.textDark.val : "#111",

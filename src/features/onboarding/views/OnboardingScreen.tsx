@@ -1,4 +1,5 @@
-import { Keyboard, Pressable, TouchableWithoutFeedback, useColorScheme } from "react-native"
+import { Keyboard, Pressable, TouchableWithoutFeedback } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -15,7 +16,7 @@ import {
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const bg = isDark ? tokens.color.appBgDark.val : "white"
   const textColor = isDark ? tokens.color.textDark.val : "#17191C"
   const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"

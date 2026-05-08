@@ -5,7 +5,6 @@ import {
   Platform,
   Pressable,
   TextInput,
-  useColorScheme,
   StyleSheet,
   ScrollView,
   Switch,
@@ -13,6 +12,7 @@ import {
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 export interface VoteData {
   options: string[]
@@ -50,7 +50,7 @@ export function VoteSheet({
   onComplete,
   initialData,
 }: VoteSheetProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const [options, setOptions] = useState<string[]>(

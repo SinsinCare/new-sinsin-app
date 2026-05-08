@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
-import { Animated, useColorScheme } from "react-native"
+import { Animated } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import {
   Defs,
   Ellipse,
@@ -75,7 +76,7 @@ export function CharacterSection({
   streak,
   withinLimits,
 }: CharacterSectionProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const fireIconName = hasRecord
     ? "fire-color"
     : isDarkMode

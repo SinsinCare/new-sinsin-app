@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 
 interface DietaryGuideContainerProps {
@@ -10,7 +10,7 @@ export function DietaryGuideContainer({
   title,
   children,
 }: DietaryGuideContainerProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <YStack

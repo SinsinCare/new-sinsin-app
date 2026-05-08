@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, useColorScheme } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { FilterTab } from "../types"
@@ -14,7 +15,7 @@ interface PlaceFilterChipsProps {
 }
 
 export function PlaceFilterChips({ onFilterPress }: PlaceFilterChipsProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   const borderColor = isDarkMode ? "#36363E" : "#D9D9DF"
   const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"

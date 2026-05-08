@@ -6,8 +6,8 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useEffect, useState } from "react"
@@ -21,7 +21,7 @@ interface TextRecordProps {
 export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
   const [text, setText] = useState("")
   const [keyboardHeight, setKeyboardHeight] = useState(0)
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const inactiveBg = isDarkMode
     ? tokens.color.grey3.val
     : tokens.color.grey8.val

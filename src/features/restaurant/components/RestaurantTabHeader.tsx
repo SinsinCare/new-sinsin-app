@@ -1,5 +1,6 @@
 import { useCallback } from "react"
-import { Pressable, useColorScheme, View } from "react-native"
+import { Pressable, View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -30,7 +31,7 @@ export function RestaurantTabHeader({
   activeTab,
   onTabChange,
 }: RestaurantTabHeaderProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
   const handlePress = useCallback(

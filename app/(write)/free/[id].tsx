@@ -5,7 +5,6 @@ import {
   Platform,
   Pressable,
   TextInput,
-  useColorScheme,
   StyleSheet,
   Alert,
 } from "react-native"
@@ -20,6 +19,7 @@ import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts
 import { LoadingScreen } from "@/src/shared/components"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 const BG_COLOR = { light: tokens.color.offWhite.val, dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: tokens.color.textDark.val } as const
@@ -41,7 +41,7 @@ export default function FreePostEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const { post, isLoading } = usePostDetail(id!)

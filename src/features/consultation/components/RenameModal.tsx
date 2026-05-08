@@ -4,9 +4,9 @@ import {
   Pressable,
   TextInput,
   StyleSheet,
-  useColorScheme,
   View,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -23,7 +23,7 @@ export function RenameModal({
   onConfirm,
   onCancel,
 }: RenameModalProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [name, setName] = useState(currentName)
   const inputRef = useRef<TextInput>(null)

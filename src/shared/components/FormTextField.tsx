@@ -1,9 +1,9 @@
 import { useState, useRef, type ComponentRef } from "react"
 import {
   Pressable,
-  useColorScheme,
   type KeyboardTypeOptions,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, Input } from "tamagui"
 import { tokens } from "../../theme/tokens"
 import {
@@ -77,7 +77,7 @@ export function FormTextField<T extends FieldValues>({
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<ComponentRef<typeof Input>>(null)
   const config = INPUT_TYPE_CONFIG[inputType]
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
 
   const hasFieldError = (fieldError: FieldError | undefined) => !!fieldError
   const getBorderColor = (fieldError: FieldError | undefined) => {

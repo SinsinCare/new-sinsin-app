@@ -3,9 +3,9 @@ import {
   Animated,
   Pressable,
   StyleSheet,
-  useColorScheme,
   View,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -63,7 +63,7 @@ export function ConfirmExitModal({
   onCancel,
   onConfirm,
 }: ConfirmExitModalProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const { opacity, shouldRender } = useFadeVisibility(visible, FADE_DURATION)
 

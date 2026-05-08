@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -8,7 +9,7 @@ interface GenderSelectorProps {
 }
 
 export function GenderSelector({ value, onChange }: GenderSelectorProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
   const unselectedBg = isDark ? "#2A2A32" : "white"
   const unselectedText = isDark ? tokens.color.textDark.val : "#17191C"

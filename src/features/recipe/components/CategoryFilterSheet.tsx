@@ -1,6 +1,7 @@
 // src/features/recipe/components/CategoryFilterSheet.tsx
 import { useState, useEffect } from "react"
-import { Pressable, ScrollView, useColorScheme } from "react-native"
+import { Pressable, ScrollView } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Sheet } from "@tamagui/sheet"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
@@ -89,7 +90,7 @@ export function CategoryFilterSheet({
   selectedFilters,
   onApply,
 }: CategoryFilterSheetProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const colors = isDark ? HEADER_COLORS.dark : HEADER_COLORS.light
   const sectionTitleColor = isDark

@@ -1,5 +1,6 @@
 import React from "react"
-import { View, Pressable, StyleSheet, useColorScheme } from "react-native"
+import { View, Pressable, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Ionicons } from "@expo/vector-icons"
 
 import { ThemedText } from "@/components/themed-text"
@@ -18,7 +19,7 @@ export function ScreenHeader({
   onBack,
   rightElement,
 }: ScreenHeaderProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const textColor = isDark ? tokens.color.textDark.val : "#17191C"
 
   return (

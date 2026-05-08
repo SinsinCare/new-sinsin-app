@@ -1,5 +1,6 @@
 // src/features/recipe/components/FilterChip.tsx
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
@@ -64,7 +65,7 @@ export function FilterChip({
   selected = false,
   onPress,
 }: FilterChipProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const palette = selected

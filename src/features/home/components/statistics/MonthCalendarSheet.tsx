@@ -3,8 +3,8 @@ import {
   Pressable,
   StyleSheet,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useState } from "react"
@@ -28,7 +28,7 @@ export function MonthCalendarSheet({
   onClose,
   disableFuture = false,
 }: MonthCalendarSheetProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const [viewYear, setViewYear] = useState(selectedDate.getFullYear())
   const [viewMonth, setViewMonth] = useState(selectedDate.getMonth())
 

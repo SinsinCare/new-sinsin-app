@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 
@@ -12,7 +13,7 @@ interface VoteAttachCardProps {
 }
 
 export function VoteAttachCard({ onEdit, onRemove }: VoteAttachCardProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
 
   return (
     <XStack

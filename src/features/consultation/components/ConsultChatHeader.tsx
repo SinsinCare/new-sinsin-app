@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
@@ -10,7 +11,7 @@ export function ConsultChatHeader({
   onHistoryPress: () => void
   onNewChatPress: () => void
 }) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const headerColor = colorScheme === "dark" ? tokens.color.textDark.val : tokens.color.textLight.val
 
   return (

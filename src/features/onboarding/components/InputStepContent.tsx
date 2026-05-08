@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, Input } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { OnboardingValueOption } from "../types"
@@ -14,7 +14,7 @@ export function InputStepContent({
   values,
   onChange,
 }: InputStepContentProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
   const unitColor = isDark ? tokens.color.textDarkSub.val : "#787C83"
   const borderColor = isDark

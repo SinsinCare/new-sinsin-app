@@ -8,6 +8,7 @@ import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
+import { Theme } from "tamagui"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
@@ -113,11 +114,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <TamaguiProvider config={config} theme={effectiveScheme}>
-          <PortalProvider>
-            <RootLayoutNav />
-            <Toast />
-          </PortalProvider>
+        <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
+          <Theme name={effectiveScheme}>
+            <PortalProvider>
+              <RootLayoutNav />
+              <Toast />
+            </PortalProvider>
+          </Theme>
         </TamaguiProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

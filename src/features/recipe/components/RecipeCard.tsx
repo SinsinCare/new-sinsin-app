@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { ImageCard } from "./ImageCard"
@@ -32,7 +33,7 @@ export function RecipeCard({
   title,
   onPress,
 }: RecipeCardProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const titleColor = isDark ? TITLE_COLORS.dark : TITLE_COLORS.light
 

@@ -1,7 +1,8 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
-import { Pressable, useColorScheme, View, StyleSheet } from "react-native"
+import { Pressable, View, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import { useRouter } from "expo-router"
@@ -18,7 +19,7 @@ export function HomeHeader({
   onChangeTab,
   topInset = 0,
 }: HomeHeaderProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const router = useRouter()
   const unreadCount = useNotificationHistoryStore((s) => s.unreadCount())
 

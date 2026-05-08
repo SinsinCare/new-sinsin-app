@@ -2,8 +2,8 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { MealType } from "../../types"
 import { Text, YStack, View } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -41,7 +41,7 @@ export function MealButton({
   isRecorded,
   time,
 }: MealButtonProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>

@@ -1,12 +1,16 @@
 import { Text, YStack } from "tamagui"
 import { EdemaRecord } from "./EdemaRecord"
 import { WeightRecord } from "./WeightRecord"
+import {
+  EdemaLevel,
+  EDEMA_LEVEL_TO_LABEL,
+  LABEL_TO_EDEMA_LEVEL,
+} from "../../data/EdemaConstants"
 import { useState, useEffect } from "react"
 import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
 import type { DateAnalysisBodyRecord } from "@/src/types"
 import { useWeightEdemaRecord } from "../../hooks/useWeightEdemaRecord"
-import { useColorScheme } from "react-native"
-import type { EdemaLevel } from "../../types"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 interface WeightEdemaTrackerProps {
   bodyRecords?: {
@@ -22,30 +26,36 @@ export function WeightEdemaTracker({
 }: WeightEdemaTrackerProps) {
   const [weight, setWeight] = useState<string>("")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
-  const { updateWeight, updateEdema, isLoading } = useWeightEdemaRecord()
-  const isDarkMode = useColorScheme() === "dark"
+  const { updateWeight, updateEdema } = useWeightEdemaRecord()
+  const isDarkMode = useAppColorScheme() === "dark"
 
   useEffect(() => {
     const today = bodyRecords?.today ?? null
     setWeight(today?.weightKg != null ? String(today.weightKg) : "")
-    setEdemaLevel(today?.edemaLevel ?? null)
+    setEdemaLevel(
+      today?.edemaLevel
+        ? (EDEMA_LEVEL_TO_LABEL[today.edemaLevel] ?? null)
+        : null,
+    )
   }, [bodyRecords])
 
   const yesterdayWeight = bodyRecords?.previous?.weightKg ?? null
-  const yesterdayEdema = bodyRecords?.previous?.edemaLevel ?? null
+  const yesterdayEdema = bodyRecords?.previous?.edemaLevel
+    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
+    : null
 
-  const selectedDateStr = selectedDate.toISOString().split("T")[0]
+  const selectDate = selectedDate.toISOString().split("T")[0]
 
   const handleSave = (weightStr: string) => {
     const val = parseFloat(weightStr)
     if (!isNaN(val) && val > 0) {
-      updateWeight(val, selectedDateStr)
+      updateWeight(val, selectDate)
     }
   }
 
-  const handleEdemaSave = (level: EdemaLevel) => {
-    setEdemaLevel(level)
-    updateEdema(level, selectedDateStr)
+  const handleEdemaSave = (edemaLevel: EdemaLevel) => {
+    setEdemaLevel(edemaLevel)
+    updateEdema(LABEL_TO_EDEMA_LEVEL[edemaLevel], selectDate)
   }
 
   const handleDecrease = () => {
@@ -75,8 +85,6 @@ export function WeightEdemaTracker({
       <WeightRecord
         weight={weight}
         yesterdayWeight={yesterdayWeight}
-        isDarkMode={isDarkMode}
-        isLoading={isLoading}
         onChangeWeight={setWeight}
         onDecrease={handleDecrease}
         onIncrease={handleIncrease}
@@ -86,8 +94,6 @@ export function WeightEdemaTracker({
       <EdemaRecord
         selected={edemaLevel}
         yesterdayEdema={yesterdayEdema}
-        isDarkMode={isDarkMode}
-        isLoading={isLoading}
         onSave={handleEdemaSave}
       />
     </YStack>

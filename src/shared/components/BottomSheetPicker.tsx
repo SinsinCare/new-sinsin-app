@@ -8,8 +8,8 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -44,7 +44,7 @@ export function BottomSheetPicker({
   const insets = useSafeAreaInsets()
   const translateY = useRef(new Animated.Value(SHEET_MAX_HEIGHT)).current
   const backdropOpacity = useRef(new Animated.Value(0)).current
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
 
   const selectedOption = options.find((o) => o.value === value)
 

@@ -1,7 +1,7 @@
 import { YStack } from "tamagui"
 import { NutrientBarSection } from "./NutrientBarSection"
 import { NutrientGraphHeader } from "./NutrientGraphHeader"
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 interface NutrientGraphProps {
   nutrient: string
@@ -24,7 +24,7 @@ export function NutrientGraph({
   const fillPct = totalMax > 0 ? (current / totalMax) * 100 : 0
   const limitPct = totalMax > 0 ? (max / totalMax) * 100 : 100
 
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <YStack

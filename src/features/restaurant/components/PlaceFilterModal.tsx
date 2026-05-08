@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react"
-import { Modal, Pressable, ScrollView, StyleSheet, useColorScheme, View } from "react-native"
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -24,7 +25,7 @@ export function PlaceFilterModal({
   initialTab = "region",
   onApply,
 }: PlaceFilterModalProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const insets = useSafeAreaInsets()
   const scrollRef = useRef<ScrollView>(null)
 

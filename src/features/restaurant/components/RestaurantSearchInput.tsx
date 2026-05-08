@@ -1,9 +1,9 @@
 import {
-  useColorScheme,
   View,
   TextInput,
   type TextInputProps,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 
@@ -33,7 +33,7 @@ export function RestaurantSearchInput({
   placeholder = "식당을 검색해 보세요",
   ...props
 }: RestaurantSearchInputProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
   return (

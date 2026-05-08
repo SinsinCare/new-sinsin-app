@@ -1,4 +1,5 @@
-import { ScrollView, useColorScheme } from "react-native"
+import { ScrollView } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { RestaurantCard } from "./RestaurantCard"
@@ -20,7 +21,7 @@ interface CurationSectionProps {
 }
 
 export function CurationSection({ section }: CurationSectionProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
   return (

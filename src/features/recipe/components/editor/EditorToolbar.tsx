@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme, StyleSheet, Keyboard } from "react-native"
+import { Pressable, StyleSheet, Keyboard } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
@@ -20,7 +21,7 @@ export function EditorToolbar({
   imageDisabled,
   isKeyboardVisible,
 }: EditorToolbarProps) {
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
   const insets = useSafeAreaInsets()
 
   return (

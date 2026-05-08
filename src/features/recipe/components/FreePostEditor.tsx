@@ -7,9 +7,9 @@ import {
   Platform,
   Pressable,
   TextInput,
-  useColorScheme,
   StyleSheet,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, View, ScrollView } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
@@ -51,7 +51,7 @@ interface FreePostEditorProps {
 
 export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const insets = useSafeAreaInsets()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const [selectedCategory, setSelectedCategory] = useState(
