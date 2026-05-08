@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { Appearance, useColorScheme } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { TamaguiProvider } from "tamagui"
 import { PortalProvider } from "@tamagui/portal"
@@ -10,7 +11,7 @@ import * as Notifications from "expo-notifications"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
-import { useSignupStore, useOnboardingStore } from "@/src/stores"
+import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 
@@ -97,13 +98,22 @@ export default function RootLayout() {
     "Pretendard-SemiBold": require("../assets/fonts/Pretendard-SemiBold.otf"),
     "Pretendard-Bold": require("../assets/fonts/Pretendard-Bold.otf"),
   })
+  const themeMode = useThemeStore((s) => s.themeMode)
+  const systemScheme = useColorScheme()
+  const effectiveScheme = themeMode === "system"
+    ? (systemScheme === "dark" ? "dark" : "light")
+    : themeMode
+
+  useEffect(() => {
+    Appearance.setColorScheme(themeMode === "system" ? "unspecified" : themeMode)
+  }, [themeMode])
 
   if (!loaded) return null
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <TamaguiProvider config={config} defaultTheme="light">
+        <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
           <PortalProvider>
             <RootLayoutNav />
             <Toast />
