@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Appearance, StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -28,7 +28,6 @@ export function SettingsScreen() {
 
   const handleThemeChange = (mode: ThemeMode) => {
     setThemeMode(mode)
-    Appearance.setColorScheme(mode === "system" ? "unspecified" : mode)
   }
 
   const handlePushToggle = async (value: boolean) => {
@@ -68,9 +67,9 @@ export function SettingsScreen() {
         <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>화면 모드</ThemedText>
         {(
           [
-            { mode: "light" as ThemeMode, icon: "sunny-outline", label: "라이트 모드" },
-            { mode: "dark" as ThemeMode, icon: "moon-outline", label: "다크 모드" },
-            { mode: "system" as ThemeMode, icon: "phone-portrait-outline", label: "시스템 설정" },
+            { mode: "light", icon: "sunny-outline", label: "라이트 모드" },
+            { mode: "dark", icon: "moon-outline", label: "다크 모드" },
+            { mode: "system", icon: "phone-portrait-outline", label: "시스템 설정" },
           ] as const
         ).map(({ mode, icon, label }) => (
           <Pressable
@@ -201,7 +200,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    textTransform: "uppercase",
     letterSpacing: 0.5,
     paddingTop: 20,
     paddingBottom: 4,

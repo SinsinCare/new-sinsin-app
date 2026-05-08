@@ -113,7 +113,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
+        <TamaguiProvider config={config} theme={effectiveScheme}>
           <PortalProvider>
             <RootLayoutNav />
             <Toast />

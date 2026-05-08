@@ -1,8 +1,8 @@
-import { useColorScheme } from "react-native"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 export function useSettingsColors() {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
 
   return {
     isDark,
