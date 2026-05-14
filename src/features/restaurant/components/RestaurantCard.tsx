@@ -1,3 +1,4 @@
+import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Image } from "expo-image"
@@ -23,13 +24,18 @@ const CARD_WIDTH = 160
 
 interface RestaurantCardProps {
   restaurant: Restaurant
+  onPress?: () => void
 }
 
-export function RestaurantCard({ restaurant }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, onPress }: RestaurantCardProps) {
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
   return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+    >
     <YStack width={CARD_WIDTH} gap={8}>
       <Image
         source={
@@ -79,5 +85,6 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
         ))}
       </XStack>
     </YStack>
+    </Pressable>
   )
 }
