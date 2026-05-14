@@ -40,4 +40,12 @@ export const onboardingService = {
     )
     await api.post(`/user/onboarding`, request)
   },
+
+  async skipOnboarding(): Promise<void> {
+    if (isMockMode()) {
+      const { mockOnboardingService } = require("./mock/mockOnboardingService") // eslint-disable-line @typescript-eslint/no-require-imports
+      return mockOnboardingService.skipOnboarding()
+    }
+    await api.post(`/user/onboarding/skip`)
+  },
 }

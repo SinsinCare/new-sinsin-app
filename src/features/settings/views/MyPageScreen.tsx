@@ -141,7 +141,13 @@ export function MyPageScreen() {
   const age = profile?.birthYear
     ? new Date().getFullYear() - profile.birthYear
     : null
-  const ageGenderLabel = age ? `${age}세` : null
+  const genderLabel =
+    profile?.gender === "MALE" ? "남" : profile?.gender === "FEMALE" ? "여" : null
+  const ageGenderLabel = age
+    ? genderLabel
+      ? `${age}세·${genderLabel}`
+      : `${age}세`
+    : null
 
   return (
     <View style={[styles.container, { backgroundColor: c.bg }]}>

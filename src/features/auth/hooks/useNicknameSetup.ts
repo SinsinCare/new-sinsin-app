@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { router } from "expo-router"
-import { nicknameService, authService } from "@/src/services"
+import { nicknameService, authService, api } from "@/src/services"
 import { useSignupStore, useAuthStore } from "@/src/stores"
 import { ApiError } from "@/src/services/core/apiError"
 import { showErrorToast } from "@/src/lib/toast"
@@ -38,6 +38,14 @@ export function useNicknameSetup() {
         recommender: signupState.referralCode,
         nickName: data.nickname,
       })
+
+      if (signupState.gender) {
+        await api.patch("/user/profile", {
+          nickName: data.nickname,
+          name: signupState.name,
+          gender: signupState.gender.toUpperCase(),
+        })
+      }
 
       setUser(user)
       setAccountState("PENDING_ONBOARDING")

@@ -96,7 +96,15 @@ export function useOnboarding() {
     if (!currentAnswer) return false
     if (currentStep.type === "input") {
       const vals = currentAnswer.inputValues ?? {}
-      return currentStep.values.every((v) => !!vals[v.key]?.trim())
+      return currentStep.values.every((v) => {
+        const raw = vals[v.key]?.trim()
+        if (!raw) return false
+        if (v.type === "number") {
+          const num = parseFloat(raw)
+          return !isNaN(num) && num > 0
+        }
+        return true
+      })
     }
     return (currentAnswer.selectedKeys?.length ?? 0) > 0
   }, [currentStep, currentAnswer])
@@ -134,7 +142,10 @@ export function useOnboarding() {
   }
 
   const completeOnboarding = async () => {
-    if (!user || hasCkd === null) return
+    if (!user || hasCkd === null) {
+      Alert.alert("오류", "온보딩을 완료할 수 없습니다. 다시 시도해주세요.")
+      return
+    }
     setIsSubmitting(true)
     try {
       await onboardingService.submitAnswers(hasCkd, getAnswersArray())
@@ -160,7 +171,7 @@ export function useOnboarding() {
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
-      setHasCkd(null)
+      resetOnboarding()
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
@@ -170,6 +181,7 @@ export function useOnboarding() {
     if (!user) return
     setIsSubmitting(true)
     try {
+      await onboardingService.skipOnboarding()
       setAccountState("ACTIVE")
       resetOnboarding()
       router.replace("/(tabs)/home")

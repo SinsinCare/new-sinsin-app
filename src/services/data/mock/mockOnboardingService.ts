@@ -122,6 +122,9 @@ export const mockOnboardingService = {
 
   async submitAnswers(): Promise<void> {
     await delay(300)
-    // Mock: 답변 제출 성공
+  },
+
+  async skipOnboarding(): Promise<void> {
+    await delay(300)
   },
 }

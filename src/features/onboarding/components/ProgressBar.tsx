@@ -19,12 +19,14 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
         backgroundColor={trackBg}
         overflow="hidden"
       >
-        <YStack
-          height={4}
-          borderRadius={2}
-          backgroundColor="#34D399"
-          width={`${((current + 1) / total) * 100}%`}
-        />
+        {total > 0 && (
+          <YStack
+            height={4}
+            borderRadius={2}
+            backgroundColor="#34D399"
+            width={`${((current + 1) / total) * 100}%`}
+          />
+        )}
       </YStack>
     </YStack>
   )
