@@ -1,0 +1,2527 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-05-09",
+  "filters": [
+    {
+      "key": "low_sodium",
+      "label_ko": "저염",
+      "threshold_pass_per_meal_mg": 500,
+      "threshold_mid_per_meal_mg": 800,
+      "rationale": "1일 2,000mg / 3끼 + 외식 시 보수적 적용"
+    },
+    {
+      "key": "low_sugar",
+      "label_ko": "저당",
+      "threshold_pass_per_meal_kcal": 200,
+      "threshold_mid_per_meal_kcal": 350,
+      "rationale": "당류 직접 측정 어려움, 단호박/꿀/시럽 함유 메뉴는 fail 처리"
+    },
+    {
+      "key": "low_protein",
+      "label_ko": "저단백",
+      "threshold_pass_per_meal_g": 12,
+      "threshold_mid_per_meal_g": 20,
+      "rationale": "투석 전 0.6-0.8g/kg 기준, 60kg 환자 1끼"
+    },
+    {
+      "key": "low_potassium",
+      "label_ko": "저칼륨",
+      "threshold_pass_per_meal_mg": 600,
+      "threshold_mid_per_meal_mg": 900,
+      "rationale": "1일 2,000mg / 3끼"
+    },
+    {
+      "key": "low_phosphorus",
+      "label_ko": "저인",
+      "threshold_pass_per_meal_mg": 250,
+      "threshold_mid_per_meal_mg": 400,
+      "rationale": "1일 800-1,000mg / 3끼"
+    }
+  ],
+  "data_sources": [
+    {
+      "name": "식약처 식품영양성분 데이터베이스",
+      "url": "https://various.foodsafetykorea.go.kr/nutrient/"
+    },
+    {
+      "name": "농촌진흥청 국가표준식품성분표",
+      "url": "https://koreanfood.rda.go.kr/kfi/fct/fctFoodSrch/list"
+    },
+    {
+      "name": "공공데이터포털 — 전국통합식품영양성분정보(음식)표준데이터",
+      "url": "https://www.data.go.kr/data/15100070/standard.do"
+    }
+  ],
+  "disclaimer": "추정치는 일반 레시피 기준 ±30% 편차 가능. 실제 식당 조리법에 따라 달라짐. production 적용 전 임상영양사 검수 필수.",
+  "restaurants": [
+    {
+      "id": "R001",
+      "name": "대한순두부",
+      "cuisine": "두부",
+      "region_si": "서울",
+      "region_gu": "종로구",
+      "region_dong": "광화문",
+      "address": "서울 종로구 새문안로5길 13 변호사회관 지하",
+      "lat": 37.5714132,
+      "lng": 126.9744038,
+      "phone": "02-725-0717",
+      "rating": 4.1,
+      "review_count": 114,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:30-14:30, 17:00-21:40",
+        "tue": "11:30-14:30, 17:00-21:40",
+        "wed": "11:30-14:30, 17:00-21:40",
+        "thu": "11:30-14:30, 17:00-21:40",
+        "fri": "11:30-14:30, 17:00-21:40",
+        "sat": "12:00-15:00, 16:00-20:00",
+        "sun": "휴무"
+      },
+      "description": "두부소반과 비건 옵션, 짠맛이 약한 편",
+      "features": [
+        "양념따로요청가능",
+        "비건옵션",
+        "예약권장"
+      ],
+      "menu_ids": [
+        "M001",
+        "M002",
+        "M003"
+      ],
+      "menus": [
+        {
+          "id": "M001",
+          "name": "두부소반 (백반형)",
+          "note": "흰쌀밥+나물+두부, 간장 따로 요청",
+          "estimated_nutrition": {
+            "kcal": 432,
+            "protein_g": 17.7,
+            "sodium_mg": 499,
+            "potassium_mg": 525,
+            "phosphorus_mg": 273
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "흰순두부",
+              "분량_g": 200,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 80,
+              "비고": "반찬"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 5,
+              "비고": "양념(따로)"
+            },
+            {
+              "식재료": "김치",
+              "분량_g": 30,
+              "비고": "반찬"
+            }
+          ]
+        },
+        {
+          "id": "M002",
+          "name": "비건 두부 정식",
+          "note": "육수 없는 비건 옵션",
+          "estimated_nutrition": {
+            "kcal": 433,
+            "protein_g": 17.5,
+            "sodium_mg": 252,
+            "potassium_mg": 473,
+            "phosphorus_mg": 265
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "흰순두부",
+              "분량_g": 200,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 100,
+              "비고": "반찬"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 4,
+              "비고": "양념(따로)"
+            }
+          ]
+        },
+        {
+          "id": "M003",
+          "name": "콩국수",
+          "note": "여름 한정, 콩 단백·인 함량 높음",
+          "estimated_nutrition": {
+            "kcal": 452,
+            "protein_g": 24.4,
+            "sodium_mg": 34,
+            "potassium_mg": 798,
+            "phosphorus_mg": 512
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "흰순두부",
+              "분량_g": 100,
+              "비고": "두부"
+            },
+            {
+              "식재료": "콩국물",
+              "분량_g": 350,
+              "비고": "국물"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 150,
+              "비고": "면대신"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R002",
+      "name": "마음죽 신세계강남점",
+      "cuisine": "죽",
+      "region_si": "서울",
+      "region_gu": "서초구",
+      "region_dong": "반포",
+      "address": "서울 서초구 신반포로 176 신세계백화점 강남점 B1",
+      "lat": 37.5043637,
+      "lng": 127.0036211,
+      "phone": null,
+      "rating": 4.7,
+      "review_count": 23,
+      "price_level": 2,
+      "hours": {
+        "mon": "10:30-20:00",
+        "tue": "10:30-20:00",
+        "wed": "10:30-20:00",
+        "thu": "10:30-20:00",
+        "fri": "10:30-20:00",
+        "sat": "10:30-20:00",
+        "sun": "10:30-20:00"
+      },
+      "description": "백화점 식품관 죽 전문점, 흰죽 베이스",
+      "features": [
+        "흰쌀변경가능",
+        "포장가능"
+      ],
+      "menu_ids": [
+        "M004",
+        "M005",
+        "M006"
+      ],
+      "menus": [
+        {
+          "id": "M004",
+          "name": "흰죽",
+          "note": "가장 안전한 옵션, 김치 제외 요청",
+          "estimated_nutrition": {
+            "kcal": 206,
+            "protein_g": 3.8,
+            "sodium_mg": 175,
+            "potassium_mg": 64,
+            "phosphorus_mg": 60
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 400,
+              "비고": "메인"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 3,
+              "비고": "양념"
+            }
+          ]
+        },
+        {
+          "id": "M005",
+          "name": "전복죽 (내장 제외)",
+          "note": "내장 제외 요청, 1/2공기 권장",
+          "estimated_nutrition": {
+            "kcal": 215,
+            "protein_g": 8.3,
+            "sodium_mg": 92,
+            "potassium_mg": 141,
+            "phosphorus_mg": 107
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 350,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "전복",
+              "분량_g": 40,
+              "비고": "토핑(내장제외)"
+            }
+          ]
+        },
+        {
+          "id": "M006",
+          "name": "단호박죽",
+          "note": "단호박 칼륨↑, 단맛 강함",
+          "estimated_nutrition": {
+            "kcal": 234,
+            "protein_g": 4.6,
+            "sodium_mg": 8,
+            "potassium_mg": 708,
+            "phosphorus_mg": 98
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "fail",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 200,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "단호박",
+              "분량_g": 200,
+              "비고": "메인"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "partial",
+      "safe_menu_ratio": 0.67
+    },
+    {
+      "id": "R003",
+      "name": "서원죽 명동본점",
+      "cuisine": "죽",
+      "region_si": "서울",
+      "region_gu": "중구",
+      "region_dong": "명동",
+      "address": "서울 중구 퇴계로 141",
+      "lat": 37.5612462,
+      "lng": 126.9874833,
+      "phone": "02-776-0214",
+      "rating": 4.8,
+      "review_count": 1939,
+      "price_level": 2,
+      "hours": {
+        "mon": "07:00-17:00",
+        "tue": "07:00-17:00",
+        "wed": "07:00-17:00",
+        "thu": "07:00-17:00",
+        "fri": "07:00-17:00",
+        "sat": "07:00-17:00",
+        "sun": "07:00-14:00"
+      },
+      "description": "40년 전통 죽 전문, 새벽~점심 운영",
+      "features": [
+        "아침메뉴",
+        "관광객친화"
+      ],
+      "menu_ids": [
+        "M007",
+        "M008",
+        "M009"
+      ],
+      "menus": [
+        {
+          "id": "M007",
+          "name": "닭죽",
+          "note": "양질 단백, 1인분 적정",
+          "estimated_nutrition": {
+            "kcal": 244,
+            "protein_g": 16.9,
+            "sodium_mg": 30,
+            "potassium_mg": 271,
+            "phosphorus_mg": 181
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "mid",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 350,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "닭가슴살",
+              "분량_g": 60,
+              "비고": "토핑"
+            }
+          ]
+        },
+        {
+          "id": "M008",
+          "name": "전복죽",
+          "note": "내장 제외 요청 가능",
+          "estimated_nutrition": {
+            "kcal": 224,
+            "protein_g": 9.7,
+            "sodium_mg": 114,
+            "potassium_mg": 164,
+            "phosphorus_mg": 122
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 350,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "전복",
+              "분량_g": 50,
+              "비고": "토핑"
+            }
+          ]
+        },
+        {
+          "id": "M009",
+          "name": "버섯굴죽",
+          "note": "굴 인 함량 높음",
+          "estimated_nutrition": {
+            "kcal": 226,
+            "protein_g": 8.7,
+            "sodium_mg": 150,
+            "potassium_mg": 255,
+            "phosphorus_mg": 156
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 350,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "굴",
+              "분량_g": 50,
+              "비고": "토핑"
+            },
+            {
+              "식재료": "버섯혼합",
+              "분량_g": 30,
+              "비고": "토핑"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "highly_recommended",
+      "safe_menu_ratio": 1.0
+    },
+    {
+      "id": "R004",
+      "name": "본죽 성수역점",
+      "cuisine": "죽",
+      "region_si": "서울",
+      "region_gu": "성동구",
+      "region_dong": "성수",
+      "address": "서울 성동구 아차산로7길 15",
+      "lat": 37.5465838,
+      "lng": 127.0545964,
+      "phone": "02-499-6282",
+      "rating": 5.0,
+      "review_count": 6,
+      "price_level": 1,
+      "hours": {
+        "mon": "09:30-20:30",
+        "tue": "09:30-20:30",
+        "wed": "09:30-20:30",
+        "thu": "09:30-20:30",
+        "fri": "09:30-20:30",
+        "sat": "10:00-18:30",
+        "sun": "휴무"
+      },
+      "description": "프랜차이즈, 영양표시 확인 가능",
+      "features": [
+        "프랜차이즈영양표시",
+        "흰쌀변경가능",
+        "포장가능"
+      ],
+      "menu_ids": [
+        "M010",
+        "M011",
+        "M012"
+      ],
+      "menus": [
+        {
+          "id": "M010",
+          "name": "야채죽 (흰쌀)",
+          "note": "단무지 제외 요청",
+          "estimated_nutrition": {
+            "kcal": 228,
+            "protein_g": 5.0,
+            "sodium_mg": 10,
+            "potassium_mg": 200,
+            "phosphorus_mg": 84
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 400,
+              "비고": "메인"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 80,
+              "비고": "토핑"
+            }
+          ]
+        },
+        {
+          "id": "M011",
+          "name": "불고기현미죽",
+          "note": "현미는 인·칼륨 ↑, 흰쌀로 변경 권장",
+          "estimated_nutrition": {
+            "kcal": 350,
+            "protein_g": 15.7,
+            "sodium_mg": 31,
+            "potassium_mg": 330,
+            "phosphorus_mg": 265
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "mid",
+            "low_potassium": "fail",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "현미밥",
+              "분량_g": 100,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "흰죽",
+              "분량_g": 250,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "쇠고기등심",
+              "분량_g": 50,
+              "비고": "고기"
+            }
+          ]
+        },
+        {
+          "id": "M012",
+          "name": "단호박죽",
+          "note": "단호박 칼륨 높음",
+          "estimated_nutrition": {
+            "kcal": 234,
+            "protein_g": 4.6,
+            "sodium_mg": 8,
+            "potassium_mg": 708,
+            "phosphorus_mg": 98
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "fail",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "흰죽",
+              "분량_g": 200,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "단호박",
+              "분량_g": 200,
+              "비고": "메인"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.33
+    },
+    {
+      "id": "R005",
+      "name": "군선생 강남점",
+      "cuisine": "한식",
+      "region_si": "서울",
+      "region_gu": "서초구",
+      "region_dong": "서초",
+      "address": "서울 서초구 서초2동 1321-9",
+      "lat": 37.4962741,
+      "lng": 127.0250965,
+      "phone": "02-587-1676",
+      "rating": 4.3,
+      "review_count": 170,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:00-21:00",
+        "tue": "11:00-21:00",
+        "wed": "11:00-21:00",
+        "thu": "11:00-21:00",
+        "fri": "11:00-21:00",
+        "sat": "11:00-21:00",
+        "sun": "11:00-21:00"
+      },
+      "description": "고등어·연어 구이 정식, 반찬 셀프바",
+      "features": [
+        "반찬선택가능",
+        "단품가능"
+      ],
+      "menu_ids": [
+        "M013",
+        "M014",
+        "M015"
+      ],
+      "menus": [
+        {
+          "id": "M013",
+          "name": "고등어 구이 정식",
+          "note": "껍질·간장 제거시 양호",
+          "estimated_nutrition": {
+            "kcal": 621,
+            "protein_g": 39.9,
+            "sodium_mg": 289,
+            "potassium_mg": 810,
+            "phosphorus_mg": 488
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "고등어구이",
+              "분량_g": 130,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 80,
+              "비고": "반찬"
+            },
+            {
+              "식재료": "김치",
+              "분량_g": 25,
+              "비고": "반찬"
+            }
+          ]
+        },
+        {
+          "id": "M014",
+          "name": "연어 구이 정식",
+          "note": "양질 단백, 1/2공기 권장",
+          "estimated_nutrition": {
+            "kcal": 608,
+            "protein_g": 36.9,
+            "sodium_mg": 109,
+            "potassium_mg": 743,
+            "phosphorus_mg": 463
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "연어구이",
+              "분량_g": 130,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 80,
+              "비고": "반찬"
+            }
+          ]
+        },
+        {
+          "id": "M015",
+          "name": "된장찌개 정식",
+          "note": "국물 마시지 말 것",
+          "estimated_nutrition": {
+            "kcal": 371,
+            "protein_g": 11.2,
+            "sodium_mg": 2246,
+            "potassium_mg": 448,
+            "phosphorus_mg": 207
+          },
+          "filter_scores": {
+            "low_sodium": "fail",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "된장국물",
+              "분량_g": 250,
+              "비고": "국"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "김치",
+              "분량_g": 30,
+              "비고": "반찬"
+            },
+            {
+              "식재료": "된장",
+              "분량_g": 8,
+              "비고": "국재료"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R006",
+      "name": "고등어식당",
+      "cuisine": "한식",
+      "region_si": "서울",
+      "region_gu": "강남구",
+      "region_dong": "역삼",
+      "address": "서울 강남구 강남대로84길 33 대우디오빌플러스 B1",
+      "lat": 37.4975164,
+      "lng": 127.0310774,
+      "phone": "02-2050-0095",
+      "rating": 4.2,
+      "review_count": 60,
+      "price_level": 1,
+      "hours": {
+        "mon": "09:30-20:50",
+        "tue": "09:30-20:50",
+        "wed": "09:30-20:50",
+        "thu": "09:30-20:50",
+        "fri": "09:30-20:50",
+        "sat": "09:30-20:50",
+        "sun": "휴무"
+      },
+      "description": "숙성 고등어 구이·조림 단품",
+      "features": [
+        "단품가능"
+      ],
+      "menu_ids": [
+        "M016",
+        "M017",
+        "M018"
+      ],
+      "menus": [
+        {
+          "id": "M016",
+          "name": "고등어 구이 단품",
+          "note": "흰밥과 함께",
+          "estimated_nutrition": {
+            "kcal": 661,
+            "protein_g": 44.5,
+            "sodium_mg": 147,
+            "potassium_mg": 825,
+            "phosphorus_mg": 532
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "고등어구이",
+              "분량_g": 150,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 80,
+              "비고": "반찬"
+            }
+          ]
+        },
+        {
+          "id": "M017",
+          "name": "숙성 고등어조림",
+          "note": "국물 적게, 무 위주",
+          "estimated_nutrition": {
+            "kcal": 666,
+            "protein_g": 38.7,
+            "sodium_mg": 1767,
+            "potassium_mg": 884,
+            "phosphorus_mg": 535
+          },
+          "filter_scores": {
+            "low_sodium": "fail",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "고등어조림",
+              "분량_g": 180,
+              "비고": "메인+양념흡수"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "무",
+              "분량_g": 60,
+              "비고": "조림무"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 8,
+              "비고": "양념"
+            }
+          ]
+        },
+        {
+          "id": "M018",
+          "name": "보쌈 정식",
+          "note": "양념 약한 편",
+          "estimated_nutrition": {
+            "kcal": 535,
+            "protein_g": 34.6,
+            "sodium_mg": 374,
+            "potassium_mg": 559,
+            "phosphorus_mg": 350
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "보쌈고기",
+              "분량_g": 130,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 180,
+              "비고": "공기"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 70,
+              "비고": "반찬"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R007",
+      "name": "바다등푸른생선구이 논현점",
+      "cuisine": "한식",
+      "region_si": "서울",
+      "region_gu": "강남구",
+      "region_dong": "논현",
+      "address": "서울 강남구 논현동 66-35",
+      "lat": 37.5181809,
+      "lng": 127.0299073,
+      "phone": "02-549-5262",
+      "rating": 4.9,
+      "review_count": 7,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:30-20:00",
+        "tue": "11:30-20:00",
+        "wed": "11:30-20:00",
+        "thu": "11:30-20:00",
+        "fri": "11:30-20:00",
+        "sat": "11:30-22:00",
+        "sun": "휴무"
+      },
+      "description": "양념 약한 조림 위주",
+      "features": [
+        "저염조리"
+      ],
+      "menu_ids": [
+        "M019",
+        "M020"
+      ],
+      "menus": [
+        {
+          "id": "M019",
+          "name": "고등어조림",
+          "note": "양념이 강하지 않음",
+          "estimated_nutrition": {
+            "kcal": 627,
+            "protein_g": 34.7,
+            "sodium_mg": 1171,
+            "potassium_mg": 834,
+            "phosphorus_mg": 481
+          },
+          "filter_scores": {
+            "low_sodium": "fail",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "고등어조림",
+              "분량_g": 160,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "무",
+              "분량_g": 80,
+              "비고": "조림무"
+            }
+          ]
+        },
+        {
+          "id": "M020",
+          "name": "콩나물국 사이드",
+          "note": "국물 자제",
+          "estimated_nutrition": {
+            "kcal": 35,
+            "protein_g": 4.6,
+            "sodium_mg": 762,
+            "potassium_mg": 220,
+            "phosphorus_mg": 75
+          },
+          "filter_scores": {
+            "low_sodium": "mid",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "콩나물",
+              "분량_g": 60,
+              "비고": "메인"
+            },
+            {
+              "식재료": "맑은육수",
+              "분량_g": 200,
+              "비고": "국물"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "partial",
+      "safe_menu_ratio": 0.5
+    },
+    {
+      "id": "R008",
+      "name": "슬로우 칼리 연남점",
+      "cuisine": "샐러드/포케",
+      "region_si": "서울",
+      "region_gu": "마포구",
+      "region_dong": "연남",
+      "address": "서울 마포구 동교로38길 35",
+      "lat": 37.5613366,
+      "lng": 126.9257923,
+      "phone": "02-336-0688",
+      "rating": 4.6,
+      "review_count": 248,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:30-20:30",
+        "tue": "11:30-15:00, 17:00-20:30",
+        "wed": "11:30-15:00, 17:00-20:30",
+        "thu": "11:30-15:00, 17:00-20:30",
+        "fri": "11:30-15:00, 17:00-20:30",
+        "sat": "11:30-15:00, 17:00-20:30",
+        "sun": "11:30-15:00, 17:00-20:30"
+      },
+      "description": "커스텀 보울, 단백질·드레싱 자유 조절",
+      "features": [
+        "커스텀가능",
+        "드레싱별도",
+        "흰쌀변경가능"
+      ],
+      "menu_ids": [
+        "M021",
+        "M022",
+        "M023"
+      ],
+      "menus": [
+        {
+          "id": "M021",
+          "name": "커스텀 보울 (흰쌀+연어소량)",
+          "note": "드레싱 별도 요청",
+          "estimated_nutrition": {
+            "kcal": 423,
+            "protein_g": 20.8,
+            "sodium_mg": 219,
+            "potassium_mg": 531,
+            "phosphorus_mg": 280
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 180,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "연어회",
+              "분량_g": 70,
+              "비고": "단백질소량"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 100,
+              "비고": "토핑"
+            },
+            {
+              "식재료": "유자간장소스",
+              "분량_g": 8,
+              "비고": "드레싱(따로)"
+            }
+          ]
+        },
+        {
+          "id": "M022",
+          "name": "치킨 보울",
+          "note": "양질 단백, 드레싱 따로",
+          "estimated_nutrition": {
+            "kcal": 398,
+            "protein_g": 29.3,
+            "sodium_mg": 282,
+            "potassium_mg": 738,
+            "phosphorus_mg": 333
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "닭가슴살",
+              "분량_g": 100,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 180,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "생채소샐러드",
+              "분량_g": 100,
+              "비고": "토핑"
+            },
+            {
+              "식재료": "유자간장소스",
+              "분량_g": 10,
+              "비고": "드레싱(따로)"
+            }
+          ]
+        },
+        {
+          "id": "M023",
+          "name": "단호박 보울",
+          "note": "단호박 칼륨 ↑",
+          "estimated_nutrition": {
+            "kcal": 143,
+            "protein_g": 3.5,
+            "sodium_mg": 14,
+            "potassium_mg": 820,
+            "phosphorus_mg": 89
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "fail",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "단호박",
+              "분량_g": 200,
+              "비고": "주재료"
+            },
+            {
+              "식재료": "생채소샐러드",
+              "분량_g": 50,
+              "비고": "사이드"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R009",
+      "name": "발런스포케 역삼점",
+      "cuisine": "샐러드/포케",
+      "region_si": "서울",
+      "region_gu": "강남구",
+      "region_dong": "역삼",
+      "address": "서울 강남구 강남대로94길 75",
+      "lat": 37.500774,
+      "lng": 127.0333951,
+      "phone": "02-553-2329",
+      "rating": 4.9,
+      "review_count": 103,
+      "price_level": 2,
+      "hours": {
+        "mon": "10:00-21:00",
+        "tue": "10:00-21:00",
+        "wed": "10:00-21:00",
+        "thu": "10:00-21:00",
+        "fri": "10:00-21:00",
+        "sat": "11:00-21:00",
+        "sun": "11:00-21:00"
+      },
+      "description": "24시간 운영, 단백질 양 조절 가능",
+      "features": [
+        "24시간",
+        "단백질조절",
+        "두부옵션"
+      ],
+      "menu_ids": [
+        "M024",
+        "M025",
+        "M026"
+      ],
+      "menus": [
+        {
+          "id": "M024",
+          "name": "연어 포케 (밥 1/2)",
+          "note": "드레싱 따로",
+          "estimated_nutrition": {
+            "kcal": 321,
+            "protein_g": 20.5,
+            "sodium_mg": 221,
+            "potassium_mg": 501,
+            "phosphorus_mg": 268
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 100,
+              "비고": "1/2공기"
+            },
+            {
+              "식재료": "연어회",
+              "분량_g": 80,
+              "비고": "메인"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 80,
+              "비고": "토핑"
+            },
+            {
+              "식재료": "유자간장소스",
+              "분량_g": 8,
+              "비고": "드레싱(따로)"
+            }
+          ]
+        },
+        {
+          "id": "M025",
+          "name": "두부 크루통 보울",
+          "note": "식물성 단백, 인 ↑ 주의",
+          "estimated_nutrition": {
+            "kcal": 296,
+            "protein_g": 11.1,
+            "sodium_mg": 14,
+            "potassium_mg": 334,
+            "phosphorus_mg": 169
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "흰순두부",
+              "분량_g": 120,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 150,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 80,
+              "비고": "토핑"
+            }
+          ]
+        },
+        {
+          "id": "M026",
+          "name": "호박수프 세트",
+          "note": "1/2공기, 칼륨 주의",
+          "estimated_nutrition": {
+            "kcal": 275,
+            "protein_g": 5.3,
+            "sodium_mg": 7,
+            "potassium_mg": 719,
+            "phosphorus_mg": 108
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "fail",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "단호박",
+              "분량_g": 200,
+              "비고": "수프"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 100,
+              "비고": "사이드"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R010",
+      "name": "피쉬버켓 합정점",
+      "cuisine": "샐러드/포케",
+      "region_si": "서울",
+      "region_gu": "마포구",
+      "region_dong": "합정",
+      "address": "서울 마포구 합정동 373-3",
+      "lat": 37.5482037,
+      "lng": 126.9145904,
+      "phone": null,
+      "rating": 4.3,
+      "review_count": 43,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:00-20:00",
+        "tue": "11:00-20:00",
+        "wed": "11:00-20:00",
+        "thu": "11:00-20:00",
+        "fri": "11:00-20:00",
+        "sat": "11:00-20:00",
+        "sun": "휴무"
+      },
+      "description": "현미밥 → 흰쌀 변경 가능",
+      "features": [
+        "흰쌀변경가능"
+      ],
+      "menu_ids": [
+        "M027",
+        "M028"
+      ],
+      "menus": [
+        {
+          "id": "M027",
+          "name": "유자간장 연어 포케",
+          "note": "간장 양 조절 요청",
+          "estimated_nutrition": {
+            "kcal": 480,
+            "protein_g": 24.9,
+            "sodium_mg": 320,
+            "potassium_mg": 666,
+            "phosphorus_mg": 335
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 200,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "연어회",
+              "분량_g": 90,
+              "비고": "메인"
+            },
+            {
+              "식재료": "생채소샐러드",
+              "분량_g": 80,
+              "비고": "토핑"
+            },
+            {
+              "식재료": "유자간장소스",
+              "분량_g": 12,
+              "비고": "양념"
+            }
+          ]
+        },
+        {
+          "id": "M028",
+          "name": "매콤 시마요 포케",
+          "note": "마요·양념 나트륨 ↑",
+          "estimated_nutrition": {
+            "kcal": 567,
+            "protein_g": 24.0,
+            "sodium_mg": 325,
+            "potassium_mg": 451,
+            "phosphorus_mg": 310
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 200,
+              "비고": "베이스"
+            },
+            {
+              "식재료": "연어회",
+              "분량_g": 90,
+              "비고": "메인"
+            },
+            {
+              "식재료": "마요네즈",
+              "분량_g": 15,
+              "비고": "매콤마요"
+            },
+            {
+              "식재료": "고추장",
+              "분량_g": 8,
+              "비고": "양념"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R011",
+      "name": "이스시 (It Sushi) 연남점",
+      "cuisine": "일식",
+      "region_si": "서울",
+      "region_gu": "마포구",
+      "region_dong": "동교",
+      "address": "서울 마포구 동교동 174-4",
+      "lat": 37.5576518,
+      "lng": 126.9284886,
+      "phone": null,
+      "rating": 4.9,
+      "review_count": 89,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:00-21:00",
+        "tue": "11:00-21:00",
+        "wed": "11:00-21:00",
+        "thu": "11:00-21:00",
+        "fri": "11:00-21:00",
+        "sat": "11:00-21:00",
+        "sun": "휴무"
+      },
+      "description": "점심 13,900원 오마카세, 1피스 단위 양 조절",
+      "features": [
+        "1피스단위주문",
+        "1인이용"
+      ],
+      "menu_ids": [
+        "M029",
+        "M030"
+      ],
+      "menus": [
+        {
+          "id": "M029",
+          "name": "흰살생선 초밥 (광어·도미)",
+          "note": "간장 최소화, 와사비 풍미",
+          "estimated_nutrition": {
+            "kcal": 219,
+            "protein_g": 16.0,
+            "sodium_mg": 356,
+            "potassium_mg": 313,
+            "phosphorus_mg": 181
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "mid",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "광어회",
+              "분량_g": 30,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "도미회",
+              "분량_g": 30,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 100,
+              "비고": "초밥용"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 5,
+              "비고": "디핑(최소)"
+            },
+            {
+              "식재료": "와사비",
+              "분량_g": 3,
+              "비고": "양념"
+            }
+          ]
+        },
+        {
+          "id": "M030",
+          "name": "점심 10피스 오마카세",
+          "note": "양 조절 어려움, 단백질 과잉 주의",
+          "estimated_nutrition": {
+            "kcal": 379,
+            "protein_g": 26.6,
+            "sodium_mg": 532,
+            "potassium_mg": 493,
+            "phosphorus_mg": 311
+          },
+          "filter_scores": {
+            "low_sodium": "mid",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "연어회",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "광어회",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "도미회",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "고등어구이",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 150,
+              "비고": "초밥용"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 8,
+              "비고": "디핑"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "partial",
+      "safe_menu_ratio": 0.5
+    },
+    {
+      "id": "R012",
+      "name": "오마카세 오사이초밥 홍대점",
+      "cuisine": "일식",
+      "region_si": "서울",
+      "region_gu": "마포구",
+      "region_dong": "연희",
+      "address": "서울 마포구 연희로1길 11 2층",
+      "lat": 37.5596538,
+      "lng": 126.9257726,
+      "phone": "02-332-5425",
+      "rating": 4.5,
+      "review_count": 24,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:00-21:30",
+        "tue": "11:00-21:30",
+        "wed": "11:00-21:30",
+        "thu": "11:00-21:30",
+        "fri": "11:00-21:30",
+        "sat": "11:00-21:30",
+        "sun": "11:00-21:30"
+      },
+      "description": "가성비 점심 오마카세, 1피스 단위",
+      "features": [
+        "1피스단위주문",
+        "예약권장"
+      ],
+      "menu_ids": [
+        "M031",
+        "M032"
+      ],
+      "menus": [
+        {
+          "id": "M031",
+          "name": "점심 8피스 오마카세",
+          "note": "간장 디핑 최소화",
+          "estimated_nutrition": {
+            "kcal": 325,
+            "protein_g": 23.9,
+            "sodium_mg": 463,
+            "potassium_mg": 446,
+            "phosphorus_mg": 272
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "연어회",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "광어회",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "도미회",
+              "분량_g": 25,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "쇠고기등심",
+              "분량_g": 20,
+              "비고": "초밥"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 130,
+              "비고": "초밥용"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 7,
+              "비고": "디핑"
+            }
+          ]
+        },
+        {
+          "id": "M032",
+          "name": "구이 사바 초밥 단품",
+          "note": "고등어 1피스만 별도 주문",
+          "estimated_nutrition": {
+            "kcal": 111,
+            "protein_g": 8.4,
+            "sodium_mg": 141,
+            "potassium_mg": 140,
+            "phosphorus_mg": 98
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "pass",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "고등어구이",
+              "분량_g": 30,
+              "비고": "구이초밥"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 30,
+              "비고": "초밥용"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 2,
+              "비고": "디핑"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "partial",
+      "safe_menu_ratio": 0.5
+    },
+    {
+      "id": "R013",
+      "name": "샤브가든 종로타워점",
+      "cuisine": "샤브",
+      "region_si": "서울",
+      "region_gu": "종로구",
+      "region_dong": "종로",
+      "address": "서울 종로구 종로 51",
+      "lat": 37.5704497,
+      "lng": 126.9838628,
+      "phone": "02-6953-0486",
+      "rating": 4.9,
+      "review_count": 55,
+      "price_level": 2,
+      "hours": {
+        "mon": "10:30-21:30",
+        "tue": "10:30-21:30",
+        "wed": "10:30-21:30",
+        "thu": "10:30-21:30",
+        "fri": "10:30-21:30",
+        "sat": "10:30-21:30",
+        "sun": "10:30-21:30"
+      },
+      "description": "맑은 육수 선택 가능, 채소 데쳐 칼륨↓",
+      "features": [
+        "맑은육수옵션",
+        "국물조절가능"
+      ],
+      "menu_ids": [
+        "M033",
+        "M034"
+      ],
+      "menus": [
+        {
+          "id": "M033",
+          "name": "맑은육수 채소 샤브 (고기소량)",
+          "note": "채소 데쳐 칼륨↓, 국물 남기기",
+          "estimated_nutrition": {
+            "kcal": 205,
+            "protein_g": 22.6,
+            "sodium_mg": 441,
+            "potassium_mg": 819,
+            "phosphorus_mg": 290
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "mid",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "쇠고기등심",
+              "분량_g": 80,
+              "비고": "샤브"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 200,
+              "비고": "샤브채소"
+            },
+            {
+              "식재료": "버섯혼합",
+              "분량_g": 50,
+              "비고": "샤브"
+            },
+            {
+              "식재료": "맑은육수",
+              "분량_g": 100,
+              "비고": "국물(소량)"
+            }
+          ]
+        },
+        {
+          "id": "M034",
+          "name": "버섯·우엉 모듬",
+          "note": "우엉 미리 데치기 권장",
+          "estimated_nutrition": {
+            "kcal": 86,
+            "protein_g": 5.5,
+            "sodium_mg": 16,
+            "potassium_mg": 680,
+            "phosphorus_mg": 158
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "버섯혼합",
+              "분량_g": 100,
+              "비고": "메인"
+            },
+            {
+              "식재료": "우엉",
+              "분량_g": 50,
+              "비고": "데침"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 100,
+              "비고": "샤브"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "partial",
+      "safe_menu_ratio": 0.5
+    },
+    {
+      "id": "R014",
+      "name": "등촌샤브칼국수 종로점",
+      "cuisine": "샤브",
+      "region_si": "서울",
+      "region_gu": "종로구",
+      "region_dong": "관철",
+      "address": "서울 종로구 삼일대로15길 3",
+      "lat": 37.5687736,
+      "lng": 126.9872379,
+      "phone": "02-734-9490",
+      "rating": 4.2,
+      "review_count": 147,
+      "price_level": 1,
+      "hours": {
+        "mon": "11:00-21:00",
+        "tue": "11:00-21:00",
+        "wed": "11:00-21:00",
+        "thu": "11:00-21:00",
+        "fri": "11:00-21:00",
+        "sat": "11:00-21:00",
+        "sun": "11:30-15:00, 16:30-18:30"
+      },
+      "description": "1인 샤브 세트, 국물 양 조절 가능",
+      "features": [
+        "1인세트",
+        "국물조절가능"
+      ],
+      "menu_ids": [
+        "M035",
+        "M036"
+      ],
+      "menus": [
+        {
+          "id": "M035",
+          "name": "소고기 샤브 (칼국수면 1/2)",
+          "note": "국물 남기기 필수",
+          "estimated_nutrition": {
+            "kcal": 291,
+            "protein_g": 22.3,
+            "sodium_mg": 359,
+            "potassium_mg": 593,
+            "phosphorus_mg": 257
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "쇠고기등심",
+              "분량_g": 80,
+              "비고": "샤브"
+            },
+            {
+              "식재료": "익힌채소혼합",
+              "분량_g": 150,
+              "비고": "샤브채소"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 80,
+              "비고": "면대체"
+            },
+            {
+              "식재료": "맑은육수",
+              "분량_g": 80,
+              "비고": "국물(소량)"
+            }
+          ]
+        },
+        {
+          "id": "M036",
+          "name": "매콤 버섯 칼국수",
+          "note": "국물 나트륨 매우 ↑",
+          "estimated_nutrition": {
+            "kcal": 215,
+            "protein_g": 10.8,
+            "sodium_mg": 2387,
+            "potassium_mg": 684,
+            "phosphorus_mg": 248
+          },
+          "filter_scores": {
+            "low_sodium": "fail",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "버섯혼합",
+              "분량_g": 100,
+              "비고": "메인"
+            },
+            {
+              "식재료": "된장국물",
+              "분량_g": 350,
+              "비고": "매콤국물"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 80,
+              "비고": "면대체"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R015",
+      "name": "산촌 (사찰음식)",
+      "cuisine": "사찰",
+      "region_si": "서울",
+      "region_gu": "종로구",
+      "region_dong": "인사",
+      "address": "서울 종로구 인사동길 30-13",
+      "lat": 37.5737828,
+      "lng": 126.9860624,
+      "phone": "02-735-0312",
+      "rating": 4.1,
+      "review_count": 718,
+      "price_level": 3,
+      "hours": {
+        "mon": "11:30-21:00",
+        "tue": "11:30-21:00",
+        "wed": "11:30-21:00",
+        "thu": "11:30-21:00",
+        "fri": "11:30-21:00",
+        "sat": "11:30-21:00",
+        "sun": "11:30-21:00"
+      },
+      "description": "마늘·양파 없는 사찰 정식 코스",
+      "features": [
+        "오신채없음",
+        "코스요리",
+        "예약권장"
+      ],
+      "menu_ids": [
+        "M037"
+      ],
+      "menus": [
+        {
+          "id": "M037",
+          "name": "사찰음식 정식 코스",
+          "note": "산나물·들기름, 잡곡 일부 포함",
+          "estimated_nutrition": {
+            "kcal": 397,
+            "protein_g": 11.5,
+            "sodium_mg": 251,
+            "potassium_mg": 676,
+            "phosphorus_mg": 227
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "pass",
+            "low_potassium": "mid",
+            "low_phosphorus": "pass"
+          },
+          "composition": [
+            {
+              "식재료": "데친나물",
+              "분량_g": 200,
+              "비고": "사찰코스"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 180,
+              "비고": "공기"
+            },
+            {
+              "식재료": "된장",
+              "분량_g": 5,
+              "비고": "양념"
+            },
+            {
+              "식재료": "참기름",
+              "분량_g": 5,
+              "비고": "양념"
+            },
+            {
+              "식재료": "버섯혼합",
+              "분량_g": 80,
+              "비고": "사찰코스"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "highly_recommended",
+      "safe_menu_ratio": 1.0
+    },
+    {
+      "id": "R016",
+      "name": "아승지 (사찰음식)",
+      "cuisine": "사찰",
+      "region_si": "서울",
+      "region_gu": "영등포구",
+      "region_dong": "신길",
+      "address": "서울 영등포구 신길로 176",
+      "lat": 37.507763,
+      "lng": 126.9112277,
+      "phone": "02-836-8442",
+      "rating": 4.3,
+      "review_count": 76,
+      "price_level": 3,
+      "hours": {
+        "mon": "10:00-20:00",
+        "tue": "10:00-20:00",
+        "wed": "10:00-20:00",
+        "thu": "10:00-20:00",
+        "fri": "10:00-20:00",
+        "sat": "휴무",
+        "sun": "휴무"
+      },
+      "description": "예약제 사찰음식 코스, 점심 30,000원",
+      "features": [
+        "오신채없음",
+        "예약필수",
+        "코스요리"
+      ],
+      "menu_ids": [
+        "M038"
+      ],
+      "menus": [
+        {
+          "id": "M038",
+          "name": "사찰음식 점심 코스",
+          "note": "마늘·양파 제외, 제철 나물",
+          "estimated_nutrition": {
+            "kcal": 389,
+            "protein_g": 12.9,
+            "sodium_mg": 208,
+            "potassium_mg": 918,
+            "phosphorus_mg": 279
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "mid",
+            "low_potassium": "fail",
+            "low_phosphorus": "mid"
+          },
+          "composition": [
+            {
+              "식재료": "데친나물",
+              "분량_g": 180,
+              "비고": "사찰코스"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 180,
+              "비고": "공기"
+            },
+            {
+              "식재료": "버섯혼합",
+              "분량_g": 100,
+              "비고": "사찰코스"
+            },
+            {
+              "식재료": "우엉",
+              "분량_g": 60,
+              "비고": "사찰코스"
+            },
+            {
+              "식재료": "된장",
+              "분량_g": 4,
+              "비고": "양념"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    },
+    {
+      "id": "R017",
+      "name": "콩청대 망원점",
+      "cuisine": "두부",
+      "region_si": "서울",
+      "region_gu": "마포구",
+      "region_dong": "망원",
+      "address": "서울 마포구 포은로 29-1",
+      "lat": 37.5504023,
+      "lng": 126.9078331,
+      "phone": "070-7576-4434",
+      "rating": 4.5,
+      "review_count": 133,
+      "price_level": 2,
+      "hours": {
+        "mon": "11:30-21:30",
+        "tue": "11:30-21:30",
+        "wed": "11:30-21:30",
+        "thu": "11:30-21:30",
+        "fri": "11:30-21:30",
+        "sat": "11:30-21:30",
+        "sun": "휴무"
+      },
+      "description": "흰순두부 단품, 양념 따로 요청 가능",
+      "features": [
+        "양념따로요청가능"
+      ],
+      "menu_ids": [
+        "M039",
+        "M040",
+        "M041"
+      ],
+      "menus": [
+        {
+          "id": "M039",
+          "name": "흰순두부 (양념 따로)",
+          "note": "간장 1티스푼만",
+          "estimated_nutrition": {
+            "kcal": 444,
+            "protein_g": 19.2,
+            "sodium_mg": 307,
+            "potassium_mg": 467,
+            "phosphorus_mg": 285
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "흰순두부",
+              "분량_g": 250,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "간장",
+              "분량_g": 5,
+              "비고": "양념(따로)"
+            },
+            {
+              "식재료": "데친나물",
+              "분량_g": 60,
+              "비고": "반찬"
+            }
+          ]
+        },
+        {
+          "id": "M040",
+          "name": "콩비지",
+          "note": "포만감, 인 ↑ 주의",
+          "estimated_nutrition": {
+            "kcal": 495,
+            "protein_g": 23.2,
+            "sodium_mg": 12,
+            "potassium_mg": 432,
+            "phosphorus_mg": 317
+          },
+          "filter_scores": {
+            "low_sodium": "pass",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "콩비지",
+              "분량_g": 250,
+              "비고": "메인"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            }
+          ]
+        },
+        {
+          "id": "M041",
+          "name": "빨간순두부",
+          "note": "국물 나트륨 ↑",
+          "estimated_nutrition": {
+            "kcal": 458,
+            "protein_g": 19.1,
+            "sodium_mg": 1622,
+            "potassium_mg": 527,
+            "phosphorus_mg": 307
+          },
+          "filter_scores": {
+            "low_sodium": "fail",
+            "low_sugar": "pass",
+            "low_protein": "fail",
+            "low_potassium": "pass",
+            "low_phosphorus": "fail"
+          },
+          "composition": [
+            {
+              "식재료": "흰순두부",
+              "분량_g": 200,
+              "비고": "메인"
+            },
+            {
+              "식재료": "된장국물",
+              "분량_g": 200,
+              "비고": "양념국"
+            },
+            {
+              "식재료": "흰쌀밥",
+              "분량_g": 210,
+              "비고": "공기"
+            },
+            {
+              "식재료": "고추장",
+              "분량_g": 10,
+              "비고": "양념"
+            }
+          ]
+        }
+      ],
+      "safety_tier": "limited",
+      "safe_menu_ratio": 0.0
+    }
+  ],
+  "ingredient_reference": {
+    "흰쌀밥": {
+      "kcal": 143,
+      "단백질": 2500,
+      "나트륨": 1,
+      "칼륨": 39,
+      "인": 38
+    },
+    "현미밥": {
+      "kcal": 145,
+      "단백질": 2900,
+      "나트륨": 2,
+      "칼륨": 130,
+      "인": 130
+    },
+    "잡곡밥": {
+      "kcal": 148,
+      "단백질": 3500,
+      "나트륨": 3,
+      "칼륨": 160,
+      "인": 165
+    },
+    "흰죽": {
+      "kcal": 51,
+      "단백질": 900,
+      "나트륨": 1,
+      "칼륨": 14,
+      "인": 14
+    },
+    "고등어구이": {
+      "kcal": 222,
+      "단백질": 25000,
+      "나트륨": 90,
+      "칼륨": 410,
+      "인": 280
+    },
+    "고등어조림": {
+      "kcal": 195,
+      "단백질": 18000,
+      "나트륨": 720,
+      "칼륨": 360,
+      "인": 240
+    },
+    "연어회": {
+      "kcal": 183,
+      "단백질": 20400,
+      "나트륨": 47,
+      "칼륨": 380,
+      "인": 245
+    },
+    "연어구이": {
+      "kcal": 215,
+      "단백질": 23000,
+      "나트륨": 75,
+      "칼륨": 410,
+      "인": 270
+    },
+    "광어회": {
+      "kcal": 105,
+      "단백질": 22000,
+      "나트륨": 95,
+      "칼륨": 440,
+      "인": 220
+    },
+    "도미회": {
+      "kcal": 130,
+      "단백질": 21500,
+      "나트륨": 68,
+      "칼륨": 420,
+      "인": 230
+    },
+    "닭가슴살": {
+      "kcal": 109,
+      "단백질": 23000,
+      "나트륨": 45,
+      "칼륨": 370,
+      "인": 220
+    },
+    "쇠고기등심": {
+      "kcal": 156,
+      "단백질": 21000,
+      "나트륨": 53,
+      "칼륨": 330,
+      "인": 200
+    },
+    "보쌈고기": {
+      "kcal": 195,
+      "단백질": 22000,
+      "나트륨": 280,
+      "칼륨": 290,
+      "인": 195
+    },
+    "흰순두부": {
+      "kcal": 48,
+      "단백질": 4900,
+      "나트륨": 5,
+      "칼륨": 110,
+      "인": 70
+    },
+    "콩비지": {
+      "kcal": 78,
+      "단백질": 7200,
+      "나트륨": 4,
+      "칼륨": 140,
+      "인": 95
+    },
+    "전복": {
+      "kcal": 92,
+      "단백질": 13000,
+      "나트륨": 220,
+      "칼륨": 230,
+      "인": 145
+    },
+    "굴": {
+      "kcal": 81,
+      "단백질": 9500,
+      "나트륨": 290,
+      "칼륨": 220,
+      "인": 162
+    },
+    "달걀": {
+      "kcal": 143,
+      "단백질": 12500,
+      "나트륨": 135,
+      "칼륨": 130,
+      "인": 200
+    },
+    "익힌채소혼합": {
+      "kcal": 30,
+      "단백질": 1800,
+      "나트륨": 8,
+      "칼륨": 180,
+      "인": 35
+    },
+    "데친나물": {
+      "kcal": 35,
+      "단백질": 2200,
+      "나트륨": 12,
+      "칼륨": 160,
+      "인": 40
+    },
+    "생채소샐러드": {
+      "kcal": 22,
+      "단백질": 1500,
+      "나트륨": 15,
+      "칼륨": 280,
+      "인": 38
+    },
+    "버섯혼합": {
+      "kcal": 24,
+      "단백질": 2500,
+      "나트륨": 6,
+      "칼륨": 320,
+      "인": 85
+    },
+    "단호박": {
+      "kcal": 66,
+      "단백질": 1400,
+      "나트륨": 3,
+      "칼륨": 340,
+      "인": 35
+    },
+    "감자": {
+      "kcal": 66,
+      "단백질": 1900,
+      "나트륨": 4,
+      "칼륨": 410,
+      "인": 55
+    },
+    "무": {
+      "kcal": 18,
+      "단백질": 800,
+      "나트륨": 21,
+      "칼륨": 220,
+      "인": 21
+    },
+    "콩나물": {
+      "kcal": 31,
+      "단백질": 4400,
+      "나트륨": 4,
+      "칼륨": 250,
+      "인": 65
+    },
+    "우엉": {
+      "kcal": 65,
+      "단백질": 2500,
+      "나트륨": 5,
+      "칼륨": 360,
+      "인": 75
+    },
+    "간장": {
+      "kcal": 53,
+      "단백질": 7200,
+      "나트륨": 5700,
+      "칼륨": 280,
+      "인": 130
+    },
+    "된장": {
+      "kcal": 132,
+      "단백질": 12000,
+      "나트륨": 4400,
+      "칼륨": 600,
+      "인": 220
+    },
+    "고추장": {
+      "kcal": 175,
+      "단백질": 5000,
+      "나트륨": 2500,
+      "칼륨": 350,
+      "인": 110
+    },
+    "참기름": {
+      "kcal": 884,
+      "단백질": 200,
+      "나트륨": 0,
+      "칼륨": 0,
+      "인": 0
+    },
+    "마요네즈": {
+      "kcal": 680,
+      "단백질": 1400,
+      "나트륨": 540,
+      "칼륨": 18,
+      "인": 28
+    },
+    "유자간장소스": {
+      "kcal": 95,
+      "단백질": 3000,
+      "나트륨": 2200,
+      "칼륨": 180,
+      "인": 70
+    },
+    "와사비": {
+      "kcal": 95,
+      "단백질": 4000,
+      "나트륨": 720,
+      "칼륨": 80,
+      "인": 60
+    },
+    "맑은육수": {
+      "kcal": 8,
+      "단백질": 1000,
+      "나트륨": 380,
+      "칼륨": 35,
+      "인": 18
+    },
+    "된장국물": {
+      "kcal": 22,
+      "단백질": 1800,
+      "나트륨": 680,
+      "칼륨": 95,
+      "인": 38
+    },
+    "콩국물": {
+      "kcal": 54,
+      "단백질": 4500,
+      "나트륨": 8,
+      "칼륨": 180,
+      "인": 110
+    },
+    "김치": {
+      "kcal": 18,
+      "단백질": 1700,
+      "나트륨": 640,
+      "칼륨": 270,
+      "인": 48
+    },
+    "단무지": {
+      "kcal": 14,
+      "단백질": 700,
+      "나트륨": 880,
+      "칼륨": 120,
+      "인": 22
+    }
+  }
+}

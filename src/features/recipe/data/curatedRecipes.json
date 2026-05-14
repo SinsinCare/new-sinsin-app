@@ -1,0 +1,8384 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-09",
+  "service": "신신당부",
+  "category_counts": {
+    "한식": 30,
+    "중식": 20,
+    "일식": 20,
+    "양식": 20,
+    "디저트": 10,
+    "샐러드": 10
+  },
+  "total": 110,
+  "nutrition_disclaimer": "영양 수치는 일반 식품 레퍼런스를 기준으로 한 추정치이며, 실제 서비스 노출 전에 영양사 검수가 필요합니다.",
+  "ckd_guide_disclaimer": "CKD 가이드는 일반적 영양 권고에 기반한 안내이며, 실제 환자 식단은 담당 의료진과 상의해야 합니다.",
+  "recipes": [
+    {
+      "id": "recipe_001",
+      "category": "한식",
+      "name": "저염 닭가슴살 백김치 비빔밥",
+      "description": "시판 김치 대신 백김치로 나트륨 부담 줄인 비빔밥",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "현미밥",
+          "amount": "1공기 (200g)"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "80g"
+        },
+        {
+          "name": "백김치",
+          "amount": "30g"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/4개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "애호박과 당근을 채 썰어 기름 없이 살짝 볶아둡니다."
+        },
+        {
+          "order": 2,
+          "content": "닭가슴살은 삶아 결대로 찢고 저염간장으로 가볍게 무칩니다."
+        },
+        {
+          "order": 3,
+          "content": "백김치는 물에 한 번 헹궈 짠기를 더 빼고 채 썹니다."
+        },
+        {
+          "order": 4,
+          "content": "현미밥 위에 모든 재료를 올리고 참기름 한 방울로 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 28,
+        "sodium_mg": 380,
+        "potassium_mg": 520,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "백김치로 나트륨을 낮춘 한식 비빔밥. 단백질 양 조절 필요.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_002",
+      "category": "한식",
+      "name": "두부 채소 된장찌개",
+      "description": "육수 없이 다시마만으로 끓인 저염 된장찌개",
+      "difficulty": "쉬움",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "두부",
+          "amount": "1/2모"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/3개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "저염된장",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 찬물에 10분 우려 다시 물을 만듭니다."
+        },
+        {
+          "order": 2,
+          "content": "다시마를 빼고 저염된장을 풀어 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "양파, 애호박을 넣고 5분간 끓입니다."
+        },
+        {
+          "order": 4,
+          "content": "두부를 깍둑 썰어 넣고 3분 더 끓여 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 12,
+        "sodium_mg": 420,
+        "potassium_mg": 380,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저염된장과 다시마 육수로 나트륨을 낮춘 찌개. CKD 전 단계 무난.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_003",
+      "category": "한식",
+      "name": "닭안심 무 조림",
+      "description": "간장 양 줄이고 무로 단맛을 살린 조림",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭안심",
+          "amount": "100g"
+        },
+        {
+          "name": "무",
+          "amount": "150g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "대파",
+          "amount": "1/4대"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "무는 도톰하게 나박 썰어 끓는 물에 1분 데쳐 둡니다."
+        },
+        {
+          "order": 2,
+          "content": "닭안심은 한입 크기로 자릅니다."
+        },
+        {
+          "order": 3,
+          "content": "냄비에 모든 재료와 물 1컵을 넣고 중불에 끓입니다."
+        },
+        {
+          "order": 4,
+          "content": "국물이 자작해질 때까지 졸여 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 22,
+        "sodium_mg": 320,
+        "potassium_mg": 410,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저염간장과 무 단맛을 살린 안전한 단백질 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_004",
+      "category": "한식",
+      "name": "배추 들깨 무침",
+      "description": "들깨가루로 고소함 살린 무염 가까운 나물",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "배추",
+          "amount": "200g"
+        },
+        {
+          "name": "들깨가루",
+          "amount": "1큰술"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "배추를 한입 크기로 잘라 끓는 물에 30초 데칩니다."
+        },
+        {
+          "order": 2,
+          "content": "찬물에 헹궈 물기를 꽉 짭니다."
+        },
+        {
+          "order": 3,
+          "content": "들깨가루, 참기름, 저염간장을 넣고 무칩니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 90,
+        "protein_g": 4,
+        "sodium_mg": 180,
+        "potassium_mg": 280,
+        "phosphorus_mg": 80,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 무난한 저염 나물 반찬.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_005",
+      "category": "한식",
+      "name": "달걀 부추전",
+      "description": "밀가루 줄이고 부추로 식감 살린 부침",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "부추",
+          "amount": "30g"
+        },
+        {
+          "name": "부침가루",
+          "amount": "2큰술"
+        },
+        {
+          "name": "물",
+          "amount": "2큰술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "부추는 송송 썹니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀, 부침가루, 물을 잘 풀어줍니다."
+        },
+        {
+          "order": 3,
+          "content": "부추를 넣고 섞어 약불에 부쳐냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 260,
+        "protein_g": 14,
+        "sodium_mg": 280,
+        "potassium_mg": 200,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 단백질 한 끼. 인 함량 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_006",
+      "category": "한식",
+      "name": "가지 들기름 볶음",
+      "description": "간장 대신 들기름으로 풍미 살린 볶음",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "가지",
+          "amount": "1개"
+        },
+        {
+          "name": "들기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "다진마늘",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가지를 반달썰기 합니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 들기름을 두르고 마늘을 볶다 가지를 넣습니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장을 두르고 살짝 볶아 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 110,
+        "protein_g": 2,
+        "sodium_mg": 160,
+        "potassium_mg": 240,
+        "phosphorus_mg": 60,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "저염·저단백 가벼운 반찬.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_007",
+      "category": "한식",
+      "name": "시금치 두부 무침",
+      "description": "단백질과 채소를 함께 챙기는 기본 반찬",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "시금치",
+          "amount": "100g"
+        },
+        {
+          "name": "두부",
+          "amount": "1/4모"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "시금치를 끓는 물에 30초 데쳐 찬물에 헹굽니다."
+        },
+        {
+          "order": 2,
+          "content": "두부는 으깨어 물기를 꽉 짭니다."
+        },
+        {
+          "order": 3,
+          "content": "모든 재료를 함께 무쳐냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 140,
+        "protein_g": 9,
+        "sodium_mg": 220,
+        "potassium_mg": 380,
+        "phosphorus_mg": 120,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질·채소 동시 보충. 칼륨 주의.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_008",
+      "category": "한식",
+      "name": "저염 미역국 (소고기 소량)",
+      "description": "소고기 양을 줄이고 다시마 우린 물로 만든 미역국",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "불린 미역",
+          "amount": "30g"
+        },
+        {
+          "name": "소고기",
+          "amount": "30g"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우려 육수를 준비합니다."
+        },
+        {
+          "order": 2,
+          "content": "참기름에 소고기를 살짝 볶다 미역을 넣고 함께 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "다시마 우린 물을 붓고 저염간장으로 간해 끓입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 150,
+        "protein_g": 10,
+        "sodium_mg": 380,
+        "potassium_mg": 320,
+        "phosphorus_mg": 100,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물요리 중 비교적 안전한 선택. 나트륨 양 주의.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_009",
+      "category": "한식",
+      "name": "버섯 잡채",
+      "description": "당면 양 줄이고 버섯으로 채운 변형 잡채",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "당면",
+          "amount": "30g"
+        },
+        {
+          "name": "표고버섯",
+          "amount": "2개"
+        },
+        {
+          "name": "느타리버섯",
+          "amount": "50g"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "시금치",
+          "amount": "30g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "당면을 미지근한 물에 20분 불린 뒤 데칩니다."
+        },
+        {
+          "order": 2,
+          "content": "각 채소와 버섯을 따로 볶아둡니다."
+        },
+        {
+          "order": 3,
+          "content": "모두 합쳐 저염간장과 참기름으로 가볍게 무칩니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 6,
+        "sodium_mg": 360,
+        "potassium_mg": 380,
+        "phosphorus_mg": 140,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저단백 한식 메뉴. 나트륨 1회 분량 조절 필요.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_010",
+      "category": "한식",
+      "name": "저염 김치볶음밥 (백김치)",
+      "description": "백김치로 만든 부드러운 볶음밥",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        },
+        {
+          "name": "백김치",
+          "amount": "50g"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "백김치를 잘게 썰어 살짝 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "현미밥을 넣고 함께 볶아줍니다."
+        },
+        {
+          "order": 3,
+          "content": "달걀프라이를 올려 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 13,
+        "sodium_mg": 420,
+        "potassium_mg": 320,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 김치볶음밥 대비 나트륨 절반 수준.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_011",
+      "category": "한식",
+      "name": "콩나물 무침",
+      "description": "고춧가루 없이 담백하게 무친 콩나물",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "콩나물",
+          "amount": "150g"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "통깨",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "콩나물을 끓는 물에 2분 데쳐 찬물에 헹굽니다."
+        },
+        {
+          "order": 2,
+          "content": "물기를 짠 후 참기름·저염간장·통깨로 무칩니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 60,
+        "protein_g": 5,
+        "sodium_mg": 140,
+        "potassium_mg": 220,
+        "phosphorus_mg": 80,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 안전한 나물 반찬.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_012",
+      "category": "한식",
+      "name": "애호박 새우젓 볶음 (저염)",
+      "description": "새우젓 양을 줄여 만든 부드러운 호박 볶음",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "애호박",
+          "amount": "1개"
+        },
+        {
+          "name": "새우젓",
+          "amount": "1/4작은술"
+        },
+        {
+          "name": "다진마늘",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "애호박을 반달썰기 합니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 식용유와 마늘을 볶다 호박을 넣고 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "새우젓 소량으로 간을 맞춥니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 80,
+        "protein_g": 2,
+        "sodium_mg": 200,
+        "potassium_mg": 240,
+        "phosphorus_mg": 60,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "새우젓 양만 조절하면 CKD 전 단계 가능.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_013",
+      "category": "한식",
+      "name": "저염 닭곰탕",
+      "description": "소금을 적게 넣고 무·대파로 단맛 살린 닭곰탕",
+      "difficulty": "보통",
+      "time_min": 60,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭다리살",
+          "amount": "100g"
+        },
+        {
+          "name": "무",
+          "amount": "100g"
+        },
+        {
+          "name": "대파",
+          "amount": "1대"
+        },
+        {
+          "name": "마늘",
+          "amount": "2쪽"
+        },
+        {
+          "name": "물",
+          "amount": "3컵"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭은 끓는 물에 데쳐 핏물을 제거합니다."
+        },
+        {
+          "order": 2,
+          "content": "냄비에 닭, 무, 대파, 마늘을 넣고 40분 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "마지막에 소금으로 살짝 간만 맞춥니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 26,
+        "sodium_mg": 340,
+        "potassium_mg": 460,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물요리지만 소금량 조절 시 단백질 보충 가능.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_014",
+      "category": "한식",
+      "name": "오이 양파 무침",
+      "description": "식초 베이스의 새콤 가벼운 반찬",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "오이",
+          "amount": "1개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "식초",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "오이와 양파를 얇게 썰어 식초·올리고당·저염간장에 무칩니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 40,
+        "protein_g": 1,
+        "sodium_mg": 140,
+        "potassium_mg": 180,
+        "phosphorus_mg": 30,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "매우 가볍고 안전한 새콤 반찬.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_015",
+      "category": "한식",
+      "name": "달걀찜 (저염)",
+      "description": "육수 줄이고 달걀 본연의 풍미를 살린 달걀찜",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "쪽파",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "달걀을 풀고 물·저염간장을 섞습니다."
+        },
+        {
+          "order": 2,
+          "content": "체에 한 번 거른 후 그릇에 담습니다."
+        },
+        {
+          "order": 3,
+          "content": "찜기에서 10분 쪄낸 뒤 쪽파를 올립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 170,
+        "protein_g": 13,
+        "sodium_mg": 220,
+        "potassium_mg": 140,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 단백질 보충용. 인 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_016",
+      "category": "한식",
+      "name": "감자조림 (간장 절반)",
+      "description": "간장 양 절반으로 만든 부드러운 감자조림",
+      "difficulty": "쉬움",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "감자",
+          "amount": "2개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "감자를 끓는 물에 5분 데쳐 칼륨을 한 번 빼냅니다."
+        },
+        {
+          "order": 2,
+          "content": "냄비에 감자·저염간장·올리고당·물을 넣고 졸입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 3,
+        "sodium_mg": 220,
+        "potassium_mg": 380,
+        "phosphorus_mg": 80,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "감자 데치기로 칼륨 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_017",
+      "category": "한식",
+      "name": "저염 비빔국수",
+      "description": "고추장 줄이고 식초·참기름 베이스로 만든 비빔국수",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "소면",
+          "amount": "80g"
+        },
+        {
+          "name": "오이",
+          "amount": "1/4개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "저염고추장",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "식초",
+          "amount": "1큰술"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "소면을 삶아 찬물에 헹굽니다."
+        },
+        {
+          "order": 2,
+          "content": "채 썬 채소와 양념을 면에 모두 무칩니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 340,
+        "protein_g": 9,
+        "sodium_mg": 380,
+        "potassium_mg": 280,
+        "phosphorus_mg": 120,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 비빔국수 대비 나트륨 1/3 수준.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_018",
+      "category": "한식",
+      "name": "잔치국수 (저염)",
+      "description": "멸치육수 짧게 우리고 간 약하게 한 국수",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "소면",
+          "amount": "80g"
+        },
+        {
+          "name": "멸치",
+          "amount": "5개"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/4개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "물",
+          "amount": "3컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "멸치 내장을 빼고 다시마와 함께 5분 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "건더기를 빼고 저염간장으로 간합니다."
+        },
+        {
+          "order": 3,
+          "content": "삶은 소면을 그릇에 담고 채 썬 호박과 국물을 부어냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 320,
+        "protein_g": 11,
+        "sodium_mg": 480,
+        "potassium_mg": 280,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물 다 마시면 나트륨 부담. 건더기 위주 권장.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_019",
+      "category": "한식",
+      "name": "브로콜리 두부 무침",
+      "description": "데친 브로콜리에 으깬 두부로 고소함을 더한 반찬",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "브로콜리",
+          "amount": "100g"
+        },
+        {
+          "name": "두부",
+          "amount": "1/4모"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "브로콜리를 끓는 물에 1분 데칩니다."
+        },
+        {
+          "order": 2,
+          "content": "두부를 으깨 물기를 짭니다."
+        },
+        {
+          "order": 3,
+          "content": "모두 함께 무쳐냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 130,
+        "protein_g": 9,
+        "sodium_mg": 180,
+        "potassium_mg": 320,
+        "phosphorus_mg": 110,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질·식이섬유 균형 좋은 반찬.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_020",
+      "category": "한식",
+      "name": "순두부 채소국 (저염)",
+      "description": "간 약하게 끓인 부드러운 순두부 국",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "순두부",
+          "amount": "1팩"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/4개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "양파·애호박을 넣고 끓이다 순두부를 넣습니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장으로 살짝 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 150,
+        "protein_g": 11,
+        "sodium_mg": 320,
+        "potassium_mg": 360,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "부드러운 단백질 국물 메뉴.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_021",
+      "category": "한식",
+      "name": "저염 갈치조림",
+      "description": "간장 양을 절반으로 줄이고 무로 단맛을 낸 조림",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "갈치",
+          "amount": "1토막"
+        },
+        {
+          "name": "무",
+          "amount": "100g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "다진마늘",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "갈치를 흐르는 물에 씻어 키친타월로 닦습니다."
+        },
+        {
+          "order": 2,
+          "content": "무를 깔고 갈치를 올린 뒤 양념과 물을 넣어 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "국물이 자작해질 때까지 졸입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 18,
+        "sodium_mg": 380,
+        "potassium_mg": 420,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 갈치조림 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_022",
+      "category": "한식",
+      "name": "명란 없는 알찜 (달걀+황태)",
+      "description": "명란 대신 황태로 감칠맛 낸 부드러운 찜",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "황태채",
+          "amount": "5g"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "쪽파",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "황태채를 물에 5분 불립니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀을 풀고 황태물·황태를 함께 섞습니다."
+        },
+        {
+          "order": 3,
+          "content": "찜기에 10분 쪄냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 190,
+        "protein_g": 16,
+        "sodium_mg": 280,
+        "potassium_mg": 200,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단 단백질 메뉴. 인 함량 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_023",
+      "category": "한식",
+      "name": "고구마 영양밥",
+      "description": "고구마와 잡곡으로 만든 든든한 한 그릇",
+      "difficulty": "쉬움",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "쌀",
+          "amount": "1컵"
+        },
+        {
+          "name": "고구마",
+          "amount": "1/2개"
+        },
+        {
+          "name": "물",
+          "amount": "1.2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "고구마를 깍둑 썰어 1시간 물에 담가 칼륨을 빼냅니다."
+        },
+        {
+          "order": 2,
+          "content": "씻은 쌀과 함께 밥을 짓습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 7,
+        "sodium_mg": 20,
+        "potassium_mg": 380,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "고구마 담그기로 칼륨 부담 낮춘 영양밥.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_024",
+      "category": "한식",
+      "name": "저염 떡국",
+      "description": "다시마 육수와 적은 간장으로 끓인 떡국",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "떡국떡",
+          "amount": "1컵"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "떡을 넣고 끓이다 저염간장으로 간합니다."
+        },
+        {
+          "order": 3,
+          "content": "달걀을 풀어 넣어 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 360,
+        "protein_g": 11,
+        "sodium_mg": 420,
+        "potassium_mg": 200,
+        "phosphorus_mg": 150,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물 양만 조절하면 CKD3 무난.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_025",
+      "category": "한식",
+      "name": "닭가슴살 김밥",
+      "description": "햄 대신 닭가슴살을 넣은 저염 김밥",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "오이",
+          "amount": "1/4개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "김",
+          "amount": "1장"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭가슴살을 삶아 결대로 찢습니다."
+        },
+        {
+          "order": 2,
+          "content": "당근은 채 썰어 살짝 볶고, 달걀은 지단을 부칩니다."
+        },
+        {
+          "order": 3,
+          "content": "현미밥에 참기름을 살짝 발라 김 위에 올리고 재료를 넣어 말아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 24,
+        "sodium_mg": 380,
+        "potassium_mg": 320,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "햄·맛살 없이 저염으로 만든 김밥.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_026",
+      "category": "한식",
+      "name": "가지 밥",
+      "description": "가지를 함께 넣어 지은 단백한 한 그릇",
+      "difficulty": "쉬움",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "쌀",
+          "amount": "1컵"
+        },
+        {
+          "name": "가지",
+          "amount": "1개"
+        },
+        {
+          "name": "들기름",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가지를 깍둑 썰어 살짝 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "쌀과 함께 밥을 짓습니다."
+        },
+        {
+          "order": 3,
+          "content": "마지막에 들기름·저염간장을 둘러 비빕니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 360,
+        "protein_g": 7,
+        "sodium_mg": 280,
+        "potassium_mg": 280,
+        "phosphorus_mg": 110,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 무난한 한 그릇.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_027",
+      "category": "한식",
+      "name": "저염 잔멸치 볶음",
+      "description": "잔멸치 데치고 양념 줄여 만든 가벼운 반찬",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "잔멸치",
+          "amount": "30g"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "멸치를 끓는 물에 30초 데쳐 짠기를 뺍니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 살짝 볶아 올리고당·저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 160,
+        "protein_g": 12,
+        "sodium_mg": 380,
+        "potassium_mg": 220,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "caution",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "양 조절 시 섭취 가능. 인 1회 분량 절반 권장.",
+        "CKD4": "제한 필요. 단백질 절반 이하, 인 함량 식재료 줄여 조리.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "멸치는 인 함량이 높아 CKD4 이상 주의 필요.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "주의"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_028",
+      "category": "한식",
+      "name": "버섯 들깨탕",
+      "description": "들깨가루로 고소함을 살린 부드러운 탕",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "느타리버섯",
+          "amount": "100g"
+        },
+        {
+          "name": "표고버섯",
+          "amount": "2개"
+        },
+        {
+          "name": "들깨가루",
+          "amount": "2큰술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "버섯을 손질해 끓는 물에 넣습니다."
+        },
+        {
+          "order": 2,
+          "content": "들깨가루를 풀고 5분 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 160,
+        "protein_g": 6,
+        "sodium_mg": 320,
+        "potassium_mg": 380,
+        "phosphorus_mg": 140,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "고소하고 든든한 저단백 국물.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_029",
+      "category": "한식",
+      "name": "궁중 떡볶이 (저염)",
+      "description": "고추장 대신 저염간장 베이스로 만든 떡볶이",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "떡볶이떡",
+          "amount": "150g"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "떡을 끓는 물에 살짝 데칩니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 채소를 볶다 떡과 양념을 넣고 볶아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 7,
+        "sodium_mg": 480,
+        "potassium_mg": 220,
+        "phosphorus_mg": 90,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "매운 떡볶이 대신 권장할 만한 저염 변형.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_030",
+      "category": "한식",
+      "name": "저염 호박죽",
+      "description": "단호박과 쌀로 끓인 부드러운 죽",
+      "difficulty": "쉬움",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#한식"
+      ],
+      "ingredients": [
+        {
+          "name": "단호박",
+          "amount": "200g"
+        },
+        {
+          "name": "찹쌀가루",
+          "amount": "2큰술"
+        },
+        {
+          "name": "물",
+          "amount": "3컵"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "단호박을 찐 후 으깨 둡니다."
+        },
+        {
+          "order": 2,
+          "content": "물과 함께 끓이다 찹쌀가루를 풀어 넣습니다."
+        },
+        {
+          "order": 3,
+          "content": "올리고당으로 살짝 단맛을 더합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 4,
+        "sodium_mg": 20,
+        "potassium_mg": 360,
+        "phosphorus_mg": 80,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저단백·저염. 단호박 칼륨만 주의.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_031",
+      "category": "중식",
+      "name": "저염 토마토 달걀 볶음",
+      "description": "중식 가정식의 대표격. 간 줄여 더 부드럽게",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "토마토",
+          "amount": "2개"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "토마토를 큼직하게 썹니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀을 풀어 살짝 볶아 꺼내둡니다."
+        },
+        {
+          "order": 3,
+          "content": "토마토를 볶다 달걀·저염간장·올리고당을 넣고 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 13,
+        "sodium_mg": 280,
+        "potassium_mg": 380,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간 줄인 중식 가정식 단백질 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_032",
+      "category": "중식",
+      "name": "청경채 마늘 볶음",
+      "description": "기름과 마늘만으로 풍미 살린 가벼운 채소 볶음",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "청경채",
+          "amount": "150g"
+        },
+        {
+          "name": "마늘",
+          "amount": "2쪽"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "청경채를 4등분 합니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 마늘을 볶다 청경채를 넣고 센 불에 빠르게 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 80,
+        "protein_g": 3,
+        "sodium_mg": 220,
+        "potassium_mg": 280,
+        "phosphorus_mg": 60,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 가능한 채소 메뉴.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_033",
+      "category": "중식",
+      "name": "새우 브로콜리 볶음",
+      "description": "새우와 데친 브로콜리의 가벼운 조합",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "새우",
+          "amount": "100g"
+        },
+        {
+          "name": "브로콜리",
+          "amount": "100g"
+        },
+        {
+          "name": "마늘",
+          "amount": "2쪽"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "브로콜리를 끓는 물에 1분 데칩니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 마늘과 새우를 볶다 브로콜리를 넣습니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 22,
+        "sodium_mg": 380,
+        "potassium_mg": 360,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질 보충용. 새우는 인 함량 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_034",
+      "category": "중식",
+      "name": "저염 마파두부",
+      "description": "고추기름·두반장 양 줄인 부드러운 마파두부",
+      "difficulty": "보통",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "두부",
+          "amount": "1/2모"
+        },
+        {
+          "name": "다진소고기",
+          "amount": "30g"
+        },
+        {
+          "name": "두반장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "대파",
+          "amount": "1/4대"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "대파와 다진소고기를 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "두반장·저염간장을 넣고 물을 부어 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "두부를 깍둑 썰어 넣고 5분 끓여 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 16,
+        "sodium_mg": 420,
+        "potassium_mg": 320,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 마파두부 대비 나트륨 절반 수준.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_035",
+      "category": "중식",
+      "name": "가지 새콤달콤 볶음",
+      "description": "식초·올리고당으로 만든 가벼운 가지 요리",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "가지",
+          "amount": "1개"
+        },
+        {
+          "name": "식초",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가지를 어슷썰어 살짝 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "양념을 넣고 짧게 볶아 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 120,
+        "protein_g": 2,
+        "sodium_mg": 200,
+        "potassium_mg": 240,
+        "phosphorus_mg": 60,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "매우 가볍고 안전한 중식 채소 반찬.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_036",
+      "category": "중식",
+      "name": "저염 짜장면 (가정식)",
+      "description": "춘장 양 줄이고 채소로 채운 가정식 짜장면",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "중화면",
+          "amount": "1인분"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/4개"
+        },
+        {
+          "name": "돼지고기",
+          "amount": "30g"
+        },
+        {
+          "name": "춘장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소와 고기를 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "춘장과 올리고당, 물을 넣고 졸입니다."
+        },
+        {
+          "order": 3,
+          "content": "삶은 면에 부어냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 440,
+        "protein_g": 14,
+        "sodium_mg": 580,
+        "potassium_mg": 320,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "caution",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "양 조절 시 섭취 가능. 나트륨 1회 분량 절반 권장.",
+        "CKD4": "섭취 가능하나 나트륨 양 조절 필수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 짜장면 대비 나트륨 1/3 수준이지만 여전히 주의.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "주의",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_037",
+      "category": "중식",
+      "name": "간단 채소 볶음밥",
+      "description": "간장 줄이고 달걀·채소로 든든한 한 그릇",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "달걀을 풀어 살짝 볶아 꺼냅니다."
+        },
+        {
+          "order": 2,
+          "content": "채소를 볶다 밥을 넣어 함께 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "달걀과 저염간장을 넣고 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 12,
+        "sodium_mg": 320,
+        "potassium_mg": 240,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "CKD3 무난한 한 그릇 메뉴.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_038",
+      "category": "중식",
+      "name": "저염 깐풍기",
+      "description": "튀김 옷 얇게 입혀 양념 절반으로 만든 깐풍기",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭다리살",
+          "amount": "100g"
+        },
+        {
+          "name": "전분",
+          "amount": "1큰술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "식초",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "마늘",
+          "amount": "1쪽"
+        },
+        {
+          "name": "식용유",
+          "amount": "2큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭에 전분을 얇게 입혀 튀깁니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 마늘과 양념을 끓여 졸입니다."
+        },
+        {
+          "order": 3,
+          "content": "튀긴 닭을 버무려 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 22,
+        "sodium_mg": 420,
+        "potassium_mg": 280,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 깐풍기 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_039",
+      "category": "중식",
+      "name": "목이버섯 달걀 볶음",
+      "description": "중식 가정식의 클래식. 가벼운 단백질 한 끼",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "불린 목이버섯",
+          "amount": "60g"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "대파",
+          "amount": "1/4대"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "목이버섯을 한입 크기로 자릅니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀을 풀어 볶다 목이버섯과 대파를 넣어 함께 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 190,
+        "protein_g": 13,
+        "sodium_mg": 240,
+        "potassium_mg": 260,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 중식 단백질 반찬.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_040",
+      "category": "중식",
+      "name": "새우 완탕 (저염 국물)",
+      "description": "국물 양을 적게 잡아 만든 가벼운 완탕",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "완탕피",
+          "amount": "8장"
+        },
+        {
+          "name": "새우",
+          "amount": "60g"
+        },
+        {
+          "name": "부추",
+          "amount": "약간"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "새우와 부추를 다져 완탕피에 넣고 빚습니다."
+        },
+        {
+          "order": 2,
+          "content": "다시마 우린 물에 완탕을 끓이고 저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 16,
+        "sodium_mg": 420,
+        "potassium_mg": 240,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물량만 조절하면 무난한 단백질 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_041",
+      "category": "중식",
+      "name": "채소 잡탕면",
+      "description": "해물 대신 채소 듬뿍 넣은 가벼운 면 요리",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "중화면",
+          "amount": "1인분"
+        },
+        {
+          "name": "배추",
+          "amount": "50g"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "표고버섯",
+          "amount": "1개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소를 채 썰어 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "물을 붓고 끓이다 면을 넣어 익힙니다."
+        },
+        {
+          "order": 3,
+          "content": "저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 11,
+        "sodium_mg": 480,
+        "potassium_mg": 320,
+        "phosphorus_mg": 140,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물 양 절제 시 CKD3 가능.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_042",
+      "category": "중식",
+      "name": "두부면 볶음",
+      "description": "일반 면 대신 두부면으로 단백질을 더한 변형",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "두부면",
+          "amount": "1팩"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소를 볶다 두부면을 넣어 함께 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "저염간장·참기름으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 18,
+        "sodium_mg": 320,
+        "potassium_mg": 240,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "탄수화물 줄이고 단백질 보충하는 변형 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_043",
+      "category": "중식",
+      "name": "저염 탕수육 (소량)",
+      "description": "튀김 양 줄이고 소스 가볍게 곁들이는 변형",
+      "difficulty": "어려움",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "돼지고기",
+          "amount": "80g"
+        },
+        {
+          "name": "전분",
+          "amount": "2큰술"
+        },
+        {
+          "name": "식초",
+          "amount": "2큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "2큰술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "고기에 전분을 입혀 튀깁니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 채소와 양념을 끓여 소스를 만듭니다."
+        },
+        {
+          "order": 3,
+          "content": "튀긴 고기에 소스를 곁들여 냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 22,
+        "sodium_mg": 380,
+        "potassium_mg": 240,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 탕수육 대비 나트륨 절반 수준.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_044",
+      "category": "중식",
+      "name": "저염 짬뽕 (맑은 국물)",
+      "description": "고춧가루 줄이고 채소 위주로 끓인 가벼운 짬뽕",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "중화면",
+          "amount": "1인분"
+        },
+        {
+          "name": "배추",
+          "amount": "50g"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "새우",
+          "amount": "30g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "고춧가루",
+          "amount": "1작은술"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "채소·새우를 볶다 다시마 물을 붓습니다."
+        },
+        {
+          "order": 3,
+          "content": "삶은 면을 그릇에 담고 국물을 부어냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 16,
+        "sodium_mg": 580,
+        "potassium_mg": 380,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "caution",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "양 조절 시 섭취 가능. 나트륨 1회 분량 절반 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물 다 마시면 나트륨 부담 큼. 건더기 위주.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "주의",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_045",
+      "category": "중식",
+      "name": "달걀 토마토 국",
+      "description": "가볍고 부드러운 가정식 중식 국",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "토마토를 큼직하게 썰어 끓입니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀을 풀어 흘려 넣고 저염간장으로 간합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 120,
+        "protein_g": 9,
+        "sodium_mg": 220,
+        "potassium_mg": 320,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "CKD3 무난한 가벼운 국물.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_046",
+      "category": "중식",
+      "name": "채식 마라샹궈 (저염)",
+      "description": "향신료 양 조절하고 채소 위주로 만든 변형",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "배추",
+          "amount": "100g"
+        },
+        {
+          "name": "연근",
+          "amount": "50g"
+        },
+        {
+          "name": "두부",
+          "amount": "1/4모"
+        },
+        {
+          "name": "느타리버섯",
+          "amount": "50g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "마라소스",
+          "amount": "1작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소들을 한입 크기로 자릅니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 식용유와 마라소스를 가볍게 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "재료를 넣고 저염간장으로 간해 볶아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 12,
+        "sodium_mg": 480,
+        "potassium_mg": 420,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 마라샹궈 대비 나트륨 1/3 수준.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_047",
+      "category": "중식",
+      "name": "시금치 두부 만두",
+      "description": "고기 줄이고 시금치·두부로 채운 만두",
+      "difficulty": "어려움",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "만두피",
+          "amount": "10장"
+        },
+        {
+          "name": "시금치",
+          "amount": "50g"
+        },
+        {
+          "name": "두부",
+          "amount": "1/4모"
+        },
+        {
+          "name": "부추",
+          "amount": "20g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "참기름",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "시금치를 데쳐 다지고, 두부는 으깨어 물기를 짭니다."
+        },
+        {
+          "order": 2,
+          "content": "모든 재료를 섞어 만두소를 만듭니다."
+        },
+        {
+          "order": 3,
+          "content": "만두피에 소를 넣고 빚어 찜기에 10분 쪄냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 12,
+        "sodium_mg": 320,
+        "potassium_mg": 280,
+        "phosphorus_mg": 140,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저단백 베지테리언 만두.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_048",
+      "category": "중식",
+      "name": "중식 가지 덮밥",
+      "description": "가지를 부드럽게 졸여 밥에 올린 한 그릇",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        },
+        {
+          "name": "가지",
+          "amount": "1개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "마늘",
+          "amount": "2쪽"
+        },
+        {
+          "name": "식용유",
+          "amount": "1큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가지를 어슷썰어 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "마늘과 양념을 넣고 졸입니다."
+        },
+        {
+          "order": 3,
+          "content": "현미밥 위에 올려냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 7,
+        "sodium_mg": 380,
+        "potassium_mg": 280,
+        "phosphorus_mg": 110,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저단백 한 그릇. 나트륨 양 조절 권장.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_049",
+      "category": "중식",
+      "name": "저염 동파육 변형",
+      "description": "찜으로 기름기 빼고 양념 줄여 만든 변형",
+      "difficulty": "어려움",
+      "time_min": 90,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "삼겹살",
+          "amount": "100g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1큰술"
+        },
+        {
+          "name": "대파",
+          "amount": "1대"
+        },
+        {
+          "name": "생강",
+          "amount": "1쪽"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "삼겹살을 끓는 물에 5분 데쳐 기름을 뺍니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 모든 재료를 넣고 약불에 1시간 졸입니다."
+        },
+        {
+          "order": 3,
+          "content": "수저로 푹 잘리는 정도까지 익힙니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 18,
+        "sodium_mg": 480,
+        "potassium_mg": 220,
+        "phosphorus_mg": 160,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "기름·나트륨 줄인 명절용 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_050",
+      "category": "중식",
+      "name": "유린기 (저염 소스)",
+      "description": "간장 양 절반으로 줄인 가벼운 유린기",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#중식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭가슴살",
+          "amount": "100g"
+        },
+        {
+          "name": "전분",
+          "amount": "1큰술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "식초",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "식용유",
+          "amount": "2큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭가슴살에 전분을 입혀 튀깁니다."
+        },
+        {
+          "order": 2,
+          "content": "다진 양파와 양념을 섞어 소스를 만듭니다."
+        },
+        {
+          "order": 3,
+          "content": "튀긴 닭에 소스를 끼얹어 냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 360,
+        "protein_g": 24,
+        "sodium_mg": 380,
+        "potassium_mg": 240,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 유린기 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_051",
+      "category": "일식",
+      "name": "저염 닭가슴살 카레",
+      "description": "시판 카레 가루 양 줄이고 채소로 단맛 살린 카레",
+      "difficulty": "쉬움",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭가슴살",
+          "amount": "100g"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/3개"
+        },
+        {
+          "name": "감자",
+          "amount": "1/2개"
+        },
+        {
+          "name": "카레가루",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1.5컵"
+        },
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "감자를 끓는 물에 5분 데쳐 칼륨을 뺍니다."
+        },
+        {
+          "order": 2,
+          "content": "닭과 채소를 볶다 물을 붓고 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "카레가루를 풀어 농도를 잡고 밥과 함께 냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 480,
+        "protein_g": 26,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 카레 대비 나트륨 절반. 감자 데치기로 칼륨 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_052",
+      "category": "일식",
+      "name": "연어 데리야끼 (저염)",
+      "description": "간장 줄이고 미림으로 단맛 살린 연어 구이",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "연어",
+          "amount": "100g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "연어 양면을 키친타월로 닦습니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 굽고 양념을 부어 졸이듯 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 22,
+        "sodium_mg": 320,
+        "potassium_mg": 380,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 데리야끼 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_053",
+      "category": "일식",
+      "name": "달걀 우동 (저염 가츠오 육수)",
+      "description": "가츠오 우린 시간 줄여 가볍게 끓인 우동",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "우동면",
+          "amount": "1인분"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "가츠오",
+          "amount": "5g"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        },
+        {
+          "name": "쪽파",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마와 가츠오로 짧게 육수를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "면을 데쳐 그릇에 담습니다."
+        },
+        {
+          "order": 3,
+          "content": "국물에 저염간장으로 간하고 부어 달걀과 쪽파를 올립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 14,
+        "sodium_mg": 480,
+        "potassium_mg": 280,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물 다 마시지 않으면 CKD3 가능.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_054",
+      "category": "일식",
+      "name": "저염 오야꼬동",
+      "description": "간장 양 줄이고 양파 단맛 살린 닭달걀덮밥",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭다리살",
+          "amount": "80g"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "양파를 채 썰어 물·저염간장·미림에 졸입니다."
+        },
+        {
+          "order": 2,
+          "content": "닭을 넣고 익힙니다."
+        },
+        {
+          "order": 3,
+          "content": "달걀을 풀어 부어 살짝 익혀 밥에 올립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 480,
+        "protein_g": 28,
+        "sodium_mg": 420,
+        "potassium_mg": 380,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 오야꼬동 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_055",
+      "category": "일식",
+      "name": "가츠오 오니기리 (저염 후리카케)",
+      "description": "소금 줄인 일본식 주먹밥",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        },
+        {
+          "name": "가츠오",
+          "amount": "5g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "김",
+          "amount": "1/2장"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가츠오와 저염간장을 섞어 가볍게 양념을 만듭니다."
+        },
+        {
+          "order": 2,
+          "content": "밥에 섞어 동그랗게 빚습니다."
+        },
+        {
+          "order": 3,
+          "content": "김을 둘러 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 320,
+        "protein_g": 8,
+        "sodium_mg": 220,
+        "potassium_mg": 180,
+        "phosphorus_mg": 100,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "간편한 한 끼. CKD 전 단계 무난.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_056",
+      "category": "일식",
+      "name": "채소 미소시루 (저염 미소)",
+      "description": "저염 미소 사용해 부드럽게 끓인 된장국",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "저염미소",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "두부",
+          "amount": "1/4모"
+        },
+        {
+          "name": "미역",
+          "amount": "5g"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마로 육수를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "미역과 두부를 넣어 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "저염미소를 풀어 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 120,
+        "protein_g": 8,
+        "sodium_mg": 380,
+        "potassium_mg": 280,
+        "phosphorus_mg": 110,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 미소시루 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_057",
+      "category": "일식",
+      "name": "자루소바 (찍먹 적게)",
+      "description": "국물에 면을 살짝만 찍어 먹는 저염 식사법",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "메밀면",
+          "amount": "1인분"
+        },
+        {
+          "name": "쯔유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "쪽파",
+          "amount": "1작은술"
+        },
+        {
+          "name": "김",
+          "amount": "1/4장"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "메밀면을 삶아 찬물에 헹굽니다."
+        },
+        {
+          "order": 2,
+          "content": "쯔유에 물을 섞어 희석합니다."
+        },
+        {
+          "order": 3,
+          "content": "면을 살짝만 찍어 먹습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 320,
+        "protein_g": 11,
+        "sodium_mg": 380,
+        "potassium_mg": 220,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "쯔유 희석으로 나트륨 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_058",
+      "category": "일식",
+      "name": "니쿠자가 (저염)",
+      "description": "간장 양 절반으로 만든 일본식 감자조림",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "소고기",
+          "amount": "60g"
+        },
+        {
+          "name": "감자",
+          "amount": "1개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "감자를 끓는 물에 5분 데쳐 둡니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 소고기를 볶다 채소를 넣습니다."
+        },
+        {
+          "order": 3,
+          "content": "양념과 물을 부어 자작하게 졸입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 360,
+        "protein_g": 18,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 니쿠자가 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_059",
+      "category": "일식",
+      "name": "다시마끼 타마고",
+      "description": "간 약한 부드러운 일본식 달걀말이",
+      "difficulty": "보통",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "3개"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1큰술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "달걀을 풀어 양념을 섞습니다."
+        },
+        {
+          "order": 2,
+          "content": "약불에 얇게 펴 부쳐 돌돌 말아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 18,
+        "sodium_mg": 240,
+        "potassium_mg": 200,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 단백질 보충. 인 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_060",
+      "category": "일식",
+      "name": "저염 가라아게 (오븐)",
+      "description": "튀김 대신 오븐에서 구워 기름 줄인 가라아게",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭다리살",
+          "amount": "100g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "생강",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "전분",
+          "amount": "2큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭에 양념을 발라 30분 재웁니다."
+        },
+        {
+          "order": 2,
+          "content": "전분을 묻혀 200도 오븐에 20분 굽습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 320,
+        "protein_g": 24,
+        "sodium_mg": 380,
+        "potassium_mg": 280,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "기름 부담 낮춘 일본식 단백질 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_061",
+      "category": "일식",
+      "name": "시오 라멘 변형 (국물 적게)",
+      "description": "국물 양 줄이고 채소 듬뿍 올린 변형 라멘",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "라멘면",
+          "amount": "1인분"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "배추",
+          "amount": "50g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "쪽파",
+          "amount": "약간"
+        },
+        {
+          "name": "물",
+          "amount": "1.5컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "채소와 닭을 익혀 그릇에 담고 면 위에 국물을 적게 부어냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 24,
+        "sodium_mg": 580,
+        "potassium_mg": 380,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "caution",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "양 조절 시 섭취 가능. 나트륨 1회 분량 절반 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "국물 양이 핵심. 다 마시면 나트륨 부담 큼.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "주의",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_062",
+      "category": "일식",
+      "name": "치킨 가츠동 (저염)",
+      "description": "튀김 옷 얇게 입혀 만든 가벼운 가츠동",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭가슴살",
+          "amount": "100g"
+        },
+        {
+          "name": "빵가루",
+          "amount": "2큰술"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭에 빵가루를 입혀 굽습니다."
+        },
+        {
+          "order": 2,
+          "content": "양파를 양념·물에 졸이다 자른 닭을 올리고 달걀물을 부어 익힙니다."
+        },
+        {
+          "order": 3,
+          "content": "밥 위에 올려냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 520,
+        "protein_g": 32,
+        "sodium_mg": 480,
+        "potassium_mg": 360,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "양 조절 시 섭취 가능. 단백질 1회 분량 절반 권장.",
+        "CKD4": "제한 필요. 단백질 절반 이하, 인 함량 식재료 줄여 조리.",
+        "dialysis": "단백질 보충에 적합. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질 함량 높음. 1회 분량 조절 필요.",
+        "risk_flags": {
+          "단백질": "주의",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_063",
+      "category": "일식",
+      "name": "저염 챠슈 덮밥",
+      "description": "얇게 썬 챠슈 적게 올린 가벼운 덮밥",
+      "difficulty": "어려움",
+      "time_min": 60,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "돼지고기",
+          "amount": "60g"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1큰술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "대파",
+          "amount": "1대"
+        },
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "돼지고기를 양념에 1시간 졸입니다."
+        },
+        {
+          "order": 2,
+          "content": "얇게 썰어 밥 위에 적당량만 올립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 440,
+        "protein_g": 22,
+        "sodium_mg": 480,
+        "potassium_mg": 320,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 챠슈동 대비 고기·소스 양 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_064",
+      "category": "일식",
+      "name": "히야얏코 (냉두부)",
+      "description": "찬 두부 위 가츠오·쪽파 올린 가벼운 한 끼",
+      "difficulty": "쉬움",
+      "time_min": 5,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "두부",
+          "amount": "1/2모"
+        },
+        {
+          "name": "가츠오",
+          "amount": "약간"
+        },
+        {
+          "name": "쪽파",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "두부를 그릇에 담습니다."
+        },
+        {
+          "order": 2,
+          "content": "가츠오·쪽파를 올리고 저염간장을 한 방울 떨어뜨립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 140,
+        "protein_g": 12,
+        "sodium_mg": 220,
+        "potassium_mg": 240,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "매우 간단한 단백질 보충 메뉴.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_065",
+      "category": "일식",
+      "name": "채소 야끼소바 (저염)",
+      "description": "소스 양 줄이고 채소 위주로 볶은 야끼소바",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "중화면",
+          "amount": "1인분"
+        },
+        {
+          "name": "양배추",
+          "amount": "60g"
+        },
+        {
+          "name": "당근",
+          "amount": "1/4개"
+        },
+        {
+          "name": "야끼소바소스",
+          "amount": "1작은술"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "식용유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "면을 데쳐둡니다."
+        },
+        {
+          "order": 2,
+          "content": "채소를 볶다 면을 넣고 양념을 더해 함께 볶습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 9,
+        "sodium_mg": 480,
+        "potassium_mg": 280,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 야끼소바 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_066",
+      "category": "일식",
+      "name": "저염 차완무시",
+      "description": "육수와 달걀로 만든 부드러운 일본식 달걀찜",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "30g"
+        },
+        {
+          "name": "표고버섯",
+          "amount": "1개"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우려 식힙니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀을 풀고 다시마 물·저염간장을 섞어 체에 거릅니다."
+        },
+        {
+          "order": 3,
+          "content": "닭과 버섯을 넣고 찜기에 15분 쪄냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 18,
+        "sodium_mg": 280,
+        "potassium_mg": 200,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "부드러운 단백질 보충 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_067",
+      "category": "일식",
+      "name": "저염 텐푸라 (오븐)",
+      "description": "튀김 대신 오븐에서 구운 채소 텐푸라",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "새우",
+          "amount": "60g"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/4개"
+        },
+        {
+          "name": "가지",
+          "amount": "1/4개"
+        },
+        {
+          "name": "튀김가루",
+          "amount": "3큰술"
+        },
+        {
+          "name": "물",
+          "amount": "3큰술"
+        },
+        {
+          "name": "저염쯔유",
+          "amount": "1큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "튀김가루와 물로 반죽을 만듭니다."
+        },
+        {
+          "order": 2,
+          "content": "재료에 반죽을 입혀 200도 오븐에 15분 굽습니다."
+        },
+        {
+          "order": 3,
+          "content": "저염쯔유를 곁들여 냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 16,
+        "sodium_mg": 380,
+        "potassium_mg": 320,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "기름 부담 줄인 일식 변형.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_068",
+      "category": "일식",
+      "name": "저염 규동",
+      "description": "간장 줄이고 양파 단맛 살린 가벼운 규동",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "소고기",
+          "amount": "60g"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "저염간장",
+          "amount": "1작은술"
+        },
+        {
+          "name": "미림",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "현미밥",
+          "amount": "1공기"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "양파를 채 썰어 물·양념에 졸입니다."
+        },
+        {
+          "order": 2,
+          "content": "소고기를 넣고 익혀 밥에 올려냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 460,
+        "protein_g": 20,
+        "sodium_mg": 420,
+        "potassium_mg": 320,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 규동 대비 고기·나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_069",
+      "category": "일식",
+      "name": "에다마메 (저염)",
+      "description": "소금 양 절반으로 줄인 가벼운 에다마메",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "냉동 풋콩",
+          "amount": "100g"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "끓는 물에 소금을 넣고 풋콩을 3분 데쳐냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 140,
+        "protein_g": 11,
+        "sodium_mg": 180,
+        "potassium_mg": 380,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 식물성 단백질 간식.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_070",
+      "category": "일식",
+      "name": "저염 모찌 미소국",
+      "description": "저염 미소에 모찌 한 조각 넣어 만든 든든한 국",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#일식"
+      ],
+      "ingredients": [
+        {
+          "name": "저염미소",
+          "amount": "1/2큰술"
+        },
+        {
+          "name": "모찌",
+          "amount": "1개"
+        },
+        {
+          "name": "다시마",
+          "amount": "1조각"
+        },
+        {
+          "name": "쪽파",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다시마를 우립니다."
+        },
+        {
+          "order": 2,
+          "content": "모찌를 구워 둡니다."
+        },
+        {
+          "order": 3,
+          "content": "저염미소를 풀고 모찌·쪽파를 올려냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 7,
+        "sodium_mg": 380,
+        "potassium_mg": 220,
+        "phosphorus_mg": 110,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "CKD3 무난한 가벼운 국물.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_071",
+      "category": "양식",
+      "name": "저염 닭가슴살 토마토 파스타",
+      "description": "시판 토마토소스 양 줄이고 생토마토로 단맛 살린 파스타",
+      "difficulty": "쉬움",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "스파게티",
+          "amount": "80g"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "80g"
+        },
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "토마토소스",
+          "amount": "2큰술"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "마늘",
+          "amount": "2쪽"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "스파게티를 삶아둡니다."
+        },
+        {
+          "order": 2,
+          "content": "마늘을 볶다 닭가슴살과 토마토를 넣고 익힙니다."
+        },
+        {
+          "order": 3,
+          "content": "토마토소스와 면을 넣어 함께 볶아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 480,
+        "protein_g": 28,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 토마토 파스타 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_072",
+      "category": "양식",
+      "name": "알리오 올리오 (저염)",
+      "description": "소금 양 줄이고 마늘·올리브유로 단순하게 만든 파스타",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "스파게티",
+          "amount": "80g"
+        },
+        {
+          "name": "마늘",
+          "amount": "4쪽"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1.5큰술"
+        },
+        {
+          "name": "페퍼론치노",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        },
+        {
+          "name": "파슬리",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "면을 삶고 면수를 1컵 남깁니다."
+        },
+        {
+          "order": 2,
+          "content": "올리브유에 마늘과 페퍼론치노를 볶습니다."
+        },
+        {
+          "order": 3,
+          "content": "면과 면수를 넣고 살짝 볶아 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 11,
+        "sodium_mg": 280,
+        "potassium_mg": 180,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 무난한 단순 파스타.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_073",
+      "category": "양식",
+      "name": "저염 크림 파스타 (우유 베이스)",
+      "description": "생크림 대신 우유로 가볍게 만든 크림 파스타",
+      "difficulty": "보통",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "스파게티",
+          "amount": "80g"
+        },
+        {
+          "name": "우유",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "면을 삶아둡니다."
+        },
+        {
+          "order": 2,
+          "content": "양파와 닭을 볶다 우유를 부어 농도를 잡습니다."
+        },
+        {
+          "order": 3,
+          "content": "면을 넣고 후추로 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 480,
+        "protein_g": 26,
+        "sodium_mg": 320,
+        "potassium_mg": 380,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 크림 파스타 대비 칼로리·인 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_074",
+      "category": "양식",
+      "name": "치킨 스테이크 + 구운 채소",
+      "description": "단순한 양념의 닭가슴살 스테이크와 채소",
+      "difficulty": "쉬움",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭가슴살",
+          "amount": "120g"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/3개"
+        },
+        {
+          "name": "파프리카",
+          "amount": "1/2개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        },
+        {
+          "name": "로즈마리",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭가슴살에 후추·소금·로즈마리를 발라 5분 둡니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 올리브유를 두르고 양면을 굽습니다."
+        },
+        {
+          "order": 3,
+          "content": "채소도 함께 구워 곁들입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 360,
+        "protein_g": 32,
+        "sodium_mg": 280,
+        "potassium_mg": 480,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "양 조절 시 섭취 가능. 단백질 1회 분량 절반 권장.",
+        "CKD4": "제한 필요. 단백질 절반 이하, 인 함량 식재료 줄여 조리.",
+        "dialysis": "단백질 보충에 적합. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질 함량 높음. CKD3은 1회 분량 조절.",
+        "risk_flags": {
+          "단백질": "주의",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_075",
+      "category": "양식",
+      "name": "채소 미네스트로네 (저염)",
+      "description": "치킨스톡 줄이고 채소 우러난 맛을 살린 수프",
+      "difficulty": "쉬움",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "애호박",
+          "amount": "1/4개"
+        },
+        {
+          "name": "토마토소스",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "3컵"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소를 깍둑 썹니다."
+        },
+        {
+          "order": 2,
+          "content": "올리브유에 양파를 볶다 모든 재료와 물을 부어 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "20분 푹 끓여 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 4,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 110,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 수프 대비 나트륨 1/3 수준.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_076",
+      "category": "양식",
+      "name": "저염 시저 샐러드 (드레싱 절반)",
+      "description": "시판 드레싱 양 줄이고 그릭요거트로 베이스 만든 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "로메인",
+          "amount": "100g"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "그릭요거트",
+          "amount": "2큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "로메인을 한입 크기로 자릅니다."
+        },
+        {
+          "order": 2,
+          "content": "그릭요거트·레몬즙·올리브유로 드레싱을 만듭니다."
+        },
+        {
+          "order": 3,
+          "content": "닭가슴살을 올리고 드레싱을 곁들입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 22,
+        "sodium_mg": 220,
+        "potassium_mg": 380,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 시저 샐러드 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_077",
+      "category": "양식",
+      "name": "구운 새우 샐러드",
+      "description": "구운 새우와 채소의 가벼운 한 끼 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "새우",
+          "amount": "100g"
+        },
+        {
+          "name": "양상추",
+          "amount": "60g"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "새우를 팬에 살짝 굽습니다."
+        },
+        {
+          "order": 2,
+          "content": "채소와 함께 그릇에 담고 올리브유·레몬즙을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 22,
+        "sodium_mg": 380,
+        "potassium_mg": 380,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "새우는 인 함량 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_078",
+      "category": "양식",
+      "name": "저염 그릭 샐러드",
+      "description": "페타치즈 양 줄이고 올리브유 베이스로 만든 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "오이",
+          "amount": "1/2개"
+        },
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "페타치즈",
+          "amount": "20g"
+        },
+        {
+          "name": "올리브",
+          "amount": "3개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소를 큼직하게 자릅니다."
+        },
+        {
+          "order": 2,
+          "content": "페타치즈와 올리브유·레몬즙을 더해 가볍게 섞습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 6,
+        "sodium_mg": 380,
+        "potassium_mg": 380,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "페타·올리브 양만 줄이면 CKD3 가능.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_079",
+      "category": "양식",
+      "name": "저염 비프 스튜",
+      "description": "치킨스톡 대신 채소 우린 물로 만든 가벼운 비프스튜",
+      "difficulty": "어려움",
+      "time_min": 60,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "소고기",
+          "amount": "80g"
+        },
+        {
+          "name": "당근",
+          "amount": "1/2개"
+        },
+        {
+          "name": "감자",
+          "amount": "1/2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "토마토소스",
+          "amount": "2큰술"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "3컵"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "감자를 데쳐 칼륨을 뺍니다."
+        },
+        {
+          "order": 2,
+          "content": "소고기와 채소를 볶다 물과 토마토소스를 넣고 40분 끓입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 22,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 비프스튜 대비 나트륨 1/3 수준.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_080",
+      "category": "양식",
+      "name": "허브 구운 연어",
+      "description": "허브와 레몬으로 단순하게 구운 연어",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "연어",
+          "amount": "100g"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "레몬",
+          "amount": "1/4개"
+        },
+        {
+          "name": "로즈마리",
+          "amount": "약간"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "연어에 허브와 후추·소금을 발라 5분 둡니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 양면을 굽고 레몬을 짭니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 22,
+        "sodium_mg": 240,
+        "potassium_mg": 380,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 양식 단백질 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_081",
+      "category": "양식",
+      "name": "저염 오믈렛",
+      "description": "치즈 줄이고 채소 듬뿍 넣은 오믈렛",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "파프리카",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소를 다져 살짝 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀을 풀어 부어 약불에 말아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 14,
+        "sodium_mg": 280,
+        "potassium_mg": 280,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 단백질 한 끼.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_082",
+      "category": "양식",
+      "name": "채소 라타투이",
+      "description": "가지·호박·토마토를 푹 졸인 프랑스 가정식",
+      "difficulty": "보통",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "가지",
+          "amount": "1개"
+        },
+        {
+          "name": "애호박",
+          "amount": "1개"
+        },
+        {
+          "name": "토마토",
+          "amount": "2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "허브",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "채소를 모두 둥글게 썹니다."
+        },
+        {
+          "order": 2,
+          "content": "올리브유와 양파를 볶다 모든 재료를 더해 30분 푹 졸입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 5,
+        "sodium_mg": 280,
+        "potassium_mg": 580,
+        "phosphorus_mg": 130,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저단백 채소 위주 메뉴. 칼륨 중간.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_083",
+      "category": "양식",
+      "name": "저염 수제 햄버거 패티",
+      "description": "시판 햄버거 대신 직접 만든 저염 패티 빵",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "다진소고기",
+          "amount": "80g"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "빵가루",
+          "amount": "1큰술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "약간"
+        },
+        {
+          "name": "햄버거번",
+          "amount": "1개"
+        },
+        {
+          "name": "양상추",
+          "amount": "1장"
+        },
+        {
+          "name": "토마토",
+          "amount": "1조각"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "다진 양파와 고기, 빵가루, 후추를 섞어 패티를 만듭니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 굽고 햄버거 번에 채소와 함께 끼웁니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 440,
+        "protein_g": 24,
+        "sodium_mg": 480,
+        "potassium_mg": 320,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "패스트푸드 햄버거 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_084",
+      "category": "양식",
+      "name": "저염 브로콜리 수프",
+      "description": "우유와 데친 브로콜리로 만든 부드러운 수프",
+      "difficulty": "쉬움",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "브로콜리",
+          "amount": "150g"
+        },
+        {
+          "name": "우유",
+          "amount": "1컵"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "브로콜리를 끓는 물에 1분 데칩니다."
+        },
+        {
+          "order": 2,
+          "content": "양파를 볶다 모든 재료를 넣고 끓입니다."
+        },
+        {
+          "order": 3,
+          "content": "블렌더로 곱게 갈아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 11,
+        "sodium_mg": 280,
+        "potassium_mg": 480,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "부드러운 가벼운 수프.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_085",
+      "category": "양식",
+      "name": "치킨 토마토 스튜",
+      "description": "토마토소스 양 줄이고 채소 듬뿍 넣은 가벼운 스튜",
+      "difficulty": "보통",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "닭다리살",
+          "amount": "100g"
+        },
+        {
+          "name": "토마토",
+          "amount": "2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/2개"
+        },
+        {
+          "name": "당근",
+          "amount": "1/2개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "토마토소스",
+          "amount": "1큰술"
+        },
+        {
+          "name": "물",
+          "amount": "2컵"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭과 채소를 볶습니다."
+        },
+        {
+          "order": 2,
+          "content": "토마토소스와 물을 넣고 30분 졸입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 26,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 스튜 대비 나트륨 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_086",
+      "category": "양식",
+      "name": "에그 베네딕트 변형",
+      "description": "홀랜다이즈 소스 대신 그릭요거트로 만든 가벼운 버전",
+      "difficulty": "보통",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "잉글리시 머핀",
+          "amount": "1개"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "그릭요거트",
+          "amount": "2큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "시금치",
+          "amount": "30g"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "수란을 만듭니다."
+        },
+        {
+          "order": 2,
+          "content": "잉글리시 머핀을 굽고 시금치를 볶아 올립니다."
+        },
+        {
+          "order": 3,
+          "content": "수란과 그릭요거트 소스를 곁들입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 20,
+        "sodium_mg": 380,
+        "potassium_mg": 320,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "브런치 메뉴 중 비교적 가벼운 선택.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_087",
+      "category": "양식",
+      "name": "저염 마르게리타 피자 (홈메이드)",
+      "description": "치즈 양 줄이고 토마토와 바질로 단순하게 만든 피자",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "토르티야",
+          "amount": "1장"
+        },
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "모짜렐라",
+          "amount": "30g"
+        },
+        {
+          "name": "바질",
+          "amount": "약간"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "토르티야 위에 으깬 토마토를 펴 바릅니다."
+        },
+        {
+          "order": 2,
+          "content": "모짜렐라를 적게 올리고 200도 오븐에 8분 굽습니다."
+        },
+        {
+          "order": 3,
+          "content": "바질을 올려 마무리합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 14,
+        "sodium_mg": 480,
+        "potassium_mg": 320,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "일반 피자 대비 나트륨·인 부담 절반.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_088",
+      "category": "양식",
+      "name": "구운 두부 부리또 (저염)",
+      "description": "고기 대신 두부 사용, 시판 살사 양 줄인 부리또",
+      "difficulty": "보통",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "토르티야",
+          "amount": "1장"
+        },
+        {
+          "name": "두부",
+          "amount": "1/2모"
+        },
+        {
+          "name": "양상추",
+          "amount": "30g"
+        },
+        {
+          "name": "토마토",
+          "amount": "1/2개"
+        },
+        {
+          "name": "아보카도",
+          "amount": "1/4개"
+        },
+        {
+          "name": "살사",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "두부를 깍둑 썰어 굽습니다."
+        },
+        {
+          "order": 2,
+          "content": "토르티야에 모든 재료를 올려 말아냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 420,
+        "protein_g": 18,
+        "sodium_mg": 380,
+        "potassium_mg": 480,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "식물성 단백질 위주 부리또.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_089",
+      "category": "양식",
+      "name": "저염 키쉬 (채소 위주)",
+      "description": "치즈 줄이고 채소를 듬뿍 넣은 프랑스식 파이",
+      "difficulty": "어려움",
+      "time_min": 50,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "파이지",
+          "amount": "1장"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "우유",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "시금치",
+          "amount": "30g"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        },
+        {
+          "name": "소금",
+          "amount": "1/4작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "파이지에 볶은 채소를 깝니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀과 우유를 섞어 부은 뒤 200도 오븐에 25분 굽습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 14,
+        "sodium_mg": 380,
+        "potassium_mg": 320,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "브런치 메뉴. 1회 분량 조절 권장.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_090",
+      "category": "양식",
+      "name": "저염 콥 샐러드",
+      "description": "베이컨·치즈 양 줄이고 단백질만 깔끔하게 챙긴 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#양식"
+      ],
+      "ingredients": [
+        {
+          "name": "로메인",
+          "amount": "60g"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "아보카도",
+          "amount": "1/4개"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭과 달걀을 삶아 자릅니다."
+        },
+        {
+          "order": 2,
+          "content": "모든 재료를 그릇에 줄지어 담고 올리브유·레몬즙을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 28,
+        "sodium_mg": 280,
+        "potassium_mg": 480,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질 충분한 한 끼 샐러드.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_091",
+      "category": "디저트",
+      "name": "저염 단호박 푸딩",
+      "description": "달걀과 단호박으로 만든 부드러운 푸딩",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "단호박",
+          "amount": "100g"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "우유",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "단호박을 쪄서 으깹니다."
+        },
+        {
+          "order": 2,
+          "content": "달걀·우유·올리고당을 섞어 단호박과 합칩니다."
+        },
+        {
+          "order": 3,
+          "content": "그릇에 담아 찜기에 15분 쪄냅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 11,
+        "sodium_mg": 120,
+        "potassium_mg": 380,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간식 중 비교적 안전한 선택.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_092",
+      "category": "디저트",
+      "name": "사과 시나몬 베이크",
+      "description": "설탕 줄이고 시나몬 향으로 단맛 살린 따뜻한 디저트",
+      "difficulty": "쉬움",
+      "time_min": 25,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "사과",
+          "amount": "1개"
+        },
+        {
+          "name": "시나몬가루",
+          "amount": "1/2작은술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        },
+        {
+          "name": "버터",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "사과를 슬라이스합니다."
+        },
+        {
+          "order": 2,
+          "content": "버터·시나몬·올리고당과 섞어 그릇에 담습니다."
+        },
+        {
+          "order": 3,
+          "content": "180도 오븐에 15분 굽습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 1,
+        "sodium_mg": 20,
+        "potassium_mg": 240,
+        "phosphorus_mg": 30,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 무난한 가벼운 디저트.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_093",
+      "category": "디저트",
+      "name": "요거트 베리볼",
+      "description": "그릭요거트와 베리류의 단순한 조합",
+      "difficulty": "쉬움",
+      "time_min": 5,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "그릭요거트",
+          "amount": "100g"
+        },
+        {
+          "name": "블루베리",
+          "amount": "30g"
+        },
+        {
+          "name": "딸기",
+          "amount": "30g"
+        },
+        {
+          "name": "꿀",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "그릭요거트를 그릇에 담고 베리와 꿀을 올립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 12,
+        "sodium_mg": 60,
+        "potassium_mg": 280,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "간단한 단백질 보충 간식.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_094",
+      "category": "디저트",
+      "name": "저당 쌀 케이크",
+      "description": "설탕 줄이고 쌀가루로 만든 글루텐 프리 케이크",
+      "difficulty": "보통",
+      "time_min": 40,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "쌀가루",
+          "amount": "1컵"
+        },
+        {
+          "name": "달걀",
+          "amount": "2개"
+        },
+        {
+          "name": "올리고당",
+          "amount": "2큰술"
+        },
+        {
+          "name": "우유",
+          "amount": "1/4컵"
+        },
+        {
+          "name": "베이킹파우더",
+          "amount": "1/2작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "모든 재료를 섞어 반죽을 만듭니다."
+        },
+        {
+          "order": 2,
+          "content": "180도 오븐에 25분 굽습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 9,
+        "sodium_mg": 180,
+        "potassium_mg": 180,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "디저트 중 인 함량은 주의.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_095",
+      "category": "디저트",
+      "name": "배 콤포트",
+      "description": "설탕 줄이고 시나몬·레몬으로 끓인 따뜻한 배 디저트",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "배",
+          "amount": "1개"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1큰술"
+        },
+        {
+          "name": "시나몬가루",
+          "amount": "약간"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "물",
+          "amount": "1컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "배를 8등분 합니다."
+        },
+        {
+          "order": 2,
+          "content": "냄비에 모든 재료를 넣고 15분 푹 졸입니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 160,
+        "protein_g": 1,
+        "sodium_mg": 10,
+        "potassium_mg": 240,
+        "phosphorus_mg": 30,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "권장. 평소 식단으로 섭취 가능.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 무난히 섭취 가능."
+      },
+      "ai_summary": {
+        "headline": "CKD 전 단계 무난한 가벼운 디저트.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_096",
+      "category": "디저트",
+      "name": "저염 머핀 (블루베리)",
+      "description": "베이킹소다 양 줄이고 단맛 적게 만든 머핀",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "박력분",
+          "amount": "1컵"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "우유",
+          "amount": "1/3컵"
+        },
+        {
+          "name": "올리고당",
+          "amount": "2큰술"
+        },
+        {
+          "name": "블루베리",
+          "amount": "30g"
+        },
+        {
+          "name": "베이킹파우더",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가루류와 액체류를 따로 섞은 후 합칩니다."
+        },
+        {
+          "order": 2,
+          "content": "블루베리를 넣고 머핀틀에 담아 180도 오븐에 20분 굽습니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 7,
+        "sodium_mg": 180,
+        "potassium_mg": 180,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "디저트 치곤 가벼운 편.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "양호",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_097",
+      "category": "디저트",
+      "name": "딸기 우유 푸딩",
+      "description": "딸기와 우유로 만든 부드러운 디저트",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "우유",
+          "amount": "1컵"
+        },
+        {
+          "name": "딸기",
+          "amount": "60g"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1큰술"
+        },
+        {
+          "name": "젤라틴",
+          "amount": "5g"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "젤라틴을 미지근한 물에 녹입니다."
+        },
+        {
+          "order": 2,
+          "content": "우유·딸기·올리고당을 데우고 젤라틴을 섞어 그릇에 부어 굳힙니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 7,
+        "sodium_mg": 120,
+        "potassium_mg": 320,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "부드럽고 가벼운 디저트.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_098",
+      "category": "디저트",
+      "name": "고구마 라떼",
+      "description": "삶은 고구마와 우유로 만든 따뜻한 음료",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "고구마",
+          "amount": "1/2개"
+        },
+        {
+          "name": "우유",
+          "amount": "1컵"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "고구마를 1시간 물에 담가 칼륨을 뺀 후 찝니다."
+        },
+        {
+          "order": 2,
+          "content": "우유·고구마·올리고당을 함께 갈아 데웁니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 8,
+        "sodium_mg": 80,
+        "potassium_mg": 380,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "고구마 담그기로 칼륨 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_099",
+      "category": "디저트",
+      "name": "쌀가루 단팥죽 (저당)",
+      "description": "설탕 줄이고 팥의 단맛만 살린 따뜻한 디저트",
+      "difficulty": "보통",
+      "time_min": 60,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "팥",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "쌀가루",
+          "amount": "2큰술"
+        },
+        {
+          "name": "올리고당",
+          "amount": "1큰술"
+        },
+        {
+          "name": "물",
+          "amount": "3컵"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "팥을 끓여 첫물을 버리고 다시 물을 부어 1시간 끓입니다."
+        },
+        {
+          "order": 2,
+          "content": "팥을 으깨 쌀가루로 농도를 잡고 올리고당으로 단맛을 더합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 9,
+        "sodium_mg": 20,
+        "potassium_mg": 380,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "팥 첫물 버려 칼륨 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_100",
+      "category": "디저트",
+      "name": "저염 그래놀라 바",
+      "description": "견과류 양 줄이고 귀리 위주로 만든 홈메이드 바",
+      "difficulty": "보통",
+      "time_min": 30,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#디저트"
+      ],
+      "ingredients": [
+        {
+          "name": "귀리",
+          "amount": "1컵"
+        },
+        {
+          "name": "아몬드",
+          "amount": "20g"
+        },
+        {
+          "name": "건포도",
+          "amount": "20g"
+        },
+        {
+          "name": "올리고당",
+          "amount": "2큰술"
+        },
+        {
+          "name": "버터",
+          "amount": "1큰술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "모든 재료를 섞어 트레이에 평평하게 담습니다."
+        },
+        {
+          "order": 2,
+          "content": "180도 오븐에 15분 굽고 식힌 뒤 자릅니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 320,
+        "protein_g": 7,
+        "sodium_mg": 60,
+        "potassium_mg": 280,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "견과류 양 조절 시 CKD3 가능. 인 주의.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_101",
+      "category": "샐러드",
+      "name": "치킨 퀴노아 샐러드",
+      "description": "퀴노아와 닭가슴살로 든든한 한 끼 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "퀴노아",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "양상추",
+          "amount": "60g"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "퀴노아를 삶아 식힙니다."
+        },
+        {
+          "order": 2,
+          "content": "닭가슴살을 삶아 결대로 찢습니다."
+        },
+        {
+          "order": 3,
+          "content": "모든 재료를 섞고 올리브유·레몬즙으로 드레싱합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 28,
+        "sodium_mg": 220,
+        "potassium_mg": 480,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "단백질 충분한 한 끼 샐러드.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_102",
+      "category": "샐러드",
+      "name": "저염 콥 라이트",
+      "description": "베이컨 빼고 단순화한 단백질 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "로메인",
+          "amount": "60g"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "달걀",
+          "amount": "1개"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "아보카도",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "닭과 달걀을 삶아 자릅니다."
+        },
+        {
+          "order": 2,
+          "content": "모든 재료를 그릇에 담고 올리브유·레몬즙을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 26,
+        "sodium_mg": 240,
+        "potassium_mg": 480,
+        "phosphorus_mg": 260,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "균형 잡힌 한 끼 샐러드.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_103",
+      "category": "샐러드",
+      "name": "구운 두부 샐러드",
+      "description": "구운 두부로 식물성 단백질을 채운 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "두부",
+          "amount": "1/2모"
+        },
+        {
+          "name": "로메인",
+          "amount": "60g"
+        },
+        {
+          "name": "오이",
+          "amount": "1/2개"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "두부를 두툼하게 잘라 굽습니다."
+        },
+        {
+          "order": 2,
+          "content": "채소와 함께 그릇에 담고 드레싱을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 16,
+        "sodium_mg": 220,
+        "potassium_mg": 380,
+        "phosphorus_mg": 200,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "식물성 단백질 위주의 가벼운 한 끼.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_104",
+      "category": "샐러드",
+      "name": "연어 아보카도 샐러드",
+      "description": "연어와 아보카도의 좋은 지방 조합 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "연어",
+          "amount": "80g"
+        },
+        {
+          "name": "아보카도",
+          "amount": "1/4개"
+        },
+        {
+          "name": "양상추",
+          "amount": "60g"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "연어를 살짝 굽거나 회로 준비합니다."
+        },
+        {
+          "order": 2,
+          "content": "채소와 함께 그릇에 담고 드레싱을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 380,
+        "protein_g": 22,
+        "sodium_mg": 220,
+        "potassium_mg": 480,
+        "phosphorus_mg": 280,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "좋은 지방·단백질 조합. 칼륨·인 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_105",
+      "category": "샐러드",
+      "name": "병아리콩 채소 샐러드",
+      "description": "병아리콩으로 단백질·식이섬유 채운 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "병아리콩",
+          "amount": "1/2컵"
+        },
+        {
+          "name": "오이",
+          "amount": "1/2개"
+        },
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "병아리콩을 삶거나 캔에서 헹궈 둡니다."
+        },
+        {
+          "order": 2,
+          "content": "채소를 잘게 썰고 모두 섞어 드레싱을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 13,
+        "sodium_mg": 180,
+        "potassium_mg": 480,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "식물성 단백질 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_106",
+      "category": "샐러드",
+      "name": "저염 카프레제 샐러드",
+      "description": "모짜렐라 양 줄이고 토마토·바질로 만든 단순한 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "토마토",
+          "amount": "1개"
+        },
+        {
+          "name": "모짜렐라",
+          "amount": "30g"
+        },
+        {
+          "name": "바질",
+          "amount": "약간"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "토마토와 모짜렐라를 둥글게 썰어 번갈아 담습니다."
+        },
+        {
+          "order": 2,
+          "content": "바질을 올리고 올리브유·후추를 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 9,
+        "sodium_mg": 220,
+        "potassium_mg": 380,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "치즈 양만 줄이면 가벼운 사이드.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_107",
+      "category": "샐러드",
+      "name": "새우 망고 샐러드",
+      "description": "달콤한 망고와 새우의 가벼운 조합",
+      "difficulty": "쉬움",
+      "time_min": 15,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "새우",
+          "amount": "80g"
+        },
+        {
+          "name": "망고",
+          "amount": "1/2개"
+        },
+        {
+          "name": "양상추",
+          "amount": "60g"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1큰술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "새우를 삶거나 굽습니다."
+        },
+        {
+          "order": 2,
+          "content": "망고와 채소와 함께 담고 드레싱을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 16,
+        "sodium_mg": 280,
+        "potassium_mg": 380,
+        "phosphorus_mg": 240,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "새우는 인 함량 주의.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_108",
+      "category": "샐러드",
+      "name": "가지 구이 샐러드",
+      "description": "구운 가지에 발사믹 드레싱을 곁들인 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "가지",
+          "amount": "1개"
+        },
+        {
+          "name": "양상추",
+          "amount": "60g"
+        },
+        {
+          "name": "방울토마토",
+          "amount": "5개"
+        },
+        {
+          "name": "발사믹",
+          "amount": "1큰술"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "가지를 두툼하게 썰어 팬에 굽습니다."
+        },
+        {
+          "order": 2,
+          "content": "채소와 함께 담고 발사믹·올리브유로 드레싱합니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 180,
+        "protein_g": 4,
+        "sodium_mg": 180,
+        "potassium_mg": 380,
+        "phosphorus_mg": 100,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 칼륨 양 조절 권장.",
+        "CKD4": "섭취 가능. 1회 분량 기준 준수.",
+        "dialysis": "단백질 함량 낮음. 다른 끼니에서 보충 필요. 칼륨 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "가벼운 저단백 샐러드.",
+        "risk_flags": {
+          "단백질": "양호",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "양호"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_109",
+      "category": "샐러드",
+      "name": "저염 참치 샐러드",
+      "description": "물에 헹군 통조림 참치로 만든 가벼운 샐러드",
+      "difficulty": "쉬움",
+      "time_min": 10,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "참치캔",
+          "amount": "1/2캔"
+        },
+        {
+          "name": "양상추",
+          "amount": "60g"
+        },
+        {
+          "name": "오이",
+          "amount": "1/2개"
+        },
+        {
+          "name": "양파",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1작은술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "참치를 체에 받쳐 끓는 물로 헹궈 짠기와 기름을 뺍니다."
+        },
+        {
+          "order": 2,
+          "content": "채소와 함께 담고 드레싱을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 220,
+        "protein_g": 22,
+        "sodium_mg": 320,
+        "potassium_mg": 380,
+        "phosphorus_mg": 220,
+        "ckd_friendliness": "moderate",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 나트륨, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 나트륨, 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "참치 헹구기로 나트륨·기름 부담 낮춤.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "중간",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    },
+    {
+      "id": "recipe_110",
+      "category": "샐러드",
+      "name": "콜리플라워 라이스 샐러드",
+      "description": "콜리플라워를 쌀처럼 다져 만든 저탄수 샐러드",
+      "difficulty": "보통",
+      "time_min": 20,
+      "servings": 1,
+      "tags": [
+        "#저염식",
+        "#CKD3",
+        "#샐러드"
+      ],
+      "ingredients": [
+        {
+          "name": "콜리플라워",
+          "amount": "150g"
+        },
+        {
+          "name": "닭가슴살",
+          "amount": "60g"
+        },
+        {
+          "name": "파프리카",
+          "amount": "1/4개"
+        },
+        {
+          "name": "올리브유",
+          "amount": "1큰술"
+        },
+        {
+          "name": "레몬즙",
+          "amount": "1작은술"
+        },
+        {
+          "name": "후추",
+          "amount": "약간"
+        }
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "content": "콜리플라워를 푸드프로세서로 잘게 다집니다."
+        },
+        {
+          "order": 2,
+          "content": "팬에 살짝 볶아 식힙니다."
+        },
+        {
+          "order": 3,
+          "content": "닭가슴살과 파프리카를 더하고 드레싱을 뿌립니다."
+        }
+      ],
+      "nutrition": {
+        "kcal": 280,
+        "protein_g": 22,
+        "sodium_mg": 180,
+        "potassium_mg": 380,
+        "phosphorus_mg": 180,
+        "ckd_friendliness": "low_risk",
+        "estimated": true,
+        "verification_required": true
+      },
+      "ckd_guide": {
+        "CKD3": "섭취 가능. 단백질, 칼륨, 인 양 조절 권장.",
+        "CKD4": "주의. 1회 분량 줄이고 다른 끼니 단백질량 함께 조절.",
+        "dialysis": "단백질 보충에 도움. 칼륨, 인 조절 필요."
+      },
+      "ai_summary": {
+        "headline": "저탄수 단백질 위주 메뉴.",
+        "risk_flags": {
+          "단백질": "중간",
+          "나트륨": "양호",
+          "칼륨": "중간",
+          "인": "중간"
+        }
+      },
+      "created_at": "2026-05-09"
+    }
+  ]
+}
