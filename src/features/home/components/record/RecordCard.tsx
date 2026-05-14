@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { TouchableOpacity, Image, ImageSourcePropType } from "react-native"
+import { TouchableOpacity } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -9,7 +9,7 @@ interface RecordCardProps {
   title: string
   subtitle?: string
   onReset?: () => void
-  icon?: ImageSourcePropType
+  icon?: ReactNode
   children: ReactNode
 }
 
@@ -30,9 +30,7 @@ export function RecordCard({
       alignItems="center"
       gap="$3"
     >
-      {icon && (
-        <Image source={icon} style={{ width: 36, height: 36 }} />
-      )}
+      {icon}
       <YStack flex={1} justifyContent="center" gap="$1">
         <XStack justifyContent="space-between" alignItems="center">
           <Text

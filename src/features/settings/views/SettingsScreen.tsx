@@ -13,6 +13,7 @@ import { useAuth } from "@/src/hooks/useAuth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { useThemeStore, type ThemeMode } from "@/src/stores/themeStore"
+import { useTabVisibilityStore } from "@/src/stores/tabVisibilityStore"
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets()
@@ -22,6 +23,7 @@ export function SettingsScreen() {
   const { settings, updateSettings, requestAndEnable } = useNotifications(isAuthenticated)
 
   const { themeMode, setThemeMode } = useThemeStore()
+  const { showRecipeTab, showRestaurantTab, setShowRecipeTab, setShowRestaurantTab } = useTabVisibilityStore()
   const pushEnabled = settings.waterReminder.enabled || settings.mealReminder.enabled
   const [marketingEnabled, setMarketingEnabled] = useState(false)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
@@ -89,6 +91,23 @@ export function SettingsScreen() {
             )}
           </Pressable>
         ))}
+
+        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
+
+        {/* 탭 표시 설정 */}
+        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>탭 표시</ThemedText>
+        <ToggleItem
+          title="레시피 탭 표시"
+          description="하단 탭에서 레시피 탭을 활성화해요."
+          value={showRecipeTab}
+          onValueChange={setShowRecipeTab}
+        />
+        <ToggleItem
+          title="식당 탭 표시"
+          description="하단 탭에서 식당 탭을 활성화해요."
+          value={showRestaurantTab}
+          onValueChange={setShowRestaurantTab}
+        />
 
         <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
 

@@ -143,7 +143,6 @@ export function CharacterSection({
           alignItems="center"
           justifyContent="center"
           gap="$2"
-          paddingHorizontal={18}
           paddingVertical={4}
           borderRadius="$6"
         >
@@ -152,6 +151,7 @@ export function CharacterSection({
             fontSize={18}
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "black"}
+            numberOfLines={1}
           >
             {streakText}
           </Text>
@@ -161,7 +161,6 @@ export function CharacterSection({
           alignItems="center"
           justifyContent="center"
           gap="$2"
-          paddingHorizontal={18}
           paddingVertical={5}
           borderRadius="$6"
         >
@@ -170,6 +169,7 @@ export function CharacterSection({
             fontSize={18}
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "black"}
+            numberOfLines={1}
           >
             {guideText}
           </Text>

@@ -6,6 +6,8 @@ const MOCK_FOOD_CAMERA_RESULT: FoodCameraAnalyzeResult = {
   foodAnalysisResultId: 1,
   servings: 1,
   eatenPercentage: 100,
+  title: "김치찌개",
+  imageUrl: null,
   foods: [
     {
       name: "김치찌개",

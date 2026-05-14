@@ -1,8 +1,10 @@
 import type { CurationSectionData, PlaceRestaurant } from "../types"
+import type { RestaurantDataItem } from "./restaurantDataTypes"
+import restaurantsJson from "./restaurantsData.json"
 
 const PLACEHOLDER_IMAGE = require("@/assets/images/SIn_2.png")
 
-// Restaurant images
+// Restaurant images (existing curated photos)
 const CHOROK_GIMBAP = [
   require("@/assets/images/restaurant/chorok-gimbap-1.jpg"),
   require("@/assets/images/restaurant/chorok-gimbap-2.jpg"),
@@ -48,87 +50,87 @@ export const MAP_CENTER = {
   longitude: 127.0281,
 }
 
+// Derive tags from menu filter_scores
+function buildTags(item: RestaurantDataItem): string[] {
+  const tags: string[] = [item.cuisine]
+  if (item.menus.some((m) => m.filter_scores.low_sodium === "pass")) tags.push("저염")
+  if (item.menus.some((m) => m.filter_scores.low_potassium === "pass")) tags.push("저칼륨")
+  if (item.menus.some((m) => m.filter_scores.low_phosphorus === "pass")) tags.push("저인")
+  if (item.menus.some((m) => m.filter_scores.low_protein === "pass")) tags.push("저단백")
+  return tags
+}
+
+function toPlaceRestaurant(item: RestaurantDataItem): PlaceRestaurant {
+  return {
+    id: item.id,
+    name: item.name,
+    tags: buildTags(item),
+    description: item.description,
+    rating: item.rating,
+    reviewCount: item.review_count,
+    distance: "",
+    address: item.address,
+    latitude: item.lat,
+    longitude: item.lng,
+    images: [],
+    menuCount: item.menus.length,
+    safeMenuCount: item.menus.filter(
+      (m) => Object.values(m.filter_scores).filter((v) => v === "pass").length >= 3,
+    ).length,
+  }
+}
+
+const allRestaurants = (restaurantsJson as { restaurants: RestaurantDataItem[] }).restaurants
+
+const highlyRecommended = allRestaurants.filter((r) => r.safety_tier === "highly_recommended")
+const partial = allRestaurants.filter((r) => r.safety_tier === "partial")
+const limited = allRestaurants.filter((r) => r.safety_tier === "limited")
+
+export const CURATED_RESTAURANTS: PlaceRestaurant[] = allRestaurants.map(toPlaceRestaurant)
+
 export const MOCK_CURATION_SECTIONS: CurationSectionData[] = [
   {
-    id: "section-1",
-    title: "마포구 성산동 저염식당",
-    subtitle: "신장 건강을 위해 인증된 내주변 저염식당을 확인해보세요.",
-    restaurants: [
-      {
-        id: "r1",
-        name: "신신식당",
-        description: "저염식 한식으로 든든한 한 끼를 즐겨보세요",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "저당", "저염"],
-        address: "마포구 성산동 123",
-      },
-      {
-        id: "r2",
-        name: "신신식당",
-        description: "저염식 한식으로 든든한 한 끼를 즐겨보세요",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "저당", "저염"],
-        address: "마포구 성산동 456",
-      },
-      {
-        id: "r3",
-        name: "그린키친",
-        description: "신선한 채소로 만든 건강한 한 끼",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["양식", "저염", "샐러드"],
-        address: "마포구 성산동 789",
-      },
-      {
-        id: "r4",
-        name: "담백한상",
-        description: "담백하고 깔끔한 한식 정식 전문점",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "저당", "정식"],
-        address: "마포구 성산동 101",
-      },
-    ],
+    id: "section-highly-recommended",
+    title: "신장 건강 추천 식당",
+    subtitle: "신장 친화적인 메뉴 비율이 높은 안심 식당이에요.",
+    restaurants: highlyRecommended.map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      imageUri: PLACEHOLDER_IMAGE,
+      tags: buildTags(r),
+      address: r.address,
+    })),
   },
   {
-    id: "section-2",
-    title: "마포구 망원동 큐레이션",
-    subtitle: "신장 건강을 위해 인증된 내주변 저염식당을 확인해보세요.",
-    restaurants: [
-      {
-        id: "r5",
-        name: "맑은국밥",
-        description: "깔끔한 국물이 일품인 저염 국밥집",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "저염", "국밥"],
-        address: "마포구 성산동 202",
-      },
-      {
-        id: "r6",
-        name: "건강밥상",
-        description: "매일 달라지는 저염 건강 정식",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "저당", "저염"],
-        address: "마포구 성산동 303",
-      },
-      {
-        id: "r7",
-        name: "소금꽃",
-        description: "소금을 줄인 특별한 한식 코스",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "코스", "저염"],
-        address: "마포구 성산동 404",
-      },
-      {
-        id: "r8",
-        name: "채움밥집",
-        description: "영양 가득 저염식 가정식 백반",
-        imageUri: PLACEHOLDER_IMAGE,
-        tags: ["한식", "백반", "저염"],
-        address: "마포구 성산동 505",
-      },
-    ],
+    id: "section-partial",
+    title: "이용 가능한 식당",
+    subtitle: "메뉴 선택에 따라 안전하게 이용할 수 있어요.",
+    restaurants: partial.map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      imageUri: PLACEHOLDER_IMAGE,
+      tags: buildTags(r),
+      address: r.address,
+    })),
+  },
+  {
+    id: "section-limited",
+    title: "섭취량 조절이 필요한 식당",
+    subtitle: "담당 의료진과 상의 후 소량만 이용하세요.",
+    restaurants: limited.map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      imageUri: PLACEHOLDER_IMAGE,
+      tags: buildTags(r),
+      address: r.address,
+    })),
   },
 ]
 
+// Photo-backed place restaurants (curated with actual images)
 export const MOCK_PLACE_RESTAURANTS: PlaceRestaurant[] = [
   {
     id: "p1",

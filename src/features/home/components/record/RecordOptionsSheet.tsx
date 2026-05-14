@@ -14,18 +14,22 @@ import { tokens } from "@/src/theme/tokens"
 
 interface RecordOptionsSheetProps {
   open: boolean
+  mealLabel?: string
   onClose: () => void
   onCameraPhoto: () => void
   onTextRecord: () => void
   onRecipeLoad: () => void
+  onSkipMeal?: () => Promise<void>
 }
 
 export function RecordOptionsSheet({
   open,
+  mealLabel,
   onClose,
   onCameraPhoto,
   onTextRecord,
   onRecipeLoad,
+  onSkipMeal,
 }: RecordOptionsSheetProps) {
   const isDarkMode = useAppColorScheme() === "dark"
   const [isVisible, setIsVisible] = useState(false)
@@ -100,6 +104,18 @@ export function RecordOptionsSheet({
           >
             <View style={styles.handle} />
 
+            {mealLabel && (
+              <Text
+                fontSize="$5"
+                fontWeight="600"
+                color={isDarkMode ? "$textDark" : "$color"}
+                paddingTop="$2"
+                paddingBottom="$1"
+              >
+                {mealLabel} 기록
+              </Text>
+            )}
+
             <TouchableOpacity
               style={styles.option}
               onPress={() => handleSelect(onCameraPhoto)}
@@ -155,6 +171,24 @@ export function RecordOptionsSheet({
                 </Text>
               </XStack>
             </TouchableOpacity>
+
+            {onSkipMeal && (
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => handleSelect(onSkipMeal)}
+              >
+                <XStack alignItems="center" gap="$4">
+                  <Ionicons
+                    name="remove-circle-outline"
+                    size={24}
+                    color={tokens.color.grey5.val}
+                  />
+                  <Text fontSize="$4" fontWeight="500" color="$grey5">
+                    이 끼니 건너뛰기
+                  </Text>
+                </XStack>
+              </TouchableOpacity>
+            )}
           </YStack>
         </Animated.View>
       </View>

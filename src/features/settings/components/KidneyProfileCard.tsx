@@ -91,14 +91,16 @@ export function KidneyProfileCard({
               <Ionicons name="bar-chart-outline" size={24} color={tokens.color.sub8.val} />
             </View>
             <View style={styles.ckdTextBlock}>
-              <ThemedText style={[styles.ckdLabel, { color: c.textSub }]}>
-                신장 병기 (CKD)
-              </ThemedText>
-              <ThemedText style={[styles.ckdValue, { color: c.text }]}>
-                {ckdStageLabel}{" "}
-                <ThemedText style={[styles.ckdDialysis, { color: c.textSub }]}>
-                  ({isDialysis ? "투석 중" : "투석 안함"})
+              <View style={styles.ckdLabelRow}>
+                <ThemedText style={[styles.ckdLabel, { color: c.textSub }]}>
+                  신장 병기 (CKD)
                 </ThemedText>
+                <ThemedText style={[styles.ckdDialysis, { color: c.textSub }]}>
+                  {isDialysis ? "투석 중" : "투석 안함"}
+                </ThemedText>
+              </View>
+              <ThemedText style={[styles.ckdValue, { color: c.text }]}>
+                {ckdStageLabel}
               </ThemedText>
             </View>
           </View>
@@ -236,7 +238,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
-  ckdTextBlock: { gap: 2 },
+  ckdTextBlock: { flex: 1, gap: 2 },
+  ckdLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   ckdLabel: { fontSize: 12, fontWeight: "500" },
   ckdValue: { fontSize: 18, fontWeight: "700" },
   ckdDialysis: { fontSize: 14, fontWeight: "500" },
