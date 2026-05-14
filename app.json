@@ -29,7 +29,10 @@
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationQueriesSchemes": [
           "instagram-stories",
-          "instagram"
+          "instagram",
+          "kakaokompassauth",
+          "kakaolink",
+          "kakaotalk"
         ]
       }
     },
@@ -99,13 +102,40 @@
           "iosUrlScheme": "com.googleusercontent.apps.87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4"
         }
       ],
+      [
+        "@react-native-kakao/core",
+        {
+          "nativeAppKey": "8a0c04712b7195a565dd74c5897a1510",
+          "android": {
+            "kakaotalkLoginEnabled": true
+          },
+          "ios": {
+            "kakaotalkLoginEnabled": true
+          }
+        }
+      ],
       "expo-image",
       "expo-sharing",
       [
         "expo-build-properties",
         {
+          "ios": {
+            "deploymentTarget": "18.6",
+            "appleTeamId": "HJJNV9Y5W8",
+            "configurations": {
+              "Debug": {
+                "prebuild": "Debug"
+              },
+              "Release": {
+                "prebuild": "Release"
+              }
+            }
+          },
           "android": {
-            "newArchEnabled": false
+            "newArchEnabled": false,
+            "extraMavenRepos": [
+              "https://devrepo.kakao.com/nexus/content/groups/public/"
+            ]
           }
         }
       ]
