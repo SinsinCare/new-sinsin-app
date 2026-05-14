@@ -35,7 +35,8 @@ export function OnlyStepContent({
             onPress={() => onSelect(option.key)}
           >
             <XStack
-              height={56}
+              minHeight={56}
+              paddingVertical={14}
               borderRadius={12}
               borderWidth={1.5}
               borderColor={isSelected ? "#34D399" : unselectedBorder}
