@@ -5,10 +5,11 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin"
 import * as AppleAuthentication from "expo-apple-authentication"
+import { login as kakaoLogin } from "@react-native-kakao/user"
 import { logger } from "@/src/lib/logger"
 
 export interface SocialAuthResult {
-  provider: "google" | "apple"
+  provider: "google" | "apple" | "kakao"
   idToken: string
   email: string | null
   displayName: string | null
@@ -99,6 +100,49 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
   }
 }
 
+export async function signInWithKakao(): Promise<SocialAuthResult> {
+  console.log("[Kakao SDK] ─── signInWithKakao 진입 ───")
+
+  let token
+  try {
+    console.log("[Kakao SDK] kakaoLogin() 호출 시작")
+    token = await kakaoLogin()
+    console.log("[Kakao SDK] kakaoLogin() 완료")
+    console.log("[Kakao SDK] token keys:", Object.keys(token))
+    console.log("[Kakao SDK] accessToken 존재:", !!token.accessToken)
+    console.log("[Kakao SDK] accessToken 앞 8자:", token.accessToken?.slice(0, 8) + "…")
+    console.log("[Kakao SDK] accessTokenExpiresAt:", token.accessTokenExpiresAt)
+    console.log("[Kakao SDK] idToken 존재:", !!token.idToken)
+    console.log("[Kakao SDK] scopes:", token.scopes)
+  } catch (e: unknown) {
+    console.error("[Kakao SDK] kakaoLogin() 예외 발생")
+    console.error("[Kakao SDK] error type:", typeof e)
+    console.error("[Kakao SDK] error instanceof Error:", e instanceof Error)
+    if (e instanceof Error) {
+      console.error("[Kakao SDK] message:", e.message)
+      console.error("[Kakao SDK] name:", e.name)
+      console.error("[Kakao SDK] stack:", e.stack)
+    }
+    // Kakao SDK 에러 구조 (code/domain 필드 등)
+    if (e !== null && typeof e === "object") {
+      const kakaoErr = e as Record<string, unknown>
+      console.error("[Kakao SDK] code:", kakaoErr.code)
+      console.error("[Kakao SDK] domain:", kakaoErr.domain)
+      console.error("[Kakao SDK] 전체 객체:", JSON.stringify(kakaoErr, null, 2))
+    }
+    logger.error("[Kakao SignIn] login 실패", e)
+    throw e
+  }
+
+  console.log("[Kakao SDK] SocialAuthResult 반환 직전")
+  return {
+    provider: "kakao",
+    idToken: token.accessToken,
+    email: null,
+    displayName: null,
+  }
+}
+
 export function isUserCancelledError(error: unknown): boolean {
   // Google cancel
   if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -109,6 +153,13 @@ export function isUserCancelledError(error: unknown): boolean {
     error instanceof Error &&
     "code" in error &&
     (error as { code: string }).code === "ERR_REQUEST_CANCELED"
+  ) {
+    return true
+  }
+  // Kakao cancel (사용자가 카카오 로그인 화면을 닫음)
+  if (
+    error instanceof Error &&
+    (error.message.includes("cancel") || error.message.includes("Cancel"))
   ) {
     return true
   }

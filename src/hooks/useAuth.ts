@@ -4,6 +4,7 @@ import { authService } from "../services/auth/authService"
 import {
   signInWithGoogle as googleSignIn,
   signInWithApple as appleSignIn,
+  signInWithKakao as kakaoSignIn,
   isUserCancelledError,
 } from "../services/auth/socialAuthService"
 import { tokenService } from "../services/core/tokenService"
@@ -75,6 +76,42 @@ export function useAuth() {
     return result
   }
 
+  const signInWithKakao = async () => {
+    console.log("[useAuth] ─── signInWithKakao 시작 ───")
+
+    console.log("[useAuth] Step 1: kakaoSignIn() 호출")
+    let socialResult
+    try {
+      socialResult = await kakaoSignIn()
+      console.log("[useAuth] Step 1 완료: provider =", socialResult.provider)
+      console.log("[useAuth]   idToken(accessToken) 앞 8자:", socialResult.idToken?.slice(0, 8) + "…")
+    } catch (e) {
+      console.error("[useAuth] Step 1 실패: kakaoSignIn() 예외", e)
+      throw e
+    }
+
+    console.log("[useAuth] Step 2: authService.signInWithSocial() 호출")
+    let result
+    try {
+      result = await authService.signInWithSocial(
+        socialResult.provider,
+        socialResult.idToken,
+        socialResult.email,
+        socialResult.displayName,
+      )
+      console.log("[useAuth] Step 2 완료: accountState =", result.accountState)
+    } catch (e) {
+      console.error("[useAuth] Step 2 실패: signInWithSocial() 예외", e)
+      throw e
+    }
+
+    console.log("[useAuth] Step 3: setUser / setAccountState 호출")
+    setUser(result.user)
+    setAccountState(result.accountState)
+    console.log("[useAuth] ─── signInWithKakao 완료 ───")
+    return result
+  }
+
   const signOut = async () => {
     await authService.signOut()
     await tokenService.clearTokens()
@@ -90,6 +127,7 @@ export function useAuth() {
     signInWithEmail,
     signInWithGoogle,
     signInWithApple,
+    signInWithKakao,
     isUserCancelledError,
     signOut,
   }
