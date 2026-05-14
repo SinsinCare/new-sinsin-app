@@ -1,11 +1,7 @@
 import { Text, YStack } from "tamagui"
 import { EdemaRecord } from "./EdemaRecord"
 import { WeightRecord } from "./WeightRecord"
-import {
-  EdemaLevel,
-  EDEMA_LEVEL_TO_LABEL,
-  LABEL_TO_EDEMA_LEVEL,
-} from "../../data/EdemaConstants"
+import { EdemaLevel } from "../../data/EdemaConstants"
 import { useState, useEffect } from "react"
 import { decreaseWeight, increaseWeight } from "../../utils/adjustWeight"
 import type { DateAnalysisBodyRecord } from "@/src/types"
@@ -32,17 +28,11 @@ export function WeightEdemaTracker({
   useEffect(() => {
     const today = bodyRecords?.today ?? null
     setWeight(today?.weightKg != null ? String(today.weightKg) : "")
-    setEdemaLevel(
-      today?.edemaLevel
-        ? (EDEMA_LEVEL_TO_LABEL[today.edemaLevel] ?? null)
-        : null,
-    )
+    setEdemaLevel(today?.edemaLevel ?? null)
   }, [bodyRecords])
 
   const yesterdayWeight = bodyRecords?.previous?.weightKg ?? null
-  const yesterdayEdema = bodyRecords?.previous?.edemaLevel
-    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
-    : null
+  const yesterdayEdema = bodyRecords?.previous?.edemaLevel ?? null
 
   const selectDate = selectedDate.toISOString().split("T")[0]
 
@@ -55,7 +45,7 @@ export function WeightEdemaTracker({
 
   const handleEdemaSave = (edemaLevel: EdemaLevel) => {
     setEdemaLevel(edemaLevel)
-    updateEdema(LABEL_TO_EDEMA_LEVEL[edemaLevel], selectDate)
+    updateEdema(edemaLevel, selectDate)
   }
 
   const handleDecrease = () => {
