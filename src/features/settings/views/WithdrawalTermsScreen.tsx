@@ -13,7 +13,7 @@ import {
   WITHDRAWAL_NOTICE,
   WITHDRAWAL_TERMS,
 } from "@/src/features/settings/data/constants"
-import { api } from "@/src/services/core/apiClient"
+import { userService } from "@/src/services/auth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 export function WithdrawalTermsScreen() {
@@ -29,7 +29,7 @@ export function WithdrawalTermsScreen() {
     setModalVisible(false)
     setLoading(true)
     try {
-      await api.delete("/user")
+      await userService.deleteAccount()
       router.push("/(settings)/withdrawal-complete")
     } catch {
       Alert.alert("오류", "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.")
