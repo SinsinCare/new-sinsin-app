@@ -110,14 +110,17 @@ export function ThreeDaysCalendar({
             const isSelected = isSameDay(date, selectedDate)
             const hasRecord = recordedDates.some((r) => isSameDay(r, date))
             const isFuture = date > today && !isSameDay(date, today)
+            const isToday = isSameDay(date, today)
 
             const cellBg = isSelected
               ? tokens.color.primary7.val
-              : hasRecord
-                ? recordBg
-                : "transparent"
+              : isToday
+                ? tokens.color.primaryAccent.val
+                : hasRecord
+                  ? recordBg
+                  : "transparent"
 
-            const textColor = isSelected
+            const textColor = isSelected || isToday
               ? "white"
               : isFuture
                 ? futureText

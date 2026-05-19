@@ -175,47 +175,37 @@ export function MonthCalendarSheet({
                       handleSelectDate(new Date(viewYear, viewMonth, day))
                     }
                   >
-                    <YStack alignItems="center" gap={3}>
-                      <YStack
-                        width={32}
-                        height={32}
-                        borderRadius={16}
-                        alignItems="center"
-                        justifyContent="center"
-                        backgroundColor={
-                          selected
-                            ? tokens.color.primary7.val
-                            : isToday
-                              ? isDarkMode
-                                ? tokens.color.grey3.val
-                                : tokens.color.grey8.val
+                    <YStack
+                      width={32}
+                      height={32}
+                      borderRadius={16}
+                      alignItems="center"
+                      justifyContent="center"
+                      backgroundColor={
+                        selected
+                          ? tokens.color.primary7.val
+                          : isToday
+                            ? tokens.color.primaryAccent.val
+                            : hasRecord
+                              ? isDarkMode ? "#3A3A3F" : "#EBEBED"
                               : "transparent"
+                      }
+                    >
+                      <Text
+                        fontSize="$4"
+                        fontWeight={selected || isToday ? "700" : "400"}
+                        color={
+                          selected || isToday
+                            ? tokens.color.pureWhite.val
+                            : disabled
+                              ? tokens.color.grey7.val
+                              : hasRecord
+                                ? isDarkMode ? tokens.color.textDarkSub.val : "#555"
+                                : textColor
                         }
                       >
-                        <Text
-                          fontSize="$4"
-                          fontWeight={selected || isToday ? "700" : "400"}
-                          color={
-                            selected
-                              ? tokens.color.pureWhite.val
-                              : disabled
-                                ? tokens.color.grey7.val
-                                : textColor
-                          }
-                        >
-                          {day}
-                        </Text>
-                      </YStack>
-                      <YStack
-                        width={5}
-                        height={5}
-                        borderRadius={3}
-                        backgroundColor={
-                          hasRecord
-                            ? tokens.color.primary7.val
-                            : "transparent"
-                        }
-                      />
+                        {day}
+                      </Text>
                     </YStack>
                   </TouchableOpacity>
                 )
