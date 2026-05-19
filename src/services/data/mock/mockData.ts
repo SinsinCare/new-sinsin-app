@@ -14,7 +14,7 @@ export const MOCK_USER_PROFILE: UserProfile = {
   displayName: "김철수",
   nickname: "철수",
   birthDate: "1975-03-15",
-  gender: "male",
+  gender: "MALE",
   height: 172,
   weight: 68,
   ckdStage: 3,

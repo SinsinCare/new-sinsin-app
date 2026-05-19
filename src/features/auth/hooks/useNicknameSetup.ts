@@ -43,7 +43,7 @@ export function useNicknameSetup() {
         await api.patch("/user/profile", {
           nickName: data.nickname,
           name: signupState.name,
-          gender: signupState.gender.toUpperCase(),
+          gender: signupState.gender,
         })
       }
 
