@@ -83,9 +83,10 @@ export function NicknameEditScreen() {
         setServerError("이미 사용 중인 닉네임입니다.")
         return
       }
-      await api.post("/user/profile/info", {
+      await api.patch("/user/profile", {
         nickName: nickname,
-        gender: profile?.gender ?? "",
+        name: profile?.name ?? "",
+        gender: profile?.gender ?? null,
       })
       await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
