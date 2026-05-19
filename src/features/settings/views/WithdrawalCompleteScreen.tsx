@@ -5,13 +5,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
-import { useAuth } from "@/src/hooks/useAuth"
+import { useAuthStore, useUserStore } from "@/src/stores"
+import { tokenService } from "@/src/services/core/tokenService"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
 export function WithdrawalCompleteScreen() {
   const insets = useSafeAreaInsets()
-  const { signOut } = useAuth()
+  const resetAuth = useAuthStore((s) => s.reset)
+  const resetProfile = useUserStore((s) => s.reset)
   const c = useSettingsColors()
+
+  const handleComplete = async () => {
+    try {
+      await tokenService.clearTokens()
+    } finally {
+      // Account already deleted — always reset local state and navigate out
+      resetProfile()
+      resetAuth()
+    }
+  }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
@@ -29,7 +41,7 @@ export function WithdrawalCompleteScreen() {
       <BottomActionBar
         label="메인 홈으로 가기"
         paddingBottom={insets.bottom + 16}
-        onPress={signOut}
+        onPress={handleComplete}
       />
     </ThemedView>
   )
