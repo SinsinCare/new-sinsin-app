@@ -295,6 +295,25 @@ export function CuratedRecipeDetailSheet({
                     </Text>
                   </XStack>
                 )}
+                {recipe.ckd_guide.notes && (
+                  <XStack gap={10} alignItems="flex-start">
+                    <XStack
+                      paddingHorizontal={8}
+                      paddingVertical={3}
+                      borderRadius={6}
+                      backgroundColor="#F3F4F6"
+                      minWidth={60}
+                      justifyContent="center"
+                    >
+                      <Text fontSize={12} fontWeight="600" fontFamily="$body" color="#6B7280">
+                        참고
+                      </Text>
+                    </XStack>
+                    <Text fontSize={14} fontFamily="$body" color={palette.sub} flex={1} lineHeight={20}>
+                      {recipe.ckd_guide.notes}
+                    </Text>
+                  </XStack>
+                )}
               </YStack>
             </YStack>
           )}

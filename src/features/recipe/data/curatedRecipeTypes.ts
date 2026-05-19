@@ -23,6 +23,7 @@ export interface CuratedRecipeCkdGuide {
   CKD3?: string
   CKD4?: string
   dialysis?: string
+  notes?: string
 }
 
 export interface CuratedRecipeAiSummary {
