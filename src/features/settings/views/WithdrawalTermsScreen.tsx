@@ -15,6 +15,7 @@ import {
 } from "@/src/features/settings/data/constants"
 import { userService } from "@/src/services/auth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { logger } from "@/src/lib/logger"
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
@@ -31,7 +32,8 @@ export function WithdrawalTermsScreen() {
     try {
       await userService.deleteAccount()
       router.push("/(settings)/withdrawal-complete")
-    } catch {
+    } catch (err) {
+      logger.error("[WithdrawalTermsScreen] 탈퇴 실패", err)
       Alert.alert("오류", "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.")
     } finally {
       setLoading(false)

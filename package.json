@@ -1,6 +1,6 @@
 {
   "name": "sinsin-rn-temp",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -109,6 +109,7 @@
     "lint-staged": "16.2.7",
     "prettier": "3.8.1",
     "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
     "typescript": "~5.9.2"
   },
   "private": true
