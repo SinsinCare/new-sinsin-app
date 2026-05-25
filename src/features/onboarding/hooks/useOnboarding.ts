@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
-import { Alert } from "react-native"
+import { Alert, BackHandler } from "react-native"
 import { router } from "expo-router"
 import { onboardingService } from "@/src/services/data/onboardingService"
 import { useOnboardingStore } from "@/src/stores/onboardingStore"
@@ -167,7 +167,7 @@ export function useOnboarding() {
     }
   }
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
@@ -175,7 +175,20 @@ export function useOnboarding() {
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
-  }
+  }, [phase, currentStepIndex, resetOnboarding, setCurrentStepIndex])
+
+  // Android 하드웨어 백 버튼: 온보딩 중 앱 종료 방지
+  useEffect(() => {
+    const onBackPress = () => {
+      if (phase === "welcome") {
+        return true // welcome에서는 뒤로 가기 차단 (앱 종료 방지)
+      }
+      handleBack()
+      return true
+    }
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress)
+    return () => sub.remove()
+  }, [phase, handleBack])
 
   const handleSkip = async () => {
     if (!user) return
