@@ -106,9 +106,20 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
 export async function signInWithKakao(): Promise<SocialAuthResult> {
   logger.debug("[Kakao SignIn] 시작")
 
-  await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
-  const keyHash = await getKeyHashAndroid()
-  console.log("[Kakao SDK] 실제 keyHash:", keyHash)
+  try {
+    await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
+    logger.debug("[Kakao SignIn] SDK 초기화 완료, appKey:", KAKAO_NATIVE_APP_KEY)
+  } catch (e) {
+    logger.error("[Kakao SignIn] SDK 초기화 실패", e)
+    throw e
+  }
+
+  try {
+    const keyHash = await getKeyHashAndroid()
+    logger.debug("[Kakao SignIn] keyHash:", keyHash)
+  } catch (e) {
+    logger.error("[Kakao SignIn] keyHash 조회 실패", e)
+  }
 
   let token
   try {
@@ -116,18 +127,19 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     logger.debug("[Kakao SignIn] login 완료", {
       hasAccessToken: !!token.accessToken,
       hasIdToken: !!token.idToken,
+      tokenType: token.tokenType,
+      scopes: token.scopes,
     })
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      logger.debug("[Kakao SignIn] login 실패", e.name, e.message)
-    }
-    if (e !== null && typeof e === "object") {
-      const kakaoErr = e as Record<string, unknown>
-      logger.debug("[Kakao SignIn] error metadata", {
-        code: kakaoErr.code,
-        domain: kakaoErr.domain,
-      })
-    }
+    const err = e as Record<string, unknown>
+    logger.error("[Kakao SignIn] login 실패", {
+      name: e instanceof Error ? e.name : "unknown",
+      message: e instanceof Error ? e.message : String(e),
+      code: err?.code,
+      domain: err?.domain,
+      nativeError: err?.nativeError,
+      userInfo: err?.userInfo,
+    })
     throw e
   }
 
