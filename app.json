@@ -105,7 +105,7 @@
       [
         "@react-native-kakao/core",
         {
-          "nativeAppKey": "8a0c04712b7195a565dd74c5897a1510",
+          "nativeAppKey": "709c22f6c6227095a316851f1f902189",
           "android": {
             "kakaotalkLoginEnabled": true
           },

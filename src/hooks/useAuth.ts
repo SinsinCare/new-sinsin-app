@@ -77,20 +77,17 @@ export function useAuth() {
   }
 
   const signInWithKakao = async () => {
-    console.log("[useAuth] ─── signInWithKakao 시작 ───")
+    logger.debug("[useAuth] signInWithKakao 시작")
 
-    console.log("[useAuth] Step 1: kakaoSignIn() 호출")
     let socialResult
     try {
       socialResult = await kakaoSignIn()
-      console.log("[useAuth] Step 1 완료: provider =", socialResult.provider)
-      console.log("[useAuth]   idToken(accessToken) 앞 8자:", socialResult.idToken?.slice(0, 8) + "…")
+      logger.debug("[useAuth] Kakao provider 확인", socialResult.provider)
     } catch (e) {
-      console.error("[useAuth] Step 1 실패: kakaoSignIn() 예외", e)
+      logger.debug("[useAuth] kakaoSignIn 실패", e)
       throw e
     }
 
-    console.log("[useAuth] Step 2: authService.signInWithSocial() 호출")
     let result
     try {
       result = await authService.signInWithSocial(
@@ -99,16 +96,14 @@ export function useAuth() {
         socialResult.email,
         socialResult.displayName,
       )
-      console.log("[useAuth] Step 2 완료: accountState =", result.accountState)
+      logger.debug("[useAuth] Kakao 로그인 완료", result.accountState)
     } catch (e) {
-      console.error("[useAuth] Step 2 실패: signInWithSocial() 예외", e)
+      logger.debug("[useAuth] Kakao 서버 로그인 실패", e)
       throw e
     }
 
-    console.log("[useAuth] Step 3: setUser / setAccountState 호출")
     setUser(result.user)
     setAccountState(result.accountState)
-    console.log("[useAuth] ─── signInWithKakao 완료 ───")
     return result
   }
 

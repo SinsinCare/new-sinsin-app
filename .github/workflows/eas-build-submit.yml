@@ -1,0 +1,70 @@
+name: EAS Build & Submit
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: '빌드 플랫폼'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+      submit:
+        description: '스토어 자동 제출'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  build-and-submit:
+    name: Build & Submit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build & Submit (tag push)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          eas build \
+            --platform all \
+            --profile production \
+            --auto-submit \
+            --non-interactive
+
+      - name: Build & Submit (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ inputs.submit }}" = "true" ]; then
+            eas build \
+              --platform ${{ inputs.platform }} \
+              --profile production \
+              --auto-submit \
+              --non-interactive
+          else
+            eas build \
+              --platform ${{ inputs.platform }} \
+              --profile production \
+              --non-interactive
+          fi

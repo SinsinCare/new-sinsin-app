@@ -6,7 +6,10 @@ import {
 } from "@react-native-google-signin/google-signin"
 import * as AppleAuthentication from "expo-apple-authentication"
 import { login as kakaoLogin } from "@react-native-kakao/user"
+import { initializeKakaoSDK, getKeyHashAndroid } from "@react-native-kakao/core"
 import { logger } from "@/src/lib/logger"
+
+const KAKAO_NATIVE_APP_KEY = "709c22f6c6227095a316851f1f902189"
 
 export interface SocialAuthResult {
   provider: "google" | "apple" | "kakao"
@@ -101,40 +104,33 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
 }
 
 export async function signInWithKakao(): Promise<SocialAuthResult> {
-  console.log("[Kakao SDK] ─── signInWithKakao 진입 ───")
+  logger.debug("[Kakao SignIn] 시작")
+
+  await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
+  const keyHash = await getKeyHashAndroid()
+  console.log("[Kakao SDK] 실제 keyHash:", keyHash)
 
   let token
   try {
-    console.log("[Kakao SDK] kakaoLogin() 호출 시작")
     token = await kakaoLogin()
-    console.log("[Kakao SDK] kakaoLogin() 완료")
-    console.log("[Kakao SDK] token keys:", Object.keys(token))
-    console.log("[Kakao SDK] accessToken 존재:", !!token.accessToken)
-    console.log("[Kakao SDK] accessToken 앞 8자:", token.accessToken?.slice(0, 8) + "…")
-    console.log("[Kakao SDK] accessTokenExpiresAt:", token.accessTokenExpiresAt)
-    console.log("[Kakao SDK] idToken 존재:", !!token.idToken)
-    console.log("[Kakao SDK] scopes:", token.scopes)
+    logger.debug("[Kakao SignIn] login 완료", {
+      hasAccessToken: !!token.accessToken,
+      hasIdToken: !!token.idToken,
+    })
   } catch (e: unknown) {
-    console.error("[Kakao SDK] kakaoLogin() 예외 발생")
-    console.error("[Kakao SDK] error type:", typeof e)
-    console.error("[Kakao SDK] error instanceof Error:", e instanceof Error)
     if (e instanceof Error) {
-      console.error("[Kakao SDK] message:", e.message)
-      console.error("[Kakao SDK] name:", e.name)
-      console.error("[Kakao SDK] stack:", e.stack)
+      logger.debug("[Kakao SignIn] login 실패", e.name, e.message)
     }
-    // Kakao SDK 에러 구조 (code/domain 필드 등)
     if (e !== null && typeof e === "object") {
       const kakaoErr = e as Record<string, unknown>
-      console.error("[Kakao SDK] code:", kakaoErr.code)
-      console.error("[Kakao SDK] domain:", kakaoErr.domain)
-      console.error("[Kakao SDK] 전체 객체:", JSON.stringify(kakaoErr, null, 2))
+      logger.debug("[Kakao SignIn] error metadata", {
+        code: kakaoErr.code,
+        domain: kakaoErr.domain,
+      })
     }
-    logger.error("[Kakao SignIn] login 실패", e)
     throw e
   }
 
-  console.log("[Kakao SDK] SocialAuthResult 반환 직전")
   return {
     provider: "kakao",
     idToken: token.accessToken,

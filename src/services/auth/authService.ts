@@ -19,59 +19,51 @@ function getRealAuthService(): IAuthService {
       email?: string | null,
       displayName?: string | null,
     ): Promise<{ user: AppUser; accountState: string }> {
-      console.log("[authService] ─── signInWithSocial 진입 ───")
-      console.log("[authService] provider:", provider)
-      console.log("[authService] idToken 앞 8자:", idToken?.slice(0, 8) + "…")
-      console.log("[authService] idToken 길이:", idToken?.length)
-      console.log("[authService] email:", email)
+      logger.debug("[authService] signInWithSocial 시작", provider)
 
       let data
       try {
-        console.log("[authService] POST /auth/social-login 요청")
         const response = await publicApi.post<ApiResponse<LoginResult>>(
           "/auth/social-login",
           { provider, idToken },
         )
-        console.log("[authService] HTTP status:", response.status)
-        console.log("[authService] 응답 isSuccess:", response.data?.isSuccess)
-        console.log("[authService] 응답 code:", response.data?.code)
         data = response.data
-        console.log("[authService] accountState:", data.result.accountState)
+        logger.debug(
+          "[authService] social login 응답",
+          response.status,
+          data.result.accountState,
+        )
       } catch (error: unknown) {
-        console.error("[authService] POST /auth/social-login 실패")
-        if (error !== null && typeof error === "object" && "isAxiosError" in error) {
+        if (
+          error !== null &&
+          typeof error === "object" &&
+          "isAxiosError" in error
+        ) {
           const axErr = error as {
             isAxiosError: boolean
             message: string
-            response?: { status: number; data: unknown; headers: unknown }
+            response?: { status: number }
             request?: unknown
-            config?: { url?: string; baseURL?: string; method?: string }
+            config?: { url?: string; method?: string }
           }
-          console.error("[authService] Axios 에러 여부:", axErr.isAxiosError)
-          console.error("[authService] message:", axErr.message)
-          console.error("[authService] config.url:", axErr.config?.url)
-          console.error("[authService] config.baseURL:", axErr.config?.baseURL)
-          console.error("[authService] config.method:", axErr.config?.method)
-          if (axErr.response) {
-            console.error("[authService] HTTP status:", axErr.response.status)
-            console.error("[authService] 응답 body:", JSON.stringify(axErr.response.data, null, 2))
-          } else if (axErr.request) {
-            console.error("[authService] 응답 없음 (네트워크 오류 or 타임아웃)")
-          }
+          logger.debug("[authService] social login 실패", {
+            isAxiosError: axErr.isAxiosError,
+            message: axErr.message,
+            method: axErr.config?.method,
+            url: axErr.config?.url,
+            status: axErr.response?.status,
+            hasRequest: !!axErr.request,
+          })
         } else if (error instanceof Error) {
-          console.error("[authService] Error message:", error.message)
-          console.error("[authService] stack:", error.stack)
+          logger.debug("[authService] social login 실패", error.message)
         } else {
-          console.error("[authService] 알 수 없는 에러:", JSON.stringify(error))
+          logger.debug("[authService] social login 실패", "unknown error")
         }
-        logger.error("[authService] /auth/social-login 실패", error)
         throw error
       }
 
       const { accessToken, refreshToken, accountState } = data.result
-      console.log("[authService] 토큰 저장 중... accessToken 앞 8자:", accessToken?.slice(0, 8) + "…")
       await tokenService.setTokens(accessToken, refreshToken)
-      console.log("[authService] 토큰 저장 완료")
 
       const user: AppUser = {
         uid: email ?? provider,
@@ -79,7 +71,7 @@ function getRealAuthService(): IAuthService {
         displayName: displayName ?? null,
       }
 
-      console.log("[authService] ─── signInWithSocial 완료:", accountState, "───")
+      logger.debug("[authService] signInWithSocial 완료", accountState)
       return { user, accountState }
     },
 

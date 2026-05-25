@@ -14,10 +14,26 @@ import {
   mapMessage,
 } from "../../types/chat"
 import type { ApiResponse } from "../../types/api"
+import type { TokenRefreshResult } from "../../types/auth"
 import { isMockMode } from "../../config/appConfig"
-import { api, tokenService } from "../core"
+import { api, publicApi, tokenService } from "../core"
 
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? "<backend-api-base-url>"
+const BASE_URL =
+  process.env.EXPO_PUBLIC_BACKEND_URL ??
+  "<backend-api-base-url>"
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = await tokenService.getRefreshToken()
+  if (!refreshToken) return null
+
+  const { data } = await publicApi.post<ApiResponse<TokenRefreshResult>>(
+    "/auth/tokens/refresh",
+    { refreshToken },
+  )
+  const { accessToken, refreshToken: newRefreshToken } = data.result
+  await tokenService.setTokens(accessToken, newRefreshToken)
+  return accessToken
+}
 
 function createRealChatService(): ChatService {
   return {
@@ -69,35 +85,40 @@ function createRealChatService(): ChatService {
     ) {
       const token = await tokenService.getAccessToken()
 
-      const formData = new FormData()
-      formData.append("content", content)
-      formData.append("messageType", "TEXT")
-      formData.append("userCategory", userCategory)
+      const buildFormData = () => {
+        const formData = new FormData()
+        formData.append("content", content)
+        formData.append("messageType", "TEXT")
+        formData.append("userCategory", userCategory)
+        return formData
+      }
 
-      return new Promise<ReturnType<typeof mapMessage>>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open(
-          "POST",
-          `${BASE_URL}/chat/conversations/${conversationId}/messages`,
-        )
-        xhr.setRequestHeader("Authorization", `Bearer ${token}`)
-        xhr.setRequestHeader("Accept", "text/event-stream")
+      const sendWithToken = (
+        accessToken: string | null,
+        retryOnUnauthorized: boolean,
+      ): Promise<ReturnType<typeof mapMessage>> =>
+        new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open(
+            "POST",
+            `${BASE_URL}/chat/conversations/${conversationId}/messages`,
+          )
+          if (accessToken) {
+            xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
+          }
+          xhr.setRequestHeader("Accept", "text/event-stream")
 
-        let fullContent = ""
-        let messageId: number | null = null
-        let category: ChatCategory | null = null
-        let categoryLabel: string | null = null
-        let processedLength = 0
+          let fullContent = ""
+          let messageId: number | null = null
+          let category: ChatCategory | null = null
+          let categoryLabel: string | null = null
+          let processedLength = 0
+          let pendingLine = ""
 
-        xhr.onprogress = () => {
-          const newData = xhr.responseText.substring(processedLength)
-          processedLength = xhr.responseText.length
-
-          const lines = newData.split("\n")
-          for (const line of lines) {
-            if (!line.startsWith("data:")) continue
+          const processLine = (line: string) => {
+            if (!line.startsWith("data:")) return
             const data = line.slice(5).trim()
-            if (data === "[DONE]") continue
+            if (data === "[DONE]") return
 
             try {
               const parsed = JSON.parse(data)
@@ -110,41 +131,62 @@ function createRealChatService(): ChatService {
               if (parsed.categoryLabel != null)
                 categoryLabel = parsed.categoryLabel
             } catch {
-              // plain text chunk
-              if (data && data !== "[DONE]") {
+              // Some older responses may stream plain text in data lines.
+              if (data) {
                 fullContent += data
                 onChunk?.(fullContent)
               }
             }
           }
-        }
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(
-              mapMessage(
-                {
-                  messageId: messageId ?? -1,
-                  role: "ASSISTANT",
-                  content: fullContent,
-                  category,
-                  categoryLabel,
-                  createdAt: new Date().toISOString(),
-                },
-                conversationId,
-              ),
-            )
-          } else {
-            reject(new Error(`sendMessage failed: ${xhr.status}`))
+          xhr.onprogress = () => {
+            const newData = xhr.responseText.substring(processedLength)
+            processedLength = xhr.responseText.length
+
+            const lines = (pendingLine + newData).split(/\r?\n/)
+            pendingLine = lines.pop() ?? ""
+            for (const line of lines) {
+              processLine(line)
+            }
           }
-        }
 
-        xhr.onerror = () => {
-          reject(new Error("Network error during sendMessage"))
-        }
+          xhr.onload = async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (pendingLine) processLine(pendingLine)
+              resolve(
+                mapMessage(
+                  {
+                    messageId: messageId ?? -1,
+                    role: "ASSISTANT",
+                    content: fullContent,
+                    category,
+                    categoryLabel,
+                    createdAt: new Date().toISOString(),
+                  },
+                  conversationId,
+                ),
+              )
+            } else if (xhr.status === 401 && retryOnUnauthorized) {
+              try {
+                const newToken = await refreshAccessToken()
+                resolve(await sendWithToken(newToken, false))
+              } catch (error) {
+                await tokenService.clearTokens()
+                reject(error)
+              }
+            } else {
+              reject(new Error(`sendMessage failed: ${xhr.status}`))
+            }
+          }
 
-        xhr.send(formData)
-      })
+          xhr.onerror = () => {
+            reject(new Error("Network error during sendMessage"))
+          }
+
+          xhr.send(buildFormData())
+        })
+
+      return sendWithToken(token, true)
     },
 
     async generateSummary(conversationId: number) {

@@ -9,6 +9,7 @@ google-play-key.json
 
 # Superpowers brainstorming
 .superpowers/
+.claude/
 
 # dependencies
 node_modules/
@@ -46,6 +47,7 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+tests/.env.test
 
 # Google OAuth credentials
 *.apps.googleusercontent.com.plist

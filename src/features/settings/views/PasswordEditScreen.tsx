@@ -20,7 +20,8 @@ import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColo
 import { tokens } from "@/src/theme/tokens"
 
 // 영문 대문자, 소문자, 숫자, 특수문자 포함 6~18자
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
+const PASSWORD_REGEX =
+  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
 
 export function PasswordEditScreen() {
   const insets = useSafeAreaInsets()
@@ -28,17 +29,26 @@ export function PasswordEditScreen() {
   const { token } = useLocalSearchParams<{ token?: string }>()
   const c = useSettingsColors()
 
+  const [currentPassword, setCurrentPassword] = useState("")
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
+  const [currentPasswordFocused, setCurrentPasswordFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
   const [confirmFocused, setConfirmFocused] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  const isResetFlow = Boolean(token)
+  const isCurrentPasswordValid = isResetFlow || currentPassword.length >= 8
   const isPasswordValid = PASSWORD_REGEX.test(password)
   const hasConfirm = confirm.length > 0
   const isMatch = password === confirm
-  const canSubmit = isPasswordValid && hasConfirm && isMatch && !isSubmitting
+  const canSubmit =
+    isCurrentPasswordValid &&
+    isPasswordValid &&
+    hasConfirm &&
+    isMatch &&
+    !isSubmitting
 
   const confirmMessage = hasConfirm
     ? isMatch
@@ -51,7 +61,11 @@ export function PasswordEditScreen() {
     setIsSubmitting(true)
     setSubmitError(null)
     try {
-      await passwordService.changePassword(password, token)
+      await passwordService.changePassword(
+        password,
+        token,
+        isResetFlow ? undefined : currentPassword,
+      )
       if (token) {
         // deeplink 진입: 로그인 화면으로
         router.replace("/(auth)/login")
@@ -92,8 +106,55 @@ export function PasswordEditScreen() {
             {"영문 대/소문자, 숫자, 특수문자 포함\n6~18자 이내로 입력해주세요"}
           </ThemedText>
 
+          {!isResetFlow && (
+            <>
+              <ThemedText style={[styles.inputLabel, { color: c.textSub }]}>
+                현재 비밀번호
+              </ThemedText>
+              <View
+                style={[
+                  styles.inputRow,
+                  { borderBottomColor: c.border },
+                  currentPasswordFocused && { borderBottomColor: c.textMuted },
+                  currentPassword.length > 0 &&
+                    currentPassword.length >= 8 &&
+                    styles.inputRowValid,
+                ]}
+              >
+                <TextInput
+                  style={[styles.textInput, { color: c.text }]}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  onFocus={() => setCurrentPasswordFocused(true)}
+                  onBlur={() => setCurrentPasswordFocused(false)}
+                  placeholder="현재 비밀번호를 입력해주세요"
+                  placeholderTextColor={c.textTertiary}
+                  secureTextEntry
+                  autoFocus
+                />
+                {currentPassword.length > 0 && (
+                  <Pressable onPress={() => setCurrentPassword("")} hitSlop={8}>
+                    <Ionicons
+                      name="close-circle"
+                      size={20}
+                      color={c.textTertiary}
+                    />
+                  </Pressable>
+                )}
+              </View>
+            </>
+          )}
+
           {/* 비밀번호 */}
-          <ThemedText style={[styles.inputLabel, { color: c.textSub }]}>비밀번호</ThemedText>
+          <ThemedText
+            style={[
+              styles.inputLabel,
+              !isResetFlow && { marginTop: 32 },
+              { color: c.textSub },
+            ]}
+          >
+            새 비밀번호
+          </ThemedText>
           <View
             style={[
               styles.inputRow,
@@ -111,17 +172,23 @@ export function PasswordEditScreen() {
               placeholder="비밀번호를 형식에 맞춰 입력해주세요"
               placeholderTextColor={c.textTertiary}
               secureTextEntry
-              autoFocus
+              autoFocus={isResetFlow}
             />
             {password.length > 0 && (
               <Pressable onPress={() => setPassword("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={20} color={c.textTertiary} />
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={c.textTertiary}
+                />
               </Pressable>
             )}
           </View>
 
           {/* 비밀번호 확인 */}
-          <ThemedText style={[styles.inputLabel, { marginTop: 32, color: c.textSub }]}>
+          <ThemedText
+            style={[styles.inputLabel, { marginTop: 32, color: c.textSub }]}
+          >
             비밀번호 확인
           </ThemedText>
           <View
@@ -145,7 +212,11 @@ export function PasswordEditScreen() {
             />
             {confirm.length > 0 && (
               <Pressable onPress={() => setConfirm("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={20} color={c.textTertiary} />
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={c.textTertiary}
+                />
               </Pressable>
             )}
           </View>
@@ -160,8 +231,6 @@ export function PasswordEditScreen() {
               {confirmMessage}
             </ThemedText>
           )}
-
-
         </ScrollView>
 
         {submitError && (

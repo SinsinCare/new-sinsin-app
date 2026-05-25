@@ -15,7 +15,12 @@ import { useAuthColors } from "../hooks"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
-  const { signInWithGoogle, signInWithApple, signInWithKakao, isUserCancelledError } = useAuth()
+  const {
+    signInWithGoogle,
+    signInWithApple,
+    signInWithKakao,
+    isUserCancelledError,
+  } = useAuth()
   const [socialLoading, setSocialLoading] = useState(false)
   const colors = useAuthColors()
 
@@ -31,7 +36,9 @@ export function LoginScreen() {
     } catch (error) {
       if (!isUserCancelledError(error)) {
         const msg =
-          error instanceof Error ? error.message : JSON.stringify(error)
+          error instanceof Error
+            ? error.message
+            : "로그인 중 문제가 발생했습니다."
         logger.debug("[LoginScreen] Google 로그인 에러", msg)
         Toast.show({
           type: "error",
@@ -53,7 +60,9 @@ export function LoginScreen() {
     } catch (error) {
       if (!isUserCancelledError(error)) {
         const msg =
-          error instanceof Error ? error.message : JSON.stringify(error)
+          error instanceof Error
+            ? error.message
+            : "로그인 중 문제가 발생했습니다."
         logger.debug("[LoginScreen] Apple 로그인 에러", msg)
         Toast.show({
           type: "error",
@@ -69,26 +78,19 @@ export function LoginScreen() {
 
   const handleKakaoLogin = async () => {
     if (socialLoading) return
-    console.log("[LoginScreen] ─── 카카오 버튼 탭 ───")
+    logger.debug("[LoginScreen] Kakao 로그인 시작")
     setSocialLoading(true)
     try {
       await signInWithKakao()
-      console.log("[LoginScreen] 카카오 로그인 성공")
+      logger.debug("[LoginScreen] Kakao 로그인 성공")
     } catch (error) {
       const cancelled = isUserCancelledError(error)
-      console.log("[LoginScreen] 카카오 에러 발생, cancelled:", cancelled)
-      if (error instanceof Error) {
-        console.error("[LoginScreen] error.message:", error.message)
-        console.error("[LoginScreen] error.name:", error.name)
-      }
-      if (error !== null && typeof error === "object") {
-        const e = error as Record<string, unknown>
-        console.error("[LoginScreen] error.code:", e.code)
-        console.error("[LoginScreen] 전체:", JSON.stringify(e, null, 2))
-      }
+      logger.debug("[LoginScreen] Kakao 로그인 에러", { cancelled })
       if (!cancelled) {
         const msg =
-          error instanceof Error ? error.message : JSON.stringify(error)
+          error instanceof Error
+            ? error.message
+            : "로그인 중 문제가 발생했습니다."
         Toast.show({
           type: "error",
           text1: "카카오 로그인 실패",
