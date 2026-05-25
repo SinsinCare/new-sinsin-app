@@ -17,7 +17,7 @@ import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading, accountState } = useAuth()
+  const { isAuthenticated, isLoading, accountState, signOut } = useAuth()
   useNotifications(isAuthenticated)
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
@@ -41,6 +41,11 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isLoading) return
+
+    if (isAuthenticated && accountState === "WITHDRAWN") {
+      signOut()
+      return
+    }
 
     const inAuthGroup = segments[0] === "(auth)"
     const inOnboarding = segments[0] === "onboarding"
@@ -67,11 +72,13 @@ function RootLayoutNav() {
   }, [
     isAuthenticated,
     isLoading,
+    accountState,
     segments,
     router,
     isSignupInProgress,
     isOnboardingInProgress,
     needsOnboarding,
+    signOut,
   ])
 
   if (isLoading) {
