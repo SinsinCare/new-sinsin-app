@@ -2,7 +2,7 @@
   "expo": {
     "name": "신신당부",
     "slug": "sinsin-rn",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -42,6 +42,7 @@
         "backgroundColor": "#007AFF"
       },
       "package": "com.mediology.sinsinapp",
+      "versionCode": 11,
       "edgeToEdgeEnabled": true,
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
