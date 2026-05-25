@@ -143,17 +143,9 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     throw e
   }
 
-  if (!token.idToken) {
-    logger.error("[Kakao SignIn] idToken 없음 (OIDC 미지원?)", {
-      hasAccessToken: !!token.accessToken,
-      scopes: token.scopes,
-    })
-    throw new Error("카카오 로그인에서 ID 토큰을 받지 못했습니다.")
-  }
-
   return {
     provider: "kakao",
-    idToken: token.idToken,
+    idToken: token.accessToken,
     email: null,
     displayName: null,
   }
