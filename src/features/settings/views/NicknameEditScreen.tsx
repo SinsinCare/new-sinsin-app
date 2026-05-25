@@ -17,7 +17,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
-import { nicknameService } from "@/src/services/auth/nicknameService"
 import { api } from "@/src/services/core/apiClient"
 import { ApiError } from "@/src/services/core/apiError"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
@@ -78,11 +77,6 @@ export function NicknameEditScreen() {
     if (!isFormatValid || isLoading) return
     setIsLoading(true)
     try {
-      const available = await nicknameService.checkNicknameAvailability(nickname)
-      if (!available) {
-        setServerError("이미 사용 중인 닉네임입니다.")
-        return
-      }
       await api.patch("/user/profile", {
         nickName: nickname,
         name: profile?.name ?? "",
