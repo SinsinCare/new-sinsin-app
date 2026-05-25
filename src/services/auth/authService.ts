@@ -19,7 +19,10 @@ function getRealAuthService(): IAuthService {
       email?: string | null,
       displayName?: string | null,
     ): Promise<{ user: AppUser; accountState: string }> {
-      logger.debug("[authService] signInWithSocial 시작", provider)
+      logger.debug("[authService] signInWithSocial 시작", provider, {
+        idTokenLength: idToken?.length,
+        idTokenPrefix: idToken?.slice(0, 30),
+      })
 
       let data
       try {
