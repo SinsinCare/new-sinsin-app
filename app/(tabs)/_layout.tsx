@@ -5,11 +5,9 @@ import { HapticTab } from "@/components/haptic-tab"
 import { Icon } from "@/src/shared/components"
 import { useColorScheme } from "react-native"
 import { tokens } from "@/src/theme/tokens"
-import { useTabVisibilityStore } from "@/src/stores/tabVisibilityStore"
 
 export default function TabLayout() {
   const isDarkMode = useColorScheme() === "dark"
-  const { showRecipeTab, showRestaurantTab } = useTabVisibilityStore()
   const styles = useMemo(
     () => ({
       activeColor: isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val,
@@ -55,7 +53,6 @@ export default function TabLayout() {
         options={{
           title: "레시피",
           tabBarIcon: ({ color }) => <Icon name="recipe" color={color} />,
-          href: showRecipeTab ? "/recipe" : null,
         }}
       />
       <Tabs.Screen
@@ -63,7 +60,6 @@ export default function TabLayout() {
         options={{
           title: "식당",
           tabBarIcon: ({ color }) => <Icon name="location" color={color} />,
-          href: showRestaurantTab ? "/restaurant" : null,
         }}
       />
       <Tabs.Screen
