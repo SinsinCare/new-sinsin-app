@@ -114,11 +114,13 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     throw e
   }
 
-  try {
-    const keyHash = await getKeyHashAndroid()
-    logger.debug("[Kakao SignIn] keyHash:", keyHash)
-  } catch (e) {
-    logger.error("[Kakao SignIn] keyHash 조회 실패", e)
+  if (Platform.OS === "android") {
+    try {
+      const keyHash = await getKeyHashAndroid()
+      logger.debug("[Kakao SignIn] keyHash:", keyHash)
+    } catch (e) {
+      logger.error("[Kakao SignIn] keyHash 조회 실패", e)
+    }
   }
 
   let token

@@ -1,4 +1,4 @@
-import { ScrollView, Pressable } from "react-native"
+import { ScrollView, Pressable, Keyboard } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { router } from "expo-router"
@@ -116,7 +116,7 @@ export function ProfileSetupScreen() {
         </ScrollView>
 
         <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
-          <Pressable onPress={handleSubmit(handleNext)} disabled={!isValid}>
+          <Pressable onPress={() => { Keyboard.dismiss(); handleSubmit(handleNext)() }} disabled={!isValid}>
             <YStack
               backgroundColor={isValid ? tokens.color.sub6.val : tokens.color.sub6.val + "40"}
               paddingVertical={16}

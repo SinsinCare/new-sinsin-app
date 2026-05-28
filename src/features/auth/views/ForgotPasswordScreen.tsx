@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Pressable } from "react-native"
+import { Pressable, Keyboard } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -82,6 +82,7 @@ export function ForgotPasswordScreen() {
   const handleSendCode = async () => {
     const valid = await emailOtpForm.trigger("email")
     if (!valid) return
+    Keyboard.dismiss()
     setSendingCode(true)
     setSendError(null)
     try {
@@ -97,6 +98,7 @@ export function ForgotPasswordScreen() {
   }
 
   const handleResendCode = async () => {
+    Keyboard.dismiss()
     setSendingCode(true)
     setSendError(null)
     try {
@@ -112,6 +114,7 @@ export function ForgotPasswordScreen() {
   const handleVerifyCode = async () => {
     const valid = await emailOtpForm.trigger("code")
     if (!valid) return
+    Keyboard.dismiss()
     setVerifyingCode(true)
     setSendError(null)
     try {
@@ -253,6 +256,7 @@ export function ForgotPasswordScreen() {
                         label="인증번호"
                         placeholder="인증번호 6자리를 입력해주세요"
                         inputType="number"
+                        maxLength={6}
                         rules={{
                           required: "인증번호를 입력해주세요.",
                           minLength: {
@@ -354,7 +358,7 @@ export function ForgotPasswordScreen() {
         {step === "password" && (
           <YStack paddingBottom={insets.bottom + 24}>
             <Pressable
-              onPress={passwordForm.handleSubmit(handleResetPassword)}
+              onPress={() => { Keyboard.dismiss(); passwordForm.handleSubmit(handleResetPassword)() }}
               disabled={!passwordForm.formState.isValid || resettingPassword}
             >
               <YStack

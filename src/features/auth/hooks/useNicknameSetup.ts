@@ -39,16 +39,20 @@ export function useNicknameSetup() {
         nickName: data.nickname,
       })
 
-      if (signupState.gender) {
-        await api.patch("/user/profile", {
-          nickName: data.nickname,
-          name: signupState.name,
-          gender: signupState.gender,
-        })
-      }
-
       setUser(user)
       setAccountState("PENDING_ONBOARDING")
+
+      if (signupState.gender) {
+        try {
+          await api.patch("/user/profile", {
+            nickName: data.nickname,
+            name: signupState.name,
+            gender: signupState.gender,
+          })
+        } catch {
+          // 성별 저장 실패는 무시 — 계정 생성은 이미 완료됨
+        }
+      }
       signupState.setNickname(data.nickname)
       router.replace("/(auth)/signup-complete")
     } catch (e: unknown) {

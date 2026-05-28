@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Pressable } from "react-native"
+import { Pressable, Keyboard } from "react-native"
 import { YStack, Text } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -70,7 +70,7 @@ export function AuthScreenLayout({
 
         <YStack paddingBottom={insets.bottom + 24}>
           <Pressable
-            onPress={onSubmit}
+            onPress={() => { Keyboard.dismiss(); onSubmit() }}
             disabled={buttonDisabled || buttonLoading}
           >
             <YStack

@@ -1,6 +1,7 @@
 import { useState, useRef, type ComponentRef } from "react"
 import {
   Pressable,
+  Keyboard,
   type KeyboardTypeOptions,
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
@@ -62,6 +63,7 @@ interface FormTextFieldProps<T extends FieldValues> {
   inputType?: InputType
   clearable?: boolean
   autoFocus?: boolean
+  maxLength?: number
 }
 
 export function FormTextField<T extends FieldValues>({
@@ -73,6 +75,7 @@ export function FormTextField<T extends FieldValues>({
   inputType = "text",
   clearable = true,
   autoFocus = false,
+  maxLength,
 }: FormTextFieldProps<T>) {
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<ComponentRef<typeof Input>>(null)
@@ -127,8 +130,12 @@ export function FormTextField<T extends FieldValues>({
               ref={inputRef}
               flex={1}
               value={value ?? ""}
-              onChangeText={onChange}
+              onChangeText={(text) => {
+                onChange(text)
+                if (maxLength && text.length >= maxLength) Keyboard.dismiss()
+              }}
               placeholder={placeholder}
+              maxLength={maxLength}
               keyboardType={config.keyboardType}
               autoCapitalize={config.autoCapitalize}
               secureTextEntry={config.secureTextEntry}
