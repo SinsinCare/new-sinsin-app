@@ -8,6 +8,7 @@ import { MealType } from "../../types"
 import { MEAL_OPTIONS } from "../../data/mealConstants"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
+import { BloodMetricsTracker } from "./BloodMetricsTracker"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useState, useEffect, useRef } from "react"
@@ -373,6 +374,8 @@ export function RecordView({
         bodyRecords={data?.result.bodyRecords}
         selectedDate={selectedDate}
       />
+
+      <BloodMetricsTracker selectedDate={selectedDate} />
     </ScrollView>
   )
 }
