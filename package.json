@@ -1,6 +1,6 @@
 {
   "name": "sinsin-rn-temp",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -9,6 +9,11 @@
     "ios-release": "expo prebuild --platform ios --clean && expo run:ios --configuration Release",
     "ios-no-user": "EXPO_PUBLIC_MOCK_NO_USER=true expo run:ios",
     "web": "expo start --web",
+    "deploy": "eas build --platform all --profile production --auto-submit",
+    "deploy:ios": "eas build --platform ios --profile production --auto-submit",
+    "deploy:android": "eas build --platform android --profile production --auto-submit",
+    "submit:ios": "eas submit --platform ios --latest",
+    "submit:android": "eas submit --platform android --latest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
