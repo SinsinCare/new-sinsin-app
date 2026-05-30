@@ -150,3 +150,21 @@ npm run deploy:android
   → 선택한 Apple 팀(`HJJNV9Y5W8`)에 `com.mediology.sinsin-care`가 맞는지 확인.
 - **첫 Android API 업로드 실패**
   → 서비스 계정 권한/앱 등록 여부(4절 4·5번) 확인.
+- **iOS 빌드 실패: `Provisioning profile ... doesn't include the Push Notifications capability` / `aps-environment entitlement` 누락**
+  → `expo-notifications` 플러그인이 들어가면 iOS 빌드에 `aps-environment`
+    엔타이틀먼트가 포함되는데, **App ID에 Push 권한을 켠 *이후* 프로파일을
+    재발급**해야 그 권한이 프로파일에 반영됩니다. App ID에 권한만 켜는 걸로는
+    부족하고, 기존 프로파일이 권한 추가 *전*에 발급됐으면 그대로 실패합니다.
+    `--non-interactive` 빌드는 Apple 인증을 못 해 낡은 프로파일을 재사용하므로
+    이 에러가 계속 납니다.
+  → **해결 (실제 터미널에서, Claude `!`/비대화형 아님 — 2FA 입력이 필요):**
+    ```bash
+    eas credentials -p ios
+    # production → Apple 로그인(+2FA) → Team HJJNV9Y5W8 / Provider DAESEONG KIM (126164371)
+    # → Build Credentials: Manage everything...
+    # → Provisioning Profile: Delete one from your project   (낡은 것 삭제)
+    # → All: Set up all the required credentials...           (Push 권한 포함 새 프로파일 자동 발급)
+    ```
+    재발급 후 `npm run deploy:ios`로 다시 빌드하면 통과됩니다.
+    (2026-05-30 빌드 #58/#59가 이 에러로 실패 → 프로파일 재발급(`FZN6RDTFDT`) 후
+    빌드 #60 성공.)
