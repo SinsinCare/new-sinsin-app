@@ -1,8 +1,10 @@
 import { Pressable } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
+import { Image } from "expo-image"
+import { YStack, XStack, Text, View } from "tamagui"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
+import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -39,7 +41,8 @@ export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
-  const friendlinessKey = recipe.nutrition.ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
+  const friendlinessKey = recipe.nutrition
+    .ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
   const friendlinessConfig =
     FRIENDLINESS_CONFIG[friendlinessKey] ?? FRIENDLINESS_CONFIG.moderate
 
@@ -48,6 +51,7 @@ export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
   const timeLabel = `${recipe.time_min}분`
 
   const visibleTags = recipe.tags.slice(0, 3)
+  const image = getCuratedRecipeImage(recipe.id)
 
   return (
     <Pressable
@@ -69,8 +73,30 @@ export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
           elevation: 1,
         }}
       >
+        {/* Recipe image */}
+        {image && (
+          <View
+            borderRadius={8}
+            overflow="hidden"
+            backgroundColor={palette.tagBg}
+            style={{ aspectRatio: 1, width: "100%" }}
+          >
+            <Image
+              source={image}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+              transition={150}
+            />
+          </View>
+        )}
+
         {/* Meta: category · difficulty · time */}
-        <Text fontSize={12} fontFamily="$body" color={palette.sub} numberOfLines={1}>
+        <Text
+          fontSize={12}
+          fontFamily="$body"
+          color={palette.sub}
+          numberOfLines={1}
+        >
           {categoryLabel} · {difficultyLabel} · {timeLabel}
         </Text>
 

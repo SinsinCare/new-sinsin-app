@@ -1,9 +1,17 @@
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions } from "react-native"
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native"
+import { Image } from "expo-image"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
+import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -78,7 +86,12 @@ function NutrientBox({
       <Text fontSize={12} fontFamily="$body" color={palette.label}>
         {label}
       </Text>
-      <Text fontSize={15} fontWeight="700" fontFamily="$body" color={palette.value}>
+      <Text
+        fontSize={15}
+        fontWeight="700"
+        fontFamily="$body"
+        color={palette.value}
+      >
         {value}
       </Text>
     </YStack>
@@ -97,9 +110,11 @@ export function CuratedRecipeDetailSheet({
 
   if (!recipe) return null
 
-  const friendlinessKey = recipe.nutrition.ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
+  const friendlinessKey = recipe.nutrition
+    .ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
   const friendlinessConfig =
     FRIENDLINESS_CONFIG[friendlinessKey] ?? FRIENDLINESS_CONFIG.moderate
+  const image = getCuratedRecipeImage(recipe.id)
 
   return (
     <Modal
@@ -109,7 +124,10 @@ export function CuratedRecipeDetailSheet({
       onRequestClose={onClose}
     >
       {/* Overlay tap to close */}
-      <Pressable style={[styles.overlay, { backgroundColor: palette.overlay }]} onPress={onClose} />
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlay }]}
+        onPress={onClose}
+      />
 
       <YStack
         position="absolute"
@@ -124,7 +142,12 @@ export function CuratedRecipeDetailSheet({
       >
         {/* Handle bar */}
         <YStack alignItems="center" paddingTop={12} paddingBottom={4}>
-          <View width={40} height={4} borderRadius={2} backgroundColor={palette.divider} />
+          <View
+            width={40}
+            height={4}
+            borderRadius={2}
+            backgroundColor={palette.divider}
+          />
         </YStack>
 
         {/* Header */}
@@ -151,7 +174,12 @@ export function CuratedRecipeDetailSheet({
                 borderRadius={8}
                 backgroundColor={palette.categoryBg}
               >
-                <Text fontSize={12} fontWeight="600" fontFamily="$body" color={palette.categoryText}>
+                <Text
+                  fontSize={12}
+                  fontWeight="600"
+                  fontFamily="$body"
+                  color={palette.categoryText}
+                >
                   {recipe.category}
                 </Text>
               </XStack>
@@ -161,7 +189,12 @@ export function CuratedRecipeDetailSheet({
                 borderRadius={8}
                 backgroundColor={friendlinessConfig.bg}
               >
-                <Text fontSize={12} fontWeight="600" fontFamily="$body" color={friendlinessConfig.text}>
+                <Text
+                  fontSize={12}
+                  fontWeight="600"
+                  fontFamily="$body"
+                  color={friendlinessConfig.text}
+                >
                   {friendlinessConfig.label}
                 </Text>
               </XStack>
@@ -187,12 +220,33 @@ export function CuratedRecipeDetailSheet({
           </Pressable>
         </XStack>
 
-        <View height={1} backgroundColor={palette.divider} marginHorizontal={20} />
+        <View
+          height={1}
+          backgroundColor={palette.divider}
+          marginHorizontal={20}
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 20, gap: 20 }}
         >
+          {/* Recipe image */}
+          {image && (
+            <View
+              borderRadius={12}
+              overflow="hidden"
+              backgroundColor={palette.badgeBg}
+              style={{ aspectRatio: 1, width: "100%" }}
+            >
+              <Image
+                source={image}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+                transition={150}
+              />
+            </View>
+          )}
+
           {/* AI 한줄평 */}
           <YStack
             backgroundColor={palette.aiBoxBg}
@@ -200,7 +254,12 @@ export function CuratedRecipeDetailSheet({
             padding={14}
             gap={4}
           >
-            <Text fontSize={12} fontWeight="600" fontFamily="$body" color={palette.categoryText}>
+            <Text
+              fontSize={12}
+              fontWeight="600"
+              fontFamily="$body"
+              color={palette.categoryText}
+            >
               AI 한줄평
             </Text>
             <Text
@@ -216,25 +275,57 @@ export function CuratedRecipeDetailSheet({
 
           {/* 영양정보 */}
           <YStack gap={10}>
-            <Text fontSize={16} fontWeight="700" fontFamily="$body" color={palette.sectionTitle}>
+            <Text
+              fontSize={16}
+              fontWeight="700"
+              fontFamily="$body"
+              color={palette.sectionTitle}
+            >
               영양정보
             </Text>
             <XStack gap={8}>
-              <NutrientBox label="나트륨" value={`${recipe.nutrition.sodium_mg}mg`} palette={palette} />
-              <NutrientBox label="칼륨" value={`${recipe.nutrition.potassium_mg}mg`} palette={palette} />
-              <NutrientBox label="인" value={`${recipe.nutrition.phosphorus_mg}mg`} palette={palette} />
+              <NutrientBox
+                label="나트륨"
+                value={`${recipe.nutrition.sodium_mg}mg`}
+                palette={palette}
+              />
+              <NutrientBox
+                label="칼륨"
+                value={`${recipe.nutrition.potassium_mg}mg`}
+                palette={palette}
+              />
+              <NutrientBox
+                label="인"
+                value={`${recipe.nutrition.phosphorus_mg}mg`}
+                palette={palette}
+              />
             </XStack>
             <XStack gap={8}>
-              <NutrientBox label="단백질" value={`${recipe.nutrition.protein_g}g`} palette={palette} />
-              <NutrientBox label="칼로리" value={`${recipe.nutrition.kcal}kcal`} palette={palette} />
+              <NutrientBox
+                label="단백질"
+                value={`${recipe.nutrition.protein_g}g`}
+                palette={palette}
+              />
+              <NutrientBox
+                label="칼로리"
+                value={`${recipe.nutrition.kcal}kcal`}
+                palette={palette}
+              />
               <YStack flex={1} />
             </XStack>
           </YStack>
 
           {/* CKD 가이드 */}
-          {(recipe.ckd_guide.CKD3 || recipe.ckd_guide.CKD4 || recipe.ckd_guide.dialysis) && (
+          {(recipe.ckd_guide.CKD3 ||
+            recipe.ckd_guide.CKD4 ||
+            recipe.ckd_guide.dialysis) && (
             <YStack gap={10}>
-              <Text fontSize={16} fontWeight="700" fontFamily="$body" color={palette.sectionTitle}>
+              <Text
+                fontSize={16}
+                fontWeight="700"
+                fontFamily="$body"
+                color={palette.sectionTitle}
+              >
                 CKD 단계별 가이드
               </Text>
               <YStack gap={8}>
@@ -248,11 +339,22 @@ export function CuratedRecipeDetailSheet({
                       minWidth={60}
                       justifyContent="center"
                     >
-                      <Text fontSize={12} fontWeight="600" fontFamily="$body" color={tokens.color.sub8.val}>
+                      <Text
+                        fontSize={12}
+                        fontWeight="600"
+                        fontFamily="$body"
+                        color={tokens.color.sub8.val}
+                      >
                         CKD 3기
                       </Text>
                     </XStack>
-                    <Text fontSize={14} fontFamily="$body" color={palette.sub} flex={1} lineHeight={20}>
+                    <Text
+                      fontSize={14}
+                      fontFamily="$body"
+                      color={palette.sub}
+                      flex={1}
+                      lineHeight={20}
+                    >
                       {recipe.ckd_guide.CKD3}
                     </Text>
                   </XStack>
@@ -267,11 +369,22 @@ export function CuratedRecipeDetailSheet({
                       minWidth={60}
                       justifyContent="center"
                     >
-                      <Text fontSize={12} fontWeight="600" fontFamily="$body" color={tokens.color.sub8.val}>
+                      <Text
+                        fontSize={12}
+                        fontWeight="600"
+                        fontFamily="$body"
+                        color={tokens.color.sub8.val}
+                      >
                         CKD 4기
                       </Text>
                     </XStack>
-                    <Text fontSize={14} fontFamily="$body" color={palette.sub} flex={1} lineHeight={20}>
+                    <Text
+                      fontSize={14}
+                      fontFamily="$body"
+                      color={palette.sub}
+                      flex={1}
+                      lineHeight={20}
+                    >
                       {recipe.ckd_guide.CKD4}
                     </Text>
                   </XStack>
@@ -286,11 +399,22 @@ export function CuratedRecipeDetailSheet({
                       minWidth={60}
                       justifyContent="center"
                     >
-                      <Text fontSize={12} fontWeight="600" fontFamily="$body" color="#92400E">
+                      <Text
+                        fontSize={12}
+                        fontWeight="600"
+                        fontFamily="$body"
+                        color="#92400E"
+                      >
                         투석
                       </Text>
                     </XStack>
-                    <Text fontSize={14} fontFamily="$body" color={palette.sub} flex={1} lineHeight={20}>
+                    <Text
+                      fontSize={14}
+                      fontFamily="$body"
+                      color={palette.sub}
+                      flex={1}
+                      lineHeight={20}
+                    >
                       {recipe.ckd_guide.dialysis}
                     </Text>
                   </XStack>
@@ -305,11 +429,22 @@ export function CuratedRecipeDetailSheet({
                       minWidth={60}
                       justifyContent="center"
                     >
-                      <Text fontSize={12} fontWeight="600" fontFamily="$body" color="#6B7280">
+                      <Text
+                        fontSize={12}
+                        fontWeight="600"
+                        fontFamily="$body"
+                        color="#6B7280"
+                      >
                         참고
                       </Text>
                     </XStack>
-                    <Text fontSize={14} fontFamily="$body" color={palette.sub} flex={1} lineHeight={20}>
+                    <Text
+                      fontSize={14}
+                      fontFamily="$body"
+                      color={palette.sub}
+                      flex={1}
+                      lineHeight={20}
+                    >
                       {recipe.ckd_guide.notes}
                     </Text>
                   </XStack>
@@ -321,7 +456,12 @@ export function CuratedRecipeDetailSheet({
           {/* 재료 */}
           {recipe.ingredients.length > 0 && (
             <YStack gap={10}>
-              <Text fontSize={16} fontWeight="700" fontFamily="$body" color={palette.sectionTitle}>
+              <Text
+                fontSize={16}
+                fontWeight="700"
+                fontFamily="$body"
+                color={palette.sectionTitle}
+              >
                 재료 ({recipe.servings}인분)
               </Text>
               <YStack gap={6}>
@@ -330,10 +470,16 @@ export function CuratedRecipeDetailSheet({
                     key={idx}
                     justifyContent="space-between"
                     paddingVertical={6}
-                    borderBottomWidth={idx < recipe.ingredients.length - 1 ? 1 : 0}
+                    borderBottomWidth={
+                      idx < recipe.ingredients.length - 1 ? 1 : 0
+                    }
                     borderBottomColor={palette.divider}
                   >
-                    <Text fontSize={14} fontFamily="$body" color={palette.value}>
+                    <Text
+                      fontSize={14}
+                      fontFamily="$body"
+                      color={palette.value}
+                    >
                       {ing.name}
                     </Text>
                     <Text fontSize={14} fontFamily="$body" color={palette.sub}>
@@ -348,7 +494,12 @@ export function CuratedRecipeDetailSheet({
           {/* 조리순서 */}
           {recipe.steps.length > 0 && (
             <YStack gap={10}>
-              <Text fontSize={16} fontWeight="700" fontFamily="$body" color={palette.sectionTitle}>
+              <Text
+                fontSize={16}
+                fontWeight="700"
+                fontFamily="$body"
+                color={palette.sectionTitle}
+              >
                 조리순서
               </Text>
               <YStack gap={12}>
@@ -363,7 +514,12 @@ export function CuratedRecipeDetailSheet({
                       justifyContent="center"
                       flexShrink={0}
                     >
-                      <Text fontSize={13} fontWeight="700" fontFamily="$body" color={palette.categoryText}>
+                      <Text
+                        fontSize={13}
+                        fontWeight="700"
+                        fontFamily="$body"
+                        color={palette.categoryText}
+                      >
                         {step.order}
                       </Text>
                     </YStack>
