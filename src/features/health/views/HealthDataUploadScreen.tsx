@@ -4,6 +4,9 @@ import {
   View,
   ScrollView,
   Pressable,
+  Modal,
+  ActivityIndicator,
+  Alert,
 } from "react-native"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
@@ -17,6 +20,8 @@ import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { UPLOAD_TIPS } from "@/src/features/health/data/mock"
+import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
+import { logger } from "@/src/lib/logger"
 
 const MAX_FILES = 5
 
@@ -25,6 +30,7 @@ export function HealthDataUploadScreen() {
   const router = useRouter()
 
   const [files, setFiles] = useState<string[]>([])
+  const [analyzing, setAnalyzing] = useState(false)
 
   const pickFromCamera = async () => {
     if (files.length >= MAX_FILES) return
@@ -59,8 +65,24 @@ export function HealthDataUploadScreen() {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleAnalyze = () => {
-    router.replace("/(settings)/health-data-upload")
+  const handleAnalyze = async () => {
+    // 백엔드 OCR은 검사지 1건(파일 1개) 단위로 분석/확정합니다.
+    // 첨부된 파일 중 첫 번째 검사지를 분석합니다.
+    if (files.length === 0 || analyzing) return
+
+    setAnalyzing(true)
+    try {
+      const report = await examOcrService.uploadOcr(files[0])
+      router.push({
+        pathname: "/(settings)/health-ocr-review",
+        params: { reportId: String(report.reportId) },
+      })
+    } catch (error) {
+      logger.error("[ocr] upload failed", error)
+      Alert.alert("검사지 분석 실패", getOcrErrorMessage(error))
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   const canAdd = files.length < MAX_FILES
@@ -219,12 +241,29 @@ export function HealthDataUploadScreen() {
       </ScrollView>
 
       <BottomActionBar
-        label="분석 시작하기"
-        disabled={files.length === 0}
+        label={analyzing ? "분석 중..." : "분석 시작하기"}
+        disabled={files.length === 0 || analyzing}
         paddingBottom={insets.bottom + 16}
         onPress={handleAnalyze}
       />
 
+      <Modal visible={analyzing} transparent animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator
+              size="large"
+              color={tokens.color.sub6.val}
+              style={{ marginBottom: 16 }}
+            />
+            <ThemedText style={styles.loadingTitle}>
+              검사지를 분석하고 있어요
+            </ThemedText>
+            <ThemedText style={styles.loadingSubtitle}>
+              검사 수치를 인식하는 중입니다.{"\n"}잠시만 기다려주세요.
+            </ThemedText>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   )
 }
