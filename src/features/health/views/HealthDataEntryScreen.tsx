@@ -46,7 +46,11 @@ export function HealthDataEntryScreen() {
           <View
             style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}
           >
-            <Ionicons name="shield-checkmark" size={24} color={tokens.color.sub6.val} />
+            <Ionicons
+              name="shield-checkmark"
+              size={24}
+              color={tokens.color.sub6.val}
+            />
           </View>
           <View style={styles.optionContent}>
             <ThemedText style={styles.optionTitle}>
@@ -90,6 +94,33 @@ export function HealthDataEntryScreen() {
           <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
         </Pressable>
 
+        {/* 대시보드 보기 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.optionCard,
+            pressed && styles.optionCardPressed,
+          ]}
+          onPress={() => router.push("/(settings)/health-dashboard")}
+        >
+          <View
+            style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}
+          >
+            <Ionicons
+              name="bar-chart-outline"
+              size={24}
+              color={tokens.color.sub6.val}
+            />
+          </View>
+          <View style={styles.optionContent}>
+            <ThemedText style={styles.optionTitle}>대시보드 보기</ThemedText>
+            <ThemedText style={styles.optionDesc}>
+              불러온 검사 수치의 추세 차트와 신장·전해질·단백뇨 등 모듈별 상태를
+              한눈에 확인합니다.
+            </ThemedText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+        </Pressable>
+
         {/* 보안 안내 */}
         <View style={styles.securityRow}>
           <Ionicons name="lock-closed-outline" size={13} color="#94A3B8" />
@@ -101,7 +132,11 @@ export function HealthDataEntryScreen() {
         {/* 신뢰 카드 */}
         <View style={styles.trustCard}>
           <View style={styles.trustIconWrapper}>
-            <Ionicons name="documents-outline" size={28} color={tokens.color.sub6.val} />
+            <Ionicons
+              name="documents-outline"
+              size={28}
+              color={tokens.color.sub6.val}
+            />
             <View style={styles.trustIconBadge}>
               <Ionicons name="checkmark" size={10} color="#FFFFFF" />
             </View>
