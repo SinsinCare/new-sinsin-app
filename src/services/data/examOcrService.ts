@@ -8,6 +8,7 @@ import type {
   OcrConfirmRequest,
   OcrConfirmResult,
   OcrReport,
+  OcrUploadFile,
 } from "@/src/features/health/types"
 
 /**
@@ -44,17 +45,23 @@ export const examOcrService = {
   /**
    * ① 검사지 업로드 & OCR 추출 (status: PENDING, 아직 저장되지 않음)
    *
+   * 이미지는 가독성을 유지하며 가공(축소/압축)하고, PDF는 원본 그대로 전송합니다.
    * multipart/form-data 업로드는 RN에서 axios 대신 fetch를 사용해
    * boundary 처리를 네이티브 네트워크 레이어에 맡깁니다(foodCameraService와 동일).
    */
-  async uploadOcr(imageUri: string): Promise<OcrReport> {
-    const preparedUri = await prepareImage(imageUri)
+  async uploadOcr(file: OcrUploadFile): Promise<OcrReport> {
+    const isPdf = file.kind === "pdf"
+    const uploadUri = isPdf ? file.uri : await prepareImage(file.uri)
+    const uploadName =
+      file.name ||
+      (isPdf ? `lab_report_${Date.now()}.pdf` : `lab_report_${Date.now()}.jpg`)
+    const uploadType = isPdf ? "application/pdf" : "image/jpeg"
 
     const formData = new FormData()
     formData.append("file", {
-      uri: preparedUri,
-      name: `lab_report_${Date.now()}.jpg`,
-      type: "image/jpeg",
+      uri: uploadUri,
+      name: uploadName,
+      type: uploadType,
     } as unknown as Blob)
 
     const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL

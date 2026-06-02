@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
-import { Animated } from "react-native"
+import { Animated, Image, StyleSheet } from "react-native"
+import type { ImageSourcePropType } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import {
   Defs,
@@ -61,12 +62,24 @@ type CharacterType =
   | "character-good"
   | "character-caution"
 
+/** 유저의 데이터 입력 상태에 따라 깔리는 배경 종류 */
+export type CharacterBackgroundVariant = "low" | "high"
+
+const BACKGROUND_SOURCES: Record<
+  CharacterBackgroundVariant,
+  ImageSourcePropType
+> = {
+  low: require("@/assets/images/home-bg-low.png"),
+  high: require("@/assets/images/home-bg-high.png"),
+}
+
 interface CharacterSectionProps {
   selectedDate: Date
   hasRecord: boolean
   characterType: CharacterType
   streak: number
   withinLimits: boolean
+  backgroundVariant: CharacterBackgroundVariant
 }
 
 export function CharacterSection({
@@ -75,6 +88,7 @@ export function CharacterSection({
   characterType,
   streak,
   withinLimits,
+  backgroundVariant,
 }: CharacterSectionProps) {
   const isDarkMode = useAppColorScheme() === "dark"
   const fireIconName = hasRecord
@@ -127,7 +141,19 @@ export function CharacterSection({
   }, [floatY, shadowScale])
 
   return (
-    <YStack borderRadius="$6" padding="$7" gap="$1" alignItems="center">
+    <YStack
+      borderRadius="$6"
+      padding="$7"
+      gap="$1"
+      alignItems="center"
+      overflow="hidden"
+    >
+      {/* 캐릭터 뒤에 깔리는 배경 (z축 가장 뒤) */}
+      <Image
+        source={BACKGROUND_SOURCES[backgroundVariant]}
+        style={styles.background}
+        resizeMode="cover"
+      />
       <YStack alignItems="center">
         <Animated.View style={{ transform: [{ translateY: floatY }] }}>
           <Icon name={characterType} size={200} />
@@ -178,3 +204,11 @@ export function CharacterSection({
     </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  background: {
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+  },
+})

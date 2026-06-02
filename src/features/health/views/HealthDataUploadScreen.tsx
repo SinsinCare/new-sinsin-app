@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import * as ImagePicker from "expo-image-picker"
+import * as DocumentPicker from "expo-document-picker"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -22,14 +23,21 @@ import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { UPLOAD_TIPS } from "@/src/features/health/data/mock"
 import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
+import type { OcrUploadFile } from "@/src/features/health/types"
 
 const MAX_FILES = 5
+
+// URI 마지막 경로 조각에서 파일명을 추출 (없으면 fallback)
+function deriveName(uri: string, fallback: string): string {
+  const last = uri.split("/").pop()?.split("?")[0]
+  return last && last.length > 0 ? last : fallback
+}
 
 export function HealthDataUploadScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
 
-  const [files, setFiles] = useState<string[]>([])
+  const [files, setFiles] = useState<OcrUploadFile[]>([])
   const [analyzing, setAnalyzing] = useState(false)
 
   const pickFromCamera = async () => {
@@ -39,7 +47,16 @@ export function HealthDataUploadScreen() {
 
     const result = await ImagePicker.launchCameraAsync({ quality: 0.9 })
     if (!result.canceled && result.assets[0]) {
-      setFiles((prev) => [...prev, result.assets[0].uri])
+      const asset = result.assets[0]
+      setFiles((prev) => [
+        ...prev,
+        {
+          uri: asset.uri,
+          name:
+            asset.fileName ?? deriveName(asset.uri, `photo_${Date.now()}.jpg`),
+          kind: "image",
+        },
+      ])
     }
   }
 
@@ -56,9 +73,32 @@ export function HealthDataUploadScreen() {
       quality: 0.9,
     })
     if (!result.canceled && result.assets.length > 0) {
-      const newUris = result.assets.map((a) => a.uri)
-      setFiles((prev) => [...prev, ...newUris].slice(0, MAX_FILES))
+      const newFiles: OcrUploadFile[] = result.assets.map((a) => ({
+        uri: a.uri,
+        name: a.fileName ?? deriveName(a.uri, `image_${Date.now()}.jpg`),
+        kind: "image",
+      }))
+      setFiles((prev) => [...prev, ...newFiles].slice(0, MAX_FILES))
     }
+  }
+
+  const pickPdf = async () => {
+    if (files.length >= MAX_FILES) return
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/pdf",
+      copyToCacheDirectory: true,
+      multiple: false,
+    })
+    if (result.canceled || !result.assets?.[0]) return
+    const asset = result.assets[0]
+    setFiles((prev) => [
+      ...prev,
+      {
+        uri: asset.uri,
+        name: asset.name ?? deriveName(asset.uri, `document_${Date.now()}.pdf`),
+        kind: "pdf",
+      },
+    ])
   }
 
   const removeFile = (index: number) => {
@@ -125,14 +165,27 @@ export function HealthDataUploadScreen() {
 
           {/* 파일 썸네일 그리드 */}
           <View style={styles.thumbGrid}>
-            {files.map((uri, index) => (
+            {files.map((file, index) => (
               // 썸네일 wrapper는 overflow:visible 명시 — X버튼은 내부에 위치
-              <View key={`${uri}-${index}`} style={styles.thumbWrapper}>
-                <Image
-                  source={{ uri }}
-                  style={styles.thumb}
-                  contentFit="cover"
-                />
+              <View key={`${file.uri}-${index}`} style={styles.thumbWrapper}>
+                {file.kind === "pdf" ? (
+                  <View style={styles.pdfThumb}>
+                    <Ionicons
+                      name="document-text"
+                      size={28}
+                      color={tokens.color.sub6.val}
+                    />
+                    <ThemedText style={styles.pdfThumbText} numberOfLines={1}>
+                      {file.name}
+                    </ThemedText>
+                  </View>
+                ) : (
+                  <Image
+                    source={{ uri: file.uri }}
+                    style={styles.thumb}
+                    contentFit="cover"
+                  />
+                )}
                 {/* X버튼을 썸네일 내부 우상단에 배치 (bounds 안) */}
                 <Pressable
                   style={styles.removeBtn}
@@ -185,7 +238,7 @@ export function HealthDataUploadScreen() {
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
-                카메라로 촬영
+                카메라
               </ThemedText>
             </Pressable>
 
@@ -211,7 +264,33 @@ export function HealthDataUploadScreen() {
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
-                갤러리에서 선택
+                갤러리
+              </ThemedText>
+            </Pressable>
+
+            <View style={styles.pickDivider} />
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.pickButton,
+                !canAdd && styles.pickButtonDisabled,
+                pressed && canAdd && styles.pickButtonPressed,
+              ]}
+              onPress={pickPdf}
+              disabled={!canAdd}
+            >
+              <Ionicons
+                name="document-text-outline"
+                size={18}
+                color={canAdd ? tokens.color.sub6.val : tokens.color.grey7.val}
+              />
+              <ThemedText
+                style={[
+                  styles.pickButtonText,
+                  !canAdd && styles.pickButtonTextDisabled,
+                ]}
+              >
+                PDF
               </ThemedText>
             </Pressable>
           </View>
@@ -335,6 +414,23 @@ const styles = StyleSheet.create({
   thumb: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
+  },
+  pdfThumb: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    gap: 4,
+  },
+  pdfThumbText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: "#64748B",
+    textAlign: "center",
   },
   // X버튼: 썸네일 내부 우상단 (overflow:hidden 내에서 position:absolute)
   removeBtn: {

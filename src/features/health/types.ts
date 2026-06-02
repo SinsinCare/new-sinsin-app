@@ -22,6 +22,13 @@ export type LabRecord = {
 
 // ===== 검사지 OCR =====
 
+// 업로드할 검사지 파일 (이미지 또는 PDF)
+export type OcrUploadFile = {
+  uri: string
+  name: string
+  kind: "image" | "pdf"
+}
+
 export type OcrReportStatus = "PENDING" | "CONFIRMED"
 
 // OCR로 추출된 개별 검사 항목 (확정 전)

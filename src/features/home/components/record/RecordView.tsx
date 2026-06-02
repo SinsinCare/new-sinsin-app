@@ -142,6 +142,10 @@ export function RecordView({
         ? "character-good"
         : "character-caution"
 
+  // 오늘 기록이 있고 영양소 제한조건까지 지켰을 때 풍성한(high) 배경
+  const backgroundVariant: "low" | "high" =
+    hasSelectedDateRecord && withinLimits ? "high" : "low"
+
   const serverExtraWater = data?.result.analysis?.extraWater ?? 0
   const { syncFromServer } = record
   const syncFromServerRef = useRef(syncFromServer)
@@ -275,6 +279,7 @@ export function RecordView({
         characterType={characterType}
         streak={streak}
         withinLimits={withinLimits}
+        backgroundVariant={backgroundVariant}
       />
 
       <View height={5} />
