@@ -6,6 +6,14 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
+      environment:
+        description: '빌드 환경'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - test
       platform:
         description: '빌드 플랫폼'
         required: true
@@ -56,15 +64,20 @@ jobs:
       - name: Build & Submit (manual trigger)
         if: github.event_name == 'workflow_dispatch'
         run: |
+          PROFILE="${{ inputs.environment }}"
+          if [ "$PROFILE" != "production" ] && [ "${{ inputs.submit }}" = "true" ]; then
+            echo "Auto-submit is only allowed for production builds."
+            exit 1
+          fi
           if [ "${{ inputs.submit }}" = "true" ]; then
             eas build \
               --platform ${{ inputs.platform }} \
-              --profile production \
+              --profile "$PROFILE" \
               --auto-submit \
               --non-interactive
           else
             eas build \
               --platform ${{ inputs.platform }} \
-              --profile production \
+              --profile "$PROFILE" \
               --non-interactive
           fi

@@ -14,6 +14,18 @@
         "EXPO_PUBLIC_MOCK_NO_USER": "false"
       }
     },
+    "test": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "<test-backend-api-base-url>",
+        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
+        "EXPO_PUBLIC_MOCK_NO_USER": "false"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {

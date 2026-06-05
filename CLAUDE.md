@@ -10,8 +10,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm start          # Start Expo development server
+npm run start:test # Start Expo against test backend
+npm run start:prod # Start Expo against production backend
 npm run android    # Run on Android
+npm run android:test
+npm run android:prod
 npm run ios        # Run on iOS
+npm run ios:test
+npm run ios:prod
 npm run web        # Run on web
 npm run lint       # ESLint check
 npm run lint:fix   # ESLint auto-fix
@@ -24,6 +30,29 @@ Mock mode: add mock data
 EXPO_PUBLIC_USE_MOCK_AUTH=true npm start   # Mock auth (skips real login/signup API)
 EXPO_PUBLIC_USE_MOCK_MODE=true npm start   # Mock data services (onboarding, etc.)
 npm run ios-no-user                        # Mock mode without user profile
+```
+
+## Build & Deployment
+
+Branch and environment policy:
+
+- `main` is the production branch and should build against the production backend.
+- `develop` is the working/test branch and should build against the test backend.
+- Before running any local, EAS, or deploy build on behalf of a user, ask which target environment to use: `test` or `production`.
+- Do not infer the target only from the current branch when the user simply says "build"; confirm the environment first.
+- Test backend URL: `<test-backend-api-base-url>`
+- Production backend URL: `<backend-api-base-url>`
+
+Build commands:
+
+```bash
+npm run build:test         # EAS test build, all platforms, test backend
+npm run build:test:ios     # EAS test build, iOS only
+npm run build:test:android # EAS test build, Android APK
+npm run build:prod         # EAS production build, all platforms, production backend
+npm run build:prod:ios     # EAS production build, iOS only
+npm run build:prod:android # EAS production build, Android only
+npm run deploy:prod        # EAS production build and auto-submit
 ```
 
 ## Architecture
