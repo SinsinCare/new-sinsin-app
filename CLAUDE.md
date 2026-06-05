@@ -24,6 +24,14 @@ npm run lint:fix   # ESLint auto-fix
 npm run format     # Prettier format all files
 ```
 
+## Branch Work Policy
+
+- `main` must remain the production-state branch.
+- `develop` must remain the shared working/test branch.
+- When the current branch is `main` or `develop` and the user asks for code changes, recommend creating a separate work branch first.
+- Create and work on a separate branch unless the user explicitly says to work directly on the current branch, such as "여기서 할게" or "이 브랜치에서 바로 해줘".
+- Do not rename, delete, or force-update `main` or `develop` unless the user explicitly requests that branch operation.
+
 Mock mode: add mock data
 
 ```bash
@@ -38,8 +46,14 @@ Branch and environment policy:
 
 - `main` is the production branch and should build against the production backend.
 - `develop` is the working/test branch and should build against the test backend.
-- Before running any local, EAS, or deploy build on behalf of a user, ask which target environment to use: `test` or `production`.
-- Do not infer the target only from the current branch when the user simply says "build"; confirm the environment first.
+- Before running any local run, local build, EAS build, deploy, submit, TestFlight upload, or Google Play build on behalf of a user, ask both:
+  - execution type: local run/build or EAS/deploy build
+  - target environment: `test` or `production`
+- Do not infer the target only from the current branch when the user simply says "build"; confirm the execution type and environment first.
+- Use `npm run ios:test`, `npm run android:test`, or `npm run start:test` for local work against the test backend.
+- Use `npm run ios:prod`, `npm run android:prod`, or `npm run start:prod` for local work against the production backend.
+- Use `npm run build:test:*` for TestFlight/internal Google Play test builds that should use the test backend.
+- Use `npm run build:prod:*` or `npm run deploy:prod` only for production backend builds.
 - Local environment values must be loaded from gitignored env files such as `.env.test` and `.env.production`.
 - Do not commit backend URLs or other environment values.
 
