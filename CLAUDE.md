@@ -40,8 +40,8 @@ Branch and environment policy:
 - `develop` is the working/test branch and should build against the test backend.
 - Before running any local, EAS, or deploy build on behalf of a user, ask which target environment to use: `test` or `production`.
 - Do not infer the target only from the current branch when the user simply says "build"; confirm the environment first.
-- Test backend URL: `<test-backend-api-base-url>`
-- Production backend URL: `<backend-api-base-url>`
+- Local environment values must be loaded from gitignored env files such as `.env.test` and `.env.production`.
+- Do not commit backend URLs or other environment values.
 
 Build commands:
 
@@ -132,20 +132,20 @@ Feature-based organization with types, data, services, hooks, and components per
 
 ## Key Technical Decisions
 
-| Aspect       | Choice                                               |
-| ------------ | ---------------------------------------------------- |
-| Framework    | Expo ~54.0 + React Native 0.81                       |
-| Routing      | Expo Router (typed routes enabled)                   |
-| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3)   |
-| Font         | Pretendard KR (OTF, 4 weights)                       |
-| State        | Zustand + React Query                                |
-| Forms        | react-hook-form                                      |
-| Backend      | Custom FastAPI (`<backend-base-url>`) |
-| Auth         | Email/password + Google Sign-In + Apple Sign-In      |
-| Image Picker | expo-image-picker (gallery + camera)                 |
+| Aspect       | Choice                                                                |
+| ------------ | --------------------------------------------------------------------- |
+| Framework    | Expo ~54.0 + React Native 0.81                                        |
+| Routing      | Expo Router (typed routes enabled)                                    |
+| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3)                    |
+| Font         | Pretendard KR (OTF, 4 weights)                                        |
+| State        | Zustand + React Query                                                 |
+| Forms        | react-hook-form                                                       |
+| Backend      | Custom FastAPI, selected by env file                                  |
+| Auth         | Email/password + Google Sign-In + Apple Sign-In                       |
+| Image Picker | expo-image-picker (gallery + camera)                                  |
 | Social Login | @react-native-google-signin/google-signin + expo-apple-authentication |
-| Linting      | ESLint + Prettier + Husky pre-commit                 |
-| Language     | App UI in Korean, code in English                    |
+| Linting      | ESLint + Prettier + Husky pre-commit                                  |
+| Language     | App UI in Korean, code in English                                     |
 
 ## Environment Variables
 

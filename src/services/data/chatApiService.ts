@@ -15,12 +15,10 @@ import {
 } from "../../types/chat"
 import type { ApiResponse } from "../../types/api"
 import type { TokenRefreshResult } from "../../types/auth"
-import { isMockMode } from "../../config/appConfig"
+import { getBackendUrl, isMockMode } from "../../config/appConfig"
 import { api, publicApi, tokenService } from "../core"
 
-const BASE_URL =
-  process.env.EXPO_PUBLIC_BACKEND_URL ??
-  "<backend-api-base-url>"
+const BASE_URL = getBackendUrl()
 
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = await tokenService.getRefreshToken()

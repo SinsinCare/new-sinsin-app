@@ -46,7 +46,9 @@ yarn-error.*
 
 # local env files
 .env
-.env*.local
+.env.*
+!.env.example
+!tests/.env.test.example
 tests/.env.test
 
 # Google OAuth credentials

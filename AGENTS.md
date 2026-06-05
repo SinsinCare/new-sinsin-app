@@ -40,8 +40,8 @@ Branch and environment policy:
 - `develop` is the working/test branch and should build against the test backend.
 - Before running any local, EAS, or deploy build on behalf of a user, ask which target environment to use: `test` or `production`.
 - Do not infer the target only from the current branch when the user simply says "build"; confirm the environment first.
-- Test backend URL: `<test-backend-api-base-url>`
-- Production backend URL: `<backend-api-base-url>`
+- Local environment values must be loaded from gitignored env files such as `.env.test` and `.env.production`.
+- Do not commit backend URLs or other environment values.
 
 Build commands:
 
@@ -58,14 +58,18 @@ npm run deploy:prod        # EAS production build and auto-submit
 ### Android
 
 **로컬 디버그 빌드 (USB 연결 기기):**
+
 ```bash
 npx expo run:android --variant release
 ```
+
 - 기기에 이미 상위 버전이 설치된 경우: `adb uninstall com.mediology.sinsinapp` 후 재설치
 
 **배포용 AAB 빌드는 반드시 EAS를 사용해야 합니다.**
+
 - 프로덕션 키스토어가 EAS 서버에서 관리됨
 - 로컬 `./gradlew bundleRelease`로 빌드하면 debug.keystore로 서명되어 Play Store 업로드 불가
+
 ```bash
 # EAS 클라우드 빌드 (키스토어 자동 처리)
 npx eas build --platform android --profile production
@@ -75,10 +79,12 @@ npx eas build --platform android --profile production --local
 ```
 
 **Play Store 업로드:**
+
 - [Play Console](https://play.google.com/console) → 신신당부 → 프로덕션 → 새 버전 만들기
 - 계정: healthierwith@gmail.com / 패키지: com.mediology.sinsinapp
 
 **Android SHA-1 (Google OAuth 등록용):**
+
 - debug.keystore: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
 - Play Store 업로드 키: `C3:4F:D7:DB:96:C6:BC:9F:0C:2A:6D:BC:60:61:99:69:3F:32:AB:4E`
 
@@ -171,20 +177,20 @@ Feature-based organization with types, data, services, hooks, and components per
 
 ## Key Technical Decisions
 
-| Aspect       | Choice                                               |
-| ------------ | ---------------------------------------------------- |
-| Framework    | Expo ~54.0 + React Native 0.81                       |
-| Routing      | Expo Router (typed routes enabled)                   |
-| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3)   |
-| Font         | Pretendard KR (OTF, 4 weights)                       |
-| State        | Zustand + React Query                                |
-| Forms        | react-hook-form                                      |
-| Backend      | Custom FastAPI (`<backend-base-url>`) |
-| Auth         | Email/password + Google Sign-In + Apple Sign-In      |
-| Image Picker | expo-image-picker (gallery + camera)                 |
+| Aspect       | Choice                                                                |
+| ------------ | --------------------------------------------------------------------- |
+| Framework    | Expo ~54.0 + React Native 0.81                                        |
+| Routing      | Expo Router (typed routes enabled)                                    |
+| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3)                    |
+| Font         | Pretendard KR (OTF, 4 weights)                                        |
+| State        | Zustand + React Query                                                 |
+| Forms        | react-hook-form                                                       |
+| Backend      | Custom FastAPI, selected by env file                                  |
+| Auth         | Email/password + Google Sign-In + Apple Sign-In                       |
+| Image Picker | expo-image-picker (gallery + camera)                                  |
 | Social Login | @react-native-google-signin/google-signin + expo-apple-authentication |
-| Linting      | ESLint + Prettier + Husky pre-commit                 |
-| Language     | App UI in Korean, code in English                    |
+| Linting      | ESLint + Prettier + Husky pre-commit                                  |
+| Language     | App UI in Korean, code in English                                     |
 
 ## Environment Variables
 

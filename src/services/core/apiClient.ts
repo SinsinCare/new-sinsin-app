@@ -3,8 +3,9 @@ import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
+import { getBackendUrl } from "../../config/appConfig"
 
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL
+const BASE_URL = getBackendUrl()
 
 // 인증 불필요 엔드포인트용 (로그인, 회원가입, OTP 등)
 export const publicApi = axios.create({

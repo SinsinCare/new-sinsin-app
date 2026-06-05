@@ -401,6 +401,7 @@ doctor_patient_assignments에서
 ### 현재 mock 상태인 부분
 
 의사 대시보드가 현재 mock 데이터로 표시하고 있는 항목:
+
 - 환자 목록 (이름, 신장 단계, 마지막 활동)
 - 식사 기록 및 영양소 차트
 - 체중 추이 그래프
@@ -420,35 +421,35 @@ apiUrl: '<backend-api-base-url>',
 
 ### 환자 목록 화면에서 표시할 핵심 정보
 
-| 필드 | 출처 |
-|------|------|
-| 이름, 이메일 | `GET /doctor/patients` |
-| CKD 단계 | `ckdStage` (1~5, null이면 "미입력") |
-| 투석 여부 | `isDialysis` |
-| 마지막 활동일 | `lastActivityAt` |
+| 필드             | 출처                                        |
+| ---------------- | ------------------------------------------- |
+| 이름, 이메일     | `GET /doctor/patients`                      |
+| CKD 단계         | `ckdStage` (1~5, null이면 "미입력")         |
+| 투석 여부        | `isDialysis`                                |
+| 마지막 활동일    | `lastActivityAt`                            |
 | 오늘 나트륨 섭취 | `/summary` → `todayNutrition.totalSodiumMg` |
 
 ### 환자 상세 화면 탭 구성 제안
 
-| 탭 | API |
-|----|-----|
-| 오늘 요약 | `/summary` |
-| 식사 기록 | `/food-logs?from=&to=` |
+| 탭        | API                       |
+| --------- | ------------------------- |
+| 오늘 요약 | `/summary`                |
+| 식사 기록 | `/food-logs?from=&to=`    |
 | 체중/부종 | `/body-records?from=&to=` |
-| 검사 결과 | `/lab-results` |
+| 검사 결과 | `/lab-results`            |
 
 ---
 
 ## 7. 기존 요청과의 차이점 요약
 
-| 항목 | 기존 요청 | 수정 내용 |
-|------|----------|----------|
-| 식사 기록 엔드포인트 | `GET /food-intake?patientId=` | `GET /doctor/patients/{id}/food-logs` |
-| 검사 결과 엔드포인트 | FHIR 표준 `/fhir/r4/Observation` | `GET /doctor/patients/{id}/lab-results` (자체 포맷) |
-| 환자 연결 엔드포인트 | `POST /api/patients/link-doctor` | `POST /api/v1/doctor/enroll` (이미 구현됨) |
-| 식사 데이터 내용 | 미정 | 식품별 `restrictionLevel`, 국/찌개 국물 섭취 여부, 부종 데이터 포함 |
-| kidney_stage 값 | `stage3b` 등 문자열 | `ckdStage: 3` 숫자형 (앱 기존 스키마 통일) |
-| 체중/부종 | 별도 언급 없음 | `edemaLevel: NONE/SLIGHT/SEVERE` 포함 |
+| 항목                 | 기존 요청                        | 수정 내용                                                           |
+| -------------------- | -------------------------------- | ------------------------------------------------------------------- |
+| 식사 기록 엔드포인트 | `GET /food-intake?patientId=`    | `GET /doctor/patients/{id}/food-logs`                               |
+| 검사 결과 엔드포인트 | FHIR 표준 `/fhir/r4/Observation` | `GET /doctor/patients/{id}/lab-results` (자체 포맷)                 |
+| 환자 연결 엔드포인트 | `POST /api/patients/link-doctor` | `POST /api/v1/doctor/enroll` (이미 구현됨)                          |
+| 식사 데이터 내용     | 미정                             | 식품별 `restrictionLevel`, 국/찌개 국물 섭취 여부, 부종 데이터 포함 |
+| kidney_stage 값      | `stage3b` 등 문자열              | `ckdStage: 3` 숫자형 (앱 기존 스키마 통일)                          |
+| 체중/부종            | 별도 언급 없음                   | `edemaLevel: NONE/SLIGHT/SEVERE` 포함                               |
 
 > FHIR은 표준이지만 이 앱의 기존 데이터 모델과 맞지 않아 오버엔지니어링입니다.
 > 자체 포맷으로 구현 후 필요 시 FHIR wrapper 추가하는 방향을 권장합니다.

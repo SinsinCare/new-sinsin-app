@@ -1,10 +1,16 @@
 import axios, { type AxiosInstance, type AxiosResponse } from "axios"
 
 /** 앱의 `EXPO_PUBLIC_BACKEND_URL`과 동일한 기준 URL 사용 */
-export const BASE_URL =
-  process.env.TEST_BASE_URL ||
-  process.env.EXPO_PUBLIC_BACKEND_URL ||
-  "<backend-api-base-url>"
+const configuredBaseUrl =
+  process.env.TEST_BASE_URL || process.env.EXPO_PUBLIC_BACKEND_URL
+
+if (!configuredBaseUrl) {
+  throw new Error(
+    "TEST_BASE_URL 또는 EXPO_PUBLIC_BACKEND_URL을 gitignored env 파일에 설정해주세요.",
+  )
+}
+
+export const BASE_URL = configuredBaseUrl
 
 // 인메모리 토큰 저장소 (AsyncStorage 대신)
 let _accessToken: string | null = null

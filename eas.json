@@ -7,46 +7,26 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
-        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
-        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
-        "EXPO_PUBLIC_MOCK_NO_USER": "false"
-      }
+      "environment": "development"
     },
     "test": {
       "distribution": "internal",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "<test-backend-api-base-url>",
-        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
-        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
-        "EXPO_PUBLIC_MOCK_NO_USER": "false"
       }
     },
     "preview": {
       "distribution": "internal",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
-        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
-        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
-        "EXPO_PUBLIC_MOCK_NO_USER": "false"
       }
     },
     "production": {
       "node": "22.21.1",
       "autoIncrement": true,
-      "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "<backend-api-base-url>",
-        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
-        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
-        "EXPO_PUBLIC_MOCK_NO_USER": "false"
-      }
+      "environment": "production"
     }
   },
   "submit": {

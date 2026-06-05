@@ -2,19 +2,24 @@
 
 This React Native repository uses two long-lived branches:
 
-| Branch | Purpose | Backend target |
-| --- | --- | --- |
-| `develop` | Ongoing development and test verification | test backend |
-| `main` | Production release state | production backend |
+| Branch    | Purpose                                   | Backend target     |
+| --------- | ----------------------------------------- | ------------------ |
+| `develop` | Ongoing development and test verification | test backend       |
+| `main`    | Production release state                  | production backend |
 
 `dev` is no longer used. Use `develop` for work and PRs.
 
-## Environment Summary
+## Environment Files
 
-| Environment | Backend URL |
-| --- | --- |
-| test | `<test-backend-api-base-url>` |
-| production | `<backend-api-base-url>` |
+Do not commit environment values. Local test and production commands load
+gitignored env files:
+
+| Environment | Local env file    |
+| ----------- | ----------------- |
+| test        | `.env.test`       |
+| production  | `.env.production` |
+
+Ask the project owner for the actual values.
 
 ## Before Updating Local Branches
 
@@ -97,6 +102,9 @@ Equivalent EAS profile:
 eas build --platform all --profile test
 ```
 
+The EAS `test` profile reads values from the EAS `preview` environment. The
+values must be configured in EAS, not committed to this repository.
+
 ## Production Build
 
 Production builds use the production backend:
@@ -113,16 +121,20 @@ Production deploy with auto-submit:
 npm run deploy:prod
 ```
 
+The EAS `production` profile reads values from the EAS `production`
+environment. The values must be configured in EAS, not committed to this
+repository.
+
 ## AI Build Requests
 
 When asking Claude, Codex, or another AI agent to build the app, specify the
 target environment. If the request does not specify an environment, the agent
 should ask first:
 
-| Request target | Use |
-| --- | --- |
-| test server testing | `test` build commands |
-| production release | `production` build commands |
+| Request target      | Use                         |
+| ------------------- | --------------------------- |
+| test server testing | `test` build commands       |
+| production release  | `production` build commands |
 
 Do not assume the build target only from the current branch.
 
