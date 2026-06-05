@@ -1,24 +1,37 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { MainTab } from "../types"
-import { Pressable, useColorScheme, View, StyleSheet } from "react-native"
-import { Icon } from "@/src/shared/components"
+import { Pressable, View, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import { useRouter } from "expo-router"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
+
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"]
+
+function formatDate(date: Date): string {
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const dow = DAY_LABELS[date.getDay()]
+  return `${month}월 ${day}일 (${dow})`
+}
 
 interface HomeHeaderProps {
   mainTab: MainTab
   onChangeTab: (tab: MainTab) => void
   topInset?: number
+  selectedDate?: Date
+  onDatePress?: () => void
 }
 
 export function HomeHeader({
   mainTab,
   onChangeTab,
   topInset = 0,
+  selectedDate,
+  onDatePress,
 }: HomeHeaderProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const router = useRouter()
   const unreadCount = useNotificationHistoryStore((s) => s.unreadCount())
 
@@ -58,11 +71,6 @@ export function HomeHeader({
         </XStack>
 
         <XStack gap="$4">
-          {isDarkMode ? (
-            <Icon name="profile-dark" size={27} />
-          ) : (
-            <Icon name="profile" size={27} />
-          )}
           <Pressable
             onPress={() => router.push("/(settings)/notifications")}
             hitSlop={8}
@@ -87,6 +95,26 @@ export function HomeHeader({
           </Pressable>
         </XStack>
       </XStack>
+
+      {selectedDate && (
+        <Pressable onPress={onDatePress} hitSlop={8} style={styles.datePillWrapper}>
+          <View style={[styles.datePill, isDarkMode && styles.datePillDark]}>
+            <Text
+              fontSize={16}
+              fontWeight="600"
+              color={isDarkMode ? "$textDark" : "$color"}
+            >
+              {formatDate(selectedDate)}
+            </Text>
+            <Ionicons
+              name="calendar-outline"
+              size={18}
+              color={isDarkMode ? tokens.color.textDark.val : tokens.color.black.val}
+              style={{ marginLeft: 6 }}
+            />
+          </View>
+        </Pressable>
+      )}
     </YStack>
   )
 }
@@ -106,5 +134,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 3,
+  },
+  datePillWrapper: {
+    alignItems: "center",
+    paddingBottom: 10,
+  },
+  datePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  datePillDark: {
+    backgroundColor: tokens.color.cardBgDark.val,
   },
 })

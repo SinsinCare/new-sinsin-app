@@ -5,8 +5,8 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import {
@@ -85,7 +85,7 @@ export function FoodResultEdit({
     handleNameConfirm()
     updateFoodTitle(result!.foodAnalysisResultId, newTitle)
   }
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const textColor = isDarkMode
     ? tokens.color.textDark.val
     : tokens.color.grey1.val

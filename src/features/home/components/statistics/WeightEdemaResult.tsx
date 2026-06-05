@@ -1,7 +1,7 @@
 import { Text, XStack, YStack } from "tamagui"
-import { EDEMA_LEVEL_TO_LABEL } from "../../data/EdemaConstants"
+import { EDEMA_DISPLAY_LABEL } from "../../data/EdemaConstants"
 import { DateAnalysisBodyRecord } from "@/src/types"
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 interface WeightEdemaResultProps {
   bodyRecords?: {
@@ -14,12 +14,12 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
   const todayWeight = bodyRecords?.today?.weightKg ?? 0
   const previousWeight = bodyRecords?.previous?.weightKg ?? 0
   const todayEdema = bodyRecords?.today?.edemaLevel
-    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.today.edemaLevel] ?? null)
+    ? (EDEMA_DISPLAY_LABEL[bodyRecords.today.edemaLevel] ?? null)
     : null
   const previousEdema = bodyRecords?.previous?.edemaLevel
-    ? (EDEMA_LEVEL_TO_LABEL[bodyRecords.previous.edemaLevel] ?? null)
+    ? (EDEMA_DISPLAY_LABEL[bodyRecords.previous.edemaLevel] ?? null)
     : null
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <YStack paddingVertical="$4" gap="$3">

@@ -18,10 +18,24 @@ module.exports = defineConfig([
     ignores: [
       "node_modules/",
       "dist/",
+      ".claude/",
       ".expo/",
       "web-build/",
       "ios/",
       "android/",
     ],
+  },
+  {
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: {
+        __dirname: "readonly",
+        console: "readonly",
+        module: "readonly",
+        process: "readonly",
+        require: "readonly",
+      },
+    },
   },
 ])

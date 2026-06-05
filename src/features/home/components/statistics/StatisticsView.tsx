@@ -7,8 +7,8 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   useWindowDimensions,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { IntakeSummary } from "./IntakeSummary"
@@ -72,7 +72,7 @@ export function StatisticsView({
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
   const isEmpty = !isLoading && !hasDiets
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   useEffect(() => {
     if (!isActive) return

@@ -1,7 +1,9 @@
-import { TouchableOpacity, StyleSheet, useColorScheme } from "react-native"
+import { TouchableOpacity, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
-import { EDEMA_OPTIONS, EdemaLevel } from "../../data/EdemaConstants"
+import { EDEMA_OPTIONS, EDEMA_BUTTON_LABEL, EdemaLevel } from "../../data/EdemaConstants"
 import { RecordCard } from "./RecordCard"
+import EdemaIconSvg from "@/assets/images/edema-icon.svg"
 
 interface EdemaRecordProps {
   selected: EdemaLevel | null
@@ -10,13 +12,13 @@ interface EdemaRecordProps {
 }
 
 export function EdemaRecord({ selected, onSave }: EdemaRecordProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <RecordCard
       type="weight"
       title="몸이 붓는 느낌이 있나요?"
-      icon={require("@/assets/images/water-edema.png")}
+      icon={<EdemaIconSvg width={26} height={36} />}
     >
       <XStack gap="$2">
         {EDEMA_OPTIONS.map((option) => (
@@ -53,7 +55,7 @@ export function EdemaRecord({ selected, onSave }: EdemaRecordProps) {
                       : "$color"
                 }
               >
-                {option}
+                {EDEMA_BUTTON_LABEL[option]}
               </Text>
             </XStack>
           </TouchableOpacity>

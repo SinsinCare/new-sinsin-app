@@ -7,6 +7,7 @@ import Toast from "react-native-toast-message"
 import MainLogo from "@/assets/images/main-logo.svg"
 import MainTextLogo from "@/assets/images/main-text-logo.svg"
 import GoogleLogo from "@/assets/images/google-logo.svg"
+import KakaoLogo from "@/assets/images/kakao-logo.svg"
 import { useAuth } from "@/src/hooks/useAuth"
 import { Ionicons } from "@expo/vector-icons"
 import { logger } from "@/src/lib/logger"
@@ -14,7 +15,12 @@ import { useAuthColors } from "../hooks"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
-  const { signInWithGoogle, signInWithApple, isUserCancelledError } = useAuth()
+  const {
+    signInWithGoogle,
+    signInWithApple,
+    signInWithKakao,
+    isUserCancelledError,
+  } = useAuth()
   const [socialLoading, setSocialLoading] = useState(false)
   const colors = useAuthColors()
 
@@ -30,7 +36,9 @@ export function LoginScreen() {
     } catch (error) {
       if (!isUserCancelledError(error)) {
         const msg =
-          error instanceof Error ? error.message : JSON.stringify(error)
+          error instanceof Error
+            ? error.message
+            : "로그인 중 문제가 발생했습니다."
         logger.debug("[LoginScreen] Google 로그인 에러", msg)
         Toast.show({
           type: "error",
@@ -52,11 +60,40 @@ export function LoginScreen() {
     } catch (error) {
       if (!isUserCancelledError(error)) {
         const msg =
-          error instanceof Error ? error.message : JSON.stringify(error)
+          error instanceof Error
+            ? error.message
+            : "로그인 중 문제가 발생했습니다."
         logger.debug("[LoginScreen] Apple 로그인 에러", msg)
         Toast.show({
           type: "error",
           text1: "Apple 로그인 실패",
+          text2: msg,
+          visibilityTime: 5000,
+        })
+      }
+    } finally {
+      setSocialLoading(false)
+    }
+  }
+
+  const handleKakaoLogin = async () => {
+    if (socialLoading) return
+    logger.debug("[LoginScreen] Kakao 로그인 시작")
+    setSocialLoading(true)
+    try {
+      await signInWithKakao()
+      logger.debug("[LoginScreen] Kakao 로그인 성공")
+    } catch (error) {
+      const cancelled = isUserCancelledError(error)
+      logger.debug("[LoginScreen] Kakao 로그인 에러", { cancelled })
+      if (!cancelled) {
+        const msg =
+          error instanceof Error
+            ? error.message
+            : "로그인 중 문제가 발생했습니다."
+        Toast.show({
+          type: "error",
+          text1: "카카오 로그인 실패",
           text2: msg,
           visibilityTime: 5000,
         })
@@ -145,6 +182,31 @@ export function LoginScreen() {
               lineHeight={20}
             >
               Google로 계속하기
+            </Text>
+          </XStack>
+        </Pressable>
+
+        {/* 카카오 로그인 */}
+        <Pressable onPress={handleKakaoLogin} disabled={socialLoading}>
+          <XStack
+            backgroundColor="#FEE500"
+            paddingVertical={16}
+            paddingHorizontal={24}
+            borderRadius={8}
+            alignItems="center"
+            justifyContent="center"
+            gap={10}
+            opacity={socialLoading ? 0.6 : 1}
+          >
+            <KakaoLogo width={20} height={20} />
+            <Text
+              color="#191919"
+              fontSize={16}
+              fontWeight="500"
+              letterSpacing={-0.3}
+              lineHeight={20}
+            >
+              카카오로 계속하기
             </Text>
           </XStack>
         </Pressable>

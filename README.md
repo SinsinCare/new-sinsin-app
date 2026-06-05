@@ -193,6 +193,7 @@ Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
 ### EAS 빌드 (테스트용 / 스토어 배포)
 
 환경 변수는 `eas.json`에 프로파일별로 설정되어 있어 별도 작업 불필요.
+스토어 자동 제출(`--auto-submit`)은 아래 [🚀 EAS 자동 배포](#-eas-자동-배포-cli) 참고.
 
 #### iOS
 ```bash
@@ -206,12 +207,6 @@ eas build --platform ios --profile development
 
 #### Android
 ```bash
-# Production (Google Play Store) - 로컬 빌드
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
-export ANDROID_HOME=$HOME/Library/Android/sdk
-eas build --platform android --profile production --local
-# 빌드 완료 후 생성된 .aab 파일을 Play Console에 수동 업로드
-
 # Preview (설치용 APK 생성)
 eas build --platform android --profile preview
 
@@ -220,6 +215,48 @@ eas build --platform android --profile development
 ```
 
 > **Google Play Store:** `com.mediology.sinsinapp` (계정: healthierwith@gmail.com)
+
+---
+
+## 🚀 EAS 자동 배포 (CLI)
+
+클라우드 빌드 + 스토어 자동 제출을 **명령어 한 줄**로 수행합니다.
+버전은 `app.json`의 `version` 한 곳에서만 관리하고, 빌드번호(iOS `buildNumber` /
+Android `versionCode`)는 EAS가 자동 증가시킵니다.
+
+### 배포 명령어
+
+```bash
+# iOS + Android 동시 빌드 + 각 스토어 자동 제출
+npm run deploy            # = eas build --platform all --profile production --auto-submit
+
+# 플랫폼별 빌드 + 제출
+npm run deploy:ios        # = eas build --platform ios     --profile production --auto-submit
+npm run deploy:android    # = eas build --platform android --profile production --auto-submit
+
+# 이미 만들어진 최신 빌드만 다시 제출
+npm run submit:ios        # = eas submit --platform ios     --latest
+npm run submit:android    # = eas submit --platform android --latest
+
+# 빌드만 (제출 안 함)
+eas build --platform ios     --profile production
+eas build --platform android --profile production
+
+# 원격 버전(빌드번호) 확인 / 빌드 상태·이력 확인
+eas build:version:get --platform ios
+eas build:list --platform ios --limit 5
+```
+
+### 릴리스 절차
+
+1. 코드 변경 후 **커밋** (EAS 프로덕션 빌드는 커밋된 git 상태 기준)
+2. `app.json`의 `version` 올리기 (예: 1.0.12 → 1.0.13). 빌드번호는 자동
+3. `npm run deploy` 실행 → 빌드 완료 후 양 스토어 자동 제출
+4. App Store Connect(TestFlight) / Play Console에서 심사 제출 및 출시
+
+> 설정·트러블슈팅 상세는 [`eas.md`](./eas.md)(전체/iOS),
+> [`eas-android.md`](./eas-android.md)(Android 서비스 계정 연결) 참고.
+> iOS 자동 제출 키, Android `google-play-key.json` 발급 등 최초 1회 설정이 거기 정리돼 있습니다.
 
 ### 로컬에서 iOS 개발 빌드 (Xcode)
 

@@ -29,7 +29,23 @@ export function WithdrawalScreen() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [customReason, setCustomReason] = useState("")
 
-  const isActive = selectedIndex !== null
+  const isOtherSelected = selectedIndex === WITHDRAWAL_OTHER_INDEX
+  const trimmedCustomReason = customReason.trim()
+  const isActive =
+    selectedIndex !== null &&
+    (!isOtherSelected || trimmedCustomReason.length >= 20)
+
+  const handleSubmit = () => {
+    if (selectedIndex === null) return
+
+    router.push({
+      pathname: "/(settings)/withdrawal-terms",
+      params: {
+        reason: WITHDRAWAL_REASONS[selectedIndex],
+        detail: isOtherSelected ? trimmedCustomReason : "",
+      },
+    })
+  }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
@@ -97,7 +113,7 @@ export function WithdrawalScreen() {
           label="제출하기"
           disabled={!isActive}
           paddingBottom={insets.bottom + 16}
-          onPress={() => router.push("/(settings)/withdrawal-terms")}
+          onPress={handleSubmit}
         />
       </KeyboardAvoidingView>
     </ThemedView>

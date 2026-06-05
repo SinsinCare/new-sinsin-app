@@ -1,4 +1,4 @@
-import { Pressable } from "react-native"
+import { Pressable, Keyboard } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { useForm } from "react-hook-form"
 import { FormTextField } from "@/src/shared/components"
@@ -33,12 +33,14 @@ export function SignupEmailScreen() {
   const handleSendCode = async () => {
     const valid = await trigger("email")
     if (!valid) return
+    Keyboard.dismiss()
     await sendCode(getValues("email"))
   }
 
   const handleVerifyCode = async () => {
     const valid = await trigger("code")
     if (!valid) return
+    Keyboard.dismiss()
     const { email, code } = getValues()
     await verifyCode(email, code)
   }
@@ -128,6 +130,7 @@ export function SignupEmailScreen() {
                   placeholder="인증번호 6자리를 입력해주세요"
                   inputType="number"
                   autoFocus
+                  maxLength={6}
                   rules={{
                     required: "인증번호를 입력해주세요.",
                     minLength: {

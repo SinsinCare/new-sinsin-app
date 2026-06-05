@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { MealType } from "../types"
@@ -9,7 +10,7 @@ interface MealTypeToggleProps {
 }
 
 export function MealTypeToggle({ value, onChange }: MealTypeToggleProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const activeColor = tokens.color.primaryAccent.val

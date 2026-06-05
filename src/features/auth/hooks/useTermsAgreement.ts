@@ -5,7 +5,7 @@ import { TERMS } from "../data/terms"
 
 export function useTermsAgreement() {
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
-  const { setTermsOfServiceAgree, setPrivacyPolicyAgree, setMarketingAgree } =
+  const { setTermsOfServiceAgree, setPrivacyPolicyAgree, setMarketingAgree, setSignupInProgress } =
     useSignupStore()
 
   const allChecked = TERMS.every((t) => agreed[t.id])
@@ -30,6 +30,7 @@ export function useTermsAgreement() {
   }, [])
 
   const handleNext = () => {
+    setSignupInProgress(true)
     setTermsOfServiceAgree(!!agreed["service"])
     setPrivacyPolicyAgree(!!agreed["privacy"])
     setMarketingAgree(!!agreed["marketing"])

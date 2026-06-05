@@ -5,10 +5,14 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin"
 import * as AppleAuthentication from "expo-apple-authentication"
+import { login as kakaoLogin } from "@react-native-kakao/user"
+import { initializeKakaoSDK, getKeyHashAndroid } from "@react-native-kakao/core"
 import { logger } from "@/src/lib/logger"
 
+const KAKAO_NATIVE_APP_KEY = "709c22f6c6227095a316851f1f902189"
+
 export interface SocialAuthResult {
-  provider: "google" | "apple"
+  provider: "google" | "apple" | "kakao"
   idToken: string
   email: string | null
   displayName: string | null
@@ -99,6 +103,56 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
   }
 }
 
+export async function signInWithKakao(): Promise<SocialAuthResult> {
+  logger.debug("[Kakao SignIn] 시작")
+
+  try {
+    await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
+    logger.debug("[Kakao SignIn] SDK 초기화 완료, appKey:", KAKAO_NATIVE_APP_KEY)
+  } catch (e) {
+    logger.error("[Kakao SignIn] SDK 초기화 실패", e)
+    throw e
+  }
+
+  if (Platform.OS === "android") {
+    try {
+      const keyHash = await getKeyHashAndroid()
+      logger.debug("[Kakao SignIn] keyHash:", keyHash)
+    } catch (e) {
+      logger.error("[Kakao SignIn] keyHash 조회 실패", e)
+    }
+  }
+
+  let token
+  try {
+    token = await kakaoLogin()
+    logger.debug("[Kakao SignIn] login 완료", {
+      hasAccessToken: !!token.accessToken,
+      hasIdToken: !!token.idToken,
+      tokenType: token.tokenType,
+      scopes: token.scopes,
+    })
+  } catch (e: unknown) {
+    const err = e as Record<string, unknown>
+    logger.error("[Kakao SignIn] login 실패", {
+      name: e instanceof Error ? e.name : "unknown",
+      message: e instanceof Error ? e.message : String(e),
+      code: err?.code,
+      domain: err?.domain,
+      nativeError: err?.nativeError,
+      userInfo: err?.userInfo,
+    })
+    throw e
+  }
+
+  return {
+    provider: "kakao",
+    idToken: token.accessToken,
+    email: null,
+    displayName: null,
+  }
+}
+
 export function isUserCancelledError(error: unknown): boolean {
   // Google cancel
   if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -109,6 +163,13 @@ export function isUserCancelledError(error: unknown): boolean {
     error instanceof Error &&
     "code" in error &&
     (error as { code: string }).code === "ERR_REQUEST_CANCELED"
+  ) {
+    return true
+  }
+  // Kakao cancel (사용자가 카카오 로그인 화면을 닫음)
+  if (
+    error instanceof Error &&
+    (error.message.includes("cancel") || error.message.includes("Cancel"))
   ) {
     return true
   }

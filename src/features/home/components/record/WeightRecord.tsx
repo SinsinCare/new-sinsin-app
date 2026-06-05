@@ -2,11 +2,12 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { RecordCard } from "./RecordCard"
 import { tokens } from "@/src/theme/tokens"
+import WeightIconSvg from "@/assets/images/weight-icon.svg"
 
 interface WeightRecordProps {
   weight: string
@@ -25,7 +26,7 @@ export function WeightRecord({
   onIncrease,
   onSave,
 }: WeightRecordProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const placeholder =
     yesterdayWeight !== null ? `${yesterdayWeight}` : "직접 입력"
 
@@ -33,7 +34,7 @@ export function WeightRecord({
     <RecordCard
       type="weight"
       title="오늘의 체중을 기록해 주세요."
-      icon={require("@/assets/images/weight.png")}
+      icon={<WeightIconSvg width={36} height={36} />}
     >
       <XStack
         alignItems="center"

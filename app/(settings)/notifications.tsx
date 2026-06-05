@@ -1,1 +1,1 @@
-export { NotificationsScreen as default } from "@/src/features/settings/views/NotificationsScreen"
+export { NotificationHistoryScreen as default } from "@/src/features/settings/views/NotificationHistoryScreen"

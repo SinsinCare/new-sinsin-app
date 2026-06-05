@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -16,7 +16,7 @@ const COLORS = {
 } as const
 
 export function LocationBar() {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const color = isDark ? COLORS.dark : COLORS.light
   const { address, isLoading, error } = useCurrentAddress()
 

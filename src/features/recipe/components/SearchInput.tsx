@@ -1,9 +1,9 @@
 import {
-  useColorScheme,
   View,
   TextInput,
   type TextInputProps,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 
@@ -33,7 +33,7 @@ export function SearchInput({
   placeholder = "레시피 검색하기",
   ...props
 }: SearchInputProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 

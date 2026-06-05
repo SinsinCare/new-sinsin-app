@@ -2,8 +2,8 @@ import axios, { type AxiosInstance, type AxiosResponse } from "axios"
 
 /** 앱의 `EXPO_PUBLIC_BACKEND_URL`과 동일한 기준 URL 사용 */
 export const BASE_URL =
-  process.env.EXPO_PUBLIC_BACKEND_URL ||
   process.env.TEST_BASE_URL ||
+  process.env.EXPO_PUBLIC_BACKEND_URL ||
   "<backend-api-base-url>"
 
 // 인메모리 토큰 저장소 (AsyncStorage 대신)

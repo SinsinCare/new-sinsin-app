@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -17,7 +18,7 @@ interface FilterTabBarProps {
 }
 
 export function FilterTabBar({ activeTab, onTabChange, onClose }: FilterTabBarProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const insets = useSafeAreaInsets()
 
   const activeTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val

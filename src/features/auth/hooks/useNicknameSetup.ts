@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { router } from "expo-router"
-import { nicknameService, authService } from "@/src/services"
+import { nicknameService, authService, api } from "@/src/services"
 import { useSignupStore, useAuthStore } from "@/src/stores"
 import { ApiError } from "@/src/services/core/apiError"
 import { showErrorToast } from "@/src/lib/toast"
@@ -41,6 +41,18 @@ export function useNicknameSetup() {
 
       setUser(user)
       setAccountState("PENDING_ONBOARDING")
+
+      if (signupState.gender) {
+        try {
+          await api.patch("/user/profile", {
+            nickName: data.nickname,
+            name: signupState.name,
+            gender: signupState.gender,
+          })
+        } catch {
+          // 성별 저장 실패는 무시 — 계정 생성은 이미 완료됨
+        }
+      }
       signupState.setNickname(data.nickname)
       router.replace("/(auth)/signup-complete")
     } catch (e: unknown) {

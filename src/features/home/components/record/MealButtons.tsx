@@ -6,8 +6,8 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Dimensions,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Ionicons } from "@expo/vector-icons"
 import { MealType } from "../../types"
 import { MealButton } from "./MealButton"
@@ -36,7 +36,7 @@ export function MealButtons({
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [pickerBottom, setPickerBottom] = useState(0)
   const buttonRef = useRef<React.ComponentRef<typeof TouchableOpacity>>(null)
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const cardBg = isDarkMode
     ? tokens.color.cardBgDark.val
     : tokens.color.pureWhite.val

@@ -1,4 +1,5 @@
-import { Alert, Pressable, useColorScheme } from "react-native"
+import { Alert, Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -47,7 +48,7 @@ export function PostListItem({
   onBlock,
   showDivider = true,
 }: PostListItemProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const colors = isDark ? ITEM_COLORS.dark : ITEM_COLORS.light
 

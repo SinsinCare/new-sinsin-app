@@ -52,7 +52,7 @@ function getRealEmailService(): EmailService {
     },
 
     async resendVerificationCode(email: string): Promise<void> {
-      await publicApi.post<ApiResponse>("/auth/password/email/send", { email })
+      await publicApi.post<ApiResponse>("/auth/signup/email/otp/send", { email })
     },
 
     async sendPasswordResetCode(email: string): Promise<void> {

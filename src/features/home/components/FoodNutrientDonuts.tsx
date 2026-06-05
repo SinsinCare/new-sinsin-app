@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Svg, { Circle } from "react-native-svg"
 import { XStack, YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -192,7 +192,7 @@ interface FoodNutrientDonutsProps {
 }
 
 export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const weight = useUserStore((s) => s.profile?.weight ?? 60)
 
   return (

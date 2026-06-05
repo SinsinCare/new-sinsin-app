@@ -1,4 +1,5 @@
-import { ScrollView, useColorScheme } from "react-native"
+import { ScrollView } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { RestaurantCard } from "./RestaurantCard"
@@ -17,10 +18,11 @@ const COLORS = {
 
 interface CurationSectionProps {
   section: CurationSectionData
+  onRestaurantPress?: (id: string) => void
 }
 
-export function CurationSection({ section }: CurationSectionProps) {
-  const isDark = useColorScheme() === "dark"
+export function CurationSection({ section, onRestaurantPress }: CurationSectionProps) {
+  const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
   return (
@@ -44,7 +46,11 @@ export function CurationSection({ section }: CurationSectionProps) {
         contentContainerStyle={{ gap: 12, paddingRight: 16 }}
       >
         {section.restaurants.map((restaurant) => (
-          <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+          <RestaurantCard
+            key={restaurant.id}
+            restaurant={restaurant}
+            onPress={onRestaurantPress ? () => onRestaurantPress(restaurant.id) : undefined}
+          />
         ))}
       </ScrollView>
     </YStack>

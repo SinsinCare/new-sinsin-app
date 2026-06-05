@@ -5,8 +5,8 @@ import {
   ScrollView,
   Pressable,
   Platform,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -16,7 +16,7 @@ import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 
 function usePrivacyColors() {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   return {
     bg: isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val,
     cardBg: isDark ? tokens.color.cardBgDark.val : "#FFF",

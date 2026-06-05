@@ -70,11 +70,16 @@ function addErrorInterceptor(instance: AxiosInstance) {
         message: data?.message,
       })
     }
+    if (data?.fieldErrors) {
+      logger.debug("[api] fieldErrors", data.fieldErrors)
+    }
     return Promise.reject(
       new ApiError(
         data?.message || "서버 오류가 발생했습니다.",
         data?.code || `HTTP_${status}`,
         status,
+        false,
+        data?.fieldErrors,
       ),
     )
   })

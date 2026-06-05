@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Platform,
-  useColorScheme,
   StyleSheet,
   Alert,
 } from "react-native"
@@ -30,6 +29,7 @@ import {
 } from "@/src/features/recipe/data/recipeTags"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" }
 const HEADER_TEXT = { light: "#3C3C43", dark: tokens.color.textDark.val }
@@ -51,7 +51,7 @@ interface RecipeEditorProps {
 }
 
 export function RecipeEditor({ onClose }: RecipeEditorProps) {
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
   const insets = useSafeAreaInsets()
 
   const [title, setTitle] = useState("")

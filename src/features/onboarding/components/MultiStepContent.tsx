@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Checkbox } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
@@ -15,7 +16,7 @@ export function MultiStepContent({
   selectedKeys,
   onToggle,
 }: MultiStepContentProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const unselectedBg = isDark ? tokens.color.cardBgDark.val : "white"
   const unselectedBorder = isDark
     ? "rgba(100,105,115,0.4)"
@@ -33,7 +34,8 @@ export function MultiStepContent({
             onPress={() => onToggle(option.key)}
           >
             <XStack
-              height={56}
+              minHeight={56}
+              paddingVertical={14}
               borderRadius={12}
               borderWidth={1.5}
               borderColor={isSelected ? "#34D399" : unselectedBorder}

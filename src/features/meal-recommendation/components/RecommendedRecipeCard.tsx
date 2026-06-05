@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -17,7 +18,7 @@ export function RecommendedRecipeCard({
   onDismiss,
   onBookmark,
 }: RecommendedRecipeCardProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
   const cardBg = isDark ? tokens.color.cardBgDark.val : "#FFFFFF"

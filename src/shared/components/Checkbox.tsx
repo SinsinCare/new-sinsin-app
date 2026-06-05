@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text, XStack } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -18,7 +19,7 @@ export function Checkbox({
   size = 22,
   disabled = false,
 }: CheckboxProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const uncheckedBg = isDark ? tokens.color.cardBgDark.val : "white"
   const uncheckedBorder = isDark ? "#6B7280" : "#C5C8CE"
   const labelColor = isDark ? tokens.color.textDark.val : "#3F444F"

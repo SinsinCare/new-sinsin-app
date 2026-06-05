@@ -1,4 +1,5 @@
-import { Alert, Pressable, useColorScheme } from "react-native"
+import { Alert, Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -49,7 +50,7 @@ export function PopularPostCard({
   onPress,
   onBlock,
 }: PopularPostCardProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const colors = isDark ? CARD_COLORS.dark : CARD_COLORS.light
 

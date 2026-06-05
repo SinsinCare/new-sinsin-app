@@ -2,7 +2,6 @@ import {
   Modal,
   ScrollView,
   Image,
-  useColorScheme,
   Alert,
   ActionSheetIOS,
   Platform,
@@ -16,6 +15,7 @@ import ViewShot, { captureRef } from "react-native-view-shot"
 import * as Sharing from "expo-sharing"
 import Share, { Social } from "react-native-share"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import type {
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
@@ -72,7 +72,7 @@ export function FoodAnalysisResult({
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const shareCardRef = useRef<ViewShot>(null)
   const FACEBOOK_APP_ID = "1306082818293951"
 

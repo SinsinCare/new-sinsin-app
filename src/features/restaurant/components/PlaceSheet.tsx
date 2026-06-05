@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import { StyleSheet, useColorScheme } from "react-native"
+import { StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet"
@@ -15,7 +16,7 @@ interface PlaceSheetProps {
 }
 
 export function PlaceSheet({ restaurants, filters, onFiltersChange }: PlaceSheetProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const insets = useSafeAreaInsets()
   const snapPoints = useMemo(() => ["40%", "100%"], [])
 

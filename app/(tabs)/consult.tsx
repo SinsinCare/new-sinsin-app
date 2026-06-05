@@ -11,7 +11,6 @@ import {
   Pressable,
   Keyboard,
   StyleSheet,
-  useColorScheme,
   Dimensions,
   Modal,
   GestureResponderEvent,
@@ -48,6 +47,7 @@ import { chatApiService } from "@/src/services"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { chatHistoryQuery } from "@/src/features/consultation/data/queyOptions"
 import { ChatHistoryCardSkeleton } from "@/src/features/consultation/components/ChatHistoryCardSkeleton"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -58,7 +58,7 @@ if (Platform.OS === "android") {
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [inputMessage, setInputMessage] = useState("")
   const [isInputFocused, setIsInputFocused] = useState(false)

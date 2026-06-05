@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { View, StyleSheet, useColorScheme } from "react-native"
+import { View, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, useTheme } from "tamagui"
 import { tokens } from "../../../../theme/tokens"
 import { CIRCLE_SIZE } from "../../data/nutrientConstants"
@@ -34,7 +35,7 @@ export function NutrientBarSection({
   const [barWidth, setBarWidth] = useState(0)
 
   const theme = useTheme()
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const colorFillNormal = theme.secondary.val
   const colorFillOver = theme.warning.val
   const colorTrack = theme.borderColor.val

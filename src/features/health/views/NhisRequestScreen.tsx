@@ -25,25 +25,14 @@ export function NhisRequestScreen() {
   const [authMethods, setAuthMethods] = useState<AuthMethodRs[]>([])
   const [loadingMethods, setLoadingMethods] = useState(true)
 
-  // Form state
-  const [userName, setUserName] = useState("")
-  const [phoneNo, setPhoneNo] = useState("")
-  const [identity, setIdentity] = useState("")
-  const [searchStartYear, setSearchStartYear] = useState(
-    String(new Date().getFullYear() - 5),
-  )
-  const [searchEndYear, setSearchEndYear] = useState(
-    String(new Date().getFullYear()),
-  )
-  const [selectedMethod, setSelectedMethod] = useState<AuthMethodRs | null>(
-    null,
-  )
+  const [resNm, setResNm] = useState("")
+  const [mobileNo, setMobileNo] = useState("")
+  const [resNo, setResNo] = useState("")
+  const [selectedMethod, setSelectedMethod] = useState<AuthMethodRs | null>(null)
   const [selectedTelecom, setSelectedTelecom] = useState("")
 
-  // Request state
   const [requesting, setRequesting] = useState(false)
   const [requestId, setRequestId] = useState<string | null>(null)
-  const [pollIntervalMs, setPollIntervalMs] = useState(3000)
   const [requestError, setRequestError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -55,8 +44,7 @@ export function NhisRequestScreen() {
   }, [])
 
   const isFormValid = () => {
-    if (!userName.trim() || !phoneNo.trim() || !identity.trim()) return false
-    if (!searchStartYear || !searchEndYear) return false
+    if (!resNm.trim() || !mobileNo.trim() || resNo.length !== 8) return false
     if (!selectedMethod) return false
     if (selectedMethod.requiresTelecom && !selectedTelecom) return false
     return true
@@ -68,19 +56,18 @@ export function NhisRequestScreen() {
     setRequestError(null)
     try {
       const result = await nhisService.healthCheckRequest({
-        userName: userName.trim(),
-        phoneNo: phoneNo.replace(/-/g, ""),
-        identity: identity.replace(/-/g, ""),
-        searchStartYear,
-        searchEndYear,
-        authMethod: selectedMethod.key.toUpperCase(),
-        telecomCode: selectedTelecom || null,
+        loginOrgCd: selectedMethod.key,
+        resNm: resNm.trim(),
+        mobileNo: mobileNo.replace(/-/g, ""),
+        resNo: resNo.trim(),
+        mobileCo: selectedTelecom || null,
       })
       if (result.status === "SUCCESS") {
         router.replace("/(settings)/health-results")
-      } else {
+      } else if (result.status === "PENDING") {
         setRequestId(result.requestId)
-        setPollIntervalMs(result.pollIntervalMs)
+      } else {
+        setRequestError(result.message || "조회 요청에 실패했습니다.")
       }
     } catch (e: unknown) {
       setRequestError(
@@ -95,7 +82,7 @@ export function NhisRequestScreen() {
     if (!requestId) return
     router.push({
       pathname: "/(settings)/health-nhis-confirm",
-      params: { requestId, pollIntervalMs: String(pollIntervalMs) },
+      params: { requestId },
     })
   }
 
@@ -124,8 +111,8 @@ export function NhisRequestScreen() {
               <ThemedText style={styles.fieldLabel}>이름</ThemedText>
               <TextInput
                 style={styles.input}
-                value={userName}
-                onChangeText={setUserName}
+                value={resNm}
+                onChangeText={setResNm}
                 placeholder="홍길동"
                 placeholderTextColor="#C5C8CE"
               />
@@ -134,8 +121,8 @@ export function NhisRequestScreen() {
               <ThemedText style={styles.fieldLabel}>전화번호</ThemedText>
               <TextInput
                 style={styles.input}
-                value={phoneNo}
-                onChangeText={setPhoneNo}
+                value={mobileNo}
+                onChangeText={setMobileNo}
                 placeholder="01012345678"
                 placeholderTextColor="#C5C8CE"
                 keyboardType="phone-pad"
@@ -147,47 +134,13 @@ export function NhisRequestScreen() {
             <ThemedText style={styles.fieldLabel}>생년월일</ThemedText>
             <TextInput
               style={styles.input}
-              value={identity}
-              onChangeText={setIdentity}
-              placeholder="예: 19900101"
+              value={resNo}
+              onChangeText={setResNo}
+              placeholder="19900101"
               placeholderTextColor="#C5C8CE"
               keyboardType="number-pad"
               maxLength={8}
             />
-          </View>
-        </View>
-
-        {/* 조회 기간 */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>조회 기간</ThemedText>
-          <View style={styles.row}>
-            <View style={styles.flex1}>
-              <ThemedText style={styles.fieldLabel}>시작 연도</ThemedText>
-              <TextInput
-                style={styles.input}
-                value={searchStartYear}
-                onChangeText={setSearchStartYear}
-                placeholder="2020"
-                placeholderTextColor="#C5C8CE"
-                keyboardType="number-pad"
-                maxLength={4}
-              />
-            </View>
-            <View style={styles.yearSeparator}>
-              <ThemedText style={styles.yearSeparatorText}>~</ThemedText>
-            </View>
-            <View style={styles.flex1}>
-              <ThemedText style={styles.fieldLabel}>종료 연도</ThemedText>
-              <TextInput
-                style={styles.input}
-                value={searchEndYear}
-                onChangeText={setSearchEndYear}
-                placeholder="2025"
-                placeholderTextColor="#C5C8CE"
-                keyboardType="number-pad"
-                maxLength={4}
-              />
-            </View>
           </View>
         </View>
 
@@ -267,9 +220,7 @@ export function NhisRequestScreen() {
           <View style={styles.pendingBox}>
             <Ionicons name="phone-portrait-outline" size={20} color={tokens.color.sub8.val} />
             <ThemedText style={styles.pendingText}>
-              {
-                "인증 앱에서 본인인증을 완료해 주세요.\n완료 후 아래 인증 완료 버튼을 눌러주세요."
-              }
+              {"인증 앱에서 본인인증을 완료해 주세요.\n완료 후 아래 인증 완료 버튼을 눌러주세요."}
             </ThemedText>
           </View>
         )}
@@ -278,11 +229,7 @@ export function NhisRequestScreen() {
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         {requestId ? (
           <Pressable style={styles.confirmButton} onPress={handleConfirm}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color="#FFFFFF"
-            />
+            <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
             <ThemedText style={styles.buttonText}>인증 완료</ThemedText>
           </Pressable>
         ) : (
@@ -352,15 +299,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#17191C",
     backgroundColor: "#FAFAFA",
-  },
-  yearSeparator: {
-    paddingBottom: 14,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  yearSeparatorText: {
-    fontSize: 18,
-    color: "#94A3B8",
   },
   methodRow: {
     flexDirection: "row",

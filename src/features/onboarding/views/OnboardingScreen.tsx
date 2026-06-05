@@ -1,4 +1,5 @@
-import { Keyboard, Pressable, TouchableWithoutFeedback, useColorScheme } from "react-native"
+import { Keyboard, Pressable, ScrollView, TouchableWithoutFeedback } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -15,7 +16,7 @@ import {
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const bg = isDark ? tokens.color.appBgDark.val : "white"
   const textColor = isDark ? tokens.color.textDark.val : "#17191C"
   const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"
@@ -58,11 +59,11 @@ export function OnboardingScreen() {
           showBack={false}
         />
 
-        <YStack flex={1} justifyContent="space-between">
-          <YStack
-            flex={1}
-            paddingHorizontal={20}
-            paddingTop={32}
+        <YStack flex={1}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
           >
             <Text
               fontSize={22}
@@ -87,9 +88,9 @@ export function OnboardingScreen() {
               selectedValue={hasCkd}
               onSelect={handleWelcomeSelect}
             />
-          </YStack>
+          </ScrollView>
 
-          <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
+          <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24} paddingTop={8}>
             <Pressable
               onPress={handleWelcomeConfirm}
               disabled={hasCkd === null}
@@ -136,11 +137,12 @@ export function OnboardingScreen() {
 
       <ProgressBar current={currentStepIndex} total={steps.length} />
 
-      <YStack flex={1} justifyContent="space-between">
-        <YStack
-          flex={1}
-          paddingHorizontal={20}
-          paddingTop={32}
+      <YStack flex={1}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Text
             fontSize={22}
@@ -179,9 +181,9 @@ export function OnboardingScreen() {
               onChange={handleInputChange}
             />
           )}
-        </YStack>
+        </ScrollView>
 
-        <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
+        <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24} paddingTop={8}>
           <Pressable
             onPress={handleNext}
             disabled={!hasValidAnswer() || isSubmitting}

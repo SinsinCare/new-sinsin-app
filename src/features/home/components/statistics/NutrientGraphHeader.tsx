@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui"
 import { fmt } from "../../utils/graphUtils"
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 interface NutrientGraphHeaderProps {
   nutrient: string
@@ -17,7 +17,7 @@ export function NutrientGraphHeader({
   unit,
   isOver,
 }: NutrientGraphHeaderProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <YStack gap={3}>

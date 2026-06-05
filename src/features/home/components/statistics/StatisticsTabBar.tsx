@@ -1,4 +1,5 @@
-import { ScrollView, Pressable, StyleSheet, useColorScheme } from "react-native"
+import { ScrollView, Pressable, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text } from "tamagui"
 import { StatisticsTab } from "../../types"
 import { tokens } from "@/src/theme/tokens"
@@ -19,7 +20,7 @@ export function StatisticsTabBar({
   selectedTab,
   onSelectTab,
 }: StatisticsTabBarProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const barBgColor = isDarkMode
     ? tokens.color.appBgDark.val
     : tokens.color.appBg.val

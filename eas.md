@@ -1,74 +1,170 @@
 # EAS 빌드 및 배포 가이드
 
-이 문서는 Expo Application Services (EAS)를 사용하여 앱을 빌드하고 App Store 및 Play Store에 배포하는 방법을 설명합니다.
+이 문서는 EAS(Expo Application Services)로 앱을 **CLI 명령어 하나로** 빌드하고
+App Store / Play Store에 자동 제출하는 방법을 설명합니다.
 
-## 1. 사전 준비
+> 기존: iOS는 로컬 빌드 → Xcode Archive → App Store Connect 수동 업로드,
+> Android는 AAB 수동 업로드.
+> 현재: 클라우드 빌드 + 스토어 자동 제출(`eas build --auto-submit`)로 전환.
 
-- **EAS CLI 설치**: `npm install -g eas-cli`
-- **Expo 로그인**: `eas login`
-- **Apple/Google 개발자 계정**: 유료 등록 완료 상태여야 함
+---
 
-## 2. 주요 설정 파일
+## 0. TL;DR — 한 줄 배포
+
+```bash
+# iOS + Android 동시 빌드 후 각 스토어로 자동 제출
+npm run deploy
+# = eas build --platform all --profile production --auto-submit
+```
+
+- 버전(`version`)은 `app.json` 한 곳에서만 관리 → iOS/Android 동일하게 적용.
+- 빌드번호(iOS `buildNumber`) / `versionCode`는 `eas.json`의
+  `appVersionSource: "remote"` + `autoIncrement: true` 설정으로 **EAS가 자동 증가**.
+  (`app.json`의 `ios.buildNumber` / `android.versionCode` 값은 무시됨 — 건드릴 필요 없음)
+
+플랫폼별 개별 배포:
+
+```bash
+npm run deploy:ios       # iOS만 빌드 + 제출
+npm run deploy:android   # Android만 빌드 + 제출
+```
+
+이미 만들어진 최신 빌드만 다시 제출:
+
+```bash
+npm run submit:ios       # eas submit --platform ios --latest
+npm run submit:android   # eas submit --platform android --latest
+```
+
+---
+
+## 1. 사전 준비 (최초 1회)
+
+- EAS CLI: `npm install -g eas-cli` (현재 설치됨)
+- 로그인: `eas login` (현재 `lemonaatree@gmail.com` 로그인됨)
+- Apple Developer / Google Play 개발자 계정 유료 등록 완료
+- **자동 제출용 인증키 2종** 발급 (아래 4·5절) — 이게 있어야 `--auto-submit`이
+  중간에 멈추지 않고 완전 자동으로 끝납니다.
+
+---
+
+## 2. 현재 설정 요약
 
 ### `app.json`
-
-앱의 기본 정보를 설정합니다.
-
+- `version`: **1.0.12** (마케팅 버전 — 릴리스마다 여기만 올리면 됨)
 - `ios.bundleIdentifier`: `com.mediology.sinsin-care`
-- `android.package`: `com.mediology.sinsin_care`
-- `version`: 앱 버전 (예: 1.0.0)
-- `ios.buildNumber`: 빌드 번호 (업로드 시마다 증가 필요)
+- `android.package`: `com.mediology.sinsinapp`
 
 ### `eas.json`
+- `cli.appVersionSource`: `remote` → 빌드번호를 EAS 서버가 관리
+- `build.production.autoIncrement`: `true` → 빌드마다 번호 자동 +1
+- `submit.production.ios`: `ascAppId` / `appleId` / `appleTeamId` 설정됨
+- `submit.production.android`:
+  - `serviceAccountKeyPath`: `./google-play-key.json`
+  - `track`: `production`
+  - `releaseStatus`: `completed`
 
-빌드 프로필을 정의합니다. 현재 설정:
+---
 
-- `development`: 개발팀 내부 테스트용 (Development Client)
-- `preview`: 내부 공유 및 테스트용 (Ad-hoc)
-- `production`: 스토어 배포용 (Release, `autoIncrement: true` + `cli.appVersionSource: "remote"`로 Android `versionCode` 자동 증가)
-
-## 3. 핵심 명령어
-
-### 프로젝트 초기 설정 (최초 1회)
-
-```bash
-eas build:configure
-```
-
-### 앱 빌드
-
-플랫폼(`ios`, `android`, `all`)과 프로필(`production`, `preview` 등)을 선택합니다.
+## 3. 핵심 명령어 상세
 
 ```bash
-# iOS 프로덕션 빌드
-eas build --platform ios --profile production
-
-# Android 프로덕션 빌드
+# 빌드만 (제출 안 함)
+eas build --platform ios     --profile production
 eas build --platform android --profile production
+eas build --platform all     --profile production
+
+# 빌드 + 자동 제출 (권장)
+eas build --platform all --profile production --auto-submit
+
+# 원격 버전(빌드번호) 확인
+eas build:version:get --platform ios
+eas build:version:get --platform android
 ```
 
-### 앱 제출 (App Store / Play Store)
+빌드 시작 시 출력되는 `https://expo.dev/...` URL에서 진행 상황·로그를 볼 수 있습니다.
 
-빌드가 완료된 후 스토어 커넥트로 업로드합니다.
+---
 
+## 4. Android 자동 제출 키 (Google Play 서비스 계정)
+
+`eas submit`이 Play Console에 비대화형으로 업로드하려면 서비스 계정 JSON 키가 필요합니다.
+
+1. **Google Play Console** → `Users and permissions`(또는 `설정 → API 액세스`)
+   → Google Cloud 프로젝트 연결.
+2. **Google Cloud Console** → `IAM 및 관리자 → 서비스 계정`에서 서비스 계정 생성
+   → 키 추가 → **JSON** 다운로드.
+3. 다운로드한 파일을 프로젝트 루트에 **`google-play-key.json`** 이름으로 저장.
+   - 이미 `.gitignore`에 등록되어 있어 커밋되지 않습니다. (절대 커밋 금지)
+   - `eas.json`의 `serviceAccountKeyPath`가 이 경로를 가리킵니다.
+4. **Play Console → Users and permissions**에서 그 서비스 계정 이메일을 초대하고
+   "프로덕션 출시(Release to production)" 권한 부여.
+5. ⚠️ Play Console에 해당 앱(`com.mediology.sinsinapp`)이 이미 등록돼 있어야 API
+   업로드가 됩니다. 신규 앱의 **최초 1개 AAB는 콘솔에서 수동 업로드** 필요
+   (이미 수동 업로드 이력이 있으므로 통과).
+
+설정 후:
 ```bash
-# 최신 iOS 빌드 제출
-eas submit --platform ios --latest
-
-# 최신 Android 빌드 제출
-eas submit --platform android --latest
+npm run deploy:android
 ```
 
-## 4. 자격 증명 (Credentials) 관리
+---
 
-EAS는 Apple의 배포 인증서 및 프로비저닝 프로필을 자동으로 생성하고 관리합니다.
+## 5. iOS 자동 제출 키 (App Store Connect API Key)
 
-- 빌드 과정에서 `Do you want to log in to your Apple account?` 질문에 `Yes`를 선택하고 로그인하면 EAS가 필요한 모든 설정을 자동으로 완료합니다.
-- 관리되는 정보는 [Expo 대시보드](https://expo.dev)의 `Credentials` 메뉴에서 확인할 수 있습니다.
+키 없이도 제출은 되지만, 그때마다 Apple ID 로그인/앱 암호를 **대화형으로 물어봅니다.**
+완전 자동화하려면 ASC API 키를 등록하세요.
 
-## 5. 유용한 팁
+1. **App Store Connect** → `Users and Access → Integrations → App Store Connect API`
+   → 키 생성 (역할: `App Manager` 이상).
+2. **`.p8` 키 파일**(1회만 다운로드 가능) + **Key ID** + **Issuer ID** 확보.
+3. EAS 서버에 등록 (권장 — 경로 노출 없이 안전):
+   ```bash
+   eas credentials --platform ios
+   # → Build/Submit credentials → App Store Connect API Key → Set up new key
+   ```
+   등록해 두면 `eas submit`이 자동으로 이 키를 사용합니다.
 
-- **빌드 로그 확인**: 빌드가 시작될 때 출력되는 URL(expo.dev/...)을 통해 전 세계 어디서든 빌드 과정을 모니터링할 수 있습니다.
-- **번들 ID 충돌**: 빌드 시 "Bundle identifier is not available" 에러가 발생하면, 선택한 Apple 팀에 해당 ID가 이미 등록되어 있는지 또는 다른 팀(Individual vs Company)을 선택했는지 확인하세요.
-- **Node.js 버전**: `.nvmrc` 파일의 버전을 참고하여 EAS 빌드 환경이 구성됩니다.
-- **Android 버전 코드 자동 증가**: `appVersionSource`가 `remote`이면 `app.json`의 `android.versionCode`는 사용되지 않습니다. 같은 `versionCode`를 재제출할 수 없으므로, 재제출 전에는 `eas build --platform android --profile production`으로 새 빌드를 먼저 생성하세요.
+> 키 등록 전에는 `npm run deploy:ios` 실행 시 Apple ID(`sht06202@naver.com`)
+> 로그인 프롬프트가 한 번 뜹니다 — 거기서 로그인하면 그대로 제출 진행됩니다.
+
+---
+
+## 6. 릴리스 절차 (요약)
+
+1. 코드 변경 완료.
+2. `app.json`의 `version` 올리기 (예: 1.0.12 → 1.0.13). 빌드번호는 자동.
+3. `npm run deploy` 실행.
+4. 빌드 완료 후 EAS가 자동으로 양 스토어에 제출.
+5. App Store Connect / Play Console에서 심사 제출 및 출시 확인.
+
+---
+
+## 7. 트러블슈팅
+
+- **`appVersionSource: remote`라 `app.json`의 buildNumber/versionCode가 무시된다는 경고**
+  → 정상입니다. EAS가 번호를 관리하므로 무시해도 됩니다.
+- **Android "Version code already used"**
+  → `autoIncrement`로 새 빌드를 먼저 만들어야 합니다(같은 빌드 재제출 불가).
+- **"Bundle identifier is not available"**
+  → 선택한 Apple 팀(`HJJNV9Y5W8`)에 `com.mediology.sinsin-care`가 맞는지 확인.
+- **첫 Android API 업로드 실패**
+  → 서비스 계정 권한/앱 등록 여부(4절 4·5번) 확인.
+- **iOS 빌드 실패: `Provisioning profile ... doesn't include the Push Notifications capability` / `aps-environment entitlement` 누락**
+  → `expo-notifications` 플러그인이 들어가면 iOS 빌드에 `aps-environment`
+    엔타이틀먼트가 포함되는데, **App ID에 Push 권한을 켠 *이후* 프로파일을
+    재발급**해야 그 권한이 프로파일에 반영됩니다. App ID에 권한만 켜는 걸로는
+    부족하고, 기존 프로파일이 권한 추가 *전*에 발급됐으면 그대로 실패합니다.
+    `--non-interactive` 빌드는 Apple 인증을 못 해 낡은 프로파일을 재사용하므로
+    이 에러가 계속 납니다.
+  → **해결 (실제 터미널에서, Claude `!`/비대화형 아님 — 2FA 입력이 필요):**
+    ```bash
+    eas credentials -p ios
+    # production → Apple 로그인(+2FA) → Team HJJNV9Y5W8 / Provider DAESEONG KIM (126164371)
+    # → Build Credentials: Manage everything...
+    # → Provisioning Profile: Delete one from your project   (낡은 것 삭제)
+    # → All: Set up all the required credentials...           (Push 권한 포함 새 프로파일 자동 발급)
+    ```
+    재발급 후 `npm run deploy:ios`로 다시 빌드하면 통과됩니다.
+    (2026-05-30 빌드 #58/#59가 이 에러로 실패 → 프로파일 재발급(`FZN6RDTFDT`) 후
+    빌드 #60 성공.)

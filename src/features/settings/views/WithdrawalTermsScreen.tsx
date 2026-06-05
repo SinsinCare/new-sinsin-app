@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -13,12 +13,17 @@ import {
   WITHDRAWAL_NOTICE,
   WITHDRAWAL_TERMS,
 } from "@/src/features/settings/data/constants"
-import { api } from "@/src/services/core/apiClient"
+import { userService } from "@/src/services/auth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { logger } from "@/src/lib/logger"
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { reason, detail } = useLocalSearchParams<{
+    reason?: string
+    detail?: string
+  }>()
   const c = useSettingsColors()
 
   const [agreed, setAgreed] = useState(false)
@@ -29,10 +34,17 @@ export function WithdrawalTermsScreen() {
     setModalVisible(false)
     setLoading(true)
     try {
-      await api.delete("/user")
+      await userService.deleteAccount(
+        reason || "앱에서 직접 탈퇴",
+        detail?.trim() || null,
+      )
       router.push("/(settings)/withdrawal-complete")
-    } catch {
-      Alert.alert("오류", "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.")
+    } catch (err) {
+      logger.error("[WithdrawalTermsScreen] 탈퇴 실패", err)
+      Alert.alert(
+        "오류",
+        "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.",
+      )
     } finally {
       setLoading(false)
     }

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, useColorScheme, PanResponder, View as RNView } from "react-native"
+import { Pressable, StyleSheet, PanResponder, View as RNView } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -35,7 +36,7 @@ export function ThreeDaysCalendar({
   recordedDates = [],
   onMonthPress,
 }: ThreeDaysCalendarProps) {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const today = new Date()
   const week = getSundayWeek(selectedDate)
 
@@ -109,14 +110,17 @@ export function ThreeDaysCalendar({
             const isSelected = isSameDay(date, selectedDate)
             const hasRecord = recordedDates.some((r) => isSameDay(r, date))
             const isFuture = date > today && !isSameDay(date, today)
+            const isToday = isSameDay(date, today)
 
             const cellBg = isSelected
               ? tokens.color.primary7.val
-              : hasRecord
-                ? recordBg
-                : "transparent"
+              : isToday
+                ? tokens.color.primaryAccent.val
+                : hasRecord
+                  ? recordBg
+                  : "transparent"
 
-            const textColor = isSelected
+            const textColor = isSelected || isToday
               ? "white"
               : isFuture
                 ? futureText

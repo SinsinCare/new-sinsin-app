@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, YStack, Text, View } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { NutrientBudget } from "../types"
@@ -11,7 +11,7 @@ interface NutrientBarProps {
 }
 
 function NutrientBar({ label, remaining, unit, color }: NutrientBarProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const subColor = isDark
     ? tokens.color.textDarkSub.val

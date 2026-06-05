@@ -1,5 +1,3 @@
-import { tokens } from "@/src/theme/tokens"
-
 export const QUICK_ADD_OPTIONS: readonly number[] = [
   50, 100, 250, 500,
 ] as const
@@ -20,8 +18,8 @@ export const DEFAULT_DAILY_GOAL: number = 1500
 export const MAX_WATER_INTAKE: number = 5000
 
 export const WATER_COLORS = {
-  percentBg: tokens.color.waterPercentBg.val,
-  percentBgDark: tokens.color.waterPercentBgDark.val,
-  gradientTop: tokens.color.waterFillTop.val,
-  gradientBottom: tokens.color.waterFillBottom.val,
+  percentBg: "#D2DFE3",
+  percentBgDark: "#46616A",
+  gradientTop: "#6BDAFE",
+  gradientBottom: "#30C1F0",
 } as const

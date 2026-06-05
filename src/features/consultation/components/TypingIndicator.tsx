@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
-import { Animated, Easing, useColorScheme } from "react-native"
+import { Animated, Easing } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack } from "tamagui"
 import Svg, {
   Defs,
@@ -12,7 +13,7 @@ import { AssistantAvatar } from "./ChatMessageBubble"
 const AnimatedStop = Animated.createAnimatedComponent(Stop)
 
 export function TypingIndicator() {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   // bg: dark #1F1F21, light #F3F3F3
   const baseColor = isDark ? "#E0E0E0" : "#1A1A1A"
   const sweepColor = isDark ? "#666666" : "#999999"

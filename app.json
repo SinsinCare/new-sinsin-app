@@ -2,7 +2,7 @@
   "expo": {
     "name": "신신당부",
     "slug": "sinsin-rn",
-    "version": "1.0.7",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "buildNumber": "1",
+      "buildNumber": "3",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
       "deploymentTarget": "18.6",
@@ -29,7 +29,10 @@
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationQueriesSchemes": [
           "instagram-stories",
-          "instagram"
+          "instagram",
+          "kakaokompassauth",
+          "kakaolink",
+          "kakaotalk"
         ]
       }
     },
@@ -39,6 +42,7 @@
         "backgroundColor": "#007AFF"
       },
       "package": "com.mediology.sinsinapp",
+      "versionCode": 11,
       "edgeToEdgeEnabled": true,
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
@@ -99,13 +103,40 @@
           "iosUrlScheme": "com.googleusercontent.apps.87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4"
         }
       ],
+      [
+        "@react-native-kakao/core",
+        {
+          "nativeAppKey": "709c22f6c6227095a316851f1f902189",
+          "android": {
+            "kakaotalkLoginEnabled": true
+          },
+          "ios": {
+            "kakaotalkLoginEnabled": true
+          }
+        }
+      ],
       "expo-image",
       "expo-sharing",
       [
         "expo-build-properties",
         {
+          "ios": {
+            "deploymentTarget": "18.6",
+            "appleTeamId": "HJJNV9Y5W8",
+            "configurations": {
+              "Debug": {
+                "prebuild": "Debug"
+              },
+              "Release": {
+                "prebuild": "Release"
+              }
+            }
+          },
           "android": {
-            "newArchEnabled": false
+            "newArchEnabled": false,
+            "extraMavenRepos": [
+              "https://devrepo.kakao.com/nexus/content/groups/public/"
+            ]
           }
         }
       ]

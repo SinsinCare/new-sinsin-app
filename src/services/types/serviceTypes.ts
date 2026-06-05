@@ -14,7 +14,7 @@ export interface IAuthService {
     password: string,
   ): Promise<{ user: AppUser; accountState: string }>
   signInWithSocial(
-    provider: "google" | "apple",
+    provider: "google" | "apple" | "kakao",
     idToken: string,
     email?: string | null,
     displayName?: string | null,

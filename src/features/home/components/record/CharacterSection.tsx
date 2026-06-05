@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react"
-import { Animated, useColorScheme } from "react-native"
+import { Animated, Image, StyleSheet } from "react-native"
+import type { ImageSourcePropType } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import {
   Defs,
   Ellipse,
@@ -60,12 +62,24 @@ type CharacterType =
   | "character-good"
   | "character-caution"
 
+/** 유저의 데이터 입력 상태에 따라 깔리는 배경 종류 */
+export type CharacterBackgroundVariant = "low" | "high"
+
+const BACKGROUND_SOURCES: Record<
+  CharacterBackgroundVariant,
+  ImageSourcePropType
+> = {
+  low: require("@/assets/images/home-bg-low.png"),
+  high: require("@/assets/images/home-bg-high.png"),
+}
+
 interface CharacterSectionProps {
   selectedDate: Date
   hasRecord: boolean
   characterType: CharacterType
   streak: number
   withinLimits: boolean
+  backgroundVariant: CharacterBackgroundVariant
 }
 
 export function CharacterSection({
@@ -74,8 +88,9 @@ export function CharacterSection({
   characterType,
   streak,
   withinLimits,
+  backgroundVariant,
 }: CharacterSectionProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const fireIconName = hasRecord
     ? "fire-color"
     : isDarkMode
@@ -126,7 +141,19 @@ export function CharacterSection({
   }, [floatY, shadowScale])
 
   return (
-    <YStack borderRadius="$6" padding="$7" gap="$1" alignItems="center">
+    <YStack
+      borderRadius="$6"
+      padding="$7"
+      gap="$1"
+      alignItems="center"
+      overflow="hidden"
+    >
+      {/* 캐릭터 뒤에 깔리는 배경 (z축 가장 뒤) */}
+      <Image
+        source={BACKGROUND_SOURCES[backgroundVariant]}
+        style={styles.background}
+        resizeMode="cover"
+      />
       <YStack alignItems="center">
         <Animated.View style={{ transform: [{ translateY: floatY }] }}>
           <Icon name={characterType} size={200} />
@@ -142,7 +169,6 @@ export function CharacterSection({
           alignItems="center"
           justifyContent="center"
           gap="$2"
-          paddingHorizontal={18}
           paddingVertical={4}
           borderRadius="$6"
         >
@@ -151,6 +177,7 @@ export function CharacterSection({
             fontSize={18}
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "black"}
+            numberOfLines={1}
           >
             {streakText}
           </Text>
@@ -160,7 +187,6 @@ export function CharacterSection({
           alignItems="center"
           justifyContent="center"
           gap="$2"
-          paddingHorizontal={18}
           paddingVertical={5}
           borderRadius="$6"
         >
@@ -169,6 +195,7 @@ export function CharacterSection({
             fontSize={18}
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "black"}
+            numberOfLines={1}
           >
             {guideText}
           </Text>
@@ -177,3 +204,11 @@ export function CharacterSection({
     </YStack>
   )
 }
+
+const styles = StyleSheet.create({
+  background: {
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+  },
+})

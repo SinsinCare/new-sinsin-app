@@ -12,6 +12,7 @@ import { ToggleItem } from "@/src/features/settings/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNotifications } from "@/src/hooks/useNotifications"
+import { useThemeStore, type ThemeMode } from "@/src/stores/themeStore"
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets()
@@ -20,9 +21,14 @@ export function SettingsScreen() {
   const c = useSettingsColors()
   const { settings, updateSettings, requestAndEnable } = useNotifications(isAuthenticated)
 
+  const { themeMode, setThemeMode } = useThemeStore()
   const pushEnabled = settings.waterReminder.enabled || settings.mealReminder.enabled
   const [marketingEnabled, setMarketingEnabled] = useState(false)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
+
+  const handleThemeChange = (mode: ThemeMode) => {
+    setThemeMode(mode)
+  }
 
   const handlePushToggle = async (value: boolean) => {
     if (value) {
@@ -57,6 +63,35 @@ export function SettingsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* 화면 모드 */}
+        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>화면 모드</ThemedText>
+        {(
+          [
+            { mode: "light", icon: "sunny-outline", label: "라이트 모드" },
+            { mode: "dark", icon: "moon-outline", label: "다크 모드" },
+            { mode: "system", icon: "phone-portrait-outline", label: "시스템 설정" },
+          ] as const
+        ).map(({ mode, icon, label }) => (
+          <Pressable
+            key={mode}
+            style={({ pressed }) => [
+              styles.themeOption,
+              pressed && { backgroundColor: c.pressedBg },
+            ]}
+            onPress={() => handleThemeChange(mode)}
+          >
+            <View style={styles.themeOptionLeft}>
+              <Ionicons name={icon} size={20} color={c.icon} style={styles.themeIcon} />
+              <ThemedText style={[styles.themeOptionLabel, { color: c.text }]}>{label}</ThemedText>
+            </View>
+            {themeMode === mode && (
+              <Ionicons name="checkmark" size={20} color="#34D399" />
+            )}
+          </Pressable>
+        ))}
+
+        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
+
         {/* 알림 설정 */}
         <ToggleItem
           title="앱 푸시 알림 동의"
@@ -157,6 +192,35 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
   },
   navItemTitle: {
+    fontSize: 16,
+    lineHeight: 16 * 1.4,
+    fontWeight: "400",
+  },
+  sectionTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+    letterSpacing: 0.5,
+    paddingTop: 20,
+    paddingBottom: 4,
+  },
+  themeOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginHorizontal: -20,
+  },
+  themeOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  themeIcon: {
+    width: 20,
+  },
+  themeOptionLabel: {
     fontSize: 16,
     lineHeight: 16 * 1.4,
     fontWeight: "400",

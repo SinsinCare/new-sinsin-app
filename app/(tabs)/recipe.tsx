@@ -4,9 +4,9 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  useColorScheme,
   StyleSheet,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text, XStack, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -19,15 +19,14 @@ import { FilterChip } from "@/src/features/recipe/components/FilterChip"
 import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
 import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
 import { WriteTypeSheet } from "@/src/features/recipe/components/WriteTypeSheet"
-import { RecipeCard } from "@/src/features/recipe/components/RecipeCard"
 import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
 import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
-import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
-import type { RecipePostFilters } from "@/src/features/recipe/types"
+import { CuratedRecipeCard } from "@/src/features/recipe/components/CuratedRecipeCard"
+import { CuratedRecipeDetailSheet } from "@/src/features/recipe/components/CuratedRecipeDetailSheet"
+import { useCuratedRecipes } from "@/src/features/recipe/hooks/useCuratedRecipes"
+import type { CuratedRecipe } from "@/src/features/recipe/data/curatedRecipeTypes"
 import { tokens } from "@/src/theme/tokens"
-import { MealRecommendationSection } from "@/src/features/meal-recommendation/components/MealRecommendationSection"
-
 // Chip key → label mapping for CategoryFilterSheet
 const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
   nutrition: {
@@ -53,30 +52,6 @@ const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
     dessert: "디저트",
     beverage: "음료",
   },
-}
-
-function filtersToRecipeFilters(
-  filters: Record<string, Set<string>>,
-): RecipePostFilters {
-  const result: RecipePostFilters = {}
-
-  if (filters.nutrition?.size) {
-    result.nutritionTags = [...filters.nutrition].map(
-      (k) => CHIP_KEY_TO_LABEL.nutrition[k] ?? k,
-    )
-  }
-  if (filters.stage?.size) {
-    result.stageTags = [...filters.stage].map(
-      (k) => CHIP_KEY_TO_LABEL.stage[k] ?? k,
-    )
-  }
-  if (filters.country?.size) {
-    result.cuisineTags = [...filters.country].map(
-      (k) => CHIP_KEY_TO_LABEL.country[k] ?? k,
-    )
-  }
-
-  return result
 }
 
 // All possible filter chips for nutrition + stage
@@ -107,7 +82,7 @@ const ICON_COLORS = {
 
 export default function RecipeScreen() {
   const insets = useSafeAreaInsets()
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [activeTab, setActiveTab] = useState("recipe")
   const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light
@@ -125,22 +100,22 @@ export default function RecipeScreen() {
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
-
-  // Convert UI filters to service filters
-  const recipeFilters = useMemo(
-    () => filtersToRecipeFilters(selectedFilters),
-    [selectedFilters],
-  )
-
-  const { posts: recipes } = useRecipePosts(
-    recipeFilters,
-    search.trim() || undefined,
-  )
+  const [selectedRecipe, setSelectedRecipe] = useState<CuratedRecipe | null>(null)
 
   // FoodCategoryBar uses selectedFilters.country directly
   const selectedCategories = useMemo(() => {
     return selectedFilters.country ?? new Set<string>()
   }, [selectedFilters])
+
+  const selectedNutrition = useMemo(() => {
+    return selectedFilters.nutrition ?? new Set<string>()
+  }, [selectedFilters])
+
+  const recipes = useCuratedRecipes({
+    search: search.trim(),
+    categories: selectedCategories,
+    nutritionFilters: selectedNutrition,
+  })
 
   const handleToggleCategory = useCallback((key: string) => {
     setSelectedFilters((prev) => {
@@ -200,8 +175,8 @@ export default function RecipeScreen() {
   )
 
   const [leftColumn, rightColumn] = useMemo(() => {
-    const left: typeof recipes = []
-    const right: typeof recipes = []
+    const left: CuratedRecipe[] = []
+    const right: CuratedRecipe[] = []
     recipes.forEach((item, i) => {
       ;(i % 2 === 0 ? left : right).push(item)
     })
@@ -273,42 +248,22 @@ export default function RecipeScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{ padding: 16 }}
             >
-              {/* 점메추/저메추 추천 섹션 */}
-              <YStack marginBottom={16}>
-                <MealRecommendationSection category="recipe" />
-              </YStack>
               <XStack gap={12}>
                 <YStack flex={1} gap={12}>
                   {leftColumn.map((item) => (
-                    <RecipeCard
+                    <CuratedRecipeCard
                       key={item.id}
-                      imageUri={item.imageUri ?? ""}
-                      likeCount={item.likes}
-                      commentCount={item.comments}
-                      tags={{
-                        nutrition: item.nutritionTags,
-                        stage: item.stageTags,
-                        country: item.cuisineTags,
-                      }}
-                      title={item.title}
-                      onPress={() => console.log("RecipeCard pressed", item.id)}
+                      recipe={item}
+                      onPress={() => setSelectedRecipe(item)}
                     />
                   ))}
                 </YStack>
                 <YStack flex={1} gap={12}>
                   {rightColumn.map((item) => (
-                    <RecipeCard
+                    <CuratedRecipeCard
                       key={item.id}
-                      imageUri={item.imageUri ?? ""}
-                      likeCount={item.likes}
-                      commentCount={item.comments}
-                      tags={{
-                        nutrition: item.nutritionTags,
-                        stage: item.stageTags,
-                        country: item.cuisineTags,
-                      }}
-                      title={item.title}
-                      onPress={() => console.log("RecipeCard pressed", item.id)}
+                      recipe={item}
+                      onPress={() => setSelectedRecipe(item)}
                     />
                   ))}
                 </YStack>
@@ -322,6 +277,11 @@ export default function RecipeScreen() {
           onOpenChange={setFilterSheetOpen}
           selectedFilters={selectedFilters}
           onApply={setSelectedFilters}
+        />
+        <CuratedRecipeDetailSheet
+          recipe={selectedRecipe}
+          visible={selectedRecipe !== null}
+          onClose={() => setSelectedRecipe(null)}
         />
         <WriteTypeSheet
           open={writeSheetOpen}
@@ -367,35 +327,6 @@ export default function RecipeScreen() {
         </Pressable>
       </YStack>
     </Pressable>
-    {/* Coming soon overlay */}
-    <View
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      backgroundColor="rgba(0,0,0,0.55)"
-      alignItems="center"
-      justifyContent="center"
-      zIndex={999}
-    >
-      <View
-        backgroundColor="white"
-        borderRadius={20}
-        paddingHorizontal={32}
-        paddingVertical={24}
-        alignItems="center"
-        gap={10}
-      >
-        <Text fontSize={32}>🚧</Text>
-        <Text fontSize={17} fontWeight="700" color="#1F1F21" fontFamily="$body">
-          곧 출시 예정이에요
-        </Text>
-        <Text fontSize={13} color="#8E8E93" textAlign="center" fontFamily="$body">
-          더 나은 서비스를 준비하고 있어요
-        </Text>
-      </View>
-    </View>
     </YStack>
   )
 }

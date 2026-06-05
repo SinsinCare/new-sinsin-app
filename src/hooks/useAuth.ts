@@ -4,6 +4,7 @@ import { authService } from "../services/auth/authService"
 import {
   signInWithGoogle as googleSignIn,
   signInWithApple as appleSignIn,
+  signInWithKakao as kakaoSignIn,
   isUserCancelledError,
 } from "../services/auth/socialAuthService"
 import { tokenService } from "../services/core/tokenService"
@@ -75,6 +76,37 @@ export function useAuth() {
     return result
   }
 
+  const signInWithKakao = async () => {
+    logger.debug("[useAuth] signInWithKakao 시작")
+
+    let socialResult
+    try {
+      socialResult = await kakaoSignIn()
+      logger.debug("[useAuth] Kakao provider 확인", socialResult.provider)
+    } catch (e) {
+      logger.debug("[useAuth] kakaoSignIn 실패", e)
+      throw e
+    }
+
+    let result
+    try {
+      result = await authService.signInWithSocial(
+        socialResult.provider,
+        socialResult.idToken,
+        socialResult.email,
+        socialResult.displayName,
+      )
+      logger.debug("[useAuth] Kakao 로그인 완료", result.accountState)
+    } catch (e) {
+      logger.debug("[useAuth] Kakao 서버 로그인 실패", e)
+      throw e
+    }
+
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
   const signOut = async () => {
     await authService.signOut()
     await tokenService.clearTokens()
@@ -90,6 +122,7 @@ export function useAuth() {
     signInWithEmail,
     signInWithGoogle,
     signInWithApple,
+    signInWithKakao,
     isUserCancelledError,
     signOut,
   }

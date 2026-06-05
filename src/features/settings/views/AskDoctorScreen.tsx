@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  useColorScheme,
   ScrollView,
   Modal,
 } from "react-native"
@@ -24,13 +23,14 @@ import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { enrollDoctor } from "@/src/services/doctorService"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 export function AskDoctorScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
 
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   const [doctorCode, setPatientCode] = useState("")
@@ -78,8 +78,19 @@ export function AskDoctorScreen() {
       >
         <View style={styles.content}>
           {/* 의사용 화면의 카드 디자인을 반영한 입력 영역 */}
-          <View style={[styles.mainCard, { backgroundColor: isDarkMode ? tokens.color.cardBgDark.val : "#EEFAF7" }]}>
-            <ThemedText style={[styles.cardTitle, { color: tokens.color.sub7.val }]}>
+          <View
+            style={[
+              styles.mainCard,
+              {
+                backgroundColor: isDarkMode
+                  ? tokens.color.cardBgDark.val
+                  : "#EEFAF7",
+              },
+            ]}
+          >
+            <ThemedText
+              style={[styles.cardTitle, { color: tokens.color.sub7.val }]}
+            >
               신신당부 앱 등록
             </ThemedText>
 
@@ -89,14 +100,22 @@ export function AskDoctorScreen() {
                   key={i}
                   style={[
                     styles.otpBox,
-                    { backgroundColor: isDarkMode ? tokens.color.grey2.val : "#FFFFFF" },
+                    {
+                      backgroundColor: isDarkMode
+                        ? tokens.color.grey2.val
+                        : "#FFFFFF",
+                    },
                     doctorCode.length === i && styles.otpBoxActive,
                   ]}
                 >
-                  <ThemedText 
+                  <ThemedText
                     style={[
-                      styles.otpText, 
-                      { color: doctorCode[i] ? tokens.color.sub8.val : c.textTertiary }
+                      styles.otpText,
+                      {
+                        color: doctorCode[i]
+                          ? tokens.color.sub8.val
+                          : c.textTertiary,
+                      },
                     ]}
                   >
                     {doctorCode[i] || ""}
@@ -140,7 +159,7 @@ export function AskDoctorScreen() {
                 담당 의사에게 건강 데이터 열람 및 공유를 동의합니다
               </ThemedText>
             </Pressable>
-            
+
             <ThemedText style={[styles.infoLabel, { color: c.textTertiary }]}>
               * 동의 시 의사가 환자님의 건강 기록을 모니터링할 수 있습니다.
             </ThemedText>
@@ -150,7 +169,9 @@ export function AskDoctorScreen() {
             onPress={() => setShowTerms(true)}
             style={styles.termsLink}
           >
-            <ThemedText style={[styles.termsLinkText, { color: c.textTertiary }]}>
+            <ThemedText
+              style={[styles.termsLinkText, { color: c.textTertiary }]}
+            >
               데이터 공유 약관 보기
             </ThemedText>
             <Ionicons name="chevron-forward" size={14} color={c.textTertiary} />
@@ -177,10 +198,7 @@ export function AskDoctorScreen() {
             <ThemedText style={[styles.termsTitle, { color: c.text }]}>
               데이터 공유 약관
             </ThemedText>
-            <Pressable
-              onPress={() => setShowTerms(false)}
-              hitSlop={8}
-            >
+            <Pressable onPress={() => setShowTerms(false)} hitSlop={8}>
               <Ionicons name="close" size={22} color={c.textSub} />
             </Pressable>
           </View>
@@ -194,37 +212,36 @@ export function AskDoctorScreen() {
             </ThemedText>
 
             <ThemedText style={[styles.termsParagraph, { color: c.textSub }]}>
-              본 약관은 신신당부 앱의 의사 등록 기능을 통한 건강 데이터 공유에 관한
-              사항을 규정합니다.
+              본 약관은 신신당부 앱의 의사 등록 기능을 통한 건강 데이터 공유에
+              관한 사항을 규정합니다.
             </ThemedText>
 
             <ThemedText style={[styles.termsSection, { color: c.text }]}>
               제1조 (서비스 개요)
             </ThemedText>
             <ThemedText style={[styles.termsParagraph, { color: c.textSub }]}>
-              의사 등록 기능은 사용자가 담당 의사의 고유 코드를 입력하여 자신의 식단
-              기록 데이터를 해당 의사에게 공유하는 기능입니다. 의사는 공유된 데이터를
-              열람하고 저장할 수 있습니다.
+              의사 등록 기능은 사용자가 담당 의사의 고유 코드를 입력하여 자신의
+              식단 기록 데이터를 해당 의사에게 공유하는 기능입니다. 의사는
+              공유된 데이터를 열람하고 저장할 수 있습니다.
             </ThemedText>
 
             <ThemedText style={[styles.termsSection, { color: c.text }]}>
               제2조 (실험 단계 안내)
             </ThemedText>
             <ThemedText style={[styles.termsParagraph, { color: c.textSub }]}>
-              본 의사 등록 기능은 현재 실험(베타) 단계로 운영되고 있습니다. 서비스의
-              안정성 및 기능이 향후 변경될 수 있으며, 실험 단계 종료 시 별도 안내를
-              드립니다.
+              본 의사 등록 기능은 현재 실험(베타) 단계로 운영되고 있습니다.
+              서비스의 안정성 및 기능이 향후 변경될 수 있으며, 실험 단계 종료 시
+              별도 안내를 드립니다.
             </ThemedText>
 
             <ThemedText style={[styles.termsSection, { color: c.text }]}>
               제3조 (공유되는 데이터)
             </ThemedText>
             <ThemedText style={[styles.termsParagraph, { color: c.textSub }]}>
-              동의 시 담당 의사에게 공유되는 데이터는 다음과 같습니다:{"\n"}
-              • 일일 식단 기록 (음식 사진, AI 분석 결과){"\n"}
-              • 영양소 섭취 기록 (나트륨, 칼륨, 인, 단백질 등){"\n"}
-              • 수분 섭취 기록{"\n"}
-              • 체중 및 부종 기록
+              동의 시 담당 의사에게 공유되는 데이터는 다음과 같습니다:{"\n"}•
+              일일 식단 기록 (음식 사진, AI 분석 결과){"\n"}• 영양소 섭취 기록
+              (나트륨, 칼륨, 인, 단백질 등){"\n"}• 수분 섭취 기록{"\n"}• 체중 및
+              부종 기록
             </ThemedText>
 
             <ThemedText style={[styles.termsSection, { color: c.text }]}>
@@ -245,28 +262,28 @@ export function AskDoctorScreen() {
               제5조 (동의 철회)
             </ThemedText>
             <ThemedText style={[styles.termsParagraph, { color: c.textSub }]}>
-              사용자는 언제든지 데이터 공유 동의를 철회할 수 있습니다. 동의 철회 시
-              이후 데이터는 더 이상 공유되지 않으며, 기존에 공유 및 저장된 데이터의
-              삭제를 요청할 수 있습니다.
+              사용자는 언제든지 데이터 공유 동의를 철회할 수 있습니다. 동의 철회
+              시 이후 데이터는 더 이상 공유되지 않으며, 기존에 공유 및 저장된
+              데이터의 삭제를 요청할 수 있습니다.
             </ThemedText>
 
             <ThemedText style={[styles.termsSection, { color: c.text }]}>
               제6조 (문의)
             </ThemedText>
             <ThemedText style={[styles.termsParagraph, { color: c.textSub }]}>
-              데이터 공유 및 삭제에 관한 문의는 앱 내 '문의하기' 기능 또는
+              데이터 공유 및 삭제에 관한 문의는 앱 내 문의하기 기능 또는
               고객센터를 통해 접수하실 수 있습니다.
             </ThemedText>
           </ScrollView>
 
-          <View style={[styles.termsBottom, { paddingBottom: insets.bottom + 16 }]}>
+          <View
+            style={[styles.termsBottom, { paddingBottom: insets.bottom + 16 }]}
+          >
             <Pressable
               style={styles.termsCloseButton}
               onPress={() => setShowTerms(false)}
             >
-              <ThemedText style={styles.termsCloseText}>
-                확인
-              </ThemedText>
+              <ThemedText style={styles.termsCloseText}>확인</ThemedText>
             </Pressable>
           </View>
         </View>

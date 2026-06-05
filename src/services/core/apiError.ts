@@ -4,6 +4,7 @@ export class ApiError extends Error {
     public code: string,
     public statusCode?: number,
     public isNetworkError = false,
+    public fieldErrors?: unknown,
   ) {
     super(message)
     this.name = "ApiError"

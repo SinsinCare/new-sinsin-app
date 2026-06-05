@@ -118,6 +118,10 @@ export const foodCameraService = {
     }
   },
 
+  async skipMeal(date: string, mealType: string): Promise<void> {
+    await api.post("/food-camera/skip-meal", { date, mealType })
+  },
+
   async fetchDateAnalysis(date: string): Promise<DateAnalysisResponse> {
     try {
       const response = await api.get(`/food-camera/date-analysis/${date}`)

@@ -34,6 +34,23 @@ export const notificationService = {
 
     const promises: Promise<string>[] = []
 
+    if (settings.morningCheck.enabled) {
+      promises.push(
+        Notifications.scheduleNotificationAsync({
+          identifier: "morning-check",
+          content: {
+            title: "🐔 굿모닝",
+            body: "첫 소변 후 물 마시기 전 👆 혈압 ☑ 체중 체크✔ 기록해주세요!",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: settings.morningCheck.hour,
+            minute: 0,
+          },
+        }),
+      )
+    }
+
     if (settings.waterReminder.enabled) {
       const { intervalHours, startHour, endHour } = settings.waterReminder
       for (let h = startHour; h <= endHour; h += intervalHours) {
@@ -97,11 +114,14 @@ export const notificationService = {
     await Notifications.cancelAllScheduledNotificationsAsync()
   },
 
-  async sendFoodAnalysisComplete(): Promise<void> {
+  async sendFoodAnalysisComplete(foodName?: string): Promise<void> {
+    const body = foodName
+      ? `${foodName} 드셨네요! 식단 분석 결과를 확인해보세요.`
+      : "식단 분석 결과를 확인해보세요!"
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "🍽️ 식단 분석 완료",
-        body: "분석 결과를 확인해보세요!",
+        body,
         data: { type: "food_analysis_complete" },
       },
       trigger: null,

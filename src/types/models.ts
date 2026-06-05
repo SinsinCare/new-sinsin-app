@@ -5,7 +5,7 @@ export interface UserProfile {
   displayName: string
   nickname: string
   birthDate: string
-  gender: "male" | "female"
+  gender: "MALE" | "FEMALE" | "OTHER"
   height: number
   weight: number
   ckdStage: 1 | 2 | 3 | 4 | 5

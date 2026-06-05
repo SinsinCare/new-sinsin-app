@@ -13,7 +13,7 @@ interface ErrorPayload {
 export async function reportError(payload: ErrorPayload): Promise<void> {
   try {
     const token = await tokenService.getAccessToken()
-    await fetch(`${BASE_URL}/api/v1/errors`, {
+    await fetch(`${BASE_URL}/errors`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

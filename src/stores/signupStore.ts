@@ -12,7 +12,7 @@ interface SignupState {
   birthYear: string
   birthMonth: string
   birthDay: string
-  gender: "male" | "female" | ""
+  gender: "MALE" | "FEMALE" | "OTHER" | ""
   referralCode: string
   nickname: string
   setSignupInProgress: (v: boolean) => void
@@ -24,7 +24,7 @@ interface SignupState {
   setMarketingAgree: (v: boolean) => void
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
-  setGender: (gender: "male" | "female" | "") => void
+  setGender: (gender: "MALE" | "FEMALE" | "OTHER" | "") => void
   setReferralCode: (code: string) => void
   setNickname: (nickname: string) => void
   reset: () => void

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import { ScrollView, useColorScheme } from "react-native"
+import { ScrollView } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { useRouter } from "expo-router"
@@ -26,7 +27,7 @@ const CATEGORY_TITLE_COLORS = {
 } as const
 
 export function FreePostTab() {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const sectionTitleColor = isDark
     ? SECTION_TITLE_COLORS.dark

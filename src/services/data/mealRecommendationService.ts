@@ -46,7 +46,7 @@ export const mealRecommendationService = {
   ): Promise<MealRecommendationResponse> {
     const params: Record<string, string> = { category }
     if (mealType) params.mealType = mealType
-    const { data } = await api.get("/api/v1/meal-recommendations", { params })
+    const { data } = await api.get("/meal-recommendations", { params })
     return mapResponse(data.result)
   },
 
@@ -56,11 +56,9 @@ export const mealRecommendationService = {
   ): Promise<MealRecommendationResponse> {
     const params: Record<string, string> = { category }
     if (mealType) params.mealType = mealType
-    const { data } = await api.post(
-      "/api/v1/meal-recommendations/refresh",
-      null,
-      { params },
-    )
+    const { data } = await api.post("/meal-recommendations/refresh", null, {
+      params,
+    })
     return mapResponse(data.result)
   },
 
@@ -68,9 +66,7 @@ export const mealRecommendationService = {
     itemType: "RECIPE" | "RESTAURANT_MENU",
     itemId: number,
   ): Promise<void> {
-    await api.post(
-      `/api/v1/meal-recommendations/${itemType}/${itemId}/dismiss`,
-    )
+    await api.post(`/meal-recommendations/${itemType}/${itemId}/dismiss`)
   },
 
   async toggleBookmark(
@@ -78,7 +74,7 @@ export const mealRecommendationService = {
     itemId: number,
   ): Promise<{ bookmarked: boolean }> {
     const { data } = await api.post(
-      `/api/v1/meal-recommendations/${itemType}/${itemId}/bookmark`,
+      `/meal-recommendations/${itemType}/${itemId}/bookmark`,
     )
     return data.result
   },

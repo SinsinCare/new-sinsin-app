@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, useColorScheme } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Markdown from "react-native-markdown-display"
 import { YStack, Text, XStack, View } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
@@ -16,7 +17,7 @@ function formatTime(date: Date): string {
 }
 
 export function AssistantAvatar() {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   const SvgComponent = isDarkMode ? SinDark : SinLight
@@ -93,7 +94,7 @@ const markdownStylesDark = StyleSheet.create({
 })
 
 export function UserBubble({ message }: { message: Message }) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   return (
     <XStack
@@ -136,7 +137,7 @@ export function AssistantBubble({
   onCopy?: () => void
   onRegenerate?: () => void
 }) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const iconColor = isDarkMode ? "#66666B" : tokens.color.textLightSub.val
 

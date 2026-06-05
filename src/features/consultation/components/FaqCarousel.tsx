@@ -5,8 +5,8 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Pressable,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, YStack, View, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { FREQUENTLY_ASKED_QUESTIONS } from "../data/mockData"
@@ -29,7 +29,7 @@ interface FaqCarouselProps {
 }
 
 export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const { width: screenWidth } = useWindowDimensions()
   const [activeIndex, setActiveIndex] = useState(0)

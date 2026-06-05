@@ -2,8 +2,8 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  useColorScheme,
 } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
 import { MealRecord } from "../../data/dietaryRecord"
 
@@ -16,7 +16,7 @@ export function DietaryRecordCard({
   mealData,
   onPress,
 }: DietaryRecordCardProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
     <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>

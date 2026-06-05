@@ -5,12 +5,11 @@ import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
 import { MealButtons } from "./MealButtons"
 import { MealType } from "../../types"
+import { MEAL_OPTIONS } from "../../data/mealConstants"
 import { HydrationTracker } from "./HydrationTracker"
 import { WeightEdemaTracker } from "./WeightEdemaTracker"
-import { ThreeDaysCalendar } from "./ThreeDaysCalendar"
-import { MonthCalendarSheet } from "../statistics/MonthCalendarSheet"
+import { BloodMetricsTracker } from "./BloodMetricsTracker"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
-import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useState, useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -75,10 +74,7 @@ export function RecordView({
   }, [pending])
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const { data: diaryExistenceDays = [] } = useDiaryExistence(selectedDate)
   const queryClient = useQueryClient()
-
-  const [showCalendar, setShowCalendar] = useState(false)
 
   const [mealImages, setMealImages] = useState<
     Partial<Record<MealType, string>>
@@ -89,6 +85,7 @@ export function RecordView({
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false)
   const recordingMealTypeRef = useRef<MealType | null>(null)
+  const [recordingMealLabel, setRecordingMealLabel] = useState<string>("")
   useEffect(() => {
     setMealImages({})
     setRecordedMeals({})
@@ -145,27 +142,9 @@ export function RecordView({
         ? "character-good"
         : "character-caution"
 
-  // 주 단위 기록 유무: 서버 데이터 + 로컬 미저장 상태 병합
-  const isSameDayFn = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-
-  const sunday = new Date(selectedDate)
-  sunday.setDate(selectedDate.getDate() - selectedDate.getDay())
-  const weekDates = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(sunday)
-    d.setDate(sunday.getDate() + i)
-    return d
-  })
-
-  const recordedDates = weekDates.filter((d) => {
-    if (diaryExistenceDays.includes(d.getDate())) return true
-    return (
-      isSameDayFn(d, selectedDate) &&
-      Object.values(recordedMeals).some(Boolean)
-    )
-  })
+  // 오늘 기록이 있고 영양소 제한조건까지 지켰을 때 풍성한(high) 배경
+  const backgroundVariant: "low" | "high" =
+    hasSelectedDateRecord && withinLimits ? "high" : "low"
 
   const serverExtraWater = data?.result.analysis?.extraWater ?? 0
   const { syncFromServer } = record
@@ -225,7 +204,23 @@ export function RecordView({
 
   const handleRecord = (mealType: MealType) => {
     recordingMealTypeRef.current = mealType
+    const label = MEAL_OPTIONS.find((o) => o.type === mealType)?.label ?? ""
+    setRecordingMealLabel(label)
     setIsOptionsSheetOpen(true)
+  }
+
+  const handleSkipMeal = async () => {
+    const mealType = recordingMealTypeRef.current
+    if (!mealType) return
+    setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
+    try {
+      await foodCameraService.skipMeal(toDateStr(selectedDate), mealType)
+      await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+      await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+    } catch {
+      setRecordedMeals((prev) => ({ ...prev, [mealType]: false }))
+      Alert.alert("오류", "기록에 실패했습니다. 다시 시도해주세요.")
+    }
   }
 
   const handleCameraPhoto = () => {
@@ -276,24 +271,6 @@ export function RecordView({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      <ThreeDaysCalendar
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        recordedDates={recordedDates}
-        onMonthPress={() => setShowCalendar(true)}
-      />
-
-      <MonthCalendarSheet
-        visible={showCalendar}
-        selectedDate={selectedDate}
-        onSelectDate={(date) => {
-          onSelectDate(date)
-          setShowCalendar(false)
-        }}
-        onClose={() => setShowCalendar(false)}
-        disableFuture
-      />
-
       <View height={10} />
 
       <CharacterSection
@@ -302,6 +279,7 @@ export function RecordView({
         characterType={characterType}
         streak={streak}
         withinLimits={withinLimits}
+        backgroundVariant={backgroundVariant}
       />
 
       <View height={5} />
@@ -317,10 +295,12 @@ export function RecordView({
 
       <RecordOptionsSheet
         open={isOptionsSheetOpen}
+        mealLabel={recordingMealLabel}
         onClose={() => setIsOptionsSheetOpen(false)}
         onCameraPhoto={handleCameraPhoto}
         onTextRecord={handleTextRecord}
         onRecipeLoad={handleRecipeLoad}
+        onSkipMeal={handleSkipMeal}
       />
 
       <TextRecord
@@ -399,6 +379,8 @@ export function RecordView({
         bodyRecords={data?.result.bodyRecords}
         selectedDate={selectedDate}
       />
+
+      <BloodMetricsTracker selectedDate={selectedDate} />
     </ScrollView>
   )
 }

@@ -1,6 +1,6 @@
 import { ScrollView, Pressable } from "react-native"
 import { Text, XStack } from "tamagui"
-import type { ChatCategory } from "@/src/types/models"
+import type { ChatCategory } from "@/src/types/chat"
 import { QUICK_QUESTIONS } from "../data/mockData"
 
 interface QuickQuestionChipsProps {

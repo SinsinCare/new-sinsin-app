@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { router } from "expo-router"
+import Toast from "react-native-toast-message"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
 
@@ -78,9 +79,11 @@ export function useSignupEmail() {
           setSignupToken(result.signupToken)
         }
         if (timerRef.current) clearInterval(timerRef.current)
+      } else {
+        Toast.show({ type: "error", text1: "인증 오류", text2: "인증번호가 올바르지 않거나 만료되었습니다." })
       }
     } catch (e: unknown) {
-      showErrorToast(e instanceof Error ? e.message : "인증에 실패했습니다.")
+      Toast.show({ type: "error", text1: "인증 오류", text2: e instanceof Error ? e.message : "인증에 실패했습니다." })
     } finally {
       setVerifyingCode(false)
     }

@@ -5,6 +5,7 @@ import { useRef, useState } from "react"
 import { MainTab } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
+import { MonthCalendarSheet } from "@/src/features/home/components/statistics/MonthCalendarSheet"
 import {
   Animated,
   PanResponder,
@@ -19,6 +20,7 @@ const PADDING = 25
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [showCalendar, setShowCalendar] = useState(false)
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const widthRef = useRef(width)
@@ -106,6 +108,19 @@ export default function HomeScreen() {
         topInset={insets.top}
         mainTab={mainTab}
         onChangeTab={switchTab}
+        selectedDate={selectedDate}
+        onDatePress={() => setShowCalendar(true)}
+      />
+
+      <MonthCalendarSheet
+        visible={showCalendar}
+        selectedDate={selectedDate}
+        onSelectDate={(date) => {
+          setSelectedDate(date)
+          setShowCalendar(false)
+        }}
+        onClose={() => setShowCalendar(false)}
+        disableFuture
       />
 
       <View style={styles.tabContent} {...panResponder.panHandlers}>

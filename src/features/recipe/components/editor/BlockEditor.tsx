@@ -1,4 +1,5 @@
-import { View, useColorScheme, StyleSheet } from "react-native"
+import { View, StyleSheet } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import type { ContentBlock } from "@/src/features/recipe/types"
 import { tokens } from "@/src/theme/tokens"
 import { TextBlock } from "./TextBlock"
@@ -29,7 +30,7 @@ export function BlockEditor({
   onEditorFocus,
   onEditorBlur,
 }: BlockEditorProps) {
-  const scheme = useColorScheme() ?? "light"
+  const scheme = useAppColorScheme()
 
   const hasNonEmptyContent = blocks.some(
     (b) =>

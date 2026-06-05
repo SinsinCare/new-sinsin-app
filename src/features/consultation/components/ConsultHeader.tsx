@@ -1,9 +1,9 @@
-import { useColorScheme } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 
 export function ConsultHeader() {
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const borderColor = isDark ? tokens.color.grey3.val : tokens.color.grey8.val
 
   return (

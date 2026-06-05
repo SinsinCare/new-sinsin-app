@@ -1,5 +1,6 @@
 import React from "react"
-import { Pressable, ScrollView, useColorScheme, View } from "react-native"
+import { Pressable, ScrollView, View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 
 import WindowIcon from "@/assets/images/window.svg"
@@ -38,7 +39,7 @@ export function FoodCategoryBar({
   onToggleCategory,
   onToggleAllCategories,
 }: FoodCategoryBarProps) {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const activeTextColor = isDark ? TEXT_COLORS.dark : TEXT_COLORS.light
 

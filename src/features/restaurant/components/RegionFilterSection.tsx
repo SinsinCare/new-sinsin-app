@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, useColorScheme, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { REGIONS, SUB_REGIONS } from "../data/filterData"
@@ -18,7 +19,7 @@ export function RegionFilterSection({
   onSubRegionToggle,
   onReset,
 }: RegionFilterSectionProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
 
   const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
   const resetColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"

@@ -12,7 +12,7 @@ export function useProfileSetup() {
   const [birthYear, setBirthYear] = useState("")
   const [birthMonth, setBirthMonth] = useState("")
   const [birthDay, setBirthDay] = useState("")
-  const [gender, setGender] = useState<"male" | "female" | "">("")
+  const [gender, setGender] = useState<"MALE" | "FEMALE" | "OTHER" | "">("")
 
   const handleYearChange = (v: string) => {
     setBirthYear(v)
@@ -33,7 +33,7 @@ export function useProfileSetup() {
   const handleNext = (data: ProfileForm) => {
     setName(data.name)
     setBirth(birthYear, birthMonth, birthDay)
-    setGenderStore(gender as "male" | "female")
+    setGenderStore(gender as "MALE" | "FEMALE" | "OTHER")
     setReferralCodeStore(data.referralCode)
     router.push("/(auth)/nickname-setup")
   }

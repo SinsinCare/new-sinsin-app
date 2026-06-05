@@ -1,6 +1,6 @@
 {
   "name": "sinsin-rn-temp",
-  "version": "1.0.7",
+  "version": "1.0.12",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -9,6 +9,11 @@
     "ios-release": "expo prebuild --platform ios --clean && expo run:ios --configuration Release",
     "ios-no-user": "EXPO_PUBLIC_MOCK_NO_USER=true expo run:ios",
     "web": "expo start --web",
+    "deploy": "eas build --platform all --profile production --auto-submit",
+    "deploy:ios": "eas build --platform ios --profile production --auto-submit",
+    "deploy:android": "eas build --platform android --profile production --auto-submit",
+    "submit:ios": "eas submit --platform ios --latest",
+    "submit:android": "eas submit --platform android --latest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
@@ -26,6 +31,8 @@
     "@gorhom/bottom-sheet": "^5.2.8",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
+    "@react-native-kakao/core": "^2.4.5",
+    "@react-native-kakao/user": "^2.4.5",
     "@react-native-menu/menu": "^2.0.0",
     "@tamagui/animations-react-native": "2.0.0-rc.6",
     "@tamagui/config": "2.0.0-rc.6",
@@ -44,6 +51,7 @@
     "expo-clipboard": "~55.0.11",
     "expo-constants": "~55.0.11",
     "expo-dev-client": "~55.0.22",
+    "expo-document-picker": "~55.0.13",
     "expo-file-system": "~55.0.14",
     "expo-font": "~55.0.6",
     "expo-haptics": "~55.0.11",
@@ -107,6 +115,7 @@
     "lint-staged": "16.2.7",
     "prettier": "3.8.1",
     "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
     "typescript": "~5.9.2"
   },
   "private": true

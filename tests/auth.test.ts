@@ -195,17 +195,17 @@ describe("Auth API", () => {
   // ────────────────────────────────────────────────
   // 비밀번호 변경 (인증 상태)
   // ────────────────────────────────────────────────
-  describe("PUT /auth/password", () => {
-    it("인증 없이 비밀번호 변경 시도 → 401 또는 404(라우트 미배포)", async () => {
-      let status: number | undefined
-      try {
-        await authClient.put("/auth/password", {
+  describe("PATCH /user/password", () => {
+    itIfCreds("현재 비밀번호가 틀리면 변경 실패 → 4xx", async () => {
+      await loginAsTestUser()
+      await expect(
+        authClient.patch("/user/password", {
+          currentPassword: "WrongPassword!999",
           newPassword: "NewPassword123!",
-        })
-      } catch (e: unknown) {
-        status = (e as { response?: { status?: number } }).response?.status
-      }
-      expect([401, 404]).toContain(status)
+        }),
+      ).rejects.toMatchObject({
+        response: { status: expect.any(Number) },
+      })
     })
   })
 

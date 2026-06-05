@@ -1,5 +1,6 @@
 import { useEffect } from "react"
-import { useColorScheme, View } from "react-native"
+import { View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import Animated, {
   useSharedValue,
@@ -11,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated"
 
 export function ChatHistoryCardSkeleton() {
-  const colorScheme = useColorScheme()
+  const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   const opacity = useSharedValue(1)

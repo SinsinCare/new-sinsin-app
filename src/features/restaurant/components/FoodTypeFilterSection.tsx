@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, useColorScheme, useWindowDimensions, View } from "react-native"
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { FOOD_TYPES } from "../data/filterData"
@@ -29,7 +30,7 @@ export function FoodTypeFilterSection({
   selectedFoodTypes,
   onToggle,
 }: FoodTypeFilterSectionProps) {
-  const isDarkMode = useColorScheme() === "dark"
+  const isDarkMode = useAppColorScheme() === "dark"
   const { width: screenWidth } = useWindowDimensions()
 
   const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"

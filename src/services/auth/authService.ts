@@ -14,12 +14,15 @@ import { logger } from "@/src/lib/logger"
 function getRealAuthService(): IAuthService {
   return {
     async signInWithSocial(
-      provider: "google" | "apple",
+      provider: "google" | "apple" | "kakao",
       idToken: string,
       email?: string | null,
       displayName?: string | null,
     ): Promise<{ user: AppUser; accountState: string }> {
-      logger.debug(`[authService] signInWithSocial`, provider)
+      logger.debug("[authService] signInWithSocial 시작", provider, {
+        idTokenLength: idToken?.length,
+        idTokenPrefix: idToken?.slice(0, 30),
+      })
 
       let data
       try {
@@ -28,15 +31,42 @@ function getRealAuthService(): IAuthService {
           { provider, idToken },
         )
         data = response.data
-        logger.debug("[authService] social-login OK", data.result.accountState)
-      } catch (error) {
-        logger.error("[authService] /auth/social-login 실패", error)
+        logger.debug(
+          "[authService] social login 응답",
+          response.status,
+          data.result.accountState,
+        )
+      } catch (error: unknown) {
+        if (
+          error !== null &&
+          typeof error === "object" &&
+          "isAxiosError" in error
+        ) {
+          const axErr = error as {
+            isAxiosError: boolean
+            message: string
+            response?: { status: number }
+            request?: unknown
+            config?: { url?: string; method?: string }
+          }
+          logger.debug("[authService] social login 실패", {
+            isAxiosError: axErr.isAxiosError,
+            message: axErr.message,
+            method: axErr.config?.method,
+            url: axErr.config?.url,
+            status: axErr.response?.status,
+            hasRequest: !!axErr.request,
+          })
+        } else if (error instanceof Error) {
+          logger.debug("[authService] social login 실패", error.message)
+        } else {
+          logger.debug("[authService] social login 실패", "unknown error")
+        }
         throw error
       }
 
       const { accessToken, refreshToken, accountState } = data.result
       await tokenService.setTokens(accessToken, refreshToken)
-      logger.debug("[authService] 토큰 저장 완료")
 
       const user: AppUser = {
         uid: email ?? provider,

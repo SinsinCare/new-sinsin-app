@@ -7,6 +7,7 @@ export interface CategoryMeta {
   key: ChatCategory
   label: string
   icon: IconName
+  color?: string
 }
 
 export interface FaqItem {

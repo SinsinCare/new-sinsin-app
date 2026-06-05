@@ -1,4 +1,5 @@
-import { Pressable, useColorScheme } from "react-native"
+import { Pressable } from "react-native"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { tokens } from "@/src/theme/tokens"
@@ -23,7 +24,7 @@ export function OnboardingHeader({
   showBack,
 }: OnboardingHeaderProps) {
   const shouldShowBack = showBack ?? currentStepIndex > 0
-  const isDark = useColorScheme() === "dark"
+  const isDark = useAppColorScheme() === "dark"
   const textColor = isDark ? tokens.color.textDark.val : "#17191C"
   const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"
 

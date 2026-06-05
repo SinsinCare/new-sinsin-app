@@ -8,8 +8,6 @@ export async function pickImageFromGallery(): Promise<string | null> {
 
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ["images"],
-    allowsEditing: true,
-    aspect: [16, 9],
     quality: 0.8,
   })
 
@@ -50,8 +48,6 @@ export async function takePhoto(): Promise<string | null> {
   }
 
   const result = await ImagePicker.launchCameraAsync({
-    allowsEditing: true,
-    aspect: [16, 9],
     quality: 0.8,
   })
 

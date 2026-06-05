@@ -31,6 +31,7 @@ const WATER_INTERVALS = [1, 2, 3, 4] as const
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i)
 
 type PickerTarget =
+  | "morning"
   | "waterStart"
   | "waterEnd"
   | "breakfast"
@@ -52,6 +53,23 @@ export function NotificationsScreen() {
 
   const update = async (next: NotificationSettings) => {
     await updateSettings(next)
+  }
+
+  const handleMorningToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestAndEnable()
+      if (!granted) {
+        Alert.alert(
+          "알림 권한 필요",
+          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        )
+        return
+      }
+    }
+    update({
+      ...settings,
+      morningCheck: { ...settings.morningCheck, enabled: value },
+    })
   }
 
   const handleWaterToggle = async (value: boolean) => {
@@ -92,6 +110,12 @@ export function NotificationsScreen() {
     if (!pickerTarget) return
     const s = settings
     switch (pickerTarget) {
+      case "morning":
+        update({
+          ...s,
+          morningCheck: { ...s.morningCheck, hour },
+        })
+        break
       case "waterStart":
         update({
           ...s,
@@ -128,6 +152,8 @@ export function NotificationsScreen() {
 
   const pickerCurrentHour = (() => {
     switch (pickerTarget) {
+      case "morning":
+        return settings.morningCheck.hour
       case "waterStart":
         return settings.waterReminder.startHour
       case "waterEnd":
@@ -145,6 +171,7 @@ export function NotificationsScreen() {
 
   const pickerTitle = (() => {
     switch (pickerTarget) {
+      case "morning": return "아침 체크 시간 선택"
       case "waterStart": return "시작 시간 선택"
       case "waterEnd": return "종료 시간 선택"
       case "breakfast": return "아침 시간 선택"
@@ -231,6 +258,50 @@ export function NotificationsScreen() {
               )}
             </View>
           )}
+        </View>
+
+        {/* 아침 건강 체크 알림 */}
+        <View style={styles.section}>
+          <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
+            아침 건강 체크 알림
+          </ThemedText>
+
+          <View style={[styles.card, { backgroundColor: c.cardBg, borderColor: c.border }]}>
+            <View style={[styles.row, styles.rowBorder, { borderColor: c.divider }]}>
+              <View style={styles.rowLeft}>
+                <ThemedText style={[styles.rowTitle, { color: c.text }]}>
+                  알림 켜기
+                </ThemedText>
+                <ThemedText style={[styles.rowSub, { color: c.textTertiary }]}>
+                  첫 소변 후 물 마시기 전 혈압·체중 기록을 알려드려요
+                </ThemedText>
+              </View>
+              <Switch
+                value={settings.morningCheck.enabled}
+                onValueChange={handleMorningToggle}
+                trackColor={{ false: c.isDark ? "#3A3A42" : "#E5E7EB", true: tokens.color.sub8.val }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={c.isDark ? "#3A3A42" : "#E5E7EB"}
+              />
+            </View>
+
+            {settings.morningCheck.enabled && (
+              <View style={styles.row}>
+                <ThemedText style={[styles.rowTitle, { color: c.text }]}>
+                  알림 시간
+                </ThemedText>
+                <TouchableOpacity
+                  style={[styles.timePill, { backgroundColor: c.inputBg }]}
+                  onPress={() => setPickerTarget("morning")}
+                >
+                  <ThemedText style={[styles.timePillText, { color: c.text }]}>
+                    {fmt(settings.morningCheck.hour)}
+                  </ThemedText>
+                  <Ionicons name="chevron-down" size={14} color={c.textTertiary} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* 수분 섭취 알림 */}
