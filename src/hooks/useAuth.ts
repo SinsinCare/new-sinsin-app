@@ -10,6 +10,20 @@ import {
 import { tokenService } from "../services/core/tokenService"
 import { logger } from "@/src/lib/logger"
 
+const RESTORE_SESSION_TIMEOUT_MS = 5000
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), timeoutMs)
+    }),
+  ])
+}
+
 export function useAuth() {
   const {
     user,
@@ -23,9 +37,15 @@ export function useAuth() {
   const { reset: resetProfile } = useUserStore()
 
   useEffect(() => {
+    let cancelled = false
+
     const restore = async () => {
       try {
-        const result = await authService.restoreSession()
+        const result = await withTimeout(
+          authService.restoreSession(),
+          RESTORE_SESSION_TIMEOUT_MS,
+        )
+        if (cancelled) return
         if (result) {
           setUser(result.user)
           setAccountState(result.accountState)
@@ -33,10 +53,15 @@ export function useAuth() {
           setUser(null)
         }
       } catch {
+        if (cancelled) return
         setUser(null)
       }
     }
     restore()
+
+    return () => {
+      cancelled = true
+    }
   }, [setUser, setAccountState])
 
   const signInWithEmail = async (email: string, password: string) => {
