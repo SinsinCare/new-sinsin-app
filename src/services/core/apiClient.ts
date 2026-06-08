@@ -81,6 +81,7 @@ function addErrorInterceptor(instance: AxiosInstance) {
         status,
         false,
         data?.fieldErrors,
+        data?.result,
       ),
     )
   })

@@ -107,6 +107,13 @@ export function useAuth() {
     return result
   }
 
+  const cancelWithdrawal = async (cancelToken: string) => {
+    const result = await authService.cancelWithdrawal(cancelToken)
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
   const signOut = async () => {
     await authService.signOut()
     await tokenService.clearTokens()
@@ -123,6 +130,7 @@ export function useAuth() {
     signInWithGoogle,
     signInWithApple,
     signInWithKakao,
+    cancelWithdrawal,
     isUserCancelledError,
     signOut,
   }

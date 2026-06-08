@@ -20,6 +20,9 @@ export interface IAuthService {
     displayName?: string | null,
   ): Promise<{ user: AppUser; accountState: string }>
   signup(request: SignupRequest): Promise<AppUser>
+  cancelWithdrawal(
+    cancelToken: string,
+  ): Promise<{ user: AppUser; accountState: string }>
   signOut(): Promise<void>
   restoreSession(): Promise<{ user: AppUser; accountState: string } | null>
 }

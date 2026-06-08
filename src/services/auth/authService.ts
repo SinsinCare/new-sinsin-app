@@ -140,6 +140,31 @@ function getRealAuthService(): IAuthService {
       return user
     },
 
+    async cancelWithdrawal(
+      cancelToken: string,
+    ): Promise<{ user: AppUser; accountState: string }> {
+      const { data } = await publicApi.post<ApiResponse<LoginResult>>(
+        "/auth/withdrawal/cancel",
+        { cancelToken },
+      )
+
+      const {
+        accessToken,
+        refreshToken,
+        accountState,
+        user: authUser,
+      } = data.result
+      await tokenService.setTokens(accessToken, refreshToken)
+
+      const user = mapAuthUser(authUser, {
+        uid: "restored-user",
+        email: null,
+        displayName: null,
+      })
+
+      return { user, accountState }
+    },
+
     async signOut(): Promise<void> {
       await tokenService.clearTokens()
     },
@@ -208,6 +233,8 @@ export const authService: IAuthService = {
   signInWithSocial: (provider, idToken, email, displayName) =>
     getAuthService().signInWithSocial(provider, idToken, email, displayName),
   signup: (request) => getAuthService().signup(request),
+  cancelWithdrawal: (cancelToken) =>
+    getAuthService().cancelWithdrawal(cancelToken),
   signOut: () => getAuthService().signOut(),
   restoreSession: () => getAuthService().restoreSession(),
 }

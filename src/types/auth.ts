@@ -22,8 +22,7 @@ export type AccountState =
   | "PENDING_ONBOARDING"
   | "ACTIVE"
   | "SUSPENDED"
-  | "WITHDRAWN"
-  | "DELETED"
+  | "WITHDRAWAL_PENDING"
 
 // 회원가입 결과
 export interface SignupResult {
@@ -56,4 +55,9 @@ export interface TokenRefreshResult {
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
+}
+
+export interface WithdrawalPendingResult {
+  cancelToken: string
+  withdrawalDueAt: string | null
 }

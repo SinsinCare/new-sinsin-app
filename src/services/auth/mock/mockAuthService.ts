@@ -58,6 +58,14 @@ export const mockAuthService: IAuthService = {
     return currentUser
   },
 
+  async cancelWithdrawal(
+    _cancelToken: string,
+  ): Promise<{ user: AppUser; accountState: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    currentUser = DEFAULT_MOCK_USER
+    return { user: currentUser, accountState: "ACTIVE" }
+  },
+
   async signOut(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 100))
     currentUser = null

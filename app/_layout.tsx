@@ -16,7 +16,7 @@ import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 
-const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWN", "DELETED"])
+const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWAL_PENDING"])
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, accountState, signOut } = useAuth()

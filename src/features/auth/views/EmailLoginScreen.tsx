@@ -2,15 +2,23 @@ import { Pressable } from "react-native"
 import { YStack, XStack, Text, Separator } from "tamagui"
 import { router } from "expo-router"
 import { useForm } from "react-hook-form"
-import { FormTextField } from "@/src/shared/components"
+import { ConfirmModal, FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useEmailLogin, useAuthColors } from "../hooks"
 import type { LoginForm } from "../types"
 import { tokens } from "@/src/theme/tokens"
 
 export function EmailLoginScreen() {
-  const { isLoading, loginError, clearLoginError, submitLogin } =
-    useEmailLogin()
+  const {
+    isLoading,
+    loginError,
+    withdrawalPending,
+    isCancellingWithdrawal,
+    clearLoginError,
+    dismissWithdrawalPending,
+    confirmWithdrawalCancel,
+    submitLogin,
+  } = useEmailLogin()
   const colors = useAuthColors()
 
   const {
@@ -34,6 +42,18 @@ export function EmailLoginScreen() {
       buttonLoading={isLoading}
       onSubmit={handleSubmit(onSubmit)}
     >
+      <ConfirmModal
+        visible={!!withdrawalPending}
+        title="회원탈퇴 처리중입니다."
+        description="회원 탈퇴를 취소하고 다시 로그인하겠습니까?"
+        cancelText="아니오"
+        confirmText={
+          isCancellingWithdrawal ? "처리 중..." : "탈퇴 취소 후 로그인"
+        }
+        onCancel={dismissWithdrawalPending}
+        onConfirm={confirmWithdrawalCancel}
+      />
+
       <YStack gap={36} marginTop={48}>
         <FormTextField<LoginForm>
           name="email"

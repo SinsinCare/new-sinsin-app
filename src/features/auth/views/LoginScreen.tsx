@@ -12,6 +12,9 @@ import { useAuth } from "@/src/hooks/useAuth"
 import { Ionicons } from "@expo/vector-icons"
 import { logger } from "@/src/lib/logger"
 import { useAuthColors } from "../hooks"
+import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
+import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
+import type { WithdrawalPendingResult } from "@/src/types"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
@@ -19,10 +22,36 @@ export function LoginScreen() {
     signInWithGoogle,
     signInWithApple,
     signInWithKakao,
+    cancelWithdrawal,
     isUserCancelledError,
   } = useAuth()
   const [socialLoading, setSocialLoading] = useState(false)
+  const [withdrawalPending, setWithdrawalPending] =
+    useState<WithdrawalPendingResult | null>(null)
+  const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
   const colors = useAuthColors()
+
+  const handleWithdrawalCancel = async () => {
+    if (!withdrawalPending || isCancellingWithdrawal) return
+    setIsCancellingWithdrawal(true)
+    try {
+      await cancelWithdrawal(withdrawalPending.cancelToken)
+      setWithdrawalPending(null)
+    } catch (error) {
+      const msg =
+        error instanceof Error
+          ? error.message
+          : "회원탈퇴 취소 중 문제가 발생했습니다."
+      Toast.show({
+        type: "error",
+        text1: "회원탈퇴 취소 실패",
+        text2: msg,
+        visibilityTime: 5000,
+      })
+    } finally {
+      setIsCancellingWithdrawal(false)
+    }
+  }
 
   const handleEmailLogin = () => {
     router.push("/(auth)/email-login")
@@ -35,6 +64,11 @@ export function LoginScreen() {
       await signInWithGoogle()
     } catch (error) {
       if (!isUserCancelledError(error)) {
+        const pending = getWithdrawalPendingResult(error)
+        if (pending) {
+          setWithdrawalPending(pending)
+          return
+        }
         const msg =
           error instanceof Error
             ? error.message
@@ -59,6 +93,11 @@ export function LoginScreen() {
       await signInWithApple()
     } catch (error) {
       if (!isUserCancelledError(error)) {
+        const pending = getWithdrawalPendingResult(error)
+        if (pending) {
+          setWithdrawalPending(pending)
+          return
+        }
         const msg =
           error instanceof Error
             ? error.message
@@ -87,6 +126,11 @@ export function LoginScreen() {
       const cancelled = isUserCancelledError(error)
       logger.debug("[LoginScreen] Kakao 로그인 에러", { cancelled })
       if (!cancelled) {
+        const pending = getWithdrawalPendingResult(error)
+        if (pending) {
+          setWithdrawalPending(pending)
+          return
+        }
         const msg =
           error instanceof Error
             ? error.message
@@ -130,6 +174,18 @@ export function LoginScreen() {
 
       {/* 버튼 영역 */}
       <YStack gap={12}>
+        <ConfirmModal
+          visible={!!withdrawalPending}
+          title="회원탈퇴 처리중입니다."
+          description="회원 탈퇴를 취소하고 다시 로그인하겠습니까?"
+          cancelText="아니오"
+          confirmText={
+            isCancellingWithdrawal ? "처리 중..." : "탈퇴 취소 후 로그인"
+          }
+          onCancel={() => setWithdrawalPending(null)}
+          onConfirm={handleWithdrawalCancel}
+        />
+
         {/* 이메일 로그인 */}
         <Pressable onPress={handleEmailLogin}>
           <YStack
