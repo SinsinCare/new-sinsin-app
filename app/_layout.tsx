@@ -16,6 +16,8 @@ import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 
+const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWN", "DELETED"])
+
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, accountState, signOut } = useAuth()
   useNotifications(isAuthenticated && accountState === "ACTIVE")
@@ -42,7 +44,11 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return
 
-    if (isAuthenticated && accountState === "WITHDRAWN") {
+    if (
+      isAuthenticated &&
+      accountState !== null &&
+      BLOCKED_ACCOUNT_STATES.has(accountState)
+    ) {
       signOut()
       return
     }

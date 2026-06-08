@@ -18,9 +18,16 @@ export interface SignupRequest {
   nickName: string
 }
 
+export type AccountState =
+  | "PENDING_ONBOARDING"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "WITHDRAWN"
+  | "DELETED"
+
 // 회원가입 결과
 export interface SignupResult {
-  accountState: string
+  accountState: AccountState
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
@@ -32,12 +39,12 @@ export interface AuthUserSummary {
   nickName: string
   name: string
   role: string
-  accountState: string
+  accountState: AccountState
 }
 
 // 로그인 결과
 export interface LoginResult {
-  accountState: string
+  accountState: AccountState
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
@@ -45,7 +52,7 @@ export interface LoginResult {
 
 // 토큰 갱신 결과
 export interface TokenRefreshResult {
-  accountState: string
+  accountState: AccountState
   accessToken: string
   refreshToken: string
   user: AuthUserSummary

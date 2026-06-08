@@ -173,9 +173,12 @@ function getRealAuthService(): IAuthService {
 
         return { user, accountState }
       } catch (error) {
-        // 401(인증 만료/무효)일 때만 토큰 삭제
+        // 401(인증 만료/무효) 또는 403(차단된 계정 상태)일 때 토큰 삭제
         // 네트워크 오류 등 일시적 에러는 토큰 유지 → 다음 실행 시 재시도
-        if (error instanceof ApiError && error.statusCode === 401) {
+        if (
+          error instanceof ApiError &&
+          (error.statusCode === 401 || error.statusCode === 403)
+        ) {
           await tokenService.clearTokens()
         }
         return null
