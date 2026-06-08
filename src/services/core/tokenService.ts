@@ -1,25 +1,73 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import * as SecureStore from "expo-secure-store"
 
-const ACCESS_TOKEN_KEY = "@sinsin/accessToken"
-const REFRESH_TOKEN_KEY = "@sinsin/refreshToken"
+const SECURE_ACCESS_TOKEN_KEY = "sinsin.accessToken"
+const SECURE_REFRESH_TOKEN_KEY = "sinsin.refreshToken"
+const LEGACY_ACCESS_TOKEN_KEY = "@sinsin/accessToken"
+const LEGACY_REFRESH_TOKEN_KEY = "@sinsin/refreshToken"
+
+let secureStoreAvailable: Promise<boolean> | null = null
+
+async function canUseSecureStore(): Promise<boolean> {
+  secureStoreAvailable ??= SecureStore.isAvailableAsync().catch(() => false)
+  return secureStoreAvailable
+}
+
+async function getToken(
+  secureKey: string,
+  legacyKey: string,
+): Promise<string | null> {
+  if (await canUseSecureStore()) {
+    const secureValue = await SecureStore.getItemAsync(secureKey)
+    if (secureValue) return secureValue
+
+    const legacyValue = await AsyncStorage.getItem(legacyKey)
+    if (legacyValue) {
+      await SecureStore.setItemAsync(secureKey, legacyValue)
+      await AsyncStorage.removeItem(legacyKey)
+    }
+    return legacyValue
+  }
+
+  return AsyncStorage.getItem(legacyKey)
+}
 
 export const tokenService = {
   async getAccessToken(): Promise<string | null> {
-    return AsyncStorage.getItem(ACCESS_TOKEN_KEY)
+    return getToken(SECURE_ACCESS_TOKEN_KEY, LEGACY_ACCESS_TOKEN_KEY)
   },
 
   async getRefreshToken(): Promise<string | null> {
-    return AsyncStorage.getItem(REFRESH_TOKEN_KEY)
+    return getToken(SECURE_REFRESH_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY)
   },
 
   async setTokens(accessToken: string, refreshToken: string): Promise<void> {
+    if (await canUseSecureStore()) {
+      await Promise.all([
+        SecureStore.setItemAsync(SECURE_ACCESS_TOKEN_KEY, accessToken),
+        SecureStore.setItemAsync(SECURE_REFRESH_TOKEN_KEY, refreshToken),
+        AsyncStorage.multiRemove([LEGACY_ACCESS_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY]),
+      ])
+      return
+    }
+
     await AsyncStorage.multiSet([
-      [ACCESS_TOKEN_KEY, accessToken],
-      [REFRESH_TOKEN_KEY, refreshToken],
+      [LEGACY_ACCESS_TOKEN_KEY, accessToken],
+      [LEGACY_REFRESH_TOKEN_KEY, refreshToken],
     ])
   },
 
   async clearTokens(): Promise<void> {
-    await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY])
+    await Promise.all([
+      canUseSecureStore().then((available) =>
+        available
+          ? Promise.all([
+              SecureStore.deleteItemAsync(SECURE_ACCESS_TOKEN_KEY),
+              SecureStore.deleteItemAsync(SECURE_REFRESH_TOKEN_KEY),
+            ])
+          : undefined,
+      ),
+      AsyncStorage.multiRemove([LEGACY_ACCESS_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY]),
+    ])
   },
 }
