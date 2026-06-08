@@ -20,8 +20,19 @@ export interface SignupRequest {
 
 // 회원가입 결과
 export interface SignupResult {
+  accountState: string
   accessToken: string
   refreshToken: string
+  user: AuthUserSummary
+}
+
+export interface AuthUserSummary {
+  id: number
+  email: string
+  nickName: string
+  name: string
+  role: string
+  accountState: string
 }
 
 // 로그인 결과
@@ -29,6 +40,7 @@ export interface LoginResult {
   accountState: string
   accessToken: string
   refreshToken: string
+  user: AuthUserSummary
 }
 
 // 토큰 갱신 결과
@@ -36,4 +48,5 @@ export interface TokenRefreshResult {
   accountState: string
   accessToken: string
   refreshToken: string
+  user: AuthUserSummary
 }

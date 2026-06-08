@@ -5,11 +5,24 @@ import type {
   LoginResult,
   SignupResult,
   TokenRefreshResult,
+  AuthUserSummary,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
 import { publicApi, tokenService } from "../core"
 import { ApiError } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
+
+function mapAuthUser(
+  user: AuthUserSummary | undefined,
+  fallback: AppUser,
+): AppUser {
+  if (!user) return fallback
+  return {
+    uid: String(user.id),
+    email: user.email,
+    displayName: user.nickName || user.name || null,
+  }
+}
 
 function getRealAuthService(): IAuthService {
   return {
@@ -65,14 +78,19 @@ function getRealAuthService(): IAuthService {
         throw error
       }
 
-      const { accessToken, refreshToken, accountState } = data.result
+      const {
+        accessToken,
+        refreshToken,
+        accountState,
+        user: authUser,
+      } = data.result
       await tokenService.setTokens(accessToken, refreshToken)
 
-      const user: AppUser = {
+      const user = mapAuthUser(authUser, {
         uid: email ?? provider,
         email: email ?? null,
         displayName: displayName ?? null,
-      }
+      })
 
       logger.debug("[authService] signInWithSocial 완료", accountState)
       return { user, accountState }
@@ -87,14 +105,19 @@ function getRealAuthService(): IAuthService {
         { email, password },
       )
 
-      const { accessToken, refreshToken, accountState } = data.result
+      const {
+        accessToken,
+        refreshToken,
+        accountState,
+        user: authUser,
+      } = data.result
       await tokenService.setTokens(accessToken, refreshToken)
 
-      const user: AppUser = {
+      const user = mapAuthUser(authUser, {
         uid: email,
         email,
         displayName: null,
-      }
+      })
 
       return { user, accountState }
     },
@@ -105,14 +128,14 @@ function getRealAuthService(): IAuthService {
         request,
       )
 
-      const { accessToken, refreshToken } = data.result
+      const { accessToken, refreshToken, user: authUser } = data.result
       await tokenService.setTokens(accessToken, refreshToken)
 
-      const user: AppUser = {
+      const user = mapAuthUser(authUser, {
         uid: request.signupToken,
         email: null,
         displayName: request.nickName,
-      }
+      })
 
       return user
     },
@@ -138,14 +161,15 @@ function getRealAuthService(): IAuthService {
           accessToken,
           refreshToken: newRefreshToken,
           accountState,
+          user: authUser,
         } = data.result
         await tokenService.setTokens(accessToken, newRefreshToken)
 
-        const user: AppUser = {
+        const user = mapAuthUser(authUser, {
           uid: "restored-user",
           email: null,
           displayName: null,
-        }
+        })
 
         return { user, accountState }
       } catch (error) {
