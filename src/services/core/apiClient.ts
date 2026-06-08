@@ -6,16 +6,19 @@ import { reportError } from "../errorService"
 import { getBackendUrl } from "../../config/appConfig"
 
 const BASE_URL = getBackendUrl()
+const API_TIMEOUT_MS = 10000
 
 // 인증 불필요 엔드포인트용 (로그인, 회원가입, OTP 등)
 export const publicApi = axios.create({
   baseURL: BASE_URL,
+  timeout: API_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 })
 
 // 인증 필요 엔드포인트용
 export const api = axios.create({
   baseURL: BASE_URL,
+  timeout: API_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 })
 
@@ -52,14 +55,13 @@ function addErrorInterceptor(instance: AxiosInstance) {
       return Promise.reject(error)
     }
     if (!error.response) {
-      return Promise.reject(
-        new ApiError(
-          "네트워크 연결을 확인해주세요.",
-          "NETWORK_ERROR",
-          undefined,
-          true,
-        ),
-      )
+      const code = error.code || "NETWORK_ERROR"
+      const message =
+        error.message ||
+        (code === "ECONNABORTED"
+          ? "요청 시간이 초과되었습니다."
+          : "네트워크 연결을 확인해주세요.")
+      return Promise.reject(new ApiError(message, code, undefined, true))
     }
     const { status, data } = error.response
     if (status !== 401) {

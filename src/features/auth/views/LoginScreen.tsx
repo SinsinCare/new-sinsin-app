@@ -1,150 +1,29 @@
-import { useState } from "react"
 import { Platform, Pressable } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import Toast from "react-native-toast-message"
 import MainLogo from "@/assets/images/main-logo.svg"
 import MainTextLogo from "@/assets/images/main-text-logo.svg"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import KakaoLogo from "@/assets/images/kakao-logo.svg"
-import { useAuth } from "@/src/hooks/useAuth"
 import { Ionicons } from "@expo/vector-icons"
-import { logger } from "@/src/lib/logger"
-import { useAuthColors } from "../hooks"
+import { useAuthColors, useSocialLogin } from "../hooks"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
-import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
-import type { WithdrawalPendingResult } from "@/src/types"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
   const {
-    signInWithGoogle,
-    signInWithApple,
-    signInWithKakao,
-    cancelWithdrawal,
-    isUserCancelledError,
-  } = useAuth()
-  const [socialLoading, setSocialLoading] = useState(false)
-  const [withdrawalPending, setWithdrawalPending] =
-    useState<WithdrawalPendingResult | null>(null)
-  const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
+    socialLoading,
+    withdrawalPending,
+    isCancellingWithdrawal,
+    loginWithProvider,
+    confirmWithdrawalCancellation,
+    dismissWithdrawalPending,
+  } = useSocialLogin()
   const colors = useAuthColors()
-
-  const handleWithdrawalCancel = async () => {
-    if (!withdrawalPending || isCancellingWithdrawal) return
-    setIsCancellingWithdrawal(true)
-    try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
-      setWithdrawalPending(null)
-    } catch (error) {
-      const msg =
-        error instanceof Error
-          ? error.message
-          : "회원탈퇴 취소 중 문제가 발생했습니다."
-      Toast.show({
-        type: "error",
-        text1: "회원탈퇴 취소 실패",
-        text2: msg,
-        visibilityTime: 5000,
-      })
-    } finally {
-      setIsCancellingWithdrawal(false)
-    }
-  }
 
   const handleEmailLogin = () => {
     router.push("/(auth)/email-login")
-  }
-
-  const handleGoogleLogin = async () => {
-    if (socialLoading) return
-    setSocialLoading(true)
-    try {
-      await signInWithGoogle()
-    } catch (error) {
-      if (!isUserCancelledError(error)) {
-        const pending = getWithdrawalPendingResult(error)
-        if (pending) {
-          setWithdrawalPending(pending)
-          return
-        }
-        const msg =
-          error instanceof Error
-            ? error.message
-            : "로그인 중 문제가 발생했습니다."
-        logger.debug("[LoginScreen] Google 로그인 에러", msg)
-        Toast.show({
-          type: "error",
-          text1: "Google 로그인 실패",
-          text2: msg,
-          visibilityTime: 5000,
-        })
-      }
-    } finally {
-      setSocialLoading(false)
-    }
-  }
-
-  const handleAppleLogin = async () => {
-    if (socialLoading) return
-    setSocialLoading(true)
-    try {
-      await signInWithApple()
-    } catch (error) {
-      if (!isUserCancelledError(error)) {
-        const pending = getWithdrawalPendingResult(error)
-        if (pending) {
-          setWithdrawalPending(pending)
-          return
-        }
-        const msg =
-          error instanceof Error
-            ? error.message
-            : "로그인 중 문제가 발생했습니다."
-        logger.debug("[LoginScreen] Apple 로그인 에러", msg)
-        Toast.show({
-          type: "error",
-          text1: "Apple 로그인 실패",
-          text2: msg,
-          visibilityTime: 5000,
-        })
-      }
-    } finally {
-      setSocialLoading(false)
-    }
-  }
-
-  const handleKakaoLogin = async () => {
-    if (socialLoading) return
-    logger.debug("[LoginScreen] Kakao 로그인 시작")
-    setSocialLoading(true)
-    try {
-      await signInWithKakao()
-      logger.debug("[LoginScreen] Kakao 로그인 성공")
-    } catch (error) {
-      const cancelled = isUserCancelledError(error)
-      logger.debug("[LoginScreen] Kakao 로그인 에러", { cancelled })
-      if (!cancelled) {
-        const pending = getWithdrawalPendingResult(error)
-        if (pending) {
-          setWithdrawalPending(pending)
-          return
-        }
-        const msg =
-          error instanceof Error
-            ? error.message
-            : "로그인 중 문제가 발생했습니다."
-        Toast.show({
-          type: "error",
-          text1: "카카오 로그인 실패",
-          text2: msg,
-          visibilityTime: 5000,
-        })
-      }
-    } finally {
-      setSocialLoading(false)
-    }
   }
 
   return (
@@ -182,8 +61,8 @@ export function LoginScreen() {
           confirmText={
             isCancellingWithdrawal ? "처리 중..." : "탈퇴 취소 후 로그인"
           }
-          onCancel={() => setWithdrawalPending(null)}
-          onConfirm={handleWithdrawalCancel}
+          onCancel={dismissWithdrawalPending}
+          onConfirm={confirmWithdrawalCancellation}
         />
 
         {/* 이메일 로그인 */}
@@ -218,7 +97,10 @@ export function LoginScreen() {
         </XStack>
 
         {/* Google 로그인 */}
-        <Pressable onPress={handleGoogleLogin} disabled={socialLoading}>
+        <Pressable
+          onPress={() => loginWithProvider("google")}
+          disabled={socialLoading}
+        >
           <XStack
             backgroundColor="#FFFFFF"
             paddingVertical={16}
@@ -243,7 +125,10 @@ export function LoginScreen() {
         </Pressable>
 
         {/* 카카오 로그인 */}
-        <Pressable onPress={handleKakaoLogin} disabled={socialLoading}>
+        <Pressable
+          onPress={() => loginWithProvider("kakao")}
+          disabled={socialLoading}
+        >
           <XStack
             backgroundColor="#FEE500"
             paddingVertical={16}
@@ -269,7 +154,10 @@ export function LoginScreen() {
 
         {/* Apple 로그인 (iOS만) */}
         {Platform.OS === "ios" && (
-          <Pressable onPress={handleAppleLogin} disabled={socialLoading}>
+          <Pressable
+            onPress={() => loginWithProvider("apple")}
+            disabled={socialLoading}
+          >
             <XStack
               backgroundColor="#000000"
               paddingVertical={16}

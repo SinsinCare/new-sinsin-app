@@ -24,6 +24,8 @@ export type AccountState =
   | "SUSPENDED"
   | "WITHDRAWAL_PENDING"
 
+export type SocialProvider = "google" | "apple" | "kakao"
+
 // 회원가입 결과
 export interface SignupResult {
   accountState: AccountState

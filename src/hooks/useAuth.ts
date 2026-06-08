@@ -2,13 +2,12 @@ import { useEffect } from "react"
 import { useAuthStore, useUserStore } from "../stores"
 import { authService } from "../services/auth/authService"
 import {
-  signInWithGoogle as googleSignIn,
-  signInWithApple as appleSignIn,
-  signInWithKakao as kakaoSignIn,
+  signInWithSocialProvider as nativeSocialSignIn,
   isUserCancelledError,
 } from "../services/auth/socialAuthService"
 import { tokenService } from "../services/core/tokenService"
 import { logger } from "@/src/lib/logger"
+import type { SocialProvider } from "@/src/types"
 
 const RESTORE_SESSION_TIMEOUT_MS = 5000
 
@@ -71,66 +70,27 @@ export function useAuth() {
     return result
   }
 
-  const signInWithGoogle = async () => {
-    logger.debug("[useAuth] signInWithGoogle")
-    const socialResult = await googleSignIn()
+  const signInWithSocialProvider = async (provider: SocialProvider) => {
+    logger.debug("[useAuth] signInWithSocialProvider", provider)
+    const socialResult = await nativeSocialSignIn(provider)
     const result = await authService.signInWithSocial(
       socialResult.provider,
       socialResult.idToken,
       socialResult.email,
       socialResult.displayName,
     )
-    logger.debug("[useAuth] Google 로그인 완료", result.accountState)
+    logger.debug("[useAuth] social login 완료", {
+      provider,
+      accountState: result.accountState,
+    })
     setUser(result.user)
     setAccountState(result.accountState)
     return result
   }
 
-  const signInWithApple = async () => {
-    logger.debug("[useAuth] signInWithApple")
-    const socialResult = await appleSignIn()
-    const result = await authService.signInWithSocial(
-      socialResult.provider,
-      socialResult.idToken,
-      socialResult.email,
-      socialResult.displayName,
-    )
-    logger.debug("[useAuth] Apple 로그인 완료", result.accountState)
-    setUser(result.user)
-    setAccountState(result.accountState)
-    return result
-  }
-
-  const signInWithKakao = async () => {
-    logger.debug("[useAuth] signInWithKakao 시작")
-
-    let socialResult
-    try {
-      socialResult = await kakaoSignIn()
-      logger.debug("[useAuth] Kakao provider 확인", socialResult.provider)
-    } catch (e) {
-      logger.debug("[useAuth] kakaoSignIn 실패", e)
-      throw e
-    }
-
-    let result
-    try {
-      result = await authService.signInWithSocial(
-        socialResult.provider,
-        socialResult.idToken,
-        socialResult.email,
-        socialResult.displayName,
-      )
-      logger.debug("[useAuth] Kakao 로그인 완료", result.accountState)
-    } catch (e) {
-      logger.debug("[useAuth] Kakao 서버 로그인 실패", e)
-      throw e
-    }
-
-    setUser(result.user)
-    setAccountState(result.accountState)
-    return result
-  }
+  const signInWithGoogle = () => signInWithSocialProvider("google")
+  const signInWithApple = () => signInWithSocialProvider("apple")
+  const signInWithKakao = () => signInWithSocialProvider("kakao")
 
   const cancelWithdrawal = async (cancelToken: string) => {
     const result = await authService.cancelWithdrawal(cancelToken)
@@ -151,6 +111,7 @@ export function useAuth() {
     accountState,
     isLoading,
     isAuthenticated,
+    signInWithSocialProvider,
     signInWithEmail,
     signInWithGoogle,
     signInWithApple,

@@ -1,4 +1,4 @@
-import type { SignupRequest } from "../../types"
+import type { SignupRequest, SocialProvider } from "../../types"
 
 // 앱 사용자 최소 인터페이스
 export interface AppUser {
@@ -14,7 +14,7 @@ export interface IAuthService {
     password: string,
   ): Promise<{ user: AppUser; accountState: string }>
   signInWithSocial(
-    provider: "google" | "apple" | "kakao",
+    provider: SocialProvider,
     idToken: string,
     email?: string | null,
     displayName?: string | null,

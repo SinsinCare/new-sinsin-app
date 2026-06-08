@@ -8,11 +8,12 @@ import * as AppleAuthentication from "expo-apple-authentication"
 import { login as kakaoLogin } from "@react-native-kakao/user"
 import { initializeKakaoSDK, getKeyHashAndroid } from "@react-native-kakao/core"
 import { logger } from "@/src/lib/logger"
+import type { SocialProvider } from "@/src/types"
 
 const KAKAO_NATIVE_APP_KEY = "709c22f6c6227095a316851f1f902189"
 
 export interface SocialAuthResult {
-  provider: "google" | "apple" | "kakao"
+  provider: SocialProvider
   idToken: string
   email: string | null
   displayName: string | null
@@ -108,7 +109,10 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
 
   try {
     await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
-    logger.debug("[Kakao SignIn] SDK 초기화 완료, appKey:", KAKAO_NATIVE_APP_KEY)
+    logger.debug(
+      "[Kakao SignIn] SDK 초기화 완료, appKey:",
+      KAKAO_NATIVE_APP_KEY,
+    )
   } catch (e) {
     logger.error("[Kakao SignIn] SDK 초기화 실패", e)
     throw e
@@ -151,6 +155,21 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     email: null,
     displayName: null,
   }
+}
+
+const socialSignInByProvider: Record<
+  SocialProvider,
+  () => Promise<SocialAuthResult>
+> = {
+  google: signInWithGoogle,
+  apple: signInWithApple,
+  kakao: signInWithKakao,
+}
+
+export function signInWithSocialProvider(
+  provider: SocialProvider,
+): Promise<SocialAuthResult> {
+  return socialSignInByProvider[provider]()
 }
 
 export function isUserCancelledError(error: unknown): boolean {
