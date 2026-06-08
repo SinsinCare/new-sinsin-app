@@ -36,27 +36,40 @@ interface ApiRecipeNutrition {
 interface ApiRecipeSummary {
   id: number
   sourceKey?: string | null
+  source_key?: string | null
   name: string
   description?: string | null
   category: string
   difficulty?: string | null
   timeMin?: number | null
+  time_min?: number | null
   servings?: number | null
   tags?: string[] | null
   thumbnailUrl?: string | null
+  thumbnail_url?: string | null
+  detailImageUrl?: string | null
+  detail_image_url?: string | null
   nutrition?: ApiRecipeNutrition | null
+  ingredients?: CuratedRecipeIngredient[] | null
+  steps?: CuratedRecipeStep[] | null
+  ckdGuide?: CuratedRecipeCkdGuide | null
+  ckd_guide?: CuratedRecipeCkdGuide | null
+  aiSummary?: {
+    headline?: string | null
+    riskFlags?: Record<string, string> | null
+    risk_flags?: Record<string, string> | null
+  } | null
+  ai_summary?: {
+    headline?: string | null
+    riskFlags?: Record<string, string> | null
+    risk_flags?: Record<string, string> | null
+  } | null
+  createdAt?: string | null
+  created_at?: string | null
 }
 
 interface ApiRecipeDetail extends ApiRecipeSummary {
   detailImageUrl?: string | null
-  ingredients?: CuratedRecipeIngredient[] | null
-  steps?: CuratedRecipeStep[] | null
-  ckdGuide?: CuratedRecipeCkdGuide | null
-  aiSummary?: {
-    headline?: string | null
-    riskFlags?: Record<string, string> | null
-  } | null
-  createdAt?: string | null
 }
 
 interface ApiRecipeListResult {
@@ -81,33 +94,40 @@ function mapNutrition(
 }
 
 function mapAiSummary(
-  aiSummary: ApiRecipeDetail["aiSummary"],
+  aiSummary: ApiRecipeDetail["aiSummary"] | ApiRecipeDetail["ai_summary"],
   fallbackHeadline: string,
 ): CuratedRecipeAiSummary {
   return {
     headline: aiSummary?.headline ?? fallbackHeadline,
-    risk_flags: aiSummary?.riskFlags ?? {},
+    risk_flags: aiSummary?.riskFlags ?? aiSummary?.risk_flags ?? {},
   }
 }
 
 function mapSummary(item: ApiRecipeSummary): CuratedRecipe {
+  const sourceKey = item.sourceKey ?? item.source_key ?? null
+  const thumbnailUrl = item.thumbnailUrl ?? item.thumbnail_url ?? null
+  const detailImageUrl =
+    item.detailImageUrl ?? item.detail_image_url ?? thumbnailUrl
+  const aiSummary = item.aiSummary ?? item.ai_summary
+
   return {
     id: item.id,
-    sourceKey: item.sourceKey,
+    sourceKey,
     name: item.name,
     description: item.description ?? "",
     category: item.category,
     difficulty: item.difficulty ?? "",
-    time_min: item.timeMin ?? 0,
+    time_min: item.timeMin ?? item.time_min ?? 0,
     servings: item.servings ?? 1,
     tags: item.tags ?? [],
-    thumbnail_url: item.thumbnailUrl ?? null,
-    detail_image_url: null,
-    ingredients: [],
-    steps: [],
+    thumbnail_url: thumbnailUrl,
+    detail_image_url: detailImageUrl,
+    ingredients: item.ingredients ?? [],
+    steps: item.steps ?? [],
     nutrition: mapNutrition(item.nutrition),
-    ckd_guide: {},
-    ai_summary: { headline: item.description ?? "", risk_flags: {} },
+    ckd_guide: item.ckdGuide ?? item.ckd_guide ?? {},
+    ai_summary: mapAiSummary(aiSummary, item.description ?? ""),
+    created_at: item.createdAt ?? item.created_at ?? undefined,
   }
 }
 
@@ -115,12 +135,20 @@ function mapDetail(item: ApiRecipeDetail): CuratedRecipe {
   const summary = mapSummary(item)
   return {
     ...summary,
-    detail_image_url: item.detailImageUrl ?? item.thumbnailUrl ?? null,
+    detail_image_url:
+      item.detailImageUrl ??
+      item.detail_image_url ??
+      item.thumbnailUrl ??
+      item.thumbnail_url ??
+      null,
     ingredients: item.ingredients ?? [],
     steps: item.steps ?? [],
-    ckd_guide: item.ckdGuide ?? {},
-    ai_summary: mapAiSummary(item.aiSummary, item.description ?? ""),
-    created_at: item.createdAt ?? undefined,
+    ckd_guide: item.ckdGuide ?? item.ckd_guide ?? {},
+    ai_summary: mapAiSummary(
+      item.aiSummary ?? item.ai_summary,
+      item.description ?? "",
+    ),
+    created_at: item.createdAt ?? item.created_at ?? undefined,
   }
 }
 
