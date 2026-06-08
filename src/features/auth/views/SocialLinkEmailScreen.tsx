@@ -42,6 +42,10 @@ export function SocialLinkEmailScreen() {
   const [timer, setTimer] = useState(0)
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
+  const [verificationComplete, setVerificationComplete] = useState(false)
+  const [nextRoute, setNextRoute] = useState<"/onboarding" | "/(tabs)/home">(
+    "/onboarding",
+  )
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const providerValue = isSocialProvider(provider) ? provider : null
@@ -92,6 +96,7 @@ export function SocialLinkEmailScreen() {
     Keyboard.dismiss()
     setSendingCode(true)
     setSendError(null)
+    setVerificationComplete(false)
     try {
       await sendSocialLinkEmailCode(tokenValue, getValues("email"))
       setCodeSent(true)
@@ -116,6 +121,7 @@ export function SocialLinkEmailScreen() {
     Keyboard.dismiss()
     setVerifyingCode(true)
     setSendError(null)
+    setVerificationComplete(false)
     try {
       const result = await verifySocialLinkEmailCode(
         tokenValue,
@@ -123,11 +129,13 @@ export function SocialLinkEmailScreen() {
         getValues("code"),
       )
       if (timerRef.current) clearInterval(timerRef.current)
-      router.replace(
+      setTimer(0)
+      setNextRoute(
         result.accountState === "PENDING_ONBOARDING"
           ? "/onboarding"
           : "/(tabs)/home",
       )
+      setVerificationComplete(true)
     } catch (error) {
       setSendError(
         error instanceof Error
@@ -143,10 +151,14 @@ export function SocialLinkEmailScreen() {
 
   return (
     <AuthScreenLayout
-      title={`${providerLabel} 로그인에 사용할\n이메일을 입력해주세요`}
-      subtitle="이메일 인증 후 기존 계정에 연결하거나 새 계정으로 가입합니다"
-      buttonLabel="로그인 화면으로"
-      onSubmit={() => router.replace("/(auth)/login")}
+      title={`${providerLabel} 로그인 계정을\n연결할 이메일을 입력해주세요`}
+      subtitle={`입력한 이메일을 기준으로 계정이 생성됩니다. 이미 같은 이메일 계정이 있으면 해당 계정에 ${providerLabel} 로그인을 연결합니다.`}
+      buttonLabel={verificationComplete ? "다음" : "로그인 화면으로"}
+      onSubmit={() =>
+        verificationComplete
+          ? router.replace(nextRoute)
+          : router.replace("/(auth)/login")
+      }
     >
       <YStack gap={36} marginTop={48}>
         <YStack>
@@ -233,10 +245,13 @@ export function SocialLinkEmailScreen() {
                 justifyContent="flex-start"
                 paddingTop={28}
               >
-                <Pressable onPress={handleVerifyCode} disabled={verifyingCode}>
+                <Pressable
+                  onPress={handleVerifyCode}
+                  disabled={verifyingCode || verificationComplete}
+                >
                   <YStack
                     backgroundColor={
-                      verifyingCode
+                      verifyingCode || verificationComplete
                         ? tokens.color.grey7.val
                         : tokens.color.sub6.val
                     }
@@ -251,7 +266,7 @@ export function SocialLinkEmailScreen() {
                       fontWeight="500"
                       letterSpacing={-0.28}
                     >
-                      확인
+                      {verificationComplete ? "완료" : "확인"}
                     </Text>
                   </YStack>
                 </Pressable>
@@ -267,7 +282,17 @@ export function SocialLinkEmailScreen() {
                 {sendError}
               </Text>
             )}
-            {!sendError && timer > 0 && (
+            {verificationComplete && (
+              <Text
+                fontSize={13}
+                color={tokens.color.sub6.val}
+                letterSpacing={-0.26}
+                paddingTop={8}
+              >
+                인증이 완료되었습니다. 다음을 눌러 진행해주세요.
+              </Text>
+            )}
+            {!verificationComplete && !sendError && timer > 0 && (
               <Text
                 fontSize={13}
                 color={tokens.color.error.val}
@@ -277,7 +302,7 @@ export function SocialLinkEmailScreen() {
                 남은 시간 {formattedTime}
               </Text>
             )}
-            {!sendError && timer === 0 && codeSent && (
+            {!verificationComplete && !sendError && timer === 0 && codeSent && (
               <Text
                 fontSize={13}
                 color={tokens.color.error.val}
