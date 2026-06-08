@@ -26,5 +26,5 @@ export interface TermItem {
   id: string
   label: string
   required: boolean
-  url?: string
+  documentType?: "terms-of-use" | "privacy-policy"
 }

@@ -5,13 +5,13 @@ export const TERMS: TermItem[] = [
     id: "service",
     label: "서비스 이용약관 동의",
     required: true,
-    url: "",
+    documentType: "terms-of-use",
   },
   {
     id: "privacy",
     label: "개인정보 수집 및 이용 동의",
     required: true,
-    url: "",
+    documentType: "privacy-policy",
   },
   {
     id: "marketing",
