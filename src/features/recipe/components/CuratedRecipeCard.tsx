@@ -5,6 +5,7 @@ import { YStack, XStack, Text, View } from "tamagui"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
+import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -54,7 +55,9 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
   const timeLabel = `${recipe.time_min}분`
 
   const visibleTags = recipe.tags.slice(0, 3)
-  const image = recipe.thumbnail_url
+  const image =
+    recipe.thumbnail_url ??
+    (recipe.sourceKey ? getCuratedRecipeImage(recipe.sourceKey) : undefined)
 
   return (
     <Pressable
@@ -85,7 +88,7 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
             style={{ aspectRatio: 1, width: "100%" }}
           >
             <Image
-              source={{ uri: image }}
+              source={typeof image === "string" ? { uri: image } : image}
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
               cachePolicy="memory-disk"
