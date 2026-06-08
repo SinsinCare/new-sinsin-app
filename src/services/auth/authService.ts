@@ -163,6 +163,35 @@ function getRealAuthService(): IAuthService {
       return { user, accountState }
     },
 
+    async completeEmailLoginLink(
+      emailLinkToken: string,
+      password: string,
+    ): Promise<{ user: AppUser; accountState: string }> {
+      const { data } = await publicApi.patch<ApiResponse<LoginResult>>(
+        "/auth/signup/email-link/password",
+        {
+          emailLinkToken,
+          password,
+        },
+      )
+
+      const {
+        accessToken,
+        refreshToken,
+        accountState,
+        user: authUser,
+      } = data.result
+      await tokenService.setTokens(accessToken, refreshToken)
+
+      const user = mapAuthUser(authUser, {
+        uid: emailLinkToken,
+        email: authUser.email,
+        displayName: authUser.nickName || authUser.name || null,
+      })
+
+      return { user, accountState }
+    },
+
     async signup(request: SignupRequest): Promise<AppUser> {
       const { data } = await publicApi.post<ApiResponse<SignupResult>>(
         "/auth/signup",
@@ -277,6 +306,8 @@ export const authService: IAuthService = {
     getAuthService().sendSocialLinkEmailCode(socialLinkToken, email),
   verifySocialLinkEmailCode: (socialLinkToken, email, code) =>
     getAuthService().verifySocialLinkEmailCode(socialLinkToken, email, code),
+  completeEmailLoginLink: (emailLinkToken, password) =>
+    getAuthService().completeEmailLoginLink(emailLinkToken, password),
   signup: (request) => getAuthService().signup(request),
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),

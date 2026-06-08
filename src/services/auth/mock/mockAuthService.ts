@@ -64,6 +64,15 @@ export const mockAuthService: IAuthService = {
     return { user: currentUser, accountState: "PENDING_ONBOARDING" }
   },
 
+  async completeEmailLoginLink(
+    _emailLinkToken: string,
+    _password: string,
+  ): Promise<{ user: AppUser; accountState: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    currentUser = DEFAULT_MOCK_USER
+    return { user: currentUser, accountState: "ACTIVE" }
+  },
+
   async signup(request: SignupRequest): Promise<AppUser> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const newUser = new MockUser(

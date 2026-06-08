@@ -4,8 +4,14 @@ import Toast from "react-native-toast-message"
 import { showErrorToast } from "@/src/lib/toast"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
+import type { EmailLoginLinkRequiredResult, SocialProvider } from "@/src/types"
 
 const TIMER_DURATION = 180
+const PROVIDER_LABELS: Record<SocialProvider, string> = {
+  google: "Google",
+  apple: "Apple",
+  kakao: "카카오",
+}
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60)
@@ -24,6 +30,9 @@ export function useSignupEmail() {
   const [timer, setTimer] = useState(0)
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
+  const [emailLoginLinkRequired, setEmailLoginLinkRequired] =
+    useState<EmailLoginLinkRequiredResult | null>(null)
+  const [emailLoginLinkMode, setEmailLoginLinkMode] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startTimer = useCallback(() => {
@@ -46,12 +55,43 @@ export function useSignupEmail() {
     }
   }, [])
 
-  const sendCode = async (email: string) => {
+  const sendEmailLoginLinkCode = async (email: string) => {
     setSendingCode(true)
     setSendError(null)
     try {
-      const available = await emailService.checkEmailAvailability(email)
-      if (!available) {
+      await emailService.sendEmailLoginLinkCode(email)
+      setCodeSent(true)
+      setCodeVerified(false)
+      setCodeInputVisible(true)
+      startTimer()
+    } catch (error) {
+      if (!codeSent) setCodeInputVisible(false)
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
+      )
+    } finally {
+      setSendingCode(false)
+    }
+  }
+
+  const sendCode = async (email: string) => {
+    if (emailLoginLinkMode) {
+      await sendEmailLoginLinkCode(email)
+      return
+    }
+
+    setSendingCode(true)
+    setSendError(null)
+    try {
+      const check = await emailService.checkSignupEmail(email)
+      if (check.status === "email_login_link_required") {
+        setEmailLoginLinkRequired(check)
+        setCodeInputVisible(false)
+        return
+      }
+      if (check.status === "duplicate") {
         showErrorToast("이미 가입된 이메일로는 회원가입할 수 없습니다")
         setCodeInputVisible(false)
         return
@@ -72,6 +112,24 @@ export function useSignupEmail() {
   const verifyCode = async (email: string, code: string) => {
     setVerifyingCode(true)
     try {
+      if (emailLoginLinkMode) {
+        const result = await emailService.verifyEmailLoginLinkCode(email, code)
+        if (result.verified && result.emailLinkToken) {
+          if (timerRef.current) clearInterval(timerRef.current)
+          router.push({
+            pathname: "./email-login-link-password",
+            params: { email, emailLinkToken: result.emailLinkToken },
+          })
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "인증 오류",
+            text2: "인증번호가 올바르지 않거나 만료되었습니다.",
+          })
+        }
+        return
+      }
+
       const result = await emailService.verifyCode(email, code)
       if (result.verified) {
         setCodeVerified(true)
@@ -102,6 +160,22 @@ export function useSignupEmail() {
     router.push("/(auth)/signup-password")
   }
 
+  const dismissEmailLoginLink = () => setEmailLoginLinkRequired(null)
+
+  const confirmEmailLoginLink = async () => {
+    if (!emailLoginLinkRequired) return
+    const { email } = emailLoginLinkRequired
+    setEmailLoginLinkRequired(null)
+    setEmailLoginLinkMode(true)
+    await sendEmailLoginLinkCode(email)
+  }
+
+  const emailLoginLinkProviderLabel = emailLoginLinkRequired?.providers.length
+    ? emailLoginLinkRequired.providers
+        .map((provider) => PROVIDER_LABELS[provider])
+        .join(", ")
+    : "소셜"
+
   const formattedTime = formatTime(timer)
 
   return {
@@ -113,8 +187,12 @@ export function useSignupEmail() {
     formattedTime,
     sendingCode,
     verifyingCode,
+    emailLoginLinkRequired,
+    emailLoginLinkProviderLabel,
     sendCode,
     verifyCode,
     handleNext,
+    dismissEmailLoginLink,
+    confirmEmailLoginLink,
   }
 }

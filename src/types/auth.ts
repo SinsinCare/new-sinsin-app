@@ -56,6 +56,16 @@ export interface SocialLinkRequiredResult {
   socialLinkToken: string
 }
 
+export interface EmailLoginLinkRequiredResult {
+  email: string
+  providers: SocialProvider[]
+}
+
+export interface EmailLoginLinkOtpVerifyResult {
+  email: string
+  emailLinkToken: string
+}
+
 // 토큰 갱신 결과
 export interface TokenRefreshResult {
   accountState: AccountState

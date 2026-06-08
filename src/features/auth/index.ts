@@ -9,4 +9,5 @@ export {
   SignupCompleteScreen,
   ForgotPasswordScreen,
   SocialLinkEmailScreen,
+  EmailLoginLinkPasswordScreen,
 } from "./views"

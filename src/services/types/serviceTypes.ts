@@ -25,6 +25,10 @@ export interface IAuthService {
     email: string,
     code: string,
   ): Promise<{ user: AppUser; accountState: string }>
+  completeEmailLoginLink(
+    emailLinkToken: string,
+    password: string,
+  ): Promise<{ user: AppUser; accountState: string }>
   signup(request: SignupRequest): Promise<AppUser>
   cancelWithdrawal(
     cancelToken: string,

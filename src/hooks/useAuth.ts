@@ -119,6 +119,19 @@ export function useAuth() {
     return result
   }
 
+  const completeEmailLoginLink = async (
+    emailLinkToken: string,
+    password: string,
+  ) => {
+    const result = await authService.completeEmailLoginLink(
+      emailLinkToken,
+      password,
+    )
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
   const cancelWithdrawal = async (cancelToken: string) => {
     const result = await authService.cancelWithdrawal(cancelToken)
     setUser(result.user)
@@ -145,6 +158,7 @@ export function useAuth() {
     signInWithKakao,
     sendSocialLinkEmailCode,
     verifySocialLinkEmailCode,
+    completeEmailLoginLink,
     cancelWithdrawal,
     isUserCancelledError,
     signOut,
