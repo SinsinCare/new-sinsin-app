@@ -27,13 +27,16 @@ export const CKD_STAGE_INFO: Record<
 }
 
 // 주 진단 원인 선택지
-export const DIAGNOSIS_CAUSES = [
-  "당뇨병성 신장 질환",
-  "고혈압",
-  "사구체신염",
-  "다낭성 신장 질환",
-  "기타",
-]
+export const DIAGNOSIS_CAUSE_OPTIONS = [
+  { key: "DIABETIC_KIDNEY_DISEASE", label: "당뇨병성 신장 질환" },
+  { key: "HYPERTENSION", label: "고혈압" },
+  { key: "GLOMERULONEPHRITIS", label: "사구체신염" },
+  { key: "POLYCYSTIC_KIDNEY_DISEASE", label: "다낭성 신장 질환" },
+  { key: "OTHER", label: "기타" },
+] as const
+export const DIAGNOSIS_CAUSES = DIAGNOSIS_CAUSE_OPTIONS.map(
+  (option) => option.label,
+)
 
 // 진단 시기 날짜 선택용
 export const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)

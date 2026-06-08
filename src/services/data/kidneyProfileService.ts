@@ -2,12 +2,15 @@ import { api } from "../core/apiClient"
 import type { ApiResponse } from "../../types"
 
 export interface KidneyProfile {
-  ckdStage: string
-  ckdStageLabel: string
+  ckdStage: string | null
+  ckdStageLabel: string | null
   isDialysis: boolean
+  heightCm: number | null
   weightKg: number | null
   weightRecordedAt: string | null
   diagnosisDate: string | null
+  diagnosisCauses?: string[]
+  diagnosisCauseOther?: string | null
   comorbidities?: string[]
 }
 

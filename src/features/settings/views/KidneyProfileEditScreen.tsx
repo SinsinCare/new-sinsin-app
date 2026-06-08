@@ -17,7 +17,7 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { DatePickerModal } from "@/src/features/settings/components"
-import { DIAGNOSIS_CAUSES } from "@/src/features/settings/data/constants"
+import { DIAGNOSIS_CAUSE_OPTIONS } from "@/src/features/settings/data/constants"
 import { api } from "@/src/services/core/apiClient"
 import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
@@ -46,11 +46,16 @@ export function KidneyProfileEditScreen() {
   const [weightVal, setWeightVal] = useState("")
   const [ckdStage, setCkdStage] = useState<number | null>(null)
   const [onDialysis, setOnDialysis] = useState(false)
-  const [diagnosisDate, setDiagnosisDate] = useState<{ year: number; month: number } | null>(null)
+  const [diagnosisDate, setDiagnosisDate] = useState<{
+    year: number
+    month: number
+  } | null>(null)
   const [datePickerVisible, setDatePickerVisible] = useState(false)
-  const [selectedCauses, setSelectedCauses] = useState<number[]>([])
+  const [selectedCauses, setSelectedCauses] = useState<string[]>([])
   const [otherCause, setOtherCause] = useState("")
-  const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>([])
+  const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>(
+    [],
+  )
 
   useEffect(() => {
     if (!kidneyProfile || initialized) return
@@ -65,10 +70,18 @@ export function KidneyProfileEditScreen() {
     if (kidneyProfile.diagnosisDate) {
       const parts = kidneyProfile.diagnosisDate.split("-")
       if (parts.length >= 2) {
-        setDiagnosisDate({ year: parseInt(parts[0]), month: parseInt(parts[1]) })
+        setDiagnosisDate({
+          year: parseInt(parts[0]),
+          month: parseInt(parts[1]),
+        })
       }
     }
-    if (kidneyProfile.weightKg != null) setWeightVal(String(kidneyProfile.weightKg))
+    if (kidneyProfile.heightCm != null)
+      setHeightVal(String(kidneyProfile.heightCm))
+    if (kidneyProfile.weightKg != null)
+      setWeightVal(String(kidneyProfile.weightKg))
+    setSelectedCauses(kidneyProfile.diagnosisCauses ?? [])
+    setOtherCause(kidneyProfile.diagnosisCauseOther ?? "")
     setSelectedComorbidities(kidneyProfile.comorbidities ?? [])
     setInitialized(true)
   }, [kidneyProfile, initialized])
@@ -79,9 +92,9 @@ export function KidneyProfileEditScreen() {
     )
   }
 
-  const toggleCause = (index: number) => {
+  const toggleCause = (key: string) => {
     setSelectedCauses((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key],
     )
   }
 
@@ -97,16 +110,24 @@ export function KidneyProfileEditScreen() {
     if (isSubmitting) return
     setIsSubmitting(true)
     try {
-      const ckdStageStr = onDialysis ? "DIALYSIS" : ckdStage != null ? (CKD_STAGE_MAP[ckdStage] ?? null) : null
+      const ckdStageStr = onDialysis
+        ? "DIALYSIS"
+        : ckdStage != null
+          ? (CKD_STAGE_MAP[ckdStage] ?? null)
+          : null
       const diagnosisDateStr = diagnosisDate
         ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
         : null
       const heightNum = parseFloat(heightVal)
 
       await api.patch("/user/profile/kidney", {
-        ...(ckdStageStr !== null ? { ckdStage: ckdStageStr } : {}),
+        ckdStage: ckdStageStr,
         isDialysis: onDialysis,
-        ...(diagnosisDateStr !== null ? { diagnosisDate: diagnosisDateStr } : {}),
+        ...(diagnosisDateStr !== null
+          ? { diagnosisDate: diagnosisDateStr }
+          : {}),
+        diagnosisCauses: selectedCauses,
+        diagnosisCauseOther: otherCause.trim() || null,
         comorbidities: selectedComorbidities,
         ...(!isNaN(heightNum) && heightNum > 0 ? { heightCm: heightNum } : {}),
       })
@@ -141,7 +162,9 @@ export function KidneyProfileEditScreen() {
         onBack={() => router.back()}
         rightElement={
           <Pressable onPress={handleSave} hitSlop={8} disabled={isSubmitting}>
-            <ThemedText style={[styles.saveButtonText, isSubmitting && { opacity: 0.5 }]}>
+            <ThemedText
+              style={[styles.saveButtonText, isSubmitting && { opacity: 0.5 }]}
+            >
               {isSubmitting ? "저장 중..." : "저장"}
             </ThemedText>
           </Pressable>
@@ -159,14 +182,26 @@ export function KidneyProfileEditScreen() {
         <ThemedText style={styles.sectionLabel}>나의 신장 프로필</ThemedText>
 
         {/* 키 / 체중 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 20, color: c.textSub }]}>
+        <ThemedText
+          style={[styles.subsectionTitle, { marginTop: 20, color: c.textSub }]}
+        >
           기본 정보
         </ThemedText>
         <View style={styles.basicInfoRow}>
           <View style={styles.inputGroup}>
-            <ThemedText style={[styles.inputLabel, { color: c.text }]}>키 (cm)</ThemedText>
+            <ThemedText style={[styles.inputLabel, { color: c.text }]}>
+              키 (cm)
+            </ThemedText>
             <TextInput
-              style={[styles.textInput, { marginTop: 6, backgroundColor: c.bg, borderColor: c.border, color: c.text }]}
+              style={[
+                styles.textInput,
+                {
+                  marginTop: 6,
+                  backgroundColor: c.bg,
+                  borderColor: c.border,
+                  color: c.text,
+                },
+              ]}
               value={heightVal}
               onChangeText={setHeightVal}
               keyboardType="numeric"
@@ -175,9 +210,19 @@ export function KidneyProfileEditScreen() {
             />
           </View>
           <View style={styles.inputGroup}>
-            <ThemedText style={[styles.inputLabel, { color: c.text }]}>체중 (kg)</ThemedText>
+            <ThemedText style={[styles.inputLabel, { color: c.text }]}>
+              체중 (kg)
+            </ThemedText>
             <TextInput
-              style={[styles.textInput, { marginTop: 6, backgroundColor: c.bg, borderColor: c.border, color: c.text }]}
+              style={[
+                styles.textInput,
+                {
+                  marginTop: 6,
+                  backgroundColor: c.bg,
+                  borderColor: c.border,
+                  color: c.text,
+                },
+              ]}
               value={weightVal}
               onChangeText={setWeightVal}
               keyboardType="numeric"
@@ -189,7 +234,11 @@ export function KidneyProfileEditScreen() {
 
         {/* 단백질 권장 섭취량 안내 */}
         <View style={[styles.proteinHintBox, { backgroundColor: greenTintBg }]}>
-          <Ionicons name="information-circle-outline" size={15} color={tokens.color.sub8.val} />
+          <Ionicons
+            name="information-circle-outline"
+            size={15}
+            color={tokens.color.sub8.val}
+          />
           <ThemedText style={styles.proteinHintText}>
             {weightVal && !isNaN(parseFloat(weightVal))
               ? `체중 ${weightVal}kg → 하루 단백질 ${Math.round(parseFloat(weightVal) * 0.8)}g 이내 권장 (1kg당 0.8g)`
@@ -199,7 +248,9 @@ export function KidneyProfileEditScreen() {
 
         {/* CKD 병기 */}
         <View style={[styles.subsectionRow, { marginTop: 24 }]}>
-          <ThemedText style={[styles.subsectionTitle, { color: c.textSub }]}>CKD 병기</ThemedText>
+          <ThemedText style={[styles.subsectionTitle, { color: c.textSub }]}>
+            CKD 병기
+          </ThemedText>
           <ThemedText style={styles.currentStageText}>
             {ckdStage != null ? `현재: ${ckdStage}기` : ""}
           </ThemedText>
@@ -240,7 +291,10 @@ export function KidneyProfileEditScreen() {
                 borderColor: tokens.color.sub6.val,
               },
             ]}
-            onPress={() => setCkdStage(null)}
+            onPress={() => {
+              setCkdStage(null)
+              setOnDialysis(false)
+            }}
           >
             <ThemedText
               style={[
@@ -255,13 +309,31 @@ export function KidneyProfileEditScreen() {
         </View>
 
         {/* 투석 여부 */}
-        <View style={[styles.dialysisBox, { marginTop: 12, borderColor: c.isDark ? c.border : "#F1F5F9" }]}>
-          <View style={[styles.dialysisIconContainer, { backgroundColor: greenTintBg }]}>
-            <Ionicons name="pulse-outline" size={24} color={tokens.color.sub8.val} />
+        <View
+          style={[
+            styles.dialysisBox,
+            { marginTop: 12, borderColor: c.isDark ? c.border : "#F1F5F9" },
+          ]}
+        >
+          <View
+            style={[
+              styles.dialysisIconContainer,
+              { backgroundColor: greenTintBg },
+            ]}
+          >
+            <Ionicons
+              name="pulse-outline"
+              size={24}
+              color={tokens.color.sub8.val}
+            />
           </View>
           <View style={styles.dialysisInfo}>
-            <ThemedText style={[styles.dialysisTitle, { color: c.text }]}>현재 투석 여부</ThemedText>
-            <ThemedText style={[styles.dialysisDescription, { color: c.textMuted }]}>
+            <ThemedText style={[styles.dialysisTitle, { color: c.text }]}>
+              현재 투석 여부
+            </ThemedText>
+            <ThemedText
+              style={[styles.dialysisDescription, { color: c.textMuted }]}
+            >
               투석 중이라면 체크해주세요
             </ThemedText>
           </View>
@@ -275,11 +347,16 @@ export function KidneyProfileEditScreen() {
         </View>
 
         {/* 진단 시기 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}>
+        <ThemedText
+          style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
+        >
           진단 시기
         </ThemedText>
         <Pressable
-          style={[styles.dateInputRow, { marginTop: 8, borderColor: c.border, backgroundColor: c.bg }]}
+          style={[
+            styles.dateInputRow,
+            { marginTop: 8, borderColor: c.border, backgroundColor: c.bg },
+          ]}
           onPress={() => setDatePickerVisible(true)}
         >
           <ThemedText
@@ -295,39 +372,49 @@ export function KidneyProfileEditScreen() {
         </Pressable>
 
         {/* 주 진단 원인 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}>
+        <ThemedText
+          style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
+        >
           주 진단 원인
         </ThemedText>
         <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
-          {DIAGNOSIS_CAUSES.map((cause, index) => (
+          {DIAGNOSIS_CAUSE_OPTIONS.map((cause) => (
             <Pressable
-              key={index}
+              key={cause.key}
               style={[
                 styles.causeButton,
                 { borderColor: c.border },
-                selectedCauses.includes(index) && {
+                selectedCauses.includes(cause.key) && {
                   backgroundColor: greenTintBg,
                   borderWidth: 1.4,
                   borderColor: tokens.color.sub6.val,
                 },
               ]}
-              onPress={() => toggleCause(index)}
+              onPress={() => toggleCause(cause.key)}
             >
               <ThemedText
                 style={[
                   styles.stageButtonText,
                   { color: c.text },
-                  selectedCauses.includes(index) &&
+                  selectedCauses.includes(cause.key) &&
                     styles.stageButtonTextSelected,
                 ]}
               >
-                {cause}
+                {cause.label}
               </ThemedText>
             </Pressable>
           ))}
         </View>
         <TextInput
-          style={[styles.otherCauseInput, { marginTop: 8, borderColor: c.border, color: c.text, backgroundColor: c.bg }]}
+          style={[
+            styles.otherCauseInput,
+            {
+              marginTop: 8,
+              borderColor: c.border,
+              color: c.text,
+              backgroundColor: c.bg,
+            },
+          ]}
           multiline
           value={otherCause}
           onChangeText={setOtherCause}
@@ -337,7 +424,9 @@ export function KidneyProfileEditScreen() {
         />
 
         {/* 동반 질환 */}
-        <ThemedText style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}>
+        <ThemedText
+          style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
+        >
           동반 질환
         </ThemedText>
         <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
@@ -370,7 +459,11 @@ export function KidneyProfileEditScreen() {
         </View>
 
         <Pressable
-          style={[styles.completeButton, { marginTop: 36 }, isSubmitting && { opacity: 0.6 }]}
+          style={[
+            styles.completeButton,
+            { marginTop: 36 },
+            isSubmitting && { opacity: 0.6 },
+          ]}
           onPress={handleSave}
           disabled={isSubmitting}
         >

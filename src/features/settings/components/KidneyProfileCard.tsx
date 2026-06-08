@@ -16,16 +16,34 @@ const COMORBIDITY_LABEL: Record<string, string> = {
   BONE_MINERAL: "골미네랄 장애",
 }
 
+const DIAGNOSIS_CAUSE_LABEL: Record<string, string> = {
+  DIABETIC_KIDNEY_DISEASE: "당뇨병성 신장 질환",
+  HYPERTENSION: "고혈압",
+  GLOMERULONEPHRITIS: "사구체신염",
+  POLYCYSTIC_KIDNEY_DISEASE: "다낭성 신장 질환",
+  OTHER: "기타",
+}
+
 function localizeComorbidity(key: string): string {
   return COMORBIDITY_LABEL[key] ?? COMORBIDITY_LABEL[key.toUpperCase()] ?? key
 }
 
+function localizeDiagnosisCause(key: string): string {
+  return (
+    DIAGNOSIS_CAUSE_LABEL[key] ??
+    DIAGNOSIS_CAUSE_LABEL[key.toUpperCase()] ??
+    key
+  )
+}
+
 interface KidneyProfileCardProps {
-  ckdStageLabel: string
+  ckdStageLabel: string | null
   isDialysis: boolean
   heightCm?: number | null
   weightKg: number | null
   diagnosisDate: string | null
+  diagnosisCauses?: string[]
+  diagnosisCauseOther?: string | null
   comorbidities?: string[]
   onEditPress: () => void
 }
@@ -36,6 +54,8 @@ export function KidneyProfileCard({
   heightCm,
   weightKg,
   diagnosisDate,
+  diagnosisCauses,
+  diagnosisCauseOther,
   comorbidities,
   onEditPress,
 }: KidneyProfileCardProps) {
@@ -46,10 +66,16 @@ export function KidneyProfileCard({
     : ["rgba(114, 223, 196, 0.16)", "rgba(233, 250, 246, 0.16)"]
 
   const heightWeightLabel = (() => {
-    if (heightCm != null && weightKg != null) return `${heightCm}cm / ${weightKg}kg`
+    if (heightCm != null && weightKg != null)
+      return `${heightCm}cm / ${weightKg}kg`
     if (weightKg != null) return `${weightKg}kg`
     return "미입력"
   })()
+  const conditionItems = [
+    ...(diagnosisCauses ?? []).map(localizeDiagnosisCause),
+    ...(diagnosisCauseOther ? [diagnosisCauseOther] : []),
+    ...(comorbidities ?? []).map(localizeComorbidity),
+  ]
 
   return (
     <View
@@ -88,7 +114,11 @@ export function KidneyProfileCard({
                 { backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4" },
               ]}
             >
-              <Ionicons name="bar-chart-outline" size={24} color={tokens.color.sub8.val} />
+              <Ionicons
+                name="bar-chart-outline"
+                size={24}
+                color={tokens.color.sub8.val}
+              />
             </View>
             <View style={styles.ckdTextBlock}>
               <View style={styles.ckdLabelRow}>
@@ -100,7 +130,7 @@ export function KidneyProfileCard({
                 </ThemedText>
               </View>
               <ThemedText style={[styles.ckdValue, { color: c.text }]}>
-                {ckdStageLabel}
+                {ckdStageLabel ?? "미입력"}
               </ThemedText>
             </View>
           </View>
@@ -136,18 +166,22 @@ export function KidneyProfileCard({
           </View>
 
           {/* 동반 질환 및 진단 원인 */}
-          {comorbidities && comorbidities.length > 0 && (
+          {conditionItems.length > 0 && (
             <View style={styles.comorbiditySection}>
               <View style={styles.comorbidityHeader}>
-                <Ionicons name="grid-outline" size={14} color={tokens.color.sub8.val} />
+                <Ionicons
+                  name="grid-outline"
+                  size={14}
+                  color={tokens.color.sub8.val}
+                />
                 <ThemedText style={styles.comorbidityTitle}>
                   동반 질환 및 진단 원인
                 </ThemedText>
               </View>
               <View style={styles.comorbidityChips}>
-                {comorbidities.map((item) => (
+                {conditionItems.map((item, index) => (
                   <View
-                    key={item}
+                    key={`${item}-${index}`}
                     style={[
                       styles.comorbidityChip,
                       {
@@ -159,7 +193,7 @@ export function KidneyProfileCard({
                     <ThemedText
                       style={[styles.comorbidityChipText, { color: c.text }]}
                     >
-                      {localizeComorbidity(item)}
+                      {item}
                     </ThemedText>
                   </View>
                 ))}

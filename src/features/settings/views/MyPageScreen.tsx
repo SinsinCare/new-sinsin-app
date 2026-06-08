@@ -1,5 +1,13 @@
 import React, { useCallback } from "react"
-import { StyleSheet, View, ScrollView, Pressable, Share, Alert, Image } from "react-native"
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Pressable,
+  Share,
+  Alert,
+  Image,
+} from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -29,6 +37,14 @@ const COMORBIDITY_LABEL: Record<string, string> = {
   GOUT: "통풍",
   ANEMIA: "빈혈",
   BONE_MINERAL: "골미네랄 장애",
+}
+
+const DIAGNOSIS_CAUSE_LABEL: Record<string, string> = {
+  DIABETIC_KIDNEY_DISEASE: "당뇨병성 신장 질환",
+  HYPERTENSION: "고혈압",
+  GLOMERULONEPHRITIS: "사구체신염",
+  POLYCYSTIC_KIDNEY_DISEASE: "다낭성 신장 질환",
+  OTHER: "기타",
 }
 
 const MEAL_LABELS: Record<string, string> = {
@@ -68,10 +84,30 @@ export function MyPageScreen() {
     if (kidneyProfile) {
       lines.push("👤 신장 프로필")
       lines.push(
-        `• ${kidneyProfile.ckdStageLabel}${kidneyProfile.isDialysis ? " | 투석 중" : ""}`,
+        `• ${kidneyProfile.ckdStageLabel ?? "신장 병기 미입력"}${kidneyProfile.isDialysis ? " | 투석 중" : ""}`,
       )
+      if (kidneyProfile.heightCm) {
+        lines.push(`• 키: ${kidneyProfile.heightCm}cm`)
+      }
       if (kidneyProfile.weightKg) {
         lines.push(`• 체중: ${kidneyProfile.weightKg}kg`)
+      }
+      if (
+        kidneyProfile.diagnosisCauses?.length ||
+        kidneyProfile.diagnosisCauseOther
+      ) {
+        const labels = [
+          ...(kidneyProfile.diagnosisCauses ?? []).map(
+            (key) =>
+              DIAGNOSIS_CAUSE_LABEL[key] ??
+              DIAGNOSIS_CAUSE_LABEL[key.toUpperCase()] ??
+              key,
+          ),
+          ...(kidneyProfile.diagnosisCauseOther
+            ? [kidneyProfile.diagnosisCauseOther]
+            : []),
+        ]
+        lines.push(`• 주 진단 원인: ${labels.join(", ")}`)
       }
       if (kidneyProfile.comorbidities?.length) {
         const labels = kidneyProfile.comorbidities.map(
@@ -142,7 +178,11 @@ export function MyPageScreen() {
     ? new Date().getFullYear() - profile.birthYear
     : null
   const genderLabel =
-    profile?.gender === "MALE" ? "남" : profile?.gender === "FEMALE" ? "여" : null
+    profile?.gender === "MALE"
+      ? "남"
+      : profile?.gender === "FEMALE"
+        ? "여"
+        : null
   const ageGenderLabel = age
     ? genderLabel
       ? `${age}세·${genderLabel}`
@@ -220,8 +260,11 @@ export function MyPageScreen() {
           <KidneyProfileCard
             ckdStageLabel={kidneyProfile.ckdStageLabel}
             isDialysis={kidneyProfile.isDialysis}
+            heightCm={kidneyProfile.heightCm}
             weightKg={kidneyProfile.weightKg}
             diagnosisDate={formatDiagnosisDate(kidneyProfile.diagnosisDate)}
+            diagnosisCauses={kidneyProfile.diagnosisCauses}
+            diagnosisCauseOther={kidneyProfile.diagnosisCauseOther}
             comorbidities={kidneyProfile.comorbidities}
             onEditPress={() => router.push("/(settings)/kidney-profile-edit")}
           />
@@ -229,10 +272,7 @@ export function MyPageScreen() {
 
         {/* 전체 너비 구분선 */}
         <View
-          style={[
-            styles.fullWidthDivider,
-            { backgroundColor: c.secondaryBg },
-          ]}
+          style={[styles.fullWidthDivider, { backgroundColor: c.secondaryBg }]}
         />
 
         {/* 메뉴 버튼 */}
@@ -267,7 +307,10 @@ export function MyPageScreen() {
             key={title}
             style={({ pressed }) => [
               styles.navButton,
-              pressed && [styles.navButtonPressed, { backgroundColor: c.pressedBg }],
+              pressed && [
+                styles.navButtonPressed,
+                { backgroundColor: c.pressedBg },
+              ],
             ]}
             onPress={onPress}
           >
@@ -281,17 +324,17 @@ export function MyPageScreen() {
 
         {/* 구분선 */}
         <View
-          style={[
-            styles.fullWidthDivider,
-            { backgroundColor: c.secondaryBg },
-          ]}
+          style={[styles.fullWidthDivider, { backgroundColor: c.secondaryBg }]}
         />
 
         {/* 의사에게 질문하기 */}
         <Pressable
           style={({ pressed }) => [
             styles.navButton,
-            pressed && [styles.navButtonPressed, { backgroundColor: c.pressedBg }],
+            pressed && [
+              styles.navButtonPressed,
+              { backgroundColor: c.pressedBg },
+            ],
           ]}
           onPress={() => router.push("/(settings)/ask-doctor")}
         >
