@@ -24,7 +24,7 @@ import { showErrorToast } from "@/src/lib/toast"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
 
-const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,8}$/
+const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,14}$/
 
 function getErrorMessage(e: unknown): string | null {
   if (e instanceof ApiError) {
@@ -118,7 +118,7 @@ export function NicknameEditScreen() {
           </ThemedText>
           <ThemedText style={[styles.subtitle, { color: c.textMuted }]}>
             {
-              "한글, 영문, 숫자만 가능합니다 (2~8자 이내)\n닉네임은 언제든지 변경할 수 있습니다"
+              "한글, 영문, 숫자만 가능합니다 (2~14자 이내)\n닉네임은 언제든지 변경할 수 있습니다"
             }
           </ThemedText>
 
@@ -142,7 +142,7 @@ export function NicknameEditScreen() {
               onBlur={() => setIsFocused(false)}
               placeholder="별명을 적어주세요. 어떤 것이든 괜찮아요!"
               placeholderTextColor={c.textTertiary}
-              maxLength={8}
+              maxLength={14}
               autoFocus
               editable={!isLoading}
             />
@@ -157,7 +157,11 @@ export function NicknameEditScreen() {
                   }}
                   hitSlop={8}
                 >
-                  <Ionicons name="close-circle" size={20} color={c.textTertiary} />
+                  <Ionicons
+                    name="close-circle"
+                    size={20}
+                    color={c.textTertiary}
+                  />
                 </Pressable>
               )
             )}

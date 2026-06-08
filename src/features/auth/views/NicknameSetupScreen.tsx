@@ -21,7 +21,7 @@ export function NicknameSetupScreen() {
   return (
     <AuthScreenLayout
       title="닉네임을 설정해주세요."
-      subtitle="한글, 영문, 숫자만 사용 가능 (2~8자)"
+      subtitle="한글, 영문, 숫자만 사용 가능 (2~14자)"
       buttonLabel="다음 단계"
       buttonDisabled={!isValid}
       buttonLoading={isLoading}
@@ -33,6 +33,7 @@ export function NicknameSetupScreen() {
           control={control}
           label="닉네임"
           placeholder="닉네임을 입력해주세요"
+          maxLength={14}
           rules={{
             required: "닉네임을 입력해주세요.",
             minLength: {
@@ -40,8 +41,8 @@ export function NicknameSetupScreen() {
               message: "닉네임은 2자 이상이어야 합니다.",
             },
             maxLength: {
-              value: 8,
-              message: "닉네임은 8자 이하여야 합니다.",
+              value: 14,
+              message: "닉네임은 14자 이하여야 합니다.",
             },
             pattern: {
               value: /^[가-힣a-zA-Z0-9]+$/,
