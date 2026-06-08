@@ -96,28 +96,52 @@ export function EmailLoginScreen() {
       </YStack>
 
       {/* Footer */}
-      <YStack alignItems="center" paddingVertical={20} gap={8} marginTop={54}>
-        <Text
-          fontSize={13}
-          fontWeight="500"
-          color={colors.text}
-          letterSpacing={-0.26}
-        >
-          가입정보를 잊으셨나요?
-        </Text>
-        <XStack alignItems="center" justifyContent="center" gap={16}>
-          <Pressable>
-            <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
-              아이디찾기
-            </Text>
-          </Pressable>
-          <Separator vertical borderColor={colors.border} height={14} />
-          <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-            <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
-              비밀번호 찾기
+      <YStack alignItems="center" paddingVertical={20} gap={18} marginTop={54}>
+        <XStack alignItems="center" justifyContent="center" gap={8}>
+          <Text
+            fontSize={13}
+            color={colors.textSub}
+            letterSpacing={-0.26}
+            lineHeight={16.9}
+          >
+            계정이 없으신가요?
+          </Text>
+          <Pressable onPress={() => router.push("/(auth)/terms-agreement")}>
+            <Text
+              fontSize={14}
+              color={colors.textSub}
+              letterSpacing={-0.28}
+              lineHeight={18.2}
+              textDecorationLine="underline"
+            >
+              회원가입하기
             </Text>
           </Pressable>
         </XStack>
+
+        <YStack alignItems="center" gap={8}>
+          <Text
+            fontSize={13}
+            fontWeight="500"
+            color={colors.text}
+            letterSpacing={-0.26}
+          >
+            가입정보를 잊으셨나요?
+          </Text>
+          <XStack alignItems="center" justifyContent="center" gap={16}>
+            <Pressable>
+              <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
+                아이디찾기
+              </Text>
+            </Pressable>
+            <Separator vertical borderColor={colors.border} height={14} />
+            <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+              <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
+                비밀번호 찾기
+              </Text>
+            </Pressable>
+          </XStack>
+        </YStack>
       </YStack>
     </AuthScreenLayout>
   )
