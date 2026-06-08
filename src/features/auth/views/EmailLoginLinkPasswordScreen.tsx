@@ -5,7 +5,11 @@ import { Text, YStack } from "tamagui"
 import { FormTextField } from "@/src/shared/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
-import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import {
+  passwordCriteriaText,
+  passwordRules,
+  confirmPasswordRules,
+} from "../data/passwordValidation"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { PasswordForm } from "../types"
 import { tokens } from "@/src/theme/tokens"
@@ -76,25 +80,25 @@ export function EmailLoginLinkPasswordScreen() {
       onSubmit={handleSubmit(submit)}
     >
       <YStack gap={36} marginTop={56}>
-        <Text
-          fontSize={14}
-          lineHeight={20}
-          color={tokens.color.grey6.val}
-          letterSpacing={-0.28}
-        >
-          비밀번호는 영문 대문자, 영문 소문자, 숫자, 특수문자를 모두 포함해
-          6~18자로 입력해주세요.
-        </Text>
-
-        <FormTextField<PasswordForm>
-          name="password"
-          control={control}
-          label="비밀번호"
-          placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-          inputType="password"
-          showPasswordToggle
-          rules={passwordRules}
-        />
+        <YStack gap={10}>
+          <FormTextField<PasswordForm>
+            name="password"
+            control={control}
+            label="비밀번호"
+            placeholder="비밀번호를 형식에 맞춰 입력해주세요"
+            inputType="password"
+            showPasswordToggle
+            rules={passwordRules}
+          />
+          <Text
+            fontSize={14}
+            lineHeight={20}
+            color={tokens.color.grey6.val}
+            letterSpacing={-0.28}
+          >
+            {passwordCriteriaText}
+          </Text>
+        </YStack>
 
         <FormTextField<PasswordForm>
           name="confirmPassword"

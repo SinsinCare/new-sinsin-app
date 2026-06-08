@@ -1,6 +1,16 @@
 import type { RegisterOptions } from "react-hook-form"
 import type { PasswordForm } from "../types"
 
+const passwordTypePatterns = [
+  /[A-Z]/,
+  /[a-z]/,
+  /[0-9]/,
+  /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+]
+
+export const passwordCriteriaText =
+  "비밀번호는 영문 대문자, 영문 소문자, 숫자, 특수문자 중 2가지 이상을 포함해 6~18자로 입력해주세요."
+
 export const passwordRules: RegisterOptions<PasswordForm, "password"> = {
   required: "비밀번호를 입력해주세요.",
   minLength: {
@@ -11,14 +21,9 @@ export const passwordRules: RegisterOptions<PasswordForm, "password"> = {
     value: 18,
     message: "비밀번호는 18자 이하여야 합니다.",
   },
-  validate: {
-    hasUpperCase: (v) => /[A-Z]/.test(v) || "영문 대문자를 포함해주세요.",
-    hasLowerCase: (v) => /[a-z]/.test(v) || "영문 소문자를 포함해주세요.",
-    hasNumber: (v) => /[0-9]/.test(v) || "숫자를 포함해주세요.",
-    hasSpecialChar: (v) =>
-      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(v) ||
-      "특수문자를 포함해주세요.",
-  },
+  validate: (value) =>
+    passwordTypePatterns.filter((pattern) => pattern.test(value)).length >= 2 ||
+    "영문 대문자, 영문 소문자, 숫자, 특수문자 중 2가지 이상을 포함해주세요.",
 }
 
 export const confirmPasswordRules = (

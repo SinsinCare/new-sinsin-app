@@ -24,7 +24,7 @@ export function SignupPasswordScreen() {
   return (
     <AuthScreenLayout
       title="비밀번호를 입력해주세요."
-      subtitle={`영문 대/소문자, 숫자, 특수문자 포함\n6~18자 이내로 입력해주세요`}
+      subtitle={`영문 대/소문자, 숫자, 특수문자 중\n2가지 이상을 포함해 6~18자로 입력해주세요`}
       buttonLabel="다음 단계"
       buttonDisabled={!isValid}
       onSubmit={handleSubmit(handleNext)}
