@@ -14,6 +14,7 @@ import {
   WITHDRAWAL_TERMS,
 } from "@/src/features/settings/data/constants"
 import { userService } from "@/src/services/auth"
+import { clearClientSession } from "@/src/services/core/sessionCleanup"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { logger } from "@/src/lib/logger"
 
@@ -38,7 +39,8 @@ export function WithdrawalTermsScreen() {
         reason || "앱에서 직접 탈퇴",
         detail?.trim() || null,
       )
-      router.push("/(settings)/withdrawal-complete")
+      await clearClientSession()
+      router.replace("/(settings)/withdrawal-complete")
     } catch (err) {
       logger.error("[WithdrawalTermsScreen] 탈퇴 실패", err)
       Alert.alert(
@@ -113,7 +115,7 @@ export function WithdrawalTermsScreen() {
       <ConfirmModal
         visible={modalVisible}
         title="정말 탈퇴하시겠습니까?"
-        description={"탈퇴 후 7일간 동일 계정으로\n재가입이 불가합니다."}
+        description={"탈퇴 후 3일간 동일 계정으로\n재가입이 불가합니다."}
         onCancel={() => setModalVisible(false)}
         onConfirm={handleWithdraw}
       />

@@ -1,5 +1,4 @@
 import { api } from "../core/apiClient"
-import { tokenService } from "../core/tokenService"
 
 export const userService = {
   async deleteAccount(
@@ -7,6 +6,5 @@ export const userService = {
     detail: string | null = null,
   ): Promise<void> {
     await api.post("/user/withdraw", { reason, detail })
-    await tokenService.clearTokens()
   },
 }

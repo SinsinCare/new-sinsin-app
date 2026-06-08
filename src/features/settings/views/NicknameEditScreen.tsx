@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
   StyleSheet,
   View,
@@ -54,6 +54,13 @@ export function NicknameEditScreen() {
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const touchedRef = useRef(false)
+
+  useEffect(() => {
+    if (!touchedRef.current && profile?.nickName) {
+      setNickname(profile.nickName)
+    }
+  }, [profile?.nickName])
 
   const hasText = nickname.length > 0
   const isFormatValid = NICKNAME_REGEX.test(nickname)
@@ -69,6 +76,7 @@ export function NicknameEditScreen() {
     : null
 
   const handleChangeText = (text: string) => {
+    touchedRef.current = true
     setNickname(text)
     if (serverError) setServerError(null)
   }
@@ -152,6 +160,7 @@ export function NicknameEditScreen() {
               hasText && (
                 <Pressable
                   onPress={() => {
+                    touchedRef.current = true
                     setNickname("")
                     setServerError(null)
                   }}

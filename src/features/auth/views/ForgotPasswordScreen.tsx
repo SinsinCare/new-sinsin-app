@@ -90,8 +90,12 @@ export function ForgotPasswordScreen() {
       setCodeSent(true)
       setStep("otp")
       startTimer()
-    } catch {
-      setSendError("인증번호 전송에 실패했습니다. 재전송해 주세요.")
+    } catch (error) {
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
+      )
     } finally {
       setSendingCode(false)
     }
@@ -104,8 +108,12 @@ export function ForgotPasswordScreen() {
     try {
       await emailService.sendPasswordResetCode(emailOtpForm.getValues("email"))
       startTimer()
-    } catch {
-      setSendError("인증번호 전송에 실패했습니다. 재전송해 주세요.")
+    } catch (error) {
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
+      )
     } finally {
       setSendingCode(false)
     }
@@ -129,8 +137,12 @@ export function ForgotPasswordScreen() {
       } else {
         setSendError("인증번호가 올바르지 않습니다. 다시 확인해주세요.")
       }
-    } catch {
-      setSendError("인증에 실패했습니다. 다시 시도해주세요.")
+    } catch (error) {
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : "인증에 실패했습니다. 다시 시도해주세요.",
+      )
     } finally {
       setVerifyingCode(false)
     }
@@ -142,9 +154,12 @@ export function ForgotPasswordScreen() {
     try {
       await passwordService.changePassword(data.password, resetToken)
       router.replace("/(auth)/login")
-    } catch {
+    } catch (error) {
       passwordForm.setError("password", {
-        message: "비밀번호 재설정에 실패했습니다. 다시 시도해주세요.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "비밀번호 재설정에 실패했습니다. 다시 시도해주세요.",
       })
     } finally {
       setResettingPassword(false)
@@ -277,7 +292,9 @@ export function ForgotPasswordScreen() {
                       >
                         <YStack
                           backgroundColor={
-                            verifyingCode ? colors.disabledBtn : tokens.color.sub6.val
+                            verifyingCode
+                              ? colors.disabledBtn
+                              : tokens.color.sub6.val
                           }
                           borderRadius={8}
                           height={52}
@@ -358,7 +375,10 @@ export function ForgotPasswordScreen() {
         {step === "password" && (
           <YStack paddingBottom={insets.bottom + 24}>
             <Pressable
-              onPress={() => { Keyboard.dismiss(); passwordForm.handleSubmit(handleResetPassword)() }}
+              onPress={() => {
+                Keyboard.dismiss()
+                passwordForm.handleSubmit(handleResetPassword)()
+              }}
               disabled={!passwordForm.formState.isValid || resettingPassword}
             >
               <YStack

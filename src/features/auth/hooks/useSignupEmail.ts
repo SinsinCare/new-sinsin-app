@@ -107,9 +107,13 @@ export function useSignupEmail() {
       setCodeVerified(false)
       setCodeInputVisible(true)
       startTimer()
-    } catch {
+    } catch (error) {
       if (!codeSent) setCodeInputVisible(false)
-      setSendError("인증번호 전송에 실패했습니다. 재전송해 주세요.")
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
+      )
     } finally {
       setSendingCode(false)
     }

@@ -8,7 +8,7 @@ import type {
   AuthUserSummary,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
-import { publicApi, tokenService } from "../core"
+import { clearClientSession, publicApi, tokenService } from "../core"
 import { ApiError } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
 
@@ -236,7 +236,16 @@ function getRealAuthService(): IAuthService {
     },
 
     async signOut(): Promise<void> {
-      await tokenService.clearTokens()
+      const accessToken = await tokenService.getAccessToken()
+      if (!accessToken) return
+
+      try {
+        await publicApi.post<ApiResponse>("/auth/logout", undefined, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+      } catch (error) {
+        logger.debug("[authService] logout revoke failed", error)
+      }
     },
 
     async restoreSession(): Promise<{
@@ -268,14 +277,15 @@ function getRealAuthService(): IAuthService {
 
         return { user, accountState }
       } catch (error) {
-        // 401(인증 만료/무효) 또는 403(차단된 계정 상태)일 때 토큰 삭제
-        // 네트워크 오류 등 일시적 에러는 토큰 유지 → 다음 실행 시 재시도
         if (
           error instanceof ApiError &&
           (error.statusCode === 401 || error.statusCode === 403)
         ) {
-          await tokenService.clearTokens()
+          await clearClientSession()
+          return null
         }
+        logger.debug("[authService] restoreSession failed", error)
+        await clearClientSession()
         return null
       }
     },

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -52,6 +52,13 @@ export function NameEditScreen() {
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const touchedRef = useRef(false)
+
+  useEffect(() => {
+    if (!touchedRef.current && profile?.name) {
+      setName(profile.name)
+    }
+  }, [profile?.name])
 
   const trimmedName = name.trim()
   const hasText = trimmedName.length > 0
@@ -67,6 +74,7 @@ export function NameEditScreen() {
         : null
 
   const handleChangeText = (text: string) => {
+    touchedRef.current = true
     setName(text)
     if (serverError) setServerError(null)
   }
@@ -150,6 +158,7 @@ export function NameEditScreen() {
               name.length > 0 && (
                 <Pressable
                   onPress={() => {
+                    touchedRef.current = true
                     setName("")
                     setServerError(null)
                   }}

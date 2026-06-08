@@ -1,4 +1,5 @@
 export { api, publicApi } from "./apiClient"
 export { ApiError } from "./apiError"
 export { queryClient } from "./queryClient"
+export { clearClientSession } from "./sessionCleanup"
 export { tokenService } from "./tokenService"

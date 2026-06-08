@@ -100,15 +100,11 @@ function getRealEmailService(): EmailService {
       email: string,
       code: string,
     ): Promise<{ verified: boolean; signupToken?: string }> {
-      try {
-        const { data } = await publicApi.post<ApiResponse<OtpVerifyResult>>(
-          "/auth/signup/email/otp/verify",
-          { email, authKey: code },
-        )
-        return { verified: true, signupToken: data.result.signupToken }
-      } catch {
-        return { verified: false }
-      }
+      const { data } = await publicApi.post<ApiResponse<OtpVerifyResult>>(
+        "/auth/signup/email/otp/verify",
+        { email, authKey: code },
+      )
+      return { verified: true, signupToken: data.result.signupToken }
     },
 
     async resendVerificationCode(email: string): Promise<void> {
@@ -127,14 +123,10 @@ function getRealEmailService(): EmailService {
       email: string,
       code: string,
     ): Promise<{ verified: boolean; resetToken?: string }> {
-      try {
-        const { data } = await publicApi.post<
-          ApiResponse<{ resetToken: string }>
-        >("/auth/password/email/otp/verify", { email, authKey: code })
-        return { verified: true, resetToken: data.result.resetToken }
-      } catch {
-        return { verified: false }
-      }
+      const { data } = await publicApi.post<
+        ApiResponse<{ resetToken: string }>
+      >("/auth/password/email/otp/verify", { email, authKey: code })
+      return { verified: true, resetToken: data.result.resetToken }
     },
 
     async sendEmailLoginLinkCode(email: string): Promise<void> {
@@ -147,16 +139,12 @@ function getRealEmailService(): EmailService {
       email: string,
       code: string,
     ): Promise<{ verified: boolean; emailLinkToken?: string }> {
-      try {
-        const { data } = await publicApi.post<
-          ApiResponse<EmailLoginLinkOtpVerifyResult>
-        >("/auth/signup/email-link/otp/verify", { email, authKey: code })
-        return {
-          verified: true,
-          emailLinkToken: data.result.emailLinkToken,
-        }
-      } catch {
-        return { verified: false }
+      const { data } = await publicApi.post<
+        ApiResponse<EmailLoginLinkOtpVerifyResult>
+      >("/auth/signup/email-link/otp/verify", { email, authKey: code })
+      return {
+        verified: true,
+        emailLinkToken: data.result.emailLinkToken,
       }
     },
   }

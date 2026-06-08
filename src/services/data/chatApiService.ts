@@ -16,7 +16,7 @@ import {
 import type { ApiResponse } from "../../types/api"
 import type { TokenRefreshResult } from "../../types/auth"
 import { getBackendUrl, isMockMode } from "../../config/appConfig"
-import { api, publicApi, tokenService } from "../core"
+import { api, clearClientSession, publicApi, tokenService } from "../core"
 
 const BASE_URL = getBackendUrl()
 
@@ -169,7 +169,7 @@ function createRealChatService(): ChatService {
                 const newToken = await refreshAccessToken()
                 resolve(await sendWithToken(newToken, false))
               } catch (error) {
-                await tokenService.clearTokens()
+                await clearClientSession()
                 reject(error)
               }
             } else {

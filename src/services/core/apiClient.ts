@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, isAxiosError } from "axios"
 import { ApiError } from "./apiError"
+import { clearClientSession } from "./sessionCleanup"
 import { tokenService } from "./tokenService"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
@@ -166,7 +167,7 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null)
       // 갱신 실패 → 로그아웃 처리
-      await tokenService.clearTokens()
+      await clearClientSession()
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false

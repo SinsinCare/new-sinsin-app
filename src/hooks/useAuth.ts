@@ -5,24 +5,11 @@ import {
   signInWithSocialProvider as nativeSocialSignIn,
   isUserCancelledError,
 } from "../services/auth/socialAuthService"
-import { tokenService } from "../services/core/tokenService"
+import { clearClientSession } from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
 import type { SocialProvider } from "@/src/types"
 
-const RESTORE_SESSION_TIMEOUT_MS = 5000
 const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 200
-
-function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => {
-      setTimeout(() => resolve(null), timeoutMs)
-    }),
-  ])
-}
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -47,20 +34,18 @@ export function useAuth() {
 
     const restore = async () => {
       try {
-        const result = await withTimeout(
-          authService.restoreSession(),
-          RESTORE_SESSION_TIMEOUT_MS,
-        )
+        const result = await authService.restoreSession()
         if (cancelled) return
         if (result) {
           setUser(result.user)
           setAccountState(result.accountState)
         } else {
-          setUser(null)
+          await clearClientSession()
         }
-      } catch {
+      } catch (error) {
         if (cancelled) return
-        setUser(null)
+        logger.debug("[useAuth] restore failed", error)
+        await clearClientSession()
       }
     }
     restore()
@@ -140,10 +125,13 @@ export function useAuth() {
   }
 
   const signOut = async () => {
-    await authService.signOut()
-    await tokenService.clearTokens()
-    resetProfile()
-    resetAuth()
+    try {
+      await authService.signOut()
+    } finally {
+      await clearClientSession()
+      resetProfile()
+      resetAuth()
+    }
   }
 
   return {

@@ -26,18 +26,21 @@ function RootLayoutNav() {
     (s) => s.isOnboardingInProgress,
   )
   const segments = useSegments()
+  const segmentPath = segments.map(String)
   const router = useRouter()
 
   const needsOnboarding = accountState === "PENDING_ONBOARDING"
 
   // 식단 분석 완료 알림 탭 시 홈 탭으로 이동 (RecordView가 pending 결과를 자동으로 엶)
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data
-      if (data?.type === "food_analysis_complete") {
-        router.push("/(tabs)/home")
-      }
-    })
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data
+        if (data?.type === "food_analysis_complete") {
+          router.push("/(tabs)/home")
+        }
+      },
+    )
     return () => sub.remove()
   }, [router])
 
@@ -53,13 +56,29 @@ function RootLayoutNav() {
       return
     }
 
-    const inAuthGroup = segments[0] === "(auth)"
-    const inOnboarding = segments[0] === "onboarding"
-    const inPublicLegalDocument = segments[segments.length - 1] === "legal-document"
+    const inAuthGroup = segmentPath[0] === "(auth)"
+    const inOnboarding = segmentPath[0] === "onboarding"
+    const inPublicLegalDocument =
+      segmentPath[segmentPath.length - 1] === "legal-document"
+    const inWithdrawalComplete =
+      segmentPath[0] === "(settings)" &&
+      segmentPath[1] === "withdrawal-complete"
+    const inSocialLinkEmail =
+      segmentPath[0] === "(auth)" && segmentPath[1] === "social-link-email"
 
-    if (!isAuthenticated && !inAuthGroup && !inPublicLegalDocument) {
+    if (
+      !isAuthenticated &&
+      !inAuthGroup &&
+      !inPublicLegalDocument &&
+      !inWithdrawalComplete
+    ) {
       router.replace("/(auth)/login")
-    } else if (isAuthenticated && inAuthGroup && !isSignupInProgress) {
+    } else if (
+      isAuthenticated &&
+      inAuthGroup &&
+      !isSignupInProgress &&
+      !inSocialLinkEmail
+    ) {
       // 회원가입 진행 중이면 auth 그룹에 유지
       if (needsOnboarding) {
         router.replace("/onboarding")
@@ -96,7 +115,13 @@ function RootLayoutNav() {
   return (
     <>
       <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false, headerShadowVisible: false, headerStyle: { backgroundColor: "transparent" } }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "transparent" },
+        }}
+      >
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(settings)" />
@@ -116,12 +141,17 @@ export default function RootLayout() {
   })
   const themeMode = useThemeStore((s) => s.themeMode)
   const systemScheme = useColorScheme()
-  const effectiveScheme = themeMode === "system"
-    ? (systemScheme === "dark" ? "dark" : "light")
-    : themeMode
+  const effectiveScheme =
+    themeMode === "system"
+      ? systemScheme === "dark"
+        ? "dark"
+        : "light"
+      : themeMode
 
   useEffect(() => {
-    Appearance.setColorScheme(themeMode === "system" ? "unspecified" : themeMode)
+    Appearance.setColorScheme(
+      themeMode === "system" ? "unspecified" : themeMode,
+    )
   }, [themeMode])
 
   if (!loaded) return null
