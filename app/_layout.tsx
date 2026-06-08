@@ -18,7 +18,7 @@ import { useNotifications } from "@/src/hooks/useNotifications"
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, accountState, signOut } = useAuth()
-  useNotifications(isAuthenticated)
+  useNotifications(isAuthenticated && accountState === "ACTIVE")
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
     (s) => s.isOnboardingInProgress,
