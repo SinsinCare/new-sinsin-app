@@ -51,6 +51,11 @@ export interface LoginResult {
   user: AuthUserSummary
 }
 
+export interface SocialLinkRequiredResult {
+  provider: SocialProvider
+  socialLinkToken: string
+}
+
 // 토큰 갱신 결과
 export interface TokenRefreshResult {
   accountState: AccountState

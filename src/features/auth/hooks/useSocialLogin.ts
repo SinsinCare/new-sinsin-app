@@ -1,8 +1,14 @@
 import { useState } from "react"
 import Toast from "react-native-toast-message"
+import { router } from "expo-router"
 import { useAuth } from "@/src/hooks/useAuth"
+import { ApiError } from "@/src/services/core/apiError"
 import { logger } from "@/src/lib/logger"
-import type { SocialProvider, WithdrawalPendingResult } from "@/src/types"
+import type {
+  SocialLinkRequiredResult,
+  SocialProvider,
+  WithdrawalPendingResult,
+} from "@/src/types"
 import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
 
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
@@ -22,6 +28,26 @@ function getDebugMessage(error: unknown): string {
     }
   }
   return "오류 메시지가 없는 로그인 실패입니다."
+}
+
+function getSocialLinkRequiredResult(
+  error: unknown,
+): SocialLinkRequiredResult | null {
+  if (!(error instanceof ApiError) || error.code !== "AUTH_ERROR_004") {
+    return null
+  }
+  const result = error.result
+  if (!result || typeof result !== "object") return null
+  const { provider, socialLinkToken } =
+    result as Partial<SocialLinkRequiredResult>
+  if (
+    (provider === "google" || provider === "apple" || provider === "kakao") &&
+    typeof socialLinkToken === "string" &&
+    socialLinkToken.length > 0
+  ) {
+    return { provider, socialLinkToken }
+  }
+  return null
 }
 
 export function useSocialLogin() {
@@ -48,6 +74,18 @@ export function useSocialLogin() {
       const pending = getWithdrawalPendingResult(error)
       if (pending) {
         setWithdrawalPending(pending)
+        return
+      }
+
+      const socialLinkRequired = getSocialLinkRequiredResult(error)
+      if (socialLinkRequired) {
+        router.push({
+          pathname: "./social-link-email",
+          params: {
+            provider: socialLinkRequired.provider,
+            socialLinkToken: socialLinkRequired.socialLinkToken,
+          },
+        })
         return
       }
 

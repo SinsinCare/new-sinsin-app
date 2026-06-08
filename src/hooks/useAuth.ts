@@ -100,6 +100,25 @@ export function useAuth() {
   const signInWithApple = () => signInWithSocialProvider("apple")
   const signInWithKakao = () => signInWithSocialProvider("kakao")
 
+  const sendSocialLinkEmailCode = (socialLinkToken: string, email: string) =>
+    authService.sendSocialLinkEmailCode(socialLinkToken, email)
+
+  const verifySocialLinkEmailCode = async (
+    socialLinkToken: string,
+    email: string,
+    code: string,
+  ) => {
+    const result = await authService.verifySocialLinkEmailCode(
+      socialLinkToken,
+      email,
+      code,
+    )
+    await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
   const cancelWithdrawal = async (cancelToken: string) => {
     const result = await authService.cancelWithdrawal(cancelToken)
     setUser(result.user)
@@ -124,6 +143,8 @@ export function useAuth() {
     signInWithGoogle,
     signInWithApple,
     signInWithKakao,
+    sendSocialLinkEmailCode,
+    verifySocialLinkEmailCode,
     cancelWithdrawal,
     isUserCancelledError,
     signOut,

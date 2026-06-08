@@ -13,6 +13,7 @@ export default function AuthLayout() {
       <Stack.Screen name="email-login" />
       <Stack.Screen name="terms-agreement" />
       <Stack.Screen name="signup-email" />
+      <Stack.Screen name="social-link-email" />
       <Stack.Screen name="signup-password" />
       <Stack.Screen name="profile-setup" />
       <Stack.Screen name="nickname-setup" />

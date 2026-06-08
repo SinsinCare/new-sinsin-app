@@ -8,4 +8,5 @@ export {
   NicknameSetupScreen,
   SignupCompleteScreen,
   ForgotPasswordScreen,
+  SocialLinkEmailScreen,
 } from "./views"

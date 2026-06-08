@@ -32,7 +32,7 @@ export const mockAuthService: IAuthService = {
   },
 
   async signInWithSocial(
-    provider: "google" | "apple",
+    provider: "google" | "apple" | "kakao",
     _idToken: string,
     email?: string | null,
     displayName?: string | null,
@@ -44,6 +44,23 @@ export const mockAuthService: IAuthService = {
       displayName ?? null,
     )
     currentUser = mockUser
+    return { user: currentUser, accountState: "PENDING_ONBOARDING" }
+  },
+
+  async sendSocialLinkEmailCode(
+    _socialLinkToken: string,
+    _email: string,
+  ): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  },
+
+  async verifySocialLinkEmailCode(
+    _socialLinkToken: string,
+    email: string,
+    _code: string,
+  ): Promise<{ user: AppUser; accountState: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    currentUser = new MockUser(`mock-linked-${Date.now()}`, email, null)
     return { user: currentUser, accountState: "PENDING_ONBOARDING" }
   },
 

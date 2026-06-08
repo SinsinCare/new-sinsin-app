@@ -19,6 +19,12 @@ export interface IAuthService {
     email?: string | null,
     displayName?: string | null,
   ): Promise<{ user: AppUser; accountState: string }>
+  sendSocialLinkEmailCode(socialLinkToken: string, email: string): Promise<void>
+  verifySocialLinkEmailCode(
+    socialLinkToken: string,
+    email: string,
+    code: string,
+  ): Promise<{ user: AppUser; accountState: string }>
   signup(request: SignupRequest): Promise<AppUser>
   cancelWithdrawal(
     cancelToken: string,

@@ -122,6 +122,47 @@ function getRealAuthService(): IAuthService {
       return { user, accountState }
     },
 
+    async sendSocialLinkEmailCode(
+      socialLinkToken: string,
+      email: string,
+    ): Promise<void> {
+      await publicApi.post<ApiResponse>("/auth/social-link/email/otp/send", {
+        socialLinkToken,
+        email,
+      })
+    },
+
+    async verifySocialLinkEmailCode(
+      socialLinkToken: string,
+      email: string,
+      code: string,
+    ): Promise<{ user: AppUser; accountState: string }> {
+      const { data } = await publicApi.post<ApiResponse<LoginResult>>(
+        "/auth/social-link/email/otp/verify",
+        {
+          socialLinkToken,
+          email,
+          authKey: code,
+        },
+      )
+
+      const {
+        accessToken,
+        refreshToken,
+        accountState,
+        user: authUser,
+      } = data.result
+      await tokenService.setTokens(accessToken, refreshToken)
+
+      const user = mapAuthUser(authUser, {
+        uid: email,
+        email,
+        displayName: null,
+      })
+
+      return { user, accountState }
+    },
+
     async signup(request: SignupRequest): Promise<AppUser> {
       const { data } = await publicApi.post<ApiResponse<SignupResult>>(
         "/auth/signup",
@@ -232,6 +273,10 @@ export const authService: IAuthService = {
     getAuthService().signInWithEmail(email, password),
   signInWithSocial: (provider, idToken, email, displayName) =>
     getAuthService().signInWithSocial(provider, idToken, email, displayName),
+  sendSocialLinkEmailCode: (socialLinkToken, email) =>
+    getAuthService().sendSocialLinkEmailCode(socialLinkToken, email),
+  verifySocialLinkEmailCode: (socialLinkToken, email, code) =>
+    getAuthService().verifySocialLinkEmailCode(socialLinkToken, email, code),
   signup: (request) => getAuthService().signup(request),
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),
