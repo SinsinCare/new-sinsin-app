@@ -1,10 +1,10 @@
+import { memo } from "react"
 import { Pressable } from "react-native"
 import { Image } from "expo-image"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
-import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -37,7 +37,10 @@ interface CuratedRecipeCardProps {
   onPress?: () => void
 }
 
-export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
+export const CuratedRecipeCard = memo(function CuratedRecipeCard({
+  recipe,
+  onPress,
+}: CuratedRecipeCardProps) {
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
@@ -51,7 +54,7 @@ export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
   const timeLabel = `${recipe.time_min}분`
 
   const visibleTags = recipe.tags.slice(0, 3)
-  const image = getCuratedRecipeImage(recipe.id)
+  const image = recipe.thumbnail_url
 
   return (
     <Pressable
@@ -82,10 +85,10 @@ export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
             style={{ aspectRatio: 1, width: "100%" }}
           >
             <Image
-              source={image}
+              source={{ uri: image }}
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
-              transition={150}
+              cachePolicy="memory-disk"
             />
           </View>
         )}
@@ -162,4 +165,4 @@ export function CuratedRecipeCard({ recipe, onPress }: CuratedRecipeCardProps) {
       </YStack>
     </Pressable>
   )
-}
+})

@@ -1,5 +1,7 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
+  ActivityIndicator,
+  FlatList,
   Keyboard,
   Modal,
   Pressable,
@@ -24,7 +26,8 @@ import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
 import { CuratedRecipeCard } from "@/src/features/recipe/components/CuratedRecipeCard"
 import { CuratedRecipeDetailSheet } from "@/src/features/recipe/components/CuratedRecipeDetailSheet"
-import { useCuratedRecipes } from "@/src/features/recipe/hooks/useCuratedRecipes"
+import { useInfiniteRecipes } from "@/src/features/recipe/hooks/useInfiniteRecipes"
+import { useRecipeDetail } from "@/src/features/recipe/hooks/useRecipeDetail"
 import type { CuratedRecipe } from "@/src/features/recipe/data/curatedRecipeTypes"
 import { tokens } from "@/src/theme/tokens"
 // Chip key → label mapping for CategoryFilterSheet
@@ -97,10 +100,16 @@ export default function RecipeScreen() {
   const [writeSheetOpen, setWriteSheetOpen] = useState(false)
   const [freePostModalOpen, setFreePostModalOpen] = useState(false)
   const [recipeModalOpen, setRecipeModalOpen] = useState(false)
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
-  const [selectedRecipe, setSelectedRecipe] = useState<CuratedRecipe | null>(null)
+  const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 250)
+    return () => clearTimeout(timer)
+  }, [search])
 
   // FoodCategoryBar uses selectedFilters.country directly
   const selectedCategories = useMemo(() => {
@@ -111,11 +120,38 @@ export default function RecipeScreen() {
     return selectedFilters.nutrition ?? new Set<string>()
   }, [selectedFilters])
 
-  const recipes = useCuratedRecipes({
-    search: search.trim(),
-    categories: selectedCategories,
-    nutritionFilters: selectedNutrition,
+  const selectedStage = useMemo(() => {
+    return selectedFilters.stage ?? new Set<string>()
+  }, [selectedFilters])
+
+  const categoryKeys = useMemo(
+    () => [...selectedCategories].sort(),
+    [selectedCategories],
+  )
+
+  const tagKeys = useMemo(
+    () => [...selectedNutrition, ...selectedStage].sort(),
+    [selectedNutrition, selectedStage],
+  )
+
+  const {
+    data: recipePages,
+    isLoading: recipesLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteRecipes({
+    search: debouncedSearch,
+    categoryKeys,
+    tagKeys,
   })
+
+  const recipes = useMemo(
+    () => recipePages?.pages.flatMap((page) => page.items) ?? [],
+    [recipePages],
+  )
+
+  const { data: selectedRecipe } = useRecipeDetail(selectedRecipeId)
 
   const handleToggleCategory = useCallback((key: string) => {
     setSelectedFilters((prev) => {
@@ -174,159 +210,206 @@ export default function RecipeScreen() {
     [selectedFilters],
   )
 
-  const [leftColumn, rightColumn] = useMemo(() => {
-    const left: CuratedRecipe[] = []
-    const right: CuratedRecipe[] = []
-    recipes.forEach((item, i) => {
-      ;(i % 2 === 0 ? left : right).push(item)
-    })
-    return [left, right] as const
-  }, [recipes])
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const renderRecipeItem = useCallback(
+    ({ item, index }: { item: CuratedRecipe; index: number }) => (
+      <View
+        style={[
+          styles.recipeItem,
+          index % 2 === 0 ? styles.recipeItemLeft : styles.recipeItemRight,
+        ]}
+      >
+        <CuratedRecipeCard
+          recipe={item}
+          onPress={() => setSelectedRecipeId(item.id)}
+        />
+      </View>
+    ),
+    [],
+  )
+
+  const recipeKeyExtractor = useCallback((item: CuratedRecipe) => {
+    return String(item.id)
+  }, [])
 
   return (
     <YStack flex={1}>
-    <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
-      <YStack
-        flex={1}
-        backgroundColor={isDarkMode ? "#1F1F21" : "#FCFCFC"}
-        paddingTop={insets.top}
-      >
-        <TopTabBar
-          tabs={RECIPE_TABS}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-        {activeTab === "recipe" && (
-          <>
-            <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
-              <XStack alignItems="center" gap={12}>
-                <View style={{ flex: 1 }}>
-                  <SearchInput value={search} onChangeText={setSearch} />
-                </View>
-                <Pressable
-                  onPress={() => setFilterSheetOpen(true)}
-                  hitSlop={8}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                >
-                  <Icon name="filter" size={24} color={iconColor} />
-                </Pressable>
-              </XStack>
-              {ALL_FILTER_CHIPS.some((chip) =>
-                isChipSelected(chip.key, chip.section),
-              ) && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                >
-                  {ALL_FILTER_CHIPS.filter((chip) =>
-                    isChipSelected(chip.key, chip.section),
-                  ).map((chip) => (
-                    <FilterChip
-                      key={chip.key}
-                      label={chip.label}
-                      theme={chip.theme}
-                      selected
-                      onPress={() =>
-                        handleToggleQuickFilter(chip.key, chip.section)
-                      }
-                    />
-                  ))}
-                </ScrollView>
-              )}
-              <FoodCategoryBar
-                selectedCategories={selectedCategories}
-                onToggleCategory={handleToggleCategory}
-                onToggleAllCategories={handleToggleAllCategories}
+      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+        <YStack
+          flex={1}
+          backgroundColor={isDarkMode ? "#1F1F21" : "#FCFCFC"}
+          paddingTop={insets.top}
+        >
+          <TopTabBar
+            tabs={RECIPE_TABS}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+          {activeTab === "recipe" && (
+            <>
+              <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
+                <XStack alignItems="center" gap={12}>
+                  <View style={{ flex: 1 }}>
+                    <SearchInput value={search} onChangeText={setSearch} />
+                  </View>
+                  <Pressable
+                    onPress={() => setFilterSheetOpen(true)}
+                    hitSlop={8}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  >
+                    <Icon name="filter" size={24} color={iconColor} />
+                  </Pressable>
+                </XStack>
+                {ALL_FILTER_CHIPS.some((chip) =>
+                  isChipSelected(chip.key, chip.section),
+                ) && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 8 }}
+                  >
+                    {ALL_FILTER_CHIPS.filter((chip) =>
+                      isChipSelected(chip.key, chip.section),
+                    ).map((chip) => (
+                      <FilterChip
+                        key={chip.key}
+                        label={chip.label}
+                        theme={chip.theme}
+                        selected
+                        onPress={() =>
+                          handleToggleQuickFilter(chip.key, chip.section)
+                        }
+                      />
+                    ))}
+                  </ScrollView>
+                )}
+                <FoodCategoryBar
+                  selectedCategories={selectedCategories}
+                  onToggleCategory={handleToggleCategory}
+                  onToggleAllCategories={handleToggleAllCategories}
+                />
+              </YStack>
+              <View
+                height={6}
+                backgroundColor={
+                  isDarkMode
+                    ? tokens.color.cardBgDark.val
+                    : tokens.color.grey8.val
+                }
               />
-            </YStack>
-            <View
-              height={6}
-              backgroundColor={isDarkMode ? tokens.color.cardBgDark.val : tokens.color.grey8.val}
-            />
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{ padding: 16 }}
-            >
-              <XStack gap={12}>
-                <YStack flex={1} gap={12}>
-                  {leftColumn.map((item) => (
-                    <CuratedRecipeCard
-                      key={item.id}
-                      recipe={item}
-                      onPress={() => setSelectedRecipe(item)}
-                    />
-                  ))}
-                </YStack>
-                <YStack flex={1} gap={12}>
-                  {rightColumn.map((item) => (
-                    <CuratedRecipeCard
-                      key={item.id}
-                      recipe={item}
-                      onPress={() => setSelectedRecipe(item)}
-                    />
-                  ))}
-                </YStack>
-              </XStack>
-            </ScrollView>
-          </>
-        )}
-        {activeTab === "free" && <FreePostTab />}
-        <CategoryFilterSheet
-          open={filterSheetOpen}
-          onOpenChange={setFilterSheetOpen}
-          selectedFilters={selectedFilters}
-          onApply={setSelectedFilters}
-        />
-        <CuratedRecipeDetailSheet
-          recipe={selectedRecipe}
-          visible={selectedRecipe !== null}
-          onClose={() => setSelectedRecipe(null)}
-        />
-        <WriteTypeSheet
-          open={writeSheetOpen}
-          onOpenChange={setWriteSheetOpen}
-          onSelect={(type) => {
-            if (type === "free") {
-              setFreePostModalOpen(true)
-            } else {
-              setRecipeModalOpen(true)
-            }
-          }}
-        />
-        <Modal
-          visible={freePostModalOpen}
-          animationType="slide"
-          onRequestClose={() => setFreePostModalOpen(false)}
-        >
-          <FreePostEditor onClose={() => setFreePostModalOpen(false)} />
-        </Modal>
-        <Modal
-          visible={recipeModalOpen}
-          animationType="slide"
-          onRequestClose={() => setRecipeModalOpen(false)}
-        >
-          <RecipeEditor onClose={() => setRecipeModalOpen(false)} />
-        </Modal>
-        <Pressable
-          onPress={() => setWriteSheetOpen(true)}
-          style={({ pressed }) => ({
-            ...styles.writeButton,
-            opacity: pressed ? 0.85 : 1,
-          })}
-        >
-          <Text
-            color={isDarkMode ? "#1F1F21" : "#FCFCFC"}
-            fontSize={16}
-            lineHeight={28}
-            fontWeight="600"
-            fontFamily="$body"
+              <FlatList
+                data={recipes}
+                keyExtractor={recipeKeyExtractor}
+                renderItem={renderRecipeItem}
+                numColumns={2}
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.recipeListContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                initialNumToRender={8}
+                maxToRenderPerBatch={8}
+                windowSize={5}
+                removeClippedSubviews
+                onEndReached={handleEndReached}
+                onEndReachedThreshold={0.6}
+                ListEmptyComponent={
+                  recipesLoading ? (
+                    <YStack paddingVertical={40} alignItems="center">
+                      <ActivityIndicator
+                        color={tokens.color.primaryAccent.val}
+                      />
+                    </YStack>
+                  ) : (
+                    <YStack paddingVertical={40} alignItems="center">
+                      <Text
+                        fontSize={14}
+                        fontFamily="$body"
+                        color={
+                          isDarkMode
+                            ? tokens.color.textDarkSub.val
+                            : tokens.color.textLightSub.val
+                        }
+                      >
+                        조건에 맞는 레시피가 없습니다.
+                      </Text>
+                    </YStack>
+                  )
+                }
+                ListFooterComponent={
+                  isFetchingNextPage ? (
+                    <YStack paddingVertical={18} alignItems="center">
+                      <ActivityIndicator
+                        color={tokens.color.primaryAccent.val}
+                      />
+                    </YStack>
+                  ) : (
+                    <View style={{ height: 88 }} />
+                  )
+                }
+              />
+            </>
+          )}
+          {activeTab === "free" && <FreePostTab />}
+          <CategoryFilterSheet
+            open={filterSheetOpen}
+            onOpenChange={setFilterSheetOpen}
+            selectedFilters={selectedFilters}
+            onApply={setSelectedFilters}
+          />
+          <CuratedRecipeDetailSheet
+            recipe={selectedRecipe ?? null}
+            visible={selectedRecipeId !== null && selectedRecipe != null}
+            onClose={() => setSelectedRecipeId(null)}
+          />
+          <WriteTypeSheet
+            open={writeSheetOpen}
+            onOpenChange={setWriteSheetOpen}
+            onSelect={(type) => {
+              if (type === "free") {
+                setFreePostModalOpen(true)
+              } else {
+                setRecipeModalOpen(true)
+              }
+            }}
+          />
+          <Modal
+            visible={freePostModalOpen}
+            animationType="slide"
+            onRequestClose={() => setFreePostModalOpen(false)}
           >
-            + 글쓰기
-          </Text>
-        </Pressable>
-      </YStack>
-    </Pressable>
+            <FreePostEditor onClose={() => setFreePostModalOpen(false)} />
+          </Modal>
+          <Modal
+            visible={recipeModalOpen}
+            animationType="slide"
+            onRequestClose={() => setRecipeModalOpen(false)}
+          >
+            <RecipeEditor onClose={() => setRecipeModalOpen(false)} />
+          </Modal>
+          <Pressable
+            onPress={() => setWriteSheetOpen(true)}
+            style={({ pressed }) => ({
+              ...styles.writeButton,
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            <Text
+              color={isDarkMode ? "#1F1F21" : "#FCFCFC"}
+              fontSize={16}
+              lineHeight={28}
+              fontWeight="600"
+              fontFamily="$body"
+            >
+              + 글쓰기
+            </Text>
+          </Pressable>
+        </YStack>
+      </Pressable>
     </YStack>
   )
 }
@@ -340,5 +423,22 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 15,
     paddingVertical: 8,
+  },
+  recipeListContent: {
+    paddingHorizontal: 10,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  recipeItem: {
+    width: "50%",
+    marginBottom: 12,
+  },
+  recipeItemLeft: {
+    paddingLeft: 6,
+    paddingRight: 6,
+  },
+  recipeItemRight: {
+    paddingLeft: 6,
+    paddingRight: 6,
   },
 })

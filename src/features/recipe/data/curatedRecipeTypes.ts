@@ -32,7 +32,8 @@ export interface CuratedRecipeAiSummary {
 }
 
 export interface CuratedRecipe {
-  id: string
+  id: number
+  sourceKey?: string | null
   category: string
   name: string
   description: string
@@ -40,6 +41,8 @@ export interface CuratedRecipe {
   time_min: number
   servings: number
   tags: string[]
+  thumbnail_url?: string | null
+  detail_image_url?: string | null
   ingredients: CuratedRecipeIngredient[]
   steps: CuratedRecipeStep[]
   nutrition: CuratedRecipeNutrition

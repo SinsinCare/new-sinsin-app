@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
-import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -114,7 +113,7 @@ export function CuratedRecipeDetailSheet({
     .ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
   const friendlinessConfig =
     FRIENDLINESS_CONFIG[friendlinessKey] ?? FRIENDLINESS_CONFIG.moderate
-  const image = getCuratedRecipeImage(recipe.id)
+  const image = recipe.detail_image_url ?? recipe.thumbnail_url
 
   return (
     <Modal
@@ -239,10 +238,10 @@ export function CuratedRecipeDetailSheet({
               style={{ aspectRatio: 1, width: "100%" }}
             >
               <Image
-                source={image}
+                source={{ uri: image }}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
-                transition={150}
+                cachePolicy="memory-disk"
               />
             </View>
           )}
