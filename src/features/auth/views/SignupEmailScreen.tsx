@@ -13,7 +13,6 @@ export function SignupEmailScreen() {
   const {
     codeSent,
     codeInputVisible,
-    emailError,
     sendError,
     codeVerified,
     timer,
@@ -52,7 +51,7 @@ export function SignupEmailScreen() {
   return (
     <AuthScreenLayout
       title="이메일을 입력해주세요"
-      subtitle="이미 가입된 이메일로는 회원가입 할 수 없습니다"
+      subtitle="회원가입을 위해 이메일 인증을 진행해주세요"
       buttonLabel="다음 단계"
       buttonDisabled={!codeVerified}
       onSubmit={onNext}
@@ -88,7 +87,9 @@ export function SignupEmailScreen() {
               >
                 <YStack
                   backgroundColor={
-                    codeVerified || sendingCode ? tokens.color.grey7.val : tokens.color.sub6.val
+                    codeVerified || sendingCode
+                      ? tokens.color.grey7.val
+                      : tokens.color.sub6.val
                   }
                   borderRadius={8}
                   height={52}
@@ -107,16 +108,6 @@ export function SignupEmailScreen() {
               </Pressable>
             </YStack>
           </XStack>
-          {emailError && (
-            <Text
-              fontSize={12}
-              color={tokens.color.error.val}
-              letterSpacing={-0.3}
-              paddingTop={6}
-            >
-              {emailError}
-            </Text>
-          )}
         </YStack>
 
         {codeInputVisible && !codeVerified && (
@@ -150,7 +141,9 @@ export function SignupEmailScreen() {
                   disabled={verifyingCode || !!sendError}
                 >
                   <YStack
-                    backgroundColor={sendError ? tokens.color.grey7.val : tokens.color.sub6.val}
+                    backgroundColor={
+                      sendError ? tokens.color.grey7.val : tokens.color.sub6.val
+                    }
                     borderRadius={8}
                     height={52}
                     justifyContent="center"

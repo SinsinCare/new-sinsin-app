@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { router } from "expo-router"
 import Toast from "react-native-toast-message"
+import { showErrorToast } from "@/src/lib/toast"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
 
@@ -18,7 +19,6 @@ export function useSignupEmail() {
 
   const [codeSent, setCodeSent] = useState(false)
   const [codeInputVisible, setCodeInputVisible] = useState(false)
-  const [emailError, setEmailError] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [codeVerified, setCodeVerified] = useState(false)
   const [timer, setTimer] = useState(0)
@@ -49,12 +49,11 @@ export function useSignupEmail() {
   const sendCode = async (email: string) => {
     setSendingCode(true)
     setSendError(null)
-    setEmailError(null)
     setCodeInputVisible(true)
     try {
       const available = await emailService.checkEmailAvailability(email)
       if (!available) {
-        setEmailError("이미 사용 중인 이메일입니다.")
+        showErrorToast("이미 가입된 이메일로는 회원가입할 수 없습니다")
         setCodeInputVisible(false)
         return
       }
@@ -80,10 +79,18 @@ export function useSignupEmail() {
         }
         if (timerRef.current) clearInterval(timerRef.current)
       } else {
-        Toast.show({ type: "error", text1: "인증 오류", text2: "인증번호가 올바르지 않거나 만료되었습니다." })
+        Toast.show({
+          type: "error",
+          text1: "인증 오류",
+          text2: "인증번호가 올바르지 않거나 만료되었습니다.",
+        })
       }
     } catch (e: unknown) {
-      Toast.show({ type: "error", text1: "인증 오류", text2: e instanceof Error ? e.message : "인증에 실패했습니다." })
+      Toast.show({
+        type: "error",
+        text1: "인증 오류",
+        text2: e instanceof Error ? e.message : "인증에 실패했습니다.",
+      })
     } finally {
       setVerifyingCode(false)
     }
@@ -99,7 +106,6 @@ export function useSignupEmail() {
   return {
     codeSent,
     codeInputVisible,
-    emailError,
     sendError,
     codeVerified,
     timer,
