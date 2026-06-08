@@ -18,16 +18,75 @@ import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { api } from "@/src/services/core/apiClient"
+import { ApiError } from "@/src/services/core/apiError"
+import { tokenService } from "@/src/services/core/tokenService"
+import { getBackendUrl } from "@/src/config/appConfig"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
 
 type Gender = "MALE" | "FEMALE" | "OTHER"
+type ProfileImageSelection = {
+  uri: string
+  name: string
+  type: string
+}
 
 const GENDER_OPTIONS: { key: Gender; label: string }[] = [
   { key: "MALE", label: "남성" },
   { key: "FEMALE", label: "여성" },
   { key: "OTHER", label: "기타" },
 ]
+
+function toProfileImageSelection(
+  asset: ImagePicker.ImagePickerAsset,
+): ProfileImageSelection {
+  const type = asset.mimeType === "image/png" ? "image/png" : "image/jpeg"
+  const extension = type === "image/png" ? "png" : "jpg"
+  return {
+    uri: asset.uri,
+    name: asset.fileName || `profile_${Date.now()}.${extension}`,
+    type,
+  }
+}
+
+async function uploadProfileImage(image: ProfileImageSelection) {
+  const formData = new FormData()
+  formData.append("image", {
+    uri: image.uri,
+    name: image.name,
+    type: image.type,
+  } as unknown as Blob)
+
+  const token = await tokenService.getAccessToken()
+  const response = await fetch(`${getBackendUrl()}/user/profile/image`, {
+    method: "PATCH",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      Accept: "application/json",
+    },
+    body: formData,
+  })
+
+  let json: {
+    isSuccess?: boolean
+    code?: string
+    message?: string
+  } | null = null
+  try {
+    json = await response.json()
+  } catch {
+    // JSON이 아닌 응답은 상태코드 기반 오류로 처리한다.
+  }
+
+  if (!response.ok || json?.isSuccess === false) {
+    throw new ApiError(
+      json?.message ||
+        `프로필 사진 업로드에 실패했습니다. HTTP ${response.status}`,
+      json?.code || `HTTP_${response.status}`,
+      response.status,
+    )
+  }
+}
 
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets()
@@ -38,7 +97,8 @@ export function ProfileEditScreen() {
 
   const [gender, setGender] = useState<Gender | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [profileImageUri, setProfileImageUri] = useState<string | null>(null)
+  const [profileImage, setProfileImage] =
+    useState<ProfileImageSelection | null>(null)
 
   useEffect(() => {
     if (profile?.gender) setGender(profile.gender)
@@ -60,7 +120,7 @@ export function ProfileEditScreen() {
             quality: 0.8,
           })
           if (!result.canceled && result.assets[0]) {
-            setProfileImageUri(result.assets[0].uri)
+            setProfileImage(toProfileImageSelection(result.assets[0]))
           }
         },
       },
@@ -80,7 +140,7 @@ export function ProfileEditScreen() {
             quality: 0.8,
           })
           if (!result.canceled && result.assets[0]) {
-            setProfileImageUri(result.assets[0].uri)
+            setProfileImage(toProfileImageSelection(result.assets[0]))
           }
         },
       },
@@ -92,16 +152,8 @@ export function ProfileEditScreen() {
     if (isSaving) return
     setIsSaving(true)
     try {
-      if (profileImageUri) {
-        const formData = new FormData()
-        formData.append("image", {
-          uri: profileImageUri,
-          name: "profile.jpg",
-          type: "image/jpeg",
-        } as unknown as Blob)
-        await api.patch("/user/profile/image", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
+      if (profileImage) {
+        await uploadProfileImage(profileImage)
       }
 
       if (profile && gender) {
@@ -112,10 +164,15 @@ export function ProfileEditScreen() {
         })
       }
 
-      queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
+      await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
-    } catch {
-      Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
+    } catch (error) {
+      Alert.alert(
+        "오류",
+        error instanceof Error
+          ? error.message
+          : "저장에 실패했습니다. 다시 시도해주세요.",
+      )
     } finally {
       setIsSaving(false)
     }
@@ -154,9 +211,9 @@ export function ProfileEditScreen() {
             style={styles.avatarWrapper}
             onPress={handlePickProfileImage}
           >
-            {profileImageUri || profile?.profileImage ? (
+            {profileImage || profile?.profileImage ? (
               <Image
-                source={{ uri: profileImageUri ?? profile?.profileImage }}
+                source={{ uri: profileImage?.uri ?? profile?.profileImage }}
                 style={styles.avatarCircle}
               />
             ) : (
