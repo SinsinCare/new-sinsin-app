@@ -18,7 +18,10 @@ export function TermsAgreementScreen() {
   const colors = useAuthColors()
 
   const openLegalDocument = (documentType: string) => {
-    router.push(`/legal-document?type=${documentType}`)
+    router.push({
+      pathname: "/legal-document",
+      params: { type: documentType },
+    })
   }
 
   return (

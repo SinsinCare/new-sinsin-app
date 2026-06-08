@@ -55,8 +55,9 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(auth)"
     const inOnboarding = segments[0] === "onboarding"
+    const inPublicLegalDocument = segments[segments.length - 1] === "legal-document"
 
-    if (!isAuthenticated && !inAuthGroup) {
+    if (!isAuthenticated && !inAuthGroup && !inPublicLegalDocument) {
       router.replace("/(auth)/login")
     } else if (isAuthenticated && inAuthGroup && !isSignupInProgress) {
       // 회원가입 진행 중이면 auth 그룹에 유지
@@ -69,6 +70,7 @@ function RootLayoutNav() {
       isAuthenticated &&
       !inAuthGroup &&
       !inOnboarding &&
+      !inPublicLegalDocument &&
       !isOnboardingInProgress &&
       needsOnboarding
     ) {
