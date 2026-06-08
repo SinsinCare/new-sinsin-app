@@ -190,21 +190,6 @@ export function useOnboarding() {
     return () => sub.remove()
   }, [phase, handleBack])
 
-  const handleSkip = async () => {
-    if (!user) return
-    setIsSubmitting(true)
-    try {
-      await onboardingService.skipOnboarding()
-      setAccountState("ACTIVE")
-      resetOnboarding()
-      router.replace("/(tabs)/home")
-    } catch {
-      Alert.alert("오류", "처리 중 문제가 발생했습니다.")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return {
     phase,
     hasCkd,
@@ -223,6 +208,5 @@ export function useOnboarding() {
     handleInputChange,
     handleNext,
     handleBack,
-    handleSkip,
   }
 }

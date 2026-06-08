@@ -8,7 +8,6 @@ interface OnboardingHeaderProps {
   currentStepIndex: number
   totalSteps: number
   onBack: () => void
-  onSkip: () => void
   title?: string
   showCounter?: boolean
   showBack?: boolean
@@ -18,7 +17,6 @@ export function OnboardingHeader({
   currentStepIndex,
   totalSteps,
   onBack,
-  onSkip,
   title,
   showCounter = true,
   showBack,
@@ -56,11 +54,7 @@ export function OnboardingHeader({
           </Text>
         </YStack>
       ) : (
-        <Pressable onPress={onSkip} style={{ padding: 8 }}>
-          <Text fontSize={14} color={textSub}>
-            건너뛰기
-          </Text>
-        </Pressable>
+        <YStack width={40} />
       )}
     </XStack>
   )

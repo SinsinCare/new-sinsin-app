@@ -1,4 +1,9 @@
-import { Keyboard, Pressable, ScrollView, TouchableWithoutFeedback } from "react-native"
+import {
+  Keyboard,
+  Pressable,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -39,7 +44,6 @@ export function OnboardingScreen() {
     handleInputChange,
     handleNext,
     handleBack,
-    handleSkip,
   } = useOnboarding()
 
   if (isLoading) {
@@ -53,7 +57,6 @@ export function OnboardingScreen() {
           currentStepIndex={-1}
           totalSteps={0}
           onBack={() => {}}
-          onSkip={handleSkip}
           title="사용자 정보"
           showCounter={false}
           showBack={false}
@@ -62,7 +65,11 @@ export function OnboardingScreen() {
         <YStack flex={1}>
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 }}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 32,
+              paddingBottom: 16,
+            }}
             showsVerticalScrollIndicator={false}
           >
             <Text
@@ -90,7 +97,11 @@ export function OnboardingScreen() {
             />
           </ScrollView>
 
-          <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24} paddingTop={8}>
+          <YStack
+            paddingHorizontal={20}
+            paddingBottom={insets.bottom + 24}
+            paddingTop={8}
+          >
             <Pressable
               onPress={handleWelcomeConfirm}
               disabled={hasCkd === null}
@@ -126,92 +137,104 @@ export function OnboardingScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-    <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
-      <OnboardingHeader
-        currentStepIndex={currentStepIndex}
-        totalSteps={steps.length}
-        onBack={handleBack}
-        onSkip={handleSkip}
-        title="신장 정보"
-      />
+      <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
+        <OnboardingHeader
+          currentStepIndex={currentStepIndex}
+          totalSteps={steps.length}
+          onBack={handleBack}
+          title="신장 정보"
+        />
 
-      <ProgressBar current={currentStepIndex} total={steps.length} />
+        <ProgressBar current={currentStepIndex} total={steps.length} />
 
-      <YStack flex={1}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text
-            fontSize={22}
-            fontWeight="600"
-            color={textColor}
-            letterSpacing={-0.44}
-            lineHeight={30.8}
-            marginBottom={8}
+        <YStack flex={1}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 32,
+              paddingBottom: 16,
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {currentStep.title}
-          </Text>
-          <Text fontSize={15} lineHeight={18} color={textSub} marginBottom={32}>
-            {currentStep.subTitle}
-          </Text>
-
-          {currentStep.type === "only" && (
-            <OnlyStepContent
-              options={currentStep.values}
-              selectedKeys={currentAnswer?.selectedKeys ?? []}
-              onSelect={handleOnlySelect}
-            />
-          )}
-
-          {currentStep.type === "multi" && (
-            <MultiStepContent
-              options={currentStep.values}
-              selectedKeys={currentAnswer?.selectedKeys ?? []}
-              onToggle={handleMultiToggle}
-            />
-          )}
-
-          {currentStep.type === "input" && (
-            <InputStepContent
-              fields={currentStep.values}
-              values={currentAnswer?.inputValues ?? {}}
-              onChange={handleInputChange}
-            />
-          )}
-        </ScrollView>
-
-        <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24} paddingTop={8}>
-          <Pressable
-            onPress={handleNext}
-            disabled={!hasValidAnswer() || isSubmitting}
-          >
-            <YStack
-              backgroundColor={
-                hasValidAnswer() && !isSubmitting ? "#34D399" : "#34D39940"
-              }
-              paddingVertical={16}
-              paddingHorizontal={24}
-              borderRadius={8}
-              alignItems="center"
-              justifyContent="center"
+            <Text
+              fontSize={22}
+              fontWeight="600"
+              color={textColor}
+              letterSpacing={-0.44}
+              lineHeight={30.8}
+              marginBottom={8}
             >
-              <Text
-                color="white"
-                fontSize={16}
-                fontWeight="500"
-                letterSpacing={-0.3}
-                lineHeight={20}
+              {currentStep.title}
+            </Text>
+            <Text
+              fontSize={15}
+              lineHeight={18}
+              color={textSub}
+              marginBottom={32}
+            >
+              {currentStep.subTitle}
+            </Text>
+
+            {currentStep.type === "only" && (
+              <OnlyStepContent
+                options={currentStep.values}
+                selectedKeys={currentAnswer?.selectedKeys ?? []}
+                onSelect={handleOnlySelect}
+              />
+            )}
+
+            {currentStep.type === "multi" && (
+              <MultiStepContent
+                options={currentStep.values}
+                selectedKeys={currentAnswer?.selectedKeys ?? []}
+                onToggle={handleMultiToggle}
+              />
+            )}
+
+            {currentStep.type === "input" && (
+              <InputStepContent
+                fields={currentStep.values}
+                values={currentAnswer?.inputValues ?? {}}
+                onChange={handleInputChange}
+              />
+            )}
+          </ScrollView>
+
+          <YStack
+            paddingHorizontal={20}
+            paddingBottom={insets.bottom + 24}
+            paddingTop={8}
+          >
+            <Pressable
+              onPress={handleNext}
+              disabled={!hasValidAnswer() || isSubmitting}
+            >
+              <YStack
+                backgroundColor={
+                  hasValidAnswer() && !isSubmitting ? "#34D399" : "#34D39940"
+                }
+                paddingVertical={16}
+                paddingHorizontal={24}
+                borderRadius={8}
+                alignItems="center"
+                justifyContent="center"
               >
-                {isSubmitting ? "처리 중..." : isLastStep ? "완료" : "다음"}
-              </Text>
-            </YStack>
-          </Pressable>
+                <Text
+                  color="white"
+                  fontSize={16}
+                  fontWeight="500"
+                  letterSpacing={-0.3}
+                  lineHeight={20}
+                >
+                  {isSubmitting ? "처리 중..." : isLastStep ? "완료" : "다음"}
+                </Text>
+              </YStack>
+            </Pressable>
+          </YStack>
         </YStack>
       </YStack>
-    </YStack>
     </TouchableWithoutFeedback>
   )
 }
