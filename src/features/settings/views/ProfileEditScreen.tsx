@@ -150,7 +150,10 @@ export function ProfileEditScreen() {
       >
         {/* 아바타 */}
         <View style={styles.avatarSection}>
-          <Pressable style={styles.avatarWrapper} onPress={handlePickProfileImage}>
+          <Pressable
+            style={styles.avatarWrapper}
+            onPress={handlePickProfileImage}
+          >
             {profileImageUri || profile?.profileImage ? (
               <Image
                 source={{ uri: profileImageUri ?? profile?.profileImage }}
@@ -204,22 +207,36 @@ export function ProfileEditScreen() {
         </Pressable>
 
         {/* 이름 */}
-        <View style={[styles.fieldRow, { borderBottomColor: c.inputBg }]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.fieldRow,
+            { borderBottomColor: c.inputBg },
+            pressed && { backgroundColor: c.pressedBg },
+          ]}
+          onPress={() => router.push("/(settings)/name-edit" as never)}
+        >
           <View style={styles.fieldContent}>
             <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
               이름
             </ThemedText>
-            <ThemedText
-              style={[
-                styles.fieldValue,
-                { color: c.text },
-                !profile?.name && { color: c.textTertiary },
-              ]}
-            >
-              {profile?.name || "홍길동"}
-            </ThemedText>
+            <View style={styles.fieldValueRow}>
+              <ThemedText
+                style={[
+                  styles.fieldValue,
+                  { color: c.text },
+                  !profile?.name && { color: c.textTertiary },
+                ]}
+              >
+                {profile?.name || "이름을 입력해주세요"}
+              </ThemedText>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={c.textTertiary}
+              />
+            </View>
           </View>
-        </View>
+        </Pressable>
 
         {/* 이메일 */}
         <View style={[styles.fieldRow, { borderBottomColor: c.inputBg }]}>
