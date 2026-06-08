@@ -14,6 +14,7 @@ interface AuthScreenLayoutProps {
   buttonLabel: string
   buttonDisabled?: boolean
   buttonLoading?: boolean
+  buttonAccessory?: ReactNode
   onSubmit: () => void
   onBack?: () => void
   showHeader?: boolean
@@ -27,6 +28,7 @@ export function AuthScreenLayout({
   buttonLabel,
   buttonDisabled = false,
   buttonLoading = false,
+  buttonAccessory,
   onSubmit,
   onBack,
   showHeader = true,
@@ -69,13 +71,19 @@ export function AuthScreenLayout({
         </YStack>
 
         <YStack paddingBottom={insets.bottom + 24}>
+          {buttonAccessory}
           <Pressable
-            onPress={() => { Keyboard.dismiss(); onSubmit() }}
+            onPress={() => {
+              Keyboard.dismiss()
+              onSubmit()
+            }}
             disabled={buttonDisabled || buttonLoading}
           >
             <YStack
               backgroundColor={
-                !buttonDisabled && !buttonLoading ? tokens.color.sub6.val : tokens.color.sub6.val + "40"
+                !buttonDisabled && !buttonLoading
+                  ? tokens.color.sub6.val
+                  : tokens.color.sub6.val + "40"
               }
               paddingVertical={16}
               paddingHorizontal={24}

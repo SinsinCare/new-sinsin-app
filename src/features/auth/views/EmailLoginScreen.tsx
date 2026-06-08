@@ -40,6 +40,34 @@ export function EmailLoginScreen() {
       buttonLabel="로그인"
       buttonDisabled={!isValid}
       buttonLoading={isLoading}
+      buttonAccessory={
+        <XStack
+          alignItems="center"
+          justifyContent="center"
+          gap={8}
+          marginBottom={16}
+        >
+          <Text
+            fontSize={13}
+            color={colors.textSub}
+            letterSpacing={-0.26}
+            lineHeight={16.9}
+          >
+            계정이 없으신가요?
+          </Text>
+          <Pressable onPress={() => router.push("/(auth)/terms-agreement")}>
+            <Text
+              fontSize={14}
+              color={colors.textSub}
+              letterSpacing={-0.28}
+              lineHeight={18.2}
+              textDecorationLine="underline"
+            >
+              회원가입하기
+            </Text>
+          </Pressable>
+        </XStack>
+      }
       onSubmit={handleSubmit(onSubmit)}
     >
       <ConfirmModal
@@ -93,33 +121,8 @@ export function EmailLoginScreen() {
             </Text>
           )}
         </YStack>
-      </YStack>
 
-      {/* Footer */}
-      <YStack alignItems="center" paddingVertical={20} gap={18} marginTop={54}>
-        <XStack alignItems="center" justifyContent="center" gap={8}>
-          <Text
-            fontSize={13}
-            color={colors.textSub}
-            letterSpacing={-0.26}
-            lineHeight={16.9}
-          >
-            계정이 없으신가요?
-          </Text>
-          <Pressable onPress={() => router.push("/(auth)/terms-agreement")}>
-            <Text
-              fontSize={14}
-              color={colors.textSub}
-              letterSpacing={-0.28}
-              lineHeight={18.2}
-              textDecorationLine="underline"
-            >
-              회원가입하기
-            </Text>
-          </Pressable>
-        </XStack>
-
-        <YStack alignItems="center" gap={8}>
+        <YStack alignItems="center" gap={8} marginTop={18}>
           <Text
             fontSize={13}
             fontWeight="500"
