@@ -10,7 +10,7 @@ import { logger } from "@/src/lib/logger"
 import type { SocialProvider } from "@/src/types"
 
 const RESTORE_SESSION_TIMEOUT_MS = 5000
-const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 700
+const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 200
 
 function withTimeout<T>(
   promise: Promise<T>,
