@@ -25,9 +25,7 @@ export function InputStepContent({
   const isDark = useAppColorScheme() === "dark"
   const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
   const unitColor = isDark ? tokens.color.textDarkSub.val : "#787C83"
-  const borderColor = isDark
-    ? "rgba(100,105,115,0.4)"
-    : "rgba(218,223,230,0.6)"
+  const borderColor = isDark ? "rgba(100,105,115,0.4)" : "rgba(218,223,230,0.6)"
   const inputBg = isDark ? "#2A2A32" : "white"
 
   return (
@@ -64,14 +62,17 @@ export function InputStepContent({
             >
               <Input
                 flex={1}
-                size="$4"
+                height={50}
                 fontSize={16}
                 color={labelColor}
                 borderWidth={0}
                 backgroundColor="transparent"
                 paddingHorizontal={0}
+                paddingVertical={0}
                 placeholder="입력해주세요"
                 placeholderTextColor="$grey7"
+                textAlignVertical="center"
+                style={{ lineHeight: 22 }}
                 keyboardType={field.type === "number" ? "numeric" : "default"}
                 value={raw}
                 onChangeText={(text) => onChange(field.key, text)}
