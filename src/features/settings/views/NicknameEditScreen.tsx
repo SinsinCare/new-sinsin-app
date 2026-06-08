@@ -82,13 +82,13 @@ export function NicknameEditScreen() {
   }
 
   const handleSave = async () => {
-    if (!isFormatValid || isLoading) return
+    if (!profile || !isFormatValid || isLoading) return
     setIsLoading(true)
     try {
       await api.patch("/user/profile", {
         nickName: nickname,
-        name: profile?.name ?? "",
-        gender: profile?.gender ?? null,
+        name: profile.name,
+        gender: profile.gender ?? null,
       })
       await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
@@ -190,7 +190,7 @@ export function NicknameEditScreen() {
 
         <BottomActionBar
           label="저장"
-          disabled={!isFormatValid || isLoading || !!serverError}
+          disabled={!profile || !isFormatValid || isLoading || !!serverError}
           paddingBottom={insets.bottom + 16}
           onPress={handleSave}
         />

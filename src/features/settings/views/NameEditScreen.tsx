@@ -183,7 +183,7 @@ export function NameEditScreen() {
 
         <BottomActionBar
           label="저장"
-          disabled={!isFormatValid || isLoading || !!serverError}
+          disabled={!profile || !isFormatValid || isLoading || !!serverError}
           paddingBottom={insets.bottom + 16}
           onPress={handleSave}
         />
