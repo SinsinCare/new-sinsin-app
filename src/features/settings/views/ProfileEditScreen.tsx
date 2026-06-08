@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   StyleSheet,
   View,
@@ -99,10 +99,16 @@ export function ProfileEditScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const [profileImage, setProfileImage] =
     useState<ProfileImageSelection | null>(null)
+  const genderTouchedRef = useRef(false)
 
   useEffect(() => {
-    if (profile?.gender) setGender(profile.gender)
+    if (!genderTouchedRef.current && profile?.gender) setGender(profile.gender)
   }, [profile?.gender])
+
+  const handleSelectGender = (nextGender: Gender) => {
+    genderTouchedRef.current = true
+    setGender(nextGender)
+  }
 
   const handlePickProfileImage = () => {
     Alert.alert("프로필 사진", "사진을 선택하세요", [
@@ -332,7 +338,7 @@ export function ProfileEditScreen() {
                       borderColor: tokens.color.sub6.val,
                     },
                   ]}
-                  onPress={() => setGender(opt.key)}
+                  onPress={() => handleSelectGender(opt.key)}
                 >
                   <ThemedText
                     style={[

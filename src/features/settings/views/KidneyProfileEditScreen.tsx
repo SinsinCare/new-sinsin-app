@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   StyleSheet,
   View,
@@ -41,6 +41,8 @@ export function KidneyProfileEditScreen() {
   const c = useSettingsColors()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const heightTouchedRef = useRef(false)
+  const weightTouchedRef = useRef(false)
 
   const [heightVal, setHeightVal] = useState("")
   const [weightVal, setWeightVal] = useState("")
@@ -76,9 +78,9 @@ export function KidneyProfileEditScreen() {
         })
       }
     }
-    if (kidneyProfile.heightCm != null)
+    if (!heightTouchedRef.current && kidneyProfile.heightCm != null)
       setHeightVal(String(kidneyProfile.heightCm))
-    if (kidneyProfile.weightKg != null)
+    if (!weightTouchedRef.current && kidneyProfile.weightKg != null)
       setWeightVal(String(kidneyProfile.weightKg))
     setSelectedCauses(kidneyProfile.diagnosisCauses ?? [])
     setOtherCause(kidneyProfile.diagnosisCauseOther ?? "")
@@ -148,6 +150,16 @@ export function KidneyProfileEditScreen() {
     }
   }
 
+  const handleChangeHeight = (text: string) => {
+    heightTouchedRef.current = true
+    setHeightVal(text)
+  }
+
+  const handleChangeWeight = (text: string) => {
+    weightTouchedRef.current = true
+    setWeightVal(text)
+  }
+
   const formattedDate = diagnosisDate
     ? `${String(diagnosisDate.month).padStart(2, "0")}/${diagnosisDate.year}`
     : ""
@@ -203,7 +215,7 @@ export function KidneyProfileEditScreen() {
                 },
               ]}
               value={heightVal}
-              onChangeText={setHeightVal}
+              onChangeText={handleChangeHeight}
               keyboardType="numeric"
               placeholder="키 입력"
               placeholderTextColor={c.textTertiary}
@@ -224,7 +236,7 @@ export function KidneyProfileEditScreen() {
                 },
               ]}
               value={weightVal}
-              onChangeText={setWeightVal}
+              onChangeText={handleChangeWeight}
               keyboardType="numeric"
               placeholder="체중 입력"
               placeholderTextColor={c.textTertiary}
