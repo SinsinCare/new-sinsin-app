@@ -57,7 +57,7 @@ export function SignupEmailScreen() {
       <AuthScreenLayout
         title="이메일을 입력해주세요"
         subtitle="회원가입을 위해 이메일 인증을 진행해주세요"
-        buttonLabel="다음 단계"
+        buttonLabel={codeVerified ? "다음" : "다음 단계"}
         buttonDisabled={!codeVerified}
         onSubmit={onNext}
       >
@@ -208,7 +208,7 @@ export function SignupEmailScreen() {
               fontWeight="500"
               letterSpacing={-0.28}
             >
-              이메일 인증이 완료되었습니다.
+              인증이 완료되었습니다. 다음을 눌러 진행해주세요.
             </Text>
           )}
         </YStack>

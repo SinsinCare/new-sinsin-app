@@ -1,13 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
-import { YStack } from "tamagui"
+import { Text, YStack } from "tamagui"
 import { FormTextField } from "@/src/shared/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
 import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { PasswordForm } from "../types"
+import { tokens } from "@/src/theme/tokens"
 
 export function EmailLoginLinkPasswordScreen() {
   const { email, emailLinkToken } = useLocalSearchParams<{
@@ -17,15 +18,10 @@ export function EmailLoginLinkPasswordScreen() {
   const { completeEmailLoginLink } = useAuth()
   const [submitting, setSubmitting] = useState(false)
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setError,
-    formState: { isValid },
-  } = useForm<PasswordForm>({
+  const { control, handleSubmit, watch, setError } = useForm<PasswordForm>({
     defaultValues: { password: "", confirmPassword: "" },
-    mode: "onChange",
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   })
 
   const password = watch("password")
@@ -75,17 +71,28 @@ export function EmailLoginLinkPasswordScreen() {
           : "이메일 계정으로 로그인할 때 사용할 비밀번호입니다"
       }
       buttonLabel="연결 완료"
-      buttonDisabled={!isValid}
+      buttonDisabled={submitting}
       buttonLoading={submitting}
       onSubmit={handleSubmit(submit)}
     >
       <YStack gap={36} marginTop={56}>
+        <Text
+          fontSize={14}
+          lineHeight={20}
+          color={tokens.color.grey6.val}
+          letterSpacing={-0.28}
+        >
+          비밀번호는 영문 대문자, 영문 소문자, 숫자, 특수문자를 모두 포함해
+          6~18자로 입력해주세요.
+        </Text>
+
         <FormTextField<PasswordForm>
           name="password"
           control={control}
           label="비밀번호"
           placeholder="비밀번호를 형식에 맞춰 입력해주세요"
           inputType="password"
+          showPasswordToggle
           rules={passwordRules}
         />
 
@@ -95,6 +102,7 @@ export function EmailLoginLinkPasswordScreen() {
           label="비밀번호 확인"
           placeholder="입력한 비밀번호를 다시 입력해주세요"
           inputType="password"
+          showPasswordToggle
           rules={confirmPasswordRules(password)}
         />
       </YStack>

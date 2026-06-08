@@ -1,9 +1,5 @@
 import { useState, useRef, type ComponentRef } from "react"
-import {
-  Pressable,
-  Keyboard,
-  type KeyboardTypeOptions,
-} from "react-native"
+import { Pressable, Keyboard, type KeyboardTypeOptions } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, Input } from "tamagui"
 import { tokens } from "../../theme/tokens"
@@ -64,6 +60,7 @@ interface FormTextFieldProps<T extends FieldValues> {
   clearable?: boolean
   autoFocus?: boolean
   maxLength?: number
+  showPasswordToggle?: boolean
 }
 
 export function FormTextField<T extends FieldValues>({
@@ -76,11 +73,15 @@ export function FormTextField<T extends FieldValues>({
   clearable = true,
   autoFocus = false,
   maxLength,
+  showPasswordToggle = false,
 }: FormTextFieldProps<T>) {
   const [isFocused, setIsFocused] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const inputRef = useRef<ComponentRef<typeof Input>>(null)
   const config = INPUT_TYPE_CONFIG[inputType]
   const isDark = useAppColorScheme() === "dark"
+  const shouldShowPasswordToggle =
+    inputType === "password" && showPasswordToggle
 
   const hasFieldError = (fieldError: FieldError | undefined) => !!fieldError
   const getBorderColor = (fieldError: FieldError | undefined) => {
@@ -124,7 +125,11 @@ export function FormTextField<T extends FieldValues>({
             height={52}
             alignItems="center"
             paddingLeft={16}
-            paddingRight={value && isFocused && clearable ? 8 : 16}
+            paddingRight={
+              shouldShowPasswordToggle || (value && isFocused && clearable)
+                ? 8
+                : 16
+            }
           >
             <Input
               ref={inputRef}
@@ -138,7 +143,11 @@ export function FormTextField<T extends FieldValues>({
               maxLength={maxLength}
               keyboardType={config.keyboardType}
               autoCapitalize={config.autoCapitalize}
-              secureTextEntry={config.secureTextEntry}
+              secureTextEntry={
+                shouldShowPasswordToggle
+                  ? !passwordVisible
+                  : config.secureTextEntry
+              }
               autoFocus={autoFocus}
               backgroundColor="transparent"
               borderWidth={0}
@@ -153,7 +162,22 @@ export function FormTextField<T extends FieldValues>({
                 onBlur()
               }}
             />
-            {value && isFocused && clearable && (
+            {shouldShowPasswordToggle ? (
+              <Pressable
+                onPress={() => {
+                  setPasswordVisible((visible) => !visible)
+                  inputRef.current?.focus()
+                }}
+                hitSlop={8}
+                style={{ padding: 4 }}
+              >
+                <Ionicons
+                  name={passwordVisible ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={tokens.color.grey5.val}
+                />
+              </Pressable>
+            ) : value && isFocused && clearable ? (
               <Pressable
                 onPress={() => {
                   onChange("")
@@ -168,7 +192,7 @@ export function FormTextField<T extends FieldValues>({
                   color={tokens.color.grey5.val}
                 />
               </Pressable>
-            )}
+            ) : null}
           </XStack>
           {error?.message && (
             <Text

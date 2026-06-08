@@ -30,6 +30,9 @@ export function useSignupEmail() {
   const [timer, setTimer] = useState(0)
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
+  const [verifiedEmailLinkToken, setVerifiedEmailLinkToken] = useState<
+    string | null
+  >(null)
   const [emailLoginLinkRequired, setEmailLoginLinkRequired] =
     useState<EmailLoginLinkRequiredResult | null>(null)
   const [emailLoginLinkMode, setEmailLoginLinkMode] = useState(false)
@@ -62,6 +65,7 @@ export function useSignupEmail() {
       await emailService.sendEmailLoginLinkCode(email)
       setCodeSent(true)
       setCodeVerified(false)
+      setVerifiedEmailLinkToken(null)
       setCodeInputVisible(true)
       startTimer()
     } catch (error) {
@@ -84,6 +88,8 @@ export function useSignupEmail() {
 
     setSendingCode(true)
     setSendError(null)
+    setCodeVerified(false)
+    setVerifiedEmailLinkToken(null)
     try {
       const check = await emailService.checkSignupEmail(email)
       if (check.status === "email_login_link_required") {
@@ -116,10 +122,9 @@ export function useSignupEmail() {
         const result = await emailService.verifyEmailLoginLinkCode(email, code)
         if (result.verified && result.emailLinkToken) {
           if (timerRef.current) clearInterval(timerRef.current)
-          router.push({
-            pathname: "./email-login-link-password",
-            params: { email, emailLinkToken: result.emailLinkToken },
-          })
+          setTimer(0)
+          setVerifiedEmailLinkToken(result.emailLinkToken)
+          setCodeVerified(true)
         } else {
           Toast.show({
             type: "error",
@@ -156,6 +161,13 @@ export function useSignupEmail() {
   }
 
   const handleNext = (email: string) => {
+    if (emailLoginLinkMode && verifiedEmailLinkToken) {
+      router.push({
+        pathname: "./email-login-link-password",
+        params: { email, emailLinkToken: verifiedEmailLinkToken },
+      })
+      return
+    }
     setSignupEmail(email)
     router.push("/(auth)/signup-password")
   }
