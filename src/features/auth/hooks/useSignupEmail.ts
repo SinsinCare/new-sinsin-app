@@ -49,7 +49,6 @@ export function useSignupEmail() {
   const sendCode = async (email: string) => {
     setSendingCode(true)
     setSendError(null)
-    setCodeInputVisible(true)
     try {
       const available = await emailService.checkEmailAvailability(email)
       if (!available) {
@@ -60,8 +59,10 @@ export function useSignupEmail() {
       await emailService.sendVerificationCode(email)
       setCodeSent(true)
       setCodeVerified(false)
+      setCodeInputVisible(true)
       startTimer()
     } catch {
+      if (!codeSent) setCodeInputVisible(false)
       setSendError("인증번호 전송에 실패했습니다. 재전송해 주세요.")
     } finally {
       setSendingCode(false)
