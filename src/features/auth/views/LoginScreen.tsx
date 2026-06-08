@@ -1,5 +1,5 @@
 import { Platform, Pressable } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
+import { YStack, XStack, Text, Spinner } from "tamagui"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import MainLogo from "@/assets/images/main-logo.svg"
@@ -14,6 +14,7 @@ export function LoginScreen() {
   const insets = useSafeAreaInsets()
   const {
     socialLoading,
+    socialLoadingMessage,
     withdrawalPending,
     isCancellingWithdrawal,
     loginWithProvider,
@@ -33,6 +34,7 @@ export function LoginScreen() {
       paddingTop={insets.top}
       paddingBottom={insets.bottom + 24}
       paddingHorizontal={20}
+      position="relative"
     >
       {/* 로고 영역 */}
       <YStack flex={1} justifyContent="center" alignItems="center" gap={24}>
@@ -210,6 +212,43 @@ export function LoginScreen() {
           </Link>
         </XStack>
       </YStack>
+
+      {socialLoading && (
+        <YStack
+          position="absolute"
+          top={0}
+          right={0}
+          bottom={0}
+          left={0}
+          zIndex={10}
+          backgroundColor={
+            colors.isDark ? "rgba(31,31,33,0.92)" : "rgba(255,255,255,0.92)"
+          }
+          justifyContent="center"
+          alignItems="center"
+          gap={14}
+          paddingHorizontal={24}
+        >
+          <Spinner size="large" color="#44AF94" />
+          <Text
+            color={colors.text}
+            fontSize={17}
+            fontWeight="600"
+            lineHeight={24}
+            textAlign="center"
+          >
+            {socialLoadingMessage}
+          </Text>
+          <Text
+            color={colors.textSub}
+            fontSize={14}
+            lineHeight={20}
+            textAlign="center"
+          >
+            계정 정보를 확인하고 있어요.
+          </Text>
+        </YStack>
+      )}
     </YStack>
   )
 }

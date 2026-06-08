@@ -28,6 +28,9 @@ export function useSocialLogin() {
   const { signInWithSocialProvider, cancelWithdrawal, isUserCancelledError } =
     useAuth()
   const [socialLoading, setSocialLoading] = useState(false)
+  const [currentProvider, setCurrentProvider] = useState<SocialProvider | null>(
+    null,
+  )
   const [withdrawalPending, setWithdrawalPending] =
     useState<WithdrawalPendingResult | null>(null)
   const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
@@ -36,6 +39,7 @@ export function useSocialLogin() {
     if (socialLoading) return
 
     setSocialLoading(true)
+    setCurrentProvider(provider)
     try {
       await signInWithSocialProvider(provider)
     } catch (error) {
@@ -61,6 +65,7 @@ export function useSocialLogin() {
       })
     } finally {
       setSocialLoading(false)
+      setCurrentProvider(null)
     }
   }
 
@@ -86,6 +91,9 @@ export function useSocialLogin() {
 
   return {
     socialLoading,
+    socialLoadingMessage: currentProvider
+      ? `${PROVIDER_LABELS[currentProvider]} 로그인 중...`
+      : "로그인 중...",
     withdrawalPending,
     isCancellingWithdrawal,
     loginWithProvider,

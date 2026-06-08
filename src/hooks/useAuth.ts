@@ -10,6 +10,7 @@ import { logger } from "@/src/lib/logger"
 import type { SocialProvider } from "@/src/types"
 
 const RESTORE_SESSION_TIMEOUT_MS = 5000
+const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 700
 
 function withTimeout<T>(
   promise: Promise<T>,
@@ -21,6 +22,12 @@ function withTimeout<T>(
       setTimeout(() => resolve(null), timeoutMs)
     }),
   ])
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
 
 export function useAuth() {
@@ -83,6 +90,7 @@ export function useAuth() {
       provider,
       accountState: result.accountState,
     })
+    await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
     setUser(result.user)
     setAccountState(result.accountState)
     return result
