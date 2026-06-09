@@ -38,6 +38,7 @@ export function SignupPasswordScreen() {
             label="비밀번호"
             placeholder="비밀번호를 형식에 맞춰 입력해주세요"
             inputType="password"
+            showValidState
             rules={passwordRules}
           />
           <PasswordCriteriaText password={password} />
@@ -49,6 +50,7 @@ export function SignupPasswordScreen() {
           label="비밀번호 확인"
           placeholder="입력한 비밀번호를 다시 입력해주세요"
           inputType="password"
+          showValidState
           rules={confirmPasswordRules(password)}
         />
       </YStack>

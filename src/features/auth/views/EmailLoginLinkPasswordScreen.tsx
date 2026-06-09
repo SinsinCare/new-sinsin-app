@@ -84,6 +84,7 @@ export function EmailLoginLinkPasswordScreen() {
             placeholder="비밀번호를 형식에 맞춰 입력해주세요"
             inputType="password"
             showPasswordToggle
+            showValidState
             rules={passwordRules}
           />
           <PasswordCriteriaText password={password} />
@@ -96,6 +97,7 @@ export function EmailLoginLinkPasswordScreen() {
           placeholder="입력한 비밀번호를 다시 입력해주세요"
           inputType="password"
           showPasswordToggle
+          showValidState
           rules={confirmPasswordRules(password)}
         />
       </YStack>
