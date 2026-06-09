@@ -89,6 +89,7 @@ export function EmailLoginScreen() {
           label="아이디"
           placeholder="이메일 주소를 입력해주세요"
           inputType="email"
+          showValidState
           rules={{
             required: "이메일을 입력해주세요.",
             pattern: {

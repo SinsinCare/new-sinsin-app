@@ -34,6 +34,7 @@ export function NicknameSetupScreen() {
           label="닉네임"
           placeholder="닉네임을 입력해주세요"
           maxLength={14}
+          showValidState
           rules={{
             required: "닉네임을 입력해주세요.",
             minLength: {

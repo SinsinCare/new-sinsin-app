@@ -72,6 +72,7 @@ export function SignupEmailScreen() {
                   placeholder="이메일 주소를 입력해주세요"
                   inputType="email"
                   autoFocus
+                  showValidState
                   rules={{
                     required: "이메일을 입력해주세요.",
                     pattern: {
@@ -127,6 +128,7 @@ export function SignupEmailScreen() {
                     inputType="number"
                     autoFocus
                     maxLength={6}
+                    showValidState
                     rules={{
                       required: "인증번호를 입력해주세요.",
                       minLength: {

@@ -82,7 +82,11 @@ export function ProfileSetupScreen() {
                 >
                   이름
                 </Text>
-                <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
+                <Text
+                  fontSize={13}
+                  fontWeight="500"
+                  color={tokens.color.error.val}
+                >
                   {" "}
                   *
                 </Text>
@@ -91,6 +95,7 @@ export function ProfileSetupScreen() {
                 name="name"
                 control={control}
                 placeholder="이름을 입력해주세요"
+                showValidState
                 rules={{ required: "이름을 입력해주세요." }}
               />
             </YStack>
@@ -116,9 +121,17 @@ export function ProfileSetupScreen() {
         </ScrollView>
 
         <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
-          <Pressable onPress={() => { Keyboard.dismiss(); handleSubmit(handleNext)() }} disabled={!isValid}>
+          <Pressable
+            onPress={() => {
+              Keyboard.dismiss()
+              handleSubmit(handleNext)()
+            }}
+            disabled={!isValid}
+          >
             <YStack
-              backgroundColor={isValid ? tokens.color.sub6.val : tokens.color.sub6.val + "40"}
+              backgroundColor={
+                isValid ? tokens.color.sub6.val : tokens.color.sub6.val + "40"
+              }
               paddingVertical={16}
               paddingHorizontal={24}
               borderRadius={8}

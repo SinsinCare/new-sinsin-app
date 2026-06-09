@@ -216,6 +216,7 @@ export function ForgotPasswordScreen() {
                       placeholder="가입한 이메일 주소를 입력해주세요"
                       inputType="email"
                       autoFocus
+                      showValidState
                       rules={{
                         required: "이메일을 입력해주세요.",
                         pattern: {
@@ -273,6 +274,7 @@ export function ForgotPasswordScreen() {
                         placeholder="인증번호 6자리를 입력해주세요"
                         inputType="number"
                         maxLength={6}
+                        showValidState
                         rules={{
                           required: "인증번호를 입력해주세요.",
                           minLength: {
