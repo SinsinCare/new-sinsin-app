@@ -27,6 +27,7 @@ export function useSignupEmail() {
   const [codeInputVisible, setCodeInputVisible] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [codeVerified, setCodeVerified] = useState(false)
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null)
   const [timer, setTimer] = useState(0)
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
@@ -58,6 +59,20 @@ export function useSignupEmail() {
     }
   }, [])
 
+  const resetVerificationState = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    setCodeSent(false)
+    setCodeInputVisible(false)
+    setSendError(null)
+    setCodeVerified(false)
+    setVerifiedEmail(null)
+    setTimer(0)
+    setVerifiedEmailLinkToken(null)
+    setEmailLoginLinkRequired(null)
+    setEmailLoginLinkMode(false)
+    setSignupToken("")
+  }, [setSignupToken])
+
   const sendEmailLoginLinkCode = async (email: string) => {
     setSendingCode(true)
     setSendError(null)
@@ -65,6 +80,7 @@ export function useSignupEmail() {
       await emailService.sendEmailLoginLinkCode(email)
       setCodeSent(true)
       setCodeVerified(false)
+      setVerifiedEmail(null)
       setVerifiedEmailLinkToken(null)
       setCodeInputVisible(true)
       startTimer()
@@ -89,6 +105,7 @@ export function useSignupEmail() {
     setSendingCode(true)
     setSendError(null)
     setCodeVerified(false)
+    setVerifiedEmail(null)
     setVerifiedEmailLinkToken(null)
     try {
       const check = await emailService.checkSignupEmail(email)
@@ -128,6 +145,7 @@ export function useSignupEmail() {
           if (timerRef.current) clearInterval(timerRef.current)
           setTimer(0)
           setVerifiedEmailLinkToken(result.emailLinkToken)
+          setVerifiedEmail(email)
           setCodeVerified(true)
         } else {
           Toast.show({
@@ -142,6 +160,7 @@ export function useSignupEmail() {
       const result = await emailService.verifyCode(email, code)
       if (result.verified) {
         setCodeVerified(true)
+        setVerifiedEmail(email)
         if (result.signupToken) {
           setSignupToken(result.signupToken)
         }
@@ -199,6 +218,7 @@ export function useSignupEmail() {
     codeInputVisible,
     sendError,
     codeVerified,
+    verifiedEmail,
     timer,
     formattedTime,
     sendingCode,
@@ -207,6 +227,7 @@ export function useSignupEmail() {
     emailLoginLinkProviderLabel,
     sendCode,
     verifyCode,
+    resetVerificationState,
     handleNext,
     dismissEmailLoginLink,
     confirmEmailLoginLink,

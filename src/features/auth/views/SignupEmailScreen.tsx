@@ -1,11 +1,16 @@
+import { useEffect, useRef } from "react"
 import { Pressable, Keyboard } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { ConfirmModal, FormTextField } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useSignupEmail } from "../hooks"
 import type { EmailForm } from "../types"
 import { tokens } from "@/src/theme/tokens"
+import {
+  isVerifiedEmailMatch,
+  normalizeSignupEmail,
+} from "../data/emailVerificationState"
 
 const BUTTON_WIDTH = 100
 
@@ -15,6 +20,7 @@ export function SignupEmailScreen() {
     codeInputVisible,
     sendError,
     codeVerified,
+    verifiedEmail,
     timer,
     formattedTime,
     sendingCode,
@@ -23,15 +29,28 @@ export function SignupEmailScreen() {
     emailLoginLinkProviderLabel,
     sendCode,
     verifyCode,
+    resetVerificationState,
     handleNext,
     dismissEmailLoginLink,
     confirmEmailLoginLink,
   } = useSignupEmail()
 
-  const { control, getValues, trigger } = useForm<EmailForm>({
+  const { control, getValues, trigger, setValue } = useForm<EmailForm>({
     defaultValues: { email: "", code: "" },
     mode: "onChange",
   })
+  const email = useWatch({ control, name: "email" })
+  const previousEmailRef = useRef(normalizeSignupEmail(email))
+  const isCurrentEmailVerified =
+    codeVerified && isVerifiedEmailMatch(verifiedEmail, email)
+
+  useEffect(() => {
+    const normalizedEmail = normalizeSignupEmail(email)
+    if (previousEmailRef.current === normalizedEmail) return
+    previousEmailRef.current = normalizedEmail
+    setValue("code", "")
+    resetVerificationState()
+  }, [email, resetVerificationState, setValue])
 
   const handleSendCode = async () => {
     const valid = await trigger("email")
@@ -57,8 +76,8 @@ export function SignupEmailScreen() {
       <AuthScreenLayout
         title="이메일을 입력해주세요"
         subtitle="회원가입을 위해 이메일 인증을 진행해주세요"
-        buttonLabel={codeVerified ? "다음" : "다음 단계"}
-        buttonDisabled={!codeVerified}
+        buttonLabel={isCurrentEmailVerified ? "다음" : "다음 단계"}
+        buttonDisabled={!isCurrentEmailVerified}
         onSubmit={onNext}
       >
         <YStack gap={36} marginTop={48}>
@@ -89,11 +108,11 @@ export function SignupEmailScreen() {
               >
                 <Pressable
                   onPress={handleSendCode}
-                  disabled={sendingCode || codeVerified}
+                  disabled={sendingCode || isCurrentEmailVerified}
                 >
                   <YStack
                     backgroundColor={
-                      codeVerified || sendingCode
+                      isCurrentEmailVerified || sendingCode
                         ? tokens.color.grey7.val
                         : tokens.color.sub6.val
                     }
@@ -116,7 +135,7 @@ export function SignupEmailScreen() {
             </XStack>
           </YStack>
 
-          {codeInputVisible && !codeVerified && (
+          {codeInputVisible && !isCurrentEmailVerified && (
             <YStack>
               <XStack gap={8}>
                 <YStack flex={1}>
@@ -203,7 +222,7 @@ export function SignupEmailScreen() {
             </YStack>
           )}
 
-          {codeVerified && (
+          {isCurrentEmailVerified && (
             <Text
               fontSize={14}
               color={tokens.color.sub8.val}
