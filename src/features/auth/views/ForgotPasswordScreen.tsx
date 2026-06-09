@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 import { emailService } from "@/src/services"
 import { passwordService } from "@/src/services"
 import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import { PasswordCriteriaText } from "../components"
 import { useAuthColors } from "../hooks"
 import { tokens } from "@/src/theme/tokens"
 
@@ -351,14 +352,17 @@ export function ForgotPasswordScreen() {
           {/* Step 3: 새 비밀번호 입력 */}
           {step === "password" && (
             <YStack gap={36}>
-              <FormTextField<NewPasswordForm>
-                name="password"
-                control={passwordForm.control}
-                label="새 비밀번호"
-                placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-                inputType="password"
-                rules={passwordRules}
-              />
+              <YStack gap={10}>
+                <FormTextField<NewPasswordForm>
+                  name="password"
+                  control={passwordForm.control}
+                  label="새 비밀번호"
+                  placeholder="비밀번호를 형식에 맞춰 입력해주세요"
+                  inputType="password"
+                  rules={passwordRules}
+                />
+                <PasswordCriteriaText password={password} />
+              </YStack>
               <FormTextField<NewPasswordForm>
                 name="confirmPassword"
                 control={passwordForm.control}

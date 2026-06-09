@@ -1,18 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
-import { Text, YStack } from "tamagui"
+import { YStack } from "tamagui"
 import { FormTextField } from "@/src/shared/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
-import {
-  passwordCriteriaText,
-  passwordRules,
-  confirmPasswordRules,
-} from "../data/passwordValidation"
+import { PasswordCriteriaText } from "../components"
+import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { PasswordForm } from "../types"
-import { tokens } from "@/src/theme/tokens"
 
 export function EmailLoginLinkPasswordScreen() {
   const { email, emailLinkToken } = useLocalSearchParams<{
@@ -90,14 +86,7 @@ export function EmailLoginLinkPasswordScreen() {
             showPasswordToggle
             rules={passwordRules}
           />
-          <Text
-            fontSize={14}
-            lineHeight={20}
-            color={tokens.color.grey6.val}
-            letterSpacing={-0.28}
-          >
-            {passwordCriteriaText}
-          </Text>
+          <PasswordCriteriaText password={password} />
         </YStack>
 
         <FormTextField<PasswordForm>

@@ -18,10 +18,11 @@ import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { passwordService } from "@/src/services"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
-
-// 영문 대문자, 소문자, 숫자, 특수문자 포함 6~18자
-const PASSWORD_REGEX =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,18}$/
+import {
+  getPasswordCriteriaState,
+  isPasswordValid as validatePassword,
+  passwordCriteriaText,
+} from "@/src/features/auth/data/passwordValidation"
 
 export function PasswordEditScreen() {
   const insets = useSafeAreaInsets()
@@ -40,7 +41,14 @@ export function PasswordEditScreen() {
 
   const isResetFlow = Boolean(token)
   const isCurrentPasswordValid = isResetFlow || currentPassword.length >= 8
-  const isPasswordValid = PASSWORD_REGEX.test(password)
+  const isPasswordValid = validatePassword(password)
+  const passwordCriteriaState = getPasswordCriteriaState(password)
+  const passwordCriteriaStyle =
+    passwordCriteriaState === "valid"
+      ? styles.validText
+      : passwordCriteriaState === "invalid"
+        ? styles.invalidText
+        : { color: c.textMuted }
   const hasConfirm = confirm.length > 0
   const isMatch = password === confirm
   const canSubmit =
@@ -103,7 +111,7 @@ export function PasswordEditScreen() {
             새 비밀번호를 입력해주세요
           </ThemedText>
           <ThemedText style={[styles.subtitle, { color: c.textMuted }]}>
-            {"영문 대/소문자, 숫자, 특수문자 포함\n6~18자 이내로 입력해주세요"}
+            새로 사용할 비밀번호를 설정해주세요
           </ThemedText>
 
           {!isResetFlow && (
@@ -184,6 +192,9 @@ export function PasswordEditScreen() {
               </Pressable>
             )}
           </View>
+          <ThemedText style={[styles.validationText, passwordCriteriaStyle]}>
+            {passwordCriteriaText}
+          </ThemedText>
 
           {/* 비밀번호 확인 */}
           <ThemedText
