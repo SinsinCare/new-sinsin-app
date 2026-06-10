@@ -2,10 +2,7 @@ import { useRef, useEffect, useState } from "react"
 import {
   Alert,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
-  LayoutAnimation,
-  UIManager,
   View,
   TextInput,
   Pressable,
@@ -26,9 +23,10 @@ import type { FaqCardEntry } from "@/src/features/consultation/types"
 import { CATEGORY_LIST } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 
-import { YStack, Text, XStack } from "tamagui"
+import { YStack, Text } from "tamagui"
 import { Chip } from "@/src/shared/components/Chip"
 import { Icon } from "@/src/shared/components/Icon"
+import { KeyboardAwareView } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 
 import { ConsultChatHeader } from "@/src/features/consultation/components/ConsultChatHeader"
@@ -49,12 +47,6 @@ import { chatHistoryQuery } from "@/src/features/consultation/data/queyOptions"
 import { ChatHistoryCardSkeleton } from "@/src/features/consultation/components/ChatHistoryCardSkeleton"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
-if (Platform.OS === "android") {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true)
-  }
-}
-
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -71,6 +63,9 @@ export default function ConsultScreen() {
   })
 
   const scrollRef = useRef<ScrollView>(null)
+  const keyboardHideRestoreTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
   const {
     conversationId,
     messages,
@@ -91,7 +86,9 @@ export default function ConsultScreen() {
 
   const isIdle = messages.length === 0 && !isTyping
   const canSend = !!inputMessage.trim() && !isTyping && !isSending
-  const menuTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const menuTextColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
 
   const handleHistoryPress = () => {
     Keyboard.dismiss()
@@ -181,12 +178,17 @@ export default function ConsultScreen() {
   const { handleCopy, showToast } = useCopyToClipboard()
 
   const handleInputFocus = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    if (keyboardHideRestoreTimerRef.current) {
+      clearTimeout(keyboardHideRestoreTimerRef.current)
+      keyboardHideRestoreTimerRef.current = null
+    }
     setIsInputFocused(true)
   }
 
   const handleInputBlur = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    if (Platform.OS === "android") {
+      return
+    }
     setIsInputFocused(false)
   }
 
@@ -220,19 +222,38 @@ export default function ConsultScreen() {
     return () => clearTimeout(timer)
   }, [messages.length, isTyping])
 
+  useEffect(() => {
+    if (Platform.OS !== "android") {
+      return
+    }
+
+    const keyboardDidHide = Keyboard.addListener("keyboardDidHide", () => {
+      keyboardHideRestoreTimerRef.current = setTimeout(() => {
+        setIsInputFocused(false)
+        keyboardHideRestoreTimerRef.current = null
+      }, 120)
+    })
+
+    return () => {
+      keyboardDidHide.remove()
+      if (keyboardHideRestoreTimerRef.current) {
+        clearTimeout(keyboardHideRestoreTimerRef.current)
+        keyboardHideRestoreTimerRef.current = null
+      }
+    }
+  }, [])
+
   return (
     <View
       style={{
         flex: 1,
-        backgroundColor: isDarkMode ? tokens.color.appBgDark.val : tokens.color.appBg.val,
+        backgroundColor: isDarkMode
+          ? tokens.color.appBgDark.val
+          : tokens.color.appBg.val,
         paddingTop: insets.top,
       }}
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={0}
-      >
+      <KeyboardAwareView keyboardVerticalOffset={0}>
         <ConsultChatHeader
           onHistoryPress={handleHistoryPress}
           onNewChatPress={handleNewChat}
@@ -246,7 +267,11 @@ export default function ConsultScreen() {
                 fontSize={18}
                 lineHeight={20}
                 fontWeight="600"
-                color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
+                color={
+                  isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.textLight.val
+                }
               >
                 {"신신당부 AI에게\n무엇이든 물어보세요"}
               </Text>
@@ -261,11 +286,16 @@ export default function ConsultScreen() {
               <YStack alignItems="center" gap={4} paddingHorizontal={24}>
                 <Text
                   fontSize={11}
-                  color={isDarkMode ? tokens.color.textLightMuted.val : tokens.color.textLightSub.val}
+                  color={
+                    isDarkMode
+                      ? tokens.color.textLightMuted.val
+                      : tokens.color.textLightSub.val
+                  }
                   textAlign="center"
                   lineHeight={16}
                 >
-                  AI 답변은 참고용 정보입니다. 정확한 진단·치료는 반드시 전문 의료인과 상담하세요.
+                  AI 답변은 참고용 정보입니다. 정확한 진단·치료는 반드시 전문
+                  의료인과 상담하세요.
                 </Text>
                 <Text
                   fontSize={11}
@@ -338,7 +368,9 @@ export default function ConsultScreen() {
           <View
             style={{
               ...styles.inputContainer,
-              backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
+              backgroundColor: isDarkMode
+                ? tokens.color.inputBgDark.val
+                : "#F2F2F5",
             }}
           >
             <TextInput
@@ -349,46 +381,42 @@ export default function ConsultScreen() {
               multiline
               style={{
                 ...styles.input,
-                color: isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val,
+                color: isDarkMode
+                  ? tokens.color.textDark.val
+                  : tokens.color.textLight.val,
               }}
               editable={!isTyping}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
             />
 
-            <XStack justifyContent="space-between" alignItems="center">
-              {/* <Pressable onPress={handlePlusPress} hitSlop={8}>
-                <Icon
-                  name="plus"
-                  size={24}
-                  color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
-                />
-              </Pressable> */}
-              <View />
-              <Pressable
-                onPress={handleSend}
-                disabled={!canSend}
-                style={{
-                  ...styles.sendButton,
-                  backgroundColor: canSend
-                    ? isDarkMode
-                      ? tokens.color.textDarkSub.val
-                      : "#474758"
-                    : isDarkMode
-                      ? "#4E4F55"
-                      : "#CACBD5",
-                }}
-              >
-                <Icon
-                  name="fly-chat"
-                  size={16}
-                  color={isDarkMode ? tokens.color.textDark.val : tokens.color.offWhite.val}
-                />
-              </Pressable>
-            </XStack>
+            <Pressable
+              onPress={handleSend}
+              disabled={!canSend}
+              style={{
+                ...styles.sendButton,
+                backgroundColor: canSend
+                  ? isDarkMode
+                    ? tokens.color.textDarkSub.val
+                    : "#474758"
+                  : isDarkMode
+                    ? "#4E4F55"
+                    : "#CACBD5",
+              }}
+            >
+              <Icon
+                name="fly-chat"
+                size={16}
+                color={
+                  isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.offWhite.val
+                }
+              />
+            </Pressable>
           </View>
         </YStack>
-      </KeyboardAvoidingView>
+      </KeyboardAwareView>
       {/* Chat History Sheet */}
       <ChatHistorySheet.Layout
         isOpen={historyOpen}
@@ -443,7 +471,9 @@ export default function ConsultScreen() {
               {
                 bottom: attachMenuPosition.bottom,
                 left: attachMenuPosition.left,
-                backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.pureWhite.val,
+                backgroundColor: isDarkMode
+                  ? tokens.color.inputBgDark.val
+                  : tokens.color.pureWhite.val,
                 shadowOpacity: isDarkMode ? 0.4 : 0.15,
               },
             ]}
@@ -494,15 +524,22 @@ export default function ConsultScreen() {
 
 const styles = StyleSheet.create({
   input: {
+    flex: 1,
     fontSize: 16,
+    includeFontPadding: false,
+    minHeight: 32,
     maxHeight: 120,
     lineHeight: 22,
     padding: 0,
-    marginBottom: 8,
+    paddingVertical: 5,
+    textAlignVertical: "center",
   },
   inputContainer: {
     marginBottom: 8,
     borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 10,
