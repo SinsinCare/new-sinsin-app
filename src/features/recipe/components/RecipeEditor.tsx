@@ -310,11 +310,14 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
       <KeyboardAwareView keyboardVerticalOffset={0}>
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+          contentContainerStyle={{ paddingBottom: 16 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
+          overScrollMode="never"
+          bounces={false}
+          alwaysBounceVertical={false}
         >
           {/* Title */}
           <YStack paddingHorizontal={16} paddingTop={20} gap={4}>
