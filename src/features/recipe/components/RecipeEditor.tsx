@@ -97,6 +97,8 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const scheme = useAppColorScheme()
   const insets = useSafeAreaInsets()
   const queryClient = useQueryClient()
+  const bottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 24) : insets.bottom
 
   const [title, setTitle] = useState("")
   const [summary, setSummary] = useState("")
@@ -307,10 +309,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         </Pressable>
       </XStack>
 
-      <KeyboardAwareView keyboardVerticalOffset={0}>
+      <KeyboardAwareView keyboardVerticalOffset={0} androidBehavior={undefined}>
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={
             Platform.OS === "ios" ? "interactive" : "on-drag"
@@ -481,6 +483,15 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           </YStack>
         </ScrollView>
       </KeyboardAwareView>
+      <View
+        pointerEvents="none"
+        position="absolute"
+        left={0}
+        right={0}
+        bottom={0}
+        height={bottomInset}
+        backgroundColor={BG_COLOR[scheme]}
+      />
 
       {/* Image Preview Modal */}
       <Modal
