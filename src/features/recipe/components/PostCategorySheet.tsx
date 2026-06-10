@@ -1,9 +1,12 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Sheet } from "@tamagui/sheet"
 import { YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import {
+  AppBottomSheet,
+  AppBottomSheetScrollView,
+} from "@/src/shared/components"
 import type { PostCategory } from "../types"
 
 interface PostCategorySheetProps {
@@ -16,18 +19,15 @@ interface PostCategorySheetProps {
 
 const SHEET_BG = {
   light: "#FFFFFF",
-  dark: "#2C2C2E",
-} as const
-
-const HANDLE_COLOR = {
-  light: "#D9D9DF",
-  dark: "#858591",
+  dark: tokens.color.cardBgDark.val,
 } as const
 
 const LABEL_COLOR = {
   light: tokens.color.textLight.val,
   dark: tokens.color.textDark.val,
 } as const
+
+const POST_CATEGORY_SNAP_POINTS = [36, 56]
 
 export function PostCategorySheet({
   open,
@@ -45,35 +45,23 @@ export function PostCategorySheet({
   }
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={[35]}
-      dismissOnSnapToBottom
-      dismissOnOverlayPress
+    <AppBottomSheet
+      visible={open}
+      onClose={() => onOpenChange(false)}
+      snapPoints={POST_CATEGORY_SNAP_POINTS}
+      contentBottomPadding={false}
     >
-      <Sheet.Overlay
-        style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        enterStyle={{ opacity: 0 }}
-        exitStyle={{ opacity: 0 }}
-      />
-      <Sheet.Frame
-        borderTopLeftRadius={20}
-        borderTopRightRadius={20}
+      <YStack
+        flex={1}
         backgroundColor={isDark ? SHEET_BG.dark : SHEET_BG.light}
-        paddingBottom={34}
       >
-        <Sheet.Handle
-          marginHorizontal="auto"
-          marginVertical={12}
-          style={{
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: isDark ? HANDLE_COLOR.dark : HANDLE_COLOR.light,
+        <AppBottomSheetScrollView
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 8,
+            gap: 2,
           }}
-        />
-        <YStack paddingHorizontal={20} paddingTop={8} gap={2}>
+        >
           {categories.map((cat) => {
             const isSelected = cat.key === selectedKey
             return (
@@ -100,8 +88,8 @@ export function PostCategorySheet({
               </Pressable>
             )
           })}
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+        </AppBottomSheetScrollView>
+      </YStack>
+    </AppBottomSheet>
   )
 }

@@ -2,11 +2,14 @@
 import { useState, useEffect } from "react"
 import { Pressable, ScrollView } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Sheet } from "@tamagui/sheet"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { FilterChip } from "./FilterChip"
+import {
+  AppBottomSheet,
+  AppBottomSheetScrollView,
+} from "@/src/shared/components"
 
 interface CategoryFilterSheetProps {
   open: boolean
@@ -61,7 +64,11 @@ const CHIP_THEME = {
 
 const HEADER_COLORS = {
   light: { close: "#3C3C43", title: "#3C3C43", apply: "#EE6145" },
-  dark: { close: tokens.color.textDark.val, title: tokens.color.textDark.val, apply: "#E77661" },
+  dark: {
+    close: tokens.color.textDark.val,
+    title: tokens.color.textDark.val,
+    apply: "#E77661",
+  },
 } as const
 
 const SECTION_TITLE_COLORS = {
@@ -71,8 +78,10 @@ const SECTION_TITLE_COLORS = {
 
 const SHEET_BG = {
   light: "#FFFFFF",
-  dark: "#2C2C2E",
+  dark: tokens.color.cardBgDark.val,
 } as const
+
+const FILTER_SNAP_POINTS = [38, 62]
 
 function cloneFilters(
   filters: Record<string, Set<string>>,
@@ -133,35 +142,13 @@ export function CategoryFilterSheet({
   }
 
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={[38]}
-      dismissOnSnapToBottom
-      dismissOnOverlayPress
+    <AppBottomSheet
+      visible={open}
+      onClose={() => onOpenChange(false)}
+      snapPoints={FILTER_SNAP_POINTS}
+      contentBottomPadding={false}
     >
-      <Sheet.Overlay
-        style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        enterStyle={{ opacity: 0 }}
-        exitStyle={{ opacity: 0 }}
-      />
-      <Sheet.Frame
-        borderTopLeftRadius={20}
-        borderTopRightRadius={20}
-        backgroundColor={sheetBg}
-      >
-        <Sheet.Handle
-          marginHorizontal={"auto"}
-          marginVertical={12}
-          style={{
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: isDark ? "#858591" : "#D9D9DF",
-          }}
-        />
-
+      <YStack flex={1} backgroundColor={sheetBg} paddingTop={4}>
         {/* Header */}
         <XStack
           paddingHorizontal={20}
@@ -202,7 +189,9 @@ export function CategoryFilterSheet({
         </XStack>
 
         {/* Sections */}
-        <YStack paddingHorizontal={20} gap={20}>
+        <AppBottomSheetScrollView
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 20 }}
+        >
           {CATEGORY_SECTIONS.map((section) => (
             <YStack key={section.key} gap={10}>
               <Text
@@ -230,8 +219,8 @@ export function CategoryFilterSheet({
               </ScrollView>
             </YStack>
           ))}
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+        </AppBottomSheetScrollView>
+      </YStack>
+    </AppBottomSheet>
   )
 }

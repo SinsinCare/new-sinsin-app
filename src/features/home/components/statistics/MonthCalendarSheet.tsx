@@ -1,17 +1,15 @@
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native"
+import { StyleSheet, TouchableOpacity } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
 import { useState } from "react"
 import { tokens } from "@/src/theme/tokens"
 import { useMonthDiaryExistence } from "../../hooks/useMonthDiaryExistence"
+import { AppBottomSheet } from "@/src/shared/components"
 
 const DAYS_OF_WEEK = ["월", "화", "수", "목", "금", "토", "일"]
+const CALENDAR_ROWS = 6
+const CALENDAR_SNAP_POINTS = [44, 68]
 
 interface MonthCalendarSheetProps {
   visible: boolean
@@ -38,10 +36,12 @@ export function MonthCalendarSheet({
   )
 
   const today = new Date()
-  const bgColor = isDarkMode ? tokens.color.appBgDark.val : tokens.color.appBg.val
-  const cardBg = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.pureWhite.val
-  const textColor = isDarkMode ? tokens.color.textDark.val : tokens.color.black.val
-  const subTextColor = isDarkMode ? tokens.color.textDarkSub.val : tokens.color.grey5.val
+  const textColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.black.val
+  const subTextColor = isDarkMode
+    ? tokens.color.textDarkSub.val
+    : tokens.color.grey5.val
 
   const goPrevMonth = () => {
     if (viewMonth === 0) {
@@ -78,8 +78,7 @@ export function MonthCalendarSheet({
       ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
     ]
 
-    // 6주 고정 (42칸)
-    while (cells.length < 42) cells.push(null)
+    while (cells.length < CALENDAR_ROWS * 7) cells.push(null)
     return cells
   }
 
@@ -95,39 +94,24 @@ export function MonthCalendarSheet({
 
   const isFutureDay = (day: number) => {
     const d = new Date(viewYear, viewMonth, day)
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    )
     return d > todayStart
   }
 
   const cells = buildCalendarDays()
 
   return (
-    <Modal
+    <AppBottomSheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      snapPoints={CALENDAR_SNAP_POINTS}
+      initialSnapIndex={0}
     >
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <YStack
-        style={[styles.sheet, { backgroundColor: cardBg }]}
-        borderTopLeftRadius={20}
-        borderTopRightRadius={20}
-        paddingHorizontal="$4"
-        paddingTop="$4"
-        paddingBottom="$6"
-        gap="$4"
-      >
-        {/* 핸들 */}
-        <YStack alignItems="center">
-          <YStack
-            width={36}
-            height={4}
-            borderRadius={2}
-            backgroundColor={isDarkMode ? tokens.color.grey4.val : tokens.color.grey8.val}
-          />
-        </YStack>
-
+      <YStack paddingHorizontal="$4" paddingTop="$1" gap="$4">
         {/* 월 네비게이션 */}
         <XStack justifyContent="space-between" alignItems="center">
           <TouchableOpacity onPress={goPrevMonth} hitSlop={8}>
@@ -145,7 +129,12 @@ export function MonthCalendarSheet({
         <XStack justifyContent="space-around">
           {DAYS_OF_WEEK.map((d) => (
             <View key={d} style={styles.cell}>
-              <Text fontSize="$3" fontWeight="600" color={subTextColor} textAlign="center">
+              <Text
+                fontSize="$3"
+                fontWeight="600"
+                color={subTextColor}
+                textAlign="center"
+              >
                 {d}
               </Text>
             </View>
@@ -154,7 +143,7 @@ export function MonthCalendarSheet({
 
         {/* 날짜 그리드 */}
         <YStack gap="$1">
-          {Array.from({ length: 6 }, (_, row) => (
+          {Array.from({ length: CALENDAR_ROWS }, (_, row) => (
             <XStack key={row} justifyContent="space-around">
               {cells.slice(row * 7, row * 7 + 7).map((day, col) => {
                 if (!day) {
@@ -187,7 +176,9 @@ export function MonthCalendarSheet({
                           : isToday
                             ? tokens.color.primaryAccent.val
                             : hasRecord
-                              ? isDarkMode ? "#3A3A3F" : "#EBEBED"
+                              ? isDarkMode
+                                ? "#3A3A3F"
+                                : "#EBEBED"
                               : "transparent"
                       }
                     >
@@ -200,7 +191,9 @@ export function MonthCalendarSheet({
                             : disabled
                               ? tokens.color.grey7.val
                               : hasRecord
-                                ? isDarkMode ? tokens.color.textDarkSub.val : "#555"
+                                ? isDarkMode
+                                  ? tokens.color.textDarkSub.val
+                                  : "#555"
                                 : textColor
                         }
                       >
@@ -214,20 +207,11 @@ export function MonthCalendarSheet({
           ))}
         </YStack>
       </YStack>
-    </Modal>
+    </AppBottomSheet>
   )
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-  },
-  sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
   cell: {
     width: 40,
     alignItems: "center",

@@ -1,15 +1,12 @@
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-} from "react-native"
+import { Pressable } from "react-native"
 import { Image } from "expo-image"
 import { YStack, XStack, Text, View } from "tamagui"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
+import {
+  AppBottomSheet,
+  AppBottomSheetScrollView,
+} from "@/src/shared/components"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
 import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
@@ -56,6 +53,8 @@ const FRIENDLINESS_CONFIG = {
   high_risk: { label: "주의 필요", bg: "#FEE2E2", text: "#991B1B" },
   caution: { label: "주의 필요", bg: "#FEE2E2", text: "#991B1B" },
 } as const
+
+const RECIPE_DETAIL_SNAP_POINTS = [58, 88]
 
 interface CuratedRecipeDetailSheetProps {
   recipe: CuratedRecipe | null
@@ -105,8 +104,6 @@ export function CuratedRecipeDetailSheet({
 }: CuratedRecipeDetailSheetProps) {
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
-  const insets = useSafeAreaInsets()
-  const { height: screenHeight } = useWindowDimensions()
 
   if (!recipe) return null
 
@@ -120,39 +117,15 @@ export function CuratedRecipeDetailSheet({
     (recipe.sourceKey ? getCuratedRecipeImage(recipe.sourceKey) : undefined)
 
   return (
-    <Modal
+    <AppBottomSheet
       visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
+      onClose={onClose}
+      snapPoints={RECIPE_DETAIL_SNAP_POINTS}
+      initialSnapIndex={0}
+      contentBottomPadding={false}
+      dragHandleOnly
     >
-      {/* Overlay tap to close */}
-      <Pressable
-        style={[styles.overlay, { backgroundColor: palette.overlay }]}
-        onPress={onClose}
-      />
-
-      <YStack
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        backgroundColor={palette.bg}
-        borderTopLeftRadius={24}
-        borderTopRightRadius={24}
-        style={{ maxHeight: screenHeight * 0.85 }}
-        paddingBottom={insets.bottom + 16}
-      >
-        {/* Handle bar */}
-        <YStack alignItems="center" paddingTop={12} paddingBottom={4}>
-          <View
-            width={40}
-            height={4}
-            borderRadius={2}
-            backgroundColor={palette.divider}
-          />
-        </YStack>
-
+      <YStack flex={1} backgroundColor={palette.bg}>
         {/* Header */}
         <XStack
           paddingHorizontal={20}
@@ -229,8 +202,7 @@ export function CuratedRecipeDetailSheet({
           marginHorizontal={20}
         />
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
+        <AppBottomSheetScrollView
           contentContainerStyle={{ padding: 20, gap: 20 }}
         >
           {/* Recipe image */}
@@ -544,18 +516,8 @@ export function CuratedRecipeDetailSheet({
 
           {/* Bottom spacer */}
           <YStack height={8} />
-        </ScrollView>
+        </AppBottomSheetScrollView>
       </YStack>
-    </Modal>
+    </AppBottomSheet>
   )
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-})

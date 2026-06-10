@@ -1,7 +1,12 @@
 import { useEffect } from "react"
 import { Appearance, useColorScheme } from "react-native"
-import { GestureHandlerRootView } from "react-native-gesture-handler"
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler"
 import { TamaguiProvider } from "tamagui"
+import { setupGestureHandler } from "@tamagui/sheet/setup-gesture-handler"
 import { PortalProvider } from "@tamagui/portal"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useFonts } from "expo-font"
@@ -15,6 +20,8 @@ import { useAuth } from "@/src/hooks"
 import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
+
+setupGestureHandler({ Gesture, GestureDetector })
 
 const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWAL_PENDING"])
 

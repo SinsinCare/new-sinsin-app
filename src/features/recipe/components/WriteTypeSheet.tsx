@@ -1,9 +1,9 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Sheet } from "@tamagui/sheet"
 import { YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import { AppBottomSheet } from "@/src/shared/components"
 
 export type WriteType = "recipe" | "free"
 
@@ -50,13 +50,10 @@ const DESC_COLOR = {
 
 const SHEET_BG = {
   light: "#FFFFFF",
-  dark: "#2C2C2E",
+  dark: tokens.color.cardBgDark.val,
 } as const
 
-const HANDLE_COLOR = {
-  light: "#D9D9DF",
-  dark: "#858591",
-} as const
+const WRITE_TYPE_SNAP_POINTS = [28]
 
 export function WriteTypeSheet({
   open,
@@ -72,36 +69,15 @@ export function WriteTypeSheet({
   }
 
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={[25]}
-      dismissOnSnapToBottom
-      dismissOnOverlayPress
+    <AppBottomSheet
+      visible={open}
+      onClose={() => onOpenChange(false)}
+      snapPoints={WRITE_TYPE_SNAP_POINTS}
     >
-      <Sheet.Overlay
-        style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-        enterStyle={{ opacity: 0 }}
-        exitStyle={{ opacity: 0 }}
-      />
-      <Sheet.Frame
-        borderTopLeftRadius={20}
-        borderTopRightRadius={20}
+      <YStack
+        flex={1}
         backgroundColor={isDark ? SHEET_BG.dark : SHEET_BG.light}
-        paddingBottom={34}
       >
-        <Sheet.Handle
-          marginHorizontal="auto"
-          marginVertical={12}
-          style={{
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: isDark ? HANDLE_COLOR.dark : HANDLE_COLOR.light,
-          }}
-        />
-
         <YStack paddingHorizontal={20} paddingTop={8} gap={4}>
           {WRITE_OPTIONS.map((option) => (
             <Pressable
@@ -141,7 +117,7 @@ export function WriteTypeSheet({
             </Pressable>
           ))}
         </YStack>
-      </Sheet.Frame>
-    </Sheet>
+      </YStack>
+    </AppBottomSheet>
   )
 }
