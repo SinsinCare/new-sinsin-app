@@ -1,11 +1,23 @@
 import { useState, useCallback, useRef } from "react"
-import { Alert } from "react-native"
 import type { ChatCategory, Message } from "@/src/types/chat"
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
 import { logger } from "@/src/lib/logger"
 
 let optimisticMsgId = -1
+
+const CHAT_UNAVAILABLE_MESSAGE =
+  "지금은 상담 챗이 작동하지 않아요. 잠시 후 다시 시도해주세요."
+
+function createChatUnavailableMessage(conversationId: number | null): Message {
+  return {
+    id: optimisticMsgId--,
+    conversationId: conversationId ?? -1,
+    role: "assistant",
+    content: CHAT_UNAVAILABLE_MESSAGE,
+    createdAt: new Date(),
+  }
+}
 
 export function useChat() {
   const [conversationId, setConversationId] = useState<number | null>(null)
@@ -68,7 +80,14 @@ export function useChat() {
 
         // Replace streaming placeholder with final message
         setMessages((prev) =>
-          prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m)),
+          placeholderAdded
+            ? prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m))
+            : [
+                ...prev,
+                assistantMsg.content
+                  ? assistantMsg
+                  : createChatUnavailableMessage(convId),
+              ],
         )
 
         return assistantMsg
@@ -122,7 +141,14 @@ export function useChat() {
         )
 
         setMessages((prev) =>
-          prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m)),
+          placeholderAdded
+            ? prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m))
+            : [
+                ...prev,
+                assistantMsg.content
+                  ? assistantMsg
+                  : createChatUnavailableMessage(convIdRef.current),
+              ],
         )
 
         return assistantMsg
@@ -168,10 +194,10 @@ export function useChat() {
           convIdRef.current = activeConvId
           setConversationId(activeConvId)
         } catch {
-          // createChat 실패 시 optimistic UI 롤백
-          setMessages((prev) =>
-            prev.filter((m) => m.id !== optimisticUserMsg.id),
-          )
+          setMessages((prev) => [
+            ...prev,
+            createChatUnavailableMessage(activeConvId),
+          ])
           setIsTyping(false)
           return
         }
@@ -184,9 +210,11 @@ export function useChat() {
           userCategory: categoryRef.current ?? "NONE",
         })
       } catch {
-        setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMsg.id))
+        setMessages((prev) => [
+          ...prev,
+          createChatUnavailableMessage(activeConvId),
+        ])
         setIsTyping(false)
-        Alert.alert("전송 실패", "메시지 전송에 실패했습니다. 다시 시도해주세요.")
       }
     },
     [isSending, createChatMutate, sendMsgMutate],

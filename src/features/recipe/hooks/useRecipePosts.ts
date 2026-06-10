@@ -40,7 +40,14 @@ export function useRecipePosts(
       const newPost = recipePostService.createPost(req)
       return Promise.resolve(newPost)
     },
-    onSuccess: () => {
+    onSuccess: (newPost) => {
+      queryClient.setQueriesData<RecipePost[]>(
+        { queryKey: RECIPES_KEY },
+        (old) =>
+          old
+            ? [newPost, ...old.filter((post) => post.id !== newPost.id)]
+            : old,
+      )
       queryClient.invalidateQueries({ queryKey: RECIPES_KEY })
     },
   })
@@ -124,6 +131,7 @@ export function useRecipePosts(
     isLoading,
     refetch,
     createRecipe: createRecipeMutation.mutate,
+    createRecipeAsync: createRecipeMutation.mutateAsync,
     isCreating: createRecipeMutation.isPending,
     toggleLike: toggleLikeMutation.mutate,
     toggleBookmark: toggleBookmarkMutation.mutate,

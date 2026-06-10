@@ -7,6 +7,7 @@ import type {
   CuratedRecipeNutrition,
   CuratedRecipeStep,
 } from "../data/curatedRecipeTypes"
+import type { CreateRecipeRequest } from "../types"
 
 export interface RecipeListParams {
   limit?: number
@@ -178,6 +179,11 @@ export const recipeCatalogService = {
 
   async getRecipe(id: number): Promise<CuratedRecipe> {
     const { data } = await api.get(`/recipes/${id}`)
+    return mapDetail(data.result as ApiRecipeDetail)
+  },
+
+  async createRecipe(request: CreateRecipeRequest): Promise<CuratedRecipe> {
+    const { data } = await api.post("/recipes", request)
     return mapDetail(data.result as ApiRecipeDetail)
   },
 }

@@ -20,8 +20,10 @@ import {
   TagSelector,
 } from "@/src/features/recipe/components/editor"
 import { useBlockEditor } from "@/src/features/recipe/hooks/useBlockEditor"
-import { useRecipePosts } from "@/src/features/recipe/hooks/useRecipePosts"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
+import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
+import { recipeCatalogService } from "@/src/features/recipe/services/recipeCatalogService"
+import type { ContentBlock } from "@/src/features/recipe/types"
 import {
   NUTRITION_TAGS,
   STAGE_TAGS,
@@ -30,18 +32,37 @@ import {
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useQueryClient } from "@tanstack/react-query"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" }
 const HEADER_TEXT = { light: "#3C3C43", dark: tokens.color.textDark.val }
-const REGISTER_ACTIVE = { light: tokens.color.sub6.val, dark: tokens.color.sub6.val }
+const REGISTER_ACTIVE = {
+  light: tokens.color.sub6.val,
+  dark: tokens.color.sub6.val,
+}
 const REGISTER_DISABLED = { light: "#81818D", dark: "#81818D" }
 const DIVIDER = { light: "#E5E5EA", dark: "#1F1F21" }
-const TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
-const PLACEHOLDER = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
+const TITLE_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
+const PLACEHOLDER = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+}
 const LABEL_COLOR = { light: "#666677", dark: "#858591" }
-const SECTION_TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
-const INPUT_BORDER_COLOR = { light: tokens.color.textLightSub.val, dark: "#858591" }
-const SECTION_LABEL = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const SECTION_TITLE_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
+const INPUT_BORDER_COLOR = {
+  light: tokens.color.textLightSub.val,
+  dark: "#858591",
+}
+const SECTION_LABEL = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
 const PRIMARY_BAR = { light: "#F1F1F3", dark: "#1F1F21" }
 
 const MAX_TOTAL_IMAGES = 10
@@ -50,9 +71,28 @@ interface RecipeEditorProps {
   onClose: () => void
 }
 
+async function uploadImageBlocks(
+  blocks: ContentBlock[],
+): Promise<ContentBlock[]> {
+  const uploadedBlocks: ContentBlock[] = []
+  for (const block of blocks) {
+    if (block.type !== "image" || block.imageUrl) {
+      uploadedBlocks.push(block)
+      continue
+    }
+    const uploaded = await imageUploadService.uploadImage(
+      block.localUri,
+      "recipe",
+    )
+    uploadedBlocks.push({ ...block, imageUrl: uploaded.imageUrl })
+  }
+  return uploadedBlocks
+}
+
 export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const scheme = useAppColorScheme()
   const insets = useSafeAreaInsets()
+  const queryClient = useQueryClient()
 
   const [title, setTitle] = useState("")
   const [summary, setSummary] = useState("")
@@ -61,8 +101,6 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const [nutritionTags, setNutritionTags] = useState<string[]>([])
   const [stageTags, setStageTags] = useState<string[]>([])
   const [cuisineTags, setCuisineTags] = useState<string[]>([])
-
-  const { createRecipe } = useRecipePosts()
 
   const descEditor = useBlockEditor()
   const ingredEditor = useBlockEditor()
@@ -76,6 +114,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const showEvent =
@@ -153,22 +192,40 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
     setList(list.includes(tag) ? list.filter((t) => t !== tag) : [...list, tag])
   }
 
-  const handleSubmit = () => {
-    if (!canSubmit) return
-    createRecipe({
-      title: title.trim(),
-      summary: summary.trim(),
-      authorInfo: authorInfo.trim() || undefined,
-      nutritionTags,
-      stageTags,
-      cuisineTags,
-      description: descEditor.blocks,
-      ingredients: ingredEditor.blocks,
-      cookingSteps: stepsEditor.blocks,
-    })
-    Alert.alert("레시피 등록", "레시피가 등록되었습니다.", [
-      { text: "확인", onPress: onClose },
-    ])
+  const handleSubmit = async () => {
+    if (!canSubmit || isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      const [description, ingredients, cookingSteps] = await Promise.all([
+        uploadImageBlocks(descEditor.blocks),
+        uploadImageBlocks(ingredEditor.blocks),
+        uploadImageBlocks(stepsEditor.blocks),
+      ])
+      await recipeCatalogService.createRecipe({
+        title: title.trim(),
+        summary: summary.trim(),
+        authorInfo: authorInfo.trim() || undefined,
+        nutritionTags,
+        stageTags,
+        cuisineTags,
+        description,
+        ingredients,
+        cookingSteps,
+      })
+      await queryClient.invalidateQueries({ queryKey: ["recipes"] })
+      Alert.alert("레시피 등록", "레시피가 등록되었습니다.", [
+        { text: "확인", onPress: onClose },
+      ])
+    } catch (error) {
+      Alert.alert(
+        "등록 실패",
+        error instanceof Error
+          ? error.message
+          : "레시피 등록에 실패했어요. 잠시 후 다시 시도해주세요.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const registerColor = canSubmit
@@ -213,7 +270,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             fontFamily="$body"
             color={registerColor}
           >
-            등록
+            {isSubmitting ? "등록 중..." : "등록"}
           </Text>
         </Pressable>
       </XStack>

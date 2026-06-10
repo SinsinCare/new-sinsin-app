@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useFocusEffect } from "@react-navigation/native"
 
 import { ThemedText } from "@/components/themed-text"
 import { KidneyProfileCard } from "@/src/features/settings/components"
@@ -58,9 +59,15 @@ export function MyPageScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
-  const { data: profile } = useMyPageProfile()
+  const { data: profile, refetch: refetchProfile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
   const { data: todayAnalysis } = useDateAnalysis(new Date())
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchProfile()
+    }, [refetchProfile]),
+  )
 
   const handleShareData = useCallback(async () => {
     const hasData = kidneyProfile || todayAnalysis?.result?.analysis
