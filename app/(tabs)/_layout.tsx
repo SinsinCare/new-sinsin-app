@@ -10,10 +10,18 @@ export default function TabLayout() {
   const isDarkMode = useColorScheme() === "dark"
   const styles = useMemo(
     () => ({
-      activeColor: isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val,
-      inactiveColor: isDarkMode ? tokens.color.textLightMuted.val : tokens.color.textLightSub.val,
-      backgroundColor: isDarkMode ? tokens.color.appBgDark.val : tokens.color.offWhite.val,
-      borderColor: isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val,
+      activeColor: isDarkMode
+        ? tokens.color.textDark.val
+        : tokens.color.textLight.val,
+      inactiveColor: isDarkMode
+        ? tokens.color.textLightMuted.val
+        : tokens.color.textLightSub.val,
+      backgroundColor: isDarkMode
+        ? tokens.color.appBgDark.val
+        : tokens.color.offWhite.val,
+      borderColor: isDarkMode
+        ? tokens.color.cardBgDark.val
+        : tokens.color.borderLight.val,
     }),
     [isDarkMode],
   )
