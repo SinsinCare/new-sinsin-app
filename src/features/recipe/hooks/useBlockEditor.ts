@@ -49,6 +49,39 @@ export function useBlockEditor(initialBlocks: ContentBlock[] = INITIAL_BLOCKS) {
     [focusedIndex, cursorPosition],
   )
 
+  const insertImages = useCallback(
+    (imageUris: string[]) => {
+      if (imageUris.length === 0) return
+
+      setBlocks((prev) => {
+        const next = [...prev]
+        const imageBlocks: ContentBlock[] = imageUris.map((uri) => ({
+          type: "image",
+          localUri: uri,
+          isUploading: false,
+        }))
+        const focused = next[focusedIndex]
+
+        if (focused?.type === "text") {
+          const before = focused.content.slice(0, cursorPosition)
+          const after = focused.content.slice(cursorPosition)
+          const replacement: ContentBlock[] = [
+            ...(before ? [{ type: "text" as const, content: before }] : []),
+            ...imageBlocks,
+            { type: "text", content: after },
+          ]
+
+          next.splice(focusedIndex, 1, ...replacement)
+        } else {
+          next.push(...imageBlocks, { type: "text", content: "" })
+        }
+
+        return next
+      })
+    },
+    [focusedIndex, cursorPosition],
+  )
+
   const deleteImage = useCallback((index: number) => {
     setBlocks((prev) => {
       const next = [...prev]
@@ -96,6 +129,7 @@ export function useBlockEditor(initialBlocks: ContentBlock[] = INITIAL_BLOCKS) {
     setCursorPosition,
     updateTextBlock,
     insertImage,
+    insertImages,
     deleteImage,
     hasContent,
     imageCount,

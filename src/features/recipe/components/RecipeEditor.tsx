@@ -9,6 +9,7 @@ import {
   Platform,
   StyleSheet,
   Alert,
+  InteractionManager,
 } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -145,7 +146,6 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   }
 
   const handleAddImage = async (target: EditorTarget) => {
-    Keyboard.dismiss()
     const remaining = MAX_TOTAL_IMAGES - totalImageCount
     if (remaining <= 0) return
 
@@ -159,9 +159,9 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           ? ingredEditor
           : stepsEditor
 
-    for (const uri of uris) {
-      editor.insertImage(uri)
-    }
+    InteractionManager.runAfterInteractions(() => {
+      editor.insertImages(uris)
+    })
   }
 
   const toggleTag = (
