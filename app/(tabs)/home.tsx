@@ -29,10 +29,12 @@ export default function HomeScreen() {
   const tabAnim = useRef(new Animated.Value(0)).current
   const mainTabRef = useRef<MainTab>("record")
 
-  const switchTab = (tab: MainTab) => {
+  const switchTab = (tab: MainTab, options?: { resetDate?: boolean }) => {
     mainTabRef.current = tab
     setMainTab(tab)
-    setSelectedDate(new Date())
+    if (options?.resetDate !== false) {
+      setSelectedDate(new Date())
+    }
     Animated.spring(tabAnim, {
       toValue: tab === "record" ? 0 : 1,
       useNativeDriver: true,
@@ -151,7 +153,7 @@ export default function HomeScreen() {
           <StatisticsView
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
-            onGoToRecord={() => switchTab("record")}
+            onGoToRecord={() => switchTab("record", { resetDate: false })}
             isActive={mainTab === "stats"}
           />
         </Animated.View>

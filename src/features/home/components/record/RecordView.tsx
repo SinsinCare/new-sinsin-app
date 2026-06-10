@@ -1,5 +1,9 @@
 import { ScrollView, StyleSheet, Alert } from "react-native"
-import type { DiaryAnalysisResult, FoodAnalysisUpdateRequest, FoodAnalysisUpdateResult } from "@/src/types"
+import type {
+  DiaryAnalysisResult,
+  FoodAnalysisUpdateRequest,
+  FoodAnalysisUpdateResult,
+} from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
 import { CharacterSection } from "./CharacterSection"
@@ -24,7 +28,6 @@ import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
-import { MAX_WATER_INTAKE } from "../../data/hydrationConstants"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { toDateStr } from "../../utils/dateUtils"
@@ -175,7 +178,10 @@ export function RecordView({
       )
       setRecordedMeals((prev) => ({ ...prev, [pending.mealType]: true }))
       if (pending.imageUri) {
-        setMealImages((prev) => ({ ...prev, [pending.mealType]: pending.imageUri! }))
+        setMealImages((prev) => ({
+          ...prev,
+          [pending.mealType]: pending.imageUri!,
+        }))
       }
       await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
       await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
@@ -191,7 +197,10 @@ export function RecordView({
   ): Promise<FoodAnalysisUpdateResult | undefined> => {
     try {
       setIsPendingUpdating(true)
-      const updated = await foodCameraService.updateFoodAnalysis(foodAnalysisResultId, body)
+      const updated = await foodCameraService.updateFoodAnalysis(
+        foodAnalysisResultId,
+        body,
+      )
       if (pending) setPending({ ...pending, result: updated })
       return updated
     } catch (error) {
@@ -364,10 +373,7 @@ export function RecordView({
         percentage={record.percentage}
         remaining={record.remaining}
         isGoalAchieved={record.isGoalAchieved}
-        addWater={(amount) => {
-          if (record.intake + amount > MAX_WATER_INTAKE) return
-          record.addWater(amount)
-        }}
+        addWater={record.addWater}
         onReset={() => {
           record.resetHydration(serverExtraWater)
         }}

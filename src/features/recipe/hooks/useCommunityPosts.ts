@@ -23,7 +23,11 @@ export function useCommunityPosts() {
         "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
       >,
     ) => communityPostService.createPost(post),
-    onSuccess: () => {
+    onSuccess: (createdPost) => {
+      queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) => [
+        createdPost,
+        ...(old ?? []).filter((post) => post.id !== createdPost.id),
+      ])
       queryClient.invalidateQueries({ queryKey: POSTS_KEY })
     },
   })
@@ -115,8 +119,15 @@ export function useCommunityPosts() {
   })
 
   const reportPostMutation = useMutation({
-    mutationFn: ({ postId, reason, description }: { postId: string; reason: string; description?: string }) =>
-      communityPostService.reportPost(postId, reason, description),
+    mutationFn: ({
+      postId,
+      reason,
+      description,
+    }: {
+      postId: string
+      reason: string
+      description?: string
+    }) => communityPostService.reportPost(postId, reason, description),
   })
 
   return {
@@ -124,6 +135,7 @@ export function useCommunityPosts() {
     isLoading,
     refetch,
     createPost: createPostMutation.mutate,
+    createPostAsync: createPostMutation.mutateAsync,
     isCreating: createPostMutation.isPending,
     updatePost: updatePostMutation.mutate,
     isUpdating: updatePostMutation.isPending,

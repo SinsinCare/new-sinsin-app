@@ -81,7 +81,7 @@ const SHEET_BG = {
   dark: tokens.color.cardBgDark.val,
 } as const
 
-const FILTER_SNAP_POINTS = [38, 62]
+const FILTER_SNAP_POINTS = [48, 70]
 
 function cloneFilters(
   filters: Record<string, Set<string>>,
@@ -146,7 +146,6 @@ export function CategoryFilterSheet({
       visible={open}
       onClose={() => onOpenChange(false)}
       snapPoints={FILTER_SNAP_POINTS}
-      contentBottomPadding={false}
     >
       <YStack flex={1} backgroundColor={sheetBg} paddingTop={4}>
         {/* Header */}

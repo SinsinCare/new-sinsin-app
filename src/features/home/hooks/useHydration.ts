@@ -1,8 +1,5 @@
 import { useState, useCallback } from "react"
-import {
-  DEFAULT_DAILY_GOAL,
-  MAX_WATER_INTAKE,
-} from "../data/hydrationConstants"
+import { DEFAULT_DAILY_GOAL } from "../data/hydrationConstants"
 
 export interface UseHydrationReturn {
   intake: number
@@ -27,11 +24,11 @@ export const useHydration = (
   const isGoalAchieved = percentage >= 100
 
   const setIntake = useCallback((amount: number): void => {
-    setIntakeState(Math.max(0, Math.min(amount, MAX_WATER_INTAKE)))
+    setIntakeState(Math.max(0, amount))
   }, [])
 
   const addWater = useCallback((amount: number): void => {
-    setIntakeState((current) => Math.min(current + amount, MAX_WATER_INTAKE))
+    setIntakeState((current) => Math.max(0, current + amount))
   }, [])
 
   const subtractWater = useCallback((amount: number): void => {

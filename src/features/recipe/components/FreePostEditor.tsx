@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import {
   Image,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -24,23 +25,45 @@ import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
+import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import { tokens } from "@/src/theme/tokens"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
-const HEADER_TEXT_COLOR = { light: "#3C3C43", dark: tokens.color.textDark.val } as const
-const REGISTER_ACTIVE_COLOR = { light: tokens.color.sub6.val, dark: tokens.color.sub6.val } as const
+const HEADER_TEXT_COLOR = {
+  light: "#3C3C43",
+  dark: tokens.color.textDark.val,
+} as const
+const REGISTER_ACTIVE_COLOR = {
+  light: tokens.color.sub6.val,
+  dark: tokens.color.sub6.val,
+} as const
 const REGISTER_DISABLED_COLOR = { light: "#81818D", dark: "#81818D" } as const
 const CATEGORY_LABEL_COLOR = { light: "#666677", dark: "#858591" } as const
-const CATEGORY_VALUE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val } as const
-const SELECT_BTN_BG = { light: tokens.color.borderLight.val, dark: "#2A2A30" } as const
+const CATEGORY_VALUE_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+} as const
+const SELECT_BTN_BG = {
+  light: tokens.color.borderLight.val,
+  dark: "#2A2A30",
+} as const
 const SELECT_BTN_TEXT = { light: "#81818D", dark: "#C5C8CE" } as const
 const DIVIDER_COLOR = { light: "#E5E5EA", dark: "#1F1F21" } as const
-const TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val } as const
+const TITLE_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+} as const
 const TITLE_PLACEHOLDER_COLOR = { light: "#666677", dark: "#858591" } as const
-const BODY_PLACEHOLDER_COLOR = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val } as const
+const BODY_PLACEHOLDER_COLOR = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+} as const
 const PRIMARY_BAR_COLOR = { light: "#F1F1F3", dark: "#1F1F21" } as const
 const TOOLBAR_ICON_COLOR = { light: "#666677", dark: "#F5F6FA" } as const
-const TOOLBAR_BORDER_COLOR = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val } as const
+const TOOLBAR_BORDER_COLOR = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+} as const
 const MAX_IMAGES = 5
 
 const BODY_PLACEHOLDER = `식단을 건강하게 관리하고, 고민과 의견을 나눌 수 있도록\n다양한 이야기를 나누는 공간입니다.\n\n이런 글을 남겨보세요\nex) 오늘의 식단 인증, 식단 관리중의 고민사항들...\n\n상대방을 불쾌하게 하거나 배려 없는 의견은 삼가 주세요.\n게시판의 성격과 무관한 글, 타인 비방, 광고성 게시물은 사전 경고 없이 삭제될 수 있습니다.`
@@ -67,7 +90,8 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [voteSheetOpen, setVoteSheetOpen] = useState(false)
   const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
-  const { createPost } = useCommunityPosts()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { createPostAsync } = useCommunityPosts()
 
   useEffect(() => {
     const showEvent =
@@ -157,17 +181,34 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     setEditingVoteIndex(null)
   }
 
-  const handleSubmit = () => {
-    if (!canSubmit) return
-    createPost({
-      authorName: "나",
-      authorRole: "CKD 환자",
-      category: selectedCategory,
-      imageUri: images.length > 0 ? images[0] : null,
-      title,
-      description: body,
-    })
-    onClose()
+  const handleSubmit = async () => {
+    if (!canSubmit || isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      const imageUri =
+        images.length > 0
+          ? (await imageUploadService.uploadImage(images[0], "community"))
+              .imageUrl
+          : null
+      await createPostAsync({
+        authorName: "나",
+        authorRole: "CKD 환자",
+        category: selectedCategory,
+        imageUri,
+        title: title.trim(),
+        description: body.trim(),
+      })
+      onClose()
+    } catch (error) {
+      Alert.alert(
+        "등록 실패",
+        error instanceof Error
+          ? error.message
+          : "자유글 등록에 실패했어요. 잠시 후 다시 시도해주세요.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const registerColor = canSubmit
@@ -215,7 +256,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
             fontFamily="$body"
             color={registerColor}
           >
-            등록
+            {isSubmitting ? "등록 중..." : "등록"}
           </Text>
         </Pressable>
       </XStack>
@@ -378,7 +419,12 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
           paddingVertical={10}
           paddingBottom={isKeyboardVisible ? 10 : 10 + insets.bottom}
           alignItems="center"
-          style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: isDark ? TOOLBAR_BORDER_COLOR.dark : TOOLBAR_BORDER_COLOR.light }}
+          style={{
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: isDark
+              ? TOOLBAR_BORDER_COLOR.dark
+              : TOOLBAR_BORDER_COLOR.light,
+          }}
           backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
         >
           <XStack gap={20} flex={1}>

@@ -163,14 +163,20 @@ export function ProfileEditScreen() {
       }
 
       if (profile && gender) {
-        await api.patch("/user/profile", {
+        const { data } = await api.patch("/user/profile", {
           nickName: profile.nickName,
           name: profile.name,
           gender,
         })
+        const updatedProfile = data.result
+        queryClient.setQueryData(["myPageProfile"], {
+          ...profile,
+          ...updatedProfile,
+          gender,
+        })
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
+      await queryClient.refetchQueries({ queryKey: ["myPageProfile"] })
       router.back()
     } catch (error) {
       Alert.alert(
