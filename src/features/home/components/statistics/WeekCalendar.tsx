@@ -8,6 +8,7 @@ interface WeekCalendarProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
   recordedDates?: number[]
+  disableFuture?: boolean
 }
 
 const isSameDay = (a: Date, b: Date) =>
@@ -19,9 +20,25 @@ export function WeekCalendar({
   selectedDate,
   onSelectDate,
   recordedDates = [],
+  disableFuture = false,
 }: WeekCalendarProps) {
   const days = getWeekDays(selectedDate, recordedDates)
   const isDarkMode = useAppColorScheme() === "dark"
+  const today = new Date()
+
+  const isFutureDay = (date: Date) => {
+    const dayStart = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    )
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    )
+    return dayStart > todayStart
+  }
 
   return (
     <XStack
@@ -31,11 +48,15 @@ export function WeekCalendar({
     >
       {days.map((day) => {
         const isSelected = isSameDay(day.date, selectedDate)
+        const disabled = disableFuture && isFutureDay(day.date)
 
         return (
           <Pressable
             key={day.date.toISOString()}
-            onPress={() => onSelectDate(day.date)}
+            disabled={disabled}
+            onPress={() => {
+              if (!disabled) onSelectDate(day.date)
+            }}
           >
             <YStack
               alignItems="center"
@@ -59,9 +80,11 @@ export function WeekCalendar({
                   fontSize="$4"
                   fontWeight={500}
                   color={
-                    isDarkMode
-                      ? tokens.color.textDark.val
-                      : tokens.color.black.val
+                    disabled
+                      ? tokens.color.grey7.val
+                      : isDarkMode
+                        ? tokens.color.textDark.val
+                        : tokens.color.black.val
                   }
                 >
                   {day.dayOfMonth}
@@ -72,7 +95,11 @@ export function WeekCalendar({
                 height={7}
                 borderRadius={3}
                 backgroundColor={
-                  day.hasRecord ? "$primary" : "$backgroundPress"
+                  disabled
+                    ? "$backgroundPress"
+                    : day.hasRecord
+                      ? "$primary"
+                      : "$backgroundPress"
                 }
               />
             </YStack>

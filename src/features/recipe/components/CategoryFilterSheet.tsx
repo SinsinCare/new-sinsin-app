@@ -146,6 +146,7 @@ export function CategoryFilterSheet({
       visible={open}
       onClose={() => onOpenChange(false)}
       snapPoints={FILTER_SNAP_POINTS}
+      disableDrag
     >
       <YStack flex={1} backgroundColor={sheetBg} paddingTop={4}>
         {/* Header */}
@@ -203,6 +204,8 @@ export function CategoryFilterSheet({
               </Text>
               <ScrollView
                 horizontal
+                keyboardShouldPersistTaps="always"
+                nestedScrollEnabled
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 8 }}
               >

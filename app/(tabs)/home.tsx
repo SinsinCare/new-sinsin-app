@@ -62,7 +62,6 @@ export default function HomeScreen() {
         if (goToStats) {
           mainTabRef.current = "stats"
           setMainTab("stats")
-          setSelectedDate(new Date())
           Animated.spring(tabAnim, {
             toValue: 1,
             useNativeDriver: true,
@@ -72,7 +71,6 @@ export default function HomeScreen() {
         } else if (goToRecord) {
           mainTabRef.current = "record"
           setMainTab("record")
-          setSelectedDate(new Date())
           Animated.spring(tabAnim, {
             toValue: 0,
             useNativeDriver: true,
