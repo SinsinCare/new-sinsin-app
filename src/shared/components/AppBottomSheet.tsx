@@ -52,6 +52,7 @@ interface AppBottomSheetProps {
   contentContainerStyle?: StyleProp<ViewStyle>
   contentBottomPadding?: boolean
   dragHandleOnly?: boolean
+  disableDrag?: boolean
 }
 
 export function AppBottomSheet({
@@ -63,6 +64,7 @@ export function AppBottomSheet({
   contentContainerStyle,
   contentBottomPadding = true,
   dragHandleOnly = false,
+  disableDrag = false,
 }: AppBottomSheetProps) {
   const insets = useSafeAreaInsets()
   const isDark = useAppColorScheme() === "dark"
@@ -126,6 +128,7 @@ export function AppBottomSheet({
       onPositionChange={setPosition}
       dismissOnSnapToBottom
       dismissOnOverlayPress
+      disableDrag={disableDrag}
     >
       <Sheet.Overlay
         style={{ backgroundColor: palette.overlay }}
