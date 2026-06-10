@@ -29,6 +29,13 @@ import { MonthCalendarSheet } from "./MonthCalendarSheet"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
+const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+const isAfterToday = (date: Date) => startOfDay(date) > startOfDay(new Date())
+
+const clampToToday = (date: Date) => (isAfterToday(date) ? new Date() : date)
+
 interface StatisticsViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
@@ -102,7 +109,16 @@ export function StatisticsView({
   const goToNextWeek = () => {
     const next = new Date(selectedDate)
     next.setDate(next.getDate() + 7)
-    onSelectDate(next)
+    if (isAfterToday(selectedDate)) {
+      onSelectDate(new Date())
+      return
+    }
+    onSelectDate(clampToToday(next))
+  }
+
+  const handleSelectDate = (date: Date) => {
+    if (isAfterToday(date)) return
+    onSelectDate(date)
   }
 
   const handleTabPress = (tab: StatisticsTab) => {
@@ -136,140 +152,144 @@ export function StatisticsView({
 
   return (
     <>
-    <ScrollView
-      ref={scrollRef}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-      stickyHeaderIndices={[1]}
-      onScroll={handleScroll}
-      scrollEventThrottle={16}
-    >
-      {/* index 0: 헤더 (주간 네비 + 달력) */}
-      <YStack gap="$3" paddingBottom="$2">
-        <XStack justifyContent="center" alignItems="center" gap="$3">
-          <TouchableOpacity onPress={goToPrevWeek}>
-            <Ionicons name="chevron-back" size={18} color="#999" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsCalendarOpen(true)}>
-            <XStack alignItems="center" gap="$2">
-              <Text
-                fontSize="$5"
-                fontWeight="600"
-                color={isDarkMode ? "$textDark" : "$black"}
-              >
-                {getWeekLabel(selectedDate)}
-              </Text>
-              <Ionicons name="calendar-outline" size={18} color="#999" />
-            </XStack>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={goToNextWeek}>
-            <Ionicons name="chevron-forward" size={18} color="#999" />
-          </TouchableOpacity>
-        </XStack>
-        <WeekCalendar
-          selectedDate={selectedDate}
-          onSelectDate={onSelectDate}
-          recordedDates={recordedDates}
-        />
-      </YStack>
-
-      {/* index 1: sticky 탭바 */}
-      <YStack
-        onLayout={(e) => {
-          tabBarHeight.current = e.nativeEvent.layout.height
-        }}
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        stickyHeaderIndices={[1]}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        <StatisticsTabBar
-          selectedTab={selectedTab}
-          onSelectTab={handleTabPress}
-        />
-        <YStack height={1} backgroundColor="$gray4" />
-      </YStack>
-
-      {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
-      {isEmpty || isLoading ? (
-        <YStack
-          minHeight={windowHeight * 0.45}
-          justifyContent="center"
-          alignItems="center"
-          gap="$4"
-        >
-          <Icon name="circle-character" size={40} />
-          <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
-            아직 기록하지 않았어요.
-          </Text>
-          <TouchableOpacity onPress={onGoToRecord}>
-            <Text
-              fontSize="$4"
-              color="$colorSubtle"
-              fontWeight="600"
-              backgroundColor={isDarkMode ? "$cardBgDark" : "$backgroundFocus"}
-              paddingHorizontal="$3"
-              paddingVertical="$2.5"
-              borderRadius="$8"
-            >
-              기록하러 가기
-            </Text>
-          </TouchableOpacity>
-        </YStack>
-      ) : (
-        <>
-          <View
-            onLayout={(e) => {
-              sectionOffsets.current.intake = e.nativeEvent.layout.y
-            }}
-          >
-            <IntakeSummary analysis={data?.result.analysis ?? null} />
-          </View>
-          <View
-            onLayout={(e) => {
-              sectionOffsets.current.guide = e.nativeEvent.layout.y
-            }}
-          >
-            <DietaryGuide
-              dietaryGuide={data?.result.analysis?.dietaryGuide}
-              cautionFoods={data?.result.analysis?.cautionFoods}
-            />
-          </View>
-          <View
-            onLayout={(e) => {
-              sectionOffsets.current.record = e.nativeEvent.layout.y
-            }}
-          >
-            <DietaryRecord
-              diets={data?.result.diets ?? []}
-              onSelectMealType={handleDietCardPress}
-            />
-          </View>
-
-          <FoodAnalysisResult
-            result={diaryResult}
-            open={isResultOpen}
-            onClose={() => setIsResultOpen(false)}
-            imageUri={diaryResult?.imageUrl}
-            mealType={resultMealType}
-            showAddButton={false}
-            isUpdating={isUpdating}
-            updateFoodAnalysis={updateFoodAnalysis}
+        {/* index 0: 헤더 (주간 네비 + 달력) */}
+        <YStack gap="$3" paddingBottom="$2">
+          <XStack justifyContent="center" alignItems="center" gap="$3">
+            <TouchableOpacity onPress={goToPrevWeek}>
+              <Ionicons name="chevron-back" size={18} color="#999" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsCalendarOpen(true)}>
+              <XStack alignItems="center" gap="$2">
+                <Text
+                  fontSize="$5"
+                  fontWeight="600"
+                  color={isDarkMode ? "$textDark" : "$black"}
+                >
+                  {getWeekLabel(selectedDate)}
+                </Text>
+                <Ionicons name="calendar-outline" size={18} color="#999" />
+              </XStack>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={goToNextWeek}>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
+          </XStack>
+          <WeekCalendar
+            selectedDate={selectedDate}
+            onSelectDate={handleSelectDate}
+            recordedDates={recordedDates}
+            disableFuture
           />
+        </YStack>
 
-          <View
-            onLayout={(e) => {
-              sectionOffsets.current.weight = e.nativeEvent.layout.y
-            }}
+        {/* index 1: sticky 탭바 */}
+        <YStack
+          onLayout={(e) => {
+            tabBarHeight.current = e.nativeEvent.layout.height
+          }}
+        >
+          <StatisticsTabBar
+            selectedTab={selectedTab}
+            onSelectTab={handleTabPress}
+          />
+          <YStack height={1} backgroundColor="$gray4" />
+        </YStack>
+
+        {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
+        {isEmpty || isLoading ? (
+          <YStack
+            minHeight={windowHeight * 0.45}
+            justifyContent="center"
+            alignItems="center"
+            gap="$4"
           >
-            <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
-          </View>
-        </>
-      )}
-    </ScrollView>
+            <Icon name="circle-character" size={40} />
+            <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
+              아직 기록하지 않았어요.
+            </Text>
+            <TouchableOpacity onPress={onGoToRecord}>
+              <Text
+                fontSize="$4"
+                color="$colorSubtle"
+                fontWeight="600"
+                backgroundColor={
+                  isDarkMode ? "$cardBgDark" : "$backgroundFocus"
+                }
+                paddingHorizontal="$3"
+                paddingVertical="$2.5"
+                borderRadius="$8"
+              >
+                기록하러 가기
+              </Text>
+            </TouchableOpacity>
+          </YStack>
+        ) : (
+          <>
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.intake = e.nativeEvent.layout.y
+              }}
+            >
+              <IntakeSummary analysis={data?.result.analysis ?? null} />
+            </View>
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.guide = e.nativeEvent.layout.y
+              }}
+            >
+              <DietaryGuide
+                dietaryGuide={data?.result.analysis?.dietaryGuide}
+                cautionFoods={data?.result.analysis?.cautionFoods}
+              />
+            </View>
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.record = e.nativeEvent.layout.y
+              }}
+            >
+              <DietaryRecord
+                diets={data?.result.diets ?? []}
+                onSelectMealType={handleDietCardPress}
+              />
+            </View>
 
-    <MonthCalendarSheet
-      visible={isCalendarOpen}
-      selectedDate={selectedDate}
-      onSelectDate={onSelectDate}
-      onClose={() => setIsCalendarOpen(false)}
-    />
+            <FoodAnalysisResult
+              result={diaryResult}
+              open={isResultOpen}
+              onClose={() => setIsResultOpen(false)}
+              imageUri={diaryResult?.imageUrl}
+              mealType={resultMealType}
+              showAddButton={false}
+              isUpdating={isUpdating}
+              updateFoodAnalysis={updateFoodAnalysis}
+            />
+
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.weight = e.nativeEvent.layout.y
+              }}
+            >
+              <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      <MonthCalendarSheet
+        visible={isCalendarOpen}
+        selectedDate={selectedDate}
+        onSelectDate={handleSelectDate}
+        onClose={() => setIsCalendarOpen(false)}
+        disableFuture
+      />
     </>
   )
 }
