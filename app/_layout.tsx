@@ -5,7 +5,7 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler"
-import { TamaguiProvider } from "tamagui"
+import { TamaguiProvider, Theme } from "tamagui"
 import { setupGestureHandler } from "@tamagui/sheet/setup-gesture-handler"
 import { PortalProvider } from "@tamagui/portal"
 import { QueryClientProvider } from "@tanstack/react-query"
@@ -13,13 +13,13 @@ import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
-import { Theme } from "tamagui"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
 import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
+import { AppPolicyGate } from "@/src/features/mobilePolicy"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
@@ -169,7 +169,9 @@ export default function RootLayout() {
         <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
           <Theme name={effectiveScheme}>
             <PortalProvider>
-              <RootLayoutNav />
+              <AppPolicyGate>
+                <RootLayoutNav />
+              </AppPolicyGate>
               <Toast />
             </PortalProvider>
           </Theme>
