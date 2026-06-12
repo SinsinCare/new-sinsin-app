@@ -33,6 +33,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "design:export": "ts-node --project scripts/design-system/tsconfig.json scripts/design-system/export.ts",
+    "design:sync": "npm run design:export && node scripts/design-system/sync.js",
     "test:api": "jest --config jest.config.ts tests/",
     "test:api:auth": "jest --config jest.config.ts tests/auth.test.ts",
     "test:api:food": "jest --config jest.config.ts tests/food.test.ts",

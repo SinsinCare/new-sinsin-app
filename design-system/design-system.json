@@ -1,0 +1,2405 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "generatedAt": "2026-06-12T15:37:52+09:00",
+    "source": {
+      "repo": "sinsin-rn",
+      "branch": "develop",
+      "commit": "842aa04"
+    }
+  },
+  "colors": {
+    "palette": [
+      {
+        "id": "color.black",
+        "name": "black",
+        "value": "#0D0D0D",
+        "category": "base"
+      },
+      {
+        "id": "color.offWhite",
+        "name": "offWhite",
+        "value": "#FCFCFC",
+        "category": "base"
+      },
+      {
+        "id": "color.pureWhite",
+        "name": "pureWhite",
+        "value": "#FFFFFF",
+        "category": "base"
+      },
+      {
+        "id": "color.white",
+        "name": "white",
+        "value": "#F4F4F4",
+        "category": "base"
+      },
+      {
+        "id": "color.primary1",
+        "name": "primary1",
+        "value": "#FFF5ED",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary2",
+        "name": "primary2",
+        "value": "#FFE2CB",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary3",
+        "name": "primary3",
+        "value": "#F9CFAD",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary4",
+        "name": "primary4",
+        "value": "#F1A89B",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary5",
+        "name": "primary5",
+        "value": "#E78D7C",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary6",
+        "name": "primary6",
+        "value": "#E77661",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary7",
+        "name": "primary7",
+        "value": "#EE6145",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary8",
+        "name": "primary8",
+        "value": "#F24D2D",
+        "category": "primary"
+      },
+      {
+        "id": "color.primary9",
+        "name": "primary9",
+        "value": "#F82F08",
+        "category": "primary"
+      },
+      {
+        "id": "color.primaryAccent",
+        "name": "primaryAccent",
+        "value": "#FF7246",
+        "category": "primary"
+      },
+      {
+        "id": "color.sub1",
+        "name": "sub1",
+        "value": "#E0FFF7",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub2",
+        "name": "sub2",
+        "value": "#C7FFF1",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub3",
+        "name": "sub3",
+        "value": "#A3F0DE",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub4",
+        "name": "sub4",
+        "value": "#7FE6CC",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub5",
+        "name": "sub5",
+        "value": "#5BC5AB",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub6",
+        "name": "sub6",
+        "value": "#44AF94",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub7",
+        "name": "sub7",
+        "value": "#1D9A7A",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub8",
+        "name": "sub8",
+        "value": "#0D896A",
+        "category": "sub"
+      },
+      {
+        "id": "color.sub9",
+        "name": "sub9",
+        "value": "#028A67",
+        "category": "sub"
+      },
+      {
+        "id": "color.grey1",
+        "name": "grey1",
+        "value": "#171717",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey2",
+        "name": "grey2",
+        "value": "#252525",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey3",
+        "name": "grey3",
+        "value": "#333333",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey4",
+        "name": "grey4",
+        "value": "#525252",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey5",
+        "name": "grey5",
+        "value": "#757575",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey6",
+        "name": "grey6",
+        "value": "#999999",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey7",
+        "name": "grey7",
+        "value": "#B3B3B3",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.grey8",
+        "name": "grey8",
+        "value": "#EDEDED",
+        "category": "greyscale"
+      },
+      {
+        "id": "color.appBg",
+        "name": "appBg",
+        "value": "#FAFAFA",
+        "category": "semantic-light"
+      },
+      {
+        "id": "color.borderLight",
+        "name": "borderLight",
+        "value": "#EAEAF0",
+        "category": "semantic-light"
+      },
+      {
+        "id": "color.textLight",
+        "name": "textLight",
+        "value": "#2A2A37",
+        "category": "semantic-light"
+      },
+      {
+        "id": "color.textLightMuted",
+        "name": "textLightMuted",
+        "value": "#595960",
+        "category": "semantic-light"
+      },
+      {
+        "id": "color.textLightSub",
+        "name": "textLightSub",
+        "value": "#A5A5AF",
+        "category": "semantic-light"
+      },
+      {
+        "id": "color.appBgDark",
+        "name": "appBgDark",
+        "value": "#1F1F21",
+        "category": "semantic-dark"
+      },
+      {
+        "id": "color.borderDark",
+        "name": "borderDark",
+        "value": "#3A3A42",
+        "category": "semantic-dark"
+      },
+      {
+        "id": "color.cardBgDark",
+        "name": "cardBgDark",
+        "value": "#313138",
+        "category": "semantic-dark"
+      },
+      {
+        "id": "color.inputBgDark",
+        "name": "inputBgDark",
+        "value": "#2E2E34",
+        "category": "semantic-dark"
+      },
+      {
+        "id": "color.textDark",
+        "name": "textDark",
+        "value": "#E7E7EE",
+        "category": "semantic-dark"
+      },
+      {
+        "id": "color.textDarkSub",
+        "name": "textDarkSub",
+        "value": "#ABABB4",
+        "category": "semantic-dark"
+      },
+      {
+        "id": "color.error",
+        "name": "error",
+        "value": "#FF3B30",
+        "category": "status"
+      },
+      {
+        "id": "color.restrictionBg",
+        "name": "restrictionBg",
+        "value": "#FCE1E1",
+        "category": "status"
+      },
+      {
+        "id": "color.restrictionText",
+        "name": "restrictionText",
+        "value": "#E74E4E",
+        "category": "status"
+      },
+      {
+        "id": "color.waterFillBottom",
+        "name": "waterFillBottom",
+        "value": "#30C1F0",
+        "category": "hydration"
+      },
+      {
+        "id": "color.waterFillTop",
+        "name": "waterFillTop",
+        "value": "#6BDAFE",
+        "category": "hydration"
+      },
+      {
+        "id": "color.waterPercentBg",
+        "name": "waterPercentBg",
+        "value": "#D2DFE3",
+        "category": "hydration"
+      },
+      {
+        "id": "color.waterPercentBgDark",
+        "name": "waterPercentBgDark",
+        "value": "#46616A",
+        "category": "hydration"
+      },
+      {
+        "id": "color.deleteBg",
+        "name": "deleteBg",
+        "value": "#D9D9DF",
+        "category": "ui"
+      }
+    ],
+    "themes": {
+      "light": [
+        {
+          "id": "theme.light.background",
+          "name": "background",
+          "tokenRef": "color.pureWhite",
+          "value": "#FFFFFF"
+        },
+        {
+          "id": "theme.light.backgroundHover",
+          "name": "backgroundHover",
+          "tokenRef": "color.grey8",
+          "value": "#EDEDED"
+        },
+        {
+          "id": "theme.light.backgroundPress",
+          "name": "backgroundPress",
+          "tokenRef": "color.grey7",
+          "value": "#B3B3B3"
+        },
+        {
+          "id": "theme.light.backgroundFocus",
+          "name": "backgroundFocus",
+          "tokenRef": "color.grey8",
+          "value": "#EDEDED"
+        },
+        {
+          "id": "theme.light.backgroundStrong",
+          "name": "backgroundStrong",
+          "tokenRef": "color.white",
+          "value": "#F4F4F4"
+        },
+        {
+          "id": "theme.light.backgroundTransparent",
+          "name": "backgroundTransparent",
+          "tokenRef": null,
+          "value": "rgba(255, 255, 255, 0)"
+        },
+        {
+          "id": "theme.light.color",
+          "name": "color",
+          "tokenRef": "color.black",
+          "value": "#0D0D0D"
+        },
+        {
+          "id": "theme.light.colorHover",
+          "name": "colorHover",
+          "tokenRef": "color.grey1",
+          "value": "#171717"
+        },
+        {
+          "id": "theme.light.colorPress",
+          "name": "colorPress",
+          "tokenRef": "color.grey2",
+          "value": "#252525"
+        },
+        {
+          "id": "theme.light.colorFocus",
+          "name": "colorFocus",
+          "tokenRef": "color.grey1",
+          "value": "#171717"
+        },
+        {
+          "id": "theme.light.colorTransparent",
+          "name": "colorTransparent",
+          "tokenRef": null,
+          "value": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "id": "theme.light.colorSubtle",
+          "name": "colorSubtle",
+          "tokenRef": "color.grey5",
+          "value": "#757575"
+        },
+        {
+          "id": "theme.light.borderColor",
+          "name": "borderColor",
+          "tokenRef": "color.grey8",
+          "value": "#EDEDED"
+        },
+        {
+          "id": "theme.light.borderColorHover",
+          "name": "borderColorHover",
+          "tokenRef": "color.grey7",
+          "value": "#B3B3B3"
+        },
+        {
+          "id": "theme.light.borderColorFocus",
+          "name": "borderColorFocus",
+          "tokenRef": "color.grey6",
+          "value": "#999999"
+        },
+        {
+          "id": "theme.light.borderColorPress",
+          "name": "borderColorPress",
+          "tokenRef": "color.grey7",
+          "value": "#B3B3B3"
+        },
+        {
+          "id": "theme.light.placeholderColor",
+          "name": "placeholderColor",
+          "tokenRef": "color.grey6",
+          "value": "#999999"
+        },
+        {
+          "id": "theme.light.outlineColor",
+          "name": "outlineColor",
+          "tokenRef": null,
+          "value": "rgba(238, 97, 69, 0.3)"
+        },
+        {
+          "id": "theme.light.primary",
+          "name": "primary",
+          "tokenRef": "color.primary7",
+          "value": "#EE6145"
+        },
+        {
+          "id": "theme.light.primaryLight",
+          "name": "primaryLight",
+          "tokenRef": "color.primary1",
+          "value": "#FFF5ED"
+        },
+        {
+          "id": "theme.light.primarySoft",
+          "name": "primarySoft",
+          "tokenRef": "color.primary3",
+          "value": "#F9CFAD"
+        },
+        {
+          "id": "theme.light.primaryHover",
+          "name": "primaryHover",
+          "tokenRef": "color.primary8",
+          "value": "#F24D2D"
+        },
+        {
+          "id": "theme.light.primaryPress",
+          "name": "primaryPress",
+          "tokenRef": "color.primary9",
+          "value": "#F82F08"
+        },
+        {
+          "id": "theme.light.secondary",
+          "name": "secondary",
+          "tokenRef": "color.sub7",
+          "value": "#1D9A7A"
+        },
+        {
+          "id": "theme.light.secondaryLight",
+          "name": "secondaryLight",
+          "tokenRef": "color.sub1",
+          "value": "#E0FFF7"
+        },
+        {
+          "id": "theme.light.secondarySoft",
+          "name": "secondarySoft",
+          "tokenRef": "color.sub3",
+          "value": "#A3F0DE"
+        },
+        {
+          "id": "theme.light.success",
+          "name": "success",
+          "tokenRef": "color.sub7",
+          "value": "#1D9A7A"
+        },
+        {
+          "id": "theme.light.warning",
+          "name": "warning",
+          "tokenRef": "color.primary6",
+          "value": "#E77661"
+        },
+        {
+          "id": "theme.light.danger",
+          "name": "danger",
+          "tokenRef": "color.primary9",
+          "value": "#F82F08"
+        },
+        {
+          "id": "theme.light.dangerBackground",
+          "name": "dangerBackground",
+          "tokenRef": "color.primary1",
+          "value": "#FFF5ED"
+        },
+        {
+          "id": "theme.light.cardBackground",
+          "name": "cardBackground",
+          "tokenRef": "color.pureWhite",
+          "value": "#FFFFFF"
+        },
+        {
+          "id": "theme.light.cardBackgroundHover",
+          "name": "cardBackgroundHover",
+          "tokenRef": "color.grey8",
+          "value": "#EDEDED"
+        }
+      ],
+      "dark": [
+        {
+          "id": "theme.dark.background",
+          "name": "background",
+          "tokenRef": "color.black",
+          "value": "#0D0D0D"
+        },
+        {
+          "id": "theme.dark.backgroundHover",
+          "name": "backgroundHover",
+          "tokenRef": "color.grey1",
+          "value": "#171717"
+        },
+        {
+          "id": "theme.dark.backgroundPress",
+          "name": "backgroundPress",
+          "tokenRef": "color.grey2",
+          "value": "#252525"
+        },
+        {
+          "id": "theme.dark.backgroundFocus",
+          "name": "backgroundFocus",
+          "tokenRef": "color.grey1",
+          "value": "#171717"
+        },
+        {
+          "id": "theme.dark.backgroundStrong",
+          "name": "backgroundStrong",
+          "tokenRef": "color.grey1",
+          "value": "#171717"
+        },
+        {
+          "id": "theme.dark.backgroundTransparent",
+          "name": "backgroundTransparent",
+          "tokenRef": null,
+          "value": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "id": "theme.dark.color",
+          "name": "color",
+          "tokenRef": "color.white",
+          "value": "#F4F4F4"
+        },
+        {
+          "id": "theme.dark.colorHover",
+          "name": "colorHover",
+          "tokenRef": "color.grey8",
+          "value": "#EDEDED"
+        },
+        {
+          "id": "theme.dark.colorPress",
+          "name": "colorPress",
+          "tokenRef": "color.grey7",
+          "value": "#B3B3B3"
+        },
+        {
+          "id": "theme.dark.colorFocus",
+          "name": "colorFocus",
+          "tokenRef": "color.grey8",
+          "value": "#EDEDED"
+        },
+        {
+          "id": "theme.dark.colorTransparent",
+          "name": "colorTransparent",
+          "tokenRef": null,
+          "value": "rgba(255, 255, 255, 0)"
+        },
+        {
+          "id": "theme.dark.colorSubtle",
+          "name": "colorSubtle",
+          "tokenRef": "color.grey6",
+          "value": "#999999"
+        },
+        {
+          "id": "theme.dark.borderColor",
+          "name": "borderColor",
+          "tokenRef": "color.grey3",
+          "value": "#333333"
+        },
+        {
+          "id": "theme.dark.borderColorHover",
+          "name": "borderColorHover",
+          "tokenRef": "color.grey4",
+          "value": "#525252"
+        },
+        {
+          "id": "theme.dark.borderColorFocus",
+          "name": "borderColorFocus",
+          "tokenRef": "color.grey5",
+          "value": "#757575"
+        },
+        {
+          "id": "theme.dark.borderColorPress",
+          "name": "borderColorPress",
+          "tokenRef": "color.grey4",
+          "value": "#525252"
+        },
+        {
+          "id": "theme.dark.placeholderColor",
+          "name": "placeholderColor",
+          "tokenRef": "color.grey5",
+          "value": "#757575"
+        },
+        {
+          "id": "theme.dark.outlineColor",
+          "name": "outlineColor",
+          "tokenRef": null,
+          "value": "rgba(238, 97, 69, 0.3)"
+        },
+        {
+          "id": "theme.dark.primary",
+          "name": "primary",
+          "tokenRef": "color.primary6",
+          "value": "#E77661"
+        },
+        {
+          "id": "theme.dark.primaryLight",
+          "name": "primaryLight",
+          "tokenRef": "color.grey2",
+          "value": "#252525"
+        },
+        {
+          "id": "theme.dark.primarySoft",
+          "name": "primarySoft",
+          "tokenRef": "color.primary4",
+          "value": "#F1A89B"
+        },
+        {
+          "id": "theme.dark.primaryHover",
+          "name": "primaryHover",
+          "tokenRef": "color.primary5",
+          "value": "#E78D7C"
+        },
+        {
+          "id": "theme.dark.primaryPress",
+          "name": "primaryPress",
+          "tokenRef": "color.primary4",
+          "value": "#F1A89B"
+        },
+        {
+          "id": "theme.dark.secondary",
+          "name": "secondary",
+          "tokenRef": "color.sub5",
+          "value": "#5BC5AB"
+        },
+        {
+          "id": "theme.dark.secondaryLight",
+          "name": "secondaryLight",
+          "tokenRef": "color.grey2",
+          "value": "#252525"
+        },
+        {
+          "id": "theme.dark.secondarySoft",
+          "name": "secondarySoft",
+          "tokenRef": "color.sub4",
+          "value": "#7FE6CC"
+        },
+        {
+          "id": "theme.dark.success",
+          "name": "success",
+          "tokenRef": "color.sub5",
+          "value": "#5BC5AB"
+        },
+        {
+          "id": "theme.dark.warning",
+          "name": "warning",
+          "tokenRef": "color.primary5",
+          "value": "#E78D7C"
+        },
+        {
+          "id": "theme.dark.danger",
+          "name": "danger",
+          "tokenRef": "color.primary8",
+          "value": "#F24D2D"
+        },
+        {
+          "id": "theme.dark.dangerBackground",
+          "name": "dangerBackground",
+          "tokenRef": "color.grey2",
+          "value": "#252525"
+        },
+        {
+          "id": "theme.dark.cardBackground",
+          "name": "cardBackground",
+          "tokenRef": "color.cardBgDark",
+          "value": "#313138"
+        },
+        {
+          "id": "theme.dark.cardBackgroundHover",
+          "name": "cardBackgroundHover",
+          "tokenRef": "color.grey3",
+          "value": "#333333"
+        }
+      ]
+    }
+  },
+  "typography": {
+    "fonts": [
+      {
+        "id": "font.body",
+        "name": "bodyFont",
+        "family": "Pretendard-Regular",
+        "faces": {
+          "100": "Pretendard-Regular",
+          "200": "Pretendard-Regular",
+          "300": "Pretendard-Regular",
+          "400": "Pretendard-Regular",
+          "500": "Pretendard-Medium",
+          "600": "Pretendard-SemiBold",
+          "700": "Pretendard-Bold",
+          "800": "Pretendard-Bold",
+          "900": "Pretendard-Bold"
+        }
+      },
+      {
+        "id": "font.heading",
+        "name": "headingFont",
+        "family": "Pretendard-SemiBold",
+        "faces": {
+          "100": "Pretendard-SemiBold",
+          "200": "Pretendard-SemiBold",
+          "300": "Pretendard-SemiBold",
+          "400": "Pretendard-SemiBold",
+          "500": "Pretendard-SemiBold",
+          "600": "Pretendard-SemiBold",
+          "700": "Pretendard-Bold",
+          "800": "Pretendard-Bold",
+          "900": "Pretendard-Bold"
+        }
+      }
+    ],
+    "scale": [
+      {
+        "id": "type.1",
+        "key": "1",
+        "designName": null,
+        "fontSize": 10,
+        "lineHeight": 16,
+        "defaultWeight": null
+      },
+      {
+        "id": "type.2",
+        "key": "2",
+        "designName": null,
+        "fontSize": 11,
+        "lineHeight": 18,
+        "defaultWeight": null
+      },
+      {
+        "id": "type.3",
+        "key": "3",
+        "designName": "Body 3",
+        "fontSize": 12,
+        "lineHeight": 22,
+        "defaultWeight": "600"
+      },
+      {
+        "id": "type.4",
+        "key": "4",
+        "designName": "Body 2",
+        "fontSize": 14,
+        "lineHeight": 24,
+        "defaultWeight": "500"
+      },
+      {
+        "id": "type.5",
+        "key": "5",
+        "designName": "Body 1",
+        "fontSize": 16,
+        "lineHeight": 26,
+        "defaultWeight": "500"
+      },
+      {
+        "id": "type.6",
+        "key": "6",
+        "designName": "Title 3",
+        "fontSize": 18,
+        "lineHeight": 30,
+        "defaultWeight": "600"
+      },
+      {
+        "id": "type.7",
+        "key": "7",
+        "designName": "Title 2",
+        "fontSize": 20,
+        "lineHeight": 32,
+        "defaultWeight": "600"
+      },
+      {
+        "id": "type.8",
+        "key": "8",
+        "designName": "Title 1",
+        "fontSize": 22,
+        "lineHeight": 34,
+        "defaultWeight": "600"
+      },
+      {
+        "id": "type.9",
+        "key": "9",
+        "designName": "Heading 2",
+        "fontSize": 26,
+        "lineHeight": 36,
+        "defaultWeight": "600"
+      },
+      {
+        "id": "type.10",
+        "key": "10",
+        "designName": "Heading 1",
+        "fontSize": 28,
+        "lineHeight": 40,
+        "defaultWeight": "600"
+      }
+    ],
+    "letterSpacing": [
+      {
+        "id": "letterSpacing.1",
+        "key": "1",
+        "value": 0
+      },
+      {
+        "id": "letterSpacing.2",
+        "key": "2",
+        "value": -0.2
+      },
+      {
+        "id": "letterSpacing.3",
+        "key": "3",
+        "value": -0.3
+      },
+      {
+        "id": "letterSpacing.4",
+        "key": "4",
+        "value": -0.4
+      },
+      {
+        "id": "letterSpacing.5",
+        "key": "5",
+        "value": -0.4
+      },
+      {
+        "id": "letterSpacing.6",
+        "key": "6",
+        "value": -0.4
+      },
+      {
+        "id": "letterSpacing.7",
+        "key": "7",
+        "value": -0.4
+      },
+      {
+        "id": "letterSpacing.8",
+        "key": "8",
+        "value": -0.4
+      },
+      {
+        "id": "letterSpacing.9",
+        "key": "9",
+        "value": -0.4
+      },
+      {
+        "id": "letterSpacing.10",
+        "key": "10",
+        "value": -0.4
+      }
+    ]
+  },
+  "tokens": {
+    "space": [
+      {
+        "id": "space.-4",
+        "key": "-4",
+        "value": -16
+      },
+      {
+        "id": "space.-3",
+        "key": "-3",
+        "value": -12
+      },
+      {
+        "id": "space.-2",
+        "key": "-2",
+        "value": -8
+      },
+      {
+        "id": "space.-1",
+        "key": "-1",
+        "value": -4
+      },
+      {
+        "id": "space.0",
+        "key": "0",
+        "value": 0
+      },
+      {
+        "id": "space.1",
+        "key": "1",
+        "value": 4
+      },
+      {
+        "id": "space.1.5",
+        "key": "1.5",
+        "value": 6
+      },
+      {
+        "id": "space.2",
+        "key": "2",
+        "value": 8
+      },
+      {
+        "id": "space.2.5",
+        "key": "2.5",
+        "value": 10
+      },
+      {
+        "id": "space.3",
+        "key": "3",
+        "value": 12
+      },
+      {
+        "id": "space.3.5",
+        "key": "3.5",
+        "value": 14
+      },
+      {
+        "id": "space.4",
+        "key": "4",
+        "value": 16
+      },
+      {
+        "id": "space.4.5",
+        "key": "4.5",
+        "value": 18
+      },
+      {
+        "id": "space.5",
+        "key": "5",
+        "value": 20
+      },
+      {
+        "id": "space.6",
+        "key": "6",
+        "value": 24
+      },
+      {
+        "id": "space.7",
+        "key": "7",
+        "value": 28
+      },
+      {
+        "id": "space.8",
+        "key": "8",
+        "value": 32
+      },
+      {
+        "id": "space.9",
+        "key": "9",
+        "value": 36
+      },
+      {
+        "id": "space.10",
+        "key": "10",
+        "value": 40
+      },
+      {
+        "id": "space.true",
+        "key": "true",
+        "value": 16
+      }
+    ],
+    "size": [
+      {
+        "id": "size.0",
+        "key": "0",
+        "value": 0
+      },
+      {
+        "id": "size.1",
+        "key": "1",
+        "value": 8
+      },
+      {
+        "id": "size.2",
+        "key": "2",
+        "value": 16
+      },
+      {
+        "id": "size.3",
+        "key": "3",
+        "value": 24
+      },
+      {
+        "id": "size.4",
+        "key": "4",
+        "value": 32
+      },
+      {
+        "id": "size.5",
+        "key": "5",
+        "value": 40
+      },
+      {
+        "id": "size.6",
+        "key": "6",
+        "value": 48
+      },
+      {
+        "id": "size.7",
+        "key": "7",
+        "value": 56
+      },
+      {
+        "id": "size.8",
+        "key": "8",
+        "value": 64
+      },
+      {
+        "id": "size.9",
+        "key": "9",
+        "value": 72
+      },
+      {
+        "id": "size.10",
+        "key": "10",
+        "value": 80
+      },
+      {
+        "id": "size.11",
+        "key": "11",
+        "value": 96
+      },
+      {
+        "id": "size.12",
+        "key": "12",
+        "value": 120
+      },
+      {
+        "id": "size.true",
+        "key": "true",
+        "value": 44
+      }
+    ],
+    "radius": [
+      {
+        "id": "radius.0",
+        "key": "0",
+        "value": 0
+      },
+      {
+        "id": "radius.1",
+        "key": "1",
+        "value": 2
+      },
+      {
+        "id": "radius.2",
+        "key": "2",
+        "value": 4
+      },
+      {
+        "id": "radius.3",
+        "key": "3",
+        "value": 6
+      },
+      {
+        "id": "radius.4",
+        "key": "4",
+        "value": 8
+      },
+      {
+        "id": "radius.5",
+        "key": "5",
+        "value": 10
+      },
+      {
+        "id": "radius.6",
+        "key": "6",
+        "value": 12
+      },
+      {
+        "id": "radius.7",
+        "key": "7",
+        "value": 14
+      },
+      {
+        "id": "radius.8",
+        "key": "8",
+        "value": 16
+      },
+      {
+        "id": "radius.9",
+        "key": "9",
+        "value": 20
+      },
+      {
+        "id": "radius.10",
+        "key": "10",
+        "value": 24
+      },
+      {
+        "id": "radius.12",
+        "key": "12",
+        "value": 999
+      },
+      {
+        "id": "radius.true",
+        "key": "true",
+        "value": 8
+      }
+    ],
+    "zIndex": [
+      {
+        "id": "zIndex.0",
+        "key": "0",
+        "value": 0
+      },
+      {
+        "id": "zIndex.1",
+        "key": "1",
+        "value": 100
+      },
+      {
+        "id": "zIndex.2",
+        "key": "2",
+        "value": 200
+      },
+      {
+        "id": "zIndex.3",
+        "key": "3",
+        "value": 300
+      },
+      {
+        "id": "zIndex.4",
+        "key": "4",
+        "value": 400
+      },
+      {
+        "id": "zIndex.5",
+        "key": "5",
+        "value": 500
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "component.button",
+      "name": "Button",
+      "category": "actions",
+      "filePath": "src/shared/components/Button.tsx",
+      "description": "기본 액션 버튼. 로딩 스피너와 비활성 상태를 지원한다.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "variant",
+          "default": "primary",
+          "values": [
+            {
+              "name": "primary",
+              "preview": {
+                "light": {
+                  "bg": "#44AF94",
+                  "fg": "#FFFFFF"
+                },
+                "dark": {
+                  "bg": "#44AF94",
+                  "fg": "#FFFFFF"
+                }
+              },
+              "tokensUsed": [
+                "color.sub6"
+              ]
+            },
+            {
+              "name": "secondary",
+              "preview": {
+                "light": {
+                  "bg": "#1D9A7A",
+                  "fg": "#FFFFFF"
+                },
+                "dark": {
+                  "bg": "#5BC5AB",
+                  "fg": "#FFFFFF"
+                }
+              },
+              "tokensUsed": [
+                "theme.secondary"
+              ]
+            },
+            {
+              "name": "outline",
+              "preview": {
+                "light": {
+                  "bg": "transparent",
+                  "fg": "#EE6145",
+                  "border": "#EE6145",
+                  "borderWidth": 1
+                },
+                "dark": {
+                  "bg": "transparent",
+                  "fg": "#E77661",
+                  "border": "#E77661",
+                  "borderWidth": 1
+                }
+              },
+              "tokensUsed": [
+                "theme.primary"
+              ]
+            },
+            {
+              "name": "ghost",
+              "preview": {
+                "light": {
+                  "bg": "transparent",
+                  "fg": "#EE6145"
+                },
+                "dark": {
+                  "bg": "transparent",
+                  "fg": "#E77661"
+                }
+              },
+              "tokensUsed": [
+                "theme.primary"
+              ]
+            },
+            {
+              "name": "danger",
+              "preview": {
+                "light": {
+                  "bg": "#F82F08",
+                  "fg": "#FFFFFF"
+                },
+                "dark": {
+                  "bg": "#F24D2D",
+                  "fg": "#FFFFFF"
+                }
+              },
+              "tokensUsed": [
+                "theme.danger"
+              ]
+            }
+          ]
+        },
+        {
+          "axis": "buttonSize",
+          "default": "medium",
+          "values": [
+            {
+              "name": "small",
+              "preview": {
+                "height": 36,
+                "paddingX": 12
+              },
+              "tokensUsed": [
+                "space.3"
+              ]
+            },
+            {
+              "name": "medium",
+              "preview": {
+                "height": 48,
+                "paddingX": 16
+              },
+              "tokensUsed": [
+                "space.4"
+              ]
+            },
+            {
+              "name": "large",
+              "preview": {
+                "height": 56,
+                "paddingX": 20
+              },
+              "tokensUsed": [
+                "space.5"
+              ]
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "required": true
+        },
+        {
+          "name": "variant",
+          "type": "\"primary\" | \"secondary\" | \"outline\" | \"ghost\" | \"danger\"",
+          "default": "primary",
+          "required": false
+        },
+        {
+          "name": "buttonSize",
+          "type": "\"small\" | \"medium\" | \"large\"",
+          "default": "medium",
+          "required": false
+        },
+        {
+          "name": "fullWidth",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "loading",
+          "type": "boolean",
+          "default": "false",
+          "required": false,
+          "description": "true면 스피너 표시 + 비활성화"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "onPress",
+          "type": "() => void",
+          "required": false
+        },
+        {
+          "name": "flex",
+          "type": "number",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.sub6",
+        "radius.3",
+        "space.3",
+        "space.4",
+        "space.5",
+        "theme.primary",
+        "theme.secondary",
+        "theme.danger"
+      ],
+      "examples": [
+        {
+          "title": "기본",
+          "code": "<Button variant=\"primary\" onPress={handleSave}>저장</Button>"
+        },
+        {
+          "title": "로딩 + 전체 너비",
+          "code": "<Button variant=\"danger\" fullWidth loading={isPending}>탈퇴하기</Button>"
+        }
+      ],
+      "notes": [
+        "내부 라벨 Text가 color=\"white\"로 고정되어 있어 outline/ghost variant의 선언 색($primary)과 실제 라벨 색이 다르다 (앱 코드의 알려진 불일치)."
+      ]
+    },
+    {
+      "id": "component.text-field",
+      "name": "TextField",
+      "category": "inputs",
+      "filePath": "src/shared/components/TextField.tsx",
+      "description": "라벨·에러·헬퍼 텍스트를 갖춘 기본 입력 필드. 포커스 시 라벨과 보더가 primary로 강조된다.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "state",
+          "default": "default",
+          "values": [
+            {
+              "name": "default",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#EDEDED",
+                  "fg": "#0D0D0D",
+                  "height": 48
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "#333333",
+                  "fg": "#F4F4F4",
+                  "height": 48
+                }
+              },
+              "tokensUsed": [
+                "theme.cardBackground",
+                "theme.borderColor"
+              ]
+            },
+            {
+              "name": "focus",
+              "description": "focusStyle: 보더 $primary, 두께 2",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#EE6145",
+                  "borderWidth": 2,
+                  "height": 48
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "#E77661",
+                  "borderWidth": 2,
+                  "height": 48
+                }
+              },
+              "tokensUsed": [
+                "theme.primary"
+              ]
+            },
+            {
+              "name": "error",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#F82F08",
+                  "fg": "#F82F08",
+                  "height": 48
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "#F24D2D",
+                  "fg": "#F24D2D",
+                  "height": 48
+                }
+              },
+              "tokensUsed": [
+                "theme.danger"
+              ]
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "error",
+          "type": "string",
+          "required": false,
+          "description": "있으면 에러 상태 + 메시지 표시"
+        },
+        {
+          "name": "helper",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "...InputProps",
+          "type": "Omit<InputProps, \"size\">",
+          "required": false,
+          "description": "Tamagui Input props 전달"
+        }
+      ],
+      "tokensUsed": [
+        "radius.3",
+        "space.3",
+        "space.1.5",
+        "theme.cardBackground",
+        "theme.borderColor",
+        "theme.primary",
+        "theme.danger",
+        "theme.colorSubtle"
+      ],
+      "examples": [
+        {
+          "title": "기본",
+          "code": "<TextField label=\"이메일\" placeholder=\"email@example.com\" />"
+        },
+        {
+          "title": "에러",
+          "code": "<TextField label=\"비밀번호\" error=\"8자 이상 입력해주세요\" />"
+        }
+      ]
+    },
+    {
+      "id": "component.form-text-field",
+      "name": "FormTextField",
+      "category": "inputs",
+      "filePath": "src/shared/components/FormTextField.tsx",
+      "description": "react-hook-form Controller 통합 입력 필드. 입력 타입 프리셋(email/password/number/phone), 클리어 버튼, 비밀번호 표시 토글, 유효성 상태 색상을 지원한다.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "validationState",
+          "default": "default",
+          "values": [
+            {
+              "name": "default",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#EDEDED",
+                  "height": 52,
+                  "radius": 8
+                },
+                "dark": {
+                  "bg": "#2A2A32",
+                  "border": "#333333",
+                  "height": 52,
+                  "radius": 8
+                }
+              },
+              "tokensUsed": [
+                "theme.borderColor"
+              ]
+            },
+            {
+              "name": "focused",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#EE6145",
+                  "height": 52,
+                  "radius": 8
+                },
+                "dark": {
+                  "bg": "#2A2A32",
+                  "border": "#E77661",
+                  "height": 52,
+                  "radius": 8
+                }
+              },
+              "tokensUsed": [
+                "theme.primary"
+              ]
+            },
+            {
+              "name": "valid",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#44AF94",
+                  "height": 52,
+                  "radius": 8
+                },
+                "dark": {
+                  "bg": "#2A2A32",
+                  "border": "#44AF94",
+                  "height": 52,
+                  "radius": 8
+                }
+              },
+              "tokensUsed": [
+                "color.sub6"
+              ]
+            },
+            {
+              "name": "invalid",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#F82F08",
+                  "height": 52,
+                  "radius": 8
+                },
+                "dark": {
+                  "bg": "#2A2A32",
+                  "border": "#F24D2D",
+                  "height": 52,
+                  "radius": 8
+                }
+              },
+              "tokensUsed": [
+                "theme.danger"
+              ]
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "name": "name",
+          "type": "Path<T>",
+          "required": true
+        },
+        {
+          "name": "control",
+          "type": "Control<T>",
+          "required": true
+        },
+        {
+          "name": "rules",
+          "type": "RegisterOptions<T>",
+          "required": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "\"text\" | \"email\" | \"password\" | \"number\" | \"phone\"",
+          "default": "text",
+          "required": false,
+          "description": "키보드 타입·자동 대문자·secure 입력 프리셋"
+        },
+        {
+          "name": "clearable",
+          "type": "boolean",
+          "default": "true",
+          "required": false
+        },
+        {
+          "name": "autoFocus",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "maxLength",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "showPasswordToggle",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "showValidState",
+          "type": "boolean",
+          "default": "false",
+          "required": false,
+          "description": "true면 유효 시 보더가 sub6로"
+        }
+      ],
+      "tokensUsed": [
+        "color.sub6",
+        "color.grey5",
+        "theme.primary",
+        "theme.danger",
+        "theme.borderColor"
+      ],
+      "examples": [
+        {
+          "title": "비밀번호",
+          "code": "<FormTextField name=\"password\" control={control} label=\"비밀번호\" inputType=\"password\" showPasswordToggle />"
+        }
+      ],
+      "notes": [
+        "다크 모드 배경 #2A2A32는 토큰이 아닌 리터럴 값."
+      ]
+    },
+    {
+      "id": "component.chip",
+      "name": "Chip",
+      "category": "display",
+      "filePath": "src/shared/components/Chip.tsx",
+      "description": "아이콘 + 라벨의 pill 형태 선택 칩. 선택 상태에 따라 색이 바뀐다.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "isSelected",
+          "default": "false",
+          "values": [
+            {
+              "name": "false",
+              "description": "기본 상태",
+              "preview": {
+                "light": {
+                  "bg": "#EAEAF0",
+                  "fg": "#3C3C43"
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "fg": "#ABABB4"
+                }
+              },
+              "tokensUsed": [
+                "color.borderLight",
+                "color.cardBgDark",
+                "color.textDarkSub"
+              ]
+            },
+            {
+              "name": "true",
+              "description": "선택 상태",
+              "preview": {
+                "light": {
+                  "bg": "#0D896C",
+                  "fg": "#FFFFFF"
+                },
+                "dark": {
+                  "bg": "#42AF94",
+                  "fg": "#2E2E34"
+                }
+              },
+              "tokensUsed": [
+                "color.inputBgDark"
+              ]
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "name": "icon",
+          "type": "IconName",
+          "required": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "isSelected",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "onPress",
+          "type": "() => void",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.borderLight",
+        "color.cardBgDark",
+        "color.textDarkSub",
+        "color.inputBgDark",
+        "radius.12",
+        "space.3",
+        "space.2",
+        "space.1.5"
+      ],
+      "examples": [
+        {
+          "title": "기본",
+          "code": "<Chip icon=\"filter\" label=\"저염식\" isSelected onPress={toggle} />"
+        }
+      ],
+      "notes": [
+        "선택 배경색 #0D896C(light)·#42AF94(dark)와 기본 텍스트 #3C3C43(light)은 tokens.ts에 없는 리터럴 hex (Chip.tsx 로컬 COLORS 상수)."
+      ]
+    },
+    {
+      "id": "component.glassmorphic-card",
+      "name": "GlassmorphicCard",
+      "category": "layout",
+      "filePath": "src/shared/components/GlassmorphicCard.tsx",
+      "description": "글래스모픽 스타일의 섹션 컨테이너 카드. 화면의 섹션 단위 래퍼로 사용한다.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "variant",
+          "default": "default",
+          "values": [
+            {
+              "name": "default",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "rgba(255, 255, 255, 0.2)",
+                  "shadow": "0 2px 8px rgba(0,0,0,0.10)"
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "rgba(255, 255, 255, 0.2)",
+                  "shadow": "0 2px 8px rgba(0,0,0,0.10)"
+                }
+              }
+            },
+            {
+              "name": "elevated",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "rgba(255, 255, 255, 0.2)",
+                  "shadow": "0 2px 12px rgba(0,0,0,0.15)"
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "rgba(255, 255, 255, 0.2)",
+                  "shadow": "0 2px 12px rgba(0,0,0,0.15)"
+                }
+              }
+            },
+            {
+              "name": "flat",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "rgba(255, 255, 255, 0.2)",
+                  "shadow": "none"
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "rgba(255, 255, 255, 0.2)",
+                  "shadow": "none"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"default\" | \"elevated\" | \"flat\"",
+          "default": "default",
+          "required": false
+        },
+        {
+          "name": "...YStackProps",
+          "type": "YStackProps",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "theme.cardBackground",
+        "radius.4",
+        "space.4"
+      ],
+      "examples": [
+        {
+          "title": "섹션 컨테이너",
+          "code": "<GlassmorphicCard variant=\"elevated\">{children}</GlassmorphicCard>"
+        }
+      ]
+    },
+    {
+      "id": "component.checkbox",
+      "name": "Checkbox",
+      "category": "inputs",
+      "filePath": "src/shared/components/Checkbox.tsx",
+      "description": "라벨 옵션이 있는 체크박스. 체크 시 sub6(teal)로 채워진다.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "checked",
+          "values": [
+            {
+              "name": "false",
+              "preview": {
+                "light": {
+                  "bg": "#FFFFFF",
+                  "border": "#C5C8CE",
+                  "size": 22,
+                  "radius": 4
+                },
+                "dark": {
+                  "bg": "#313138",
+                  "border": "#6B7280",
+                  "size": 22,
+                  "radius": 4
+                }
+              },
+              "tokensUsed": [
+                "color.cardBgDark"
+              ]
+            },
+            {
+              "name": "true",
+              "preview": {
+                "light": {
+                  "bg": "#44AF94",
+                  "border": "#44AF94",
+                  "fg": "#FFFFFF",
+                  "size": 22,
+                  "radius": 4
+                },
+                "dark": {
+                  "bg": "#44AF94",
+                  "border": "#44AF94",
+                  "fg": "#FFFFFF",
+                  "size": 22,
+                  "radius": 4
+                }
+              },
+              "tokensUsed": [
+                "color.sub6"
+              ]
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "onToggle",
+          "type": "() => void",
+          "required": true
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "default": "22",
+          "required": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.sub6",
+        "color.cardBgDark",
+        "color.textDark"
+      ],
+      "examples": [
+        {
+          "title": "약관 동의",
+          "code": "<Checkbox checked={agreed} onToggle={toggleAgreed} label=\"이용약관에 동의합니다\" />"
+        }
+      ],
+      "notes": [
+        "미체크 보더 #C5C8CE(light)·#6B7280(dark), 라벨 #3F444F(light)는 토큰 외 리터럴."
+      ]
+    },
+    {
+      "id": "component.toast",
+      "name": "Toast",
+      "category": "feedback",
+      "filePath": "src/shared/components/Toast.tsx",
+      "description": "react-native-toast-message 기반 전역 토스트. error/success/info 타입별 색상 프리셋.",
+      "previewable": true,
+      "variants": [
+        {
+          "axis": "type",
+          "values": [
+            {
+              "name": "error",
+              "preview": {
+                "light": {
+                  "bg": "#FFF5ED",
+                  "fg": "#F24D2D"
+                },
+                "dark": {
+                  "bg": "#FFF5ED",
+                  "fg": "#F24D2D"
+                }
+              },
+              "tokensUsed": [
+                "color.primary1",
+                "color.primary8"
+              ]
+            },
+            {
+              "name": "success",
+              "preview": {
+                "light": {
+                  "bg": "#E0FFF7",
+                  "fg": "#0D896A"
+                },
+                "dark": {
+                  "bg": "#E0FFF7",
+                  "fg": "#0D896A"
+                }
+              },
+              "tokensUsed": [
+                "color.sub1",
+                "color.sub8"
+              ]
+            },
+            {
+              "name": "info",
+              "preview": {
+                "light": {
+                  "bg": "#EDEDED",
+                  "fg": "#252525"
+                },
+                "dark": {
+                  "bg": "#EDEDED",
+                  "fg": "#252525"
+                }
+              },
+              "tokensUsed": [
+                "color.grey8",
+                "color.grey2"
+              ]
+            }
+          ]
+        }
+      ],
+      "props": [],
+      "tokensUsed": [
+        "color.primary1",
+        "color.primary8",
+        "color.sub1",
+        "color.sub8",
+        "color.grey8",
+        "color.grey2",
+        "radius.3",
+        "space.4",
+        "space.3"
+      ],
+      "examples": [
+        {
+          "title": "루트에 마운트",
+          "code": "<Toast />"
+        },
+        {
+          "title": "호출",
+          "code": "Toast.show({ type: \"success\", text1: \"저장되었습니다\" })"
+        }
+      ],
+      "notes": [
+        "토스트 색상은 라이트/다크 동일 (테마 미분기)."
+      ]
+    },
+    {
+      "id": "component.screen-header",
+      "name": "ScreenHeader",
+      "category": "layout",
+      "filePath": "src/shared/components/ScreenHeader.tsx",
+      "description": "뒤로가기 버튼·타이틀·우측 요소 슬롯을 갖춘 화면 상단 헤더.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "paddingTop",
+          "type": "number",
+          "default": "0",
+          "required": false
+        },
+        {
+          "name": "onBack",
+          "type": "() => void",
+          "required": false,
+          "description": "있으면 뒤로가기 chevron 표시"
+        },
+        {
+          "name": "rightElement",
+          "type": "ReactNode",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.textDark"
+      ]
+    },
+    {
+      "id": "component.icon",
+      "name": "Icon",
+      "category": "display",
+      "filePath": "src/shared/components/Icon.tsx",
+      "description": "assets/icons/의 SVG 65종을 감싸는 아이콘 컴포넌트. SVG가 currentColor를 쓰면 color prop으로 런타임 색상 변경 가능.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "name",
+          "type": "IconName (65종)",
+          "required": true
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "default": "24",
+          "required": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "default": "tokens.color.textLightSub",
+          "required": false
+        },
+        {
+          "name": "...SvgProps",
+          "type": "Omit<SvgProps, \"width\" | \"height\">",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.textLightSub"
+      ]
+    },
+    {
+      "id": "component.error-message",
+      "name": "ErrorMessage",
+      "category": "feedback",
+      "filePath": "src/shared/components/ErrorMessage.tsx",
+      "description": "에러 박스. dangerBackground 배경에 danger 텍스트, 선택적 재시도 버튼.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "message",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "onRetry",
+          "type": "() => void",
+          "required": false,
+          "description": "있으면 '다시 시도' outline 버튼 표시"
+        }
+      ],
+      "tokensUsed": [
+        "theme.dangerBackground",
+        "theme.danger",
+        "radius.3",
+        "space.4",
+        "space.3",
+        "space.2"
+      ]
+    },
+    {
+      "id": "component.loading-screen",
+      "name": "LoadingScreen",
+      "category": "feedback",
+      "filePath": "src/shared/components/LoadingScreen.tsx",
+      "description": "전체 화면 로딩 상태. primary 스피너 + 메시지.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "message",
+          "type": "string",
+          "default": "\"로딩 중...\"",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "theme.primary",
+        "theme.colorSubtle",
+        "space.4"
+      ]
+    },
+    {
+      "id": "component.confirm-modal",
+      "name": "ConfirmModal",
+      "category": "overlay",
+      "filePath": "src/shared/components/ConfirmModal.tsx",
+      "description": "취소/확인 2버튼 확인 모달 (RN Modal 기반).",
+      "previewable": false,
+      "props": [
+        {
+          "name": "visible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "cancelText",
+          "type": "string",
+          "default": "\"취소\"",
+          "required": false
+        },
+        {
+          "name": "confirmText",
+          "type": "string",
+          "default": "\"확인\"",
+          "required": false
+        },
+        {
+          "name": "onCancel",
+          "type": "() => void",
+          "required": true
+        },
+        {
+          "name": "onConfirm",
+          "type": "() => void",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "component.confirm-exit-modal",
+      "name": "ConfirmExitModal",
+      "category": "overlay",
+      "filePath": "src/shared/components/ConfirmExitModal.tsx",
+      "description": "이탈 확인 모달. 페이드 인/아웃 애니메이션과 다크 모드를 지원한다.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "visible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "cancelLabel",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "confirmLabel",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "component.app-bottom-sheet",
+      "name": "AppBottomSheet",
+      "category": "overlay",
+      "filePath": "src/shared/components/AppBottomSheet.tsx",
+      "description": "Tamagui Sheet + gesture-handler 기반 공용 바텀시트. 스냅 포인트, 핸들 전용 드래그, 드래그 비활성화를 지원한다.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "visible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "onClose",
+          "type": "() => void",
+          "required": true
+        },
+        {
+          "name": "snapPoints",
+          "type": "number[]",
+          "required": true
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "required": true
+        },
+        {
+          "name": "initialSnapIndex",
+          "type": "number",
+          "default": "0",
+          "required": false
+        },
+        {
+          "name": "contentContainerStyle",
+          "type": "StyleProp<ViewStyle>",
+          "required": false
+        },
+        {
+          "name": "contentBottomPadding",
+          "type": "boolean",
+          "default": "true",
+          "required": false
+        },
+        {
+          "name": "dragHandleOnly",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "disableDrag",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "component.bottom-sheet-picker",
+      "name": "BottomSheetPicker",
+      "category": "inputs",
+      "filePath": "src/shared/components/BottomSheetPicker.tsx",
+      "description": "바텀시트로 옵션을 고르는 셀렉트 입력. 라벨·필수 표시·플레이스홀더 지원.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "options",
+          "type": "{ label: string; value: string }[]",
+          "required": true
+        },
+        {
+          "name": "onSelect",
+          "type": "(value: string) => void",
+          "required": true
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "default": "\"선택해주세요\"",
+          "required": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.textDark",
+        "color.textDarkSub",
+        "color.borderDark"
+      ],
+      "notes": [
+        "선택 강조색 #5464F2 등 다수 리터럴 hex 사용 (토큰 외)."
+      ]
+    },
+    {
+      "id": "component.bottom-action-bar",
+      "name": "BottomActionBar",
+      "category": "actions",
+      "filePath": "src/shared/components/BottomActionBar.tsx",
+      "description": "화면 하단 고정 CTA 바. 비활성 시 sub6의 35% 투명 배경.",
+      "previewable": false,
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "onPress",
+          "type": "() => void",
+          "required": true
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "default": "false",
+          "required": false
+        },
+        {
+          "name": "paddingBottom",
+          "type": "number",
+          "default": "16",
+          "required": false
+        }
+      ],
+      "tokensUsed": [
+        "color.sub6"
+      ]
+    },
+    {
+      "id": "component.keyboard-aware-view",
+      "name": "KeyboardAwareView",
+      "category": "layout",
+      "filePath": "src/shared/components/KeyboardAwareView.tsx",
+      "description": "플랫폼별 behavior를 프리셋한 KeyboardAvoidingView 래퍼 (iOS padding / Android height).",
+      "previewable": false,
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "required": true
+        },
+        {
+          "name": "iosBehavior",
+          "type": "KeyboardAvoidingViewProps[\"behavior\"]",
+          "default": "\"padding\"",
+          "required": false
+        },
+        {
+          "name": "androidBehavior",
+          "type": "KeyboardAvoidingViewProps[\"behavior\"]",
+          "default": "\"height\"",
+          "required": false
+        },
+        {
+          "name": "keyboardVerticalOffset",
+          "type": "number",
+          "default": "0",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
