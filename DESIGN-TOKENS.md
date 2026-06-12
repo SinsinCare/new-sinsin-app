@@ -4,12 +4,12 @@
 
 이 프로젝트는 Tamagui의 `createTokens`, `createFont`를 사용해 Figma 디자인 시스템과 1:1 매핑된 토큰을 관리합니다.
 
-| 파일 | 역할 |
-|------|------|
-| `src/theme/tokens.ts` | 색상, 간격, 크기, 반경, zIndex 토큰 |
-| `src/theme/fonts.ts` | Pretendard KR 폰트 설정 + 타이포그래피 스케일 |
-| `src/theme/themes.ts` | Light/Dark 테마 (색상 매핑) |
-| `tamagui.config.ts` | 위 모듈들을 조합하는 진입점 |
+| 파일                  | 역할                                          |
+| --------------------- | --------------------------------------------- |
+| `src/theme/tokens.ts` | 색상, 간격, 크기, 반경, zIndex 토큰           |
+| `src/theme/fonts.ts`  | Pretendard KR 폰트 설정 + 타이포그래피 스케일 |
+| `src/theme/themes.ts` | Light/Dark 테마 (색상 매핑)                   |
+| `tamagui.config.ts`   | 위 모듈들을 조합하는 진입점                   |
 
 ---
 
@@ -205,3 +205,25 @@ const Title = styled(Text, {
 3. **새 색상 추가 시:** `src/theme/tokens.ts`의 `color`에 추가 → 테마에서 사용할 경우 `src/theme/themes.ts`의 light/dark 모두에 동일한 키로 추가.
 
 4. **테마 키 규칙:** light와 dark 테마는 반드시 **같은 키**를 가져야 합니다. 한쪽에만 키를 추가하면 TypeScript 에러가 발생합니다.
+
+---
+
+## Admin Dashboard로 내보내기 (Design System Export)
+
+신신 admin dashboard의 디자인 시스템 카탈로그(`/design-system`)는 이 repo에서 추출한
+`design-system/design-system.json`을 데이터 소스로 사용합니다.
+
+```bash
+npm run design:export   # src/theme/* + 컴포넌트 메타데이터 → design-system/design-system.json
+npm run design:sync     # export 후 ../sinsin-admin-dashboard/src/features/design-system/data/ 로 복사
+```
+
+- 토큰(컬러·space·size·radius·zIndex), light/dark 테마 매핑, 타이포 스케일은
+  `src/theme/*`에서 **자동 추출**됩니다.
+- 공용 컴포넌트(variant·props·프리뷰 색상) 정보는
+  `scripts/design-system/components.meta.ts`에서 **수동 관리**합니다.
+  컴포넌트의 variant를 추가/이름 변경하면 이 파일도 함께 갱신하세요 —
+  export가 variant 이름을 소스와 대조해 불일치 시 실패합니다.
+- 토큰이나 컴포넌트를 변경했다면 `npm run design:sync` 실행 후
+  **양쪽 repo의 변경분을 각각 커밋**하세요 (대시보드는 JSON 사본으로 standalone 빌드).
+- 대상 경로는 `DESIGN_SYNC_TARGET` 환경변수로 오버라이드할 수 있습니다.
