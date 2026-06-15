@@ -1,0 +1,720 @@
+apis:
+  - id: API_GET_MOBILE_POLICY
+    method: GET
+    path: /public/mobile-policy
+    description: 앱 실행 전 서버 권위 정책을 조회한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [
+        network_error,
+        unsupported_contract,
+        maintenance,
+        force_update,
+        server_error,
+      ]
+
+  - id: API_AUTH_SOCIAL_LOGIN
+    method: POST
+    path: /auth/social-login
+    description: Google, Apple, Kakao ID token으로 로그인한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [
+        network_error,
+        invalid_provider,
+        invalid_token,
+        social_link_required,
+        server_error,
+      ]
+
+  - id: API_AUTH_EMAIL_LOGIN
+    method: POST
+    path: /auth/login
+    description: 이메일과 비밀번호로 로그인한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [
+        network_error,
+        validation_error,
+        invalid_credentials,
+        withdrawal_pending,
+        server_error,
+      ]
+
+  - id: API_AUTH_LOGOUT
+    method: POST
+    path: /auth/logout
+    description: 서버 세션 또는 refresh token을 폐기한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_AUTH_REFRESH_TOKEN
+    method: POST
+    path: /auth/tokens/refresh
+    description: refresh token으로 access token을 갱신한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [network_error, invalid_refresh_token, blocked_account, server_error]
+
+  - id: API_AUTH_VERIFY_SIGNUP_EMAIL
+    method: GET
+    path: /auth/signup/email/verify
+    description: 회원가입 이메일 사용 가능 여부를 확인한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [network_error, duplicate_email, email_login_link_required, server_error]
+
+  - id: API_AUTH_SEND_SIGNUP_EMAIL_OTP
+    method: POST
+    path: /auth/signup/email/otp/send
+    description: 회원가입 이메일 OTP를 발송한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, validation_error, rate_limited, server_error]
+
+  - id: API_AUTH_VERIFY_SIGNUP_EMAIL_OTP
+    method: POST
+    path: /auth/signup/email/otp/verify
+    description: 회원가입 이메일 OTP를 검증하고 signupToken을 발급한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_code, expired_code, server_error]
+
+  - id: API_AUTH_SEND_PASSWORD_EMAIL_OTP
+    method: POST
+    path: /auth/password/email/otp/send
+    description: 비밀번호 재설정 이메일 OTP를 발송한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, unknown_email, rate_limited, server_error]
+
+  - id: API_AUTH_VERIFY_PASSWORD_EMAIL_OTP
+    method: POST
+    path: /auth/password/email/otp/verify
+    description: 비밀번호 재설정 OTP를 검증하고 resetToken을 발급한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_code, expired_code, server_error]
+
+  - id: API_AUTH_RESET_PASSWORD
+    method: PATCH
+    path: /auth/password/reset
+    description: resetToken으로 비밀번호를 재설정한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_token, validation_error, server_error]
+
+  - id: API_AUTH_SEND_EMAIL_LINK_OTP
+    method: POST
+    path: /auth/signup/email-link/otp/send
+    description: 소셜 가입 이메일을 이메일 로그인과 연결하기 위한 OTP를 발송한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, rate_limited, server_error]
+
+  - id: API_AUTH_VERIFY_EMAIL_LINK_OTP
+    method: POST
+    path: /auth/signup/email-link/otp/verify
+    description: 이메일 로그인 연결 OTP를 검증하고 emailLinkToken을 발급한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_code, expired_code, server_error]
+
+  - id: API_AUTH_SET_EMAIL_LINK_PASSWORD
+    method: PATCH
+    path: /auth/signup/email-link/password
+    description: emailLinkToken으로 이메일 로그인 비밀번호를 설정한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_token, validation_error, server_error]
+
+  - id: API_AUTH_SEND_SOCIAL_LINK_EMAIL_OTP
+    method: POST
+    path: /auth/social-link/email/otp/send
+    description: 소셜 로그인 계정 연결용 이메일 OTP를 발송한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [network_error, invalid_social_link_token, rate_limited, server_error]
+
+  - id: API_AUTH_VERIFY_SOCIAL_LINK_EMAIL_OTP
+    method: POST
+    path: /auth/social-link/email/otp/verify
+    description: 소셜 로그인 계정 연결용 이메일 OTP를 검증한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_code, expired_code, server_error]
+
+  - id: API_AUTH_VERIFY_NICKNAME
+    method: GET
+    path: /auth/signup/nickname/verify
+    description: 회원가입 또는 닉네임 수정 전 닉네임 사용 가능 여부를 확인한다.
+    auth_required: false
+    success_status: [200]
+    error_cases:
+      [network_error, duplicate_nickname, validation_error, server_error]
+
+  - id: API_AUTH_SIGNUP
+    method: POST
+    path: /auth/signup
+    description: signupToken, 비밀번호, 기본 프로필, 닉네임으로 계정을 생성한다.
+    auth_required: false
+    success_status: [200, 201]
+    error_cases:
+      [
+        network_error,
+        validation_error,
+        duplicate_nickname,
+        expired_signup_token,
+        server_error,
+      ]
+
+  - id: API_AUTH_CANCEL_WITHDRAWAL
+    method: POST
+    path: /auth/withdrawal/cancel
+    description: 탈퇴 대기 계정의 탈퇴를 취소하고 로그인 상태를 복구한다.
+    auth_required: false
+    success_status: [200]
+    error_cases: [network_error, invalid_cancel_token, server_error]
+
+  - id: API_GET_ONBOARDING_CKD
+    method: GET
+    path: /user/onboarding/ckd
+    description: CKD 사용자용 온보딩 질문 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_GET_ONBOARDING_NON_CKD
+    method: GET
+    path: /user/onboarding/non-ckd
+    description: 비CKD 사용자용 온보딩 질문 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_SUBMIT_ONBOARDING
+    method: POST
+    path: /user/onboarding
+    description: 온보딩 답변을 제출한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_SKIP_ONBOARDING
+    method: POST
+    path: /user/onboarding/skip
+    description: 온보딩을 건너뛴다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_GET_USER_PROFILE
+    method: GET
+    path: /user/profile
+    description: 사용자 기본 프로필을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_UPDATE_USER_PROFILE
+    method: PATCH
+    path: /user/profile
+    description: 사용자 기본 프로필을 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_KIDNEY_PROFILE
+    method: GET
+    path: /user/profile/kidney
+    description: 사용자 신장 프로필을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_UPDATE_KIDNEY_PROFILE
+    method: PATCH
+    path: /user/profile/kidney
+    description: 사용자 신장 프로필을 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_UPDATE_PASSWORD
+    method: PATCH
+    path: /user/password
+    description: 로그인 상태에서 현재 비밀번호 확인 후 비밀번호를 변경한다.
+    auth_required: true
+    success_status: [200]
+    error_cases:
+      [
+        network_error,
+        unauthorized,
+        invalid_current_password,
+        validation_error,
+        server_error,
+      ]
+
+  - id: API_WITHDRAW_USER
+    method: POST
+    path: /user/withdraw
+    description: 회원탈퇴를 요청한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_LINK_DOCTOR
+    method: POST
+    path: /user/link-doctor
+    description: 담당의 초대 코드로 사용자와 의사를 연결한다.
+    auth_required: true
+    success_status: [200]
+    error_cases:
+      [network_error, unauthorized, invalid_invite_code, server_error]
+
+  - id: API_REPORT_USER
+    method: POST
+    path: /user/report
+    description: 사용자 또는 콘텐츠를 신고한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_UPLOAD_IMAGE
+    method: POST
+    path: /uploads/images
+    description: 커뮤니티, 레시피, 프로필 등에서 사용하는 이미지를 업로드한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases:
+      [network_error, unauthorized, invalid_image, file_too_large, server_error]
+
+  - id: API_CREATE_INQUIRY
+    method: POST
+    path: /user/inquiries
+    description: 문의 내용을 제출한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_BLOCK_USER
+    method: POST
+    path: /user/block
+    description: 특정 사용자를 차단한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_BLOCKED_USERS
+    method: GET
+    path: /user/block
+    description: 차단한 사용자 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_GET_NOTIFICATION_SETTINGS
+    method: GET
+    path: /user/notification-settings
+    description: 서버에 저장된 알림 설정을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_unavailable, server_error]
+
+  - id: API_UPDATE_NOTIFICATION_SETTINGS
+    method: PUT
+    path: /user/notification-settings
+    description: 알림 설정을 서버에 저장한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_ANALYZE_FOOD_IMAGE
+    method: POST
+    path: /food-camera/analyze
+    description: 음식 사진을 업로드해 식단 분석을 요청한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases:
+      [
+        network_error,
+        unauthorized,
+        invalid_image,
+        analysis_failed,
+        server_error,
+      ]
+
+  - id: API_ANALYZE_FOOD_TEXT
+    method: POST
+    path: /food-camera/analyze-text
+    description: 텍스트 식사 설명으로 식단 분석을 요청한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases:
+      [
+        network_error,
+        unauthorized,
+        validation_error,
+        analysis_failed,
+        server_error,
+      ]
+
+  - id: API_CREATE_FOOD_DIARY
+    method: POST
+    path: /food-camera/analysis-results/{foodAnalysisResultId}/diary
+    description: 분석 결과를 특정 날짜와 식사 유형의 기록으로 저장한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases:
+      [
+        network_error,
+        unauthorized,
+        validation_error,
+        duplicate_record,
+        server_error,
+      ]
+
+  - id: API_SKIP_MEAL
+    method: POST
+    path: /food-camera/skip-meal
+    description: 특정 날짜와 식사 유형을 건너뛴 것으로 기록한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_DATE_ANALYSIS
+    method: GET
+    path: /food-camera/date-analysis/{date}
+    description: 특정 날짜의 식사 기록과 영양 분석을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_GET_DIARY_EXISTENCE
+    method: GET
+    path: /food-camera/statistics/diary-existence
+    description: 기간별 식사 기록 존재 여부를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_UPDATE_EXTRA_WATER
+    method: PATCH
+    path: /food-camera/date-analysis/{date}/extra-water
+    description: 날짜별 추가 수분 섭취량을 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_DIARY_ANALYSIS
+    method: GET
+    path: /food-camera/diaries/{diaryId}/analysis
+    description: 특정 식사 기록의 분석 결과를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_UPDATE_FOOD_ANALYSIS
+    method: PATCH
+    path: /food-camera/analysis-results/{foodAnalysisResultId}
+    description: 분석 결과의 음식 항목과 영양 정보를 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_UPDATE_FOOD_TITLE
+    method: PATCH
+    path: /food-camera/analysis-results/{foodAnalysisResultId}/title
+    description: 분석 결과 제목을 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_CREATE_WEIGHT_RECORD
+    method: POST
+    path: /weight-records
+    description: 체중 기록을 저장한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_CREATE_EDEMA_RECORD
+    method: POST
+    path: /edema-records
+    description: 부종 기록을 저장한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_CHAT_CONVERSATIONS
+    method: GET
+    path: /chat/conversations
+    description: 상담 대화 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_CREATE_CHAT_CONVERSATION
+    method: POST
+    path: /chat/conversations
+    description: 새 상담 대화를 생성한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_CHAT_CONVERSATION
+    method: GET
+    path: /chat/conversations/{conversationId}
+    description: 상담 대화 상세를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_DELETE_CHAT_CONVERSATION
+    method: DELETE
+    path: /chat/conversations/{conversationId}
+    description: 상담 대화를 삭제한다.
+    auth_required: true
+    success_status: [200, 204]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_UPDATE_CHAT_TITLE
+    method: PATCH
+    path: /chat/conversations/{conversationId}/title
+    description: 상담 대화 제목을 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_CHAT_MESSAGES
+    method: GET
+    path: /chat/conversations/{conversationId}/messages
+    description: 상담 메시지 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_CREATE_CHAT_SUMMARY
+    method: POST
+    path: /chat/conversations/{conversationId}/summary
+    description: 상담 대화 요약을 생성한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_MEAL_RECOMMENDATIONS
+    method: GET
+    path: /meal-recommendations
+    description: 식사 추천 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_REFRESH_MEAL_RECOMMENDATIONS
+    method: POST
+    path: /meal-recommendations/refresh
+    description: 식사 추천을 새로고침한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_DISMISS_MEAL_RECOMMENDATION
+    method: POST
+    path: /meal-recommendations/{itemType}/{itemId}/dismiss
+    description: 특정 식사 추천 항목을 숨긴다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_BOOKMARK_MEAL_RECOMMENDATION
+    method: POST
+    path: /meal-recommendations/{itemType}/{itemId}/bookmark
+    description: 특정 식사 추천 항목의 북마크 상태를 토글한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_RESTAURANTS_NEARBY
+    method: GET
+    path: /restaurants/nearby
+    description: 현재 위치 또는 지정 위치 주변 식당을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases:
+      [network_error, unauthorized, location_unavailable, server_error]
+
+  - id: API_GET_RESTAURANT_MENUS
+    method: GET
+    path: /restaurants/{restaurantId}/menus
+    description: 식당별 메뉴와 영양 정보를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_GET_RECIPES
+    method: GET
+    path: /recipes
+    description: 레시피 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_GET_RECIPE
+    method: GET
+    path: /recipes/{id}
+    description: 레시피 상세를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_CREATE_RECIPE
+    method: POST
+    path: /recipes
+    description: 레시피 게시글을 생성한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_COMMUNITY_POSTS
+    method: GET
+    path: /community/posts
+    description: 커뮤니티 게시글 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_GET_COMMUNITY_POST
+    method: GET
+    path: /community/posts/{id}
+    description: 커뮤니티 게시글 상세를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_CREATE_COMMUNITY_POST
+    method: POST
+    path: /community/posts
+    description: 커뮤니티 게시글을 생성한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_UPDATE_COMMUNITY_POST
+    method: PUT
+    path: /community/posts/{id}
+    description: 커뮤니티 게시글을 수정한다.
+    auth_required: true
+    success_status: [200]
+    error_cases:
+      [network_error, unauthorized, not_found, validation_error, server_error]
+
+  - id: API_DELETE_COMMUNITY_POST
+    method: DELETE
+    path: /community/posts/{id}
+    description: 커뮤니티 게시글을 삭제한다.
+    auth_required: true
+    success_status: [200, 204]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_LIKE_COMMUNITY_POST
+    method: POST
+    path: /community/posts/{postId}/like
+    description: 커뮤니티 게시글 좋아요를 토글한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_BOOKMARK_COMMUNITY_POST
+    method: POST
+    path: /community/posts/{postId}/bookmark
+    description: 커뮤니티 게시글 북마크를 토글한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_REPORT_COMMUNITY_POST
+    method: POST
+    path: /community/posts/{postId}/report
+    description: 커뮤니티 게시글을 신고한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_GET_HEALTH_AUTH_METHODS
+    method: GET
+    path: /health-check/auth-methods
+    description: 건강검진 연동 인증 방식을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_REQUEST_HEALTH_CHECK
+    method: POST
+    path: /health-check/request
+    description: 건강검진 자료 연동을 요청한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, validation_error, server_error]
+
+  - id: API_CONFIRM_HEALTH_CHECK
+    method: POST
+    path: /health-check/confirm/{requestId}
+    description: 건강검진 연동 인증을 확인한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, invalid_request, server_error]
+
+  - id: API_GET_HEALTH_RESULTS
+    method: GET
+    path: /health-check/results
+    description: 건강검진 결과 목록을 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, server_error]
+
+  - id: API_GET_HEALTH_RESULT
+    method: GET
+    path: /health-check/results/{resultId}
+    description: 건강검진 결과 상세를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_GET_EXAM_OCR_RESULT
+    method: GET
+    path: /user/exam-results/ocr/{reportId}
+    description: OCR 처리된 검사 결과를 조회한다.
+    auth_required: true
+    success_status: [200]
+    error_cases: [network_error, unauthorized, not_found, server_error]
+
+  - id: API_UPLOAD_EXAM_OCR
+    method: POST
+    path: /user/exam-results/ocr
+    description: 검사 결과지 이미지를 OCR 처리용으로 업로드한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases: [network_error, unauthorized, invalid_image, server_error]
+
+  - id: API_CONFIRM_EXAM_OCR
+    method: POST
+    path: /user/exam-results/ocr/{reportId}/confirm
+    description: OCR 검토 결과를 확정해 건강검진 결과에 저장한다.
+    auth_required: true
+    success_status: [200, 201]
+    error_cases:
+      [
+        network_error,
+        unauthorized,
+        not_found,
+        already_confirmed,
+        validation_error,
+        server_error,
+      ]
