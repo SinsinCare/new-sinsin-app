@@ -1,0 +1,260 @@
+routes:
+  - path: "/"
+    screen: SCR_ROOT_INDEX
+    module: root
+    auth_required: false
+
+  - path: "/(auth)/login"
+    screen: SCR_AUTH_LOGIN
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/email-login"
+    screen: SCR_AUTH_EMAIL_LOGIN
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/forgot-password"
+    screen: SCR_AUTH_FORGOT_PASSWORD
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/terms-agreement"
+    screen: SCR_AUTH_TERMS_AGREEMENT
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/signup-email"
+    screen: SCR_AUTH_SIGNUP_EMAIL
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/email-login-link-password"
+    screen: SCR_AUTH_EMAIL_LINK_PASSWORD
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/signup-password"
+    screen: SCR_AUTH_SIGNUP_PASSWORD
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/profile-setup"
+    screen: SCR_AUTH_PROFILE_SETUP
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/nickname-setup"
+    screen: SCR_AUTH_NICKNAME_SETUP
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/signup-complete"
+    screen: SCR_AUTH_SIGNUP_COMPLETE
+    module: auth
+    auth_required: false
+
+  - path: "/(auth)/social-link-email"
+    screen: SCR_AUTH_SOCIAL_LINK_EMAIL
+    module: auth
+    auth_required: false
+
+  - path: "/onboarding"
+    screen: SCR_ONBOARDING
+    module: onboarding
+    auth_required: true
+
+  - path: "/(tabs)/home"
+    screen: SCR_TABS_HOME
+    module: home
+    auth_required: true
+
+  - path: "/(tabs)/consult"
+    screen: SCR_TABS_CONSULT
+    module: consultation
+    auth_required: true
+
+  - path: "/(tabs)/recipe"
+    screen: SCR_TABS_RECIPE
+    module: recipe
+    auth_required: true
+
+  - path: "/(tabs)/restaurant"
+    screen: SCR_TABS_RESTAURANT
+    module: restaurant
+    auth_required: true
+
+  - path: "/(tabs)/all"
+    screen: SCR_TABS_ALL
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)"
+    screen: SCR_SETTINGS_INDEX
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/profile-edit"
+    screen: SCR_SETTINGS_PROFILE_EDIT
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/name-edit"
+    screen: SCR_SETTINGS_NAME_EDIT
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/nickname-edit"
+    screen: SCR_SETTINGS_NICKNAME_EDIT
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/password-edit"
+    screen: SCR_SETTINGS_PASSWORD_EDIT
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/kidney-profile-edit"
+    screen: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/notifications"
+    screen: SCR_SETTINGS_NOTIFICATIONS
+    module: notification
+    auth_required: true
+
+  - path: "/(settings)/notification-settings"
+    screen: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    module: notification
+    auth_required: true
+
+  - path: "/privacy-settings"
+    screen: SCR_SETTINGS_PRIVACY
+    module: settings
+    auth_required: true
+
+  - path: "/legal-document"
+    screen: SCR_LEGAL_DOCUMENT
+    module: legal
+    auth_required: false
+
+  - path: "/(settings)/app-info"
+    screen: SCR_SETTINGS_APP_INFO
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/announcements"
+    screen: SCR_SETTINGS_ANNOUNCEMENTS
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/announcement-detail"
+    screen: SCR_SETTINGS_ANNOUNCEMENT_DETAIL
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/inquiry"
+    screen: SCR_SETTINGS_INQUIRY
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/ask-doctor"
+    screen: SCR_SETTINGS_ASK_DOCTOR
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/medical-reference"
+    screen: SCR_SETTINGS_MEDICAL_REFERENCE
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/withdrawal"
+    screen: SCR_SETTINGS_WITHDRAWAL
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/withdrawal-terms"
+    screen: SCR_SETTINGS_WITHDRAWAL_TERMS
+    module: settings
+    auth_required: true
+
+  - path: "/(settings)/withdrawal-complete"
+    screen: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    module: settings
+    auth_required: false
+
+  - path: "/(settings)/health-data"
+    screen: SCR_HEALTH_DATA
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-dashboard"
+    screen: SCR_HEALTH_DASHBOARD
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-data-upload"
+    screen: SCR_HEALTH_DATA_UPLOAD
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-ocr-review"
+    screen: SCR_HEALTH_OCR_REVIEW
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-results"
+    screen: SCR_HEALTH_RESULTS
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-result-detail"
+    screen: SCR_HEALTH_RESULT_DETAIL
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-nhis-auth"
+    screen: SCR_HEALTH_NHIS_AUTH
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-nhis-request"
+    screen: SCR_HEALTH_NHIS_REQUEST
+    module: health
+    auth_required: true
+
+  - path: "/(settings)/health-nhis-confirm"
+    screen: SCR_HEALTH_NHIS_CONFIRM
+    module: health
+    auth_required: true
+
+  - path: "/post/[id]"
+    screen: SCR_POST_DETAIL
+    module: recipe
+    auth_required: true
+
+  - path: "/(write)/free/new"
+    screen: SCR_WRITE_FREE_NEW
+    module: recipe
+    auth_required: true
+
+  - path: "/(write)/free/[id]"
+    screen: SCR_WRITE_FREE_EDIT
+    module: recipe
+    auth_required: true
+
+  - path: "/(write)/recipe/new"
+    screen: SCR_WRITE_RECIPE_NEW
+    module: recipe
+    auth_required: true
+
+  - path: "/(write)/recipe/[id]"
+    screen: SCR_WRITE_RECIPE_EDIT
+    module: recipe
+    auth_required: true
+
+  - path: "/restaurant/[id]"
+    screen: SCR_RESTAURANT_DETAIL
+    module: restaurant
+    auth_required: true

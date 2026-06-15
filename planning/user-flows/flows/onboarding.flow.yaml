@@ -1,0 +1,244 @@
+id: FLOW_ONBOARDING
+name: 온보딩 플로우
+description: 신규 또는 미완료 사용자가 CKD 여부를 선택하고 건강 정보 질문을 완료해 ACTIVE 계정으로 전환하는 경로
+version: 1
+
+entry_points:
+  - screen: SCR_ONBOARDING
+    trigger: account_state_pending_onboarding
+  - screen: SCR_AUTH_SIGNUP_COMPLETE
+    trigger: signup_continue
+  - screen: SCR_AUTH_LOGIN
+    trigger: login_result_pending_onboarding
+
+preconditions:
+  - id: PRE_AUTH_REQUIRED
+    description: 사용자는 로그인되어 있고 accountState가 PENDING_ONBOARDING이어야 한다.
+    type: auth
+    required: true
+
+nodes:
+  - id: N_START
+    type: start
+    label: 온보딩 시작
+
+  - id: D_AUTHENTICATED
+    type: decision
+    label: 로그인 상태인가?
+
+  - id: SCR_AUTH_LOGIN
+    type: screen
+    label: 로그인 화면
+    screen: SCR_AUTH_LOGIN
+    route: "/(auth)/login"
+    states: [default]
+
+  - id: SCR_ONBOARDING_WELCOME
+    type: screen
+    label: CKD 여부 선택
+    screen: SCR_ONBOARDING
+    route: "/onboarding"
+    states: [welcome]
+    analytics: [onboarding_started]
+
+  - id: D_HAS_CKD_SELECTED
+    type: decision
+    label: CKD 여부가 선택되었는가?
+
+  - id: ACT_LOAD_ONBOARDING_STEPS
+    type: action
+    label: 온보딩 질문 목록 조회
+    api: API_GET_ONBOARDING_CKD
+    notes:
+      - CKD 사용자는 API_GET_ONBOARDING_CKD를 호출한다.
+      - 비CKD 사용자는 API_GET_ONBOARDING_NON_CKD를 호출한다.
+
+  - id: D_LOAD_STEPS_RESULT
+    type: decision
+    label: 질문 목록 조회 결과
+
+  - id: SCR_ONBOARDING_STEP
+    type: screen
+    label: 온보딩 질문 단계
+    screen: SCR_ONBOARDING
+    route: "/onboarding"
+    states: [step]
+
+  - id: D_ANSWER_VALID
+    type: decision
+    label: 현재 답변이 유효한가?
+
+  - id: D_IS_LAST_STEP
+    type: decision
+    label: 마지막 질문인가?
+
+  - id: ACT_SUBMIT_ONBOARDING
+    type: action
+    label: 온보딩 답변 제출
+    api: API_SUBMIT_ONBOARDING
+
+  - id: D_SUBMIT_RESULT
+    type: decision
+    label: 온보딩 제출 결과
+
+  - id: ACT_UPDATE_SIGNUP_PROFILE
+    type: action
+    label: 가입 중 수집한 기본 프로필 반영
+    api: API_UPDATE_USER_PROFILE
+    notes:
+      - signup store에 name, nickname, gender가 남아 있을 때만 호출된다.
+
+  - id: D_PROFILE_PATCH_RESULT
+    type: decision
+    label: 기본 프로필 반영 결과
+
+  - id: SCR_TABS_HOME
+    type: screen
+    label: 홈
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record]
+
+  - id: ERR_ONBOARDING
+    type: error
+    label: 온보딩 오류
+    notes:
+      - 질문 목록 조회 실패 또는 제출 실패 시 Alert를 보여준다.
+      - 입력 중인 답변은 store에 남겨 재시도 가능하게 한다.
+
+  - id: N_END
+    type: end
+    label: 온보딩 종료
+
+edges:
+  - from: N_START
+    to: D_AUTHENTICATED
+
+  - from: D_AUTHENTICATED
+    to: SCR_ONBOARDING_WELCOME
+    condition: authenticated_pending_onboarding
+
+  - from: D_AUTHENTICATED
+    to: SCR_AUTH_LOGIN
+    condition: unauthenticated
+
+  - from: SCR_AUTH_LOGIN
+    to: N_END
+    description: 인증 플로우가 로그인 후 다시 온보딩으로 라우팅한다.
+
+  - from: SCR_ONBOARDING_WELCOME
+    to: D_HAS_CKD_SELECTED
+    trigger: tap_start
+
+  - from: D_HAS_CKD_SELECTED
+    to: ACT_LOAD_ONBOARDING_STEPS
+    condition: selected
+
+  - from: D_HAS_CKD_SELECTED
+    to: ERR_ONBOARDING
+    condition: not_selected
+    analytics: [onboarding_answer_validation_failed]
+
+  - from: ACT_LOAD_ONBOARDING_STEPS
+    to: D_LOAD_STEPS_RESULT
+
+  - from: D_LOAD_STEPS_RESULT
+    to: SCR_ONBOARDING_STEP
+    condition: success
+    analytics: [onboarding_steps_loaded]
+
+  - from: D_LOAD_STEPS_RESULT
+    to: ERR_ONBOARDING
+    condition: failure
+
+  - from: SCR_ONBOARDING_STEP
+    to: D_ANSWER_VALID
+    trigger: tap_next
+
+  - from: D_ANSWER_VALID
+    to: D_IS_LAST_STEP
+    condition: valid
+
+  - from: D_ANSWER_VALID
+    to: SCR_ONBOARDING_STEP
+    condition: invalid
+    description: 다음 버튼을 비활성 또는 오류 상태로 유지한다.
+    analytics: [onboarding_answer_validation_failed]
+
+  - from: D_IS_LAST_STEP
+    to: SCR_ONBOARDING_STEP
+    condition: has_next_step
+    description: currentStepIndex를 1 증가시킨다.
+
+  - from: D_IS_LAST_STEP
+    to: ACT_SUBMIT_ONBOARDING
+    condition: last_step
+
+  - from: SCR_ONBOARDING_STEP
+    to: SCR_ONBOARDING_WELCOME
+    trigger: hardware_back
+    condition: first_step
+    description: 첫 질문에서 뒤로가면 welcome으로 돌아가고 진행 상태를 초기화한다.
+
+  - from: SCR_ONBOARDING_STEP
+    to: SCR_ONBOARDING_STEP
+    trigger: hardware_back
+    condition: previous_step_exists
+    description: 이전 질문으로 이동한다.
+
+  - from: ACT_SUBMIT_ONBOARDING
+    to: D_SUBMIT_RESULT
+
+  - from: D_SUBMIT_RESULT
+    to: ACT_UPDATE_SIGNUP_PROFILE
+    condition: success_with_signup_profile
+    analytics: [onboarding_submitted]
+
+  - from: D_SUBMIT_RESULT
+    to: SCR_TABS_HOME
+    condition: success_without_signup_profile
+    analytics: [onboarding_submitted]
+
+  - from: D_SUBMIT_RESULT
+    to: ERR_ONBOARDING
+    condition: failure
+    analytics: [onboarding_submit_failed]
+
+  - from: ACT_UPDATE_SIGNUP_PROFILE
+    to: D_PROFILE_PATCH_RESULT
+
+  - from: D_PROFILE_PATCH_RESULT
+    to: SCR_TABS_HOME
+    condition: success
+
+  - from: D_PROFILE_PATCH_RESULT
+    to: ERR_ONBOARDING
+    condition: failure
+
+  - from: ERR_ONBOARDING
+    to: SCR_ONBOARDING_WELCOME
+    trigger: retry_from_welcome
+    condition: load_failed
+    analytics: [error_retry_tapped]
+
+  - from: ERR_ONBOARDING
+    to: SCR_ONBOARDING_STEP
+    trigger: retry_from_step
+    condition: submit_failed
+    analytics: [error_retry_tapped]
+
+  - from: SCR_TABS_HOME
+    to: N_END
+
+analytics:
+  - onboarding_started
+  - onboarding_steps_loaded
+  - onboarding_answer_validation_failed
+  - onboarding_submitted
+  - onboarding_submit_failed
+  - error_retry_tapped
+
+notes:
+  - Android hardware back is intercepted during onboarding so the app does not exit from the welcome phase.
+  - The onboarding store restores in-progress answers after AsyncStorage hydration.
+  - submitAnswers changes accountState to ACTIVE only after backend submission succeeds.

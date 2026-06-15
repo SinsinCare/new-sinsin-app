@@ -1,0 +1,200 @@
+id: FLOW_ERROR_RECOVERY
+name: 앱 실행 및 공통 오류 복구 플로우
+description: AppPolicyGate, 세션 복원, 인증 가드, 계정 상태, 네트워크 실패 재시도 등 공통 복구 경로를 정리한다.
+version: 1
+
+entry_points:
+  - source: app_launch
+    trigger: open_app
+  - source: route_guard
+    trigger: protected_route_access
+  - source: api_error
+    trigger: unauthorized_or_network_error
+
+preconditions:
+  - id: PRE_APP_START
+    description: 앱 실행 시 provider와 route guard가 로드된다.
+    type: runtime
+    required: true
+
+nodes:
+  - id: N_START
+    type: start
+    label: 앱 실행 시작
+
+  - id: ACT_CHECK_MOBILE_POLICY
+    type: action
+    label: 모바일 정책 확인
+    api: API_GET_MOBILE_POLICY
+    analytics: [app_launch_started]
+
+  - id: D_MOBILE_POLICY_RESULT
+    type: decision
+    label: 모바일 정책 결과
+
+  - id: SCR_POLICY_BLOCKING
+    type: screen
+    label: 강제 업데이트 또는 점검 안내
+    screen: SCR_ROOT_INDEX
+    route: "/"
+    states: [blocked]
+    analytics: [app_policy_blocked]
+
+  - id: ACT_RESTORE_SESSION
+    type: action
+    label: refresh token 세션 복원
+    api: API_AUTH_REFRESH_TOKEN
+    analytics: [auth_session_restore_started]
+
+  - id: D_SESSION_RESTORE_RESULT
+    type: decision
+    label: 세션 복원 결과
+
+  - id: D_ACCOUNT_STATE
+    type: decision
+    label: 계정 상태
+
+  - id: SCR_AUTH_LOGIN
+    type: screen
+    label: 로그인 화면
+    screen: SCR_AUTH_LOGIN
+    route: "/(auth)/login"
+    states: [default]
+
+  - id: SCR_ONBOARDING
+    type: screen
+    label: 온보딩 화면
+    screen: SCR_ONBOARDING
+    route: "/onboarding"
+    states: [welcome, step]
+
+  - id: SCR_TABS_HOME
+    type: screen
+    label: 홈
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record]
+
+  - id: ACT_SIGN_OUT_BLOCKED_ACCOUNT
+    type: action
+    label: 차단 계정 로컬 세션 정리
+    api: API_AUTH_LOGOUT
+    notes:
+      - RootLayout은 SUSPENDED 또는 WITHDRAWAL_PENDING 계정 상태를 감지하면 signOut을 호출한다.
+
+  - id: D_SIGN_OUT_RESULT
+    type: decision
+    label: 차단 계정 로그아웃 결과
+
+  - id: ERR_RECOVERY
+    type: error
+    label: 공통 복구 오류
+    notes:
+      - 네트워크 실패 시 재시도 CTA를 제공한다.
+      - refresh 실패는 로그인 화면으로 보낸다.
+
+  - id: N_END
+    type: end
+    label: 앱 실행 및 복구 종료
+
+edges:
+  - from: N_START
+    to: ACT_CHECK_MOBILE_POLICY
+
+  - from: ACT_CHECK_MOBILE_POLICY
+    to: D_MOBILE_POLICY_RESULT
+
+  - from: D_MOBILE_POLICY_RESULT
+    to: ACT_RESTORE_SESSION
+    condition: allow_or_recommend_update
+    analytics: [app_policy_checked]
+
+  - from: D_MOBILE_POLICY_RESULT
+    to: SCR_POLICY_BLOCKING
+    condition: force_update_or_maintenance_or_unsupported
+    analytics: [app_policy_blocked]
+
+  - from: D_MOBILE_POLICY_RESULT
+    to: ERR_RECOVERY
+    condition: network_or_server_error
+
+  - from: SCR_POLICY_BLOCKING
+    to: N_END
+
+  - from: ACT_RESTORE_SESSION
+    to: D_SESSION_RESTORE_RESULT
+
+  - from: D_SESSION_RESTORE_RESULT
+    to: D_ACCOUNT_STATE
+    condition: restored
+
+  - from: D_SESSION_RESTORE_RESULT
+    to: SCR_AUTH_LOGIN
+    condition: no_token_or_invalid_refresh
+    analytics: [auth_session_restore_failed]
+
+  - from: D_SESSION_RESTORE_RESULT
+    to: ERR_RECOVERY
+    condition: network_or_server_error
+
+  - from: D_ACCOUNT_STATE
+    to: SCR_TABS_HOME
+    condition: active
+
+  - from: D_ACCOUNT_STATE
+    to: SCR_ONBOARDING
+    condition: pending_onboarding
+
+  - from: D_ACCOUNT_STATE
+    to: ACT_SIGN_OUT_BLOCKED_ACCOUNT
+    condition: suspended_or_withdrawal_pending
+
+  - from: ACT_SIGN_OUT_BLOCKED_ACCOUNT
+    to: D_SIGN_OUT_RESULT
+
+  - from: D_SIGN_OUT_RESULT
+    to: SCR_AUTH_LOGIN
+    condition: success_or_local_cleanup
+
+  - from: D_SIGN_OUT_RESULT
+    to: ERR_RECOVERY
+    condition: unrecoverable_failure
+
+  - from: ERR_RECOVERY
+    to: ACT_CHECK_MOBILE_POLICY
+    trigger: retry_app_launch
+    condition: policy_check_failure
+    analytics: [error_retry_tapped]
+
+  - from: ERR_RECOVERY
+    to: ACT_RESTORE_SESSION
+    trigger: retry_session_restore
+    condition: session_restore_network_failure
+    analytics: [error_retry_tapped]
+
+  - from: ERR_RECOVERY
+    to: SCR_AUTH_LOGIN
+    trigger: go_to_login
+    condition: auth_recovery_failed
+
+  - from: SCR_TABS_HOME
+    to: N_END
+
+  - from: SCR_ONBOARDING
+    to: N_END
+
+  - from: SCR_AUTH_LOGIN
+    to: N_END
+
+analytics:
+  - app_launch_started
+  - app_policy_checked
+  - app_policy_blocked
+  - auth_session_restore_started
+  - auth_session_restore_failed
+  - error_retry_tapped
+
+notes:
+  - This flow documents cross-cutting behavior implemented by AppPolicyGate, useAuth restoreSession, apiClient token refresh, and RootLayout route guards.
+  - Auth-required screen handling is centralized here to avoid repeating the same unauthenticated redirect in every feature flow.
+  - App policy decisions are server-authoritative; the client only follows the returned decision.

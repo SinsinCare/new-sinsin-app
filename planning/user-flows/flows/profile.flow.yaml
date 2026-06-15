@@ -1,0 +1,416 @@
+id: FLOW_PROFILE
+name: 프로필 및 설정 플로우
+description: My Page에서 기본 프로필, 신장 프로필, 비밀번호, 문의, 탈퇴 등 설정성 작업을 처리한다.
+version: 1
+
+entry_points:
+  - screen: SCR_TABS_ALL
+    trigger: bottom_tab_all
+  - screen: SCR_SETTINGS_INDEX
+    trigger: tap_settings
+
+preconditions:
+  - id: PRE_AUTH_REQUIRED
+    description: 설정과 프로필 수정은 ACTIVE 계정으로 로그인된 사용자만 접근한다.
+    type: auth
+    required: true
+
+nodes:
+  - id: N_START
+    type: start
+    label: 프로필 설정 시작
+
+  - id: D_AUTH_REQUIRED
+    type: decision
+    label: 인증 상태 확인
+
+  - id: SCR_AUTH_LOGIN
+    type: screen
+    label: 로그인 화면
+    screen: SCR_AUTH_LOGIN
+    route: "/(auth)/login"
+    states: [default]
+
+  - id: SCR_TABS_ALL
+    type: screen
+    label: 전체 메뉴 My Page
+    screen: SCR_TABS_ALL
+    route: "/(tabs)/all"
+    states: [default, loading, error]
+    analytics: [profile_viewed]
+
+  - id: ACT_GET_PROFILE
+    type: action
+    label: 프로필 조회
+    api: API_GET_USER_PROFILE
+
+  - id: D_PROFILE_LOAD_RESULT
+    type: decision
+    label: 프로필 조회 결과
+
+  - id: SCR_SETTINGS_PROFILE_EDIT
+    type: screen
+    label: 프로필 수정
+    screen: SCR_SETTINGS_PROFILE_EDIT
+    route: "/(settings)/profile-edit"
+    states: [default, editing, saving, permission_denied, error]
+
+  - id: ACT_UPDATE_PROFILE
+    type: action
+    label: 기본 프로필 수정
+    api: API_UPDATE_USER_PROFILE
+    analytics: [profile_update_started]
+
+  - id: D_PROFILE_UPDATE_RESULT
+    type: decision
+    label: 기본 프로필 수정 결과
+
+  - id: SCR_SETTINGS_NICKNAME_EDIT
+    type: screen
+    label: 닉네임 수정
+    screen: SCR_SETTINGS_NICKNAME_EDIT
+    route: "/(settings)/nickname-edit"
+    states: [default, checking, saving, duplicate, error]
+
+  - id: ACT_VERIFY_NICKNAME
+    type: action
+    label: 닉네임 중복 확인
+    api: API_AUTH_VERIFY_NICKNAME
+
+  - id: D_NICKNAME_RESULT
+    type: decision
+    label: 닉네임 확인 결과
+
+  - id: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    type: screen
+    label: 신장 프로필 수정
+    screen: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    route: "/(settings)/kidney-profile-edit"
+    states: [default, saving, validation_error, error]
+
+  - id: ACT_GET_KIDNEY_PROFILE
+    type: action
+    label: 신장 프로필 조회
+    api: API_GET_KIDNEY_PROFILE
+
+  - id: D_KIDNEY_PROFILE_LOAD_RESULT
+    type: decision
+    label: 신장 프로필 조회 결과
+
+  - id: ACT_UPDATE_KIDNEY_PROFILE
+    type: action
+    label: 신장 프로필 수정
+    api: API_UPDATE_KIDNEY_PROFILE
+
+  - id: D_KIDNEY_PROFILE_UPDATE_RESULT
+    type: decision
+    label: 신장 프로필 수정 결과
+
+  - id: SCR_SETTINGS_PASSWORD_EDIT
+    type: screen
+    label: 비밀번호 변경
+    screen: SCR_SETTINGS_PASSWORD_EDIT
+    route: "/(settings)/password-edit"
+    states: [default, saving, validation_error, error]
+
+  - id: ACT_UPDATE_PASSWORD
+    type: action
+    label: 비밀번호 변경
+    api: API_UPDATE_PASSWORD
+
+  - id: D_PASSWORD_UPDATE_RESULT
+    type: decision
+    label: 비밀번호 변경 결과
+
+  - id: SCR_SETTINGS_INQUIRY
+    type: screen
+    label: 문의하기
+    screen: SCR_SETTINGS_INQUIRY
+    route: "/(settings)/inquiry"
+    states: [default, permission_denied, submitting, success, error]
+
+  - id: PERM_PHOTO_LIBRARY
+    type: permission
+    label: 문의 첨부 사진 권한
+
+  - id: D_INQUIRY_PHOTO_PERMISSION
+    type: decision
+    label: 문의 첨부 권한 결과
+
+  - id: ACT_CREATE_INQUIRY
+    type: action
+    label: 문의 제출
+    api: API_CREATE_INQUIRY
+
+  - id: D_INQUIRY_RESULT
+    type: decision
+    label: 문의 제출 결과
+
+  - id: SCR_SETTINGS_WITHDRAWAL
+    type: screen
+    label: 회원탈퇴
+    screen: SCR_SETTINGS_WITHDRAWAL
+    route: "/(settings)/withdrawal"
+    states: [default, validation_error]
+
+  - id: SCR_SETTINGS_WITHDRAWAL_TERMS
+    type: screen
+    label: 회원탈퇴 최종 확인
+    screen: SCR_SETTINGS_WITHDRAWAL_TERMS
+    route: "/(settings)/withdrawal-terms"
+    states: [default, submitting, error]
+
+  - id: ACT_WITHDRAW_USER
+    type: action
+    label: 회원탈퇴 요청
+    api: API_WITHDRAW_USER
+
+  - id: D_WITHDRAW_RESULT
+    type: decision
+    label: 회원탈퇴 결과
+
+  - id: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    type: screen
+    label: 회원탈퇴 완료
+    screen: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    route: "/(settings)/withdrawal-complete"
+    states: [default]
+
+  - id: ERR_PROFILE
+    type: error
+    label: 프로필 설정 오류
+    notes:
+      - 수정 실패 시 현재 입력값을 유지한다.
+      - 비밀번호 변경 성공 시 로그인 화면으로 이동한다.
+
+  - id: N_END
+    type: end
+    label: 프로필 설정 종료
+
+edges:
+  - from: N_START
+    to: D_AUTH_REQUIRED
+
+  - from: D_AUTH_REQUIRED
+    to: SCR_TABS_ALL
+    condition: active_session
+
+  - from: D_AUTH_REQUIRED
+    to: SCR_AUTH_LOGIN
+    condition: unauthenticated
+
+  - from: SCR_AUTH_LOGIN
+    to: N_END
+
+  - from: SCR_TABS_ALL
+    to: ACT_GET_PROFILE
+    trigger: screen_focus
+
+  - from: ACT_GET_PROFILE
+    to: D_PROFILE_LOAD_RESULT
+
+  - from: D_PROFILE_LOAD_RESULT
+    to: SCR_TABS_ALL
+    condition: success
+
+  - from: D_PROFILE_LOAD_RESULT
+    to: ERR_PROFILE
+    condition: failure
+
+  - from: SCR_TABS_ALL
+    to: SCR_SETTINGS_PROFILE_EDIT
+    trigger: tap_profile_edit
+
+  - from: SCR_SETTINGS_PROFILE_EDIT
+    to: ACT_UPDATE_PROFILE
+    trigger: save_profile
+
+  - from: ACT_UPDATE_PROFILE
+    to: D_PROFILE_UPDATE_RESULT
+
+  - from: D_PROFILE_UPDATE_RESULT
+    to: SCR_TABS_ALL
+    condition: success
+    analytics: [profile_update_succeeded]
+
+  - from: D_PROFILE_UPDATE_RESULT
+    to: ERR_PROFILE
+    condition: failure
+    analytics: [profile_update_failed]
+
+  - from: SCR_SETTINGS_PROFILE_EDIT
+    to: SCR_SETTINGS_NICKNAME_EDIT
+    trigger: tap_nickname
+
+  - from: SCR_SETTINGS_NICKNAME_EDIT
+    to: ACT_VERIFY_NICKNAME
+    trigger: save_nickname
+
+  - from: ACT_VERIFY_NICKNAME
+    to: D_NICKNAME_RESULT
+
+  - from: D_NICKNAME_RESULT
+    to: ACT_UPDATE_PROFILE
+    condition: available
+
+  - from: D_NICKNAME_RESULT
+    to: ERR_PROFILE
+    condition: duplicate_or_failure
+
+  - from: SCR_TABS_ALL
+    to: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    trigger: tap_kidney_profile_edit
+
+  - from: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    to: ACT_GET_KIDNEY_PROFILE
+    trigger: screen_focus
+
+  - from: ACT_GET_KIDNEY_PROFILE
+    to: D_KIDNEY_PROFILE_LOAD_RESULT
+
+  - from: D_KIDNEY_PROFILE_LOAD_RESULT
+    to: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    condition: success
+
+  - from: D_KIDNEY_PROFILE_LOAD_RESULT
+    to: ERR_PROFILE
+    condition: failure
+
+  - from: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    to: ACT_UPDATE_KIDNEY_PROFILE
+    trigger: save_kidney_profile
+
+  - from: ACT_UPDATE_KIDNEY_PROFILE
+    to: D_KIDNEY_PROFILE_UPDATE_RESULT
+
+  - from: D_KIDNEY_PROFILE_UPDATE_RESULT
+    to: SCR_TABS_ALL
+    condition: success
+    analytics: [kidney_profile_update_succeeded]
+
+  - from: D_KIDNEY_PROFILE_UPDATE_RESULT
+    to: ERR_PROFILE
+    condition: failure
+
+  - from: SCR_SETTINGS_PROFILE_EDIT
+    to: SCR_SETTINGS_PASSWORD_EDIT
+    trigger: tap_password
+
+  - from: SCR_SETTINGS_PASSWORD_EDIT
+    to: ACT_UPDATE_PASSWORD
+    trigger: save_password
+
+  - from: ACT_UPDATE_PASSWORD
+    to: D_PASSWORD_UPDATE_RESULT
+
+  - from: D_PASSWORD_UPDATE_RESULT
+    to: SCR_AUTH_LOGIN
+    condition: success
+    analytics: [password_change_succeeded]
+
+  - from: D_PASSWORD_UPDATE_RESULT
+    to: ERR_PROFILE
+    condition: failure
+
+  - from: SCR_TABS_ALL
+    to: SCR_SETTINGS_INQUIRY
+    trigger: tap_inquiry
+
+  - from: SCR_SETTINGS_INQUIRY
+    to: PERM_PHOTO_LIBRARY
+    trigger: add_attachment
+
+  - from: PERM_PHOTO_LIBRARY
+    to: D_INQUIRY_PHOTO_PERMISSION
+
+  - from: D_INQUIRY_PHOTO_PERMISSION
+    to: SCR_SETTINGS_INQUIRY
+    condition: granted
+
+  - from: D_INQUIRY_PHOTO_PERMISSION
+    to: SCR_SETTINGS_INQUIRY
+    condition: denied
+    description: 첨부 없이 문의 작성 상태를 유지한다.
+
+  - from: SCR_SETTINGS_INQUIRY
+    to: ACT_CREATE_INQUIRY
+    trigger: submit_inquiry
+
+  - from: ACT_CREATE_INQUIRY
+    to: D_INQUIRY_RESULT
+
+  - from: D_INQUIRY_RESULT
+    to: SCR_TABS_ALL
+    condition: success
+    analytics: [inquiry_submitted]
+
+  - from: D_INQUIRY_RESULT
+    to: ERR_PROFILE
+    condition: failure
+
+  - from: SCR_TABS_ALL
+    to: SCR_SETTINGS_WITHDRAWAL
+    trigger: tap_withdrawal
+
+  - from: SCR_SETTINGS_WITHDRAWAL
+    to: SCR_SETTINGS_WITHDRAWAL_TERMS
+    trigger: submit_reason
+    condition: reason_selected
+
+  - from: SCR_SETTINGS_WITHDRAWAL
+    to: ERR_PROFILE
+    trigger: submit_reason
+    condition: missing_reason
+
+  - from: SCR_SETTINGS_WITHDRAWAL_TERMS
+    to: ACT_WITHDRAW_USER
+    trigger: confirm_withdrawal
+
+  - from: ACT_WITHDRAW_USER
+    to: D_WITHDRAW_RESULT
+
+  - from: D_WITHDRAW_RESULT
+    to: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    condition: success
+    analytics: [account_withdrawal_requested]
+
+  - from: D_WITHDRAW_RESULT
+    to: ERR_PROFILE
+    condition: failure
+
+  - from: SCR_SETTINGS_PROFILE_EDIT
+    to: SCR_TABS_ALL
+    trigger: back
+    condition: cancel
+
+  - from: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    to: SCR_TABS_ALL
+    trigger: back
+    condition: cancel
+
+  - from: SCR_SETTINGS_PASSWORD_EDIT
+    to: SCR_SETTINGS_PROFILE_EDIT
+    trigger: back
+    condition: cancel
+
+  - from: ERR_PROFILE
+    to: SCR_TABS_ALL
+    trigger: dismiss_or_retry_later
+
+  - from: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    to: N_END
+
+analytics:
+  - profile_viewed
+  - profile_update_started
+  - profile_update_succeeded
+  - profile_update_failed
+  - kidney_profile_update_succeeded
+  - password_change_succeeded
+  - inquiry_submitted
+  - account_withdrawal_requested
+
+notes:
+  - The My Page entry lives at /(tabs)/all in the tab navigator and links into the settings stack.
+  - Profile image and inquiry attachment use media permissions, but the current UX keeps editing possible without an attachment.
+  - Password change success returns to login because the session state may need renewal.
