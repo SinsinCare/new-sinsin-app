@@ -1,0 +1,215 @@
+id: FLOW_NOTIFICATION
+name: 알림 설정 및 알림 진입 플로우
+description: 알림 설정 조회, 권한 요청, 로컬 알림 스케줄링, 알림 탭 후 홈 복귀를 처리한다.
+version: 1
+
+entry_points:
+  - screen: SCR_SETTINGS_NOTIFICATIONS
+    trigger: tap_notification_icon
+  - screen: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    trigger: tap_notification_settings
+  - source: local_notification
+    trigger: tap_food_analysis_complete
+
+preconditions:
+  - id: PRE_AUTH_REQUIRED
+    description: 알림함과 알림 설정은 로그인된 ACTIVE 사용자만 접근한다.
+    type: auth
+    required: true
+
+nodes:
+  - id: N_START
+    type: start
+    label: 알림 플로우 시작
+
+  - id: D_ENTRY_SOURCE
+    type: decision
+    label: 진입 경로
+
+  - id: SCR_SETTINGS_NOTIFICATIONS
+    type: screen
+    label: 알림함
+    screen: SCR_SETTINGS_NOTIFICATIONS
+    route: "/(settings)/notifications"
+    states: [default, empty, unread, error]
+
+  - id: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    type: screen
+    label: 알림 설정
+    screen: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    route: "/(settings)/notification-settings"
+    states: [default, loading, permission_denied, saving, error]
+    analytics: [notification_settings_viewed]
+
+  - id: ACT_LOAD_NOTIFICATION_SETTINGS
+    type: action
+    label: 알림 설정 조회
+    api: API_GET_NOTIFICATION_SETTINGS
+
+  - id: D_LOAD_SETTINGS_RESULT
+    type: decision
+    label: 알림 설정 조회 결과
+
+  - id: D_NOTIFICATION_TOGGLE
+    type: decision
+    label: 알림이 켜졌는가?
+
+  - id: PERM_NOTIFICATION
+    type: permission
+    label: 알림 권한 요청
+    analytics: [notification_permission_requested]
+
+  - id: D_NOTIFICATION_PERMISSION
+    type: decision
+    label: 알림 권한 결과
+
+  - id: ACT_SAVE_NOTIFICATION_SETTINGS
+    type: action
+    label: 알림 설정 저장
+    api: API_UPDATE_NOTIFICATION_SETTINGS
+
+  - id: D_SAVE_SETTINGS_RESULT
+    type: decision
+    label: 알림 설정 저장 결과
+
+  - id: ACT_SCHEDULE_LOCAL_NOTIFICATIONS
+    type: action
+    label: 로컬 알림 스케줄링
+    notes:
+      - morning-check, water reminder, meal reminder를 expo-notifications로 예약한다.
+
+  - id: D_SCHEDULE_RESULT
+    type: decision
+    label: 로컬 알림 스케줄링 결과
+
+  - id: SCR_TABS_HOME
+    type: screen
+    label: 홈 기록 탭
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record, pending_result]
+
+  - id: ERR_NOTIFICATION
+    type: error
+    label: 알림 오류
+    notes:
+      - 서버 저장 실패 시 로컬 AsyncStorage 저장은 유지한다.
+      - 권한 거부 시 알림 없이 앱 내 기능은 계속 사용한다.
+
+  - id: N_END
+    type: end
+    label: 알림 플로우 종료
+
+edges:
+  - from: N_START
+    to: D_ENTRY_SOURCE
+
+  - from: D_ENTRY_SOURCE
+    to: SCR_SETTINGS_NOTIFICATIONS
+    condition: notification_history
+
+  - from: D_ENTRY_SOURCE
+    to: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    condition: settings
+
+  - from: D_ENTRY_SOURCE
+    to: SCR_TABS_HOME
+    condition: tapped_food_analysis_notification
+    analytics: [notification_opened]
+
+  - from: SCR_SETTINGS_NOTIFICATIONS
+    to: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    trigger: tap_settings
+
+  - from: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    to: ACT_LOAD_NOTIFICATION_SETTINGS
+    trigger: screen_focus
+
+  - from: ACT_LOAD_NOTIFICATION_SETTINGS
+    to: D_LOAD_SETTINGS_RESULT
+
+  - from: D_LOAD_SETTINGS_RESULT
+    to: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    condition: success_or_cached
+
+  - from: D_LOAD_SETTINGS_RESULT
+    to: ERR_NOTIFICATION
+    condition: unrecoverable_failure
+
+  - from: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    to: D_NOTIFICATION_TOGGLE
+    trigger: change_notification_toggle
+
+  - from: D_NOTIFICATION_TOGGLE
+    to: PERM_NOTIFICATION
+    condition: enabled
+
+  - from: D_NOTIFICATION_TOGGLE
+    to: ACT_SAVE_NOTIFICATION_SETTINGS
+    condition: disabled
+
+  - from: PERM_NOTIFICATION
+    to: D_NOTIFICATION_PERMISSION
+
+  - from: D_NOTIFICATION_PERMISSION
+    to: ACT_SAVE_NOTIFICATION_SETTINGS
+    condition: granted
+
+  - from: D_NOTIFICATION_PERMISSION
+    to: ERR_NOTIFICATION
+    condition: denied
+    analytics: [notification_permission_denied]
+
+  - from: ACT_SAVE_NOTIFICATION_SETTINGS
+    to: D_SAVE_SETTINGS_RESULT
+
+  - from: D_SAVE_SETTINGS_RESULT
+    to: ACT_SCHEDULE_LOCAL_NOTIFICATIONS
+    condition: success
+    analytics: [notification_settings_saved]
+
+  - from: D_SAVE_SETTINGS_RESULT
+    to: ERR_NOTIFICATION
+    condition: failure
+    analytics: [notification_settings_save_failed]
+
+  - from: ACT_SCHEDULE_LOCAL_NOTIFICATIONS
+    to: D_SCHEDULE_RESULT
+
+  - from: D_SCHEDULE_RESULT
+    to: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    condition: success
+
+  - from: D_SCHEDULE_RESULT
+    to: ERR_NOTIFICATION
+    condition: failure
+
+  - from: ERR_NOTIFICATION
+    to: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    trigger: dismiss
+
+  - from: SCR_TABS_HOME
+    to: N_END
+
+  - from: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    to: N_END
+
+flow_links:
+  - from_node: SCR_TABS_HOME
+    to_flow: FLOW_HOME_RECORD
+    to_node: N_START
+    trigger: tap_food_analysis_complete
+    description: 음식 분석 완료 알림 탭은 홈 기록 플로우의 pending analysis 경로로 이어진다.
+
+analytics:
+  - notification_settings_viewed
+  - notification_permission_requested
+  - notification_permission_denied
+  - notification_settings_saved
+  - notification_settings_save_failed
+  - notification_opened
+
+notes:
+  - The service stores notification settings in AsyncStorage before attempting the server PUT.
+  - Local food-analysis completion notifications route to /(tabs)/home where pending analysis is opened.
+  - Permission denial is a product warning, not a hard app failure.

@@ -1,0 +1,580 @@
+id: FLOW_AUTH
+name: 인증 및 회원가입 플로우
+description: 앱 진입 후 로그인, 소셜 로그인, 이메일 회원가입, 비밀번호 재설정, 계정 상태별 라우팅을 처리한다.
+version: 1
+
+entry_points:
+  - screen: SCR_AUTH_LOGIN
+    trigger: unauthenticated_redirect
+  - screen: SCR_ROOT_INDEX
+    trigger: app_launch_without_session
+  - source: deep_link
+    trigger: password_reset_link
+
+preconditions:
+  - id: PRE_AUTH_PUBLIC
+    description: 인증 플로우는 로그인 전 사용자가 접근할 수 있어야 한다.
+    type: auth
+    required: false
+
+nodes:
+  - id: N_START
+    type: start
+    label: 인증 시작
+
+  - id: SCR_AUTH_LOGIN
+    type: screen
+    label: 로그인 화면
+    screen: SCR_AUTH_LOGIN
+    route: "/(auth)/login"
+    states: [default, loading, error, withdrawal_pending]
+    analytics: [auth_login_viewed]
+
+  - id: D_LOGIN_METHOD
+    type: decision
+    label: 로그인 또는 가입 방식 선택
+
+  - id: SCR_AUTH_EMAIL_LOGIN
+    type: screen
+    label: 이메일 로그인
+    screen: SCR_AUTH_EMAIL_LOGIN
+    route: "/(auth)/email-login"
+    states: [default, loading, error, withdrawal_pending]
+
+  - id: ACT_EMAIL_LOGIN
+    type: action
+    label: 이메일 로그인 API 호출
+    api: API_AUTH_EMAIL_LOGIN
+    analytics: [auth_email_login_started]
+
+  - id: D_EMAIL_LOGIN_RESULT
+    type: decision
+    label: 이메일 로그인 결과
+
+  - id: ACT_CANCEL_WITHDRAWAL
+    type: action
+    label: 탈퇴 대기 취소
+    api: API_AUTH_CANCEL_WITHDRAWAL
+
+  - id: D_CANCEL_WITHDRAWAL_RESULT
+    type: decision
+    label: 탈퇴 취소 결과
+
+  - id: ACT_SOCIAL_LOGIN
+    type: action
+    label: 소셜 로그인 API 호출
+    api: API_AUTH_SOCIAL_LOGIN
+    analytics: [auth_social_login_started]
+
+  - id: D_SOCIAL_LOGIN_RESULT
+    type: decision
+    label: 소셜 로그인 결과
+
+  - id: SCR_AUTH_SOCIAL_LINK_EMAIL
+    type: screen
+    label: 소셜 이메일 연결
+    screen: SCR_AUTH_SOCIAL_LINK_EMAIL
+    route: "/(auth)/social-link-email"
+    states: [default, code_sent, verified, loading, error]
+
+  - id: ACT_SEND_SOCIAL_LINK_OTP
+    type: action
+    label: 소셜 이메일 연결 OTP 발송
+    api: API_AUTH_SEND_SOCIAL_LINK_EMAIL_OTP
+
+  - id: D_SOCIAL_LINK_OTP_RESULT
+    type: decision
+    label: 소셜 이메일 OTP 발송 결과
+
+  - id: ACT_VERIFY_SOCIAL_LINK_OTP
+    type: action
+    label: 소셜 이메일 연결 OTP 검증
+    api: API_AUTH_VERIFY_SOCIAL_LINK_EMAIL_OTP
+
+  - id: D_SOCIAL_LINK_VERIFY_RESULT
+    type: decision
+    label: 소셜 이메일 연결 검증 결과
+
+  - id: SCR_AUTH_TERMS_AGREEMENT
+    type: screen
+    label: 약관 동의
+    screen: SCR_AUTH_TERMS_AGREEMENT
+    route: "/(auth)/terms-agreement"
+    states: [default, validation_error]
+    analytics: [auth_signup_started]
+
+  - id: SCR_AUTH_SIGNUP_EMAIL
+    type: screen
+    label: 회원가입 이메일 인증
+    screen: SCR_AUTH_SIGNUP_EMAIL
+    route: "/(auth)/signup-email"
+    states:
+      [
+        default,
+        code_sent,
+        verified,
+        duplicate_email,
+        social_link_required,
+        loading,
+        error,
+      ]
+
+  - id: ACT_VERIFY_SIGNUP_EMAIL
+    type: action
+    label: 회원가입 이메일 사용 가능 확인
+    api: API_AUTH_VERIFY_SIGNUP_EMAIL
+
+  - id: D_SIGNUP_EMAIL_CHECK_RESULT
+    type: decision
+    label: 이메일 사용 가능 여부
+
+  - id: ACT_SEND_SIGNUP_EMAIL_OTP
+    type: action
+    label: 회원가입 OTP 발송
+    api: API_AUTH_SEND_SIGNUP_EMAIL_OTP
+
+  - id: D_SIGNUP_OTP_SEND_RESULT
+    type: decision
+    label: 회원가입 OTP 발송 결과
+
+  - id: ACT_VERIFY_SIGNUP_EMAIL_OTP
+    type: action
+    label: 회원가입 OTP 검증
+    api: API_AUTH_VERIFY_SIGNUP_EMAIL_OTP
+
+  - id: D_SIGNUP_EMAIL_VERIFY_RESULT
+    type: decision
+    label: 회원가입 OTP 검증 결과
+
+  - id: SCR_AUTH_EMAIL_LINK_PASSWORD
+    type: screen
+    label: 이메일 연결 비밀번호 설정
+    screen: SCR_AUTH_EMAIL_LINK_PASSWORD
+    route: "/(auth)/email-login-link-password"
+    states: [default, loading, error]
+
+  - id: ACT_SET_EMAIL_LINK_PASSWORD
+    type: action
+    label: 이메일 연결 비밀번호 저장
+    api: API_AUTH_SET_EMAIL_LINK_PASSWORD
+
+  - id: D_EMAIL_LINK_PASSWORD_RESULT
+    type: decision
+    label: 이메일 연결 비밀번호 저장 결과
+
+  - id: SCR_AUTH_SIGNUP_PASSWORD
+    type: screen
+    label: 비밀번호 설정
+    screen: SCR_AUTH_SIGNUP_PASSWORD
+    route: "/(auth)/signup-password"
+    states: [default, validation_error]
+
+  - id: SCR_AUTH_PROFILE_SETUP
+    type: screen
+    label: 기본 정보 입력
+    screen: SCR_AUTH_PROFILE_SETUP
+    route: "/(auth)/profile-setup"
+    states: [default, validation_error]
+
+  - id: SCR_AUTH_NICKNAME_SETUP
+    type: screen
+    label: 닉네임 설정
+    screen: SCR_AUTH_NICKNAME_SETUP
+    route: "/(auth)/nickname-setup"
+    states: [default, checking, available, duplicate, loading, error]
+
+  - id: ACT_VERIFY_NICKNAME
+    type: action
+    label: 닉네임 중복 확인
+    api: API_AUTH_VERIFY_NICKNAME
+
+  - id: D_NICKNAME_RESULT
+    type: decision
+    label: 닉네임 사용 가능 여부
+
+  - id: ACT_SIGNUP
+    type: action
+    label: 회원가입 API 호출
+    api: API_AUTH_SIGNUP
+
+  - id: D_SIGNUP_RESULT
+    type: decision
+    label: 회원가입 결과
+
+  - id: SCR_AUTH_SIGNUP_COMPLETE
+    type: screen
+    label: 회원가입 완료
+    screen: SCR_AUTH_SIGNUP_COMPLETE
+    route: "/(auth)/signup-complete"
+    states: [default]
+    analytics: [auth_signup_completed]
+
+  - id: SCR_AUTH_FORGOT_PASSWORD
+    type: screen
+    label: 비밀번호 찾기
+    screen: SCR_AUTH_FORGOT_PASSWORD
+    route: "/(auth)/forgot-password"
+    states: [default, code_sent, verified, loading, error]
+    analytics: [auth_password_reset_started]
+
+  - id: ACT_SEND_PASSWORD_RESET_OTP
+    type: action
+    label: 비밀번호 재설정 OTP 발송
+    api: API_AUTH_SEND_PASSWORD_EMAIL_OTP
+
+  - id: D_PASSWORD_RESET_OTP_SEND_RESULT
+    type: decision
+    label: 비밀번호 재설정 OTP 발송 결과
+
+  - id: ACT_VERIFY_PASSWORD_RESET_OTP
+    type: action
+    label: 비밀번호 재설정 OTP 검증
+    api: API_AUTH_VERIFY_PASSWORD_EMAIL_OTP
+
+  - id: D_PASSWORD_RESET_OTP_VERIFY_RESULT
+    type: decision
+    label: 비밀번호 재설정 OTP 검증 결과
+
+  - id: ACT_RESET_PASSWORD
+    type: action
+    label: 비밀번호 재설정 저장
+    api: API_AUTH_RESET_PASSWORD
+
+  - id: D_PASSWORD_RESET_RESULT
+    type: decision
+    label: 비밀번호 재설정 결과
+
+  - id: D_ACCOUNT_STATE
+    type: decision
+    label: 계정 상태
+
+  - id: SCR_ONBOARDING
+    type: screen
+    label: 온보딩
+    screen: SCR_ONBOARDING
+    route: "/onboarding"
+    states: [welcome, loading, step]
+
+  - id: SCR_TABS_HOME
+    type: screen
+    label: 홈
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record]
+
+  - id: ERR_AUTH
+    type: error
+    label: 인증 오류 표시
+    notes:
+      - API 오류 메시지를 화면 또는 Toast에 표시한다.
+      - 사용자가 입력한 이메일과 현재 단계는 가능한 한 유지한다.
+
+  - id: N_END
+    type: end
+    label: 인증 종료
+
+edges:
+  - from: N_START
+    to: SCR_AUTH_LOGIN
+
+  - from: SCR_AUTH_LOGIN
+    to: D_LOGIN_METHOD
+    trigger: choose_auth_method
+
+  - from: D_LOGIN_METHOD
+    to: SCR_AUTH_EMAIL_LOGIN
+    condition: email_login
+
+  - from: D_LOGIN_METHOD
+    to: ACT_SOCIAL_LOGIN
+    condition: social_login
+
+  - from: D_LOGIN_METHOD
+    to: SCR_AUTH_TERMS_AGREEMENT
+    condition: signup
+
+  - from: D_LOGIN_METHOD
+    to: SCR_AUTH_FORGOT_PASSWORD
+    condition: forgot_password
+
+  - from: SCR_AUTH_EMAIL_LOGIN
+    to: ACT_EMAIL_LOGIN
+    trigger: submit_email_password
+
+  - from: ACT_EMAIL_LOGIN
+    to: D_EMAIL_LOGIN_RESULT
+
+  - from: D_EMAIL_LOGIN_RESULT
+    to: D_ACCOUNT_STATE
+    condition: success
+    analytics: [auth_email_login_succeeded]
+
+  - from: D_EMAIL_LOGIN_RESULT
+    to: ERR_AUTH
+    condition: failure
+    analytics: [auth_email_login_failed]
+
+  - from: D_EMAIL_LOGIN_RESULT
+    to: ACT_CANCEL_WITHDRAWAL
+    condition: withdrawal_pending_confirmed
+
+  - from: ACT_CANCEL_WITHDRAWAL
+    to: D_CANCEL_WITHDRAWAL_RESULT
+
+  - from: D_CANCEL_WITHDRAWAL_RESULT
+    to: SCR_TABS_HOME
+    condition: success
+    analytics: [auth_withdrawal_cancelled]
+
+  - from: D_CANCEL_WITHDRAWAL_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: ACT_SOCIAL_LOGIN
+    to: D_SOCIAL_LOGIN_RESULT
+
+  - from: D_SOCIAL_LOGIN_RESULT
+    to: D_ACCOUNT_STATE
+    condition: success
+    analytics: [auth_social_login_succeeded]
+
+  - from: D_SOCIAL_LOGIN_RESULT
+    to: SCR_AUTH_SOCIAL_LINK_EMAIL
+    condition: email_link_required
+
+  - from: D_SOCIAL_LOGIN_RESULT
+    to: ERR_AUTH
+    condition: failure
+    analytics: [auth_social_login_failed]
+
+  - from: SCR_AUTH_SOCIAL_LINK_EMAIL
+    to: ACT_SEND_SOCIAL_LINK_OTP
+    trigger: submit_email
+
+  - from: ACT_SEND_SOCIAL_LINK_OTP
+    to: D_SOCIAL_LINK_OTP_RESULT
+
+  - from: D_SOCIAL_LINK_OTP_RESULT
+    to: ACT_VERIFY_SOCIAL_LINK_OTP
+    condition: code_sent
+    trigger: submit_code
+
+  - from: D_SOCIAL_LINK_OTP_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: ACT_VERIFY_SOCIAL_LINK_OTP
+    to: D_SOCIAL_LINK_VERIFY_RESULT
+
+  - from: D_SOCIAL_LINK_VERIFY_RESULT
+    to: D_ACCOUNT_STATE
+    condition: verified
+
+  - from: D_SOCIAL_LINK_VERIFY_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: SCR_AUTH_TERMS_AGREEMENT
+    to: SCR_AUTH_SIGNUP_EMAIL
+    trigger: agree_required_terms
+
+  - from: SCR_AUTH_TERMS_AGREEMENT
+    to: ERR_AUTH
+    trigger: tap_next
+    condition: missing_required_terms
+
+  - from: SCR_AUTH_SIGNUP_EMAIL
+    to: ACT_VERIFY_SIGNUP_EMAIL
+    trigger: submit_email
+
+  - from: ACT_VERIFY_SIGNUP_EMAIL
+    to: D_SIGNUP_EMAIL_CHECK_RESULT
+
+  - from: D_SIGNUP_EMAIL_CHECK_RESULT
+    to: ACT_SEND_SIGNUP_EMAIL_OTP
+    condition: available
+
+  - from: D_SIGNUP_EMAIL_CHECK_RESULT
+    to: ERR_AUTH
+    condition: duplicate_email
+
+  - from: D_SIGNUP_EMAIL_CHECK_RESULT
+    to: SCR_AUTH_EMAIL_LINK_PASSWORD
+    condition: email_login_link_required
+
+  - from: D_SIGNUP_EMAIL_CHECK_RESULT
+    to: ERR_AUTH
+    condition: network_or_server_error
+
+  - from: ACT_SEND_SIGNUP_EMAIL_OTP
+    to: D_SIGNUP_OTP_SEND_RESULT
+
+  - from: D_SIGNUP_OTP_SEND_RESULT
+    to: ACT_VERIFY_SIGNUP_EMAIL_OTP
+    condition: sent
+    trigger: submit_code
+
+  - from: D_SIGNUP_OTP_SEND_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: ACT_VERIFY_SIGNUP_EMAIL_OTP
+    to: D_SIGNUP_EMAIL_VERIFY_RESULT
+
+  - from: D_SIGNUP_EMAIL_VERIFY_RESULT
+    to: SCR_AUTH_SIGNUP_PASSWORD
+    condition: verified
+    analytics: [auth_signup_email_verified]
+
+  - from: D_SIGNUP_EMAIL_VERIFY_RESULT
+    to: ERR_AUTH
+    condition: invalid_or_expired
+
+  - from: SCR_AUTH_EMAIL_LINK_PASSWORD
+    to: ACT_SET_EMAIL_LINK_PASSWORD
+    trigger: submit_password
+
+  - from: ACT_SET_EMAIL_LINK_PASSWORD
+    to: D_EMAIL_LINK_PASSWORD_RESULT
+
+  - from: D_EMAIL_LINK_PASSWORD_RESULT
+    to: D_ACCOUNT_STATE
+    condition: success
+
+  - from: D_EMAIL_LINK_PASSWORD_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: SCR_AUTH_SIGNUP_PASSWORD
+    to: SCR_AUTH_PROFILE_SETUP
+    trigger: valid_password_submitted
+
+  - from: SCR_AUTH_PROFILE_SETUP
+    to: SCR_AUTH_NICKNAME_SETUP
+    trigger: valid_profile_submitted
+
+  - from: SCR_AUTH_NICKNAME_SETUP
+    to: ACT_VERIFY_NICKNAME
+    trigger: check_nickname
+
+  - from: ACT_VERIFY_NICKNAME
+    to: D_NICKNAME_RESULT
+
+  - from: D_NICKNAME_RESULT
+    to: ACT_SIGNUP
+    condition: available
+    trigger: submit_signup
+
+  - from: D_NICKNAME_RESULT
+    to: ERR_AUTH
+    condition: duplicate_or_failure
+
+  - from: ACT_SIGNUP
+    to: D_SIGNUP_RESULT
+
+  - from: D_SIGNUP_RESULT
+    to: SCR_AUTH_SIGNUP_COMPLETE
+    condition: success
+
+  - from: D_SIGNUP_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: SCR_AUTH_SIGNUP_COMPLETE
+    to: D_ACCOUNT_STATE
+    trigger: tap_continue
+
+  - from: SCR_AUTH_FORGOT_PASSWORD
+    to: ACT_SEND_PASSWORD_RESET_OTP
+    trigger: submit_email
+
+  - from: ACT_SEND_PASSWORD_RESET_OTP
+    to: D_PASSWORD_RESET_OTP_SEND_RESULT
+
+  - from: D_PASSWORD_RESET_OTP_SEND_RESULT
+    to: ACT_VERIFY_PASSWORD_RESET_OTP
+    condition: sent
+    trigger: submit_code
+
+  - from: D_PASSWORD_RESET_OTP_SEND_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: ACT_VERIFY_PASSWORD_RESET_OTP
+    to: D_PASSWORD_RESET_OTP_VERIFY_RESULT
+
+  - from: D_PASSWORD_RESET_OTP_VERIFY_RESULT
+    to: ACT_RESET_PASSWORD
+    condition: verified
+    trigger: submit_new_password
+
+  - from: D_PASSWORD_RESET_OTP_VERIFY_RESULT
+    to: ERR_AUTH
+    condition: invalid_or_expired
+
+  - from: ACT_RESET_PASSWORD
+    to: D_PASSWORD_RESET_RESULT
+
+  - from: D_PASSWORD_RESET_RESULT
+    to: SCR_AUTH_LOGIN
+    condition: success
+    analytics: [auth_password_reset_completed]
+
+  - from: D_PASSWORD_RESET_RESULT
+    to: ERR_AUTH
+    condition: failure
+
+  - from: D_ACCOUNT_STATE
+    to: SCR_TABS_HOME
+    condition: active
+
+  - from: D_ACCOUNT_STATE
+    to: SCR_ONBOARDING
+    condition: pending_onboarding
+
+  - from: D_ACCOUNT_STATE
+    to: ERR_AUTH
+    condition: suspended_or_blocked
+
+  - from: SCR_TABS_HOME
+    to: N_END
+
+  - from: SCR_ONBOARDING
+    to: N_END
+
+  - from: ERR_AUTH
+    to: SCR_AUTH_LOGIN
+    trigger: retry_or_back_to_login
+
+flow_links:
+  - from_node: SCR_ONBOARDING
+    to_flow: FLOW_ONBOARDING
+    to_node: N_START
+    condition: pending_onboarding
+    description: 로그인 또는 가입 후 온보딩 대기 계정은 온보딩 플로우로 이어진다.
+
+  - from_node: SCR_TABS_HOME
+    to_flow: FLOW_HOME_RECORD
+    to_node: N_START
+    condition: active
+    description: 로그인 또는 가입 후 활성 계정은 홈 기록 플로우로 이어진다.
+
+analytics:
+  - auth_login_viewed
+  - auth_email_login_started
+  - auth_email_login_succeeded
+  - auth_email_login_failed
+  - auth_social_login_started
+  - auth_social_login_succeeded
+  - auth_social_login_failed
+  - auth_signup_started
+  - auth_signup_email_verified
+  - auth_signup_completed
+  - auth_password_reset_started
+  - auth_password_reset_completed
+  - auth_withdrawal_cancelled
+
+notes:
+  - RootLayout keeps unauthenticated users inside auth routes except public legal document and withdrawal-complete.
+  - PENDING_ONBOARDING users are routed to /onboarding after successful login or signup.
+  - WITHDRAWAL_PENDING and SUSPENDED users are signed out by root auth guard unless the login flow explicitly cancels withdrawal.

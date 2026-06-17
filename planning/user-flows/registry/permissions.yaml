@@ -1,0 +1,41 @@
+permissions:
+  - id: PERM_CAMERA
+    name: 카메라 권한
+    platform: [ios, android]
+    required_for:
+      - food_photo_capture
+      - consult_photo_capture
+      - health_exam_photo_capture
+      - profile_photo_capture
+      - recipe_photo_capture
+    denied_behavior: 권한 거부 시 촬영을 중단하고 기존 화면에 머무르며 대체 입력 경로를 유지한다.
+
+  - id: PERM_PHOTO_LIBRARY
+    name: 사진 접근 권한
+    platform: [ios, android]
+    required_for:
+      - food_photo_upload
+      - consult_photo_upload
+      - health_exam_photo_upload
+      - inquiry_attachment_upload
+      - profile_photo_upload
+      - recipe_photo_upload
+    denied_behavior: 권한 거부 시 사진 선택을 중단하고 사용자가 다시 다른 입력 방식을 선택할 수 있게 한다.
+
+  - id: PERM_NOTIFICATION
+    name: 알림 권한
+    platform: [ios, android]
+    required_for:
+      - morning_check_push
+      - water_reminder_push
+      - meal_record_push
+      - food_analysis_complete_local_notification
+    denied_behavior: 알림 스케줄링을 하지 않고 앱 내 설정과 기록 화면은 계속 사용할 수 있게 한다.
+
+  - id: PERM_LOCATION_FOREGROUND
+    name: 위치 권한
+    platform: [ios, android]
+    required_for:
+      - nearby_restaurant_search
+      - current_address_display
+    denied_behavior: 현재 위치 기반 식당 추천을 제한하고 기본 지역 또는 수동 탐색 상태를 보여준다.

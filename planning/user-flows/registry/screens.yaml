@@ -1,0 +1,427 @@
+screens:
+  - id: SCR_ROOT_INDEX
+    name: 루트 리다이렉트
+    route: "/"
+    module: root
+    description: 앱 진입 시 홈 탭으로 리다이렉트하는 Expo Router index 화면
+    auth_required: false
+    states: [redirect]
+
+  - id: SCR_AUTH_LOGIN
+    name: 로그인
+    route: "/(auth)/login"
+    module: auth
+    description: 이메일, Google, Apple, Kakao 로그인 진입 화면
+    auth_required: false
+    states: [default, loading, error, withdrawal_pending]
+
+  - id: SCR_AUTH_EMAIL_LOGIN
+    name: 이메일 로그인
+    route: "/(auth)/email-login"
+    module: auth
+    description: 이메일과 비밀번호로 로그인하는 화면
+    auth_required: false
+    states: [default, loading, error, withdrawal_pending]
+
+  - id: SCR_AUTH_FORGOT_PASSWORD
+    name: 비밀번호 찾기
+    route: "/(auth)/forgot-password"
+    module: auth
+    description: 이메일 OTP 인증 후 비밀번호를 재설정하는 화면
+    auth_required: false
+    states: [default, code_sent, verified, loading, error]
+
+  - id: SCR_AUTH_TERMS_AGREEMENT
+    name: 약관 동의
+    route: "/(auth)/terms-agreement"
+    module: auth
+    description: 회원가입 전 필수 약관을 확인하고 동의하는 화면
+    auth_required: false
+    states: [default, validation_error]
+
+  - id: SCR_AUTH_SIGNUP_EMAIL
+    name: 회원가입 이메일 인증
+    route: "/(auth)/signup-email"
+    module: auth
+    description: 가입 이메일 중복 확인 및 OTP 인증을 수행하는 화면
+    auth_required: false
+    states:
+      [
+        default,
+        code_sent,
+        verified,
+        duplicate_email,
+        social_link_required,
+        loading,
+        error,
+      ]
+
+  - id: SCR_AUTH_EMAIL_LINK_PASSWORD
+    name: 이메일 연결 비밀번호 설정
+    route: "/(auth)/email-login-link-password"
+    module: auth
+    description: 소셜 가입 이메일을 이메일 로그인과 연결하기 위해 비밀번호를 설정하는 화면
+    auth_required: false
+    states: [default, loading, error]
+
+  - id: SCR_AUTH_SIGNUP_PASSWORD
+    name: 회원가입 비밀번호 설정
+    route: "/(auth)/signup-password"
+    module: auth
+    description: 이메일 인증 후 계정 비밀번호를 설정하는 화면
+    auth_required: false
+    states: [default, validation_error]
+
+  - id: SCR_AUTH_PROFILE_SETUP
+    name: 회원가입 기본 정보
+    route: "/(auth)/profile-setup"
+    module: auth
+    description: 이름, 생년월일, 성별 등 가입 기본 정보를 입력하는 화면
+    auth_required: false
+    states: [default, validation_error]
+
+  - id: SCR_AUTH_NICKNAME_SETUP
+    name: 닉네임 설정
+    route: "/(auth)/nickname-setup"
+    module: auth
+    description: 닉네임 중복 확인 후 회원가입을 완료하는 화면
+    auth_required: false
+    states: [default, checking, available, duplicate, loading, error]
+
+  - id: SCR_AUTH_SIGNUP_COMPLETE
+    name: 회원가입 완료
+    route: "/(auth)/signup-complete"
+    module: auth
+    description: 가입 완료 후 온보딩 또는 홈으로 이동하는 완료 화면
+    auth_required: false
+    states: [default]
+
+  - id: SCR_AUTH_SOCIAL_LINK_EMAIL
+    name: 소셜 이메일 연결
+    route: "/(auth)/social-link-email"
+    module: auth
+    description: 소셜 로그인 계정에 이메일 OTP를 연결하는 화면
+    auth_required: false
+    states: [default, code_sent, verified, loading, error]
+
+  - id: SCR_ONBOARDING
+    name: 온보딩
+    route: "/onboarding"
+    module: onboarding
+    description: CKD 여부 선택과 건강 정보 질문을 완료하는 화면
+    auth_required: true
+    states: [welcome, loading, step, validation_error, submitting, error]
+
+  - id: SCR_TABS_HOME
+    name: 홈
+    route: "/(tabs)/home"
+    module: home
+    description: 오늘 식사, 수분, 체중, 혈압 기록과 통계를 제공하는 메인 탭
+    auth_required: true
+    states:
+      [record, statistics, loading, empty, analyzing, pending_result, error]
+
+  - id: SCR_TABS_CONSULT
+    name: 상담
+    route: "/(tabs)/consult"
+    module: consultation
+    description: AI 상담, FAQ, 이미지 첨부 질문을 제공하는 상담 탭
+    auth_required: true
+    states: [default, chat, loading, error, permission_denied]
+
+  - id: SCR_TABS_RECIPE
+    name: 레시피 커뮤니티
+    route: "/(tabs)/recipe"
+    module: recipe
+    description: 신장 친화 레시피, 자유글, 검색, 필터, 글 작성을 제공하는 탭
+    auth_required: true
+    states:
+      [recipe_tab, free_tab, search, filter, write_sheet, loading, empty, error]
+
+  - id: SCR_TABS_RESTAURANT
+    name: 식당
+    route: "/(tabs)/restaurant"
+    module: restaurant
+    description: 신장 친화 식당 추천, 위치 기반 목록, 필터를 제공하는 탭
+    auth_required: true
+    states: [default, loading, empty, permission_denied, error]
+
+  - id: SCR_TABS_ALL
+    name: 전체 메뉴
+    route: "/(tabs)/all"
+    module: settings
+    description: My Page와 설정 관련 진입점을 제공하는 탭
+    auth_required: true
+    states: [default, loading, error]
+
+  - id: SCR_SETTINGS_INDEX
+    name: 설정
+    route: "/(settings)"
+    module: settings
+    description: 테마, 약관, 개인정보, 로그아웃, 탈퇴 등 설정을 제공하는 화면
+    auth_required: true
+    states: [default, loading, error]
+
+  - id: SCR_SETTINGS_PROFILE_EDIT
+    name: 프로필 수정
+    route: "/(settings)/profile-edit"
+    module: settings
+    description: 이름, 닉네임, 성별, 프로필 사진 등 기본 프로필을 수정하는 화면
+    auth_required: true
+    states: [default, editing, saving, permission_denied, error]
+
+  - id: SCR_SETTINGS_NAME_EDIT
+    name: 이름 수정
+    route: "/(settings)/name-edit"
+    module: settings
+    description: 사용자 이름을 수정하는 화면
+    auth_required: true
+    states: [default, saving, validation_error, error]
+
+  - id: SCR_SETTINGS_NICKNAME_EDIT
+    name: 닉네임 수정
+    route: "/(settings)/nickname-edit"
+    module: settings
+    description: 닉네임을 수정하고 중복을 확인하는 화면
+    auth_required: true
+    states: [default, checking, saving, duplicate, error]
+
+  - id: SCR_SETTINGS_PASSWORD_EDIT
+    name: 비밀번호 변경
+    route: "/(settings)/password-edit"
+    module: settings
+    description: 현재 비밀번호 확인 후 새 비밀번호로 변경하는 화면
+    auth_required: true
+    states: [default, saving, validation_error, error]
+
+  - id: SCR_SETTINGS_KIDNEY_PROFILE_EDIT
+    name: 신장 프로필 수정
+    route: "/(settings)/kidney-profile-edit"
+    module: settings
+    description: CKD 단계, 투석 여부, 키, 체중, 진단 원인 등 신장 정보를 수정하는 화면
+    auth_required: true
+    states: [default, saving, validation_error, error]
+
+  - id: SCR_SETTINGS_NOTIFICATIONS
+    name: 알림함
+    route: "/(settings)/notifications"
+    module: notification
+    description: 앱 내 알림 이력과 알림 설정 진입점을 제공하는 화면
+    auth_required: true
+    states: [default, empty, unread, error]
+
+  - id: SCR_SETTINGS_NOTIFICATION_SETTINGS
+    name: 알림 설정
+    route: "/(settings)/notification-settings"
+    module: notification
+    description: 아침 확인, 물 알림, 식사 기록 알림을 켜고 시간을 설정하는 화면
+    auth_required: true
+    states: [default, loading, permission_denied, saving, error]
+
+  - id: SCR_SETTINGS_PRIVACY
+    name: 개인정보 설정
+    route: "/privacy-settings"
+    module: settings
+    description: 개인정보 관련 메뉴와 회원탈퇴 진입점을 제공하는 화면
+    auth_required: true
+    states: [default]
+
+  - id: SCR_LEGAL_DOCUMENT
+    name: 법적 문서
+    route: "/legal-document"
+    module: legal
+    description: 이용약관, 개인정보처리방침 등 법적 문서를 보여주는 공개 화면
+    auth_required: false
+    states: [terms, privacy_policy, default]
+
+  - id: SCR_SETTINGS_APP_INFO
+    name: 앱 정보
+    route: "/(settings)/app-info"
+    module: settings
+    description: 앱 버전과 서비스 정보를 보여주는 화면
+    auth_required: true
+    states: [default]
+
+  - id: SCR_SETTINGS_ANNOUNCEMENTS
+    name: 공지사항 목록
+    route: "/(settings)/announcements"
+    module: settings
+    description: 공지사항 목록을 보여주는 화면
+    auth_required: true
+    states: [default, empty, error]
+
+  - id: SCR_SETTINGS_ANNOUNCEMENT_DETAIL
+    name: 공지사항 상세
+    route: "/(settings)/announcement-detail"
+    module: settings
+    description: 선택한 공지사항 상세 내용을 보여주는 화면
+    auth_required: true
+    states: [default, error]
+
+  - id: SCR_SETTINGS_INQUIRY
+    name: 문의하기
+    route: "/(settings)/inquiry"
+    module: settings
+    description: 문의 내용과 첨부 이미지를 제출하는 화면
+    auth_required: true
+    states: [default, permission_denied, submitting, success, error]
+
+  - id: SCR_SETTINGS_ASK_DOCTOR
+    name: 담당의 연결
+    route: "/(settings)/ask-doctor"
+    module: settings
+    description: 의사 초대 코드로 담당의를 연결하는 화면
+    auth_required: true
+    states: [default, submitting, success, error]
+
+  - id: SCR_SETTINGS_MEDICAL_REFERENCE
+    name: 의학 참고 정보
+    route: "/(settings)/medical-reference"
+    module: settings
+    description: 식단과 상담 화면에서 연결되는 의학 참고 정보를 보여주는 화면
+    auth_required: true
+    states: [default]
+
+  - id: SCR_SETTINGS_WITHDRAWAL
+    name: 회원탈퇴
+    route: "/(settings)/withdrawal"
+    module: settings
+    description: 회원탈퇴 사유와 안내를 확인하는 화면
+    auth_required: true
+    states: [default, validation_error]
+
+  - id: SCR_SETTINGS_WITHDRAWAL_TERMS
+    name: 회원탈퇴 약관
+    route: "/(settings)/withdrawal-terms"
+    module: settings
+    description: 탈퇴 전 최종 안내와 확인을 진행하는 화면
+    auth_required: true
+    states: [default, submitting, error]
+
+  - id: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    name: 회원탈퇴 완료
+    route: "/(settings)/withdrawal-complete"
+    module: settings
+    description: 탈퇴 완료 후 로그인 화면으로 이동할 수 있는 공개 완료 화면
+    auth_required: false
+    states: [default]
+
+  - id: SCR_HEALTH_DATA
+    name: 건강 데이터
+    route: "/(settings)/health-data"
+    module: health
+    description: 건강 데이터 입력, 업로드, 건강검진 연동 진입 화면
+    auth_required: true
+    states: [default]
+
+  - id: SCR_HEALTH_DASHBOARD
+    name: 건강 대시보드
+    route: "/(settings)/health-dashboard"
+    module: health
+    description: 건강 지표와 추세를 보여주는 화면
+    auth_required: true
+    states: [default, loading, empty, error]
+
+  - id: SCR_HEALTH_DATA_UPLOAD
+    name: 건강 데이터 업로드
+    route: "/(settings)/health-data-upload"
+    module: health
+    description: 카메라 또는 사진첩으로 검사 결과지를 업로드하는 화면
+    auth_required: true
+    states: [default, permission_denied, uploading, error]
+
+  - id: SCR_HEALTH_OCR_REVIEW
+    name: 검사 결과 OCR 검토
+    route: "/(settings)/health-ocr-review"
+    module: health
+    description: OCR 결과를 확인하고 저장 여부를 결정하는 화면
+    auth_required: true
+    states: [default, saving, error]
+
+  - id: SCR_HEALTH_RESULTS
+    name: 건강검진 결과 목록
+    route: "/(settings)/health-results"
+    module: health
+    description: 건강검진 결과 목록을 보여주는 화면
+    auth_required: true
+    states: [default, loading, empty, error]
+
+  - id: SCR_HEALTH_RESULT_DETAIL
+    name: 건강검진 결과 상세
+    route: "/(settings)/health-result-detail"
+    module: health
+    description: 선택한 건강검진 결과 상세를 보여주는 화면
+    auth_required: true
+    states: [default, loading, error]
+
+  - id: SCR_HEALTH_NHIS_AUTH
+    name: 건강검진 연동 인증 방식
+    route: "/(settings)/health-nhis-auth"
+    module: health
+    description: 국민건강보험 인증 방식 선택 화면
+    auth_required: true
+    states: [default, loading, error]
+
+  - id: SCR_HEALTH_NHIS_REQUEST
+    name: 건강검진 연동 요청
+    route: "/(settings)/health-nhis-request"
+    module: health
+    description: 건강검진 자료 연동 요청 정보를 입력하는 화면
+    auth_required: true
+    states: [default, submitting, validation_error, error]
+
+  - id: SCR_HEALTH_NHIS_CONFIRM
+    name: 건강검진 연동 확인
+    route: "/(settings)/health-nhis-confirm"
+    module: health
+    description: 인증 요청을 확인하고 결과 목록으로 이동하는 화면
+    auth_required: true
+    states: [default, confirming, retry, error]
+
+  - id: SCR_POST_DETAIL
+    name: 커뮤니티 게시글 상세
+    route: "/post/[id]"
+    module: recipe
+    description: 레시피 커뮤니티 게시글 상세와 이전/다음 이동을 제공하는 화면
+    auth_required: true
+    states: [default, loading, not_found, error]
+
+  - id: SCR_WRITE_FREE_NEW
+    name: 자유글 작성
+    route: "/(write)/free/new"
+    module: recipe
+    description: 커뮤니티 자유글을 작성하는 화면
+    auth_required: true
+    states: [editing, confirm_exit, submitting, error]
+
+  - id: SCR_WRITE_FREE_EDIT
+    name: 자유글 수정
+    route: "/(write)/free/[id]"
+    module: recipe
+    description: 커뮤니티 자유글을 수정하는 화면
+    auth_required: true
+    states: [editing, confirm_exit, submitting, error]
+
+  - id: SCR_WRITE_RECIPE_NEW
+    name: 레시피 글 작성
+    route: "/(write)/recipe/new"
+    module: recipe
+    description: 레시피 게시글을 작성하는 화면
+    auth_required: true
+    states: [editing, confirm_exit, submitting, error]
+
+  - id: SCR_WRITE_RECIPE_EDIT
+    name: 레시피 글 수정
+    route: "/(write)/recipe/[id]"
+    module: recipe
+    description: 레시피 게시글을 수정하는 화면
+    auth_required: true
+    states: [editing, confirm_exit, submitting, error]
+
+  - id: SCR_RESTAURANT_DETAIL
+    name: 식당 상세
+    route: "/restaurant/[id]"
+    module: restaurant
+    description: 선택한 식당 상세와 메뉴 정보를 보여주는 화면
+    auth_required: true
+    states: [default, loading, not_found, error]

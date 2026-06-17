@@ -1,0 +1,439 @@
+id: FLOW_HOME_RECORD
+name: 홈 식사 기록 플로우
+description: 홈 기록 탭에서 식사 사진 또는 텍스트를 분석하고 날짜별 식사 기록으로 저장하는 핵심 사용 경로
+version: 1
+
+entry_points:
+  - screen: SCR_TABS_HOME
+    trigger: bottom_tab_home
+  - source: local_notification
+    trigger: tap_food_analysis_complete
+  - source: app_launch
+    trigger: restored_active_session
+
+preconditions:
+  - id: PRE_AUTH_REQUIRED
+    description: 홈 기록은 ACTIVE 계정으로 로그인된 사용자만 접근한다.
+    type: auth
+    required: true
+
+nodes:
+  - id: N_START
+    type: start
+    label: 홈 기록 시작
+
+  - id: D_AUTH_REQUIRED
+    type: decision
+    label: 인증 상태 확인
+
+  - id: SCR_AUTH_LOGIN
+    type: screen
+    label: 로그인 화면
+    screen: SCR_AUTH_LOGIN
+    route: "/(auth)/login"
+    states: [default]
+
+  - id: SCR_TABS_HOME
+    type: screen
+    label: 홈 기록 탭
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record, loading, empty, error]
+    analytics: [home_record_viewed]
+
+  - id: ACT_FETCH_DATE_ANALYSIS
+    type: action
+    label: 날짜별 식사 분석 조회
+    api: API_GET_DATE_ANALYSIS
+
+  - id: D_DATE_ANALYSIS_RESULT
+    type: decision
+    label: 날짜별 기록 조회 결과
+
+  - id: SCR_HOME_EMPTY
+    type: screen
+    label: 기록 없는 홈 상태
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [empty]
+
+  - id: SCR_HOME_WITH_RECORD
+    type: screen
+    label: 기록 있는 홈 상태
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record]
+
+  - id: MOD_RECORD_OPTIONS
+    type: modal
+    label: 식사 기록 방식 선택
+    states: [default]
+    analytics: [food_record_started, food_record_method_selected]
+
+  - id: D_RECORD_METHOD
+    type: decision
+    label: 기록 방식 선택
+
+  - id: PERM_CAMERA
+    type: permission
+    label: 카메라 권한 요청
+    notes:
+      - 카메라 촬영 선택 시 expo-image-picker 카메라 권한을 요청한다.
+
+  - id: D_CAMERA_PERMISSION
+    type: decision
+    label: 카메라 권한 결과
+
+  - id: PERM_PHOTO_LIBRARY
+    type: permission
+    label: 사진 접근 권한 요청
+    notes:
+      - 갤러리 선택 시 expo-image-picker 사진 접근 권한을 요청한다.
+
+  - id: D_PHOTO_PERMISSION
+    type: decision
+    label: 사진 접근 권한 결과
+
+  - id: SCR_TEXT_RECORD
+    type: modal
+    label: 텍스트 식사 기록 입력
+    states: [default, validation_error]
+
+  - id: ACT_ANALYZE_FOOD_IMAGE
+    type: action
+    label: 음식 사진 분석
+    api: API_ANALYZE_FOOD_IMAGE
+    analytics: [food_analysis_started]
+
+  - id: ACT_ANALYZE_FOOD_TEXT
+    type: action
+    label: 음식 텍스트 분석
+    api: API_ANALYZE_FOOD_TEXT
+    analytics: [food_analysis_started]
+
+  - id: SCR_ANALYSIS_LOADING
+    type: screen
+    label: 식단 분석 로딩
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [analyzing]
+
+  - id: D_ANALYSIS_RESULT
+    type: decision
+    label: 분석 결과
+
+  - id: D_ANALYSIS_VISIBLE
+    type: decision
+    label: 사용자가 로딩 화면을 유지했는가?
+
+  - id: ACT_SEND_ANALYSIS_COMPLETE_NOTIFICATION
+    type: action
+    label: 분석 완료 로컬 알림 저장
+    analytics: [food_analysis_dismissed]
+
+  - id: SCR_ANALYSIS_RESULT
+    type: modal
+    label: 식단 분석 결과
+    states: [success, editing, error]
+    analytics: [food_analysis_succeeded]
+
+  - id: ACT_REGISTER_DIARY
+    type: action
+    label: 분석 결과 식사 기록 저장
+    api: API_CREATE_FOOD_DIARY
+
+  - id: D_REGISTER_RESULT
+    type: decision
+    label: 식사 기록 저장 결과
+
+  - id: ACT_UPDATE_FOOD_ANALYSIS
+    type: action
+    label: 분석 결과 수정
+    api: API_UPDATE_FOOD_ANALYSIS
+
+  - id: D_UPDATE_ANALYSIS_RESULT
+    type: decision
+    label: 분석 결과 수정 결과
+
+  - id: ACT_FETCH_DIARY_RESULT
+    type: action
+    label: 저장된 식사 결과 조회
+    api: API_GET_DIARY_ANALYSIS
+
+  - id: D_FETCH_DIARY_RESULT
+    type: decision
+    label: 저장된 식사 조회 결과
+
+  - id: ACT_SKIP_MEAL
+    type: action
+    label: 식사 건너뛰기 저장
+    api: API_SKIP_MEAL
+
+  - id: D_SKIP_RESULT
+    type: decision
+    label: 건너뛰기 저장 결과
+
+  - id: SCR_HOME_UPDATED
+    type: screen
+    label: 최신 기록 반영 홈
+    screen: SCR_TABS_HOME
+    route: "/(tabs)/home"
+    states: [record]
+
+  - id: ERR_HOME
+    type: error
+    label: 홈 기록 오류
+    notes:
+      - 분석 실패, 등록 실패, 조회 실패는 Alert로 보여준다.
+      - 등록 실패 시 분석 결과 모달을 유지해 재시도할 수 있게 한다.
+
+  - id: N_END
+    type: end
+    label: 홈 기록 종료
+
+edges:
+  - from: N_START
+    to: D_AUTH_REQUIRED
+
+  - from: D_AUTH_REQUIRED
+    to: SCR_TABS_HOME
+    condition: active_session
+
+  - from: D_AUTH_REQUIRED
+    to: SCR_AUTH_LOGIN
+    condition: unauthenticated
+
+  - from: SCR_AUTH_LOGIN
+    to: N_END
+    description: 로그인 완료 후 auth flow가 홈으로 복귀시킨다.
+
+  - from: SCR_TABS_HOME
+    to: ACT_FETCH_DATE_ANALYSIS
+    trigger: screen_focus_or_date_change
+
+  - from: ACT_FETCH_DATE_ANALYSIS
+    to: D_DATE_ANALYSIS_RESULT
+
+  - from: D_DATE_ANALYSIS_RESULT
+    to: SCR_HOME_WITH_RECORD
+    condition: has_records
+
+  - from: D_DATE_ANALYSIS_RESULT
+    to: SCR_HOME_EMPTY
+    condition: empty
+
+  - from: D_DATE_ANALYSIS_RESULT
+    to: ERR_HOME
+    condition: failure
+
+  - from: SCR_HOME_EMPTY
+    to: MOD_RECORD_OPTIONS
+    trigger: tap_meal_record_button
+
+  - from: SCR_HOME_WITH_RECORD
+    to: MOD_RECORD_OPTIONS
+    trigger: tap_meal_record_button
+
+  - from: MOD_RECORD_OPTIONS
+    to: D_RECORD_METHOD
+    trigger: choose_method
+
+  - from: D_RECORD_METHOD
+    to: PERM_CAMERA
+    condition: camera
+
+  - from: D_RECORD_METHOD
+    to: PERM_PHOTO_LIBRARY
+    condition: gallery
+
+  - from: D_RECORD_METHOD
+    to: SCR_TEXT_RECORD
+    condition: text
+
+  - from: D_RECORD_METHOD
+    to: ACT_SKIP_MEAL
+    condition: skip_meal
+
+  - from: D_RECORD_METHOD
+    to: SCR_TABS_HOME
+    condition: cancel
+
+  - from: PERM_CAMERA
+    to: D_CAMERA_PERMISSION
+
+  - from: D_CAMERA_PERMISSION
+    to: SCR_ANALYSIS_LOADING
+    condition: granted
+
+  - from: D_CAMERA_PERMISSION
+    to: ERR_HOME
+    condition: denied
+    analytics: [food_photo_permission_denied]
+
+  - from: PERM_PHOTO_LIBRARY
+    to: D_PHOTO_PERMISSION
+
+  - from: D_PHOTO_PERMISSION
+    to: SCR_ANALYSIS_LOADING
+    condition: granted
+
+  - from: D_PHOTO_PERMISSION
+    to: ERR_HOME
+    condition: denied
+    analytics: [food_photo_permission_denied]
+
+  - from: SCR_TEXT_RECORD
+    to: SCR_ANALYSIS_LOADING
+    trigger: submit_text
+    condition: text_not_empty
+
+  - from: SCR_TEXT_RECORD
+    to: MOD_RECORD_OPTIONS
+    trigger: close
+    condition: cancel
+
+  - from: SCR_TEXT_RECORD
+    to: ERR_HOME
+    trigger: submit_text
+    condition: text_empty
+
+  - from: SCR_ANALYSIS_LOADING
+    to: ACT_ANALYZE_FOOD_IMAGE
+    trigger: image_selected
+
+  - from: SCR_ANALYSIS_LOADING
+    to: ACT_ANALYZE_FOOD_TEXT
+    trigger: text_submitted
+
+  - from: ACT_ANALYZE_FOOD_IMAGE
+    to: D_ANALYSIS_RESULT
+
+  - from: ACT_ANALYZE_FOOD_TEXT
+    to: D_ANALYSIS_RESULT
+
+  - from: D_ANALYSIS_VISIBLE
+    to: SCR_ANALYSIS_RESULT
+    condition: visible
+
+  - from: D_ANALYSIS_VISIBLE
+    to: ACT_SEND_ANALYSIS_COMPLETE_NOTIFICATION
+    condition: dismissed_before_finish
+
+  - from: ACT_SEND_ANALYSIS_COMPLETE_NOTIFICATION
+    to: SCR_TABS_HOME
+    description: 결과를 pending store에 저장하고 로컬 알림 이력에 추가한다.
+
+  - from: D_ANALYSIS_RESULT
+    to: D_ANALYSIS_VISIBLE
+    condition: success
+    analytics: [food_analysis_succeeded]
+
+  - from: D_ANALYSIS_RESULT
+    to: ERR_HOME
+    condition: failure
+    analytics: [food_analysis_failed]
+
+  - from: SCR_ANALYSIS_RESULT
+    to: ACT_UPDATE_FOOD_ANALYSIS
+    trigger: edit_food_result
+
+  - from: ACT_UPDATE_FOOD_ANALYSIS
+    to: D_UPDATE_ANALYSIS_RESULT
+
+  - from: D_UPDATE_ANALYSIS_RESULT
+    to: SCR_ANALYSIS_RESULT
+    condition: success
+
+  - from: D_UPDATE_ANALYSIS_RESULT
+    to: ERR_HOME
+    condition: failure
+
+  - from: SCR_ANALYSIS_RESULT
+    to: ACT_REGISTER_DIARY
+    trigger: tap_add_to_record
+
+  - from: ACT_REGISTER_DIARY
+    to: D_REGISTER_RESULT
+
+  - from: D_REGISTER_RESULT
+    to: SCR_HOME_UPDATED
+    condition: success
+    analytics: [food_record_saved]
+
+  - from: D_REGISTER_RESULT
+    to: ERR_HOME
+    condition: failure
+    analytics: [food_record_save_failed]
+
+  - from: SCR_HOME_WITH_RECORD
+    to: ACT_FETCH_DIARY_RESULT
+    trigger: tap_recorded_meal
+
+  - from: ACT_FETCH_DIARY_RESULT
+    to: D_FETCH_DIARY_RESULT
+
+  - from: D_FETCH_DIARY_RESULT
+    to: SCR_ANALYSIS_RESULT
+    condition: success
+
+  - from: D_FETCH_DIARY_RESULT
+    to: ERR_HOME
+    condition: failure
+
+  - from: ACT_SKIP_MEAL
+    to: D_SKIP_RESULT
+
+  - from: D_SKIP_RESULT
+    to: SCR_HOME_UPDATED
+    condition: success
+    analytics: [food_record_skipped]
+
+  - from: D_SKIP_RESULT
+    to: ERR_HOME
+    condition: failure
+
+  - from: ERR_HOME
+    to: MOD_RECORD_OPTIONS
+    trigger: retry_record_method
+    condition: analysis_or_permission_failure
+    analytics: [error_retry_tapped]
+
+  - from: ERR_HOME
+    to: SCR_ANALYSIS_RESULT
+    trigger: retry_save
+    condition: save_failure
+    analytics: [error_retry_tapped]
+
+  - from: SCR_HOME_UPDATED
+    to: ACT_FETCH_DATE_ANALYSIS
+    trigger: refetch_date_analysis
+
+  - from: SCR_HOME_UPDATED
+    to: N_END
+
+flow_links:
+  - from_node: SCR_AUTH_LOGIN
+    to_flow: FLOW_AUTH
+    to_node: N_START
+    condition: unauthenticated
+    description: 홈 탭 접근 중 비인증 상태이면 인증 플로우로 이어진다.
+
+analytics:
+  - home_record_viewed
+  - food_record_started
+  - food_record_method_selected
+  - food_photo_permission_denied
+  - food_analysis_started
+  - food_analysis_succeeded
+  - food_analysis_failed
+  - food_analysis_dismissed
+  - food_record_saved
+  - food_record_save_failed
+  - food_record_skipped
+  - error_retry_tapped
+
+notes:
+  - RecordView supports camera, gallery, text, and skip-meal paths.
+  - If the analysis loading overlay is dismissed before completion, the result is stored as pending and a local notification is created.
+  - After saving or skipping a meal, dateAnalysis and diaryExistence queries are refetched.
+  - Permission denial currently returns the user to the same screen with no API call.
