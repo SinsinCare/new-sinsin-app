@@ -13,6 +13,7 @@ import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
+import { KeyboardProvider } from "react-native-keyboard-controller"
 import config from "../tamagui.config"
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
@@ -165,18 +166,20 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
-          <Theme name={effectiveScheme}>
-            <PortalProvider>
-              <AppPolicyGate>
-                <RootLayoutNav />
-              </AppPolicyGate>
-              <Toast />
-            </PortalProvider>
-          </Theme>
-        </TamaguiProvider>
-      </QueryClientProvider>
+      <KeyboardProvider>
+        <QueryClientProvider client={queryClient}>
+          <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
+            <Theme name={effectiveScheme}>
+              <PortalProvider>
+                <AppPolicyGate>
+                  <RootLayoutNav />
+                </AppPolicyGate>
+                <Toast />
+              </PortalProvider>
+            </Theme>
+          </TamaguiProvider>
+        </QueryClientProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   )
 }
