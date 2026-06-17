@@ -14,12 +14,14 @@ import {
   View,
 } from "react-native"
 import { tokens } from "@/src/theme/tokens"
+import { useSelectedDateStore } from "@/src/stores"
 
 const PADDING = 25
 
 export default function HomeScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("record")
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const selectedDate = useSelectedDateStore((state) => state.selectedDate)
+  const setSelectedDate = useSelectedDateStore((state) => state.setSelectedDate)
   const [showCalendar, setShowCalendar] = useState(false)
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
@@ -29,12 +31,9 @@ export default function HomeScreen() {
   const tabAnim = useRef(new Animated.Value(0)).current
   const mainTabRef = useRef<MainTab>("record")
 
-  const switchTab = (tab: MainTab, options?: { resetDate?: boolean }) => {
+  const switchTab = (tab: MainTab) => {
     mainTabRef.current = tab
     setMainTab(tab)
-    if (options?.resetDate !== false) {
-      setSelectedDate(new Date())
-    }
     Animated.spring(tabAnim, {
       toValue: tab === "record" ? 0 : 1,
       useNativeDriver: true,
@@ -151,7 +150,7 @@ export default function HomeScreen() {
           <StatisticsView
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
-            onGoToRecord={() => switchTab("record", { resetDate: false })}
+            onGoToRecord={() => switchTab("record")}
             isActive={mainTab === "stats"}
           />
         </Animated.View>
