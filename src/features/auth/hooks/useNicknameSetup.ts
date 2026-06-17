@@ -37,6 +37,7 @@ export function useNicknameSetup() {
         birthDay: Number(signupState.birthDay),
         recommender: signupState.referralCode,
         nickName: data.nickname,
+        gender: signupState.gender || undefined,
       })
 
       setUser(user)

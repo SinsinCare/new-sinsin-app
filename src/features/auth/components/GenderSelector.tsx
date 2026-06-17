@@ -36,19 +36,21 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
         >
           성별
         </Text>
-        <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
-          {" "}
-          *
-        </Text>
       </XStack>
       <XStack gap={8}>
         {GENDER_OPTIONS.map(({ key, label }) => (
-          <Pressable key={key} style={{ flex: 1 }} onPress={() => onChange(key)}>
+          <Pressable
+            key={key}
+            style={{ flex: 1 }}
+            onPress={() => onChange(key)}
+          >
             <YStack
               height={52}
               borderRadius={8}
               borderWidth={1}
-              borderColor={value === key ? tokens.color.sub6.val : unselectedBorder}
+              borderColor={
+                value === key ? tokens.color.sub6.val : unselectedBorder
+              }
               backgroundColor={value === key ? selectedBg : unselectedBg}
               alignItems="center"
               justifyContent="center"
