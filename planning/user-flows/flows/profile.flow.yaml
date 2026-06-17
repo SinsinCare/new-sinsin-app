@@ -400,6 +400,19 @@ edges:
   - from: SCR_SETTINGS_WITHDRAWAL_COMPLETE
     to: N_END
 
+flow_links:
+  - from_node: SCR_AUTH_LOGIN
+    to_flow: FLOW_AUTH
+    to_node: N_START
+    condition: unauthenticated
+    description: 설정 접근 중 비인증 상태이면 인증 플로우로 이어진다.
+
+  - from_node: SCR_SETTINGS_WITHDRAWAL_COMPLETE
+    to_flow: FLOW_AUTH
+    to_node: N_START
+    condition: withdrawal_completed
+    description: 회원탈퇴 완료 후 공개 인증 화면으로 복귀한다.
+
 analytics:
   - profile_viewed
   - profile_update_started

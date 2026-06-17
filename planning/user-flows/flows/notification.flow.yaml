@@ -194,6 +194,13 @@ edges:
   - from: SCR_SETTINGS_NOTIFICATION_SETTINGS
     to: N_END
 
+flow_links:
+  - from_node: SCR_TABS_HOME
+    to_flow: FLOW_HOME_RECORD
+    to_node: N_START
+    trigger: tap_food_analysis_complete
+    description: 음식 분석 완료 알림 탭은 홈 기록 플로우의 pending analysis 경로로 이어진다.
+
 analytics:
   - notification_settings_viewed
   - notification_permission_requested

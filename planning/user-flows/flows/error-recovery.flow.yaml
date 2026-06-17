@@ -186,6 +186,25 @@ edges:
   - from: SCR_AUTH_LOGIN
     to: N_END
 
+flow_links:
+  - from_node: SCR_AUTH_LOGIN
+    to_flow: FLOW_AUTH
+    to_node: N_START
+    condition: no_token_or_invalid_refresh
+    description: 세션 복원 실패 또는 보호 라우트 비인증 상태는 인증 플로우로 이어진다.
+
+  - from_node: SCR_ONBOARDING
+    to_flow: FLOW_ONBOARDING
+    to_node: N_START
+    condition: pending_onboarding
+    description: 복원된 계정이 온보딩 대기 상태이면 온보딩 플로우로 이어진다.
+
+  - from_node: SCR_TABS_HOME
+    to_flow: FLOW_HOME_RECORD
+    to_node: N_START
+    condition: active
+    description: 활성 계정 복원 후 홈 기록 플로우로 이어진다.
+
 analytics:
   - app_launch_started
   - app_policy_checked

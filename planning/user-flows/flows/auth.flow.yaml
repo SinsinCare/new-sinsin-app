@@ -546,6 +546,19 @@ edges:
     to: SCR_AUTH_LOGIN
     trigger: retry_or_back_to_login
 
+flow_links:
+  - from_node: SCR_ONBOARDING
+    to_flow: FLOW_ONBOARDING
+    to_node: N_START
+    condition: pending_onboarding
+    description: 로그인 또는 가입 후 온보딩 대기 계정은 온보딩 플로우로 이어진다.
+
+  - from_node: SCR_TABS_HOME
+    to_flow: FLOW_HOME_RECORD
+    to_node: N_START
+    condition: active
+    description: 로그인 또는 가입 후 활성 계정은 홈 기록 플로우로 이어진다.
+
 analytics:
   - auth_login_viewed
   - auth_email_login_started

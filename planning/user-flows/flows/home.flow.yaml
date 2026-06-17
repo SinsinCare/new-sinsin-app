@@ -411,6 +411,13 @@ edges:
   - from: SCR_HOME_UPDATED
     to: N_END
 
+flow_links:
+  - from_node: SCR_AUTH_LOGIN
+    to_flow: FLOW_AUTH
+    to_node: N_START
+    condition: unauthenticated
+    description: 홈 탭 접근 중 비인증 상태이면 인증 플로우로 이어진다.
+
 analytics:
   - home_record_viewed
   - food_record_started
