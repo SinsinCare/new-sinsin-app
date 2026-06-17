@@ -10,6 +10,7 @@ import {
   Switch,
 } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
@@ -27,17 +28,32 @@ interface VoteSheetProps {
 }
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
-const HEADER_TEXT = { light: "#3C3C43", dark: tokens.color.textDark.val } as const
+const HEADER_TEXT = {
+  light: "#3C3C43",
+  dark: tokens.color.textDark.val,
+} as const
 const COMPLETE_ACTIVE = { light: "#028A67", dark: "#43C6A7" } as const
 const COMPLETE_DISABLED = { light: "#C7C7CC", dark: "#636366" } as const
 const INPUT_BG = { light: "#FFFFFF", dark: "#1F1F21" } as const
 const INPUT_BORDER = { light: "#E5E5EA", dark: "#38383A" } as const
-const INPUT_TEXT = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val } as const
-const INPUT_PLACEHOLDER = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val } as const
+const INPUT_TEXT = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+} as const
+const INPUT_PLACEHOLDER = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+} as const
 const ADD_BTN_BG = { light: "#C6E5DE", dark: "#36363E" } as const
 const ADD_BTN_TEXT = { light: "#474758", dark: "#F3F3F3" } as const
-const REMOVE_BTN_ICON = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightSub.val } as const
-const LABEL_TEXT = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val } as const
+const REMOVE_BTN_ICON = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightSub.val,
+} as const
+const LABEL_TEXT = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+} as const
 const HINT_TEXT = { light: "#8E8E93", dark: "#858591" } as const
 const SWITCH_TRACK_ON = "#43C6A7"
 const SWITCH_TRACK_OFF_IOS = { light: "#E5E5EA", dark: "#38383A" } as const
@@ -52,6 +68,9 @@ export function VoteSheet({
 }: VoteSheetProps) {
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
+  const insets = useSafeAreaInsets()
+  const topPadding =
+    Platform.OS === "android" ? Math.max(insets.top, 24) + 10 : 10
 
   const [options, setOptions] = useState<string[]>(
     initialData?.options ?? ["", ""],
@@ -107,7 +126,7 @@ export function VoteSheet({
         <YStack
           flex={1}
           backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
-          paddingTop={10}
+          paddingTop={topPadding}
         >
           {/* Header */}
           <XStack
