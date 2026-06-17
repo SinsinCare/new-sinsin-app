@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { Alert, BackHandler } from "react-native"
 import { router } from "expo-router"
-import { api } from "@/src/services"
 import { onboardingService } from "@/src/services/data/onboardingService"
 import { useOnboardingStore } from "@/src/stores/onboardingStore"
 import { useAuthStore } from "@/src/stores/authStore"
@@ -24,9 +23,6 @@ export function useOnboarding() {
 
   const user = useAuthStore((s) => s.user)
   const setAccountState = useAuthStore((s) => s.setAccountState)
-  const signupName = useSignupStore((s) => s.name)
-  const signupNickname = useSignupStore((s) => s.nickname)
-  const signupGender = useSignupStore((s) => s.gender)
   const resetSignup = useSignupStore((s) => s.reset)
   const {
     hasCkd,
@@ -155,13 +151,6 @@ export function useOnboarding() {
     setIsSubmitting(true)
     try {
       await onboardingService.submitAnswers(hasCkd, getAnswersArray())
-      if (signupName && signupNickname && signupGender) {
-        await api.patch("/user/profile", {
-          nickName: signupNickname,
-          name: signupName,
-          gender: signupGender,
-        })
-      }
       setAccountState("ACTIVE")
       resetOnboarding()
       resetSignup()

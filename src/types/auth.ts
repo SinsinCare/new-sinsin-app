@@ -16,6 +16,7 @@ export interface SignupRequest {
   birthDay: number
   recommender: string
   nickName: string
+  gender?: "MALE" | "FEMALE" | "OTHER"
 }
 
 export type AccountState =

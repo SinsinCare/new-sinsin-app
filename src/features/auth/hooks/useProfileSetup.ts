@@ -33,7 +33,7 @@ export function useProfileSetup() {
   const handleNext = (data: ProfileForm) => {
     setName(data.name)
     setBirth(birthYear, birthMonth, birthDay)
-    setGenderStore(gender as "MALE" | "FEMALE" | "OTHER")
+    setGenderStore(gender)
     setReferralCodeStore(data.referralCode)
     router.push("/(auth)/nickname-setup")
   }

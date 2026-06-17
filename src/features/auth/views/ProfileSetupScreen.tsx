@@ -32,8 +32,7 @@ export function ProfileSetupScreen() {
   })
 
   const name = watch("name")
-  const isValid =
-    !!name && !!birthYear && !!birthMonth && !!birthDay && !!gender
+  const isValid = !!name && !!birthYear && !!birthMonth && !!birthDay
 
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
