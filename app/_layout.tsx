@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Appearance, useColorScheme } from "react-native"
 import {
   Gesture,
@@ -21,6 +21,7 @@ import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
+import { routeFromPushData } from "@/src/services/notificationRoutingService"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
@@ -34,23 +35,32 @@ function RootLayoutNav() {
     (s) => s.isOnboardingInProgress,
   )
   const segments = useSegments()
-  const segmentPath = segments.map(String)
+  const segmentPath = useMemo(() => segments.map(String), [segments])
   const router = useRouter()
+  const handledNotificationIdsRef = useRef(new Set<string>())
 
   const needsOnboarding = accountState === "PENDING_ONBOARDING"
 
-  // 식단 분석 완료 알림 탭 시 홈 탭으로 이동 (RecordView가 pending 결과를 자동으로 엶)
+  // 푸시 data.type 라우팅은 클라이언트가 소유한다. 서버는 앱 내부 경로를 모른다.
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        const data = response.notification.request.content.data
-        if (data?.type === "food_analysis_complete") {
-          router.push("/(tabs)/home")
-        }
-      },
-    )
+    const handleResponse = (response: Notifications.NotificationResponse) => {
+      const id = response.notification.request.identifier
+      if (handledNotificationIdsRef.current.has(id)) return
+      handledNotificationIdsRef.current.add(id)
+      routeFromPushData(response.notification.request.content.data, router)
+    }
+
+    const sub =
+      Notifications.addNotificationResponseReceivedListener(handleResponse)
+
+    if (isAuthenticated && accountState === "ACTIVE") {
+      Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (response) handleResponse(response)
+      })
+    }
+
     return () => sub.remove()
-  }, [router])
+  }, [accountState, isAuthenticated, router])
 
   useEffect(() => {
     if (isLoading) return
@@ -108,7 +118,7 @@ function RootLayoutNav() {
     isAuthenticated,
     isLoading,
     accountState,
-    segments,
+    segmentPath,
     router,
     isSignupInProgress,
     isOnboardingInProgress,

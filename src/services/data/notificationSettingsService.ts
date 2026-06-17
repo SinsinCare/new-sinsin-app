@@ -5,13 +5,47 @@ import { DEFAULT_NOTIFICATION_SETTINGS } from "@/src/types/notification"
 
 const STORAGE_KEY = "@sinsin/notification-settings"
 
-function mergeWithDefaults(partial: Partial<NotificationSettings>): NotificationSettings {
+type NotificationSettingsPayload = Partial<NotificationSettings> & {
+  morningCheck?: Partial<NotificationSettings["categories"]["morningCheck"]>
+  waterReminder?: Partial<NotificationSettings["categories"]["waterReminder"]>
+  mealReminder?: Partial<NotificationSettings["categories"]["mealReminder"]>
+}
+
+function mergeWithDefaults(
+  partial: NotificationSettingsPayload,
+): NotificationSettings {
+  const rawCategories: Partial<NotificationSettings["categories"]> =
+    partial.categories ?? {}
   return {
     ...DEFAULT_NOTIFICATION_SETTINGS,
-    ...partial,
-    morningCheck: { ...DEFAULT_NOTIFICATION_SETTINGS.morningCheck, ...partial.morningCheck },
-    waterReminder: { ...DEFAULT_NOTIFICATION_SETTINGS.waterReminder, ...partial.waterReminder },
-    mealReminder: { ...DEFAULT_NOTIFICATION_SETTINGS.mealReminder, ...partial.mealReminder },
+    pushConsent:
+      partial.pushConsent ?? DEFAULT_NOTIFICATION_SETTINGS.pushConsent,
+    categories: {
+      morningCheck: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.categories.morningCheck,
+        ...(rawCategories.morningCheck ?? partial.morningCheck),
+      },
+      waterReminder: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.categories.waterReminder,
+        ...(rawCategories.waterReminder ?? partial.waterReminder),
+      },
+      mealReminder: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.categories.mealReminder,
+        ...(rawCategories.mealReminder ?? partial.mealReminder),
+      },
+      foodAnalysis: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.categories.foodAnalysis,
+        ...rawCategories.foodAnalysis,
+      },
+      announcement: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.categories.announcement,
+        ...rawCategories.announcement,
+      },
+      marketing: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.categories.marketing,
+        ...rawCategories.marketing,
+      },
+    },
   }
 }
 
@@ -38,5 +72,16 @@ export const notificationSettingsService = {
     } catch {
       // 로컬 저장은 완료됐으므로 서버 실패는 무시
     }
+  },
+
+  async setPushConsent(pushConsent: boolean): Promise<NotificationSettings> {
+    const current = await this.get()
+    const next = { ...current, pushConsent }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    const res = await api.patch("/user/notification-settings", { pushConsent })
+    const raw = res.data.result ?? res.data.data
+    const settings = mergeWithDefaults(raw)
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+    return settings
   },
 }

@@ -19,11 +19,10 @@ export function SettingsScreen() {
   const router = useRouter()
   const { signOut, isAuthenticated } = useAuth()
   const c = useSettingsColors()
-  const { settings, updateSettings, requestAndEnable } = useNotifications(isAuthenticated)
+  const { settings, updateSettings, pushEnabled, setPushConsent } =
+    useNotifications(isAuthenticated)
 
   const { themeMode, setThemeMode } = useThemeStore()
-  const pushEnabled = settings.waterReminder.enabled || settings.mealReminder.enabled
-  const [marketingEnabled, setMarketingEnabled] = useState(false)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
 
   const handleThemeChange = (mode: ThemeMode) => {
@@ -31,20 +30,26 @@ export function SettingsScreen() {
   }
 
   const handlePushToggle = async (value: boolean) => {
-    if (value) {
-      const granted = await requestAndEnable()
-      if (!granted) {
+    try {
+      const ok = await setPushConsent(value)
+      if (value && !ok) {
         Alert.alert(
           "알림 권한 필요",
           "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
         )
-        return
       }
+    } catch {
+      Alert.alert("알림 설정 실패", "잠시 후 다시 시도해주세요.")
     }
+  }
+
+  const handleMarketingToggle = async (value: boolean) => {
     await updateSettings({
       ...settings,
-      waterReminder: { ...settings.waterReminder, enabled: value },
-      mealReminder: { ...settings.mealReminder, enabled: value },
+      categories: {
+        ...settings.categories,
+        marketing: { enabled: value },
+      },
     })
   }
 
@@ -64,12 +69,18 @@ export function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* 화면 모드 */}
-        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>화면 모드</ThemedText>
+        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>
+          화면 모드
+        </ThemedText>
         {(
           [
             { mode: "light", icon: "sunny-outline", label: "라이트 모드" },
             { mode: "dark", icon: "moon-outline", label: "다크 모드" },
-            { mode: "system", icon: "phone-portrait-outline", label: "시스템 설정" },
+            {
+              mode: "system",
+              icon: "phone-portrait-outline",
+              label: "시스템 설정",
+            },
           ] as const
         ).map(({ mode, icon, label }) => (
           <Pressable
@@ -81,8 +92,15 @@ export function SettingsScreen() {
             onPress={() => handleThemeChange(mode)}
           >
             <View style={styles.themeOptionLeft}>
-              <Ionicons name={icon} size={20} color={c.icon} style={styles.themeIcon} />
-              <ThemedText style={[styles.themeOptionLabel, { color: c.text }]}>{label}</ThemedText>
+              <Ionicons
+                name={icon}
+                size={20}
+                color={c.icon}
+                style={styles.themeIcon}
+              />
+              <ThemedText style={[styles.themeOptionLabel, { color: c.text }]}>
+                {label}
+              </ThemedText>
             </View>
             {themeMode === mode && (
               <Ionicons name="checkmark" size={20} color="#34D399" />
@@ -90,23 +108,39 @@ export function SettingsScreen() {
           </Pressable>
         ))}
 
-        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
 
         {/* 알림 설정 */}
         <ToggleItem
           title="앱 푸시 알림 동의"
-          description="수분 섭취 및 식사 기록 알림을 수신해요."
+          description="분석 완료와 공지 등 앱 푸시 알림을 수신해요."
           value={pushEnabled}
           onValueChange={handlePushToggle}
         />
+        <Pressable
+          style={({ pressed }) => [
+            styles.navItem,
+            pressed && { backgroundColor: c.pressedBg },
+          ]}
+          onPress={() => router.push("/(settings)/notification-settings")}
+        >
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
+            알림 설정
+          </ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
+        </Pressable>
         <ToggleItem
           title="마케팅 알림 동의"
           description="마케팅 정보 수신에 동의해요."
-          value={marketingEnabled}
-          onValueChange={setMarketingEnabled}
+          value={settings.categories.marketing.enabled}
+          onValueChange={handleMarketingToggle}
         />
 
-        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
 
         {/* 약관 */}
         {[
@@ -127,12 +161,16 @@ export function SettingsScreen() {
             ]}
             onPress={onPress}
           >
-            <ThemedText style={[styles.navItemTitle, { color: c.text }]}>{title}</ThemedText>
+            <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
+              {title}
+            </ThemedText>
             <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
           </Pressable>
         ))}
 
-        <View style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]} />
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
 
         {/* 계정 */}
         <Pressable
@@ -142,7 +180,9 @@ export function SettingsScreen() {
           ]}
           onPress={() => setLogoutModalVisible(true)}
         >
-          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>로그아웃</ThemedText>
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
+            로그아웃
+          </ThemedText>
           <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
         <Pressable
@@ -152,7 +192,9 @@ export function SettingsScreen() {
           ]}
           onPress={() => router.push("/(settings)/withdrawal")}
         >
-          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>회원탈퇴</ThemedText>
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
+            회원탈퇴
+          </ThemedText>
           <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
       </ScrollView>
