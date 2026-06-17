@@ -12,12 +12,19 @@ import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useQueryClient } from "@tanstack/react-query"
+import { isAxiosError } from "axios"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { DatePickerModal } from "@/src/features/settings/components"
 import { DIAGNOSIS_CAUSE_OPTIONS } from "@/src/features/settings/data/constants"
+import {
+  mapKidneyProfileServerFieldErrors,
+  validateKidneyProfileInput,
+  type KidneyProfileFieldKey,
+  type KidneyProfileValidationErrors,
+} from "@/src/features/settings/utils/kidneyProfileValidation"
 import { api } from "@/src/services/core/apiClient"
 import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
@@ -33,6 +40,17 @@ const COMORBIDITY_OPTIONS = [
   { key: "BONE_MINERAL", label: "골미네랄 장애" },
 ]
 
+function extractFieldErrors(error: unknown): unknown {
+  if (!isAxiosError(error)) return undefined
+
+  const data = error.response?.data
+  if (typeof data !== "object" || data === null || !("fieldErrors" in data)) {
+    return undefined
+  }
+
+  return data.fieldErrors
+}
+
 export function KidneyProfileEditScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -41,6 +59,7 @@ export function KidneyProfileEditScreen() {
   const c = useSettingsColors()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [errors, setErrors] = useState<KidneyProfileValidationErrors>({})
   const heightTouchedRef = useRef(false)
   const weightTouchedRef = useRef(false)
 
@@ -94,7 +113,17 @@ export function KidneyProfileEditScreen() {
     )
   }
 
+  const clearFieldError = (field: KidneyProfileFieldKey) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
   const toggleCause = (key: string) => {
+    if (key === "OTHER") clearFieldError("otherCause")
     setSelectedCauses((prev) =>
       prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key],
     )
@@ -110,6 +139,20 @@ export function KidneyProfileEditScreen() {
 
   const handleSave = async () => {
     if (isSubmitting) return
+    const validationErrors = validateKidneyProfileInput({
+      heightVal,
+      weightVal,
+      otherCause,
+      selectedCauses,
+      diagnosisDate,
+    })
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+
+    setErrors({})
     setIsSubmitting(true)
     try {
       const ckdStageStr = onDialysis
@@ -120,7 +163,7 @@ export function KidneyProfileEditScreen() {
       const diagnosisDateStr = diagnosisDate
         ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
         : null
-      const heightNum = parseFloat(heightVal)
+      const heightNum = Number(heightVal.trim())
 
       await api.patch("/user/profile/kidney", {
         ckdStage: ckdStageStr,
@@ -131,19 +174,26 @@ export function KidneyProfileEditScreen() {
         diagnosisCauses: selectedCauses,
         diagnosisCauseOther: otherCause.trim() || null,
         comorbidities: selectedComorbidities,
-        ...(!isNaN(heightNum) && heightNum > 0 ? { heightCm: heightNum } : {}),
+        heightCm: heightNum,
       })
 
-      const weight = parseFloat(weightVal)
-      if (!isNaN(weight) && weight > 0) {
-        const today = new Date().toISOString().split("T")[0]
-        await weightEdemaService.updateWeight(weight, today)
-      }
+      const weight = Number(weightVal.trim())
+      const today = new Date().toISOString().split("T")[0]
+      await weightEdemaService.updateWeight(weight, today)
 
       queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
       router.back()
-    } catch {
+    } catch (error) {
+      const serverErrors = mapKidneyProfileServerFieldErrors(
+        extractFieldErrors(error),
+      )
+
+      if (Object.keys(serverErrors).length > 0) {
+        setErrors(serverErrors)
+        return
+      }
+
       Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
     } finally {
       setIsSubmitting(false)
@@ -152,12 +202,19 @@ export function KidneyProfileEditScreen() {
 
   const handleChangeHeight = (text: string) => {
     heightTouchedRef.current = true
+    clearFieldError("height")
     setHeightVal(text)
   }
 
   const handleChangeWeight = (text: string) => {
     weightTouchedRef.current = true
+    clearFieldError("weight")
     setWeightVal(text)
+  }
+
+  const handleChangeOtherCause = (text: string) => {
+    clearFieldError("otherCause")
+    setOtherCause(text)
   }
 
   const formattedDate = diagnosisDate
@@ -210,7 +267,9 @@ export function KidneyProfileEditScreen() {
                 {
                   marginTop: 6,
                   backgroundColor: c.bg,
-                  borderColor: c.border,
+                  borderColor: errors.height
+                    ? tokens.color.error.val
+                    : c.border,
                   color: c.text,
                 },
               ]}
@@ -220,6 +279,9 @@ export function KidneyProfileEditScreen() {
               placeholder="키 입력"
               placeholderTextColor={c.textTertiary}
             />
+            {errors.height ? (
+              <ThemedText style={styles.fieldError}>{errors.height}</ThemedText>
+            ) : null}
           </View>
           <View style={styles.inputGroup}>
             <ThemedText style={[styles.inputLabel, { color: c.text }]}>
@@ -231,7 +293,9 @@ export function KidneyProfileEditScreen() {
                 {
                   marginTop: 6,
                   backgroundColor: c.bg,
-                  borderColor: c.border,
+                  borderColor: errors.weight
+                    ? tokens.color.error.val
+                    : c.border,
                   color: c.text,
                 },
               ]}
@@ -241,6 +305,9 @@ export function KidneyProfileEditScreen() {
               placeholder="체중 입력"
               placeholderTextColor={c.textTertiary}
             />
+            {errors.weight ? (
+              <ThemedText style={styles.fieldError}>{errors.weight}</ThemedText>
+            ) : null}
           </View>
         </View>
 
@@ -367,7 +434,13 @@ export function KidneyProfileEditScreen() {
         <Pressable
           style={[
             styles.dateInputRow,
-            { marginTop: 8, borderColor: c.border, backgroundColor: c.bg },
+            {
+              marginTop: 8,
+              borderColor: errors.diagnosisDate
+                ? tokens.color.error.val
+                : c.border,
+              backgroundColor: c.bg,
+            },
           ]}
           onPress={() => setDatePickerVisible(true)}
         >
@@ -382,6 +455,11 @@ export function KidneyProfileEditScreen() {
           </ThemedText>
           <Ionicons name="calendar-outline" size={24} color={c.textMuted} />
         </Pressable>
+        {errors.diagnosisDate ? (
+          <ThemedText style={styles.fieldError}>
+            {errors.diagnosisDate}
+          </ThemedText>
+        ) : null}
 
         {/* 주 진단 원인 */}
         <ThemedText
@@ -422,18 +500,23 @@ export function KidneyProfileEditScreen() {
             styles.otherCauseInput,
             {
               marginTop: 8,
-              borderColor: c.border,
+              borderColor: errors.otherCause
+                ? tokens.color.error.val
+                : c.border,
               color: c.text,
               backgroundColor: c.bg,
             },
           ]}
           multiline
           value={otherCause}
-          onChangeText={setOtherCause}
+          onChangeText={handleChangeOtherCause}
           placeholder="기타 원인이 있다면 적어주세요..."
           placeholderTextColor={c.textTertiary}
           textAlignVertical="top"
         />
+        {errors.otherCause ? (
+          <ThemedText style={styles.fieldError}>{errors.otherCause}</ThemedText>
+        ) : null}
 
         {/* 동반 질환 */}
         <ThemedText
@@ -489,6 +572,7 @@ export function KidneyProfileEditScreen() {
         selected={diagnosisDate}
         onClose={() => setDatePickerVisible(false)}
         onSelect={(year, month) => {
+          clearFieldError("diagnosisDate")
           setDiagnosisDate({ year, month })
           setDatePickerVisible(false)
         }}
@@ -537,6 +621,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
+  },
+  fieldError: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+    color: tokens.color.error.val,
   },
   textInput: {
     borderWidth: 1,
