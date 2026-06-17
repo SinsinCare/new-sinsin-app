@@ -1,6 +1,8 @@
 import * as Notifications from "expo-notifications"
+import Constants from "expo-constants"
 import { Platform } from "react-native"
 import type { NotificationSettings } from "@/src/types/notification"
+import { api } from "@/src/services/core/apiClient"
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -12,15 +14,25 @@ Notifications.setNotificationHandler({
   }),
 })
 
+async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== "android") return
+  await Notifications.setNotificationChannelAsync("default", {
+    name: "신신당부 알림",
+    importance: Notifications.AndroidImportance.DEFAULT,
+    sound: "default",
+  })
+}
+
+function getExpoProjectId(): string | undefined {
+  return (
+    Constants.easConfig?.projectId ??
+    Constants.expoConfig?.extra?.eas?.projectId
+  )
+}
+
 export const notificationService = {
   async requestPermissions(): Promise<boolean> {
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "신신당부 알림",
-        importance: Notifications.AndroidImportance.DEFAULT,
-        sound: "default",
-      })
-    }
+    await ensureAndroidChannel()
 
     const { status: existing } = await Notifications.getPermissionsAsync()
     if (existing === "granted") return true
@@ -29,12 +41,46 @@ export const notificationService = {
     return status === "granted"
   },
 
+  async hasPermission(): Promise<boolean> {
+    const { status } = await Notifications.getPermissionsAsync()
+    return status === "granted"
+  },
+
+  async registerPushToken(): Promise<string> {
+    await ensureAndroidChannel()
+    const projectId = getExpoProjectId()
+    const token = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined,
+    )
+    const platform = Platform.OS === "ios" ? "ios" : "android"
+    await api.post("/user/push-token", {
+      expoPushToken: token.data,
+      platform,
+    })
+    return token.data
+  },
+
+  async unregisterPushToken(): Promise<void> {
+    try {
+      const projectId = getExpoProjectId()
+      const token = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined,
+      )
+      await api.delete("/user/push-token", {
+        data: { expoPushToken: token.data },
+      })
+    } catch {
+      // 토큰 조회/삭제 실패가 마스터 동의 OFF 저장을 막으면 안 된다.
+    }
+  },
+
   async scheduleAll(settings: NotificationSettings): Promise<void> {
     await Notifications.cancelAllScheduledNotificationsAsync()
 
     const promises: Promise<string>[] = []
+    const { morningCheck, waterReminder, mealReminder } = settings.categories
 
-    if (settings.morningCheck.enabled) {
+    if (morningCheck.enabled) {
       promises.push(
         Notifications.scheduleNotificationAsync({
           identifier: "morning-check",
@@ -44,15 +90,15 @@ export const notificationService = {
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DAILY,
-            hour: settings.morningCheck.hour,
+            hour: morningCheck.hour,
             minute: 0,
           },
         }),
       )
     }
 
-    if (settings.waterReminder.enabled) {
-      const { intervalHours, startHour, endHour } = settings.waterReminder
+    if (waterReminder.enabled) {
+      const { intervalHours, startHour, endHour } = waterReminder
       for (let h = startHour; h <= endHour; h += intervalHours) {
         promises.push(
           Notifications.scheduleNotificationAsync({
@@ -71,23 +117,23 @@ export const notificationService = {
       }
     }
 
-    if (settings.mealReminder.enabled) {
+    if (mealReminder.enabled) {
       const meals = [
         {
           id: "meal-breakfast",
-          hour: settings.mealReminder.breakfastHour,
+          hour: mealReminder.breakfastHour,
           title: "🍳 아침 식사 기록",
           body: "오늘 아침 식사를 기록해주세요.",
         },
         {
           id: "meal-lunch",
-          hour: settings.mealReminder.lunchHour,
+          hour: mealReminder.lunchHour,
           title: "🍱 점심 식사 기록",
           body: "오늘 점심 식사를 기록해주세요.",
         },
         {
           id: "meal-dinner",
-          hour: settings.mealReminder.dinnerHour,
+          hour: mealReminder.dinnerHour,
           title: "🍽️ 저녁 식사 기록",
           body: "오늘 저녁 식사를 기록해주세요.",
         },
