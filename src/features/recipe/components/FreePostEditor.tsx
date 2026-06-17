@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Image,
   Alert,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -27,6 +26,12 @@ import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import { tokens } from "@/src/theme/tokens"
+import {
+  KeyboardAwareScrollView,
+  KeyboardController,
+  KeyboardStickyView,
+  useKeyboardState,
+} from "react-native-keyboard-controller"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
 const HEADER_TEXT_COLOR = {
@@ -72,10 +77,28 @@ interface FreePostEditorProps {
   onClose: () => void
 }
 
+function KeyboardDismissButton({ color }: { color: string }) {
+  const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
+
+  if (!isKeyboardVisible) return null
+
+  return (
+    <Pressable
+      onPress={() => KeyboardController.dismiss()}
+      hitSlop={8}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      <Icon name="keyboard" size={24} color={color} />
+    </Pressable>
+  )
+}
+
 export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const insets = useSafeAreaInsets()
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
+  const bottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 24) : insets.bottom
 
   const [selectedCategory, setSelectedCategory] = useState(
     FREE_POST_CATEGORIES[0].key,
@@ -83,7 +106,6 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
   const [categorySheetOpen, setCategorySheetOpen] = useState(false)
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [votes, setVotes] = useState<VoteData[]>([])
@@ -92,23 +114,6 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { createPostAsync } = useCommunityPosts()
-
-  useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow"
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide"
-    const showSub = Keyboard.addListener(showEvent, () =>
-      setIsKeyboardVisible(true),
-    )
-    const hideSub = Keyboard.addListener(hideEvent, () =>
-      setIsKeyboardVisible(false),
-    )
-    return () => {
-      showSub.remove()
-      hideSub.remove()
-    }
-  }, [])
 
   const iconColor = isDark ? TOOLBAR_ICON_COLOR.dark : TOOLBAR_ICON_COLOR.light
 
@@ -318,14 +323,16 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
       />
 
       {/* Title + Body inputs */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
+      <View flex={1}>
+        <KeyboardAwareScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 12 }}
+          bottomOffset={bottomInset + 72}
+          disableScrollOnKeyboardHide
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
         >
           <YStack paddingHorizontal={16} paddingTop={20} flex={1}>
             <TextInput
@@ -370,100 +377,94 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
               ]}
             />
           </YStack>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
-        {/* Image Strip */}
-        {images.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingVertical: 12,
-              gap: 12,
-            }}
-            style={{
-              flexGrow: 0,
-              flexShrink: 0,
-            }}
-          >
-            {images.map((uri, index) => (
-              <ImageThumbnailCard
-                key={uri + index}
-                uri={uri}
-                onPress={() => setPreviewImage(uri)}
-                onRemove={() => handleRemoveImage(index)}
-              />
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Vote Attachment Cards */}
-        {votes.map((_, voteIndex) => (
-          <View
-            key={voteIndex}
-            marginHorizontal={20}
-            marginTop={voteIndex === 0 ? 8 : 0}
-            marginBottom={8}
-          >
-            <VoteAttachCard
-              onEdit={() => handleEditVote(voteIndex)}
-              onRemove={() => handleRemoveVote(voteIndex)}
-            />
-          </View>
-        ))}
-
-        {/* Bottom Toolbar */}
-        <XStack
-          paddingHorizontal={20}
-          paddingVertical={10}
-          paddingBottom={isKeyboardVisible ? 10 : 10 + insets.bottom}
-          alignItems="center"
-          style={{
-            borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: isDark
-              ? TOOLBAR_BORDER_COLOR.dark
-              : TOOLBAR_BORDER_COLOR.light,
-          }}
-          backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
-        >
-          <XStack gap={20} flex={1}>
-            <Pressable
-              onPress={handlePickImages}
-              hitSlop={8}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <Icon name="gallery" size={24} color={iconColor} />
-            </Pressable>
-            <Pressable
-              onPress={handleOpenVoteSheet}
-              hitSlop={8}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <Icon name="vote" size={24} color={iconColor} />
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                Keyboard.dismiss()
-                console.log("hashtag pressed")
+        <KeyboardStickyView offset={{ closed: 0, opened: bottomInset }}>
+          {/* Image Strip */}
+          {images.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                gap: 12,
               }}
-              hitSlop={8}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              style={{
+                flexGrow: 0,
+                flexShrink: 0,
+              }}
             >
-              <Icon name="hashtag" size={24} color={iconColor} />
-            </Pressable>
-          </XStack>
-          {isKeyboardVisible && (
-            <Pressable
-              onPress={() => Keyboard.dismiss()}
-              hitSlop={8}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <Icon name="keyboard" size={24} color={iconColor} />
-            </Pressable>
+              {images.map((uri, index) => (
+                <ImageThumbnailCard
+                  key={uri + index}
+                  uri={uri}
+                  onPress={() => setPreviewImage(uri)}
+                  onRemove={() => handleRemoveImage(index)}
+                />
+              ))}
+            </ScrollView>
           )}
-        </XStack>
-      </KeyboardAvoidingView>
+
+          {/* Vote Attachment Cards */}
+          {votes.map((_, voteIndex) => (
+            <View
+              key={voteIndex}
+              marginHorizontal={20}
+              marginTop={voteIndex === 0 ? 8 : 0}
+              marginBottom={8}
+            >
+              <VoteAttachCard
+                onEdit={() => handleEditVote(voteIndex)}
+                onRemove={() => handleRemoveVote(voteIndex)}
+              />
+            </View>
+          ))}
+
+          {/* Bottom Toolbar */}
+          <XStack
+            paddingHorizontal={20}
+            paddingTop={10}
+            paddingBottom={10 + bottomInset}
+            alignItems="center"
+            style={{
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: isDark
+                ? TOOLBAR_BORDER_COLOR.dark
+                : TOOLBAR_BORDER_COLOR.light,
+            }}
+            backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
+          >
+            <XStack gap={20} flex={1}>
+              <Pressable
+                onPress={handlePickImages}
+                hitSlop={8}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Icon name="gallery" size={24} color={iconColor} />
+              </Pressable>
+              <Pressable
+                onPress={handleOpenVoteSheet}
+                hitSlop={8}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Icon name="vote" size={24} color={iconColor} />
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Keyboard.dismiss()
+                  console.log("hashtag pressed")
+                }}
+                hitSlop={8}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Icon name="hashtag" size={24} color={iconColor} />
+              </Pressable>
+            </XStack>
+            <KeyboardDismissButton color={iconColor} />
+          </XStack>
+        </KeyboardStickyView>
+      </View>
 
       {/* Category Sheet */}
       <PostCategorySheet

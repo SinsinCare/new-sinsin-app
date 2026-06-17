@@ -1,35 +1,47 @@
-import { Pressable, StyleSheet, Keyboard } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import {
+  KeyboardController,
+  useKeyboardState,
+} from "react-native-keyboard-controller"
 
 const TOOLBAR_BG = { light: "#FCFCFC", dark: "#2A2A30" }
-const TOOLBAR_BORDER = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
+const TOOLBAR_BORDER = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+}
 const ICON_COLOR = { light: "#666677", dark: "#F5F6FA" }
-const ICON_DISABLED = { light: "#C5C8CE", dark: tokens.color.textLightMuted.val }
+const ICON_DISABLED = {
+  light: "#C5C8CE",
+  dark: tokens.color.textLightMuted.val,
+}
 
 interface EditorToolbarProps {
   onAddImage: () => void
   imageDisabled?: boolean
-  isKeyboardVisible?: boolean
 }
 
 export function EditorToolbar({
   onAddImage,
   imageDisabled,
-  isKeyboardVisible,
 }: EditorToolbarProps) {
   const scheme = useAppColorScheme()
   const insets = useSafeAreaInsets()
+  const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
 
   return (
     <XStack
       paddingHorizontal={20}
-      paddingVertical={10}
-      paddingBottom={isKeyboardVisible ? 10 : 10 + insets.bottom}
-      style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: TOOLBAR_BORDER[scheme] }}
+      paddingTop={10}
+      paddingBottom={10 + insets.bottom}
+      style={{
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: TOOLBAR_BORDER[scheme],
+      }}
       backgroundColor={TOOLBAR_BG[scheme]}
       alignItems="center"
     >
@@ -51,7 +63,7 @@ export function EditorToolbar({
       </XStack>
       {isKeyboardVisible && (
         <Pressable
-          onPress={() => Keyboard.dismiss()}
+          onPress={() => KeyboardController.dismiss()}
           hitSlop={8}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
