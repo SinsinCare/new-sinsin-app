@@ -137,6 +137,15 @@ export function KidneyProfileEditScreen() {
     5: "STAGE_5",
   }
 
+  const navigateBackOrFallback = () => {
+    if (router.canGoBack()) {
+      router.back()
+      return
+    }
+
+    router.replace("/(tabs)/all")
+  }
+
   const handleSave = async () => {
     if (isSubmitting) return
     const validationErrors = validateKidneyProfileInput({
@@ -183,7 +192,7 @@ export function KidneyProfileEditScreen() {
 
       queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
-      router.back()
+      navigateBackOrFallback()
     } catch (error) {
       const serverErrors = mapKidneyProfileServerFieldErrors(
         extractFieldErrors(error),
@@ -228,7 +237,7 @@ export function KidneyProfileEditScreen() {
       <ScreenHeader
         title="신장 프로필 수정"
         paddingTop={insets.top + 8}
-        onBack={() => router.back()}
+        onBack={navigateBackOrFallback}
         rightElement={
           <Pressable onPress={handleSave} hitSlop={8} disabled={isSubmitting}>
             <ThemedText
