@@ -1,4 +1,8 @@
-import type { SignupRequest, SocialProvider } from "../../types"
+import type {
+  ProfileCompleteRequest,
+  SignupRequest,
+  SocialProvider,
+} from "../../types"
 
 // 앱 사용자 최소 인터페이스
 export interface AppUser {
@@ -28,6 +32,9 @@ export interface IAuthService {
   completeEmailLoginLink(
     emailLinkToken: string,
     password: string,
+  ): Promise<{ user: AppUser; accountState: string }>
+  completeProfile(
+    request: ProfileCompleteRequest,
   ): Promise<{ user: AppUser; accountState: string }>
   signup(request: SignupRequest): Promise<AppUser>
   cancelWithdrawal(

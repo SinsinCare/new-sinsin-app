@@ -15,6 +15,7 @@ export interface PasswordForm {
 
 export interface ProfileForm {
   name: string
+  acquisitionSourceOther: string
   referralCode: string
 }
 

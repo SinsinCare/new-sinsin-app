@@ -13,6 +13,17 @@ interface SignupState {
   birthMonth: string
   birthDay: string
   gender: "MALE" | "FEMALE" | "OTHER" | ""
+  acquisitionSource:
+    | "APP_STORE"
+    | "INSTAGRAM"
+    | "YOUTUBE"
+    | "KAKAO"
+    | "BLOG"
+    | "NAVER_CAFE"
+    | "FRIEND"
+    | "OTHER"
+    | ""
+  acquisitionSourceOther: string
   referralCode: string
   nickname: string
   setSignupInProgress: (v: boolean) => void
@@ -25,6 +36,19 @@ interface SignupState {
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
   setGender: (gender: "MALE" | "FEMALE" | "OTHER" | "") => void
+  setAcquisitionSource: (
+    source:
+      | "APP_STORE"
+      | "INSTAGRAM"
+      | "YOUTUBE"
+      | "KAKAO"
+      | "BLOG"
+      | "NAVER_CAFE"
+      | "FRIEND"
+      | "OTHER"
+      | "",
+  ) => void
+  setAcquisitionSourceOther: (value: string) => void
   setReferralCode: (code: string) => void
   setNickname: (nickname: string) => void
   reset: () => void
@@ -43,6 +67,8 @@ const initialState = {
   birthMonth: "",
   birthDay: "",
   gender: "" as const,
+  acquisitionSource: "" as const,
+  acquisitionSourceOther: "",
   referralCode: "",
   nickname: "",
 }
@@ -60,6 +86,9 @@ export const useSignupStore = create<SignupState>((set) => ({
   setBirth: (birthYear, birthMonth, birthDay) =>
     set({ birthYear, birthMonth, birthDay }),
   setGender: (gender) => set({ gender }),
+  setAcquisitionSource: (acquisitionSource) => set({ acquisitionSource }),
+  setAcquisitionSourceOther: (acquisitionSourceOther) =>
+    set({ acquisitionSourceOther }),
   setReferralCode: (referralCode) => set({ referralCode }),
   setNickname: (nickname) => set({ nickname }),
   reset: () => set(initialState),

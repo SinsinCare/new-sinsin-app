@@ -7,6 +7,10 @@ import { FormTextField } from "@/src/shared/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
 import { tokens } from "@/src/theme/tokens"
+import {
+  getDestinationForAccountState,
+  type AuthDestination,
+} from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { EmailForm } from "../types"
 import type { SocialProvider } from "@/src/types"
@@ -43,9 +47,7 @@ export function SocialLinkEmailScreen() {
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
   const [verificationComplete, setVerificationComplete] = useState(false)
-  const [nextRoute, setNextRoute] = useState<"/onboarding" | "/(tabs)/home">(
-    "/onboarding",
-  )
+  const [nextRoute, setNextRoute] = useState<AuthDestination>("/onboarding")
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const providerValue = isSocialProvider(provider) ? provider : null
@@ -130,11 +132,7 @@ export function SocialLinkEmailScreen() {
       )
       if (timerRef.current) clearInterval(timerRef.current)
       setTimer(0)
-      setNextRoute(
-        result.accountState === "PENDING_ONBOARDING"
-          ? "/onboarding"
-          : "/(tabs)/home",
-      )
+      setNextRoute(getDestinationForAccountState(result.accountState))
       setVerificationComplete(true)
     } catch (error) {
       setSendError(

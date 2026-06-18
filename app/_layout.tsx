@@ -40,6 +40,7 @@ function RootLayoutNav() {
   const handledNotificationIdsRef = useRef(new Set<string>())
 
   const needsOnboarding = accountState === "PENDING_ONBOARDING"
+  const needsProfile = accountState === "PENDING_PROFILE"
 
   // 푸시 data.type 라우팅은 클라이언트가 소유한다. 서버는 앱 내부 경로를 모른다.
   useEffect(() => {
@@ -83,6 +84,8 @@ function RootLayoutNav() {
       segmentPath[1] === "withdrawal-complete"
     const inSocialLinkEmail =
       segmentPath[0] === "(auth)" && segmentPath[1] === "social-link-email"
+    const inProfileSetup =
+      segmentPath[0] === "(auth)" && segmentPath[1] === "profile-setup"
 
     if (
       !isAuthenticated &&
@@ -95,14 +98,28 @@ function RootLayoutNav() {
       isAuthenticated &&
       inAuthGroup &&
       !isSignupInProgress &&
-      !inSocialLinkEmail
+      !inSocialLinkEmail &&
+      !(needsProfile && inProfileSetup)
     ) {
       // 회원가입 진행 중이면 auth 그룹에 유지
-      if (needsOnboarding) {
+      if (needsProfile) {
+        router.replace("/(auth)/profile-setup")
+      } else if (needsOnboarding) {
         router.replace("/onboarding")
       } else {
         router.replace("/(tabs)/home")
       }
+    } else if (
+      isAuthenticated &&
+      !inAuthGroup &&
+      !inOnboarding &&
+      !inProfileSetup &&
+      !inPublicLegalDocument &&
+      !isOnboardingInProgress &&
+      needsProfile
+    ) {
+      // 소셜 신규 유저가 필수 프로필을 끝내기 전에는 프로필 입력으로 고정
+      router.replace("/(auth)/profile-setup")
     } else if (
       isAuthenticated &&
       !inAuthGroup &&
@@ -123,6 +140,7 @@ function RootLayoutNav() {
     isSignupInProgress,
     isOnboardingInProgress,
     needsOnboarding,
+    needsProfile,
     signOut,
   ])
 

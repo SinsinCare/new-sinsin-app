@@ -7,6 +7,7 @@ import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
 import { PasswordCriteriaText } from "../components"
 import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { PasswordForm } from "../types"
 
@@ -45,11 +46,7 @@ export function EmailLoginLinkPasswordScreen() {
     setSubmitting(true)
     try {
       const result = await completeEmailLoginLink(tokenValue, data.password)
-      router.replace(
-        result.accountState === "PENDING_ONBOARDING"
-          ? "/onboarding"
-          : "/(tabs)/home",
-      )
+      router.replace(getDestinationForAccountState(result.accountState))
     } catch (error) {
       setError("password", {
         message:

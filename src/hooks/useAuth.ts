@@ -7,7 +7,7 @@ import {
 } from "../services/auth/socialAuthService"
 import { clearClientSession } from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
-import type { SocialProvider } from "@/src/types"
+import type { ProfileCompleteRequest, SocialProvider } from "@/src/types"
 
 const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 200
 
@@ -117,6 +117,13 @@ export function useAuth() {
     return result
   }
 
+  const completeProfile = async (request: ProfileCompleteRequest) => {
+    const result = await authService.completeProfile(request)
+    setUser(result.user)
+    setAccountState(result.accountState)
+    return result
+  }
+
   const cancelWithdrawal = async (cancelToken: string) => {
     const result = await authService.cancelWithdrawal(cancelToken)
     setUser(result.user)
@@ -147,6 +154,7 @@ export function useAuth() {
     sendSocialLinkEmailCode,
     verifySocialLinkEmailCode,
     completeEmailLoginLink,
+    completeProfile,
     cancelWithdrawal,
     isUserCancelledError,
     signOut,

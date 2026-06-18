@@ -4,12 +4,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { router } from "expo-router"
 import { useForm } from "react-hook-form"
 import { Ionicons } from "@expo/vector-icons"
-import { FormTextField } from "@/src/shared/components"
+import { BottomSheetPicker, FormTextField } from "@/src/shared/components"
 import { BirthDatePicker } from "../components/BirthDatePicker"
 import { GenderSelector } from "../components/GenderSelector"
 import { useProfileSetup, useAuthColors } from "../hooks"
+import { ACQUISITION_SOURCE_OPTIONS } from "../data/acquisitionSources"
 import { tokens } from "@/src/theme/tokens"
 import type { ProfileForm } from "../types"
+import type { AcquisitionSourceInput } from "../data/acquisitionSources"
 
 export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
@@ -19,20 +21,38 @@ export function ProfileSetupScreen() {
     birthMonth,
     birthDay,
     gender,
+    acquisitionSource,
+    isSocialProfileMode,
+    isSubmitting,
+    submitError,
     handleYearChange,
     handleMonthChange,
     setBirthDay,
     setGender,
+    setAcquisitionSource,
     handleNext,
   } = useProfileSetup()
 
   const { control, watch, handleSubmit } = useForm<ProfileForm>({
-    defaultValues: { name: "", referralCode: "" },
+    defaultValues: {
+      name: "",
+      acquisitionSourceOther: "",
+      referralCode: "",
+    },
     mode: "onChange",
   })
 
   const name = watch("name")
-  const isValid = !!name && !!birthYear && !!birthMonth && !!birthDay
+  const acquisitionSourceOther = watch("acquisitionSourceOther")
+  const isOtherSource = acquisitionSource === "OTHER"
+  const isValid =
+    !!name.trim() &&
+    !!birthYear &&
+    !!birthMonth &&
+    !!birthDay &&
+    !!gender &&
+    !!acquisitionSource &&
+    (!isOtherSource || !!acquisitionSourceOther.trim())
 
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
@@ -110,6 +130,32 @@ export function ProfileSetupScreen() {
 
             <GenderSelector value={gender} onChange={setGender} />
 
+            <YStack gap={12}>
+              <BottomSheetPicker
+                label="어떻게 신신을 알게 되셨나요?"
+                value={acquisitionSource}
+                options={[...ACQUISITION_SOURCE_OPTIONS]}
+                onSelect={(value) =>
+                  setAcquisitionSource(value as AcquisitionSourceInput)
+                }
+                placeholder="유입경로를 선택해주세요"
+                required
+              />
+
+              {isOtherSource && (
+                <FormTextField<ProfileForm>
+                  name="acquisitionSourceOther"
+                  control={control}
+                  placeholder="알게 된 경로를 입력해주세요"
+                  maxLength={200}
+                  showValidState
+                  rules={{
+                    required: "알게 된 경로를 입력해주세요.",
+                  }}
+                />
+              )}
+            </YStack>
+
             <FormTextField<ProfileForm>
               name="referralCode"
               control={control}
@@ -125,11 +171,13 @@ export function ProfileSetupScreen() {
               Keyboard.dismiss()
               handleSubmit(handleNext)()
             }}
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
           >
             <YStack
               backgroundColor={
-                isValid ? tokens.color.sub6.val : tokens.color.sub6.val + "40"
+                isValid && !isSubmitting
+                  ? tokens.color.sub6.val
+                  : tokens.color.sub6.val + "40"
               }
               paddingVertical={16}
               paddingHorizontal={24}
@@ -141,13 +189,28 @@ export function ProfileSetupScreen() {
                 color="white"
                 fontSize={16}
                 fontWeight="500"
-                letterSpacing={-0.3}
+                letterSpacing={0}
                 lineHeight={20}
               >
-                다음 단계
+                {isSubmitting
+                  ? "저장 중..."
+                  : isSocialProfileMode
+                    ? "저장하기"
+                    : "다음 단계"}
               </Text>
             </YStack>
           </Pressable>
+          {submitError && (
+            <Text
+              color={tokens.color.error.val}
+              fontSize={13}
+              lineHeight={18}
+              marginTop={10}
+              textAlign="center"
+            >
+              {submitError}
+            </Text>
+          )}
         </YStack>
       </YStack>
     </YStack>

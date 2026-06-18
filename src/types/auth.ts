@@ -17,9 +17,20 @@ export interface SignupRequest {
   recommender: string
   nickName: string
   gender?: "MALE" | "FEMALE" | "OTHER"
+  acquisitionSource:
+    | "APP_STORE"
+    | "INSTAGRAM"
+    | "YOUTUBE"
+    | "KAKAO"
+    | "BLOG"
+    | "NAVER_CAFE"
+    | "FRIEND"
+    | "OTHER"
+  acquisitionSourceOther?: string | null
 }
 
 export type AccountState =
+  | "PENDING_PROFILE"
   | "PENDING_ONBOARDING"
   | "ACTIVE"
   | "SUSPENDED"
@@ -50,6 +61,33 @@ export interface LoginResult {
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
+}
+
+export interface ProfileCompleteRequest {
+  name: string
+  birthYear: number
+  birthMonth: number
+  birthDay: number
+  gender: "MALE" | "FEMALE" | "OTHER"
+  acquisitionSource: SignupRequest["acquisitionSource"]
+  acquisitionSourceOther?: string | null
+  recommender?: string
+}
+
+export interface ProfileCompleteResult {
+  accountState: AccountState
+  profile: {
+    userId: number
+    email: string
+    nickName: string
+    name: string
+    birthYear: number
+    birthMonth: number
+    birthDay: number
+    accountState: AccountState
+    gender: "MALE" | "FEMALE" | "OTHER" | null
+    profileImage?: string | null
+  }
 }
 
 export interface SocialLinkRequiredResult {

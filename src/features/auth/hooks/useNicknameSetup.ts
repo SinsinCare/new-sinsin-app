@@ -17,6 +17,12 @@ export function useNicknameSetup() {
     setIsLoading(true)
     setError("")
     try {
+      if (!signupState.gender || !signupState.acquisitionSource) {
+        setError("필수정보를 다시 입력해주세요.")
+        router.replace("/(auth)/profile-setup")
+        return
+      }
+
       const available = await nicknameService.checkNicknameAvailability(
         data.nickname,
       )
@@ -37,7 +43,12 @@ export function useNicknameSetup() {
         birthDay: Number(signupState.birthDay),
         recommender: signupState.referralCode,
         nickName: data.nickname,
-        gender: signupState.gender || undefined,
+        gender: signupState.gender,
+        acquisitionSource: signupState.acquisitionSource,
+        acquisitionSourceOther:
+          signupState.acquisitionSource === "OTHER"
+            ? signupState.acquisitionSourceOther || null
+            : null,
       })
 
       setUser(user)

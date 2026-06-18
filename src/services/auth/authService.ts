@@ -3,12 +3,14 @@ import type {
   SignupRequest,
   ApiResponse,
   LoginResult,
+  ProfileCompleteRequest,
+  ProfileCompleteResult,
   SignupResult,
   TokenRefreshResult,
   AuthUserSummary,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
-import { clearClientSession, publicApi, tokenService } from "../core"
+import { api, clearClientSession, publicApi, tokenService } from "../core"
 import { ApiError } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
 
@@ -192,6 +194,24 @@ function getRealAuthService(): IAuthService {
       return { user, accountState }
     },
 
+    async completeProfile(
+      request: ProfileCompleteRequest,
+    ): Promise<{ user: AppUser; accountState: string }> {
+      const { data } = await api.post<ApiResponse<ProfileCompleteResult>>(
+        "/user/profile/complete",
+        request,
+      )
+
+      const { accountState, profile } = data.result
+      const user: AppUser = {
+        uid: String(profile.userId),
+        email: profile.email || null,
+        displayName: profile.nickName || profile.name || null,
+      }
+
+      return { user, accountState }
+    },
+
     async signup(request: SignupRequest): Promise<AppUser> {
       const { data } = await publicApi.post<ApiResponse<SignupResult>>(
         "/auth/signup",
@@ -318,6 +338,7 @@ export const authService: IAuthService = {
     getAuthService().verifySocialLinkEmailCode(socialLinkToken, email, code),
   completeEmailLoginLink: (emailLinkToken, password) =>
     getAuthService().completeEmailLoginLink(emailLinkToken, password),
+  completeProfile: (request) => getAuthService().completeProfile(request),
   signup: (request) => getAuthService().signup(request),
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),
