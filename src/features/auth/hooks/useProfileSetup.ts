@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { router } from "expo-router"
 import { useSignupStore } from "@/src/stores"
 import { useAuth } from "@/src/hooks"
@@ -7,6 +7,11 @@ import { showErrorToast } from "@/src/lib/toast"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import type { ProfileForm } from "../types"
 import type { AcquisitionSourceInput } from "../data/acquisitionSources"
+import type { AuthProfile } from "@/src/types"
+
+function validDatePart(value: number) {
+  return value > 0 ? String(value) : ""
+}
 
 export function useProfileSetup() {
   const setName = useSignupStore((s) => s.setName)
@@ -19,7 +24,12 @@ export function useProfileSetup() {
     (s) => s.setAcquisitionSourceOther,
   )
   const setReferralCodeStore = useSignupStore((s) => s.setReferralCode)
-  const { accountState, completeProfile } = useAuth()
+  const {
+    accountState,
+    requiresAdditionalInfo,
+    completeProfile,
+    getProfile,
+  } = useAuth()
 
   const [birthYear, setBirthYear] = useState("")
   const [birthMonth, setBirthMonth] = useState("")
@@ -28,9 +38,62 @@ export function useProfileSetup() {
   const [acquisitionSource, setAcquisitionSource] =
     useState<AcquisitionSourceInput>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPrefilling, setIsPrefilling] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [prefillValues, setPrefillValues] = useState<ProfileForm | null>(null)
 
   const isSocialProfileMode = accountState === "PENDING_PROFILE"
+  const isBackfillMode =
+    accountState === "ACTIVE" && requiresAdditionalInfo
+  const isCompletionMode = isSocialProfileMode || isBackfillMode
+
+  useEffect(() => {
+    let cancelled = false
+
+    const prefillProfile = (profile: AuthProfile) => {
+      setBirthYear(validDatePart(profile.birthYear))
+      setBirthMonth(validDatePart(profile.birthMonth))
+      setBirthDay(validDatePart(profile.birthDay))
+      setGender(profile.gender ?? "")
+      if (profile.acquisitionSource) {
+        setAcquisitionSource(profile.acquisitionSource)
+      }
+      setPrefillValues({
+        name: profile.name ?? "",
+        acquisitionSourceOther: profile.acquisitionSourceOther ?? "",
+        referralCode: "",
+      })
+    }
+
+    const loadProfile = async () => {
+      setIsPrefilling(true)
+      setSubmitError("")
+      try {
+        const profile = await getProfile()
+        if (!cancelled) prefillProfile(profile)
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setSubmitError(
+            e instanceof Error
+              ? e.message
+              : "프로필 정보를 불러오지 못했습니다.",
+          )
+        }
+      } finally {
+        if (!cancelled) setIsPrefilling(false)
+      }
+    }
+
+    if (isBackfillMode) {
+      loadProfile()
+    } else {
+      setPrefillValues(null)
+    }
+
+    return () => {
+      cancelled = true
+    }
+  }, [getProfile, isBackfillMode])
 
   const handleYearChange = (v: string) => {
     setBirthYear(v)
@@ -56,7 +119,7 @@ export function useProfileSetup() {
 
     setSubmitError("")
 
-    if (isSocialProfileMode) {
+    if (isCompletionMode) {
       setIsSubmitting(true)
       try {
         const result = await completeProfile({
@@ -70,7 +133,12 @@ export function useProfileSetup() {
             acquisitionSource === "OTHER" ? acquisitionSourceOther : null,
           recommender: referralCode || undefined,
         })
-        router.replace(getDestinationForAccountState(result.accountState))
+        router.replace(
+          getDestinationForAccountState(
+            result.accountState,
+            result.requiresAdditionalInfo,
+          ),
+        )
       } catch (e: unknown) {
         if (e instanceof ApiError && e.isNetworkError) {
           showErrorToast(e.message)
@@ -105,8 +173,12 @@ export function useProfileSetup() {
     gender,
     acquisitionSource,
     isSocialProfileMode,
+    isBackfillMode,
+    isCompletionMode,
+    isPrefilling,
     isSubmitting,
     submitError,
+    prefillValues,
     handleYearChange,
     handleMonthChange,
     setBirthDay,

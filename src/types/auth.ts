@@ -44,6 +44,7 @@ export interface SignupResult {
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
+  requiresAdditionalInfo: boolean
 }
 
 export interface AuthUserSummary {
@@ -53,6 +54,7 @@ export interface AuthUserSummary {
   name: string
   role: string
   accountState: AccountState
+  requiresAdditionalInfo: boolean
 }
 
 // 로그인 결과
@@ -61,6 +63,23 @@ export interface LoginResult {
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
+  requiresAdditionalInfo: boolean
+}
+
+export interface AuthProfile {
+  userId: number
+  email: string
+  nickName: string
+  name: string
+  birthYear: number
+  birthMonth: number
+  birthDay: number
+  accountState: AccountState
+  gender: "MALE" | "FEMALE" | "OTHER" | null
+  profileImage?: string | null
+  acquisitionSource?: SignupRequest["acquisitionSource"] | null
+  acquisitionSourceOther?: string | null
+  requiresAdditionalInfo: boolean
 }
 
 export interface ProfileCompleteRequest {
@@ -76,18 +95,7 @@ export interface ProfileCompleteRequest {
 
 export interface ProfileCompleteResult {
   accountState: AccountState
-  profile: {
-    userId: number
-    email: string
-    nickName: string
-    name: string
-    birthYear: number
-    birthMonth: number
-    birthDay: number
-    accountState: AccountState
-    gender: "MALE" | "FEMALE" | "OTHER" | null
-    profileImage?: string | null
-  }
+  profile: AuthProfile
 }
 
 export interface SocialLinkRequiredResult {
@@ -111,6 +119,7 @@ export interface TokenRefreshResult {
   accessToken: string
   refreshToken: string
   user: AuthUserSummary
+  requiresAdditionalInfo: boolean
 }
 
 export interface WithdrawalPendingResult {

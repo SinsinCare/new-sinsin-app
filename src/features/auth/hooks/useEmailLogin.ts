@@ -18,7 +18,12 @@ export function useEmailLogin() {
     setLoginError(null)
     try {
       const result = await signInWithEmail(data.email, data.password)
-      router.replace(getDestinationForAccountState(result.accountState))
+      router.replace(
+        getDestinationForAccountState(
+          result.accountState,
+          result.requiresAdditionalInfo,
+        ),
+      )
     } catch (e: unknown) {
       const pending = getWithdrawalPendingResult(e)
       if (pending) {

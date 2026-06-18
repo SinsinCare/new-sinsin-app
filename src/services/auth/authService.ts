@@ -8,6 +8,7 @@ import type {
   SignupResult,
   TokenRefreshResult,
   AuthUserSummary,
+  AuthProfile,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
 import { api, clearClientSession, publicApi, tokenService } from "../core"
@@ -26,6 +27,13 @@ function mapAuthUser(
   }
 }
 
+function getRequiresAdditionalInfo(result: {
+  requiresAdditionalInfo?: boolean
+  user?: { requiresAdditionalInfo?: boolean }
+}) {
+  return result.requiresAdditionalInfo ?? result.user?.requiresAdditionalInfo ?? false
+}
+
 function getRealAuthService(): IAuthService {
   return {
     async signInWithSocial(
@@ -33,7 +41,11 @@ function getRealAuthService(): IAuthService {
       idToken: string,
       email?: string | null,
       displayName?: string | null,
-    ): Promise<{ user: AppUser; accountState: string }> {
+    ): Promise<{
+      user: AppUser
+      accountState: string
+      requiresAdditionalInfo: boolean
+    }> {
       logger.debug("[authService] signInWithSocial 시작", provider, {
         idTokenLength: idToken?.length,
         idTokenPrefix: idToken?.slice(0, 30),
@@ -95,13 +107,21 @@ function getRealAuthService(): IAuthService {
       })
 
       logger.debug("[authService] signInWithSocial 완료", accountState)
-      return { user, accountState }
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+      }
     },
 
     async signInWithEmail(
       email: string,
       password: string,
-    ): Promise<{ user: AppUser; accountState: string }> {
+    ): Promise<{
+      user: AppUser
+      accountState: string
+      requiresAdditionalInfo: boolean
+    }> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/login",
         { email, password },
@@ -121,7 +141,11 @@ function getRealAuthService(): IAuthService {
         displayName: null,
       })
 
-      return { user, accountState }
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+      }
     },
 
     async sendSocialLinkEmailCode(
@@ -138,7 +162,11 @@ function getRealAuthService(): IAuthService {
       socialLinkToken: string,
       email: string,
       code: string,
-    ): Promise<{ user: AppUser; accountState: string }> {
+    ): Promise<{
+      user: AppUser
+      accountState: string
+      requiresAdditionalInfo: boolean
+    }> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/social-link/email/otp/verify",
         {
@@ -162,13 +190,21 @@ function getRealAuthService(): IAuthService {
         displayName: null,
       })
 
-      return { user, accountState }
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+      }
     },
 
     async completeEmailLoginLink(
       emailLinkToken: string,
       password: string,
-    ): Promise<{ user: AppUser; accountState: string }> {
+    ): Promise<{
+      user: AppUser
+      accountState: string
+      requiresAdditionalInfo: boolean
+    }> {
       const { data } = await publicApi.patch<ApiResponse<LoginResult>>(
         "/auth/signup/email-link/password",
         {
@@ -191,12 +227,20 @@ function getRealAuthService(): IAuthService {
         displayName: authUser.nickName || authUser.name || null,
       })
 
-      return { user, accountState }
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+      }
     },
 
     async completeProfile(
       request: ProfileCompleteRequest,
-    ): Promise<{ user: AppUser; accountState: string }> {
+    ): Promise<{
+      user: AppUser
+      accountState: string
+      requiresAdditionalInfo: boolean
+    }> {
       const { data } = await api.post<ApiResponse<ProfileCompleteResult>>(
         "/user/profile/complete",
         request,
@@ -209,7 +253,16 @@ function getRealAuthService(): IAuthService {
         displayName: profile.nickName || profile.name || null,
       }
 
-      return { user, accountState }
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: profile.requiresAdditionalInfo,
+      }
+    },
+
+    async getProfile(): Promise<AuthProfile> {
+      const { data } = await api.get<ApiResponse<AuthProfile>>("/user/profile")
+      return data.result
     },
 
     async signup(request: SignupRequest): Promise<AppUser> {
@@ -232,7 +285,11 @@ function getRealAuthService(): IAuthService {
 
     async cancelWithdrawal(
       cancelToken: string,
-    ): Promise<{ user: AppUser; accountState: string }> {
+    ): Promise<{
+      user: AppUser
+      accountState: string
+      requiresAdditionalInfo: boolean
+    }> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/withdrawal/cancel",
         { cancelToken },
@@ -252,7 +309,11 @@ function getRealAuthService(): IAuthService {
         displayName: null,
       })
 
-      return { user, accountState }
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+      }
     },
 
     async signOut(): Promise<void> {
@@ -271,6 +332,7 @@ function getRealAuthService(): IAuthService {
     async restoreSession(): Promise<{
       user: AppUser
       accountState: string
+      requiresAdditionalInfo: boolean
     } | null> {
       const refreshToken = await tokenService.getRefreshToken()
       if (!refreshToken) return null
@@ -295,7 +357,11 @@ function getRealAuthService(): IAuthService {
           displayName: null,
         })
 
-        return { user, accountState }
+        return {
+          user,
+          accountState,
+          requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+        }
       } catch (error) {
         if (
           error instanceof ApiError &&
@@ -339,6 +405,7 @@ export const authService: IAuthService = {
   completeEmailLoginLink: (emailLinkToken, password) =>
     getAuthService().completeEmailLoginLink(emailLinkToken, password),
   completeProfile: (request) => getAuthService().completeProfile(request),
+  getProfile: () => getAuthService().getProfile(),
   signup: (request) => getAuthService().signup(request),
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),

@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 import { useAuthStore, useUserStore } from "../stores"
 import { authService } from "../services/auth/authService"
 import {
@@ -23,8 +23,10 @@ export function useAuth() {
     accountState,
     isLoading,
     isAuthenticated,
+    requiresAdditionalInfo,
     setUser,
     setAccountState,
+    setRequiresAdditionalInfo,
     reset: resetAuth,
   } = useAuthStore()
   const { reset: resetProfile } = useUserStore()
@@ -39,6 +41,7 @@ export function useAuth() {
         if (result) {
           setUser(result.user)
           setAccountState(result.accountState)
+          setRequiresAdditionalInfo(result.requiresAdditionalInfo)
         } else {
           await clearClientSession()
         }
@@ -53,12 +56,13 @@ export function useAuth() {
     return () => {
       cancelled = true
     }
-  }, [setUser, setAccountState])
+  }, [setUser, setAccountState, setRequiresAdditionalInfo])
 
   const signInWithEmail = async (email: string, password: string) => {
     const result = await authService.signInWithEmail(email, password)
     setUser(result.user)
     setAccountState(result.accountState)
+    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
     return result
   }
 
@@ -78,6 +82,7 @@ export function useAuth() {
     await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
     setUser(result.user)
     setAccountState(result.accountState)
+    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
     return result
   }
 
@@ -101,6 +106,7 @@ export function useAuth() {
     await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
     setUser(result.user)
     setAccountState(result.accountState)
+    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
     return result
   }
 
@@ -114,6 +120,7 @@ export function useAuth() {
     )
     setUser(result.user)
     setAccountState(result.accountState)
+    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
     return result
   }
 
@@ -121,13 +128,17 @@ export function useAuth() {
     const result = await authService.completeProfile(request)
     setUser(result.user)
     setAccountState(result.accountState)
+    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
     return result
   }
+
+  const getProfile = useCallback(() => authService.getProfile(), [])
 
   const cancelWithdrawal = async (cancelToken: string) => {
     const result = await authService.cancelWithdrawal(cancelToken)
     setUser(result.user)
     setAccountState(result.accountState)
+    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
     return result
   }
 
@@ -144,6 +155,7 @@ export function useAuth() {
   return {
     user,
     accountState,
+    requiresAdditionalInfo,
     isLoading,
     isAuthenticated,
     signInWithSocialProvider,
@@ -155,6 +167,7 @@ export function useAuth() {
     verifySocialLinkEmailCode,
     completeEmailLoginLink,
     completeProfile,
+    getProfile,
     cancelWithdrawal,
     isUserCancelledError,
     signOut,

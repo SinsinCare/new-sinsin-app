@@ -1,5 +1,5 @@
 import type { IAuthService, AppUser } from "../../types/serviceTypes"
-import type { SignupRequest } from "../../../types"
+import type { AuthProfile, SignupRequest } from "../../../types"
 import { MockUser, DEFAULT_MOCK_USER } from "./mockUser"
 import { appConfig } from "../../../config/appConfig"
 
@@ -21,14 +21,22 @@ export const mockAuthService: IAuthService = {
   async signInWithEmail(
     email: string,
     password: string,
-  ): Promise<{ user: AppUser; accountState: string }> {
+  ): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const userData = mockUsers.get(email)
     if (!userData || userData.password !== password) {
       throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.")
     }
     currentUser = userData.user
-    return { user: currentUser, accountState: "ACTIVE" }
+    return {
+      user: currentUser,
+      accountState: "ACTIVE",
+      requiresAdditionalInfo: false,
+    }
   },
 
   async signInWithSocial(
@@ -36,7 +44,11 @@ export const mockAuthService: IAuthService = {
     _idToken: string,
     email?: string | null,
     displayName?: string | null,
-  ): Promise<{ user: AppUser; accountState: string }> {
+  ): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const mockUser = new MockUser(
       `mock-${provider}-${Date.now()}`,
@@ -44,7 +56,11 @@ export const mockAuthService: IAuthService = {
       displayName ?? null,
     )
     currentUser = mockUser
-    return { user: currentUser, accountState: "PENDING_ONBOARDING" }
+    return {
+      user: currentUser,
+      accountState: "PENDING_ONBOARDING",
+      requiresAdditionalInfo: false,
+    }
   },
 
   async sendSocialLinkEmailCode(
@@ -58,25 +74,68 @@ export const mockAuthService: IAuthService = {
     _socialLinkToken: string,
     email: string,
     _code: string,
-  ): Promise<{ user: AppUser; accountState: string }> {
+  ): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     currentUser = new MockUser(`mock-linked-${Date.now()}`, email, null)
-    return { user: currentUser, accountState: "PENDING_ONBOARDING" }
+    return {
+      user: currentUser,
+      accountState: "PENDING_ONBOARDING",
+      requiresAdditionalInfo: false,
+    }
   },
 
   async completeEmailLoginLink(
     _emailLinkToken: string,
     _password: string,
-  ): Promise<{ user: AppUser; accountState: string }> {
+  ): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     currentUser = DEFAULT_MOCK_USER
-    return { user: currentUser, accountState: "ACTIVE" }
+    return {
+      user: currentUser,
+      accountState: "ACTIVE",
+      requiresAdditionalInfo: false,
+    }
   },
 
-  async completeProfile(): Promise<{ user: AppUser; accountState: string }> {
+  async completeProfile(): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     currentUser = currentUser ?? DEFAULT_MOCK_USER
-    return { user: currentUser, accountState: "PENDING_ONBOARDING" }
+    return {
+      user: currentUser,
+      accountState: "PENDING_ONBOARDING",
+      requiresAdditionalInfo: false,
+    }
+  },
+
+  async getProfile(): Promise<AuthProfile> {
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    return {
+      userId: Number(currentUser?.uid ?? 1),
+      email: currentUser?.email ?? "test@sinsin.dev",
+      nickName: currentUser?.displayName ?? "테스터",
+      name: currentUser?.displayName ?? "테스트",
+      birthYear: 1990,
+      birthMonth: 1,
+      birthDay: 1,
+      accountState: "ACTIVE",
+      gender: "FEMALE",
+      profileImage: null,
+      acquisitionSource: null,
+      acquisitionSourceOther: null,
+      requiresAdditionalInfo: true,
+    }
   },
 
   async signup(request: SignupRequest): Promise<AppUser> {
@@ -92,10 +151,18 @@ export const mockAuthService: IAuthService = {
 
   async cancelWithdrawal(
     _cancelToken: string,
-  ): Promise<{ user: AppUser; accountState: string }> {
+  ): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     currentUser = DEFAULT_MOCK_USER
-    return { user: currentUser, accountState: "ACTIVE" }
+    return {
+      user: currentUser,
+      accountState: "ACTIVE",
+      requiresAdditionalInfo: false,
+    }
   },
 
   async signOut(): Promise<void> {
@@ -106,10 +173,15 @@ export const mockAuthService: IAuthService = {
   async restoreSession(): Promise<{
     user: AppUser
     accountState: string
+    requiresAdditionalInfo: boolean
   } | null> {
     await new Promise((resolve) => setTimeout(resolve, 200))
     if (currentUser) {
-      return { user: currentUser, accountState: "ACTIVE" }
+      return {
+        user: currentUser,
+        accountState: "ACTIVE",
+        requiresAdditionalInfo: false,
+      }
     }
     return null
   },

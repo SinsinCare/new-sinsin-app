@@ -23,6 +23,9 @@ export function useOnboarding() {
 
   const user = useAuthStore((s) => s.user)
   const setAccountState = useAuthStore((s) => s.setAccountState)
+  const setRequiresAdditionalInfo = useAuthStore(
+    (s) => s.setRequiresAdditionalInfo,
+  )
   const resetSignup = useSignupStore((s) => s.reset)
   const {
     hasCkd,
@@ -152,6 +155,7 @@ export function useOnboarding() {
     try {
       await onboardingService.submitAnswers(hasCkd, getAnswersArray())
       setAccountState("ACTIVE")
+      setRequiresAdditionalInfo(false)
       resetOnboarding()
       resetSignup()
       router.replace("/(tabs)/home")

@@ -7,7 +7,11 @@ export type AuthDestination =
 
 export function getDestinationForAccountState(
   accountState: AccountState | string | null | undefined,
+  requiresAdditionalInfo = false,
 ): AuthDestination {
+  if (accountState === "ACTIVE" && requiresAdditionalInfo) {
+    return "/(auth)/profile-setup"
+  }
   if (accountState === "PENDING_PROFILE") return "/(auth)/profile-setup"
   if (accountState === "PENDING_ONBOARDING") return "/onboarding"
   return "/(tabs)/home"

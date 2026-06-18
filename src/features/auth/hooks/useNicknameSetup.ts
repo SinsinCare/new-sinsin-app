@@ -10,6 +10,9 @@ export function useNicknameSetup() {
   const signupState = useSignupStore()
   const setUser = useAuthStore((s) => s.setUser)
   const setAccountState = useAuthStore((s) => s.setAccountState)
+  const setRequiresAdditionalInfo = useAuthStore(
+    (s) => s.setRequiresAdditionalInfo,
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -53,6 +56,7 @@ export function useNicknameSetup() {
 
       setUser(user)
       setAccountState("PENDING_ONBOARDING")
+      setRequiresAdditionalInfo(false)
 
       signupState.setNickname(data.nickname)
       router.replace("/(auth)/signup-complete")

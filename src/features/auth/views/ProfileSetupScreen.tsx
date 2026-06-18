@@ -1,4 +1,5 @@
-import { ScrollView, Pressable, Keyboard } from "react-native"
+import { useEffect } from "react"
+import { ScrollView, Pressable, Keyboard, BackHandler } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { router } from "expo-router"
@@ -22,9 +23,12 @@ export function ProfileSetupScreen() {
     birthDay,
     gender,
     acquisitionSource,
-    isSocialProfileMode,
+    isBackfillMode,
+    isCompletionMode,
+    isPrefilling,
     isSubmitting,
     submitError,
+    prefillValues,
     handleYearChange,
     handleMonthChange,
     setBirthDay,
@@ -33,7 +37,7 @@ export function ProfileSetupScreen() {
     handleNext,
   } = useProfileSetup()
 
-  const { control, watch, handleSubmit } = useForm<ProfileForm>({
+  const { control, watch, handleSubmit, reset } = useForm<ProfileForm>({
     defaultValues: {
       name: "",
       acquisitionSourceOther: "",
@@ -54,15 +58,27 @@ export function ProfileSetupScreen() {
     !!acquisitionSource &&
     (!isOtherSource || !!acquisitionSourceOther.trim())
 
+  useEffect(() => {
+    if (prefillValues) reset(prefillValues)
+  }, [prefillValues, reset])
+
+  useEffect(() => {
+    if (!isBackfillMode) return
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => true)
+    return () => sub.remove()
+  }, [isBackfillMode])
+
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack height={56} justifyContent="center">
-        <Pressable
-          onPress={() => router.back()}
-          style={{ position: "absolute", left: 9, padding: 4 }}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.icon} />
-        </Pressable>
+        {!isBackfillMode && (
+          <Pressable
+            onPress={() => router.back()}
+            style={{ position: "absolute", left: 9, padding: 4 }}
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.icon} />
+          </Pressable>
+        )}
       </YStack>
 
       <YStack flex={1} justifyContent="space-between">
@@ -171,11 +187,11 @@ export function ProfileSetupScreen() {
               Keyboard.dismiss()
               handleSubmit(handleNext)()
             }}
-            disabled={!isValid || isSubmitting}
+            disabled={!isValid || isSubmitting || isPrefilling}
           >
             <YStack
               backgroundColor={
-                isValid && !isSubmitting
+                isValid && !isSubmitting && !isPrefilling
                   ? tokens.color.sub6.val
                   : tokens.color.sub6.val + "40"
               }
@@ -192,9 +208,11 @@ export function ProfileSetupScreen() {
                 letterSpacing={0}
                 lineHeight={20}
               >
-                {isSubmitting
+                {isPrefilling
+                  ? "불러오는 중..."
+                  : isSubmitting
                   ? "저장 중..."
-                  : isSocialProfileMode
+                  : isCompletionMode
                     ? "저장하기"
                     : "다음 단계"}
               </Text>

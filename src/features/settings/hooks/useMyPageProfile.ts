@@ -11,6 +11,9 @@ export interface MyPageProfile {
   birthDay: number
   accountState: string
   profileImage?: string
+  acquisitionSource?: string | null
+  acquisitionSourceOther?: string | null
+  requiresAdditionalInfo: boolean
 }
 
 async function fetchMyPageProfile(): Promise<MyPageProfile> {

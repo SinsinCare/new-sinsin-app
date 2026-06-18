@@ -46,7 +46,12 @@ export function EmailLoginLinkPasswordScreen() {
     setSubmitting(true)
     try {
       const result = await completeEmailLoginLink(tokenValue, data.password)
-      router.replace(getDestinationForAccountState(result.accountState))
+      router.replace(
+        getDestinationForAccountState(
+          result.accountState,
+          result.requiresAdditionalInfo,
+        ),
+      )
     } catch (error) {
       setError("password", {
         message:

@@ -28,8 +28,16 @@ setupGestureHandler({ Gesture, GestureDetector })
 const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWAL_PENDING"])
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading, accountState, signOut } = useAuth()
-  useNotifications(isAuthenticated && accountState === "ACTIVE")
+  const {
+    isAuthenticated,
+    isLoading,
+    accountState,
+    requiresAdditionalInfo,
+    signOut,
+  } = useAuth()
+  useNotifications(
+    isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo,
+  )
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
     (s) => s.isOnboardingInProgress,
@@ -41,6 +49,8 @@ function RootLayoutNav() {
 
   const needsOnboarding = accountState === "PENDING_ONBOARDING"
   const needsProfile = accountState === "PENDING_PROFILE"
+  const needsAdditionalInfo =
+    accountState === "ACTIVE" && requiresAdditionalInfo
 
   // 푸시 data.type 라우팅은 클라이언트가 소유한다. 서버는 앱 내부 경로를 모른다.
   useEffect(() => {
@@ -99,10 +109,10 @@ function RootLayoutNav() {
       inAuthGroup &&
       !isSignupInProgress &&
       !inSocialLinkEmail &&
-      !(needsProfile && inProfileSetup)
+      !((needsProfile || needsAdditionalInfo) && inProfileSetup)
     ) {
       // 회원가입 진행 중이면 auth 그룹에 유지
-      if (needsProfile) {
+      if (needsProfile || needsAdditionalInfo) {
         router.replace("/(auth)/profile-setup")
       } else if (needsOnboarding) {
         router.replace("/onboarding")
@@ -116,9 +126,9 @@ function RootLayoutNav() {
       !inProfileSetup &&
       !inPublicLegalDocument &&
       !isOnboardingInProgress &&
-      needsProfile
+      (needsProfile || needsAdditionalInfo)
     ) {
-      // 소셜 신규 유저가 필수 프로필을 끝내기 전에는 프로필 입력으로 고정
+      // 필수 추가정보를 끝내기 전에는 프로필 입력으로 고정
       router.replace("/(auth)/profile-setup")
     } else if (
       isAuthenticated &&
@@ -141,6 +151,7 @@ function RootLayoutNav() {
     isOnboardingInProgress,
     needsOnboarding,
     needsProfile,
+    needsAdditionalInfo,
     signOut,
   ])
 

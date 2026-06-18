@@ -132,7 +132,12 @@ export function SocialLinkEmailScreen() {
       )
       if (timerRef.current) clearInterval(timerRef.current)
       setTimer(0)
-      setNextRoute(getDestinationForAccountState(result.accountState))
+      setNextRoute(
+        getDestinationForAccountState(
+          result.accountState,
+          result.requiresAdditionalInfo,
+        ),
+      )
       setVerificationComplete(true)
     } catch (error) {
       setSendError(
