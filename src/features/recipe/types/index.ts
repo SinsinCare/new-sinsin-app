@@ -76,6 +76,7 @@ export interface CommunityMealPostApi {
   bookmarked: boolean
   createdAt: string | number | Date
   updatedAt?: string | number | Date
+  tags?: string[] | null
   vote?: CommunityPostVote | null
 }
 
@@ -94,18 +95,28 @@ export interface CommunityMealPost {
   bookmarked: boolean
   createdAt: Date
   updatedAt?: Date
+  tags: string[]
   vote: CommunityPostVote | null
 }
 
 export type CreateCommunityPostInput = Omit<
   CommunityMealPost,
-  "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt" | "vote"
+  | "id"
+  | "likes"
+  | "liked"
+  | "comments"
+  | "bookmarked"
+  | "createdAt"
+  | "tags"
+  | "vote"
 > & {
+  imageObjectPath?: string | null
+  tags?: string[]
   vote?: CommunityPostVoteCreate | null
 }
 
 export interface ICommunityPostService {
-  getPosts(): Promise<CommunityMealPost[]>
+  getPosts(params?: { tag?: string | null }): Promise<CommunityMealPost[]>
   getPost(id: string): Promise<CommunityMealPost | undefined>
   createPost(post: CreateCommunityPostInput): Promise<CommunityMealPost>
   updatePost(

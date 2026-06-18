@@ -3,24 +3,27 @@ import { communityPostService } from "../services/communityPostService"
 import { CommunityMealPost, CreateCommunityPostInput } from "../types"
 
 const POSTS_KEY = ["community-posts"] as const
+const postsKey = (tag?: string | null) =>
+  tag ? [...POSTS_KEY, { tag }] : POSTS_KEY
 
-export function useCommunityPosts() {
+export function useCommunityPosts(tag?: string | null) {
   const queryClient = useQueryClient()
+  const queryKey = postsKey(tag)
 
   const {
     data: posts = [],
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: POSTS_KEY,
-    queryFn: () => communityPostService.getPosts(),
+    queryKey,
+    queryFn: () => communityPostService.getPosts({ tag }),
   })
 
   const createPostMutation = useMutation({
     mutationFn: (post: CreateCommunityPostInput) =>
       communityPostService.createPost(post),
     onSuccess: (createdPost) => {
-      queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) => [
+      queryClient.setQueryData<CommunityMealPost[]>(queryKey, (old) => [
         createdPost,
         ...(old ?? []).filter((post) => post.id !== createdPost.id),
       ])
@@ -47,16 +50,16 @@ export function useCommunityPosts() {
   const deletePostMutation = useMutation({
     mutationFn: (postId: string) => communityPostService.deletePost(postId),
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({ queryKey: POSTS_KEY })
-      const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
-      queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) =>
+      await queryClient.cancelQueries({ queryKey })
+      const prev = queryClient.getQueryData<CommunityMealPost[]>(queryKey)
+      queryClient.setQueryData<CommunityMealPost[]>(queryKey, (old) =>
         (old ?? []).filter((p) => p.id !== postId),
       )
       return { prev }
     },
     onError: (_err, _id, context) => {
       if (context?.prev) {
-        queryClient.setQueryData(POSTS_KEY, context.prev)
+        queryClient.setQueryData(queryKey, context.prev)
       }
     },
     onSettled: () => {
@@ -67,9 +70,9 @@ export function useCommunityPosts() {
   const toggleLikeMutation = useMutation({
     mutationFn: (postId: string) => communityPostService.toggleLike(postId),
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({ queryKey: POSTS_KEY })
-      const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
-      queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) =>
+      await queryClient.cancelQueries({ queryKey })
+      const prev = queryClient.getQueryData<CommunityMealPost[]>(queryKey)
+      queryClient.setQueryData<CommunityMealPost[]>(queryKey, (old) =>
         (old ?? []).map((p) =>
           p.id === postId
             ? {
@@ -84,7 +87,7 @@ export function useCommunityPosts() {
     },
     onError: (_err, _id, context) => {
       if (context?.prev) {
-        queryClient.setQueryData(POSTS_KEY, context.prev)
+        queryClient.setQueryData(queryKey, context.prev)
       }
     },
     onSettled: () => {
@@ -95,9 +98,9 @@ export function useCommunityPosts() {
   const toggleBookmarkMutation = useMutation({
     mutationFn: (postId: string) => communityPostService.toggleBookmark(postId),
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({ queryKey: POSTS_KEY })
-      const prev = queryClient.getQueryData<CommunityMealPost[]>(POSTS_KEY)
-      queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) =>
+      await queryClient.cancelQueries({ queryKey })
+      const prev = queryClient.getQueryData<CommunityMealPost[]>(queryKey)
+      queryClient.setQueryData<CommunityMealPost[]>(queryKey, (old) =>
         (old ?? []).map((p) =>
           p.id === postId ? { ...p, bookmarked: !p.bookmarked } : p,
         ),
@@ -106,7 +109,7 @@ export function useCommunityPosts() {
     },
     onError: (_err, _id, context) => {
       if (context?.prev) {
-        queryClient.setQueryData(POSTS_KEY, context.prev)
+        queryClient.setQueryData(queryKey, context.prev)
       }
     },
     onSettled: () => {

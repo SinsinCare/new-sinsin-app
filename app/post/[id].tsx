@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ActionSheetIOS,
   Alert,
+  Image,
   Platform,
 } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
@@ -14,6 +15,7 @@ import { Icon } from "@/src/shared/components/Icon"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { PollCard } from "@/src/features/recipe/components/PollCard"
+import { TagChips } from "@/src/features/recipe/components/TagChips"
 import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { tokens } from "@/src/theme/tokens"
@@ -143,6 +145,13 @@ export default function PostDetailScreen() {
           "투표에 실패했어요. 잠시 후 다시 시도해주세요.",
       )
     }
+  }
+
+  const handleTagPress = (tag: string) => {
+    router.push({
+      pathname: "/recipe",
+      params: { tab: "free", tag },
+    } as Href)
   }
 
   if (isError) {
@@ -313,11 +322,17 @@ export default function PostDetailScreen() {
               paddingBottom: 20,
             }}
           >
-            <View style={styles.thumbnail} backgroundColor={AVATAR_BG[scheme]}>
-              <Ionicons name="image" size={24} color={MUTED_TEXT[scheme]} />
-            </View>
+            <Image
+              source={{ uri: post.imageUri }}
+              style={styles.postImage}
+              resizeMode="cover"
+            />
           </ScrollView>
         )}
+
+        <YStack paddingHorizontal={20} paddingBottom={post.vote ? 12 : 20}>
+          <TagChips tags={post.tags} onPressTag={handleTagPress} />
+        </YStack>
 
         {post.vote && (
           <PollCard
@@ -454,11 +469,9 @@ export default function PostDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  thumbnail: {
-    width: 64,
-    height: 64,
+  postImage: {
+    width: 160,
+    height: 160,
     borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
   },
 })

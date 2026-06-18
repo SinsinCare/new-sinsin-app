@@ -5,6 +5,7 @@ import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { reportService } from "@/src/services/reportService"
 import type { ReportReason } from "@/src/services/reportService"
+import { TagChips } from "./TagChips"
 
 interface PostListItemProps {
   title: string
@@ -13,7 +14,9 @@ interface PostListItemProps {
   viewCount: number
   likeCount: number
   commentCount: number
+  tags?: string[]
   onPress?: () => void
+  onPressTag?: (tag: string) => void
   onBlock?: (authorName: string) => void
   showDivider?: boolean
 }
@@ -44,7 +47,9 @@ export function PostListItem({
   viewCount,
   likeCount,
   commentCount,
+  tags = [],
   onPress,
+  onPressTag,
   onBlock,
   showDivider = true,
 }: PostListItemProps) {
@@ -68,7 +73,10 @@ export function PostListItem({
             targetNickName: authorName,
             reason: r.value,
           })
-          Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 조치하겠습니다.")
+          Alert.alert(
+            "신고 완료",
+            "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
+          )
         },
       })),
       { text: "취소", style: "cancel" as const },
@@ -141,6 +149,8 @@ export function PostListItem({
         >
           {summary}
         </Text>
+
+        <TagChips tags={tags} onPressTag={onPressTag} />
 
         <XStack
           alignItems="center"

@@ -11,6 +11,11 @@ import { FREE_POST_CATEGORIES } from "../data/freePostCategories"
 import { useCommunityPosts } from "../hooks/useCommunityPosts"
 import { useBlockedUsers } from "../hooks/useBlockedUsers"
 
+interface FreePostTabProps {
+  tagFilter?: string | null
+  onTagFilterChange?: (tag: string | null) => void
+}
+
 const POPULAR_POST_SECTION_BG_COLOR = {
   light: "#F1F1F3",
   dark: "#2A2A30",
@@ -26,7 +31,10 @@ const CATEGORY_TITLE_COLORS = {
   dark: tokens.color.textDark.val,
 } as const
 
-export function FreePostTab() {
+export function FreePostTab({
+  tagFilter = null,
+  onTagFilterChange,
+}: FreePostTabProps) {
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const sectionTitleColor = isDark
@@ -41,7 +49,7 @@ export function FreePostTab() {
   )
 
   const router = useRouter()
-  const { posts } = useCommunityPosts()
+  const { posts } = useCommunityPosts(tagFilter)
   const { blockedNickNames, blockUser } = useBlockedUsers()
 
   const visiblePosts = useMemo(
@@ -55,16 +63,32 @@ export function FreePostTab() {
   )
 
   const filteredPosts = useMemo(
-    () => visiblePosts.filter((p) => p.category === selectedCategory),
-    [visiblePosts, selectedCategory],
+    () =>
+      tagFilter
+        ? visiblePosts
+        : visiblePosts.filter((p) => p.category === selectedCategory),
+    [visiblePosts, selectedCategory, tagFilter],
   )
 
-  const handleCategoryPress = useCallback((key: string) => {
-    setSelectedCategory(key)
-  }, [])
+  const handleCategoryPress = useCallback(
+    (key: string) => {
+      onTagFilterChange?.(null)
+      setSelectedCategory(key)
+    },
+    [onTagFilterChange],
+  )
 
-  const selectedLabel =
-    FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? ""
+  const handleTagPress = useCallback(
+    (tag: string) => {
+      onTagFilterChange?.(tag)
+    },
+    [onTagFilterChange],
+  )
+
+  const selectedLabel = tagFilter
+    ? `#${tagFilter}`
+    : (FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ??
+      "")
 
   return (
     <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -122,10 +146,18 @@ export function FreePostTab() {
               key={cat.key}
               label={cat.label}
               theme="category"
-              selected={selectedCategory === cat.key}
+              selected={!tagFilter && selectedCategory === cat.key}
               onPress={() => handleCategoryPress(cat.key)}
             />
           ))}
+          {tagFilter && (
+            <FilterChip
+              label={`#${tagFilter}`}
+              theme="sub"
+              selected
+              onPress={() => onTagFilterChange?.(null)}
+            />
+          )}
         </ScrollView>
 
         <Text
@@ -147,8 +179,10 @@ export function FreePostTab() {
               viewCount={post.comments}
               likeCount={post.likes}
               commentCount={post.comments}
+              tags={post.tags}
               showDivider={index < filteredPosts.length - 1}
               onPress={() => router.push(`/post/${post.id}`)}
+              onPressTag={handleTagPress}
               onBlock={blockUser}
             />
           ))}

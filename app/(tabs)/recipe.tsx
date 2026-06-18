@@ -15,6 +15,7 @@ import {
   TopTabBar,
   type TabItem,
 } from "@/src/features/recipe/components/TabBar"
+import { useLocalSearchParams, useRouter, type Href } from "expo-router"
 import { Icon } from "@/src/shared/components/Icon"
 import { SearchInput } from "@/src/features/recipe/components/SearchInput"
 import { FilterChip } from "@/src/features/recipe/components/FilterChip"
@@ -22,7 +23,6 @@ import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFi
 import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
 import { WriteTypeSheet } from "@/src/features/recipe/components/WriteTypeSheet"
 import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
-import { FreePostEditor } from "@/src/features/recipe/components/FreePostEditor"
 import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
 import { CuratedRecipeCard } from "@/src/features/recipe/components/CuratedRecipeCard"
 import { CuratedRecipeDetailSheet } from "@/src/features/recipe/components/CuratedRecipeDetailSheet"
@@ -85,9 +85,16 @@ const ICON_COLORS = {
 
 export default function RecipeScreen() {
   const insets = useSafeAreaInsets()
+  const params = useLocalSearchParams<{ tab?: string; tag?: string }>()
+  const router = useRouter()
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
-  const [activeTab, setActiveTab] = useState("recipe")
+  const [activeTab, setActiveTab] = useState(
+    params.tab === "free" ? "free" : "recipe",
+  )
+  const [freePostTagFilter, setFreePostTagFilter] = useState<string | null>(
+    typeof params.tag === "string" && params.tag.length > 0 ? params.tag : null,
+  )
   const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light
 
   const handleTabChange = (tab: string) => {
@@ -98,7 +105,6 @@ export default function RecipeScreen() {
   const [search, setSearch] = useState("")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [writeSheetOpen, setWriteSheetOpen] = useState(false)
-  const [freePostModalOpen, setFreePostModalOpen] = useState(false)
   const [recipeModalOpen, setRecipeModalOpen] = useState(false)
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<
@@ -110,6 +116,15 @@ export default function RecipeScreen() {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 250)
     return () => clearTimeout(timer)
   }, [search])
+
+  useEffect(() => {
+    if (params.tab === "free") {
+      setActiveTab("free")
+    }
+    if (typeof params.tag === "string") {
+      setFreePostTagFilter(params.tag.length > 0 ? params.tag : null)
+    }
+  }, [params.tab, params.tag])
 
   // FoodCategoryBar uses selectedFilters.country directly
   const selectedCategories = useMemo(() => {
@@ -354,7 +369,12 @@ export default function RecipeScreen() {
               />
             </>
           )}
-          {activeTab === "free" && <FreePostTab />}
+          {activeTab === "free" && (
+            <FreePostTab
+              tagFilter={freePostTagFilter}
+              onTagFilterChange={setFreePostTagFilter}
+            />
+          )}
           <CategoryFilterSheet
             open={filterSheetOpen}
             onOpenChange={setFilterSheetOpen}
@@ -370,20 +390,14 @@ export default function RecipeScreen() {
             open={writeSheetOpen}
             onOpenChange={setWriteSheetOpen}
             onSelect={(type) => {
+              setWriteSheetOpen(false)
               if (type === "free") {
-                setFreePostModalOpen(true)
+                router.push("/free/new" as Href)
               } else {
                 setRecipeModalOpen(true)
               }
             }}
           />
-          <Modal
-            visible={freePostModalOpen}
-            animationType="slide"
-            onRequestClose={() => setFreePostModalOpen(false)}
-          >
-            <FreePostEditor onClose={() => setFreePostModalOpen(false)} />
-          </Modal>
           <Modal
             visible={recipeModalOpen}
             animationType="slide"

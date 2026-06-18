@@ -22,6 +22,7 @@ import {
 } from "@/src/features/recipe/components/VoteSheet"
 import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
+import { TagInput } from "@/src/features/recipe/components/TagInput"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
@@ -109,6 +110,8 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [images, setImages] = useState<string[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [votes, setVotes] = useState<VoteData[]>([])
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInputOpen, setTagInputOpen] = useState(false)
   const [voteSheetOpen, setVoteSheetOpen] = useState(false)
   const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
@@ -131,6 +134,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     title.trim().length > 0 ||
     body.trim().length > 0 ||
     images.length > 0 ||
+    tags.length > 0 ||
     votes.length > 0
 
   const handleClose = () => {
@@ -163,6 +167,11 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     setVoteSheetOpen(true)
   }
 
+  const handleOpenTagInput = () => {
+    Keyboard.dismiss()
+    setTagInputOpen(true)
+  }
+
   const handleEditVote = (index: number) => {
     Keyboard.dismiss()
     setEditingVoteIndex(index)
@@ -191,18 +200,19 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     if (!canSubmit || isSubmitting) return
     setIsSubmitting(true)
     try {
-      const imageUri =
+      const uploadedImage =
         images.length > 0
-          ? (await imageUploadService.uploadImage(images[0], "community"))
-              .imageUrl
+          ? await imageUploadService.uploadImage(images[0], "community")
           : null
       await createPostAsync({
         authorName: "나",
         authorRole: "CKD 환자",
         category: selectedCategory,
-        imageUri,
+        imageUri: null,
+        imageObjectPath: uploadedImage?.objectPath ?? null,
         title: title.trim(),
         description: body.trim(),
+        tags,
         vote: votes[0] ?? null,
       })
       onClose()
@@ -378,6 +388,9 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
                 },
               ]}
             />
+            {(tagInputOpen || tags.length > 0) && (
+              <TagInput tags={tags} onChangeTags={setTags} />
+            )}
           </YStack>
         </KeyboardAwareScrollView>
 
@@ -456,10 +469,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
                 <Icon name="vote" size={24} color={iconColor} />
               </Pressable>
               <Pressable
-                onPress={() => {
-                  Keyboard.dismiss()
-                  console.log("hashtag pressed")
-                }}
+                onPress={handleOpenTagInput}
                 hitSlop={8}
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >

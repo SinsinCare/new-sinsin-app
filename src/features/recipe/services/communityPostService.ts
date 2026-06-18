@@ -39,13 +39,18 @@ function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
     bookmarked: raw.bookmarked,
     createdAt: new Date(raw.createdAt),
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : undefined,
+    tags: raw.tags ?? [],
     vote: mapVote(raw.vote),
   }
 }
 
 class CommunityPostService implements ICommunityPostService {
-  async getPosts(): Promise<CommunityMealPost[]> {
-    const res = await api.get("/community/posts")
+  async getPosts(params?: {
+    tag?: string | null
+  }): Promise<CommunityMealPost[]> {
+    const res = await api.get("/community/posts", {
+      params: params?.tag ? { tag: params.tag } : undefined,
+    })
     const list = (res.data.result ??
       res.data.data ??
       []) as CommunityMealPostApi[]
@@ -70,7 +75,9 @@ class CommunityPostService implements ICommunityPostService {
       category: post.category,
       title: post.title,
       description: post.description,
-      imageUri: post.imageUri,
+      imageUri: post.imageUri ?? null,
+      imageObjectPath: post.imageObjectPath ?? null,
+      tags: post.tags ?? [],
       vote: post.vote ?? null,
     })
     return mapPost((res.data.result ?? res.data.data) as CommunityMealPostApi)
