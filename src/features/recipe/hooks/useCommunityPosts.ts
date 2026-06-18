@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { communityPostService } from "../services/communityPostService"
-import { CommunityMealPost } from "../types"
+import { CommunityMealPost, CreateCommunityPostInput } from "../types"
 
 const POSTS_KEY = ["community-posts"] as const
 
@@ -17,12 +17,8 @@ export function useCommunityPosts() {
   })
 
   const createPostMutation = useMutation({
-    mutationFn: (
-      post: Omit<
-        CommunityMealPost,
-        "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
-      >,
-    ) => communityPostService.createPost(post),
+    mutationFn: (post: CreateCommunityPostInput) =>
+      communityPostService.createPost(post),
     onSuccess: (createdPost) => {
       queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) => [
         createdPost,

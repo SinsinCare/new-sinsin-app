@@ -13,23 +13,39 @@ import { useLocalSearchParams, useRouter, type Href } from "expo-router"
 import { Icon } from "@/src/shared/components/Icon"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
+import { PollCard } from "@/src/features/recipe/components/PollCard"
 import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
-const BG = { light: tokens.color.offWhite.val, dark: tokens.color.appBgDark.val }
+const BG = {
+  light: tokens.color.offWhite.val,
+  dark: tokens.color.appBgDark.val,
+}
 const HEADER_ICON = { light: "#3C3C43", dark: tokens.color.textDark.val }
-const AUTHOR_NAME = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const AUTHOR_NAME = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
 const AUTHOR_SUB = { light: "#81818D", dark: "#858591" }
-const TITLE_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const TITLE_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
 const BODY_COLOR = { light: "#3C3C43", dark: "#C5C8CE" }
 const DIVIDER = { light: "#E5E5EA", dark: tokens.color.cardBgDark.val }
 const LIKE_COLOR = { light: "#44AF94", dark: "#44AF94" }
 const MUTED_TEXT = { light: "#81818D", dark: "#858591" }
 const AVATAR_BG = { light: tokens.color.textDark.val, dark: "#3A3A3C" }
-const NAV_LABEL = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
-const NAV_TITLE = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const NAV_LABEL = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+}
+const NAV_TITLE = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
 
 function formatTimeAgo(date: Date): string {
   const diffMs = Date.now() - date.getTime()
@@ -48,7 +64,8 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets()
   const scheme = useAppColorScheme()
 
-  const { post, isLoading, isError, error, refetch } = usePostDetail(id!)
+  const { post, isLoading, isError, error, refetch, castVoteAsync, isVoting } =
+    usePostDetail(id!)
   const { posts, toggleLike, toggleBookmark, deletePost, reportPost } =
     useCommunityPosts()
 
@@ -113,6 +130,18 @@ export default function PostDetailScreen() {
         { text: "신고하기", onPress: handleReport },
         { text: "취소", style: "cancel" },
       ])
+    }
+  }
+
+  const handleVote = async (optionIds: number[]) => {
+    try {
+      await castVoteAsync(optionIds)
+    } catch (voteError) {
+      Alert.alert(
+        "투표 실패",
+        getErrorMessage(voteError) ||
+          "투표에 실패했어요. 잠시 후 다시 시도해주세요.",
+      )
     }
   }
 
@@ -288,6 +317,14 @@ export default function PostDetailScreen() {
               <Ionicons name="image" size={24} color={MUTED_TEXT[scheme]} />
             </View>
           </ScrollView>
+        )}
+
+        {post.vote && (
+          <PollCard
+            vote={post.vote}
+            isSubmitting={isVoting}
+            onVote={handleVote}
+          />
         )}
 
         {/* Engagement */}

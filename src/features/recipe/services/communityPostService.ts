@@ -3,8 +3,25 @@ import { ApiError } from "@/src/services/core/apiError"
 import {
   CommunityMealPost,
   CommunityMealPostApi,
+  CommunityPostVote,
+  CreateCommunityPostInput,
   ICommunityPostService,
 } from "../types"
+
+function mapVote(raw: CommunityMealPostApi["vote"]): CommunityPostVote | null {
+  if (!raw) return null
+  return {
+    id: Number(raw.id),
+    allowMultiple: raw.allowMultiple,
+    options: raw.options.map((option) => ({
+      id: Number(option.id),
+      text: option.text,
+      count: Number(option.count ?? 0),
+    })),
+    totalCount: Number(raw.totalCount ?? 0),
+    myVote: raw.myVote && raw.myVote.length > 0 ? raw.myVote.map(Number) : null,
+  }
+}
 
 function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
   return {
@@ -22,6 +39,7 @@ function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
     bookmarked: raw.bookmarked,
     createdAt: new Date(raw.createdAt),
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : undefined,
+    vote: mapVote(raw.vote),
   }
 }
 
@@ -47,17 +65,13 @@ class CommunityPostService implements ICommunityPostService {
     }
   }
 
-  async createPost(
-    post: Omit<
-      CommunityMealPost,
-      "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
-    >,
-  ): Promise<CommunityMealPost> {
+  async createPost(post: CreateCommunityPostInput): Promise<CommunityMealPost> {
     const res = await api.post("/community/posts", {
       category: post.category,
       title: post.title,
       description: post.description,
       imageUri: post.imageUri,
+      vote: post.vote ?? null,
     })
     return mapPost((res.data.result ?? res.data.data) as CommunityMealPostApi)
   }
@@ -85,6 +99,14 @@ class CommunityPostService implements ICommunityPostService {
 
   async toggleBookmark(postId: string): Promise<void> {
     await api.post(`/community/posts/${postId}/bookmark`)
+  }
+
+  async castVote(
+    postId: string,
+    optionIds: number[],
+  ): Promise<CommunityPostVote> {
+    const res = await api.post(`/community/posts/${postId}/vote`, { optionIds })
+    return mapVote(res.data.result ?? res.data.data) as CommunityPostVote
   }
 
   async reportPost(

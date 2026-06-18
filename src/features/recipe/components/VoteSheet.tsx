@@ -59,6 +59,7 @@ const SWITCH_TRACK_ON = "#43C6A7"
 const SWITCH_TRACK_OFF_IOS = { light: "#E5E5EA", dark: "#38383A" } as const
 
 const MIN_OPTIONS = 2
+const MAX_OPTIONS = 10
 
 export function VoteSheet({
   open,
@@ -79,9 +80,17 @@ export function VoteSheet({
     initialData?.allowMultiple ?? false,
   )
 
-  const canComplete = options.some((opt) => opt.trim().length > 0)
+  const filledOptions = options
+    .map((opt) => opt.trim())
+    .filter((opt) => opt.length > 0)
+  const hasDuplicateOptions =
+    new Set(filledOptions.map((opt) => opt.toLocaleLowerCase())).size !==
+    filledOptions.length
+  const canComplete =
+    filledOptions.length >= MIN_OPTIONS && !hasDuplicateOptions
 
   const handleAddOption = () => {
+    if (options.length >= MAX_OPTIONS) return
     setOptions((prev) => [...prev, ""])
   }
 
@@ -100,7 +109,6 @@ export function VoteSheet({
 
   const handleComplete = () => {
     if (!canComplete) return
-    const filledOptions = options.filter((opt) => opt.trim().length > 0)
     onComplete({ options: filledOptions, allowMultiple })
   }
 
@@ -227,7 +235,8 @@ export function VoteSheet({
             <Pressable
               onPress={handleAddOption}
               style={({ pressed }) => ({
-                opacity: pressed ? 0.7 : 1,
+                opacity:
+                  options.length >= MAX_OPTIONS ? 0.5 : pressed ? 0.7 : 1,
                 backgroundColor: isDark ? ADD_BTN_BG.dark : ADD_BTN_BG.light,
                 borderRadius: 8,
                 paddingVertical: 14,
@@ -237,6 +246,7 @@ export function VoteSheet({
                 gap: 6,
                 marginTop: 16,
               })}
+              disabled={options.length >= MAX_OPTIONS}
             >
               <Text
                 fontSize={14}
@@ -304,7 +314,7 @@ export function VoteSheet({
                 color={isDark ? HINT_TEXT.dark : HINT_TEXT.light}
                 fontFamily="$body"
               >
-                * 투표는 7일간 집계됩니다
+                * 투표 항목은 2개 이상, 최대 10개까지 등록할 수 있습니다
               </Text>
             </YStack>
           </ScrollView>

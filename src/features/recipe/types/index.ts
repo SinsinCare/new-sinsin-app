@@ -41,6 +41,25 @@ export interface KidneyRecommendedFood {
   tags: string[]
 }
 
+export interface CommunityPostVoteCreate {
+  options: string[]
+  allowMultiple: boolean
+}
+
+export interface CommunityPostVoteOption {
+  id: number
+  text: string
+  count: number
+}
+
+export interface CommunityPostVote {
+  id: number
+  allowMultiple: boolean
+  options: CommunityPostVoteOption[]
+  totalCount: number
+  myVote: number[] | null
+}
+
 /** Backend / API payload before mapping to {@link CommunityMealPost}. */
 export interface CommunityMealPostApi {
   id: string | number
@@ -57,6 +76,7 @@ export interface CommunityMealPostApi {
   bookmarked: boolean
   createdAt: string | number | Date
   updatedAt?: string | number | Date
+  vote?: CommunityPostVote | null
 }
 
 export interface CommunityMealPost {
@@ -74,25 +94,38 @@ export interface CommunityMealPost {
   bookmarked: boolean
   createdAt: Date
   updatedAt?: Date
+  vote: CommunityPostVote | null
+}
+
+export type CreateCommunityPostInput = Omit<
+  CommunityMealPost,
+  "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt" | "vote"
+> & {
+  vote?: CommunityPostVoteCreate | null
 }
 
 export interface ICommunityPostService {
   getPosts(): Promise<CommunityMealPost[]>
   getPost(id: string): Promise<CommunityMealPost | undefined>
-  createPost(
-    post: Omit<
-      CommunityMealPost,
-      "id" | "likes" | "liked" | "comments" | "bookmarked" | "createdAt"
-    >,
-  ): Promise<CommunityMealPost>
+  createPost(post: CreateCommunityPostInput): Promise<CommunityMealPost>
   updatePost(
     id: string,
-    post: { category?: string; title?: string; description?: string; imageUri?: string | null },
+    post: {
+      category?: string
+      title?: string
+      description?: string
+      imageUri?: string | null
+    },
   ): Promise<CommunityMealPost>
   deletePost(id: string): Promise<void>
   toggleLike(postId: string): Promise<void>
   toggleBookmark(postId: string): Promise<void>
-  reportPost(postId: string, reason: string, description?: string): Promise<void>
+  castVote(postId: string, optionIds: number[]): Promise<CommunityPostVote>
+  reportPost(
+    postId: string,
+    reason: string,
+    description?: string,
+  ): Promise<void>
 }
 
 export interface PostCategory {

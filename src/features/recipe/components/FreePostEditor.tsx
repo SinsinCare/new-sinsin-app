@@ -158,6 +158,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
 
   const handleOpenVoteSheet = () => {
     Keyboard.dismiss()
+    if (votes.length >= 1) return
     setEditingVoteIndex(null)
     setVoteSheetOpen(true)
   }
@@ -175,12 +176,12 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const handleVoteComplete = (data: VoteData) => {
     if (editingVoteIndex !== null) {
       setVotes((prev) => {
-        const next = [...prev]
+        const next = prev.slice(0, 1)
         next[editingVoteIndex] = data
-        return next
+        return next.slice(0, 1)
       })
     } else {
-      setVotes((prev) => [...prev, data])
+      setVotes([data])
     }
     setVoteSheetOpen(false)
     setEditingVoteIndex(null)
@@ -202,6 +203,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         imageUri,
         title: title.trim(),
         description: body.trim(),
+        vote: votes[0] ?? null,
       })
       onClose()
     } catch (error) {
@@ -445,8 +447,11 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
               </Pressable>
               <Pressable
                 onPress={handleOpenVoteSheet}
+                disabled={votes.length >= 1}
                 hitSlop={8}
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                style={({ pressed }) => ({
+                  opacity: votes.length >= 1 ? 0.35 : pressed ? 0.7 : 1,
+                })}
               >
                 <Icon name="vote" size={24} color={iconColor} />
               </Pressable>
