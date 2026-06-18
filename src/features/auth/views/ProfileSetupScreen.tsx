@@ -148,7 +148,7 @@ export function ProfileSetupScreen() {
 
             <YStack gap={12}>
               <BottomSheetPicker
-                label="어떻게 신신을 알게 되셨나요?"
+                label="어떻게 신신당부를 알게 되었나요?"
                 value={acquisitionSource}
                 options={[...ACQUISITION_SOURCE_OPTIONS]}
                 onSelect={(value) =>
