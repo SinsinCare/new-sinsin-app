@@ -10,7 +10,7 @@ interface ConfirmModalProps {
   cancelText?: string
   confirmText?: string
   onCancel: () => void
-  onConfirm: () => void
+  onConfirm: () => void | Promise<void>
 }
 
 export function ConfirmModal({

@@ -133,6 +133,16 @@ export function SignupEmailScreen() {
                 </Pressable>
               </YStack>
             </XStack>
+            {sendError && !codeInputVisible && (
+              <Text
+                fontSize={13}
+                color={tokens.color.error.val}
+                letterSpacing={-0.26}
+                paddingTop={8}
+              >
+                {sendError}
+              </Text>
+            )}
           </YStack>
 
           {codeInputVisible && !isCurrentEmailVerified && (

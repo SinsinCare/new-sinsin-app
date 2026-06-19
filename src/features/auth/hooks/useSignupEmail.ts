@@ -13,6 +13,12 @@ const PROVIDER_LABELS: Record<SocialProvider, string> = {
   kakao: "카카오",
 }
 
+function formatProviderLabel(providers: SocialProvider[]) {
+  return providers.length
+    ? providers.map((provider) => PROVIDER_LABELS[provider]).join(", ")
+    : "소셜"
+}
+
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
@@ -111,6 +117,11 @@ export function useSignupEmail() {
       const check = await emailService.checkSignupEmail(email)
       if (check.status === "email_login_link_required") {
         setEmailLoginLinkRequired(check)
+        setSendError(
+          `이미 ${formatProviderLabel(
+            check.providers,
+          )} 로그인으로 가입된 이메일입니다. 연결하기를 눌러 이메일 로그인을 연결해주세요.`,
+        )
         setCodeInputVisible(false)
         return
       }
@@ -202,13 +213,12 @@ export function useSignupEmail() {
     const { email } = emailLoginLinkRequired
     setEmailLoginLinkRequired(null)
     setEmailLoginLinkMode(true)
+    setSendError(null)
     await sendEmailLoginLinkCode(email)
   }
 
-  const emailLoginLinkProviderLabel = emailLoginLinkRequired?.providers.length
-    ? emailLoginLinkRequired.providers
-        .map((provider) => PROVIDER_LABELS[provider])
-        .join(", ")
+  const emailLoginLinkProviderLabel = emailLoginLinkRequired
+    ? formatProviderLabel(emailLoginLinkRequired.providers)
     : "소셜"
 
   const formattedTime = formatTime(timer)
