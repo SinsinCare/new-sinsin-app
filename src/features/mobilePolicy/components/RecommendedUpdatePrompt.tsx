@@ -5,10 +5,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native"
-import { AlertTriangle } from "@tamagui/lucide-icons"
-import { Text, YStack } from "tamagui"
+import { Download } from "@tamagui/lucide-icons"
+import { Text, XStack, YStack } from "tamagui"
 
 import { Button } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
@@ -21,8 +22,13 @@ interface RecommendedUpdatePromptProps {
 export function RecommendedUpdatePrompt({
   policy,
 }: RecommendedUpdatePromptProps) {
+  const { width } = useWindowDimensions()
   const [visible, setVisible] = useState(true)
   const [openError, setOpenError] = useState<string | null>(null)
+  const cardWidth = Math.min(Math.max(width - 40, 280), 372)
+  const message =
+    policy.message?.trim() ||
+    "더 안정적인 사용을 위해 최신 버전으로 업데이트해주세요."
 
   const handleOpenStore = async () => {
     if (!policy.storeUrl) return
@@ -48,44 +54,54 @@ export function RecommendedUpdatePrompt({
           keyboardShouldPersistTaps="handled"
         >
           <YStack
-            width="100%"
-            maxWidth={360}
-            alignItems="center"
-            gap="$4"
-            padding="$6"
-            borderRadius="$6"
+            width={cardWidth}
+            maxWidth="100%"
+            gap="$5"
+            paddingHorizontal="$5"
+            paddingTop="$6"
+            paddingBottom="$5"
+            borderRadius="$8"
             backgroundColor="$cardBackground"
             borderWidth={1}
             borderColor="$borderColor"
           >
-            <YStack
-              width={64}
-              height={64}
-              borderRadius="$12"
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor="$dangerBackground"
-            >
-              <AlertTriangle size={30} color={tokens.color.primary8.val} />
-            </YStack>
-            <YStack gap="$2" alignItems="center">
+            <XStack gap="$3" alignItems="center" width="100%" minWidth={0}>
+              <YStack
+                width={44}
+                height={44}
+                borderRadius="$12"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor="$secondaryLight"
+                flexShrink={0}
+              >
+                <Download size={22} color={tokens.color.sub7.val} />
+              </YStack>
               <Text
-                fontSize={22}
-                lineHeight={30}
+                flex={1}
+                flexShrink={1}
+                minWidth={0}
+                fontSize={19}
+                lineHeight={25}
                 fontWeight="700"
                 color="$color"
-                textAlign="center"
+                letterSpacing={0}
+                maxFontSizeMultiplier={1.2}
               >
-                업데이트를 권장합니다
+                새 버전이 준비됐어요
               </Text>
+            </XStack>
+            <YStack gap="$2" width="100%" minWidth={0}>
               <Text
+                width="100%"
+                flexShrink={1}
                 fontSize={15}
-                lineHeight={22}
+                lineHeight={23}
                 color="$colorSubtle"
-                textAlign="center"
+                letterSpacing={0}
+                maxFontSizeMultiplier={1.15}
               >
-                {policy.message ??
-                  "더 안정적인 사용을 위해 최신 버전으로 업데이트해주세요."}
+                {message}
               </Text>
             </YStack>
             <Button
@@ -102,6 +118,9 @@ export function RecommendedUpdatePrompt({
                 lineHeight={18}
                 color="$danger"
                 textAlign="center"
+                width="100%"
+                flexShrink={1}
+                maxFontSizeMultiplier={1.15}
               >
                 {openError}
               </Text>
@@ -142,7 +161,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 24,
   },
   skipButton: {

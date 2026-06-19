@@ -31,6 +31,15 @@ const CATEGORY_TITLE_COLORS = {
   dark: tokens.color.textDark.val,
 } as const
 
+const WITHDRAWN_AUTHOR_NAME = "탈퇴한 사용자"
+
+function isWithdrawnAuthor(post: {
+  authorId?: number | null
+  authorName: string
+}) {
+  return post.authorId === null || post.authorName === WITHDRAWN_AUTHOR_NAME
+}
+
 export function FreePostTab({
   tagFilter = null,
   onTagFilterChange,
@@ -53,7 +62,10 @@ export function FreePostTab({
   const { blockedNickNames, blockUser } = useBlockedUsers()
 
   const visiblePosts = useMemo(
-    () => posts.filter((p) => !blockedNickNames.includes(p.authorName)),
+    () =>
+      posts.filter(
+        (p) => isWithdrawnAuthor(p) || !blockedNickNames.includes(p.authorName),
+      ),
     [posts, blockedNickNames],
   )
 
@@ -129,6 +141,7 @@ export function FreePostTab({
               commentCount={post.comments}
               onPress={() => router.push(`/post/${post.id}`)}
               onBlock={blockUser}
+              isWithdrawnAuthor={isWithdrawnAuthor(post)}
             />
           ))}
         </ScrollView>
@@ -184,6 +197,7 @@ export function FreePostTab({
               onPress={() => router.push(`/post/${post.id}`)}
               onPressTag={handleTagPress}
               onBlock={blockUser}
+              isWithdrawnAuthor={isWithdrawnAuthor(post)}
             />
           ))}
         </YStack>

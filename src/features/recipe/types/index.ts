@@ -63,7 +63,7 @@ export interface CommunityPostVote {
 /** Backend / API payload before mapping to {@link CommunityMealPost}. */
 export interface CommunityMealPostApi {
   id: string | number
-  authorId?: number
+  authorId?: number | null
   authorName: string
   authorRole: string
   category: string
@@ -82,7 +82,7 @@ export interface CommunityMealPostApi {
 
 export interface CommunityMealPost {
   id: string
-  authorId?: number
+  authorId?: number | null
   authorName: string
   authorRole: string
   category: string

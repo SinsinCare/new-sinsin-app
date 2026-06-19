@@ -15,6 +15,7 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { ToggleItem } from "@/src/features/settings/components"
 import {
   WITHDRAWAL_REASONS,
   WITHDRAWAL_OTHER_INDEX,
@@ -28,6 +29,7 @@ export function WithdrawalScreen() {
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [customReason, setCustomReason] = useState("")
+  const [deleteMyPosts, setDeleteMyPosts] = useState(false)
 
   const isOtherSelected = selectedIndex === WITHDRAWAL_OTHER_INDEX
   const trimmedCustomReason = customReason.trim()
@@ -43,6 +45,7 @@ export function WithdrawalScreen() {
       params: {
         reason: WITHDRAWAL_REASONS[selectedIndex],
         detail: isOtherSelected ? trimmedCustomReason : "",
+        deleteMyPosts: deleteMyPosts ? "true" : "false",
       },
     })
   }
@@ -107,6 +110,15 @@ export function WithdrawalScreen() {
               </React.Fragment>
             ))}
           </View>
+
+          <View style={[styles.postOptionBox, { borderColor: c.border }]}>
+            <ToggleItem
+              title="내 게시글도 삭제"
+              description="선택하지 않으면 작성자만 익명 처리되고 글은 보존됩니다."
+              value={deleteMyPosts}
+              onValueChange={setDeleteMyPosts}
+            />
+          </View>
         </ScrollView>
 
         <BottomActionBar
@@ -159,5 +171,10 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 14,
     marginTop: 4,
+  },
+  postOptionBox: {
+    marginTop: 24,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 })

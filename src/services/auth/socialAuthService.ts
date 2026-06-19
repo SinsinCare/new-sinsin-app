@@ -1,6 +1,7 @@
 import { Platform } from "react-native"
 import {
   GoogleSignin,
+  isCancelledResponse,
   isErrorWithCode,
   statusCodes,
 } from "@react-native-google-signin/google-signin"
@@ -17,6 +18,12 @@ export interface SocialAuthResult {
   idToken: string
   email: string | null
   displayName: string | null
+}
+
+function createGoogleCancelledError() {
+  return Object.assign(new Error("Google 로그인이 취소되었습니다."), {
+    code: statusCodes.SIGN_IN_CANCELLED,
+  })
 }
 
 GoogleSignin.configure({
@@ -39,7 +46,6 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
   let response
   try {
     response = await GoogleSignin.signIn()
-    logger.debug("[Google SignIn] signIn 완료")
   } catch (e) {
     logger.error("[Google SignIn] signIn 실패", e)
     if (isErrorWithCode(e)) {
@@ -48,7 +54,25 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
     throw e
   }
 
-  if (!response.data?.idToken) {
+  if (isCancelledResponse(response)) {
+    logger.debug("[Google SignIn] 사용자가 취소")
+    throw createGoogleCancelledError()
+  }
+
+  logger.debug("[Google SignIn] signIn 완료")
+  let idToken = response.data.idToken
+  if (!idToken) {
+    try {
+      idToken = (await GoogleSignin.getTokens()).idToken
+      logger.debug("[Google SignIn] getTokens idToken 회수", {
+        hasIdToken: !!idToken,
+      })
+    } catch (e) {
+      logger.error("[Google SignIn] getTokens 실패", e)
+    }
+  }
+
+  if (!idToken) {
     logger.error("[Google SignIn] idToken 없음")
     throw new Error("Google 로그인에서 ID 토큰을 받지 못했습니다.")
   }
@@ -56,7 +80,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
   logger.debug("[Google SignIn] 성공")
   return {
     provider: "google",
-    idToken: response.data.idToken,
+    idToken,
     email: response.data.user.email ?? null,
     displayName: response.data.user.name ?? null,
   }

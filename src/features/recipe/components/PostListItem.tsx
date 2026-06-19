@@ -18,6 +18,7 @@ interface PostListItemProps {
   onPress?: () => void
   onPressTag?: (tag: string) => void
   onBlock?: (authorName: string) => void
+  isWithdrawnAuthor?: boolean
   showDivider?: boolean
 }
 
@@ -51,6 +52,7 @@ export function PostListItem({
   onPress,
   onPressTag,
   onBlock,
+  isWithdrawnAuthor = false,
   showDivider = true,
 }: PostListItemProps) {
   const colorScheme = useAppColorScheme()
@@ -131,13 +133,15 @@ export function PostListItem({
           >
             {title}
           </Text>
-          <Pressable
-            onPress={handleMorePress}
-            hitSlop={8}
-            accessibilityLabel="더보기"
-          >
-            <Icon name="ellipsis-horizontal" size={18} color={colors.meta} />
-          </Pressable>
+          {!isWithdrawnAuthor && (
+            <Pressable
+              onPress={handleMorePress}
+              hitSlop={8}
+              accessibilityLabel="더보기"
+            >
+              <Icon name="ellipsis-horizontal" size={18} color={colors.meta} />
+            </Pressable>
+          )}
         </XStack>
 
         <Text

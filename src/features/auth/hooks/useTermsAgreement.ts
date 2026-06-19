@@ -114,7 +114,11 @@ export function useTermsAgreement({
       router.replace("/(auth)/login")
       return
     }
-    router.back()
+    if (router.canGoBack()) {
+      router.back()
+      return
+    }
+    router.replace("/(auth)/login")
   }
 
   return {

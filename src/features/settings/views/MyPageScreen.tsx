@@ -285,6 +285,11 @@ export function MyPageScreen() {
         {/* 메뉴 버튼 */}
         {[
           {
+            icon: "medkit-outline" as const,
+            title: "의사 연결하기",
+            onPress: () => router.push("/(settings)/ask-doctor"),
+          },
+          {
             icon: "clipboard-outline" as const,
             title: "건강검진 데이터 불러오고 분석하기",
             onPress: () => router.push("/(settings)/health-data"),
@@ -328,29 +333,6 @@ export function MyPageScreen() {
             <Ionicons name="chevron-forward" size={20} color={c.iconLight} />
           </Pressable>
         ))}
-
-        {/* 구분선 */}
-        <View
-          style={[styles.fullWidthDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
-        {/* 의사에게 질문하기 */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.navButton,
-            pressed && [
-              styles.navButtonPressed,
-              { backgroundColor: c.pressedBg },
-            ],
-          ]}
-          onPress={() => router.push("/(settings)/ask-doctor")}
-        >
-          <Ionicons name="medkit-outline" size={24} color={c.icon} />
-          <ThemedText style={[styles.navButtonText, { color: c.text }]}>
-            의사 연결하기
-          </ThemedText>
-          <Ionicons name="chevron-forward" size={20} color={c.iconLight} />
-        </Pressable>
       </ScrollView>
     </View>
   )

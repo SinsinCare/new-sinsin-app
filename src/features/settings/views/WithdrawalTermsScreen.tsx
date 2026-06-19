@@ -21,9 +21,10 @@ import { logger } from "@/src/lib/logger"
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const { reason, detail } = useLocalSearchParams<{
+  const { reason, detail, deleteMyPosts } = useLocalSearchParams<{
     reason?: string
     detail?: string
+    deleteMyPosts?: string
   }>()
   const c = useSettingsColors()
 
@@ -38,6 +39,7 @@ export function WithdrawalTermsScreen() {
       await userService.deleteAccount(
         reason || "앱에서 직접 탈퇴",
         detail?.trim() || null,
+        deleteMyPosts === "true",
       )
       await clearClientSession()
       router.replace("/(settings)/withdrawal-complete")

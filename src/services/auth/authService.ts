@@ -45,12 +45,17 @@ function isSocialProvider(value: unknown): value is SocialProvider {
   return value === "google" || value === "apple" || value === "kakao"
 }
 
+const SOCIAL_CONSENT_REQUIRED_CODES = new Set([
+  "SOCIAL_CONSENT_REQUIRED",
+  "AUTH_ERROR_011",
+])
+
 function getSocialSignupConsentRequiredResult(
   code: string | undefined,
   result: unknown,
   fallbackProvider?: SocialProvider,
 ): SocialSignupConsentRequiredResult | null {
-  if (code !== "SOCIAL_CONSENT_REQUIRED") return null
+  if (!code || !SOCIAL_CONSENT_REQUIRED_CODES.has(code)) return null
   if (!result || typeof result !== "object") return null
 
   const payload = result as {

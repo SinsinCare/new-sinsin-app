@@ -48,6 +48,14 @@ const NAV_TITLE = {
   light: tokens.color.textLight.val,
   dark: tokens.color.textDark.val,
 }
+const WITHDRAWN_AUTHOR_NAME = "탈퇴한 사용자"
+
+function isWithdrawnPostAuthor(post: {
+  authorId?: number | null
+  authorName: string
+}) {
+  return post.authorId === null || post.authorName === WITHDRAWN_AUTHOR_NAME
+}
 
 function formatTimeAgo(date: Date): string {
   const diffMs = Date.now() - date.getTime()
@@ -115,23 +123,44 @@ export default function PostDetailScreen() {
   }
 
   const handleMorePress = () => {
-    const options = ["수정하기", "삭제하기", "신고하기", "취소"]
+    if (!post) return
+    const withdrawnAuthor = isWithdrawnPostAuthor(post)
+    const options = withdrawnAuthor
+      ? ["신고하기", "취소"]
+      : ["수정하기", "삭제하기", "신고하기", "취소"]
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: 3, destructiveButtonIndex: 1 },
+        {
+          options,
+          cancelButtonIndex: withdrawnAuthor ? 1 : 3,
+          destructiveButtonIndex: withdrawnAuthor ? undefined : 1,
+        },
         (buttonIndex) => {
+          if (withdrawnAuthor) {
+            if (buttonIndex === 0) handleReport()
+            return
+          }
           if (buttonIndex === 0) handleEdit()
           else if (buttonIndex === 1) handleDelete()
           else if (buttonIndex === 2) handleReport()
         },
       )
     } else {
-      Alert.alert("더보기", "", [
-        { text: "수정하기", onPress: handleEdit },
-        { text: "삭제하기", style: "destructive", onPress: handleDelete },
-        { text: "신고하기", onPress: handleReport },
-        { text: "취소", style: "cancel" },
-      ])
+      Alert.alert(
+        "더보기",
+        "",
+        withdrawnAuthor
+          ? [
+              { text: "신고하기", onPress: handleReport },
+              { text: "취소", style: "cancel" },
+            ]
+          : [
+              { text: "수정하기", onPress: handleEdit },
+              { text: "삭제하기", style: "destructive", onPress: handleDelete },
+              { text: "신고하기", onPress: handleReport },
+              { text: "취소", style: "cancel" },
+            ],
+      )
     }
   }
 
@@ -202,6 +231,7 @@ export default function PostDetailScreen() {
   const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null
   const nextPost =
     currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
+  const withdrawnAuthor = isWithdrawnPostAuthor(post)
 
   return (
     <YStack flex={1} backgroundColor={BG[scheme]} paddingTop={insets.top}>
@@ -272,7 +302,7 @@ export default function PostDetailScreen() {
               fontFamily="$body"
               color={AUTHOR_NAME[scheme]}
             >
-              {post.authorName}
+              {withdrawnAuthor ? WITHDRAWN_AUTHOR_NAME : post.authorName}
             </Text>
             <Text
               fontSize={12}

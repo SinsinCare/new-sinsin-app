@@ -16,6 +16,7 @@ interface PopularPostCardProps {
   commentCount: number
   onPress?: () => void
   onBlock?: (authorName: string) => void
+  isWithdrawnAuthor?: boolean
 }
 
 const CARD_COLORS = {
@@ -49,6 +50,7 @@ export function PopularPostCard({
   commentCount,
   onPress,
   onBlock,
+  isWithdrawnAuthor = false,
 }: PopularPostCardProps) {
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
@@ -70,7 +72,10 @@ export function PopularPostCard({
             targetNickName: authorName,
             reason: r.value,
           })
-          Alert.alert("신고 완료", "신고가 접수되었습니다. 검토 후 조치하겠습니다.")
+          Alert.alert(
+            "신고 완료",
+            "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
+          )
         },
       })),
       { text: "취소", style: "cancel" as const },
@@ -128,13 +133,15 @@ export function PopularPostCard({
           >
             {category}
           </Text>
-          <Pressable
-            onPress={handleMorePress}
-            hitSlop={8}
-            accessibilityLabel="더보기"
-          >
-            <Icon name="ellipsis-horizontal" size={16} color={colors.meta} />
-          </Pressable>
+          {!isWithdrawnAuthor && (
+            <Pressable
+              onPress={handleMorePress}
+              hitSlop={8}
+              accessibilityLabel="더보기"
+            >
+              <Icon name="ellipsis-horizontal" size={16} color={colors.meta} />
+            </Pressable>
+          )}
         </XStack>
 
         <Text

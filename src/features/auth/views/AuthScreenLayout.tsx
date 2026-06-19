@@ -36,13 +36,20 @@ export function AuthScreenLayout({
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
   const colors = useAuthColors()
+  const handleDefaultBack = () => {
+    if (router.canGoBack()) {
+      router.back()
+      return
+    }
+    router.replace("/(auth)/login")
+  }
 
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       {showHeader && (
         <YStack height={56} justifyContent="center">
           <Pressable
-            onPress={onBack ?? (() => router.back())}
+            onPress={onBack ?? handleDefaultBack}
             style={{ position: "absolute", left: 9, padding: 4 }}
           >
             <Ionicons name="chevron-back" size={24} color={colors.icon} />

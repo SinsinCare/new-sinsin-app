@@ -26,7 +26,7 @@ function mapVote(raw: CommunityMealPostApi["vote"]): CommunityPostVote | null {
 function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
   return {
     id: String(raw.id),
-    authorId: raw.authorId,
+    authorId: raw.authorId ?? null,
     authorName: raw.authorName,
     authorRole: raw.authorRole,
     category: raw.category,

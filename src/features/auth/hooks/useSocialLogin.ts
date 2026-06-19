@@ -77,7 +77,7 @@ export function useSocialLogin() {
       const result = await signInWithSocialProvider(provider)
       if ("status" in result && result.status === "SOCIAL_CONSENT_REQUIRED") {
         router.push({
-          pathname: "./terms-agreement",
+          pathname: "/(auth)/terms-agreement",
           params: {
             mode: "social",
             provider: result.provider,
