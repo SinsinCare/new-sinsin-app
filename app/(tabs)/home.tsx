@@ -15,6 +15,10 @@ import {
 } from "react-native"
 import { tokens } from "@/src/theme/tokens"
 import { useSelectedDateStore } from "@/src/stores"
+import {
+  AnnouncementPopupModal,
+  useAnnouncementOnEntry,
+} from "@/src/features/announcement"
 
 const PADDING = 25
 
@@ -25,6 +29,7 @@ export default function HomeScreen() {
   const [showCalendar, setShowCalendar] = useState(false)
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
+  const announcement = useAnnouncementOnEntry(true)
   const widthRef = useRef(width)
   widthRef.current = width
 
@@ -155,6 +160,12 @@ export default function HomeScreen() {
           />
         </Animated.View>
       </View>
+
+      <AnnouncementPopupModal
+        visible={announcement.visible}
+        notice={announcement.activeNotice}
+        onClose={announcement.close}
+      />
     </ThemedView>
   )
 }

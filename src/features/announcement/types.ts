@@ -1,0 +1,6 @@
+export interface AnnouncementNotice {
+  id: number
+  title: string
+  content: string
+  createdAt: string
+}
