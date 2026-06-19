@@ -43,7 +43,7 @@ export function Checkbox({
           )}
         </YStack>
         {label && (
-          <Text fontSize={14} color={labelColor} letterSpacing={-0.28}>
+          <Text fontSize={14} color={labelColor} letterSpacing={0}>
             {label}
           </Text>
         )}
