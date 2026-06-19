@@ -32,6 +32,9 @@ function addIsSuccessInterceptor(instance: AxiosInstance) {
         data.message || "요청에 실패했습니다.",
         data.code || "UNKNOWN",
         response.status,
+        false,
+        data.fieldErrors,
+        data.result,
       )
     }
     return response

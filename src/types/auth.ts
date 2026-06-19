@@ -103,6 +103,19 @@ export interface SocialLinkRequiredResult {
   socialLinkToken: string
 }
 
+export interface SocialSignupConsentRequiredResult {
+  status: "SOCIAL_CONSENT_REQUIRED"
+  provider: SocialProvider
+  socialSignupToken: string
+}
+
+export interface SocialSignupRequest {
+  socialSignupToken: string
+  termsOfServiceAgree: boolean
+  privacyPolicyAgree: boolean
+  marketingAgree: boolean
+}
+
 export interface EmailLoginLinkRequiredResult {
   email: string
   providers: SocialProvider[]

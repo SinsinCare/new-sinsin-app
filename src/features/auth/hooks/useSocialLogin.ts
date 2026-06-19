@@ -16,6 +16,10 @@ const PROVIDER_LABELS: Record<SocialProvider, string> = {
   apple: "Apple",
   kakao: "카카오",
 }
+const SOCIAL_LINK_REQUIRED_CODES = new Set([
+  "AUTH_ERROR_004",
+  "SOCIAL_EMAIL_NOT_FOUND",
+])
 
 function getDebugMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message
@@ -33,7 +37,10 @@ function getDebugMessage(error: unknown): string {
 function getSocialLinkRequiredResult(
   error: unknown,
 ): SocialLinkRequiredResult | null {
-  if (!(error instanceof ApiError) || error.code !== "AUTH_ERROR_004") {
+  if (
+    !(error instanceof ApiError) ||
+    !SOCIAL_LINK_REQUIRED_CODES.has(error.code)
+  ) {
     return null
   }
   const result = error.result
@@ -67,7 +74,17 @@ export function useSocialLogin() {
     setSocialLoading(true)
     setCurrentProvider(provider)
     try {
-      await signInWithSocialProvider(provider)
+      const result = await signInWithSocialProvider(provider)
+      if ("status" in result && result.status === "SOCIAL_CONSENT_REQUIRED") {
+        router.push({
+          pathname: "./terms-agreement",
+          params: {
+            mode: "social",
+            provider: result.provider,
+            socialSignupToken: result.socialSignupToken,
+          },
+        })
+      }
     } catch (error) {
       if (isUserCancelledError(error)) return
 

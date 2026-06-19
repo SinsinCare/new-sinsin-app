@@ -13,7 +13,10 @@ import {
 } from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { EmailForm } from "../types"
-import type { SocialProvider } from "@/src/types"
+import type {
+  SocialProvider,
+  SocialSignupConsentRequiredResult,
+} from "@/src/types"
 
 const BUTTON_WIDTH = 100
 const TIMER_DURATION = 180
@@ -31,6 +34,16 @@ function formatTime(seconds: number) {
 
 function isSocialProvider(value: unknown): value is SocialProvider {
   return value === "google" || value === "apple" || value === "kakao"
+}
+
+function isSocialSignupConsentRequiredResult(
+  result: unknown,
+): result is SocialSignupConsentRequiredResult {
+  return (
+    !!result &&
+    typeof result === "object" &&
+    (result as { status?: unknown }).status === "SOCIAL_CONSENT_REQUIRED"
+  )
 }
 
 export function SocialLinkEmailScreen() {
@@ -130,6 +143,17 @@ export function SocialLinkEmailScreen() {
         getValues("email"),
         getValues("code"),
       )
+      if (isSocialSignupConsentRequiredResult(result)) {
+        router.replace({
+          pathname: "/(auth)/terms-agreement",
+          params: {
+            mode: "social",
+            provider: result.provider,
+            socialSignupToken: result.socialSignupToken,
+          },
+        })
+        return
+      }
       if (timerRef.current) clearInterval(timerRef.current)
       setTimer(0)
       setNextRoute(

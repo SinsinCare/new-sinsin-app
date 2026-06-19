@@ -23,6 +23,7 @@ import {
 import { VoteAttachCard } from "@/src/features/recipe/components/VoteAttachCard"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
 import { TagInput } from "@/src/features/recipe/components/TagInput"
+import { ContentResponsibilityCheck } from "@/src/features/recipe/components/ContentResponsibilityCheck"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
@@ -116,6 +117,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [responsibilityAgreed, setResponsibilityAgreed] = useState(false)
   const { createPostAsync } = useCommunityPosts()
 
   const iconColor = isDark ? TOOLBAR_ICON_COLOR.dark : TOOLBAR_ICON_COLOR.light
@@ -123,7 +125,8 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const selectedLabel =
     FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? ""
 
-  const canSubmit = title.trim().length > 0 && body.trim().length > 0
+  const canSubmit =
+    title.trim().length > 0 && body.trim().length > 0 && responsibilityAgreed
 
   const handleOpenCategorySheet = () => {
     Keyboard.dismiss()
@@ -262,6 +265,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         </Pressable>
         <Pressable
           onPress={handleSubmit}
+          disabled={!canSubmit || isSubmitting}
           hitSlop={8}
           style={({ pressed }) => ({
             opacity: pressed && canSubmit ? 0.7 : 1,
@@ -391,6 +395,13 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
             {(tagInputOpen || tags.length > 0) && (
               <TagInput tags={tags} onChangeTags={setTags} />
             )}
+            <YStack paddingTop={16} paddingBottom={8}>
+              <ContentResponsibilityCheck
+                value={responsibilityAgreed}
+                onChange={setResponsibilityAgreed}
+                disabled={isSubmitting}
+              />
+            </YStack>
           </YStack>
         </KeyboardAwareScrollView>
 

@@ -1,10 +1,22 @@
 import { useState, useCallback } from "react"
 import { router } from "expo-router"
-import { useSignupStore } from "@/src/stores"
+import { authService } from "@/src/services"
+import { useAuthStore, useSignupStore } from "@/src/stores"
+import { showErrorToast } from "@/src/lib/toast"
 import { TERMS } from "../data/terms"
+import { getDestinationForAccountState } from "../utils/accountStateRoute"
 
-export function useTermsAgreement() {
+interface UseTermsAgreementOptions {
+  mode?: "email" | "social"
+  socialSignupToken?: string
+}
+
+export function useTermsAgreement({
+  mode = "email",
+  socialSignupToken,
+}: UseTermsAgreementOptions = {}) {
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const {
     reset,
     setTermsOfServiceAgree,
@@ -12,6 +24,11 @@ export function useTermsAgreement() {
     setMarketingAgree,
     setSignupInProgress,
   } = useSignupStore()
+  const setUser = useAuthStore((s) => s.setUser)
+  const setAccountState = useAuthStore((s) => s.setAccountState)
+  const setRequiresAdditionalInfo = useAuthStore(
+    (s) => s.setRequiresAdditionalInfo,
+  )
 
   const allChecked = TERMS.every((t) => agreed[t.id])
   const requiredChecked = TERMS.filter((t) => t.required).every(
@@ -34,7 +51,7 @@ export function useTermsAgreement() {
     setAgreed((prev) => ({ ...prev, [id]: !prev[id] }))
   }, [])
 
-  const handleNext = () => {
+  const handleEmailNext = () => {
     reset()
     setSignupInProgress(true)
     setTermsOfServiceAgree(!!agreed["service"])
@@ -43,13 +60,72 @@ export function useTermsAgreement() {
     router.push("/(auth)/signup-email")
   }
 
+  const handleSocialNext = async () => {
+    if (!requiredChecked || isSubmitting) return
+    if (!socialSignupToken) {
+      reset()
+      showErrorToast("소셜 가입 정보가 만료되었습니다. 다시 시도해주세요.")
+      router.replace("/(auth)/login")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const result = await authService.completeSocialSignup({
+        socialSignupToken,
+        termsOfServiceAgree: !!agreed["service"],
+        privacyPolicyAgree: !!agreed["privacy"],
+        marketingAgree: !!agreed["marketing"],
+      })
+
+      reset()
+      setUser(result.user)
+      setAccountState(result.accountState)
+      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      router.replace(
+        getDestinationForAccountState(
+          result.accountState,
+          result.requiresAdditionalInfo,
+        ),
+      )
+    } catch (error) {
+      showErrorToast(
+        error instanceof Error
+          ? error.message
+          : "소셜 회원가입에 실패했습니다. 다시 시도해주세요.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleNext = () => {
+    if (mode === "social") {
+      void handleSocialNext()
+      return
+    }
+    handleEmailNext()
+  }
+
+  const handleBack = () => {
+    if (isSubmitting) return
+    if (mode === "social") {
+      reset()
+      router.replace("/(auth)/login")
+      return
+    }
+    router.back()
+  }
+
   return {
     terms: TERMS,
     agreed,
     allChecked,
     requiredChecked,
+    isSubmitting,
     toggleAll,
     toggleItem,
+    handleBack,
     handleNext,
   }
 }

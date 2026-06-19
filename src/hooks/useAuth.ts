@@ -7,7 +7,11 @@ import {
 } from "../services/auth/socialAuthService"
 import { clearClientSession } from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
-import type { ProfileCompleteRequest, SocialProvider } from "@/src/types"
+import type {
+  ProfileCompleteRequest,
+  SocialProvider,
+  SocialSignupConsentRequiredResult,
+} from "@/src/types"
 
 const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 200
 
@@ -15,6 +19,16 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
   })
+}
+
+function isSocialSignupConsentRequiredResult(
+  result: unknown,
+): result is SocialSignupConsentRequiredResult {
+  return (
+    !!result &&
+    typeof result === "object" &&
+    (result as { status?: unknown }).status === "SOCIAL_CONSENT_REQUIRED"
+  )
 }
 
 export function useAuth() {
@@ -77,8 +91,13 @@ export function useAuth() {
     )
     logger.debug("[useAuth] social login 완료", {
       provider,
-      accountState: result.accountState,
+      accountState: isSocialSignupConsentRequiredResult(result)
+        ? result.status
+        : result.accountState,
     })
+    if (isSocialSignupConsentRequiredResult(result)) {
+      return result
+    }
     await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
     setUser(result.user)
     setAccountState(result.accountState)
@@ -103,6 +122,9 @@ export function useAuth() {
       email,
       code,
     )
+    if (isSocialSignupConsentRequiredResult(result)) {
+      return result
+    }
     await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
     setUser(result.user)
     setAccountState(result.accountState)

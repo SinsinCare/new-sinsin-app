@@ -5,16 +5,26 @@ import { Checkbox } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useTermsAgreement, useAuthColors } from "../hooks"
 
-export function TermsAgreementScreen() {
+interface TermsAgreementScreenProps {
+  mode?: "email" | "social"
+  socialSignupToken?: string
+}
+
+export function TermsAgreementScreen({
+  mode = "email",
+  socialSignupToken,
+}: TermsAgreementScreenProps) {
   const {
     terms,
     agreed,
     allChecked,
     requiredChecked,
+    isSubmitting,
     toggleAll,
     toggleItem,
+    handleBack,
     handleNext,
-  } = useTermsAgreement()
+  } = useTermsAgreement({ mode, socialSignupToken })
   const colors = useAuthColors()
 
   const openLegalDocument = (documentType: string) => {
@@ -28,8 +38,10 @@ export function TermsAgreementScreen() {
     <AuthScreenLayout
       title={`신신당부 서비스 이용약관에\n동의해주세요`}
       buttonLabel="동의하고 계속하기"
-      buttonDisabled={!requiredChecked}
+      buttonDisabled={!requiredChecked || isSubmitting}
+      buttonLoading={isSubmitting}
       onSubmit={handleNext}
+      onBack={handleBack}
     >
       <YStack gap={16} marginTop={32}>
         <Checkbox

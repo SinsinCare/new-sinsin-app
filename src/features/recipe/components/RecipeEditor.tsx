@@ -28,6 +28,7 @@ import {
   CUISINE_TAGS,
 } from "@/src/features/recipe/data/recipeTags"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
+import { ContentResponsibilityCheck } from "@/src/features/recipe/components/ContentResponsibilityCheck"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useQueryClient } from "@tanstack/react-query"
@@ -114,6 +115,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [responsibilityAgreed, setResponsibilityAgreed] = useState(false)
 
   const totalImageCount =
     descEditor.imageCount + ingredEditor.imageCount + stepsEditor.imageCount
@@ -122,6 +124,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const canSubmit =
     title.trim().length > 0 &&
     descEditor.hasContent &&
+    responsibilityAgreed &&
     !descEditor.hasUploadingImages &&
     !ingredEditor.hasUploadingImages &&
     !stepsEditor.hasUploadingImages
@@ -292,6 +295,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         </Text>
         <Pressable
           onPress={handleSubmit}
+          disabled={!canSubmit || isSubmitting}
           hitSlop={8}
           style={({ pressed }) => ({
             opacity: pressed && canSubmit ? 0.7 : 1,
@@ -475,6 +479,14 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             onCursorPositionChange={stepsEditor.setCursorPosition}
             onUpdateTextBlock={stepsEditor.updateTextBlock}
             onDeleteImage={stepsEditor.deleteImage}
+          />
+        </YStack>
+
+        <YStack paddingHorizontal={16} paddingTop={20} paddingBottom={8}>
+          <ContentResponsibilityCheck
+            value={responsibilityAgreed}
+            onChange={setResponsibilityAgreed}
+            disabled={isSubmitting}
           />
         </YStack>
       </KeyboardAwareScrollView>

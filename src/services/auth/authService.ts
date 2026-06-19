@@ -1,4 +1,8 @@
-import type { IAuthService, AppUser } from "../types/serviceTypes"
+import type {
+  IAuthService,
+  AppUser,
+  AuthSessionResult,
+} from "../types/serviceTypes"
 import type {
   SignupRequest,
   ApiResponse,
@@ -9,6 +13,9 @@ import type {
   TokenRefreshResult,
   AuthUserSummary,
   AuthProfile,
+  SocialProvider,
+  SocialSignupConsentRequiredResult,
+  SocialSignupRequest,
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
 import { api, clearClientSession, publicApi, tokenService } from "../core"
@@ -34,36 +41,96 @@ function getRequiresAdditionalInfo(result: {
   return result.requiresAdditionalInfo ?? result.user?.requiresAdditionalInfo ?? false
 }
 
+function isSocialProvider(value: unknown): value is SocialProvider {
+  return value === "google" || value === "apple" || value === "kakao"
+}
+
+function getSocialSignupConsentRequiredResult(
+  code: string | undefined,
+  result: unknown,
+  fallbackProvider?: SocialProvider,
+): SocialSignupConsentRequiredResult | null {
+  if (code !== "SOCIAL_CONSENT_REQUIRED") return null
+  if (!result || typeof result !== "object") return null
+
+  const payload = result as {
+    provider?: unknown
+    socialSignupToken?: unknown
+  }
+  const provider = isSocialProvider(payload.provider)
+    ? payload.provider
+    : fallbackProvider
+  if (
+    !provider ||
+    typeof payload.socialSignupToken !== "string" ||
+    payload.socialSignupToken.length === 0
+  ) {
+    return null
+  }
+
+  return {
+    status: "SOCIAL_CONSENT_REQUIRED",
+    provider,
+    socialSignupToken: payload.socialSignupToken,
+  }
+}
+
+function getSocialSignupConsentRequiredFromError(
+  error: unknown,
+  fallbackProvider?: SocialProvider,
+): SocialSignupConsentRequiredResult | null {
+  if (!(error instanceof ApiError)) return null
+  return getSocialSignupConsentRequiredResult(
+    error.code,
+    error.result,
+    fallbackProvider,
+  )
+}
+
 function getRealAuthService(): IAuthService {
   return {
     async signInWithSocial(
-      provider: "google" | "apple" | "kakao",
+      provider: SocialProvider,
       idToken: string,
       email?: string | null,
       displayName?: string | null,
-    ): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    }> {
+    ) {
       logger.debug("[authService] signInWithSocial 시작", provider, {
         idTokenLength: idToken?.length,
         idTokenPrefix: idToken?.slice(0, 30),
       })
 
-      let data
+      let data: ApiResponse<LoginResult> | null = null
       try {
-        const response = await publicApi.post<ApiResponse<LoginResult>>(
-          "/auth/social-login",
-          { provider, idToken },
+        const response = await publicApi.post<
+          ApiResponse<LoginResult | SocialSignupConsentRequiredResult>
+        >("/auth/social-login", { provider, idToken })
+        const responseData = response.data
+        const consentRequired = getSocialSignupConsentRequiredResult(
+          responseData.code,
+          responseData.result,
+          provider,
         )
-        data = response.data
+        if (consentRequired) {
+          logger.debug("[authService] social signup consent required", provider)
+          return consentRequired
+        }
+        data = responseData as ApiResponse<LoginResult>
         logger.debug(
           "[authService] social login 응답",
           response.status,
           data.result.accountState,
         )
       } catch (error: unknown) {
+        const consentRequired = getSocialSignupConsentRequiredFromError(
+          error,
+          provider,
+        )
+        if (consentRequired) {
+          logger.debug("[authService] social signup consent required", provider)
+          return consentRequired
+        }
+
         if (
           error !== null &&
           typeof error === "object" &&
@@ -90,6 +157,10 @@ function getRealAuthService(): IAuthService {
           logger.debug("[authService] social login 실패", "unknown error")
         }
         throw error
+      }
+
+      if (!data) {
+        throw new Error("소셜 로그인 응답을 확인할 수 없습니다.")
       }
 
       const {
@@ -162,19 +233,32 @@ function getRealAuthService(): IAuthService {
       socialLinkToken: string,
       email: string,
       code: string,
-    ): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    }> {
-      const { data } = await publicApi.post<ApiResponse<LoginResult>>(
-        "/auth/social-link/email/otp/verify",
-        {
+    ) {
+      let data: ApiResponse<LoginResult> | null = null
+      try {
+        const response = await publicApi.post<
+          ApiResponse<LoginResult | SocialSignupConsentRequiredResult>
+        >("/auth/social-link/email/otp/verify", {
           socialLinkToken,
           email,
           authKey: code,
-        },
-      )
+        })
+        const responseData = response.data
+        const consentRequired = getSocialSignupConsentRequiredResult(
+          responseData.code,
+          responseData.result,
+        )
+        if (consentRequired) return consentRequired
+        data = responseData as ApiResponse<LoginResult>
+      } catch (error: unknown) {
+        const consentRequired = getSocialSignupConsentRequiredFromError(error)
+        if (consentRequired) return consentRequired
+        throw error
+      }
+
+      if (!data) {
+        throw new Error("소셜 이메일 인증 응답을 확인할 수 없습니다.")
+      }
 
       const {
         accessToken,
@@ -281,6 +365,35 @@ function getRealAuthService(): IAuthService {
       })
 
       return user
+    },
+
+    async completeSocialSignup(
+      request: SocialSignupRequest,
+    ): Promise<AuthSessionResult> {
+      const { data } = await publicApi.post<ApiResponse<LoginResult>>(
+        "/auth/social-signup",
+        request,
+      )
+
+      const {
+        accessToken,
+        refreshToken,
+        accountState,
+        user: authUser,
+      } = data.result
+      await tokenService.setTokens(accessToken, refreshToken)
+
+      const user = mapAuthUser(authUser, {
+        uid: request.socialSignupToken,
+        email: null,
+        displayName: null,
+      })
+
+      return {
+        user,
+        accountState,
+        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
+      }
     },
 
     async cancelWithdrawal(
@@ -407,6 +520,8 @@ export const authService: IAuthService = {
   completeProfile: (request) => getAuthService().completeProfile(request),
   getProfile: () => getAuthService().getProfile(),
   signup: (request) => getAuthService().signup(request),
+  completeSocialSignup: (request) =>
+    getAuthService().completeSocialSignup(request),
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),
   signOut: () => getAuthService().signOut(),

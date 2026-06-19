@@ -4,7 +4,8 @@ import { tokens } from "@/src/theme/tokens"
 const StyledButton = styled(TamaguiButton, {
   name: "SinsinButton",
   borderRadius: "$3",
-  height: 48,
+  minHeight: 48,
+  paddingVertical: "$3",
   pressStyle: {
     opacity: 0.8,
     scale: 0.98,
@@ -37,16 +38,19 @@ const StyledButton = styled(TamaguiButton, {
     },
     buttonSize: {
       small: {
-        height: 36,
+        minHeight: 36,
         paddingHorizontal: "$3",
+        paddingVertical: "$2",
       },
       medium: {
-        height: 48,
+        minHeight: 48,
         paddingHorizontal: "$4",
+        paddingVertical: "$3",
       },
       large: {
-        height: 56,
+        minHeight: 56,
         paddingHorizontal: "$5",
+        paddingVertical: "$3",
       },
     },
     fullWidth: {
@@ -88,14 +92,21 @@ export function Button({
 
   return (
     <StyledButton
-      size="$4"
       opacity={isDisabled ? 0.5 : 1}
       onPress={handlePress}
       {...props}
     >
-      <XStack gap="$2" alignItems="center">
+      <XStack
+        gap="$2"
+        alignItems="center"
+        justifyContent="center"
+        flexShrink={1}
+        maxWidth="100%"
+      >
         {loading && <Spinner size="small" color="white" />}
-        <Text color="white">{children}</Text>
+        <Text color="white" textAlign="center" flexShrink={1} lineHeight={20}>
+          {children}
+        </Text>
       </XStack>
     </StyledButton>
   )

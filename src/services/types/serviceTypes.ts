@@ -3,6 +3,8 @@ import type {
   SignupRequest,
   SocialProvider,
   AuthProfile,
+  SocialSignupConsentRequiredResult,
+  SocialSignupRequest,
 } from "../../types"
 
 // 앱 사용자 최소 인터페이스
@@ -18,6 +20,10 @@ export interface AuthSessionResult {
   requiresAdditionalInfo: boolean
 }
 
+export type SocialAuthSessionResult =
+  | AuthSessionResult
+  | SocialSignupConsentRequiredResult
+
 // 인증 서비스 인터페이스
 export interface IAuthService {
   signInWithEmail(
@@ -29,13 +35,13 @@ export interface IAuthService {
     idToken: string,
     email?: string | null,
     displayName?: string | null,
-  ): Promise<AuthSessionResult>
+  ): Promise<SocialAuthSessionResult>
   sendSocialLinkEmailCode(socialLinkToken: string, email: string): Promise<void>
   verifySocialLinkEmailCode(
     socialLinkToken: string,
     email: string,
     code: string,
-  ): Promise<AuthSessionResult>
+  ): Promise<SocialAuthSessionResult>
   completeEmailLoginLink(
     emailLinkToken: string,
     password: string,
@@ -45,6 +51,7 @@ export interface IAuthService {
   ): Promise<AuthSessionResult>
   getProfile(): Promise<AuthProfile>
   signup(request: SignupRequest): Promise<AppUser>
+  completeSocialSignup(request: SocialSignupRequest): Promise<AuthSessionResult>
   cancelWithdrawal(
     cancelToken: string,
   ): Promise<AuthSessionResult>

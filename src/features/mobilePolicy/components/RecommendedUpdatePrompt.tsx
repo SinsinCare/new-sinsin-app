@@ -1,5 +1,13 @@
 import { useState } from "react"
-import { Linking, Modal, Pressable, StyleSheet, View } from "react-native"
+import {
+  Linking,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native"
+import { AlertTriangle } from "@tamagui/lucide-icons"
 import { Text, YStack } from "tamagui"
 
 import { Button } from "@/src/shared/components"
@@ -34,36 +42,70 @@ export function RecommendedUpdatePrompt({
       onRequestClose={() => setVisible(false)}
     >
       <View style={styles.dim}>
-        <YStack
-          width="100%"
-          maxWidth={360}
-          gap="$4"
-          padding="$5"
-          borderRadius="$6"
-          backgroundColor="$cardBackground"
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <YStack gap="$2">
-            <Text fontSize={20} lineHeight={28} fontWeight="700" color="$color">
-              업데이트를 권장합니다
-            </Text>
-            <Text fontSize={15} lineHeight={22} color="$colorSubtle">
-              {policy.message ??
-                "더 안정적인 사용을 위해 최신 버전으로 업데이트해주세요."}
-            </Text>
-          </YStack>
-          <YStack gap="$2">
-            {openError && (
-              <Text fontSize={13} color="$danger">
-                {openError}
+          <YStack
+            width="100%"
+            maxWidth={360}
+            alignItems="center"
+            gap="$4"
+            padding="$6"
+            borderRadius="$6"
+            backgroundColor="$cardBackground"
+            borderWidth={1}
+            borderColor="$borderColor"
+          >
+            <YStack
+              width={64}
+              height={64}
+              borderRadius="$12"
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor="$dangerBackground"
+            >
+              <AlertTriangle size={30} color={tokens.color.primary8.val} />
+            </YStack>
+            <YStack gap="$2" alignItems="center">
+              <Text
+                fontSize={22}
+                lineHeight={30}
+                fontWeight="700"
+                color="$color"
+                textAlign="center"
+              >
+                업데이트를 권장합니다
               </Text>
-            )}
+              <Text
+                fontSize={15}
+                lineHeight={22}
+                color="$colorSubtle"
+                textAlign="center"
+              >
+                {policy.message ??
+                  "더 안정적인 사용을 위해 최신 버전으로 업데이트해주세요."}
+              </Text>
+            </YStack>
             <Button
               fullWidth
+              buttonSize="large"
               disabled={!policy.storeUrl}
               onPress={handleOpenStore}
             >
               업데이트하기
             </Button>
+            {openError && (
+              <Text
+                fontSize={13}
+                lineHeight={18}
+                color="$danger"
+                textAlign="center"
+              >
+                {openError}
+              </Text>
+            )}
             <Pressable
               style={({ pressed }) => [
                 styles.skipButton,
@@ -76,12 +118,13 @@ export function RecommendedUpdatePrompt({
                 fontWeight="600"
                 color={tokens.color.grey5.val}
                 textAlign="center"
+                lineHeight={20}
               >
                 나중에 하기
               </Text>
             </Pressable>
           </YStack>
-        </YStack>
+        </ScrollView>
       </View>
     </Modal>
   )
@@ -90,15 +133,24 @@ export function RecommendedUpdatePrompt({
 const styles = StyleSheet.create({
   dim: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
     backgroundColor: "#0000006B",
   },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+  },
   skipButton: {
-    minHeight: 44,
+    width: "100%",
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 12,
   },
   skipButtonPressed: {
     opacity: 0.6,

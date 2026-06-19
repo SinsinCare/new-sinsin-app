@@ -1,5 +1,5 @@
 import type { IAuthService, AppUser } from "../../types/serviceTypes"
-import type { AuthProfile, SignupRequest } from "../../../types"
+import type { AuthProfile, SignupRequest, SocialSignupRequest } from "../../../types"
 import { MockUser, DEFAULT_MOCK_USER } from "./mockUser"
 import { appConfig } from "../../../config/appConfig"
 
@@ -147,6 +147,22 @@ export const mockAuthService: IAuthService = {
     )
     currentUser = newUser
     return currentUser
+  },
+
+  async completeSocialSignup(
+    _request: SocialSignupRequest,
+  ): Promise<{
+    user: AppUser
+    accountState: string
+    requiresAdditionalInfo: boolean
+  }> {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    currentUser = new MockUser(`mock-social-${Date.now()}`, null, null)
+    return {
+      user: currentUser,
+      accountState: "PENDING_PROFILE",
+      requiresAdditionalInfo: false,
+    }
   },
 
   async cancelWithdrawal(
