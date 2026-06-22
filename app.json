@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain"
@@ -19,7 +18,6 @@
       "buildNumber": "4",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
-      "deploymentTarget": "18.6",
       "associatedDomains": [
         "applinks:sinsin.mediology.ai"
       ],
@@ -45,9 +43,6 @@
       },
       "package": "com.mediology.sinsinapp",
       "versionCode": 13,
-      "edgeToEdgeEnabled": true,
-      "minSdkVersion": 23,
-      "targetSdkVersion": 34,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -125,6 +120,16 @@
           "ios": {
             "deploymentTarget": "18.6",
             "appleTeamId": "HJJNV9Y5W8",
+            "extraPods": [
+              {
+                "name": "GoogleUtilities",
+                "modular_headers": true
+              },
+              {
+                "name": "RecaptchaInterop",
+                "modular_headers": true
+              }
+            ],
             "configurations": {
               "Debug": {
                 "prebuild": "Debug"
@@ -136,6 +141,8 @@
           },
           "android": {
             "newArchEnabled": false,
+            "minSdkVersion": 24,
+            "targetSdkVersion": 34,
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
             ]
@@ -151,8 +158,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "40c02a9a-5bfa-42f1-84db-85faa562f011"
+        "projectId": "dd9b5694-69b9-43b8-bc38-f3c0c4366183"
       }
-    }
+    },
+    "owner": "mediologyadmin"
   }
 }
