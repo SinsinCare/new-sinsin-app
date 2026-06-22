@@ -125,7 +125,7 @@ npm run deploy:android
    ```
    등록해 두면 `eas submit`이 자동으로 이 키를 사용합니다.
 
-> 키 등록 전에는 `npm run deploy:ios` 실행 시 Apple ID(`sht06202@naver.com`)
+> 키 등록 전에는 `npm run deploy:ios` 실행 시 Apple ID(`healthierwith@gmail.com`)
 > 로그인 프롬프트가 한 번 뜹니다 — 거기서 로그인하면 그대로 제출 진행됩니다.
 
 ---
