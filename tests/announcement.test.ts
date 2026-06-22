@@ -36,6 +36,9 @@ describe("announcement popup service", () => {
           title: "중요 공지",
           content: "홈 진입 공지입니다.",
           createdAt: "2026-06-19T12:00:00",
+          imageUrl: "https://cdn.test/notices/7/banner.jpg",
+          linkUrl: "sinsin://notice/7",
+          ctaLabel: "자세히 보기",
         },
       },
     })
@@ -48,6 +51,9 @@ describe("announcement popup service", () => {
       title: "중요 공지",
       content: "홈 진입 공지입니다.",
       createdAt: "2026-06-19T12:00:00",
+      imageUrl: "https://cdn.test/notices/7/banner.jpg",
+      linkUrl: "sinsin://notice/7",
+      ctaLabel: "자세히 보기",
     })
   })
 
