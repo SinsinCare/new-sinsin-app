@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react"
-import { Modal, ScrollView, StyleSheet, View } from "react-native"
+import {
+  Alert,
+  Linking,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native"
+import { Image } from "expo-image"
 import { Text, YStack } from "tamagui"
 import { Button, Checkbox } from "@/src/shared/components"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
@@ -28,10 +36,23 @@ export function AnnouncementPopupModal({
 
   const cardBg = isDark ? tokens.color.cardBgDark.val : "white"
   const textColor = isDark ? tokens.color.textDark.val : tokens.color.black.val
-  const bodyColor = isDark ? tokens.color.textDarkSub.val : tokens.color.grey3.val
+  const bodyColor = isDark
+    ? tokens.color.textDarkSub.val
+    : tokens.color.grey3.val
   const borderColor = isDark
     ? tokens.color.grey4.val
     : tokens.color.borderLight.val
+  const hasCta = Boolean(notice.ctaLabel && notice.linkUrl)
+
+  const handleCtaPress = async () => {
+    if (!notice.linkUrl) return
+    try {
+      await Linking.openURL(notice.linkUrl)
+      await onClose(dontShowAgain)
+    } catch {
+      Alert.alert("링크를 열 수 없어요", "잠시 후 다시 시도해주세요.")
+    }
+  }
 
   return (
     <Modal
@@ -52,6 +73,16 @@ export function AnnouncementPopupModal({
           borderWidth={StyleSheet.hairlineWidth}
           borderColor={borderColor}
         >
+          {notice.imageUrl && (
+            <Image
+              source={{ uri: notice.imageUrl }}
+              style={styles.bannerImage}
+              contentFit="cover"
+              transition={120}
+              accessibilityLabel={`${notice.title} 이미지`}
+            />
+          )}
+
           <YStack gap="$2">
             <Text fontSize="$7" fontWeight="700" color={textColor}>
               {notice.title}
@@ -77,6 +108,11 @@ export function AnnouncementPopupModal({
               onToggle={() => setDontShowAgain((value) => !value)}
               label="다시 안 보기"
             />
+            {hasCta && (
+              <Button fullWidth onPress={() => void handleCtaPress()}>
+                {notice.ctaLabel}
+              </Button>
+            )}
             <Button fullWidth onPress={() => onClose(dontShowAgain)}>
               닫기
             </Button>
@@ -100,5 +136,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingVertical: 4,
+  },
+  bannerImage: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    borderRadius: 8,
+    backgroundColor: "#EDEDED",
   },
 })

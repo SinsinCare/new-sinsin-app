@@ -3,4 +3,7 @@ export interface AnnouncementNotice {
   title: string
   content: string
   createdAt: string
+  imageUrl?: string | null
+  linkUrl?: string | null
+  ctaLabel?: string | null
 }
