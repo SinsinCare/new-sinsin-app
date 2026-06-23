@@ -60,6 +60,36 @@ export interface CommunityPostVote {
   myVote: number[] | null
 }
 
+export interface CommunityCommentApi {
+  id: string | number
+  postId: string | number
+  parentCommentId?: string | number | null
+  authorId?: number | null
+  authorName: string
+  content: string
+  likes: number
+  liked: boolean
+  isDeleted: boolean
+  createdAt: string | number | Date
+  updatedAt?: string | number | Date
+  replies?: CommunityCommentApi[]
+}
+
+export interface CommunityComment {
+  id: string
+  postId: string
+  parentCommentId: string | null
+  authorId?: number | null
+  authorName: string
+  content: string
+  likes: number
+  liked: boolean
+  isDeleted: boolean
+  createdAt: Date
+  updatedAt?: Date
+  replies: CommunityComment[]
+}
+
 /** Backend / API payload before mapping to {@link CommunityMealPost}. */
 export interface CommunityMealPostApi {
   id: string | number
@@ -134,6 +164,25 @@ export interface ICommunityPostService {
   castVote(postId: string, optionIds: number[]): Promise<CommunityPostVote>
   reportPost(
     postId: string,
+    reason: string,
+    description?: string,
+  ): Promise<void>
+  getComments(postId: string): Promise<CommunityComment[]>
+  createComment(
+    postId: string,
+    content: string,
+    parentCommentId?: string | null,
+  ): Promise<CommunityComment>
+  updateComment(
+    postId: string,
+    commentId: string,
+    content: string,
+  ): Promise<CommunityComment>
+  deleteComment(postId: string, commentId: string): Promise<void>
+  toggleCommentLike(postId: string, commentId: string): Promise<void>
+  reportComment(
+    postId: string,
+    commentId: string,
     reason: string,
     description?: string,
   ): Promise<void>

@@ -1,4 +1,5 @@
 import { THUMB_SIZE } from "../data/foodEditConstants"
+import type { FoodAnalysisUpdateRequest } from "@/src/types"
 
 export function getInitialEatenStep(
   eatenPercentage: number | undefined,
@@ -10,4 +11,38 @@ export function getInitialEatenStep(
 
 export function calcThumbPosition(step: number, trackWidth: number): number {
   return ((2 * step + 1) / 8) * trackWidth - THUMB_SIZE / 2
+}
+
+export function validateMealTitle(title: string): {
+  isValid: boolean
+  message: string
+} {
+  if (!title.trim()) {
+    return { isValid: false, message: "식단 이름을 입력해주세요" }
+  }
+  return { isValid: true, message: "" }
+}
+
+export interface EditableFoodItem {
+  id?: number
+  name: string
+  amount: string
+  unit: string
+}
+
+export function buildFoodAnalysisUpdateRequest(input: {
+  servings: number
+  eatenPercentage: number
+  foods: EditableFoodItem[]
+}): FoodAnalysisUpdateRequest {
+  return {
+    servings: input.servings,
+    eatenPercentage: input.eatenPercentage,
+    foods: input.foods.map((food) => ({
+      foodId: food.id,
+      name: food.name.trim(),
+      servingSizeValue: Number(food.amount) || 0,
+      servingSizeUnit: food.unit,
+    })),
+  }
 }

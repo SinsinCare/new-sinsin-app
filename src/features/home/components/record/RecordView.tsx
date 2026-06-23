@@ -31,6 +31,7 @@ import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { toDateStr } from "../../utils/dateUtils"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -221,14 +222,13 @@ export function RecordView({
   const handleSkipMeal = async () => {
     const mealType = recordingMealTypeRef.current
     if (!mealType) return
-    setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
     try {
       await foodCameraService.skipMeal(toDateStr(selectedDate), mealType)
+      setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
       await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
       await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
-    } catch {
-      setRecordedMeals((prev) => ({ ...prev, [mealType]: false }))
-      Alert.alert("오류", "기록에 실패했습니다. 다시 시도해주세요.")
+    } catch (error) {
+      Alert.alert("오류", getErrorMessage(error))
     }
   }
 

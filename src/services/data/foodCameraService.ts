@@ -119,7 +119,14 @@ export const foodCameraService = {
   },
 
   async skipMeal(date: string, mealType: string): Promise<void> {
-    await api.post("/food-camera/skip-meal", { date, mealType })
+    try {
+      await api.post("/food-camera/skip-meal", { date, mealType })
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
   },
 
   async fetchDateAnalysis(date: string): Promise<DateAnalysisResponse> {

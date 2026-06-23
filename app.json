@@ -10,17 +10,13 @@
       "image": "./assets/splash.png",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "buildNumber": "4",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
-      "associatedDomains": [
-        "applinks:sinsin.mediology.ai"
-      ],
+      "associatedDomains": ["applinks:sinsin.mediology.ai"],
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "신신당부",
@@ -59,10 +55,7 @@
               "pathPrefix": "/password-edit"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -108,7 +101,8 @@
             "kakaotalkLoginEnabled": true
           },
           "ios": {
-            "kakaotalkLoginEnabled": true
+            "kakaotalkLoginEnabled": true,
+            "handleKakaoOpenUrl": true
           }
         }
       ],

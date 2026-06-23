@@ -6,7 +6,9 @@ import {
   Alert,
   Image,
   Platform,
+  TextInput,
 } from "react-native"
+import { useState } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
@@ -20,6 +22,7 @@ import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import type { CommunityComment } from "@/src/features/recipe/types"
 
 const BG = {
   light: tokens.color.offWhite.val,
@@ -73,9 +76,28 @@ export default function PostDetailScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const scheme = useAppColorScheme()
+  const [commentText, setCommentText] = useState("")
+  const [replyingTo, setReplyingTo] = useState<CommunityComment | null>(null)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
 
-  const { post, isLoading, isError, error, refetch, castVoteAsync, isVoting } =
-    usePostDetail(id!)
+  const {
+    post,
+    comments,
+    isLoading,
+    isCommentsLoading,
+    isError,
+    error,
+    refetch,
+    castVoteAsync,
+    isVoting,
+    createComment,
+    updateComment,
+    deleteComment,
+    toggleCommentLike,
+    reportComment,
+    isCreatingComment,
+    isUpdatingComment,
+  } = usePostDetail(id!)
   const { posts, toggleLike, toggleBookmark, deletePost, reportPost } =
     useCommunityPosts()
 
@@ -182,6 +204,192 @@ export default function PostDetailScreen() {
       params: { tab: "free", tag },
     } as Href)
   }
+
+  const handleSubmitComment = async () => {
+    const content = commentText.trim()
+    if (!content) return
+    try {
+      if (editingCommentId) {
+        await updateComment({ commentId: editingCommentId, content })
+        setEditingCommentId(null)
+      } else {
+        await createComment({
+          content,
+          parentCommentId: replyingTo?.id ?? null,
+        })
+        setReplyingTo(null)
+      }
+      setCommentText("")
+    } catch (commentError) {
+      Alert.alert("댓글 저장 실패", getErrorMessage(commentError))
+    }
+  }
+
+  const handleCommentReport = async (comment: CommunityComment) => {
+    const reasons: { label: string; value: string }[] = [
+      { label: "스팸/광고", value: "SPAM" },
+      { label: "괴롭힘/혐오 표현", value: "HARASSMENT" },
+      { label: "부적절한 콘텐츠", value: "INAPPROPRIATE_CONTENT" },
+      { label: "거짓 정보", value: "FALSE_INFORMATION" },
+      { label: "기타", value: "OTHER" },
+    ]
+    Alert.alert("신고 사유를 선택해주세요", undefined, [
+      ...reasons.map((r) => ({
+        text: r.label,
+        onPress: async () => {
+          try {
+            await reportComment({ commentId: comment.id, reason: r.value })
+            Alert.alert("신고 완료", "신고가 접수되었습니다.")
+          } catch (commentError) {
+            Alert.alert("신고 실패", getErrorMessage(commentError))
+          }
+        },
+      })),
+      { text: "취소", style: "cancel" },
+    ])
+  }
+
+  const handleDeleteComment = (comment: CommunityComment) => {
+    Alert.alert("댓글 삭제", "이 댓글을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteComment(comment.id)
+          } catch (commentError) {
+            Alert.alert("댓글 삭제 실패", getErrorMessage(commentError))
+          }
+        },
+      },
+    ])
+  }
+
+  const handleCommentMore = (comment: CommunityComment) => {
+    if (comment.isDeleted) return
+    const startReply = () => {
+      setReplyingTo(comment)
+      setEditingCommentId(null)
+      setCommentText("")
+    }
+    const startEdit = () => {
+      setEditingCommentId(comment.id)
+      setReplyingTo(null)
+      setCommentText(comment.content)
+    }
+    const options = ["답글", "수정", "삭제", "신고", "취소"]
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: 4,
+          destructiveButtonIndex: 2,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) startReply()
+          else if (buttonIndex === 1) startEdit()
+          else if (buttonIndex === 2) handleDeleteComment(comment)
+          else if (buttonIndex === 3) handleCommentReport(comment)
+        },
+      )
+      return
+    }
+    Alert.alert("댓글", undefined, [
+      { text: "답글", onPress: startReply },
+      { text: "수정", onPress: startEdit },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () => handleDeleteComment(comment),
+      },
+      { text: "신고", onPress: () => handleCommentReport(comment) },
+      { text: "취소", style: "cancel" },
+    ])
+  }
+
+  const handleToggleCommentLike = async (comment: CommunityComment) => {
+    if (comment.isDeleted) return
+    try {
+      await toggleCommentLike(comment.id)
+    } catch (commentError) {
+      Alert.alert("좋아요 실패", getErrorMessage(commentError))
+    }
+  }
+
+  const renderComment = (comment: CommunityComment, isReply = false) => (
+    <YStack
+      key={comment.id}
+      marginLeft={isReply ? 28 : 0}
+      paddingVertical={12}
+      gap={6}
+    >
+      <XStack justifyContent="space-between" gap={12}>
+        <YStack flex={1} gap={3}>
+          <XStack gap={6} alignItems="center">
+            <Text
+              fontSize={13}
+              fontWeight="600"
+              color={AUTHOR_NAME[scheme]}
+              fontFamily="$body"
+            >
+              {comment.authorName}
+            </Text>
+            <Text fontSize={12} color={MUTED_TEXT[scheme]} fontFamily="$body">
+              {formatTimeAgo(comment.createdAt)}
+            </Text>
+          </XStack>
+          <Text
+            fontSize={14}
+            lineHeight={21}
+            color={comment.isDeleted ? MUTED_TEXT[scheme] : BODY_COLOR[scheme]}
+            fontFamily="$body"
+          >
+            {comment.content}
+          </Text>
+        </YStack>
+        {!comment.isDeleted && (
+          <Pressable hitSlop={8} onPress={() => handleCommentMore(comment)}>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={18}
+              color={MUTED_TEXT[scheme]}
+            />
+          </Pressable>
+        )}
+      </XStack>
+      {!comment.isDeleted && (
+        <XStack gap={14}>
+          <Pressable onPress={() => handleToggleCommentLike(comment)}>
+            <XStack gap={4} alignItems="center">
+              <Ionicons
+                name={comment.liked ? "heart" : "heart-outline"}
+                size={16}
+                color={LIKE_COLOR[scheme]}
+              />
+              <Text fontSize={12} color={LIKE_COLOR[scheme]}>
+                {comment.likes}
+              </Text>
+            </XStack>
+          </Pressable>
+          {!isReply && (
+            <Pressable
+              onPress={() => {
+                setReplyingTo(comment)
+                setEditingCommentId(null)
+                setCommentText("")
+              }}
+            >
+              <Text fontSize={12} color={MUTED_TEXT[scheme]}>
+                답글
+              </Text>
+            </Pressable>
+          )}
+        </XStack>
+      )}
+      {comment.replies.map((reply) => renderComment(reply, true))}
+    </YStack>
+  )
 
   if (isError) {
     return (
@@ -416,6 +624,90 @@ export default function PostDetailScreen() {
           backgroundColor={DIVIDER[scheme]}
         />
 
+        <YStack paddingHorizontal={20} paddingVertical={18} gap={12}>
+          <Text
+            fontSize={16}
+            fontWeight="700"
+            color={TITLE_COLOR[scheme]}
+            fontFamily="$body"
+          >
+            댓글 {post.comments}
+          </Text>
+          {isCommentsLoading ? (
+            <Text fontSize={14} color={MUTED_TEXT[scheme]} fontFamily="$body">
+              댓글을 불러오는 중...
+            </Text>
+          ) : (
+            comments.map((comment) => renderComment(comment))
+          )}
+          {(replyingTo || editingCommentId) && (
+            <XStack
+              backgroundColor={DIVIDER[scheme]}
+              borderRadius={8}
+              paddingHorizontal={10}
+              paddingVertical={8}
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Text fontSize={12} color={MUTED_TEXT[scheme]}>
+                {editingCommentId
+                  ? "댓글 수정"
+                  : `${replyingTo?.authorName}님에게 답글`}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setReplyingTo(null)
+                  setEditingCommentId(null)
+                  setCommentText("")
+                }}
+              >
+                <Text fontSize={12} color={LIKE_COLOR[scheme]}>
+                  취소
+                </Text>
+              </Pressable>
+            </XStack>
+          )}
+          <XStack
+            borderWidth={1}
+            borderColor={DIVIDER[scheme]}
+            borderRadius={8}
+            paddingHorizontal={12}
+            paddingVertical={8}
+            alignItems="center"
+            gap={10}
+          >
+            <TextInput
+              value={commentText}
+              onChangeText={setCommentText}
+              placeholder="댓글을 입력하세요"
+              placeholderTextColor={MUTED_TEXT[scheme]}
+              multiline
+              style={[styles.commentInput, { color: BODY_COLOR[scheme] }]}
+            />
+            <Pressable
+              onPress={handleSubmitComment}
+              disabled={
+                isCreatingComment || isUpdatingComment || !commentText.trim()
+              }
+            >
+              <Text
+                fontSize={14}
+                fontWeight="600"
+                color={
+                  commentText.trim() ? LIKE_COLOR[scheme] : MUTED_TEXT[scheme]
+                }
+              >
+                {editingCommentId ? "저장" : "등록"}
+              </Text>
+            </Pressable>
+          </XStack>
+        </YStack>
+
+        <View
+          height={StyleSheet.hairlineWidth}
+          backgroundColor={DIVIDER[scheme]}
+        />
+
         {/* Previous / Next Post Navigation */}
         {prevPost && (
           <>
@@ -503,5 +795,14 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 8,
+  },
+  commentInput: {
+    flex: 1,
+    minHeight: 36,
+    maxHeight: 96,
+    paddingTop: 0,
+    paddingBottom: 0,
+    fontSize: 14,
+    lineHeight: 20,
   },
 })

@@ -1,5 +1,6 @@
 import {
   Animated,
+  Alert,
   Image,
   Modal,
   ScrollView,
@@ -25,7 +26,11 @@ import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
 import { useFoodEdit } from "../hooks/useFoodEdit"
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
-import { getInitialEatenStep } from "../utils/foodEditUtils"
+import {
+  buildFoodAnalysisUpdateRequest,
+  getInitialEatenStep,
+  validateMealTitle,
+} from "../utils/foodEditUtils"
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -70,6 +75,7 @@ export function FoodResultEdit({
     thumbAnim,
     handleNameEdit,
     handleNameConfirm,
+    handleFoodNameChange,
     handleAmountChange,
     handleDelete,
     handleTrackTouch,
@@ -81,9 +87,18 @@ export function FoodResultEdit({
   const { updateFoodTitle } = useFoodAnalysis()
 
   const handleTitleEdit = async () => {
-    const newTitle = editingName.trim() || mealName
-    handleNameConfirm()
-    updateFoodTitle(result!.foodAnalysisResultId, newTitle)
+    if (!result) return
+    const validation = validateMealTitle(editingName)
+    if (!validation.isValid) {
+      Alert.alert("업데이트 실패", validation.message)
+      return
+    }
+    const newTitle = editingName.trim()
+    const response = await updateFoodTitle(
+      result.foodAnalysisResultId,
+      newTitle,
+    )
+    if (response) handleNameConfirm()
   }
   const isDarkMode = useAppColorScheme() === "dark"
   const textColor = isDarkMode
@@ -108,16 +123,11 @@ export function FoodResultEdit({
         )
       })
     if (!eatenPercentageChanged && !foodsChanged) return
-    const body: FoodAnalysisUpdateRequest = {
+    const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
       servings: result.servings,
       eatenPercentage: (eatenStep + 1) * 25,
-      foods: foods.map((f) => ({
-        foodId: f.id,
-        name: f.name,
-        servingSizeValue: Number(f.amount) || 1,
-        servingSizeUnit: f.unit,
-      })),
-    }
+      foods,
+    })
 
     const updated = await updateFoodAnalysis(result.foodAnalysisResultId, body)
     if (updated) onClose()
@@ -275,7 +285,7 @@ export function FoodResultEdit({
                     placeholder={result?.title}
                     placeholderTextColor={tokens.color.grey5.val}
                     returnKeyType="done"
-                    onSubmitEditing={handleNameConfirm}
+                    onSubmitEditing={handleTitleEdit}
                     style={{
                       fontSize: 14,
                       color: textColor,
@@ -422,14 +432,22 @@ export function FoodResultEdit({
               )}
               {foods.map((f, i) => (
                 <XStack key={i} alignItems="center" gap="$2">
-                  <Text
-                    fontWeight={500}
-                    fontSize={15}
-                    flex={1}
-                    color={isDarkMode ? "$textDark" : "$black"}
-                  >
-                    {f.name}
-                  </Text>
+                  <TextInput
+                    value={f.name}
+                    onChangeText={(v) => handleFoodNameChange(i, v)}
+                    placeholder="음식 이름"
+                    placeholderTextColor={tokens.color.grey5.val}
+                    style={{
+                      flex: 1,
+                      backgroundColor: inputBg,
+                      borderRadius: 10,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      fontSize: 15,
+                      fontWeight: "500",
+                      color: textColor,
+                    }}
+                  />
                   <TextInput
                     value={f.amount}
                     onChangeText={(v) => handleAmountChange(i, v)}

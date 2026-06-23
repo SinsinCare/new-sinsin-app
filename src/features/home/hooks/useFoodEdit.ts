@@ -64,6 +64,12 @@ export function useFoodEdit(
     )
   }
 
+  const handleFoodNameChange = (index: number, value: string) => {
+    setFoods((prev) =>
+      prev.map((f, i) => (i === index ? { ...f, name: value } : f)),
+    )
+  }
+
   const handleDelete = (index: number) => {
     setFoods((prev) => prev.filter((_, i) => i !== index))
   }
@@ -137,6 +143,7 @@ export function useFoodEdit(
     // handlers
     handleNameEdit,
     handleNameConfirm,
+    handleFoodNameChange,
     handleAmountChange,
     handleDelete,
     handleTrackTouch,
