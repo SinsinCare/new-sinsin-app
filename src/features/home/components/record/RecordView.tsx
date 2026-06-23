@@ -32,6 +32,7 @@ import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { toDateStr } from "../../utils/dateUtils"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { isSkippedDiet, toSkippedMealMap } from "../../utils/mealRecordUtils"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -102,6 +103,7 @@ export function RecordView({
   const apiRecordedMeals = Object.fromEntries(
     apiDiets.map((d) => [d.mealType, true]),
   ) as Partial<Record<MealType, boolean>>
+  const apiSkippedMeals = toSkippedMealMap(apiDiets)
   const apiMealTimes = Object.fromEntries(
     apiDiets.map((d) => {
       const date = new Date(d.createdAt + "Z")
@@ -222,6 +224,7 @@ export function RecordView({
   const handleSkipMeal = async () => {
     const mealType = recordingMealTypeRef.current
     if (!mealType) return
+    setIsOptionsSheetOpen(false)
     try {
       await foodCameraService.skipMeal(toDateStr(selectedDate), mealType)
       setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
@@ -267,6 +270,10 @@ export function RecordView({
   const handleViewMealResult = async (mealType: MealType) => {
     const diet = data?.result.diets.find((d) => d.mealType === mealType)
     if (!diet) return
+    if (diet.diaryId === null || isSkippedDiet(diet)) {
+      handleRecord(mealType)
+      return
+    }
     const result = await fetchDiaryResult(diet.diaryId)
     if (result) {
       setViewDiaryResult(result)
@@ -297,6 +304,7 @@ export function RecordView({
         onSelectMealType={onSelectMealType}
         mealImages={mergedMealImages}
         recordedMeals={mergedRecordedMeals}
+        skippedMeals={apiSkippedMeals}
         mealTimes={apiMealTimes}
         onRecord={handleRecord}
         onViewResult={handleViewMealResult}

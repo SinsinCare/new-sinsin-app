@@ -11,6 +11,7 @@ import {
 import { useState } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { KeyboardStickyView } from "react-native-keyboard-controller"
 import { Ionicons } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter, type Href } from "expo-router"
 import { Icon } from "@/src/shared/components/Icon"
@@ -76,6 +77,8 @@ export default function PostDetailScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const scheme = useAppColorScheme()
+  const bottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 16) : insets.bottom
   const [commentText, setCommentText] = useState("")
   const [replyingTo, setReplyingTo] = useState<CommunityComment | null>(null)
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
@@ -484,7 +487,9 @@ export default function PostDetailScreen() {
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        contentContainerStyle={{ paddingBottom: bottomInset + 96 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       >
         {/* Author */}
         <XStack
@@ -640,67 +645,6 @@ export default function PostDetailScreen() {
           ) : (
             comments.map((comment) => renderComment(comment))
           )}
-          {(replyingTo || editingCommentId) && (
-            <XStack
-              backgroundColor={DIVIDER[scheme]}
-              borderRadius={8}
-              paddingHorizontal={10}
-              paddingVertical={8}
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <Text fontSize={12} color={MUTED_TEXT[scheme]}>
-                {editingCommentId
-                  ? "댓글 수정"
-                  : `${replyingTo?.authorName}님에게 답글`}
-              </Text>
-              <Pressable
-                onPress={() => {
-                  setReplyingTo(null)
-                  setEditingCommentId(null)
-                  setCommentText("")
-                }}
-              >
-                <Text fontSize={12} color={LIKE_COLOR[scheme]}>
-                  취소
-                </Text>
-              </Pressable>
-            </XStack>
-          )}
-          <XStack
-            borderWidth={1}
-            borderColor={DIVIDER[scheme]}
-            borderRadius={8}
-            paddingHorizontal={12}
-            paddingVertical={8}
-            alignItems="center"
-            gap={10}
-          >
-            <TextInput
-              value={commentText}
-              onChangeText={setCommentText}
-              placeholder="댓글을 입력하세요"
-              placeholderTextColor={MUTED_TEXT[scheme]}
-              multiline
-              style={[styles.commentInput, { color: BODY_COLOR[scheme] }]}
-            />
-            <Pressable
-              onPress={handleSubmitComment}
-              disabled={
-                isCreatingComment || isUpdatingComment || !commentText.trim()
-              }
-            >
-              <Text
-                fontSize={14}
-                fontWeight="600"
-                color={
-                  commentText.trim() ? LIKE_COLOR[scheme] : MUTED_TEXT[scheme]
-                }
-              >
-                {editingCommentId ? "저장" : "등록"}
-              </Text>
-            </Pressable>
-          </XStack>
         </YStack>
 
         <View
@@ -786,6 +730,79 @@ export default function PostDetailScreen() {
           </>
         )}
       </ScrollView>
+      <KeyboardStickyView offset={{ closed: 0, opened: bottomInset }}>
+        <YStack
+          backgroundColor={BG[scheme]}
+          paddingHorizontal={20}
+          paddingTop={10}
+          paddingBottom={10 + bottomInset}
+          gap={8}
+          borderTopWidth={StyleSheet.hairlineWidth}
+          borderTopColor={DIVIDER[scheme]}
+        >
+          {(replyingTo || editingCommentId) && (
+            <XStack
+              backgroundColor={DIVIDER[scheme]}
+              borderRadius={8}
+              paddingHorizontal={10}
+              paddingVertical={8}
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Text fontSize={12} color={MUTED_TEXT[scheme]}>
+                {editingCommentId
+                  ? "댓글 수정"
+                  : `${replyingTo?.authorName}님에게 답글`}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setReplyingTo(null)
+                  setEditingCommentId(null)
+                  setCommentText("")
+                }}
+              >
+                <Text fontSize={12} color={LIKE_COLOR[scheme]}>
+                  취소
+                </Text>
+              </Pressable>
+            </XStack>
+          )}
+          <XStack
+            borderWidth={1}
+            borderColor={DIVIDER[scheme]}
+            borderRadius={8}
+            paddingHorizontal={12}
+            paddingVertical={8}
+            alignItems="center"
+            gap={10}
+          >
+            <TextInput
+              value={commentText}
+              onChangeText={setCommentText}
+              placeholder="댓글을 입력하세요"
+              placeholderTextColor={MUTED_TEXT[scheme]}
+              multiline
+              style={[styles.commentInput, { color: BODY_COLOR[scheme] }]}
+            />
+            <Pressable
+              onPress={handleSubmitComment}
+              disabled={
+                isCreatingComment || isUpdatingComment || !commentText.trim()
+              }
+            >
+              <Text
+                fontSize={14}
+                fontWeight="600"
+                color={
+                  commentText.trim() ? LIKE_COLOR[scheme] : MUTED_TEXT[scheme]
+                }
+              >
+                {editingCommentId ? "저장" : "등록"}
+              </Text>
+            </Pressable>
+          </XStack>
+        </YStack>
+      </KeyboardStickyView>
     </YStack>
   )
 }
