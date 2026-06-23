@@ -1,6 +1,8 @@
 import { api } from "@/src/services/core/apiClient"
 import { ApiError } from "@/src/services/core/apiError"
 import {
+  CommunityComment,
+  CommunityCommentApi,
   CommunityMealPost,
   CommunityMealPostApi,
   CommunityPostVote,
@@ -41,6 +43,28 @@ function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : undefined,
     tags: raw.tags ?? [],
     vote: mapVote(raw.vote),
+  }
+}
+
+export function mapCommunityComment(
+  raw: CommunityCommentApi,
+): CommunityComment {
+  return {
+    id: String(raw.id),
+    postId: String(raw.postId),
+    parentCommentId:
+      raw.parentCommentId === null || raw.parentCommentId === undefined
+        ? null
+        : String(raw.parentCommentId),
+    authorId: raw.authorId ?? null,
+    authorName: raw.authorName,
+    content: raw.content,
+    likes: Number(raw.likes ?? 0),
+    liked: raw.liked,
+    isDeleted: raw.isDeleted,
+    createdAt: new Date(raw.createdAt),
+    updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : undefined,
+    replies: (raw.replies ?? []).map(mapCommunityComment),
   }
 }
 
@@ -122,6 +146,62 @@ class CommunityPostService implements ICommunityPostService {
     description?: string,
   ): Promise<void> {
     await api.post(`/community/posts/${postId}/report`, { reason, description })
+  }
+
+  async getComments(postId: string): Promise<CommunityComment[]> {
+    const res = await api.get(`/community/posts/${postId}/comments`)
+    const list = (res.data.result ??
+      res.data.data ??
+      []) as CommunityCommentApi[]
+    return list.map(mapCommunityComment)
+  }
+
+  async createComment(
+    postId: string,
+    content: string,
+    parentCommentId?: string | null,
+  ): Promise<CommunityComment> {
+    const res = await api.post(`/community/posts/${postId}/comments`, {
+      content,
+      parentCommentId: parentCommentId ? Number(parentCommentId) : null,
+    })
+    return mapCommunityComment(
+      (res.data.result ?? res.data.data) as CommunityCommentApi,
+    )
+  }
+
+  async updateComment(
+    postId: string,
+    commentId: string,
+    content: string,
+  ): Promise<CommunityComment> {
+    const res = await api.patch(
+      `/community/posts/${postId}/comments/${commentId}`,
+      { content },
+    )
+    return mapCommunityComment(
+      (res.data.result ?? res.data.data) as CommunityCommentApi,
+    )
+  }
+
+  async deleteComment(postId: string, commentId: string): Promise<void> {
+    await api.delete(`/community/posts/${postId}/comments/${commentId}`)
+  }
+
+  async toggleCommentLike(postId: string, commentId: string): Promise<void> {
+    await api.post(`/community/posts/${postId}/comments/${commentId}/like`)
+  }
+
+  async reportComment(
+    postId: string,
+    commentId: string,
+    reason: string,
+    description?: string,
+  ): Promise<void> {
+    await api.post(`/community/posts/${postId}/comments/${commentId}/report`, {
+      reason,
+      description,
+    })
   }
 }
 
