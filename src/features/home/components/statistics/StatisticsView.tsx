@@ -26,6 +26,7 @@ import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import type { DiaryAnalysisResult } from "@/src/types"
 import { Icon } from "@/src/shared/components"
 import { MonthCalendarSheet } from "./MonthCalendarSheet"
+import { isSkippedDiet } from "../../utils/mealRecordUtils"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -92,6 +93,10 @@ export function StatisticsView({
   const handleDietCardPress = async (mealType: MealType) => {
     const diet = data?.result.diets.find((d) => d.mealType === mealType)
     if (!diet) return
+    if (diet.diaryId === null || isSkippedDiet(diet)) {
+      onGoToRecord()
+      return
+    }
     const result = await fetchDiaryResult(diet.diaryId)
     if (result) {
       setDiaryResult(result)

@@ -14,11 +14,13 @@ import { MealButton } from "./MealButton"
 import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
 import { MEAL_OPTIONS } from "../../data/mealConstants"
+import { getMealButtonAction } from "../../utils/mealRecordUtils"
 
 interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
   mealImages?: Partial<Record<MealType, string>>
   recordedMeals?: Partial<Record<MealType, boolean>>
+  skippedMeals?: Partial<Record<MealType, boolean>>
   mealTimes?: Partial<Record<MealType, string>>
   onRecord: (mealType: MealType) => void
   onViewResult: (mealType: MealType) => void
@@ -28,6 +30,7 @@ export function MealButtons({
   onSelectMealType,
   mealImages = {},
   recordedMeals = {},
+  skippedMeals = {},
   mealTimes = {},
   onRecord,
   onViewResult,
@@ -83,18 +86,25 @@ export function MealButtons({
         </Text>
       </YStack>
       <XStack gap="$2">
-        {mealTypes.map((type) => (
-          <MealButton
-            key={type}
-            mealType={type}
-            onPress={
-              recordedMeals[type] ? () => onViewResult(type) : () => onRecord(type)
-            }
-            imageUri={mealImages[type]}
-            isRecorded={recordedMeals[type] ?? false}
-            time={mealTimes[type]}
-          />
-        ))}
+        {mealTypes.map((type) => {
+          const isRecorded = recordedMeals[type] ?? false
+          const isSkipped = skippedMeals[type] ?? false
+          const action = getMealButtonAction({ isRecorded, isSkipped })
+          return (
+            <MealButton
+              key={type}
+              mealType={type}
+              onPress={
+                action === "view"
+                  ? () => onViewResult(type)
+                  : () => onRecord(type)
+              }
+              imageUri={mealImages[type]}
+              isRecorded={isRecorded}
+              time={mealTimes[type]}
+            />
+          )
+        })}
       </XStack>
 
       <Modal

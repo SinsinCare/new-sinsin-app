@@ -73,10 +73,11 @@ export interface FoodCameraDiaryRegisterResponse {
 }
 
 export interface DateAnalysisDiet {
-  diaryId: number
+  diaryId: number | null
   mealType: MealType
   createdAt: string
-  imageUrl: string
+  imageUrl: string | null
+  isSkipped?: boolean
 }
 
 export interface DateAnalysisBodyRecord {
