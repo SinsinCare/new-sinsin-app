@@ -1,21 +1,30 @@
 import { Text, YStack } from "tamagui"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { BloodPressureRecord } from "./BloodPressureRecord"
 import { BloodGlucoseRecord } from "./BloodGlucoseRecord"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useBloodMetricsRecord } from "../../hooks/useBloodMetricsRecord"
+import { toDateStr } from "../../utils/dateUtils"
+import { parseVital } from "../../utils/vitalsJudgment"
 import type {
   GlucoseTiming,
   GlucoseElapsed,
 } from "../../data/bloodMetricsConstants"
+import type { DateAnalysisResult } from "@/src/types"
 
 interface BloodMetricsTrackerProps {
   selectedDate: Date
+  dateAnalysis?: DateAnalysisResult
 }
 
 export function BloodMetricsTracker({
   selectedDate,
+  dateAnalysis,
 }: BloodMetricsTrackerProps) {
   const isDarkMode = useAppColorScheme() === "dark"
+  const { updateBloodPressure, updateBloodGlucose } = useBloodMetricsRecord()
+  const selectedDateStr = toDateStr(selectedDate)
+  const hydratedDateRef = useRef<string | null>(null)
 
   // Blood pressure
   const [systolic, setSystolic] = useState("")
@@ -23,28 +32,96 @@ export function BloodMetricsTracker({
   const [heartRate, setHeartRate] = useState("")
 
   // Blood glucose
-  const [glucose, setGlucose] = useState("")
   const [timing, setTiming] = useState<GlucoseTiming>("FASTING")
-  const [elapsed, setElapsed] = useState<GlucoseElapsed>("2H")
+  const [glucoseByTiming, setGlucoseByTiming] = useState<
+    Partial<Record<GlucoseTiming, { value: string; elapsed: GlucoseElapsed }>>
+  >({})
+  const currentGlucoseRecord = glucoseByTiming[timing]
+  const glucose = currentGlucoseRecord?.value ?? ""
+  const elapsed = currentGlucoseRecord?.elapsed ?? "2H"
 
-  // Reset inputs when the selected date changes.
-  // TODO: hydrate from / persist to backend once body-records supports
-  // blood pressure and glucose fields.
   useEffect(() => {
-    setSystolic("")
-    setDiastolic("")
-    setHeartRate("")
-    setGlucose("")
-    setTiming("FASTING")
-    setElapsed("2H")
-  }, [selectedDate])
+    const isNewDate = hydratedDateRef.current !== selectedDateStr
+    const pressure = dateAnalysis?.bloodPressure
+    setSystolic(pressure ? String(pressure.systolic) : "")
+    setDiastolic(pressure ? String(pressure.diastolic) : "")
+    setHeartRate(pressure?.heartRate != null ? String(pressure.heartRate) : "")
+
+    const nextGlucose = Object.fromEntries(
+      (dateAnalysis?.bloodGlucose ?? []).map((record) => [
+        record.timing,
+        {
+          value: String(record.value),
+          elapsed: record.elapsed ?? "2H",
+        },
+      ]),
+    ) as Partial<
+      Record<GlucoseTiming, { value: string; elapsed: GlucoseElapsed }>
+    >
+    setGlucoseByTiming(nextGlucose)
+    if (isNewDate) {
+      setTiming(
+        (["FASTING", "BEFORE_MEAL", "AFTER_MEAL"] as GlucoseTiming[]).find(
+          (option) => nextGlucose[option]?.value,
+        ) ?? "FASTING",
+      )
+    }
+    hydratedDateRef.current = selectedDateStr
+  }, [dateAnalysis, selectedDateStr])
 
   const handleBloodPressureSave = () => {
-    // Persisted locally for now; wire to backend when supported.
+    const systolicValue = parseVital(systolic)
+    const diastolicValue = parseVital(diastolic)
+    const heartRateValue = parseVital(heartRate)
+    if (systolicValue === null || diastolicValue === null) return
+
+    updateBloodPressure({
+      systolic: Math.trunc(systolicValue),
+      diastolic: Math.trunc(diastolicValue),
+      heartRate: heartRateValue === null ? null : Math.trunc(heartRateValue),
+      date: selectedDateStr,
+    })
   }
 
-  const handleGlucoseSave = () => {
-    // Persisted locally for now; wire to backend when supported.
+  const handleChangeGlucose = (value: string) => {
+    setGlucoseByTiming((prev) => ({
+      ...prev,
+      [timing]: {
+        value,
+        elapsed,
+      },
+    }))
+  }
+
+  const handleChangeTiming = (nextTiming: GlucoseTiming) => {
+    setTiming(nextTiming)
+  }
+
+  const handleChangeElapsed = (nextElapsed: GlucoseElapsed) => {
+    setGlucoseByTiming((prev) => ({
+      ...prev,
+      [timing]: {
+        value: glucose,
+        elapsed: nextElapsed,
+      },
+    }))
+    handleGlucoseSave(timing, nextElapsed)
+  }
+
+  const handleGlucoseSave = (
+    targetTiming: GlucoseTiming = timing,
+    targetElapsed: GlucoseElapsed = elapsed,
+  ) => {
+    const targetRecord = glucoseByTiming[targetTiming]
+    const glucoseValue = parseVital(targetRecord?.value ?? "")
+    if (glucoseValue === null) return
+
+    updateBloodGlucose({
+      value: Math.trunc(glucoseValue),
+      timing: targetTiming,
+      elapsed: targetTiming === "AFTER_MEAL" ? targetElapsed : null,
+      date: selectedDateStr,
+    })
   }
 
   return (
@@ -71,9 +148,9 @@ export function BloodMetricsTracker({
         glucose={glucose}
         timing={timing}
         elapsed={elapsed}
-        onChangeGlucose={setGlucose}
-        onChangeTiming={setTiming}
-        onChangeElapsed={setElapsed}
+        onChangeGlucose={handleChangeGlucose}
+        onChangeTiming={handleChangeTiming}
+        onChangeElapsed={handleChangeElapsed}
         onSave={handleGlucoseSave}
       />
     </YStack>

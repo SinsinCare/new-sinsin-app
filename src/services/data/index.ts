@@ -1,6 +1,7 @@
 export { onboardingService } from "./onboardingService"
 export { chatApiService } from "./chatApiService"
 export { foodCameraService } from "./foodCameraService"
+export { bloodMetricsService } from "./bloodMetricsService"
 export { nhisService } from "./nhisService"
 export { examOcrService, getOcrErrorMessage } from "./examOcrService"
 export { mealRecommendationService } from "./mealRecommendationService"
