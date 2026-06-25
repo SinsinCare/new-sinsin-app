@@ -1,4 +1,6 @@
-import { ScrollView, StyleSheet, Alert } from "react-native"
+import { StyleSheet, Alert, Platform } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import type {
   DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
@@ -45,6 +47,7 @@ export function RecordView({
   onSelectDate,
   onSelectMealType,
 }: RecordViewProps) {
+  const insets = useSafeAreaInsets()
   const record = useHomeRecord(selectedDate)
   const [viewDiaryResult, setViewDiaryResult] =
     useState<DiaryAnalysisResult | null>(null)
@@ -283,9 +286,16 @@ export function RecordView({
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: insets.bottom + 32 },
+      ]}
+      bottomOffset={insets.bottom + 48}
+      disableScrollOnKeyboardHide
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
     >
       <View height={10} />
 
@@ -398,7 +408,7 @@ export function RecordView({
         selectedDate={selectedDate}
         dateAnalysis={data?.result}
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   )
 }
 

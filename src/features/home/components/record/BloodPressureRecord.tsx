@@ -5,10 +5,8 @@ import { RecordCard } from "./RecordCard"
 import { tokens } from "@/src/theme/tokens"
 import {
   BP_PLACEHOLDER,
-  VITAL_RANGE,
   VITAL_STATUS_LABEL,
 } from "../../data/bloodMetricsConstants"
-import { VitalRangeIndicator } from "./VitalRangeIndicator"
 import {
   judgeBloodPressure,
   parseVital,
@@ -105,16 +103,6 @@ export function BloodPressureRecord({
         </XStack>
 
         <View style={[styles.divider, { backgroundColor: dividerColor }]} />
-
-        <VitalRangeIndicator
-          status={status}
-          value={systolicValue}
-          min={VITAL_RANGE.systolic.min}
-          max={VITAL_RANGE.systolic.max}
-          defaultValue={VITAL_RANGE.systolic.defaultValue}
-          color={statusStyle.indicatorColor}
-          trackColor={statusStyle.trackColor}
-        />
 
         {/* Heart rate row */}
         <XStack alignItems="center" justifyContent="center" gap="$3">
