@@ -394,7 +394,10 @@ export function RecordView({
         selectedDate={selectedDate}
       />
 
-      <BloodMetricsTracker selectedDate={selectedDate} />
+      <BloodMetricsTracker
+        selectedDate={selectedDate}
+        dateAnalysis={data?.result}
+      />
     </ScrollView>
   )
 }

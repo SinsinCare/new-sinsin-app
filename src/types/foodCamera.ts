@@ -86,6 +86,20 @@ export interface DateAnalysisBodyRecord {
   recordDate: string
 }
 
+export interface DateAnalysisBloodPressureRecord {
+  systolic: number
+  diastolic: number
+  heartRate: number | null
+  recordDate: string
+}
+
+export interface DateAnalysisBloodGlucoseRecord {
+  value: number
+  timing: "FASTING" | "BEFORE_MEAL" | "AFTER_MEAL"
+  elapsed: "30M" | "1H" | "2H" | null
+  recordDate: string
+}
+
 export interface DateAnalysis {
   protein: number
   sodium: number
@@ -104,6 +118,8 @@ export interface DateAnalysisResult {
     today: DateAnalysisBodyRecord | null
     previous: DateAnalysisBodyRecord | null
   }
+  bloodPressure: DateAnalysisBloodPressureRecord | null
+  bloodGlucose: DateAnalysisBloodGlucoseRecord[]
 }
 
 export interface DateAnalysisResponse {

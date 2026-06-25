@@ -3,7 +3,17 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { RecordCard } from "./RecordCard"
 import { tokens } from "@/src/theme/tokens"
-import { BP_PLACEHOLDER } from "../../data/bloodMetricsConstants"
+import {
+  BP_PLACEHOLDER,
+  VITAL_RANGE,
+  VITAL_STATUS_LABEL,
+} from "../../data/bloodMetricsConstants"
+import { VitalRangeIndicator } from "./VitalRangeIndicator"
+import {
+  judgeBloodPressure,
+  parseVital,
+  type VitalStatus,
+} from "../../utils/vitalsJudgment"
 
 interface BloodPressureRecordProps {
   systolic: string
@@ -33,6 +43,10 @@ export function BloodPressureRecord({
   const dividerColor = isDarkMode
     ? tokens.color.borderDark.val
     : tokens.color.borderLight.val
+  const systolicValue = parseVital(systolic)
+  const diastolicValue = parseVital(diastolic)
+  const status = judgeBloodPressure(systolicValue, diastolicValue)
+  const statusStyle = getStatusStyle(status, isDarkMode)
 
   return (
     <RecordCard
@@ -50,13 +64,13 @@ export function BloodPressureRecord({
         {/* Blood pressure value row */}
         <XStack alignItems="center" gap="$3">
           <XStack
-            backgroundColor={isDarkMode ? "$appBgDark" : "$backgroundFocus"}
+            backgroundColor={statusStyle.backgroundColor}
             paddingVertical="$1.5"
             paddingHorizontal="$3"
             borderRadius="$4"
           >
-            <Text fontSize="$4" fontWeight="600" color={labelColor}>
-              ----
+            <Text fontSize="$4" fontWeight="600" color={statusStyle.textColor}>
+              {VITAL_STATUS_LABEL[status]}
             </Text>
           </XStack>
 
@@ -92,6 +106,16 @@ export function BloodPressureRecord({
 
         <View style={[styles.divider, { backgroundColor: dividerColor }]} />
 
+        <VitalRangeIndicator
+          status={status}
+          value={systolicValue}
+          min={VITAL_RANGE.systolic.min}
+          max={VITAL_RANGE.systolic.max}
+          defaultValue={VITAL_RANGE.systolic.defaultValue}
+          color={statusStyle.indicatorColor}
+          trackColor={statusStyle.trackColor}
+        />
+
         {/* Heart rate row */}
         <XStack alignItems="center" justifyContent="center" gap="$3">
           <Text fontSize="$4" fontWeight="500" color={labelColor}>
@@ -115,6 +139,49 @@ export function BloodPressureRecord({
       </YStack>
     </RecordCard>
   )
+}
+
+function getStatusStyle(status: VitalStatus, isDarkMode: boolean) {
+  if (status === "normal") {
+    return {
+      backgroundColor: isDarkMode
+        ? tokens.color.waterPercentBgDark.val
+        : tokens.color.waterPercentBg.val,
+      textColor: isDarkMode
+        ? tokens.color.textDark.val
+        : tokens.color.waterFillBottom.val,
+      indicatorColor: tokens.color.waterFillBottom.val,
+      trackColor: isDarkMode
+        ? tokens.color.borderDark.val
+        : tokens.color.waterPercentBg.val,
+    }
+  }
+  if (status === "caution") {
+    return {
+      backgroundColor: isDarkMode
+        ? tokens.color.primary7.val
+        : tokens.color.primary1.val,
+      textColor: isDarkMode
+        ? tokens.color.pureWhite.val
+        : tokens.color.primary8.val,
+      indicatorColor: tokens.color.primary8.val,
+      trackColor: isDarkMode
+        ? tokens.color.borderDark.val
+        : tokens.color.primary2.val,
+    }
+  }
+  return {
+    backgroundColor: isDarkMode
+      ? tokens.color.appBgDark.val
+      : tokens.color.grey8.val,
+    textColor: isDarkMode
+      ? tokens.color.textDarkSub.val
+      : tokens.color.grey5.val,
+    indicatorColor: tokens.color.grey6.val,
+    trackColor: isDarkMode
+      ? tokens.color.borderDark.val
+      : tokens.color.grey8.val,
+  }
 }
 
 const styles = StyleSheet.create({
