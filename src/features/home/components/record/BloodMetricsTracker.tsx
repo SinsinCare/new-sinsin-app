@@ -62,16 +62,10 @@ export function BloodMetricsTracker({
       glucoseSaveTimeoutRef.current = null
     }
 
-    // 혈압 필드도 혈당과 동일하게: 같은 날짜 refetch(자체 저장 invalidate)엔
-    // 입력 중인 값을 덮지 않고, 날짜가 바뀔 때만 서버값으로 hydrate.
-    if (isNewDate) {
-      const pressure = dateAnalysis?.bloodPressure
-      setSystolic(pressure ? String(pressure.systolic) : "")
-      setDiastolic(pressure ? String(pressure.diastolic) : "")
-      setHeartRate(
-        pressure?.heartRate != null ? String(pressure.heartRate) : "",
-      )
-    }
+    const pressure = dateAnalysis?.bloodPressure
+    setSystolic(pressure ? String(pressure.systolic) : "")
+    setDiastolic(pressure ? String(pressure.diastolic) : "")
+    setHeartRate(pressure?.heartRate != null ? String(pressure.heartRate) : "")
 
     const nextGlucose = mergeBloodGlucoseDraftFromAnalysis(
       dateAnalysis?.bloodGlucose ?? [],
