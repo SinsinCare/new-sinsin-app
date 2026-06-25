@@ -35,8 +35,3 @@ export const VITAL_STATUS_LABEL = {
   caution: "주의",
   none: "----",
 } as const
-
-export const VITAL_RANGE = {
-  systolic: { min: 60, max: 200, defaultValue: 100 },
-  glucose: { min: 40, max: 300, defaultValue: 100 },
-} as const

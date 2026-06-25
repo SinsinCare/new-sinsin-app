@@ -5,6 +5,11 @@ import { BloodGlucoseRecord } from "./BloodGlucoseRecord"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useBloodMetricsRecord } from "../../hooks/useBloodMetricsRecord"
 import { toDateStr } from "../../utils/dateUtils"
+import {
+  getInitialGlucoseTiming,
+  mergeBloodGlucoseDraftFromAnalysis,
+  type BloodGlucoseDraft,
+} from "../../utils/bloodGlucoseDraft"
 import { parseVital } from "../../utils/vitalsJudgment"
 import type {
   GlucoseTiming,
@@ -25,6 +30,10 @@ export function BloodMetricsTracker({
   const { updateBloodPressure, updateBloodGlucose } = useBloodMetricsRecord()
   const selectedDateStr = toDateStr(selectedDate)
   const hydratedDateRef = useRef<string | null>(null)
+  const glucoseDraftRef = useRef<BloodGlucoseDraft>({})
+  const glucoseSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
 
   // Blood pressure
   const [systolic, setSystolic] = useState("")
@@ -33,41 +42,53 @@ export function BloodMetricsTracker({
 
   // Blood glucose
   const [timing, setTiming] = useState<GlucoseTiming>("FASTING")
-  const [glucoseByTiming, setGlucoseByTiming] = useState<
-    Partial<Record<GlucoseTiming, { value: string; elapsed: GlucoseElapsed }>>
-  >({})
+  const [glucoseByTiming, setGlucoseByTiming] = useState<BloodGlucoseDraft>({})
   const currentGlucoseRecord = glucoseByTiming[timing]
   const glucose = currentGlucoseRecord?.value ?? ""
   const elapsed = currentGlucoseRecord?.elapsed ?? "2H"
 
   useEffect(() => {
+    return () => {
+      if (glucoseSaveTimeoutRef.current) {
+        clearTimeout(glucoseSaveTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     const isNewDate = hydratedDateRef.current !== selectedDateStr
+    if (isNewDate && glucoseSaveTimeoutRef.current) {
+      clearTimeout(glucoseSaveTimeoutRef.current)
+      glucoseSaveTimeoutRef.current = null
+    }
+
     const pressure = dateAnalysis?.bloodPressure
     setSystolic(pressure ? String(pressure.systolic) : "")
     setDiastolic(pressure ? String(pressure.diastolic) : "")
     setHeartRate(pressure?.heartRate != null ? String(pressure.heartRate) : "")
 
-    const nextGlucose = Object.fromEntries(
-      (dateAnalysis?.bloodGlucose ?? []).map((record) => [
-        record.timing,
-        {
-          value: String(record.value),
-          elapsed: record.elapsed ?? "2H",
-        },
-      ]),
-    ) as Partial<
-      Record<GlucoseTiming, { value: string; elapsed: GlucoseElapsed }>
-    >
+    const nextGlucose = mergeBloodGlucoseDraftFromAnalysis(
+      dateAnalysis?.bloodGlucose ?? [],
+      glucoseDraftRef.current,
+      { isNewDate },
+    )
+    glucoseDraftRef.current = nextGlucose
     setGlucoseByTiming(nextGlucose)
     if (isNewDate) {
-      setTiming(
-        (["FASTING", "BEFORE_MEAL", "AFTER_MEAL"] as GlucoseTiming[]).find(
-          (option) => nextGlucose[option]?.value,
-        ) ?? "FASTING",
-      )
+      setTiming(getInitialGlucoseTiming(nextGlucose))
     }
     hydratedDateRef.current = selectedDateStr
   }, [dateAnalysis, selectedDateStr])
+
+  const setGlucoseDraft = (
+    updater: (prev: BloodGlucoseDraft) => BloodGlucoseDraft,
+  ) => {
+    setGlucoseByTiming((prev) => {
+      const next = updater(prev)
+      glucoseDraftRef.current = next
+      return next
+    })
+  }
 
   const handleBloodPressureSave = () => {
     const systolicValue = parseVital(systolic)
@@ -84,7 +105,7 @@ export function BloodMetricsTracker({
   }
 
   const handleChangeGlucose = (value: string) => {
-    setGlucoseByTiming((prev) => ({
+    setGlucoseDraft((prev) => ({
       ...prev,
       [timing]: {
         value,
@@ -98,21 +119,22 @@ export function BloodMetricsTracker({
   }
 
   const handleChangeElapsed = (nextElapsed: GlucoseElapsed) => {
-    setGlucoseByTiming((prev) => ({
+    setGlucoseDraft((prev) => ({
       ...prev,
       [timing]: {
         value: glucose,
         elapsed: nextElapsed,
       },
     }))
-    handleGlucoseSave(timing, nextElapsed)
+    scheduleGlucoseSave(timing, nextElapsed)
   }
 
-  const handleGlucoseSave = (
+  const saveGlucoseRecord = (
     targetTiming: GlucoseTiming = timing,
     targetElapsed: GlucoseElapsed = elapsed,
+    targetDate: string = selectedDateStr,
   ) => {
-    const targetRecord = glucoseByTiming[targetTiming]
+    const targetRecord = glucoseDraftRef.current[targetTiming]
     const glucoseValue = parseVital(targetRecord?.value ?? "")
     if (glucoseValue === null) return
 
@@ -120,8 +142,25 @@ export function BloodMetricsTracker({
       value: Math.trunc(glucoseValue),
       timing: targetTiming,
       elapsed: targetTiming === "AFTER_MEAL" ? targetElapsed : null,
-      date: selectedDateStr,
+      date: targetDate,
     })
+  }
+
+  const scheduleGlucoseSave = (
+    targetTiming: GlucoseTiming,
+    targetElapsed: GlucoseElapsed,
+  ) => {
+    if (glucoseSaveTimeoutRef.current) {
+      clearTimeout(glucoseSaveTimeoutRef.current)
+    }
+    glucoseSaveTimeoutRef.current = setTimeout(() => {
+      glucoseSaveTimeoutRef.current = null
+      saveGlucoseRecord(targetTiming, targetElapsed, selectedDateStr)
+    }, 250)
+  }
+
+  const handleGlucoseSave = () => {
+    saveGlucoseRecord()
   }
 
   return (
