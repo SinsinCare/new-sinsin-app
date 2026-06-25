@@ -1,8 +1,4 @@
-import {
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
-} from "react-native"
+import { TouchableOpacity, TextInput, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { RecordCard } from "./RecordCard"
@@ -67,8 +63,9 @@ export function WeightRecord({
           paddingHorizontal="$3"
           borderRadius="$4"
           alignItems="center"
-          minWidth={110}
+          width={112}
           justifyContent="center"
+          position="relative"
         >
           <TextInput
             style={[
@@ -84,6 +81,8 @@ export function WeightRecord({
           />
           {!!weight && (
             <Text
+              position="absolute"
+              right="$3"
               fontSize="$4"
               fontWeight="600"
               color={isDarkMode ? "$textDarkSub" : "$black"}
@@ -122,6 +121,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1a1a1a",
     textAlign: "center",
-    minWidth: 60,
+    width: 72,
   },
 })

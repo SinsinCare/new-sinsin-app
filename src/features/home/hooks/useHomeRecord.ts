@@ -5,6 +5,7 @@ import { EdemaLevel } from "../data/EdemaConstants"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { useQueryClient } from "@tanstack/react-query"
 import { debounce } from "lodash-es"
+import { clampWaterIntake, getAppliedWaterDelta } from "../utils/waterIntake"
 
 const DEBOUNCE_MS = 500
 
@@ -44,8 +45,13 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
 
   // Debounce state for water intake
   const pendingDeltaRef = useRef(0)
+  const intakeRef = useRef(hydration.intake)
   const updateExtraWaterRef = useRef(updateExtraWater)
   updateExtraWaterRef.current = updateExtraWater
+
+  useEffect(() => {
+    intakeRef.current = hydration.intake
+  }, [hydration.intake])
 
   // flushPendingWater은 stable — updateExtraWater ref로 접근해서 매 렌더 재생성 방지
   const flushPendingWater = useMemo(
@@ -71,6 +77,7 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
   useEffect(() => {
     flushPendingWaterRef.current.cancel()
     pendingDeltaRef.current = 0
+    intakeRef.current = 0
     setHydrationIntake(0)
   }, [dateStr, setHydrationIntake])
 
@@ -83,8 +90,12 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
 
   const addWaterWithApi = useCallback(
     (amount: number) => {
-      hydration.addWater(amount)
-      pendingDeltaRef.current += amount
+      const applied = getAppliedWaterDelta(intakeRef.current, amount)
+      if (applied <= 0) return
+
+      intakeRef.current = clampWaterIntake(intakeRef.current + applied)
+      hydration.addWater(applied)
+      pendingDeltaRef.current += applied
       flushPendingWater(dateStr)
     },
     [hydration, dateStr, flushPendingWater],
@@ -92,8 +103,12 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
 
   const subtractWaterWithApi = useCallback(
     (amount: number) => {
-      hydration.subtractWater(amount)
-      pendingDeltaRef.current -= amount
+      const applied = getAppliedWaterDelta(intakeRef.current, -amount)
+      if (applied >= 0) return
+
+      intakeRef.current = clampWaterIntake(intakeRef.current + applied)
+      hydration.subtractWater(Math.abs(applied))
+      pendingDeltaRef.current += applied
       flushPendingWater(dateStr)
     },
     [hydration, dateStr, flushPendingWater],
@@ -102,7 +117,8 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
   const syncFromServer = useCallback(
     (serverExtraWater: number) => {
       // 아직 안 보낸 pending이 있으면 optimistic 상태 유지 (덮어쓰지 않음)
-      if (pendingDeltaRef.current > 0) return
+      if (pendingDeltaRef.current !== 0) return
+      intakeRef.current = clampWaterIntake(serverExtraWater)
       hydration.setIntake(serverExtraWater)
     },
     [hydration],
@@ -113,6 +129,7 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
       // Cancel pending debounce
       flushPendingWater.cancel()
       pendingDeltaRef.current = 0
+      intakeRef.current = 0
 
       // Optimistic: reset local state immediately
       hydration.reset()
