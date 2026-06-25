@@ -8,9 +8,13 @@ describe("vitals judgment", () => {
   it.each([
     [110, 60, "normal"],
     [119, 79, "normal"],
+    [90, 60, "normal"],
     [119, 80, "caution"],
     [120, 60, "caution"],
     [120, 80, "caution"],
+    [89, 79, "caution"],
+    [110, 59, "caution"],
+    [5, 50, "caution"],
   ] as const)(
     "judges blood pressure %s/%s as %s",
     (systolic, diastolic, expected) => {
