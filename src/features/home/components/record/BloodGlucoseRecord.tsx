@@ -9,12 +9,10 @@ import {
   GLUCOSE_ELAPSED_OPTIONS,
   GLUCOSE_ELAPSED_LABEL,
   GLUCOSE_PLACEHOLDER,
-  VITAL_RANGE,
   VITAL_STATUS_LABEL,
   type GlucoseTiming,
   type GlucoseElapsed,
 } from "../../data/bloodMetricsConstants"
-import { VitalRangeIndicator } from "./VitalRangeIndicator"
 import {
   judgeGlucose,
   parseVital,
@@ -123,16 +121,6 @@ export function BloodGlucoseRecord({
           </XStack>
         </XStack>
 
-        <VitalRangeIndicator
-          status={status}
-          value={glucoseValue}
-          min={VITAL_RANGE.glucose.min}
-          max={VITAL_RANGE.glucose.max}
-          defaultValue={VITAL_RANGE.glucose.defaultValue}
-          color={statusStyle.indicatorColor}
-          trackColor={statusStyle.trackColor}
-        />
-
         {showElapsed && (
           <XStack
             backgroundColor={isDarkMode ? "$appBgDark" : "$backgroundFocus"}
@@ -190,10 +178,6 @@ function getStatusStyle(status: VitalStatus, isDarkMode: boolean) {
       textColor: isDarkMode
         ? tokens.color.textDark.val
         : tokens.color.waterFillBottom.val,
-      indicatorColor: tokens.color.waterFillBottom.val,
-      trackColor: isDarkMode
-        ? tokens.color.borderDark.val
-        : tokens.color.waterPercentBg.val,
     }
   }
   if (status === "caution") {
@@ -204,10 +188,6 @@ function getStatusStyle(status: VitalStatus, isDarkMode: boolean) {
       textColor: isDarkMode
         ? tokens.color.pureWhite.val
         : tokens.color.primary8.val,
-      indicatorColor: tokens.color.primary8.val,
-      trackColor: isDarkMode
-        ? tokens.color.borderDark.val
-        : tokens.color.primary2.val,
     }
   }
   return {
@@ -217,10 +197,6 @@ function getStatusStyle(status: VitalStatus, isDarkMode: boolean) {
     textColor: isDarkMode
       ? tokens.color.textDarkSub.val
       : tokens.color.grey5.val,
-    indicatorColor: tokens.color.grey6.val,
-    trackColor: isDarkMode
-      ? tokens.color.borderDark.val
-      : tokens.color.grey8.val,
   }
 }
 
