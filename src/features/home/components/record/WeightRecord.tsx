@@ -34,7 +34,7 @@ export function WeightRecord({
     >
       <XStack
         alignItems="center"
-        justifyContent="flex-end"
+        justifyContent="center"
         gap="$3"
         paddingTop="$7"
       >

@@ -14,7 +14,10 @@ export function judgeBloodPressure(
   diastolic: number | null,
 ): VitalStatus {
   if (systolic === null || diastolic === null) return "none"
-  return systolic < 120 && diastolic < 80 ? "normal" : "caution"
+  // 정상 = 수축 90~119 그리고 이완 60~79. 상·하한 모두 벗어나면 주의(저혈압 포함).
+  const normal =
+    systolic >= 90 && systolic < 120 && diastolic >= 60 && diastolic < 80
+  return normal ? "normal" : "caution"
 }
 
 export function judgeGlucose(
