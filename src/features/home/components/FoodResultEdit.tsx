@@ -1,5 +1,4 @@
 import {
-  Animated,
   Alert,
   Image,
   Modal,
@@ -17,11 +16,8 @@ import {
 } from "@/src/types"
 import { Icon } from "@/src/shared/components"
 import { LoadingOverlay } from "./LoadingOverlay"
-import {
-  EATEN_STEPS,
-  THUMB_SIZE,
-  UNIT_OPTIONS,
-} from "../data/foodEditConstants"
+import { EatenSlider } from "./EatenSlider"
+import { UNIT_OPTIONS } from "../data/foodEditConstants"
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
 import { useFoodEdit } from "../hooks/useFoodEdit"
@@ -62,8 +58,7 @@ export function FoodResultEdit({
     setEditingName,
     setIsNameEdit,
     eatenStep,
-    trackWidth,
-    setTrackWidth,
+    setEatenStep,
     addStep,
     newMenuName,
     setNewMenuName,
@@ -74,14 +69,11 @@ export function FoodResultEdit({
     nameEditInputRef,
     nameInputRef,
     amountInputRef,
-    thumbAnim,
     handleNameEdit,
     handleNameConfirm,
     handleFoodNameChange,
     handleAmountChange,
     handleDelete,
-    handleTrackMove,
-    handleTrackRelease,
     handleAddMenu,
     handleNameSubmit,
     handleAmountSubmit,
@@ -527,64 +519,7 @@ export function FoodResultEdit({
           >
             얼마나 드셨나요?
           </Text>
-          <View
-            onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderTerminationRequest={() => false}
-            onResponderGrant={(e) => handleTrackMove(e.nativeEvent.locationX)}
-            onResponderMove={(e) => handleTrackMove(e.nativeEvent.locationX)}
-            onResponderRelease={(e) =>
-              handleTrackRelease(e.nativeEvent.locationX)
-            }
-            style={{ height: THUMB_SIZE + 8, justifyContent: "center" }}
-          >
-            {/* 배경 트랙 */}
-            <View
-              style={{
-                height: 30,
-                backgroundColor: tokens.color.deleteBg.val,
-                borderRadius: 15,
-              }}
-            />
-            {/* 썸 */}
-            {trackWidth > 0 && (
-              <Animated.View
-                style={{
-                  position: "absolute",
-                  transform: [{ translateX: thumbAnim }],
-                  width: THUMB_SIZE,
-                  height: THUMB_SIZE,
-                  borderRadius: THUMB_SIZE / 2,
-                  backgroundColor: tokens.color.pureWhite.val,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 4,
-                  elevation: 3,
-                }}
-              />
-            )}
-          </View>
-          <XStack marginTop="$2">
-            {EATEN_STEPS.map((label, i) => (
-              <View key={i} flex={1} alignItems="center">
-                <Text
-                  fontSize={13}
-                  fontWeight={i === eatenStep ? 500 : 400}
-                  color={
-                    i === eatenStep
-                      ? isDarkMode
-                        ? "$textDark"
-                        : "$color"
-                      : "$colorSubtle"
-                  }
-                >
-                  {label}
-                </Text>
-              </View>
-            ))}
-          </XStack>
+          <EatenSlider value={eatenStep} onChange={setEatenStep} />
         </View>
       </ScrollView>
 
