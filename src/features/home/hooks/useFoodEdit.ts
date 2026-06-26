@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Animated, TextInput } from "react-native"
 import { FoodCameraAnalyzeResult } from "@/src/types"
-import { UNIT_OPTIONS, UnitOption } from "../data/foodEditConstants"
+import { THUMB_SIZE, UNIT_OPTIONS, UnitOption } from "../data/foodEditConstants"
 import { calcThumbPosition, getInitialEatenStep } from "../utils/foodEditUtils"
 import { MealType } from "../types"
 
@@ -34,10 +34,12 @@ export function useFoodEdit(
   const nameInputRef = useRef<TextInput>(null)
   const amountInputRef = useRef<TextInput>(null)
   const thumbAnim = useRef(new Animated.Value(0)).current
+  const draggingRef = useRef(false)
 
   // --- effects ---
   useEffect(() => {
-    if (trackWidth === 0) return
+    // 드래그 중에는 썸이 손가락을 직접 따라가므로 스냅 애니메이션을 걸지 않는다
+    if (trackWidth === 0 || draggingRef.current) return
     Animated.spring(thumbAnim, {
       toValue: calcThumbPosition(eatenStep, trackWidth),
       useNativeDriver: true,
@@ -74,9 +76,32 @@ export function useFoodEdit(
     setFoods((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleTrackTouch = (locationX: number) => {
+  const stepFromX = (locationX: number) => {
+    const x = Math.max(0, Math.min(locationX, trackWidth))
+    return Math.max(0, Math.min(3, Math.floor(x / (trackWidth / 4))))
+  }
+
+  // 드래그 중: 썸이 손가락을 그대로 따라오고, 라벨은 가까운 단계로 표시
+  const handleTrackMove = (locationX: number) => {
     if (trackWidth === 0) return
-    setEatenStep(Math.min(3, Math.floor(locationX / (trackWidth / 4))))
+    draggingRef.current = true
+    const x = Math.max(0, Math.min(locationX, trackWidth))
+    thumbAnim.setValue(x - THUMB_SIZE / 2)
+    setEatenStep(stepFromX(locationX))
+  }
+
+  // 손을 뗐을 때: 가장 가까운 단계로 스냅
+  const handleTrackRelease = (locationX: number) => {
+    if (trackWidth === 0) return
+    draggingRef.current = false
+    const step = stepFromX(locationX)
+    setEatenStep(step)
+    Animated.spring(thumbAnim, {
+      toValue: calcThumbPosition(step, trackWidth),
+      useNativeDriver: true,
+      tension: 120,
+      friction: 10,
+    }).start()
   }
 
   const handleAddMenu = () => {
@@ -146,7 +171,8 @@ export function useFoodEdit(
     handleFoodNameChange,
     handleAmountChange,
     handleDelete,
-    handleTrackTouch,
+    handleTrackMove,
+    handleTrackRelease,
     handleAddMenu,
     handleNameSubmit,
     handleAmountSubmit,

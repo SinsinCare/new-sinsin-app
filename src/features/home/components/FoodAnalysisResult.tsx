@@ -6,7 +6,7 @@ import {
   ActionSheetIOS,
   Platform,
 } from "react-native"
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
@@ -72,6 +72,11 @@ export function FoodAnalysisResult({
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
+  // 제목 수정 시 즉시 반영용 로컬 오버라이드 (다른 식단으로 바뀌면 리셋)
+  const [titleOverride, setTitleOverride] = useState<string | null>(null)
+  useEffect(() => {
+    setTitleOverride(null)
+  }, [result?.foodAnalysisResultId])
   const isDarkMode = useAppColorScheme() === "dark"
   const shareCardRef = useRef<ViewShot>(null)
   const FACEBOOK_APP_ID = "1306082818293951"
@@ -250,7 +255,7 @@ export function FoodAnalysisResult({
               flexShrink={1}
               flex={1}
             >
-              {result.title}{" "}
+              {titleOverride ?? result.title}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
                 {servingsLabel}
               </Text>
@@ -610,7 +615,11 @@ export function FoodAnalysisResult({
           alignItems="center"
         >
           <YStack
-            backgroundColor={isDarkMode ? tokens.color.cardBgDark.val : tokens.color.offWhite.val}
+            backgroundColor={
+              isDarkMode
+                ? tokens.color.cardBgDark.val
+                : tokens.color.offWhite.val
+            }
             borderRadius={15}
             overflow="hidden"
           >
@@ -665,7 +674,9 @@ export function FoodAnalysisResult({
 
               <View
                 width={1}
-                backgroundColor={isDarkMode ? tokens.color.grey2.val : "#E5E5E5"}
+                backgroundColor={
+                  isDarkMode ? tokens.color.grey2.val : "#E5E5E5"
+                }
               />
 
               <YStack
@@ -695,6 +706,7 @@ export function FoodAnalysisResult({
           mealType={mealType ?? null}
           isUpdating={isUpdating}
           updateFoodAnalysis={updateFoodAnalysis}
+          onTitleChange={setTitleOverride}
         />
       )}
     </Modal>

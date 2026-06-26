@@ -42,6 +42,7 @@ interface FoodResultEditProps {
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
   ) => Promise<FoodAnalysisUpdateResult | undefined>
+  onTitleChange?: (title: string) => void
 }
 
 export function FoodResultEdit({
@@ -51,6 +52,7 @@ export function FoodResultEdit({
   mealType,
   isUpdating = false,
   updateFoodAnalysis,
+  onTitleChange,
 }: FoodResultEditProps) {
   const {
     foods,
@@ -78,7 +80,8 @@ export function FoodResultEdit({
     handleFoodNameChange,
     handleAmountChange,
     handleDelete,
-    handleTrackTouch,
+    handleTrackMove,
+    handleTrackRelease,
     handleAddMenu,
     handleNameSubmit,
     handleAmountSubmit,
@@ -98,7 +101,10 @@ export function FoodResultEdit({
       result.foodAnalysisResultId,
       newTitle,
     )
-    if (response) handleNameConfirm()
+    if (response) {
+      handleNameConfirm()
+      onTitleChange?.(newTitle)
+    }
   }
   const isDarkMode = useAppColorScheme() === "dark"
   const textColor = isDarkMode
@@ -122,7 +128,10 @@ export function FoodResultEdit({
           f.unit !== orig.servingSizeUnit
         )
       })
-    if (!eatenPercentageChanged && !foodsChanged) return
+    if (!eatenPercentageChanged && !foodsChanged) {
+      onClose()
+      return
+    }
     const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
       servings: result.servings,
       eatenPercentage: (eatenStep + 1) * 25,
@@ -148,7 +157,10 @@ export function FoodResultEdit({
         paddingVertical="$10"
         justifyContent="space-between"
       >
-        <TouchableOpacity onPress={onClose}>
+        <TouchableOpacity
+          onPress={onClose}
+          hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+        >
           <Text fontSize={16} fontWeight={500} color="$colorSubtle">
             취소
           </Text>
@@ -160,8 +172,11 @@ export function FoodResultEdit({
         >
           식단 수정하기
         </Text>
-        <TouchableOpacity onPress={handleSubmit}>
-          <Text fontSize={16} fontWeight={500} color="$colorSubtle">
+        <TouchableOpacity
+          onPress={handleSubmit}
+          hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+        >
+          <Text fontSize={16} fontWeight={600} color="$sub6">
             완료
           </Text>
         </TouchableOpacity>
@@ -516,9 +531,10 @@ export function FoodResultEdit({
             onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
-            onResponderMove={(e) => handleTrackTouch(e.nativeEvent.locationX)}
+            onResponderGrant={(e) => handleTrackMove(e.nativeEvent.locationX)}
+            onResponderMove={(e) => handleTrackMove(e.nativeEvent.locationX)}
             onResponderRelease={(e) =>
-              handleTrackTouch(e.nativeEvent.locationX)
+              handleTrackRelease(e.nativeEvent.locationX)
             }
             style={{ height: THUMB_SIZE + 8, justifyContent: "center" }}
           >
