@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   Alert,
   Image,
@@ -39,6 +40,11 @@ interface FoodResultEditProps {
     body: FoodAnalysisUpdateRequest,
   ) => Promise<FoodAnalysisUpdateResult | undefined>
   onTitleChange?: (title: string) => void
+  diaryId?: number
+  updateDiaryMealType?: (
+    diaryId: number,
+    mealType: string,
+  ) => Promise<{ diaryId: number; mealType: string } | undefined>
 }
 
 export function FoodResultEdit({
@@ -49,6 +55,8 @@ export function FoodResultEdit({
   isUpdating = false,
   updateFoodAnalysis,
   onTitleChange,
+  diaryId,
+  updateDiaryMealType,
 }: FoodResultEditProps) {
   const {
     foods,
@@ -80,6 +88,9 @@ export function FoodResultEdit({
   } = useFoodEdit(result, mealType)
 
   const { updateFoodTitle } = useFoodAnalysis()
+  const [selectedMealType, setSelectedMealType] = useState<MealType | null>(
+    mealType,
+  )
 
   const handleTitleEdit = async () => {
     if (!result) return
@@ -120,18 +131,35 @@ export function FoodResultEdit({
           f.unit !== orig.servingSizeUnit
         )
       })
-    if (!eatenPercentageChanged && !foodsChanged) {
+    const mealTypeChanged =
+      diaryId != null &&
+      updateDiaryMealType != null &&
+      selectedMealType != null &&
+      selectedMealType !== mealType
+
+    if (!eatenPercentageChanged && !foodsChanged && !mealTypeChanged) {
       onClose()
       return
     }
-    const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
-      servings: result.servings,
-      eatenPercentage: (eatenStep + 1) * 25,
-      foods,
-    })
 
-    const updated = await updateFoodAnalysis(result.foodAnalysisResultId, body)
-    if (updated) onClose()
+    let ok = true
+    if (eatenPercentageChanged || foodsChanged) {
+      const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
+        servings: result.servings,
+        eatenPercentage: (eatenStep + 1) * 25,
+        foods,
+      })
+      const updated = await updateFoodAnalysis(
+        result.foodAnalysisResultId,
+        body,
+      )
+      if (!updated) ok = false
+    }
+    if (ok && mealTypeChanged) {
+      const changed = await updateDiaryMealType(diaryId, selectedMealType)
+      if (!changed) ok = false
+    }
+    if (ok) onClose()
   }
 
   return (
@@ -204,10 +232,11 @@ export function FoodResultEdit({
 
             <XStack justifyContent="space-between" alignItems="center" gap={4}>
               {MEAL_OPTIONS.map((opt) => {
-                const isSelected = mealType === opt.type
+                const isSelected = selectedMealType === opt.type
                 return (
                   <TouchableOpacity
                     key={opt.type}
+                    onPress={() => setSelectedMealType(opt.type)}
                     style={{
                       backgroundColor: isSelected
                         ? tokens.color.sub6.val + "29"

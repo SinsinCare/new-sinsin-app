@@ -256,4 +256,22 @@ export const foodCameraService = {
       throw err
     }
   },
+
+  async updateDiaryMealType(
+    diaryId: number,
+    mealType: string,
+  ): Promise<{ diaryId: number; mealType: string }> {
+    try {
+      const response = await api.patch(
+        `/food-camera/diaries/${diaryId}/meal-type`,
+        { mealType },
+      )
+      return response.data.result
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
 }

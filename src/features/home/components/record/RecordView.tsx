@@ -51,6 +51,7 @@ export function RecordView({
   const record = useHomeRecord(selectedDate)
   const [viewDiaryResult, setViewDiaryResult] =
     useState<DiaryAnalysisResult | null>(null)
+  const [viewDiaryId, setViewDiaryId] = useState<number | null>(null)
   const [isViewResultOpen, setIsViewResultOpen] = useState(false)
   const [viewResultMealType, setViewResultMealType] = useState<
     MealType | undefined
@@ -69,6 +70,7 @@ export function RecordView({
     registerDiary,
     closeResult,
     updateFoodAnalysis,
+    updateDiaryMealType,
     fetchDiaryResult,
   } = useFoodAnalysis()
 
@@ -280,6 +282,7 @@ export function RecordView({
     const result = await fetchDiaryResult(diet.diaryId)
     if (result) {
       setViewDiaryResult(result)
+      setViewDiaryId(diet.diaryId)
       setViewResultMealType(mealType)
       setIsViewResultOpen(true)
     }
@@ -361,6 +364,8 @@ export function RecordView({
         showAddButton={false}
         isUpdating={isUpdating}
         updateFoodAnalysis={updateFoodAnalysis}
+        diaryId={viewDiaryId ?? undefined}
+        updateDiaryMealType={updateDiaryMealType}
       />
 
       <FoodAnalysisResult

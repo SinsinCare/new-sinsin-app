@@ -42,6 +42,11 @@ interface FoodAnalysisResultProps {
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
   ) => Promise<FoodAnalysisUpdateResult | undefined>
+  diaryId?: number
+  updateDiaryMealType?: (
+    diaryId: number,
+    mealType: string,
+  ) => Promise<{ diaryId: number; mealType: string } | undefined>
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -68,6 +73,8 @@ export function FoodAnalysisResult({
   showAddButton = true,
   isUpdating = false,
   updateFoodAnalysis,
+  diaryId,
+  updateDiaryMealType,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
@@ -711,6 +718,8 @@ export function FoodAnalysisResult({
           isUpdating={isUpdating}
           updateFoodAnalysis={updateFoodAnalysis}
           onTitleChange={setTitleOverride}
+          diaryId={diaryId}
+          updateDiaryMealType={updateDiaryMealType}
         />
       )}
     </Modal>

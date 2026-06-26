@@ -1,5 +1,6 @@
 import { useRef, useState } from "react"
 import { Alert } from "react-native"
+import { useQueryClient } from "@tanstack/react-query"
 import { foodCameraService } from "@/src/services/data"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
@@ -33,6 +34,13 @@ export function useFoodAnalysis(
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const queryClient = useQueryClient()
+
+  // 수정 후 서버 데이터로 재동기화 (목록/존재여부 쿼리)
+  const refetchDiaryQueries = async () => {
+    await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+    await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+  }
 
   // 분석 도중 X 버튼으로 나갔는지 추적 (ref: async closure에서 최신값 보장)
   const dismissedRef = useRef(false)
@@ -180,6 +188,7 @@ export function useFoodAnalysis(
       )
       setAnalysisResult(updated)
       onUpdateSuccess?.(updated)
+      await refetchDiaryQueries()
       return updated
     } catch (error) {
       console.error("updateFoodAnalysis error:", error)
@@ -198,10 +207,28 @@ export function useFoodAnalysis(
         foodAnalysisResultId,
         title,
       )
+      await refetchDiaryQueries()
       return response
     } catch (error) {
       console.error("updateFoodTitle error:", error)
       Alert.alert("업데이트 실패", getErrorMessage(error))
+    }
+  }
+
+  const updateDiaryMealType = async (
+    diaryId: number,
+    mealType: string,
+  ): Promise<{ diaryId: number; mealType: string } | undefined> => {
+    try {
+      const result = await foodCameraService.updateDiaryMealType(
+        diaryId,
+        mealType,
+      )
+      await refetchDiaryQueries()
+      return result
+    } catch (error) {
+      console.error("updateDiaryMealType error:", error)
+      Alert.alert("끼니 변경 실패", getErrorMessage(error))
     }
   }
 
@@ -219,6 +246,7 @@ export function useFoodAnalysis(
     fetchDiaryResult,
     updateFoodAnalysis,
     updateFoodTitle,
+    updateDiaryMealType,
     closeResult: () => setIsResultOpen(false),
   }
 }

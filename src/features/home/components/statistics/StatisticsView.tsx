@@ -55,6 +55,7 @@ export function StatisticsView({
   const [diaryResult, setDiaryResult] = useState<DiaryAnalysisResult | null>(
     null,
   )
+  const [diaryId, setDiaryId] = useState<number | null>(null)
   const [isResultOpen, setIsResultOpen] = useState(false)
   const [resultMealType, setResultMealType] = useState<MealType | undefined>()
   const scrollRef = useRef<ScrollView>(null)
@@ -64,19 +65,22 @@ export function StatisticsView({
   const { data, isLoading, refetch } = useDateAnalysis(selectedDate)
   const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
-  const { updateFoodAnalysis, fetchDiaryResult, isUpdating } = useFoodAnalysis(
-    (updated) => {
-      setDiaryResult((prev) =>
-        prev
-          ? {
-              ...prev,
-              ...updated,
-              imageUrl: updated.imageUrl ?? prev.imageUrl,
-            }
-          : null,
-      )
-    },
-  )
+  const {
+    updateFoodAnalysis,
+    updateDiaryMealType,
+    fetchDiaryResult,
+    isUpdating,
+  } = useFoodAnalysis((updated) => {
+    setDiaryResult((prev) =>
+      prev
+        ? {
+            ...prev,
+            ...updated,
+            imageUrl: updated.imageUrl ?? prev.imageUrl,
+          }
+        : null,
+    )
+  })
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
   const isEmpty = !isLoading && !hasDiets
@@ -100,6 +104,7 @@ export function StatisticsView({
     const result = await fetchDiaryResult(diet.diaryId)
     if (result) {
       setDiaryResult(result)
+      setDiaryId(diet.diaryId)
       setResultMealType(mealType)
       setIsResultOpen(true)
     }
@@ -275,6 +280,8 @@ export function StatisticsView({
               showAddButton={false}
               isUpdating={isUpdating}
               updateFoodAnalysis={updateFoodAnalysis}
+              diaryId={diaryId ?? undefined}
+              updateDiaryMealType={updateDiaryMealType}
             />
 
             <View
