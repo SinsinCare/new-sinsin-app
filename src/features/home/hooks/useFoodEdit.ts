@@ -50,7 +50,7 @@ export function useFoodEdit(
 
   // --- handlers ---
   const handleNameEdit = () => {
-    setEditingName("")
+    setEditingName(mealName)
     setIsNameEdit(true)
     setTimeout(() => nameEditInputRef.current?.focus(), 100)
   }

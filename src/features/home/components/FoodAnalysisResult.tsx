@@ -161,6 +161,10 @@ export function FoodAnalysisResult({
 
   if (!result) return null
 
+  // 제목 수정 즉시 반영용: 오버라이드가 있으면 그 제목 사용 (편집화면 재진입 포함)
+  const effectiveResult =
+    titleOverride != null ? { ...result, title: titleOverride } : result
+
   const handleEditPress = () => {
     setIsEdit(true)
   }
@@ -255,7 +259,7 @@ export function FoodAnalysisResult({
               flexShrink={1}
               flex={1}
             >
-              {titleOverride ?? result.title}{" "}
+              {effectiveResult.title}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
                 {servingsLabel}
               </Text>
@@ -700,7 +704,7 @@ export function FoodAnalysisResult({
       )}
       {isEdit && (
         <FoodResultEdit
-          result={result}
+          result={effectiveResult}
           imageUri={imageUri}
           onClose={() => setIsEdit(false)}
           mealType={mealType ?? null}
