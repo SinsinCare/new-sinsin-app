@@ -1,10 +1,11 @@
 import { useRef, useState } from "react"
 import { Alert } from "react-native"
 import { foodCameraService } from "@/src/services/data"
-import { notificationService } from "@/src/services/notificationService"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
+import { markFoodAnalysisRequestHandled } from "../services/foodAnalysisRequestState"
+import { pendingAnalysisRequests } from "../storage/pendingAnalysisRequests"
 import type {
   DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
@@ -14,6 +15,11 @@ import type {
 } from "@/src/types"
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
+
+function createFoodAnalysisRequestId(): string {
+  const randomPart = Math.random().toString(36).slice(2, 10)
+  return `food-${Date.now().toString(36)}-${randomPart}`
+}
 
 export function useFoodAnalysis(
   onUpdateSuccess?: (updated: FoodAnalysisUpdateResult) => void,
@@ -43,19 +49,26 @@ export function useFoodAnalysis(
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
     dismissedRef.current = false
+    const requestId = createFoodAnalysisRequestId()
     try {
       setAnalyzedImageUri(uri)
       setAnalyzedMealType(mealType)
       setIsAnalyzing(true)
-      const result = await foodCameraService.analyze(uri)
+      await pendingAnalysisRequests.add({
+        requestId,
+        mealType,
+        imageUri: uri,
+        startedAt: Date.now(),
+      })
+      const result = await foodCameraService.analyze(uri, requestId)
+      markFoodAnalysisRequestHandled(requestId)
+      await pendingAnalysisRequests.remove(requestId)
 
       if (dismissedRef.current) {
-        // 백그라운드 완료: 스토어에 저장 후 알림 발송
         setPending({ result, mealType, imageUri: uri })
         const notifBody = result.title
           ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
           : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`
-        await notificationService.sendFoodAnalysisComplete(result.title)
         addNotification({
           type: "food_analysis",
           title: "🍽️ 식단 분석 완료",
@@ -78,17 +91,25 @@ export function useFoodAnalysis(
 
   const analyzeText = async (text: string, mealType: MealType) => {
     dismissedRef.current = false
+    const requestId = createFoodAnalysisRequestId()
     try {
       setAnalyzedMealType(mealType)
       setIsAnalyzing(true)
-      const result = await foodCameraService.analyzeText(text)
+      await pendingAnalysisRequests.add({
+        requestId,
+        mealType,
+        imageUri: null,
+        startedAt: Date.now(),
+      })
+      const result = await foodCameraService.analyzeText(text, requestId)
+      markFoodAnalysisRequestHandled(requestId)
+      await pendingAnalysisRequests.remove(requestId)
 
       if (dismissedRef.current) {
         setPending({ result, mealType, imageUri: result.imageUrl ?? null })
         const notifBody = result.title
           ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
           : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`
-        await notificationService.sendFoodAnalysisComplete(result.title)
         addNotification({
           type: "food_analysis",
           title: "🍽️ 식단 분석 완료",

@@ -3,15 +3,35 @@ import Constants from "expo-constants"
 import { Platform } from "react-native"
 import type { NotificationSettings } from "@/src/types/notification"
 import { api } from "@/src/services/core/apiClient"
+import { isFoodAnalysisRequestHandled } from "@/src/features/home/services/foodAnalysisRequestState"
+
+function shouldShowForegroundNotification(
+  notification: Notifications.Notification,
+): boolean {
+  const data = notification.request.content.data
+  const requestId =
+    typeof data?.requestId === "string" ? data.requestId : undefined
+  if (
+    data?.type === "food_analysis_complete" &&
+    requestId &&
+    isFoodAnalysisRequestHandled(requestId)
+  ) {
+    return false
+  }
+  return true
+}
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    const shouldShow = shouldShowForegroundNotification(notification)
+    return {
+      shouldShowAlert: shouldShow,
+      shouldPlaySound: shouldShow,
+      shouldSetBadge: false,
+      shouldShowBanner: shouldShow,
+      shouldShowList: shouldShow,
+    }
+  },
 })
 
 async function ensureAndroidChannel(): Promise<void> {
@@ -160,7 +180,10 @@ export const notificationService = {
     await Notifications.cancelAllScheduledNotificationsAsync()
   },
 
-  async sendFoodAnalysisComplete(foodName?: string): Promise<void> {
+  async sendFoodAnalysisComplete(
+    foodName?: string,
+    requestId?: string,
+  ): Promise<void> {
     const body = foodName
       ? `${foodName} 드셨네요! 식단 분석 결과를 확인해보세요.`
       : "식단 분석 결과를 확인해보세요!"
@@ -168,7 +191,10 @@ export const notificationService = {
       content: {
         title: "🍽️ 식단 분석 완료",
         body,
-        data: { type: "food_analysis_complete" },
+        data: {
+          type: "food_analysis_complete",
+          ...(requestId ? { requestId } : {}),
+        },
       },
       trigger: null,
     })
