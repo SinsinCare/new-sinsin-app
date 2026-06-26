@@ -531,6 +531,7 @@ export function FoodResultEdit({
             onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => false}
             onResponderGrant={(e) => handleTrackMove(e.nativeEvent.locationX)}
             onResponderMove={(e) => handleTrackMove(e.nativeEvent.locationX)}
             onResponderRelease={(e) =>

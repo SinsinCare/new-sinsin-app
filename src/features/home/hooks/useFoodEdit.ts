@@ -42,7 +42,7 @@ export function useFoodEdit(
     if (trackWidth === 0 || draggingRef.current) return
     Animated.spring(thumbAnim, {
       toValue: calcThumbPosition(eatenStep, trackWidth),
-      useNativeDriver: true,
+      useNativeDriver: false,
       tension: 120,
       friction: 10,
     }).start()
@@ -98,7 +98,7 @@ export function useFoodEdit(
     setEatenStep(step)
     Animated.spring(thumbAnim, {
       toValue: calcThumbPosition(step, trackWidth),
-      useNativeDriver: true,
+      useNativeDriver: false,
       tension: 120,
       friction: 10,
     }).start()
