@@ -1,11 +1,12 @@
 import { ThemedView } from "@/components/themed-view"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { HomeHeader } from "@/src/features/home/components/HomeHeader"
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { MainTab } from "@/src/features/home/types"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { StatisticsView } from "@/src/features/home/components/statistics/StatisticsView"
 import { MonthCalendarSheet } from "@/src/features/home/components/statistics/MonthCalendarSheet"
+import { useFocusEffect } from "@react-navigation/native"
 import {
   Animated,
   PanResponder,
@@ -19,6 +20,10 @@ import {
   AnnouncementPopupModal,
   useAnnouncementOnEntry,
 } from "@/src/features/announcement"
+import {
+  getCommittedHomePagerValue,
+  getReleasedHomePagerTab,
+} from "@/src/features/home/utils/homePager"
 
 const PADDING = 25
 
@@ -36,60 +41,55 @@ export default function HomeScreen() {
   const tabAnim = useRef(new Animated.Value(0)).current
   const mainTabRef = useRef<MainTab>("record")
 
-  const switchTab = (tab: MainTab) => {
-    mainTabRef.current = tab
-    setMainTab(tab)
+  const animateToCommittedTab = useCallback(() => {
     Animated.spring(tabAnim, {
-      toValue: tab === "record" ? 0 : 1,
+      toValue: getCommittedHomePagerValue(mainTabRef.current),
       useNativeDriver: true,
       tension: 100,
       friction: 14,
     }).start()
+  }, [tabAnim])
+
+  const alignToCommittedTab = useCallback(() => {
+    tabAnim.stopAnimation()
+    tabAnim.setValue(getCommittedHomePagerValue(mainTabRef.current))
+  }, [tabAnim])
+
+  useFocusEffect(
+    useCallback(() => {
+      alignToCommittedTab()
+    }, [alignToCommittedTab]),
+  )
+
+  const switchTab = (tab: MainTab) => {
+    mainTabRef.current = tab
+    setMainTab(tab)
+    animateToCommittedTab()
   }
 
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, { dx, dy }) =>
         Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_, { dx }) => {
         const base = mainTabRef.current === "record" ? 0 : 1
         const newVal = Math.max(0, Math.min(1, base - dx / widthRef.current))
         tabAnim.setValue(newVal)
       },
       onPanResponderRelease: (_, { dx, vx }) => {
-        const current = mainTabRef.current
-        const goToStats =
-          current === "record" && (dx < -widthRef.current * 0.3 || vx < -0.5)
-        const goToRecord =
-          current === "stats" && (dx > widthRef.current * 0.3 || vx > 0.5)
+        const settledTab = getReleasedHomePagerTab({
+          current: mainTabRef.current,
+          dx,
+          vx,
+          width: widthRef.current,
+        })
 
-        if (goToStats) {
-          mainTabRef.current = "stats"
-          setMainTab("stats")
-          Animated.spring(tabAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            tension: 100,
-            friction: 14,
-          }).start()
-        } else if (goToRecord) {
-          mainTabRef.current = "record"
-          setMainTab("record")
-          Animated.spring(tabAnim, {
-            toValue: 0,
-            useNativeDriver: true,
-            tension: 100,
-            friction: 14,
-          }).start()
-        } else {
-          Animated.spring(tabAnim, {
-            toValue: current === "record" ? 0 : 1,
-            useNativeDriver: true,
-            tension: 100,
-            friction: 14,
-          }).start()
-        }
+        mainTabRef.current = settledTab
+        setMainTab(settledTab)
+        animateToCommittedTab()
       },
+      onPanResponderTerminate: animateToCommittedTab,
     }),
   ).current
 
