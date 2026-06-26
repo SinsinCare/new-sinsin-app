@@ -44,7 +44,10 @@ async function compressImage(uri: string): Promise<string> {
 }
 
 export const foodCameraService = {
-  async analyze(imageUri: string): Promise<FoodCameraAnalyzeResult> {
+  async analyze(
+    imageUri: string,
+    requestId?: string,
+  ): Promise<FoodCameraAnalyzeResult> {
     let result: FoodCameraAnalyzeResult
 
     if (isMockMode()) {
@@ -59,6 +62,9 @@ export const foodCameraService = {
         name: `food_${Date.now()}.jpg`,
         type: "image/jpeg",
       } as unknown as Blob)
+      if (requestId) {
+        formData.append("requestId", requestId)
+      }
 
       const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
       const token = await tokenService.getAccessToken()
@@ -68,9 +74,13 @@ export const foodCameraService = {
           Authorization: token ? `Bearer ${token}` : "",
           Accept: "application/json",
         },
-        body: formData,
+        body: formData as unknown as RequestInit["body"],
       })
-      const json = await fetchResponse.json()
+      const json = (await fetchResponse.json()) as {
+        isSuccess?: boolean
+        message?: string
+        result?: FoodCameraAnalyzeResult
+      }
       if (!fetchResponse.ok || json?.isSuccess === false) {
         throw new Error(json?.message || `HTTP ${fetchResponse.status}`)
       }
@@ -79,7 +89,10 @@ export const foodCameraService = {
     return result
   },
 
-  async analyzeText(text: string): Promise<FoodCameraAnalyzeResult> {
+  async analyzeText(
+    text: string,
+    requestId?: string,
+  ): Promise<FoodCameraAnalyzeResult> {
     let result: FoodCameraAnalyzeResult
 
     if (isMockMode()) {
@@ -87,7 +100,10 @@ export const foodCameraService = {
       result = await mockFoodCameraService.analyze()
     } else {
       try {
-        const response = await api.post("/food-camera/analyze-text", { text })
+        const response = await api.post("/food-camera/analyze-text", {
+          text,
+          ...(requestId ? { requestId } : {}),
+        })
         result = response.data.result as FoodCameraAnalyzeResult
       } catch (err) {
         if (isAxiosError(err) && err.response?.data?.message) {
@@ -97,6 +113,22 @@ export const foodCameraService = {
       }
     }
     return result
+  },
+
+  async fetchByRequestId(
+    requestId: string,
+  ): Promise<FoodCameraAnalyzeResult | null> {
+    try {
+      const response = await api.get("/food-camera/analysis-results", {
+        params: { requestId },
+      })
+      return (response.data.result as FoodCameraAnalyzeResult | null) ?? null
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
   },
 
   async registerDiary(

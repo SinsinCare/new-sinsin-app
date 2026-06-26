@@ -22,6 +22,8 @@ import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
 import { routeFromPushData } from "@/src/services/notificationRoutingService"
+import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
+import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
@@ -35,9 +37,10 @@ function RootLayoutNav() {
     requiresAdditionalInfo,
     signOut,
   } = useAuth()
-  useNotifications(
-    isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo,
-  )
+  const canUseAppNotifications =
+    isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo
+  useNotifications(canUseAppNotifications)
+  useFoodAnalysisRecovery(canUseAppNotifications)
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
     (s) => s.isOnboardingInProgress,
@@ -58,7 +61,13 @@ function RootLayoutNav() {
       const id = response.notification.request.identifier
       if (handledNotificationIdsRef.current.has(id)) return
       handledNotificationIdsRef.current.add(id)
-      routeFromPushData(response.notification.request.content.data, router)
+      const data = response.notification.request.content.data
+      routeFromPushData(data, router)
+      const requestId =
+        typeof data?.requestId === "string" ? data.requestId : undefined
+      if (data?.type === "food_analysis_complete" && requestId) {
+        foodAnalysisRecovery.recoverFoodAnalysisRequest(requestId)
+      }
     }
 
     const sub =
