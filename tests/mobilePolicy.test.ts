@@ -1,7 +1,9 @@
 import {
   MOBILE_POLICY_CACHE_KEY,
   createMobilePolicyService,
+  isFeatureFlagEnabled,
   isBlockingMobilePolicyDecision,
+  isRestaurantTabEnabled,
 } from "../src/features/mobilePolicy/services/mobilePolicyService"
 import { resolveMobilePolicyBaseUrl } from "../src/features/mobilePolicy/services/mobilePolicyClient"
 import {
@@ -113,6 +115,17 @@ describe("mobile policy service", () => {
     expect(isBlockingMobilePolicyDecision("maintenance")).toBe(true)
     expect(isBlockingMobilePolicyDecision("recommend_update")).toBe(false)
     expect(isBlockingMobilePolicyDecision("allow")).toBe(false)
+  })
+
+  it("reads boolean feature flags without treating missing values as enabled", () => {
+    expect(isFeatureFlagEnabled(allowPolicy, "foodCameraEnabled")).toBe(true)
+    expect(isFeatureFlagEnabled(allowPolicy, "restaurantTab")).toBe(false)
+    expect(
+      isRestaurantTabEnabled({
+        ...allowPolicy,
+        featureFlags: { restaurantTab: true },
+      }),
+    ).toBe(true)
   })
 })
 

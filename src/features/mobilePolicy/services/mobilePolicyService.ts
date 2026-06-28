@@ -31,6 +31,21 @@ export function isBlockingMobilePolicyDecision(
   )
 }
 
+export function isFeatureFlagEnabled(
+  policy: MobilePolicyResponse | null | undefined,
+  flagName: string,
+  fallback = false,
+): boolean {
+  const value = policy?.featureFlags?.[flagName]
+  return typeof value === "boolean" ? value : fallback
+}
+
+export function isRestaurantTabEnabled(
+  policy: MobilePolicyResponse | null | undefined,
+): boolean {
+  return isFeatureFlagEnabled(policy, "restaurantTab", false)
+}
+
 export function createMobilePolicyService({
   fetchPolicy,
   storage,

@@ -7,13 +7,19 @@ import { RestaurantSearchInput } from "@/src/features/restaurant/components/Rest
 import { KakaoMapWebView } from "@/src/features/restaurant/components/KakaoMapWebView"
 import { CurationTab } from "@/src/features/restaurant/components/CurationTab"
 import { PlaceSheet } from "@/src/features/restaurant/components/PlaceSheet"
+import { RestaurantReportForm } from "@/src/features/restaurant/components/RestaurantReportForm"
 import { MAP_CENTER } from "@/src/features/restaurant/data/curationData"
 import { DEFAULT_FILTER_STATE } from "@/src/features/restaurant/data/filterData"
 import {
   restaurantService,
   type NearbyRestaurantItem,
 } from "@/src/services/data/restaurantService"
-import type { FilterState, PlaceRestaurant } from "@/src/features/restaurant/types"
+import type {
+  FilterState,
+  PlaceRestaurant,
+} from "@/src/features/restaurant/types"
+import { useMobilePolicy } from "@/src/features/mobilePolicy"
+import { isRestaurantTabEnabled } from "@/src/features/mobilePolicy/services/mobilePolicyService"
 
 const TABS = [
   { key: "place", label: "장소" },
@@ -28,8 +34,11 @@ const CUISINE_TYPE_MAP: Record<string, string> = {
   ETC: "세계음식",
 }
 
-const REGION_COORDS: Record<string, { latitude: number; longitude: number; zoomLevel: number }> = {
-  서울: { latitude: 37.5665, longitude: 126.9780, zoomLevel: 6 },
+const REGION_COORDS: Record<
+  string,
+  { latitude: number; longitude: number; zoomLevel: number }
+> = {
+  서울: { latitude: 37.5665, longitude: 126.978, zoomLevel: 6 },
   경기: { latitude: 37.4138, longitude: 127.5183, zoomLevel: 7 },
   인천: { latitude: 37.4563, longitude: 126.7052, zoomLevel: 6 },
   부산: { latitude: 35.1796, longitude: 129.0756, zoomLevel: 6 },
@@ -40,21 +49,24 @@ const REGION_COORDS: Record<string, { latitude: number; longitude: number; zoomL
   경북: { latitude: 36.4919, longitude: 128.8889, zoomLevel: 7 },
   강원: { latitude: 37.8228, longitude: 128.1555, zoomLevel: 7 },
   대전: { latitude: 36.3504, longitude: 127.3845, zoomLevel: 6 },
-  충남: { latitude: 36.5184, longitude: 126.8000, zoomLevel: 7 },
+  충남: { latitude: 36.5184, longitude: 126.8, zoomLevel: 7 },
   충북: { latitude: 36.6357, longitude: 127.4914, zoomLevel: 7 },
-  세종: { latitude: 36.4800, longitude: 127.2890, zoomLevel: 6 },
-  전남: { latitude: 34.8679, longitude: 126.9910, zoomLevel: 7 },
+  세종: { latitude: 36.48, longitude: 127.289, zoomLevel: 6 },
+  전남: { latitude: 34.8679, longitude: 126.991, zoomLevel: 7 },
   광주: { latitude: 35.1595, longitude: 126.8526, zoomLevel: 6 },
-  전북: { latitude: 35.7175, longitude: 127.1530, zoomLevel: 7 },
+  전북: { latitude: 35.7175, longitude: 127.153, zoomLevel: 7 },
 }
 
-const SEOUL_SUBREGION_COORDS: Record<string, { latitude: number; longitude: number }> = {
+const SEOUL_SUBREGION_COORDS: Record<
+  string,
+  { latitude: number; longitude: number }
+> = {
   강남: { latitude: 37.5172, longitude: 127.0473 },
   서초: { latitude: 37.4837, longitude: 127.0324 },
   "잠실/송파/강동": { latitude: 37.5139, longitude: 127.1069 },
   "영등포/여의도/강서": { latitude: 37.5283, longitude: 126.8993 },
-  "건대/성수/왕십리": { latitude: 37.5408, longitude: 127.0690 },
-  "종로/중구": { latitude: 37.5730, longitude: 126.9797 },
+  "건대/성수/왕십리": { latitude: 37.5408, longitude: 127.069 },
+  "종로/중구": { latitude: 37.573, longitude: 126.9797 },
   "홍대/합정/마포": { latitude: 37.5563, longitude: 126.9236 },
   "용산/이태원/한남": { latitude: 37.5326, longitude: 126.9958 },
   "성북/노원/중랑": { latitude: 37.6099, longitude: 127.0539 },
@@ -98,6 +110,8 @@ function toPlaceRestaurant(item: NearbyRestaurantItem): PlaceRestaurant {
 export default function RestaurantScreen() {
   const insets = useSafeAreaInsets()
   const isDarkMode = useAppColorScheme() === "dark"
+  const { policy } = useMobilePolicy()
+  const restaurantTabEnabled = isRestaurantTabEnabled(policy)
   const [activeTab, setActiveTab] = useState("place")
   const [search, setSearch] = useState("")
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE)
@@ -111,13 +125,17 @@ export default function RestaurantScreen() {
         const coords = SEOUL_SUBREGION_COORDS[specific]
         if (coords) return { ...coords, zoomLevel: 5 }
       }
-      return { latitude: 37.5665, longitude: 126.9780, zoomLevel: 6 }
+      return { latitude: 37.5665, longitude: 126.978, zoomLevel: 6 }
     }
     if (filters.region) {
       const coords = REGION_COORDS[filters.region]
       if (coords) return coords
     }
-    return { latitude: MAP_CENTER.latitude, longitude: MAP_CENTER.longitude, zoomLevel: 5 }
+    return {
+      latitude: MAP_CENTER.latitude,
+      longitude: MAP_CENTER.longitude,
+      zoomLevel: 5,
+    }
   }, [filters.region, filters.subRegions])
 
   const fetchRestaurants = useCallback(async () => {
@@ -150,10 +168,10 @@ export default function RestaurantScreen() {
   }, [mapCenter.latitude, mapCenter.longitude, filters.foodTypes])
 
   useEffect(() => {
-    if (activeTab === "place") {
+    if (restaurantTabEnabled && activeTab === "place") {
       fetchRestaurants()
     }
-  }, [activeTab, fetchRestaurants])
+  }, [activeTab, fetchRestaurants, restaurantTabEnabled])
 
   const filteredRestaurants = useMemo(() => {
     return restaurants.filter((r) => {
@@ -166,11 +184,18 @@ export default function RestaurantScreen() {
           r.description.toLowerCase().includes(q)
         if (!matches) return false
       }
-      if (filters.foodTypes.length > 0 && !filters.foodTypes.some((t) => r.tags.includes(t)))
+      if (
+        filters.foodTypes.length > 0 &&
+        !filters.foodTypes.some((t) => r.tags.includes(t))
+      )
         return false
       return true
     })
   }, [search, restaurants, filters.foodTypes])
+
+  if (!restaurantTabEnabled) {
+    return <RestaurantReportForm paddingTop={insets.top} />
+  }
 
   return (
     <YStack

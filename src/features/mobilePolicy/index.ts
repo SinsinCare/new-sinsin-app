@@ -1,4 +1,4 @@
-export { AppPolicyGate } from "./AppPolicyGate"
+export { AppPolicyGate, useMobilePolicy } from "./AppPolicyGate"
 export type {
   MobilePolicyDecision,
   MobilePolicyEnvironment,
