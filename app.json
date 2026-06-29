@@ -3,7 +3,7 @@
     "name": "신신당부",
     "slug": "sinsin-rn",
     "version": "1.1.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -21,8 +21,8 @@
       "infoPlist": {
         "CFBundleDisplayName": "신신당부",
         "CFBundleName": "신신당부",
-        "NSMicrophoneUsageDescription": "AI 상담원과의 음성 대화를 위해 마이크 접근 권한이 필요합니다.",
         "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
         "LSApplicationQueriesSchemes": [
           "instagram-stories",
           "instagram",
@@ -35,14 +35,13 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#007AFF"
+        "backgroundColor": "#D8E9F5"
       },
       "package": "com.mediology.sinsinapp",
-      "versionCode": 13,
+      "versionCode": 14,
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.READ_EXTERNAL_STORAGE"
       ],
       "intentFilters": [
         {
@@ -76,13 +75,17 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "음식 사진을 촬영하기 위해 카메라 접근이 필요합니다."
+          "cameraPermission": "음식 사진을 촬영하기 위해 카메라 접근이 필요합니다.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "음식 사진을 선택하기 위해 사진 접근이 필요합니다."
+          "photosPermission": "음식 사진을 선택하기 위해 사진 접근이 필요합니다.",
+          "microphonePermission": false
         }
       ],
       "expo-font",
@@ -134,16 +137,26 @@
             }
           },
           "android": {
-            "newArchEnabled": false,
+            "newArchEnabled": true,
             "minSdkVersion": 24,
-            "targetSdkVersion": 34,
+            "targetSdkVersion": 35,
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
             ]
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "주변 추천 식당과 현재 위치(동·구)를 표시하기 위해 위치 정보를 사용합니다.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
     ],
     "scheme": "sinsin",
     "experiments": {
