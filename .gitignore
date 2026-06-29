@@ -7,6 +7,10 @@ google-play-key.json
 *.jks
 *.keystore
 
+# EAS local credentials (contains keystore passwords in plaintext)
+credentials.json
+/credentials/
+
 # Superpowers brainstorming
 .superpowers/
 .claude/

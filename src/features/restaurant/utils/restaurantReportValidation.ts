@@ -13,10 +13,7 @@ export function validateRestaurantReportDraft(
   draft: RestaurantReportValidationDraft,
 ): string | null {
   if (!draft.name.trim()) return "식당 이름을 입력해주세요."
-  if (!draft.address.trim()) return "주소를 입력해주세요."
   if (!draft.category.trim()) return "음식 종류를 입력해주세요."
-  if (!draft.recommendedMenu.trim()) return "추천 메뉴를 입력해주세요."
-  if (!draft.reason.trim()) return "추천 이유를 입력해주세요."
   if (draft.photoCount > MAX_RESTAURANT_REPORT_PHOTOS) {
     return `사진은 최대 ${MAX_RESTAURANT_REPORT_PHOTOS}장까지 첨부할 수 있어요.`
   }

@@ -189,7 +189,7 @@ export function RestaurantReportForm({
               placeholder="예: 초록김밥"
             />
             <TextField
-              label="주소"
+              label="주소 (선택)"
               value={draft.address}
               onChangeText={(value) => update("address", value)}
               placeholder="도로명 주소 또는 동네명"
@@ -201,7 +201,7 @@ export function RestaurantReportForm({
               placeholder="한식, 일식, 분식 등"
             />
             <TextField
-              label="추천 메뉴"
+              label="추천 메뉴 (선택)"
               value={draft.recommendedMenu}
               onChangeText={(value) => update("recommendedMenu", value)}
               placeholder="싱겁게 먹기 좋은 메뉴"
@@ -209,7 +209,7 @@ export function RestaurantReportForm({
 
             <YStack gap="$1.5">
               <Text fontSize={14} color={palette.text}>
-                추천 이유
+                추천 이유 (선택)
               </Text>
               <TextArea
                 minHeight={112}
@@ -224,7 +224,7 @@ export function RestaurantReportForm({
             </YStack>
 
             <TextField
-              label="외부 링크"
+              label="외부 링크 (선택)"
               value={draft.externalLink}
               onChangeText={(value) => update("externalLink", value)}
               placeholder="지도, 메뉴판, 리뷰 링크"
