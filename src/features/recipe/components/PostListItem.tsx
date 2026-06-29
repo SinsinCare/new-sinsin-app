@@ -70,15 +70,19 @@ export function PostListItem({
     Alert.alert("신고 사유를 선택해주세요", undefined, [
       ...reasons.map((r) => ({
         text: r.label,
-        onPress: () => {
-          reportService.reportUser({
-            targetNickName: authorName,
-            reason: r.value,
-          })
-          Alert.alert(
-            "신고 완료",
-            "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
-          )
+        onPress: async () => {
+          try {
+            await reportService.reportUser({
+              targetNickName: authorName,
+              reason: r.value,
+            })
+            Alert.alert(
+              "신고 완료",
+              "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
+            )
+          } catch {
+            Alert.alert("신고 실패", "잠시 후 다시 시도해주세요.")
+          }
         },
       })),
       { text: "취소", style: "cancel" as const },
