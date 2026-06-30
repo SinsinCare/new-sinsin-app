@@ -27,7 +27,7 @@
       "node": "22.21.1",
       "distribution": "store",
       "environment": "preview",
-      "autoIncrement": false,
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
@@ -41,7 +41,7 @@
       "node": "22.21.1",
       "distribution": "store",
       "environment": "preview",
-      "autoIncrement": false,
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
