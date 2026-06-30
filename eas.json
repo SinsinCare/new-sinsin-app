@@ -70,6 +70,13 @@
         "releaseStatus": "completed"
       }
     },
+    "production-draft": {
+      "android": {
+        "serviceAccountKeyPath": "./google-play-key.json",
+        "track": "production",
+        "releaseStatus": "draft"
+      }
+    },
     "testflight": {
       "ios": {
         "ascAppId": "6758880186",
