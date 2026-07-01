@@ -127,7 +127,7 @@ export function KakaoMapWebView({
 
   return (
     <WebView
-      source={{ html, baseUrl: "https://sinsin.mediology.ai" }}
+      source={{ html, baseUrl: "https://sinsincare.kr" }}
       style={[styles.container, style]}
       javaScriptEnabled
       domStorageEnabled

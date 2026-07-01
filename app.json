@@ -16,7 +16,7 @@
       "buildNumber": "4",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
-      "associatedDomains": ["applinks:sinsin.mediology.ai"],
+      "associatedDomains": ["applinks:sinsincare.kr"],
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "신신당부",
@@ -50,7 +50,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "sinsin.mediology.ai",
+              "host": "sinsincare.kr",
               "pathPrefix": "/password-edit"
             }
           ],
