@@ -1,10 +1,10 @@
-import { ApiError } from "@/src/services/core/apiError"
+import { isApiErrorLike } from "@/src/services/core/apiError"
 import type { WithdrawalPendingResult } from "@/src/types"
 
 export function getWithdrawalPendingResult(
   error: unknown,
 ): WithdrawalPendingResult | null {
-  if (!(error instanceof ApiError) || error.code !== "AUTH_ERROR_008") {
+  if (!isApiErrorLike(error) || error.code !== "AUTH_ERROR_008") {
     return null
   }
   const result = error.result

@@ -19,7 +19,7 @@ import type {
 } from "../../types"
 import { isMockUser } from "../../config/appConfig"
 import { api, clearClientSession, publicApi, tokenService } from "../core"
-import { ApiError } from "../core/apiError"
+import { isApiErrorLike } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
 
 function mapAuthUser(
@@ -84,7 +84,7 @@ function getSocialSignupConsentRequiredFromError(
   error: unknown,
   fallbackProvider?: SocialProvider,
 ): SocialSignupConsentRequiredResult | null {
-  if (!(error instanceof ApiError)) return null
+  if (!isApiErrorLike(error)) return null
   return getSocialSignupConsentRequiredResult(
     error.code,
     error.result,
@@ -482,7 +482,7 @@ function getRealAuthService(): IAuthService {
         }
       } catch (error) {
         if (
-          error instanceof ApiError &&
+          isApiErrorLike(error) &&
           (error.statusCode === 401 || error.statusCode === 403)
         ) {
           await clearClientSession()

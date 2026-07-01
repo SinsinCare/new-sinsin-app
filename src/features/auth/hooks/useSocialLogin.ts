@@ -2,7 +2,7 @@ import { useState } from "react"
 import Toast from "react-native-toast-message"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks/useAuth"
-import { ApiError } from "@/src/services/core/apiError"
+import { isApiErrorLike } from "@/src/services/core/apiError"
 import { logger } from "@/src/lib/logger"
 import type {
   SocialLinkRequiredResult,
@@ -38,7 +38,7 @@ function getSocialLinkRequiredResult(
   error: unknown,
 ): SocialLinkRequiredResult | null {
   if (
-    !(error instanceof ApiError) ||
+    !isApiErrorLike(error) ||
     !SOCIAL_LINK_REQUIRED_CODES.has(error.code)
   ) {
     return null
