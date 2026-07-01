@@ -28,6 +28,33 @@ describe("announcement popup service", () => {
     jest.clearAllMocks()
   })
 
+  it("fetches the announcement list from the /user/notices contract", async () => {
+    ;(api.get as jest.Mock).mockResolvedValue({
+      data: {
+        result: [
+          {
+            id: 11,
+            title: "관리자 공지",
+            content: "관리자 대시보드에서 작성했습니다.",
+            createdAt: "2026-07-01T10:30:00",
+          },
+        ],
+      },
+    })
+
+    const notices = await announcementService.fetchList()
+
+    expect(api.get).toHaveBeenCalledWith("/user/notices")
+    expect(notices).toEqual([
+      {
+        id: 11,
+        title: "관리자 공지",
+        content: "관리자 대시보드에서 작성했습니다.",
+        createdAt: "2026-07-01T10:30:00",
+      },
+    ])
+  })
+
   it("fetches the active popup notice from the /notices contract", async () => {
     ;(api.get as jest.Mock).mockResolvedValue({
       data: {
