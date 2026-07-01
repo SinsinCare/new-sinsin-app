@@ -38,7 +38,7 @@
         "backgroundColor": "#D8E9F5"
       },
       "package": "com.mediology.sinsinapp",
-      "versionCode": 14,
+      "versionCode": 19,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE"
@@ -101,7 +101,7 @@
         {
           "nativeAppKey": "709c22f6c6227095a316851f1f902189",
           "android": {
-            "kakaotalkLoginEnabled": true
+            "authCodeHandlerActivity": true
           },
           "ios": {
             "kakaotalkLoginEnabled": true,
