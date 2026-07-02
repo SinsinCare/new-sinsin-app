@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
-import { ScrollView } from "react-native"
+import { RefreshControl, ScrollView } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -56,9 +56,10 @@ export function FreePostTab({
   const [selectedCategory, setSelectedCategory] = useState(
     FREE_POST_CATEGORIES[0].key,
   )
+  const [refreshing, setRefreshing] = useState(false)
 
   const router = useRouter()
-  const { posts } = useCommunityPosts(tagFilter)
+  const { posts, refetch } = useCommunityPosts(tagFilter)
   const { blockedNickNames, blockUser } = useBlockedUsers()
 
   const visiblePosts = useMemo(
@@ -97,13 +98,40 @@ export function FreePostTab({
     [onTagFilterChange],
   )
 
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) {
+      return
+    }
+    setRefreshing(true)
+    try {
+      await refetch()
+    } finally {
+      setRefreshing(false)
+    }
+  }, [refetch, refreshing])
+
   const selectedLabel = tagFilter
     ? `#${tagFilter}`
     : (FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ??
       "")
 
   return (
-    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={{ flex: 1 }}
+      showsVerticalScrollIndicator={false}
+      alwaysBounceVertical
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={tokens.color.primaryAccent.val}
+          colors={[tokens.color.primaryAccent.val]}
+          progressBackgroundColor={
+            isDark ? tokens.color.cardBgDark.val : tokens.color.appBg.val
+          }
+        />
+      }
+    >
       {/* 전체 인기글 섹션 */}
       <YStack
         paddingHorizontal={16}

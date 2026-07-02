@@ -5,6 +5,7 @@ import {
   Keyboard,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
 } from "react-native"
@@ -107,6 +108,7 @@ export default function RecipeScreen() {
   const [writeSheetOpen, setWriteSheetOpen] = useState(false)
   const [recipeModalOpen, setRecipeModalOpen] = useState(false)
   const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [recipeRefreshing, setRecipeRefreshing] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, Set<string>>
   >({})
@@ -155,6 +157,7 @@ export default function RecipeScreen() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    refetch: refetchRecipes,
   } = useInfiniteRecipes({
     search: debouncedSearch,
     categoryKeys,
@@ -230,6 +233,18 @@ export default function RecipeScreen() {
       fetchNextPage()
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const handleRefreshRecipes = useCallback(async () => {
+    if (recipeRefreshing) {
+      return
+    }
+    setRecipeRefreshing(true)
+    try {
+      await refetchRecipes()
+    } finally {
+      setRecipeRefreshing(false)
+    }
+  }, [recipeRefreshing, refetchRecipes])
 
   const renderRecipeItem = useCallback(
     ({ item, index }: { item: CuratedRecipe; index: number }) => (
@@ -326,12 +341,26 @@ export default function RecipeScreen() {
                 contentContainerStyle={styles.recipeListContent}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
+                alwaysBounceVertical
                 initialNumToRender={8}
                 maxToRenderPerBatch={8}
                 windowSize={5}
                 removeClippedSubviews
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.6}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={recipeRefreshing}
+                    onRefresh={handleRefreshRecipes}
+                    tintColor={tokens.color.primaryAccent.val}
+                    colors={[tokens.color.primaryAccent.val]}
+                    progressBackgroundColor={
+                      isDarkMode
+                        ? tokens.color.cardBgDark.val
+                        : tokens.color.appBg.val
+                    }
+                  />
+                }
                 ListEmptyComponent={
                   recipesLoading ? (
                     <YStack paddingVertical={40} alignItems="center">

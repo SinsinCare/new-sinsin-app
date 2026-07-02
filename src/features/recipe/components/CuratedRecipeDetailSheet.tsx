@@ -8,7 +8,6 @@ import {
   AppBottomSheetScrollView,
 } from "@/src/shared/components"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
-import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -111,10 +110,7 @@ export function CuratedRecipeDetailSheet({
     .ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
   const friendlinessConfig =
     FRIENDLINESS_CONFIG[friendlinessKey] ?? FRIENDLINESS_CONFIG.moderate
-  const image =
-    recipe.detail_image_url ??
-    recipe.thumbnail_url ??
-    (recipe.sourceKey ? getCuratedRecipeImage(recipe.sourceKey) : undefined)
+  const image = recipe.detail_image_url ?? recipe.thumbnail_url
 
   return (
     <AppBottomSheet

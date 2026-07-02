@@ -28,7 +28,7 @@ export function HydrationTracker({
 
   return (
     <YStack paddingVertical="$3" gap="$3">
-      <XStack justifyContent="space-between">
+      <XStack justifyContent="space-between" alignItems="center">
         <Text
           fontSize={20}
           fontWeight="600"
@@ -36,6 +36,24 @@ export function HydrationTracker({
         >
           수분 섭취 기록
         </Text>
+        <Pressable
+          onPress={onReset}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.5 : 1,
+          })}
+        >
+          <XStack gap={2} alignItems="center">
+            <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+              되돌리기
+            </Text>
+            <Ionicons
+              name="refresh-outline"
+              size={14}
+              color={tokens.color.grey5.val}
+            />
+          </XStack>
+        </Pressable>
       </XStack>
 
       <XStack
@@ -85,54 +103,27 @@ export function HydrationTracker({
         </XStack>
       </XStack>
 
-      <XStack
-        justifyContent="space-between"
-        alignItems="center"
-        flexWrap="wrap"
-      >
-        {/* Quick add + reset buttons */}
-        <XStack gap={5}>
-          {QUICK_ADD_OPTIONS.map((amount) => (
-            <Pressable
-              key={amount}
-              onPress={() => addWater(amount)}
-              style={({ pressed }) => [
-                styles.chip,
-                {
-                  backgroundColor: chipBg,
-                  transform: [{ scale: pressed ? 0.93 : 1 }],
-                  opacity: pressed ? 0.8 : 1,
-                },
-              ]}
-            >
-              <Text
-                fontSize={15}
-                color={isDarkMode ? "$textDarkSub" : "$color"}
-              >
-                +
-                {QUICK_ADD_LABELS[amount] ??
-                  (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)}
-              </Text>
-            </Pressable>
-          ))}
-        </XStack>
-        <Pressable
-          onPress={onReset}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.5 : 1,
-          })}
-        >
-          <XStack gap={2}>
-            <Text fontSize={14} fontWeight="500" color="$colorSubtle">
-              되돌리기
+      <XStack gap={5} flexWrap="wrap">
+        {QUICK_ADD_OPTIONS.map((amount) => (
+          <Pressable
+            key={amount}
+            onPress={() => addWater(amount)}
+            style={({ pressed }) => [
+              styles.chip,
+              {
+                backgroundColor: chipBg,
+                transform: [{ scale: pressed ? 0.93 : 1 }],
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Text fontSize={15} color={isDarkMode ? "$textDarkSub" : "$color"}>
+              +
+              {QUICK_ADD_LABELS[amount] ??
+                (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)}
             </Text>
-            <Ionicons
-              name="refresh-outline"
-              size={14}
-              color={tokens.color.grey5.val}
-            />
-          </XStack>
-        </Pressable>
+          </Pressable>
+        ))}
       </XStack>
     </YStack>
   )

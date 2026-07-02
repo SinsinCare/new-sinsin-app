@@ -5,7 +5,6 @@ import { YStack, XStack, Text, View } from "tamagui"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
-import { getCuratedRecipeImage } from "../data/curatedRecipeImages"
 
 const COLORS = {
   light: {
@@ -15,6 +14,7 @@ const COLORS = {
     tagBg: "#F2F2F7",
     tagText: "#636366",
     border: "#E5E5EA",
+    accent: tokens.color.primary1.val,
   },
   dark: {
     bg: tokens.color.cardBgDark.val,
@@ -23,6 +23,7 @@ const COLORS = {
     tagBg: "#3A3A42",
     tagText: tokens.color.textDarkSub.val,
     border: "#3A3A42",
+    accent: "#3B2B28",
   },
 } as const
 
@@ -55,9 +56,7 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
   const timeLabel = `${recipe.time_min}분`
 
   const visibleTags = recipe.tags.slice(0, 3)
-  const image =
-    recipe.thumbnail_url ??
-    (recipe.sourceKey ? getCuratedRecipeImage(recipe.sourceKey) : undefined)
+  const image = recipe.thumbnail_url
 
   return (
     <Pressable
@@ -67,10 +66,11 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
       <YStack
         backgroundColor={palette.bg}
         borderRadius={12}
-        padding={12}
-        gap={8}
+        padding={image ? 12 : 14}
+        gap={image ? 8 : 10}
         borderWidth={1}
         borderColor={palette.border}
+        minHeight={image ? undefined : 178}
         style={{
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
@@ -94,6 +94,14 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
               cachePolicy="memory-disk"
             />
           </View>
+        )}
+        {!image && (
+          <View
+            height={4}
+            width={42}
+            borderRadius={999}
+            backgroundColor={palette.accent}
+          />
         )}
 
         {/* Meta: category · difficulty · time */}

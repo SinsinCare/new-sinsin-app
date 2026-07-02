@@ -7,11 +7,12 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  StatusBar,
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
-import { Text, TextArea, XStack, YStack } from "tamagui"
+import { Text, XStack, YStack } from "tamagui"
 
-import { Button, TextField } from "@/src/shared/components"
+import { Button, TextAreaField, TextField } from "@/src/shared/components"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import { restaurantReportService } from "@/src/services/data/restaurantReportService"
@@ -41,6 +42,10 @@ export function RestaurantReportForm({
   const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([])
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const contentTopPadding = Math.max(
+    paddingTop,
+    Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) : 0,
+  )
 
   const palette = isDarkMode
     ? {
@@ -133,7 +138,10 @@ export function RestaurantReportForm({
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { paddingTop }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: contentTopPadding },
+        ]}
       >
         <YStack gap="$4">
           <YStack gap="$2" paddingHorizontal={24} paddingTop={18}>
@@ -207,21 +215,16 @@ export function RestaurantReportForm({
               placeholder="싱겁게 먹기 좋은 메뉴"
             />
 
-            <YStack gap="$1.5">
-              <Text fontSize={14} color={palette.text}>
-                추천 이유 (선택)
-              </Text>
-              <TextArea
-                minHeight={112}
-                borderRadius={10}
-                borderColor={palette.border}
-                backgroundColor={palette.input}
-                color={palette.text}
-                value={draft.reason}
-                onChangeText={(value) => update("reason", value)}
-                placeholder="왜 추천하는지 알려주세요."
-              />
-            </YStack>
+            <TextAreaField
+              label="추천 이유 (선택)"
+              value={draft.reason}
+              onChangeText={(value) => update("reason", value)}
+              placeholder="왜 추천하는지 알려주세요."
+              borderRadius={10}
+              borderColor={palette.border}
+              backgroundColor={palette.input}
+              color={palette.text}
+            />
 
             <TextField
               label="외부 링크 (선택)"
