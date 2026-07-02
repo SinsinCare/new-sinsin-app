@@ -289,11 +289,12 @@ export function MyPageScreen() {
             title: "의사 연결하기",
             onPress: () => router.push("/(settings)/ask-doctor"),
           },
-          {
-            icon: "clipboard-outline" as const,
-            title: "건강검진 데이터 불러오고 분석하기",
-            onPress: () => router.push("/(settings)/health-data"),
-          },
+          // TODO: 기능 개발 완료 후 재노출 (production 출시 전 임시 숨김)
+          // {
+          //   icon: "clipboard-outline" as const,
+          //   title: "건강검진 데이터 불러오고 분석하기",
+          //   onPress: () => router.push("/(settings)/health-data"),
+          // },
           {
             icon: "share-outline" as const,
             title: "나의 데이터 공유하기",
