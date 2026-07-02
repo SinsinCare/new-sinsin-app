@@ -12,10 +12,6 @@ const DEBOUNCE_MS = 500
 export interface UseHomeRecordReturn {
   // Hydration
   intake: number
-  dailyGoal: number
-  percentage: number
-  remaining: number
-  isGoalAchieved: boolean
   addWater: (amount: number) => void
   subtractWater: (amount: number) => void
   resetHydration: (serverExtraWater: number) => void
@@ -151,10 +147,6 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
   return {
     // Hydration
     intake: hydration.intake,
-    dailyGoal: hydration.dailyGoal,
-    percentage: hydration.percentage,
-    remaining: hydration.remaining,
-    isGoalAchieved: hydration.isGoalAchieved,
     addWater: addWaterWithApi,
     subtractWater: subtractWaterWithApi,
     resetHydration: resetWithApi,

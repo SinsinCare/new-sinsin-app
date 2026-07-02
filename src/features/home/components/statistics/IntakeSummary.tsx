@@ -17,7 +17,6 @@ interface IntakeSummaryProps {
 export function IntakeSummary({ analysis }: IntakeSummaryProps) {
   const getIntake = (nutrient: string): number => {
     if (!analysis) return 0
-    if (nutrient === "수분") return analysis.water + analysis.extraWater
     const key = NUTRIENT_KEY_MAP[nutrient]
     return key ? (analysis[key] as number) : 0
   }

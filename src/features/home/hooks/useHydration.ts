@@ -1,28 +1,16 @@
 import { useState, useCallback } from "react"
-import { DEFAULT_DAILY_GOAL } from "../data/hydrationConstants"
 import { clampWaterIntake } from "../utils/waterIntake"
 
 export interface UseHydrationReturn {
   intake: number
-  dailyGoal: number
-  percentage: number
-  remaining: number
-  isGoalAchieved: boolean
   setIntake: (amount: number) => void
   addWater: (amount: number) => void
   subtractWater: (amount: number) => void
   reset: () => void
 }
 
-export const useHydration = (
-  initialGoal: number = DEFAULT_DAILY_GOAL,
-): UseHydrationReturn => {
+export const useHydration = (): UseHydrationReturn => {
   const [intake, setIntakeState] = useState<number>(0)
-  const [dailyGoal] = useState<number>(initialGoal)
-
-  const percentage = Math.min((intake / dailyGoal) * 100, 100)
-  const remaining = Math.max(dailyGoal - intake, 0)
-  const isGoalAchieved = percentage >= 100
 
   const setIntake = useCallback((amount: number): void => {
     setIntakeState(clampWaterIntake(amount))
@@ -42,10 +30,6 @@ export const useHydration = (
 
   return {
     intake,
-    dailyGoal,
-    percentage,
-    remaining,
-    isGoalAchieved,
     setIntake,
     addWater,
     subtractWater,

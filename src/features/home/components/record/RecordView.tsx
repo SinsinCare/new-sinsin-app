@@ -129,17 +129,15 @@ export function RecordView({
     analysis !== null &&
     CKD_NUTRIENT_LIMITS.every((limit) => {
       const intake =
-        limit.nutrient === "수분"
-          ? (analysis.water ?? 0) + (analysis.extraWater ?? 0)
-          : limit.nutrient === "단백질"
-            ? (analysis.protein ?? 0)
-            : limit.nutrient === "나트륨"
-              ? (analysis.sodium ?? 0)
-              : limit.nutrient === "칼륨"
-                ? (analysis.potassium ?? 0)
-                : limit.nutrient === "인"
-                  ? (analysis.phosphorus ?? 0)
-                  : 0
+        limit.nutrient === "단백질"
+          ? (analysis.protein ?? 0)
+          : limit.nutrient === "나트륨"
+            ? (analysis.sodium ?? 0)
+            : limit.nutrient === "칼륨"
+              ? (analysis.potassium ?? 0)
+              : limit.nutrient === "인"
+                ? (analysis.phosphorus ?? 0)
+                : 0
       return intake <= limit.max
     })
 
@@ -392,10 +390,6 @@ export function RecordView({
 
       <HydrationTracker
         intake={record.intake}
-        dailyGoal={record.dailyGoal}
-        percentage={record.percentage}
-        remaining={record.remaining}
-        isGoalAchieved={record.isGoalAchieved}
         addWater={record.addWater}
         onReset={() => {
           record.resetHydration(serverExtraWater)

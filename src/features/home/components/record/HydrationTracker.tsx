@@ -1,72 +1,27 @@
 import { Text, XStack, YStack } from "tamagui"
-import { Animated, Pressable, StyleSheet } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components/Icon"
-import Svg, {
-  Text as SvgText,
-  Defs,
-  ClipPath,
-  Rect,
-  LinearGradient,
-  Stop,
-} from "react-native-svg"
 import {
-  CAP_H,
-  FONT_SIZE,
-  PCT_X,
   QUICK_ADD_LABELS,
   QUICK_ADD_OPTIONS,
-  SVG_HEIGHT,
-  SVG_WIDTH,
-  TEXT_BASELINE,
-  WATER_COLORS,
 } from "../../data/hydrationConstants"
 import { tokens } from "@/src/theme/tokens"
-import { useEffect, useRef, useState } from "react"
 
 interface HydrationTrackerProps {
   intake: number
-  dailyGoal: number
-  percentage: number
-  remaining: number
-  isGoalAchieved: boolean
   addWater: (amount: number) => void
   onReset: () => void
 }
 
 export function HydrationTracker({
   intake,
-  dailyGoal,
-  percentage,
-  remaining,
-  isGoalAchieved,
   addWater,
   onReset,
 }: HydrationTrackerProps) {
   const isDarkMode = useAppColorScheme() === "dark"
 
-  const fillAnim = useRef(new Animated.Value(0)).current
-  const [animWaterY, setAnimWaterY] = useState(TEXT_BASELINE)
-  const [displayPct, setDisplayPct] = useState(0)
-
-  useEffect(() => {
-    const id = fillAnim.addListener(({ value }) => {
-      setAnimWaterY(TEXT_BASELINE - value * CAP_H)
-      setDisplayPct(Math.round(value * 100))
-    })
-    return () => fillAnim.removeListener(id)
-  }, [fillAnim])
-
-  useEffect(() => {
-    const target = Math.min(percentage, 100) / 100
-    Animated.spring(fillAnim, {
-      toValue: target,
-      useNativeDriver: false,
-      tension: 60,
-      friction: 10,
-    }).start()
-  }, [percentage, fillAnim])
   const chipBg = isDarkMode
     ? tokens.color.cardBgDark.val
     : tokens.color.pureWhite.val
@@ -101,86 +56,32 @@ export function HydrationTracker({
               {intake}
             </Text>
             <Text fontSize="$4" color="$colorSubtle" fontWeight="500">
-              /{dailyGoal}ml
+              ml
             </Text>
           </XStack>
           <Text fontSize={13} color="$colorSubtle" fontWeight="500">
-            {isGoalAchieved ? "목표 달성!" : `${remaining}ml 남았어요`}
+            오늘 마신 물
           </Text>
         </YStack>
 
-        {/* Right: water-fill % text + droplet icon (same row) */}
-        <XStack alignItems="center" paddingBottom={5} flexShrink={0} gap={1}>
-          <Svg width={SVG_WIDTH} height={SVG_HEIGHT}>
-            <Defs>
-              <ClipPath id="waterClip">
-                <Rect
-                  x={0}
-                  y={animWaterY}
-                  width={SVG_WIDTH}
-                  height={SVG_HEIGHT - animWaterY}
-                />
-              </ClipPath>
-              <LinearGradient
-                id="waterGradient"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2={SVG_HEIGHT}
-                gradientUnits="userSpaceOnUse"
-              >
-                <Stop offset="0" stopColor={WATER_COLORS.gradientTop} />
-                <Stop offset="1" stopColor={WATER_COLORS.gradientBottom} />
-              </LinearGradient>
-            </Defs>
-
-            {/* 배경 텍스트 (미채움 색) */}
-            <SvgText
-              x={PCT_X}
-              y={TEXT_BASELINE}
-              fontSize={FONT_SIZE}
-              fontWeight="800"
-              textAnchor="end"
-              fill={WATER_COLORS.percentBg}
-            >
-              {displayPct}
-            </SvgText>
-            <SvgText
-              x={PCT_X}
-              y={TEXT_BASELINE}
-              fontSize={FONT_SIZE}
-              fontWeight="800"
-              textAnchor="start"
-              fill={WATER_COLORS.percentBg}
-            >
-              %
-            </SvgText>
-
-            {/* 물 채운 텍스트 (그라디언트), 아래쪽 직사각형 영역만 보임 */}
-            <SvgText
-              x={PCT_X}
-              y={TEXT_BASELINE}
-              fontSize={FONT_SIZE}
-              fontWeight="800"
-              textAnchor="end"
-              fill="url(#waterGradient)"
-              clipPath="url(#waterClip)"
-            >
-              {displayPct}
-            </SvgText>
-            <SvgText
-              x={PCT_X}
-              y={TEXT_BASELINE}
-              fontSize={FONT_SIZE}
-              fontWeight="800"
-              textAnchor="start"
-              fill="url(#waterGradient)"
-              clipPath="url(#waterClip)"
-            >
-              %
-            </SvgText>
-          </Svg>
-          <Icon name="water-drop" size={18} style={{ marginBottom: 18 }} />
+        <XStack
+          alignItems="center"
+          justifyContent="center"
+          width={52}
+          height={52}
+          borderRadius={26}
+          backgroundColor={
+            isDarkMode
+              ? tokens.color.waterPercentBgDark.val
+              : tokens.color.waterPercentBg.val
+          }
+          flexShrink={0}
+        >
+          <Icon
+            name="water-drop"
+            size={28}
+            color={tokens.color.waterFillBottom.val}
+          />
         </XStack>
       </XStack>
 
@@ -208,7 +109,9 @@ export function HydrationTracker({
                 fontSize={15}
                 color={isDarkMode ? "$textDarkSub" : "$color"}
               >
-                +{QUICK_ADD_LABELS[amount] ?? (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)}
+                +
+                {QUICK_ADD_LABELS[amount] ??
+                  (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)}
               </Text>
             </Pressable>
           ))}
