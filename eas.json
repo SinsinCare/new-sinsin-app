@@ -26,28 +26,28 @@
     "testflight": {
       "node": "22.21.1",
       "distribution": "store",
-      "environment": "preview",
+      "environment": "production",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
         "EXPO_PUBLIC_MOCK_NO_USER": "false",
-        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-test-be-87899379852.asia-northeast3.run.app/api/v1",
-        "EXPO_PUBLIC_APP_ENV": "test",
+        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-fastapi-87899379852.asia-northeast3.run.app/api/v1",
+        "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
       }
     },
     "playstore": {
       "node": "22.21.1",
       "distribution": "store",
-      "environment": "preview",
+      "environment": "production",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
         "EXPO_PUBLIC_MOCK_NO_USER": "false",
-        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-test-be-87899379852.asia-northeast3.run.app/api/v1",
-        "EXPO_PUBLIC_APP_ENV": "test",
+        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-fastapi-87899379852.asia-northeast3.run.app/api/v1",
+        "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
       }
     },
