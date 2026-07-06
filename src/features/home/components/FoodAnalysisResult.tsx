@@ -5,6 +5,7 @@ import {
   Alert,
   ActionSheetIOS,
   Platform,
+  Pressable,
 } from "react-native"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { router } from "expo-router"
@@ -79,10 +80,12 @@ export function FoodAnalysisResult({
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
+  const [isAddingToRecord, setIsAddingToRecord] = useState(false)
   // 제목 수정 시 즉시 반영용 로컬 오버라이드 (다른 식단으로 바뀌면 리셋)
   const [titleOverride, setTitleOverride] = useState<string | null>(null)
   useEffect(() => {
     setTitleOverride(null)
+    setIsAddingToRecord(false)
   }, [result?.foodAnalysisResultId])
   const isDarkMode = useAppColorScheme() === "dark"
   const shareCardRef = useRef<ViewShot>(null)
@@ -186,6 +189,17 @@ export function FoodAnalysisResult({
 
   const servingsLabel = `${result.servings}인분`
 
+  const handleAddToRecordPress = async () => {
+    if (isAddingToRecord) return
+    setIsAddingToRecord(true)
+    try {
+      await onAddToRecord?.()
+      onClose()
+    } finally {
+      setIsAddingToRecord(false)
+    }
+  }
+
   return (
     <Modal
       visible={open}
@@ -202,22 +216,30 @@ export function FoodAnalysisResult({
           paddingBottom={10}
           backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
         >
-          <XStack
-            width={40}
-            height={40}
-            alignItems="center"
-            justifyContent="center"
+          <Pressable
             onPress={handleShare}
-            pressStyle={{ opacity: 0.7 }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="분석 결과 공유"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Ionicons
-              name="share-outline"
-              size={22}
-              color={
-                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
-              }
-            />
-          </XStack>
+            <XStack
+              width={40}
+              height={40}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Ionicons
+                name="share-outline"
+                size={22}
+                color={
+                  isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.grey3.val
+                }
+              />
+            </XStack>
+          </Pressable>
           <Text
             fontSize="$5"
             fontWeight="600"
@@ -227,22 +249,30 @@ export function FoodAnalysisResult({
           >
             식단 분석
           </Text>
-          <XStack
-            width={40}
-            height={40}
-            alignItems="center"
-            justifyContent="center"
+          <Pressable
             onPress={handleClosePress}
-            pressStyle={{ opacity: 0.7 }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="분석 결과 닫기"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Ionicons
-              name="close"
-              size={22}
-              color={
-                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
-              }
-            />
-          </XStack>
+            <XStack
+              width={40}
+              height={40}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Ionicons
+                name="close"
+                size={22}
+                color={
+                  isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.grey3.val
+                }
+              />
+            </XStack>
+          </Pressable>
         </XStack>
 
         <ScrollView
@@ -312,25 +342,31 @@ export function FoodAnalysisResult({
                 source={{ uri: imageUri }}
                 style={{ width: "100%", height: 220, resizeMode: "cover" }}
               />
-              <XStack
-                position="absolute"
-                bottom={10}
-                right={10}
-                alignItems="center"
-                backgroundColor="$offWhite"
-                borderRadius={8}
-                paddingHorizontal={9}
-                paddingVertical={7}
-                gap={3}
-                opacity={0.9}
-                pressStyle={{ opacity: 0.5 }}
+              <Pressable
                 onPress={handleEditPress}
+                accessibilityRole="button"
+                accessibilityLabel="식단 수정"
+                style={({ pressed }) => ({
+                  position: "absolute",
+                  bottom: 10,
+                  right: 10,
+                  opacity: pressed ? 0.5 : 0.9,
+                })}
               >
-                <Icon name="edit" size={18} />
-                <Text fontSize={12} fontWeight="600" color="$color.grey4">
-                  식단 수정
-                </Text>
-              </XStack>
+                <XStack
+                  alignItems="center"
+                  backgroundColor="$offWhite"
+                  borderRadius={8}
+                  paddingHorizontal={9}
+                  paddingVertical={7}
+                  gap={3}
+                >
+                  <Icon name="edit" size={18} />
+                  <Text fontSize={12} fontWeight="600" color="$color.grey4">
+                    식단 수정
+                  </Text>
+                </XStack>
+              </Pressable>
             </View>
           )}
 
@@ -527,50 +563,61 @@ export function FoodAnalysisResult({
               영양소 분석 기준: 한국영양학회 식품성분데이터베이스 · 대한신장학회
               CKD 영양 권고안 · 한국보건산업진흥원
             </Text>
-            <Text
-              fontSize={12}
-              color={isDarkMode ? "#5BC5AB" : tokens.color.sub8.val}
-              fontWeight="500"
+            <Pressable
               onPress={() => {
                 onClose()
                 router.push("/(settings)/medical-reference")
               }}
+              accessibilityRole="button"
+              accessibilityLabel="참고 문헌 전체 보기"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              📚 참고 문헌 전체 보기 →
-            </Text>
+              <Text
+                fontSize={12}
+                color={isDarkMode ? "#5BC5AB" : tokens.color.sub8.val}
+                fontWeight="500"
+              >
+                📚 참고 문헌 전체 보기 →
+              </Text>
+            </Pressable>
           </YStack>
 
           {/* 식사에 대해 질문하기 */}
-          <XStack
-            alignItems="center"
-            justifyContent="center"
-            gap={6}
-            marginTop={12}
-            paddingVertical={17}
-            marginHorizontal={15}
-            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-            borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
+          <Pressable
             onPress={() => {
               onClose()
               router.push("/(tabs)/consult")
             }}
+            accessibilityRole="button"
+            accessibilityLabel="식사에 대해 질문하기"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Ionicons
-              name="chatbubble-ellipses-outline"
-              size={18}
-              color={
-                isDarkMode ? tokens.color.appBg.val : tokens.color.grey3.val
-              }
-            />
-            <Text
-              fontSize={16}
-              fontWeight="500"
-              color={isDarkMode ? "$textDark" : "$color"}
+            <XStack
+              alignItems="center"
+              justifyContent="center"
+              gap={6}
+              marginTop={12}
+              paddingVertical={17}
+              marginHorizontal={15}
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+              borderRadius={20}
             >
-              식사에 대해 질문하기
-            </Text>
-          </XStack>
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={18}
+                color={
+                  isDarkMode ? tokens.color.appBg.val : tokens.color.grey3.val
+                }
+              />
+              <Text
+                fontSize={16}
+                fontWeight="500"
+                color={isDarkMode ? "$textDark" : "$color"}
+              >
+                식사에 대해 질문하기
+              </Text>
+            </XStack>
+          </Pressable>
         </ScrollView>
 
         {/* 하단 고정 버튼 */}
@@ -585,22 +632,28 @@ export function FoodAnalysisResult({
             paddingTop={12}
             paddingBottom={insets.bottom + 12}
           >
-            <YStack
-              backgroundColor={tokens.color.primary7.val}
-              borderRadius={30}
-              height={54}
-              alignItems="center"
-              justifyContent="center"
-              onPress={async () => {
-                await onAddToRecord?.()
-                onClose()
-              }}
-              pressStyle={{ opacity: 0.8 }}
+            <Pressable
+              onPress={handleAddToRecordPress}
+              disabled={isAddingToRecord}
+              accessibilityRole="button"
+              accessibilityLabel="기록에 추가하기"
+              style={({ pressed }) => ({
+                width: "100%",
+                opacity: isAddingToRecord ? 0.7 : pressed ? 0.8 : 1,
+              })}
             >
-              <Text color="white" fontSize={16} fontWeight="700">
-                기록에 추가하기
-              </Text>
-            </YStack>
+              <YStack
+                backgroundColor={tokens.color.primary7.val}
+                borderRadius={30}
+                height={54}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Text color="white" fontSize={16} fontWeight="700">
+                  {isAddingToRecord ? "기록 중..." : "기록에 추가하기"}
+                </Text>
+              </YStack>
+            </Pressable>
           </YStack>
         )}
       </YStack>
@@ -664,24 +717,28 @@ export function FoodAnalysisResult({
             />
 
             <XStack>
-              <YStack
-                flex={1}
-                alignItems="center"
-                paddingVertical="$4"
+              <Pressable
                 onPress={() => {
                   setShowExitConfirm(false)
                   onClose()
                 }}
-                pressStyle={{ opacity: 0.6 }}
+                accessibilityRole="button"
+                accessibilityLabel="기록하지 않고 나가기"
+                style={({ pressed }) => ({
+                  flex: 1,
+                  opacity: pressed ? 0.6 : 1,
+                })}
               >
-                <Text
-                  color={tokens.color.primary9.val}
-                  fontSize={15}
-                  fontWeight="500"
-                >
-                  나가기
-                </Text>
-              </YStack>
+                <YStack alignItems="center" paddingVertical="$4">
+                  <Text
+                    color={tokens.color.primary9.val}
+                    fontSize={15}
+                    fontWeight="500"
+                  >
+                    나가기
+                  </Text>
+                </YStack>
+              </Pressable>
 
               <View
                 width={1}
@@ -690,21 +747,25 @@ export function FoodAnalysisResult({
                 }
               />
 
-              <YStack
-                flex={1}
-                alignItems="center"
-                paddingVertical="$4"
+              <Pressable
                 onPress={() => setShowExitConfirm(false)}
-                pressStyle={{ opacity: 0.8 }}
+                accessibilityRole="button"
+                accessibilityLabel="분석 결과로 돌아가기"
+                style={({ pressed }) => ({
+                  flex: 1,
+                  opacity: pressed ? 0.8 : 1,
+                })}
               >
-                <Text
-                  fontSize={15}
-                  fontWeight="500"
-                  color={isDarkMode ? "$textDark" : "$color"}
-                >
-                  돌아가기
-                </Text>
-              </YStack>
+                <YStack alignItems="center" paddingVertical="$4">
+                  <Text
+                    fontSize={15}
+                    fontWeight="500"
+                    color={isDarkMode ? "$textDark" : "$color"}
+                  >
+                    돌아가기
+                  </Text>
+                </YStack>
+              </Pressable>
             </XStack>
           </YStack>
         </YStack>
