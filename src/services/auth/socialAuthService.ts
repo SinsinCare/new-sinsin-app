@@ -12,6 +12,12 @@ import { logger } from "@/src/lib/logger"
 import type { SocialProvider } from "@/src/types"
 
 const KAKAO_NATIVE_APP_KEY = "709c22f6c6227095a316851f1f902189"
+const GOOGLE_WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ||
+  "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com"
+const GOOGLE_IOS_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim() ||
+  "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com"
 
 export interface SocialAuthResult {
   provider: SocialProvider
@@ -27,10 +33,8 @@ function createGoogleCancelledError() {
 }
 
 GoogleSignin.configure({
-  webClientId:
-    "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
-  iosClientId:
-    "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+  iosClientId: GOOGLE_IOS_CLIENT_ID,
 })
 
 export async function signInWithGoogle(): Promise<SocialAuthResult> {
