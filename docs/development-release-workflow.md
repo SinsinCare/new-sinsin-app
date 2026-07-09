@@ -96,14 +96,20 @@ npm run build:test:ios
 npm run build:test:android
 ```
 
-Equivalent EAS profile:
+Equivalent EAS profiles:
 
 ```bash
-eas build --platform all --profile test
+eas build --platform android --profile test
+eas build --platform ios --profile ios-testflight-test
 ```
 
-The EAS `test` profile reads values from the EAS `preview` environment. The
-values must be configured in EAS, not committed to this repository.
+The EAS `test`, `preview`, and `ios-testflight-test` profiles all point to the
+test backend:
+`https://sinsin-test-be-87899379852.asia-northeast3.run.app/api/v1`.
+
+`ios-testflight-test` uses store distribution credentials so it can run in
+non-interactive EAS builds. It is a test-backend build, not a production-backend
+release build.
 
 ## Production Build
 
@@ -122,7 +128,8 @@ npm run deploy:prod
 ```
 
 The EAS `production` profile reads values from the EAS `production`
-environment. The values must be configured in EAS, not committed to this
+environment and points to the production backend:
+`https://sinsin-fastapi-87899379852.asia-northeast3.run.app/api/v1`.
 repository.
 
 ## AI Build Requests
