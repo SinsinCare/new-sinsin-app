@@ -16,6 +16,8 @@ import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
 
+const ANALYZE_TEXT_TIMEOUT_MS = 180000
+
 async function compressImage(uri: string): Promise<string> {
   try {
     let sourceUri = uri
@@ -100,10 +102,14 @@ export const foodCameraService = {
       result = await mockFoodCameraService.analyze()
     } else {
       try {
-        const response = await api.post("/food-camera/analyze-text", {
-          text,
-          ...(requestId ? { requestId } : {}),
-        })
+        const response = await api.post(
+          "/food-camera/analyze-text",
+          {
+            text,
+            ...(requestId ? { requestId } : {}),
+          },
+          { timeout: ANALYZE_TEXT_TIMEOUT_MS },
+        )
         result = response.data.result as FoodCameraAnalyzeResult
       } catch (err) {
         if (isAxiosError(err) && err.response?.data?.message) {

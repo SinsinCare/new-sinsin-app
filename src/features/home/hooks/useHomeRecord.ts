@@ -49,40 +49,51 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
     intakeRef.current = hydration.intake
   }, [hydration.intake])
 
-  // flushPendingWater은 stable — updateExtraWater ref로 접근해서 매 렌더 재생성 방지
-  const flushPendingWater = useMemo(
-    () =>
-      debounce((flushDateStr: string) => {
-        const delta = pendingDeltaRef.current
-        if (delta === 0) return
-        pendingDeltaRef.current = 0
-        updateExtraWaterRef.current(flushDateStr, delta).then(() => {
+  const savePendingWater = useCallback(
+    (flushDateStr: string) => {
+      const delta = pendingDeltaRef.current
+      if (delta === 0) return
+      pendingDeltaRef.current = 0
+      updateExtraWaterRef
+        .current(flushDateStr, delta)
+        .then(() => {
           queryClient.refetchQueries({
             queryKey: ["dateAnalysis", flushDateStr],
           })
         })
-      }, DEBOUNCE_MS),
+        .catch((error) => {
+          console.error("updateExtraWater error:", error)
+        })
+    },
     [queryClient],
   )
 
-  const flushPendingWaterRef = useRef(flushPendingWater)
-  flushPendingWaterRef.current = flushPendingWater
+  const flushPendingWater = useMemo(
+    () => debounce(savePendingWater, DEBOUNCE_MS),
+    [savePendingWater],
+  )
+
+  const flushPendingWaterNow = useCallback(
+    (flushDateStr: string) => {
+      flushPendingWater.cancel()
+      savePendingWater(flushDateStr)
+    },
+    [flushPendingWater, savePendingWater],
+  )
 
   // Reset hydration when date changes
   const { setIntake: setHydrationIntake } = hydration
   useEffect(() => {
-    flushPendingWaterRef.current.cancel()
-    pendingDeltaRef.current = 0
     intakeRef.current = 0
     setHydrationIntake(0)
   }, [dateStr, setHydrationIntake])
 
-  // Cancel debounce on unmount
+  // Flush pending water for the date that is being left.
   useEffect(() => {
     return () => {
-      flushPendingWaterRef.current.cancel()
+      flushPendingWaterNow(dateStr)
     }
-  }, [])
+  }, [dateStr, flushPendingWaterNow])
 
   const addWaterWithApi = useCallback(
     (amount: number) => {
@@ -131,11 +142,15 @@ export const useHomeRecord = (selectedDate: Date): UseHomeRecordReturn => {
       hydration.reset()
 
       // API call + refetch current date only
-      updateExtraWater(dateStr, -serverExtraWater).then(() => {
-        queryClient.refetchQueries({
-          queryKey: ["dateAnalysis", dateStr],
+      updateExtraWater(dateStr, -serverExtraWater)
+        .then(() => {
+          queryClient.refetchQueries({
+            queryKey: ["dateAnalysis", dateStr],
+          })
         })
-      })
+        .catch((error) => {
+          console.error("resetExtraWater error:", error)
+        })
     },
     [hydration, dateStr, updateExtraWater, queryClient, flushPendingWater],
   )

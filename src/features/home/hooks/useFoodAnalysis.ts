@@ -2,6 +2,7 @@ import { useRef, useState } from "react"
 import { Alert } from "react-native"
 import { useQueryClient } from "@tanstack/react-query"
 import { foodCameraService } from "@/src/services/data"
+import { isApiErrorLike } from "@/src/services/core/apiError"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
@@ -20,6 +21,12 @@ import { toDateStr } from "@/src/features/home/utils/dateUtils"
 function createFoodAnalysisRequestId(): string {
   const randomPart = Math.random().toString(36).slice(2, 10)
   return `food-${Date.now().toString(36)}-${randomPart}`
+}
+
+function isTimeoutError(error: unknown): boolean {
+  if (isApiErrorLike(error)) return error.code === "ECONNABORTED"
+  if (!error || typeof error !== "object") return false
+  return (error as { code?: unknown }).code === "ECONNABORTED"
 }
 
 export function useFoodAnalysis(
@@ -132,7 +139,14 @@ export function useFoodAnalysis(
     } catch (error) {
       if (!dismissedRef.current) {
         console.error("analyzeText error:", error)
-        Alert.alert("분석 실패", getErrorMessage(error))
+        if (isTimeoutError(error)) {
+          Alert.alert(
+            "분석 진행 중",
+            "식단 분석 요청이 길어지고 있어요. 서버에서는 계속 처리될 수 있어 앱을 다시 열거나 잠시 후 결과 알림을 확인해주세요.",
+          )
+        } else {
+          Alert.alert("분석 실패", getErrorMessage(error))
+        }
       }
     } finally {
       setIsAnalyzing(false)
