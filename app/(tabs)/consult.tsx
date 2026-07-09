@@ -13,7 +13,7 @@ import {
   GestureResponderEvent,
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
-import { useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter } from "expo-router"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -47,9 +47,152 @@ import { chatHistoryQuery } from "@/src/features/consultation/data/queyOptions"
 import { ChatHistoryCardSkeleton } from "@/src/features/consultation/components/ChatHistoryCardSkeleton"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
+type FoodConsultSearchParams = {
+  foodConsultContext?: string | string[]
+  foodConsultRequestId?: string | string[]
+}
+
+interface FoodConsultContext {
+  foodAnalysisResultId?: number
+  mealType?: string
+  mealLabel?: string
+  title?: string
+  servings?: number
+  total?: {
+    calories?: number
+    carbohydrates?: number
+    protein?: number
+    fat?: number
+    sodium?: number
+    potassium?: number
+    phosphorus?: number
+    water?: number
+  }
+  comment?: string
+  cautionFoods?: {
+    food?: string
+    reason?: string
+  }[]
+  foods?: {
+    name?: string
+    servingSizeValue?: number | null
+    servingSizeUnit?: string
+    restrictionLevel?: string
+    nutritionStatus?: string
+    calories?: number
+    carbohydrates?: number
+    protein?: number
+    fat?: number
+    sodium?: number
+    potassium?: number
+    phosphorus?: number
+    water?: number
+  }[]
+}
+
+const FOOD_CONSULT_MESSAGE_MAX_LENGTH = 4800
+
+function getParamString(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null
+  return value ?? null
+}
+
+function parseFoodConsultContext(raw: string): FoodConsultContext | null {
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== "object") return null
+    return parsed as FoodConsultContext
+  } catch {
+    return null
+  }
+}
+
+function formatNutrient(value: unknown, unit: string): string | null {
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${Math.round(value)}${unit}`
+    : null
+}
+
+function buildFoodConsultMessage(context: FoodConsultContext): string {
+  const title = context.title?.trim() || "분석한 식사"
+  const mealLabel = context.mealLabel ?? context.mealType
+  const total = context.total ?? {}
+  const totalLine = [
+    formatNutrient(total.calories, "kcal"),
+    formatNutrient(total.carbohydrates, "g 탄수화물"),
+    formatNutrient(total.protein, "g 단백질"),
+    formatNutrient(total.fat, "g 지방"),
+    formatNutrient(total.sodium, "mg 나트륨"),
+    formatNutrient(total.potassium, "mg 칼륨"),
+    formatNutrient(total.phosphorus, "mg 인"),
+    formatNutrient(total.water, "ml 수분"),
+  ]
+    .filter(Boolean)
+    .join(", ")
+
+  const foodsLine =
+    context.foods
+      ?.slice(0, 8)
+      .map((food) => {
+        const serving =
+          food.servingSizeValue != null && food.servingSizeUnit
+            ? ` ${food.servingSizeValue}${food.servingSizeUnit}`
+            : ""
+        const nutrition = [
+          formatNutrient(food.calories, "kcal"),
+          formatNutrient(food.sodium, "mg 나트륨"),
+          formatNutrient(food.potassium, "mg 칼륨"),
+          formatNutrient(food.phosphorus, "mg 인"),
+        ]
+          .filter(Boolean)
+          .join(", ")
+        const status =
+          food.nutritionStatus === "PENDING" ? "영양 재계산 대기" : undefined
+        const restriction = food.restrictionLevel
+          ? `주의도 ${food.restrictionLevel}`
+          : undefined
+        return `- ${food.name ?? "음식"}${serving}: ${[
+          nutrition,
+          restriction,
+          status,
+        ]
+          .filter(Boolean)
+          .join(", ")}`
+      })
+      .join("\n") ?? ""
+
+  const cautionsLine =
+    context.cautionFoods
+      ?.slice(0, 5)
+      .map(
+        (item) =>
+          `- ${item.food ?? "주의 음식"}: ${item.reason ?? "주의가 필요합니다."}`,
+      )
+      .join("\n") ?? ""
+
+  return [
+    "아래 식단 분석 결과를 바탕으로 신장 건강 관점에서 주의할 점과 다음 식사 조절법을 알려주세요.",
+    "",
+    `[식단] ${title}`,
+    mealLabel ? `[끼니] ${mealLabel}` : null,
+    context.foodAnalysisResultId
+      ? `[분석결과 ID] ${context.foodAnalysisResultId}`
+      : null,
+    context.servings ? `[분량] ${context.servings}인분` : null,
+    totalLine ? `[총 영양] ${totalLine}` : null,
+    context.comment ? `[분석 한줄평] ${context.comment}` : null,
+    foodsLine ? `[음식별 정보]\n${foodsLine}` : null,
+    cautionsLine ? `[주의 음식]\n${cautionsLine}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, FOOD_CONSULT_MESSAGE_MAX_LENGTH)
+}
+
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const foodConsultParams = useLocalSearchParams<FoodConsultSearchParams>()
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   const [inputMessage, setInputMessage] = useState("")
@@ -195,6 +338,10 @@ export default function ConsultScreen() {
   const [pendingFaqMessage, setPendingFaqMessage] = useState<string | null>(
     null,
   )
+  const [pendingFoodConsultMessage, setPendingFoodConsultMessage] = useState<
+    string | null
+  >(null)
+  const handledFoodConsultRequestRef = useRef<string | null>(null)
 
   const handleFaqPress = (entry: FaqCardEntry) => {
     setCategory(entry.category)
@@ -208,6 +355,36 @@ export default function ConsultScreen() {
       setPendingFaqMessage(null)
     }
   }, [pendingFaqMessage, category, sendMessage])
+
+  useEffect(() => {
+    const rawContext = getParamString(foodConsultParams.foodConsultContext)
+    if (!rawContext) return
+
+    const requestId =
+      getParamString(foodConsultParams.foodConsultRequestId) ?? rawContext
+    if (handledFoodConsultRequestRef.current === requestId) return
+
+    const context = parseFoodConsultContext(rawContext)
+    if (!context) return
+
+    handledFoodConsultRequestRef.current = requestId
+    resetChat()
+    setInputMessage("")
+    setCategory("FOOD_DIET")
+    setPendingFoodConsultMessage(buildFoodConsultMessage(context))
+  }, [
+    foodConsultParams.foodConsultContext,
+    foodConsultParams.foodConsultRequestId,
+    resetChat,
+    setCategory,
+  ])
+
+  useEffect(() => {
+    if (pendingFoodConsultMessage && category === "FOOD_DIET") {
+      sendMessage(pendingFoodConsultMessage)
+      setPendingFoodConsultMessage(null)
+    }
+  }, [pendingFoodConsultMessage, category, sendMessage])
 
   const handleSend = () => {
     sendMessage(inputMessage)
@@ -373,6 +550,19 @@ export default function ConsultScreen() {
                 : "#F2F2F5",
             }}
           >
+            <Pressable
+              onPress={handlePlusPress}
+              disabled={isTyping}
+              accessibilityRole="button"
+              accessibilityLabel="상담 첨부 메뉴 열기"
+              style={({ pressed }) => ({
+                ...styles.attachButton,
+                opacity: pressed ? 0.6 : isTyping ? 0.4 : 1,
+              })}
+            >
+              <Icon name="paperclip" size={20} color={menuTextColor} />
+            </Pressable>
+
             <TextInput
               value={inputMessage}
               onChangeText={setInputMessage}
@@ -545,6 +735,13 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  attachButton: {
     width: 32,
     height: 32,
     borderRadius: 18,

@@ -64,6 +64,39 @@ const MEAL_LABEL: Record<MealType, string> = {
   SNACKS: "간식",
 }
 
+function buildFoodConsultContext(
+  result: FoodCameraAnalyzeResult,
+  mealType?: MealType,
+) {
+  return JSON.stringify({
+    foodAnalysisResultId: result.foodAnalysisResultId,
+    mealType,
+    mealLabel: mealType ? MEAL_LABEL[mealType] : undefined,
+    title: result.title,
+    servings: result.servings,
+    total: result.total,
+    comment: result.evaluation.comment,
+    cautionFoods: result.evaluation.cautionFoods.map((item) => ({
+      food: item.food,
+      reason: item.reason,
+    })),
+    foods: result.foods.map((food) => ({
+      name: food.name,
+      servingSizeValue: food.servingSizeValue,
+      servingSizeUnit: food.servingSizeUnit,
+      restrictionLevel: food.restrictionLevel,
+      calories: food.calories,
+      protein: food.protein,
+      carbohydrates: food.carbohydrates,
+      fat: food.fat,
+      sodium: food.sodium,
+      potassium: food.potassium,
+      phosphorus: food.phosphorus,
+      water: food.water,
+    })),
+  })
+}
+
 export function FoodAnalysisResult({
   result,
   open,
@@ -198,6 +231,17 @@ export function FoodAnalysisResult({
     } finally {
       setIsAddingToRecord(false)
     }
+  }
+
+  const handleAskAboutMealPress = () => {
+    onClose()
+    router.push({
+      pathname: "/(tabs)/consult",
+      params: {
+        foodConsultContext: buildFoodConsultContext(effectiveResult, mealType),
+        foodConsultRequestId: `${effectiveResult.foodAnalysisResultId}-${Date.now()}`,
+      },
+    })
   }
 
   return (
@@ -584,10 +628,7 @@ export function FoodAnalysisResult({
 
           {/* 식사에 대해 질문하기 */}
           <Pressable
-            onPress={() => {
-              onClose()
-              router.push("/(tabs)/consult")
-            }}
+            onPress={handleAskAboutMealPress}
             accessibilityRole="button"
             accessibilityLabel="식사에 대해 질문하기"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
