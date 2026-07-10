@@ -203,10 +203,14 @@ describe("foodCameraService requestId contract", () => {
       ) => Promise<unknown>
     )("저염 샐러드", "food-req-4")
 
-    expect(api.post).toHaveBeenCalledWith("/food-camera/analyze-text", {
-      text: "저염 샐러드",
-      requestId: "food-req-4",
-    })
+    expect(api.post).toHaveBeenCalledWith(
+      "/food-camera/analyze-text",
+      {
+        text: "저염 샐러드",
+        requestId: "food-req-4",
+      },
+      { timeout: 180000 },
+    )
   })
 
   it("fetches completed analysis by requestId", async () => {

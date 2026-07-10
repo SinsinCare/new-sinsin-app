@@ -48,6 +48,15 @@ interface FoodAnalysisResultProps {
     diaryId: number,
     mealType: string,
   ) => Promise<{ diaryId: number; mealType: string } | undefined>
+  onResultChange?: (result: FoodCameraAnalyzeResult) => void
+  onMealTypeChange?: (change: FoodAnalysisMealTypeChange) => void
+}
+
+export interface FoodAnalysisMealTypeChange {
+  diaryId: number
+  fromMealType: MealType
+  toMealType: MealType
+  imageUri: string | null
 }
 
 const MEAL_TYPE_ICON: Record<MealType, string> = {
@@ -109,17 +118,39 @@ export function FoodAnalysisResult({
   updateFoodAnalysis,
   diaryId,
   updateDiaryMealType,
+  onResultChange,
+  onMealTypeChange,
 }: FoodAnalysisResultProps) {
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
   const [isAddingToRecord, setIsAddingToRecord] = useState(false)
-  // 제목 수정 시 즉시 반영용 로컬 오버라이드 (다른 식단으로 바뀌면 리셋)
-  const [titleOverride, setTitleOverride] = useState<string | null>(null)
+  const [displayResult, setDisplayResult] =
+    useState<FoodCameraAnalyzeResult | null>(result)
+  const [displayMealType, setDisplayMealType] = useState<MealType | undefined>(
+    mealType,
+  )
+  const [displayImageUri, setDisplayImageUri] = useState<string | undefined>(
+    imageUri ?? result?.imageUrl ?? undefined,
+  )
+
   useEffect(() => {
-    setTitleOverride(null)
+    setDisplayResult(result)
+  }, [result])
+
+  useEffect(() => {
+    setDisplayMealType(mealType)
+  }, [mealType])
+
+  useEffect(() => {
+    setDisplayImageUri(imageUri ?? result?.imageUrl ?? undefined)
+  }, [imageUri, result?.imageUrl])
+
+  useEffect(() => {
     setIsAddingToRecord(false)
+    setIsEdit(false)
   }, [result?.foodAnalysisResultId])
+
   const isDarkMode = useAppColorScheme() === "dark"
   const shareCardRef = useRef<ViewShot>(null)
   const FACEBOOK_APP_ID = "1306082818293951"
@@ -202,11 +233,9 @@ export function FoodAnalysisResult({
     }
   }, [])
 
-  if (!result) return null
+  if (!displayResult) return null
 
-  // 제목 수정 즉시 반영용: 오버라이드가 있으면 그 제목 사용 (편집화면 재진입 포함)
-  const effectiveResult =
-    titleOverride != null ? { ...result, title: titleOverride } : result
+  const effectiveResult = displayResult
 
   const handleEditPress = () => {
     setIsEdit(true)
@@ -220,7 +249,7 @@ export function FoodAnalysisResult({
     }
   }
 
-  const servingsLabel = `${result.servings}인분`
+  const servingsLabel = `${effectiveResult.servings}인분`
 
   const handleAddToRecordPress = async () => {
     if (isAddingToRecord) return
@@ -238,9 +267,34 @@ export function FoodAnalysisResult({
     router.push({
       pathname: "/(tabs)/consult",
       params: {
-        foodConsultContext: buildFoodConsultContext(effectiveResult, mealType),
+        foodConsultContext: buildFoodConsultContext(
+          effectiveResult,
+          displayMealType,
+        ),
         foodConsultRequestId: `${effectiveResult.foodAnalysisResultId}-${Date.now()}`,
       },
+    })
+  }
+
+  const handleResultChange = (updated: FoodCameraAnalyzeResult) => {
+    setDisplayResult(updated)
+    if (updated.imageUrl) setDisplayImageUri(updated.imageUrl)
+    onResultChange?.(updated)
+  }
+
+  const handleTitleChange = (title: string) => {
+    setDisplayResult((prev) => (prev ? { ...prev, title } : prev))
+  }
+
+  const handleMealTypeChange = (change: {
+    diaryId: number
+    fromMealType: MealType
+    toMealType: MealType
+  }) => {
+    setDisplayMealType(change.toMealType)
+    onMealTypeChange?.({
+      ...change,
+      imageUri: displayImageUri ?? effectiveResult.imageUrl ?? null,
     })
   }
 
@@ -345,7 +399,7 @@ export function FoodAnalysisResult({
                 {servingsLabel}
               </Text>
             </Text>
-            {mealType && (
+            {displayMealType && (
               <XStack
                 alignItems="center"
                 gap="$1"
@@ -359,7 +413,9 @@ export function FoodAnalysisResult({
               >
                 <Ionicons
                   name={
-                    MEAL_TYPE_ICON[mealType] as keyof typeof Ionicons.glyphMap
+                    MEAL_TYPE_ICON[
+                      displayMealType
+                    ] as keyof typeof Ionicons.glyphMap
                   }
                   size={15}
                   color={
@@ -373,17 +429,17 @@ export function FoodAnalysisResult({
                   color={isDarkMode ? "$textDark" : "$color"}
                   fontWeight="500"
                 >
-                  {MEAL_LABEL[mealType]}
+                  {MEAL_LABEL[displayMealType]}
                 </Text>
               </XStack>
             )}
           </XStack>
 
           {/* 음식 이미지 */}
-          {imageUri && (
+          {displayImageUri && (
             <View marginHorizontal="$4" borderRadius={16} overflow="hidden">
               <Image
-                source={{ uri: imageUri }}
+                source={{ uri: displayImageUri }}
                 style={{ width: "100%", height: 220, resizeMode: "cover" }}
               />
               <Pressable
@@ -432,7 +488,7 @@ export function FoodAnalysisResult({
               lineHeight={22}
               fontWeight="600"
             >
-              {result.evaluation.comment}
+              {effectiveResult.evaluation.comment}
             </Text>
           </YStack>
 
@@ -457,7 +513,7 @@ export function FoodAnalysisResult({
                 fontWeight="600"
                 color={isDarkMode ? "$textDark" : "$color"}
               >
-                {Math.round(result.total.calories)}
+                {Math.round(effectiveResult.total.calories)}
               </Text>
               <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
                 Kcal
@@ -465,9 +521,9 @@ export function FoodAnalysisResult({
             </XStack>
             <View height="$2" />
             <MacroBar
-              carbs={result.total.carbohydrates}
-              protein={result.total.protein}
-              fat={result.total.fat}
+              carbs={effectiveResult.total.carbohydrates}
+              protein={effectiveResult.total.protein}
+              fat={effectiveResult.total.fat}
             />
           </YStack>
 
@@ -492,7 +548,7 @@ export function FoodAnalysisResult({
                 단백질은 체중 1kg당 0.8g) 대비 이 음식의 비율이에요.
               </Text>
             </XStack>
-            {result.foods.map((food, i) => {
+            {effectiveResult.foods.map((food, i) => {
               const restriction = getRestrictionStyle(food.restrictionLevel)
               return (
                 <YStack
@@ -559,7 +615,7 @@ export function FoodAnalysisResult({
           </YStack>
 
           {/* 더 건강하게 식사하는 법 */}
-          {result.evaluation.cautionFoods.length > 0 && (
+          {effectiveResult.evaluation.cautionFoods.length > 0 && (
             <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
               <Text
                 fontSize={22}
@@ -574,7 +630,7 @@ export function FoodAnalysisResult({
                 padding="$4"
                 gap="$6"
               >
-                {result.evaluation.cautionFoods.map((item, i) => (
+                {effectiveResult.evaluation.cautionFoods.map((item, i) => (
                   <YStack key={i} gap="$2">
                     <Text fontSize="$3" fontWeight="700" color="$colorSubtle">
                       주의해야 할 음식 {i + 1}: {item.food}
@@ -702,9 +758,9 @@ export function FoodAnalysisResult({
       {/* 공유 카드 (offscreen) */}
       <ShareCard
         ref={shareCardRef}
-        result={result}
-        imageUri={imageUri}
-        mealType={mealType}
+        result={effectiveResult}
+        imageUri={displayImageUri}
+        mealType={displayMealType}
       />
 
       {/* 나가기 확인 오버레이 */}
@@ -814,14 +870,16 @@ export function FoodAnalysisResult({
       {isEdit && (
         <FoodResultEdit
           result={effectiveResult}
-          imageUri={imageUri}
+          imageUri={displayImageUri}
           onClose={() => setIsEdit(false)}
-          mealType={mealType ?? null}
+          mealType={displayMealType ?? null}
           isUpdating={isUpdating}
           updateFoodAnalysis={updateFoodAnalysis}
-          onTitleChange={setTitleOverride}
+          onAnalysisChange={handleResultChange}
+          onTitleChange={handleTitleChange}
           diaryId={diaryId}
           updateDiaryMealType={updateDiaryMealType}
+          onMealTypeChange={handleMealTypeChange}
         />
       )}
     </Modal>

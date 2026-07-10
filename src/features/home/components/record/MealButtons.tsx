@@ -18,7 +18,7 @@ import { getMealButtonAction } from "../../utils/mealRecordUtils"
 
 interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
-  mealImages?: Partial<Record<MealType, string>>
+  mealImages?: Partial<Record<MealType, string | null>>
   recordedMeals?: Partial<Record<MealType, boolean>>
   skippedMeals?: Partial<Record<MealType, boolean>>
   mealTimes?: Partial<Record<MealType, string>>

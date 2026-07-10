@@ -45,6 +45,12 @@ interface FoodResultEditProps {
     diaryId: number,
     mealType: string,
   ) => Promise<{ diaryId: number; mealType: string } | undefined>
+  onAnalysisChange?: (result: FoodAnalysisUpdateResult) => void
+  onMealTypeChange?: (change: {
+    diaryId: number
+    fromMealType: MealType
+    toMealType: MealType
+  }) => void
 }
 
 export function FoodResultEdit({
@@ -57,6 +63,8 @@ export function FoodResultEdit({
   onTitleChange,
   diaryId,
   updateDiaryMealType,
+  onAnalysisChange,
+  onMealTypeChange,
 }: FoodResultEditProps) {
   const {
     foods,
@@ -135,6 +143,7 @@ export function FoodResultEdit({
       diaryId != null &&
       updateDiaryMealType != null &&
       selectedMealType != null &&
+      mealType != null &&
       selectedMealType !== mealType
 
     if (!eatenPercentageChanged && !foodsChanged && !mealTypeChanged) {
@@ -153,11 +162,23 @@ export function FoodResultEdit({
         result.foodAnalysisResultId,
         body,
       )
-      if (!updated) ok = false
+      if (updated) {
+        onAnalysisChange?.(updated)
+      } else {
+        ok = false
+      }
     }
     if (ok && mealTypeChanged) {
       const changed = await updateDiaryMealType(diaryId, selectedMealType)
-      if (!changed) ok = false
+      if (changed) {
+        onMealTypeChange?.({
+          diaryId: changed.diaryId,
+          fromMealType: mealType,
+          toMealType: selectedMealType,
+        })
+      } else {
+        ok = false
+      }
     }
     if (ok) onClose()
   }

@@ -37,6 +37,15 @@ GoogleSignin.configure({
   iosClientId: GOOGLE_IOS_CLIENT_ID,
 })
 
+async function clearGoogleSigninSession(): Promise<void> {
+  try {
+    await GoogleSignin.signOut()
+    logger.debug("[Google SignIn] 기존 Google 세션 초기화 완료")
+  } catch (e) {
+    logger.debug("[Google SignIn] 기존 Google 세션 초기화 실패 또는 없음", e)
+  }
+}
+
 export async function signInWithGoogle(): Promise<SocialAuthResult> {
   logger.debug("[Google SignIn] 시작")
   try {
@@ -46,6 +55,8 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
     logger.error("[Google SignIn] hasPlayServices 실패", e)
     throw e
   }
+
+  await clearGoogleSigninSession()
 
   let response
   try {

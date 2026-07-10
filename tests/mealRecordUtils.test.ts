@@ -1,4 +1,6 @@
 import {
+  applyMealTypeChangeToMealImages,
+  applyMealTypeChangeToRecordedMeals,
   getMealButtonAction,
   isSkippedDiet,
   toSkippedMealMap,
@@ -53,5 +55,32 @@ describe("meal record utilities", () => {
         imageUrl: null,
       }),
     ).toBe(true)
+  })
+
+  it("moves a local meal image and explicitly clears the previous meal type", () => {
+    expect(
+      applyMealTypeChangeToMealImages({
+        current: { DINNER: "file://dinner.jpg" },
+        fromMealType: "DINNER",
+        toMealType: "LUNCH",
+        imageUri: "https://cdn.example.com/meal.jpg",
+      }),
+    ).toEqual({
+      DINNER: null,
+      LUNCH: "https://cdn.example.com/meal.jpg",
+    })
+  })
+
+  it("moves recorded meal state and explicitly unrecords the previous meal type", () => {
+    expect(
+      applyMealTypeChangeToRecordedMeals({
+        current: { DINNER: true },
+        fromMealType: "DINNER",
+        toMealType: "LUNCH",
+      }),
+    ).toEqual({
+      DINNER: false,
+      LUNCH: true,
+    })
   })
 })
