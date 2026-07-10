@@ -5,6 +5,7 @@ import type {
   DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
+  FoodCameraAnalyzeResult,
 } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
@@ -34,7 +35,14 @@ import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { toDateStr } from "../../utils/dateUtils"
 import { getErrorMessage } from "@/src/lib/errorUtils"
-import { isSkippedDiet, toSkippedMealMap } from "../../utils/mealRecordUtils"
+import {
+  applyMealTypeChangeToMealImages,
+  applyMealTypeChangeToRecordedMeals,
+  isSkippedDiet,
+  toSkippedMealMap,
+  type MealImageMap,
+  type RecordedMealMap,
+} from "../../utils/mealRecordUtils"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -86,12 +94,8 @@ export function RecordView({
   const { data: streak = 0 } = useStreak()
   const queryClient = useQueryClient()
 
-  const [mealImages, setMealImages] = useState<
-    Partial<Record<MealType, string>>
-  >({})
-  const [recordedMeals, setRecordedMeals] = useState<
-    Partial<Record<MealType, boolean>>
-  >({})
+  const [mealImages, setMealImages] = useState<MealImageMap>({})
+  const [recordedMeals, setRecordedMeals] = useState<RecordedMealMap>({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false)
   const recordingMealTypeRef = useRef<MealType | null>(null)
@@ -104,10 +108,10 @@ export function RecordView({
   const apiDiets = data?.result.diets ?? []
   const apiMealImages = Object.fromEntries(
     apiDiets.map((d) => [d.mealType, d.imageUrl]),
-  ) as Partial<Record<MealType, string>>
+  ) as MealImageMap
   const apiRecordedMeals = Object.fromEntries(
     apiDiets.map((d) => [d.mealType, true]),
-  ) as Partial<Record<MealType, boolean>>
+  ) as RecordedMealMap
   const apiSkippedMeals = toSkippedMealMap(apiDiets)
   const apiMealTimes = Object.fromEntries(
     apiDiets.map((d) => {
@@ -286,6 +290,47 @@ export function RecordView({
     }
   }
 
+  const handleViewResultChange = (updated: FoodCameraAnalyzeResult) => {
+    setViewDiaryResult((prev) =>
+      prev
+        ? {
+            ...prev,
+            ...updated,
+            imageUrl: updated.imageUrl ?? prev.imageUrl,
+          }
+        : updated.imageUrl
+          ? { ...updated, imageUrl: updated.imageUrl }
+          : null,
+    )
+  }
+
+  const handleViewMealTypeChange = ({
+    fromMealType,
+    toMealType,
+    imageUri,
+  }: {
+    fromMealType: MealType
+    toMealType: MealType
+    imageUri: string | null
+  }) => {
+    setViewResultMealType(toMealType)
+    setMealImages((prev) =>
+      applyMealTypeChangeToMealImages({
+        current: prev,
+        fromMealType,
+        toMealType,
+        imageUri,
+      }),
+    )
+    setRecordedMeals((prev) =>
+      applyMealTypeChangeToRecordedMeals({
+        current: prev,
+        fromMealType,
+        toMealType,
+      }),
+    )
+  }
+
   return (
     <KeyboardAwareScrollView
       showsVerticalScrollIndicator={false}
@@ -364,6 +409,8 @@ export function RecordView({
         updateFoodAnalysis={updateFoodAnalysis}
         diaryId={viewDiaryId ?? undefined}
         updateDiaryMealType={updateDiaryMealType}
+        onResultChange={handleViewResultChange}
+        onMealTypeChange={handleViewMealTypeChange}
       />
 
       <FoodAnalysisResult

@@ -17,6 +17,7 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
 
 const ANALYZE_TEXT_TIMEOUT_MS = 180000
+const FOOD_ANALYSIS_UPDATE_TIMEOUT_MS = 180000
 
 async function compressImage(uri: string): Promise<string> {
   try {
@@ -235,6 +236,7 @@ export const foodCameraService = {
       const response = await api.patch(
         `/food-camera/analysis-results/${foodAnalysisResultId}`,
         body,
+        { timeout: FOOD_ANALYSIS_UPDATE_TIMEOUT_MS },
       )
       return response.data.result as FoodAnalysisUpdateResult
     } catch (err) {

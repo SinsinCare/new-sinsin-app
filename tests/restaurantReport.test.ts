@@ -17,19 +17,22 @@ describe("restaurant report validation", () => {
     expect(validateRestaurantReportDraft(validDraft)).toBeNull()
   })
 
-  it("requires the restaurant name and address", () => {
+  it("requires the restaurant name", () => {
     expect(
       validateRestaurantReportDraft({
         ...validDraft,
         name: " ",
       }),
     ).toContain("식당 이름")
+  })
+
+  it("allows a blank optional address", () => {
     expect(
       validateRestaurantReportDraft({
         ...validDraft,
         address: "",
       }),
-    ).toContain("주소")
+    ).toBeNull()
   })
 
   it("limits optional photos to three", () => {

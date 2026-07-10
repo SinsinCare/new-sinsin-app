@@ -1,4 +1,6 @@
 import FormData from "form-data"
+import fs from "fs"
+import path from "path"
 import {
   authClient,
   loginAsTestUser,
@@ -7,10 +9,9 @@ import {
 } from "./helpers/client"
 import { describeAuth } from "./helpers/testCredentials"
 
-/** 1×1 PNG (투명) — multipart /food-camera/analyze 용 */
-const PNG_1X1 = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-  "base64",
+const FOOD_IMAGE_PATH = path.join(
+  __dirname,
+  "../assets/images/restaurant/chorok-gimbap-1.jpg",
 )
 
 function buildFoodAnalysisUpdateBody(r: {
@@ -185,11 +186,11 @@ describeAuth("Food Camera API", () => {
   // 이미지 분석 (앱 foodCameraService.analyze)
   // ────────────────────────────────────────────────
   describe("POST /food-camera/analyze (multipart)", () => {
-    it("작은 PNG로 분석 요청", async () => {
+    it("JPG 음식 사진으로 분석 요청", async () => {
       const form = new FormData()
-      form.append("image", PNG_1X1, {
-        filename: "tiny.png",
-        contentType: "image/png",
+      form.append("image", fs.createReadStream(FOOD_IMAGE_PATH), {
+        filename: "chorok-gimbap-1.jpg",
+        contentType: "image/jpeg",
       })
       const res = await authClient.post("/food-camera/analyze", form, {
         headers: form.getHeaders(),

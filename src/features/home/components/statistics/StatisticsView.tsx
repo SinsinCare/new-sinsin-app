@@ -110,6 +110,11 @@ export function StatisticsView({
     }
   }
 
+  const handleMealTypeChange = ({ toMealType }: { toMealType: MealType }) => {
+    setResultMealType(toMealType)
+    void refetch()
+  }
+
   const goToPrevWeek = () => {
     const prev = new Date(selectedDate)
     prev.setDate(prev.getDate() - 7)
@@ -282,6 +287,7 @@ export function StatisticsView({
               updateFoodAnalysis={updateFoodAnalysis}
               diaryId={diaryId ?? undefined}
               updateDiaryMealType={updateDiaryMealType}
+              onMealTypeChange={handleMealTypeChange}
             />
 
             <View

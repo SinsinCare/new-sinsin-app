@@ -2,6 +2,8 @@ import type { DateAnalysisDiet } from "@/src/types"
 import type { MealType } from "../types"
 
 export type MealButtonAction = "record" | "view"
+export type MealImageMap = Partial<Record<MealType, string | null>>
+export type RecordedMealMap = Partial<Record<MealType, boolean>>
 
 export function isSkippedDiet(diet: DateAnalysisDiet): boolean {
   return diet.isSkipped === true || diet.diaryId === null
@@ -23,4 +25,42 @@ export function getMealButtonAction({
   isSkipped: boolean
 }): MealButtonAction {
   return isRecorded && !isSkipped ? "view" : "record"
+}
+
+export function applyMealTypeChangeToMealImages({
+  current,
+  fromMealType,
+  toMealType,
+  imageUri,
+}: {
+  current: MealImageMap
+  fromMealType: MealType
+  toMealType: MealType
+  imageUri?: string | null
+}): MealImageMap {
+  if (fromMealType === toMealType) return current
+
+  return {
+    ...current,
+    [fromMealType]: null,
+    [toMealType]: imageUri ?? current[fromMealType] ?? null,
+  }
+}
+
+export function applyMealTypeChangeToRecordedMeals({
+  current,
+  fromMealType,
+  toMealType,
+}: {
+  current: RecordedMealMap
+  fromMealType: MealType
+  toMealType: MealType
+}): RecordedMealMap {
+  if (fromMealType === toMealType) return current
+
+  return {
+    ...current,
+    [fromMealType]: false,
+    [toMealType]: true,
+  }
 }
