@@ -118,6 +118,12 @@ adb -s <device-id> logcat -s ReactNativeJS
 
 ## Architecture
 
+Before adding, redesigning, or refactoring React Native screens, read
+[`docs/mobile-frontend-architecture.md`](docs/mobile-frontend-architecture.md).
+Screen work must keep Expo Router files thin, feature behavior owned by
+`src/features/<feature>`, and new v2 UI assembled from `src/design-system-v2`
+tokens/components instead of one-off styling.
+
 ### Routing (Expo Router - File-based)
 
 - `app/_layout.tsx` - Root layout with providers (Tamagui, React Query, Pretendard fonts) and auth-based navigation

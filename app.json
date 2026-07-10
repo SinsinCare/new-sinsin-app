@@ -10,19 +10,25 @@
       "image": "./assets/splash.png",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "buildNumber": "4",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
-      "associatedDomains": ["applinks:sinsincare.kr"],
+      "associatedDomains": [
+        "applinks:sinsincare.kr"
+      ],
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "신신당부",
         "CFBundleName": "신신당부",
         "ITSAppUsesNonExemptEncryption": false,
-        "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
         "LSApplicationQueriesSchemes": [
           "instagram-stories",
           "instagram",
@@ -54,7 +60,10 @@
               "pathPrefix": "/password-edit"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -156,7 +165,8 @@
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "scheme": "sinsin",
     "experiments": {
