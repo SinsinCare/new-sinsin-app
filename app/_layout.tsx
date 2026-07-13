@@ -18,13 +18,19 @@ import config from "../tamagui.config"
 import "@/src/i18n" // i18n 초기화 (부수효과 import — 앱 로드 시 1회, useTranslation 사용 전 준비)
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
-import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
+import {
+  useAuthStore,
+  useSignupStore,
+  useOnboardingStore,
+  useThemeStore,
+} from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
 import { routeFromPushData } from "@/src/services/notificationRoutingService"
 import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
 import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
+import { useAnalyticsLifecycle } from "@/src/features/analytics"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
@@ -38,6 +44,8 @@ function RootLayoutNav() {
     requiresAdditionalInfo,
     signOut,
   } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  useAnalyticsLifecycle(user, isLoading)
   const canUseAppNotifications =
     isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo
   useNotifications(canUseAppNotifications)

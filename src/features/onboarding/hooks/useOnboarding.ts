@@ -6,6 +6,7 @@ import { useOnboardingStore } from "@/src/stores/onboardingStore"
 import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 type Phase = "welcome" | "steps"
 
@@ -49,6 +50,7 @@ export function useOnboarding() {
   }, [isStoreHydrated])
 
   useEffect(() => {
+    trackAnalyticsEvent("onboarding_started", {})
     setOnboardingInProgress(true)
     return () => {
       setOnboardingInProgress(false)
@@ -61,6 +63,9 @@ export function useOnboarding() {
       const data = await onboardingService.getSteps(isCkd)
       setSteps(data)
       setPhase("steps")
+      trackAnalyticsEvent("onboarding_steps_loaded", {
+        step_count: data.length,
+      })
     } catch {
       Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
     } finally {
@@ -154,12 +159,14 @@ export function useOnboarding() {
     setIsSubmitting(true)
     try {
       await onboardingService.submitAnswers(hasCkd, getAnswersArray())
+      trackAnalyticsEvent("onboarding_submitted", {})
       setAccountState("ACTIVE")
       setRequiresAdditionalInfo(false)
       resetOnboarding()
       resetSignup()
       router.replace("/(tabs)/home")
     } catch (error) {
+      trackAnalyticsEvent("onboarding_submit_failed", {})
       Alert.alert(
         "오류",
         error instanceof Error

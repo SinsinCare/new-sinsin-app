@@ -7,6 +7,11 @@ import {
 } from "../services/auth/socialAuthService"
 import { clearClientSession } from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
+import {
+  identifyAnalyticsUser,
+  resetAnalyticsIdentity,
+  trackAnalyticsEvent,
+} from "@/src/features/analytics"
 import type {
   ProfileCompleteRequest,
   SocialProvider,
@@ -49,6 +54,7 @@ export function useAuth() {
     let cancelled = false
 
     const restore = async () => {
+      trackAnalyticsEvent("auth_session_restore_started", {})
       try {
         const result = await authService.restoreSession()
         if (cancelled) return
@@ -61,6 +67,7 @@ export function useAuth() {
         }
       } catch (error) {
         if (cancelled) return
+        trackAnalyticsEvent("auth_session_restore_failed", {})
         logger.debug("[useAuth] restore failed", error)
         await clearClientSession()
       }
@@ -73,36 +80,53 @@ export function useAuth() {
   }, [setUser, setAccountState, setRequiresAdditionalInfo])
 
   const signInWithEmail = async (email: string, password: string) => {
-    const result = await authService.signInWithEmail(email, password)
-    setUser(result.user)
-    setAccountState(result.accountState)
-    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
-    return result
+    trackAnalyticsEvent("auth_email_login_started", {})
+    try {
+      const result = await authService.signInWithEmail(email, password)
+      setUser(result.user)
+      setAccountState(result.accountState)
+      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      identifyAnalyticsUser(result.user.uid)
+      trackAnalyticsEvent("auth_email_login_succeeded", {})
+      return result
+    } catch (error) {
+      trackAnalyticsEvent("auth_email_login_failed", {})
+      throw error
+    }
   }
 
   const signInWithSocialProvider = async (provider: SocialProvider) => {
-    logger.debug("[useAuth] signInWithSocialProvider", provider)
-    const socialResult = await nativeSocialSignIn(provider)
-    const result = await authService.signInWithSocial(
-      socialResult.provider,
-      socialResult.idToken,
-      socialResult.email,
-      socialResult.displayName,
-    )
-    logger.debug("[useAuth] social login 완료", {
-      provider,
-      accountState: isSocialSignupConsentRequiredResult(result)
-        ? result.status
-        : result.accountState,
-    })
-    if (isSocialSignupConsentRequiredResult(result)) {
+    trackAnalyticsEvent("auth_social_login_started", { provider })
+    try {
+      logger.debug("[useAuth] signInWithSocialProvider", provider)
+      const socialResult = await nativeSocialSignIn(provider)
+      const result = await authService.signInWithSocial(
+        socialResult.provider,
+        socialResult.idToken,
+        socialResult.email,
+        socialResult.displayName,
+      )
+      logger.debug("[useAuth] social login 완료", {
+        provider,
+        accountState: isSocialSignupConsentRequiredResult(result)
+          ? result.status
+          : result.accountState,
+      })
+      if (isSocialSignupConsentRequiredResult(result)) {
+        trackAnalyticsEvent("auth_signup_started", {})
+        return result
+      }
+      await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
+      setUser(result.user)
+      setAccountState(result.accountState)
+      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      identifyAnalyticsUser(result.user.uid)
+      trackAnalyticsEvent("auth_social_login_succeeded", { provider })
       return result
+    } catch (error) {
+      trackAnalyticsEvent("auth_social_login_failed", { provider })
+      throw error
     }
-    await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
-    setUser(result.user)
-    setAccountState(result.accountState)
-    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
-    return result
   }
 
   const signInWithGoogle = () => signInWithSocialProvider("google")
@@ -147,10 +171,15 @@ export function useAuth() {
   }
 
   const completeProfile = async (request: ProfileCompleteRequest) => {
+    const isSignupCompletion = accountState === "PENDING_PROFILE"
     const result = await authService.completeProfile(request)
     setUser(result.user)
     setAccountState(result.accountState)
     setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+    identifyAnalyticsUser(result.user.uid)
+    if (isSignupCompletion) {
+      trackAnalyticsEvent("auth_signup_completed", {})
+    }
     return result
   }
 
@@ -161,6 +190,7 @@ export function useAuth() {
     setUser(result.user)
     setAccountState(result.accountState)
     setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+    trackAnalyticsEvent("auth_withdrawal_cancelled", {})
     return result
   }
 
@@ -168,6 +198,7 @@ export function useAuth() {
     try {
       await authService.signOut()
     } finally {
+      resetAnalyticsIdentity()
       await clearClientSession()
       resetProfile()
       resetAuth()

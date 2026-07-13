@@ -88,6 +88,7 @@
     "expo-symbols": "~55.0.7",
     "i18next": "^26.3.4",
     "lodash-es": "^4.17.23",
+    "mixpanel-react-native": "^3.5.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "7.71.1",

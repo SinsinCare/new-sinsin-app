@@ -20,6 +20,7 @@ import type {
 } from "@/src/types"
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { appConfig } from "@/src/config/appConfig"
 
 function createFoodAnalysisRequestId(): string {
@@ -59,6 +60,7 @@ export function useFoodAnalysis(
 
   // 분석 도중 X 버튼으로 나갔는지 추적 (ref: async closure에서 최신값 보장)
   const dismissedRef = useRef(false)
+  const analysisMethodRef = useRef<"photo" | "text">("photo")
 
   const setPending = usePendingAnalysisStore((s) => s.setPending)
   const addNotification = useNotificationHistoryStore((s) => s.addNotification)
@@ -76,9 +78,11 @@ export function useFoodAnalysis(
     mealType: MealType,
     imageUri: string | null,
   ) => {
+    const method = imageUri ? "photo" : "text"
     markFoodAnalysisRequestHandled(requestId)
     await pendingAnalysisRequests.remove(requestId)
     setAnalysisStatus("READY")
+    trackAnalyticsEvent("food_analysis_succeeded", { method })
 
     if (dismissedRef.current) {
       setPending({ result, mealType, imageUri: result.imageUrl ?? imageUri })
@@ -151,7 +155,9 @@ export function useFoodAnalysis(
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
     dismissedRef.current = false
+    analysisMethodRef.current = "photo"
     const requestId = createFoodAnalysisRequestId()
+    trackAnalyticsEvent("food_analysis_started", { method: "photo" })
     try {
       setAnalyzedImageUri(uri)
       setAnalyzedMealType(mealType)
@@ -167,6 +173,7 @@ export function useFoodAnalysis(
       await resolveJob(job, requestId, mealType, uri)
     } catch (error) {
       if (!dismissedRef.current) {
+        trackAnalyticsEvent("food_analysis_failed", { method: "photo" })
         console.error("analyzeImage error:", error)
         Alert.alert("분석 실패", getErrorMessage(error))
       }
@@ -177,7 +184,9 @@ export function useFoodAnalysis(
 
   const analyzeText = async (text: string, mealType: MealType) => {
     dismissedRef.current = false
+    analysisMethodRef.current = "text"
     const requestId = createFoodAnalysisRequestId()
+    trackAnalyticsEvent("food_analysis_started", { method: "text" })
     try {
       setAnalyzedMealType(mealType)
       setIsAnalyzing(true)
@@ -207,8 +216,10 @@ export function useFoodAnalysis(
       setAnalyzedImageUri(result.imageUrl)
       setAnalysisResult(result)
       setIsResultOpen(true)
+      trackAnalyticsEvent("food_analysis_succeeded", { method: "text" })
     } catch (error) {
       if (!dismissedRef.current) {
+        trackAnalyticsEvent("food_analysis_failed", { method: "text" })
         console.error("analyzeText error:", error)
         if (isTimeoutError(error)) {
           Alert.alert(
@@ -226,6 +237,9 @@ export function useFoodAnalysis(
 
   // 로딩 중 X 버튼 탭 시 호출
   const dismissAnalysis = () => {
+    trackAnalyticsEvent("food_analysis_dismissed", {
+      method: analysisMethodRef.current,
+    })
     dismissedRef.current = true
     setIsAnalyzing(false)
   }
@@ -282,8 +296,10 @@ export function useFoodAnalysis(
         date,
         analyzedMealType,
       )
+      trackAnalyticsEvent("food_record_saved", {})
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
+      trackAnalyticsEvent("food_record_save_failed", {})
       console.error("registerDiary error:", error)
       Alert.alert("등록 실패", getErrorMessage(error))
     }
