@@ -2,6 +2,9 @@ export const appConfig = {
   useMockAuth: process.env.EXPO_PUBLIC_USE_MOCK_AUTH === "true",
   mockNoUser: process.env.EXPO_PUBLIC_MOCK_NO_USER === "true",
   useMockMode: process.env.EXPO_PUBLIC_USE_MOCK_MODE === "true",
+  appEnvironment: process.env.EXPO_PUBLIC_APP_ENV?.trim() || "local",
+  mixpanelToken: process.env.EXPO_PUBLIC_MIXPANEL_TOKEN?.trim() || "",
+  mixpanelServerUrl: process.env.EXPO_PUBLIC_MIXPANEL_SERVER_URL?.trim() || "",
 } as const
 
 export function getBackendUrl(): string {

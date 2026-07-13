@@ -11,6 +11,10 @@ events:
     description: 앱 정책에 의해 사용이 차단됨
     owner: product
 
+  - id: screen_viewed
+    description: 사용자가 개인정보가 제거된 화면 범주를 봄
+    owner: product
+
   - id: auth_session_restore_started
     description: 저장된 토큰으로 세션 복원을 시작함
     owner: product
