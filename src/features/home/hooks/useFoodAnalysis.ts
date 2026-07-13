@@ -21,6 +21,7 @@ import type {
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { appConfig } from "@/src/config/appConfig"
 
 function createFoodAnalysisRequestId(): string {
   const randomPart = Math.random().toString(36).slice(2, 10)
@@ -123,7 +124,19 @@ export function useFoodAnalysis(
         return
       }
       if (job.status === "NEEDS_CONFIRMATION") {
-        setConfirmationJob(job)
+        if (appConfig.foodAnalysisConfirmationEnabled) {
+          setConfirmationJob(job)
+          return
+        }
+
+        // 추가 정보 수집 API/상태는 보존한다. 현재 UI가 비활성인 빌드에서는
+        // 서버 요청을 취소하지 않고 pending으로 남겨 다음 복구 시 다시 확인한다.
+        setConfirmationJob(null)
+        setAnalysisStatus("RESOLVING")
+        Alert.alert(
+          "분석 결과를 준비하고 있어요",
+          "추가 확인 없이 분석을 마칠 수 있도록 요청을 유지했어요. 잠시 후 앱을 다시 열면 결과를 다시 확인할게요.",
+        )
         return
       }
       if (job.status === "FAILED") {

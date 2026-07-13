@@ -10,6 +10,9 @@ import {
 } from "../src/features/home/storage/pendingAnalysisRequests"
 
 jest.mock("../src/config/appConfig", () => ({
+  appConfig: {
+    foodAnalysisConfirmationEnabled: false,
+  },
   getBackendUrl: () => "https://backend.test/api/v1",
   isMockMode: () => false,
 }))
@@ -183,6 +186,85 @@ describe("food analysis recovery", () => {
     await recovery.recoverPendingAnalyses()
 
     expect(setPending).not.toHaveBeenCalled()
+    await expect(pendingRequests.getAll()).resolves.toHaveLength(1)
+  })
+
+  it("keeps confirmation jobs pending without opening the disabled survey", async () => {
+    const pendingRequests = createPendingAnalysisRequestStorage(
+      createMemoryStorage({
+        [PENDING_ANALYSIS_REQUESTS_KEY]: JSON.stringify([
+          {
+            requestId: "food-req-confirmation-hidden",
+            mealType: "LUNCH",
+            imageUri: "file://lunch.jpg",
+            startedAt: 100,
+          },
+        ]),
+      }),
+    )
+    const setPendingConfirmation = jest.fn()
+    const recovery = createFoodAnalysisRecovery({
+      pendingRequests,
+      fetchByRequestId: jest.fn(() => Promise.resolve(null)),
+      fetchJobByRequestId: jest.fn(() =>
+        Promise.resolve({
+          analysisId: "analysis-hidden",
+          requestId: "food-req-confirmation-hidden",
+          status: "NEEDS_CONFIRMATION",
+          confirmationQuestions: [],
+        }),
+      ),
+      setPending: jest.fn(),
+      setPendingConfirmation,
+      confirmationEnabled: false,
+      markHandledRequestId: jest.fn(),
+      now: () => 1000,
+    } satisfies FoodAnalysisRecoveryDeps)
+
+    await recovery.recoverPendingAnalyses()
+
+    expect(setPendingConfirmation).not.toHaveBeenCalled()
+    await expect(pendingRequests.getAll()).resolves.toHaveLength(1)
+  })
+
+  it("can restore the preserved confirmation flow with the feature flag", async () => {
+    const pendingRequests = createPendingAnalysisRequestStorage(
+      createMemoryStorage({
+        [PENDING_ANALYSIS_REQUESTS_KEY]: JSON.stringify([
+          {
+            requestId: "food-req-confirmation-enabled",
+            mealType: "DINNER",
+            imageUri: null,
+            startedAt: 100,
+          },
+        ]),
+      }),
+    )
+    const setPendingConfirmation = jest.fn()
+    const job = {
+      analysisId: "analysis-enabled",
+      requestId: "food-req-confirmation-enabled",
+      status: "NEEDS_CONFIRMATION" as const,
+      confirmationQuestions: [],
+    }
+    const recovery = createFoodAnalysisRecovery({
+      pendingRequests,
+      fetchByRequestId: jest.fn(() => Promise.resolve(null)),
+      fetchJobByRequestId: jest.fn(() => Promise.resolve(job)),
+      setPending: jest.fn(),
+      setPendingConfirmation,
+      confirmationEnabled: true,
+      markHandledRequestId: jest.fn(),
+      now: () => 1000,
+    } satisfies FoodAnalysisRecoveryDeps)
+
+    await recovery.recoverPendingAnalyses()
+
+    expect(setPendingConfirmation).toHaveBeenCalledWith({
+      job,
+      mealType: "DINNER",
+      imageUri: null,
+    })
     await expect(pendingRequests.getAll()).resolves.toHaveLength(1)
   })
 })

@@ -5,6 +5,9 @@ export const appConfig = {
   appEnvironment: process.env.EXPO_PUBLIC_APP_ENV?.trim() || "local",
   mixpanelToken: process.env.EXPO_PUBLIC_MIXPANEL_TOKEN?.trim() || "",
   mixpanelServerUrl: process.env.EXPO_PUBLIC_MIXPANEL_SERVER_URL?.trim() || "",
+  // 추가 정보 수집 계약은 유지하되, UI를 다시 설계하기 전까지 노출하지 않는다.
+  foodAnalysisConfirmationEnabled:
+    process.env.EXPO_PUBLIC_FOOD_ANALYSIS_CONFIRMATION_ENABLED === "true",
 } as const
 
 export function getBackendUrl(): string {
