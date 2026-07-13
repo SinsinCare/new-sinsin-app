@@ -8,6 +8,7 @@ import {
 import { clearClientSession } from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
 import {
+  identifyAnalyticsUser,
   resetAnalyticsIdentity,
   trackAnalyticsEvent,
 } from "@/src/features/analytics"
@@ -85,6 +86,7 @@ export function useAuth() {
       setUser(result.user)
       setAccountState(result.accountState)
       setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      identifyAnalyticsUser(result.user.uid)
       trackAnalyticsEvent("auth_email_login_succeeded", {})
       return result
     } catch (error) {
@@ -118,6 +120,7 @@ export function useAuth() {
       setUser(result.user)
       setAccountState(result.accountState)
       setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      identifyAnalyticsUser(result.user.uid)
       trackAnalyticsEvent("auth_social_login_succeeded", { provider })
       return result
     } catch (error) {
@@ -173,6 +176,7 @@ export function useAuth() {
     setUser(result.user)
     setAccountState(result.accountState)
     setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+    identifyAnalyticsUser(result.user.uid)
     if (isSignupCompletion) {
       trackAnalyticsEvent("auth_signup_completed", {})
     }
