@@ -149,8 +149,12 @@ export interface FoodAnalysisJob {
   pollAfterMs?: number
   result?: FoodCameraAnalyzeResult | null
   confirmationQuestions?: FoodAnalysisConfirmationQuestion[]
+  error?: string | null
+  /** @deprecated Transitional alias for pre-contract clients. */
   failureMessage?: string | null
 }
+
+export type FoodAnalysisMode = "PRE_MEAL" | "POST_MEAL"
 
 export interface FoodAnalysisConsumptionItem {
   analysisItemId: string
@@ -161,10 +165,9 @@ export interface FoodAnalysisConsumptionItem {
 }
 
 export interface FoodAnalysisConsumptionRequest {
-  consumedRatio?: number
-  solidConsumedRatio?: number
-  brothConsumedRatio?: number
-  items?: FoodAnalysisConsumptionItem[]
+  baseRevisionId: string
+  baseConsumptionRevisionId?: string
+  items: FoodAnalysisConsumptionItem[]
 }
 
 export interface FoodAnalysisConfirmationRequest {

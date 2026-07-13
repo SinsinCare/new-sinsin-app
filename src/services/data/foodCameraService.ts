@@ -8,6 +8,7 @@ import type {
   FoodAnalysisConfirmationRequest,
   FoodAnalysisConsumptionRequest,
   FoodAnalysisJob,
+  FoodAnalysisMode,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
   FoodTitleUpdateResponse,
@@ -30,8 +31,22 @@ function isUnsupportedV2Status(status: number): boolean {
   return status === 404 || status === 405
 }
 
-function normalizeAnalysisJob(job: FoodAnalysisJob): FoodAnalysisJob {
-  const result = job.result
+type TransitionalFoodAnalysisJob = FoodAnalysisJob &
+  Partial<FoodCameraAnalyzeResult>
+
+function normalizeAnalysisJob(input: FoodAnalysisJob): FoodAnalysisJob {
+  const transitional = input as TransitionalFoodAnalysisJob
+  const topLevelResult =
+    !transitional.result &&
+    (transitional.revision || Array.isArray(transitional.foods))
+      ? (transitional as FoodCameraAnalyzeResult)
+      : null
+  const result = transitional.result ?? topLevelResult
+  const job: FoodAnalysisJob = {
+    ...transitional,
+    result,
+    error: transitional.error ?? transitional.failureMessage ?? null,
+  }
   if (!result?.revision || result.foods) return job
 
   const consumptionByItem = new Map(
@@ -116,6 +131,7 @@ export const foodCameraService = {
   async createAnalysis(
     imageUri: string,
     requestId: string,
+    mode: FoodAnalysisMode = "POST_MEAL",
   ): Promise<FoodAnalysisJob> {
     if (isMockMode()) {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
@@ -136,6 +152,7 @@ export const foodCameraService = {
       type: "image/jpeg",
     } as unknown as Blob)
     formData.append("requestId", requestId)
+    formData.append("mode", mode)
 
     const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
     const token = await tokenService.getAccessToken()
@@ -219,7 +236,7 @@ export const foodCameraService = {
 
   async updateConsumption(
     analysisId: string,
-    body: FoodAnalysisConsumptionRequest & { baseRevisionId?: string },
+    body: FoodAnalysisConsumptionRequest,
   ): Promise<FoodAnalysisJob> {
     const response = await api.patch(
       `/food-analyses/${analysisId}/consumption`,

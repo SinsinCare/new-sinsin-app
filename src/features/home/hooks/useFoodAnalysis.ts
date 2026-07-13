@@ -124,7 +124,9 @@ export function useFoodAnalysis(
       }
       if (job.status === "FAILED") {
         await pendingAnalysisRequests.remove(requestId)
-        throw new Error(job.failureMessage || "식단 분석에 실패했어요.")
+        throw new Error(
+          job.error || job.failureMessage || "식단 분석에 실패했어요.",
+        )
       }
 
       await new Promise((resolve) =>
@@ -253,6 +255,13 @@ export function useFoodAnalysis(
     onSuccess: (mealType: MealType, imageUri: string | null) => void,
   ) => {
     if (!analysisResult || !analyzedMealType) return
+    if (analysisResult.foodAnalysisResultId <= 0) {
+      Alert.alert(
+        "기록 준비 중",
+        "분석 결과를 식단 기록과 연결하고 있어요. 잠시 후 다시 시도해 주세요.",
+      )
+      return
+    }
     const date = toDateStr(selectedDate)
     try {
       await foodCameraService.registerDiary(
@@ -287,6 +296,7 @@ export function useFoodAnalysis(
     const targetResult = sourceResult ?? analysisResult
     const isConsumptionOnly =
       targetResult?.analysisId != null &&
+      targetResult.revision != null &&
       body.consumedRatio != null &&
       body.foods.length === targetResult.foods.length &&
       body.foods.every((food, index) => {
@@ -305,10 +315,37 @@ export function useFoodAnalysis(
             await foodCameraService.updateConsumption(
               targetResult.analysisId as string,
               {
-                consumedRatio: body.consumedRatio,
-                solidConsumedRatio: body.solidConsumedRatio,
-                brothConsumedRatio: body.brothConsumedRatio,
-                baseRevisionId: targetResult.revisionId,
+                baseRevisionId:
+                  targetResult.revisionId ??
+                  (
+                    targetResult.revision as NonNullable<
+                      FoodCameraAnalyzeResult["revision"]
+                    >
+                  ).revisionId,
+                baseConsumptionRevisionId:
+                  targetResult.consumptionRevision?.consumptionRevisionId,
+                items: (
+                  targetResult.revision as NonNullable<
+                    FoodCameraAnalyzeResult["revision"]
+                  >
+                ).items.map((revisionItem) => {
+                  const food = targetResult.foods.find(
+                    (candidate) =>
+                      candidate.analysisItemId === revisionItem.analysisItemId,
+                  )
+                  const supportsBrothRatio =
+                    food?.isBroth ||
+                    /국|탕|찌개|전골|라면|우동|육수/.test(
+                      food?.name ?? revisionItem.name,
+                    )
+                  return {
+                    analysisItemId: revisionItem.analysisItemId,
+                    consumedRatio: body.consumedRatio,
+                    ...(supportsBrothRatio && body.brothConsumedRatio != null
+                      ? { brothConsumedRatio: body.brothConsumedRatio }
+                      : {}),
+                  }
+                }),
               },
             )
           ).result

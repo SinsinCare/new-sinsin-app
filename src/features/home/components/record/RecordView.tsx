@@ -128,7 +128,9 @@ export function RecordView({
         return
       }
       if (job.status !== "READY" || !job.result) {
-        throw new Error(job.failureMessage || "식단 분석에 실패했어요.")
+        throw new Error(
+          job.error || job.failureMessage || "식단 분석에 실패했어요.",
+        )
       }
       setPending({
         result: job.result,
@@ -231,6 +233,13 @@ export function RecordView({
 
   const handlePendingAddToRecord = async () => {
     if (!pending) return
+    if (pending.result.foodAnalysisResultId <= 0) {
+      Alert.alert(
+        "기록 준비 중",
+        "분석 결과를 식단 기록과 연결하고 있어요. 잠시 후 다시 시도해 주세요.",
+      )
+      return
+    }
     try {
       await foodCameraService.registerDiary(
         pending.result.foodAnalysisResultId,

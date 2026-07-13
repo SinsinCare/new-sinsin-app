@@ -214,6 +214,51 @@ describe("foodCameraService requestId contract", () => {
     )
   })
 
+  it("creates post-meal image analysis with the idempotency fields", async () => {
+    const append = jest.fn()
+    const originalFormData = global.FormData
+    Object.defineProperty(global, "FormData", {
+      configurable: true,
+      value: jest.fn(() => ({ append })),
+    })
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 202,
+      json: async () => ({
+        isSuccess: true,
+        result: {
+          analysisId: "analysis-create",
+          requestId: "food-req-create",
+          status: "QUEUED",
+          pollAfterMs: 1500,
+        },
+      }),
+    } as Response)
+
+    try {
+      await foodCameraService.createAnalysis(
+        "file://meal.jpg",
+        "food-req-create",
+      )
+      expect(append).toHaveBeenCalledWith("requestId", "food-req-create")
+      expect(append).toHaveBeenCalledWith("mode", "POST_MEAL")
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/food-analyses"),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "Idempotency-Key": "food-req-create",
+          }),
+        }),
+      )
+    } finally {
+      fetchMock.mockRestore()
+      Object.defineProperty(global, "FormData", {
+        configurable: true,
+        value: originalFormData,
+      })
+    }
+  })
+
   it("fetches completed analysis by requestId", async () => {
     ;(api.get as jest.Mock).mockResolvedValue({
       data: { result: createAnalysisResult({ foodAnalysisResultId: 44 }) },
@@ -283,6 +328,48 @@ describe("foodCameraService requestId contract", () => {
     })
   })
 
+  it("normalizes the transitional top-level READY payload", async () => {
+    ;(api.get as jest.Mock).mockResolvedValue({
+      data: {
+        result: {
+          analysisId: "analysis-top-level",
+          requestId: "food-req-top-level",
+          status: "READY",
+          revision: {
+            revisionId: "revision-top-level",
+            catalogSnapshotId: "catalog-top-level",
+            policyVersion: "renal-1",
+            nutritionFingerprint: "fingerprint-top-level",
+            fullTotal: createAnalysisResult().total,
+            evaluation: createAnalysisResult().evaluation,
+            items: [
+              {
+                analysisItemId: "item-top-level",
+                canonicalFoodId: "food-top-level",
+                name: "현미밥",
+                analyzedGrams: 150,
+                fullNutrients: createAnalysisResult().total,
+                provenance: "CATALOG",
+                confidence: 0.95,
+              },
+            ],
+          },
+        },
+      },
+    })
+
+    await expect(
+      foodCameraService.fetchAnalysis("analysis-top-level"),
+    ).resolves.toMatchObject({
+      status: "READY",
+      result: {
+        analysisId: "analysis-top-level",
+        revisionId: "revision-top-level",
+        foods: [{ analysisItemId: "item-top-level", name: "현미밥" }],
+      },
+    })
+  })
+
   it("sends consumption updates without the legacy servings field", async () => {
     ;(api.patch as jest.Mock).mockResolvedValue({
       data: {
@@ -296,17 +383,27 @@ describe("foodCameraService requestId contract", () => {
     })
 
     await foodCameraService.updateConsumption("analysis-2", {
-      consumedRatio: 0.5,
-      brothConsumedRatio: 0.25,
       baseRevisionId: "revision-2",
+      items: [
+        {
+          analysisItemId: "item-2",
+          consumedRatio: 0.5,
+          brothConsumedRatio: 0.25,
+        },
+      ],
     })
 
     expect(api.patch).toHaveBeenCalledWith(
       "/food-analyses/analysis-2/consumption",
       {
-        consumedRatio: 0.5,
-        brothConsumedRatio: 0.25,
         baseRevisionId: "revision-2",
+        items: [
+          {
+            analysisItemId: "item-2",
+            consumedRatio: 0.5,
+            brothConsumedRatio: 0.25,
+          },
+        ],
       },
     )
   })
