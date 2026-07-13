@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, isAxiosError } from "axios"
 import { ApiError } from "./apiError"
-import { clearClientSession } from "./sessionCleanup"
 import { tokenService } from "./tokenService"
+import { refreshAccessToken } from "./authSession"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
 import { getBackendUrl } from "../../config/appConfig"
@@ -109,24 +109,7 @@ api.interceptors.request.use(async (config) => {
   return config
 })
 
-// Response interceptor: 401 시 토큰 갱신 후 재시도
-let isRefreshing = false
-let failedQueue: {
-  resolve: (token: string) => void
-  reject: (error: unknown) => void
-}[] = []
-
-function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error)
-    } else {
-      promise.resolve(token!)
-    }
-  })
-  failedQueue = []
-}
-
+// Response interceptor: 공용 갱신 큐를 통해 401 요청을 한 번만 재시도
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -135,45 +118,14 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: (token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            resolve(api(originalRequest))
-          },
-          reject,
-        })
-      })
-    }
-
     originalRequest._retry = true
-    isRefreshing = true
 
     try {
-      const refreshToken = await tokenService.getRefreshToken()
-      if (!refreshToken) {
-        throw new Error("No refresh token")
-      }
-
-      const { data } = await publicApi.post("/auth/tokens/refresh", {
-        refreshToken,
-      })
-
-      const newAccessToken = data.result.accessToken
-      const newRefreshToken = data.result.refreshToken
-      await tokenService.setTokens(newAccessToken, newRefreshToken)
-
-      processQueue(null, newAccessToken)
+      const newAccessToken = await refreshAccessToken()
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return api(originalRequest)
     } catch (refreshError) {
-      processQueue(refreshError, null)
-      // 갱신 실패 → 로그아웃 처리
-      await clearClientSession()
       return Promise.reject(refreshError)
-    } finally {
-      isRefreshing = false
     }
   },
 )
