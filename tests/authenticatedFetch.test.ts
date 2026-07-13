@@ -66,7 +66,10 @@ describe("authenticatedFetch", () => {
       const body = new FormData()
       body.append("requestId", "request-1")
       bodies.push(body)
-      return { method: "POST", body }
+      return {
+        method: "POST",
+        body: body as unknown as RequestInit["body"],
+      }
     })
 
     const response = await authenticatedFetch(
@@ -111,11 +114,17 @@ describe("authenticatedFetch", () => {
 
     const first = authenticatedFetch(
       "https://backend.test/api/v1/food-analyses",
-      () => ({ method: "POST", body: new FormData() }),
+      () => ({
+        method: "POST",
+        body: new FormData() as unknown as RequestInit["body"],
+      }),
     )
     const second = authenticatedFetch(
       "https://backend.test/api/v1/food-analyses",
-      () => ({ method: "POST", body: new FormData() }),
+      () => ({
+        method: "POST",
+        body: new FormData() as unknown as RequestInit["body"],
+      }),
     )
 
     await Promise.resolve()
@@ -150,7 +159,10 @@ describe("authenticatedFetch", () => {
 
     const request = authenticatedFetch(
       "https://backend.test/api/v1/food-analyses",
-      () => ({ method: "POST", body: new FormData() }),
+      () => ({
+        method: "POST",
+        body: new FormData() as unknown as RequestInit["body"],
+      }),
     )
 
     await expect(request).rejects.toMatchObject({
