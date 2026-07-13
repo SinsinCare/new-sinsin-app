@@ -25,6 +25,7 @@ import { useFoodEdit } from "../hooks/useFoodEdit"
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
 import {
   buildFoodAnalysisUpdateRequest,
+  applyOptimisticConsumption,
   getInitialEatenStep,
   validateMealTitle,
 } from "../utils/foodEditUtils"
@@ -38,6 +39,7 @@ interface FoodResultEditProps {
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
+    sourceResult?: FoodCameraAnalyzeResult,
   ) => Promise<FoodAnalysisUpdateResult | undefined>
   onTitleChange?: (title: string) => void
   diaryId?: number
@@ -99,6 +101,18 @@ export function FoodResultEdit({
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(
     mealType,
   )
+  const hasBroth =
+    result?.foods.some(
+      (food) =>
+        food.isBroth || /국|탕|찌개|전골|라면|우동|육수/.test(food.name),
+    ) ?? false
+  const [brothStep, setBrothStep] = useState(() =>
+    getInitialEatenStep(
+      result?.brothConsumedRatio == null
+        ? result?.eatenPercentage
+        : result.brothConsumedRatio * 100,
+    ),
+  )
 
   const handleTitleEdit = async () => {
     if (!result) return
@@ -129,6 +143,12 @@ export function FoodResultEdit({
     if (!result) return
     const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
     const eatenPercentageChanged = eatenStep !== initialEatenStep
+    const initialBrothStep = getInitialEatenStep(
+      result.brothConsumedRatio == null
+        ? result.eatenPercentage
+        : result.brothConsumedRatio * 100,
+    )
+    const brothPercentageChanged = hasBroth && brothStep !== initialBrothStep
     const foodsChanged =
       foods.length !== result.foods.length ||
       foods.some((f, i) => {
@@ -146,25 +166,41 @@ export function FoodResultEdit({
       mealType != null &&
       selectedMealType !== mealType
 
-    if (!eatenPercentageChanged && !foodsChanged && !mealTypeChanged) {
+    if (
+      !eatenPercentageChanged &&
+      !brothPercentageChanged &&
+      !foodsChanged &&
+      !mealTypeChanged
+    ) {
       onClose()
       return
     }
 
     let ok = true
-    if (eatenPercentageChanged || foodsChanged) {
+    if (eatenPercentageChanged || brothPercentageChanged || foodsChanged) {
       const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
         servings: result.servings,
         eatenPercentage: (eatenStep + 1) * 25,
+        brothConsumedRatio: hasBroth ? (brothStep + 1) * 0.25 : undefined,
+        includeConsumptionContract: result.analysisId != null,
         foods,
       })
+      const shouldOptimisticallyUpdate =
+        result.analysisId != null && !foodsChanged && eatenPercentageChanged
+      if (shouldOptimisticallyUpdate) {
+        onAnalysisChange?.(
+          applyOptimisticConsumption(result, (eatenStep + 1) * 0.25),
+        )
+      }
       const updated = await updateFoodAnalysis(
         result.foodAnalysisResultId,
         body,
+        result,
       )
       if (updated) {
         onAnalysisChange?.(updated)
       } else {
+        if (shouldOptimisticallyUpdate) onAnalysisChange?.(result)
         ok = false
       }
     }
@@ -570,6 +606,22 @@ export function FoodResultEdit({
             얼마나 드셨나요?
           </Text>
           <EatenSlider value={eatenStep} onChange={setEatenStep} />
+          {hasBroth && (
+            <YStack marginTop="$5" gap="$3">
+              <Text
+                fontSize={15}
+                fontWeight={600}
+                paddingLeft={4}
+                color={isDarkMode ? "$textDark" : "$black"}
+              >
+                국물은 얼마나 드셨나요?
+              </Text>
+              <Text fontSize={13} color="$colorSubtle" paddingLeft={4}>
+                건더기와 국물 양을 나누어 계산해요.
+              </Text>
+              <EatenSlider value={brothStep} onChange={setBrothStep} />
+            </YStack>
+          )}
         </View>
       </ScrollView>
 

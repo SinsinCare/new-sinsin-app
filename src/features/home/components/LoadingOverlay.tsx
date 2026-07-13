@@ -14,18 +14,31 @@ import { Ionicons } from "@expo/vector-icons"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import { LOADING_TIPS } from "../data/loadingTips"
+import type { FoodAnalysisStatus } from "@/src/types"
 
 interface LoadingOverlayProps {
   visible: boolean
   message: string
   onDismiss?: () => void
+  status?: FoodAnalysisStatus | null
+}
+
+const STATUS_MESSAGES: Partial<Record<FoodAnalysisStatus, string>> = {
+  QUEUED: "분석을 준비하고 있어요",
+  PERCEIVING: "사진에서 음식과 양을 확인하고 있어요",
+  RESOLVING: "공식 영양 데이터와 비교하고 있어요",
 }
 
 function getRandomTip() {
   return LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)]
 }
 
-export function LoadingOverlay({ visible, message, onDismiss }: LoadingOverlayProps) {
+export function LoadingOverlay({
+  visible,
+  message,
+  onDismiss,
+  status,
+}: LoadingOverlayProps) {
   const [dots, setDots] = useState(".")
   const [tip, setTip] = useState(getRandomTip)
   const [showDismiss, setShowDismiss] = useState(false)
@@ -96,7 +109,9 @@ export function LoadingOverlay({ visible, message, onDismiss }: LoadingOverlayPr
             <Ionicons
               name="close"
               size={26}
-              color={isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val}
+              color={
+                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
+              }
             />
           </TouchableOpacity>
         )}
@@ -110,7 +125,7 @@ export function LoadingOverlay({ visible, message, onDismiss }: LoadingOverlayPr
           marginTop="$4"
           color={isDarkMode ? "$textDark" : "$black"}
         >
-          {`${message}${dots}`}
+          {`${(status && STATUS_MESSAGES[status]) || message}${dots}`}
         </Text>
         <Text
           fontSize={14}
@@ -133,7 +148,9 @@ export function LoadingOverlay({ visible, message, onDismiss }: LoadingOverlayPr
             marginHorizontal="$6"
             lineHeight={18}
           >
-            {"X를 눌러 나가도 분석은 계속 진행돼요.\n완료되면 알림으로 알려드릴게요!"}
+            {
+              "X를 눌러 나가도 분석은 계속 진행돼요.\n완료되면 알림으로 알려드릴게요!"
+            }
           </Text>
         )}
       </View>

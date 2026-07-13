@@ -1,10 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { MealType } from "../types"
+import type { FoodAnalysisStatus } from "@/src/types"
 
 export const PENDING_ANALYSIS_REQUESTS_KEY = "@sinsin/pending-analysis"
 
 export interface PendingAnalysisRequest {
   requestId: string
+  analysisId?: string
+  status?: FoodAnalysisStatus
   mealType: MealType
   imageUri: string | null
   startedAt: number
@@ -23,6 +26,8 @@ function isPendingAnalysisRequest(
   const item = value as Record<string, unknown>
   return (
     typeof item.requestId === "string" &&
+    (item.analysisId === undefined || typeof item.analysisId === "string") &&
+    (item.status === undefined || typeof item.status === "string") &&
     typeof item.mealType === "string" &&
     (typeof item.imageUri === "string" || item.imageUri === null) &&
     typeof item.startedAt === "number"

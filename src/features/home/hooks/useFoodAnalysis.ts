@@ -13,6 +13,9 @@ import type {
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
+  FoodAnalysisConfirmationRequest,
+  FoodAnalysisJob,
+  FoodAnalysisStatus,
   FoodTitleUpdateResponse,
 } from "@/src/types"
 import { MealType } from "../types"
@@ -41,6 +44,10 @@ export function useFoodAnalysis(
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [analysisStatus, setAnalysisStatus] =
+    useState<FoodAnalysisStatus | null>(null)
+  const [confirmationJob, setConfirmationJob] =
+    useState<FoodAnalysisJob | null>(null)
   const queryClient = useQueryClient()
 
   // 수정 후 서버 데이터로 재동기화 (목록/존재여부 쿼리)
@@ -62,6 +69,73 @@ export function useFoodAnalysis(
     SNACKS: "간식",
   }
 
+  const completeAnalysis = async (
+    result: FoodCameraAnalyzeResult,
+    requestId: string,
+    mealType: MealType,
+    imageUri: string | null,
+  ) => {
+    markFoodAnalysisRequestHandled(requestId)
+    await pendingAnalysisRequests.remove(requestId)
+    setAnalysisStatus("READY")
+
+    if (dismissedRef.current) {
+      setPending({ result, mealType, imageUri: result.imageUrl ?? imageUri })
+      addNotification({
+        type: "food_analysis",
+        title: "🍽️ 식단 분석 완료",
+        body: result.title
+          ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
+          : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`,
+      })
+      return
+    }
+
+    setAnalysisResult(result)
+    setIsResultOpen(true)
+  }
+
+  const resolveJob = async (
+    initialJob: FoodAnalysisJob,
+    requestId: string,
+    mealType: MealType,
+    imageUri: string | null,
+  ) => {
+    let job = initialJob
+    const startedAt = Date.now()
+    while (!dismissedRef.current) {
+      setAnalysisStatus(job.status)
+      await pendingAnalysisRequests.add({
+        requestId,
+        analysisId: job.analysisId,
+        status: job.status,
+        mealType,
+        imageUri,
+        startedAt,
+      })
+
+      if (job.status === "READY" && job.result) {
+        await completeAnalysis(job.result, requestId, mealType, imageUri)
+        return
+      }
+      if (job.status === "NEEDS_CONFIRMATION") {
+        setConfirmationJob(job)
+        return
+      }
+      if (job.status === "FAILED") {
+        await pendingAnalysisRequests.remove(requestId)
+        throw new Error(
+          job.error || job.failureMessage || "식단 분석에 실패했어요.",
+        )
+      }
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.max(500, job.pollAfterMs ?? 1500)),
+      )
+      job = await foodCameraService.fetchAnalysis(job.analysisId)
+    }
+  }
+
   const analyzeImage = async (uri: string, mealType: MealType) => {
     dismissedRef.current = false
     const requestId = createFoodAnalysisRequestId()
@@ -75,25 +149,9 @@ export function useFoodAnalysis(
         imageUri: uri,
         startedAt: Date.now(),
       })
-      const result = await foodCameraService.analyze(uri, requestId)
-      markFoodAnalysisRequestHandled(requestId)
-      await pendingAnalysisRequests.remove(requestId)
-
-      if (dismissedRef.current) {
-        setPending({ result, mealType, imageUri: uri })
-        const notifBody = result.title
-          ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
-          : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`
-        addNotification({
-          type: "food_analysis",
-          title: "🍽️ 식단 분석 완료",
-          body: notifBody,
-        })
-        return
-      }
-
-      setAnalysisResult(result)
-      setIsResultOpen(true)
+      setAnalysisStatus("QUEUED")
+      const job = await foodCameraService.createAnalysis(uri, requestId)
+      await resolveJob(job, requestId, mealType, uri)
     } catch (error) {
       if (!dismissedRef.current) {
         console.error("analyzeImage error:", error)
@@ -159,11 +217,51 @@ export function useFoodAnalysis(
     setIsAnalyzing(false)
   }
 
+  const confirmAnalysis = async (
+    body: FoodAnalysisConfirmationRequest,
+  ): Promise<void> => {
+    if (!confirmationJob || !analyzedMealType) return
+    try {
+      setIsAnalyzing(true)
+      setConfirmationJob(null)
+      const job = await foodCameraService.confirmAnalysis(
+        confirmationJob.analysisId,
+        {
+          ...body,
+          baseRevisionId: confirmationJob.result?.revisionId,
+        },
+      )
+      await resolveJob(
+        job,
+        confirmationJob.requestId,
+        analyzedMealType,
+        analyzedImageUri,
+      )
+    } catch (error) {
+      Alert.alert("확인 실패", getErrorMessage(error))
+      setConfirmationJob(confirmationJob)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const deferConfirmation = () => {
+    dismissedRef.current = true
+    setConfirmationJob(null)
+  }
+
   const registerDiary = async (
     selectedDate: Date,
     onSuccess: (mealType: MealType, imageUri: string | null) => void,
   ) => {
     if (!analysisResult || !analyzedMealType) return
+    if (analysisResult.foodAnalysisResultId <= 0) {
+      Alert.alert(
+        "기록 준비 중",
+        "분석 결과를 식단 기록과 연결하고 있어요. 잠시 후 다시 시도해 주세요.",
+      )
+      return
+    }
     const date = toDateStr(selectedDate)
     try {
       await foodCameraService.registerDiary(
@@ -193,13 +291,66 @@ export function useFoodAnalysis(
   const updateFoodAnalysis = async (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
+    sourceResult?: FoodCameraAnalyzeResult,
   ): Promise<FoodAnalysisUpdateResult | undefined> => {
+    const targetResult = sourceResult ?? analysisResult
+    const isConsumptionOnly =
+      targetResult?.analysisId != null &&
+      targetResult.revision != null &&
+      body.consumedRatio != null &&
+      body.foods.length === targetResult.foods.length &&
+      body.foods.every((food, index) => {
+        const current = targetResult.foods[index]
+        return (
+          food.foodId === current.id &&
+          food.name === current.name &&
+          food.servingSizeValue === current.servingSizeValue &&
+          food.servingSizeUnit === current.servingSizeUnit
+        )
+      })
     try {
-      setIsUpdating(true)
-      const updated = await foodCameraService.updateFoodAnalysis(
-        foodAnalysisResultId,
-        body,
-      )
+      if (!isConsumptionOnly) setIsUpdating(true)
+      const updated = isConsumptionOnly
+        ? (
+            await foodCameraService.updateConsumption(
+              targetResult.analysisId as string,
+              {
+                baseRevisionId:
+                  targetResult.revisionId ??
+                  (
+                    targetResult.revision as NonNullable<
+                      FoodCameraAnalyzeResult["revision"]
+                    >
+                  ).revisionId,
+                baseConsumptionRevisionId:
+                  targetResult.consumptionRevision?.consumptionRevisionId,
+                items: (
+                  targetResult.revision as NonNullable<
+                    FoodCameraAnalyzeResult["revision"]
+                  >
+                ).items.map((revisionItem) => {
+                  const food = targetResult.foods.find(
+                    (candidate) =>
+                      candidate.analysisItemId === revisionItem.analysisItemId,
+                  )
+                  const supportsBrothRatio =
+                    food?.isBroth ||
+                    /국|탕|찌개|전골|라면|우동|육수/.test(
+                      food?.name ?? revisionItem.name,
+                    )
+                  return {
+                    analysisItemId: revisionItem.analysisItemId,
+                    consumedRatio: body.consumedRatio,
+                    ...(supportsBrothRatio && body.brothConsumedRatio != null
+                      ? { brothConsumedRatio: body.brothConsumedRatio }
+                      : {}),
+                  }
+                }),
+              },
+            )
+          ).result
+        : await foodCameraService.updateFoodAnalysis(foodAnalysisResultId, body)
+      if (!updated) throw new Error("수정된 식단 결과를 불러오지 못했어요.")
       setAnalysisResult(updated)
       onUpdateSuccess?.(updated)
       await refetchDiaryQueries()
@@ -250,12 +401,16 @@ export function useFoodAnalysis(
     isAnalyzing,
     isUpdating,
     isResultOpen,
+    analysisStatus,
+    confirmationJob,
     analysisResult,
     analyzedMealType,
     analyzedImageUri,
     analyzeImage,
     analyzeText,
     dismissAnalysis,
+    confirmAnalysis,
+    deferConfirmation,
     registerDiary,
     fetchDiaryResult,
     updateFoodAnalysis,
