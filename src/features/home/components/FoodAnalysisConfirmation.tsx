@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react"
-import { Modal, Pressable } from "react-native"
+import { Modal, Pressable, ScrollView, StyleSheet } from "react-native"
+import { SafeAreaView } from "react-native-safe-area-context"
 import { Text, XStack, YStack } from "tamagui"
-import { Button, GlassmorphicCard } from "@/src/shared/components"
+import { GlassmorphicCard } from "@/src/shared/components"
+import { V2BottomCTA } from "@/src/design-system-v2"
 import type {
   FoodAnalysisConfirmationRequest,
   FoodAnalysisConfirmationOption,
   FoodAnalysisJob,
 } from "@/src/types"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { tokens } from "@/src/theme/tokens"
 
 interface FoodAnalysisConfirmationProps {
   job: FoodAnalysisJob | null
@@ -72,97 +75,128 @@ export function FoodAnalysisConfirmation({
     <Modal
       visible={job?.status === "NEEDS_CONFIRMATION"}
       animationType="slide"
+      presentationStyle="fullScreen"
+      statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onClose}
     >
-      <YStack
-        flex={1}
-        backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
-        paddingHorizontal="$4"
-        paddingTop="$10"
-        paddingBottom="$6"
-        gap="$5"
+      <SafeAreaView
+        edges={["top", "left", "right"]}
+        style={[
+          styles.safeArea,
+          {
+            backgroundColor: isDarkMode
+              ? tokens.color.appBgDark.val
+              : tokens.color.appBg.val,
+          },
+        ]}
       >
-        <YStack gap="$2">
-          <Text
-            fontSize="$7"
-            fontWeight="700"
-            color={isDarkMode ? "$textDark" : "$color"}
-          >
-            음식과 양을 확인해 주세요
-          </Text>
-          <Text fontSize="$4" lineHeight={21} color="$colorSubtle">
-            정확한 양을 선택하면 영양소 분석이 더 정확해져요.
-          </Text>
-        </YStack>
+        <YStack flex={1} paddingTop="$4" gap="$4">
+          <YStack paddingHorizontal="$4" gap="$2">
+            <Text
+              fontSize="$7"
+              fontWeight="700"
+              color={isDarkMode ? "$textDark" : "$color"}
+            >
+              음식과 양을 확인해 주세요
+            </Text>
+            <Text fontSize="$4" lineHeight={21} color="$colorSubtle">
+              정확한 양을 선택하면 영양소 분석이 더 정확해져요.
+            </Text>
+          </YStack>
 
-        <YStack flex={1} gap="$4">
-          {questions.map((question) => (
-            <GlassmorphicCard key={question.questionId} padding="$4">
-              <YStack gap="$3">
-                <Text
-                  fontSize="$5"
-                  fontWeight="600"
-                  color={isDarkMode ? "$textDark" : "$color"}
-                >
-                  {question.prompt}
-                </Text>
-                <XStack flexWrap="wrap" gap="$2">
-                  {question.options.map((option) => {
-                    const selected =
-                      answers[question.questionId]?.value === option.value
-                    return (
-                      <Pressable
-                        key={option.value}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected }}
-                        onPress={() =>
-                          setAnswers((current) => ({
-                            ...current,
-                            [question.questionId]: option,
-                          }))
-                        }
-                      >
-                        <YStack
-                          borderRadius="$6"
-                          borderWidth={1}
-                          borderColor={selected ? "$sub6" : "$borderColor"}
-                          backgroundColor={
-                            selected ? "$sub1" : "$cardBackground"
-                          }
-                          paddingHorizontal="$4"
-                          paddingVertical="$3"
-                        >
-                          <Text
-                            fontSize="$4"
-                            fontWeight={selected ? "600" : "500"}
-                            color={selected ? "$sub8" : "$colorSubtle"}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            contentInsetAdjustmentBehavior="never"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <YStack gap="$4">
+              {questions.map((question) => (
+                <GlassmorphicCard key={question.questionId} padding="$4">
+                  <YStack gap="$3">
+                    <Text
+                      fontSize="$5"
+                      fontWeight="600"
+                      color={isDarkMode ? "$textDark" : "$color"}
+                    >
+                      {question.prompt}
+                    </Text>
+                    <XStack flexWrap="wrap" gap="$2">
+                      {question.options.map((option) => {
+                        const selected =
+                          answers[question.questionId]?.value === option.value
+                        return (
+                          <Pressable
+                            key={option.value}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected }}
+                            onPress={() =>
+                              setAnswers((current) => ({
+                                ...current,
+                                [question.questionId]: option,
+                              }))
+                            }
                           >
-                            {option.label}
-                          </Text>
-                        </YStack>
-                      </Pressable>
-                    )
-                  })}
-                </XStack>
-              </YStack>
-            </GlassmorphicCard>
-          ))}
-        </YStack>
+                            <YStack
+                              minHeight={48}
+                              justifyContent="center"
+                              borderRadius="$6"
+                              borderWidth={1}
+                              borderColor={selected ? "$sub6" : "$borderColor"}
+                              backgroundColor={
+                                selected ? "$sub1" : "$cardBackground"
+                              }
+                              paddingHorizontal="$4"
+                              paddingVertical="$3"
+                            >
+                              <Text
+                                fontSize="$4"
+                                fontWeight={selected ? "600" : "500"}
+                                color={selected ? "$sub8" : "$colorSubtle"}
+                              >
+                                {option.label}
+                              </Text>
+                            </YStack>
+                          </Pressable>
+                        )
+                      })}
+                    </XStack>
+                  </YStack>
+                </GlassmorphicCard>
+              ))}
+            </YStack>
+          </ScrollView>
 
-        <XStack gap="$3">
-          <Button variant="ghost" flex={1} onPress={onClose}>
-            나중에 하기
-          </Button>
-          <Button
-            flex={1}
-            disabled={!canSubmit}
-            loading={isSubmitting}
-            onPress={handleSubmit}
-          >
-            분석 계속하기
-          </Button>
-        </XStack>
-      </YStack>
+          <V2BottomCTA
+            layout="horizontal"
+            secondaryLabel="나중에 하기"
+            onSecondary={onClose}
+            primaryLabel="분석 계속하기"
+            onPrimary={() => {
+              void handleSubmit()
+            }}
+            primaryProps={{
+              disabled: !canSubmit,
+              loading: isSubmitting,
+            }}
+          />
+        </YStack>
+      </SafeAreaView>
     </Modal>
   )
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+})
