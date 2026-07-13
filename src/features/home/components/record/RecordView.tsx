@@ -6,6 +6,7 @@ import type {
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
+  FoodAnalysisConfirmationRequest,
 } from "@/src/types"
 import { RecordOptionsSheet } from "./RecordOptionsSheet"
 import { View } from "tamagui"
@@ -26,6 +27,7 @@ import {
 } from "@/src/features/recipe/services/imagePickerService"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
 import { LoadingOverlay } from "../LoadingOverlay"
+import { FoodAnalysisConfirmation } from "../FoodAnalysisConfirmation"
 import { TextRecord } from "./TextRecord"
 import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
@@ -35,6 +37,7 @@ import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { toDateStr } from "../../utils/dateUtils"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { pendingAnalysisRequests } from "../../storage/pendingAnalysisRequests"
 import {
   applyMealTypeChangeToMealImages,
   applyMealTypeChangeToRecordedMeals,
@@ -69,12 +72,16 @@ export function RecordView({
     isAnalyzing,
     isUpdating,
     isResultOpen,
+    analysisStatus,
+    confirmationJob,
     analysisResult,
     analyzedMealType,
     analyzedImageUri,
     analyzeImage,
     analyzeText,
     dismissAnalysis,
+    confirmAnalysis,
+    deferConfirmation,
     registerDiary,
     closeResult,
     updateFoodAnalysis,
@@ -84,12 +91,56 @@ export function RecordView({
 
   const pending = usePendingAnalysisStore((s) => s.pending)
   const setPending = usePendingAnalysisStore((s) => s.setPending)
+  const pendingConfirmation = usePendingAnalysisStore(
+    (s) => s.pendingConfirmation,
+  )
+  const setPendingConfirmation = usePendingAnalysisStore(
+    (s) => s.setPendingConfirmation,
+  )
   const [isPendingOpen, setIsPendingOpen] = useState(false)
   const [isPendingUpdating, setIsPendingUpdating] = useState(false)
 
   useEffect(() => {
     if (pending) setIsPendingOpen(true)
   }, [pending])
+
+  const handleRecoveredConfirmation = async (
+    body: FoodAnalysisConfirmationRequest,
+  ) => {
+    if (!pendingConfirmation) return
+    try {
+      let job = await foodCameraService.confirmAnalysis(
+        pendingConfirmation.job.analysisId,
+        body,
+      )
+      while (
+        job.status === "QUEUED" ||
+        job.status === "PERCEIVING" ||
+        job.status === "RESOLVING"
+      ) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(500, job.pollAfterMs ?? 1500)),
+        )
+        job = await foodCameraService.fetchAnalysis(job.analysisId)
+      }
+      if (job.status === "NEEDS_CONFIRMATION") {
+        setPendingConfirmation({ ...pendingConfirmation, job })
+        return
+      }
+      if (job.status !== "READY" || !job.result) {
+        throw new Error(job.failureMessage || "식단 분석에 실패했어요.")
+      }
+      setPending({
+        result: job.result,
+        mealType: pendingConfirmation.mealType,
+        imageUri: job.result.imageUrl ?? pendingConfirmation.imageUri,
+      })
+      setPendingConfirmation(null)
+      await pendingAnalysisRequests.remove(job.requestId)
+    } catch (error) {
+      Alert.alert("확인 실패", getErrorMessage(error))
+    }
+  }
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
   const queryClient = useQueryClient()
@@ -430,7 +481,20 @@ export function RecordView({
       <LoadingOverlay
         visible={isAnalyzing}
         message="식단을 분석하고 있어요"
+        status={analysisStatus}
         onDismiss={dismissAnalysis}
+      />
+
+      <FoodAnalysisConfirmation
+        job={confirmationJob}
+        onSubmit={confirmAnalysis}
+        onClose={deferConfirmation}
+      />
+
+      <FoodAnalysisConfirmation
+        job={pendingConfirmation?.job ?? null}
+        onSubmit={handleRecoveredConfirmation}
+        onClose={() => setPendingConfirmation(null)}
       />
 
       <View height={10} />

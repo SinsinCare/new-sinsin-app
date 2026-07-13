@@ -2,6 +2,8 @@ import { EdemaLevel, MealType } from "../features/home/types"
 
 export interface FoodCameraFood {
   id?: number
+  analysisItemId?: string
+  canonicalFoodId?: string | null
   name: string
   restrictionLevel: string
   servingSizeValue: number | null
@@ -14,6 +16,47 @@ export interface FoodCameraFood {
   potassium: number
   phosphorus: number
   water: number
+  analyzedGrams?: number | null
+  consumedGrams?: number | null
+  confidence?: number | null
+  provenance?: FoodNutritionProvenance
+  isBroth?: boolean
+}
+
+export type FoodAnalysisStatus =
+  | "QUEUED"
+  | "PERCEIVING"
+  | "RESOLVING"
+  | "NEEDS_CONFIRMATION"
+  | "READY"
+  | "FAILED"
+
+export type FoodNutritionProvenance =
+  | "CATALOG"
+  | "RECIPE"
+  | "INGREDIENT_ESTIMATE"
+  | "AI_ESTIMATE"
+
+export interface FoodAnalysisCoverage {
+  catalog?: number
+  recipe?: number
+  ingredientEstimate?: number
+  unresolved?: number
+}
+
+export interface FoodAnalysisConfirmationOption {
+  value: string
+  label: string
+  canonicalFoodId?: string
+  analyzedGrams?: number
+}
+
+export interface FoodAnalysisConfirmationQuestion {
+  questionId: string
+  type: "FOOD_MATCH" | "PORTION" | "INGREDIENT" | "BROTH_RATIO"
+  observationItemId?: string | null
+  prompt: string
+  options: FoodAnalysisConfirmationOption[]
 }
 
 export interface FoodCameraNutritionTotal {
@@ -44,13 +87,95 @@ export interface FoodCameraEvaluation {
 
 export interface FoodCameraAnalyzeResult {
   foodAnalysisResultId: number
+  analysisId?: string
+  requestId?: string
+  status?: FoodAnalysisStatus
+  revisionId?: string
+  catalogSnapshotId?: string
+  policyVersion?: string
+  coverage?: FoodAnalysisCoverage
+  revision?: FoodAnalysisRevision
+  consumptionRevision?: FoodAnalysisConsumptionRevision | null
   servings: number
   eatenPercentage: number
+  consumedRatio?: number
+  solidConsumedRatio?: number
+  brothConsumedRatio?: number
   title: string
   imageUrl: string | null
   foods: FoodCameraFood[]
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation
+}
+
+export interface FoodAnalysisRevisionItem {
+  analysisItemId: string
+  canonicalFoodId?: string | null
+  name: string
+  analyzedGrams: number
+  fullNutrients: FoodCameraNutritionTotal
+  provenance: FoodNutritionProvenance
+  confidence: number
+}
+
+export interface FoodAnalysisRevision {
+  revisionId: string
+  catalogSnapshotId: string
+  policyVersion: string
+  nutritionFingerprint: string
+  fullTotal: FoodCameraNutritionTotal
+  totals?: FoodCameraNutritionTotal
+  coverage?: FoodAnalysisCoverage
+  evaluation: FoodCameraEvaluation
+  items: FoodAnalysisRevisionItem[]
+}
+
+export interface FoodAnalysisConsumptionRevision {
+  consumptionRevisionId: string
+  baseRevisionId: string
+  items: (FoodAnalysisConsumptionItem & {
+    nutrients: FoodCameraNutritionTotal
+  })[]
+  consumedTotal: FoodCameraNutritionTotal
+  totals?: FoodCameraNutritionTotal
+  coverage?: FoodAnalysisCoverage
+  evaluation: FoodCameraEvaluation
+}
+
+export interface FoodAnalysisJob {
+  analysisId: string
+  requestId: string
+  status: FoodAnalysisStatus
+  pollAfterMs?: number
+  result?: FoodCameraAnalyzeResult | null
+  confirmationQuestions?: FoodAnalysisConfirmationQuestion[]
+  failureMessage?: string | null
+}
+
+export interface FoodAnalysisConsumptionItem {
+  analysisItemId: string
+  consumedGrams?: number
+  consumedRatio?: number
+  solidConsumedRatio?: number
+  brothConsumedRatio?: number
+}
+
+export interface FoodAnalysisConsumptionRequest {
+  consumedRatio?: number
+  solidConsumedRatio?: number
+  brothConsumedRatio?: number
+  items?: FoodAnalysisConsumptionItem[]
+}
+
+export interface FoodAnalysisConfirmationRequest {
+  items: {
+    observationItemId?: string
+    canonicalFoodId: string
+    analyzedGrams: number
+    confidence?: number
+    ingredientOverrides?: Record<string, number>
+    preparationModifiers?: string[]
+  }[]
 }
 
 export interface DiaryAnalysisResult extends FoodCameraAnalyzeResult {
@@ -165,6 +290,9 @@ export interface FoodAnalysisUpdateFoodItem {
 export interface FoodAnalysisUpdateRequest {
   servings: number
   eatenPercentage: number
+  consumedRatio?: number
+  solidConsumedRatio?: number
+  brothConsumedRatio?: number
   foods: FoodAnalysisUpdateFoodItem[]
 }
 

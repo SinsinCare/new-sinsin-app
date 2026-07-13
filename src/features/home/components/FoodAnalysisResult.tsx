@@ -30,6 +30,13 @@ import { FoodResultEdit } from "./FoodResultEdit"
 import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
 import { ShareCard } from "./ShareCard"
 
+const PROVENANCE_LABEL = {
+  CATALOG: "공식 영양 DB",
+  RECIPE: "레시피 계산",
+  INGREDIENT_ESTIMATE: "재료 기반 추정",
+  AI_ESTIMATE: "AI 추정",
+} as const
+
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
   open: boolean
@@ -42,6 +49,7 @@ interface FoodAnalysisResultProps {
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
+    sourceResult?: FoodCameraAnalyzeResult,
   ) => Promise<FoodAnalysisUpdateResult | undefined>
   diaryId?: number
   updateDiaryMealType?: (
@@ -470,6 +478,30 @@ export function FoodAnalysisResult({
             </View>
           )}
 
+          {(effectiveResult.revision ||
+            effectiveResult.consumptionRevision) && (
+            <XStack
+              marginHorizontal="$4"
+              marginTop="$3"
+              paddingHorizontal="$3"
+              paddingVertical="$2"
+              borderRadius="$4"
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+              alignItems="center"
+              justifyContent="space-between"
+              gap="$2"
+            >
+              <Text fontSize="$3" fontWeight="600" color="$sub8">
+                {effectiveResult.consumptionRevision
+                  ? "실제 섭취 기준"
+                  : "사진 속 전체 기준"}
+              </Text>
+              <Text fontSize="$3" color="$colorSubtle" textAlign="right">
+                섭취량 수정은 AI 재분석 없이 바로 계산돼요
+              </Text>
+            </XStack>
+          )}
+
           {/* 한줄평 */}
           <YStack
             marginHorizontal="$4"
@@ -607,6 +639,24 @@ export function FoodAnalysisResult({
                       </Text>
                     </View>
                   </XStack>
+
+                  {(food.provenance || food.analyzedGrams != null) && (
+                    <XStack gap="$2" flexWrap="wrap" marginTop={-6}>
+                      {food.provenance && (
+                        <Text fontSize="$3" color="$colorSubtle">
+                          {PROVENANCE_LABEL[food.provenance]}
+                        </Text>
+                      )}
+                      {food.analyzedGrams != null && (
+                        <Text fontSize="$3" color="$colorSubtle">
+                          사진 속 {Math.round(food.analyzedGrams)}g
+                          {food.consumedGrams != null
+                            ? ` · 섭취 ${Math.round(food.consumedGrams)}g`
+                            : ""}
+                        </Text>
+                      )}
+                    </XStack>
+                  )}
 
                   <FoodNutrientDonuts food={food} />
                 </YStack>

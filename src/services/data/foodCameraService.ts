@@ -5,6 +5,9 @@ import type {
   ExtraWaterUpdateResponse,
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
+  FoodAnalysisConfirmationRequest,
+  FoodAnalysisConsumptionRequest,
+  FoodAnalysisJob,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
   FoodTitleUpdateResponse,
@@ -18,6 +21,69 @@ import * as FileSystem from "expo-file-system/legacy"
 
 const ANALYZE_TEXT_TIMEOUT_MS = 180000
 const FOOD_ANALYSIS_UPDATE_TIMEOUT_MS = 180000
+
+function unwrapResult<T>(data: { result?: T } | T): T {
+  return ((data as { result?: T }).result ?? data) as T
+}
+
+function isUnsupportedV2Status(status: number): boolean {
+  return status === 404 || status === 405
+}
+
+function normalizeAnalysisJob(job: FoodAnalysisJob): FoodAnalysisJob {
+  const result = job.result
+  if (!result?.revision || result.foods) return job
+
+  const consumptionByItem = new Map(
+    (result.consumptionRevision?.items ?? []).map((item) => [
+      item.analysisItemId,
+      item,
+    ]),
+  )
+  const foods = result.revision.items.map((item) => {
+    const consumption = consumptionByItem.get(item.analysisItemId)
+    const nutrients = consumption?.nutrients ?? item.fullNutrients
+    return {
+      analysisItemId: item.analysisItemId,
+      canonicalFoodId: item.canonicalFoodId,
+      name: item.name,
+      restrictionLevel: "",
+      servingSizeValue: item.analyzedGrams,
+      servingSizeUnit: "g",
+      analyzedGrams: item.analyzedGrams,
+      consumedGrams: consumption?.consumedGrams,
+      confidence: item.confidence,
+      provenance: item.provenance,
+      ...nutrients,
+    }
+  })
+  const total =
+    result.consumptionRevision?.consumedTotal ?? result.revision.fullTotal
+
+  return {
+    ...job,
+    result: {
+      ...result,
+      analysisId: job.analysisId,
+      requestId: job.requestId,
+      status: job.status,
+      revisionId: result.revision.revisionId,
+      catalogSnapshotId: result.revision.catalogSnapshotId,
+      policyVersion: result.revision.policyVersion,
+      coverage:
+        result.consumptionRevision?.coverage ?? result.revision.coverage,
+      foodAnalysisResultId: result.foodAnalysisResultId ?? 0,
+      servings: result.servings ?? 1,
+      eatenPercentage: result.eatenPercentage ?? 100,
+      title: result.title ?? foods.map((food) => food.name).join(", "),
+      imageUrl: result.imageUrl ?? null,
+      foods,
+      total,
+      evaluation:
+        result.consumptionRevision?.evaluation ?? result.revision.evaluation,
+    },
+  }
+}
 
 async function compressImage(uri: string): Promise<string> {
   try {
@@ -47,6 +113,121 @@ async function compressImage(uri: string): Promise<string> {
 }
 
 export const foodCameraService = {
+  async createAnalysis(
+    imageUri: string,
+    requestId: string,
+  ): Promise<FoodAnalysisJob> {
+    if (isMockMode()) {
+      const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
+      const result = await mockFoodCameraService.analyze()
+      return {
+        analysisId: `mock-${requestId}`,
+        requestId,
+        status: "READY",
+        result: { ...result, status: "READY", requestId },
+      }
+    }
+
+    const compressedUri = await compressImage(imageUri)
+    const formData = new FormData()
+    formData.append("image", {
+      uri: compressedUri,
+      name: `food_${Date.now()}.jpg`,
+      type: "image/jpeg",
+    } as unknown as Blob)
+    formData.append("requestId", requestId)
+
+    const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
+    const token = await tokenService.getAccessToken()
+    const response = await fetch(`${baseURL}/food-analyses`, {
+      method: "POST",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        Accept: "application/json",
+        "Idempotency-Key": requestId,
+      },
+      body: formData as unknown as RequestInit["body"],
+    })
+
+    if (isUnsupportedV2Status(response.status)) {
+      const result = await this.analyze(imageUri, requestId)
+      return {
+        analysisId: String(result.foodAnalysisResultId),
+        requestId,
+        status: "READY",
+        result: { ...result, status: "READY", requestId },
+      }
+    }
+
+    const json = (await response.json()) as {
+      isSuccess?: boolean
+      message?: string
+      result?: FoodAnalysisJob
+    }
+    if (!response.ok || json.isSuccess === false || !json.result) {
+      throw new Error(json.message || `HTTP ${response.status}`)
+    }
+    return normalizeAnalysisJob(json.result)
+  },
+
+  async fetchAnalysis(analysisId: string): Promise<FoodAnalysisJob> {
+    const response = await api.get(`/food-analyses/${analysisId}`)
+    return normalizeAnalysisJob(unwrapResult<FoodAnalysisJob>(response.data))
+  },
+
+  async fetchAnalysisByRequestId(
+    requestId: string,
+  ): Promise<FoodAnalysisJob | null> {
+    try {
+      const response = await api.get(
+        `/food-analyses/by-request/${encodeURIComponent(requestId)}`,
+      )
+      const job = unwrapResult<FoodAnalysisJob | null>(response.data)
+      return job ? normalizeAnalysisJob(job) : null
+    } catch (err) {
+      if (
+        isAxiosError(err) &&
+        isUnsupportedV2Status(err.response?.status ?? 0)
+      ) {
+        const result = await this.fetchByRequestId(requestId)
+        return result
+          ? {
+              analysisId: String(result.foodAnalysisResultId),
+              requestId,
+              status: "READY",
+              result: { ...result, status: "READY", requestId },
+            }
+          : null
+      }
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async confirmAnalysis(
+    analysisId: string,
+    body: FoodAnalysisConfirmationRequest & { baseRevisionId?: string },
+  ): Promise<FoodAnalysisJob> {
+    const response = await api.post(
+      `/food-analyses/${analysisId}/confirmation`,
+      body,
+    )
+    return normalizeAnalysisJob(unwrapResult<FoodAnalysisJob>(response.data))
+  },
+
+  async updateConsumption(
+    analysisId: string,
+    body: FoodAnalysisConsumptionRequest & { baseRevisionId?: string },
+  ): Promise<FoodAnalysisJob> {
+    const response = await api.patch(
+      `/food-analyses/${analysisId}/consumption`,
+      body,
+    )
+    return normalizeAnalysisJob(unwrapResult<FoodAnalysisJob>(response.data))
+  },
+
   async analyze(
     imageUri: string,
     requestId?: string,
