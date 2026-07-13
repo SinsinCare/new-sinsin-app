@@ -18,6 +18,9 @@ interface FoodAnalysisConfirmationProps {
   onClose: () => void
 }
 
+// TODO(food-analysis-confirmation-ui): 질문 선택지와 건너뛰기 동작을 다시
+// 설계한 뒤 EXPO_PUBLIC_FOOD_ANALYSIS_CONFIRMATION_ENABLED로 재활성화한다.
+// API 계약과 컴포넌트는 향후 추가 정보 수집을 위해 의도적으로 보존한다.
 export function FoodAnalysisConfirmation({
   job,
   onSubmit,
