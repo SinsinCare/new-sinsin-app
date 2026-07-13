@@ -46,6 +46,7 @@ import {
   type MealImageMap,
   type RecordedMealMap,
 } from "../../utils/mealRecordUtils"
+import { appConfig } from "@/src/config/appConfig"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -494,17 +495,21 @@ export function RecordView({
         onDismiss={dismissAnalysis}
       />
 
-      <FoodAnalysisConfirmation
-        job={confirmationJob}
-        onSubmit={confirmAnalysis}
-        onClose={deferConfirmation}
-      />
+      {appConfig.foodAnalysisConfirmationEnabled && (
+        <>
+          <FoodAnalysisConfirmation
+            job={confirmationJob}
+            onSubmit={confirmAnalysis}
+            onClose={deferConfirmation}
+          />
 
-      <FoodAnalysisConfirmation
-        job={pendingConfirmation?.job ?? null}
-        onSubmit={handleRecoveredConfirmation}
-        onClose={() => setPendingConfirmation(null)}
-      />
+          <FoodAnalysisConfirmation
+            job={pendingConfirmation?.job ?? null}
+            onSubmit={handleRecoveredConfirmation}
+            onClose={() => setPendingConfirmation(null)}
+          />
+        </>
+      )}
 
       <View height={10} />
 

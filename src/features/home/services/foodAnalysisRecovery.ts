@@ -3,8 +3,8 @@ import {
   usePendingAnalysisStore,
   type PendingAnalysis,
 } from "@/src/stores/pendingAnalysisStore"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
-import type { FoodAnalysisJob } from "@/src/types"
+import type { FoodAnalysisJob, FoodCameraAnalyzeResult } from "@/src/types"
+import { appConfig } from "@/src/config/appConfig"
 import { markFoodAnalysisRequestHandled } from "./foodAnalysisRequestState"
 import {
   pendingAnalysisRequests,
@@ -28,6 +28,7 @@ export interface FoodAnalysisRecoveryDeps {
     mealType: PendingAnalysisRequest["mealType"]
     imageUri: string | null
   }) => void
+  confirmationEnabled?: boolean
   markHandledRequestId: (requestId: string) => void
   now: () => number
 }
@@ -42,6 +43,7 @@ const defaultDeps: FoodAnalysisRecoveryDeps = {
     usePendingAnalysisStore.getState().setPending(pending),
   setPendingConfirmation: (pending) =>
     usePendingAnalysisStore.getState().setPendingConfirmation(pending),
+  confirmationEnabled: appConfig.foodAnalysisConfirmationEnabled,
   markHandledRequestId: markFoodAnalysisRequestHandled,
   now: Date.now,
 }
@@ -62,12 +64,18 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
 
     const job = await deps.fetchJobByRequestId?.(pending.requestId)
     if (job?.status === "NEEDS_CONFIRMATION") {
-      deps.setPendingConfirmation?.({
-        job,
-        mealType: pending.mealType,
-        imageUri: pending.imageUri,
-      })
-      return true
+      if (deps.confirmationEnabled) {
+        deps.setPendingConfirmation?.({
+          job,
+          mealType: pending.mealType,
+          imageUri: pending.imageUri,
+        })
+        return true
+      }
+
+      // 설문 UI가 꺼진 동안 요청을 지우지 않는다. 다음 앱 진입/포그라운드
+      // 전환에서 READY 여부를 다시 확인하고, TTL 이후에만 정리한다.
+      return false
     }
     const result =
       job?.status === "READY"
