@@ -1,4 +1,6 @@
 export { api, publicApi } from "./apiClient"
+export { authenticatedFetch } from "./authenticatedFetch"
+export { refreshAccessToken } from "./authSession"
 export { ApiError } from "./apiError"
 export { queryClient } from "./queryClient"
 export { clearClientSession } from "./sessionCleanup"

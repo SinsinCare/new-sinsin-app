@@ -14,8 +14,7 @@ import type {
   FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
-import { api } from "../core"
-import { tokenService } from "../core/tokenService"
+import { api, authenticatedFetch } from "../core"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
@@ -145,26 +144,29 @@ export const foodCameraService = {
     }
 
     const compressedUri = await compressImage(imageUri)
-    const formData = new FormData()
-    formData.append("image", {
-      uri: compressedUri,
-      name: `food_${Date.now()}.jpg`,
-      type: "image/jpeg",
-    } as unknown as Blob)
-    formData.append("requestId", requestId)
-    formData.append("mode", mode)
-
     const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-    const token = await tokenService.getAccessToken()
-    const response = await fetch(`${baseURL}/food-analyses`, {
-      method: "POST",
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-        Accept: "application/json",
-        "Idempotency-Key": requestId,
+    const fileName = `food_${Date.now()}.jpg`
+    const response = await authenticatedFetch(
+      `${baseURL}/food-analyses`,
+      () => {
+        const formData = new FormData()
+        formData.append("image", {
+          uri: compressedUri,
+          name: fileName,
+          type: "image/jpeg",
+        } as unknown as Blob)
+        formData.append("requestId", requestId)
+        formData.append("mode", mode)
+        return {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Idempotency-Key": requestId,
+          },
+          body: formData as unknown as RequestInit["body"],
+        }
       },
-      body: formData as unknown as RequestInit["body"],
-    })
+    )
 
     if (isUnsupportedV2Status(response.status)) {
       const result = await this.analyze(imageUri, requestId)
@@ -257,26 +259,27 @@ export const foodCameraService = {
     } else {
       const compressedUri = await compressImage(imageUri)
 
-      const formData = new FormData()
-      formData.append("image", {
-        uri: compressedUri,
-        name: `food_${Date.now()}.jpg`,
-        type: "image/jpeg",
-      } as unknown as Blob)
-      if (requestId) {
-        formData.append("requestId", requestId)
-      }
-
       const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-      const token = await tokenService.getAccessToken()
-      const fetchResponse = await fetch(`${baseURL}/food-camera/analyze`, {
-        method: "POST",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-          Accept: "application/json",
+      const fileName = `food_${Date.now()}.jpg`
+      const fetchResponse = await authenticatedFetch(
+        `${baseURL}/food-camera/analyze`,
+        () => {
+          const formData = new FormData()
+          formData.append("image", {
+            uri: compressedUri,
+            name: fileName,
+            type: "image/jpeg",
+          } as unknown as Blob)
+          if (requestId) {
+            formData.append("requestId", requestId)
+          }
+          return {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            body: formData as unknown as RequestInit["body"],
+          }
         },
-        body: formData as unknown as RequestInit["body"],
-      })
+      )
       const json = (await fetchResponse.json()) as {
         isSuccess?: boolean
         message?: string

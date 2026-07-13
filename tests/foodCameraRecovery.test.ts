@@ -23,6 +23,10 @@ jest.mock("../src/services/core", () => ({
     post: jest.fn(),
     patch: jest.fn(),
   },
+  authenticatedFetch: jest.fn(
+    async (url: string, createRequest: () => RequestInit) =>
+      fetch(url, createRequest()),
+  ),
 }))
 
 jest.mock("../src/services/core/tokenService", () => ({

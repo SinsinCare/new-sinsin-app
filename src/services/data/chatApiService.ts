@@ -14,24 +14,10 @@ import {
   mapMessage,
 } from "../../types/chat"
 import type { ApiResponse } from "../../types/api"
-import type { TokenRefreshResult } from "../../types/auth"
 import { getBackendUrl, isMockMode } from "../../config/appConfig"
-import { api, clearClientSession, publicApi, tokenService } from "../core"
+import { api, refreshAccessToken, tokenService } from "../core"
 
 const BASE_URL = getBackendUrl()
-
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = await tokenService.getRefreshToken()
-  if (!refreshToken) return null
-
-  const { data } = await publicApi.post<ApiResponse<TokenRefreshResult>>(
-    "/auth/tokens/refresh",
-    { refreshToken },
-  )
-  const { accessToken, refreshToken: newRefreshToken } = data.result
-  await tokenService.setTokens(accessToken, newRefreshToken)
-  return accessToken
-}
 
 function createRealChatService(): ChatService {
   return {
@@ -169,7 +155,6 @@ function createRealChatService(): ChatService {
                 const newToken = await refreshAccessToken()
                 resolve(await sendWithToken(newToken, false))
               } catch (error) {
-                await clearClientSession()
                 reject(error)
               }
             } else {
