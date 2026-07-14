@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { Alert, BackHandler } from "react-native"
 import { router } from "expo-router"
 import { onboardingService } from "@/src/services/data/onboardingService"
@@ -16,6 +16,7 @@ export function useOnboarding() {
   // hydration 완료 전까지 로딩 화면을 보여주기 위해 true로 시작
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const lastViewedStepRef = useRef<string | null>(null)
 
   // persist hydration 상태 추적
   const [isStoreHydrated, setIsStoreHydrated] = useState(() =>
@@ -67,6 +68,7 @@ export function useOnboarding() {
         step_count: data.length,
       })
     } catch {
+      trackAnalyticsEvent("onboarding_steps_load_failed", {})
       Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
     } finally {
       setIsLoading(false)
@@ -100,6 +102,17 @@ export function useOnboarding() {
   const currentStep = steps[currentStepIndex]
   const isLastStep = currentStepIndex === steps.length - 1
   const currentAnswer = currentStep ? answers[currentStep.step] : undefined
+
+  useEffect(() => {
+    if (phase !== "steps" || isLoading || !currentStep) return
+    const viewKey = `${currentStepIndex}:${steps.length}`
+    if (lastViewedStepRef.current === viewKey) return
+    lastViewedStepRef.current = viewKey
+    trackAnalyticsEvent("onboarding_step_viewed", {
+      step_index: currentStepIndex,
+      step_count: steps.length,
+    })
+  }, [currentStep, currentStepIndex, isLoading, phase, steps.length])
 
   const hasValidAnswer = useCallback(() => {
     if (!currentStep) return false
@@ -179,6 +192,11 @@ export function useOnboarding() {
   }
 
   const handleNext = () => {
+    if (!hasValidAnswer()) return
+    trackAnalyticsEvent("onboarding_step_completed", {
+      step_index: currentStepIndex,
+      step_count: steps.length,
+    })
     if (isLastStep) {
       completeOnboarding()
     } else {

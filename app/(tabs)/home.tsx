@@ -24,6 +24,7 @@ import {
   getCommittedHomePagerValue,
   getReleasedHomePagerTab,
 } from "@/src/features/home/utils/homePager"
+import { useHomeTabAnalytics } from "@/src/features/home/hooks/useHomeTabAnalytics"
 
 const PADDING = 25
 
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const announcement = useAnnouncementOnEntry(true)
+  useHomeTabAnalytics(mainTab)
   const widthRef = useRef(width)
   widthRef.current = width
 

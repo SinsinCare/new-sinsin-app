@@ -8,7 +8,7 @@ import {
   resetAnalyticsIdentity,
   trackAnalyticsEvent,
 } from "./analyticsClient"
-import { getAnalyticsScreenName } from "./events"
+import { getAnalyticsScreenName, getAnalyticsSignupStep } from "./events"
 
 export function useAnalyticsLifecycle(
   user: AppUser | null,
@@ -19,7 +19,14 @@ export function useAnalyticsLifecycle(
     () => getAnalyticsScreenName(segments.map(String)),
     [segments],
   )
+  const routeSegments = useMemo(() => segments.map(String), [segments])
+  const signupStep = useMemo(
+    () => getAnalyticsSignupStep(routeSegments),
+    [routeSegments],
+  )
   const lastScreenRef = useRef<string | null>(null)
+  const lastSignupStepRef = useRef<string | null>(null)
+  const loginViewedRef = useRef(false)
 
   const launchTrackedRef = useRef(false)
 
@@ -41,6 +48,29 @@ export function useAnalyticsLifecycle(
     lastScreenRef.current = screenName
     trackAnalyticsEvent("screen_viewed", { screen: screenName })
   }, [isAuthLoading, screenName])
+
+  useEffect(() => {
+    if (isAuthLoading) return
+
+    const [group, route] = routeSegments
+    const isLoginLanding = group === "(auth)" && route === "login"
+    if (isLoginLanding) {
+      if (!loginViewedRef.current) {
+        trackAnalyticsEvent("auth_login_viewed", {})
+      }
+      loginViewedRef.current = true
+    } else {
+      loginViewedRef.current = false
+    }
+
+    if (!signupStep) {
+      lastSignupStepRef.current = null
+      return
+    }
+    if (lastSignupStepRef.current === signupStep) return
+    lastSignupStepRef.current = signupStep
+    trackAnalyticsEvent("auth_signup_step_viewed", { step: signupStep })
+  }, [isAuthLoading, routeSegments, signupStep])
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {

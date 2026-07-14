@@ -98,6 +98,7 @@ export function useFoodAnalysis(
 
     setAnalysisResult(result)
     setIsResultOpen(true)
+    trackAnalyticsEvent("food_record_result_viewed", { source: "fresh" })
   }
 
   const resolveJob = async (
@@ -199,6 +200,7 @@ export function useFoodAnalysis(
       const result = await foodCameraService.analyzeText(text, requestId)
       markFoodAnalysisRequestHandled(requestId)
       await pendingAnalysisRequests.remove(requestId)
+      trackAnalyticsEvent("food_analysis_succeeded", { method: "text" })
 
       if (dismissedRef.current) {
         setPending({ result, mealType, imageUri: result.imageUrl ?? null })
@@ -216,7 +218,7 @@ export function useFoodAnalysis(
       setAnalyzedImageUri(result.imageUrl)
       setAnalysisResult(result)
       setIsResultOpen(true)
-      trackAnalyticsEvent("food_analysis_succeeded", { method: "text" })
+      trackAnalyticsEvent("food_record_result_viewed", { source: "fresh" })
     } catch (error) {
       if (!dismissedRef.current) {
         trackAnalyticsEvent("food_analysis_failed", { method: "text" })
@@ -296,10 +298,10 @@ export function useFoodAnalysis(
         date,
         analyzedMealType,
       )
-      trackAnalyticsEvent("food_record_saved", {})
+      trackAnalyticsEvent("food_record_saved", { source: "fresh" })
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
-      trackAnalyticsEvent("food_record_save_failed", {})
+      trackAnalyticsEvent("food_record_save_failed", { source: "fresh" })
       console.error("registerDiary error:", error)
       Alert.alert("등록 실패", getErrorMessage(error))
     }

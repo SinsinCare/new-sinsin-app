@@ -101,7 +101,7 @@ nodes:
     screen: SCR_AUTH_TERMS_AGREEMENT
     route: "/(auth)/terms-agreement"
     states: [default, validation_error]
-    analytics: [auth_signup_started]
+    analytics: [auth_signup_started, auth_signup_step_viewed]
 
   - id: SCR_AUTH_SIGNUP_EMAIL
     type: screen
@@ -118,6 +118,7 @@ nodes:
         loading,
         error,
       ]
+    analytics: [auth_signup_step_viewed]
 
   - id: ACT_VERIFY_SIGNUP_EMAIL
     type: action
@@ -168,6 +169,7 @@ nodes:
     screen: SCR_AUTH_SIGNUP_PASSWORD
     route: "/(auth)/signup-password"
     states: [default, validation_error]
+    analytics: [auth_signup_step_viewed]
 
   - id: SCR_AUTH_PROFILE_SETUP
     type: screen
@@ -175,6 +177,7 @@ nodes:
     screen: SCR_AUTH_PROFILE_SETUP
     route: "/(auth)/profile-setup"
     states: [default, validation_error]
+    analytics: [auth_signup_step_viewed]
 
   - id: SCR_AUTH_NICKNAME_SETUP
     type: screen
@@ -182,6 +185,7 @@ nodes:
     screen: SCR_AUTH_NICKNAME_SETUP
     route: "/(auth)/nickname-setup"
     states: [default, checking, available, duplicate, loading, error]
+    analytics: [auth_signup_step_viewed]
 
   - id: ACT_VERIFY_NICKNAME
     type: action
@@ -207,7 +211,7 @@ nodes:
     screen: SCR_AUTH_SIGNUP_COMPLETE
     route: "/(auth)/signup-complete"
     states: [default]
-    analytics: [auth_signup_completed]
+    analytics: [auth_signup_step_viewed]
 
   - id: SCR_AUTH_FORGOT_PASSWORD
     type: screen
@@ -475,10 +479,12 @@ edges:
   - from: D_SIGNUP_RESULT
     to: SCR_AUTH_SIGNUP_COMPLETE
     condition: success
+    analytics: [auth_signup_completed]
 
   - from: D_SIGNUP_RESULT
     to: ERR_AUTH
     condition: failure
+    analytics: [auth_signup_failed]
 
   - from: SCR_AUTH_SIGNUP_COMPLETE
     to: D_ACCOUNT_STATE
@@ -568,8 +574,10 @@ analytics:
   - auth_social_login_succeeded
   - auth_social_login_failed
   - auth_signup_started
+  - auth_signup_step_viewed
   - auth_signup_email_verified
   - auth_signup_completed
+  - auth_signup_failed
   - auth_password_reset_started
   - auth_password_reset_completed
   - auth_withdrawal_cancelled

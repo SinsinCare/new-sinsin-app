@@ -47,6 +47,17 @@ import {
   type RecordedMealMap,
 } from "../../utils/mealRecordUtils"
 import { appConfig } from "@/src/config/appConfig"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
+
+const ANALYTICS_MEAL_SLOT: Record<
+  MealType,
+  "breakfast" | "lunch" | "dinner" | "snack"
+> = {
+  BREAKFAST: "breakfast",
+  LUNCH: "lunch",
+  DINNER: "dinner",
+  SNACKS: "snack",
+}
 
 interface RecordViewProps {
   selectedDate: Date
@@ -100,9 +111,19 @@ export function RecordView({
   )
   const [isPendingOpen, setIsPendingOpen] = useState(false)
   const [isPendingUpdating, setIsPendingUpdating] = useState(false)
+  const pendingResultViewedRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (pending) setIsPendingOpen(true)
+    if (!pending) return
+    setIsPendingOpen(true)
+    if (
+      pendingResultViewedRef.current !== pending.result.foodAnalysisResultId
+    ) {
+      pendingResultViewedRef.current = pending.result.foodAnalysisResultId
+      trackAnalyticsEvent("food_record_result_viewed", {
+        source: "recovered",
+      })
+    }
   }, [pending])
 
   const handleRecoveredConfirmation = async (
@@ -256,7 +277,9 @@ export function RecordView({
       }
       await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
       await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+      trackAnalyticsEvent("food_record_saved", { source: "recovered" })
     } catch (error) {
+      trackAnalyticsEvent("food_record_save_failed", { source: "recovered" })
       console.error("handlePendingAddToRecord error:", error)
       Alert.alert("등록 실패", "기록 추가에 실패했어요.")
     }
@@ -283,6 +306,9 @@ export function RecordView({
   }
 
   const handleRecord = (mealType: MealType) => {
+    trackAnalyticsEvent("food_record_started", {
+      slot: ANALYTICS_MEAL_SLOT[mealType],
+    })
     recordingMealTypeRef.current = mealType
     const label = MEAL_OPTIONS.find((o) => o.type === mealType)?.label ?? ""
     setRecordingMealLabel(label)
@@ -293,11 +319,18 @@ export function RecordView({
     const mealType = recordingMealTypeRef.current
     if (!mealType) return
     setIsOptionsSheetOpen(false)
+    trackAnalyticsEvent("food_record_method_selected", {
+      method: "skip",
+      slot: ANALYTICS_MEAL_SLOT[mealType],
+    })
     try {
       await foodCameraService.skipMeal(toDateStr(selectedDate), mealType)
       setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
       await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
       await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+      trackAnalyticsEvent("food_record_skipped", {
+        slot: ANALYTICS_MEAL_SLOT[mealType],
+      })
     } catch (error) {
       Alert.alert("오류", getErrorMessage(error))
     }
@@ -311,14 +344,32 @@ export function RecordView({
       {
         text: "카메라",
         onPress: async () => {
-          const uri = await takePhoto()
+          trackAnalyticsEvent("food_record_method_selected", {
+            method: "camera",
+            slot: ANALYTICS_MEAL_SLOT[mealType],
+          })
+          const uri = await takePhoto({
+            onPermissionDenied: () =>
+              trackAnalyticsEvent("food_photo_permission_denied", {
+                source: "camera",
+              }),
+          })
           if (uri) analyzeImage(uri, mealType)
         },
       },
       {
         text: "갤러리",
         onPress: async () => {
-          const uri = await pickImageFromGallery()
+          trackAnalyticsEvent("food_record_method_selected", {
+            method: "gallery",
+            slot: ANALYTICS_MEAL_SLOT[mealType],
+          })
+          const uri = await pickImageFromGallery({
+            onPermissionDenied: () =>
+              trackAnalyticsEvent("food_photo_permission_denied", {
+                source: "gallery",
+              }),
+          })
           if (uri) analyzeImage(uri, mealType)
         },
       },
@@ -327,11 +378,25 @@ export function RecordView({
   }
 
   const handleTextRecord = () => {
+    const mealType = recordingMealTypeRef.current
+    if (mealType) {
+      trackAnalyticsEvent("food_record_method_selected", {
+        method: "text",
+        slot: ANALYTICS_MEAL_SLOT[mealType],
+      })
+    }
     setIsOptionsSheetOpen(false)
     setIsTextRecordOpen(true)
   }
 
   const handleRecipeLoad = () => {
+    const mealType = recordingMealTypeRef.current
+    if (mealType) {
+      trackAnalyticsEvent("food_record_method_selected", {
+        method: "recipe",
+        slot: ANALYTICS_MEAL_SLOT[mealType],
+      })
+    }
     setIsOptionsSheetOpen(false)
   }
 
@@ -344,6 +409,7 @@ export function RecordView({
     }
     const result = await fetchDiaryResult(diet.diaryId)
     if (result) {
+      trackAnalyticsEvent("food_record_result_viewed", { source: "saved" })
       setViewDiaryResult(result)
       setViewDiaryId(diet.diaryId)
       setViewResultMealType(mealType)

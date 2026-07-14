@@ -1,6 +1,6 @@
 id: FLOW_HOME_RECORD
-name: 홈 식사 기록 플로우
-description: 홈 기록 탭에서 식사 사진 또는 텍스트를 분석하고 날짜별 식사 기록으로 저장하는 핵심 사용 경로
+name: 홈 기록 및 통계 플로우
+description: 홈에서 기록과 통계를 이동하고 식단 및 건강정보 저장을 완료하는 핵심 사용 경로
 version: 1
 
 entry_points:
@@ -135,7 +135,7 @@ nodes:
     type: modal
     label: 식단 분석 결과
     states: [success, editing, error]
-    analytics: [food_analysis_succeeded]
+    analytics: [food_analysis_succeeded, food_record_result_viewed]
 
   - id: ACT_REGISTER_DIARY
     type: action
@@ -150,6 +150,7 @@ nodes:
     type: action
     label: 분석 결과 수정
     api: API_UPDATE_FOOD_ANALYSIS
+    analytics: [food_record_edit_started]
 
   - id: D_UPDATE_ANALYSIS_RESULT
     type: decision
@@ -343,10 +344,12 @@ edges:
   - from: D_UPDATE_ANALYSIS_RESULT
     to: SCR_ANALYSIS_RESULT
     condition: success
+    analytics: [food_record_edit_succeeded]
 
   - from: D_UPDATE_ANALYSIS_RESULT
     to: ERR_HOME
     condition: failure
+    analytics: [food_record_edit_failed]
 
   - from: SCR_ANALYSIS_RESULT
     to: ACT_REGISTER_DIARY
@@ -420,6 +423,7 @@ flow_links:
 
 analytics:
   - home_record_viewed
+  - home_statistics_viewed
   - food_record_started
   - food_record_method_selected
   - food_photo_permission_denied
@@ -430,6 +434,12 @@ analytics:
   - food_record_saved
   - food_record_save_failed
   - food_record_skipped
+  - food_record_result_viewed
+  - food_record_edit_started
+  - food_record_edit_succeeded
+  - food_record_edit_failed
+  - health_entry_save_succeeded
+  - health_entry_save_failed
   - error_retry_tapped
 
 notes:
@@ -437,3 +447,5 @@ notes:
   - If the analysis loading overlay is dismissed before completion, the result is stored as pending and a local notification is created.
   - After saving or skipping a meal, dateAnalysis and diaryExistence queries are refetched.
   - Permission denial currently returns the user to the same screen with no API call.
+  - Blood pressure, glucose, weight, edema, and hydration share generalized health-entry success/failure events; metric type, date, value, and raw errors are excluded.
+  - Home record/statistics tab changes are tracked after the selected tab settles, whether changed by tap or swipe.

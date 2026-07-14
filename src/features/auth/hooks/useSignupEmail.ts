@@ -5,6 +5,7 @@ import { showErrorToast } from "@/src/lib/toast"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
 import type { EmailLoginLinkRequiredResult, SocialProvider } from "@/src/types"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 const TIMER_DURATION = 180
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
@@ -170,6 +171,7 @@ export function useSignupEmail() {
 
       const result = await emailService.verifyCode(email, code)
       if (result.verified) {
+        trackAnalyticsEvent("auth_signup_email_verified", {})
         setCodeVerified(true)
         setVerifiedEmail(email)
         if (result.signupToken) {
