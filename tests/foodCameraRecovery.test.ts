@@ -414,6 +414,60 @@ describe("foodCameraService requestId contract", () => {
     })
   })
 
+  it("fills evaluation from the revision when foods are already present", async () => {
+    const revisionEvaluation = createAnalysisResult().evaluation
+    const resultWithFoods = createAnalysisResult({
+      evaluation: undefined,
+      revision: {
+        revisionId: "revision-with-foods",
+        catalogSnapshotId: "catalog-with-foods",
+        policyVersion: "renal-1",
+        nutritionFingerprint: "fingerprint-with-foods",
+        fullTotal: createAnalysisResult().total,
+        evaluation: revisionEvaluation,
+        items: [],
+      },
+    })
+    ;(api.get as jest.Mock).mockResolvedValue({
+      data: {
+        result: {
+          analysisId: "analysis-with-foods",
+          requestId: "food-req-with-foods",
+          status: "READY",
+          result: resultWithFoods,
+        },
+      },
+    })
+
+    await expect(
+      foodCameraService.fetchAnalysis("analysis-with-foods"),
+    ).resolves.toMatchObject({
+      result: {
+        foods: [],
+        evaluation: revisionEvaluation,
+      },
+    })
+  })
+
+  it("provides an empty evaluation when legacy payloads omit it", async () => {
+    ;(api.get as jest.Mock).mockResolvedValue({
+      data: {
+        result: createAnalysisResult({ evaluation: undefined }),
+      },
+    })
+
+    await expect(
+      foodCameraService.fetchByRequestId("food-req-no-evaluation"),
+    ).resolves.toMatchObject({
+      evaluation: {
+        comment: "",
+        score: 0,
+        cautionFoods: [],
+        detail: { riskFactors: "", disclaimer: "" },
+      },
+    })
+  })
+
   it("normalizes the transitional top-level READY payload", async () => {
     ;(api.get as jest.Mock).mockResolvedValue({
       data: {

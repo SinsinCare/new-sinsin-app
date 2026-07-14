@@ -14,6 +14,7 @@ import type {
   FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
+import { normalizeFoodAnalysisResult } from "../../shared/utils/foodAnalysisResult"
 import { api, authenticatedFetch } from "../core"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
@@ -46,57 +47,17 @@ function normalizeAnalysisJob(input: FoodAnalysisJob): FoodAnalysisJob {
     result,
     error: transitional.error ?? transitional.failureMessage ?? null,
   }
-  if (!result?.revision || result.foods) return job
-
-  const consumptionByItem = new Map(
-    (result.consumptionRevision?.items ?? []).map((item) => [
-      item.analysisItemId,
-      item,
-    ]),
-  )
-  const foods = result.revision.items.map((item) => {
-    const consumption = consumptionByItem.get(item.analysisItemId)
-    const nutrients = consumption?.nutrients ?? item.fullNutrients
-    return {
-      analysisItemId: item.analysisItemId,
-      canonicalFoodId: item.canonicalFoodId,
-      name: item.name,
-      restrictionLevel: "",
-      servingSizeValue: item.analyzedGrams,
-      servingSizeUnit: "g",
-      analyzedGrams: item.analyzedGrams,
-      consumedGrams: consumption?.consumedGrams,
-      confidence: item.confidence,
-      provenance: item.provenance,
-      ...nutrients,
-    }
-  })
-  const total =
-    result.consumptionRevision?.consumedTotal ?? result.revision.fullTotal
-
-  return {
-    ...job,
-    result: {
-      ...result,
-      analysisId: job.analysisId,
-      requestId: job.requestId,
-      status: job.status,
-      revisionId: result.revision.revisionId,
-      catalogSnapshotId: result.revision.catalogSnapshotId,
-      policyVersion: result.revision.policyVersion,
-      coverage:
-        result.consumptionRevision?.coverage ?? result.revision.coverage,
-      foodAnalysisResultId: result.foodAnalysisResultId ?? 0,
-      servings: result.servings ?? 1,
-      eatenPercentage: result.eatenPercentage ?? 100,
-      title: result.title ?? foods.map((food) => food.name).join(", "),
-      imageUrl: result.imageUrl ?? null,
-      foods,
-      total,
-      evaluation:
-        result.consumptionRevision?.evaluation ?? result.revision.evaluation,
-    },
-  }
+  return result
+    ? {
+        ...job,
+        result: normalizeFoodAnalysisResult({
+          ...result,
+          analysisId: result.analysisId ?? job.analysisId,
+          requestId: result.requestId ?? job.requestId,
+          status: result.status ?? job.status,
+        }),
+      }
+    : job
 }
 
 async function compressImage(uri: string): Promise<string> {
@@ -290,7 +251,7 @@ export const foodCameraService = {
       }
       result = json.result as FoodCameraAnalyzeResult
     }
-    return result
+    return normalizeFoodAnalysisResult(result)
   },
 
   async analyzeText(
@@ -320,7 +281,7 @@ export const foodCameraService = {
         throw err
       }
     }
-    return result
+    return normalizeFoodAnalysisResult(result)
   },
 
   async fetchByRequestId(
@@ -330,7 +291,9 @@ export const foodCameraService = {
       const response = await api.get("/food-camera/analysis-results", {
         params: { requestId },
       })
-      return (response.data.result as FoodCameraAnalyzeResult | null) ?? null
+      const result =
+        (response.data.result as FoodCameraAnalyzeResult | null) ?? null
+      return result ? normalizeFoodAnalysisResult(result) : null
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
@@ -420,7 +383,9 @@ export const foodCameraService = {
   async fetchDiaryResult(diaryId: number): Promise<DiaryAnalysisResult> {
     try {
       const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
-      return response.data.result as DiaryAnalysisResult
+      return normalizeFoodAnalysisResult(
+        response.data.result as DiaryAnalysisResult,
+      ) as DiaryAnalysisResult
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
@@ -439,7 +404,9 @@ export const foodCameraService = {
         body,
         { timeout: FOOD_ANALYSIS_UPDATE_TIMEOUT_MS },
       )
-      return response.data.result as FoodAnalysisUpdateResult
+      return normalizeFoodAnalysisResult(
+        response.data.result as FoodAnalysisUpdateResult,
+      ) as FoodAnalysisUpdateResult
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
