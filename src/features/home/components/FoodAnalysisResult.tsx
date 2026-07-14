@@ -22,6 +22,7 @@ import type {
   FoodAnalysisUpdateResult,
   FoodCameraAnalyzeResult,
 } from "@/src/types"
+import { normalizeFoodAnalysisResult } from "@/src/shared/utils/foodAnalysisResult"
 import type { MealType } from "../types"
 import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
@@ -243,7 +244,7 @@ export function FoodAnalysisResult({
 
   if (!displayResult) return null
 
-  const effectiveResult = displayResult
+  const effectiveResult = normalizeFoodAnalysisResult(displayResult)
 
   const handleEditPress = () => {
     setIsEdit(true)

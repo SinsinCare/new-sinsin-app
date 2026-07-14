@@ -124,6 +124,7 @@
         "expo-build-properties",
         {
           "ios": {
+            "buildReactNativeFromSource": true,
             "deploymentTarget": "18.6",
             "appleTeamId": "HJJNV9Y5W8",
             "extraPods": [
