@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Alert,
   Image,
@@ -29,6 +29,7 @@ import {
   getInitialEatenStep,
   validateMealTitle,
 } from "../utils/foodEditUtils"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -101,6 +102,11 @@ export function FoodResultEdit({
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(
     mealType,
   )
+  const [titleChanged, setTitleChanged] = useState(false)
+
+  useEffect(() => {
+    trackAnalyticsEvent("food_record_edit_started", {})
+  }, [])
   const hasBroth =
     result?.foods.some(
       (food) =>
@@ -129,6 +135,14 @@ export function FoodResultEdit({
     if (response) {
       handleNameConfirm()
       onTitleChange?.(newTitle)
+      setTitleChanged(true)
+    } else {
+      trackAnalyticsEvent("food_record_edit_failed", {
+        items_changed: false,
+        consumption_changed: false,
+        slot_changed: false,
+        label_changed: true,
+      })
     }
   }
   const isDarkMode = useAppColorScheme() === "dark"
@@ -138,6 +152,18 @@ export function FoodResultEdit({
   const inputBg = isDarkMode
     ? tokens.color.appBgDark.val
     : tokens.color.grey8.val
+
+  const handleCancel = () => {
+    if (titleChanged) {
+      trackAnalyticsEvent("food_record_edit_succeeded", {
+        items_changed: false,
+        consumption_changed: false,
+        slot_changed: false,
+        label_changed: true,
+      })
+    }
+    onClose()
+  }
 
   const handleSubmit = async () => {
     if (!result) return
@@ -170,7 +196,8 @@ export function FoodResultEdit({
       !eatenPercentageChanged &&
       !brothPercentageChanged &&
       !foodsChanged &&
-      !mealTypeChanged
+      !mealTypeChanged &&
+      !titleChanged
     ) {
       onClose()
       return
@@ -216,7 +243,18 @@ export function FoodResultEdit({
         ok = false
       }
     }
-    if (ok) onClose()
+    const changeProperties = {
+      items_changed: foodsChanged,
+      consumption_changed: eatenPercentageChanged || brothPercentageChanged,
+      slot_changed: mealTypeChanged,
+      label_changed: titleChanged,
+    }
+    if (ok) {
+      trackAnalyticsEvent("food_record_edit_succeeded", changeProperties)
+      onClose()
+    } else {
+      trackAnalyticsEvent("food_record_edit_failed", changeProperties)
+    }
   }
 
   return (
@@ -235,7 +273,7 @@ export function FoodResultEdit({
         justifyContent="space-between"
       >
         <TouchableOpacity
-          onPress={onClose}
+          onPress={handleCancel}
           hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
         >
           <Text fontSize={16} fontWeight={500} color="$colorSubtle">

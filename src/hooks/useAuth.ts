@@ -113,7 +113,7 @@ export function useAuth() {
           : result.accountState,
       })
       if (isSocialSignupConsentRequiredResult(result)) {
-        trackAnalyticsEvent("auth_signup_started", {})
+        trackAnalyticsEvent("auth_signup_started", { method: "social" })
         return result
       }
       await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
@@ -172,15 +172,25 @@ export function useAuth() {
 
   const completeProfile = async (request: ProfileCompleteRequest) => {
     const isSignupCompletion = accountState === "PENDING_PROFILE"
-    const result = await authService.completeProfile(request)
-    setUser(result.user)
-    setAccountState(result.accountState)
-    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
-    identifyAnalyticsUser(result.user.uid)
-    if (isSignupCompletion) {
-      trackAnalyticsEvent("auth_signup_completed", {})
+    try {
+      const result = await authService.completeProfile(request)
+      setUser(result.user)
+      setAccountState(result.accountState)
+      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      identifyAnalyticsUser(result.user.uid)
+      if (isSignupCompletion) {
+        trackAnalyticsEvent("auth_signup_completed", { method: "social" })
+      }
+      return result
+    } catch (error) {
+      if (isSignupCompletion) {
+        trackAnalyticsEvent("auth_signup_failed", {
+          method: "social",
+          stage: "profile",
+        })
+      }
+      throw error
     }
-    return result
   }
 
   const getProfile = useCallback(() => authService.getProfile(), [])

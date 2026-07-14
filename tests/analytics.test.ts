@@ -1,5 +1,6 @@
 import {
   getAnalyticsScreenName,
+  getAnalyticsSignupStep,
   sanitizeAnalyticsProperties,
 } from "@/src/features/analytics/events"
 
@@ -25,5 +26,13 @@ describe("analytics privacy contract", () => {
     expect(
       getAnalyticsScreenName(["(settings)", "notification-settings"]),
     ).toBe("notifications")
+  })
+
+  it("maps signup routes to stable step codes", () => {
+    expect(getAnalyticsSignupStep(["(auth)", "terms-agreement"])).toBe("terms")
+    expect(getAnalyticsSignupStep(["(auth)", "signup-email"])).toBe(
+      "email_verification",
+    )
+    expect(getAnalyticsSignupStep(["(tabs)", "home"])).toBeNull()
   })
 })

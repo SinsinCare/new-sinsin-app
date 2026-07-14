@@ -4,6 +4,7 @@ import { Alert } from "react-native"
 import { EdemaLevel } from "../types"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { useQueryClient } from "@tanstack/react-query"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 export function useWeightEdemaRecord() {
   const queryClient = useQueryClient()
@@ -14,7 +15,9 @@ export function useWeightEdemaRecord() {
     try {
       await weightEdemaService.updateWeight(weightKg, date)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", date] })
+      trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
+      trackAnalyticsEvent("health_entry_save_failed", {})
       console.error("updateWeight error:", error)
       Alert.alert("업데이트 실패", getErrorMessage(error))
     } finally {
@@ -27,7 +30,9 @@ export function useWeightEdemaRecord() {
     try {
       await weightEdemaService.updateEdema(edemaLevel, date)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", date] })
+      trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
+      trackAnalyticsEvent("health_entry_save_failed", {})
       console.error("updateEdema error:", error)
       Alert.alert("업데이트 실패", getErrorMessage(error))
     } finally {

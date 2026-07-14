@@ -5,6 +5,10 @@ import { useSignupStore, useAuthStore } from "@/src/stores"
 import { ApiError } from "@/src/services/core/apiError"
 import { showErrorToast } from "@/src/lib/toast"
 import type { NicknameForm } from "../types"
+import {
+  identifyAnalyticsUser,
+  trackAnalyticsEvent,
+} from "@/src/features/analytics"
 
 export function useNicknameSetup() {
   const signupState = useSignupStore()
@@ -57,10 +61,16 @@ export function useNicknameSetup() {
       setUser(user)
       setAccountState("PENDING_ONBOARDING")
       setRequiresAdditionalInfo(false)
+      identifyAnalyticsUser(user.uid)
+      trackAnalyticsEvent("auth_signup_completed", { method: "email" })
 
       signupState.setNickname(data.nickname)
       router.replace("/(auth)/signup-complete")
     } catch (e: unknown) {
+      trackAnalyticsEvent("auth_signup_failed", {
+        method: "email",
+        stage: "account",
+      })
       if (e instanceof ApiError && e.isNetworkError) {
         showErrorToast(e.message)
       } else {
