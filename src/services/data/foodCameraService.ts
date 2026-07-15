@@ -450,4 +450,15 @@ export const foodCameraService = {
       throw err
     }
   },
+
+  async deleteDiary(diaryId: number): Promise<void> {
+    try {
+      await api.delete(`/food-camera/diaries/${diaryId}`)
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
 }

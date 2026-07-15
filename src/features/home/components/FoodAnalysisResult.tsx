@@ -30,6 +30,7 @@ import { Icon } from "@/src/shared/components/Icon"
 import { FoodResultEdit } from "./FoodResultEdit"
 import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
 import { ShareCard } from "./ShareCard"
+import { useMealPersistenceActions } from "@/src/features/food-analysis"
 
 const PROVENANCE_LABEL = {
   CATALOG: "공식 영양 DB",
@@ -57,6 +58,8 @@ interface FoodAnalysisResultProps {
     diaryId: number,
     mealType: string,
   ) => Promise<{ diaryId: number; mealType: string } | undefined>
+  recordDate?: string
+  onDiaryDeleted?: () => void
   onResultChange?: (result: FoodCameraAnalyzeResult) => void
   onMealTypeChange?: (change: FoodAnalysisMealTypeChange) => void
 }
@@ -82,39 +85,6 @@ const MEAL_LABEL: Record<MealType, string> = {
   SNACKS: "간식",
 }
 
-function buildFoodConsultContext(
-  result: FoodCameraAnalyzeResult,
-  mealType?: MealType,
-) {
-  return JSON.stringify({
-    foodAnalysisResultId: result.foodAnalysisResultId,
-    mealType,
-    mealLabel: mealType ? MEAL_LABEL[mealType] : undefined,
-    title: result.title,
-    servings: result.servings,
-    total: result.total,
-    comment: result.evaluation.comment,
-    cautionFoods: result.evaluation.cautionFoods.map((item) => ({
-      food: item.food,
-      reason: item.reason,
-    })),
-    foods: result.foods.map((food) => ({
-      name: food.name,
-      servingSizeValue: food.servingSizeValue,
-      servingSizeUnit: food.servingSizeUnit,
-      restrictionLevel: food.restrictionLevel,
-      calories: food.calories,
-      protein: food.protein,
-      carbohydrates: food.carbohydrates,
-      fat: food.fat,
-      sodium: food.sodium,
-      potassium: food.potassium,
-      phosphorus: food.phosphorus,
-      water: food.water,
-    })),
-  })
-}
-
 export function FoodAnalysisResult({
   result,
   open,
@@ -127,6 +97,8 @@ export function FoodAnalysisResult({
   updateFoodAnalysis,
   diaryId,
   updateDiaryMealType,
+  recordDate,
+  onDiaryDeleted,
   onResultChange,
   onMealTypeChange,
 }: FoodAnalysisResultProps) {
@@ -142,6 +114,12 @@ export function FoodAnalysisResult({
   const [displayImageUri, setDisplayImageUri] = useState<string | undefined>(
     imageUri ?? result?.imageUrl ?? undefined,
   )
+  const {
+    startConsultation,
+    deleteSavedMeal,
+    isStartingConsultation,
+    isDeletingDiary,
+  } = useMealPersistenceActions()
 
   useEffect(() => {
     setDisplayResult(result)
@@ -271,18 +249,23 @@ export function FoodAnalysisResult({
     }
   }
 
-  const handleAskAboutMealPress = () => {
-    onClose()
-    router.push({
-      pathname: "/(tabs)/consult",
-      params: {
-        foodConsultContext: buildFoodConsultContext(
-          effectiveResult,
-          displayMealType,
-        ),
-        foodConsultRequestId: `${effectiveResult.foodAnalysisResultId}-${Date.now()}`,
-      },
+  const handleAskAboutMealPress = async () => {
+    if (isStartingConsultation) return
+    const started = await startConsultation({
+      result: effectiveResult,
+      mealType: displayMealType,
+      recordDate,
+      diaryId,
     })
+    if (started) onClose()
+  }
+
+  const handleDeleteDiaryPress = async () => {
+    if (diaryId == null || isDeletingDiary) return
+    const deleted = await deleteSavedMeal(diaryId)
+    if (!deleted) return
+    onClose()
+    onDiaryDeleted?.()
   }
 
   const handleResultChange = (updated: FoodCameraAnalyzeResult) => {
@@ -735,10 +718,13 @@ export function FoodAnalysisResult({
 
           {/* 식사에 대해 질문하기 */}
           <Pressable
-            onPress={handleAskAboutMealPress}
+            onPress={() => void handleAskAboutMealPress()}
+            disabled={isStartingConsultation}
             accessibilityRole="button"
-            accessibilityLabel="식사에 대해 질문하기"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            accessibilityLabel="이 식단으로 상담하기"
+            style={({ pressed }) => ({
+              opacity: isStartingConsultation ? 0.6 : pressed ? 0.7 : 1,
+            })}
           >
             <XStack
               alignItems="center"
@@ -762,10 +748,46 @@ export function FoodAnalysisResult({
                 fontWeight="500"
                 color={isDarkMode ? "$textDark" : "$color"}
               >
-                식사에 대해 질문하기
+                {isStartingConsultation
+                  ? "식단을 저장하고 있어요..."
+                  : "이 식단으로 상담하기"}
               </Text>
             </XStack>
           </Pressable>
+
+          {diaryId != null && (
+            <Pressable
+              onPress={() => void handleDeleteDiaryPress()}
+              disabled={isDeletingDiary}
+              accessibilityRole="button"
+              accessibilityLabel="식단 기록 삭제"
+              style={({ pressed }) => ({
+                opacity: isDeletingDiary ? 0.6 : pressed ? 0.7 : 1,
+              })}
+            >
+              <XStack
+                alignItems="center"
+                justifyContent="center"
+                gap={6}
+                marginTop={10}
+                paddingVertical={15}
+                marginHorizontal={15}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color={tokens.color.primary9.val}
+                />
+                <Text
+                  fontSize={15}
+                  fontWeight="500"
+                  color={tokens.color.primary9.val}
+                >
+                  {isDeletingDiary ? "삭제 중..." : "식단 기록 삭제"}
+                </Text>
+              </XStack>
+            </Pressable>
+          )}
         </ScrollView>
 
         {/* 하단 고정 버튼 */}
