@@ -325,6 +325,46 @@ export function ProfileEditScreen() {
           </View>
         </View>
 
+        {/* 전화번호 */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`전화번호 ${
+            profile?.hasPhoneNumber
+              ? profile.phoneNumberMasked || "등록됨"
+              : "등록하지 않음"
+          } 수정`}
+          style={({ pressed }) => [
+            styles.fieldRow,
+            { borderBottomColor: c.inputBg },
+            pressed && { backgroundColor: c.pressedBg },
+          ]}
+          onPress={() => router.push("/(settings)/phone-number-edit" as never)}
+        >
+          <View style={styles.fieldContent}>
+            <ThemedText style={[styles.fieldLabel, { color: c.textMuted }]}>
+              전화번호
+            </ThemedText>
+            <View style={styles.fieldValueRow}>
+              <ThemedText
+                style={[
+                  styles.fieldValue,
+                  { color: c.text },
+                  !profile?.hasPhoneNumber && { color: c.textTertiary },
+                ]}
+              >
+                {profile?.hasPhoneNumber
+                  ? profile.phoneNumberMasked || "등록됨"
+                  : "등록하지 않음"}
+              </ThemedText>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={c.textTertiary}
+              />
+            </View>
+          </View>
+        </Pressable>
+
         {/* 성별 */}
         <View style={[styles.fieldRow, styles.fieldRowNoBorder]}>
           <View style={styles.fieldContent}>

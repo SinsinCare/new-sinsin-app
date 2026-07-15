@@ -14,6 +14,8 @@ export interface MyPageProfile {
   acquisitionSource?: string | null
   acquisitionSourceOther?: string | null
   requiresAdditionalInfo: boolean
+  hasPhoneNumber?: boolean
+  phoneNumberMasked?: string | null
 }
 
 async function fetchMyPageProfile(): Promise<MyPageProfile> {

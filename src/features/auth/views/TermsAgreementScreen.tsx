@@ -2,6 +2,7 @@ import { Pressable } from "react-native"
 import { YStack, XStack, Text, Separator } from "tamagui"
 import { router } from "expo-router"
 import { Checkbox } from "@/src/shared/components"
+import { V2TextField } from "@/src/design-system-v2"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useTermsAgreement, useAuthColors } from "../hooks"
 
@@ -18,10 +19,14 @@ export function TermsAgreementScreen({
     terms,
     agreed,
     allChecked,
-    requiredChecked,
+    canSubmit,
     isSubmitting,
+    phoneNumber,
+    phoneNumberError,
+    marketingAgree,
     toggleAll,
     toggleItem,
+    handlePhoneNumberChange,
     handleBack,
     handleNext,
   } = useTermsAgreement({ mode, socialSignupToken })
@@ -38,10 +43,12 @@ export function TermsAgreementScreen({
     <AuthScreenLayout
       title={`신신당부 서비스 이용약관에\n동의해주세요`}
       buttonLabel="동의하고 계속하기"
-      buttonDisabled={!requiredChecked || isSubmitting}
+      buttonDisabled={!canSubmit || isSubmitting}
       buttonLoading={isSubmitting}
       onSubmit={handleNext}
       onBack={handleBack}
+      scrollable
+      keyboardAvoiding
     >
       <YStack gap={16} marginTop={32}>
         <Checkbox
@@ -106,6 +113,34 @@ export function TermsAgreementScreen({
               )}
             </XStack>
           ))}
+        </YStack>
+
+        <Separator borderColor={colors.border} />
+
+        <YStack gap={8} paddingBottom={8}>
+          <V2TextField
+            variant="box"
+            label="전화번호 (선택)"
+            value={phoneNumber}
+            onChangeText={handlePhoneNumberChange}
+            placeholder="010-1234-5678"
+            keyboardType="phone-pad"
+            textContentType="telephoneNumber"
+            autoComplete="tel"
+            returnKeyType="done"
+            maxLength={13}
+            error={phoneNumberError ?? false}
+            accessibilityLabel="전화번호 선택 입력"
+            accessibilityHint="입력하지 않아도 회원가입할 수 있습니다"
+          />
+          <Text fontSize={13} lineHeight={19} color={colors.textSub}>
+            개인 연락을 위해 선택적으로 수집합니다. 마케팅 수신에 동의한
+            경우에만 마케팅 안내에도 활용합니다.
+          </Text>
+          <Text fontSize={12} lineHeight={18} color={colors.textSub}>
+            로그인, 계정 통합 또는 SMS 본인인증에는 사용하지 않습니다.
+            {marketingAgree ? " 현재 마케팅 활용에 동의한 상태입니다." : ""}
+          </Text>
         </YStack>
       </YStack>
     </AuthScreenLayout>
