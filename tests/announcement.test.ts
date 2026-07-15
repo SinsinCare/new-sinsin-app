@@ -316,6 +316,44 @@ describe("announcement entry controller", () => {
     expect(showNotice).toHaveBeenCalledTimes(1)
   })
 
+  it("starts a new generation immediately and ignores stale request completion", async () => {
+    const staleNotice = createNotice({ title: "이전 세션 공지" })
+    const currentNotice = createNotice({ title: "현재 세션 공지" })
+    const requestResolvers: ((notice: AnnouncementNotice | null) => void)[] = []
+    const fetchActivePopup = jest.fn(
+      () =>
+        new Promise<AnnouncementNotice | null>((resolve) => {
+          requestResolvers.push(resolve)
+        }),
+    )
+    const { controller, showNotice } = createControllerHarness(fetchActivePopup)
+
+    const staleCheck = controller.check()
+    controller.invalidate()
+    useAnnouncementSessionStore.getState().reset()
+    const currentCheck = controller.check()
+
+    expect(fetchActivePopup).toHaveBeenCalledTimes(2)
+
+    requestResolvers[0]?.(staleNotice)
+    await staleCheck
+
+    expect(showNotice).not.toHaveBeenCalled()
+    expect(useAnnouncementSessionStore.getState().checkedThisSession).toBe(
+      false,
+    )
+
+    const duplicateCurrentCheck = controller.check()
+    expect(fetchActivePopup).toHaveBeenCalledTimes(2)
+
+    requestResolvers[1]?.(currentNotice)
+    await Promise.all([currentCheck, duplicateCurrentCheck])
+
+    expect(showNotice).toHaveBeenCalledTimes(1)
+    expect(showNotice).toHaveBeenCalledWith(currentNotice)
+    expect(useAnnouncementSessionStore.getState().checkedThisSession).toBe(true)
+  })
+
   it("bounds retries after repeated request failures", async () => {
     const fetchActivePopup = jest.fn().mockRejectedValue(new Error("offline"))
     const { controller } = createControllerHarness(fetchActivePopup)

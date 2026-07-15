@@ -18,6 +18,11 @@ interface AnnouncementEntryControllerDependencies {
   maxAttempts?: number
 }
 
+interface InFlightRequest {
+  generation: number
+  promise: Promise<void>
+}
+
 export function createAnnouncementEntryController({
   fetchActivePopup,
   isDismissed,
@@ -28,7 +33,7 @@ export function createAnnouncementEntryController({
   onError,
   maxAttempts = MAX_ANNOUNCEMENT_CHECK_ATTEMPTS,
 }: AnnouncementEntryControllerDependencies) {
-  let inFlight: Promise<void> | null = null
+  let inFlight: InFlightRequest | null = null
   let generation = 0
 
   const check = (): Promise<void> => {
@@ -36,11 +41,16 @@ export function createAnnouncementEntryController({
     if (session.checkedThisSession || session.requestAttempts >= maxAttempts) {
       return Promise.resolve()
     }
-    if (inFlight) return inFlight
+    if (inFlight?.generation === generation) return inFlight.promise
 
     recordAttempt()
     const requestGeneration = generation
-    const request = (async () => {
+    const request: InFlightRequest = {
+      generation: requestGeneration,
+      promise: Promise.resolve(),
+    }
+    inFlight = request
+    request.promise = (async () => {
       try {
         const notice = await fetchActivePopup()
         if (requestGeneration !== generation) return
@@ -58,11 +68,10 @@ export function createAnnouncementEntryController({
       } catch (error) {
         if (requestGeneration === generation) onError(error)
       } finally {
-        inFlight = null
+        if (inFlight === request) inFlight = null
       }
     })()
-    inFlight = request
-    return request
+    return request.promise
   }
 
   return {
