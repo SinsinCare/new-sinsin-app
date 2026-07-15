@@ -35,6 +35,12 @@ function isPendingAnalysisRequest(
 }
 
 export function createPendingAnalysisRequestStorage(storage: KeyValueStorage) {
+  const listeners = new Set<(requests: PendingAnalysisRequest[]) => void>()
+
+  function notify(requests: PendingAnalysisRequest[]) {
+    listeners.forEach((listener) => listener(requests))
+  }
+
   async function getAll(): Promise<PendingAnalysisRequest[]> {
     const raw = await storage.getItem(PENDING_ANALYSIS_REQUESTS_KEY)
     if (!raw) return []
@@ -50,12 +56,14 @@ export function createPendingAnalysisRequestStorage(storage: KeyValueStorage) {
   async function writeAll(requests: PendingAnalysisRequest[]): Promise<void> {
     if (requests.length === 0 && storage.removeItem) {
       await storage.removeItem(PENDING_ANALYSIS_REQUESTS_KEY)
+      notify(requests)
       return
     }
     await storage.setItem(
       PENDING_ANALYSIS_REQUESTS_KEY,
       JSON.stringify(requests),
     )
+    notify(requests)
   }
 
   return {
@@ -70,6 +78,10 @@ export function createPendingAnalysisRequestStorage(storage: KeyValueStorage) {
     async remove(requestId: string): Promise<void> {
       const existing = await getAll()
       await writeAll(existing.filter((item) => item.requestId !== requestId))
+    },
+    subscribe(listener: (requests: PendingAnalysisRequest[]) => void) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
     },
   }
 }

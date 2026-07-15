@@ -8,6 +8,7 @@ import {
   PENDING_ANALYSIS_REQUESTS_KEY,
   createPendingAnalysisRequestStorage,
 } from "../src/features/home/storage/pendingAnalysisRequests"
+import { createFoodAnalysisRecoveryPoller } from "../src/features/home/services/foodAnalysisRecoveryPolling"
 
 jest.mock("../src/config/appConfig", () => ({
   appConfig: {
@@ -126,6 +127,27 @@ describe("pending food analysis request storage", () => {
 
     await expect(storage.getAll()).resolves.toEqual([])
   })
+
+  it("notifies subscribers when pending requests are added and removed", async () => {
+    const storage = createPendingAnalysisRequestStorage(createMemoryStorage())
+    const listener = jest.fn()
+    const unsubscribe = storage.subscribe(listener)
+
+    await storage.add({
+      requestId: "food-req-subscribe",
+      mealType: "BREAKFAST",
+      imageUri: null,
+      startedAt: 100,
+    })
+    expect(listener).toHaveBeenLastCalledWith([
+      expect.objectContaining({ requestId: "food-req-subscribe" }),
+    ])
+
+    await storage.remove("food-req-subscribe")
+    expect(listener).toHaveBeenLastCalledWith([])
+
+    unsubscribe()
+  })
 })
 
 describe("food analysis recovery", () => {
@@ -154,7 +176,10 @@ describe("food analysis recovery", () => {
       now: () => 1000,
     } satisfies FoodAnalysisRecoveryDeps)
 
-    await recovery.recoverPendingAnalyses()
+    await expect(recovery.recoverPendingAnalyses()).resolves.toEqual({
+      recoveredCount: 1,
+      remainingCount: 0,
+    })
 
     expect(setPending).toHaveBeenCalledWith({
       result: expect.objectContaining({ foodAnalysisResultId: 22 }),
@@ -191,6 +216,52 @@ describe("food analysis recovery", () => {
 
     expect(setPending).not.toHaveBeenCalled()
     await expect(pendingRequests.getAll()).resolves.toHaveLength(1)
+  })
+
+  it("deduplicates concurrent recovery for the same requestId", async () => {
+    const pendingRequests = createPendingAnalysisRequestStorage(
+      createMemoryStorage({
+        [PENDING_ANALYSIS_REQUESTS_KEY]: JSON.stringify([
+          {
+            requestId: "food-req-concurrent",
+            mealType: "LUNCH",
+            imageUri: null,
+            startedAt: 100,
+          },
+        ]),
+      }),
+    )
+    let resolveResult!: (value: ReturnType<typeof createAnalysisResult>) => void
+    const fetchByRequestId = jest.fn(
+      () =>
+        new Promise<ReturnType<typeof createAnalysisResult>>((resolve) => {
+          resolveResult = resolve
+        }),
+    )
+    const setPending = jest.fn()
+    const recovery = createFoodAnalysisRecovery({
+      pendingRequests,
+      fetchByRequestId,
+      setPending,
+      markHandledRequestId: jest.fn(),
+      now: () => 1000,
+    } satisfies FoodAnalysisRecoveryDeps)
+
+    const first = recovery.recoverPendingAnalyses()
+    const second = recovery.recoverPendingAnalyses()
+    for (
+      let i = 0;
+      i < 10 && fetchByRequestId.mock.calls.length === 0;
+      i += 1
+    ) {
+      await Promise.resolve()
+    }
+    expect(fetchByRequestId).toHaveBeenCalledTimes(1)
+    resolveResult(createAnalysisResult())
+    await Promise.all([first, second])
+
+    expect(setPending).toHaveBeenCalledTimes(1)
+    await expect(pendingRequests.getAll()).resolves.toEqual([])
   })
 
   it("keeps confirmation jobs pending without opening the disabled survey", async () => {
@@ -270,6 +341,93 @@ describe("food analysis recovery", () => {
       imageUri: null,
     })
     await expect(pendingRequests.getAll()).resolves.toHaveLength(1)
+  })
+})
+
+describe("food analysis recovery poller", () => {
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it("polls only while requests remain", async () => {
+    jest.useFakeTimers()
+    const recover = jest
+      .fn()
+      .mockResolvedValueOnce({ recoveredCount: 0, remainingCount: 1 })
+      .mockResolvedValueOnce({ recoveredCount: 1, remainingCount: 0 })
+    const poller = createFoodAnalysisRecoveryPoller({
+      recover,
+      intervalMs: 1000,
+    })
+
+    poller.start()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(recover).toHaveBeenCalledTimes(1)
+
+    await jest.advanceTimersByTimeAsync(1000)
+    expect(recover).toHaveBeenCalledTimes(2)
+    expect(jest.getTimerCount()).toBe(0)
+  })
+
+  it("stops a scheduled recovery when the screen or app becomes inactive", async () => {
+    jest.useFakeTimers()
+    const recover = jest
+      .fn()
+      .mockResolvedValue({ recoveredCount: 0, remainingCount: 1 })
+    const poller = createFoodAnalysisRecoveryPoller({
+      recover,
+      intervalMs: 1000,
+    })
+
+    poller.start()
+    await Promise.resolve()
+    await Promise.resolve()
+    poller.stop()
+    await jest.advanceTimersByTimeAsync(1000)
+
+    expect(recover).toHaveBeenCalledTimes(1)
+    expect(jest.getTimerCount()).toBe(0)
+  })
+
+  it("can restart when a new pending request is added after becoming idle", async () => {
+    jest.useFakeTimers()
+    const recover = jest
+      .fn()
+      .mockResolvedValue({ recoveredCount: 0, remainingCount: 0 })
+    const poller = createFoodAnalysisRecoveryPoller({
+      recover,
+      intervalMs: 1000,
+    })
+
+    poller.start()
+    await Promise.resolve()
+    await Promise.resolve()
+    poller.start()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(recover).toHaveBeenCalledTimes(2)
+  })
+
+  it("retries after a temporary recovery failure", async () => {
+    jest.useFakeTimers()
+    const recover = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce({ recoveredCount: 1, remainingCount: 0 })
+    const poller = createFoodAnalysisRecoveryPoller({
+      recover,
+      intervalMs: 1000,
+    })
+
+    poller.start()
+    await Promise.resolve()
+    await Promise.resolve()
+    await jest.advanceTimersByTimeAsync(1000)
+
+    expect(recover).toHaveBeenCalledTimes(2)
+    expect(jest.getTimerCount()).toBe(0)
   })
 })
 
