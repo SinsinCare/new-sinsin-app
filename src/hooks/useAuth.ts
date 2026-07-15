@@ -1,6 +1,10 @@
 import { useCallback, useEffect } from "react"
 import { useAuthStore, useUserStore } from "../stores"
-import { authService } from "../services/auth/authService"
+import {
+  authService,
+  persistSocialReauthenticationIntentForSignOut,
+  type AuthSignOutReason,
+} from "../services/auth/authService"
 import {
   signInWithSocialProvider as nativeSocialSignIn,
   isUserCancelledError,
@@ -204,14 +208,18 @@ export function useAuth() {
     return result
   }
 
-  const signOut = async () => {
+  const signOut = async (reason: AuthSignOutReason = "automatic") => {
     try {
       await authService.signOut()
     } finally {
-      resetAnalyticsIdentity()
-      await clearClientSession()
-      resetProfile()
-      resetAuth()
+      try {
+        await persistSocialReauthenticationIntentForSignOut(reason)
+      } finally {
+        resetAnalyticsIdentity()
+        await clearClientSession()
+        resetProfile()
+        resetAuth()
+      }
     }
   }
 
