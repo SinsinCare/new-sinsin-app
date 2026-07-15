@@ -104,26 +104,35 @@ export function HydrationTracker({
       </XStack>
 
       <XStack gap={5} flexWrap="wrap">
-        {QUICK_ADD_OPTIONS.map((amount) => (
-          <Pressable
-            key={amount}
-            onPress={() => addWater(amount)}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                backgroundColor: chipBg,
-                transform: [{ scale: pressed ? 0.93 : 1 }],
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Text fontSize={15} color={isDarkMode ? "$textDarkSub" : "$color"}>
-              +
-              {QUICK_ADD_LABELS[amount] ??
-                (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)}
-            </Text>
-          </Pressable>
-        ))}
+        {QUICK_ADD_OPTIONS.map((amount) => {
+          const label =
+            QUICK_ADD_LABELS[amount] ??
+            (amount >= 1000 ? `${amount / 1000}L` : `${amount}ml`)
+
+          return (
+            <Pressable
+              key={amount}
+              accessibilityRole="button"
+              accessibilityLabel={`물 ${label} 추가`}
+              onPress={() => addWater(amount)}
+              style={({ pressed }) => [
+                styles.chip,
+                {
+                  backgroundColor: chipBg,
+                  transform: [{ scale: pressed ? 0.93 : 1 }],
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
+            >
+              <Text
+                fontSize={15}
+                color={isDarkMode ? "$textDarkSub" : "$color"}
+              >
+                +{label}
+              </Text>
+            </Pressable>
+          )
+        })}
       </XStack>
     </YStack>
   )
