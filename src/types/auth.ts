@@ -9,6 +9,7 @@ export interface SignupRequest {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  phoneNumber?: string
   password: string
   name: string
   birthYear: number
@@ -80,6 +81,8 @@ export interface AuthProfile {
   acquisitionSource?: SignupRequest["acquisitionSource"] | null
   acquisitionSourceOther?: string | null
   requiresAdditionalInfo: boolean
+  hasPhoneNumber?: boolean
+  phoneNumberMasked?: string | null
 }
 
 export interface ProfileCompleteRequest {
@@ -114,6 +117,7 @@ export interface SocialSignupRequest {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  phoneNumber?: string
 }
 
 export interface EmailLoginLinkRequiredResult {

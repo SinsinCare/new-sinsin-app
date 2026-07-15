@@ -8,6 +8,7 @@ interface SignupState {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  phoneNumber: string
   name: string
   birthYear: string
   birthMonth: string
@@ -33,6 +34,7 @@ interface SignupState {
   setTermsOfServiceAgree: (v: boolean) => void
   setPrivacyPolicyAgree: (v: boolean) => void
   setMarketingAgree: (v: boolean) => void
+  setPhoneNumber: (phoneNumber: string) => void
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
   setGender: (gender: "MALE" | "FEMALE" | "OTHER" | "") => void
@@ -62,6 +64,7 @@ const initialState = {
   termsOfServiceAgree: false,
   privacyPolicyAgree: false,
   marketingAgree: false,
+  phoneNumber: "",
   name: "",
   birthYear: "",
   birthMonth: "",
@@ -82,6 +85,7 @@ export const useSignupStore = create<SignupState>((set) => ({
   setTermsOfServiceAgree: (termsOfServiceAgree) => set({ termsOfServiceAgree }),
   setPrivacyPolicyAgree: (privacyPolicyAgree) => set({ privacyPolicyAgree }),
   setMarketingAgree: (marketingAgree) => set({ marketingAgree }),
+  setPhoneNumber: (phoneNumber) => set({ phoneNumber }),
   setName: (name) => set({ name }),
   setBirth: (birthYear, birthMonth, birthDay) =>
     set({ birthYear, birthMonth, birthDay }),

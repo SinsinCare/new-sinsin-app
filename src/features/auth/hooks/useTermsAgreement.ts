@@ -4,6 +4,11 @@ import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
 import { TERMS } from "../data/terms"
+import {
+  buildOptionalPhoneNumberPayload,
+  formatKoreanMobileInput,
+  getOptionalPhoneNumberError,
+} from "../data/phoneNumber"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import {
   identifyAnalyticsUser,
@@ -20,12 +25,14 @@ export function useTermsAgreement({
   socialSignupToken,
 }: UseTermsAgreementOptions = {}) {
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const {
     reset,
     setTermsOfServiceAgree,
     setPrivacyPolicyAgree,
     setMarketingAgree,
+    setPhoneNumber: setSignupPhoneNumber,
     setSignupInProgress,
   } = useSignupStore()
   const setUser = useAuthStore((s) => s.setUser)
@@ -38,6 +45,12 @@ export function useTermsAgreement({
   const requiredChecked = TERMS.filter((t) => t.required).every(
     (t) => agreed[t.id],
   )
+  const phoneNumberError = getOptionalPhoneNumberError(phoneNumber)
+  const canSubmit = requiredChecked && !phoneNumberError
+
+  const handlePhoneNumberChange = useCallback((value: string) => {
+    setPhoneNumber(formatKoreanMobileInput(value))
+  }, [])
 
   const toggleAll = useCallback(() => {
     if (allChecked) {
@@ -56,17 +69,19 @@ export function useTermsAgreement({
   }, [])
 
   const handleEmailNext = () => {
+    if (!canSubmit) return
     trackAnalyticsEvent("auth_signup_started", { method: "email" })
     reset()
     setSignupInProgress(true)
     setTermsOfServiceAgree(!!agreed["service"])
     setPrivacyPolicyAgree(!!agreed["privacy"])
     setMarketingAgree(!!agreed["marketing"])
+    setSignupPhoneNumber(phoneNumber)
     router.push("/(auth)/signup-email")
   }
 
   const handleSocialNext = async () => {
-    if (!requiredChecked || isSubmitting) return
+    if (!canSubmit || isSubmitting) return
     if (!socialSignupToken) {
       reset()
       showErrorToast("소셜 가입 정보가 만료되었습니다. 다시 시도해주세요.")
@@ -81,6 +96,7 @@ export function useTermsAgreement({
         termsOfServiceAgree: !!agreed["service"],
         privacyPolicyAgree: !!agreed["privacy"],
         marketingAgree: !!agreed["marketing"],
+        ...buildOptionalPhoneNumberPayload(phoneNumber),
       })
 
       reset()
@@ -139,9 +155,14 @@ export function useTermsAgreement({
     agreed,
     allChecked,
     requiredChecked,
+    canSubmit,
     isSubmitting,
+    phoneNumber,
+    phoneNumberError,
+    marketingAgree: !!agreed["marketing"],
     toggleAll,
     toggleItem,
+    handlePhoneNumberChange,
     handleBack,
     handleNext,
   }
