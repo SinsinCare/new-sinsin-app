@@ -2,25 +2,18 @@ import { useState } from "react"
 import Toast from "react-native-toast-message"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks/useAuth"
-import { isApiErrorLike } from "@/src/services/core/apiError"
 import { logger } from "@/src/lib/logger"
-import type {
-  SocialLinkRequiredResult,
-  SocialProvider,
-  WithdrawalPendingResult,
-} from "@/src/types"
-import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
+import type { SocialProvider, WithdrawalPendingResult } from "@/src/types"
+import {
+  getSocialLoginErrorAction,
+  getSocialLoginSuccessAction,
+} from "../utils/socialLoginFlow"
 
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
   google: "Google",
   apple: "Apple",
   kakao: "카카오",
 }
-const SOCIAL_LINK_REQUIRED_CODES = new Set([
-  "AUTH_ERROR_004",
-  "SOCIAL_EMAIL_NOT_FOUND",
-])
-
 function getDebugMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message
   if (typeof error === "string" && error) return error
@@ -32,29 +25,6 @@ function getDebugMessage(error: unknown): string {
     }
   }
   return "오류 메시지가 없는 로그인 실패입니다."
-}
-
-function getSocialLinkRequiredResult(
-  error: unknown,
-): SocialLinkRequiredResult | null {
-  if (
-    !isApiErrorLike(error) ||
-    !SOCIAL_LINK_REQUIRED_CODES.has(error.code)
-  ) {
-    return null
-  }
-  const result = error.result
-  if (!result || typeof result !== "object") return null
-  const { provider, socialLinkToken } =
-    result as Partial<SocialLinkRequiredResult>
-  if (
-    (provider === "google" || provider === "apple" || provider === "kakao") &&
-    typeof socialLinkToken === "string" &&
-    socialLinkToken.length > 0
-  ) {
-    return { provider, socialLinkToken }
-  }
-  return null
 }
 
 export function useSocialLogin() {
@@ -75,32 +45,43 @@ export function useSocialLogin() {
     setCurrentProvider(provider)
     try {
       const result = await signInWithSocialProvider(provider)
-      if ("status" in result && result.status === "SOCIAL_CONSENT_REQUIRED") {
+      const action = getSocialLoginSuccessAction(result)
+      if (action.type === "consent_required") {
         router.push({
           pathname: "/(auth)/terms-agreement",
           params: {
             mode: "social",
-            provider: result.provider,
-            socialSignupToken: result.socialSignupToken,
+            provider: action.provider,
+            socialSignupToken: action.socialSignupToken,
           },
         })
       }
     } catch (error) {
-      if (isUserCancelledError(error)) return
-
-      const pending = getWithdrawalPendingResult(error)
-      if (pending) {
-        setWithdrawalPending(pending)
+      const action = getSocialLoginErrorAction(
+        error,
+        provider,
+        isUserCancelledError,
+      )
+      if (action.type === "cancelled") return
+      if (action.type === "withdrawal_pending") {
+        setWithdrawalPending(action.result)
         return
       }
-
-      const socialLinkRequired = getSocialLinkRequiredResult(error)
-      if (socialLinkRequired) {
+      if (action.type === "provider_email_required") {
+        Toast.show({
+          type: "error",
+          text1: action.title,
+          text2: action.message,
+          visibilityTime: 7000,
+        })
+        return
+      }
+      if (action.type === "legacy_social_link_required") {
         router.push({
           pathname: "./social-link-email",
           params: {
-            provider: socialLinkRequired.provider,
-            socialLinkToken: socialLinkRequired.socialLinkToken,
+            provider: action.provider,
+            socialLinkToken: action.socialLinkToken,
           },
         })
         return
