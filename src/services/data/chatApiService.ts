@@ -6,8 +6,13 @@ import type {
   ChatDetail,
   MessageData,
   Summary,
+  ChatStreamChunkEvent,
+  ChatStreamDoneEvent,
+  ChatStreamErrorEvent,
+  ChatStreamStartedEvent,
 } from "../../types/chat"
 import {
+  ChatStreamError,
   mapChatSummary,
   mapChatCreate,
   mapChatDetail,
@@ -18,8 +23,109 @@ import { getBackendUrl, isMockMode } from "../../config/appConfig"
 import { api, refreshAccessToken, tokenService } from "../core"
 
 const BASE_URL = getBackendUrl()
+export const CHAT_STREAM_TIMEOUT_MS = 120_000
 
-function createRealChatService(): ChatService {
+interface SseEvent {
+  event: string
+  data: string
+}
+
+interface ChatXMLHttpRequest {
+  responseText: string
+  status: number
+  timeout: number
+  onprogress: (() => void) | null
+  onload: (() => void) | null
+  onerror: (() => void) | null
+  ontimeout: (() => void) | null
+  onabort: (() => void) | null
+  open(method: string, url: string): void
+  setRequestHeader(name: string, value: string): void
+  send(body: unknown): void
+}
+
+interface ChatXMLHttpRequestConstructor {
+  new (): ChatXMLHttpRequest
+}
+
+function createXMLHttpRequest(): ChatXMLHttpRequest {
+  const constructor = (
+    globalThis as unknown as { XMLHttpRequest: ChatXMLHttpRequestConstructor }
+  ).XMLHttpRequest
+  return new constructor()
+}
+
+class SseEventParser {
+  private buffer = ""
+
+  constructor(private readonly onEvent: (event: SseEvent) => void) {}
+
+  push(chunk: string) {
+    this.buffer += chunk
+    this.drain(false)
+  }
+
+  finish() {
+    this.drain(true)
+  }
+
+  private drain(flush: boolean) {
+    const delimiter = /\r\n\r\n|\n\n|\r\r/
+    let match = delimiter.exec(this.buffer)
+
+    while (match) {
+      const frame = this.buffer.slice(0, match.index)
+      this.buffer = this.buffer.slice(match.index + match[0].length)
+      this.processFrame(frame)
+      match = delimiter.exec(this.buffer)
+    }
+
+    if (flush && this.buffer.length > 0) {
+      const frame = this.buffer
+      this.buffer = ""
+      this.processFrame(frame)
+    }
+  }
+
+  private processFrame(frame: string) {
+    let event = "message"
+    const dataLines: string[] = []
+
+    for (const line of frame.split(/\r\n|\r|\n/)) {
+      if (!line || line.startsWith(":")) continue
+      const colonIndex = line.indexOf(":")
+      const field = colonIndex === -1 ? line : line.slice(0, colonIndex)
+      let value = colonIndex === -1 ? "" : line.slice(colonIndex + 1)
+      if (value.startsWith(" ")) value = value.slice(1)
+
+      if (field === "event") event = value
+      if (field === "data") dataLines.push(value)
+    }
+
+    if (dataLines.length > 0) {
+      this.onEvent({ event, data: dataLines.join("\n") })
+    }
+  }
+}
+
+function parseEventPayload(data: string): Record<string, unknown> {
+  try {
+    const payload: unknown = JSON.parse(data)
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("SSE payload must be an object")
+    }
+    return payload as Record<string, unknown>
+  } catch {
+    throw new ChatStreamError({
+      code: "INVALID_SSE_EVENT",
+      message: "Invalid JSON in chat stream event",
+      retryable: true,
+      partialContentAvailable: false,
+    })
+  }
+}
+
+export function createRealChatService(): ChatService {
   return {
     async getChats() {
       const { data } = await api.get<ApiResponse<ChatList>>(
@@ -82,7 +188,7 @@ function createRealChatService(): ChatService {
         retryOnUnauthorized: boolean,
       ): Promise<ReturnType<typeof mapMessage>> =>
         new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest()
+          const xhr = createXMLHttpRequest()
           xhr.open(
             "POST",
             `${BASE_URL}/chat/conversations/${conversationId}/messages`,
@@ -91,60 +197,167 @@ function createRealChatService(): ChatService {
             xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
           }
           xhr.setRequestHeader("Accept", "text/event-stream")
+          xhr.timeout = CHAT_STREAM_TIMEOUT_MS
 
           let fullContent = ""
-          let messageId: number | null = null
-          let category: ChatCategory | null = null
-          let categoryLabel: string | null = null
+          let doneEvent: ChatStreamDoneEvent | null = null
           let processedLength = 0
-          let pendingLine = ""
+          let settled = false
 
-          const processLine = (line: string) => {
-            if (!line.startsWith("data:")) return
-            const data = line.slice(5).trim()
-            if (data === "[DONE]") return
+          const resolveOnce = (message: ReturnType<typeof mapMessage>) => {
+            if (settled) return
+            settled = true
+            resolve(message)
+          }
+
+          const rejectOnce = (error: unknown) => {
+            if (settled) return
+            settled = true
+            reject(error)
+          }
+
+          const parser = new SseEventParser(({ event, data }) => {
+            if (settled || data === "[DONE]") return
 
             try {
-              const parsed = JSON.parse(data)
-              if (parsed.content != null) {
-                fullContent += parsed.content
-                onChunk?.(fullContent)
+              const payload = parseEventPayload(data)
+              const eventName =
+                event === "message"
+                  ? String(payload.type ?? payload.event ?? event)
+                  : event
+
+              if (eventName === "started") {
+                const started = payload as unknown as ChatStreamStartedEvent
+                if (
+                  (typeof started.attemptId !== "string" &&
+                    typeof started.attemptId !== "number") ||
+                  typeof started.userMessageId !== "number" ||
+                  typeof started.retry !== "boolean"
+                ) {
+                  throw new ChatStreamError({
+                    code: "INVALID_SSE_EVENT",
+                    message: "Chat started event is invalid",
+                    retryable: true,
+                    partialContentAvailable: fullContent.length > 0,
+                    partialContent: fullContent || undefined,
+                  })
+                }
+                if (started.retry && fullContent.length > 0) {
+                  fullContent = ""
+                  onChunk?.(fullContent)
+                }
+                return
               }
-              if (parsed.messageId != null) messageId = parsed.messageId
-              if (parsed.category != null) category = parsed.category
-              if (parsed.categoryLabel != null)
-                categoryLabel = parsed.categoryLabel
-            } catch {
-              // Some older responses may stream plain text in data lines.
-              if (data) {
-                fullContent += data
+
+              if (eventName === "chunk") {
+                const chunk = payload as unknown as ChatStreamChunkEvent
+                if (typeof chunk.content !== "string") {
+                  throw new ChatStreamError({
+                    code: "INVALID_SSE_EVENT",
+                    message: "Chat chunk is missing content",
+                    retryable: true,
+                    partialContentAvailable: fullContent.length > 0,
+                    partialContent: fullContent || undefined,
+                  })
+                }
+                fullContent += chunk.content
                 onChunk?.(fullContent)
+                return
+              }
+
+              if (eventName === "done") {
+                const done = payload as unknown as ChatStreamDoneEvent
+                if (typeof done.messageId !== "number") {
+                  throw new ChatStreamError({
+                    code: "INVALID_SSE_EVENT",
+                    message: "Chat completion is missing messageId",
+                    retryable: true,
+                    partialContentAvailable: fullContent.length > 0,
+                    partialContent: fullContent || undefined,
+                  })
+                }
+                if (done.finishReason !== "STOP") {
+                  throw new ChatStreamError({
+                    code: done.finishReason || "INCOMPLETE_STREAM",
+                    message: `Chat stopped with ${done.finishReason || "an unknown reason"}`,
+                    retryable: true,
+                    partialContentAvailable: fullContent.length > 0,
+                    finishReason: done.finishReason,
+                    partialContent: fullContent || undefined,
+                  })
+                }
+                doneEvent = done
+                return
+              }
+
+              if (eventName === "error") {
+                const streamError = payload as unknown as ChatStreamErrorEvent
+                throw new ChatStreamError({
+                  code: streamError.code || "PROVIDER_ERROR",
+                  message: streamError.message || "Chat provider error",
+                  retryable: streamError.retryable ?? false,
+                  partialContentAvailable:
+                    streamError.partialContentAvailable ??
+                    fullContent.length > 0,
+                  finishReason: streamError.finishReason,
+                  partialContent: fullContent || undefined,
+                })
+              }
+            } catch (error) {
+              if (error instanceof ChatStreamError) {
+                const partialContent = error.partialContent ?? fullContent
+                rejectOnce(
+                  new ChatStreamError({
+                    code: error.code,
+                    message: error.message,
+                    retryable: error.retryable,
+                    partialContentAvailable:
+                      error.partialContentAvailable ||
+                      partialContent.length > 0,
+                    finishReason: error.finishReason,
+                    partialContent: partialContent || undefined,
+                  }),
+                )
+              } else {
+                rejectOnce(error)
               }
             }
-          }
+          })
 
           xhr.onprogress = () => {
             const newData = xhr.responseText.substring(processedLength)
             processedLength = xhr.responseText.length
-
-            const lines = (pendingLine + newData).split(/\r?\n/)
-            pendingLine = lines.pop() ?? ""
-            for (const line of lines) {
-              processLine(line)
-            }
+            parser.push(newData)
           }
 
           xhr.onload = async () => {
+            if (settled) return
             if (xhr.status >= 200 && xhr.status < 300) {
-              if (pendingLine) processLine(pendingLine)
-              resolve(
+              parser.finish()
+              if (settled) return
+
+              const completion = doneEvent as ChatStreamDoneEvent | null
+              if (!completion || completion.finishReason !== "STOP") {
+                rejectOnce(
+                  new ChatStreamError({
+                    code: "INCOMPLETE_STREAM",
+                    message: "Chat stream ended before a STOP completion",
+                    retryable: true,
+                    partialContentAvailable: fullContent.length > 0,
+                    partialContent: fullContent || undefined,
+                  }),
+                )
+                return
+              }
+
+              resolveOnce(
                 mapMessage(
                   {
-                    messageId: messageId ?? -1,
+                    messageId: completion.messageId,
                     role: "ASSISTANT",
                     content: fullContent,
-                    category,
-                    categoryLabel,
+                    category: null,
+                    categoryLabel: null,
                     createdAt: new Date().toISOString(),
                   },
                   conversationId,
@@ -153,17 +366,57 @@ function createRealChatService(): ChatService {
             } else if (xhr.status === 401 && retryOnUnauthorized) {
               try {
                 const newToken = await refreshAccessToken()
-                resolve(await sendWithToken(newToken, false))
+                resolveOnce(await sendWithToken(newToken, false))
               } catch (error) {
-                reject(error)
+                rejectOnce(error)
               }
             } else {
-              reject(new Error(`sendMessage failed: ${xhr.status}`))
+              rejectOnce(
+                new ChatStreamError({
+                  code: `HTTP_${xhr.status}`,
+                  message: `sendMessage failed: ${xhr.status}`,
+                  retryable: xhr.status >= 500,
+                  partialContentAvailable: fullContent.length > 0,
+                  partialContent: fullContent || undefined,
+                }),
+              )
             }
           }
 
           xhr.onerror = () => {
-            reject(new Error("Network error during sendMessage"))
+            rejectOnce(
+              new ChatStreamError({
+                code: "NETWORK_ERROR",
+                message: "Network error during sendMessage",
+                retryable: true,
+                partialContentAvailable: fullContent.length > 0,
+                partialContent: fullContent || undefined,
+              }),
+            )
+          }
+
+          xhr.ontimeout = () => {
+            rejectOnce(
+              new ChatStreamError({
+                code: "TIMEOUT",
+                message: "Chat stream timed out",
+                retryable: true,
+                partialContentAvailable: fullContent.length > 0,
+                partialContent: fullContent || undefined,
+              }),
+            )
+          }
+
+          xhr.onabort = () => {
+            rejectOnce(
+              new ChatStreamError({
+                code: "ABORTED",
+                message: "Chat stream was aborted",
+                retryable: true,
+                partialContentAvailable: fullContent.length > 0,
+                partialContent: fullContent || undefined,
+              }),
+            )
           }
 
           xhr.send(buildFormData())
