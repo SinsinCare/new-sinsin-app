@@ -488,6 +488,13 @@ export function RecordView({
     )
   }
 
+  const handleViewDiaryDeleted = () => {
+    setIsViewResultOpen(false)
+    setViewDiaryResult(null)
+    setViewDiaryId(null)
+    setViewResultMealType(undefined)
+  }
+
   return (
     <KeyboardAwareScrollView
       showsVerticalScrollIndicator={false}
@@ -558,6 +565,7 @@ export function RecordView({
         onClose={closeResult}
         imageUri={analyzedImageUri ?? undefined}
         mealType={analyzedMealType ?? undefined}
+        recordDate={toDateStr(selectedDate)}
         onAddToRecord={handleAddToRecord}
         isUpdating={isUpdating}
         updateFoodAnalysis={updateFoodAnalysis}
@@ -573,7 +581,9 @@ export function RecordView({
         isUpdating={isUpdating}
         updateFoodAnalysis={updateFoodAnalysis}
         diaryId={viewDiaryId ?? undefined}
+        recordDate={toDateStr(selectedDate)}
         updateDiaryMealType={updateDiaryMealType}
+        onDiaryDeleted={handleViewDiaryDeleted}
         onResultChange={handleViewResultChange}
         onMealTypeChange={handleViewMealTypeChange}
       />
@@ -587,6 +597,7 @@ export function RecordView({
         }}
         imageUri={pending?.imageUri ?? undefined}
         mealType={pending?.mealType}
+        recordDate={toDateStr(selectedDate)}
         onAddToRecord={handlePendingAddToRecord}
         isUpdating={isPendingUpdating}
         updateFoodAnalysis={updatePendingFoodAnalysis}
