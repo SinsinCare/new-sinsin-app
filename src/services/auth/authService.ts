@@ -17,10 +17,38 @@ import type {
   SocialSignupConsentRequiredResult,
   SocialSignupRequest,
 } from "../../types"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { isMockUser } from "../../config/appConfig"
 import { api, clearClientSession, publicApi, tokenService } from "../core"
 import { isApiErrorLike } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
+
+const SOCIAL_REAUTHENTICATION_INTENT_KEY =
+  "@sinsin/next-social-login-reauthentication"
+const SOCIAL_REAUTHENTICATION_INTENT_VALUE = "required"
+
+export type AuthSignOutReason = "automatic" | "explicit"
+
+export async function persistSocialReauthenticationIntentForSignOut(
+  reason: AuthSignOutReason,
+): Promise<void> {
+  if (reason !== "explicit") return
+  await AsyncStorage.setItem(
+    SOCIAL_REAUTHENTICATION_INTENT_KEY,
+    SOCIAL_REAUTHENTICATION_INTENT_VALUE,
+  )
+}
+
+export async function isSocialReauthenticationRequired(): Promise<boolean> {
+  return (
+    (await AsyncStorage.getItem(SOCIAL_REAUTHENTICATION_INTENT_KEY)) ===
+    SOCIAL_REAUTHENTICATION_INTENT_VALUE
+  )
+}
+
+export async function consumeSocialReauthenticationIntent(): Promise<void> {
+  await AsyncStorage.removeItem(SOCIAL_REAUTHENTICATION_INTENT_KEY)
+}
 
 function mapAuthUser(
   user: AuthUserSummary | undefined,

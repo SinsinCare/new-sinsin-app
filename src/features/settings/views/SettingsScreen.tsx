@@ -206,7 +206,7 @@ export function SettingsScreen() {
         onCancel={() => setLogoutModalVisible(false)}
         onConfirm={() => {
           setLogoutModalVisible(false)
-          signOut()
+          signOut("explicit")
         }}
       />
     </ThemedView>
