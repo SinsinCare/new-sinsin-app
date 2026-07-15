@@ -82,6 +82,10 @@ export interface ChatStreamChunkEvent {
 export interface ChatStreamDoneEvent {
   messageId: number
   finishReason: ChatStreamFinishReason
+  category?: ChatCategory | null
+  categoryLabel?: string | null
+  role?: MessageRole
+  createdAt?: string
 }
 
 export interface ChatStreamErrorEvent {

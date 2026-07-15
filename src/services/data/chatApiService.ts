@@ -354,11 +354,11 @@ export function createRealChatService(): ChatService {
                 mapMessage(
                   {
                     messageId: completion.messageId,
-                    role: "ASSISTANT",
+                    role: completion.role ?? "ASSISTANT",
                     content: fullContent,
-                    category: null,
-                    categoryLabel: null,
-                    createdAt: new Date().toISOString(),
+                    category: completion.category ?? null,
+                    categoryLabel: completion.categoryLabel ?? null,
+                    createdAt: completion.createdAt ?? new Date().toISOString(),
                   },
                   conversationId,
                 ),

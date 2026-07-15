@@ -82,6 +82,7 @@ describe("chat SSE streaming", () => {
 
   it("parses SSE events split across arbitrary response boundaries", async () => {
     const chunks: string[] = []
+    const serverCreatedAt = "2026-07-15T10:20:30.456Z"
     const { promise, xhr } = await startRequest((content) =>
       chunks.push(content),
     )
@@ -93,7 +94,14 @@ describe("chat SSE streaming", () => {
       }) +
       event("chunk", { content: "안녕" }) +
       event("chunk", { content: "하세요" }) +
-      event("done", { messageId: 91, finishReason: "STOP" })
+      event("done", {
+        messageId: 91,
+        finishReason: "STOP",
+        category: "FOOD_DIET",
+        categoryLabel: "음식·식단",
+        role: "ASSISTANT",
+        createdAt: serverCreatedAt,
+      })
     const boundaries = [1, 2, 7, 3, 19, 4, 11, 5, 23, 2, 1000]
     let offset = 0
 
@@ -110,6 +118,9 @@ describe("chat SSE streaming", () => {
       conversationId: 7,
       role: "assistant",
       content: "안녕하세요",
+      aiCategory: "FOOD_DIET",
+      aiCategoryLabel: "음식·식단",
+      createdAt: new Date(serverCreatedAt),
     })
     expect(chunks).toEqual(["안녕", "안녕하세요"])
   })
