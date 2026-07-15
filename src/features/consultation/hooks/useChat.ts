@@ -1,5 +1,11 @@
 import { useState, useCallback, useRef } from "react"
-import type { ChatCategory, Message } from "@/src/types/chat"
+import {
+  asChatStreamError,
+  reconcileStreamedMessage,
+  type ChatCategory,
+  type ChatStreamError,
+  type Message,
+} from "@/src/types/chat"
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
 import { logger } from "@/src/lib/logger"
@@ -19,11 +25,52 @@ function createChatUnavailableMessage(conversationId: number | null): Message {
   }
 }
 
+function streamFailureMessage(error: ChatStreamError): string {
+  const suffix =
+    error.code === "MAX_TOKENS" || error.finishReason === "MAX_TOKENS"
+      ? "답변이 너무 길어 중간에 멈췄어요. 다시 생성해주세요."
+      : error.code === "TIMEOUT"
+        ? "답변 생성 시간이 초과됐어요. 다시 시도해주세요."
+        : error.code === "INCOMPLETE_STREAM"
+          ? "답변 연결이 중간에 끊겼어요. 다시 시도해주세요."
+          : error.retryable
+            ? "AI 상담 서비스에 일시적인 문제가 생겼어요. 다시 시도해주세요."
+            : CHAT_UNAVAILABLE_MESSAGE
+
+  return error.partialContentAvailable && error.partialContent
+    ? `${error.partialContent}\n\n_${suffix}_`
+    : suffix
+}
+
+function reconcileStreamFailure(
+  messages: Message[],
+  placeholderId: number,
+  conversationId: number,
+  error: ChatStreamError,
+): Message[] {
+  const failureMessage: Message = {
+    id: placeholderId,
+    conversationId,
+    role: "assistant",
+    content: streamFailureMessage(error),
+    createdAt: new Date(),
+  }
+  const placeholderIndex = messages.findIndex(
+    (message) => message.id === placeholderId,
+  )
+
+  if (placeholderIndex === -1) return [...messages, failureMessage]
+  return messages.map((message) =>
+    message.id === placeholderId ? failureMessage : message,
+  )
+}
+
 export function useChat() {
   const [conversationId, setConversationId] = useState<number | null>(null)
   const [category, setCategory] = useState<ChatCategory | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
+  const [lastError, setLastError] = useState<ChatStreamError | null>(null)
   const convIdRef = useRef<number | null>(null)
 
   const { mutateAsync: createChatMutate, isPending: isCreating } = useMutation({
@@ -49,48 +96,51 @@ export function useChat() {
       }) => {
         const streamingMsgId = optimisticMsgId--
         let placeholderAdded = false
+        setLastError(null)
 
-        const assistantMsg = await chatApiService.sendMessage(
-          convId,
-          content,
-          userCategory,
-          (accumulated) => {
-            if (!placeholderAdded) {
-              placeholderAdded = true
-              setIsTyping(false)
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: streamingMsgId,
-                  conversationId: convId,
-                  role: "assistant",
-                  content: accumulated,
-                  createdAt: new Date(),
-                },
-              ])
-            } else {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === streamingMsgId ? { ...m, content: accumulated } : m,
-                ),
-              )
-            }
-          },
-        )
+        try {
+          const assistantMsg = await chatApiService.sendMessage(
+            convId,
+            content,
+            userCategory,
+            (accumulated) => {
+              if (!placeholderAdded) {
+                placeholderAdded = true
+                setIsTyping(false)
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: streamingMsgId,
+                    conversationId: convId,
+                    role: "assistant",
+                    content: accumulated,
+                    createdAt: new Date(),
+                  },
+                ])
+              } else {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === streamingMsgId
+                      ? { ...m, content: accumulated }
+                      : m,
+                  ),
+                )
+              }
+            },
+          )
 
-        // Replace streaming placeholder with final message
-        setMessages((prev) =>
-          placeholderAdded
-            ? prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m))
-            : [
-                ...prev,
-                assistantMsg.content
-                  ? assistantMsg
-                  : createChatUnavailableMessage(convId),
-              ],
-        )
-
-        return assistantMsg
+          setMessages((prev) =>
+            reconcileStreamedMessage(prev, streamingMsgId, assistantMsg),
+          )
+          return assistantMsg
+        } catch (error) {
+          const streamError = asChatStreamError(error)
+          setLastError(streamError)
+          setMessages((prev) =>
+            reconcileStreamFailure(prev, streamingMsgId, convId, streamError),
+          )
+          throw streamError
+        }
       },
       onError: (err) => {
         logger.error("Failed to send message", err)
@@ -111,47 +161,57 @@ export function useChat() {
       }) => {
         const streamingMsgId = optimisticMsgId--
         let placeholderAdded = false
+        const activeConversationId = convIdRef.current!
+        setLastError(null)
 
-        const assistantMsg = await chatApiService.sendMessage(
-          convIdRef.current!,
-          content,
-          userCategory,
-          (accumulated) => {
-            if (!placeholderAdded) {
-              placeholderAdded = true
-              setIsTyping(false)
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: streamingMsgId,
-                  conversationId: convIdRef.current!,
-                  role: "assistant",
-                  content: accumulated,
-                  createdAt: new Date(),
-                },
-              ])
-            } else {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === streamingMsgId ? { ...m, content: accumulated } : m,
-                ),
-              )
-            }
-          },
-        )
+        try {
+          const assistantMsg = await chatApiService.sendMessage(
+            activeConversationId,
+            content,
+            userCategory,
+            (accumulated) => {
+              if (!placeholderAdded) {
+                placeholderAdded = true
+                setIsTyping(false)
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: streamingMsgId,
+                    conversationId: activeConversationId,
+                    role: "assistant",
+                    content: accumulated,
+                    createdAt: new Date(),
+                  },
+                ])
+              } else {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === streamingMsgId
+                      ? { ...m, content: accumulated }
+                      : m,
+                  ),
+                )
+              }
+            },
+          )
 
-        setMessages((prev) =>
-          placeholderAdded
-            ? prev.map((m) => (m.id === streamingMsgId ? assistantMsg : m))
-            : [
-                ...prev,
-                assistantMsg.content
-                  ? assistantMsg
-                  : createChatUnavailableMessage(convIdRef.current),
-              ],
-        )
-
-        return assistantMsg
+          setMessages((prev) =>
+            reconcileStreamedMessage(prev, streamingMsgId, assistantMsg),
+          )
+          return assistantMsg
+        } catch (error) {
+          const streamError = asChatStreamError(error)
+          setLastError(streamError)
+          setMessages((prev) =>
+            reconcileStreamFailure(
+              prev,
+              streamingMsgId,
+              activeConversationId,
+              streamError,
+            ),
+          )
+          throw streamError
+        }
       },
       onError: (err) => {
         logger.error("Failed to regenerate message", err)
@@ -210,10 +270,6 @@ export function useChat() {
           userCategory: categoryRef.current ?? "NONE",
         })
       } catch {
-        setMessages((prev) => [
-          ...prev,
-          createChatUnavailableMessage(activeConvId),
-        ])
         setIsTyping(false)
       }
     },
@@ -231,6 +287,7 @@ export function useChat() {
         setConversationId(conversation.id)
         setCategory(conversation.category ?? null)
         setMessages(loadedMessages)
+        setLastError(null)
       } catch (err) {
         logger.error("Failed to load conversation", err)
       }
@@ -244,6 +301,7 @@ export function useChat() {
     setCategory(null)
     setMessages([])
     setIsTyping(false)
+    setLastError(null)
   }, [])
 
   const startNewChat = useCallback(
@@ -267,10 +325,14 @@ export function useChat() {
     })
 
     setIsTyping(true)
-    await regenerateMutate({
-      content: lastUserMsg.content,
-      userCategory: categoryRef.current ?? "NONE",
-    })
+    try {
+      await regenerateMutate({
+        content: lastUserMsg.content,
+        userCategory: categoryRef.current ?? "NONE",
+      })
+    } catch {
+      // The mutation already reconciles the placeholder to a retryable error.
+    }
   }, [isSending, messages, regenerateMutate])
 
   return {
@@ -279,6 +341,7 @@ export function useChat() {
     messages,
     isTyping,
     isSending,
+    lastError,
     setCategory,
     sendMessage,
     startNewChat,
