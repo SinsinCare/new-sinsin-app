@@ -7,6 +7,7 @@ interface InputStepContentProps {
   fields: OnboardingValueOption[]
   values: Record<string, string>
   onChange: (key: string, text: string) => void
+  onSubmit: () => void
 }
 
 function getNumericError(raw: string): string | null {
@@ -21,6 +22,7 @@ export function InputStepContent({
   fields,
   values,
   onChange,
+  onSubmit,
 }: InputStepContentProps) {
   const isDark = useAppColorScheme() === "dark"
   const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
@@ -74,6 +76,8 @@ export function InputStepContent({
                 textAlignVertical="center"
                 style={{ lineHeight: 22 }}
                 keyboardType={field.type === "number" ? "numeric" : "default"}
+                returnKeyType="done"
+                onSubmitEditing={onSubmit}
                 value={raw}
                 onChangeText={(text) => onChange(field.key, text)}
               />
