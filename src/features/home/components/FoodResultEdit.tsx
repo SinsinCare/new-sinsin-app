@@ -3,10 +3,11 @@ import {
   Alert,
   Image,
   Modal,
-  ScrollView,
+  Platform,
   TextInput,
   TouchableOpacity,
 } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -16,8 +17,9 @@ import {
   FoodCameraAnalyzeResult,
 } from "@/src/types"
 import { Icon } from "@/src/shared/components"
+import { V2Button, V2SegmentControl, V2TextField } from "@/src/design-system-v2"
 import { LoadingOverlay } from "./LoadingOverlay"
-import { EatenSlider } from "./EatenSlider"
+import { ConsumedAmountSelector } from "./ConsumedAmountSelector"
 import { UNIT_OPTIONS } from "../data/foodEditConstants"
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
@@ -27,9 +29,16 @@ import {
   buildFoodAnalysisUpdateRequest,
   applyOptimisticConsumption,
   getInitialEatenStep,
+  validateMenuAmount,
+  validateMenuName,
   validateMealTitle,
 } from "../utils/foodEditUtils"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+
+const UNIT_SEGMENTS = UNIT_OPTIONS.map((unit) => ({
+  label: unit,
+  value: unit,
+}))
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -80,20 +89,20 @@ export function FoodResultEdit({
     setEatenStep,
     addStep,
     newMenuName,
-    setNewMenuName,
+    newMenuNameError,
     newMenuAmount,
-    setNewMenuAmount,
+    newMenuAmountError,
     newMenuUnit,
     setNewMenuUnit,
     nameEditInputRef,
-    nameInputRef,
-    amountInputRef,
     handleNameEdit,
     handleNameConfirm,
     handleFoodNameChange,
     handleAmountChange,
     handleDelete,
     handleAddMenu,
+    handleNewMenuNameChange,
+    handleNewMenuAmountChange,
     handleNameSubmit,
     handleAmountSubmit,
   } = useFoodEdit(result, mealType)
@@ -167,6 +176,18 @@ export function FoodResultEdit({
 
   const handleSubmit = async () => {
     if (!result) return
+    const hasInvalidFood = foods.some(
+      (food) =>
+        !validateMenuName(food.name).isValid ||
+        !validateMenuAmount(food.amount).isValid,
+    )
+    if (hasInvalidFood) {
+      Alert.alert(
+        "입력 내용을 확인해 주세요",
+        "메뉴명과 0보다 큰 양이 필요해요.",
+      )
+      return
+    }
     const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
     const eatenPercentageChanged = eatenStep !== initialEatenStep
     const initialBrothStep = getInitialEatenStep(
@@ -297,7 +318,15 @@ export function FoodResultEdit({
         </TouchableOpacity>
       </XStack>
 
-      <ScrollView contentContainerStyle={{ gap: 32, paddingBottom: 60 }}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ gap: 32, paddingBottom: 60 }}
+        bottomOffset={24}
+        disableScrollOnKeyboardHide
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        showsVerticalScrollIndicator={false}
+      >
         <XStack>
           {imageUri && (
             <View marginLeft={19} marginRight={13} overflow="hidden">
@@ -485,80 +514,65 @@ export function FoodResultEdit({
           >
             <YStack gap="$3">
               {addStep === "name" && (
-                <XStack alignItems="center" paddingVertical="$2" gap="$3">
-                  <TextInput
-                    ref={nameInputRef}
+                <XStack alignItems="flex-start" paddingVertical="$2" gap="$2">
+                  <V2TextField
+                    autoFocus
                     value={newMenuName}
-                    onChangeText={setNewMenuName}
+                    onChangeText={handleNewMenuNameChange}
                     placeholder="메뉴 이름"
-                    placeholderTextColor={tokens.color.grey5.val}
-                    returnKeyType="next"
+                    returnKeyType="done"
                     onSubmitEditing={handleNameSubmit}
-                    style={{
-                      flex: 1,
-                      paddingLeft: 1,
-                      fontSize: 15,
-                      fontWeight: "500",
-                      color: textColor,
-                    }}
+                    error={newMenuNameError || false}
+                    style={{ flex: 1, minWidth: 0 }}
                   />
+                  <V2Button
+                    size="l"
+                    onPress={handleNameSubmit}
+                    accessibilityLabel="메뉴 이름 확인"
+                  >
+                    확인
+                  </V2Button>
                 </XStack>
               )}
               {addStep === "amount" && (
-                <YStack gap="$2">
+                <YStack gap="$3">
                   <XStack alignItems="center" gap="$3">
                     <Text fontWeight={500} fontSize={15} flex={1}>
                       {newMenuName}
                     </Text>
                   </XStack>
-                  <TextInput
-                    ref={amountInputRef}
-                    value={newMenuAmount}
-                    onChangeText={setNewMenuAmount}
-                    placeholder="양을 입력해 주세요"
-                    placeholderTextColor={tokens.color.grey5.val}
-                    keyboardType="numeric"
-                    returnKeyType="done"
-                    onSubmitEditing={handleAmountSubmit}
-                    style={{
-                      alignSelf: "stretch",
-                      borderRadius: 10,
-                      paddingVertical: 8,
-                      fontSize: 16,
-                      fontWeight: "600",
-                      textAlign: "center",
-                      color: textColor,
-                    }}
-                  />
-                  <XStack gap="$2" justifyContent="center" paddingVertical="$2">
-                    {UNIT_OPTIONS.map((unit) => (
-                      <TouchableOpacity
-                        key={unit}
-                        onPress={() => setNewMenuUnit(unit)}
-                      >
-                        <View
-                          width={65}
-                          height={35}
-                          alignItems="center"
-                          justifyContent="center"
-                          borderRadius="$4"
-                          backgroundColor={
-                            newMenuUnit === unit
-                              ? tokens.color.sub6.val + "29"
-                              : tokens.color.grey8.val
-                          }
-                        >
-                          <Text
-                            fontSize={14}
-                            fontWeight={500}
-                            color="$colorSubtle"
-                          >
-                            {unit}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
+                  <XStack alignItems="flex-start" gap="$2">
+                    <V2TextField
+                      autoFocus
+                      value={newMenuAmount}
+                      onChangeText={handleNewMenuAmountChange}
+                      placeholder="양"
+                      keyboardType="decimal-pad"
+                      returnKeyType="done"
+                      onSubmitEditing={handleAmountSubmit}
+                      error={newMenuAmountError || false}
+                      style={{ flex: 1, minWidth: 0 }}
+                      inputStyle={{ textAlign: "center" }}
+                    />
+                    <V2SegmentControl
+                      items={UNIT_SEGMENTS}
+                      value={newMenuUnit}
+                      onChange={(unit) =>
+                        setNewMenuUnit(unit as typeof newMenuUnit)
+                      }
+                      size="s"
+                      alignment="fixed"
+                      style={{ flex: 2 }}
+                    />
                   </XStack>
+                  <V2Button
+                    size="m"
+                    fullWidth
+                    onPress={handleAmountSubmit}
+                    accessibilityLabel="메뉴 양 확인"
+                  >
+                    확인
+                  </V2Button>
                 </YStack>
               )}
               {foods.map((f, i) => (
@@ -643,7 +657,7 @@ export function FoodResultEdit({
           >
             얼마나 드셨나요?
           </Text>
-          <EatenSlider value={eatenStep} onChange={setEatenStep} />
+          <ConsumedAmountSelector value={eatenStep} onChange={setEatenStep} />
           {hasBroth && (
             <YStack marginTop="$5" gap="$3">
               <Text
@@ -657,11 +671,15 @@ export function FoodResultEdit({
               <Text fontSize={13} color="$colorSubtle" paddingLeft={4}>
                 건더기와 국물 양을 나누어 계산해요.
               </Text>
-              <EatenSlider value={brothStep} onChange={setBrothStep} />
+              <ConsumedAmountSelector
+                value={brothStep}
+                onChange={setBrothStep}
+                accessibilityLabel="국물 섭취량 선택"
+              />
             </YStack>
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <LoadingOverlay visible={isUpdating} message="식단을 수정하고 있어요" />
     </YStack>

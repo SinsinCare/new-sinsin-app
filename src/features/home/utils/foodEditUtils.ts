@@ -59,6 +59,30 @@ export function validateMealTitle(title: string): {
   return { isValid: true, message: "" }
 }
 
+export function validateMenuName(name: string): {
+  isValid: boolean
+  message: string
+} {
+  if (!name.trim()) {
+    return { isValid: false, message: "메뉴 이름을 입력해 주세요" }
+  }
+  return { isValid: true, message: "" }
+}
+
+export function validateMenuAmount(amount: string): {
+  isValid: boolean
+  message: string
+} {
+  if (!amount.trim()) {
+    return { isValid: false, message: "양을 입력해 주세요" }
+  }
+  const numericAmount = Number(amount)
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    return { isValid: false, message: "0보다 큰 숫자를 입력해 주세요" }
+  }
+  return { isValid: true, message: "" }
+}
+
 export interface EditableFoodItem {
   id?: number
   name: string

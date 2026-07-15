@@ -1,8 +1,12 @@
 import { useRef, useState } from "react"
-import { TextInput } from "react-native"
+import { Keyboard, TextInput } from "react-native"
 import { FoodCameraAnalyzeResult } from "@/src/types"
 import { UNIT_OPTIONS, UnitOption } from "../data/foodEditConstants"
-import { getInitialEatenStep } from "../utils/foodEditUtils"
+import {
+  getInitialEatenStep,
+  validateMenuAmount,
+  validateMenuName,
+} from "../utils/foodEditUtils"
 import { MealType } from "../types"
 
 export function useFoodEdit(
@@ -27,11 +31,11 @@ export function useFoodEdit(
   const [newMenuName, setNewMenuName] = useState("")
   const [newMenuAmount, setNewMenuAmount] = useState("")
   const [newMenuUnit, setNewMenuUnit] = useState<UnitOption>(UNIT_OPTIONS[0])
+  const [newMenuNameError, setNewMenuNameError] = useState("")
+  const [newMenuAmountError, setNewMenuAmountError] = useState("")
 
   // --- refs ---
   const nameEditInputRef = useRef<TextInput>(null)
-  const nameInputRef = useRef<TextInput>(null)
-  const amountInputRef = useRef<TextInput>(null)
 
   // --- handlers ---
   const handleNameEdit = () => {
@@ -64,17 +68,24 @@ export function useFoodEdit(
   const handleAddMenu = () => {
     setAddStep("name")
     setNewMenuName("")
-    setTimeout(() => nameInputRef.current?.focus(), 100)
+    setNewMenuAmount("")
+    setNewMenuNameError("")
+    setNewMenuAmountError("")
   }
 
   const handleNameSubmit = () => {
-    if (!newMenuName.trim()) return
+    const validation = validateMenuName(newMenuName)
+    setNewMenuNameError(validation.message)
+    if (!validation.isValid) return
     setAddStep("amount")
     setNewMenuAmount("")
-    setTimeout(() => amountInputRef.current?.focus(), 100)
+    setNewMenuAmountError("")
   }
 
   const handleAmountSubmit = () => {
+    const validation = validateMenuAmount(newMenuAmount)
+    setNewMenuAmountError(validation.message)
+    if (!validation.isValid) return
     setFoods((prev) => [
       {
         name: newMenuName.trim(),
@@ -97,6 +108,19 @@ export function useFoodEdit(
     setAddStep("idle")
     setNewMenuName("")
     setNewMenuAmount("")
+    setNewMenuNameError("")
+    setNewMenuAmountError("")
+    Keyboard.dismiss()
+  }
+
+  const handleNewMenuNameChange = (value: string) => {
+    setNewMenuName(value)
+    if (newMenuNameError) setNewMenuNameError("")
+  }
+
+  const handleNewMenuAmountChange = (value: string) => {
+    setNewMenuAmount(value)
+    if (newMenuAmountError) setNewMenuAmountError("")
   }
 
   return {
@@ -111,15 +135,13 @@ export function useFoodEdit(
     setEatenStep,
     addStep,
     newMenuName,
-    setNewMenuName,
+    newMenuNameError,
     newMenuAmount,
-    setNewMenuAmount,
+    newMenuAmountError,
     newMenuUnit,
     setNewMenuUnit,
     // refs
     nameEditInputRef,
-    nameInputRef,
-    amountInputRef,
     // handlers
     handleNameEdit,
     handleNameConfirm,
@@ -127,6 +149,8 @@ export function useFoodEdit(
     handleAmountChange,
     handleDelete,
     handleAddMenu,
+    handleNewMenuNameChange,
+    handleNewMenuAmountChange,
     handleNameSubmit,
     handleAmountSubmit,
   }
