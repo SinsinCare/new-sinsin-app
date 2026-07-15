@@ -1,8 +1,8 @@
-import { ApiError } from "@/src/services/core/apiError"
+import { ApiError } from "../src/services/core/apiError"
 import {
   getSocialLoginErrorAction,
   getSocialLoginSuccessAction,
-} from "../utils/socialLoginFlow"
+} from "../src/features/auth/utils/socialLoginFlow"
 
 const isCancelled = (error: unknown) =>
   error instanceof Error && error.message === "cancelled"
