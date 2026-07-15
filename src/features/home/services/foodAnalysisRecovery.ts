@@ -13,6 +13,11 @@ import {
 
 const PENDING_ANALYSIS_TTL_MS = 10 * 60 * 1000
 
+export interface FoodAnalysisRecoveryResult {
+  recoveredCount: number
+  remainingCount: number
+}
+
 export interface FoodAnalysisRecoveryDeps {
   pendingRequests: {
     getAll: () => Promise<PendingAnalysisRequest[]>
@@ -56,7 +61,11 @@ function resolveRecoveredImageUri(
 }
 
 export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
-  async function recoverOne(pending: PendingAnalysisRequest): Promise<boolean> {
+  const inFlightRequests = new Map<string, Promise<boolean>>()
+
+  async function runRecovery(
+    pending: PendingAnalysisRequest,
+  ): Promise<boolean> {
     if (deps.now() - pending.startedAt > PENDING_ANALYSIS_TTL_MS) {
       await deps.pendingRequests.remove(pending.requestId)
       return false
@@ -95,16 +104,32 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
     return true
   }
 
+  function recoverOne(pending: PendingAnalysisRequest): Promise<boolean> {
+    const existing = inFlightRequests.get(pending.requestId)
+    if (existing) return existing
+
+    const recovery = runRecovery(pending).finally(() => {
+      if (inFlightRequests.get(pending.requestId) === recovery) {
+        inFlightRequests.delete(pending.requestId)
+      }
+    })
+    inFlightRequests.set(pending.requestId, recovery)
+    return recovery
+  }
+
   return {
-    async recoverPendingAnalyses(): Promise<void> {
+    async recoverPendingAnalyses(): Promise<FoodAnalysisRecoveryResult> {
       const pendingList = await deps.pendingRequests.getAll()
+      let recoveredCount = 0
       for (const pending of pendingList) {
         try {
-          await recoverOne(pending)
+          if (await recoverOne(pending)) recoveredCount += 1
         } catch {
           // 복구 실패는 다음 앱 진입/포그라운드 전환에서 다시 시도한다.
         }
       }
+      const remaining = await deps.pendingRequests.getAll()
+      return { recoveredCount, remainingCount: remaining.length }
     },
     async recoverFoodAnalysisRequest(requestId: string): Promise<void> {
       const pendingList = await deps.pendingRequests.getAll()

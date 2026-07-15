@@ -1,4 +1,4 @@
-import { StyleSheet, Alert, Platform } from "react-native"
+import { StyleSheet, Alert, Platform, RefreshControl } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import type {
@@ -19,7 +19,7 @@ import { WeightEdemaTracker } from "./WeightEdemaTracker"
 import { BloodMetricsTracker } from "./BloodMetricsTracker"
 import { useHomeRecord } from "../../hooks/useHomeRecord"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
   pickImageFromGallery,
@@ -48,6 +48,8 @@ import {
 } from "../../utils/mealRecordUtils"
 import { appConfig } from "@/src/config/appConfig"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useFoodAnalysisRecoveryPolling } from "../../hooks/useFoodAnalysisRecoveryPolling"
+import { foodAnalysisRecovery } from "../../services/foodAnalysisRecovery"
 
 const ANALYTICS_MEAL_SLOT: Record<
   MealType,
@@ -71,7 +73,9 @@ export function RecordView({
   onSelectMealType,
 }: RecordViewProps) {
   const insets = useSafeAreaInsets()
+  const queryClient = useQueryClient()
   const record = useHomeRecord(selectedDate)
+  useFoodAnalysisRecoveryPolling()
   const [viewDiaryResult, setViewDiaryResult] =
     useState<DiaryAnalysisResult | null>(null)
   const [viewDiaryId, setViewDiaryId] = useState<number | null>(null)
@@ -111,6 +115,8 @@ export function RecordView({
   )
   const [isPendingOpen, setIsPendingOpen] = useState(false)
   const [isPendingUpdating, setIsPendingUpdating] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const refreshPromiseRef = useRef<Promise<void> | null>(null)
   const pendingResultViewedRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -167,7 +173,31 @@ export function RecordView({
   }
   const { data } = useDateAnalysis(selectedDate)
   const { data: streak = 0 } = useStreak()
-  const queryClient = useQueryClient()
+
+  const refreshSelectedDate = useCallback((): Promise<void> => {
+    if (refreshPromiseRef.current) return refreshPromiseRef.current
+
+    setIsRefreshing(true)
+    const runRefresh = async () => {
+      try {
+        await Promise.all([
+          foodAnalysisRecovery.recoverPendingAnalyses(),
+          queryClient.refetchQueries({
+            queryKey: ["dateAnalysis", toDateStr(selectedDate)],
+            exact: true,
+          }),
+          queryClient.refetchQueries({ queryKey: ["diaryExistence"] }),
+        ])
+      } finally {
+        refreshPromiseRef.current = null
+        setIsRefreshing(false)
+      }
+    }
+
+    const refreshPromise = runRefresh()
+    refreshPromiseRef.current = refreshPromise
+    return refreshPromise
+  }, [queryClient, selectedDate])
 
   const [mealImages, setMealImages] = useState<MealImageMap>({})
   const [recordedMeals, setRecordedMeals] = useState<RecordedMealMap>({})
@@ -461,6 +491,14 @@ export function RecordView({
   return (
     <KeyboardAwareScrollView
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => void refreshSelectedDate()}
+          tintColor={tokens.color.sub6.val}
+          colors={[tokens.color.sub6.val]}
+        />
+      }
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: insets.bottom + 32 },
