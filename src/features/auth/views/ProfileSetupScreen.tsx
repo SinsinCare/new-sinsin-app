@@ -1,8 +1,9 @@
 import { useEffect } from "react"
-import { ScrollView, Pressable, Keyboard, BackHandler } from "react-native"
+import { Pressable, Keyboard, BackHandler, Platform } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { router } from "expo-router"
+import { router, useNavigation } from "expo-router"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useForm } from "react-hook-form"
 import { Ionicons } from "@expo/vector-icons"
 import { BottomSheetPicker, FormTextField } from "@/src/shared/components"
@@ -16,6 +17,7 @@ import type { AcquisitionSourceInput } from "../data/acquisitionSources"
 
 export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
+  const navigation = useNavigation()
   const colors = useAuthColors()
   const {
     birthYear,
@@ -23,7 +25,6 @@ export function ProfileSetupScreen() {
     birthDay,
     gender,
     acquisitionSource,
-    isBackfillMode,
     isCompletionMode,
     isPrefilling,
     isSubmitting,
@@ -63,15 +64,20 @@ export function ProfileSetupScreen() {
   }, [prefillValues, reset])
 
   useEffect(() => {
-    if (!isBackfillMode) return
+    navigation.setOptions({ gestureEnabled: !isCompletionMode })
+    return () => navigation.setOptions({ gestureEnabled: true })
+  }, [isCompletionMode, navigation])
+
+  useEffect(() => {
+    if (!isCompletionMode) return
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true)
     return () => sub.remove()
-  }, [isBackfillMode])
+  }, [isCompletionMode])
 
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack height={56} justifyContent="center">
-        {!isBackfillMode && (
+        {!isCompletionMode && (
           <Pressable
             onPress={() => router.back()}
             style={{ position: "absolute", left: 9, padding: 4 }}
@@ -82,9 +88,16 @@ export function ProfileSetupScreen() {
       </YStack>
 
       <YStack flex={1} justifyContent="space-between">
-        <ScrollView
+        <KeyboardAwareScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+          bottomOffset={insets.bottom + 24}
+          disableScrollOnKeyboardHide
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+          showsVerticalScrollIndicator={false}
         >
           <Text
             fontSize={22}
@@ -179,7 +192,7 @@ export function ProfileSetupScreen() {
               placeholder="추천인 코드를 입력해주세요 (선택)"
             />
           </YStack>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
           <Pressable
@@ -211,10 +224,10 @@ export function ProfileSetupScreen() {
                 {isPrefilling
                   ? "불러오는 중..."
                   : isSubmitting
-                  ? "저장 중..."
-                  : isCompletionMode
-                    ? "저장하기"
-                    : "다음 단계"}
+                    ? "저장 중..."
+                    : isCompletionMode
+                      ? "저장하기"
+                      : "다음 단계"}
               </Text>
             </YStack>
           </Pressable>
