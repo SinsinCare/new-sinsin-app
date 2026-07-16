@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import type { AcquisitionSource } from "@/src/types"
 
 interface SignupState {
   isSignupInProgress: boolean
@@ -14,16 +15,7 @@ interface SignupState {
   birthMonth: string
   birthDay: string
   gender: "MALE" | "FEMALE" | "OTHER" | ""
-  acquisitionSource:
-    | "APP_STORE"
-    | "INSTAGRAM"
-    | "YOUTUBE"
-    | "KAKAO"
-    | "BLOG"
-    | "NAVER_CAFE"
-    | "FRIEND"
-    | "OTHER"
-    | ""
+  acquisitionSource: AcquisitionSource | ""
   acquisitionSourceOther: string
   referralCode: string
   nickname: string
@@ -38,18 +30,7 @@ interface SignupState {
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
   setGender: (gender: "MALE" | "FEMALE" | "OTHER" | "") => void
-  setAcquisitionSource: (
-    source:
-      | "APP_STORE"
-      | "INSTAGRAM"
-      | "YOUTUBE"
-      | "KAKAO"
-      | "BLOG"
-      | "NAVER_CAFE"
-      | "FRIEND"
-      | "OTHER"
-      | "",
-  ) => void
+  setAcquisitionSource: (source: AcquisitionSource | "") => void
   setAcquisitionSourceOther: (value: string) => void
   setReferralCode: (code: string) => void
   setNickname: (nickname: string) => void

@@ -1,21 +1,13 @@
 import { isMockUser } from "../../config/appConfig"
 import { publicApi } from "../core/apiClient"
-import { ApiError } from "../core/apiError"
 import type {
   ApiResponse,
   EmailLoginLinkOtpVerifyResult,
-  EmailLoginLinkRequiredResult,
   OtpVerifyResult,
 } from "../../types"
 
-type SignupEmailCheckResult =
-  | { status: "available" }
-  | { status: "duplicate"; message: string }
-  | ({ status: "email_login_link_required" } & EmailLoginLinkRequiredResult)
-
 interface EmailService {
   checkEmailAvailability(email: string): Promise<boolean>
-  checkSignupEmail(email: string): Promise<SignupEmailCheckResult>
   sendVerificationCode(email: string): Promise<void>
   verifyCode(
     email: string,
@@ -34,28 +26,6 @@ interface EmailService {
   ): Promise<{ verified: boolean; emailLinkToken?: string }>
 }
 
-function getEmailLoginLinkRequiredResult(
-  error: unknown,
-): EmailLoginLinkRequiredResult | null {
-  if (!(error instanceof ApiError) || error.code !== "AUTH_ERROR_009") {
-    return null
-  }
-  const result = error.result
-  if (!result || typeof result !== "object") return null
-  const { email, providers } = result as Partial<EmailLoginLinkRequiredResult>
-  if (
-    typeof email === "string" &&
-    Array.isArray(providers) &&
-    providers.every(
-      (provider) =>
-        provider === "google" || provider === "apple" || provider === "kakao",
-    )
-  ) {
-    return { email, providers }
-  }
-  return null
-}
-
 function getRealEmailService(): EmailService {
   return {
     async checkEmailAvailability(email: string): Promise<boolean> {
@@ -66,27 +36,6 @@ function getRealEmailService(): EmailService {
         return true
       } catch {
         return false
-      }
-    },
-
-    async checkSignupEmail(email: string): Promise<SignupEmailCheckResult> {
-      try {
-        await publicApi.get<ApiResponse>("/auth/signup/email/verify", {
-          params: { email },
-        })
-        return { status: "available" }
-      } catch (error) {
-        const linkRequired = getEmailLoginLinkRequiredResult(error)
-        if (linkRequired) {
-          return { status: "email_login_link_required", ...linkRequired }
-        }
-        if (error instanceof ApiError && error.code === "SIGNUP_ERROR_001") {
-          return {
-            status: "duplicate",
-            message: error.message,
-          }
-        }
-        throw error
       }
     },
 
@@ -156,10 +105,6 @@ function getMockEmailService(): EmailService {
       return true
     },
 
-    async checkSignupEmail(_email: string): Promise<SignupEmailCheckResult> {
-      return { status: "available" }
-    },
-
     async sendVerificationCode(_email: string): Promise<void> {
       // mock: 아무것도 하지 않음
     },
@@ -210,7 +155,6 @@ function getEmailService(): EmailService {
 export const emailService: EmailService = {
   checkEmailAvailability: (email) =>
     getEmailService().checkEmailAvailability(email),
-  checkSignupEmail: (email) => getEmailService().checkSignupEmail(email),
   sendVerificationCode: (email) =>
     getEmailService().sendVerificationCode(email),
   verifyCode: (email, code) => getEmailService().verifyCode(email, code),

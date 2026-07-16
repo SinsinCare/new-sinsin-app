@@ -127,7 +127,11 @@ export function SignupEmailScreen() {
                       fontWeight="500"
                       letterSpacing={-0.28}
                     >
-                      {codeSent ? "재전송" : "인증번호 전송"}
+                      {sendingCode
+                        ? "전송 중..."
+                        : codeSent
+                          ? "재전송"
+                          : "인증번호 전송"}
                     </Text>
                   </YStack>
                 </Pressable>

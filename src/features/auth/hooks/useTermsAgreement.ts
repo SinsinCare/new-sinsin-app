@@ -4,11 +4,6 @@ import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
 import { TERMS } from "../data/terms"
-import {
-  buildRequiredPhoneNumberPayload,
-  formatKoreanMobileInput,
-  getRequiredPhoneNumberError,
-} from "../data/phoneNumber"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import {
   identifyAnalyticsUser,
@@ -25,14 +20,12 @@ export function useTermsAgreement({
   socialSignupToken,
 }: UseTermsAgreementOptions = {}) {
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
-  const [phoneNumber, setPhoneNumber] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const {
     reset,
     setTermsOfServiceAgree,
     setPrivacyPolicyAgree,
     setMarketingAgree,
-    setPhoneNumber: setSignupPhoneNumber,
     setSignupInProgress,
   } = useSignupStore()
   const setUser = useAuthStore((s) => s.setUser)
@@ -45,13 +38,7 @@ export function useTermsAgreement({
   const requiredChecked = TERMS.filter((t) => t.required).every(
     (t) => agreed[t.id],
   )
-  const requiredPhoneNumberError = getRequiredPhoneNumberError(phoneNumber)
-  const phoneNumberError = phoneNumber ? requiredPhoneNumberError : null
-  const canSubmit = requiredChecked && !requiredPhoneNumberError
-
-  const handlePhoneNumberChange = useCallback((value: string) => {
-    setPhoneNumber(formatKoreanMobileInput(value))
-  }, [])
+  const canSubmit = requiredChecked
 
   const toggleAll = useCallback(() => {
     if (allChecked) {
@@ -77,7 +64,6 @@ export function useTermsAgreement({
     setTermsOfServiceAgree(!!agreed["service"])
     setPrivacyPolicyAgree(!!agreed["privacy"])
     setMarketingAgree(!!agreed["marketing"])
-    setSignupPhoneNumber(phoneNumber)
     router.push("/(auth)/signup-email")
   }
 
@@ -97,7 +83,6 @@ export function useTermsAgreement({
         termsOfServiceAgree: !!agreed["service"],
         privacyPolicyAgree: !!agreed["privacy"],
         marketingAgree: !!agreed["marketing"],
-        ...buildRequiredPhoneNumberPayload(phoneNumber),
       })
 
       reset()
@@ -158,12 +143,9 @@ export function useTermsAgreement({
     requiredChecked,
     canSubmit,
     isSubmitting,
-    phoneNumber,
-    phoneNumberError,
     marketingAgree: !!agreed["marketing"],
     toggleAll,
     toggleItem,
-    handlePhoneNumberChange,
     handleBack,
     handleNext,
   }

@@ -18,19 +18,17 @@ describe("signup phone payload", () => {
     ).toEqual({ phoneNumber: "01012345678" })
   })
 
-  it("adds the same normalized field to a social signup request", () => {
+  it("adds the normalized field to the social profile completion request", () => {
     const socialRequest = {
-      socialSignupToken: "social-token",
-      termsOfServiceAgree: true,
-      privacyPolicyAgree: true,
-      marketingAgree: false,
+      name: "소셜 사용자",
+      gender: "FEMALE",
       ...buildRequiredPhoneNumberPayload("010 9876 5432"),
     }
 
     expect(socialRequest.phoneNumber).toBe("01098765432")
   })
 
-  it("rejects an omitted phoneNumber in new email and social signup flows", () => {
+  it("rejects an omitted phoneNumber in new email and social profile flows", () => {
     expect(() => buildRequiredPhoneNumberPayload("")).toThrow(
       PHONE_NUMBER_ERROR_MESSAGE,
     )

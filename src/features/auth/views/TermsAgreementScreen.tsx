@@ -2,7 +2,6 @@ import { Pressable } from "react-native"
 import { YStack, XStack, Text, Separator } from "tamagui"
 import { router } from "expo-router"
 import { Checkbox } from "@/src/shared/components"
-import { V2TextField } from "@/src/design-system-v2"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { useTermsAgreement, useAuthColors } from "../hooks"
 
@@ -21,11 +20,8 @@ export function TermsAgreementScreen({
     allChecked,
     canSubmit,
     isSubmitting,
-    phoneNumber,
-    phoneNumberError,
     toggleAll,
     toggleItem,
-    handlePhoneNumberChange,
     handleBack,
     handleNext,
   } = useTermsAgreement({ mode, socialSignupToken })
@@ -112,33 +108,6 @@ export function TermsAgreementScreen({
               )}
             </XStack>
           ))}
-        </YStack>
-
-        <Separator borderColor={colors.border} />
-
-        <YStack gap={8} paddingBottom={8}>
-          <V2TextField
-            variant="box"
-            label="전화번호 *"
-            value={phoneNumber}
-            onChangeText={handlePhoneNumberChange}
-            placeholder="010-1234-5678"
-            keyboardType="phone-pad"
-            textContentType="telephoneNumber"
-            autoComplete="tel"
-            returnKeyType="done"
-            maxLength={13}
-            error={phoneNumberError ?? false}
-            accessibilityLabel="전화번호 필수 입력"
-            accessibilityHint="010으로 시작하는 휴대전화 번호 11자리를 입력해주세요"
-          />
-          <Text fontSize={13} lineHeight={19} color={colors.textSub}>
-            전화번호는 회원정보로 수집하며, 마케팅 수신에 동의한 경우에만 마케팅
-            정보 안내에 활용합니다.
-          </Text>
-          <Text fontSize={12} lineHeight={18} color={colors.textSub}>
-            로그인, 계정 통합 또는 SMS 본인인증에는 사용하지 않습니다.
-          </Text>
         </YStack>
       </YStack>
     </AuthScreenLayout>

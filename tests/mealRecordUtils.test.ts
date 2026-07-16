@@ -2,6 +2,7 @@ import {
   applyMealTypeChangeToMealImages,
   applyMealTypeChangeToRecordedMeals,
   getMealButtonAction,
+  getMealTimeLabel,
   isSkippedDiet,
   toSkippedMealMap,
 } from "../src/features/home/utils/mealRecordUtils"
@@ -23,6 +24,15 @@ describe("meal record utilities", () => {
         isSkipped: false,
       }),
     ).toBe("view")
+  })
+
+  it("shows skipped instead of the server-created time for skipped meals", () => {
+    expect(getMealTimeLabel({ isSkipped: true, time: "오후 4:12" })).toBe(
+      "건너뜀",
+    )
+    expect(getMealTimeLabel({ isSkipped: false, time: "오후 4:12" })).toBe(
+      "오후 4:12",
+    )
   })
 
   it("maps skipped diets by meal type", () => {

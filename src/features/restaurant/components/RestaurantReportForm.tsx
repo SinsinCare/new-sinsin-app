@@ -13,13 +13,14 @@ import * as ImagePicker from "expo-image-picker"
 import { Text, XStack, YStack } from "tamagui"
 
 import { Button, TextAreaField, TextField } from "@/src/shared/components"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { tokens } from "@/src/theme/tokens"
+import { radius, spacing, useV2Theme } from "@/src/design-system-v2"
 import { restaurantReportService } from "@/src/services/data/restaurantReportService"
 import {
   MAX_RESTAURANT_REPORT_PHOTOS,
   validateRestaurantReportDraft,
 } from "../utils/restaurantReportValidation"
+import { getRestaurantReportPalette } from "../utils/restaurantReportPresentation"
+import { RestaurantReportSection } from "./RestaurantReportSection"
 
 interface RestaurantReportFormProps {
   paddingTop: number
@@ -37,7 +38,8 @@ const emptyDraft = {
 export function RestaurantReportForm({
   paddingTop,
 }: RestaurantReportFormProps) {
-  const isDarkMode = useAppColorScheme() === "dark"
+  const theme = useV2Theme()
+  const palette = getRestaurantReportPalette(theme)
   const [draft, setDraft] = useState(emptyDraft)
   const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([])
   const [error, setError] = useState("")
@@ -46,24 +48,6 @@ export function RestaurantReportForm({
     paddingTop,
     Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) : 0,
   )
-
-  const palette = isDarkMode
-    ? {
-        bg: tokens.color.appBgDark.val,
-        card: tokens.color.cardBgDark.val,
-        text: tokens.color.textDark.val,
-        subText: tokens.color.textDarkSub.val,
-        border: tokens.color.borderDark.val,
-        input: tokens.color.inputBgDark.val,
-      }
-    : {
-        bg: tokens.color.offWhite.val,
-        card: tokens.color.pureWhite.val,
-        text: tokens.color.textLight.val,
-        subText: tokens.color.textLightMuted.val,
-        border: tokens.color.borderLight.val,
-        input: tokens.color.pureWhite.val,
-      }
 
   const update = (key: keyof typeof draft, value: string) => {
     setDraft((current) => ({ ...current, [key]: value }))
@@ -143,8 +127,12 @@ export function RestaurantReportForm({
           { paddingTop: contentTopPadding },
         ]}
       >
-        <YStack gap="$4">
-          <YStack gap="$2" paddingHorizontal={24} paddingTop={18}>
+        <YStack gap={spacing[16]}>
+          <YStack
+            gap={spacing[8]}
+            paddingHorizontal={spacing[24]}
+            paddingTop={spacing[20]}
+          >
             <Text
               fontSize={26}
               lineHeight={34}
@@ -160,12 +148,12 @@ export function RestaurantReportForm({
           </YStack>
 
           <YStack
-            gap="$4"
-            marginHorizontal={16}
-            padding={18}
-            borderRadius={16}
-            borderWidth={1}
-            borderColor={palette.border}
+            gap={spacing[16]}
+            marginHorizontal={spacing[16]}
+            padding={spacing[16]}
+            borderRadius={radius["2xl"]}
+            borderWidth={1.5}
+            borderColor={palette.cardBorder}
             backgroundColor={palette.card}
           >
             <Text
@@ -181,98 +169,134 @@ export function RestaurantReportForm({
               <Text
                 fontSize={13}
                 lineHeight={18}
-                color={tokens.color.error.val}
-                backgroundColor={isDarkMode ? "#3B2727" : "#FFF0EE"}
-                padding={12}
-                borderRadius={10}
+                color={palette.errorText}
+                backgroundColor={palette.errorBackground}
+                padding={spacing[12]}
+                borderRadius={radius.md}
               >
                 {error}
               </Text>
             ) : null}
 
-            <TextField
-              label="식당 이름"
-              value={draft.name}
-              onChangeText={(value) => update("name", value)}
-              placeholder="예: 초록김밥"
-            />
-            <TextField
-              label="주소 (선택)"
-              value={draft.address}
-              onChangeText={(value) => update("address", value)}
-              placeholder="도로명 주소 또는 동네명"
-            />
-            <TextField
-              label="음식 종류"
-              value={draft.category}
-              onChangeText={(value) => update("category", value)}
-              placeholder="한식, 일식, 분식 등"
-            />
-            <TextField
-              label="추천 메뉴 (선택)"
-              value={draft.recommendedMenu}
-              onChangeText={(value) => update("recommendedMenu", value)}
-              placeholder="싱겁게 먹기 좋은 메뉴"
-            />
+            <RestaurantReportSection
+              title="기본 정보"
+              backgroundColor={palette.section}
+              borderColor={palette.fieldBorder}
+              textColor={palette.text}
+            >
+              <TextField
+                label="식당 이름"
+                value={draft.name}
+                onChangeText={(value) => update("name", value)}
+                placeholder="예: 초록김밥"
+                borderColor={palette.fieldBorder}
+                backgroundColor={palette.input}
+                color={palette.text}
+              />
+              <TextField
+                label="주소 (선택)"
+                value={draft.address}
+                onChangeText={(value) => update("address", value)}
+                placeholder="도로명 주소 또는 동네명"
+                borderColor={palette.fieldBorder}
+                backgroundColor={palette.input}
+                color={palette.text}
+              />
+              <TextField
+                label="음식 종류"
+                value={draft.category}
+                onChangeText={(value) => update("category", value)}
+                placeholder="한식, 일식, 분식 등"
+                borderColor={palette.fieldBorder}
+                backgroundColor={palette.input}
+                color={palette.text}
+              />
+            </RestaurantReportSection>
 
-            <TextAreaField
-              label="추천 이유 (선택)"
-              value={draft.reason}
-              onChangeText={(value) => update("reason", value)}
-              placeholder="왜 추천하는지 알려주세요."
-              borderRadius={10}
-              borderColor={palette.border}
-              backgroundColor={palette.input}
-              color={palette.text}
-            />
+            <RestaurantReportSection
+              title="추천 정보"
+              backgroundColor={palette.section}
+              borderColor={palette.fieldBorder}
+              textColor={palette.text}
+            >
+              <TextField
+                label="추천 메뉴 (선택)"
+                value={draft.recommendedMenu}
+                onChangeText={(value) => update("recommendedMenu", value)}
+                placeholder="싱겁게 먹기 좋은 메뉴"
+                borderColor={palette.fieldBorder}
+                backgroundColor={palette.input}
+                color={palette.text}
+              />
 
-            <TextField
-              label="외부 링크 (선택)"
-              value={draft.externalLink}
-              onChangeText={(value) => update("externalLink", value)}
-              placeholder="지도, 메뉴판, 리뷰 링크"
-              autoCapitalize="none"
-            />
+              <TextAreaField
+                label="추천 이유 (선택)"
+                value={draft.reason}
+                onChangeText={(value) => update("reason", value)}
+                placeholder="왜 추천하는지 알려주세요."
+                borderRadius={radius.md}
+                borderColor={palette.fieldBorder}
+                backgroundColor={palette.input}
+                color={palette.text}
+              />
 
-            <YStack gap="$2">
-              <XStack alignItems="center" justifyContent="space-between">
-                <Text fontSize={14} color={palette.text}>
-                  사진 {photos.length}/{MAX_RESTAURANT_REPORT_PHOTOS}
-                </Text>
-                <Pressable
-                  onPress={addPhotos}
-                  style={[
-                    styles.addPhotoButton,
-                    { borderColor: palette.border },
-                  ]}
-                >
-                  <Text
-                    fontSize={13}
-                    fontWeight="600"
-                    color={tokens.color.sub7.val}
-                  >
-                    사진 추가
+              <TextField
+                label="외부 링크 (선택)"
+                value={draft.externalLink}
+                onChangeText={(value) => update("externalLink", value)}
+                placeholder="지도, 메뉴판, 리뷰 링크"
+                autoCapitalize="none"
+                borderColor={palette.fieldBorder}
+                backgroundColor={palette.input}
+                color={palette.text}
+              />
+            </RestaurantReportSection>
+
+            <RestaurantReportSection
+              title="사진"
+              backgroundColor={palette.section}
+              borderColor={palette.fieldBorder}
+              textColor={palette.text}
+            >
+              <YStack gap={spacing[8]}>
+                <XStack alignItems="center" justifyContent="space-between">
+                  <Text fontSize={14} color={palette.text}>
+                    첨부 {photos.length}/{MAX_RESTAURANT_REPORT_PHOTOS}
                   </Text>
-                </Pressable>
-              </XStack>
-              {photos.length > 0 && (
-                <XStack gap="$2" flexWrap="wrap">
-                  {photos.map((photo) => (
-                    <Pressable
-                      key={photo.uri}
-                      onPress={() => removePhoto(photo.uri)}
-                      style={styles.photoThumb}
-                    >
-                      <Image
-                        source={{ uri: photo.uri }}
-                        style={styles.photoImage}
-                      />
-                      <Text style={styles.removePhotoText}>삭제</Text>
-                    </Pressable>
-                  ))}
+                  <Pressable
+                    onPress={addPhotos}
+                    style={[
+                      styles.addPhotoButton,
+                      {
+                        borderColor: palette.cardBorder,
+                        backgroundColor: palette.card,
+                      },
+                    ]}
+                  >
+                    <Text fontSize={13} fontWeight="600" color={palette.action}>
+                      사진 추가
+                    </Text>
+                  </Pressable>
                 </XStack>
-              )}
-            </YStack>
+                {photos.length > 0 && (
+                  <XStack gap={spacing[8]} flexWrap="wrap">
+                    {photos.map((photo) => (
+                      <Pressable
+                        key={photo.uri}
+                        onPress={() => removePhoto(photo.uri)}
+                        style={styles.photoThumb}
+                      >
+                        <Image
+                          source={{ uri: photo.uri }}
+                          style={styles.photoImage}
+                        />
+                        <Text style={styles.removePhotoText}>삭제</Text>
+                      </Pressable>
+                    ))}
+                  </XStack>
+                )}
+              </YStack>
+            </RestaurantReportSection>
 
             <Button fullWidth loading={isSubmitting} onPress={submit}>
               제보 보내기

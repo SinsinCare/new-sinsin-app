@@ -4,9 +4,10 @@ import { YStack, XStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { router, useNavigation } from "expo-router"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { Ionicons } from "@expo/vector-icons"
 import { BottomSheetPicker, FormTextField } from "@/src/shared/components"
+import { V2TextField } from "@/src/design-system-v2"
 import { BirthDatePicker } from "../components/BirthDatePicker"
 import { GenderSelector } from "../components/GenderSelector"
 import {
@@ -18,6 +19,11 @@ import { ACQUISITION_SOURCE_OPTIONS } from "../data/acquisitionSources"
 import { tokens } from "@/src/theme/tokens"
 import type { ProfileForm } from "../types"
 import type { AcquisitionSourceInput } from "../data/acquisitionSources"
+import {
+  formatKoreanMobileInput,
+  getRequiredPhoneNumberError,
+  isValidKoreanMobile,
+} from "../data/phoneNumber"
 
 export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
@@ -45,6 +51,7 @@ export function ProfileSetupScreen() {
   const { control, watch, handleSubmit, reset } = useForm<ProfileForm>({
     defaultValues: {
       name: "",
+      phoneNumber: "",
       acquisitionSourceOther: "",
       referralCode: "",
     },
@@ -52,6 +59,7 @@ export function ProfileSetupScreen() {
   })
 
   const name = watch("name")
+  const phoneNumber = watch("phoneNumber")
   const acquisitionSourceOther = watch("acquisitionSourceOther")
   const isOtherSource = acquisitionSource === "OTHER"
   const isValid =
@@ -60,6 +68,7 @@ export function ProfileSetupScreen() {
     !!birthMonth &&
     !!birthDay &&
     !!gender &&
+    isValidKoreanMobile(phoneNumber) &&
     !!acquisitionSource &&
     (!isOtherSource || !!acquisitionSourceOther.trim())
 
@@ -162,6 +171,33 @@ export function ProfileSetupScreen() {
             />
 
             <GenderSelector value={gender} onChange={setGender} />
+
+            <Controller
+              name="phoneNumber"
+              control={control}
+              rules={{
+                validate: (value) => getRequiredPhoneNumberError(value) ?? true,
+              }}
+              render={({ field, fieldState }) => (
+                <V2TextField
+                  variant="box"
+                  label="전화번호 *"
+                  value={field.value}
+                  onChangeText={(value) =>
+                    field.onChange(formatKoreanMobileInput(value))
+                  }
+                  onBlur={field.onBlur}
+                  placeholder="010-1234-5678"
+                  keyboardType="phone-pad"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
+                  returnKeyType="done"
+                  maxLength={13}
+                  error={fieldState.error?.message ?? false}
+                  accessibilityLabel="전화번호 필수 입력"
+                />
+              )}
+            />
 
             <YStack gap={12}>
               <BottomSheetPicker
