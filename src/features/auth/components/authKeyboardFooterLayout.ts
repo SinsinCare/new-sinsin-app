@@ -14,3 +14,11 @@ export function getAuthKeyboardFooterPadding(safeAreaBottom: number) {
     opened: AUTH_KEYBOARD_OPEN_GAP,
   }
 }
+
+export function getAuthKeyboardFooterBottomPadding(
+  safeAreaBottom: number,
+  isKeyboardVisible: boolean,
+) {
+  const padding = getAuthKeyboardFooterPadding(safeAreaBottom)
+  return isKeyboardVisible ? padding.opened : padding.closed
+}
