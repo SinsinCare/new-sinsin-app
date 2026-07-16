@@ -8,6 +8,7 @@ import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import type { ProfileForm } from "../types"
 import type { AcquisitionSourceInput } from "../data/acquisitionSources"
 import type { AuthProfile } from "@/src/types"
+import { buildRequiredPhoneNumberPayload } from "../data/phoneNumber"
 
 function validDatePart(value: number) {
   return value > 0 ? String(value) : ""
@@ -17,6 +18,7 @@ export function useProfileSetup() {
   const setName = useSignupStore((s) => s.setName)
   const setBirth = useSignupStore((s) => s.setBirth)
   const setGenderStore = useSignupStore((s) => s.setGender)
+  const setPhoneNumberStore = useSignupStore((s) => s.setPhoneNumber)
   const setAcquisitionSourceStore = useSignupStore(
     (s) => s.setAcquisitionSource,
   )
@@ -24,12 +26,8 @@ export function useProfileSetup() {
     (s) => s.setAcquisitionSourceOther,
   )
   const setReferralCodeStore = useSignupStore((s) => s.setReferralCode)
-  const {
-    accountState,
-    requiresAdditionalInfo,
-    completeProfile,
-    getProfile,
-  } = useAuth()
+  const { accountState, requiresAdditionalInfo, completeProfile, getProfile } =
+    useAuth()
 
   const [birthYear, setBirthYear] = useState("")
   const [birthMonth, setBirthMonth] = useState("")
@@ -43,8 +41,7 @@ export function useProfileSetup() {
   const [prefillValues, setPrefillValues] = useState<ProfileForm | null>(null)
 
   const isSocialProfileMode = accountState === "PENDING_PROFILE"
-  const isBackfillMode =
-    accountState === "ACTIVE" && requiresAdditionalInfo
+  const isBackfillMode = accountState === "ACTIVE" && requiresAdditionalInfo
   const isCompletionMode = isSocialProfileMode || isBackfillMode
 
   useEffect(() => {
@@ -60,6 +57,7 @@ export function useProfileSetup() {
       }
       setPrefillValues({
         name: profile.name ?? "",
+        phoneNumber: "",
         acquisitionSourceOther: profile.acquisitionSourceOther ?? "",
         referralCode: "",
       })
@@ -128,6 +126,7 @@ export function useProfileSetup() {
           birthMonth: Number(birthMonth),
           birthDay: Number(birthDay),
           gender,
+          ...buildRequiredPhoneNumberPayload(data.phoneNumber),
           acquisitionSource,
           acquisitionSourceOther:
             acquisitionSource === "OTHER" ? acquisitionSourceOther : null,
@@ -144,9 +143,7 @@ export function useProfileSetup() {
           showErrorToast(e.message)
         } else {
           setSubmitError(
-            e instanceof Error
-              ? e.message
-              : "필수정보 저장에 실패했습니다.",
+            e instanceof Error ? e.message : "필수정보 저장에 실패했습니다.",
           )
         }
       } finally {
@@ -158,6 +155,7 @@ export function useProfileSetup() {
     setName(data.name.trim())
     setBirth(birthYear, birthMonth, birthDay)
     setGenderStore(gender)
+    setPhoneNumberStore(data.phoneNumber)
     setAcquisitionSourceStore(acquisitionSource)
     setAcquisitionSourceOtherStore(
       acquisitionSource === "OTHER" ? acquisitionSourceOther : "",

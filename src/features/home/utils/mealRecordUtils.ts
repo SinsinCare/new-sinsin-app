@@ -27,6 +27,16 @@ export function getMealButtonAction({
   return isRecorded && !isSkipped ? "view" : "record"
 }
 
+export function getMealTimeLabel({
+  isSkipped,
+  time,
+}: {
+  isSkipped: boolean
+  time?: string
+}): string | undefined {
+  return isSkipped ? "건너뜀" : time
+}
+
 export function applyMealTypeChangeToMealImages({
   current,
   fromMealType,

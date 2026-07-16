@@ -1,6 +1,8 @@
 export { OnboardingHeader } from "./OnboardingHeader"
 export { ProgressBar } from "./ProgressBar"
 export { WelcomeStepContent } from "./WelcomeStepContent"
+export { OnboardingQuestionHeader } from "./OnboardingQuestionHeader"
+export { OnboardingCompletionContent } from "./OnboardingCompletionContent"
 export { OnlyStepContent } from "./OnlyStepContent"
 export { MultiStepContent } from "./MultiStepContent"
 export { InputStepContent } from "./InputStepContent"

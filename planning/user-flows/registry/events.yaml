@@ -115,6 +115,14 @@ events:
     description: 온보딩 답변 제출에 실패함
     owner: product
 
+  - id: onboarding_completion_viewed
+    description: 온보딩 제출 뒤 회원가입 완료 화면이 표시됨
+    owner: product
+
+  - id: onboarding_completion_cta_pressed
+    description: 사용자가 회원가입 완료 화면에서 신신당부 시작하기를 누름
+    owner: product
+
   - id: home_record_viewed
     description: 사용자가 홈 기록 탭을 봄
     owner: product

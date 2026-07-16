@@ -67,7 +67,7 @@ export function useNicknameSetup() {
       trackAnalyticsEvent("auth_signup_completed", { method: "email" })
 
       signupState.setNickname(data.nickname)
-      router.replace("/(auth)/signup-complete")
+      router.replace("/onboarding")
     } catch (e: unknown) {
       trackAnalyticsEvent("auth_signup_failed", {
         method: "email",

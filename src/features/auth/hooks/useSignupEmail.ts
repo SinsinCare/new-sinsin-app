@@ -6,6 +6,7 @@ import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
 import type { EmailLoginLinkRequiredResult, SocialProvider } from "@/src/types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { mapSignupEmailSendFailure } from "../data/signupEmailSendFailure"
 
 const TIMER_DURATION = 180
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
@@ -115,28 +116,28 @@ export function useSignupEmail() {
     setVerifiedEmail(null)
     setVerifiedEmailLinkToken(null)
     try {
-      const check = await emailService.checkSignupEmail(email)
-      if (check.status === "email_login_link_required") {
-        setEmailLoginLinkRequired(check)
-        setSendError(
-          `이미 ${formatProviderLabel(
-            check.providers,
-          )} 로그인으로 가입된 이메일입니다. 연결하기를 눌러 이메일 로그인을 연결해주세요.`,
-        )
-        setCodeInputVisible(false)
-        return
-      }
-      if (check.status === "duplicate") {
-        showErrorToast("이미 가입된 이메일로는 회원가입할 수 없습니다")
-        setCodeInputVisible(false)
-        return
-      }
       await emailService.sendVerificationCode(email)
       setCodeSent(true)
       setCodeVerified(false)
       setCodeInputVisible(true)
       startTimer()
     } catch (error) {
+      const sendFailure = mapSignupEmailSendFailure(error)
+      if (sendFailure?.status === "email_login_link_required") {
+        setEmailLoginLinkRequired(sendFailure)
+        setSendError(
+          `이미 ${formatProviderLabel(
+            sendFailure.providers,
+          )} 로그인으로 가입된 이메일입니다. 연결하기를 눌러 이메일 로그인을 연결해주세요.`,
+        )
+        setCodeInputVisible(false)
+        return
+      }
+      if (sendFailure?.status === "duplicate") {
+        showErrorToast("이미 가입된 이메일로는 회원가입할 수 없습니다")
+        setCodeInputVisible(false)
+        return
+      }
       if (!codeSent) setCodeInputVisible(false)
       setSendError(
         error instanceof Error

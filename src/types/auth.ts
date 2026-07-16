@@ -3,6 +3,18 @@ export interface OtpVerifyResult {
   signupToken: string
 }
 
+export type AcquisitionSource =
+  | "APP_STORE"
+  | "HOSPITAL"
+  | "BLOG"
+  | "NAVER_CAFE"
+  | "DANGGEUN_COMMUNITY"
+  | "KAKAO"
+  | "YOUTUBE"
+  | "INSTAGRAM"
+  | "FRIEND"
+  | "OTHER"
+
 // 회원가입 요청
 export interface SignupRequest {
   signupToken: string
@@ -18,15 +30,7 @@ export interface SignupRequest {
   recommender: string
   nickName: string
   gender?: "MALE" | "FEMALE" | "OTHER"
-  acquisitionSource:
-    | "APP_STORE"
-    | "INSTAGRAM"
-    | "YOUTUBE"
-    | "KAKAO"
-    | "BLOG"
-    | "NAVER_CAFE"
-    | "FRIEND"
-    | "OTHER"
+  acquisitionSource: AcquisitionSource
   acquisitionSourceOther?: string | null
 }
 
@@ -91,6 +95,7 @@ export interface ProfileCompleteRequest {
   birthMonth: number
   birthDay: number
   gender: "MALE" | "FEMALE" | "OTHER"
+  phoneNumber: string
   acquisitionSource: SignupRequest["acquisitionSource"]
   acquisitionSourceOther?: string | null
   recommender?: string

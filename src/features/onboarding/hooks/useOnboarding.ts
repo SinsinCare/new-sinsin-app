@@ -8,7 +8,7 @@ import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 
-type Phase = "welcome" | "steps"
+type Phase = "welcome" | "steps" | "complete"
 
 export function useOnboarding() {
   const [phase, setPhase] = useState<Phase>("welcome")
@@ -17,6 +17,7 @@ export function useOnboarding() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const lastViewedStepRef = useRef<string | null>(null)
+  const completionViewedRef = useRef(false)
 
   // persist hydration 상태 추적
   const [isStoreHydrated, setIsStoreHydrated] = useState(() =>
@@ -114,6 +115,12 @@ export function useOnboarding() {
     })
   }, [currentStep, currentStepIndex, isLoading, phase, steps.length])
 
+  useEffect(() => {
+    if (phase !== "complete" || completionViewedRef.current) return
+    completionViewedRef.current = true
+    trackAnalyticsEvent("onboarding_completion_viewed", {})
+  }, [phase])
+
   const hasValidAnswer = useCallback(() => {
     if (!currentStep) return false
     if (!currentAnswer) return false
@@ -176,8 +183,7 @@ export function useOnboarding() {
       setAccountState("ACTIVE")
       setRequiresAdditionalInfo(false)
       resetOnboarding()
-      resetSignup()
-      router.replace("/(tabs)/home")
+      setPhase("complete")
     } catch (error) {
       trackAnalyticsEvent("onboarding_submit_failed", {})
       Alert.alert(
@@ -192,7 +198,7 @@ export function useOnboarding() {
   }
 
   const handleNext = () => {
-    if (!hasValidAnswer()) return
+    if (isSubmitting || !hasValidAnswer()) return
     trackAnalyticsEvent("onboarding_step_completed", {
       step_index: currentStepIndex,
       step_count: steps.length,
@@ -205,6 +211,7 @@ export function useOnboarding() {
   }
 
   const handleBack = useCallback(() => {
+    if (phase === "complete") return
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
@@ -214,10 +221,16 @@ export function useOnboarding() {
     }
   }, [phase, currentStepIndex, resetOnboarding, setCurrentStepIndex])
 
+  const handleCompletionStart = useCallback(() => {
+    trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
+    resetSignup()
+    router.replace("/(tabs)/home")
+  }, [resetSignup])
+
   // Android 하드웨어 백 버튼: 온보딩 중 앱 종료 방지
   useEffect(() => {
     const onBackPress = () => {
-      if (phase === "welcome") {
+      if (phase === "welcome" || phase === "complete") {
         return true // welcome에서는 뒤로 가기 차단 (앱 종료 방지)
       }
       handleBack()
@@ -245,5 +258,6 @@ export function useOnboarding() {
     handleInputChange,
     handleNext,
     handleBack,
+    handleCompletionStart,
   }
 }

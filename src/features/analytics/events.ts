@@ -55,6 +55,8 @@ export type AnalyticsEventProperties = {
   onboarding_step_completed: { step_index: number; step_count: number }
   onboarding_submitted: Record<string, never>
   onboarding_submit_failed: Record<string, never>
+  onboarding_completion_viewed: Record<string, never>
+  onboarding_completion_cta_pressed: Record<string, never>
   home_record_viewed: Record<string, never>
   home_statistics_viewed: Record<string, never>
   food_record_started: { slot: AnalyticsMealSlot }

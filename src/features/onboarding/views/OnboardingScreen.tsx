@@ -19,7 +19,10 @@ import {
   OnlyStepContent,
   MultiStepContent,
   InputStepContent,
+  OnboardingQuestionHeader,
+  OnboardingCompletionContent,
 } from "../components"
+import { shouldShowOnboardingBackButton } from "../data/onboardingPresentation"
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
@@ -47,6 +50,7 @@ export function OnboardingScreen() {
     handleInputChange,
     handleNext,
     handleBack,
+    handleCompletionStart,
   } = useOnboarding()
 
   if (isLoading) {
@@ -134,6 +138,10 @@ export function OnboardingScreen() {
     )
   }
 
+  if (phase === "complete") {
+    return <OnboardingCompletionContent onStart={handleCompletionStart} />
+  }
+
   if (steps.length === 0) {
     return <LoadingScreen message="온보딩 데이터가 없습니다." />
   }
@@ -146,6 +154,7 @@ export function OnboardingScreen() {
           totalSteps={steps.length}
           onBack={handleBack}
           title="신장 정보"
+          showBack={shouldShowOnboardingBackButton(phase, currentStepIndex)}
         />
 
         <ProgressBar current={currentStepIndex} total={steps.length} />
@@ -163,24 +172,12 @@ export function OnboardingScreen() {
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
             >
-              <Text
-                fontSize={22}
-                fontWeight="600"
-                color={textColor}
-                letterSpacing={-0.44}
-                lineHeight={30.8}
-                marginBottom={8}
-              >
-                {currentStep.title}
-              </Text>
-              <Text
-                fontSize={15}
-                lineHeight={18}
-                color={textSub}
-                marginBottom={32}
-              >
-                {currentStep.subTitle}
-              </Text>
+              <OnboardingQuestionHeader
+                title={currentStep.title}
+                subtitle={currentStep.subTitle}
+                titleColor={textColor}
+                subtitleColor={textSub}
+              />
 
               {currentStep.type === "only" && (
                 <OnlyStepContent
