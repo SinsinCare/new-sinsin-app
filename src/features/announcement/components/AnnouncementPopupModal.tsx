@@ -202,17 +202,35 @@ export function AnnouncementPopupModal({
                 </Text>
               </Pressable>
 
-              <V2Button
-                fullWidth
-                size="m"
-                color="brand"
-                variant="fill"
-                loading={isOpeningLink}
-                onPress={() => void handlePrimaryPress()}
-                style={styles.primaryButton}
-              >
-                {hasCta ? notice.ctaLabel : "확인"}
-              </V2Button>
+              <View style={hasCta ? styles.actionRow : undefined}>
+                {hasCta && (
+                  <V2Button
+                    size="m"
+                    color="neutral"
+                    variant="weak"
+                    accessibilityLabel="공지 닫기"
+                    onPress={() => close()}
+                    style={styles.actionButton}
+                  >
+                    닫기
+                  </V2Button>
+                )}
+
+                <V2Button
+                  fullWidth={!hasCta}
+                  size="m"
+                  color="brand"
+                  variant="fill"
+                  loading={isOpeningLink}
+                  accessibilityLabel={
+                    hasCta ? (notice.ctaLabel ?? undefined) : "확인"
+                  }
+                  onPress={() => void handlePrimaryPress()}
+                  style={hasCta ? styles.actionButton : styles.primaryButton}
+                >
+                  {hasCta ? notice.ctaLabel : "확인"}
+                </V2Button>
+              </View>
             </View>
           </View>
         </View>
