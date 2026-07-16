@@ -24,6 +24,10 @@ export function getOptionalPhoneNumberError(value: string): string | null {
   return isValidKoreanMobile(value) ? null : PHONE_NUMBER_ERROR_MESSAGE
 }
 
+export function getRequiredPhoneNumberError(value: string): string | null {
+  return isValidKoreanMobile(value) ? null : PHONE_NUMBER_ERROR_MESSAGE
+}
+
 export function buildOptionalPhoneNumberPayload(value: string): {
   phoneNumber?: string
 } {
@@ -35,11 +39,19 @@ export function buildOptionalPhoneNumberPayload(value: string): {
   return { phoneNumber: digits }
 }
 
+export function buildRequiredPhoneNumberPayload(value: string): {
+  phoneNumber: string
+} {
+  const digits = onlyPhoneDigits(value)
+  if (!KOREAN_MOBILE_PATTERN.test(digits)) {
+    throw new Error(PHONE_NUMBER_ERROR_MESSAGE)
+  }
+  return { phoneNumber: digits }
+}
+
 export function buildPhoneProfileUpdatePayload(value: string | null): {
   phoneNumber: string | null
 } {
   if (value === null) return { phoneNumber: null }
-  const { phoneNumber } = buildOptionalPhoneNumberPayload(value)
-  if (!phoneNumber) throw new Error(PHONE_NUMBER_ERROR_MESSAGE)
-  return { phoneNumber }
+  return buildRequiredPhoneNumberPayload(value)
 }

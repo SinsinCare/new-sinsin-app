@@ -5,9 +5,9 @@ import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
 import { TERMS } from "../data/terms"
 import {
-  buildOptionalPhoneNumberPayload,
+  buildRequiredPhoneNumberPayload,
   formatKoreanMobileInput,
-  getOptionalPhoneNumberError,
+  getRequiredPhoneNumberError,
 } from "../data/phoneNumber"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import {
@@ -45,8 +45,9 @@ export function useTermsAgreement({
   const requiredChecked = TERMS.filter((t) => t.required).every(
     (t) => agreed[t.id],
   )
-  const phoneNumberError = getOptionalPhoneNumberError(phoneNumber)
-  const canSubmit = requiredChecked && !phoneNumberError
+  const requiredPhoneNumberError = getRequiredPhoneNumberError(phoneNumber)
+  const phoneNumberError = phoneNumber ? requiredPhoneNumberError : null
+  const canSubmit = requiredChecked && !requiredPhoneNumberError
 
   const handlePhoneNumberChange = useCallback((value: string) => {
     setPhoneNumber(formatKoreanMobileInput(value))
@@ -96,7 +97,7 @@ export function useTermsAgreement({
         termsOfServiceAgree: !!agreed["service"],
         privacyPolicyAgree: !!agreed["privacy"],
         marketingAgree: !!agreed["marketing"],
-        ...buildOptionalPhoneNumberPayload(phoneNumber),
+        ...buildRequiredPhoneNumberPayload(phoneNumber),
       })
 
       reset()

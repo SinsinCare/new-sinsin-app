@@ -9,6 +9,10 @@ import { Ionicons } from "@expo/vector-icons"
 import { BottomSheetPicker, FormTextField } from "@/src/shared/components"
 import { BirthDatePicker } from "../components/BirthDatePicker"
 import { GenderSelector } from "../components/GenderSelector"
+import {
+  AuthKeyboardFooter,
+  AUTH_KEYBOARD_FOOTER_CLEARANCE,
+} from "../components"
 import { useProfileSetup, useAuthColors } from "../hooks"
 import { ACQUISITION_SOURCE_OPTIONS } from "../data/acquisitionSources"
 import { tokens } from "@/src/theme/tokens"
@@ -91,7 +95,7 @@ export function ProfileSetupScreen() {
         <KeyboardAwareScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
-          bottomOffset={insets.bottom + 24}
+          bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
           disableScrollOnKeyboardHide
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={
@@ -194,7 +198,7 @@ export function ProfileSetupScreen() {
           </YStack>
         </KeyboardAwareScrollView>
 
-        <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
+        <AuthKeyboardFooter horizontalPadding={20} backgroundColor={colors.bg}>
           <Pressable
             onPress={() => {
               Keyboard.dismiss()
@@ -242,7 +246,7 @@ export function ProfileSetupScreen() {
               {submitError}
             </Text>
           )}
-        </YStack>
+        </AuthKeyboardFooter>
       </YStack>
     </YStack>
   )
