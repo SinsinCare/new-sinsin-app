@@ -10,6 +10,7 @@ import {
   MAX_ANNOUNCEMENT_CHECK_ATTEMPTS,
 } from "../src/features/announcement/hooks/announcementEntryController"
 import type { AnnouncementNotice } from "../src/features/announcement/types"
+import { normalizeAnnouncementLink } from "../src/features/announcement/data/announcementLink"
 
 jest.mock("../src/services/core", () => ({
   api: {
@@ -129,6 +130,32 @@ describe("announcement popup service", () => {
     ;(api.get as jest.Mock).mockResolvedValue({ data: { result: null } })
 
     await expect(announcementService.fetchActivePopup()).resolves.toBeNull()
+  })
+})
+
+describe("announcement CTA link", () => {
+  it("keeps supported web and app links", () => {
+    expect(normalizeAnnouncementLink("https://sinsincare.kr/notice?id=1")).toBe(
+      "https://sinsincare.kr/notice?id=1",
+    )
+    expect(normalizeAnnouncementLink("sinsin://settings/announcement")).toBe(
+      "sinsin://settings/announcement",
+    )
+  })
+
+  it("adds https to a web host entered without a scheme", () => {
+    expect(normalizeAnnouncementLink("www.sinsincare.kr/notice")).toBe(
+      "https://www.sinsincare.kr/notice",
+    )
+    expect(normalizeAnnouncementLink("sinsincare.kr/notice")).toBe(
+      "https://sinsincare.kr/notice",
+    )
+  })
+
+  it("rejects empty, malformed, and unsafe links", () => {
+    expect(normalizeAnnouncementLink(" ")).toBeNull()
+    expect(normalizeAnnouncementLink("공지 자세히 보기")).toBeNull()
+    expect(normalizeAnnouncementLink("javascript:alert(1)")).toBeNull()
   })
 })
 

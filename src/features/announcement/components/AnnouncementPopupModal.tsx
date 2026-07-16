@@ -3,16 +3,24 @@ import {
   Alert,
   Linking,
   Modal,
+  Pressable,
   ScrollView,
-  StyleSheet,
+  Text,
   View,
 } from "react-native"
 import { Image } from "expo-image"
-import { Text, YStack } from "tamagui"
-import { Button, Checkbox } from "@/src/shared/components"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { tokens } from "@/src/theme/tokens"
+import {
+  V2Badge,
+  V2Button,
+  V2Checkbox,
+  V2Icon,
+  V2IconButton,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
+import { normalizeAnnouncementLink } from "../data/announcementLink"
 import type { AnnouncementNotice } from "../types"
+import { announcementPopupStyles as styles } from "./announcementPopupStyles"
 
 interface AnnouncementPopupModalProps {
   visible: boolean
@@ -26,32 +34,48 @@ export function AnnouncementPopupModal({
   onClose,
 }: AnnouncementPopupModalProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false)
-  const isDark = useAppColorScheme() === "dark"
+  const [isOpeningLink, setIsOpeningLink] = useState(false)
+  const { colors } = useV2Theme()
 
   useEffect(() => {
-    if (visible) setDontShowAgain(false)
+    if (!visible) return
+    setDontShowAgain(false)
+    setIsOpeningLink(false)
   }, [visible, notice?.id])
 
   if (!notice) return null
 
-  const cardBg = isDark ? tokens.color.cardBgDark.val : "white"
-  const textColor = isDark ? tokens.color.textDark.val : tokens.color.black.val
-  const bodyColor = isDark
-    ? tokens.color.textDarkSub.val
-    : tokens.color.grey3.val
-  const borderColor = isDark
-    ? tokens.color.grey4.val
-    : tokens.color.borderLight.val
   const hasCta = Boolean(notice.ctaLabel && notice.linkUrl)
+  const close = (dismissPermanently = dontShowAgain) => {
+    void onClose(dismissPermanently)
+  }
 
-  const handleCtaPress = async () => {
-    if (!notice.linkUrl) return
+  const handlePrimaryPress = async () => {
+    if (!hasCta || !notice.linkUrl) {
+      close()
+      return
+    }
+
+    const targetUrl = normalizeAnnouncementLink(notice.linkUrl)
+    if (!targetUrl) {
+      Alert.alert(
+        "링크를 열 수 없어요",
+        "공지에 등록된 링크 형식을 확인해주세요.",
+      )
+      return
+    }
+
+    setIsOpeningLink(true)
     try {
-      await Linking.openURL(notice.linkUrl)
-      await onClose(dontShowAgain)
+      await Linking.openURL(targetUrl)
     } catch {
       Alert.alert("링크를 열 수 없어요", "잠시 후 다시 시도해주세요.")
+      return
+    } finally {
+      setIsOpeningLink(false)
     }
+
+    close()
   }
 
   return (
@@ -59,88 +83,140 @@ export function AnnouncementPopupModal({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={() => onClose(false)}
+      statusBarTranslucent
+      onRequestClose={() => close(false)}
     >
-      <View style={styles.backdrop}>
-        <YStack
-          width="86%"
-          maxWidth={420}
-          maxHeight="74%"
-          backgroundColor={cardBg}
-          borderRadius="$4"
-          padding="$5"
-          gap="$4"
-          borderWidth={StyleSheet.hairlineWidth}
-          borderColor={borderColor}
+      <View
+        style={[styles.backdrop, { backgroundColor: colors.background.dim }]}
+      >
+        <View
+          accessibilityViewIsModal
+          onAccessibilityEscape={() => close(false)}
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.background.floated,
+              borderColor: colors.line.alternative,
+            },
+          ]}
         >
           {notice.imageUrl && (
             <Image
               source={{ uri: notice.imageUrl }}
-              style={styles.bannerImage}
+              style={[
+                styles.heroImage,
+                { backgroundColor: colors.fill.background },
+              ]}
               contentFit="cover"
               transition={120}
-              accessibilityLabel={`${notice.title} 이미지`}
+              accessibilityLabel={`${notice.title} 공지 이미지`}
             />
           )}
 
-          <YStack gap="$2">
-            <Text fontSize="$7" fontWeight="700" color={textColor}>
+          <View style={styles.content}>
+            <View style={styles.headerRow}>
+              <View style={styles.headerMeta}>
+                {!notice.imageUrl && (
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      { backgroundColor: colors.primary.primaryWeak },
+                    ]}
+                  >
+                    <V2Icon
+                      name="announcement"
+                      size="sm"
+                      color={colors.primary.primary}
+                    />
+                  </View>
+                )}
+                <V2Badge size="xs" color="brand" variant="weak">
+                  새로운 소식
+                </V2Badge>
+              </View>
+
+              <V2IconButton
+                name="close"
+                size="s"
+                variant="fill"
+                accessibilityLabel="공지 닫기"
+                onPress={() => close()}
+              />
+            </View>
+
+            <Text
+              accessibilityRole="header"
+              style={[
+                typography.title.xSmallWeak,
+                { color: colors.label.normal },
+              ]}
+            >
               {notice.title}
             </Text>
-            <Text fontSize="$3" color={bodyColor}>
-              공지사항
-            </Text>
-          </YStack>
 
-          <ScrollView
-            style={styles.contentScroll}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text fontSize="$4" lineHeight={23} color={bodyColor}>
-              {notice.content}
-            </Text>
-          </ScrollView>
+            <ScrollView
+              style={styles.bodyScroll}
+              contentContainerStyle={styles.bodyContent}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+            >
+              <Text
+                style={[
+                  typography.subtext.large,
+                  { color: colors.label.neutral },
+                ]}
+              >
+                {notice.content}
+              </Text>
+            </ScrollView>
 
-          <YStack gap="$4">
-            <Checkbox
-              checked={dontShowAgain}
-              onToggle={() => setDontShowAgain((value) => !value)}
-              label="다시 안 보기"
-            />
-            {hasCta && (
-              <Button fullWidth onPress={() => void handleCtaPress()}>
-                {notice.ctaLabel}
-              </Button>
-            )}
-            <Button fullWidth onPress={() => onClose(dontShowAgain)}>
-              닫기
-            </Button>
-          </YStack>
-        </YStack>
+            <View
+              style={[
+                styles.footer,
+                { borderTopColor: colors.line.alternative },
+              ]}
+            >
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityLabel="이 공지 다시 보지 않기"
+                accessibilityState={{ checked: dontShowAgain }}
+                onPress={() => setDontShowAgain((value) => !value)}
+                style={({ pressed }) => [
+                  styles.dismissRow,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <V2Checkbox
+                  accessible={false}
+                  pointerEvents="none"
+                  size="s"
+                  checked={dontShowAgain}
+                />
+                <Text
+                  style={[
+                    typography.subtext.medium,
+                    { color: colors.label.neutral },
+                  ]}
+                >
+                  이 공지 다시 보지 않기
+                </Text>
+              </Pressable>
+
+              <V2Button
+                fullWidth
+                size="m"
+                color="brand"
+                variant="fill"
+                loading={isOpeningLink}
+                onPress={() => void handlePrimaryPress()}
+                style={styles.primaryButton}
+              >
+                {hasCta ? notice.ctaLabel : "확인"}
+              </V2Button>
+            </View>
+          </View>
+        </View>
       </View>
     </Modal>
   )
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.46)",
-    paddingHorizontal: 20,
-  },
-  contentScroll: {
-    flexGrow: 0,
-  },
-  contentContainer: {
-    paddingVertical: 4,
-  },
-  bannerImage: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-    borderRadius: 8,
-    backgroundColor: "#EDEDED",
-  },
-})
