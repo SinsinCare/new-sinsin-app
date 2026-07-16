@@ -1,4 +1,13 @@
+import { spacing } from "@/src/design-system-v2/tokens/spacing"
+
 export const COMPLETION_PARTICLE_DURATION_MS = 2700
+
+export const ONBOARDING_SCROLL_CONTENT_STYLE = {
+  flexGrow: 1,
+  paddingHorizontal: spacing[20],
+  paddingTop: spacing[32],
+  paddingBottom: spacing[24],
+} as const
 
 type OnboardingPhase = "welcome" | "steps" | "complete"
 

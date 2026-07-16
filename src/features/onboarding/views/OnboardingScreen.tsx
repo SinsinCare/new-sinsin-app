@@ -1,12 +1,6 @@
-import {
-  Keyboard,
-  Pressable,
-  ScrollView,
-  TouchableWithoutFeedback,
-} from "react-native"
+import { Keyboard, ScrollView, TouchableWithoutFeedback } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { useKeyboardVisibility } from "@/src/hooks/useKeyboardVisibility"
-import { spacing } from "@/src/design-system-v2"
+import { V2BottomCTA } from "@/src/design-system-v2"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -22,7 +16,10 @@ import {
   OnboardingQuestionHeader,
   OnboardingCompletionContent,
 } from "../components"
-import { shouldShowOnboardingBackButton } from "../data/onboardingPresentation"
+import {
+  ONBOARDING_SCROLL_CONTENT_STYLE,
+  shouldShowOnboardingBackButton,
+} from "../data/onboardingPresentation"
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
@@ -30,7 +27,6 @@ export function OnboardingScreen() {
   const bg = isDark ? tokens.color.appBgDark.val : "white"
   const textColor = isDark ? tokens.color.textDark.val : "#17191C"
   const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"
-  const isKeyboardVisible = useKeyboardVisibility()
 
   const {
     phase,
@@ -72,11 +68,7 @@ export function OnboardingScreen() {
         <YStack flex={1}>
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: 32,
-              paddingBottom: 16,
-            }}
+            contentContainerStyle={ONBOARDING_SCROLL_CONTENT_STYLE}
             showsVerticalScrollIndicator={false}
           >
             <Text
@@ -104,35 +96,11 @@ export function OnboardingScreen() {
             />
           </ScrollView>
 
-          <YStack
-            paddingHorizontal={20}
-            paddingBottom={insets.bottom + 24}
-            paddingTop={8}
-          >
-            <Pressable
-              onPress={handleWelcomeConfirm}
-              disabled={hasCkd === null}
-            >
-              <YStack
-                backgroundColor={hasCkd !== null ? "#34D399" : "#34D39940"}
-                paddingVertical={16}
-                paddingHorizontal={24}
-                borderRadius={8}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text
-                  color="white"
-                  fontSize={16}
-                  fontWeight="500"
-                  letterSpacing={-0.3}
-                  lineHeight={20}
-                >
-                  다음
-                </Text>
-              </YStack>
-            </Pressable>
-          </YStack>
+          <V2BottomCTA
+            primaryLabel="다음"
+            onPrimary={handleWelcomeConfirm}
+            primaryProps={{ disabled: hasCkd === null }}
+          />
         </YStack>
       </YStack>
     )
@@ -163,11 +131,7 @@ export function OnboardingScreen() {
           <YStack flex={1}>
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingTop: 32,
-                paddingBottom: 16,
-              }}
+              contentContainerStyle={ONBOARDING_SCROLL_CONTENT_STYLE}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
@@ -205,39 +169,14 @@ export function OnboardingScreen() {
               )}
             </ScrollView>
 
-            <YStack
-              paddingHorizontal={20}
-              paddingBottom={
-                isKeyboardVisible ? spacing[12] : insets.bottom + spacing[24]
-              }
-              paddingTop={8}
-            >
-              <Pressable
-                onPress={handleNext}
-                disabled={!hasValidAnswer() || isSubmitting}
-              >
-                <YStack
-                  backgroundColor={
-                    hasValidAnswer() && !isSubmitting ? "#34D399" : "#34D39940"
-                  }
-                  paddingVertical={16}
-                  paddingHorizontal={24}
-                  borderRadius={8}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Text
-                    color="white"
-                    fontSize={16}
-                    fontWeight="500"
-                    letterSpacing={-0.3}
-                    lineHeight={20}
-                  >
-                    {isSubmitting ? "처리 중..." : isLastStep ? "완료" : "다음"}
-                  </Text>
-                </YStack>
-              </Pressable>
-            </YStack>
+            <V2BottomCTA
+              primaryLabel={isLastStep ? "완료" : "다음"}
+              onPrimary={handleNext}
+              primaryProps={{
+                disabled: !hasValidAnswer() || isSubmitting,
+                loading: isSubmitting,
+              }}
+            />
           </YStack>
         </KeyboardAwareView>
       </YStack>
