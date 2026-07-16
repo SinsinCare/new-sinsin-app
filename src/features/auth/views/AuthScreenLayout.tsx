@@ -1,17 +1,15 @@
 import type { ReactNode } from "react"
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-} from "react-native"
+import { Keyboard, Pressable, ScrollView, StyleSheet } from "react-native"
 import { YStack, Text } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { Ionicons } from "@expo/vector-icons"
 import { useAuthColors } from "../hooks"
+import {
+  AuthKeyboardFooter,
+  AUTH_KEYBOARD_FOOTER_CLEARANCE,
+} from "../components"
 import { tokens } from "@/src/theme/tokens"
 
 interface AuthScreenLayoutProps {
@@ -76,8 +74,8 @@ export function AuthScreenLayout({
     </>
   )
 
-  const footer = (
-    <YStack paddingBottom={insets.bottom + 24}>
+  const footerContent = (
+    <>
       {buttonAccessory}
       <Pressable
         accessibilityRole="button"
@@ -111,20 +109,44 @@ export function AuthScreenLayout({
           </Text>
         </YStack>
       </Pressable>
-    </YStack>
+    </>
+  )
+
+  const footer = keyboardAvoiding ? (
+    <AuthKeyboardFooter backgroundColor={colors.bg}>
+      {footerContent}
+    </AuthKeyboardFooter>
+  ) : (
+    <YStack paddingBottom={insets.bottom + 24}>{footerContent}</YStack>
+  )
+
+  const scrollContent = keyboardAvoiding ? (
+    <KeyboardAwareScrollView
+      style={styles.flex}
+      contentContainerStyle={styles.scrollContent}
+      bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
+      disableScrollOnKeyboardHide
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
+      {content}
+    </KeyboardAwareScrollView>
+  ) : (
+    <ScrollView
+      style={styles.flex}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
+      {content}
+    </ScrollView>
   )
 
   const body = scrollable ? (
     <YStack flex={1} paddingHorizontal={20}>
-      <ScrollView
-        style={styles.flex}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-      >
-        {content}
-      </ScrollView>
+      {scrollContent}
       {footer}
     </YStack>
   ) : (
@@ -149,16 +171,7 @@ export function AuthScreenLayout({
         </YStack>
       )}
 
-      {keyboardAvoiding ? (
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          {body}
-        </KeyboardAvoidingView>
-      ) : (
-        body
-      )}
+      {body}
     </YStack>
   )
 }

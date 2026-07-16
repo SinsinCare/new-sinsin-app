@@ -23,7 +23,6 @@ export function TermsAgreementScreen({
     isSubmitting,
     phoneNumber,
     phoneNumberError,
-    marketingAgree,
     toggleAll,
     toggleItem,
     handlePhoneNumberChange,
@@ -120,7 +119,7 @@ export function TermsAgreementScreen({
         <YStack gap={8} paddingBottom={8}>
           <V2TextField
             variant="box"
-            label="전화번호 (선택)"
+            label="전화번호 *"
             value={phoneNumber}
             onChangeText={handlePhoneNumberChange}
             placeholder="010-1234-5678"
@@ -130,16 +129,15 @@ export function TermsAgreementScreen({
             returnKeyType="done"
             maxLength={13}
             error={phoneNumberError ?? false}
-            accessibilityLabel="전화번호 선택 입력"
-            accessibilityHint="입력하지 않아도 회원가입할 수 있습니다"
+            accessibilityLabel="전화번호 필수 입력"
+            accessibilityHint="010으로 시작하는 휴대전화 번호 11자리를 입력해주세요"
           />
           <Text fontSize={13} lineHeight={19} color={colors.textSub}>
-            개인 연락을 위해 선택적으로 수집합니다. 마케팅 수신에 동의한
-            경우에만 마케팅 안내에도 활용합니다.
+            전화번호는 회원정보로 수집하며, 마케팅 수신에 동의한 경우에만 마케팅
+            정보 안내에 활용합니다.
           </Text>
           <Text fontSize={12} lineHeight={18} color={colors.textSub}>
             로그인, 계정 통합 또는 SMS 본인인증에는 사용하지 않습니다.
-            {marketingAgree ? " 현재 마케팅 활용에 동의한 상태입니다." : ""}
           </Text>
         </YStack>
       </YStack>

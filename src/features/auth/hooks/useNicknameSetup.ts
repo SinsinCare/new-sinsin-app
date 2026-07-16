@@ -9,7 +9,7 @@ import {
   identifyAnalyticsUser,
   trackAnalyticsEvent,
 } from "@/src/features/analytics"
-import { buildOptionalPhoneNumberPayload } from "../data/phoneNumber"
+import { buildRequiredPhoneNumberPayload } from "../data/phoneNumber"
 
 export function useNicknameSetup() {
   const signupState = useSignupStore()
@@ -44,7 +44,7 @@ export function useNicknameSetup() {
         termsOfServiceAgree: signupState.termsOfServiceAgree,
         privacyPolicyAgree: signupState.privacyPolicyAgree,
         marketingAgree: signupState.marketingAgree,
-        ...buildOptionalPhoneNumberPayload(signupState.phoneNumber),
+        ...buildRequiredPhoneNumberPayload(signupState.phoneNumber),
         password: signupState.password,
         name: signupState.name,
         birthYear: Number(signupState.birthYear),
