@@ -1,5 +1,6 @@
 import {
   COMPLETION_PARTICLE_DURATION_MS,
+  ONBOARDING_SCROLL_CONTENT_STYLE,
   normalizeOnboardingSubtitle,
   shouldShowOnboardingBackButton,
   shouldPlayCompletionParticles,
@@ -31,5 +32,12 @@ describe("onboarding presentation rules", () => {
     expect(shouldShowOnboardingBackButton("steps", 2)).toBe(true)
     expect(shouldShowOnboardingBackButton("welcome", -1)).toBe(false)
     expect(shouldShowOnboardingBackButton("complete", 0)).toBe(false)
+  })
+
+  it("keeps onboarding content scrollable above the fixed bottom action", () => {
+    expect(ONBOARDING_SCROLL_CONTENT_STYLE.flexGrow).toBe(1)
+    expect(
+      ONBOARDING_SCROLL_CONTENT_STYLE.paddingBottom,
+    ).toBeGreaterThanOrEqual(24)
   })
 })
