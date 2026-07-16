@@ -34,11 +34,13 @@ export function useOnboarding() {
     hasCkd,
     currentStepIndex,
     answers,
+    prepareForUser,
     setHasCkd,
     setCurrentStepIndex,
     setAnswer,
     getAnswersArray,
     setOnboardingInProgress,
+    resetProgress,
     reset: resetOnboarding,
   } = useOnboardingStore()
 
@@ -76,20 +78,24 @@ export function useOnboarding() {
     }
   }, [])
 
-  // hydration 완료 후 저장된 진행 상태 복원
+  // hydration 완료 후 현재 사용자에게 속한 진행 상태만 복원
   useEffect(() => {
-    if (!isStoreHydrated) return
+    if (!isStoreHydrated || !user) return
 
-    if (hasCkd !== null) {
-      // 이전 진행 데이터가 있으면 해당 스텝으로 자동 복원
+    const canResume = prepareForUser(user.uid)
+
+    if (canResume && hasCkd !== null) {
+      // 동일 사용자의 이전 진행 데이터가 있으면 해당 스텝으로 복원
       loadSteps(hasCkd)
     } else {
-      // 처음 시작이면 welcome 화면 표시
+      // 신규 사용자이거나 소유자가 없는 기존 데이터면 진단 화면부터 시작
+      setPhase("welcome")
+      setSteps([])
       setIsLoading(false)
     }
-    // hasCkd 변화에 반응하지 않도록 hydration 시점에만 실행
+    // hasCkd 변화에는 반응하지 않고 사용자/스토리지 준비 시점에만 실행
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStoreHydrated])
+  }, [isStoreHydrated, user?.uid])
 
   const handleWelcomeSelect = (isCkd: boolean) => {
     setHasCkd(isCkd)
@@ -215,11 +221,11 @@ export function useOnboarding() {
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
-      resetOnboarding()
+      resetProgress()
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
-  }, [phase, currentStepIndex, resetOnboarding, setCurrentStepIndex])
+  }, [phase, currentStepIndex, resetProgress, setCurrentStepIndex])
 
   const handleCompletionStart = useCallback(() => {
     trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
