@@ -5,6 +5,8 @@ import {
   TouchableWithoutFeedback,
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useKeyboardVisibility } from "@/src/hooks/useKeyboardVisibility"
+import { spacing } from "@/src/design-system-v2"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -25,6 +27,7 @@ export function OnboardingScreen() {
   const bg = isDark ? tokens.color.appBgDark.val : "white"
   const textColor = isDark ? tokens.color.textDark.val : "#17191C"
   const textSub = isDark ? tokens.color.textDarkSub.val : "#787C83"
+  const isKeyboardVisible = useKeyboardVisibility()
 
   const {
     phase,
@@ -207,7 +210,9 @@ export function OnboardingScreen() {
 
             <YStack
               paddingHorizontal={20}
-              paddingBottom={insets.bottom + 24}
+              paddingBottom={
+                isKeyboardVisible ? spacing[12] : insets.bottom + spacing[24]
+              }
               paddingTop={8}
             >
               <Pressable

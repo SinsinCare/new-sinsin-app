@@ -14,6 +14,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { spacing } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
+import { useKeyboardVisibility } from "@/src/hooks/useKeyboardVisibility"
 import { V2Button, type V2ButtonProps } from "./V2Button"
 
 export type V2BottomCTALayout = "single" | "horizontal" | "vertical"
@@ -52,9 +53,12 @@ export function V2BottomCTA({
 }: V2BottomCTAProps) {
   const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
+  const isKeyboardVisible = useKeyboardVisibility()
 
-  // safe-area 하단 inset. 없으면(0) spacing[20]로 최소 여백 확보.
-  const paddingBottom = Math.max(insets.bottom, spacing[20])
+  // 열린 키보드 위에서는 홈 인디케이터 inset을 다시 더하지 않는다.
+  const paddingBottom = isKeyboardVisible
+    ? spacing[12]
+    : Math.max(insets.bottom, spacing[20])
 
   // layout 미지정 시 secondary 유무로 결정
   const resolvedLayout: V2BottomCTALayout =

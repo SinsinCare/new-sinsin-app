@@ -1,11 +1,9 @@
 import type { ReactNode } from "react"
-import { Animated, StyleSheet } from "react-native"
-import {
-  KeyboardStickyView,
-  useKeyboardAnimation,
-} from "react-native-keyboard-controller"
+import { StyleSheet, View } from "react-native"
+import { KeyboardStickyView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { getAuthKeyboardFooterPadding } from "./authKeyboardFooterLayout"
+import { useKeyboardVisibility } from "@/src/hooks/useKeyboardVisibility"
+import { getAuthKeyboardFooterBottomPadding } from "./authKeyboardFooterLayout"
 
 interface AuthKeyboardFooterProps {
   children: ReactNode
@@ -19,16 +17,18 @@ export function AuthKeyboardFooter({
   backgroundColor,
 }: AuthKeyboardFooterProps) {
   const insets = useSafeAreaInsets()
-  const { progress } = useKeyboardAnimation()
-  const padding = getAuthKeyboardFooterPadding(insets.bottom)
-  const paddingBottom = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [padding.closed, padding.opened],
-  })
+  // iOS phone-pad can move the sticky view while animated progress still
+  // reports the closed state, so visibility events own the footer padding.
+  const isKeyboardVisible = useKeyboardVisibility()
+
+  const paddingBottom = getAuthKeyboardFooterBottomPadding(
+    insets.bottom,
+    isKeyboardVisible,
+  )
 
   return (
     <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-      <Animated.View
+      <View
         style={[
           styles.container,
           {
@@ -39,7 +39,7 @@ export function AuthKeyboardFooter({
         ]}
       >
         {children}
-      </Animated.View>
+      </View>
     </KeyboardStickyView>
   )
 }
