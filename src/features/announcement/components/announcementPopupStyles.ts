@@ -74,6 +74,14 @@ export const announcementPopupStyles = StyleSheet.create({
   primaryButton: {
     minHeight: touchTarget.min,
   },
+  actionRow: {
+    flexDirection: "row",
+    gap: spacing[8],
+  },
+  actionButton: {
+    flex: 1,
+    minHeight: touchTarget.min,
+  },
   pressed: {
     opacity: 0.85,
   },
