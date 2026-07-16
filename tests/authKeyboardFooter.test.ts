@@ -1,6 +1,6 @@
 import {
   AUTH_KEYBOARD_FOOTER_CLEARANCE,
-  getAuthKeyboardFooterBottomPadding,
+  getAuthKeyboardFooterLayout,
   getAuthKeyboardFooterPadding,
 } from "../src/features/auth/components/authKeyboardFooterLayout"
 
@@ -16,8 +16,23 @@ describe("auth keyboard footer layout", () => {
     expect(AUTH_KEYBOARD_FOOTER_CLEARANCE).toBe(76)
   })
 
-  it("removes the closed safe-area padding as soon as the keyboard becomes visible", () => {
-    expect(getAuthKeyboardFooterBottomPadding(34, false)).toBe(58)
-    expect(getAuthKeyboardFooterBottomPadding(34, true)).toBe(12)
+  it("keeps one footer height and lets the sticky view own the keyboard transition", () => {
+    expect(getAuthKeyboardFooterLayout(34)).toEqual({
+      paddingBottom: 58,
+      offset: {
+        closed: 0,
+        opened: 46,
+      },
+    })
+  })
+
+  it("keeps the open gap platform-safe when there is no bottom inset", () => {
+    expect(getAuthKeyboardFooterLayout(0)).toEqual({
+      paddingBottom: 24,
+      offset: {
+        closed: 0,
+        opened: 12,
+      },
+    })
   })
 })
