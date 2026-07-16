@@ -45,7 +45,7 @@ export function OnboardingCompletionContent({
     >
       <Image
         ref={imageRef}
-        source={require("../../../../assets/videos/회원가입_파티클_2.gif")}
+        source={require("../../../../assets/videos/signup-completion-particles.gif")}
         style={styles.particles}
         contentFit="contain"
         autoplay={false}
