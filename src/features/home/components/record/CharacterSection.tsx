@@ -14,6 +14,8 @@ import {
 } from "react-native-svg"
 import { Text, XStack, YStack } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { toDateStr } from "../../utils/dateUtils"
+import { getMealRecordStatusPresentation } from "../../utils/mealRecordUtils"
 
 function ShadowEllipse({ dark }: { dark?: boolean }) {
   const edgeColor = dark ? "#1D1D1D" : "#666666"
@@ -58,11 +60,6 @@ function ShadowEllipse({ dark }: { dark?: boolean }) {
   )
 }
 
-type CharacterType =
-  | "character-excellent"
-  | "character-good"
-  | "character-caution"
-
 /** 유저의 데이터 입력 상태에 따라 깔리는 배경 종류 */
 export type CharacterBackgroundVariant = "low" | "high"
 
@@ -77,25 +74,26 @@ const BACKGROUND_SOURCES: Record<
 interface CharacterSectionProps {
   selectedDate: Date
   hasRecord: boolean
-  characterType: CharacterType
   streak: number
   withinLimits: boolean
   backgroundVariant: CharacterBackgroundVariant
 }
 
 export function CharacterSection({
-  selectedDate: _selectedDate,
+  selectedDate,
   hasRecord,
-  characterType,
   streak,
   withinLimits,
   backgroundVariant,
 }: CharacterSectionProps) {
   const isDarkMode = useAppColorScheme() === "dark"
-  const fireIconName = hasRecord ? "fire-color" : "fire-dark"
+  const recordStatus = getMealRecordStatusPresentation({
+    hasRecord,
+    streak,
+    isToday: toDateStr(selectedDate) === toDateStr(new Date()),
+  })
+  const fireIconName = recordStatus.isRecorded ? "fire-color" : "fire-dark"
   const checkIconName = withinLimits ? "check-color" : "check-dark"
-  const streakText =
-    streak > 0 ? `연속 ${streak}일 기록중` : "오늘은 식이 기록이 없어요"
   const guideText = withinLimits
     ? "영양소 제한조건을 잘 지켰어요"
     : "영양소 제한조건을 지켜 식사해요"
@@ -135,8 +133,10 @@ export function CharacterSection({
 
   return (
     <YStack
+      width="100%"
       borderRadius="$6"
-      padding="$7"
+      paddingVertical="$7"
+      paddingHorizontal="$3"
       gap="$1"
       alignItems="center"
       overflow="hidden"
@@ -155,7 +155,7 @@ export function CharacterSection({
       />
       <YStack alignItems="center">
         <Animated.View style={{ transform: [{ translateY: floatY }] }}>
-          <Icon name={characterType} size={200} />
+          <Icon name="character-good" size={200} />
         </Animated.View>
         <Animated.View
           style={{ transform: [{ scaleX: shadowScale }], marginTop: -12 }}
@@ -168,9 +168,10 @@ export function CharacterSection({
         paddingHorizontal="$3"
         paddingVertical="$2"
         borderRadius="$5"
-        backgroundColor="rgba(0, 0, 0, 0.36)"
+        backgroundColor="rgba(0, 0, 0, 0.28)"
       >
         <XStack
+          width="100%"
           alignItems="center"
           justifyContent="center"
           gap="$2"
@@ -178,12 +179,21 @@ export function CharacterSection({
           borderRadius="$6"
         >
           <Icon name={fireIconName} size={26} />
-          <Text fontSize={18} fontWeight="600" color="white" numberOfLines={1}>
-            {streakText}
+          <Text
+            flexShrink={1}
+            fontSize={18}
+            lineHeight={24}
+            fontWeight="600"
+            color="white"
+            textAlign="center"
+            numberOfLines={2}
+          >
+            {recordStatus.text}
           </Text>
         </XStack>
 
         <XStack
+          width="100%"
           alignItems="center"
           justifyContent="center"
           gap="$2"
@@ -191,7 +201,15 @@ export function CharacterSection({
           borderRadius="$6"
         >
           <Icon name={checkIconName} size={26} />
-          <Text fontSize={18} fontWeight="600" color="white" numberOfLines={1}>
+          <Text
+            flexShrink={1}
+            fontSize={18}
+            lineHeight={24}
+            fontWeight="600"
+            color="white"
+            textAlign="center"
+            numberOfLines={2}
+          >
             {guideText}
           </Text>
         </XStack>

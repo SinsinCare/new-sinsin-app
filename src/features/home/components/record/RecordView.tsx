@@ -250,16 +250,6 @@ export function RecordView({
       return intake <= limit.max
     })
 
-  const recordedCount =
-    Object.values(mergedRecordedMeals).filter(Boolean).length
-  const recordRate = (recordedCount / 4) * 100
-  const characterType =
-    recordRate >= 85
-      ? "character-excellent"
-      : recordRate >= 70
-        ? "character-good"
-        : "character-caution"
-
   // 오늘 기록이 있고 영양소 제한조건까지 지켰을 때 풍성한(high) 배경
   const backgroundVariant: "low" | "high" =
     hasSelectedDateRecord && withinLimits ? "high" : "low"
@@ -520,7 +510,6 @@ export function RecordView({
       <CharacterSection
         selectedDate={selectedDate}
         hasRecord={hasSelectedDateRecord}
-        characterType={characterType}
         streak={streak}
         withinLimits={withinLimits}
         backgroundVariant={backgroundVariant}

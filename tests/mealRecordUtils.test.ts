@@ -1,6 +1,7 @@
 import {
   applyMealTypeChangeToMealImages,
   applyMealTypeChangeToRecordedMeals,
+  getMealRecordStatusPresentation,
   getMealButtonAction,
   getMealTimeLabel,
   isSkippedDiet,
@@ -8,6 +9,58 @@ import {
 } from "../src/features/home/utils/mealRecordUtils"
 
 describe("meal record utilities", () => {
+  it("treats a skipped-only day as a recorded day even when streak is zero", () => {
+    expect(
+      getMealRecordStatusPresentation({
+        hasRecord: true,
+        streak: 0,
+        isToday: true,
+      }),
+    ).toEqual({
+      isRecorded: true,
+      text: "오늘의 식이 기록을 남겼어요",
+    })
+  })
+
+  it("uses the same unrecorded state for the icon and today's text", () => {
+    expect(
+      getMealRecordStatusPresentation({
+        hasRecord: false,
+        streak: 3,
+        isToday: true,
+      }),
+    ).toEqual({
+      isRecorded: false,
+      text: "오늘은 식이 기록이 없어요",
+    })
+  })
+
+  it("shows a streak only when the selected day is today and recorded", () => {
+    expect(
+      getMealRecordStatusPresentation({
+        hasRecord: true,
+        streak: 4,
+        isToday: true,
+      }),
+    ).toEqual({
+      isRecorded: true,
+      text: "연속 4일 기록중",
+    })
+  })
+
+  it("uses selected-date wording instead of today's streak for past dates", () => {
+    expect(
+      getMealRecordStatusPresentation({
+        hasRecord: true,
+        streak: 4,
+        isToday: false,
+      }),
+    ).toEqual({
+      isRecorded: true,
+      text: "이날의 식이 기록을 남겼어요",
+    })
+  })
+
   it("opens the record flow instead of diary detail for skipped meals", () => {
     expect(
       getMealButtonAction({

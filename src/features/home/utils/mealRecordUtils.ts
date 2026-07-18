@@ -5,6 +5,42 @@ export type MealButtonAction = "record" | "view"
 export type MealImageMap = Partial<Record<MealType, string | null>>
 export type RecordedMealMap = Partial<Record<MealType, boolean>>
 
+export interface MealRecordStatusPresentation {
+  isRecorded: boolean
+  text: string
+}
+
+export function getMealRecordStatusPresentation({
+  hasRecord,
+  streak,
+  isToday,
+}: {
+  hasRecord: boolean
+  streak: number
+  isToday: boolean
+}): MealRecordStatusPresentation {
+  if (!hasRecord) {
+    return {
+      isRecorded: false,
+      text: isToday ? "오늘은 식이 기록이 없어요" : "이날은 식이 기록이 없어요",
+    }
+  }
+
+  if (isToday && streak > 0) {
+    return {
+      isRecorded: true,
+      text: `연속 ${streak}일 기록중`,
+    }
+  }
+
+  return {
+    isRecorded: true,
+    text: isToday
+      ? "오늘의 식이 기록을 남겼어요"
+      : "이날의 식이 기록을 남겼어요",
+  }
+}
+
 export function isSkippedDiet(diet: DateAnalysisDiet): boolean {
   return diet.isSkipped === true || diet.diaryId === null
 }
