@@ -24,6 +24,7 @@ import { UPLOAD_TIPS } from "@/src/features/health/data/mock"
 import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
 import type { OcrUploadFile } from "@/src/features/health/types"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 const MAX_FILES = 5
 
@@ -36,6 +37,7 @@ function deriveName(uri: string, fallback: string): string {
 export function HealthDataUploadScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { healthColors } = useHealthTheme()
 
   const [files, setFiles] = useState<OcrUploadFile[]>([])
   const [analyzing, setAnalyzing] = useState(false)
@@ -128,7 +130,9 @@ export function HealthDataUploadScreen() {
   const canAdd = files.length < MAX_FILES
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="검사 결과 가져오기"
         paddingTop={insets.top + 8}
@@ -142,15 +146,29 @@ export function HealthDataUploadScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={styles.title}>검사 결과를 가져올까요?</ThemedText>
-        <ThemedText style={styles.subtitle}>
+        <ThemedText style={[styles.title, { color: healthColors.text }]}>
+          검사 결과를 가져올까요?
+        </ThemedText>
+        <ThemedText
+          style={[styles.subtitle, { color: healthColors.textSecondary }]}
+        >
           정확한 건강 관리를 위해 검사지를 업로드 해주세요
         </ThemedText>
 
         {/* 첨부 파일 영역 (항상 표시) */}
-        <View style={styles.attachSection}>
+        <View
+          style={[
+            styles.attachSection,
+            {
+              borderColor: healthColors.line,
+              backgroundColor: healthColors.surface,
+            },
+          ]}
+        >
           <View style={styles.attachHeader}>
-            <ThemedText style={styles.attachTitle}>
+            <ThemedText
+              style={[styles.attachTitle, { color: healthColors.text }]}
+            >
               첨부 파일{" "}
               <ThemedText style={styles.attachCount}>
                 {files.length}/{MAX_FILES}
@@ -169,13 +187,27 @@ export function HealthDataUploadScreen() {
               // 썸네일 wrapper는 overflow:visible 명시 — X버튼은 내부에 위치
               <View key={`${file.uri}-${index}`} style={styles.thumbWrapper}>
                 {file.kind === "pdf" ? (
-                  <View style={styles.pdfThumb}>
+                  <View
+                    style={[
+                      styles.pdfThumb,
+                      {
+                        backgroundColor: healthColors.positiveWeak,
+                        borderColor: healthColors.line,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="document-text"
                       size={28}
                       color={tokens.color.sub6.val}
                     />
-                    <ThemedText style={styles.pdfThumbText} numberOfLines={1}>
+                    <ThemedText
+                      style={[
+                        styles.pdfThumbText,
+                        { color: healthColors.textSecondary },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {file.name}
                     </ThemedText>
                   </View>
@@ -201,28 +233,60 @@ export function HealthDataUploadScreen() {
 
             {/* 추가 슬롯 (최대치 미달 시) */}
             {canAdd && (
-              <View style={styles.addSlot}>
+              <View
+                style={[
+                  styles.addSlot,
+                  {
+                    borderColor: healthColors.line,
+                    backgroundColor: healthColors.surfaceMuted,
+                  },
+                ]}
+              >
                 <Pressable
                   style={({ pressed }) => [
                     styles.addSlotButton,
-                    pressed && styles.addSlotButtonPressed,
+                    {
+                      backgroundColor: healthColors.surfaceMuted,
+                      borderColor: healthColors.line,
+                    },
+                    pressed && { backgroundColor: healthColors.surfacePressed },
                   ]}
                   onPress={pickFromGallery}
                 >
-                  <Ionicons name="add" size={28} color="#94A3B8" />
-                  <ThemedText style={styles.addSlotText}>파일 추가</ThemedText>
+                  <Ionicons
+                    name="add"
+                    size={28}
+                    color={healthColors.textAssistive}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.addSlotText,
+                      { color: healthColors.textAssistive },
+                    ]}
+                  >
+                    파일 추가
+                  </ThemedText>
                 </Pressable>
               </View>
             )}
           </View>
 
           {/* 첨부 방법 버튼 */}
-          <View style={styles.pickRow}>
+          <View
+            style={[
+              styles.pickRow,
+              {
+                borderColor: healthColors.line,
+                backgroundColor: healthColors.surfaceMuted,
+              },
+            ]}
+          >
             <Pressable
               style={({ pressed }) => [
                 styles.pickButton,
                 !canAdd && styles.pickButtonDisabled,
-                pressed && canAdd && styles.pickButtonPressed,
+                pressed &&
+                  canAdd && { backgroundColor: healthColors.surfacePressed },
               ]}
               onPress={pickFromCamera}
               disabled={!canAdd}
@@ -235,6 +299,7 @@ export function HealthDataUploadScreen() {
               <ThemedText
                 style={[
                   styles.pickButtonText,
+                  { color: healthColors.textSecondary },
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
@@ -242,13 +307,19 @@ export function HealthDataUploadScreen() {
               </ThemedText>
             </Pressable>
 
-            <View style={styles.pickDivider} />
+            <View
+              style={[
+                styles.pickDivider,
+                { backgroundColor: healthColors.line },
+              ]}
+            />
 
             <Pressable
               style={({ pressed }) => [
                 styles.pickButton,
                 !canAdd && styles.pickButtonDisabled,
-                pressed && canAdd && styles.pickButtonPressed,
+                pressed &&
+                  canAdd && { backgroundColor: healthColors.surfacePressed },
               ]}
               onPress={pickFromGallery}
               disabled={!canAdd}
@@ -261,6 +332,7 @@ export function HealthDataUploadScreen() {
               <ThemedText
                 style={[
                   styles.pickButtonText,
+                  { color: healthColors.textSecondary },
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
@@ -268,13 +340,19 @@ export function HealthDataUploadScreen() {
               </ThemedText>
             </Pressable>
 
-            <View style={styles.pickDivider} />
+            <View
+              style={[
+                styles.pickDivider,
+                { backgroundColor: healthColors.line },
+              ]}
+            />
 
             <Pressable
               style={({ pressed }) => [
                 styles.pickButton,
                 !canAdd && styles.pickButtonDisabled,
-                pressed && canAdd && styles.pickButtonPressed,
+                pressed &&
+                  canAdd && { backgroundColor: healthColors.surfacePressed },
               ]}
               onPress={pickPdf}
               disabled={!canAdd}
@@ -287,6 +365,7 @@ export function HealthDataUploadScreen() {
               <ThemedText
                 style={[
                   styles.pickButtonText,
+                  { color: healthColors.textSecondary },
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
@@ -296,7 +375,12 @@ export function HealthDataUploadScreen() {
           </View>
 
           {!canAdd && (
-            <ThemedText style={styles.maxReachedText}>
+            <ThemedText
+              style={[
+                styles.maxReachedText,
+                { color: healthColors.cautionary },
+              ]}
+            >
               최대 {MAX_FILES}개까지 첨부할 수 있어요. 파일을 삭제 후
               추가해주세요.
             </ThemedText>
@@ -304,7 +388,12 @@ export function HealthDataUploadScreen() {
         </View>
 
         {/* 안내사항 */}
-        <View style={styles.tipsBox}>
+        <View
+          style={[
+            styles.tipsBox,
+            { backgroundColor: healthColors.surfaceMuted },
+          ]}
+        >
           {UPLOAD_TIPS.map((tip, i) => (
             <View key={i} style={styles.tipRow}>
               <Ionicons
@@ -313,7 +402,11 @@ export function HealthDataUploadScreen() {
                 color={tokens.color.sub6.val}
                 style={styles.tipIcon}
               />
-              <ThemedText style={styles.tipText}>{tip}</ThemedText>
+              <ThemedText
+                style={[styles.tipText, { color: healthColors.textSecondary }]}
+              >
+                {tip}
+              </ThemedText>
             </View>
           ))}
         </View>
@@ -328,16 +421,28 @@ export function HealthDataUploadScreen() {
 
       <Modal visible={analyzing} transparent animationType="fade">
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
+          <View
+            style={[
+              styles.loadingCard,
+              { backgroundColor: healthColors.surface },
+            ]}
+          >
             <ActivityIndicator
               size="large"
               color={tokens.color.sub6.val}
               style={{ marginBottom: 16 }}
             />
-            <ThemedText style={styles.loadingTitle}>
+            <ThemedText
+              style={[styles.loadingTitle, { color: healthColors.text }]}
+            >
               검사지를 분석하고 있어요
             </ThemedText>
-            <ThemedText style={styles.loadingSubtitle}>
+            <ThemedText
+              style={[
+                styles.loadingSubtitle,
+                { color: healthColors.textSecondary },
+              ]}
+            >
               검사 수치를 인식하는 중입니다.{"\n"}잠시만 기다려주세요.
             </ThemedText>
           </View>

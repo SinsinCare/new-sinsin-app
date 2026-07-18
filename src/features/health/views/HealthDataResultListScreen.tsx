@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import {
   StyleSheet,
   View,
@@ -9,13 +9,15 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useQuery } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
-import { nhisService } from "@/src/services/data/nhisService"
 import type { HealthCheckResultsRs } from "@/src/types/nhis"
+import { healthResultsQueryOptions } from "../data/healthQueries"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 function ResultRow({
   item,
@@ -24,16 +26,31 @@ function ResultRow({
   item: HealthCheckResultsRs
   onPress: () => void
 }) {
+  const { healthColors } = useHealthTheme()
   return (
     <Pressable
-      style={({ pressed }) => [rowStyles.row, pressed && rowStyles.rowPressed]}
+      style={({ pressed }) => [
+        rowStyles.row,
+        { borderBottomColor: healthColors.lineSubtle },
+        pressed && { backgroundColor: healthColors.surfacePressed },
+      ]}
       onPress={onPress}
     >
       <View style={rowStyles.info}>
-        <ThemedText style={rowStyles.date}>{item.checkupDate}</ThemedText>
-        <ThemedText style={rowStyles.place}>{item.checkupPlace}</ThemedText>
+        <ThemedText style={[rowStyles.date, { color: healthColors.text }]}>
+          {item.checkupDate}
+        </ThemedText>
+        <ThemedText
+          style={[rowStyles.place, { color: healthColors.textSecondary }]}
+        >
+          {item.checkupPlace}
+        </ThemedText>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#C5C8CE" />
+      <Ionicons
+        name="chevron-forward"
+        size={18}
+        color={healthColors.textAssistive}
+      />
     </Pressable>
   )
 }
@@ -41,19 +58,14 @@ function ResultRow({
 export function HealthDataResultListScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-
-  const [results, setResults] = useState<HealthCheckResultsRs[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { healthColors } = useHealthTheme()
+  const {
+    data: results = [],
+    isLoading: loading,
+    isError,
+  } = useQuery(healthResultsQueryOptions())
+  const error = isError ? "결과를 불러올 수 없습니다." : null
   const [activeTab, setActiveTab] = useState<"recent" | "all">("recent")
-
-  useEffect(() => {
-    nhisService
-      .getHealthCheckResults()
-      .then(setResults)
-      .catch(() => setError("결과를 불러올 수 없습니다."))
-      .finally(() => setLoading(false))
-  }, [])
 
   const handleRowPress = (resultId: number) => {
     router.push({
@@ -83,14 +95,18 @@ export function HealthDataResultListScreen() {
   )
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="검진 결과 목록"
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
-      <View style={styles.tabBar}>
+      <View
+        style={[styles.tabBar, { borderBottomColor: healthColors.lineSubtle }]}
+      >
         {(["recent", "all"] as const).map((tab) => (
           <Pressable
             key={tab}
@@ -100,6 +116,7 @@ export function HealthDataResultListScreen() {
             <ThemedText
               style={[
                 styles.tabText,
+                { color: healthColors.textAssistive },
                 activeTab === tab && styles.tabTextActive,
               ]}
             >
@@ -117,14 +134,22 @@ export function HealthDataResultListScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
+          <ThemedText
+            style={[styles.errorText, { color: healthColors.textSecondary }]}
+          >
+            {error}
+          </ThemedText>
         </View>
       )}
 
       {!loading && !error && results.length === 0 && (
         <View style={styles.center}>
-          <Ionicons name="document-outline" size={48} color="#C5C8CE" />
-          <ThemedText style={styles.emptyText}>
+          <Ionicons
+            name="document-outline"
+            size={48}
+            color={healthColors.textAssistive}
+          />
+          <ThemedText style={[styles.emptyText, { color: healthColors.text }]}>
             검진 결과가 없습니다.
           </ThemedText>
         </View>
@@ -141,7 +166,12 @@ export function HealthDataResultListScreen() {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.countRow}>
-                <ThemedText style={styles.countText}>
+                <ThemedText
+                  style={[
+                    styles.countText,
+                    { color: healthColors.textSecondary },
+                  ]}
+                >
                   가져온 결과{" "}
                   <ThemedText style={styles.countHighlight}>
                     {results.length}건
@@ -154,7 +184,13 @@ export function HealthDataResultListScreen() {
 
               {latestResult && (
                 <Pressable
-                  style={styles.latestCard}
+                  style={[
+                    styles.latestCard,
+                    {
+                      backgroundColor: healthColors.positiveWeak,
+                      borderColor: healthColors.positive,
+                    },
+                  ]}
                   onPress={() => handleRowPress(latestResult.resultId)}
                 >
                   <View style={styles.latestCardHeader}>
@@ -163,11 +199,18 @@ export function HealthDataResultListScreen() {
                         최근
                       </ThemedText>
                     </View>
-                    <ThemedText style={styles.latestDate}>
+                    <ThemedText
+                      style={[styles.latestDate, { color: healthColors.text }]}
+                    >
                       {latestResult.checkupDate}
                     </ThemedText>
                   </View>
-                  <ThemedText style={styles.latestPlace}>
+                  <ThemedText
+                    style={[
+                      styles.latestPlace,
+                      { color: healthColors.textSecondary },
+                    ]}
+                  >
                     {latestResult.checkupPlace}
                   </ThemedText>
                   <View style={styles.latestCardFooter}>
@@ -203,8 +246,20 @@ export function HealthDataResultListScreen() {
             >
               {sortedYears.map((year) => (
                 <View key={year}>
-                  <View style={styles.yearHeader}>
-                    <ThemedText style={styles.yearText}>{year}년</ThemedText>
+                  <View
+                    style={[
+                      styles.yearHeader,
+                      {
+                        backgroundColor: healthColors.surfaceMuted,
+                        borderBottomColor: healthColors.lineSubtle,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={[styles.yearText, { color: healthColors.text }]}
+                    >
+                      {year}년
+                    </ThemedText>
                   </View>
                   {resultsByYear[year].map((item) => (
                     <ResultRow

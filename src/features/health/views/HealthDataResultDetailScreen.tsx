@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { StyleSheet, View, ScrollView, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
+import { useQuery } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
-import { nhisService } from "@/src/services/data/nhisService"
-import type { HealthCheckResultDetailRs } from "@/src/types/nhis"
+import { healthResultDetailQueryOptions } from "../data/healthQueries"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 type ResultField = { label: string; value: string; unit?: string }
 
@@ -19,22 +20,54 @@ function ResultGroup({
   title: string
   fields: ResultField[]
 }) {
+  const { healthColors } = useHealthTheme()
   return (
-    <View style={groupStyles.container}>
-      <ThemedText style={groupStyles.title}>{title}</ThemedText>
+    <View
+      style={[
+        groupStyles.container,
+        {
+          borderColor: healthColors.line,
+          backgroundColor: healthColors.surface,
+        },
+      ]}
+    >
+      <ThemedText
+        style={[
+          groupStyles.title,
+          {
+            color: healthColors.textSecondary,
+            borderBottomColor: healthColors.lineSubtle,
+          },
+        ]}
+      >
+        {title}
+      </ThemedText>
       {fields.map((f, i) => (
         <View
           key={f.label}
           style={[
             groupStyles.row,
+            { borderBottomColor: healthColors.lineSubtle },
             i === fields.length - 1 && groupStyles.rowLast,
           ]}
         >
-          <ThemedText style={groupStyles.label}>{f.label}</ThemedText>
-          <ThemedText style={groupStyles.value}>
+          <ThemedText
+            style={[groupStyles.label, { color: healthColors.textSecondary }]}
+          >
+            {f.label}
+          </ThemedText>
+          <ThemedText style={[groupStyles.value, { color: healthColors.text }]}>
             {f.value || "-"}
             {f.unit && f.value ? (
-              <ThemedText style={groupStyles.unit}> {f.unit}</ThemedText>
+              <ThemedText
+                style={[
+                  groupStyles.unit,
+                  { color: healthColors.textAssistive },
+                ]}
+              >
+                {" "}
+                {f.unit}
+              </ThemedText>
             ) : null}
           </ThemedText>
         </View>
@@ -46,23 +79,19 @@ function ResultGroup({
 export function HealthDataResultDetailScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { healthColors } = useHealthTheme()
   const { resultId } = useLocalSearchParams<{ resultId: string }>()
-
-  const [data, setData] = useState<HealthCheckResultDetailRs | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!resultId) return
-    nhisService
-      .getHealthCheckResultById(resultId)
-      .then(setData)
-      .catch(() => setError("데이터를 불러올 수 없습니다."))
-      .finally(() => setLoading(false))
-  }, [resultId])
+  const {
+    data = null,
+    isLoading: loading,
+    isError,
+  } = useQuery(healthResultDetailQueryOptions(resultId ?? ""))
+  const error = isError ? "데이터를 불러올 수 없습니다." : null
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="검진 결과 상세"
         paddingTop={insets.top + 8}
@@ -77,7 +106,11 @@ export function HealthDataResultDetailScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
+          <ThemedText
+            style={[styles.errorText, { color: healthColors.textSecondary }]}
+          >
+            {error}
+          </ThemedText>
         </View>
       )}
 
@@ -89,18 +122,53 @@ export function HealthDataResultDetailScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerCard}>
-            <ThemedText style={styles.headerDate}>
+          <View
+            style={[
+              styles.headerCard,
+              {
+                backgroundColor: healthColors.positiveWeak,
+                borderColor: healthColors.positive,
+              },
+            ]}
+          >
+            <ThemedText
+              style={[styles.headerDate, { color: healthColors.text }]}
+            >
               {data.checkupDate}
             </ThemedText>
-            <ThemedText style={styles.headerPlace}>
+            <ThemedText
+              style={[
+                styles.headerPlace,
+                { color: healthColors.textSecondary },
+              ]}
+            >
               {data.checkupPlace}
             </ThemedText>
             {data.judgement ? (
-              <View style={styles.judgementBadge}>
-                <ThemedText style={styles.judgementText}>
+              <View
+                style={[
+                  styles.judgementBadge,
+                  { backgroundColor: healthColors.surface },
+                ]}
+              >
+                <ThemedText
+                  style={[
+                    styles.judgementText,
+                    { color: healthColors.positive },
+                  ]}
+                >
                   종합 판정: {data.judgement}
                 </ThemedText>
+                {data.judgementDescription ? (
+                  <ThemedText
+                    style={[
+                      styles.judgementDescription,
+                      { color: healthColors.textSecondary },
+                    ]}
+                  >
+                    {data.judgementDescription}
+                  </ThemedText>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -247,6 +315,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: tokens.color.sub8.val,
+  },
+  judgementDescription: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 4,
   },
 })
 
