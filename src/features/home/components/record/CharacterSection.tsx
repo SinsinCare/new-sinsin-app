@@ -60,11 +60,6 @@ function ShadowEllipse({ dark }: { dark?: boolean }) {
   )
 }
 
-type CharacterType =
-  | "character-excellent"
-  | "character-good"
-  | "character-caution"
-
 /** 유저의 데이터 입력 상태에 따라 깔리는 배경 종류 */
 export type CharacterBackgroundVariant = "low" | "high"
 
@@ -79,7 +74,6 @@ const BACKGROUND_SOURCES: Record<
 interface CharacterSectionProps {
   selectedDate: Date
   hasRecord: boolean
-  characterType: CharacterType
   streak: number
   withinLimits: boolean
   backgroundVariant: CharacterBackgroundVariant
@@ -88,7 +82,6 @@ interface CharacterSectionProps {
 export function CharacterSection({
   selectedDate,
   hasRecord,
-  characterType,
   streak,
   withinLimits,
   backgroundVariant,
@@ -162,7 +155,7 @@ export function CharacterSection({
       />
       <YStack alignItems="center">
         <Animated.View style={{ transform: [{ translateY: floatY }] }}>
-          <Icon name={characterType} size={200} />
+          <Icon name="character-good" size={200} />
         </Animated.View>
         <Animated.View
           style={{ transform: [{ scaleX: shadowScale }], marginTop: -12 }}
