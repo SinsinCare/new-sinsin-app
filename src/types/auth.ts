@@ -21,7 +21,7 @@ export interface SignupRequest {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
-  phoneNumber?: string
+  phoneNumber: string
   password: string
   name: string
   birthYear: number
@@ -29,7 +29,7 @@ export interface SignupRequest {
   birthDay: number
   recommender: string
   nickName: string
-  gender?: "MALE" | "FEMALE" | "OTHER"
+  gender: "MALE" | "FEMALE" | "OTHER"
   acquisitionSource: AcquisitionSource
   acquisitionSourceOther?: string | null
 }

@@ -1,5 +1,11 @@
 import type { ReactNode } from "react"
-import { Keyboard, Pressable, ScrollView, StyleSheet } from "react-native"
+import {
+  Keyboard,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+} from "react-native"
 import { YStack, Text } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -157,22 +163,24 @@ export function AuthScreenLayout({
   )
 
   return (
-    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
-      {showHeader && (
-        <YStack height={56} justifyContent="center">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="뒤로 가기"
-            onPress={onBack ?? handleDefaultBack}
-            style={{ position: "absolute", left: 9, padding: 4 }}
-          >
-            <Ionicons name="chevron-back" size={24} color={colors.icon} />
-          </Pressable>
-        </YStack>
-      )}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
+        {showHeader && (
+          <YStack height={56} justifyContent="center">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="뒤로 가기"
+              onPress={onBack ?? handleDefaultBack}
+              style={{ position: "absolute", left: 9, padding: 4 }}
+            >
+              <Ionicons name="chevron-back" size={24} color={colors.icon} />
+            </Pressable>
+          </YStack>
+        )}
 
-      {body}
-    </YStack>
+        {body}
+      </YStack>
+    </TouchableWithoutFeedback>
   )
 }
 

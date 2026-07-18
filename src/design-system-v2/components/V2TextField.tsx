@@ -33,6 +33,8 @@ export type V2TextFieldProps = Omit<TextInputProps, "style" | "editable"> & {
   variant?: V2TextFieldVariant
   /** 필드 상단 라벨 */
   label?: string
+  /** 필수 필드 표시. 라벨 색과 별개로 오류 색상의 별표를 표시 */
+  required?: boolean
   /** 필드 하단 안내 문구 (에러가 문자열이면 그 문자열로 대체) */
   helperText?: string
   /** 에러 상태. 문자열이면 helperText 대신 그 메시지를 붉게 표기 */
@@ -52,6 +54,7 @@ const LINE_MIN_HEIGHT = 30 // Line 단일행
 export function V2TextField({
   variant = "box",
   label,
+  required = false,
   helperText,
   error = false,
   disabled = false,
@@ -154,6 +157,9 @@ export function V2TextField({
       {label != null && (
         <Text style={[typography.subtext.mediumStrong, { color: labelColor }]}>
           {label}
+          {required && (
+            <Text style={{ color: colors.status.negative }}> *</Text>
+          )}
         </Text>
       )}
 
