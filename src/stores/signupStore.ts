@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import type { AcquisitionSource } from "@/src/types"
 
 interface SignupState {
   isSignupInProgress: boolean
@@ -8,21 +9,13 @@ interface SignupState {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  phoneNumber: string
   name: string
   birthYear: string
   birthMonth: string
   birthDay: string
   gender: "MALE" | "FEMALE" | "OTHER" | ""
-  acquisitionSource:
-    | "APP_STORE"
-    | "INSTAGRAM"
-    | "YOUTUBE"
-    | "KAKAO"
-    | "BLOG"
-    | "NAVER_CAFE"
-    | "FRIEND"
-    | "OTHER"
-    | ""
+  acquisitionSource: AcquisitionSource | ""
   acquisitionSourceOther: string
   referralCode: string
   nickname: string
@@ -33,21 +26,11 @@ interface SignupState {
   setTermsOfServiceAgree: (v: boolean) => void
   setPrivacyPolicyAgree: (v: boolean) => void
   setMarketingAgree: (v: boolean) => void
+  setPhoneNumber: (phoneNumber: string) => void
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
   setGender: (gender: "MALE" | "FEMALE" | "OTHER" | "") => void
-  setAcquisitionSource: (
-    source:
-      | "APP_STORE"
-      | "INSTAGRAM"
-      | "YOUTUBE"
-      | "KAKAO"
-      | "BLOG"
-      | "NAVER_CAFE"
-      | "FRIEND"
-      | "OTHER"
-      | "",
-  ) => void
+  setAcquisitionSource: (source: AcquisitionSource | "") => void
   setAcquisitionSourceOther: (value: string) => void
   setReferralCode: (code: string) => void
   setNickname: (nickname: string) => void
@@ -62,6 +45,7 @@ const initialState = {
   termsOfServiceAgree: false,
   privacyPolicyAgree: false,
   marketingAgree: false,
+  phoneNumber: "",
   name: "",
   birthYear: "",
   birthMonth: "",
@@ -82,6 +66,7 @@ export const useSignupStore = create<SignupState>((set) => ({
   setTermsOfServiceAgree: (termsOfServiceAgree) => set({ termsOfServiceAgree }),
   setPrivacyPolicyAgree: (privacyPolicyAgree) => set({ privacyPolicyAgree }),
   setMarketingAgree: (marketingAgree) => set({ marketingAgree }),
+  setPhoneNumber: (phoneNumber) => set({ phoneNumber }),
   setName: (name) => set({ name }),
   setBirth: (birthYear, birthMonth, birthDay) =>
     set({ birthYear, birthMonth, birthDay }),

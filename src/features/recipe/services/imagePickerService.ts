@@ -1,8 +1,15 @@
 import * as ImagePicker from "expo-image-picker"
 
-export async function pickImageFromGallery(): Promise<string | null> {
+interface ImagePickerTrackingOptions {
+  onPermissionDenied?: () => void
+}
+
+export async function pickImageFromGallery(
+  options: ImagePickerTrackingOptions = {},
+): Promise<string | null> {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
   if (status !== "granted") {
+    options.onPermissionDenied?.()
     return null
   }
 
@@ -41,9 +48,12 @@ export async function pickMultipleImages(
   return result.assets.map((asset) => asset.uri)
 }
 
-export async function takePhoto(): Promise<string | null> {
+export async function takePhoto(
+  options: ImagePickerTrackingOptions = {},
+): Promise<string | null> {
   const { status } = await ImagePicker.requestCameraPermissionsAsync()
   if (status !== "granted") {
+    options.onPermissionDenied?.()
     return null
   }
 

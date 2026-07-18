@@ -118,6 +118,12 @@ adb -s <device-id> logcat -s ReactNativeJS
 
 ## Architecture
 
+Before adding, redesigning, or refactoring React Native screens, read
+[`docs/mobile-frontend-architecture.md`](docs/mobile-frontend-architecture.md).
+Screen work must keep Expo Router files thin, feature behavior owned by
+`src/features/<feature>`, and new v2 UI assembled from `src/design-system-v2`
+tokens/components instead of one-off styling.
+
 ### Routing (Expo Router - File-based)
 
 - `app/_layout.tsx` - Root layout with providers (Tamagui, React Query, Pretendard fonts) and auth-based navigation
@@ -242,6 +248,16 @@ Health app for CKD patients with:
 - Shared components (e.g. `ScreenHeader`): use `useColorScheme()` + `tokens.color.textDark.val`
 - Dark mode color tokens: `appBgDark` (#1F1F21), `cardBgDark` (#313138), `textDark` (#E7E7EE), `textDarkSub` (#ABABB4)
 - Green accent colors (#34D399, #0D896A, #44AF94) stay the same in both modes
+
+## Mixpanel Analytics
+
+- The app sends analytics directly through `mixpanel-react-native` in Expo-compatible JavaScript mode. Do not add a second analytics SDK or call Mixpanel outside `src/features/analytics/`.
+- Test builds read `EXPO_PUBLIC_MIXPANEL_TOKEN` from `.env.test`. Production analytics remains disabled until a separate production project and token are approved.
+- Initialization and privacy filtering live in `src/features/analytics/analyticsClient.ts`. IP-based geolocation is disabled, and event properties must never include email, names, health data, food text, images, URLs, tokens, or other free-form user content.
+- Authentication identity is the backend-issued internal `user.uid`. Call `identifyAnalyticsUser` before login or signup success events, identify again on restored authenticated sessions, and call `resetAnalyticsIdentity` on logout.
+- Event names and allowed properties are defined in `src/features/analytics/events.ts` and use `snake_case`. Update that contract and `planning/user-flows/registry/events.yaml` together when adding events.
+- The current value funnel is login or signup completion, then `food_analysis_started`, `food_analysis_succeeded`, and `food_record_saved`.
+- The current launch scope is Korean users only, so no regional consent gate is enabled. Reassess consent and data residency requirements before expanding regions.
 
 ## Google Cloud / OAuth
 

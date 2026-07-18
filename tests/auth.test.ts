@@ -1,3 +1,46 @@
+/* eslint-disable import/first */
+const mockAsyncStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}
+const mockAppPublicApi = {
+  post: jest.fn(),
+}
+const mockAppApi = {
+  get: jest.fn(),
+  post: jest.fn(),
+}
+const mockAppTokenService = {
+  getAccessToken: jest.fn(),
+  getRefreshToken: jest.fn(),
+  setTokens: jest.fn(),
+}
+const mockClearClientSession = jest.fn()
+
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  __esModule: true,
+  default: mockAsyncStorage,
+}))
+
+jest.mock("../src/services/core", () => ({
+  api: mockAppApi,
+  clearClientSession: mockClearClientSession,
+  publicApi: mockAppPublicApi,
+  tokenService: mockAppTokenService,
+}))
+
+jest.mock("../src/config/appConfig", () => ({
+  isMockUser: jest.fn(() => false),
+}))
+
+jest.mock("../src/lib/logger", () => ({
+  logger: {
+    debug: jest.fn(),
+    error: jest.fn(),
+  },
+}))
+
 import {
   publicClient,
   authClient,
@@ -6,6 +49,13 @@ import {
   assertSuccess,
 } from "./helpers/client"
 import { itIfCreds } from "./helpers/testCredentials"
+import {
+  authService,
+  consumeSocialReauthenticationIntent,
+  isSocialReauthenticationRequired,
+  persistSocialReauthenticationIntentForSignOut,
+} from "../src/services/auth/authService"
+/* eslint-enable import/first */
 
 const TEST_EMAIL = process.env.TEST_EMAIL ?? ""
 const TEST_PASSWORD = process.env.TEST_PASSWORD ?? ""
@@ -282,5 +332,71 @@ describe("Auth API", () => {
         response: { status: expect.any(Number) },
       })
     })
+  })
+})
+
+describe("local social reauthentication intent", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockAsyncStorage.getItem.mockResolvedValue(null)
+    mockAsyncStorage.setItem.mockResolvedValue(undefined)
+    mockAsyncStorage.removeItem.mockResolvedValue(undefined)
+    mockAppTokenService.setTokens.mockResolvedValue(undefined)
+  })
+
+  it("restores the access/refresh session without reading or changing provider UI intent", async () => {
+    mockAppTokenService.getRefreshToken.mockResolvedValue("refresh-token")
+    mockAppPublicApi.post.mockResolvedValue({
+      data: {
+        result: {
+          accessToken: "new-access-token",
+          refreshToken: "new-refresh-token",
+          accountState: "ACTIVE",
+          requiresAdditionalInfo: false,
+          user: {
+            id: 42,
+            email: "restored@example.com",
+            nickName: "Restored",
+          },
+        },
+      },
+    })
+
+    await expect(authService.restoreSession()).resolves.toMatchObject({
+      user: { uid: "42" },
+      accountState: "ACTIVE",
+    })
+
+    expect(mockAppPublicApi.post).toHaveBeenCalledWith("/auth/tokens/refresh", {
+      refreshToken: "refresh-token",
+    })
+    expect(mockAppTokenService.setTokens).toHaveBeenCalledWith(
+      "new-access-token",
+      "new-refresh-token",
+    )
+    expect(mockAsyncStorage.getItem).not.toHaveBeenCalled()
+    expect(mockAsyncStorage.setItem).not.toHaveBeenCalled()
+    expect(mockAsyncStorage.removeItem).not.toHaveBeenCalled()
+  })
+
+  it("does not persist reauthentication intent for automatic logout", async () => {
+    await persistSocialReauthenticationIntentForSignOut("automatic")
+
+    expect(mockAsyncStorage.setItem).not.toHaveBeenCalled()
+  })
+
+  it("persists intent only for explicit settings logout", async () => {
+    await persistSocialReauthenticationIntentForSignOut("explicit")
+
+    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
+  })
+
+  it("reports and consumes the persisted one-shot intent", async () => {
+    mockAsyncStorage.getItem.mockResolvedValue("required")
+
+    await expect(isSocialReauthenticationRequired()).resolves.toBe(true)
+    await consumeSocialReauthenticationIntent()
+
+    expect(mockAsyncStorage.removeItem).toHaveBeenCalledTimes(1)
   })
 })

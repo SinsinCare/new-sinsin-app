@@ -1,6 +1,7 @@
 export { MyPageScreen } from "./MyPageScreen"
 export { SettingsScreen } from "./SettingsScreen"
 export { ProfileEditScreen } from "./ProfileEditScreen"
+export { PhoneNumberEditScreen } from "./PhoneNumberEditScreen"
 export { NicknameEditScreen } from "./NicknameEditScreen"
 export { NameEditScreen } from "./NameEditScreen"
 export { KidneyProfileEditScreen } from "./KidneyProfileEditScreen"

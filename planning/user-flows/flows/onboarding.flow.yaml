@@ -63,6 +63,7 @@ nodes:
     screen: SCR_ONBOARDING
     route: "/onboarding"
     states: [step]
+    analytics: [onboarding_step_viewed]
 
   - id: D_ANSWER_VALID
     type: decision
@@ -150,6 +151,7 @@ edges:
   - from: D_LOAD_STEPS_RESULT
     to: ERR_ONBOARDING
     condition: failure
+    analytics: [onboarding_steps_load_failed]
 
   - from: SCR_ONBOARDING_STEP
     to: D_ANSWER_VALID
@@ -158,6 +160,7 @@ edges:
   - from: D_ANSWER_VALID
     to: D_IS_LAST_STEP
     condition: valid
+    analytics: [onboarding_step_completed]
 
   - from: D_ANSWER_VALID
     to: SCR_ONBOARDING_STEP
@@ -240,6 +243,9 @@ flow_links:
 analytics:
   - onboarding_started
   - onboarding_steps_loaded
+  - onboarding_steps_load_failed
+  - onboarding_step_viewed
+  - onboarding_step_completed
   - onboarding_answer_validation_failed
   - onboarding_submitted
   - onboarding_submit_failed
@@ -249,3 +255,4 @@ notes:
   - Android hardware back is intercepted during onboarding so the app does not exit from the welcome phase.
   - The onboarding store restores in-progress answers after AsyncStorage hydration.
   - submitAnswers changes accountState to ACTIVE only after backend submission succeeds.
+  - Analytics receives only step index and count; CKD selection, question text, and answers are never sent.

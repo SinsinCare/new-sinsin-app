@@ -10,8 +10,18 @@ import { login as kakaoLogin } from "@react-native-kakao/user"
 import { initializeKakaoSDK, getKeyHashAndroid } from "@react-native-kakao/core"
 import { logger } from "@/src/lib/logger"
 import type { SocialProvider } from "@/src/types"
+import {
+  consumeSocialReauthenticationIntent,
+  isSocialReauthenticationRequired,
+} from "./authService"
 
 const KAKAO_NATIVE_APP_KEY = "709c22f6c6227095a316851f1f902189"
+const GOOGLE_WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ||
+  "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com"
+const GOOGLE_IOS_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim() ||
+  "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com"
 
 export interface SocialAuthResult {
   provider: SocialProvider
@@ -27,20 +37,33 @@ function createGoogleCancelledError() {
 }
 
 GoogleSignin.configure({
-  webClientId:
-    "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
-  iosClientId:
-    "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+  iosClientId: GOOGLE_IOS_CLIENT_ID,
 })
+
+async function clearGoogleSigninSession(): Promise<void> {
+  await GoogleSignin.signOut()
+  logger.debug("[Google SignIn] 기존 Google 세션 초기화 완료")
+}
 
 export async function signInWithGoogle(): Promise<SocialAuthResult> {
   logger.debug("[Google SignIn] 시작")
+  const requiresReauthentication = await isSocialReauthenticationRequired()
   try {
     await GoogleSignin.hasPlayServices()
     logger.debug("[Google SignIn] hasPlayServices 통과")
   } catch (e) {
     logger.error("[Google SignIn] hasPlayServices 실패", e)
     throw e
+  }
+
+  if (requiresReauthentication) {
+    try {
+      await clearGoogleSigninSession()
+    } catch (e) {
+      logger.error("[Google SignIn] 기존 Google 세션 초기화 실패", e)
+      throw e
+    }
   }
 
   let response
@@ -57,6 +80,10 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
   if (isCancelledResponse(response)) {
     logger.debug("[Google SignIn] 사용자가 취소")
     throw createGoogleCancelledError()
+  }
+
+  if (requiresReauthentication) {
+    await consumeSocialReauthenticationIntent()
   }
 
   logger.debug("[Google SignIn] signIn 완료")
@@ -92,6 +119,7 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
     throw new Error("Apple 로그인은 iOS에서만 지원됩니다.")
   }
 
+  const requiresReauthentication = await isSocialReauthenticationRequired()
   let credential
   try {
     credential = await AppleAuthentication.signInAsync({
@@ -114,6 +142,10 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
     throw new Error("Apple 로그인에서 ID 토큰을 받지 못했습니다.")
   }
 
+  if (requiresReauthentication) {
+    await consumeSocialReauthenticationIntent()
+  }
+
   const displayName =
     credential.fullName?.givenName && credential.fullName?.familyName
       ? `${credential.fullName.familyName}${credential.fullName.givenName}`
@@ -130,6 +162,7 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
 
 export async function signInWithKakao(): Promise<SocialAuthResult> {
   logger.debug("[Kakao SignIn] 시작")
+  const requiresReauthentication = await isSocialReauthenticationRequired()
 
   try {
     await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
@@ -153,7 +186,12 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
 
   let token
   try {
-    token = await kakaoLogin()
+    token = requiresReauthentication
+      ? await kakaoLogin({
+          useKakaoAccountLogin: true,
+          prompts: ["SelectAccount"],
+        })
+      : await kakaoLogin()
     logger.debug("[Kakao SignIn] login 완료", {
       hasAccessToken: !!token.accessToken,
       hasIdToken: !!token.idToken,
@@ -171,6 +209,10 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
       userInfo: err?.userInfo,
     })
     throw e
+  }
+
+  if (requiresReauthentication) {
+    await consumeSocialReauthenticationIntent()
   }
 
   return {

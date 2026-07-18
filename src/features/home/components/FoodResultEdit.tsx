@@ -1,12 +1,13 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Alert,
   Image,
   Modal,
-  ScrollView,
+  Platform,
   TextInput,
   TouchableOpacity,
 } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -16,8 +17,9 @@ import {
   FoodCameraAnalyzeResult,
 } from "@/src/types"
 import { Icon } from "@/src/shared/components"
+import { V2Button, V2SegmentControl, V2TextField } from "@/src/design-system-v2"
 import { LoadingOverlay } from "./LoadingOverlay"
-import { EatenSlider } from "./EatenSlider"
+import { ConsumedAmountSelector } from "./ConsumedAmountSelector"
 import { UNIT_OPTIONS } from "../data/foodEditConstants"
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
@@ -25,9 +27,18 @@ import { useFoodEdit } from "../hooks/useFoodEdit"
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
 import {
   buildFoodAnalysisUpdateRequest,
+  applyOptimisticConsumption,
   getInitialEatenStep,
+  validateMenuAmount,
+  validateMenuName,
   validateMealTitle,
 } from "../utils/foodEditUtils"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
+
+const UNIT_SEGMENTS = UNIT_OPTIONS.map((unit) => ({
+  label: unit,
+  value: unit,
+}))
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -38,6 +49,7 @@ interface FoodResultEditProps {
   updateFoodAnalysis: (
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
+    sourceResult?: FoodCameraAnalyzeResult,
   ) => Promise<FoodAnalysisUpdateResult | undefined>
   onTitleChange?: (title: string) => void
   diaryId?: number
@@ -45,6 +57,12 @@ interface FoodResultEditProps {
     diaryId: number,
     mealType: string,
   ) => Promise<{ diaryId: number; mealType: string } | undefined>
+  onAnalysisChange?: (result: FoodAnalysisUpdateResult) => void
+  onMealTypeChange?: (change: {
+    diaryId: number
+    fromMealType: MealType
+    toMealType: MealType
+  }) => void
 }
 
 export function FoodResultEdit({
@@ -57,6 +75,8 @@ export function FoodResultEdit({
   onTitleChange,
   diaryId,
   updateDiaryMealType,
+  onAnalysisChange,
+  onMealTypeChange,
 }: FoodResultEditProps) {
   const {
     foods,
@@ -69,20 +89,20 @@ export function FoodResultEdit({
     setEatenStep,
     addStep,
     newMenuName,
-    setNewMenuName,
+    newMenuNameError,
     newMenuAmount,
-    setNewMenuAmount,
+    newMenuAmountError,
     newMenuUnit,
     setNewMenuUnit,
     nameEditInputRef,
-    nameInputRef,
-    amountInputRef,
     handleNameEdit,
     handleNameConfirm,
     handleFoodNameChange,
     handleAmountChange,
     handleDelete,
     handleAddMenu,
+    handleNewMenuNameChange,
+    handleNewMenuAmountChange,
     handleNameSubmit,
     handleAmountSubmit,
   } = useFoodEdit(result, mealType)
@@ -90,6 +110,23 @@ export function FoodResultEdit({
   const { updateFoodTitle } = useFoodAnalysis()
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(
     mealType,
+  )
+  const [titleChanged, setTitleChanged] = useState(false)
+
+  useEffect(() => {
+    trackAnalyticsEvent("food_record_edit_started", {})
+  }, [])
+  const hasBroth =
+    result?.foods.some(
+      (food) =>
+        food.isBroth || /국|탕|찌개|전골|라면|우동|육수/.test(food.name),
+    ) ?? false
+  const [brothStep, setBrothStep] = useState(() =>
+    getInitialEatenStep(
+      result?.brothConsumedRatio == null
+        ? result?.eatenPercentage
+        : result.brothConsumedRatio * 100,
+    ),
   )
 
   const handleTitleEdit = async () => {
@@ -107,6 +144,14 @@ export function FoodResultEdit({
     if (response) {
       handleNameConfirm()
       onTitleChange?.(newTitle)
+      setTitleChanged(true)
+    } else {
+      trackAnalyticsEvent("food_record_edit_failed", {
+        items_changed: false,
+        consumption_changed: false,
+        slot_changed: false,
+        label_changed: true,
+      })
     }
   }
   const isDarkMode = useAppColorScheme() === "dark"
@@ -117,10 +162,40 @@ export function FoodResultEdit({
     ? tokens.color.appBgDark.val
     : tokens.color.grey8.val
 
+  const handleCancel = () => {
+    if (titleChanged) {
+      trackAnalyticsEvent("food_record_edit_succeeded", {
+        items_changed: false,
+        consumption_changed: false,
+        slot_changed: false,
+        label_changed: true,
+      })
+    }
+    onClose()
+  }
+
   const handleSubmit = async () => {
     if (!result) return
+    const hasInvalidFood = foods.some(
+      (food) =>
+        !validateMenuName(food.name).isValid ||
+        !validateMenuAmount(food.amount).isValid,
+    )
+    if (hasInvalidFood) {
+      Alert.alert(
+        "입력 내용을 확인해 주세요",
+        "메뉴명과 0보다 큰 양이 필요해요.",
+      )
+      return
+    }
     const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
     const eatenPercentageChanged = eatenStep !== initialEatenStep
+    const initialBrothStep = getInitialEatenStep(
+      result.brothConsumedRatio == null
+        ? result.eatenPercentage
+        : result.brothConsumedRatio * 100,
+    )
+    const brothPercentageChanged = hasBroth && brothStep !== initialBrothStep
     const foodsChanged =
       foods.length !== result.foods.length ||
       foods.some((f, i) => {
@@ -135,31 +210,72 @@ export function FoodResultEdit({
       diaryId != null &&
       updateDiaryMealType != null &&
       selectedMealType != null &&
+      mealType != null &&
       selectedMealType !== mealType
 
-    if (!eatenPercentageChanged && !foodsChanged && !mealTypeChanged) {
+    if (
+      !eatenPercentageChanged &&
+      !brothPercentageChanged &&
+      !foodsChanged &&
+      !mealTypeChanged &&
+      !titleChanged
+    ) {
       onClose()
       return
     }
 
     let ok = true
-    if (eatenPercentageChanged || foodsChanged) {
+    if (eatenPercentageChanged || brothPercentageChanged || foodsChanged) {
       const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
         servings: result.servings,
         eatenPercentage: (eatenStep + 1) * 25,
+        brothConsumedRatio: hasBroth ? (brothStep + 1) * 0.25 : undefined,
+        includeConsumptionContract: result.analysisId != null,
         foods,
       })
+      const shouldOptimisticallyUpdate =
+        result.analysisId != null && !foodsChanged && eatenPercentageChanged
+      if (shouldOptimisticallyUpdate) {
+        onAnalysisChange?.(
+          applyOptimisticConsumption(result, (eatenStep + 1) * 0.25),
+        )
+      }
       const updated = await updateFoodAnalysis(
         result.foodAnalysisResultId,
         body,
+        result,
       )
-      if (!updated) ok = false
+      if (updated) {
+        onAnalysisChange?.(updated)
+      } else {
+        if (shouldOptimisticallyUpdate) onAnalysisChange?.(result)
+        ok = false
+      }
     }
     if (ok && mealTypeChanged) {
       const changed = await updateDiaryMealType(diaryId, selectedMealType)
-      if (!changed) ok = false
+      if (changed) {
+        onMealTypeChange?.({
+          diaryId: changed.diaryId,
+          fromMealType: mealType,
+          toMealType: selectedMealType,
+        })
+      } else {
+        ok = false
+      }
     }
-    if (ok) onClose()
+    const changeProperties = {
+      items_changed: foodsChanged,
+      consumption_changed: eatenPercentageChanged || brothPercentageChanged,
+      slot_changed: mealTypeChanged,
+      label_changed: titleChanged,
+    }
+    if (ok) {
+      trackAnalyticsEvent("food_record_edit_succeeded", changeProperties)
+      onClose()
+    } else {
+      trackAnalyticsEvent("food_record_edit_failed", changeProperties)
+    }
   }
 
   return (
@@ -178,7 +294,7 @@ export function FoodResultEdit({
         justifyContent="space-between"
       >
         <TouchableOpacity
-          onPress={onClose}
+          onPress={handleCancel}
           hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
         >
           <Text fontSize={16} fontWeight={500} color="$colorSubtle">
@@ -202,7 +318,15 @@ export function FoodResultEdit({
         </TouchableOpacity>
       </XStack>
 
-      <ScrollView contentContainerStyle={{ gap: 32, paddingBottom: 60 }}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ gap: 32, paddingBottom: 60 }}
+        bottomOffset={24}
+        disableScrollOnKeyboardHide
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        showsVerticalScrollIndicator={false}
+      >
         <XStack>
           {imageUri && (
             <View marginLeft={19} marginRight={13} overflow="hidden">
@@ -390,80 +514,65 @@ export function FoodResultEdit({
           >
             <YStack gap="$3">
               {addStep === "name" && (
-                <XStack alignItems="center" paddingVertical="$2" gap="$3">
-                  <TextInput
-                    ref={nameInputRef}
+                <XStack alignItems="flex-start" paddingVertical="$2" gap="$2">
+                  <V2TextField
+                    autoFocus
                     value={newMenuName}
-                    onChangeText={setNewMenuName}
+                    onChangeText={handleNewMenuNameChange}
                     placeholder="메뉴 이름"
-                    placeholderTextColor={tokens.color.grey5.val}
-                    returnKeyType="next"
+                    returnKeyType="done"
                     onSubmitEditing={handleNameSubmit}
-                    style={{
-                      flex: 1,
-                      paddingLeft: 1,
-                      fontSize: 15,
-                      fontWeight: "500",
-                      color: textColor,
-                    }}
+                    error={newMenuNameError || false}
+                    style={{ flex: 1, minWidth: 0 }}
                   />
+                  <V2Button
+                    size="l"
+                    onPress={handleNameSubmit}
+                    accessibilityLabel="메뉴 이름 확인"
+                  >
+                    확인
+                  </V2Button>
                 </XStack>
               )}
               {addStep === "amount" && (
-                <YStack gap="$2">
+                <YStack gap="$3">
                   <XStack alignItems="center" gap="$3">
                     <Text fontWeight={500} fontSize={15} flex={1}>
                       {newMenuName}
                     </Text>
                   </XStack>
-                  <TextInput
-                    ref={amountInputRef}
-                    value={newMenuAmount}
-                    onChangeText={setNewMenuAmount}
-                    placeholder="양을 입력해 주세요"
-                    placeholderTextColor={tokens.color.grey5.val}
-                    keyboardType="numeric"
-                    returnKeyType="done"
-                    onSubmitEditing={handleAmountSubmit}
-                    style={{
-                      alignSelf: "stretch",
-                      borderRadius: 10,
-                      paddingVertical: 8,
-                      fontSize: 16,
-                      fontWeight: "600",
-                      textAlign: "center",
-                      color: textColor,
-                    }}
-                  />
-                  <XStack gap="$2" justifyContent="center" paddingVertical="$2">
-                    {UNIT_OPTIONS.map((unit) => (
-                      <TouchableOpacity
-                        key={unit}
-                        onPress={() => setNewMenuUnit(unit)}
-                      >
-                        <View
-                          width={65}
-                          height={35}
-                          alignItems="center"
-                          justifyContent="center"
-                          borderRadius="$4"
-                          backgroundColor={
-                            newMenuUnit === unit
-                              ? tokens.color.sub6.val + "29"
-                              : tokens.color.grey8.val
-                          }
-                        >
-                          <Text
-                            fontSize={14}
-                            fontWeight={500}
-                            color="$colorSubtle"
-                          >
-                            {unit}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
+                  <XStack alignItems="flex-start" gap="$2">
+                    <V2TextField
+                      autoFocus
+                      value={newMenuAmount}
+                      onChangeText={handleNewMenuAmountChange}
+                      placeholder="양"
+                      keyboardType="decimal-pad"
+                      returnKeyType="done"
+                      onSubmitEditing={handleAmountSubmit}
+                      error={newMenuAmountError || false}
+                      style={{ flex: 1, minWidth: 0 }}
+                      inputStyle={{ textAlign: "center" }}
+                    />
+                    <V2SegmentControl
+                      items={UNIT_SEGMENTS}
+                      value={newMenuUnit}
+                      onChange={(unit) =>
+                        setNewMenuUnit(unit as typeof newMenuUnit)
+                      }
+                      size="s"
+                      alignment="fixed"
+                      style={{ flex: 2 }}
+                    />
                   </XStack>
+                  <V2Button
+                    size="m"
+                    fullWidth
+                    onPress={handleAmountSubmit}
+                    accessibilityLabel="메뉴 양 확인"
+                  >
+                    확인
+                  </V2Button>
                 </YStack>
               )}
               {foods.map((f, i) => (
@@ -548,9 +657,29 @@ export function FoodResultEdit({
           >
             얼마나 드셨나요?
           </Text>
-          <EatenSlider value={eatenStep} onChange={setEatenStep} />
+          <ConsumedAmountSelector value={eatenStep} onChange={setEatenStep} />
+          {hasBroth && (
+            <YStack marginTop="$5" gap="$3">
+              <Text
+                fontSize={15}
+                fontWeight={600}
+                paddingLeft={4}
+                color={isDarkMode ? "$textDark" : "$black"}
+              >
+                국물은 얼마나 드셨나요?
+              </Text>
+              <Text fontSize={13} color="$colorSubtle" paddingLeft={4}>
+                건더기와 국물 양을 나누어 계산해요.
+              </Text>
+              <ConsumedAmountSelector
+                value={brothStep}
+                onChange={setBrothStep}
+                accessibilityLabel="국물 섭취량 선택"
+              />
+            </YStack>
+          )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <LoadingOverlay visible={isUpdating} message="식단을 수정하고 있어요" />
     </YStack>

@@ -14,11 +14,14 @@ import { MealButton } from "./MealButton"
 import { tokens } from "@/src/theme/tokens"
 import { Icon } from "@/src/shared/components"
 import { MEAL_OPTIONS } from "../../data/mealConstants"
-import { getMealButtonAction } from "../../utils/mealRecordUtils"
+import {
+  getMealButtonAction,
+  getMealTimeLabel,
+} from "../../utils/mealRecordUtils"
 
 interface MealButtonsProps {
   onSelectMealType: (mealType: MealType) => void
-  mealImages?: Partial<Record<MealType, string>>
+  mealImages?: Partial<Record<MealType, string | null>>
   recordedMeals?: Partial<Record<MealType, boolean>>
   skippedMeals?: Partial<Record<MealType, boolean>>
   mealTimes?: Partial<Record<MealType, string>>
@@ -101,7 +104,10 @@ export function MealButtons({
               }
               imageUri={mealImages[type]}
               isRecorded={isRecorded}
-              time={mealTimes[type]}
+              time={getMealTimeLabel({
+                isSkipped,
+                time: mealTimes[type],
+              })}
             />
           )
         })}

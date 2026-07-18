@@ -21,6 +21,7 @@ import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
 import type { OcrConfirmItem, OcrReport } from "@/src/features/health/types"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 // 화면에서 편집 가능한 항목 (id는 React 리스트 key 용 로컬 식별자)
 type EditableItem = {
@@ -60,6 +61,7 @@ function formatDateInput(raw: string): string {
 export function OcrReviewScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { healthColors } = useHealthTheme()
   const { reportId: reportIdParam } = useLocalSearchParams<{
     reportId: string
   }>()
@@ -185,7 +187,9 @@ export function OcrReviewScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[styles.container, { backgroundColor: healthColors.background }]}
+      >
         <ScreenHeader
           title="검사 결과 확인"
           paddingTop={insets.top + 8}
@@ -200,18 +204,32 @@ export function OcrReviewScreen() {
 
   if (error || !report) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[styles.container, { backgroundColor: healthColors.background }]}
+      >
         <ScreenHeader
           title="검사 결과 확인"
           paddingTop={insets.top + 8}
           onBack={() => router.back()}
         />
         <View style={styles.center}>
-          <ThemedText style={styles.errorText}>
+          <ThemedText
+            style={[styles.errorText, { color: healthColors.textSecondary }]}
+          >
             {error ?? "데이터를 불러올 수 없습니다."}
           </ThemedText>
-          <Pressable style={styles.retryButton} onPress={loadReport}>
-            <ThemedText style={styles.retryText}>다시 시도</ThemedText>
+          <Pressable
+            style={[
+              styles.retryButton,
+              { backgroundColor: healthColors.surfaceMuted },
+            ]}
+            onPress={loadReport}
+          >
+            <ThemedText
+              style={[styles.retryText, { color: healthColors.text }]}
+            >
+              다시 시도
+            </ThemedText>
           </Pressable>
         </View>
       </ThemedView>
@@ -219,7 +237,9 @@ export function OcrReviewScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="검사 결과 확인"
         paddingTop={insets.top + 8}
@@ -234,10 +254,12 @@ export function OcrReviewScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <ThemedText style={styles.title}>
+        <ThemedText style={[styles.title, { color: healthColors.text }]}>
           추출된 검사 수치를 확인해주세요
         </ThemedText>
-        <ThemedText style={styles.subtitle}>
+        <ThemedText
+          style={[styles.subtitle, { color: healthColors.textSecondary }]}
+        >
           잘못 인식된 값은 직접 수정하고, 저장할 항목을 선택할 수 있어요.
         </ThemedText>
 
@@ -251,33 +273,61 @@ export function OcrReviewScreen() {
         ) : null}
 
         {alreadyConfirmed && (
-          <View style={styles.confirmedBanner}>
+          <View
+            style={[
+              styles.confirmedBanner,
+              { backgroundColor: healthColors.positiveWeak },
+            ]}
+          >
             <Ionicons
               name="checkmark-circle"
               size={16}
               color={tokens.color.sub8.val}
             />
-            <ThemedText style={styles.confirmedText}>
+            <ThemedText
+              style={[styles.confirmedText, { color: healthColors.positive }]}
+            >
               이미 저장이 완료된 검사지입니다.
             </ThemedText>
           </View>
         )}
 
         {/* 검사일 */}
-        <View style={styles.dateCard}>
-          <ThemedText style={styles.fieldLabel}>검사일</ThemedText>
+        <View
+          style={[
+            styles.dateCard,
+            {
+              backgroundColor: healthColors.surface,
+              borderColor: healthColors.line,
+            },
+          ]}
+        >
+          <ThemedText
+            style={[styles.fieldLabel, { color: healthColors.textSecondary }]}
+          >
+            검사일
+          </ThemedText>
           <TextInput
-            style={styles.dateInput}
+            style={[
+              styles.dateInput,
+              {
+                color: healthColors.text,
+                borderColor: healthColors.line,
+                backgroundColor: healthColors.surfaceMuted,
+              },
+            ]}
             value={measuredAt}
             onChangeText={(t) => setMeasuredAt(formatDateInput(t))}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={healthColors.textAssistive}
             keyboardType="number-pad"
             maxLength={10}
             editable={!alreadyConfirmed}
           />
           {!report.measuredAt && (
-            <ThemedText style={styles.dateHint}>
+            <ThemedText
+              style={[styles.dateHint, { color: healthColors.cautionary }]}
+            >
               검사지에서 검사일을 인식하지 못했어요. 직접 입력해주세요.
             </ThemedText>
           )}
@@ -285,7 +335,9 @@ export function OcrReviewScreen() {
 
         {/* 항목 리스트 */}
         <View style={styles.itemsHeader}>
-          <ThemedText style={styles.sectionTitle}>
+          <ThemedText
+            style={[styles.sectionTitle, { color: healthColors.text }]}
+          >
             검사 항목{" "}
             <ThemedText style={styles.sectionCount}>
               {includedCount}개 선택됨
@@ -298,7 +350,14 @@ export function OcrReviewScreen() {
           return (
             <View
               key={item.key}
-              style={[styles.itemCard, isUnmapped && styles.itemCardUnmapped]}
+              style={[
+                styles.itemCard,
+                {
+                  backgroundColor: healthColors.surface,
+                  borderColor: healthColors.line,
+                },
+                isUnmapped && { borderColor: healthColors.cautionary },
+              ]}
             >
               <View style={styles.itemTopRow}>
                 {/* include 체크박스 */}
@@ -313,6 +372,10 @@ export function OcrReviewScreen() {
                   <View
                     style={[
                       styles.checkboxBox,
+                      {
+                        backgroundColor: healthColors.surface,
+                        borderColor: healthColors.line,
+                      },
                       item.include && styles.checkboxBoxChecked,
                     ]}
                   >
@@ -326,13 +389,19 @@ export function OcrReviewScreen() {
                 <View style={styles.itemNameWrap}>
                   {item.itemId == null ? (
                     <TextInput
-                      style={styles.nameInput}
+                      style={[
+                        styles.nameInput,
+                        {
+                          color: healthColors.text,
+                          borderBottomColor: healthColors.line,
+                        },
+                      ]}
                       value={item.examName}
                       onChangeText={(t) =>
                         updateItem(item.key, { examName: t })
                       }
                       placeholder="검사 항목명"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={healthColors.textAssistive}
                       editable={!alreadyConfirmed}
                     />
                   ) : (
@@ -340,6 +409,7 @@ export function OcrReviewScreen() {
                       <ThemedText
                         style={[
                           styles.itemName,
+                          { color: healthColors.text },
                           isUnmapped && styles.itemNameUnmapped,
                         ]}
                         numberOfLines={1}
@@ -347,8 +417,18 @@ export function OcrReviewScreen() {
                         {item.examName || "(미상 항목)"}
                       </ThemedText>
                       {isUnmapped && (
-                        <View style={styles.badge}>
-                          <ThemedText style={styles.badgeText}>
+                        <View
+                          style={[
+                            styles.badge,
+                            { backgroundColor: healthColors.surfaceMuted },
+                          ]}
+                        >
+                          <ThemedText
+                            style={[
+                              styles.badgeText,
+                              { color: healthColors.textSecondary },
+                            ]}
+                          >
                             미인식
                           </ThemedText>
                         </View>
@@ -356,7 +436,13 @@ export function OcrReviewScreen() {
                     </View>
                   )}
                   {item.rawText && item.rawText !== item.examName ? (
-                    <ThemedText style={styles.rawText} numberOfLines={1}>
+                    <ThemedText
+                      style={[
+                        styles.rawText,
+                        { color: healthColors.textAssistive },
+                      ]}
+                      numberOfLines={1}
+                    >
                       원문: {item.rawText}
                     </ThemedText>
                   ) : null}
@@ -369,7 +455,11 @@ export function OcrReviewScreen() {
                     hitSlop={8}
                     style={styles.deleteBtn}
                   >
-                    <Ionicons name="close" size={18} color="#94A3B8" />
+                    <Ionicons
+                      name="close"
+                      size={18}
+                      color={healthColors.textAssistive}
+                    />
                   </Pressable>
                 )}
               </View>
@@ -377,19 +467,35 @@ export function OcrReviewScreen() {
               {/* 값 / 단위 입력 */}
               <View style={styles.valueRow}>
                 <TextInput
-                  style={[styles.valueInput, styles.valueInputValue]}
+                  style={[
+                    styles.valueInput,
+                    styles.valueInputValue,
+                    {
+                      color: healthColors.text,
+                      backgroundColor: healthColors.surfaceMuted,
+                      borderColor: healthColors.line,
+                    },
+                  ]}
                   value={item.examValue}
                   onChangeText={(t) => updateItem(item.key, { examValue: t })}
                   placeholder="수치"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={healthColors.textAssistive}
                   editable={!alreadyConfirmed}
                 />
                 <TextInput
-                  style={[styles.valueInput, styles.valueInputUnit]}
+                  style={[
+                    styles.valueInput,
+                    styles.valueInputUnit,
+                    {
+                      color: healthColors.text,
+                      backgroundColor: healthColors.surfaceMuted,
+                      borderColor: healthColors.line,
+                    },
+                  ]}
                   value={item.unit}
                   onChangeText={(t) => updateItem(item.key, { unit: t })}
                   placeholder="단위"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={healthColors.textAssistive}
                   editable={!alreadyConfirmed}
                 />
               </View>
@@ -402,12 +508,20 @@ export function OcrReviewScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.addItemButton,
-              pressed && styles.addItemButtonPressed,
+              {
+                borderColor: healthColors.line,
+                backgroundColor: healthColors.surface,
+              },
+              pressed && { backgroundColor: healthColors.surfacePressed },
             ]}
             onPress={addCustomItem}
           >
             <Ionicons name="add" size={18} color={tokens.color.sub6.val} />
-            <ThemedText style={styles.addItemText}>항목 직접 추가</ThemedText>
+            <ThemedText
+              style={[styles.addItemText, { color: healthColors.positive }]}
+            >
+              항목 직접 추가
+            </ThemedText>
           </Pressable>
         )}
       </ScrollView>

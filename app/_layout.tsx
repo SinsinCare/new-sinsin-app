@@ -15,15 +15,22 @@ import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import config from "../tamagui.config"
+import "@/src/i18n" // i18n 초기화 (부수효과 import — 앱 로드 시 1회, useTranslation 사용 전 준비)
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
-import { useSignupStore, useOnboardingStore, useThemeStore } from "@/src/stores"
+import {
+  useAuthStore,
+  useSignupStore,
+  useOnboardingStore,
+  useThemeStore,
+} from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
 import { routeFromPushData } from "@/src/services/notificationRoutingService"
 import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
 import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
+import { useAnalyticsLifecycle } from "@/src/features/analytics"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
@@ -37,6 +44,8 @@ function RootLayoutNav() {
     requiresAdditionalInfo,
     signOut,
   } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  useAnalyticsLifecycle(user, isLoading)
   const canUseAppNotifications =
     isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo
   useNotifications(canUseAppNotifications)
@@ -84,6 +93,16 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isLoading) return
+
+    // v2 컴포넌트 쇼케이스: dev 전용 검증 화면.
+    //  - dev(__DEV__): 인증 리다이렉트에서 제외 → 로그인 없이 바로 확인.
+    //  - prod: 딥링크로 진입해도(로그인 유저 포함) 정규 화면으로 돌려보내 접근 차단.
+    //    (라우트 코드는 번들에 남지만 더미 데이터 컴포넌트 갤러리라 무해 + 런타임 접근은 막힌다.)
+    if (segmentPath[0] === "v2-showcase") {
+      if (__DEV__) return
+      router.replace(isAuthenticated ? "/(tabs)/home" : "/(auth)/login")
+      return
+    }
 
     if (
       isAuthenticated &&

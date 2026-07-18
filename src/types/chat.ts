@@ -67,6 +67,69 @@ export interface MessageSendRequest {
   files?: File[] // binary files for IMAGE/MIXED
 }
 
+export type ChatStreamFinishReason = "STOP" | "MAX_TOKENS" | (string & {})
+
+export interface ChatStreamStartedEvent {
+  attemptId: string | number
+  userMessageId: number
+  retry: boolean
+}
+
+export interface ChatStreamChunkEvent {
+  content: string
+}
+
+export interface ChatStreamDoneEvent {
+  messageId: number
+  finishReason: ChatStreamFinishReason
+  category?: ChatCategory | null
+  categoryLabel?: string | null
+  role?: MessageRole
+  createdAt?: string
+}
+
+export interface ChatStreamErrorEvent {
+  code: string
+  message: string
+  retryable: boolean
+  partialContentAvailable: boolean
+  finishReason?: ChatStreamFinishReason
+}
+
+export interface ChatStreamErrorOptions extends ChatStreamErrorEvent {
+  partialContent?: string
+}
+
+/** A terminal SSE or transport failure that callers can present or retry. */
+export class ChatStreamError extends Error {
+  readonly code: string
+  readonly retryable: boolean
+  readonly partialContentAvailable: boolean
+  readonly finishReason?: ChatStreamFinishReason
+  readonly partialContent?: string
+
+  constructor(options: ChatStreamErrorOptions) {
+    super(options.message)
+    this.name = "ChatStreamError"
+    this.code = options.code
+    this.retryable = options.retryable
+    this.partialContentAvailable = options.partialContentAvailable
+    this.finishReason = options.finishReason
+    this.partialContent = options.partialContent
+    Object.setPrototypeOf(this, ChatStreamError.prototype)
+  }
+}
+
+export function asChatStreamError(error: unknown): ChatStreamError {
+  if (error instanceof ChatStreamError) return error
+  return new ChatStreamError({
+    code: "UNKNOWN",
+    message: error instanceof Error ? error.message : "Unknown chat error",
+    retryable: false,
+    partialContentAvailable: false,
+  })
+}
+
 export interface Summary {
   conversationId: number
   summary: string // JSON format
@@ -94,6 +157,30 @@ export interface Message {
   aiCategory?: ChatCategory
   aiCategoryLabel?: string
   createdAt: Date
+}
+
+export function reconcileStreamedMessage(
+  messages: Message[],
+  placeholderId: number,
+  finalMessage: Message,
+): Message[] {
+  const targetIndex = messages.findIndex(
+    (message) => message.id === placeholderId || message.id === finalMessage.id,
+  )
+  const withoutDuplicates = messages.filter(
+    (message) => message.id !== placeholderId && message.id !== finalMessage.id,
+  )
+
+  if (targetIndex === -1) return [...withoutDuplicates, finalMessage]
+
+  const insertionIndex = messages
+    .slice(0, targetIndex)
+    .filter(
+      (message) =>
+        message.id !== placeholderId && message.id !== finalMessage.id,
+    ).length
+  withoutDuplicates.splice(insertionIndex, 0, finalMessage)
+  return withoutDuplicates
 }
 
 // === Mapper Functions ===

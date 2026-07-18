@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useMemo } from "react"
 import {
   StyleSheet,
   View,
@@ -9,15 +9,15 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useQuery } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
-import { nhisService } from "@/src/services/data/nhisService"
-import type { HealthCheckResultDetailRs } from "@/src/types/nhis"
-
 import { TrendChart } from "../components/TrendChart"
+import { healthDashboardQueryOptions } from "../data/healthQueries"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 import {
   DASHBOARD_MODULES,
   STATUS_COLORS,
@@ -46,9 +46,18 @@ interface ModuleData {
 function ModuleStatusCard({ data }: { data: ModuleData }) {
   const { config, series, status } = data
   const statusStyle = status ? STATUS_COLORS[status] : null
+  const { healthColors } = useHealthTheme()
 
   return (
-    <View style={cardStyles.statusCard}>
+    <View
+      style={[
+        cardStyles.statusCard,
+        {
+          borderColor: healthColors.line,
+          backgroundColor: healthColors.surface,
+        },
+      ]}
+    >
       <View style={cardStyles.statusHeader}>
         <View
           style={[
@@ -62,7 +71,11 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
             color={config.accent}
           />
         </View>
-        <ThemedText style={cardStyles.statusTitle}>{config.title}</ThemedText>
+        <ThemedText
+          style={[cardStyles.statusTitle, { color: healthColors.text }]}
+        >
+          {config.title}
+        </ThemedText>
         {statusStyle ? (
           <View
             style={[
@@ -83,8 +96,19 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
             </ThemedText>
           </View>
         ) : (
-          <View style={[cardStyles.statusBadge, cardStyles.statusBadgeEmpty]}>
-            <ThemedText style={cardStyles.statusBadgeEmptyText}>
+          <View
+            style={[
+              cardStyles.statusBadge,
+              cardStyles.statusBadgeEmpty,
+              { backgroundColor: healthColors.surfaceMuted },
+            ]}
+          >
+            <ThemedText
+              style={[
+                cardStyles.statusBadgeEmptyText,
+                { color: healthColors.textAssistive },
+              ]}
+            >
               기록 없음
             </ThemedText>
           </View>
@@ -96,19 +120,37 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
           {series
             .filter((s) => s.latest)
             .map((s) => (
-              <View key={s.config.key} style={cardStyles.chip}>
+              <View
+                key={s.config.key}
+                style={[
+                  cardStyles.chip,
+                  { backgroundColor: healthColors.surfaceMuted },
+                ]}
+              >
                 <View
                   style={[
                     cardStyles.chipDot,
                     { backgroundColor: STATUS_COLORS[s.latest!.status].dot },
                   ]}
                 />
-                <ThemedText style={cardStyles.chipLabel}>
+                <ThemedText
+                  style={[
+                    cardStyles.chipLabel,
+                    { color: healthColors.textSecondary },
+                  ]}
+                >
                   {s.config.label.replace(/\s*\(.*\)\s*/, "")}
                 </ThemedText>
-                <ThemedText style={cardStyles.chipValue}>
+                <ThemedText
+                  style={[cardStyles.chipValue, { color: healthColors.text }]}
+                >
                   {s.latest!.value}
-                  <ThemedText style={cardStyles.chipUnit}>
+                  <ThemedText
+                    style={[
+                      cardStyles.chipUnit,
+                      { color: healthColors.textAssistive },
+                    ]}
+                  >
                     {" "}
                     {s.config.unit}
                   </ThemedText>
@@ -117,7 +159,12 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
             ))}
         </View>
       ) : (
-        <ThemedText style={cardStyles.placeholderText}>
+        <ThemedText
+          style={[
+            cardStyles.placeholderText,
+            { color: healthColors.textAssistive },
+          ]}
+        >
           {config.description}
         </ThemedText>
       )}
@@ -129,25 +176,46 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
 function MetricChartCard({ series }: { series: MetricSeries }) {
   const latest = series.latest
   const statusStyle = latest ? STATUS_COLORS[latest.status] : null
+  const { healthColors } = useHealthTheme()
   return (
-    <View style={cardStyles.chartCard}>
+    <View
+      style={[
+        cardStyles.chartCard,
+        {
+          borderColor: healthColors.line,
+          backgroundColor: healthColors.surface,
+        },
+      ]}
+    >
       <View style={cardStyles.chartHeader}>
         <View style={cardStyles.chartTitleWrap}>
-          <ThemedText style={cardStyles.chartTitle}>
+          <ThemedText
+            style={[cardStyles.chartTitle, { color: healthColors.text }]}
+          >
             {series.config.label}
           </ThemedText>
-          <ThemedText style={cardStyles.chartRange}>
+          <ThemedText
+            style={[
+              cardStyles.chartRange,
+              { color: healthColors.textAssistive },
+            ]}
+          >
             {normalRangeText(series.config)} {series.config.unit}
           </ThemedText>
         </View>
         {latest && statusStyle && (
           <View style={cardStyles.chartLatest}>
             <ThemedText
-              style={[cardStyles.chartLatestValue, { color: statusStyle.text }]}
+              style={[cardStyles.chartLatestValue, { color: statusStyle.dot }]}
             >
               {latest.value}
             </ThemedText>
-            <ThemedText style={cardStyles.chartLatestUnit}>
+            <ThemedText
+              style={[
+                cardStyles.chartLatestUnit,
+                { color: healthColors.textAssistive },
+              ]}
+            >
               {series.config.unit}
             </ThemedText>
           </View>
@@ -161,44 +229,13 @@ function MetricChartCard({ series }: { series: MetricSeries }) {
 export function HealthDashboardScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-
-  const [details, setDetails] = useState<HealthCheckResultDetailRs[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const results = await nhisService.getHealthCheckResults()
-        const valid = results.filter((r) => !!r.checkupDate)
-        const fetched = await Promise.all(
-          valid.map((r) =>
-            nhisService
-              .getHealthCheckResultById(String(r.resultId))
-              .catch(() => null),
-          ),
-        )
-        if (cancelled) return
-        const ascending = fetched
-          .filter((d): d is HealthCheckResultDetailRs => d != null)
-          .sort(
-            (a, b) =>
-              new Date(a.checkupDate.replace(/\./g, "-")).getTime() -
-              new Date(b.checkupDate.replace(/\./g, "-")).getTime(),
-          )
-        setDetails(ascending)
-      } catch {
-        if (!cancelled) setError("검사 데이터를 불러올 수 없습니다.")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { healthColors } = useHealthTheme()
+  const {
+    data: details = [],
+    isLoading: loading,
+    isError,
+  } = useQuery(healthDashboardQueryOptions())
+  const error = isError ? "검사 데이터를 불러올 수 없습니다." : null
 
   const modules = useMemo<ModuleData[]>(() => {
     return DASHBOARD_MODULES.map((config) => {
@@ -219,7 +256,9 @@ export function HealthDashboardScreen() {
   const chartModules = modules.filter((m) => m.status != null)
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="검사 대시보드"
         paddingTop={insets.top + 8}
@@ -234,17 +273,27 @@ export function HealthDashboardScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
+          <ThemedText
+            style={[styles.errorText, { color: healthColors.textSecondary }]}
+          >
+            {error}
+          </ThemedText>
         </View>
       )}
 
       {!loading && !error && details.length === 0 && (
         <View style={styles.center}>
-          <Ionicons name="bar-chart-outline" size={48} color="#C5C8CE" />
-          <ThemedText style={styles.emptyText}>
+          <Ionicons
+            name="bar-chart-outline"
+            size={48}
+            color={healthColors.textAssistive}
+          />
+          <ThemedText style={[styles.emptyText, { color: healthColors.text }]}>
             분석할 검사 기록이 없습니다.
           </ThemedText>
-          <ThemedText style={styles.emptySub}>
+          <ThemedText
+            style={[styles.emptySub, { color: healthColors.textSecondary }]}
+          >
             건강검진 데이터를 먼저 불러와 주세요.
           </ThemedText>
         </View>
@@ -259,8 +308,21 @@ export function HealthDashboardScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* 요약 */}
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryIcon}>
+          <View
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: healthColors.positiveWeak,
+                borderColor: healthColors.positive,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.summaryIcon,
+                { backgroundColor: healthColors.surface },
+              ]}
+            >
               <Ionicons
                 name="documents-outline"
                 size={20}
@@ -268,17 +330,30 @@ export function HealthDashboardScreen() {
               />
             </View>
             <View style={styles.summaryInfo}>
-              <ThemedText style={styles.summaryCount}>
+              <ThemedText
+                style={[styles.summaryCount, { color: healthColors.text }]}
+              >
                 총 {details.length}건의 검진 기록
               </ThemedText>
               {dateRange && (
-                <ThemedText style={styles.summaryRange}>{dateRange}</ThemedText>
+                <ThemedText
+                  style={[
+                    styles.summaryRange,
+                    { color: healthColors.textSecondary },
+                  ]}
+                >
+                  {dateRange}
+                </ThemedText>
               )}
             </View>
           </View>
 
           {/* 모듈별 상태 카드 */}
-          <ThemedText style={styles.sectionTitle}>모듈별 상태</ThemedText>
+          <ThemedText
+            style={[styles.sectionTitle, { color: healthColors.text }]}
+          >
+            모듈별 상태
+          </ThemedText>
           <View style={styles.moduleGrid}>
             {modules.map((m) => (
               <ModuleStatusCard key={m.config.id} data={m} />
@@ -286,9 +361,18 @@ export function HealthDashboardScreen() {
           </View>
 
           {/* 항목별 추세 그래프 */}
-          <ThemedText style={styles.sectionTitle}>항목별 추세</ThemedText>
+          <ThemedText
+            style={[styles.sectionTitle, { color: healthColors.text }]}
+          >
+            항목별 추세
+          </ThemedText>
           {chartModules.length === 0 ? (
-            <ThemedText style={styles.placeholderText}>
+            <ThemedText
+              style={[
+                styles.placeholderText,
+                { color: healthColors.textAssistive },
+              ]}
+            >
               추세를 그릴 검사 항목이 아직 없습니다.
             </ThemedText>
           ) : (
@@ -300,7 +384,12 @@ export function HealthDashboardScreen() {
                     size={15}
                     color={m.config.accent}
                   />
-                  <ThemedText style={styles.chartGroupTitle}>
+                  <ThemedText
+                    style={[
+                      styles.chartGroupTitle,
+                      { color: healthColors.textSecondary },
+                    ]}
+                  >
                     {m.config.title}
                   </ThemedText>
                 </View>
@@ -313,7 +402,12 @@ export function HealthDashboardScreen() {
             ))
           )}
 
-          <View style={styles.legendRow}>
+          <View
+            style={[
+              styles.legendRow,
+              { borderTopColor: healthColors.lineSubtle },
+            ]}
+          >
             {(["normal", "caution", "warning"] as MetricStatus[]).map((st) => (
               <View key={st} style={styles.legendItem}>
                 <View
@@ -322,14 +416,26 @@ export function HealthDashboardScreen() {
                     { backgroundColor: STATUS_COLORS[st].dot },
                   ]}
                 />
-                <ThemedText style={styles.legendText}>
+                <ThemedText
+                  style={[
+                    styles.legendText,
+                    { color: healthColors.textSecondary },
+                  ]}
+                >
                   {STATUS_COLORS[st].label}
                 </ThemedText>
               </View>
             ))}
             <View style={styles.legendItem}>
               <View style={styles.legendBand} />
-              <ThemedText style={styles.legendText}>정상 범위</ThemedText>
+              <ThemedText
+                style={[
+                  styles.legendText,
+                  { color: healthColors.textSecondary },
+                ]}
+              >
+                정상 범위
+              </ThemedText>
             </View>
           </View>
         </ScrollView>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { Alert, BackHandler } from "react-native"
 import { router } from "expo-router"
 import { onboardingService } from "@/src/services/data/onboardingService"
@@ -6,15 +6,20 @@ import { useOnboardingStore } from "@/src/stores/onboardingStore"
 import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
-type Phase = "welcome" | "steps"
+type Phase = "welcome" | "steps" | "complete"
 
 export function useOnboarding() {
   const [phase, setPhase] = useState<Phase>("welcome")
   const [steps, setSteps] = useState<OnboardingStep[]>([])
-  // hydration 완료 전까지 로딩 화면을 보여주기 위해 true로 시작
-  const [isLoading, setIsLoading] = useState(true)
+  // 저장 상태 복원 중에는 전체 로딩을, 환자 선택 후 질문을 가져오는 동안에는
+  // 현재 welcome 화면과 CTA 로딩을 유지한다.
+  const [isInitializing, setIsInitializing] = useState(true)
+  const [isLoadingSteps, setIsLoadingSteps] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const lastViewedStepRef = useRef<string | null>(null)
+  const completionViewedRef = useRef(false)
 
   // persist hydration 상태 추적
   const [isStoreHydrated, setIsStoreHydrated] = useState(() =>
@@ -31,11 +36,13 @@ export function useOnboarding() {
     hasCkd,
     currentStepIndex,
     answers,
+    prepareForUser,
     setHasCkd,
     setCurrentStepIndex,
     setAnswer,
     getAnswersArray,
     setOnboardingInProgress,
+    resetProgress,
     reset: resetOnboarding,
   } = useOnboardingStore()
 
@@ -49,6 +56,7 @@ export function useOnboarding() {
   }, [isStoreHydrated])
 
   useEffect(() => {
+    trackAnalyticsEvent("onboarding_started", {})
     setOnboardingInProgress(true)
     return () => {
       setOnboardingInProgress(false)
@@ -56,45 +64,74 @@ export function useOnboarding() {
   }, [setOnboardingInProgress])
 
   const loadSteps = useCallback(async (isCkd: boolean) => {
-    setIsLoading(true)
+    setIsLoadingSteps(true)
     try {
       const data = await onboardingService.getSteps(isCkd)
       setSteps(data)
       setPhase("steps")
+      trackAnalyticsEvent("onboarding_steps_loaded", {
+        step_count: data.length,
+      })
     } catch {
+      trackAnalyticsEvent("onboarding_steps_load_failed", {})
       Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
     } finally {
-      setIsLoading(false)
+      setIsLoadingSteps(false)
     }
   }, [])
 
-  // hydration 완료 후 저장된 진행 상태 복원
+  // hydration 완료 후 현재 사용자에게 속한 진행 상태만 복원
   useEffect(() => {
-    if (!isStoreHydrated) return
+    if (!isStoreHydrated || !user) return
 
-    if (hasCkd !== null) {
-      // 이전 진행 데이터가 있으면 해당 스텝으로 자동 복원
-      loadSteps(hasCkd)
-    } else {
-      // 처음 시작이면 welcome 화면 표시
-      setIsLoading(false)
+    const canResume = prepareForUser(user.uid)
+
+    const initialize = async () => {
+      if (canResume && hasCkd !== null) {
+        // 동일 사용자의 이전 진행 데이터가 있으면 해당 스텝으로 복원
+        await loadSteps(hasCkd)
+      } else {
+        // 신규 사용자이거나 소유자가 없는 기존 데이터면 진단 화면부터 시작
+        setPhase("welcome")
+        setSteps([])
+      }
+      setIsInitializing(false)
     }
-    // hasCkd 변화에 반응하지 않도록 hydration 시점에만 실행
+
+    void initialize()
+    // hasCkd 변화에는 반응하지 않고 사용자/스토리지 준비 시점에만 실행
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStoreHydrated])
+  }, [isStoreHydrated, user?.uid])
 
   const handleWelcomeSelect = (isCkd: boolean) => {
     setHasCkd(isCkd)
   }
 
   const handleWelcomeConfirm = () => {
-    if (hasCkd === null) return
-    loadSteps(hasCkd)
+    if (hasCkd === null || isLoadingSteps) return
+    void loadSteps(hasCkd)
   }
 
   const currentStep = steps[currentStepIndex]
   const isLastStep = currentStepIndex === steps.length - 1
   const currentAnswer = currentStep ? answers[currentStep.step] : undefined
+
+  useEffect(() => {
+    if (phase !== "steps" || isLoadingSteps || !currentStep) return
+    const viewKey = `${currentStepIndex}:${steps.length}`
+    if (lastViewedStepRef.current === viewKey) return
+    lastViewedStepRef.current = viewKey
+    trackAnalyticsEvent("onboarding_step_viewed", {
+      step_index: currentStepIndex,
+      step_count: steps.length,
+    })
+  }, [currentStep, currentStepIndex, isLoadingSteps, phase, steps.length])
+
+  useEffect(() => {
+    if (phase !== "complete" || completionViewedRef.current) return
+    completionViewedRef.current = true
+    trackAnalyticsEvent("onboarding_completion_viewed", {})
+  }, [phase])
 
   const hasValidAnswer = useCallback(() => {
     if (!currentStep) return false
@@ -154,12 +191,13 @@ export function useOnboarding() {
     setIsSubmitting(true)
     try {
       await onboardingService.submitAnswers(hasCkd, getAnswersArray())
+      trackAnalyticsEvent("onboarding_submitted", {})
       setAccountState("ACTIVE")
       setRequiresAdditionalInfo(false)
       resetOnboarding()
-      resetSignup()
-      router.replace("/(tabs)/home")
+      setPhase("complete")
     } catch (error) {
+      trackAnalyticsEvent("onboarding_submit_failed", {})
       Alert.alert(
         "오류",
         error instanceof Error
@@ -172,6 +210,11 @@ export function useOnboarding() {
   }
 
   const handleNext = () => {
+    if (isSubmitting || !hasValidAnswer()) return
+    trackAnalyticsEvent("onboarding_step_completed", {
+      step_index: currentStepIndex,
+      step_count: steps.length,
+    })
     if (isLastStep) {
       completeOnboarding()
     } else {
@@ -180,19 +223,26 @@ export function useOnboarding() {
   }
 
   const handleBack = useCallback(() => {
+    if (phase === "complete") return
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
-      resetOnboarding()
+      resetProgress()
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
-  }, [phase, currentStepIndex, resetOnboarding, setCurrentStepIndex])
+  }, [phase, currentStepIndex, resetProgress, setCurrentStepIndex])
+
+  const handleCompletionStart = useCallback(() => {
+    trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
+    resetSignup()
+    router.replace("/(tabs)/home")
+  }, [resetSignup])
 
   // Android 하드웨어 백 버튼: 온보딩 중 앱 종료 방지
   useEffect(() => {
     const onBackPress = () => {
-      if (phase === "welcome") {
+      if (phase === "welcome" || phase === "complete") {
         return true // welcome에서는 뒤로 가기 차단 (앱 종료 방지)
       }
       handleBack()
@@ -209,7 +259,8 @@ export function useOnboarding() {
     currentStep,
     currentStepIndex,
     currentAnswer,
-    isLoading,
+    isInitializing,
+    isLoadingSteps,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
@@ -220,5 +271,6 @@ export function useOnboarding() {
     handleInputChange,
     handleNext,
     handleBack,
+    handleCompletionStart,
   }
 }

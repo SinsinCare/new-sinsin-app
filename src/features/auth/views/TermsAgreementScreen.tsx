@@ -18,7 +18,7 @@ export function TermsAgreementScreen({
     terms,
     agreed,
     allChecked,
-    requiredChecked,
+    canSubmit,
     isSubmitting,
     toggleAll,
     toggleItem,
@@ -38,10 +38,12 @@ export function TermsAgreementScreen({
     <AuthScreenLayout
       title={`신신당부 서비스 이용약관에\n동의해주세요`}
       buttonLabel="동의하고 계속하기"
-      buttonDisabled={!requiredChecked || isSubmitting}
+      buttonDisabled={!canSubmit || isSubmitting}
       buttonLoading={isSubmitting}
       onSubmit={handleNext}
       onBack={handleBack}
+      scrollable
+      keyboardAvoiding
     >
       <YStack gap={16} marginTop={32}>
         <Checkbox

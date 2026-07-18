@@ -3,7 +3,8 @@ import {
   usePendingAnalysisStore,
   type PendingAnalysis,
 } from "@/src/stores/pendingAnalysisStore"
-import type { FoodCameraAnalyzeResult } from "@/src/types"
+import type { FoodAnalysisJob, FoodCameraAnalyzeResult } from "@/src/types"
+import { appConfig } from "@/src/config/appConfig"
 import { markFoodAnalysisRequestHandled } from "./foodAnalysisRequestState"
 import {
   pendingAnalysisRequests,
@@ -11,6 +12,11 @@ import {
 } from "../storage/pendingAnalysisRequests"
 
 const PENDING_ANALYSIS_TTL_MS = 10 * 60 * 1000
+
+export interface FoodAnalysisRecoveryResult {
+  recoveredCount: number
+  remainingCount: number
+}
 
 export interface FoodAnalysisRecoveryDeps {
   pendingRequests: {
@@ -20,7 +26,14 @@ export interface FoodAnalysisRecoveryDeps {
   fetchByRequestId: (
     requestId: string,
   ) => Promise<FoodCameraAnalyzeResult | null>
+  fetchJobByRequestId?: (requestId: string) => Promise<FoodAnalysisJob | null>
   setPending: (pending: PendingAnalysis | null) => void
+  setPendingConfirmation?: (pending: {
+    job: FoodAnalysisJob
+    mealType: PendingAnalysisRequest["mealType"]
+    imageUri: string | null
+  }) => void
+  confirmationEnabled?: boolean
   markHandledRequestId: (requestId: string) => void
   now: () => number
 }
@@ -29,8 +42,13 @@ const defaultDeps: FoodAnalysisRecoveryDeps = {
   pendingRequests: pendingAnalysisRequests,
   fetchByRequestId: (requestId) =>
     foodCameraService.fetchByRequestId(requestId),
+  fetchJobByRequestId: (requestId) =>
+    foodCameraService.fetchAnalysisByRequestId(requestId),
   setPending: (pending) =>
     usePendingAnalysisStore.getState().setPending(pending),
+  setPendingConfirmation: (pending) =>
+    usePendingAnalysisStore.getState().setPendingConfirmation(pending),
+  confirmationEnabled: appConfig.foodAnalysisConfirmationEnabled,
   markHandledRequestId: markFoodAnalysisRequestHandled,
   now: Date.now,
 }
@@ -43,13 +61,37 @@ function resolveRecoveredImageUri(
 }
 
 export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
-  async function recoverOne(pending: PendingAnalysisRequest): Promise<boolean> {
+  const inFlightRequests = new Map<string, Promise<boolean>>()
+
+  async function runRecovery(
+    pending: PendingAnalysisRequest,
+  ): Promise<boolean> {
     if (deps.now() - pending.startedAt > PENDING_ANALYSIS_TTL_MS) {
       await deps.pendingRequests.remove(pending.requestId)
       return false
     }
 
-    const result = await deps.fetchByRequestId(pending.requestId)
+    const job = await deps.fetchJobByRequestId?.(pending.requestId)
+    if (job?.status === "NEEDS_CONFIRMATION") {
+      if (deps.confirmationEnabled) {
+        deps.setPendingConfirmation?.({
+          job,
+          mealType: pending.mealType,
+          imageUri: pending.imageUri,
+        })
+        return true
+      }
+
+      // 설문 UI가 꺼진 동안 요청을 지우지 않는다. 다음 앱 진입/포그라운드
+      // 전환에서 READY 여부를 다시 확인하고, TTL 이후에만 정리한다.
+      return false
+    }
+    const result =
+      job?.status === "READY"
+        ? (job.result ?? null)
+        : job
+          ? null
+          : await deps.fetchByRequestId(pending.requestId)
     if (!result) return false
 
     deps.markHandledRequestId(pending.requestId)
@@ -62,16 +104,32 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
     return true
   }
 
+  function recoverOne(pending: PendingAnalysisRequest): Promise<boolean> {
+    const existing = inFlightRequests.get(pending.requestId)
+    if (existing) return existing
+
+    const recovery = runRecovery(pending).finally(() => {
+      if (inFlightRequests.get(pending.requestId) === recovery) {
+        inFlightRequests.delete(pending.requestId)
+      }
+    })
+    inFlightRequests.set(pending.requestId, recovery)
+    return recovery
+  }
+
   return {
-    async recoverPendingAnalyses(): Promise<void> {
+    async recoverPendingAnalyses(): Promise<FoodAnalysisRecoveryResult> {
       const pendingList = await deps.pendingRequests.getAll()
+      let recoveredCount = 0
       for (const pending of pendingList) {
         try {
-          await recoverOne(pending)
+          if (await recoverOne(pending)) recoveredCount += 1
         } catch {
           // 복구 실패는 다음 앱 진입/포그라운드 전환에서 다시 시도한다.
         }
       }
+      const remaining = await deps.pendingRequests.getAll()
+      return { recoveredCount, remainingCount: remaining.length }
     },
     async recoverFoodAnalysisRequest(requestId: string): Promise<void> {
       const pendingList = await deps.pendingRequests.getAll()

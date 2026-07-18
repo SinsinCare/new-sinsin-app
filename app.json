@@ -2,27 +2,33 @@
   "expo": {
     "name": "신신당부",
     "slug": "sinsin-rn",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "default",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/branding/app_icon_260718_resize_512.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "buildNumber": "4",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
-      "associatedDomains": ["applinks:sinsincare.kr"],
+      "associatedDomains": [
+        "applinks:sinsincare.kr"
+      ],
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "신신당부",
         "CFBundleName": "신신당부",
         "ITSAppUsesNonExemptEncryption": false,
-        "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
         "LSApplicationQueriesSchemes": [
           "instagram-stories",
           "instagram",
@@ -34,7 +40,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/branding/app_icon_260718_resize_512.png",
         "backgroundColor": "#D8E9F5"
       },
       "package": "com.mediology.sinsinapp",
@@ -54,7 +60,10 @@
               "pathPrefix": "/password-edit"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -115,6 +124,7 @@
         "expo-build-properties",
         {
           "ios": {
+            "buildReactNativeFromSource": true,
             "deploymentTarget": "18.6",
             "appleTeamId": "HJJNV9Y5W8",
             "extraPods": [
@@ -156,7 +166,8 @@
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "scheme": "sinsin",
     "experiments": {

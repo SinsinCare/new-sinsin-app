@@ -1,21 +1,33 @@
 import { useEffect } from "react"
-import { ScrollView, Pressable, Keyboard, BackHandler } from "react-native"
+import { Pressable, Keyboard, BackHandler, Platform } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { router } from "expo-router"
-import { useForm } from "react-hook-form"
+import { router, useNavigation } from "expo-router"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import { Controller, useForm } from "react-hook-form"
 import { Ionicons } from "@expo/vector-icons"
 import { BottomSheetPicker, FormTextField } from "@/src/shared/components"
+import { V2TextField } from "@/src/design-system-v2"
 import { BirthDatePicker } from "../components/BirthDatePicker"
 import { GenderSelector } from "../components/GenderSelector"
+import {
+  AuthKeyboardFooter,
+  AUTH_KEYBOARD_FOOTER_CLEARANCE,
+} from "../components"
 import { useProfileSetup, useAuthColors } from "../hooks"
 import { ACQUISITION_SOURCE_OPTIONS } from "../data/acquisitionSources"
 import { tokens } from "@/src/theme/tokens"
 import type { ProfileForm } from "../types"
 import type { AcquisitionSourceInput } from "../data/acquisitionSources"
+import {
+  formatKoreanMobileInput,
+  getRequiredPhoneNumberError,
+  isValidKoreanMobile,
+} from "../data/phoneNumber"
 
 export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
+  const navigation = useNavigation()
   const colors = useAuthColors()
   const {
     birthYear,
@@ -23,7 +35,6 @@ export function ProfileSetupScreen() {
     birthDay,
     gender,
     acquisitionSource,
-    isBackfillMode,
     isCompletionMode,
     isPrefilling,
     isSubmitting,
@@ -40,6 +51,7 @@ export function ProfileSetupScreen() {
   const { control, watch, handleSubmit, reset } = useForm<ProfileForm>({
     defaultValues: {
       name: "",
+      phoneNumber: "",
       acquisitionSourceOther: "",
       referralCode: "",
     },
@@ -47,6 +59,7 @@ export function ProfileSetupScreen() {
   })
 
   const name = watch("name")
+  const phoneNumber = watch("phoneNumber")
   const acquisitionSourceOther = watch("acquisitionSourceOther")
   const isOtherSource = acquisitionSource === "OTHER"
   const isValid =
@@ -55,6 +68,7 @@ export function ProfileSetupScreen() {
     !!birthMonth &&
     !!birthDay &&
     !!gender &&
+    isValidKoreanMobile(phoneNumber) &&
     !!acquisitionSource &&
     (!isOtherSource || !!acquisitionSourceOther.trim())
 
@@ -63,15 +77,20 @@ export function ProfileSetupScreen() {
   }, [prefillValues, reset])
 
   useEffect(() => {
-    if (!isBackfillMode) return
+    navigation.setOptions({ gestureEnabled: !isCompletionMode })
+    return () => navigation.setOptions({ gestureEnabled: true })
+  }, [isCompletionMode, navigation])
+
+  useEffect(() => {
+    if (!isCompletionMode) return
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true)
     return () => sub.remove()
-  }, [isBackfillMode])
+  }, [isCompletionMode])
 
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack height={56} justifyContent="center">
-        {!isBackfillMode && (
+        {!isCompletionMode && (
           <Pressable
             onPress={() => router.back()}
             style={{ position: "absolute", left: 9, padding: 4 }}
@@ -82,9 +101,16 @@ export function ProfileSetupScreen() {
       </YStack>
 
       <YStack flex={1} justifyContent="space-between">
-        <ScrollView
+        <KeyboardAwareScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+          bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
+          disableScrollOnKeyboardHide
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+          showsVerticalScrollIndicator={false}
         >
           <Text
             fontSize={22}
@@ -146,6 +172,34 @@ export function ProfileSetupScreen() {
 
             <GenderSelector value={gender} onChange={setGender} />
 
+            <Controller
+              name="phoneNumber"
+              control={control}
+              rules={{
+                validate: (value) => getRequiredPhoneNumberError(value) ?? true,
+              }}
+              render={({ field, fieldState }) => (
+                <V2TextField
+                  variant="box"
+                  label="전화번호"
+                  required
+                  value={field.value}
+                  onChangeText={(value) =>
+                    field.onChange(formatKoreanMobileInput(value))
+                  }
+                  onBlur={field.onBlur}
+                  placeholder="010-1234-5678"
+                  keyboardType="phone-pad"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
+                  returnKeyType="done"
+                  maxLength={13}
+                  error={fieldState.error?.message ?? false}
+                  accessibilityLabel="전화번호 필수 입력"
+                />
+              )}
+            />
+
             <YStack gap={12}>
               <BottomSheetPicker
                 label="어떻게 신신당부를 알게 되었나요?"
@@ -179,9 +233,9 @@ export function ProfileSetupScreen() {
               placeholder="추천인 코드를 입력해주세요 (선택)"
             />
           </YStack>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
-        <YStack paddingHorizontal={20} paddingBottom={insets.bottom + 24}>
+        <AuthKeyboardFooter horizontalPadding={20} backgroundColor={colors.bg}>
           <Pressable
             onPress={() => {
               Keyboard.dismiss()
@@ -211,10 +265,10 @@ export function ProfileSetupScreen() {
                 {isPrefilling
                   ? "불러오는 중..."
                   : isSubmitting
-                  ? "저장 중..."
-                  : isCompletionMode
-                    ? "저장하기"
-                    : "다음 단계"}
+                    ? "저장 중..."
+                    : isCompletionMode
+                      ? "저장하기"
+                      : "다음 단계"}
               </Text>
             </YStack>
           </Pressable>
@@ -229,7 +283,7 @@ export function ProfileSetupScreen() {
               {submitError}
             </Text>
           )}
-        </YStack>
+        </AuthKeyboardFooter>
       </YStack>
     </YStack>
   )

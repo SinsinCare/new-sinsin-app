@@ -43,9 +43,9 @@ describeAuth("Chat API", () => {
   // 대화 생성
   // ────────────────────────────────────────────────
   describe("POST /chat/conversations", () => {
-    it("새 대화 생성 성공 (DIET 카테고리)", async () => {
+    it("새 대화 생성 성공 (FOOD_DIET 카테고리)", async () => {
       const res = await authClient.post("/chat/conversations", {
-        category: "DIET",
+        category: "FOOD_DIET",
       })
       assertSuccess(res.data)
 

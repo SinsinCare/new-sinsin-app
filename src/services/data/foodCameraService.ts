@@ -5,16 +5,60 @@ import type {
   ExtraWaterUpdateResponse,
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
+  FoodAnalysisConfirmationRequest,
+  FoodAnalysisConsumptionRequest,
+  FoodAnalysisJob,
+  FoodAnalysisMode,
   FoodCameraAnalyzeResult,
   FoodCameraDiaryRegisterResponse,
   FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
-import { api } from "../core"
-import { tokenService } from "../core/tokenService"
+import { normalizeFoodAnalysisResult } from "../../shared/utils/foodAnalysisResult"
+import { api, authenticatedFetch } from "../core"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
+
+const ANALYZE_TEXT_TIMEOUT_MS = 180000
+const FOOD_ANALYSIS_UPDATE_TIMEOUT_MS = 180000
+
+function unwrapResult<T>(data: { result?: T } | T): T {
+  return ((data as { result?: T }).result ?? data) as T
+}
+
+function isUnsupportedV2Status(status: number): boolean {
+  return status === 404 || status === 405
+}
+
+type TransitionalFoodAnalysisJob = FoodAnalysisJob &
+  Partial<FoodCameraAnalyzeResult>
+
+function normalizeAnalysisJob(input: FoodAnalysisJob): FoodAnalysisJob {
+  const transitional = input as TransitionalFoodAnalysisJob
+  const topLevelResult =
+    !transitional.result &&
+    (transitional.revision || Array.isArray(transitional.foods))
+      ? (transitional as FoodCameraAnalyzeResult)
+      : null
+  const result = transitional.result ?? topLevelResult
+  const job: FoodAnalysisJob = {
+    ...transitional,
+    result,
+    error: transitional.error ?? transitional.failureMessage ?? null,
+  }
+  return result
+    ? {
+        ...job,
+        result: normalizeFoodAnalysisResult({
+          ...result,
+          analysisId: result.analysisId ?? job.analysisId,
+          requestId: result.requestId ?? job.requestId,
+          status: result.status ?? job.status,
+        }),
+      }
+    : job
+}
 
 async function compressImage(uri: string): Promise<string> {
   try {
@@ -44,6 +88,126 @@ async function compressImage(uri: string): Promise<string> {
 }
 
 export const foodCameraService = {
+  async createAnalysis(
+    imageUri: string,
+    requestId: string,
+    mode: FoodAnalysisMode = "POST_MEAL",
+  ): Promise<FoodAnalysisJob> {
+    if (isMockMode()) {
+      const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
+      const result = await mockFoodCameraService.analyze()
+      return {
+        analysisId: `mock-${requestId}`,
+        requestId,
+        status: "READY",
+        result: { ...result, status: "READY", requestId },
+      }
+    }
+
+    const compressedUri = await compressImage(imageUri)
+    const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
+    const fileName = `food_${Date.now()}.jpg`
+    const response = await authenticatedFetch(
+      `${baseURL}/food-analyses`,
+      () => {
+        const formData = new FormData()
+        formData.append("image", {
+          uri: compressedUri,
+          name: fileName,
+          type: "image/jpeg",
+        } as unknown as Blob)
+        formData.append("requestId", requestId)
+        formData.append("mode", mode)
+        return {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Idempotency-Key": requestId,
+          },
+          body: formData as unknown as RequestInit["body"],
+        }
+      },
+    )
+
+    if (isUnsupportedV2Status(response.status)) {
+      const result = await this.analyze(imageUri, requestId)
+      return {
+        analysisId: String(result.foodAnalysisResultId),
+        requestId,
+        status: "READY",
+        result: { ...result, status: "READY", requestId },
+      }
+    }
+
+    const json = (await response.json()) as {
+      isSuccess?: boolean
+      message?: string
+      result?: FoodAnalysisJob
+    }
+    if (!response.ok || json.isSuccess === false || !json.result) {
+      throw new Error(json.message || `HTTP ${response.status}`)
+    }
+    return normalizeAnalysisJob(json.result)
+  },
+
+  async fetchAnalysis(analysisId: string): Promise<FoodAnalysisJob> {
+    const response = await api.get(`/food-analyses/${analysisId}`)
+    return normalizeAnalysisJob(unwrapResult<FoodAnalysisJob>(response.data))
+  },
+
+  async fetchAnalysisByRequestId(
+    requestId: string,
+  ): Promise<FoodAnalysisJob | null> {
+    try {
+      const response = await api.get(
+        `/food-analyses/by-request/${encodeURIComponent(requestId)}`,
+      )
+      const job = unwrapResult<FoodAnalysisJob | null>(response.data)
+      return job ? normalizeAnalysisJob(job) : null
+    } catch (err) {
+      if (
+        isAxiosError(err) &&
+        isUnsupportedV2Status(err.response?.status ?? 0)
+      ) {
+        const result = await this.fetchByRequestId(requestId)
+        return result
+          ? {
+              analysisId: String(result.foodAnalysisResultId),
+              requestId,
+              status: "READY",
+              result: { ...result, status: "READY", requestId },
+            }
+          : null
+      }
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async confirmAnalysis(
+    analysisId: string,
+    body: FoodAnalysisConfirmationRequest & { baseRevisionId?: string },
+  ): Promise<FoodAnalysisJob> {
+    const response = await api.post(
+      `/food-analyses/${analysisId}/confirmation`,
+      body,
+    )
+    return normalizeAnalysisJob(unwrapResult<FoodAnalysisJob>(response.data))
+  },
+
+  async updateConsumption(
+    analysisId: string,
+    body: FoodAnalysisConsumptionRequest,
+  ): Promise<FoodAnalysisJob> {
+    const response = await api.patch(
+      `/food-analyses/${analysisId}/consumption`,
+      body,
+    )
+    return normalizeAnalysisJob(unwrapResult<FoodAnalysisJob>(response.data))
+  },
+
   async analyze(
     imageUri: string,
     requestId?: string,
@@ -56,26 +220,27 @@ export const foodCameraService = {
     } else {
       const compressedUri = await compressImage(imageUri)
 
-      const formData = new FormData()
-      formData.append("image", {
-        uri: compressedUri,
-        name: `food_${Date.now()}.jpg`,
-        type: "image/jpeg",
-      } as unknown as Blob)
-      if (requestId) {
-        formData.append("requestId", requestId)
-      }
-
       const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-      const token = await tokenService.getAccessToken()
-      const fetchResponse = await fetch(`${baseURL}/food-camera/analyze`, {
-        method: "POST",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-          Accept: "application/json",
+      const fileName = `food_${Date.now()}.jpg`
+      const fetchResponse = await authenticatedFetch(
+        `${baseURL}/food-camera/analyze`,
+        () => {
+          const formData = new FormData()
+          formData.append("image", {
+            uri: compressedUri,
+            name: fileName,
+            type: "image/jpeg",
+          } as unknown as Blob)
+          if (requestId) {
+            formData.append("requestId", requestId)
+          }
+          return {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            body: formData as unknown as RequestInit["body"],
+          }
         },
-        body: formData as unknown as RequestInit["body"],
-      })
+      )
       const json = (await fetchResponse.json()) as {
         isSuccess?: boolean
         message?: string
@@ -86,7 +251,7 @@ export const foodCameraService = {
       }
       result = json.result as FoodCameraAnalyzeResult
     }
-    return result
+    return normalizeFoodAnalysisResult(result)
   },
 
   async analyzeText(
@@ -100,10 +265,14 @@ export const foodCameraService = {
       result = await mockFoodCameraService.analyze()
     } else {
       try {
-        const response = await api.post("/food-camera/analyze-text", {
-          text,
-          ...(requestId ? { requestId } : {}),
-        })
+        const response = await api.post(
+          "/food-camera/analyze-text",
+          {
+            text,
+            ...(requestId ? { requestId } : {}),
+          },
+          { timeout: ANALYZE_TEXT_TIMEOUT_MS },
+        )
         result = response.data.result as FoodCameraAnalyzeResult
       } catch (err) {
         if (isAxiosError(err) && err.response?.data?.message) {
@@ -112,7 +281,7 @@ export const foodCameraService = {
         throw err
       }
     }
-    return result
+    return normalizeFoodAnalysisResult(result)
   },
 
   async fetchByRequestId(
@@ -122,7 +291,9 @@ export const foodCameraService = {
       const response = await api.get("/food-camera/analysis-results", {
         params: { requestId },
       })
-      return (response.data.result as FoodCameraAnalyzeResult | null) ?? null
+      const result =
+        (response.data.result as FoodCameraAnalyzeResult | null) ?? null
+      return result ? normalizeFoodAnalysisResult(result) : null
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
@@ -212,7 +383,9 @@ export const foodCameraService = {
   async fetchDiaryResult(diaryId: number): Promise<DiaryAnalysisResult> {
     try {
       const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
-      return response.data.result as DiaryAnalysisResult
+      return normalizeFoodAnalysisResult(
+        response.data.result as DiaryAnalysisResult,
+      ) as DiaryAnalysisResult
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
@@ -229,8 +402,11 @@ export const foodCameraService = {
       const response = await api.patch(
         `/food-camera/analysis-results/${foodAnalysisResultId}`,
         body,
+        { timeout: FOOD_ANALYSIS_UPDATE_TIMEOUT_MS },
       )
-      return response.data.result as FoodAnalysisUpdateResult
+      return normalizeFoodAnalysisResult(
+        response.data.result as FoodAnalysisUpdateResult,
+      ) as FoodAnalysisUpdateResult
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)
@@ -267,6 +443,17 @@ export const foodCameraService = {
         { mealType },
       )
       return response.data.result
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.message) {
+        throw new Error(err.response.data.message)
+      }
+      throw err
+    }
+  },
+
+  async deleteDiary(diaryId: number): Promise<void> {
+    try {
+      await api.delete(`/food-camera/diaries/${diaryId}`)
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         throw new Error(err.response.data.message)

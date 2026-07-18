@@ -1,14 +1,10 @@
-import {
-  Keyboard,
-  Pressable,
-  ScrollView,
-  TouchableWithoutFeedback,
-} from "react-native"
+import { Keyboard, ScrollView, TouchableWithoutFeedback } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { V2BottomCTA } from "@/src/design-system-v2"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
-import { LoadingScreen } from "@/src/shared/components"
+import { KeyboardAwareView, LoadingScreen } from "@/src/shared/components"
 import { useOnboarding } from "../hooks"
 import {
   OnboardingHeader,
@@ -17,7 +13,14 @@ import {
   OnlyStepContent,
   MultiStepContent,
   InputStepContent,
+  OnboardingQuestionHeader,
+  OnboardingCompletionContent,
 } from "../components"
+import {
+  ONBOARDING_SCROLL_CONTENT_STYLE,
+  getOnboardingLoadingPresentation,
+  shouldShowOnboardingBackButton,
+} from "../data/onboardingPresentation"
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
@@ -33,7 +36,8 @@ export function OnboardingScreen() {
     currentStep,
     currentStepIndex,
     currentAnswer,
-    isLoading,
+    isInitializing,
+    isLoadingSteps,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
@@ -44,9 +48,15 @@ export function OnboardingScreen() {
     handleInputChange,
     handleNext,
     handleBack,
+    handleCompletionStart,
   } = useOnboarding()
 
-  if (isLoading) {
+  const loadingPresentation = getOnboardingLoadingPresentation(
+    isInitializing,
+    isLoadingSteps,
+  )
+
+  if (loadingPresentation === "screen") {
     return <LoadingScreen message="준비 중..." />
   }
 
@@ -65,11 +75,7 @@ export function OnboardingScreen() {
         <YStack flex={1}>
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: 32,
-              paddingBottom: 16,
-            }}
+            contentContainerStyle={ONBOARDING_SCROLL_CONTENT_STYLE}
             showsVerticalScrollIndicator={false}
           >
             <Text
@@ -97,38 +103,21 @@ export function OnboardingScreen() {
             />
           </ScrollView>
 
-          <YStack
-            paddingHorizontal={20}
-            paddingBottom={insets.bottom + 24}
-            paddingTop={8}
-          >
-            <Pressable
-              onPress={handleWelcomeConfirm}
-              disabled={hasCkd === null}
-            >
-              <YStack
-                backgroundColor={hasCkd !== null ? "#34D399" : "#34D39940"}
-                paddingVertical={16}
-                paddingHorizontal={24}
-                borderRadius={8}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text
-                  color="white"
-                  fontSize={16}
-                  fontWeight="500"
-                  letterSpacing={-0.3}
-                  lineHeight={20}
-                >
-                  다음
-                </Text>
-              </YStack>
-            </Pressable>
-          </YStack>
+          <V2BottomCTA
+            primaryLabel="다음"
+            onPrimary={handleWelcomeConfirm}
+            primaryProps={{
+              disabled: hasCkd === null || isLoadingSteps,
+              loading: loadingPresentation === "cta",
+            }}
+          />
         </YStack>
       </YStack>
     )
+  }
+
+  if (phase === "complete") {
+    return <OnboardingCompletionContent onStart={handleCompletionStart} />
   }
 
   if (steps.length === 0) {
@@ -143,97 +132,63 @@ export function OnboardingScreen() {
           totalSteps={steps.length}
           onBack={handleBack}
           title="신장 정보"
+          showBack={shouldShowOnboardingBackButton(phase, currentStepIndex)}
         />
 
         <ProgressBar current={currentStepIndex} total={steps.length} />
 
-        <YStack flex={1}>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: 32,
-              paddingBottom: 16,
-            }}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Text
-              fontSize={22}
-              fontWeight="600"
-              color={textColor}
-              letterSpacing={-0.44}
-              lineHeight={30.8}
-              marginBottom={8}
+        <KeyboardAwareView>
+          <YStack flex={1}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={ONBOARDING_SCROLL_CONTENT_STYLE}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
             >
-              {currentStep.title}
-            </Text>
-            <Text
-              fontSize={15}
-              lineHeight={18}
-              color={textSub}
-              marginBottom={32}
-            >
-              {currentStep.subTitle}
-            </Text>
-
-            {currentStep.type === "only" && (
-              <OnlyStepContent
-                options={currentStep.values}
-                selectedKeys={currentAnswer?.selectedKeys ?? []}
-                onSelect={handleOnlySelect}
+              <OnboardingQuestionHeader
+                title={currentStep.title}
+                subtitle={currentStep.subTitle}
+                titleColor={textColor}
+                subtitleColor={textSub}
               />
-            )}
 
-            {currentStep.type === "multi" && (
-              <MultiStepContent
-                options={currentStep.values}
-                selectedKeys={currentAnswer?.selectedKeys ?? []}
-                onToggle={handleMultiToggle}
-              />
-            )}
+              {currentStep.type === "only" && (
+                <OnlyStepContent
+                  options={currentStep.values}
+                  selectedKeys={currentAnswer?.selectedKeys ?? []}
+                  onSelect={handleOnlySelect}
+                />
+              )}
 
-            {currentStep.type === "input" && (
-              <InputStepContent
-                fields={currentStep.values}
-                values={currentAnswer?.inputValues ?? {}}
-                onChange={handleInputChange}
-              />
-            )}
-          </ScrollView>
+              {currentStep.type === "multi" && (
+                <MultiStepContent
+                  options={currentStep.values}
+                  selectedKeys={currentAnswer?.selectedKeys ?? []}
+                  onToggle={handleMultiToggle}
+                />
+              )}
 
-          <YStack
-            paddingHorizontal={20}
-            paddingBottom={insets.bottom + 24}
-            paddingTop={8}
-          >
-            <Pressable
-              onPress={handleNext}
-              disabled={!hasValidAnswer() || isSubmitting}
-            >
-              <YStack
-                backgroundColor={
-                  hasValidAnswer() && !isSubmitting ? "#34D399" : "#34D39940"
-                }
-                paddingVertical={16}
-                paddingHorizontal={24}
-                borderRadius={8}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text
-                  color="white"
-                  fontSize={16}
-                  fontWeight="500"
-                  letterSpacing={-0.3}
-                  lineHeight={20}
-                >
-                  {isSubmitting ? "처리 중..." : isLastStep ? "완료" : "다음"}
-                </Text>
-              </YStack>
-            </Pressable>
+              {currentStep.type === "input" && (
+                <InputStepContent
+                  fields={currentStep.values}
+                  values={currentAnswer?.inputValues ?? {}}
+                  onChange={handleInputChange}
+                  onSubmit={handleNext}
+                />
+              )}
+            </ScrollView>
+
+            <V2BottomCTA
+              primaryLabel={isLastStep ? "완료" : "다음"}
+              onPrimary={handleNext}
+              primaryProps={{
+                disabled: !hasValidAnswer() || isSubmitting,
+                loading: isSubmitting,
+              }}
+            />
           </YStack>
-        </YStack>
+        </KeyboardAwareView>
       </YStack>
     </TouchableWithoutFeedback>
   )

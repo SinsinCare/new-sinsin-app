@@ -185,10 +185,12 @@ Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
 
 1.  **폰 설정**: 실제 디바이스인 경우 '설정 > 휴대전화 정보 > 소프트웨어 정보'에서 '빌드 번호'를 연타하여 **개발자 옵션**을 활성화하고, **USB 디버깅**을 켭니다.
 2.  **명령어 실행**:
+
     ```bash
     npm run android
     ```
-    *   또는 `npx expo run:android`를 사용하여 네이티브 빌드 후 실행할 수 있습니다.
+
+    - 또는 `npx expo run:android`를 사용하여 네이티브 빌드 후 실행할 수 있습니다.
 
 ### EAS 빌드 (테스트용 / 스토어 배포)
 
@@ -196,9 +198,13 @@ Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
 스토어 자동 제출(`--auto-submit`)은 아래 [🚀 EAS 자동 배포](#-eas-자동-배포-cli) 참고.
 
 #### iOS
+
 ```bash
+# Test backend (TestFlight credentials, no submit)
+eas build --platform ios --profile ios-testflight-test
+
 # Production (App Store)
-eas build --platform ios --profile production
+eas build --platform ios --profile testflight
 eas submit --platform ios --latest --profile production
 
 # Development Build
@@ -206,9 +212,13 @@ eas build --platform ios --profile development
 ```
 
 #### Android
+
 ```bash
-# Preview (설치용 APK 생성)
-eas build --platform android --profile preview
+# Test backend (설치용 APK 생성)
+eas build --platform android --profile test
+
+# Production backend (Play Store internal track)
+eas build --platform android --profile playstore
 
 # Development Build (개발용 앱 생성)
 eas build --platform android --profile development
@@ -231,16 +241,16 @@ Android `versionCode`)는 EAS가 자동 증가시킵니다.
 npm run deploy            # = eas build --platform all --profile production --auto-submit
 
 # 플랫폼별 빌드 + 제출
-npm run deploy:ios        # = eas build --platform ios     --profile production --auto-submit
-npm run deploy:android    # = eas build --platform android --profile production --auto-submit
+npm run deploy:ios        # = eas build --platform ios     --profile testflight --auto-submit-with-profile testflight
+npm run deploy:android    # = eas build --platform android --profile playstore  --auto-submit-with-profile playstore
 
 # 이미 만들어진 최신 빌드만 다시 제출
 npm run submit:ios        # = eas submit --platform ios     --latest
 npm run submit:android    # = eas submit --platform android --latest
 
 # 빌드만 (제출 안 함)
-eas build --platform ios     --profile production
-eas build --platform android --profile production
+eas build --platform ios     --profile testflight
+eas build --platform android --profile playstore
 
 # 원격 버전(빌드번호) 확인 / 빌드 상태·이력 확인
 eas build:version:get --platform ios

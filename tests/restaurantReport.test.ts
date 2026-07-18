@@ -2,6 +2,8 @@ import {
   MAX_RESTAURANT_REPORT_PHOTOS,
   validateRestaurantReportDraft,
 } from "../src/features/restaurant/utils/restaurantReportValidation"
+import { getRestaurantReportPalette } from "../src/features/restaurant/utils/restaurantReportPresentation"
+import { resolveTheme } from "../src/design-system-v2/theme"
 
 const validDraft = {
   name: "초록김밥",
@@ -17,19 +19,22 @@ describe("restaurant report validation", () => {
     expect(validateRestaurantReportDraft(validDraft)).toBeNull()
   })
 
-  it("requires the restaurant name and address", () => {
+  it("requires the restaurant name", () => {
     expect(
       validateRestaurantReportDraft({
         ...validDraft,
         name: " ",
       }),
     ).toContain("식당 이름")
+  })
+
+  it("allows a blank optional address", () => {
     expect(
       validateRestaurantReportDraft({
         ...validDraft,
         address: "",
       }),
-    ).toContain("주소")
+    ).toBeNull()
   })
 
   it("limits optional photos to three", () => {
@@ -40,4 +45,17 @@ describe("restaurant report validation", () => {
       }),
     ).toContain("사진")
   })
+
+  it.each(["light", "dark"] as const)(
+    "uses strong card and visible field hierarchy in %s mode",
+    (mode) => {
+      const theme = resolveTheme(mode)
+      const palette = getRestaurantReportPalette(theme)
+
+      expect(palette.cardBorder).toBe(theme.colors.line.strong)
+      expect(palette.fieldBorder).toBe(theme.colors.line.normal)
+      expect(palette.section).toBe(theme.colors.fill.alternative)
+      expect(palette.cardBorder).not.toBe(palette.card)
+    },
+  )
 })
