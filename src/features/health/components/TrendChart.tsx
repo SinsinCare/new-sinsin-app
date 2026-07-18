@@ -9,6 +9,7 @@ import Svg, {
 
 import { STATUS_COLORS } from "../data/dashboardMetrics"
 import type { MetricSeries } from "../data/dashboardMetrics"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 interface TrendChartProps {
   series: MetricSeries
@@ -27,6 +28,7 @@ const PAD_B = 22
  * - 각 측정점은 정상/주의/경고 색으로 표시
  */
 export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
+  const { healthColors } = useHealthTheme()
   const { config, points } = series
   const plotL = PAD_L
   const plotR = width - PAD_R
@@ -77,7 +79,7 @@ export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
           y={bandTop}
           width={plotW}
           height={bandBottom - bandTop}
-          fill="#34D399"
+          fill={healthColors.positive}
           opacity={0.1}
         />
       )}
@@ -87,7 +89,7 @@ export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
           y1={bandTop}
           x2={plotR}
           y2={bandTop}
-          stroke="#34D399"
+          stroke={healthColors.positive}
           strokeWidth={1}
           strokeDasharray="4 4"
           opacity={0.5}
@@ -99,7 +101,7 @@ export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
           y1={bandBottom}
           x2={plotR}
           y2={bandBottom}
-          stroke="#34D399"
+          stroke={healthColors.positive}
           strokeWidth={1}
           strokeDasharray="4 4"
           opacity={0.5}
@@ -110,7 +112,7 @@ export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
       {points.length > 1 && (
         <Path
           d={linePath}
-          stroke="#94A3B8"
+          stroke={healthColors.textAssistive}
           strokeWidth={2}
           fill="none"
           strokeLinejoin="round"
@@ -126,14 +128,14 @@ export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
         const showLabel = showAllLabels || i === 0 || i === points.length - 1
         return (
           <React.Fragment key={`${p.date}-${i}`}>
-            <Circle cx={cx} cy={cy} r={5} fill="#FFFFFF" />
+            <Circle cx={cx} cy={cy} r={5} fill={healthColors.surface} />
             <Circle cx={cx} cy={cy} r={4} fill={color} />
             <SvgText
               x={cx}
               y={cy - 9}
               fontSize={9}
               fontWeight="600"
-              fill={STATUS_COLORS[p.status].text}
+              fill={color}
               textAnchor="middle"
             >
               {p.value}
@@ -143,7 +145,7 @@ export function TrendChart({ series, width, height = 150 }: TrendChartProps) {
                 x={cx}
                 y={height - 6}
                 fontSize={9}
-                fill="#94A3B8"
+                fill={healthColors.textAssistive}
                 textAnchor="middle"
               >
                 {p.label}

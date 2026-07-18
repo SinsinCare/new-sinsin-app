@@ -1,6 +1,7 @@
 import {
   COMPLETION_PARTICLE_DURATION_MS,
   ONBOARDING_SCROLL_CONTENT_STYLE,
+  getOnboardingLoadingPresentation,
   normalizeOnboardingSubtitle,
   shouldShowOnboardingBackButton,
   shouldPlayCompletionParticles,
@@ -32,6 +33,12 @@ describe("onboarding presentation rules", () => {
     expect(shouldShowOnboardingBackButton("steps", 2)).toBe(true)
     expect(shouldShowOnboardingBackButton("welcome", -1)).toBe(false)
     expect(shouldShowOnboardingBackButton("complete", 0)).toBe(false)
+  })
+
+  it("keeps the welcome screen visible while loading questions after confirmation", () => {
+    expect(getOnboardingLoadingPresentation(true, false)).toBe("screen")
+    expect(getOnboardingLoadingPresentation(false, true)).toBe("cta")
+    expect(getOnboardingLoadingPresentation(false, false)).toBe("idle")
   })
 
   it("keeps onboarding content scrollable above the fixed bottom action", () => {

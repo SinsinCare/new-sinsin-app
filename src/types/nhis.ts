@@ -60,5 +60,7 @@ export interface HealthCheckResultDetailRs {
   altSgpt: string
   gammaGtp: string
   judgement: string
+  judgementCode?: string
+  judgementDescription?: string
   createdAt: string
 }

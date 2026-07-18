@@ -8,13 +8,17 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 export function HealthDataEntryScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { healthColors } = useHealthTheme()
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="검사 결과 불러오기"
         paddingTop={insets.top + 8}
@@ -28,10 +32,12 @@ export function HealthDataEntryScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={styles.title}>
+        <ThemedText style={[styles.title, { color: healthColors.text }]}>
           {"검사 결과를\n어떻게 가져올까요?"}
         </ThemedText>
-        <ThemedText style={styles.subtitle}>
+        <ThemedText
+          style={[styles.subtitle, { color: healthColors.textSecondary }]}
+        >
           {"최근 건강검진 결과를 불러와 신장 상태를\n쉽게 설명해드려요."}
         </ThemedText>
 
@@ -39,12 +45,19 @@ export function HealthDataEntryScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.optionCard,
-            pressed && styles.optionCardPressed,
+            {
+              backgroundColor: healthColors.surface,
+              borderColor: healthColors.line,
+            },
+            pressed && { backgroundColor: healthColors.surfacePressed },
           ]}
           onPress={() => router.push("/(settings)/health-nhis-auth")}
         >
           <View
-            style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}
+            style={[
+              styles.optionIconWrapper,
+              { backgroundColor: healthColors.positiveWeak },
+            ]}
           >
             <Ionicons
               name="shield-checkmark"
@@ -53,57 +66,101 @@ export function HealthDataEntryScreen() {
             />
           </View>
           <View style={styles.optionContent}>
-            <ThemedText style={styles.optionTitle}>
+            <ThemedText
+              style={[styles.optionTitle, { color: healthColors.text }]}
+            >
               건강보험공단에서 불러오기
             </ThemedText>
-            <ThemedText style={styles.optionDesc}>
+            <ThemedText
+              style={[styles.optionDesc, { color: healthColors.textSecondary }]}
+            >
               최근 10년간의 검진 기록을 한 번에 자동으로 가져옵니다. 간편인증이
               필요합니다.
             </ThemedText>
-            <View style={styles.recommendBadge}>
+            <View
+              style={[
+                styles.recommendBadge,
+                { backgroundColor: healthColors.positiveWeak },
+              ]}
+            >
               <Ionicons name="flash" size={11} color={tokens.color.sub8.val} />
-              <ThemedText style={styles.recommendBadgeText}>
+              <ThemedText
+                style={[
+                  styles.recommendBadgeText,
+                  { color: healthColors.positive },
+                ]}
+              >
                 가장 빠르고 정확해요
               </ThemedText>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={healthColors.textAssistive}
+          />
         </Pressable>
 
         {/* 검사지 업로드하기 */}
         <Pressable
           style={({ pressed }) => [
             styles.optionCard,
-            pressed && styles.optionCardPressed,
+            {
+              backgroundColor: healthColors.surface,
+              borderColor: healthColors.line,
+            },
+            pressed && { backgroundColor: healthColors.surfacePressed },
           ]}
           onPress={() => router.push("/(settings)/health-data-upload")}
         >
           <View
-            style={[styles.optionIconWrapper, styles.optionIconWrapperGray]}
+            style={[
+              styles.optionIconWrapper,
+              { backgroundColor: healthColors.surfaceMuted },
+            ]}
           >
-            <Ionicons name="camera-outline" size={24} color="#94A3B8" />
+            <Ionicons
+              name="camera-outline"
+              size={24}
+              color={healthColors.textAssistive}
+            />
           </View>
           <View style={styles.optionContent}>
-            <ThemedText style={styles.optionTitle}>
+            <ThemedText
+              style={[styles.optionTitle, { color: healthColors.text }]}
+            >
               검사지 업로드하기
             </ThemedText>
-            <ThemedText style={styles.optionDesc}>
+            <ThemedText
+              style={[styles.optionDesc, { color: healthColors.textSecondary }]}
+            >
               가지고 계신 종이 검사지를 촬영하거나 PDF 파일을 직접 업로드합니다.
             </ThemedText>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={healthColors.textAssistive}
+          />
         </Pressable>
 
         {/* 대시보드 보기 */}
         <Pressable
           style={({ pressed }) => [
             styles.optionCard,
-            pressed && styles.optionCardPressed,
+            {
+              backgroundColor: healthColors.surface,
+              borderColor: healthColors.line,
+            },
+            pressed && { backgroundColor: healthColors.surfacePressed },
           ]}
           onPress={() => router.push("/(settings)/health-dashboard")}
         >
           <View
-            style={[styles.optionIconWrapper, styles.optionIconWrapperGreen]}
+            style={[
+              styles.optionIconWrapper,
+              { backgroundColor: healthColors.positiveWeak },
+            ]}
           >
             <Ionicons
               name="bar-chart-outline"
@@ -112,26 +169,55 @@ export function HealthDataEntryScreen() {
             />
           </View>
           <View style={styles.optionContent}>
-            <ThemedText style={styles.optionTitle}>대시보드 보기</ThemedText>
-            <ThemedText style={styles.optionDesc}>
+            <ThemedText
+              style={[styles.optionTitle, { color: healthColors.text }]}
+            >
+              대시보드 보기
+            </ThemedText>
+            <ThemedText
+              style={[styles.optionDesc, { color: healthColors.textSecondary }]}
+            >
               불러온 검사 수치의 추세 차트와 신장·전해질·단백뇨 등 모듈별 상태를
               한눈에 확인합니다.
             </ThemedText>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#C5C8CE" />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={healthColors.textAssistive}
+          />
         </Pressable>
 
         {/* 보안 안내 */}
         <View style={styles.securityRow}>
-          <Ionicons name="lock-closed-outline" size={13} color="#94A3B8" />
-          <ThemedText style={styles.securityText}>
+          <Ionicons
+            name="lock-closed-outline"
+            size={13}
+            color={healthColors.textAssistive}
+          />
+          <ThemedText
+            style={[styles.securityText, { color: healthColors.textSecondary }]}
+          >
             데이터는 암호화되어 안전하게 보호됩니다
           </ThemedText>
         </View>
 
         {/* 신뢰 카드 */}
-        <View style={styles.trustCard}>
-          <View style={styles.trustIconWrapper}>
+        <View
+          style={[
+            styles.trustCard,
+            {
+              backgroundColor: healthColors.surfaceMuted,
+              borderColor: healthColors.lineSubtle,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.trustIconWrapper,
+              { backgroundColor: healthColors.positiveWeak },
+            ]}
+          >
             <Ionicons
               name="documents-outline"
               size={28}
@@ -141,7 +227,9 @@ export function HealthDataEntryScreen() {
               <Ionicons name="checkmark" size={10} color="#FFFFFF" />
             </View>
           </View>
-          <ThemedText style={styles.trustText}>
+          <ThemedText
+            style={[styles.trustText, { color: healthColors.textSecondary }]}
+          >
             {
               '"신신당부는 보건복지부 가이드라인을 준수하며\n여러분의 소중한 정보를 철저히 관리합니다."'
             }

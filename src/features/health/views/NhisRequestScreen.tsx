@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -17,10 +18,14 @@ import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { nhisService } from "@/src/services/data/nhisService"
 import type { AuthMethodRs } from "@/src/types/nhis"
+import { refreshHealthData } from "../data/healthQueries"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 export function NhisRequestScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const queryClient = useQueryClient()
+  const { healthColors } = useHealthTheme()
 
   const [authMethods, setAuthMethods] = useState<AuthMethodRs[]>([])
   const [loadingMethods, setLoadingMethods] = useState(true)
@@ -28,7 +33,9 @@ export function NhisRequestScreen() {
   const [resNm, setResNm] = useState("")
   const [mobileNo, setMobileNo] = useState("")
   const [resNo, setResNo] = useState("")
-  const [selectedMethod, setSelectedMethod] = useState<AuthMethodRs | null>(null)
+  const [selectedMethod, setSelectedMethod] = useState<AuthMethodRs | null>(
+    null,
+  )
   const [selectedTelecom, setSelectedTelecom] = useState("")
 
   const [requesting, setRequesting] = useState(false)
@@ -63,7 +70,8 @@ export function NhisRequestScreen() {
         mobileCo: selectedTelecom || null,
       })
       if (result.status === "SUCCESS") {
-        router.replace("/(settings)/health-results")
+        await refreshHealthData(queryClient)
+        router.replace("/(settings)/health-dashboard")
       } else if (result.status === "PENDING") {
         setRequestId(result.requestId)
       } else {
@@ -87,7 +95,9 @@ export function NhisRequestScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: healthColors.background }]}
+    >
       <ScreenHeader
         title="건강검진 조회"
         paddingTop={insets.top + 8}
@@ -103,41 +113,89 @@ export function NhisRequestScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* 개인 정보 */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>개인 정보</ThemedText>
+        <View
+          style={[
+            styles.section,
+            { borderBottomColor: healthColors.lineSubtle },
+          ]}
+        >
+          <ThemedText
+            style={[styles.sectionTitle, { color: healthColors.text }]}
+          >
+            개인 정보
+          </ThemedText>
 
           <View style={styles.row}>
             <View style={styles.flex1}>
-              <ThemedText style={styles.fieldLabel}>이름</ThemedText>
+              <ThemedText
+                style={[
+                  styles.fieldLabel,
+                  { color: healthColors.textSecondary },
+                ]}
+              >
+                이름
+              </ThemedText>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    color: healthColors.text,
+                    backgroundColor: healthColors.surfaceMuted,
+                    borderColor: healthColors.line,
+                  },
+                ]}
                 value={resNm}
                 onChangeText={setResNm}
                 placeholder="홍길동"
-                placeholderTextColor="#C5C8CE"
+                placeholderTextColor={healthColors.textAssistive}
               />
             </View>
             <View style={styles.flex1}>
-              <ThemedText style={styles.fieldLabel}>전화번호</ThemedText>
+              <ThemedText
+                style={[
+                  styles.fieldLabel,
+                  { color: healthColors.textSecondary },
+                ]}
+              >
+                전화번호
+              </ThemedText>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    color: healthColors.text,
+                    backgroundColor: healthColors.surfaceMuted,
+                    borderColor: healthColors.line,
+                  },
+                ]}
                 value={mobileNo}
                 onChangeText={setMobileNo}
                 placeholder="01012345678"
-                placeholderTextColor="#C5C8CE"
+                placeholderTextColor={healthColors.textAssistive}
                 keyboardType="phone-pad"
               />
             </View>
           </View>
 
           <View style={styles.fieldBlock}>
-            <ThemedText style={styles.fieldLabel}>생년월일</ThemedText>
+            <ThemedText
+              style={[styles.fieldLabel, { color: healthColors.textSecondary }]}
+            >
+              생년월일
+            </ThemedText>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  color: healthColors.text,
+                  backgroundColor: healthColors.surfaceMuted,
+                  borderColor: healthColors.line,
+                },
+              ]}
               value={resNo}
               onChangeText={setResNo}
               placeholder="19900101"
-              placeholderTextColor="#C5C8CE"
+              placeholderTextColor={healthColors.textAssistive}
               keyboardType="number-pad"
               maxLength={8}
             />
@@ -145,11 +203,23 @@ export function NhisRequestScreen() {
         </View>
 
         {/* 간편인증 수단 */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>간편인증 수단</ThemedText>
+        <View
+          style={[
+            styles.section,
+            { borderBottomColor: healthColors.lineSubtle },
+          ]}
+        >
+          <ThemedText
+            style={[styles.sectionTitle, { color: healthColors.text }]}
+          >
+            간편인증 수단
+          </ThemedText>
 
           {loadingMethods ? (
-            <ActivityIndicator color={tokens.color.sub6.val} style={{ marginTop: 12 }} />
+            <ActivityIndicator
+              color={tokens.color.sub6.val}
+              style={{ marginTop: 12 }}
+            />
           ) : (
             <View style={styles.methodRow}>
               {authMethods.map((method) => {
@@ -159,6 +229,10 @@ export function NhisRequestScreen() {
                     key={method.key}
                     style={[
                       styles.methodCard,
+                      {
+                        backgroundColor: healthColors.surfaceMuted,
+                        borderColor: healthColors.line,
+                      },
                       isSelected && styles.methodCardSelected,
                     ]}
                     onPress={() => {
@@ -169,6 +243,7 @@ export function NhisRequestScreen() {
                     <ThemedText
                       style={[
                         styles.methodName,
+                        { color: healthColors.textSecondary },
                         isSelected && styles.methodNameSelected,
                       ]}
                     >
@@ -182,13 +257,24 @@ export function NhisRequestScreen() {
 
           {selectedMethod?.requiresTelecom && (
             <View style={styles.fieldBlock}>
-              <ThemedText style={styles.fieldLabel}>통신사 선택</ThemedText>
+              <ThemedText
+                style={[
+                  styles.fieldLabel,
+                  { color: healthColors.textSecondary },
+                ]}
+              >
+                통신사 선택
+              </ThemedText>
               <View style={styles.telecomRow}>
                 {selectedMethod.telecomOptions.map((t) => (
                   <Pressable
                     key={t.code}
                     style={[
                       styles.telecomChip,
+                      {
+                        backgroundColor: healthColors.surfaceMuted,
+                        borderColor: healthColors.line,
+                      },
                       selectedTelecom === t.code && styles.telecomChipSelected,
                     ]}
                     onPress={() => setSelectedTelecom(t.code)}
@@ -196,6 +282,7 @@ export function NhisRequestScreen() {
                     <ThemedText
                       style={[
                         styles.telecomChipText,
+                        { color: healthColors.textSecondary },
                         selectedTelecom === t.code &&
                           styles.telecomChipTextSelected,
                       ]}
@@ -210,26 +297,68 @@ export function NhisRequestScreen() {
         </View>
 
         {requestError && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
-            <ThemedText style={styles.errorText}>{requestError}</ThemedText>
+          <View
+            style={[
+              styles.errorBox,
+              { backgroundColor: healthColors.negativeWeak },
+            ]}
+          >
+            <Ionicons
+              name="alert-circle-outline"
+              size={16}
+              color={healthColors.negative}
+            />
+            <ThemedText
+              style={[styles.errorText, { color: healthColors.negative }]}
+            >
+              {requestError}
+            </ThemedText>
           </View>
         )}
 
         {requestId && (
-          <View style={styles.pendingBox}>
-            <Ionicons name="phone-portrait-outline" size={20} color={tokens.color.sub8.val} />
-            <ThemedText style={styles.pendingText}>
-              {"인증 앱에서 본인인증을 완료해 주세요.\n완료 후 아래 인증 완료 버튼을 눌러주세요."}
+          <View
+            style={[
+              styles.pendingBox,
+              {
+                backgroundColor: healthColors.positiveWeak,
+                borderColor: healthColors.positive,
+              },
+            ]}
+          >
+            <Ionicons
+              name="phone-portrait-outline"
+              size={20}
+              color={tokens.color.sub8.val}
+            />
+            <ThemedText
+              style={[styles.pendingText, { color: healthColors.text }]}
+            >
+              {
+                "인증 앱에서 본인인증을 완료해 주세요.\n완료 후 아래 인증 완료 버튼을 눌러주세요."
+              }
             </ThemedText>
           </View>
         )}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+      <View
+        style={[
+          styles.footer,
+          {
+            paddingBottom: insets.bottom + 12,
+            backgroundColor: healthColors.background,
+            borderTopColor: healthColors.lineSubtle,
+          },
+        ]}
+      >
         {requestId ? (
           <Pressable style={styles.confirmButton} onPress={handleConfirm}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={20}
+              color="#FFFFFF"
+            />
             <ThemedText style={styles.buttonText}>인증 완료</ThemedText>
           </Pressable>
         ) : (

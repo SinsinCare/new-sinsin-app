@@ -3,17 +3,22 @@ import { StyleSheet, View, Pressable } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { nhisService } from "@/src/services/data/nhisService"
+import { refreshHealthData } from "../data/healthQueries"
+import { useHealthTheme } from "../hooks/useHealthTheme"
 
 type ConfirmStatus = "loading" | "failed" | "timeout"
 
 export function NhisConfirmScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const queryClient = useQueryClient()
+  const { healthColors } = useHealthTheme()
   const { requestId } = useLocalSearchParams<{ requestId: string }>()
 
   const [status, setStatus] = useState<ConfirmStatus>("loading")
@@ -25,7 +30,8 @@ export function NhisConfirmScreen() {
     try {
       const result = await nhisService.healthCheckConfirm(requestId)
       if (result.status === "SUCCESS") {
-        router.replace("/(settings)/health-results")
+        await refreshHealthData(queryClient)
+        router.replace("/(settings)/health-dashboard")
       } else if (result.status === "TIMEOUT") {
         setStatus("timeout")
         setErrorMessage("인증 시간이 초과되었습니다. 다시 시도해 주세요.")
@@ -50,6 +56,7 @@ export function NhisConfirmScreen() {
     <ThemedView
       style={[
         styles.container,
+        { backgroundColor: healthColors.background },
         { paddingTop: insets.top, paddingBottom: insets.bottom + 24 },
       ]}
     >
@@ -57,24 +64,40 @@ export function NhisConfirmScreen() {
         {status === "loading" ? (
           <>
             <View style={styles.iconWrapper}>
-              <Ionicons name="hourglass-outline" size={52} color={tokens.color.sub6.val} />
+              <Ionicons
+                name="hourglass-outline"
+                size={52}
+                color={tokens.color.sub6.val}
+              />
             </View>
-            <ThemedText style={styles.title}>결과를 불러오고 있습니다</ThemedText>
-            <ThemedText style={styles.subtitle}>잠시만 기다려 주세요.</ThemedText>
+            <ThemedText style={[styles.title, { color: healthColors.text }]}>
+              결과를 불러오고 있습니다
+            </ThemedText>
+            <ThemedText
+              style={[styles.subtitle, { color: healthColors.textSecondary }]}
+            >
+              잠시만 기다려 주세요.
+            </ThemedText>
           </>
         ) : (
           <>
             <View style={styles.iconWrapper}>
               <Ionicons
-                name={status === "timeout" ? "time-outline" : "close-circle-outline"}
+                name={
+                  status === "timeout" ? "time-outline" : "close-circle-outline"
+                }
                 size={52}
-                color="#DC2626"
+                color={healthColors.negative}
               />
             </View>
-            <ThemedText style={styles.title}>
+            <ThemedText style={[styles.title, { color: healthColors.text }]}>
               {status === "timeout" ? "인증 시간 초과" : "인증 실패"}
             </ThemedText>
-            <ThemedText style={styles.subtitle}>{errorMessage}</ThemedText>
+            <ThemedText
+              style={[styles.subtitle, { color: healthColors.textSecondary }]}
+            >
+              {errorMessage}
+            </ThemedText>
           </>
         )}
       </View>

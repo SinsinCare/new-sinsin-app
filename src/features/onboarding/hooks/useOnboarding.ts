@@ -13,8 +13,10 @@ type Phase = "welcome" | "steps" | "complete"
 export function useOnboarding() {
   const [phase, setPhase] = useState<Phase>("welcome")
   const [steps, setSteps] = useState<OnboardingStep[]>([])
-  // hydration 완료 전까지 로딩 화면을 보여주기 위해 true로 시작
-  const [isLoading, setIsLoading] = useState(true)
+  // 저장 상태 복원 중에는 전체 로딩을, 환자 선택 후 질문을 가져오는 동안에는
+  // 현재 welcome 화면과 CTA 로딩을 유지한다.
+  const [isInitializing, setIsInitializing] = useState(true)
+  const [isLoadingSteps, setIsLoadingSteps] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const lastViewedStepRef = useRef<string | null>(null)
   const completionViewedRef = useRef(false)
@@ -62,7 +64,7 @@ export function useOnboarding() {
   }, [setOnboardingInProgress])
 
   const loadSteps = useCallback(async (isCkd: boolean) => {
-    setIsLoading(true)
+    setIsLoadingSteps(true)
     try {
       const data = await onboardingService.getSteps(isCkd)
       setSteps(data)
@@ -74,7 +76,7 @@ export function useOnboarding() {
       trackAnalyticsEvent("onboarding_steps_load_failed", {})
       Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
     } finally {
-      setIsLoading(false)
+      setIsLoadingSteps(false)
     }
   }, [])
 
@@ -84,15 +86,19 @@ export function useOnboarding() {
 
     const canResume = prepareForUser(user.uid)
 
-    if (canResume && hasCkd !== null) {
-      // 동일 사용자의 이전 진행 데이터가 있으면 해당 스텝으로 복원
-      loadSteps(hasCkd)
-    } else {
-      // 신규 사용자이거나 소유자가 없는 기존 데이터면 진단 화면부터 시작
-      setPhase("welcome")
-      setSteps([])
-      setIsLoading(false)
+    const initialize = async () => {
+      if (canResume && hasCkd !== null) {
+        // 동일 사용자의 이전 진행 데이터가 있으면 해당 스텝으로 복원
+        await loadSteps(hasCkd)
+      } else {
+        // 신규 사용자이거나 소유자가 없는 기존 데이터면 진단 화면부터 시작
+        setPhase("welcome")
+        setSteps([])
+      }
+      setIsInitializing(false)
     }
+
+    void initialize()
     // hasCkd 변화에는 반응하지 않고 사용자/스토리지 준비 시점에만 실행
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStoreHydrated, user?.uid])
@@ -102,8 +108,8 @@ export function useOnboarding() {
   }
 
   const handleWelcomeConfirm = () => {
-    if (hasCkd === null) return
-    loadSteps(hasCkd)
+    if (hasCkd === null || isLoadingSteps) return
+    void loadSteps(hasCkd)
   }
 
   const currentStep = steps[currentStepIndex]
@@ -111,7 +117,7 @@ export function useOnboarding() {
   const currentAnswer = currentStep ? answers[currentStep.step] : undefined
 
   useEffect(() => {
-    if (phase !== "steps" || isLoading || !currentStep) return
+    if (phase !== "steps" || isLoadingSteps || !currentStep) return
     const viewKey = `${currentStepIndex}:${steps.length}`
     if (lastViewedStepRef.current === viewKey) return
     lastViewedStepRef.current = viewKey
@@ -119,7 +125,7 @@ export function useOnboarding() {
       step_index: currentStepIndex,
       step_count: steps.length,
     })
-  }, [currentStep, currentStepIndex, isLoading, phase, steps.length])
+  }, [currentStep, currentStepIndex, isLoadingSteps, phase, steps.length])
 
   useEffect(() => {
     if (phase !== "complete" || completionViewedRef.current) return
@@ -253,7 +259,8 @@ export function useOnboarding() {
     currentStep,
     currentStepIndex,
     currentAnswer,
-    isLoading,
+    isInitializing,
+    isLoadingSteps,
     isSubmitting,
     isLastStep,
     hasValidAnswer,

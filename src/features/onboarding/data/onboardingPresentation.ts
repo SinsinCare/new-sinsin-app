@@ -11,6 +11,17 @@ export const ONBOARDING_SCROLL_CONTENT_STYLE = {
 
 type OnboardingPhase = "welcome" | "steps" | "complete"
 
+export type OnboardingLoadingPresentation = "screen" | "cta" | "idle"
+
+export function getOnboardingLoadingPresentation(
+  isInitializing: boolean,
+  isLoadingSteps: boolean,
+): OnboardingLoadingPresentation {
+  if (isInitializing) return "screen"
+  if (isLoadingSteps) return "cta"
+  return "idle"
+}
+
 export function normalizeOnboardingSubtitle(
   subtitle: string | null | undefined,
 ): string | null {

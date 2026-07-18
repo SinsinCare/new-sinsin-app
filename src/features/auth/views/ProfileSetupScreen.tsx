@@ -181,7 +181,8 @@ export function ProfileSetupScreen() {
               render={({ field, fieldState }) => (
                 <V2TextField
                   variant="box"
-                  label="전화번호 *"
+                  label="전화번호"
+                  required
                   value={field.value}
                   onChangeText={(value) =>
                     field.onChange(formatKoreanMobileInput(value))

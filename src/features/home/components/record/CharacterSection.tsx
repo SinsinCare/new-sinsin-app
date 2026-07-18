@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import { Animated, Image, StyleSheet } from "react-native"
 import type { ImageSourcePropType } from "react-native"
+import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import {
   Defs,
@@ -91,16 +92,8 @@ export function CharacterSection({
   backgroundVariant,
 }: CharacterSectionProps) {
   const isDarkMode = useAppColorScheme() === "dark"
-  const fireIconName = hasRecord
-    ? "fire-color"
-    : isDarkMode
-      ? "fire-dark"
-      : "fire-empty"
-  const checkIconName = withinLimits
-    ? "check-color"
-    : isDarkMode
-      ? "check-dark"
-      : "check-empty"
+  const fireIconName = hasRecord ? "fire-color" : "fire-dark"
+  const checkIconName = withinLimits ? "check-color" : "check-dark"
   const streakText =
     streak > 0 ? `연속 ${streak}일 기록중` : "오늘은 식이 기록이 없어요"
   const guideText = withinLimits
@@ -154,6 +147,12 @@ export function CharacterSection({
         style={styles.background}
         resizeMode="cover"
       />
+      <ExpoLinearGradient
+        pointerEvents="none"
+        colors={["transparent", "rgba(0, 0, 0, 0.58)"]}
+        locations={[0, 1]}
+        style={styles.statusContrastGradient}
+      />
       <YStack alignItems="center">
         <Animated.View style={{ transform: [{ translateY: floatY }] }}>
           <Icon name={characterType} size={200} />
@@ -164,7 +163,13 @@ export function CharacterSection({
           <ShadowEllipse dark={isDarkMode} />
         </Animated.View>
       </YStack>
-      <YStack>
+      <YStack
+        width="100%"
+        paddingHorizontal="$3"
+        paddingVertical="$2"
+        borderRadius="$5"
+        backgroundColor="rgba(0, 0, 0, 0.36)"
+      >
         <XStack
           alignItems="center"
           justifyContent="center"
@@ -173,12 +178,7 @@ export function CharacterSection({
           borderRadius="$6"
         >
           <Icon name={fireIconName} size={26} />
-          <Text
-            fontSize={18}
-            fontWeight="600"
-            color={isDarkMode ? "$textDark" : "black"}
-            numberOfLines={1}
-          >
+          <Text fontSize={18} fontWeight="600" color="white" numberOfLines={1}>
             {streakText}
           </Text>
         </XStack>
@@ -191,12 +191,7 @@ export function CharacterSection({
           borderRadius="$6"
         >
           <Icon name={checkIconName} size={26} />
-          <Text
-            fontSize={18}
-            fontWeight="600"
-            color={isDarkMode ? "$textDark" : "black"}
-            numberOfLines={1}
-          >
+          <Text fontSize={18} fontWeight="600" color="white" numberOfLines={1}>
             {guideText}
           </Text>
         </XStack>
@@ -210,5 +205,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: undefined,
     height: undefined,
+  },
+  statusContrastGradient: {
+    ...StyleSheet.absoluteFillObject,
+    top: "55%",
   },
 })

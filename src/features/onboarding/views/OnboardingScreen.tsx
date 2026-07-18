@@ -18,6 +18,7 @@ import {
 } from "../components"
 import {
   ONBOARDING_SCROLL_CONTENT_STYLE,
+  getOnboardingLoadingPresentation,
   shouldShowOnboardingBackButton,
 } from "../data/onboardingPresentation"
 
@@ -35,7 +36,8 @@ export function OnboardingScreen() {
     currentStep,
     currentStepIndex,
     currentAnswer,
-    isLoading,
+    isInitializing,
+    isLoadingSteps,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
@@ -49,7 +51,12 @@ export function OnboardingScreen() {
     handleCompletionStart,
   } = useOnboarding()
 
-  if (isLoading) {
+  const loadingPresentation = getOnboardingLoadingPresentation(
+    isInitializing,
+    isLoadingSteps,
+  )
+
+  if (loadingPresentation === "screen") {
     return <LoadingScreen message="준비 중..." />
   }
 
@@ -99,7 +106,10 @@ export function OnboardingScreen() {
           <V2BottomCTA
             primaryLabel="다음"
             onPrimary={handleWelcomeConfirm}
-            primaryProps={{ disabled: hasCkd === null }}
+            primaryProps={{
+              disabled: hasCkd === null || isLoadingSteps,
+              loading: loadingPresentation === "cta",
+            }}
           />
         </YStack>
       </YStack>
