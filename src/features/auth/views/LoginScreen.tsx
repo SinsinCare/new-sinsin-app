@@ -46,7 +46,7 @@ export function LoginScreen() {
             letterSpacing={-0.3}
             lineHeight={32}
           >
-            신장관리 통합 솔루션
+            신장 식단·건강관리 솔루션
           </Text>
           <MainTextLogo width={180} height={40} />
         </YStack>
