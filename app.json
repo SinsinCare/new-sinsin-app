@@ -4,7 +4,7 @@
     "slug": "sinsin-rn",
     "version": "1.1.2",
     "orientation": "default",
-    "icon": "./assets/branding/app_icon_260718_resize_512.png",
+    "icon": "./assets/branding/app_icon_260720.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
@@ -40,7 +40,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/branding/app_icon_260718_resize_512.png",
+        "foregroundImage": "./assets/branding/app_icon_260720.png",
         "backgroundColor": "#D8E9F5"
       },
       "package": "com.mediology.sinsinapp",
