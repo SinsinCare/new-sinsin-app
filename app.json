@@ -2,7 +2,7 @@
   "expo": {
     "name": "신신당부",
     "slug": "sinsin-rn",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "default",
     "icon": "./assets/branding/app_icon_260718_resize_512.png",
     "userInterfaceStyle": "automatic",
