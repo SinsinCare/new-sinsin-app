@@ -64,6 +64,9 @@ npm run build:test         # EAS test build, all platforms, test backend
 npm run build:test:ios     # EAS test build, iOS only
 npm run build:test:android # EAS test build, Android APK
 npm run build:prod         # EAS production build, all platforms, production backend
+npm run build:prod:qa      # EAS internal QA build, all platforms, production backend
+npm run build:prod:qa:ios  # EAS internal QA build, iOS only, production backend
+npm run build:prod:qa:android # EAS internal APK build, Android only, production backend
 npm run build:prod:ios     # EAS production build, iOS only
 npm run build:prod:android # EAS production build, Android only
 npm run deploy:prod        # EAS production build and auto-submit
@@ -252,11 +255,13 @@ Health app for CKD patients with:
 ## Mixpanel Analytics
 
 - The app sends analytics directly through `mixpanel-react-native` in Expo-compatible JavaScript mode. Do not add a second analytics SDK or call Mixpanel outside `src/features/analytics/`.
-- Test builds read `EXPO_PUBLIC_MIXPANEL_TOKEN` from `.env.test`. Production analytics remains disabled until a separate production project and token are approved.
+- Test builds read `EXPO_PUBLIC_MIXPANEL_TOKEN` from `.env.test`. Production builds read the separate production token and `https://api.mixpanel.com` endpoint from the EAS `production` environment; never commit either environment's token to the repository.
+- The production project is `sinsin-production` (project ID `4046247`) with US data residency, `Asia/Seoul` timezone, and Simplified ID Merge. Revalidate these settings before changing the ingestion endpoint or identity model.
 - Initialization and privacy filtering live in `src/features/analytics/analyticsClient.ts`. IP-based geolocation is disabled, and event properties must never include email, names, health data, food text, images, URLs, tokens, or other free-form user content.
 - Authentication identity is the backend-issued internal `user.uid`. Call `identifyAnalyticsUser` before login or signup success events, identify again on restored authenticated sessions, and call `resetAnalyticsIdentity` on logout.
 - Event names and allowed properties are defined in `src/features/analytics/events.ts` and use `snake_case`. Update that contract and `planning/user-flows/registry/events.yaml` together when adding events.
 - The current value funnel is login or signup completion, then `food_analysis_started`, `food_analysis_succeeded`, and `food_record_saved`.
+- Before a public production release, verify `app_environment=production`, identity behavior, and the value funnel in Mixpanel Live View, then save a funnel report for ongoing monitoring.
 - The current launch scope is Korean users only, so no regional consent gate is enabled. Reassess consent and data residency requirements before expanding regions.
 
 ## Google Cloud / OAuth

@@ -59,6 +59,24 @@
         "buildType": "apk"
       }
     },
+    "production-qa": {
+      "node": "22.21.1",
+      "distribution": "internal",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_USE_MOCK_MODE": "false",
+        "EXPO_PUBLIC_MOCK_NO_USER": "false",
+        "EXPO_PUBLIC_BACKEND_URL": "https://sinsin-fastapi-87899379852.asia-northeast3.run.app/api/v1",
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
+        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "testflight": {
       "node": "22.21.1",
       "distribution": "store",
