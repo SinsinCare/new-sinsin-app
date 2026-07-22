@@ -64,6 +64,7 @@
       "distribution": "internal",
       "environment": "production",
       "env": {
+        "SINSIN_BUILD_VARIANT": "production-qa",
         "EXPO_PUBLIC_USE_MOCK_AUTH": "false",
         "EXPO_PUBLIC_USE_MOCK_MODE": "false",
         "EXPO_PUBLIC_MOCK_NO_USER": "false",

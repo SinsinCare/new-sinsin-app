@@ -255,6 +255,7 @@ Health app for CKD patients with:
 ## Mixpanel Analytics
 
 - The app sends analytics directly through `mixpanel-react-native` in Expo-compatible JavaScript mode. Do not add a second analytics SDK or call Mixpanel outside `src/features/analytics/`.
+- Production-targeted internal QA uses the `production-qa` EAS profile. It reads the production EAS environment but installs under a distinct app identifier, so it must not replace or delete the store-signed production app on a test device.
 - Test builds read `EXPO_PUBLIC_MIXPANEL_TOKEN` from `.env.test`. Production builds read the separate production token and `https://api.mixpanel.com` endpoint from the EAS `production` environment; never commit either environment's token to the repository.
 - The production project is `sinsin-production` (project ID `4046247`) with US data residency, `Asia/Seoul` timezone, and Simplified ID Merge. Revalidate these settings before changing the ingestion endpoint or identity model.
 - Initialization and privacy filtering live in `src/features/analytics/analyticsClient.ts`. IP-based geolocation is disabled, and event properties must never include email, names, health data, food text, images, URLs, tokens, or other free-form user content.
