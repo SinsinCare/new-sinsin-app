@@ -2,15 +2,14 @@ import React, { useState } from "react"
 import {
   StyleSheet,
   View,
-  ScrollView,
   Pressable,
   TextInput,
-  KeyboardAvoidingView,
   Platform,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -91,10 +90,7 @@ export function PasswordEditScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex}
-      >
+      <View style={styles.flex}>
         {/* 헤더 */}
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -102,10 +98,15 @@ export function PasswordEditScreen() {
           </Pressable>
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
+          style={styles.flex}
           contentContainerStyle={styles.scrollContent}
+          bottomOffset={insets.bottom + 88}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
         >
           <ThemedText style={[styles.title, { color: c.text }]}>
             새 비밀번호를 입력해주세요
@@ -242,7 +243,7 @@ export function PasswordEditScreen() {
               {confirmMessage}
             </ThemedText>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         {submitError && (
           <ThemedText style={styles.errorText}>{submitError}</ThemedText>
@@ -253,7 +254,7 @@ export function PasswordEditScreen() {
           paddingBottom={insets.bottom + 16}
           onPress={handleSave}
         />
-      </KeyboardAvoidingView>
+      </View>
     </ThemedView>
   )
 }
