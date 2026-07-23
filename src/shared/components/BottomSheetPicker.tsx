@@ -32,6 +32,23 @@ interface BottomSheetPickerProps {
   required?: boolean
 }
 
+export function getBottomSheetPickerColors(isDark: boolean) {
+  return {
+    label: isDark ? tokens.color.textDark.val : "#17191C",
+    placeholder: isDark ? "#6B7280" : "#A0A4A8",
+    inputBg: isDark ? "#2A2A32" : "white",
+    inputBorder: isDark
+      ? tokens.color.borderDark.val
+      : "rgba(218,223,230,0.6)",
+    chevron: isDark ? tokens.color.textDarkSub.val : "#787C83",
+    sheetBg: isDark ? "#2A2A32" : "white",
+    handle: isDark ? tokens.color.borderDark.val : "#E0E0E0",
+    selectedBg: isDark ? `${tokens.color.sub8.val}20` : "#F0FDF4",
+    selectedText: tokens.color.sub8.val,
+    itemText: isDark ? tokens.color.textDark.val : "#17191C",
+  }
+}
+
 export function BottomSheetPicker({
   label,
   value,
@@ -48,18 +65,7 @@ export function BottomSheetPicker({
 
   const selectedOption = options.find((o) => o.value === value)
 
-  const colors = {
-    label: isDark ? tokens.color.textDark.val : "#17191C",
-    placeholder: isDark ? "#6B7280" : "#A0A4A8",
-    inputBg: isDark ? "#2A2A32" : "white",
-    inputBorder: isDark ? tokens.color.borderDark.val : "rgba(218,223,230,0.6)",
-    chevron: isDark ? tokens.color.textDarkSub.val : "#787C83",
-    sheetBg: isDark ? "#2A2A32" : "white",
-    handle: isDark ? tokens.color.borderDark.val : "#E0E0E0",
-    selectedBg: isDark ? tokens.color.borderDark.val : "#F5F6FF",
-    selectedText: "#5464F2",
-    itemText: isDark ? tokens.color.textDark.val : "#17191C",
-  }
+  const colors = getBottomSheetPickerColors(isDark)
 
   useEffect(() => {
     if (visible) {
