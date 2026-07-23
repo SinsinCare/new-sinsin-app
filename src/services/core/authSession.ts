@@ -76,7 +76,7 @@ async function requestNewAccessToken(): Promise<string> {
     )
     return accessToken
   } catch {
-    await clearClientSession()
+    await clearClientSession({ requireFreshSocialProviderSelection: true })
     throw createSessionExpiredError()
   }
 }

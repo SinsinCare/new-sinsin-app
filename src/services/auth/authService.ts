@@ -32,9 +32,8 @@ const SOCIAL_REAUTHENTICATION_INTENT_VALUE = "required"
 export type AuthSignOutReason = "automatic" | "explicit"
 
 export async function persistSocialReauthenticationIntentForSignOut(
-  reason: AuthSignOutReason,
+  _reason: AuthSignOutReason,
 ): Promise<void> {
-  if (reason !== "explicit") return
   await AsyncStorage.setItem(
     SOCIAL_REAUTHENTICATION_INTENT_KEY,
     SOCIAL_REAUTHENTICATION_INTENT_VALUE,
@@ -477,11 +476,15 @@ function getRealAuthService(): IAuthService {
           isApiErrorLike(error) &&
           (error.statusCode === 401 || error.statusCode === 403)
         ) {
-          await clearClientSession()
+          await clearClientSession({
+            requireFreshSocialProviderSelection: true,
+          })
           return null
         }
         logger.debug("[authService] restoreSession failed", error)
-        await clearClientSession()
+        await clearClientSession({
+          requireFreshSocialProviderSelection: true,
+        })
         return null
       }
     },
