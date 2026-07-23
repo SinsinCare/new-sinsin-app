@@ -5,6 +5,8 @@ import type {
   AuthProfile,
   SocialSignupConsentRequiredResult,
   SocialSignupRequest,
+  EntryGate,
+  SessionPersistence,
 } from "../../types"
 
 // 앱 사용자 최소 인터페이스
@@ -18,6 +20,8 @@ export interface AuthSessionResult {
   user: AppUser
   accountState: string
   requiresAdditionalInfo: boolean
+  entryGate?: EntryGate
+  sessionPersistence?: SessionPersistence
 }
 
 export type SocialAuthSessionResult =
@@ -50,11 +54,12 @@ export interface IAuthService {
     request: ProfileCompleteRequest,
   ): Promise<AuthSessionResult>
   getProfile(): Promise<AuthProfile>
-  signup(request: SignupRequest): Promise<AppUser>
+  signup(request: SignupRequest): Promise<AuthSessionResult>
   completeSocialSignup(request: SocialSignupRequest): Promise<AuthSessionResult>
   cancelWithdrawal(
     cancelToken: string,
   ): Promise<AuthSessionResult>
   signOut(): Promise<void>
+  promoteSession(): Promise<AuthSessionResult>
   restoreSession(): Promise<AuthSessionResult | null>
 }

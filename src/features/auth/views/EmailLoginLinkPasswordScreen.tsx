@@ -50,6 +50,7 @@ export function EmailLoginLinkPasswordScreen() {
         getDestinationForAccountState(
           result.accountState,
           result.requiresAdditionalInfo,
+          result.entryGate,
         ),
       )
     } catch (error) {

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { Alert, BackHandler } from "react-native"
 import { router } from "expo-router"
 import { onboardingService } from "@/src/services/data/onboardingService"
+import { authService } from "@/src/services/auth/authService"
 import { useOnboardingStore } from "@/src/stores/onboardingStore"
 import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
@@ -27,10 +28,13 @@ export function useOnboarding() {
   )
 
   const user = useAuthStore((s) => s.user)
+  const setUser = useAuthStore((s) => s.setUser)
   const setAccountState = useAuthStore((s) => s.setAccountState)
   const setRequiresAdditionalInfo = useAuthStore(
     (s) => s.setRequiresAdditionalInfo,
   )
+  const setEntryGate = useAuthStore((s) => s.setEntryGate)
+  const setSessionPersistence = useAuthStore((s) => s.setSessionPersistence)
   const resetSignup = useSignupStore((s) => s.reset)
   const {
     hasCkd,
@@ -191,9 +195,13 @@ export function useOnboarding() {
     setIsSubmitting(true)
     try {
       await onboardingService.submitAnswers(hasCkd, getAnswersArray())
+      const promotedSession = await authService.promoteSession()
       trackAnalyticsEvent("onboarding_submitted", {})
-      setAccountState("ACTIVE")
-      setRequiresAdditionalInfo(false)
+      setUser(promotedSession.user)
+      setAccountState(promotedSession.accountState)
+      setRequiresAdditionalInfo(promotedSession.requiresAdditionalInfo)
+      setEntryGate(promotedSession.entryGate ?? "HOME")
+      setSessionPersistence(promotedSession.sessionPersistence ?? "persistent")
       resetOnboarding()
       setPhase("complete")
     } catch (error) {

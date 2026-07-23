@@ -33,6 +33,8 @@ export function useTermsAgreement({
   const setRequiresAdditionalInfo = useAuthStore(
     (s) => s.setRequiresAdditionalInfo,
   )
+  const setEntryGate = useAuthStore((s) => s.setEntryGate)
+  const setSessionPersistence = useAuthStore((s) => s.setSessionPersistence)
 
   const allChecked = TERMS.every((t) => agreed[t.id])
   const requiredChecked = TERMS.filter((t) => t.required).every(
@@ -89,6 +91,8 @@ export function useTermsAgreement({
       setUser(result.user)
       setAccountState(result.accountState)
       setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      setEntryGate(result.entryGate ?? "PROFILE")
+      setSessionPersistence(result.sessionPersistence ?? "ephemeral")
       identifyAnalyticsUser(result.user.uid)
       if (result.accountState !== "PENDING_PROFILE") {
         trackAnalyticsEvent("auth_signup_completed", { method: "social" })
@@ -97,6 +101,7 @@ export function useTermsAgreement({
         getDestinationForAccountState(
           result.accountState,
           result.requiresAdditionalInfo,
+          result.entryGate,
         ),
       )
     } catch (error) {

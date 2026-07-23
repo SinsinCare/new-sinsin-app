@@ -14,6 +14,7 @@ const mockAppApi = {
 const mockAppTokenService = {
   getAccessToken: jest.fn(),
   getRefreshToken: jest.fn(),
+  getPersistedRefreshToken: jest.fn(),
   setTokens: jest.fn(),
 }
 const mockClearClientSession = jest.fn()
@@ -345,7 +346,7 @@ describe("local social reauthentication intent", () => {
   })
 
   it("restores the access/refresh session without reading or changing provider UI intent", async () => {
-    mockAppTokenService.getRefreshToken.mockResolvedValue("refresh-token")
+    mockAppTokenService.getPersistedRefreshToken.mockResolvedValue("refresh-token")
     mockAppPublicApi.post.mockResolvedValue({
       data: {
         result: {
@@ -373,6 +374,7 @@ describe("local social reauthentication intent", () => {
     expect(mockAppTokenService.setTokens).toHaveBeenCalledWith(
       "new-access-token",
       "new-refresh-token",
+      "persistent",
     )
     expect(mockAsyncStorage.getItem).not.toHaveBeenCalled()
     expect(mockAsyncStorage.setItem).not.toHaveBeenCalled()

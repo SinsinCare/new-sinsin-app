@@ -83,6 +83,7 @@ describe("authenticatedFetch", () => {
     expect(mockedTokenService.setTokens).toHaveBeenCalledWith(
       "fresh-access",
       "fresh-refresh",
+      "persistent",
     )
     const firstHeaders = fetchMock.mock.calls[0][1]?.headers as Headers
     const retryHeaders = fetchMock.mock.calls[2][1]?.headers as Headers

@@ -12,6 +12,7 @@ type TokenRefreshResponse = {
   result?: {
     accessToken?: string
     refreshToken?: string
+    sessionPersistence?: "persistent" | "ephemeral"
   }
 }
 
@@ -66,7 +67,13 @@ async function requestNewAccessToken(): Promise<string> {
       throw new Error(data.message || `HTTP ${response.status}`)
     }
 
-    await tokenService.setTokens(accessToken, newRefreshToken)
+    await tokenService.setTokens(
+      accessToken,
+      newRefreshToken,
+      data.result?.sessionPersistence === "ephemeral"
+        ? "ephemeral"
+        : "persistent",
+    )
     return accessToken
   } catch {
     await clearClientSession()

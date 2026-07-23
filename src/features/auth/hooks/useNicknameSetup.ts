@@ -18,6 +18,8 @@ export function useNicknameSetup() {
   const setRequiresAdditionalInfo = useAuthStore(
     (s) => s.setRequiresAdditionalInfo,
   )
+  const setEntryGate = useAuthStore((s) => s.setEntryGate)
+  const setSessionPersistence = useAuthStore((s) => s.setSessionPersistence)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -39,7 +41,7 @@ export function useNicknameSetup() {
         return
       }
 
-      const user = await authService.signup({
+      const result = await authService.signup({
         signupToken: signupState.signupToken,
         termsOfServiceAgree: signupState.termsOfServiceAgree,
         privacyPolicyAgree: signupState.privacyPolicyAgree,
@@ -60,10 +62,12 @@ export function useNicknameSetup() {
             : null,
       })
 
-      setUser(user)
-      setAccountState("PENDING_ONBOARDING")
-      setRequiresAdditionalInfo(false)
-      identifyAnalyticsUser(user.uid)
+      setUser(result.user)
+      setAccountState(result.accountState)
+      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      setEntryGate(result.entryGate ?? "ONBOARDING")
+      setSessionPersistence(result.sessionPersistence ?? "ephemeral")
+      identifyAnalyticsUser(result.user.uid)
       trackAnalyticsEvent("auth_signup_completed", { method: "email" })
 
       signupState.setNickname(data.nickname)

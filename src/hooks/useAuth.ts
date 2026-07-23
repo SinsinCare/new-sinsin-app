@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react"
+import { AppState } from "react-native"
 import { useAuthStore, useUserStore } from "../stores"
 import {
   authService,
@@ -21,6 +22,7 @@ import type {
   SocialProvider,
   SocialSignupConsentRequiredResult,
 } from "@/src/types"
+import type { AuthSessionResult } from "@/src/services/types/serviceTypes"
 
 const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 200
 
@@ -40,6 +42,18 @@ function isSocialSignupConsentRequiredResult(
   )
 }
 
+function fallbackEntryGate(result: AuthSessionResult) {
+  if (result.entryGate) return result.entryGate
+  if (result.accountState === "PENDING_PROFILE") return "PROFILE" as const
+  if (result.accountState === "PENDING_ONBOARDING") {
+    return "ONBOARDING" as const
+  }
+  if (result.accountState === "ACTIVE" && result.requiresAdditionalInfo) {
+    return "PROFILE" as const
+  }
+  return "HOME" as const
+}
+
 export function useAuth() {
   const {
     user,
@@ -47,12 +61,33 @@ export function useAuth() {
     isLoading,
     isAuthenticated,
     requiresAdditionalInfo,
+    entryGate,
+    sessionPersistence,
     setUser,
     setAccountState,
     setRequiresAdditionalInfo,
+    setEntryGate,
+    setSessionPersistence,
     reset: resetAuth,
   } = useAuthStore()
   const { reset: resetProfile } = useUserStore()
+
+  const applyAuthSession = useCallback(
+    (result: AuthSessionResult) => {
+      setUser(result.user)
+      setAccountState(result.accountState)
+      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      setEntryGate(fallbackEntryGate(result))
+      setSessionPersistence(result.sessionPersistence ?? "persistent")
+    },
+    [
+      setAccountState,
+      setEntryGate,
+      setRequiresAdditionalInfo,
+      setSessionPersistence,
+      setUser,
+    ],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -63,9 +98,7 @@ export function useAuth() {
         const result = await authService.restoreSession()
         if (cancelled) return
         if (result) {
-          setUser(result.user)
-          setAccountState(result.accountState)
-          setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+          applyAuthSession(result)
         } else {
           await clearClientSession()
         }
@@ -81,15 +114,13 @@ export function useAuth() {
     return () => {
       cancelled = true
     }
-  }, [setUser, setAccountState, setRequiresAdditionalInfo])
+  }, [applyAuthSession])
 
   const signInWithEmail = async (email: string, password: string) => {
     trackAnalyticsEvent("auth_email_login_started", {})
     try {
       const result = await authService.signInWithEmail(email, password)
-      setUser(result.user)
-      setAccountState(result.accountState)
-      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      applyAuthSession(result)
       identifyAnalyticsUser(result.user.uid)
       trackAnalyticsEvent("auth_email_login_succeeded", {})
       return result
@@ -121,9 +152,7 @@ export function useAuth() {
         return result
       }
       await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
-      setUser(result.user)
-      setAccountState(result.accountState)
-      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      applyAuthSession(result)
       identifyAnalyticsUser(result.user.uid)
       trackAnalyticsEvent("auth_social_login_succeeded", { provider })
       return result
@@ -154,9 +183,7 @@ export function useAuth() {
       return result
     }
     await delay(SOCIAL_LOGIN_SUCCESS_TRANSITION_MS)
-    setUser(result.user)
-    setAccountState(result.accountState)
-    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+    applyAuthSession(result)
     return result
   }
 
@@ -168,9 +195,7 @@ export function useAuth() {
       emailLinkToken,
       password,
     )
-    setUser(result.user)
-    setAccountState(result.accountState)
-    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+    applyAuthSession(result)
     return result
   }
 
@@ -178,9 +203,7 @@ export function useAuth() {
     const isSignupCompletion = accountState === "PENDING_PROFILE"
     try {
       const result = await authService.completeProfile(request)
-      setUser(result.user)
-      setAccountState(result.accountState)
-      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+      applyAuthSession(result)
       identifyAnalyticsUser(result.user.uid)
       if (isSignupCompletion) {
         trackAnalyticsEvent("auth_signup_completed", { method: "social" })
@@ -201,9 +224,7 @@ export function useAuth() {
 
   const cancelWithdrawal = async (cancelToken: string) => {
     const result = await authService.cancelWithdrawal(cancelToken)
-    setUser(result.user)
-    setAccountState(result.accountState)
-    setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+    applyAuthSession(result)
     trackAnalyticsEvent("auth_withdrawal_cancelled", {})
     return result
   }
@@ -223,10 +244,21 @@ export function useAuth() {
     }
   }
 
+  useEffect(() => {
+    if (!isAuthenticated || sessionPersistence !== "ephemeral") return
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background") void signOut("automatic")
+    })
+    return () => subscription.remove()
+  }, [isAuthenticated, sessionPersistence, signOut])
+
   return {
     user,
     accountState,
     requiresAdditionalInfo,
+    entryGate,
+    sessionPersistence,
     isLoading,
     isAuthenticated,
     signInWithSocialProvider,
@@ -240,6 +272,11 @@ export function useAuth() {
     completeProfile,
     getProfile,
     cancelWithdrawal,
+    promoteSession: async () => {
+      const result = await authService.promoteSession()
+      applyAuthSession(result)
+      return result
+    },
     isUserCancelledError,
     signOut,
   }
