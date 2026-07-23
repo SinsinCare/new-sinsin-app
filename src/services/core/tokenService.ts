@@ -6,6 +6,11 @@ const SECURE_REFRESH_TOKEN_KEY = "sinsin.refreshToken"
 const LEGACY_ACCESS_TOKEN_KEY = "@sinsin/accessToken"
 const LEGACY_REFRESH_TOKEN_KEY = "@sinsin/refreshToken"
 
+type TokenPersistence = "persistent" | "ephemeral"
+
+let ephemeralTokens: { accessToken: string; refreshToken: string } | null =
+  null
+
 let secureStoreAvailable: Promise<boolean> | null = null
 
 async function canUseSecureStore(): Promise<boolean> {
@@ -32,16 +37,50 @@ async function getToken(
   return AsyncStorage.getItem(legacyKey)
 }
 
+async function clearPersistedTokens(): Promise<void> {
+  await Promise.all([
+    canUseSecureStore().then((available) =>
+      available
+        ? Promise.all([
+            SecureStore.deleteItemAsync(SECURE_ACCESS_TOKEN_KEY),
+            SecureStore.deleteItemAsync(SECURE_REFRESH_TOKEN_KEY),
+          ])
+        : undefined,
+    ),
+    AsyncStorage.multiRemove([
+      LEGACY_ACCESS_TOKEN_KEY,
+      LEGACY_REFRESH_TOKEN_KEY,
+    ]),
+  ])
+}
+
 export const tokenService = {
   async getAccessToken(): Promise<string | null> {
+    if (ephemeralTokens) return ephemeralTokens.accessToken
     return getToken(SECURE_ACCESS_TOKEN_KEY, LEGACY_ACCESS_TOKEN_KEY)
   },
 
   async getRefreshToken(): Promise<string | null> {
+    if (ephemeralTokens) return ephemeralTokens.refreshToken
     return getToken(SECURE_REFRESH_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY)
   },
 
-  async setTokens(accessToken: string, refreshToken: string): Promise<void> {
+  async getPersistedRefreshToken(): Promise<string | null> {
+    return getToken(SECURE_REFRESH_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY)
+  },
+
+  async setTokens(
+    accessToken: string,
+    refreshToken: string,
+    persistence: TokenPersistence = "persistent",
+  ): Promise<void> {
+    if (persistence === "ephemeral") {
+      ephemeralTokens = { accessToken, refreshToken }
+      await clearPersistedTokens()
+      return
+    }
+
+    ephemeralTokens = null
     if (await canUseSecureStore()) {
       await Promise.all([
         SecureStore.setItemAsync(SECURE_ACCESS_TOKEN_KEY, accessToken),
@@ -58,16 +97,11 @@ export const tokenService = {
   },
 
   async clearTokens(): Promise<void> {
-    await Promise.all([
-      canUseSecureStore().then((available) =>
-        available
-          ? Promise.all([
-              SecureStore.deleteItemAsync(SECURE_ACCESS_TOKEN_KEY),
-              SecureStore.deleteItemAsync(SECURE_REFRESH_TOKEN_KEY),
-            ])
-          : undefined,
-      ),
-      AsyncStorage.multiRemove([LEGACY_ACCESS_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY]),
-    ])
+    ephemeralTokens = null
+    await clearPersistedTokens()
+  },
+
+  async clearPersistedTokens(): Promise<void> {
+    await clearPersistedTokens()
   },
 }

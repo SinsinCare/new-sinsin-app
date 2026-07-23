@@ -42,6 +42,7 @@ function RootLayoutNav() {
     isLoading,
     accountState,
     requiresAdditionalInfo,
+    entryGate,
     signOut,
   } = useAuth()
   const user = useAuthStore((s) => s.user)
@@ -59,10 +60,12 @@ function RootLayoutNav() {
   const router = useRouter()
   const handledNotificationIdsRef = useRef(new Set<string>())
 
-  const needsOnboarding = accountState === "PENDING_ONBOARDING"
-  const needsProfile = accountState === "PENDING_PROFILE"
+  const needsOnboarding = entryGate === "ONBOARDING"
+  const needsProfile = entryGate === "PROFILE"
   const needsAdditionalInfo =
-    accountState === "ACTIVE" && requiresAdditionalInfo
+    entryGate === "PROFILE" &&
+    accountState === "ACTIVE" &&
+    requiresAdditionalInfo
 
   // 푸시 data.type 라우팅은 클라이언트가 소유한다. 서버는 앱 내부 경로를 모른다.
   useEffect(() => {
@@ -173,6 +176,7 @@ function RootLayoutNav() {
     isAuthenticated,
     isLoading,
     accountState,
+    entryGate,
     segmentPath,
     router,
     isSignupInProgress,

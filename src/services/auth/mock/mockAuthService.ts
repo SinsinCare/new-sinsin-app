@@ -138,7 +138,7 @@ export const mockAuthService: IAuthService = {
     }
   },
 
-  async signup(request: SignupRequest): Promise<AppUser> {
+  async signup(request: SignupRequest) {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const newUser = new MockUser(
       `mock-user-${Date.now()}`,
@@ -146,7 +146,13 @@ export const mockAuthService: IAuthService = {
       request.nickName,
     )
     currentUser = newUser
-    return currentUser
+    return {
+      user: currentUser,
+      accountState: "PENDING_ONBOARDING",
+      requiresAdditionalInfo: false,
+      entryGate: "ONBOARDING" as const,
+      sessionPersistence: "ephemeral" as const,
+    }
   },
 
   async completeSocialSignup(
@@ -184,6 +190,17 @@ export const mockAuthService: IAuthService = {
   async signOut(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 100))
     currentUser = null
+  },
+
+  async promoteSession() {
+    currentUser = currentUser ?? DEFAULT_MOCK_USER
+    return {
+      user: currentUser,
+      accountState: "ACTIVE",
+      requiresAdditionalInfo: false,
+      entryGate: "HOME" as const,
+      sessionPersistence: "persistent" as const,
+    }
   },
 
   async restoreSession(): Promise<{

@@ -160,6 +160,7 @@ export function SocialLinkEmailScreen() {
         getDestinationForAccountState(
           result.accountState,
           result.requiresAdditionalInfo,
+          result.entryGate,
         ),
       )
       setVerificationComplete(true)

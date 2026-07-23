@@ -1,4 +1,4 @@
-import type { AccountState } from "@/src/types"
+import type { AccountState, EntryGate } from "@/src/types"
 
 export type AuthDestination =
   | "/(auth)/profile-setup"
@@ -8,7 +8,11 @@ export type AuthDestination =
 export function getDestinationForAccountState(
   accountState: AccountState | string | null | undefined,
   requiresAdditionalInfo = false,
+  entryGate?: EntryGate,
 ): AuthDestination {
+  if (entryGate === "PROFILE") return "/(auth)/profile-setup"
+  if (entryGate === "ONBOARDING") return "/onboarding"
+  if (entryGate === "HOME") return "/(tabs)/home"
   if (accountState === "ACTIVE" && requiresAdditionalInfo) {
     return "/(auth)/profile-setup"
   }

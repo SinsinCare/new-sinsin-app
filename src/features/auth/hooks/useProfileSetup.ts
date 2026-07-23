@@ -136,6 +136,7 @@ export function useProfileSetup() {
           getDestinationForAccountState(
             result.accountState,
             result.requiresAdditionalInfo,
+            result.entryGate,
           ),
         )
       } catch (e: unknown) {

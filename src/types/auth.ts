@@ -42,6 +42,8 @@ export type AccountState =
   | "WITHDRAWAL_PENDING"
 
 export type SocialProvider = "google" | "apple" | "kakao"
+export type EntryGate = "HOME" | "PROFILE" | "ONBOARDING"
+export type SessionPersistence = "persistent" | "ephemeral"
 
 // 회원가입 결과
 export interface SignupResult {
@@ -50,6 +52,8 @@ export interface SignupResult {
   refreshToken: string
   user: AuthUserSummary
   requiresAdditionalInfo: boolean
+  entryGate?: EntryGate
+  sessionPersistence?: SessionPersistence
 }
 
 export interface AuthUserSummary {
@@ -69,6 +73,8 @@ export interface LoginResult {
   refreshToken: string
   user: AuthUserSummary
   requiresAdditionalInfo: boolean
+  entryGate?: EntryGate
+  sessionPersistence?: SessionPersistence
 }
 
 export interface AuthProfile {
@@ -142,6 +148,8 @@ export interface TokenRefreshResult {
   refreshToken: string
   user: AuthUserSummary
   requiresAdditionalInfo: boolean
+  entryGate?: EntryGate
+  sessionPersistence?: SessionPersistence
 }
 
 export interface WithdrawalPendingResult {

@@ -16,6 +16,8 @@ import type {
   SocialProvider,
   SocialSignupConsentRequiredResult,
   SocialSignupRequest,
+  EntryGate,
+  SessionPersistence,
 } from "../../types"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { isMockUser } from "../../config/appConfig"
@@ -67,6 +69,51 @@ function getRequiresAdditionalInfo(result: {
   user?: { requiresAdditionalInfo?: boolean }
 }) {
   return result.requiresAdditionalInfo ?? result.user?.requiresAdditionalInfo ?? false
+}
+
+type AuthTokenResult = LoginResult | SignupResult | TokenRefreshResult
+
+function getEntryGate(result: AuthTokenResult): EntryGate {
+  if (
+    result.entryGate === "HOME" ||
+    result.entryGate === "PROFILE" ||
+    result.entryGate === "ONBOARDING"
+  ) {
+    return result.entryGate
+  }
+  if (result.accountState === "PENDING_PROFILE") return "PROFILE"
+  if (result.accountState === "PENDING_ONBOARDING") return "ONBOARDING"
+  if (result.accountState === "ACTIVE" && getRequiresAdditionalInfo(result)) {
+    return "PROFILE"
+  }
+  return "HOME"
+}
+
+function getSessionPersistence(result: AuthTokenResult): SessionPersistence {
+  if (result.sessionPersistence === "ephemeral") return "ephemeral"
+  if (result.sessionPersistence === "persistent") return "persistent"
+  return getEntryGate(result) === "HOME" ? "persistent" : "ephemeral"
+}
+
+async function persistSessionTokens(result: AuthTokenResult): Promise<void> {
+  await tokenService.setTokens(
+    result.accessToken,
+    result.refreshToken,
+    getSessionPersistence(result),
+  )
+}
+
+function toAuthSessionResult(
+  result: AuthTokenResult,
+  fallback: AppUser,
+): AuthSessionResult {
+  return {
+    user: mapAuthUser(result.user, fallback),
+    accountState: result.accountState,
+    requiresAdditionalInfo: getRequiresAdditionalInfo(result),
+    entryGate: getEntryGate(result),
+    sessionPersistence: getSessionPersistence(result),
+  }
 }
 
 function isSocialProvider(value: unknown): value is SocialProvider {
@@ -196,60 +243,35 @@ function getRealAuthService(): IAuthService {
         throw new Error("소셜 로그인 응답을 확인할 수 없습니다.")
       }
 
-      const {
-        accessToken,
-        refreshToken,
-        accountState,
-        user: authUser,
-      } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      const fallback = {
         uid: email ?? provider,
         email: email ?? null,
         displayName: displayName ?? null,
-      })
-
-      logger.debug("[authService] signInWithSocial 완료", accountState)
-      return {
-        user,
-        accountState,
-        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
       }
+
+      logger.debug(
+        "[authService] signInWithSocial 완료",
+        data.result.accountState,
+      )
+      return toAuthSessionResult(data.result, fallback)
     },
 
     async signInWithEmail(
       email: string,
       password: string,
-    ): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    }> {
+    ): Promise<AuthSessionResult> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/login",
         { email, password },
       )
 
-      const {
-        accessToken,
-        refreshToken,
-        accountState,
-        user: authUser,
-      } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
         uid: email,
         email,
         displayName: null,
       })
-
-      return {
-        user,
-        accountState,
-        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
-      }
     },
 
     async sendSocialLinkEmailCode(
@@ -293,35 +315,18 @@ function getRealAuthService(): IAuthService {
         throw new Error("소셜 이메일 인증 응답을 확인할 수 없습니다.")
       }
 
-      const {
-        accessToken,
-        refreshToken,
-        accountState,
-        user: authUser,
-      } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
         uid: email,
         email,
         displayName: null,
       })
-
-      return {
-        user,
-        accountState,
-        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
-      }
     },
 
     async completeEmailLoginLink(
       emailLinkToken: string,
       password: string,
-    ): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    }> {
+    ): Promise<AuthSessionResult> {
       const { data } = await publicApi.patch<ApiResponse<LoginResult>>(
         "/auth/signup/email-link/password",
         {
@@ -330,34 +335,17 @@ function getRealAuthService(): IAuthService {
         },
       )
 
-      const {
-        accessToken,
-        refreshToken,
-        accountState,
-        user: authUser,
-      } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
         uid: emailLinkToken,
-        email: authUser.email,
-        displayName: authUser.nickName || authUser.name || null,
+        email: null,
+        displayName: null,
       })
-
-      return {
-        user,
-        accountState,
-        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
-      }
     },
 
     async completeProfile(
       request: ProfileCompleteRequest,
-    ): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    }> {
+    ): Promise<AuthSessionResult> {
       const { data } = await api.post<ApiResponse<ProfileCompleteResult>>(
         "/user/profile/complete",
         request,
@@ -374,6 +362,18 @@ function getRealAuthService(): IAuthService {
         user,
         accountState,
         requiresAdditionalInfo: profile.requiresAdditionalInfo,
+        entryGate:
+          accountState === "PENDING_ONBOARDING"
+            ? "ONBOARDING"
+            : accountState === "PENDING_PROFILE" ||
+                profile.requiresAdditionalInfo
+              ? "PROFILE"
+              : "HOME",
+        sessionPersistence:
+          accountState === "PENDING_ONBOARDING" ||
+          accountState === "PENDING_PROFILE"
+            ? "ephemeral"
+            : "persistent",
       }
     },
 
@@ -382,22 +382,18 @@ function getRealAuthService(): IAuthService {
       return data.result
     },
 
-    async signup(request: SignupRequest): Promise<AppUser> {
+    async signup(request: SignupRequest): Promise<AuthSessionResult> {
       const { data } = await publicApi.post<ApiResponse<SignupResult>>(
         "/auth/signup",
         request,
       )
 
-      const { accessToken, refreshToken, user: authUser } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
         uid: request.signupToken,
         email: null,
         displayName: request.nickName,
       })
-
-      return user
     },
 
     async completeSocialSignup(
@@ -408,58 +404,28 @@ function getRealAuthService(): IAuthService {
         request,
       )
 
-      const {
-        accessToken,
-        refreshToken,
-        accountState,
-        user: authUser,
-      } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
         uid: request.socialSignupToken,
         email: null,
         displayName: null,
       })
-
-      return {
-        user,
-        accountState,
-        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
-      }
     },
 
     async cancelWithdrawal(
       cancelToken: string,
-    ): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    }> {
+    ): Promise<AuthSessionResult> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/withdrawal/cancel",
         { cancelToken },
       )
 
-      const {
-        accessToken,
-        refreshToken,
-        accountState,
-        user: authUser,
-      } = data.result
-      await tokenService.setTokens(accessToken, refreshToken)
-
-      const user = mapAuthUser(authUser, {
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
         uid: "restored-user",
         email: null,
         displayName: null,
       })
-
-      return {
-        user,
-        accountState,
-        requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
-      }
     },
 
     async signOut(): Promise<void> {
@@ -475,12 +441,23 @@ function getRealAuthService(): IAuthService {
       }
     },
 
-    async restoreSession(): Promise<{
-      user: AppUser
-      accountState: string
-      requiresAdditionalInfo: boolean
-    } | null> {
+    async promoteSession(): Promise<AuthSessionResult> {
       const refreshToken = await tokenService.getRefreshToken()
+      if (!refreshToken) throw new Error("로그인 세션이 없습니다.")
+      const { data } = await publicApi.post<ApiResponse<TokenRefreshResult>>(
+        "/auth/tokens/refresh",
+        { refreshToken },
+      )
+      await persistSessionTokens(data.result)
+      return toAuthSessionResult(data.result, {
+        uid: "restored-user",
+        email: null,
+        displayName: null,
+      })
+    },
+
+    async restoreSession(): Promise<AuthSessionResult | null> {
+      const refreshToken = await tokenService.getPersistedRefreshToken()
       if (!refreshToken) return null
 
       try {
@@ -489,25 +466,12 @@ function getRealAuthService(): IAuthService {
           { refreshToken },
         )
 
-        const {
-          accessToken,
-          refreshToken: newRefreshToken,
-          accountState,
-          user: authUser,
-        } = data.result
-        await tokenService.setTokens(accessToken, newRefreshToken)
-
-        const user = mapAuthUser(authUser, {
+        await persistSessionTokens(data.result)
+        return toAuthSessionResult(data.result, {
           uid: "restored-user",
           email: null,
           displayName: null,
         })
-
-        return {
-          user,
-          accountState,
-          requiresAdditionalInfo: getRequiresAdditionalInfo(data.result),
-        }
       } catch (error) {
         if (
           isApiErrorLike(error) &&
@@ -558,5 +522,6 @@ export const authService: IAuthService = {
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),
   signOut: () => getAuthService().signOut(),
+  promoteSession: () => getAuthService().promoteSession(),
   restoreSession: () => getAuthService().restoreSession(),
 }
