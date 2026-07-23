@@ -34,6 +34,6 @@ export async function authenticatedFetch(
   const retryResponse = await send(newAccessToken)
   if (retryResponse.status !== 401) return retryResponse
 
-  await clearClientSession()
+  await clearClientSession({ requireFreshSocialProviderSelection: true })
   throw createSessionExpiredError()
 }

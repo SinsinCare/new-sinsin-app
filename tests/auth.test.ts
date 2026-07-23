@@ -381,13 +381,13 @@ describe("local social reauthentication intent", () => {
     expect(mockAsyncStorage.removeItem).not.toHaveBeenCalled()
   })
 
-  it("does not persist reauthentication intent for automatic logout", async () => {
+  it("persists reauthentication intent for automatic logout", async () => {
     await persistSocialReauthenticationIntentForSignOut("automatic")
 
-    expect(mockAsyncStorage.setItem).not.toHaveBeenCalled()
+    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
   })
 
-  it("persists intent only for explicit settings logout", async () => {
+  it("persists reauthentication intent for explicit settings logout", async () => {
     await persistSocialReauthenticationIntentForSignOut("explicit")
 
     expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)

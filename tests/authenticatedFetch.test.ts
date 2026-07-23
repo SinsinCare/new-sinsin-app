@@ -171,6 +171,8 @@ describe("authenticatedFetch", () => {
       message: "로그인이 만료되었습니다. 다시 로그인해주세요.",
       statusCode: 401,
     })
-    expect(mockedClearClientSession).toHaveBeenCalledTimes(1)
+    expect(mockedClearClientSession).toHaveBeenCalledWith({
+      requireFreshSocialProviderSelection: true,
+    })
   })
 })
