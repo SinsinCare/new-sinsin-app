@@ -5,6 +5,7 @@ import { useAuth } from "@/src/hooks"
 import { ApiError } from "@/src/services/core/apiError"
 import { showErrorToast } from "@/src/lib/toast"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
+import { isProfileSetupCompletionMode } from "../utils/profileSetupMode"
 import type { ProfileForm } from "../types"
 import type { AcquisitionSourceInput } from "../data/acquisitionSources"
 import type { AuthProfile } from "@/src/types"
@@ -26,8 +27,14 @@ export function useProfileSetup() {
     (s) => s.setAcquisitionSourceOther,
   )
   const setReferralCodeStore = useSignupStore((s) => s.setReferralCode)
-  const { accountState, requiresAdditionalInfo, completeProfile, getProfile } =
-    useAuth()
+  const {
+    accountState,
+    entryGate,
+    sessionPersistence,
+    requiresAdditionalInfo,
+    completeProfile,
+    getProfile,
+  } = useAuth()
 
   const [birthYear, setBirthYear] = useState("")
   const [birthMonth, setBirthMonth] = useState("")
@@ -40,9 +47,13 @@ export function useProfileSetup() {
   const [submitError, setSubmitError] = useState("")
   const [prefillValues, setPrefillValues] = useState<ProfileForm | null>(null)
 
-  const isSocialProfileMode = accountState === "PENDING_PROFILE"
   const isBackfillMode = accountState === "ACTIVE" && requiresAdditionalInfo
-  const isCompletionMode = isSocialProfileMode || isBackfillMode
+  const isCompletionMode = isProfileSetupCompletionMode({
+    accountState,
+    entryGate,
+    sessionPersistence,
+    requiresAdditionalInfo,
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -171,7 +182,6 @@ export function useProfileSetup() {
     birthDay,
     gender,
     acquisitionSource,
-    isSocialProfileMode,
     isBackfillMode,
     isCompletionMode,
     isPrefilling,
