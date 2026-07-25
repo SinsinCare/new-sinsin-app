@@ -70,9 +70,15 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
   try {
     response = await GoogleSignin.signIn()
   } catch (e) {
-    logger.error("[Google SignIn] signIn 실패", e)
-    if (isErrorWithCode(e)) {
-      logger.debug("[Google SignIn] 에러 코드:", e.code)
+    // 사용자가 창을 닫은 것은 정상 흐름입니다. error 로 찍으면 개발 중 LogBox 가 뜨고
+    // 운영에서는 에러 로그로 집계돼 실제 장애를 가립니다.
+    if (isUserCancelledError(e)) {
+      logger.debug("[Google SignIn] 사용자가 취소")
+    } else {
+      logger.error("[Google SignIn] signIn 실패", e)
+      if (isErrorWithCode(e)) {
+        logger.debug("[Google SignIn] 에러 코드:", e.code)
+      }
     }
     throw e
   }
@@ -130,9 +136,13 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
     })
     logger.debug("[Apple SignIn] credential 수신", !!credential.identityToken)
   } catch (e) {
-    logger.error("[Apple SignIn] signInAsync 실패", e)
-    if (e instanceof Error && "code" in e) {
-      logger.debug("[Apple SignIn] 에러 코드:", (e as { code: string }).code)
+    if (isUserCancelledError(e)) {
+      logger.debug("[Apple SignIn] 사용자가 취소")
+    } else {
+      logger.error("[Apple SignIn] signInAsync 실패", e)
+      if (e instanceof Error && "code" in e) {
+        logger.debug("[Apple SignIn] 에러 코드:", (e as { code: string }).code)
+      }
     }
     throw e
   }
@@ -199,6 +209,10 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
       scopes: token.scopes,
     })
   } catch (e: unknown) {
+    if (isUserCancelledError(e)) {
+      logger.debug("[Kakao SignIn] 사용자가 취소")
+      throw e
+    }
     const err = e as Record<string, unknown>
     logger.error("[Kakao SignIn] login 실패", {
       name: e instanceof Error ? e.name : "unknown",
@@ -252,6 +266,16 @@ export function isUserCancelledError(error: unknown): boolean {
     return true
   }
   // Kakao cancel (사용자가 카카오 로그인 화면을 닫음)
+  // SDK 가 code: "Cancelled" 를 주므로 이걸 먼저 봅니다.
+  // 아래 메시지 검사는 문구가 바뀌었을 때를 위한 보조 수단인데,
+  // "cancel" 이 들어간 무관한 에러까지 삼킬 수 있어 코드 검사를 우선합니다.
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "Cancelled"
+  ) {
+    return true
+  }
   if (
     error instanceof Error &&
     (error.message.includes("cancel") || error.message.includes("Cancel"))

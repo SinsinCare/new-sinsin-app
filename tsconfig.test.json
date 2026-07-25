@@ -3,6 +3,9 @@
     "target": "ES2020",
     "module": "commonjs",
     "lib": ["ES2020"],
+    // .tsx 를 import 하는 테스트(bottomSheetPicker 등)가 TS6142 로 통째로 죽습니다.
+    // 앱 tsconfig 는 expo/tsconfig.base 에서 jsx 를 받지만 이 파일은 상속하지 않습니다.
+    "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
