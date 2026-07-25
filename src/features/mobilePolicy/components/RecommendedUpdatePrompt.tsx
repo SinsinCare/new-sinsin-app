@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native"
-import { Download } from "@tamagui/lucide-icons"
+import { Download } from "@/src/shared/components/lucide"
 import { Text, XStack, YStack } from "tamagui"
 
 import { Button } from "@/src/shared/components"

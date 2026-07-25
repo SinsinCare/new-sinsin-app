@@ -2,7 +2,7 @@ import { Platform, Pressable } from "react-native"
 import { YStack, XStack, Text, Spinner } from "tamagui"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import MainLogo from "@/assets/images/main-logo.svg"
+import { Image } from "expo-image"
 import MainTextLogo from "@/assets/images/main-text-logo.svg"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import KakaoLogo from "@/assets/images/kakao-logo.svg"
@@ -50,7 +50,12 @@ export function LoginScreen() {
           </Text>
           <MainTextLogo width={180} height={40} />
         </YStack>
-        <MainLogo width={160} height={172} />
+        <Image
+          source={require("@/assets/images/main-logo.png")}
+          style={{ width: 160, height: 172 }}
+          contentFit="contain"
+          transition={0}
+        />
       </YStack>
 
       {/* 버튼 영역 */}

@@ -5,8 +5,12 @@ import { YStack, Text, XStack, View } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
-import SinDark from "@/assets/images/Sin_dark.svg"
-import SinLight from "@/assets/images/Sin_light.svg"
+import { Image } from "expo-image"
+
+// 아바타는 메시지마다 렌더됩니다. SVG 래퍼(base64 PNG 645KB)를 그대로 두면
+// 말풍선 하나당 그 컴포넌트를 인스턴스화하게 되어 상담 탭 스크롤이 무너집니다.
+const AVATAR_DARK = require("@/assets/images/Sin_dark.png")
+const AVATAR_LIGHT = require("@/assets/images/Sin_light.png")
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("ko-KR", {
@@ -20,8 +24,6 @@ export function AssistantAvatar() {
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
-  const SvgComponent = isDarkMode ? SinDark : SinLight
-
   return (
     <View
       width={36}
@@ -30,7 +32,12 @@ export function AssistantAvatar() {
       overflow="hidden"
       marginTop="$1"
     >
-      <SvgComponent width={36} height={36} />
+      <Image
+        source={isDarkMode ? AVATAR_DARK : AVATAR_LIGHT}
+        style={{ width: 36, height: 36 }}
+        contentFit="contain"
+        transition={0}
+      />
     </View>
   )
 }
@@ -107,7 +114,9 @@ export function UserBubble({ message }: { message: Message }) {
         {formatTime(message.createdAt)}
       </Text>
       <YStack
-        backgroundColor={isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val}
+        backgroundColor={
+          isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val
+        }
         borderRadius="$6"
         borderBottomRightRadius={1}
         paddingHorizontal="$3"
@@ -116,7 +125,9 @@ export function UserBubble({ message }: { message: Message }) {
       >
         <Text
           fontSize="$4"
-          color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
+          color={
+            isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+          }
           lineHeight={22}
         >
           {message.content}

@@ -25,6 +25,7 @@ import {
   useThemeStore,
 } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
+import { resolveEntryRoute } from "@/src/shared/navigation/entryRoute"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
 import { routeFromPushData } from "@/src/services/notificationRoutingService"
@@ -142,14 +143,16 @@ function RootLayoutNav() {
       !inSocialLinkEmail &&
       !((needsProfile || needsAdditionalInfo) && inProfileSetup)
     ) {
-      // 회원가입 진행 중이면 auth 그룹에 유지
-      if (needsProfile || needsAdditionalInfo) {
-        router.replace("/(auth)/profile-setup")
-      } else if (needsOnboarding) {
-        router.replace("/onboarding")
-      } else {
-        router.replace("/(tabs)/home")
-      }
+      // 회원가입 진행 중이면 auth 그룹에 유지.
+      // 목적지 판정은 app/index.tsx 와 같은 규칙을 써야 서로 어긋나지 않습니다.
+      router.replace(
+        resolveEntryRoute({
+          isAuthenticated,
+          accountState,
+          requiresAdditionalInfo,
+          entryGate,
+        }),
+      )
     } else if (
       isAuthenticated &&
       !inAuthGroup &&

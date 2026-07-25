@@ -1,5 +1,5 @@
 import { YStack, Text, XStack } from "tamagui"
-import { AlertCircle } from "@tamagui/lucide-icons"
+import { AlertCircle } from "./lucide"
 import { Button } from "./Button"
 
 interface ErrorMessageProps {
