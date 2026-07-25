@@ -502,7 +502,7 @@ export default function ConsultScreen() {
                   key={msg.id}
                   message={msg}
                   // isLastAssistant={index === lastAssistantIdx}
-                  onCopy={() => handleCopy(msg.content)}
+                  onCopy={handleCopy}
                   onRegenerate={regenerateLastMessage}
                 />
               ),

@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Markdown from "react-native-markdown-display"
@@ -100,7 +101,16 @@ const markdownStylesDark = StyleSheet.create({
   },
 })
 
-export function UserBubble({ message }: { message: Message }) {
+/**
+ * 말풍선은 memo 합니다. 부모(consult 화면)는 입력창 타이핑·isTyping 토글마다
+ * 리렌더되는데, memo 가 없으면 그때마다 모든 메시지의 Markdown 이 다시 파싱됩니다.
+ * 대화가 길수록 입력 자체가 느려집니다.
+ */
+export const UserBubble = memo(function UserBubble({
+  message,
+}: {
+  message: Message
+}) {
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
   return (
@@ -135,9 +145,9 @@ export function UserBubble({ message }: { message: Message }) {
       </YStack>
     </XStack>
   )
-}
+})
 
-export function AssistantBubble({
+export const AssistantBubble = memo(function AssistantBubble({
   message,
   // isLastAssistant,
   onCopy,
@@ -145,7 +155,9 @@ export function AssistantBubble({
 }: {
   message: Message
   isLastAssistant?: boolean
-  onCopy?: () => void
+  // 내용은 컴포넌트가 알고 있으므로 인자로 넘깁니다. 호출처가
+  // onCopy={() => handleCopy(msg.content)} 로 감싸면 매 렌더 새 함수가 되어 memo 가 무력화됩니다.
+  onCopy?: (content: string) => void
   onRegenerate?: () => void
 }) {
   const colorScheme = useAppColorScheme()
@@ -161,7 +173,7 @@ export function AssistantBubble({
         </Markdown>
         {/* {isLastAssistant && ( */}
         <XStack gap="$3">
-          <Pressable onPress={onCopy} hitSlop={8}>
+          <Pressable onPress={() => onCopy?.(message.content)} hitSlop={8}>
             <Icon name="copy" size={20} color={iconColor} />
           </Pressable>
           <Pressable onPress={onRegenerate} hitSlop={8}>
@@ -172,4 +184,4 @@ export function AssistantBubble({
       </YStack>
     </XStack>
   )
-}
+})
