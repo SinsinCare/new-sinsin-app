@@ -8,7 +8,7 @@ import {
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useEffect, useRef, useState } from "react"
 import { Text, View, XStack, YStack } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 

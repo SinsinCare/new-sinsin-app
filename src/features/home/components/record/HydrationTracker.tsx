@@ -1,7 +1,7 @@
 import { Text, XStack, YStack } from "tamagui"
 import { Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components/Icon"
 import {
   QUICK_ADD_LABELS,

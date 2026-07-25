@@ -1,7 +1,7 @@
 import { StyleSheet, TouchableOpacity } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack, View } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useState } from "react"
 import { tokens } from "@/src/theme/tokens"
 import { useMonthDiaryExistence } from "../../hooks/useMonthDiaryExistence"

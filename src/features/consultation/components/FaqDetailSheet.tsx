@@ -1,7 +1,7 @@
 import { Sheet } from "@tamagui/sheet"
 import { ScrollView, Pressable, View } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { tokens } from "@/src/theme/tokens"

@@ -1,7 +1,7 @@
 import React from "react"
 import { View, Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { ThemedText } from "@/components/themed-text"
 import { tokens } from "@/src/theme/tokens"

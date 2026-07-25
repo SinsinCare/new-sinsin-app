@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { Text, View } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import { LOADING_TIPS } from "../data/loadingTips"

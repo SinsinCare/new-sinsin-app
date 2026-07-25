@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useRouter } from "expo-router"
 import { tokens } from "@/src/theme/tokens"
 

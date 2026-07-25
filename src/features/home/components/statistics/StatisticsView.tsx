@@ -10,7 +10,7 @@ import {
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { IntakeSummary } from "./IntakeSummary"
 import { DietaryGuide } from "./DietaryGuide"
 import { DietaryRecord } from "./DietaryRecord"

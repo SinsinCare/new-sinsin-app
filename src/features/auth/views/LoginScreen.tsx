@@ -6,7 +6,7 @@ import { Image } from "expo-image"
 import MainTextLogo from "@/assets/images/main-text-logo.svg"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import KakaoLogo from "@/assets/images/kakao-logo.svg"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useAuthColors, useSocialLogin } from "../hooks"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 

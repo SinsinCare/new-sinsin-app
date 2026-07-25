@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { MealType } from "../../types"
 import { MealButton } from "./MealButton"
 import { tokens } from "@/src/theme/tokens"
