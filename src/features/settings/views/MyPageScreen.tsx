@@ -19,7 +19,7 @@ import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { KIDNEY_SAFE_LIMITS } from "@/src/types/models"
+import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
 
 function formatDiagnosisDate(iso: string | null): string | null {
   if (!iso) return null
@@ -61,6 +61,8 @@ export function MyPageScreen() {
   const c = useSettingsColors()
   const { data: profile, refetch: refetchProfile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
+  // 같은 ["kidneyProfile"] 캐시를 공유하므로 요청이 늘지 않는다.
+  const nutrientLimits = useNutrientLimits()
   const { data: todayAnalysis } = useDateAnalysis(new Date())
 
   useFocusEffect(
@@ -140,21 +142,24 @@ export function MyPageScreen() {
 
     if (analysis?.analysis) {
       const a = analysis.analysis
-      const proteinLimit = kidneyProfile?.weightKg
-        ? Math.round(kidneyProfile.weightKg * KIDNEY_SAFE_LIMITS.protein)
-        : null
+      // 서버가 이미 proteinGPerKg × 체중을 계산해 준다. 여기서 다시 곱하면
+      // 화면마다 다른 숫자가 나온다(예전에 실제로 세 가지가 있었다).
+      const proteinLimit =
+        nutrientLimits.proteinGDay != null
+          ? Math.round(nutrientLimits.proteinGDay)
+          : null
       lines.push("📊 오늘 영양소 섭취")
       lines.push(
         `• 단백질: ${a.protein.toFixed(1)}g${proteinLimit ? ` / ${proteinLimit}g` : ""}`,
       )
       lines.push(
-        `• 나트륨: ${Math.round(a.sodium)}mg / ${KIDNEY_SAFE_LIMITS.sodium}mg`,
+        `• 나트륨: ${Math.round(a.sodium)}mg / ${nutrientLimits.sodiumMg}mg`,
       )
       lines.push(
-        `• 칼륨: ${Math.round(a.potassium)}mg / ${KIDNEY_SAFE_LIMITS.potassium}mg`,
+        `• 칼륨: ${Math.round(a.potassium)}mg / ${nutrientLimits.potassiumMg}mg`,
       )
       lines.push(
-        `• 인: ${Math.round(a.phosphorus)}mg / ${KIDNEY_SAFE_LIMITS.phosphorus}mg`,
+        `• 인: ${Math.round(a.phosphorus)}mg / ${nutrientLimits.phosphorusMg}mg`,
       )
       lines.push(`• 수분: ${Math.round(a.water + a.extraWater)}ml`)
       if (a.cautionFoods?.length) {

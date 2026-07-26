@@ -32,7 +32,7 @@ import { TextRecord } from "./TextRecord"
 import { tokens } from "@/src/theme/tokens"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
-import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
+import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { toDateStr } from "../../utils/dateUtils"
@@ -234,9 +234,11 @@ export function RecordView({
     apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
 
   const analysis = data?.result.analysis ?? null
+  // 하드코딩 표 대신 서버가 준 이 사용자의 목표를 쓴다.
+  const { bars: nutrientBars } = useNutrientLimits()
   const withinLimits =
     analysis !== null &&
-    CKD_NUTRIENT_LIMITS.every((limit) => {
+    nutrientBars.every((limit) => {
       const intake =
         limit.nutrient === "단백질"
           ? (analysis.protein ?? 0)

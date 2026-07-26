@@ -62,10 +62,9 @@ export interface DailyHealthLog {
   notes?: string
 }
 
-// 영양 한계치 (신장 환자용)
-export const KIDNEY_SAFE_LIMITS = {
-  sodium: 2000, // mg
-  potassium: 2000, // mg
-  phosphorus: 1000, // mg
-  protein: 0.8, // g per kg body weight
-} as const
+// 영양 한계치는 서버가 CKD 단계·체중으로 계산해 준다.
+// useNutrientLimits() (src/features/nutrition/hooks) 를 쓸 것.
+//
+// 여기 있던 KIDNEY_SAFE_LIMITS 는 단계와 무관한 고정값이었고,
+// src/features/home/data/nutrientConstants.ts 의 표와 칼륨이 달라
+// (2000 vs 3000) 같은 사용자가 화면에 따라 다른 숫자를 봤다.

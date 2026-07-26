@@ -1,22 +1,11 @@
-export interface NutrientLimit {
-  nutrient: string
-  max: number
-  unit: string
-}
+// 영양 목표치는 서버가 준다. useNutrientLimits() 를 쓸 것.
+//
+// 여기 있던 CKD_NUTRIENT_LIMITS 는 단백질이 체중과 무관하게 48g 고정이라
+// 90kg 1기 환자(서버 목표 72g)가 "초과" 판정을 받았다. src/types/models.ts 의
+// KIDNEY_SAFE_LIMITS 와도 칼륨이 달라(3000 vs 2000) 같은 사용자가 화면에 따라
+// 다른 숫자를 봤다. 둘 다 제거했다.
+//
+// MOCK_CURRENT_INTAKE 도 함께 제거했다(자체 TODO 가 삭제하라고 적혀 있었다).
 
-export const CKD_NUTRIENT_LIMITS: NutrientLimit[] = [
-  { nutrient: "단백질", max: 48, unit: "g" },
-  { nutrient: "나트륨", max: 2000, unit: "mg" },
-  { nutrient: "칼륨", max: 3000, unit: "mg" },
-  { nutrient: "인", max: 1000, unit: "mg" },
-]
-
-// TODO: 실제 데이터 연결 시 제거
-export const MOCK_CURRENT_INTAKE: Record<string, number> = {
-  단백질: 32,
-  나트륨: 2000, // 제한량과 동일 (at limit)
-  칼륨: 4800, // 초과 (limit: 3000)
-  인: 0, // 미섭취
-}
-
+/** 통계 막대 끝의 원형 마커 지름. NutrientBarSection 전용 레이아웃 상수. */
 export const CIRCLE_SIZE = 12

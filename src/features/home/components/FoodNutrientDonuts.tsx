@@ -3,8 +3,10 @@ import Svg, { Circle } from "react-native-svg"
 import { XStack, YStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodCameraFood } from "@/src/types"
-import { KIDNEY_SAFE_LIMITS } from "@/src/types"
-import { useUserStore } from "@/src/stores/userStore"
+import {
+  useNutrientLimits,
+  type NutrientLimits,
+} from "@/src/features/nutrition/hooks/useNutrientLimits"
 
 type NutrientKey = "sodium" | "potassium" | "phosphorus" | "protein"
 
@@ -22,16 +24,17 @@ const LABELS: Record<NutrientKey, string> = {
   protein: "단백질",
 }
 
-function dailyLimitFor(key: NutrientKey, weightKg: number): number {
+function dailyLimitFor(key: NutrientKey, limits: NutrientLimits): number | null {
   switch (key) {
     case "sodium":
-      return KIDNEY_SAFE_LIMITS.sodium
+      return limits.sodiumMg
     case "potassium":
-      return KIDNEY_SAFE_LIMITS.potassium
+      return limits.potassiumMg
     case "phosphorus":
-      return KIDNEY_SAFE_LIMITS.phosphorus
+      return limits.phosphorusMg
     case "protein":
-      return Math.max(weightKg, 1) * KIDNEY_SAFE_LIMITS.protein
+      // 서버가 체중을 곱해 준다. 체중을 모르면 null — 예전처럼 60kg 로 가정하지 않는다.
+      return limits.proteinGDay
   }
 }
 
@@ -193,14 +196,16 @@ interface FoodNutrientDonutsProps {
 
 export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
   const isDark = useAppColorScheme() === "dark"
-  const weight = useUserStore((s) => s.profile?.weight ?? 60)
+  const limits = useNutrientLimits()
 
   return (
     <XStack gap="$2" alignItems="stretch">
       {NUTRIENT_KEYS.map((key) => {
-        const limit = dailyLimitFor(key, weight)
+        const limit = dailyLimitFor(key, limits)
         const amount = valueFor(food, key)
-        const rawPct = limit > 0 ? (amount / limit) * 100 : 0
+        // 목표를 모르면(체중 미기록) 비율을 0 으로 둔다. 임의 체중으로 지어내면
+        // 환자가 근거 없는 퍼센트를 보게 된다.
+        const rawPct = limit != null && limit > 0 ? (amount / limit) * 100 : 0
         return (
           <NutrientDonut
             key={key}

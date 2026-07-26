@@ -30,6 +30,11 @@ import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
+import {
+  STAGE_OPTIONS,
+  hydrateStage,
+  labelForStage,
+} from "../utils/ckdStage"
 
 const COMORBIDITY_OPTIONS = [
   { key: "DIABETES", label: "당뇨" },
@@ -65,7 +70,9 @@ export function KidneyProfileEditScreen() {
 
   const [heightVal, setHeightVal] = useState("")
   const [weightVal, setWeightVal] = useState("")
-  const [ckdStage, setCkdStage] = useState<number | null>(null)
+  // 정본 stage 키를 그대로 들고 있는다. 예전에는 number 라 3A/3B 를 표현할 수 없었고,
+  // 저장할 때 3 -> STAGE_3A 로 굳어져 3B 환자의 제한이 조용히 완화됐다.
+  const [ckdStage, setCkdStage] = useState<string | null>(null)
   const [onDialysis, setOnDialysis] = useState(false)
   const [diagnosisDate, setDiagnosisDate] = useState<{
     year: number
@@ -81,11 +88,12 @@ export function KidneyProfileEditScreen() {
   useEffect(() => {
     if (!kidneyProfile || initialized) return
     if (kidneyProfile.ckdStage === "DIALYSIS") {
-      setCkdStage(5)
+      setCkdStage("STAGE_5")
       setOnDialysis(true)
     } else {
-      const num = parseInt((kidneyProfile.ckdStage ?? "").replace(/\D/g, ""))
-      setCkdStage(num || null)
+      // 서버가 준 키를 그대로 쓴다. 예전에는 parseInt 로 숫자만 뽑아
+      // STAGE_3B -> 3 -> STAGE_3A 가 됐다.
+      setCkdStage(hydrateStage(kidneyProfile.ckdStage))
       setOnDialysis(kidneyProfile.isDialysis)
     }
     if (kidneyProfile.diagnosisDate) {
@@ -129,14 +137,6 @@ export function KidneyProfileEditScreen() {
     )
   }
 
-  const CKD_STAGE_MAP: Record<number, string> = {
-    1: "STAGE_1",
-    2: "STAGE_2",
-    3: "STAGE_3A",
-    4: "STAGE_4",
-    5: "STAGE_5",
-  }
-
   const navigateBackOrFallback = () => {
     if (router.canGoBack()) {
       router.back()
@@ -167,7 +167,7 @@ export function KidneyProfileEditScreen() {
       const ckdStageStr = onDialysis
         ? "DIALYSIS"
         : ckdStage != null
-          ? (CKD_STAGE_MAP[ckdStage] ?? null)
+          ? ckdStage
           : null
       const diagnosisDateStr = diagnosisDate
         ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
@@ -340,32 +340,32 @@ export function KidneyProfileEditScreen() {
             CKD 병기
           </ThemedText>
           <ThemedText style={styles.currentStageText}>
-            {ckdStage != null ? `현재: ${ckdStage}기` : ""}
+            {ckdStage != null ? `현재: ${labelForStage(ckdStage)}` : ""}
           </ThemedText>
         </View>
         <View style={[styles.stageButtonsRow, { marginTop: 8 }]}>
-          {[1, 2, 3, 4, 5].map((stage) => (
+          {STAGE_OPTIONS.map((option) => (
             <Pressable
-              key={stage}
+              key={option.key}
               style={[
                 styles.stageButton,
                 { borderColor: c.border },
-                ckdStage === stage && {
+                ckdStage === option.key && {
                   backgroundColor: greenTintBg,
                   borderWidth: 1.4,
                   borderColor: tokens.color.sub6.val,
                 },
               ]}
-              onPress={() => setCkdStage(stage)}
+              onPress={() => setCkdStage(option.key)}
             >
               <ThemedText
                 style={[
                   styles.stageButtonText,
                   { color: c.text },
-                  ckdStage === stage && styles.stageButtonTextSelected,
+                  ckdStage === option.key && styles.stageButtonTextSelected,
                 ]}
               >
-                {stage}기
+                {option.label}
               </ThemedText>
             </Pressable>
           ))}

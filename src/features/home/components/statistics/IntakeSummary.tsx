@@ -1,6 +1,6 @@
 import { YStack } from "tamagui"
 import { NutrientGraph } from "./NutrientGraph"
-import { CKD_NUTRIENT_LIMITS } from "../../data/nutrientConstants"
+import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
 import { DateAnalysis } from "@/src/types"
 
 const NUTRIENT_KEY_MAP: Partial<Record<string, keyof DateAnalysis>> = {
@@ -15,6 +15,10 @@ interface IntakeSummaryProps {
 }
 
 export function IntakeSummary({ analysis }: IntakeSummaryProps) {
+  // 예전에는 하드코딩 표를 그렸다. 단백질이 체중과 무관하게 48g 고정이라
+  // 90kg 1기 환자(서버 목표 72g)가 "초과" 판정을 받았다.
+  const { bars } = useNutrientLimits()
+
   const getIntake = (nutrient: string): number => {
     if (!analysis) return 0
     const key = NUTRIENT_KEY_MAP[nutrient]
@@ -23,7 +27,7 @@ export function IntakeSummary({ analysis }: IntakeSummaryProps) {
 
   return (
     <YStack paddingVertical="$3" gap="$3">
-      {CKD_NUTRIENT_LIMITS.map((limit) => (
+      {bars.map((limit) => (
         <NutrientGraph
           key={limit.nutrient}
           nutrient={limit.nutrient}
