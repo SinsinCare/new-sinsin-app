@@ -1,59 +1,47 @@
-import { YStack } from "tamagui"
+import { useEffect } from "react"
+import { router } from "expo-router"
 import { useForm } from "react-hook-form"
-import { FormTextField } from "@/src/shared/components"
+import { showErrorToast } from "@/src/lib/toast"
+import { useSignupStore } from "@/src/stores"
 import { AuthScreenLayout } from "./AuthScreenLayout"
-import { PasswordCriteriaText } from "../components"
+import { AuthPasswordFields } from "../components/AuthPasswordFields"
 import { useSignupPassword } from "../hooks"
-import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import { getPasswordFlowToken } from "../data/passwordFlow"
 import type { PasswordForm } from "../types"
 
 export function SignupPasswordScreen() {
   const { handleNext } = useSignupPassword()
+  const signupToken = useSignupStore((state) => state.signupToken)
+  const signupTokenValue = getPasswordFlowToken(signupToken)
 
   const {
     control,
     handleSubmit,
-    watch,
     formState: { isValid },
   } = useForm<PasswordForm>({
     defaultValues: { password: "", confirmPassword: "" },
     mode: "onChange",
   })
 
-  const password = watch("password")
+  useEffect(() => {
+    if (signupTokenValue) return
+    showErrorToast(
+      "회원가입 정보가 만료되었습니다. 이메일 인증부터 다시 시도해주세요.",
+    )
+    router.replace("/(auth)/signup-email")
+  }, [signupTokenValue])
 
   return (
     <AuthScreenLayout
       title="비밀번호를 입력해주세요."
       subtitle="로그인에 사용할 비밀번호를 설정해주세요"
       buttonLabel="다음 단계"
-      buttonDisabled={!isValid}
+      buttonDisabled={!signupTokenValue || !isValid}
       onSubmit={handleSubmit(handleNext)}
+      scrollable
+      keyboardAvoiding
     >
-      <YStack gap={36} marginTop={56}>
-        <YStack gap={10}>
-          <FormTextField<PasswordForm>
-            name="password"
-            control={control}
-            label="비밀번호"
-            placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-            inputType="password"
-            showValidState
-            rules={passwordRules}
-          />
-          <PasswordCriteriaText password={password} />
-        </YStack>
-
-        <FormTextField<PasswordForm>
-          name="confirmPassword"
-          control={control}
-          label="비밀번호 확인"
-          placeholder="입력한 비밀번호를 다시 입력해주세요"
-          inputType="password"
-          showValidState
-          rules={confirmPasswordRules(password)}
-        />
-      </YStack>
+      <AuthPasswordFields control={control} />
     </AuthScreenLayout>
   )
 }
