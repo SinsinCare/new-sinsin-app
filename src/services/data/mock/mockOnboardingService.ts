@@ -2,7 +2,7 @@ import type { OnboardingStep } from "@/src/types"
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
+const MOCK_CKD_ONBOARDING_STEPS: OnboardingStep[] = [
   {
     step: 1,
     title: "현재 신장 상태를 알려주세요",
@@ -114,10 +114,93 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
   },
 ]
 
+const MOCK_NON_CKD_ONBOARDING_STEPS: OnboardingStep[] = [
+  {
+    step: 1,
+    title: "신장 건강과 관련해 해당되는 것이 있나요?",
+    subTitle: "해당되는 것만 골라 주세요.",
+    type: "multi",
+    values: [
+      { key: "HYPERTENSION", value: "고혈압이 있어요" },
+      { key: "DIABETES", value: "당뇨가 있어요" },
+      {
+        key: "HIGH_PROTEIN_DIET",
+        value: "고단백 식이로 신장 건강이 걱정돼요",
+      },
+      {
+        key: "FAMILY_HISTORY",
+        value: "가족 중에 신장 질환 환자가 있어요",
+      },
+      {
+        key: "ABNORMAL_TEST",
+        value: "건강검진에서 단백뇨나 신장 수치 이야기를 들은 적 있어요",
+      },
+      { key: "NONE", value: "특별한 문제는 없어요" },
+      { key: "UNKNOWN", value: "잘 모르겠어요" },
+    ],
+  },
+  {
+    step: 2,
+    title: "신장 건강에 대해 왜 관심이 있으신가요?",
+    subTitle: "이 앱을 사용하게 된 이유를 알려주세요.",
+    type: "only",
+    values: [
+      { key: "PREVENTIVE", value: "미리 건강 관리를 하고 싶어요" },
+      {
+        key: "EXERCISE",
+        value: "운동을 할때 신장건강을 챙기고 싶어요",
+      },
+      {
+        key: "RECENT_CHECKUP",
+        value: "최근 건강검진 결과가 조금 걱정됐어요",
+      },
+      {
+        key: "DIET_CONCERN",
+        value: "식습관이나 염분 섭취가 신경 쓰여요",
+      },
+      {
+        key: "FAMILY_PATIENT",
+        value: "가족이나 주변에 신장 질환 환자가 있어요",
+      },
+      { key: "GENERAL_INFO", value: "그냥 건강 정보가 궁금해요" },
+    ],
+  },
+  {
+    step: 3,
+    title: "평소 식습관은 어떤 편인가요?",
+    subTitle: "",
+    type: "only",
+    values: [
+      { key: "HOME_LOW_SODIUM", value: "집에서 싱겁게 먹는 편이에요" },
+      { key: "HOME_AND_OUT", value: "집밥과 외식을 섞어서 먹어요" },
+      { key: "MOSTLY_OUT", value: "외식이나 배달이 대부분이에요" },
+      {
+        key: "UNKNOWN",
+        value: "잘 모르겠어요 / 신경 안 쓰는 편이에요",
+      },
+    ],
+  },
+  {
+    step: 4,
+    title: "현재 체중을 알려주세요.",
+    subTitle: "단백질 섭취량 계산에 사용돼요.",
+    type: "input",
+    values: [
+      {
+        key: "weight",
+        value: "",
+        type: "number",
+        unit: "kg",
+        label: "몸무게",
+      },
+    ],
+  },
+]
+
 export const mockOnboardingService = {
-  async getSteps(): Promise<OnboardingStep[]> {
+  async getSteps(hasCkd: boolean): Promise<OnboardingStep[]> {
     await delay(300)
-    return MOCK_ONBOARDING_STEPS
+    return hasCkd ? MOCK_CKD_ONBOARDING_STEPS : MOCK_NON_CKD_ONBOARDING_STEPS
   },
 
   async submitAnswers(): Promise<void> {

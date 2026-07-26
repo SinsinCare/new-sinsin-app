@@ -15,7 +15,7 @@ export const onboardingService = {
   async getSteps(hasCkd: boolean): Promise<OnboardingStep[]> {
     if (isMockMode()) {
       const { mockOnboardingService } = require("./mock/mockOnboardingService") // eslint-disable-line @typescript-eslint/no-require-imports
-      return mockOnboardingService.getSteps()
+      return mockOnboardingService.getSteps(hasCkd)
     }
 
     const response = hasCkd
