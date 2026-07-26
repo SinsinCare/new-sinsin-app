@@ -1,22 +1,27 @@
 import type { ReactNode } from "react"
 import {
   Keyboard,
-  Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableWithoutFeedback,
+  View,
 } from "react-native"
-import { YStack, Text } from "tamagui"
 import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
-import { Ionicons } from "@expo/vector-icons"
-import { useAuthColors } from "../hooks"
 import {
   AuthKeyboardFooter,
   AUTH_KEYBOARD_FOOTER_CLEARANCE,
 } from "../components"
-import { tokens } from "@/src/theme/tokens"
+import {
+  V2Button,
+  V2Screen,
+  V2ScreenHeader,
+  spacing,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -48,7 +53,7 @@ export function AuthScreenLayout({
   keyboardAvoiding = false,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
-  const colors = useAuthColors()
+  const { colors } = useV2Theme()
   const handleDefaultBack = () => {
     if (router.canGoBack()) {
       router.back()
@@ -58,72 +63,54 @@ export function AuthScreenLayout({
   }
 
   const content = (
-    <>
-      <YStack flex={scrollable ? 1 : undefined}>
-        <Text
-          fontSize={22}
-          fontWeight="600"
-          color={colors.text}
-          letterSpacing={-0.44}
-          lineHeight={26.4}
-          marginBottom={subtitle ? 8 : 0}
-        >
+    <View style={scrollable ? styles.contentFlex : undefined}>
+      <View>
+        <Text style={[typography.title.medium, { color: colors.label.strong }]}>
           {title}
         </Text>
         {subtitle && (
-          <Text fontSize={15} lineHeight={18} color={colors.textSub}>
+          <Text
+            style={[
+              typography.subtext.large,
+              styles.subtitle,
+              { color: colors.label.alternative },
+            ]}
+          >
             {subtitle}
           </Text>
         )}
         {children}
-      </YStack>
-    </>
+      </View>
+    </View>
   )
 
   const footerContent = (
     <>
       {buttonAccessory}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: buttonDisabled || buttonLoading }}
+      <V2Button
+        size="xl"
+        color="brand"
+        fullWidth
+        disabled={buttonDisabled}
+        loading={buttonLoading}
         onPress={() => {
           Keyboard.dismiss()
           onSubmit()
         }}
-        disabled={buttonDisabled || buttonLoading}
       >
-        <YStack
-          backgroundColor={
-            !buttonDisabled && !buttonLoading
-              ? tokens.color.sub6.val
-              : tokens.color.sub6.val + "40"
-          }
-          paddingVertical={16}
-          paddingHorizontal={24}
-          borderRadius={8}
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Text
-            color="white"
-            fontSize={16}
-            fontWeight="500"
-            letterSpacing={-0.3}
-            lineHeight={20}
-          >
-            {buttonLabel}
-          </Text>
-        </YStack>
-      </Pressable>
+        {buttonLabel}
+      </V2Button>
     </>
   )
 
   const footer = keyboardAvoiding ? (
-    <AuthKeyboardFooter backgroundColor={colors.bg}>
+    <AuthKeyboardFooter backgroundColor={colors.background.default}>
       {footerContent}
     </AuthKeyboardFooter>
   ) : (
-    <YStack paddingBottom={insets.bottom + 24}>{footerContent}</YStack>
+    <View style={{ paddingBottom: insets.bottom + spacing[24] }}>
+      {footerContent}
+    </View>
   )
 
   const scrollContent = keyboardAvoiding ? (
@@ -151,40 +138,36 @@ export function AuthScreenLayout({
   )
 
   const body = scrollable ? (
-    <YStack flex={1} paddingHorizontal={20}>
+    <View style={styles.body}>
       {scrollContent}
       {footer}
-    </YStack>
+    </View>
   ) : (
-    <YStack flex={1} paddingHorizontal={20} justifyContent="space-between">
+    <View style={[styles.body, styles.bodyWithFooter]}>
       {content}
       {footer}
-    </YStack>
+    </View>
   )
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
-        {showHeader && (
-          <YStack height={56} justifyContent="center">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="뒤로 가기"
-              onPress={onBack ?? handleDefaultBack}
-              style={{ position: "absolute", left: 9, padding: 4 }}
-            >
-              <Ionicons name="chevron-back" size={24} color={colors.icon} />
-            </Pressable>
-          </YStack>
-        )}
+      <V2Screen
+        padded={false}
+        edges={showHeader ? ["left", "right", "bottom"] : undefined}
+      >
+        {showHeader && <V2ScreenHeader onBack={onBack ?? handleDefaultBack} />}
 
         {body}
-      </YStack>
+      </V2Screen>
     </TouchableWithoutFeedback>
   )
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingBottom: 24 },
+  contentFlex: { flex: 1 },
+  body: { flex: 1, paddingHorizontal: spacing[20] },
+  bodyWithFooter: { justifyContent: "space-between" },
+  scrollContent: { flexGrow: 1, paddingBottom: spacing[24] },
+  subtitle: { marginTop: spacing[8] },
 })
