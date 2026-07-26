@@ -28,6 +28,31 @@ export const PROFILE_SETUP_STEP_TITLES: Record<ProfileSetupStep, string> = {
 
 const NICKNAME_PATTERN = /^[가-힣a-zA-Z0-9]{2,14}$/
 
+function getDraftString(value: unknown) {
+  return typeof value === "string" ? value : ""
+}
+
+/**
+ * React Hook Form may expose a partial draft while fields are mounting.
+ * Normalize at the feature boundary so validation and submission only receive strings.
+ */
+export function normalizeProfileSetupDraft(draft: unknown): ProfileSetupDraft {
+  const values =
+    draft && typeof draft === "object" ? (draft as Record<string, unknown>) : {}
+
+  return {
+    name: getDraftString(values.name),
+    birthDate: getDraftString(values.birthDate),
+    gender: getDraftString(values.gender) as ProfileSetupDraft["gender"],
+    phoneNumber: getDraftString(values.phoneNumber),
+    acquisitionSource: getDraftString(
+      values.acquisitionSource,
+    ) as ProfileSetupDraft["acquisitionSource"],
+    acquisitionSourceOther: getDraftString(values.acquisitionSourceOther),
+    nickname: getDraftString(values.nickname),
+  }
+}
+
 export function getProfileSetupStepError(
   step: ProfileSetupStep,
   draft: ProfileSetupDraft,
@@ -81,6 +106,7 @@ export function isNicknameAvailabilityVerified(
   verifiedNickname: string | null,
   draft: ProfileSetupDraft,
 ) {
+  if (typeof draft.nickname !== "string") return false
   return verifiedNickname === draft.nickname.trim()
 }
 
