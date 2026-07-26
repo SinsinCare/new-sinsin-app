@@ -23,6 +23,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { getAuthScrollableContentPresentation } from "../data/authPresentation"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -191,7 +192,7 @@ export function AuthScreenLayout({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contentFlex: { flex: 1 },
+  contentFlex: getAuthScrollableContentPresentation(),
   body: { flex: 1, paddingHorizontal: spacing[20] },
   bodyWithFooter: { justifyContent: "space-between" },
   scrollContent: { flexGrow: 1 },
