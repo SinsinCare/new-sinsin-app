@@ -1,4 +1,6 @@
 import {
+  getAuthKeyboardDismissMode,
+  getAuthKeyboardScrollViewportInset,
   getAuthPasswordPlaceholders,
   getAuthScrollableContentPresentation,
   getAuthTextInputPresentation,
@@ -37,6 +39,17 @@ describe("auth text input presentation", () => {
   it("lets scrollable content grow without shrinking its natural height", () => {
     expect(getAuthScrollableContentPresentation()).toEqual({ flexGrow: 1 })
     expect(getAuthScrollableContentPresentation()).not.toHaveProperty("flex")
+  })
+
+  it("uses platform-native keyboard dismissal for scroll gestures", () => {
+    expect(getAuthKeyboardDismissMode("ios")).toBe("interactive")
+    expect(getAuthKeyboardDismissMode("android")).toBe("on-drag")
+  })
+
+  it("reserves Android viewport space for footer content above the baseline", () => {
+    expect(getAuthKeyboardScrollViewportInset("android", 150, 80)).toBe(70)
+    expect(getAuthKeyboardScrollViewportInset("android", 80, 80)).toBe(0)
+    expect(getAuthKeyboardScrollViewportInset("ios", 150, 80)).toBe(0)
   })
 
   it("uses concise password placeholders only for large text", () => {

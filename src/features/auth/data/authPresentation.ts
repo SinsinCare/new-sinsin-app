@@ -60,6 +60,19 @@ export function getAuthScrollableContentPresentation(): Pick<
   return { flexGrow: 1 }
 }
 
+export function getAuthKeyboardDismissMode(platform: "ios" | "android") {
+  return platform === "ios" ? ("interactive" as const) : ("on-drag" as const)
+}
+
+export function getAuthKeyboardScrollViewportInset(
+  platform: "ios" | "android",
+  footerClearance: number,
+  baselineClearance: number,
+) {
+  if (platform !== "android") return 0
+  return Math.max(0, footerClearance - baselineClearance)
+}
+
 export function getAuthPasswordPlaceholders(fontScale: number) {
   return fontScale >= 1.3
     ? {

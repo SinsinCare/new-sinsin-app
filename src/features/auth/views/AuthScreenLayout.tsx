@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react"
 import {
   Keyboard,
   type LayoutChangeEvent,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,7 +24,11 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { getAuthScrollableContentPresentation } from "../data/authPresentation"
+import {
+  getAuthKeyboardDismissMode,
+  getAuthKeyboardScrollViewportInset,
+  getAuthScrollableContentPresentation,
+} from "../data/authPresentation"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -122,6 +127,14 @@ export function AuthScreenLayout({
     AUTH_KEYBOARD_FOOTER_CLEARANCE,
     footerContentHeight + spacing[24],
   )
+  const scrollViewportInset = getAuthKeyboardScrollViewportInset(
+    Platform.OS === "ios" ? "ios" : "android",
+    footerClearance,
+    AUTH_KEYBOARD_FOOTER_CLEARANCE,
+  )
+  const keyboardDismissMode = getAuthKeyboardDismissMode(
+    Platform.OS === "ios" ? "ios" : "android",
+  )
 
   const measuredFooterContent = (
     <View onLayout={handleFooterContentLayout}>{footerContent}</View>
@@ -139,7 +152,10 @@ export function AuthScreenLayout({
 
   const scrollContent = keyboardAvoiding ? (
     <KeyboardAwareScrollView
-      style={styles.flex}
+      style={[
+        styles.flex,
+        scrollViewportInset > 0 && { marginBottom: scrollViewportInset },
+      ]}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: footerClearance },
@@ -148,7 +164,7 @@ export function AuthScreenLayout({
       disableScrollOnKeyboardHide
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
+      keyboardDismissMode={keyboardDismissMode}
     >
       {content}
     </KeyboardAwareScrollView>
@@ -158,7 +174,7 @@ export function AuthScreenLayout({
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
+      keyboardDismissMode={keyboardDismissMode}
     >
       {content}
     </ScrollView>
@@ -176,16 +192,22 @@ export function AuthScreenLayout({
     </View>
   )
 
+  const screen = (
+    <V2Screen
+      padded={false}
+      edges={showHeader ? ["left", "right", "bottom"] : undefined}
+    >
+      {showHeader && <V2ScreenHeader onBack={onBack ?? handleDefaultBack} />}
+
+      {body}
+    </V2Screen>
+  )
+
+  if (scrollable) return screen
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <V2Screen
-        padded={false}
-        edges={showHeader ? ["left", "right", "bottom"] : undefined}
-      >
-        {showHeader && <V2ScreenHeader onBack={onBack ?? handleDefaultBack} />}
-
-        {body}
-      </V2Screen>
+      {screen}
     </TouchableWithoutFeedback>
   )
 }
