@@ -186,15 +186,20 @@ export function LoginScreen() {
             신신당부가 처음이신가요?
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
-            <Text
-              style={[
-                typography.subtext.large,
-                styles.underline,
-                { color: colors.label.alternative },
-              ]}
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="회원가입하기"
             >
-              회원가입하기
-            </Text>
+              <Text
+                style={[
+                  typography.subtext.large,
+                  styles.underline,
+                  { color: colors.label.alternative },
+                ]}
+              >
+                회원가입하기
+              </Text>
+            </Pressable>
           </Link>
         </View>
       </View>
