@@ -86,6 +86,7 @@
     "expo-router": "~55.0.10",
     "expo-secure-store": "~55.0.14",
     "expo-sharing": "~55.0.16",
+    "expo-splash-screen": "~55.0.23",
     "expo-status-bar": "~55.0.5",
     "expo-symbols": "~55.0.7",
     "i18next": "^26.3.4",
