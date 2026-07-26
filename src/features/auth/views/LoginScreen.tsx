@@ -129,7 +129,7 @@ export function LoginScreen() {
           >
             <GoogleLogo width={20} height={20} />
             <Text
-              numberOfLines={2}
+              numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
               style={[
@@ -157,7 +157,7 @@ export function LoginScreen() {
           >
             <KakaoLogo width={20} height={20} />
             <Text
-              numberOfLines={2}
+              numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
               style={[
@@ -191,7 +191,7 @@ export function LoginScreen() {
                 color={colors.static.white}
               />
               <Text
-                numberOfLines={2}
+                numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.8}
                 style={[
