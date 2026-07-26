@@ -27,7 +27,7 @@ mock은 상태 주입 기능이 제한적이다. 아래 fixture를 사용하되,
 
 | fixture              | 입력/전이                                 | mock이 제공하는 결과            | 사용 범위                    |
 | -------------------- | ----------------------------------------- | ------------------------------- | ---------------------------- |
-| `mock-email-active`  | `qa@example.test` / `test1234`            | `ACTIVE`, HOME                  | 이메일 로그인 happy/relaunch |
+| `mock-email-active`  | `test@sinsin.dev` / `test1234`            | `ACTIVE`, HOME                  | 이메일 로그인 happy/relaunch |
 | `mock-email-invalid` | 동일 이메일 + 잘못된 비밀번호             | 오류                            | 이메일 로그인 error/retry    |
 | `mock-signup`        | 가입 email OTP + profile + signup         | `PENDING_ONBOARDING`, ephemeral | 이메일 회원가입→온보딩 진입  |
 | `mock-social`        | provider native 결과를 승인 mock으로 주입 | `PENDING_ONBOARDING`            | social 성공 후 route 단위    |
