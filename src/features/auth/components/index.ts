@@ -1,4 +1,5 @@
 export { GenderSelector } from "./GenderSelector"
+export { GenderIcon } from "./GenderIcon"
 export { BirthDatePicker } from "./BirthDatePicker"
 export { PasswordCriteriaText } from "./PasswordCriteriaText"
 export { AuthKeyboardFooter } from "./AuthKeyboardFooter"

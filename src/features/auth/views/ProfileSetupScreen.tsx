@@ -1,290 +1,417 @@
-import { useEffect } from "react"
-import { Pressable, Keyboard, BackHandler, Platform } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useEffect, useState } from "react"
+import {
+  BackHandler,
+  Keyboard,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native"
 import { router, useNavigation } from "expo-router"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { Ionicons } from "@expo/vector-icons"
-import { BottomSheetPicker, FormTextField } from "@/src/shared/components"
-import { V2TextField } from "@/src/design-system-v2"
-import { BirthDatePicker } from "../components/BirthDatePicker"
-import { GenderSelector } from "../components/GenderSelector"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import {
+  V2Button,
+  V2TextField,
+  spacing,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
+import { BottomSheetPicker } from "@/src/shared/components"
 import {
   AuthKeyboardFooter,
   AUTH_KEYBOARD_FOOTER_CLEARANCE,
+  BirthDatePicker,
+  GenderSelector,
 } from "../components"
-import { useProfileSetup, useAuthColors } from "../hooks"
 import { ACQUISITION_SOURCE_OPTIONS } from "../data/acquisitionSources"
-import { tokens } from "@/src/theme/tokens"
-import type { ProfileForm } from "../types"
-import type { AcquisitionSourceInput } from "../data/acquisitionSources"
 import {
-  formatKoreanMobileInput,
-  getRequiredPhoneNumberError,
-  isValidKoreanMobile,
-} from "../data/phoneNumber"
+  getNextProfileSetupStep,
+  getPreviousProfileSetupStep,
+  getProfileSetupStepError,
+  PROFILE_SETUP_STEP_TITLES,
+  requiresNicknameAvailability,
+  type ProfileSetupStep,
+} from "../data/profileSetupFlow"
+import { formatKoreanMobileInput } from "../data/phoneNumber"
+import { useProfileSetup } from "../hooks"
+import type { ProfileSetupDraft } from "../types"
+
+const EMPTY_DRAFT: ProfileSetupDraft = {
+  name: "",
+  birthDate: "",
+  gender: "",
+  phoneNumber: "",
+  acquisitionSource: "",
+  acquisitionSourceOther: "",
+  nickname: "",
+}
 
 export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
   const navigation = useNavigation()
-  const colors = useAuthColors()
+  const { colors } = useV2Theme()
+  const [step, setStep] = useState<ProfileSetupStep>("name")
+  const [stepError, setStepError] = useState("")
+  const [isAcquisitionPickerOpen, setIsAcquisitionPickerOpen] = useState(false)
   const {
-    birthYear,
-    birthMonth,
-    birthDay,
-    gender,
-    acquisitionSource,
     isCompletionMode,
     isPrefilling,
     isSubmitting,
+    isVerifyingNickname,
     submitError,
     prefillValues,
-    handleYearChange,
-    handleMonthChange,
-    setBirthDay,
-    setGender,
-    setAcquisitionSource,
-    handleNext,
+    clearNicknameVerification,
+    isNicknameVerified,
+    verifyNickname,
+    submit,
   } = useProfileSetup()
-
-  const { control, watch, handleSubmit, reset } = useForm<ProfileForm>({
-    defaultValues: {
-      name: "",
-      phoneNumber: "",
-      acquisitionSourceOther: "",
-      referralCode: "",
-    },
+  const { control, getValues, reset } = useForm<ProfileSetupDraft>({
+    defaultValues: EMPTY_DRAFT,
     mode: "onChange",
   })
-
-  const name = watch("name")
-  const phoneNumber = watch("phoneNumber")
-  const acquisitionSourceOther = watch("acquisitionSourceOther")
-  const isOtherSource = acquisitionSource === "OTHER"
-  const isValid =
-    !!name.trim() &&
-    !!birthYear &&
-    !!birthMonth &&
-    !!birthDay &&
-    !!gender &&
-    isValidKoreanMobile(phoneNumber) &&
-    !!acquisitionSource &&
-    (!isOtherSource || !!acquisitionSourceOther.trim())
+  const watchedDraft = useWatch({ control })
+  const draft = {
+    ...EMPTY_DRAFT,
+    ...watchedDraft,
+  } as ProfileSetupDraft
+  const acquisitionSource = draft.acquisitionSource
+  const isFinalInputStep = step === "acquisition"
+  const isFirstStep = step === "name"
+  const isCurrentStepValid = !getProfileSetupStepError(step, draft)
 
   useEffect(() => {
     if (prefillValues) reset(prefillValues)
   }, [prefillValues, reset])
 
   useEffect(() => {
-    navigation.setOptions({ gestureEnabled: !isCompletionMode })
+    navigation.setOptions({
+      gestureEnabled: isFirstStep && !isCompletionMode,
+    })
     return () => navigation.setOptions({ gestureEnabled: true })
-  }, [isCompletionMode, navigation])
+  }, [isCompletionMode, isFirstStep, navigation])
 
   useEffect(() => {
-    if (!isCompletionMode) return
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => true)
-    return () => sub.remove()
-  }, [isCompletionMode])
+    if (isFirstStep && !isCompletionMode) return
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        const previous = getPreviousProfileSetupStep(step)
+        if (previous) {
+          setStep(previous)
+          setStepError("")
+        }
+        return true
+      },
+    )
+    return () => subscription.remove()
+  }, [isCompletionMode, isFirstStep, step])
+
+  const moveBack = () => {
+    Keyboard.dismiss()
+    const previous = getPreviousProfileSetupStep(step)
+    if (previous) {
+      setStep(previous)
+      setStepError("")
+      return
+    }
+    if (isCompletionMode) return
+    if (router.canGoBack()) {
+      router.back()
+      return
+    }
+    router.replace("/(auth)/signup-password")
+  }
+
+  const moveForward = async () => {
+    const draft = getValues()
+    const error = getProfileSetupStepError(step, draft)
+    if (error) {
+      setStepError(error)
+      return
+    }
+
+    setStepError("")
+    if (requiresNicknameAvailability(step) && !isNicknameVerified(draft)) {
+      const verified = await verifyNickname(draft.nickname)
+      if (!verified) return
+    }
+
+    if (isFinalInputStep) {
+      Keyboard.dismiss()
+      void submit(draft)
+      return
+    }
+
+    const next = getNextProfileSetupStep(step)
+    if (next) setStep(next)
+  }
+
+  const renderStep = () => {
+    switch (step) {
+      case "name":
+        return (
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <V2TextField
+                variant="box"
+                label="이름"
+                required
+                accessibilityLabel="이름 필수 입력"
+                value={field.value}
+                onChangeText={(value) => {
+                  setStepError("")
+                  field.onChange(value)
+                }}
+                onBlur={field.onBlur}
+                placeholder="이름을 입력해주세요"
+                autoComplete="name"
+                textContentType="name"
+                returnKeyType="next"
+                maxLength={100}
+                error={stepError}
+              />
+            )}
+          />
+        )
+      case "birthDate":
+        return (
+          <Controller
+            name="birthDate"
+            control={control}
+            render={({ field }) => (
+              <BirthDatePicker
+                value={field.value}
+                onChange={(value) => {
+                  setStepError("")
+                  field.onChange(value)
+                }}
+                error={stepError}
+              />
+            )}
+          />
+        )
+      case "gender":
+        return (
+          <Controller
+            name="gender"
+            control={control}
+            render={({ field }) => (
+              <GenderSelector
+                value={field.value}
+                onChange={(value) => {
+                  setStepError("")
+                  field.onChange(value)
+                }}
+                error={stepError}
+              />
+            )}
+          />
+        )
+      case "phoneNumber":
+        return (
+          <Controller
+            name="phoneNumber"
+            control={control}
+            render={({ field }) => (
+              <V2TextField
+                variant="box"
+                label="전화번호"
+                required
+                accessibilityLabel="전화번호 필수 입력"
+                value={field.value}
+                onChangeText={(value) => {
+                  setStepError("")
+                  field.onChange(formatKoreanMobileInput(value))
+                }}
+                onBlur={field.onBlur}
+                placeholder="010-1234-5678"
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                autoComplete="tel"
+                returnKeyType="next"
+                maxLength={13}
+                error={stepError}
+              />
+            )}
+          />
+        )
+      case "acquisition":
+        return (
+          <View style={styles.acquisitionContent}>
+            <Controller
+              name="acquisitionSource"
+              control={control}
+              render={({ field }) => (
+                <BottomSheetPicker
+                  label="알게된 경로"
+                  value={field.value}
+                  options={[...ACQUISITION_SOURCE_OPTIONS]}
+                  onSelect={(value) => {
+                    setStepError("")
+                    field.onChange(value)
+                  }}
+                  onOpenChange={setIsAcquisitionPickerOpen}
+                  placeholder="알게된 경로를 선택해주세요"
+                  required
+                />
+              )}
+            />
+            {acquisitionSource === "OTHER" ? (
+              <Controller
+                name="acquisitionSourceOther"
+                control={control}
+                render={({ field }) => (
+                  <V2TextField
+                    variant="box"
+                    label="직접 입력"
+                    required
+                    accessibilityLabel="알게 된 경로 직접 입력"
+                    value={field.value}
+                    onChangeText={(value) => {
+                      setStepError("")
+                      field.onChange(value)
+                    }}
+                    onBlur={field.onBlur}
+                    placeholder="알게 된 경로를 입력해주세요"
+                    maxLength={200}
+                    error={stepError}
+                  />
+                )}
+              />
+            ) : null}
+            {stepError || submitError ? (
+              <Text
+                style={[
+                  typography.subtext.medium,
+                  { color: colors.status.negative },
+                ]}
+              >
+                {stepError || submitError}
+              </Text>
+            ) : null}
+          </View>
+        )
+      case "nickname":
+        return (
+          <Controller
+            name="nickname"
+            control={control}
+            render={({ field }) => (
+              <V2TextField
+                variant="box"
+                label="닉네임"
+                required
+                accessibilityLabel="닉네임 필수 입력"
+                accessibilityHint="한글, 영문, 숫자 2~14자로 입력하세요"
+                value={field.value}
+                onChangeText={(value) => {
+                  setStepError("")
+                  clearNicknameVerification()
+                  field.onChange(value)
+                }}
+                onBlur={field.onBlur}
+                placeholder="닉네임을 입력해주세요"
+                autoComplete="nickname"
+                maxLength={14}
+                error={stepError || submitError}
+              />
+            )}
+          />
+        )
+    }
+  }
+
+  const buttonLabel = isFinalInputStep ? "가입 완료" : "다음"
+  const buttonDisabled =
+    !isCurrentStepValid || isPrefilling || isSubmitting || isVerifyingNickname
 
   return (
-    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
-      <YStack height={56} justifyContent="center">
-        {!isCompletionMode && (
+    <View style={[styles.root, { backgroundColor: colors.background.default }]}>
+      <View style={{ height: insets.top + 56 }}>
+        {(!isFirstStep || !isCompletionMode) && (
           <Pressable
-            onPress={() => router.back()}
-            style={{ position: "absolute", left: 9, padding: 4 }}
+            accessibilityRole="button"
+            accessibilityLabel="뒤로 가기"
+            hitSlop={8}
+            onPress={moveBack}
+            style={[styles.backButton, { top: insets.top + 16 }]}
           >
-            <Ionicons name="chevron-back" size={24} color={colors.icon} />
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={colors.label.normal}
+            />
           </Pressable>
         )}
-      </YStack>
+      </View>
 
-      <YStack flex={1} justifyContent="space-between">
-        <KeyboardAwareScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
-          bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
-          disableScrollOnKeyboardHide
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
-          showsVerticalScrollIndicator={false}
+      <KeyboardAwareScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
+        disableScrollOnKeyboardHide
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[typography.title.medium, { color: colors.label.normal }]}>
+          {PROFILE_SETUP_STEP_TITLES[step]}
+        </Text>
+        <View style={styles.field}>{renderStep()}</View>
+      </KeyboardAwareScrollView>
+
+      <AuthKeyboardFooter
+        horizontalPadding={spacing[20]}
+        backgroundColor={colors.background.default}
+        keyboardTrackingEnabled={!isAcquisitionPickerOpen}
+      >
+        <V2Button
+          size="xl"
+          color="brand"
+          fullWidth
+          loading={isSubmitting || isPrefilling || isVerifyingNickname}
+          disabled={buttonDisabled}
+          onPress={moveForward}
         >
+          {isPrefilling
+            ? "불러오는 중..."
+            : isVerifyingNickname
+              ? "확인 중..."
+              : buttonLabel}
+        </V2Button>
+        {!isFinalInputStep && submitError && step !== "nickname" ? (
           <Text
-            fontSize={22}
-            fontWeight="600"
-            color={colors.text}
-            letterSpacing={-0.44}
-            lineHeight={26.4}
-            marginBottom={8}
+            style={[
+              styles.submitError,
+              typography.subtext.medium,
+              { color: colors.status.negative },
+            ]}
           >
-            필수정보를 입력해주세요.
+            {submitError}
           </Text>
-          <Text
-            fontSize={15}
-            lineHeight={18}
-            color={colors.textSub}
-            marginBottom={40}
-          >
-            서비스 이용을 위한 기본 정보를 입력해주세요
-          </Text>
-
-          <YStack gap={28}>
-            <YStack>
-              <XStack paddingBottom={10}>
-                <Text
-                  fontSize={13}
-                  fontWeight="500"
-                  color={colors.text}
-                  letterSpacing={-0.3}
-                  lineHeight={18.2}
-                >
-                  이름
-                </Text>
-                <Text
-                  fontSize={13}
-                  fontWeight="500"
-                  color={tokens.color.error.val}
-                >
-                  {" "}
-                  *
-                </Text>
-              </XStack>
-              <FormTextField<ProfileForm>
-                name="name"
-                control={control}
-                placeholder="이름을 입력해주세요"
-                showValidState
-                rules={{ required: "이름을 입력해주세요." }}
-              />
-            </YStack>
-
-            <BirthDatePicker
-              birthYear={birthYear}
-              birthMonth={birthMonth}
-              birthDay={birthDay}
-              onYearChange={handleYearChange}
-              onMonthChange={handleMonthChange}
-              onDayChange={setBirthDay}
-            />
-
-            <GenderSelector value={gender} onChange={setGender} />
-
-            <Controller
-              name="phoneNumber"
-              control={control}
-              rules={{
-                validate: (value) => getRequiredPhoneNumberError(value) ?? true,
-              }}
-              render={({ field, fieldState }) => (
-                <V2TextField
-                  variant="box"
-                  label="전화번호"
-                  required
-                  value={field.value}
-                  onChangeText={(value) =>
-                    field.onChange(formatKoreanMobileInput(value))
-                  }
-                  onBlur={field.onBlur}
-                  placeholder="010-1234-5678"
-                  keyboardType="phone-pad"
-                  textContentType="telephoneNumber"
-                  autoComplete="tel"
-                  returnKeyType="done"
-                  maxLength={13}
-                  error={fieldState.error?.message ?? false}
-                  accessibilityLabel="전화번호 필수 입력"
-                />
-              )}
-            />
-
-            <YStack gap={12}>
-              <BottomSheetPicker
-                label="어떻게 신신당부를 알게 되었나요?"
-                value={acquisitionSource}
-                options={[...ACQUISITION_SOURCE_OPTIONS]}
-                onSelect={(value) =>
-                  setAcquisitionSource(value as AcquisitionSourceInput)
-                }
-                placeholder="유입경로를 선택해주세요"
-                required
-              />
-
-              {isOtherSource && (
-                <FormTextField<ProfileForm>
-                  name="acquisitionSourceOther"
-                  control={control}
-                  placeholder="알게 된 경로를 입력해주세요"
-                  maxLength={200}
-                  showValidState
-                  rules={{
-                    required: "알게 된 경로를 입력해주세요.",
-                  }}
-                />
-              )}
-            </YStack>
-
-            <FormTextField<ProfileForm>
-              name="referralCode"
-              control={control}
-              label="추천인 코드"
-              placeholder="추천인 코드를 입력해주세요 (선택)"
-            />
-          </YStack>
-        </KeyboardAwareScrollView>
-
-        <AuthKeyboardFooter horizontalPadding={20} backgroundColor={colors.bg}>
-          <Pressable
-            onPress={() => {
-              Keyboard.dismiss()
-              handleSubmit(handleNext)()
-            }}
-            disabled={!isValid || isSubmitting || isPrefilling}
-          >
-            <YStack
-              backgroundColor={
-                isValid && !isSubmitting && !isPrefilling
-                  ? tokens.color.sub6.val
-                  : tokens.color.sub6.val + "40"
-              }
-              paddingVertical={16}
-              paddingHorizontal={24}
-              borderRadius={8}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Text
-                color="white"
-                fontSize={16}
-                fontWeight="500"
-                letterSpacing={0}
-                lineHeight={20}
-              >
-                {isPrefilling
-                  ? "불러오는 중..."
-                  : isSubmitting
-                    ? "저장 중..."
-                    : isCompletionMode
-                      ? "저장하기"
-                      : "다음 단계"}
-              </Text>
-            </YStack>
-          </Pressable>
-          {submitError && (
-            <Text
-              color={tokens.color.error.val}
-              fontSize={13}
-              lineHeight={18}
-              marginTop={10}
-              textAlign="center"
-            >
-              {submitError}
-            </Text>
-          )}
-        </AuthKeyboardFooter>
-      </YStack>
-    </YStack>
+        ) : null}
+      </AuthKeyboardFooter>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  backButton: { position: "absolute", left: 12, padding: 4 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing[20],
+    paddingTop: spacing[28],
+    paddingBottom: spacing[24],
+  },
+  field: { marginTop: spacing[24] },
+  acquisitionContent: { gap: spacing[12] },
+  submitError: { marginTop: spacing[10], textAlign: "center" },
+})

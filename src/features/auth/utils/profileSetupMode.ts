@@ -19,6 +19,7 @@ export function isProfileSetupCompletionMode({
   requiresAdditionalInfo,
 }: ProfileSetupModeInput) {
   return (
+    accountState === "PENDING_PROFILE" ||
     (entryGate === "PROFILE" && sessionPersistence === "ephemeral") ||
     (accountState === "ACTIVE" && requiresAdditionalInfo)
   )

@@ -1,52 +1,44 @@
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
-  Modal,
-  Pressable,
-  FlatList,
-  StyleSheet,
   Animated,
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text } from "tamagui"
 import { Ionicons } from "@expo/vector-icons"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { tokens } from "@/src/theme/tokens"
+import {
+  borderWidth,
+  controlHeight,
+  radius,
+  spacing,
+  typography,
+  useV2Theme,
+  V2BottomSheet,
+} from "@/src/design-system-v2"
+import {
+  getWheelPickerIndex,
+  getWheelPickerValueAtOffset,
+  resolveWheelPickerValue,
+  type WheelPickerOption,
+} from "./bottomSheetPickerModel"
 
-const SCREEN_HEIGHT = Dimensions.get("window").height
-const SHEET_MAX_HEIGHT = SCREEN_HEIGHT * 0.5
-
-interface PickerOption {
-  label: string
-  value: string
-}
+const WHEEL_ITEM_HEIGHT = 48
+const WHEEL_VISIBLE_ITEM_COUNT = 5
+const WHEEL_HEIGHT = WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_ITEM_COUNT
+const WHEEL_VERTICAL_PADDING = (WHEEL_HEIGHT - WHEEL_ITEM_HEIGHT) / 2
 
 interface BottomSheetPickerProps {
   label?: string
   value: string
-  options: PickerOption[]
+  options: WheelPickerOption[]
   onSelect: (value: string) => void
   placeholder?: string
   required?: boolean
-}
-
-export function getBottomSheetPickerColors(isDark: boolean) {
-  return {
-    label: isDark ? tokens.color.textDark.val : "#17191C",
-    placeholder: isDark ? "#6B7280" : "#A0A4A8",
-    inputBg: isDark ? "#2A2A32" : "white",
-    inputBorder: isDark
-      ? tokens.color.borderDark.val
-      : "rgba(218,223,230,0.6)",
-    chevron: isDark ? tokens.color.textDarkSub.val : "#787C83",
-    sheetBg: isDark ? "#2A2A32" : "white",
-    handle: isDark ? tokens.color.borderDark.val : "#E0E0E0",
-    selectedBg: isDark ? `${tokens.color.sub8.val}20` : "#F0FDF4",
-    selectedText: tokens.color.sub8.val,
-    itemText: isDark ? tokens.color.textDark.val : "#17191C",
-  }
+  onOpenChange?: (open: boolean) => void
 }
 
 export function BottomSheetPicker({
@@ -56,206 +48,290 @@ export function BottomSheetPicker({
   onSelect,
   placeholder = "선택해주세요",
   required,
+  onOpenChange,
 }: BottomSheetPickerProps) {
+  const { colors } = useV2Theme()
+  const listRef = useRef<Animated.FlatList<WheelPickerOption>>(null)
+  const scrollY = useRef(new Animated.Value(0)).current
   const [visible, setVisible] = useState(false)
-  const insets = useSafeAreaInsets()
-  const translateY = useRef(new Animated.Value(SHEET_MAX_HEIGHT)).current
-  const backdropOpacity = useRef(new Animated.Value(0)).current
-  const isDark = useAppColorScheme() === "dark"
+  const [pendingValue, setPendingValue] = useState(() =>
+    resolveWheelPickerValue(value, options),
+  )
 
-  const selectedOption = options.find((o) => o.value === value)
+  const selectedOption = options.find((option) => option.value === value)
+  const wheelTitle = label ? `${label} 선택` : "항목 선택"
 
-  const colors = getBottomSheetPickerColors(isDark)
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start()
-    }
-  }, [visible])
-
-  const close = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: SHEET_MAX_HEIGHT,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setVisible(false)
+  const scrollToValue = (nextValue: string, animated: boolean) => {
+    const index = getWheelPickerIndex(nextValue, options)
+    scrollY.setValue(index * WHEEL_ITEM_HEIGHT)
+    listRef.current?.scrollToOffset({
+      offset: index * WHEEL_ITEM_HEIGHT,
+      animated,
     })
   }
 
-  const handleSelect = (v: string) => {
-    onSelect(v)
+  useEffect(() => {
+    if (!visible) return
+    const nextValue = resolveWheelPickerValue(value, options)
+    setPendingValue(nextValue)
+
+    const frame = requestAnimationFrame(() => {
+      scrollToValue(nextValue, false)
+    })
+    return () => cancelAnimationFrame(frame)
+    // options are static for each picker instance; reopening re-syncs the committed value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, visible])
+
+  const open = () => {
+    Keyboard.dismiss()
+    const nextValue = resolveWheelPickerValue(value, options)
+    setPendingValue(nextValue)
+    setVisible(true)
+    onOpenChange?.(true)
+  }
+
+  const close = () => {
+    setVisible(false)
+    onOpenChange?.(false)
+  }
+
+  const confirm = () => {
+    if (pendingValue) onSelect(pendingValue)
     close()
   }
 
-  return (
-    <YStack>
-      {label && (
-        <XStack paddingBottom={10}>
-          <Text
-            fontSize={13}
-            fontWeight="500"
-            color={colors.label}
-            letterSpacing={-0.3}
-            lineHeight={18.2}
-          >
-            {label}
-          </Text>
-          {required && (
-            <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
-              {" "}
-              *
-            </Text>
-          )}
-        </XStack>
-      )}
-      <Pressable onPress={() => setVisible(true)}>
-        <XStack
-          backgroundColor={colors.inputBg}
-          borderWidth={1}
-          borderColor={colors.inputBorder}
-          borderRadius={8}
-          height={52}
-          alignItems="center"
-          paddingHorizontal={16}
-          justifyContent="space-between"
-        >
-          <Text
-            fontSize={16}
-            color={selectedOption ? colors.label : colors.placeholder}
-            letterSpacing={-0.3}
-          >
-            {selectedOption ? selectedOption.label : placeholder}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.chevron} />
-        </XStack>
-      </Pressable>
+  const updatePendingValue = (
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
+    const targetOffset =
+      event.nativeEvent.targetContentOffset?.y ??
+      event.nativeEvent.contentOffset.y
+    const nextValue = getWheelPickerValueAtOffset(
+      targetOffset,
+      WHEEL_ITEM_HEIGHT,
+      options,
+    )
+    if (nextValue) setPendingValue(nextValue)
+  }
 
-      <Modal
-        visible={visible}
-        transparent
-        statusBarTranslucent
-        animationType="none"
-        onRequestClose={close}
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: WheelPickerOption
+    index: number
+  }) => {
+    const itemOffset = index * WHEEL_ITEM_HEIGHT
+    const inputRange = [
+      itemOffset - WHEEL_ITEM_HEIGHT * 2,
+      itemOffset - WHEEL_ITEM_HEIGHT,
+      itemOffset,
+      itemOffset + WHEEL_ITEM_HEIGHT,
+      itemOffset + WHEEL_ITEM_HEIGHT * 2,
+    ]
+    const opacity = scrollY.interpolate({
+      inputRange,
+      outputRange: [0.22, 0.58, 1, 0.58, 0.22],
+      extrapolate: "clamp",
+    })
+    const scale = scrollY.interpolate({
+      inputRange,
+      outputRange: [0.86, 0.94, 1, 0.94, 0.86],
+      extrapolate: "clamp",
+    })
+    const rotateX = scrollY.interpolate({
+      inputRange,
+      outputRange: ["48deg", "24deg", "0deg", "-24deg", "-48deg"],
+      extrapolate: "clamp",
+    })
+    const selected = item.value === pendingValue
+
+    return (
+      <Animated.View
+        style={[
+          styles.wheelItem,
+          {
+            opacity,
+            transform: [{ perspective: 900 }, { rotateX }, { scale }],
+          },
+        ]}
       >
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        <Pressable
+          accessibilityRole="radio"
+          accessibilityLabel={item.label}
+          accessibilityState={{ checked: selected }}
+          style={styles.wheelItemPressable}
+          onPress={() => {
+            setPendingValue(item.value)
+            scrollToValue(item.value, true)
+          }}
         >
-          {/* Backdrop */}
-          <Animated.View
-            style={[styles.backdrop, { opacity: backdropOpacity }]}
-          >
-            <Pressable style={styles.backdropPress} onPress={close} />
-          </Animated.View>
-
-          {/* Sheet */}
-          <Animated.View
+          <Text
             style={[
-              styles.sheet,
+              selected
+                ? typography.body.mediumStrong
+                : typography.body.mediumWeak,
               {
-                transform: [{ translateY }],
-                paddingBottom: insets.bottom,
-                backgroundColor: colors.sheetBg,
+                color: selected ? colors.label.normal : colors.label.neutral,
               },
             ]}
           >
-            <YStack alignItems="center" paddingVertical={12}>
-              <YStack
-                width={40}
-                height={4}
-                backgroundColor={colors.handle}
-                borderRadius={2}
-              />
-            </YStack>
-            <FlatList
-              data={options}
-              keyExtractor={(item) => item.value}
-              style={{ maxHeight: SHEET_MAX_HEIGHT - 60 }}
-              initialScrollIndex={
-                options.findIndex((o) => o.value === value) > 0
-                  ? options.findIndex((o) => o.value === value)
-                  : undefined
-              }
-              getItemLayout={(_, index) => ({
-                length: 48,
-                offset: 48 * index,
-                index,
-              })}
-              renderItem={({ item }) => (
-                <Pressable onPress={() => handleSelect(item.value)}>
-                  <XStack
-                    height={48}
-                    paddingHorizontal={20}
-                    backgroundColor={
-                      item.value === value ? colors.selectedBg : "transparent"
-                    }
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Text
-                      fontSize={16}
-                      color={
-                        item.value === value
-                          ? colors.selectedText
-                          : colors.itemText
-                      }
-                      fontWeight={item.value === value ? "600" : "400"}
-                      letterSpacing={-0.3}
-                    >
-                      {item.label}
-                    </Text>
-                    {item.value === value && (
-                      <Ionicons
-                        name="checkmark"
-                        size={20}
-                        color={colors.selectedText}
-                      />
-                    )}
-                  </XStack>
-                </Pressable>
-              )}
-            />
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </YStack>
+            {item.label}
+          </Text>
+        </Pressable>
+      </Animated.View>
+    )
+  }
+
+  return (
+    <View style={styles.root}>
+      {label ? (
+        <Text
+          style={[
+            typography.subtext.mediumStrong,
+            { color: colors.label.normal },
+          ]}
+        >
+          {label}
+          {required ? (
+            <Text style={{ color: colors.status.negative }}> *</Text>
+          ) : null}
+        </Text>
+      ) : null}
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label ?? placeholder}
+        accessibilityHint="휠 피커를 엽니다"
+        accessibilityState={{ expanded: visible }}
+        onPress={open}
+        style={({ pressed }) => [
+          styles.trigger,
+          {
+            backgroundColor: colors.background.default,
+            borderColor: colors.line.normal,
+          },
+          pressed && styles.triggerPressed,
+        ]}
+      >
+        <Text
+          numberOfLines={1}
+          style={[
+            typography.body.mediumWeak,
+            {
+              color: selectedOption
+                ? colors.label.normal
+                : colors.label.alternative,
+            },
+            styles.triggerText,
+          ]}
+        >
+          {selectedOption?.label ?? placeholder}
+        </Text>
+        <Ionicons name="chevron-down" size={20} color={colors.label.neutral} />
+      </Pressable>
+
+      <V2BottomSheet
+        visible={visible}
+        onClose={close}
+        title={wheelTitle}
+        secondaryLabel="취소"
+        onSecondary={close}
+        primaryLabel="확인"
+        onPrimary={confirm}
+      >
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel={wheelTitle}
+          style={styles.wheelViewport}
+          onLayout={() => scrollToValue(pendingValue, false)}
+        >
+          <View
+            pointerEvents="none"
+            style={[
+              styles.selectionIndicator,
+              {
+                borderColor: colors.line.normal,
+              },
+            ]}
+          />
+          <Animated.FlatList
+            ref={listRef}
+            data={options}
+            keyExtractor={(item) => item.value}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
+            snapToInterval={WHEEL_ITEM_HEIGHT}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            contentContainerStyle={styles.wheelContent}
+            getItemLayout={(_, index) => ({
+              length: WHEEL_ITEM_HEIGHT,
+              offset: WHEEL_ITEM_HEIGHT * index,
+              index,
+            })}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: true },
+            )}
+            onScrollEndDrag={updatePendingValue}
+            onMomentumScrollEnd={updatePendingValue}
+            scrollEventThrottle={16}
+          />
+        </View>
+      </V2BottomSheet>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
+    gap: spacing[6],
+  },
+  trigger: {
+    minHeight: 54,
+    borderWidth: borderWidth.thin,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing[16],
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[12],
+  },
+  triggerPressed: {
+    opacity: 0.85,
+  },
+  triggerText: {
     flex: 1,
-    justifyContent: "flex-end",
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.4)",
+  wheelViewport: {
+    height: WHEEL_HEIGHT,
+    marginTop: spacing[16],
+    overflow: "hidden",
   },
-  backdropPress: {
-    flex: 1,
+  wheelContent: {
+    paddingVertical: WHEEL_VERTICAL_PADDING,
   },
-  sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: SHEET_MAX_HEIGHT,
+  selectionIndicator: {
+    position: "absolute",
+    zIndex: 0,
+    top: WHEEL_VERTICAL_PADDING,
+    left: spacing[24],
+    right: spacing[24],
+    height: WHEEL_ITEM_HEIGHT,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  wheelItem: {
+    height: WHEEL_ITEM_HEIGHT,
+  },
+  wheelItemPressable: {
+    minHeight: controlHeight.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing[24],
   },
 })

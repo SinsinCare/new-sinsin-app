@@ -8,18 +8,23 @@ interface AuthKeyboardFooterProps {
   children: ReactNode
   horizontalPadding?: number
   backgroundColor?: string
+  keyboardTrackingEnabled?: boolean
 }
 
 export function AuthKeyboardFooter({
   children,
   horizontalPadding = 0,
   backgroundColor,
+  keyboardTrackingEnabled = true,
 }: AuthKeyboardFooterProps) {
   const insets = useSafeAreaInsets()
   const layout = getAuthKeyboardFooterLayout(insets.bottom)
 
   return (
-    <KeyboardStickyView offset={layout.offset}>
+    <KeyboardStickyView
+      enabled={keyboardTrackingEnabled}
+      offset={layout.offset}
+    >
       <View
         style={[
           styles.container,

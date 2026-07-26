@@ -1,76 +1,127 @@
-import { Pressable } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text } from "tamagui"
-import { tokens } from "@/src/theme/tokens"
+import { Ionicons } from "@expo/vector-icons"
+import { Pressable, StyleSheet, Text, View } from "react-native"
+import { radius, spacing, typography, useV2Theme } from "@/src/design-system-v2"
+import { GenderIcon } from "./GenderIcon"
 
 type Gender = "MALE" | "FEMALE" | "OTHER"
 
 interface GenderSelectorProps {
   value: Gender | ""
   onChange: (gender: Gender) => void
+  error?: string
 }
 
-const GENDER_OPTIONS: { key: Gender; label: string }[] = [
-  { key: "MALE", label: "남성" },
-  { key: "FEMALE", label: "여성" },
+const GENDER_OPTIONS: {
+  key: Gender
+  label: string
+}[] = [
+  { key: "MALE", label: "남자" },
+  { key: "FEMALE", label: "여자" },
   { key: "OTHER", label: "기타" },
 ]
 
-export function GenderSelector({ value, onChange }: GenderSelectorProps) {
-  const isDark = useAppColorScheme() === "dark"
-  const labelColor = isDark ? tokens.color.textDark.val : "#17191C"
-  const unselectedBg = isDark ? "#2A2A32" : "white"
-  const unselectedText = isDark ? tokens.color.textDark.val : "#17191C"
-  const unselectedBorder = isDark ? "#3A3A42" : "rgba(218,223,230,0.6)"
-  const selectedBg = isDark ? "#0D896A20" : "#F0FDF4"
+export function GenderSelector({
+  value,
+  onChange,
+  error,
+}: GenderSelectorProps) {
+  const { colors } = useV2Theme()
+  // Figma's new-user frame has only two cards. Retain OTHER for existing
+  // profiles and payload compatibility until the open product decision lands.
+  const visibleOptions =
+    value === "OTHER" ? GENDER_OPTIONS : GENDER_OPTIONS.slice(0, 2)
 
   return (
-    <YStack>
-      <XStack paddingBottom={10}>
-        <Text
-          fontSize={13}
-          fontWeight="500"
-          color={labelColor}
-          letterSpacing={-0.3}
-          lineHeight={18.2}
-        >
-          성별
-        </Text>
-        <Text fontSize={13} fontWeight="500" color={tokens.color.error.val}>
-          {" "}
-          *
-        </Text>
-      </XStack>
-      <XStack gap={8}>
-        {GENDER_OPTIONS.map(({ key, label }) => (
+    <View style={styles.root}>
+      <Text
+        style={[
+          typography.subtext.mediumStrong,
+          { color: colors.label.normal },
+        ]}
+      >
+        성별<Text style={{ color: colors.status.negative }}> *</Text>
+      </Text>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel="성별 필수 선택"
+        style={styles.options}
+      >
+        {visibleOptions.map(({ key, label }) => (
           <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel={label}
+            accessibilityState={{ checked: value === key }}
             key={key}
-            style={{ flex: 1 }}
+            style={
+              key === "OTHER" ? styles.otherOptionWrapper : styles.optionWrapper
+            }
             onPress={() => onChange(key)}
           >
-            <YStack
-              height={52}
-              borderRadius={8}
-              borderWidth={1}
-              borderColor={
-                value === key ? tokens.color.sub6.val : unselectedBorder
-              }
-              backgroundColor={value === key ? selectedBg : unselectedBg}
-              alignItems="center"
-              justifyContent="center"
+            <View
+              style={[
+                styles.option,
+                {
+                  borderColor:
+                    value === key ? colors.primary.primary : "transparent",
+                  backgroundColor:
+                    value === key
+                      ? colors.primary.primaryWeak
+                      : colors.fill.background,
+                },
+              ]}
             >
+              {key === "OTHER" ? (
+                <Ionicons
+                  name="person-outline"
+                  size={40}
+                  color={
+                    value === key
+                      ? colors.primary.primary
+                      : colors.label.alternative
+                  }
+                />
+              ) : (
+                <GenderIcon gender={key} />
+              )}
               <Text
-                fontSize={16}
-                fontWeight={value === key ? "600" : "400"}
-                color={value === key ? tokens.color.sub8.val : unselectedText}
-                letterSpacing={-0.3}
+                style={[
+                  typography.label.mediumWeak,
+                  {
+                    color:
+                      value === key
+                        ? colors.primary.primary
+                        : colors.label.normal,
+                  },
+                ]}
               >
                 {label}
               </Text>
-            </YStack>
+            </View>
           </Pressable>
         ))}
-      </XStack>
-    </YStack>
+      </View>
+      {error ? (
+        <Text
+          style={[typography.subtext.medium, { color: colors.status.negative }]}
+        >
+          {error}
+        </Text>
+      ) : null}
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  root: { gap: spacing[6], marginHorizontal: spacing[4] },
+  options: { flexDirection: "row", flexWrap: "wrap", gap: spacing[16] },
+  optionWrapper: { flex: 1 },
+  otherOptionWrapper: { width: "100%" },
+  option: {
+    height: 150,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: radius["2xl"],
+    gap: spacing[6],
+  },
+})

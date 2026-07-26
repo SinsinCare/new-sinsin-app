@@ -1,3 +1,5 @@
+import type { AcquisitionSource } from "@/src/types"
+
 export interface LoginForm {
   email: string
   password: string
@@ -18,6 +20,16 @@ export interface ProfileForm {
   phoneNumber: string
   acquisitionSourceOther: string
   referralCode: string
+}
+
+export interface ProfileSetupDraft {
+  name: string
+  birthDate: string
+  gender: "MALE" | "FEMALE" | "OTHER" | ""
+  phoneNumber: string
+  acquisitionSource: AcquisitionSource | ""
+  acquisitionSourceOther: string
+  nickname: string
 }
 
 export interface NicknameForm {

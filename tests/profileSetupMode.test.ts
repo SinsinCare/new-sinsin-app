@@ -12,6 +12,17 @@ describe("profile setup completion mode", () => {
     ).toBe(true)
   })
 
+  it("locks a pending social profile even when an older response defaults to persistent", () => {
+    expect(
+      isProfileSetupCompletionMode({
+        accountState: "PENDING_PROFILE",
+        entryGate: "PROFILE",
+        sessionPersistence: "persistent",
+        requiresAdditionalInfo: false,
+      }),
+    ).toBe(true)
+  })
+
   it("keeps an active account's additional-info backfill in completion mode", () => {
     expect(
       isProfileSetupCompletionMode({

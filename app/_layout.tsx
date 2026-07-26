@@ -17,7 +17,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller"
 import config from "../tamagui.config"
 import "@/src/i18n" // i18n 초기화 (부수효과 import — 앱 로드 시 1회, useTranslation 사용 전 준비)
 import { queryClient } from "@/src/services"
-import { useAuth } from "@/src/hooks"
+import { useAuth, useAuthSessionBootstrap } from "@/src/hooks"
 import {
   useAuthStore,
   useSignupStore,
@@ -37,6 +37,7 @@ setupGestureHandler({ Gesture, GestureDetector })
 const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWAL_PENDING"])
 
 function RootLayoutNav() {
+  useAuthSessionBootstrap()
   const {
     isAuthenticated,
     isLoading,

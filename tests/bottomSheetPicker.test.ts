@@ -1,18 +1,30 @@
-import { getBottomSheetPickerColors } from "../src/shared/components/BottomSheetPicker"
-import { tokens } from "../src/theme/tokens"
+import {
+  getWheelPickerIndex,
+  getWheelPickerValueAtOffset,
+  resolveWheelPickerValue,
+} from "../src/shared/components/bottomSheetPickerModel"
 
-describe("BottomSheetPicker selected palette", () => {
-  it("uses the light green selection palette", () => {
-    const colors = getBottomSheetPickerColors(false)
+const options = [
+  { label: "앱스토어 검색", value: "APP_STORE" },
+  { label: "병원", value: "HOSPITAL" },
+  { label: "블로그", value: "BLOG" },
+]
 
-    expect(colors.selectedBg).toBe("#F0FDF4")
-    expect(colors.selectedText).toBe(tokens.color.sub8.val)
+describe("BottomSheetPicker wheel model", () => {
+  it("restores a committed option and falls back to the first option", () => {
+    expect(resolveWheelPickerValue("HOSPITAL", options)).toBe("HOSPITAL")
+    expect(resolveWheelPickerValue("", options)).toBe("APP_STORE")
   })
 
-  it("uses a green-tinted selection palette in dark mode", () => {
-    const colors = getBottomSheetPickerColors(true)
+  it("resolves the selected index for opening the wheel", () => {
+    expect(getWheelPickerIndex("BLOG", options)).toBe(2)
+    expect(getWheelPickerIndex("UNKNOWN", options)).toBe(0)
+  })
 
-    expect(colors.selectedBg).toBe(`${tokens.color.sub8.val}20`)
-    expect(colors.selectedText).toBe(tokens.color.sub8.val)
+  it("snaps offsets to a bounded option", () => {
+    expect(getWheelPickerValueAtOffset(0, 48, options)).toBe("APP_STORE")
+    expect(getWheelPickerValueAtOffset(52, 48, options)).toBe("HOSPITAL")
+    expect(getWheelPickerValueAtOffset(999, 48, options)).toBe("BLOG")
+    expect(getWheelPickerValueAtOffset(-100, 48, options)).toBe("APP_STORE")
   })
 })

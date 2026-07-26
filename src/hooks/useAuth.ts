@@ -17,6 +17,7 @@ import {
   resetAnalyticsIdentity,
   trackAnalyticsEvent,
 } from "@/src/features/analytics"
+import { bootstrapAuthSession } from "@/src/features/auth/utils/authSessionBootstrap"
 import type {
   ProfileCompleteRequest,
   SocialProvider,
@@ -54,6 +55,53 @@ function fallbackEntryGate(result: AuthSessionResult) {
   return "HOME" as const
 }
 
+function applyAuthSession(result: AuthSessionResult) {
+  const {
+    setUser,
+    setAccountState,
+    setRequiresAdditionalInfo,
+    setEntryGate,
+    setSessionPersistence,
+  } = useAuthStore.getState()
+
+  setUser(result.user)
+  setAccountState(result.accountState)
+  setRequiresAdditionalInfo(result.requiresAdditionalInfo)
+  setEntryGate(fallbackEntryGate(result))
+  setSessionPersistence(result.sessionPersistence ?? "persistent")
+}
+
+export function useAuthSessionBootstrap() {
+  useEffect(() => {
+    let cancelled = false
+
+    const restore = async () => {
+      trackAnalyticsEvent("auth_session_restore_started", {})
+      try {
+        await bootstrapAuthSession({
+          isAuthenticated: () =>
+            cancelled || useAuthStore.getState().isAuthenticated,
+          restoreSession: authService.restoreSession,
+          applyAuthSession,
+          clearClientSession,
+        })
+      } catch (error) {
+        if (cancelled) return
+        trackAnalyticsEvent("auth_session_restore_failed", {})
+        logger.debug("[useAuth] restore failed", error)
+        if (!useAuthStore.getState().isAuthenticated) {
+          await clearClientSession()
+        }
+      }
+    }
+    void restore()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+}
+
 export function useAuth() {
   const {
     user,
@@ -63,58 +111,9 @@ export function useAuth() {
     requiresAdditionalInfo,
     entryGate,
     sessionPersistence,
-    setUser,
-    setAccountState,
-    setRequiresAdditionalInfo,
-    setEntryGate,
-    setSessionPersistence,
     reset: resetAuth,
   } = useAuthStore()
   const { reset: resetProfile } = useUserStore()
-
-  const applyAuthSession = useCallback(
-    (result: AuthSessionResult) => {
-      setUser(result.user)
-      setAccountState(result.accountState)
-      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
-      setEntryGate(fallbackEntryGate(result))
-      setSessionPersistence(result.sessionPersistence ?? "persistent")
-    },
-    [
-      setAccountState,
-      setEntryGate,
-      setRequiresAdditionalInfo,
-      setSessionPersistence,
-      setUser,
-    ],
-  )
-
-  useEffect(() => {
-    let cancelled = false
-
-    const restore = async () => {
-      trackAnalyticsEvent("auth_session_restore_started", {})
-      try {
-        const result = await authService.restoreSession()
-        if (cancelled) return
-        if (result) {
-          applyAuthSession(result)
-        } else {
-          await clearClientSession()
-        }
-      } catch (error) {
-        if (cancelled) return
-        trackAnalyticsEvent("auth_session_restore_failed", {})
-        logger.debug("[useAuth] restore failed", error)
-        await clearClientSession()
-      }
-    }
-    restore()
-
-    return () => {
-      cancelled = true
-    }
-  }, [applyAuthSession])
 
   const signInWithEmail = async (email: string, password: string) => {
     trackAnalyticsEvent("auth_email_login_started", {})
@@ -229,20 +228,23 @@ export function useAuth() {
     return result
   }
 
-  const signOut = async (reason: AuthSignOutReason = "automatic") => {
-    try {
-      await authService.signOut()
-    } finally {
+  const signOut = useCallback(
+    async (reason: AuthSignOutReason = "automatic") => {
       try {
-        await persistSocialReauthenticationIntentForSignOut(reason)
+        await authService.signOut()
       } finally {
-        resetAnalyticsIdentity()
-        await clearClientSession()
-        resetProfile()
-        resetAuth()
+        try {
+          await persistSocialReauthenticationIntentForSignOut(reason)
+        } finally {
+          resetAnalyticsIdentity()
+          await clearClientSession()
+          resetProfile()
+          resetAuth()
+        }
       }
-    }
-  }
+    },
+    [resetAuth, resetProfile],
+  )
 
   useEffect(() => {
     if (!isAuthenticated || sessionPersistence !== "ephemeral") return
