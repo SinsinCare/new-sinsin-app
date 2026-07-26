@@ -170,6 +170,14 @@ screens:
     auth_required: true
     states: [default, editing, saving, permission_denied, error]
 
+  - id: SCR_SETTINGS_PHONE_NUMBER_EDIT
+    name: 전화번호 수정
+    route: "/(settings)/phone-number-edit"
+    module: settings
+    description: 연락받을 전화번호를 수정하거나 삭제하는 화면
+    auth_required: true
+    states: [default, saving, deleting, validation_error, error]
+
   - id: SCR_SETTINGS_NAME_EDIT
     name: 이름 수정
     route: "/(settings)/name-edit"
