@@ -67,7 +67,11 @@ function getRequiresAdditionalInfo(result: {
   requiresAdditionalInfo?: boolean
   user?: { requiresAdditionalInfo?: boolean }
 }) {
-  return result.requiresAdditionalInfo ?? result.user?.requiresAdditionalInfo ?? false
+  return (
+    result.requiresAdditionalInfo ??
+    result.user?.requiresAdditionalInfo ??
+    false
+  )
 }
 
 type AuthTokenResult = LoginResult | SignupResult | TokenRefreshResult
@@ -411,9 +415,7 @@ function getRealAuthService(): IAuthService {
       })
     },
 
-    async cancelWithdrawal(
-      cancelToken: string,
-    ): Promise<AuthSessionResult> {
+    async cancelWithdrawal(cancelToken: string): Promise<AuthSessionResult> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/withdrawal/cancel",
         { cancelToken },
