@@ -3,6 +3,7 @@ import {
   getSocialLoginErrorAction,
   getSocialLoginSuccessAction,
 } from "../src/features/auth/utils/socialLoginFlow"
+import { getPostAuthenticationDestination } from "../src/features/auth/data/emailLoginFlow"
 
 const isCancelled = (error: unknown) =>
   error instanceof Error && error.message === "cancelled"
@@ -112,6 +113,16 @@ describe("social login flow", () => {
     expect(
       getSocialLoginErrorAction(new Error("cancelled"), "google", isCancelled),
     ).toEqual({ type: "cancelled" })
+  })
+
+  it("uses the restored account entry gate after withdrawal cancellation", () => {
+    expect(
+      getPostAuthenticationDestination({
+        accountState: "ACTIVE",
+        requiresAdditionalInfo: false,
+        entryGate: "ONBOARDING",
+      }),
+    ).toBe("/onboarding")
   })
 
   it("falls back to the legacy manual email flow only without provider-email markers", () => {

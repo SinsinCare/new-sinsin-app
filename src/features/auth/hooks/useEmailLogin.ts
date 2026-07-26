@@ -2,7 +2,7 @@ import { useState } from "react"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks"
 import { showErrorToast } from "@/src/lib/toast"
-import { getDestinationForAccountState } from "../utils/accountStateRoute"
+import { getPostAuthenticationDestination } from "../data/emailLoginFlow"
 import type { LoginForm } from "../types"
 import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
 import type { WithdrawalPendingResult } from "@/src/types"
@@ -18,13 +18,7 @@ export function useEmailLogin() {
     setLoginError(null)
     try {
       const result = await signInWithEmail(data.email, data.password)
-      router.replace(
-        getDestinationForAccountState(
-          result.accountState,
-          result.requiresAdditionalInfo,
-          result.entryGate,
-        ),
-      )
+      router.replace(getPostAuthenticationDestination(result))
     } catch (e: unknown) {
       const pending = getWithdrawalPendingResult(e)
       if (pending) {
@@ -45,9 +39,9 @@ export function useEmailLogin() {
     if (!withdrawalPending || isCancellingWithdrawal) return
     setIsCancellingWithdrawal(true)
     try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
+      const result = await cancelWithdrawal(withdrawalPending.cancelToken)
       setWithdrawalPending(null)
-      router.replace("/(tabs)/home")
+      router.replace(getPostAuthenticationDestination(result))
     } catch (e: unknown) {
       showErrorToast(
         e instanceof Error

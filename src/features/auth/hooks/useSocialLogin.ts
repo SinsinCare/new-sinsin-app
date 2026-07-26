@@ -8,6 +8,7 @@ import {
   getSocialLoginErrorAction,
   getSocialLoginSuccessAction,
 } from "../utils/socialLoginFlow"
+import { getPostAuthenticationDestination } from "../data/emailLoginFlow"
 
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
   google: "Google",
@@ -110,8 +111,9 @@ export function useSocialLogin() {
 
     setIsCancellingWithdrawal(true)
     try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
+      const result = await cancelWithdrawal(withdrawalPending.cancelToken)
       setWithdrawalPending(null)
+      router.replace(getPostAuthenticationDestination(result))
     } catch (error) {
       const msg = getDebugMessage(error)
       Toast.show({

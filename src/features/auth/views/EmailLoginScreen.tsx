@@ -1,12 +1,12 @@
-import { Pressable } from "react-native"
-import { YStack, XStack, Text, Separator } from "tamagui"
+import { Pressable, StyleSheet, Text, View } from "react-native"
 import { router } from "expo-router"
 import { useForm } from "react-hook-form"
-import { ConfirmModal, FormTextField } from "@/src/shared/components"
+import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
 import { AuthScreenLayout } from "./AuthScreenLayout"
-import { useEmailLogin, useAuthColors } from "../hooks"
+import { AuthWithdrawalRecoveryModal } from "../components/AuthWithdrawalRecoveryModal"
+import { V2AuthFormTextField } from "../components/V2AuthFormTextField"
+import { useEmailLogin } from "../hooks"
 import type { LoginForm } from "../types"
-import { tokens } from "@/src/theme/tokens"
 
 export function EmailLoginScreen() {
   const {
@@ -19,7 +19,7 @@ export function EmailLoginScreen() {
     confirmWithdrawalCancel,
     submitLogin,
   } = useEmailLogin()
-  const colors = useAuthColors()
+  const { colors } = useV2Theme()
 
   const {
     control,
@@ -41,55 +41,52 @@ export function EmailLoginScreen() {
       buttonDisabled={!isValid}
       buttonLoading={isLoading}
       buttonAccessory={
-        <XStack
-          alignItems="center"
-          justifyContent="center"
-          gap={8}
-          marginBottom={16}
-        >
+        <View style={styles.signupPrompt}>
           <Text
-            fontSize={13}
-            color={colors.textSub}
-            letterSpacing={-0.26}
-            lineHeight={16.9}
+            style={[
+              typography.subtext.medium,
+              { color: colors.label.alternative },
+            ]}
           >
             계정이 없으신가요?
           </Text>
-          <Pressable onPress={() => router.push("/(auth)/terms-agreement")}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="회원가입하기"
+            onPress={() => router.push("/(auth)/terms-agreement")}
+          >
             <Text
-              fontSize={14}
-              color={colors.textSub}
-              letterSpacing={-0.28}
-              lineHeight={18.2}
-              textDecorationLine="underline"
+              style={[
+                typography.subtext.large,
+                styles.underline,
+                { color: colors.label.alternative },
+              ]}
             >
               회원가입하기
             </Text>
           </Pressable>
-        </XStack>
+        </View>
       }
       onSubmit={handleSubmit(onSubmit)}
+      scrollable
+      keyboardAvoiding
     >
-      <ConfirmModal
+      <AuthWithdrawalRecoveryModal
         visible={!!withdrawalPending}
-        title="회원탈퇴 처리중입니다."
-        description="회원 탈퇴를 취소하고 다시 로그인하겠습니까?"
-        cancelText="아니오"
-        confirmText={
-          isCancellingWithdrawal ? "처리 중..." : "탈퇴 취소 후 로그인"
-        }
-        onCancel={dismissWithdrawalPending}
+        isCancelling={isCancellingWithdrawal}
+        onDismiss={dismissWithdrawalPending}
         onConfirm={confirmWithdrawalCancel}
       />
 
-      <YStack gap={36} marginTop={48}>
-        <FormTextField<LoginForm>
+      <View style={styles.form}>
+        <V2AuthFormTextField<LoginForm>
           name="email"
           control={control}
-          label="아이디"
+          label="이메일"
           placeholder="이메일 주소를 입력해주세요"
           inputType="email"
-          showValidState
+          keyboardContentType="username"
+          autoComplete="email"
           rules={{
             required: "이메일을 입력해주세요.",
             pattern: {
@@ -99,13 +96,16 @@ export function EmailLoginScreen() {
           }}
         />
 
-        <YStack>
-          <FormTextField<LoginForm>
+        <View>
+          <V2AuthFormTextField<LoginForm>
             name="password"
             control={control}
             label="비밀번호"
             placeholder="비밀번호를 입력해주세요"
             inputType="password"
+            keyboardContentType="password"
+            autoComplete="current-password"
+            showPasswordToggle
             rules={{
               required: "비밀번호를 입력해주세요.",
               onChange: clearLoginError,
@@ -113,40 +113,57 @@ export function EmailLoginScreen() {
           />
           {loginError && (
             <Text
-              fontSize={12}
-              color={tokens.color.error.val}
-              letterSpacing={-0.3}
-              paddingTop={6}
+              style={[
+                typography.subtext.medium,
+                styles.loginError,
+                { color: colors.status.negative },
+              ]}
             >
               {loginError}
             </Text>
           )}
-        </YStack>
+        </View>
 
-        <YStack alignItems="center" gap={8} marginTop={18}>
+        <View style={styles.passwordHelp}>
           <Text
-            fontSize={13}
-            fontWeight="500"
-            color={colors.text}
-            letterSpacing={-0.26}
+            style={[
+              typography.subtext.mediumStrong,
+              { color: colors.label.normal },
+            ]}
           >
-            가입정보를 잊으셨나요?
+            비밀번호를 잊으셨나요?
           </Text>
-          <XStack alignItems="center" justifyContent="center" gap={16}>
-            <Pressable>
-              <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
-                아이디찾기
-              </Text>
-            </Pressable>
-            <Separator vertical borderColor={colors.border} height={14} />
-            <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-              <Text fontSize={13} color={colors.textSub} letterSpacing={-0.26}>
-                비밀번호 찾기
-              </Text>
-            </Pressable>
-          </XStack>
-        </YStack>
-      </YStack>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="비밀번호 찾기"
+            onPress={() => router.push("/(auth)/forgot-password")}
+          >
+            <Text
+              style={[
+                typography.subtext.large,
+                styles.underline,
+                { color: colors.label.alternative },
+              ]}
+            >
+              비밀번호 찾기
+            </Text>
+          </Pressable>
+        </View>
+      </View>
     </AuthScreenLayout>
   )
 }
+
+const styles = StyleSheet.create({
+  form: { gap: spacing[32], marginTop: spacing[32] },
+  signupPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[8],
+    marginBottom: spacing[16],
+  },
+  passwordHelp: { alignItems: "center", gap: spacing[8] },
+  loginError: { marginTop: spacing[6] },
+  underline: { textDecorationLine: "underline" },
+})
