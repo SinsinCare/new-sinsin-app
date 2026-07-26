@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Toast from "react-native-toast-message"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks/useAuth"
@@ -8,6 +8,7 @@ import {
   getSocialLoginErrorAction,
   getSocialLoginSuccessAction,
 } from "../utils/socialLoginFlow"
+import { getPostAuthenticationDestination } from "../data/emailLoginFlow"
 
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
   google: "Google",
@@ -37,6 +38,7 @@ export function useSocialLogin() {
   const [withdrawalPending, setWithdrawalPending] =
     useState<WithdrawalPendingResult | null>(null)
   const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
+  const withdrawalCancellationInFlightRef = useRef(false)
 
   const loginWithProvider = async (provider: SocialProvider) => {
     if (socialLoading) return
@@ -106,12 +108,19 @@ export function useSocialLogin() {
   }
 
   const confirmWithdrawalCancellation = async () => {
-    if (!withdrawalPending || isCancellingWithdrawal) return
+    if (
+      !withdrawalPending ||
+      isCancellingWithdrawal ||
+      withdrawalCancellationInFlightRef.current
+    )
+      return
 
+    withdrawalCancellationInFlightRef.current = true
     setIsCancellingWithdrawal(true)
     try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
+      const result = await cancelWithdrawal(withdrawalPending.cancelToken)
       setWithdrawalPending(null)
+      router.replace(getPostAuthenticationDestination(result))
     } catch (error) {
       const msg = getDebugMessage(error)
       Toast.show({
@@ -121,6 +130,7 @@ export function useSocialLogin() {
         visibilityTime: 5000,
       })
     } finally {
+      withdrawalCancellationInFlightRef.current = false
       setIsCancellingWithdrawal(false)
     }
   }

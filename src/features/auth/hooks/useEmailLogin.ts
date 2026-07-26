@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks"
 import { showErrorToast } from "@/src/lib/toast"
-import { getDestinationForAccountState } from "../utils/accountStateRoute"
+import { getPostAuthenticationDestination } from "../data/emailLoginFlow"
 import type { LoginForm } from "../types"
 import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
 import type { WithdrawalPendingResult } from "@/src/types"
@@ -13,18 +13,13 @@ export function useEmailLogin() {
   const [withdrawalPending, setWithdrawalPending] =
     useState<WithdrawalPendingResult | null>(null)
   const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
+  const withdrawalCancellationInFlightRef = useRef(false)
 
   const submitLogin = async (data: LoginForm) => {
     setLoginError(null)
     try {
       const result = await signInWithEmail(data.email, data.password)
-      router.replace(
-        getDestinationForAccountState(
-          result.accountState,
-          result.requiresAdditionalInfo,
-          result.entryGate,
-        ),
-      )
+      router.replace(getPostAuthenticationDestination(result))
     } catch (e: unknown) {
       const pending = getWithdrawalPendingResult(e)
       if (pending) {
@@ -42,12 +37,19 @@ export function useEmailLogin() {
   const clearLoginError = () => setLoginError(null)
   const dismissWithdrawalPending = () => setWithdrawalPending(null)
   const confirmWithdrawalCancel = async () => {
-    if (!withdrawalPending || isCancellingWithdrawal) return
+    if (
+      !withdrawalPending ||
+      isCancellingWithdrawal ||
+      withdrawalCancellationInFlightRef.current
+    )
+      return
+
+    withdrawalCancellationInFlightRef.current = true
     setIsCancellingWithdrawal(true)
     try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
+      const result = await cancelWithdrawal(withdrawalPending.cancelToken)
       setWithdrawalPending(null)
-      router.replace("/(tabs)/home")
+      router.replace(getPostAuthenticationDestination(result))
     } catch (e: unknown) {
       showErrorToast(
         e instanceof Error
@@ -55,6 +57,7 @@ export function useEmailLogin() {
           : "회원탈퇴 취소 중 문제가 발생했습니다.",
       )
     } finally {
+      withdrawalCancellationInFlightRef.current = false
       setIsCancellingWithdrawal(false)
     }
   }
