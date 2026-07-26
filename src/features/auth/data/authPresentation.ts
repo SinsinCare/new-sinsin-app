@@ -64,13 +64,8 @@ export function getAuthKeyboardDismissMode(platform: "ios" | "android") {
   return platform === "ios" ? ("interactive" as const) : ("on-drag" as const)
 }
 
-export function getAuthKeyboardScrollViewportInset(
-  platform: "ios" | "android",
-  footerClearance: number,
-  baselineClearance: number,
-) {
-  if (platform !== "android") return 0
-  return Math.max(0, footerClearance - baselineClearance)
+export function getEmailLoginFormGapToken(fontScale: number): 24 | 32 {
+  return fontScale >= 1.3 ? 24 : 32
 }
 
 export function getAuthPasswordPlaceholders(fontScale: number) {

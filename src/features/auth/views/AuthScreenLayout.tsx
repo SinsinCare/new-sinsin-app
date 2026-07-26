@@ -26,7 +26,6 @@ import {
 } from "@/src/design-system-v2"
 import {
   getAuthKeyboardDismissMode,
-  getAuthKeyboardScrollViewportInset,
   getAuthScrollableContentPresentation,
 } from "../data/authPresentation"
 
@@ -127,11 +126,6 @@ export function AuthScreenLayout({
     AUTH_KEYBOARD_FOOTER_CLEARANCE,
     footerContentHeight + spacing[24],
   )
-  const scrollViewportInset = getAuthKeyboardScrollViewportInset(
-    Platform.OS === "ios" ? "ios" : "android",
-    footerClearance,
-    AUTH_KEYBOARD_FOOTER_CLEARANCE,
-  )
   const keyboardDismissMode = getAuthKeyboardDismissMode(
     Platform.OS === "ios" ? "ios" : "android",
   )
@@ -152,10 +146,7 @@ export function AuthScreenLayout({
 
   const scrollContent = keyboardAvoiding ? (
     <KeyboardAwareScrollView
-      style={[
-        styles.flex,
-        scrollViewportInset > 0 && { marginBottom: scrollViewportInset },
-      ]}
+      style={styles.flex}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: footerClearance },

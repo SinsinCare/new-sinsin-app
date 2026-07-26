@@ -1,4 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native"
 import { router } from "expo-router"
 import { useForm } from "react-hook-form"
 import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
@@ -7,8 +13,11 @@ import { AuthWithdrawalRecoveryModal } from "../components/AuthWithdrawalRecover
 import { V2AuthFormTextField } from "../components/V2AuthFormTextField"
 import { useEmailLogin } from "../hooks"
 import type { LoginForm } from "../types"
+import { getEmailLoginFormGapToken } from "../data/authPresentation"
 
 export function EmailLoginScreen() {
+  const { fontScale } = useWindowDimensions()
+  const formGapToken = getEmailLoginFormGapToken(fontScale)
   const {
     isLoading,
     loginError,
@@ -83,7 +92,7 @@ export function EmailLoginScreen() {
         onConfirm={confirmWithdrawalCancel}
       />
 
-      <View style={styles.form}>
+      <View style={[styles.form, { gap: spacing[formGapToken] }]}>
         <V2AuthFormTextField<LoginForm>
           name="email"
           control={control}
@@ -162,7 +171,7 @@ export function EmailLoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  form: { gap: spacing[32], marginTop: spacing[32] },
+  form: { marginTop: spacing[32] },
   signupPrompt: {
     flexDirection: "row",
     flexWrap: "wrap",

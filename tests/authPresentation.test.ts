@@ -1,9 +1,9 @@
 import {
   getAuthKeyboardDismissMode,
-  getAuthKeyboardScrollViewportInset,
   getAuthPasswordPlaceholders,
   getAuthScrollableContentPresentation,
   getAuthTextInputPresentation,
+  getEmailLoginFormGapToken,
 } from "../src/features/auth/data/authPresentation"
 
 describe("auth text input presentation", () => {
@@ -46,10 +46,11 @@ describe("auth text input presentation", () => {
     expect(getAuthKeyboardDismissMode("android")).toBe("on-drag")
   })
 
-  it("reserves Android viewport space for footer content above the baseline", () => {
-    expect(getAuthKeyboardScrollViewportInset("android", 150, 80)).toBe(70)
-    expect(getAuthKeyboardScrollViewportInset("android", 80, 80)).toBe(0)
-    expect(getAuthKeyboardScrollViewportInset("ios", 150, 80)).toBe(0)
+  it("uses tighter email login form gaps only at large font scale", () => {
+    expect(getEmailLoginFormGapToken(1)).toBe(32)
+    expect(getEmailLoginFormGapToken(1.29)).toBe(32)
+    expect(getEmailLoginFormGapToken(1.3)).toBe(24)
+    expect(getEmailLoginFormGapToken(2)).toBe(24)
   })
 
   it("uses concise password placeholders only for large text", () => {
