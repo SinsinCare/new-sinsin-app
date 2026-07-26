@@ -337,7 +337,7 @@ export function ForgotPasswordScreen() {
               style={[
                 typography.subtext.large,
                 styles.subtitle,
-                { color: colors.label.alternative },
+                { color: colors.label.neutral },
               ]}
             >
               가입한 이메일로 인증번호를 전송해드립니다

@@ -1,6 +1,7 @@
 import {
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -52,157 +53,175 @@ export function LoginScreen() {
 
   return (
     <View
-      style={[
-        styles.screen,
-        {
-          backgroundColor: colors.background.default,
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom + spacing[24],
-        },
-      ]}
+      style={[styles.screen, { backgroundColor: colors.background.default }]}
     >
-      {/* Figma 6010:41988 / background 6010:41989 artwork. */}
-      {heroLayout.height > 0 && (
-        <View style={{ width: heroLayout.width, height: heroLayout.height }}>
-          <SigninBackground
-            width={heroLayout.width}
-            height={heroLayout.height}
-            preserveAspectRatio={heroLayout.preserveAspectRatio}
+      <ScrollView
+        contentContainerStyle={[
+          styles.screenContent,
+          {
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom + spacing[24],
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Figma 6010:41988 / background 6010:41989 artwork. */}
+        {heroLayout.height > 0 && (
+          <View style={{ width: heroLayout.width, height: heroLayout.height }}>
+            <SigninBackground
+              width={heroLayout.width}
+              height={heroLayout.height}
+              preserveAspectRatio={heroLayout.preserveAspectRatio}
+            />
+          </View>
+        )}
+
+        <View style={styles.actions}>
+          <AuthWithdrawalRecoveryModal
+            visible={!!withdrawalPending}
+            isCancelling={isCancellingWithdrawal}
+            onDismiss={dismissWithdrawalPending}
+            onConfirm={confirmWithdrawalCancellation}
           />
-        </View>
-      )}
 
-      <View style={styles.actions}>
-        <AuthWithdrawalRecoveryModal
-          visible={!!withdrawalPending}
-          isCancelling={isCancellingWithdrawal}
-          onDismiss={dismissWithdrawalPending}
-          onConfirm={confirmWithdrawalCancellation}
-        />
-
-        <V2Button
-          size="xl"
-          color="brand"
-          fullWidth
-          onPress={handleEmailLogin}
-          accessibilityLabel="이메일 로그인"
-        >
-          이메일 로그인
-        </V2Button>
-
-        <View style={styles.dividerRow}>
-          <View
-            style={[styles.divider, { backgroundColor: colors.line.normal }]}
-          />
-          <Text
-            style={[
-              typography.subtext.medium,
-              { color: colors.label.alternative },
-            ]}
+          <V2Button
+            size="xl"
+            color="brand"
+            fullWidth
+            onPress={handleEmailLogin}
+            accessibilityLabel="이메일 로그인"
           >
-            또는
-          </Text>
-          <View
-            style={[styles.divider, { backgroundColor: colors.line.normal }]}
-          />
-        </View>
+            이메일 로그인
+          </V2Button>
 
-        <Pressable
-          onPress={() => loginWithProvider("google")}
-          disabled={socialLoading}
-          accessibilityRole="button"
-          accessibilityLabel="Google로 계속하기"
-          accessibilityState={{ disabled: socialLoading }}
-          style={({ pressed }) => [
-            styles.socialButton,
-            { backgroundColor: colors.static.white },
-            pressed && !socialLoading && styles.pressed,
-            socialLoading && styles.disabled,
-          ]}
-        >
-          <GoogleLogo width={20} height={20} />
-          <Text
-            style={[typography.label.medium, { color: colors.static.black }]}
-            numberOfLines={1}
-          >
-            Google로 계속하기
-          </Text>
-        </Pressable>
+          <View style={styles.dividerRow}>
+            <View
+              style={[styles.divider, { backgroundColor: colors.line.normal }]}
+            />
+            <Text
+              style={[
+                typography.subtext.medium,
+                { color: colors.label.neutral },
+              ]}
+            >
+              또는
+            </Text>
+            <View
+              style={[styles.divider, { backgroundColor: colors.line.normal }]}
+            />
+          </View>
 
-        <Pressable
-          onPress={() => loginWithProvider("kakao")}
-          disabled={socialLoading}
-          accessibilityRole="button"
-          accessibilityLabel="카카오로 계속하기"
-          accessibilityState={{ disabled: socialLoading }}
-          style={({ pressed }) => [
-            styles.socialButton,
-            styles.kakaoButton,
-            pressed && !socialLoading && styles.pressed,
-            socialLoading && styles.disabled,
-          ]}
-        >
-          <KakaoLogo width={20} height={20} />
-          <Text
-            style={[typography.label.medium, { color: colors.static.black }]}
-            numberOfLines={1}
-          >
-            카카오로 계속하기
-          </Text>
-        </Pressable>
-
-        {/* Apple 로그인 (iOS만) */}
-        {Platform.OS === "ios" && (
           <Pressable
-            onPress={() => loginWithProvider("apple")}
+            onPress={() => loginWithProvider("google")}
             disabled={socialLoading}
             accessibilityRole="button"
-            accessibilityLabel="Apple로 계속하기"
+            accessibilityLabel="Google로 계속하기"
             accessibilityState={{ disabled: socialLoading }}
             style={({ pressed }) => [
               styles.socialButton,
-              styles.appleButton,
+              { backgroundColor: colors.static.white },
               pressed && !socialLoading && styles.pressed,
               socialLoading && styles.disabled,
             ]}
           >
-            <Ionicons name="logo-apple" size={20} color={colors.static.white} />
+            <GoogleLogo width={20} height={20} />
             <Text
-              style={[typography.label.medium, { color: colors.static.white }]}
-              numberOfLines={1}
+              style={[
+                typography.label.medium,
+                styles.socialLabel,
+                { color: colors.static.black },
+              ]}
             >
-              Apple로 계속하기
+              Google로 계속하기
             </Text>
           </Pressable>
-        )}
 
-        <View style={styles.signupPrompt}>
-          <Text
-            style={[
-              typography.subtext.medium,
-              { color: colors.label.alternative },
+          <Pressable
+            onPress={() => loginWithProvider("kakao")}
+            disabled={socialLoading}
+            accessibilityRole="button"
+            accessibilityLabel="카카오로 계속하기"
+            accessibilityState={{ disabled: socialLoading }}
+            style={({ pressed }) => [
+              styles.socialButton,
+              styles.kakaoButton,
+              pressed && !socialLoading && styles.pressed,
+              socialLoading && styles.disabled,
             ]}
           >
-            신신당부가 처음이신가요?
-          </Text>
-          <Link href="/(auth)/terms-agreement" asChild>
-            <Pressable
-              accessibilityRole="link"
-              accessibilityLabel="회원가입하기"
+            <KakaoLogo width={20} height={20} />
+            <Text
+              style={[
+                typography.label.medium,
+                styles.socialLabel,
+                { color: colors.static.black },
+              ]}
             >
+              카카오로 계속하기
+            </Text>
+          </Pressable>
+
+          {/* Apple 로그인 (iOS만) */}
+          {Platform.OS === "ios" && (
+            <Pressable
+              onPress={() => loginWithProvider("apple")}
+              disabled={socialLoading}
+              accessibilityRole="button"
+              accessibilityLabel="Apple로 계속하기"
+              accessibilityState={{ disabled: socialLoading }}
+              style={({ pressed }) => [
+                styles.socialButton,
+                styles.appleButton,
+                pressed && !socialLoading && styles.pressed,
+                socialLoading && styles.disabled,
+              ]}
+            >
+              <Ionicons
+                name="logo-apple"
+                size={20}
+                color={colors.static.white}
+              />
               <Text
                 style={[
-                  typography.subtext.large,
-                  styles.underline,
-                  { color: colors.label.alternative },
+                  typography.label.medium,
+                  styles.socialLabel,
+                  { color: colors.static.white },
                 ]}
               >
-                회원가입하기
+                Apple로 계속하기
               </Text>
             </Pressable>
-          </Link>
+          )}
+
+          <View style={styles.signupPrompt}>
+            <Text
+              style={[
+                typography.subtext.medium,
+                { color: colors.label.neutral },
+              ]}
+            >
+              신신당부가 처음이신가요?
+            </Text>
+            <Link href="/(auth)/terms-agreement" asChild>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="회원가입하기"
+              >
+                <Text
+                  style={[
+                    typography.subtext.large,
+                    styles.underline,
+                    { color: colors.label.neutral },
+                  ]}
+                >
+                  회원가입하기
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
       {socialLoading && (
         <View
@@ -220,6 +239,7 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, position: "relative" },
+  screenContent: { flexGrow: 1 },
   actions: { paddingHorizontal: spacing[20], gap: spacing[12] },
   dividerRow: {
     flexDirection: "row",
@@ -239,6 +259,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     gap: spacing[10],
   },
+  socialLabel: { flexShrink: 1, textAlign: "center" },
   kakaoButton: { backgroundColor: "#FEE500" },
   appleButton: { backgroundColor: "#000000" },
   pressed: { opacity: 0.85 },

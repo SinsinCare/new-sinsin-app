@@ -43,10 +43,7 @@ export function EmailLoginScreen() {
       buttonAccessory={
         <View style={styles.signupPrompt}>
           <Text
-            style={[
-              typography.subtext.medium,
-              { color: colors.label.alternative },
-            ]}
+            style={[typography.subtext.medium, { color: colors.label.neutral }]}
           >
             계정이 없으신가요?
           </Text>
@@ -59,7 +56,7 @@ export function EmailLoginScreen() {
               style={[
                 typography.subtext.large,
                 styles.underline,
-                { color: colors.label.alternative },
+                { color: colors.label.neutral },
               ]}
             >
               회원가입하기
@@ -142,7 +139,7 @@ export function EmailLoginScreen() {
               style={[
                 typography.subtext.large,
                 styles.underline,
-                { color: colors.label.alternative },
+                { color: colors.label.neutral },
               ]}
             >
               비밀번호 찾기

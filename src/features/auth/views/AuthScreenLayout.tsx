@@ -103,6 +103,15 @@ export function AuthScreenLayout({
     </>
   )
 
+  // The footer stays owned by AuthKeyboardFooter. The scrollable content needs
+  // enough trailing room to be brought above that fixed footer at larger text
+  // sizes, including the optional secondary action below the fields.
+  const scrollBottomClearance =
+    AUTH_KEYBOARD_FOOTER_CLEARANCE +
+    (buttonAccessory == null
+      ? spacing[24]
+      : spacing[24] + spacing[32] + spacing[16])
+
   const footer = keyboardAvoiding ? (
     <AuthKeyboardFooter backgroundColor={colors.background.default}>
       {footerContent}
@@ -116,7 +125,10 @@ export function AuthScreenLayout({
   const scrollContent = keyboardAvoiding ? (
     <KeyboardAwareScrollView
       style={styles.flex}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: scrollBottomClearance },
+      ]}
       bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
       disableScrollOnKeyboardHide
       showsVerticalScrollIndicator={false}
@@ -128,7 +140,10 @@ export function AuthScreenLayout({
   ) : (
     <ScrollView
       style={styles.flex}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: scrollBottomClearance },
+      ]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
@@ -168,6 +183,6 @@ const styles = StyleSheet.create({
   contentFlex: { flex: 1 },
   body: { flex: 1, paddingHorizontal: spacing[20] },
   bodyWithFooter: { justifyContent: "space-between" },
-  scrollContent: { flexGrow: 1, paddingBottom: spacing[24] },
+  scrollContent: { flexGrow: 1 },
   subtitle: { marginTop: spacing[8] },
 })
