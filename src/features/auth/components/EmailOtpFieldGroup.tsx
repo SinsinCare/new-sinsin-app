@@ -1,4 +1,9 @@
-import { StyleSheet, View } from "react-native"
+import {
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type TextInputProps,
+} from "react-native"
 import type { Control, FieldValues, Path } from "react-hook-form"
 import { V2Button, spacing } from "@/src/design-system-v2"
 import { V2AuthFormTextField } from "./V2AuthFormTextField"
@@ -15,6 +20,7 @@ type EmailOtpFieldGroupProps<T extends FieldValues> = {
   canVerify: boolean
   onSendCode: () => void
   onVerifyCode: () => void
+  placeholderTextColor?: TextInputProps["placeholderTextColor"]
 }
 
 /**
@@ -33,10 +39,14 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
   canVerify,
   onSendCode,
   onVerifyCode,
+  placeholderTextColor,
 }: EmailOtpFieldGroupProps<T>) {
+  const { fontScale, width } = useWindowDimensions()
+  const stackActions = fontScale >= 1.3 || width < 360
+
   return (
     <View style={styles.stack}>
-      <View style={styles.row}>
+      <View style={[styles.row, stackActions && styles.stackedRow]}>
         <V2AuthFormTextField<T>
           name={emailName}
           control={control}
@@ -48,7 +58,8 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
           textContentType="emailAddress"
           accessibilityLabel="이메일 주소"
           disabled={sendingCode || verifyingCode}
-          style={styles.field}
+          placeholderTextColor={placeholderTextColor}
+          style={stackActions ? styles.stackedField : styles.field}
           rules={{
             required: "이메일을 입력해주세요.",
             pattern: {
@@ -63,6 +74,7 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
           disabled={verified || verifyingCode}
           loading={sendingCode}
           onPress={onSendCode}
+          fullWidth={stackActions}
           accessibilityLabel={codeSent ? "인증번호 재전송" : "인증번호 전송"}
         >
           {codeSent ? "재전송" : "인증번호 전송"}
@@ -70,7 +82,7 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
       </View>
 
       {codeInputVisible && !verified ? (
-        <View style={styles.row}>
+        <View style={[styles.row, stackActions && styles.stackedRow]}>
           <V2AuthFormTextField<T>
             name={codeName}
             control={control}
@@ -82,7 +94,8 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
             textContentType="oneTimeCode"
             accessibilityLabel="인증번호"
             maxLength={6}
-            style={styles.field}
+            placeholderTextColor={placeholderTextColor}
+            style={stackActions ? styles.stackedField : styles.field}
             rules={{
               required: "인증번호를 입력해주세요.",
               minLength: {
@@ -97,6 +110,7 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
             disabled={!canVerify || sendingCode}
             loading={verifyingCode}
             onPress={onVerifyCode}
+            fullWidth={stackActions}
             accessibilityLabel="인증번호 확인"
           >
             확인
@@ -110,5 +124,7 @@ export function EmailOtpFieldGroup<T extends FieldValues>({
 const styles = StyleSheet.create({
   stack: { gap: spacing[16] },
   row: { flexDirection: "row", alignItems: "flex-end", gap: spacing[8] },
+  stackedRow: { flexDirection: "column", alignItems: "stretch" },
   field: { flex: 1 },
+  stackedField: { flex: 1, width: "100%" },
 })

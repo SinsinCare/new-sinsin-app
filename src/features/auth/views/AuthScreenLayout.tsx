@@ -1,6 +1,8 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import {
   Keyboard,
+  type LayoutChangeEvent,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,6 +24,10 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import {
+  getAuthKeyboardDismissMode,
+  getAuthScrollableContentPresentation,
+} from "../data/authPresentation"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -53,7 +59,8 @@ export function AuthScreenLayout({
   keyboardAvoiding = false,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
+  const [footerContentHeight, setFooterContentHeight] = useState(0)
   const handleDefaultBack = () => {
     if (router.canGoBack()) {
       router.back()
@@ -73,7 +80,12 @@ export function AuthScreenLayout({
             style={[
               typography.subtext.large,
               styles.subtitle,
-              { color: colors.label.alternative },
+              {
+                color:
+                  mode === "dark"
+                    ? colors.label.normal
+                    : colors.label.alternative,
+              },
             ]}
           >
             {subtitle}
@@ -103,25 +115,47 @@ export function AuthScreenLayout({
     </>
   )
 
+  const handleFooterContentLayout = (event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height
+    setFooterContentHeight((currentHeight) =>
+      currentHeight === nextHeight ? currentHeight : nextHeight,
+    )
+  }
+
+  const footerClearance = Math.max(
+    AUTH_KEYBOARD_FOOTER_CLEARANCE,
+    footerContentHeight + spacing[24],
+  )
+  const keyboardDismissMode = getAuthKeyboardDismissMode(
+    Platform.OS === "ios" ? "ios" : "android",
+  )
+
+  const measuredFooterContent = (
+    <View onLayout={handleFooterContentLayout}>{footerContent}</View>
+  )
+
   const footer = keyboardAvoiding ? (
     <AuthKeyboardFooter backgroundColor={colors.background.default}>
-      {footerContent}
+      {measuredFooterContent}
     </AuthKeyboardFooter>
   ) : (
     <View style={{ paddingBottom: insets.bottom + spacing[24] }}>
-      {footerContent}
+      {measuredFooterContent}
     </View>
   )
 
   const scrollContent = keyboardAvoiding ? (
     <KeyboardAwareScrollView
       style={styles.flex}
-      contentContainerStyle={styles.scrollContent}
-      bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: footerClearance },
+      ]}
+      bottomOffset={footerClearance}
       disableScrollOnKeyboardHide
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
+      keyboardDismissMode={keyboardDismissMode}
     >
       {content}
     </KeyboardAwareScrollView>
@@ -131,7 +165,7 @@ export function AuthScreenLayout({
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
+      keyboardDismissMode={keyboardDismissMode}
     >
       {content}
     </ScrollView>
@@ -149,25 +183,31 @@ export function AuthScreenLayout({
     </View>
   )
 
+  const screen = (
+    <V2Screen
+      padded={false}
+      edges={showHeader ? ["left", "right", "bottom"] : undefined}
+    >
+      {showHeader && <V2ScreenHeader onBack={onBack ?? handleDefaultBack} />}
+
+      {body}
+    </V2Screen>
+  )
+
+  if (scrollable) return screen
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <V2Screen
-        padded={false}
-        edges={showHeader ? ["left", "right", "bottom"] : undefined}
-      >
-        {showHeader && <V2ScreenHeader onBack={onBack ?? handleDefaultBack} />}
-
-        {body}
-      </V2Screen>
+      {screen}
     </TouchableWithoutFeedback>
   )
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contentFlex: { flex: 1 },
+  contentFlex: getAuthScrollableContentPresentation(),
   body: { flex: 1, paddingHorizontal: spacing[20] },
   bodyWithFooter: { justifyContent: "space-between" },
-  scrollContent: { flexGrow: 1, paddingBottom: spacing[24] },
+  scrollContent: { flexGrow: 1 },
   subtitle: { marginTop: spacing[8] },
 })

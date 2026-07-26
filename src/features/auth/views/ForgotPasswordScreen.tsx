@@ -40,7 +40,10 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function ForgotPasswordScreen() {
   const navigation = useNavigation()
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
+  const subtitleColor =
+    mode === "dark" ? colors.label.normal : colors.label.alternative
+  const placeholderTextColor = mode === "dark" ? colors.label.normal : undefined
   const [flow, dispatch] = useReducer(
     passwordResetFlowReducer,
     undefined,
@@ -309,7 +312,10 @@ export function ForgotPasswordScreen() {
         scrollable
         keyboardAvoiding
       >
-        <AuthPasswordFields control={passwordControl} />
+        <AuthPasswordFields
+          control={passwordControl}
+          placeholderTextColor={placeholderTextColor}
+        />
       </AuthScreenLayout>
     )
   }
@@ -337,7 +343,7 @@ export function ForgotPasswordScreen() {
               style={[
                 typography.subtext.large,
                 styles.subtitle,
-                { color: colors.label.alternative },
+                { color: subtitleColor },
               ]}
             >
               가입한 이메일로 인증번호를 전송해드립니다
@@ -355,6 +361,7 @@ export function ForgotPasswordScreen() {
                 canVerify={canVerify}
                 onSendCode={handleSendCode}
                 onVerifyCode={handleVerifyCode}
+                placeholderTextColor={placeholderTextColor}
               />
               <OtpVerificationStatus
                 codeSent={flow.codeSent}

@@ -1,6 +1,13 @@
-import { StyleSheet, View, type ViewStyle } from "react-native"
+import {
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type TextInputProps,
+  type ViewStyle,
+} from "react-native"
 import { useWatch, type Control } from "react-hook-form"
 import { spacing } from "@/src/design-system-v2"
+import { getAuthPasswordPlaceholders } from "../data/authPresentation"
 import { confirmPasswordRules, passwordRules } from "../data/passwordValidation"
 import type { PasswordForm } from "../types"
 import { V2AuthFormTextField } from "./V2AuthFormTextField"
@@ -9,6 +16,7 @@ import { PasswordCriteriaText } from "./PasswordCriteriaText"
 interface AuthPasswordFieldsProps {
   control: Control<PasswordForm>
   style?: ViewStyle
+  placeholderTextColor?: TextInputProps["placeholderTextColor"]
 }
 
 /**
@@ -18,8 +26,11 @@ interface AuthPasswordFieldsProps {
 export function AuthPasswordFields({
   control,
   style,
+  placeholderTextColor,
 }: AuthPasswordFieldsProps) {
   const password = useWatch({ control, name: "password" })
+  const { fontScale } = useWindowDimensions()
+  const placeholders = getAuthPasswordPlaceholders(fontScale)
 
   return (
     <View style={[styles.root, style]}>
@@ -28,13 +39,14 @@ export function AuthPasswordFields({
           name="password"
           control={control}
           label="비밀번호"
-          placeholder="비밀번호를 형식에 맞춰 입력해주세요"
+          placeholder={placeholders.password}
           inputType="password"
           textContentType="newPassword"
           autoComplete="new-password"
           importantForAutofill="yes"
           returnKeyType="next"
           showPasswordToggle
+          placeholderTextColor={placeholderTextColor}
           rules={passwordRules}
         />
         <PasswordCriteriaText password={password ?? ""} />
@@ -44,13 +56,14 @@ export function AuthPasswordFields({
         name="confirmPassword"
         control={control}
         label="비밀번호 확인"
-        placeholder="입력한 비밀번호를 다시 입력해주세요"
+        placeholder={placeholders.confirmPassword}
         inputType="password"
         textContentType="newPassword"
         autoComplete="new-password"
         importantForAutofill="yes"
         returnKeyType="done"
         showPasswordToggle
+        placeholderTextColor={placeholderTextColor}
         rules={confirmPasswordRules(password ?? "")}
       />
     </View>

@@ -1,4 +1,4 @@
-import type { TextInputProps } from "react-native"
+import type { TextInputProps, ViewStyle } from "react-native"
 
 export type AuthTextInputType =
   | "text"
@@ -51,4 +51,31 @@ export function getAuthTextInputPresentation(
   inputType: AuthTextInputType,
 ): AuthTextInputPresentation {
   return AUTH_TEXT_INPUT_PRESENTATION[inputType]
+}
+
+export function getAuthScrollableContentPresentation(): Pick<
+  ViewStyle,
+  "flexGrow"
+> {
+  return { flexGrow: 1 }
+}
+
+export function getAuthKeyboardDismissMode(platform: "ios" | "android") {
+  return platform === "ios" ? ("interactive" as const) : ("on-drag" as const)
+}
+
+export function getEmailLoginFormGapToken(fontScale: number): 24 | 32 {
+  return fontScale >= 1.3 ? 24 : 32
+}
+
+export function getAuthPasswordPlaceholders(fontScale: number) {
+  return fontScale >= 1.3
+    ? {
+        password: "비밀번호 입력",
+        confirmPassword: "비밀번호 다시 입력",
+      }
+    : {
+        password: "비밀번호를 형식에 맞춰 입력해주세요",
+        confirmPassword: "입력한 비밀번호를 다시 입력해주세요",
+      }
 }
