@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, Text, View, useColorScheme } from "react-native"
 import { router } from "expo-router"
 import { useForm } from "react-hook-form"
 import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
@@ -20,6 +20,11 @@ export function EmailLoginScreen() {
     submitLogin,
   } = useEmailLogin()
   const { colors } = useV2Theme()
+  const isDark = useColorScheme() === "dark"
+  const supportingTextColor = isDark
+    ? colors.label.normal
+    : colors.label.alternative
+  const placeholderTextColor = isDark ? colors.label.normal : undefined
 
   const {
     control,
@@ -43,7 +48,11 @@ export function EmailLoginScreen() {
       buttonAccessory={
         <View style={styles.signupPrompt}>
           <Text
-            style={[typography.subtext.medium, { color: colors.label.neutral }]}
+            style={[
+              typography.subtext.medium,
+              styles.signupPromptText,
+              { color: supportingTextColor },
+            ]}
           >
             계정이 없으신가요?
           </Text>
@@ -51,12 +60,13 @@ export function EmailLoginScreen() {
             accessibilityRole="link"
             accessibilityLabel="회원가입하기"
             onPress={() => router.push("/(auth)/terms-agreement")}
+            style={styles.signupPromptLink}
           >
             <Text
               style={[
                 typography.subtext.large,
                 styles.underline,
-                { color: colors.label.neutral },
+                { color: supportingTextColor },
               ]}
             >
               회원가입하기
@@ -84,6 +94,7 @@ export function EmailLoginScreen() {
           inputType="email"
           keyboardContentType="username"
           autoComplete="email"
+          placeholderTextColor={placeholderTextColor}
           rules={{
             required: "이메일을 입력해주세요.",
             pattern: {
@@ -102,6 +113,7 @@ export function EmailLoginScreen() {
             inputType="password"
             keyboardContentType="password"
             autoComplete="current-password"
+            placeholderTextColor={placeholderTextColor}
             showPasswordToggle
             rules={{
               required: "비밀번호를 입력해주세요.",
@@ -139,7 +151,7 @@ export function EmailLoginScreen() {
               style={[
                 typography.subtext.large,
                 styles.underline,
-                { color: colors.label.neutral },
+                { color: supportingTextColor },
               ]}
             >
               비밀번호 찾기
@@ -155,11 +167,15 @@ const styles = StyleSheet.create({
   form: { gap: spacing[32], marginTop: spacing[32] },
   signupPrompt: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
+    alignContent: "center",
     justifyContent: "center",
     gap: spacing[8],
     marginBottom: spacing[16],
   },
+  signupPromptText: { flexShrink: 1, textAlign: "center" },
+  signupPromptLink: { maxWidth: "100%" },
   passwordHelp: { alignItems: "center", gap: spacing[8] },
   loginError: { marginTop: spacing[6] },
   underline: { textDecorationLine: "underline" },

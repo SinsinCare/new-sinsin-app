@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useColorScheme,
   useWindowDimensions,
 } from "react-native"
 import { Link, router } from "expo-router"
@@ -39,6 +40,10 @@ export function LoginScreen() {
     dismissWithdrawalPending,
   } = useSocialLogin()
   const { colors } = useV2Theme()
+  const isDark = useColorScheme() === "dark"
+  const supportingTextColor = isDark
+    ? colors.label.normal
+    : colors.label.alternative
   const heroLayout = getLoginHeroLayout({
     viewportWidth: width,
     viewportHeight: height,
@@ -102,7 +107,7 @@ export function LoginScreen() {
             <Text
               style={[
                 typography.subtext.medium,
-                { color: colors.label.neutral },
+                { color: supportingTextColor },
               ]}
             >
               또는
@@ -198,7 +203,8 @@ export function LoginScreen() {
             <Text
               style={[
                 typography.subtext.medium,
-                { color: colors.label.neutral },
+                styles.signupPromptText,
+                { color: supportingTextColor },
               ]}
             >
               신신당부가 처음이신가요?
@@ -207,12 +213,13 @@ export function LoginScreen() {
               <Pressable
                 accessibilityRole="link"
                 accessibilityLabel="회원가입하기"
+                style={styles.signupPromptLink}
               >
                 <Text
                   style={[
                     typography.subtext.large,
                     styles.underline,
-                    { color: colors.label.neutral },
+                    { color: supportingTextColor },
                   ]}
                 >
                   회원가입하기
@@ -266,11 +273,15 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.4 },
   signupPrompt: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "center",
     alignItems: "center",
+    alignContent: "center",
     gap: spacing[8],
     marginTop: spacing[8],
   },
+  signupPromptText: { flexShrink: 1, textAlign: "center" },
+  signupPromptLink: { maxWidth: "100%" },
   underline: { textDecorationLine: "underline" },
   loadingOverlay: {
     position: "absolute",

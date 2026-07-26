@@ -1,6 +1,7 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import {
   Keyboard,
+  type LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -54,6 +55,7 @@ export function AuthScreenLayout({
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
   const { colors } = useV2Theme()
+  const [footerContentHeight, setFooterContentHeight] = useState(0)
   const handleDefaultBack = () => {
     if (router.canGoBack()) {
       router.back()
@@ -103,22 +105,29 @@ export function AuthScreenLayout({
     </>
   )
 
-  // The footer stays owned by AuthKeyboardFooter. The scrollable content needs
-  // enough trailing room to be brought above that fixed footer at larger text
-  // sizes, including the optional secondary action below the fields.
-  const scrollBottomClearance =
-    AUTH_KEYBOARD_FOOTER_CLEARANCE +
-    (buttonAccessory == null
-      ? spacing[24]
-      : spacing[24] + spacing[32] + spacing[16])
+  const handleFooterContentLayout = (event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height
+    setFooterContentHeight((currentHeight) =>
+      currentHeight === nextHeight ? currentHeight : nextHeight,
+    )
+  }
+
+  const footerClearance = Math.max(
+    AUTH_KEYBOARD_FOOTER_CLEARANCE,
+    footerContentHeight + spacing[24],
+  )
+
+  const measuredFooterContent = (
+    <View onLayout={handleFooterContentLayout}>{footerContent}</View>
+  )
 
   const footer = keyboardAvoiding ? (
     <AuthKeyboardFooter backgroundColor={colors.background.default}>
-      {footerContent}
+      {measuredFooterContent}
     </AuthKeyboardFooter>
   ) : (
     <View style={{ paddingBottom: insets.bottom + spacing[24] }}>
-      {footerContent}
+      {measuredFooterContent}
     </View>
   )
 
@@ -127,9 +136,9 @@ export function AuthScreenLayout({
       style={styles.flex}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: scrollBottomClearance },
+        { paddingBottom: footerClearance },
       ]}
-      bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
+      bottomOffset={footerClearance}
       disableScrollOnKeyboardHide
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
@@ -140,10 +149,7 @@ export function AuthScreenLayout({
   ) : (
     <ScrollView
       style={styles.flex}
-      contentContainerStyle={[
-        styles.scrollContent,
-        { paddingBottom: scrollBottomClearance },
-      ]}
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"

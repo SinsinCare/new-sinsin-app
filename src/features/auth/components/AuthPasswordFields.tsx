@@ -1,4 +1,9 @@
-import { StyleSheet, View, type ViewStyle } from "react-native"
+import {
+  StyleSheet,
+  View,
+  type TextInputProps,
+  type ViewStyle,
+} from "react-native"
 import { useWatch, type Control } from "react-hook-form"
 import { spacing } from "@/src/design-system-v2"
 import { confirmPasswordRules, passwordRules } from "../data/passwordValidation"
@@ -9,6 +14,7 @@ import { PasswordCriteriaText } from "./PasswordCriteriaText"
 interface AuthPasswordFieldsProps {
   control: Control<PasswordForm>
   style?: ViewStyle
+  placeholderTextColor?: TextInputProps["placeholderTextColor"]
 }
 
 /**
@@ -18,6 +24,7 @@ interface AuthPasswordFieldsProps {
 export function AuthPasswordFields({
   control,
   style,
+  placeholderTextColor,
 }: AuthPasswordFieldsProps) {
   const password = useWatch({ control, name: "password" })
 
@@ -35,6 +42,7 @@ export function AuthPasswordFields({
           importantForAutofill="yes"
           returnKeyType="next"
           showPasswordToggle
+          placeholderTextColor={placeholderTextColor}
           rules={passwordRules}
         />
         <PasswordCriteriaText password={password ?? ""} />
@@ -51,6 +59,7 @@ export function AuthPasswordFields({
         importantForAutofill="yes"
         returnKeyType="done"
         showPasswordToggle
+        placeholderTextColor={placeholderTextColor}
         rules={confirmPasswordRules(password ?? "")}
       />
     </View>
