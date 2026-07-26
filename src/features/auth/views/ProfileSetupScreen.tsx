@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Pressable, Keyboard, BackHandler, Platform } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -29,6 +29,7 @@ export function ProfileSetupScreen() {
   const insets = useSafeAreaInsets()
   const navigation = useNavigation()
   const colors = useAuthColors()
+  const [isAcquisitionPickerOpen, setIsAcquisitionPickerOpen] = useState(false)
   const {
     birthYear,
     birthMonth,
@@ -87,12 +88,24 @@ export function ProfileSetupScreen() {
     return () => sub.remove()
   }, [isCompletionMode])
 
+  const handleBack = () => {
+    Keyboard.dismiss()
+    if (router.canGoBack()) {
+      router.back()
+      return
+    }
+    router.replace("/(auth)/signup-password")
+  }
+
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack height={56} justifyContent="center">
         {!isCompletionMode && (
           <Pressable
-            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="뒤로 가기"
+            hitSlop={8}
+            onPress={handleBack}
             style={{ position: "absolute", left: 9, padding: 4 }}
           >
             <Ionicons name="chevron-back" size={24} color={colors.icon} />
@@ -208,6 +221,7 @@ export function ProfileSetupScreen() {
                 onSelect={(value) =>
                   setAcquisitionSource(value as AcquisitionSourceInput)
                 }
+                onOpenChange={setIsAcquisitionPickerOpen}
                 placeholder="유입경로를 선택해주세요"
                 required
               />
@@ -235,8 +249,20 @@ export function ProfileSetupScreen() {
           </YStack>
         </KeyboardAwareScrollView>
 
-        <AuthKeyboardFooter horizontalPadding={20} backgroundColor={colors.bg}>
+        <AuthKeyboardFooter
+          horizontalPadding={20}
+          backgroundColor={colors.bg}
+          keyboardTrackingEnabled={!isAcquisitionPickerOpen}
+        >
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              isCompletionMode ? "필수정보 저장하기" : "다음 단계"
+            }
+            accessibilityState={{
+              disabled: !isValid || isSubmitting || isPrefilling,
+              busy: isSubmitting || isPrefilling,
+            }}
             onPress={() => {
               Keyboard.dismiss()
               handleSubmit(handleNext)()

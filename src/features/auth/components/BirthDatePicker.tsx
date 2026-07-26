@@ -83,6 +83,8 @@ export function BirthDatePicker({
         justifyContent="center"
       >
         <TextInput
+          accessibilityLabel="생년월일 필수 입력"
+          accessibilityHint="연도, 월, 일을 숫자 8자리로 입력하세요"
           value={inputValue}
           onChangeText={handleChange}
           placeholder="YYYY.MM.DD"

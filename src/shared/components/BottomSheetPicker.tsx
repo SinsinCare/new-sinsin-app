@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
 } from "react-native"
@@ -30,6 +31,7 @@ interface BottomSheetPickerProps {
   onSelect: (value: string) => void
   placeholder?: string
   required?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function getBottomSheetPickerColors(isDark: boolean) {
@@ -37,9 +39,7 @@ export function getBottomSheetPickerColors(isDark: boolean) {
     label: isDark ? tokens.color.textDark.val : "#17191C",
     placeholder: isDark ? "#6B7280" : "#A0A4A8",
     inputBg: isDark ? "#2A2A32" : "white",
-    inputBorder: isDark
-      ? tokens.color.borderDark.val
-      : "rgba(218,223,230,0.6)",
+    inputBorder: isDark ? tokens.color.borderDark.val : "rgba(218,223,230,0.6)",
     chevron: isDark ? tokens.color.textDarkSub.val : "#787C83",
     sheetBg: isDark ? "#2A2A32" : "white",
     handle: isDark ? tokens.color.borderDark.val : "#E0E0E0",
@@ -56,6 +56,7 @@ export function BottomSheetPicker({
   onSelect,
   placeholder = "선택해주세요",
   required,
+  onOpenChange,
 }: BottomSheetPickerProps) {
   const [visible, setVisible] = useState(false)
   const insets = useSafeAreaInsets()
@@ -82,7 +83,7 @@ export function BottomSheetPicker({
         }),
       ]).start()
     }
-  }, [visible])
+  }, [backdropOpacity, translateY, visible])
 
   const close = () => {
     Animated.parallel([
@@ -98,12 +99,19 @@ export function BottomSheetPicker({
       }),
     ]).start(() => {
       setVisible(false)
+      onOpenChange?.(false)
     })
   }
 
   const handleSelect = (v: string) => {
     onSelect(v)
     close()
+  }
+
+  const open = () => {
+    Keyboard.dismiss()
+    onOpenChange?.(true)
+    setVisible(true)
   }
 
   return (
@@ -127,7 +135,13 @@ export function BottomSheetPicker({
           )}
         </XStack>
       )}
-      <Pressable onPress={() => setVisible(true)}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label ?? placeholder}
+        accessibilityHint="선택 항목을 엽니다"
+        accessibilityState={{ expanded: visible }}
+        onPress={open}
+      >
         <XStack
           backgroundColor={colors.inputBg}
           borderWidth={1}
@@ -164,11 +178,17 @@ export function BottomSheetPicker({
           <Animated.View
             style={[styles.backdrop, { opacity: backdropOpacity }]}
           >
-            <Pressable style={styles.backdropPress} onPress={close} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="선택창 닫기"
+              style={styles.backdropPress}
+              onPress={close}
+            />
           </Animated.View>
 
           {/* Sheet */}
           <Animated.View
+            accessibilityViewIsModal
             style={[
               styles.sheet,
               {
@@ -201,7 +221,12 @@ export function BottomSheetPicker({
                 index,
               })}
               renderItem={({ item }) => (
-                <Pressable onPress={() => handleSelect(item.value)}>
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityLabel={item.label}
+                  accessibilityState={{ checked: item.value === value }}
+                  onPress={() => handleSelect(item.value)}
+                >
                   <XStack
                     height={48}
                     paddingHorizontal={20}

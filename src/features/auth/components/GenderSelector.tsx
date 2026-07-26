@@ -41,9 +41,16 @@ export function GenderSelector({ value, onChange }: GenderSelectorProps) {
           *
         </Text>
       </XStack>
-      <XStack gap={8}>
+      <XStack
+        accessibilityRole="radiogroup"
+        accessibilityLabel="성별 필수 선택"
+        gap={8}
+      >
         {GENDER_OPTIONS.map(({ key, label }) => (
           <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel={label}
+            accessibilityState={{ checked: value === key }}
             key={key}
             style={{ flex: 1 }}
             onPress={() => onChange(key)}
