@@ -131,6 +131,59 @@ describe("bootstrapAuthSession", () => {
 
     expect(applyAuthSession).not.toHaveBeenCalled()
     expect(clearClientSession).toHaveBeenCalledTimes(1)
+    expect(clearClientSession).toHaveBeenCalledWith()
+  })
+
+  it.each(["401", "403", "network"])(
+    "clears a failed %s restore once and preserves fresh social reauthentication intent",
+    async () => {
+      const applyAuthSession = jest.fn()
+      const clearClientSession = jest.fn().mockResolvedValue(undefined)
+
+      await expect(
+        bootstrapAuthSession({
+          isAuthenticated: () => false,
+          restoreSession: async () => {
+            throw new Error("restore failed")
+          },
+          applyAuthSession,
+          clearClientSession,
+        }),
+      ).resolves.toBe("cleared")
+
+      expect(applyAuthSession).not.toHaveBeenCalled()
+      expect(clearClientSession).toHaveBeenCalledTimes(1)
+      expect(clearClientSession).toHaveBeenCalledWith({
+        requireFreshSocialProviderSelection: true,
+      })
+    },
+  )
+
+  it("preserves an interactive login completed while a restore fails", async () => {
+    let authenticated = false
+    const applyAuthSession = jest.fn()
+    const clearClientSession = jest.fn().mockResolvedValue(undefined)
+    let failRestore: ((error: Error) => void) | undefined
+    const restoreSession = new Promise<AuthSessionResult | null>(
+      (_, reject) => {
+        failRestore = reject
+      },
+    )
+
+    const bootstrap = bootstrapAuthSession({
+      isAuthenticated: () => authenticated,
+      restoreSession: () => restoreSession,
+      applyAuthSession,
+      clearClientSession,
+    })
+
+    authenticated = true
+    failRestore?.(new Error("refresh failed"))
+
+    await expect(bootstrap).resolves.toBe("preserved_active_session")
+
+    expect(applyAuthSession).not.toHaveBeenCalled()
+    expect(clearClientSession).not.toHaveBeenCalled()
   })
 })
 
@@ -188,29 +241,32 @@ describe("authService.restoreSession", () => {
     expect(mockClearClientSession).not.toHaveBeenCalled()
   })
 
-  it("clears the client session after a rejected persisted-token refresh", async () => {
-    mockTokenService.getPersistedRefreshToken.mockResolvedValue("expired-token")
-    mockPublicApi.post.mockRejectedValue(
-      new ApiError("expired", "AUTH_SESSION_EXPIRED", 401, false),
-    )
+  it.each([401, 403])(
+    "propagates a rejected persisted-token refresh with status %i without cleanup",
+    async (statusCode) => {
+      mockTokenService.getPersistedRefreshToken.mockResolvedValue(
+        "expired-token",
+      )
+      mockPublicApi.post.mockRejectedValue(
+        new ApiError("expired", "AUTH_SESSION_EXPIRED", statusCode, false),
+      )
 
-    await expect(authService.restoreSession()).resolves.toBeNull()
+      await expect(authService.restoreSession()).rejects.toMatchObject({
+        statusCode,
+      })
 
-    expect(mockClearClientSession).toHaveBeenCalledWith({
-      requireFreshSocialProviderSelection: true,
-    })
-    expect(mockClearClientSession).toHaveBeenCalledTimes(1)
-  })
+      expect(mockClearClientSession).not.toHaveBeenCalled()
+    },
+  )
 
-  it("clears the client session after a refresh network failure", async () => {
+  it("propagates a refresh network failure without cleanup", async () => {
     mockTokenService.getPersistedRefreshToken.mockResolvedValue("network-token")
     mockPublicApi.post.mockRejectedValue(new Error("network unavailable"))
 
-    await expect(authService.restoreSession()).resolves.toBeNull()
+    await expect(authService.restoreSession()).rejects.toThrow(
+      "network unavailable",
+    )
 
-    expect(mockClearClientSession).toHaveBeenCalledWith({
-      requireFreshSocialProviderSelection: true,
-    })
-    expect(mockClearClientSession).toHaveBeenCalledTimes(1)
+    expect(mockClearClientSession).not.toHaveBeenCalled()
   })
 })

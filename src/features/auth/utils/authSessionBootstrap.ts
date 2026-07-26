@@ -10,7 +10,9 @@ interface AuthSessionBootstrapDependencies {
   isAuthenticated: () => boolean
   restoreSession: () => Promise<AuthSessionResult | null>
   applyAuthSession: (result: AuthSessionResult) => void
-  clearClientSession: () => Promise<void>
+  clearClientSession: (options?: {
+    requireFreshSocialProviderSelection?: boolean
+  }) => Promise<void>
 }
 
 /**
@@ -28,7 +30,17 @@ export async function bootstrapAuthSession({
 }: AuthSessionBootstrapDependencies): Promise<AuthSessionBootstrapOutcome> {
   if (isAuthenticated()) return "already_authenticated"
 
-  const restoredSession = await restoreSession()
+  let restoredSession: AuthSessionResult | null
+  try {
+    restoredSession = await restoreSession()
+  } catch {
+    if (isAuthenticated()) return "preserved_active_session"
+
+    await clearClientSession({
+      requireFreshSocialProviderSelection: true,
+    })
+    return "cleared"
+  }
 
   if (isAuthenticated()) return "preserved_active_session"
 
