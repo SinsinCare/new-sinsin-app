@@ -59,6 +59,8 @@ async function readFixture(): Promise<MockSessionFixture> {
 export async function persistMockAuthSession(
   session: AuthSessionResult,
 ): Promise<void> {
+  if (session.sessionPersistence !== "persistent") return
+
   const fixture = await readFixture()
   const persistedSession = toPersistedSession(session)
 
@@ -76,7 +78,14 @@ export async function restoreMockAuthSession(): Promise<AuthSessionResult | null
 
 export async function clearMockAuthSession(): Promise<void> {
   const fixture = await readFixture()
+  if (fixture.activeUserId) {
+    delete fixture.sessionsByUserId[fixture.activeUserId]
+  }
   fixture.activeUserId = null
+  if (Object.keys(fixture.sessionsByUserId).length === 0) {
+    await AsyncStorage.removeItem(STORAGE_KEY)
+    return
+  }
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(fixture))
 }
 

@@ -234,6 +234,15 @@ export const mockAuthService: IAuthService = {
         sessionPersistence: persistedSession.sessionPersistence,
       }
     }
+    if (currentUser && !appConfig.mockNoUser) {
+      return {
+        user: currentUser,
+        accountState: "ACTIVE",
+        requiresAdditionalInfo: false,
+        entryGate: "HOME",
+        sessionPersistence: "persistent",
+      }
+    }
     return null
   },
 }

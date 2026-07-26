@@ -1,4 +1,5 @@
 const storage = new Map<string, string>()
+const appConfig = { mockNoUser: true }
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   __esModule: true,
@@ -14,7 +15,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 }))
 
 jest.mock("../src/config/appConfig", () => ({
-  appConfig: { mockNoUser: true },
+  appConfig,
 }))
 const loadMockAuth = () => {
   jest.resetModules()
@@ -25,6 +26,7 @@ const loadMockAuth = () => {
 describe("mock auth session fixture lifecycle", () => {
   beforeEach(async () => {
     storage.clear()
+    appConfig.mockNoUser = true
     const { resetMockAuthSessionFixture } = loadMockAuth()
     await resetMockAuthSessionFixture()
   })
@@ -83,6 +85,39 @@ describe("mock auth session fixture lifecycle", () => {
     await expect(
       relaunched.mockAuthService.restoreSession(),
     ).resolves.toBeNull()
+  })
+
+  it("does not persist an ephemeral fixture passed directly to the helper", async () => {
+    const firstLaunch = loadMockAuth()
+    await firstLaunch.persistMockAuthSession({
+      user: {
+        uid: "ephemeral-user",
+        email: "ephemeral@example.test",
+        displayName: null,
+      },
+      accountState: "PENDING_ONBOARDING",
+      requiresAdditionalInfo: false,
+      entryGate: "ONBOARDING",
+      sessionPersistence: "ephemeral",
+    })
+
+    const relaunched = loadMockAuth()
+    await expect(
+      relaunched.mockAuthService.restoreSession(),
+    ).resolves.toBeNull()
+  })
+
+  it("preserves the default mock user when mockNoUser is disabled", async () => {
+    appConfig.mockNoUser = false
+    const defaultMockLaunch = loadMockAuth()
+
+    await expect(
+      defaultMockLaunch.mockAuthService.restoreSession(),
+    ).resolves.toMatchObject({
+      user: { uid: "mock-user-001" },
+      accountState: "ACTIVE",
+      entryGate: "HOME",
+    })
   })
 
   it("isolates persistent fixtures by user ID and resets deterministically", async () => {
