@@ -7,7 +7,7 @@
     "icon": "./assets/branding/app_icon_260720.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/branding/app_icon_260720.png",
       "resizeMode": "contain"
     },
     "assetBundlePatterns": [
