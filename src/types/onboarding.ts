@@ -11,7 +11,7 @@ export interface OnboardingValueOption {
 export interface OnboardingStep {
   step: number
   title: string
-  subTitle: string
+  subTitle: string | null
   type: OnboardingStepType
   values: OnboardingValueOption[]
 }
@@ -32,7 +32,7 @@ export interface OnboardingStepRs {
   step: number
   flow: string
   title: string
-  subTitle: string
+  subTitle?: string | null
   type: OnboardingStepType
   values: OnboardingValueOption[]
 }

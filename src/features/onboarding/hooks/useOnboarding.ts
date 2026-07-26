@@ -8,6 +8,7 @@ import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { resolveOnboardingStepIndex } from "../data/onboardingStepRecovery"
 
 type Phase = "welcome" | "steps" | "complete"
 
@@ -67,22 +68,42 @@ export function useOnboarding() {
     }
   }, [setOnboardingInProgress])
 
-  const loadSteps = useCallback(async (isCkd: boolean) => {
-    setIsLoadingSteps(true)
-    try {
-      const data = await onboardingService.getSteps(isCkd)
-      setSteps(data)
-      setPhase("steps")
-      trackAnalyticsEvent("onboarding_steps_loaded", {
-        step_count: data.length,
-      })
-    } catch {
-      trackAnalyticsEvent("onboarding_steps_load_failed", {})
-      Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
-    } finally {
-      setIsLoadingSteps(false)
-    }
-  }, [])
+  const loadSteps = useCallback(
+    async (isCkd: boolean) => {
+      setIsLoadingSteps(true)
+      try {
+        const data = await onboardingService.getSteps(isCkd)
+        const recoveredStepIndex = resolveOnboardingStepIndex(
+          currentStepIndex,
+          data.length,
+        )
+
+        if (recoveredStepIndex === null) {
+          setSteps([])
+          setPhase("welcome")
+          trackAnalyticsEvent("onboarding_steps_load_failed", {})
+          Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
+          return
+        }
+
+        if (recoveredStepIndex !== currentStepIndex) {
+          setCurrentStepIndex(recoveredStepIndex)
+        }
+
+        setSteps(data)
+        setPhase("steps")
+        trackAnalyticsEvent("onboarding_steps_loaded", {
+          step_count: data.length,
+        })
+      } catch {
+        trackAnalyticsEvent("onboarding_steps_load_failed", {})
+        Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
+      } finally {
+        setIsLoadingSteps(false)
+      }
+    },
+    [currentStepIndex, setCurrentStepIndex],
+  )
 
   // hydration 완료 후 현재 사용자에게 속한 진행 상태만 복원
   useEffect(() => {
