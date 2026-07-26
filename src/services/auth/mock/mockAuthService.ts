@@ -1,7 +1,20 @@
-import type { IAuthService, AppUser } from "../../types/serviceTypes"
-import type { AuthProfile, SignupRequest, SocialSignupRequest } from "../../../types"
+import type {
+  IAuthService,
+  AppUser,
+  AuthSessionResult,
+} from "../../types/serviceTypes"
+import type {
+  AuthProfile,
+  SignupRequest,
+  SocialSignupRequest,
+} from "../../../types"
 import { MockUser, DEFAULT_MOCK_USER } from "./mockUser"
 import { appConfig } from "../../../config/appConfig"
+import {
+  clearMockAuthSession,
+  persistMockAuthSession,
+  restoreMockAuthSession,
+} from "./mockAuthSessionFixture"
 
 const mockUsers = new Map<
   string,
@@ -32,11 +45,15 @@ export const mockAuthService: IAuthService = {
       throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.")
     }
     currentUser = userData.user
-    return {
+    const session = {
       user: currentUser,
       accountState: "ACTIVE",
       requiresAdditionalInfo: false,
+      entryGate: "HOME" as const,
+      sessionPersistence: "persistent" as const,
     }
+    await persistMockAuthSession(session)
+    return session
   },
 
   async signInWithSocial(
@@ -44,11 +61,7 @@ export const mockAuthService: IAuthService = {
     _idToken: string,
     email?: string | null,
     displayName?: string | null,
-  ): Promise<{
-    user: AppUser
-    accountState: string
-    requiresAdditionalInfo: boolean
-  }> {
+  ): Promise<AuthSessionResult> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const mockUser = new MockUser(
       `mock-${provider}-${Date.now()}`,
@@ -60,6 +73,8 @@ export const mockAuthService: IAuthService = {
       user: currentUser,
       accountState: "PENDING_ONBOARDING",
       requiresAdditionalInfo: false,
+      entryGate: "ONBOARDING" as const,
+      sessionPersistence: "ephemeral" as const,
     }
   },
 
@@ -157,23 +172,19 @@ export const mockAuthService: IAuthService = {
 
   async completeSocialSignup(
     _request: SocialSignupRequest,
-  ): Promise<{
-    user: AppUser
-    accountState: string
-    requiresAdditionalInfo: boolean
-  }> {
+  ): Promise<AuthSessionResult> {
     await new Promise((resolve) => setTimeout(resolve, 300))
     currentUser = new MockUser(`mock-social-${Date.now()}`, null, null)
     return {
       user: currentUser,
       accountState: "PENDING_PROFILE",
       requiresAdditionalInfo: false,
+      entryGate: "PROFILE" as const,
+      sessionPersistence: "ephemeral" as const,
     }
   },
 
-  async cancelWithdrawal(
-    _cancelToken: string,
-  ): Promise<{
+  async cancelWithdrawal(_cancelToken: string): Promise<{
     user: AppUser
     accountState: string
     requiresAdditionalInfo: boolean
@@ -190,30 +201,46 @@ export const mockAuthService: IAuthService = {
   async signOut(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 100))
     currentUser = null
+    await clearMockAuthSession()
   },
 
   async promoteSession() {
     currentUser = currentUser ?? DEFAULT_MOCK_USER
-    return {
+    const session = {
       user: currentUser,
       accountState: "ACTIVE",
       requiresAdditionalInfo: false,
       entryGate: "HOME" as const,
       sessionPersistence: "persistent" as const,
     }
+    await persistMockAuthSession(session)
+    return session
   },
 
-  async restoreSession(): Promise<{
-    user: AppUser
-    accountState: string
-    requiresAdditionalInfo: boolean
-  } | null> {
+  async restoreSession(): Promise<AuthSessionResult | null> {
     await new Promise((resolve) => setTimeout(resolve, 200))
-    if (currentUser) {
+    const persistedSession = await restoreMockAuthSession()
+    if (persistedSession) {
+      currentUser = new MockUser(
+        persistedSession.user.uid,
+        persistedSession.user.email,
+        persistedSession.user.displayName,
+      )
+      return {
+        user: currentUser,
+        accountState: persistedSession.accountState,
+        requiresAdditionalInfo: persistedSession.requiresAdditionalInfo,
+        entryGate: persistedSession.entryGate,
+        sessionPersistence: persistedSession.sessionPersistence,
+      }
+    }
+    if (currentUser && !appConfig.mockNoUser) {
       return {
         user: currentUser,
         accountState: "ACTIVE",
         requiresAdditionalInfo: false,
+        entryGate: "HOME",
+        sessionPersistence: "persistent",
       }
     }
     return null
