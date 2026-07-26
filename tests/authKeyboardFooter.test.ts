@@ -13,7 +13,7 @@ describe("auth keyboard footer layout", () => {
   })
 
   it("reserves enough keyboard clearance for the primary action and focused input", () => {
-    expect(AUTH_KEYBOARD_FOOTER_CLEARANCE).toBe(76)
+    expect(AUTH_KEYBOARD_FOOTER_CLEARANCE).toBe(80)
   })
 
   it("keeps one footer height and lets the sticky view own the keyboard transition", () => {

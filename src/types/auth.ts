@@ -97,6 +97,11 @@ export interface AuthProfile {
 
 export interface ProfileCompleteRequest {
   name: string
+  /**
+   * The backend accepts this as optional for legacy requests, but a
+   * PENDING_PROFILE completion always supplies it after availability checks.
+   */
+  nickName: string
   birthYear: number
   birthMonth: number
   birthDay: number
