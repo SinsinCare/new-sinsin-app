@@ -5,6 +5,7 @@ import {
   getPreviousProfileSetupStep,
   getProfileSetupStepError,
   isNicknameAvailabilityVerified,
+  normalizeProfileSetupDraft,
   PROFILE_SETUP_STEPS,
   PROFILE_SETUP_STEP_TITLES,
   requiresNicknameAvailability,
@@ -50,6 +51,51 @@ describe("required profile setup flow", () => {
         nickname: "새닉네임",
       }),
     ).toBe(false)
+  })
+
+  it("fails closed when a partial draft has no usable nickname", () => {
+    expect(
+      isNicknameAvailabilityVerified("길동이", {
+        ...completeDraft,
+        nickname: undefined,
+      } as unknown as ProfileSetupDraft),
+    ).toBe(false)
+    expect(
+      isNicknameAvailabilityVerified("길동이", {
+        ...completeDraft,
+        nickname: 123,
+      } as unknown as ProfileSetupDraft),
+    ).toBe(false)
+  })
+
+  it("normalizes runtime partial drafts before validation and submission", () => {
+    const normalized = normalizeProfileSetupDraft({
+      name: undefined,
+      birthDate: 123,
+      gender: null,
+      phoneNumber: {},
+      acquisitionSource: false,
+      acquisitionSourceOther: [],
+      nickname: undefined,
+    })
+
+    expect(normalized).toEqual({
+      name: "",
+      birthDate: "",
+      gender: "",
+      phoneNumber: "",
+      acquisitionSource: "",
+      acquisitionSourceOther: "",
+      nickname: "",
+    })
+    expect(() => getProfileSetupStepError("name", normalized)).not.toThrow()
+    expect(() =>
+      isNicknameAvailabilityVerified("길동이", normalized),
+    ).not.toThrow()
+    expect(isNicknameAvailabilityVerified("길동이", normalized)).toBe(false)
+    expect(() => buildProfileCompletePayload(normalized)).toThrow(
+      "이름을 입력해주세요.",
+    )
   })
 
   it("keeps an unchanged ACTIVE backfill nickname verified without a public recheck", () => {

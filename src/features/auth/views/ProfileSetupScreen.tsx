@@ -32,6 +32,7 @@ import {
   getNextProfileSetupStep,
   getPreviousProfileSetupStep,
   getProfileSetupStepError,
+  normalizeProfileSetupDraft,
   PROFILE_SETUP_STEP_TITLES,
   requiresNicknameAvailability,
   type ProfileSetupStep,
@@ -74,10 +75,7 @@ export function ProfileSetupScreen() {
     mode: "onChange",
   })
   const watchedDraft = useWatch({ control })
-  const draft = {
-    ...EMPTY_DRAFT,
-    ...watchedDraft,
-  } as ProfileSetupDraft
+  const draft = normalizeProfileSetupDraft(watchedDraft)
   const acquisitionSource = draft.acquisitionSource
   const isFinalInputStep = step === "acquisition"
   const isFirstStep = step === "name"
@@ -127,7 +125,7 @@ export function ProfileSetupScreen() {
   }
 
   const moveForward = async () => {
-    const draft = getValues()
+    const draft = normalizeProfileSetupDraft(getValues())
     const error = getProfileSetupStepError(step, draft)
     if (error) {
       setStepError(error)
