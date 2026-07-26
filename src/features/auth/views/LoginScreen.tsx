@@ -1,17 +1,75 @@
-import { Platform, Pressable } from "react-native"
+import { Platform, Pressable, useWindowDimensions } from "react-native"
 import { YStack, XStack, Text, Spinner } from "tamagui"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import MainLogo from "@/assets/images/main-logo.svg"
-import MainTextLogo from "@/assets/images/main-text-logo.svg"
+import { Image } from "expo-image"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import KakaoLogo from "@/assets/images/kakao-logo.svg"
 import { Ionicons } from "@expo/vector-icons"
 import { useAuthColors, useSocialLogin } from "../hooks"
+import { AUTH_RADIUS } from "../hooks/useAuthColors"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
+
+// 디자인 프레임 375x530 기준. 화면 폭에 맞춰 같은 비율로 늘린다.
+const BG_ASPECT = 530 / 375
+
+// 배경은 base64 를 품은 SVG(1.35MB)로 들어왔다. SVG 로 두면 svg-transformer 가
+// JS 컴포넌트로 컴파일해 base64 문자열이 번들에 그대로 실리고 콜드스타트마다 파싱된다.
+// PNG 로 분리하고 표시 크기의 3배로 리사이즈했다(1620x2290 -> 853x1206, 986KB -> 500KB).
+const LOGIN_BG = require("@/assets/images/login-bg.png")
+
+interface SocialButtonProps {
+  label: string
+  bg: string
+  color: string
+  icon: React.ReactNode
+  onPress: () => void
+  disabled?: boolean
+}
+
+function SocialButton({
+  label,
+  bg,
+  color,
+  icon,
+  onPress,
+  disabled,
+}: SocialButtonProps) {
+  return (
+    <Pressable onPress={onPress} disabled={disabled}>
+      {({ pressed }) => (
+        <XStack
+          backgroundColor={bg}
+          height={54}
+          borderRadius={AUTH_RADIUS}
+          alignItems="center"
+          paddingHorizontal={20}
+          opacity={disabled ? 0.6 : pressed ? 0.85 : 1}
+        >
+          {/* 아이콘은 왼쪽 고정, 라벨은 버튼 중앙 — 목업과 같은 배치 */}
+          <XStack width={24} alignItems="center" justifyContent="center">
+            {icon}
+          </XStack>
+          <Text
+            flex={1}
+            textAlign="center"
+            color={color}
+            fontSize={16}
+            fontWeight="600"
+            letterSpacing={-0.3}
+            marginRight={24}
+          >
+            {label}
+          </Text>
+        </XStack>
+      )}
+    </Pressable>
+  )
+}
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
+  const { width } = useWindowDimensions()
   const {
     socialLoading,
     socialLoadingMessage,
@@ -28,33 +86,35 @@ export function LoginScreen() {
   }
 
   return (
-    <YStack
-      flex={1}
-      backgroundColor={colors.bg}
-      paddingTop={insets.top}
-      paddingBottom={insets.bottom + 24}
-      paddingHorizontal={20}
-      position="relative"
-    >
-      {/* 로고 영역 */}
-      <YStack flex={1} justifyContent="center" alignItems="center" gap={24}>
-        <YStack alignItems="center" gap={0}>
-          <Text
-            color={colors.text}
-            fontSize={24}
-            fontWeight="600"
-            letterSpacing={-0.3}
-            lineHeight={32}
-          >
-            신장 식단·건강관리 솔루션
-          </Text>
-          <MainTextLogo width={180} height={40} />
-        </YStack>
-        <MainLogo width={160} height={172} />
-      </YStack>
+    <YStack flex={1} backgroundColor={colors.sheetBg} position="relative">
+      {/* 배경 일러스트 — 상단 풀블리드. 하단 시트가 아래에서 덮는다. */}
+      <Image
+        source={LOGIN_BG}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width,
+          height: width * BG_ASPECT,
+        }}
+        contentFit="cover"
+        transition={0}
+      />
 
-      {/* 버튼 영역 */}
-      <YStack gap={12}>
+      {/* 타이틀("신장 건강 관리는 / 신신당부")은 배경 이미지에 이미 포함돼 있다.
+          텍스트로 다시 얹으면 겹친다. 문구를 바꿔야 하면 이미지를 교체해야 한다. */}
+      <YStack flex={1} />
+
+      {/* 하단 시트 */}
+      <YStack
+        backgroundColor={colors.sheetBg}
+        borderTopLeftRadius={AUTH_RADIUS}
+        borderTopRightRadius={AUTH_RADIUS}
+        paddingHorizontal={20}
+        paddingTop={24}
+        paddingBottom={insets.bottom + 20}
+        gap={10}
+      >
         <ConfirmModal
           visible={!!withdrawalPending}
           title="회원탈퇴 처리중입니다."
@@ -67,144 +127,74 @@ export function LoginScreen() {
           onConfirm={confirmWithdrawalCancellation}
         />
 
-        {/* 이메일 로그인 */}
         <Pressable onPress={handleEmailLogin}>
-          <YStack
-            backgroundColor="#34D399"
-            paddingVertical={16}
-            paddingHorizontal={24}
-            borderRadius={8}
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text
-              color="white"
-              fontSize={16}
-              fontWeight="500"
-              letterSpacing={-0.3}
-              lineHeight={20}
-            >
-              이메일 로그인
-            </Text>
-          </YStack>
-        </Pressable>
-
-        {/* 구분선 */}
-        <XStack alignItems="center" gap={12} marginVertical={4}>
-          <YStack flex={1} height={1} backgroundColor={colors.border} />
-          <Text color={colors.textSub} fontSize={13}>
-            또는
-          </Text>
-          <YStack flex={1} height={1} backgroundColor={colors.border} />
-        </XStack>
-
-        {/* Google 로그인 */}
-        <Pressable
-          onPress={() => loginWithProvider("google")}
-          disabled={socialLoading}
-        >
-          <XStack
-            backgroundColor="#FFFFFF"
-            paddingVertical={16}
-            paddingHorizontal={24}
-            borderRadius={8}
-            alignItems="center"
-            justifyContent="center"
-            gap={10}
-            opacity={socialLoading ? 0.6 : 1}
-          >
-            <GoogleLogo width={20} height={20} />
-            <Text
-              color="#1F1F1F"
-              fontSize={16}
-              fontWeight="500"
-              letterSpacing={-0.3}
-              lineHeight={20}
-            >
-              Google로 계속하기
-            </Text>
-          </XStack>
-        </Pressable>
-
-        {/* 카카오 로그인 */}
-        <Pressable
-          onPress={() => loginWithProvider("kakao")}
-          disabled={socialLoading}
-        >
-          <XStack
-            backgroundColor="#FEE500"
-            paddingVertical={16}
-            paddingHorizontal={24}
-            borderRadius={8}
-            alignItems="center"
-            justifyContent="center"
-            gap={10}
-            opacity={socialLoading ? 0.6 : 1}
-          >
-            <KakaoLogo width={20} height={20} />
-            <Text
-              color="#191919"
-              fontSize={16}
-              fontWeight="500"
-              letterSpacing={-0.3}
-              lineHeight={20}
-            >
-              카카오로 계속하기
-            </Text>
-          </XStack>
-        </Pressable>
-
-        {/* Apple 로그인 (iOS만) */}
-        {Platform.OS === "ios" && (
-          <Pressable
-            onPress={() => loginWithProvider("apple")}
-            disabled={socialLoading}
-          >
-            <XStack
-              backgroundColor="#000000"
-              paddingVertical={16}
-              paddingHorizontal={24}
-              borderRadius={8}
+          {({ pressed }) => (
+            <YStack
+              backgroundColor={colors.primaryBg}
+              height={54}
+              borderRadius={AUTH_RADIUS}
               alignItems="center"
               justifyContent="center"
-              gap={10}
-              opacity={socialLoading ? 0.6 : 1}
+              opacity={pressed ? 0.85 : 1}
             >
-              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
               <Text
-                color="#FFFFFF"
+                color={colors.primaryText}
                 fontSize={16}
-                fontWeight="500"
+                fontWeight="600"
                 letterSpacing={-0.3}
-                lineHeight={20}
               >
-                Apple로 계속하기
+                이메일 로그인
               </Text>
-            </XStack>
-          </Pressable>
+            </YStack>
+          )}
+        </Pressable>
+
+        <SocialButton
+          label="구글로 시작하기"
+          bg={colors.googleBg}
+          color={colors.googleText}
+          icon={<GoogleLogo width={20} height={20} />}
+          onPress={() => loginWithProvider("google")}
+          disabled={socialLoading}
+        />
+
+        <SocialButton
+          label="카카오로 시작하기"
+          bg={colors.kakaoBg}
+          color={colors.kakaoText}
+          icon={<KakaoLogo width={20} height={20} />}
+          onPress={() => loginWithProvider("kakao")}
+          disabled={socialLoading}
+        />
+
+        {Platform.OS === "ios" && (
+          <SocialButton
+            label="애플로 시작하기"
+            bg={colors.appleBg}
+            color={colors.appleText}
+            icon={
+              <Ionicons name="logo-apple" size={20} color={colors.appleText} />
+            }
+            onPress={() => loginWithProvider("apple")}
+            disabled={socialLoading}
+          />
         )}
 
-        {/* 회원가입 링크 */}
         <XStack
           justifyContent="center"
           alignItems="center"
-          gap={8}
+          gap={6}
           marginTop={8}
         >
-          <Text
-            color={colors.textSub}
-            fontSize={13}
-            letterSpacing={-0.26}
-            lineHeight={16.9}
-          >
-            신신당부가 처음이신가요?
+          <Text color={colors.textSub} fontSize={13} letterSpacing={-0.26}>
+            아직 신신당부 회원이 아니신가요?
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
             <Text
-              color={colors.textSub}
-              fontSize={14}
-              letterSpacing={-0.28}
-              lineHeight={18.2}
+              color={colors.text}
+              fontSize={13}
+              fontWeight="600"
+              letterSpacing={-0.26}
               textDecorationLine="underline"
             >
               회원가입하기
@@ -222,7 +212,7 @@ export function LoginScreen() {
           left={0}
           zIndex={10}
           backgroundColor={
-            colors.isDark ? "rgba(31,31,33,0.92)" : "rgba(255,255,255,0.92)"
+            colors.isDark ? "rgba(28,28,30,0.92)" : "rgba(255,255,255,0.92)"
           }
           justifyContent="center"
           alignItems="center"

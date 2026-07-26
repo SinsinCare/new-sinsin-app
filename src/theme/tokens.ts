@@ -126,7 +126,8 @@ export const tokens = createTokens({
     9: 20,
     10: 24,
     12: 999,
-    true: 8,
+    // 시스템 기본 라디우스 = 16. 디자인 확정값이라 bare `radius` 도 16 이 되게 한다.
+    true: 16,
   },
 
   zIndex: {
