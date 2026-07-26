@@ -102,9 +102,6 @@ export function LoginScreen() {
               style={[styles.divider, { backgroundColor: colors.line.normal }]}
             />
             <Text
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
               style={[
                 typography.subtext.medium,
                 { color: supportingTextColor },
@@ -160,6 +157,9 @@ export function LoginScreen() {
           >
             <KakaoLogo width={20} height={20} />
             <Text
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
               style={[
                 typography.label.medium,
                 styles.socialLabel,
