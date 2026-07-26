@@ -1,4 +1,4 @@
-import type { FoodCameraAnalyzeResult } from "@/src/types"
+import type { DateAnalysisResponse, FoodCameraAnalyzeResult } from "@/src/types"
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -50,9 +50,36 @@ const MOCK_FOOD_CAMERA_RESULT: FoodCameraAnalyzeResult = {
   },
 }
 
+const MOCK_DATE_ANALYSIS_RESPONSE: DateAnalysisResponse = {
+  isSuccess: true,
+  code: "SUCCESS",
+  message: "Mock date analysis loaded.",
+  timestamp: "2026-01-01T00:00:00.000Z",
+  result: {
+    analysis: {
+      protein: 0,
+      sodium: 0,
+      potassium: 0,
+      phosphorus: 0,
+      water: 0,
+      extraWater: 0,
+      dietaryGuide: "기록된 식단이 없어요.",
+      cautionFoods: [],
+    },
+    diets: [],
+    bodyRecords: { today: null, previous: null },
+    bloodPressure: null,
+    bloodGlucose: [],
+  },
+}
+
 export const mockFoodCameraService = {
   async analyze(): Promise<FoodCameraAnalyzeResult> {
     await delay(1500)
     return MOCK_FOOD_CAMERA_RESULT
+  },
+
+  async fetchDateAnalysis(): Promise<DateAnalysisResponse> {
+    return MOCK_DATE_ANALYSIS_RESPONSE
   },
 }

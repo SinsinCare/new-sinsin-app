@@ -333,6 +333,11 @@ export const foodCameraService = {
   },
 
   async fetchDateAnalysis(date: string): Promise<DateAnalysisResponse> {
+    if (isMockMode()) {
+      const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
+      return mockFoodCameraService.fetchDateAnalysis()
+    }
+
     try {
       const response = await api.get(`/food-camera/date-analysis/${date}`)
       return response.data as DateAnalysisResponse
