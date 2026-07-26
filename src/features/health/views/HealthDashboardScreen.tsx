@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 10,
     borderRadius: 2,
-    backgroundColor: "#34D39926",
+    backgroundColor: "#FE713926",
   },
   legendText: {
     fontSize: 12,

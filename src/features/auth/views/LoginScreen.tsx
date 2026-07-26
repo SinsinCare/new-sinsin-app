@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { useAuthColors, useSocialLogin } from "../hooks"
 import { AUTH_RADIUS } from "../hooks/useAuthColors"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
+import { tokens } from "@/src/theme/tokens"
 
 // 디자인 프레임 375x530 기준. 화면 폭에 맞춰 같은 비율로 늘린다.
 const BG_ASPECT = 530 / 375
@@ -223,7 +224,7 @@ export function LoginScreen() {
           gap={14}
           paddingHorizontal={24}
         >
-          <Spinner size="large" color="#44AF94" />
+          <Spinner size="large" color={tokens.color.sub6.val} />
           <Text
             color={colors.text}
             fontSize={17}

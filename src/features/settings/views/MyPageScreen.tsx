@@ -20,6 +20,7 @@ import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
+import { tokens } from "@/src/theme/tokens"
 
 function formatDiagnosisDate(iso: string | null): string | null {
   if (!iso) return null
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   infoLabel: {
-    backgroundColor: "#44AF9429",
+    backgroundColor: "#FE713929",
     borderRadius: 100,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
   },
   kidneyEmptyButton: {
     height: 56,
-    backgroundColor: "#34D399",
+    backgroundColor: tokens.color.sub6.val,
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",

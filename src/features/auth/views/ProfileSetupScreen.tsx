@@ -87,12 +87,23 @@ export function ProfileSetupScreen() {
     return () => sub.remove()
   }, [isCompletionMode])
 
+  // 프로필 입력은 로그인 직후 진입점이라 스택이 비어 있을 수 있다.
+  // 그대로 router.back() 을 부르면 "The action 'GO_BACK' was not handled by any navigator"
+  // 경고만 뜨고 아무 일도 안 일어난다. AuthScreenLayout 과 같은 방식으로 막는다.
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back()
+      return
+    }
+    router.replace("/(auth)/login")
+  }
+
   return (
     <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
       <YStack height={56} justifyContent="center">
         {!isCompletionMode && (
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             style={{ position: "absolute", left: 9, padding: 4 }}
           >
             <Ionicons name="chevron-back" size={24} color={colors.icon} />

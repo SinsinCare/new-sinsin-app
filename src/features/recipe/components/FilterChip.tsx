@@ -32,11 +32,11 @@ const THEME_COLORS = {
   },
   sub: {
     light: {
-      border: "#4889784F",
-      text: "#44AF94B0",
+      border: "#C2551F4F",
+      text: "#FE7139B0",
       background: "transparent",
     },
-    dark: { border: "#4889784F", text: "#44AF94B0", background: "transparent" },
+    dark: { border: "#C2551F4F", text: "#FE7139B0", background: "transparent" },
   },
   tertiary: {
     light: {

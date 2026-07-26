@@ -40,7 +40,7 @@ const COLORS = {
     badgeBg: "#3A3A42",
     badgeText: tokens.color.textDarkSub.val,
     categoryBg: "#1B3830",
-    categoryText: "#44AF94",
+    categoryText: tokens.color.sub6.val,
     nutritionBg: "#26262D",
     nutritionBorder: "#3A3A42",
   },

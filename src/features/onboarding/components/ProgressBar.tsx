@@ -23,7 +23,7 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
           <YStack
             height={4}
             borderRadius={2}
-            backgroundColor="#34D399"
+            backgroundColor={tokens.color.sub6.val}
             width={`${((current + 1) / total) * 100}%`}
           />
         )}

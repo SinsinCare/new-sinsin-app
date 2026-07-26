@@ -25,16 +25,32 @@ export const tokens = createTokens({
     primary9: "#F82F08",
     primaryAccent: "#FF7246",
 
-    // Sub (teal/green)
-    sub1: "#E0FFF7",
-    sub2: "#C7FFF1",
-    sub3: "#A3F0DE",
-    sub4: "#7FE6CC",
-    sub5: "#5BC5AB",
-    sub6: "#44AF94",
-    sub7: "#1D9A7A",
-    sub8: "#0D896A",
-    sub9: "#028A67",
+    // Sub — 브랜드 인터랙션 색(선택·활성·CTA).
+    // 2026-07 브랜드가 초록에서 #FE7139 로 바뀌면서 이 스케일도 옮겼다.
+    // sub6~8 은 앱 전반에서 isSelected/agreed/canAdd 상태색으로 쓰이고 있었고
+    // 그게 곧 브랜드 역할이라, 초록으로 두면 화면 대부분이 구 브랜드로 남는다.
+    sub1: "#FFF3EC",
+    sub2: "#FFE3D3",
+    sub3: "#FFCDB2",
+    sub4: "#FFAE85",
+    sub5: "#FE8F5C",
+    sub6: "#FE7139",
+    sub7: "#F05F27",
+    sub8: "#DC4F1B",
+    sub9: "#C24312",
+
+    // Safe — "안전/양호" 의미색. 브랜드 색이 아니다.
+    // 구 sub(teal/green)을 그대로 옮겼다. 안전 배지를 주황으로 바꾸면
+    // 이 앱에서 주황은 제한·주의라 정반대 신호가 된다.
+    safe1: "#E0FFF7",
+    safe2: "#C7FFF1",
+    safe3: "#A3F0DE",
+    safe4: "#7FE6CC",
+    safe5: "#5BC5AB",
+    safe6: "#44AF94",
+    safe7: "#1D9A7A",
+    safe8: "#0D896A",
+    safe9: "#028A67",
 
     // App screen background
     appBg: "#FAFAFA",

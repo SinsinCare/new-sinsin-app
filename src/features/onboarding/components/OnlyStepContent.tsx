@@ -39,7 +39,7 @@ export function OnlyStepContent({
               paddingVertical={14}
               borderRadius={12}
               borderWidth={1.5}
-              borderColor={isSelected ? "#34D399" : unselectedBorder}
+              borderColor={isSelected ? tokens.color.sub6.val : unselectedBorder}
               backgroundColor={isSelected ? selectedBg : unselectedBg}
               alignItems="center"
               paddingHorizontal={16}
@@ -50,7 +50,7 @@ export function OnlyStepContent({
                 height={22}
                 borderRadius={11}
                 borderWidth={isSelected ? 6 : 1.5}
-                borderColor={isSelected ? "#34D399" : radioBorder}
+                borderColor={isSelected ? tokens.color.sub6.val : radioBorder}
                 backgroundColor={radioBg}
               />
               <Text

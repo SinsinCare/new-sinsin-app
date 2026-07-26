@@ -5,7 +5,7 @@ import { useRouter } from "expo-router"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 
-const TEAL = "#44AF94"
+const TEAL = tokens.color.sub6.val
 const TEAL_PRESSED = "#3A9E85"
 
 const CHIPS = [

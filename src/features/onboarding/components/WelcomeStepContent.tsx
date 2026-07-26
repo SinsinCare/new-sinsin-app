@@ -39,7 +39,7 @@ export function WelcomeStepContent({
               height={96}
               borderRadius={16}
               borderWidth={1.5}
-              borderColor={isSelected ? "#34D399" : unselectedBorder}
+              borderColor={isSelected ? tokens.color.sub6.val : unselectedBorder}
               backgroundColor={isSelected ? selectedBg : unselectedBg}
               alignItems="center"
               justifyContent="center"

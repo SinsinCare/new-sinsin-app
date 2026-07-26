@@ -38,7 +38,7 @@ export function MultiStepContent({
               paddingVertical={14}
               borderRadius={12}
               borderWidth={1.5}
-              borderColor={isSelected ? "#34D399" : unselectedBorder}
+              borderColor={isSelected ? tokens.color.sub6.val : unselectedBorder}
               backgroundColor={isSelected ? selectedBg : unselectedBg}
               alignItems="center"
               paddingHorizontal={16}

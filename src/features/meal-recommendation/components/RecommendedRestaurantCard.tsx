@@ -13,7 +13,7 @@ interface RecommendedRestaurantCardProps {
 }
 
 const RISK_BADGE = {
-  SAFE: { bg: "#34D399", label: "안전" },
+  SAFE: { bg: tokens.color.safe6.val, label: "안전" },
   CAUTION: { bg: "#F59E0B", label: "주의" },
   HIGH_RISK: { bg: "#EF4444", label: "위험" },
 } as const

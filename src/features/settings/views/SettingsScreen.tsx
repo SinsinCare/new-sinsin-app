@@ -13,6 +13,7 @@ import { useAuth } from "@/src/hooks/useAuth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { useThemeStore, type ThemeMode } from "@/src/stores/themeStore"
+import { tokens } from "@/src/theme/tokens"
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets()
@@ -103,7 +104,7 @@ export function SettingsScreen() {
               </ThemedText>
             </View>
             {themeMode === mode && (
-              <Ionicons name="checkmark" size={20} color="#34D399" />
+              <Ionicons name="checkmark" size={20} color={tokens.color.sub6.val} />
             )}
           </Pressable>
         ))}

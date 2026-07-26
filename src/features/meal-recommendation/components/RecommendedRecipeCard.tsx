@@ -26,7 +26,7 @@ export function RecommendedRecipeCard({
   const subColor = isDark ? tokens.color.textDarkSub.val : tokens.color.grey5.val
   const scoreBg =
     recipe.kidneyScore >= 90
-      ? "#34D399"
+      ? tokens.color.safe6.val
       : recipe.kidneyScore >= 80
         ? "#0D896A"
         : "#F59E0B"

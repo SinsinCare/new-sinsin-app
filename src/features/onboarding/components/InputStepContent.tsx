@@ -58,7 +58,7 @@ export function InputStepContent({
               alignItems="center"
               paddingHorizontal={16}
               focusStyle={{
-                borderColor: "#34D399",
+                borderColor: tokens.color.sub6.val,
                 borderWidth: 1.5,
               }}
             >

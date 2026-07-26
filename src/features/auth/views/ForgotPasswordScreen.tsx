@@ -172,7 +172,9 @@ export function ForgotPasswordScreen() {
       {/* Header */}
       <YStack height={56} justifyContent="center">
         <Pressable
-          onPress={() => router.back()}
+          onPress={() =>
+            router.canGoBack() ? router.back() : router.replace("/(auth)/login")
+          }
           style={{ position: "absolute", left: 9, padding: 4 }}
         >
           <Ionicons name="chevron-back" size={24} color={colors.icon} />
