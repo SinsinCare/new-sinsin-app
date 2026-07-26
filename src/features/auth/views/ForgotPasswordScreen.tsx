@@ -6,7 +6,6 @@ import {
   Text,
   TouchableWithoutFeedback,
   View,
-  useColorScheme,
 } from "react-native"
 import { router, useNavigation } from "expo-router"
 import { useForm, useWatch } from "react-hook-form"
@@ -41,10 +40,10 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function ForgotPasswordScreen() {
   const navigation = useNavigation()
-  const { colors } = useV2Theme()
-  const isDark = useColorScheme() === "dark"
-  const subtitleColor = isDark ? colors.label.normal : colors.label.alternative
-  const placeholderTextColor = isDark ? colors.label.normal : undefined
+  const { colors, mode } = useV2Theme()
+  const subtitleColor =
+    mode === "dark" ? colors.label.normal : colors.label.alternative
+  const placeholderTextColor = mode === "dark" ? colors.label.normal : undefined
   const [flow, dispatch] = useReducer(
     passwordResetFlowReducer,
     undefined,

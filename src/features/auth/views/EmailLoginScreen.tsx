@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, useColorScheme } from "react-native"
+import { Pressable, StyleSheet, Text, View } from "react-native"
 import { router } from "expo-router"
 import { useForm } from "react-hook-form"
 import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
@@ -19,12 +19,10 @@ export function EmailLoginScreen() {
     confirmWithdrawalCancel,
     submitLogin,
   } = useEmailLogin()
-  const { colors } = useV2Theme()
-  const isDark = useColorScheme() === "dark"
-  const supportingTextColor = isDark
-    ? colors.label.normal
-    : colors.label.alternative
-  const placeholderTextColor = isDark ? colors.label.normal : undefined
+  const { colors, mode } = useV2Theme()
+  const supportingTextColor =
+    mode === "dark" ? colors.label.normal : colors.label.alternative
+  const placeholderTextColor = mode === "dark" ? colors.label.normal : undefined
 
   const {
     control,

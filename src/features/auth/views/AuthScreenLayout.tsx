@@ -54,7 +54,7 @@ export function AuthScreenLayout({
   keyboardAvoiding = false,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
   const [footerContentHeight, setFooterContentHeight] = useState(0)
   const handleDefaultBack = () => {
     if (router.canGoBack()) {
@@ -75,7 +75,12 @@ export function AuthScreenLayout({
             style={[
               typography.subtext.large,
               styles.subtitle,
-              { color: colors.label.alternative },
+              {
+                color:
+                  mode === "dark"
+                    ? colors.label.normal
+                    : colors.label.alternative,
+              },
             ]}
           >
             {subtitle}

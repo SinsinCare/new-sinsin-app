@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
   useWindowDimensions,
 } from "react-native"
 import { Link, router } from "expo-router"
@@ -39,11 +38,9 @@ export function LoginScreen() {
     confirmWithdrawalCancellation,
     dismissWithdrawalPending,
   } = useSocialLogin()
-  const { colors } = useV2Theme()
-  const isDark = useColorScheme() === "dark"
-  const supportingTextColor = isDark
-    ? colors.label.normal
-    : colors.label.alternative
+  const { colors, mode } = useV2Theme()
+  const supportingTextColor =
+    mode === "dark" ? colors.label.normal : colors.label.alternative
   const heroLayout = getLoginHeroLayout({
     viewportWidth: width,
     viewportHeight: height,

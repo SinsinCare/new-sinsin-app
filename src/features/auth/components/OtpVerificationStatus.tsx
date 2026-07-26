@@ -25,7 +25,7 @@ export function OtpVerificationStatus({
   timer,
   verified,
 }: OtpVerificationStatusProps) {
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
   const status = getEmailOtpVerificationStatus({
     codeSent,
     timer,
@@ -58,7 +58,9 @@ export function OtpVerificationStatus({
     status === "verified"
       ? colors.primary.primary
       : status === "active"
-        ? colors.label.alternative
+        ? mode === "dark"
+          ? colors.label.normal
+          : colors.label.alternative
         : colors.status.negative
 
   return (

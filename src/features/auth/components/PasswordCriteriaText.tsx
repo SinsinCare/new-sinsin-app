@@ -10,14 +10,16 @@ interface PasswordCriteriaTextProps {
 }
 
 export function PasswordCriteriaText({ password }: PasswordCriteriaTextProps) {
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
   const state = getPasswordCriteriaState(password)
   const color =
     state === "valid"
       ? colors.status.positive
       : state === "invalid"
         ? colors.status.negative
-        : colors.label.alternative
+        : mode === "dark"
+          ? colors.label.normal
+          : colors.label.alternative
 
   return (
     <Text style={[typography.subtext.medium, styles.text, { color }]}>
