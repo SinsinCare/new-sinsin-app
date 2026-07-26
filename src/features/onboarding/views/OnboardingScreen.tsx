@@ -1,6 +1,6 @@
 import { Keyboard, ScrollView, TouchableWithoutFeedback } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { V2BottomCTA } from "@/src/design-system-v2"
+import { V2BottomCTA, V2ErrorState } from "@/src/design-system-v2"
 import { YStack, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
@@ -19,6 +19,7 @@ import {
 import {
   ONBOARDING_SCROLL_CONTENT_STYLE,
   getOnboardingLoadingPresentation,
+  shouldShowOnboardingQuestionLoadError,
   shouldShowOnboardingBackButton,
 } from "../data/onboardingPresentation"
 
@@ -38,11 +39,13 @@ export function OnboardingScreen() {
     currentAnswer,
     isInitializing,
     isLoadingSteps,
+    hasQuestionLoadError,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
     handleWelcomeSelect,
     handleWelcomeConfirm,
+    handleQuestionLoadRetry,
     handleOnlySelect,
     handleMultiToggle,
     handleInputChange,
@@ -55,9 +58,36 @@ export function OnboardingScreen() {
     isInitializing,
     isLoadingSteps,
   )
+  const shouldShowQuestionLoadError = shouldShowOnboardingQuestionLoadError(
+    isInitializing,
+    isLoadingSteps,
+    hasQuestionLoadError,
+  )
 
   if (loadingPresentation === "screen") {
     return <LoadingScreen message="준비 중..." />
+  }
+
+  if (shouldShowQuestionLoadError) {
+    return (
+      <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
+        <OnboardingHeader
+          currentStepIndex={-1}
+          totalSteps={0}
+          onBack={() => {}}
+          title="사용자 정보"
+          showCounter={false}
+          showBack={false}
+        />
+        <YStack flex={1} justifyContent="center">
+          <V2ErrorState
+            title="온보딩 데이터를 불러올 수 없어요"
+            description="잠시 후 다시 시도해주세요."
+            onRetry={handleQuestionLoadRetry}
+          />
+        </YStack>
+      </YStack>
+    )
   }
 
   if (phase === "welcome") {

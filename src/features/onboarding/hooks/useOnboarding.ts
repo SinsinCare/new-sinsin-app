@@ -19,6 +19,7 @@ export function useOnboarding() {
   // 현재 welcome 화면과 CTA 로딩을 유지한다.
   const [isInitializing, setIsInitializing] = useState(true)
   const [isLoadingSteps, setIsLoadingSteps] = useState(false)
+  const [hasQuestionLoadError, setHasQuestionLoadError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const lastViewedStepRef = useRef<string | null>(null)
   const completionViewedRef = useRef(false)
@@ -68,9 +69,17 @@ export function useOnboarding() {
     }
   }, [setOnboardingInProgress])
 
+  const showQuestionLoadError = useCallback(() => {
+    setSteps([])
+    setPhase("welcome")
+    setHasQuestionLoadError(true)
+    trackAnalyticsEvent("onboarding_steps_load_failed", {})
+  }, [])
+
   const loadSteps = useCallback(
     async (isCkd: boolean) => {
       setIsLoadingSteps(true)
+      setHasQuestionLoadError(false)
       try {
         const data = await onboardingService.getSteps(isCkd)
         const recoveredStepIndex = resolveOnboardingStepIndex(
@@ -79,10 +88,7 @@ export function useOnboarding() {
         )
 
         if (recoveredStepIndex === null) {
-          setSteps([])
-          setPhase("welcome")
-          trackAnalyticsEvent("onboarding_steps_load_failed", {})
-          Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
+          showQuestionLoadError()
           return
         }
 
@@ -96,13 +102,12 @@ export function useOnboarding() {
           step_count: data.length,
         })
       } catch {
-        trackAnalyticsEvent("onboarding_steps_load_failed", {})
-        Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
+        showQuestionLoadError()
       } finally {
         setIsLoadingSteps(false)
       }
     },
-    [currentStepIndex, setCurrentStepIndex],
+    [currentStepIndex, setCurrentStepIndex, showQuestionLoadError],
   )
 
   // hydration 완료 후 현재 사용자에게 속한 진행 상태만 복원
@@ -133,6 +138,11 @@ export function useOnboarding() {
   }
 
   const handleWelcomeConfirm = () => {
+    if (hasCkd === null || isLoadingSteps) return
+    void loadSteps(hasCkd)
+  }
+
+  const handleQuestionLoadRetry = () => {
     if (hasCkd === null || isLoadingSteps) return
     void loadSteps(hasCkd)
   }
@@ -290,11 +300,13 @@ export function useOnboarding() {
     currentAnswer,
     isInitializing,
     isLoadingSteps,
+    hasQuestionLoadError,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
     handleWelcomeSelect,
     handleWelcomeConfirm,
+    handleQuestionLoadRetry,
     handleOnlySelect,
     handleMultiToggle,
     handleInputChange,
