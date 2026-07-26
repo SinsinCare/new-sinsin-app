@@ -1,12 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
-import { YStack } from "tamagui"
-import { FormTextField } from "@/src/shared/components"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
-import { PasswordCriteriaText } from "../components"
-import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import { AuthPasswordFields } from "../components/AuthPasswordFields"
+import { getPasswordFlowToken } from "../data/passwordFlow"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { PasswordForm } from "../types"
@@ -19,17 +17,18 @@ export function EmailLoginLinkPasswordScreen() {
   const { completeEmailLoginLink } = useAuth()
   const [submitting, setSubmitting] = useState(false)
 
-  const { control, handleSubmit, watch, setError } = useForm<PasswordForm>({
+  const {
+    control,
+    handleSubmit,
+    setError,
+    formState: { isValid },
+  } = useForm<PasswordForm>({
     defaultValues: { password: "", confirmPassword: "" },
-    mode: "onSubmit",
-    reValidateMode: "onSubmit",
+    mode: "onChange",
+    reValidateMode: "onChange",
   })
 
-  const password = watch("password")
-  const tokenValue =
-    typeof emailLinkToken === "string" && emailLinkToken.length > 0
-      ? emailLinkToken
-      : null
+  const tokenValue = getPasswordFlowToken(emailLinkToken)
   const emailValue = typeof email === "string" ? email : null
 
   useEffect(() => {
@@ -74,36 +73,13 @@ export function EmailLoginLinkPasswordScreen() {
           : "이메일 계정으로 로그인할 때 사용할 비밀번호입니다"
       }
       buttonLabel="연결 완료"
-      buttonDisabled={submitting}
+      buttonDisabled={!tokenValue || !isValid || submitting}
       buttonLoading={submitting}
       onSubmit={handleSubmit(submit)}
+      scrollable
+      keyboardAvoiding
     >
-      <YStack gap={36} marginTop={56}>
-        <YStack gap={10}>
-          <FormTextField<PasswordForm>
-            name="password"
-            control={control}
-            label="비밀번호"
-            placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-            inputType="password"
-            showPasswordToggle
-            showValidState
-            rules={passwordRules}
-          />
-          <PasswordCriteriaText password={password} />
-        </YStack>
-
-        <FormTextField<PasswordForm>
-          name="confirmPassword"
-          control={control}
-          label="비밀번호 확인"
-          placeholder="입력한 비밀번호를 다시 입력해주세요"
-          inputType="password"
-          showPasswordToggle
-          showValidState
-          rules={confirmPasswordRules(password)}
-        />
-      </YStack>
+      <AuthPasswordFields control={control} />
     </AuthScreenLayout>
   )
 }

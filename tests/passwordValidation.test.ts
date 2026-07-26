@@ -2,6 +2,7 @@ import {
   getPasswordCriteriaState,
   isPasswordValid,
 } from "../src/features/auth/data/passwordValidation"
+import { getPasswordFlowToken } from "../src/features/auth/data/passwordFlow"
 
 describe("password validation display state", () => {
   it("treats an empty password as neutral", () => {
@@ -19,5 +20,18 @@ describe("password validation display state", () => {
     expect(getPasswordCriteriaState("ABCdef")).toBe("valid")
     expect(getPasswordCriteriaState("abcdef!")).toBe("valid")
     expect(isPasswordValid("abc123")).toBe(true)
+  })
+})
+
+describe("password flow token guards", () => {
+  it("rejects missing or blank tokens before the password form can submit", () => {
+    expect(getPasswordFlowToken(undefined)).toBeNull()
+    expect(getPasswordFlowToken("")).toBeNull()
+    expect(getPasswordFlowToken("   ")).toBeNull()
+  })
+
+  it("preserves opaque server-issued tokens", () => {
+    expect(getPasswordFlowToken("signup-token")).toBe("signup-token")
+    expect(getPasswordFlowToken("email-link-token")).toBe("email-link-token")
   })
 })

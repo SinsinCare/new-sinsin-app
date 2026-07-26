@@ -1,5 +1,5 @@
-import { Text } from "tamagui"
-import { tokens } from "@/src/theme/tokens"
+import { StyleSheet, Text } from "react-native"
+import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
 import {
   getPasswordCriteriaState,
   passwordCriteriaText,
@@ -10,17 +10,22 @@ interface PasswordCriteriaTextProps {
 }
 
 export function PasswordCriteriaText({ password }: PasswordCriteriaTextProps) {
+  const { colors } = useV2Theme()
   const state = getPasswordCriteriaState(password)
   const color =
     state === "valid"
-      ? tokens.color.sub6.val
+      ? colors.status.positive
       : state === "invalid"
-        ? tokens.color.error.val
-        : tokens.color.grey6.val
+        ? colors.status.negative
+        : colors.label.alternative
 
   return (
-    <Text fontSize={14} lineHeight={20} color={color} letterSpacing={0}>
+    <Text style={[typography.subtext.medium, styles.text, { color }]}>
       {passwordCriteriaText}
     </Text>
   )
 }
+
+const styles = StyleSheet.create({
+  text: { marginTop: spacing[2] },
+})
