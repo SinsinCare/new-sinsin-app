@@ -31,6 +31,7 @@ import { routeFromPushData } from "@/src/services/notificationRoutingService"
 import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
 import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
 import { useAnalyticsLifecycle } from "@/src/features/analytics"
+import { getOnboardingRouteRedirectDestination } from "@/src/features/auth/utils/accountStateRoute"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
@@ -67,6 +68,12 @@ function RootLayoutNav() {
     entryGate === "PROFILE" &&
     accountState === "ACTIVE" &&
     requiresAdditionalInfo
+  const onboardingRouteRedirect = getOnboardingRouteRedirectDestination(
+    accountState,
+    requiresAdditionalInfo,
+    entryGate,
+    isOnboardingInProgress,
+  )
 
   // 푸시 data.type 라우팅은 클라이언트가 소유한다. 서버는 앱 내부 경로를 모른다.
   useEffect(() => {
@@ -151,6 +158,9 @@ function RootLayoutNav() {
       } else {
         router.replace("/(tabs)/home")
       }
+    } else if (isAuthenticated && inOnboarding && onboardingRouteRedirect) {
+      // Direct onboarding links must respect the canonical account-state gate.
+      router.replace(onboardingRouteRedirect)
     } else if (
       isAuthenticated &&
       !inAuthGroup &&
@@ -185,6 +195,7 @@ function RootLayoutNav() {
     needsOnboarding,
     needsProfile,
     needsAdditionalInfo,
+    onboardingRouteRedirect,
     signOut,
   ])
 
