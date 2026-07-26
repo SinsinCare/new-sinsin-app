@@ -7,6 +7,10 @@ import { useSignupStore } from "@/src/stores"
 import type { EmailLoginLinkRequiredResult, SocialProvider } from "@/src/types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { mapSignupEmailSendFailure } from "../data/signupEmailSendFailure"
+import {
+  canVerifyEmailOtp,
+  isVerifiedEmailMatch,
+} from "../data/emailVerificationState"
 
 const TIMER_DURATION = 180
 const PROVIDER_LABELS: Record<SocialProvider, string> = {
@@ -46,6 +50,8 @@ export function useSignupEmail() {
     useState<EmailLoginLinkRequiredResult | null>(null)
   const [emailLoginLinkMode, setEmailLoginLinkMode] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const sendingCodeRef = useRef(false)
+  const verifyingCodeRef = useRef(false)
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
@@ -82,6 +88,8 @@ export function useSignupEmail() {
   }, [setSignupToken])
 
   const sendEmailLoginLinkCode = async (email: string) => {
+    if (sendingCodeRef.current || verifyingCodeRef.current) return
+    sendingCodeRef.current = true
     setSendingCode(true)
     setSendError(null)
     try {
@@ -100,16 +108,19 @@ export function useSignupEmail() {
           : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
       )
     } finally {
+      sendingCodeRef.current = false
       setSendingCode(false)
     }
   }
 
   const sendCode = async (email: string) => {
+    if (sendingCodeRef.current || verifyingCodeRef.current) return
     if (emailLoginLinkMode) {
       await sendEmailLoginLinkCode(email)
       return
     }
 
+    sendingCodeRef.current = true
     setSendingCode(true)
     setSendError(null)
     setCodeVerified(false)
@@ -145,11 +156,32 @@ export function useSignupEmail() {
           : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
       )
     } finally {
+      sendingCodeRef.current = false
       setSendingCode(false)
     }
   }
 
   const verifyCode = async (email: string, code: string) => {
+    if (verifyingCodeRef.current || sendingCodeRef.current) return
+    if (
+      !canVerifyEmailOtp({
+        codeSent,
+        timer,
+        error: sendError,
+        verified: codeVerified,
+      })
+    ) {
+      if (codeSent && timer <= 0) {
+        Toast.show({
+          type: "error",
+          text1: "인증 시간이 만료되었습니다.",
+          text2: "인증번호를 재전송해주세요.",
+        })
+      }
+      return
+    }
+
+    verifyingCodeRef.current = true
     setVerifyingCode(true)
     try {
       if (emailLoginLinkMode) {
@@ -193,15 +225,32 @@ export function useSignupEmail() {
         text2: e instanceof Error ? e.message : "인증에 실패했습니다.",
       })
     } finally {
+      verifyingCodeRef.current = false
       setVerifyingCode(false)
     }
   }
 
   const handleNext = (email: string) => {
+    if (!codeVerified || !isVerifiedEmailMatch(verifiedEmail, email)) {
+      Toast.show({
+        type: "error",
+        text1: "이메일 인증이 필요합니다.",
+        text2: "인증번호를 확인한 뒤 계속해주세요.",
+      })
+      return
+    }
     if (emailLoginLinkMode && verifiedEmailLinkToken) {
       router.push({
         pathname: "./email-login-link-password",
         params: { email, emailLinkToken: verifiedEmailLinkToken },
+      })
+      return
+    }
+    if (emailLoginLinkMode) {
+      Toast.show({
+        type: "error",
+        text1: "이메일 연결 정보를 확인할 수 없습니다.",
+        text2: "인증번호를 다시 전송해주세요.",
       })
       return
     }
@@ -212,7 +261,7 @@ export function useSignupEmail() {
   const dismissEmailLoginLink = () => setEmailLoginLinkRequired(null)
 
   const confirmEmailLoginLink = async () => {
-    if (!emailLoginLinkRequired) return
+    if (!emailLoginLinkRequired || sendingCodeRef.current) return
     const { email } = emailLoginLinkRequired
     setEmailLoginLinkRequired(null)
     setEmailLoginLinkMode(true)
