@@ -153,6 +153,7 @@ export function ProfileSetupScreen() {
       case "name":
         return (
           <Controller
+            key={step}
             name="name"
             control={control}
             render={({ field }) => (
@@ -180,6 +181,7 @@ export function ProfileSetupScreen() {
       case "birthDate":
         return (
           <Controller
+            key={step}
             name="birthDate"
             control={control}
             render={({ field }) => (
@@ -197,6 +199,7 @@ export function ProfileSetupScreen() {
       case "gender":
         return (
           <Controller
+            key={step}
             name="gender"
             control={control}
             render={({ field }) => (
@@ -214,6 +217,7 @@ export function ProfileSetupScreen() {
       case "phoneNumber":
         return (
           <Controller
+            key={step}
             name="phoneNumber"
             control={control}
             render={({ field }) => (
@@ -243,6 +247,7 @@ export function ProfileSetupScreen() {
         return (
           <View style={styles.acquisitionContent}>
             <Controller
+              key={step}
               name="acquisitionSource"
               control={control}
               render={({ field }) => (
@@ -298,6 +303,7 @@ export function ProfileSetupScreen() {
       case "nickname":
         return (
           <Controller
+            key={step}
             name="nickname"
             control={control}
             render={({ field }) => (
