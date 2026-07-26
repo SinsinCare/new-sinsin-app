@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks"
 import { showErrorToast } from "@/src/lib/toast"
@@ -13,6 +13,7 @@ export function useEmailLogin() {
   const [withdrawalPending, setWithdrawalPending] =
     useState<WithdrawalPendingResult | null>(null)
   const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
+  const withdrawalCancellationInFlightRef = useRef(false)
 
   const submitLogin = async (data: LoginForm) => {
     setLoginError(null)
@@ -36,7 +37,14 @@ export function useEmailLogin() {
   const clearLoginError = () => setLoginError(null)
   const dismissWithdrawalPending = () => setWithdrawalPending(null)
   const confirmWithdrawalCancel = async () => {
-    if (!withdrawalPending || isCancellingWithdrawal) return
+    if (
+      !withdrawalPending ||
+      isCancellingWithdrawal ||
+      withdrawalCancellationInFlightRef.current
+    )
+      return
+
+    withdrawalCancellationInFlightRef.current = true
     setIsCancellingWithdrawal(true)
     try {
       const result = await cancelWithdrawal(withdrawalPending.cancelToken)
@@ -49,6 +57,7 @@ export function useEmailLogin() {
           : "회원탈퇴 취소 중 문제가 발생했습니다.",
       )
     } finally {
+      withdrawalCancellationInFlightRef.current = false
       setIsCancellingWithdrawal(false)
     }
   }
