@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { getBottomSheetPickerColors } from "./bottomSheetPickerColors"
 import {
   Modal,
   Pressable,
@@ -11,7 +12,7 @@ import {
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
 
@@ -32,22 +33,9 @@ interface BottomSheetPickerProps {
   required?: boolean
 }
 
-export function getBottomSheetPickerColors(isDark: boolean) {
-  return {
-    label: isDark ? tokens.color.textDark.val : "#17191C",
-    placeholder: isDark ? "#6B7280" : "#A0A4A8",
-    inputBg: isDark ? "#2A2A32" : "white",
-    inputBorder: isDark
-      ? tokens.color.borderDark.val
-      : "rgba(218,223,230,0.6)",
-    chevron: isDark ? tokens.color.textDarkSub.val : "#787C83",
-    sheetBg: isDark ? "#2A2A32" : "white",
-    handle: isDark ? tokens.color.borderDark.val : "#E0E0E0",
-    selectedBg: isDark ? `${tokens.color.sub8.val}20` : "#F0FDF4",
-    selectedText: tokens.color.sub8.val,
-    itemText: isDark ? tokens.color.textDark.val : "#17191C",
-  }
-}
+// 순수 팔레트는 별도 모듈로 분리했습니다(테스트가 RN 그래프를 안 끌고 오게).
+// re-export 만으로는 이 파일 스코프에 들어오지 않아 import 도 함께 둡니다.
+export { getBottomSheetPickerColors }
 
 export function BottomSheetPicker({
   label,

@@ -1,5 +1,7 @@
 import { WeightEdemaResponse } from "@/src/types/weightEdema"
-import { api } from "@/src/services"
+// 배럴(@/src/services)을 거치면 services/index -> data/index -> 이 파일 로 순환합니다.
+// Metro 가 "uninitialized values" 를 경고하는 실제 사이클이라 core 를 직접 참조합니다.
+import { api } from "../core"
 import { isAxiosError } from "axios"
 import { EdemaLevel } from "@/src/features/home/types"
 

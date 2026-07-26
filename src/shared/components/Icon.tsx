@@ -1,7 +1,13 @@
 /**
  * SVG 아이콘 래퍼. assets/icons/ 의 SVG는 stroke/fill에 "currentColor"를
  * 사용해야 color prop으로 런타임 색상 변경이 가능합니다.
+ *
+ * 캐릭터 일러스트는 벡터가 아니라 래스터입니다. SVG 래퍼에 base64 PNG로 들어 있던 것을
+ * PNG 에셋으로 분리했습니다 — SVG로 두면 react-native-svg-transformer 가 JS 컴포넌트로
+ * 컴파일해 base64 문자열이 번들에 그대로 실리고, Hermes가 콜드스타트마다 파싱합니다.
+ * (character 3종 + circle-character = 2.2MB 였음)
  */
+import { Image } from "expo-image"
 import { SvgProps } from "react-native-svg"
 import { tokens } from "@/src/theme/tokens"
 import Chef from "@/assets/icons/chef.svg"
@@ -56,15 +62,11 @@ import Evening from "@/assets/icons/evening.svg"
 import Dessert from "@/assets/icons/dessert.svg"
 import Edit from "@/assets/icons/edit.svg"
 import Spot from "@/assets/icons/spot.svg"
-import CharacterExcellent from "@/assets/icons/character-excellent.svg"
-import CharacterGood from "@/assets/icons/character-good.svg"
-import CharacterCaution from "@/assets/icons/character-caution.svg"
 import MorningFood from "@/assets/icons/morning_food.svg"
 import NoonFood from "@/assets/icons/noon_food.svg"
 import EveningFood from "@/assets/icons/evening_food.svg"
 import DessertFood from "@/assets/icons/dessert_food.svg"
 import CheckOrange from "@/assets/icons/check-orange.svg"
-import CircleCharacter from "@/assets/icons/circle-character.svg"
 import Sparkle from "@/assets/icons/sparkle.svg"
 import Profile from "@/assets/icons/profile.svg"
 import ProfileDark from "@/assets/icons/profile-dark.svg"
@@ -123,10 +125,6 @@ const icons = {
   edit: Edit,
   spot: Spot,
   x: X,
-  "character-excellent": CharacterExcellent,
-  "character-good": CharacterGood,
-  "character-caution": CharacterCaution,
-  "circle-character": CircleCharacter,
   sparkle: Sparkle,
   "morning-food": MorningFood,
   "noon-food": NoonFood,
@@ -139,7 +137,19 @@ const icons = {
   "ellipsis-horizontal": EllipsisHorizontal,
 } as const
 
-export type IconName = keyof typeof icons
+/** 래스터 일러스트. color prop은 적용되지 않습니다(벡터가 아님). */
+const rasterIcons = {
+  "character-excellent": require("@/assets/icons/character-excellent.png"),
+  "character-good": require("@/assets/icons/character-good.png"),
+  "character-caution": require("@/assets/icons/character-caution.png"),
+  "circle-character": require("@/assets/icons/circle-character.png"),
+} as const
+
+export type IconName = keyof typeof icons | keyof typeof rasterIcons
+
+function isRaster(name: IconName): name is keyof typeof rasterIcons {
+  return name in rasterIcons
+}
 
 interface IconProps extends Omit<SvgProps, "width" | "height"> {
   name: IconName
@@ -153,6 +163,16 @@ export function Icon({
   color = tokens.color.textLightSub.val,
   ...props
 }: IconProps) {
+  if (isRaster(name)) {
+    return (
+      <Image
+        source={rasterIcons[name]}
+        style={{ width: size, height: size }}
+        contentFit="contain"
+        transition={0}
+      />
+    )
+  }
   const SvgComponent = icons[name]
   return <SvgComponent width={size} height={size} color={color} {...props} />
 }

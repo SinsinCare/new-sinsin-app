@@ -10,7 +10,7 @@ import {
   type Path,
   type RegisterOptions,
 } from "react-hook-form"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { getFormValidationState } from "../utils/formValidationState"
 
 type InputType = "text" | "email" | "password" | "number" | "phone"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { BackHandler, Linking, ScrollView, StyleSheet } from "react-native"
-import { AlertTriangle } from "@tamagui/lucide-icons"
+import { AlertTriangle } from "@/src/shared/components/lucide"
 import { Text, YStack } from "tamagui"
 
 import { Button } from "@/src/shared/components"

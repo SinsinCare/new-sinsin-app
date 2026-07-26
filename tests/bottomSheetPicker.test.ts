@@ -1,4 +1,4 @@
-import { getBottomSheetPickerColors } from "../src/shared/components/BottomSheetPicker"
+import { getBottomSheetPickerColors } from "../src/shared/components/bottomSheetPickerColors"
 import { tokens } from "../src/theme/tokens"
 
 describe("BottomSheetPicker selected palette", () => {

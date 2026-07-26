@@ -4,7 +4,8 @@ import { useExtraWater } from "./useExtraWater"
 import { EdemaLevel } from "../data/EdemaConstants"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { useQueryClient } from "@tanstack/react-query"
-import { debounce } from "lodash-es"
+// 배럴 import 는 lodash 모듈 640개(1.2MB)를 통째로 번들에 넣습니다. debounce 하나만 가져옵니다.
+import debounce from "lodash-es/debounce"
 import { clampWaterIntake, getAppliedWaterDelta } from "../utils/waterIntake"
 
 const DEBOUNCE_MS = 500

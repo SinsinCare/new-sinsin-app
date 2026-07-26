@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"

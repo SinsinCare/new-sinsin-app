@@ -10,7 +10,7 @@ import {
 import { useState, useRef, useCallback, useEffect } from "react"
 import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ViewShot, { captureRef } from "react-native-view-shot"
 import * as Sharing from "expo-sharing"

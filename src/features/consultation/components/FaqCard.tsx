@@ -1,6 +1,6 @@
 import { XStack, Text } from "tamagui"
 import { Pressable } from "react-native"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
 import type { FaqItem } from "../types"

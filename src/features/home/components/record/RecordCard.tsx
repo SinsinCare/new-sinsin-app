@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 import { TouchableOpacity } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 
 interface RecordCardProps {
   type: string

@@ -1,6 +1,8 @@
-import { useRef, useEffect, useState } from "react"
+import { useCallback, useRef, useEffect, useState } from "react"
 import {
   Alert,
+  FlatList,
+  type ListRenderItemInfo,
   ScrollView,
   Platform,
   View,
@@ -17,7 +19,7 @@ import { useLocalSearchParams, useRouter } from "expo-router"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-import type { Chat } from "@/src/types/chat"
+import type { Chat, Message } from "@/src/types/chat"
 import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import { CATEGORY_LIST } from "@/src/features/consultation/data/mockData"
@@ -189,6 +191,12 @@ function buildFoodConsultMessage(context: FoodConsultContext): string {
     .slice(0, FOOD_CONSULT_MESSAGE_MAX_LENGTH)
 }
 
+// ScrollView 시절 contentContainerStyle 의 gap:16 을 대체합니다.
+// FlatList 는 셀을 개별 마운트하므로 간격을 구분자로 넣습니다.
+function MessageSeparator() {
+  return <View style={{ height: 16 }} />
+}
+
 export default function ConsultScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -205,7 +213,7 @@ export default function ConsultScreen() {
     left: 0,
   })
 
-  const scrollRef = useRef<ScrollView>(null)
+  const listRef = useRef<FlatList<Message>>(null)
   const keyboardHideRestoreTimerRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null)
@@ -320,6 +328,23 @@ export default function ConsultScreen() {
 
   const { handleCopy, showToast } = useCopyToClipboard()
 
+  // FlatList 로 넘기는 prop 들은 렌더마다 새로 만들면 안 됩니다.
+  // 새 참조가 가면 FlatList 가 셀을 통째로 다시 그립니다.
+  const keyExtractor = useCallback((msg: Message) => String(msg.id), [])
+  const renderMessage = useCallback(
+    ({ item }: ListRenderItemInfo<Message>) =>
+      item.role === "user" ? (
+        <UserBubble message={item} />
+      ) : (
+        <AssistantBubble
+          message={item}
+          onCopy={handleCopy}
+          onRegenerate={regenerateLastMessage}
+        />
+      ),
+    [handleCopy, regenerateLastMessage],
+  )
+
   const handleInputFocus = () => {
     if (keyboardHideRestoreTimerRef.current) {
       clearTimeout(keyboardHideRestoreTimerRef.current)
@@ -394,7 +419,7 @@ export default function ConsultScreen() {
   // Auto-scroll to bottom when new messages arrive or typing starts
   useEffect(() => {
     const timer = setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true })
+      listRef.current?.scrollToEnd({ animated: true })
     }, 100)
     return () => clearTimeout(timer)
   }, [messages.length, isTyping])
@@ -486,29 +511,25 @@ export default function ConsultScreen() {
             </YStack>
           </Pressable>
         ) : (
-          <ScrollView
-            ref={scrollRef}
+          <FlatList
+            ref={listRef}
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingVertical: 16, gap: 16 }}
+            data={messages}
+            keyExtractor={keyExtractor}
+            renderItem={renderMessage}
+            ItemSeparatorComponent={MessageSeparator}
+            ListFooterComponent={isTyping ? <TypingIndicator /> : null}
+            contentContainerStyle={{ paddingVertical: 16 }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
-          >
-            {messages.map((msg) =>
-              msg.role === "user" ? (
-                <UserBubble key={msg.id} message={msg} />
-              ) : (
-                <AssistantBubble
-                  key={msg.id}
-                  message={msg}
-                  // isLastAssistant={index === lastAssistantIdx}
-                  onCopy={() => handleCopy(msg.content)}
-                  onRegenerate={regenerateLastMessage}
-                />
-              ),
-            )}
-            {isTyping && <TypingIndicator />}
-          </ScrollView>
+            // 말풍선은 높이가 제각각이라 getItemLayout 을 줄 수 없습니다.
+            // 화면에 보이는 만큼만 유지하도록 창을 좁게 잡습니다.
+            initialNumToRender={12}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
+          />
         )}
 
         {/* Bottom Composer */}

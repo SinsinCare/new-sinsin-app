@@ -60,10 +60,13 @@ jest.mock("../src/services/auth/authService", () => ({
 
 // eslint-disable-next-line import/first
 import {
+  isUserCancelledError,
   signInWithApple,
   signInWithGoogle,
   signInWithKakao,
 } from "../src/services/auth/socialAuthService"
+// eslint-disable-next-line import/first
+import { logger } from "../src/lib/logger"
 
 describe("socialAuthService", () => {
   beforeEach(() => {
@@ -184,5 +187,55 @@ describe("socialAuthService", () => {
     expect(mockGoogleSignin.signOut).not.toHaveBeenCalled()
     expect(mockKakaoLogin).not.toHaveBeenCalled()
     expect(mockConsumeSocialReauthenticationIntent).toHaveBeenCalledTimes(1)
+  })
+
+  describe("사용자 취소는 에러가 아니다", () => {
+    // 취소를 logger.error 로 찍으면 dev 에서 LogBox 가 뜨고,
+    // logger.error 는 전 빌드에서 console.error 를 남기므로 디바이스 로그가 오염된다.
+    it("카카오 창을 닫아도 error 로 찍지 않는다", async () => {
+      // 실제 RNCKakao 가 던지는 형태
+      const cancelled = Object.assign(
+        new Error("The authentication session has been canceled by user."),
+        { code: "Cancelled", domain: "RNCKakaoErrorDomain" },
+      )
+      mockKakaoLogin.mockRejectedValueOnce(cancelled)
+
+      await expect(signInWithKakao()).rejects.toBe(cancelled)
+
+      expect(isUserCancelledError(cancelled)).toBe(true)
+      expect(logger.error).not.toHaveBeenCalled()
+      expect(logger.debug).toHaveBeenCalledWith("[Kakao SignIn] 사용자가 취소")
+    })
+
+    it("애플 시트를 닫아도 error 로 찍지 않는다", async () => {
+      mockPlatform.OS = "ios"
+      const cancelled = Object.assign(
+        new Error("The user canceled the sign-in flow."),
+        {
+          code: "ERR_REQUEST_CANCELED",
+        },
+      )
+      mockAppleSignIn.mockRejectedValueOnce(cancelled)
+
+      await expect(signInWithApple()).rejects.toBe(cancelled)
+
+      expect(logger.error).not.toHaveBeenCalled()
+      expect(logger.debug).toHaveBeenCalledWith("[Apple SignIn] 사용자가 취소")
+    })
+
+    it("진짜 실패는 그대로 error 로 남긴다", async () => {
+      const failure = Object.assign(new Error("network unreachable"), {
+        code: "NetworkError",
+      })
+      mockKakaoLogin.mockRejectedValueOnce(failure)
+
+      await expect(signInWithKakao()).rejects.toBe(failure)
+
+      expect(isUserCancelledError(failure)).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        "[Kakao SignIn] login 실패",
+        expect.objectContaining({ code: "NetworkError" }),
+      )
+    })
   })
 })

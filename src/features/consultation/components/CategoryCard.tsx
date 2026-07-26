@@ -1,7 +1,7 @@
 import { Text } from "tamagui"
 import { Pressable, View, Animated } from "react-native"
 import { useRef, useCallback } from "react"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
 import type { CategoryMeta, ChatCategory } from "../types"
 

@@ -1,4 +1,8 @@
-import { createAnimations } from "@tamagui/animations-react-native"
+// animations-react-native 는 RN 의 Animated 드라이버라 스프링 계산이 JS 스레드에서 돕니다.
+// 목록 렌더·API 파싱으로 JS 스레드가 막히면 그대로 애니메이션이 끊깁니다.
+// reanimated 드라이버는 같은 스프링 설정(damping/mass/stiffness)을 그대로 받고
+// 계산을 UI 스레드로 넘깁니다. reanimated 는 이미 의존성에 있습니다.
+import { createAnimations } from "@tamagui/animations-reanimated"
 import { createTamagui } from "@tamagui/core"
 import { tokens } from "./src/theme/tokens"
 import { bodyFont, headingFont } from "./src/theme/fonts"

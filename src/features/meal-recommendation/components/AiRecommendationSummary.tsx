@@ -1,6 +1,6 @@
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
-import { Ionicons } from "@expo/vector-icons"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 
 interface AiRecommendationSummaryProps {

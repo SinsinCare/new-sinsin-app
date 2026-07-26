@@ -26,6 +26,15 @@ import type { AuthSessionResult } from "@/src/services/types/serviceTypes"
 
 const SOCIAL_LOGIN_SUCCESS_TRANSITION_MS = 200
 
+/**
+ * 세션 복구는 앱 프로세스당 정확히 한 번만.
+ *
+ * useAuth() 는 루트 레이아웃·진입 라우트·로그인 훅 등 9곳에서 호출되는데,
+ * 복구 effect 가 훅 안에 있어 호출처마다 /auth/tokens/refresh 를 따로 쐈습니다.
+ * 리프레시 토큰이 회전되는 구조라 동시 호출은 서로를 무효화할 수 있습니다.
+ */
+let sessionRestorePromise: Promise<void> | null = null
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
@@ -90,30 +99,27 @@ export function useAuth() {
   )
 
   useEffect(() => {
-    let cancelled = false
+    if (sessionRestorePromise) return
 
     const restore = async () => {
       trackAnalyticsEvent("auth_session_restore_started", {})
       try {
         const result = await authService.restoreSession()
-        if (cancelled) return
         if (result) {
           applyAuthSession(result)
         } else {
           await clearClientSession()
         }
       } catch (error) {
-        if (cancelled) return
         trackAnalyticsEvent("auth_session_restore_failed", {})
         logger.debug("[useAuth] restore failed", error)
         await clearClientSession()
       }
     }
-    restore()
 
-    return () => {
-      cancelled = true
-    }
+    // 취소하지 않습니다. 첫 호출처가 언마운트돼도 복구 결과는 스토어에 반영돼야
+    // 나머지 호출처가 로딩 상태에 갇히지 않습니다.
+    sessionRestorePromise = restore()
   }, [applyAuthSession])
 
   const signInWithEmail = async (email: string, password: string) => {
