@@ -32,8 +32,9 @@ export function useAuthColors() {
     appleBg: isDark ? "#F7F7F7" : "#000000",
     appleText: isDark ? "#000000" : "#FFFFFF",
 
-    // 이메일 로그인(주 CTA)
-    primaryBg: isDark ? "#3DBE9B" : "#34D399",
+    // 이메일 로그인(주 CTA). 브랜드 프라이머리를 그대로 쓴다 —
+    // 예전 초록(#34D399)은 토큰 밖 하드코딩이었고 브랜드 색도 아니었다.
+    primaryBg: tokens.color.primary.val,
     primaryText: "#FFFFFF",
   }
 }

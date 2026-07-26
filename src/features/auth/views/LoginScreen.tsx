@@ -13,6 +13,9 @@ import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 // 디자인 프레임 375x530 기준. 화면 폭에 맞춰 같은 비율로 늘린다.
 const BG_ASPECT = 530 / 375
 
+// 안전영역 아래로 더 내리는 여백. 구워진 타이틀이 상태바에 붙지 않게 한다.
+const BG_TOP_OFFSET = 16
+
 // 배경은 base64 를 품은 SVG(1.35MB)로 들어왔다. SVG 로 두면 svg-transformer 가
 // JS 컴포넌트로 컴파일해 base64 문자열이 번들에 그대로 실리고 콜드스타트마다 파싱된다.
 // PNG 로 분리하고 표시 크기의 3배로 리사이즈했다(1620x2290 -> 853x1206, 986KB -> 500KB).
@@ -87,12 +90,13 @@ export function LoginScreen() {
 
   return (
     <YStack flex={1} backgroundColor={colors.sheetBg} position="relative">
-      {/* 배경 일러스트 — 상단 풀블리드. 하단 시트가 아래에서 덮는다. */}
+      {/* 배경 일러스트. 타이틀이 이미지에 구워져 있어서 top:0 으로 두면
+          다이나믹 아일랜드·상태바에 물린다. 안전영역만큼 내려서 시작한다. */}
       <Image
         source={LOGIN_BG}
         style={{
           position: "absolute",
-          top: 0,
+          top: insets.top + BG_TOP_OFFSET,
           left: 0,
           width,
           height: width * BG_ASPECT,

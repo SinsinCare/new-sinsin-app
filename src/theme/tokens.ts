@@ -8,6 +8,11 @@ export const tokens = createTokens({
     offWhite: "#FCFCFC",
     pureWhite: "#FFFFFF",
 
+    // 브랜드 프라이머리. 2026-07 확정값 — 초록 계열에서 이 코랄로 바뀌었다.
+    // 화면에서 "브랜드 색"이 필요하면 이걸 쓴다. primary1~9 는 그 주변 스케일이고,
+    // primaryAccent(#FF7246)는 이 값과 사실상 같으니 새로 쓰지 말 것.
+    primary: "#FE7139",
+
     // Primary (coral/red)
     primary1: "#FFF5ED",
     primary2: "#FFE2CB",
