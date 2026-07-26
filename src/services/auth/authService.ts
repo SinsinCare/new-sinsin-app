@@ -21,7 +21,7 @@ import type {
 } from "../../types"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { isMockUser } from "../../config/appConfig"
-import { api, clearClientSession, publicApi, tokenService } from "../core"
+import { api, publicApi, tokenService } from "../core"
 import { isApiErrorLike } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
 
@@ -472,20 +472,8 @@ function getRealAuthService(): IAuthService {
           displayName: null,
         })
       } catch (error) {
-        if (
-          isApiErrorLike(error) &&
-          (error.statusCode === 401 || error.statusCode === 403)
-        ) {
-          await clearClientSession({
-            requireFreshSocialProviderSelection: true,
-          })
-          return null
-        }
         logger.debug("[authService] restoreSession failed", error)
-        await clearClientSession({
-          requireFreshSocialProviderSelection: true,
-        })
-        return null
+        throw error
       }
     },
   }
