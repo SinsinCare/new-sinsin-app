@@ -1,17 +1,19 @@
-import { Platform, Pressable } from "react-native"
+import { Platform, Pressable, useWindowDimensions } from "react-native"
 import { YStack, XStack, Text, Spinner } from "tamagui"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import MainLogo from "@/assets/images/main-logo.svg"
-import MainTextLogo from "@/assets/images/main-text-logo.svg"
+import SigninBackground from "@/assets/images/sinsin_signin_bg_260727.svg"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import KakaoLogo from "@/assets/images/kakao-logo.svg"
 import { Ionicons } from "@expo/vector-icons"
 import { useAuthColors, useSocialLogin } from "../hooks"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
+import { useV2Theme } from "@/src/design-system-v2"
+import { getLoginHeroLayout } from "../data/loginPresentation"
 
 export function LoginScreen() {
   const insets = useSafeAreaInsets()
+  const { width, height } = useWindowDimensions()
   const {
     socialLoading,
     socialLoadingMessage,
@@ -22,6 +24,14 @@ export function LoginScreen() {
     dismissWithdrawalPending,
   } = useSocialLogin()
   const colors = useAuthColors()
+  const { colors: v2Colors } = useV2Theme()
+  const heroLayout = getLoginHeroLayout({
+    viewportWidth: width,
+    viewportHeight: height,
+    topInset: insets.top,
+    bottomInset: insets.bottom,
+    showsAppleLogin: Platform.OS === "ios",
+  })
 
   const handleEmailLogin = () => {
     router.push("/(auth)/email-login")
@@ -33,28 +43,24 @@ export function LoginScreen() {
       backgroundColor={colors.bg}
       paddingTop={insets.top}
       paddingBottom={insets.bottom + 24}
-      paddingHorizontal={20}
       position="relative"
     >
-      {/* 로고 영역 */}
-      <YStack flex={1} justifyContent="center" alignItems="center" gap={24}>
-        <YStack alignItems="center" gap={0}>
-          <Text
-            color={colors.text}
-            fontSize={24}
-            fontWeight="600"
-            letterSpacing={-0.3}
-            lineHeight={32}
-          >
-            신장 식단·건강관리 솔루션
-          </Text>
-          <MainTextLogo width={180} height={40} />
+      {/* Figma 6010:41988 / background 6010:41989 artwork. */}
+      {heroLayout.height > 0 && (
+        <YStack
+          width={heroLayout.width}
+          height={heroLayout.height}
+          overflow="hidden"
+        >
+          <SigninBackground
+            width={heroLayout.width}
+            height={heroLayout.height}
+            preserveAspectRatio={heroLayout.preserveAspectRatio}
+          />
         </YStack>
-        <MainLogo width={160} height={172} />
-      </YStack>
+      )}
 
-      {/* 버튼 영역 */}
-      <YStack gap={12}>
+      <YStack paddingHorizontal={20} gap={12}>
         <ConfirmModal
           visible={!!withdrawalPending}
           title="회원탈퇴 처리중입니다."
@@ -68,9 +74,13 @@ export function LoginScreen() {
         />
 
         {/* 이메일 로그인 */}
-        <Pressable onPress={handleEmailLogin}>
+        <Pressable
+          onPress={handleEmailLogin}
+          accessibilityRole="button"
+          accessibilityLabel="이메일 로그인"
+        >
           <YStack
-            backgroundColor="#34D399"
+            backgroundColor={v2Colors.primary.primary}
             paddingVertical={16}
             paddingHorizontal={24}
             borderRadius={8}
@@ -78,7 +88,7 @@ export function LoginScreen() {
             justifyContent="center"
           >
             <Text
-              color="white"
+              color={v2Colors.static.white}
               fontSize={16}
               fontWeight="500"
               letterSpacing={-0.3}
