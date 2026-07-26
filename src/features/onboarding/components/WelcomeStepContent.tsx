@@ -33,6 +33,9 @@ export function WelcomeStepContent({
           <Pressable
             key={String(option.hasCkd)}
             onPress={() => onSelect(option.hasCkd)}
+            accessibilityRole="radio"
+            accessibilityLabel={option.label}
+            accessibilityState={{ selected: isSelected }}
             style={{ flex: 1 }}
           >
             <YStack

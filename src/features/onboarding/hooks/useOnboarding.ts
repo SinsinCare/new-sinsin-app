@@ -9,6 +9,10 @@ import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { resolveOnboardingStepIndex } from "../data/onboardingStepRecovery"
+import {
+  canNavigateOnboardingBack,
+  isValidPositiveDecimal,
+} from "../data/onboardingValidation"
 
 type Phase = "welcome" | "steps" | "complete"
 
@@ -177,8 +181,7 @@ export function useOnboarding() {
         const raw = vals[v.key]?.trim()
         if (!raw) return false
         if (v.type === "number") {
-          const num = parseFloat(raw)
-          return !isNaN(num) && num > 0
+          return isValidPositiveDecimal(raw)
         }
         return true
       })
@@ -262,7 +265,9 @@ export function useOnboarding() {
   }
 
   const handleBack = useCallback(() => {
-    if (phase === "complete") return
+    if (phase === "complete" || !canNavigateOnboardingBack(isSubmitting)) {
+      return
+    }
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
@@ -270,7 +275,13 @@ export function useOnboarding() {
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
-  }, [phase, currentStepIndex, resetProgress, setCurrentStepIndex])
+  }, [
+    phase,
+    isSubmitting,
+    currentStepIndex,
+    resetProgress,
+    setCurrentStepIndex,
+  ])
 
   const handleCompletionStart = useCallback(() => {
     trackAnalyticsEvent("onboarding_completion_cta_pressed", {})

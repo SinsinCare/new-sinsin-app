@@ -2,20 +2,13 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text, Input } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { OnboardingValueOption } from "../types"
+import { getPositiveDecimalValidationError } from "../data/onboardingValidation"
 
 interface InputStepContentProps {
   fields: OnboardingValueOption[]
   values: Record<string, string>
   onChange: (key: string, text: string) => void
   onSubmit: () => void
-}
-
-function getNumericError(raw: string): string | null {
-  if (!raw.trim()) return null
-  const num = parseFloat(raw)
-  if (isNaN(num)) return "숫자를 입력해주세요"
-  if (num <= 0) return "0보다 큰 값을 입력해주세요"
-  return null
 }
 
 export function InputStepContent({
@@ -34,7 +27,10 @@ export function InputStepContent({
     <YStack gap={16}>
       {fields.map((field, index) => {
         const raw = values[field.key] ?? ""
-        const numError = field.type === "number" ? getNumericError(raw) : null
+        const numError =
+          field.type === "number"
+            ? getPositiveDecimalValidationError(raw)
+            : null
         const hasError = !!numError
         return (
           <YStack key={`${index}-${field.key}`} gap={8}>
@@ -77,6 +73,13 @@ export function InputStepContent({
                 style={{ lineHeight: 22 }}
                 keyboardType={field.type === "number" ? "numeric" : "default"}
                 returnKeyType="done"
+                accessibilityLabel={`${field.label ?? field.key}${
+                  field.unit ? ` (${field.unit})` : ""
+                }`}
+                accessibilityValue={{ text: raw || "입력되지 않음" }}
+                accessibilityHint={
+                  numError ?? "값을 입력한 뒤 완료 버튼을 누르세요"
+                }
                 onSubmitEditing={onSubmit}
                 value={raw}
                 onChangeText={(text) => onChange(field.key, text)}
