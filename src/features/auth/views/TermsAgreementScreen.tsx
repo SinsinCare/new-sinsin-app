@@ -1,9 +1,17 @@
-import { Pressable } from "react-native"
-import { YStack, XStack, Text, Separator } from "tamagui"
+import { ScrollView, StyleSheet, Text, View } from "react-native"
 import { router } from "expo-router"
-import { Checkbox } from "@/src/shared/components"
-import { AuthScreenLayout } from "./AuthScreenLayout"
-import { useTermsAgreement, useAuthColors } from "../hooks"
+import {
+  V2Button,
+  V2Divider,
+  V2Screen,
+  V2ScreenHeader,
+  spacing,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
+import { TermsConsentRow } from "../components/TermsConsentRow"
+import { getLegalDocumentRoute } from "../data/termsAgreementFlow"
+import { useTermsAgreement } from "../hooks"
 
 interface TermsAgreementScreenProps {
   mode?: "email" | "social"
@@ -14,6 +22,7 @@ export function TermsAgreementScreen({
   mode = "email",
   socialSignupToken,
 }: TermsAgreementScreenProps) {
+  const { colors } = useV2Theme()
   const {
     terms,
     agreed,
@@ -25,91 +34,81 @@ export function TermsAgreementScreen({
     handleBack,
     handleNext,
   } = useTermsAgreement({ mode, socialSignupToken })
-  const colors = useAuthColors()
-
-  const openLegalDocument = (documentType: string) => {
-    router.push({
-      pathname: "/legal-document",
-      params: { type: documentType },
-    })
-  }
 
   return (
-    <AuthScreenLayout
-      title={`신신당부 서비스 이용약관에\n동의해주세요`}
-      buttonLabel="동의하고 계속하기"
-      buttonDisabled={!canSubmit || isSubmitting}
-      buttonLoading={isSubmitting}
-      onSubmit={handleNext}
-      onBack={handleBack}
-      scrollable
-      keyboardAvoiding
-    >
-      <YStack gap={16} marginTop={32}>
-        <Checkbox
-          checked={allChecked}
-          onToggle={toggleAll}
-          label="전체 동의"
-          size={24}
-        />
+    <V2Screen padded={false} edges={["left", "right", "bottom"]}>
+      <V2ScreenHeader onBack={handleBack} />
+      <View style={styles.screenContent}>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text
+            accessibilityRole="header"
+            style={[typography.title.large, { color: colors.label.strong }]}
+          >
+            신신당부 서비스 이용약관에{"\n"}동의해주세요
+          </Text>
 
-        <Separator borderColor={colors.border} />
+          <View style={styles.allConsentSection}>
+            <TermsConsentRow
+              term={{ id: "all", label: "전체 동의", required: false }}
+              checked={allChecked}
+              onChange={toggleAll}
+              showRequirement={false}
+            />
+          </View>
 
-        <YStack gap={16}>
-          {terms.map((term) => (
-            <XStack
-              key={term.id}
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <XStack flex={1} alignItems="center">
-                <Checkbox
-                  checked={!!agreed[term.id]}
-                  onToggle={() => toggleItem(term.id)}
-                />
-                <Pressable
-                  onPress={() => toggleItem(term.id)}
-                  style={{ flex: 1, marginLeft: 10 }}
-                >
-                  <XStack alignItems="center" gap={4}>
-                    <Text
-                      fontSize={14}
-                      color={colors.textSub}
-                      letterSpacing={-0.28}
-                    >
-                      {term.required ? "[필수]" : "[선택]"}
-                    </Text>
-                    <Text
-                      fontSize={14}
-                      color={colors.text}
-                      letterSpacing={-0.28}
-                    >
-                      {term.label}
-                    </Text>
-                  </XStack>
-                </Pressable>
-              </XStack>
-              {term.documentType && (
-                <Pressable
-                  onPress={() =>
-                    term.documentType && openLegalDocument(term.documentType)
-                  }
-                  hitSlop={8}
-                >
-                  <Text
-                    fontSize={13}
-                    color={colors.textSub}
-                    letterSpacing={-0.26}
-                    textDecorationLine="underline"
-                  >
-                    내용보기
-                  </Text>
-                </Pressable>
-              )}
-            </XStack>
-          ))}
-        </YStack>
-      </YStack>
-    </AuthScreenLayout>
+          <V2Divider tone="neutral" />
+
+          <View style={styles.termsList}>
+            {terms.map((term) => (
+              <TermsConsentRow
+                key={term.id}
+                term={term}
+                checked={!!agreed[term.id]}
+                onChange={() => toggleItem(term.id)}
+                onOpenDocument={(documentType) =>
+                  router.push(getLegalDocumentRoute(documentType))
+                }
+              />
+            ))}
+          </View>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <V2Button
+            size="xl"
+            color="brand"
+            fullWidth
+            disabled={!canSubmit}
+            loading={isSubmitting}
+            onPress={handleNext}
+          >
+            동의하고 계속하기
+          </V2Button>
+        </View>
+      </View>
+    </V2Screen>
   )
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  screenContent: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing[24],
+    paddingTop: spacing[20],
+    paddingBottom: spacing[32],
+  },
+  allConsentSection: { marginTop: spacing[32], marginBottom: spacing[20] },
+  termsList: { gap: spacing[16], marginTop: spacing[20] },
+  footer: {
+    paddingHorizontal: spacing[20],
+    paddingTop: spacing[16],
+    paddingBottom: spacing[20],
+  },
+})
