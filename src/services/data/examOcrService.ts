@@ -1,9 +1,8 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
 
-import { api } from "../core"
+import { api, authenticatedFetch } from "../core"
 import { ApiError } from "../core/apiError"
-import { tokenService } from "../core/tokenService"
 import type {
   OcrConfirmRequest,
   OcrConfirmResult,
@@ -57,23 +56,23 @@ export const examOcrService = {
       (isPdf ? `lab_report_${Date.now()}.pdf` : `lab_report_${Date.now()}.jpg`)
     const uploadType = isPdf ? "application/pdf" : "image/jpeg"
 
-    const formData = new FormData()
-    formData.append("file", {
-      uri: uploadUri,
-      name: uploadName,
-      type: uploadType,
-    } as unknown as Blob)
-
     const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-    const token = await tokenService.getAccessToken()
-    const res = await fetch(`${baseURL}/user/exam-results/ocr`, {
-      method: "POST",
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-        Accept: "application/json",
+    const res = await authenticatedFetch(
+      `${baseURL}/user/exam-results/ocr`,
+      () => {
+        const formData = new FormData()
+        formData.append("file", {
+          uri: uploadUri,
+          name: uploadName,
+          type: uploadType,
+        } as unknown as Blob)
+        return {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: formData as unknown as RequestInit["body"],
+        }
       },
-      body: formData,
-    })
+    )
 
     let json: {
       isSuccess?: boolean
@@ -140,6 +139,8 @@ export function getOcrErrorMessage(error: unknown): string {
       return "이미 저장된 검사지입니다."
     case "LAB_REPORT_ERROR_006":
       return "저장할 항목을 최소 1개 이상 선택해주세요."
+    case "LAB_REPORT_ERROR_007":
+      return "검사지 분석 서비스에 연결할 수 없어요. 잠시 후 다시 시도해주세요."
     default:
       return error instanceof ApiError && error.message
         ? error.message
