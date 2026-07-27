@@ -1,9 +1,8 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
 
-import { api } from "../core"
+import { api, authenticatedFetch } from "../core"
 import { ApiError } from "../core/apiError"
-import { tokenService } from "../core/tokenService"
 import type {
   OcrConfirmRequest,
   OcrConfirmResult,
@@ -57,23 +56,23 @@ export const examOcrService = {
       (isPdf ? `lab_report_${Date.now()}.pdf` : `lab_report_${Date.now()}.jpg`)
     const uploadType = isPdf ? "application/pdf" : "image/jpeg"
 
-    const formData = new FormData()
-    formData.append("file", {
-      uri: uploadUri,
-      name: uploadName,
-      type: uploadType,
-    } as unknown as Blob)
-
     const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-    const token = await tokenService.getAccessToken()
-    const res = await fetch(`${baseURL}/user/exam-results/ocr`, {
-      method: "POST",
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-        Accept: "application/json",
+    const res = await authenticatedFetch(
+      `${baseURL}/user/exam-results/ocr`,
+      () => {
+        const formData = new FormData()
+        formData.append("file", {
+          uri: uploadUri,
+          name: uploadName,
+          type: uploadType,
+        } as unknown as Blob)
+        return {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: formData as unknown as RequestInit["body"],
+        }
       },
-      body: formData,
-    })
+    )
 
     let json: {
       isSuccess?: boolean
@@ -128,18 +127,20 @@ export const examOcrService = {
 export function getOcrErrorMessage(error: unknown): string {
   const code = error instanceof ApiError ? error.code : undefined
   switch (code) {
-    case "INVALID_LAB_REPORT_FILE":
+    case "LAB_REPORT_ERROR_001":
       return "지원하지 않는 형식입니다. JPEG, PNG, WEBP, PDF 파일만 업로드할 수 있어요."
-    case "LAB_REPORT_FILE_TOO_LARGE":
+    case "LAB_REPORT_ERROR_002":
       return "파일 용량이 너무 큽니다. 10MB 이하의 파일을 업로드해주세요."
-    case "LAB_REPORT_NO_VALUES":
+    case "LAB_REPORT_ERROR_003":
       return "검사지에서 수치를 인식하지 못했어요. 글씨가 선명하게 보이도록 다시 촬영해주세요."
-    case "LAB_REPORT_NOT_FOUND":
+    case "LAB_REPORT_ERROR_004":
       return "검사지 정보를 찾을 수 없습니다. 다시 시도해주세요."
-    case "LAB_REPORT_ALREADY_CONFIRMED":
+    case "LAB_REPORT_ERROR_005":
       return "이미 저장된 검사지입니다."
-    case "LAB_REPORT_NO_CONFIRMED_ITEMS":
+    case "LAB_REPORT_ERROR_006":
       return "저장할 항목을 최소 1개 이상 선택해주세요."
+    case "LAB_REPORT_ERROR_007":
+      return "검사지 분석 서비스에 연결할 수 없어요. 잠시 후 다시 시도해주세요."
     default:
       return error instanceof ApiError && error.message
         ? error.message
