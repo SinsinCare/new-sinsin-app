@@ -42,8 +42,6 @@ const defaultDeps: FoodAnalysisRecoveryDeps = {
   pendingRequests: pendingAnalysisRequests,
   fetchByRequestId: (requestId) =>
     foodCameraService.fetchByRequestId(requestId),
-  fetchJobByRequestId: (requestId) =>
-    foodCameraService.fetchAnalysisByRequestId(requestId),
   setPending: (pending) =>
     usePendingAnalysisStore.getState().setPending(pending),
   setPendingConfirmation: (pending) =>

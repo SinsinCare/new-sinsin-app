@@ -27,10 +27,6 @@ function unwrapResult<T>(data: { result?: T } | T): T {
   return ((data as { result?: T }).result ?? data) as T
 }
 
-function isUnsupportedV2Status(status: number): boolean {
-  return status === 404 || status === 405
-}
-
 type TransitionalFoodAnalysisJob = FoodAnalysisJob &
   Partial<FoodCameraAnalyzeResult>
 
@@ -91,7 +87,7 @@ export const foodCameraService = {
   async createAnalysis(
     imageUri: string,
     requestId: string,
-    mode: FoodAnalysisMode = "POST_MEAL",
+    _mode: FoodAnalysisMode = "POST_MEAL",
   ): Promise<FoodAnalysisJob> {
     if (isMockMode()) {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
@@ -104,50 +100,16 @@ export const foodCameraService = {
       }
     }
 
-    const compressedUri = await compressImage(imageUri)
-    const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-    const fileName = `food_${Date.now()}.jpg`
-    const response = await authenticatedFetch(
-      `${baseURL}/food-analyses`,
-      () => {
-        const formData = new FormData()
-        formData.append("image", {
-          uri: compressedUri,
-          name: fileName,
-          type: "image/jpeg",
-        } as unknown as Blob)
-        formData.append("requestId", requestId)
-        formData.append("mode", mode)
-        return {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Idempotency-Key": requestId,
-          },
-          body: formData as unknown as RequestInit["body"],
-        }
-      },
-    )
-
-    if (isUnsupportedV2Status(response.status)) {
-      const result = await this.analyze(imageUri, requestId)
-      return {
-        analysisId: String(result.foodAnalysisResultId),
-        requestId,
-        status: "READY",
-        result: { ...result, status: "READY", requestId },
-      }
+    // The production backend has not exposed the v2 /food-analyses contract.
+    // Use the supported legacy endpoint directly instead of issuing an expected
+    // 404 first and leaving a request that recovery later polls through v2.
+    const result = await this.analyze(imageUri, requestId)
+    return {
+      analysisId: String(result.foodAnalysisResultId),
+      requestId,
+      status: "READY",
+      result: { ...result, status: "READY", requestId },
     }
-
-    const json = (await response.json()) as {
-      isSuccess?: boolean
-      message?: string
-      result?: FoodAnalysisJob
-    }
-    if (!response.ok || json.isSuccess === false || !json.result) {
-      throw new Error(json.message || `HTTP ${response.status}`)
-    }
-    return normalizeAnalysisJob(json.result)
   },
 
   async fetchAnalysis(analysisId: string): Promise<FoodAnalysisJob> {
@@ -158,32 +120,15 @@ export const foodCameraService = {
   async fetchAnalysisByRequestId(
     requestId: string,
   ): Promise<FoodAnalysisJob | null> {
-    try {
-      const response = await api.get(
-        `/food-analyses/by-request/${encodeURIComponent(requestId)}`,
-      )
-      const job = unwrapResult<FoodAnalysisJob | null>(response.data)
-      return job ? normalizeAnalysisJob(job) : null
-    } catch (err) {
-      if (
-        isAxiosError(err) &&
-        isUnsupportedV2Status(err.response?.status ?? 0)
-      ) {
-        const result = await this.fetchByRequestId(requestId)
-        return result
-          ? {
-              analysisId: String(result.foodAnalysisResultId),
-              requestId,
-              status: "READY",
-              result: { ...result, status: "READY", requestId },
-            }
-          : null
-      }
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
-      throw err
-    }
+    const result = await this.fetchByRequestId(requestId)
+    return result
+      ? {
+          analysisId: String(result.foodAnalysisResultId),
+          requestId,
+          status: "READY",
+          result: { ...result, status: "READY", requestId },
+        }
+      : null
   },
 
   async confirmAnalysis(
