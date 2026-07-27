@@ -79,14 +79,26 @@ export const ANNOUNCEMENTS: Announcement[] = [
 ]
 
 // 회원탈퇴 이유 선택지
-export const WITHDRAWAL_REASONS = [
-  "자주 이용하지 않아요",
-  "질병 관리에 도움이 되지 않는 것 같아요",
-  "서비스 및 고객지원이 만족스럽지 않아요",
-  "광고성 알림이 너무 많이 와요",
-  "기타(직접 작성)",
-]
-export const WITHDRAWAL_OTHER_INDEX = 4
+export const WITHDRAWAL_REASON_OPTIONS = [
+  { code: "LOW_USAGE", label: "자주 이용하지 않아요" },
+  {
+    code: "NOT_HELPFUL_FOR_HEALTH_MANAGEMENT",
+    label: "질병 관리에 도움이 되지 않는 것 같아요",
+  },
+  {
+    code: "UNSATISFACTORY_SERVICE_OR_SUPPORT",
+    label: "서비스 및 고객지원이 만족스럽지 않아요",
+  },
+  { code: "TOO_MANY_NOTIFICATIONS", label: "광고성 알림이 너무 많이 와요" },
+  { code: "OTHER", label: "기타(직접 작성)" },
+] as const
+
+export type WithdrawalReasonCode =
+  (typeof WITHDRAWAL_REASON_OPTIONS)[number]["code"]
+
+export const WITHDRAWAL_OTHER_CODE: WithdrawalReasonCode = "OTHER"
+export const WITHDRAWAL_OTHER_MIN_LENGTH = 20
+export const WITHDRAWAL_OTHER_MAX_LENGTH = 500
 
 // 회원탈퇴 약관
 export const WITHDRAWAL_NOTICE =

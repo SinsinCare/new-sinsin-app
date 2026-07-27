@@ -101,49 +101,6 @@ export function HealthDataEntryScreen() {
           />
         </Pressable>
 
-        {/* 검사지 업로드하기 */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.optionCard,
-            {
-              backgroundColor: healthColors.surface,
-              borderColor: healthColors.line,
-            },
-            pressed && { backgroundColor: healthColors.surfacePressed },
-          ]}
-          onPress={() => router.push("/(settings)/health-data-upload")}
-        >
-          <View
-            style={[
-              styles.optionIconWrapper,
-              { backgroundColor: healthColors.surfaceMuted },
-            ]}
-          >
-            <Ionicons
-              name="camera-outline"
-              size={24}
-              color={healthColors.textAssistive}
-            />
-          </View>
-          <View style={styles.optionContent}>
-            <ThemedText
-              style={[styles.optionTitle, { color: healthColors.text }]}
-            >
-              검사지 업로드하기
-            </ThemedText>
-            <ThemedText
-              style={[styles.optionDesc, { color: healthColors.textSecondary }]}
-            >
-              가지고 계신 종이 검사지를 촬영하거나 PDF 파일을 직접 업로드합니다.
-            </ThemedText>
-          </View>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={healthColors.textAssistive}
-          />
-        </Pressable>
-
         {/* 대시보드 보기 */}
         <Pressable
           style={({ pressed }) => [
