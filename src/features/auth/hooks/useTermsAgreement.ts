@@ -3,6 +3,7 @@ import { router } from "expo-router"
 import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
+import { notificationService } from "@/src/services/notificationService"
 import { TERMS } from "../data/terms"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import {
@@ -21,6 +22,8 @@ export function useTermsAgreement({
 }: UseTermsAgreementOptions = {}) {
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRequestingPushPermission, setIsRequestingPushPermission] =
+    useState(false)
   const {
     reset,
     setTermsOfServiceAgree,
@@ -42,21 +45,50 @@ export function useTermsAgreement({
   )
   const canSubmit = requiredChecked
 
+  const requestPushConsent = useCallback(async () => {
+    if (isRequestingPushPermission) return
+    setIsRequestingPushPermission(true)
+    try {
+      const granted = await notificationService.requestPermissions()
+      setAgreed((previous) => ({ ...previous, push_notifications: granted }))
+      if (!granted) {
+        showErrorToast("알림 권한을 허용하지 않아 푸시 동의가 해제되었어요.")
+      }
+    } catch {
+      setAgreed((previous) => ({ ...previous, push_notifications: false }))
+      showErrorToast("알림 권한을 확인하지 못해 푸시 동의가 해제되었어요.")
+    } finally {
+      setIsRequestingPushPermission(false)
+    }
+  }, [isRequestingPushPermission])
+
   const toggleAll = useCallback(() => {
     if (allChecked) {
       setAgreed({})
     } else {
       const next: Record<string, boolean> = {}
       TERMS.forEach((t) => {
-        next[t.id] = true
+        next[t.id] = t.id !== "push_notifications"
       })
       setAgreed(next)
+      void requestPushConsent()
     }
-  }, [allChecked])
+  }, [allChecked, requestPushConsent])
 
-  const toggleItem = useCallback((id: string) => {
-    setAgreed((prev) => ({ ...prev, [id]: !prev[id] }))
-  }, [])
+  const toggleItem = useCallback(
+    (id: string) => {
+      if (id === "push_notifications") {
+        if (agreed[id]) {
+          setAgreed((previous) => ({ ...previous, [id]: false }))
+        } else {
+          void requestPushConsent()
+        }
+        return
+      }
+      setAgreed((previous) => ({ ...previous, [id]: !previous[id] }))
+    },
+    [agreed, requestPushConsent],
+  )
 
   const handleEmailNext = () => {
     if (!canSubmit) return
@@ -148,6 +180,7 @@ export function useTermsAgreement({
     requiredChecked,
     canSubmit,
     isSubmitting,
+    isRequestingPushPermission,
     marketingAgree: !!agreed["marketing"],
     toggleAll,
     toggleItem,
