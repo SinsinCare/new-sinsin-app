@@ -18,4 +18,9 @@ export const TERMS: TermItem[] = [
     label: "마케팅 정보 수신 동의",
     required: false,
   },
+  {
+    id: "push_notifications",
+    label: "푸시 알림 수신 동의",
+    required: false,
+  },
 ]
