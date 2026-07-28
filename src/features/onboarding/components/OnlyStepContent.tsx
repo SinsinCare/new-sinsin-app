@@ -33,6 +33,9 @@ export function OnlyStepContent({
           <Pressable
             key={`${index}-${option.key}`}
             onPress={() => onSelect(option.key)}
+            accessibilityRole="radio"
+            accessibilityLabel={option.value}
+            accessibilityState={{ selected: isSelected }}
           >
             <XStack
               minHeight={56}

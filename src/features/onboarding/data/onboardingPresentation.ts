@@ -22,6 +22,14 @@ export function getOnboardingLoadingPresentation(
   return "idle"
 }
 
+export function shouldShowOnboardingQuestionLoadError(
+  isInitializing: boolean,
+  isLoadingSteps: boolean,
+  hasQuestionLoadError: boolean,
+): boolean {
+  return !isInitializing && !isLoadingSteps && hasQuestionLoadError
+}
+
 export function normalizeOnboardingSubtitle(
   subtitle: string | null | undefined,
 ): string | null {

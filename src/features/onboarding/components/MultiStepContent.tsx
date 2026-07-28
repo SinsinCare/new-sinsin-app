@@ -1,4 +1,4 @@
-import { Pressable } from "react-native"
+import { Pressable, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Checkbox } from "@/src/shared/components"
@@ -32,6 +32,9 @@ export function MultiStepContent({
           <Pressable
             key={`${index}-${option.key}`}
             onPress={() => onToggle(option.key)}
+            accessibilityRole="checkbox"
+            accessibilityLabel={option.value}
+            accessibilityState={{ checked: isSelected }}
           >
             <XStack
               minHeight={56}
@@ -44,10 +47,13 @@ export function MultiStepContent({
               paddingHorizontal={16}
               gap={12}
             >
-              <Checkbox
-                checked={isSelected}
-                onToggle={() => onToggle(option.key)}
-              />
+              <View
+                pointerEvents="none"
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                <Checkbox checked={isSelected} onToggle={() => undefined} />
+              </View>
               <Text
                 fontSize={16}
                 fontWeight={isSelected ? "600" : "400"}

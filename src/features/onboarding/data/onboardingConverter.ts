@@ -2,7 +2,6 @@ import type {
   OnboardingStep,
   OnboardingStepRs,
   OnboardingAnswer,
-  OnboardingAnswerRq,
   OnboardingSubmitRq,
   OnboardingValueOption,
 } from "@/src/types/onboarding"
@@ -21,7 +20,7 @@ export function convertStepRsToSteps(
   return rsArray.map((rs) => ({
     step: rs.step,
     title: rs.title,
-    subTitle: rs.subTitle,
+    subTitle: rs.subTitle ?? null,
     type: rs.type,
     values: rs.type === "input" ? INPUT_STEP_VALUES : rs.values,
   }))

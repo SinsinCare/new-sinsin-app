@@ -8,6 +8,11 @@ import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { resolveOnboardingStepIndex } from "../data/onboardingStepRecovery"
+import {
+  canNavigateOnboardingBack,
+  isValidPositiveDecimal,
+} from "../data/onboardingValidation"
 
 type Phase = "welcome" | "steps" | "complete"
 
@@ -18,6 +23,7 @@ export function useOnboarding() {
   // 현재 welcome 화면과 CTA 로딩을 유지한다.
   const [isInitializing, setIsInitializing] = useState(true)
   const [isLoadingSteps, setIsLoadingSteps] = useState(false)
+  const [hasQuestionLoadError, setHasQuestionLoadError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const lastViewedStepRef = useRef<string | null>(null)
   const completionViewedRef = useRef(false)
@@ -67,22 +73,46 @@ export function useOnboarding() {
     }
   }, [setOnboardingInProgress])
 
-  const loadSteps = useCallback(async (isCkd: boolean) => {
-    setIsLoadingSteps(true)
-    try {
-      const data = await onboardingService.getSteps(isCkd)
-      setSteps(data)
-      setPhase("steps")
-      trackAnalyticsEvent("onboarding_steps_loaded", {
-        step_count: data.length,
-      })
-    } catch {
-      trackAnalyticsEvent("onboarding_steps_load_failed", {})
-      Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
-    } finally {
-      setIsLoadingSteps(false)
-    }
+  const showQuestionLoadError = useCallback(() => {
+    setSteps([])
+    setPhase("welcome")
+    setHasQuestionLoadError(true)
+    trackAnalyticsEvent("onboarding_steps_load_failed", {})
   }, [])
+
+  const loadSteps = useCallback(
+    async (isCkd: boolean) => {
+      setIsLoadingSteps(true)
+      setHasQuestionLoadError(false)
+      try {
+        const data = await onboardingService.getSteps(isCkd)
+        const recoveredStepIndex = resolveOnboardingStepIndex(
+          currentStepIndex,
+          data.length,
+        )
+
+        if (recoveredStepIndex === null) {
+          showQuestionLoadError()
+          return
+        }
+
+        if (recoveredStepIndex !== currentStepIndex) {
+          setCurrentStepIndex(recoveredStepIndex)
+        }
+
+        setSteps(data)
+        setPhase("steps")
+        trackAnalyticsEvent("onboarding_steps_loaded", {
+          step_count: data.length,
+        })
+      } catch {
+        showQuestionLoadError()
+      } finally {
+        setIsLoadingSteps(false)
+      }
+    },
+    [currentStepIndex, setCurrentStepIndex, showQuestionLoadError],
+  )
 
   // hydration 완료 후 현재 사용자에게 속한 진행 상태만 복원
   useEffect(() => {
@@ -112,6 +142,11 @@ export function useOnboarding() {
   }
 
   const handleWelcomeConfirm = () => {
+    if (hasCkd === null || isLoadingSteps) return
+    void loadSteps(hasCkd)
+  }
+
+  const handleQuestionLoadRetry = () => {
     if (hasCkd === null || isLoadingSteps) return
     void loadSteps(hasCkd)
   }
@@ -146,8 +181,7 @@ export function useOnboarding() {
         const raw = vals[v.key]?.trim()
         if (!raw) return false
         if (v.type === "number") {
-          const num = parseFloat(raw)
-          return !isNaN(num) && num > 0
+          return isValidPositiveDecimal(raw)
         }
         return true
       })
@@ -231,7 +265,9 @@ export function useOnboarding() {
   }
 
   const handleBack = useCallback(() => {
-    if (phase === "complete") return
+    if (phase === "complete" || !canNavigateOnboardingBack(isSubmitting)) {
+      return
+    }
     if (phase === "steps" && currentStepIndex === 0) {
       setPhase("welcome")
       setSteps([])
@@ -239,7 +275,13 @@ export function useOnboarding() {
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
-  }, [phase, currentStepIndex, resetProgress, setCurrentStepIndex])
+  }, [
+    phase,
+    isSubmitting,
+    currentStepIndex,
+    resetProgress,
+    setCurrentStepIndex,
+  ])
 
   const handleCompletionStart = useCallback(() => {
     trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
@@ -269,11 +311,13 @@ export function useOnboarding() {
     currentAnswer,
     isInitializing,
     isLoadingSteps,
+    hasQuestionLoadError,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
     handleWelcomeSelect,
     handleWelcomeConfirm,
+    handleQuestionLoadRetry,
     handleOnlySelect,
     handleMultiToggle,
     handleInputChange,
