@@ -14,7 +14,7 @@ import {
   isValidPositiveDecimal,
 } from "../data/onboardingValidation"
 
-type Phase = "welcome" | "steps" | "complete"
+type Phase = "welcome" | "steps"
 
 export function useOnboarding() {
   const [phase, setPhase] = useState<Phase>("welcome")
@@ -25,8 +25,9 @@ export function useOnboarding() {
   const [isLoadingSteps, setIsLoadingSteps] = useState(false)
   const [hasQuestionLoadError, setHasQuestionLoadError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSkipping, setIsSkipping] = useState(false)
   const lastViewedStepRef = useRef<string | null>(null)
-  const completionViewedRef = useRef(false)
+  const skipInFlightRef = useRef(false)
 
   // persist hydration 상태 추적
   const [isStoreHydrated, setIsStoreHydrated] = useState(() =>
@@ -166,12 +167,6 @@ export function useOnboarding() {
     })
   }, [currentStep, currentStepIndex, isLoadingSteps, phase, steps.length])
 
-  useEffect(() => {
-    if (phase !== "complete" || completionViewedRef.current) return
-    completionViewedRef.current = true
-    trackAnalyticsEvent("onboarding_completion_viewed", {})
-  }, [phase])
-
   const hasValidAnswer = useCallback(() => {
     if (!currentStep) return false
     if (!currentAnswer) return false
@@ -189,25 +184,15 @@ export function useOnboarding() {
     return (currentAnswer.selectedKeys?.length ?? 0) > 0
   }, [currentStep, currentAnswer])
 
-  const handleOnlySelect = (key: string) => {
-    if (!currentStep) return
+  const handleOptionSelectionConfirm = (
+    type: OnboardingStep["type"],
+    selectedKeys: string[],
+  ) => {
+    if (!currentStep || type === "input") return
     setAnswer(currentStep.step, {
       step: currentStep.step,
-      type: "only",
-      selectedKeys: [key],
-    })
-  }
-
-  const handleMultiToggle = (key: string) => {
-    if (!currentStep) return
-    const current = currentAnswer?.selectedKeys ?? []
-    const updated = current.includes(key)
-      ? current.filter((k) => k !== key)
-      : [...current, key]
-    setAnswer(currentStep.step, {
-      step: currentStep.step,
-      type: "multi",
-      selectedKeys: updated,
+      type,
+      selectedKeys,
     })
   }
 
@@ -237,7 +222,8 @@ export function useOnboarding() {
       setEntryGate(promotedSession.entryGate ?? "HOME")
       setSessionPersistence(promotedSession.sessionPersistence ?? "persistent")
       resetOnboarding()
-      setPhase("complete")
+      resetSignup()
+      router.replace("/(tabs)/home")
     } catch (error) {
       trackAnalyticsEvent("onboarding_submit_failed", {})
       Alert.alert(
@@ -252,7 +238,7 @@ export function useOnboarding() {
   }
 
   const handleNext = () => {
-    if (isSubmitting || !hasValidAnswer()) return
+    if (isSubmitting || isSkipping || !hasValidAnswer()) return
     trackAnalyticsEvent("onboarding_step_completed", {
       step_index: currentStepIndex,
       step_count: steps.length,
@@ -265,7 +251,7 @@ export function useOnboarding() {
   }
 
   const handleBack = useCallback(() => {
-    if (phase === "complete" || !canNavigateOnboardingBack(isSubmitting)) {
+    if (!canNavigateOnboardingBack(isSubmitting || isSkipping)) {
       return
     }
     if (phase === "steps" && currentStepIndex === 0) {
@@ -278,21 +264,72 @@ export function useOnboarding() {
   }, [
     phase,
     isSubmitting,
+    isSkipping,
     currentStepIndex,
     resetProgress,
     setCurrentStepIndex,
   ])
 
-  const handleCompletionStart = useCallback(() => {
-    trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
-    resetSignup()
-    router.replace("/(tabs)/home")
-  }, [resetSignup])
+  const completeSkip = useCallback(async () => {
+    if (!user || skipInFlightRef.current) return
+    skipInFlightRef.current = true
+    setIsSkipping(true)
+    try {
+      await onboardingService.skipOnboarding()
+      const promotedSession = await authService.promoteSession()
+      setUser(promotedSession.user)
+      setAccountState(promotedSession.accountState)
+      setRequiresAdditionalInfo(promotedSession.requiresAdditionalInfo)
+      setEntryGate(promotedSession.entryGate ?? "HOME")
+      setSessionPersistence(promotedSession.sessionPersistence ?? "persistent")
+      resetOnboarding()
+      resetSignup()
+      trackAnalyticsEvent("onboarding_skipped", {})
+      router.replace("/(tabs)/home")
+    } catch (error) {
+      trackAnalyticsEvent("onboarding_skip_failed", {})
+      Alert.alert(
+        "오류",
+        error instanceof Error
+          ? error.message
+          : "온보딩을 건너뛸 수 없습니다. 다시 시도해주세요.",
+      )
+    } finally {
+      skipInFlightRef.current = false
+      setIsSkipping(false)
+    }
+  }, [
+    resetOnboarding,
+    resetSignup,
+    setAccountState,
+    setEntryGate,
+    setRequiresAdditionalInfo,
+    setSessionPersistence,
+    setUser,
+    user,
+  ])
+
+  const handleSkip = useCallback(() => {
+    if (isSubmitting || isSkipping || skipInFlightRef.current) return
+    trackAnalyticsEvent("onboarding_skip_confirmation_viewed", {})
+    Alert.alert(
+      "온보딩을 건너뛸까요?",
+      "나중에 내 정보에서 입력할 수 있어요.",
+      [
+        { text: "계속 입력하기", style: "cancel" },
+        {
+          text: "건너뛰기",
+          style: "destructive",
+          onPress: () => void completeSkip(),
+        },
+      ],
+    )
+  }, [completeSkip, isSkipping, isSubmitting])
 
   // Android 하드웨어 백 버튼: 온보딩 중 앱 종료 방지
   useEffect(() => {
     const onBackPress = () => {
-      if (phase === "welcome" || phase === "complete") {
+      if (phase === "welcome") {
         return true // welcome에서는 뒤로 가기 차단 (앱 종료 방지)
       }
       handleBack()
@@ -313,16 +350,16 @@ export function useOnboarding() {
     isLoadingSteps,
     hasQuestionLoadError,
     isSubmitting,
+    isSkipping,
     isLastStep,
     hasValidAnswer,
     handleWelcomeSelect,
     handleWelcomeConfirm,
     handleQuestionLoadRetry,
-    handleOnlySelect,
-    handleMultiToggle,
+    handleOptionSelectionConfirm,
     handleInputChange,
     handleNext,
     handleBack,
-    handleCompletionStart,
+    handleSkip,
   }
 }

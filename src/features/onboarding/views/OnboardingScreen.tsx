@@ -1,4 +1,5 @@
 import { Keyboard, ScrollView, TouchableWithoutFeedback } from "react-native"
+import { useState } from "react"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { V2BottomCTA, V2ErrorState } from "@/src/design-system-v2"
 import { YStack, Text } from "tamagui"
@@ -10,11 +11,10 @@ import {
   OnboardingHeader,
   ProgressBar,
   WelcomeStepContent,
-  OnlyStepContent,
-  MultiStepContent,
   InputStepContent,
   OnboardingQuestionHeader,
-  OnboardingCompletionContent,
+  OnboardingOptionPickerSheet,
+  OnboardingOptionSelectField,
 } from "../components"
 import {
   ONBOARDING_SCROLL_CONTENT_STYLE,
@@ -24,6 +24,7 @@ import {
 } from "../data/onboardingPresentation"
 
 export function OnboardingScreen() {
+  const [isOptionPickerOpen, setIsOptionPickerOpen] = useState(false)
   const insets = useSafeAreaInsets()
   const isDark = useAppColorScheme() === "dark"
   const bg = isDark ? tokens.color.appBgDark.val : "white"
@@ -41,17 +42,17 @@ export function OnboardingScreen() {
     isLoadingSteps,
     hasQuestionLoadError,
     isSubmitting,
+    isSkipping,
     isLastStep,
     hasValidAnswer,
     handleWelcomeSelect,
     handleWelcomeConfirm,
     handleQuestionLoadRetry,
-    handleOnlySelect,
-    handleMultiToggle,
+    handleOptionSelectionConfirm,
     handleInputChange,
     handleNext,
     handleBack,
-    handleCompletionStart,
+    handleSkip,
   } = useOnboarding()
 
   const loadingPresentation = getOnboardingLoadingPresentation(
@@ -136,18 +137,17 @@ export function OnboardingScreen() {
           <V2BottomCTA
             primaryLabel="다음"
             onPrimary={handleWelcomeConfirm}
+            secondaryLabel="나중에 할게요"
+            onSecondary={handleSkip}
+            layout="vertical"
             primaryProps={{
-              disabled: hasCkd === null || isLoadingSteps,
+              disabled: hasCkd === null || isLoadingSteps || isSkipping,
               loading: loadingPresentation === "cta",
             }}
           />
         </YStack>
       </YStack>
     )
-  }
-
-  if (phase === "complete") {
-    return <OnboardingCompletionContent onStart={handleCompletionStart} />
   }
 
   if (steps.length === 0) {
@@ -184,18 +184,20 @@ export function OnboardingScreen() {
               />
 
               {currentStep.type === "only" && (
-                <OnlyStepContent
+                <OnboardingOptionSelectField
+                  type="only"
                   options={currentStep.values}
                   selectedKeys={currentAnswer?.selectedKeys ?? []}
-                  onSelect={handleOnlySelect}
+                  onPress={() => setIsOptionPickerOpen(true)}
                 />
               )}
 
               {currentStep.type === "multi" && (
-                <MultiStepContent
+                <OnboardingOptionSelectField
+                  type="multi"
                   options={currentStep.values}
                   selectedKeys={currentAnswer?.selectedKeys ?? []}
-                  onToggle={handleMultiToggle}
+                  onPress={() => setIsOptionPickerOpen(true)}
                 />
               )}
 
@@ -212,13 +214,31 @@ export function OnboardingScreen() {
             <V2BottomCTA
               primaryLabel={isLastStep ? "완료" : "다음"}
               onPrimary={handleNext}
+              secondaryLabel="나중에 할게요"
+              onSecondary={handleSkip}
+              layout="vertical"
               primaryProps={{
-                disabled: !hasValidAnswer() || isSubmitting,
+                disabled: !hasValidAnswer() || isSubmitting || isSkipping,
                 loading: isSubmitting,
               }}
             />
           </YStack>
         </KeyboardAwareView>
+
+        {(currentStep.type === "only" || currentStep.type === "multi") && (
+          <OnboardingOptionPickerSheet
+            visible={isOptionPickerOpen}
+            onClose={() => setIsOptionPickerOpen(false)}
+            type={currentStep.type}
+            title={currentStep.title}
+            subTitle={currentStep.subTitle}
+            options={currentStep.values}
+            selectedKeys={currentAnswer?.selectedKeys ?? []}
+            onConfirm={(selectedKeys) => {
+              handleOptionSelectionConfirm(currentStep.type, selectedKeys)
+            }}
+          />
+        )}
       </YStack>
     </TouchableWithoutFeedback>
   )

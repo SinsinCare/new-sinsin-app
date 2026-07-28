@@ -110,7 +110,7 @@ screens:
     module: onboarding
     description: CKD 여부 선택과 건강 정보 질문을 완료하는 화면
     auth_required: true
-    states: [welcome, loading, step, validation_error, submitting, error]
+    states: [welcome, loading, step, selection_sheet, validation_error, submitting, skip_confirming, skipping, error]
 
   - id: SCR_TABS_HOME
     name: 홈
