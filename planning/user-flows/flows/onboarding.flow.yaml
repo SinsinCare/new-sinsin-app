@@ -78,9 +78,18 @@ nodes:
     label: 온보딩 답변 제출
     api: API_SUBMIT_ONBOARDING
 
+  - id: ACT_SKIP_ONBOARDING
+    type: action
+    label: 온보딩 건너뛰기
+    api: API_SKIP_ONBOARDING
+
   - id: D_SUBMIT_RESULT
     type: decision
     label: 온보딩 제출 결과
+
+  - id: D_SKIP_RESULT
+    type: decision
+    label: 온보딩 건너뛰기 결과
 
   - id: ACT_UPDATE_SIGNUP_PROFILE
     type: action
@@ -162,6 +171,16 @@ edges:
     condition: valid
     analytics: [onboarding_step_completed]
 
+  - from: SCR_ONBOARDING_WELCOME
+    to: ACT_SKIP_ONBOARDING
+    trigger: tap_skip_confirm
+    analytics: [onboarding_skip_confirmation_viewed]
+
+  - from: SCR_ONBOARDING_STEP
+    to: ACT_SKIP_ONBOARDING
+    trigger: tap_skip_confirm
+    analytics: [onboarding_skip_confirmation_viewed]
+
   - from: D_ANSWER_VALID
     to: SCR_ONBOARDING_STEP
     condition: invalid
@@ -191,6 +210,19 @@ edges:
 
   - from: ACT_SUBMIT_ONBOARDING
     to: D_SUBMIT_RESULT
+
+  - from: ACT_SKIP_ONBOARDING
+    to: D_SKIP_RESULT
+
+  - from: D_SKIP_RESULT
+    to: SCR_TABS_HOME
+    condition: success
+    analytics: [onboarding_skipped]
+
+  - from: D_SKIP_RESULT
+    to: ERR_ONBOARDING
+    condition: failure
+    analytics: [onboarding_skip_failed]
 
   - from: D_SUBMIT_RESULT
     to: ACT_UPDATE_SIGNUP_PROFILE
@@ -249,6 +281,9 @@ analytics:
   - onboarding_answer_validation_failed
   - onboarding_submitted
   - onboarding_submit_failed
+  - onboarding_skip_confirmation_viewed
+  - onboarding_skipped
+  - onboarding_skip_failed
   - error_retry_tapped
 
 notes:
