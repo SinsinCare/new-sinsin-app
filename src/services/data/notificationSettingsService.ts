@@ -20,6 +20,9 @@ function mergeWithDefaults(
     ...DEFAULT_NOTIFICATION_SETTINGS,
     pushConsent:
       partial.pushConsent ?? DEFAULT_NOTIFICATION_SETTINGS.pushConsent,
+    nightPushConsent:
+      partial.nightPushConsent ??
+      DEFAULT_NOTIFICATION_SETTINGS.nightPushConsent,
     categories: {
       morningCheck: {
         ...DEFAULT_NOTIFICATION_SETTINGS.categories.morningCheck,
@@ -79,6 +82,21 @@ export const notificationSettingsService = {
     const next = { ...current, pushConsent }
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     const res = await api.patch("/user/notification-settings", { pushConsent })
+    const raw = res.data.result ?? res.data.data
+    const settings = mergeWithDefaults(raw)
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+    return settings
+  },
+
+  async setNightPushConsent(
+    nightPushConsent: boolean,
+  ): Promise<NotificationSettings> {
+    const current = await this.get()
+    const next = { ...current, nightPushConsent }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    const res = await api.patch("/user/notification-settings", {
+      nightPushConsent,
+    })
     const raw = res.data.result ?? res.data.data
     const settings = mergeWithDefaults(raw)
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(settings))

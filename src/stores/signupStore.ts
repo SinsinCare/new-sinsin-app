@@ -9,6 +9,8 @@ interface SignupState {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  pushConsent: boolean
+  nightPushConsent: boolean
   phoneNumber: string
   name: string
   birthYear: string
@@ -26,6 +28,8 @@ interface SignupState {
   setTermsOfServiceAgree: (v: boolean) => void
   setPrivacyPolicyAgree: (v: boolean) => void
   setMarketingAgree: (v: boolean) => void
+  setPushConsent: (v: boolean) => void
+  setNightPushConsent: (v: boolean) => void
   setPhoneNumber: (phoneNumber: string) => void
   setName: (name: string) => void
   setBirth: (year: string, month: string, day: string) => void
@@ -45,6 +49,8 @@ const initialState = {
   termsOfServiceAgree: false,
   privacyPolicyAgree: false,
   marketingAgree: false,
+  pushConsent: false,
+  nightPushConsent: false,
   phoneNumber: "",
   name: "",
   birthYear: "",
@@ -66,6 +72,8 @@ export const useSignupStore = create<SignupState>((set) => ({
   setTermsOfServiceAgree: (termsOfServiceAgree) => set({ termsOfServiceAgree }),
   setPrivacyPolicyAgree: (privacyPolicyAgree) => set({ privacyPolicyAgree }),
   setMarketingAgree: (marketingAgree) => set({ marketingAgree }),
+  setPushConsent: (pushConsent) => set({ pushConsent }),
+  setNightPushConsent: (nightPushConsent) => set({ nightPushConsent }),
   setPhoneNumber: (phoneNumber) => set({ phoneNumber }),
   setName: (name) => set({ name }),
   setBirth: (birthYear, birthMonth, birthDay) =>

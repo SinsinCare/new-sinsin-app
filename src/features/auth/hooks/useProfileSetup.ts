@@ -191,6 +191,8 @@ export function useProfileSetup() {
           termsOfServiceAgree: signupState.termsOfServiceAgree,
           privacyPolicyAgree: signupState.privacyPolicyAgree,
           marketingAgree: signupState.marketingAgree,
+          pushConsent: signupState.pushConsent,
+          nightPushConsent: signupState.nightPushConsent,
           password: signupState.password,
           recommender: signupState.referralCode,
         }),

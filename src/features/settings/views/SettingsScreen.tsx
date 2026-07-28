@@ -19,8 +19,13 @@ export function SettingsScreen() {
   const router = useRouter()
   const { signOut, isAuthenticated } = useAuth()
   const c = useSettingsColors()
-  const { settings, updateSettings, pushEnabled, setPushConsent } =
-    useNotifications(isAuthenticated)
+  const {
+    settings,
+    updateSettings,
+    pushEnabled,
+    setPushConsent,
+    setNightPushConsent,
+  } = useNotifications(isAuthenticated)
 
   const { themeMode, setThemeMode } = useThemeStore()
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
@@ -46,11 +51,26 @@ export function SettingsScreen() {
   const handleMarketingToggle = async (value: boolean) => {
     await updateSettings({
       ...settings,
+      nightPushConsent: value ? settings.nightPushConsent : false,
       categories: {
         ...settings.categories,
         marketing: { enabled: value },
       },
     })
+  }
+
+  const handleNightPushToggle = async (value: boolean) => {
+    try {
+      const ok = await setNightPushConsent(value)
+      if (value && !ok) {
+        Alert.alert(
+          "앱 푸시 알림 필요",
+          "먼저 앱 푸시 알림 동의와 기기 알림 권한을 켜주세요.",
+        )
+      }
+    } catch {
+      Alert.alert("알림 설정 실패", "잠시 후 다시 시도해주세요.")
+    }
   }
 
   return (
@@ -136,6 +156,13 @@ export function SettingsScreen() {
           description="마케팅 정보 수신에 동의해요."
           value={settings.categories.marketing.enabled}
           onValueChange={handleMarketingToggle}
+        />
+        <ToggleItem
+          title="야간 광고성 알림 동의"
+          description="21:00~08:00 사이 광고성 알림을 수신해요."
+          value={settings.nightPushConsent}
+          onValueChange={handleNightPushToggle}
+          disabled={!pushEnabled || !settings.categories.marketing.enabled}
         />
 
         <View

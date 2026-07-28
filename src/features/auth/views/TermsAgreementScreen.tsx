@@ -29,6 +29,7 @@ export function TermsAgreementScreen({
     allChecked,
     canSubmit,
     isSubmitting,
+    isRequestingPushPermission,
     toggleAll,
     toggleItem,
     handleBack,
@@ -58,6 +59,7 @@ export function TermsAgreementScreen({
               checked={allChecked}
               onChange={toggleAll}
               showRequirement={false}
+              disabled={isRequestingPushPermission}
             />
           </View>
 
@@ -72,6 +74,11 @@ export function TermsAgreementScreen({
                 onChange={() => toggleItem(term.id)}
                 onOpenDocument={(documentType) =>
                   router.push(getLegalDocumentRoute(documentType))
+                }
+                disabled={
+                  isRequestingPushPermission ||
+                  (term.id === "night_push_notifications" &&
+                    (!agreed.push_notifications || !agreed.marketing))
                 }
               />
             ))}

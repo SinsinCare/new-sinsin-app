@@ -23,4 +23,9 @@ export const TERMS: TermItem[] = [
     label: "푸시 알림 수신 동의",
     required: false,
   },
+  {
+    id: "night_push_notifications",
+    label: "야간(21:00~08:00) 광고성 알림 수신 동의",
+    required: false,
+  },
 ]
