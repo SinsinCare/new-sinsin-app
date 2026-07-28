@@ -1,8 +1,8 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useRouter } from "expo-router"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -16,40 +16,50 @@ import {
 import { userService } from "@/src/services/auth"
 import { clearClientSession } from "@/src/services/core/sessionCleanup"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { logger } from "@/src/lib/logger"
+import {
+  clearWithdrawalDraft,
+  getWithdrawalDraft,
+} from "@/src/features/settings/services/withdrawalDraft"
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const { reason, detail, deleteMyPosts } = useLocalSearchParams<{
-    reason?: string
-    detail?: string
-    deleteMyPosts?: string
-  }>()
   const c = useSettingsColors()
 
   const [agreed, setAgreed] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [loading, setLoading] = useState(false)
+  const isSubmittingRef = useRef(false)
 
   const handleWithdraw = async () => {
+    if (isSubmittingRef.current) return
+    const draft = getWithdrawalDraft()
+    if (!draft) {
+      setModalVisible(false)
+      Alert.alert("탈퇴 사유 확인", "탈퇴 사유를 다시 선택해주세요.")
+      router.replace("/(settings)/withdrawal")
+      return
+    }
+
+    isSubmittingRef.current = true
     setModalVisible(false)
     setLoading(true)
     try {
       await userService.deleteAccount(
-        reason || "앱에서 직접 탈퇴",
-        detail?.trim() || null,
-        deleteMyPosts === "true",
+        draft.reasonCode,
+        draft.otherDetail,
+        draft.deleteMyPosts,
       )
+      clearWithdrawalDraft()
       await clearClientSession()
       router.replace("/(settings)/withdrawal-complete")
-    } catch (err) {
-      logger.error("[WithdrawalTermsScreen] 탈퇴 실패", err)
+    } catch {
       Alert.alert(
         "오류",
         "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.",
       )
     } finally {
+      isSubmittingRef.current = false
       setLoading(false)
     }
   }

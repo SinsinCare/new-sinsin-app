@@ -458,7 +458,7 @@ describe("foodCameraService requestId contract", () => {
     )
   })
 
-  it("creates post-meal image analysis with the idempotency fields", async () => {
+  it("creates post-meal image analysis through the supported legacy endpoint", async () => {
     const append = jest.fn()
     const originalFormData = global.FormData
     Object.defineProperty(global, "FormData", {
@@ -467,15 +467,10 @@ describe("foodCameraService requestId contract", () => {
     })
     const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
       ok: true,
-      status: 202,
+      status: 200,
       json: async () => ({
         isSuccess: true,
-        result: {
-          analysisId: "analysis-create",
-          requestId: "food-req-create",
-          status: "QUEUED",
-          pollAfterMs: 1500,
-        },
+        result: createAnalysisResult({ foodAnalysisResultId: 55 }),
       }),
     } as Response)
 
@@ -485,14 +480,13 @@ describe("foodCameraService requestId contract", () => {
         "food-req-create",
       )
       expect(append).toHaveBeenCalledWith("requestId", "food-req-create")
-      expect(append).toHaveBeenCalledWith("mode", "POST_MEAL")
       expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/food-camera/analyze"),
+        expect.any(Object),
+      )
+      expect(fetchMock).not.toHaveBeenCalledWith(
         expect.stringContaining("/food-analyses"),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            "Idempotency-Key": "food-req-create",
-          }),
-        }),
+        expect.anything(),
       )
     } finally {
       fetchMock.mockRestore()

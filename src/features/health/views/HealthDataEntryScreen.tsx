@@ -101,7 +101,6 @@ export function HealthDataEntryScreen() {
           />
         </Pressable>
 
-        {/* 검사지 업로드하기 */}
         <Pressable
           style={({ pressed }) => [
             styles.optionCard,
@@ -134,7 +133,7 @@ export function HealthDataEntryScreen() {
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
             >
-              가지고 계신 종이 검사지를 촬영하거나 PDF 파일을 직접 업로드합니다.
+              사진 또는 PDF에서 검사 수치를 읽고, 저장 전 직접 확인할 수 있어요.
             </ThemedText>
           </View>
           <Ionicons

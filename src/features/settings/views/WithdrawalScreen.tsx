@@ -17,37 +17,42 @@ import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { ToggleItem } from "@/src/features/settings/components"
 import {
-  WITHDRAWAL_REASONS,
-  WITHDRAWAL_OTHER_INDEX,
+  WITHDRAWAL_OTHER_CODE,
+  WITHDRAWAL_OTHER_MAX_LENGTH,
+  WITHDRAWAL_OTHER_MIN_LENGTH,
+  WITHDRAWAL_REASON_OPTIONS,
+  type WithdrawalReasonCode,
 } from "@/src/features/settings/data/constants"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { saveWithdrawalDraft } from "@/src/features/settings/services/withdrawalDraft"
 
 export function WithdrawalScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [selectedReasonCode, setSelectedReasonCode] =
+    useState<WithdrawalReasonCode | null>(null)
   const [customReason, setCustomReason] = useState("")
   const [deleteMyPosts, setDeleteMyPosts] = useState(false)
 
-  const isOtherSelected = selectedIndex === WITHDRAWAL_OTHER_INDEX
+  const isOtherSelected = selectedReasonCode === WITHDRAWAL_OTHER_CODE
   const trimmedCustomReason = customReason.trim()
   const isActive =
-    selectedIndex !== null &&
-    (!isOtherSelected || trimmedCustomReason.length >= 20)
+    selectedReasonCode !== null &&
+    (!isOtherSelected ||
+      (trimmedCustomReason.length >= WITHDRAWAL_OTHER_MIN_LENGTH &&
+        trimmedCustomReason.length <= WITHDRAWAL_OTHER_MAX_LENGTH))
 
   const handleSubmit = () => {
-    if (selectedIndex === null) return
+    if (!selectedReasonCode || !isActive) return
 
-    router.push({
-      pathname: "/(settings)/withdrawal-terms",
-      params: {
-        reason: WITHDRAWAL_REASONS[selectedIndex],
-        detail: isOtherSelected ? trimmedCustomReason : "",
-        deleteMyPosts: deleteMyPosts ? "true" : "false",
-      },
+    saveWithdrawalDraft({
+      reasonCode: selectedReasonCode,
+      otherDetail: isOtherSelected ? trimmedCustomReason : null,
+      deleteMyPosts,
     })
+    router.push("/(settings)/withdrawal-terms")
   }
 
   return (
@@ -77,33 +82,34 @@ export function WithdrawalScreen() {
           </ThemedText>
 
           <View style={styles.optionList}>
-            {WITHDRAWAL_REASONS.map((reason, index) => (
-              <React.Fragment key={index}>
+            {WITHDRAWAL_REASON_OPTIONS.map((reason) => (
+              <React.Fragment key={reason.code}>
                 <Pressable
                   style={[
                     styles.optionItem,
-                    selectedIndex === index && {
+                    selectedReasonCode === reason.code && {
                       backgroundColor: c.secondaryBg,
                     },
                   ]}
-                  onPress={() => setSelectedIndex(index)}
+                  onPress={() => setSelectedReasonCode(reason.code)}
                 >
                   <ThemedText style={[styles.optionText, { color: c.text }]}>
-                    {reason}
+                    {reason.label}
                   </ThemedText>
                 </Pressable>
 
-                {index === WITHDRAWAL_OTHER_INDEX && (
+                {reason.code === WITHDRAWAL_OTHER_CODE && isOtherSelected && (
                   <TextInput
                     style={[
                       styles.customInput,
                       { backgroundColor: c.secondaryBg, color: c.text },
                     ]}
                     multiline
-                    placeholder="20자 이상 입력"
+                    placeholder="20자 이상, 500자 이하로 입력"
                     placeholderTextColor={c.textTertiary}
                     value={customReason}
                     onChangeText={setCustomReason}
+                    maxLength={WITHDRAWAL_OTHER_MAX_LENGTH}
                     textAlignVertical="top"
                   />
                 )}
