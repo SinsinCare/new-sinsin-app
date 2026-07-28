@@ -15,6 +15,7 @@ interface TermsConsentRowProps {
   onChange: () => void
   onOpenDocument?: (documentType: NonNullable<TermItem["documentType"]>) => void
   showRequirement?: boolean
+  disabled?: boolean
 }
 
 /** Auth-owned consent composition: one checkbox focus target plus an optional legal link. */
@@ -24,6 +25,7 @@ export function TermsConsentRow({
   onChange,
   onOpenDocument,
   showRequirement = true,
+  disabled = false,
 }: TermsConsentRowProps) {
   const { colors } = useV2Theme()
   const accessibilityLabel = showRequirement
@@ -35,12 +37,17 @@ export function TermsConsentRow({
       <Pressable
         accessibilityRole="checkbox"
         accessibilityLabel={accessibilityLabel}
-        accessibilityHint="두 번 탭하여 동의 상태를 변경합니다"
-        accessibilityState={{ checked }}
+        accessibilityHint={
+          disabled
+            ? "푸시 알림 수신 동의 후 선택할 수 있습니다"
+            : "두 번 탭하여 동의 상태를 변경합니다"
+        }
+        accessibilityState={{ checked, disabled }}
+        disabled={disabled}
         onPress={onChange}
         style={({ pressed }) => [
           styles.consentAction,
-          pressed && styles.pressed,
+          (pressed || disabled) && styles.pressed,
         ]}
       >
         <V2Checkbox

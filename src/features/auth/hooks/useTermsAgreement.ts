@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { router } from "expo-router"
 import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
@@ -24,11 +24,14 @@ export function useTermsAgreement({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRequestingPushPermission, setIsRequestingPushPermission] =
     useState(false)
+  const pushPermissionRequestInFlightRef = useRef(false)
   const {
     reset,
     setTermsOfServiceAgree,
     setPrivacyPolicyAgree,
     setMarketingAgree,
+    setPushConsent,
+    setNightPushConsent,
     setSignupInProgress,
   } = useSignupStore()
   const setUser = useAuthStore((s) => s.setUser)
@@ -45,22 +48,34 @@ export function useTermsAgreement({
   )
   const canSubmit = requiredChecked
 
-  const requestPushConsent = useCallback(async () => {
-    if (isRequestingPushPermission) return
+  const requestPushConsent = useCallback(async (selectNightPush = false) => {
+    if (pushPermissionRequestInFlightRef.current) return false
+    pushPermissionRequestInFlightRef.current = true
     setIsRequestingPushPermission(true)
     try {
       const granted = await notificationService.requestPermissions()
-      setAgreed((previous) => ({ ...previous, push_notifications: granted }))
+      setAgreed((previous) => ({
+        ...previous,
+        push_notifications: granted,
+        night_push_notifications: granted && selectNightPush,
+      }))
       if (!granted) {
         showErrorToast("알림 권한을 허용하지 않아 푸시 동의가 해제되었어요.")
       }
+      return granted
     } catch {
-      setAgreed((previous) => ({ ...previous, push_notifications: false }))
+      setAgreed((previous) => ({
+        ...previous,
+        push_notifications: false,
+        night_push_notifications: false,
+      }))
       showErrorToast("알림 권한을 확인하지 못해 푸시 동의가 해제되었어요.")
+      return false
     } finally {
+      pushPermissionRequestInFlightRef.current = false
       setIsRequestingPushPermission(false)
     }
-  }, [isRequestingPushPermission])
+  }, [])
 
   const toggleAll = useCallback(() => {
     if (allChecked) {
@@ -68,10 +83,11 @@ export function useTermsAgreement({
     } else {
       const next: Record<string, boolean> = {}
       TERMS.forEach((t) => {
-        next[t.id] = t.id !== "push_notifications"
+        next[t.id] =
+          t.id !== "push_notifications" && t.id !== "night_push_notifications"
       })
       setAgreed(next)
-      void requestPushConsent()
+      void requestPushConsent(true)
     }
   }, [allChecked, requestPushConsent])
 
@@ -79,10 +95,27 @@ export function useTermsAgreement({
     (id: string) => {
       if (id === "push_notifications") {
         if (agreed[id]) {
-          setAgreed((previous) => ({ ...previous, [id]: false }))
+          setAgreed((previous) => ({
+            ...previous,
+            [id]: false,
+            night_push_notifications: false,
+          }))
         } else {
           void requestPushConsent()
         }
+        return
+      }
+      if (id === "night_push_notifications") {
+        if (!agreed.push_notifications || !agreed.marketing) return
+        setAgreed((previous) => ({ ...previous, [id]: !previous[id] }))
+        return
+      }
+      if (id === "marketing" && agreed[id]) {
+        setAgreed((previous) => ({
+          ...previous,
+          marketing: false,
+          night_push_notifications: false,
+        }))
         return
       }
       setAgreed((previous) => ({ ...previous, [id]: !previous[id] }))
@@ -98,6 +131,8 @@ export function useTermsAgreement({
     setTermsOfServiceAgree(!!agreed["service"])
     setPrivacyPolicyAgree(!!agreed["privacy"])
     setMarketingAgree(!!agreed["marketing"])
+    setPushConsent(!!agreed["push_notifications"])
+    setNightPushConsent(!!agreed["night_push_notifications"])
     router.push("/(auth)/signup-email")
   }
 
@@ -117,6 +152,8 @@ export function useTermsAgreement({
         termsOfServiceAgree: !!agreed["service"],
         privacyPolicyAgree: !!agreed["privacy"],
         marketingAgree: !!agreed["marketing"],
+        pushConsent: !!agreed["push_notifications"],
+        nightPushConsent: !!agreed["night_push_notifications"],
       })
 
       reset()

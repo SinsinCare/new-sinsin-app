@@ -39,7 +39,7 @@ export function NotificationSettingsScreen() {
   const router = useRouter()
   const c = useSettingsColors()
   const { isAuthenticated } = useAuth()
-  const { settings, updateSettings, requestAndEnable } =
+  const { settings, updateSettings, setPushConsent } =
     useNotifications(isAuthenticated)
 
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null)
@@ -51,7 +51,7 @@ export function NotificationSettingsScreen() {
 
   const handleMorningToggle = async (value: boolean) => {
     if (value) {
-      const granted = await requestAndEnable()
+      const granted = await setPushConsent(true)
       if (!granted) {
         Alert.alert(
           "알림 권한 필요",
@@ -62,6 +62,7 @@ export function NotificationSettingsScreen() {
     }
     update({
       ...settings,
+      pushConsent: value ? true : settings.pushConsent,
       categories: {
         ...categories,
         morningCheck: { ...categories.morningCheck, enabled: value },
@@ -71,7 +72,7 @@ export function NotificationSettingsScreen() {
 
   const handleWaterToggle = async (value: boolean) => {
     if (value) {
-      const granted = await requestAndEnable()
+      const granted = await setPushConsent(true)
       if (!granted) {
         Alert.alert(
           "알림 권한 필요",
@@ -82,6 +83,7 @@ export function NotificationSettingsScreen() {
     }
     update({
       ...settings,
+      pushConsent: value ? true : settings.pushConsent,
       categories: {
         ...categories,
         waterReminder: { ...categories.waterReminder, enabled: value },
@@ -91,7 +93,7 @@ export function NotificationSettingsScreen() {
 
   const handleMealToggle = async (value: boolean) => {
     if (value) {
-      const granted = await requestAndEnable()
+      const granted = await setPushConsent(true)
       if (!granted) {
         Alert.alert(
           "알림 권한 필요",
@@ -102,6 +104,7 @@ export function NotificationSettingsScreen() {
     }
     update({
       ...settings,
+      pushConsent: value ? true : settings.pushConsent,
       categories: {
         ...categories,
         mealReminder: { ...categories.mealReminder, enabled: value },

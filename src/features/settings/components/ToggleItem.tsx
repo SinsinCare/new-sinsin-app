@@ -10,6 +10,7 @@ interface ToggleItemProps {
   description: string
   value: boolean
   onValueChange: (value: boolean) => void
+  disabled?: boolean
 }
 
 export function ToggleItem({
@@ -17,6 +18,7 @@ export function ToggleItem({
   description,
   value,
   onValueChange,
+  disabled = false,
 }: ToggleItemProps) {
   const c = useSettingsColors()
 
@@ -34,13 +36,16 @@ export function ToggleItem({
         <ThemedText style={[styles.toggleTitle, { color: c.text }]}>
           {title}
         </ThemedText>
-        <ThemedText style={[styles.toggleDescription, { color: c.textTertiary }]}>
+        <ThemedText
+          style={[styles.toggleDescription, { color: c.textTertiary }]}
+        >
           {description}
         </ThemedText>
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
+        disabled={disabled}
         trackColor={{
           false: c.isDark ? "#3A3A42" : "#E5E7EB",
           true: tokens.color.sub8.val,

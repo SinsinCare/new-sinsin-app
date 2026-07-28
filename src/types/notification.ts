@@ -32,11 +32,13 @@ export interface NotificationCategories {
 
 export interface NotificationSettings {
   pushConsent: boolean
+  nightPushConsent: boolean
   categories: NotificationCategories
 }
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   pushConsent: false,
+  nightPushConsent: false,
   categories: {
     morningCheck: {
       enabled: true,

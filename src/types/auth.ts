@@ -21,6 +21,8 @@ export interface SignupRequest {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  pushConsent?: boolean
+  nightPushConsent?: boolean
   phoneNumber: string
   password: string
   name: string
@@ -133,6 +135,8 @@ export interface SocialSignupRequest {
   termsOfServiceAgree: boolean
   privacyPolicyAgree: boolean
   marketingAgree: boolean
+  pushConsent?: boolean
+  nightPushConsent?: boolean
   phoneNumber?: string
 }
 

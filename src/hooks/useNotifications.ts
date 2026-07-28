@@ -17,13 +17,15 @@ export function useNotifications(isAuthenticated: boolean) {
     const granted = await notificationService.hasPermission()
     setSettings(fetched)
     setOsPermissionGranted(granted)
-    await notificationService.scheduleAll(fetched)
     if (fetched.pushConsent && granted) {
+      await notificationService.scheduleAll(fetched)
       try {
         await notificationService.registerPushToken()
       } catch {
         // 자동 최신화 실패가 로컬 알림 예약과 설정 표시를 막으면 안 된다.
       }
+    } else {
+      await notificationService.cancelAll()
     }
   }, [isAuthenticated])
 
@@ -50,13 +52,13 @@ export function useNotifications(isAuthenticated: boolean) {
   const updateSettings = useCallback(async (next: NotificationSettings) => {
     setSettings(next)
     await notificationSettingsService.update(next)
-    await notificationService.scheduleAll(next)
-  }, [])
-
-  const requestAndEnable = useCallback(async (): Promise<boolean> => {
-    const granted = await notificationService.requestPermissions()
+    const granted = await notificationService.hasPermission()
     setOsPermissionGranted(granted)
-    return granted
+    if (next.pushConsent && granted) {
+      await notificationService.scheduleAll(next)
+    } else {
+      await notificationService.cancelAll()
+    }
   }, [])
 
   const setPushConsent = useCallback(
@@ -65,9 +67,13 @@ export function useNotifications(isAuthenticated: boolean) {
         const granted = await notificationService.requestPermissions()
         setOsPermissionGranted(granted)
         if (!granted) return false
-        await notificationService.registerPushToken()
         const next = await notificationSettingsService.setPushConsent(true)
         setSettings(next)
+        try {
+          await notificationService.registerPushToken()
+        } catch {
+          // 제품 동의는 저장됐고, 다음 동기화 때 토큰 등록을 다시 시도한다.
+        }
         return true
       }
 
@@ -81,12 +87,26 @@ export function useNotifications(isAuthenticated: boolean) {
     [],
   )
 
+  const setNightPushConsent = useCallback(
+    async (enabled: boolean): Promise<boolean> => {
+      const granted = await notificationService.hasPermission()
+      setOsPermissionGranted(granted)
+      if (enabled && (!settings.pushConsent || !granted)) return false
+
+      const next =
+        await notificationSettingsService.setNightPushConsent(enabled)
+      setSettings(next)
+      return true
+    },
+    [settings.pushConsent],
+  )
+
   return {
     settings,
     osPermissionGranted,
     pushEnabled: settings.pushConsent && osPermissionGranted,
     updateSettings,
-    requestAndEnable,
     setPushConsent,
+    setNightPushConsent,
   }
 }

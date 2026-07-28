@@ -156,6 +156,8 @@ type SignupPrerequisites = Pick<
   | "termsOfServiceAgree"
   | "privacyPolicyAgree"
   | "marketingAgree"
+  | "pushConsent"
+  | "nightPushConsent"
   | "password"
   | "recommender"
 >
