@@ -5,16 +5,20 @@
 import { type ReactNode, useState } from "react"
 import {
   Appearance,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   useColorScheme,
   View,
 } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { v2AssetManifest } from "@/src/assets/v2AssetManifest"
 import {
+  iconNames,
+  radius,
   useV2Theme,
   V2Badge,
+  V2BottomCTA,
   V2BottomSheet,
   V2Bubble,
   V2Button,
@@ -31,6 +35,7 @@ import {
   V2Modal,
   V2Option,
   V2ProgressBar,
+  V2Screen,
   V2ScreenHeader,
   V2SearchField,
   V2SegmentControl,
@@ -38,13 +43,24 @@ import {
   V2Tab,
   V2TabBar,
   V2TextField,
-  type V2IconName,
 } from "@/src/design-system-v2"
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  children,
+  testID,
+}: {
+  title: string
+  children: ReactNode
+  testID?: string
+}) {
   const { colors } = useV2Theme()
   return (
-    <View style={styles.section}>
+    <View
+      style={styles.section}
+      testID={testID}
+      accessibilityLabel={testID ? `${title} showcase section` : undefined}
+    >
       <Text style={[styles.sectionTitle, { color: colors.label.neutral }]}>
         {title}
       </Text>
@@ -52,21 +68,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     </View>
   )
 }
-
-const ICONS: V2IconName[] = [
-  "heart",
-  "doctor",
-  "chat",
-  "health",
-  "camera",
-  "book",
-  "report",
-  "info",
-  "danger",
-  "search",
-  "chevronLeft",
-  "close",
-]
 
 export default function V2Showcase() {
   const { colors } = useV2Theme()
@@ -86,17 +87,21 @@ export default function V2Showcase() {
     Appearance.setColorScheme(scheme === "dark" ? "light" : "dark")
 
   return (
-    <SafeAreaView
-      style={[styles.root, { backgroundColor: colors.background.default }]}
-      edges={["top"]}
-    >
+    <V2Screen padded={false} edges={["top", "left", "right"]}>
       <V2ScreenHeader
         title="V2 Showcase"
-        right={<V2IconButton name="theme" onPress={toggleTheme} />}
+        right={
+          <V2IconButton
+            name="theme"
+            onPress={toggleTheme}
+            testID="v2-showcase-theme-toggle"
+            accessibilityLabel="Toggle showcase theme"
+          />
+        }
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Section title="Button">
+        <Section title="Button" testID="v2-showcase-button-states">
           <View style={styles.row}>
             <V2Button color="brand">브랜드</V2Button>
             <V2Button color="brand" variant="weak">
@@ -113,21 +118,31 @@ export default function V2Showcase() {
             <V2Button size="l">L</V2Button>
             <V2Button size="xl">XL</V2Button>
           </View>
-          <V2Button loading fullWidth>
+          <V2Button loading fullWidth testID="v2-showcase-button-loading">
             로딩 중
+          </V2Button>
+          <V2Button disabled fullWidth testID="v2-showcase-button-disabled">
+            비활성 버튼
           </V2Button>
         </Section>
 
-        <Section title="Icon Button">
+        <Section title="Icon Button" testID="v2-showcase-icon-button-states">
           <View style={styles.row}>
             <V2IconButton name="heart" variant="clear" />
             <V2IconButton name="heart" variant="border" />
             <V2IconButton name="heart" variant="fill" />
             <V2IconButton name="camera" variant="border" size="l" />
+            <V2IconButton
+              name="close"
+              variant="border"
+              disabled
+              testID="v2-showcase-icon-button-disabled"
+              accessibilityLabel="Disabled close icon button"
+            />
           </View>
         </Section>
 
-        <Section title="Text Field / Search">
+        <Section title="Text Field / Search" testID="v2-showcase-input-states">
           <V2TextField
             label="라벨"
             placeholder="입력하세요"
@@ -146,6 +161,22 @@ export default function V2Showcase() {
             value="잘못된 값"
             onChangeText={() => {}}
             error="필수 입력이에요"
+            testID="v2-showcase-text-field-error"
+          />
+          <V2TextField
+            label="비활성"
+            value="수정할 수 없어요"
+            onChangeText={() => {}}
+            disabled
+            testID="v2-showcase-text-field-disabled"
+          />
+          <V2TextField
+            label="여러 줄 입력"
+            value="긴 내용을 입력하는 multiline 상태를 확인합니다.\n두 번째 줄도 표시됩니다."
+            onChangeText={() => {}}
+            multiline
+            numberOfLines={3}
+            testID="v2-showcase-text-field-multiline"
           />
           <V2SearchField
             value={query}
@@ -155,7 +186,10 @@ export default function V2Showcase() {
           />
         </Section>
 
-        <Section title="Checkbox / Switch">
+        <Section
+          title="Checkbox / Switch"
+          testID="v2-showcase-selection-states"
+        >
           <View style={styles.row}>
             <V2Checkbox checked={checked} onChange={setChecked} />
             <V2Checkbox
@@ -165,6 +199,12 @@ export default function V2Showcase() {
             />
             <V2Switch value={sw} onValueChange={setSw} />
             <V2Switch value={!sw} onValueChange={(v) => setSw(!v)} disabled />
+            <V2Checkbox
+              checked
+              disabled
+              testID="v2-showcase-checkbox-disabled"
+              accessibilityLabel="Disabled checked checkbox"
+            />
           </View>
         </Section>
 
@@ -232,6 +272,34 @@ export default function V2Showcase() {
           </V2Card>
         </Section>
 
+        <Section
+          title="Replaceable Sample Asset"
+          testID="v2-showcase-sample-asset"
+        >
+          <View style={styles.assetPreviewRow}>
+            <Image
+              source={v2AssetManifest.genericCard.source}
+              style={[
+                styles.assetPreview,
+                {
+                  backgroundColor: colors.fill.background,
+                  borderRadius: radius["2xl"],
+                },
+              ]}
+              testID="v2-showcase-sample-asset-preview"
+              accessibilityLabel="Temporary neutral sample artwork"
+            />
+            <Text
+              style={[
+                styles.assetPreviewLabel,
+                { color: colors.label.neutral },
+              ]}
+            >
+              genericCard · sample · replacement pending
+            </Text>
+          </View>
+        </Section>
+
         <Section title="List Row / Option">
           <V2Card variant="outlined" padded={false}>
             <V2ListRow
@@ -261,28 +329,50 @@ export default function V2Showcase() {
           />
         </Section>
 
-        <Section title="Overlay (탭하면 열림)">
-          <V2Button color="brand" variant="weak" onPress={() => setModal(true)}>
+        <Section title="Bottom CTA" testID="v2-showcase-bottom-cta">
+          <V2BottomCTA
+            layout="vertical"
+            primaryLabel="주 작업"
+            onPrimary={() => {}}
+            secondaryLabel="보조 작업"
+            onSecondary={() => {}}
+          />
+        </Section>
+
+        <Section
+          title="Overlay (탭하면 열림)"
+          testID="v2-showcase-overlay-triggers"
+        >
+          <V2Button
+            color="brand"
+            variant="weak"
+            onPress={() => setModal(true)}
+            testID="v2-showcase-open-modal"
+          >
             Modal 열기
           </V2Button>
           <V2Button
             color="neutral"
             variant="weak"
             onPress={() => setSheet(true)}
+            testID="v2-showcase-open-bottom-sheet"
           >
             Bottom Sheet 열기
           </V2Button>
         </Section>
 
-        <Section title="Icons (12)">
+        <Section
+          title={`Icons (${iconNames.length})`}
+          testID="v2-showcase-icons"
+        >
           <View style={styles.iconGrid}>
-            {ICONS.map((n) => (
+            {iconNames.map((n) => (
               <V2Icon key={n} name={n} color={colors.label.normal} />
             ))}
           </View>
         </Section>
 
-        <Section title="States">
+        <Section title="States" testID="v2-showcase-async-states">
           <V2Card variant="outlined">
             <V2EmptyState
               icon="file"
@@ -337,12 +427,11 @@ export default function V2Showcase() {
           <V2ListRow leadingIcon="upload" title="앨범에서 선택" />
         </View>
       </V2BottomSheet>
-    </SafeAreaView>
+    </V2Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
   scroll: { padding: 24, paddingBottom: 120, gap: 4 },
   section: { marginBottom: 24, gap: 12 },
   sectionTitle: {
@@ -354,4 +443,7 @@ const styles = StyleSheet.create({
   sectionBody: { gap: 12 },
   row: { flexDirection: "row", gap: 8, flexWrap: "wrap", alignItems: "center" },
   iconGrid: { flexDirection: "row", gap: 16, flexWrap: "wrap" },
+  assetPreviewRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  assetPreview: { width: 96, height: 96 },
+  assetPreviewLabel: { flex: 1, fontSize: 14, lineHeight: 20 },
 })

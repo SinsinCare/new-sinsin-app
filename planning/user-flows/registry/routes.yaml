@@ -99,6 +99,11 @@ routes:
     module: settings
     auth_required: true
 
+  - path: "/(settings)/phone-number-edit"
+    screen: SCR_SETTINGS_PHONE_NUMBER_EDIT
+    module: settings
+    auth_required: true
+
   - path: "/(settings)/name-edit"
     screen: SCR_SETTINGS_NAME_EDIT
     module: settings
