@@ -14,9 +14,11 @@ export function judgeBloodPressure(
   diastolic: number | null,
 ): VitalStatus {
   if (systolic === null || diastolic === null) return "none"
-  // 정상 = 수축 90~119 그리고 이완 60~79. 상·하한 모두 벗어나면 주의(저혈압 포함).
+  // This card records home measurements. The Korean home-BP hypertension threshold is
+  // 135/85 mmHg, so common self-measurements such as 120/80 must not be marked caution.
+  // This is a display aid, not a patient's individualized CKD treatment target.
   const normal =
-    systolic >= 90 && systolic < 120 && diastolic >= 60 && diastolic < 80
+    systolic >= 90 && systolic < 135 && diastolic >= 60 && diastolic < 85
   return normal ? "normal" : "caution"
 }
 

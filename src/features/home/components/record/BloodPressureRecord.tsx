@@ -79,7 +79,7 @@ export function BloodPressureRecord({
               placeholderTextColor={placeholderColor}
               value={systolic}
               onChangeText={onChangeSystolic}
-              onEndEditing={onSave}
+              onBlur={onSave}
               keyboardType="number-pad"
               maxLength={3}
             />
@@ -92,7 +92,7 @@ export function BloodPressureRecord({
               placeholderTextColor={placeholderColor}
               value={diastolic}
               onChangeText={onChangeDiastolic}
-              onEndEditing={onSave}
+              onBlur={onSave}
               keyboardType="number-pad"
               maxLength={3}
             />
@@ -116,7 +116,7 @@ export function BloodPressureRecord({
             placeholderTextColor={placeholderColor}
             value={heartRate}
             onChangeText={onChangeHeartRate}
-            onEndEditing={onSave}
+            onBlur={onSave}
             keyboardType="number-pad"
             maxLength={3}
           />
