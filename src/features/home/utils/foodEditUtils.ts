@@ -90,7 +90,30 @@ export interface EditableFoodItem {
   unit: string
 }
 
+export function getAutoTitleForFoodCorrection(
+  result: FoodCameraAnalyzeResult,
+  foods: EditableFoodItem[],
+): string | undefined {
+  if (result.foods.length !== 1 || foods.length !== 1) return undefined
+
+  const currentTitle = result.title?.trim()
+  const originalFoodName = result.foods[0].name.trim()
+  const correctedFoodName = foods[0].name.trim()
+  const generatedTitleWithServing =
+    currentTitle?.startsWith(`${originalFoodName} `) &&
+    /^\d/.test(currentTitle.slice(originalFoodName.length).trim())
+  if (
+    !currentTitle ||
+    (currentTitle !== originalFoodName && !generatedTitleWithServing) ||
+    correctedFoodName === originalFoodName
+  ) {
+    return undefined
+  }
+  return correctedFoodName
+}
+
 export function buildFoodAnalysisUpdateRequest(input: {
+  title?: string
   servings: number
   eatenPercentage: number
   brothConsumedRatio?: number
@@ -98,6 +121,7 @@ export function buildFoodAnalysisUpdateRequest(input: {
   foods: EditableFoodItem[]
 }): FoodAnalysisUpdateRequest {
   return {
+    ...(input.title ? { title: input.title.trim() } : {}),
     servings: input.servings,
     eatenPercentage: input.eatenPercentage,
     ...(input.includeConsumptionContract

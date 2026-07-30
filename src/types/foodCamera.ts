@@ -215,8 +215,8 @@ export interface DateAnalysisBodyRecord {
 }
 
 export interface DateAnalysisBloodPressureRecord {
-  systolic: number
-  diastolic: number
+  systolic: number | null
+  diastolic: number | null
   heartRate: number | null
   recordDate: string
 }
@@ -291,6 +291,7 @@ export interface FoodAnalysisUpdateFoodItem {
 }
 
 export interface FoodAnalysisUpdateRequest {
+  title?: string
   servings: number
   eatenPercentage: number
   consumedRatio?: number
