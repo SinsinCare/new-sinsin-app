@@ -247,8 +247,9 @@ export function BloodMetricsTracker({
     const pressure = dateAnalysis?.bloodPressure
     if (isNewDate || !bloodPressureDirtyRef.current) {
       const nextBloodPressureDraft = {
-        systolic: pressure ? String(pressure.systolic) : "",
-        diastolic: pressure ? String(pressure.diastolic) : "",
+        systolic: pressure?.systolic != null ? String(pressure.systolic) : "",
+        diastolic:
+          pressure?.diastolic != null ? String(pressure.diastolic) : "",
         heartRate:
           pressure?.heartRate != null ? String(pressure.heartRate) : "",
       }

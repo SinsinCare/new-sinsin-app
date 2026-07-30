@@ -7,9 +7,9 @@ export interface BloodPressureDraft {
 }
 
 export interface BloodPressureAutoSaveRequest {
-  systolic: number
-  diastolic: number
-  heartRate: number | null
+  systolic?: number
+  diastolic?: number
+  heartRate?: number
   isComplete: boolean
   date: string
 }
@@ -21,13 +21,13 @@ export function buildBloodPressureAutoSaveRequest(
   const systolic = parseVital(draft.systolic)
   const diastolic = parseVital(draft.diastolic)
   const heartRate = parseVital(draft.heartRate)
-  if (systolic === null || diastolic === null) return null
+  if (systolic === null && diastolic === null && heartRate === null) return null
 
   return {
-    systolic: Math.trunc(systolic),
-    diastolic: Math.trunc(diastolic),
-    heartRate: heartRate === null ? null : Math.trunc(heartRate),
-    isComplete: heartRate !== null,
+    ...(systolic === null ? {} : { systolic: Math.trunc(systolic) }),
+    ...(diastolic === null ? {} : { diastolic: Math.trunc(diastolic) }),
+    ...(heartRate === null ? {} : { heartRate: Math.trunc(heartRate) }),
+    isComplete: systolic !== null && diastolic !== null && heartRate !== null,
     date,
   }
 }

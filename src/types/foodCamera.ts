@@ -215,8 +215,8 @@ export interface DateAnalysisBodyRecord {
 }
 
 export interface DateAnalysisBloodPressureRecord {
-  systolic: number
-  diastolic: number
+  systolic: number | null
+  diastolic: number | null
   heartRate: number | null
   recordDate: string
 }

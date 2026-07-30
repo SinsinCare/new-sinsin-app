@@ -4,9 +4,9 @@ import type {
 } from "@/src/features/home/data/bloodMetricsConstants"
 
 export interface BloodPressureUpsertRequest {
-  systolic: number
-  diastolic: number
-  heartRate?: number | null
+  systolic?: number
+  diastolic?: number
+  heartRate?: number
   isComplete?: boolean
   date: string
 }
