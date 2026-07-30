@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native"
+import { Animated, Pressable, StyleSheet, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
@@ -67,10 +62,18 @@ export function ConfirmExitModal({
   const isDarkMode = colorScheme === "dark"
   const { opacity, shouldRender } = useFadeVisibility(visible, FADE_DURATION)
 
-  const textColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
-  const secondaryTextColor = isDarkMode ? tokens.color.textDarkSub.val : "#81818D"
-  const cardBg = isDarkMode ? tokens.color.appBgDark.val : tokens.color.pureWhite.val
-  const borderColor = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const textColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
+  const secondaryTextColor = isDarkMode
+    ? tokens.color.textDarkSub.val
+    : "#81818D"
+  const cardBg = isDarkMode
+    ? tokens.color.appBgDark.val
+    : tokens.color.pureWhite.val
+  const borderColor = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.borderLight.val
   const backdropBg = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.3)"
 
   if (!shouldRender) return null

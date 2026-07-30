@@ -1,3 +1,4 @@
+import i18n from "@/src/i18n"
 import type { EmailLoginLinkRequiredResult, SocialProvider } from "@/src/types"
 
 export type SignupEmailSendFailure =
@@ -23,7 +24,9 @@ export function mapSignupEmailSendFailure(
     return {
       status: "duplicate",
       message:
-        typeof message === "string" ? message : "이미 가입된 이메일입니다.",
+        typeof message === "string"
+          ? message
+          : i18n.t("emailVerification.cannotSend", { ns: "auth" }),
     }
   }
 

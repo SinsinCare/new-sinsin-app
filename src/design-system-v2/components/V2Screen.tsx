@@ -53,6 +53,8 @@ export function V2Screen({
 
   const content = scroll ? (
     <ScrollView
+      bounces={false}
+      overScrollMode="never"
       style={styles.flex}
       contentContainerStyle={[styles.scrollContent, pad, contentContainerStyle]}
       keyboardShouldPersistTaps="handled"

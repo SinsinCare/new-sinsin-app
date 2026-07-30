@@ -35,17 +35,17 @@ const MOCK_FOOD_CAMERA_RESULT: FoodCameraAnalyzeResult = {
     water: 300,
   },
   evaluation: {
-    comment: "나트륨 섭취가 높은 편이에요. 국물 섭취를 줄여보세요.",
+    comment: "나트륨이 많은 식사예요. 국물은 덜 먹어 보세요.",
     score: 72,
     cautionFoods: [
       {
         food: "김치찌개",
-        reason: "나트륨이 높습니다.",
+        reason: "나트륨이 많아요.",
       },
     ],
     detail: {
-      riskFactors: "고나트륨 섭취",
-      disclaimer: "본 결과는 참고용이며, 의학적 진단이 아닙니다.",
+      riskFactors: "나트륨 섭취량이 많음",
+      disclaimer: "이 결과는 참고용이에요. 의학적 진단을 대신하지 않아요.",
     },
   },
 }

@@ -1,13 +1,24 @@
 import { YStack, Text, XStack } from "tamagui"
 import { AlertCircle } from "./lucide"
 import { Button } from "./Button"
+import { useTranslation } from "react-i18next"
 
 interface ErrorMessageProps {
+  title: string
   message: string
   onRetry?: () => void
+  retryLabel?: string
 }
 
-export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
+export function ErrorMessage({
+  title,
+  message,
+  onRetry,
+  retryLabel,
+}: ErrorMessageProps) {
+  const { t } = useTranslation()
+  const resolvedRetryLabel = retryLabel ?? t("action.retry")
+
   return (
     <YStack
       backgroundColor="$dangerBackground"
@@ -18,13 +29,13 @@ export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
       <XStack gap="$2" alignItems="center">
         <AlertCircle size={20} color="$danger" />
         <Text color="$danger" fontWeight="600">
-          오류 발생
+          {title}
         </Text>
       </XStack>
       <Text color="$danger">{message}</Text>
       {onRetry && (
         <Button variant="outline" buttonSize="small" onPress={onRetry}>
-          다시 시도
+          {resolvedRetryLabel}
         </Button>
       )}
     </YStack>

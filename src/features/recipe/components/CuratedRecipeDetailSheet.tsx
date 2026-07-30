@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { Pressable } from "react-native"
 import { Image } from "expo-image"
 import { YStack, XStack, Text, View } from "tamagui"
@@ -8,6 +9,28 @@ import {
   AppBottomSheetScrollView,
 } from "@/src/shared/components"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
+import { useTranslation } from "react-i18next"
+import { normalizeLanguage } from "@/src/i18n"
+import { useRecipeDetail } from "../hooks/useRecipeDetail"
+import { getCuratedRecipeContentPresentation } from "../utils/curatedRecipePresentation"
+
+const CATEGORY_KEYS = {
+  한식: "category.food.korean",
+  korean: "category.food.korean",
+  중식: "category.food.chinese",
+  chinese: "category.food.chinese",
+  일식: "category.food.japanese",
+  japanese: "category.food.japanese",
+  양식: "category.food.western",
+  western: "category.food.western",
+  샐러드: "category.food.salad",
+  salad: "category.food.salad",
+  디저트: "category.food.dessert",
+  dessert: "category.food.dessert",
+  음료: "category.food.beverage",
+  beverage: "category.food.beverage",
+  drink: "category.food.drink",
+} as const
 
 const COLORS = {
   light: {
@@ -44,13 +67,6 @@ const COLORS = {
     nutritionBg: "#26262D",
     nutritionBorder: "#3A3A42",
   },
-} as const
-
-const FRIENDLINESS_CONFIG = {
-  low_risk: { label: "신장 안전", bg: "#D1FAE5", text: "#065F46" },
-  moderate: { label: "적당히 섭취", bg: "#FEF3C7", text: "#92400E" },
-  high_risk: { label: "주의 필요", bg: "#FEE2E2", text: "#991B1B" },
-  caution: { label: "주의 필요", bg: "#FEE2E2", text: "#991B1B" },
 } as const
 
 const RECIPE_DETAIL_SNAP_POINTS = [58, 88]
@@ -101,16 +117,43 @@ export function CuratedRecipeDetailSheet({
   visible,
   onClose,
 }: CuratedRecipeDetailSheetProps) {
+  const { t, i18n } = useTranslation("recipe")
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
+  const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
+  const [showOriginal, setShowOriginal] = useState(false)
+  const contentPresentation = getCuratedRecipeContentPresentation(
+    recipe,
+    language,
+  )
+  const { isEnglishCatalog, hasEnglishContentGap } = contentPresentation
+  const originalRecipeQuery = useRecipeDetail(
+    isEnglishCatalog && showOriginal ? (recipe?.id ?? null) : null,
+    "ko",
+  )
+
+  useEffect(() => {
+    setShowOriginal(false)
+  }, [language, recipe?.id])
 
   if (!recipe) return null
 
-  const friendlinessKey = recipe.nutrition
-    .ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
-  const friendlinessConfig =
-    FRIENDLINESS_CONFIG[friendlinessKey] ?? FRIENDLINESS_CONFIG.moderate
   const image = recipe.detail_image_url ?? recipe.thumbnail_url
+  const categoryKey =
+    CATEGORY_KEYS[
+      recipe.category.toLowerCase() as keyof typeof CATEGORY_KEYS
+    ] ?? CATEGORY_KEYS[recipe.category as keyof typeof CATEGORY_KEYS]
+  const categoryLabel = categoryKey ? t(categoryKey) : recipe.category
+  const localeTag = language === "en" ? "en-US" : "ko-KR"
+  const originalRecipe = originalRecipeQuery.data
+  const visibleIngredients =
+    showOriginal && originalRecipe
+      ? originalRecipe.ingredients
+      : recipe.ingredients
+  const visibleSteps =
+    showOriginal && originalRecipe ? originalRecipe.steps : recipe.steps
+  const formatNutrition = (value: number, unit: string) =>
+    `${value.toLocaleString(localeTag)} ${unit}`
 
   return (
     <AppBottomSheet
@@ -152,29 +195,31 @@ export function CuratedRecipeDetailSheet({
                   fontFamily="$body"
                   color={palette.categoryText}
                 >
-                  {recipe.category}
+                  {categoryLabel}
                 </Text>
               </XStack>
-              <XStack
-                paddingHorizontal={8}
-                paddingVertical={4}
-                borderRadius={8}
-                backgroundColor={friendlinessConfig.bg}
-              >
-                <Text
-                  fontSize={12}
-                  fontWeight="600"
-                  fontFamily="$body"
-                  color={friendlinessConfig.text}
-                >
-                  {friendlinessConfig.label}
+              {recipe.time_min > 0 && (
+                <Text fontSize={12} fontFamily="$body" color={palette.sub}>
+                  {t("curated.minutes", { count: recipe.time_min })}
                 </Text>
-              </XStack>
+              )}
+              {recipe.difficulty && (
+                <Text fontSize={12} fontFamily="$body" color={palette.sub}>
+                  · {recipe.difficulty}
+                </Text>
+              )}
+              {recipe.servings > 0 && (
+                <Text fontSize={12} fontFamily="$body" color={palette.sub}>
+                  · {t("curated.servings", { count: recipe.servings })}
+                </Text>
+              )}
             </XStack>
           </YStack>
           <Pressable
             onPress={onClose}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("action.close")}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <View
@@ -218,7 +263,128 @@ export function CuratedRecipeDetailSheet({
             </View>
           )}
 
-          {/* AI 한줄평 */}
+          {recipe.description && (
+            <Text
+              fontSize={15}
+              fontFamily="$body"
+              color={palette.value}
+              lineHeight={23}
+            >
+              {recipe.description}
+            </Text>
+          )}
+
+          {hasEnglishContentGap && (
+            <YStack
+              borderWidth={1}
+              borderColor={palette.nutritionBorder}
+              backgroundColor={palette.nutritionBg}
+              borderRadius={12}
+              padding={14}
+              gap={10}
+            >
+              <YStack gap={4}>
+                <Text
+                  fontSize={15}
+                  fontWeight="700"
+                  fontFamily="$body"
+                  color={palette.sectionTitle}
+                >
+                  {t("curated.englishContentGapTitle")}
+                </Text>
+                <Text
+                  fontSize={14}
+                  fontFamily="$body"
+                  color={palette.sub}
+                  lineHeight={20}
+                >
+                  {t("curated.englishContentGapBody")}
+                </Text>
+              </YStack>
+
+              <XStack gap={8} flexWrap="wrap">
+                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                  {t("curated.ingredientCount", {
+                    count: contentPresentation.ingredientCount,
+                  })}
+                </Text>
+                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                  ·
+                </Text>
+                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                  {t("curated.stepCount", {
+                    count: contentPresentation.stepCount,
+                  })}
+                </Text>
+              </XStack>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  showOriginal
+                    ? "curated.hideOriginal"
+                    : "curated.showOriginal",
+                )}
+                onPress={() => setShowOriginal((current) => !current)}
+                style={({ pressed }) => ({
+                  alignSelf: "flex-start",
+                  opacity: pressed ? 0.65 : 1,
+                })}
+              >
+                <Text
+                  fontSize={14}
+                  fontWeight="700"
+                  fontFamily="$body"
+                  color={palette.categoryText}
+                >
+                  {t(
+                    showOriginal
+                      ? "curated.hideOriginal"
+                      : "curated.showOriginal",
+                  )}
+                </Text>
+              </Pressable>
+
+              {showOriginal && originalRecipeQuery.isLoading && (
+                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                  {t("curated.loadingOriginal")}
+                </Text>
+              )}
+              {showOriginal && originalRecipeQuery.isError && (
+                <YStack gap={6}>
+                  <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                    {t("curated.originalLoadError")}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("curated.retryOriginal")}
+                    onPress={() => void originalRecipeQuery.refetch()}
+                  >
+                    <Text
+                      fontSize={13}
+                      fontWeight="700"
+                      fontFamily="$body"
+                      color={palette.categoryText}
+                    >
+                      {t("curated.retryOriginal")}
+                    </Text>
+                  </Pressable>
+                </YStack>
+              )}
+              {showOriginal && originalRecipe && (
+                <Text
+                  fontSize={12}
+                  fontWeight="600"
+                  fontFamily="$body"
+                  color={palette.sub}
+                >
+                  {t("curated.originalKoreanLabel")}
+                </Text>
+              )}
+            </YStack>
+          )}
+
+          {/* 임상 검수 전에는 AI 요약과 단계별 섭취 허용 문구를 노출하지 않는다. */}
           <YStack
             backgroundColor={palette.aiBoxBg}
             borderRadius={12}
@@ -231,16 +397,15 @@ export function CuratedRecipeDetailSheet({
               fontFamily="$body"
               color={palette.categoryText}
             >
-              AI 한줄평
+              {t("curated.estimateTitle")}
             </Text>
             <Text
               fontSize={14}
               fontFamily="$body"
               color={palette.sub}
               lineHeight={20}
-              fontStyle="italic"
             >
-              {recipe.ai_summary.headline}
+              {t("curated.estimateBody")}
             </Text>
           </YStack>
 
@@ -252,180 +417,42 @@ export function CuratedRecipeDetailSheet({
               fontFamily="$body"
               color={palette.sectionTitle}
             >
-              영양정보
+              {t("curated.nutritionTitle")}
             </Text>
             <XStack gap={8}>
               <NutrientBox
-                label="나트륨"
-                value={`${recipe.nutrition.sodium_mg}mg`}
+                label={t("curated.sodium")}
+                value={formatNutrition(recipe.nutrition.sodium_mg, "mg")}
                 palette={palette}
               />
               <NutrientBox
-                label="칼륨"
-                value={`${recipe.nutrition.potassium_mg}mg`}
+                label={t("curated.potassium")}
+                value={formatNutrition(recipe.nutrition.potassium_mg, "mg")}
                 palette={palette}
               />
               <NutrientBox
-                label="인"
-                value={`${recipe.nutrition.phosphorus_mg}mg`}
+                label={t("curated.phosphorus")}
+                value={formatNutrition(recipe.nutrition.phosphorus_mg, "mg")}
                 palette={palette}
               />
             </XStack>
             <XStack gap={8}>
               <NutrientBox
-                label="단백질"
-                value={`${recipe.nutrition.protein_g}g`}
+                label={t("curated.protein")}
+                value={formatNutrition(recipe.nutrition.protein_g, "g")}
                 palette={palette}
               />
               <NutrientBox
-                label="칼로리"
-                value={`${recipe.nutrition.kcal}kcal`}
+                label={t("curated.calories")}
+                value={formatNutrition(recipe.nutrition.kcal, "kcal")}
                 palette={palette}
               />
               <YStack flex={1} />
             </XStack>
           </YStack>
 
-          {/* CKD 가이드 */}
-          {(recipe.ckd_guide.CKD3 ||
-            recipe.ckd_guide.CKD4 ||
-            recipe.ckd_guide.dialysis) && (
-            <YStack gap={10}>
-              <Text
-                fontSize={16}
-                fontWeight="700"
-                fontFamily="$body"
-                color={palette.sectionTitle}
-              >
-                CKD 단계별 가이드
-              </Text>
-              <YStack gap={8}>
-                {recipe.ckd_guide.CKD3 && (
-                  <XStack gap={10} alignItems="flex-start">
-                    <XStack
-                      paddingHorizontal={8}
-                      paddingVertical={3}
-                      borderRadius={6}
-                      backgroundColor="#EEF7F4"
-                      minWidth={60}
-                      justifyContent="center"
-                    >
-                      <Text
-                        fontSize={12}
-                        fontWeight="600"
-                        fontFamily="$body"
-                        color={tokens.color.sub8.val}
-                      >
-                        CKD 3기
-                      </Text>
-                    </XStack>
-                    <Text
-                      fontSize={14}
-                      fontFamily="$body"
-                      color={palette.sub}
-                      flex={1}
-                      lineHeight={20}
-                    >
-                      {recipe.ckd_guide.CKD3}
-                    </Text>
-                  </XStack>
-                )}
-                {recipe.ckd_guide.CKD4 && (
-                  <XStack gap={10} alignItems="flex-start">
-                    <XStack
-                      paddingHorizontal={8}
-                      paddingVertical={3}
-                      borderRadius={6}
-                      backgroundColor="#EEF7F4"
-                      minWidth={60}
-                      justifyContent="center"
-                    >
-                      <Text
-                        fontSize={12}
-                        fontWeight="600"
-                        fontFamily="$body"
-                        color={tokens.color.sub8.val}
-                      >
-                        CKD 4기
-                      </Text>
-                    </XStack>
-                    <Text
-                      fontSize={14}
-                      fontFamily="$body"
-                      color={palette.sub}
-                      flex={1}
-                      lineHeight={20}
-                    >
-                      {recipe.ckd_guide.CKD4}
-                    </Text>
-                  </XStack>
-                )}
-                {recipe.ckd_guide.dialysis && (
-                  <XStack gap={10} alignItems="flex-start">
-                    <XStack
-                      paddingHorizontal={8}
-                      paddingVertical={3}
-                      borderRadius={6}
-                      backgroundColor="#FEF3C7"
-                      minWidth={60}
-                      justifyContent="center"
-                    >
-                      <Text
-                        fontSize={12}
-                        fontWeight="600"
-                        fontFamily="$body"
-                        color="#92400E"
-                      >
-                        투석
-                      </Text>
-                    </XStack>
-                    <Text
-                      fontSize={14}
-                      fontFamily="$body"
-                      color={palette.sub}
-                      flex={1}
-                      lineHeight={20}
-                    >
-                      {recipe.ckd_guide.dialysis}
-                    </Text>
-                  </XStack>
-                )}
-                {recipe.ckd_guide.notes && (
-                  <XStack gap={10} alignItems="flex-start">
-                    <XStack
-                      paddingHorizontal={8}
-                      paddingVertical={3}
-                      borderRadius={6}
-                      backgroundColor="#F3F4F6"
-                      minWidth={60}
-                      justifyContent="center"
-                    >
-                      <Text
-                        fontSize={12}
-                        fontWeight="600"
-                        fontFamily="$body"
-                        color="#6B7280"
-                      >
-                        참고
-                      </Text>
-                    </XStack>
-                    <Text
-                      fontSize={14}
-                      fontFamily="$body"
-                      color={palette.sub}
-                      flex={1}
-                      lineHeight={20}
-                    >
-                      {recipe.ckd_guide.notes}
-                    </Text>
-                  </XStack>
-                )}
-              </YStack>
-            </YStack>
-          )}
-
           {/* 재료 */}
-          {recipe.ingredients.length > 0 && (
+          {visibleIngredients.length > 0 && (
             <YStack gap={10}>
               <Text
                 fontSize={16}
@@ -433,16 +460,16 @@ export function CuratedRecipeDetailSheet({
                 fontFamily="$body"
                 color={palette.sectionTitle}
               >
-                재료 ({recipe.servings}인분)
+                {t("curated.ingredients", { count: recipe.servings })}
               </Text>
               <YStack gap={6}>
-                {recipe.ingredients.map((ing, idx) => (
+                {visibleIngredients.map((ing, idx) => (
                   <XStack
                     key={idx}
                     justifyContent="space-between"
                     paddingVertical={6}
                     borderBottomWidth={
-                      idx < recipe.ingredients.length - 1 ? 1 : 0
+                      idx < visibleIngredients.length - 1 ? 1 : 0
                     }
                     borderBottomColor={palette.divider}
                   >
@@ -462,8 +489,8 @@ export function CuratedRecipeDetailSheet({
             </YStack>
           )}
 
-          {/* 조리순서 */}
-          {recipe.steps.length > 0 && (
+          {/* 조리 순서 */}
+          {visibleSteps.length > 0 && (
             <YStack gap={10}>
               <Text
                 fontSize={16}
@@ -471,10 +498,10 @@ export function CuratedRecipeDetailSheet({
                 fontFamily="$body"
                 color={palette.sectionTitle}
               >
-                조리순서
+                {t("curated.steps")}
               </Text>
               <YStack gap={12}>
-                {recipe.steps.map((step) => (
+                {visibleSteps.map((step) => (
                   <XStack key={step.order} gap={12} alignItems="flex-start">
                     <YStack
                       width={28}

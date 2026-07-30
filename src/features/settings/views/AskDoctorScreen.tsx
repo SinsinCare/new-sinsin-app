@@ -16,6 +16,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -32,15 +33,38 @@ import {
   searchDoctors,
 } from "@/src/services/doctorService"
 import { tokens } from "@/src/theme/tokens"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 
 type Mode = "code" | "search"
 
 const CONNECTIONS_QUERY_KEY = ["doctor-connections"]
 
-const statusCopy: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  APPROVED: { label: "연결됨", color: tokens.color.sub7.val, icon: "checkmark-circle" },
-  PENDING: { label: "승인 대기", color: "#C27803", icon: "time" },
-  REJECTED: { label: "거절됨", color: tokens.color.error.val, icon: "close-circle" },
+const statusCopy: Record<
+  string,
+  {
+    labelKey:
+      | "doctor.status.approved"
+      | "doctor.status.pending"
+      | "doctor.status.rejected"
+    color: string
+    icon: keyof typeof Ionicons.glyphMap
+  }
+> = {
+  APPROVED: {
+    labelKey: "doctor.status.approved",
+    color: tokens.color.sub7.val,
+    icon: "checkmark-circle",
+  },
+  PENDING: {
+    labelKey: "doctor.status.pending",
+    color: "#C27803",
+    icon: "time",
+  },
+  REJECTED: {
+    labelKey: "doctor.status.rejected",
+    color: tokens.color.error.val,
+    icon: "close-circle",
+  },
 }
 
 export function AskDoctorScreen() {
@@ -49,6 +73,7 @@ export function AskDoctorScreen() {
   const queryClient = useQueryClient()
   const c = useSettingsColors()
   const isDarkMode = useAppColorScheme() === "dark"
+  const { t } = useTranslation("settings")
 
   const [mode, setMode] = useState<Mode>("code")
   const [doctorCode, setDoctorCode] = useState("")
@@ -57,7 +82,9 @@ export function AskDoctorScreen() {
   const [name, setName] = useState("")
   const [hospital, setHospital] = useState("")
   const [department, setDepartment] = useState("")
-  const [messageByDoctorId, setMessageByDoctorId] = useState<Record<string, string>>({})
+  const [messageByDoctorId, setMessageByDoctorId] = useState<
+    Record<string, string>
+  >({})
   const [searchResult, setSearchResult] = useState<DoctorDirectoryItem[]>([])
 
   const inputRef = useRef<TextInput>(null)
@@ -72,10 +99,13 @@ export function AskDoctorScreen() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY })
       setDoctorCode("")
-      Alert.alert("등록 완료", "담당 의사가 연결되었습니다.")
+      Alert.alert(t("doctor.code.successTitle"), t("doctor.code.successBody"))
     },
     onError: (error) => {
-      Alert.alert("등록 실패", error instanceof Error ? error.message : "잠시 후 다시 시도해주세요.")
+      Alert.alert(
+        t("doctor.code.errorTitle"),
+        getErrorMessage(error, t("doctor.code.errorBody")),
+      )
     },
   })
 
@@ -85,7 +115,10 @@ export function AskDoctorScreen() {
       setSearchResult(result.items)
     },
     onError: (error) => {
-      Alert.alert("검색 실패", error instanceof Error ? error.message : "잠시 후 다시 시도해주세요.")
+      Alert.alert(
+        t("doctor.search.errorTitle"),
+        getErrorMessage(error, t("doctor.search.errorBody")),
+      )
     },
   })
 
@@ -93,15 +126,22 @@ export function AskDoctorScreen() {
     mutationFn: requestDoctorConnection,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY })
-      Alert.alert("요청 완료", "의사의 승인 후 연결됩니다.")
+      Alert.alert(
+        t("doctor.request.successTitle"),
+        t("doctor.request.successBody"),
+      )
     },
     onError: (error) => {
-      Alert.alert("요청 실패", error instanceof Error ? error.message : "잠시 후 다시 시도해주세요.")
+      Alert.alert(
+        t("doctor.request.errorTitle"),
+        getErrorMessage(error, t("doctor.request.errorBody")),
+      )
     },
   })
 
   const connections = connectionsQuery.data?.items ?? []
-  const canSubmitCode = doctorCode.length === 6 && agreed && !enrollMutation.isPending
+  const canSubmitCode =
+    doctorCode.length === 6 && agreed && !enrollMutation.isPending
 
   const submitCode = () => {
     enrollMutation.mutate(doctorCode)
@@ -114,7 +154,10 @@ export function AskDoctorScreen() {
       department: department.trim() || undefined,
     }
     if (!payload.name && !payload.hospital && !payload.department) {
-      Alert.alert("검색어 필요", "이름, 병원, 진료과 중 하나를 입력해주세요.")
+      Alert.alert(
+        t("doctor.search.missingTitle"),
+        t("doctor.search.missingBody"),
+      )
       return
     }
     Keyboard.dismiss()
@@ -127,7 +170,7 @@ export function AskDoctorScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
-        title="의사 연결하기"
+        title={t("doctor.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
@@ -137,28 +180,38 @@ export function AskDoctorScreen() {
         style={styles.flex}
       >
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: mode === "code" ? insets.bottom + 128 : insets.bottom + 32 },
+            {
+              paddingBottom:
+                mode === "code" ? insets.bottom + 128 : insets.bottom + 32,
+            },
           ]}
         >
           <ConnectionStatusSection
             colors={c}
             isLoading={connectionsQuery.isLoading}
+            isRefreshing={connectionsQuery.isFetching}
+            hasError={connectionsQuery.isError}
             connections={connections}
+            onRetry={() => {
+              void connectionsQuery.refetch()
+            }}
           />
 
           <View style={[styles.segmented, { backgroundColor: c.cardBg }]}>
             <SegmentButton
-              label="코드"
+              label={t("doctor.tabs.code")}
               icon="keypad-outline"
               active={mode === "code"}
               colors={c}
               onPress={() => setMode("code")}
             />
             <SegmentButton
-              label="검색"
+              label={t("doctor.tabs.search")}
               icon="search"
               active={mode === "search"}
               colors={c}
@@ -172,28 +225,45 @@ export function AskDoctorScreen() {
                 style={[
                   styles.mainCard,
                   {
-                    backgroundColor: isDarkMode ? tokens.color.cardBgDark.val : "#EEFAF7",
+                    backgroundColor: isDarkMode
+                      ? tokens.color.cardBgDark.val
+                      : "#EEFAF7",
                   },
                 ]}
               >
-                <ThemedText style={[styles.cardTitle, { color: tokens.color.sub7.val }]}>
-                  초대 코드 등록
+                <ThemedText
+                  style={[styles.cardTitle, { color: tokens.color.sub7.val }]}
+                >
+                  {t("doctor.code.title")}
                 </ThemedText>
 
-                <Pressable style={styles.otpContainer} onPress={() => inputRef.current?.focus()}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("doctor.code.inputAccessibility")}
+                  style={styles.otpContainer}
+                  onPress={() => inputRef.current?.focus()}
+                >
                   {[0, 1, 2, 3, 4, 5].map((i) => (
                     <View
                       key={i}
                       style={[
                         styles.otpBox,
-                        { backgroundColor: isDarkMode ? tokens.color.grey2.val : "#FFFFFF" },
+                        {
+                          backgroundColor: isDarkMode
+                            ? tokens.color.grey2.val
+                            : "#FFFFFF",
+                        },
                         doctorCode.length === i && styles.otpBoxActive,
                       ]}
                     >
                       <ThemedText
                         style={[
                           styles.otpText,
-                          { color: doctorCode[i] ? tokens.color.sub8.val : c.textTertiary },
+                          {
+                            color: doctorCode[i]
+                              ? tokens.color.sub8.val
+                              : c.textTertiary,
+                          },
                         ]}
                       >
                         {doctorCode[i] || ""}
@@ -202,8 +272,10 @@ export function AskDoctorScreen() {
                   ))}
                 </Pressable>
 
-                <ThemedText style={[styles.cardSubText, { color: c.textTertiary }]}>
-                  병원에서 전달받은 6자리 코드를 입력해주세요
+                <ThemedText
+                  style={[styles.cardSubText, { color: c.textTertiary }]}
+                >
+                  {t("doctor.code.hint")}
                 </ThemedText>
               </View>
 
@@ -219,6 +291,7 @@ export function AskDoctorScreen() {
                 keyboardType="number-pad"
                 maxLength={6}
                 autoFocus
+                accessibilityLabel={t("doctor.code.sixDigitAccessibility")}
               />
 
               <AgreementSection
@@ -231,28 +304,30 @@ export function AskDoctorScreen() {
           ) : (
             <View style={styles.searchSection}>
               <SearchInput
-                label="이름"
+                label={t("doctor.search.name")}
                 value={name}
                 colors={c}
-                placeholder="의사 이름"
+                placeholder={t("doctor.search.namePlaceholder")}
                 onChangeText={setName}
               />
               <SearchInput
-                label="병원"
+                label={t("doctor.search.hospital")}
                 value={hospital}
                 colors={c}
-                placeholder="병원명"
+                placeholder={t("doctor.search.hospitalPlaceholder")}
                 onChangeText={setHospital}
               />
               <SearchInput
-                label="진료과"
+                label={t("doctor.search.department")}
                 value={department}
                 colors={c}
-                placeholder="예: 신장내과"
+                placeholder={t("doctor.search.departmentPlaceholder")}
                 onChangeText={setDepartment}
               />
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("doctor.search.accessibility")}
                 style={[
                   styles.searchButton,
                   { opacity: searchMutation.isPending ? 0.7 : 1 },
@@ -265,12 +340,19 @@ export function AskDoctorScreen() {
                 ) : (
                   <>
                     <Ionicons name="search" size={18} color="#FFFFFF" />
-                    <ThemedText style={styles.searchButtonText}>검색</ThemedText>
+                    <ThemedText style={styles.searchButtonText}>
+                      {t("doctor.search.action")}
+                    </ThemedText>
                   </>
                 )}
               </Pressable>
 
               <View style={styles.resultsList}>
+                {searchMutation.isSuccess && searchResult.length === 0 ? (
+                  <ThemedText style={[styles.emptyText, { color: c.textSub }]}>
+                    {t("doctor.search.empty")}
+                  </ThemedText>
+                ) : null}
                 {searchResult.map((doctor) => {
                   const existing = existingConnectionFor(doctor.id)
                   const pendingThisDoctor =
@@ -285,7 +367,10 @@ export function AskDoctorScreen() {
                       colors={c}
                       isPending={pendingThisDoctor}
                       onChangeMessage={(text) =>
-                        setMessageByDoctorId((prev) => ({ ...prev, [doctor.id]: text }))
+                        setMessageByDoctorId((prev) => ({
+                          ...prev,
+                          [doctor.id]: text,
+                        }))
                       }
                       onRequest={() =>
                         requestMutation.mutate({
@@ -304,7 +389,7 @@ export function AskDoctorScreen() {
 
       {mode === "code" ? (
         <BottomActionBar
-          label="등록하기"
+          label={t("doctor.code.connect")}
           disabled={!canSubmitCode}
           paddingBottom={insets.bottom + 16}
           onPress={submitCode}
@@ -334,16 +419,29 @@ function SegmentButton({
   colors: ReturnType<typeof useSettingsColors>
   onPress: () => void
 }) {
+  const { t } = useTranslation("settings")
   return (
     <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      accessibilityLabel={t("doctor.tabs.accessibility", { label })}
       style={[
         styles.segmentButton,
         active && { backgroundColor: tokens.color.sub6.val },
       ]}
       onPress={onPress}
     >
-      <Ionicons name={icon} size={17} color={active ? "#FFFFFF" : colors.textSub} />
-      <ThemedText style={[styles.segmentText, { color: active ? "#FFFFFF" : colors.textSub }]}>
+      <Ionicons
+        name={icon}
+        size={17}
+        color={active ? "#FFFFFF" : colors.textSub}
+      />
+      <ThemedText
+        style={[
+          styles.segmentText,
+          { color: active ? "#FFFFFF" : colors.textSub },
+        ]}
+      >
         {label}
       </ThemedText>
     </Pressable>
@@ -353,53 +451,142 @@ function SegmentButton({
 function ConnectionStatusSection({
   colors,
   isLoading,
+  isRefreshing,
+  hasError,
   connections,
+  onRetry,
 }: {
   colors: ReturnType<typeof useSettingsColors>
   isLoading: boolean
+  isRefreshing: boolean
+  hasError: boolean
   connections: DoctorConnection[]
+  onRetry: () => void
 }) {
+  const { t } = useTranslation("settings")
   return (
     <View style={styles.statusSection}>
       <View style={styles.sectionHeader}>
-        <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>연결 상태</ThemedText>
-        {isLoading ? <ActivityIndicator size="small" color={tokens.color.sub6.val} /> : null}
+        <ThemedText style={[styles.sectionTitle, { color: colors.text }]}>
+          {t("doctor.status.title")}
+        </ThemedText>
+        {isLoading ? (
+          <ActivityIndicator size="small" color={tokens.color.sub6.val} />
+        ) : null}
       </View>
-      {connections.length === 0 && !isLoading ? (
-        <View style={[styles.emptyState, { borderColor: colors.border, backgroundColor: colors.cardBg }]}>
-          <Ionicons name="person-add-outline" size={20} color={colors.textTertiary} />
-          <ThemedText style={[styles.emptyText, { color: colors.textSub }]}>
-            연결된 의사가 없습니다.
+      {hasError && !isLoading ? (
+        <ConnectionRefreshState
+          colors={colors}
+          icon="cloud-offline-outline"
+          message={t("doctor.status.loadError")}
+          isRefreshing={isRefreshing}
+          onRetry={onRetry}
+        />
+      ) : null}
+      {!hasError && connections.length === 0 && !isLoading ? (
+        <ConnectionRefreshState
+          colors={colors}
+          icon="person-add-outline"
+          message={t("doctor.status.empty")}
+          isRefreshing={isRefreshing}
+          onRetry={onRetry}
+        />
+      ) : null}
+      {connections.length > 0
+        ? connections.map((connection) => {
+            const status = statusCopy[connection.status] ?? statusCopy.PENDING
+            return (
+              <View
+                key={connection.id}
+                style={[
+                  styles.connectionRow,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.cardBg,
+                  },
+                ]}
+              >
+                <View style={styles.connectionInfo}>
+                  <ThemedText
+                    style={[styles.connectionName, { color: colors.text }]}
+                  >
+                    {connection.doctor?.name ?? t("doctor.status.unknownName")}
+                  </ThemedText>
+                  <ThemedText
+                    style={[styles.connectionMeta, { color: colors.textSub }]}
+                  >
+                    {[
+                      connection.doctor?.organizationName,
+                      connection.doctor?.department,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || t("doctor.status.unknownOrganization")}
+                  </ThemedText>
+                </View>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: `${status.color}18` },
+                  ]}
+                >
+                  <Ionicons name={status.icon} size={14} color={status.color} />
+                  <ThemedText
+                    style={[styles.statusText, { color: status.color }]}
+                  >
+                    {t(status.labelKey)}
+                  </ThemedText>
+                </View>
+              </View>
+            )
+          })
+        : null}
+    </View>
+  )
+}
+
+function ConnectionRefreshState({
+  colors,
+  icon,
+  message,
+  isRefreshing,
+  onRetry,
+}: {
+  colors: ReturnType<typeof useSettingsColors>
+  icon: keyof typeof Ionicons.glyphMap
+  message: string
+  isRefreshing: boolean
+  onRetry: () => void
+}) {
+  const { t } = useTranslation("settings")
+  return (
+    <View
+      style={[
+        styles.emptyState,
+        { borderColor: colors.border, backgroundColor: colors.cardBg },
+      ]}
+    >
+      <View style={styles.emptyStateCopy}>
+        <Ionicons name={icon} size={20} color={colors.textTertiary} />
+        <ThemedText style={[styles.emptyText, { color: colors.textSub }]}>
+          {message}
+        </ThemedText>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("doctor.status.retryAccessibility")}
+        accessibilityState={{ disabled: isRefreshing }}
+        disabled={isRefreshing}
+        style={[styles.retryButton, isRefreshing && styles.retryButtonDisabled]}
+        onPress={onRetry}
+      >
+        {isRefreshing ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <ThemedText style={styles.retryButtonText}>
+            {t("doctor.status.retry")}
           </ThemedText>
-        </View>
-      ) : (
-        connections.map((connection) => {
-          const status = statusCopy[connection.status] ?? statusCopy.PENDING
-          return (
-            <View
-              key={connection.id}
-              style={[styles.connectionRow, { borderColor: colors.border, backgroundColor: colors.cardBg }]}
-            >
-              <View style={styles.connectionInfo}>
-                <ThemedText style={[styles.connectionName, { color: colors.text }]}>
-                  {connection.doctor?.name ?? "의사 정보 없음"}
-                </ThemedText>
-                <ThemedText style={[styles.connectionMeta, { color: colors.textSub }]}>
-                  {[connection.doctor?.organizationName, connection.doctor?.department]
-                    .filter(Boolean)
-                    .join(" · ") || "소속 정보 없음"}
-                </ThemedText>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: `${status.color}18` }]}>
-                <Ionicons name={status.icon} size={14} color={status.color} />
-                <ThemedText style={[styles.statusText, { color: status.color }]}>
-                  {status.label}
-                </ThemedText>
-              </View>
-            </View>
-          )
-        })
-      )}
+        )}
+      </Pressable>
     </View>
   )
 }
@@ -415,28 +602,45 @@ function AgreementSection({
   onToggle: () => void
   onOpenTerms: () => void
 }) {
+  const { t } = useTranslation("settings")
   return (
     <View style={styles.agreementSection}>
-      <Pressable style={styles.checkboxRow} onPress={onToggle}>
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: agreed }}
+        accessibilityLabel={t("doctor.agreement.accessibility")}
+        style={styles.checkboxRow}
+        onPress={onToggle}
+      >
         <Ionicons
           name={agreed ? "checkbox" : "square-outline"}
           size={22}
           color={agreed ? tokens.color.sub6.val : colors.textTertiary}
         />
         <ThemedText style={[styles.checkboxText, { color: colors.text }]}>
-          담당 의사에게 건강 데이터 열람 및 공유를 동의합니다
+          {t("doctor.agreement.label")}
         </ThemedText>
       </Pressable>
 
       <ThemedText style={[styles.infoLabel, { color: colors.textTertiary }]}>
-        동의 시 의사가 환자님의 건강 기록을 모니터링할 수 있습니다.
+        {t("doctor.agreement.body")}
       </ThemedText>
 
-      <Pressable onPress={onOpenTerms} style={styles.termsLink}>
-        <ThemedText style={[styles.termsLinkText, { color: colors.textTertiary }]}>
-          데이터 공유 약관 보기
+      <Pressable
+        accessibilityRole="button"
+        onPress={onOpenTerms}
+        style={styles.termsLink}
+      >
+        <ThemedText
+          style={[styles.termsLinkText, { color: colors.textTertiary }]}
+        >
+          {t("doctor.agreement.details")}
         </ThemedText>
-        <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
+        <Ionicons
+          name="chevron-forward"
+          size={14}
+          color={colors.textTertiary}
+        />
       </Pressable>
     </View>
   )
@@ -457,7 +661,9 @@ function SearchInput({
 }) {
   return (
     <View style={styles.fieldGroup}>
-      <ThemedText style={[styles.fieldLabel, { color: colors.textSub }]}>{label}</ThemedText>
+      <ThemedText style={[styles.fieldLabel, { color: colors.textSub }]}>
+        {label}
+      </ThemedText>
       <TextInput
         value={value}
         placeholder={placeholder}
@@ -494,26 +700,44 @@ function DoctorResultCard({
   onChangeMessage: (value: string) => void
   onRequest: () => void
 }) {
-  const status = existingConnection ? statusCopy[existingConnection.status] : null
+  const { t } = useTranslation("settings")
+  const status = existingConnection
+    ? statusCopy[existingConnection.status]
+    : null
   const disabled = Boolean(existingConnection) || isPending
 
   return (
-    <View style={[styles.resultCard, { borderColor: colors.border, backgroundColor: colors.cardBg }]}>
+    <View
+      style={[
+        styles.resultCard,
+        { borderColor: colors.border, backgroundColor: colors.cardBg },
+      ]}
+    >
       <View style={styles.resultHeader}>
         <View style={styles.resultAvatar}>
           <Ionicons name="medkit" size={18} color={tokens.color.sub7.val} />
         </View>
         <View style={styles.resultInfo}>
-          <ThemedText style={[styles.resultName, { color: colors.text }]}>{doctor.name}</ThemedText>
+          <ThemedText style={[styles.resultName, { color: colors.text }]}>
+            {doctor.name}
+          </ThemedText>
           <ThemedText style={[styles.resultMeta, { color: colors.textSub }]}>
-            {[doctor.organizationName, doctor.department || doctor.speciality].filter(Boolean).join(" · ") ||
-              "소속 정보 없음"}
+            {[doctor.organizationName, doctor.department || doctor.speciality]
+              .filter(Boolean)
+              .join(" · ") || t("doctor.status.unknownOrganization")}
           </ThemedText>
         </View>
         {status ? (
-          <View style={[styles.statusBadge, { backgroundColor: `${status.color}18` }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: `${status.color}18` },
+            ]}
+          >
             <Ionicons name={status.icon} size={14} color={status.color} />
-            <ThemedText style={[styles.statusText, { color: status.color }]}>{status.label}</ThemedText>
+            <ThemedText style={[styles.statusText, { color: status.color }]}>
+              {t(status.labelKey)}
+            </ThemedText>
           </View>
         ) : null}
       </View>
@@ -521,7 +745,7 @@ function DoctorResultCard({
       {!existingConnection ? (
         <TextInput
           value={message}
-          placeholder="전달할 메시지"
+          placeholder={t("doctor.request.messagePlaceholder")}
           placeholderTextColor={colors.textTertiary}
           multiline
           style={[
@@ -533,6 +757,12 @@ function DoctorResultCard({
       ) : null}
 
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          existingConnection
+            ? t("doctor.request.alreadyAccessibility")
+            : t("doctor.request.accessibility", { name: doctor.name })
+        }
         style={[styles.requestButton, disabled && styles.requestButtonDisabled]}
         disabled={disabled}
         onPress={onRequest}
@@ -541,7 +771,9 @@ function DoctorResultCard({
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <ThemedText style={styles.requestButtonText}>
-            {existingConnection ? "요청됨" : "연결 요청"}
+            {existingConnection
+              ? t("doctor.request.sent")
+              : t("doctor.request.action")}
           </ThemedText>
         )}
       </Pressable>
@@ -560,6 +792,7 @@ function TermsModal({
   bottomInset: number
   onClose: () => void
 }) {
+  const { t } = useTranslation("settings")
   return (
     <Modal
       visible={visible}
@@ -569,36 +802,63 @@ function TermsModal({
     >
       <View style={[styles.termsModal, { backgroundColor: colors.bg }]}>
         <View style={styles.termsHeader}>
-          <ThemedText style={[styles.termsTitle, { color: colors.text }]}>데이터 공유 약관</ThemedText>
-          <Pressable onPress={onClose} hitSlop={8}>
+          <ThemedText style={[styles.termsTitle, { color: colors.text }]}>
+            {t("doctor.terms.title")}
+          </ThemedText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("doctor.terms.closeAccessibility")}
+            onPress={onClose}
+            hitSlop={8}
+          >
             <Ionicons name="close" size={22} color={colors.textSub} />
           </Pressable>
         </View>
 
-        <ScrollView style={styles.termsScroll} contentContainerStyle={styles.termsContent}>
+        <ScrollView
+          bounces={false}
+          overScrollMode="never"
+          style={styles.termsScroll}
+          contentContainerStyle={styles.termsContent}
+        >
           <ThemedText style={[styles.termsSection, { color: colors.text }]}>
-            의사 연결 및 데이터 공유
+            {t("doctor.terms.sharingTitle")}
           </ThemedText>
-          <ThemedText style={[styles.termsParagraph, { color: colors.textSub }]}>
-            연결된 의사는 사용자의 식단 기록, 영양소 섭취 기록, 수분 기록, 체중 및 부종 기록을 열람할 수 있습니다.
+          <ThemedText
+            style={[styles.termsParagraph, { color: colors.textSub }]}
+          >
+            {t("doctor.terms.sharingBody")}
           </ThemedText>
 
           <ThemedText style={[styles.termsSection, { color: colors.text }]}>
-            동의 철회 및 삭제
+            {t("doctor.terms.withdrawalTitle")}
           </ThemedText>
-          <ThemedText style={[styles.termsParagraph, { color: colors.textSub }]}>
-            사용자는 데이터 공유 중단 또는 삭제를 요청할 수 있으며, 회원 탈퇴 시 공유된 데이터도 처리 정책에 따라 삭제됩니다.
+          <ThemedText
+            style={[styles.termsParagraph, { color: colors.textSub }]}
+          >
+            {t("doctor.terms.withdrawalBody")}
           </ThemedText>
 
-          <ThemedText style={[styles.termsSection, { color: colors.text }]}>문의</ThemedText>
-          <ThemedText style={[styles.termsParagraph, { color: colors.textSub }]}>
-            데이터 공유와 삭제에 관한 문의는 앱 내 문의하기 기능 또는 고객센터를 통해 접수할 수 있습니다.
+          <ThemedText style={[styles.termsSection, { color: colors.text }]}>
+            {t("doctor.terms.supportTitle")}
+          </ThemedText>
+          <ThemedText
+            style={[styles.termsParagraph, { color: colors.textSub }]}
+          >
+            {t("doctor.terms.supportBody")}
           </ThemedText>
         </ScrollView>
 
         <View style={[styles.termsBottom, { paddingBottom: bottomInset + 16 }]}>
-          <Pressable style={styles.termsCloseButton} onPress={onClose}>
-            <ThemedText style={styles.termsCloseText}>확인</ThemedText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("doctor.terms.confirmAccessibility")}
+            style={styles.termsCloseButton}
+            onPress={onClose}
+          >
+            <ThemedText style={styles.termsCloseText}>
+              {t("doctor.terms.confirm")}
+            </ThemedText>
           </Pressable>
         </View>
       </View>
@@ -635,14 +895,38 @@ const styles = StyleSheet.create({
     minHeight: 56,
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 14,
+    padding: 14,
+    gap: 12,
+  },
+  emptyStateCopy: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
   emptyText: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "500",
+    lineHeight: 20,
+  },
+  retryButton: {
+    minWidth: 104,
+    height: 36,
+    alignSelf: "flex-start",
+    marginLeft: 28,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: tokens.color.sub6.val,
+  },
+  retryButtonDisabled: {
+    opacity: 0.65,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
   },
   connectionRow: {
     minHeight: 68,

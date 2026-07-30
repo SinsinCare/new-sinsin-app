@@ -124,6 +124,11 @@ Screen work must keep Expo Router files thin, feature behavior owned by
 `src/features/<feature>`, and new v2 UI assembled from `src/design-system-v2`
 tokens/components instead of one-off styling.
 
+Before adding or changing user-facing Korean copy, read
+[`docs/ux-writing-guide.md`](docs/ux-writing-guide.md). Do not expose raw API
+errors or implementation terms to users, and run `npm run audit:ux-copy` after
+copy changes.
+
 ### Routing (Expo Router - File-based)
 
 - `app/_layout.tsx` - Root layout with providers (Tamagui, React Query, Pretendard fonts) and auth-based navigation
@@ -226,7 +231,9 @@ Required in `.env` (see `.env.example`):
 Health app for CKD patients with:
 
 - CKD stages 1-5 tracking, dialysis status
-- Kidney-safe nutrient limits: sodium 2000mg, potassium 2000mg, phosphorus 1000mg, protein 0.8g/kg
+- Kidney-safe nutrient limits come from the profile and backend policy. CKD stage,
+  dialysis status, weight, and clinician-set goals can change them; do not present
+  `0.8g/kg` as a universal protein target.
 - AI food analysis with kidney safety assessment (safe/caution/warning)
 - AI consultation chat with health context
 - Kidney-safe food scoring algorithm (penalizes high phosphorus/potassium/sodium/protein, rewards water/magnesium/calcium/vitamin D)

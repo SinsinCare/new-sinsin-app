@@ -21,7 +21,10 @@ interface CurationSectionProps {
   onRestaurantPress?: (id: string) => void
 }
 
-export function CurationSection({ section, onRestaurantPress }: CurationSectionProps) {
+export function CurationSection({
+  section,
+  onRestaurantPress,
+}: CurationSectionProps) {
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
@@ -41,6 +44,8 @@ export function CurationSection({ section, onRestaurantPress }: CurationSectionP
         </Text>
       </YStack>
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingRight: 16 }}
@@ -49,7 +54,11 @@ export function CurationSection({ section, onRestaurantPress }: CurationSectionP
           <RestaurantCard
             key={restaurant.id}
             restaurant={restaurant}
-            onPress={onRestaurantPress ? () => onRestaurantPress(restaurant.id) : undefined}
+            onPress={
+              onRestaurantPress
+                ? () => onRestaurantPress(restaurant.id)
+                : undefined
+            }
           />
         ))}
       </ScrollView>

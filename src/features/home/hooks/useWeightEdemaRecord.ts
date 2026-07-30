@@ -2,11 +2,13 @@ import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useState } from "react"
 import { Alert } from "react-native"
 import { EdemaLevel } from "../types"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { logRecoverableError } from "@/src/lib/errorUtils"
 import { useQueryClient } from "@tanstack/react-query"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useTranslation } from "react-i18next"
 
 export function useWeightEdemaRecord() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -18,8 +20,11 @@ export function useWeightEdemaRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      console.error("updateWeight error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      logRecoverableError("updateWeight error:", error)
+      Alert.alert(
+        t("home.errors.saveWeightTitle"),
+        t("home.errors.saveWeightBody"),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -33,8 +38,11 @@ export function useWeightEdemaRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      console.error("updateEdema error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      logRecoverableError("updateEdema error:", error)
+      Alert.alert(
+        t("home.errors.saveEdemaTitle"),
+        t("home.errors.saveEdemaBody"),
+      )
     } finally {
       setIsLoading(false)
     }

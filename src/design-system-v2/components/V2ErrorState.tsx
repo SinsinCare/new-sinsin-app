@@ -12,28 +12,39 @@ import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Button } from "./V2Button"
 import { V2Icon } from "./V2Icon"
 
-export type V2ErrorStateProps = {
+type V2ErrorStateBaseProps = {
   /** 상단 아이콘. 기본 'caution' (status.negative 색으로 칠함) */
   icon?: V2IconName
-  /** 제목. 기본 "문제가 발생했어요" */
-  title?: string
+  /** 사용자가 처한 상황을 구체적으로 설명하는 제목 */
+  title: string
   /** 부가 설명 (옵션) */
   description?: string
-  /** 재시도 콜백. 넘기면 하단에 "다시 시도" 버튼 노출 */
-  onRetry?: () => void
-  /** 재시도 버튼 라벨 override. 기본 "다시 시도" */
-  retryLabel?: string
   style?: ViewStyle
 }
 
-export function V2ErrorState({
-  icon = "caution",
-  title = "문제가 발생했어요",
-  description,
-  onRetry,
-  retryLabel = "다시 시도",
-  style,
-}: V2ErrorStateProps) {
+export type V2ErrorStateProps = V2ErrorStateBaseProps &
+  (
+    | {
+        /** 사용자가 이 화면에서 바로 복구할 수 있을 때만 제공 */
+        onRetry: () => void
+        /** 실제 행동을 나타내는 라벨. 예: "다시 불러오기" */
+        retryLabel: string
+      }
+    | {
+        onRetry?: undefined
+        retryLabel?: never
+      }
+  )
+
+export function V2ErrorState(props: V2ErrorStateProps) {
+  const {
+    icon = "caution",
+    title,
+    description,
+    onRetry,
+    retryLabel,
+    style,
+  } = props
   const { colors } = useV2Theme()
 
   return (

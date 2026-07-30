@@ -26,8 +26,8 @@ describe("social login flow", () => {
     expect(getSocialLoginErrorAction(error, "google", isCancelled)).toEqual({
       type: "provider_email_required",
       provider: "google",
-      title: "Google 이메일 정보가 필요해요",
-      message: expect.stringContaining("이메일 제공에 동의"),
+      title: "Google에서 이메일을 받지 못했어요",
+      message: expect.stringContaining("이메일 공유를 허용"),
     })
   })
 
@@ -52,7 +52,7 @@ describe("social login flow", () => {
       ).toMatchObject({
         type: "provider_email_required",
         provider,
-        title: `${label} 이메일 정보가 필요해요`,
+        title: `${label}에서 이메일을 받지 못했어요`,
         message: expect.stringContaining("다른 로그인 방법"),
       })
     },

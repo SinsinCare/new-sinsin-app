@@ -9,6 +9,7 @@ export type AnalyticsScreenName =
   | "profile"
   | "notifications"
   | "health"
+  | "community"
   | "community_write"
   | "community_post"
   | "other"
@@ -17,8 +18,14 @@ export type AnalyticsSignupStep =
   | "terms"
   | "email_verification"
   | "password"
-  | "profile"
+  // 필수정보 스텝. 라우트가 하나라 화면 전환으로는 구분되지 않고,
+  // 스텝 화면이 직접 auth_signup_step_viewed 를 쏜다.
   | "nickname"
+  | "birth"
+  | "gender"
+  | "name"
+  | "phone"
+  | "acquisition"
   | "complete"
 
 export type AnalyticsSignupMethod = "email" | "social"
@@ -67,7 +74,10 @@ export type AnalyticsEventProperties = {
   food_photo_permission_denied: { source: "camera" | "gallery" }
   food_analysis_started: { method: "photo" | "text" }
   food_analysis_succeeded: { method: "photo" | "text" }
-  food_analysis_failed: { method: "photo" | "text" }
+  food_analysis_failed: {
+    method: "photo" | "text"
+    reason?: "confirmation_unavailable"
+  }
   food_analysis_dismissed: { method: "photo" | "text" }
   food_record_result_viewed: { source: AnalyticsFoodRecordSource }
   food_record_saved: { source: "fresh" | "recovered" }
@@ -116,6 +126,8 @@ export function getAnalyticsScreenName(
   const [group, route] = segments
 
   if (group === "onboarding") return "onboarding"
+  // 상담은 탭에서 전역 모달 라우트로 이동했다 — 그룹 없이 루트에 선다.
+  if (group === "consult") return "consult"
   if (group === "post") return "community_post"
   if (group === "(write)") return "community_write"
   if (group === "restaurant") return "restaurant"
@@ -126,7 +138,7 @@ export function getAnalyticsScreenName(
 
   if (group === "(tabs)") {
     if (route === "home") return "home"
-    if (route === "consult") return "consult"
+    if (route === "community") return "community"
     if (route === "recipe") return "recipe"
     if (route === "restaurant") return "restaurant"
     if (route === "all") return "profile"
@@ -154,10 +166,8 @@ export function getAnalyticsSignupStep(
       return "email_verification"
     case "signup-password":
       return "password"
-    case "profile-setup":
-      return "profile"
-    case "nickname-setup":
-      return "nickname"
+    // profile-setup 은 라우트 하나에 여섯 질문이 들어 있다. 라우트 진입으로
+    // 한 번 찍으면 어느 질문에서 이탈했는지 못 본다 — 화면이 스텝별로 직접 찍는다.
     case "signup-complete":
       return "complete"
     default:

@@ -11,12 +11,14 @@ import { router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { useTranslation } from "react-i18next"
 import { useAuthColors } from "../hooks"
+import { useAuthSurface } from "../hooks/useAuthSurface"
+import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import {
   AuthKeyboardFooter,
   AUTH_KEYBOARD_FOOTER_CLEARANCE,
 } from "../components"
-import { tokens } from "@/src/theme/tokens"
 
 interface AuthScreenLayoutProps {
   title: string
@@ -48,7 +50,9 @@ export function AuthScreenLayout({
   keyboardAvoiding = false,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets()
+  const { t } = useTranslation("auth")
   const colors = useAuthColors()
+  const surface = useAuthSurface()
   const handleDefaultBack = () => {
     if (router.canGoBack()) {
       router.back()
@@ -60,18 +64,18 @@ export function AuthScreenLayout({
   const content = (
     <>
       <YStack flex={scrollable ? 1 : undefined}>
+        {/* 질문 위계는 스텝 화면과 같은 스케일을 쓴다(24/700 → 15/weak).
+            화면마다 제목 크기가 다르면 같은 흐름으로 안 읽힌다. */}
         <Text
-          fontSize={22}
-          fontWeight="600"
-          color={colors.text}
-          letterSpacing={-0.44}
-          lineHeight={26.4}
+          {...AUTH_TYPE.question}
+          fontWeight="700"
+          color={surface.textStrong}
           marginBottom={subtitle ? 8 : 0}
         >
           {title}
         </Text>
         {subtitle && (
-          <Text fontSize={15} lineHeight={18} color={colors.textSub}>
+          <Text {...AUTH_TYPE.subtitle} color={surface.textWeak}>
             {subtitle}
           </Text>
         )}
@@ -92,24 +96,25 @@ export function AuthScreenLayout({
         }}
         disabled={buttonDisabled || buttonLoading}
       >
+        {/* 비활성 CTA 는 브랜드색을 옅게 깔지 않는다 — 흐린 주황은 "곧 눌린다"처럼
+            보여 계속 누르게 만든다. 아예 회색 면으로 빠진다. */}
         <YStack
           backgroundColor={
-            !buttonDisabled && !buttonLoading
-              ? tokens.color.sub6.val
-              : tokens.color.sub6.val + "40"
+            !buttonDisabled && !buttonLoading ? surface.brand : surface.ctaOffBg
           }
-          paddingVertical={16}
-          paddingHorizontal={24}
-          borderRadius={8}
+          height={AUTH_LAYOUT.ctaHeight}
+          borderRadius={AUTH_LAYOUT.radius.cta}
           alignItems="center"
           justifyContent="center"
         >
           <Text
-            color="white"
-            fontSize={16}
-            fontWeight="500"
-            letterSpacing={-0.3}
-            lineHeight={20}
+            color={
+              !buttonDisabled && !buttonLoading
+                ? surface.onBrand
+                : surface.ctaOffText
+            }
+            {...AUTH_TYPE.cta}
+            fontWeight="600"
           >
             {buttonLabel}
           </Text>
@@ -119,7 +124,7 @@ export function AuthScreenLayout({
   )
 
   const footer = keyboardAvoiding ? (
-    <AuthKeyboardFooter backgroundColor={colors.bg}>
+    <AuthKeyboardFooter backgroundColor={surface.canvas}>
       {footerContent}
     </AuthKeyboardFooter>
   ) : (
@@ -128,6 +133,8 @@ export function AuthScreenLayout({
 
   const scrollContent = keyboardAvoiding ? (
     <KeyboardAwareScrollView
+      bounces={false}
+      overScrollMode="never"
       style={styles.flex}
       contentContainerStyle={styles.scrollContent}
       bottomOffset={AUTH_KEYBOARD_FOOTER_CLEARANCE}
@@ -140,6 +147,8 @@ export function AuthScreenLayout({
     </KeyboardAwareScrollView>
   ) : (
     <ScrollView
+      bounces={false}
+      overScrollMode="never"
       style={styles.flex}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
@@ -164,12 +173,12 @@ export function AuthScreenLayout({
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
+      <YStack flex={1} backgroundColor={surface.canvas} paddingTop={insets.top}>
         {showHeader && (
           <YStack height={56} justifyContent="center">
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="뒤로 가기"
+              accessibilityLabel={t("common.back")}
               onPress={onBack ?? handleDefaultBack}
               style={{ position: "absolute", left: 9, padding: 4 }}
             >

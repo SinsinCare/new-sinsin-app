@@ -131,12 +131,15 @@ All components use Tamagui with glassmorphic design:
 
 Feature-based organization with types, data, services, hooks, and components per feature:
 
-- **`recipe/`** - Kidney-safe recipe community (fully implemented)
-  - `types/` - FoodNutrients, KidneyRecommendedFood, CommunityMealPost, ICommunityPostService
-  - `data/` - Food nutrition data (2,859 items from CSV), scoring engine, low-phosphorus food list
-  - `services/` - In-memory community post service, image picker (expo-image-picker)
-  - `hooks/` - useKidneyRecommendations (scored search), useCommunityPosts (React Query CRUD)
-  - `components/` - RecipeHeader, KidneyNutritionSection, KidneyFoodCard, NutrientChip, LowPhosphorusSection, LowPhosphorusCard, FlowTags, CommunitySection, CommunityPostCard, CreatePostSheet, EmptyPostsPlaceholder
+- **`recipe/`** - Kidney-safe recipes + community feature (커뮤니티 탭 코드가 여기 산다)
+  - `types/` - FoodNutrients, KidneyRecommendedFood, CommunityMealPost, CommunityComment, ICommunityPostService
+  - `data/` - Food nutrition data (2,859 items from CSV), scoring engine, freePostCategories
+  - `services/` - communityPostService (backend `/api/v1/community` CRUD), imageUploadService, image picker
+  - `hooks/` - useCommunityPosts, usePostDetail (like/bookmark은 상세·목록 캐시 동시 낙관 갱신), useKidneyRecommendations, useRecentCommunitySearches
+  - `utils/` - postRanking (시간감쇠 핫스코어 인기글·연관 추천글), commentMentions (@태그 파싱), timeAgo, communityTags
+  - `components/` - FreePostTab (검색·스토리·인기글·카테고리 피드), PostListItem, PopularPostCard, PollCard, StoryRail, MentionSuggestions/MentionText, FreePostEditor, VoteSheet, PostCategorySheet, TagChips/TagInput 등 — surface 디자인 시스템(`src/theme/surface.ts`) + SurfacePressable 스프링 인터랙션 사용
+  - 스토리: `app/stories.tsx`(전체화면 추천/최신 뷰어), `app/(write)/story/new.tsx`(식사 기록 사진에서 고르기) — 24시간 뒤 서버에서 만료
+  - 내 활동: `app/community-library.tsx` (쓴 글 / 좋아요 / 북마크)
 - **`settings/`** - MyPage & settings (fully implemented, dark mode supported)
   - `hooks/` - useSettingsColors (dark mode color hook), useKidneyProfile, useMyPageProfile
   - `views/` - MyPageScreen, SettingsScreen, ProfileEditScreen, KidneyProfileEditScreen, PasswordEditScreen, NicknameEditScreen, WithdrawalScreen, InquiryScreen, AskDoctorScreen, AnnouncementListScreen, MedicalReferenceScreen
@@ -175,11 +178,14 @@ Required in `.env` (see `.env.example`):
 Health app for CKD patients with:
 
 - CKD stages 1-5 tracking, dialysis status
-- Kidney-safe nutrient limits: sodium 2000mg, potassium 2000mg, phosphorus 1000mg, protein 0.8g/kg
+- Kidney-safe nutrient limits come from the profile and backend policy. CKD stage,
+  dialysis status, weight, and clinician-set goals can change them; do not present
+  `0.8g/kg` as a universal protein target.
 - AI food analysis with kidney safety assessment (safe/caution/warning)
 - AI consultation chat with health context
 - Kidney-safe food scoring algorithm (penalizes high phosphorus/potassium/sodium/protein, rewards water/magnesium/calcium/vitamin D)
-- Community recipe sharing with in-memory storage (future: backend API)
+- Community board backed by backend API (posts, comments with @mentions, polls with optional question, tags, like/bookmark/report; 이미지 게시글당 최대 5장)
+- Community stories: 하루만 사는 사진 한 장. 식사 기록 사진을 그대로 올릴 수 있고 추천은 서버가 매번 섞어 준다
 
 ## Styling Conventions
 

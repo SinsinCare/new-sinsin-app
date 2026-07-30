@@ -14,8 +14,12 @@ import type {
   FoodTitleUpdateResponse,
 } from "../../types"
 import { isMockMode } from "../../config/appConfig"
-import { normalizeFoodAnalysisResult } from "../../shared/utils/foodAnalysisResult"
-import { api, authenticatedFetch } from "../core"
+import { getAppLanguage } from "../../i18n"
+import {
+  normalizeFoodAnalysisResult,
+  projectFoodAnalysisJobPresentation,
+} from "../../shared/utils/foodAnalysisResult"
+import { api, ApiError, authenticatedFetch } from "../core"
 import { isAxiosError } from "axios"
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
@@ -29,6 +33,19 @@ function unwrapResult<T>(data: { result?: T } | T): T {
 
 function isUnsupportedV2Status(status: number): boolean {
   return status === 404 || status === 405
+}
+
+function createFoodAnalysisError(status: number, code?: string): ApiError {
+  const isEnglish = getAppLanguage() === "en"
+  const message =
+    status >= 500
+      ? isEnglish
+        ? "We can’t analyze this photo right now. Try uploading it again in a moment."
+        : "지금은 음식 사진을 살펴보기 어려워요. 잠시 후 다시 올려 주세요."
+      : isEnglish
+        ? "We couldn’t identify the food in this photo. Check the photo and upload it again."
+        : "음식 사진을 읽지 못했어요. 사진을 확인하고 다시 올려 주세요."
+  return new ApiError(message, code || `HTTP_${status}`, status)
 }
 
 type TransitionalFoodAnalysisJob = FoodAnalysisJob &
@@ -47,7 +64,7 @@ function normalizeAnalysisJob(input: FoodAnalysisJob): FoodAnalysisJob {
     result,
     error: transitional.error ?? transitional.failureMessage ?? null,
   }
-  return result
+  const normalizedJob = result
     ? {
         ...job,
         result: normalizeFoodAnalysisResult({
@@ -58,6 +75,7 @@ function normalizeAnalysisJob(input: FoodAnalysisJob): FoodAnalysisJob {
         }),
       }
     : job
+  return projectFoodAnalysisJobPresentation(normalizedJob)
 }
 
 async function compressImage(uri: string): Promise<string> {
@@ -93,15 +111,16 @@ export const foodCameraService = {
     requestId: string,
     mode: FoodAnalysisMode = "POST_MEAL",
   ): Promise<FoodAnalysisJob> {
+    const language = getAppLanguage()
     if (isMockMode()) {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
       const result = await mockFoodCameraService.analyze()
-      return {
+      return normalizeAnalysisJob({
         analysisId: `mock-${requestId}`,
         requestId,
         status: "READY",
         result: { ...result, status: "READY", requestId },
-      }
+      })
     }
 
     const compressedUri = await compressImage(imageUri)
@@ -118,6 +137,7 @@ export const foodCameraService = {
         } as unknown as Blob)
         formData.append("requestId", requestId)
         formData.append("mode", mode)
+        formData.append("language", language)
         return {
           method: "POST",
           headers: {
@@ -142,10 +162,11 @@ export const foodCameraService = {
     const json = (await response.json()) as {
       isSuccess?: boolean
       message?: string
+      code?: string
       result?: FoodAnalysisJob
     }
     if (!response.ok || json.isSuccess === false || !json.result) {
-      throw new Error(json.message || `HTTP ${response.status}`)
+      throw createFoodAnalysisError(response.status, json.code)
     }
     return normalizeAnalysisJob(json.result)
   },
@@ -179,9 +200,6 @@ export const foodCameraService = {
             }
           : null
       }
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -213,6 +231,7 @@ export const foodCameraService = {
     requestId?: string,
   ): Promise<FoodCameraAnalyzeResult> {
     let result: FoodCameraAnalyzeResult
+    const language = getAppLanguage()
 
     if (isMockMode()) {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
@@ -234,6 +253,7 @@ export const foodCameraService = {
           if (requestId) {
             formData.append("requestId", requestId)
           }
+          formData.append("language", language)
           return {
             method: "POST",
             headers: { Accept: "application/json" },
@@ -244,10 +264,11 @@ export const foodCameraService = {
       const json = (await fetchResponse.json()) as {
         isSuccess?: boolean
         message?: string
+        code?: string
         result?: FoodCameraAnalyzeResult
       }
       if (!fetchResponse.ok || json?.isSuccess === false) {
-        throw new Error(json?.message || `HTTP ${fetchResponse.status}`)
+        throw createFoodAnalysisError(fetchResponse.status, json?.code)
       }
       result = json.result as FoodCameraAnalyzeResult
     }
@@ -259,6 +280,7 @@ export const foodCameraService = {
     requestId?: string,
   ): Promise<FoodCameraAnalyzeResult> {
     let result: FoodCameraAnalyzeResult
+    const language = getAppLanguage()
 
     if (isMockMode()) {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
@@ -270,14 +292,12 @@ export const foodCameraService = {
           {
             text,
             ...(requestId ? { requestId } : {}),
+            language,
           },
           { timeout: ANALYZE_TEXT_TIMEOUT_MS },
         )
         result = response.data.result as FoodCameraAnalyzeResult
       } catch (err) {
-        if (isAxiosError(err) && err.response?.data?.message) {
-          throw new Error(err.response.data.message)
-        }
         throw err
       }
     }
@@ -295,9 +315,6 @@ export const foodCameraService = {
         (response.data.result as FoodCameraAnalyzeResult | null) ?? null
       return result ? normalizeFoodAnalysisResult(result) : null
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -314,9 +331,6 @@ export const foodCameraService = {
       )
       return response.data as FoodCameraDiaryRegisterResponse
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -325,9 +339,6 @@ export const foodCameraService = {
     try {
       await api.post("/food-camera/skip-meal", { date, mealType })
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -337,9 +348,6 @@ export const foodCameraService = {
       const response = await api.get(`/food-camera/date-analysis/${date}`)
       return response.data as DateAnalysisResponse
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -355,9 +363,6 @@ export const foodCameraService = {
       )
       return response.data as DiaryExistenceResponse
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -373,9 +378,6 @@ export const foodCameraService = {
       )
       return response.data as ExtraWaterUpdateResponse
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -387,9 +389,6 @@ export const foodCameraService = {
         response.data.result as DiaryAnalysisResult,
       ) as DiaryAnalysisResult
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -401,16 +400,13 @@ export const foodCameraService = {
     try {
       const response = await api.patch(
         `/food-camera/analysis-results/${foodAnalysisResultId}`,
-        body,
+        { ...body, language: getAppLanguage() },
         { timeout: FOOD_ANALYSIS_UPDATE_TIMEOUT_MS },
       )
       return normalizeFoodAnalysisResult(
         response.data.result as FoodAnalysisUpdateResult,
       ) as FoodAnalysisUpdateResult
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -426,9 +422,6 @@ export const foodCameraService = {
       )
       return response.data.result as FoodTitleUpdateResponse
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -444,9 +437,6 @@ export const foodCameraService = {
       )
       return response.data.result
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -455,9 +445,6 @@ export const foodCameraService = {
     try {
       await api.delete(`/food-camera/diaries/${diaryId}`)
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },

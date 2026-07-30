@@ -3,7 +3,10 @@ jest.mock("../src/services/core/apiClient", () => ({
   api: {},
 }))
 
-import { mapCommunityComment } from "../src/features/recipe/services/communityPostService"
+import {
+  mapCommunityComment,
+  parseServerDate,
+} from "../src/features/recipe/services/communityPostService"
 
 describe("community post service mappers", () => {
   it("maps nested comment API payloads into app models", () => {
@@ -47,5 +50,26 @@ describe("community post service mappers", () => {
       parentCommentId: "1",
       content: "답글",
     })
+  })
+})
+
+describe("parseServerDate", () => {
+  it("타임존 없는 서버 시각은 UTC 로 읽는다 — KST 9시간 오차 방지", () => {
+    const parsed = parseServerDate("2026-06-23T00:00:00")
+    expect(parsed.getTime()).toBe(Date.UTC(2026, 5, 23, 0, 0, 0))
+  })
+
+  it("타임존이 명시된 문자열은 그대로 읽는다", () => {
+    expect(parseServerDate("2026-06-23T00:00:00Z").getTime()).toBe(
+      Date.UTC(2026, 5, 23),
+    )
+    expect(parseServerDate("2026-06-23T09:00:00+09:00").getTime()).toBe(
+      Date.UTC(2026, 5, 23),
+    )
+  })
+
+  it("Date 인스턴스는 손대지 않는다", () => {
+    const date = new Date()
+    expect(parseServerDate(date)).toBe(date)
   })
 })

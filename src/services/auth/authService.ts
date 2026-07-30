@@ -67,7 +67,11 @@ function getRequiresAdditionalInfo(result: {
   requiresAdditionalInfo?: boolean
   user?: { requiresAdditionalInfo?: boolean }
 }) {
-  return result.requiresAdditionalInfo ?? result.user?.requiresAdditionalInfo ?? false
+  return (
+    result.requiresAdditionalInfo ??
+    result.user?.requiresAdditionalInfo ??
+    false
+  )
 }
 
 type AuthTokenResult = LoginResult | SignupResult | TokenRefreshResult
@@ -239,7 +243,9 @@ function getRealAuthService(): IAuthService {
       }
 
       if (!data) {
-        throw new Error("소셜 로그인 응답을 확인할 수 없습니다.")
+        throw new Error(
+          "로그인 정보를 확인하지 못했어요. 다시 로그인해 주세요.",
+        )
       }
 
       await persistSessionTokens(data.result)
@@ -311,7 +317,9 @@ function getRealAuthService(): IAuthService {
       }
 
       if (!data) {
-        throw new Error("소셜 이메일 인증 응답을 확인할 수 없습니다.")
+        throw new Error(
+          "이메일 인증 결과를 확인하지 못했어요. 인증번호를 다시 받아 주세요.",
+        )
       }
 
       await persistSessionTokens(data.result)
@@ -411,9 +419,7 @@ function getRealAuthService(): IAuthService {
       })
     },
 
-    async cancelWithdrawal(
-      cancelToken: string,
-    ): Promise<AuthSessionResult> {
+    async cancelWithdrawal(cancelToken: string): Promise<AuthSessionResult> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/withdrawal/cancel",
         { cancelToken },
@@ -442,7 +448,9 @@ function getRealAuthService(): IAuthService {
 
     async promoteSession(): Promise<AuthSessionResult> {
       const refreshToken = await tokenService.getRefreshToken()
-      if (!refreshToken) throw new Error("로그인 세션이 없습니다.")
+      if (!refreshToken) {
+        throw new Error("로그인이 만료됐어요. 다시 로그인해 주세요.")
+      }
       const { data } = await publicApi.post<ApiResponse<TokenRefreshResult>>(
         "/auth/tokens/refresh",
         { refreshToken },

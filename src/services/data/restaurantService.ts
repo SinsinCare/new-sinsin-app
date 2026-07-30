@@ -1,10 +1,10 @@
 import { api } from "../core"
-import { isAxiosError } from "axios"
 
 export interface NearbyRestaurantItem {
   restaurantId: number
   name: string
-  address: string | null
+  address?: string | null
+  shortAddress?: string | null
   lat: number
   lng: number
   phone: string | null
@@ -47,17 +47,23 @@ export const restaurantService = {
     lat: number,
     lng: number,
     radius = 2000,
-    cuisineType?: string,
+    cuisineTypes: string[] = [],
+    nutritionTags: string[] = [],
   ): Promise<NearbyRestaurantItem[]> {
     try {
       const response = await api.get("/restaurants/nearby", {
-        params: { lat, lng, radius, cuisineType },
+        params: {
+          lat,
+          lng,
+          radius,
+          cuisineTypes:
+            cuisineTypes.length > 0 ? cuisineTypes.join(",") : undefined,
+          nutritionTags:
+            nutritionTags.length > 0 ? nutritionTags.join(",") : undefined,
+        },
       })
       return response.data.result as NearbyRestaurantItem[]
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -67,9 +73,6 @@ export const restaurantService = {
       const response = await api.get(`/restaurants/${restaurantId}/menus`)
       return response.data.result as RestaurantMenusResult
     } catch (err) {
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },

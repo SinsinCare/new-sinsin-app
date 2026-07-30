@@ -6,6 +6,7 @@ import { tokens } from "../../../../theme/tokens"
 import { CIRCLE_SIZE } from "../../data/nutrientConstants"
 import { clampTranslateX, fmt } from "../../utils/graphUtils"
 import { ChipWithLine } from "./ChipWithLine"
+import { useTranslation } from "react-i18next"
 
 interface NutrientBarSectionProps {
   isOver: boolean
@@ -16,6 +17,7 @@ interface NutrientBarSectionProps {
   current: number
   max: number
   unit: string
+  limitLabel: string
 }
 
 export function NutrientBarSection({
@@ -27,7 +29,12 @@ export function NutrientBarSection({
   current,
   max,
   unit,
+  limitLabel,
 }: NutrientBarSectionProps) {
+  const { t, i18n } = useTranslation()
+  const numberLocale = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
+    ? "en-US"
+    : "ko-KR"
   const [intakeChipW, setIntakeChipW] = useState(0)
   const [limitChipW, setLimitChipW] = useState(0)
   const [currentValW, setCurrentValW] = useState(0)
@@ -66,7 +73,10 @@ export function NutrientBarSection({
                 <View
                   onLayout={(e) => setIntakeChipW(e.nativeEvent.layout.width)}
                 >
-                  <ChipWithLine label="하루 섭취량" isOver={isOver} />
+                  <ChipWithLine
+                    label={t("stats.nutrientGraph.dailyIntake")}
+                    isOver={isOver}
+                  />
                 </View>
               </View>
             ) : (
@@ -92,7 +102,10 @@ export function NutrientBarSection({
                 <View
                   onLayout={(e) => setIntakeChipW(e.nativeEvent.layout.width)}
                 >
-                  <ChipWithLine label="하루 섭취량" isOver={isOver} />
+                  <ChipWithLine
+                    label={t("stats.nutrientGraph.dailyIntake")}
+                    isOver={isOver}
+                  />
                 </View>
               </View>
             ))}
@@ -106,7 +119,7 @@ export function NutrientBarSection({
                 <View
                   onLayout={(e) => setLimitChipW(e.nativeEvent.layout.width)}
                 >
-                  <ChipWithLine label="제한량" />
+                  <ChipWithLine label={limitLabel} />
                 </View>
               </View>
             ) : (
@@ -132,7 +145,7 @@ export function NutrientBarSection({
                 <View
                   onLayout={(e) => setLimitChipW(e.nativeEvent.layout.width)}
                 >
-                  <ChipWithLine label="제한량" />
+                  <ChipWithLine label={limitLabel} />
                 </View>
               </View>
             ))}
@@ -140,7 +153,7 @@ export function NutrientBarSection({
           {/* 미섭취: 제한량 칩만 오른쪽 */}
           {isEmpty && (
             <View style={[styles.absChip, { right: 0 }]}>
-              <ChipWithLine label="제한량" />
+              <ChipWithLine label={limitLabel} />
             </View>
           )}
         </View>
@@ -223,12 +236,12 @@ export function NutrientBarSection({
           // 미섭취: 0 왼쪽, max 오른쪽
           <>
             <Text fontSize={11} color="$colorSubtle">
-              {fmt(0)}
+              {fmt(0, numberLocale)}
               {unit}
             </Text>
             <View style={styles.scaleAbsRight}>
               <Text fontSize={11} color="$colorSubtle">
-                {fmt(max)}
+                {fmt(max, numberLocale)}
                 {unit}
               </Text>
             </View>
@@ -237,7 +250,7 @@ export function NutrientBarSection({
           // 제한도달: current만 오른쪽
           <View style={styles.scaleAbsRight}>
             <Text fontSize={11} color="$colorSubtle">
-              {fmt(current)}
+              {fmt(current, numberLocale)}
               {unit}
             </Text>
           </View>
@@ -264,7 +277,7 @@ export function NutrientBarSection({
               onLayout={(e) => setMaxValW(e.nativeEvent.layout.width)}
             >
               <Text fontSize={11} color="$colorSubtle">
-                {fmt(max)}
+                {fmt(max, numberLocale)}
                 {unit}
               </Text>
             </View>
@@ -273,7 +286,7 @@ export function NutrientBarSection({
               onLayout={(e) => setCurrentValW(e.nativeEvent.layout.width)}
             >
               <Text fontSize={11} color="$colorSubtle">
-                {fmt(current)}
+                {fmt(current, numberLocale)}
                 {unit}
               </Text>
             </View>
@@ -301,7 +314,7 @@ export function NutrientBarSection({
               onLayout={(e) => setCurrentValW(e.nativeEvent.layout.width)}
             >
               <Text fontSize={11} color="$colorSubtle">
-                {fmt(current)}
+                {fmt(current, numberLocale)}
                 {unit}
               </Text>
             </View>
@@ -310,7 +323,7 @@ export function NutrientBarSection({
               onLayout={(e) => setMaxValW(e.nativeEvent.layout.width)}
             >
               <Text fontSize={11} color="$colorSubtle">
-                {fmt(max)}
+                {fmt(max, numberLocale)}
                 {unit}
               </Text>
             </View>

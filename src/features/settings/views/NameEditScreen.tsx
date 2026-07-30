@@ -6,39 +6,43 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
+  Text,
   View,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 
-import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { showErrorToast } from "@/src/lib/toast"
+import { getErrorMessage as getUserFacingErrorMessage } from "@/src/lib/errorUtils"
 import { ApiError } from "@/src/services/core/apiError"
 import { api } from "@/src/services/core/apiClient"
+import { useSurface } from "@/src/hooks/useSurface"
+import { LAYOUT } from "@/src/theme/surface"
 import { tokens } from "@/src/theme/tokens"
+import i18n from "@/src/i18n"
+import { FieldHelp, SettingsTextField } from "../components/SettingsTextField"
 import { useMyPageProfile } from "../hooks/useMyPageProfile"
-import { useSettingsColors } from "../hooks/useSettingsColors"
 
 const NAME_MAX_LENGTH = 20
 
-function getErrorMessage(e: unknown): string | null {
+function getNameErrorMessage(e: unknown): string | null {
   if (e instanceof ApiError) {
     if (e.isNetworkError) return null
     switch (e.code) {
       case "TOKEN_ERROR_001":
-        return "인증 토큰이 유효하지 않습니다. 다시 로그인해주세요."
+        return i18n.t("name.error.sessionExpired", { ns: "settings" })
       case "ONBOARDING_ERROR_002":
-        return "잘못된 값이 입력되었습니다."
+        return i18n.t("name.check", { ns: "settings" })
       default:
-        return e.message || "저장 중 오류가 발생했습니다."
+        return i18n.t("name.error.save", { ns: "settings" })
     }
   }
-  return "저장 중 오류가 발생했습니다."
+  return i18n.t("name.error.save", { ns: "settings" })
 }
 
 export function NameEditScreen() {
@@ -46,10 +50,10 @@ export function NameEditScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
-  const c = useSettingsColors()
+  const s = useSurface()
+  const { t } = useTranslation("settings")
 
   const [name, setName] = useState(profile?.name ?? "")
-  const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const touchedRef = useRef(false)
@@ -68,15 +72,21 @@ export function NameEditScreen() {
   const validationMessage = serverError
     ? serverError
     : name.length > 0 && !hasText
-      ? "이름을 입력해주세요."
+      ? t("name.required")
       : trimmedName.length > NAME_MAX_LENGTH
-        ? `이름은 ${NAME_MAX_LENGTH}자 이내로 입력해주세요.`
+        ? t("name.tooLong", { max: NAME_MAX_LENGTH })
         : null
 
   const handleChangeText = (text: string) => {
     touchedRef.current = true
     setName(text)
     if (serverError) setServerError(null)
+  }
+
+  const handleClear = () => {
+    touchedRef.current = true
+    setName("")
+    setServerError(null)
   }
 
   const handleSave = async () => {
@@ -92,97 +102,87 @@ export function NameEditScreen() {
       router.back()
     } catch (e) {
       if (e instanceof ApiError && e.isNetworkError) {
-        showErrorToast(e.message)
+        showErrorToast(getUserFacingErrorMessage(e))
         return
       }
-      setServerError(getErrorMessage(e))
+      setServerError(getNameErrorMessage(e))
     } finally {
       setIsLoading(false)
     }
   }
 
+  const pageBg = s.isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val
+
   return (
-    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
+    <ThemedView style={[styles.container, { backgroundColor: pageBg }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color={c.text} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("shared.back")}
+            // 딥링크로 첫 화면이 되면 히스토리가 없다 — back 대신 프로필 수정으로.
+            onPress={() =>
+              router.canGoBack()
+                ? router.back()
+                : router.replace("/(settings)/profile-edit")
+            }
+            hitSlop={8}
+          >
+            <Ionicons name="chevron-back" size={24} color={s.textStrong} />
           </Pressable>
         </View>
 
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ThemedText style={[styles.title, { color: c.text }]}>
-            이름을 입력해주세요
-          </ThemedText>
-          <ThemedText style={[styles.subtitle, { color: c.textMuted }]}>
-            프로필에 표시되는 이름입니다. 언제든지 변경할 수 있습니다.
-          </ThemedText>
-
-          <ThemedText style={[styles.inputLabel, { color: c.textSub }]}>
-            이름
-          </ThemedText>
-          <View
-            style={[
-              styles.inputRow,
-              { borderBottomColor: c.border },
-              isFocused && styles.inputRowFocused,
-              isFormatValid && styles.inputRowValid,
-              hasError && styles.inputRowError,
-            ]}
+          <Text
+            style={[styles.title, { color: s.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
           >
-            <TextInput
-              style={[styles.textInput, { color: c.text }]}
-              value={name}
-              onChangeText={handleChangeText}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder="이름을 입력해주세요"
-              placeholderTextColor={c.textTertiary}
-              maxLength={NAME_MAX_LENGTH}
-              autoFocus
-              editable={!isLoading}
-              autoCapitalize="none"
-              returnKeyType="done"
-              onSubmitEditing={handleSave}
-            />
-            {isLoading ? (
-              <ActivityIndicator size="small" color={c.textMuted} />
-            ) : (
-              name.length > 0 && (
-                <Pressable
-                  onPress={() => {
-                    touchedRef.current = true
-                    setName("")
-                    setServerError(null)
-                  }}
-                  hitSlop={8}
-                >
-                  <Ionicons
-                    name="close-circle"
-                    size={20}
-                    color={c.textTertiary}
-                  />
-                </Pressable>
-              )
-            )}
-          </View>
+            {t("name.title")}
+          </Text>
+          <Text
+            style={[styles.subtitle, { color: s.textMuted }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
+            {t("name.subtitle")}
+          </Text>
+
+          <SettingsTextField
+            label={t("name.field")}
+            value={name}
+            onChangeText={handleChangeText}
+            placeholder={t("name.field")}
+            maxLength={NAME_MAX_LENGTH}
+            autoFocus
+            editable={!isLoading}
+            autoCapitalize="none"
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+            hasError={hasError}
+            // 저장 중에는 지우기 대신 진행 표시가 그 자리에 선다.
+            onClear={isLoading ? undefined : handleClear}
+            trailing={
+              isLoading ? (
+                <ActivityIndicator size="small" color={s.textMuted} />
+              ) : undefined
+            }
+          />
 
           {validationMessage && (
-            <ThemedText style={[styles.validationText, styles.invalidText]}>
-              {validationMessage}
-            </ThemedText>
+            <FieldHelp text={validationMessage} tone="error" />
           )}
         </ScrollView>
 
         <BottomActionBar
-          label="저장"
+          label={t("shared.save")}
           disabled={!profile || !isFormatValid || isLoading || !!serverError}
           paddingBottom={insets.bottom + 16}
           onPress={handleSave}
@@ -200,61 +200,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: LAYOUT.screenX,
     paddingBottom: 12,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: LAYOUT.screenX,
     paddingTop: 12,
     paddingBottom: 24,
   },
   title: {
     fontSize: 24,
     lineHeight: 32,
+    letterSpacing: -0.48,
     fontWeight: "700",
     marginBottom: 10,
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "400",
-    marginBottom: 40,
-  },
-  inputLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1.5,
-    paddingBottom: 10,
-    gap: 8,
-  },
-  inputRowFocused: {
-    borderBottomColor: "#94A3B8",
-  },
-  inputRowValid: {
-    borderBottomColor: tokens.color.sub6.val,
-  },
-  inputRowError: {
-    borderBottomColor: tokens.color.restrictionText.val,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 18,
-    lineHeight: 24,
-    padding: 0,
-  },
-  validationText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "400",
-    marginTop: 8,
-  },
-  invalidText: {
-    color: tokens.color.restrictionText.val,
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    marginBottom: 36,
   },
 })

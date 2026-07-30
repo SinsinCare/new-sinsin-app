@@ -16,7 +16,10 @@ const COLORS = {
     selected: { bg: "#0D896C", fg: "#FFFFFF" },
   },
   dark: {
-    default: { bg: tokens.color.cardBgDark.val, fg: tokens.color.textDarkSub.val },
+    default: {
+      bg: tokens.color.cardBgDark.val,
+      fg: tokens.color.textDarkSub.val,
+    },
     selected: { bg: "#42AF94", fg: tokens.color.inputBgDark.val },
   },
 } as const

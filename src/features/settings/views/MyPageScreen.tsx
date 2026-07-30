@@ -2,6 +2,7 @@ import React, { useCallback } from "react"
 import {
   StyleSheet,
   View,
+  Text,
   ScrollView,
   Pressable,
   Share,
@@ -9,63 +10,93 @@ import {
   Image,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import Constants from "expo-constants"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useFocusEffect } from "@react-navigation/native"
+import { useTranslation } from "react-i18next"
 
-import { ThemedText } from "@/components/themed-text"
 import { KidneyProfileCard } from "@/src/features/settings/components"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
-import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
-import { tokens } from "@/src/theme/tokens"
+import { useSurface } from "@/src/hooks/useSurface"
+import { hapticSelection } from "@/src/lib/haptics"
 
-function formatDiagnosisDate(iso: string | null): string | null {
+function formatDiagnosisDate(
+  iso: string | null,
+  language: string,
+): string | null {
   if (!iso) return null
   const [year, month] = iso.split("-")
   if (!year || !month) return null
-  return `${year}년 ${parseInt(month)}월`
+  return new Intl.DateTimeFormat(
+    language.startsWith("en") ? "en-US" : "ko-KR",
+    { year: "numeric", month: "long" },
+  ).format(new Date(Number(year), Number(month) - 1, 1))
 }
 
 const APP_DOWNLOAD_URL =
   "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
 
-const COMORBIDITY_LABEL: Record<string, string> = {
-  DIABETES: "당뇨",
-  HYPERTENSION: "고혈압",
-  HEART_DISEASE: "심장질환",
-  GOUT: "통풍",
-  ANEMIA: "빈혈",
-  BONE_MINERAL: "골미네랄 장애",
+interface MenuItem {
+  icon: React.ComponentProps<typeof Ionicons>["name"]
+  title: string
+  onPress: () => void
 }
 
-const DIAGNOSIS_CAUSE_LABEL: Record<string, string> = {
-  DIABETIC_KIDNEY_DISEASE: "당뇨병성 신장 질환",
-  HYPERTENSION: "고혈압",
-  GLOMERULONEPHRITIS: "사구체신염",
-  POLYCYSTIC_KIDNEY_DISEASE: "다낭성 신장 질환",
-  OTHER: "기타",
-}
-
-const MEAL_LABELS: Record<string, string> = {
-  BREAKFAST: "아침",
-  LUNCH: "점심",
-  DINNER: "저녁",
-  SNACKS: "간식",
+function MenuRow({
+  item,
+  isLast,
+  surface,
+}: {
+  item: MenuItem
+  isLast: boolean
+  surface: ReturnType<typeof useSurface>
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={item.title}
+      onPress={() => {
+        hapticSelection()
+        item.onPress()
+      }}
+      style={({ pressed }) => [
+        styles.menuRow,
+        pressed && { backgroundColor: surface.surfacePressed },
+      ]}
+    >
+      <View style={[styles.menuIconTile, { backgroundColor: surface.surface }]}>
+        <Ionicons name={item.icon} size={18} color={surface.textMuted} />
+      </View>
+      <Text
+        style={[styles.menuTitle, { color: surface.textStrong }]}
+        numberOfLines={1}
+      >
+        {item.title}
+      </Text>
+      <Ionicons name="chevron-forward" size={15} color={surface.textWeak} />
+      {!isLast && (
+        <View
+          style={[styles.rowHairline, { backgroundColor: surface.hairline }]}
+        />
+      )}
+    </Pressable>
+  )
 }
 
 export function MyPageScreen() {
+  const { t, i18n } = useTranslation("common")
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const c = useSettingsColors()
+  const surface = useSurface()
   const { data: profile, refetch: refetchProfile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
   // 같은 ["kidneyProfile"] 캐시를 공유하므로 요청이 늘지 않는다.
   const nutrientLimits = useNutrientLimits()
   const { data: todayAnalysis } = useDateAnalysis(new Date())
-
   useFocusEffect(
     useCallback(() => {
       refetchProfile()
@@ -75,68 +106,81 @@ export function MyPageScreen() {
   const handleShareData = useCallback(async () => {
     const hasData = kidneyProfile || todayAnalysis?.result?.analysis
     if (!hasData) {
-      Alert.alert(
-        "공유할 데이터가 없습니다",
-        "신장 프로필을 입력하거나 오늘 식사를 기록한 후 공유해주세요.",
-      )
+      Alert.alert(t("myPage.share.emptyTitle"), t("myPage.share.emptyBody"))
       return
     }
 
     const today = new Date()
-    const dateLabel = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    const currentLanguage = i18n.resolvedLanguage ?? i18n.language
+    const dateLabel = new Intl.DateTimeFormat(
+      currentLanguage.startsWith("en") ? "en-US" : "ko-KR",
+      { year: "numeric", month: "long", day: "numeric" },
+    ).format(today)
 
     const lines: string[] = [
-      `[신신당부] ${profile?.nickName ?? "사용자"}님의 건강 데이터`,
-      `📅 ${dateLabel} 기준`,
+      t("myPage.share.titleLine", {
+        name: profile?.nickName ?? t("myPage.userFallback"),
+      }),
+      t("myPage.share.asOf", { date: dateLabel }),
       "",
     ]
 
     if (kidneyProfile) {
-      lines.push("👤 신장 프로필")
-      lines.push(
-        `• ${kidneyProfile.ckdStageLabel ?? "신장 병기 미입력"}${kidneyProfile.isDialysis ? " | 투석 중" : ""}`,
-      )
+      lines.push(t("myPage.share.kidneyProfile"))
+      if (kidneyProfile.isDialysis) {
+        lines.push(`• ${t("myPage.share.onDialysis")}`)
+      } else {
+        const stageCode = kidneyProfile.ckdStage
+          ?.match(/^STAGE_(\d[A-B]?)$/i)?.[1]
+          ?.toLowerCase()
+        const stageLabel = currentLanguage.startsWith("en")
+          ? stageCode
+            ? t("kidneyProfile.stageValue", { stage: stageCode })
+            : t("myPage.share.stageNotRecorded")
+          : (kidneyProfile.ckdStageLabel ?? t("myPage.share.stageNotRecorded"))
+        lines.push(`• ${stageLabel}`)
+      }
       if (kidneyProfile.heightCm) {
-        lines.push(`• 키: ${kidneyProfile.heightCm}cm`)
+        lines.push(
+          `• ${t("myPage.share.height")}: ${kidneyProfile.heightCm} cm`,
+        )
       }
       if (kidneyProfile.weightKg) {
-        lines.push(`• 체중: ${kidneyProfile.weightKg}kg`)
+        lines.push(
+          `• ${t("myPage.share.weight")}: ${kidneyProfile.weightKg} kg`,
+        )
       }
       if (
         kidneyProfile.diagnosisCauses?.length ||
         kidneyProfile.diagnosisCauseOther
       ) {
         const labels = [
-          ...(kidneyProfile.diagnosisCauses ?? []).map(
-            (key) =>
-              DIAGNOSIS_CAUSE_LABEL[key] ??
-              DIAGNOSIS_CAUSE_LABEL[key.toUpperCase()] ??
-              key,
+          ...(kidneyProfile.diagnosisCauses ?? []).map((key) =>
+            t(`medical.diagnosisCause.${key.toUpperCase()}`, key),
           ),
           ...(kidneyProfile.diagnosisCauseOther
             ? [kidneyProfile.diagnosisCauseOther]
             : []),
         ]
-        lines.push(`• 주 진단 원인: ${labels.join(", ")}`)
+        lines.push(`• ${t("myPage.share.primaryCause")}: ${labels.join(", ")}`)
       }
       if (kidneyProfile.comorbidities?.length) {
-        const labels = kidneyProfile.comorbidities.map(
-          (key) =>
-            COMORBIDITY_LABEL[key] ??
-            COMORBIDITY_LABEL[key.toUpperCase()] ??
-            key,
+        const labels = kidneyProfile.comorbidities.map((key) =>
+          t(`medical.comorbidity.${key.toUpperCase()}`, key),
         )
-        lines.push(`• 동반질환: ${labels.join(", ")}`)
+        lines.push(
+          `• ${t("myPage.share.otherConditions")}: ${labels.join(", ")}`,
+        )
       }
       lines.push("")
     }
 
     const analysis = todayAnalysis?.result
     if (analysis?.diets?.length) {
-      const mealNames = analysis.diets.map(
-        (d) => MEAL_LABELS[d.mealType] ?? d.mealType,
+      const mealNames = analysis.diets.map((d) =>
+        t(`meal.${d.mealType}`, d.mealType),
       )
-      lines.push("🍽️ 오늘 식사 기록")
+      lines.push(t("myPage.share.todaysMeals"))
       lines.push(`• ${mealNames.join(", ")}`)
       lines.push("")
     }
@@ -149,23 +193,35 @@ export function MyPageScreen() {
         nutrientLimits.proteinGDay != null
           ? Math.round(nutrientLimits.proteinGDay)
           : null
-      lines.push("📊 오늘 영양소 섭취")
+      const limitText = (value: number | null, unit: string) =>
+        value != null
+          ? ` / ${value}${unit}`
+          : ` · ${t("myPage.share.limitUnknown")}`
+      lines.push(t("myPage.share.todaysNutrients"))
       lines.push(
-        `• 단백질: ${a.protein.toFixed(1)}g${proteinLimit ? ` / ${proteinLimit}g` : ""}`,
+        `• ${t("nutrient.protein")}: ${a.protein.toFixed(1)}g${limitText(proteinLimit, "g")}`,
       )
       lines.push(
-        `• 나트륨: ${Math.round(a.sodium)}mg / ${nutrientLimits.sodiumMg}mg`,
+        `• ${t("nutrient.sodium")}: ${Math.round(a.sodium)}mg${limitText(nutrientLimits.sodiumMg, "mg")}`,
       )
       lines.push(
-        `• 칼륨: ${Math.round(a.potassium)}mg / ${nutrientLimits.potassiumMg}mg`,
+        `• ${t("nutrient.potassium")}: ${Math.round(a.potassium)}mg${limitText(nutrientLimits.potassiumMg, "mg")}`,
       )
       lines.push(
-        `• 인: ${Math.round(a.phosphorus)}mg / ${nutrientLimits.phosphorusMg}mg`,
+        `• ${t("nutrient.phosphorus")}: ${Math.round(a.phosphorus)}mg${limitText(nutrientLimits.phosphorusMg, "mg")}`,
       )
-      lines.push(`• 수분: ${Math.round(a.water + a.extraWater)}ml`)
+      lines.push(
+        `• ${t("nutrient.fluids")}: ${Math.round(
+          a.water + a.extraWater,
+        ).toLocaleString(
+          currentLanguage.startsWith("en") ? "en-US" : "ko-KR",
+        )} mL`,
+      )
       if (a.cautionFoods?.length) {
         lines.push("")
-        lines.push(`⚠️ 주의 식품: ${a.cautionFoods.join(", ")}`)
+        lines.push(
+          `⚠️ ${t("myPage.share.foodsToWatch")}: ${a.cautionFoods.join(", ")}`,
+        )
       }
       if (a.dietaryGuide) {
         lines.push("")
@@ -174,108 +230,196 @@ export function MyPageScreen() {
       lines.push("")
     }
 
-    lines.push("신신당부 앱에서 건강을 관리하세요.")
-    lines.push(`📲 다운로드: ${APP_DOWNLOAD_URL}`)
+    lines.push(t("myPage.share.footer"))
+    lines.push(`📲 ${t("myPage.share.download")}: ${APP_DOWNLOAD_URL}`)
 
     try {
       await Share.share({
-        title: "나의 신장 건강 데이터",
+        title: t("myPage.share.sheetTitle"),
         message: lines.join("\n"),
       })
     } catch {
-      Alert.alert("공유 실패", "데이터 공유 중 오류가 발생했습니다.")
+      Alert.alert(t("myPage.share.errorTitle"), t("myPage.share.errorBody"))
     }
-  }, [profile, kidneyProfile, todayAnalysis])
+  }, [
+    profile,
+    kidneyProfile,
+    todayAnalysis,
+    nutrientLimits,
+    t,
+    i18n.language,
+    i18n.resolvedLanguage,
+  ])
 
   const age = profile?.birthYear
     ? new Date().getFullYear() - profile.birthYear
     : null
   const genderLabel =
     profile?.gender === "MALE"
-      ? "남"
+      ? t("profile.gender.male")
       : profile?.gender === "FEMALE"
-        ? "여"
+        ? t("profile.gender.female")
         : null
-  const ageGenderLabel = age
-    ? genderLabel
-      ? `${age}세·${genderLabel}`
-      : `${age}세`
-    : null
+  const profileSub =
+    [age ? t("profile.age", { age }) : null, genderLabel]
+      .filter(Boolean)
+      .join(" · ") || null
+
+  const healthMenu: MenuItem[] = [
+    {
+      icon: "medkit-outline",
+      title: t("myPage.menu.doctor"),
+      onPress: () => router.push("/(settings)/ask-doctor"),
+    },
+    {
+      icon: "clipboard-outline",
+      title: t("myPage.menu.healthData"),
+      onPress: () => router.push("/(settings)/health-data"),
+    },
+    {
+      icon: "share-outline",
+      title: t("myPage.menu.share"),
+      onPress: handleShareData,
+    },
+  ]
+
+  const supportMenu: MenuItem[] = [
+    {
+      icon: "megaphone-outline",
+      title: t("myPage.menu.announcements"),
+      onPress: () => router.push("/(settings)/announcements"),
+    },
+    {
+      icon: "chatbubble-outline",
+      title: t("myPage.menu.inquiry"),
+      onPress: () => router.push("/(settings)/inquiry"),
+    },
+    {
+      icon: "book-outline",
+      title: t("myPage.menu.references"),
+      onPress: () => router.push("/(settings)/medical-reference"),
+    },
+  ]
+
+  // 층 규칙: 라이트는 회색 바닥 위 흰 카드, 다크는 짙은 바닥 위 옅은 카드.
+  const screenBg = surface.isDark ? surface.canvas : surface.surface
+  const appVersion = Constants.expoConfig?.version
 
   return (
-    <View style={[styles.container, { backgroundColor: c.bg }]}>
-      {/* 헤더 */}
+    <View style={[styles.container, { backgroundColor: screenBg }]}>
+      {/* 헤더 — 탭 이름과 같은 "전체". */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <ThemedText style={[styles.headerTitle, { color: c.text }]}>
-          마이페이지
-        </ThemedText>
-        <Pressable onPress={() => router.push("/(settings)")} hitSlop={8}>
-          <Ionicons name="settings-outline" size={24} color={c.textSub} />
+        <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
+          {t("myPage.title")}
+        </Text>
+        <Pressable
+          onPress={() => router.push("/(settings)")}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t("myPage.openSettings")}
+        >
+          {({ pressed }) => (
+            <Ionicons
+              name="settings-outline"
+              size={22}
+              color={surface.textMuted}
+              style={{ opacity: pressed ? 0.5 : 1 }}
+            />
+          )}
         </Pressable>
       </View>
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 20, paddingBottom: insets.bottom + 40 },
+          { paddingBottom: insets.bottom + 112 },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* 프로필 행 */}
-        <View style={styles.profileRow}>
+        {/* 프로필 카드 — 카드 전체가 프로필 수정 진입점. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("myPage.editProfile")}
+          onPress={() => {
+            hapticSelection()
+            router.push("/(settings)/profile-edit")
+          }}
+          style={({ pressed }) => [
+            styles.profileCard,
+            {
+              backgroundColor: pressed ? surface.surfacePressed : surface.card,
+            },
+          ]}
+        >
           {profile?.profileImage ? (
             <Image
               source={{ uri: profile.profileImage }}
-              style={[styles.avatar, styles.avatarImage]}
+              style={styles.avatar}
             />
           ) : (
-            <View style={[styles.avatar, { backgroundColor: c.avatarBg }]}>
-              <Ionicons name="person" size={28} color={c.textTertiary} />
+            <View style={[styles.avatar, { backgroundColor: surface.surface }]}>
+              <Ionicons name="person" size={24} color={surface.textWeak} />
             </View>
           )}
           <View style={styles.profileInfo}>
-            <ThemedText style={[styles.userName, { color: c.text }]}>
-              {profile?.nickName ?? "사용자"}
-            </ThemedText>
-            {ageGenderLabel && (
-              <View style={styles.infoLabel}>
-                <ThemedText style={styles.infoLabelText}>
-                  {ageGenderLabel}
-                </ThemedText>
-              </View>
-            )}
+            <Text
+              style={[styles.userName, { color: surface.textStrong }]}
+              numberOfLines={1}
+            >
+              {profile?.nickName ?? t("myPage.userFallback")}
+            </Text>
+            <Text style={[styles.profileSub, { color: surface.textMuted }]}>
+              {profileSub
+                ? `${profileSub} · ${t("myPage.editProfile")}`
+                : t("myPage.editProfile")}
+            </Text>
           </View>
-          <Pressable
-            onPress={() => router.push("/(settings)/profile-edit")}
-            style={[styles.editButton, { borderColor: c.border }]}
-          >
-            <ThemedText style={[styles.editButtonText, { color: c.textSub }]}>
-              프로필 수정
-            </ThemedText>
-          </Pressable>
-        </View>
+          <Ionicons name="chevron-forward" size={16} color={surface.textWeak} />
+        </Pressable>
 
-        {/* 구분선 */}
-        <View style={[styles.divider, { backgroundColor: c.divider }]} />
-
-        {/* 신장 프로필 영역 */}
+        {/* 신장 프로필 */}
+        <Text style={[styles.sectionHeader, { color: surface.textMuted }]}>
+          {t("myPage.kidneyHealth")}
+        </Text>
         {!kidneyProfile ? (
           <Pressable
-            style={styles.kidneyEmptyButton}
-            onPress={() => router.push("/(settings)/kidney-profile-edit")}
+            accessibilityRole="button"
+            accessibilityLabel={t("myPage.addKidneyProfile")}
+            onPress={() => {
+              hapticSelection()
+              router.push("/(settings)/kidney-profile-edit")
+            }}
+            style={({ pressed }) => [
+              styles.kidneyEmptyCard,
+              {
+                backgroundColor: surface.surfaceBrand,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
           >
-            <Ionicons name="bar-chart-outline" size={18} color="#FFFFFF" />
-            <ThemedText style={styles.kidneyEmptyButtonText}>
-              신장 건강 정보를 입력해주세요
-            </ThemedText>
+            <Ionicons name="pulse" size={18} color={surface.brand} />
+            <Text
+              style={[styles.kidneyEmptyText, { color: surface.brand }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
+              {t("myPage.addKidneyProfile")}
+            </Text>
+            <Ionicons name="chevron-forward" size={15} color={surface.brand} />
           </Pressable>
         ) : (
           <KidneyProfileCard
+            ckdStage={kidneyProfile.ckdStage}
             ckdStageLabel={kidneyProfile.ckdStageLabel}
             isDialysis={kidneyProfile.isDialysis}
             heightCm={kidneyProfile.heightCm}
             weightKg={kidneyProfile.weightKg}
-            diagnosisDate={formatDiagnosisDate(kidneyProfile.diagnosisDate)}
+            diagnosisDate={formatDiagnosisDate(
+              kidneyProfile.diagnosisDate,
+              i18n.resolvedLanguage ?? i18n.language,
+            )}
             diagnosisCauses={kidneyProfile.diagnosisCauses}
             diagnosisCauseOther={kidneyProfile.diagnosisCauseOther}
             comorbidities={kidneyProfile.comorbidities}
@@ -283,62 +427,41 @@ export function MyPageScreen() {
           />
         )}
 
-        {/* 전체 너비 구분선 */}
-        <View
-          style={[styles.fullWidthDivider, { backgroundColor: c.secondaryBg }]}
-        />
+        {/* 메뉴 — 헤어라인으로만 나눈 카드 그룹. */}
+        <Text style={[styles.sectionHeader, { color: surface.textMuted }]}>
+          {t("myPage.healthManagement")}
+        </Text>
+        <View style={[styles.menuGroup, { backgroundColor: surface.card }]}>
+          {healthMenu.map((item, index) => (
+            <MenuRow
+              key={item.title}
+              item={item}
+              isLast={index === healthMenu.length - 1}
+              surface={surface}
+            />
+          ))}
+        </View>
 
-        {/* 메뉴 버튼 */}
-        {[
-          {
-            icon: "medkit-outline" as const,
-            title: "의사 연결하기",
-            onPress: () => router.push("/(settings)/ask-doctor"),
-          },
-          {
-            icon: "clipboard-outline" as const,
-            title: "건강검진 데이터 불러오고 분석하기",
-            onPress: () => router.push("/(settings)/health-data"),
-          },
-          {
-            icon: "share-outline" as const,
-            title: "나의 데이터 공유하기",
-            onPress: handleShareData,
-          },
-          {
-            icon: "megaphone-outline" as const,
-            title: "공지사항",
-            onPress: () => router.push("/(settings)/announcements"),
-          },
-          {
-            icon: "chatbubble-outline" as const,
-            title: "1:1 문의",
-            onPress: () => router.push("/(settings)/inquiry"),
-          },
-          {
-            icon: "book-outline" as const,
-            title: "의료 참고 문헌",
-            onPress: () => router.push("/(settings)/medical-reference"),
-          },
-        ].map(({ icon, title, onPress }) => (
-          <Pressable
-            key={title}
-            style={({ pressed }) => [
-              styles.navButton,
-              pressed && [
-                styles.navButtonPressed,
-                { backgroundColor: c.pressedBg },
-              ],
-            ]}
-            onPress={onPress}
-          >
-            <Ionicons name={icon} size={24} color={c.icon} />
-            <ThemedText style={[styles.navButtonText, { color: c.text }]}>
-              {title}
-            </ThemedText>
-            <Ionicons name="chevron-forward" size={20} color={c.iconLight} />
-          </Pressable>
-        ))}
+        <Text style={[styles.sectionHeader, { color: surface.textMuted }]}>
+          {t("myPage.support")}
+        </Text>
+        <View style={[styles.menuGroup, { backgroundColor: surface.card }]}>
+          {supportMenu.map((item, index) => (
+            <MenuRow
+              key={item.title}
+              item={item}
+              isLast={index === supportMenu.length - 1}
+              surface={surface}
+            />
+          ))}
+        </View>
+
+        {/* 푸터 — 버전 캡션 하나만 조용히. */}
+        {appVersion && (
+          <Text style={[styles.versionText, { color: surface.placeholder }]}>
+            {t("brand.name")} {appVersion}
+          </Text>
+        )}
       </ScrollView>
     </View>
   )
@@ -357,101 +480,115 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
+    lineHeight: 30,
+    letterSpacing: -0.44,
     fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 8,
   },
-  profileRow: {
+
+  profileCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 4,
-    marginBottom: 20,
+    gap: 14,
+    borderRadius: 16,
+    padding: 16,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
-  },
-  avatarImage: {
     overflow: "hidden",
   },
   profileInfo: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 6,
+    gap: 3,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 18,
     lineHeight: 24,
+    letterSpacing: -0.36,
     fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
   },
-  infoLabel: {
-    backgroundColor: "#FE713929",
-    borderRadius: 100,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  infoLabelText: {
+  profileSub: {
     fontSize: 13,
-    color: "#2E7D6B",
-    fontWeight: "500",
+    lineHeight: 18,
+    letterSpacing: -0.26,
+    fontFamily: "Pretendard-Regular",
   },
-  editButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 100,
-    borderWidth: 1,
+
+  sectionHeader: {
+    paddingTop: 24,
+    paddingBottom: 10,
+    fontSize: 13.5,
+    lineHeight: 19,
+    letterSpacing: -0.27,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
   },
-  editButtonText: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  divider: {
-    height: 1,
-    marginBottom: 20,
-  },
-  kidneyEmptyButton: {
-    height: 56,
-    backgroundColor: tokens.color.sub6.val,
-    borderRadius: 12,
-    padding: 16,
+  kidneyEmptyCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 24,
+    gap: 10,
+    height: 56,
+    borderRadius: 16,
+    paddingHorizontal: 16,
   },
-  kidneyEmptyButtonText: {
+  kidneyEmptyText: {
     flex: 1,
-    fontSize: 14,
-    color: "#FFFFFF",
-    fontWeight: "500",
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
   },
-  fullWidthDivider: {
-    height: 12,
-    marginHorizontal: -20,
-    marginBottom: 4,
+
+  menuGroup: {
+    borderRadius: 16,
+    overflow: "hidden",
   },
-  navButton: {
-    height: 64,
-    paddingVertical: 16,
+  menuRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  navButtonPressed: {
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
+  menuIconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  navButtonText: {
+  menuTitle: {
     flex: 1,
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: "500",
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+  rowHairline: {
+    position: "absolute",
+    left: 64,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+  },
+
+  versionText: {
+    marginTop: 32,
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 17,
+    letterSpacing: -0.24,
+    fontFamily: "Pretendard-Regular",
   },
 })

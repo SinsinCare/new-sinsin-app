@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Appearance, useColorScheme } from "react-native"
 import {
   Gesture,
@@ -14,8 +14,9 @@ import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
+import { useTranslation } from "react-i18next"
 import config from "../tamagui.config"
-import "@/src/i18n" // i18n 초기화 (부수효과 import — 앱 로드 시 1회, useTranslation 사용 전 준비)
+import { languageReady } from "@/src/i18n" // 초기화(부수효과) + 저장 언어 복원 약속
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
 import {
@@ -38,6 +39,7 @@ setupGestureHandler({ Gesture, GestureDetector })
 const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWAL_PENDING"])
 
 function RootLayoutNav() {
+  const { t } = useTranslation()
   const {
     isAuthenticated,
     isLoading,
@@ -191,7 +193,7 @@ function RootLayoutNav() {
   ])
 
   if (isLoading) {
-    return <LoadingScreen message="앱을 불러오는 중..." />
+    return <LoadingScreen message={t("brand.opening")} />
   }
 
   return (
@@ -208,6 +210,16 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(settings)" />
         <Stack.Screen name="(write)" />
+        {/* AI 상담 — 탭이 아니라 어디서든 띄우는 전역 모달. 아래로 쓸어 닫는다. */}
+        <Stack.Screen name="consult" options={{ presentation: "modal" }} />
+        {/* 통계 — 홈에서 밀고 들어가는 일반 페이지다. 등록해 두지 않으면
+            기본값에 맡겨져 모달처럼 얹혀 보인다. */}
+        <Stack.Screen name="statistics" options={{ presentation: "card" }} />
+        {/* 스토리 뷰어 — 전체화면 몰입. 사진이 화면을 다 쓴다. */}
+        <Stack.Screen
+          name="stories"
+          options={{ presentation: "fullScreenModal", animation: "fade" }}
+        />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
       </Stack>
     </>
@@ -221,6 +233,19 @@ export default function RootLayout() {
     "Pretendard-SemiBold": require("../assets/fonts/Pretendard-SemiBold.otf"),
     "Pretendard-Bold": require("../assets/fonts/Pretendard-Bold.otf"),
   })
+  // 폰트와 같은 자리에서 언어도 기다린다. 저장 언어가 붙기 전에 그리면
+  // 기기 언어로 한 프레임이 보이고, 그 사이 나간 요청이 서버에 다른 언어로
+  // 리포트를 한 벌 더 만들게 한다.
+  const [languageLoaded, setLanguageLoaded] = useState(false)
+  useEffect(() => {
+    let alive = true
+    void languageReady.then(() => {
+      if (alive) setLanguageLoaded(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
   const themeMode = useThemeStore((s) => s.themeMode)
   const systemScheme = useColorScheme()
   const effectiveScheme =
@@ -236,7 +261,7 @@ export default function RootLayout() {
     )
   }, [themeMode])
 
-  if (!loaded) return null
+  if (!loaded || !languageLoaded) return null
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

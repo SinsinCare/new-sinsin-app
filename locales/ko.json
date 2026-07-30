@@ -1,0 +1,12 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "신신당부",
+    "CFBundleName": "신신당부",
+    "NSCameraUsageDescription": "음식 사진으로 식사를 기록하려면 카메라 접근을 허용해 주세요.",
+    "NSPhotoLibraryUsageDescription": "앨범의 음식 사진으로 식사를 기록하려면 사진 접근을 허용해 주세요.",
+    "NSLocationWhenInUseUsageDescription": "내 주변 식당을 찾으려면 앱을 사용하는 동안 위치 접근을 허용해 주세요."
+  },
+  "android": {
+    "app_name": "신신당부"
+  }
+}

@@ -1,10 +1,7 @@
-import {
-  View,
-  TextInput,
-  type TextInputProps,
-} from "react-native"
+import { View, TextInput, type TextInputProps } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components/Icon"
+import { useTranslation } from "react-i18next"
 import { tokens } from "@/src/theme/tokens"
 
 const COLORS = {
@@ -30,9 +27,10 @@ interface RestaurantSearchInputProps extends Omit<
 }
 
 export function RestaurantSearchInput({
-  placeholder = "식당을 검색해 보세요",
+  placeholder,
   ...props
 }: RestaurantSearchInputProps) {
+  const { t } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
@@ -59,7 +57,10 @@ export function RestaurantSearchInput({
           color: palette.text,
           padding: 0,
         }}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("restaurant.searchPlaceholder")}
+        accessibilityLabel={
+          props.accessibilityLabel ?? t("restaurant.searchAccessibility")
+        }
         placeholderTextColor={palette.placeholder}
         {...props}
       />

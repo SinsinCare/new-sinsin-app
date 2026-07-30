@@ -96,6 +96,8 @@ export interface AuthProfile {
 }
 
 export interface ProfileCompleteRequest {
+  /** 새 가입 스텝에서 확정한 닉네임. 서버는 구 앱 호환을 위해 선택값으로 받는다. */
+  nickName?: string
   name: string
   birthYear: number
   birthMonth: number

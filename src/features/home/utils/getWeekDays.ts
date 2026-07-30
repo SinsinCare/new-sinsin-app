@@ -26,9 +26,13 @@ export function getWeekDays(
   })
 }
 
-export function getWeekLabel(baseDate: Date): string {
-  const month = baseDate.getMonth() + 1
-  const firstDay = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
-  const weekNumber = Math.ceil((baseDate.getDate() + firstDay.getDay()) / 7)
-  return `${month}월 ${weekNumber}주차`
+export function getWeekLabel(baseDate: Date, language: string): string {
+  const days = getWeekDays(baseDate)
+  const start = days[0].date
+  const end = days[days.length - 1].date
+  const formatter = new Intl.DateTimeFormat(
+    language.startsWith("en") ? "en-US" : "ko-KR",
+    { month: "short", day: "numeric" },
+  )
+  return `${formatter.format(start)} – ${formatter.format(end)}`
 }

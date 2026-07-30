@@ -2,15 +2,17 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, YStack, Text, View } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { NutrientBudget } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface NutrientBarProps {
   label: string
-  remaining: number
+  remaining: number | null
   unit: string
   color: string
 }
 
 function NutrientBar({ label, remaining, unit, color }: NutrientBarProps) {
+  const { t, i18n } = useTranslation()
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const subColor = isDark
@@ -30,13 +32,26 @@ function NutrientBar({ label, remaining, unit, color }: NutrientBarProps) {
       >
         <View
           height={4}
-          width={`${Math.min(100, Math.max(10, remaining > 0 ? 100 : 0))}%`}
+          width={`${
+            remaining == null
+              ? 0
+              : Math.min(100, Math.max(10, remaining > 0 ? 100 : 0))
+          }%`}
           borderRadius={2}
           backgroundColor={color}
         />
       </View>
       <Text fontSize={11} fontFamily="$body" fontWeight="600" color={color}>
-        {remaining > 0 ? `${Math.round(remaining)}${unit}` : "초과"}
+        {remaining == null
+          ? t("mealRecommendation.weightNeeded")
+          : remaining > 0
+            ? t("mealRecommendation.underLimit", {
+                amount: new Intl.NumberFormat(
+                  i18n.language.startsWith("en") ? "en-US" : "ko-KR",
+                ).format(Math.round(remaining)),
+                unit,
+              })
+            : t("mealRecommendation.overLimit")}
       </Text>
     </YStack>
   )
@@ -47,28 +62,29 @@ interface NutrientBudgetBarProps {
 }
 
 export function NutrientBudgetBar({ budget }: NutrientBudgetBarProps) {
+  const { t } = useTranslation()
   return (
     <XStack gap={8}>
       <NutrientBar
-        label="나트륨"
+        label={t("nutrient.sodium")}
         remaining={budget.sodiumMg}
         unit="mg"
         color="#EE6145"
       />
       <NutrientBar
-        label="칼륨"
+        label={t("nutrient.potassium")}
         remaining={budget.potassiumMg}
         unit="mg"
         color="#0D896A"
       />
       <NutrientBar
-        label="인"
+        label={t("nutrient.phosphorus")}
         remaining={budget.phosphorusMg}
         unit="mg"
         color="#7C3AED"
       />
       <NutrientBar
-        label="단백질"
+        label={t("nutrient.protein")}
         remaining={budget.proteinG}
         unit="g"
         color="#0369A1"

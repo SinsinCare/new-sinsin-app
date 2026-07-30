@@ -1,65 +1,71 @@
-import { Pressable } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, Text } from "tamagui"
-import { Icon } from "@/src/shared/components/Icon"
+import { Pressable, StyleSheet, Text, View } from "react-native"
+import Ionicons from "@expo/vector-icons/Ionicons"
 
-const VOTE_CARD_BG = { light: "#D9D9DF", dark: "#36363E" } as const
-const VOTE_CARD_TEXT = { light: "#474758", dark: "#F5F6FA" } as const
-const VOTE_CARD_ICON = { light: "#17191C", dark: "#17191C" } as const
+import { useSurface } from "@/src/hooks/useSurface"
+import { useTranslation } from "react-i18next"
 
 interface VoteAttachCardProps {
+  /** 투표 질문(선택) — 있으면 자리표시 문구 대신 질문을 보여준다. */
+  title?: string
   onEdit: () => void
   onRemove: () => void
 }
 
-export function VoteAttachCard({ onEdit, onRemove }: VoteAttachCardProps) {
-  const isDark = useAppColorScheme() === "dark"
+/** 에디터에 붙은 투표 — 회색 면 한 장으로 존재만 알린다. */
+export function VoteAttachCard({
+  title,
+  onEdit,
+  onRemove,
+}: VoteAttachCardProps) {
+  const { t } = useTranslation("recipe")
+  const surface = useSurface()
 
   return (
-    <XStack
-      paddingHorizontal={16}
-      paddingVertical={14}
-      borderRadius={10}
-      backgroundColor={isDark ? VOTE_CARD_BG.dark : VOTE_CARD_BG.light}
-      alignItems="center"
-      gap={10}
-    >
-      <Icon
-        name="vote"
-        size={20}
-        color={isDark ? VOTE_CARD_ICON.dark : VOTE_CARD_ICON.light}
-      />
+    <View style={[styles.card, { backgroundColor: surface.surface }]}>
+      <Ionicons name="podium-outline" size={18} color={surface.textMuted} />
       <Text
-        flex={1}
-        fontSize={14}
-        fontWeight="500"
-        fontFamily="$body"
-        color={isDark ? VOTE_CARD_TEXT.dark : VOTE_CARD_TEXT.light}
+        style={[styles.label, { color: surface.textStrong }]}
+        numberOfLines={1}
       >
-        투표가 첨부되었습니다.
+        {title ?? t("poll.attached")}
       </Text>
       <Pressable
         onPress={onEdit}
         hitSlop={8}
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        accessibilityRole="button"
+        accessibilityLabel={t("poll.editAccessibility")}
+        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
       >
-        <Icon
-          name="pencil"
-          size={20}
-          color={isDark ? VOTE_CARD_ICON.dark : VOTE_CARD_ICON.light}
-        />
+        <Ionicons name="create-outline" size={20} color={surface.textMuted} />
       </Pressable>
       <Pressable
         onPress={onRemove}
         hitSlop={8}
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        accessibilityRole="button"
+        accessibilityLabel={t("poll.deleteAccessibility")}
+        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
       >
-        <Icon
-          name="trashcan"
-          size={20}
-          color={isDark ? VOTE_CARD_ICON.dark : VOTE_CARD_ICON.light}
-        />
+        <Ionicons name="trash-outline" size={19} color={surface.textMuted} />
       </Pressable>
-    </XStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  label: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: -0.28,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+})

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
+import { useTranslation } from "react-i18next"
 import { tokens } from "@/src/theme/tokens"
 import { FOOD_TYPES } from "../data/filterData"
 import KoreanIcon from "@/assets/images/korean.svg"
@@ -30,21 +31,35 @@ export function FoodTypeFilterSection({
   selectedFoodTypes,
   onToggle,
 }: FoodTypeFilterSectionProps) {
+  const { t } = useTranslation("common")
   const isDarkMode = useAppColorScheme() === "dark"
   const { width: screenWidth } = useWindowDimensions()
 
   const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
-  const defaultBorder = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const defaultBorder = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.borderLight.val
   const selectedBorder = tokens.color.primaryAccent.val
-  const headingColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const headingColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
 
   const availableWidth = screenWidth - HORIZONTAL_PADDING * 2
   const cardWidth = (availableWidth - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS
 
   return (
-    <YStack paddingHorizontal={HORIZONTAL_PADDING} paddingVertical={16} gap={12}>
-      <Text fontFamily="$body" fontWeight="600" fontSize={15} color={headingColor}>
-        음식 종류
+    <YStack
+      paddingHorizontal={HORIZONTAL_PADDING}
+      paddingVertical={16}
+      gap={12}
+    >
+      <Text
+        fontFamily="$body"
+        fontWeight="600"
+        fontSize={15}
+        color={headingColor}
+      >
+        {t("restaurant.filter.foodType")}
       </Text>
       <View style={styles.grid}>
         {FOOD_TYPES.map((food) => {
@@ -70,7 +85,7 @@ export function FoodTypeFilterSection({
                 color={isSelected ? selectedBorder : textColor}
                 marginTop={6}
               >
-                {food.label}
+                {t(food.labelKey)}
               </Text>
             </Pressable>
           )

@@ -5,9 +5,83 @@ import { refreshAccessToken } from "./authSession"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
 import { getBackendUrl } from "../../config/appConfig"
+import { getAppLanguage } from "@/src/i18n"
 
 const BASE_URL = getBackendUrl()
 const API_TIMEOUT_MS = 10000
+
+function getStatusFallbackMessage(status?: number): string {
+  const isEnglish = getAppLanguage() === "en"
+  if (status === 404) {
+    return isEnglish
+      ? "We couldn’t find that. Go back and try again."
+      : "요청한 내용을 찾지 못했어요. 이전 화면에서 다시 시작해 주세요."
+  }
+  if (status === 409) {
+    return isEnglish
+      ? "This may already be updated. Refresh the screen to check."
+      : "이미 반영된 내용일 수 있어요. 화면을 새로고침해 확인해 주세요."
+  }
+  if (status === 429) {
+    return isEnglish
+      ? "We’re getting a lot of requests right now. Try again in a moment."
+      : "이용이 잠시 몰리고 있어요. 잠시 뒤 다시 해 주세요."
+  }
+  if (status && status >= 500) {
+    // 연결 문구를 쓰지 않는다. 5xx 는 우리 잘못이고, 사용자가 와이파이를 확인하러
+    // 가게 만들면 안 된다. 연결 문구는 응답 자체가 없을 때(isNetworkError)만 쓴다.
+    return isEnglish
+      ? "Something went wrong on our side. Try again in a moment."
+      : "서비스에 문제가 생겼어요. 잠시 후 다시 해 주세요."
+  }
+  return isEnglish
+    ? "Check what you entered and try again."
+    : "입력한 내용을 다시 확인해 주세요."
+}
+
+/**
+ * 서버 봉투의 문구를 그대로 쓸지 판단한다.
+ *
+ * 코드가 함께 왔다면 백엔드가 큐레이션한 문구다 — 언어까지 맞춰 보내 주므로 그대로 쓴다.
+ * 문구를 정규식으로 훑어 판단하면 두 방향 모두 틀린다. 실제로 그랬다:
+ *  - `/(?:HTTP|API|…)/i` 의 `API` 가 경계 없이 걸려서 the**rapi**st·**rapi**d·c**api**tal
+ *    같은 평범한 영어 단어를 품은 안내가 통째로 사라졌다.
+ *  - `givesNoDirection` 은 한국어 문형만 알아서 한국어 13개를 지우고 영어는 0개를 지웠다.
+ *    같은 뜻의 문구가 언어에 따라 다르게 취급됐다.
+ */
+function getSafeApiMessage(
+  message: unknown,
+  status?: number,
+  code?: unknown,
+): string {
+  if (typeof message !== "string" || !message.trim()) {
+    return getStatusFallbackMessage(status)
+  }
+
+  const isCurated =
+    typeof code === "string" &&
+    code.length > 0 &&
+    code !== "UNKNOWN" &&
+    !/^HTTP_\d+$/.test(code)
+  if (isCurated) return message
+
+  // 코드 없이 온 문구만 검사한다. 약어는 경계를 두고 대소문자를 지킨다.
+  const exposesImplementation =
+    /\b(?:HTTP|API|SQL)\b/.test(message) ||
+    /\b(?:exception|traceback|database|undefined)\b/i.test(message) ||
+    /axios|status code \d|\b\d+ms\b/i.test(message) ||
+    /서버|엔드포인트|토큰/.test(message)
+  const givesNoDirection =
+    /(?:오류|에러|문제)가 발생|알 수 없는 오류|요청에 실패했습니다/.test(
+      message,
+    ) ||
+    /\b(?:unknown|unexpected|internal)\s+error\b/i.test(message) ||
+    /\bsomething went wrong\b/i.test(message)
+
+  return exposesImplementation || givesNoDirection
+    ? getStatusFallbackMessage(status)
+    : message
+}
 
 // 인증 불필요 엔드포인트용 (로그인, 회원가입, OTP 등)
 export const publicApi = axios.create({
@@ -23,13 +97,24 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 })
 
+function addLanguageInterceptor(instance: AxiosInstance) {
+  instance.interceptors.request.use((config) => {
+    config.headers["Accept-Language"] =
+      getAppLanguage() === "en" ? "en-US" : "ko-KR"
+    return config
+  })
+}
+
+addLanguageInterceptor(publicApi)
+addLanguageInterceptor(api)
+
 // isSuccess 체크: HTTP 200이지만 비즈니스 에러인 경우 ApiError throw
 function addIsSuccessInterceptor(instance: AxiosInstance) {
   instance.interceptors.response.use((response) => {
     const data = response.data
     if (data && typeof data.isSuccess === "boolean" && !data.isSuccess) {
       throw new ApiError(
-        data.message || "요청에 실패했습니다.",
+        getSafeApiMessage(data.message, response.status, data.code),
         data.code || "UNKNOWN",
         response.status,
         false,
@@ -60,11 +145,15 @@ function addErrorInterceptor(instance: AxiosInstance) {
     }
     if (!error.response) {
       const code = error.code || "NETWORK_ERROR"
+      const isEnglish = getAppLanguage() === "en"
       const message =
-        error.message ||
-        (code === "ECONNABORTED"
-          ? "요청 시간이 초과되었습니다."
-          : "네트워크 연결을 확인해주세요.")
+        code === "ECONNABORTED"
+          ? isEnglish
+            ? "The response is taking longer than expected. Try again in a moment."
+            : "응답이 늦어지고 있어요. 잠시 후 다시 해 주세요."
+          : isEnglish
+            ? "Check your internet connection and try again."
+            : "인터넷 연결을 확인한 뒤 다시 해 주세요."
       return Promise.reject(new ApiError(message, code, undefined, true))
     }
     const { status, data } = error.response
@@ -82,7 +171,7 @@ function addErrorInterceptor(instance: AxiosInstance) {
     }
     return Promise.reject(
       new ApiError(
-        data?.message || "서버 오류가 발생했습니다.",
+        getSafeApiMessage(data?.message, status, data?.code),
         data?.code || `HTTP_${status}`,
         status,
         false,

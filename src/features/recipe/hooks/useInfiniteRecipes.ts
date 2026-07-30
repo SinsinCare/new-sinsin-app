@@ -1,5 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { recipeCatalogService } from "../services/recipeCatalogService"
+import { useTranslation } from "react-i18next"
+import { normalizeLanguage } from "@/src/i18n"
 
 const PAGE_SIZE = 20
 
@@ -43,11 +45,13 @@ export function useInfiniteRecipes({
   categoryKeys,
   tagKeys,
 }: UseInfiniteRecipesParams) {
+  const { i18n } = useTranslation()
+  const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
   const categories = mapFilterKeys(categoryKeys, CATEGORY_MAP)
   const tags = mapFilterKeys(tagKeys, TAG_MAP)
 
   return useInfiniteQuery({
-    queryKey: ["recipes", search, categories, tags],
+    queryKey: ["recipes", language, search, categories, tags],
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
       recipeCatalogService.getRecipes({

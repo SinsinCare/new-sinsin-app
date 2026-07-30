@@ -8,8 +8,14 @@ import {
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 
-const TEXT_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
-const PLACEHOLDER_COLOR = { light: tokens.color.textLightSub.val, dark: tokens.color.textLightMuted.val }
+const TEXT_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
+const PLACEHOLDER_COLOR = {
+  light: tokens.color.textLightSub.val,
+  dark: tokens.color.textLightMuted.val,
+}
 
 interface TextBlockProps {
   content: string

@@ -1,3 +1,4 @@
+import i18n from "@/src/i18n"
 import { isApiErrorLike } from "@/src/services/core/apiError"
 import type {
   SocialProvider,
@@ -12,26 +13,20 @@ const SOCIAL_LINK_REQUIRED_CODES = new Set([
   "SOCIAL_EMAIL_NOT_FOUND",
 ])
 
-const PROVIDER_EMAIL_GUIDANCE: Record<
-  SocialProvider,
-  { title: string; message: string }
-> = {
+const PROVIDER_EMAIL_GUIDANCE_KEYS = {
   google: {
-    title: "Google 이메일 정보가 필요해요",
-    message:
-      "Google 로그인에서 이메일 제공에 동의한 뒤 다시 시도해 주세요. 계속 안 되면 다른 로그인 방법을 이용해 주세요.",
+    title: "social.googleEmailTitle",
+    message: "social.googleEmailMessage",
   },
   apple: {
-    title: "Apple 이메일 정보가 필요해요",
-    message:
-      "Apple 계정 설정에서 신신당부 연결을 해제한 뒤 다시 로그인해 이메일 공유에 동의해 주세요. 계속 안 되면 다른 로그인 방법을 이용해 주세요.",
+    title: "social.appleEmailTitle",
+    message: "social.appleEmailMessage",
   },
   kakao: {
-    title: "카카오 이메일 정보가 필요해요",
-    message:
-      "카카오 로그인에서 이메일 제공에 동의한 뒤 다시 시도해 주세요. 계속 안 되면 다른 로그인 방법을 이용해 주세요.",
+    title: "social.kakaoEmailTitle",
+    message: "social.kakaoEmailMessage",
   },
-}
+} as const satisfies Record<SocialProvider, { title: string; message: string }>
 
 type SocialLoginResult = AuthSessionResult | SocialSignupConsentRequiredResult
 
@@ -84,12 +79,12 @@ function getProviderEmailRequiredAction(
   const provider = isSocialProvider(result.provider)
     ? result.provider
     : requestedProvider
-  const guidance = PROVIDER_EMAIL_GUIDANCE[provider]
+  const guidanceKeys = PROVIDER_EMAIL_GUIDANCE_KEYS[provider]
   return {
     type: "provider_email_required",
     provider,
-    title: guidance.title,
-    message: guidance.message,
+    title: i18n.t(guidanceKeys.title, { ns: "auth" }),
+    message: i18n.t(guidanceKeys.message, { ns: "auth" }),
   }
 }
 

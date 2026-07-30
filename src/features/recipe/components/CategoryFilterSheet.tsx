@@ -10,6 +10,7 @@ import {
   AppBottomSheet,
   AppBottomSheetScrollView,
 } from "@/src/shared/components"
+import { useTranslation } from "react-i18next"
 
 interface CategoryFilterSheetProps {
   open: boolean
@@ -21,37 +22,37 @@ interface CategoryFilterSheetProps {
 const CATEGORY_SECTIONS = [
   {
     key: "nutrition",
-    title: "영양 기준",
+    titleKey: "filter.nutrition",
     chips: [
-      { key: "low-salt", label: "저염" },
-      { key: "low-protein", label: "저단백" },
-      { key: "low-potassium", label: "저칼륨" },
-      { key: "low-phosphorus", label: "저인" },
-      { key: "high-calorie", label: "고열량" },
+      { key: "low-salt", labelKey: "category.nutrition.low-salt" },
+      { key: "low-protein", labelKey: "category.nutrition.low-protein" },
+      { key: "low-potassium", labelKey: "category.nutrition.low-potassium" },
+      { key: "low-phosphorus", labelKey: "category.nutrition.low-phosphorus" },
+      { key: "high-calorie", labelKey: "category.nutrition.high-calorie" },
     ],
   },
   {
     key: "stage",
-    title: "병기별",
+    titleKey: "filter.stage",
     chips: [
-      { key: "ckd3", label: "CKD 3기" },
-      { key: "ckd4", label: "CKD 4기" },
-      { key: "ckd5", label: "CKD 5기" },
-      { key: "diabetes", label: "당뇨동반" },
-      { key: "hypertension", label: "고혈압동반" },
+      { key: "ckd3", labelKey: "category.stage.ckd3" },
+      { key: "ckd4", labelKey: "category.stage.ckd4" },
+      { key: "ckd5", labelKey: "category.stage.ckd5" },
+      { key: "diabetes", labelKey: "category.stage.diabetes" },
+      { key: "hypertension", labelKey: "category.stage.hypertension" },
     ],
   },
   {
     key: "country",
-    title: "나라별",
+    titleKey: "filter.food",
     chips: [
-      { key: "korean", label: "한식" },
-      { key: "chinese", label: "중식" },
-      { key: "japanese", label: "일식" },
-      { key: "western", label: "양식" },
-      { key: "salad", label: "샐러드" },
-      { key: "dessert", label: "디저트" },
-      { key: "beverage", label: "음료" },
+      { key: "korean", labelKey: "category.food.korean" },
+      { key: "chinese", labelKey: "category.food.chinese" },
+      { key: "japanese", labelKey: "category.food.japanese" },
+      { key: "western", labelKey: "category.food.western" },
+      { key: "salad", labelKey: "category.food.salad" },
+      { key: "dessert", labelKey: "category.food.dessert" },
+      { key: "beverage", labelKey: "category.food.beverage" },
     ],
   },
 ] as const
@@ -99,6 +100,7 @@ export function CategoryFilterSheet({
   selectedFilters,
   onApply,
 }: CategoryFilterSheetProps) {
+  const { t } = useTranslation("recipe")
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const colors = isDark ? HEADER_COLORS.dark : HEADER_COLORS.light
@@ -170,7 +172,7 @@ export function CategoryFilterSheet({
             fontFamily="$body"
             color={colors.title}
           >
-            카테고리
+            {t("filter.title")}
           </Text>
           <Pressable
             onPress={handleApply}
@@ -183,7 +185,7 @@ export function CategoryFilterSheet({
               fontFamily="$body"
               color={colors.apply}
             >
-              등록
+              {t("action.apply")}
             </Text>
           </Pressable>
         </XStack>
@@ -200,9 +202,11 @@ export function CategoryFilterSheet({
                 fontFamily="$body"
                 color={sectionTitleColor}
               >
-                {section.title}
+                {t(section.titleKey)}
               </Text>
               <ScrollView
+                bounces={false}
+                overScrollMode="never"
                 horizontal
                 keyboardShouldPersistTaps="always"
                 nestedScrollEnabled
@@ -212,7 +216,7 @@ export function CategoryFilterSheet({
                 {section.chips.map((chip) => (
                   <FilterChip
                     key={chip.key}
-                    label={chip.label}
+                    label={t(chip.labelKey)}
                     theme={CHIP_THEME[section.key]}
                     selected={tempFilters[section.key]?.has(chip.key) ?? false}
                     onPress={() => toggleChip(section.key, chip.key)}

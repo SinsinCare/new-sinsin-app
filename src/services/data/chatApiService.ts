@@ -21,6 +21,7 @@ import {
 import type { ApiResponse } from "../../types/api"
 import { getBackendUrl, isMockMode } from "../../config/appConfig"
 import { api, refreshAccessToken, tokenService } from "../core"
+import { getAppLanguage } from "@/src/i18n"
 
 const BASE_URL = getBackendUrl()
 export const CHAT_STREAM_TIMEOUT_MS = 120_000
@@ -172,14 +173,36 @@ export function createRealChatService(): ChatService {
       content: string,
       userCategory: ChatCategory,
       onChunk?: (text: string) => void,
+      /** 첨부 이미지 로컬 URI. 있으면 IMAGE 메시지로 보내고 서버가 멀티모달로 해석한다. */
+      imageUri?: string,
     ) {
       const token = await tokenService.getAccessToken()
 
       const buildFormData = () => {
         const formData = new FormData()
         formData.append("content", content)
-        formData.append("messageType", "TEXT")
+        // 사진만 → IMAGE, 사진+글 → MIXED(서버가 글과 사진을 함께 해석), 글만 → TEXT.
+        formData.append(
+          "messageType",
+          imageUri ? (content.trim() ? "MIXED" : "IMAGE") : "TEXT",
+        )
         formData.append("userCategory", userCategory)
+        if (imageUri) {
+          const name = imageUri.split("/").pop() || "photo.jpg"
+          const extension = name.split(".").pop()?.toLowerCase()
+          const type =
+            extension === "png"
+              ? "image/png"
+              : extension === "webp"
+                ? "image/webp"
+                : "image/jpeg"
+          // RN FormData 파일 파트 — fetch/XHR 이 멀티파트로 직렬화한다.
+          formData.append("files", {
+            uri: imageUri,
+            name,
+            type,
+          } as unknown as Blob)
+        }
         return formData
       }
 
@@ -196,6 +219,10 @@ export function createRealChatService(): ChatService {
           if (accessToken) {
             xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
           }
+          xhr.setRequestHeader(
+            "Accept-Language",
+            getAppLanguage() === "en" ? "en-US" : "ko-KR",
+          )
           xhr.setRequestHeader("Accept", "text/event-stream")
           xhr.timeout = CHAT_STREAM_TIMEOUT_MS
 
@@ -459,7 +486,13 @@ export const chatApiService: ChatService = {
   deleteChat: (id) => getChatApiService().deleteChat(id),
   renameChat: (id, title) => getChatApiService().renameChat(id, title),
   getMessages: (id) => getChatApiService().getMessages(id),
-  sendMessage: (id, content, userCategory, onChunk) =>
-    getChatApiService().sendMessage(id, content, userCategory, onChunk),
+  sendMessage: (id, content, userCategory, onChunk, imageUri) =>
+    getChatApiService().sendMessage(
+      id,
+      content,
+      userCategory,
+      onChunk,
+      imageUri,
+    ),
   generateSummary: (id) => getChatApiService().generateSummary(id),
 }

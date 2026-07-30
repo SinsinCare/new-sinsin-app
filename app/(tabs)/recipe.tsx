@@ -1,487 +1,434 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+/**
+ * 레시피 목록 화면 v2 (계약 docs/contract/recipe-v2.md §6.1 / §6.3).
+ *
+ * 시안(`아카이브 5.zip`)에서 고친 것 — 전부 "사용자가 결과를 예측할 수 없다" 는 한 문제였다.
+ *
+ *  1. **검색이 아무것도 하지 않았다.** `Typing.png` 와 `Typed.png` 가 완전히 동일하다.
+ *     "밥" 을 입력해도 아래는 그대로 "오늘의 아침 추천메뉴" 였다.
+ *     → 입력 즉시 자동완성(400ms 디바운스) → 확정하면 결과 목록. **결과 수를 먼저** 말한다.
+ *  2. **필터가 3곳에 흩어져 있었다**(상단 칩 · 카테고리 아이콘 캐러셀 · 우측 필터 아이콘 →
+ *     시트에 또 같은 3그룹). 어떤 게 적용 중인지 알 수 없었다.
+ *     → 시트는 고르는 곳 하나, 적용된 것은 상단 칩에서 보고 거기서 뺀다. 캐러셀은 없앴다.
+ *  3. 카드의 `#CKD3` `#저염식` 을 지우고(§1.2) 그 자리에 **영양 수치 1개 + 내 참고량 대비**
+ *     를 넣었다. 데이터 없이 그려져 있던 `★4.0 (27)` 은 실제 별점이고 0건이면 안 그린다.
+ *  4. "레시피 작성" 플로팅이 카드를 가리고 AI 상담 필과 같은 자리에 쌓여 있었다.
+ *     → 스크롤을 내리면 접히고, 좌표 산술을 `RecipeWriteFab` 에 못 박아 겹치지 않는다.
+ *  5. 정렬을 붙였다 — `추천 | 최신 | 별점 | 저장많은 | 빨리되는`. `빨리되는` 은 시안에 없지만
+ *     "지금 뭐 먹지" 의 실제 질의다.
+ *
+ * 색: 강조는 `tokens.color.primary` 하나. `safe*`(틸)는 "안전" 의미색이라 쓰지 않는다(§6.4).
+ */
+import { useRouter } from "expo-router"
+import { useCallback, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
   FlatList,
   Keyboard,
-  Modal,
   Pressable,
   RefreshControl,
-  ScrollView,
-  StyleSheet,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, Text, XStack, View } from "tamagui"
+import { Text, View, XStack, YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import {
-  TopTabBar,
-  type TabItem,
-} from "@/src/features/recipe/components/TabBar"
-import { useLocalSearchParams, useRouter, type Href } from "expo-router"
-import { Icon } from "@/src/shared/components/Icon"
-import { SearchInput } from "@/src/features/recipe/components/SearchInput"
-import { FilterChip } from "@/src/features/recipe/components/FilterChip"
-import { CategoryFilterSheet } from "@/src/features/recipe/components/CategoryFilterSheet"
-import { FoodCategoryBar } from "@/src/features/recipe/components/FoodCategoryBar"
-import { WriteTypeSheet } from "@/src/features/recipe/components/WriteTypeSheet"
-import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
-import { RecipeEditor } from "@/src/features/recipe/components/RecipeEditor"
-import { CuratedRecipeCard } from "@/src/features/recipe/components/CuratedRecipeCard"
-import { CuratedRecipeDetailSheet } from "@/src/features/recipe/components/CuratedRecipeDetailSheet"
-import { useInfiniteRecipes } from "@/src/features/recipe/hooks/useInfiniteRecipes"
-import { useRecipeDetail } from "@/src/features/recipe/hooks/useRecipeDetail"
-import type { CuratedRecipe } from "@/src/features/recipe/data/curatedRecipeTypes"
+import { useTranslation } from "react-i18next"
+
+import { useSurface } from "@/src/hooks/useSurface"
+import { LAYOUT, TYPE } from "@/src/theme/surface"
 import { tokens } from "@/src/theme/tokens"
-// Chip key → label mapping for CategoryFilterSheet
-const CHIP_KEY_TO_LABEL: Record<string, Record<string, string>> = {
-  nutrition: {
-    "low-salt": "저염",
-    "low-protein": "저단백",
-    "low-potassium": "저칼륨",
-    "low-phosphorus": "저인",
-    "high-calorie": "고열량",
-  },
-  stage: {
-    ckd3: "CKD 3기",
-    ckd4: "CKD 4기",
-    ckd5: "CKD 5기",
-    diabetes: "당뇨동반",
-    hypertension: "고혈압동반",
-  },
-  country: {
-    korean: "한식",
-    chinese: "중식",
-    japanese: "일식",
-    western: "양식",
-    salad: "샐러드",
-    dessert: "디저트",
-    beverage: "음료",
-  },
-}
 
-// All possible filter chips for nutrition + stage
-const ALL_FILTER_CHIPS = [
-  ...Object.entries(CHIP_KEY_TO_LABEL.nutrition).map(([key, label]) => ({
-    key,
-    label: `#${label}`,
-    theme: "primary" as const,
-    section: "nutrition",
-  })),
-  ...Object.entries(CHIP_KEY_TO_LABEL.stage).map(([key, label]) => ({
-    key,
-    label: `#${label}`,
-    theme: "sub" as const,
-    section: "stage",
-  })),
-]
-
-const RECIPE_TABS: TabItem[] = [
-  { key: "recipe", label: "레시피" },
-  { key: "free", label: "자유글" },
-]
-
-const ICON_COLORS = {
-  light: "#8E8E93",
-  dark: "#66666B",
-} as const
+import {
+  AppliedFilterRow,
+  EMPTY_RECIPE_FILTERS,
+  hasEstimatedNutrition,
+  listAppliedRecipeFilters,
+  nextFabCollapsed,
+  RECIPE_LIST_BOTTOM_SPACER,
+  RecipeFilterSheet,
+  RecipeListCard,
+  RecipeSearchField,
+  RecipeSortRow,
+  RecipeSuggestPanel,
+  RecipeWriteFab,
+  removeRecipeFilter,
+  countRecipeFilters,
+  type RecipeFilterGroupKey,
+  type RecipeFilterSelection,
+} from "@/src/features/recipe/components/list"
+import { useRecipeListV2 } from "@/src/features/recipe/hooks/useRecipeListV2"
+import { useRecipeSearch } from "@/src/features/recipe/hooks/useRecipeSearch"
+import type {
+  RecipeCard,
+  RecipeSortKey,
+} from "@/src/features/recipe/types/recipeListV2"
 
 export default function RecipeScreen() {
-  const insets = useSafeAreaInsets()
-  const params = useLocalSearchParams<{ tab?: string; tag?: string }>()
   const router = useRouter()
-  const colorScheme = useAppColorScheme()
-  const isDarkMode = colorScheme === "dark"
-  const [activeTab, setActiveTab] = useState(
-    params.tab === "free" ? "free" : "recipe",
-  )
-  const [freePostTagFilter, setFreePostTagFilter] = useState<string | null>(
-    typeof params.tag === "string" && params.tag.length > 0 ? params.tag : null,
-  )
-  const iconColor = isDarkMode ? ICON_COLORS.dark : ICON_COLORS.light
+  const { t } = useTranslation("common")
+  const { t: tr } = useTranslation("recipe")
+  const insets = useSafeAreaInsets()
+  const surface = useSurface()
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    Keyboard.dismiss()
-  }
-
-  const [search, setSearch] = useState("")
+  const [filters, setFilters] =
+    useState<RecipeFilterSelection>(EMPTY_RECIPE_FILTERS)
+  const [sort, setSort] = useState<RecipeSortKey>("recommended")
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-  const [writeSheetOpen, setWriteSheetOpen] = useState(false)
-  const [recipeModalOpen, setRecipeModalOpen] = useState(false)
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [recipeRefreshing, setRecipeRefreshing] = useState(false)
-  const [selectedFilters, setSelectedFilters] = useState<
-    Record<string, Set<string>>
-  >({})
-  const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null)
+  const [fabCollapsed, setFabCollapsed] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const lastOffsetRef = useRef(0)
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 250)
-    return () => clearTimeout(timer)
-  }, [search])
-
-  useEffect(() => {
-    if (params.tab === "free") {
-      setActiveTab("free")
-    }
-    if (typeof params.tag === "string") {
-      setFreePostTagFilter(params.tag.length > 0 ? params.tag : null)
-    }
-  }, [params.tab, params.tag])
-
-  // FoodCategoryBar uses selectedFilters.country directly
-  const selectedCategories = useMemo(() => {
-    return selectedFilters.country ?? new Set<string>()
-  }, [selectedFilters])
-
-  const selectedNutrition = useMemo(() => {
-    return selectedFilters.nutrition ?? new Set<string>()
-  }, [selectedFilters])
-
-  const selectedStage = useMemo(() => {
-    return selectedFilters.stage ?? new Set<string>()
-  }, [selectedFilters])
-
-  const categoryKeys = useMemo(
-    () => [...selectedCategories].sort(),
-    [selectedCategories],
-  )
-
-  const tagKeys = useMemo(
-    () => [...selectedNutrition, ...selectedStage].sort(),
-    [selectedNutrition, selectedStage],
-  )
-
-  const {
-    data: recipePages,
-    isLoading: recipesLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch: refetchRecipes,
-  } = useInfiniteRecipes({
-    search: debouncedSearch,
-    categoryKeys,
-    tagKeys,
+  const search = useRecipeSearch()
+  const list = useRecipeListV2({
+    query: search.committedQuery,
+    filters,
+    sort,
   })
 
-  const recipes = useMemo(
-    () => recipePages?.pages.flatMap((page) => page.items) ?? [],
-    [recipePages],
+  const applied = useMemo(() => listAppliedRecipeFilters(filters), [filters])
+  const appliedCount = useMemo(() => countRecipeFilters(filters), [filters])
+  const showEstimateNotice = useMemo(
+    () => hasEstimatedNutrition(list.items),
+    [list.items],
   )
 
-  const { data: selectedRecipe } = useRecipeDetail(selectedRecipeId)
+  /** 결과 수를 말할 상황인가 — 검색했거나 필터를 걸었을 때만(그냥 둘러볼 때 개수는 소음이다). */
+  const showResultCount =
+    (search.isSearching || appliedCount > 0) && !list.isLoading && !list.isError
+  const resultCountText =
+    list.resultCount.kind === "atLeast"
+      ? tr("list.resultCountAtLeast", { count: list.resultCount.count })
+      : tr("feed.results", { count: list.resultCount.count })
 
-  const handleToggleCategory = useCallback((key: string) => {
-    setSelectedFilters((prev) => {
-      const next: Record<string, Set<string>> = {}
-      for (const k of Object.keys(prev)) {
-        next[k] = new Set(prev[k])
-      }
-      if (!next.country) {
-        next.country = new Set()
-      }
-      if (next.country.has(key)) {
-        next.country.delete(key)
-      } else {
-        next.country.add(key)
-      }
-      return next
-    })
-  }, [])
+  /**
+   * 검색 확정. 키보드를 같이 내린다 — 결과 목록이 뜨는데 키보드가 절반을 덮고 있으면
+   * "결과 수를 먼저 보여준다"(§6.1)가 무의미하다.
+   */
+  const handleCommitSearch = useCallback(
+    (text?: string) => {
+      search.commit(text)
+      Keyboard.dismiss()
+    },
+    [search],
+  )
 
-  const handleToggleAllCategories = useCallback((_isSelected: boolean) => {
-    setSelectedFilters((prev) => {
-      const next: Record<string, Set<string>> = {}
-      for (const k of Object.keys(prev)) {
-        next[k] = new Set(prev[k])
-      }
-      next.country = new Set()
-      return next
-    })
-  }, [])
-
-  const handleToggleQuickFilter = useCallback(
-    (chipKey: string, section: string) => {
-      setSelectedFilters((prev) => {
-        const next: Record<string, Set<string>> = {}
-        for (const key of Object.keys(prev)) {
-          next[key] = new Set(prev[key])
-        }
-        if (!next[section]) {
-          next[section] = new Set()
-        }
-        if (next[section].has(chipKey)) {
-          next[section].delete(chipKey)
-        } else {
-          next[section].add(chipKey)
-        }
-        return next
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y
+      const next = nextFabCollapsed({
+        collapsed: fabCollapsed,
+        offsetY,
+        lastOffsetY: lastOffsetRef.current,
       })
+      // 방향이 바뀐 프레임에서만 상태를 바꾼다 — 매 프레임 setState 하면 목록이 끊긴다.
+      if (Math.abs(offsetY - lastOffsetRef.current) > 4) {
+        lastOffsetRef.current = offsetY
+      }
+      if (next !== fabCollapsed) setFabCollapsed(next)
+    },
+    [fabCollapsed],
+  )
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      await list.refetch()
+    } finally {
+      setRefreshing(false)
+    }
+  }, [list, refreshing])
+
+  const handleRemoveFilter = useCallback(
+    (group: RecipeFilterGroupKey, optionKey: string) => {
+      setFilters((prev) => removeRecipeFilter(prev, group, optionKey))
     },
     [],
   )
 
-  const isChipSelected = useCallback(
-    (chipKey: string, section: string) => {
-      return selectedFilters[section]?.has(chipKey) ?? false
+  /**
+   * v2 상세는 **전체 화면**이다(`app/recipe/[id]`). 옛 v1 은 바텀시트였는데,
+   * 상세에 재료 체크·인분 조절·조리 단계·리뷰가 들어가면서 시트로는 담기지 않는다.
+   * 시트는 스크롤이 두 겹(시트 안 + 화면)이 되어 조리 중에 한 손으로 쓰기 어렵다.
+   */
+  const handleOpenRecipe = useCallback(
+    (card: RecipeCard) => {
+      router.push(`/recipe/${card.id}`)
     },
-    [selectedFilters],
+    [router],
   )
 
-  const handleEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage()
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
-
-  const handleRefreshRecipes = useCallback(async () => {
-    if (recipeRefreshing) {
-      return
-    }
-    setRecipeRefreshing(true)
-    try {
-      await refetchRecipes()
-    } finally {
-      setRecipeRefreshing(false)
-    }
-  }, [recipeRefreshing, refetchRecipes])
-
-  const renderRecipeItem = useCallback(
-    ({ item, index }: { item: CuratedRecipe; index: number }) => (
-      <View
-        style={[
-          styles.recipeItem,
-          index % 2 === 0 ? styles.recipeItemLeft : styles.recipeItemRight,
-        ]}
-      >
-        <CuratedRecipeCard
-          recipe={item}
-          onPress={() => setSelectedRecipeId(item.id)}
-        />
+  const renderItem = useCallback(
+    ({ item }: { item: RecipeCard }) => (
+      <View paddingHorizontal={LAYOUT.screenX} paddingBottom={12}>
+        <RecipeListCard card={item} onPress={handleOpenRecipe} />
       </View>
     ),
-    [],
+    [handleOpenRecipe],
   )
 
-  const recipeKeyExtractor = useCallback((item: CuratedRecipe) => {
-    return String(item.id)
-  }, [])
+  const keyExtractor = useCallback((item: RecipeCard) => String(item.id), [])
 
   return (
-    <YStack flex={1}>
-      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
-        <YStack
-          flex={1}
-          backgroundColor={isDarkMode ? "#1F1F21" : "#FCFCFC"}
-          paddingTop={insets.top}
-        >
-          <TopTabBar
-            tabs={RECIPE_TABS}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-          {activeTab === "recipe" && (
-            <>
-              <YStack paddingHorizontal={16} paddingVertical={14} gap={16}>
-                <XStack alignItems="center" gap={12}>
-                  <View style={{ flex: 1 }}>
-                    <SearchInput value={search} onChangeText={setSearch} />
-                  </View>
-                  <Pressable
-                    onPress={() => setFilterSheetOpen(true)}
-                    hitSlop={8}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                  >
-                    <Icon name="filter" size={24} color={iconColor} />
-                  </Pressable>
-                </XStack>
-                {ALL_FILTER_CHIPS.some((chip) =>
-                  isChipSelected(chip.key, chip.section),
-                ) && (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ gap: 8 }}
-                  >
-                    {ALL_FILTER_CHIPS.filter((chip) =>
-                      isChipSelected(chip.key, chip.section),
-                    ).map((chip) => (
-                      <FilterChip
-                        key={chip.key}
-                        label={chip.label}
-                        theme={chip.theme}
-                        selected
-                        onPress={() =>
-                          handleToggleQuickFilter(chip.key, chip.section)
-                        }
-                      />
-                    ))}
-                  </ScrollView>
-                )}
-                <FoodCategoryBar
-                  selectedCategories={selectedCategories}
-                  onToggleCategory={handleToggleCategory}
-                  onToggleAllCategories={handleToggleAllCategories}
-                />
-              </YStack>
-              <View
-                height={6}
-                backgroundColor={
-                  isDarkMode
-                    ? tokens.color.cardBgDark.val
-                    : tokens.color.grey8.val
-                }
-              />
-              <FlatList
-                data={recipes}
-                keyExtractor={recipeKeyExtractor}
-                renderItem={renderRecipeItem}
-                numColumns={2}
-                style={{ flex: 1 }}
-                contentContainerStyle={styles.recipeListContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                alwaysBounceVertical
-                initialNumToRender={8}
-                maxToRenderPerBatch={8}
-                windowSize={5}
-                removeClippedSubviews
-                onEndReached={handleEndReached}
-                onEndReachedThreshold={0.6}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={recipeRefreshing}
-                    onRefresh={handleRefreshRecipes}
-                    tintColor={tokens.color.primaryAccent.val}
-                    colors={[tokens.color.primaryAccent.val]}
-                    progressBackgroundColor={
-                      isDarkMode
-                        ? tokens.color.cardBgDark.val
-                        : tokens.color.appBg.val
-                    }
-                  />
-                }
-                ListEmptyComponent={
-                  recipesLoading ? (
-                    <YStack paddingVertical={40} alignItems="center">
-                      <ActivityIndicator
-                        color={tokens.color.primaryAccent.val}
-                      />
-                    </YStack>
-                  ) : (
-                    <YStack paddingVertical={40} alignItems="center">
-                      <Text
-                        fontSize={14}
-                        fontFamily="$body"
-                        color={
-                          isDarkMode
-                            ? tokens.color.textDarkSub.val
-                            : tokens.color.textLightSub.val
-                        }
-                      >
-                        조건에 맞는 레시피가 없습니다.
-                      </Text>
-                    </YStack>
-                  )
-                }
-                ListFooterComponent={
-                  isFetchingNextPage ? (
-                    <YStack paddingVertical={18} alignItems="center">
-                      <ActivityIndicator
-                        color={tokens.color.primaryAccent.val}
-                      />
-                    </YStack>
-                  ) : (
-                    <View style={{ height: 88 }} />
-                  )
-                }
-              />
-            </>
-          )}
-          {activeTab === "free" && (
-            <FreePostTab
-              tagFilter={freePostTagFilter}
-              onTagFilterChange={setFreePostTagFilter}
-            />
-          )}
-          <CategoryFilterSheet
-            open={filterSheetOpen}
-            onOpenChange={setFilterSheetOpen}
-            selectedFilters={selectedFilters}
-            onApply={setSelectedFilters}
-          />
-          <CuratedRecipeDetailSheet
-            recipe={selectedRecipe ?? null}
-            visible={selectedRecipeId !== null && selectedRecipe != null}
-            onClose={() => setSelectedRecipeId(null)}
-          />
-          <WriteTypeSheet
-            open={writeSheetOpen}
-            onOpenChange={setWriteSheetOpen}
-            onSelect={(type) => {
-              setWriteSheetOpen(false)
-              if (type === "free") {
-                router.push("/free/new" as Href)
-              } else {
-                setRecipeModalOpen(true)
-              }
-            }}
-          />
-          <Modal
-            visible={recipeModalOpen}
-            animationType="slide"
-            onRequestClose={() => setRecipeModalOpen(false)}
+    <YStack flex={1} backgroundColor={surface.canvas} paddingTop={insets.top}>
+      <YStack paddingHorizontal={LAYOUT.screenX} paddingTop={12} gap={14}>
+        <XStack alignItems="center" justifyContent="space-between" gap={12}>
+          <Text
+            fontFamily="$body"
+            fontSize={22}
+            lineHeight={30}
+            fontWeight="700"
+            color={surface.textStrong}
           >
-            <RecipeEditor onClose={() => setRecipeModalOpen(false)} />
-          </Modal>
+            {t("recipe.title")}
+          </Text>
+
+          {/*
+            보관함 진입점. 이것이 없어서 `app/recipe/saved.tsx` · `recent.tsx` 와
+            `RecipeArchiveScreen` 전체가 **어떤 화면에서도 도달할 수 없었다** — 딥링크로만
+            열리는 화면이었다.
+
+            아이콘이 아니라 글자다(§6.4 "누른 결과를 예측할 수 있어야 한다"). 북마크
+            아이콘을 쓰면 이 자리에서 "저장한다" 인지 "저장한 것을 본다" 인지 알 수 없고,
+            카드의 북마크와 같은 모양이라 더 헷갈린다.
+
+            강조색을 쓰지 않는다 — 이 화면의 프라이머리는 "레시피 쓰기" 하나다.
+          */}
           <Pressable
-            onPress={() => setWriteSheetOpen(true)}
-            style={({ pressed }) => ({
-              ...styles.writeButton,
-              opacity: pressed ? 0.85 : 1,
-            })}
+            accessibilityRole="button"
+            accessibilityLabel={tr("archive.title")}
+            onPress={() => router.push("/recipe/saved")}
+            hitSlop={10}
           >
             <Text
-              color={isDarkMode ? "#1F1F21" : "#FCFCFC"}
-              fontSize={16}
-              lineHeight={28}
-              fontWeight="600"
               fontFamily="$body"
+              fontSize={14}
+              lineHeight={20}
+              letterSpacing={-0.28}
+              fontWeight="600"
+              color={surface.text}
             >
-              + 글쓰기
+              {tr("archive.entry")}
             </Text>
           </Pressable>
-        </YStack>
-      </Pressable>
+        </XStack>
+
+        <RecipeSearchField
+          value={search.draft}
+          onChangeText={search.setDraft}
+          onSubmit={() => handleCommitSearch()}
+          onClear={search.clear}
+          onFocus={search.focus}
+          onBlur={search.blur}
+          onOpenFilters={() => setFilterSheetOpen(true)}
+          appliedFilterCount={appliedCount}
+        />
+      </YStack>
+
+      {search.showSuggestions ? (
+        <RecipeSuggestPanel
+          draft={search.draft}
+          suggestions={search.suggestions}
+          isSuggesting={search.isSuggesting}
+          onSelect={(text) => handleCommitSearch(text)}
+        />
+      ) : (
+        <>
+          <YStack paddingTop={12} gap={10}>
+            {applied.length > 0 && (
+              <YStack paddingHorizontal={LAYOUT.screenX}>
+                <AppliedFilterRow
+                  applied={applied}
+                  onRemove={handleRemoveFilter}
+                  onClearAll={() => setFilters(EMPTY_RECIPE_FILTERS)}
+                />
+              </YStack>
+            )}
+
+            <YStack paddingHorizontal={LAYOUT.screenX}>
+              <RecipeSortRow sort={sort} onChange={setSort} />
+            </YStack>
+
+            {(showResultCount || showEstimateNotice) && (
+              <XStack
+                paddingHorizontal={LAYOUT.screenX}
+                alignItems="center"
+                justifyContent="space-between"
+                gap={12}
+              >
+                <Text
+                  fontFamily="$body"
+                  fontSize={TYPE.caption.fontSize}
+                  lineHeight={TYPE.caption.lineHeight}
+                  letterSpacing={TYPE.caption.letterSpacing}
+                  fontWeight="600"
+                  color={surface.text}
+                  numberOfLines={1}
+                >
+                  {showResultCount ? resultCountText : ""}
+                </Text>
+                {/* provenance 를 카드마다 배지로 쌓지 않고 목록에 한 번만 알린다(§6.4). */}
+                {showEstimateNotice && (
+                  <Text
+                    fontFamily="$body"
+                    fontSize={11.5}
+                    lineHeight={16}
+                    color={surface.textWeak}
+                    numberOfLines={1}
+                  >
+                    {tr("curated.estimatedBadge")}
+                  </Text>
+                )}
+              </XStack>
+            )}
+          </YStack>
+
+          <FlatList
+            data={list.items}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingTop: 12 }}
+            onScroll={handleScroll}
+            scrollEventThrottle={32}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={6}
+            maxToRenderPerBatch={6}
+            windowSize={7}
+            removeClippedSubviews
+            onEndReached={list.loadMore}
+            onEndReachedThreshold={0.6}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={tokens.color.primary.val}
+                colors={[tokens.color.primary.val]}
+                progressBackgroundColor={surface.card}
+              />
+            }
+            ListEmptyComponent={
+              list.isLoading ? (
+                <YStack paddingVertical={48} alignItems="center">
+                  <ActivityIndicator color={tokens.color.primary.val} />
+                </YStack>
+              ) : list.isError ? (
+                <YStack
+                  paddingVertical={40}
+                  paddingHorizontal={LAYOUT.screenX}
+                  alignItems="center"
+                  gap={6}
+                >
+                  <Text
+                    fontFamily="$body"
+                    fontSize={15}
+                    lineHeight={21}
+                    fontWeight="600"
+                    color={surface.textStrong}
+                  >
+                    {tr("list.errorTitle")}
+                  </Text>
+                  <Text
+                    fontFamily="$body"
+                    fontSize={13}
+                    lineHeight={19}
+                    color={surface.textMuted}
+                    textAlign="center"
+                  >
+                    {tr("list.errorBody")}
+                  </Text>
+                  <Pressable
+                    onPress={() => void list.refetch()}
+                    accessibilityRole="button"
+                    accessibilityLabel={tr("list.retry")}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.7 : 1,
+                      marginTop: 8,
+                    })}
+                  >
+                    <Text
+                      fontFamily="$body"
+                      fontSize={14}
+                      lineHeight={20}
+                      fontWeight="700"
+                      color={tokens.color.primary.val}
+                    >
+                      {tr("list.retry")}
+                    </Text>
+                  </Pressable>
+                </YStack>
+              ) : (
+                <YStack
+                  paddingVertical={40}
+                  paddingHorizontal={LAYOUT.screenX}
+                  alignItems="center"
+                  gap={6}
+                >
+                  <Text
+                    fontFamily="$body"
+                    fontSize={15}
+                    lineHeight={21}
+                    fontWeight="600"
+                    color={surface.textStrong}
+                  >
+                    {search.isSearching
+                      ? tr("feed.noResultsTitle")
+                      : tr("list.emptyTitle")}
+                  </Text>
+                  <Text
+                    fontFamily="$body"
+                    fontSize={13}
+                    lineHeight={19}
+                    color={surface.textMuted}
+                    textAlign="center"
+                  >
+                    {search.isSearching
+                      ? tr("feed.noResultsBody")
+                      : tr("list.emptyBody")}
+                  </Text>
+                </YStack>
+              )
+            }
+            ListFooterComponent={
+              list.isFetchingNextPage ? (
+                <YStack paddingVertical={18} alignItems="center">
+                  <ActivityIndicator color={tokens.color.primary.val} />
+                </YStack>
+              ) : (
+                // 두 플로팅(작성 + AI 상담)이 마지막 카드를 영구히 가리지 않게 비운다.
+                <View height={RECIPE_LIST_BOTTOM_SPACER} />
+              )
+            }
+          />
+        </>
+      )}
+
+      <RecipeFilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        selection={filters}
+        onApply={setFilters}
+      />
+
+
+      {/* 자동완성 패널이 떠 있을 때는 감춘다 — 키보드 위에 뜬 버튼이 제안 목록을 가린다. */}
+      {!search.showSuggestions && (
+        <RecipeWriteFab
+          label={t("recipe.write")}
+          collapsed={fabCollapsed}
+          /*
+            v2 작성 폼(`app/(write)/recipe/new.tsx` → `RecipeWriteForm`)으로 보낸다.
+            이 버튼은 v1 `RecipeEditor` 모달을 열고 있었다 — 재료를 입력하면 나트륨·칼륨이
+            실시간으로 계산되는 v2 폼은 **어느 화면에서도 열리지 않았다.** 라우트는
+            있었지만 아무도 가리키지 않았다.
+
+            모달이 아니라 화면 전환이다. 작성은 사진·재료·조리 단계로 여러 단계를 오가고,
+            모달 안에서 또 시트를 띄우면 뒤로 가기가 무엇을 닫는지 예측할 수 없다.
+          */
+          onPress={() => router.push("/(write)/recipe/new")}
+        />
+      )}
     </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  writeButton: {
-    position: "absolute",
-    bottom: 26,
-    right: 16,
-    backgroundColor: tokens.color.primaryAccent.val,
-    borderRadius: 24,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-  },
-  recipeListContent: {
-    paddingHorizontal: 10,
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  recipeItem: {
-    width: "50%",
-    marginBottom: 12,
-  },
-  recipeItemLeft: {
-    paddingLeft: 6,
-    paddingRight: 6,
-  },
-  recipeItemRight: {
-    paddingLeft: 6,
-    paddingRight: 6,
-  },
-})

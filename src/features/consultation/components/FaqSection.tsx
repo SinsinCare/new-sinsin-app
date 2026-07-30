@@ -3,6 +3,7 @@ import { ScrollView } from "react-native"
 import { tokens } from "@/src/theme/tokens"
 import { FaqCard } from "./FaqCard"
 import type { FaqItem } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface FaqSectionProps {
   items: FaqItem[]
@@ -10,6 +11,7 @@ interface FaqSectionProps {
 }
 
 export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
+  const { t } = useTranslation()
   return (
     <YStack gap="$3">
       {/* Section header */}
@@ -19,7 +21,7 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
         paddingHorizontal="$5"
       >
         <Text fontSize="$5" fontWeight="700" color="$grey3">
-          자주 하는 질문
+          {t("consult.faqTitle")}
         </Text>
         <Text
           fontSize="$3"
@@ -30,12 +32,14 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
           paddingHorizontal={10}
           paddingVertical={2}
         >
-          {items.length}개 질문
+          {t("consult.questionCount", { count: items.length })}
         </Text>
       </XStack>
 
       {/* Horizontal FAQ list */}
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{

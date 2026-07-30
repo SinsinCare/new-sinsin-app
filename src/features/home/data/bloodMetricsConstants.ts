@@ -31,7 +31,7 @@ export const BP_PLACEHOLDER = {
 export const GLUCOSE_PLACEHOLDER = "100"
 
 export const VITAL_STATUS_LABEL = {
-  normal: "정상",
-  caution: "주의",
+  normal: "참고 범위 안",
+  caution: "참고 범위 밖",
   none: "----",
 } as const

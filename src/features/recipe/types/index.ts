@@ -42,6 +42,8 @@ export interface KidneyRecommendedFood {
 }
 
 export interface CommunityPostVoteCreate {
+  /** 투표 질문(선택). */
+  title?: string | null
   options: string[]
   allowMultiple: boolean
 }
@@ -54,6 +56,8 @@ export interface CommunityPostVoteOption {
 
 export interface CommunityPostVote {
   id: number
+  /** 투표 질문(선택). */
+  title: string | null
   allowMultiple: boolean
   options: CommunityPostVoteOption[]
   totalCount: number
@@ -67,6 +71,7 @@ export interface CommunityCommentApi {
   authorId?: number | null
   authorName: string
   content: string
+  mentions?: string[] | null
   likes: number
   liked: boolean
   isDeleted: boolean
@@ -82,6 +87,8 @@ export interface CommunityComment {
   authorId?: number | null
   authorName: string
   content: string
+  /** 본문의 '@닉네임' 중 서버가 실제 참여자로 확인한 것만. */
+  mentions: string[]
   likes: number
   liked: boolean
   isDeleted: boolean
@@ -98,6 +105,8 @@ export interface CommunityMealPostApi {
   authorRole: string
   category: string
   imageUri?: string | null
+  imageUris?: string[] | null
+  imageObjectPaths?: string[] | null
   title: string
   description: string
   likes: number
@@ -116,7 +125,11 @@ export interface CommunityMealPost {
   authorName: string
   authorRole: string
   category: string
+  /** 첫 이미지(하위호환). 렌더는 imageUris 를 쓴다. */
   imageUri: string | null
+  imageUris: string[]
+  /** 수정 시 이미지 세트를 되돌려 보내기 위한 저장 경로. */
+  imageObjectPaths: string[]
   title: string
   description: string
   likes: number
@@ -139,8 +152,11 @@ export type CreateCommunityPostInput = Omit<
   | "createdAt"
   | "tags"
   | "vote"
+  | "imageUris"
+  | "imageObjectPaths"
 > & {
   imageObjectPath?: string | null
+  imageObjectPaths?: string[]
   tags?: string[]
   vote?: CommunityPostVoteCreate | null
 }
@@ -156,6 +172,8 @@ export interface ICommunityPostService {
       title?: string
       description?: string
       imageUri?: string | null
+      imageObjectPaths?: string[]
+      tags?: string[]
     },
   ): Promise<CommunityMealPost>
   deletePost(id: string): Promise<void>
@@ -172,11 +190,13 @@ export interface ICommunityPostService {
     postId: string,
     content: string,
     parentCommentId?: string | null,
+    mentions?: string[],
   ): Promise<CommunityComment>
   updateComment(
     postId: string,
     commentId: string,
     content: string,
+    mentions?: string[],
   ): Promise<CommunityComment>
   deleteComment(postId: string, commentId: string): Promise<void>
   toggleCommentLike(postId: string, commentId: string): Promise<void>

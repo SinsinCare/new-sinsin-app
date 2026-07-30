@@ -1,10 +1,8 @@
-import { Image, Pressable, StyleSheet } from "react-native"
-import { View } from "tamagui"
-import { Icon } from "@/src/shared/components/Icon"
+import { Image, Pressable, StyleSheet, View } from "react-native"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import { useTranslation } from "react-i18next"
 
-const IMAGE_CARD_SIZE = 64
-const IMAGE_CLOSE_BG = "#F5F6FA"
-const IMAGE_CLOSE_ICON = "#0B0D0E"
+const IMAGE_CARD_SIZE = 72
 
 interface ImageThumbnailCardProps {
   uri: string
@@ -12,26 +10,31 @@ interface ImageThumbnailCardProps {
   onRemove?: () => void
 }
 
+/** 첨부 이미지 섬네일 — 제거 버튼은 잉크 원. */
 export function ImageThumbnailCard({
   uri,
   onPress,
   onRemove,
 }: ImageThumbnailCardProps) {
+  const { t } = useTranslation("recipe")
   return (
-    <View style={{ position: "relative" }}>
-      <Pressable onPress={onPress}>
-        <Image
-          source={{ uri }}
-          style={{
-            width: IMAGE_CARD_SIZE,
-            height: IMAGE_CARD_SIZE,
-            borderRadius: 8,
-          }}
-        />
+    <View style={styles.wrap}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="imagebutton"
+        accessibilityLabel={t("media.openPhoto")}
+      >
+        <Image source={{ uri }} style={styles.image} />
       </Pressable>
       {onRemove && (
-        <Pressable onPress={onRemove} style={styles.closeButton}>
-          <Icon name="x" size={12} color={IMAGE_CLOSE_ICON} />
+        <Pressable
+          onPress={onRemove}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={t("media.deletePhoto")}
+          style={styles.closeButton}
+        >
+          <Ionicons name="close" size={12} color="#FFFFFF" />
         </Pressable>
       )}
     </View>
@@ -39,6 +42,14 @@ export function ImageThumbnailCard({
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    position: "relative",
+  },
+  image: {
+    width: IMAGE_CARD_SIZE,
+    height: IMAGE_CARD_SIZE,
+    borderRadius: 12,
+  },
   closeButton: {
     position: "absolute",
     top: -6,
@@ -46,7 +57,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: IMAGE_CLOSE_BG,
+    backgroundColor: "#1D1E20",
     alignItems: "center",
     justifyContent: "center",
   },

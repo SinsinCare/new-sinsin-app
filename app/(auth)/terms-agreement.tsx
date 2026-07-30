@@ -14,9 +14,6 @@ export default function TermsAgreement() {
   const socialSignupToken = getParamValue(params.socialSignupToken)
 
   return (
-    <TermsAgreementScreen
-      mode={mode}
-      socialSignupToken={socialSignupToken}
-    />
+    <TermsAgreementScreen mode={mode} socialSignupToken={socialSignupToken} />
   )
 }

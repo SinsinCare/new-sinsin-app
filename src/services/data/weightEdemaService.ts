@@ -26,9 +26,6 @@ export const weightEdemaService = {
       if (isAxiosError(err) && hasFieldErrors(err.response?.data)) {
         throw err
       }
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
-      }
       throw err
     }
   },
@@ -43,9 +40,6 @@ export const weightEdemaService = {
     } catch (err) {
       if (isAxiosError(err) && hasFieldErrors(err.response?.data)) {
         throw err
-      }
-      if (isAxiosError(err) && err.response?.data?.message) {
-        throw new Error(err.response.data.message)
       }
       throw err
     }

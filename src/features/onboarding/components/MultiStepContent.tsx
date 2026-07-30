@@ -1,9 +1,35 @@
-import { Pressable } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text } from "tamagui"
-import { Checkbox } from "@/src/shared/components"
-import { tokens } from "@/src/theme/tokens"
+import { useEffect } from "react"
+import { Pressable, StyleSheet, View } from "react-native"
+import Animated, {
+  Easing,
+  ReduceMotion,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated"
+import { CheckCircle } from "@/src/features/auth/components"
+import { hapticSelection } from "@/src/lib/haptics"
+import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import {
+  AUTH_LAYOUT,
+  AUTH_MOTION,
+  AUTH_TYPE,
+} from "@/src/features/auth/data/authSurface"
 import type { OnboardingValueOption } from "../types"
+
+const EASE = Easing.bezier(0.22, 1, 0.36, 1)
+const TIMING = {
+  duration: AUTH_MOTION.duration.fast,
+  easing: EASE,
+  reduceMotion: ReduceMotion.System,
+}
+const SPRING = {
+  damping: 15,
+  stiffness: 260,
+  reduceMotion: ReduceMotion.System,
+}
 
 interface MultiStepContentProps {
   options: OnboardingValueOption[]
@@ -11,56 +37,99 @@ interface MultiStepContentProps {
   onToggle: (key: string) => void
 }
 
+function MultiRow({
+  label,
+  selected,
+  onToggle,
+}: {
+  label: string
+  selected: boolean
+  onToggle: () => void
+}) {
+  const surface = useAuthSurface()
+  const selection = useSharedValue(selected ? 1 : 0)
+  const scale = useSharedValue(1)
+
+  useEffect(() => {
+    selection.value = withTiming(selected ? 1 : 0, TIMING)
+  }, [selected, selection])
+
+  const rowStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      selection.value,
+      [0, 1],
+      [surface.surface, surface.surfaceBrand],
+    ),
+    transform: [{ scale: scale.value }],
+  }))
+
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      selection.value,
+      [0, 1],
+      [surface.text, surface.brand],
+    ),
+  }))
+
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      onPress={() => {
+        hapticSelection()
+        onToggle()
+      }}
+      onPressIn={() => {
+        scale.value = withTiming(0.985, { duration: 90, easing: EASE })
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, SPRING)
+      }}
+    >
+      {/* 복수 선택은 체크를 남긴다 — "몇 개든 고를 수 있다"는 면 색만으로 안 읽힌다. */}
+      <Animated.View style={[styles.row, rowStyle]}>
+        <CheckCircle checked={selected} />
+        <Animated.Text style={[styles.label, labelStyle]} numberOfLines={2}>
+          {label}
+        </Animated.Text>
+      </Animated.View>
+    </Pressable>
+  )
+}
+
 export function MultiStepContent({
   options,
   selectedKeys,
   onToggle,
 }: MultiStepContentProps) {
-  const isDark = useAppColorScheme() === "dark"
-  const unselectedBg = isDark ? tokens.color.cardBgDark.val : "white"
-  const unselectedBorder = isDark
-    ? "rgba(100,105,115,0.4)"
-    : "rgba(218,223,230,0.6)"
-  const selectedBg = isDark ? "#1A3A2E" : "#F0FDF9"
-  const unselectedText = isDark ? tokens.color.textDark.val : "#17191C"
-
   return (
-    <YStack gap={12}>
-      {options.map((option, index) => {
-        const isSelected = selectedKeys.includes(option.key)
-        return (
-          <Pressable
-            key={`${index}-${option.key}`}
-            onPress={() => onToggle(option.key)}
-          >
-            <XStack
-              minHeight={56}
-              paddingVertical={14}
-              borderRadius={12}
-              borderWidth={1.5}
-              borderColor={isSelected ? tokens.color.sub6.val : unselectedBorder}
-              backgroundColor={isSelected ? selectedBg : unselectedBg}
-              alignItems="center"
-              paddingHorizontal={16}
-              gap={12}
-            >
-              <Checkbox
-                checked={isSelected}
-                onToggle={() => onToggle(option.key)}
-              />
-              <Text
-                fontSize={16}
-                fontWeight={isSelected ? "600" : "400"}
-                color={isSelected ? tokens.color.sub8.val : unselectedText}
-                letterSpacing={-0.3}
-                flex={1}
-              >
-                {option.value}
-              </Text>
-            </XStack>
-          </Pressable>
-        )
-      })}
-    </YStack>
+    <View style={styles.list}>
+      {options.map((option, index) => (
+        <MultiRow
+          key={`${index}-${option.key}`}
+          label={option.value}
+          selected={selectedKeys.includes(option.key)}
+          onToggle={() => onToggle(option.key)}
+        />
+      ))}
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  list: { gap: 10 },
+  row: {
+    minHeight: AUTH_LAYOUT.optionHeight,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: AUTH_LAYOUT.radius.option,
+  },
+  label: {
+    ...AUTH_TYPE.option,
+    flex: 1,
+    fontWeight: "600",
+  },
+})

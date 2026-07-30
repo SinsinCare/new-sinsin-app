@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { barHeight, spacing, touchTarget, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"
+import { useTranslation } from "react-i18next"
 
 export type V2ScreenHeaderOS = "ios" | "android"
 
@@ -48,6 +49,7 @@ export function V2ScreenHeader({
   safeAreaTop = true,
   style,
 }: V2ScreenHeaderProps) {
+  const { t } = useTranslation()
   const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
 
@@ -71,7 +73,7 @@ export function V2ScreenHeader({
           {onBack != null && (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="뒤로 가기"
+              accessibilityLabel={t("action.back")}
               onPress={onBack}
               style={({ pressed }) => [
                 styles.backButton,

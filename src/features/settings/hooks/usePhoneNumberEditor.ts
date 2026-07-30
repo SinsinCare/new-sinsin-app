@@ -2,8 +2,10 @@ import { useState } from "react"
 import { Alert } from "react-native"
 import { useRouter } from "expo-router"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { showErrorToast } from "@/src/lib/toast"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { ApiError } from "@/src/services/core/apiError"
 import { api } from "@/src/services/core/apiClient"
 import {
@@ -15,23 +17,22 @@ import { useMyPageProfile } from "./useMyPageProfile"
 
 type PendingAction = "save" | "delete" | null
 
-function getPhoneUpdateError(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.isNetworkError) return error.message
-    return error.message || "전화번호를 저장하지 못했습니다."
-  }
-  return "전화번호를 저장하지 못했습니다. 다시 시도해주세요."
+function getPhoneUpdateError(error: unknown, fallback: string): string {
+  return getErrorMessage(error, fallback)
 }
 
 export function usePhoneNumberEditor() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
+  const { t } = useTranslation("settings")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const validationError = getOptionalPhoneNumberError(phoneNumber)
+    ? t("phone.validation")
+    : null
   const canSave = phoneNumber.length > 0 && !validationError && !pendingAction
 
   const handlePhoneNumberChange = (value: string) => {
@@ -54,7 +55,10 @@ export function usePhoneNumberEditor() {
       await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
     } catch (error) {
-      const message = getPhoneUpdateError(error)
+      const message = getPhoneUpdateError(
+        error,
+        action === "delete" ? t("phone.deleteError") : t("phone.saveError"),
+      )
       if (error instanceof ApiError && error.isNetworkError) {
         showErrorToast(message)
       } else {
@@ -74,18 +78,14 @@ export function usePhoneNumberEditor() {
 
   const handleDelete = () => {
     if (!profile?.hasPhoneNumber || pendingAction) return
-    Alert.alert(
-      "전화번호를 삭제할까요?",
-      "삭제하면 개인 연락과 동의한 마케팅 안내에 더 이상 활용되지 않습니다.",
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "삭제",
-          style: "destructive",
-          onPress: () => void updatePhoneNumber(null, "delete"),
-        },
-      ],
-    )
+    Alert.alert(t("phone.deleteTitle"), t("phone.deleteBody"), [
+      { text: t("shared.cancel"), style: "cancel" },
+      {
+        text: t("shared.delete"),
+        style: "destructive",
+        onPress: () => void updatePhoneNumber(null, "delete"),
+      },
+    ])
   }
 
   return {
@@ -98,6 +98,5 @@ export function usePhoneNumberEditor() {
     handlePhoneNumberChange,
     handleSave,
     handleDelete,
-    handleBack: () => router.back(),
   }
 }

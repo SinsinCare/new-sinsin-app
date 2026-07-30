@@ -1,13 +1,22 @@
-import { YStack } from "tamagui"
-import { useForm } from "react-hook-form"
-import { FormTextField } from "@/src/shared/components"
+import { StyleSheet, View } from "react-native"
+import { Controller, useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { AuthScreenLayout } from "./AuthScreenLayout"
-import { PasswordCriteriaText } from "../components"
+import {
+  PasswordCriteriaText,
+  StepHelperText,
+  StepTextInput,
+} from "../components"
 import { useSignupPassword } from "../hooks"
-import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import {
+  getConfirmPasswordRules,
+  getPasswordRules,
+} from "../data/passwordValidation"
+import { AUTH_LAYOUT } from "../data/authSurface"
 import type { PasswordForm } from "../types"
 
 export function SignupPasswordScreen() {
+  const { t } = useTranslation("auth")
   const { handleNext } = useSignupPassword()
 
   const {
@@ -24,36 +33,70 @@ export function SignupPasswordScreen() {
 
   return (
     <AuthScreenLayout
-      title="비밀번호를 입력해주세요."
-      subtitle="로그인에 사용할 비밀번호를 설정해주세요"
-      buttonLabel="다음 단계"
+      title={t("password.createTitle")}
+      subtitle={t("password.createSubtitle")}
+      buttonLabel={t("common.next")}
       buttonDisabled={!isValid}
       onSubmit={handleSubmit(handleNext)}
+      keyboardAvoiding
     >
-      <YStack gap={36} marginTop={56}>
-        <YStack gap={10}>
-          <FormTextField<PasswordForm>
-            name="password"
-            control={control}
-            label="비밀번호"
-            placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-            inputType="password"
-            showValidState
-            rules={passwordRules}
-          />
-          <PasswordCriteriaText password={password} />
-        </YStack>
+      <View style={styles.body}>
+        <Controller
+          name="password"
+          control={control}
+          rules={getPasswordRules()}
+          render={({ field }) => (
+            <View style={styles.group}>
+              <StepTextInput
+                autoFocus
+                label={t("fields.password")}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t("password.placeholder")}
+                secureTextEntry
+                textContentType="newPassword"
+                autoComplete="new-password"
+                returnKeyType="next"
+              />
+              <PasswordCriteriaText password={field.value} />
+            </View>
+          )}
+        />
 
-        <FormTextField<PasswordForm>
+        <Controller
           name="confirmPassword"
           control={control}
-          label="비밀번호 확인"
-          placeholder="입력한 비밀번호를 다시 입력해주세요"
-          inputType="password"
-          showValidState
-          rules={confirmPasswordRules(password)}
+          rules={getConfirmPasswordRules(password)}
+          render={({ field, fieldState }) => (
+            <View>
+              <StepTextInput
+                label={t("fields.confirmPassword")}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t("password.confirmPlaceholder")}
+                secureTextEntry
+                textContentType="newPassword"
+                autoComplete="new-password"
+                returnKeyType="done"
+                hasError={!!fieldState.error && !!field.value}
+              />
+              {fieldState.error && field.value ? (
+                <StepHelperText
+                  message={fieldState.error.message ?? ""}
+                  tone="error"
+                />
+              ) : null}
+            </View>
+          )}
         />
-      </YStack>
+      </View>
     </AuthScreenLayout>
   )
 }
+
+const styles = StyleSheet.create({
+  body: { marginTop: AUTH_LAYOUT.questionToField, gap: 20 },
+  group: { gap: 10 },
+})

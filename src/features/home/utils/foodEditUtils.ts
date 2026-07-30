@@ -9,7 +9,10 @@ function scaleNutrients(
   ratio: number,
 ): FoodCameraNutritionTotal {
   return Object.fromEntries(
-    Object.entries(nutrients).map(([key, value]) => [key, value * ratio]),
+    Object.entries(nutrients).map(([key, value]) => [
+      key,
+      value === null ? null : value * ratio,
+    ]),
   ) as unknown as FoodCameraNutritionTotal
 }
 
@@ -54,31 +57,46 @@ export function validateMealTitle(title: string): {
   message: string
 } {
   if (!title.trim()) {
-    return { isValid: false, message: "식단 이름을 입력해주세요" }
+    return { isValid: false, message: "식사 이름을 입력해 주세요" }
   }
   return { isValid: true, message: "" }
 }
 
-export function validateMenuName(name: string): {
+export function validateMenuName(
+  name: string,
+  invalidMessage = "음식 이름을 입력해 주세요",
+): {
   isValid: boolean
   message: string
 } {
   if (!name.trim()) {
-    return { isValid: false, message: "메뉴 이름을 입력해 주세요" }
+    return { isValid: false, message: invalidMessage }
   }
   return { isValid: true, message: "" }
 }
 
-export function validateMenuAmount(amount: string): {
+export function validateMenuAmount(
+  amount: string,
+  messages: {
+    required: string
+    positive: string
+  } = {
+    required: "먹은 양을 입력해 주세요",
+    positive: "먹은 양은 0보다 큰 숫자로 입력해 주세요",
+  },
+): {
   isValid: boolean
   message: string
 } {
   if (!amount.trim()) {
-    return { isValid: false, message: "양을 입력해 주세요" }
+    return { isValid: false, message: messages.required }
   }
   const numericAmount = Number(amount)
   if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    return { isValid: false, message: "0보다 큰 숫자를 입력해 주세요" }
+    return {
+      isValid: false,
+      message: messages.positive,
+    }
   }
   return { isValid: true, message: "" }
 }

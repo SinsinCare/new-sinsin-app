@@ -3,11 +3,13 @@ import { YStack, Text } from "tamagui"
 
 interface DietaryGuideContainerProps {
   title: string
+  isSummary?: boolean
   children: React.ReactNode
 }
 
 export function DietaryGuideContainer({
   title,
+  isSummary = false,
   children,
 }: DietaryGuideContainerProps) {
   const isDarkMode = useAppColorScheme() === "dark"
@@ -21,16 +23,10 @@ export function DietaryGuideContainer({
       gap="$3"
     >
       <Text
-        fontSize={title === "한줄평" ? 14 : 16}
+        fontSize={isSummary ? 14 : 16}
         fontWeight={600}
         paddingVertical="$1"
-        color={
-          title === "한줄평"
-            ? "$colorSubtle"
-            : isDarkMode
-              ? "$textDark"
-              : "$color"
-        }
+        color={isSummary ? "$colorSubtle" : isDarkMode ? "$textDark" : "$color"}
       >
         {title}
       </Text>

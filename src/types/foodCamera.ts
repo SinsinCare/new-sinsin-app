@@ -12,10 +12,10 @@ export interface FoodCameraFood {
   protein: number
   carbohydrates: number
   fat: number
-  sodium: number
-  potassium: number
-  phosphorus: number
-  water: number
+  sodium: number | null
+  potassium: number | null
+  phosphorus: number | null
+  water: number | null
   analyzedGrams?: number | null
   consumedGrams?: number | null
   confidence?: number | null
@@ -64,10 +64,10 @@ export interface FoodCameraNutritionTotal {
   protein: number
   carbohydrates: number
   fat: number
-  sodium: number
-  potassium: number
-  phosphorus: number
-  water: number
+  sodium: number | null
+  potassium: number | null
+  phosphorus: number | null
+  water: number | null
 }
 
 export interface FoodCameraCautionFood {
@@ -77,7 +77,7 @@ export interface FoodCameraCautionFood {
 
 export interface FoodCameraEvaluation {
   comment: string
-  score: number
+  score: number | null
   cautionFoods: FoodCameraCautionFood[]
   detail: {
     riskFactors: string
@@ -146,6 +146,7 @@ export interface FoodAnalysisJob {
   analysisId: string
   requestId: string
   status: FoodAnalysisStatus
+  presentationLocale?: "ko" | "en"
   pollAfterMs?: number
   result?: FoodCameraAnalyzeResult | null
   confirmationQuestions?: FoodAnalysisConfirmationQuestion[]

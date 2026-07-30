@@ -30,10 +30,7 @@ export type SocialAuthSessionResult =
 
 // 인증 서비스 인터페이스
 export interface IAuthService {
-  signInWithEmail(
-    email: string,
-    password: string,
-  ): Promise<AuthSessionResult>
+  signInWithEmail(email: string, password: string): Promise<AuthSessionResult>
   signInWithSocial(
     provider: SocialProvider,
     idToken: string,
@@ -50,15 +47,11 @@ export interface IAuthService {
     emailLinkToken: string,
     password: string,
   ): Promise<AuthSessionResult>
-  completeProfile(
-    request: ProfileCompleteRequest,
-  ): Promise<AuthSessionResult>
+  completeProfile(request: ProfileCompleteRequest): Promise<AuthSessionResult>
   getProfile(): Promise<AuthProfile>
   signup(request: SignupRequest): Promise<AuthSessionResult>
   completeSocialSignup(request: SocialSignupRequest): Promise<AuthSessionResult>
-  cancelWithdrawal(
-    cancelToken: string,
-  ): Promise<AuthSessionResult>
+  cancelWithdrawal(cancelToken: string): Promise<AuthSessionResult>
   signOut(): Promise<void>
   promoteSession(): Promise<AuthSessionResult>
   restoreSession(): Promise<AuthSessionResult | null>

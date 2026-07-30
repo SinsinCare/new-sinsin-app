@@ -11,15 +11,20 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useTranslation } from "react-i18next"
 
-function formatDate(timestamp: string): string {
+function formatDate(timestamp: string, language: string): string {
   const date = new Date(timestamp)
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  const h = String(date.getHours()).padStart(2, "0")
-  const min = String(date.getMinutes()).padStart(2, "0")
-  return `${y}.${m}.${d} ${h}:${min}`
+  return new Intl.DateTimeFormat(
+    language.startsWith("en") ? "en-US" : "ko-KR",
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+    },
+  ).format(date)
 }
 
 interface ChatHistoryCardProps {
@@ -39,6 +44,7 @@ export function ChatHistoryCard({
   onRename,
   onDelete,
 }: ChatHistoryCardProps) {
+  const { t, i18n } = useTranslation()
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
@@ -51,7 +57,9 @@ export function ChatHistoryCard({
     setMenuOpen(true)
   }
 
-  const textColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const textColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
   const deleteColor = tokens.color.primary9.val
 
   return (
@@ -60,7 +68,9 @@ export function ChatHistoryCard({
         onPress={onPress}
         style={({ pressed }) => ({
           opacity: pressed ? 0.7 : 1,
-          backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
+          backgroundColor: isDarkMode
+            ? tokens.color.inputBgDark.val
+            : tokens.color.offWhite.val,
           borderRadius: 16,
           paddingHorizontal: 20,
           paddingVertical: 14,
@@ -72,7 +82,11 @@ export function ChatHistoryCard({
               fontSize={15}
               lineHeight={20}
               fontWeight="600"
-              color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
+              color={
+                isDarkMode
+                  ? tokens.color.textDark.val
+                  : tokens.color.textLight.val
+              }
               flex={1}
               numberOfLines={1}
             >
@@ -86,7 +100,11 @@ export function ChatHistoryCard({
               <Ionicons
                 name="ellipsis-horizontal"
                 size={20}
-                color={isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val}
+                color={
+                  isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.textLight.val
+                }
               />
             </Pressable>
           </XStack>
@@ -107,7 +125,7 @@ export function ChatHistoryCard({
             fontWeight="400"
             color={isDarkMode ? "#66666B" : "#81818D"}
           >
-            {formatDate(timestamp)}
+            {formatDate(timestamp, i18n.language)}
           </Text>
         </YStack>
       </Pressable>
@@ -125,7 +143,9 @@ export function ChatHistoryCard({
               {
                 top: menuPosition.top,
                 right: menuPosition.right,
-                backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.pureWhite.val,
+                backgroundColor: isDarkMode
+                  ? tokens.color.inputBgDark.val
+                  : tokens.color.pureWhite.val,
                 shadowOpacity: isDarkMode ? 0.4 : 0.15,
               },
             ]}
@@ -142,7 +162,7 @@ export function ChatHistoryCard({
               })}
             >
               <Text style={[styles.menuItemText, { color: textColor }]}>
-                제목 바꾸기
+                {t("consult.history.rename")}
               </Text>
               <Icon name="pencil" size={20} color={textColor} />
             </Pressable>
@@ -159,7 +179,7 @@ export function ChatHistoryCard({
               })}
             >
               <Text style={[styles.menuItemText, { color: deleteColor }]}>
-                삭제하기
+                {t("consult.history.delete")}
               </Text>
               <Icon name="trashcan" size={20} color={deleteColor} />
             </Pressable>

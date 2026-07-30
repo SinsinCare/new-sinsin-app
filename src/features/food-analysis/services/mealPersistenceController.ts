@@ -4,15 +4,8 @@ import type {
   PersistedMealIdentity,
 } from "./mealDiaryPersistence"
 
-const MEAL_LABEL: Record<string, string> = {
-  BREAKFAST: "아침",
-  LUNCH: "점심",
-  DINNER: "저녁",
-  SNACKS: "간식",
-}
-
 export interface FoodConsultNavigation {
-  pathname: "/(tabs)/consult"
+  pathname: "/consult"
   params: {
     foodConsultContext: string
     foodConsultRequestId: string
@@ -44,20 +37,13 @@ function buildFoodConsultContext(
     analysisId: identity.analysisId,
     foodAnalysisResultId: identity.foodAnalysisResultId,
     mealType,
-    mealLabel: mealType ? MEAL_LABEL[mealType] : undefined,
     title: result.title,
     servings: result.servings,
     total: result.total,
-    comment: result.evaluation.comment,
-    cautionFoods: result.evaluation.cautionFoods.map((item) => ({
-      food: item.food,
-      reason: item.reason,
-    })),
     foods: result.foods.map((food) => ({
       name: food.name,
       servingSizeValue: food.servingSizeValue,
       servingSizeUnit: food.servingSizeUnit,
-      restrictionLevel: food.restrictionLevel,
       calories: food.calories,
       protein: food.protein,
       carbohydrates: food.carbohydrates,
@@ -86,7 +72,7 @@ export function createMealConsultController(
       .then(async (identity) => {
         if (identity.wasCreated) await dependencies.refreshHome()
         dependencies.navigate({
-          pathname: "/(tabs)/consult",
+          pathname: "/consult",
           params: {
             foodConsultContext: buildFoodConsultContext(
               input.result,

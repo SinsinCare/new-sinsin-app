@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { Modal, View, Pressable, ScrollView, StyleSheet } from "react-native"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { MONTHS, YEARS } from "@/src/features/settings/data/constants"
@@ -22,6 +23,7 @@ export function DatePickerModal({
   const [tempYear, setTempYear] = useState(selected?.year ?? YEARS[0])
   const [tempMonth, setTempMonth] = useState(selected?.month ?? 1)
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
 
   return (
     <Modal
@@ -33,26 +35,28 @@ export function DatePickerModal({
       <View style={styles.overlay}>
         <Pressable style={styles.dimArea} onPress={onClose} />
         <View style={[styles.container, { backgroundColor: c.modalBg }]}>
-          <View
-            style={[styles.header, { borderBottomColor: c.border }]}
-          >
+          <View style={[styles.header, { borderBottomColor: c.border }]}>
             <Pressable onPress={onClose} hitSlop={8}>
               <ThemedText style={[styles.cancelText, { color: c.textMuted }]}>
-                취소
+                {t("shared.cancel")}
               </ThemedText>
             </Pressable>
             <ThemedText style={[styles.headerTitle, { color: c.text }]}>
-              진단 시기
+              {t("datePicker.title")}
             </ThemedText>
             <Pressable
               onPress={() => onSelect(tempYear, tempMonth)}
               hitSlop={8}
             >
-              <ThemedText style={styles.confirmText}>확인</ThemedText>
+              <ThemedText style={styles.confirmText}>
+                {t("datePicker.confirm")}
+              </ThemedText>
             </Pressable>
           </View>
           <View style={styles.columns}>
             <ScrollView
+              bounces={false}
+              overScrollMode="never"
               style={styles.column}
               showsVerticalScrollIndicator={false}
             >
@@ -74,12 +78,16 @@ export function DatePickerModal({
                       tempMonth === m && styles.pickerItemTextSelected,
                     ]}
                   >
-                    {String(m).padStart(2, "0")}월
+                    {t("datePicker.month", {
+                      month: String(m).padStart(2, "0"),
+                    })}
                   </ThemedText>
                 </Pressable>
               ))}
             </ScrollView>
             <ScrollView
+              bounces={false}
+              overScrollMode="never"
               style={styles.column}
               showsVerticalScrollIndicator={false}
             >
@@ -101,7 +109,7 @@ export function DatePickerModal({
                       tempYear === y && styles.pickerItemTextSelected,
                     ]}
                   >
-                    {y}년
+                    {t("datePicker.year", { year: y })}
                   </ThemedText>
                 </Pressable>
               ))}

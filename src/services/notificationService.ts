@@ -4,6 +4,29 @@ import { Platform } from "react-native"
 import type { NotificationSettings } from "@/src/types/notification"
 import { api } from "@/src/services/core/apiClient"
 import { isFoodAnalysisRequestHandled } from "@/src/features/home/services/foodAnalysisRequestState"
+import i18n from "@/src/i18n"
+
+type NotificationCopyKey =
+  | "notifications.scheduled.channel"
+  | "notifications.scheduled.morningTitle"
+  | "notifications.scheduled.morningBody"
+  | "notifications.scheduled.waterTitle"
+  | "notifications.scheduled.waterBody"
+  | "notifications.scheduled.mealTitle"
+  | "notifications.scheduled.mealBody"
+  | "notifications.scheduled.analysisTitle"
+  | "notifications.scheduled.analysisMealBody"
+  | "notifications.scheduled.analysisBody"
+  | "notifications.meal.breakfast"
+  | "notifications.meal.lunch"
+  | "notifications.meal.dinner"
+
+function notificationCopy(
+  key: NotificationCopyKey,
+  options?: Record<string, unknown>,
+): string {
+  return i18n.t(key, { ns: "settings", ...options })
+}
 
 function shouldShowForegroundNotification(
   notification: Notifications.Notification,
@@ -37,7 +60,7 @@ Notifications.setNotificationHandler({
 async function ensureAndroidChannel(): Promise<void> {
   if (Platform.OS !== "android") return
   await Notifications.setNotificationChannelAsync("default", {
-    name: "신신당부 알림",
+    name: notificationCopy("notifications.scheduled.channel"),
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: "default",
   })
@@ -105,8 +128,8 @@ export const notificationService = {
         Notifications.scheduleNotificationAsync({
           identifier: "morning-check",
           content: {
-            title: "🐔 굿모닝",
-            body: "첫 소변 후 물 마시기 전 👆 혈압 ☑ 체중 체크✔ 기록해주세요!",
+            title: notificationCopy("notifications.scheduled.morningTitle"),
+            body: notificationCopy("notifications.scheduled.morningBody"),
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -124,8 +147,8 @@ export const notificationService = {
           Notifications.scheduleNotificationAsync({
             identifier: `water-${h}`,
             content: {
-              title: "💧 수분 섭취 시간이에요",
-              body: "신장 건강을 위해 물을 마셔볼까요?",
+              title: notificationCopy("notifications.scheduled.waterTitle"),
+              body: notificationCopy("notifications.scheduled.waterBody"),
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -142,20 +165,29 @@ export const notificationService = {
         {
           id: "meal-breakfast",
           hour: mealReminder.breakfastHour,
-          title: "🍳 아침 식사 기록",
-          body: "오늘 아침 식사를 기록해주세요.",
+          title: notificationCopy(
+            "notifications.scheduled.mealTitle",
+            { meal: notificationCopy("notifications.meal.breakfast") },
+          ),
+          body: notificationCopy("notifications.scheduled.mealBody"),
         },
         {
           id: "meal-lunch",
           hour: mealReminder.lunchHour,
-          title: "🍱 점심 식사 기록",
-          body: "오늘 점심 식사를 기록해주세요.",
+          title: notificationCopy(
+            "notifications.scheduled.mealTitle",
+            { meal: notificationCopy("notifications.meal.lunch") },
+          ),
+          body: notificationCopy("notifications.scheduled.mealBody"),
         },
         {
           id: "meal-dinner",
           hour: mealReminder.dinnerHour,
-          title: "🍽️ 저녁 식사 기록",
-          body: "오늘 저녁 식사를 기록해주세요.",
+          title: notificationCopy(
+            "notifications.scheduled.mealTitle",
+            { meal: notificationCopy("notifications.meal.dinner") },
+          ),
+          body: notificationCopy("notifications.scheduled.mealBody"),
         },
       ]
       for (const meal of meals) {
@@ -185,11 +217,13 @@ export const notificationService = {
     requestId?: string,
   ): Promise<void> {
     const body = foodName
-      ? `${foodName} 드셨네요! 식단 분석 결과를 확인해보세요.`
-      : "식단 분석 결과를 확인해보세요!"
+      ? notificationCopy("notifications.scheduled.analysisMealBody", {
+          meal: foodName,
+        })
+      : notificationCopy("notifications.scheduled.analysisBody")
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "🍽️ 식단 분석 완료",
+        title: notificationCopy("notifications.scheduled.analysisTitle"),
         body,
         data: {
           type: "food_analysis_complete",

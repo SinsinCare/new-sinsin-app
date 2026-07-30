@@ -1,22 +1,30 @@
 import { Text, XStack, YStack } from "tamagui"
 import { fmt } from "../../utils/graphUtils"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useTranslation } from "react-i18next"
+import type { NutrientKey } from "@/src/features/nutrition/hooks/useNutrientLimits"
 
 interface NutrientGraphHeaderProps {
-  nutrient: string
+  nutrientKey: NutrientKey
   current: number
   max: number
   unit: string
   isOver: boolean
+  isReferenceLimit: boolean
 }
 
 export function NutrientGraphHeader({
-  nutrient,
+  nutrientKey,
   current,
   max,
   unit,
   isOver,
+  isReferenceLimit,
 }: NutrientGraphHeaderProps) {
+  const { t, i18n } = useTranslation()
+  const numberLocale = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
+    ? "en-US"
+    : "ko-KR"
   const isDarkMode = useAppColorScheme() === "dark"
 
   return (
@@ -26,7 +34,7 @@ export function NutrientGraphHeader({
         fontWeight="600"
         color={isOver ? "$primary" : isDarkMode ? "$textDark" : "$color"}
       >
-        {nutrient}
+        {t(`nutrient.${nutrientKey}`)}
       </Text>
       <XStack alignItems="baseline">
         <Text
@@ -34,19 +42,24 @@ export function NutrientGraphHeader({
           fontWeight="600"
           color={isOver ? "$primary" : isDarkMode ? "$textDark" : "$color"}
         >
-          {fmt(current)}
+          {fmt(current, numberLocale)}
           {unit}
         </Text>
         <Text fontSize={15} color="$colorSubtle">
-          /{fmt(max)}
-          {unit} 제한
+          /{fmt(max, numberLocale)}
+          {unit}{" "}
+          {isReferenceLimit
+            ? t("stats.nutrientGraph.generalReference")
+            : t("stats.nutrientGraph.personalReference")}
         </Text>
       </XStack>
-      {nutrient === "단백질" && (
-        <Text fontSize={11} color="$colorSubtle" marginTop={1}>
-          체중 1kg당 0.8g 기준
-        </Text>
-      )}
+      <Text fontSize={11} color="$colorSubtle" marginTop={1}>
+        {isReferenceLimit
+          ? t("stats.nutrientGraph.generalBody")
+          : nutrientKey === "protein"
+            ? t("stats.nutrientGraph.proteinBody")
+            : t("stats.nutrientGraph.personalBody")}
+      </Text>
     </YStack>
   )
 }

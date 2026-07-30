@@ -124,8 +124,12 @@ export function V2Button({
 }: V2ButtonProps) {
   const { colors } = useV2Theme()
   const s = SIZE[size]
-  const { bg, fg } = resolveColors(color, variant, colors)
+  const resolved = resolveColors(color, variant, colors)
   const isDisabled = disabled || loading
+  // 비활성은 브랜드색을 흐리게 깔지 않는다 — 옅은 주황은 "곧 눌린다"로 읽혀
+  // 계속 누르게 만든다. 아예 중립 면으로 빠지고 글자는 보조 톤으로 낮춘다.
+  const bg = isDisabled ? colors.fill.normal : resolved.bg
+  const fg = isDisabled ? colors.label.disable : resolved.fg
 
   return (
     <Pressable
@@ -142,7 +146,6 @@ export function V2Button({
         },
         fullWidth && styles.fullWidth,
         pressed && !isDisabled && styles.pressed,
-        disabled && styles.disabled,
         style,
       ]}
       {...rest}
@@ -173,6 +176,4 @@ const styles = StyleSheet.create({
   fullWidth: { alignSelf: "stretch" },
   // Pressed: 눌림 피드백. 정확한 pressed 토큰 미추출 → opacity 기반(legacy와 동일 접근).
   pressed: { opacity: 0.85 },
-  // Disabled: 흐리게(투명도↓). 정확한 disabled 토큰 미추출 → opacity 기반.
-  disabled: { opacity: 0.4 },
 })

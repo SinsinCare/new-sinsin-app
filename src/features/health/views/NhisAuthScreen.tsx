@@ -4,19 +4,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 const TEAL = tokens.color.sub6.val
 const TEAL_PRESSED = "#3A9E85"
 
 const CHIPS = [
-  { icon: "shield-checkmark" as const, label: "안전 인증" },
-  { icon: "lock-closed" as const, label: "암호화 전송" },
-  { icon: "calendar-outline" as const, label: "최근 10년" },
-]
+  { icon: "shield-checkmark" as const, labelKey: "nhis.chips.simpleAuth" },
+  { icon: "documents-outline" as const, labelKey: "nhis.chips.allAtOnce" },
+  { icon: "calendar-outline" as const, labelKey: "nhis.chips.tenYears" },
+] as const
 
 export function NhisAuthScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { t } = useTranslation(["health", "common"])
   const isDark = useAppColorScheme() === "dark"
 
   const bg = isDark ? tokens.color.appBgDark.val : "#FFFFFF"
@@ -30,17 +32,27 @@ export function NhisAuthScreen() {
   const nhisBorder = isDark ? "#1A4535" : "#D1FAE5"
 
   return (
-    <View style={[styles.root, { backgroundColor: bg, paddingTop: insets.top }]}>
+    <View
+      style={[styles.root, { backgroundColor: bg, paddingTop: insets.top }]}
+    >
       {/* 헤더 */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.closeBtn}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={styles.closeBtn}
+        >
           <Ionicons name="close" size={22} color={textSub} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: textPrimary }]}>신신당부</Text>
+        <Text style={[styles.headerTitle, { color: textPrimary }]}>
+          {t("common:brand.name")}
+        </Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.body,
           { paddingBottom: insets.bottom + 32 },
@@ -58,19 +70,26 @@ export function NhisAuthScreen() {
           </View>
 
           {/* 건강보험공단 배지 */}
-          <View style={[styles.nhisBadge, { backgroundColor: nhisBg, borderColor: nhisBorder }]}>
+          <View
+            style={[
+              styles.nhisBadge,
+              { backgroundColor: nhisBg, borderColor: nhisBorder },
+            ]}
+          >
             <Ionicons name="business-outline" size={13} color={TEAL} />
-            <Text style={[styles.nhisBadgeText, { color: TEAL }]}>건강보험공단</Text>
+            <Text style={[styles.nhisBadgeText, { color: TEAL }]}>
+              {t("nhis.organization")}
+            </Text>
           </View>
         </View>
 
         {/* 타이틀 */}
         <View style={styles.textSection}>
           <Text style={[styles.title, { color: textPrimary }]}>
-            {"본인인증이\n필요합니다"}
+            {t("nhis.authTitle")}
           </Text>
           <Text style={[styles.subtitle, { color: textSub }]}>
-            {"건강검진 데이터를 안전하게 불러오기 위해\n간편 본인인증을 진행합니다."}
+            {t("nhis.authDescription")}
           </Text>
         </View>
 
@@ -78,11 +97,16 @@ export function NhisAuthScreen() {
         <View style={styles.chipRow}>
           {CHIPS.map((chip) => (
             <View
-              key={chip.label}
-              style={[styles.chip, { backgroundColor: chipBg, borderColor: chipBorder }]}
+              key={chip.labelKey}
+              style={[
+                styles.chip,
+                { backgroundColor: chipBg, borderColor: chipBorder },
+              ]}
             >
               <Ionicons name={chip.icon} size={15} color={TEAL} />
-              <Text style={[styles.chipLabel, { color: TEAL }]}>{chip.label}</Text>
+              <Text style={[styles.chipLabel, { color: TEAL }]}>
+                {t(chip.labelKey)}
+              </Text>
             </View>
           ))}
         </View>
@@ -98,13 +122,19 @@ export function NhisAuthScreen() {
           <View style={styles.startButtonIcon}>
             <Ionicons name="finger-print-outline" size={20} color="#FFFFFF" />
           </View>
-          <Text style={styles.startButtonText}>본인인증 시작</Text>
-          <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
+          <Text style={styles.startButtonText}>
+            {t("nhis.startVerification")}
+          </Text>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color="rgba(255,255,255,0.6)"
+          />
         </Pressable>
 
         {/* 하단 안내 */}
         <Text style={[styles.privacyNote, { color: textSub }]}>
-          인증 정보는 암호화되어 전송되며 서버에 저장되지 않습니다.
+          {t("nhis.authNote")}
         </Text>
       </ScrollView>
     </View>

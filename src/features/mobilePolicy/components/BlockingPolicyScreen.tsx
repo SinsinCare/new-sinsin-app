@@ -6,27 +6,25 @@ import { Text, YStack } from "tamagui"
 import { Button } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import type { MobilePolicyResponse } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface BlockingPolicyScreenProps {
   policy: MobilePolicyResponse
 }
 
-function getTitle(policy: MobilePolicyResponse): string {
-  if (policy.decision === "maintenance") return "서비스 점검 중입니다"
-  return "최신 버전으로 업데이트해주세요"
-}
-
-function getMessage(policy: MobilePolicyResponse): string {
-  if (policy.message) return policy.message
-  if (policy.decision === "maintenance") {
-    return "안정적인 서비스 제공을 위해 잠시 점검 중입니다."
-  }
-  return "앱을 계속 사용하려면 최신 버전으로 업데이트가 필요합니다."
-}
-
 export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
+  const { t } = useTranslation()
   const [openError, setOpenError] = useState<string | null>(null)
   const canOpenStore = Boolean(policy.storeUrl)
+  const title =
+    policy.decision === "maintenance"
+      ? t("mobilePolicy.maintenanceTitle")
+      : t("mobilePolicy.requiredTitle")
+  const message =
+    policy.message ||
+    (policy.decision === "maintenance"
+      ? t("mobilePolicy.maintenanceBody")
+      : t("mobilePolicy.requiredBody"))
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -42,13 +40,15 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
       await Linking.openURL(policy.storeUrl)
       setOpenError(null)
     } catch {
-      setOpenError("스토어를 열 수 없습니다. 잠시 후 다시 시도해주세요.")
+      setOpenError(t("mobilePolicy.storeError"))
     }
   }
 
   return (
     <YStack flex={1} backgroundColor="$background">
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -82,7 +82,7 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
               color="$color"
               textAlign="center"
             >
-              {getTitle(policy)}
+              {title}
             </Text>
             <Text
               fontSize={15}
@@ -90,7 +90,7 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
               color="$colorSubtle"
               textAlign="center"
             >
-              {getMessage(policy)}
+              {message}
             </Text>
           </YStack>
           {policy.decision !== "maintenance" && (
@@ -100,7 +100,7 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
               disabled={!canOpenStore}
               onPress={handleOpenStore}
             >
-              업데이트하기
+              {t("mobilePolicy.update")}
             </Button>
           )}
           {openError && (

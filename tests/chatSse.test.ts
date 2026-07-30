@@ -11,15 +11,24 @@ jest.mock("../src/services/core", () => ({
   },
 }))
 
+jest.mock("../src/i18n", () => ({
+  getAppLanguage: jest.fn(() => "ko"),
+}))
+
 import {
   CHAT_STREAM_TIMEOUT_MS,
   createRealChatService,
 } from "../src/services/data/chatApiService"
+import { getAppLanguage } from "../src/i18n"
 import {
   ChatStreamError,
   reconcileStreamedMessage,
   type Message,
 } from "../src/types/chat"
+
+const mockGetAppLanguage = getAppLanguage as jest.MockedFunction<
+  typeof getAppLanguage
+>
 
 class MockXMLHttpRequest {
   static instances: MockXMLHttpRequest[] = []
@@ -78,6 +87,39 @@ describe("chat SSE streaming", () => {
 
   beforeEach(() => {
     MockXMLHttpRequest.instances = []
+    mockGetAppLanguage.mockReturnValue("ko")
+  })
+
+  it("reads the current app language when each message request begins", async () => {
+    mockGetAppLanguage.mockReturnValue("en")
+    const first = await startRequest()
+    expect(first.xhr.setRequestHeader).toHaveBeenCalledWith(
+      "Accept-Language",
+      "en-US",
+    )
+    first.xhr.appendResponse(
+      event("chunk", { content: "English reply" }) +
+        event("done", { messageId: 201, finishReason: "STOP" }),
+    )
+    first.xhr.complete()
+    await expect(first.promise).resolves.toMatchObject({
+      content: "English reply",
+    })
+
+    mockGetAppLanguage.mockReturnValue("ko")
+    const second = await startRequest()
+    expect(second.xhr.setRequestHeader).toHaveBeenCalledWith(
+      "Accept-Language",
+      "ko-KR",
+    )
+    second.xhr.appendResponse(
+      event("chunk", { content: "한국어 답변" }) +
+        event("done", { messageId: 202, finishReason: "STOP" }),
+    )
+    second.xhr.complete()
+    await expect(second.promise).resolves.toMatchObject({
+      content: "한국어 답변",
+    })
   })
 
   it("parses SSE events split across arbitrary response boundaries", async () => {

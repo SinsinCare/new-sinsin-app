@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Alert,
   Image,
@@ -34,11 +34,37 @@ import {
   validateMealTitle,
 } from "../utils/foodEditUtils"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useTranslation } from "react-i18next"
 
-const UNIT_SEGMENTS = UNIT_OPTIONS.map((unit) => ({
-  label: unit,
-  value: unit,
-}))
+type UnitTranslationKey =
+  | "foodEdit.unit.serving"
+  | "foodEdit.unit.piece"
+  | "foodEdit.unit.glass"
+
+const UNIT_KEY_BY_CANONICAL: Record<string, UnitTranslationKey> = {
+  [UNIT_OPTIONS[0]]: "foodEdit.unit.serving",
+  [UNIT_OPTIONS[2]]: "foodEdit.unit.piece",
+  [UNIT_OPTIONS[3]]: "foodEdit.unit.glass",
+}
+
+function getUnitTranslationKey(unit: string): UnitTranslationKey | undefined {
+  const canonicalKey = UNIT_KEY_BY_CANONICAL[unit]
+  if (canonicalKey) return canonicalKey
+
+  switch (unit.trim().toLowerCase()) {
+    case "serving":
+    case "servings":
+      return "foodEdit.unit.serving"
+    case "piece":
+    case "pieces":
+      return "foodEdit.unit.piece"
+    case "glass":
+    case "glasses":
+      return "foodEdit.unit.glass"
+    default:
+      return undefined
+  }
+}
 
 interface FoodResultEditProps {
   result: FoodCameraAnalyzeResult | null
@@ -78,6 +104,22 @@ export function FoodResultEdit({
   onAnalysisChange,
   onMealTypeChange,
 }: FoodResultEditProps) {
+  const { t } = useTranslation("common")
+  const unitSegments = useMemo(
+    () =>
+      UNIT_OPTIONS.map((unit) => {
+        const translationKey = getUnitTranslationKey(unit)
+        return {
+          label: translationKey ? t(translationKey) : unit,
+          value: unit,
+        }
+      }),
+    [t],
+  )
+  const getUnitLabel = (unit: string) => {
+    const translationKey = getUnitTranslationKey(unit)
+    return translationKey ? t(translationKey) : unit
+  }
   const {
     foods,
     mealName,
@@ -133,7 +175,10 @@ export function FoodResultEdit({
     if (!result) return
     const validation = validateMealTitle(editingName)
     if (!validation.isValid) {
-      Alert.alert("업데이트 실패", validation.message)
+      Alert.alert(
+        t("foodEdit.checkMealName"),
+        t("foodEdit.enterMealName"),
+      )
       return
     }
     const newTitle = editingName.trim()
@@ -183,8 +228,8 @@ export function FoodResultEdit({
     )
     if (hasInvalidFood) {
       Alert.alert(
-        "입력 내용을 확인해 주세요",
-        "메뉴명과 0보다 큰 양이 필요해요.",
+        t("foodEdit.checkInput"),
+        t("foodEdit.checkInputBody"),
       )
       return
     }
@@ -298,27 +343,23 @@ export function FoodResultEdit({
           hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
         >
           <Text fontSize={16} fontWeight={500} color="$colorSubtle">
-            취소
+            {t("action.cancel")}
           </Text>
         </TouchableOpacity>
         <Text
           fontSize={17}
-          fontWeight={600}
+          fontWeight={700}
           color={isDarkMode ? "$textDark" : "$black"}
         >
-          식단 수정하기
+          {t("foodResult.edit")}
         </Text>
-        <TouchableOpacity
-          onPress={handleSubmit}
-          hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
-        >
-          <Text fontSize={16} fontWeight={600} color="$sub6">
-            완료
-          </Text>
-        </TouchableOpacity>
+        {/* 저장은 하단 CTA 하나로 — 헤더 우측은 폭만 맞춘다 */}
+        <View width={40} />
       </XStack>
 
       <KeyboardAwareScrollView
+        bounces={false}
+        overScrollMode="never"
         style={{ flex: 1 }}
         contentContainerStyle={{ gap: 32, paddingBottom: 60 }}
         bottomOffset={24}
@@ -363,7 +404,7 @@ export function FoodResultEdit({
                     onPress={() => setSelectedMealType(opt.type)}
                     style={{
                       backgroundColor: isSelected
-                        ? tokens.color.sub6.val + "29"
+                        ? tokens.color.primary.val + "1F"
                         : "transparent",
                       borderRadius: 15,
                       paddingLeft: 6,
@@ -377,24 +418,18 @@ export function FoodResultEdit({
                         size={16}
                         color={
                           isSelected
-                            ? isDarkMode
-                              ? tokens.color.textDarkSub.val
-                              : tokens.color.grey1.val
+                            ? tokens.color.primary.val
                             : tokens.color.grey6.val
                         }
                       />
                       <Text
                         fontSize={15}
-                        fontWeight={500}
+                        fontWeight={isSelected ? 700 : 500}
                         color={
-                          isSelected
-                            ? isDarkMode
-                              ? "$textDarkSub"
-                              : "$color"
-                            : "$colorSubtle"
+                          isSelected ? tokens.color.primary.val : "$colorSubtle"
                         }
                       >
-                        {opt.label}
+                        {t(`meal.${opt.type}`)}
                       </Text>
                     </XStack>
                   </TouchableOpacity>
@@ -429,7 +464,7 @@ export function FoodResultEdit({
                   textAlign="center"
                   color={isDarkMode ? "$textDark" : "$black"}
                 >
-                  식단 이름 수정
+                  {t("foodEdit.renameMeal")}
                 </Text>
                 <View
                   borderWidth={1}
@@ -466,7 +501,7 @@ export function FoodResultEdit({
                   onPress={() => setIsNameEdit(false)}
                 >
                   <Text fontSize={16} color="$colorSubtle">
-                    취소
+                    {t("action.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <View
@@ -477,8 +512,12 @@ export function FoodResultEdit({
                   style={{ flex: 1, paddingVertical: 14, alignItems: "center" }}
                   onPress={handleTitleEdit}
                 >
-                  <Text fontSize={16} fontWeight={600} color="$sub6">
-                    확인
+                  <Text
+                    fontSize={16}
+                    fontWeight={600}
+                    color={tokens.color.primary.val}
+                  >
+                    {t("action.confirm")}
                   </Text>
                 </TouchableOpacity>
               </XStack>
@@ -493,13 +532,13 @@ export function FoodResultEdit({
               fontWeight={600}
               color={isDarkMode ? "$textDark" : "$black"}
             >
-              식단 세부 수정
+              {t("foodEdit.foodsAndAmounts")}
             </Text>
             <TouchableOpacity onPress={handleAddMenu}>
               <XStack paddingRight="$1" gap={3}>
                 <Icon name="plus" size={17} />
                 <Text fontSize={15} fontWeight={600} color="$colorSubtle">
-                  메뉴 추가
+                  {t("foodEdit.addMenu")}
                 </Text>
               </XStack>
             </TouchableOpacity>
@@ -519,7 +558,7 @@ export function FoodResultEdit({
                     autoFocus
                     value={newMenuName}
                     onChangeText={handleNewMenuNameChange}
-                    placeholder="메뉴 이름"
+                    placeholder={t("foodEdit.menuName")}
                     returnKeyType="done"
                     onSubmitEditing={handleNameSubmit}
                     error={newMenuNameError || false}
@@ -528,9 +567,9 @@ export function FoodResultEdit({
                   <V2Button
                     size="l"
                     onPress={handleNameSubmit}
-                    accessibilityLabel="메뉴 이름 확인"
+                    accessibilityLabel={t("foodEdit.confirmMenuName")}
                   >
-                    확인
+                    {t("action.confirm")}
                   </V2Button>
                 </XStack>
               )}
@@ -546,7 +585,7 @@ export function FoodResultEdit({
                       autoFocus
                       value={newMenuAmount}
                       onChangeText={handleNewMenuAmountChange}
-                      placeholder="양"
+                      placeholder={t("foodEdit.amount")}
                       keyboardType="decimal-pad"
                       returnKeyType="done"
                       onSubmitEditing={handleAmountSubmit}
@@ -555,7 +594,7 @@ export function FoodResultEdit({
                       inputStyle={{ textAlign: "center" }}
                     />
                     <V2SegmentControl
-                      items={UNIT_SEGMENTS}
+                      items={unitSegments}
                       value={newMenuUnit}
                       onChange={(unit) =>
                         setNewMenuUnit(unit as typeof newMenuUnit)
@@ -569,9 +608,9 @@ export function FoodResultEdit({
                     size="m"
                     fullWidth
                     onPress={handleAmountSubmit}
-                    accessibilityLabel="메뉴 양 확인"
+                    accessibilityLabel={t("foodEdit.confirmAmount")}
                   >
-                    확인
+                    {t("action.confirm")}
                   </V2Button>
                 </YStack>
               )}
@@ -580,7 +619,7 @@ export function FoodResultEdit({
                   <TextInput
                     value={f.name}
                     onChangeText={(v) => handleFoodNameChange(i, v)}
-                    placeholder="음식 이름"
+                    placeholder={t("foodEdit.foodName")}
                     placeholderTextColor={tokens.color.grey5.val}
                     style={{
                       flex: 1,
@@ -609,26 +648,37 @@ export function FoodResultEdit({
                     }}
                   />
                   <Text
-                    fontSize={f.unit === "인분" ? 12 : 14}
+                    fontSize={
+                      getUnitTranslationKey(f.unit) === "foodEdit.unit.serving"
+                        ? 12
+                        : 14
+                    }
                     width={21}
                     textAlign="center"
                     color={isDarkMode ? "$textDark" : "$black"}
                   >
-                    {f.unit}
+                    {getUnitLabel(f.unit)}
                   </Text>
-                  <TouchableOpacity onPress={() => handleDelete(i)}>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(i)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityLabel={t("foodEdit.deleteMenu", {
+                      name: f.name || t("foodEdit.menu"),
+                    })}
+                  >
                     <View
-                      width={20}
-                      height={20}
-                      borderRadius={12}
-                      backgroundColor={inputBg}
+                      width={22}
+                      height={22}
+                      borderRadius={11}
+                      backgroundColor={isDarkMode ? "#3A3A40" : "#DADCE0"}
                       alignItems="center"
                       justifyContent="center"
                     >
                       <Text
-                        fontSize={18}
-                        lineHeight={20}
-                        color="$pureWhite"
+                        fontSize={15}
+                        lineHeight={17}
+                        fontWeight="600"
+                        color={isDarkMode ? "$textDark" : "#5A5C63"}
                         textAlign="center"
                       >
                         ×
@@ -655,7 +705,7 @@ export function FoodResultEdit({
             paddingLeft={4}
             color={isDarkMode ? "$textDark" : "$black"}
           >
-            얼마나 드셨나요?
+            {t("foodEdit.howMuch")}
           </Text>
           <ConsumedAmountSelector value={eatenStep} onChange={setEatenStep} />
           {hasBroth && (
@@ -666,22 +716,46 @@ export function FoodResultEdit({
                 paddingLeft={4}
                 color={isDarkMode ? "$textDark" : "$black"}
               >
-                국물은 얼마나 드셨나요?
+                {t("foodEdit.howMuchBroth")}
               </Text>
               <Text fontSize={13} color="$colorSubtle" paddingLeft={4}>
-                건더기와 국물 양을 나누어 계산해요.
+                {t("foodEdit.brothHint")}
               </Text>
               <ConsumedAmountSelector
                 value={brothStep}
                 onChange={setBrothStep}
-                accessibilityLabel="국물 섭취량 선택"
+                accessibilityLabel={t("foodEdit.chooseBrothAmount")}
               />
             </YStack>
           )}
         </View>
       </KeyboardAwareScrollView>
 
-      <LoadingOverlay visible={isUpdating} message="식단을 수정하고 있어요" />
+      {/* 저장은 손이 닿는 하단 한 곳 — 헤더 우측 텍스트 버튼보다 놓치지 않는다 */}
+      <View paddingHorizontal={20} paddingTop={10} paddingBottom={34}>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={isUpdating}
+          accessibilityLabel={t("foodEdit.save")}
+          style={{
+            height: 56,
+            borderRadius: 16,
+            backgroundColor: tokens.color.primary.val,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: isUpdating ? 0.6 : 1,
+          }}
+        >
+          <Text fontSize={16} fontWeight={700} color="#FFFFFF">
+            {t("action.save")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <LoadingOverlay
+        visible={isUpdating}
+        message={t("foodEdit.saving")}
+      />
     </YStack>
   )
 }

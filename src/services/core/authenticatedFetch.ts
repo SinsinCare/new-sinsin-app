@@ -1,6 +1,7 @@
 import { clearClientSession } from "./sessionCleanup"
 import { createSessionExpiredError, refreshAccessToken } from "./authSession"
 import { tokenService } from "./tokenService"
+import { getAppLanguage } from "@/src/i18n"
 
 export type AuthenticatedRequestFactory =
   | (() => RequestInit)
@@ -23,6 +24,10 @@ export async function authenticatedFetch(
     } else {
       headers.delete("Authorization")
     }
+    headers.set(
+      "Accept-Language",
+      getAppLanguage() === "en" ? "en-US" : "ko-KR",
+    )
     return fetch(input, { ...init, headers })
   }
 

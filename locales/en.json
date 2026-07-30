@@ -1,0 +1,12 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Sinsin Care",
+    "CFBundleName": "Sinsin Care",
+    "NSCameraUsageDescription": "Allow Sinsin Care to use your camera so you can log a meal with a photo.",
+    "NSPhotoLibraryUsageDescription": "Allow Sinsin Care to access your photos so you can choose meal images to log.",
+    "NSLocationWhenInUseUsageDescription": "Allow Sinsin Care to use your location while you’re using the app to find nearby restaurants."
+  },
+  "android": {
+    "app_name": "Sinsin Care"
+  }
+}

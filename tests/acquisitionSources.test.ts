@@ -11,8 +11,8 @@ describe("signup acquisition sources", () => {
       { label: "카카오톡", value: "KAKAO" },
       { label: "유튜브", value: "YOUTUBE" },
       { label: "인스타그램", value: "INSTAGRAM" },
-      { label: "지인추천", value: "FRIEND" },
-      { label: "기타(직접 입력)", value: "OTHER" },
+      { label: "지인 추천", value: "FRIEND" },
+      { label: "기타 (직접 입력)", value: "OTHER" },
     ])
   })
 })

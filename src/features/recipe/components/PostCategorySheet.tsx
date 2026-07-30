@@ -1,13 +1,15 @@
-import { Pressable } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, Text } from "tamagui"
-import { Icon } from "@/src/shared/components/Icon"
-import { tokens } from "@/src/theme/tokens"
+import { StyleSheet, Text, View } from "react-native"
+import Ionicons from "@expo/vector-icons/Ionicons"
+
+import { useSurface } from "@/src/hooks/useSurface"
+import { hapticSelection } from "@/src/lib/haptics"
 import {
   AppBottomSheet,
   AppBottomSheetScrollView,
 } from "@/src/shared/components"
+import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import type { PostCategory } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface PostCategorySheetProps {
   open: boolean
@@ -17,17 +19,15 @@ interface PostCategorySheetProps {
   onSelect: (key: string) => void
 }
 
-const SHEET_BG = {
-  light: "#FFFFFF",
-  dark: tokens.color.cardBgDark.val,
-} as const
-
-const LABEL_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-} as const
-
 const POST_CATEGORY_SNAP_POINTS = [36, 56]
+const POST_CATEGORY_LABEL_KEYS = {
+  diet: "category.post.diet",
+  numbers: "category.post.numbers",
+  symptoms: "category.post.symptoms",
+  medicine: "category.post.medicine",
+  "dining-out": "category.post.dining-out",
+  daily: "category.post.daily",
+} as const
 
 export function PostCategorySheet({
   open,
@@ -36,10 +36,11 @@ export function PostCategorySheet({
   selectedKey,
   onSelect,
 }: PostCategorySheetProps) {
-  const colorScheme = useAppColorScheme()
-  const isDark = colorScheme === "dark"
+  const { t } = useTranslation("recipe")
+  const surface = useSurface()
 
   const handleSelect = (key: string) => {
+    hapticSelection()
     onSelect(key)
     onOpenChange(false)
   }
@@ -51,45 +52,93 @@ export function PostCategorySheet({
       snapPoints={POST_CATEGORY_SNAP_POINTS}
       contentBottomPadding={false}
     >
-      <YStack
-        flex={1}
-        backgroundColor={isDark ? SHEET_BG.dark : SHEET_BG.light}
+      <View
+        style={[
+          styles.sheetBody,
+          { backgroundColor: surface.isDark ? surface.card : "#FFFFFF" },
+        ]}
       >
-        <AppBottomSheetScrollView
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingTop: 8,
-            gap: 2,
-          }}
-        >
+        <AppBottomSheetScrollView contentContainerStyle={styles.sheetContent}>
+          <Text style={[styles.sheetTitle, { color: surface.textStrong }]}>
+            {t("freePost.topicTitle")}
+          </Text>
           {categories.map((cat) => {
             const isSelected = cat.key === selectedKey
             return (
-              <Pressable
+              <SurfacePressable
                 key={cat.key}
                 onPress={() => handleSelect(cat.key)}
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.7 : 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingVertical: 14,
-                })}
+                haptic={false}
+                accessibilityState={{ selected: isSelected }}
+                baseColor={surface.isDark ? surface.card : "#FFFFFF"}
+                pressScale={0.99}
+                style={styles.row}
               >
                 <Text
-                  fontSize={16}
-                  fontWeight={isSelected ? "700" : "400"}
-                  fontFamily="$body"
-                  color={isDark ? LABEL_COLOR.dark : LABEL_COLOR.light}
+                  style={[
+                    styles.rowLabel,
+                    isSelected
+                      ? [styles.rowLabelSelected, { color: surface.textStrong }]
+                      : { color: surface.text },
+                  ]}
                 >
-                  {cat.label}
+                  {POST_CATEGORY_LABEL_KEYS[
+                    cat.key as keyof typeof POST_CATEGORY_LABEL_KEYS
+                  ]
+                    ? t(
+                        POST_CATEGORY_LABEL_KEYS[
+                          cat.key as keyof typeof POST_CATEGORY_LABEL_KEYS
+                        ],
+                      )
+                    : cat.label}
                 </Text>
-                {isSelected && <Icon name="check-color" size={24} />}
-              </Pressable>
+                {isSelected && (
+                  <Ionicons name="checkmark" size={20} color={surface.brand} />
+                )}
+              </SurfacePressable>
             )
           })}
         </AppBottomSheetScrollView>
-      </YStack>
+      </View>
     </AppBottomSheet>
   )
 }
+
+const styles = StyleSheet.create({
+  sheetBody: {
+    flex: 1,
+  },
+  sheetContent: {
+    paddingHorizontal: 12,
+    paddingTop: 4,
+  },
+  sheetTitle: {
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.34,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+  row: {
+    height: 52,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rowLabel: {
+    fontSize: 15.5,
+    lineHeight: 22,
+    letterSpacing: -0.31,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  rowLabelSelected: {
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+})

@@ -1,6 +1,7 @@
 import axios from "axios"
 
 import { getBackendUrl } from "@/src/config/appConfig"
+import { getAppLanguage } from "@/src/i18n"
 import type { MobilePolicyResponse, MobilePolicyRuntimeInfo } from "../types"
 
 type MobilePolicyApiPayload =
@@ -33,7 +34,10 @@ export async function fetchMobilePolicy(
   const mobilePolicyApi = axios.create({
     baseURL: resolveMobilePolicyBaseUrl(getBackendUrl()),
     timeout: API_TIMEOUT_MS,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
+    },
   })
 
   const response = await mobilePolicyApi.get<MobilePolicyApiPayload>(

@@ -28,16 +28,12 @@ import { getRestrictionStyle } from "../utils/getRestrictionStyle"
 import { MacroBar } from "./record/MacroBar"
 import { Icon } from "@/src/shared/components/Icon"
 import { FoodResultEdit } from "./FoodResultEdit"
+import { MealReportView } from "@/src/features/food-report/components/MealReportView"
+import { useMealReport } from "@/src/features/food-report/hooks/useMealReport"
 import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
 import { ShareCard } from "./ShareCard"
 import { useMealPersistenceActions } from "@/src/features/food-analysis"
-
-const PROVENANCE_LABEL = {
-  CATALOG: "공식 영양 DB",
-  RECIPE: "레시피 계산",
-  INGREDIENT_ESTIMATE: "재료 기반 추정",
-  AI_ESTIMATE: "AI 추정",
-} as const
+import { useTranslation } from "react-i18next"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -71,6 +67,71 @@ export interface FoodAnalysisMealTypeChange {
   imageUri: string | null
 }
 
+/**
+ * 리포트 하단 공유 카드 — 제목은 행동, 캡션은 그 행동의 결과를 말한다.
+ * "공유하기" 같은 기능 이름 대신 "무슨 일이 생기는지"를 쓴다(UX 라이팅).
+ */
+function ShareActionCard({
+  icon,
+  title,
+  caption,
+  isDarkMode,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap
+  title: string
+  caption: string
+  isDarkMode: boolean
+  onPress: () => void
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}
+    >
+      <YStack
+        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+        borderRadius={20}
+        paddingVertical={14}
+        paddingHorizontal={14}
+        gap={8}
+        flex={1}
+      >
+        <XStack
+          width={34}
+          height={34}
+          borderRadius={999}
+          backgroundColor={isDarkMode ? "#2E2E33" : "#F2F3F5"}
+          alignItems="center"
+          justifyContent="center"
+        >
+          <Ionicons
+            name={icon}
+            size={17}
+            color={
+              isDarkMode ? tokens.color.textDarkSub.val : tokens.color.grey4.val
+            }
+          />
+        </XStack>
+        <YStack gap={2}>
+          <Text
+            fontSize={14}
+            fontWeight="700"
+            color={isDarkMode ? "$textDark" : "$color"}
+          >
+            {title}
+          </Text>
+          <Text fontSize={11.5} lineHeight={16} color="$colorSubtle">
+            {caption}
+          </Text>
+        </YStack>
+      </YStack>
+    </Pressable>
+  )
+}
+
 const MEAL_TYPE_ICON: Record<MealType, string> = {
   BREAKFAST: "sunny-outline",
   LUNCH: "partly-sunny-outline",
@@ -78,11 +139,72 @@ const MEAL_TYPE_ICON: Record<MealType, string> = {
   SNACKS: "cafe-outline",
 }
 
-const MEAL_LABEL: Record<MealType, string> = {
-  BREAKFAST: "아침",
-  LUNCH: "점심",
-  DINNER: "저녁",
-  SNACKS: "간식",
+const ENGLISH_PORTION_UNITS: Record<
+  string,
+  { singular: string; plural: string }
+> = {
+  인분: { singular: "serving", plural: "servings" },
+  serving: { singular: "serving", plural: "servings" },
+  servings: { singular: "serving", plural: "servings" },
+  개: { singular: "piece", plural: "pieces" },
+  piece: { singular: "piece", plural: "pieces" },
+  pieces: { singular: "piece", plural: "pieces" },
+  잔: { singular: "cup", plural: "cups" },
+  컵: { singular: "cup", plural: "cups" },
+  cup: { singular: "cup", plural: "cups" },
+  cups: { singular: "cup", plural: "cups" },
+  glass: { singular: "glass", plural: "glasses" },
+  glasses: { singular: "glass", plural: "glasses" },
+  공기: { singular: "bowl", plural: "bowls" },
+  국그릇: { singular: "bowl", plural: "bowls" },
+  bowl: { singular: "bowl", plural: "bowls" },
+  bowls: { singular: "bowl", plural: "bowls" },
+  대접: { singular: "large bowl", plural: "large bowls" },
+  "large bowl": { singular: "large bowl", plural: "large bowls" },
+  조각: { singular: "piece", plural: "pieces" },
+  큰술: { singular: "tbsp", plural: "tbsp" },
+  tbsp: { singular: "tbsp", plural: "tbsp" },
+  작은술: { singular: "tsp", plural: "tsp" },
+  tsp: { singular: "tsp", plural: "tsp" },
+}
+
+const KOREAN_PORTION_UNITS: Record<string, string> = {
+  serving: "인분",
+  servings: "인분",
+  piece: "개",
+  pieces: "개",
+  cup: "컵",
+  cups: "컵",
+  glass: "잔",
+  glasses: "잔",
+  bowl: "공기",
+  bowls: "공기",
+  "large bowl": "대접",
+  "large bowls": "대접",
+  tbsp: "큰술",
+  tsp: "작은술",
+}
+
+function formatFoodPortion(
+  value: number | null,
+  unit: string,
+  language: "ko" | "en",
+): string {
+  const valueText = value == null ? "" : String(value)
+  const normalizedUnit = unit.trim().toLowerCase()
+  if (language === "ko") {
+    return `${valueText}${KOREAN_PORTION_UNITS[normalizedUnit] ?? unit}`
+  }
+
+  if (normalizedUnit === "g" || normalizedUnit === "ml") {
+    return `${valueText}${normalizedUnit}`
+  }
+  const forms = ENGLISH_PORTION_UNITS[normalizedUnit] ?? {
+    singular: unit,
+    plural: unit,
+  }
+  const displayUnit = value === 1 ? forms.singular : forms.plural
+  return [valueText, displayUnit].filter(Boolean).join(" ")
 }
 
 export function FoodAnalysisResult({
@@ -102,6 +224,10 @@ export function FoodAnalysisResult({
   onResultChange,
   onMealTypeChange,
 }: FoodAnalysisResultProps) {
+  const { t, i18n } = useTranslation("common")
+  const language = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
+    ? "en"
+    : "ko"
   const insets = useSafeAreaInsets()
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
@@ -114,6 +240,7 @@ export function FoodAnalysisResult({
   const [displayImageUri, setDisplayImageUri] = useState<string | undefined>(
     imageUri ?? result?.imageUrl ?? undefined,
   )
+  const [imageFailed, setImageFailed] = useState(false)
   const {
     startConsultation,
     deleteSavedMeal,
@@ -131,12 +258,22 @@ export function FoodAnalysisResult({
 
   useEffect(() => {
     setDisplayImageUri(imageUri ?? result?.imageUrl ?? undefined)
+    setImageFailed(false)
   }, [imageUri, result?.imageUrl])
 
   useEffect(() => {
     setIsAddingToRecord(false)
     setIsEdit(false)
   }, [result?.foodAnalysisResultId])
+
+  // 리포트는 서버가 만들어 저장한다. 실패해도 화면은 예전 한줄평으로 버틴다.
+  // `result` 는 신규 분석 경로에만 들어온다. 저장된 다이어리를 다시 열 때는
+  // displayResult 로만 오므로 둘 다 본다.
+  // isLoading(=pending+fetching)을 쓴다 — 쿼리가 비활성이면 pending 이
+  // 영원히 true 라 스켈레톤이 안 사라진다.
+  const { data: mealReport, isLoading: isReportPending } = useMealReport(
+    displayResult?.foodAnalysisResultId ?? result?.foodAnalysisResultId,
+  )
 
   const isDarkMode = useAppColorScheme() === "dark"
   const shareCardRef = useRef<ViewShot>(null)
@@ -148,7 +285,11 @@ export function FoodAnalysisResult({
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ["인스타그램 스토리에 공유", "다른 앱으로 공유", "취소"],
+          options: [
+            t("foodResult.shareInstagram"),
+            t("foodResult.shareOther"),
+            t("action.cancel"),
+          ],
           cancelButtonIndex: 2,
         },
         async (buttonIndex) => {
@@ -183,8 +324,8 @@ export function FoodAnalysisResult({
             }
           } catch {
             Alert.alert(
-              "공유 실패",
-              "인스타그램이 설치되어 있는지 확인해주세요.",
+              t("foodResult.instagramErrorTitle"),
+              t("foodResult.instagramErrorBody"),
             )
           }
         },
@@ -218,7 +359,7 @@ export function FoodAnalysisResult({
         }
       }
     }
-  }, [])
+  }, [t])
 
   if (!displayResult) return null
 
@@ -236,7 +377,9 @@ export function FoodAnalysisResult({
     }
   }
 
-  const servingsLabel = `${effectiveResult.servings}인분`
+  const servingsLabel = t("foodResult.servings", {
+    count: effectiveResult.servings,
+  })
 
   const handleAddToRecordPress = async () => {
     if (isAddingToRecord) return
@@ -310,7 +453,7 @@ export function FoodAnalysisResult({
             onPress={handleShare}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="분석 결과 공유"
+            accessibilityLabel={t("foodResult.share")}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <XStack
@@ -337,13 +480,13 @@ export function FoodAnalysisResult({
             textAlign="center"
             flex={1}
           >
-            식단 분석
+            {t("foodResult.title")}
           </Text>
           <Pressable
             onPress={handleClosePress}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="분석 결과 닫기"
+            accessibilityLabel={t("foodResult.close")}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <XStack
@@ -366,6 +509,8 @@ export function FoodAnalysisResult({
         </XStack>
 
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingTop: 4,
@@ -421,23 +566,25 @@ export function FoodAnalysisResult({
                   color={isDarkMode ? "$textDark" : "$color"}
                   fontWeight="500"
                 >
-                  {MEAL_LABEL[displayMealType]}
+                  {t(`meal.${displayMealType}`)}
                 </Text>
               </XStack>
             )}
           </XStack>
 
-          {/* 음식 이미지 */}
-          {displayImageUri && (
+          {/* 음식 이미지 — 없거나 로드에 실패하면 아래 컴팩트 행으로 대신한다.
+              빈 회색 박스 220pt 를 그대로 두면 글로 기록한 식사가 "고장난 화면"처럼 보인다. */}
+          {displayImageUri && !imageFailed && (
             <View marginHorizontal="$4" borderRadius={16} overflow="hidden">
               <Image
                 source={{ uri: displayImageUri }}
                 style={{ width: "100%", height: 220, resizeMode: "cover" }}
+                onError={() => setImageFailed(true)}
               />
               <Pressable
                 onPress={handleEditPress}
                 accessibilityRole="button"
-                accessibilityLabel="식단 수정"
+                accessibilityLabel={t("foodResult.edit")}
                 style={({ pressed }) => ({
                   position: "absolute",
                   bottom: 10,
@@ -455,11 +602,72 @@ export function FoodAnalysisResult({
                 >
                   <Icon name="edit" size={18} />
                   <Text fontSize={12} fontWeight="600" color="$color.grey4">
-                    식단 수정
+                    {t("foodResult.edit")}
                   </Text>
                 </XStack>
               </Pressable>
             </View>
+          )}
+
+          {/* 사진 없는 기록(글로 남긴 식사 등) — 수정 진입을 잃지 않으면서 화면을 낭비하지 않는다 */}
+          {(!displayImageUri || imageFailed) && (
+            <Pressable
+              onPress={handleEditPress}
+              accessibilityRole="button"
+              accessibilityLabel={t("foodResult.edit")}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <XStack
+                marginHorizontal="$4"
+                paddingHorizontal={16}
+                paddingVertical={14}
+                borderRadius={16}
+                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+                alignItems="center"
+                gap={10}
+              >
+                {/* 아이콘 사각형도 그레이 — 수정 진입은 안내지 액션 촉구가 아니다 */}
+                <XStack
+                  width={36}
+                  height={36}
+                  borderRadius={12}
+                  backgroundColor={isDarkMode ? "$cardBgDark" : "#F2F3F5"}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Ionicons
+                    name="create-outline"
+                    size={18}
+                    color={
+                      isDarkMode
+                        ? tokens.color.textDarkSub.val
+                        : tokens.color.grey3.val
+                    }
+                  />
+                </XStack>
+                <YStack flex={1}>
+                  <Text
+                    fontSize={14}
+                    fontWeight="600"
+                    color={isDarkMode ? "$textDark" : "$color"}
+                  >
+                    {t("foodResult.textMeal")}
+                  </Text>
+                  <Text fontSize={12.5} color="$colorSubtle">
+                    {t("foodResult.textMealHint")}
+                  </Text>
+                </YStack>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={
+                    isDarkMode
+                      ? tokens.color.textDarkSub.val
+                      : tokens.color.grey3.val
+                  }
+                />
+              </XStack>
+            </Pressable>
           )}
 
           {(effectiveResult.revision ||
@@ -477,225 +685,243 @@ export function FoodAnalysisResult({
             >
               <Text fontSize="$3" fontWeight="600" color="$sub8">
                 {effectiveResult.consumptionRevision
-                  ? "실제 섭취 기준"
-                  : "사진 속 전체 기준"}
+                  ? t("foodResult.consumedBasis")
+                  : t("foodResult.photoBasis")}
               </Text>
               <Text fontSize="$3" color="$colorSubtle" textAlign="right">
-                섭취량 수정은 AI 재분석 없이 바로 계산돼요
+                {t("foodResult.amountHint")}
               </Text>
             </XStack>
           )}
 
-          {/* 한줄평 */}
-          <YStack
-            marginHorizontal="$4"
-            marginTop="$4"
-            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-            borderRadius="$4"
-            padding="$4"
-            gap="$2"
-          >
-            <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
-              한줄평
-            </Text>
-            <Text
-              fontSize="$4"
-              color={isDarkMode ? "$textDark" : "$color"}
-              lineHeight={22}
-              fontWeight="600"
-            >
-              {effectiveResult.evaluation.comment}
-            </Text>
-          </YStack>
+          {/* 인사이트 리포트 — 판정·근거·남은 예산·음식별 이유·대체.
+              수치 전체는 여기 안의 "상세 영양표 보기" 시트로 내렸다.
 
-          {/* 총 열량 */}
-          <YStack
-            marginHorizontal="$4"
-            marginTop="$3"
-            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-            borderRadius="$4"
-            padding="$4"
-          >
-            <Text
-              fontSize="$4"
-              fontWeight="600"
-              color={isDarkMode ? "$textDark" : "$color"}
+              로딩 중에는 스켈레톤을 그린다. 예전 한줄평을 임시로 보였다가
+              리포트로 바꾸면 "2초 보이다 사라지는 글"이 된다(실제 사용자 피드백) —
+              폴백은 로딩이 아니라 **실패**에만 쓴다. */}
+          {mealReport ? (
+            <YStack marginHorizontal="$4" marginTop="$4">
+              <MealReportView report={mealReport} />
+            </YStack>
+          ) : isReportPending ? (
+            <YStack
+              marginHorizontal="$4"
+              marginTop="$4"
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+              borderRadius={16}
+              padding={18}
+              gap={10}
             >
-              총 열량
-            </Text>
-            <XStack alignItems="baseline" gap="$1">
-              <Text
-                fontSize={30}
-                fontWeight="600"
-                color={isDarkMode ? "$textDark" : "$color"}
-              >
-                {Math.round(effectiveResult.total.calories)}
-              </Text>
-              <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
-                Kcal
-              </Text>
-            </XStack>
-            <View height="$2" />
-            <MacroBar
-              carbs={effectiveResult.total.carbohydrates}
-              protein={effectiveResult.total.protein}
-              fat={effectiveResult.total.fat}
-            />
-          </YStack>
-
-          {/* 식단 세부 분석 */}
-          <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
-            <Text
-              fontSize={22}
-              fontWeight="700"
-              color={isDarkMode ? "$textDark" : "$color"}
-            >
-              식단 세부 분석
-            </Text>
-            <XStack
-              alignItems="flex-start"
-              gap="$2"
-              paddingHorizontal={2}
-              marginTop={-4}
-            >
-              <Icon name="info" size={16} color={tokens.color.grey6.val} />
-              <Text fontSize="$3" color="$colorSubtle" flex={1} lineHeight={20}>
-                원 그래프의 %는 하루 권장 섭취 한도(나트륨·칼륨·인 1일 기준,
-                단백질은 체중 1kg당 0.8g) 대비 이 음식의 비율이에요.
-              </Text>
-            </XStack>
-            {effectiveResult.foods.map((food, i) => {
-              const restriction = getRestrictionStyle(food.restrictionLevel)
-              return (
-                <YStack
+              {[168, 260, 210].map((width, i) => (
+                <View
                   key={i}
+                  width={width}
+                  height={i === 1 ? 22 : 13}
+                  borderRadius={6}
                   backgroundColor={
-                    isDarkMode ? "$cardBgDark" : "$cardBackground"
+                    isDarkMode ? "rgba(255,255,255,0.07)" : "#F2F3F5"
                   }
-                  borderRadius="$4"
-                  padding="$4"
-                  paddingVertical="$5"
-                  gap="$3"
-                >
-                  <XStack
-                    alignItems="center"
-                    justifyContent="space-between"
-                    paddingBottom={8}
-                    gap="$2"
-                  >
-                    <XStack
-                      alignItems="baseline"
-                      gap="$1"
-                      flex={1}
-                      flexShrink={1}
-                    >
-                      <Text
-                        fontSize="$4"
-                        fontWeight="600"
-                        color={isDarkMode ? "$textDark" : "$color"}
-                        numberOfLines={1}
-                        flexShrink={1}
-                      >
-                        {food.name}
-                      </Text>
-                      <XStack paddingHorizontal={1}>
-                        <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
-                          {food.servingSizeValue}
-                        </Text>
-                        <Text fontSize="$3" color="$colorSubtle" flexShrink={0}>
-                          {food.servingSizeUnit}
-                        </Text>
-                      </XStack>
-                    </XStack>
-                    <View
-                      paddingHorizontal={8}
-                      paddingVertical={4}
-                      borderRadius={8}
-                      backgroundColor={restriction.bg}
-                      flexShrink={0}
-                    >
-                      <Text
-                        fontSize="$3"
-                        fontWeight="500"
-                        color={restriction.color}
-                      >
-                        {restriction.label}
-                      </Text>
-                    </View>
-                  </XStack>
-
-                  {(food.provenance || food.analyzedGrams != null) && (
-                    <XStack gap="$2" flexWrap="wrap" marginTop={-6}>
-                      {food.provenance && (
-                        <Text fontSize="$3" color="$colorSubtle">
-                          {PROVENANCE_LABEL[food.provenance]}
-                        </Text>
-                      )}
-                      {food.analyzedGrams != null && (
-                        <Text fontSize="$3" color="$colorSubtle">
-                          사진 속 {Math.round(food.analyzedGrams)}g
-                          {food.consumedGrams != null
-                            ? ` · 섭취 ${Math.round(food.consumedGrams)}g`
-                            : ""}
-                        </Text>
-                      )}
-                    </XStack>
-                  )}
-
-                  <FoodNutrientDonuts food={food} />
-                </YStack>
-              )
-            })}
-          </YStack>
-
-          {/* 더 건강하게 식사하는 법 */}
-          {effectiveResult.evaluation.cautionFoods.length > 0 && (
-            <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
-              <Text
-                fontSize={22}
-                fontWeight="700"
-                color={isDarkMode ? "$textDark" : "$color"}
-              >
-                더 건강하게 식사하는 법
+                />
+              ))}
+            </YStack>
+          ) : (
+            /* 리포트 조회가 실패하면 레거시 AI 평가문을 다시 노출하지 않는다.
+                예전 평가문은 현재 책임·근거 정책을 거치지 않았기 때문이다. */
+            <YStack
+              marginHorizontal="$4"
+              marginTop="$4"
+              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+              borderRadius="$4"
+              padding="$4"
+              gap="$2"
+            >
+              <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
+                {t("foodResult.nutrientsReady")}
               </Text>
-              <YStack
-                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-                borderRadius="$4"
-                padding="$4"
-                gap="$6"
+              <Text
+                fontSize="$4"
+                color={isDarkMode ? "$textDark" : "$color"}
+                lineHeight={22}
+                fontWeight="600"
               >
-                {effectiveResult.evaluation.cautionFoods.map((item, i) => (
-                  <YStack key={i} gap="$2">
-                    <Text fontSize="$3" fontWeight="700" color="$colorSubtle">
-                      주의해야 할 음식 {i + 1}: {item.food}
-                    </Text>
-                    <Text
-                      fontSize={15}
-                      fontWeight="500"
-                      lineHeight={22}
-                      color={isDarkMode ? "$textDark" : "$color"}
-                    >
-                      {item.reason}
-                    </Text>
-                  </YStack>
-                ))}
-              </YStack>
+                {t("foodResult.reportUnavailable")}
+              </Text>
             </YStack>
           )}
 
-          {/* 의료 정보 출처 안내 */}
-          <YStack
-            marginHorizontal={15}
-            marginTop={16}
-            paddingVertical={12}
-            paddingHorizontal={16}
-            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-            borderRadius={12}
-            gap={4}
-          >
+          {/* 아래 수치 블록은 리포트가 뜨면 감춘다 — 리포트의 "남은 예산"과
+              "상세 영양표" 가 같은 내용을 더 읽기 쉽게 말한다. 둘 다 띄우면
+              같은 숫자가 두 번 나오고 화면이 다시 수치 위주가 된다. */}
+          {!mealReport && !isReportPending && (
+            <>
+              {/* 총 열량 */}
+              <YStack
+                marginHorizontal="$4"
+                marginTop="$3"
+                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+                borderRadius="$4"
+                padding="$4"
+              >
+                <Text
+                  fontSize="$4"
+                  fontWeight="600"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
+                  {t("foodResult.totalCalories")}
+                </Text>
+                <XStack alignItems="baseline" gap="$1">
+                  <Text
+                    fontSize={30}
+                    fontWeight="600"
+                    color={isDarkMode ? "$textDark" : "$color"}
+                  >
+                    {Math.round(effectiveResult.total.calories)}
+                  </Text>
+                  <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
+                    Kcal
+                  </Text>
+                </XStack>
+                <View height="$2" />
+                <MacroBar
+                  carbs={effectiveResult.total.carbohydrates}
+                  protein={effectiveResult.total.protein}
+                  fat={effectiveResult.total.fat}
+                />
+              </YStack>
+
+              {/* 식단 세부 분석 */}
+              <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
+                <Text
+                  fontSize={22}
+                  fontWeight="700"
+                  color={isDarkMode ? "$textDark" : "$color"}
+                >
+                  {t("foodResult.nutrientDetails")}
+                </Text>
+                <XStack
+                  alignItems="flex-start"
+                  gap="$2"
+                  paddingHorizontal={2}
+                  marginTop={-4}
+                >
+                  <Icon name="info" size={16} color={tokens.color.grey6.val} />
+                  <Text
+                    fontSize="$3"
+                    color="$colorSubtle"
+                    flex={1}
+                    lineHeight={20}
+                  >
+                    {t("foodResult.chartExplanation")}
+                  </Text>
+                </XStack>
+                {effectiveResult.foods.map((food, i) => {
+                  const restriction = getRestrictionStyle(food.restrictionLevel)
+                  return (
+                    <YStack
+                      key={i}
+                      backgroundColor={
+                        isDarkMode ? "$cardBgDark" : "$cardBackground"
+                      }
+                      borderRadius="$4"
+                      padding="$4"
+                      paddingVertical="$5"
+                      gap="$3"
+                    >
+                      <XStack
+                        alignItems="center"
+                        justifyContent="space-between"
+                        paddingBottom={8}
+                        gap="$2"
+                      >
+                        <XStack
+                          alignItems="baseline"
+                          gap="$1"
+                          flex={1}
+                          flexShrink={1}
+                        >
+                          <Text
+                            fontSize="$4"
+                            fontWeight="600"
+                            color={isDarkMode ? "$textDark" : "$color"}
+                            numberOfLines={1}
+                            flexShrink={1}
+                          >
+                            {food.name}
+                          </Text>
+                          <XStack paddingHorizontal={1}>
+                            <Text
+                              fontSize="$3"
+                              color="$colorSubtle"
+                              flexShrink={0}
+                            >
+                              {formatFoodPortion(
+                                food.servingSizeValue,
+                                food.servingSizeUnit,
+                                language,
+                              )}
+                            </Text>
+                          </XStack>
+                        </XStack>
+                        <View
+                          paddingHorizontal={8}
+                          paddingVertical={4}
+                          borderRadius={8}
+                          backgroundColor={restriction.bg}
+                          flexShrink={0}
+                        >
+                          <Text
+                            fontSize="$3"
+                            fontWeight="500"
+                            color={restriction.color}
+                          >
+                            {t(restriction.labelKey)}
+                          </Text>
+                        </View>
+                      </XStack>
+
+                      {(food.provenance || food.analyzedGrams != null) && (
+                        <XStack gap="$2" flexWrap="wrap" marginTop={-6}>
+                          {food.provenance && (
+                            <Text fontSize="$3" color="$colorSubtle">
+                              {t(`foodResult.provenance.${food.provenance}`)}
+                            </Text>
+                          )}
+                          {food.analyzedGrams != null && (
+                            <Text fontSize="$3" color="$colorSubtle">
+                              {t("foodResult.inPhoto", {
+                                amount: Math.round(food.analyzedGrams),
+                              })}
+                              {food.consumedGrams != null
+                                ? ` · ${t("foodResult.consumed", {
+                                    amount: Math.round(food.consumedGrams),
+                                  })}`
+                                : ""}
+                            </Text>
+                          )}
+                        </XStack>
+                      )}
+
+                      <FoodNutrientDonuts food={food} />
+                    </YStack>
+                  )
+                })}
+              </YStack>
+            </>
+          )}
+
+          {/* 의료 정보 출처 — 본문과 경쟁하지 않는 조용한 푸터.
+              카드·이모지·유채색 링크를 걷어냈다: 출처는 신뢰의 근거이지
+              눌러 달라고 조르는 배너가 아니다. */}
+          <YStack marginHorizontal={20} marginTop={28} gap={10}>
+            <View
+              height={0.5}
+              backgroundColor={
+                isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(23,24,28,0.06)"
+              }
+            />
             <Text fontSize={12} color="$colorSubtle" lineHeight={18}>
-              영양소 분석 기준: 한국영양학회 식품성분데이터베이스 · 대한신장학회
-              CKD 영양 권고안 · 한국보건산업진흥원
+              {t("foodResult.referencesNote")}
             </Text>
             <Pressable
               onPress={() => {
@@ -703,64 +929,126 @@ export function FoodAnalysisResult({
                 router.push("/(settings)/medical-reference")
               }}
               accessibilityRole="button"
-              accessibilityLabel="참고 문헌 전체 보기"
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              accessibilityLabel={t("foodResult.openAllReferences")}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              hitSlop={8}
             >
-              <Text
-                fontSize={12}
-                color={isDarkMode ? "#5BC5AB" : tokens.color.sub8.val}
-                fontWeight="500"
-              >
-                📚 참고 문헌 전체 보기 →
-              </Text>
+              <XStack alignItems="center" gap={2}>
+                <Text
+                  fontSize={12.5}
+                  fontWeight="600"
+                  color={isDarkMode ? "$textDarkSub" : "$colorSubtle"}
+                >
+                  {t("foodResult.openReferences")}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={12}
+                  color={
+                    isDarkMode
+                      ? tokens.color.textDarkSub.val
+                      : tokens.color.grey3.val
+                  }
+                />
+              </XStack>
             </Pressable>
           </YStack>
 
-          {/* 식사에 대해 질문하기 */}
-          <Pressable
-            onPress={() => void handleAskAboutMealPress()}
-            disabled={isStartingConsultation}
-            accessibilityRole="button"
-            accessibilityLabel="이 식단으로 상담하기"
-            style={({ pressed }) => ({
-              opacity: isStartingConsultation ? 0.6 : pressed ? 0.7 : 1,
-            })}
-          >
-            <XStack
-              alignItems="center"
-              justifyContent="center"
-              gap={6}
-              marginTop={12}
-              paddingVertical={17}
-              marginHorizontal={15}
-              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-              borderRadius={20}
+          {/* ── 다음 행동 — 리포트를 읽고 나서 할 수 있는 일들.
+              공유 두 장(스토리·커뮤니티)을 나란히, 그 아래 AI 질문을
+              전폭 행으로. 셋 다 흰 카드라 위계는 크기와 자리로만 말한다. */}
+          <YStack marginHorizontal={15} marginTop={16} gap={10}>
+            {diaryId != null && displayImageUri && !imageFailed && (
+              <XStack gap={10}>
+                <ShareActionCard
+                  icon="sparkles-outline"
+                  title={t("foodResult.story")}
+                  caption={t("foodResult.storyCaption")}
+                  isDarkMode={isDarkMode}
+                  onPress={() => {
+                    onClose()
+                    router.push("/(write)/story/new")
+                  }}
+                />
+                <ShareActionCard
+                  icon="people-outline"
+                  title={t("foodResult.community")}
+                  caption={t("foodResult.communityCaption")}
+                  isDarkMode={isDarkMode}
+                  onPress={() => {
+                    onClose()
+                    router.push("/(write)/free/new")
+                  }}
+                />
+              </XStack>
+            )}
+
+            <Pressable
+              onPress={() => void handleAskAboutMealPress()}
+              disabled={isStartingConsultation}
+              accessibilityRole="button"
+              accessibilityLabel={t("foodResult.askMore")}
+              style={({ pressed }) => ({
+                opacity: isStartingConsultation ? 0.6 : pressed ? 0.85 : 1,
+              })}
             >
-              <Ionicons
-                name="chatbubble-ellipses-outline"
-                size={18}
-                color={
-                  isDarkMode ? tokens.color.appBg.val : tokens.color.grey3.val
-                }
-              />
-              <Text
-                fontSize={16}
-                fontWeight="500"
-                color={isDarkMode ? "$textDark" : "$color"}
+              <XStack
+                alignItems="center"
+                gap={12}
+                paddingVertical={14}
+                paddingHorizontal={16}
+                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
+                borderRadius={20}
               >
-                {isStartingConsultation
-                  ? "식단을 저장하고 있어요..."
-                  : "이 식단으로 상담하기"}
-              </Text>
-            </XStack>
-          </Pressable>
+                <XStack
+                  width={38}
+                  height={38}
+                  borderRadius={999}
+                  backgroundColor={
+                    isDarkMode ? "rgba(254,113,57,0.18)" : "#FFF6F2"
+                  }
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses"
+                    size={18}
+                    color={tokens.color.primary.val}
+                  />
+                </XStack>
+                <YStack flex={1} gap={1}>
+                  <Text
+                    fontSize={15}
+                    fontWeight="700"
+                    color={isDarkMode ? "$textDark" : "$color"}
+                  >
+                    {isStartingConsultation
+                      ? t("foodResult.openingConsult")
+                      : t("foodResult.askMore")}
+                  </Text>
+                  <Text fontSize={12.5} color="$colorSubtle">
+                    {t("foodResult.askMoreCaption")}
+                  </Text>
+                </YStack>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={
+                    isDarkMode
+                      ? tokens.color.textDarkSub.val
+                      : tokens.color.grey3.val
+                  }
+                />
+              </XStack>
+            </Pressable>
+          </YStack>
 
           {diaryId != null && (
             <Pressable
               onPress={() => void handleDeleteDiaryPress()}
               disabled={isDeletingDiary}
               accessibilityRole="button"
-              accessibilityLabel="식단 기록 삭제"
+              accessibilityLabel={t("foodResult.delete")}
               style={({ pressed }) => ({
                 opacity: isDeletingDiary ? 0.6 : pressed ? 0.7 : 1,
               })}
@@ -783,7 +1071,9 @@ export function FoodAnalysisResult({
                   fontWeight="500"
                   color={tokens.color.primary9.val}
                 >
-                  {isDeletingDiary ? "삭제 중..." : "식단 기록 삭제"}
+                  {isDeletingDiary
+                    ? t("foodResult.deleting")
+                    : t("foodResult.delete")}
                 </Text>
               </XStack>
             </Pressable>
@@ -806,7 +1096,7 @@ export function FoodAnalysisResult({
               onPress={handleAddToRecordPress}
               disabled={isAddingToRecord}
               accessibilityRole="button"
-              accessibilityLabel="기록에 추가하기"
+              accessibilityLabel={t("foodResult.addToLog")}
               style={({ pressed }) => ({
                 width: "100%",
                 opacity: isAddingToRecord ? 0.7 : pressed ? 0.8 : 1,
@@ -820,7 +1110,9 @@ export function FoodAnalysisResult({
                 justifyContent="center"
               >
                 <Text color="white" fontSize={16} fontWeight="700">
-                  {isAddingToRecord ? "기록 중..." : "기록에 추가하기"}
+                  {isAddingToRecord
+                    ? t("foodResult.adding")
+                    : t("foodResult.addToLog")}
                 </Text>
               </YStack>
             </Pressable>
@@ -869,7 +1161,7 @@ export function FoodAnalysisResult({
                 textAlign="center"
                 color={isDarkMode ? "$textDark" : "$color"}
               >
-                아직 식단을 기록하지 않았어요.
+                {t("foodResult.unsavedTitle")}
               </Text>
               <Text
                 fontSize={14}
@@ -877,7 +1169,7 @@ export function FoodAnalysisResult({
                 textAlign="center"
                 lineHeight={22}
               >
-                식단을 기록에 추가해 주세요.
+                {t("foodResult.unsavedBody")}
               </Text>
             </YStack>
 
@@ -893,7 +1185,7 @@ export function FoodAnalysisResult({
                   onClose()
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="기록하지 않고 나가기"
+                accessibilityLabel={t("foodResult.leaveWithoutSaving")}
                 style={({ pressed }) => ({
                   flex: 1,
                   opacity: pressed ? 0.6 : 1,
@@ -905,7 +1197,7 @@ export function FoodAnalysisResult({
                     fontSize={15}
                     fontWeight="500"
                   >
-                    나가기
+                    {t("foodResult.leaveWithoutSaving")}
                   </Text>
                 </YStack>
               </Pressable>
@@ -920,7 +1212,7 @@ export function FoodAnalysisResult({
               <Pressable
                 onPress={() => setShowExitConfirm(false)}
                 accessibilityRole="button"
-                accessibilityLabel="분석 결과로 돌아가기"
+                accessibilityLabel={t("foodResult.returnToResult")}
                 style={({ pressed }) => ({
                   flex: 1,
                   opacity: pressed ? 0.8 : 1,
@@ -932,7 +1224,7 @@ export function FoodAnalysisResult({
                     fontWeight="500"
                     color={isDarkMode ? "$textDark" : "$color"}
                   >
-                    돌아가기
+                    {t("foodResult.returnToResult")}
                   </Text>
                 </YStack>
               </Pressable>

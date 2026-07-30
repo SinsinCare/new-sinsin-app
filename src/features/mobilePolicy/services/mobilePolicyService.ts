@@ -7,7 +7,12 @@ import type {
   MobilePolicyStorage,
 } from "../types"
 
-export const MOBILE_POLICY_CACHE_KEY = "mobilePolicy:lastSuccessful:v1"
+export const MOBILE_POLICY_CACHE_KEY = "mobilePolicy:lastSuccessful:v2"
+
+export function getMobilePolicyCacheKey(locale: string): string {
+  const language = locale.toLowerCase().startsWith("en") ? "en" : "ko"
+  return `${MOBILE_POLICY_CACHE_KEY}:${language}`
+}
 
 interface MobilePolicyServiceDeps {
   fetchPolicy: MobilePolicyFetcher
@@ -15,10 +20,14 @@ interface MobilePolicyServiceDeps {
   maxAttempts?: number
 }
 
-const FALLBACK_POLICY: MobilePolicyResponse = {
-  decision: "allow",
-  reason: "policy_unavailable_no_cache",
-  message: "버전 정책을 확인하지 못했지만 앱 사용을 계속합니다.",
+function fallbackPolicy(locale: string): MobilePolicyResponse {
+  return {
+    decision: "allow",
+    reason: "policy_unavailable_no_cache",
+    message: locale.toLowerCase().startsWith("en")
+      ? "We couldn't check this version right now. You can keep using the app."
+      : "버전을 확인하지 못했어요. 현재 버전으로 계속 이용할 수 있어요.",
+  }
 }
 
 export function isBlockingMobilePolicyDecision(
@@ -51,8 +60,10 @@ export function createMobilePolicyService({
   storage,
   maxAttempts = 2,
 }: MobilePolicyServiceDeps) {
-  async function readCachedPolicy(): Promise<MobilePolicyResponse | null> {
-    const cached = await storage.getItem(MOBILE_POLICY_CACHE_KEY)
+  async function readCachedPolicy(
+    locale: string,
+  ): Promise<MobilePolicyResponse | null> {
+    const cached = await storage.getItem(getMobilePolicyCacheKey(locale))
     if (!cached) return null
     try {
       return JSON.parse(cached) as MobilePolicyResponse
@@ -78,17 +89,21 @@ export function createMobilePolicyService({
   return {
     async evaluate(
       runtimeInfo: MobilePolicyRuntimeInfo,
+      locale = "ko",
     ): Promise<MobilePolicyEvaluation> {
       try {
         const policy = await fetchWithRetry(runtimeInfo)
-        await storage.setItem(MOBILE_POLICY_CACHE_KEY, JSON.stringify(policy))
+        await storage.setItem(
+          getMobilePolicyCacheKey(locale),
+          JSON.stringify(policy),
+        )
         return { policy, source: "server" }
       } catch {
-        const cachedPolicy = await readCachedPolicy()
+        const cachedPolicy = await readCachedPolicy(locale)
         if (cachedPolicy) {
           return { policy: cachedPolicy, source: "cache" }
         }
-        return { policy: FALLBACK_POLICY, source: "fallback" }
+        return { policy: fallbackPolicy(locale), source: "fallback" }
       }
     },
   }

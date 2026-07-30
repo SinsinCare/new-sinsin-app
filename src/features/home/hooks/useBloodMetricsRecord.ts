@@ -2,14 +2,16 @@ import { useState } from "react"
 import { Alert } from "react-native"
 import { useQueryClient } from "@tanstack/react-query"
 import { bloodMetricsService } from "@/src/services/data/bloodMetricsService"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { logRecoverableError } from "@/src/lib/errorUtils"
 import type {
   BloodGlucoseUpsertRequest,
   BloodPressureUpsertRequest,
 } from "@/src/types/bloodMetrics"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useTranslation } from "react-i18next"
 
 export function useBloodMetricsRecord() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -21,8 +23,11 @@ export function useBloodMetricsRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      console.error("updateBloodPressure error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      logRecoverableError("updateBloodPressure error:", error)
+      Alert.alert(
+        t("home.errors.saveBloodPressureTitle"),
+        t("home.errors.saveBloodPressureBody"),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -36,8 +41,11 @@ export function useBloodMetricsRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      console.error("updateBloodGlucose error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      logRecoverableError("updateBloodGlucose error:", error)
+      Alert.alert(
+        t("home.errors.saveBloodGlucoseTitle"),
+        t("home.errors.saveBloodGlucoseBody"),
+      )
     } finally {
       setIsLoading(false)
     }

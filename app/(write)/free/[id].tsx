@@ -1,24 +1,18 @@
 import { useState, useEffect } from "react"
 import {
+  Alert,
   Keyboard,
   Platform,
   Pressable,
-  TextInput,
+  ScrollView,
   StyleSheet,
-  Alert,
+  Text,
+  TextInput,
+  View,
 } from "react-native"
-import { YStack, XStack, Text, View } from "tamagui"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { Icon } from "@/src/shared/components/Icon"
-import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
-import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
-import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
-import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
-import { LoadingScreen } from "@/src/shared/components"
-import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
-import { tokens } from "@/src/theme/tokens"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import {
   KeyboardAwareScrollView,
   KeyboardController,
@@ -26,47 +20,40 @@ import {
   useKeyboardState,
 } from "react-native-keyboard-controller"
 
-const BG_COLOR = { light: tokens.color.offWhite.val, dark: "#2A2A30" } as const
-const HEADER_TEXT_COLOR = {
-  light: "#3C3C43",
-  dark: tokens.color.textDark.val,
-} as const
-const REGISTER_ACTIVE_COLOR = { light: "#44AF94", dark: "#44AF94" } as const
-const REGISTER_DISABLED_COLOR = { light: "#81818D", dark: "#81818D" } as const
-const CATEGORY_LABEL_COLOR = { light: "#666677", dark: "#858591" } as const
-const CATEGORY_VALUE_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-} as const
-const SELECT_BTN_BG = {
-  light: tokens.color.borderLight.val,
-  dark: "#2A2A30",
-} as const
-const SELECT_BTN_TEXT = { light: "#81818D", dark: "#C5C8CE" } as const
-const DIVIDER_COLOR = {
-  light: "#E5E5EA",
-  dark: tokens.color.appBgDark.val,
-} as const
-const TITLE_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-} as const
-const TITLE_PLACEHOLDER_COLOR = { light: "#666677", dark: "#858591" } as const
-const BODY_PLACEHOLDER_COLOR = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightMuted.val,
-} as const
-const PRIMARY_BAR_COLOR = {
-  light: "#F1F1F3",
-  dark: tokens.color.appBgDark.val,
-} as const
-const TOOLBAR_ICON_COLOR = { light: "#666677", dark: "#F5F6FA" } as const
-const TOOLBAR_BORDER_COLOR = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightMuted.val,
+import { useSurface } from "@/src/hooks/useSurface"
+import { Icon } from "@/src/shared/components/Icon"
+import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
+import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
+import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
+import { TagInput } from "@/src/features/recipe/components/TagInput"
+import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
+import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
+import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
+import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
+import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
+import { LoadingScreen } from "@/src/shared/components"
+import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
+import { useTranslation } from "react-i18next"
+
+const MAX_IMAGES = 5
+const POST_CATEGORY_LABEL_KEYS = {
+  diet: "category.post.diet",
+  numbers: "category.post.numbers",
+  symptoms: "category.post.symptoms",
+  medicine: "category.post.medicine",
+  "dining-out": "category.post.dining-out",
+  daily: "category.post.daily",
 } as const
 
+/** 기존 이미지는 저장 경로를, 새로 고른 이미지는 로컬 URI 를 들고 있다. */
+interface EditImage {
+  objectPath?: string
+  localUri?: string
+  displayUri: string
+}
+
 function KeyboardDismissButton({ color }: { color: string }) {
+  const { t } = useTranslation("recipe")
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
 
   if (!isKeyboardVisible) return null
@@ -75,7 +62,9 @@ function KeyboardDismissButton({ color }: { color: string }) {
     <Pressable
       onPress={() => KeyboardController.dismiss()}
       hitSlop={8}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      accessibilityRole="button"
+      accessibilityLabel={t("action.dismissKeyboard")}
+      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
       <Icon name="keyboard" size={24} color={color} />
     </Pressable>
@@ -83,11 +72,11 @@ function KeyboardDismissButton({ color }: { color: string }) {
 }
 
 export default function FreePostEditScreen() {
+  const { t } = useTranslation("recipe")
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const colorScheme = useAppColorScheme()
-  const isDark = colorScheme === "dark"
+  const surface = useSurface()
   const bottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 24) : insets.bottom
 
@@ -97,8 +86,12 @@ export default function FreePostEditScreen() {
   const [selectedCategory, setSelectedCategory] = useState("")
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
+  const [images, setImages] = useState<EditImage[]>([])
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInputOpen, setTagInputOpen] = useState(false)
   const [categorySheetOpen, setCategorySheetOpen] = useState(false)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -106,20 +99,43 @@ export default function FreePostEditScreen() {
       setSelectedCategory(post.category)
       setTitle(post.title)
       setBody(post.description)
+      setImages(
+        post.imageObjectPaths.map((objectPath, index) => ({
+          objectPath,
+          displayUri: post.imageUris[index] ?? objectPath,
+        })),
+      )
+      setTags(post.tags)
       setInitialized(true)
     }
   }, [post, initialized])
 
   if (isLoading || !post) {
-    return <LoadingScreen message="게시물을 불러오는 중..." />
+    return <LoadingScreen message={t("freePost.loading")} />
   }
 
+  const inkBg = surface.isDark ? "#F4F4F6" : "#1D1E20"
+  const inkContent = surface.isDark ? "#17181C" : "#FFFFFF"
+  const isSaving = isUpdating || isUploading
+
   const canSubmit = title.trim().length > 0 && body.trim().length > 0
+
+  const imagesChanged =
+    images.length !== post.imageObjectPaths.length ||
+    images.some(
+      (image, index) => image.objectPath !== post.imageObjectPaths[index],
+    )
+
+  const tagsChanged =
+    tags.length !== post.tags.length ||
+    tags.some((tag, index) => tag !== post.tags[index])
 
   const hasChanges =
     title !== post.title ||
     body !== post.description ||
-    selectedCategory !== post.category
+    selectedCategory !== post.category ||
+    imagesChanged ||
+    tagsChanged
 
   const handleClose = () => {
     Keyboard.dismiss()
@@ -130,139 +146,155 @@ export default function FreePostEditScreen() {
     }
   }
 
-  const handleSubmit = () => {
-    if (!canSubmit) return
+  const handlePickImages = async () => {
+    Keyboard.dismiss()
+    const remaining = MAX_IMAGES - images.length
+    if (remaining <= 0) {
+      Alert.alert(
+        t("freePost.photoLimitTitle"),
+        t("freePost.photoLimitBody", { count: MAX_IMAGES }),
+      )
+      return
+    }
+    const uris = await pickMultipleImages(remaining)
+    if (uris.length > 0) {
+      setImages((prev) =>
+        [
+          ...prev,
+          ...uris.map((uri) => ({ localUri: uri, displayUri: uri })),
+        ].slice(0, MAX_IMAGES),
+      )
+    }
+  }
+
+  const handleRemoveImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = async () => {
+    if (!canSubmit || isSaving) return
+    setIsUploading(true)
+    let imageObjectPaths: string[]
+    try {
+      imageObjectPaths = []
+      for (const image of images) {
+        if (image.objectPath) {
+          imageObjectPaths.push(image.objectPath)
+        } else if (image.localUri) {
+          const uploaded = await imageUploadService.uploadImage(
+            image.localUri,
+            "community",
+          )
+          imageObjectPaths.push(uploaded.objectPath)
+        }
+      }
+    } catch {
+      setIsUploading(false)
+      Alert.alert(
+        t("freePost.photoUploadErrorTitle"),
+        t("freePost.photoUploadErrorBody"),
+      )
+      return
+    }
+    setIsUploading(false)
     updatePost(
       {
         id: post.id,
         category: selectedCategory,
         title: title.trim(),
         description: body.trim(),
+        imageObjectPaths,
+        tags,
       },
       {
         onSuccess: () => router.back(),
-        onError: () => Alert.alert("오류", "게시글 수정에 실패했습니다."),
+        onError: () =>
+          Alert.alert(
+            t("freePost.editErrorTitle"),
+            t("freePost.editErrorBody"),
+          ),
       },
     )
   }
 
-  const selectedLabel =
-    FREE_POST_CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? ""
-
-  const registerColor = canSubmit
-    ? isDark
-      ? REGISTER_ACTIVE_COLOR.dark
-      : REGISTER_ACTIVE_COLOR.light
-    : isDark
-      ? REGISTER_DISABLED_COLOR.dark
-      : REGISTER_DISABLED_COLOR.light
-
-  const iconColor = isDark ? TOOLBAR_ICON_COLOR.dark : TOOLBAR_ICON_COLOR.light
+  const selectedLabel = t(
+    POST_CATEGORY_LABEL_KEYS[
+      selectedCategory as keyof typeof POST_CATEGORY_LABEL_KEYS
+    ],
+  )
 
   return (
-    <YStack
-      flex={1}
-      backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
-      paddingTop={insets.top}
+    <View
+      style={[
+        styles.screen,
+        { backgroundColor: surface.canvas, paddingTop: insets.top },
+      ]}
     >
-      {/* Header */}
-      <XStack
-        paddingHorizontal={20}
-        paddingVertical={12}
-        alignItems="center"
-        justifyContent="space-between"
-      >
+      {/* 헤더 */}
+      <View style={styles.header}>
         <Pressable
           onPress={handleClose}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t("action.close")}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <Icon
-            name="x"
-            size={24}
-            color={isDark ? HEADER_TEXT_COLOR.dark : HEADER_TEXT_COLOR.light}
-          />
+          <Ionicons name="close" size={24} color={surface.textStrong} />
         </Pressable>
-        <Pressable
+        <SurfacePressable
           onPress={handleSubmit}
-          disabled={!canSubmit || isUpdating}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed && canSubmit ? 0.7 : 1 })}
-        >
-          <Text
-            fontSize={16}
-            fontWeight="600"
-            fontFamily="$body"
-            color={registerColor}
-          >
-            {isUpdating ? "수정 중..." : "수정"}
-          </Text>
-        </Pressable>
-      </XStack>
-
-      {/* Category Selector */}
-      <YStack paddingHorizontal={20} paddingVertical={16} gap={4}>
-        <Text
-          fontSize={12}
-          fontWeight="400"
-          fontFamily="$body"
-          color={
-            isDark ? CATEGORY_LABEL_COLOR.dark : CATEGORY_LABEL_COLOR.light
+          disabled={!canSubmit || isSaving}
+          accessibilityState={{ disabled: !canSubmit || isSaving }}
+          baseColor={canSubmit ? inkBg : surface.ctaOffBg}
+          pressedColor={
+            canSubmit
+              ? surface.isDark
+                ? "#DADAE0"
+                : "#34363A"
+              : surface.ctaOffBg
           }
+          pressScale={0.94}
+          style={styles.submitPill}
         >
-          카테고리 선택
-        </Text>
-        <XStack alignItems="center" justifyContent="space-between">
           <Text
-            fontSize={16}
-            fontWeight="600"
-            fontFamily="$body"
-            color={
-              isDark ? CATEGORY_VALUE_COLOR.dark : CATEGORY_VALUE_COLOR.light
-            }
+            style={[
+              styles.submitLabel,
+              { color: canSubmit ? inkContent : surface.ctaOffText },
+            ]}
           >
+            {isSaving ? t("action.saving") : t("action.save")}
+          </Text>
+        </SurfacePressable>
+      </View>
+
+      {/* 카테고리 */}
+      <View style={styles.categoryRow}>
+        <SurfacePressable
+          onPress={() => {
+            Keyboard.dismiss()
+            setCategorySheetOpen(true)
+          }}
+          accessibilityLabel={t("freePost.topicAccessibility", {
+            category: selectedLabel,
+          })}
+          baseColor={surface.surface}
+          pressScale={0.96}
+          style={styles.categoryChip}
+        >
+          <Text style={[styles.categoryLabel, { color: surface.textStrong }]}>
             {selectedLabel}
           </Text>
-          <Pressable
-            onPress={() => {
-              Keyboard.dismiss()
-              setCategorySheetOpen(true)
-            }}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.7 : 1,
-              backgroundColor: isDark
-                ? SELECT_BTN_BG.dark
-                : SELECT_BTN_BG.light,
-              borderRadius: 6,
-              paddingHorizontal: 10,
-              paddingVertical: 8,
-            })}
-          >
-            <Text
-              fontSize={12}
-              lineHeight={14}
-              fontWeight="500"
-              fontFamily="$body"
-              color={isDark ? SELECT_BTN_TEXT.dark : SELECT_BTN_TEXT.light}
-            >
-              선택
-            </Text>
-          </Pressable>
-        </XStack>
-      </YStack>
+          <Ionicons name="chevron-down" size={14} color={surface.textMuted} />
+        </SurfacePressable>
+      </View>
 
-      <View
-        height={12}
-        backgroundColor={
-          isDark ? PRIMARY_BAR_COLOR.dark : PRIMARY_BAR_COLOR.light
-        }
-      />
-
-      {/* Title + Body */}
-      <View flex={1}>
+      {/* 제목·본문 */}
+      <View style={styles.flex}>
         <KeyboardAwareScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 12 }}
+          bounces={false}
+          overScrollMode="never"
+          style={styles.flex}
+          contentContainerStyle={styles.editorContent}
           bottomOffset={bottomInset + 72}
           disableScrollOnKeyboardHide
           keyboardShouldPersistTaps="handled"
@@ -270,76 +302,95 @@ export default function FreePostEditScreen() {
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
         >
-          <YStack paddingHorizontal={16} paddingTop={20} flex={1}>
+          <View style={styles.editorBody}>
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="제목을 입력해주세요"
-              placeholderTextColor={
-                isDark
-                  ? TITLE_PLACEHOLDER_COLOR.dark
-                  : TITLE_PLACEHOLDER_COLOR.light
-              }
+              placeholder={t("freePost.titlePlaceholder")}
+              placeholderTextColor={surface.placeholder}
+              maxLength={200}
               style={[
                 styles.titleInput,
                 {
-                  fontWeight: "500",
-                  color: isDark ? TITLE_COLOR.dark : TITLE_COLOR.light,
-                  borderBottomColor: isDark
-                    ? DIVIDER_COLOR.dark
-                    : DIVIDER_COLOR.light,
+                  color: surface.textStrong,
+                  borderBottomColor: surface.hairline,
                 },
               ]}
             />
             <TextInput
               value={body}
               onChangeText={setBody}
-              placeholder="내용을 입력해주세요"
-              placeholderTextColor={
-                isDark
-                  ? BODY_PLACEHOLDER_COLOR.dark
-                  : BODY_PLACEHOLDER_COLOR.light
-              }
+              placeholder={t("freePost.editBodyPlaceholder")}
+              placeholderTextColor={surface.placeholder}
               multiline
               textAlignVertical="top"
-              style={[
-                styles.bodyInput,
-                {
-                  color: isDark ? TITLE_COLOR.dark : TITLE_COLOR.light,
-                  fontSize: 16,
-                  lineHeight: 24,
-                  fontWeight: "400",
-                },
-              ]}
+              style={[styles.bodyInput, { color: surface.textStrong }]}
             />
-          </YStack>
+            {(tagInputOpen || tags.length > 0) && (
+              <TagInput tags={tags} onChangeTags={setTags} />
+            )}
+          </View>
         </KeyboardAwareScrollView>
 
         <KeyboardStickyView offset={{ closed: 0, opened: bottomInset }}>
-          {/* Bottom Toolbar */}
-          <XStack
-            paddingHorizontal={20}
-            paddingTop={10}
-            paddingBottom={10 + bottomInset}
-            alignItems="center"
-            style={{
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderTopColor: isDark
-                ? TOOLBAR_BORDER_COLOR.dark
-                : TOOLBAR_BORDER_COLOR.light,
-            }}
-            backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
+          {images.length > 0 && (
+            <ScrollView
+              bounces={false}
+              overScrollMode="never"
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.imageStrip}
+              style={styles.imageStripWrap}
+            >
+              {images.map((image, index) => (
+                <ImageThumbnailCard
+                  key={`${image.displayUri}-${index}`}
+                  uri={image.displayUri}
+                  onPress={() => {}}
+                  onRemove={() => handleRemoveImage(index)}
+                />
+              ))}
+            </ScrollView>
+          )}
+          <View
+            style={[
+              styles.toolbar,
+              {
+                borderTopColor: surface.hairline,
+                backgroundColor: surface.canvas,
+                paddingBottom: 10 + bottomInset,
+              },
+            ]}
           >
-            <XStack gap={20} flex={1}>
+            <View style={styles.toolbarActions}>
               <Pressable
+                onPress={handlePickImages}
                 hitSlop={8}
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                accessibilityRole="button"
+                accessibilityLabel={t("action.addPhoto")}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               >
-                <Icon name="gallery" size={24} color={iconColor} />
+                <Ionicons
+                  name="image-outline"
+                  size={23}
+                  color={surface.textMuted}
+                />
               </Pressable>
-            </XStack>
-            <KeyboardDismissButton color={iconColor} />
-          </XStack>
+              <Pressable
+                onPress={() => {
+                  Keyboard.dismiss()
+                  setTagInputOpen(true)
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("action.addTag")}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              >
+                <Icon name="hashtag" size={22} color={surface.textMuted} />
+              </Pressable>
+            </View>
+            <KeyboardDismissButton color={surface.textMuted} />
+          </View>
         </KeyboardStickyView>
       </View>
 
@@ -353,32 +404,119 @@ export default function FreePostEditScreen() {
 
       <ConfirmExitModal
         visible={confirmExitVisible}
-        title={"게시글 수정을\n취소하시겠어요?"}
-        description="수정한 내용은 저장되지 않습니다."
-        cancelLabel="유지"
-        confirmLabel="수정 취소"
+        title={t("freePost.editExitTitle")}
+        description={t("freePost.editExitBody")}
+        cancelLabel={t("action.keepEditing")}
+        confirmLabel={t("action.exit")}
         onCancel={() => setConfirmExitVisible(false)}
         onConfirm={() => {
           setConfirmExitVisible(false)
           router.back()
         }}
       />
-    </YStack>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  titleInput: {
-    fontSize: 18,
+  screen: {
+    flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
+
+  header: {
+    height: 52,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  submitPill: {
+    height: 34,
+    borderRadius: 17,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitLabel: {
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: -0.28,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+
+  categoryRow: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 12,
+    flexDirection: "row",
+  },
+  categoryChip: {
+    height: 36,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  categoryLabel: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    letterSpacing: -0.27,
     fontWeight: "600",
-    paddingVertical: 12,
+    fontFamily: "Pretendard-SemiBold",
+  },
+
+  editorContent: {
+    flexGrow: 1,
+    paddingBottom: 12,
+  },
+  editorBody: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  titleInput: {
+    fontSize: 19,
+    lineHeight: 26,
+    letterSpacing: -0.38,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   bodyInput: {
-    fontSize: 15,
-    lineHeight: 22,
-    paddingTop: 16,
     flex: 1,
     minHeight: 200,
+    paddingTop: 14,
+    fontSize: 15.5,
+    lineHeight: 24,
+    letterSpacing: -0.31,
+    fontFamily: "Pretendard-Regular",
+  },
+
+  imageStrip: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  imageStripWrap: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  toolbar: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  toolbarActions: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 22,
   },
 })

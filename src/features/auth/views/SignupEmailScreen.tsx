@@ -1,20 +1,28 @@
 import { useEffect, useRef } from "react"
-import { Pressable, Keyboard } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
-import { useForm, useWatch } from "react-hook-form"
-import { ConfirmModal, FormTextField } from "@/src/shared/components"
+import { Keyboard, StyleSheet, Text, View } from "react-native"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { ConfirmModal } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
+import { ResendCodeLink, StepHelperText, StepTextInput } from "../components"
 import { useSignupEmail } from "../hooks"
+import { useAuthSurface } from "../hooks/useAuthSurface"
+import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import type { EmailForm } from "../types"
-import { tokens } from "@/src/theme/tokens"
 import {
   isVerifiedEmailMatch,
   normalizeSignupEmail,
 } from "../data/emailVerificationState"
 
-const BUTTON_WIDTH = 100
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * 이메일 인증. 화면의 액션은 하단 CTA 하나다 — 이메일을 쓰면 "인증번호 받기",
+ * 번호가 오면 "확인". 재전송은 코드 필드 아래 텍스트 링크로 낮춰 잡고,
+ * 남은 시간은 필드 안 오른쪽에 둔다. 인증이 끝나면 바로 다음 스텝으로 넘어간다.
+ */
 export function SignupEmailScreen() {
+  const { t } = useTranslation("auth")
   const {
     codeSent,
     codeInputVisible,
@@ -26,7 +34,6 @@ export function SignupEmailScreen() {
     sendingCode,
     verifyingCode,
     emailLoginLinkRequired,
-    emailLoginLinkProviderLabel,
     sendCode,
     verifyCode,
     resetVerificationState,
@@ -34,12 +41,14 @@ export function SignupEmailScreen() {
     dismissEmailLoginLink,
     confirmEmailLoginLink,
   } = useSignupEmail()
+  const surface = useAuthSurface()
 
-  const { control, getValues, trigger, setValue } = useForm<EmailForm>({
+  const { control, getValues, setValue } = useForm<EmailForm>({
     defaultValues: { email: "", code: "" },
     mode: "onChange",
   })
   const email = useWatch({ control, name: "email" })
+  const code = useWatch({ control, name: "code" })
   const previousEmailRef = useRef(normalizeSignupEmail(email))
   const isCurrentEmailVerified =
     codeVerified && isVerifiedEmailMatch(verifiedEmail, email)
@@ -52,211 +61,147 @@ export function SignupEmailScreen() {
     resetVerificationState()
   }, [email, resetVerificationState, setValue])
 
+  // 인증이 확인되는 순간 바로 다음 스텝으로 — "다음을 눌러주세요" 같은
+  // 죽은 상태를 화면에 남기지 않는다. 이메일이 바뀌면 가드가 풀린다.
+  const advancedRef = useRef(false)
+  useEffect(() => {
+    if (isCurrentEmailVerified && !advancedRef.current) {
+      advancedRef.current = true
+      handleNext(getValues("email"))
+      return
+    }
+    if (!isCurrentEmailVerified) advancedRef.current = false
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCurrentEmailVerified])
+
+  const emailValid = EMAIL_PATTERN.test(email.trim())
+  const awaitingCode = codeInputVisible && !isCurrentEmailVerified
+  const codeExpired = !sendError && timer === 0 && codeSent
+
   const handleSendCode = async () => {
-    const valid = await trigger("email")
-    if (!valid) return
     Keyboard.dismiss()
     await sendCode(getValues("email"))
   }
 
   const handleVerifyCode = async () => {
-    const valid = await trigger("code")
-    if (!valid) return
     Keyboard.dismiss()
     const { email, code } = getValues()
     await verifyCode(email, code)
   }
 
-  const onNext = () => {
-    handleNext(getValues("email"))
-  }
+  const ctaLabel = awaitingCode
+    ? t("common.confirm")
+    : t("emailVerification.sendCode")
+  const ctaDisabled = awaitingCode
+    ? code.length !== 6 || verifyingCode || !!sendError
+    : !emailValid || sendingCode
+  const onCtaPress = awaitingCode ? handleVerifyCode : handleSendCode
 
   return (
     <>
       <AuthScreenLayout
-        title="이메일을 입력해주세요"
-        subtitle="회원가입을 위해 이메일 인증을 진행해주세요"
-        buttonLabel={isCurrentEmailVerified ? "다음" : "다음 단계"}
-        buttonDisabled={!isCurrentEmailVerified}
-        onSubmit={onNext}
+        title={t("signupEmail.title")}
+        subtitle={t("signupEmail.subtitle")}
+        buttonLabel={ctaLabel}
+        buttonDisabled={ctaDisabled}
+        buttonLoading={sendingCode || verifyingCode}
+        onSubmit={onCtaPress}
+        keyboardAvoiding
       >
-        <YStack gap={36} marginTop={48}>
-          <YStack>
-            <XStack gap={8}>
-              <YStack flex={1}>
-                <FormTextField<EmailForm>
-                  name="email"
-                  control={control}
-                  label="이메일"
-                  placeholder="이메일 주소를 입력해주세요"
-                  inputType="email"
+        <View style={styles.body}>
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <View>
+                <StepTextInput
                   autoFocus
-                  showValidState
-                  rules={{
-                    required: "이메일을 입력해주세요.",
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "올바른 이메일 형식이 아닙니다.",
-                    },
-                  }}
+                  label={t("fields.email")}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  onClear={() => field.onChange("")}
+                  placeholder="example@email.com"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  hasError={!!field.value && !emailValid}
                 />
-              </YStack>
-              <YStack
-                width={BUTTON_WIDTH}
-                justifyContent="flex-start"
-                paddingTop={28}
-              >
-                <Pressable
-                  onPress={handleSendCode}
-                  disabled={sendingCode || isCurrentEmailVerified}
-                >
-                  <YStack
-                    backgroundColor={
-                      isCurrentEmailVerified || sendingCode
-                        ? tokens.color.grey7.val
-                        : tokens.color.sub6.val
-                    }
-                    borderRadius={8}
-                    height={52}
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    <Text
-                      color="white"
-                      fontSize={14}
-                      fontWeight="500"
-                      letterSpacing={-0.28}
-                    >
-                      {sendingCode
-                        ? "전송 중..."
-                        : codeSent
-                          ? "재전송"
-                          : "인증번호 전송"}
-                    </Text>
-                  </YStack>
-                </Pressable>
-              </YStack>
-            </XStack>
-            {sendError && !codeInputVisible && (
-              <Text
-                fontSize={13}
-                color={tokens.color.error.val}
-                letterSpacing={-0.26}
-                paddingTop={8}
-              >
-                {sendError}
-              </Text>
-            )}
-          </YStack>
-
-          {codeInputVisible && !isCurrentEmailVerified && (
-            <YStack>
-              <XStack gap={8}>
-                <YStack flex={1}>
-                  <FormTextField<EmailForm>
-                    name="code"
-                    control={control}
-                    label="인증번호"
-                    placeholder="인증번호 6자리를 입력해주세요"
-                    inputType="number"
-                    autoFocus
-                    maxLength={6}
-                    showValidState
-                    rules={{
-                      required: "인증번호를 입력해주세요.",
-                      minLength: {
-                        value: 6,
-                        message: "인증번호 6자리를 입력해주세요.",
-                      },
-                    }}
+                {field.value && !emailValid ? (
+                  <StepHelperText
+                    message={t("validation.emailInvalid")}
+                    tone="error"
                   />
-                </YStack>
-                <YStack
-                  width={BUTTON_WIDTH}
-                  justifyContent="flex-start"
-                  paddingTop={28}
-                >
-                  <Pressable
-                    onPress={handleVerifyCode}
-                    disabled={verifyingCode || !!sendError}
-                  >
-                    <YStack
-                      backgroundColor={
-                        sendError
-                          ? tokens.color.grey7.val
-                          : tokens.color.sub6.val
-                      }
-                      borderRadius={8}
-                      height={52}
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Text
-                        color="white"
-                        fontSize={14}
-                        fontWeight="500"
-                        letterSpacing={-0.28}
-                      >
-                        확인
-                      </Text>
-                    </YStack>
-                  </Pressable>
-                </YStack>
-              </XStack>
-              {sendError && (
-                <Text
-                  fontSize={13}
-                  color={tokens.color.error.val}
-                  letterSpacing={-0.26}
-                  paddingTop={8}
-                >
-                  {sendError}
-                </Text>
-              )}
-              {!sendError && timer > 0 && (
-                <Text
-                  fontSize={13}
-                  color={tokens.color.error.val}
-                  letterSpacing={-0.26}
-                  paddingTop={8}
-                >
-                  남은 시간 {formattedTime}
-                </Text>
-              )}
-              {!sendError && timer === 0 && codeSent && (
-                <Text
-                  fontSize={13}
-                  color={tokens.color.error.val}
-                  letterSpacing={-0.26}
-                  paddingTop={8}
-                >
-                  인증 시간이 만료되었습니다. 재전송해주세요.
-                </Text>
-              )}
-            </YStack>
-          )}
+                ) : sendError && !codeInputVisible ? (
+                  <StepHelperText message={sendError} tone="error" />
+                ) : null}
+              </View>
+            )}
+          />
 
-          {isCurrentEmailVerified && (
-            <Text
-              fontSize={14}
-              color={tokens.color.sub8.val}
-              fontWeight="500"
-              letterSpacing={-0.28}
-            >
-              인증이 완료되었습니다. 다음을 눌러 진행해주세요.
-            </Text>
+          {awaitingCode && (
+            <Controller
+              name="code"
+              control={control}
+              render={({ field }) => (
+                <View>
+                  <StepTextInput
+                    autoFocus
+                    label={t("fields.verificationCode")}
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder={t("fields.sixDigitCode")}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    returnKeyType="done"
+                    hasError={!!sendError || codeExpired}
+                    trailing={
+                      timer > 0 ? (
+                        <Text style={[styles.timer, { color: surface.brand }]}>
+                          {formattedTime}
+                        </Text>
+                      ) : null
+                    }
+                  />
+                  {sendError ? (
+                    <StepHelperText message={sendError} tone="error" />
+                  ) : codeExpired ? (
+                    <StepHelperText
+                      message={t("emailVerification.expired")}
+                      tone="error"
+                    />
+                  ) : null}
+                  <ResendCodeLink
+                    onPress={handleSendCode}
+                    disabled={sendingCode}
+                  />
+                </View>
+              )}
+            />
           )}
-        </YStack>
+        </View>
       </AuthScreenLayout>
       <ConfirmModal
         visible={!!emailLoginLinkRequired}
-        title="이미 가입된 이메일입니다"
-        description={`이미 ${emailLoginLinkProviderLabel} 로그인으로 가입된 이메일입니다.\n이메일 로그인도 연결하시겠습니까?`}
-        cancelText="취소"
-        confirmText="연결하기"
+        title={t("signupEmail.linkTitle")}
+        description={t("signupEmail.linkDescription")}
+        cancelText={t("signupEmail.otherEmail")}
+        confirmText={t("signupEmail.verifyIdentity")}
         onCancel={dismissEmailLoginLink}
         onConfirm={confirmEmailLoginLink}
       />
     </>
   )
 }
+
+const styles = StyleSheet.create({
+  body: { marginTop: AUTH_LAYOUT.questionToField, gap: 20 },
+  timer: {
+    ...AUTH_TYPE.helper,
+    fontVariant: ["tabular-nums"],
+  },
+})

@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "run_id": "2026-07-28-001",
+    "version": 2,
+    "mode": "strict",
+    "scope": ["liability_copy", "agent_voice", "ko_en_localization"]
+  },
+  "edits": [
+    {
+      "before": "문체: 짧고 담백하게. 한 항목은 한두 문장을 넘기지 않습니다.",
+      "after": "짧게 끝내려고 이유와 다음 행동을 잘라내지 않습니다. 일상 기록에는 작은 생기를 담고 심각 상황에서는 장난기를 뺍니다.",
+      "reason": "캐릭터와 설명력을 복원하고 상황별 톤을 분리함"
+    },
+    {
+      "before": "누락 영양소를 0으로 합산해 기준 안으로 판정",
+      "after": "누락값을 null로 보존하고 비교·SAFE 판정에서 제외",
+      "reason": "미확인 데이터를 의학적 여유로 오인하는 경로 차단"
+    },
+    {
+      "before": "한국어 고정 상담·오류·식단 가이드",
+      "after": "설정 언어를 Accept-Language와 Gemini 프롬프트까지 전달하고 U.S. English 폴백 제공",
+      "reason": "직역이 아닌 언어별 UX 계약 적용"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import { AppBottomSheet } from "@/src/shared/components"
+import { useTranslation } from "react-i18next"
 
 export type WriteType = "recipe" | "free"
 
@@ -16,20 +17,20 @@ interface WriteTypeSheetProps {
 const WRITE_OPTIONS: {
   type: WriteType
   icon: "chef" | "pencil"
-  title: string
-  description: string
+  titleKey: "writeType.recipeTitle" | "writeType.postTitle"
+  descriptionKey: "writeType.recipeBody" | "writeType.postBody"
 }[] = [
   {
     type: "recipe",
     icon: "chef",
-    title: "레시피",
-    description: "추천하고 싶은 나만의 식단 가이드",
+    titleKey: "writeType.recipeTitle",
+    descriptionKey: "writeType.recipeBody",
   },
   {
     type: "free",
     icon: "pencil",
-    title: "자유글",
-    description: "자유롭게 이야기를 공유해요!",
+    titleKey: "writeType.postTitle",
+    descriptionKey: "writeType.postBody",
   },
 ]
 
@@ -60,6 +61,7 @@ export function WriteTypeSheet({
   onOpenChange,
   onSelect,
 }: WriteTypeSheetProps) {
+  const { t } = useTranslation("recipe")
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
@@ -103,7 +105,7 @@ export function WriteTypeSheet({
                   fontFamily="$body"
                   color={isDark ? TITLE_COLOR.dark : TITLE_COLOR.light}
                 >
-                  {option.title}
+                  {t(option.titleKey)}
                 </Text>
                 <Text
                   fontSize={14}
@@ -111,7 +113,7 @@ export function WriteTypeSheet({
                   fontFamily="$body"
                   color={isDark ? DESC_COLOR.dark : DESC_COLOR.light}
                 >
-                  {option.description}
+                  {t(option.descriptionKey)}
                 </Text>
               </YStack>
             </Pressable>

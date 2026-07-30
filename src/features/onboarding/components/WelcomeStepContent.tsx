@@ -1,62 +1,132 @@
-import { Pressable } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text } from "tamagui"
-import { tokens } from "@/src/theme/tokens"
+import { useEffect } from "react"
+import { Pressable, StyleSheet, View } from "react-native"
+import Animated, {
+  Easing,
+  ReduceMotion,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated"
+import { useTranslation } from "react-i18next"
+import { hapticSelection } from "@/src/lib/haptics"
+import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { AUTH_LAYOUT, AUTH_MOTION } from "@/src/features/auth/data/authSurface"
 
 interface WelcomeStepContentProps {
   selectedValue: boolean | null
   onSelect: (hasCkd: boolean) => void
 }
 
-const OPTIONS = [
-  { hasCkd: true, label: "신장 질환자" },
-  { hasCkd: false, label: "비환자" },
-] as const
+const EASE = Easing.bezier(0.22, 1, 0.36, 1)
+const TIMING = {
+  duration: AUTH_MOTION.duration.fast,
+  easing: EASE,
+  reduceMotion: ReduceMotion.System,
+}
+const SPRING = {
+  damping: 15,
+  stiffness: 260,
+  reduceMotion: ReduceMotion.System,
+}
+
+function WelcomeCard({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string
+  selected: boolean
+  onPress: () => void
+}) {
+  const surface = useAuthSurface()
+  const selection = useSharedValue(selected ? 1 : 0)
+  const scale = useSharedValue(1)
+
+  useEffect(() => {
+    selection.value = withTiming(selected ? 1 : 0, TIMING)
+  }, [selected, selection])
+
+  const cardStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      selection.value,
+      [0, 1],
+      [surface.surface, surface.surfaceBrand],
+    ),
+    transform: [{ scale: scale.value }],
+  }))
+
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      selection.value,
+      [0, 1],
+      [surface.text, surface.brand],
+    ),
+  }))
+
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      onPress={() => {
+        if (!selected) hapticSelection()
+        onPress()
+      }}
+      onPressIn={() => {
+        scale.value = withTiming(0.985, { duration: 90, easing: EASE })
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, SPRING)
+      }}
+      style={styles.pressable}
+    >
+      <Animated.View style={[styles.card, cardStyle]}>
+        <Animated.Text style={[styles.label, labelStyle]}>
+          {label}
+        </Animated.Text>
+      </Animated.View>
+    </Pressable>
+  )
+}
 
 export function WelcomeStepContent({
   selectedValue,
   onSelect,
 }: WelcomeStepContentProps) {
-  const isDark = useAppColorScheme() === "dark"
-  const unselectedBg = isDark ? tokens.color.cardBgDark.val : "white"
-  const unselectedBorder = isDark
-    ? "rgba(100,105,115,0.4)"
-    : "rgba(218,223,230,0.6)"
-  const selectedBg = isDark ? "#1A3A2E" : "#F0FDF9"
-  const unselectedText = isDark ? tokens.color.textDark.val : "#17191C"
-
+  const { t } = useTranslation("auth")
+  const options = [
+    { hasCkd: true, label: t("onboarding.diagnosed") },
+    { hasCkd: false, label: t("onboarding.notDiagnosed") },
+  ] as const
   return (
-    <XStack gap={12}>
-      {OPTIONS.map((option) => {
-        const isSelected = selectedValue === option.hasCkd
-        return (
-          <Pressable
-            key={String(option.hasCkd)}
-            onPress={() => onSelect(option.hasCkd)}
-            style={{ flex: 1 }}
-          >
-            <YStack
-              height={96}
-              borderRadius={16}
-              borderWidth={1.5}
-              borderColor={isSelected ? tokens.color.sub6.val : unselectedBorder}
-              backgroundColor={isSelected ? selectedBg : unselectedBg}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Text
-                fontSize={17}
-                fontWeight={isSelected ? "700" : "500"}
-                color={isSelected ? tokens.color.sub8.val : unselectedText}
-                letterSpacing={-0.3}
-                textAlign="center"
-              >
-                {option.label}
-              </Text>
-            </YStack>
-          </Pressable>
-        )
-      })}
-    </XStack>
+    <View style={styles.row} accessibilityRole="radiogroup">
+      {options.map((option) => (
+        <WelcomeCard
+          key={String(option.hasCkd)}
+          label={option.label}
+          selected={selectedValue === option.hasCkd}
+          onPress={() => onSelect(option.hasCkd)}
+        />
+      ))}
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  row: { flexDirection: "row", gap: 10 },
+  pressable: { flex: 1 },
+  card: {
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: AUTH_LAYOUT.radius.option,
+  },
+  label: {
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "600",
+    letterSpacing: -0.34,
+    textAlign: "center",
+  },
+})

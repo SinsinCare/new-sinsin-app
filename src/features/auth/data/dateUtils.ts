@@ -1,3 +1,5 @@
+import i18n, { getAppLanguage } from "@/src/i18n"
+
 interface PickerOption {
   label: string
   value: string
@@ -17,14 +19,17 @@ export function generateYearOptions(): PickerOption[] {
   const currentYear = new Date().getFullYear()
   const options: PickerOption[] = []
   for (let y = currentYear; y >= 1920; y--) {
-    options.push({ label: `${y}년`, value: String(y) })
+    options.push({
+      label: i18n.t("date.year", { ns: "auth", value: y }),
+      value: String(y),
+    })
   }
   return options
 }
 
 export function generateMonthOptions(): PickerOption[] {
   return Array.from({ length: 12 }, (_, i) => ({
-    label: `${i + 1}월`,
+    label: i18n.t("date.month", { ns: "auth", value: i + 1 }),
     value: String(i + 1).padStart(2, "0"),
   }))
 }
@@ -35,19 +40,24 @@ export function generateDayOptions(
 ): PickerOption[] {
   if (!year || !month) {
     return Array.from({ length: 31 }, (_, i) => ({
-      label: `${i + 1}일`,
+      label: i18n.t("date.day", { ns: "auth", value: i + 1 }),
       value: String(i + 1).padStart(2, "0"),
     }))
   }
   const daysInMonth = new Date(Number(year), Number(month), 0).getDate()
   return Array.from({ length: daysInMonth }, (_, i) => ({
-    label: `${i + 1}일`,
+    label: i18n.t("date.day", { ns: "auth", value: i + 1 }),
     value: String(i + 1).padStart(2, "0"),
   }))
 }
 
 export function formatBirthDateInput(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 8)
+  if (getAppLanguage() === "en") {
+    if (digits.length <= 2) return digits
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
+  }
   if (digits.length <= 4) return digits
   if (digits.length <= 6) return `${digits.slice(0, 4)}.${digits.slice(4)}`
   return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`
@@ -66,7 +76,13 @@ export function getBirthDateInputState(
     }
   }
 
-  const [year, month, day] = formatted.split(".")
+  const [year, month, day] =
+    getAppLanguage() === "en"
+      ? (() => {
+          const [monthPart, dayPart, yearPart] = formatted.split("/")
+          return [yearPart, monthPart, dayPart]
+        })()
+      : formatted.split(".")
   const yearNumber = Number(year)
   const monthNumber = Number(month)
   const dayNumber = Number(day)
@@ -79,7 +95,7 @@ export function getBirthDateInputState(
   if (!validDate || yearNumber < 1900) {
     return {
       isValid: false,
-      message: "잘못된 생년월일입니다.",
+      message: i18n.t("validation.birthInvalid", { ns: "auth" }),
       parts: null,
     }
   }
@@ -92,7 +108,7 @@ export function getBirthDateInputState(
   if (date > today) {
     return {
       isValid: false,
-      message: "미래 날짜는 입력할 수 없습니다.",
+      message: i18n.t("validation.birthFuture", { ns: "auth" }),
       parts: null,
     }
   }

@@ -5,13 +5,17 @@ import { FilterChip } from "../FilterChip"
 
 type ChipTheme = "primary" | "sub" | "tertiary"
 
-const LABEL_COLOR = { light: tokens.color.textLight.val, dark: tokens.color.textDark.val }
+const LABEL_COLOR = {
+  light: tokens.color.textLight.val,
+  dark: tokens.color.textDark.val,
+}
 
 interface TagSelectorProps {
   tags: readonly string[]
   selected: string[]
   onToggle: (tag: string) => void
   label: string
+  getLabel?: (tag: string) => string
   chipTheme?: ChipTheme
 }
 
@@ -20,6 +24,7 @@ export function TagSelector({
   selected,
   onToggle,
   label,
+  getLabel = (tag) => tag,
   chipTheme = "primary",
 }: TagSelectorProps) {
   const scheme = useAppColorScheme()
@@ -39,7 +44,7 @@ export function TagSelector({
         {tags.map((tag) => (
           <FilterChip
             key={tag}
-            label={tag}
+            label={getLabel(tag)}
             theme={chipTheme}
             selected={selected.includes(tag)}
             onPress={() => onToggle(tag)}

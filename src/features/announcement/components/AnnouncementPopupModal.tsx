@@ -21,6 +21,7 @@ import {
 import { normalizeAnnouncementLink } from "../data/announcementLink"
 import type { AnnouncementNotice } from "../types"
 import { announcementPopupStyles as styles } from "./announcementPopupStyles"
+import { useTranslation } from "react-i18next"
 
 interface AnnouncementPopupModalProps {
   visible: boolean
@@ -33,6 +34,7 @@ export function AnnouncementPopupModal({
   notice,
   onClose,
 }: AnnouncementPopupModalProps) {
+  const { t } = useTranslation()
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [isOpeningLink, setIsOpeningLink] = useState(false)
   const { colors } = useV2Theme()
@@ -59,8 +61,8 @@ export function AnnouncementPopupModal({
     const targetUrl = normalizeAnnouncementLink(notice.linkUrl)
     if (!targetUrl) {
       Alert.alert(
-        "링크를 열 수 없어요",
-        "공지에 등록된 링크 형식을 확인해주세요.",
+        t("announcement.linkErrorTitle"),
+        t("announcement.invalidLinkBody"),
       )
       return
     }
@@ -69,7 +71,10 @@ export function AnnouncementPopupModal({
     try {
       await Linking.openURL(targetUrl)
     } catch {
-      Alert.alert("링크를 열 수 없어요", "잠시 후 다시 시도해주세요.")
+      Alert.alert(
+        t("announcement.linkErrorTitle"),
+        t("announcement.openLinkErrorBody"),
+      )
       return
     } finally {
       setIsOpeningLink(false)
@@ -109,7 +114,9 @@ export function AnnouncementPopupModal({
               ]}
               contentFit="cover"
               transition={120}
-              accessibilityLabel={`${notice.title} 공지 이미지`}
+              accessibilityLabel={t("announcement.image", {
+                title: notice.title,
+              })}
             />
           )}
 
@@ -131,7 +138,7 @@ export function AnnouncementPopupModal({
                   </View>
                 )}
                 <V2Badge size="xs" color="brand" variant="weak">
-                  새로운 소식
+                  {t("announcement.new")}
                 </V2Badge>
               </View>
 
@@ -139,7 +146,7 @@ export function AnnouncementPopupModal({
                 name="close"
                 size="s"
                 variant="fill"
-                accessibilityLabel="공지 닫기"
+                accessibilityLabel={t("announcement.close")}
                 onPress={() => close()}
               />
             </View>
@@ -155,10 +162,11 @@ export function AnnouncementPopupModal({
             </Text>
 
             <ScrollView
+              bounces={false}
+              overScrollMode="never"
               style={styles.bodyScroll}
               contentContainerStyle={styles.bodyContent}
               showsVerticalScrollIndicator={false}
-              bounces={false}
             >
               <Text
                 style={[
@@ -178,7 +186,7 @@ export function AnnouncementPopupModal({
             >
               <Pressable
                 accessibilityRole="checkbox"
-                accessibilityLabel="이 공지 다시 보지 않기"
+                accessibilityLabel={t("announcement.dontShowAgain")}
                 accessibilityState={{ checked: dontShowAgain }}
                 onPress={() => setDontShowAgain((value) => !value)}
                 style={({ pressed }) => [
@@ -198,7 +206,7 @@ export function AnnouncementPopupModal({
                     { color: colors.label.neutral },
                   ]}
                 >
-                  이 공지 다시 보지 않기
+                  {t("announcement.dontShowAgain")}
                 </Text>
               </Pressable>
 
@@ -208,11 +216,11 @@ export function AnnouncementPopupModal({
                     size="m"
                     color="neutral"
                     variant="weak"
-                    accessibilityLabel="공지 닫기"
+                    accessibilityLabel={t("announcement.close")}
                     onPress={() => close()}
                     style={styles.actionButton}
                   >
-                    닫기
+                    {t("action.close")}
                   </V2Button>
                 )}
 
@@ -223,12 +231,14 @@ export function AnnouncementPopupModal({
                   variant="fill"
                   loading={isOpeningLink}
                   accessibilityLabel={
-                    hasCta ? (notice.ctaLabel ?? undefined) : "확인"
+                    hasCta
+                      ? (notice.ctaLabel ?? undefined)
+                      : t("action.close")
                   }
                   onPress={() => void handlePrimaryPress()}
                   style={hasCta ? styles.actionButton : styles.primaryButton}
                 >
-                  {hasCta ? notice.ctaLabel : "확인"}
+                  {hasCta ? notice.ctaLabel : t("action.close")}
                 </V2Button>
               </View>
             </View>

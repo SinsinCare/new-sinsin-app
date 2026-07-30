@@ -4,23 +4,42 @@ import { ScrollView } from "react-native-gesture-handler"
 import { Text, XStack, YStack } from "tamagui"
 import { useRouter } from "expo-router"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
+import { normalizeLanguage } from "@/src/i18n"
 import type { PlaceRestaurant } from "../types"
+import {
+  getLocalizedCategoryTags,
+  getLocalizedDescription,
+} from "../utils/restaurantLocalization"
 
 interface PlaceCardProps {
   restaurant: PlaceRestaurant
 }
 
 export function PlaceCard({ restaurant }: PlaceCardProps) {
+  const { t, i18n } = useTranslation("common")
   const isDarkMode = useAppColorScheme() === "dark"
   const router = useRouter()
-  const restaurantTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const restaurantTextColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
   const borderColor = isDarkMode ? "#2A2A2E" : "#F0F0F0"
   const subTextColor = isDarkMode ? tokens.color.textDarkSub.val : "#8E8E93"
+  const language = normalizeLanguage(i18n.resolvedLanguage)
+  const tags = getLocalizedCategoryTags(restaurant.tags, language)
+  const description = getLocalizedDescription(
+    restaurant.description,
+    t,
+    language,
+  )
 
   return (
     <Pressable
       onPress={() =>
-        router.push({ pathname: "/restaurant/[id]", params: { id: restaurant.id } })
+        router.push({
+          pathname: "/restaurant/[id]",
+          params: { id: restaurant.id },
+        })
       }
       style={[styles.container, { borderBottomColor: borderColor }]}
     >
@@ -36,7 +55,7 @@ export function PlaceCard({ restaurant }: PlaceCardProps) {
             {restaurant.name}
           </Text>
           <XStack gap={4}>
-            {restaurant.tags.map((tag, i) => (
+            {tags.map((tag, i) => (
               <Text
                 key={i}
                 fontFamily="$body"
@@ -51,7 +70,7 @@ export function PlaceCard({ restaurant }: PlaceCardProps) {
 
         {/* Description */}
         <Text fontFamily="$body" fontSize={13} color={subTextColor}>
-          {restaurant.description}
+          {description}
         </Text>
 
         {/* Rating + Reviews */}
@@ -62,7 +81,10 @@ export function PlaceCard({ restaurant }: PlaceCardProps) {
             </Text>
             {restaurant.reviewCount != null && (
               <Text fontFamily="$body" fontSize={13} color={subTextColor}>
-                · 리뷰 {restaurant.reviewCount}
+                ·{" "}
+                {t("restaurant.reviews", {
+                  count: restaurant.reviewCount,
+                })}
               </Text>
             )}
           </XStack>
@@ -80,6 +102,8 @@ export function PlaceCard({ restaurant }: PlaceCardProps) {
 
         {/* Image Gallery */}
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           horizontal
           nestedScrollEnabled
           showsHorizontalScrollIndicator={false}

@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "run_id": "2026-07-28-001",
+    "total_edit_groups": 16,
+    "style_edits_passed": 12,
+    "claim_level_changes_flagged": 4,
+    "rollback_required": 0,
+    "warnings": 2,
+    "audit_verdict": "conditional_pass",
+    "style_fidelity_verdict": "full_pass"
+  },
+  "preserved_invariants": [
+    "탈퇴 안내와 탈퇴 약관은 Git HEAD 원문으로 복구했습니다.",
+    "화면에 남은 수치·단위·날짜·CKD 단계·검사명은 임의로 바꾸지 않았습니다.",
+    "서버의 개인별 영양 기준 계산 로직과 건강 판정 로직은 바꾸지 않았습니다.",
+    "법률 본문은 자연스럽게 보이게 만들 목적으로 축약하거나 윤문하지 않았습니다."
+  ],
+  "flagged_edits": [
+    {
+      "finding_id": "medical-001",
+      "issue": "고정 수분·영양 수치를 개인 처방처럼 보이게 하던 주장을 중립 참고값으로 낮췄습니다.",
+      "checklist_failed": [7, 10, 13],
+      "action": "clinical_owner_review_before_release"
+    },
+    {
+      "finding_id": "medical-002",
+      "issue": "보편적인 0.8g/kg 단백질 공식을 제거해 원문의 수치 주장이 삭제됐습니다.",
+      "checklist_failed": [2, 7, 13],
+      "action": "clinical_owner_review_before_release"
+    },
+    {
+      "finding_id": "trust-002",
+      "issue": "인증 정보 비보관 주장이 실제 최대 300초 Redis 임시 보관과 충돌해 삭제됐습니다.",
+      "checklist_failed": [7, 13],
+      "action": "security_owner_review_before_release"
+    },
+    {
+      "finding_id": "medical-003",
+      "issue": "고정 60kg·3끼 가정으로 만든 단백질 분류 UI를 숨겼습니다.",
+      "checklist_failed": [7, 13],
+      "action": "product_and_clinical_owner_review_before_reenable"
+    }
+  ],
+  "unresolved_product_risks": [
+    {
+      "severity": "release_blocker",
+      "area": "개인정보 처리방침",
+      "detail": "암호화 저장 범위, 민감정보 별도 동의, HYPHEN 전송·위탁 고지, 탈퇴 후 즉시 파기 문구가 현재 코드 흐름과 맞지 않습니다.",
+      "action": "법무·개인정보 책임자·개발 책임자가 정책과 구현을 함께 확정해야 합니다. UX 윤문으로 수정하지 않았습니다."
+    },
+    {
+      "severity": "governance",
+      "area": "동적 문구",
+      "detail": "백엔드에서 내려오는 공지·모바일 정책·상담 응답은 정적 감사 범위를 벗어납니다.",
+      "action": "서버 콘텐츠 발행 단계에 같은 라이팅·의료·법률 검수를 적용해야 합니다."
+    }
+  ]
+}

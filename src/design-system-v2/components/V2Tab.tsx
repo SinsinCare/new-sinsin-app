@@ -143,6 +143,8 @@ export function V2Tab({
   if (alignment === "fluid") {
     return (
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         horizontal
         showsHorizontalScrollIndicator={false}
         style={[styles.frame, frame, style]}

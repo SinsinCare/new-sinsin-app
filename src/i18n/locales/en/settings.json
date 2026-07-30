@@ -1,0 +1,484 @@
+{
+  "shared": {
+    "back": "Go back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "change": "Change",
+    "delete": "Delete",
+    "openSettings": "Open Settings",
+    "add": "Add",
+    "registered": "Added",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "clearField": "Clear {{label}}"
+  },
+  "profile": {
+    "title": "Edit profile",
+    "photo": {
+      "change": "Change profile photo",
+      "sourcePrompt": "Choose a photo source.",
+      "take": "Take a photo",
+      "choose": "Choose from library",
+      "cameraPermissionTitle": "Camera access is off",
+      "cameraPermissionBody": "To take a profile photo, allow camera access in your device settings.",
+      "libraryPermissionTitle": "Photo access is off",
+      "libraryPermissionBody": "To choose a profile photo, allow photo access in your device settings.",
+      "hint": "Tap the photo to change it"
+    },
+    "section": {
+      "personal": "Personal info",
+      "security": "Security"
+    },
+    "field": {
+      "nickname": "Nickname",
+      "name": "Name",
+      "phone": "Phone number",
+      "email": "Email",
+      "gender": "Gender",
+      "password": "Password"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "phone": {
+      "add": "Add"
+    },
+    "emailMissing": "No email on file",
+    "changePassword": "Change",
+    "saveAccessibility": "Save profile",
+    "save": "Save changes",
+    "saveErrorTitle": "We couldn’t save your profile",
+    "saveErrorBody": "Try again in a moment. If you chose a photo, you can also try a different one.",
+    "uploadError": "We couldn’t upload your profile photo."
+  },
+  "password": {
+    "title": "Create a new password",
+    "subtitle": "Use it the next time you sign in.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "confirmPlaceholder": "Enter your new password again",
+    "criteria": "Use 6–18 characters and at least two of these: uppercase letters, lowercase letters, numbers, or symbols.",
+    "match": "Passwords match.",
+    "mismatch": "Passwords don’t match. Check them again.",
+    "wrongCurrent": "Your current password isn’t correct. Check it and try again.",
+    "saveError": "We couldn’t change your password. Try again in a moment.",
+    "submit": "Change password"
+  },
+  "nickname": {
+    "title": "What should we call you?",
+    "subtitle": "Use 2–14 Korean or English letters or numbers.\nYou can change this anytime.",
+    "field": "Nickname",
+    "available": "That nickname is available.",
+    "validation": "Use 2–14 Korean or English letters or numbers.",
+    "error": {
+      "duplicate": "That nickname is already taken. Try another one.",
+      "sessionExpired": "Your session has expired. Sign in again.",
+      "save": "We couldn’t save your nickname. Try again in a moment."
+    }
+  },
+  "name": {
+    "title": "What’s your name?",
+    "subtitle": "This appears in your medical records and health reports. You can change it anytime.",
+    "field": "Name",
+    "required": "Enter your name.",
+    "tooLong": "Keep your name to {{max}} characters or fewer.",
+    "check": "Check the name you entered.",
+    "error": {
+      "sessionExpired": "Your session has expired. Sign in again.",
+      "save": "We couldn’t save your name. Try again in a moment."
+    }
+  },
+  "phone": {
+    "title": "What number can we reach you at?",
+    "subtitle": "This is optional. We’ll use it only when we need to contact you, and for marketing if you’ve opted in.",
+    "current": "Current number",
+    "field": "Phone number",
+    "newField": "New phone number",
+    "contactAccessibility": "Contact phone number",
+    "inputHint": "Enter an 11-digit Korean mobile number beginning with 010",
+    "validation": "Enter an 11-digit Korean mobile number beginning with 010.",
+    "usageNote": "We won’t use this for sign-in, account linking, or SMS identity verification.",
+    "deleteAccessibility": "Delete saved phone number",
+    "deleteLabel": "Delete saved phone number",
+    "deleteTitle": "Delete this phone number?",
+    "deleteBody": "We’ll stop using this number for contact and any marketing you opted into.",
+    "deleteError": "We couldn’t delete your phone number. Try again in a moment.",
+    "saveError": "We couldn’t save your phone number. Try again in a moment."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "permissionTitle": "Notifications are off",
+    "permissionBody": "To get reminders from Sinsin Care, turn on notifications in your device settings.",
+    "enable": "Turn on reminders",
+    "time": {
+      "label": "Reminder time",
+      "start": "Start time",
+      "end": "End time",
+      "periodAm": "AM",
+      "periodPm": "PM",
+      "format": "{{hour}} {{period}}",
+      "closePicker": "Close time picker"
+    },
+    "picker": {
+      "morning": "Choose a morning check-in time",
+      "waterStart": "Choose a start time",
+      "waterEnd": "Choose an end time",
+      "breakfast": "Choose a breakfast time",
+      "lunch": "Choose a lunch time",
+      "dinner": "Choose a dinner time"
+    },
+    "morning": {
+      "section": "Morning health check-in",
+      "body": "Reminds you to log your blood pressure and weight after your first urination and before drinking fluids."
+    },
+    "water": {
+      "section": "Fluid intake reminders",
+      "body": "Reminds you to review your fluid intake at the interval you choose.",
+      "interval": "Reminder interval",
+      "intervalHours": "Every {{count}} hours",
+      "intervalHours_one": "Every hour",
+      "intervalHours_other": "Every {{count}} hours"
+    },
+    "meal": {
+      "section": "Meal logging reminders",
+      "body": "Reminds you to log around your usual mealtimes.",
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner"
+    },
+    "scheduled": {
+      "channel": "Sinsin Care notifications",
+      "morningTitle": "Time for your morning check-in",
+      "morningBody": "After your first urination and before drinking fluids, log your blood pressure and weight.",
+      "waterTitle": "Check in on your fluids",
+      "waterBody": "See how much fluid you have left for today.",
+      "mealTitle": "Log {{meal}} while it’s fresh",
+      "mealBody": "Add what you ate and roughly how much.",
+      "analysisTitle": "Your meal results are ready",
+      "analysisMealBody": "Review the nutrients and amount logged for {{meal}}.",
+      "analysisBody": "Review the nutrients and amount logged for this meal."
+    },
+    "history": {
+      "title": "Notifications",
+      "openSettings": "Open notification settings",
+      "received": "Recent notifications",
+      "clearAccessibility": "Delete all notifications",
+      "clearTitle": "Delete all notifications?",
+      "clearBody": "You won’t be able to recover them.",
+      "clearAll": "Delete all",
+      "empty": "No notifications yet.",
+      "markAllAccessibility": "Mark all notifications as read",
+      "markAll": "Mark all as read",
+      "justNow": "Just now",
+      "minutes": "{{count}} minutes ago",
+      "minutes_one": "1 minute ago",
+      "minutes_other": "{{count}} minutes ago",
+      "hours": "{{count}} hours ago",
+      "hours_one": "1 hour ago",
+      "hours_other": "{{count}} hours ago",
+      "days": "{{count}} days ago",
+      "days_one": "1 day ago",
+      "days_other": "{{count}} days ago"
+    }
+  },
+  "inquiry": {
+    "title": "Contact support",
+    "category": "Topic",
+    "selectCategory": "Choose a support topic",
+    "select": "Choose",
+    "categoryPrompt": "What can we help with?",
+    "categories": {
+      "app": "Using the app",
+      "health": "Health records",
+      "content": "Meals and content",
+      "billing": "Subscriptions and billing",
+      "account": "Account and settings",
+      "other": "Something else"
+    },
+    "subject": "Subject",
+    "subjectPlaceholder": "Briefly describe your question",
+    "contentPlaceholder": "Tell us what you need help with.",
+    "sending": "Sending…",
+    "send": "Send message",
+    "successTitle": "Your message was sent",
+    "successBody": "We’ll review it and get back to you.",
+    "errorTitle": "We couldn’t send your message",
+    "errorBody": "Check your internet connection and try again.",
+    "confirm": "Done",
+    "discardTitle": "Discard this message?",
+    "discardBody": "Your draft will be deleted.",
+    "discard": "Discard"
+  },
+  "announcements": {
+    "title": "Announcements",
+    "loading": "Loading announcements…",
+    "empty": "You’re all caught up.",
+    "notFound": "We couldn’t find this announcement.",
+    "fallback": {
+      "1": {
+        "title": "Welcome to Sinsin Care",
+        "content": "Welcome to Sinsin Care.\n\nKeep meal, fluid, weight, and other health records together and get guidance based on what you log.\n\nIf you’re new, start with today’s meal or weight. Contact our support team anytime you need help.\n\nThe Sinsin Care team"
+      },
+      "2": {
+        "title": "Privacy Policy update",
+        "content": "Our Privacy Policy changed on March 1, 2026.\n\nPlease review the key changes. Contact our support team if you have questions.\n\nThe Sinsin Care team"
+      },
+      "3": {
+        "title": "Third-party data sharing policy update",
+        "content": "Our policy for consent to share data with third parties changed on March 1, 2026.\n\nPlease review the changes. Contact our support team if you have questions.\n\nThe Sinsin Care team"
+      }
+    }
+  },
+  "withdrawal": {
+    "reasonTitle": "Why are you leaving?",
+    "reasons": {
+      "inactive": "I don’t use the app often",
+      "notHelpful": "It isn’t helping me manage my condition",
+      "experience": "I’m unhappy with the app or support",
+      "marketing": "I get too many marketing notifications",
+      "other": "Something else"
+    },
+    "customReason": "Tell us why in at least 20 characters",
+    "deletePostsTitle": "Delete my posts too",
+    "deletePostsBody": "If this is off, your name will be removed but your posts will stay.",
+    "next": "Continue",
+    "termsTitle": "Before you delete your account",
+    "termsSection": "Account deletion terms",
+    "notice": "Deleting your account permanently removes your account information and health management data. Records that must be retained by law and anonymized community posts may be kept under our policies.",
+    "terms": {
+      "1": "These terms set out all conditions for account deletion between Mediology Co., Ltd. (\"we,\" \"us,\" or \"our\") and the member (\"you\").",
+      "2": "Deleting your account may not cancel an active paid subscription. You may need to cancel it separately through the App Store or Google Play.",
+      "3": "You may request account deletion at any time in writing, through our website, or by another method we specify. We will promptly take the steps required to complete your request. These terms set out all conditions for account deletion between Mediology Co., Ltd. (\"we,\" \"us,\" or \"our\") and the member (\"you\")."
+    },
+    "agreement": "I’ve reviewed this information and agree to delete my account.",
+    "withdraw": "Delete account",
+    "defaultReason": "Deleted in the app",
+    "errorTitle": "We couldn’t delete your account",
+    "errorBody": "Your account and health information are still there. Try again in a moment.",
+    "confirmTitle": "Delete your Sinsin Care account?",
+    "confirmBody": "You won’t be able to sign up again with the same account for 3 days.",
+    "completeTitle": "Your account has been deleted",
+    "completeBody": "Thanks for using Sinsin Care.\nYou’re welcome back anytime.",
+    "signIn": "Sign in"
+  },
+  "medical": {
+    "title": "Medical references",
+    "lead": "These are some of the sources we consulted when reviewing nutrition and medical guidance in Sinsin Care. Each source has its own scope. Make treatment decisions with your care team.",
+    "search": "Search by title or organization",
+    "empty": "No references match your search.",
+    "open": "Open {{title}}",
+    "sections": {
+      "guidelines": "Clinical guidelines",
+      "international": "International guidelines",
+      "patient": "Patient education and support"
+    },
+    "badge": {
+      "new": "NEW",
+      "kdigo": "KDIGO",
+      "pdf": "PDF"
+    },
+    "items": {
+      "g1": {
+        "title": "Hypertensive Kidney Disease Clinical Practice Guideline",
+        "meta": "Korean Society of Nephrology · Jul 2025"
+      },
+      "g2": {
+        "title": "CKD in Older Adults Clinical Practice Guideline",
+        "meta": "Korean Society of Nephrology · Jan 2026"
+      },
+      "g3": {
+        "title": "Diabetic Kidney Disease Clinical Practice Guideline",
+        "meta": "Korean Society of Nephrology · Dec 2024"
+      },
+      "g4": {
+        "title": "Continuous Kidney Replacement Therapy (CKRT) Clinical Practice Guideline",
+        "meta": "Korean Society of Nephrology · 2023"
+      },
+      "g5": {
+        "title": "Nephrology Glossary",
+        "meta": "Korean Society of Nephrology · Jul 2024"
+      },
+      "i1": {
+        "title": "KDIGO Guidelines",
+        "meta": "KDIGO · English"
+      },
+      "p1": {
+        "title": "Nutrition Before Dialysis",
+        "meta": "Korean Society of Nephrology · Patient guide, Vol. 1"
+      },
+      "p2": {
+        "title": "Nutrition for Hemodialysis",
+        "meta": "Korean Society of Nephrology · Patient guide, Vol. 2"
+      },
+      "p3": {
+        "title": "Nutrition for Peritoneal Dialysis",
+        "meta": "Korean Society of Nephrology · Patient guide, Vol. 3"
+      },
+      "p4": {
+        "title": "Understanding CKD in Children and Teens",
+        "meta": "Korean Society of Nephrology · For patients and caregivers"
+      },
+      "p5": {
+        "title": "Understanding CKD: Diabetes and Hypertension",
+        "meta": "Korean Society of Nephrology · Public guide"
+      },
+      "p6": {
+        "title": "Understanding CKD: Healthy Adults",
+        "meta": "Korean Society of Nephrology · Public guide"
+      },
+      "p7": {
+        "title": "Support Resources for People With CKD",
+        "meta": "Korean Society of Nephrology · 2023 edition"
+      }
+    },
+    "lastChecked": "Reference coverage reflects our last review\nLast reviewed {{date}}",
+    "disclaimer": "Sinsin Care doesn’t replace diagnosis or treatment.\nMake treatment decisions with your care team.",
+    "privacy": "Privacy Policy",
+    "privacyAccessibility": "View Privacy Policy"
+  },
+  "kidney": {
+    "title": "Edit kidney health information",
+    "save": "Save",
+    "saving": "Saving…",
+    "saveAccessibility": "Save kidney health information",
+    "section": "Kidney health information",
+    "basic": "Basic information",
+    "height": "Height (cm)",
+    "heightPlaceholder": "Enter height",
+    "weight": "Weight (kg)",
+    "weightPlaceholder": "Enter weight",
+    "proteinNote": "Protein targets vary with kidney function, dialysis, and your current health. Follow the target set by your care team.",
+    "stage": {
+      "title": "CKD stage",
+      "current": "Current: {{stage}}",
+      "value": "Stage {{stage}}",
+      "accessibility": "CKD stage {{stage}}",
+      "none": "Not set",
+      "noneAccessibility": "No CKD stage selected"
+    },
+    "dialysis": {
+      "title": "Are you on dialysis?",
+      "body": "Turn this on if you currently receive dialysis.",
+      "accessibility": "Currently receiving dialysis"
+    },
+    "diagnosisDate": "When were you diagnosed?",
+    "diagnosisDateAccessibility": "Choose diagnosis month",
+    "diagnosisCause": "Primary cause",
+    "otherCausePlaceholder": "Describe another cause",
+    "causes": {
+      "diabetic": "Diabetic kidney disease",
+      "hypertension": "Hypertension",
+      "glomerulonephritis": "Glomerulonephritis",
+      "polycystic": "Polycystic kidney disease",
+      "other": "Other"
+    },
+    "comorbiditiesTitle": "Other conditions",
+    "comorbidities": {
+      "diabetes": "Diabetes",
+      "hypertension": "Hypertension",
+      "heartDisease": "Heart disease",
+      "gout": "Gout",
+      "anemia": "Anemia",
+      "boneMineral": "Mineral and bone disorder"
+    },
+    "errorTitle": "We couldn’t save your kidney health information",
+    "errorBody": "Your entries are still here. Try again in a moment.",
+    "validation": {
+      "heightRequired": "Enter your height.",
+      "heightNumber": "Enter your height as a number.",
+      "heightRange": "Enter a height greater than 0 and no more than 300 cm.",
+      "weightRequired": "Enter your weight.",
+      "weightNumber": "Enter your weight as a number.",
+      "weightRange": "Enter a weight greater than 0 and no more than 300 kg.",
+      "otherTooLong": "Keep the other cause to 500 characters or fewer.",
+      "otherRequired": "Describe the other cause.",
+      "otherSelect": "Select Other under Primary cause before adding details.",
+      "dateFuture": "Choose this month or an earlier month."
+    }
+  },
+  "datePicker": {
+    "title": "Diagnosis month",
+    "confirm": "Done",
+    "month": "{{month}}",
+    "year": "{{year}}"
+  },
+  "doctor": {
+    "title": "Connect a doctor",
+    "status": {
+      "title": "Connection status",
+      "approved": "Connected",
+      "pending": "Awaiting approval",
+      "rejected": "Declined",
+      "loadError": "We couldn’t load your connections. Check your internet connection.",
+      "empty": "No doctors are connected yet. Check again for new connections.",
+      "unknownName": "Name unavailable",
+      "unknownOrganization": "Organization unavailable",
+      "retryAccessibility": "Reload doctor connections",
+      "retry": "Reload"
+    },
+    "tabs": {
+      "code": "Invitation code",
+      "search": "Find a doctor",
+      "accessibility": "{{label}} method"
+    },
+    "code": {
+      "title": "Connect with a code",
+      "inputAccessibility": "Enter invitation code",
+      "sixDigitAccessibility": "6-digit doctor invitation code",
+      "hint": "Enter the 6-digit invitation code from your clinic.",
+      "connect": "Connect",
+      "successTitle": "Your doctor is connected",
+      "successBody": "You can now share your health records.",
+      "errorTitle": "We couldn’t verify that invitation code",
+      "errorBody": "Check all 6 digits and try connecting again."
+    },
+    "search": {
+      "name": "Name",
+      "namePlaceholder": "Doctor’s name",
+      "hospital": "Hospital or clinic",
+      "hospitalPlaceholder": "Organization name",
+      "department": "Department",
+      "departmentPlaceholder": "For example, Nephrology",
+      "accessibility": "Search for a doctor",
+      "action": "Search",
+      "empty": "We couldn’t find a matching doctor. Try different search terms.",
+      "missingTitle": "Add a search term",
+      "missingBody": "Enter a doctor’s name, hospital, or department.",
+      "errorTitle": "We couldn’t search for doctors",
+      "errorBody": "Check your search terms and try again."
+    },
+    "request": {
+      "successTitle": "Connection request sent",
+      "successBody": "You’ll be connected after the doctor approves it.",
+      "errorTitle": "We couldn’t send your connection request",
+      "errorBody": "Check your internet connection and try again.",
+      "messagePlaceholder": "Add a message for the doctor (optional)",
+      "alreadyAccessibility": "Connection already requested",
+      "accessibility": "Request a connection with {{name}}",
+      "sent": "Request sent",
+      "action": "Request connection"
+    },
+    "agreement": {
+      "accessibility": "Consent to share health records with your doctor",
+      "label": "I agree to let this doctor view my health records",
+      "body": "The doctor can view your meal, nutrient, fluid, weight, and swelling records.",
+      "details": "Review what you’ll share"
+    },
+    "terms": {
+      "title": "Health record sharing",
+      "closeAccessibility": "Close health record sharing information",
+      "sharingTitle": "Doctor connections and shared records",
+      "sharingBody": "Connected doctors can view your meal, nutrient, fluid, weight, and swelling records.",
+      "withdrawalTitle": "Stop sharing or request deletion",
+      "withdrawalBody": "You can stop sharing or request deletion at any time. If you delete your account, shared records are deleted under our retention and deletion policies.",
+      "supportTitle": "Questions",
+      "supportBody": "Use Contact support in the app or reach customer support with questions about sharing or deletion.",
+      "confirmAccessibility": "Confirm sharing information",
+      "confirm": "Done"
+    }
+  }
+}

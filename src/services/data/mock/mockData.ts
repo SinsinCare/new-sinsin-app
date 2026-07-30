@@ -67,9 +67,8 @@ const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
 export const MOCK_CHATS: Chat[] = [
   {
     id: 1,
-    title: "저염 식단 문의",
-    summary:
-      "만성신장병 3기 환자의 나트륨 섭취 제한 방법에 대해 상담한 내용입니다.",
+    title: "나트륨을 줄여 먹는 법",
+    summary: "만성신장병 3기에서 나트륨 섭취를 줄이는 방법",
     status: "ACTIVE",
     category: "FOOD_DIET",
     messageCount: 2,
@@ -90,9 +89,9 @@ export const MOCK_CHATS: Chat[] = [
   },
   {
     id: 2,
-    title: "칼륨 수치가 높을 때 과일 섭취 제한은?",
+    title: "칼륨 수치가 높을 때 먹는 과일",
     summary:
-      "고칼륨혈증 시 바나나, 멜론, 키위 등을 피하고, 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하세요.",
+      "과일마다 칼륨 함량이 달라요. 최근 검사 결과와 개인 식단 기준을 확인해 종류와 양을 정해요.",
     status: "ACTIVE",
     category: "FOOD_DIET",
     messageCount: 2,
@@ -101,9 +100,9 @@ export const MOCK_CHATS: Chat[] = [
   },
   {
     id: 3,
-    title: "GFR 수치 해석 방법이 궁금합니다",
+    title: "GFR 수치는 어떻게 보나요?",
     summary:
-      "GFR(사구체여과율)은 신장 기능을 나타내는 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
+      "eGFR은 한 번의 숫자만으로 판단하지 않고 검사 기간과 다른 결과를 함께 봐요.",
     status: "ACTIVE",
     category: "EXAM",
     messageCount: 2,
@@ -136,7 +135,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         conversationId: 1,
         role: "assistant",
         content:
-          "만성신장병 3기 환자분의 경우 하루 나트륨 섭취량을 2,000mg 이하로 제한하는 것이 권장됩니다. 소금 대신 레몬즙, 식초, 후추 등 천연 양념을 활용하세요.",
+          "나트륨 목표는 검사 결과와 건강 상태에 따라 달라요. 담당 의료진이 정한 목표가 있다면 그 값을 먼저 따르세요. 일상에서는 소금 대신 레몬즙, 식초, 후추 같은 양념을 써 볼 수 있어요.",
         aiCategory: "FOOD_DIET",
         aiCategoryLabel: "음식·식단",
         createdAt: new Date(
@@ -157,7 +156,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         id: 3,
         conversationId: 2,
         role: "user",
-        content: "칼륨 수치가 높을 때 과일 섭취 제한은?",
+        content: "칼륨 수치가 높으면 어떤 과일을 피해야 하나요?",
         createdAt: yesterday,
       },
       {
@@ -165,7 +164,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         conversationId: 2,
         role: "assistant",
         content:
-          "고칼륨혈증이 있을 때는 바나나, 멜론, 키위, 오렌지를 피하세요. 사과, 배, 블루베리 등 저칼륨 과일을 소량 섭취하는 것이 좋습니다.",
+          "과일마다 칼륨 함량이 달라요. 최근 칼륨 검사 결과와 개인 식단 기준을 확인한 뒤, 의료진이나 영양사에게 종류와 하루 분량을 물어보세요.",
         aiCategory: "FOOD_DIET",
         aiCategoryLabel: "음식·식단",
         createdAt: yesterday,
@@ -179,7 +178,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         id: 5,
         conversationId: 3,
         role: "user",
-        content: "GFR 수치 해석 방법이 궁금합니다",
+        content: "GFR 수치는 어떻게 봐야 하나요?",
         createdAt: twoDaysAgo,
       },
       {
@@ -187,7 +186,7 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
         conversationId: 3,
         role: "assistant",
         content:
-          "GFR(사구체여과율)은 신장 기능의 핵심 지표입니다. 정상은 90 이상이며, 60 미만이면 만성신장질환으로 분류됩니다.",
+          "eGFR은 콩팥의 여과 기능을 살펴보는 지표 중 하나예요. 한 번의 숫자만으로 상태를 단정하지 않고 검사 기간과 다른 결과를 함께 봐요.",
         aiCategory: "EXAM",
         aiCategoryLabel: "검사·수치해석",
         createdAt: twoDaysAgo,

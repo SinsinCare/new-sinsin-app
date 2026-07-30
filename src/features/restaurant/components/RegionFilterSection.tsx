@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
+import { useTranslation } from "react-i18next"
 import { tokens } from "@/src/theme/tokens"
 import { REGIONS, SUB_REGIONS } from "../data/filterData"
 
@@ -19,28 +20,40 @@ export function RegionFilterSection({
   onSubRegionToggle,
   onReset,
 }: RegionFilterSectionProps) {
+  const { t } = useTranslation("common")
   const isDarkMode = useAppColorScheme() === "dark"
 
   const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
   const resetColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
-  const defaultBorder = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const defaultBorder = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.borderLight.val
   const selectedBorder = tokens.color.primaryAccent.val
   const selectedBg = isDarkMode ? "#D56E321A" : "#FCEBE1"
-  const headingColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const headingColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
 
-  const subRegions = selectedRegion ? SUB_REGIONS[selectedRegion] || [] : []
+  const subRegions = selectedRegion
+    ? (SUB_REGIONS[selectedRegion as keyof typeof SUB_REGIONS] ?? [])
+    : []
 
   return (
     <YStack paddingHorizontal={16} paddingVertical={16} gap={12}>
       {/* Section Header */}
       <XStack justifyContent="space-between" alignItems="center">
-        <Text fontFamily="$body" fontWeight="600" fontSize={15} color={headingColor}>
-          지역
+        <Text
+          fontFamily="$body"
+          fontWeight="600"
+          fontSize={15}
+          color={headingColor}
+        >
+          {t("restaurant.filter.region")}
         </Text>
         <Pressable onPress={onReset}>
           <XStack alignItems="center" gap={4}>
             <Text fontFamily="$body" fontSize={13} color={resetColor}>
-              ↻ 초기화
+              {t("restaurant.filter.reset")}
             </Text>
           </XStack>
         </Pressable>
@@ -70,7 +83,7 @@ export function RegionFilterSection({
                 fontSize={14}
                 color={isSelected ? selectedBorder : textColor}
               >
-                {region.label}
+                {t(region.labelKey)}
               </Text>
             </Pressable>
           )
@@ -95,10 +108,15 @@ export function RegionFilterSection({
                 ]}
               >
                 <Text fontFamily="$body" fontSize={13} color={textColor}>
-                  {sub.label}
+                  {t(sub.labelKey)}
                 </Text>
                 {isSelected && (
-                  <Text fontFamily="$body" fontSize={11} color={textColor} marginLeft={4}>
+                  <Text
+                    fontFamily="$body"
+                    fontSize={11}
+                    color={textColor}
+                    marginLeft={4}
+                  >
                     ✕
                   </Text>
                 )}

@@ -3,6 +3,7 @@ import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -13,6 +14,7 @@ import { useHealthTheme } from "../hooks/useHealthTheme"
 export function HealthDataEntryScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
 
   return (
@@ -20,12 +22,14 @@ export function HealthDataEntryScreen() {
       style={[styles.container, { backgroundColor: healthColors.background }]}
     >
       <ScreenHeader
-        title="검사 결과 불러오기"
+        title={t("entry.header")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -33,12 +37,12 @@ export function HealthDataEntryScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ThemedText style={[styles.title, { color: healthColors.text }]}>
-          {"검사 결과를\n어떻게 가져올까요?"}
+          {t("entry.title")}
         </ThemedText>
         <ThemedText
           style={[styles.subtitle, { color: healthColors.textSecondary }]}
         >
-          {"최근 건강검진 결과를 불러와 신장 상태를\n쉽게 설명해드려요."}
+          {t("entry.subtitle")}
         </ThemedText>
 
         {/* 건강보험공단에서 불러오기 */}
@@ -69,13 +73,12 @@ export function HealthDataEntryScreen() {
             <ThemedText
               style={[styles.optionTitle, { color: healthColors.text }]}
             >
-              건강보험공단에서 불러오기
+              {t("entry.nhisTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
             >
-              최근 10년간의 검진 기록을 한 번에 자동으로 가져옵니다. 간편인증이
-              필요합니다.
+              {t("entry.nhisDescription")}
             </ThemedText>
             <View
               style={[
@@ -90,7 +93,7 @@ export function HealthDataEntryScreen() {
                   { color: healthColors.positive },
                 ]}
               >
-                가장 빠르고 정확해요
+                {t("entry.nhisBadge")}
               </ThemedText>
             </View>
           </View>
@@ -129,12 +132,12 @@ export function HealthDataEntryScreen() {
             <ThemedText
               style={[styles.optionTitle, { color: healthColors.text }]}
             >
-              검사지 업로드하기
+              {t("entry.fileTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
             >
-              가지고 계신 종이 검사지를 촬영하거나 PDF 파일을 직접 업로드합니다.
+              {t("entry.fileDescription")}
             </ThemedText>
           </View>
           <Ionicons
@@ -172,13 +175,12 @@ export function HealthDataEntryScreen() {
             <ThemedText
               style={[styles.optionTitle, { color: healthColors.text }]}
             >
-              대시보드 보기
+              {t("entry.dashboardTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
             >
-              불러온 검사 수치의 추세 차트와 신장·전해질·단백뇨 등 모듈별 상태를
-              한눈에 확인합니다.
+              {t("entry.dashboardDescription")}
             </ThemedText>
           </View>
           <Ionicons
@@ -188,21 +190,21 @@ export function HealthDataEntryScreen() {
           />
         </Pressable>
 
-        {/* 보안 안내 */}
+        {/* 사용 안내 */}
         <View style={styles.securityRow}>
           <Ionicons
-            name="lock-closed-outline"
+            name="information-circle-outline"
             size={13}
             color={healthColors.textAssistive}
           />
           <ThemedText
             style={[styles.securityText, { color: healthColors.textSecondary }]}
           >
-            데이터는 암호화되어 안전하게 보호됩니다
+            {t("entry.usageNote")}
           </ThemedText>
         </View>
 
-        {/* 신뢰 카드 */}
+        {/* 활용 안내 */}
         <View
           style={[
             styles.trustCard,
@@ -223,16 +225,11 @@ export function HealthDataEntryScreen() {
               size={28}
               color={tokens.color.sub6.val}
             />
-            <View style={styles.trustIconBadge}>
-              <Ionicons name="checkmark" size={10} color="#FFFFFF" />
-            </View>
           </View>
           <ThemedText
             style={[styles.trustText, { color: healthColors.textSecondary }]}
           >
-            {
-              '"신신당부는 보건복지부 가이드라인을 준수하며\n여러분의 소중한 정보를 철저히 관리합니다."'
-            }
+            {t("entry.comparisonNote")}
           </ThemedText>
         </View>
       </ScrollView>
@@ -322,7 +319,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: tokens.color.sub8.val,
   },
-  // 보안 안내
+  // 사용 안내
   securityRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -335,7 +332,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#94A3B8",
   },
-  // 신뢰 카드
+  // 활용 안내
   trustCard: {
     backgroundColor: "#F8FAFC",
     borderRadius: 16,
@@ -344,22 +341,10 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   trustIconWrapper: {
-    position: "relative",
     width: 44,
     height: 44,
-  },
-  trustIconBadge: {
-    position: "absolute",
-    bottom: -2,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: tokens.color.sub6.val,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#F8FAFC",
   },
   trustText: {
     fontSize: 14,

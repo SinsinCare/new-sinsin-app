@@ -1,5 +1,7 @@
 import { api } from "../src/services/core"
+import { isMockMode } from "../src/config/appConfig"
 import { foodCameraService } from "../src/services/data/foodCameraService"
+import { mockFoodCameraService } from "../src/services/data/mock/mockFoodCameraService"
 import {
   createFoodAnalysisRecovery,
   type FoodAnalysisRecoveryDeps,
@@ -9,13 +11,14 @@ import {
   createPendingAnalysisRequestStorage,
 } from "../src/features/home/storage/pendingAnalysisRequests"
 import { createFoodAnalysisRecoveryPoller } from "../src/features/home/services/foodAnalysisRecoveryPolling"
+import i18n from "../src/i18n"
 
 jest.mock("../src/config/appConfig", () => ({
   appConfig: {
     foodAnalysisConfirmationEnabled: false,
   },
   getBackendUrl: () => "https://backend.test/api/v1",
-  isMockMode: () => false,
+  isMockMode: jest.fn(() => false),
 }))
 
 jest.mock("../src/services/core", () => ({
@@ -264,7 +267,7 @@ describe("food analysis recovery", () => {
     await expect(pendingRequests.getAll()).resolves.toEqual([])
   })
 
-  it("keeps confirmation jobs pending without opening the disabled survey", async () => {
+  it("removes an unresolvable confirmation job when the survey is disabled", async () => {
     const pendingRequests = createPendingAnalysisRequestStorage(
       createMemoryStorage({
         [PENDING_ANALYSIS_REQUESTS_KEY]: JSON.stringify([
@@ -278,6 +281,7 @@ describe("food analysis recovery", () => {
       }),
     )
     const setPendingConfirmation = jest.fn()
+    const markHandledRequestId = jest.fn()
     const recovery = createFoodAnalysisRecovery({
       pendingRequests,
       fetchByRequestId: jest.fn(() => Promise.resolve(null)),
@@ -292,14 +296,17 @@ describe("food analysis recovery", () => {
       setPending: jest.fn(),
       setPendingConfirmation,
       confirmationEnabled: false,
-      markHandledRequestId: jest.fn(),
+      markHandledRequestId,
       now: () => 1000,
     } satisfies FoodAnalysisRecoveryDeps)
 
     await recovery.recoverPendingAnalyses()
 
     expect(setPendingConfirmation).not.toHaveBeenCalled()
-    await expect(pendingRequests.getAll()).resolves.toHaveLength(1)
+    expect(markHandledRequestId).toHaveBeenCalledWith(
+      "food-req-confirmation-hidden",
+    )
+    await expect(pendingRequests.getAll()).resolves.toHaveLength(0)
   })
 
   it("can restore the preserved confirmation flow with the feature flag", async () => {
@@ -432,8 +439,10 @@ describe("food analysis recovery poller", () => {
 })
 
 describe("foodCameraService requestId contract", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
+    ;(isMockMode as jest.Mock).mockReturnValue(false)
+    await i18n.changeLanguage("ko")
   })
 
   it("sends requestId with text analysis requests", async () => {
@@ -453,6 +462,7 @@ describe("foodCameraService requestId contract", () => {
       {
         text: "저염 샐러드",
         requestId: "food-req-4",
+        language: "ko",
       },
       { timeout: 180000 },
     )
@@ -486,6 +496,7 @@ describe("foodCameraService requestId contract", () => {
       )
       expect(append).toHaveBeenCalledWith("requestId", "food-req-create")
       expect(append).toHaveBeenCalledWith("mode", "POST_MEAL")
+      expect(append).toHaveBeenCalledWith("language", "ko")
       expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining("/food-analyses"),
         expect.objectContaining({
@@ -501,6 +512,58 @@ describe("foodCameraService requestId contract", () => {
         value: originalFormData,
       })
     }
+  })
+
+  it("projects the asynchronous mock result after switching to English", async () => {
+    ;(isMockMode as jest.Mock).mockReturnValue(true)
+    jest.spyOn(mockFoodCameraService, "analyze").mockResolvedValue(
+      createAnalysisResult({
+        title: "김치찌개",
+        foods: [
+          {
+            name: "김치찌개",
+            servingSizeValue: 1,
+            servingSizeUnit: "인분",
+            ...createAnalysisResult().total,
+          },
+        ],
+      }),
+    )
+    await i18n.changeLanguage("en")
+
+    const job = await foodCameraService.createAnalysis(
+      "file://meal.jpg",
+      "mock-food-en",
+    )
+
+    expect(job.result?.title).toBe("Kimchi stew")
+    expect(job.result?.foods[0]?.name).toBe("Kimchi stew")
+    expect(job.result?.foods[0]?.servingSizeUnit).toBe("serving")
+    expect(JSON.stringify(job)).not.toMatch(/[ㄱ-ㅎㅏ-ㅣ가-힣]/)
+  })
+
+  it("reads the current language when each food analysis request begins", async () => {
+    ;(api.post as jest.Mock).mockResolvedValue({
+      data: { result: createAnalysisResult({ title: "Salad" }) },
+    })
+
+    await i18n.changeLanguage("en")
+    await foodCameraService.analyzeText("salad", "food-req-en")
+    await i18n.changeLanguage("ko")
+    await foodCameraService.analyzeText("샐러드", "food-req-ko")
+
+    expect(api.post).toHaveBeenNthCalledWith(
+      1,
+      "/food-camera/analyze-text",
+      { text: "salad", requestId: "food-req-en", language: "en" },
+      { timeout: 180000 },
+    )
+    expect(api.post).toHaveBeenNthCalledWith(
+      2,
+      "/food-camera/analyze-text",
+      { text: "샐러드", requestId: "food-req-ko", language: "ko" },
+      { timeout: 180000 },
+    )
   })
 
   it("fetches completed analysis by requestId", async () => {
@@ -619,7 +682,7 @@ describe("foodCameraService requestId contract", () => {
     ).resolves.toMatchObject({
       evaluation: {
         comment: "",
-        score: 0,
+        score: null,
         cautionFoods: [],
         detail: { riskFactors: "", disclaimer: "" },
       },

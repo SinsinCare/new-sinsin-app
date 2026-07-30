@@ -10,10 +10,27 @@ import {
   ICommunityPostService,
 } from "../types"
 
+/**
+ * 서버가 타임존 표기 없는 UTC(naive) ISO 문자열을 내려준다.
+ * 그대로 new Date() 에 넣으면 로컬 시각으로 읽혀 KST 에서 9시간 어긋난다.
+ */
+export function parseServerDate(value: string | number | Date): Date {
+  if (value instanceof Date) return value
+  if (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value) &&
+    !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)
+  ) {
+    return new Date(`${value}Z`)
+  }
+  return new Date(value)
+}
+
 function mapVote(raw: CommunityMealPostApi["vote"]): CommunityPostVote | null {
   if (!raw) return null
   return {
     id: Number(raw.id),
+    title: raw.title ?? null,
     allowMultiple: raw.allowMultiple,
     options: raw.options.map((option) => ({
       id: Number(option.id),
@@ -26,21 +43,29 @@ function mapVote(raw: CommunityMealPostApi["vote"]): CommunityPostVote | null {
 }
 
 function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
+  const imageUris =
+    raw.imageUris && raw.imageUris.length > 0
+      ? raw.imageUris
+      : raw.imageUri
+        ? [raw.imageUri]
+        : []
   return {
     id: String(raw.id),
     authorId: raw.authorId ?? null,
     authorName: raw.authorName,
     authorRole: raw.authorRole,
     category: raw.category,
-    imageUri: raw.imageUri ?? null,
+    imageUri: imageUris[0] ?? null,
+    imageUris,
+    imageObjectPaths: raw.imageObjectPaths ?? [],
     title: raw.title,
     description: raw.description,
     likes: raw.likes,
     liked: raw.liked,
     comments: raw.comments,
     bookmarked: raw.bookmarked,
-    createdAt: new Date(raw.createdAt),
-    updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : undefined,
+    createdAt: parseServerDate(raw.createdAt),
+    updatedAt: raw.updatedAt ? parseServerDate(raw.updatedAt) : undefined,
     tags: raw.tags ?? [],
     vote: mapVote(raw.vote),
   }
@@ -59,11 +84,12 @@ export function mapCommunityComment(
     authorId: raw.authorId ?? null,
     authorName: raw.authorName,
     content: raw.content,
+    mentions: raw.mentions ?? [],
     likes: Number(raw.likes ?? 0),
     liked: raw.liked,
     isDeleted: raw.isDeleted,
-    createdAt: new Date(raw.createdAt),
-    updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : undefined,
+    createdAt: parseServerDate(raw.createdAt),
+    updatedAt: raw.updatedAt ? parseServerDate(raw.updatedAt) : undefined,
     replies: (raw.replies ?? []).map(mapCommunityComment),
   }
 }
@@ -95,12 +121,15 @@ class CommunityPostService implements ICommunityPostService {
   }
 
   async createPost(post: CreateCommunityPostInput): Promise<CommunityMealPost> {
+    const imageObjectPaths =
+      post.imageObjectPaths ??
+      (post.imageObjectPath ? [post.imageObjectPath] : [])
     const res = await api.post("/community/posts", {
       category: post.category,
       title: post.title,
       description: post.description,
       imageUri: post.imageUri ?? null,
-      imageObjectPath: post.imageObjectPath ?? null,
+      imageObjectPaths,
       tags: post.tags ?? [],
       vote: post.vote ?? null,
     })
@@ -114,6 +143,8 @@ class CommunityPostService implements ICommunityPostService {
       title?: string
       description?: string
       imageUri?: string | null
+      imageObjectPaths?: string[]
+      tags?: string[]
     },
   ): Promise<CommunityMealPost> {
     const res = await api.put(`/community/posts/${id}`, post)
@@ -160,10 +191,12 @@ class CommunityPostService implements ICommunityPostService {
     postId: string,
     content: string,
     parentCommentId?: string | null,
+    mentions: string[] = [],
   ): Promise<CommunityComment> {
     const res = await api.post(`/community/posts/${postId}/comments`, {
       content,
       parentCommentId: parentCommentId ? Number(parentCommentId) : null,
+      mentions,
     })
     return mapCommunityComment(
       (res.data.result ?? res.data.data) as CommunityCommentApi,
@@ -174,10 +207,11 @@ class CommunityPostService implements ICommunityPostService {
     postId: string,
     commentId: string,
     content: string,
+    mentions: string[] = [],
   ): Promise<CommunityComment> {
     const res = await api.patch(
       `/community/posts/${postId}/comments/${commentId}`,
-      { content },
+      { content, mentions },
     )
     return mapCommunityComment(
       (res.data.result ?? res.data.data) as CommunityCommentApi,

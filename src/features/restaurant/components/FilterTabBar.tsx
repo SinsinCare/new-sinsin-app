@@ -2,14 +2,15 @@ import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { tokens } from "@/src/theme/tokens"
 import type { FilterTab } from "../types"
 
-const TABS: { key: FilterTab; label: string }[] = [
-  { key: "region", label: "지역" },
-  { key: "foodType", label: "음식 종류" },
-  { key: "nutrient", label: "영양소 제한" },
-]
+const TABS = [
+  { key: "region", labelKey: "restaurant.tabs.region" },
+  { key: "foodType", labelKey: "restaurant.tabs.foodType" },
+  { key: "nutrient", labelKey: "restaurant.tabs.nutrient" },
+] as const satisfies readonly { key: FilterTab; labelKey: string }[]
 
 interface FilterTabBarProps {
   activeTab: FilterTab
@@ -17,13 +18,24 @@ interface FilterTabBarProps {
   onClose: () => void
 }
 
-export function FilterTabBar({ activeTab, onTabChange, onClose }: FilterTabBarProps) {
+export function FilterTabBar({
+  activeTab,
+  onTabChange,
+  onClose,
+}: FilterTabBarProps) {
+  const { t } = useTranslation("common")
   const isDarkMode = useAppColorScheme() === "dark"
   const insets = useSafeAreaInsets()
 
-  const activeTextColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
-  const inactiveTextColor = isDarkMode ? tokens.color.textLightMuted.val : tokens.color.textLight.val
-  const borderColor = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const activeTextColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
+  const inactiveTextColor = isDarkMode
+    ? tokens.color.textLightMuted.val
+    : tokens.color.textLight.val
+  const borderColor = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.borderLight.val
 
   return (
     <XStack
@@ -44,15 +56,23 @@ export function FilterTabBar({ activeTab, onTabChange, onClose }: FilterTabBarPr
                 fontSize={16}
                 color={isActive ? activeTextColor : inactiveTextColor}
                 paddingBottom={8}
-                style={{ borderBottomWidth: isActive ? 2 : 0, borderBottomColor: activeTextColor }}
+                style={{
+                  borderBottomWidth: isActive ? 2 : 0,
+                  borderBottomColor: activeTextColor,
+                }}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </Text>
             </Pressable>
           )
         })}
       </XStack>
-      <Pressable onPress={onClose} hitSlop={8}>
+      <Pressable
+        onPress={onClose}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t("restaurant.filter.close")}
+      >
         <Text fontSize={18} color={activeTextColor}>
           ✕
         </Text>

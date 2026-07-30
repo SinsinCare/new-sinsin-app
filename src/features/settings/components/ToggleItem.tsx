@@ -34,7 +34,9 @@ export function ToggleItem({
         <ThemedText style={[styles.toggleTitle, { color: c.text }]}>
           {title}
         </ThemedText>
-        <ThemedText style={[styles.toggleDescription, { color: c.textTertiary }]}>
+        <ThemedText
+          style={[styles.toggleDescription, { color: c.textTertiary }]}
+        >
           {description}
         </ThemedText>
       </View>

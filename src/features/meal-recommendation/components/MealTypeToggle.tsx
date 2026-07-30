@@ -3,6 +3,7 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { MealType } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface MealTypeToggleProps {
   value: MealType
@@ -10,6 +11,7 @@ interface MealTypeToggleProps {
 }
 
 export function MealTypeToggle({ value, onChange }: MealTypeToggleProps) {
+  const { t } = useTranslation()
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
 
@@ -28,7 +30,8 @@ export function MealTypeToggle({ value, onChange }: MealTypeToggleProps) {
     >
       {(["LUNCH", "DINNER"] as const).map((type) => {
         const isActive = value === type
-        const label = type === "LUNCH" ? "점심" : "저녁"
+        const label =
+          type === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
         return (
           <Pressable key={type} onPress={() => onChange(type)}>
             <XStack

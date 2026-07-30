@@ -1,5 +1,5 @@
-export function fmt(n: number): string {
-  return n.toLocaleString("ko-KR")
+export function fmt(n: number, locale: string): string {
+  return n.toLocaleString(locale)
 }
 
 /**

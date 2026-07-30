@@ -8,6 +8,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
 import { ThemedText } from "@/components/themed-text"
@@ -18,11 +19,13 @@ import {
   useNotificationHistoryStore,
   type NotificationItem,
 } from "@/src/stores/notificationHistoryStore"
+import appI18n from "@/src/i18n"
 
 export function NotificationHistoryScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
 
   const { items, markAsRead, markAllAsRead, clearAll } =
     useNotificationHistoryStore()
@@ -30,11 +33,13 @@ export function NotificationHistoryScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
-        title="알림"
+        title={t("notifications.history.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
         rightElement={
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("notifications.history.openSettings")}
             onPress={() => router.push("/(settings)/notification-settings")}
             hitSlop={8}
           >
@@ -44,6 +49,8 @@ export function NotificationHistoryScreen() {
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + 40 },
@@ -53,33 +60,61 @@ export function NotificationHistoryScreen() {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
-              받은 알림
+              {t("notifications.history.received")}
             </ThemedText>
             {items.length > 0 && (
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  "notifications.history.clearAccessibility",
+                )}
                 onPress={() =>
-                  Alert.alert("알림 삭제", "모든 알림을 삭제할까요?", [
-                    { text: "취소", style: "cancel" },
-                    { text: "삭제", style: "destructive", onPress: clearAll },
-                  ])
+                  Alert.alert(
+                    t("notifications.history.clearTitle"),
+                    t("notifications.history.clearBody"),
+                    [
+                      { text: t("shared.cancel"), style: "cancel" },
+                      {
+                        text: t("shared.delete"),
+                        style: "destructive",
+                        onPress: clearAll,
+                      },
+                    ],
+                  )
                 }
               >
-                <ThemedText style={[styles.clearBtn, { color: c.textTertiary }]}>
-                  모두 지우기
+                <ThemedText
+                  style={[styles.clearBtn, { color: c.textTertiary }]}
+                >
+                  {t("notifications.history.clearAll")}
                 </ThemedText>
               </TouchableOpacity>
             )}
           </View>
 
           {items.length === 0 ? (
-            <View style={[styles.emptyBox, { backgroundColor: c.cardBg, borderColor: c.border }]}>
-              <Ionicons name="notifications-off-outline" size={32} color={c.textTertiary} />
+            <View
+              style={[
+                styles.emptyBox,
+                { backgroundColor: c.cardBg, borderColor: c.border },
+              ]}
+            >
+              <Ionicons
+                name="notifications-off-outline"
+                size={32}
+                color={c.textTertiary}
+              />
               <ThemedText style={[styles.emptyText, { color: c.textTertiary }]}>
-                받은 알림이 없어요
+                {t("notifications.history.empty")}
               </ThemedText>
             </View>
           ) : (
-            <View style={[styles.card, { backgroundColor: c.cardBg, borderColor: c.border }]}>
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: c.cardBg, borderColor: c.border },
+              ]}
+            >
               {items.map((item, i) => (
                 <NotificationRow
                   key={item.id}
@@ -91,11 +126,21 @@ export function NotificationHistoryScreen() {
               ))}
               {items.some((n) => !n.read) && (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    "notifications.history.markAllAccessibility",
+                  )}
                   style={[styles.markAllRow, { borderTopColor: c.divider }]}
                   onPress={markAllAsRead}
                 >
-                  <ThemedText style={{ fontSize: 13, color: tokens.color.sub8.val, fontWeight: "500" }}>
-                    모두 읽음 표시
+                  <ThemedText
+                    style={{
+                      fontSize: 13,
+                      color: tokens.color.sub8.val,
+                      fontWeight: "500",
+                    }}
+                  >
+                    {t("notifications.history.markAll")}
                   </ThemedText>
                 </TouchableOpacity>
               )}
@@ -110,12 +155,27 @@ export function NotificationHistoryScreen() {
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1) return "방금 전"
-  if (mins < 60) return `${mins}분 전`
+  if (mins < 1) {
+    return appI18n.t("notifications.history.justNow", { ns: "settings" })
+  }
+  if (mins < 60) {
+    return appI18n.t("notifications.history.minutes", {
+      ns: "settings",
+      count: mins,
+    })
+  }
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}시간 전`
+  if (hours < 24) {
+    return appI18n.t("notifications.history.hours", {
+      ns: "settings",
+      count: hours,
+    })
+  }
   const days = Math.floor(hours / 24)
-  return `${days}일 전`
+  return appI18n.t("notifications.history.days", {
+    ns: "settings",
+    count: days,
+  })
 }
 
 interface NotificationRowProps {
@@ -126,6 +186,20 @@ interface NotificationRowProps {
 }
 
 function NotificationRow({ item, isLast, onPress, c }: NotificationRowProps) {
+  const { t, i18n } = useTranslation("common")
+  const canShowStoredFoodName =
+    Boolean(item.foodName) &&
+    (!i18n.resolvedLanguage?.startsWith("en") ||
+      !/[가-힣]/.test(item.foodName ?? ""))
+  const title = t("home.analysis.readyTitle")
+  const body = canShowStoredFoodName
+    ? t("home.analysis.readyNamedBody", { title: item.foodName })
+    : item.mealType
+      ? t("home.analysis.readyMealBody", {
+          meal: t(`meal.${item.mealType}`),
+        })
+      : t("home.analysis.readyGenericBody")
+
   return (
     <TouchableOpacity
       style={[
@@ -139,15 +213,20 @@ function NotificationRow({ item, isLast, onPress, c }: NotificationRowProps) {
     >
       <View style={styles.notiDotWrapper}>
         {!item.read && (
-          <View style={[styles.unreadDot, { backgroundColor: tokens.color.sub8.val }]} />
+          <View
+            style={[
+              styles.unreadDot,
+              { backgroundColor: tokens.color.sub8.val },
+            ]}
+          />
         )}
       </View>
       <View style={styles.notiContent}>
         <ThemedText style={[styles.notiTitle, { color: c.text }]}>
-          {item.title}
+          {title}
         </ThemedText>
         <ThemedText style={[styles.notiBody, { color: c.textSub }]}>
-          {item.body}
+          {body}
         </ThemedText>
         <ThemedText style={[styles.notiTime, { color: c.textTertiary }]}>
           {relativeTime(item.timestamp)}

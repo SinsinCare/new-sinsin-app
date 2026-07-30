@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { router } from "expo-router"
+import { useTranslation } from "react-i18next"
 import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
-import { TERMS } from "../data/terms"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import { getTerms } from "../data/terms"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import {
   identifyAnalyticsUser,
@@ -19,6 +21,8 @@ export function useTermsAgreement({
   mode = "email",
   socialSignupToken,
 }: UseTermsAgreementOptions = {}) {
+  const { t } = useTranslation("auth")
+  const terms = useMemo(getTerms, [t])
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const {
@@ -36,10 +40,10 @@ export function useTermsAgreement({
   const setEntryGate = useAuthStore((s) => s.setEntryGate)
   const setSessionPersistence = useAuthStore((s) => s.setSessionPersistence)
 
-  const allChecked = TERMS.every((t) => agreed[t.id])
-  const requiredChecked = TERMS.filter((t) => t.required).every(
-    (t) => agreed[t.id],
-  )
+  const allChecked = terms.every((term) => agreed[term.id])
+  const requiredChecked = terms
+    .filter((term) => term.required)
+    .every((term) => agreed[term.id])
   const canSubmit = requiredChecked
 
   const toggleAll = useCallback(() => {
@@ -47,12 +51,12 @@ export function useTermsAgreement({
       setAgreed({})
     } else {
       const next: Record<string, boolean> = {}
-      TERMS.forEach((t) => {
-        next[t.id] = true
+      terms.forEach((term) => {
+        next[term.id] = true
       })
       setAgreed(next)
     }
-  }, [allChecked])
+  }, [allChecked, terms])
 
   const toggleItem = useCallback((id: string) => {
     setAgreed((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -73,7 +77,7 @@ export function useTermsAgreement({
     if (!canSubmit || isSubmitting) return
     if (!socialSignupToken) {
       reset()
-      showErrorToast("소셜 가입 정보가 만료되었습니다. 다시 시도해주세요.")
+      showErrorToast(t("terms.expired"))
       router.replace("/(auth)/login")
       return
     }
@@ -109,11 +113,7 @@ export function useTermsAgreement({
         method: "social",
         stage: "consent",
       })
-      showErrorToast(
-        error instanceof Error
-          ? error.message
-          : "소셜 회원가입에 실패했습니다. 다시 시도해주세요.",
-      )
+      showErrorToast(getErrorMessage(error, t("terms.submitFailed")))
     } finally {
       setIsSubmitting(false)
     }
@@ -142,7 +142,7 @@ export function useTermsAgreement({
   }
 
   return {
-    terms: TERMS,
+    terms,
     agreed,
     allChecked,
     requiredChecked,

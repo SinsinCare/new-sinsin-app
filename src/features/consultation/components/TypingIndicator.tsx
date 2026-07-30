@@ -1,89 +1,97 @@
 import { useEffect } from "react"
+import { StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack } from "tamagui"
+import { XStack, Text } from "tamagui"
 import Animated, {
   Easing,
   cancelAnimation,
-  useAnimatedProps,
+  interpolate,
+  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
+  type SharedValue,
 } from "react-native-reanimated"
-import Svg, {
-  Defs,
-  LinearGradient,
-  Stop,
-  Text as SvgText,
-} from "react-native-svg"
-import { AssistantAvatar } from "./ChatMessageBubble"
+import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 /**
- * SVG 그라디언트 offset 은 transform/opacity 가 아니라서 RN Animated 로는
- * useNativeDriver 를 못 씁니다. 즉 이 셔머는 JS 스레드에서 돌았는데,
- * 하필 답변 생성·응답 파싱으로 JS 스레드가 가장 바쁜 구간에 계속 돕니다.
- * reanimated 의 useAnimatedProps 로 옮기면 같은 그림을 UI 스레드에서 그립니다.
+ * 답변 생성 중 표시. 이전엔 SVG 그라디언트 셔머였는데, SVG <Stop>은
+ * 호스트 뷰가 없어 새 아키텍처의 reanimated useAnimatedProps 가
+ * "Cannot find host instance" 로 죽는다. 점 3개 펄스(호스트 뷰인
+ * Animated.View 만 사용)로 바꿔 같은 "생각 중" 신호를 안전하게 낸다.
  */
-const AnimatedStop = Animated.createAnimatedComponent(Stop)
 
-const DURATION_MS = 2000
+const CYCLE_MS = 1200
+const DOT_COUNT = 3
 
-// 하이라이트가 왼쪽 밖에서 오른쪽 밖까지 지나가 루프 복귀(1→0)가 보이지 않습니다.
-const STOPS = [
-  { from: -0.6, to: 1.0 },
-  { from: -0.3, to: 1.3 },
-  { from: 0.0, to: 1.6 },
-] as const
+function PulseDot({
+  progress,
+  index,
+  color,
+}: {
+  progress: SharedValue<number>
+  index: number
+  color: string
+}) {
+  const animatedStyle = useAnimatedStyle(() => {
+    // 도트마다 1/3 주기씩 위상을 밀어 물결처럼 이어진다.
+    const phase = (progress.value + (DOT_COUNT - index) / DOT_COUNT) % 1
+    return {
+      opacity: interpolate(phase, [0, 0.35, 0.7, 1], [0.25, 1, 0.25, 0.25]),
+    }
+  })
+  return (
+    <Animated.View
+      style={[styles.dot, { backgroundColor: color }, animatedStyle]}
+    />
+  )
+}
 
 export function TypingIndicator() {
+  const { t } = useTranslation()
   const isDark = useAppColorScheme() === "dark"
-  // bg: dark #1F1F21, light #F3F3F3
-  const baseColor = isDark ? "#E0E0E0" : "#1A1A1A"
-  const sweepColor = isDark ? "#666666" : "#999999"
+  const textColor = isDark
+    ? tokens.color.textDarkSub.val
+    : tokens.color.textLightSub.val
 
   const progress = useSharedValue(0)
 
   useEffect(() => {
     progress.value = withRepeat(
-      withTiming(1, {
-        duration: DURATION_MS,
-        easing: Easing.inOut(Easing.ease),
-      }),
+      withTiming(1, { duration: CYCLE_MS, easing: Easing.linear }),
       -1,
       false,
     )
     return () => cancelAnimation(progress)
   }, [progress])
 
-  const stop1Props = useAnimatedProps(() => ({
-    offset: STOPS[0].from + (STOPS[0].to - STOPS[0].from) * progress.value,
-  }))
-  const stop2Props = useAnimatedProps(() => ({
-    offset: STOPS[1].from + (STOPS[1].to - STOPS[1].from) * progress.value,
-  }))
-  const stop3Props = useAnimatedProps(() => ({
-    offset: STOPS[2].from + (STOPS[2].to - STOPS[2].from) * progress.value,
-  }))
-
+  // AI 답변과 같은 자리(전폭 왼끝·거터 20)에서 시작한다 — 아바타 없이.
   return (
-    <XStack alignItems="center" paddingHorizontal="$4" gap="$3">
-      <AssistantAvatar />
-      <Svg height={22} width={250}>
-        <Defs>
-          <LinearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
-            <AnimatedStop animatedProps={stop1Props} stopColor={baseColor} />
-            <AnimatedStop animatedProps={stop2Props} stopColor={sweepColor} />
-            <AnimatedStop animatedProps={stop3Props} stopColor={baseColor} />
-          </LinearGradient>
-        </Defs>
-        <SvgText
-          fill="url(#shimmer)"
-          fontSize={14}
-          fontFamily="PretendardKR-Medium"
-          y={16}
-        >
-          답변을 신중하게 고민하고 있어요
-        </SvgText>
-      </Svg>
+    <XStack alignItems="center" paddingHorizontal={20}>
+      <XStack alignItems="center" gap={8}>
+        <Text fontSize={14} lineHeight={20} color={textColor}>
+          {t("consult.organizing")}
+        </Text>
+        <XStack alignItems="center" gap={4}>
+          {Array.from({ length: DOT_COUNT }, (_, index) => (
+            <PulseDot
+              key={index}
+              progress={progress}
+              index={index}
+              color={textColor}
+            />
+          ))}
+        </XStack>
+      </XStack>
     </XStack>
   )
 }
+
+const styles = StyleSheet.create({
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+})

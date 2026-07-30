@@ -3,20 +3,24 @@ import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { DotItem } from "@/src/features/settings/components"
-import {
-  WITHDRAWAL_NOTICE,
-  WITHDRAWAL_TERMS,
-} from "@/src/features/settings/data/constants"
 import { userService } from "@/src/services/auth"
 import { clearClientSession } from "@/src/services/core/sessionCleanup"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { logger } from "@/src/lib/logger"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+
+const WITHDRAWAL_TERM_KEYS = [
+  "withdrawal.terms.1",
+  "withdrawal.terms.2",
+  "withdrawal.terms.3",
+] as const
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
@@ -27,6 +31,7 @@ export function WithdrawalTermsScreen() {
     deleteMyPosts?: string
   }>()
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
 
   const [agreed, setAgreed] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -37,7 +42,7 @@ export function WithdrawalTermsScreen() {
     setLoading(true)
     try {
       await userService.deleteAccount(
-        reason || "앱에서 직접 탈퇴",
+        reason || t("withdrawal.defaultReason"),
         detail?.trim() || null,
         deleteMyPosts === "true",
       )
@@ -46,8 +51,8 @@ export function WithdrawalTermsScreen() {
     } catch (err) {
       logger.error("[WithdrawalTermsScreen] 탈퇴 실패", err)
       Alert.alert(
-        "오류",
-        "탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.",
+        t("withdrawal.errorTitle"),
+        getErrorMessage(err, t("withdrawal.errorBody")),
       )
     } finally {
       setLoading(false)
@@ -57,6 +62,8 @@ export function WithdrawalTermsScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingTop: insets.top + 16, paddingBottom: 24 },
@@ -64,6 +71,8 @@ export function WithdrawalTermsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("shared.back")}
           onPress={() => router.back()}
           hitSlop={8}
           style={styles.backButton}
@@ -72,17 +81,17 @@ export function WithdrawalTermsScreen() {
         </Pressable>
 
         <ThemedText style={[styles.title, { color: c.text }]}>
-          {"신신당부를 떠나기 전에\n꼭 확인해주세요"}
+          {t("withdrawal.termsTitle")}
         </ThemedText>
 
-        <DotItem text={WITHDRAWAL_NOTICE} />
+        <DotItem text={t("withdrawal.notice")} />
 
         <ThemedText style={[styles.sectionTitle, { color: c.text }]}>
-          탈퇴 약관
+          {t("withdrawal.termsSection")}
         </ThemedText>
         <View style={styles.termsList}>
-          {WITHDRAWAL_TERMS.map((term, i) => (
-            <DotItem key={i} text={term} />
+          {WITHDRAWAL_TERM_KEYS.map((key) => (
+            <DotItem key={key} text={t(key)} />
           ))}
         </View>
 
@@ -102,13 +111,13 @@ export function WithdrawalTermsScreen() {
               agreed && { color: c.text },
             ]}
           >
-            유의사항 숙지 후 탈퇴에 동의합니다.
+            {t("withdrawal.agreement")}
           </ThemedText>
         </Pressable>
       </ScrollView>
 
       <BottomActionBar
-        label="탈퇴하기"
+        label={t("withdrawal.withdraw")}
         disabled={!agreed || loading}
         paddingBottom={insets.bottom + 16}
         onPress={() => setModalVisible(true)}
@@ -116,8 +125,9 @@ export function WithdrawalTermsScreen() {
 
       <ConfirmModal
         visible={modalVisible}
-        title="정말 탈퇴하시겠습니까?"
-        description={"탈퇴 후 3일간 동일 계정으로\n재가입이 불가합니다."}
+        title={t("withdrawal.confirmTitle")}
+        description={t("withdrawal.confirmBody")}
+        confirmText={t("withdrawal.withdraw")}
         onCancel={() => setModalVisible(false)}
         onConfirm={handleWithdraw}
       />

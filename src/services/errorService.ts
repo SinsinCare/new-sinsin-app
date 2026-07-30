@@ -1,4 +1,5 @@
 import { tokenService } from "./core/tokenService"
+import { getAppLanguage } from "@/src/i18n"
 
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL
 
@@ -17,6 +18,7 @@ export async function reportError(payload: ErrorPayload): Promise<void> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(payload),

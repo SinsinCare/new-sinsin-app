@@ -7,6 +7,7 @@ import {
   useNutrientLimits,
   type NutrientLimits,
 } from "@/src/features/nutrition/hooks/useNutrientLimits"
+import { useTranslation } from "react-i18next"
 
 type NutrientKey = "sodium" | "potassium" | "phosphorus" | "protein"
 
@@ -17,14 +18,10 @@ const NUTRIENT_KEYS: NutrientKey[] = [
   "protein",
 ]
 
-const LABELS: Record<NutrientKey, string> = {
-  sodium: "나트륨",
-  potassium: "칼륨",
-  phosphorus: "인",
-  protein: "단백질",
-}
-
-function dailyLimitFor(key: NutrientKey, limits: NutrientLimits): number | null {
+function dailyLimitFor(
+  key: NutrientKey,
+  limits: NutrientLimits,
+): number | null {
   switch (key) {
     case "sodium":
       return limits.sodiumMg
@@ -38,7 +35,7 @@ function dailyLimitFor(key: NutrientKey, limits: NutrientLimits): number | null 
   }
 }
 
-function valueFor(food: FoodCameraFood, key: NutrientKey): number {
+function valueFor(food: FoodCameraFood, key: NutrientKey): number | null {
   switch (key) {
     case "sodium":
       return food.sodium
@@ -51,7 +48,8 @@ function valueFor(food: FoodCameraFood, key: NutrientKey): number {
   }
 }
 
-function formatAmount(key: NutrientKey, val: number): string {
+function formatAmount(key: NutrientKey, val: number | null): string {
+  if (val == null) return "—"
   if (key === "protein") {
     const rounded = Math.round(val * 10) / 10
     return Number.isInteger(rounded) ? `${rounded}g` : `${rounded.toFixed(1)}g`
@@ -61,9 +59,13 @@ function formatAmount(key: NutrientKey, val: number): string {
 
 /** 일일 한도 대비 비율: 적절(초록) / 주의(노랑) / 과다(빨강) */
 function donutLevelColors(
-  percent: number,
+  percent: number | null,
   isDark: boolean,
 ): { stroke: string; centerColor: string } {
+  if (percent == null) {
+    const neutral = isDark ? tokens.color.grey5.val : tokens.color.grey6.val
+    return { stroke: neutral, centerColor: neutral }
+  }
   if (percent < 40) {
     return {
       stroke: isDark ? "#5BC5AB" : tokens.color.sub8.val,
@@ -97,16 +99,25 @@ function NutrientDonut({
 }: {
   label: string
   amountStr: string
-  percent: number
+  percent: number | null
   isDark: boolean
 }) {
   const { stroke, centerColor } = donutLevelColors(percent, isDark)
-  const arcPercent = Math.min(Math.max(percent, 0), 100)
+  const arcPercent =
+    percent == null ? 0 : Math.min(Math.max(percent, 0), 100)
   const dash = (arcPercent / 100) * CIRC
   const displayPct =
-    percent >= 100 ? Math.round(percent) : Math.max(0, Math.round(percent))
+    percent == null
+      ? null
+      : percent >= 100
+        ? Math.round(percent)
+        : Math.max(0, Math.round(percent))
   const centerLabel =
-    displayPct > 999 ? "999%+" : `${Math.min(displayPct, 999)}%`
+    displayPct == null
+      ? "—"
+      : displayPct > 999
+        ? "999%+"
+        : `${Math.min(displayPct, 999)}%`
 
   const trackColor = isDark
     ? tokens.color.grey4.val + "66"
@@ -195,6 +206,7 @@ interface FoodNutrientDonutsProps {
 }
 
 export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
+  const { t } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
   const limits = useNutrientLimits()
 
@@ -203,13 +215,15 @@ export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
       {NUTRIENT_KEYS.map((key) => {
         const limit = dailyLimitFor(key, limits)
         const amount = valueFor(food, key)
-        // 목표를 모르면(체중 미기록) 비율을 0 으로 둔다. 임의 체중으로 지어내면
-        // 환자가 근거 없는 퍼센트를 보게 된다.
-        const rawPct = limit != null && limit > 0 ? (amount / limit) * 100 : 0
+        // 기준을 모르면 0%가 아니라 미확인 상태로 그린다.
+        const rawPct =
+          amount != null && limit != null && limit > 0
+            ? (amount / limit) * 100
+            : null
         return (
           <NutrientDonut
             key={key}
-            label={LABELS[key]}
+            label={t(`mealReport.nutrients.${key}`)}
             amountStr={formatAmount(key, amount)}
             percent={rawPct}
             isDark={isDark}

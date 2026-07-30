@@ -124,7 +124,10 @@ export function asChatStreamError(error: unknown): ChatStreamError {
   if (error instanceof ChatStreamError) return error
   return new ChatStreamError({
     code: "UNKNOWN",
-    message: error instanceof Error ? error.message : "Unknown chat error",
+    message:
+      error instanceof Error
+        ? error.message
+        : "답변을 받지 못했어요. 잠시 후 다시 보내 주세요.",
     retryable: false,
     partialContentAvailable: false,
   })
@@ -132,7 +135,7 @@ export function asChatStreamError(error: unknown): ChatStreamError {
 
 export interface Summary {
   conversationId: number
-  summary: string // JSON format
+  summary: string
 }
 
 // === Domain Models (app-internal, Date objects, camelCase) ===
@@ -157,6 +160,11 @@ export interface Message {
   aiCategory?: ChatCategory
   aiCategoryLabel?: string
   createdAt: Date
+  /**
+   * 이 세션에서 첨부해 보낸 사진의 로컬 URI (클라이언트 전용 낙관 표시).
+   * 서버는 "[이미지]" 텍스트로 저장하므로 히스토리 재로드 시에는 없다.
+   */
+  imageUri?: string
 }
 
 export function reconcileStreamedMessage(
@@ -181,6 +189,33 @@ export function reconcileStreamedMessage(
     ).length
   withoutDuplicates.splice(insertionIndex, 0, finalMessage)
   return withoutDuplicates
+}
+
+/**
+ * 답변 다시 받기 직전 정리 — 마지막 질문 뒤에 붙은 답변은 하나도 남기지 않는다.
+ * 실패 폴백이 그 자리에 남으면 새 답변과 나란히 서서, 어느 쪽이 유효한 의료
+ * 답변인지 알 수 없게 된다. 답변이 여러 개 쌓인 경우(중복 재생성)도 함께 걷는다.
+ */
+export function dropAnswersAfterLastUser(messages: Message[]): Message[] {
+  const lastUserIndex = messages.findLastIndex(
+    (message) => message.role === "user",
+  )
+  if (lastUserIndex === -1) return messages
+  // 걷어낼 게 없으면 같은 배열을 돌려 불필요한 리렌더를 만들지 않는다.
+  if (lastUserIndex === messages.length - 1) return messages
+  return messages.slice(0, lastUserIndex + 1)
+}
+
+/**
+ * 대화 생성부터 실패한 턴은 재생성할 대화가 서버에 없다. 질문까지 걷어내고
+ * 처음 보내던 경로(대화 생성 + 전송)로 다시 태워야 질문 버블이 겹치지 않는다.
+ */
+export function dropLastTurn(messages: Message[]): Message[] {
+  const lastUserIndex = messages.findLastIndex(
+    (message) => message.role === "user",
+  )
+  if (lastUserIndex === -1) return messages
+  return messages.slice(0, lastUserIndex)
 }
 
 // === Mapper Functions ===
@@ -270,12 +305,13 @@ export interface ChatService {
   /** 메시지 목록 조회 */
   getMessages(conversationId: number): Promise<Message[]>
 
-  /** 메시지 전송 → AI 응답 SSE 수신 */
+  /** 메시지 전송 → AI 응답 SSE 수신. imageUri 가 있으면 IMAGE 멀티모달 전송. */
   sendMessage(
     conversationId: number,
     content: string,
     userCategory: ChatCategory,
     onChunk?: (text: string) => void,
+    imageUri?: string,
   ): Promise<Message>
 
   /** 대화 요약 생성 */

@@ -15,6 +15,7 @@ import { YStack, XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 const SCREEN_HEIGHT = Dimensions.get("window").height
 const SHEET_MAX_HEIGHT = SCREEN_HEIGHT * 0.5
@@ -42,9 +43,11 @@ export function BottomSheetPicker({
   value,
   options,
   onSelect,
-  placeholder = "선택해주세요",
+  placeholder,
   required,
 }: BottomSheetPickerProps) {
+  const { t } = useTranslation()
+  const resolvedPlaceholder = placeholder ?? t("form.choose")
   const [visible, setVisible] = useState(false)
   const insets = useSafeAreaInsets()
   const translateY = useRef(new Animated.Value(SHEET_MAX_HEIGHT)).current
@@ -131,7 +134,7 @@ export function BottomSheetPicker({
             color={selectedOption ? colors.label : colors.placeholder}
             letterSpacing={-0.3}
           >
-            {selectedOption ? selectedOption.label : placeholder}
+            {selectedOption ? selectedOption.label : resolvedPlaceholder}
           </Text>
           <Ionicons name="chevron-down" size={20} color={colors.chevron} />
         </XStack>
@@ -175,6 +178,8 @@ export function BottomSheetPicker({
               />
             </YStack>
             <FlatList
+              bounces={false}
+              overScrollMode="never"
               data={options}
               keyExtractor={(item) => item.value}
               style={{ maxHeight: SHEET_MAX_HEIGHT - 60 }}

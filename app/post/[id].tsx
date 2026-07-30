@@ -1,87 +1,87 @@
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
   ActionSheetIOS,
   Alert,
   Image,
+  Modal,
   Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
   TextInput,
+  View,
 } from "react-native"
-import { useState } from "react"
-import { YStack, XStack, Text, View } from "tamagui"
+import { useMemo, useRef, useState } from "react"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardStickyView } from "react-native-keyboard-controller"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useLocalSearchParams, useRouter, type Href } from "expo-router"
-import { Icon } from "@/src/shared/components/Icon"
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated"
+
+import { useSurface } from "@/src/hooks/useSurface"
+import { hapticSelection } from "@/src/lib/haptics"
+import { MOTION } from "@/src/theme/surface"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
+import { useBlockedUsers } from "@/src/features/recipe/hooks/useBlockedUsers"
 import { PollCard } from "@/src/features/recipe/components/PollCard"
 import { TagChips } from "@/src/features/recipe/components/TagChips"
+import { MentionText } from "@/src/features/recipe/components/MentionText"
+import {
+  MentionSuggestions,
+  type MentionCandidate,
+} from "@/src/features/recipe/components/MentionSuggestions"
+import {
+  applyMention,
+  findMentionQuery,
+  removeMention,
+  retainedMentions,
+} from "@/src/features/recipe/utils/commentMentions"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
+import { formatTimeAgo } from "@/src/features/recipe/utils/timeAgo"
+import { rankRelatedPosts } from "@/src/features/recipe/utils/postRanking"
 import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
+import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { getErrorMessage } from "@/src/lib/errorUtils"
-import { tokens } from "@/src/theme/tokens"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import type { CommunityComment } from "@/src/features/recipe/types"
+import { useTranslation } from "react-i18next"
 
-const BG = {
-  light: tokens.color.offWhite.val,
-  dark: tokens.color.appBgDark.val,
-}
-const HEADER_ICON = { light: "#3C3C43", dark: tokens.color.textDark.val }
-const AUTHOR_NAME = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
-const AUTHOR_SUB = { light: "#81818D", dark: "#858591" }
-const TITLE_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
-const BODY_COLOR = { light: "#3C3C43", dark: "#C5C8CE" }
-const DIVIDER = { light: "#E5E5EA", dark: tokens.color.cardBgDark.val }
-const LIKE_COLOR = { light: "#44AF94", dark: "#44AF94" }
-const MUTED_TEXT = { light: "#81818D", dark: "#858591" }
-const AVATAR_BG = { light: tokens.color.textDark.val, dark: "#3A3A3C" }
-const NAV_LABEL = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightMuted.val,
-}
-const NAV_TITLE = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
+const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
+
 const WITHDRAWN_AUTHOR_NAME = "탈퇴한 사용자"
+const APP_DOWNLOAD_URL =
+  "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
 
-function isWithdrawnPostAuthor(post: {
+function isWithdrawnAuthor(author: {
   authorId?: number | null
   authorName: string
 }) {
-  return post.authorId === null || post.authorName === WITHDRAWN_AUTHOR_NAME
-}
-
-function formatTimeAgo(date: Date): string {
-  const diffMs = Date.now() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return "방금 전"
-  if (diffMin < 60) return `${diffMin}분 전`
-  const diffHour = Math.floor(diffMin / 60)
-  if (diffHour < 24) return `${diffHour}시간 전`
-  const diffDay = Math.floor(diffHour / 24)
-  return `${diffDay}일 전`
+  return author.authorId === null || author.authorName === WITHDRAWN_AUTHOR_NAME
 }
 
 export default function PostDetailScreen() {
+  const { t, i18n } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const scheme = useAppColorScheme()
+  const surface = useSurface()
   const bottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 16) : insets.bottom
   const [commentText, setCommentText] = useState("")
   const [replyingTo, setReplyingTo] = useState<CommunityComment | null>(null)
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [commentCursor, setCommentCursor] = useState(0)
+  /** 입력창에서 고른 멘션. 전송 직전 본문에 남아 있는 것만 서버로 보낸다. */
+  const [pickedMentions, setPickedMentions] = useState<string[]>([])
+  const commentInputRef = useRef<TextInput>(null)
 
   const {
     post,
@@ -93,6 +93,8 @@ export default function PostDetailScreen() {
     refetch,
     castVoteAsync,
     isVoting,
+    togglePostLike,
+    togglePostBookmark,
     createComment,
     updateComment,
     deleteComment,
@@ -101,8 +103,160 @@ export default function PostDetailScreen() {
     isCreatingComment,
     isUpdatingComment,
   } = usePostDetail(id!)
-  const { posts, toggleLike, toggleBookmark, deletePost, reportPost } =
-    useCommunityPosts()
+  const { posts, deletePost, reportPostAsync } = useCommunityPosts()
+  const { blockedNickNames } = useBlockedUsers()
+
+  const inkBg = surface.isDark ? "#F4F4F6" : "#1D1E20"
+  const inkContent = surface.isDark ? "#17181C" : "#FFFFFF"
+  const reportReasons: { label: string; value: string }[] = [
+    {
+      label: t("community.postDetail.reportReasons.spam"),
+      value: "SPAM",
+    },
+    {
+      label: t("community.postDetail.reportReasons.harassment"),
+      value: "HARASSMENT",
+    },
+    {
+      label: t("community.postDetail.reportReasons.inappropriate"),
+      value: "INAPPROPRIATE_CONTENT",
+    },
+    {
+      label: t("community.postDetail.reportReasons.falseInformation"),
+      value: "FALSE_INFORMATION",
+    },
+    {
+      label: t("community.postDetail.reportReasons.other"),
+      value: "OTHER",
+    },
+  ]
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case "diet":
+        return t("community.categories.diet")
+      case "numbers":
+        return t("community.categories.numbers")
+      case "symptoms":
+        return t("community.categories.symptoms")
+      case "medicine":
+        return t("community.categories.medicine")
+      case "dining-out":
+        return t("community.categories.diningOut")
+      case "daily":
+        return t("community.categories.daily")
+      default:
+        return category
+    }
+  }
+
+  /** 이어 읽을 글 — 태그·카테고리·핫스코어 기반, 차단한 작성자의 글은 제외. */
+  const relatedPosts = useMemo(() => {
+    if (!post) return []
+    const candidates = posts.filter(
+      (p) => !blockedNickNames.includes(p.authorName),
+    )
+    return rankRelatedPosts(post, candidates, new Date(), 3)
+  }, [post, posts, blockedNickNames])
+
+  /** 태그할 수 있는 사람 = 글쓴이 + 댓글 단 사람. 나 자신과 탈퇴 계정은 뺀다. */
+  const { data: myProfile } = useMyPageProfile()
+  const mentionCandidates = useMemo<MentionCandidate[]>(() => {
+    if (!post) return []
+    const myNickName = myProfile?.nickName
+    const seen = new Set<string>()
+    const candidates: MentionCandidate[] = []
+
+    const push = (nickName: string, isPostAuthor: boolean) => {
+      if (
+        !nickName ||
+        nickName === WITHDRAWN_AUTHOR_NAME ||
+        nickName === myNickName ||
+        seen.has(nickName)
+      ) {
+        return
+      }
+      seen.add(nickName)
+      candidates.push({ nickName, isPostAuthor })
+    }
+
+    push(post.authorName, true)
+    const walk = (list: CommunityComment[]) => {
+      list.forEach((comment) => {
+        if (!comment.isDeleted) push(comment.authorName, false)
+        walk(comment.replies)
+      })
+    }
+    walk(comments)
+    return candidates
+  }, [post, comments, myProfile?.nickName])
+
+  const mentionQuery = findMentionQuery(commentText, commentCursor)
+  const visibleMentionCandidates = useMemo(() => {
+    if (!mentionQuery) return []
+    const query = mentionQuery.query.toLowerCase()
+    return mentionCandidates.filter((candidate) =>
+      candidate.nickName.toLowerCase().includes(query),
+    )
+  }, [mentionQuery, mentionCandidates])
+
+  const handleSelectMention = (nickName: string) => {
+    if (!mentionQuery) return
+    hapticSelection()
+    const next = applyMention(commentText, mentionQuery, nickName)
+    setCommentText(next.text)
+    setCommentCursor(next.cursor)
+    setPickedMentions((prev) =>
+      prev.includes(nickName) ? prev : [...prev, nickName],
+    )
+    commentInputRef.current?.focus()
+  }
+
+  /** 답글은 상대를 태그한 채로 시작한다 — 누구에게 하는 말인지 본문에도 남는다. */
+  const startReplyTo = (comment: CommunityComment) => {
+    setReplyingTo(comment)
+    setEditingCommentId(null)
+    const canMention =
+      comment.authorName !== WITHDRAWN_AUTHOR_NAME &&
+      comment.authorName !== myProfile?.nickName
+    const seed = canMention ? `@${comment.authorName} ` : ""
+    setCommentText(seed)
+    setCommentCursor(seed.length)
+    setPickedMentions(canMention ? [comment.authorName] : [])
+    commentInputRef.current?.focus()
+  }
+
+  const resetCommentDraft = () => {
+    setCommentText("")
+    setCommentCursor(0)
+    setPickedMentions([])
+  }
+
+  /** 실제로 전송될 태그. 손으로 친 '@이름'은 여기 들어오지 않는다. */
+  const activeMentions = useMemo(
+    () => retainedMentions(commentText, pickedMentions),
+    [commentText, pickedMentions],
+  )
+
+  const handleRemoveMention = (nickName: string) => {
+    hapticSelection()
+    const next = removeMention(commentText, nickName)
+    setCommentText(next)
+    setCommentCursor(next.length)
+    setPickedMentions((prev) => prev.filter((name) => name !== nickName))
+  }
+
+  const heartScale = useSharedValue(1)
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }))
+
+  const handleToggleLike = () => {
+    heartScale.value = withSequence(
+      withSpring(1.3, HEART_SPRING),
+      withSpring(1, HEART_SPRING),
+    )
+    togglePostLike()
+  }
 
   const handleEdit = () => {
     if (!post) return
@@ -111,48 +265,76 @@ export default function PostDetailScreen() {
   }
 
   const handleDelete = () => {
-    Alert.alert("게시글 삭제", "이 게시글을 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "삭제",
-        style: "destructive",
-        onPress: () => {
-          deletePost(post!.id)
-          router.back()
+    Alert.alert(
+      t("community.postDetail.deletePostTitle"),
+      t("community.postDetail.deletePostBody"),
+      [
+        { text: t("action.cancel"), style: "cancel" },
+        {
+          text: t("action.delete"),
+          style: "destructive",
+          onPress: () => {
+            deletePost(post!.id)
+            router.back()
+          },
         },
-      },
-    ])
+      ],
+    )
   }
 
   const handleReport = () => {
-    const reasons: { label: string; value: string }[] = [
-      { label: "스팸/광고", value: "SPAM" },
-      { label: "괴롭힘/혐오 표현", value: "HARASSMENT" },
-      { label: "부적절한 콘텐츠", value: "INAPPROPRIATE_CONTENT" },
-      { label: "거짓 정보", value: "FALSE_INFORMATION" },
-      { label: "기타", value: "OTHER" },
-    ]
-    Alert.alert("신고 사유를 선택해주세요", undefined, [
-      ...reasons.map((r) => ({
+    Alert.alert(t("community.postDetail.reportReasonTitle"), undefined, [
+      ...reportReasons.map((r) => ({
         text: r.label,
-        onPress: () => {
-          reportPost({ postId: post!.id, reason: r.value })
-          Alert.alert(
-            "신고 완료",
-            "신고가 접수되었습니다. 검토 후 조치하겠습니다.",
-          )
+        onPress: async () => {
+          try {
+            await reportPostAsync({ postId: post!.id, reason: r.value })
+            Alert.alert(
+              t("community.postDetail.reportReceivedTitle"),
+              t("community.postDetail.reportReceivedBody"),
+            )
+          } catch (reportError) {
+            Alert.alert(
+              t("community.postDetail.reportErrorTitle"),
+              getErrorMessage(
+                reportError,
+                t("community.postDetail.reportErrorBody"),
+              ),
+            )
+          }
         },
       })),
-      { text: "취소", style: "cancel" },
+      { text: t("action.cancel"), style: "cancel" },
     ])
+  }
+
+  const handleShare = async () => {
+    if (!post) return
+    hapticSelection()
+    try {
+      await Share.share({
+        message: t("community.postDetail.shareMessage", {
+          title: post.title,
+          description: post.description,
+          url: APP_DOWNLOAD_URL,
+        }),
+      })
+    } catch {
+      // 사용자가 공유를 취소한 경우 조용히 넘어간다.
+    }
   }
 
   const handleMorePress = () => {
     if (!post) return
-    const withdrawnAuthor = isWithdrawnPostAuthor(post)
+    const withdrawnAuthor = isWithdrawnAuthor(post)
     const options = withdrawnAuthor
-      ? ["신고하기", "취소"]
-      : ["수정하기", "삭제하기", "신고하기", "취소"]
+      ? [t("community.postDetail.report"), t("action.cancel")]
+      : [
+          t("community.postDetail.edit"),
+          t("action.delete"),
+          t("community.postDetail.report"),
+          t("action.cancel"),
+        ]
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -172,18 +354,22 @@ export default function PostDetailScreen() {
       )
     } else {
       Alert.alert(
-        "더보기",
+        t("community.postDetail.more"),
         "",
         withdrawnAuthor
           ? [
-              { text: "신고하기", onPress: handleReport },
-              { text: "취소", style: "cancel" },
+              { text: t("community.postDetail.report"), onPress: handleReport },
+              { text: t("action.cancel"), style: "cancel" },
             ]
           : [
-              { text: "수정하기", onPress: handleEdit },
-              { text: "삭제하기", style: "destructive", onPress: handleDelete },
-              { text: "신고하기", onPress: handleReport },
-              { text: "취소", style: "cancel" },
+              { text: t("community.postDetail.edit"), onPress: handleEdit },
+              {
+                text: t("action.delete"),
+                style: "destructive",
+                onPress: handleDelete,
+              },
+              { text: t("community.postDetail.report"), onPress: handleReport },
+              { text: t("action.cancel"), style: "cancel" },
             ],
       )
     }
@@ -194,94 +380,120 @@ export default function PostDetailScreen() {
       await castVoteAsync(optionIds)
     } catch (voteError) {
       Alert.alert(
-        "투표 실패",
-        getErrorMessage(voteError) ||
-          "투표에 실패했어요. 잠시 후 다시 시도해주세요.",
+        t("community.postDetail.voteErrorTitle"),
+        getErrorMessage(voteError, t("community.postDetail.voteErrorBody")),
       )
     }
   }
 
   const handleTagPress = (tag: string) => {
     router.push({
-      pathname: "/recipe",
-      params: { tab: "free", tag },
+      pathname: "/community",
+      params: { tag },
     } as Href)
   }
 
   const handleSubmitComment = async () => {
     const content = commentText.trim()
     if (!content) return
+    // 골라놓고 '@닉네임'을 지웠다면 태그도 함께 사라진다.
+    const mentions = retainedMentions(content, pickedMentions)
     try {
       if (editingCommentId) {
-        await updateComment({ commentId: editingCommentId, content })
+        await updateComment({ commentId: editingCommentId, content, mentions })
         setEditingCommentId(null)
       } else {
         await createComment({
           content,
           parentCommentId: replyingTo?.id ?? null,
+          mentions,
         })
         setReplyingTo(null)
       }
-      setCommentText("")
+      resetCommentDraft()
     } catch (commentError) {
-      Alert.alert("댓글 저장 실패", getErrorMessage(commentError))
+      Alert.alert(
+        t("community.postDetail.commentSaveErrorTitle"),
+        getErrorMessage(
+          commentError,
+          t("community.postDetail.commentSaveErrorBody"),
+        ),
+      )
     }
   }
 
   const handleCommentReport = async (comment: CommunityComment) => {
-    const reasons: { label: string; value: string }[] = [
-      { label: "스팸/광고", value: "SPAM" },
-      { label: "괴롭힘/혐오 표현", value: "HARASSMENT" },
-      { label: "부적절한 콘텐츠", value: "INAPPROPRIATE_CONTENT" },
-      { label: "거짓 정보", value: "FALSE_INFORMATION" },
-      { label: "기타", value: "OTHER" },
-    ]
-    Alert.alert("신고 사유를 선택해주세요", undefined, [
-      ...reasons.map((r) => ({
+    Alert.alert(t("community.postDetail.reportReasonTitle"), undefined, [
+      ...reportReasons.map((r) => ({
         text: r.label,
         onPress: async () => {
           try {
             await reportComment({ commentId: comment.id, reason: r.value })
-            Alert.alert("신고 완료", "신고가 접수되었습니다.")
+            Alert.alert(
+              t("community.postDetail.reportReceivedTitle"),
+              t("community.postDetail.reportReceivedBody"),
+            )
           } catch (commentError) {
-            Alert.alert("신고 실패", getErrorMessage(commentError))
+            Alert.alert(
+              t("community.postDetail.reportErrorTitle"),
+              getErrorMessage(
+                commentError,
+                t("community.postDetail.reportErrorBody"),
+              ),
+            )
           }
         },
       })),
-      { text: "취소", style: "cancel" },
+      { text: t("action.cancel"), style: "cancel" },
     ])
   }
 
   const handleDeleteComment = (comment: CommunityComment) => {
-    Alert.alert("댓글 삭제", "이 댓글을 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "삭제",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteComment(comment.id)
-          } catch (commentError) {
-            Alert.alert("댓글 삭제 실패", getErrorMessage(commentError))
-          }
+    Alert.alert(
+      t("community.postDetail.deleteCommentTitle"),
+      t("community.postDetail.deleteCommentBody"),
+      [
+        { text: t("action.cancel"), style: "cancel" },
+        {
+          text: t("action.delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteComment(comment.id)
+            } catch (commentError) {
+              Alert.alert(
+                t("community.postDetail.commentDeleteErrorTitle"),
+                getErrorMessage(
+                  commentError,
+                  t("community.postDetail.commentDeleteErrorBody"),
+                ),
+              )
+            }
+          },
         },
-      },
-    ])
+      ],
+    )
   }
 
   const handleCommentMore = (comment: CommunityComment) => {
     if (comment.isDeleted) return
-    const startReply = () => {
-      setReplyingTo(comment)
-      setEditingCommentId(null)
-      setCommentText("")
-    }
+    const startReply = () => startReplyTo(comment)
     const startEdit = () => {
       setEditingCommentId(comment.id)
       setReplyingTo(null)
       setCommentText(comment.content)
+      setCommentCursor(comment.content.length)
+      // 수정 진입 시 기존 멘션을 이어받아, 손대지 않으면 그대로 유지된다.
+      setPickedMentions(comment.mentions)
+      commentInputRef.current?.focus()
     }
-    const options = ["답글", "수정", "삭제", "신고", "취소"]
+    const options = [
+      t("community.postDetail.reply"),
+      t("community.postDetail.edit"),
+      t("action.delete"),
+      t("community.postDetail.report"),
+      t("action.cancel"),
+    ]
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -298,285 +510,345 @@ export default function PostDetailScreen() {
       )
       return
     }
-    Alert.alert("댓글", undefined, [
-      { text: "답글", onPress: startReply },
-      { text: "수정", onPress: startEdit },
+    Alert.alert(t("community.postDetail.comment"), undefined, [
+      { text: t("community.postDetail.reply"), onPress: startReply },
+      { text: t("community.postDetail.edit"), onPress: startEdit },
       {
-        text: "삭제",
+        text: t("action.delete"),
         style: "destructive",
         onPress: () => handleDeleteComment(comment),
       },
-      { text: "신고", onPress: () => handleCommentReport(comment) },
-      { text: "취소", style: "cancel" },
+      {
+        text: t("community.postDetail.report"),
+        onPress: () => handleCommentReport(comment),
+      },
+      { text: t("action.cancel"), style: "cancel" },
     ])
   }
 
   const handleToggleCommentLike = async (comment: CommunityComment) => {
     if (comment.isDeleted) return
+    hapticSelection()
     try {
       await toggleCommentLike(comment.id)
     } catch (commentError) {
-      Alert.alert("좋아요 실패", getErrorMessage(commentError))
+      Alert.alert(
+        t("community.postDetail.likeErrorTitle"),
+        getErrorMessage(commentError, t("community.postDetail.likeErrorBody")),
+      )
     }
   }
 
   const renderComment = (comment: CommunityComment, isReply = false) => (
-    <YStack
+    <View
       key={comment.id}
-      marginLeft={isReply ? 28 : 0}
-      paddingVertical={12}
-      gap={6}
+      style={[styles.comment, isReply && styles.commentReply]}
     >
-      <XStack justifyContent="space-between" gap={12}>
-        <YStack flex={1} gap={3}>
-          <XStack gap={6} alignItems="center">
-            <Text
-              fontSize={13}
-              fontWeight="600"
-              color={AUTHOR_NAME[scheme]}
-              fontFamily="$body"
-            >
-              {comment.authorName}
+      <View style={styles.commentTop}>
+        <View
+          style={[styles.commentAvatar, { backgroundColor: surface.surface }]}
+        >
+          <Ionicons name="person" size={15} color={surface.textWeak} />
+        </View>
+        <View style={styles.commentBody}>
+          <View style={styles.commentNameRow}>
+            <Text style={[styles.commentName, { color: surface.textStrong }]}>
+              {isWithdrawnAuthor(comment)
+                ? t("community.postDetail.withdrawnUser")
+                : comment.authorName}
             </Text>
-            <Text fontSize={12} color={MUTED_TEXT[scheme]} fontFamily="$body">
-              {formatTimeAgo(comment.createdAt)}
+            <Text style={[styles.commentTime, { color: surface.textWeak }]}>
+              {formatTimeAgo(comment.createdAt, i18n.language)}
             </Text>
-          </XStack>
-          <Text
-            fontSize={14}
-            lineHeight={21}
-            color={comment.isDeleted ? MUTED_TEXT[scheme] : BODY_COLOR[scheme]}
-            fontFamily="$body"
-          >
-            {comment.content}
-          </Text>
-        </YStack>
+          </View>
+          <MentionText
+            content={
+              comment.isDeleted
+                ? t("community.postDetail.deletedComment")
+                : comment.content
+            }
+            mentions={comment.mentions}
+            muted={comment.isDeleted}
+            style={styles.commentContent}
+          />
+          {!comment.isDeleted && (
+            <View style={styles.commentActions}>
+              <Pressable
+                onPress={() => handleToggleCommentLike(comment)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("community.postDetail.likeComment")}
+                style={styles.commentAction}
+              >
+                <Ionicons
+                  name={comment.liked ? "heart" : "heart-outline"}
+                  size={14}
+                  color={comment.liked ? surface.brand : surface.textWeak}
+                />
+                {comment.likes > 0 && (
+                  <Text
+                    style={[
+                      styles.commentActionText,
+                      {
+                        color: comment.liked ? surface.brand : surface.textWeak,
+                      },
+                    ]}
+                  >
+                    {comment.likes}
+                  </Text>
+                )}
+              </Pressable>
+              {!isReply && (
+                <Pressable
+                  onPress={() => startReplyTo(comment)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                >
+                  <Text
+                    style={[
+                      styles.commentActionText,
+                      { color: surface.textWeak },
+                    ]}
+                  >
+                    {t("community.postDetail.reply")}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+        </View>
         {!comment.isDeleted && (
-          <Pressable hitSlop={8} onPress={() => handleCommentMore(comment)}>
+          <Pressable
+            hitSlop={10}
+            onPress={() => handleCommentMore(comment)}
+            accessibilityRole="button"
+            accessibilityLabel={t("community.postDetail.commentMore")}
+          >
             <Ionicons
               name="ellipsis-horizontal"
-              size={18}
-              color={MUTED_TEXT[scheme]}
+              size={16}
+              color={surface.textWeak}
             />
           </Pressable>
         )}
-      </XStack>
-      {!comment.isDeleted && (
-        <XStack gap={14}>
-          <Pressable onPress={() => handleToggleCommentLike(comment)}>
-            <XStack gap={4} alignItems="center">
-              <Ionicons
-                name={comment.liked ? "heart" : "heart-outline"}
-                size={16}
-                color={LIKE_COLOR[scheme]}
-              />
-              <Text fontSize={12} color={LIKE_COLOR[scheme]}>
-                {comment.likes}
-              </Text>
-            </XStack>
-          </Pressable>
-          {!isReply && (
-            <Pressable
-              onPress={() => {
-                setReplyingTo(comment)
-                setEditingCommentId(null)
-                setCommentText("")
-              }}
-            >
-              <Text fontSize={12} color={MUTED_TEXT[scheme]}>
-                답글
-              </Text>
-            </Pressable>
-          )}
-        </XStack>
-      )}
+      </View>
       {comment.replies.map((reply) => renderComment(reply, true))}
-    </YStack>
+    </View>
   )
 
   if (isError) {
     return (
-      <YStack
-        flex={1}
-        backgroundColor={BG[scheme]}
-        paddingTop={insets.top}
-        paddingHorizontal={20}
-        justifyContent="center"
+      <View
+        style={[
+          styles.stateScreen,
+          {
+            backgroundColor: surface.canvas,
+            paddingTop: insets.top,
+          },
+        ]}
       >
         <ErrorMessage
+          title={t("community.postDetail.loadErrorTitle")}
           message={getErrorMessage(error)}
           onRetry={() => refetch()}
+          retryLabel={t("community.postDetail.reload")}
         />
-      </YStack>
+      </View>
     )
   }
 
   if (isLoading) {
-    return <LoadingScreen message="게시물을 불러오는 중..." />
+    return <LoadingScreen message={t("community.postDetail.loading")} />
   }
 
   if (!post) {
     return (
-      <YStack
-        flex={1}
-        backgroundColor={BG[scheme]}
-        paddingTop={insets.top}
-        paddingHorizontal={20}
-        justifyContent="center"
-        gap="$3"
+      <View
+        style={[
+          styles.stateScreen,
+          {
+            backgroundColor: surface.canvas,
+            paddingTop: insets.top,
+          },
+        ]}
       >
-        <Text fontSize={16} fontFamily="$body" color={TITLE_COLOR[scheme]}>
-          게시글을 찾을 수 없습니다.
+        <Text style={[styles.stateTitle, { color: surface.textStrong }]}>
+          {t("community.postDetail.notFound")}
         </Text>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
-          <Text fontSize={15} color={LIKE_COLOR[scheme]} fontWeight="600">
-            돌아가기
+          <Text style={[styles.stateAction, { color: surface.brand }]}>
+            {t("action.back")}
           </Text>
         </Pressable>
-      </YStack>
+      </View>
     )
   }
 
-  // Find previous/next posts
-  const currentIndex = posts.findIndex((p) => p.id === post.id)
-  const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null
-  const nextPost =
-    currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null
-  const withdrawnAuthor = isWithdrawnPostAuthor(post)
+  const withdrawnAuthor = isWithdrawnAuthor(post)
 
   return (
-    <YStack flex={1} backgroundColor={BG[scheme]} paddingTop={insets.top}>
-      {/* Header */}
-      <XStack
-        paddingHorizontal={16}
-        paddingVertical={12}
-        alignItems="center"
-        justifyContent="space-between"
-      >
+    <View
+      style={[
+        styles.screen,
+        { backgroundColor: surface.canvas, paddingTop: insets.top },
+      ]}
+    >
+      {/* 앱바 */}
+      <View style={styles.appBar}>
         <Pressable
           onPress={() => router.back()}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t("action.back")}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <Ionicons name="chevron-back" size={24} color={HEADER_ICON[scheme]} />
+          <Ionicons name="chevron-back" size={24} color={surface.textStrong} />
         </Pressable>
-        <XStack gap={16} alignItems="center">
-          {/* <Pressable hitSlop={8}>
-            <Icon name="notification" size={24} color={HEADER_ICON[scheme]} />
-          </Pressable> */}
-          {/* <Pressable hitSlop={8}>
-            <Icon name="upload" size={24} color={HEADER_ICON[scheme]} />
-          </Pressable> */}
-          <Pressable hitSlop={8} onPress={() => toggleBookmark(post.id)}>
-            <Icon
-              name="bookmark"
-              size={24}
-              color={post.bookmarked ? LIKE_COLOR[scheme] : HEADER_ICON[scheme]}
+        <View style={styles.appBarActions}>
+          <Pressable
+            hitSlop={10}
+            onPress={handleShare}
+            accessibilityRole="button"
+            accessibilityLabel={t("community.postDetail.share")}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
+            <Ionicons
+              name="share-outline"
+              size={22}
+              color={surface.textMuted}
             />
           </Pressable>
-          <Pressable hitSlop={8} onPress={handleMorePress}>
+          <Pressable
+            hitSlop={10}
+            onPress={() => {
+              hapticSelection()
+              togglePostBookmark()
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t("community.postDetail.bookmark")}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
+            <Ionicons
+              name={post.bookmarked ? "bookmark" : "bookmark-outline"}
+              size={21}
+              color={post.bookmarked ? surface.brand : surface.textMuted}
+            />
+          </Pressable>
+          <Pressable
+            hitSlop={10}
+            onPress={handleMorePress}
+            accessibilityRole="button"
+            accessibilityLabel={t("community.postDetail.more")}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
             <Ionicons
               name="ellipsis-horizontal"
-              size={24}
-              color={HEADER_ICON[scheme]}
+              size={22}
+              color={surface.textMuted}
             />
           </Pressable>
-        </XStack>
-      </XStack>
+        </View>
+      </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        bounces={false}
+        overScrollMode="never"
+        style={styles.flex}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomInset + 96 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       >
-        {/* Author */}
-        <XStack
-          paddingHorizontal={20}
-          paddingTop={16}
-          gap={10}
-          alignItems="center"
-        >
+        {/* 작성자 */}
+        <View style={styles.authorRow}>
           <View
-            width={36}
-            height={36}
-            borderRadius={18}
-            backgroundColor={AVATAR_BG[scheme]}
-            alignItems="center"
-            justifyContent="center"
+            style={[styles.authorAvatar, { backgroundColor: surface.surface }]}
           >
-            <Ionicons name="person" size={18} color={MUTED_TEXT[scheme]} />
+            <Ionicons name="person" size={19} color={surface.textWeak} />
           </View>
-          <YStack>
-            <Text
-              fontSize={15}
-              fontWeight="600"
-              fontFamily="$body"
-              color={AUTHOR_NAME[scheme]}
-            >
-              {withdrawnAuthor ? WITHDRAWN_AUTHOR_NAME : post.authorName}
+          <View style={styles.authorText}>
+            <Text style={[styles.authorName, { color: surface.textStrong }]}>
+              {withdrawnAuthor
+                ? t("community.postDetail.withdrawnUser")
+                : post.authorName}
             </Text>
-            <Text
-              fontSize={12}
-              fontWeight="400"
-              fontFamily="$body"
-              color={AUTHOR_SUB[scheme]}
-            >
-              {formatTimeAgo(post.createdAt)}
+            <Text style={[styles.authorSub, { color: surface.textMuted }]}>
+              {getCategoryLabel(post.category)} ·{" "}
+              {formatTimeAgo(post.createdAt, i18n.language)}
             </Text>
-          </YStack>
-        </XStack>
+          </View>
+        </View>
 
-        {/* Title */}
-        <YStack paddingHorizontal={20} paddingTop={16}>
-          <Text
-            fontSize={18}
-            fontWeight="700"
-            fontFamily="$body"
-            lineHeight={26}
-            color={TITLE_COLOR[scheme]}
-          >
-            {post.title}
-          </Text>
-        </YStack>
+        {/* 제목·본문 */}
+        <Text
+          style={[styles.title, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
+          {post.title}
+        </Text>
+        <Text
+          style={[styles.body, { color: surface.text }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
+          {post.description}
+        </Text>
 
-        {/* Description */}
-        <YStack paddingHorizontal={20} paddingTop={12} paddingBottom={20}>
-          <Text
-            fontSize={15}
-            fontWeight="400"
-            fontFamily="$body"
-            lineHeight={24}
-            color={BODY_COLOR[scheme]}
-          >
-            {post.description}
-          </Text>
-        </YStack>
-
-        {/* Image */}
-        {post.imageUri && (
+        {/* 이미지 — 1장이면 크게, 여러 장이면 가로 스트립. 탭하면 전체 보기. */}
+        {post.imageUris.length === 1 && (
+          <View style={styles.imageWrap}>
+            <Pressable
+              onPress={() => setPreviewImage(post.imageUris[0])}
+              accessibilityRole="imagebutton"
+              accessibilityLabel={t("community.postDetail.enlargePhoto")}
+            >
+              <Image
+                source={{ uri: post.imageUris[0] }}
+                style={[styles.postImage, { backgroundColor: surface.surface }]}
+                resizeMode="cover"
+              />
+            </Pressable>
+          </View>
+        )}
+        {post.imageUris.length > 1 && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              gap: 8,
-              paddingBottom: 20,
-            }}
+            bounces={false}
+            overScrollMode="never"
+            contentContainerStyle={styles.imageStrip}
           >
-            <Image
-              source={{ uri: post.imageUri }}
-              style={styles.postImage}
-              resizeMode="cover"
-            />
+            {post.imageUris.map((uri, index) => (
+              <Pressable
+                key={`${uri}-${index}`}
+                onPress={() => setPreviewImage(uri)}
+                accessibilityRole="imagebutton"
+                accessibilityLabel={t(
+                  "community.postDetail.enlargePhotoNumber",
+                  { number: index + 1 },
+                )}
+              >
+                <Image
+                  source={{ uri }}
+                  style={[
+                    styles.stripImage,
+                    { backgroundColor: surface.surface },
+                  ]}
+                  resizeMode="cover"
+                />
+              </Pressable>
+            ))}
           </ScrollView>
         )}
 
-        <YStack paddingHorizontal={20} paddingBottom={post.vote ? 12 : 20}>
-          <TagChips tags={post.tags} onPressTag={handleTagPress} />
-        </YStack>
+        {/* 태그 */}
+        {post.tags.length > 0 && (
+          <View style={styles.tagsWrap}>
+            <TagChips tags={post.tags} onPressTag={handleTagPress} />
+          </View>
+        )}
 
+        {/* 투표 */}
         {post.vote && (
           <PollCard
             vote={post.vote}
@@ -585,241 +857,662 @@ export default function PostDetailScreen() {
           />
         )}
 
-        {/* Engagement */}
-        <XStack
-          paddingHorizontal={20}
-          paddingBottom={16}
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Pressable
-            onPress={() => toggleLike(post.id)}
-            hitSlop={8}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        {/* 좋아요 */}
+        <View style={styles.engagementRow}>
+          <SurfacePressable
+            onPress={handleToggleLike}
+            hitSlop={4}
+            accessibilityState={{ selected: post.liked }}
+            accessibilityLabel={t("community.postDetail.like")}
+            baseColor={post.liked ? surface.surfaceBrand : surface.surface}
+            pressScale={0.94}
+            style={styles.likeButton}
           >
-            <XStack gap={6} alignItems="center">
+            <Animated.View style={heartStyle}>
               <Ionicons
                 name={post.liked ? "heart" : "heart-outline"}
-                size={20}
-                color={LIKE_COLOR[scheme]}
+                size={16}
+                color={post.liked ? surface.brand : surface.textMuted}
               />
-              <Text
-                fontSize={14}
-                fontWeight="500"
-                fontFamily="$body"
-                color={LIKE_COLOR[scheme]}
-              >
-                좋아요
-              </Text>
-            </XStack>
-          </Pressable>
-          <Text
-            fontSize={14}
-            fontWeight="400"
-            fontFamily="$body"
-            color={MUTED_TEXT[scheme]}
-          >
-            조회 0
-          </Text>
-        </XStack>
+            </Animated.View>
+            <Text
+              style={[
+                styles.likeLabel,
+                { color: post.liked ? surface.brand : surface.textMuted },
+              ]}
+            >
+              {t("community.postDetail.likeCount", { count: post.likes })}
+            </Text>
+          </SurfacePressable>
+        </View>
 
-        {/* Divider */}
+        {/* 본문 ↔ 댓글 경계 — 두꺼운 회색 밴드 하나로 가른다. */}
         <View
-          height={StyleSheet.hairlineWidth}
-          backgroundColor={DIVIDER[scheme]}
+          style={[
+            styles.sectionBand,
+            {
+              backgroundColor: surface.isDark ? "#26262A" : surface.surface,
+            },
+          ]}
         />
 
-        <YStack paddingHorizontal={20} paddingVertical={18} gap={12}>
-          <Text
-            fontSize={16}
-            fontWeight="700"
-            color={TITLE_COLOR[scheme]}
-            fontFamily="$body"
-          >
-            댓글 {post.comments}
+        {/* 댓글 */}
+        <View style={styles.commentsSection}>
+          <Text style={[styles.commentsTitle, { color: surface.textStrong }]}>
+            {t("community.postDetail.commentCount", {
+              count: post.comments,
+            })}
           </Text>
           {isCommentsLoading ? (
-            <Text fontSize={14} color={MUTED_TEXT[scheme]} fontFamily="$body">
-              댓글을 불러오는 중...
+            <Text
+              style={[styles.commentsLoading, { color: surface.textMuted }]}
+            >
+              {t("community.postDetail.commentsLoading")}
             </Text>
+          ) : comments.length === 0 ? (
+            <View style={styles.commentsEmpty}>
+              <Text
+                style={[
+                  styles.commentsEmptyTitle,
+                  { color: surface.textStrong },
+                ]}
+              >
+                {t("community.postDetail.noComments")}
+              </Text>
+              <Text
+                style={[styles.commentsEmptySub, { color: surface.textMuted }]}
+              >
+                {t("community.postDetail.firstComment")}
+              </Text>
+            </View>
           ) : (
             comments.map((comment) => renderComment(comment))
           )}
-        </YStack>
+        </View>
 
-        <View
-          height={StyleSheet.hairlineWidth}
-          backgroundColor={DIVIDER[scheme]}
-        />
-
-        {/* Previous / Next Post Navigation */}
-        {prevPost && (
+        {/* 이어 읽을 글 — 태그·카테고리가 닿아 있는 글을 골라준다. */}
+        {relatedPosts.length > 0 && (
           <>
-            <Pressable
-              onPress={() => router.replace(`/post/${prevPost.id}`)}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <XStack
-                paddingHorizontal={20}
-                paddingVertical={16}
-                gap={10}
-                alignItems="center"
-              >
-                <Text
-                  fontSize={13}
-                  fontWeight="400"
-                  fontFamily="$body"
-                  color={NAV_LABEL[scheme]}
-                >
-                  이전
-                </Text>
-                <Text
-                  fontSize={14}
-                  fontWeight="400"
-                  fontFamily="$body"
-                  color={NAV_TITLE[scheme]}
-                  numberOfLines={1}
-                  flex={1}
-                >
-                  {prevPost.title}
-                </Text>
-              </XStack>
-            </Pressable>
             <View
-              height={StyleSheet.hairlineWidth}
-              backgroundColor={DIVIDER[scheme]}
+              style={[
+                styles.sectionBand,
+                {
+                  backgroundColor: surface.isDark ? "#26262A" : surface.surface,
+                },
+              ]}
             />
-          </>
-        )}
-        {nextPost && (
-          <>
-            <Pressable
-              onPress={() => router.replace(`/post/${nextPost.id}`)}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <XStack
-                paddingHorizontal={20}
-                paddingVertical={16}
-                gap={10}
-                alignItems="center"
+            <View style={styles.relatedSection}>
+              <Text
+                style={[styles.relatedTitle, { color: surface.textStrong }]}
               >
-                <Text
-                  fontSize={13}
-                  fontWeight="400"
-                  fontFamily="$body"
-                  color={NAV_LABEL[scheme]}
+                {t("community.postDetail.related")}
+              </Text>
+              {relatedPosts.map((related) => (
+                <SurfacePressable
+                  key={related.id}
+                  onPress={() => router.push(`/post/${related.id}` as Href)}
+                  accessibilityLabel={related.title}
+                  baseColor={surface.isDark ? "#2E2E33" : surface.surface}
+                  style={styles.relatedCard}
                 >
-                  다음
-                </Text>
-                <Text
-                  fontSize={14}
-                  fontWeight="400"
-                  fontFamily="$body"
-                  color={NAV_TITLE[scheme]}
-                  numberOfLines={1}
-                  flex={1}
-                >
-                  {nextPost.title}
-                </Text>
-              </XStack>
-            </Pressable>
-            <View
-              height={StyleSheet.hairlineWidth}
-              backgroundColor={DIVIDER[scheme]}
-            />
+                  <Text
+                    style={[styles.relatedMeta, { color: surface.textWeak }]}
+                    numberOfLines={1}
+                  >
+                    {getCategoryLabel(related.category)} ·{" "}
+                    {formatTimeAgo(related.createdAt, i18n.language)}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.relatedCardTitle,
+                      { color: surface.textStrong },
+                    ]}
+                    numberOfLines={2}
+                    lineBreakStrategyIOS="hangul-word"
+                    textBreakStrategy="balanced"
+                  >
+                    {related.title}
+                  </Text>
+                </SurfacePressable>
+              ))}
+            </View>
           </>
         )}
       </ScrollView>
+
+      {/* 댓글 입력 바 */}
       <KeyboardStickyView offset={{ closed: 0, opened: bottomInset }}>
-        <YStack
-          backgroundColor={BG[scheme]}
-          paddingHorizontal={20}
-          paddingTop={10}
-          paddingBottom={10 + bottomInset}
-          gap={8}
-          borderTopWidth={StyleSheet.hairlineWidth}
-          borderTopColor={DIVIDER[scheme]}
+        {/* 멘션 후보는 입력 바 밖에 띄운다 — 흰 면이 위로 늘어나지 않는다. */}
+        {visibleMentionCandidates.length > 0 && (
+          <View style={styles.mentionFloat}>
+            <MentionSuggestions
+              candidates={visibleMentionCandidates}
+              onSelect={handleSelectMention}
+            />
+          </View>
+        )}
+        <View
+          style={[
+            styles.inputBar,
+            {
+              backgroundColor: surface.canvas,
+              borderTopColor: surface.hairline,
+              paddingBottom: 10 + bottomInset,
+            },
+          ]}
         >
           {(replyingTo || editingCommentId) && (
-            <XStack
-              backgroundColor={DIVIDER[scheme]}
-              borderRadius={8}
-              paddingHorizontal={10}
-              paddingVertical={8}
-              alignItems="center"
-              justifyContent="space-between"
+            <View
+              style={[
+                styles.inputContext,
+                { backgroundColor: surface.surface },
+              ]}
             >
-              <Text fontSize={12} color={MUTED_TEXT[scheme]}>
+              <Text
+                style={[styles.inputContextText, { color: surface.textMuted }]}
+                numberOfLines={1}
+              >
                 {editingCommentId
-                  ? "댓글 수정"
-                  : `${replyingTo?.authorName}님에게 답글`}
+                  ? t("community.postDetail.editingComment")
+                  : t("community.postDetail.replyingTo", {
+                      name: replyingTo?.authorName,
+                    })}
               </Text>
               <Pressable
                 onPress={() => {
                   setReplyingTo(null)
                   setEditingCommentId(null)
-                  setCommentText("")
+                  resetCommentDraft()
                 }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("community.postDetail.cancelReply")}
               >
-                <Text fontSize={12} color={LIKE_COLOR[scheme]}>
-                  취소
-                </Text>
+                <Ionicons name="close" size={15} color={surface.textWeak} />
               </Pressable>
-            </XStack>
+            </View>
           )}
-          <XStack
-            borderWidth={1}
-            borderColor={DIVIDER[scheme]}
-            borderRadius={8}
-            paddingHorizontal={12}
-            paddingVertical={8}
-            alignItems="center"
-            gap={10}
-          >
-            <TextInput
-              value={commentText}
-              onChangeText={setCommentText}
-              placeholder="댓글을 입력하세요"
-              placeholderTextColor={MUTED_TEXT[scheme]}
-              multiline
-              style={[styles.commentInput, { color: BODY_COLOR[scheme] }]}
-            />
-            <Pressable
+          {/* 확정된 태그 — 이 사람들에게만 실제로 알림이 간다. */}
+          {activeMentions.length > 0 && (
+            <View style={styles.mentionChips}>
+              {activeMentions.map((nickName) => (
+                <Pressable
+                  key={nickName}
+                  onPress={() => handleRemoveMention(nickName)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("community.postDetail.removeMention", {
+                    name: nickName,
+                  })}
+                  style={({ pressed }) => [
+                    styles.mentionChip,
+                    {
+                      backgroundColor: surface.surfaceBrand,
+                      opacity: pressed ? 0.7 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.mentionChipText, { color: surface.brand }]}
+                    numberOfLines={1}
+                  >
+                    @{nickName}
+                  </Text>
+                  <Ionicons name="close" size={12} color={surface.brand} />
+                </Pressable>
+              ))}
+            </View>
+          )}
+          <View style={styles.inputRow}>
+            <View
+              style={[styles.inputField, { backgroundColor: surface.surface }]}
+            >
+              <TextInput
+                ref={commentInputRef}
+                value={commentText}
+                onChangeText={setCommentText}
+                onSelectionChange={(event) =>
+                  setCommentCursor(event.nativeEvent.selection.start)
+                }
+                placeholder={t("community.postDetail.commentPlaceholder")}
+                placeholderTextColor={surface.placeholder}
+                multiline
+                maxLength={2000}
+                style={[styles.commentInput, { color: surface.textStrong }]}
+              />
+            </View>
+            <SurfacePressable
               onPress={handleSubmitComment}
               disabled={
                 isCreatingComment || isUpdatingComment || !commentText.trim()
               }
+              accessibilityLabel={
+                editingCommentId
+                  ? t("community.postDetail.saveComment")
+                  : t("community.postDetail.postComment")
+              }
+              baseColor={commentText.trim() ? inkBg : surface.ctaOffBg}
+              pressedColor={
+                commentText.trim()
+                  ? surface.isDark
+                    ? "#DADAE0"
+                    : "#34363A"
+                  : surface.ctaOffBg
+              }
+              pressScale={0.88}
+              style={styles.sendButton}
             >
-              <Text
-                fontSize={14}
-                fontWeight="600"
-                color={
-                  commentText.trim() ? LIKE_COLOR[scheme] : MUTED_TEXT[scheme]
-                }
-              >
-                {editingCommentId ? "저장" : "등록"}
-              </Text>
-            </Pressable>
-          </XStack>
-        </YStack>
+              <Ionicons
+                name="arrow-up"
+                size={17}
+                color={commentText.trim() ? inkContent : surface.ctaOffText}
+              />
+            </SurfacePressable>
+          </View>
+        </View>
       </KeyboardStickyView>
-    </YStack>
+
+      {/* 이미지 전체 보기 */}
+      <Modal
+        visible={previewImage !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewImage(null)}
+      >
+        <Pressable
+          onPress={() => setPreviewImage(null)}
+          style={styles.previewOverlay}
+          accessibilityRole="button"
+          accessibilityLabel={t("community.postDetail.closePhoto")}
+        >
+          {previewImage && (
+            <Image
+              source={{ uri: previewImage }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          )}
+          <View style={styles.previewClose}>
+            <Ionicons name="close" size={26} color="#FFFFFF" />
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
+
+  stateScreen: {
+    flex: 1,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    gap: 12,
+  },
+  stateTitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    letterSpacing: -0.32,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+    textAlign: "center",
+  },
+  stateAction: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+    textAlign: "center",
+  },
+
+  appBar: {
+    height: 52,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  appBarActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18,
+  },
+
+  authorRow: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  authorAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  authorText: {
+    gap: 1,
+  },
+  authorName: {
+    fontSize: 14.5,
+    lineHeight: 20,
+    letterSpacing: -0.29,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+  authorSub: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+
+  title: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    fontSize: 20,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+  body: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+    fontSize: 15.5,
+    lineHeight: 25,
+    letterSpacing: -0.31,
+    fontFamily: "Pretendard-Regular",
+  },
+
+  imageWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
   postImage: {
-    width: 160,
-    height: 160,
+    width: "100%",
+    aspectRatio: 4 / 3,
+    borderRadius: 14,
+  },
+  imageStrip: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 8,
+  },
+  stripImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 14,
+  },
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.92)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewImage: {
+    width: "94%",
+    height: "76%",
+  },
+  previewClose: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    padding: 8,
+  },
+
+  tagsWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+
+  engagementRow: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    flexDirection: "row",
+  },
+  likeButton: {
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  likeLabel: {
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: -0.28,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+
+  sectionBand: {
+    height: 8,
+  },
+
+  relatedSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  relatedTitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+    paddingBottom: 2,
+  },
+  relatedCard: {
+    borderRadius: 14,
+    padding: 14,
+    gap: 4,
+  },
+  relatedMeta: {
+    fontSize: 11.5,
+    lineHeight: 15,
+    letterSpacing: -0.23,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  relatedCardTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.28,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+
+  commentsSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  commentsTitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+    paddingBottom: 8,
+  },
+  commentsLoading: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    fontFamily: "Pretendard-Regular",
+    paddingVertical: 12,
+  },
+  commentsEmpty: {
+    alignItems: "center",
+    paddingVertical: 36,
+    gap: 4,
+  },
+  commentsEmptyTitle: {
+    fontSize: 14.5,
+    lineHeight: 20,
+    letterSpacing: -0.29,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+  commentsEmptySub: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontFamily: "Pretendard-Regular",
+  },
+
+  comment: {
+    paddingVertical: 10,
+  },
+  commentReply: {
+    marginLeft: 40,
+  },
+  commentTop: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  commentBody: {
+    flex: 1,
+    gap: 3,
+  },
+  commentNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  commentName: {
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.26,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+  commentTime: {
+    fontSize: 11.5,
+    lineHeight: 15,
+    letterSpacing: -0.23,
+    fontFamily: "Pretendard-Regular",
+  },
+  commentContent: {
+    fontSize: 14.5,
+    lineHeight: 22,
+    letterSpacing: -0.29,
+    fontFamily: "Pretendard-Regular",
+  },
+  commentActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingTop: 4,
+  },
+  commentAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  commentActionText: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: -0.24,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+
+  mentionFloat: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  inputBar: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  inputContext: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  inputContextText: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  mentionChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  mentionChip: {
+    height: 28,
     borderRadius: 8,
+    paddingLeft: 10,
+    paddingRight: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    maxWidth: 180,
+  },
+  mentionChipText: {
+    flexShrink: 1,
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  inputField: {
+    flex: 1,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    justifyContent: "center",
   },
   commentInput: {
-    flex: 1,
-    minHeight: 36,
+    minHeight: 22,
     maxHeight: 96,
     paddingTop: 0,
     paddingBottom: 0,
-    fontSize: 14,
+    fontSize: 14.5,
     lineHeight: 20,
+    letterSpacing: -0.29,
+    fontFamily: "Pretendard-Regular",
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
 })

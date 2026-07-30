@@ -21,8 +21,8 @@ describe("kidney profile validation", () => {
     })
 
     expect(errors).toMatchObject({
-      height: "키를 입력해주세요",
-      weight: "체중을 입력해주세요",
+      height: "키를 입력해 주세요.",
+      weight: "체중을 입력해 주세요.",
     })
   })
 
@@ -34,8 +34,8 @@ describe("kidney profile validation", () => {
     })
 
     expect(errors).toMatchObject({
-      height: "키를 숫자로 입력해주세요",
-      weight: "체중을 숫자로 입력해주세요",
+      height: "키를 숫자로 입력해 주세요.",
+      weight: "체중을 숫자로 입력해 주세요.",
     })
   })
 
@@ -71,7 +71,7 @@ describe("kidney profile validation", () => {
         selectedCauses: ["OTHER"],
         otherCause: "",
       }).otherCause,
-    ).toBe("기타 원인을 입력해주세요")
+    ).toBe("기타 원인을 입력해 주세요.")
 
     expect(
       validateKidneyProfileInput({
@@ -79,7 +79,7 @@ describe("kidney profile validation", () => {
         selectedCauses: [],
         otherCause: "알 수 없음",
       }).otherCause,
-    ).toBe("기타 원인을 입력하려면 '기타'를 선택해주세요")
+    ).toBe("직접 입력하려면 진단 원인에서 ‘기타’를 선택해 주세요.")
   })
 
   it("rejects other cause over 500 characters", () => {
@@ -89,7 +89,7 @@ describe("kidney profile validation", () => {
       otherCause: "가".repeat(501),
     })
 
-    expect(errors.otherCause).toBe("기타 원인은 500자 이내로 입력해주세요")
+    expect(errors.otherCause).toBe("기타 원인을 500자 이하로 입력해 주세요.")
   })
 
   it("rejects future diagnosis month", () => {
@@ -98,7 +98,7 @@ describe("kidney profile validation", () => {
       diagnosisDate: { year: 2026, month: 7 },
     })
 
-    expect(errors.diagnosisDate).toBe("진단 시기는 오늘 이후일 수 없습니다")
+    expect(errors.diagnosisDate).toBe("이번 달 또는 이전 시기를 선택해 주세요.")
   })
 
   it("accepts current diagnosis month", () => {
@@ -130,7 +130,7 @@ describe("kidney profile validation", () => {
 
     expect(errors.height).toContain("300cm 이하")
     expect(errors.weight).toContain("300kg 이하")
-    expect(errors.otherCause).toBe("기타 원인은 500자 이내로 입력해주세요")
-    expect(errors.diagnosisDate).toBe("진단 시기는 오늘 이후일 수 없습니다")
+    expect(errors.otherCause).toBe("기타 원인을 500자 이하로 입력해 주세요.")
+    expect(errors.diagnosisDate).toBe("이번 달 또는 이전 시기를 선택해 주세요.")
   })
 })

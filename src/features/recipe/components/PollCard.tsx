@@ -1,9 +1,47 @@
-import { useMemo, useState } from "react"
-import { Pressable } from "react-native"
-import { YStack, XStack, Text, View } from "tamagui"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { tokens } from "@/src/theme/tokens"
+import { useEffect, useMemo, useState } from "react"
+import { StyleSheet, Text, View } from "react-native"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated"
+
+import { useSurface } from "@/src/hooks/useSurface"
+import { hapticSelection } from "@/src/lib/haptics"
+import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import type { CommunityPostVote } from "../types"
+import { useTranslation } from "react-i18next"
+
+const BAR_EASE = Easing.bezier(0.22, 1, 0.36, 1)
+/** 옵션 행 높이의 절반 — 행과 득표 캡슐이 같은 곡률을 공유한다. */
+const OPTION_HEIGHT = 52
+const OPTION_RADIUS = OPTION_HEIGHT / 2
+
+/** 득표 캡슐 — 행 왼쪽에서 득표율만큼 차오르는 알약 면. */
+function ResultFill({ percent, color }: { percent: number; color: string }) {
+  const progress = useSharedValue(0)
+
+  useEffect(() => {
+    progress.value = withTiming(1, {
+      duration: 520,
+      easing: BAR_EASE,
+      reduceMotion: ReduceMotion.System,
+    })
+  }, [progress])
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: `${percent * progress.value}%`,
+  }))
+
+  return (
+    <Animated.View
+      style={[styles.resultFill, { backgroundColor: color }, animatedStyle]}
+    />
+  )
+}
 
 interface PollCardProps {
   vote: CommunityPostVote
@@ -11,108 +49,83 @@ interface PollCardProps {
   onVote: (optionIds: number[]) => void | Promise<void>
 }
 
-const COLORS = {
-  light: {
-    background: "#FFFFFF",
-    border: tokens.color.borderLight.val,
-    title: tokens.color.textLight.val,
-    text: "#474758",
-    muted: "#8E8E93",
-    optionBg: "#FCFCFC",
-    selectedBg: "#E0FFF7",
-    selectedBorder: tokens.color.sub6.val,
-    barFill: tokens.color.sub3.val,
-    buttonBg: tokens.color.sub6.val,
-    buttonDisabled: "#C7C7CC",
-    buttonText: "#FFFFFF",
-  },
-  dark: {
-    background: tokens.color.cardBgDark.val,
-    border: tokens.color.borderDark.val,
-    title: tokens.color.textDark.val,
-    text: tokens.color.textDarkSub.val,
-    muted: "#858591",
-    optionBg: "#2A2A30",
-    selectedBg: "#173E36",
-    selectedBorder: tokens.color.sub5.val,
-    barFill: "#1D9A7A",
-    buttonBg: tokens.color.sub5.val,
-    buttonDisabled: "#636366",
-    buttonText: "#FFFFFF",
-  },
-} as const
-
 function getPercent(count: number, total: number) {
   if (total <= 0) return 0
   return Math.round((count / total) * 100)
 }
 
+/**
+ * 투표 카드 — 선택 전에는 라디오/체크 캡슐 행, 투표 후에는 득표율만큼
+ * 차오르는 캡슐 바. 내 선택만 브랜드 틴트를 받고 숫자는 % 하나만 말한다.
+ */
 export function PollCard({
   vote,
   isSubmitting = false,
   onVote,
 }: PollCardProps) {
-  const scheme = useAppColorScheme()
-  const colors = COLORS[scheme]
+  const { t } = useTranslation("recipe")
+  const surface = useSurface()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const hasVoted = vote.myVote !== null
   const myVoteSet = useMemo(() => new Set(vote.myVote ?? []), [vote.myVote])
 
+  const optionBg = surface.isDark ? "#2E2E33" : surface.card
+  const fillBg = surface.isDark ? "#3A3A40" : surface.surfacePressed
+  const inkBg = surface.isDark ? "#F4F4F6" : "#1D1E20"
+  const inkContent = surface.isDark ? "#17181C" : "#FFFFFF"
+
+  /**
+   * 투표는 되돌릴 수 없으므로 단일 선택도 바로 제출하지 않는다 —
+   * 선택(라디오)과 확정(투표하기 버튼)을 갈라 실수를 막는다.
+   */
   const toggleOption = (optionId: number) => {
     if (hasVoted || isSubmitting) return
-    if (!vote.allowMultiple) {
-      void onVote([optionId])
-      return
-    }
-    setSelectedIds((prev) =>
-      prev.includes(optionId)
-        ? prev.filter((id) => id !== optionId)
-        : [...prev, optionId],
-    )
+    hapticSelection()
+    setSelectedIds((prev) => {
+      if (vote.allowMultiple) {
+        return prev.includes(optionId)
+          ? prev.filter((id) => id !== optionId)
+          : [...prev, optionId]
+      }
+      return prev.includes(optionId) ? [] : [optionId]
+    })
   }
 
-  const submitMultiple = () => {
+  const submitVote = () => {
     if (selectedIds.length === 0 || isSubmitting) return
+    hapticSelection()
     void onVote(selectedIds)
   }
 
-  return (
-    <YStack
-      marginHorizontal={20}
-      marginBottom={20}
-      padding={16}
-      gap={12}
-      borderRadius={8}
-      borderWidth={1}
-      borderColor={colors.border}
-      backgroundColor={colors.background}
-    >
-      <XStack justifyContent="space-between" alignItems="center" gap={12}>
-        <Text
-          fontSize={15}
-          lineHeight={20}
-          fontWeight="700"
-          fontFamily="$body"
-          color={colors.title}
-        >
-          투표
-        </Text>
-        <Text
-          fontSize={12}
-          lineHeight={16}
-          fontWeight="500"
-          fontFamily="$body"
-          color={colors.muted}
-        >
-          {hasVoted
-            ? `총 ${vote.totalCount}표`
-            : vote.allowMultiple
-              ? "복수 선택"
-              : "단일 선택"}
-        </Text>
-      </XStack>
+  const canSubmit = selectedIds.length > 0 && !isSubmitting
 
-      <YStack gap={8}>
+  return (
+    <View style={[styles.card, { backgroundColor: surface.surface }]}>
+      <View style={styles.headerRow}>
+        <Text style={[styles.title, { color: surface.brand }]}>
+          {t("poll.label")}
+        </Text>
+        <Text style={[styles.meta, { color: surface.textMuted }]}>
+          {hasVoted
+            ? t("poll.participants", { count: vote.totalCount })
+            : vote.allowMultiple
+              ? t("poll.multipleHint")
+              : t("poll.singleHint")}
+        </Text>
+      </View>
+
+      {/* 질문(선택) — 글 제목과 별개로 투표가 스스로 묻는다. */}
+      {vote.title && (
+        <Text
+          style={[styles.question, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
+          {vote.title}
+        </Text>
+      )}
+
+      <View style={styles.options}>
         {vote.options.map((option) => {
           const selected = hasVoted
             ? myVoteSet.has(option.id)
@@ -120,129 +133,211 @@ export function PollCard({
           const percent = getPercent(option.count, vote.totalCount)
 
           return (
-            <Pressable
+            <SurfacePressable
               key={option.id}
               onPress={() => toggleOption(option.id)}
               disabled={hasVoted || isSubmitting}
-              accessibilityRole="button"
+              haptic={false}
               accessibilityState={{
                 selected,
                 disabled: hasVoted || isSubmitting,
               }}
-              style={({ pressed }) => ({
-                opacity: pressed && !hasVoted ? 0.85 : 1,
-              })}
+              baseColor={
+                selected && !hasVoted ? surface.surfaceBrand : optionBg
+              }
+              style={styles.option}
             >
-              <YStack
-                minHeight={48}
-                overflow="hidden"
-                borderRadius={8}
-                borderWidth={1}
-                borderColor={selected ? colors.selectedBorder : colors.border}
-                backgroundColor={selected ? colors.selectedBg : colors.optionBg}
-              >
-                {hasVoted && (
+              {hasVoted && percent > 0 && (
+                <ResultFill
+                  percent={percent}
+                  color={selected ? surface.surfaceBrand : fillBg}
+                />
+              )}
+              <View style={styles.optionInner}>
+                {!hasVoted && (
                   <View
-                    position="absolute"
-                    left={0}
-                    top={0}
-                    bottom={0}
-                    width={`${percent}%`}
-                    backgroundColor={colors.barFill}
-                    opacity={0.35}
+                    style={[
+                      styles.selector,
+                      {
+                        borderRadius: vote.allowMultiple ? 5 : 9,
+                        borderColor: selected
+                          ? surface.brand
+                          : surface.textWeak,
+                        backgroundColor: selected
+                          ? surface.brand
+                          : "transparent",
+                      },
+                    ]}
+                  >
+                    {selected && (
+                      <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                    )}
+                  </View>
+                )}
+                {hasVoted && selected && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={15}
+                    color={surface.brand}
                   />
                 )}
-                <XStack
-                  minHeight={48}
-                  paddingHorizontal={14}
-                  paddingVertical={12}
-                  alignItems="center"
-                  gap={10}
+                <Text
+                  style={[
+                    styles.optionText,
+                    {
+                      color: selected ? surface.brand : surface.textStrong,
+                      fontWeight: selected ? "700" : "500",
+                      fontFamily: selected
+                        ? "Pretendard-Bold"
+                        : "Pretendard-Medium",
+                    },
+                  ]}
+                  numberOfLines={1}
                 >
-                  {!hasVoted && (
-                    <View
-                      width={18}
-                      height={18}
-                      borderRadius={vote.allowMultiple ? 4 : 9}
-                      borderWidth={2}
-                      borderColor={
-                        selected ? colors.selectedBorder : colors.muted
-                      }
-                      backgroundColor={
-                        selected ? colors.selectedBorder : "transparent"
-                      }
-                    />
-                  )}
+                  {option.text}
+                </Text>
+                {hasVoted && (
                   <Text
-                    flex={1}
-                    fontSize={14}
-                    lineHeight={20}
-                    fontWeight={selected ? "700" : "500"}
-                    fontFamily="$body"
-                    color={colors.text}
+                    style={[
+                      styles.percent,
+                      {
+                        color: selected ? surface.brand : surface.textStrong,
+                      },
+                    ]}
                   >
-                    {option.text}
+                    {percent}%
                   </Text>
-                  {hasVoted && (
-                    <XStack minWidth={72} justifyContent="flex-end" gap={6}>
-                      <Text
-                        fontSize={13}
-                        lineHeight={18}
-                        fontWeight="700"
-                        fontFamily="$body"
-                        color={colors.title}
-                      >
-                        {percent}%
-                      </Text>
-                      <Text
-                        fontSize={13}
-                        lineHeight={18}
-                        fontWeight="500"
-                        fontFamily="$body"
-                        color={colors.muted}
-                      >
-                        {option.count}
-                      </Text>
-                    </XStack>
-                  )}
-                </XStack>
-              </YStack>
-            </Pressable>
+                )}
+              </View>
+            </SurfacePressable>
           )
         })}
-      </YStack>
+      </View>
 
-      {!hasVoted && vote.allowMultiple && (
-        <Pressable
-          onPress={submitMultiple}
-          disabled={selectedIds.length === 0 || isSubmitting}
-          accessibilityRole="button"
-          style={({ pressed }) => ({
-            opacity: pressed && selectedIds.length > 0 ? 0.85 : 1,
-          })}
+      {!hasVoted && (
+        <SurfacePressable
+          onPress={submitVote}
+          disabled={!canSubmit}
+          haptic={false}
+          baseColor={canSubmit ? inkBg : surface.ctaOffBg}
+          pressedColor={
+            canSubmit
+              ? surface.isDark
+                ? "#DADAE0"
+                : "#34363A"
+              : surface.ctaOffBg
+          }
+          pressScale={0.97}
+          style={styles.submitButton}
         >
-          <View
-            height={44}
-            borderRadius={8}
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor={
-              selectedIds.length > 0 && !isSubmitting
-                ? colors.buttonBg
-                : colors.buttonDisabled
-            }
+          <Text
+            style={[
+              styles.submitLabel,
+              { color: canSubmit ? inkContent : surface.ctaOffText },
+            ]}
           >
-            <Text
-              fontSize={14}
-              fontWeight="700"
-              fontFamily="$body"
-              color={colors.buttonText}
-            >
-              {isSubmitting ? "투표 중..." : "투표하기"}
-            </Text>
-          </View>
-        </Pressable>
+            {isSubmitting
+              ? t("poll.submitting")
+              : canSubmit
+                ? t("poll.submit")
+                : t("poll.selectFirst")}
+          </Text>
+        </SurfacePressable>
       )}
-    </YStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  title: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+  meta: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: -0.24,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  question: {
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.34,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+    marginTop: -4,
+  },
+  options: {
+    gap: 8,
+  },
+  option: {
+    height: OPTION_HEIGHT,
+    borderRadius: OPTION_RADIUS,
+    overflow: "hidden",
+  },
+  resultFill: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    minWidth: OPTION_HEIGHT,
+    borderRadius: OPTION_RADIUS,
+  },
+  optionInner: {
+    height: OPTION_HEIGHT,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  selector: {
+    width: 18,
+    height: 18,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionText: {
+    flex: 1,
+    fontSize: 14.5,
+    lineHeight: 20,
+    letterSpacing: -0.29,
+  },
+  percent: {
+    fontSize: 14.5,
+    lineHeight: 20,
+    letterSpacing: -0.29,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+  submitButton: {
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitLabel: {
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+})

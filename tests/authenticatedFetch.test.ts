@@ -86,9 +86,16 @@ describe("authenticatedFetch", () => {
       "persistent",
     )
     const firstHeaders = fetchMock.mock.calls[0][1]?.headers as Headers
+    const refreshHeaders = fetchMock.mock.calls[1][1]?.headers as Record<
+      string,
+      string
+    >
     const retryHeaders = fetchMock.mock.calls[2][1]?.headers as Headers
     expect(firstHeaders.get("Authorization")).toBe("Bearer expired-access")
+    expect(firstHeaders.get("Accept-Language")).toBe("ko-KR")
+    expect(refreshHeaders["Accept-Language"]).toBe("ko-KR")
     expect(retryHeaders.get("Authorization")).toBe("Bearer fresh-access")
+    expect(retryHeaders.get("Accept-Language")).toBe("ko-KR")
   })
 
   it("queues concurrent 401 responses behind one refresh request", async () => {
@@ -168,7 +175,8 @@ describe("authenticatedFetch", () => {
 
     await expect(request).rejects.toMatchObject({
       code: "AUTH_SESSION_EXPIRED",
-      message: "로그인이 만료되었습니다. 다시 로그인해주세요.",
+      message:
+        "로그인 시간이 지났어요. 안전한 이용을 위해 다시 로그인해 주세요.",
       statusCode: 401,
     })
     expect(mockedClearClientSession).toHaveBeenCalledWith({

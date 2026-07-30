@@ -1,42 +1,36 @@
 import React from "react"
-import { View, Pressable, StyleSheet, Platform } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
+import { View, Text, Pressable, StyleSheet } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
-import { ThemedText } from "@/components/themed-text"
-import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { tokens } from "@/src/theme/tokens"
+import { useSurface } from "@/src/hooks/useSurface"
+import { hapticSelection } from "@/src/lib/haptics"
+import { useTranslation } from "react-i18next"
 
-const COMORBIDITY_LABEL: Record<string, string> = {
-  DIABETES: "당뇨",
-  HYPERTENSION: "고혈압",
-  HEART_DISEASE: "심장질환",
-  GOUT: "통풍",
-  ANEMIA: "빈혈",
-  BONE_MINERAL: "골미네랄 장애",
-}
+/** CKD 병기 순서. 트랙 시각화와 하이라이트 위치가 여기서 나온다. */
+const STAGE_ORDER = ["1", "2", "3a", "3b", "4", "5"] as const
 
-const DIAGNOSIS_CAUSE_LABEL: Record<string, string> = {
-  DIABETIC_KIDNEY_DISEASE: "당뇨병성 신장 질환",
-  HYPERTENSION: "고혈압",
-  GLOMERULONEPHRITIS: "사구체신염",
-  POLYCYSTIC_KIDNEY_DISEASE: "다낭성 신장 질환",
-  OTHER: "기타",
-}
-
-function localizeComorbidity(key: string): string {
-  return COMORBIDITY_LABEL[key] ?? COMORBIDITY_LABEL[key.toUpperCase()] ?? key
-}
-
-function localizeDiagnosisCause(key: string): string {
-  return (
-    DIAGNOSIS_CAUSE_LABEL[key] ??
-    DIAGNOSIS_CAUSE_LABEL[key.toUpperCase()] ??
-    key
+/** 정본 키를 우선하고, 한·영 표시 라벨에서는 eGFR 보조 정보만 꺼낸다. */
+function parseStageLabel(
+  label: string | null,
+  canonicalStage?: string | null,
+): {
+  stage: string | null
+  detail: string | null
+} {
+  const canonical = canonicalStage
+    ?.match(/^STAGE_(\d[A-B]?)$/i)?.[1]
+    ?.toLowerCase()
+  const localized = label?.match(
+    /^(?:Stage\s+)?([0-9]+(?:[ab])?)(?:기)?\s*(?:\((.+)\))?/i,
   )
+  return {
+    stage: canonical ?? localized?.[1]?.toLowerCase() ?? null,
+    detail: localized?.[2] ?? null,
+  }
 }
 
 interface KidneyProfileCardProps {
+  ckdStage?: string | null
   ckdStageLabel: string | null
   isDialysis: boolean
   heightCm?: number | null
@@ -48,7 +42,40 @@ interface KidneyProfileCardProps {
   onEditPress: () => void
 }
 
+function InfoRow({
+  label,
+  value,
+  surface,
+}: {
+  label: string
+  /** null 이면 값 대신 "입력하기" 액션 프롬프트를 보여준다. */
+  value: string | null
+  surface: ReturnType<typeof useSurface>
+}) {
+  const { t } = useTranslation("common")
+  return (
+    <View style={styles.infoRow}>
+      <Text style={[styles.infoLabel, { color: surface.textMuted }]}>
+        {label}
+      </Text>
+      {value ? (
+        <Text style={[styles.infoValue, { color: surface.textStrong }]}>
+          {value}
+        </Text>
+      ) : (
+        <View style={styles.infoAction}>
+          <Text style={[styles.infoActionText, { color: surface.brand }]}>
+            {t("kidneyProfile.add")}
+          </Text>
+          <Ionicons name="chevron-forward" size={12} color={surface.brand} />
+        </View>
+      )}
+    </View>
+  )
+}
+
 export function KidneyProfileCard({
+  ckdStage,
   ckdStageLabel,
   isDialysis,
   heightCm,
@@ -59,278 +86,317 @@ export function KidneyProfileCard({
   comorbidities,
   onEditPress,
 }: KidneyProfileCardProps) {
-  const c = useSettingsColors()
+  const { t, i18n } = useTranslation("common")
+  const surface = useSurface()
+  const english = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
 
-  const gradientColors: [string, string] = c.isDark
-    ? ["rgba(114, 223, 196, 0.08)", "rgba(49, 49, 56, 0.8)"]
-    : ["rgba(114, 223, 196, 0.16)", "rgba(233, 250, 246, 0.16)"]
+  const { stage, detail } = parseStageLabel(ckdStageLabel, ckdStage)
+  const stageIndex = stage
+    ? STAGE_ORDER.indexOf(stage as (typeof STAGE_ORDER)[number])
+    : -1
 
   const heightWeightLabel = (() => {
     if (heightCm != null && weightKg != null)
-      return `${heightCm}cm / ${weightKg}kg`
-    if (weightKg != null) return `${weightKg}kg`
-    return "미입력"
+      return `${heightCm}${english ? " " : ""}cm · ${weightKg}${
+        english ? " " : ""
+      }kg`
+    if (weightKg != null) return `${weightKg}${english ? " " : ""}kg`
+    if (heightCm != null) return `${heightCm}${english ? " " : ""}cm`
+    return null
   })()
   const conditionItems = [
-    ...(diagnosisCauses ?? []).map(localizeDiagnosisCause),
+    ...(diagnosisCauses ?? []).map((key) =>
+      t(`medical.diagnosisCause.${key.toUpperCase()}`, key),
+    ),
     ...(diagnosisCauseOther ? [diagnosisCauseOther] : []),
-    ...(comorbidities ?? []).map(localizeComorbidity),
+    ...(comorbidities ?? []).map((key) =>
+      t(`medical.comorbidity.${key.toUpperCase()}`, key),
+    ),
   ]
-
   return (
-    <View
-      style={[
-        styles.shadowOuter,
-        { backgroundColor: c.cardBg },
-        c.isDark && styles.shadowOuterDark,
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t("kidneyProfile.edit")}
+      onPress={() => {
+        hapticSelection()
+        onEditPress()
+      }}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          backgroundColor: pressed ? surface.surfacePressed : surface.card,
+        },
       ]}
     >
-      <View style={[styles.shadowInner, { backgroundColor: c.cardBg }]}>
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0.511, y: 1 }}
-          end={{ x: 0.489, y: 0 }}
-          locations={[0.1032, 1]}
-          style={styles.gradientBox}
+      {/* 라벨 + 투석 배지 */}
+      <View style={styles.cardHeader}>
+        <Text style={[styles.stageLabel, { color: surface.textMuted }]}>
+          {t("kidneyProfile.stage")}
+        </Text>
+        <View
+          style={[
+            styles.dialysisBadge,
+            {
+              backgroundColor: isDialysis
+                ? surface.surfaceBrand
+                : surface.surface,
+            },
+          ]}
         >
-          {/* 헤더 */}
-          <View style={styles.header}>
-            <ThemedText style={styles.title}>나의 신장 프로필</ThemedText>
-            <Pressable onPress={onEditPress} hitSlop={8}>
-              <ThemedText style={styles.editBtn}>수정하기</ThemedText>
-            </Pressable>
-          </View>
-
-          {/* CKD 병기 */}
-          <View
+          <Text
             style={[
-              styles.ckdRow,
-              { backgroundColor: c.isDark ? "#2A2A32" : "#FFFFFF" },
+              styles.dialysisBadgeText,
+              { color: isDialysis ? surface.brand : surface.textMuted },
             ]}
           >
-            <View
-              style={[
-                styles.ckdIconSquare,
-                { backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4" },
-              ]}
-            >
-              <Ionicons
-                name="bar-chart-outline"
-                size={24}
-                color={tokens.color.sub8.val}
-              />
-            </View>
-            <View style={styles.ckdTextBlock}>
-              <View style={styles.ckdLabelRow}>
-                <ThemedText style={[styles.ckdLabel, { color: c.textSub }]}>
-                  신장 병기 (CKD)
-                </ThemedText>
-                <ThemedText style={[styles.ckdDialysis, { color: c.textSub }]}>
-                  {isDialysis ? "투석 중" : "투석 안함"}
-                </ThemedText>
-              </View>
-              <ThemedText style={[styles.ckdValue, { color: c.text }]}>
-                {ckdStageLabel ?? "미입력"}
-              </ThemedText>
-            </View>
-          </View>
-
-          {/* 키·체중 & 진단 시기 */}
-          <View style={styles.infoBoxRow}>
-            <View
-              style={[
-                styles.infoBox,
-                { backgroundColor: c.isDark ? "#2A2A32" : "#FFFFFF" },
-              ]}
-            >
-              <ThemedText style={[styles.infoBoxTitle, { color: c.textSub }]}>
-                키 / 체중
-              </ThemedText>
-              <ThemedText style={[styles.infoBoxValue, { color: c.text }]}>
-                {heightWeightLabel}
-              </ThemedText>
-            </View>
-            <View
-              style={[
-                styles.infoBox,
-                { backgroundColor: c.isDark ? "#2A2A32" : "#FFFFFF" },
-              ]}
-            >
-              <ThemedText style={[styles.infoBoxTitle, { color: c.textSub }]}>
-                진단 시기
-              </ThemedText>
-              <ThemedText style={[styles.infoBoxValue, { color: c.text }]}>
-                {diagnosisDate ?? "미입력"}
-              </ThemedText>
-            </View>
-          </View>
-
-          {/* 동반 질환 및 진단 원인 */}
-          {conditionItems.length > 0 && (
-            <View style={styles.comorbiditySection}>
-              <View style={styles.comorbidityHeader}>
-                <Ionicons
-                  name="grid-outline"
-                  size={14}
-                  color={tokens.color.sub8.val}
-                />
-                <ThemedText style={styles.comorbidityTitle}>
-                  동반 질환 및 진단 원인
-                </ThemedText>
-              </View>
-              <View style={styles.comorbidityChips}>
-                {conditionItems.map((item, index) => (
-                  <View
-                    key={`${item}-${index}`}
-                    style={[
-                      styles.comorbidityChip,
-                      {
-                        backgroundColor: c.isDark ? "#2A2A32" : "#FFFFFF",
-                        borderColor: c.isDark ? "#3A3A42" : "#E0E0E0",
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      style={[styles.comorbidityChipText, { color: c.text }]}
-                    >
-                      {item}
-                    </ThemedText>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-        </LinearGradient>
+            {isDialysis
+              ? t("kidneyProfile.onDialysis")
+              : t("kidneyProfile.notOnDialysis")}
+          </Text>
+        </View>
       </View>
-    </View>
+
+      {/* 히어로 — 병기 숫자가 주인공, eGFR 은 보조 캡션. */}
+      <View style={styles.heroRow}>
+        <Text style={[styles.heroValue, { color: surface.textStrong }]}>
+          {stage
+            ? english
+              ? t("kidneyProfile.stageValue", { stage })
+              : `${stage}기`
+            : t("kidneyProfile.notAdded")}
+        </Text>
+        {detail && (
+          <Text style={[styles.heroDetail, { color: surface.textMuted }]}>
+            {detail}
+          </Text>
+        )}
+        <View style={styles.heroSpacer} />
+        <Ionicons name="chevron-forward" size={16} color={surface.textWeak} />
+      </View>
+
+      {/* 병기 트랙 — 1→5 중 지금 위치. */}
+      {stageIndex >= 0 && (
+        <View style={styles.track}>
+          {STAGE_ORDER.map((step, index) => {
+            const isPassed = index <= stageIndex
+            const isCurrent = index === stageIndex
+            return (
+              <View key={step} style={styles.trackStep}>
+                <View
+                  style={[
+                    styles.trackBar,
+                    {
+                      backgroundColor: isPassed
+                        ? surface.brand
+                        : surface.surface,
+                      opacity: isPassed && !isCurrent ? 0.35 : 1,
+                    },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.trackLabel,
+                    isCurrent
+                      ? [styles.trackLabelCurrent, { color: surface.brand }]
+                      : { color: surface.textWeak },
+                  ]}
+                >
+                  {step}
+                </Text>
+              </View>
+            )
+          })}
+        </View>
+      )}
+
+      <View style={[styles.hairline, { backgroundColor: surface.hairline }]} />
+
+      {/* 토스식 라벨-값 행. 비어 있으면 값 대신 "입력하기" 프롬프트. */}
+      <View style={styles.infoList}>
+        <InfoRow
+          label={t("kidneyProfile.heightWeight")}
+          value={heightWeightLabel}
+          surface={surface}
+        />
+        <InfoRow
+          label={t("kidneyProfile.diagnosisDate")}
+          value={diagnosisDate}
+          surface={surface}
+        />
+      </View>
+
+      {/* 동반 질환·진단 원인 — 회색 면 칩. */}
+      {conditionItems.length > 0 && (
+        <View style={styles.conditionSection}>
+          <Text style={[styles.infoLabel, { color: surface.textMuted }]}>
+            {t("kidneyProfile.conditions")}
+          </Text>
+          <View style={styles.conditionChips}>
+            {conditionItems.map((item, index) => (
+              <View
+                key={`${item}-${index}`}
+                style={[
+                  styles.conditionChip,
+                  { backgroundColor: surface.surface },
+                ]}
+              >
+                <Text
+                  style={[styles.conditionChipText, { color: surface.text }]}
+                >
+                  {item}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  shadowOuter: {
+  card: {
     borderRadius: 16,
-    marginBottom: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000000",
-        shadowOffset: { width: 2, height: 4 },
-        shadowOpacity: 0.122,
-        shadowRadius: 7.6,
-      },
-      android: { elevation: 4 },
-    }),
+    padding: 18,
   },
-  shadowOuterDark: {
-    ...Platform.select({
-      ios: { shadowOpacity: 0.3 },
-    }),
-  },
-  shadowInner: {
-    borderRadius: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000000",
-        shadowOffset: { width: -2, height: -1 },
-        shadowOpacity: 0.051,
-        shadowRadius: 4.3,
-      },
-    }),
-  },
-  gradientBox: {
-    borderRadius: 16,
-    padding: 16,
-    overflow: "hidden",
-  },
-  header: {
+
+  cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 4,
   },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: tokens.color.sub8.val,
-  },
-  editBtn: {
-    fontSize: 14,
+  stageLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.26,
     fontWeight: "500",
-    color: tokens.color.sub8.val,
+    fontFamily: "Pretendard-Medium",
   },
-  ckdRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 12,
-    padding: 14,
-  },
-  ckdIconSquare: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  dialysisBadge: {
+    height: 24,
+    borderRadius: 7,
+    paddingHorizontal: 8,
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
   },
-  ckdTextBlock: { flex: 1, gap: 2 },
-  ckdLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  ckdLabel: { fontSize: 12, fontWeight: "500" },
-  ckdValue: { fontSize: 18, fontWeight: "700" },
-  ckdDialysis: { fontSize: 14, fontWeight: "500" },
-  infoBoxRow: {
-    flexDirection: "row",
-    gap: 14,
-    marginTop: 10,
-  },
-  infoBox: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 14,
-    gap: 2,
-  },
-  infoBoxTitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    lineHeight: 16,
-  },
-  infoBoxValue: {
-    fontSize: 16,
+  dialysisBadgeText: {
+    fontSize: 11.5,
+    lineHeight: 15,
     fontWeight: "600",
-    lineHeight: 28,
+    fontFamily: "Pretendard-SemiBold",
   },
-  comorbiditySection: {
-    marginTop: 14,
+
+  heroRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 8,
   },
-  comorbidityHeader: {
+  heroValue: {
+    fontSize: 26,
+    lineHeight: 34,
+    letterSpacing: -0.52,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+  heroDetail: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    letterSpacing: -0.27,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  heroSpacer: {
+    flex: 1,
+  },
+
+  track: {
     flexDirection: "row",
+    gap: 5,
+    marginTop: 14,
+  },
+  trackStep: {
+    flex: 1,
     alignItems: "center",
     gap: 5,
   },
-  comorbidityTitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "500",
-    color: tokens.color.sub8.val,
+  trackBar: {
+    alignSelf: "stretch",
+    height: 6,
+    borderRadius: 3,
   },
-  comorbidityChips: {
+  trackLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: "Pretendard-Regular",
+  },
+  trackLabelCurrent: {
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+
+  hairline: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 14,
+  },
+
+  infoList: {
+    gap: 12,
+  },
+  infoRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  infoLabel: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    letterSpacing: -0.27,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  infoValue: {
+    fontSize: 14.5,
+    lineHeight: 20,
+    letterSpacing: -0.29,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+  infoAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 1,
+  },
+  infoActionText: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    letterSpacing: -0.27,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+
+  conditionSection: {
+    marginTop: 16,
     gap: 8,
   },
-  comorbidityChip: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 13,
+  conditionChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
   },
-  comorbidityChipText: {
-    fontSize: 14,
-    lineHeight: 20,
+  conditionChip: {
+    height: 28,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  conditionChipText: {
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.26,
     fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
   },
 })

@@ -1,17 +1,27 @@
 import { router, useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { YStack } from "tamagui"
-import { FormTextField } from "@/src/shared/components"
+import { Controller, useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { StyleSheet, View } from "react-native"
 import { useAuth } from "@/src/hooks/useAuth"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { showErrorToast } from "@/src/lib/toast"
-import { PasswordCriteriaText } from "../components"
-import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
+import {
+  PasswordCriteriaText,
+  StepHelperText,
+  StepTextInput,
+} from "../components"
+import {
+  getConfirmPasswordRules,
+  getPasswordRules,
+} from "../data/passwordValidation"
+import { AUTH_LAYOUT } from "../data/authSurface"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { PasswordForm } from "../types"
 
 export function EmailLoginLinkPasswordScreen() {
+  const { t } = useTranslation("auth")
   const { email, emailLinkToken } = useLocalSearchParams<{
     email?: string
     emailLinkToken?: string
@@ -34,12 +44,10 @@ export function EmailLoginLinkPasswordScreen() {
 
   useEffect(() => {
     if (!tokenValue) {
-      showErrorToast(
-        "이메일 로그인 연결 정보가 만료되었습니다. 다시 시도해주세요.",
-      )
+      showErrorToast(t("linkPassword.expired"))
       router.replace("/(auth)/signup-email")
     }
-  }, [tokenValue])
+  }, [t, tokenValue])
 
   const submit = async (data: PasswordForm) => {
     if (!tokenValue || submitting) return
@@ -55,10 +63,7 @@ export function EmailLoginLinkPasswordScreen() {
       )
     } catch (error) {
       setError("password", {
-        message:
-          error instanceof Error
-            ? error.message
-            : "이메일 로그인 연결에 실패했습니다. 다시 시도해주세요.",
+        message: getErrorMessage(error, t("linkPassword.failed")),
       })
     } finally {
       setSubmitting(false)
@@ -67,43 +72,83 @@ export function EmailLoginLinkPasswordScreen() {
 
   return (
     <AuthScreenLayout
-      title="이메일 로그인 비밀번호를 설정해주세요"
+      title={t("linkPassword.title")}
       subtitle={
         emailValue
-          ? `${emailValue} 계정으로 로그인할 때 사용할 비밀번호입니다`
-          : "이메일 계정으로 로그인할 때 사용할 비밀번호입니다"
+          ? t("linkPassword.subtitleWithEmail", { email: emailValue })
+          : t("linkPassword.subtitle")
       }
-      buttonLabel="연결 완료"
+      buttonLabel={t("linkPassword.connect")}
       buttonDisabled={submitting}
       buttonLoading={submitting}
       onSubmit={handleSubmit(submit)}
+      keyboardAvoiding
     >
-      <YStack gap={36} marginTop={56}>
-        <YStack gap={10}>
-          <FormTextField<PasswordForm>
-            name="password"
-            control={control}
-            label="비밀번호"
-            placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-            inputType="password"
-            showPasswordToggle
-            showValidState
-            rules={passwordRules}
-          />
-          <PasswordCriteriaText password={password} />
-        </YStack>
+      <View style={styles.body}>
+        <Controller
+          name="password"
+          control={control}
+          rules={getPasswordRules()}
+          render={({ field, fieldState }) => (
+            <View style={styles.group}>
+              <StepTextInput
+                autoFocus
+                label={t("fields.password")}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t("password.placeholder")}
+                secureTextEntry
+                textContentType="newPassword"
+                autoComplete="new-password"
+                returnKeyType="next"
+                hasError={!!fieldState.error}
+              />
+              {fieldState.error?.message ? (
+                <StepHelperText
+                  message={fieldState.error.message}
+                  tone="error"
+                />
+              ) : (
+                <PasswordCriteriaText password={field.value} />
+              )}
+            </View>
+          )}
+        />
 
-        <FormTextField<PasswordForm>
+        <Controller
           name="confirmPassword"
           control={control}
-          label="비밀번호 확인"
-          placeholder="입력한 비밀번호를 다시 입력해주세요"
-          inputType="password"
-          showPasswordToggle
-          showValidState
-          rules={confirmPasswordRules(password)}
+          rules={getConfirmPasswordRules(password)}
+          render={({ field, fieldState }) => (
+            <View>
+              <StepTextInput
+                label={t("fields.confirmPassword")}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t("password.confirmPlaceholder")}
+                secureTextEntry
+                textContentType="newPassword"
+                autoComplete="new-password"
+                returnKeyType="done"
+                hasError={!!fieldState.error}
+              />
+              {fieldState.error?.message ? (
+                <StepHelperText
+                  message={fieldState.error.message}
+                  tone="error"
+                />
+              ) : null}
+            </View>
+          )}
         />
-      </YStack>
+      </View>
     </AuthScreenLayout>
   )
 }
+
+const styles = StyleSheet.create({
+  body: { marginTop: AUTH_LAYOUT.questionToField, gap: 20 },
+  group: { gap: 10 },
+})

@@ -31,7 +31,7 @@ export interface SocialAuthResult {
 }
 
 function createGoogleCancelledError() {
-  return Object.assign(new Error("Google 로그인이 취소되었습니다."), {
+  return Object.assign(new Error("Google 로그인을 취소했어요."), {
     code: statusCodes.SIGN_IN_CANCELLED,
   })
 }
@@ -107,7 +107,9 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
 
   if (!idToken) {
     logger.error("[Google SignIn] idToken 없음")
-    throw new Error("Google 로그인에서 ID 토큰을 받지 못했습니다.")
+    throw new Error(
+      "Google에서 로그인 정보를 받지 못했어요. 다시 로그인해 주세요.",
+    )
   }
 
   logger.debug("[Google SignIn] 성공")
@@ -122,7 +124,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
 export async function signInWithApple(): Promise<SocialAuthResult> {
   logger.debug("[Apple SignIn] 시작")
   if (Platform.OS !== "ios") {
-    throw new Error("Apple 로그인은 iOS에서만 지원됩니다.")
+    throw new Error("Apple 로그인은 iPhone에서 이용할 수 있어요.")
   }
 
   const requiresReauthentication = await isSocialReauthenticationRequired()
@@ -149,7 +151,9 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
 
   if (!credential.identityToken) {
     logger.error("[Apple SignIn] identityToken 없음")
-    throw new Error("Apple 로그인에서 ID 토큰을 받지 못했습니다.")
+    throw new Error(
+      "Apple에서 로그인 정보를 받지 못했어요. 다시 로그인해 주세요.",
+    )
   }
 
   if (requiresReauthentication) {

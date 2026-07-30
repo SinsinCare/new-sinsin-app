@@ -16,6 +16,7 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 function useInfoColors() {
   const isDark = useAppColorScheme() === "dark"
@@ -31,6 +32,7 @@ function useInfoColors() {
 }
 
 export default function AppInfoScreen() {
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useInfoColors()
@@ -71,16 +73,23 @@ export default function AppInfoScreen() {
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("action.back")}
+          onPress={() => router.back()}
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={24} color={c.icon} />
         </Pressable>
         <ThemedText style={[styles.headerTitle, { color: c.text }]}>
-          앱 정보 및 고객센터
+          {t("settings.appInfo.title")}
         </ThemedText>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -100,15 +109,15 @@ export default function AppInfoScreen() {
         <View style={styles.section}>
           <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>
             <ThemedText style={[styles.sectionTitle, { color: c.text }]}>
-              고객센터
+              {t("settings.appInfo.support")}
             </ThemedText>
             <InfoRow
-              label="이메일"
+              label={t("settings.appInfo.email")}
               value="contact@mediology.ai"
               onPress={() => Linking.openURL("mailto:contact@mediology.ai")}
             />
             <InfoRow
-              label="웹사이트"
+              label={t("settings.appInfo.website")}
               value="www.mediology.ai"
               onPress={() => Linking.openURL("https://www.mediology.ai")}
               isLast
@@ -119,16 +128,16 @@ export default function AppInfoScreen() {
         {/* Company Footer */}
         <View style={styles.footer}>
           <ThemedText style={[styles.footerCompany, { color: c.textValue }]}>
-            주식회사 메디올로지
+            {t("settings.appInfo.company")}
           </ThemedText>
           <ThemedText style={[styles.footerText, { color: c.textSub }]}>
-            대표이사 정설아 | 사업자등록번호 520-87-03235
+            {t("settings.appInfo.business")}
           </ThemedText>
           <ThemedText style={[styles.footerText, { color: c.textSub }]}>
-            (03176) 서울특별시 종로구 경희궁길27 블루코브스퀘어 3F
+            {t("settings.appInfo.address")}
           </ThemedText>
           <ThemedText style={[styles.footerText, { color: c.textSub }]}>
-            Copyright © 2026 Mediology Co., Ltd. 신신당부. All Rights reserved.
+            {t("settings.appInfo.copyright")}
           </ThemedText>
         </View>
       </ScrollView>

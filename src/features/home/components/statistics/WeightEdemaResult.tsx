@@ -1,7 +1,9 @@
 import { Text, XStack, YStack } from "tamagui"
-import { EDEMA_DISPLAY_LABEL } from "../../data/EdemaConstants"
 import { DateAnalysisBodyRecord } from "@/src/types"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useTranslation } from "react-i18next"
+
+import { normalizeEdemaLevel } from "@/src/features/home/data/EdemaConstants"
 
 interface WeightEdemaResultProps {
   bodyRecords?: {
@@ -11,14 +13,13 @@ interface WeightEdemaResultProps {
 }
 
 export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
+  const { t } = useTranslation()
   const todayWeight = bodyRecords?.today?.weightKg ?? 0
   const previousWeight = bodyRecords?.previous?.weightKg ?? 0
-  const todayEdema = bodyRecords?.today?.edemaLevel
-    ? (EDEMA_DISPLAY_LABEL[bodyRecords.today.edemaLevel] ?? null)
-    : null
-  const previousEdema = bodyRecords?.previous?.edemaLevel
-    ? (EDEMA_DISPLAY_LABEL[bodyRecords.previous.edemaLevel] ?? null)
-    : null
+  // 서버에 남은 구 표기(SOME)를 화면이 아는 단계로 맞춘다 — 안 하면
+  // `stats.body.edema.SOME` 이 그대로 렌더된다.
+  const todayEdema = normalizeEdemaLevel(bodyRecords?.today?.edemaLevel)
+  const previousEdema = normalizeEdemaLevel(bodyRecords?.previous?.edemaLevel)
   const isDarkMode = useAppColorScheme() === "dark"
 
   return (
@@ -28,7 +29,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
         fontWeight="600"
         color={isDarkMode ? "$textDark" : "$black"}
       >
-        체중·부종 기록
+        {t("stats.body.title")}
       </Text>
 
       <XStack
@@ -49,14 +50,14 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
 
         <YStack width="55%" gap="$1">
           <Text fontSize={14} color="$colorSubtle" fontWeight="600">
-            체중
+            {t("stats.body.weight")}
           </Text>
           <Text
             fontSize={18}
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "$black"}
           >
-            {todayWeight > 0 ? `${todayWeight}kg` : "기록 없음"}
+            {todayWeight > 0 ? `${todayWeight}kg` : t("stats.body.noRecord")}
           </Text>
           <Text
             paddingTop="$2"
@@ -64,20 +65,25 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             fontWeight="500"
             color="$colorSubtle"
           >
-            전날: {previousWeight > 0 ? `${previousWeight}kg` : "기록 없음"}
+            {t("stats.body.previous")}:{" "}
+            {previousWeight > 0
+              ? `${previousWeight}kg`
+              : t("stats.body.noRecord")}
           </Text>
         </YStack>
 
         <YStack flex={1} gap="$1">
           <Text fontSize={14} color="$colorSubtle" fontWeight="600">
-            붓기
+            {t("stats.body.swelling")}
           </Text>
           <Text
             fontSize={18}
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "$black"}
           >
-            {todayEdema ?? "기록 없음"}
+            {todayEdema
+              ? t(`stats.body.edema.${todayEdema}`)
+              : t("stats.body.noRecord")}
           </Text>
           <Text
             paddingTop="$2"
@@ -85,7 +91,10 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             fontWeight="500"
             color="$colorSubtle"
           >
-            전날: {previousEdema ?? "기록 없음"}
+            {t("stats.body.previous")}:{" "}
+            {previousEdema
+              ? t(`stats.body.edema.${previousEdema}`)
+              : t("stats.body.noRecord")}
           </Text>
         </YStack>
       </XStack>

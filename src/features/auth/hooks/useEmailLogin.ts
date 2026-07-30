@@ -1,13 +1,17 @@
 import { useState } from "react"
 import { router } from "expo-router"
+import { useTranslation } from "react-i18next"
 import { useAuth } from "@/src/hooks"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { showErrorToast } from "@/src/lib/toast"
+import { isApiErrorLike } from "@/src/services/core/apiError"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import type { LoginForm } from "../types"
 import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
 import type { WithdrawalPendingResult } from "@/src/types"
 
 export function useEmailLogin() {
+  const { t } = useTranslation("auth")
   const { signInWithEmail, cancelWithdrawal, isLoading } = useAuth()
   const [loginError, setLoginError] = useState<string | null>(null)
   const [withdrawalPending, setWithdrawalPending] =
@@ -32,9 +36,9 @@ export function useEmailLogin() {
         return
       }
       setLoginError(
-        e instanceof Error
-          ? e.message
-          : "이메일 또는 비밀번호를 다시 확인해주세요.",
+        isApiErrorLike(e) && e.isNetworkError
+          ? t("login.networkError")
+          : t("login.credentialsError"),
       )
     }
   }
@@ -49,11 +53,7 @@ export function useEmailLogin() {
       setWithdrawalPending(null)
       router.replace("/(tabs)/home")
     } catch (e: unknown) {
-      showErrorToast(
-        e instanceof Error
-          ? e.message
-          : "회원탈퇴 취소 중 문제가 발생했습니다.",
-      )
+      showErrorToast(getErrorMessage(e, t("withdrawal.cancelFailed")))
     } finally {
       setIsCancellingWithdrawal(false)
     }

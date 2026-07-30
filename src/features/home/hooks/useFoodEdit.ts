@@ -8,11 +8,13 @@ import {
   validateMenuName,
 } from "../utils/foodEditUtils"
 import { MealType } from "../types"
+import { useTranslation } from "react-i18next"
 
 export function useFoodEdit(
   result: FoodCameraAnalyzeResult | null,
   mealType: MealType | null,
 ) {
+  const { t } = useTranslation()
   // --- state ---
   const [foods, setFoods] = useState(
     (result?.foods ?? []).map((f) => ({
@@ -74,7 +76,10 @@ export function useFoodEdit(
   }
 
   const handleNameSubmit = () => {
-    const validation = validateMenuName(newMenuName)
+    const validation = validateMenuName(
+      newMenuName,
+      t("foodEdit.enterFoodName"),
+    )
     setNewMenuNameError(validation.message)
     if (!validation.isValid) return
     setAddStep("amount")
@@ -83,7 +88,10 @@ export function useFoodEdit(
   }
 
   const handleAmountSubmit = () => {
-    const validation = validateMenuAmount(newMenuAmount)
+    const validation = validateMenuAmount(newMenuAmount, {
+      required: t("foodEdit.enterAmount"),
+      positive: t("foodEdit.amountPositive"),
+    })
     setNewMenuAmountError(validation.message)
     if (!validation.isValid) return
     setFoods((prev) => [

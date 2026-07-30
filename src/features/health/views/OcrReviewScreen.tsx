@@ -12,6 +12,7 @@ import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -61,6 +62,7 @@ function formatDateInput(raw: string): string {
 export function OcrReviewScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
   const { reportId: reportIdParam } = useLocalSearchParams<{
     reportId: string
@@ -77,7 +79,7 @@ export function OcrReviewScreen() {
 
   const loadReport = useCallback(() => {
     if (!reportId) {
-      setError("잘못된 접근입니다.")
+      setError(t("ocrReview.missingReport"))
       setLoading(false)
       return
     }
@@ -95,7 +97,7 @@ export function OcrReviewScreen() {
         setError(getOcrErrorMessage(err))
       })
       .finally(() => setLoading(false))
-  }, [reportId])
+  }, [reportId, t])
 
   useEffect(() => {
     loadReport()
@@ -139,8 +141,8 @@ export function OcrReviewScreen() {
 
     if (!DATE_PATTERN.test(measuredAt)) {
       Alert.alert(
-        "검사일 확인",
-        "검사일을 YYYY-MM-DD 형식으로 입력해주세요. (예: 2026-05-01)",
+        t("ocrReview.invalidDateTitle"),
+        t("ocrReview.invalidDateDescription"),
       )
       return
     }
@@ -157,7 +159,10 @@ export function OcrReviewScreen() {
       }))
 
     if (!payloadItems.some((i) => i.include && i.examValue)) {
-      Alert.alert("항목 선택", "저장할 항목을 최소 1개 이상 선택해주세요.")
+      Alert.alert(
+        t("ocrReview.noItemsTitle"),
+        t("ocrReview.noItemsDescription"),
+      )
       return
     }
 
@@ -168,18 +173,18 @@ export function OcrReviewScreen() {
         items: payloadItems,
       })
       Alert.alert(
-        "저장 완료",
-        `${result.savedCount}건의 검사 결과가 저장되었어요.`,
+        t("ocrReview.saveSuccessTitle"),
+        t("ocrReview.saveSuccessDescription", { count: result.savedCount }),
         [
           {
-            text: "확인",
+            text: t("actions.confirm"),
             onPress: () => router.dismissAll(),
           },
         ],
       )
     } catch (err) {
       logger.error("[ocr] confirm failed", err)
-      Alert.alert("저장 실패", getOcrErrorMessage(err))
+      Alert.alert(t("ocrReview.saveErrorTitle"), getOcrErrorMessage(err))
     } finally {
       setSaving(false)
     }
@@ -191,7 +196,7 @@ export function OcrReviewScreen() {
         style={[styles.container, { backgroundColor: healthColors.background }]}
       >
         <ScreenHeader
-          title="검사 결과 확인"
+          title={t("ocrReview.title")}
           paddingTop={insets.top + 8}
           onBack={() => router.back()}
         />
@@ -208,7 +213,7 @@ export function OcrReviewScreen() {
         style={[styles.container, { backgroundColor: healthColors.background }]}
       >
         <ScreenHeader
-          title="검사 결과 확인"
+          title={t("ocrReview.title")}
           paddingTop={insets.top + 8}
           onBack={() => router.back()}
         />
@@ -216,7 +221,7 @@ export function OcrReviewScreen() {
           <ThemedText
             style={[styles.errorText, { color: healthColors.textSecondary }]}
           >
-            {error ?? "데이터를 불러올 수 없습니다."}
+            {error ?? t("ocrReview.fallbackLoadError")}
           </ThemedText>
           <Pressable
             style={[
@@ -228,7 +233,7 @@ export function OcrReviewScreen() {
             <ThemedText
               style={[styles.retryText, { color: healthColors.text }]}
             >
-              다시 시도
+              {t("ocrReview.retryLoad")}
             </ThemedText>
           </Pressable>
         </View>
@@ -241,12 +246,14 @@ export function OcrReviewScreen() {
       style={[styles.container, { backgroundColor: healthColors.background }]}
     >
       <ScreenHeader
-        title="검사 결과 확인"
+        title={t("ocrReview.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 100 },
@@ -255,12 +262,12 @@ export function OcrReviewScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <ThemedText style={[styles.title, { color: healthColors.text }]}>
-          추출된 검사 수치를 확인해주세요
+          {t("ocrReview.heading")}
         </ThemedText>
         <ThemedText
           style={[styles.subtitle, { color: healthColors.textSecondary }]}
         >
-          잘못 인식된 값은 직접 수정하고, 저장할 항목을 선택할 수 있어요.
+          {t("ocrReview.description")}
         </ThemedText>
 
         {/* 원본 검사지 미리보기 */}
@@ -287,7 +294,7 @@ export function OcrReviewScreen() {
             <ThemedText
               style={[styles.confirmedText, { color: healthColors.positive }]}
             >
-              이미 저장이 완료된 검사지입니다.
+              {t("ocrReview.alreadySaved")}
             </ThemedText>
           </View>
         )}
@@ -305,7 +312,7 @@ export function OcrReviewScreen() {
           <ThemedText
             style={[styles.fieldLabel, { color: healthColors.textSecondary }]}
           >
-            검사일
+            {t("ocrReview.examDate")}
           </ThemedText>
           <TextInput
             style={[
@@ -328,7 +335,7 @@ export function OcrReviewScreen() {
             <ThemedText
               style={[styles.dateHint, { color: healthColors.cautionary }]}
             >
-              검사지에서 검사일을 인식하지 못했어요. 직접 입력해주세요.
+              {t("ocrReview.missingDate")}
             </ThemedText>
           )}
         </View>
@@ -338,9 +345,9 @@ export function OcrReviewScreen() {
           <ThemedText
             style={[styles.sectionTitle, { color: healthColors.text }]}
           >
-            검사 항목{" "}
+            {t("ocrReview.items")}{" "}
             <ThemedText style={styles.sectionCount}>
-              {includedCount}개 선택됨
+              {t("ocrReview.selectedCount", { count: includedCount })}
             </ThemedText>
           </ThemedText>
         </View>
@@ -400,7 +407,7 @@ export function OcrReviewScreen() {
                       onChangeText={(t) =>
                         updateItem(item.key, { examName: t })
                       }
-                      placeholder="검사 항목명"
+                      placeholder={t("ocrReview.examNamePlaceholder")}
                       placeholderTextColor={healthColors.textAssistive}
                       editable={!alreadyConfirmed}
                     />
@@ -414,7 +421,7 @@ export function OcrReviewScreen() {
                         ]}
                         numberOfLines={1}
                       >
-                        {item.examName || "(미상 항목)"}
+                        {item.examName || t("ocrReview.nameNeedsReview")}
                       </ThemedText>
                       {isUnmapped && (
                         <View
@@ -429,7 +436,7 @@ export function OcrReviewScreen() {
                               { color: healthColors.textSecondary },
                             ]}
                           >
-                            미인식
+                            {t("ocrReview.reviewBadge")}
                           </ThemedText>
                         </View>
                       )}
@@ -443,7 +450,7 @@ export function OcrReviewScreen() {
                       ]}
                       numberOfLines={1}
                     >
-                      원문: {item.rawText}
+                      {t("ocrReview.sourceLabel", { text: item.rawText })}
                     </ThemedText>
                   ) : null}
                 </View>
@@ -478,7 +485,7 @@ export function OcrReviewScreen() {
                   ]}
                   value={item.examValue}
                   onChangeText={(t) => updateItem(item.key, { examValue: t })}
-                  placeholder="수치"
+                  placeholder={t("ocrReview.valuePlaceholder")}
                   placeholderTextColor={healthColors.textAssistive}
                   editable={!alreadyConfirmed}
                 />
@@ -494,7 +501,7 @@ export function OcrReviewScreen() {
                   ]}
                   value={item.unit}
                   onChangeText={(t) => updateItem(item.key, { unit: t })}
-                  placeholder="단위"
+                  placeholder={t("ocrReview.unitPlaceholder")}
                   placeholderTextColor={healthColors.textAssistive}
                   editable={!alreadyConfirmed}
                 />
@@ -520,14 +527,14 @@ export function OcrReviewScreen() {
             <ThemedText
               style={[styles.addItemText, { color: healthColors.positive }]}
             >
-              항목 직접 추가
+              {t("ocrReview.addItem")}
             </ThemedText>
           </Pressable>
         )}
       </ScrollView>
 
       <BottomActionBar
-        label={saving ? "저장 중..." : "저장하기"}
+        label={saving ? t("actions.saving") : t("actions.save")}
         disabled={saving || alreadyConfirmed || includedCount === 0}
         paddingBottom={insets.bottom + 16}
         onPress={handleSave}

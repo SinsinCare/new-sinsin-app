@@ -1,4 +1,14 @@
 {
+  "time": {
+    "justNow": "Just now",
+    "yesterday": "Yesterday",
+    "minutesAgo_one": "{{count}} minute ago",
+    "minutesAgo_other": "{{count}} minutes ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
   "action": {
     "confirm": "Confirm",
     "cancel": "Cancel",
@@ -9,8 +19,1070 @@
     "back": "Back",
     "retry": "Retry"
   },
+  "accessibility": {
+    "remove": "Remove",
+    "clear": "Clear"
+  },
+  "form": {
+    "choose": "Choose an option"
+  },
+  "announcement": {
+    "linkErrorTitle": "We couldn’t open that link",
+    "invalidLinkBody": "The link in this announcement isn’t valid. Check the announcement for another way to continue.",
+    "openLinkErrorBody": "Check your connection, then open the link again.",
+    "image": "Image for {{title}}",
+    "new": "What’s new",
+    "close": "Close announcement",
+    "dontShowAgain": "Don’t show this announcement again"
+  },
+  "legalDocument": {
+    "title": "Policies",
+    "notFound": "We couldn’t find that document. Go back and choose it again.",
+    "termsHeading": "Sinsin Care Terms of Service",
+    "officialKoreanNotice": "This is the official Korean legal text. An English version requires legal review before it can be used for consent."
+  },
   "state": {
     "loading": "Loading",
-    "error": "Something went wrong"
+    "error": "We couldn’t load this right now"
+  },
+  "mobilePolicy": {
+    "opening": "Opening Sinsin Care…",
+    "maintenanceTitle": "We’ll be back soon",
+    "maintenanceBody": "We’re doing a little maintenance. Please open the app again in a few minutes.",
+    "requiredTitle": "Update required",
+    "requiredBody": "Install the latest version to keep using Sinsin Care.",
+    "recommendedTitle": "An update is available",
+    "recommendedBody": "A newer, more reliable version is ready to install.",
+    "storeError": "We couldn’t open the app store. Check your connection and try again.",
+    "update": "Update now",
+    "later": "Not now"
+  },
+  "mealRecommendation": {
+    "title": "{{meal}} ideas",
+    "refresh": "Refresh meal ideas",
+    "loading": "Finding options to compare with today’s records…",
+    "recipes": "Recipes to make at home",
+    "restaurantMenus": "Restaurant options",
+    "empty": "We couldn’t find an option that fits your current records.\nTry switching between lunch and dinner.",
+    "weightNeeded": "Add weight",
+    "underLimit": "{{amount}} {{unit}} under",
+    "overLimit": "Over limit"
+  },
+  "brand": {
+    "name": "Sinsin Care",
+    "tagline": "Sinsin Care — Kidney health, made clearer",
+    "opening": "Getting Sinsin Care ready…"
+  },
+  "nav": {
+    "home": "Home",
+    "community": "Community",
+    "recipes": "Recipes",
+    "restaurants": "Dining",
+    "myPage": "You"
+  },
+  "profile": {
+    "age": "Age {{age}}",
+    "gender": {
+      "male": "Man",
+      "female": "Woman"
+    }
+  },
+  "meal": {
+    "BREAKFAST": "Breakfast",
+    "LUNCH": "Lunch",
+    "DINNER": "Dinner",
+    "SNACKS": "Snacks"
+  },
+  "nutrient": {
+    "protein": "Protein",
+    "sodium": "Sodium",
+    "potassium": "Potassium",
+    "phosphorus": "Phosphorus",
+    "fluids": "Fluids"
+  },
+  "medical": {
+    "diagnosisCause": {
+      "DIABETIC_KIDNEY_DISEASE": "Diabetic kidney disease",
+      "HYPERTENSION": "High blood pressure",
+      "GLOMERULONEPHRITIS": "Glomerulonephritis",
+      "POLYCYSTIC_KIDNEY_DISEASE": "Polycystic kidney disease",
+      "OTHER": "Other"
+    },
+    "comorbidity": {
+      "DIABETES": "Diabetes",
+      "HYPERTENSION": "High blood pressure",
+      "HEART_DISEASE": "Heart disease",
+      "GOUT": "Gout",
+      "ANEMIA": "Anemia",
+      "BONE_MINERAL": "Mineral and bone disorder"
+    }
+  },
+  "myPage": {
+    "title": "You",
+    "openSettings": "Open settings",
+    "editProfile": "Edit profile",
+    "userFallback": "User",
+    "kidneyHealth": "Kidney health",
+    "addKidneyProfile": "Add kidney health details",
+    "healthManagement": "Health",
+    "support": "Support",
+    "menu": {
+      "doctor": "Connect with your care team",
+      "healthData": "Import lab results",
+      "share": "Share health summary",
+      "announcements": "What’s new",
+      "inquiry": "Contact support",
+      "references": "Medical references"
+    },
+    "share": {
+      "emptyTitle": "There’s nothing to share yet",
+      "emptyBody": "Add your kidney health details or log a meal first.",
+      "titleLine": "[Sinsin Care] {{name}}’s health summary",
+      "asOf": "📅 Updated {{date}}",
+      "kidneyProfile": "👤 Kidney health",
+      "stageNotRecorded": "CKD stage not added",
+      "onDialysis": "On dialysis",
+      "height": "Height",
+      "weight": "Weight",
+      "primaryCause": "Primary cause",
+      "otherConditions": "Other conditions",
+      "todaysMeals": "🍽️ Today’s meals",
+      "todaysNutrients": "📊 Today’s nutrients",
+      "foodsToWatch": "Foods to watch",
+      "footer": "Keep your health records together with Sinsin Care.",
+      "download": "Download",
+      "sheetTitle": "My kidney health summary",
+      "errorTitle": "We couldn’t share your health summary",
+      "errorBody": "Choose a sharing app again or try in a moment.",
+      "limitUnknown": "Personal limit unavailable"
+    }
+  },
+  "community": {
+    "title": "Community",
+    "myActivity": "Your activity",
+    "bookmarks": "Saved posts",
+    "write": "New post",
+    "writeAccessibility": "Write a community post",
+    "categories": {
+      "diet": "Meals",
+      "numbers": "Health trends",
+      "symptoms": "Symptoms",
+      "medicine": "Medications",
+      "diningOut": "Dining out",
+      "daily": "Everyday life"
+    },
+    "postDetail": {
+      "withdrawnUser": "Former member",
+      "deletePostTitle": "Delete this post?",
+      "deletePostBody": "You won’t be able to get it back.",
+      "report": "Report",
+      "edit": "Edit",
+      "more": "More options",
+      "reportReasonTitle": "Why are you reporting this?",
+      "reportReasons": {
+        "spam": "Spam or advertising",
+        "harassment": "Harassment or hate speech",
+        "inappropriate": "Inappropriate content",
+        "falseInformation": "False information",
+        "other": "Something else"
+      },
+      "reportReceivedTitle": "Report received",
+      "reportReceivedBody": "We’ll review it.",
+      "reportErrorTitle": "We couldn’t submit your report",
+      "reportErrorBody": "Check your connection, then try reporting it again.",
+      "shareMessage": "{{title}}\n\n{{description}}\n\nRead this post on Sinsin Care\n{{url}}",
+      "voteErrorTitle": "We couldn’t save your vote",
+      "voteErrorBody": "Check your connection, then vote again.",
+      "commentSaveErrorTitle": "We couldn’t save your comment",
+      "commentSaveErrorBody": "Check your connection, then try saving it again.",
+      "deleteCommentTitle": "Delete this comment?",
+      "deleteCommentBody": "You won’t be able to get it back.",
+      "commentDeleteErrorTitle": "We couldn’t delete your comment",
+      "commentDeleteErrorBody": "Wait a moment, then try deleting it again.",
+      "reply": "Reply",
+      "comment": "Comment",
+      "likeErrorTitle": "We couldn’t update your like",
+      "likeErrorBody": "Check your connection, then tap Like again.",
+      "deletedComment": "This comment was deleted",
+      "likeComment": "Like comment",
+      "commentMore": "Comment options",
+      "loadErrorTitle": "We couldn’t load this post",
+      "reload": "Reload post",
+      "loading": "Loading post…",
+      "notFound": "We couldn’t find this post",
+      "share": "Share",
+      "bookmark": "Save post",
+      "enlargePhoto": "View photo",
+      "enlargePhotoNumber": "View photo {{number}}",
+      "like": "Like",
+      "likeCount": "{{count}} likes",
+      "likeCount_zero": "Like",
+      "likeCount_one": "{{count}} like",
+      "likeCount_other": "{{count}} likes",
+      "commentCount": "{{count}} comments",
+      "commentCount_one": "{{count}} comment",
+      "commentCount_other": "{{count}} comments",
+      "commentsLoading": "Loading comments…",
+      "noComments": "No comments yet",
+      "firstComment": "Start the conversation",
+      "related": "You might also like",
+      "editingComment": "Editing comment",
+      "replyingTo": "Replying to {{name}}",
+      "cancelReply": "Cancel reply",
+      "removeMention": "Remove {{name}}",
+      "commentPlaceholder": "Add a comment",
+      "saveComment": "Save comment",
+      "postComment": "Post comment",
+      "closePhoto": "Close photo"
+    },
+    "stories": {
+      "recommended": "For you",
+      "recent": "Latest",
+      "expiringSoon": "Expiring soon",
+      "expiresInMinutes": "Expires in {{count}} minutes",
+      "expiresInMinutes_one": "Expires in {{count}} minute",
+      "expiresInMinutes_other": "Expires in {{count}} minutes",
+      "expiresInHours": "Expires in {{count}} hours",
+      "expiresInHours_one": "Expires in {{count}} hour",
+      "expiresInHours_other": "Expires in {{count}} hours",
+      "deleteTitle": "Delete this story?",
+      "deleteBody": "You won’t be able to get it back.",
+      "report": "Report this story",
+      "blockUser": "Block this person",
+      "blockTitle": "Block {{name}}?",
+      "blockBody": "You won’t see this person’s community posts or stories.",
+      "block": "Block",
+      "like": "Like story",
+      "more": "Story options",
+      "mine": "Your story",
+      "emptyTitle": "No stories yet",
+      "emptyBody": "Share a photo from today’s meals to get started.",
+      "add": "Add story"
+    },
+    "newStory": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "galleryPhoto": "Photo library",
+      "errorTitle": "We couldn’t post your story",
+      "errorBody": "Check your connection, then try posting it again.",
+      "title": "New story",
+      "add": "Post story",
+      "saving": "Posting…",
+      "submit": "Post",
+      "choosePhoto": "Choose a photo to share",
+      "recentMeals": "Recent meal photos",
+      "chooseFromGallery": "Choose from photo library",
+      "gallery": "Photo library",
+      "selectPhoto": "Select {{label}}",
+      "noMealPhotos": "No meal photos yet. You can choose one from your photo library.",
+      "captionLabel": "Caption (optional)",
+      "captionPlaceholder": "How was this meal?",
+      "notice": "Your story will be visible for 24 hours."
+    },
+    "library": {
+      "tabs": {
+        "mine": "Your posts",
+        "liked": "Liked",
+        "bookmarked": "Saved"
+      },
+      "empty": {
+        "mine": {
+          "title": "You haven’t posted yet",
+          "body": "Share your first post with the community."
+        },
+        "liked": {
+          "title": "No liked posts yet",
+          "body": "Tap Like when you find a post that helps."
+        },
+        "bookmarked": {
+          "title": "No saved posts yet",
+          "body": "Save posts you want to come back to."
+        }
+      }
+    }
+  },
+  "recipe": {
+    "title": "Recipes",
+    "empty": "No recipes to show yet. Add one of your own to get started.",
+    "write": "Add recipe"
+  },
+  "restaurant": {
+    "nearby": "Nearby",
+    "menuInfo": "Menu estimates",
+    "loadingNearby": "Finding restaurants near you…",
+    "menuCount": "{{count}} menu items",
+    "menuCount_one": "{{count}} menu item",
+    "menuCount_other": "{{count}} menu items",
+    "searchPlaceholder": "Search by restaurant or address",
+    "searchAccessibility": "Search restaurants",
+    "loadErrorTitle": "We couldn’t load nearby restaurants",
+    "loadErrorBody": "Check your connection, then reload the list.",
+    "reload": "Reload restaurants",
+    "emptyTitle": "No restaurants match your search",
+    "emptyBody": "Try a different search or adjust your filters.",
+    "notFound": "We couldn’t find that restaurant. Choose another one from the list.",
+    "backAccessibility": "Back to restaurant list",
+    "photoAccessibility": "{{name}} photo {{number}}",
+    "reviews": "{{count}} reviews",
+    "reviews_one": "{{count}} review",
+    "reviews_other": "{{count}} reviews",
+    "tabs": {
+      "region": "Area",
+      "foodType": "Cuisine",
+      "nutrient": "Nutrition"
+    },
+    "filter": {
+      "reset": "Reset",
+      "apply": "Show results",
+      "close": "Close filters",
+      "region": "Area",
+      "foodType": "Cuisine",
+      "nutrient": "Nutrition filters",
+      "regions": {
+        "all": "All areas",
+        "seoul": "Seoul",
+        "gyeonggi": "Gyeonggi",
+        "incheon": "Incheon",
+        "busan": "Busan",
+        "jeju": "Jeju",
+        "ulsan": "Ulsan",
+        "gyeongnam": "South Gyeongsang",
+        "daegu": "Daegu",
+        "gyeongbuk": "North Gyeongsang",
+        "gangwon": "Gangwon",
+        "daejeon": "Daejeon",
+        "chungnam": "South Chungcheong",
+        "chungbuk": "North Chungcheong",
+        "sejong": "Sejong",
+        "jeonnam": "South Jeolla",
+        "gwangju": "Gwangju",
+        "jeonbuk": "North Jeolla"
+      },
+      "subRegions": {
+        "seoulAll": "All Seoul",
+        "gangnam": "Gangnam",
+        "seocho": "Seocho",
+        "jamsil": "Jamsil · Songpa · Gangdong",
+        "yeongdeungpo": "Yeongdeungpo · Yeouido · Gangseo",
+        "kondae": "Kondae · Seongsu · Wangsimni",
+        "jongno": "Jongno · Jung",
+        "hongdae": "Hongdae · Hapjeong · Mapo",
+        "yongsan": "Yongsan · Itaewon · Hannam",
+        "seongbuk": "Seongbuk · Nowon · Jungnang",
+        "guro": "Guro · Gwanak · Dongjak"
+      },
+      "foodTypes": {
+        "korean": "Korean",
+        "chinese": "Chinese",
+        "japanese": "Japanese",
+        "american": "Western",
+        "world": "Global"
+      },
+      "nutrients": {
+        "lowSugar": "Lower sugar",
+        "lowSalt": "Lower sodium",
+        "lowPotassium": "Lower potassium",
+        "lowPhosphorus": "Lower phosphorus"
+      }
+    },
+    "cuisine": {
+      "KOREAN": "Korean",
+      "JAPANESE": "Japanese",
+      "CHINESE": "Chinese",
+      "WESTERN": "Western",
+      "ETC": "Global",
+      "OTHER": "Other"
+    },
+    "catalogCuisine": {
+      "tofu": "Tofu",
+      "porridge": "Porridge",
+      "saladPoke": "Salads & poke",
+      "shabu": "Shabu-shabu",
+      "temple": "Temple cuisine"
+    },
+    "curation": {
+      "title": "Menu nutrition estimates",
+      "subtitle": "These estimates use standard recipes. Ask the restaurant about actual ingredients and portions.",
+      "summaryTitle": "At a glance",
+      "summaryBody": "Compare menu estimates and consider them alongside your personal meal guidelines.",
+      "cardDescription": "{{count}} menu items listed",
+      "cardDescription_one": "{{count}} menu item listed",
+      "cardDescription_other": "{{count}} menu items listed",
+      "mockDescription": "Ask the restaurant about current menus and ingredients."
+    },
+    "location": {
+      "loading": "Finding your location…",
+      "unavailable": "Showing recommendations without your current location",
+      "notFound": "Current address unavailable"
+    },
+    "detail": {
+      "close": "Close restaurant details",
+      "todayHours": "Hours today",
+      "hoursUnknown": "Hours unavailable",
+      "closed": "Closed",
+      "menus": "{{count}} menu items",
+      "menus_one": "{{count}} menu item",
+      "menus_other": "{{count}} menu items",
+      "nutritionDisclaimer": "Nutrition estimates use standard recipes, not this restaurant’s actual ingredients. Ask the restaurant about ingredients and portions, and follow guidance from your clinician or dietitian.",
+      "nutritionLine": "{{kcal}} kcal · Sodium {{sodium}} mg · Protein {{protein}} g · Potassium {{potassium}} mg",
+      "descriptionUnavailable": "Ask the restaurant for current menu details."
+    },
+    "report": {
+      "maxPhotos": "You can add up to {{count}} photos.",
+      "permissionTitle": "Allow photo access to choose restaurant photos",
+      "permissionBody": "Turn on photo access in Settings.",
+      "later": "Not now",
+      "openSettings": "Open Settings",
+      "successTitle": "Thanks — we got it",
+      "successBody": "We’ll review the details you sent.",
+      "failure": "We couldn’t send the restaurant details. Check your connection, then try again.",
+      "introTitle": "Know a restaurant worth sharing?",
+      "introBody": "Tell us where it was easy to order a less salty meal. We’ll review your submission before adding it.",
+      "formTitle": "Share a restaurant",
+      "sections": {
+        "restaurant": "Restaurant details",
+        "highlights": "What worked well?",
+        "photos": "Photos"
+      },
+      "fields": {
+        "name": "Restaurant name",
+        "namePlaceholder": "For example, Green Gimbap",
+        "address": "Address (optional)",
+        "addressPlaceholder": "Street address or neighborhood",
+        "category": "Cuisine",
+        "categoryPlaceholder": "Korean, Japanese, diner, and more",
+        "menu": "Menu item (optional)",
+        "menuPlaceholder": "A dish that was easy to order less salty",
+        "reason": "What worked well? (optional)",
+        "reasonPlaceholder": "What made ordering or eating there easier?",
+        "link": "Reference link (optional)",
+        "linkPlaceholder": "Map, menu, or review link"
+      },
+      "selectedPhotos": "{{current}} of {{max}} photos selected",
+      "addPhoto": "Add photos",
+      "removePhoto": "Remove photo",
+      "remove": "Remove",
+      "submit": "Send restaurant details",
+      "validation": {
+        "nameRequired": "Enter the restaurant name.",
+        "categoryRequired": "Enter the cuisine.",
+        "tooManyPhotos": "You can add up to {{count}} photos."
+      }
+    }
+  },
+  "stats": {
+    "title": "Trends",
+    "tabs": {
+      "nutrients": "Nutrients",
+      "mealGuide": "Meal guide",
+      "mealLog": "Meal log",
+      "body": "Weight & swelling"
+    },
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "openCalendar": "Choose a date",
+    "emptyPeriod": "No meals were logged during this period.",
+    "logMeal": "Log a meal",
+    "previousPeriod": "Previous period",
+    "nextPeriod": "Next period",
+    "metrics": "Averages",
+    "todaysNumbers": "Today’s readings",
+    "remaining": "Remaining today",
+    "needsAttention": "{{count}} items to review",
+    "needsAttention_one": "{{count}} item to review",
+    "needsAttention_other": "{{count}} items to review",
+    "reference": "Reference",
+    "foodsToday": "What you ate today",
+    "allInRange": "All within range",
+    "period": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "periodReport": "{{period}} report",
+    "errorTitle": "We couldn’t load your trends",
+    "errorBody": "Check your connection, then try again.",
+    "retryAccessibility": "Reload trends",
+    "lowDataTitle": "A little more data will make this clearer",
+    "mealsRecorded": "{{recorded}} of {{expected}} meals · {{rate}}%",
+    "lowDataBody": "For now, use this as a rough pattern. Log a few more meals for a more reliable view.",
+    "calendar": {
+      "goToday": "Go to today",
+      "today": "Today",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "hasRecord": "Has records",
+      "selected": "Selected"
+    },
+    "body": {
+      "title": "Weight & swelling",
+      "weight": "Weight",
+      "swelling": "Swelling",
+      "previous": "Yesterday",
+      "noRecord": "No entry",
+      "edema": {
+        "NONE": "No swelling",
+        "SLIGHT": "Mild swelling",
+        "SEVERE": "Significant swelling"
+      }
+    },
+    "dietary": {
+      "title": "Meal log",
+      "body": "Tap a card to see its nutrients and what you may want to adjust.",
+      "noRecord": "Not logged"
+    },
+    "nutrientGraph": {
+      "dailyIntake": "Amount today",
+      "generalReference": "general reference",
+      "personalReference": "your profile reference",
+      "generalBody": "This general reference is shown until your profile is available.",
+      "proteinBody": "Calculated from your CKD stage, dialysis status, and weight. Follow a target set by your care team instead.",
+      "personalBody": "Calculated from your CKD stage and dialysis status. Follow a target set by your care team instead."
+    },
+    "dietaryGuide": {
+      "title": "Meal notes",
+      "today": "Today at a glance",
+      "empty": "Log a meal to see what you may want to adjust.",
+      "nextMeal": "Foods to review at your next meal",
+      "foods": "Consider adjusting"
+    }
+  },
+  "home": {
+    "recordBar": {
+      "chooseDate": "Choose a date",
+      "viewStats": "View trends",
+      "stats": "Trends"
+    },
+    "textRecord": {
+      "title": "Describe your meal",
+      "placeholder": "Add each food and how much you ate",
+      "example": "Example: 1 serving salad, 5 oz meat, 1 egg, 1 cup milk",
+      "checkNutrients": "Check nutrients"
+    },
+    "analysis": {
+      "readyTitle": "Your meal results are ready",
+      "readyNamedBody": "Review the nutrients and notes for {{title}}.",
+      "readyMealBody": "Review the nutrients and notes for {{meal}}.",
+      "readyGenericBody": "Open your meal log to review the nutrients and notes.",
+      "photoUnclearTitle": "We couldn’t identify the food in this photo",
+      "photoUnclearBody": "Try another angle or describe the meal instead.",
+      "photoFailedTitle": "We couldn’t read this meal photo",
+      "photoFailedBody": "Try a clear photo with the food in view. If your connection is unstable, wait a moment and try again.",
+      "takingLongTitle": "This is taking longer than usual",
+      "takingLongBody": "You can close this screen and check for the result again later.",
+      "textFailedTitle": "We couldn’t check that meal",
+      "textFailedBody": "Your description is still here. Check your connection, then try again."
+    },
+    "undoRecord": "Undo",
+    "tile": {
+      "meals": "Meals",
+      "water": "Water",
+      "bloodPressure": "Blood pressure",
+      "bloodGlucose": "Blood sugar",
+      "weight": "Weight",
+      "edema": "Swelling"
+    },
+    "meal": {
+      "unit": "meals",
+      "first": "Log your first meal",
+      "remaining": "{{meal}} is still open",
+      "complete": "All 3 meals logged"
+    },
+    "weight": {
+      "morning": "Check before breakfast",
+      "noYesterday": "No entry from yesterday",
+      "same": "Same as yesterday",
+      "change": "{{change}} kg from yesterday"
+    },
+    "recordedAt": "Logged at {{time}}",
+    "recordedToday": "Logged today",
+    "bloodPressure": {
+      "prompt": "Add today’s blood pressure"
+    },
+    "bloodGlucose": {
+      "timings": "Fasting · Before · After",
+      "latest": "{{timing}}{{extra}}",
+      "extra": " +{{count}} more",
+      "extra_one": " +{{count}} more",
+      "extra_other": " +{{count}} more",
+      "timing": {
+        "FASTING": "Fasting",
+        "BEFORE_MEAL": "Before meal",
+        "AFTER_MEAL": "After meal"
+      }
+    },
+    "edema": {
+      "today": "Today’s check",
+      "prompt": "Check your feet and ankles",
+      "level": {
+        "NONE": "None",
+        "SLIGHT": "Mild",
+        "SEVERE": "Severe"
+      }
+    },
+    "analyzingMeal": "Checking the nutrients in your meal…",
+    "todayRecord": {
+      "title": "Today",
+      "hint": "Tap to add",
+      "add": "Add a reading",
+      "now": "Now"
+    },
+    "timeline": {
+      "title": "Meals",
+      "count": "{{count}} of 4 logged",
+      "empty": "Tap breakfast, lunch, dinner, or snacks to add a meal.",
+      "add": "Log a meal",
+      "openRecorded": "Open {{meal}} {{time}}",
+      "recordSkipped": "{{meal}} was skipped. Tap to add it instead.",
+      "recordMeal": "Log {{meal}}",
+      "skipped": "Skipped"
+    },
+    "character": {
+      "empty": {
+        "first": {
+          "pre": "Start with ",
+          "keyword": "one meal",
+          "post": " today"
+        },
+        "second": {
+          "pre": "and keep your nutrition ",
+          "keyword": "goals",
+          "post": " in view"
+        }
+      },
+      "onTarget": {
+        "pre": "You stayed within today’s ",
+        "keyword": "goals",
+        "post": ""
+      },
+      "streak": {
+        "pre": "{{count}} days of ",
+        "keyword": "logging",
+        "post": " in a row"
+      },
+      "tomorrow": {
+        "pre": "Try another ",
+        "keyword": "meal",
+        "post": " tomorrow"
+      },
+      "progress": {
+        "first": {
+          "pre": "You’re building a solid ",
+          "keyword": "log",
+          "post": " today"
+        },
+        "second": {
+          "pre": "At your next meal, check your nutrition ",
+          "keyword": "goals",
+          "post": " too"
+        }
+      }
+    },
+    "sheet": {
+      "record": "Log",
+      "recordValue": "Log {{value}}",
+      "target": "Target",
+      "yesterday": "Yesterday",
+      "noRecord": "No entry",
+      "previousReading": "Previous reading",
+      "meal": {
+        "alreadyRecorded": "{{meal}} is already logged",
+        "willRecordAs": "This will be saved as {{meal}}",
+        "recorded": "Logged",
+        "notRecorded": "Not logged",
+        "view": "View {{meal}}",
+        "viewDescription": "Review nutrients and what to adjust.",
+        "takePhoto": "Take a photo",
+        "photoDescription": "Make sure the food and portion are easy to see.",
+        "choosePhoto": "Choose from photos",
+        "writeText": "Describe the meal",
+        "info": "Add the foods and portions to check sodium, potassium, and phosphorus.",
+        "skip": "Skip this meal today"
+      },
+      "water": {
+        "title": "Log water",
+        "subtitle": "Tap the amount you drank",
+        "referenceLimit": "General reference {{limit}} mL",
+        "personalLimit": "Your limit {{limit}} mL",
+      "overLimitGuidance": "You’re over your limit. Follow your care team’s guidance before adding more fluids.",
+        "undoLast": "Undo last drink",
+        "undoAmount": "Undo {{amount}} mL",
+        "recordCustom": "Log the amount entered",
+        "custom": "Enter another amount",
+        "customHint": "Enter an amount in mL",
+        "info": "Soup and fruit also count as fluids. Half a bowl of broth counts as 100 mL.",
+        "presetAccessibility": "Log {{amount}} mL using {{anchor}}",
+        "preset": {
+          "shot": "Small glass",
+          "halfCup": "Half cup",
+          "cup": "Cup",
+          "bottle": "Bottle"
+        }
+      },
+      "bloodPressure": {
+        "title": "Log blood pressure",
+        "subtitle": "Sit for 5 minutes, then keep your arm at heart level",
+        "systolic": "Systolic",
+        "diastolic": "Diastolic",
+        "heartRate": "Heart rate",
+        "noPrevious": "No previous blood pressure reading to compare",
+        "enterBoth": "Enter systolic and diastolic values"
+      },
+      "bloodGlucose": {
+        "title": "Log blood sugar",
+        "subtitle": "Pick when you checked, then set the number",
+        "chooseValue": "Set your reading to continue",
+        "decrease": "Lower blood sugar by 1",
+        "increase": "Raise blood sugar by 1",
+        "step": "Steps of 1",
+        "timing": "When you checked",
+        "mealTiming": "Around a meal",
+        "elapsed": "How long after eating?",
+        "elapsedOption": {
+          "30M": "30 min",
+          "1H": "1 hr",
+          "2H": "2 hr"
+        }
+      },
+      "weight": {
+        "title": "Log weight",
+        "subtitle": "Try to check at a similar time and under similar conditions each day",
+        "chooseValue": "Choose your weight",
+        "decrease": "Lower weight by 0.1 kg",
+        "increase": "Raise weight by 0.1 kg",
+        "step": "Adjust by 0.1 kg",
+        "difference": "Change from yesterday",
+        "noComparisonInfo": "For a useful comparison, try to check at a similar time and under similar conditions.",
+        "comparisonInfo": "This is the change from your previous entry. Time of day, clothing, meals, and fluids can affect the number."
+      },
+      "edema": {
+        "title": "Log swelling",
+        "subtitle": "Choose how much swelling you notice today",
+        "chooseValue": "Choose a swelling level",
+        "description": {
+          "NONE": "Feels normal",
+          "SLIGHT": "Socks leave a mark",
+          "SEVERE": "Shoes feel too tight"
+        },
+        "info": "Check around your eyes in the morning and your feet and ankles in the evening."
+      }
+    },
+    "errors": {
+      "analysisFailed": "We couldn’t analyze this meal.",
+      "confirmationTitle": "We couldn’t finish checking the food",
+      "confirmationBody": "Your choices are still here. Check your connection, then try again.",
+      "notReadyTitle": "This meal isn’t ready to save yet",
+      "notReadyBody": "We’re still preparing the result. Try “Add to log” again in a moment.",
+      "saveMealTitle": "We couldn’t save this meal",
+      "saveMealBody": "Check your connection, then try “Add to log” again.",
+      "saveChangesTitle": "We couldn’t save your changes",
+      "saveChangesBody": "Your edits are still here. Check your connection, then tap Save again.",
+      "skipMealTitle": "We couldn’t mark this meal as skipped",
+      "tryAgainBody": "Check your connection, then try again.",
+      "openMealTitle": "We couldn’t open this meal",
+      "openMealBody": "Check your connection, then tap the meal card again.",
+      "renameMealTitle": "We couldn’t rename this meal",
+      "renameMealBody": "Your new name is still here. Wait a moment, then save again.",
+      "changeMealTypeTitle": "We couldn’t move this meal",
+      "changeMealTypeBody": "Check your connection, then choose the meal again.",
+      "saveBloodPressureTitle": "We couldn’t save your blood pressure",
+      "saveBloodPressureBody": "Check the numbers, then tap Log again in a moment.",
+      "saveBloodGlucoseTitle": "We couldn’t save your blood sugar",
+      "saveBloodGlucoseBody": "Check the reading and when you took it, then tap Log again.",
+      "saveWeightTitle": "We couldn’t save your weight",
+      "saveWeightBody": "Check the number, then tap Log again in a moment.",
+      "saveEdemaTitle": "We couldn’t save your swelling check",
+      "saveEdemaBody": "Your selection is still here. Wait a moment, then tap Log again.",
+      "saveWaterTitle": "We couldn’t save that water",
+      "saveWaterBody": "We restored the previous amount. Check your connection, then try again."
+    }
+  },
+  "mealReport": {
+    "recorded": "Logged",
+    "notRecorded": "Not logged yet",
+    "atAGlance": "At a glance",
+    "focus": "Focus on {{nutrient}}",
+    "comparison": "How this meal compares",
+    "profileReference": "Compared with the limits saved in your profile",
+    "energyReferencePercent": "{{percent}}% of your weight-based reference",
+    "showDetails": "Show full nutrition facts",
+    "hideDetails": "Hide full nutrition facts",
+    "over": "{{amount}} over",
+    "untilLimit": "{{amount}} before the reference limit",
+    "remaining": "{{amount}} remaining",
+    "byFood": "Food-by-food",
+    "relevantNutrients": "Only nutrients worth a closer look",
+    "foodDailyPercent": "{{nutrient}} {{amount}} · {{percent}}% of your daily limit",
+    "swaps": "Easier swaps",
+    "nutritionFacts": "Nutrition facts",
+    "nutrient": "Nutrient",
+    "amount": "Amount",
+    "percentOfLimit": "% of limit",
+    "nutritionNotice": "Nutrient amounts vary with portions, preparation, and seasoning. Daily limits reflect the kidney details saved in your profile. Follow your care team’s treatment guidance.",
+    "nutrients": {
+      "calories": "Calories",
+      "carbohydrates": "Carbohydrates",
+      "protein": "Protein",
+      "fat": "Fat",
+      "sodium": "Sodium",
+      "potassium": "Potassium",
+      "phosphorus": "Phosphorus",
+      "water": "Fluids"
+    }
+  },
+  "foodResult": {
+    "shareInstagram": "Share to Instagram Stories",
+    "shareOther": "Share with another app",
+    "instagramErrorTitle": "We couldn’t open Instagram",
+    "instagramErrorBody": "Make sure Instagram is installed, then try again.",
+    "share": "Share meal results",
+    "title": "Meal results",
+    "close": "Close meal results",
+    "servings_one": "{{count}} serving",
+    "servings_other": "{{count}} servings",
+    "servings": "{{count}} servings",
+    "edit": "Edit meal details",
+    "textMeal": "You logged this meal with text",
+    "textMealHint": "You can fix the foods or portions anytime.",
+    "consumedBasis": "Based on what you ate",
+    "photoBasis": "Based on everything in the photo",
+    "amountHint": "Changing the portion updates the nutrients right away.",
+    "nutrientsReady": "Your nutrient totals are ready",
+    "reportUnavailable": "We couldn’t load the written summary. You can still review the nutrient totals below.",
+    "totalCalories": "Total calories",
+    "nutrientDetails": "Nutrient details",
+    "chartExplanation": "Each circle shows how much this food contributes to the daily limit saved in your profile.",
+    "inPhoto": "{{amount}} g in the photo",
+    "consumed": "{{amount}} g eaten",
+    "referencesNote": "Nutrient references are informed by KDIGO 2024, Korean Society of Nephrology CKD nutrition guidance, and the Korean Food Composition Database. Photo-based estimates do not replace medical care. Follow your care team’s personal guidance.",
+    "openAllReferences": "View all medical references",
+    "openReferences": "View medical references",
+    "story": "Share to your story",
+    "storyCaption": "Neighbors can see this meal\nfor 24 hours",
+    "community": "Ask the community",
+    "communityCaption": "Share this meal\nwith your neighbors",
+    "askMore": "Ask about this meal",
+    "openingConsult": "Opening your chat…",
+    "askMoreCaption": "Keep going with any questions you have.",
+    "delete": "Delete meal log",
+    "deleting": "Deleting…",
+    "deleteConfirmTitle": "Delete this meal log?",
+    "deleteConfirmBody": "You won’t be able to recover it.",
+    "deleteFailedTitle": "We couldn’t delete this meal log",
+    "deleteFailedBody": "Check your connection, then try again in a moment.",
+    "addToLog": "Add to log",
+    "adding": "Adding…",
+    "unsavedTitle": "This meal hasn’t been saved yet.",
+    "unsavedBody": "If you leave now, this result won’t be added to your log.",
+    "leaveWithoutSaving": "Leave without saving",
+    "returnToResult": "Return to results",
+    "unavailable": "Unavailable",
+    "restriction": {
+      "safe": "Within your reference",
+      "caution": "Above your reference",
+      "restricted": "Well above your reference",
+      "unknown": "Unavailable"
+    },
+    "provenance": {
+      "CATALOG": "Food nutrition database",
+      "RECIPE": "Recipe-based calculation",
+      "INGREDIENT_ESTIMATE": "Estimated from ingredients",
+      "AI_ESTIMATE": "Estimated from the photo"
+    }
+  },
+  "foodEdit": {
+    "checkMealName": "Check the meal name",
+    "enterMealName": "Enter a name for this meal.",
+    "checkInput": "Check the meal details",
+    "checkInputBody": "Enter a food name and an amount greater than zero.",
+    "enterFoodName": "Enter a food name",
+    "enterAmount": "Enter how much you ate",
+    "amountPositive": "Enter a number greater than zero",
+    "renameMeal": "Rename meal",
+    "foodsAndAmounts": "Foods and portions",
+    "addMenu": "Add food",
+    "menuName": "Food name",
+    "confirmMenuName": "Confirm food name",
+    "amount": "Amount",
+    "confirmAmount": "Confirm amount",
+    "foodName": "Food name",
+    "menu": "Food",
+    "deleteMenu": "Delete {{name}}",
+    "howMuch": "How much did you eat?",
+    "howMuchBroth": "How much broth did you have?",
+    "brothHint": "We calculate the solids and broth separately.",
+    "chooseBrothAmount": "Choose the amount of broth",
+    "chooseConsumedAmount": "Choose how much you ate",
+    "consumed": {
+      "0": "A little",
+      "1": "Half",
+      "2": "Most",
+      "3": "All"
+    },
+    "save": "Save meal details",
+    "saving": "Saving your changes…",
+    "unit": {
+      "serving": "serving",
+      "piece": "piece",
+      "glass": "glass"
+    }
+  },
+  "foodConfirmation": {
+    "title": "Do the food and portions look right?",
+    "body": "Choose the best match so we can calculate the nutrients more accurately.",
+    "skip": "Skip for now",
+    "continue": "Continue"
+  },
+  "foodLoading": {
+    "status": {
+      "QUEUED": "Getting your photo ready",
+      "PERCEIVING": "Identifying the foods and portions",
+      "RESOLVING": "Calculating nutrients for what you ate"
+    },
+    "tips": {
+      "first": "We’re checking each food and portion.",
+      "second": "Broth and sauces can affect the estimate too.",
+      "third": "We’re getting ready to compare this meal with your personal limits.",
+      "fourth": "Clear photos help us make a better estimate.",
+      "fifth": "You’ll be able to edit the foods and portions before saving."
+    },
+    "dismissHint": "You can close this screen.\nCome back later to view the result."
+  },
+  "kidneyProfile": {
+    "add": "Add",
+    "edit": "Edit kidney health details",
+    "stage": "CKD stage",
+    "stageValue": "Stage {{stage}}",
+    "onDialysis": "On dialysis",
+    "notOnDialysis": "Not on dialysis",
+    "notAdded": "Not added",
+    "heightWeight": "Height · weight",
+    "diagnosisDate": "Diagnosed",
+    "conditions": "Conditions and primary cause"
+  },
+  "settings": {
+    "title": "Settings",
+    "display": {
+      "section": "Appearance",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Use device setting"
+    },
+    "language": {
+      "section": "Language",
+      "korean": "한국어",
+      "english": "English",
+      "changeErrorTitle": "We couldn’t change the language",
+      "changeErrorBody": "Give it another try in a moment."
+    },
+    "notifications": {
+      "app": "App notifications",
+      "appDescription": "Get analysis results and important updates.",
+      "detail": "Notification settings",
+      "marketing": "News and offers",
+      "marketingDescription": "Get occasional product news and offers.",
+      "disabledTitle": "Notifications are off",
+      "disabledBody": "Turn on Sinsin Care notifications in your device settings.",
+      "saveErrorTitle": "We couldn’t save your notification settings",
+      "saveErrorBody": "Check your connection, then try again."
+    },
+    "legal": {
+      "terms": "Terms of service",
+      "privacy": "Privacy policy"
+    },
+    "account": {
+      "logout": "Log out",
+      "withdraw": "Delete account",
+      "logoutTitle": "Log out?",
+      "logoutBody": "You can sign back in anytime."
+    },
+    "appInfo": {
+      "title": "App info & support",
+      "support": "Contact us",
+      "email": "Email",
+      "website": "Website",
+      "company": "Mediology Co., Ltd.",
+      "business": "CEO: Seol-ah Jeong | Business registration no. 520-87-03235",
+      "address": "3F, Blue Cove Square, 27 Gyeonghuigung-gil, Jongno-gu, Seoul 03176, South Korea",
+      "copyright": "Copyright © 2026 Mediology Co., Ltd. Sinsin Care. All rights reserved."
+    },
+    "privacy": {
+      "title": "Privacy & account",
+      "policies": "Policies",
+      "account": "Account"
+    }
+  },
+  "consult": {
+    "shortTitle": "Ask Sinsin",
+    "open": "Open AI chat",
+    "heroTitle": "What’s on your mind\nabout kidney health?",
+    "heroBody": "Ask about a meal, a lab result, medication, or day-to-day care.",
+    "popularQuestions": "Popular questions",
+    "disclaimer": "Use these answers as general health information.\nFor diagnosis or treatment, talk with your care team.",
+    "references": "View medical references",
+    "category": "Topic",
+    "placeholder": "Ask a question",
+    "copied": "Answer copied",
+    "choosePhoto": "Choose a photo",
+    "takePhoto": "Take a photo",
+    "removeAttachment": "Remove attached photo",
+    "openAttachmentMenu": "Add a photo",
+    "attachedPhoto": "Attached photo",
+    "copyAnswer": "Copy answer",
+    "regenerate": "Try again",
+    "renameTitle": "Rename chat",
+    "renamePlaceholder": "For example, Low-potassium fruits",
+    "chatTitle": "Ask Sinsin",
+    "closeChat": "Close chat",
+    "organizing": "Putting your answer together",
+    "mealSection": "Meal",
+    "answer": "Answer",
+    "askMore": "Ask a follow-up",
+    "faqTitle": "Frequently asked questions",
+    "questionCount": "{{count}} questions",
+    "questionCount_one": "{{count}} question",
+    "questionCount_other": "{{count}} questions",
+    "deleteTitle": "Delete this chat?",
+    "deleteBody": "You won’t be able to get it back.",
+    "photoPermissionTitle": "We can’t open your photos",
+    "photoPermissionBody": "To attach a photo, allow photo access in your device settings.",
+    "cameraPermissionTitle": "We can’t open the camera",
+    "cameraPermissionBody": "To take a photo, allow camera access in your device settings.",
+    "openSettings": "Open settings",
+    "history": {
+      "title": "Chat history",
+      "close": "Close chat history",
+      "new": "New chat",
+      "emptyTitle": "No chats yet",
+      "emptyBody": "Start a chat and you’ll be able to come back to it here.",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Past 7 days",
+      "older": "Earlier",
+      "openChat": "Open {{title}}",
+      "manageChat": "Manage {{title}}",
+      "closeMenu": "Close menu",
+      "rename": "Rename",
+      "delete": "Delete"
+    },
+    "mealPrompt": "Compare this meal with my personal limits and tell me what to pay attention to at my next meal.",
+    "recordedMeal": "Recorded meal",
+    "food": "Food",
+    "meal": "Meal",
+    "servings": "Amount eaten",
+    "nutrients": "Nutrients",
+    "foodNutrients": "Nutrients by food",
+    "foodCard": {
+      "eyebrow": "Meal record",
+      "foodsToggle": "See nutrients by food"
+    },
+    "categories": {
+      "FOOD_DIET": "Food and meals",
+      "MEDICATION": "Medications",
+      "LIFESTYLE": "Daily habits",
+      "SYMPTOMS": "Symptoms",
+      "EXAM": "Lab results",
+      "NONE": "Something else"
+    }
   }
 }

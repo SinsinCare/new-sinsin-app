@@ -10,21 +10,26 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { Button } from "@/src/shared/components/Button"
 import type { HealthCheckResultsRs } from "@/src/types/nhis"
 import { healthResultsQueryOptions } from "../data/healthQueries"
+import { formatHealthDate } from "../data/dashboardMetrics"
 import { useHealthTheme } from "../hooks/useHealthTheme"
 
 function ResultRow({
   item,
   onPress,
+  language,
 }: {
   item: HealthCheckResultsRs
   onPress: () => void
+  language: string
 }) {
   const { healthColors } = useHealthTheme()
   return (
@@ -38,7 +43,7 @@ function ResultRow({
     >
       <View style={rowStyles.info}>
         <ThemedText style={[rowStyles.date, { color: healthColors.text }]}>
-          {item.checkupDate}
+          {formatHealthDate(item.checkupDate, language)}
         </ThemedText>
         <ThemedText
           style={[rowStyles.place, { color: healthColors.textSecondary }]}
@@ -58,13 +63,17 @@ function ResultRow({
 export function HealthDataResultListScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { t, i18n } = useTranslation("health")
+  const language = i18n.resolvedLanguage ?? i18n.language
   const { healthColors } = useHealthTheme()
   const {
     data: results = [],
     isLoading: loading,
     isError,
+    isFetching,
+    refetch,
   } = useQuery(healthResultsQueryOptions())
-  const error = isError ? "결과를 불러올 수 없습니다." : null
+  const error = isError ? t("result.loadError") : null
   const [activeTab, setActiveTab] = useState<"recent" | "all">("recent")
 
   const handleRowPress = (resultId: number) => {
@@ -99,7 +108,7 @@ export function HealthDataResultListScreen() {
       style={[styles.container, { backgroundColor: healthColors.background }]}
     >
       <ScreenHeader
-        title="검진 결과 목록"
+        title={t("result.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
@@ -120,7 +129,7 @@ export function HealthDataResultListScreen() {
                 activeTab === tab && styles.tabTextActive,
               ]}
             >
-              {tab === "recent" ? "최근 검사 보기" : "전체 결과 보기"}
+              {tab === "recent" ? t("result.recentTab") : t("result.allTab")}
             </ThemedText>
           </Pressable>
         ))}
@@ -139,6 +148,16 @@ export function HealthDataResultListScreen() {
           >
             {error}
           </ThemedText>
+          <View style={styles.stateAction}>
+            <Button
+              buttonSize="small"
+              fullWidth
+              loading={isFetching}
+              onPress={() => void refetch()}
+            >
+              {t("actions.retryLoad")}
+            </Button>
+          </View>
         </View>
       )}
 
@@ -150,8 +169,17 @@ export function HealthDataResultListScreen() {
             color={healthColors.textAssistive}
           />
           <ThemedText style={[styles.emptyText, { color: healthColors.text }]}>
-            검진 결과가 없습니다.
+            {t("result.listEmpty")}
           </ThemedText>
+          <View style={styles.stateAction}>
+            <Button
+              buttonSize="small"
+              fullWidth
+              onPress={() => router.push("/(settings)/health-data")}
+            >
+              {t("actions.importResults")}
+            </Button>
+          </View>
         </View>
       )}
 
@@ -159,6 +187,8 @@ export function HealthDataResultListScreen() {
         <>
           {activeTab === "recent" ? (
             <ScrollView
+              bounces={false}
+              overScrollMode="never"
               contentContainerStyle={[
                 styles.scrollContent,
                 { paddingBottom: insets.bottom + 40 },
@@ -172,13 +202,12 @@ export function HealthDataResultListScreen() {
                     { color: healthColors.textSecondary },
                   ]}
                 >
-                  가져온 결과{" "}
-                  <ThemedText style={styles.countHighlight}>
-                    {results.length}건
-                  </ThemedText>
+                  {t("result.resultCount", { count: results.length })}
                 </ThemedText>
                 <Pressable onPress={() => setActiveTab("all")}>
-                  <ThemedText style={styles.viewAllText}>전체 보기</ThemedText>
+                  <ThemedText style={styles.viewAllText}>
+                    {t("result.viewAll")}
+                  </ThemedText>
                 </Pressable>
               </View>
 
@@ -196,13 +225,13 @@ export function HealthDataResultListScreen() {
                   <View style={styles.latestCardHeader}>
                     <View style={styles.latestBadge}>
                       <ThemedText style={styles.latestBadgeText}>
-                        최근
+                        {t("result.latest")}
                       </ThemedText>
                     </View>
                     <ThemedText
                       style={[styles.latestDate, { color: healthColors.text }]}
                     >
-                      {latestResult.checkupDate}
+                      {formatHealthDate(latestResult.checkupDate, language)}
                     </ThemedText>
                   </View>
                   <ThemedText
@@ -215,7 +244,7 @@ export function HealthDataResultListScreen() {
                   </ThemedText>
                   <View style={styles.latestCardFooter}>
                     <ThemedText style={styles.latestDetailText}>
-                      상세 결과 보기
+                      {t("result.viewDetails")}
                     </ThemedText>
                     <Ionicons
                       name="chevron-forward"
@@ -231,6 +260,7 @@ export function HealthDataResultListScreen() {
                   <ResultRow
                     key={item.resultId}
                     item={item}
+                    language={language}
                     onPress={() => handleRowPress(item.resultId)}
                   />
                 ))}
@@ -238,6 +268,8 @@ export function HealthDataResultListScreen() {
             </ScrollView>
           ) : (
             <ScrollView
+              bounces={false}
+              overScrollMode="never"
               contentContainerStyle={[
                 styles.scrollContent,
                 { paddingBottom: insets.bottom + 40 },
@@ -258,13 +290,14 @@ export function HealthDataResultListScreen() {
                     <ThemedText
                       style={[styles.yearText, { color: healthColors.text }]}
                     >
-                      {year}년
+                      {t("result.year", { year })}
                     </ThemedText>
                   </View>
                   {resultsByYear[year].map((item) => (
                     <ResultRow
                       key={item.resultId}
                       item={item}
+                      language={language}
                       onPress={() => handleRowPress(item.resultId)}
                     />
                   ))}
@@ -312,14 +345,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
+    paddingHorizontal: 32,
   },
   errorText: {
     fontSize: 15,
     color: "#64748B",
+    textAlign: "center",
+    lineHeight: 22,
   },
   emptyText: {
     fontSize: 15,
     color: "#94A3B8",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  stateAction: {
+    width: 200,
+    marginTop: 4,
   },
   scrollContent: {
     paddingHorizontal: 20,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -10,6 +11,7 @@ import type { AnnouncementNotice } from "@/src/features/announcement/types"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { ANNOUNCEMENTS } from "@/src/features/settings/data/constants"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import appI18n, { getAppLanguage } from "@/src/i18n"
 
 type AnnouncementListItem = {
   id: string
@@ -21,6 +23,7 @@ export function AnnouncementListScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
   const [announcements, setAnnouncements] = useState<AnnouncementListItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -50,12 +53,14 @@ export function AnnouncementListScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
-        title="공지사항"
+        title={t("announcements.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -64,11 +69,11 @@ export function AnnouncementListScreen() {
       >
         {loading ? (
           <ThemedText style={[styles.empty, { color: c.textMuted }]}>
-            공지사항을 불러오는 중입니다.
+            {t("announcements.loading")}
           </ThemedText>
         ) : announcements.length === 0 ? (
           <ThemedText style={[styles.empty, { color: c.textMuted }]}>
-            등록된 공지사항이 없습니다.
+            {t("announcements.empty")}
           </ThemedText>
         ) : (
           announcements.map((item, index) => (
@@ -120,8 +125,21 @@ function toFallbackListItem(
 ): AnnouncementListItem {
   return {
     id: item.id,
-    title: item.title,
+    title: getFallbackTitle(item.id),
     date: item.date,
+  }
+}
+
+function getFallbackTitle(id: string): string {
+  switch (id) {
+    case "1":
+      return appI18n.t("announcements.fallback.1.title", { ns: "settings" })
+    case "2":
+      return appI18n.t("announcements.fallback.2.title", { ns: "settings" })
+    case "3":
+      return appI18n.t("announcements.fallback.3.title", { ns: "settings" })
+    default:
+      return ""
   }
 }
 
@@ -129,7 +147,7 @@ function formatNoticeDate(value: string): string {
   if (/^\d{4}\.\d{2}\.\d{2}/.test(value)) return value
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString("ko-KR")
+  return date.toLocaleDateString(getAppLanguage() === "en" ? "en-US" : "ko-KR")
 }
 
 const styles = StyleSheet.create({

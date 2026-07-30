@@ -1,6 +1,6 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text, View } from "tamagui"
+import { YStack, XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import type { RecommendedRecipe } from "../types"
@@ -22,15 +22,12 @@ export function RecommendedRecipeCard({
   const isDark = colorScheme === "dark"
 
   const cardBg = isDark ? tokens.color.cardBgDark.val : "#FFFFFF"
-  const textColor = isDark ? tokens.color.textDark.val : tokens.color.textLight.val
-  const subColor = isDark ? tokens.color.textDarkSub.val : tokens.color.grey5.val
-  const scoreBg =
-    recipe.kidneyScore >= 90
-      ? tokens.color.safe6.val
-      : recipe.kidneyScore >= 80
-        ? "#0D896A"
-        : "#F59E0B"
-
+  const textColor = isDark
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
+  const subColor = isDark
+    ? tokens.color.textDarkSub.val
+    : tokens.color.grey5.val
   return (
     <Pressable
       onPress={onPress}
@@ -50,26 +47,12 @@ export function RecommendedRecipeCard({
         shadowRadius={8}
         elevation={3}
       >
-        {/* Header: Score badge + actions */}
-        <XStack justifyContent="space-between" alignItems="center">
-          <View
-            backgroundColor={scoreBg}
-            paddingHorizontal={8}
-            paddingVertical={3}
-            borderRadius={10}
-          >
-            <Text fontSize={11} fontFamily="$body" fontWeight="700" color="#FFF">
-              {Math.round(recipe.kidneyScore)}점
-            </Text>
-          </View>
+        {/* 임상 검증 근거가 없는 kidneyScore는 안전 점수처럼 보이지 않게 숨긴다. */}
+        <XStack justifyContent="flex-end" alignItems="center">
           <XStack gap={6}>
             {onBookmark && (
               <Pressable onPress={onBookmark} hitSlop={8}>
-                <Ionicons
-                  name="bookmark-outline"
-                  size={16}
-                  color={subColor}
-                />
+                <Ionicons name="bookmark-outline" size={16} color={subColor} />
               </Pressable>
             )}
             {onDismiss && (
@@ -90,25 +73,6 @@ export function RecommendedRecipeCard({
         >
           {recipe.name}
         </Text>
-
-        {/* Tags */}
-        <XStack flexWrap="wrap" gap={4}>
-          {recipe.tags.slice(0, 3).map((tag) => (
-            <View
-              key={tag}
-              backgroundColor={
-                isDark ? "rgba(13,137,106,0.15)" : "rgba(13,137,106,0.1)"
-              }
-              paddingHorizontal={8}
-              paddingVertical={2}
-              borderRadius={8}
-            >
-              <Text fontSize={11} fontFamily="$body" color="#0D896A">
-                {tag}
-              </Text>
-            </View>
-          ))}
-        </XStack>
 
         {/* Reason */}
         <Text

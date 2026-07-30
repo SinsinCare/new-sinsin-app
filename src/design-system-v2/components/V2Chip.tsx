@@ -14,6 +14,7 @@ import { iconSize, radius, spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"
 import type { V2IconName } from "../icons"
+import { useTranslation } from "react-i18next"
 
 export type V2ChipSize = "s" | "m"
 
@@ -56,6 +57,7 @@ export function V2Chip({
   disabled = false,
   style,
 }: V2ChipProps) {
+  const { t } = useTranslation()
   const { colors } = useV2Theme()
   const s = SIZE[size]
 
@@ -91,7 +93,7 @@ export function V2Chip({
         // × 는 칩 본체와 별개 터치 타겟 — onPress로 전파되지 않음
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="제거"
+          accessibilityLabel={t("accessibility.remove")}
           disabled={disabled}
           hitSlop={spacing[6]}
           onPress={onRemove}

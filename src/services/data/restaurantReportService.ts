@@ -38,17 +38,15 @@ function buildFileName(asset: ImagePicker.ImagePickerAsset, index: number) {
 
 function assertPhotoConstraints(photos: ImagePicker.ImagePickerAsset[]) {
   if (photos.length > MAX_RESTAURANT_REPORT_PHOTOS) {
-    throw new Error(
-      `사진은 최대 ${MAX_RESTAURANT_REPORT_PHOTOS}장까지 첨부할 수 있어요.`,
-    )
+    throw new Error("TOO_MANY_RESTAURANT_REPORT_PHOTOS")
   }
   for (const photo of photos) {
     const mimeType = normalizeMimeType(photo)
     if (!ALLOWED_PHOTO_TYPES.has(mimeType)) {
-      throw new Error("JPEG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.")
+      throw new Error("UNSUPPORTED_RESTAURANT_REPORT_PHOTO_TYPE")
     }
     if (photo.fileSize && photo.fileSize > MAX_PHOTO_BYTES) {
-      throw new Error("사진은 한 장당 5MB 이하로 첨부해주세요.")
+      throw new Error("RESTAURANT_REPORT_PHOTO_TOO_LARGE")
     }
   }
 }

@@ -1,20 +1,30 @@
 import { useLocalSearchParams } from "expo-router"
+import { useMemo } from "react"
 import { View, StyleSheet } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { ThemedText } from "@/components/themed-text"
 import { RestaurantDetailScreen } from "@/src/features/restaurant/views/RestaurantDetailScreen"
-import { MOCK_PLACE_RESTAURANTS } from "@/src/features/restaurant/data/curationData"
+import { getMockPlaceRestaurants } from "@/src/features/restaurant/data/curationData"
+import { normalizeLanguage } from "@/src/i18n"
 
 export default function RestaurantDetailRoute() {
+  const { t, i18n } = useTranslation("common")
+  const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
   const { id } = useLocalSearchParams<{ id: string }>()
   const insets = useSafeAreaInsets()
 
-  const restaurant = MOCK_PLACE_RESTAURANTS.find((r) => r.id === id)
+  const restaurant = useMemo(
+    () => getMockPlaceRestaurants(t, language).find((item) => item.id === id),
+    [id, language, t],
+  )
 
   if (!restaurant) {
     return (
       <View style={[styles.notFound, { paddingTop: insets.top + 20 }]}>
-        <ThemedText style={styles.notFoundText}>식당 정보를 찾을 수 없습니다.</ThemedText>
+        <ThemedText style={styles.notFoundText}>
+          {t("restaurant.notFound")}
+        </ThemedText>
       </View>
     )
   }

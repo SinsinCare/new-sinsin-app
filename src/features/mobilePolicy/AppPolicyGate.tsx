@@ -5,6 +5,7 @@ import { BlockingPolicyScreen } from "./components/BlockingPolicyScreen"
 import { RecommendedUpdatePrompt } from "./components/RecommendedUpdatePrompt"
 import { useAppPolicyGate } from "./hooks/useAppPolicyGate"
 import type { MobilePolicyResponse, MobilePolicySource } from "./types"
+import { useTranslation } from "react-i18next"
 
 interface AppPolicyGateProps {
   children: ReactNode
@@ -27,11 +28,12 @@ export function useMobilePolicy() {
 }
 
 export function AppPolicyGate({ children }: AppPolicyGateProps) {
+  const { t } = useTranslation()
   const { status, policy, source, isBlocking, shouldRecommendUpdate, refresh } =
     useAppPolicyGate()
 
   if (status === "checking") {
-    return <LoadingScreen message="앱 버전을 확인하는 중..." />
+    return <LoadingScreen message={t("mobilePolicy.opening")} />
   }
 
   if (policy && isBlocking) {

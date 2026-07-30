@@ -1,8 +1,9 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -13,9 +14,13 @@ import { useAuth } from "@/src/hooks/useAuth"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { useThemeStore, type ThemeMode } from "@/src/stores/themeStore"
+import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
+import { notificationService } from "@/src/services/notificationService"
 import { tokens } from "@/src/theme/tokens"
+import { getAppLanguage, setAppLanguage, type Language } from "@/src/i18n"
 
 export function SettingsScreen() {
+  const { t } = useTranslation("common")
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { signOut, isAuthenticated } = useAuth()
@@ -25,22 +30,60 @@ export function SettingsScreen() {
 
   const { themeMode, setThemeMode } = useThemeStore()
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
+  const [languageChanging, setLanguageChanging] = useState(false)
+  const languageChangeInFlightRef = useRef(false)
+  const currentLanguage = getAppLanguage()
 
   const handleThemeChange = (mode: ThemeMode) => {
     setThemeMode(mode)
+  }
+
+  const handleLanguageChange = async (language: Language) => {
+    if (languageChangeInFlightRef.current || language === getAppLanguage()) {
+      return
+    }
+    languageChangeInFlightRef.current = true
+    setLanguageChanging(true)
+    try {
+      await setAppLanguage(language)
+    } catch {
+      Alert.alert(
+        t("settings.language.changeErrorTitle"),
+        t("settings.language.changeErrorBody"),
+      )
+      return
+    } finally {
+      // 알림 재등록은 아래에서 이어지므로 성공 시에는 아직 잠금을 풀지 않는다.
+      if (getAppLanguage() !== language) {
+        languageChangeInFlightRef.current = false
+        setLanguageChanging(false)
+      }
+    }
+
+    // 이미 예약된 로컬 알림과 서버에 등록된 푸시 토큰의 언어도 함께 바꾼다.
+    // 알림 재등록 실패가 이미 끝난 화면 언어 변경을 실패로 되돌리지는 않는다.
+    await Promise.allSettled([
+      notificationService.scheduleAll(settings),
+      ...(pushEnabled ? [notificationService.registerPushToken()] : []),
+    ])
+    languageChangeInFlightRef.current = false
+    setLanguageChanging(false)
   }
 
   const handlePushToggle = async (value: boolean) => {
     try {
       const ok = await setPushConsent(value)
       if (value && !ok) {
-        Alert.alert(
-          "알림 권한 필요",
-          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        showOpenSettingsAlert(
+          t("settings.notifications.disabledTitle"),
+          t("settings.notifications.disabledBody"),
         )
       }
     } catch {
-      Alert.alert("알림 설정 실패", "잠시 후 다시 시도해주세요.")
+      Alert.alert(
+        t("settings.notifications.saveErrorTitle"),
+        t("settings.notifications.saveErrorBody"),
+      )
     }
   }
 
@@ -57,12 +100,14 @@ export function SettingsScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
-        title="환경설정"
+        title={t("settings.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -71,21 +116,32 @@ export function SettingsScreen() {
       >
         {/* 화면 모드 */}
         <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>
-          화면 모드
+          {t("settings.display.section")}
         </ThemedText>
         {(
           [
-            { mode: "light", icon: "sunny-outline", label: "라이트 모드" },
-            { mode: "dark", icon: "moon-outline", label: "다크 모드" },
+            {
+              mode: "light",
+              icon: "sunny-outline",
+              label: t("settings.display.light"),
+            },
+            {
+              mode: "dark",
+              icon: "moon-outline",
+              label: t("settings.display.dark"),
+            },
             {
               mode: "system",
               icon: "phone-portrait-outline",
-              label: "시스템 설정",
+              label: t("settings.display.system"),
             },
           ] as const
         ).map(({ mode, icon, label }) => (
           <Pressable
             key={mode}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: themeMode === mode }}
+            accessibilityLabel={label}
             style={({ pressed }) => [
               styles.themeOption,
               pressed && { backgroundColor: c.pressedBg },
@@ -104,7 +160,53 @@ export function SettingsScreen() {
               </ThemedText>
             </View>
             {themeMode === mode && (
-              <Ionicons name="checkmark" size={20} color={tokens.color.sub6.val} />
+              <Ionicons
+                name="checkmark"
+                size={20}
+                color={tokens.color.sub6.val}
+              />
+            )}
+          </Pressable>
+        ))}
+
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
+
+        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>
+          {t("settings.language.section")}
+        </ThemedText>
+        {(
+          [
+            { language: "ko", label: t("settings.language.korean") },
+            { language: "en", label: t("settings.language.english") },
+          ] as const
+        ).map(({ language, label }) => (
+          <Pressable
+            key={language}
+            accessibilityRole="radio"
+            accessibilityState={{
+              selected: currentLanguage === language,
+              disabled: languageChanging,
+            }}
+            accessibilityLabel={label}
+            disabled={languageChanging}
+            style={({ pressed }) => [
+              styles.themeOption,
+              pressed && { backgroundColor: c.pressedBg },
+              languageChanging && styles.languageOptionDisabled,
+            ]}
+            onPress={() => void handleLanguageChange(language)}
+          >
+            <ThemedText style={[styles.themeOptionLabel, { color: c.text }]}>
+              {label}
+            </ThemedText>
+            {currentLanguage === language && (
+              <Ionicons
+                name="checkmark"
+                size={20}
+                color={tokens.color.sub6.val}
+              />
             )}
           </Pressable>
         ))}
@@ -115,12 +217,14 @@ export function SettingsScreen() {
 
         {/* 알림 설정 */}
         <ToggleItem
-          title="앱 푸시 알림 동의"
-          description="분석 완료와 공지 등 앱 푸시 알림을 수신해요."
+          title={t("settings.notifications.app")}
+          description={t("settings.notifications.appDescription")}
           value={pushEnabled}
           onValueChange={handlePushToggle}
         />
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.notifications.detail")}
           style={({ pressed }) => [
             styles.navItem,
             pressed && { backgroundColor: c.pressedBg },
@@ -128,13 +232,13 @@ export function SettingsScreen() {
           onPress={() => router.push("/(settings)/notification-settings")}
         >
           <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            알림 설정
+            {t("settings.notifications.detail")}
           </ThemedText>
           <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
         <ToggleItem
-          title="마케팅 알림 동의"
-          description="마케팅 정보 수신에 동의해요."
+          title={t("settings.notifications.marketing")}
+          description={t("settings.notifications.marketingDescription")}
           value={settings.categories.marketing.enabled}
           onValueChange={handleMarketingToggle}
         />
@@ -146,16 +250,18 @@ export function SettingsScreen() {
         {/* 약관 */}
         {[
           {
-            title: "회원 이용약관",
+            title: t("settings.legal.terms"),
             onPress: () => router.push("/legal-document"),
           },
           {
-            title: "개인정보 처리방침",
+            title: t("settings.legal.privacy"),
             onPress: () => router.push("/privacy-settings"),
           },
         ].map(({ title, onPress }) => (
           <Pressable
             key={title}
+            accessibilityRole="button"
+            accessibilityLabel={title}
             style={({ pressed }) => [
               styles.navItem,
               pressed && { backgroundColor: c.pressedBg },
@@ -175,6 +281,8 @@ export function SettingsScreen() {
 
         {/* 계정 */}
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.account.logout")}
           style={({ pressed }) => [
             styles.navItem,
             pressed && { backgroundColor: c.pressedBg },
@@ -182,11 +290,13 @@ export function SettingsScreen() {
           onPress={() => setLogoutModalVisible(true)}
         >
           <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            로그아웃
+            {t("settings.account.logout")}
           </ThemedText>
           <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.account.withdraw")}
           style={({ pressed }) => [
             styles.navItem,
             pressed && { backgroundColor: c.pressedBg },
@@ -194,7 +304,7 @@ export function SettingsScreen() {
           onPress={() => router.push("/(settings)/withdrawal")}
         >
           <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            회원탈퇴
+            {t("settings.account.withdraw")}
           </ThemedText>
           <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
         </Pressable>
@@ -202,8 +312,9 @@ export function SettingsScreen() {
 
       <ConfirmModal
         visible={logoutModalVisible}
-        title="로그아웃 하시겠습니까?"
-        description="정말 로그아웃 하시겠습니까?"
+        title={t("settings.account.logoutTitle")}
+        description={t("settings.account.logoutBody")}
+        confirmText={t("settings.account.logout")}
         onCancel={() => setLogoutModalVisible(false)}
         onConfirm={() => {
           setLogoutModalVisible(false)
@@ -268,4 +379,5 @@ const styles = StyleSheet.create({
     lineHeight: 16 * 1.4,
     fontWeight: "400",
   },
+  languageOptionDisabled: { opacity: 0.55 },
 })

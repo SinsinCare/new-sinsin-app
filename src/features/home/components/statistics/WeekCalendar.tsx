@@ -3,6 +3,7 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { getWeekDays } from "../../utils/getWeekDays"
+import { useTranslation } from "react-i18next"
 
 interface WeekCalendarProps {
   selectedDate: Date
@@ -22,6 +23,7 @@ export function WeekCalendar({
   recordedDates = [],
   disableFuture = false,
 }: WeekCalendarProps) {
+  const { t, i18n } = useTranslation()
   const days = getWeekDays(selectedDate, recordedDates)
   const isDarkMode = useAppColorScheme() === "dark"
   const today = new Date()
@@ -49,11 +51,25 @@ export function WeekCalendar({
       {days.map((day) => {
         const isSelected = isSameDay(day.date, selectedDate)
         const disabled = disableFuture && isFutureDay(day.date)
+        const dateLabel = new Intl.DateTimeFormat(
+          i18n.language.startsWith("en") ? "en-US" : "ko-KR",
+          { weekday: "long", month: "long", day: "numeric" },
+        ).format(day.date)
+        const accessibilityLabel = [
+          dateLabel,
+          day.hasRecord ? t("stats.calendar.hasRecord") : null,
+          isSelected ? t("stats.calendar.selected") : null,
+        ]
+          .filter(Boolean)
+          .join(", ")
 
         return (
           <Pressable
             key={day.date.toISOString()}
             disabled={disabled}
+            accessibilityRole="button"
+            accessibilityLabel={accessibilityLabel}
+            accessibilityState={{ selected: isSelected, disabled }}
             onPress={() => {
               if (!disabled) onSelectDate(day.date)
             }}

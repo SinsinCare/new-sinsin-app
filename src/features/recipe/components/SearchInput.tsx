@@ -1,11 +1,8 @@
-import {
-  View,
-  TextInput,
-  type TextInputProps,
-} from "react-native"
+import { View, TextInput, type TextInputProps } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 const COLORS = {
   light: {
@@ -29,10 +26,8 @@ interface SearchInputProps extends Omit<
   placeholder?: string
 }
 
-export function SearchInput({
-  placeholder = "레시피 검색하기",
-  ...props
-}: SearchInputProps) {
+export function SearchInput({ placeholder, ...props }: SearchInputProps) {
+  const { t } = useTranslation("recipe")
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
@@ -58,7 +53,7 @@ export function SearchInput({
           color: palette.text,
           padding: 0,
         }}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("feed.recipeSearchPlaceholder")}
         placeholderTextColor={palette.placeholder}
         {...props}
       />

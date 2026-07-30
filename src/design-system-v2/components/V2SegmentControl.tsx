@@ -138,6 +138,8 @@ export function V2SegmentControl({
   if (isFluid) {
     return (
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         horizontal
         showsHorizontalScrollIndicator={false}
         style={[

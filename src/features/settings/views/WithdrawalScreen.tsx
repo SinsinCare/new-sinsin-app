@@ -11,6 +11,7 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -22,10 +23,19 @@ import {
 } from "@/src/features/settings/data/constants"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
+const WITHDRAWAL_REASON_LABEL_KEYS = [
+  "withdrawal.reasons.inactive",
+  "withdrawal.reasons.notHelpful",
+  "withdrawal.reasons.experience",
+  "withdrawal.reasons.marketing",
+  "withdrawal.reasons.other",
+] as const
+
 export function WithdrawalScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [customReason, setCustomReason] = useState("")
@@ -57,6 +67,8 @@ export function WithdrawalScreen() {
         style={styles.flex}
       >
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           contentContainerStyle={[
             styles.scrollContent,
             { paddingTop: insets.top + 16, paddingBottom: 24 },
@@ -65,6 +77,8 @@ export function WithdrawalScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("shared.back")}
             onPress={() => router.back()}
             hitSlop={8}
             style={styles.backButton}
@@ -73,13 +87,15 @@ export function WithdrawalScreen() {
           </Pressable>
 
           <ThemedText style={[styles.title, { color: c.text }]}>
-            {"신신당부를 떠나시려는\n이유가 무엇인가요?"}
+            {t("withdrawal.reasonTitle")}
           </ThemedText>
 
           <View style={styles.optionList}>
-            {WITHDRAWAL_REASONS.map((reason, index) => (
+            {WITHDRAWAL_REASONS.map((_, index) => (
               <React.Fragment key={index}>
                 <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: selectedIndex === index }}
                   style={[
                     styles.optionItem,
                     selectedIndex === index && {
@@ -89,7 +105,7 @@ export function WithdrawalScreen() {
                   onPress={() => setSelectedIndex(index)}
                 >
                   <ThemedText style={[styles.optionText, { color: c.text }]}>
-                    {reason}
+                    {t(WITHDRAWAL_REASON_LABEL_KEYS[index])}
                   </ThemedText>
                 </Pressable>
 
@@ -100,7 +116,7 @@ export function WithdrawalScreen() {
                       { backgroundColor: c.secondaryBg, color: c.text },
                     ]}
                     multiline
-                    placeholder="20자 이상 입력"
+                    placeholder={t("withdrawal.customReason")}
                     placeholderTextColor={c.textTertiary}
                     value={customReason}
                     onChangeText={setCustomReason}
@@ -113,8 +129,8 @@ export function WithdrawalScreen() {
 
           <View style={[styles.postOptionBox, { borderColor: c.border }]}>
             <ToggleItem
-              title="내 게시글도 삭제"
-              description="선택하지 않으면 작성자만 익명 처리되고 글은 보존됩니다."
+              title={t("withdrawal.deletePostsTitle")}
+              description={t("withdrawal.deletePostsBody")}
               value={deleteMyPosts}
               onValueChange={setDeleteMyPosts}
             />
@@ -122,7 +138,7 @@ export function WithdrawalScreen() {
         </ScrollView>
 
         <BottomActionBar
-          label="제출하기"
+          label={t("withdrawal.next")}
           disabled={!isActive}
           paddingBottom={insets.bottom + 16}
           onPress={handleSubmit}

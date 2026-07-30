@@ -25,7 +25,7 @@ describe("restaurant report validation", () => {
         ...validDraft,
         name: " ",
       }),
-    ).toContain("식당 이름")
+    ).toBe("nameRequired")
   })
 
   it("allows a blank optional address", () => {
@@ -43,7 +43,7 @@ describe("restaurant report validation", () => {
         ...validDraft,
         photoCount: MAX_RESTAURANT_REPORT_PHOTOS + 1,
       }),
-    ).toContain("사진")
+    ).toBe("tooManyPhotos")
   })
 
   it.each(["light", "dark"] as const)(

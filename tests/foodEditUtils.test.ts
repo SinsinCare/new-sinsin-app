@@ -12,7 +12,7 @@ describe("food edit utilities", () => {
   it("rejects blank meal titles with the server-facing message", () => {
     expect(validateMealTitle("   ")).toEqual({
       isValid: false,
-      message: "식단 이름을 입력해주세요",
+      message: "식사 이름을 입력해 주세요",
     })
   })
 
@@ -56,7 +56,7 @@ describe("food edit utilities", () => {
   it("rejects blank menu names", () => {
     expect(validateMenuName("   ")).toEqual({
       isValid: false,
-      message: "메뉴 이름을 입력해 주세요",
+      message: "음식 이름을 입력해 주세요",
     })
   })
 

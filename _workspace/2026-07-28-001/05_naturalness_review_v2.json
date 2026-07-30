@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "run_id": "2026-07-28-001",
+    "version": 2,
+    "korean": "pass",
+    "english_us": "partial_pass"
+  },
+  "korean_checks": {
+    "natural_haeyo_style": true,
+    "warm_character_restored": true,
+    "forced_brevity_removed": true,
+    "severity_aware_tone": true
+  },
+  "english_checks": {
+    "active_voice": true,
+    "contractions_and_you": true,
+    "specific_cta": true,
+    "non_literal_examples": true,
+    "whole_app_coverage": false
+  }
+}

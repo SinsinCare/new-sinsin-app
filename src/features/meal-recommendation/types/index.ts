@@ -2,7 +2,7 @@ export interface NutrientBudget {
   sodiumMg: number
   potassiumMg: number
   phosphorusMg: number
-  proteinG: number
+  proteinG: number | null
 }
 
 export interface RecipeNutrients {
@@ -17,7 +17,6 @@ export interface RecommendedRecipe {
   id: number
   name: string
   category: string
-  kidneyScore: number
   nutrients: RecipeNutrients
   tags: string[]
   reason: string
@@ -29,7 +28,6 @@ export interface RecommendedRestaurantMenu {
   restaurantName: string
   menuId: number
   menuName: string
-  riskLevel: "SAFE" | "CAUTION" | "HIGH_RISK"
   nutrients: RecipeNutrients
   tags: string[]
   reason: string

@@ -1,23 +1,39 @@
 import type { HealthCheckResultDetailRs } from "@/src/types/nhis"
+import type health from "@/src/i18n/locales/ko/health.json"
+import type { TFunction } from "i18next"
 
 export type MetricStatus = "normal" | "caution" | "warning"
+type MetricLabelKey = keyof typeof health.dashboard.metrics
+type ModuleTranslationKey = keyof typeof health.dashboard.modules
 
-/** 상태별 색상 (점/배지/텍스트) */
+/** 검진 참고 범위와의 비교 상태. 진단이나 개인 치료 목표가 아니다. */
 export const STATUS_COLORS: Record<
   MetricStatus,
-  { dot: string; text: string; bg: string; label: string }
+  { dot: string; text: string; bg: string }
 > = {
-  normal: { dot: "#34D399", text: "#0D896A", bg: "#F0FDF4", label: "정상" },
-  caution: { dot: "#F59E0B", text: "#B45309", bg: "#FFFBEB", label: "주의" },
-  warning: { dot: "#EF4444", text: "#B91C1C", bg: "#FEF2F2", label: "경고" },
+  normal: {
+    dot: "#34D399",
+    text: "#0D896A",
+    bg: "#F0FDF4",
+  },
+  caution: {
+    dot: "#F59E0B",
+    text: "#B45309",
+    bg: "#FFFBEB",
+  },
+  warning: {
+    dot: "#EF4444",
+    text: "#B91C1C",
+    bg: "#FEF2F2",
+  },
 }
 
 export interface MetricConfig {
   /** NHIS 상세 응답의 필드 키 */
   key: keyof HealthCheckResultDetailRs
-  label: string
+  labelKey: MetricLabelKey
   unit: string
-  /** 차트에 표시할 정상 범위 (밴드). 한쪽만 있으면 "이상/이하" */
+  /** 차트에 표시할 검진 참고 범위. 한쪽만 있으면 "이상/이하" */
   normalMin?: number
   normalMax?: number
   /** 측정값 → 상태 판정 */
@@ -26,15 +42,14 @@ export interface MetricConfig {
 
 export interface ModuleConfig {
   id: string
-  title: string
+  translationKey: ModuleTranslationKey
   /** Ionicons 이름 */
   icon: string
   accent: string
-  description: string
   metrics: MetricConfig[]
 }
 
-/** 정상/주의 범위 기반 판정기 생성 */
+/** 로컬 검진 참고 범위와의 비교 상태를 만든다. */
 function band(
   normalLow: number,
   normalHigh: number,
@@ -82,21 +97,20 @@ function lowerBetter(
 export const DASHBOARD_MODULES: ModuleConfig[] = [
   {
     id: "kidney",
-    title: "신장",
+    translationKey: "kidney",
     icon: "water-outline",
     accent: "#0D896A",
-    description: "신사구체 여과율과 크레아티닌으로 신장 기능을 봅니다.",
     metrics: [
       {
         key: "gfr",
-        label: "신사구체 여과율 (GFR)",
+        labelKey: "gfr",
         unit: "mL/min",
         normalMin: 60,
         evaluate: higherBetter(60, 30),
       },
       {
         key: "serumCreatinine",
-        label: "혈청 크레아티닌",
+        labelKey: "serumCreatinine",
         unit: "mg/dL",
         normalMin: 0.5,
         normalMax: 1.2,
@@ -106,30 +120,27 @@ export const DASHBOARD_MODULES: ModuleConfig[] = [
   },
   {
     id: "electrolyte",
-    title: "전해질",
+    translationKey: "electrolytes",
     icon: "flask-outline",
     accent: "#2563EB",
-    description: "나트륨·칼륨 등 전해질 균형 (검진 항목 연동 예정)",
     metrics: [],
   },
   {
     id: "proteinuria",
-    title: "단백뇨",
+    translationKey: "proteinuria",
     icon: "beaker-outline",
     accent: "#9333EA",
-    description: "요단백 배출 정도 (검진 항목 연동 예정)",
     metrics: [],
   },
   {
     id: "bloodPressure",
-    title: "혈압",
+    translationKey: "bloodPressure",
     icon: "pulse-outline",
     accent: "#DB2777",
-    description: "수축기·이완기 혈압",
     metrics: [
       {
         key: "bloodPressureSystolic",
-        label: "수축기 혈압",
+        labelKey: "systolicBloodPressure",
         unit: "mmHg",
         normalMin: 90,
         normalMax: 120,
@@ -137,7 +148,7 @@ export const DASHBOARD_MODULES: ModuleConfig[] = [
       },
       {
         key: "bloodPressureDiastolic",
-        label: "이완기 혈압",
+        labelKey: "diastolicBloodPressure",
         unit: "mmHg",
         normalMin: 60,
         normalMax: 80,
@@ -147,14 +158,13 @@ export const DASHBOARD_MODULES: ModuleConfig[] = [
   },
   {
     id: "bloodSugar",
-    title: "혈당",
+    translationKey: "bloodGlucose",
     icon: "nutrition-outline",
     accent: "#EA580C",
-    description: "공복 혈당",
     metrics: [
       {
         key: "fastingBloodSugar",
-        label: "공복 혈당",
+        labelKey: "fastingBloodGlucose",
         unit: "mg/dL",
         normalMin: 70,
         normalMax: 99,
@@ -164,35 +174,34 @@ export const DASHBOARD_MODULES: ModuleConfig[] = [
   },
   {
     id: "lipid",
-    title: "지질",
+    translationKey: "lipids",
     icon: "ellipse-outline",
     accent: "#CA8A04",
-    description: "콜레스테롤·중성지방",
     metrics: [
       {
         key: "totalCholesterol",
-        label: "총 콜레스테롤",
+        labelKey: "totalCholesterol",
         unit: "mg/dL",
         normalMax: 200,
         evaluate: lowerBetter(200, 239),
       },
       {
         key: "ldlCholesterol",
-        label: "LDL 콜레스테롤",
+        labelKey: "ldlCholesterol",
         unit: "mg/dL",
         normalMax: 130,
         evaluate: lowerBetter(130, 159),
       },
       {
         key: "hdlCholesterol",
-        label: "HDL 콜레스테롤",
+        labelKey: "hdlCholesterol",
         unit: "mg/dL",
         normalMin: 60,
         evaluate: higherBetter(60, 40),
       },
       {
         key: "triglyceride",
-        label: "중성지방",
+        labelKey: "triglycerides",
         unit: "mg/dL",
         normalMax: 150,
         evaluate: lowerBetter(150, 199),
@@ -201,14 +210,13 @@ export const DASHBOARD_MODULES: ModuleConfig[] = [
   },
   {
     id: "bloodLiver",
-    title: "혈액·간",
+    translationKey: "bloodLiver",
     icon: "fitness-outline",
     accent: "#0891B2",
-    description: "혈색소와 간 기능 수치",
     metrics: [
       {
         key: "hemoglobin",
-        label: "혈색소",
+        labelKey: "hemoglobin",
         unit: "g/dL",
         normalMin: 12,
         normalMax: 17.5,
@@ -216,21 +224,21 @@ export const DASHBOARD_MODULES: ModuleConfig[] = [
       },
       {
         key: "astSgot",
-        label: "AST (SGOT)",
+        labelKey: "ast",
         unit: "U/L",
         normalMax: 40,
         evaluate: lowerBetter(40, 50),
       },
       {
         key: "altSgpt",
-        label: "ALT (SGPT)",
+        labelKey: "alt",
         unit: "U/L",
         normalMax: 40,
         evaluate: lowerBetter(40, 50),
       },
       {
         key: "gammaGtp",
-        label: "감마-GTP",
+        labelKey: "gammaGtp",
         unit: "U/L",
         normalMax: 63,
         evaluate: lowerBetter(63, 77),
@@ -252,20 +260,57 @@ export interface MetricSeries {
   latest?: MetricPoint
 }
 
-/** "2023.10.15" / "2023-10-15" → "23.10" */
-export function formatShortDate(date: string): string {
+function parseHealthDate(date: string): Date | null {
   const digits = (date ?? "").replace(/[^0-9]/g, "")
-  if (digits.length < 6) return date ?? ""
-  return `${digits.slice(2, 4)}.${digits.slice(4, 6)}`
+  if (digits.length < 8) return null
+  const year = Number(digits.slice(0, 4))
+  const month = Number(digits.slice(4, 6))
+  const day = Number(digits.slice(6, 8))
+  const parsed = new Date(year, month - 1, day)
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null
+  }
+  return parsed
 }
 
-/** 정상 범위를 사람이 읽는 문구로 */
-export function normalRangeText(config: MetricConfig): string {
+export function formatHealthDate(date: string, language: string): string {
+  const parsed = parseHealthDate(date)
+  if (!parsed) return date ?? ""
+  return new Intl.DateTimeFormat(
+    language.toLowerCase().startsWith("en") ? "en-US" : "ko-KR",
+    { year: "numeric", month: "short", day: "numeric" },
+  ).format(parsed)
+}
+
+/** Compact chart label in the selected app language. */
+export function formatShortDate(date: string, language = "ko"): string {
+  const parsed = parseHealthDate(date)
+  if (!parsed) return date ?? ""
+  return new Intl.DateTimeFormat(
+    language.toLowerCase().startsWith("en") ? "en-US" : "ko-KR",
+    { year: "2-digit", month: "short" },
+  ).format(parsed)
+}
+
+/** 앱의 일반 참고 구간을 검진기관 판정과 구분해 보여 준다. */
+export function normalRangeText(
+  config: MetricConfig,
+  t: TFunction<"health">,
+): string {
   const { normalMin, normalMax } = config
   if (normalMin != null && normalMax != null)
-    return `정상 ${normalMin}~${normalMax}`
-  if (normalMin != null) return `정상 ${normalMin} 이상`
-  if (normalMax != null) return `정상 ${normalMax} 이하`
+    return t("dashboard.referenceRangeBetween", {
+      min: normalMin,
+      max: normalMax,
+    })
+  if (normalMin != null)
+    return t("dashboard.referenceRangeMin", { min: normalMin })
+  if (normalMax != null)
+    return t("dashboard.referenceRangeMax", { max: normalMax })
   return ""
 }
 
@@ -282,6 +327,7 @@ function parseValue(raw: string | undefined): number | null {
 export function buildSeries(
   config: MetricConfig,
   ascendingDetails: HealthCheckResultDetailRs[],
+  language = "ko",
 ): MetricSeries {
   const points: MetricPoint[] = []
   for (const d of ascendingDetails) {
@@ -289,7 +335,7 @@ export function buildSeries(
     if (value == null) continue
     points.push({
       date: d.checkupDate,
-      label: formatShortDate(d.checkupDate),
+      label: formatShortDate(d.checkupDate, language),
       value,
       status: config.evaluate(value),
     })

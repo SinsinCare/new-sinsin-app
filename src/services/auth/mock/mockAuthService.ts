@@ -1,7 +1,12 @@
 import type { IAuthService, AppUser } from "../../types/serviceTypes"
-import type { AuthProfile, SignupRequest, SocialSignupRequest } from "../../../types"
+import type {
+  AuthProfile,
+  SignupRequest,
+  SocialSignupRequest,
+} from "../../../types"
 import { MockUser, DEFAULT_MOCK_USER } from "./mockUser"
 import { appConfig } from "../../../config/appConfig"
+import i18n from "@/src/i18n"
 
 const mockUsers = new Map<
   string,
@@ -29,7 +34,7 @@ export const mockAuthService: IAuthService = {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const userData = mockUsers.get(email)
     if (!userData || userData.password !== password) {
-      throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.")
+      throw new Error(i18n.t("login.credentialsError", { ns: "auth" }))
     }
     currentUser = userData.user
     return {
@@ -155,9 +160,7 @@ export const mockAuthService: IAuthService = {
     }
   },
 
-  async completeSocialSignup(
-    _request: SocialSignupRequest,
-  ): Promise<{
+  async completeSocialSignup(_request: SocialSignupRequest): Promise<{
     user: AppUser
     accountState: string
     requiresAdditionalInfo: boolean
@@ -171,9 +174,7 @@ export const mockAuthService: IAuthService = {
     }
   },
 
-  async cancelWithdrawal(
-    _cancelToken: string,
-  ): Promise<{
+  async cancelWithdrawal(_cancelToken: string): Promise<{
     user: AppUser
     accountState: string
     requiresAdditionalInfo: boolean

@@ -124,6 +124,9 @@ describe("meal consultation persistence", () => {
       foodAnalysisResultId: 41,
       mealType: "LUNCH",
     })
+    expect(context).not.toHaveProperty("comment")
+    expect(context).not.toHaveProperty("cautionFoods")
+    expect(context.foods).toEqual([])
   })
 
   test("save failure keeps navigation closed and a later retry can succeed", async () => {

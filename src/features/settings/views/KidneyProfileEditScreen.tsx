@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useQueryClient } from "@tanstack/react-query"
 import { isAxiosError } from "axios"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -27,23 +28,33 @@ import {
 } from "@/src/features/settings/utils/kidneyProfileValidation"
 import { api } from "@/src/services/core/apiClient"
 import { weightEdemaService } from "@/src/services/data/weightEdemaService"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
-import {
-  STAGE_OPTIONS,
-  hydrateStage,
-  labelForStage,
-} from "../utils/ckdStage"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import { STAGE_OPTIONS, hydrateStage } from "../utils/ckdStage"
 
 const COMORBIDITY_OPTIONS = [
-  { key: "DIABETES", label: "당뇨" },
-  { key: "HYPERTENSION", label: "고혈압" },
-  { key: "HEART_DISEASE", label: "심장질환" },
-  { key: "GOUT", label: "통풍" },
-  { key: "ANEMIA", label: "빈혈" },
-  { key: "BONE_MINERAL", label: "골미네랄 장애" },
-]
+  { key: "DIABETES", labelKey: "kidney.comorbidities.diabetes" },
+  { key: "HYPERTENSION", labelKey: "kidney.comorbidities.hypertension" },
+  { key: "HEART_DISEASE", labelKey: "kidney.comorbidities.heartDisease" },
+  { key: "GOUT", labelKey: "kidney.comorbidities.gout" },
+  { key: "ANEMIA", labelKey: "kidney.comorbidities.anemia" },
+  { key: "BONE_MINERAL", labelKey: "kidney.comorbidities.boneMineral" },
+] as const
+
+const DIAGNOSIS_CAUSE_LABEL_KEYS = {
+  DIABETIC_KIDNEY_DISEASE: "kidney.causes.diabetic",
+  HYPERTENSION: "kidney.causes.hypertension",
+  GLOMERULONEPHRITIS: "kidney.causes.glomerulonephritis",
+  POLYCYSTIC_KIDNEY_DISEASE: "kidney.causes.polycystic",
+  OTHER: "kidney.causes.other",
+} as const
+
+function stageCode(stage: string): string {
+  return stage.replace(/^STAGE_/, "").toUpperCase()
+}
 
 function extractFieldErrors(error: unknown): unknown {
   if (!isAxiosError(error)) return undefined
@@ -62,6 +73,7 @@ export function KidneyProfileEditScreen() {
   const queryClient = useQueryClient()
   const { data: kidneyProfile } = useKidneyProfile()
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [initialized, setInitialized] = useState(false)
   const [errors, setErrors] = useState<KidneyProfileValidationErrors>({})
@@ -84,6 +96,31 @@ export function KidneyProfileEditScreen() {
   const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>(
     [],
   )
+
+  const localizedFieldError = (field: KidneyProfileFieldKey): string | null => {
+    if (!errors[field]) return null
+    if (field === "height") {
+      if (!heightVal.trim()) return t("kidney.validation.heightRequired")
+      return Number.isFinite(Number(heightVal))
+        ? t("kidney.validation.heightRange")
+        : t("kidney.validation.heightNumber")
+    }
+    if (field === "weight") {
+      if (!weightVal.trim()) return t("kidney.validation.weightRequired")
+      return Number.isFinite(Number(weightVal))
+        ? t("kidney.validation.weightRange")
+        : t("kidney.validation.weightNumber")
+    }
+    if (field === "otherCause") {
+      if (otherCause.trim().length > 500) {
+        return t("kidney.validation.otherTooLong")
+      }
+      return selectedCauses.includes("OTHER")
+        ? t("kidney.validation.otherRequired")
+        : t("kidney.validation.otherSelect")
+    }
+    return t("kidney.validation.dateFuture")
+  }
 
   useEffect(() => {
     if (!kidneyProfile || initialized) return
@@ -187,7 +224,10 @@ export function KidneyProfileEditScreen() {
       })
 
       const weight = Number(weightVal.trim())
-      const today = new Date().toISOString().split("T")[0]
+      // 반드시 **로컬** 날짜 키여야 한다. toISOString() 은 UTC 기준이라 KST 아침
+      // 09시 이전 측정이 전날 키로 저장됐다 — 저장은 upsert 라서 전날의 실제
+      // 측정값을 덮어쓰고, 오늘 카드는 빈 채로 남았다. 읽는 쪽은 전부 로컬 날짜다.
+      const today = toDateStr(new Date())
       await weightEdemaService.updateWeight(weight, today)
 
       queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
@@ -203,7 +243,10 @@ export function KidneyProfileEditScreen() {
         return
       }
 
-      Alert.alert("오류", "저장에 실패했습니다. 다시 시도해주세요.")
+      Alert.alert(
+        t("kidney.errorTitle"),
+        getErrorMessage(error, t("kidney.errorBody")),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -235,7 +278,7 @@ export function KidneyProfileEditScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
-        title="신장 프로필 수정"
+        title={t("kidney.title")}
         paddingTop={insets.top + 8}
         onBack={navigateBackOrFallback}
         rightElement={
@@ -243,13 +286,15 @@ export function KidneyProfileEditScreen() {
             <ThemedText
               style={[styles.saveButtonText, isSubmitting && { opacity: 0.5 }]}
             >
-              {isSubmitting ? "저장 중..." : "저장"}
+              {isSubmitting ? t("kidney.saving") : t("kidney.save")}
             </ThemedText>
           </Pressable>
         }
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -257,18 +302,20 @@ export function KidneyProfileEditScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <ThemedText style={styles.sectionLabel}>나의 신장 프로필</ThemedText>
+        <ThemedText style={styles.sectionLabel}>
+          {t("kidney.section")}
+        </ThemedText>
 
         {/* 키 / 체중 */}
         <ThemedText
           style={[styles.subsectionTitle, { marginTop: 20, color: c.textSub }]}
         >
-          기본 정보
+          {t("kidney.basic")}
         </ThemedText>
         <View style={styles.basicInfoRow}>
           <View style={styles.inputGroup}>
             <ThemedText style={[styles.inputLabel, { color: c.text }]}>
-              키 (cm)
+              {t("kidney.height")}
             </ThemedText>
             <TextInput
               style={[
@@ -285,16 +332,18 @@ export function KidneyProfileEditScreen() {
               value={heightVal}
               onChangeText={handleChangeHeight}
               keyboardType="numeric"
-              placeholder="키 입력"
+              placeholder={t("kidney.heightPlaceholder")}
               placeholderTextColor={c.textTertiary}
             />
             {errors.height ? (
-              <ThemedText style={styles.fieldError}>{errors.height}</ThemedText>
+              <ThemedText style={styles.fieldError}>
+                {localizedFieldError("height")}
+              </ThemedText>
             ) : null}
           </View>
           <View style={styles.inputGroup}>
             <ThemedText style={[styles.inputLabel, { color: c.text }]}>
-              체중 (kg)
+              {t("kidney.weight")}
             </ThemedText>
             <TextInput
               style={[
@@ -311,16 +360,18 @@ export function KidneyProfileEditScreen() {
               value={weightVal}
               onChangeText={handleChangeWeight}
               keyboardType="numeric"
-              placeholder="체중 입력"
+              placeholder={t("kidney.weightPlaceholder")}
               placeholderTextColor={c.textTertiary}
             />
             {errors.weight ? (
-              <ThemedText style={styles.fieldError}>{errors.weight}</ThemedText>
+              <ThemedText style={styles.fieldError}>
+                {localizedFieldError("weight")}
+              </ThemedText>
             ) : null}
           </View>
         </View>
 
-        {/* 단백질 권장 섭취량 안내 */}
+        {/* 단백질 목표 안내 */}
         <View style={[styles.proteinHintBox, { backgroundColor: greenTintBg }]}>
           <Ionicons
             name="information-circle-outline"
@@ -328,25 +379,34 @@ export function KidneyProfileEditScreen() {
             color={tokens.color.sub8.val}
           />
           <ThemedText style={styles.proteinHintText}>
-            {weightVal && !isNaN(parseFloat(weightVal))
-              ? `체중 ${weightVal}kg → 하루 단백질 ${Math.round(parseFloat(weightVal) * 0.8)}g 이내 권장 (1kg당 0.8g)`
-              : "CKD 환자 단백질 권장 섭취량: 체중 1kg당 0.8g"}
+            {t("kidney.proteinNote")}
           </ThemedText>
         </View>
 
         {/* CKD 병기 */}
         <View style={[styles.subsectionRow, { marginTop: 24 }]}>
           <ThemedText style={[styles.subsectionTitle, { color: c.textSub }]}>
-            CKD 병기
+            {t("kidney.stage.title")}
           </ThemedText>
           <ThemedText style={styles.currentStageText}>
-            {ckdStage != null ? `현재: ${labelForStage(ckdStage)}` : ""}
+            {ckdStage != null
+              ? t("kidney.stage.current", {
+                  stage: t("kidney.stage.value", {
+                    stage: stageCode(ckdStage),
+                  }),
+                })
+              : ""}
           </ThemedText>
         </View>
         <View style={[styles.stageButtonsRow, { marginTop: 8 }]}>
           {STAGE_OPTIONS.map((option) => (
             <Pressable
               key={option.key}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: ckdStage === option.key }}
+              accessibilityLabel={t("kidney.stage.accessibility", {
+                stage: stageCode(option.key),
+              })}
               style={[
                 styles.stageButton,
                 { borderColor: c.border },
@@ -365,11 +425,16 @@ export function KidneyProfileEditScreen() {
                   ckdStage === option.key && styles.stageButtonTextSelected,
                 ]}
               >
-                {option.label}
+                {t("kidney.stage.value", {
+                  stage: stageCode(option.key),
+                })}
               </ThemedText>
             </Pressable>
           ))}
           <Pressable
+            accessibilityRole="radio"
+            accessibilityState={{ selected: ckdStage === null }}
+            accessibilityLabel={t("kidney.stage.noneAccessibility")}
             style={[
               styles.stageButton,
               { borderColor: c.border },
@@ -391,7 +456,7 @@ export function KidneyProfileEditScreen() {
                 ckdStage === null && styles.stageButtonTextSelected,
               ]}
             >
-              없음
+              {t("kidney.stage.none")}
             </ThemedText>
           </Pressable>
         </View>
@@ -417,15 +482,16 @@ export function KidneyProfileEditScreen() {
           </View>
           <View style={styles.dialysisInfo}>
             <ThemedText style={[styles.dialysisTitle, { color: c.text }]}>
-              현재 투석 여부
+              {t("kidney.dialysis.title")}
             </ThemedText>
             <ThemedText
               style={[styles.dialysisDescription, { color: c.textMuted }]}
             >
-              투석 중이라면 체크해주세요
+              {t("kidney.dialysis.body")}
             </ThemedText>
           </View>
           <Switch
+            accessibilityLabel={t("kidney.dialysis.accessibility")}
             value={onDialysis}
             onValueChange={setOnDialysis}
             trackColor={{ false: c.border, true: tokens.color.sub8.val }}
@@ -438,9 +504,11 @@ export function KidneyProfileEditScreen() {
         <ThemedText
           style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
         >
-          진단 시기
+          {t("kidney.diagnosisDate")}
         </ThemedText>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("kidney.diagnosisDateAccessibility")}
           style={[
             styles.dateInputRow,
             {
@@ -466,7 +534,7 @@ export function KidneyProfileEditScreen() {
         </Pressable>
         {errors.diagnosisDate ? (
           <ThemedText style={styles.fieldError}>
-            {errors.diagnosisDate}
+            {localizedFieldError("diagnosisDate")}
           </ThemedText>
         ) : null}
 
@@ -474,12 +542,16 @@ export function KidneyProfileEditScreen() {
         <ThemedText
           style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
         >
-          주 진단 원인
+          {t("kidney.diagnosisCause")}
         </ThemedText>
         <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
           {DIAGNOSIS_CAUSE_OPTIONS.map((cause) => (
             <Pressable
               key={cause.key}
+              accessibilityRole="checkbox"
+              accessibilityState={{
+                checked: selectedCauses.includes(cause.key),
+              }}
               style={[
                 styles.causeButton,
                 { borderColor: c.border },
@@ -499,7 +571,7 @@ export function KidneyProfileEditScreen() {
                     styles.stageButtonTextSelected,
                 ]}
               >
-                {cause.label}
+                {t(DIAGNOSIS_CAUSE_LABEL_KEYS[cause.key])}
               </ThemedText>
             </Pressable>
           ))}
@@ -519,24 +591,30 @@ export function KidneyProfileEditScreen() {
           multiline
           value={otherCause}
           onChangeText={handleChangeOtherCause}
-          placeholder="기타 원인이 있다면 적어주세요..."
+          placeholder={t("kidney.otherCausePlaceholder")}
           placeholderTextColor={c.textTertiary}
           textAlignVertical="top"
         />
         {errors.otherCause ? (
-          <ThemedText style={styles.fieldError}>{errors.otherCause}</ThemedText>
+          <ThemedText style={styles.fieldError}>
+            {localizedFieldError("otherCause")}
+          </ThemedText>
         ) : null}
 
         {/* 동반 질환 */}
         <ThemedText
           style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
         >
-          동반 질환
+          {t("kidney.comorbiditiesTitle")}
         </ThemedText>
         <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
           {COMORBIDITY_OPTIONS.map((opt) => (
             <Pressable
               key={opt.key}
+              accessibilityRole="checkbox"
+              accessibilityState={{
+                checked: selectedComorbidities.includes(opt.key),
+              }}
               style={[
                 styles.causeButton,
                 { borderColor: c.border },
@@ -556,13 +634,15 @@ export function KidneyProfileEditScreen() {
                     styles.stageButtonTextSelected,
                 ]}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </ThemedText>
             </Pressable>
           ))}
         </View>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("kidney.saveAccessibility")}
           style={[
             styles.completeButton,
             { marginTop: 36 },
@@ -572,7 +652,9 @@ export function KidneyProfileEditScreen() {
           disabled={isSubmitting}
         >
           <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
-          <ThemedText style={styles.completeButtonText}>저장하기</ThemedText>
+          <ThemedText style={styles.completeButtonText}>
+            {t("kidney.save")}
+          </ThemedText>
         </Pressable>
       </ScrollView>
 
@@ -668,13 +750,21 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  // 칩이 7개다. 한 줄에 밀어 넣으면 칸당 글자 상자가 37pt 인데 영어 라벨은
+  // "Stage 1"(50pt) 이라 "Stag"/"e 1" 로 글자 중간에서 쪼개졌다. 줄바꿈을 허용하고
+  // 고정 높이를 최소 높이로 바꿔 두 줄이 되어도 잘리지 않게 한다.
   stageButtonsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   stageButton: {
-    flex: 1,
-    height: 48,
+    minWidth: 76,
+    flexGrow: 1,
+    flexBasis: 0,
+    minHeight: 48,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderWidth: 2,
     borderRadius: 10,
     alignItems: "center",
@@ -684,6 +774,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
+    textAlign: "center",
   },
   stageButtonTextSelected: {
     color: tokens.color.sub8.val,

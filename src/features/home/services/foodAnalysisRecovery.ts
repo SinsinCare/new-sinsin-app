@@ -82,8 +82,10 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
         return true
       }
 
-      // 설문 UI가 꺼진 동안 요청을 지우지 않는다. 다음 앱 진입/포그라운드
-      // 전환에서 READY 여부를 다시 확인하고, TTL 이후에만 정리한다.
+      // 확인 UI가 없는 빌드에서는 사용자가 이 상태를 끝낼 수 없다. 진행 중인
+      // 것처럼 보존하지 않고 실패한 미완료 요청을 정리한다.
+      deps.markHandledRequestId(pending.requestId)
+      await deps.pendingRequests.remove(pending.requestId)
       return false
     }
     const result =

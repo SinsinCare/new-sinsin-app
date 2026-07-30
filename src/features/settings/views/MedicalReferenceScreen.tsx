@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import {
   View,
+  Text,
   StyleSheet,
   ScrollView,
   Pressable,
@@ -10,12 +11,10 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
-import { ThemedText } from "@/components/themed-text"
-import { ThemedView } from "@/components/themed-view"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
-import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { tokens } from "@/src/theme/tokens"
+import { useSurface } from "@/src/hooks/useSurface"
 
 // -----------------------------------------
 // 데이터 타입 정의
@@ -28,7 +27,6 @@ export interface ReferenceItem {
   title: string
   meta: string
   badge: BadgeType
-  iconColor: "teal" | "blue" | "orange" | "purple"
   url?: string
 }
 
@@ -38,282 +36,205 @@ export interface ReferenceSection {
   items: ReferenceItem[]
 }
 
-// -----------------------------------------
-// 콘텐츠 데이터
-// -----------------------------------------
-
-const REFERENCE_SECTIONS: ReferenceSection[] = [
+const REFERENCE_SECTIONS = [
   {
     id: "guidelines",
-    header: "진료지침",
     items: [
       {
         id: "g1",
-        title: "고혈압콩팥병 진료지침",
-        meta: "대한신장학회 · 2025.07",
         badge: "new",
-        iconColor: "teal",
         url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g2",
-        title: "노인 만성콩팥병 진료지침",
-        meta: "대한신장학회 · 2026.01",
         badge: "new",
-        iconColor: "teal",
         url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g3",
-        title: "당뇨병콩팥병 진료지침",
-        meta: "대한신장학회 · 2024.12",
         badge: "pdf",
-        iconColor: "teal",
         url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g4",
-        title: "지속가능신장치료 (CKRT) 진료지침",
-        meta: "대한신장학회 · 2023",
         badge: "pdf",
-        iconColor: "teal",
         url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
       {
         id: "g5",
-        title: "신장학 용어집",
-        meta: "대한신장학회 · 2024.07",
         badge: "pdf",
-        iconColor: "teal",
         url: "https://ksn.or.kr/bbs/?code=g_guideline",
       },
     ],
   },
   {
     id: "international",
-    header: "국제 가이드라인",
     items: [
       {
         id: "i1",
-        title: "KDIGO Guidelines",
-        meta: "KDIGO · 영문",
         badge: "kdigo",
-        iconColor: "purple",
         url: "https://kdigo.org/guidelines/",
       },
     ],
   },
   {
     id: "patient",
-    header: "환자 교육 자료 / 용어집 / 복지 정보",
     items: [
       {
         id: "p1",
-        title: "투석 전 단계 만성콩팥병 영양·식생활 관리",
-        meta: "대한신장학회 · 1권 환자용",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p2",
-        title: "혈액투석 환자를 위한 영양·식생활 관리",
-        meta: "대한신장학회 · 2권 환자용",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p3",
-        title: "복막투석 환자를 위한 영양·식생활 관리",
-        meta: "대한신장학회 · 3권 환자용",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p4",
-        title: "소아청소년 만성콩팥병 바로알기",
-        meta: "대한신장학회 · 보호자·환아용",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p5",
-        title: "만성콩팥병 바로알기 (당뇨병·고혈압 환자편)",
-        meta: "대한신장학회 · 일반인용",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p6",
-        title: "만성콩팥병 바로알기 (건강한 성인편)",
-        meta: "대한신장학회 · 일반인용",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
       {
         id: "p7",
-        title: "만성콩팥병 환자 복지 정보",
-        meta: "대한신장학회 · 2023년도 개정판",
         badge: "pdf",
-        iconColor: "blue",
         url: "https://ksn.or.kr/general/ebook/",
       },
     ],
   },
-]
+] as const
 
 const LAST_UPDATED = "2026.03.01"
 
+const SECTION_HEADER_KEYS = {
+  guidelines: "medical.sections.guidelines",
+  international: "medical.sections.international",
+  patient: "medical.sections.patient",
+} as const
+
+const ITEM_TEXT_KEYS = {
+  g1: { title: "medical.items.g1.title", meta: "medical.items.g1.meta" },
+  g2: { title: "medical.items.g2.title", meta: "medical.items.g2.meta" },
+  g3: { title: "medical.items.g3.title", meta: "medical.items.g3.meta" },
+  g4: { title: "medical.items.g4.title", meta: "medical.items.g4.meta" },
+  g5: { title: "medical.items.g5.title", meta: "medical.items.g5.meta" },
+  i1: { title: "medical.items.i1.title", meta: "medical.items.i1.meta" },
+  p1: { title: "medical.items.p1.title", meta: "medical.items.p1.meta" },
+  p2: { title: "medical.items.p2.title", meta: "medical.items.p2.meta" },
+  p3: { title: "medical.items.p3.title", meta: "medical.items.p3.meta" },
+  p4: { title: "medical.items.p4.title", meta: "medical.items.p4.meta" },
+  p5: { title: "medical.items.p5.title", meta: "medical.items.p5.meta" },
+  p6: { title: "medical.items.p6.title", meta: "medical.items.p6.meta" },
+  p7: { title: "medical.items.p7.title", meta: "medical.items.p7.meta" },
+} as const
+
+const BADGE_LABEL_KEYS: Record<BadgeType, `medical.badge.${BadgeType}`> = {
+  new: "medical.badge.new",
+  kdigo: "medical.badge.kdigo",
+  pdf: "medical.badge.pdf",
+}
+
 // -----------------------------------------
-// 서브 컴포넌트
+// 서브 컴포넌트 — 서피스 시스템 문법.
+// 색 아이콘·보더 대신 회색 면과 글자 위계로만 말하고,
+// 포인트(브랜드 틴트)는 "최신" 배지 하나에만 준다.
 // -----------------------------------------
 
-const ICON_BG_LIGHT: Record<ReferenceItem["iconColor"], string> = {
-  teal: "#E0FFF7",
-  blue: "#E8F0FB",
-  orange: "#FFF0E0",
-  purple: "#F0EEFF",
-}
-
-const ICON_BG_DARK: Record<ReferenceItem["iconColor"], string> = {
-  teal: "#1A3A2E",
-  blue: "#1A2A3E",
-  orange: "#3A2A1A",
-  purple: "#2A1A3E",
-}
-
-const ICON_STROKE: Record<ReferenceItem["iconColor"], string> = {
-  teal: tokens.color.sub6.val,
-  blue: "#1E6FBF",
-  orange: "#C47A1A",
-  purple: "#7C5CBF",
-}
-
-const BADGE_LABEL: Record<BadgeType, string> = {
-  new: "최신",
-  kdigo: "KDIGO",
-  pdf: "PDF",
-}
-
-const BADGE_COLOR: Record<BadgeType, string> = {
-  new: "#028A67",
-  kdigo: "#7C5CBF",
-  pdf: "#64748B",
-}
-
-const BADGE_BG_LIGHT: Record<BadgeType, string> = {
-  new: "#E0FFF7",
-  kdigo: "#F0EEFF",
-  pdf: "#F0F2F5",
-}
-
-const BADGE_BG_DARK: Record<BadgeType, string> = {
-  new: "#1A3A2E",
-  kdigo: "#2A1A3E",
-  pdf: "#2A2A32",
-}
-
-function ItemIcon({ color, isDark }: { color: ReferenceItem["iconColor"]; isDark: boolean }) {
-  const bg = isDark ? ICON_BG_DARK[color] : ICON_BG_LIGHT[color]
+function DocIcon({ barColor, tileBg }: { barColor: string; tileBg: string }) {
   return (
-    <View style={[styles.itemIcon, { backgroundColor: bg }]}>
+    <View style={[styles.itemIcon, { backgroundColor: tileBg }]}>
       <View
-        style={[styles.iconBar1, { backgroundColor: ICON_STROKE[color] }]}
+        style={[styles.iconBar, { width: 14, backgroundColor: barColor }]}
       />
       <View
-        style={[styles.iconBar2, { backgroundColor: ICON_STROKE[color] }]}
+        style={[styles.iconBar, { width: 10, backgroundColor: barColor }]}
       />
       <View
-        style={[styles.iconBar3, { backgroundColor: ICON_STROKE[color] }]}
+        style={[styles.iconBar, { width: 12, backgroundColor: barColor }]}
       />
-    </View>
-  )
-}
-
-function Badge({ type, isDark }: { type: BadgeType; isDark: boolean }) {
-  const bg = isDark ? BADGE_BG_DARK[type] : BADGE_BG_LIGHT[type]
-  const color = BADGE_COLOR[type]
-  const label = BADGE_LABEL[type]
-  return (
-    <View style={[styles.badge, { backgroundColor: bg }]}>
-      <ThemedText style={[styles.badgeText, { color }]}>{label}</ThemedText>
     </View>
   )
 }
 
 function ReferenceRow({
   item,
-  colors,
-  isDark,
+  isLast,
+  surface,
 }: {
   item: ReferenceItem
-  colors: ReturnType<typeof useSettingsColors>
-  isDark: boolean
+  isLast: boolean
+  surface: ReturnType<typeof useSurface>
 }) {
-  const handlePress = () => {
-    if (item.url) Linking.openURL(item.url)
-  }
-
+  const isNew = item.badge === "new"
+  const { t } = useTranslation("settings")
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t("medical.open", { title: item.title })}
+      onPress={() => {
+        if (item.url) Linking.openURL(item.url)
+      }}
       style={({ pressed }) => [
         styles.listItem,
-        pressed && { backgroundColor: colors.inputBg },
+        pressed && { backgroundColor: surface.surfacePressed },
       ]}
-      onPress={handlePress}
     >
-      <ItemIcon color={item.iconColor} isDark={isDark} />
+      <DocIcon barColor={surface.textWeak} tileBg={surface.surface} />
       <View style={styles.itemBody}>
-        <ThemedText
-          style={[styles.itemTitle, { color: colors.text }]}
+        <Text
+          style={[styles.itemTitle, { color: surface.textStrong }]}
           numberOfLines={2}
+          // 한국어가 단어 중간("관/리")에서 꺾이지 않게 어절 단위로 줄바꿈한다.
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
         >
           {item.title}
-        </ThemedText>
-        <ThemedText style={[styles.itemMeta, { color: colors.textMuted }]}>
+        </Text>
+        <Text style={[styles.itemMeta, { color: surface.textMuted }]}>
           {item.meta}
-        </ThemedText>
+        </Text>
       </View>
       <View style={styles.itemRight}>
-        <Badge type={item.badge} isDark={isDark} />
-        <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: isNew ? surface.surfaceBrand : surface.surface,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              { color: isNew ? surface.brand : surface.textMuted },
+            ]}
+          >
+            {t(BADGE_LABEL_KEYS[item.badge])}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={15} color={surface.textWeak} />
       </View>
+      {!isLast && (
+        <View
+          style={[styles.rowHairline, { backgroundColor: surface.hairline }]}
+        />
+      )}
     </Pressable>
-  )
-}
-
-function SectionGroup({
-  section,
-  colors,
-  isDark,
-}: {
-  section: ReferenceSection
-  colors: ReturnType<typeof useSettingsColors>
-  isDark: boolean
-}) {
-  return (
-    <>
-      <ThemedText style={[styles.sectionHeader, { color: colors.textMuted }]}>
-        {section.header}
-      </ThemedText>
-      <View style={[styles.listGroup, { borderColor: colors.border }]}>
-        {section.items.map((item, index) => (
-          <View key={item.id}>
-            <ReferenceRow item={item} colors={colors} isDark={isDark} />
-            {index < section.items.length - 1 && (
-              <View
-                style={[styles.divider, { backgroundColor: colors.inputBg }]}
-              />
-            )}
-          </View>
-        ))}
-      </View>
-    </>
   )
 }
 
@@ -324,113 +245,157 @@ function SectionGroup({
 export function MedicalReferenceScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const c = useSettingsColors()
-  const { isDark } = c
+  const surface = useSurface()
+  const { t } = useTranslation("settings")
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredSections: ReferenceSection[] = REFERENCE_SECTIONS.map(
+  const localizedSections: ReferenceSection[] = REFERENCE_SECTIONS.map(
     (section) => ({
+      ...section,
+      header: t(SECTION_HEADER_KEYS[section.id]),
+      items: section.items.map((item) => ({
+        ...item,
+        title: t(ITEM_TEXT_KEYS[item.id].title),
+        meta: t(ITEM_TEXT_KEYS[item.id].meta),
+      })),
+    }),
+  )
+
+  const filteredSections = localizedSections
+    .map((section) => ({
       ...section,
       items: section.items.filter(
         (item) =>
-          item.title.includes(searchQuery) || item.meta.includes(searchQuery),
+          item.title
+            .toLocaleLowerCase()
+            .includes(searchQuery.toLocaleLowerCase()) ||
+          item.meta
+            .toLocaleLowerCase()
+            .includes(searchQuery.toLocaleLowerCase()),
       ),
-    }),
-  ).filter((section) => section.items.length > 0)
+    }))
+    .filter((section) => section.items.length > 0)
+
+  // 홈과 같은 층 규칙: 라이트는 회색 바닥 위 흰 카드, 다크는 짙은 바닥 위 옅은 카드.
+  const screenBg = surface.isDark ? surface.canvas : surface.surface
+  const fieldBg = surface.isDark ? surface.surface : surface.card
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
+    <View style={[styles.container, { backgroundColor: screenBg }]}>
       <ScreenHeader
-        title="의료 참고 문헌"
+        title={t("medical.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* 안내 배너 */}
-        <View style={[styles.infoBanner, { borderColor: c.border }]}>
-          <View style={[styles.infoIcon, { backgroundColor: isDark ? "#1A3A2E" : "#E0FFF7" }]}>
-            <Ionicons
-              name="information-circle-outline"
-              size={18}
-              color={tokens.color.sub6.val}
-            />
-          </View>
-          <View style={styles.infoTextWrap}>
-            <ThemedText style={[styles.infoTitle, { color: c.text }]}>
-              근거 기반 의료 정보 제공
-            </ThemedText>
-            <ThemedText style={[styles.infoDesc, { color: c.textSub }]}>
-              이 앱의 모든 영양·의료 권고사항은 아래 공인 학회 지침 및
-              진료지침을 기반으로 합니다. 개인 치료 결정은 반드시 담당 의료진과
-              상의하세요.
-            </ThemedText>
-          </View>
-        </View>
+        {/* 리드 문장 — 카드 없이 조용한 본문 한 단락. */}
+        <Text
+          style={[styles.lead, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
+          {t("medical.lead")}
+        </Text>
 
-        {/* 검색바 */}
-        <View style={[styles.searchBar, { borderColor: c.border }]}>
-          <Ionicons name="search-outline" size={16} color={c.textMuted} />
+        {/* 검색 필드 — 보더 없는 흰 면. */}
+        <View style={[styles.searchBar, { backgroundColor: fieldBg }]}>
+          <Ionicons name="search" size={17} color={surface.textWeak} />
           <TextInput
-            style={[styles.searchInput, { color: c.text }]}
-            placeholder="문헌 검색"
-            placeholderTextColor={c.textTertiary}
+            style={[styles.searchInput, { color: surface.textStrong }]}
+            placeholder={t("medical.search")}
+            placeholderTextColor={surface.placeholder}
+            selectionColor={surface.brand}
             value={searchQuery}
             onChangeText={setSearchQuery}
             clearButtonMode="while-editing"
           />
         </View>
 
-        {/* 섹션 목록 */}
+        {/* 섹션 목록 — 헤어라인으로만 나눈 카드 그룹. */}
         {filteredSections.length > 0 ? (
           filteredSections.map((section) => (
-            <SectionGroup key={section.id} section={section} colors={c} isDark={isDark} />
+            <View key={section.id}>
+              <Text
+                style={[styles.sectionHeader, { color: surface.textMuted }]}
+              >
+                {section.header}
+              </Text>
+              <View
+                style={[styles.listGroup, { backgroundColor: surface.card }]}
+              >
+                {section.items.map((item, index) => (
+                  <ReferenceRow
+                    key={item.id}
+                    item={item}
+                    isLast={index === section.items.length - 1}
+                    surface={surface}
+                  />
+                ))}
+              </View>
+            </View>
           ))
         ) : (
-          <ThemedText style={[styles.emptyText, { color: c.textMuted }]}>
-            검색 결과가 없습니다.
-          </ThemedText>
+          <Text style={[styles.emptyText, { color: surface.textMuted }]}>
+            {t("medical.empty")}
+          </Text>
         )}
 
-        {/* 업데이트 안내 */}
-        <View style={[styles.updateNotice, { borderColor: c.border }]}>
-          <View style={styles.updateDot} />
-          <ThemedText style={[styles.updateText, { color: c.textSub }]}>
-            <ThemedText style={[styles.updateBold, { color: c.text }]}>
-              문헌은 최신 학회 발표 기준으로 업데이트
-            </ThemedText>
-            됩니다. 마지막 갱신: {LAST_UPDATED}
-          </ThemedText>
-        </View>
-
-        {/* 면책 문구 */}
-        <View style={[styles.disclaimer, { borderColor: c.border }]}>
-          <ThemedText style={[styles.disclaimerText, { color: c.textMuted }]}>
-            이 앱의 정보는 의학적 진단이나 치료를 대체하지 않습니다.{"\n"}
-            구체적인 치료 계획은 반드시 담당 의료진과 상의하세요.
-          </ThemedText>
-          <View style={styles.disclaimerLinks}>
-            <Pressable
-              onPress={() =>
-                Linking.openURL(
-                  "https://healthier.notion.site/2fe91d1eca7780a7877cfd2692b4be3f",
-                )
-              }
-            >
-              <ThemedText style={styles.disclaimerLink}>
-                개인정보 처리방침
-              </ThemedText>
-            </Pressable>
-          </View>
+        {/* 갱신·면책 — 하나의 푸터 스택. 카드도 보더도 없이 가운데 정렬 캡션 위계. */}
+        <View style={styles.footer}>
+          <Text
+            style={[styles.updateText, { color: surface.placeholder }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
+            {t("medical.lastChecked", { date: LAST_UPDATED })}
+          </Text>
+          <View
+            style={[
+              styles.footerDivider,
+              { backgroundColor: surface.hairline },
+            ]}
+          />
+          <Text
+            style={[styles.disclaimerText, { color: surface.placeholder }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
+            {t("medical.disclaimer")}
+          </Text>
+          <Pressable
+            onPress={() =>
+              Linking.openURL(
+                "https://healthier.notion.site/2fe91d1eca7780a7877cfd2692b4be3f",
+              )
+            }
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("medical.privacyAccessibility")}
+          >
+            {({ pressed }) => (
+              <Text
+                style={[
+                  styles.footerLink,
+                  { color: surface.textMuted, opacity: pressed ? 0.5 : 1 },
+                ]}
+              >
+                {t("medical.privacy")}
+              </Text>
+            )}
+          </Pressable>
         </View>
       </ScrollView>
-    </ThemedView>
+    </View>
   )
 }
 
@@ -442,110 +407,88 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
-  // 스크롤
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 4,
   },
 
-  // 안내 배너
-  infoBanner: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-  },
-  infoIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  infoTextWrap: {
-    flex: 1,
-  },
-  infoTitle: {
+  lead: {
     fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  infoDesc: {
-    fontSize: 13,
-    lineHeight: 18,
+    lineHeight: 21,
+    letterSpacing: -0.28,
+    fontFamily: "Pretendard-Regular",
+    marginBottom: 16,
   },
 
-  // 검색바
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 8,
+    height: 48,
+    borderRadius: 14,
+    paddingHorizontal: 14,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 15.5,
+    letterSpacing: -0.31,
+    fontFamily: "Pretendard-Regular",
     padding: 0,
   },
 
-  // 섹션
   sectionHeader: {
-    paddingTop: 20,
-    paddingBottom: 8,
-    fontSize: 13,
+    paddingTop: 24,
+    paddingBottom: 10,
+    fontSize: 13.5,
+    lineHeight: 19,
+    letterSpacing: -0.27,
     fontWeight: "600",
-    letterSpacing: 0.3,
+    fontFamily: "Pretendard-SemiBold",
   },
   listGroup: {
-    borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
   },
   listItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  divider: {
-    height: 1,
-    marginLeft: 60,
+  rowHairline: {
+    position: "absolute",
+    left: 64,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
   },
 
-  // 아이템 아이콘
   itemIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
-    padding: 8,
   },
-  iconBar1: { width: 14, height: 2, borderRadius: 1 },
-  iconBar2: { width: 10, height: 2, borderRadius: 1 },
-  iconBar3: { width: 8, height: 2, borderRadius: 1 },
+  iconBar: { height: 2, borderRadius: 1 },
 
-  // 아이템 본문
   itemBody: {
     flex: 1,
   },
   itemTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
   },
   itemMeta: {
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.26,
+    fontFamily: "Pretendard-Regular",
     marginTop: 2,
   },
   itemRight: {
@@ -554,75 +497,58 @@ const styles = StyleSheet.create({
     gap: 6,
   },
 
-  // 뱃지
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
+    height: 22,
+    borderRadius: 7,
+    paddingHorizontal: 7,
+    alignItems: "center",
+    justifyContent: "center",
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: "600",
+    lineHeight: 14,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
   },
 
-  // 빈 결과
   emptyText: {
     textAlign: "center",
     fontSize: 14,
-    marginTop: 40,
+    lineHeight: 20,
+    fontFamily: "Pretendard-Regular",
+    marginTop: 48,
   },
 
-  // 업데이트 안내
-  updateNotice: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 20,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-  },
-  updateDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: tokens.color.sub6.val,
-  },
   updateText: {
-    flex: 1,
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 18,
+    letterSpacing: -0.24,
+    textAlign: "center",
+    fontFamily: "Pretendard-Regular",
   },
-  updateBold: {
-    fontSize: 14,
-    fontWeight: "600",
+  footerDivider: {
+    width: 40,
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 6,
   },
 
-  // 면책 문구
-  disclaimer: {
-    marginTop: 16,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
+  footer: {
     alignItems: "center",
+    gap: 8,
+    marginTop: 28,
+    paddingHorizontal: 12,
   },
   disclaimerText: {
+    fontSize: 11.5,
+    lineHeight: 17,
+    letterSpacing: -0.23,
+    textAlign: "center",
+    fontFamily: "Pretendard-Regular",
+  },
+  footerLink: {
     fontSize: 12,
     lineHeight: 17,
-    textAlign: "center",
-  },
-  disclaimerLinks: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 8,
-  },
-  disclaimerLink: {
-    fontSize: 12,
-    color: tokens.color.sub6.val,
-  },
-  disclaimerSep: {
-    fontSize: 12,
-    color: "#94A3B8",
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
   },
 })

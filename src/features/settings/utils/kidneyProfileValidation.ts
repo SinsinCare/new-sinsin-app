@@ -20,10 +20,10 @@ export const KIDNEY_PROFILE_LIMITS = {
 } as const
 
 const KIDNEY_PROFILE_MESSAGES: Record<KidneyProfileFieldKey, string> = {
-  height: "키는 0보다 크고 300cm 이하로 입력해주세요",
-  weight: "체중은 0보다 크고 300kg 이하로 입력해주세요",
-  otherCause: "기타 원인은 500자 이내로 입력해주세요",
-  diagnosisDate: "진단 시기는 오늘 이후일 수 없습니다",
+  height: "키를 0보다 크고 300cm 이하로 입력해 주세요.",
+  weight: "체중을 0보다 크고 300kg 이하로 입력해 주세요.",
+  otherCause: "기타 원인을 500자 이하로 입력해 주세요.",
+  diagnosisDate: "이번 달 또는 이전 시기를 선택해 주세요.",
 }
 
 type ValidateKidneyProfileInputParams = {
@@ -57,9 +57,9 @@ export function validateKidneyProfileInput({
 
   const height = parseRequiredNumber(heightVal)
   if (height.status === "missing") {
-    errors.height = "키를 입력해주세요"
+    errors.height = "키를 입력해 주세요."
   } else if (height.status === "invalid") {
-    errors.height = "키를 숫자로 입력해주세요"
+    errors.height = "키를 숫자로 입력해 주세요."
   } else if (
     height.value <= 0 ||
     height.value > KIDNEY_PROFILE_LIMITS.heightMax
@@ -69,9 +69,9 @@ export function validateKidneyProfileInput({
 
   const weight = parseRequiredNumber(weightVal)
   if (weight.status === "missing") {
-    errors.weight = "체중을 입력해주세요"
+    errors.weight = "체중을 입력해 주세요."
   } else if (weight.status === "invalid") {
-    errors.weight = "체중을 숫자로 입력해주세요"
+    errors.weight = "체중을 숫자로 입력해 주세요."
   } else if (
     weight.value <= 0 ||
     weight.value > KIDNEY_PROFILE_LIMITS.weightMax
@@ -84,9 +84,9 @@ export function validateKidneyProfileInput({
   if (trimmedOtherCause.length > KIDNEY_PROFILE_LIMITS.otherCauseMaxLength) {
     errors.otherCause = KIDNEY_PROFILE_MESSAGES.otherCause
   } else if (hasOtherCause && !trimmedOtherCause) {
-    errors.otherCause = "기타 원인을 입력해주세요"
+    errors.otherCause = "기타 원인을 입력해 주세요."
   } else if (!hasOtherCause && trimmedOtherCause) {
-    errors.otherCause = "기타 원인을 입력하려면 '기타'를 선택해주세요"
+    errors.otherCause = "직접 입력하려면 진단 원인에서 ‘기타’를 선택해 주세요."
   }
 
   if (diagnosisDate) {

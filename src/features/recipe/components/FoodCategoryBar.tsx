@@ -11,16 +11,17 @@ import AmericanIcon from "@/assets/images/american.svg"
 import SaladIcon from "@/assets/images/salad.svg"
 import DessertIcon from "@/assets/images/dessert.svg"
 import DrinkIcon from "@/assets/images/drink.svg"
+import { useTranslation } from "react-i18next"
 
 const CATEGORIES = [
-  { key: "all", label: "전체", Icon: WindowIcon },
-  { key: "korean", label: "한식", Icon: KoreanIcon },
-  { key: "chinese", label: "중식", Icon: ChineseIcon },
-  { key: "japanese", label: "일식", Icon: JapaneseIcon },
-  { key: "american", label: "양식", Icon: AmericanIcon },
-  { key: "salad", label: "샐러드", Icon: SaladIcon },
-  { key: "dessert", label: "디저트", Icon: DessertIcon },
-  { key: "drink", label: "음료", Icon: DrinkIcon },
+  { key: "all", labelKey: "category.food.all", Icon: WindowIcon },
+  { key: "korean", labelKey: "category.food.korean", Icon: KoreanIcon },
+  { key: "chinese", labelKey: "category.food.chinese", Icon: ChineseIcon },
+  { key: "japanese", labelKey: "category.food.japanese", Icon: JapaneseIcon },
+  { key: "american", labelKey: "category.food.american", Icon: AmericanIcon },
+  { key: "salad", labelKey: "category.food.salad", Icon: SaladIcon },
+  { key: "dessert", labelKey: "category.food.dessert", Icon: DessertIcon },
+  { key: "drink", labelKey: "category.food.drink", Icon: DrinkIcon },
 ] as const
 
 const TEXT_COLORS = {
@@ -39,17 +40,21 @@ export function FoodCategoryBar({
   onToggleCategory,
   onToggleAllCategories,
 }: FoodCategoryBarProps) {
+  const { t } = useTranslation("recipe")
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const activeTextColor = isDark ? TEXT_COLORS.dark : TEXT_COLORS.light
 
   return (
     <ScrollView
+      bounces={false}
+      overScrollMode="never"
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ gap: 12 }}
     >
-      {CATEGORIES.map(({ key, label, Icon }) => {
+      {CATEGORIES.map(({ key, labelKey, Icon }) => {
+        const label = t(labelKey)
         const isAllButton = key === "all"
         const isActive = isAllButton
           ? selectedCategories.size === 0

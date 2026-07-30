@@ -33,7 +33,9 @@ const KNOWN_KEYS = new Set(STAGE_OPTIONS.map((o) => o.key))
  * 임의로 가까운 단계에 붙이면 그게 곧 잘못된 제한이 된다.
  * `DIALYSIS` 는 화면에서 별도 토글로 다루므로 여기서 처리하지 않는다.
  */
-export function hydrateStage(serverStage: string | null | undefined): string | null {
+export function hydrateStage(
+  serverStage: string | null | undefined,
+): string | null {
   if (!serverStage) return null
   return KNOWN_KEYS.has(serverStage) ? serverStage : null
 }

@@ -36,7 +36,9 @@ export function ChatHistoryCardSkeleton() {
   return (
     <View
       style={{
-        backgroundColor: isDarkMode ? tokens.color.inputBgDark.val : tokens.color.offWhite.val,
+        backgroundColor: isDarkMode
+          ? tokens.color.inputBgDark.val
+          : tokens.color.offWhite.val,
         borderRadius: 16,
         paddingHorizontal: 20,
         paddingVertical: 14,

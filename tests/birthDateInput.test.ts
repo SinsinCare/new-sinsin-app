@@ -23,12 +23,15 @@ describe("birth date text input", () => {
   it("rejects invalid or future dates", () => {
     expect(
       getBirthDateInputState("2001.02.29", new Date("2026-06-23T00:00:00Z")),
-    ).toMatchObject({ isValid: false, message: "잘못된 생년월일입니다." })
+    ).toMatchObject({
+      isValid: false,
+      message: "생년월일을 다시 확인해 주세요.",
+    })
     expect(
       getBirthDateInputState("2026.06.24", new Date("2026-06-23T00:00:00Z")),
     ).toMatchObject({
       isValid: false,
-      message: "미래 날짜는 입력할 수 없습니다.",
+      message: "오늘 또는 이전 날짜를 입력해 주세요.",
     })
   })
 })

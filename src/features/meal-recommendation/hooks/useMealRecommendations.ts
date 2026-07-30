@@ -5,6 +5,7 @@ import type {
   MealRecommendationResponse,
   RecommendationCategory,
 } from "../types"
+import { useTranslation } from "react-i18next"
 
 const MEAL_REC_KEY = ["meal-recommendations"] as const
 
@@ -16,26 +17,25 @@ export function useMealRecommendations(
   mealType: MealType,
   category: RecommendationCategory = "all",
 ) {
+  const { i18n } = useTranslation()
   const queryClient = useQueryClient()
   const todayStr = getTodayDateStr()
+  const locale = i18n.language.startsWith("en") ? "en" : "ko"
+  const queryKey = [...MEAL_REC_KEY, locale, mealType, category, todayStr]
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery<MealRecommendationResponse>({
-    queryKey: [...MEAL_REC_KEY, mealType, category, todayStr],
-    queryFn: () =>
-      mealRecommendationService.getRecommendations(mealType, category),
-  })
+  const { data, isLoading, error, refetch } =
+    useQuery<MealRecommendationResponse>({
+      queryKey,
+      queryFn: () =>
+        mealRecommendationService.getRecommendations(mealType, category),
+    })
 
   const refreshMutation = useMutation({
     mutationFn: () =>
       mealRecommendationService.refreshRecommendations(mealType, category),
     onSuccess: (newData) => {
       queryClient.setQueryData(
-        [...MEAL_REC_KEY, mealType, category, todayStr],
+        queryKey,
         newData,
       )
     },

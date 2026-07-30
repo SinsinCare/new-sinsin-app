@@ -1,10 +1,29 @@
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions } from "react-native"
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { normalizeLanguage } from "@/src/i18n"
 import { tokens } from "@/src/theme/tokens"
 import restaurantsJson from "../data/restaurantsData.json"
-import type { RestaurantDataItem, RestaurantsData, FilterScore } from "../data/restaurantDataTypes"
+import type {
+  RestaurantDataItem,
+  RestaurantsData,
+} from "../data/restaurantDataTypes"
+import {
+  getCatalogAddress,
+  getCatalogCuisineLabel,
+  getCatalogFeatureLabels,
+  getCatalogHours,
+  getCatalogMenuName,
+  getCatalogRestaurantName,
+} from "../utils/restaurantLocalization"
 
 const COLORS = {
   light: {
@@ -41,38 +60,6 @@ const COLORS = {
   },
 } as const
 
-const SAFETY_TIER_CONFIG = {
-  highly_recommended: {
-    label: "✓ 신장 건강 추천",
-    bg: "#D1FAE5",
-    text: "#065F46",
-  },
-  partial: {
-    label: "◐ 메뉴 선택 필요",
-    bg: "#FEF3C7",
-    text: "#92400E",
-  },
-  limited: {
-    label: "△ 섭취량 조절 필요",
-    bg: "#FEE2E2",
-    text: "#991B1B",
-  },
-} as const
-
-const FILTER_SCORE_CONFIG: Record<FilterScore, { bg: string; text: string }> = {
-  pass: { bg: "#D1FAE5", text: "#065F46" },
-  mid: { bg: "#FEF3C7", text: "#92400E" },
-  fail: { bg: "#FEE2E2", text: "#991B1B" },
-}
-
-const FILTER_LABEL_MAP: Record<string, string> = {
-  low_sodium: "저염",
-  low_sugar: "저당",
-  low_protein: "저단백",
-  low_potassium: "저칼륨",
-  low_phosphorus: "저인",
-}
-
 const DAY_MAP: Record<string, string> = {
   0: "sun",
   1: "mon",
@@ -85,9 +72,11 @@ const DAY_MAP: Record<string, string> = {
 
 const allRestaurants = (restaurantsJson as RestaurantsData).restaurants
 
-function getTodayHours(hours: RestaurantDataItem["hours"]): string {
+function getTodayHoursValue(
+  hours: RestaurantDataItem["hours"],
+): string | undefined {
   const dayKey = DAY_MAP[new Date().getDay()]
-  return (hours as Record<string, string | undefined>)[dayKey] ?? "정보 없음"
+  return (hours as Record<string, string | undefined>)[dayKey]
 }
 
 function getPriceLevel(level: number): string {
@@ -105,21 +94,32 @@ export function RestaurantDetailSheet({
   visible,
   onClose,
 }: RestaurantDetailSheetProps) {
+  const { t, i18n } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
   const insets = useSafeAreaInsets()
   const { height: screenHeight } = useWindowDimensions()
 
   const restaurant = restaurantId
-    ? allRestaurants.find((r) => r.id === restaurantId) ?? null
+    ? (allRestaurants.find((r) => r.id === restaurantId) ?? null)
     : null
 
   if (!restaurant) return null
 
-  const safetyConfig =
-    SAFETY_TIER_CONFIG[restaurant.safety_tier] ?? SAFETY_TIER_CONFIG.partial
-
-  const todayHours = getTodayHours(restaurant.hours)
+  const language = normalizeLanguage(i18n.resolvedLanguage)
+  const todayHours = getCatalogHours(
+    getTodayHoursValue(restaurant.hours),
+    t,
+    language,
+  )
+  const cuisine = getCatalogCuisineLabel(restaurant.cuisine, t, language)
+  const features = getCatalogFeatureLabels(restaurant.features, language)
+  const restaurantName = getCatalogRestaurantName(
+    restaurant.id,
+    restaurant.name,
+    language,
+  )
+  const address = getCatalogAddress(restaurant.id, restaurant.address, language)
 
   return (
     <Modal
@@ -128,7 +128,10 @@ export function RestaurantDetailSheet({
       transparent
       onRequestClose={onClose}
     >
-      <Pressable style={[styles.overlay, { backgroundColor: palette.overlay }]} onPress={onClose} />
+      <Pressable
+        style={[styles.overlay, { backgroundColor: palette.overlay }]}
+        onPress={onClose}
+      />
 
       <YStack
         position="absolute"
@@ -143,7 +146,12 @@ export function RestaurantDetailSheet({
       >
         {/* Handle bar */}
         <YStack alignItems="center" paddingTop={12} paddingBottom={4}>
-          <View width={40} height={4} borderRadius={2} backgroundColor={palette.divider} />
+          <View
+            width={40}
+            height={4}
+            borderRadius={2}
+            backgroundColor={palette.divider}
+          />
         </YStack>
 
         {/* Header */}
@@ -161,7 +169,7 @@ export function RestaurantDetailSheet({
               color={palette.title}
               lineHeight={28}
             >
-              {restaurant.name}
+              {restaurantName}
             </Text>
             <XStack gap={8} alignItems="center" flexWrap="wrap">
               <XStack
@@ -170,18 +178,30 @@ export function RestaurantDetailSheet({
                 borderRadius={8}
                 backgroundColor={palette.badgeBg}
               >
-                <Text fontSize={12} fontWeight="600" fontFamily="$body" color={palette.badgeText}>
-                  {restaurant.cuisine}
+                <Text
+                  fontSize={12}
+                  fontWeight="600"
+                  fontFamily="$body"
+                  color={palette.badgeText}
+                >
+                  {cuisine}
                 </Text>
               </XStack>
-              <Text fontSize={12} fontFamily="$body" color={palette.sub} numberOfLines={1}>
-                {restaurant.address}
+              <Text
+                fontSize={12}
+                fontFamily="$body"
+                color={palette.sub}
+                numberOfLines={1}
+              >
+                {address}
               </Text>
             </XStack>
           </YStack>
           <Pressable
             onPress={onClose}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("restaurant.detail.close")}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <View
@@ -199,37 +219,33 @@ export function RestaurantDetailSheet({
           </Pressable>
         </XStack>
 
-        <View height={1} backgroundColor={palette.divider} marginHorizontal={20} />
+        <View
+          height={1}
+          backgroundColor={palette.divider}
+          marginHorizontal={20}
+        />
 
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 20, gap: 16 }}
         >
           {/* 기본 정보 */}
           <XStack gap={12} alignItems="center" flexWrap="wrap">
             <Text fontSize={14} fontFamily="$body" color={palette.sub}>
-              ⭐ {restaurant.rating.toFixed(1)} · 리뷰 {restaurant.review_count}개 · {getPriceLevel(restaurant.price_level)}
+              ⭐ {restaurant.rating.toFixed(1)} ·{" "}
+              {t("restaurant.reviews", {
+                count: restaurant.review_count,
+              })}{" "}
+              · {getPriceLevel(restaurant.price_level)}
             </Text>
           </XStack>
 
-          {/* 안전등급 배지 */}
-          <XStack>
-            <XStack
-              paddingHorizontal={12}
-              paddingVertical={6}
-              borderRadius={10}
-              backgroundColor={safetyConfig.bg}
-            >
-              <Text fontSize={13} fontWeight="700" fontFamily="$body" color={safetyConfig.text}>
-                {safetyConfig.label}
-              </Text>
-            </XStack>
-          </XStack>
-
           {/* 특징 칩들 */}
-          {restaurant.features.length > 0 && (
+          {features.length > 0 && (
             <XStack gap={8} flexWrap="wrap">
-              {restaurant.features.map((feature) => (
+              {features.map((feature) => (
                 <XStack
                   key={feature}
                   paddingHorizontal={10}
@@ -237,7 +253,11 @@ export function RestaurantDetailSheet({
                   borderRadius={8}
                   backgroundColor={palette.featureBg}
                 >
-                  <Text fontSize={12} fontFamily="$body" color={palette.featureText}>
+                  <Text
+                    fontSize={12}
+                    fontFamily="$body"
+                    color={palette.featureText}
+                  >
                     {feature}
                   </Text>
                 </XStack>
@@ -247,8 +267,13 @@ export function RestaurantDetailSheet({
 
           {/* 오늘 영업시간 */}
           <XStack gap={8} alignItems="center">
-            <Text fontSize={13} fontWeight="600" fontFamily="$body" color={palette.label}>
-              오늘 영업시간
+            <Text
+              fontSize={13}
+              fontWeight="600"
+              fontFamily="$body"
+              color={palette.label}
+            >
+              {t("restaurant.detail.todayHours")}
             </Text>
             <Text fontSize={13} fontFamily="$body" color={palette.value}>
               {todayHours}
@@ -260,14 +285,27 @@ export function RestaurantDetailSheet({
           {/* 메뉴 목록 */}
           {restaurant.menus.length > 0 && (
             <YStack gap={12}>
-              <Text fontSize={16} fontWeight="700" fontFamily="$body" color={palette.sectionTitle}>
-                메뉴 ({restaurant.menus.length}개)
+              <Text
+                fontSize={16}
+                fontWeight="700"
+                fontFamily="$body"
+                color={palette.sectionTitle}
+              >
+                {t("restaurant.detail.menus", {
+                  count: restaurant.menus.length,
+                })}
+              </Text>
+              <Text
+                fontSize={12}
+                lineHeight={18}
+                fontFamily="$body"
+                color={palette.sub}
+              >
+                {t("restaurant.detail.nutritionDisclaimer")}
               </Text>
               <YStack gap={10}>
                 {restaurant.menus.map((menu) => {
                   const n = menu.estimated_nutrition
-                  const scores = menu.filter_scores
-                  const scoreEntries = Object.entries(scores) as [string, FilterScore][]
 
                   return (
                     <YStack
@@ -288,45 +326,22 @@ export function RestaurantDetailSheet({
                           color={palette.value}
                           flex={1}
                         >
-                          {menu.name}
+                          {getCatalogMenuName(menu.id, menu.name, language)}
                         </Text>
                       </XStack>
-                      {menu.note && (
-                        <Text fontSize={12} fontFamily="$body" color={palette.sub}>
-                          {menu.note}
-                        </Text>
-                      )}
-
                       {/* 칼로리 + 주요 영양소 */}
-                      <Text fontSize={12} fontFamily="$body" color={palette.sub}>
-                        {n.kcal}kcal · 나트륨 {n.sodium_mg}mg · 단백질 {n.protein_g}g · 칼륨 {n.potassium_mg}mg
-                      </Text>
-
-                      {/* 필터 스코어 칩들 */}
-                      <XStack gap={6} flexWrap="wrap">
-                        {scoreEntries.map(([key, score]) => {
-                          const config = FILTER_SCORE_CONFIG[score]
-                          const label = FILTER_LABEL_MAP[key] ?? key
-                          return (
-                            <XStack
-                              key={key}
-                              paddingHorizontal={7}
-                              paddingVertical={3}
-                              borderRadius={6}
-                              backgroundColor={config.bg}
-                            >
-                              <Text
-                                fontSize={11}
-                                fontWeight="600"
-                                fontFamily="$body"
-                                color={config.text}
-                              >
-                                {label}
-                              </Text>
-                            </XStack>
-                          )
+                      <Text
+                        fontSize={12}
+                        fontFamily="$body"
+                        color={palette.sub}
+                      >
+                        {t("restaurant.detail.nutritionLine", {
+                          kcal: n.kcal,
+                          sodium: n.sodium_mg,
+                          protein: n.protein_g,
+                          potassium: n.potassium_mg,
                         })}
-                      </XStack>
+                      </Text>
                     </YStack>
                   )
                 })}

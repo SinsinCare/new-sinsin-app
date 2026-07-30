@@ -1,20 +1,26 @@
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Pressable, Keyboard } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
+import { Keyboard, StyleSheet, Text, View } from "react-native"
 import { router } from "expo-router"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import Ionicons from "@expo/vector-icons/Ionicons"
-import { FormTextField } from "@/src/shared/components"
-import { useForm } from "react-hook-form"
-import { emailService } from "@/src/services"
-import { passwordService } from "@/src/services"
-import { passwordRules, confirmPasswordRules } from "../data/passwordValidation"
-import { PasswordCriteriaText } from "../components"
-import { useAuthColors } from "../hooks"
-import { tokens } from "@/src/theme/tokens"
+import { Controller, useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { emailService, passwordService } from "@/src/services"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import {
+  PasswordCriteriaText,
+  ResendCodeLink,
+  StepHelperText,
+  StepTextInput,
+} from "../components"
+import {
+  getConfirmPasswordRules,
+  getPasswordRules,
+} from "../data/passwordValidation"
+import { useAuthSurface } from "../hooks/useAuthSurface"
+import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
+import { AuthScreenLayout } from "./AuthScreenLayout"
 
 const TIMER_DURATION = 180
-const BUTTON_WIDTH = 100
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60)
@@ -34,9 +40,14 @@ interface NewPasswordForm {
 
 type Step = "email" | "otp" | "password"
 
+/**
+ * 비밀번호 재설정. 가입 이메일 인증과 같은 문법 — 액션은 하단 CTA 하나
+ * ("인증번호 받기" → "확인" → "비밀번호 재설정"), 재전송은 텍스트 링크,
+ * 남은 시간은 필드 안에. 인증이 확인되면 바로 새 비밀번호 입력으로 넘어간다.
+ */
 export function ForgotPasswordScreen() {
-  const insets = useSafeAreaInsets()
-  const colors = useAuthColors()
+  const { t } = useTranslation("auth")
+  const surface = useAuthSurface()
 
   const [step, setStep] = useState<Step>("email")
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -58,7 +69,10 @@ export function ForgotPasswordScreen() {
     mode: "onChange",
   })
 
+  const emailValue = emailOtpForm.watch("email")
+  const codeValue = emailOtpForm.watch("code")
   const password = passwordForm.watch("password")
+  const emailValid = EMAIL_PATTERN.test(emailValue.trim())
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
@@ -81,8 +95,6 @@ export function ForgotPasswordScreen() {
   }, [])
 
   const handleSendCode = async () => {
-    const valid = await emailOtpForm.trigger("email")
-    if (!valid) return
     Keyboard.dismiss()
     setSendingCode(true)
     setSendError(null)
@@ -93,27 +105,7 @@ export function ForgotPasswordScreen() {
       startTimer()
     } catch (error) {
       setSendError(
-        error instanceof Error
-          ? error.message
-          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
-      )
-    } finally {
-      setSendingCode(false)
-    }
-  }
-
-  const handleResendCode = async () => {
-    Keyboard.dismiss()
-    setSendingCode(true)
-    setSendError(null)
-    try {
-      await emailService.sendPasswordResetCode(emailOtpForm.getValues("email"))
-      startTimer()
-    } catch (error) {
-      setSendError(
-        error instanceof Error
-          ? error.message
-          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
+        getErrorMessage(error, t("emailVerification.sendFailedCheckEmail")),
       )
     } finally {
       setSendingCode(false)
@@ -121,8 +113,6 @@ export function ForgotPasswordScreen() {
   }
 
   const handleVerifyCode = async () => {
-    const valid = await emailOtpForm.trigger("code")
-    if (!valid) return
     Keyboard.dismiss()
     setVerifyingCode(true)
     setSendError(null)
@@ -136,14 +126,10 @@ export function ForgotPasswordScreen() {
         if (timerRef.current) clearInterval(timerRef.current)
         setStep("password")
       } else {
-        setSendError("인증번호가 올바르지 않습니다. 다시 확인해주세요.")
+        setSendError(t("emailVerification.invalidOrExpired"))
       }
     } catch (error) {
-      setSendError(
-        error instanceof Error
-          ? error.message
-          : "인증에 실패했습니다. 다시 시도해주세요.",
-      )
+      setSendError(getErrorMessage(error, t("emailVerification.verifyFailed")))
     } finally {
       setVerifyingCode(false)
     }
@@ -157,266 +143,200 @@ export function ForgotPasswordScreen() {
       router.replace("/(auth)/login")
     } catch (error) {
       passwordForm.setError("password", {
-        message:
-          error instanceof Error
-            ? error.message
-            : "비밀번호 재설정에 실패했습니다. 다시 시도해주세요.",
+        message: getErrorMessage(error, t("forgotPassword.changeFailed")),
       })
     } finally {
       setResettingPassword(false)
     }
   }
 
+  const codeExpired = step === "otp" && !sendError && timer === 0 && codeSent
+
+  const ctaLabel =
+    step === "email"
+      ? t("emailVerification.sendCode")
+      : step === "otp"
+        ? t("common.confirm")
+        : t("forgotPassword.change")
+  const ctaDisabled =
+    step === "email"
+      ? !emailValid || sendingCode
+      : step === "otp"
+        ? codeValue.length !== 6 || verifyingCode
+        : !passwordForm.formState.isValid || resettingPassword
+  const onCtaPress =
+    step === "email"
+      ? handleSendCode
+      : step === "otp"
+        ? handleVerifyCode
+        : passwordForm.handleSubmit(handleResetPassword)
+
   return (
-    <YStack flex={1} backgroundColor={colors.bg} paddingTop={insets.top}>
-      {/* Header */}
-      <YStack height={56} justifyContent="center">
-        <Pressable
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/(auth)/login")
-          }
-          style={{ position: "absolute", left: 9, padding: 4 }}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.icon} />
-        </Pressable>
-      </YStack>
-
-      <YStack flex={1} paddingHorizontal={20} justifyContent="space-between">
-        <YStack>
-          <Text
-            fontSize={22}
-            fontWeight="600"
-            color={colors.text}
-            letterSpacing={-0.44}
-            lineHeight={26.4}
-            marginBottom={8}
-          >
-            비밀번호 찾기
-          </Text>
-          <Text
-            fontSize={15}
-            lineHeight={18}
-            color={colors.textSub}
-            marginBottom={48}
-          >
-            {step === "password"
-              ? "새로운 비밀번호를 입력해주세요"
-              : "가입한 이메일로 인증번호를 전송해드립니다"}
-          </Text>
-
-          {/* Step 1 & 2: 이메일 + OTP */}
-          {step !== "password" && (
-            <YStack gap={36}>
-              {/* 이메일 필드 */}
-              <YStack>
-                <XStack gap={8}>
-                  <YStack flex={1}>
-                    <FormTextField<EmailOtpForm>
-                      name="email"
-                      control={emailOtpForm.control}
-                      label="이메일"
-                      placeholder="가입한 이메일 주소를 입력해주세요"
-                      inputType="email"
-                      autoFocus
-                      showValidState
-                      rules={{
-                        required: "이메일을 입력해주세요.",
-                        pattern: {
-                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "올바른 이메일 형식이 아닙니다.",
-                        },
-                      }}
-                    />
-                  </YStack>
-                  <YStack
-                    width={BUTTON_WIDTH}
-                    justifyContent="flex-start"
-                    paddingTop={28}
-                  >
-                    <Pressable
-                      onPress={
-                        step === "otp" ? handleResendCode : handleSendCode
-                      }
-                      disabled={sendingCode || (step === "otp" && timer > 0)}
-                    >
-                      <YStack
-                        backgroundColor={
-                          sendingCode || (step === "otp" && timer > 0)
-                            ? colors.disabledBtn
-                            : tokens.color.sub6.val
-                        }
-                        borderRadius={8}
-                        height={52}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text
-                          color="white"
-                          fontSize={14}
-                          fontWeight="500"
-                          letterSpacing={-0.28}
-                        >
-                          {codeSent ? "재전송" : "이메일 전송"}
-                        </Text>
-                      </YStack>
-                    </Pressable>
-                  </YStack>
-                </XStack>
-              </YStack>
-
-              {/* 인증번호 필드 */}
-              {step === "otp" && (
-                <YStack>
-                  <XStack gap={8}>
-                    <YStack flex={1}>
-                      <FormTextField<EmailOtpForm>
-                        name="code"
-                        control={emailOtpForm.control}
-                        label="인증번호"
-                        placeholder="인증번호 6자리를 입력해주세요"
-                        inputType="number"
-                        maxLength={6}
-                        showValidState
-                        rules={{
-                          required: "인증번호를 입력해주세요.",
-                          minLength: {
-                            value: 6,
-                            message: "인증번호 6자리를 입력해주세요.",
-                          },
-                        }}
-                      />
-                    </YStack>
-                    <YStack
-                      width={BUTTON_WIDTH}
-                      justifyContent="flex-start"
-                      paddingTop={28}
-                    >
-                      <Pressable
-                        onPress={handleVerifyCode}
-                        disabled={verifyingCode}
-                      >
-                        <YStack
-                          backgroundColor={
-                            verifyingCode
-                              ? colors.disabledBtn
-                              : tokens.color.sub6.val
-                          }
-                          borderRadius={8}
-                          height={52}
-                          justifyContent="center"
-                          alignItems="center"
-                        >
-                          <Text
-                            color="white"
-                            fontSize={14}
-                            fontWeight="500"
-                            letterSpacing={-0.28}
-                          >
-                            확인
-                          </Text>
-                        </YStack>
-                      </Pressable>
-                    </YStack>
-                  </XStack>
-                  {sendError && (
-                    <Text
-                      fontSize={13}
-                      color={tokens.color.error.val}
-                      letterSpacing={-0.26}
-                      paddingTop={8}
-                    >
-                      {sendError}
-                    </Text>
-                  )}
-                  {!sendError && timer > 0 && (
-                    <Text
-                      fontSize={13}
-                      color={tokens.color.error.val}
-                      letterSpacing={-0.26}
-                      paddingTop={8}
-                    >
-                      남은 시간 {formatTime(timer)}
-                    </Text>
-                  )}
-                  {!sendError && timer === 0 && codeSent && (
-                    <Text
-                      fontSize={13}
-                      color={tokens.color.error.val}
-                      letterSpacing={-0.26}
-                      paddingTop={8}
-                    >
-                      인증 시간이 만료되었습니다. 재전송해주세요.
-                    </Text>
-                  )}
-                </YStack>
-              )}
-            </YStack>
-          )}
-
-          {/* Step 3: 새 비밀번호 입력 */}
-          {step === "password" && (
-            <YStack gap={36}>
-              <YStack gap={10}>
-                <FormTextField<NewPasswordForm>
-                  name="password"
-                  control={passwordForm.control}
-                  label="새 비밀번호"
-                  placeholder="비밀번호를 형식에 맞춰 입력해주세요"
-                  inputType="password"
-                  showValidState
-                  rules={passwordRules}
+    <AuthScreenLayout
+      title={
+        step === "password"
+          ? t("forgotPassword.newTitle")
+          : t("forgotPassword.title")
+      }
+      subtitle={
+        step === "password"
+          ? t("forgotPassword.newSubtitle")
+          : t("forgotPassword.subtitle")
+      }
+      buttonLabel={ctaLabel}
+      buttonDisabled={ctaDisabled}
+      buttonLoading={sendingCode || verifyingCode || resettingPassword}
+      onSubmit={onCtaPress}
+      keyboardAvoiding
+    >
+      {step !== "password" ? (
+        <View style={styles.body}>
+          <Controller
+            name="email"
+            control={emailOtpForm.control}
+            render={({ field }) => (
+              <View>
+                <StepTextInput
+                  autoFocus
+                  label={t("fields.email")}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  onClear={() => field.onChange("")}
+                  placeholder="example@email.com"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  hasError={!!field.value && !emailValid}
                 />
-                <PasswordCriteriaText password={password} />
-              </YStack>
-              <FormTextField<NewPasswordForm>
-                name="confirmPassword"
-                control={passwordForm.control}
-                label="비밀번호 확인"
-                placeholder="입력한 비밀번호를 다시 입력해주세요"
-                inputType="password"
-                showValidState
-                rules={confirmPasswordRules(password)}
-              />
-            </YStack>
-          )}
-        </YStack>
+                {field.value && !emailValid ? (
+                  <StepHelperText
+                    message={t("validation.emailInvalid")}
+                    tone="error"
+                  />
+                ) : sendError && step === "email" ? (
+                  <StepHelperText message={sendError} tone="error" />
+                ) : null}
+              </View>
+            )}
+          />
 
-        {/* 하단 버튼 */}
-        {step === "password" && (
-          <YStack paddingBottom={insets.bottom + 24}>
-            <Pressable
-              onPress={() => {
-                Keyboard.dismiss()
-                passwordForm.handleSubmit(handleResetPassword)()
-              }}
-              disabled={!passwordForm.formState.isValid || resettingPassword}
-            >
-              <YStack
-                backgroundColor={
-                  passwordForm.formState.isValid && !resettingPassword
-                    ? tokens.color.sub6.val
-                    : tokens.color.sub6.val + "40"
-                }
-                paddingVertical={16}
-                paddingHorizontal={24}
-                borderRadius={8}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text
-                  color="white"
-                  fontSize={16}
-                  fontWeight="500"
-                  letterSpacing={-0.3}
-                  lineHeight={20}
-                >
-                  비밀번호 재설정
-                </Text>
-              </YStack>
-            </Pressable>
-          </YStack>
-        )}
-      </YStack>
-    </YStack>
+          {step === "otp" && (
+            <Controller
+              name="code"
+              control={emailOtpForm.control}
+              render={({ field }) => (
+                <View>
+                  <StepTextInput
+                    autoFocus
+                    label={t("fields.verificationCode")}
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder={t("fields.sixDigitCode")}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    returnKeyType="done"
+                    hasError={!!sendError || codeExpired}
+                    trailing={
+                      timer > 0 ? (
+                        <Text style={[styles.timer, { color: surface.brand }]}>
+                          {formatTime(timer)}
+                        </Text>
+                      ) : null
+                    }
+                  />
+                  {sendError ? (
+                    <StepHelperText message={sendError} tone="error" />
+                  ) : codeExpired ? (
+                    <StepHelperText
+                      message={t("emailVerification.expired")}
+                      tone="error"
+                    />
+                  ) : null}
+                  <ResendCodeLink
+                    onPress={handleSendCode}
+                    disabled={sendingCode}
+                  />
+                </View>
+              )}
+            />
+          )}
+        </View>
+      ) : (
+        <View style={styles.body}>
+          <Controller
+            name="password"
+            control={passwordForm.control}
+            rules={getPasswordRules()}
+            render={({ field, fieldState }) => (
+              <View style={styles.group}>
+                <StepTextInput
+                  autoFocus
+                  label={t("fields.newPassword")}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={t("password.newPlaceholder")}
+                  secureTextEntry
+                  textContentType="newPassword"
+                  autoComplete="new-password"
+                  returnKeyType="next"
+                  hasError={!!fieldState.error && !!field.value}
+                />
+                {fieldState.error?.message && field.value ? (
+                  <StepHelperText
+                    message={fieldState.error.message}
+                    tone="error"
+                  />
+                ) : (
+                  <PasswordCriteriaText password={field.value} />
+                )}
+              </View>
+            )}
+          />
+
+          <Controller
+            name="confirmPassword"
+            control={passwordForm.control}
+            rules={getConfirmPasswordRules(password)}
+            render={({ field, fieldState }) => (
+              <View>
+                <StepTextInput
+                  label={t("fields.confirmPassword")}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={t("password.confirmNewPlaceholder")}
+                  secureTextEntry
+                  textContentType="newPassword"
+                  autoComplete="new-password"
+                  returnKeyType="done"
+                  hasError={!!fieldState.error && !!field.value}
+                />
+                {fieldState.error && field.value ? (
+                  <StepHelperText
+                    message={fieldState.error.message ?? ""}
+                    tone="error"
+                  />
+                ) : null}
+              </View>
+            )}
+          />
+        </View>
+      )}
+    </AuthScreenLayout>
   )
 }
+
+const styles = StyleSheet.create({
+  body: { marginTop: AUTH_LAYOUT.questionToField, gap: 20 },
+  group: { gap: 10 },
+  timer: {
+    ...AUTH_TYPE.helper,
+    fontVariant: ["tabular-nums"],
+  },
+})

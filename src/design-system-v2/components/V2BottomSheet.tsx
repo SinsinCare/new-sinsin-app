@@ -28,6 +28,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { radius, spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Button } from "./V2Button"
+import { useTranslation } from "react-i18next"
 
 export type V2BottomSheetProps = {
   /** 표시 여부 */
@@ -78,6 +79,7 @@ export function V2BottomSheet({
   onSecondary,
   dim = true,
 }: V2BottomSheetProps) {
+  const { t } = useTranslation()
   const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
   const { height: screenHeight } = useWindowDimensions()
@@ -151,7 +153,7 @@ export function V2BottomSheet({
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="닫기"
+            accessibilityLabel={t("action.close")}
             onPress={onClose}
             style={[
               StyleSheet.absoluteFill,

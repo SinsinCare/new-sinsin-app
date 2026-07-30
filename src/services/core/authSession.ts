@@ -1,11 +1,10 @@
 import { getBackendUrl } from "../../config/appConfig"
+import { getAppLanguage } from "@/src/i18n"
 import { ApiError } from "./apiError"
 import { clearClientSession } from "./sessionCleanup"
 import { tokenService } from "./tokenService"
 
 const TOKEN_REFRESH_TIMEOUT_MS = 10000
-const SESSION_EXPIRED_MESSAGE = "로그인이 만료되었습니다. 다시 로그인해주세요."
-
 type TokenRefreshResponse = {
   isSuccess?: boolean
   message?: string
@@ -20,7 +19,9 @@ let refreshPromise: Promise<string> | null = null
 
 export function createSessionExpiredError(): ApiError {
   return new ApiError(
-    SESSION_EXPIRED_MESSAGE,
+    getAppLanguage() === "en"
+      ? "Your session has expired. Sign in again to keep your account secure."
+      : "로그인 시간이 지났어요. 안전한 이용을 위해 다시 로그인해 주세요.",
     "AUTH_SESSION_EXPIRED",
     401,
     false,
@@ -47,9 +48,10 @@ async function requestNewAccessToken(): Promise<string> {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
         },
         body: JSON.stringify({ refreshToken }),
-        signal: controller.signal,
+        signal: controller.signal as unknown as RequestInit["signal"],
       })
     } finally {
       clearTimeout(timeout)

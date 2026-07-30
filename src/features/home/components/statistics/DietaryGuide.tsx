@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from "tamagui"
 import { DietaryGuideContainer } from "./DietaryGuideContainer"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useTranslation } from "react-i18next"
 
 interface DietaryGuideProps {
   dietaryGuide?: string
@@ -11,6 +12,7 @@ export function DietaryGuide({
   dietaryGuide,
   cautionFoods,
 }: DietaryGuideProps) {
+  const { t } = useTranslation()
   const isDarkMode = useAppColorScheme() === "dark"
 
   return (
@@ -20,16 +22,16 @@ export function DietaryGuide({
         fontWeight="600"
         color={isDarkMode ? "$textDark" : "$black"}
       >
-        식이 가이드
+        {t("stats.dietaryGuide.title")}
       </Text>
 
-      <DietaryGuideContainer title="한줄평">
+      <DietaryGuideContainer title={t("stats.dietaryGuide.today")} isSummary>
         <Text
           fontSize={14}
           color={isDarkMode ? "$textDark" : "$black"}
           lineHeight={18}
         >
-          {dietaryGuide ?? "오늘의 식이 분석 데이터가 없어요."}
+          {dietaryGuide ?? t("stats.dietaryGuide.empty")}
         </Text>
       </DietaryGuideContainer>
 
@@ -41,9 +43,9 @@ export function DietaryGuide({
             color="$colorSubtle"
             paddingTop="$3"
           >
-            주의할 음식
+            {t("stats.dietaryGuide.nextMeal")}
           </Text>
-          <DietaryGuideContainer title="주의 식품">
+          <DietaryGuideContainer title={t("stats.dietaryGuide.foods")}>
             <XStack flexWrap="wrap" gap="$2">
               {cautionFoods.map((food) => (
                 <Text

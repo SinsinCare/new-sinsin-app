@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "run_id": "2026-07-28-001",
+    "mode": "strict",
+    "char_count_before": 401680,
+    "char_count_after": 445570,
+    "change_rate": 0.109266,
+    "change_rate_basis": "사용자 노출 후보 인벤토리 전체의 문자 수 변화입니다. 기능 개발과 파일 이동이 함께 있던 워크트리라 순수 문체 변경률과 같지 않습니다.",
+    "copy_count_before": 6016,
+    "copy_count_after": 6683,
+    "findings_before": 288,
+    "findings_after": 0,
+    "findings_resolved_or_reclassified": 288,
+    "findings_unresolved": 0,
+    "over_polish_warning": false
+  },
+  "edits": [
+    {
+      "finding_id": "f0002",
+      "before": "이미지 업로드에 실패했어요. 잠시 후 다시 시도해주세요.",
+      "after": "사진을 올리지 못했어요. 인터넷 연결을 확인한 뒤 다시 올려 주세요.",
+      "category": "NAV-002/KR-004",
+      "reason": "실패 대상과 사용자가 확인할 항목, 같은 행동의 재실행을 구체적으로 안내했습니다."
+    },
+    {
+      "finding_id": "error-boundary-001",
+      "before": "서버 오류가 발생했습니다.",
+      "after": "지금은 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.",
+      "category": "USER-001/NAV-001",
+      "reason": "구현 용어와 원본 상태 코드를 숨기고 사용자가 할 수 있는 행동만 남겼습니다."
+    },
+    {
+      "finding_id": "completion-001",
+      "before": "문의가 성공적으로 등록되었습니다.",
+      "after": "문의를 보냈어요. 문의 내용을 확인한 뒤 답변드릴게요.",
+      "category": "USER-002",
+      "reason": "서비스 처리 결과 대신 사용자가 얻은 결과와 다음 기대를 설명했습니다."
+    },
+    {
+      "finding_id": "chat-001",
+      "before": "답변 생성 시간이 초과됐어요. 다시 시도해주세요.",
+      "after": "답변을 준비하는 데 시간이 오래 걸렸어요. 아래 ‘답변 다시 받기’를 눌러 주세요.",
+      "category": "NAV-002",
+      "reason": "실제 화면의 재생성 버튼 이름과 문구를 일치시켰습니다."
+    },
+    {
+      "finding_id": "onboarding-001",
+      "before": "만성 콩팥병(CKD) 진단을 받으신 적이 있으신가요?",
+      "after": "만성 콩팥병(CKD)을 진단받았나요?",
+      "category": "KR-003",
+      "reason": "겹높임을 없애고 한 번에 읽히는 질문으로 줄였습니다."
+    },
+    {
+      "finding_id": "onboarding-002",
+      "before": "질문을 불러오지 못한 상태에서 진행이 멈춤",
+      "after": "질문 다시 불러오기 / 진단 여부 다시 선택",
+      "category": "NAV-001",
+      "reason": "두 문구 모두 실제 재조회와 이전 단계 이동 동작에 연결했습니다."
+    },
+    {
+      "finding_id": "permission-001",
+      "before": "설정에서 사진 접근을 허용해 주세요.",
+      "after": "사진을 첨부하려면 설정에서 사진 접근을 허용해 주세요. / 설정 열기",
+      "category": "NAV-001",
+      "reason": "권한의 효익을 먼저 말하고 실제 OS 설정 이동 버튼을 함께 제공했습니다."
+    },
+    {
+      "finding_id": "medical-001",
+      "before": "권장량까지 ${remaining}ml 남았어요",
+      "after": "오늘 기록은 내 프로필 기준보다 ${remaining}ml 적어요",
+      "category": "MED-001",
+      "reason": "수분 상한을 채워야 할 목표로 보이지 않게 현재 기록과 개인 참고값의 차이로 바꿨습니다."
+    },
+    {
+      "finding_id": "medical-002",
+      "before": "체중 1kg당 0.8g을 모든 사용자에게 단백질 기준으로 안내",
+      "after": "등록한 신장 단계·투석 여부·체중으로 계산한 참고값이며 의료진 목표를 우선한다고 안내",
+      "category": "MED-001/MED-002",
+      "reason": "고정 공식을 제거하고 프로필 값, 폴백 값, 의료진 목표의 우선순위를 구분했습니다."
+    },
+    {
+      "finding_id": "medical-003",
+      "before": "저단백",
+      "after": "고정 60kg·3끼 가정에 의존한 단백질 안전 태그·필터·점수 칩을 미노출",
+      "category": "MED-002",
+      "reason": "개인화되지 않은 분류를 안전한 메뉴처럼 보이게 하지 않고 실제 단백질 g와 면책 문구만 남겼습니다."
+    },
+    {
+      "finding_id": "trust-001",
+      "before": "데이터는 암호화되어 안전하게 보호됩니다.",
+      "after": "가져온 결과는 검사 수치와 변화를 보여 주는 데 사용해요.",
+      "category": "TRUST-001",
+      "reason": "코드로 입증되지 않은 보안 보장을 제거하고 실제 사용 목적만 설명했습니다."
+    },
+    {
+      "finding_id": "trust-002",
+      "before": "입력한 인증 정보는 암호화해서 보내며 따로 보관하지 않아요.",
+      "after": "인증 방법을 고른 뒤 안내에 따라 본인인증을 마쳐 주세요.",
+      "category": "TRUST-001",
+      "reason": "인증 정보가 최대 300초 임시 보관되는 구현과 충돌한 문구를 제거했습니다."
+    },
+    {
+      "finding_id": "trust-003",
+      "before": "공인 식품 영양자료",
+      "after": "식품 영양자료",
+      "category": "TRUST-001",
+      "reason": "내부 카탈로그를 공인 자료로 단정하지 않도록 범위를 낮췄습니다."
+    },
+    {
+      "finding_id": "reference-001",
+      "before": "앱의 모든 영양·의료 권고는 아래 공인 학회 진료지침을 근거로 해요.",
+      "after": "아래에는 신신당부의 영양·의료 안내를 검토할 때 참고한 자료 중 일부를 모았어요.",
+      "category": "TRUST-001",
+      "reason": "모든 권고를 보장하지 않고 실제 참고 범위와 마지막 확인일을 분리했습니다."
+    },
+    {
+      "finding_id": "notification-001",
+      "before": "첫 소변 후 물 마시기 전 👆 혈압 ☑ 체중 체크✔ 기록해주세요!",
+      "after": "첫 소변을 본 뒤, 물을 마시기 전에 혈압과 체중을 기록해 보세요.",
+      "category": "J/KR-004",
+      "reason": "장식 문자를 걷고 측정 조건과 행동을 자연스러운 문장으로 유지했습니다."
+    },
+    {
+      "finding_id": "inquiry-attachment-001",
+      "before": "사진은 3장까지 첨부할 수 있어요.",
+      "after": "첨부 API 계약이 없어 사진 첨부 UI를 미노출",
+      "category": "ACTION-CONTRACT",
+      "reason": "선택한 사진이 실제 문의 요청에 포함되지 않는 거짓 동작을 제거했습니다."
+    }
+  ],
+  "detector_changes": [
+    "TypeScript/TSX뿐 아니라 app.json, 한국어 i18n, 식당 JSON도 검사합니다.",
+    "확인한 뒤, 잠시 후처럼 해결 조건이 있는 재시도는 NAV-002 오탐에서 제외합니다.",
+    "고정 의료 수치, 상한과 목표의 혼동, 근거 없는 보안·공인·갱신 보장을 S1로 검사합니다.",
+    "법률 원문은 자동 윤문에서 제외하고 별도 법무·구현 대조 대상으로 남깁니다."
+  ],
+  "unresolved_findings": []
+}

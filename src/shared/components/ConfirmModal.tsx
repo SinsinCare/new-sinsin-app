@@ -2,6 +2,7 @@ import React from "react"
 import { Modal, View, Pressable, StyleSheet } from "react-native"
 
 import { ThemedText } from "@/components/themed-text"
+import { useTranslation } from "react-i18next"
 
 interface ConfirmModalProps {
   visible: boolean
@@ -17,11 +18,15 @@ export function ConfirmModal({
   visible,
   title,
   description,
-  cancelText = "취소",
-  confirmText = "확인",
+  cancelText,
+  confirmText,
   onCancel,
   onConfirm,
 }: ConfirmModalProps) {
+  const { t } = useTranslation()
+  const resolvedCancelText = cancelText ?? t("action.cancel")
+  const resolvedConfirmText = confirmText ?? t("action.confirm")
+
   return (
     <Modal
       visible={visible}
@@ -49,7 +54,7 @@ export function ConfirmModal({
               onPress={onCancel}
             >
               <ThemedText style={styles.popupButtonCancelText}>
-                {cancelText}
+                {resolvedCancelText}
               </ThemedText>
             </Pressable>
             <Pressable
@@ -60,7 +65,7 @@ export function ConfirmModal({
               onPress={onConfirm}
             >
               <ThemedText style={styles.popupButtonConfirmText}>
-                {confirmText}
+                {resolvedConfirmText}
               </ThemedText>
             </Pressable>
           </View>

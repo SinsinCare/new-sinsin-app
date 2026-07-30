@@ -2,6 +2,7 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 import { useCurrentAddress } from "../hooks/useCurrentAddress"
 
 const COLORS = {
@@ -16,15 +17,16 @@ const COLORS = {
 } as const
 
 export function LocationBar() {
+  const { t } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
   const color = isDark ? COLORS.dark : COLORS.light
   const { address, isLoading, error } = useCurrentAddress()
 
   const displayText = isLoading
-    ? "위치 확인 중..."
+    ? t("restaurant.location.loading")
     : error
-      ? "위치를 확인할 수 없습니다"
-      : address
+      ? t("restaurant.location.unavailable")
+      : (address ?? t("restaurant.location.notFound"))
 
   return (
     <XStack

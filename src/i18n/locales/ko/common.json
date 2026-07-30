@@ -1,4 +1,14 @@
 {
+  "time": {
+    "justNow": "방금 전",
+    "yesterday": "어제",
+    "minutesAgo_one": "{{count}}분 전",
+    "minutesAgo_other": "{{count}}분 전",
+    "hoursAgo_one": "{{count}}시간 전",
+    "hoursAgo_other": "{{count}}시간 전",
+    "daysAgo_one": "{{count}}일 전",
+    "daysAgo_other": "{{count}}일 전"
+  },
   "action": {
     "confirm": "확인",
     "cancel": "취소",
@@ -7,10 +17,1056 @@
     "close": "닫기",
     "next": "다음",
     "back": "뒤로",
-    "retry": "다시 시도"
+    "retry": "다시 해 보기"
+  },
+  "accessibility": {
+    "remove": "제거",
+    "clear": "지우기"
+  },
+  "form": {
+    "choose": "선택해 주세요"
+  },
+  "announcement": {
+    "linkErrorTitle": "링크를 열 수 없어요",
+    "invalidLinkBody": "연결할 주소가 올바르지 않아요. 공지에서 다른 안내를 확인해 주세요.",
+    "openLinkErrorBody": "인터넷 연결을 확인한 뒤 다시 열어 주세요.",
+    "image": "{{title}} 공지 이미지",
+    "new": "새로운 소식",
+    "close": "공지 닫기",
+    "dontShowAgain": "이 공지 다시 보지 않기"
+  },
+  "legalDocument": {
+    "title": "약관·정책",
+    "notFound": "요청한 문서를 찾지 못했어요. 이전 화면에서 다시 선택해 주세요.",
+    "termsHeading": "신신당부 서비스 이용약관",
+    "officialKoreanNotice": ""
   },
   "state": {
-    "loading": "불러오는 중",
-    "error": "오류가 발생했어요"
+    "loading": "불러오고 있어요",
+    "error": "지금은 내용을 불러올 수 없어요"
+  },
+  "mobilePolicy": {
+    "opening": "신신당부를 여는 중이에요",
+    "maintenanceTitle": "잠시 점검 중이에요",
+    "maintenanceBody": "더 안정적으로 이용할 수 있도록 점검하고 있어요. 잠시 후 다시 열어 주세요.",
+    "requiredTitle": "새 버전으로 업데이트해 주세요",
+    "requiredBody": "신신당부를 계속 이용하려면 앱을 최신 버전으로 업데이트해 주세요.",
+    "recommendedTitle": "새 버전이 나왔어요",
+    "recommendedBody": "더 안정적으로 이용할 수 있는 버전이에요. 지금 업데이트할 수 있어요.",
+    "storeError": "스토어를 열지 못했어요. 인터넷 연결을 확인한 뒤 다시 해 주세요.",
+    "update": "업데이트",
+    "later": "나중에"
+  },
+  "mealRecommendation": {
+    "title": "{{meal}} 메뉴 후보",
+    "refresh": "메뉴 후보 다시 찾기",
+    "loading": "오늘 기록과 비교할 메뉴를 찾고 있어요",
+    "recipes": "집밥 레시피",
+    "restaurantMenus": "외식 메뉴",
+    "empty": "현재 기록과 비교할 메뉴 후보를 찾지 못했어요.\n점심이나 저녁을 바꿔 다시 확인해 보세요.",
+    "weightNeeded": "체중 기록 필요",
+    "underLimit": "기준보다 {{amount}}{{unit}} 적음",
+    "overLimit": "기준 초과"
+  },
+  "brand": {
+    "name": "신신당부",
+    "tagline": "신신당부 — 콩팥 건강 관리",
+    "opening": "신신당부를 여는 중이에요"
+  },
+  "nav": {
+    "home": "홈",
+    "community": "커뮤니티",
+    "recipes": "레시피",
+    "restaurants": "식당",
+    "myPage": "내 정보"
+  },
+  "profile": {
+    "age": "{{age}}세",
+    "gender": {
+      "male": "남성",
+      "female": "여성"
+    }
+  },
+  "meal": {
+    "BREAKFAST": "아침",
+    "LUNCH": "점심",
+    "DINNER": "저녁",
+    "SNACKS": "간식"
+  },
+  "nutrient": {
+    "protein": "단백질",
+    "sodium": "나트륨",
+    "potassium": "칼륨",
+    "phosphorus": "인",
+    "fluids": "수분"
+  },
+  "medical": {
+    "diagnosisCause": {
+      "DIABETIC_KIDNEY_DISEASE": "당뇨병성 신장 질환",
+      "HYPERTENSION": "고혈압",
+      "GLOMERULONEPHRITIS": "사구체신염",
+      "POLYCYSTIC_KIDNEY_DISEASE": "다낭성 신장 질환",
+      "OTHER": "기타"
+    },
+    "comorbidity": {
+      "DIABETES": "당뇨",
+      "HYPERTENSION": "고혈압",
+      "HEART_DISEASE": "심장질환",
+      "GOUT": "통풍",
+      "ANEMIA": "빈혈",
+      "BONE_MINERAL": "골미네랄 장애"
+    }
+  },
+  "myPage": {
+    "title": "전체",
+    "openSettings": "설정 열기",
+    "editProfile": "프로필 수정",
+    "userFallback": "사용자",
+    "kidneyHealth": "나의 신장 건강",
+    "addKidneyProfile": "신장 건강 정보 입력",
+    "healthManagement": "건강 관리",
+    "support": "소식·지원",
+    "menu": {
+      "doctor": "담당 의사 연결",
+      "healthData": "건강검진 결과 불러오기",
+      "share": "건강 기록 공유",
+      "announcements": "공지사항",
+      "inquiry": "1:1 문의",
+      "references": "의학 참고 자료"
+    },
+    "share": {
+      "emptyTitle": "아직 공유할 기록이 없어요",
+      "emptyBody": "신장 건강 정보를 입력하거나 오늘 식사를 기록하면 공유할 수 있어요.",
+      "titleLine": "[신신당부] {{name}}님의 건강 기록",
+      "asOf": "📅 {{date}} 기준",
+      "kidneyProfile": "👤 신장 건강 정보",
+      "stageNotRecorded": "신장 병기 기록 전",
+      "onDialysis": "투석 중",
+      "height": "키",
+      "weight": "체중",
+      "primaryCause": "주 진단 원인",
+      "otherConditions": "동반 질환",
+      "todaysMeals": "🍽️ 오늘 식사 기록",
+      "todaysNutrients": "📊 오늘 영양소 섭취",
+      "foodsToWatch": "주의 식품",
+      "footer": "신신당부에서 건강 기록을 한곳에 모아 보세요.",
+      "download": "다운로드",
+      "sheetTitle": "나의 신장 건강 기록",
+      "errorTitle": "건강 기록을 공유하지 못했어요",
+      "errorBody": "공유할 앱을 다시 선택하거나 잠시 후 다시 시도해 주세요.",
+      "limitUnknown": "기준 미확인"
+    }
+  },
+  "community": {
+    "title": "커뮤니티",
+    "myActivity": "내 활동",
+    "bookmarks": "북마크한 글",
+    "write": "글쓰기",
+    "writeAccessibility": "커뮤니티에 글쓰기",
+    "categories": {
+      "diet": "식단",
+      "numbers": "수치 변화",
+      "symptoms": "증상 고민",
+      "medicine": "약물",
+      "diningOut": "외식 후기",
+      "daily": "일상 공감"
+    },
+    "postDetail": {
+      "withdrawnUser": "탈퇴한 사용자",
+      "deletePostTitle": "이 글을 삭제할까요?",
+      "deletePostBody": "삭제한 글은 되돌릴 수 없어요.",
+      "report": "신고",
+      "edit": "수정",
+      "more": "더보기",
+      "reportReasonTitle": "신고할 이유를 골라 주세요",
+      "reportReasons": {
+        "spam": "스팸 또는 광고",
+        "harassment": "괴롭힘 또는 혐오 표현",
+        "inappropriate": "부적절한 콘텐츠",
+        "falseInformation": "거짓 정보",
+        "other": "기타"
+      },
+      "reportReceivedTitle": "신고를 접수했어요",
+      "reportReceivedBody": "신고 내용을 확인할게요.",
+      "reportErrorTitle": "신고를 접수하지 못했어요",
+      "reportErrorBody": "인터넷 연결을 확인한 뒤 다시 신고해 주세요.",
+      "shareMessage": "{{title}}\n\n{{description}}\n\n신신당부에서 이 글을 함께 읽어 보세요\n{{url}}",
+      "voteErrorTitle": "투표를 반영하지 못했어요",
+      "voteErrorBody": "인터넷 연결을 확인한 뒤 다시 투표해 주세요.",
+      "commentSaveErrorTitle": "댓글을 저장하지 못했어요",
+      "commentSaveErrorBody": "인터넷 연결을 확인한 뒤 다시 저장해 주세요.",
+      "deleteCommentTitle": "이 댓글을 삭제할까요?",
+      "deleteCommentBody": "삭제한 댓글은 되돌릴 수 없어요.",
+      "commentDeleteErrorTitle": "댓글을 삭제하지 못했어요",
+      "commentDeleteErrorBody": "잠시 후 다시 삭제해 주세요.",
+      "reply": "답글",
+      "comment": "댓글",
+      "likeErrorTitle": "좋아요를 반영하지 못했어요",
+      "likeErrorBody": "인터넷 연결을 확인한 뒤 좋아요를 다시 눌러 주세요.",
+      "deletedComment": "삭제된 댓글이에요",
+      "likeComment": "댓글 좋아요",
+      "commentMore": "댓글 더보기",
+      "loadErrorTitle": "글을 불러오지 못했어요",
+      "reload": "글 다시 불러오기",
+      "loading": "글을 불러오고 있어요",
+      "notFound": "이 글을 찾지 못했어요",
+      "share": "공유하기",
+      "bookmark": "북마크",
+      "enlargePhoto": "사진 크게 보기",
+      "enlargePhotoNumber": "{{number}}번째 사진 크게 보기",
+      "like": "좋아요",
+      "likeCount": "좋아요 {{count}}",
+      "likeCount_zero": "좋아요",
+      "commentCount": "댓글 {{count}}",
+      "commentsLoading": "댓글을 불러오고 있어요",
+      "noComments": "아직 댓글이 없어요",
+      "firstComment": "첫 댓글을 남겨 보세요",
+      "related": "함께 보면 좋은 글",
+      "editingComment": "댓글 수정 중",
+      "replyingTo": "{{name}}님에게 답글 쓰는 중",
+      "cancelReply": "답글 취소",
+      "removeMention": "{{name}} 태그 빼기",
+      "commentPlaceholder": "댓글을 남겨 주세요",
+      "saveComment": "댓글 저장",
+      "postComment": "댓글 올리기",
+      "closePhoto": "사진 닫기"
+    },
+    "stories": {
+      "recommended": "추천",
+      "recent": "최신",
+      "expiringSoon": "곧 사라져요",
+      "expiresInMinutes": "{{count}}분 후 사라져요",
+      "expiresInHours": "{{count}}시간 후 사라져요",
+      "deleteTitle": "이 스토리를 삭제할까요?",
+      "deleteBody": "삭제한 스토리는 되돌릴 수 없어요.",
+      "report": "이 스토리 신고하기",
+      "blockUser": "이 사용자 차단하기",
+      "blockTitle": "{{name}}님을 차단할까요?",
+      "blockBody": "차단하면 커뮤니티에서 이 사용자의 콘텐츠가 보이지 않아요.",
+      "block": "차단",
+      "like": "스토리 좋아요",
+      "more": "스토리 더보기",
+      "mine": "내 스토리",
+      "emptyTitle": "아직 스토리가 없어요",
+      "emptyBody": "오늘 먹은 사진으로 첫 스토리를 남겨 보세요",
+      "add": "스토리 올리기"
+    },
+    "newStory": {
+      "today": "오늘",
+      "yesterday": "어제",
+      "galleryPhoto": "갤러리 사진",
+      "errorTitle": "스토리를 올리지 못했어요",
+      "errorBody": "인터넷 연결을 확인한 뒤 다시 올려 주세요.",
+      "title": "스토리 올리기",
+      "add": "스토리 올리기",
+      "saving": "올리는 중",
+      "submit": "올리기",
+      "choosePhoto": "올릴 사진을 골라 주세요",
+      "recentMeals": "최근 식사 기록",
+      "chooseFromGallery": "갤러리에서 사진 고르기",
+      "gallery": "갤러리",
+      "selectPhoto": "{{label}} 사진 선택",
+      "noMealPhotos": "아직 기록한 식사 사진이 없어요. 갤러리에서 골라 올릴 수 있어요.",
+      "captionLabel": "한마디 (선택)",
+      "captionPlaceholder": "오늘 이 한 끼는 어땠나요?",
+      "notice": "스토리는 올린 뒤 24시간 동안만 보여요"
+    },
+    "library": {
+      "tabs": {
+        "mine": "쓴 글",
+        "liked": "좋아요",
+        "bookmarked": "북마크"
+      },
+      "empty": {
+        "mine": {
+          "title": "아직 쓴 글이 없어요",
+          "body": "커뮤니티에 첫 글을 남겨 보세요"
+        },
+        "liked": {
+          "title": "좋아요를 누른 글이 없어요",
+          "body": "마음에 드는 글에 좋아요를 눌러 보세요"
+        },
+        "bookmarked": {
+          "title": "북마크한 글이 없어요",
+          "body": "다시 보고 싶은 글을 북마크해 보세요"
+        }
+      }
+    }
+  },
+  "recipe": {
+    "title": "레시피",
+    "empty": "아직 보여 줄 레시피가 없어요. 직접 만든 레시피를 기록해 보세요.",
+    "write": "레시피 쓰기"
+  },
+  "restaurant": {
+    "nearby": "주변 식당",
+    "menuInfo": "메뉴 정보",
+    "loadingNearby": "주변 식당을 찾고 있어요",
+    "menuCount": "메뉴 {{count}}개",
+    "menuCount_one": "메뉴 {{count}}개",
+    "menuCount_other": "메뉴 {{count}}개",
+    "searchPlaceholder": "식당 이름이나 주소를 검색해 보세요",
+    "searchAccessibility": "식당 검색",
+    "loadErrorTitle": "주변 식당을 불러오지 못했어요",
+    "loadErrorBody": "인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
+    "reload": "식당 다시 불러오기",
+    "emptyTitle": "조건에 맞는 식당을 찾지 못했어요",
+    "emptyBody": "검색어나 필터를 바꾸면 다른 식당을 볼 수 있어요.",
+    "notFound": "식당 정보를 찾지 못했어요. 목록에서 다른 식당을 골라 주세요.",
+    "backAccessibility": "식당 목록으로 돌아가기",
+    "photoAccessibility": "{{name}} 사진 {{number}}",
+    "reviews": "리뷰 {{count}}개",
+    "reviews_one": "리뷰 {{count}}개",
+    "reviews_other": "리뷰 {{count}}개",
+    "tabs": {
+      "region": "지역",
+      "foodType": "음식 종류",
+      "nutrient": "영양 기준"
+    },
+    "filter": {
+      "reset": "초기화",
+      "apply": "필터 적용",
+      "close": "필터 닫기",
+      "region": "지역",
+      "foodType": "음식 종류",
+      "nutrient": "영양 기준",
+      "regions": {
+        "all": "전체",
+        "seoul": "서울",
+        "gyeonggi": "경기",
+        "incheon": "인천",
+        "busan": "부산",
+        "jeju": "제주",
+        "ulsan": "울산",
+        "gyeongnam": "경남",
+        "daegu": "대구",
+        "gyeongbuk": "경북",
+        "gangwon": "강원",
+        "daejeon": "대전",
+        "chungnam": "충남",
+        "chungbuk": "충북",
+        "sejong": "세종",
+        "jeonnam": "전남",
+        "gwangju": "광주",
+        "jeonbuk": "전북"
+      },
+      "subRegions": {
+        "seoulAll": "서울 전체",
+        "gangnam": "강남",
+        "seocho": "서초",
+        "jamsil": "잠실·송파·강동",
+        "yeongdeungpo": "영등포·여의도·강서",
+        "kondae": "건대·성수·왕십리",
+        "jongno": "종로·중구",
+        "hongdae": "홍대·합정·마포",
+        "yongsan": "용산·이태원·한남",
+        "seongbuk": "성북·노원·중랑",
+        "guro": "구로·관악·동작"
+      },
+      "foodTypes": {
+        "korean": "한식",
+        "chinese": "중식",
+        "japanese": "일식",
+        "american": "양식",
+        "world": "세계 음식"
+      },
+      "nutrients": {
+        "lowSugar": "당류 적은 편",
+        "lowSalt": "나트륨 적은 편",
+        "lowPotassium": "칼륨 적은 편",
+        "lowPhosphorus": "인 적은 편"
+      }
+    },
+    "cuisine": {
+      "KOREAN": "한식",
+      "JAPANESE": "일식",
+      "CHINESE": "중식",
+      "WESTERN": "양식",
+      "ETC": "세계음식",
+      "OTHER": "기타"
+    },
+    "catalogCuisine": {
+      "tofu": "두부",
+      "porridge": "죽",
+      "saladPoke": "샐러드·포케",
+      "shabu": "샤브샤브",
+      "temple": "사찰음식"
+    },
+    "curation": {
+      "title": "메뉴 영양 추정값",
+      "subtitle": "일반 레시피로 계산했어요. 실제 재료와 양은 식당에 확인해 주세요.",
+      "summaryTitle": "한눈에 보기",
+      "summaryBody": "메뉴별 영양 추정값을 비교하고 내 식단 기준과 함께 참고해 보세요.",
+      "cardDescription": "등록된 메뉴 {{count}}개",
+      "cardDescription_one": "등록된 메뉴 {{count}}개",
+      "cardDescription_other": "등록된 메뉴 {{count}}개",
+      "mockDescription": "현재 메뉴와 재료는 식당에 확인해 주세요."
+    },
+    "location": {
+      "loading": "현재 위치를 찾고 있어요",
+      "unavailable": "현재 위치 없이 추천 식당을 보여 드려요",
+      "notFound": "현재 주소를 찾지 못했어요"
+    },
+    "detail": {
+      "close": "식당 정보 닫기",
+      "todayHours": "오늘 영업시간",
+      "hoursUnknown": "확인되지 않았어요",
+      "closed": "휴무",
+      "menus": "메뉴 {{count}}개",
+      "menus_one": "메뉴 {{count}}개",
+      "menus_other": "메뉴 {{count}}개",
+      "nutritionDisclaimer": "일반 레시피로 계산한 추정값이며 이 식당의 실제 조리법을 확인한 값은 아니에요. 주문 전 재료와 양을 식당에 확인하고, 개인 식단 기준은 담당 의료진이나 영양사의 안내를 따라 주세요.",
+      "nutritionLine": "{{kcal}}kcal · 나트륨 {{sodium}}mg · 단백질 {{protein}}g · 칼륨 {{potassium}}mg",
+      "descriptionUnavailable": "자세한 메뉴 정보는 식당에 확인해 주세요."
+    },
+    "report": {
+      "maxPhotos": "사진은 최대 {{count}}장까지 첨부할 수 있어요.",
+      "permissionTitle": "식당 사진을 고르려면 사진 접근이 필요해요",
+      "permissionBody": "설정에서 사진 접근을 허용해 주세요.",
+      "later": "나중에",
+      "openSettings": "설정 열기",
+      "successTitle": "식당 정보를 보냈어요",
+      "successBody": "보내주신 내용을 확인할게요.",
+      "failure": "식당 정보를 보내지 못했어요. 인터넷 연결을 확인한 뒤 다시 보내 주세요.",
+      "introTitle": "추천하고 싶은 식당이 있나요?",
+      "introBody": "싱겁게 주문하기 좋았던 식당과 메뉴를 알려 주세요. 보내주신 내용은 확인한 뒤 반영할게요.",
+      "formTitle": "식당 알려주기",
+      "sections": {
+        "restaurant": "식당 정보",
+        "highlights": "어떤 점이 좋았나요?",
+        "photos": "사진"
+      },
+      "fields": {
+        "name": "식당 이름",
+        "namePlaceholder": "예: 초록김밥",
+        "address": "주소 (선택)",
+        "addressPlaceholder": "도로명 주소 또는 동네명",
+        "category": "음식 종류",
+        "categoryPlaceholder": "한식, 일식, 분식 등",
+        "menu": "메뉴 (선택)",
+        "menuPlaceholder": "싱겁게 주문하기 좋았던 메뉴",
+        "reason": "좋았던 점 (선택)",
+        "reasonPlaceholder": "주문하거나 먹을 때 좋았던 점",
+        "link": "참고 링크 (선택)",
+        "linkPlaceholder": "지도, 메뉴판, 리뷰 링크"
+      },
+      "selectedPhotos": "고른 사진 {{current}}/{{max}}",
+      "addPhoto": "사진 추가",
+      "removePhoto": "사진 삭제",
+      "remove": "삭제",
+      "submit": "식당 정보 보내기",
+      "validation": {
+        "nameRequired": "식당 이름을 입력해 주세요.",
+        "categoryRequired": "음식 종류를 입력해 주세요.",
+        "tooManyPhotos": "사진은 최대 {{count}}장까지 첨부할 수 있어요."
+      }
+    }
+  },
+  "stats": {
+    "title": "통계",
+    "tabs": {
+      "nutrients": "영양소",
+      "mealGuide": "식사 조절",
+      "mealLog": "식사 기록",
+      "body": "체중·붓기"
+    },
+    "previousWeek": "이전 주",
+    "nextWeek": "다음 주",
+    "openCalendar": "날짜 선택",
+    "emptyPeriod": "선택한 기간에는 식사 기록이 없어요.",
+    "logMeal": "식사 기록하기",
+    "previousPeriod": "이전 기간",
+    "nextPeriod": "다음 기간",
+    "metrics": "지표",
+    "todaysNumbers": "오늘의 수치",
+    "remaining": "오늘 남은 양",
+    "needsAttention": "확인 필요 {{count}}개",
+    "reference": "참고",
+    "foodsToday": "오늘 먹은 것",
+    "allInRange": "모두 기준 안",
+    "period": {
+      "day": "일",
+      "week": "주",
+      "month": "월"
+    },
+    "periodReport": "{{period}}간 리포트",
+    "errorTitle": "통계를 불러오지 못했어요",
+    "errorBody": "인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
+    "retryAccessibility": "통계 다시 불러오기",
+    "lowDataTitle": "아직 판단할 기록이 부족해요",
+    "mealsRecorded": "{{recorded}}/{{expected}}끼 · {{rate}}%",
+    "lowDataBody": "지금은 기록이 적어 흐름만 참고해 주세요. 끼니를 더 기록하면 더 정확히 볼 수 있어요.",
+    "calendar": {
+      "goToday": "오늘로 이동",
+      "today": "오늘",
+      "previousMonth": "이전 달",
+      "nextMonth": "다음 달",
+      "hasRecord": "기록 있음",
+      "selected": "선택됨"
+    },
+    "body": {
+      "title": "체중·붓기",
+      "weight": "체중",
+      "swelling": "붓기",
+      "previous": "전날",
+      "noRecord": "기록 없음",
+      "edema": {
+        "NONE": "붓기 없어요",
+        "SLIGHT": "약간 부었어요",
+        "SEVERE": "많이 부었어요"
+      }
+    },
+    "dietary": {
+      "title": "식사 기록",
+      "body": "카드를 누르면 영양소와 조절할 점을 볼 수 있어요.",
+      "noRecord": "기록 없음"
+    },
+    "nutrientGraph": {
+      "dailyIntake": "하루 섭취량",
+      "generalReference": "일반 참고 기준",
+      "personalReference": "내 프로필 기준",
+      "generalBody": "프로필을 불러오기 전 사용하는 일반 참고값이에요.",
+      "proteinBody": "등록한 신장 단계·투석 여부·체중으로 계산한 참고값이에요. 의료진 목표가 있으면 그 값을 따르세요.",
+      "personalBody": "등록한 신장 단계·투석 여부로 계산한 참고값이에요. 의료진 목표가 있으면 그 값을 따르세요."
+    },
+    "dietaryGuide": {
+      "title": "식사 조절",
+      "today": "오늘 한눈에",
+      "empty": "오늘 식사를 기록하면 조절할 점을 볼 수 있어요.",
+      "nextMeal": "다음 식사에서 살펴볼 음식",
+      "foods": "조절해 볼 음식"
+    }
+  },
+  "home": {
+    "recordBar": {
+      "chooseDate": "날짜 선택",
+      "viewStats": "통계 보기",
+      "stats": "통계"
+    },
+    "textRecord": {
+      "title": "식사를 글로 기록해요",
+      "placeholder": "먹은 음식과 양을 적어 주세요",
+      "example": "예: 샐러드 1인분, 고기 150g, 계란 1개, 우유 1컵",
+      "checkNutrients": "영양소 확인하기"
+    },
+    "analysis": {
+      "readyTitle": "식사 결과가 준비됐어요",
+      "readyNamedBody": "{{title}}의 영양소와 조절할 점을 확인해 보세요.",
+      "readyMealBody": "{{meal}} 식사의 영양소와 조절할 점을 확인해 보세요.",
+      "readyGenericBody": "식사 기록에서 영양소와 조절할 점을 확인해 보세요.",
+      "photoUnclearTitle": "사진만으로는 음식을 확인하기 어려워요",
+      "photoUnclearBody": "다른 각도로 다시 찍거나 음식 이름을 글로 입력해 주세요.",
+      "photoFailedTitle": "사진에서 식사를 확인하지 못했어요",
+      "photoFailedBody": "음식이 선명하게 보이는 사진으로 다시 해 주세요. 연결이 불안정하다면 잠시 후 다시 시도해 주세요.",
+      "takingLongTitle": "결과를 준비하는 데 시간이 더 걸리고 있어요",
+      "takingLongBody": "이 화면을 닫고 나중에 결과를 다시 확인해 주세요.",
+      "textFailedTitle": "적어 주신 식사를 확인하지 못했어요",
+      "textFailedBody": "입력한 내용은 그대로 두고, 연결을 확인한 뒤 다시 해 주세요."
+    },
+    "undoRecord": "되돌리기",
+    "tile": {
+      "meals": "식사",
+      "water": "물",
+      "bloodPressure": "혈압",
+      "bloodGlucose": "혈당",
+      "weight": "체중",
+      "edema": "붓기"
+    },
+    "meal": {
+      "unit": "끼",
+      "first": "첫 끼니를 기록해 보세요",
+      "remaining": "{{meal}}이 남았어요",
+      "complete": "세 끼 모두 기록"
+    },
+    "weight": {
+      "morning": "아침 공복에 재 보세요",
+      "noYesterday": "어제 기록이 없어요",
+      "same": "어제와 같아요",
+      "change": "어제보다 {{change}}kg"
+    },
+    "recordedAt": "{{time}}에 기록했어요",
+    "recordedToday": "오늘 기록했어요",
+    "bloodPressure": {
+      "prompt": "오늘 잰 혈압을 기록해 보세요"
+    },
+    "bloodGlucose": {
+      "timings": "공복·식전·식후",
+      "latest": "{{timing}} 기준{{extra}}",
+      "extra": " 외 {{count}}건",
+      "timing": {
+        "FASTING": "공복",
+        "BEFORE_MEAL": "식전",
+        "AFTER_MEAL": "식후"
+      }
+    },
+    "edema": {
+      "today": "오늘 상태",
+      "prompt": "발·발목을 살펴보세요",
+      "level": {
+        "NONE": "없음",
+        "SLIGHT": "조금",
+        "SEVERE": "심함"
+      }
+    },
+    "analyzingMeal": "먹은 음식의 영양소를 확인하고 있어요",
+    "todayRecord": {
+      "title": "오늘 기록",
+      "hint": "눌러서 기록",
+      "add": "기록하기",
+      "now": "지금"
+    },
+    "timeline": {
+      "title": "식사 기록",
+      "count": "{{count}} / 4 기록",
+      "empty": "아침·점심·저녁·간식을 눌러 기록해 보세요",
+      "add": "식사 기록하기",
+      "openRecorded": "{{meal}} {{time}} 기록 열기",
+      "recordSkipped": "{{meal}} 건너뜀, 다시 기록하기",
+      "recordMeal": "{{meal}} 기록하기",
+      "skipped": "건너뜀"
+    },
+    "character": {
+      "empty": {
+        "first": {
+          "pre": "오늘 먹은 ",
+          "keyword": "식사",
+          "post": "부터 남기고"
+        },
+        "second": {
+          "pre": "내 영양 ",
+          "keyword": "목표",
+          "post": "도 함께 챙겨요"
+        }
+      },
+      "onTarget": {
+        "pre": "오늘 영양 ",
+        "keyword": "목표",
+        "post": "를 잘 지켰어요"
+      },
+      "streak": {
+        "pre": "{{count}}일째 ",
+        "keyword": "기록",
+        "post": "을 이어가고 있어요"
+      },
+      "tomorrow": {
+        "pre": "내일도 한 끼씩 ",
+        "keyword": "기록",
+        "post": "해 봐요"
+      },
+      "progress": {
+        "first": {
+          "pre": "오늘 ",
+          "keyword": "기록",
+          "post": "을 잘 채우고 있어요"
+        },
+        "second": {
+          "pre": "다음 식사에서는 영양 ",
+          "keyword": "목표",
+          "post": "도 살펴봐요"
+        }
+      }
+    },
+    "sheet": {
+      "record": "기록",
+      "recordValue": "{{value}} 기록하기",
+      "target": "목표",
+      "yesterday": "어제",
+      "noRecord": "기록 없음",
+      "previousReading": "지난 기록",
+      "meal": {
+        "alreadyRecorded": "{{meal}}은 이미 기록했어요",
+        "willRecordAs": "{{meal}}으로 기록돼요",
+        "recorded": "기록함",
+        "notRecorded": "기록 전",
+        "view": "{{meal}} 기록 보기",
+        "viewDescription": "영양소와 조절할 점을 다시 볼 수 있어요",
+        "takePhoto": "사진 찍어 기록하기",
+        "photoDescription": "음식과 양이 잘 보이게 찍어 주세요",
+        "choosePhoto": "앨범에서 고르기",
+        "writeText": "글로 남기기",
+        "info": "먹은 음식과 양만 남기면 나트륨·칼륨·인을 확인할 수 있어요.",
+        "skip": "오늘은 건너뛰기"
+      },
+      "water": {
+        "title": "물 기록",
+        "subtitle": "마신 만큼 눌러 주세요",
+        "referenceLimit": "일반 참고 기준 {{limit}}mL",
+        "personalLimit": "내 프로필 기준 {{limit}}mL",
+      "overLimitGuidance": "기준을 넘었어요. 추가 수분은 의료진 안내를 확인해 주세요.",
+        "undoLast": "마지막 잔 되돌리기",
+        "undoAmount": "방금 {{amount}}mL 되돌리기",
+        "recordCustom": "입력한 양 기록하기",
+        "custom": "직접 입력",
+        "customHint": "mL 단위로 입력해요",
+        "info": "국·과일에도 수분이 있어요. 국물은 반 그릇이면 100mL로 계산해요.",
+        "presetAccessibility": "{{anchor}} 기준으로 {{amount}}mL 기록",
+        "preset": {
+          "shot": "소주잔",
+          "halfCup": "반 컵",
+          "cup": "종이컵",
+          "bottle": "생수병"
+        }
+      },
+      "bloodPressure": {
+        "title": "혈압 기록",
+        "subtitle": "5분 앉아 쉰 뒤, 팔을 심장 높이에",
+        "systolic": "수축기 (위)",
+        "diastolic": "이완기 (아래)",
+        "heartRate": "심박수",
+        "noPrevious": "아직 비교할 혈압 기록이 없어요",
+        "enterBoth": "수축기·이완기를 입력해 주세요"
+      },
+      "bloodGlucose": {
+        "title": "혈당 기록",
+        "subtitle": "혈당을 잰 시점과 수치를 골라 주세요",
+        "chooseValue": "혈당 수치를 골라 주세요",
+        "decrease": "혈당 1 낮추기",
+        "increase": "혈당 1 높이기",
+        "step": "1씩 조절해요",
+        "timing": "측정 시점",
+        "mealTiming": "식사 기준",
+        "elapsed": "식사 후 얼마나 지났나요",
+        "elapsedOption": {
+          "30M": "30분",
+          "1H": "1시간",
+          "2H": "2시간"
+        }
+      },
+      "weight": {
+        "title": "체중 기록",
+        "subtitle": "가능하면 매일 비슷한 시간과 조건에서 재 주세요",
+        "chooseValue": "체중을 골라 주세요",
+        "decrease": "체중 0.1kg 줄이기",
+        "increase": "체중 0.1kg 늘리기",
+        "step": "0.1kg씩 조절해요",
+        "difference": "어제와 차이",
+        "noComparisonInfo": "전날과 비교하려면 가능하면 같은 시간과 비슷한 조건에서 기록해 주세요.",
+        "comparisonInfo": "전날 기록과의 차이예요. 측정 시간, 옷, 식사와 수분 상태에 따라 값이 달라질 수 있어요."
+      },
+      "edema": {
+        "title": "붓기 기록",
+        "subtitle": "오늘 얼마나 부었는지 골라 주세요",
+        "chooseValue": "부은 정도를 골라 주세요",
+        "description": {
+          "NONE": "평소와 같아요",
+          "SLIGHT": "양말 자국이 남아요",
+          "SEVERE": "신발이 안 맞아요"
+        },
+        "info": "아침에 눈두덩이, 저녁에 발·발목을 보면 하루 변화가 가장 잘 보여요."
+      }
+    },
+    "errors": {
+      "analysisFailed": "식단 분석에 실패했어요.",
+      "confirmationTitle": "음식 확인을 마치지 못했어요",
+      "confirmationBody": "연결이 잠시 불안정할 수 있어요. 선택한 내용은 그대로 두었으니 다시 눌러 주세요.",
+      "notReadyTitle": "아직 식사를 기록할 수 없어요",
+      "notReadyBody": "결과를 준비하고 있어요. 잠시 후 ‘기록에 추가하기’를 다시 눌러 주세요.",
+      "saveMealTitle": "식사 기록을 저장하지 못했어요",
+      "saveMealBody": "연결이 잠시 불안정할 수 있어요. 잠시 후 ‘기록에 추가하기’를 다시 눌러 주세요.",
+      "saveChangesTitle": "바꾼 내용을 저장하지 못했어요",
+      "saveChangesBody": "입력한 내용은 그대로 있어요. 연결을 확인한 뒤 ‘저장’을 다시 눌러 주세요.",
+      "skipMealTitle": "식사를 건너뛰지 못했어요",
+      "tryAgainBody": "연결이 잠시 불안정할 수 있어요. 잠시 후 다시 눌러 주세요.",
+      "openMealTitle": "식사 기록을 열지 못했어요",
+      "openMealBody": "연결이 잠시 불안정할 수 있어요. 잠시 후 식사 카드를 다시 눌러 주세요.",
+      "renameMealTitle": "식사 이름을 바꾸지 못했어요",
+      "renameMealBody": "입력한 이름은 그대로 있어요. 잠시 후 다시 저장해 주세요.",
+      "changeMealTypeTitle": "끼니를 바꾸지 못했어요",
+      "changeMealTypeBody": "연결을 확인한 뒤 끼니를 다시 골라 주세요.",
+      "saveBloodPressureTitle": "혈압을 저장하지 못했어요",
+      "saveBloodPressureBody": "입력한 수치를 확인하고 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
+      "saveBloodGlucoseTitle": "혈당을 저장하지 못했어요",
+      "saveBloodGlucoseBody": "입력한 수치와 측정 시점을 확인하고 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
+      "saveWeightTitle": "체중을 저장하지 못했어요",
+      "saveWeightBody": "입력한 체중을 확인하고 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
+      "saveEdemaTitle": "붓기를 저장하지 못했어요",
+      "saveEdemaBody": "고른 상태는 그대로 있어요. 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
+      "saveWaterTitle": "마신 물을 기록하지 못했어요",
+      "saveWaterBody": "화면의 양은 원래대로 돌려놓았어요. 연결을 확인한 뒤 다시 눌러 주세요."
+    }
+  },
+  "mealReport": {
+    "recorded": "기록됨",
+    "notRecorded": "아직 기록 전",
+    "atAGlance": "한눈에 보면",
+    "focus": "확인할 항목 · {{nutrient}}",
+    "comparison": "영양 수치 비교",
+    "profileReference": "프로필에 저장된 참고 기준",
+    "energyReferencePercent": "체중 기반 참고값의 {{percent}}%",
+    "showDetails": "상세 영양표 보기",
+    "hideDetails": "상세 영양표 접기",
+    "over": "{{amount}} 초과",
+    "untilLimit": "기준까지 {{amount}}",
+    "remaining": "{{amount}} 남음",
+    "byFood": "음식별로 살펴보면",
+    "relevantNutrients": "살펴볼 영양소만",
+    "foodDailyPercent": "{{nutrient}} {{amount}} · 하루 기준의 {{percent}}%",
+    "swaps": "이렇게 바꾸면 편해요",
+    "nutritionFacts": "영양성분표",
+    "nutrient": "영양소",
+    "amount": "섭취량",
+    "percentOfLimit": "기준 대비",
+    "nutritionNotice": "실제 영양소 함량은 조리법과 양념에 따라 달라질 수 있어요. 하루 기준은 등록한 콩팥 상태를 반영했으며, 치료는 의료진 안내를 따라 주세요.",
+    "nutrients": {
+      "calories": "열량",
+      "carbohydrates": "탄수화물",
+      "protein": "단백질",
+      "fat": "지방",
+      "sodium": "나트륨",
+      "potassium": "칼륨",
+      "phosphorus": "인",
+      "water": "수분"
+    }
+  },
+  "foodResult": {
+    "shareInstagram": "인스타그램 스토리에 공유",
+    "shareOther": "다른 앱으로 공유",
+    "instagramErrorTitle": "인스타그램으로 열지 못했어요",
+    "instagramErrorBody": "인스타그램이 설치되어 있는지 확인한 뒤 다시 해 주세요.",
+    "share": "식사 결과 공유",
+    "title": "식사 결과",
+    "close": "식사 결과 닫기",
+    "servings": "{{count}}인분",
+    "edit": "식사 내용 수정",
+    "textMeal": "글로 기록한 식사예요",
+    "textMealHint": "음식이나 양이 다르면 바로 고칠 수 있어요",
+    "consumedBasis": "실제 섭취 기준",
+    "photoBasis": "사진 속 전체 기준",
+    "amountHint": "먹은 양을 바꾸면 영양소도 바로 달라져요",
+    "nutrientsReady": "영양 수치는 확인했어요",
+    "reportUnavailable": "문장 리포트는 불러오지 못했어요. 아래 영양 수치를 확인해 주세요.",
+    "totalCalories": "총 열량",
+    "nutrientDetails": "영양소 자세히 보기",
+    "chartExplanation": "원 그래프는 내 프로필에 설정된 하루 기준 중 이 음식이 차지하는 비율이에요.",
+    "inPhoto": "사진 속 {{amount}}g",
+    "consumed": "섭취 {{amount}}g",
+    "referencesNote": "앱의 영양소 참고 기준을 정할 때 KDIGO 2024, 대한신장학회 CKD 영양 권고안, 한국영양학회 식품성분DB를 참고했어요. 사진에서 추정한 값은 진료를 대신하지 않으며, 개인 기준은 담당 의료진의 안내를 먼저 따라 주세요.",
+    "openAllReferences": "참고 문헌 전체 보기",
+    "openReferences": "참고 문헌 보기",
+    "story": "스토리에 올리기",
+    "storyCaption": "오늘 한 끼, 24시간만\n이웃에게 보여요",
+    "community": "커뮤니티에 묻기",
+    "communityCaption": "이 식사 기록을\n이웃과 나눠요",
+    "askMore": "이 식사 더 물어보기",
+    "openingConsult": "상담을 열고 있어요",
+    "askMoreCaption": "궁금한 점을 이어서 물어보세요",
+    "delete": "식사 기록 삭제",
+    "deleting": "삭제하는 중",
+    "deleteConfirmTitle": "식사 기록을 삭제할까요?",
+    "deleteConfirmBody": "삭제한 기록은 되돌릴 수 없어요.",
+    "deleteFailedTitle": "기록을 삭제하지 못했어요",
+    "deleteFailedBody": "연결을 확인한 뒤 잠시 후 다시 삭제해 주세요.",
+    "addToLog": "기록에 추가하기",
+    "adding": "기록하는 중",
+    "unsavedTitle": "아직 이 식사를 저장하지 않았어요.",
+    "unsavedBody": "지금 나가면 이 결과는 기록에 남지 않아요.",
+    "leaveWithoutSaving": "기록하지 않고 나가기",
+    "returnToResult": "결과로 돌아가기",
+    "unavailable": "확인 안 됨",
+    "restriction": {
+      "safe": "내 참고 기준 안",
+      "caution": "내 참고 기준 초과",
+      "restricted": "내 참고 기준 크게 초과",
+      "unknown": "확인 안 됨"
+    },
+    "provenance": {
+      "CATALOG": "식품 영양자료",
+      "RECIPE": "레시피 기준 계산",
+      "INGREDIENT_ESTIMATE": "재료로 추정",
+      "AI_ESTIMATE": "사진으로 추정"
+    }
+  },
+  "foodEdit": {
+    "checkMealName": "식사 이름을 확인해 주세요",
+    "enterMealName": "식사 이름을 입력해 주세요.",
+    "checkInput": "입력 내용을 확인해 주세요",
+    "checkInputBody": "메뉴 이름과 0보다 큰 양을 입력해 주세요.",
+    "enterFoodName": "음식 이름을 입력해 주세요",
+    "enterAmount": "먹은 양을 입력해 주세요",
+    "amountPositive": "먹은 양은 0보다 큰 숫자로 입력해 주세요",
+    "renameMeal": "식사 이름 바꾸기",
+    "foodsAndAmounts": "음식과 양",
+    "addMenu": "메뉴 추가",
+    "menuName": "메뉴 이름",
+    "confirmMenuName": "메뉴 이름 확인",
+    "amount": "양",
+    "confirmAmount": "메뉴 양 확인",
+    "foodName": "음식 이름",
+    "menu": "메뉴",
+    "deleteMenu": "{{name}} 삭제",
+    "howMuch": "얼마나 드셨나요?",
+    "howMuchBroth": "국물은 얼마나 드셨나요?",
+    "brothHint": "건더기와 국물 양을 나누어 계산해요.",
+    "chooseBrothAmount": "국물 섭취량 선택",
+    "chooseConsumedAmount": "섭취량 선택",
+    "consumed": {
+      "0": "조금",
+      "1": "절반",
+      "2": "대부분",
+      "3": "전부"
+    },
+    "save": "식사 내용 저장",
+    "saving": "바꾼 내용을 저장하고 있어요",
+    "unit": {
+      "serving": "인분",
+      "piece": "개",
+      "glass": "잔"
+    }
+  },
+  "foodConfirmation": {
+    "title": "음식과 양이 맞는지 봐 주세요",
+    "body": "맞는 내용을 골라 주면 영양소를 더 정확히 계산할 수 있어요.",
+    "skip": "건너뛰기",
+    "continue": "계속 확인하기"
+  },
+  "foodLoading": {
+    "status": {
+      "QUEUED": "사진을 확인하고 있어요",
+      "PERCEIVING": "사진에서 음식과 양을 확인하고 있어요",
+      "RESOLVING": "먹은 양에 맞춰 영양소를 정리하고 있어요"
+    },
+    "tips": {
+      "first": "음식과 양을 차례로 확인하고 있어요.",
+      "second": "국물과 양념까지 함께 살펴보고 있어요.",
+      "third": "개인 영양 기준과 비교할 준비를 하고 있어요.",
+      "fourth": "사진이 선명할수록 더 정확하게 확인할 수 있어요.",
+      "fifth": "잠시 후 음식과 영양소를 직접 수정할 수 있어요."
+    },
+    "dismissHint": "화면을 닫아도 괜찮아요.\n나중에 앱을 다시 열어 결과를 확인해 주세요."
+  },
+  "kidneyProfile": {
+    "add": "입력",
+    "edit": "신장 건강 정보 수정",
+    "stage": "신장 병기 (CKD)",
+    "stageValue": "{{stage}}기",
+    "onDialysis": "투석 중",
+    "notOnDialysis": "투석 안 함",
+    "notAdded": "입력 전",
+    "heightWeight": "키 · 체중",
+    "diagnosisDate": "진단 시기",
+    "conditions": "동반 질환·진단 원인"
+  },
+  "settings": {
+    "title": "설정",
+    "display": {
+      "section": "화면 모드",
+      "light": "라이트 모드",
+      "dark": "다크 모드",
+      "system": "시스템 설정"
+    },
+    "language": {
+      "section": "언어",
+      "korean": "한국어",
+      "english": "English",
+      "changeErrorTitle": "언어를 바꾸지 못했어요",
+      "changeErrorBody": "잠시 후 언어를 다시 선택해 주세요."
+    },
+    "notifications": {
+      "app": "앱 알림",
+      "appDescription": "분석 결과와 새 공지를 알림으로 받아요.",
+      "detail": "알림 설정",
+      "marketing": "혜택·소식 알림",
+      "marketingDescription": "새 소식과 혜택을 알림으로 받아요.",
+      "disabledTitle": "알림이 꺼져 있어요",
+      "disabledBody": "알림을 받으려면 휴대폰 설정에서 신신당부 알림을 켜 주세요.",
+      "saveErrorTitle": "알림 설정을 저장하지 못했어요",
+      "saveErrorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요."
+    },
+    "legal": {
+      "terms": "서비스 이용약관",
+      "privacy": "개인정보 처리방침"
+    },
+    "account": {
+      "logout": "로그아웃",
+      "withdraw": "회원 탈퇴",
+      "logoutTitle": "로그아웃할까요?",
+      "logoutBody": "언제든 다시 로그인할 수 있어요."
+    },
+    "appInfo": {
+      "title": "앱 정보·고객센터",
+      "support": "고객센터",
+      "email": "이메일",
+      "website": "웹사이트",
+      "company": "주식회사 메디올로지",
+      "business": "대표이사 정설아 | 사업자등록번호 520-87-03235",
+      "address": "(03176) 서울특별시 종로구 경희궁길27 블루코브스퀘어 3F",
+      "copyright": "Copyright © 2026 Mediology Co., Ltd. 신신당부. All rights reserved."
+    },
+    "privacy": {
+      "title": "개인정보·계정",
+      "policies": "약관 및 정책",
+      "account": "계정 관리"
+    }
+  },
+  "consult": {
+    "shortTitle": "AI 상담",
+    "open": "AI 상담 열기",
+    "heroTitle": "콩팥 건강,\n무엇이 궁금하세요?",
+    "heroBody": "먹은 음식부터 검사 수치, 약 복용까지 편하게 물어보세요",
+    "popularQuestions": "이런 질문이 많아요",
+    "disclaimer": "이 답변은 건강 관리에 참고해 주세요.\n진단과 치료는 담당 의료진과 상의해 주세요.",
+    "references": "의학 참고 문헌 보기",
+    "category": "카테고리",
+    "placeholder": "궁금한 내용을 적어보세요",
+    "copied": "답변을 복사했어요",
+    "choosePhoto": "사진에서 선택",
+    "takePhoto": "사진 찍기",
+    "removeAttachment": "첨부 사진 빼기",
+    "openAttachmentMenu": "상담 첨부 메뉴 열기",
+    "attachedPhoto": "첨부한 사진",
+    "copyAnswer": "답변 복사",
+    "regenerate": "답변 다시 받기",
+    "renameTitle": "제목 바꾸기",
+    "renamePlaceholder": "예: 칼륨 낮은 과일",
+    "chatTitle": "신신당부 상담",
+    "closeChat": "상담 닫기",
+    "organizing": "답변을 정리하고 있어요",
+    "mealSection": "식사",
+    "answer": "답변",
+    "askMore": "추가로 물어보기",
+    "faqTitle": "자주 하는 질문",
+    "questionCount": "{{count}}개 질문",
+    "deleteTitle": "이 상담을 삭제할까요?",
+    "deleteBody": "삭제하면 다시 볼 수 없어요.",
+    "photoPermissionTitle": "사진을 열 수 없어요",
+    "photoPermissionBody": "사진을 첨부하려면 설정에서 사진 접근을 허용해 주세요.",
+    "cameraPermissionTitle": "카메라를 열 수 없어요",
+    "cameraPermissionBody": "사진을 찍으려면 설정에서 카메라 접근을 허용해 주세요.",
+    "openSettings": "설정 열기",
+    "history": {
+      "title": "상담 기록",
+      "close": "상담 기록 닫기",
+      "new": "새 상담",
+      "emptyTitle": "아직 상담 기록이 없어요",
+      "emptyBody": "상담을 시작하면 지난 대화를 여기서 다시 볼 수 있어요",
+      "today": "오늘",
+      "yesterday": "어제",
+      "week": "최근 7일",
+      "older": "이전",
+      "openChat": "{{title}} 대화 열기",
+      "manageChat": "{{title}} 관리 메뉴",
+      "closeMenu": "메뉴 닫기",
+      "rename": "제목 바꾸기",
+      "delete": "삭제하기"
+    },
+    "mealPrompt": "이 식사의 영양 수치를 개인 기준과 비교하고, 다음 식사에서 확인할 항목을 알려 주세요.",
+    "recordedMeal": "기록한 식사",
+    "food": "음식",
+    "meal": "끼니",
+    "servings": "먹은 양",
+    "nutrients": "영양소",
+    "foodNutrients": "음식별 영양소",
+    "foodCard": {
+      "eyebrow": "식사 기록",
+      "foodsToggle": "음식별 영양 보기"
+    },
+    "categories": {
+      "FOOD_DIET": "음식·식단",
+      "MEDICATION": "약·영양제",
+      "LIFESTYLE": "생활관리",
+      "SYMPTOMS": "증상",
+      "EXAM": "검사·수치 해석",
+      "NONE": "기타"
+    }
   }
 }

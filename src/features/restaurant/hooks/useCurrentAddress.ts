@@ -22,7 +22,11 @@ export function useCurrentAddress(): AddressState {
         const { status } = await Location.requestForegroundPermissionsAsync()
         if (status !== "granted") {
           if (!cancelled)
-            setState({ address: null, isLoading: false, error: "permission_denied" })
+            setState({
+              address: null,
+              isLoading: false,
+              error: "permission_denied",
+            })
           return
         }
 
@@ -37,9 +41,9 @@ export function useCurrentAddress(): AddressState {
           const street = result.street || result.name || ""
           const address = `${district} ${street}`.trim()
           setState({
-            address: address || "주소를 찾을 수 없습니다",
+            address: address || null,
             isLoading: false,
-            error: null,
+            error: address ? null : "address_not_found",
           })
         }
       } catch {

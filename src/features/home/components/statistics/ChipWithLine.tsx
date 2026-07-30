@@ -19,7 +19,7 @@ export function ChipWithLine({ label, isOver }: ChipWithLineProps) {
         <Text
           fontSize="$3"
           color={isOver ? "$primary" : "$color"}
-          paddingVertical={label === "제한량" ? 2 : 1}
+          paddingVertical={1}
         >
           {label}
         </Text>

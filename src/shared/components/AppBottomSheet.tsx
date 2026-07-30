@@ -334,6 +334,8 @@ export function AppBottomSheetScrollView({
 
   return (
     <ScrollView
+      bounces={false}
+      overScrollMode="never"
       {...props}
       showsVerticalScrollIndicator={props.showsVerticalScrollIndicator ?? false}
       contentContainerStyle={[

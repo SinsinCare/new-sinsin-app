@@ -5,7 +5,6 @@ import {
   View,
   Switch,
   TouchableOpacity,
-  Alert,
   Modal,
   Platform,
 } from "react-native"
@@ -13,6 +12,7 @@ import { Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
 import { ThemedText } from "@/components/themed-text"
@@ -20,6 +20,7 @@ import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { useAuth } from "@/src/hooks/useAuth"
+import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
 import { tokens } from "@/src/theme/tokens"
 import type { NotificationSettings } from "@/src/types/notification"
 
@@ -38,6 +39,7 @@ export function NotificationSettingsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = useSettingsColors()
+  const { t } = useTranslation("settings")
   const { isAuthenticated } = useAuth()
   const { settings, updateSettings, requestAndEnable } =
     useNotifications(isAuthenticated)
@@ -53,9 +55,9 @@ export function NotificationSettingsScreen() {
     if (value) {
       const granted = await requestAndEnable()
       if (!granted) {
-        Alert.alert(
-          "알림 권한 필요",
-          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        showOpenSettingsAlert(
+          t("notifications.permissionTitle"),
+          t("notifications.permissionBody"),
         )
         return
       }
@@ -73,9 +75,9 @@ export function NotificationSettingsScreen() {
     if (value) {
       const granted = await requestAndEnable()
       if (!granted) {
-        Alert.alert(
-          "알림 권한 필요",
-          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        showOpenSettingsAlert(
+          t("notifications.permissionTitle"),
+          t("notifications.permissionBody"),
         )
         return
       }
@@ -93,9 +95,9 @@ export function NotificationSettingsScreen() {
     if (value) {
       const granted = await requestAndEnable()
       if (!granted) {
-        Alert.alert(
-          "알림 권한 필요",
-          "설정 앱에서 신신당부 알림 권한을 허용해주세요.",
+        showOpenSettingsAlert(
+          t("notifications.permissionTitle"),
+          t("notifications.permissionBody"),
         )
         return
       }
@@ -191,24 +193,30 @@ export function NotificationSettingsScreen() {
   const pickerTitle = (() => {
     switch (pickerTarget) {
       case "morning":
-        return "아침 체크 시간 선택"
+        return t("notifications.picker.morning")
       case "waterStart":
-        return "시작 시간 선택"
+        return t("notifications.picker.waterStart")
       case "waterEnd":
-        return "종료 시간 선택"
+        return t("notifications.picker.waterEnd")
       case "breakfast":
-        return "아침 시간 선택"
+        return t("notifications.picker.breakfast")
       case "lunch":
-        return "점심 시간 선택"
+        return t("notifications.picker.lunch")
       case "dinner":
-        return "저녁 시간 선택"
+        return t("notifications.picker.dinner")
       default:
         return ""
     }
   })()
 
   const fmt = (h: number) =>
-    `${h < 12 ? "오전" : "오후"} ${h === 0 ? 12 : h > 12 ? h - 12 : h}시`
+    t("notifications.time.format", {
+      period:
+        h < 12
+          ? t("notifications.time.periodAm")
+          : t("notifications.time.periodPm"),
+      hour: h === 0 ? 12 : h > 12 ? h - 12 : h,
+    })
 
   const switchColors = {
     track: {
@@ -222,12 +230,14 @@ export function NotificationSettingsScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
-        title="알림 설정"
+        title={t("notifications.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + 40 },
@@ -237,7 +247,7 @@ export function NotificationSettingsScreen() {
         {/* 아침 건강 체크 */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
-            아침 건강 체크 알림
+            {t("notifications.morning.section")}
           </ThemedText>
           <View
             style={[
@@ -250,13 +260,14 @@ export function NotificationSettingsScreen() {
             >
               <View style={styles.rowLeft}>
                 <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                  알림 켜기
+                  {t("notifications.enable")}
                 </ThemedText>
                 <ThemedText style={[styles.rowSub, { color: c.textTertiary }]}>
-                  첫 소변 후 물 마시기 전 혈압·체중 기록을 알려드려요
+                  {t("notifications.morning.body")}
                 </ThemedText>
               </View>
               <Switch
+                accessibilityLabel={t("notifications.morning.section")}
                 value={categories.morningCheck.enabled}
                 onValueChange={handleMorningToggle}
                 trackColor={switchColors.track}
@@ -267,7 +278,7 @@ export function NotificationSettingsScreen() {
             {categories.morningCheck.enabled && (
               <View style={styles.row}>
                 <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                  알림 시간
+                  {t("notifications.time.label")}
                 </ThemedText>
                 <TouchableOpacity
                   style={[styles.timePill, { backgroundColor: c.inputBg }]}
@@ -290,7 +301,7 @@ export function NotificationSettingsScreen() {
         {/* 수분 섭취 알림 */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
-            수분 섭취 알림
+            {t("notifications.water.section")}
           </ThemedText>
           <View
             style={[
@@ -303,13 +314,14 @@ export function NotificationSettingsScreen() {
             >
               <View style={styles.rowLeft}>
                 <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                  알림 켜기
+                  {t("notifications.enable")}
                 </ThemedText>
                 <ThemedText style={[styles.rowSub, { color: c.textTertiary }]}>
-                  설정한 주기마다 수분 섭취를 알려드려요
+                  {t("notifications.water.body")}
                 </ThemedText>
               </View>
               <Switch
+                accessibilityLabel={t("notifications.water.section")}
                 value={categories.waterReminder.enabled}
                 onValueChange={handleWaterToggle}
                 trackColor={switchColors.track}
@@ -327,7 +339,7 @@ export function NotificationSettingsScreen() {
                   ]}
                 >
                   <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                    알림 주기
+                    {t("notifications.water.interval")}
                   </ThemedText>
                   <View style={styles.chipRow}>
                     {WATER_INTERVALS.map((h) => (
@@ -364,7 +376,7 @@ export function NotificationSettingsScreen() {
                               : c.textSub
                           }
                         >
-                          {h}시간
+                          {t("notifications.water.intervalHours", { count: h })}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -378,7 +390,7 @@ export function NotificationSettingsScreen() {
                   ]}
                 >
                   <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                    시작 시간
+                    {t("notifications.time.start")}
                   </ThemedText>
                   <TouchableOpacity
                     style={[styles.timePill, { backgroundColor: c.inputBg }]}
@@ -398,7 +410,7 @@ export function NotificationSettingsScreen() {
                 </View>
                 <View style={styles.row}>
                   <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                    종료 시간
+                    {t("notifications.time.end")}
                   </ThemedText>
                   <TouchableOpacity
                     style={[styles.timePill, { backgroundColor: c.inputBg }]}
@@ -424,7 +436,7 @@ export function NotificationSettingsScreen() {
         {/* 식사 기록 알림 */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
-            식사 기록 알림
+            {t("notifications.meal.section")}
           </ThemedText>
           <View
             style={[
@@ -437,13 +449,14 @@ export function NotificationSettingsScreen() {
             >
               <View style={styles.rowLeft}>
                 <ThemedText style={[styles.rowTitle, { color: c.text }]}>
-                  알림 켜기
+                  {t("notifications.enable")}
                 </ThemedText>
                 <ThemedText style={[styles.rowSub, { color: c.textTertiary }]}>
-                  식사 시간에 맞춰 기록을 알려드려요
+                  {t("notifications.meal.body")}
                 </ThemedText>
               </View>
               <Switch
+                accessibilityLabel={t("notifications.meal.section")}
                 value={categories.mealReminder.enabled}
                 onValueChange={handleMealToggle}
                 trackColor={switchColors.track}
@@ -456,17 +469,17 @@ export function NotificationSettingsScreen() {
                 {(
                   [
                     {
-                      label: "아침",
+                      label: t("notifications.meal.breakfast"),
                       target: "breakfast" as PickerTarget,
                       hour: categories.mealReminder.breakfastHour,
                     },
                     {
-                      label: "점심",
+                      label: t("notifications.meal.lunch"),
                       target: "lunch" as PickerTarget,
                       hour: categories.mealReminder.lunchHour,
                     },
                     {
-                      label: "저녁",
+                      label: t("notifications.meal.dinner"),
                       target: "dinner" as PickerTarget,
                       hour: categories.mealReminder.dinnerHour,
                     },
@@ -527,10 +540,17 @@ export function NotificationSettingsScreen() {
                 {pickerTitle}
               </ThemedText>
               <TouchableOpacity onPress={() => setPickerTarget(null)}>
-                <Ionicons name="close" size={22} color={c.textSub} />
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={c.textSub}
+                  accessibilityLabel={t("notifications.time.closePicker")}
+                />
               </TouchableOpacity>
             </View>
             <ScrollView
+              bounces={false}
+              overScrollMode="never"
               style={styles.hourList}
               showsVerticalScrollIndicator={false}
             >
@@ -603,9 +623,18 @@ const styles = StyleSheet.create({
   },
   rowBorder: { borderBottomWidth: StyleSheet.hairlineWidth },
   rowLeft: { flex: 1, gap: 3, paddingRight: 12 },
-  rowTitle: { fontSize: 15, fontWeight: "500" },
+  rowTitle: { fontSize: 15, fontWeight: "500", flexShrink: 1 },
   rowSub: { fontSize: 13 },
-  chipRow: { flexDirection: "row", gap: 6 },
+  // 칩 라벨은 한국어로 "1시간"(≈34pt)이지만 영어로는 "Every 3 hours"(≈95pt)다.
+  // 줄바꿈 없이 한 줄에 밀어 넣으면 카드(overflow:hidden)를 넘어가 뒤쪽 칩이
+  // 아예 안 보였다 — 영어 사용자는 3·4시간 간격을 **고를 수 없었다**.
+  chipRow: {
+    flexDirection: "row",
+    gap: 6,
+    flexShrink: 1,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  },
   chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
   timePill: {
     flexDirection: "row",

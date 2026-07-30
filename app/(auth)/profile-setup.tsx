@@ -1,5 +1,5 @@
-import { ProfileSetupScreen } from "@/src/features/auth"
+import { SignupStepsScreen } from "@/src/features/auth"
 
 export default function ProfileSetup() {
-  return <ProfileSetupScreen />
+  return <SignupStepsScreen />
 }

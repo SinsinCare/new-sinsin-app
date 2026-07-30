@@ -7,6 +7,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Linking,
 } from "react-native"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -14,13 +15,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import * as ImagePicker from "expo-image-picker"
 import * as DocumentPicker from "expo-document-picker"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
-import { UPLOAD_TIPS } from "@/src/features/health/data/mock"
 import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
 import type { OcrUploadFile } from "@/src/features/health/types"
@@ -37,6 +38,7 @@ function deriveName(uri: string, fallback: string): string {
 export function HealthDataUploadScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
 
   const [files, setFiles] = useState<OcrUploadFile[]>([])
@@ -45,7 +47,20 @@ export function HealthDataUploadScreen() {
   const pickFromCamera = async () => {
     if (files.length >= MAX_FILES) return
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
-    if (status !== "granted") return
+    if (status !== "granted") {
+      Alert.alert(
+        t("upload.cameraPermissionTitle"),
+        t("upload.cameraPermissionDescription"),
+        [
+          { text: t("actions.cancel"), style: "cancel" },
+          {
+            text: t("actions.openSettings"),
+            onPress: () => void Linking.openSettings(),
+          },
+        ],
+      )
+      return
+    }
 
     const result = await ImagePicker.launchCameraAsync({ quality: 0.9 })
     if (!result.canceled && result.assets[0]) {
@@ -65,7 +80,20 @@ export function HealthDataUploadScreen() {
   const pickFromGallery = async () => {
     if (files.length >= MAX_FILES) return
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (status !== "granted") return
+    if (status !== "granted") {
+      Alert.alert(
+        t("upload.photoPermissionTitle"),
+        t("upload.photoPermissionDescription"),
+        [
+          { text: t("actions.cancel"), style: "cancel" },
+          {
+            text: t("actions.openSettings"),
+            onPress: () => void Linking.openSettings(),
+          },
+        ],
+      )
+      return
+    }
 
     const remaining = MAX_FILES - files.length
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -121,7 +149,7 @@ export function HealthDataUploadScreen() {
       })
     } catch (error) {
       logger.error("[ocr] upload failed", error)
-      Alert.alert("검사지 분석 실패", getOcrErrorMessage(error))
+      Alert.alert(t("upload.readErrorTitle"), getOcrErrorMessage(error))
     } finally {
       setAnalyzing(false)
     }
@@ -134,12 +162,14 @@ export function HealthDataUploadScreen() {
       style={[styles.container, { backgroundColor: healthColors.background }]}
     >
       <ScreenHeader
-        title="검사 결과 가져오기"
+        title={t("upload.header")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 100 },
@@ -147,12 +177,12 @@ export function HealthDataUploadScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ThemedText style={[styles.title, { color: healthColors.text }]}>
-          검사 결과를 가져올까요?
+          {t("upload.title")}
         </ThemedText>
         <ThemedText
           style={[styles.subtitle, { color: healthColors.textSecondary }]}
         >
-          정확한 건강 관리를 위해 검사지를 업로드 해주세요
+          {t("upload.subtitle")}
         </ThemedText>
 
         {/* 첨부 파일 영역 (항상 표시) */}
@@ -169,14 +199,16 @@ export function HealthDataUploadScreen() {
             <ThemedText
               style={[styles.attachTitle, { color: healthColors.text }]}
             >
-              첨부 파일{" "}
+              {t("upload.attachments")}{" "}
               <ThemedText style={styles.attachCount}>
                 {files.length}/{MAX_FILES}
               </ThemedText>
             </ThemedText>
             {files.length > 0 && (
               <Pressable onPress={() => setFiles([])} hitSlop={8}>
-                <ThemedText style={styles.clearAllText}>전체 삭제</ThemedText>
+                <ThemedText style={styles.clearAllText}>
+                  {t("actions.clearAll")}
+                </ThemedText>
               </Pressable>
             )}
           </View>
@@ -264,7 +296,7 @@ export function HealthDataUploadScreen() {
                       { color: healthColors.textAssistive },
                     ]}
                   >
-                    파일 추가
+                    {t("upload.chooseFile")}
                   </ThemedText>
                 </Pressable>
               </View>
@@ -303,7 +335,7 @@ export function HealthDataUploadScreen() {
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
-                카메라
+                {t("upload.takePhoto")}
               </ThemedText>
             </Pressable>
 
@@ -336,7 +368,7 @@ export function HealthDataUploadScreen() {
                   !canAdd && styles.pickButtonTextDisabled,
                 ]}
               >
-                갤러리
+                {t("upload.choosePhoto")}
               </ThemedText>
             </Pressable>
 
@@ -381,8 +413,7 @@ export function HealthDataUploadScreen() {
                 { color: healthColors.cautionary },
               ]}
             >
-              최대 {MAX_FILES}개까지 첨부할 수 있어요. 파일을 삭제 후
-              추가해주세요.
+              {t("upload.maxFiles", { count: MAX_FILES })}
             </ThemedText>
           )}
         </View>
@@ -394,8 +425,15 @@ export function HealthDataUploadScreen() {
             { backgroundColor: healthColors.surfaceMuted },
           ]}
         >
-          {UPLOAD_TIPS.map((tip, i) => (
-            <View key={i} style={styles.tipRow}>
+          {(
+            [
+              "upload.tips.report",
+              "upload.tips.straight",
+              "upload.tips.focus",
+              "upload.tips.fullPage",
+            ] as const
+          ).map((tipKey) => (
+            <View key={tipKey} style={styles.tipRow}>
               <Ionicons
                 name="checkmark-circle"
                 size={16}
@@ -405,7 +443,7 @@ export function HealthDataUploadScreen() {
               <ThemedText
                 style={[styles.tipText, { color: healthColors.textSecondary }]}
               >
-                {tip}
+                {t(tipKey)}
               </ThemedText>
             </View>
           ))}
@@ -413,7 +451,7 @@ export function HealthDataUploadScreen() {
       </ScrollView>
 
       <BottomActionBar
-        label={analyzing ? "분석 중..." : "분석 시작하기"}
+        label={analyzing ? t("upload.readingResults") : t("upload.readResults")}
         disabled={files.length === 0 || analyzing}
         paddingBottom={insets.bottom + 16}
         onPress={handleAnalyze}
@@ -435,7 +473,7 @@ export function HealthDataUploadScreen() {
             <ThemedText
               style={[styles.loadingTitle, { color: healthColors.text }]}
             >
-              검사지를 분석하고 있어요
+              {t("upload.readingTitle")}
             </ThemedText>
             <ThemedText
               style={[
@@ -443,7 +481,7 @@ export function HealthDataUploadScreen() {
                 { color: healthColors.textSecondary },
               ]}
             >
-              검사 수치를 인식하는 중입니다.{"\n"}잠시만 기다려주세요.
+              {t("upload.readingDescription")}
             </ThemedText>
           </View>
         </View>

@@ -1,16 +1,48 @@
+import i18n from "@/src/i18n"
 import type { AcquisitionSource } from "@/src/types"
 
-export const ACQUISITION_SOURCE_OPTIONS = [
-  { label: "앱스토어 검색", value: "APP_STORE" },
-  { label: "병원", value: "HOSPITAL" },
-  { label: "블로그", value: "BLOG" },
-  { label: "네이버 카페", value: "NAVER_CAFE" },
-  { label: "당근 커뮤니티", value: "DANGGEUN_COMMUNITY" },
-  { label: "카카오톡", value: "KAKAO" },
-  { label: "유튜브", value: "YOUTUBE" },
-  { label: "인스타그램", value: "INSTAGRAM" },
-  { label: "지인추천", value: "FRIEND" },
-  { label: "기타(직접 입력)", value: "OTHER" },
-] as const satisfies readonly { label: string; value: AcquisitionSource }[]
-
 export type AcquisitionSourceInput = AcquisitionSource | ""
+
+const ACQUISITION_SOURCE_LABEL_KEYS: Record<
+  AcquisitionSource,
+  | "acquisition.appStore"
+  | "acquisition.hospital"
+  | "acquisition.blog"
+  | "acquisition.naverCafe"
+  | "acquisition.danggeun"
+  | "acquisition.kakao"
+  | "acquisition.youtube"
+  | "acquisition.instagram"
+  | "acquisition.friend"
+  | "acquisition.other"
+> = {
+  APP_STORE: "acquisition.appStore",
+  HOSPITAL: "acquisition.hospital",
+  BLOG: "acquisition.blog",
+  NAVER_CAFE: "acquisition.naverCafe",
+  DANGGEUN_COMMUNITY: "acquisition.danggeun",
+  KAKAO: "acquisition.kakao",
+  YOUTUBE: "acquisition.youtube",
+  INSTAGRAM: "acquisition.instagram",
+  FRIEND: "acquisition.friend",
+  OTHER: "acquisition.other",
+}
+
+//: 표시 순서의 정본. 라벨 맵의 키 순서를 그대로 따른다 — 목록을 따로 두면
+//: 항목을 추가할 때 한쪽만 고쳐져 조용히 빠진다.
+const ACQUISITION_SOURCE_VALUES = Object.keys(
+  ACQUISITION_SOURCE_LABEL_KEYS,
+) as AcquisitionSource[]
+
+export function getAcquisitionSourceOptions(): {
+  label: string
+  value: AcquisitionSource
+}[] {
+  return ACQUISITION_SOURCE_VALUES.map((value) => ({
+    value,
+    label: i18n.t(ACQUISITION_SOURCE_LABEL_KEYS[value], { ns: "auth" }),
+  }))
+}
+
+/** 기본 언어의 정적 스냅샷. 화면에서는 언어 변경에 반응하는 getter를 사용한다. */
+export const ACQUISITION_SOURCE_OPTIONS = getAcquisitionSourceOptions()

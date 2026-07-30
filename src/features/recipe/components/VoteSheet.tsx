@@ -4,18 +4,24 @@ import {
   Modal,
   Platform,
   Pressable,
-  TextInput,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   Switch,
+  Text,
+  TextInput,
+  View,
 } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Icon } from "@/src/shared/components/Icon"
-import { tokens } from "@/src/theme/tokens"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+
+import { useSurface } from "@/src/hooks/useSurface"
+import { hapticSelection } from "@/src/lib/haptics"
+import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
+import { useTranslation } from "react-i18next"
 
 export interface VoteData {
+  /** 투표 질문(선택). */
+  title?: string
   options: string[]
   allowMultiple: boolean
 }
@@ -27,37 +33,6 @@ interface VoteSheetProps {
   initialData?: VoteData | null
 }
 
-const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" } as const
-const HEADER_TEXT = {
-  light: "#3C3C43",
-  dark: tokens.color.textDark.val,
-} as const
-const COMPLETE_ACTIVE = { light: "#028A67", dark: "#43C6A7" } as const
-const COMPLETE_DISABLED = { light: "#C7C7CC", dark: "#636366" } as const
-const INPUT_BG = { light: "#FFFFFF", dark: "#1F1F21" } as const
-const INPUT_BORDER = { light: "#E5E5EA", dark: "#38383A" } as const
-const INPUT_TEXT = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-} as const
-const INPUT_PLACEHOLDER = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightMuted.val,
-} as const
-const ADD_BTN_BG = { light: "#C6E5DE", dark: "#36363E" } as const
-const ADD_BTN_TEXT = { light: "#474758", dark: "#F3F3F3" } as const
-const REMOVE_BTN_ICON = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightSub.val,
-} as const
-const LABEL_TEXT = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-} as const
-const HINT_TEXT = { light: "#8E8E93", dark: "#858591" } as const
-const SWITCH_TRACK_ON = "#43C6A7"
-const SWITCH_TRACK_OFF_IOS = { light: "#E5E5EA", dark: "#38383A" } as const
-
 const MIN_OPTIONS = 2
 const MAX_OPTIONS = 10
 
@@ -67,18 +42,22 @@ export function VoteSheet({
   onComplete,
   initialData,
 }: VoteSheetProps) {
-  const colorScheme = useAppColorScheme()
-  const isDark = colorScheme === "dark"
+  const { t } = useTranslation("recipe")
+  const surface = useSurface()
   const insets = useSafeAreaInsets()
   const topPadding =
     Platform.OS === "android" ? Math.max(insets.top, 24) + 10 : 10
 
+  const [title, setTitle] = useState(initialData?.title ?? "")
   const [options, setOptions] = useState<string[]>(
     initialData?.options ?? ["", ""],
   )
   const [allowMultiple, setAllowMultiple] = useState(
     initialData?.allowMultiple ?? false,
   )
+
+  const inkBg = surface.isDark ? "#F4F4F6" : "#1D1E20"
+  const inkContent = surface.isDark ? "#17181C" : "#FFFFFF"
 
   const filledOptions = options
     .map((opt) => opt.trim())
@@ -91,6 +70,7 @@ export function VoteSheet({
 
   const handleAddOption = () => {
     if (options.length >= MAX_OPTIONS) return
+    hapticSelection()
     setOptions((prev) => [...prev, ""])
   }
 
@@ -109,16 +89,13 @@ export function VoteSheet({
 
   const handleComplete = () => {
     if (!canComplete) return
-    onComplete({ options: filledOptions, allowMultiple })
+    hapticSelection()
+    onComplete({
+      title: title.trim() || undefined,
+      options: filledOptions,
+      allowMultiple,
+    })
   }
-
-  const completeColor = canComplete
-    ? isDark
-      ? COMPLETE_ACTIVE.dark
-      : COMPLETE_ACTIVE.light
-    : isDark
-      ? COMPLETE_DISABLED.dark
-      : COMPLETE_DISABLED.light
 
   return (
     <Modal
@@ -129,207 +106,301 @@ export function VoteSheet({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+        style={styles.flex}
       >
-        <YStack
-          flex={1}
-          backgroundColor={isDark ? BG_COLOR.dark : BG_COLOR.light}
-          paddingTop={topPadding}
+        <View
+          style={[
+            styles.screen,
+            { backgroundColor: surface.canvas, paddingTop: topPadding },
+          ]}
         >
-          {/* Header */}
-          <XStack
-            paddingHorizontal={30}
-            paddingVertical={12}
-            alignItems="center"
-            justifyContent="space-between"
-          >
+          {/* 헤더 */}
+          <View style={styles.header}>
             <Pressable
               onPress={onClose}
-              hitSlop={8}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("action.close")}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <Icon
-                name="x"
-                size={24}
-                color={isDark ? HEADER_TEXT.dark : HEADER_TEXT.light}
-              />
+              <Ionicons name="close" size={24} color={surface.textStrong} />
             </Pressable>
-            <Text
-              fontSize={16}
-              fontWeight="600"
-              fontFamily="$body"
-              color={isDark ? HEADER_TEXT.dark : HEADER_TEXT.light}
-            >
-              투표
+            <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
+              {initialData ? t("poll.editTitle") : t("poll.createTitle")}
             </Text>
-            <Pressable
+            <SurfacePressable
               onPress={handleComplete}
-              hitSlop={8}
-              style={({ pressed }) => ({
-                opacity: pressed && canComplete ? 0.7 : 1,
-              })}
+              disabled={!canComplete}
+              haptic={false}
+              accessibilityLabel={
+                initialData
+                  ? t("poll.saveAccessibility")
+                  : t("poll.attachAccessibility")
+              }
+              accessibilityState={{ disabled: !canComplete }}
+              baseColor={canComplete ? inkBg : surface.ctaOffBg}
+              pressedColor={
+                canComplete
+                  ? surface.isDark
+                    ? "#DADAE0"
+                    : "#34363A"
+                  : surface.ctaOffBg
+              }
+              pressScale={0.94}
+              style={styles.completePill}
             >
               <Text
-                fontSize={16}
-                fontWeight="600"
-                fontFamily="$body"
-                color={completeColor}
+                style={[
+                  styles.completeLabel,
+                  { color: canComplete ? inkContent : surface.ctaOffText },
+                ]}
               >
-                완료
+                {initialData ? t("action.save") : t("poll.attach")}
               </Text>
-            </Pressable>
-          </XStack>
+            </SurfacePressable>
+          </View>
 
-          {/* Content */}
+          {/* 내용 */}
           <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 }}
+            bounces={false}
+            overScrollMode="never"
+            style={styles.flex}
+            contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Option inputs */}
-            <YStack gap={10}>
+            {/* 질문(선택) — 글 제목과 별개로 투표가 스스로 묻게 한다. */}
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder={t("poll.questionPlaceholder")}
+              placeholderTextColor={surface.placeholder}
+              maxLength={100}
+              style={[
+                styles.titleInput,
+                {
+                  color: surface.textStrong,
+                  borderBottomColor: surface.hairline,
+                },
+              ]}
+            />
+
+            <View style={styles.optionList}>
               {options.map((opt, index) => (
-                <XStack key={index} alignItems="center" gap={8}>
+                <View key={index} style={styles.optionRow}>
                   <TextInput
                     value={opt}
                     onChangeText={(text) => handleChangeOption(index, text)}
-                    placeholder="항목입력"
-                    placeholderTextColor={
-                      isDark ? INPUT_PLACEHOLDER.dark : INPUT_PLACEHOLDER.light
-                    }
+                    placeholder={t("poll.optionPlaceholder", {
+                      number: index + 1,
+                    })}
+                    placeholderTextColor={surface.placeholder}
+                    maxLength={100}
                     style={[
-                      voteStyles.optionInput,
+                      styles.optionInput,
                       {
-                        flex: 1,
-                        color: isDark ? INPUT_TEXT.dark : INPUT_TEXT.light,
-                        backgroundColor: isDark
-                          ? INPUT_BG.dark
-                          : INPUT_BG.light,
-                        borderColor: isDark
-                          ? INPUT_BORDER.dark
-                          : INPUT_BORDER.light,
+                        color: surface.textStrong,
+                        backgroundColor: surface.surface,
                       },
                     ]}
                   />
                   {options.length > MIN_OPTIONS && (
                     <Pressable
                       onPress={() => handleRemoveOption(index)}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("poll.deleteOption", {
+                        number: index + 1,
+                      })}
                       style={({ pressed }) => ({
-                        opacity: pressed ? 0.7 : 1,
+                        opacity: pressed ? 0.6 : 1,
                       })}
                     >
-                      <Icon
-                        name="minus-circle"
-                        size={20}
-                        color={
-                          isDark ? REMOVE_BTN_ICON.dark : REMOVE_BTN_ICON.light
-                        }
+                      <Ionicons
+                        name="remove-circle-outline"
+                        size={22}
+                        color={surface.textWeak}
                       />
                     </Pressable>
                   )}
-                </XStack>
+                </View>
               ))}
-            </YStack>
+            </View>
 
-            {/* Add option button */}
-            <Pressable
+            <SurfacePressable
               onPress={handleAddOption}
-              style={({ pressed }) => ({
-                opacity:
-                  options.length >= MAX_OPTIONS ? 0.5 : pressed ? 0.7 : 1,
-                backgroundColor: isDark ? ADD_BTN_BG.dark : ADD_BTN_BG.light,
-                borderRadius: 8,
-                paddingVertical: 14,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                gap: 6,
-                marginTop: 16,
-              })}
               disabled={options.length >= MAX_OPTIONS}
+              haptic={false}
+              accessibilityLabel={t("poll.addOption")}
+              baseColor={surface.surface}
+              pressScale={0.98}
+              style={[
+                styles.addButton,
+                options.length >= MAX_OPTIONS && styles.addButtonDisabled,
+              ]}
             >
-              <Text
-                fontSize={14}
-                fontWeight="600"
-                fontFamily="$body"
-                color={isDark ? ADD_BTN_TEXT.dark : ADD_BTN_TEXT.light}
-              >
-                ＋ 항목 추가
+              <Ionicons name="add" size={18} color={surface.textStrong} />
+              <Text style={[styles.addLabel, { color: surface.textStrong }]}>
+                {t("poll.addOption")}
               </Text>
-            </Pressable>
+            </SurfacePressable>
 
-            {/* Allow multiple toggle */}
-            <XStack
-              alignItems="center"
-              justifyContent="space-between"
-              marginTop={28}
-            >
-              <Text
-                fontSize={16}
-                lineHeight={20}
-                fontWeight="500"
-                fontFamily="$body"
-                color={isDark ? LABEL_TEXT.dark : LABEL_TEXT.light}
-              >
-                복수 선택 가능
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleLabel, { color: surface.textStrong }]}>
+                {t("poll.allowMultiple")}
               </Text>
               <Switch
                 value={allowMultiple}
-                onValueChange={setAllowMultiple}
+                onValueChange={(value) => {
+                  hapticSelection()
+                  setAllowMultiple(value)
+                }}
                 trackColor={{
-                  false: isDark
-                    ? SWITCH_TRACK_OFF_IOS.dark
-                    : SWITCH_TRACK_OFF_IOS.light,
-                  true: SWITCH_TRACK_ON,
+                  false: surface.isDark ? "#3A3A40" : "#E1E2E4",
+                  true: surface.brand,
                 }}
                 thumbColor="#FFFFFF"
               />
-            </XStack>
+            </View>
 
-            {/* Hints */}
-            <YStack marginTop={24} gap={8}>
-              <XStack
-                alignItems="center"
-                justifyContent="center"
-                gap={6}
-                padding={16}
-              >
-                <Icon
-                  name="info"
-                  size={20}
-                  color={isDark ? HINT_TEXT.dark : HINT_TEXT.light}
-                />
-                <Text
-                  fontSize={14}
-                  fontWeight="500"
-                  lineHeight={20}
-                  color={isDark ? HINT_TEXT.dark : HINT_TEXT.light}
-                  fontFamily="$body"
-                >
-                  글 등록 이후에는 투표 수정 및 삭제가 불가능합니다.
+            <View style={styles.hints}>
+              {hasDuplicateOptions && (
+                <Text style={[styles.hintText, { color: surface.danger }]}>
+                  {t("poll.duplicateError")}
                 </Text>
-              </XStack>
-              <Text
-                fontSize={13}
-                color={isDark ? HINT_TEXT.dark : HINT_TEXT.light}
-                fontFamily="$body"
-              >
-                * 투표 항목은 2개 이상, 최대 10개까지 등록할 수 있습니다
+              )}
+              <Text style={[styles.hintText, { color: surface.textMuted }]}>
+                {t("poll.lockedHint")}
               </Text>
-            </YStack>
+              <Text style={[styles.hintSub, { color: surface.textWeak }]}>
+                {t("poll.optionLimit")}
+              </Text>
+            </View>
           </ScrollView>
-        </YStack>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   )
 }
 
-const voteStyles = StyleSheet.create({
-  optionInput: {
-    fontSize: 15,
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
+  screen: {
+    flex: 1,
+  },
+
+  header: {
+    height: 52,
     paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.34,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+  completePill: {
+    height: 34,
+    borderRadius: 17,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  completeLabel: {
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: -0.28,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
+  },
+
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 32,
+  },
+  titleInput: {
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.34,
+    fontWeight: "700",
+    fontFamily: "Pretendard-Bold",
     paddingVertical: 14,
-    borderRadius: 8,
-    borderWidth: 1,
+    marginBottom: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  optionList: {
+    gap: 10,
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  optionInput: {
+    flex: 1,
+    height: 56,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 15.5,
+    letterSpacing: -0.31,
+    fontFamily: "Pretendard-Medium",
+    fontWeight: "500",
+  },
+  addButton: {
+    height: 52,
+    borderRadius: 14,
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  addButtonDisabled: {
+    opacity: 0.4,
+  },
+  addLabel: {
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+
+  toggleRow: {
+    marginTop: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  toggleLabel: {
+    fontSize: 15.5,
+    lineHeight: 22,
+    letterSpacing: -0.31,
+    fontWeight: "600",
+    fontFamily: "Pretendard-SemiBold",
+  },
+
+  hints: {
+    marginTop: 28,
+    gap: 4,
+  },
+  hintText: {
+    fontSize: 13,
+    lineHeight: 19,
+    letterSpacing: -0.26,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+  hintSub: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontFamily: "Pretendard-Regular",
   },
 })

@@ -2,6 +2,7 @@ import { ReactNode } from "react"
 import { TouchableOpacity } from "react-native"
 import { Text, XStack, YStack } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { useTranslation } from "react-i18next"
 
 interface RecordResultCardProps {
   type: string
@@ -18,6 +19,7 @@ export function RecordResultCard({
   onReset,
   children,
 }: RecordResultCardProps) {
+  const { t } = useTranslation()
   const isHorizontal = type === "edema"
 
   const titleSection = (
@@ -34,7 +36,7 @@ export function RecordResultCard({
           <TouchableOpacity onPress={onReset}>
             <XStack alignItems="center" gap={2}>
               <Text fontSize="$3" color="$color.grey5">
-                되돌리기
+                {t("home.undoRecord")}
               </Text>
               <Ionicons name="refresh" size={14} color="#999" />
             </XStack>

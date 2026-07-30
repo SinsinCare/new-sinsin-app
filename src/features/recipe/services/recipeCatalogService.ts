@@ -3,6 +3,7 @@ import type {
   CuratedRecipe,
   CuratedRecipeAiSummary,
   CuratedRecipeCkdGuide,
+  CuratedRecipeContentAvailability,
   CuratedRecipeIngredient,
   CuratedRecipeNutrition,
   CuratedRecipeStep,
@@ -65,6 +66,14 @@ interface ApiRecipeSummary {
     riskFlags?: Record<string, string> | null
     risk_flags?: Record<string, string> | null
   } | null
+  contentAvailability?: {
+    requestedLocale?: "ko" | "en"
+    sourceLocale?: "ko" | "en" | null
+    ingredientCount?: number
+    stepCount?: number
+    ingredientsAvailable?: boolean
+    stepsAvailable?: boolean
+  } | null
   createdAt?: string | null
   created_at?: string | null
 }
@@ -110,6 +119,19 @@ function mapSummary(item: ApiRecipeSummary): CuratedRecipe {
   const detailImageUrl =
     item.detailImageUrl ?? item.detail_image_url ?? thumbnailUrl
   const aiSummary = item.aiSummary ?? item.ai_summary
+  const contentAvailability = item.contentAvailability
+  const ingredients = item.ingredients ?? []
+  const steps = item.steps ?? []
+  const mappedContentAvailability: CuratedRecipeContentAvailability = {
+    requested_locale: contentAvailability?.requestedLocale ?? "ko",
+    source_locale: contentAvailability?.sourceLocale ?? null,
+    ingredient_count:
+      contentAvailability?.ingredientCount ?? ingredients.length,
+    step_count: contentAvailability?.stepCount ?? steps.length,
+    ingredients_available:
+      contentAvailability?.ingredientsAvailable ?? ingredients.length > 0,
+    steps_available: contentAvailability?.stepsAvailable ?? steps.length > 0,
+  }
 
   return {
     id: item.id,
@@ -123,11 +145,12 @@ function mapSummary(item: ApiRecipeSummary): CuratedRecipe {
     tags: item.tags ?? [],
     thumbnail_url: thumbnailUrl,
     detail_image_url: detailImageUrl,
-    ingredients: item.ingredients ?? [],
-    steps: item.steps ?? [],
+    ingredients,
+    steps,
     nutrition: mapNutrition(item.nutrition),
     ckd_guide: item.ckdGuide ?? item.ckd_guide ?? {},
     ai_summary: mapAiSummary(aiSummary, item.description ?? ""),
+    content_availability: mappedContentAvailability,
     created_at: item.createdAt ?? item.created_at ?? undefined,
   }
 }
@@ -177,8 +200,13 @@ export const recipeCatalogService = {
     }
   },
 
-  async getRecipe(id: number): Promise<CuratedRecipe> {
-    const { data } = await api.get(`/recipes/${id}`)
+  async getRecipe(
+    id: number,
+    options?: { locale?: "ko" | "en" },
+  ): Promise<CuratedRecipe> {
+    const { data } = await api.get(`/recipes/${id}`, {
+      params: options?.locale ? { locale: options.locale } : undefined,
+    })
     return mapDetail(data.result as ApiRecipeDetail)
   },
 

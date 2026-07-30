@@ -1,55 +1,83 @@
 export const REGIONS = [
-  { key: "all", label: "전체" },
-  { key: "seoul", label: "서울" },
-  { key: "gyeonggi", label: "경기" },
-  { key: "incheon", label: "인천" },
-  { key: "busan", label: "부산" },
-  { key: "jeju", label: "제주" },
-  { key: "ulsan", label: "울산" },
-  { key: "gyeongnam", label: "경남" },
-  { key: "daegu", label: "대구" },
-  { key: "gyeongbuk", label: "경북" },
-  { key: "gangwon", label: "강원" },
-  { key: "daejeon", label: "대전" },
-  { key: "chungnam", label: "충남" },
-  { key: "chungbuk", label: "충북" },
-  { key: "sejong", label: "세종" },
-  { key: "jeonnam", label: "전남" },
-  { key: "gwangju", label: "광주" },
-  { key: "jeonbuk", label: "전북" },
-]
+  { key: "all", labelKey: "restaurant.filter.regions.all" },
+  { key: "seoul", labelKey: "restaurant.filter.regions.seoul" },
+  { key: "gyeonggi", labelKey: "restaurant.filter.regions.gyeonggi" },
+  { key: "incheon", labelKey: "restaurant.filter.regions.incheon" },
+  { key: "busan", labelKey: "restaurant.filter.regions.busan" },
+  { key: "jeju", labelKey: "restaurant.filter.regions.jeju" },
+  { key: "ulsan", labelKey: "restaurant.filter.regions.ulsan" },
+  { key: "gyeongnam", labelKey: "restaurant.filter.regions.gyeongnam" },
+  { key: "daegu", labelKey: "restaurant.filter.regions.daegu" },
+  { key: "gyeongbuk", labelKey: "restaurant.filter.regions.gyeongbuk" },
+  { key: "gangwon", labelKey: "restaurant.filter.regions.gangwon" },
+  { key: "daejeon", labelKey: "restaurant.filter.regions.daejeon" },
+  { key: "chungnam", labelKey: "restaurant.filter.regions.chungnam" },
+  { key: "chungbuk", labelKey: "restaurant.filter.regions.chungbuk" },
+  { key: "sejong", labelKey: "restaurant.filter.regions.sejong" },
+  { key: "jeonnam", labelKey: "restaurant.filter.regions.jeonnam" },
+  { key: "gwangju", labelKey: "restaurant.filter.regions.gwangju" },
+  { key: "jeonbuk", labelKey: "restaurant.filter.regions.jeonbuk" },
+] as const
 
-export const SUB_REGIONS: Record<string, { key: string; label: string }[]> = {
+export const SUB_REGIONS = {
   seoul: [
-    { key: "seoul-all", label: "서울 전체" },
-    { key: "gangnam", label: "강남" },
-    { key: "seocho", label: "서초" },
-    { key: "jamsil", label: "잠실/송파/강동" },
-    { key: "yeongdeungpo", label: "영등포/여의도/강서" },
-    { key: "kondae", label: "건대/성수/왕십리" },
-    { key: "jongno", label: "종로/중구" },
-    { key: "hongdae", label: "홍대/합정/마포" },
-    { key: "yongsan", label: "용산/이태원/한남" },
-    { key: "seongbuk", label: "성북/노원/중랑" },
-    { key: "guro", label: "구로/관악/동작" },
+    { key: "seoul-all", labelKey: "restaurant.filter.subRegions.seoulAll" },
+    { key: "gangnam", labelKey: "restaurant.filter.subRegions.gangnam" },
+    { key: "seocho", labelKey: "restaurant.filter.subRegions.seocho" },
+    { key: "jamsil", labelKey: "restaurant.filter.subRegions.jamsil" },
+    {
+      key: "yeongdeungpo",
+      labelKey: "restaurant.filter.subRegions.yeongdeungpo",
+    },
+    { key: "kondae", labelKey: "restaurant.filter.subRegions.kondae" },
+    { key: "jongno", labelKey: "restaurant.filter.subRegions.jongno" },
+    { key: "hongdae", labelKey: "restaurant.filter.subRegions.hongdae" },
+    { key: "yongsan", labelKey: "restaurant.filter.subRegions.yongsan" },
+    { key: "seongbuk", labelKey: "restaurant.filter.subRegions.seongbuk" },
+    { key: "guro", labelKey: "restaurant.filter.subRegions.guro" },
   ],
-}
+} as const
 
 export const FOOD_TYPES = [
-  { key: "korean", label: "한식", icon: "korean" as const },
-  { key: "chinese", label: "중식", icon: "chinese" as const },
-  { key: "japanese", label: "일식", icon: "japanese" as const },
-  { key: "american", label: "양식", icon: "american" as const },
-  { key: "world", label: "세계음식", icon: "globe" as const },
-]
+  {
+    key: "korean",
+    labelKey: "restaurant.filter.foodTypes.korean",
+    icon: "korean",
+  },
+  {
+    key: "chinese",
+    labelKey: "restaurant.filter.foodTypes.chinese",
+    icon: "chinese",
+  },
+  {
+    key: "japanese",
+    labelKey: "restaurant.filter.foodTypes.japanese",
+    icon: "japanese",
+  },
+  {
+    key: "american",
+    labelKey: "restaurant.filter.foodTypes.american",
+    icon: "american",
+  },
+  {
+    key: "world",
+    labelKey: "restaurant.filter.foodTypes.world",
+    icon: "globe",
+  },
+] as const
 
 export const NUTRIENTS = [
-  { key: "low-sugar", label: "저당" },
-  { key: "low-protein", label: "저단백" },
-  { key: "low-salt", label: "저염" },
-  { key: "low-potassium", label: "저칼륨" },
-  { key: "low-phosphorus", label: "저인" },
-]
+  { key: "low-sugar", labelKey: "restaurant.filter.nutrients.lowSugar" },
+  { key: "low-salt", labelKey: "restaurant.filter.nutrients.lowSalt" },
+  {
+    key: "low-potassium",
+    labelKey: "restaurant.filter.nutrients.lowPotassium",
+  },
+  {
+    key: "low-phosphorus",
+    labelKey: "restaurant.filter.nutrients.lowPhosphorus",
+  },
+] as const
 
 export const DEFAULT_FILTER_STATE: import("../types").FilterState = {
   region: null,

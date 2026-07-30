@@ -11,32 +11,19 @@ import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile
  * 이 훅을 여러 화면에서 불러도 요청은 한 번이다.
  */
 
-/**
- * 프로필을 아직 못 받았을 때만 쓰는 폴백. 가장 엄격한 행(5기/투석)이다.
- *
- * 잠깐 비관적으로 보이는 건 안전하지만 잠깐 낙관적으로 보이는 건 아니다.
- * 로딩 중에 느슨한 목표를 보여주면 환자가 그 순간 더 먹어도 된다고 읽는다.
- * 값은 백엔드 app/core/ckd_limits.py 의 STAGE_5 행과 같다.
- */
-const STRICTEST_FALLBACK = {
-  sodiumMg: 2000,
-  potassiumMg: 2000,
-  phosphorusMg: 800,
-  fluidMl: 1000,
-  proteinGPerKg: 0.6,
-} as const
+export type NutrientKey = "protein" | "sodium" | "potassium" | "phosphorus"
 
 export interface NutrientBar {
-  nutrient: string
+  nutrient: NutrientKey
   max: number
   unit: string
 }
 
 export interface NutrientLimits {
-  sodiumMg: number
-  potassiumMg: number
-  phosphorusMg: number
-  fluidMl: number
+  sodiumMg: number | null
+  potassiumMg: number | null
+  phosphorusMg: number | null
+  fluidMl: number | null
   /** 체중을 모르면 null. 지어내지 않는다. */
   proteinGDay: number | null
   /**
@@ -54,11 +41,17 @@ function toBars(
 ): NutrientBar[] {
   const bars: NutrientBar[] = []
   if (limits.proteinGDay != null) {
-    bars.push({ nutrient: "단백질", max: limits.proteinGDay, unit: "g" })
+    bars.push({ nutrient: "protein", max: limits.proteinGDay, unit: "g" })
   }
-  bars.push({ nutrient: "나트륨", max: limits.sodiumMg, unit: "mg" })
-  bars.push({ nutrient: "칼륨", max: limits.potassiumMg, unit: "mg" })
-  bars.push({ nutrient: "인", max: limits.phosphorusMg, unit: "mg" })
+  if (limits.sodiumMg != null && limits.sodiumMg > 0) {
+    bars.push({ nutrient: "sodium", max: limits.sodiumMg, unit: "mg" })
+  }
+  if (limits.potassiumMg != null && limits.potassiumMg > 0) {
+    bars.push({ nutrient: "potassium", max: limits.potassiumMg, unit: "mg" })
+  }
+  if (limits.phosphorusMg != null && limits.phosphorusMg > 0) {
+    bars.push({ nutrient: "phosphorus", max: limits.phosphorusMg, unit: "mg" })
+  }
   return bars
 }
 
@@ -66,15 +59,23 @@ export function useNutrientLimits(): NutrientLimits {
   const { data: profile, isLoading } = useKidneyProfile()
 
   if (!profile) {
-    const values = { ...STRICTEST_FALLBACK, proteinGDay: null }
+    // 모르는 값을 "가장 엄격한 수치"로 채우면 특히 수분에서 안전하지 않다.
+    // 프로필을 받기 전에는 판정·퍼센트·한도를 그리지 않는다.
+    const values = {
+      sodiumMg: null,
+      potassiumMg: null,
+      phosphorusMg: null,
+      fluidMl: null,
+      proteinGDay: null,
+    }
     return { ...values, bars: toBars(values), isFallback: true, isLoading }
   }
 
   const values = {
-    sodiumMg: profile.sodiumMg ?? STRICTEST_FALLBACK.sodiumMg,
-    potassiumMg: profile.potassiumMg ?? STRICTEST_FALLBACK.potassiumMg,
-    phosphorusMg: profile.phosphorusMg ?? STRICTEST_FALLBACK.phosphorusMg,
-    fluidMl: profile.fluidMl ?? STRICTEST_FALLBACK.fluidMl,
+    sodiumMg: profile.sodiumMg,
+    potassiumMg: profile.potassiumMg,
+    phosphorusMg: profile.phosphorusMg,
+    fluidMl: profile.fluidMl,
     // 서버가 이미 proteinGPerKg × 체중을 계산해 준다. 앱에서 다시 곱하지 않는다.
     proteinGDay: profile.proteinGDay,
   }

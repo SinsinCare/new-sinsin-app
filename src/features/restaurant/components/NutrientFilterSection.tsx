@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
+import { useTranslation } from "react-i18next"
 import { tokens } from "@/src/theme/tokens"
 import { NUTRIENTS } from "../data/filterData"
 
@@ -15,24 +16,36 @@ export function NutrientFilterSection({
   onToggle,
   onReset,
 }: NutrientFilterSectionProps) {
+  const { t } = useTranslation("common")
   const isDarkMode = useAppColorScheme() === "dark"
 
   const textColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
   const resetColor = isDarkMode ? tokens.color.textDarkSub.val : "#474758"
-  const defaultBorder = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
-  const selectedBorder = isDarkMode ? tokens.color.cardBgDark.val : tokens.color.borderLight.val
+  const defaultBorder = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.borderLight.val
+  const selectedBorder = isDarkMode
+    ? tokens.color.cardBgDark.val
+    : tokens.color.borderLight.val
   const selectedBg = isDarkMode ? "#D56E321A" : "#FCEBE1"
-  const headingColor = isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val
+  const headingColor = isDarkMode
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
 
   return (
     <YStack paddingHorizontal={16} paddingVertical={16} gap={12}>
       <XStack justifyContent="space-between" alignItems="center">
-        <Text fontFamily="$body" fontWeight="600" fontSize={15} color={headingColor}>
-          영양소 제한
+        <Text
+          fontFamily="$body"
+          fontWeight="600"
+          fontSize={15}
+          color={headingColor}
+        >
+          {t("restaurant.filter.nutrient")}
         </Text>
         <Pressable onPress={onReset}>
           <Text fontFamily="$body" fontSize={13} color={resetColor}>
-            ↻ 초기화
+            {t("restaurant.filter.reset")}
           </Text>
         </Pressable>
       </XStack>
@@ -52,10 +65,15 @@ export function NutrientFilterSection({
               ]}
             >
               <Text fontFamily="$body" fontSize={13} color={textColor}>
-                {nutrient.label}
+                {t(nutrient.labelKey)}
               </Text>
               {isSelected && (
-                <Text fontFamily="$body" fontSize={11} color={textColor} marginLeft={4}>
+                <Text
+                  fontFamily="$body"
+                  fontSize={11}
+                  color={textColor}
+                  marginLeft={4}
+                >
                   ✕
                 </Text>
               )}

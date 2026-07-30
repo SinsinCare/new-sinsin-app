@@ -9,13 +9,18 @@ export interface RestaurantReportValidationDraft {
   photoCount: number
 }
 
+export type RestaurantReportValidationError =
+  | "nameRequired"
+  | "categoryRequired"
+  | "tooManyPhotos"
+
 export function validateRestaurantReportDraft(
   draft: RestaurantReportValidationDraft,
-): string | null {
-  if (!draft.name.trim()) return "식당 이름을 입력해주세요."
-  if (!draft.category.trim()) return "음식 종류를 입력해주세요."
+): RestaurantReportValidationError | null {
+  if (!draft.name.trim()) return "nameRequired"
+  if (!draft.category.trim()) return "categoryRequired"
   if (draft.photoCount > MAX_RESTAURANT_REPORT_PHOTOS) {
-    return `사진은 최대 ${MAX_RESTAURANT_REPORT_PHOTOS}장까지 첨부할 수 있어요.`
+    return "tooManyPhotos"
   }
   return null
 }

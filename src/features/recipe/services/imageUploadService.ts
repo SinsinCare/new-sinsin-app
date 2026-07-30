@@ -2,6 +2,7 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system/legacy"
 
 import { getBackendUrl } from "@/src/config/appConfig"
+import { getAppLanguage } from "@/src/i18n"
 import { ApiError } from "@/src/services/core/apiError"
 import { tokenService } from "@/src/services/core/tokenService"
 
@@ -12,6 +13,13 @@ export interface ImageUploadResult {
   imageUrl: string
   contentType: string
   size: number
+}
+
+type ImageUploadResponse = {
+  isSuccess?: boolean
+  code?: string
+  message?: string
+  result?: ImageUploadResult
 }
 
 async function prepareImage(uri: string): Promise<string> {
@@ -58,26 +66,23 @@ export const imageUploadService = {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
         Accept: "application/json",
+        "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
       },
-      body: formData,
+      body: formData as unknown as RequestInit["body"],
     })
 
-    let json: {
-      isSuccess?: boolean
-      code?: string
-      message?: string
-      result?: ImageUploadResult
-    } | null = null
+    let json: ImageUploadResponse | null = null
     try {
-      json = await response.json()
+      json = (await response.json()) as ImageUploadResponse
     } catch {
       // Non-JSON responses are handled by status below.
     }
 
     if (!response.ok || json?.isSuccess === false || !json?.result) {
       throw new ApiError(
-        json?.message ||
-          `이미지 업로드에 실패했습니다. HTTP ${response.status}`,
+        getAppLanguage() === "en"
+          ? "We couldn’t upload the photo. Check your connection and try again."
+          : "사진을 올리지 못했어요. 인터넷 연결을 확인한 뒤 다시 올려 주세요.",
         json?.code || `HTTP_${response.status}`,
         response.status,
       )

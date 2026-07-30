@@ -1,4 +1,8 @@
-import { normalizeFoodAnalysisResult } from "../src/shared/utils/foodAnalysisResult"
+import {
+  normalizeFoodAnalysisResult,
+  projectFoodAnalysisJobPresentation,
+} from "../src/shared/utils/foodAnalysisResult"
+import i18n from "../src/i18n"
 
 const total = {
   calories: 420,
@@ -12,6 +16,10 @@ const total = {
 }
 
 describe("normalizeFoodAnalysisResult", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("ko")
+  })
+
   it("adapts the exact v2 READY payload to the result-card contract", () => {
     const result = normalizeFoodAnalysisResult({
       foodAnalysisResultId: 91,
@@ -60,7 +68,7 @@ describe("normalizeFoodAnalysisResult", () => {
 
     expect(result.evaluation).toEqual({
       comment: "이 결과는 식이 기록과 의료진 상담을 돕기 위한 참고 정보입니다.",
-      score: 0,
+      score: null,
       cautionFoods: [],
       detail: {
         riskFactors: "",
@@ -87,7 +95,7 @@ describe("normalizeFoodAnalysisResult", () => {
     expect(result.foods).toEqual([])
     expect(result.evaluation).toEqual({
       comment: "부분 응답",
-      score: 0,
+      score: null,
       cautionFoods: [],
       detail: { riskFactors: "", disclaimer: "" },
     })
@@ -96,10 +104,10 @@ describe("normalizeFoodAnalysisResult", () => {
       protein: 0,
       carbohydrates: 0,
       fat: 0,
-      sodium: 0,
-      potassium: 0,
-      phosphorus: 0,
-      water: 0,
+      sodium: null,
+      potassium: null,
+      phosphorus: null,
+      water: null,
     })
   })
 
@@ -126,10 +134,10 @@ describe("normalizeFoodAnalysisResult", () => {
       analysisItemId: "item-only",
       name: "국",
       servingSizeValue: 200,
-      sodium: 0,
+      sodium: null,
       provenance: "AI_ESTIMATE",
     })
-    expect(result.total.potassium).toBe(0)
+    expect(result.total.potassium).toBeNull()
     expect(result.evaluation.cautionFoods).toEqual([
       { food: "", reason: "나트륨 주의" },
     ])
@@ -208,5 +216,129 @@ describe("normalizeFoodAnalysisResult", () => {
       "soup-item",
       "rice-item",
     ])
+  })
+
+  it("uses an English fallback name when an English result omits food names", async () => {
+    await i18n.changeLanguage("en")
+
+    const result = normalizeFoodAnalysisResult({
+      foods: [{}],
+      total,
+    })
+
+    expect(result.foods[0]?.name).toBe("Food")
+  })
+
+  it("fails closed when an in-flight Korean result arrives after switching to English", async () => {
+    await i18n.changeLanguage("en")
+
+    const result = normalizeFoodAnalysisResult({
+      title: "검증되지 않은 식사",
+      foods: [
+        {
+          name: "현미밥",
+          servingSizeValue: 1,
+          servingSizeUnit: "공기",
+          ...total,
+        },
+        {
+          name: "검증되지 않은 요리",
+          servingSizeValue: 1,
+          servingSizeUnit: "인분",
+          ...total,
+        },
+      ],
+      total,
+      evaluation: {
+        comment: "이번 식사의 영양정보를 확인해 주세요.",
+        cautionFoods: [
+          {
+            food: "검증되지 않은 요리",
+            reason: "나트륨 수치를 확인해 주세요.",
+          },
+        ],
+        detail: {
+          riskFactors: "나트륨",
+          disclaimer: "참고용 정보예요.",
+        },
+      },
+      revision: {
+        revisionId: "revision-old-ko",
+        fullTotal: total,
+        evaluation: {
+          guidance: ["식이 기록에 참고해 주세요."],
+        },
+        items: [
+          {
+            analysisItemId: "rice",
+            name: "현미밥",
+            analyzedGrams: 150,
+            fullNutrients: total,
+            provenance: "CATALOG",
+          },
+          {
+            analysisItemId: "unknown",
+            name: "검증되지 않은 요리",
+            analyzedGrams: 100,
+            fullNutrients: total,
+            provenance: "AI_INGREDIENT_ESTIMATE",
+          },
+        ],
+      },
+    })
+
+    expect(result.title).toBe("Brown rice + 1 more")
+    expect(result.foods.map((food) => food.name)).toEqual([
+      "Brown rice",
+      // 사전에 없는 이름은 "Food 2" 로 지우지 않고 로마자로 읽을 수 있게 준다.
+      "Geomjeungdoeji aneun yori",
+    ])
+    expect(result.foods.map((food) => food.servingSizeUnit)).toEqual([
+      "bowl",
+      "serving",
+    ])
+    expect(result.revision?.items.map((item) => item.name)).toEqual([
+      "Brown rice",
+      // 사전에 없는 이름은 "Food 2" 로 지우지 않고 로마자로 읽을 수 있게 준다.
+      "Geomjeungdoeji aneun yori",
+    ])
+    expect(result.evaluation.comment).toBe(
+      "Review the nutrition details recorded for this meal.",
+    )
+    expect(JSON.stringify(result)).not.toMatch(/[ㄱ-ㅎㅏ-ㅣ가-힣]/)
+  })
+
+  it("fails closed for stale Korean confirmation copy in English mode", async () => {
+    await i18n.changeLanguage("en")
+
+    const job = projectFoodAnalysisJobPresentation({
+      analysisId: "analysis-1",
+      requestId: "request-1",
+      status: "NEEDS_CONFIRMATION",
+      error: "분석을 완료하지 못했어요.",
+      confirmationQuestions: [
+        {
+          questionId: "q-1",
+          type: "PORTION",
+          prompt: "사진 속 음식의 양을 확인해 주세요.",
+          options: [
+            { value: "75", label: "적게" },
+            { value: "100", label: "사진 추정량" },
+            { value: "125", label: "많게" },
+          ],
+        },
+      ],
+    })
+
+    expect(job.error).toBe(
+      "We couldn’t finish the meal analysis. Try it again.",
+    )
+    expect(job.confirmationQuestions?.[0]?.prompt).toBe(
+      "How much of this food is shown?",
+    )
+    expect(
+      job.confirmationQuestions?.[0]?.options.map((option) => option.label),
+    ).toEqual(["A little less", "Photo estimate", "A little more"])
+    expect(JSON.stringify(job)).not.toMatch(/[ㄱ-ㅎㅏ-ㅣ가-힣]/)
   })
 })

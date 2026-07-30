@@ -11,6 +11,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -25,6 +26,7 @@ export function NhisRequestScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
 
   const [authMethods, setAuthMethods] = useState<AuthMethodRs[]>([])
@@ -75,12 +77,10 @@ export function NhisRequestScreen() {
       } else if (result.status === "PENDING") {
         setRequestId(result.requestId)
       } else {
-        setRequestError(result.message || "조회 요청에 실패했습니다.")
+        setRequestError(t("nhis.requestRejected"))
       }
-    } catch (e: unknown) {
-      setRequestError(
-        e instanceof Error ? e.message : "요청 중 오류가 발생했습니다.",
-      )
+    } catch {
+      setRequestError(t("nhis.requestNetworkError"))
     } finally {
       setRequesting(false)
     }
@@ -99,12 +99,14 @@ export function NhisRequestScreen() {
       style={[styles.container, { backgroundColor: healthColors.background }]}
     >
       <ScreenHeader
-        title="건강검진 조회"
+        title={t("nhis.requestTitle")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 100 },
@@ -122,7 +124,7 @@ export function NhisRequestScreen() {
           <ThemedText
             style={[styles.sectionTitle, { color: healthColors.text }]}
           >
-            개인 정보
+            {t("nhis.personalInfo")}
           </ThemedText>
 
           <View style={styles.row}>
@@ -133,7 +135,7 @@ export function NhisRequestScreen() {
                   { color: healthColors.textSecondary },
                 ]}
               >
-                이름
+                {t("nhis.name")}
               </ThemedText>
               <TextInput
                 style={[
@@ -146,7 +148,7 @@ export function NhisRequestScreen() {
                 ]}
                 value={resNm}
                 onChangeText={setResNm}
-                placeholder="홍길동"
+                placeholder={t("nhis.namePlaceholder")}
                 placeholderTextColor={healthColors.textAssistive}
               />
             </View>
@@ -157,7 +159,7 @@ export function NhisRequestScreen() {
                   { color: healthColors.textSecondary },
                 ]}
               >
-                전화번호
+                {t("nhis.phone")}
               </ThemedText>
               <TextInput
                 style={[
@@ -181,7 +183,7 @@ export function NhisRequestScreen() {
             <ThemedText
               style={[styles.fieldLabel, { color: healthColors.textSecondary }]}
             >
-              생년월일
+              {t("nhis.birthDate")}
             </ThemedText>
             <TextInput
               style={[
@@ -212,7 +214,7 @@ export function NhisRequestScreen() {
           <ThemedText
             style={[styles.sectionTitle, { color: healthColors.text }]}
           >
-            간편인증 수단
+            {t("nhis.authMethod")}
           </ThemedText>
 
           {loadingMethods ? (
@@ -224,9 +226,19 @@ export function NhisRequestScreen() {
             <View style={styles.methodRow}>
               {authMethods.map((method) => {
                 const isSelected = selectedMethod?.key === method.key
+                const methodKey = method.key.toUpperCase()
+                const methodName =
+                  methodKey === "KAKAO"
+                    ? t("nhis.methods.KAKAO")
+                    : methodKey === "PASS"
+                      ? t("nhis.methods.PASS")
+                      : method.displayName
                 return (
                   <Pressable
                     key={method.key}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={methodName}
                     style={[
                       styles.methodCard,
                       {
@@ -247,7 +259,7 @@ export function NhisRequestScreen() {
                         isSelected && styles.methodNameSelected,
                       ]}
                     >
-                      {method.displayName}
+                      {methodName}
                     </ThemedText>
                   </Pressable>
                 )
@@ -263,7 +275,7 @@ export function NhisRequestScreen() {
                   { color: healthColors.textSecondary },
                 ]}
               >
-                통신사 선택
+                {t("nhis.carrier")}
               </ThemedText>
               <View style={styles.telecomRow}>
                 {selectedMethod.telecomOptions.map((t) => (
@@ -334,9 +346,7 @@ export function NhisRequestScreen() {
             <ThemedText
               style={[styles.pendingText, { color: healthColors.text }]}
             >
-              {
-                "인증 앱에서 본인인증을 완료해 주세요.\n완료 후 아래 인증 완료 버튼을 눌러주세요."
-              }
+              {t("nhis.pendingInstructions")}
             </ThemedText>
           </View>
         )}
@@ -359,7 +369,9 @@ export function NhisRequestScreen() {
               size={20}
               color="#FFFFFF"
             />
-            <ThemedText style={styles.buttonText}>인증 완료</ThemedText>
+            <ThemedText style={styles.buttonText}>
+              {t("nhis.verified")}
+            </ThemedText>
           </Pressable>
         ) : (
           <Pressable
@@ -373,7 +385,9 @@ export function NhisRequestScreen() {
             {requesting ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <ThemedText style={styles.buttonText}>조회 요청</ThemedText>
+              <ThemedText style={styles.buttonText}>
+                {t("nhis.startVerification")}
+              </ThemedText>
             )}
           </Pressable>
         )}

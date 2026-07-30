@@ -2,7 +2,8 @@
  * Centralized logging: verbose output only in development.
  * Use `error` for failures you still want in device logs / future crash reporters.
  */
-const isDev = typeof __DEV__ !== "undefined" && __DEV__
+const isDev =
+  (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ === true
 
 function formatArg(value: unknown): string {
   if (value instanceof Error) return value.message

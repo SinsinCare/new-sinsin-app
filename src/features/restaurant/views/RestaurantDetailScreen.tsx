@@ -6,80 +6,61 @@ import {
   Image,
   Pressable,
   Dimensions,
-  Platform,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
-import { tokens } from "@/src/theme/tokens"
+import { normalizeLanguage } from "@/src/i18n"
 import type { PlaceRestaurant } from "../types"
+import {
+  getLocalizedCategoryTags,
+  getLocalizedDescription,
+} from "../utils/restaurantLocalization"
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window")
-
-const NUTRIENT_INFO: Record<string, { label: string; color: string; bg: string; desc: string }> = {
-  저염: {
-    label: "저염",
-    color: tokens.color.sub8.val,
-    bg: "#F0FDF4",
-    desc: "소디움 함량을 낮춰 신장 부담을 줄입니다",
-  },
-  저칼륨: {
-    label: "저칼륨",
-    color: "#0369A1",
-    bg: "#F0F9FF",
-    desc: "칼륨 섭취를 제한해 혈중 칼륨 농도를 관리합니다",
-  },
-  저인: {
-    label: "저인",
-    color: "#7C3AED",
-    bg: "#F5F3FF",
-    desc: "인 함량을 낮춰 뼈 건강과 혈관을 보호합니다",
-  },
-  저당: {
-    label: "저당",
-    color: "#B45309",
-    bg: "#FFFBEB",
-    desc: "혈당 관리에 적합한 저당 메뉴를 제공합니다",
-  },
-  저단백: {
-    label: "저단백",
-    color: "#BE185D",
-    bg: "#FDF2F8",
-    desc: "단백질 섭취를 제한해 신장 부담을 최소화합니다",
-  },
-}
-
-const NUTRIENT_KEYS = Object.keys(NUTRIENT_INFO)
 
 interface Props {
   restaurant: PlaceRestaurant
 }
 
 export function RestaurantDetailScreen({ restaurant }: Props) {
+  const { t, i18n } = useTranslation("common")
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const [activeImageIndex, setActiveImageIndex] = useState(0)
 
-  const healthTags = restaurant.tags.filter((t) => NUTRIENT_KEYS.includes(t))
-  const foodTags = restaurant.tags.filter((t) => !NUTRIENT_KEYS.includes(t))
+  const language = normalizeLanguage(i18n.resolvedLanguage)
+  const foodTags = getLocalizedCategoryTags(restaurant.tags, language)
+  const description = getLocalizedDescription(
+    restaurant.description,
+    t,
+    language,
+  )
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       >
         {/* 이미지 갤러리 */}
         <View style={styles.imageSection}>
           <ScrollView
+            bounces={false}
+            overScrollMode="never"
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(e) => {
-              const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH)
+              const index = Math.round(
+                e.nativeEvent.contentOffset.x / SCREEN_WIDTH,
+              )
               setActiveImageIndex(index)
             }}
           >
@@ -89,6 +70,10 @@ export function RestaurantDetailScreen({ restaurant }: Props) {
                 source={typeof img === "number" ? img : { uri: img }}
                 style={styles.heroImage}
                 resizeMode="cover"
+                accessibilityLabel={t("restaurant.photoAccessibility", {
+                  name: restaurant.name,
+                  number: i + 1,
+                })}
               />
             ))}
           </ScrollView>
@@ -98,6 +83,8 @@ export function RestaurantDetailScreen({ restaurant }: Props) {
             style={[styles.backButton, { top: insets.top + 8 }]}
             onPress={() => router.back()}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("restaurant.backAccessibility")}
           >
             <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </Pressable>
@@ -110,7 +97,9 @@ export function RestaurantDetailScreen({ restaurant }: Props) {
                   key={i}
                   style={[
                     styles.dot,
-                    i === activeImageIndex ? styles.dotActive : styles.dotInactive,
+                    i === activeImageIndex
+                      ? styles.dotActive
+                      : styles.dotInactive,
                   ]}
                 />
               ))}
@@ -137,52 +126,32 @@ export function RestaurantDetailScreen({ restaurant }: Props) {
             <View style={styles.metaItem}>
               <Ionicons name="star" size={14} color="#F59E0B" />
               <ThemedText style={styles.metaText}>
-                {restaurant.rating} ({restaurant.reviewCount}개 리뷰)
+                {restaurant.rating} ·{" "}
+                {t("restaurant.reviews", {
+                  count: restaurant.reviewCount ?? 0,
+                })}
               </ThemedText>
             </View>
             <View style={styles.metaDivider} />
             <View style={styles.metaItem}>
               <Ionicons name="location-outline" size={14} color="#64748B" />
-              <ThemedText style={styles.metaText}>{restaurant.distance}</ThemedText>
+              <ThemedText style={styles.metaText}>
+                {restaurant.distance}
+              </ThemedText>
             </View>
           </View>
 
           {/* 주소 */}
           <View style={styles.addressRow}>
             <Ionicons name="map-outline" size={14} color="#94A3B8" />
-            <ThemedText style={styles.addressText}>{restaurant.address}</ThemedText>
+            <ThemedText style={styles.addressText}>
+              {restaurant.address}
+            </ThemedText>
           </View>
 
           {/* 설명 */}
           <View style={styles.divider} />
-          <ThemedText style={styles.description}>{restaurant.description}</ThemedText>
-
-          {/* 신장 건강 적합성 */}
-          {healthTags.length > 0 && (
-            <>
-              <View style={styles.divider} />
-              <View style={styles.healthSection}>
-                <View style={styles.healthHeader}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color={tokens.color.sub8.val} />
-                  <ThemedText style={styles.healthTitle}>신장 건강 적합 정보</ThemedText>
-                </View>
-                {healthTags.map((tag) => {
-                  const info = NUTRIENT_INFO[tag]
-                  if (!info) return null
-                  return (
-                    <View key={tag} style={[styles.healthCard, { backgroundColor: info.bg }]}>
-                      <View style={[styles.healthBadge, { backgroundColor: info.color }]}>
-                        <ThemedText style={styles.healthBadgeText}>{info.label}</ThemedText>
-                      </View>
-                      <ThemedText style={[styles.healthDesc, { color: info.color }]}>
-                        {info.desc}
-                      </ThemedText>
-                    </View>
-                  )
-                })}
-              </View>
-            </>
-          )}
+          <ThemedText style={styles.description}>{description}</ThemedText>
         </View>
       </ScrollView>
     </ThemedView>
@@ -302,44 +271,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: "#374151",
-  },
-  healthSection: {
-    gap: 10,
-  },
-  healthHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 4,
-  },
-  healthTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: tokens.color.sub8.val,
-  },
-  healthCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  healthBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    flexShrink: 0,
-  },
-  healthBadgeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  healthDesc: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "500",
   },
 })

@@ -1,0 +1,271 @@
+{
+  "actions": {
+    "cancel": "Cancel",
+    "openSettings": "Open Settings",
+    "retryLoad": "Reload",
+    "importResults": "Import results",
+    "clearAll": "Remove all",
+    "confirm": "OK",
+    "save": "Save results",
+    "saving": "Saving…"
+  },
+  "entry": {
+    "header": "Import lab results",
+    "title": "How would you like to\nimport your results?",
+    "subtitle": "Keep past results together and\nsee how your numbers change.",
+    "nhisTitle": "Import from Korea’s NHIS",
+    "nhisDescription": "Verify your identity once to import up to 10 years of checkup results.",
+    "nhisBadge": "Import all at once",
+    "fileTitle": "Use a photo or PDF",
+    "fileDescription": "Take a photo of your paper report or choose a PDF.",
+    "dashboardTitle": "View trends",
+    "dashboardDescription": "See how your results have changed over time.",
+    "usageNote": "Imported results are used to show your lab values and trends.",
+    "comparisonNote": "Keep results together to compare\nvalues and dates in one place."
+  },
+  "result": {
+    "title": "Health checkup results",
+    "loadError": "We couldn’t load your health checkup results.\nCheck your internet connection and reload.",
+    "detailLoadError": "We couldn’t load this health checkup result.\nCheck your internet connection and reload.",
+    "emptyTitle": "No health checkup result to show",
+    "emptyDescription": "Import your results to see the values and date here.",
+    "listEmpty": "You haven’t imported any health checkup results yet.\nImport your results to see them here.",
+    "overallAssessment": "Overall assessment: {{assessment}}",
+    "judgements": {
+      "NORMAL_A": {
+        "label": "NHIS Normal A",
+        "description": "This checkup did not identify any notable findings. Continue routine checkups."
+      },
+      "NORMAL_B": {
+        "label": "NHIS Normal B",
+        "description": "Some results may benefit from lifestyle changes. Review the detailed results."
+      },
+      "NORMAL": {
+        "label": "No flagged findings",
+        "description": "This checkup did not identify any notable findings. Continue routine checkups."
+      },
+      "GENERAL_DISEASE_SUSPECTED": {
+        "label": "Possible general condition",
+        "description": "One or more results need follow-up. Review the detailed results and the testing facility’s guidance."
+      },
+      "CARDIOMETABOLIC_DISEASE_SUSPECTED": {
+        "label": "Possible hypertension or diabetes",
+        "description": "Some blood pressure or blood glucose results need follow-up. Talk with a healthcare professional."
+      },
+      "DISEASE_SUSPECTED": {
+        "label": "Possible health condition",
+        "description": "One or more results need follow-up. Review the detailed results and the testing facility’s guidance."
+      },
+      "KNOWN_CONDITION": {
+        "label": "Existing condition needs follow-up",
+        "description": "Review these results with your care team in the context of the condition you’re already managing."
+      },
+      "REVIEW_NEEDED": {
+        "label": "Follow-up needed",
+        "description": "One or more results need review. This category does not identify a specific condition, so check the detailed results."
+      },
+      "UNKNOWN": {
+        "label": "Review the facility’s assessment",
+        "description": "We couldn’t interpret this assessment category. Review the detailed results and the testing facility’s guidance."
+      }
+    },
+    "recentTab": "Latest",
+    "allTab": "All results",
+    "resultCount": "{{count}} health checkup results",
+    "resultCount_one": "{{count}} health checkup result",
+    "resultCount_other": "{{count}} health checkup results",
+    "viewAll": "View all",
+    "latest": "Latest",
+    "viewDetails": "View details",
+    "year": "{{year}}",
+    "groups": {
+      "bodyMeasurements": "Body measurements",
+      "bloodPressure": "Blood pressure",
+      "bloodGlucose": "Blood glucose",
+      "cholesterol": "Cholesterol",
+      "blood": "Blood",
+      "kidneyFunction": "Kidney function",
+      "liverFunction": "Liver function"
+    },
+    "fields": {
+      "height": "Height",
+      "weight": "Weight",
+      "bmi": "Body mass index (BMI)",
+      "waistCircumference": "Waist circumference",
+      "systolicBloodPressure": "Systolic blood pressure",
+      "diastolicBloodPressure": "Diastolic blood pressure",
+      "fastingBloodGlucose": "Fasting blood glucose",
+      "totalCholesterol": "Total cholesterol",
+      "hdlCholesterol": "HDL cholesterol",
+      "ldlCholesterol": "LDL cholesterol",
+      "triglycerides": "Triglycerides",
+      "hemoglobin": "Hemoglobin",
+      "serumCreatinine": "Serum creatinine",
+      "gfr": "Glomerular filtration rate (GFR)",
+      "ast": "AST (SGOT)",
+      "alt": "ALT (SGPT)",
+      "gammaGtp": "Gamma-GTP"
+    }
+  },
+  "upload": {
+    "header": "Import lab results",
+    "title": "Upload your lab report",
+    "subtitle": "Add a photo or PDF to review the values before saving.",
+    "attachments": "Attachments",
+    "chooseFile": "Choose file",
+    "takePhoto": "Take photo",
+    "choosePhoto": "Photo library",
+    "maxFiles": "You can add up to {{count}} files. Remove one before choosing another.",
+    "maxFiles_one": "You can add up to {{count}} file. Remove it before choosing another.",
+    "maxFiles_other": "You can add up to {{count}} files. Remove one before choosing another.",
+    "readResults": "Read lab results",
+    "readingResults": "Reading lab results…",
+    "readingTitle": "Reading your lab results",
+    "readingDescription": "This may take a moment.\nKeep this screen open while we read the text.",
+    "readErrorTitle": "We couldn’t read the lab results",
+    "cameraPermissionTitle": "Camera access is off",
+    "cameraPermissionDescription": "Allow camera access in Settings to take a photo of your lab report.",
+    "photoPermissionTitle": "Photo access is off",
+    "photoPermissionDescription": "Allow photo access in Settings to choose a lab report.",
+    "tips": {
+      "report": "Use a lab report or results summary.",
+      "straight": "Hold the camera directly above the page so the text is clear.",
+      "focus": "Keep the camera steady and make sure the text is in focus.",
+      "fullPage": "Include the full page if any text is cut off."
+    }
+  },
+  "ocrReview": {
+    "title": "Review lab results",
+    "missingReport": "We couldn’t find this lab report. Go back and choose the file again.",
+    "fallbackLoadError": "We couldn’t load the lab results. Try reloading in a moment.",
+    "retryLoad": "Reload lab results",
+    "heading": "Review the values we found",
+    "description": "Correct anything that looks different, then select the results you want to save.",
+    "alreadySaved": "You already saved this lab report to your records.",
+    "examDate": "Date of test",
+    "missingDate": "We couldn’t read the test date. Enter the date shown on the report.",
+    "invalidDateTitle": "Check the test date",
+    "invalidDateDescription": "Enter the date as year-month-day. Example: 2026-05-01",
+    "items": "Lab results",
+    "selectedCount": "{{count}} selected",
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "examNamePlaceholder": "Test name",
+    "nameNeedsReview": "Check test name",
+    "reviewBadge": "Review",
+    "sourceLabel": "Shown on report: {{text}}",
+    "valuePlaceholder": "Value",
+    "unitPlaceholder": "Unit",
+    "addItem": "Add a lab result",
+    "noItemsTitle": "Choose a result to save",
+    "noItemsDescription": "Select at least one item that has a lab value.",
+    "saveSuccessTitle": "Lab results saved",
+    "saveSuccessDescription": "Added {{count}} results to your health records.",
+    "saveSuccessDescription_one": "Added {{count}} result to your health records.",
+    "saveSuccessDescription_other": "Added {{count}} results to your health records.",
+    "saveErrorTitle": "We couldn’t save the lab results"
+  },
+  "dashboard": {
+    "title": "Lab result trends",
+    "emptyTitle": "No lab results yet",
+    "emptyDescription": "Import your results to see how your values change over time.",
+    "recordCount": "{{count}} health checkup records",
+    "recordCount_one": "{{count}} health checkup record",
+    "recordCount_other": "{{count}} health checkup records",
+    "referenceNote": "These labels compare your values with general reference ranges in the app. Follow the assessment from the testing facility or any personal target set by your care team.",
+    "statusSection": "Results by category",
+    "trendSection": "Trends by test",
+    "noTrend": "There aren’t enough imported values to show a trend yet.",
+    "noRecords": "No records",
+    "referenceRange": "Lab reference range",
+    "referenceRangeBetween": "Lab reference range {{min}}–{{max}}",
+    "referenceRangeMin": "Lab reference range {{min}} or higher",
+    "referenceRangeMax": "Lab reference range {{max}} or lower",
+    "status": {
+      "withinRange": "Within range",
+      "outsideRange": "Outside range",
+      "review": "Review needed"
+    },
+    "modules": {
+      "kidney": {
+        "title": "Kidney",
+        "description": "Import lab results to see your glomerular filtration rate and creatinine."
+      },
+      "electrolytes": {
+        "title": "Electrolytes",
+        "description": "No imported sodium or potassium results yet."
+      },
+      "proteinuria": {
+        "title": "Protein in urine",
+        "description": "No imported urine protein results yet."
+      },
+      "bloodPressure": {
+        "title": "Blood pressure",
+        "description": "Systolic and diastolic blood pressure"
+      },
+      "bloodGlucose": {
+        "title": "Blood glucose",
+        "description": "Fasting blood glucose"
+      },
+      "lipids": {
+        "title": "Lipids",
+        "description": "Cholesterol and triglycerides"
+      },
+      "bloodLiver": {
+        "title": "Blood and liver",
+        "description": "Hemoglobin and liver function values"
+      }
+    },
+    "metrics": {
+      "gfr": "Glomerular filtration rate (GFR)",
+      "serumCreatinine": "Serum creatinine",
+      "systolicBloodPressure": "Systolic blood pressure",
+      "diastolicBloodPressure": "Diastolic blood pressure",
+      "fastingBloodGlucose": "Fasting blood glucose",
+      "totalCholesterol": "Total cholesterol",
+      "ldlCholesterol": "LDL cholesterol",
+      "hdlCholesterol": "HDL cholesterol",
+      "triglycerides": "Triglycerides",
+      "hemoglobin": "Hemoglobin",
+      "ast": "AST (SGOT)",
+      "alt": "ALT (SGPT)",
+      "gammaGtp": "Gamma-GTP"
+    }
+  },
+  "nhis": {
+    "organization": "Korea’s National Health Insurance Service",
+    "authTitle": "Verify your identity to\nimport your health checkups",
+    "authDescription": "Complete one identity check to import\nup to 10 years of NHIS results.",
+    "chips": {
+      "simpleAuth": "Simple verification",
+      "allAtOnce": "Import together",
+      "tenYears": "Up to 10 years"
+    },
+    "startVerification": "Start identity check",
+    "authNote": "Choose a verification method, then follow the steps in that app.",
+    "requestTitle": "Import NHIS checkups",
+    "personalInfo": "Personal information",
+    "name": "Full name",
+    "namePlaceholder": "Name on your Korean ID",
+    "phone": "Mobile number",
+    "birthDate": "Date of birth",
+    "authMethod": "Verification method",
+    "methods": {
+      "KAKAO": "Kakao",
+      "PASS": "PASS"
+    },
+    "carrier": "Mobile carrier",
+    "requestRejected": "We couldn’t start the identity check. Review your information and verification method.",
+    "requestNetworkError": "We couldn’t start the identity check. Check your internet connection and try again.",
+    "pendingInstructions": "Finish the identity check in the app you selected.\nWhen you’re done, return here to import your results.",
+    "verified": "I’m verified",
+    "confirmTimeout": "The identity check expired. Go back and start it again.",
+    "confirmFailed": "The identity check may be incomplete, or some information may not match. Go back and review it.",
+    "confirmNetworkError": "We couldn’t confirm the identity check. Check your internet connection and try again.",
+    "loadingTitle": "Importing your health checkups",
+    "loadingDescription": "Keep this screen open while we confirm the results.",
+    "timeoutTitle": "Identity check expired",
+    "failedTitle": "We couldn’t confirm your identity",
+    "retryVerification": "Restart identity check"
+  }
+}

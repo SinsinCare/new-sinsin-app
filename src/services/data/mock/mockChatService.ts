@@ -5,20 +5,26 @@ import type {
   ChatCategory,
 } from "../../../types/chat"
 import { MOCK_CHATS, MOCK_CHAT_MESSAGES } from "./mockData"
+import { getAppLanguage, type Language } from "@/src/i18n"
 
 const delay = (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // 카테고리별 목 응답
-const MOCK_REPLIES: Record<string, string[]> = {
-  default: [
-    "안녕하세요! 만성신장질환 관리에 대해 도움을 드리겠습니다. 어떤 것이 궁금하신가요?",
-    "좋은 질문이시네요. CKD 환자분의 건강 관리에서 가장 중요한 것은 식이 조절과 정기적인 검진입니다.",
-    "해당 내용에 대해 자세히 안내해드리겠습니다. 다만, 정확한 진단과 처방은 반드시 주치의와 상담해주세요.",
+const MOCK_REPLIES: Record<Language, string[]> = {
+  ko: [
+    "신장 건강에서 어떤 점이 궁금한지 편하게 말씀해 주세요.",
+    "신장 건강은 식사와 정기 검진을 함께 살펴보는 게 중요해요. 어떤 부분이 가장 궁금하세요?",
+    "말씀해 주신 내용을 하나씩 살펴볼게요. 진단이나 처방이 필요하면 담당 의료진과 상의해 주세요.",
+  ],
+  en: [
+    "Tell me what’s on your mind about kidney health, and we’ll look at it together.",
+    "Kidney care often means looking at meals and routine checkups together. What would you like to start with?",
+    "Let’s take it one piece at a time. For a diagnosis or treatment decision, check with your care team.",
   ],
 }
 
-function pickMockReply(): string {
-  const pool = MOCK_REPLIES.default
+function pickMockReply(language: Language): string {
+  const pool = MOCK_REPLIES[language]
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
@@ -34,13 +40,84 @@ function pickMockCategory(): ChatCategory {
   return categories[Math.floor(Math.random() * categories.length)]
 }
 
-const CATEGORY_LABELS: Record<ChatCategory, string> = {
-  FOOD_DIET: "음식·식단",
-  MEDICATION: "약·영양제",
-  LIFESTYLE: "생활관리",
-  SYMPTOMS: "증상",
-  EXAM: "검사·수치해석",
-  NONE: "기타",
+const CATEGORY_LABELS: Record<Language, Record<ChatCategory, string>> = {
+  ko: {
+    FOOD_DIET: "음식·식단",
+    MEDICATION: "약·영양제",
+    LIFESTYLE: "생활관리",
+    SYMPTOMS: "증상",
+    EXAM: "검사·수치해석",
+    NONE: "기타",
+  },
+  en: {
+    FOOD_DIET: "Food and meals",
+    MEDICATION: "Medications",
+    LIFESTYLE: "Daily habits",
+    SYMPTOMS: "Symptoms",
+    EXAM: "Lab results",
+    NONE: "Something else",
+  },
+}
+
+const EN_SEED_CHATS: Record<number, Pick<Chat, "title" | "summary">> = {
+  1: {
+    title: "Ways to cut back on sodium",
+    summary:
+      "Practical ways to lower sodium while following the goals set by your care team.",
+  },
+  2: {
+    title: "Fruit choices when potassium is high",
+    summary:
+      "Potassium varies by fruit, so use your latest labs and personal meal plan to choose the type and amount.",
+  },
+  3: {
+    title: "Understanding your eGFR",
+    summary:
+      "eGFR is best understood as a trend alongside your other test results, not as a single isolated number.",
+  },
+}
+
+const EN_SEED_MESSAGES: Record<
+  number,
+  Pick<Message, "content" | "aiCategoryLabel">
+> = {
+  1: {
+    content:
+      "I have stage 3 chronic kidney disease. How can I lower my sodium intake?",
+  },
+  2: {
+    content:
+      "Your sodium goal depends on your labs and overall health. If your care team gave you a target, follow that first. For everyday meals, try lemon, vinegar, pepper, or other salt-free seasonings for flavor.",
+    aiCategoryLabel: "Food and meals",
+  },
+  3: {
+    content: "Which fruits should I avoid if my potassium is high?",
+  },
+  4: {
+    content:
+      "Potassium varies by fruit. Use your latest potassium result and personal meal plan, then ask your clinician or dietitian which fruits and daily portions fit your care.",
+    aiCategoryLabel: "Food and meals",
+  },
+  5: {
+    content: "How should I understand my eGFR?",
+  },
+  6: {
+    content:
+      "eGFR is one measure of how well your kidneys filter. A single result doesn’t tell the whole story, so your care team will look at the trend and your other test results too.",
+    aiCategoryLabel: "Lab results",
+  },
+}
+
+function presentChat(chat: Chat): Chat {
+  if (getAppLanguage() !== "en") return { ...chat }
+  const localized = EN_SEED_CHATS[chat.id]
+  return localized ? { ...chat, ...localized } : { ...chat }
+}
+
+function presentMessage(message: Message): Message {
+  if (getAppLanguage() !== "en") return { ...message }
+  const localized = EN_SEED_MESSAGES[message.id]
+  return localized ? { ...message, ...localized } : { ...message }
 }
 
 export function createMockChatService(): ChatService {
@@ -60,7 +137,7 @@ export function createMockChatService(): ChatService {
     async getChats() {
       await delay()
       return {
-        conversations: conversations,
+        conversations: conversations.map(presentChat),
         totalCount: conversations.length,
       }
     },
@@ -71,7 +148,7 @@ export function createMockChatService(): ChatService {
       const now = new Date()
       const conversation: Chat = {
         id: convId,
-        title: "새 상담",
+        title: getAppLanguage() === "en" ? "New chat" : "새 상담",
         status: "ACTIVE",
         category: category,
         createdAt: now,
@@ -84,7 +161,9 @@ export function createMockChatService(): ChatService {
         conversationId: convId,
         role: "assistant",
         content:
-          "안녕하세요! 신신당부 AI 상담사입니다. 만성신장질환 관리에 대해 무엇이든 편하게 물어보세요.",
+          getAppLanguage() === "en"
+            ? "Hi! I’m Sinsin. Ask me anything that’s on your mind about kidney health."
+            : "안녕하세요. 신장 건강에 관해 궁금한 점을 편하게 물어보세요.",
         createdAt: now,
       }
       messagesStore.set(convId, [greetingMessage])
@@ -98,8 +177,8 @@ export function createMockChatService(): ChatService {
       if (!conv) throw new Error(`Conversation ${conversationId} not found`)
       const msgs = messagesStore.get(conversationId) ?? []
       return {
-        conversation: { ...conv },
-        messages: [...msgs],
+        conversation: presentChat(conv),
+        messages: msgs.map(presentMessage),
       }
     },
 
@@ -118,7 +197,7 @@ export function createMockChatService(): ChatService {
 
     async getMessages(conversationId: number) {
       await delay()
-      return [...(messagesStore.get(conversationId) ?? [])]
+      return (messagesStore.get(conversationId) ?? []).map(presentMessage)
     },
 
     async sendMessage(
@@ -144,13 +223,14 @@ export function createMockChatService(): ChatService {
       // Simulate AI response delay
       await delay(800 + Math.random() * 700)
       const aiCategory = pickMockCategory()
+      const language = getAppLanguage()
       const assistantMsg: Message = {
         id: nextMsgId++,
         conversationId,
         role: "assistant",
-        content: pickMockReply(),
+        content: pickMockReply(language),
         aiCategory,
-        aiCategoryLabel: CATEGORY_LABELS[aiCategory],
+        aiCategoryLabel: CATEGORY_LABELS[language][aiCategory],
         createdAt: new Date(),
       }
       msgs.push(assistantMsg)
@@ -168,7 +248,10 @@ export function createMockChatService(): ChatService {
 
     async generateSummary(conversationId: number) {
       await delay(300)
-      const summary = "만성신장질환 식이 관리에 대한 상담 내용입니다."
+      const summary =
+        getAppLanguage() === "en"
+          ? "Chronic kidney disease meal planning"
+          : "만성신장질환 식이 관리 상담"
       const conv = conversations.find((c) => c.id === conversationId)
       if (conv) conv.summary = summary
       return { conversationId, summary }

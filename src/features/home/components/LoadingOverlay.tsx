@@ -13,8 +13,8 @@ import { Text, View } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
-import { LOADING_TIPS } from "../data/loadingTips"
 import type { FoodAnalysisStatus } from "@/src/types"
+import { useTranslation } from "react-i18next"
 
 interface LoadingOverlayProps {
   visible: boolean
@@ -23,14 +23,16 @@ interface LoadingOverlayProps {
   status?: FoodAnalysisStatus | null
 }
 
-const STATUS_MESSAGES: Partial<Record<FoodAnalysisStatus, string>> = {
-  QUEUED: "분석을 준비하고 있어요",
-  PERCEIVING: "사진에서 음식과 양을 확인하고 있어요",
-  RESOLVING: "공식 영양 데이터와 비교하고 있어요",
-}
+const TIP_KEYS = [
+  "foodLoading.tips.first",
+  "foodLoading.tips.second",
+  "foodLoading.tips.third",
+  "foodLoading.tips.fourth",
+  "foodLoading.tips.fifth",
+] as const
 
-function getRandomTip() {
-  return LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)]
+function getRandomTipIndex() {
+  return Math.floor(Math.random() * TIP_KEYS.length)
 }
 
 export function LoadingOverlay({
@@ -39,8 +41,9 @@ export function LoadingOverlay({
   onDismiss,
   status,
 }: LoadingOverlayProps) {
+  const { t } = useTranslation("common")
   const [dots, setDots] = useState(".")
-  const [tip, setTip] = useState(getRandomTip)
+  const [tipIndex, setTipIndex] = useState(getRandomTipIndex)
   const [showDismiss, setShowDismiss] = useState(false)
   const floatY = useSharedValue(0)
   const floatStyle = useAnimatedStyle(() => ({
@@ -48,6 +51,14 @@ export function LoadingOverlay({
   }))
   const isDarkMode = useAppColorScheme() === "dark"
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const statusMessage =
+    status === "QUEUED"
+      ? t("foodLoading.status.QUEUED")
+      : status === "PERCEIVING"
+        ? t("foodLoading.status.PERCEIVING")
+        : status === "RESOLVING"
+          ? t("foodLoading.status.RESOLVING")
+          : message
 
   useEffect(() => {
     if (visible) {
@@ -63,7 +74,7 @@ export function LoadingOverlay({
         setDots((d) => (d.length >= 3 ? "." : d + "."))
       }, 500)
       const tipInterval = setInterval(() => {
-        setTip(getRandomTip())
+        setTipIndex(getRandomTipIndex())
       }, 7000)
 
       dismissTimerRef.current = setTimeout(() => {
@@ -78,7 +89,7 @@ export function LoadingOverlay({
     } else {
       floatY.value = 0
       setDots(".")
-      setTip(getRandomTip())
+      setTipIndex(getRandomTipIndex())
       setShowDismiss(false)
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current)
     }
@@ -125,7 +136,7 @@ export function LoadingOverlay({
           marginTop="$4"
           color={isDarkMode ? "$textDark" : "$black"}
         >
-          {`${(status && STATUS_MESSAGES[status]) || message}${dots}`}
+          {`${statusMessage}${dots}`}
         </Text>
         <Text
           fontSize={14}
@@ -136,7 +147,7 @@ export function LoadingOverlay({
           color="$colorSubtle"
           lineHeight={20}
         >
-          {tip}
+          {t(TIP_KEYS[tipIndex])}
         </Text>
 
         {showDismiss && onDismiss && (
@@ -148,9 +159,7 @@ export function LoadingOverlay({
             marginHorizontal="$6"
             lineHeight={18}
           >
-            {
-              "X를 눌러 나가도 분석은 계속 진행돼요.\n완료되면 알림으로 알려드릴게요!"
-            }
+            {t("foodLoading.dismissHint")}
           </Text>
         )}
       </View>

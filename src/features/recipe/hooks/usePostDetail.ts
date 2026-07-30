@@ -1,8 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { communityPostService } from "../services/communityPostService"
-import { CommunityMealPost } from "../types"
+import { CommunityComment, CommunityMealPost } from "../types"
 
 const POSTS_KEY = ["community-posts"] as const
+
+/** 댓글 트리에서 해당 댓글만 좋아요 토글한 새 트리를 만든다. */
+function toggleCommentLikeInTree(
+  comments: CommunityComment[],
+  commentId: string,
+): CommunityComment[] {
+  return comments.map((comment) => {
+    if (comment.id === commentId) {
+      return {
+        ...comment,
+        liked: !comment.liked,
+        likes: comment.liked ? comment.likes - 1 : comment.likes + 1,
+      }
+    }
+    if (comment.replies.length === 0) return comment
+    return {
+      ...comment,
+      replies: toggleCommentLikeInTree(comment.replies, commentId),
+    }
+  })
+}
 
 export function usePostDetail(postId: string) {
   const queryClient = useQueryClient()
@@ -40,6 +61,69 @@ export function usePostDetail(postId: string) {
     },
   })
 
+  /**
+   * 좋아요·북마크는 상세 캐시(["community-post", id])와 목록 캐시를 함께
+   * 낙관 갱신한다. 목록 훅의 토글만 쓰면 상세 화면에는 반영되지 않는다.
+   */
+  const applyPostPatch = (
+    patch: (old: CommunityMealPost) => CommunityMealPost,
+  ) => {
+    queryClient.setQueryData<CommunityMealPost | undefined>(
+      ["community-post", postId],
+      (old) => (old ? patch(old) : old),
+    )
+    queryClient.setQueryData<CommunityMealPost[]>(POSTS_KEY, (old) =>
+      (old ?? []).map((item) => (item.id === postId ? patch(item) : item)),
+    )
+  }
+
+  const invalidatePost = () => {
+    queryClient.invalidateQueries({ queryKey: ["community-post", postId] })
+    queryClient.invalidateQueries({ queryKey: POSTS_KEY })
+  }
+
+  const togglePostLikeMutation = useMutation({
+    mutationFn: () => communityPostService.toggleLike(postId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["community-post", postId] })
+      const prev = queryClient.getQueryData<CommunityMealPost | undefined>([
+        "community-post",
+        postId,
+      ])
+      applyPostPatch((old) => ({
+        ...old,
+        liked: !old.liked,
+        likes: old.liked ? old.likes - 1 : old.likes + 1,
+      }))
+      return { prev }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(["community-post", postId], context.prev)
+      }
+    },
+    onSettled: invalidatePost,
+  })
+
+  const togglePostBookmarkMutation = useMutation({
+    mutationFn: () => communityPostService.toggleBookmark(postId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["community-post", postId] })
+      const prev = queryClient.getQueryData<CommunityMealPost | undefined>([
+        "community-post",
+        postId,
+      ])
+      applyPostPatch((old) => ({ ...old, bookmarked: !old.bookmarked }))
+      return { prev }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(["community-post", postId], context.prev)
+      }
+    },
+    onSettled: invalidatePost,
+  })
+
   const {
     data: comments = [],
     isLoading: isCommentsLoading,
@@ -62,10 +146,18 @@ export function usePostDetail(postId: string) {
     mutationFn: ({
       content,
       parentCommentId,
+      mentions,
     }: {
       content: string
       parentCommentId?: string | null
-    }) => communityPostService.createComment(postId, content, parentCommentId),
+      mentions?: string[]
+    }) =>
+      communityPostService.createComment(
+        postId,
+        content,
+        parentCommentId,
+        mentions,
+      ),
     onSuccess: invalidateComments,
   })
 
@@ -73,10 +165,13 @@ export function usePostDetail(postId: string) {
     mutationFn: ({
       commentId,
       content,
+      mentions,
     }: {
       commentId: string
       content: string
-    }) => communityPostService.updateComment(postId, commentId, content),
+      mentions?: string[]
+    }) =>
+      communityPostService.updateComment(postId, commentId, content, mentions),
     onSuccess: invalidateComments,
   })
 
@@ -89,7 +184,34 @@ export function usePostDetail(postId: string) {
   const toggleCommentLikeMutation = useMutation({
     mutationFn: (commentId: string) =>
       communityPostService.toggleCommentLike(postId, commentId),
-    onSuccess: invalidateComments,
+    // 하트는 즉시 반응해야 한다 — 낙관 갱신 후 실패 시 되돌린다.
+    onMutate: async (commentId) => {
+      await queryClient.cancelQueries({
+        queryKey: ["community-post-comments", postId],
+      })
+      const prev = queryClient.getQueryData<CommunityComment[]>([
+        "community-post-comments",
+        postId,
+      ])
+      queryClient.setQueryData<CommunityComment[]>(
+        ["community-post-comments", postId],
+        (old) => (old ? toggleCommentLikeInTree(old, commentId) : old),
+      )
+      return { prev }
+    },
+    onError: (_err, _commentId, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(
+          ["community-post-comments", postId],
+          context.prev,
+        )
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["community-post-comments", postId],
+      })
+    },
   })
 
   const reportCommentMutation = useMutation({
@@ -122,6 +244,8 @@ export function usePostDetail(postId: string) {
     castVote: castVoteMutation.mutate,
     castVoteAsync: castVoteMutation.mutateAsync,
     isVoting: castVoteMutation.isPending,
+    togglePostLike: togglePostLikeMutation.mutate,
+    togglePostBookmark: togglePostBookmarkMutation.mutate,
     createComment: createCommentMutation.mutateAsync,
     isCreatingComment: createCommentMutation.isPending,
     updateComment: updateCommentMutation.mutateAsync,

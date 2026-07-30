@@ -11,6 +11,7 @@ import type {
 } from "@/src/types"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 interface FoodAnalysisConfirmationProps {
   job: FoodAnalysisJob | null
@@ -26,6 +27,7 @@ export function FoodAnalysisConfirmation({
   onSubmit,
   onClose,
 }: FoodAnalysisConfirmationProps) {
+  const { t } = useTranslation("common")
   const [answers, setAnswers] = useState<
     Record<string, FoodAnalysisConfirmationOption>
   >({})
@@ -101,14 +103,16 @@ export function FoodAnalysisConfirmation({
               fontWeight="700"
               color={isDarkMode ? "$textDark" : "$color"}
             >
-              음식과 양을 확인해 주세요
+              {t("foodConfirmation.title")}
             </Text>
             <Text fontSize="$4" lineHeight={21} color="$colorSubtle">
-              정확한 양을 선택하면 영양소 분석이 더 정확해져요.
+              {t("foodConfirmation.body")}
             </Text>
           </YStack>
 
           <ScrollView
+            bounces={false}
+            overScrollMode="never"
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             contentInsetAdjustmentBehavior="never"
@@ -174,9 +178,9 @@ export function FoodAnalysisConfirmation({
 
           <V2BottomCTA
             layout="horizontal"
-            secondaryLabel="나중에 하기"
+            secondaryLabel={t("foodConfirmation.skip")}
             onSecondary={onClose}
-            primaryLabel="분석 계속하기"
+            primaryLabel={t("foodConfirmation.continue")}
             onPrimary={() => {
               void handleSubmit()
             }}

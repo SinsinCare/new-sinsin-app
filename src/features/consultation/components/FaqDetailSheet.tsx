@@ -8,6 +8,7 @@ import { tokens } from "@/src/theme/tokens"
 import { Button } from "@/src/shared/components"
 import { getCategoryMeta } from "../data/mockData"
 import type { FaqItem } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface FaqDetailSheetProps {
   item: FaqItem | null
@@ -16,12 +17,13 @@ interface FaqDetailSheetProps {
 }
 
 export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
+  const { t, i18n } = useTranslation()
   const insets = useSafeAreaInsets()
   const router = useRouter()
 
   if (!item) return null
 
-  const meta = getCategoryMeta(item.category)
+  const meta = getCategoryMeta(item.category, i18n.language)
 
   return (
     <Sheet
@@ -91,6 +93,8 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
 
         {/* Scrollable content */}
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: 20,
@@ -125,7 +129,7 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
                 fontWeight="600"
                 color={tokens.color.sub7.val}
               >
-                답변
+                {t("consult.answer")}
               </Text>
             </XStack>
             <Text fontSize="$4" color="$grey2" lineHeight={24}>
@@ -140,13 +144,13 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
               fullWidth
               onPress={() => {
                 onClose()
-                router.push("/(tabs)/consult")
+                router.push("/consult")
               }}
             >
               <XStack alignItems="center" gap="$2">
                 <Ionicons name="chatbubble" size={18} color="white" />
                 <Text fontSize="$4" fontWeight="600" color="white">
-                  추가 질문하기 (1:1 채팅)
+                  {t("consult.askMore")}
                 </Text>
               </XStack>
             </Button>

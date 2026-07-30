@@ -5,12 +5,17 @@ import { View, Text, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../types"
+import { useTranslation } from "react-i18next"
 
-const MEAL_LABEL: Record<MealType, string> = {
-  BREAKFAST: "아침",
-  LUNCH: "점심",
-  DINNER: "저녁",
-  SNACKS: "간식",
+function formatNutrientAmount(
+  value: number | null,
+  unit: "mg" | "g",
+  unavailable: string,
+): string {
+  if (value == null) return unavailable
+  const rounded =
+    unit === "g" ? Math.round(value * 10) / 10 : Math.round(value)
+  return `${rounded}${unit}`
 }
 
 interface ShareCardProps {
@@ -21,7 +26,8 @@ interface ShareCardProps {
 
 export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
   function ShareCard({ result, imageUri, mealType }, ref) {
-    const { total, foods } = result
+    const { t } = useTranslation("common")
+    const { total } = result
 
     const carbKcal = total.carbohydrates * 4
     const proteinKcal = total.protein * 4
@@ -44,7 +50,7 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
               source={require("@/assets/icon.png")}
               style={styles.appIcon}
             />
-            <Text style={styles.appName}>신신당부</Text>
+            <Text style={styles.appName}>{t("brand.name")}</Text>
           </XStack>
 
           {/* 음식 이미지 */}
@@ -71,7 +77,7 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
             {mealType && (
               <View style={styles.mealBadge}>
                 <Text style={styles.mealBadgeText}>
-                  {MEAL_LABEL[mealType]}
+                  {t(`meal.${mealType}`)}
                 </Text>
               </View>
             )}
@@ -89,25 +95,23 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
           <XStack gap={10} paddingBottom={8}>
             {[
               {
-                label: "탄수화물",
+                label: t("mealReport.nutrients.carbohydrates"),
                 value: `${Math.round(total.carbohydrates * 10) / 10}g`,
                 color: tokens.color.sub9.val,
               },
               {
-                label: "단백질",
+                label: t("mealReport.nutrients.protein"),
                 value: `${Math.round(total.protein * 10) / 10}g`,
                 color: tokens.color.sub6.val,
               },
               {
-                label: "지방",
+                label: t("mealReport.nutrients.fat"),
                 value: `${Math.round(total.fat * 10) / 10}g`,
                 color: tokens.color.sub4.val,
               },
             ].map(({ label, value, color }) => (
               <XStack key={label} alignItems="center" gap={4}>
-                <View
-                  style={[styles.macroDot, { backgroundColor: color }]}
-                />
+                <View style={[styles.macroDot, { backgroundColor: color }]} />
                 <Text style={styles.macroText}>
                   {label} {value}
                 </Text>
@@ -126,9 +130,7 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
                 },
               ]}
             >
-              {carbPct >= 8 && (
-                <Text style={styles.barLabel}>{carbPct}%</Text>
-              )}
+              {carbPct >= 8 && <Text style={styles.barLabel}>{carbPct}%</Text>}
             </View>
             <View
               style={[
@@ -151,9 +153,7 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
                 },
               ]}
             >
-              {fatPct >= 8 && (
-                <Text style={styles.barLabel}>{fatPct}%</Text>
-              )}
+              {fatPct >= 8 && <Text style={styles.barLabel}>{fatPct}%</Text>}
             </View>
           </XStack>
 
@@ -164,11 +164,32 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
             paddingBottom={6}
           >
             {[
-              { label: "나트륨", value: `${Math.round(total.sodium)}mg` },
-              { label: "칼륨", value: `${Math.round(total.potassium)}mg` },
-              { label: "인", value: `${Math.round(total.phosphorus)}mg` },
               {
-                label: "단백질",
+                label: t("mealReport.nutrients.sodium"),
+                value: formatNutrientAmount(
+                  total.sodium,
+                  "mg",
+                  t("foodResult.unavailable"),
+                ),
+              },
+              {
+                label: t("mealReport.nutrients.potassium"),
+                value: formatNutrientAmount(
+                  total.potassium,
+                  "mg",
+                  t("foodResult.unavailable"),
+                ),
+              },
+              {
+                label: t("mealReport.nutrients.phosphorus"),
+                value: formatNutrientAmount(
+                  total.phosphorus,
+                  "mg",
+                  t("foodResult.unavailable"),
+                ),
+              },
+              {
+                label: t("mealReport.nutrients.protein"),
                 value: `${Math.round(total.protein * 10) / 10}g`,
               },
             ].map(({ label, value }) => (
@@ -178,15 +199,6 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
               </YStack>
             ))}
           </XStack>
-
-          {/* 한줄평 */}
-          {result.evaluation.comment && (
-            <View style={styles.commentBox}>
-              <Text style={styles.commentText} numberOfLines={2}>
-                {result.evaluation.comment}
-              </Text>
-            </View>
-          )}
 
           {/* 하단 브랜딩 */}
           <XStack
@@ -199,7 +211,7 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
               source={require("@/assets/icon.png")}
               style={styles.footerIcon}
             />
-            <Text style={styles.footerText}>신신당부 — 신장 건강 관리</Text>
+            <Text style={styles.footerText}>{t("brand.tagline")}</Text>
           </XStack>
         </View>
       </ViewShot>

@@ -10,8 +10,8 @@ export const STAGE_TAGS = [
   "CKD 3기",
   "CKD 4기",
   "CKD 5기",
-  "당뇨동반",
-  "고혈압동반",
+  "당뇨 동반",
+  "고혈압 동반",
 ] as const
 
 export const CUISINE_TAGS = [

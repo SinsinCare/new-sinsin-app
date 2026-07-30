@@ -1,6 +1,6 @@
 import {
-  MOBILE_POLICY_CACHE_KEY,
   createMobilePolicyService,
+  getMobilePolicyCacheKey,
   isFeatureFlagEnabled,
   isBlockingMobilePolicyDecision,
   isRestaurantTabEnabled,
@@ -15,10 +15,13 @@ import type {
   MobilePolicyStorage,
 } from "../src/features/mobilePolicy/types"
 
-function createStorage(initial?: MobilePolicyResponse): MobilePolicyStorage {
+function createStorage(
+  initial?: MobilePolicyResponse,
+  locale = "ko",
+): MobilePolicyStorage {
   const values = new Map<string, string>()
   if (initial) {
-    values.set(MOBILE_POLICY_CACHE_KEY, JSON.stringify(initial))
+    values.set(getMobilePolicyCacheKey(locale), JSON.stringify(initial))
   }
   return {
     getItem: jest.fn((key: string) => Promise.resolve(values.get(key) ?? null)),
@@ -71,7 +74,7 @@ describe("mobile policy service", () => {
 
     expect(fetchPolicy).toHaveBeenCalledWith(runtimeInfo)
     expect(storage.setItem).toHaveBeenCalledWith(
-      MOBILE_POLICY_CACHE_KEY,
+      getMobilePolicyCacheKey("ko"),
       JSON.stringify(allowPolicy),
     )
     expect(result.source).toBe("server")
@@ -107,6 +110,31 @@ describe("mobile policy service", () => {
     expect(result.source).toBe("fallback")
     expect(result.policy.decision).toBe("allow")
     expect(result.policy.reason).toBe("policy_unavailable_no_cache")
+  })
+
+  it("keeps Korean and English policy caches separate", async () => {
+    const englishPolicy: MobilePolicyResponse = {
+      ...allowPolicy,
+      message: "This version is ready to use.",
+    }
+    const storage = createStorage(englishPolicy, "en")
+    const service = createMobilePolicyService({
+      fetchPolicy: jest.fn().mockRejectedValue(new Error("network")),
+      storage,
+    })
+
+    const english = await service.evaluate(runtimeInfo, "en-US")
+    const korean = await service.evaluate(runtimeInfo, "ko-KR")
+
+    expect(english.source).toBe("cache")
+    expect(english.policy.message).toBe("This version is ready to use.")
+    expect(korean.source).toBe("fallback")
+    expect(korean.policy.message).toBe(
+      "버전을 확인하지 못했어요. 현재 버전으로 계속 이용할 수 있어요.",
+    )
+    expect(getMobilePolicyCacheKey("en-US")).not.toBe(
+      getMobilePolicyCacheKey("ko-KR"),
+    )
   })
 
   it("classifies decisions that must block the app shell", () => {

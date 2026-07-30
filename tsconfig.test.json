@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": ["ES2020"],
+    // 앱 코드가 findLast/findLastIndex(ES2023)를 씁니다. Hermes·Node 모두 있는
+    // 메서드인데 lib 이 ES2020 이면 타입만 없어서 테스트 스위트가 통째로 죽습니다.
+    "lib": ["ES2023"],
     // .tsx 를 import 하는 테스트(bottomSheetPicker 등)가 TS6142 로 통째로 죽습니다.
     // 앱 tsconfig 는 expo/tsconfig.base 에서 jsx 를 받지만 이 파일은 상속하지 않습니다.
     "jsx": "react-jsx",

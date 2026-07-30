@@ -4,13 +4,7 @@ import { MealType } from "../../types"
 import { DateAnalysisDiet } from "@/src/types"
 import { Text, XStack, YStack } from "tamagui"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-
-const MEAL_LABELS: Record<MealType, string> = {
-  BREAKFAST: "아침",
-  LUNCH: "점심",
-  DINNER: "저녁",
-  SNACKS: "간식",
-}
+import { useTranslation } from "react-i18next"
 
 const ALL_MEAL_TYPES: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
 
@@ -20,18 +14,22 @@ interface DietaryRecordProps {
 }
 
 export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
+  const { t, i18n } = useTranslation()
   const mealRecords: MealRecord[] = ALL_MEAL_TYPES.map((mealType) => {
     const diet = diets.find((d) => d.mealType === mealType)
     const time = diet
       ? (() => {
           const d = new Date(diet.createdAt + "Z")
-          return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+          return new Intl.DateTimeFormat(
+            i18n.language.startsWith("en") ? "en-US" : "ko-KR",
+            { hour: "numeric", minute: "2-digit" },
+          ).format(d)
         })()
       : null
     return {
       id: `meal-${mealType}`,
       mealType,
-      label: MEAL_LABELS[mealType],
+      label: t(`meal.${mealType}`),
       time,
       imageUri: diet?.imageUrl ?? null,
     }
@@ -46,10 +44,10 @@ export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
           fontWeight="600"
           color={isDarkMode ? "$textDark" : "$black"}
         >
-          식이 기록
+          {t("stats.dietary.title")}
         </Text>
         <Text fontSize={14} fontWeight="500" color="$colorSubtle">
-          카드를 누르면 상세 분석 내용을 볼 수 있어요.
+          {t("stats.dietary.body")}
         </Text>
       </YStack>
       <XStack width="100%" justifyContent="center" gap="$2">

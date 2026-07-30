@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "run_id": "2026-07-28-001",
+    "score_type": "severity_weighted_static_findings",
+    "score_before": 382,
+    "score_after": 0,
+    "score_improvement": 382,
+    "s1_residual": 0,
+    "s2_residual": 0,
+    "over_polish_signals": [],
+    "verdict": "accept",
+    "quality_level": "A"
+  },
+  "residual_findings": [],
+  "over_polish_findings": [],
+  "unclassified_candidates": [],
+  "independent_reviews": {
+    "state_and_action_contracts": "13/13 PASS",
+    "security_claim_copy": "2/2 PASS after rewrite",
+    "clinical_personalization_copy": "13/13 PASS after rewrite",
+    "static_detector": "6683 copies in 260 files, 0 findings"
+  },
+  "review_notes": [
+    "해요체, 버튼 행동형, 사용자 관점, 조사·어미, 번역투를 화면 단위로 맞췄습니다.",
+    "오류는 상황·이유·해결 행동을 가능한 범위에서 분리했습니다.",
+    "상한을 목표처럼 권하는 말과 코드로 입증되지 않은 보장을 자연스러움과 별개로 고위험 문구로 처리했습니다.",
+    "법률 원문과 백엔드 동적 문구는 자연스러움 승인 대상에서 제외했습니다."
+  ],
+  "next_action": {
+    "type": "accept",
+    "targets": []
+  }
+}

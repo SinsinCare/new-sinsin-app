@@ -11,6 +11,7 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 interface TextRecordProps {
   open: boolean
@@ -19,6 +20,7 @@ interface TextRecordProps {
 }
 
 export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
+  const { t } = useTranslation()
   const [text, setText] = useState("")
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const isDarkMode = useAppColorScheme() === "dark"
@@ -66,7 +68,7 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
             textAlign="center"
             color={isDarkMode ? "$textDark" : "$black"}
           >
-            직접 기록하기
+            {t("home.textRecord.title")}
           </Text>
           <XStack
             position="absolute"
@@ -78,6 +80,8 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
             justifyContent="center"
             onPress={onClose}
             pressStyle={{ opacity: 0.7 }}
+            accessibilityRole="button"
+            accessibilityLabel={t("action.close")}
           >
             <Ionicons name="close" size={22} color={tokens.color.grey3.val} />
           </XStack>
@@ -101,11 +105,11 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
             ]}
             value={text}
             onChangeText={setText}
-            placeholder="음식 종류와 양을 알려주세요."
+            placeholder={t("home.textRecord.placeholder")}
             textAlign="center"
           />
           <Text color="$colorSubtle" fontWeight="600">
-            예: 샐러드 1인분, 고기 150g, 계란 1개, 우유 1컵
+            {t("home.textRecord.example")}
           </Text>
         </YStack>
 
@@ -123,7 +127,7 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
             fontWeight="600"
             color={text ? "$color.pureWhite" : "$colorSubtle"}
           >
-            영양성분 분석하기
+            {t("home.textRecord.checkNutrients")}
           </Text>
         </TouchableOpacity>
       </YStack>

@@ -1,4 +1,6 @@
 import * as ImagePicker from "expo-image-picker"
+import { Alert, Linking } from "react-native"
+import i18n from "@/src/i18n"
 
 interface ImagePickerTrackingOptions {
   onPermissionDenied?: () => void
@@ -31,6 +33,22 @@ export async function pickMultipleImages(
 ): Promise<string[]> {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
   if (status !== "granted") {
+    Alert.alert(
+      i18n.t("media.permissionTitle", { ns: "recipe" }),
+      i18n.t("media.permissionBody", { ns: "recipe" }),
+      [
+        {
+          text: i18n.t("media.notNow", { ns: "recipe" }),
+          style: "cancel",
+        },
+        {
+          text: i18n.t("media.openSettings", { ns: "recipe" }),
+          onPress: () => {
+            void Linking.openSettings()
+          },
+        },
+      ],
+    )
     return []
   }
 

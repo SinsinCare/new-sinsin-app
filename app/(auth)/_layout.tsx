@@ -16,8 +16,8 @@ export default function AuthLayout() {
       <Stack.Screen name="social-link-email" />
       <Stack.Screen name="email-login-link-password" />
       <Stack.Screen name="signup-password" />
+      {/* 닉네임·생년월일·성별·이름·휴대폰·유입경로를 한 라우트 안에서 스텝으로 넘긴다. */}
       <Stack.Screen name="profile-setup" />
-      <Stack.Screen name="nickname-setup" />
       <Stack.Screen
         name="signup-complete"
         options={{ gestureEnabled: false }}

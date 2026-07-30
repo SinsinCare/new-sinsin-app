@@ -4,12 +4,20 @@ import * as FileSystem from "expo-file-system/legacy"
 import { api } from "../core"
 import { ApiError } from "../core/apiError"
 import { tokenService } from "../core/tokenService"
+import { getAppLanguage } from "@/src/i18n"
 import type {
   OcrConfirmRequest,
   OcrConfirmResult,
   OcrReport,
   OcrUploadFile,
 } from "@/src/features/health/types"
+
+type OcrUploadResponse = {
+  isSuccess?: boolean
+  code?: string
+  message?: string
+  result?: OcrReport
+}
 
 /**
  * 검사지 사진을 OCR 업로드에 적합하게 가공합니다.
@@ -71,25 +79,23 @@ export const examOcrService = {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
         Accept: "application/json",
+        "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
       },
-      body: formData,
+      body: formData as unknown as RequestInit["body"],
     })
 
-    let json: {
-      isSuccess?: boolean
-      code?: string
-      message?: string
-      result?: OcrReport
-    } | null = null
+    let json: OcrUploadResponse | null = null
     try {
-      json = await res.json()
+      json = (await res.json()) as OcrUploadResponse
     } catch {
       // 본문이 비어있거나 JSON이 아닌 경우 무시하고 상태코드로 처리
     }
 
     if (!res.ok || json?.isSuccess === false) {
       throw new ApiError(
-        json?.message || "검사지 분석에 실패했습니다.",
+        getAppLanguage() === "en"
+          ? "We couldn’t read this lab report. Check the file and upload it again."
+          : "검사지를 읽지 못했어요. 파일을 확인하고 다시 올려 주세요.",
         json?.code || `HTTP_${res.status}`,
         res.status,
       )
@@ -127,22 +133,35 @@ export const examOcrService = {
  */
 export function getOcrErrorMessage(error: unknown): string {
   const code = error instanceof ApiError ? error.code : undefined
+  const isEnglish = getAppLanguage() === "en"
   switch (code) {
     case "INVALID_LAB_REPORT_FILE":
-      return "지원하지 않는 형식입니다. JPEG, PNG, WEBP, PDF 파일만 업로드할 수 있어요."
+      return isEnglish
+        ? "Choose a JPEG, PNG, WEBP, or PDF file."
+        : "이 파일은 올릴 수 없어요. JPEG, PNG, WEBP, PDF 파일을 선택해 주세요."
     case "LAB_REPORT_FILE_TOO_LARGE":
-      return "파일 용량이 너무 큽니다. 10MB 이하의 파일을 업로드해주세요."
+      return isEnglish
+        ? "This file is larger than 10 MB. Choose a smaller file."
+        : "파일이 10MB를 넘어요. 더 작은 파일을 선택해 주세요."
     case "LAB_REPORT_NO_VALUES":
-      return "검사지에서 수치를 인식하지 못했어요. 글씨가 선명하게 보이도록 다시 촬영해주세요."
+      return isEnglish
+        ? "We couldn’t read the results. Retake the photo with the text clearly visible."
+        : "검사 수치를 읽기 어려워요. 글씨가 선명하게 보이도록 다시 촬영해 주세요."
     case "LAB_REPORT_NOT_FOUND":
-      return "검사지 정보를 찾을 수 없습니다. 다시 시도해주세요."
+      return isEnglish
+        ? "We couldn’t find this lab report. Choose it again from your reports."
+        : "이 검사지를 찾지 못했어요. 검사지 목록에서 다시 선택해 주세요."
     case "LAB_REPORT_ALREADY_CONFIRMED":
-      return "이미 저장된 검사지입니다."
+      return isEnglish
+        ? "You already saved this lab report. You can find it in your reports."
+        : "이미 저장한 검사지예요. 검사지 목록에서 확인할 수 있어요."
     case "LAB_REPORT_NO_CONFIRMED_ITEMS":
-      return "저장할 항목을 최소 1개 이상 선택해주세요."
+      return isEnglish
+        ? "Select at least one result to save."
+        : "저장할 검사 수치를 하나 이상 선택해 주세요."
     default:
-      return error instanceof ApiError && error.message
-        ? error.message
-        : "검사지 분석에 실패했습니다. 잠시 후 다시 시도해주세요."
+      return isEnglish
+        ? "We couldn’t read this lab report. Try uploading it again in a moment."
+        : "검사지를 읽지 못했어요. 잠시 후 파일을 다시 올려 주세요."
   }
 }

@@ -1,6 +1,7 @@
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components/Icon"
+import { useTranslation } from "react-i18next"
 
 const COLORS = {
   light: {
@@ -18,6 +19,7 @@ const COLORS = {
 } as const
 
 export function AiSummaryCard() {
+  const { t } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
@@ -39,11 +41,11 @@ export function AiSummaryCard() {
           fontFamily="$body"
           color={palette.label}
         >
-          AI 요약
+          {t("restaurant.curation.summaryTitle")}
         </Text>
       </XStack>
       <Text fontSize={14} fontFamily="$body" color={palette.body}>
-        무슨 내용이 들어갈지 모름
+        {t("restaurant.curation.summaryBody")}
       </Text>
     </YStack>
   )

@@ -6,8 +6,10 @@ import { Image } from "expo-image"
 import GoogleLogo from "@/assets/images/google-logo.svg"
 import KakaoLogo from "@/assets/images/kakao-logo.svg"
 import { Ionicons } from "@expo/vector-icons"
+import { useTranslation } from "react-i18next"
 import { useAuthColors, useSocialLogin } from "../hooks"
-import { AUTH_RADIUS } from "../hooks/useAuthColors"
+import { useAuthSurface } from "../hooks/useAuthSurface"
+import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { tokens } from "@/src/theme/tokens"
 
@@ -40,15 +42,20 @@ function SocialButton({
   disabled,
 }: SocialButtonProps) {
   return (
-    <Pressable onPress={onPress} disabled={disabled}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      disabled={disabled}
+    >
       {({ pressed }) => (
         <XStack
           backgroundColor={bg}
-          height={54}
-          borderRadius={AUTH_RADIUS}
+          height={AUTH_LAYOUT.ctaHeight}
+          borderRadius={AUTH_LAYOUT.radius.cta}
           alignItems="center"
           paddingHorizontal={20}
-          opacity={disabled ? 0.6 : pressed ? 0.85 : 1}
+          opacity={disabled ? 0.6 : pressed ? 0.92 : 1}
         >
           {/* 아이콘은 왼쪽 고정, 라벨은 버튼 중앙 — 목업과 같은 배치 */}
           <XStack width={24} alignItems="center" justifyContent="center">
@@ -58,9 +65,8 @@ function SocialButton({
             flex={1}
             textAlign="center"
             color={color}
-            fontSize={16}
+            {...AUTH_TYPE.cta}
             fontWeight="600"
-            letterSpacing={-0.3}
             marginRight={24}
           >
             {label}
@@ -72,6 +78,7 @@ function SocialButton({
 }
 
 export function LoginScreen() {
+  const { t, i18n } = useTranslation("auth")
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const {
@@ -84,17 +91,25 @@ export function LoginScreen() {
     dismissWithdrawalPending,
   } = useSocialLogin()
   const colors = useAuthColors()
+  const surface = useAuthSurface()
+  const isEnglish = i18n.resolvedLanguage?.startsWith("en") ?? false
 
   const handleEmailLogin = () => {
     router.push("/(auth)/email-login")
   }
 
   return (
-    <YStack flex={1} backgroundColor={colors.sheetBg} position="relative">
+    <YStack flex={1} backgroundColor={surface.canvas} position="relative">
       {/* 배경 일러스트. 타이틀이 이미지에 구워져 있어서 top:0 으로 두면
           다이나믹 아일랜드·상태바에 물린다. 안전영역만큼 내려서 시작한다. */}
       <Image
         source={LOGIN_BG}
+        accessible={!isEnglish}
+        accessibilityLabel={
+          isEnglish
+            ? undefined
+            : `${t("login.heroEyebrow")} ${t("login.heroBrand")}`
+        }
         style={{
           position: "absolute",
           top: insets.top + BG_TOP_OFFSET,
@@ -106,56 +121,90 @@ export function LoginScreen() {
         transition={0}
       />
 
-      {/* 타이틀("신장 건강 관리는 / 신신당부")은 배경 이미지에 이미 포함돼 있다.
-          텍스트로 다시 얹으면 겹친다. 문구를 바꿔야 하면 이미지를 교체해야 한다. */}
+      {/* 한국어 타이틀은 이미지에 포함돼 있다. 영어에서는 해당 영역을 가리고
+          실제 텍스트를 올려 언어 전환과 접근성 글꼴 크기를 함께 지원한다. */}
+      {isEnglish && (
+        <YStack
+          position="absolute"
+          zIndex={1}
+          top={insets.top + BG_TOP_OFFSET}
+          left={0}
+          width={width}
+          height={width * 0.31}
+          backgroundColor="#FFFEFE"
+          alignItems="center"
+          justifyContent="center"
+          paddingTop={6}
+        >
+          <Text
+            color="#9B9B9B"
+            fontSize={18}
+            lineHeight={24}
+            fontWeight="500"
+            textAlign="center"
+          >
+            {t("login.heroEyebrow")}
+          </Text>
+          <Text
+            color={surface.brand}
+            fontSize={36}
+            lineHeight={43}
+            fontWeight="700"
+            textAlign="center"
+          >
+            {t("login.heroBrand")}
+          </Text>
+        </YStack>
+      )}
       <YStack flex={1} />
 
       {/* 하단 시트 */}
       <YStack
-        backgroundColor={colors.sheetBg}
-        borderTopLeftRadius={AUTH_RADIUS}
-        borderTopRightRadius={AUTH_RADIUS}
-        paddingHorizontal={20}
-        paddingTop={24}
+        backgroundColor={surface.canvas}
+        borderTopLeftRadius={AUTH_LAYOUT.radius.sheet}
+        borderTopRightRadius={AUTH_LAYOUT.radius.sheet}
+        paddingHorizontal={AUTH_LAYOUT.screenX}
+        paddingTop={28}
         paddingBottom={insets.bottom + 20}
         gap={10}
       >
         <ConfirmModal
           visible={!!withdrawalPending}
-          title="회원탈퇴 처리중입니다."
-          description="회원 탈퇴를 취소하고 다시 로그인하겠습니까?"
-          cancelText="아니오"
+          title={t("withdrawal.pendingTitle")}
+          description={t("withdrawal.pendingDescription")}
+          cancelText={t("withdrawal.cancel")}
           confirmText={
-            isCancellingWithdrawal ? "처리 중..." : "탈퇴 취소 후 로그인"
+            isCancellingWithdrawal
+              ? t("withdrawal.cancelling")
+              : t("withdrawal.cancelAndLogin")
           }
           onCancel={dismissWithdrawalPending}
           onConfirm={confirmWithdrawalCancellation}
         />
 
-        <Pressable onPress={handleEmailLogin}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("login.emailButton")}
+          onPress={handleEmailLogin}
+        >
           {({ pressed }) => (
             <YStack
-              backgroundColor={colors.primaryBg}
-              height={54}
-              borderRadius={AUTH_RADIUS}
+              backgroundColor={surface.brand}
+              height={AUTH_LAYOUT.ctaHeight}
+              borderRadius={AUTH_LAYOUT.radius.cta}
               alignItems="center"
               justifyContent="center"
-              opacity={pressed ? 0.85 : 1}
+              opacity={pressed ? 0.92 : 1}
             >
-              <Text
-                color={colors.primaryText}
-                fontSize={16}
-                fontWeight="600"
-                letterSpacing={-0.3}
-              >
-                이메일 로그인
+              <Text color={surface.onBrand} {...AUTH_TYPE.cta} fontWeight="600">
+                {t("login.emailButton")}
               </Text>
             </YStack>
           )}
         </Pressable>
 
         <SocialButton
-          label="구글로 시작하기"
+          label={t("login.continueGoogle")}
           bg={colors.googleBg}
           color={colors.googleText}
           icon={<GoogleLogo width={20} height={20} />}
@@ -164,7 +213,7 @@ export function LoginScreen() {
         />
 
         <SocialButton
-          label="카카오로 시작하기"
+          label={t("login.continueKakao")}
           bg={colors.kakaoBg}
           color={colors.kakaoText}
           icon={<KakaoLogo width={20} height={20} />}
@@ -174,7 +223,7 @@ export function LoginScreen() {
 
         {Platform.OS === "ios" && (
           <SocialButton
-            label="애플로 시작하기"
+            label={t("login.continueApple")}
             bg={colors.appleBg}
             color={colors.appleText}
             icon={
@@ -192,7 +241,7 @@ export function LoginScreen() {
           marginTop={8}
         >
           <Text color={colors.textSub} fontSize={13} letterSpacing={-0.26}>
-            아직 신신당부 회원이 아니신가요?
+            {t("login.newHere")}
           </Text>
           <Link href="/(auth)/terms-agreement" asChild>
             <Text
@@ -202,7 +251,7 @@ export function LoginScreen() {
               letterSpacing={-0.26}
               textDecorationLine="underline"
             >
-              회원가입하기
+              {t("login.signUp")}
             </Text>
           </Link>
         </XStack>
@@ -240,7 +289,7 @@ export function LoginScreen() {
             lineHeight={20}
             textAlign="center"
           >
-            계정 정보를 확인하고 있어요.
+            {t("login.checkingAccount")}
           </Text>
         </YStack>
       )}

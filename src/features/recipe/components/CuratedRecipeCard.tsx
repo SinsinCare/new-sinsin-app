@@ -5,6 +5,34 @@ import { YStack, XStack, Text, View } from "tamagui"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
+import { useTranslation } from "react-i18next"
+
+const CATEGORY_KEYS = {
+  한식: "category.food.korean",
+  korean: "category.food.korean",
+  중식: "category.food.chinese",
+  chinese: "category.food.chinese",
+  일식: "category.food.japanese",
+  japanese: "category.food.japanese",
+  양식: "category.food.western",
+  western: "category.food.western",
+  샐러드: "category.food.salad",
+  salad: "category.food.salad",
+  디저트: "category.food.dessert",
+  dessert: "category.food.dessert",
+  음료: "category.food.beverage",
+  beverage: "category.food.beverage",
+  drink: "category.food.drink",
+} as const
+
+const DIFFICULTY_KEYS = {
+  쉬움: "curated.difficulty.easy",
+  easy: "curated.difficulty.easy",
+  보통: "curated.difficulty.medium",
+  medium: "curated.difficulty.medium",
+  어려움: "curated.difficulty.hard",
+  hard: "curated.difficulty.hard",
+} as const
 
 const COLORS = {
   light: {
@@ -27,13 +55,6 @@ const COLORS = {
   },
 } as const
 
-const FRIENDLINESS_CONFIG = {
-  low_risk: { label: "신장 안전", bg: "#D1FAE5", text: "#065F46" },
-  moderate: { label: "적당히 섭취", bg: "#FEF3C7", text: "#92400E" },
-  high_risk: { label: "주의 필요", bg: "#FEE2E2", text: "#991B1B" },
-  caution: { label: "주의 필요", bg: "#FEE2E2", text: "#991B1B" },
-} as const
-
 interface CuratedRecipeCardProps {
   recipe: CuratedRecipe
   onPress?: () => void
@@ -43,19 +64,22 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
   recipe,
   onPress,
 }: CuratedRecipeCardProps) {
+  const { t } = useTranslation("recipe")
   const isDark = useAppColorScheme() === "dark"
   const palette = isDark ? COLORS.dark : COLORS.light
 
-  const friendlinessKey = recipe.nutrition
-    .ckd_friendliness as keyof typeof FRIENDLINESS_CONFIG
-  const friendlinessConfig =
-    FRIENDLINESS_CONFIG[friendlinessKey] ?? FRIENDLINESS_CONFIG.moderate
+  const categoryKey =
+    CATEGORY_KEYS[
+      recipe.category.toLowerCase() as keyof typeof CATEGORY_KEYS
+    ] ?? CATEGORY_KEYS[recipe.category as keyof typeof CATEGORY_KEYS]
+  const difficultyKey =
+    DIFFICULTY_KEYS[
+      recipe.difficulty.toLowerCase() as keyof typeof DIFFICULTY_KEYS
+    ] ?? DIFFICULTY_KEYS[recipe.difficulty as keyof typeof DIFFICULTY_KEYS]
+  const categoryLabel = categoryKey ? t(categoryKey) : recipe.category
+  const difficultyLabel = difficultyKey ? t(difficultyKey) : recipe.difficulty
+  const timeLabel = t("curated.minutes", { count: recipe.time_min })
 
-  const categoryLabel = recipe.category
-  const difficultyLabel = recipe.difficulty
-  const timeLabel = `${recipe.time_min}분`
-
-  const visibleTags = recipe.tags.slice(0, 3)
   const image = recipe.thumbnail_url
 
   return (
@@ -136,40 +160,21 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
           {recipe.description}
         </Text>
 
-        {/* Tags */}
-        {visibleTags.length > 0 && (
-          <XStack gap={6} flexWrap="wrap">
-            {visibleTags.map((tag) => (
-              <XStack
-                key={tag}
-                paddingHorizontal={7}
-                paddingVertical={3}
-                borderRadius={6}
-                backgroundColor={palette.tagBg}
-              >
-                <Text fontSize={11} fontFamily="$body" color={palette.tagText}>
-                  {tag}
-                </Text>
-              </XStack>
-            ))}
-          </XStack>
-        )}
-
-        {/* CKD Friendliness badge */}
+        {/* 영양·CKD 적합성은 임상 검수 전이므로 중립 상태만 보여 준다. */}
         <XStack>
           <XStack
             paddingHorizontal={8}
             paddingVertical={4}
             borderRadius={8}
-            backgroundColor={friendlinessConfig.bg}
+            backgroundColor={palette.tagBg}
           >
             <Text
               fontSize={12}
               fontWeight="600"
               fontFamily="$body"
-              color={friendlinessConfig.text}
+              color={palette.tagText}
             >
-              {friendlinessConfig.label}
+              {t("curated.estimatedBadge")}
             </Text>
           </XStack>
         </XStack>

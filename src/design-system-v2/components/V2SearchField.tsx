@@ -22,6 +22,7 @@ import {
 import { iconSize, radius, spacing, touchTarget, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"
+import { useTranslation } from "react-i18next"
 
 // value·onChangeText·placeholder는 controlled 계약으로 명시(재정의)하므로 TextInputProps에서 제외하고,
 // style/editable은 자체 관리(style·disabled로 노출)하므로 함께 제외. 나머지는 그대로 스프레드.
@@ -60,6 +61,7 @@ export function V2SearchField({
   selectionColor,
   ...rest
 }: V2SearchFieldProps) {
+  const { t } = useTranslation()
   const { colors } = useV2Theme()
 
   // 값이 있을 때만 Clear 노출(Typing/Typed). 빈 값(Placeholder/Focused)엔 감춤.
@@ -112,7 +114,7 @@ export function V2SearchField({
       {hasValue && !disabled && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="지우기"
+          accessibilityLabel={t("accessibility.clear")}
           hitSlop={(touchTarget.min - iconSize.sm) / 2}
           onPress={handleClear}
         >

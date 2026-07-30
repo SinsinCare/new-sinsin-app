@@ -25,7 +25,7 @@ const SEED_RECIPES: RecipePost[] = [
     authorName: "김민지",
     authorInfo: "CKD 3기",
     title: "저염 된장찌개",
-    summary: "나트륨을 줄인 된장찌개로 건강한 한 끼를 즐겨보세요.",
+    summary: "나트륨을 줄이고 다시마 육수로 맛을 낸 된장찌개예요.",
     imageUri: null,
     nutritionTags: ["저염"],
     stageTags: ["CKD 3기"],
@@ -34,7 +34,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "일반 된장찌개 대비 나트륨 50% 감소 레시피입니다. 된장 양을 줄이고 다시마 육수로 감칠맛을 보완했어요.",
+          "일반 된장찌개보다 나트륨을 50% 줄인 레시피예요. 된장 양을 줄이고 다시마 육수로 감칠맛을 더했어요.",
       },
     ],
     ingredients: [
@@ -48,7 +48,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 다시마 육수를 끓입니다.\n2. 된장 1큰술을 풀어줍니다.\n3. 두부, 애호박, 양파를 넣고 끓입니다.\n4. 대파와 고추를 넣고 2분 더 끓입니다.",
+          "1. 다시마 육수를 끓여요.\n2. 된장 1큰술을 풀어요.\n3. 두부, 애호박, 양파를 넣고 끓여요.\n4. 대파와 고추를 넣고 2분 더 끓여요.",
       },
     ],
     likes: 245,
@@ -62,7 +62,7 @@ const SEED_RECIPES: RecipePost[] = [
     authorName: "이수현",
     authorInfo: "임상영양사",
     title: "저단백 계란찜",
-    summary: "단백질 섭취를 조절하면서도 맛있게 먹을 수 있는 계란찜.",
+    summary: "단백질 섭취를 조절하면서 맛있게 먹는 계란찜이에요.",
     imageUri: null,
     nutritionTags: ["저단백"],
     stageTags: ["CKD 4기"],
@@ -71,7 +71,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "계란 1개만 사용하고 두부와 채소를 넣어 볼륨감을 살린 저단백 계란찜입니다. CKD 4기 이상 환자분들께 추천합니다.",
+          "계란 1개만 사용하고 두부와 채소를 더해 양을 늘린 저단백 계란찜이에요. CKD 4기 이상 식단을 고려해 만들었어요.",
       },
     ],
     ingredients: [
@@ -85,7 +85,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 계란 1개를 풀어줍니다.\n2. 연두부를 으깨서 섞습니다.\n3. 물 100ml를 넣고 잘 저어줍니다.\n4. 다진 당근과 대파를 넣습니다.\n5. 중불에서 10분간 쪄줍니다.",
+          "1. 계란 1개를 풀어요.\n2. 연두부를 으깨 섞어요.\n3. 물 100ml를 넣고 잘 저어요.\n4. 다진 당근과 대파를 넣어요.\n5. 중간 불에서 10분간 쪄요.",
       },
     ],
     likes: 189,
@@ -97,9 +97,9 @@ const SEED_RECIPES: RecipePost[] = [
   {
     id: makeId(),
     authorName: "박준호",
-    authorInfo: "요리전문가",
+    authorInfo: "요리 전문가",
     title: "저칼륨 닭가슴살 샐러드",
-    summary: "칼륨을 줄인 가벼운 샐러드로 점심 한 끼를 해결하세요.",
+    summary: "칼륨 함량이 낮은 채소로 만든 가벼운 샐러드예요.",
     imageUri: null,
     nutritionTags: ["저칼륨"],
     stageTags: ["CKD 3기", "CKD 4기"],
@@ -108,7 +108,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "칼륨이 낮은 채소 위주로 구성한 닭가슴살 샐러드입니다. 상추, 양배추 등 저칼륨 채소를 활용했어요.",
+          "칼륨 함량이 낮은 채소를 중심으로 구성한 닭가슴살 샐러드예요. 상추와 양배추 등을 활용했어요.",
       },
     ],
     ingredients: [
@@ -122,7 +122,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 닭가슴살을 삶아서 찢어줍니다.\n2. 양상추, 양배추를 씻어 한입 크기로 자릅니다.\n3. 당근을 채 썰어줍니다.\n4. 올리브유와 레몬즙으로 드레싱을 만들어 뿌려줍니다.",
+          "1. 닭가슴살을 삶아 잘게 찢어요.\n2. 양상추와 양배추를 씻어 한입 크기로 잘라요.\n3. 당근을 채 썰어요.\n4. 올리브유와 레몬즙으로 드레싱을 만들어 뿌려요.",
       },
     ],
     likes: 312,
@@ -134,9 +134,9 @@ const SEED_RECIPES: RecipePost[] = [
   {
     id: makeId(),
     authorName: "최예진",
-    authorInfo: "CKD 5기 투석중",
+    authorInfo: "CKD 5기, 투석 중",
     title: "저인 두부스테이크",
-    summary: "인 함량을 줄인 두부스테이크로 든든한 저녁식사를.",
+    summary: "치즈 대신 허브로 풍미를 낸 저인 두부 스테이크예요.",
     imageUri: null,
     nutritionTags: ["저인"],
     stageTags: ["CKD 5기"],
@@ -145,7 +145,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "인 함량이 높은 치즈 대신 허브로 풍미를 낸 두부스테이크입니다. 투석 중인 분들도 안심하고 드실 수 있어요.",
+          "인 함량이 높은 치즈 대신 허브로 풍미를 낸 두부 스테이크예요. 투석 중인 분의 식단도 고려해 만들었어요.",
       },
     ],
     ingredients: [
@@ -159,7 +159,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 두부를 두껍게 썰어 물기를 빼줍니다.\n2. 올리브유에 마늘과 로즈마리를 넣고 향을 냅니다.\n3. 두부를 앞뒤로 노릇하게 구워줍니다.\n4. 저염 간장으로 살짝 간합니다.",
+          "1. 두부를 두껍게 썰어 물기를 빼요.\n2. 올리브유에 마늘과 로즈마리를 넣고 향을 내요.\n3. 두부를 앞뒤로 노릇하게 구워요.\n4. 저염 간장으로 가볍게 간해요.",
       },
     ],
     likes: 167,
@@ -171,18 +171,18 @@ const SEED_RECIPES: RecipePost[] = [
   {
     id: makeId(),
     authorName: "한지원",
-    authorInfo: "CKD 3기, 당뇨동반",
+    authorInfo: "CKD 3기, 당뇨 동반",
     title: "고열량 저단백 볶음밥",
-    summary: "열량은 높이고 단백질은 줄인 특별한 볶음밥 레시피.",
+    summary: "열량은 보충하고 단백질은 줄인 볶음밥 레시피예요.",
     imageUri: null,
     nutritionTags: ["고열량", "저단백"],
-    stageTags: ["CKD 3기", "당뇨동반"],
+    stageTags: ["CKD 3기", "당뇨 동반"],
     cuisineTags: ["중식"],
     description: [
       {
         type: "text",
         content:
-          "단백질 대신 기름과 채소로 열량을 보충한 볶음밥입니다. 당뇨를 동반한 CKD 환자분들의 열량 보충에 도움이 됩니다.",
+          "기름과 채소로 열량을 보충하고 단백질은 줄인 볶음밥이에요. 당뇨를 함께 관리하는 CKD 식단을 고려했어요.",
       },
     ],
     ingredients: [
@@ -196,7 +196,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 채소를 잘게 다져줍니다.\n2. 팬에 기름을 넉넉히 두르고 채소를 볶습니다.\n3. 밥을 넣고 센불에서 볶아줍니다.\n4. 저염 간장과 참기름으로 간합니다.",
+          "1. 채소를 잘게 다져요.\n2. 팬에 기름을 넉넉히 두르고 채소를 볶아요.\n3. 밥을 넣고 센 불에서 볶아요.\n4. 저염 간장과 참기름으로 간해요.",
       },
     ],
     likes: 98,
@@ -210,7 +210,7 @@ const SEED_RECIPES: RecipePost[] = [
     authorName: "정수영",
     authorInfo: "CKD 4기",
     title: "저염 미소시루",
-    summary: "나트륨을 줄인 일본식 미소시루로 따뜻한 한 끼를.",
+    summary: "나트륨을 줄인 따뜻한 일본식 미소시루예요.",
     imageUri: null,
     nutritionTags: ["저염"],
     stageTags: ["CKD 4기"],
@@ -219,7 +219,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "미소(된장) 양을 줄이고 가쓰오부시 육수로 깊은 맛을 낸 미소시루입니다. 일반 대비 나트륨 40% 감소.",
+          "미소(된장) 양을 줄이고 가쓰오부시 육수로 깊은 맛을 냈어요. 일반 미소시루보다 나트륨을 40% 줄였어요.",
       },
     ],
     ingredients: [
@@ -233,7 +233,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 물에 가쓰오부시를 넣어 육수를 우려냅니다.\n2. 두부를 작게 깍둑썰기합니다.\n3. 육수에 두부와 미역을 넣고 끓입니다.\n4. 불을 끄고 미소를 풀어줍니다.\n5. 대파를 올려 완성합니다.",
+          "1. 물에 가쓰오부시를 넣어 육수를 우려요.\n2. 두부를 작게 깍둑썰기해요.\n3. 육수에 두부와 미역을 넣고 끓여요.\n4. 불을 끄고 미소를 풀어요.\n5. 대파를 올려 마무리해요.",
       },
     ],
     likes: 134,
@@ -245,18 +245,18 @@ const SEED_RECIPES: RecipePost[] = [
   {
     id: makeId(),
     authorName: "오민석",
-    authorInfo: "CKD 3기, 고혈압동반",
+    authorInfo: "CKD 3기, 고혈압 동반",
     title: "저염 파스타 아라비아타",
-    summary: "소금 없이 토마토와 허브로 맛을 낸 건강 파스타.",
+    summary: "소금 없이 토마토와 허브로 맛을 낸 파스타예요.",
     imageUri: null,
     nutritionTags: ["저염", "저칼륨"],
-    stageTags: ["CKD 3기", "고혈압동반"],
+    stageTags: ["CKD 3기", "고혈압 동반"],
     cuisineTags: ["양식"],
     description: [
       {
         type: "text",
         content:
-          "소금 대신 마늘, 바질, 올리브유로 풍미를 살린 아라비아타 파스타입니다. 고혈압을 동반한 CKD 환자분들께 추천합니다.",
+          "소금 대신 마늘, 바질, 올리브유로 풍미를 살린 아라비아타 파스타예요. 고혈압을 함께 관리하는 CKD 식단을 고려했어요.",
       },
     ],
     ingredients: [
@@ -270,7 +270,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 파스타면을 소금 없이 삶아줍니다.\n2. 올리브유에 마늘과 페퍼론치노를 볶습니다.\n3. 무염 토마토소스를 넣고 끓입니다.\n4. 삶은 면을 넣고 볶아줍니다.\n5. 바질을 올려 완성합니다.",
+          "1. 파스타면을 소금 없이 삶아요.\n2. 올리브유에 마늘과 페퍼론치노를 볶아요.\n3. 무염 토마토소스를 넣고 끓여요.\n4. 삶은 면을 넣고 볶아요.\n5. 바질을 올려 마무리해요.",
       },
     ],
     likes: 276,
@@ -284,7 +284,7 @@ const SEED_RECIPES: RecipePost[] = [
     authorName: "윤하은",
     authorInfo: "임상영양사",
     title: "저인 과일 디저트",
-    summary: "인 함량이 낮은 과일로 만든 가벼운 디저트.",
+    summary: "인 함량이 낮은 과일로 만든 가벼운 디저트예요.",
     imageUri: null,
     nutritionTags: ["저인"],
     stageTags: ["CKD 4기", "CKD 5기"],
@@ -293,7 +293,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "인 함량이 낮은 사과, 배, 포도를 활용한 과일 디저트입니다. 유제품 없이 만들어 인 부담을 줄였어요.",
+          "인 함량이 낮은 사과, 배, 포도를 활용한 과일 디저트예요. 유제품을 넣지 않아 인 부담을 줄였어요.",
       },
     ],
     ingredients: [
@@ -307,7 +307,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 과일을 깨끗이 씻어 한입 크기로 자릅니다.\n2. 꿀과 레몬즙을 섞어 드레싱을 만듭니다.\n3. 과일에 드레싱을 뿌려줍니다.\n4. 민트잎으로 장식합니다.",
+          "1. 과일을 깨끗이 씻어 한입 크기로 잘라요.\n2. 꿀과 레몬즙을 섞어 드레싱을 만들어요.\n3. 과일에 드레싱을 뿌려요.\n4. 민트잎으로 장식해요.",
       },
     ],
     likes: 89,
@@ -321,7 +321,7 @@ const SEED_RECIPES: RecipePost[] = [
     authorName: "강서연",
     authorInfo: "CKD 3기",
     title: "저칼륨 허브티 레시피",
-    summary: "칼륨이 낮은 허브로 만든 건강 음료.",
+    summary: "칼륨 함량이 낮은 허브로 만든 따뜻한 차예요.",
     imageUri: null,
     nutritionTags: ["저칼륨"],
     stageTags: ["CKD 3기"],
@@ -330,7 +330,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "칼륨이 높은 녹차 대신, 칼륨이 낮은 페퍼민트와 캐모마일을 블렌딩한 허브티입니다.",
+          "칼륨 함량이 높은 녹차 대신 페퍼민트와 캐모마일을 섞어 만든 허브차예요.",
       },
     ],
     ingredients: [
@@ -344,7 +344,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 컵에 티백 2개를 넣습니다.\n2. 뜨거운 물을 부어줍니다.\n3. 3-5분간 우려냅니다.\n4. 기호에 따라 꿀을 넣어줍니다.",
+          "1. 컵에 티백 2개를 넣어요.\n2. 뜨거운 물을 부어요.\n3. 3~5분간 우려요.\n4. 입맛에 따라 꿀을 넣어요.",
       },
     ],
     likes: 67,
@@ -356,18 +356,18 @@ const SEED_RECIPES: RecipePost[] = [
   {
     id: makeId(),
     authorName: "박소미",
-    authorInfo: "CKD 4기, 당뇨동반",
+    authorInfo: "CKD 4기, 당뇨 동반",
     title: "저염 저단백 일본식 우동",
-    summary: "나트륨과 단백질을 줄인 건강한 우동 레시피.",
+    summary: "나트륨과 단백질을 줄인 우동 레시피예요.",
     imageUri: null,
     nutritionTags: ["저염", "저단백"],
-    stageTags: ["CKD 4기", "당뇨동반"],
+    stageTags: ["CKD 4기", "당뇨 동반"],
     cuisineTags: ["일식"],
     description: [
       {
         type: "text",
         content:
-          "저단백 우동면을 사용하고 소금 없이 다시마·멸치 육수로 맛을 낸 우동입니다. 당뇨를 동반한 CKD 4기 환자분들의 식단에 적합합니다.",
+          "저단백 우동면을 사용하고 소금 없이 다시마·멸치 육수로 맛을 낸 우동이에요. 당뇨를 함께 관리하는 CKD 4기 식단을 고려했어요.",
       },
     ],
     ingredients: [
@@ -381,7 +381,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 다시마와 멸치로 육수를 만듭니다.\n2. 무를 얇게 썰어 육수에 넣고 끓입니다.\n3. 저단백 우동면을 따로 삶아줍니다.\n4. 육수에 면을 넣고 대파를 올립니다.\n5. 저염 간장으로 살짝 간합니다.",
+          "1. 다시마와 멸치로 육수를 만들어요.\n2. 무를 얇게 썰어 육수에 넣고 끓여요.\n3. 저단백 우동면을 따로 삶아요.\n4. 육수에 면을 넣고 대파를 올려요.\n5. 저염 간장으로 가볍게 간해요.",
       },
     ],
     likes: 156,
@@ -395,7 +395,7 @@ const SEED_RECIPES: RecipePost[] = [
     authorName: "이도현",
     authorInfo: "CKD 5기",
     title: "고열량 저칼륨 떡볶이",
-    summary: "칼륨을 줄이고 열량을 높인 특별한 떡볶이.",
+    summary: "칼륨을 줄이고 열량을 보충한 떡볶이예요.",
     imageUri: null,
     nutritionTags: ["고열량", "저칼륨"],
     stageTags: ["CKD 5기"],
@@ -404,7 +404,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "고추장 대신 설탕과 물엿으로 맛을 낸 떡볶이입니다. 칼륨이 높은 고추장을 최소화하고 열량을 보충했어요.",
+          "설탕과 물엿으로 단맛을 내고 고추장 사용량은 줄인 떡볶이예요. 칼륨 부담을 줄이면서 열량을 보충하도록 구성했어요.",
       },
     ],
     ingredients: [
@@ -418,7 +418,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 물에 물엿, 설탕, 고추장을 넣고 끓입니다.\n2. 떡을 넣고 부드러워질 때까지 끓입니다.\n3. 어묵과 양배추를 넣고 2분 더 끓입니다.\n4. 불을 줄이고 소스가 걸쭉해지면 완성입니다.",
+          "1. 물에 물엿, 설탕, 고추장을 넣고 끓여요.\n2. 떡을 넣고 부드러워질 때까지 끓여요.\n3. 어묵과 양배추를 넣고 2분 더 끓여요.\n4. 불을 줄이고 소스가 걸쭉해지면 마무리해요.",
       },
     ],
     likes: 203,
@@ -430,18 +430,18 @@ const SEED_RECIPES: RecipePost[] = [
   {
     id: makeId(),
     authorName: "김태호",
-    authorInfo: "CKD 3기, 고혈압동반",
+    authorInfo: "CKD 3기, 고혈압 동반",
     title: "무염 감자 크로켓",
-    summary: "소금 없이 만든 바삭한 감자 크로켓.",
+    summary: "소금 없이 허브와 후추로 맛을 낸 감자 크로켓이에요.",
     imageUri: null,
     nutritionTags: ["저염"],
-    stageTags: ["CKD 3기", "고혈압동반"],
+    stageTags: ["CKD 3기", "고혈압 동반"],
     cuisineTags: ["양식"],
     description: [
       {
         type: "text",
         content:
-          "감자를 물에 충분히 담가 칼륨을 제거한 뒤, 소금 없이 허브와 후추로만 맛을 낸 크로켓입니다.",
+          "감자를 물에 충분히 담가 칼륨을 줄인 뒤, 소금 없이 허브와 후추로 맛을 낸 크로켓이에요.",
       },
     ],
     ingredients: [
@@ -455,7 +455,7 @@ const SEED_RECIPES: RecipePost[] = [
       {
         type: "text",
         content:
-          "1. 감자를 껍질 벗기고 얇게 썰어 2시간 물에 담급니다.\n2. 감자를 삶아 으깹니다.\n3. 다진 양파, 후추, 파슬리를 섞어줍니다.\n4. 동그랗게 빚어 계란물, 빵가루 순으로 입힙니다.\n5. 170도 기름에 노릇하게 튀겨냅니다.",
+          "1. 감자 껍질을 벗기고 얇게 썰어 물에 2시간 담가요.\n2. 감자를 삶아 으깨요.\n3. 다진 양파, 후추, 파슬리를 섞어요.\n4. 동그랗게 빚어 계란물과 빵가루 순으로 입혀요.\n5. 170도 기름에서 노릇하게 튀겨요.",
       },
     ],
     likes: 178,

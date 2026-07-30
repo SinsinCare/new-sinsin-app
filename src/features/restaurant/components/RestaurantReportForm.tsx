@@ -3,6 +3,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +12,7 @@ import {
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
 import { Text, XStack, YStack } from "tamagui"
+import { useTranslation } from "react-i18next"
 
 import { Button, TextAreaField, TextField } from "@/src/shared/components"
 import { radius, spacing, useV2Theme } from "@/src/design-system-v2"
@@ -38,6 +40,7 @@ const emptyDraft = {
 export function RestaurantReportForm({
   paddingTop,
 }: RestaurantReportFormProps) {
+  const { t } = useTranslation("common")
   const theme = useV2Theme()
   const palette = getRestaurantReportPalette(theme)
   const [draft, setDraft] = useState(emptyDraft)
@@ -56,14 +59,28 @@ export function RestaurantReportForm({
   const addPhotos = async () => {
     if (photos.length >= MAX_RESTAURANT_REPORT_PHOTOS) {
       setError(
-        `사진은 최대 ${MAX_RESTAURANT_REPORT_PHOTOS}장까지 첨부할 수 있어요.`,
+        t("restaurant.report.maxPhotos", {
+          count: MAX_RESTAURANT_REPORT_PHOTOS,
+        }),
       )
       return
     }
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
-      setError("사진 접근 권한이 필요해요.")
+      Alert.alert(
+        t("restaurant.report.permissionTitle"),
+        t("restaurant.report.permissionBody"),
+        [
+          { text: t("restaurant.report.later"), style: "cancel" },
+          {
+            text: t("restaurant.report.openSettings"),
+            onPress: () => {
+              void Linking.openSettings()
+            },
+          },
+        ],
+      )
       return
     }
 
@@ -93,7 +110,11 @@ export function RestaurantReportForm({
       photoCount: photos.length,
     })
     if (validation) {
-      setError(validation)
+      setError(
+        t(`restaurant.report.validation.${validation}`, {
+          count: MAX_RESTAURANT_REPORT_PHOTOS,
+        }),
+      )
       return
     }
 
@@ -103,13 +124,12 @@ export function RestaurantReportForm({
       await restaurantReportService.submitReport({ draft, photos })
       setDraft(emptyDraft)
       setPhotos([])
-      Alert.alert("제보 완료", "소중한 식당 정보를 보내주셔서 감사합니다.")
-    } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "제보 등록에 실패했습니다.",
+      Alert.alert(
+        t("restaurant.report.successTitle"),
+        t("restaurant.report.successBody"),
       )
+    } catch {
+      setError(t("restaurant.report.failure"))
     } finally {
       setIsSubmitting(false)
     }
@@ -121,6 +141,8 @@ export function RestaurantReportForm({
       style={[styles.flex, { backgroundColor: palette.bg }]}
     >
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           styles.content,
@@ -139,11 +161,10 @@ export function RestaurantReportForm({
               fontWeight="700"
               color={palette.text}
             >
-              식당 탭 준비 중
+              {t("restaurant.report.introTitle")}
             </Text>
             <Text fontSize={15} lineHeight={22} color={palette.subText}>
-              신장 건강에 맞는 식당 정보를 정리하고 있어요. 추천하고 싶은 식당을
-              알려주세요.
+              {t("restaurant.report.introBody")}
             </Text>
           </YStack>
 
@@ -162,7 +183,7 @@ export function RestaurantReportForm({
               fontWeight="700"
               color={palette.text}
             >
-              식당 제보
+              {t("restaurant.report.formTitle")}
             </Text>
 
             {error ? (
@@ -179,34 +200,34 @@ export function RestaurantReportForm({
             ) : null}
 
             <RestaurantReportSection
-              title="기본 정보"
+              title={t("restaurant.report.sections.restaurant")}
               backgroundColor={palette.section}
               borderColor={palette.fieldBorder}
               textColor={palette.text}
             >
               <TextField
-                label="식당 이름"
+                label={t("restaurant.report.fields.name")}
                 value={draft.name}
                 onChangeText={(value) => update("name", value)}
-                placeholder="예: 초록김밥"
+                placeholder={t("restaurant.report.fields.namePlaceholder")}
                 borderColor={palette.fieldBorder}
                 backgroundColor={palette.input}
                 color={palette.text}
               />
               <TextField
-                label="주소 (선택)"
+                label={t("restaurant.report.fields.address")}
                 value={draft.address}
                 onChangeText={(value) => update("address", value)}
-                placeholder="도로명 주소 또는 동네명"
+                placeholder={t("restaurant.report.fields.addressPlaceholder")}
                 borderColor={palette.fieldBorder}
                 backgroundColor={palette.input}
                 color={palette.text}
               />
               <TextField
-                label="음식 종류"
+                label={t("restaurant.report.fields.category")}
                 value={draft.category}
                 onChangeText={(value) => update("category", value)}
-                placeholder="한식, 일식, 분식 등"
+                placeholder={t("restaurant.report.fields.categoryPlaceholder")}
                 borderColor={palette.fieldBorder}
                 backgroundColor={palette.input}
                 color={palette.text}
@@ -214,26 +235,26 @@ export function RestaurantReportForm({
             </RestaurantReportSection>
 
             <RestaurantReportSection
-              title="추천 정보"
+              title={t("restaurant.report.sections.highlights")}
               backgroundColor={palette.section}
               borderColor={palette.fieldBorder}
               textColor={palette.text}
             >
               <TextField
-                label="추천 메뉴 (선택)"
+                label={t("restaurant.report.fields.menu")}
                 value={draft.recommendedMenu}
                 onChangeText={(value) => update("recommendedMenu", value)}
-                placeholder="싱겁게 먹기 좋은 메뉴"
+                placeholder={t("restaurant.report.fields.menuPlaceholder")}
                 borderColor={palette.fieldBorder}
                 backgroundColor={palette.input}
                 color={palette.text}
               />
 
               <TextAreaField
-                label="추천 이유 (선택)"
+                label={t("restaurant.report.fields.reason")}
                 value={draft.reason}
                 onChangeText={(value) => update("reason", value)}
-                placeholder="왜 추천하는지 알려주세요."
+                placeholder={t("restaurant.report.fields.reasonPlaceholder")}
                 borderRadius={radius.md}
                 borderColor={palette.fieldBorder}
                 backgroundColor={palette.input}
@@ -241,10 +262,10 @@ export function RestaurantReportForm({
               />
 
               <TextField
-                label="외부 링크 (선택)"
+                label={t("restaurant.report.fields.link")}
                 value={draft.externalLink}
                 onChangeText={(value) => update("externalLink", value)}
-                placeholder="지도, 메뉴판, 리뷰 링크"
+                placeholder={t("restaurant.report.fields.linkPlaceholder")}
                 autoCapitalize="none"
                 borderColor={palette.fieldBorder}
                 backgroundColor={palette.input}
@@ -253,7 +274,7 @@ export function RestaurantReportForm({
             </RestaurantReportSection>
 
             <RestaurantReportSection
-              title="사진"
+              title={t("restaurant.report.sections.photos")}
               backgroundColor={palette.section}
               borderColor={palette.fieldBorder}
               textColor={palette.text}
@@ -261,7 +282,10 @@ export function RestaurantReportForm({
               <YStack gap={spacing[8]}>
                 <XStack alignItems="center" justifyContent="space-between">
                   <Text fontSize={14} color={palette.text}>
-                    첨부 {photos.length}/{MAX_RESTAURANT_REPORT_PHOTOS}
+                    {t("restaurant.report.selectedPhotos", {
+                      current: photos.length,
+                      max: MAX_RESTAURANT_REPORT_PHOTOS,
+                    })}
                   </Text>
                   <Pressable
                     onPress={addPhotos}
@@ -274,7 +298,7 @@ export function RestaurantReportForm({
                     ]}
                   >
                     <Text fontSize={13} fontWeight="600" color={palette.action}>
-                      사진 추가
+                      {t("restaurant.report.addPhoto")}
                     </Text>
                   </Pressable>
                 </XStack>
@@ -284,13 +308,17 @@ export function RestaurantReportForm({
                       <Pressable
                         key={photo.uri}
                         onPress={() => removePhoto(photo.uri)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("restaurant.report.removePhoto")}
                         style={styles.photoThumb}
                       >
                         <Image
                           source={{ uri: photo.uri }}
                           style={styles.photoImage}
                         />
-                        <Text style={styles.removePhotoText}>삭제</Text>
+                        <Text style={styles.removePhotoText}>
+                          {t("restaurant.report.remove")}
+                        </Text>
                       </Pressable>
                     ))}
                   </XStack>
@@ -299,7 +327,7 @@ export function RestaurantReportForm({
             </RestaurantReportSection>
 
             <Button fullWidth loading={isSubmitting} onPress={submit}>
-              제보 보내기
+              {t("restaurant.report.submit")}
             </Button>
           </YStack>
         </YStack>

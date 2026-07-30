@@ -4,6 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -18,6 +19,7 @@ export function NhisConfirmScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
   const { requestId } = useLocalSearchParams<{ requestId: string }>()
 
@@ -34,14 +36,14 @@ export function NhisConfirmScreen() {
         router.replace("/(settings)/health-dashboard")
       } else if (result.status === "TIMEOUT") {
         setStatus("timeout")
-        setErrorMessage("인증 시간이 초과되었습니다. 다시 시도해 주세요.")
+        setErrorMessage(t("nhis.confirmTimeout"))
       } else {
         setStatus("failed")
-        setErrorMessage(result.message || "인증에 실패했습니다.")
+        setErrorMessage(t("nhis.confirmFailed"))
       }
     } catch {
       setStatus("failed")
-      setErrorMessage("네트워크 오류가 발생했습니다.")
+      setErrorMessage(t("nhis.confirmNetworkError"))
     }
   }
 
@@ -71,12 +73,12 @@ export function NhisConfirmScreen() {
               />
             </View>
             <ThemedText style={[styles.title, { color: healthColors.text }]}>
-              결과를 불러오고 있습니다
+              {t("nhis.loadingTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.subtitle, { color: healthColors.textSecondary }]}
             >
-              잠시만 기다려 주세요.
+              {t("nhis.loadingDescription")}
             </ThemedText>
           </>
         ) : (
@@ -91,7 +93,9 @@ export function NhisConfirmScreen() {
               />
             </View>
             <ThemedText style={[styles.title, { color: healthColors.text }]}>
-              {status === "timeout" ? "인증 시간 초과" : "인증 실패"}
+              {status === "timeout"
+                ? t("nhis.timeoutTitle")
+                : t("nhis.failedTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.subtitle, { color: healthColors.textSecondary }]}
@@ -105,7 +109,9 @@ export function NhisConfirmScreen() {
       {isError && (
         <View style={styles.buttonArea}>
           <Pressable style={styles.retryButton} onPress={() => router.back()}>
-            <ThemedText style={styles.retryButtonText}>다시 시도</ThemedText>
+            <ThemedText style={styles.retryButtonText}>
+              {t("nhis.retryVerification")}
+            </ThemedText>
           </Pressable>
         </View>
       )}

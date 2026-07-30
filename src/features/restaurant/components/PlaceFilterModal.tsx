@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react"
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
+import { useTranslation } from "react-i18next"
 import { tokens } from "@/src/theme/tokens"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { FilterTabBar } from "./FilterTabBar"
@@ -25,6 +26,7 @@ export function PlaceFilterModal({
   initialTab = "region",
   onApply,
 }: PlaceFilterModalProps) {
+  const { t } = useTranslation("common")
   const isDarkMode = useAppColorScheme() === "dark"
   const insets = useSafeAreaInsets()
   const scrollRef = useRef<ScrollView>(null)
@@ -126,7 +128,12 @@ export function PlaceFilterModal({
           onTabChange={handleTabChange}
           onClose={onClose}
         />
-        <ScrollView ref={scrollRef} style={styles.scrollView}>
+        <ScrollView
+          bounces={false}
+          overScrollMode="never"
+          ref={scrollRef}
+          style={styles.scrollView}
+        >
           <View
             onLayout={(e) => {
               sectionPositions.current.region = e.nativeEvent.layout.y
@@ -166,7 +173,9 @@ export function PlaceFilterModal({
         </ScrollView>
 
         {/* Apply Button */}
-        <View style={[styles.applyContainer, { paddingBottom: insets.bottom + 16 }]}>
+        <View
+          style={[styles.applyContainer, { paddingBottom: insets.bottom + 16 }]}
+        >
           <Pressable onPress={handleApply} style={styles.applyButton}>
             <Text
               fontFamily="$body"
@@ -174,7 +183,7 @@ export function PlaceFilterModal({
               fontSize={16}
               color="#FDFDFD"
             >
-              필터 적용하기
+              {t("restaurant.filter.apply")}
             </Text>
           </Pressable>
         </View>

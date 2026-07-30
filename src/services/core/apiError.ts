@@ -27,5 +27,7 @@ export function isApiErrorLike(error: unknown): error is ApiErrorLike {
   if (!error || typeof error !== "object") return false
 
   const candidate = error as Partial<ApiErrorLike>
-  return typeof candidate.message === "string" && typeof candidate.code === "string"
+  return (
+    typeof candidate.message === "string" && typeof candidate.code === "string"
+  )
 }

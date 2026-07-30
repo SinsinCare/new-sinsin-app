@@ -12,6 +12,7 @@ import { AiRecommendationSummary } from "./AiRecommendationSummary"
 import { RecommendedRecipeCard } from "./RecommendedRecipeCard"
 import { RecommendedRestaurantCard } from "./RecommendedRestaurantCard"
 import type { MealType, RecommendationCategory } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface MealRecommendationSectionProps {
   /** Which type of recommendations to show */
@@ -26,6 +27,7 @@ function getDefaultMealType(): MealType {
 export function MealRecommendationSection({
   category = "all",
 }: MealRecommendationSectionProps) {
+  const { t } = useTranslation()
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const [mealType, setMealType] = useState<MealType>(getDefaultMealType)
@@ -63,7 +65,8 @@ export function MealRecommendationSection({
     [toggleBookmark],
   )
 
-  const mealLabel = mealType === "LUNCH" ? "점심" : "저녁"
+  const mealLabel =
+    mealType === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
   const hasRecipes = (recommendations?.recipes.length ?? 0) > 0
   const hasMenus = (recommendations?.restaurantMenus.length ?? 0) > 0
   const isEmpty = !isLoading && !hasRecipes && !hasMenus
@@ -84,12 +87,18 @@ export function MealRecommendationSection({
             fontWeight="700"
             color={textColor}
           >
-            오늘의 {mealLabel} 추천
+            {t("mealRecommendation.title", { meal: mealLabel })}
           </Text>
         </XStack>
         <XStack gap={8} alignItems="center">
           <MealTypeToggle value={mealType} onChange={setMealType} />
-          <Pressable onPress={() => refresh()} hitSlop={8} disabled={isRefreshing}>
+          <Pressable
+            onPress={() => refresh()}
+            hitSlop={8}
+            disabled={isRefreshing}
+            accessibilityRole="button"
+            accessibilityLabel={t("mealRecommendation.refresh")}
+          >
             <Ionicons
               name="refresh"
               size={18}
@@ -106,13 +115,8 @@ export function MealRecommendationSection({
             color={tokens.color.primaryAccent.val}
             size="small"
           />
-          <Text
-            fontSize={13}
-            fontFamily="$body"
-            color={subColor}
-            marginTop={8}
-          >
-            추천을 생성하고 있어요...
+          <Text fontSize={13} fontFamily="$body" color={subColor} marginTop={8}>
+            {t("mealRecommendation.loading")}
           </Text>
         </YStack>
       )}
@@ -137,9 +141,11 @@ export function MealRecommendationSection({
                 fontWeight="600"
                 color={subColor}
               >
-                집밥 레시피
+                {t("mealRecommendation.recipes")}
               </Text>
               <ScrollView
+                bounces={false}
+                overScrollMode="never"
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 12 }}
@@ -165,9 +171,11 @@ export function MealRecommendationSection({
                 fontWeight="600"
                 color={subColor}
               >
-                외식 메뉴
+                {t("mealRecommendation.restaurantMenus")}
               </Text>
               <ScrollView
+                bounces={false}
+                overScrollMode="never"
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 12 }}
@@ -195,8 +203,7 @@ export function MealRecommendationSection({
                 marginTop={8}
                 textAlign="center"
               >
-                오늘의 영양소 예산에 맞는 추천 메뉴가 없어요.{"\n"}
-                영양소 한도를 확인해보세요.
+                {t("mealRecommendation.empty")}
               </Text>
             </YStack>
           )}

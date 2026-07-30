@@ -12,16 +12,21 @@ import {
   ensureMealDiary,
   type MealDiaryPersistenceInput,
 } from "../services/mealDiaryPersistence"
+import appI18n from "@/src/i18n"
 
 function confirmDeleteMeal(): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(
-      "식단 기록 삭제",
-      "이 식단 기록을 삭제하시겠습니까?",
+      appI18n.t("foodResult.deleteConfirmTitle"),
+      appI18n.t("foodResult.deleteConfirmBody"),
       [
-        { text: "취소", style: "cancel", onPress: () => resolve(false) },
         {
-          text: "삭제",
+          text: appI18n.t("action.cancel"),
+          style: "cancel",
+          onPress: () => resolve(false),
+        },
+        {
+          text: appI18n.t("action.delete"),
           style: "destructive",
           onPress: () => resolve(true),
         },
@@ -79,8 +84,8 @@ export function useMealPersistenceActions() {
       return true
     } catch (error) {
       Alert.alert(
-        "식단 저장 실패",
-        `${getErrorMessage(error)}\n현재 화면에서 다시 시도해 주세요.`,
+        appI18n.t("home.errors.saveMealTitle"),
+        getErrorMessage(error, appI18n.t("home.errors.saveMealBody")),
       )
       return false
     } finally {
@@ -93,7 +98,10 @@ export function useMealPersistenceActions() {
     try {
       return await deleteControllerRef.current!.remove(diaryId)
     } catch (error) {
-      Alert.alert("삭제 실패", getErrorMessage(error))
+      Alert.alert(
+        appI18n.t("foodResult.deleteFailedTitle"),
+        getErrorMessage(error, appI18n.t("foodResult.deleteFailedBody")),
+      )
       return false
     } finally {
       setIsDeletingDiary(false)

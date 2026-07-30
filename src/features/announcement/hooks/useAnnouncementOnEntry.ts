@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { AppState, type AppStateStatus } from "react-native"
 import { useIsFocused } from "@react-navigation/native"
+import { useTranslation } from "react-i18next"
 import { logger } from "@/src/lib/logger"
+import { normalizeLanguage } from "@/src/i18n"
 import { announcementService } from "../services/announcementService"
 import { dismissedAnnouncementStorage } from "../storage/dismissedAnnouncements"
 import { useAnnouncementSessionStore } from "../state/announcementSessionStore"
@@ -10,6 +12,8 @@ import { createAnnouncementEntryController } from "./announcementEntryController
 
 export function useAnnouncementOnEntry(enabled: boolean) {
   const isFocused = useIsFocused()
+  const { i18n } = useTranslation()
+  const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
   const resetSession = useAnnouncementSessionStore((state) => state.reset)
   const [activeNotice, setActiveNotice] = useState<AnnouncementNotice | null>(
     null,
@@ -17,6 +21,7 @@ export function useAnnouncementOnEntry(enabled: boolean) {
   const [visible, setVisible] = useState(false)
   const lifecycleRef = useRef({ enabled, isFocused })
   lifecycleRef.current = { enabled, isFocused }
+  const previousLanguageRef = useRef(language)
   const controllerRef = useRef<ReturnType<
     typeof createAnnouncementEntryController
   > | null>(null)
@@ -59,8 +64,19 @@ export function useAnnouncementOnEntry(enabled: boolean) {
   }, [enabled, resetSession])
 
   useEffect(() => {
+    if (previousLanguageRef.current === language) return
+    previousLanguageRef.current = language
+    // 같은 로그인 세션이어도 언어별 공지 payload는 별개다. 이전 언어의
+    // 완료 표시와 화면 상태를 지우고, 진행 중 요청도 무효화한다.
+    controllerRef.current?.invalidate()
+    resetSession()
+    setVisible(false)
+    setActiveNotice(null)
+  }, [language, resetSession])
+
+  useEffect(() => {
     triggerCheck()
-  }, [enabled, isFocused, triggerCheck])
+  }, [enabled, isFocused, language, triggerCheck])
 
   useEffect(() => {
     const handleAppState = (state: AppStateStatus) => {

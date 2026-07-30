@@ -1,11 +1,15 @@
-import { Pressable, StyleSheet, PanResponder, View as RNView } from "react-native"
+import {
+  Pressable,
+  StyleSheet,
+  PanResponder,
+  View as RNView,
+} from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack, View } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import { useRef } from "react"
-
-const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"]
+import { useTranslation } from "react-i18next"
 
 function getSundayWeek(base: Date): Date[] {
   const sunday = new Date(base)
@@ -36,11 +40,16 @@ export function ThreeDaysCalendar({
   recordedDates = [],
   onMonthPress,
 }: ThreeDaysCalendarProps) {
+  const { i18n } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
   const today = new Date()
   const week = getSundayWeek(selectedDate)
-
-  const month = selectedDate.getMonth() + 1
+  const locale = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
+    ? "en-US"
+    : "ko-KR"
+  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long" }).format(
+    selectedDate,
+  )
 
   const recordBg = isDark ? "#3A3A3F" : "#EBEBED"
   const recordText = isDark ? tokens.color.textDarkSub.val : "#555"
@@ -83,25 +92,32 @@ export function ThreeDaysCalendar({
               fontWeight="700"
               color={isDark ? "$textDark" : "$color"}
             >
-              {month}월
+              {monthLabel}
             </Text>
             <Ionicons
               name="chevron-forward"
               size={18}
-              color={isDark ? tokens.color.textDark.val : tokens.color.black.val}
+              color={
+                isDark ? tokens.color.textDark.val : tokens.color.black.val
+              }
             />
           </XStack>
         </Pressable>
 
         {/* 요일 레이블 */}
         <XStack justifyContent="space-between" paddingHorizontal="$1">
-          {DAY_LABELS.map((label) => (
-            <View key={label} style={styles.cell}>
+          {week.map((date) => {
+            const label = new Intl.DateTimeFormat(locale, {
+              weekday: "narrow",
+            }).format(date)
+            return (
+            <View key={date.getDay()} style={styles.cell}>
               <Text fontSize={12} fontWeight="500" color={labelText}>
                 {label}
               </Text>
             </View>
-          ))}
+            )
+          })}
         </XStack>
 
         {/* 날짜 행 */}
@@ -120,13 +136,14 @@ export function ThreeDaysCalendar({
                   ? recordBg
                   : "transparent"
 
-            const textColor = isSelected || isToday
-              ? "white"
-              : isFuture
-                ? futureText
-                : hasRecord
-                  ? recordText
-                  : regularText
+            const textColor =
+              isSelected || isToday
+                ? "white"
+                : isFuture
+                  ? futureText
+                  : hasRecord
+                    ? recordText
+                    : regularText
 
             return (
               <Pressable

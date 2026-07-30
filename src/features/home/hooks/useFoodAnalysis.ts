@@ -3,7 +3,7 @@ import { Alert } from "react-native"
 import { useQueryClient } from "@tanstack/react-query"
 import { foodCameraService } from "@/src/services/data"
 import { isApiErrorLike } from "@/src/services/core/apiError"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { logRecoverableError } from "@/src/lib/errorUtils"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
 import { markFoodAnalysisRequestHandled } from "../services/foodAnalysisRequestState"
@@ -22,6 +22,7 @@ import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { appConfig } from "@/src/config/appConfig"
+import { useTranslation } from "react-i18next"
 
 function createFoodAnalysisRequestId(): string {
   const randomPart = Math.random().toString(36).slice(2, 10)
@@ -37,6 +38,7 @@ function isTimeoutError(error: unknown): boolean {
 export function useFoodAnalysis(
   onUpdateSuccess?: (updated: FoodAnalysisUpdateResult) => void,
 ) {
+  const { t } = useTranslation()
   const [analysisResult, setAnalysisResult] =
     useState<FoodCameraAnalyzeResult | null>(null)
   const [isResultOpen, setIsResultOpen] = useState(false)
@@ -65,13 +67,6 @@ export function useFoodAnalysis(
   const setPending = usePendingAnalysisStore((s) => s.setPending)
   const addNotification = useNotificationHistoryStore((s) => s.addNotification)
 
-  const MEAL_LABELS: Record<string, string> = {
-    BREAKFAST: "아침",
-    LUNCH: "점심",
-    DINNER: "저녁",
-    SNACKS: "간식",
-  }
-
   const completeAnalysis = async (
     result: FoodCameraAnalyzeResult,
     requestId: string,
@@ -88,10 +83,8 @@ export function useFoodAnalysis(
       setPending({ result, mealType, imageUri: result.imageUrl ?? imageUri })
       addNotification({
         type: "food_analysis",
-        title: "🍽️ 식단 분석 완료",
-        body: result.title
-          ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
-          : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`,
+        foodName: result.title || undefined,
+        mealType,
       })
       return
     }
@@ -130,20 +123,26 @@ export function useFoodAnalysis(
           return
         }
 
-        // 추가 정보 수집 API/상태는 보존한다. 현재 UI가 비활성인 빌드에서는
-        // 서버 요청을 취소하지 않고 pending으로 남겨 다음 복구 시 다시 확인한다.
+        // 확인 질문을 받을 UI가 없는 빌드에서는 자동 완료를 약속하지 않는다.
+        // 미완료 요청을 pending으로 남겨 두면 앱을 다시 열어도 진행할 방법이 없다.
+        await pendingAnalysisRequests.remove(requestId)
+        markFoodAnalysisRequestHandled(requestId)
         setConfirmationJob(null)
-        setAnalysisStatus("RESOLVING")
+        setAnalysisStatus("FAILED")
+        trackAnalyticsEvent("food_analysis_failed", {
+          method: analysisMethodRef.current,
+          reason: "confirmation_unavailable",
+        })
         Alert.alert(
-          "분석 결과를 준비하고 있어요",
-          "추가 확인 없이 분석을 마칠 수 있도록 요청을 유지했어요. 잠시 후 앱을 다시 열면 결과를 다시 확인할게요.",
+          t("home.analysis.photoUnclearTitle"),
+          t("home.analysis.photoUnclearBody"),
         )
         return
       }
       if (job.status === "FAILED") {
         await pendingAnalysisRequests.remove(requestId)
         throw new Error(
-          job.error || job.failureMessage || "식단 분석에 실패했어요.",
+          job.error || job.failureMessage || t("home.errors.analysisFailed"),
         )
       }
 
@@ -175,8 +174,11 @@ export function useFoodAnalysis(
     } catch (error) {
       if (!dismissedRef.current) {
         trackAnalyticsEvent("food_analysis_failed", { method: "photo" })
-        console.error("analyzeImage error:", error)
-        Alert.alert("분석 실패", getErrorMessage(error))
+        logRecoverableError("analyzeImage error:", error)
+        Alert.alert(
+          t("home.analysis.photoFailedTitle"),
+          t("home.analysis.photoFailedBody"),
+        )
       }
     } finally {
       setIsAnalyzing(false)
@@ -204,13 +206,10 @@ export function useFoodAnalysis(
 
       if (dismissedRef.current) {
         setPending({ result, mealType, imageUri: result.imageUrl ?? null })
-        const notifBody = result.title
-          ? `${result.title} 드셨네요! 식단 분석 결과를 확인해보세요.`
-          : `${MEAL_LABELS[mealType] ?? mealType} 식단 분석이 완료됐어요. 결과를 확인해보세요!`
         addNotification({
           type: "food_analysis",
-          title: "🍽️ 식단 분석 완료",
-          body: notifBody,
+          foodName: result.title || undefined,
+          mealType,
         })
         return
       }
@@ -222,14 +221,17 @@ export function useFoodAnalysis(
     } catch (error) {
       if (!dismissedRef.current) {
         trackAnalyticsEvent("food_analysis_failed", { method: "text" })
-        console.error("analyzeText error:", error)
+        logRecoverableError("analyzeText error:", error)
         if (isTimeoutError(error)) {
           Alert.alert(
-            "분석 진행 중",
-            "식단 분석 요청이 길어지고 있어요. 서버에서는 계속 처리될 수 있어 앱을 다시 열거나 잠시 후 결과 알림을 확인해주세요.",
+            t("home.analysis.takingLongTitle"),
+            t("home.analysis.takingLongBody"),
           )
         } else {
-          Alert.alert("분석 실패", getErrorMessage(error))
+          Alert.alert(
+            t("home.analysis.textFailedTitle"),
+            t("home.analysis.textFailedBody"),
+          )
         }
       }
     } finally {
@@ -266,8 +268,11 @@ export function useFoodAnalysis(
         analyzedMealType,
         analyzedImageUri,
       )
-    } catch (error) {
-      Alert.alert("확인 실패", getErrorMessage(error))
+    } catch {
+      Alert.alert(
+        t("home.errors.confirmationTitle"),
+        t("home.errors.confirmationBody"),
+      )
       setConfirmationJob(confirmationJob)
     } finally {
       setIsAnalyzing(false)
@@ -285,10 +290,7 @@ export function useFoodAnalysis(
   ) => {
     if (!analysisResult || !analyzedMealType) return
     if (analysisResult.foodAnalysisResultId <= 0) {
-      Alert.alert(
-        "기록 준비 중",
-        "분석 결과를 식단 기록과 연결하고 있어요. 잠시 후 다시 시도해 주세요.",
-      )
+      Alert.alert(t("home.errors.notReadyTitle"), t("home.errors.notReadyBody"))
       return
     }
     const date = toDateStr(selectedDate)
@@ -302,8 +304,8 @@ export function useFoodAnalysis(
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
       trackAnalyticsEvent("food_record_save_failed", { source: "fresh" })
-      console.error("registerDiary error:", error)
-      Alert.alert("등록 실패", getErrorMessage(error))
+      logRecoverableError("registerDiary error:", error)
+      Alert.alert(t("home.errors.saveMealTitle"), t("home.errors.saveMealBody"))
     }
   }
 
@@ -314,8 +316,8 @@ export function useFoodAnalysis(
       const response = await foodCameraService.fetchDiaryResult(diaryId)
       return response
     } catch (error) {
-      console.error("fetchDiaryResult error:", error)
-      Alert.alert("조회 실패", getErrorMessage(error))
+      logRecoverableError("fetchDiaryResult error:", error)
+      Alert.alert(t("home.errors.openMealTitle"), t("home.errors.openMealBody"))
     }
   }
 
@@ -387,8 +389,11 @@ export function useFoodAnalysis(
       await refetchDiaryQueries()
       return updated
     } catch (error) {
-      console.error("updateFoodAnalysis error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      logRecoverableError("updateFoodAnalysis error:", error)
+      Alert.alert(
+        t("home.errors.saveChangesTitle"),
+        t("home.errors.saveChangesBody"),
+      )
     } finally {
       setIsUpdating(false)
     }
@@ -406,8 +411,11 @@ export function useFoodAnalysis(
       await refetchDiaryQueries()
       return response
     } catch (error) {
-      console.error("updateFoodTitle error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      logRecoverableError("updateFoodTitle error:", error)
+      Alert.alert(
+        t("home.errors.renameMealTitle"),
+        t("home.errors.renameMealBody"),
+      )
     }
   }
 
@@ -423,8 +431,11 @@ export function useFoodAnalysis(
       await refetchDiaryQueries()
       return result
     } catch (error) {
-      console.error("updateDiaryMealType error:", error)
-      Alert.alert("끼니 변경 실패", getErrorMessage(error))
+      logRecoverableError("updateDiaryMealType error:", error)
+      Alert.alert(
+        t("home.errors.changeMealTypeTitle"),
+        t("home.errors.changeMealTypeBody"),
+      )
     }
   }
 

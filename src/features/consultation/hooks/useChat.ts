@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef } from "react"
+import { LayoutAnimation } from "react-native"
 import {
   asChatStreamError,
+  dropAnswersAfterLastUser,
+  dropLastTurn,
   reconcileStreamedMessage,
   type ChatCategory,
   type ChatStreamError,
@@ -9,37 +12,29 @@ import {
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
 import { logger } from "@/src/lib/logger"
+import {
+  CHAT_UNAVAILABLE_MESSAGE,
+  CHAT_UNAVAILABLE_MESSAGE_EN,
+  streamFailureMessage,
+} from "@/src/features/consultation/utils/chatFailureCopy"
+import { getAppLanguage } from "@/src/i18n"
 
-let optimisticMsgId = -1
-
-const CHAT_UNAVAILABLE_MESSAGE =
-  "지금은 상담 챗이 작동하지 않아요. 잠시 후 다시 시도해주세요."
+// 낙관 메시지 id. 시각 기반 시드 — 모듈이 리로드(fast refresh)돼도 이전 상태에
+// 남아 있는 id 와 겹치지 않는다. 서버 id(양수)와는 부호로 구분된다.
+let optimisticMsgId = -(Date.now() % 1_000_000_000)
 
 function createChatUnavailableMessage(conversationId: number | null): Message {
+  const language = getAppLanguage()
   return {
     id: optimisticMsgId--,
     conversationId: conversationId ?? -1,
     role: "assistant",
-    content: CHAT_UNAVAILABLE_MESSAGE,
+    content:
+      language === "en"
+        ? CHAT_UNAVAILABLE_MESSAGE_EN
+        : CHAT_UNAVAILABLE_MESSAGE,
     createdAt: new Date(),
   }
-}
-
-function streamFailureMessage(error: ChatStreamError): string {
-  const suffix =
-    error.code === "MAX_TOKENS" || error.finishReason === "MAX_TOKENS"
-      ? "답변이 너무 길어 중간에 멈췄어요. 다시 생성해주세요."
-      : error.code === "TIMEOUT"
-        ? "답변 생성 시간이 초과됐어요. 다시 시도해주세요."
-        : error.code === "INCOMPLETE_STREAM"
-          ? "답변 연결이 중간에 끊겼어요. 다시 시도해주세요."
-          : error.retryable
-            ? "AI 상담 서비스에 일시적인 문제가 생겼어요. 다시 시도해주세요."
-            : CHAT_UNAVAILABLE_MESSAGE
-
-  return error.partialContentAvailable && error.partialContent
-    ? `${error.partialContent}\n\n_${suffix}_`
-    : suffix
 }
 
 function reconcileStreamFailure(
@@ -52,7 +47,7 @@ function reconcileStreamFailure(
     id: placeholderId,
     conversationId,
     role: "assistant",
-    content: streamFailureMessage(error),
+    content: streamFailureMessage(error, getAppLanguage()),
     createdAt: new Date(),
   }
   const placeholderIndex = messages.findIndex(
@@ -72,6 +67,13 @@ export function useChat() {
   const [isTyping, setIsTyping] = useState(false)
   const [lastError, setLastError] = useState<ChatStreamError | null>(null)
   const convIdRef = useRef<number | null>(null)
+  const messagesRef = useRef<Message[]>(messages)
+  messagesRef.current = messages
+  /**
+   * 전송·재생성의 단일 관문. isSending(리렌더 후에야 true)으로 막으면 빠른
+   * 연타가 같은 턴에 두 스트림을 띄우고, 답변이 두 개 쌓인다.
+   */
+  const inFlightRef = useRef(false)
 
   const { mutateAsync: createChatMutate, isPending: isCreating } = useMutation({
     mutationFn: async (category: ChatCategory) => {
@@ -89,10 +91,12 @@ export function useChat() {
         conversationId: convId,
         content,
         userCategory,
+        imageUri,
       }: {
         conversationId: number
         content: string
         userCategory: ChatCategory
+        imageUri?: string
       }) => {
         const streamingMsgId = optimisticMsgId--
         let placeholderAdded = false
@@ -127,6 +131,7 @@ export function useChat() {
                 )
               }
             },
+            imageUri,
           )
 
           setMessages((prev) =>
@@ -143,7 +148,7 @@ export function useChat() {
         }
       },
       onError: (err) => {
-        logger.error("Failed to send message", err)
+        logger.warn("Failed to send message", err)
       },
       onSettled: () => {
         setIsTyping(false)
@@ -155,9 +160,11 @@ export function useChat() {
       mutationFn: async ({
         content,
         userCategory,
+        imageUri,
       }: {
         content: string
         userCategory: ChatCategory
+        imageUri?: string
       }) => {
         const streamingMsgId = optimisticMsgId--
         let placeholderAdded = false
@@ -193,6 +200,7 @@ export function useChat() {
                 )
               }
             },
+            imageUri,
           )
 
           setMessages((prev) =>
@@ -214,7 +222,7 @@ export function useChat() {
         }
       },
       onError: (err) => {
-        logger.error("Failed to regenerate message", err)
+        logger.warn("Failed to regenerate message", err)
       },
       onSettled: () => {
         setIsTyping(false)
@@ -227,53 +235,61 @@ export function useChat() {
   categoryRef.current = category
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, imageUri?: string) => {
       const trimmed = content.trim()
-      if (!trimmed || isSending) return
-
-      // Optimistic UI: 유저 버블 + 타이핑 표시를 즉시 보여줌
-      const optimisticUserMsg: Message = {
-        id: optimisticMsgId--,
-        conversationId: convIdRef.current ?? -1,
-        role: "user",
-        content: trimmed,
-        createdAt: new Date(),
-      }
-      setMessages((prev) => [...prev, optimisticUserMsg])
-      setIsTyping(true)
-
-      let activeConvId = convIdRef.current
-
-      // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
-      if (activeConvId === null) {
-        try {
-          const conversation = await createChatMutate(
-            categoryRef.current ?? "NONE",
-          )
-          activeConvId = conversation.id
-          convIdRef.current = activeConvId
-          setConversationId(activeConvId)
-        } catch {
-          setMessages((prev) => [
-            ...prev,
-            createChatUnavailableMessage(activeConvId),
-          ])
-          setIsTyping(false)
-          return
-        }
-      }
+      // 사진만 보내는 것도 유효한 메시지다 — 텍스트 없이도 통과시킨다.
+      if ((!trimmed && !imageUri) || inFlightRef.current) return
+      inFlightRef.current = true
 
       try {
-        await sendMsgMutate({
-          conversationId: activeConvId,
+        // Optimistic UI: 유저 버블 + 타이핑 표시를 즉시 보여줌
+        const optimisticUserMsg: Message = {
+          id: optimisticMsgId--,
+          conversationId: convIdRef.current ?? -1,
+          role: "user",
           content: trimmed,
-          userCategory: categoryRef.current ?? "NONE",
-        })
-      } catch {
-        setIsTyping(false)
+          createdAt: new Date(),
+          imageUri,
+        }
+        setMessages((prev) => [...prev, optimisticUserMsg])
+        setIsTyping(true)
+
+        let activeConvId = convIdRef.current
+
+        // 첫 메시지: 대화 생성 (UI는 이미 표시됨)
+        if (activeConvId === null) {
+          try {
+            const conversation = await createChatMutate(
+              categoryRef.current ?? "NONE",
+            )
+            activeConvId = conversation.id
+            convIdRef.current = activeConvId
+            setConversationId(activeConvId)
+          } catch {
+            setMessages((prev) => [
+              ...prev,
+              createChatUnavailableMessage(activeConvId),
+            ])
+            setIsTyping(false)
+            return
+          }
+        }
+
+        try {
+          await sendMsgMutate({
+            conversationId: activeConvId,
+            content: trimmed,
+            userCategory: categoryRef.current ?? "NONE",
+            imageUri,
+          })
+        } catch {
+          setIsTyping(false)
+        }
+      } finally {
+        inFlightRef.current = false
       }
     },
-    [isSending, createChatMutate, sendMsgMutate],
+    [createChatMutate, sendMsgMutate],
   )
 
   const loadConversation = useCallback(
@@ -313,27 +329,43 @@ export function useChat() {
   )
 
   const regenerateLastMessage = useCallback(async () => {
-    if (!convIdRef.current || isSending) return
+    if (inFlightRef.current) return
 
-    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
+    const lastUserMsg = messagesRef.current.findLast((m) => m.role === "user")
     if (!lastUserMsg) return
+    // 사진만 보낸 턴은 로컬 URI 가 세션에만 있어 재전송할 원본이 없다.
+    // 내용 없는 재생성은 서버 검증(INVALID_MESSAGE_CONTENT)에 걸리므로 막는다.
+    if (!lastUserMsg.content.trim() && !lastUserMsg.imageUri) return
 
-    setMessages((prev) => {
-      const lastAssistantIdx = prev.findLastIndex((m) => m.role === "assistant")
-      if (lastAssistantIdx === -1) return prev
-      return prev.filter((_, i) => i !== lastAssistantIdx)
-    })
+    // 대화 생성부터 실패했으면 재생성할 대화가 없다 — 질문 버블까지 걷고
+    // 처음 보내던 경로로 다시 태운다. 안 그러면 버튼이 아무 일도 하지 않는다.
+    if (!convIdRef.current) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+      setMessages(dropLastTurn)
+      setLastError(null)
+      await sendMessage(lastUserMsg.content, lastUserMsg.imageUri)
+      return
+    }
 
-    setIsTyping(true)
+    inFlightRef.current = true
     try {
+      // 폴백 답변이 접히고 그 자리에 타이핑이 들어오게 — 툭 끊기지 않는다.
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+      setMessages(dropAnswersAfterLastUser)
+      setLastError(null)
+      setIsTyping(true)
+
       await regenerateMutate({
         content: lastUserMsg.content,
         userCategory: categoryRef.current ?? "NONE",
+        imageUri: lastUserMsg.imageUri,
       })
     } catch {
       // The mutation already reconciles the placeholder to a retryable error.
+    } finally {
+      inFlightRef.current = false
     }
-  }, [isSending, messages, regenerateMutate])
+  }, [regenerateMutate, sendMessage])
 
   return {
     conversationId,

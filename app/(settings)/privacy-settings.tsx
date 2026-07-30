@@ -1,11 +1,5 @@
 import React from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-  Platform,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Platform } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -14,6 +8,7 @@ import { useRouter } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 function usePrivacyColors() {
   const isDark = useAppColorScheme() === "dark"
@@ -49,6 +44,8 @@ const MenuItem = ({
   colors,
 }: MenuItemProps) => (
   <Pressable
+    accessibilityRole="button"
+    accessibilityLabel={title}
     style={({ pressed }) => [
       styles.menuItem,
       { borderBottomColor: colors.border },
@@ -64,7 +61,10 @@ const MenuItem = ({
         style={styles.menuIcon}
       />
       <ThemedText
-        style={[styles.menuTitle, { color: danger ? tokens.color.restrictionText.val : colors.text }]}
+        style={[
+          styles.menuTitle,
+          { color: danger ? tokens.color.restrictionText.val : colors.text },
+        ]}
       >
         {title}
       </ThemedText>
@@ -78,6 +78,7 @@ const MenuItem = ({
 )
 
 export default function PrivacySettingsScreen() {
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const c = usePrivacyColors()
@@ -86,16 +87,23 @@ export default function PrivacySettingsScreen() {
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("action.back")}
+          onPress={() => router.back()}
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={24} color={c.iconBack} />
         </Pressable>
         <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
-          개인정보 관리
+          {t("settings.privacy.title")}
         </ThemedText>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -105,18 +113,18 @@ export default function PrivacySettingsScreen() {
         {/* Terms & Policies Section */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
-            약관 및 정책
+            {t("settings.privacy.policies")}
           </ThemedText>
           <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>
             <MenuItem
               icon="document-text-outline"
-              title="개인정보 처리방침"
+              title={t("settings.legal.privacy")}
               onPress={() => router.push("/legal-document?type=privacy-policy")}
               colors={c}
             />
             <MenuItem
               icon="reader-outline"
-              title="서비스 이용약관"
+              title={t("settings.legal.terms")}
               onPress={() => router.push("/legal-document?type=terms-of-use")}
               colors={c}
             />
@@ -126,12 +134,12 @@ export default function PrivacySettingsScreen() {
         {/* Account Management Section */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
-            계정 관리
+            {t("settings.privacy.account")}
           </ThemedText>
           <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>
             <MenuItem
               icon="trash-outline"
-              title="계정 삭제"
+              title={t("settings.account.withdraw")}
               danger
               onPress={() => router.push("/(settings)/withdrawal")}
               colors={c}

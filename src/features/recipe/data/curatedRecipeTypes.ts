@@ -14,7 +14,12 @@ export interface CuratedRecipeNutrition {
   sodium_mg: number
   potassium_mg: number
   phosphorus_mg: number
-  ckd_friendliness: "low_risk" | "moderate" | "high_risk" | "caution"
+  ckd_friendliness:
+    | "low_risk"
+    | "moderate"
+    | "high_risk"
+    | "caution"
+    | "unreviewed"
   estimated: boolean
   verification_required: boolean
 }
@@ -29,6 +34,15 @@ export interface CuratedRecipeCkdGuide {
 export interface CuratedRecipeAiSummary {
   headline: string
   risk_flags: Record<string, string>
+}
+
+export interface CuratedRecipeContentAvailability {
+  requested_locale: "ko" | "en"
+  source_locale?: "ko" | "en" | null
+  ingredient_count: number
+  step_count: number
+  ingredients_available: boolean
+  steps_available: boolean
 }
 
 export interface CuratedRecipe {
@@ -48,6 +62,7 @@ export interface CuratedRecipe {
   nutrition: CuratedRecipeNutrition
   ckd_guide: CuratedRecipeCkdGuide
   ai_summary: CuratedRecipeAiSummary
+  content_availability: CuratedRecipeContentAvailability
   created_at?: string
 }
 

@@ -1,0 +1,484 @@
+{
+  "shared": {
+    "back": "이전 화면",
+    "cancel": "취소",
+    "save": "저장",
+    "saving": "저장하고 있어요",
+    "change": "변경",
+    "delete": "삭제",
+    "openSettings": "설정 열기",
+    "add": "입력하기",
+    "registered": "등록됨",
+    "showPassword": "비밀번호 보기",
+    "hidePassword": "비밀번호 가리기",
+    "clearField": "{{label}} 지우기"
+  },
+  "profile": {
+    "title": "프로필 수정",
+    "photo": {
+      "change": "프로필 사진 바꾸기",
+      "sourcePrompt": "사진을 가져올 곳을 선택해 주세요.",
+      "take": "사진 촬영",
+      "choose": "앨범에서 선택",
+      "cameraPermissionTitle": "카메라 접근이 꺼져 있어요",
+      "cameraPermissionBody": "사진을 찍으려면 휴대폰 설정에서 카메라 접근을 허용해 주세요.",
+      "libraryPermissionTitle": "사진 접근이 꺼져 있어요",
+      "libraryPermissionBody": "사진을 선택하려면 휴대폰 설정에서 사진 접근을 허용해 주세요.",
+      "hint": "사진을 눌러 바꿀 수 있어요"
+    },
+    "section": {
+      "personal": "내 정보",
+      "security": "보안"
+    },
+    "field": {
+      "nickname": "닉네임",
+      "name": "이름",
+      "phone": "전화번호",
+      "email": "이메일",
+      "gender": "성별",
+      "password": "비밀번호"
+    },
+    "gender": {
+      "male": "남성",
+      "female": "여성",
+      "other": "기타"
+    },
+    "phone": {
+      "add": "등록하기"
+    },
+    "emailMissing": "등록된 이메일이 없어요",
+    "changePassword": "변경하기",
+    "saveAccessibility": "프로필 저장",
+    "save": "저장하기",
+    "saveErrorTitle": "프로필을 저장하지 못했어요",
+    "saveErrorBody": "잠시 후 다시 시도해 주세요. 사진을 선택했다면 다른 사진도 확인해 주세요.",
+    "uploadError": "프로필 사진을 올리지 못했어요."
+  },
+  "password": {
+    "title": "새 비밀번호를 만들어 주세요",
+    "subtitle": "다음 로그인부터 새 비밀번호를 사용해요.",
+    "current": "현재 비밀번호",
+    "new": "새 비밀번호",
+    "confirm": "비밀번호 확인",
+    "confirmPlaceholder": "새 비밀번호 다시 입력",
+    "criteria": "6~18자로, 영문 대문자·소문자·숫자·특수문자 중 2가지 이상을 조합해 주세요.",
+    "match": "두 비밀번호가 같아요.",
+    "mismatch": "두 비밀번호가 달라요. 다시 확인해 주세요.",
+    "wrongCurrent": "현재 비밀번호가 맞지 않아요. 다시 확인해 주세요.",
+    "saveError": "비밀번호를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "submit": "비밀번호 변경"
+  },
+  "nickname": {
+    "title": "신신당부에서\n어떻게 불러드릴까요?",
+    "subtitle": "한글·영문·숫자 2~14자로 입력해 주세요.\n언제든 바꿀 수 있어요.",
+    "field": "닉네임",
+    "available": "사용할 수 있는 닉네임이에요.",
+    "validation": "한글·영문·숫자 2~14자로 입력해 주세요.",
+    "error": {
+      "duplicate": "이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.",
+      "sessionExpired": "로그인이 만료됐어요. 다시 로그인해 주세요.",
+      "save": "닉네임을 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+    }
+  },
+  "name": {
+    "title": "이름이 어떻게 되세요?",
+    "subtitle": "진료 기록과 건강 리포트에 표시해요. 언제든 바꿀 수 있어요.",
+    "field": "이름",
+    "required": "이름을 입력해 주세요.",
+    "tooLong": "이름을 {{max}}자 이하로 입력해 주세요.",
+    "check": "입력한 이름을 다시 확인해 주세요.",
+    "error": {
+      "sessionExpired": "로그인이 만료됐어요. 다시 로그인해 주세요.",
+      "save": "이름을 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+    }
+  },
+  "phone": {
+    "title": "연락받을 번호를 알려 주세요",
+    "subtitle": "전화번호는 입력하지 않아도 돼요. 연락이 필요한 경우에 사용하고, 마케팅 안내는 동의했을 때만 보내요.",
+    "current": "현재 저장된 번호",
+    "field": "전화번호",
+    "newField": "새 전화번호",
+    "contactAccessibility": "연락받을 전화번호",
+    "inputHint": "010으로 시작하는 휴대전화 번호를 입력해 주세요",
+    "validation": "010으로 시작하는 휴대전화 번호 11자리를 확인해 주세요.",
+    "usageNote": "로그인·계정 연결·SMS 본인 인증에는 사용하지 않아요.",
+    "deleteAccessibility": "저장된 전화번호 삭제",
+    "deleteLabel": "저장된 전화번호 삭제",
+    "deleteTitle": "전화번호를 삭제할까요?",
+    "deleteBody": "삭제하면 연락이나 동의한 마케팅 안내에 이 번호를 사용하지 않아요.",
+    "deleteError": "전화번호를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "saveError": "전화번호를 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+  },
+  "notifications": {
+    "title": "알림 설정",
+    "permissionTitle": "알림이 꺼져 있어요",
+    "permissionBody": "알림을 받으려면 휴대폰 설정에서 신신당부 알림을 켜 주세요.",
+    "enable": "알림 켜기",
+    "time": {
+      "label": "알림 시간",
+      "start": "시작 시간",
+      "end": "종료 시간",
+      "periodAm": "오전",
+      "periodPm": "오후",
+      "format": "{{period}} {{hour}}시",
+      "closePicker": "시간 선택 닫기"
+    },
+    "picker": {
+      "morning": "아침 체크 시간 선택",
+      "waterStart": "시작 시간 선택",
+      "waterEnd": "종료 시간 선택",
+      "breakfast": "아침 시간 선택",
+      "lunch": "점심 시간 선택",
+      "dinner": "저녁 시간 선택"
+    },
+    "morning": {
+      "section": "아침 건강 체크 알림",
+      "body": "첫 소변 뒤, 물을 마시기 전 혈압과 체중 기록을 알려드려요"
+    },
+    "water": {
+      "section": "수분 섭취 알림",
+      "body": "설정한 간격마다 수분 섭취를 확인할 시간을 알려드려요",
+      "interval": "알림 주기",
+      "intervalHours": "{{count}}시간",
+      "intervalHours_one": "{{count}}시간",
+      "intervalHours_other": "{{count}}시간"
+    },
+    "meal": {
+      "section": "식사 기록 알림",
+      "body": "식사 시간에 맞춰 기록할 시간을 알려드려요",
+      "breakfast": "아침",
+      "lunch": "점심",
+      "dinner": "저녁"
+    },
+    "scheduled": {
+      "channel": "신신당부 알림",
+      "morningTitle": "아침 건강 기록할 시간이에요",
+      "morningBody": "첫 소변을 본 뒤, 물을 마시기 전에 혈압과 체중을 기록해 보세요.",
+      "waterTitle": "수분 섭취를 확인할 시간이에요",
+      "waterBody": "오늘 남은 수분량을 확인해 보세요.",
+      "mealTitle": "{{meal}} 식사, 잊기 전에 기록해 보세요",
+      "mealBody": "먹은 음식과 양을 남길 수 있어요.",
+      "analysisTitle": "기록한 식사를 함께 살펴봐요",
+      "analysisMealBody": "{{meal}}의 영양소와 먹은 양을 확인해 보세요.",
+      "analysisBody": "식사의 영양소와 먹은 양을 확인해 보세요."
+    },
+    "history": {
+      "title": "알림",
+      "openSettings": "알림 설정 열기",
+      "received": "받은 알림",
+      "clearAccessibility": "알림 전체 삭제",
+      "clearTitle": "알림을 모두 지울까요?",
+      "clearBody": "지운 알림은 다시 볼 수 없어요.",
+      "clearAll": "전체 삭제",
+      "empty": "받은 알림이 없어요",
+      "markAllAccessibility": "알림 모두 읽음",
+      "markAll": "모두 읽음",
+      "justNow": "방금 전",
+      "minutes": "{{count}}분 전",
+      "minutes_one": "{{count}}분 전",
+      "minutes_other": "{{count}}분 전",
+      "hours": "{{count}}시간 전",
+      "hours_one": "{{count}}시간 전",
+      "hours_other": "{{count}}시간 전",
+      "days": "{{count}}일 전",
+      "days_one": "{{count}}일 전",
+      "days_other": "{{count}}일 전"
+    }
+  },
+  "inquiry": {
+    "title": "1:1 문의",
+    "category": "문의 종류",
+    "selectCategory": "문의 종류 선택",
+    "select": "선택",
+    "categoryPrompt": "문의 종류를 선택해 주세요",
+    "categories": {
+      "app": "앱 이용",
+      "health": "건강 기록",
+      "content": "식단·콘텐츠",
+      "billing": "구독·결제",
+      "account": "계정·설정",
+      "other": "기타"
+    },
+    "subject": "제목",
+    "subjectPlaceholder": "문의 제목",
+    "contentPlaceholder": "궁금한 내용을 자세히 적어 주세요.",
+    "sending": "보내고 있어요",
+    "send": "문의 보내기",
+    "successTitle": "문의를 보냈어요",
+    "successBody": "문의 내용을 확인한 뒤 답변드릴게요.",
+    "errorTitle": "문의를 보내지 못했어요",
+    "errorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
+    "confirm": "확인",
+    "discardTitle": "작성을 그만할까요?",
+    "discardBody": "지금 나가면 작성한 내용이 사라져요.",
+    "discard": "나가기"
+  },
+  "announcements": {
+    "title": "공지사항",
+    "loading": "공지사항을 불러오고 있어요.",
+    "empty": "새 공지사항이 없어요.",
+    "notFound": "이 공지사항을 찾을 수 없어요.",
+    "fallback": {
+      "1": {
+        "title": "신신당부에 오신 걸 환영해요",
+        "content": "안녕하세요, 신신당부예요.\n\n식단, 수분, 체중 같은 건강 기록을 한곳에서 관리하고 내 기록에 맞는 안내를 받아볼 수 있어요.\n\n처음이라면 오늘 먹은 식사나 체중부터 기록해 보세요. 궁금한 점은 언제든 고객지원팀에 문의해 주세요.\n\n신신당부 팀 드림"
+      },
+      "2": {
+        "title": "개인정보 처리방침 개정 안내",
+        "content": "안녕하세요, 신신당부예요.\n\n2026년 3월 1일부터 개인정보 처리방침 일부가 바뀌었어요.\n\n주요 변경 사항을 확인해 주세요. 궁금한 점은 고객지원팀에 문의해 주세요.\n\n신신당부 팀 드림"
+      },
+      "3": {
+        "title": "제3자 정보 제공 동의 처리방침 개정 안내",
+        "content": "안녕하세요, 신신당부예요.\n\n2026년 3월 1일부터 제3자 정보 제공 동의 처리방침 일부가 바뀌었어요.\n\n변경된 내용을 확인해 주세요. 궁금한 점은 고객지원팀에 문의해 주세요.\n\n신신당부 팀 드림"
+      }
+    }
+  },
+  "withdrawal": {
+    "reasonTitle": "탈퇴하려는 이유를\n알려 주세요",
+    "reasons": {
+      "inactive": "자주 이용하지 않아요",
+      "notHelpful": "질병 관리에 도움이 되지 않아요",
+      "experience": "앱이나 고객지원이 마음에 들지 않아요",
+      "marketing": "마케팅 알림이 너무 자주 와요",
+      "other": "기타 (직접 작성)"
+    },
+    "customReason": "이유를 20자 이상 적어 주세요",
+    "deletePostsTitle": "내가 쓴 글도 삭제",
+    "deletePostsBody": "끄면 작성자 이름만 지우고 글은 남겨요.",
+    "next": "다음",
+    "termsTitle": "탈퇴하기 전에\n꼭 확인해 주세요",
+    "termsSection": "탈퇴 약관",
+    "notice": "회원 탈퇴 시 계정 정보와 건강 관리 데이터는 복구할 수 없도록 삭제됩니다. 관련 법령에 따라 보관할 의무가 있는 자료와 익명 처리된 커뮤니티 게시글은 정책에 따라 보존될 수 있습니다.",
+    "terms": {
+      "1": "본 약관은 주식회사 메디올로지(이하 \"당사\")가 회원(이하 \"회원\")의 탈퇴에 관한 모든 조건을 규정한 것입니다.",
+      "2": "탈퇴 시 진행 중인 유료 구독은 자동 해지되지 않을 수 있으며, 앱스토어/플레이스토어를 통해 별도로 해지해야 합니다.",
+      "3": "회원은 언제든지 서면, 홈페이지 등 당사가 정하는 방법으로 회원 탈퇴를 요청할 수 있으며, 당사는 회원의 요청에 따라 조속히 회원탈퇴에 필요한 제반 절차를 수행합니다. 본 약관은 주식회사 메디올로지(이하 \"당사\")가 회원(이하 \"회원\")의 탈퇴에 관한 모든 조건을 규정한 것입니다."
+    },
+    "agreement": "내용을 확인했고 탈퇴에 동의해요.",
+    "withdraw": "탈퇴",
+    "defaultReason": "앱에서 직접 탈퇴",
+    "errorTitle": "탈퇴하지 못했어요",
+    "errorBody": "계정과 건강 정보는 그대로 남아 있어요. 잠시 후 다시 시도해 주세요.",
+    "confirmTitle": "신신당부에서 탈퇴할까요?",
+    "confirmBody": "탈퇴하면 3일 동안 같은 계정으로\n다시 가입할 수 없어요.",
+    "completeTitle": "회원 탈퇴가 끝났어요",
+    "completeBody": "그동안 신신당부와 함께해 주셔서 감사해요.\n언제든 다시 찾아와 주세요.",
+    "signIn": "로그인하기"
+  },
+  "medical": {
+    "title": "의학 참고 자료",
+    "lead": "아래에는 신신당부의 영양·의료 안내를 검토할 때 참고한 자료 중 일부를 모았어요. 자료마다 적용 범위가 다르므로 치료는 담당 의료진과 상의해 결정해 주세요.",
+    "search": "자료 제목이나 기관명 검색",
+    "empty": "검색어와 맞는 자료가 없어요",
+    "open": "{{title}} 열기",
+    "sections": {
+      "guidelines": "진료지침",
+      "international": "국제 가이드라인",
+      "patient": "환자 교육 자료·용어집·복지 정보"
+    },
+    "badge": {
+      "new": "최신",
+      "kdigo": "KDIGO",
+      "pdf": "PDF"
+    },
+    "items": {
+      "g1": {
+        "title": "고혈압콩팥병 진료지침",
+        "meta": "대한신장학회 · 2025.07"
+      },
+      "g2": {
+        "title": "노인 만성콩팥병 진료지침",
+        "meta": "대한신장학회 · 2026.01"
+      },
+      "g3": {
+        "title": "당뇨병콩팥병 진료지침",
+        "meta": "대한신장학회 · 2024.12"
+      },
+      "g4": {
+        "title": "지속가능신장치료 (CKRT) 진료지침",
+        "meta": "대한신장학회 · 2023"
+      },
+      "g5": {
+        "title": "신장학 용어집",
+        "meta": "대한신장학회 · 2024.07"
+      },
+      "i1": {
+        "title": "KDIGO Guidelines",
+        "meta": "KDIGO · 영문"
+      },
+      "p1": {
+        "title": "투석 전 단계 만성콩팥병 영양·식생활 관리",
+        "meta": "대한신장학회 · 1권 환자용"
+      },
+      "p2": {
+        "title": "혈액투석 환자를 위한 영양·식생활 관리",
+        "meta": "대한신장학회 · 2권 환자용"
+      },
+      "p3": {
+        "title": "복막투석 환자를 위한 영양·식생활 관리",
+        "meta": "대한신장학회 · 3권 환자용"
+      },
+      "p4": {
+        "title": "소아청소년 만성콩팥병 바로알기",
+        "meta": "대한신장학회 · 보호자·환아용"
+      },
+      "p5": {
+        "title": "만성콩팥병 바로알기 (당뇨병·고혈압 환자편)",
+        "meta": "대한신장학회 · 일반인용"
+      },
+      "p6": {
+        "title": "만성콩팥병 바로알기 (건강한 성인편)",
+        "meta": "대한신장학회 · 일반인용"
+      },
+      "p7": {
+        "title": "만성콩팥병 환자 복지 정보",
+        "meta": "대한신장학회 · 2023년도 개정판"
+      }
+    },
+    "lastChecked": "참고 자료 범위는 마지막 확인일 기준이에요\n마지막 확인 {{date}}",
+    "disclaimer": "신신당부의 정보는 진단이나 치료를 대신할 수 없어요.\n치료 계획은 담당 의료진과 상의해 주세요.",
+    "privacy": "개인정보 처리방침",
+    "privacyAccessibility": "개인정보 처리방침 보기"
+  },
+  "kidney": {
+    "title": "신장 건강 정보 수정",
+    "save": "저장",
+    "saving": "저장 중",
+    "saveAccessibility": "신장 건강 정보 저장",
+    "section": "나의 신장 건강 정보",
+    "basic": "기본 정보",
+    "height": "키 (cm)",
+    "heightPlaceholder": "키 입력",
+    "weight": "체중 (kg)",
+    "weightPlaceholder": "체중 입력",
+    "proteinNote": "단백질 목표는 신장 기능과 투석 여부, 현재 건강 상태에 따라 달라요. 담당 의료진이 정한 목표를 따라 주세요.",
+    "stage": {
+      "title": "신장 병기 (CKD)",
+      "current": "현재 병기: {{stage}}",
+      "value": "{{stage}}기",
+      "accessibility": "신장 병기 {{stage}}",
+      "none": "없음",
+      "noneAccessibility": "신장 병기 없음"
+    },
+    "dialysis": {
+      "title": "투석 중인가요?",
+      "body": "현재 투석 중이면 켜 주세요.",
+      "accessibility": "현재 투석 중"
+    },
+    "diagnosisDate": "진단 시기",
+    "diagnosisDateAccessibility": "진단 시기 선택",
+    "diagnosisCause": "주 진단 원인",
+    "otherCausePlaceholder": "그 밖의 진단 원인을 적어 주세요",
+    "causes": {
+      "diabetic": "당뇨병성 신장 질환",
+      "hypertension": "고혈압",
+      "glomerulonephritis": "사구체신염",
+      "polycystic": "다낭성 신장 질환",
+      "other": "기타"
+    },
+    "comorbiditiesTitle": "동반 질환",
+    "comorbidities": {
+      "diabetes": "당뇨",
+      "hypertension": "고혈압",
+      "heartDisease": "심장질환",
+      "gout": "통풍",
+      "anemia": "빈혈",
+      "boneMineral": "골미네랄 장애"
+    },
+    "errorTitle": "신장 건강 정보를 저장하지 못했어요",
+    "errorBody": "입력한 내용은 그대로 남아 있어요. 잠시 후 다시 시도해 주세요.",
+    "validation": {
+      "heightRequired": "키를 입력해 주세요.",
+      "heightNumber": "키를 숫자로 입력해 주세요.",
+      "heightRange": "키를 0보다 크고 300cm 이하로 입력해 주세요.",
+      "weightRequired": "체중을 입력해 주세요.",
+      "weightNumber": "체중을 숫자로 입력해 주세요.",
+      "weightRange": "체중을 0보다 크고 300kg 이하로 입력해 주세요.",
+      "otherTooLong": "기타 원인을 500자 이하로 입력해 주세요.",
+      "otherRequired": "기타 원인을 입력해 주세요.",
+      "otherSelect": "직접 입력하려면 진단 원인에서 ‘기타’를 선택해 주세요.",
+      "dateFuture": "이번 달 또는 이전 시기를 선택해 주세요."
+    }
+  },
+  "datePicker": {
+    "title": "진단 시기",
+    "confirm": "확인",
+    "month": "{{month}}월",
+    "year": "{{year}}년"
+  },
+  "doctor": {
+    "title": "담당 의사 연결",
+    "status": {
+      "title": "연결 상태",
+      "approved": "연결됨",
+      "pending": "승인 대기",
+      "rejected": "거절됨",
+      "loadError": "연결 상태를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.",
+      "empty": "아직 연결된 의사가 없어요. 새 연결이 생겼는지 다시 확인할 수 있어요.",
+      "unknownName": "이름을 확인할 수 없어요",
+      "unknownOrganization": "소속을 확인할 수 없어요",
+      "retryAccessibility": "연결 상태 다시 불러오기",
+      "retry": "다시 불러오기"
+    },
+    "tabs": {
+      "code": "초대 코드",
+      "search": "의사 찾기",
+      "accessibility": "{{label}} 방식"
+    },
+    "code": {
+      "title": "초대 코드로 연결",
+      "inputAccessibility": "초대 코드 입력",
+      "sixDigitAccessibility": "6자리 의사 초대 코드",
+      "hint": "병원에서 받은 6자리 초대 코드를 입력해 주세요",
+      "connect": "연결",
+      "successTitle": "담당 의사를 연결했어요",
+      "successBody": "이제 건강 기록을 공유할 수 있어요.",
+      "errorTitle": "초대 코드를 확인하지 못했어요",
+      "errorBody": "코드 6자리를 다시 확인한 뒤 연결해 주세요."
+    },
+    "search": {
+      "name": "이름",
+      "namePlaceholder": "의사 이름",
+      "hospital": "병원",
+      "hospitalPlaceholder": "병원명",
+      "department": "진료과",
+      "departmentPlaceholder": "예: 신장내과",
+      "accessibility": "의사 검색",
+      "action": "검색",
+      "empty": "조건에 맞는 의사를 찾지 못했어요. 검색어를 바꿔 보세요.",
+      "missingTitle": "검색 조건을 입력해 주세요",
+      "missingBody": "의사 이름, 병원, 진료과 중 하나를 입력해 주세요.",
+      "errorTitle": "의사를 검색하지 못했어요",
+      "errorBody": "검색어를 확인한 뒤 다시 시도해 주세요."
+    },
+    "request": {
+      "successTitle": "연결을 요청했어요",
+      "successBody": "의사가 승인하면 연결돼요.",
+      "errorTitle": "연결 요청을 보내지 못했어요",
+      "errorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
+      "messagePlaceholder": "의사에게 전할 메시지 (선택)",
+      "alreadyAccessibility": "이미 연결을 요청했어요",
+      "accessibility": "{{name}} 의사에게 연결 요청",
+      "sent": "요청 보냄",
+      "action": "연결 요청"
+    },
+    "agreement": {
+      "accessibility": "담당 의사에게 건강 기록 공유 동의",
+      "label": "담당 의사가 내 건강 기록을 보도록 동의해요",
+      "body": "동의하면 담당 의사가 식단·영양소·수분·체중·부종 기록을 볼 수 있어요.",
+      "details": "공유하는 정보 확인"
+    },
+    "terms": {
+      "title": "건강 기록 공유 안내",
+      "closeAccessibility": "건강 기록 공유 안내 닫기",
+      "sharingTitle": "의사 연결과 건강 기록 공유",
+      "sharingBody": "연결된 의사는 식단, 영양소 섭취, 수분, 체중, 부종 기록을 볼 수 있어요.",
+      "withdrawalTitle": "동의 철회 및 삭제",
+      "withdrawalBody": "언제든 건강 기록 공유를 중단하거나 삭제를 요청할 수 있어요. 회원 탈퇴 시 공유된 기록도 보관·삭제 정책에 따라 삭제돼요.",
+      "supportTitle": "문의",
+      "supportBody": "기록 공유·삭제 문의는 앱의 1:1 문의나 고객센터에서 접수할 수 있어요.",
+      "confirmAccessibility": "안내 확인",
+      "confirm": "확인"
+    }
+  }
+}

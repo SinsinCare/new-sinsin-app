@@ -1,6 +1,6 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text, View } from "tamagui"
+import { YStack, XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import type { RecommendedRestaurantMenu } from "../types"
@@ -12,12 +12,6 @@ interface RecommendedRestaurantCardProps {
   onBookmark?: () => void
 }
 
-const RISK_BADGE = {
-  SAFE: { bg: tokens.color.safe6.val, label: "안전" },
-  CAUTION: { bg: "#F59E0B", label: "주의" },
-  HIGH_RISK: { bg: "#EF4444", label: "위험" },
-} as const
-
 export function RecommendedRestaurantCard({
   menu,
   onPress,
@@ -28,10 +22,12 @@ export function RecommendedRestaurantCard({
   const isDark = colorScheme === "dark"
 
   const cardBg = isDark ? tokens.color.cardBgDark.val : "#FFFFFF"
-  const textColor = isDark ? tokens.color.textDark.val : tokens.color.textLight.val
-  const subColor = isDark ? tokens.color.textDarkSub.val : tokens.color.grey5.val
-  const badge = RISK_BADGE[menu.riskLevel] ?? RISK_BADGE.CAUTION
-
+  const textColor = isDark
+    ? tokens.color.textDark.val
+    : tokens.color.textLight.val
+  const subColor = isDark
+    ? tokens.color.textDarkSub.val
+    : tokens.color.grey5.val
   return (
     <Pressable
       onPress={onPress}
@@ -51,26 +47,12 @@ export function RecommendedRestaurantCard({
         shadowRadius={8}
         elevation={3}
       >
-        {/* Header: Risk badge + actions */}
-        <XStack justifyContent="space-between" alignItems="center">
-          <View
-            backgroundColor={badge.bg}
-            paddingHorizontal={8}
-            paddingVertical={3}
-            borderRadius={10}
-          >
-            <Text fontSize={11} fontFamily="$body" fontWeight="700" color="#FFF">
-              {badge.label}
-            </Text>
-          </View>
+        {/* 개인 처방과 연결되지 않은 riskLevel은 안전 등급으로 노출하지 않는다. */}
+        <XStack justifyContent="flex-end" alignItems="center">
           <XStack gap={6}>
             {onBookmark && (
               <Pressable onPress={onBookmark} hitSlop={8}>
-                <Ionicons
-                  name="bookmark-outline"
-                  size={16}
-                  color={subColor}
-                />
+                <Ionicons name="bookmark-outline" size={16} color={subColor} />
               </Pressable>
             )}
             {onDismiss && (

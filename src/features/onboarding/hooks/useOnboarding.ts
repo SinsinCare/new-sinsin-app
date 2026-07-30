@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { Alert, BackHandler } from "react-native"
 import { router } from "expo-router"
+import { useTranslation } from "react-i18next"
 import { onboardingService } from "@/src/services/data/onboardingService"
 import { authService } from "@/src/services/auth/authService"
 import { useOnboardingStore } from "@/src/stores/onboardingStore"
@@ -8,17 +9,21 @@ import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 
 type Phase = "welcome" | "steps" | "complete"
 
 export function useOnboarding() {
+  const { t } = useTranslation("auth")
   const [phase, setPhase] = useState<Phase>("welcome")
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   // 저장 상태 복원 중에는 전체 로딩을, 환자 선택 후 질문을 가져오는 동안에는
   // 현재 welcome 화면과 CTA 로딩을 유지한다.
   const [isInitializing, setIsInitializing] = useState(true)
   const [isLoadingSteps, setIsLoadingSteps] = useState(false)
+  const [stepsLoadError, setStepsLoadError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const loadStepsAttemptRef = useRef(0)
   const lastViewedStepRef = useRef<string | null>(null)
   const completionViewedRef = useRef(false)
 
@@ -67,22 +72,40 @@ export function useOnboarding() {
     }
   }, [setOnboardingInProgress])
 
-  const loadSteps = useCallback(async (isCkd: boolean) => {
-    setIsLoadingSteps(true)
-    try {
-      const data = await onboardingService.getSteps(isCkd)
-      setSteps(data)
-      setPhase("steps")
-      trackAnalyticsEvent("onboarding_steps_loaded", {
-        step_count: data.length,
-      })
-    } catch {
-      trackAnalyticsEvent("onboarding_steps_load_failed", {})
-      Alert.alert("오류", "온보딩 데이터를 불러올 수 없습니다.")
-    } finally {
-      setIsLoadingSteps(false)
-    }
-  }, [])
+  const loadSteps = useCallback(
+    async (isCkd: boolean) => {
+      const attempt = ++loadStepsAttemptRef.current
+      setIsLoadingSteps(true)
+      try {
+        const data = await onboardingService.getSteps(isCkd)
+        if (attempt !== loadStepsAttemptRef.current) return
+        if (data.length === 0) {
+          setSteps([])
+          setPhase("steps")
+          setStepsLoadError(t("onboarding.noQuestions"))
+          trackAnalyticsEvent("onboarding_steps_load_failed", {})
+          return
+        }
+        setSteps(data)
+        setStepsLoadError(null)
+        setPhase("steps")
+        trackAnalyticsEvent("onboarding_steps_loaded", {
+          step_count: data.length,
+        })
+      } catch {
+        if (attempt !== loadStepsAttemptRef.current) return
+        setSteps([])
+        setPhase("steps")
+        setStepsLoadError(t("onboarding.loadFailed"))
+        trackAnalyticsEvent("onboarding_steps_load_failed", {})
+      } finally {
+        if (attempt === loadStepsAttemptRef.current) {
+          setIsLoadingSteps(false)
+        }
+      }
+    },
+    [t],
+  )
 
   // hydration 완료 후 현재 사용자에게 속한 진행 상태만 복원
   useEffect(() => {
@@ -115,6 +138,11 @@ export function useOnboarding() {
     if (hasCkd === null || isLoadingSteps) return
     void loadSteps(hasCkd)
   }
+
+  const retrySteps = useCallback(() => {
+    if (hasCkd === null || isLoadingSteps) return
+    void loadSteps(hasCkd)
+  }, [hasCkd, isLoadingSteps, loadSteps])
 
   const currentStep = steps[currentStepIndex]
   const isLastStep = currentStepIndex === steps.length - 1
@@ -189,7 +217,10 @@ export function useOnboarding() {
 
   const completeOnboarding = async () => {
     if (!user || hasCkd === null) {
-      Alert.alert("오류", "온보딩을 완료할 수 없습니다. 다시 시도해주세요.")
+      Alert.alert(
+        t("onboarding.saveFailedTitle"),
+        t("onboarding.loginRequired"),
+      )
       return
     }
     setIsSubmitting(true)
@@ -207,10 +238,8 @@ export function useOnboarding() {
     } catch (error) {
       trackAnalyticsEvent("onboarding_submit_failed", {})
       Alert.alert(
-        "오류",
-        error instanceof Error
-          ? error.message
-          : "온보딩을 완료할 수 없습니다. 다시 시도해주세요.",
+        t("onboarding.saveFailedTitle"),
+        getErrorMessage(error, t("onboarding.saveFailed")),
       )
     } finally {
       setIsSubmitting(false)
@@ -232,14 +261,23 @@ export function useOnboarding() {
 
   const handleBack = useCallback(() => {
     if (phase === "complete") return
-    if (phase === "steps" && currentStepIndex === 0) {
+    if (phase === "steps" && (steps.length === 0 || currentStepIndex === 0)) {
+      loadStepsAttemptRef.current += 1
+      setIsLoadingSteps(false)
+      setStepsLoadError(null)
       setPhase("welcome")
       setSteps([])
       resetProgress()
     } else if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
     }
-  }, [phase, currentStepIndex, resetProgress, setCurrentStepIndex])
+  }, [
+    phase,
+    steps.length,
+    currentStepIndex,
+    resetProgress,
+    setCurrentStepIndex,
+  ])
 
   const handleCompletionStart = useCallback(() => {
     trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
@@ -269,11 +307,13 @@ export function useOnboarding() {
     currentAnswer,
     isInitializing,
     isLoadingSteps,
+    stepsLoadError,
     isSubmitting,
     isLastStep,
     hasValidAnswer,
     handleWelcomeSelect,
     handleWelcomeConfirm,
+    retrySteps,
     handleOnlySelect,
     handleMultiToggle,
     handleInputChange,

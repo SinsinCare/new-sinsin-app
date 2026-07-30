@@ -3,6 +3,7 @@ import { V2SegmentControl } from "@/src/design-system-v2"
 import { useV2Theme } from "@/src/design-system-v2/hooks/useV2Theme"
 import { spacing, typography } from "@/src/design-system-v2/tokens"
 import { EATEN_PRESETS } from "../data/foodEditConstants"
+import { useTranslation } from "react-i18next"
 
 interface ConsumedAmountSelectorProps {
   value: number
@@ -18,12 +19,18 @@ const ITEMS = EATEN_PRESETS.map((preset) => ({
 export function ConsumedAmountSelector({
   value,
   onChange,
-  accessibilityLabel = "섭취량 선택",
+  accessibilityLabel,
 }: ConsumedAmountSelectorProps) {
+  const { t } = useTranslation("common")
   const { colors } = useV2Theme()
 
   return (
-    <View accessibilityLabel={accessibilityLabel} style={styles.root}>
+    <View
+      accessibilityLabel={
+        accessibilityLabel ?? t("foodEdit.chooseConsumedAmount")
+      }
+      style={styles.root}
+    >
       <V2SegmentControl
         items={ITEMS}
         value={String(value)}
@@ -50,7 +57,7 @@ export function ConsumedAmountSelector({
                 },
               ]}
             >
-              {preset.description}
+              {t(`foodEdit.consumed.${preset.step}`)}
             </Text>
           )
         })}

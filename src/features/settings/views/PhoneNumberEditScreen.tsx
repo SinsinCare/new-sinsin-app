@@ -1,20 +1,32 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native"
-
+import React from "react"
 import {
-  V2BottomCTA,
-  V2Button,
-  V2Screen,
-  V2ScreenHeader,
-  V2TextField,
-  radius,
-  spacing,
-  typography,
-  useV2Theme,
-} from "@/src/design-system-v2"
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import { useRouter } from "expo-router"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
+
+import { ThemedView } from "@/components/themed-view"
+import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { useSurface } from "@/src/hooks/useSurface"
+import { LAYOUT } from "@/src/theme/surface"
+import { tokens } from "@/src/theme/tokens"
+import { FieldHelp, SettingsTextField } from "../components/SettingsTextField"
 import { usePhoneNumberEditor } from "../hooks/usePhoneNumberEditor"
 
 export function PhoneNumberEditScreen() {
-  const { colors } = useV2Theme()
+  const insets = useSafeAreaInsets()
+  const router = useRouter()
+  const s = useSurface()
+  const { t } = useTranslation("settings")
   const {
     profile,
     phoneNumber,
@@ -25,134 +37,187 @@ export function PhoneNumberEditScreen() {
     handlePhoneNumberChange,
     handleSave,
     handleDelete,
-    handleBack,
   } = usePhoneNumberEditor()
 
+  const pageBg = s.isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val
+  const isBusy = isSaving || isDeleting
+
   return (
-    <V2Screen
-      keyboardAvoiding
-      padded={false}
-      edges={["left", "right", "bottom"]}
-    >
-      <V2ScreenHeader title="전화번호" onBack={handleBack} />
-      <ScrollView
+    <ThemedView style={[styles.container, { backgroundColor: pageBg }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
       >
-        <Text style={[typography.title.medium, { color: colors.label.strong }]}>
-          연락받을 전화번호를 입력해주세요
-        </Text>
-        <Text
-          style={[
-            typography.body.mediumWeak,
-            styles.description,
-            { color: colors.label.alternative },
-          ]}
-        >
-          선택 정보이며 개인 연락수단 확보를 위해 수집합니다. 마케팅 수신에
-          동의한 경우에만 마케팅 안내에도 활용합니다.
-        </Text>
-
-        {profile?.hasPhoneNumber && (
-          <View
-            style={[
-              styles.currentPhone,
-              { backgroundColor: colors.fill.normal },
-            ]}
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("shared.back")}
+            // 딥링크로 첫 화면이 되면 히스토리가 없다 — back 대신 프로필 수정으로.
+            onPress={() =>
+              router.canGoBack()
+                ? router.back()
+                : router.replace("/(settings)/profile-edit")
+            }
+            hitSlop={8}
           >
-            <Text
-              style={[
-                typography.subtext.medium,
-                { color: colors.label.alternative },
-              ]}
-            >
-              현재 저장된 번호
-            </Text>
-            <Text
-              style={[
-                typography.body.mediumStrong,
-                { color: colors.label.normal },
-              ]}
-            >
-              {profile.phoneNumberMasked || "등록됨"}
-            </Text>
-          </View>
-        )}
+            <Ionicons name="chevron-back" size={24} color={s.textStrong} />
+          </Pressable>
+        </View>
 
-        <V2TextField
-          label={profile?.hasPhoneNumber ? "새 전화번호" : "전화번호"}
-          value={phoneNumber}
-          onChangeText={handlePhoneNumberChange}
-          placeholder="010-1234-5678"
-          keyboardType="phone-pad"
-          textContentType="telephoneNumber"
-          autoComplete="tel"
-          returnKeyType="done"
-          onSubmitEditing={handleSave}
-          maxLength={13}
-          error={phoneNumberError ?? false}
-          disabled={isSaving || isDeleting}
-          accessibilityLabel="연락받을 전화번호"
-          accessibilityHint="010으로 시작하는 휴대전화 번호를 입력합니다"
+        <ScrollView
+          bounces={false}
+          overScrollMode="never"
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          <Text
+            style={[styles.title, { color: s.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
+            {t("phone.title")}
+          </Text>
+          <Text
+            style={[styles.subtitle, { color: s.textMuted }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
+            {t("phone.subtitle")}
+          </Text>
+
+          {profile?.hasPhoneNumber && (
+            <View style={[styles.currentPhone, { backgroundColor: s.card }]}>
+              <Text style={[styles.currentPhoneLabel, { color: s.textMuted }]}>
+                {t("phone.current")}
+              </Text>
+              <Text style={[styles.currentPhoneValue, { color: s.textStrong }]}>
+                {profile.phoneNumberMasked || t("shared.registered")}
+              </Text>
+            </View>
+          )}
+
+          <SettingsTextField
+            label={
+              profile?.hasPhoneNumber ? t("phone.newField") : t("phone.field")
+            }
+            value={phoneNumber}
+            onChangeText={handlePhoneNumberChange}
+            placeholder="010-1234-5678"
+            keyboardType="phone-pad"
+            textContentType="telephoneNumber"
+            autoComplete="tel"
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+            maxLength={13}
+            hasError={!!phoneNumberError}
+            editable={!isBusy}
+            accessibilityLabel={t("phone.contactAccessibility")}
+            accessibilityHint={t("phone.inputHint")}
+          />
+          {phoneNumberError && (
+            <FieldHelp text={phoneNumberError} tone="error" />
+          )}
+          <FieldHelp text={t("phone.usageNote")} tone="muted" />
+
+          {profile?.hasPhoneNumber && (
+            // 삭제는 되돌릴 수 없어서 CTA 와 같은 무게로 세우지 않는다 — 글자만.
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("phone.deleteAccessibility")}
+              onPress={handleDelete}
+              disabled={isBusy}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.deleteButton,
+                (pressed || isBusy) && styles.deleteButtonDimmed,
+              ]}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color={s.danger} />
+              ) : (
+                <Text style={[styles.deleteLabel, { color: s.danger }]}>
+                  {t("phone.deleteLabel")}
+                </Text>
+              )}
+            </Pressable>
+          )}
+        </ScrollView>
+
+        <BottomActionBar
+          label={
+            profile?.hasPhoneNumber ? t("shared.change") : t("shared.save")
+          }
+          disabled={!canSave}
+          paddingBottom={insets.bottom + 16}
+          onPress={handleSave}
         />
-
-        <Text
-          style={[
-            typography.subtext.medium,
-            styles.policyText,
-            { color: colors.label.alternative },
-          ]}
-        >
-          전화번호는 로그인, 계정 통합 또는 SMS 본인인증 수단으로 사용하지
-          않습니다.
-        </Text>
-
-        {profile?.hasPhoneNumber && (
-          <V2Button
-            color="danger"
-            variant="weak"
-            size="l"
-            fullWidth
-            loading={isDeleting}
-            disabled={isSaving}
-            onPress={handleDelete}
-            accessibilityLabel="저장된 전화번호 삭제"
-          >
-            저장된 전화번호 삭제
-          </V2Button>
-        )}
-      </ScrollView>
-
-      <V2BottomCTA
-        primaryLabel={profile?.hasPhoneNumber ? "변경하기" : "저장하기"}
-        onPrimary={handleSave}
-        primaryProps={{ disabled: !canSave, loading: isSaving }}
-      />
-    </V2Screen>
+      </KeyboardAvoidingView>
+    </ThemedView>
   )
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: {
-    paddingHorizontal: spacing[24],
-    paddingTop: spacing[20],
-    paddingBottom: spacing[32],
+  container: {
+    flex: 1,
   },
-  description: {
-    marginTop: spacing[8],
-    marginBottom: spacing[24],
+  flex: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: LAYOUT.screenX,
+    paddingBottom: 12,
+  },
+  scrollContent: {
+    paddingHorizontal: LAYOUT.screenX,
+    paddingTop: 12,
+    paddingBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: -0.48,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    marginBottom: 28,
   },
   currentPhone: {
-    gap: spacing[4],
-    padding: spacing[16],
-    marginBottom: spacing[20],
-    borderRadius: radius.xl,
+    gap: 4,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginBottom: 20,
+    borderRadius: LAYOUT.card.radius,
   },
-  policyText: {
-    marginTop: spacing[10],
-    marginBottom: spacing[24],
+  currentPhoneLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.26,
+    fontWeight: "600",
+  },
+  currentPhoneValue: {
+    fontSize: 16,
+    lineHeight: 22,
+    letterSpacing: -0.32,
+    fontWeight: "700",
+  },
+  deleteButton: {
+    marginTop: 28,
+    minHeight: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteButtonDimmed: {
+    opacity: 0.6,
+  },
+  deleteLabel: {
+    fontSize: 15,
+    lineHeight: 21,
+    letterSpacing: -0.3,
+    fontWeight: "600",
   },
 })

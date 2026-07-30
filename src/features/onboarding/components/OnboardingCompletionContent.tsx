@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { StyleSheet, Text, View } from "react-native"
 import { Image } from "expo-image"
+import { useTranslation } from "react-i18next"
 import {
   spacing,
   typography,
@@ -20,6 +21,7 @@ type OnboardingCompletionContentProps = {
 export function OnboardingCompletionContent({
   onStart,
 }: OnboardingCompletionContentProps) {
+  const { t } = useTranslation("auth")
   const { colors } = useV2Theme()
   const prefersReducedMotion = useReduceMotionEnabled()
   const shouldPlay = shouldPlayCompletionParticles(prefersReducedMotion)
@@ -57,11 +59,21 @@ export function OnboardingCompletionContent({
 
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.label.normal }]}>
-          회원가입이{"\n"}완료되었습니다!
+          {t("onboarding.completionTitle")}
         </Text>
+        {/* 시트의 완료 캐릭터. 글자만 있던 화면이라 축하가 문구 하나로만 남아 있었다. */}
+        <Image
+          source={require("../../../../assets/images/signup-complete-character.png")}
+          style={styles.character}
+          contentFit="contain"
+          accessibilityIgnoresInvertColors
+        />
       </View>
 
-      <V2BottomCTA primaryLabel="신신당부 시작하기" onPrimary={onStart} />
+      <V2BottomCTA
+        primaryLabel={t("onboarding.startApp")}
+        onPrimary={onStart}
+      />
     </View>
   )
 }
@@ -85,4 +97,5 @@ const styles = StyleSheet.create({
     ...typography.display.medium,
     textAlign: "center",
   },
+  character: { width: 208, height: 230, marginTop: spacing[24] },
 })

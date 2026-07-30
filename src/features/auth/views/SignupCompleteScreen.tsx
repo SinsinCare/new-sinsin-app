@@ -6,9 +6,7 @@ export function SignupCompleteScreen() {
 
   return (
     <Redirect
-      href={
-        entryGate === "ONBOARDING" ? "/onboarding" : "/(tabs)/home"
-      }
+      href={entryGate === "ONBOARDING" ? "/onboarding" : "/(tabs)/home"}
     />
   )
 }

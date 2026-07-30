@@ -9,13 +9,17 @@ import {
 import { Text } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useTranslation } from "react-i18next"
 
 const DELETE_BTN_BG = "rgba(0,0,0,0.5)"
 const DELETE_BTN_ICON = "#FFFFFF"
 const OVERLAY_BG = "rgba(0,0,0,0.4)"
 const ERROR_BG = { light: "#FFF5ED", dark: "#3A2A20" }
 const ERROR_TEXT = { light: "#E77661", dark: "#E78D7C" }
-const RETRY_COLOR = { light: tokens.color.sub6.val, dark: tokens.color.sub6.val }
+const RETRY_COLOR = {
+  light: tokens.color.sub6.val,
+  dark: tokens.color.sub6.val,
+}
 
 interface ImageBlockProps {
   localUri: string
@@ -34,12 +38,13 @@ export function ImageBlock({
   onRetry,
   onPress,
 }: ImageBlockProps) {
+  const { t } = useTranslation("recipe")
   const scheme = useAppColorScheme()
 
   const handleDelete = () => {
-    Alert.alert("이미지 삭제", "이미지를 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      { text: "삭제", style: "destructive", onPress: onDelete },
+    Alert.alert(t("media.deletePhotoTitle"), t("media.deletePhotoBody"), [
+      { text: t("action.cancel"), style: "cancel" },
+      { text: t("action.delete"), style: "destructive", onPress: onDelete },
     ])
   }
 
@@ -68,7 +73,7 @@ export function ImageBlock({
               fontWeight="600"
               fontFamily="$body"
             >
-              업로드 실패
+              {t("media.uploadFailed")}
             </Text>
             <View style={styles.errorActions}>
               <Pressable onPress={onRetry} style={styles.errorBtn}>
@@ -78,7 +83,7 @@ export function ImageBlock({
                   fontWeight="600"
                   fontFamily="$body"
                 >
-                  재시도
+                  {t("media.retryUpload")}
                 </Text>
               </Pressable>
               <Pressable onPress={onDelete} style={styles.errorBtn}>
@@ -88,7 +93,7 @@ export function ImageBlock({
                   fontWeight="600"
                   fontFamily="$body"
                 >
-                  삭제
+                  {t("action.delete")}
                 </Text>
               </Pressable>
             </View>

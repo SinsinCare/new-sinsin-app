@@ -1,7 +1,8 @@
 import { ScrollView, Pressable } from "react-native"
 import { Text, XStack } from "tamagui"
 import type { ChatCategory } from "@/src/types/chat"
-import { QUICK_QUESTIONS } from "../data/mockData"
+import { getLocalizedQuickQuestions } from "../data/mockData"
+import { useTranslation } from "react-i18next"
 
 interface QuickQuestionChipsProps {
   category: ChatCategory
@@ -14,12 +15,18 @@ export function QuickQuestionChips({
   onSelect,
   disabled,
 }: QuickQuestionChipsProps) {
-  const questions = QUICK_QUESTIONS[category] ?? []
+  const { i18n } = useTranslation("common")
+  const questions = getLocalizedQuickQuestions(
+    category,
+    i18n.resolvedLanguage ?? i18n.language,
+  )
 
   if (questions.length === 0) return null
 
   return (
     <ScrollView
+      bounces={false}
+      overScrollMode="never"
       horizontal
       showsHorizontalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"

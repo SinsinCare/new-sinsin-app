@@ -20,7 +20,11 @@ export function useBlockedUsers() {
       const prev = queryClient.getQueryData<BlockedUser[]>(BLOCKED_KEY)
       queryClient.setQueryData<BlockedUser[]>(BLOCKED_KEY, (old) => [
         ...(old ?? []),
-        { id: Date.now(), blockedNickName: nickName, createdAt: new Date().toISOString() },
+        {
+          id: Date.now(),
+          blockedNickName: nickName,
+          createdAt: new Date().toISOString(),
+        },
       ])
       return { prev }
     },

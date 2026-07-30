@@ -27,6 +27,7 @@ import type { DiaryAnalysisResult } from "@/src/types"
 import { Icon } from "@/src/shared/components"
 import { MonthCalendarSheet } from "./MonthCalendarSheet"
 import { isSkippedDiet } from "../../utils/mealRecordUtils"
+import { useTranslation } from "react-i18next"
 
 const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
 
@@ -50,6 +51,7 @@ export function StatisticsView({
   onGoToRecord,
   isActive,
 }: StatisticsViewProps) {
+  const { t, i18n } = useTranslation()
   const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [diaryResult, setDiaryResult] = useState<DiaryAnalysisResult | null>(
@@ -168,6 +170,8 @@ export function StatisticsView({
   return (
     <>
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -178,22 +182,34 @@ export function StatisticsView({
         {/* index 0: 헤더 (주간 네비 + 달력) */}
         <YStack gap="$3" paddingBottom="$2">
           <XStack justifyContent="center" alignItems="center" gap="$3">
-            <TouchableOpacity onPress={goToPrevWeek}>
+            <TouchableOpacity
+              onPress={goToPrevWeek}
+              accessibilityRole="button"
+              accessibilityLabel={t("stats.previousWeek")}
+            >
               <Ionicons name="chevron-back" size={18} color="#999" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsCalendarOpen(true)}>
+            <TouchableOpacity
+              onPress={() => setIsCalendarOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t("stats.openCalendar")}
+            >
               <XStack alignItems="center" gap="$2">
                 <Text
                   fontSize="$5"
                   fontWeight="600"
                   color={isDarkMode ? "$textDark" : "$black"}
                 >
-                  {getWeekLabel(selectedDate)}
+                  {getWeekLabel(selectedDate, i18n.language)}
                 </Text>
                 <Ionicons name="calendar-outline" size={18} color="#999" />
               </XStack>
             </TouchableOpacity>
-            <TouchableOpacity onPress={goToNextWeek}>
+            <TouchableOpacity
+              onPress={goToNextWeek}
+              accessibilityRole="button"
+              accessibilityLabel={t("stats.nextWeek")}
+            >
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
           </XStack>
@@ -228,7 +244,7 @@ export function StatisticsView({
           >
             <Icon name="circle-character" size={40} />
             <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
-              아직 기록하지 않았어요.
+              {t("stats.emptyPeriod")}
             </Text>
             <TouchableOpacity onPress={onGoToRecord}>
               <Text
@@ -242,7 +258,7 @@ export function StatisticsView({
                 paddingVertical="$2.5"
                 borderRadius="$8"
               >
-                기록하러 가기
+                {t("stats.logMeal")}
               </Text>
             </TouchableOpacity>
           </YStack>
@@ -314,6 +330,8 @@ export function StatisticsView({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingVertical: 10,
+    paddingTop: 10,
+    // 우하단 AI 상담 필(16+48)에 마지막 카드가 가리지 않게 그 높이만큼 비운다.
+    paddingBottom: 88,
   },
 })

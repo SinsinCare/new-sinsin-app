@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
+import { useTranslation } from "react-i18next"
 
 interface MacroBarProps {
   carbs: number
@@ -8,6 +9,7 @@ interface MacroBarProps {
 }
 
 export function MacroBar({ carbs, protein, fat }: MacroBarProps) {
+  const { t } = useTranslation("common")
   const carbKcal = carbs * 4
   const proteinKcal = protein * 4
   const fatKcal = fat * 9
@@ -22,17 +24,17 @@ export function MacroBar({ carbs, protein, fat }: MacroBarProps) {
       <XStack gap="$3">
         {[
           {
-            label: "탄수화물",
+            label: t("mealReport.nutrients.carbohydrates"),
             value: `${Math.round(carbs * 10) / 10}g`,
             color: "$sub9",
           },
           {
-            label: "단백질",
+            label: t("mealReport.nutrients.protein"),
             value: `${Math.round(protein * 10) / 10}g`,
             color: "$sub6",
           },
           {
-            label: "지방",
+            label: t("mealReport.nutrients.fat"),
             value: `${Math.round(fat * 10) / 10}g`,
             color: "$sub4",
           },

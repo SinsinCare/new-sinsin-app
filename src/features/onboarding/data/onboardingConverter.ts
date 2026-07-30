@@ -2,13 +2,19 @@ import type {
   OnboardingStep,
   OnboardingStepRs,
   OnboardingAnswer,
-  OnboardingAnswerRq,
   OnboardingSubmitRq,
   OnboardingValueOption,
 } from "@/src/types/onboarding"
+import i18n from "@/src/i18n"
 
 const INPUT_STEP_VALUES: OnboardingValueOption[] = [
-  { key: "weight", value: "", type: "number", unit: "kg", label: "몸무게" },
+  {
+    key: "weight",
+    value: "",
+    type: "number",
+    unit: "kg",
+    label: i18n.t("onboarding.weight", { ns: "auth" }),
+  },
 ]
 
 /**

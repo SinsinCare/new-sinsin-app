@@ -1,4 +1,5 @@
 import { Redirect } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { useAuth } from "@/src/hooks"
 import { LoadingScreen } from "@/src/shared/components"
@@ -10,6 +11,7 @@ import { resolveEntryRoute } from "@/src/shared/navigation/entryRoute"
  * 마운트됐다가 밀려나는 일이 없습니다.
  */
 export default function Index() {
+  const { t } = useTranslation()
   const {
     isAuthenticated,
     isLoading,
@@ -18,7 +20,7 @@ export default function Index() {
     entryGate,
   } = useAuth()
 
-  if (isLoading) return <LoadingScreen message="앱을 불러오는 중..." />
+  if (isLoading) return <LoadingScreen message={t("brand.opening")} />
 
   return (
     <Redirect

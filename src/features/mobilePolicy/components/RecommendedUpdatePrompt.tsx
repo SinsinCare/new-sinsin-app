@@ -14,6 +14,7 @@ import { Text, XStack, YStack } from "tamagui"
 import { Button } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import type { MobilePolicyResponse } from "../types"
+import { useTranslation } from "react-i18next"
 
 interface RecommendedUpdatePromptProps {
   policy: MobilePolicyResponse
@@ -22,13 +23,13 @@ interface RecommendedUpdatePromptProps {
 export function RecommendedUpdatePrompt({
   policy,
 }: RecommendedUpdatePromptProps) {
+  const { t } = useTranslation()
   const { width } = useWindowDimensions()
   const [visible, setVisible] = useState(true)
   const [openError, setOpenError] = useState<string | null>(null)
   const cardWidth = Math.min(Math.max(width - 40, 280), 372)
   const message =
-    policy.message?.trim() ||
-    "더 안정적인 사용을 위해 최신 버전으로 업데이트해주세요."
+    policy.message?.trim() || t("mobilePolicy.recommendedBody")
 
   const handleOpenStore = async () => {
     if (!policy.storeUrl) return
@@ -36,7 +37,7 @@ export function RecommendedUpdatePrompt({
       await Linking.openURL(policy.storeUrl)
       setOpenError(null)
     } catch {
-      setOpenError("스토어를 열 수 없습니다. 잠시 후 다시 시도해주세요.")
+      setOpenError(t("mobilePolicy.storeError"))
     }
   }
 
@@ -49,6 +50,8 @@ export function RecommendedUpdatePrompt({
     >
       <View style={styles.dim}>
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -88,7 +91,7 @@ export function RecommendedUpdatePrompt({
                 letterSpacing={0}
                 maxFontSizeMultiplier={1.2}
               >
-                새 버전이 준비됐어요
+                {t("mobilePolicy.recommendedTitle")}
               </Text>
             </XStack>
             <YStack gap="$2" width="100%" minWidth={0}>
@@ -110,7 +113,7 @@ export function RecommendedUpdatePrompt({
               disabled={!policy.storeUrl}
               onPress={handleOpenStore}
             >
-              업데이트하기
+              {t("mobilePolicy.update")}
             </Button>
             {openError && (
               <Text
@@ -139,7 +142,7 @@ export function RecommendedUpdatePrompt({
                 textAlign="center"
                 lineHeight={20}
               >
-                나중에 하기
+                {t("mobilePolicy.later")}
               </Text>
             </Pressable>
           </YStack>

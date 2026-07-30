@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet } from "react-native"
-import { XStack, Text } from "tamagui"
-import { Icon } from "@/src/shared/components/Icon"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { tokens } from "@/src/theme/tokens"
+import { Pressable, StyleSheet, Text, View } from "react-native"
+import Ionicons from "@expo/vector-icons/Ionicons"
+
+import { useSurface } from "@/src/hooks/useSurface"
+import { useTranslation } from "react-i18next"
 
 interface TagChipsProps {
   tags: string[]
@@ -10,48 +10,19 @@ interface TagChipsProps {
   onRemoveTag?: (tag: string) => void
 }
 
-const COLORS = {
-  light: {
-    border: "#D8D8DE",
-    background: "#F7F7F9",
-    text: "#666677",
-    remove: "#81818D",
-  },
-  dark: {
-    border: "#4E4F55",
-    background: "#2A2A30",
-    text: tokens.color.textDarkSub.val,
-    remove: "#C5C8CE",
-  },
-} as const
-
+/** 해시태그 칩 — 보더 없이 회색 면으로만 구분한다. */
 export function TagChips({ tags, onPressTag, onRemoveTag }: TagChipsProps) {
-  const scheme = useAppColorScheme()
-  const colors = COLORS[scheme]
+  const { t } = useTranslation("recipe")
+  const surface = useSurface()
 
   if (tags.length === 0) return null
 
   return (
-    <XStack flexWrap="wrap" gap={6}>
+    <View style={styles.row}>
       {tags.map((tag) => {
         const chip = (
-          <XStack
-            alignItems="center"
-            gap={4}
-            paddingHorizontal={8}
-            paddingVertical={5}
-            borderRadius={8}
-            borderWidth={StyleSheet.hairlineWidth}
-            borderColor={colors.border}
-            backgroundColor={colors.background}
-          >
-            <Text
-              fontSize={13}
-              lineHeight={17}
-              fontWeight="500"
-              fontFamily="$body"
-              color={colors.text}
-            >
+          <View style={[styles.chip, { backgroundColor: surface.surface }]}>
+            <Text style={[styles.chipText, { color: surface.text }]}>
               #{tag}
             </Text>
             {onRemoveTag && (
@@ -59,16 +30,16 @@ export function TagChips({ tags, onPressTag, onRemoveTag }: TagChipsProps) {
                 onPress={() => onRemoveTag(tag)}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel={`${tag} 태그 삭제`}
+                accessibilityLabel={t("tag.delete", { tag })}
               >
-                <Icon name="x" size={12} color={colors.remove} />
+                <Ionicons name="close" size={13} color={surface.textWeak} />
               </Pressable>
             )}
-          </XStack>
+          </View>
         )
 
         if (!onPressTag) {
-          return <XStack key={tag}>{chip}</XStack>
+          return <View key={tag}>{chip}</View>
         }
 
         return (
@@ -76,13 +47,36 @@ export function TagChips({ tags, onPressTag, onRemoveTag }: TagChipsProps) {
             key={tag}
             onPress={() => onPressTag(tag)}
             accessibilityRole="button"
-            accessibilityLabel={`${tag} 태그 검색`}
+            accessibilityLabel={t("tag.search", { tag })}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             {chip}
           </Pressable>
         )
       })}
-    </XStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  chip: {
+    height: 28,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  chipText: {
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.26,
+    fontWeight: "500",
+    fontFamily: "Pretendard-Medium",
+  },
+})

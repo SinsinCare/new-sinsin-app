@@ -26,9 +26,7 @@ export function AiRecommendationSummary({
       gap={8}
       alignItems="flex-start"
       borderWidth={1}
-      borderColor={
-        isDark ? "rgba(238,97,69,0.15)" : "rgba(238,97,69,0.12)"
-      }
+      borderColor={isDark ? "rgba(238,97,69,0.15)" : "rgba(238,97,69,0.12)"}
     >
       <Ionicons
         name="sparkles"

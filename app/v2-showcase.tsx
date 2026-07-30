@@ -95,7 +95,11 @@ export default function V2Showcase() {
         right={<V2IconButton name="theme" onPress={toggleTheme} />}
       />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        bounces={false}
+        overScrollMode="never"
+        contentContainerStyle={styles.scroll}
+      >
         <Section title="Button">
           <View style={styles.row}>
             <V2Button color="brand">브랜드</V2Button>
@@ -129,11 +133,11 @@ export default function V2Showcase() {
 
         <Section title="Text Field / Search">
           <V2TextField
-            label="라벨"
-            placeholder="입력하세요"
+            label="이름"
+            placeholder="이름을 입력해 주세요"
             value={text}
             onChangeText={setText}
-            helperText="도움말 텍스트"
+            helperText="앱에서 사용할 이름이에요"
           />
           <V2TextField
             variant="line"
@@ -142,10 +146,10 @@ export default function V2Showcase() {
             onChangeText={() => {}}
           />
           <V2TextField
-            label="에러"
-            value="잘못된 값"
+            label="이메일"
+            value="sinsin@"
             onChangeText={() => {}}
-            error="필수 입력이에요"
+            error="이메일 형식을 확인해 주세요"
           />
           <V2SearchField
             value={query}
@@ -287,16 +291,21 @@ export default function V2Showcase() {
             <V2EmptyState
               icon="file"
               title="기록이 없어요"
-              description="첫 기록을 남겨보세요"
+              description="첫 기록을 남겨 보세요"
               actionLabel="기록 추가"
               onAction={() => {}}
             />
           </V2Card>
           <V2Card variant="outlined">
-            <V2LoadingState message="불러오는 중" />
+            <V2LoadingState message="불러오고 있어요" />
           </V2Card>
           <V2Card variant="outlined">
-            <V2ErrorState onRetry={() => {}} />
+            <V2ErrorState
+              title="건강 기록을 불러오지 못했어요"
+              description="인터넷 연결을 확인한 뒤 다시 불러와 주세요."
+              onRetry={() => {}}
+              retryLabel="다시 불러오기"
+            />
           </V2Card>
         </Section>
       </ScrollView>
@@ -328,7 +337,7 @@ export default function V2Showcase() {
         visible={sheet}
         onClose={() => setSheet(false)}
         title="옵션 선택"
-        subTitle="원하는 항목을 골라주세요"
+        subTitle="원하는 항목을 골라 주세요"
         primaryLabel="확인"
         onPrimary={() => setSheet(false)}
       >

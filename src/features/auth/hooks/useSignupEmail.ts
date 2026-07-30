@@ -1,25 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { router } from "expo-router"
+import { useTranslation } from "react-i18next"
 import Toast from "react-native-toast-message"
 import { showErrorToast } from "@/src/lib/toast"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
-import type { EmailLoginLinkRequiredResult, SocialProvider } from "@/src/types"
+import type { EmailLoginLinkRequiredResult } from "@/src/types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { mapSignupEmailSendFailure } from "../data/signupEmailSendFailure"
 
 const TIMER_DURATION = 180
-const PROVIDER_LABELS: Record<SocialProvider, string> = {
-  google: "Google",
-  apple: "Apple",
-  kakao: "카카오",
-}
-
-function formatProviderLabel(providers: SocialProvider[]) {
-  return providers.length
-    ? providers.map((provider) => PROVIDER_LABELS[provider]).join(", ")
-    : "소셜"
-}
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60)
@@ -28,6 +18,7 @@ function formatTime(seconds: number) {
 }
 
 export function useSignupEmail() {
+  const { t } = useTranslation("auth")
   const setSignupEmail = useSignupStore((s) => s.setEmail)
   const setSignupToken = useSignupStore((s) => s.setSignupToken)
 
@@ -92,13 +83,9 @@ export function useSignupEmail() {
       setVerifiedEmailLinkToken(null)
       setCodeInputVisible(true)
       startTimer()
-    } catch (error) {
+    } catch {
       if (!codeSent) setCodeInputVisible(false)
-      setSendError(
-        error instanceof Error
-          ? error.message
-          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
-      )
+      setSendError(t("emailVerification.sendFailed"))
     } finally {
       setSendingCode(false)
     }
@@ -125,25 +112,17 @@ export function useSignupEmail() {
       const sendFailure = mapSignupEmailSendFailure(error)
       if (sendFailure?.status === "email_login_link_required") {
         setEmailLoginLinkRequired(sendFailure)
-        setSendError(
-          `이미 ${formatProviderLabel(
-            sendFailure.providers,
-          )} 로그인으로 가입된 이메일입니다. 연결하기를 눌러 이메일 로그인을 연결해주세요.`,
-        )
+        setSendError(t("emailVerification.continueVerification"))
         setCodeInputVisible(false)
         return
       }
       if (sendFailure?.status === "duplicate") {
-        showErrorToast("이미 가입된 이메일로는 회원가입할 수 없습니다")
+        showErrorToast(t("emailVerification.duplicate"))
         setCodeInputVisible(false)
         return
       }
       if (!codeSent) setCodeInputVisible(false)
-      setSendError(
-        error instanceof Error
-          ? error.message
-          : "인증번호 전송에 실패했습니다. 재전송해 주세요.",
-      )
+      setSendError(t("emailVerification.sendFailed"))
     } finally {
       setSendingCode(false)
     }
@@ -163,8 +142,8 @@ export function useSignupEmail() {
         } else {
           Toast.show({
             type: "error",
-            text1: "인증 오류",
-            text2: "인증번호가 올바르지 않거나 만료되었습니다.",
+            text1: t("emailVerification.checkTitle"),
+            text2: t("emailVerification.invalidOrExpired"),
           })
         }
         return
@@ -182,15 +161,15 @@ export function useSignupEmail() {
       } else {
         Toast.show({
           type: "error",
-          text1: "인증 오류",
-          text2: "인증번호가 올바르지 않거나 만료되었습니다.",
+          text1: t("emailVerification.checkTitle"),
+          text2: t("emailVerification.invalidOrExpired"),
         })
       }
-    } catch (e: unknown) {
+    } catch {
       Toast.show({
         type: "error",
-        text1: "인증 오류",
-        text2: e instanceof Error ? e.message : "인증에 실패했습니다.",
+        text1: t("emailVerification.emailVerifyFailedTitle"),
+        text2: t("login.networkError"),
       })
     } finally {
       setVerifyingCode(false)
@@ -220,10 +199,6 @@ export function useSignupEmail() {
     await sendEmailLoginLinkCode(email)
   }
 
-  const emailLoginLinkProviderLabel = emailLoginLinkRequired
-    ? formatProviderLabel(emailLoginLinkRequired.providers)
-    : "소셜"
-
   const formattedTime = formatTime(timer)
 
   return {
@@ -237,7 +212,6 @@ export function useSignupEmail() {
     sendingCode,
     verifyingCode,
     emailLoginLinkRequired,
-    emailLoginLinkProviderLabel,
     sendCode,
     verifyCode,
     resetVerificationState,

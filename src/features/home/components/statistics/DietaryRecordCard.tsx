@@ -1,11 +1,8 @@
-import {
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native"
+import { Image, TouchableOpacity, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
 import { MealRecord } from "../../data/dietaryRecord"
+import { useTranslation } from "react-i18next"
 
 interface DietaryRecordCardProps {
   mealData: MealRecord
@@ -16,6 +13,7 @@ export function DietaryRecordCard({
   mealData,
   onPress,
 }: DietaryRecordCardProps) {
+  const { t } = useTranslation()
   const isDarkMode = useAppColorScheme() === "dark"
 
   return (
@@ -52,7 +50,7 @@ export function DietaryRecordCard({
             fontWeight="500"
             color={mealData.imageUri ? "white" : "$colorSubtle"}
           >
-            {mealData.time ?? "기록 없음"}
+            {mealData.time ?? t("stats.dietary.noRecord")}
           </Text>
         </YStack>
       </YStack>

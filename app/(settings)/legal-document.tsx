@@ -1,10 +1,5 @@
 import React from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -13,6 +8,7 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
 function useLegalColors() {
   const isDark = useAppColorScheme() === "dark"
@@ -273,13 +269,9 @@ const TERMS_OF_USE = `본 약관은 주식회사 메디올로지(이하 "회사"
 
 const DOCUMENTS = {
   "privacy-policy": {
-    title: "개인정보 처리방침",
-    heading: "개인정보 처리방침",
     content: PRIVACY_POLICY,
   },
   "terms-of-use": {
-    title: "서비스 이용약관",
-    heading: "신신당부 서비스 이용약관",
     content: TERMS_OF_USE,
   },
 } as const
@@ -391,28 +383,36 @@ function renderContent(content: string, c: ReturnType<typeof useLegalColors>) {
 }
 
 export default function LegalDocumentScreen() {
+  const { t, i18n } = useTranslation()
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { type } = useLocalSearchParams<{ type: DocumentType }>()
   const c = useLegalColors()
 
-  const doc = type && DOCUMENTS[type as DocumentType]
+  const docType = type as DocumentType
+  const doc = type && DOCUMENTS[docType]
+  const isPrivacyPolicy = docType === "privacy-policy"
 
   if (!doc) {
     return (
       <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("action.back")}
+            onPress={() => router.back()}
+            hitSlop={8}
+          >
             <Ionicons name="chevron-back" size={24} color={c.icon} />
           </Pressable>
           <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
-            문서
+            {t("legalDocument.title")}
           </ThemedText>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.emptyContainer}>
           <ThemedText style={[styles.bodyText, { color: c.body }]}>
-            문서를 찾을 수 없습니다.
+            {t("legalDocument.notFound")}
           </ThemedText>
         </View>
       </ThemedView>
@@ -423,16 +423,25 @@ export default function LegalDocumentScreen() {
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("action.back")}
+          onPress={() => router.back()}
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={24} color={c.icon} />
         </Pressable>
         <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
-          {doc.title}
+          {isPrivacyPolicy
+            ? t("settings.legal.privacy")
+            : t("settings.legal.terms")}
         </ThemedText>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 40 },
@@ -440,8 +449,15 @@ export default function LegalDocumentScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ThemedText style={[styles.documentHeading, { color: c.heading }]}>
-          {doc.heading}
+          {isPrivacyPolicy
+            ? t("settings.legal.privacy")
+            : t("legalDocument.termsHeading")}
         </ThemedText>
+        {i18n.language.startsWith("en") && (
+          <ThemedText style={[styles.noteText, { color: c.note }]}>
+            {t("legalDocument.officialKoreanNotice")}
+          </ThemedText>
+        )}
         {renderContent(doc.content, c)}
       </ScrollView>
     </ThemedView>

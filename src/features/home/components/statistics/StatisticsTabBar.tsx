@@ -3,13 +3,21 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text } from "tamagui"
 import { StatisticsTab } from "../../types"
 import { tokens } from "@/src/theme/tokens"
+import { useTranslation } from "react-i18next"
 
-const TABS: { key: StatisticsTab; label: string }[] = [
-  { key: "intake", label: "섭취량 통계" },
-  { key: "guide", label: "식이 가이드" },
-  { key: "record", label: "식이 기록" },
-  { key: "weight", label: "체중·부종 기록" },
-]
+const TABS = [
+  { key: "intake", labelKey: "stats.tabs.nutrients" },
+  { key: "guide", labelKey: "stats.tabs.mealGuide" },
+  { key: "record", labelKey: "stats.tabs.mealLog" },
+  { key: "weight", labelKey: "stats.tabs.body" },
+] as const satisfies readonly {
+  key: StatisticsTab
+  labelKey:
+    | "stats.tabs.nutrients"
+    | "stats.tabs.mealGuide"
+    | "stats.tabs.mealLog"
+    | "stats.tabs.body"
+}[]
 
 interface StatisticsTabBarProps {
   selectedTab: StatisticsTab
@@ -20,6 +28,7 @@ export function StatisticsTabBar({
   selectedTab,
   onSelectTab,
 }: StatisticsTabBarProps) {
+  const { t } = useTranslation()
   const isDarkMode = useAppColorScheme() === "dark"
   const barBgColor = isDarkMode
     ? tokens.color.appBgDark.val
@@ -28,6 +37,8 @@ export function StatisticsTabBar({
 
   return (
     <ScrollView
+      bounces={false}
+      overScrollMode="never"
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
@@ -39,6 +50,9 @@ export function StatisticsTabBar({
           <Pressable
             key={tab.key}
             onPress={() => onSelectTab(tab.key)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={t(tab.labelKey)}
             style={() => [
               styles.tab,
               isSelected && { backgroundColor: bgColor },
@@ -57,7 +71,7 @@ export function StatisticsTabBar({
                     : tokens.color.grey5.val
               }
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Text>
           </Pressable>
         )

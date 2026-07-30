@@ -41,9 +41,17 @@ export function useCommunityPosts(tag?: string | null) {
       title?: string
       description?: string
       imageUri?: string | null
+      imageObjectPaths?: string[]
+      tags?: string[]
     }) => communityPostService.updatePost(id, data),
-    onSuccess: () => {
+    onSuccess: (updated, variables) => {
+      // 수정 직후 돌아가는 상세 화면이 낡은 본문을 보여주지 않도록
+      // 상세 캐시를 서버 응답으로 즉시 교체한다.
+      queryClient.setQueryData(["community-post", variables.id], updated)
       queryClient.invalidateQueries({ queryKey: POSTS_KEY })
+      queryClient.invalidateQueries({
+        queryKey: ["community-post", variables.id],
+      })
     },
   })
 
@@ -143,6 +151,7 @@ export function useCommunityPosts(tag?: string | null) {
     toggleLike: toggleLikeMutation.mutate,
     toggleBookmark: toggleBookmarkMutation.mutate,
     reportPost: reportPostMutation.mutate,
+    reportPostAsync: reportPostMutation.mutateAsync,
     isReporting: reportPostMutation.isPending,
   }
 }

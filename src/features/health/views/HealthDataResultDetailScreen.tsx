@@ -3,15 +3,62 @@ import { StyleSheet, View, ScrollView, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { Button } from "@/src/shared/components/Button"
 import { healthResultDetailQueryOptions } from "../data/healthQueries"
+import { formatHealthDate } from "../data/dashboardMetrics"
 import { useHealthTheme } from "../hooks/useHealthTheme"
 
 type ResultField = { label: string; value: string; unit?: string }
+const JUDGEMENT_COPY_KEYS = {
+  NORMAL_A: {
+    label: "result.judgements.NORMAL_A.label",
+    description: "result.judgements.NORMAL_A.description",
+  },
+  NORMAL_B: {
+    label: "result.judgements.NORMAL_B.label",
+    description: "result.judgements.NORMAL_B.description",
+  },
+  NORMAL: {
+    label: "result.judgements.NORMAL.label",
+    description: "result.judgements.NORMAL.description",
+  },
+  GENERAL_DISEASE_SUSPECTED: {
+    label: "result.judgements.GENERAL_DISEASE_SUSPECTED.label",
+    description: "result.judgements.GENERAL_DISEASE_SUSPECTED.description",
+  },
+  CARDIOMETABOLIC_DISEASE_SUSPECTED: {
+    label: "result.judgements.CARDIOMETABOLIC_DISEASE_SUSPECTED.label",
+    description:
+      "result.judgements.CARDIOMETABOLIC_DISEASE_SUSPECTED.description",
+  },
+  DISEASE_SUSPECTED: {
+    label: "result.judgements.DISEASE_SUSPECTED.label",
+    description: "result.judgements.DISEASE_SUSPECTED.description",
+  },
+  KNOWN_CONDITION: {
+    label: "result.judgements.KNOWN_CONDITION.label",
+    description: "result.judgements.KNOWN_CONDITION.description",
+  },
+  REVIEW_NEEDED: {
+    label: "result.judgements.REVIEW_NEEDED.label",
+    description: "result.judgements.REVIEW_NEEDED.description",
+  },
+  UNKNOWN: {
+    label: "result.judgements.UNKNOWN.label",
+    description: "result.judgements.UNKNOWN.description",
+  },
+} as const
+
+function getJudgementCopyKeys(code: string | undefined) {
+  if (!code || !(code in JUDGEMENT_COPY_KEYS)) return null
+  return JUDGEMENT_COPY_KEYS[code as keyof typeof JUDGEMENT_COPY_KEYS]
+}
 
 function ResultGroup({
   title,
@@ -79,21 +126,26 @@ function ResultGroup({
 export function HealthDataResultDetailScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { t, i18n } = useTranslation("health")
+  const language = i18n.resolvedLanguage ?? i18n.language
   const { healthColors } = useHealthTheme()
   const { resultId } = useLocalSearchParams<{ resultId: string }>()
   const {
     data = null,
     isLoading: loading,
     isError,
+    isFetching,
+    refetch,
   } = useQuery(healthResultDetailQueryOptions(resultId ?? ""))
-  const error = isError ? "데이터를 불러올 수 없습니다." : null
+  const error = isError ? t("result.detailLoadError") : null
+  const judgementCopy = getJudgementCopyKeys(data?.judgementCode)
 
   return (
     <ThemedView
       style={[styles.container, { backgroundColor: healthColors.background }]}
     >
       <ScreenHeader
-        title="검진 결과 상세"
+        title={t("result.title")}
         paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
@@ -111,11 +163,45 @@ export function HealthDataResultDetailScreen() {
           >
             {error}
           </ThemedText>
+          <View style={styles.stateAction}>
+            <Button
+              buttonSize="small"
+              fullWidth
+              loading={isFetching}
+              onPress={() => void refetch()}
+            >
+              {t("actions.retryLoad")}
+            </Button>
+          </View>
+        </View>
+      )}
+
+      {!loading && !error && !data && (
+        <View style={styles.center}>
+          <ThemedText style={[styles.emptyTitle, { color: healthColors.text }]}>
+            {t("result.emptyTitle")}
+          </ThemedText>
+          <ThemedText
+            style={[styles.emptySub, { color: healthColors.textSecondary }]}
+          >
+            {t("result.emptyDescription")}
+          </ThemedText>
+          <View style={styles.stateAction}>
+            <Button
+              buttonSize="small"
+              fullWidth
+              onPress={() => router.push("/(settings)/health-data")}
+            >
+              {t("actions.importResults")}
+            </Button>
+          </View>
         </View>
       )}
 
       {data && (
         <ScrollView
+          bounces={false}
+          overScrollMode="never"
           contentContainerStyle={[
             styles.scrollContent,
             { paddingBottom: insets.bottom + 40 },
@@ -134,7 +220,7 @@ export function HealthDataResultDetailScreen() {
             <ThemedText
               style={[styles.headerDate, { color: healthColors.text }]}
             >
-              {data.checkupDate}
+              {formatHealthDate(data.checkupDate, language)}
             </ThemedText>
             <ThemedText
               style={[
@@ -157,16 +243,22 @@ export function HealthDataResultDetailScreen() {
                     { color: healthColors.positive },
                   ]}
                 >
-                  종합 판정: {data.judgement}
+                  {t("result.overallAssessment", {
+                    assessment: judgementCopy
+                      ? t(judgementCopy.label)
+                      : data.judgement,
+                  })}
                 </ThemedText>
-                {data.judgementDescription ? (
+                {judgementCopy || data.judgementDescription ? (
                   <ThemedText
                     style={[
                       styles.judgementDescription,
                       { color: healthColors.textSecondary },
                     ]}
                   >
-                    {data.judgementDescription}
+                    {judgementCopy
+                      ? t(judgementCopy.description)
+                      : data.judgementDescription}
                   </ThemedText>
                 ) : null}
               </View>
@@ -174,25 +266,41 @@ export function HealthDataResultDetailScreen() {
           </View>
 
           <ResultGroup
-            title="신체 계측"
+            title={t("result.groups.bodyMeasurements")}
             fields={[
-              { label: "신장", value: data.height, unit: "cm" },
-              { label: "체중", value: data.weight, unit: "kg" },
-              { label: "체질량지수 (BMI)", value: data.bmi, unit: "kg/m²" },
-              { label: "허리둘레", value: data.waistCircumference, unit: "cm" },
+              {
+                label: t("result.fields.height"),
+                value: data.height,
+                unit: "cm",
+              },
+              {
+                label: t("result.fields.weight"),
+                value: data.weight,
+                unit: "kg",
+              },
+              {
+                label: t("result.fields.bmi"),
+                value: data.bmi,
+                unit: "kg/m²",
+              },
+              {
+                label: t("result.fields.waistCircumference"),
+                value: data.waistCircumference,
+                unit: "cm",
+              },
             ]}
           />
 
           <ResultGroup
-            title="혈압"
+            title={t("result.groups.bloodPressure")}
             fields={[
               {
-                label: "수축기 혈압",
+                label: t("result.fields.systolicBloodPressure"),
                 value: data.bloodPressureSystolic,
                 unit: "mmHg",
               },
               {
-                label: "이완기 혈압",
+                label: t("result.fields.diastolicBloodPressure"),
                 value: data.bloodPressureDiastolic,
                 unit: "mmHg",
               },
@@ -200,10 +308,10 @@ export function HealthDataResultDetailScreen() {
           />
 
           <ResultGroup
-            title="혈당"
+            title={t("result.groups.bloodGlucose")}
             fields={[
               {
-                label: "공복 혈당",
+                label: t("result.fields.fastingBloodGlucose"),
                 value: data.fastingBloodSugar,
                 unit: "mg/dL",
               },
@@ -211,42 +319,52 @@ export function HealthDataResultDetailScreen() {
           />
 
           <ResultGroup
-            title="콜레스테롤"
+            title={t("result.groups.cholesterol")}
             fields={[
               {
-                label: "총 콜레스테롤",
+                label: t("result.fields.totalCholesterol"),
                 value: data.totalCholesterol,
                 unit: "mg/dL",
               },
               {
-                label: "HDL 콜레스테롤",
+                label: t("result.fields.hdlCholesterol"),
                 value: data.hdlCholesterol,
                 unit: "mg/dL",
               },
               {
-                label: "LDL 콜레스테롤",
+                label: t("result.fields.ldlCholesterol"),
                 value: data.ldlCholesterol,
                 unit: "mg/dL",
               },
-              { label: "중성지방", value: data.triglyceride, unit: "mg/dL" },
+              {
+                label: t("result.fields.triglycerides"),
+                value: data.triglyceride,
+                unit: "mg/dL",
+              },
             ]}
           />
 
           <ResultGroup
-            title="혈액"
-            fields={[{ label: "혈색소", value: data.hemoglobin, unit: "g/dL" }]}
+            title={t("result.groups.blood")}
+            fields={[
+              {
+                label: t("result.fields.hemoglobin"),
+                value: data.hemoglobin,
+                unit: "g/dL",
+              },
+            ]}
           />
 
           <ResultGroup
-            title="신장 기능"
+            title={t("result.groups.kidneyFunction")}
             fields={[
               {
-                label: "혈청 크레아티닌",
+                label: t("result.fields.serumCreatinine"),
                 value: data.serumCreatinine,
                 unit: "mg/dL",
               },
               {
-                label: "신사구체 여과율 (GFR)",
+                label: t("result.fields.gfr"),
                 value: data.gfr,
                 unit: "mL/min",
               },
@@ -254,11 +372,23 @@ export function HealthDataResultDetailScreen() {
           />
 
           <ResultGroup
-            title="간 기능"
+            title={t("result.groups.liverFunction")}
             fields={[
-              { label: "AST (SGOT)", value: data.astSgot, unit: "U/L" },
-              { label: "ALT (SGPT)", value: data.altSgpt, unit: "U/L" },
-              { label: "감마-GTP", value: data.gammaGtp, unit: "U/L" },
+              {
+                label: t("result.fields.ast"),
+                value: data.astSgot,
+                unit: "U/L",
+              },
+              {
+                label: t("result.fields.alt"),
+                value: data.altSgpt,
+                unit: "U/L",
+              },
+              {
+                label: t("result.fields.gammaGtp"),
+                value: data.gammaGtp,
+                unit: "U/L",
+              },
             ]}
           />
         </ScrollView>
@@ -276,10 +406,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 10,
+    paddingHorizontal: 32,
   },
   errorText: {
     fontSize: 15,
     color: "#64748B",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  emptySub: {
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  stateAction: {
+    width: 200,
+    marginTop: 4,
   },
   scrollContent: {
     paddingHorizontal: 20,

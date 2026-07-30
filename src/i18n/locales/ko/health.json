@@ -1,0 +1,271 @@
+{
+  "actions": {
+    "cancel": "취소",
+    "openSettings": "설정 열기",
+    "retryLoad": "다시 불러오기",
+    "importResults": "검사 결과 가져오기",
+    "clearAll": "전체 삭제",
+    "confirm": "확인",
+    "save": "저장하기",
+    "saving": "저장하는 중"
+  },
+  "entry": {
+    "header": "검사 결과 불러오기",
+    "title": "검사 결과를\n어떻게 가져올까요?",
+    "subtitle": "지난 검사 수치와 변화를\n한곳에서 확인할 수 있어요.",
+    "nhisTitle": "건강보험공단에서 불러오기",
+    "nhisDescription": "간편인증 한 번으로 최근 10년의 검진 결과를 가져와요.",
+    "nhisBadge": "한 번에 가져와요",
+    "fileTitle": "검사지 사진·PDF로 가져오기",
+    "fileDescription": "종이 검사지를 찍거나 PDF 파일을 선택해 주세요.",
+    "dashboardTitle": "검사 변화 보기",
+    "dashboardDescription": "지난 검사 수치가 어떻게 달라졌는지 한눈에 볼 수 있어요.",
+    "usageNote": "가져온 결과는 검사 수치와 변화를 보여 주는 데 사용해요.",
+    "comparisonNote": "검사 결과를 모아 두면\n수치와 날짜를 한곳에서 비교할 수 있어요."
+  },
+  "result": {
+    "title": "검진 결과",
+    "loadError": "검진 결과를 불러오지 못했어요.\n인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
+    "detailLoadError": "이 검진 결과를 불러오지 못했어요.\n인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
+    "emptyTitle": "확인할 검진 결과가 없어요.",
+    "emptyDescription": "검사 결과를 가져오면 수치와 날짜를 여기서 볼 수 있어요.",
+    "listEmpty": "아직 가져온 검진 결과가 없어요.\n검사 결과를 가져오면 여기서 볼 수 있어요.",
+    "overallAssessment": "종합 판정: {{assessment}}",
+    "judgements": {
+      "NORMAL_A": {
+        "label": "정상 A",
+        "description": "현재 검진 결과에서 특별한 이상이 확인되지 않았어요. 정기 검진을 이어가세요."
+      },
+      "NORMAL_B": {
+        "label": "정상 B",
+        "description": "생활습관 관리가 필요한 항목이 있을 수 있어요. 세부 검사 결과를 함께 확인하세요."
+      },
+      "NORMAL": {
+        "label": "정상",
+        "description": "현재 검진 결과에서 특별한 이상이 확인되지 않았어요. 정기 검진을 이어가세요."
+      },
+      "GENERAL_DISEASE_SUSPECTED": {
+        "label": "일반질환 의심",
+        "description": "추가 확인이 필요한 항목이 있어요. 세부 결과와 검진기관 안내를 확인하세요."
+      },
+      "CARDIOMETABOLIC_DISEASE_SUSPECTED": {
+        "label": "고혈압·당뇨병 질환 의심",
+        "description": "혈압이나 혈당과 관련해 추가 확인이 필요한 항목이 있어요. 의료기관과 상의해 주세요."
+      },
+      "DISEASE_SUSPECTED": {
+        "label": "질환 의심",
+        "description": "추가 확인이 필요한 항목이 있어요. 세부 결과와 검진기관 안내를 확인하세요."
+      },
+      "KNOWN_CONDITION": {
+        "label": "기존 질환 관리 필요",
+        "description": "현재 관리 중인 질환을 고려해 검진 결과를 의료진과 함께 확인하세요."
+      },
+      "REVIEW_NEEDED": {
+        "label": "추가 확인 필요",
+        "description": "확인이 필요한 항목이 있어요. 특정 질환을 뜻하는 것은 아니므로 세부 결과를 확인하세요."
+      },
+      "UNKNOWN": {
+        "label": "검진기관 판정 확인 필요",
+        "description": "판정 문구를 자동으로 해석하기 어려워요. 세부 결과와 검진기관 안내를 확인하세요."
+      }
+    },
+    "recentTab": "최근 검사",
+    "allTab": "전체 결과",
+    "resultCount": "검진 결과 {{count}}건",
+    "resultCount_one": "검진 결과 {{count}}건",
+    "resultCount_other": "검진 결과 {{count}}건",
+    "viewAll": "전체 보기",
+    "latest": "최근",
+    "viewDetails": "상세 결과 보기",
+    "year": "{{year}}년",
+    "groups": {
+      "bodyMeasurements": "신체 계측",
+      "bloodPressure": "혈압",
+      "bloodGlucose": "혈당",
+      "cholesterol": "콜레스테롤",
+      "blood": "혈액",
+      "kidneyFunction": "신장 기능",
+      "liverFunction": "간 기능"
+    },
+    "fields": {
+      "height": "신장",
+      "weight": "체중",
+      "bmi": "체질량지수 (BMI)",
+      "waistCircumference": "허리둘레",
+      "systolicBloodPressure": "수축기 혈압",
+      "diastolicBloodPressure": "이완기 혈압",
+      "fastingBloodGlucose": "공복 혈당",
+      "totalCholesterol": "총 콜레스테롤",
+      "hdlCholesterol": "HDL 콜레스테롤",
+      "ldlCholesterol": "LDL 콜레스테롤",
+      "triglycerides": "중성지방",
+      "hemoglobin": "혈색소",
+      "serumCreatinine": "혈청 크레아티닌",
+      "gfr": "신사구체 여과율 (GFR)",
+      "ast": "AST (SGOT)",
+      "alt": "ALT (SGPT)",
+      "gammaGtp": "감마-GTP"
+    }
+  },
+  "upload": {
+    "header": "검사 결과 가져오기",
+    "title": "검사지 파일을 올려 주세요",
+    "subtitle": "사진이나 PDF를 올리면 검사 수치를 확인할 수 있어요.",
+    "attachments": "첨부 파일",
+    "chooseFile": "파일 고르기",
+    "takePhoto": "사진 찍기",
+    "choosePhoto": "사진에서 선택",
+    "maxFiles": "최대 {{count}}개까지 올릴 수 있어요. 파일을 하나 지운 뒤 새 파일을 골라 주세요.",
+    "maxFiles_one": "최대 {{count}}개까지 올릴 수 있어요. 파일을 하나 지운 뒤 새 파일을 골라 주세요.",
+    "maxFiles_other": "최대 {{count}}개까지 올릴 수 있어요. 파일을 하나 지운 뒤 새 파일을 골라 주세요.",
+    "readResults": "검사 수치 읽기",
+    "readingResults": "검사 수치 읽는 중",
+    "readingTitle": "검사 수치를 읽고 있어요",
+    "readingDescription": "글씨를 읽는 데 조금 걸릴 수 있어요.\n이 화면에서 잠시 기다려 주세요.",
+    "readErrorTitle": "검사 수치를 읽지 못했어요",
+    "cameraPermissionTitle": "카메라를 열 수 없어요",
+    "cameraPermissionDescription": "검사지를 찍으려면 설정에서 카메라 접근을 허용해 주세요.",
+    "photoPermissionTitle": "사진을 열 수 없어요",
+    "photoPermissionDescription": "검사지를 고르려면 설정에서 사진 접근을 허용해 주세요.",
+    "tips": {
+      "report": "검진 안내서나 판독 결과지를 올려 주세요.",
+      "straight": "글씨가 잘 보이도록 정면에서 찍어 주세요.",
+      "focus": "흔들리지 않게 초점을 맞춰 찍어 주세요.",
+      "fullPage": "글자가 잘렸다면 전체가 나오도록 다시 찍어 주세요."
+    }
+  },
+  "ocrReview": {
+    "title": "검사 결과 확인",
+    "missingReport": "확인할 검사지를 찾지 못했어요. 이전 화면에서 파일을 다시 골라 주세요.",
+    "fallbackLoadError": "검사 결과를 불러오지 못했어요. 잠시 후 다시 불러와 주세요.",
+    "retryLoad": "검사 결과 다시 불러오기",
+    "heading": "읽어온 검사 수치를 확인해 주세요",
+    "description": "다른 값이 있다면 고치고, 남길 항목만 골라 주세요.",
+    "alreadySaved": "이미 내 검사 기록에 저장한 검사지예요.",
+    "examDate": "검사일",
+    "missingDate": "검사일을 읽지 못했어요. 검사지에 적힌 날짜를 입력해 주세요.",
+    "invalidDateTitle": "검사일을 확인해 주세요",
+    "invalidDateDescription": "연도-월-일 순서로 입력해 주세요. 예: 2026-05-01",
+    "items": "검사 항목",
+    "selectedCount": "{{count}}개 선택됨",
+    "selectedCount_one": "{{count}}개 선택됨",
+    "selectedCount_other": "{{count}}개 선택됨",
+    "examNamePlaceholder": "검사 항목명",
+    "nameNeedsReview": "이름 확인 필요",
+    "reviewBadge": "직접 확인",
+    "sourceLabel": "검사지 표기: {{text}}",
+    "valuePlaceholder": "수치",
+    "unitPlaceholder": "단위",
+    "addItem": "검사 항목 추가",
+    "noItemsTitle": "저장할 항목을 골라 주세요",
+    "noItemsDescription": "검사 수치가 있는 항목을 한 개 이상 선택해 주세요.",
+    "saveSuccessTitle": "검사 결과를 저장했어요",
+    "saveSuccessDescription": "{{count}}건을 내 검사 기록에 추가했어요.",
+    "saveSuccessDescription_one": "{{count}}건을 내 검사 기록에 추가했어요.",
+    "saveSuccessDescription_other": "{{count}}건을 내 검사 기록에 추가했어요.",
+    "saveErrorTitle": "검사 결과를 저장하지 못했어요"
+  },
+  "dashboard": {
+    "title": "검사 수치 변화",
+    "emptyTitle": "아직 가져온 검사 결과가 없어요.",
+    "emptyDescription": "검사 결과를 가져오면 수치 변화를 한눈에 볼 수 있어요.",
+    "recordCount": "총 {{count}}건의 검진 기록",
+    "recordCount_one": "총 {{count}}건의 검진 기록",
+    "recordCount_other": "총 {{count}}건의 검진 기록",
+    "referenceNote": "이 표시는 검진 수치를 앱의 참고 범위와 비교한 결과예요. 검진기관의 판정이나 의료진이 정한 개인 목표가 있다면 그 안내를 따라 주세요.",
+    "statusSection": "항목별 상태",
+    "trendSection": "항목별 추세",
+    "noTrend": "아직 변화 추이를 볼 수 있는 검사 항목이 없어요.",
+    "noRecords": "기록 없음",
+    "referenceRange": "검진 참고 범위",
+    "referenceRangeBetween": "검진 참고 범위 {{min}}~{{max}}",
+    "referenceRangeMin": "검진 참고 범위 {{min}} 이상",
+    "referenceRangeMax": "검진 참고 범위 {{max}} 이하",
+    "status": {
+      "withinRange": "참고 범위 안",
+      "outsideRange": "참고 범위 밖",
+      "review": "확인 필요"
+    },
+    "modules": {
+      "kidney": {
+        "title": "신장",
+        "description": "검사 결과를 가져오면 신사구체 여과율과 크레아티닌을 볼 수 있어요."
+      },
+      "electrolytes": {
+        "title": "전해질",
+        "description": "아직 가져온 나트륨·칼륨 검사 기록이 없어요."
+      },
+      "proteinuria": {
+        "title": "단백뇨",
+        "description": "아직 가져온 요단백 검사 기록이 없어요."
+      },
+      "bloodPressure": {
+        "title": "혈압",
+        "description": "수축기·이완기 혈압"
+      },
+      "bloodGlucose": {
+        "title": "혈당",
+        "description": "공복 혈당"
+      },
+      "lipids": {
+        "title": "지질",
+        "description": "콜레스테롤·중성지방"
+      },
+      "bloodLiver": {
+        "title": "혈액·간",
+        "description": "혈색소와 간 기능 수치"
+      }
+    },
+    "metrics": {
+      "gfr": "신사구체 여과율 (GFR)",
+      "serumCreatinine": "혈청 크레아티닌",
+      "systolicBloodPressure": "수축기 혈압",
+      "diastolicBloodPressure": "이완기 혈압",
+      "fastingBloodGlucose": "공복 혈당",
+      "totalCholesterol": "총 콜레스테롤",
+      "ldlCholesterol": "LDL 콜레스테롤",
+      "hdlCholesterol": "HDL 콜레스테롤",
+      "triglycerides": "중성지방",
+      "hemoglobin": "혈색소",
+      "ast": "AST (SGOT)",
+      "alt": "ALT (SGPT)",
+      "gammaGtp": "감마-GTP"
+    }
+  },
+  "nhis": {
+    "organization": "건강보험공단",
+    "authTitle": "내 검진 결과를 가져오려면\n본인인증이 필요해요",
+    "authDescription": "간편인증을 마치면 최근 10년의\n건강검진 결과를 한 번에 가져올 수 있어요.",
+    "chips": {
+      "simpleAuth": "간편인증",
+      "allAtOnce": "한 번에 확인",
+      "tenYears": "최근 10년"
+    },
+    "startVerification": "본인인증 시작",
+    "authNote": "인증 방법을 고른 뒤 안내에 따라 본인인증을 마쳐 주세요.",
+    "requestTitle": "건강검진 가져오기",
+    "personalInfo": "개인정보",
+    "name": "이름",
+    "namePlaceholder": "홍길동",
+    "phone": "전화번호",
+    "birthDate": "생년월일",
+    "authMethod": "간편인증 수단",
+    "methods": {
+      "KAKAO": "카카오",
+      "PASS": "PASS"
+    },
+    "carrier": "통신사 선택",
+    "requestRejected": "본인인증을 시작하지 못했어요. 입력한 정보와 인증 수단을 확인해 주세요.",
+    "requestNetworkError": "연결이 원활하지 않아 본인인증을 시작하지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.",
+    "pendingInstructions": "선택한 인증 앱에서 본인인증을 마쳐 주세요.\n마쳤다면 아래 버튼을 눌러 검진 결과를 가져오세요.",
+    "verified": "인증했어요",
+    "confirmTimeout": "정해진 시간 안에 인증을 확인하지 못했어요. 이전 화면에서 본인인증을 다시 시작해 주세요.",
+    "confirmFailed": "인증 앱에서 완료되지 않았거나 입력 정보가 다를 수 있어요. 이전 화면에서 확인해 주세요.",
+    "confirmNetworkError": "인터넷 연결이 원활하지 않아 인증 결과를 확인하지 못했어요. 연결을 확인한 뒤 다시 해 주세요.",
+    "loadingTitle": "검진 결과를 가져오고 있어요",
+    "loadingDescription": "확인이 끝날 때까지 잠시 기다려 주세요.",
+    "timeoutTitle": "인증 시간이 지났어요",
+    "failedTitle": "인증을 확인하지 못했어요",
+    "retryVerification": "본인인증 다시 하기"
+  }
+}

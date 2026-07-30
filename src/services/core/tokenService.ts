@@ -8,8 +8,7 @@ const LEGACY_REFRESH_TOKEN_KEY = "@sinsin/refreshToken"
 
 type TokenPersistence = "persistent" | "ephemeral"
 
-let ephemeralTokens: { accessToken: string; refreshToken: string } | null =
-  null
+let ephemeralTokens: { accessToken: string; refreshToken: string } | null = null
 
 let secureStoreAvailable: Promise<boolean> | null = null
 
@@ -85,7 +84,10 @@ export const tokenService = {
       await Promise.all([
         SecureStore.setItemAsync(SECURE_ACCESS_TOKEN_KEY, accessToken),
         SecureStore.setItemAsync(SECURE_REFRESH_TOKEN_KEY, refreshToken),
-        AsyncStorage.multiRemove([LEGACY_ACCESS_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY]),
+        AsyncStorage.multiRemove([
+          LEGACY_ACCESS_TOKEN_KEY,
+          LEGACY_REFRESH_TOKEN_KEY,
+        ]),
       ])
       return
     }

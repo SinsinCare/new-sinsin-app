@@ -168,16 +168,20 @@ refactor/state-mgmt    # 리팩토링
 ### iOS 시뮬레이터
 
 ```bash
-npx expo run:ios
+npm run ios
 ```
 
 ### 실제 아이폰 디바이스
 
 ```bash
-npx expo prebuild --platform ios
+npm run native:sync:ios
 cd ios && pod install && cd ..
 npx expo run:ios --device
 ```
+
+`npm run ios`와 `npm run android`는 빌드 전에 `app.json`을 네이티브
+프로젝트에 동기화합니다. 앱 이름, 권한 안내, 지원 언어가 바뀌었을 때 이
+단계를 건너뛰지 마세요.
 
 Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
 
@@ -190,7 +194,7 @@ Xcode에서 **Signing & Capabilities → Team** 선택 필요 (Apple ID 계정)
     npm run android
     ```
 
-    - 또는 `npx expo run:android`를 사용하여 네이티브 빌드 후 실행할 수 있습니다.
+    - `npm run android`가 네이티브 설정 동기화까지 함께 처리합니다.
 
 ### EAS 빌드 (테스트용 / 스토어 배포)
 
@@ -281,7 +285,7 @@ npx expo start
 open ios/app.xcworkspace
 ```
 
-한 번에 하려면 `npm run ios`(또는 `npx expo run:ios`)를 쓰면 Metro와 빌드가 같이 맞춰집니다.
+한 번에 하려면 `npm run ios`를 쓰면 네이티브 설정, Metro, 빌드가 같이 맞춰집니다.
 
 ```bash
 npx expo prebuild --platform ios --clean   # 네이티브 폴더 재생성 시

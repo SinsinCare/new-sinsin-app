@@ -18,7 +18,7 @@ describe("meal record utilities", () => {
       }),
     ).toEqual({
       isRecorded: true,
-      text: "오늘의 식이 기록을 남겼어요",
+      text: "오늘 식사를 기록했어요",
     })
   })
 
@@ -31,7 +31,7 @@ describe("meal record utilities", () => {
       }),
     ).toEqual({
       isRecorded: false,
-      text: "오늘은 식이 기록이 없어요",
+      text: "오늘은 식사 기록이 없어요",
     })
   })
 
@@ -44,7 +44,7 @@ describe("meal record utilities", () => {
       }),
     ).toEqual({
       isRecorded: true,
-      text: "연속 4일 기록중",
+      text: "4일째 기록 중",
     })
   })
 
@@ -57,7 +57,7 @@ describe("meal record utilities", () => {
       }),
     ).toEqual({
       isRecorded: true,
-      text: "이날의 식이 기록을 남겼어요",
+      text: "이날 식사를 기록했어요",
     })
   })
 
