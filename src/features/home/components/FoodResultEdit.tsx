@@ -27,6 +27,7 @@ import { useFoodEdit } from "../hooks/useFoodEdit"
 import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
 import {
   buildFoodAnalysisUpdateRequest,
+  getAutoTitleForFoodCorrection,
   applyOptimisticConsumption,
   getInitialEatenStep,
   validateMenuAmount,
@@ -212,6 +213,9 @@ export function FoodResultEdit({
       selectedMealType != null &&
       mealType != null &&
       selectedMealType !== mealType
+    const automaticTitle = foodsChanged
+      ? getAutoTitleForFoodCorrection(result, foods)
+      : undefined
 
     if (
       !eatenPercentageChanged &&
@@ -227,6 +231,7 @@ export function FoodResultEdit({
     let ok = true
     if (eatenPercentageChanged || brothPercentageChanged || foodsChanged) {
       const body: FoodAnalysisUpdateRequest = buildFoodAnalysisUpdateRequest({
+        title: automaticTitle,
         servings: result.servings,
         eatenPercentage: (eatenStep + 1) * 25,
         brothConsumedRatio: hasBroth ? (brothStep + 1) * 0.25 : undefined,
@@ -246,7 +251,24 @@ export function FoodResultEdit({
         result,
       )
       if (updated) {
-        onAnalysisChange?.(updated)
+        let resultWithTitle = updated
+        if (automaticTitle && updated.title !== automaticTitle) {
+          // Older deployed servers ignore the new optional correction title. Keep their users
+          // correct while the new server performs the same update atomically.
+          const titleUpdated = await updateFoodTitle(
+            result.foodAnalysisResultId,
+            automaticTitle,
+          )
+          if (!titleUpdated) {
+            ok = false
+          } else {
+            resultWithTitle = { ...updated, title: automaticTitle }
+          }
+        }
+        if (ok) {
+          if (automaticTitle) onTitleChange?.(automaticTitle)
+          onAnalysisChange?.(resultWithTitle)
+        }
       } else {
         if (shouldOptimisticallyUpdate) onAnalysisChange?.(result)
         ok = false
@@ -268,7 +290,7 @@ export function FoodResultEdit({
       items_changed: foodsChanged,
       consumption_changed: eatenPercentageChanged || brothPercentageChanged,
       slot_changed: mealTypeChanged,
-      label_changed: titleChanged,
+      label_changed: titleChanged || automaticTitle !== undefined,
     }
     if (ok) {
       trackAnalyticsEvent("food_record_edit_succeeded", changeProperties)

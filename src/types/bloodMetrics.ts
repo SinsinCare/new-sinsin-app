@@ -7,6 +7,7 @@ export interface BloodPressureUpsertRequest {
   systolic: number
   diastolic: number
   heartRate?: number | null
+  isComplete?: boolean
   date: string
 }
 

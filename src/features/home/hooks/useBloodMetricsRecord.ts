@@ -19,10 +19,12 @@ export function useBloodMetricsRecord() {
       await bloodMetricsService.updateBloodPressure(body)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", body.date] })
       trackAnalyticsEvent("health_entry_save_succeeded", {})
+      return true
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
       console.error("updateBloodPressure error:", error)
       Alert.alert("업데이트 실패", getErrorMessage(error))
+      return false
     } finally {
       setIsLoading(false)
     }

@@ -41,8 +41,8 @@ export function BloodMetricsTracker({
     diastolic: "",
     heartRate: "",
   })
-  const bloodPressureDateRef = useRef(selectedDateStr)
   const bloodPressureDirtyRef = useRef(false)
+  const bloodPressureSavingRef = useRef(false)
   const glucoseDraftRef = useRef<BloodGlucoseDraft>({})
   const glucoseSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -57,6 +57,7 @@ export function BloodMetricsTracker({
   const [systolic, setSystolic] = useState("")
   const [diastolic, setDiastolic] = useState("")
   const [heartRate, setHeartRate] = useState("")
+  const [isBloodPressureSaving, setIsBloodPressureSaving] = useState(false)
 
   // Blood glucose
   const [timing, setTiming] = useState<GlucoseTiming>("FASTING")
@@ -66,33 +67,38 @@ export function BloodMetricsTracker({
   const elapsed = currentGlucoseRecord?.elapsed ?? "2H"
 
   const saveBloodPressureDraft = useCallback(
-    (targetDate: string, draft: BloodPressureDraft): boolean => {
+    async (targetDate: string, draft: BloodPressureDraft): Promise<boolean> => {
       const systolicValue = parseVital(draft.systolic)
       const diastolicValue = parseVital(draft.diastolic)
       const heartRateValue = parseVital(draft.heartRate)
-      if (systolicValue === null || diastolicValue === null) return false
+      if (
+        systolicValue === null ||
+        diastolicValue === null ||
+        heartRateValue === null ||
+        bloodPressureSavingRef.current
+      ) {
+        return false
+      }
 
-      updateBloodPressure({
-        systolic: Math.trunc(systolicValue),
-        diastolic: Math.trunc(diastolicValue),
-        heartRate: heartRateValue === null ? null : Math.trunc(heartRateValue),
-        date: targetDate,
-      })
-      bloodPressureDirtyRef.current = false
-      return true
+      bloodPressureSavingRef.current = true
+      setIsBloodPressureSaving(true)
+      try {
+        const saved = await updateBloodPressure({
+          systolic: Math.trunc(systolicValue),
+          diastolic: Math.trunc(diastolicValue),
+          heartRate: Math.trunc(heartRateValue),
+          isComplete: true,
+          date: targetDate,
+        })
+        if (saved) bloodPressureDirtyRef.current = false
+        return saved
+      } finally {
+        bloodPressureSavingRef.current = false
+        setIsBloodPressureSaving(false)
+      }
     },
     [updateBloodPressure],
   )
-
-  const flushPendingBloodPressureSave = useCallback(() => {
-    if (!bloodPressureDirtyRef.current) return
-    saveBloodPressureDraft(
-      bloodPressureDateRef.current,
-      bloodPressureDraftRef.current,
-    )
-  }, [saveBloodPressureDraft])
-  const flushPendingBloodPressureSaveRef = useRef(flushPendingBloodPressureSave)
-  flushPendingBloodPressureSaveRef.current = flushPendingBloodPressureSave
 
   const setGlucoseDraft = (
     updater: (prev: BloodGlucoseDraft) => BloodGlucoseDraft,
@@ -105,12 +111,11 @@ export function BloodMetricsTracker({
   }
 
   const handleBloodPressureSave = () => {
-    saveBloodPressureDraft(selectedDateStr, bloodPressureDraftRef.current)
+    void saveBloodPressureDraft(selectedDateStr, bloodPressureDraftRef.current)
   }
 
   const handleChangeSystolic = (value: string) => {
     bloodPressureDirtyRef.current = true
-    bloodPressureDateRef.current = selectedDateStr
     bloodPressureDraftRef.current = {
       ...bloodPressureDraftRef.current,
       systolic: value,
@@ -120,7 +125,6 @@ export function BloodMetricsTracker({
 
   const handleChangeDiastolic = (value: string) => {
     bloodPressureDirtyRef.current = true
-    bloodPressureDateRef.current = selectedDateStr
     bloodPressureDraftRef.current = {
       ...bloodPressureDraftRef.current,
       diastolic: value,
@@ -130,7 +134,6 @@ export function BloodMetricsTracker({
 
   const handleChangeHeartRate = (value: string) => {
     bloodPressureDirtyRef.current = true
-    bloodPressureDateRef.current = selectedDateStr
     bloodPressureDraftRef.current = {
       ...bloodPressureDraftRef.current,
       heartRate: value,
@@ -230,7 +233,6 @@ export function BloodMetricsTracker({
   useEffect(() => {
     return () => {
       flushScheduledGlucoseSaveRef.current()
-      flushPendingBloodPressureSaveRef.current()
     }
   }, [])
 
@@ -238,7 +240,6 @@ export function BloodMetricsTracker({
     const isNewDate = hydratedDateRef.current !== selectedDateStr
     if (isNewDate) {
       flushScheduledGlucoseSaveRef.current()
-      flushPendingBloodPressureSaveRef.current()
     }
 
     const pressure = dateAnalysis?.bloodPressure
@@ -250,7 +251,6 @@ export function BloodMetricsTracker({
           pressure?.heartRate != null ? String(pressure.heartRate) : "",
       }
       bloodPressureDraftRef.current = nextBloodPressureDraft
-      bloodPressureDateRef.current = selectedDateStr
       bloodPressureDirtyRef.current = false
       setSystolic(nextBloodPressureDraft.systolic)
       setDiastolic(nextBloodPressureDraft.diastolic)
@@ -287,6 +287,12 @@ export function BloodMetricsTracker({
         onChangeSystolic={handleChangeSystolic}
         onChangeDiastolic={handleChangeDiastolic}
         onChangeHeartRate={handleChangeHeartRate}
+        canSave={
+          parseVital(systolic) !== null &&
+          parseVital(diastolic) !== null &&
+          parseVital(heartRate) !== null
+        }
+        isSaving={isBloodPressureSaving}
         onSave={handleBloodPressureSave}
       />
 

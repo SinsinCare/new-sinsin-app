@@ -1,6 +1,7 @@
 import {
   applyOptimisticConsumption,
   buildFoodAnalysisUpdateRequest,
+  getAutoTitleForFoodCorrection,
   validateMenuAmount,
   validateMenuName,
   validateMealTitle,
@@ -42,6 +43,71 @@ describe("food edit utilities", () => {
         },
       ],
     })
+  })
+
+  it("includes an automatic title with a corrected single-food request", () => {
+    expect(
+      buildFoodAnalysisUpdateRequest({
+        title: " 멜론 ",
+        servings: 1,
+        eatenPercentage: 100,
+        foods: [{ id: 10, name: "멜론", amount: "1", unit: "개" }],
+      }),
+    ).toMatchObject({ title: "멜론" })
+  })
+
+  it("updates only a single-food title that still matches the AI-generated name", () => {
+    const singleFood = {
+      foodAnalysisResultId: 3,
+      title: "참외",
+      servings: 1,
+      eatenPercentage: 100,
+      imageUrl: null,
+      foods: [
+        {
+          id: 10,
+          name: "참외",
+          restrictionLevel: "SAFE",
+          servingSizeValue: 1,
+          servingSizeUnit: "개",
+          calories: 0,
+          protein: 0,
+          carbohydrates: 0,
+          fat: 0,
+          sodium: 0,
+          potassium: 0,
+          phosphorus: 0,
+          water: 0,
+        },
+      ],
+      total: {
+        calories: 0,
+        protein: 0,
+        carbohydrates: 0,
+        fat: 0,
+        sodium: 0,
+        potassium: 0,
+        phosphorus: 0,
+        water: 0,
+      },
+      evaluation: {
+        comment: "",
+        score: 0,
+        cautionFoods: [],
+        detail: { riskFactors: "", disclaimer: "" },
+      },
+    } satisfies FoodCameraAnalyzeResult
+
+    expect(
+      getAutoTitleForFoodCorrection(singleFood, [
+        { id: 10, name: "멜론", amount: "1", unit: "개" },
+      ]),
+    ).toBe("멜론")
+    expect(
+      getAutoTitleForFoodCorrection({ ...singleFood, title: "여름 과일" }, [
+        { id: 10, name: "멜론", amount: "1", unit: "개" },
+      ]),
+    ).toBeUndefined()
   })
 
   it("defines four explicit consumed amount presets", () => {

@@ -291,6 +291,7 @@ export interface FoodAnalysisUpdateFoodItem {
 }
 
 export interface FoodAnalysisUpdateRequest {
+  title?: string
   servings: number
   eatenPercentage: number
   consumedRatio?: number
