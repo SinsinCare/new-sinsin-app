@@ -104,6 +104,11 @@ describe("food edit utilities", () => {
       ]),
     ).toBe("멜론")
     expect(
+      getAutoTitleForFoodCorrection({ ...singleFood, title: "참외 1인분" }, [
+        { id: 10, name: "멜론", amount: "1", unit: "개" },
+      ]),
+    ).toBe("멜론")
+    expect(
       getAutoTitleForFoodCorrection({ ...singleFood, title: "여름 과일" }, [
         { id: 10, name: "멜론", amount: "1", unit: "개" },
       ]),
