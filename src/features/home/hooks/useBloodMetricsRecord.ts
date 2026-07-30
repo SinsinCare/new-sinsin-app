@@ -13,17 +13,23 @@ export function useBloodMetricsRecord() {
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
 
-  const updateBloodPressure = async (body: BloodPressureUpsertRequest) => {
+  const updateBloodPressure = async (
+    body: BloodPressureUpsertRequest,
+    options: { notifyOnError?: boolean; trackOutcome?: boolean } = {},
+  ) => {
+    const { notifyOnError = true, trackOutcome = true } = options
     setIsLoading(true)
     try {
       await bloodMetricsService.updateBloodPressure(body)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", body.date] })
-      trackAnalyticsEvent("health_entry_save_succeeded", {})
+      if (trackOutcome) trackAnalyticsEvent("health_entry_save_succeeded", {})
       return true
     } catch (error) {
-      trackAnalyticsEvent("health_entry_save_failed", {})
+      if (trackOutcome) trackAnalyticsEvent("health_entry_save_failed", {})
       console.error("updateBloodPressure error:", error)
-      Alert.alert("업데이트 실패", getErrorMessage(error))
+      if (notifyOnError) {
+        Alert.alert("업데이트 실패", getErrorMessage(error))
+      }
       return false
     } finally {
       setIsLoading(false)

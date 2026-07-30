@@ -10,6 +10,10 @@ import {
   mergeBloodGlucoseDraftFromAnalysis,
   type BloodGlucoseDraft,
 } from "../../utils/bloodGlucoseDraft"
+import {
+  buildBloodPressureAutoSaveRequest,
+  type BloodPressureDraft,
+} from "../../utils/bloodPressureSave"
 import { parseVital } from "../../utils/vitalsJudgment"
 import type {
   GlucoseTiming,
@@ -20,12 +24,6 @@ import type { DateAnalysisResult } from "@/src/types"
 interface BloodMetricsTrackerProps {
   selectedDate: Date
   dateAnalysis?: DateAnalysisResult
-}
-
-interface BloodPressureDraft {
-  systolic: string
-  diastolic: string
-  heartRate: string
 }
 
 export function BloodMetricsTracker({
@@ -43,6 +41,10 @@ export function BloodMetricsTracker({
   })
   const bloodPressureDirtyRef = useRef(false)
   const bloodPressureSavingRef = useRef(false)
+  const pendingBloodPressureSaveRef = useRef<{
+    date: string
+    draft: BloodPressureDraft
+  } | null>(null)
   const glucoseDraftRef = useRef<BloodGlucoseDraft>({})
   const glucoseSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -57,7 +59,6 @@ export function BloodMetricsTracker({
   const [systolic, setSystolic] = useState("")
   const [diastolic, setDiastolic] = useState("")
   const [heartRate, setHeartRate] = useState("")
-  const [isBloodPressureSaving, setIsBloodPressureSaving] = useState(false)
 
   // Blood glucose
   const [timing, setTiming] = useState<GlucoseTiming>("FASTING")
@@ -68,33 +69,26 @@ export function BloodMetricsTracker({
 
   const saveBloodPressureDraft = useCallback(
     async (targetDate: string, draft: BloodPressureDraft): Promise<boolean> => {
-      const systolicValue = parseVital(draft.systolic)
-      const diastolicValue = parseVital(draft.diastolic)
-      const heartRateValue = parseVital(draft.heartRate)
-      if (
-        systolicValue === null ||
-        diastolicValue === null ||
-        heartRateValue === null ||
-        bloodPressureSavingRef.current
-      ) {
-        return false
-      }
+      const body = buildBloodPressureAutoSaveRequest(draft, targetDate)
+      if (body === null) return false
 
       bloodPressureSavingRef.current = true
-      setIsBloodPressureSaving(true)
       try {
-        const saved = await updateBloodPressure({
-          systolic: Math.trunc(systolicValue),
-          diastolic: Math.trunc(diastolicValue),
-          heartRate: Math.trunc(heartRateValue),
-          isComplete: true,
-          date: targetDate,
+        const saved = await updateBloodPressure(body, {
+          notifyOnError: body.isComplete,
+          trackOutcome: body.isComplete,
         })
-        if (saved) bloodPressureDirtyRef.current = false
+        const hasUnchangedDraft =
+          bloodPressureDraftRef.current.systolic === draft.systolic &&
+          bloodPressureDraftRef.current.diastolic === draft.diastolic &&
+          bloodPressureDraftRef.current.heartRate === draft.heartRate
+        if (saved && hasUnchangedDraft) bloodPressureDirtyRef.current = false
         return saved
       } finally {
         bloodPressureSavingRef.current = false
-        setIsBloodPressureSaving(false)
+        const pending = pendingBloodPressureSaveRef.current
+        pendingBloodPressureSaveRef.current = null
+        if (pending) void saveBloodPressureDraft(pending.date, pending.draft)
       }
     },
     [updateBloodPressure],
@@ -111,7 +105,15 @@ export function BloodMetricsTracker({
   }
 
   const handleBloodPressureSave = () => {
-    void saveBloodPressureDraft(selectedDateStr, bloodPressureDraftRef.current)
+    const nextSave = {
+      date: selectedDateStr,
+      draft: { ...bloodPressureDraftRef.current },
+    }
+    if (bloodPressureSavingRef.current) {
+      pendingBloodPressureSaveRef.current = nextSave
+      return
+    }
+    void saveBloodPressureDraft(nextSave.date, nextSave.draft)
   }
 
   const handleChangeSystolic = (value: string) => {
@@ -287,12 +289,6 @@ export function BloodMetricsTracker({
         onChangeSystolic={handleChangeSystolic}
         onChangeDiastolic={handleChangeDiastolic}
         onChangeHeartRate={handleChangeHeartRate}
-        canSave={
-          parseVital(systolic) !== null &&
-          parseVital(diastolic) !== null &&
-          parseVital(heartRate) !== null
-        }
-        isSaving={isBloodPressureSaving}
         onSave={handleBloodPressureSave}
       />
 

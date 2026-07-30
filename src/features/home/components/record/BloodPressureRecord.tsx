@@ -1,10 +1,4 @@
-import {
-  TextInput,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  View,
-} from "react-native"
+import { TextInput, StyleSheet, Image, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
 import { RecordCard } from "./RecordCard"
@@ -14,7 +8,6 @@ import {
   VITAL_STATUS_LABEL,
 } from "../../data/bloodMetricsConstants"
 import {
-  hasStartedBloodPressureInput,
   judgeBloodPressure,
   parseVital,
   type VitalStatus,
@@ -28,8 +21,6 @@ interface BloodPressureRecordProps {
   onChangeSystolic: (value: string) => void
   onChangeDiastolic: (value: string) => void
   onChangeHeartRate: (value: string) => void
-  canSave: boolean
-  isSaving?: boolean
   onSave: () => void
 }
 
@@ -41,8 +32,6 @@ export function BloodPressureRecord({
   onChangeSystolic,
   onChangeDiastolic,
   onChangeHeartRate,
-  canSave,
-  isSaving = false,
   onSave,
 }: BloodPressureRecordProps) {
   const isDarkMode = useAppColorScheme() === "dark"
@@ -54,11 +43,6 @@ export function BloodPressureRecord({
     : tokens.color.borderLight.val
   const systolicValue = parseVital(systolic)
   const diastolicValue = parseVital(diastolic)
-  const hasStartedInput = hasStartedBloodPressureInput(
-    systolic,
-    diastolic,
-    heartRate,
-  )
   const status = judgeBloodPressure(systolicValue, diastolicValue)
   const statusStyle = getStatusStyle(status, isDarkMode)
 
@@ -95,6 +79,7 @@ export function BloodPressureRecord({
               placeholderTextColor={placeholderColor}
               value={systolic}
               onChangeText={onChangeSystolic}
+              onBlur={onSave}
               keyboardType="number-pad"
               maxLength={3}
             />
@@ -107,6 +92,7 @@ export function BloodPressureRecord({
               placeholderTextColor={placeholderColor}
               value={diastolic}
               onChangeText={onChangeDiastolic}
+              onBlur={onSave}
               keyboardType="number-pad"
               maxLength={3}
             />
@@ -130,6 +116,7 @@ export function BloodPressureRecord({
             placeholderTextColor={placeholderColor}
             value={heartRate}
             onChangeText={onChangeHeartRate}
+            onBlur={onSave}
             keyboardType="number-pad"
             maxLength={3}
           />
@@ -137,36 +124,6 @@ export function BloodPressureRecord({
             bpm
           </Text>
         </XStack>
-
-        {hasStartedInput && (
-          <YStack alignItems="center" gap="$2">
-            {!canSave && (
-              <Text fontSize="$3" color={labelColor} textAlign="center">
-                수축기·이완기·맥박을 모두 입력한 뒤 저장할 수 있어요.
-              </Text>
-            )}
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="혈압 저장"
-              accessibilityState={{ disabled: !canSave || isSaving }}
-              disabled={!canSave || isSaving}
-              onPress={onSave}
-              style={[
-                styles.saveButton,
-                {
-                  backgroundColor:
-                    canSave && !isSaving
-                      ? tokens.color.sub6.val
-                      : tokens.color.grey7.val,
-                },
-              ]}
-            >
-              <Text color="$pureWhite" fontSize="$4" fontWeight="600">
-                {isSaving ? "저장 중…" : "혈압 저장"}
-              </Text>
-            </TouchableOpacity>
-          </YStack>
-        )}
       </YStack>
     </RecordCard>
   )
@@ -240,12 +197,5 @@ const styles = StyleSheet.create({
   vDivider: {
     width: 1,
     height: 20,
-  },
-  saveButton: {
-    minWidth: 112,
-    alignItems: "center",
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
   },
 })

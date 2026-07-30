@@ -9,16 +9,6 @@ export function parseVital(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-export function hasStartedBloodPressureInput(
-  systolic: string,
-  diastolic: string,
-  heartRate: string,
-): boolean {
-  return [systolic, diastolic, heartRate].some(
-    (value) => value.trim().length > 0,
-  )
-}
-
 export function judgeBloodPressure(
   systolic: number | null,
   diastolic: number | null,

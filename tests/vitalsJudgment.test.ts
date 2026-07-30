@@ -1,18 +1,10 @@
 import {
-  hasStartedBloodPressureInput,
   judgeBloodPressure,
   judgeGlucose,
   parseVital,
 } from "../src/features/home/utils/vitalsJudgment"
 
 describe("vitals judgment", () => {
-  it("shows the blood pressure save affordance as soon as any field has input", () => {
-    expect(hasStartedBloodPressureInput("", "", "")).toBe(false)
-    expect(hasStartedBloodPressureInput("120", "", "")).toBe(true)
-    expect(hasStartedBloodPressureInput("", "80", "")).toBe(true)
-    expect(hasStartedBloodPressureInput("", "", "70")).toBe(true)
-  })
-
   it.each([
     [110, 60, "normal"],
     [119, 79, "normal"],
