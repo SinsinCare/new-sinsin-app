@@ -29,6 +29,12 @@ import { tokens } from "@/src/theme/tokens"
 const MAX_IMAGES = 3
 const MAX_CONTENT = 100
 
+type InquiryImage = {
+  uri: string
+  mimeType: "image/jpeg" | "image/png"
+  name: string
+}
+
 const INQUIRY_CATEGORIES = [
   "서비스 이용 문의",
   "건강 데이터 관련",
@@ -46,7 +52,7 @@ export function InquiryScreen() {
   const [category, setCategory] = useState<string | null>(null)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [images, setImages] = useState<string[]>([])
+  const [images, setImages] = useState<InquiryImage[]>([])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCategorySheet, setShowCategorySheet] = useState(false)
@@ -97,7 +103,17 @@ export function InquiryScreen() {
       quality: 0.8,
     })
     if (!result.canceled && result.assets[0]) {
-      setImages((prev) => [...prev, result.assets[0].uri])
+      const asset = result.assets[0]
+      const mimeType = asset.mimeType === "image/png" ? "image/png" : "image/jpeg"
+      const extension = mimeType === "image/png" ? "png" : "jpg"
+      setImages((prev) => [
+        ...prev,
+        {
+          uri: asset.uri,
+          mimeType,
+          name: asset.fileName || `inquiry-${Date.now()}.${extension}`,
+        },
+      ])
     }
   }
 
@@ -109,10 +125,26 @@ export function InquiryScreen() {
     if (!canSubmit || isSubmitting) return
     setIsSubmitting(true)
     try {
-      await api.post("/user/inquiries", {
-        subject: `[${category}] ${title}`,
-        content,
-      })
+      if (images.length === 0) {
+        await api.post("/user/inquiries", {
+          subject: `[${category}] ${title}`,
+          content,
+        })
+      } else {
+        const form = new FormData()
+        form.append("subject", `[${category}] ${title}`)
+        form.append("content", content)
+        images.forEach((image) => {
+          form.append("images", {
+            uri: image.uri,
+            type: image.mimeType,
+            name: image.name,
+          } as never)
+        })
+        await api.post("/user/inquiries/with-attachments", form, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+      }
       Alert.alert("문의 등록 완료", "문의가 성공적으로 등록되었습니다.", [
         { text: "확인", onPress: () => router.back() },
       ])
@@ -223,10 +255,10 @@ export function InquiryScreen() {
               >
                 <Ionicons name="image-outline" size={24} color={c.textMuted} />
               </Pressable>
-              {images.map((uri, index) => (
+              {images.map((image, index) => (
                 <View key={index} style={styles.imageThumbWrapper}>
                   <Image
-                    source={{ uri }}
+                    source={{ uri: image.uri }}
                     style={styles.imageThumb}
                     contentFit="cover"
                   />
