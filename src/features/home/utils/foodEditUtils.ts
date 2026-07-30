@@ -99,9 +99,12 @@ export function getAutoTitleForFoodCorrection(
   const currentTitle = result.title?.trim()
   const originalFoodName = result.foods[0].name.trim()
   const correctedFoodName = foods[0].name.trim()
+  const generatedTitleWithServing =
+    currentTitle?.startsWith(`${originalFoodName} `) &&
+    /^\d/.test(currentTitle.slice(originalFoodName.length).trim())
   if (
     !currentTitle ||
-    currentTitle !== originalFoodName ||
+    (currentTitle !== originalFoodName && !generatedTitleWithServing) ||
     correctedFoodName === originalFoodName
   ) {
     return undefined
