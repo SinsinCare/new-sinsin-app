@@ -223,13 +223,20 @@ export default function RootLayout() {
                   <RootLayoutNav />
                 </AppPolicyGate>
                 <Toast />
-                {/*
-                  키보드 탈출구. 숫자 키패드에는 완료 키가 없고, InputAccessoryView 는
-                  모달(기록 시트) 안에서 렌더되지 않는다 — 전역 툴바만이 모든 입력을
-                  덮는다(AppKeyboardToolbar 머리말).
-                */}
-                <AppKeyboardToolbar />
               </PortalProvider>
+              {/*
+                키보드 탈출구. 숫자 키패드에는 완료 키가 없고, InputAccessoryView 는
+                시트 안에서 렌더되지 않는다 — 전역 툴바만이 모든 입력을 덮는다
+                (AppKeyboardToolbar 머리말).
+
+                **`PortalProvider` 밖에 둔다.** 안에 두면 안 보인다. 그 provider 는
+                자식을 그린 **뒤에** 포털 호스트를 그리고(`[children, PortalHost]`),
+                Tamagui Sheet 는 RN Modal 이 아니라 그 호스트로 들어간다. 즉 시트는
+                언제나 provider 자식들 위에 얹히므로, 툴바를 자식으로 두면 시트 프레임
+                뒤에 깔려 화면에 나오지 않는다 — 1.1.24 QA "여전히 키보드가 가린다" 가
+                이것이다. 밖으로 빼면 마지막에 그려져 시트 위에 선다.
+              */}
+              <AppKeyboardToolbar />
             </Theme>
           </TamaguiProvider>
         </QueryClientProvider>

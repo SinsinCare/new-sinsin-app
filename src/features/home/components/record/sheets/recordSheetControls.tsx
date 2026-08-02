@@ -142,6 +142,7 @@ function SheetEditableValue({
   caption?: string
   edit: SheetValueEdit
 }) {
+  const { t } = useTranslation("common")
   const surface = useSurface()
   const inputRef = useRef<TextInput>(null)
   const [draft, setDraft] = useState<string | null>(null)
@@ -247,11 +248,37 @@ function SheetEditableValue({
           {caption}
         </Text>
       ) : null}
-      {!editing ? (
+      {/*
+        평소엔 힌트, 치는 동안엔 완료 — **같은 자리**라 줄이 늘거나 줄지 않는다.
+
+        전역 키보드 툴바가 있는데도 여기에 하나 더 두는 이유: 툴바는 화면 바닥에
+        붙고, 시트가 열려 있으면 그 위를 시트·포털이 덮을 여지가 남는다(실제로 그래서
+        1.1.24 에서 안 보였다). 이 버튼은 **큰 숫자 바로 아래**, 즉 키패드가 절대
+        닿지 않는 위쪽에 있어서 무엇에도 가려지지 않는다. 눌러 blur 시키면
+        `onBlur` 가 그대로 commit 을 태우므로 값도 함께 확정된다.
+      */}
+      {editing ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => inputRef.current?.blur()}
+          hitSlop={10}
+          style={({ pressed }) => [
+            styles.editDone,
+            {
+              backgroundColor: surface.surface,
+              opacity: pressed ? 0.6 : 1,
+            },
+          ]}
+        >
+          <Text style={[styles.editDoneLabel, { color: surface.textStrong }]}>
+            {t("action.done")}
+          </Text>
+        </Pressable>
+      ) : (
         <Text style={[styles.editHint, { color: surface.textMuted }]}>
           {edit.hint}
         </Text>
-      ) : null}
+      )}
     </View>
   )
 }
@@ -715,6 +742,14 @@ const styles = StyleSheet.create({
     width: 96,
   },
   editHint: { fontSize: 11.5, lineHeight: 16, textAlign: "center" },
+  // 힌트와 같은 높이(16 + 위아래 4)로 잡아 편집 진입 때 아래가 밀리지 않게 한다.
+  editDone: {
+    paddingVertical: 4,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    alignSelf: "center",
+  },
+  editDoneLabel: { fontSize: 11.5, lineHeight: 16, fontWeight: "700" },
 
   // 판정 배지 h28 r9
   badge: {
