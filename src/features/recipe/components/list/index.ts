@@ -102,6 +102,7 @@ export type {
 } from "./recipeCardFormat"
 
 export {
+  clearRecipeFilterGroup,
   clearRecipeFilters,
   countRecipeFilters,
   EMPTY_RECIPE_FILTERS,

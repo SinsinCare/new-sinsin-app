@@ -151,6 +151,19 @@ export function removeRecipeFilter(
   }
 }
 
+/**
+ * 한 그룹만 비운다 — 카테고리 캐러셀의 "전체" 가 쓴다.
+ * 다른 그룹(영양·병기)의 선택은 건드리지 않는다: 사용자가 "전체" 로 뜻한 것은
+ * 음식 종류 전부이지 필터를 처음부터 다시 걸겠다는 뜻이 아니다.
+ */
+export function clearRecipeFilterGroup(
+  selection: RecipeFilterSelection,
+  group: RecipeFilterGroupKey,
+): RecipeFilterSelection {
+  if ((selection[group] ?? []).length === 0) return selection
+  return { ...selection, [group]: [] }
+}
+
 export function clearRecipeFilters(): RecipeFilterSelection {
   return EMPTY_RECIPE_FILTERS
 }

@@ -131,6 +131,7 @@ import {
   RecipePhotoCard,
   resolveRecipeBrowseLayout,
   visibleAppliedRecipeFilters,
+  clearRecipeFilterGroup,
   toggleRecipeFilter,
   toRecipeListQueryFilters,
   type RecipeFilterGroupKey,
@@ -282,6 +283,10 @@ export default function RecipeScreen() {
     setFilters((prev) => toggleRecipeFilter(prev, "category", optionKey))
   }, [])
 
+  const handleClearCategories = useCallback(() => {
+    setFilters((prev) => clearRecipeFilterGroup(prev, "category"))
+  }, [])
+
   /** 캐러셀이 읽는 선택 상태 — 서버 표기 목록. 변환의 정본은 필터 모델이다. */
   const selectedCategoryQueryValues = useMemo(
     () => toRecipeListQueryFilters(filters).categories,
@@ -343,6 +348,7 @@ export default function RecipeScreen() {
             <RecipeCategoryCarousel
               selected={selectedCategoryQueryValues}
               onToggle={handleToggleCategory}
+              onClearAll={handleClearCategories}
             />
           </YStack>
         )}
@@ -462,22 +468,35 @@ export default function RecipeScreen() {
             provenance 를 카드마다 배지로 쌓지 않고 목록에 한 번만 알린다(§6.4) —
             176개 카드에 같은 배지를 붙이면 그것은 정보가 아니라 무늬가 된다.
           */}
-          {showResultCount && (
-            <RNText
-              style={[styles.resultCount, { color: surface.text }]}
-              numberOfLines={1}
-            >
-              {resultCountText}
-            </RNText>
-          )}
-          {showEstimateNotice && (
-            <RNText
-              style={[styles.estimateNotice, { color: surface.textMuted }]}
-              numberOfLines={1}
-            >
-              {tr("list.estimateNotice")}
-            </RNText>
-          )}
+          {/*
+            결과 머리 한 줄. 예전에는 회색 잔글씨 두 줄이 정렬 칩 위에 떠 있었고,
+            **로딩 중에는 아예 없다가 결과가 오면 생겨서** 아래 목록이 통째로 밀렸다
+            (2026-08-02 QA: 스켈레톤에 없어서 레이아웃 시프트 + 시작선 어긋남).
+
+            고친 방식 셋:
+             1. 두 문장을 한 줄로 합친다 — 개수는 굵게(이 줄의 주인공), 추정값 안내는
+                가운뎃점 뒤 보조. 잔글씨 두 줄이 쌓이면 무엇이 중요한지 사라진다.
+             2. **높이를 항상 차지한다**(minHeight). 검색 전/로딩 중에도 자리가 비어
+                있을 뿐이라 결과가 도착해도 아래가 밀리지 않는다.
+             3. 시작선을 정렬 칩의 **글자**에 맞춘다. 칩은 면이 있어 안쪽 여백만큼
+                글자가 밀리는데, 맨 글자인 이 줄을 GUTTER 에 두면 혼자 왼쪽으로 튀어
+                나온 것처럼 보인다(그게 "혼자 시작선 안 맞는다" 의 정체다).
+          */}
+          <View style={styles.resultHead}>
+            {showResultCount && (
+              <RNText
+                style={[styles.resultCount, { color: surface.textStrong }]}
+                numberOfLines={1}
+              >
+                {resultCountText}
+                {showEstimateNotice ? (
+                  <RNText style={{ color: surface.textMuted }}>
+                    {`  ·  ${tr("list.estimateNotice")}`}
+                  </RNText>
+                ) : null}
+              </RNText>
+            )}
+          </View>
 
           {/*
             정렬 줄이 맨 글자에서 **칩**이 되면서 이 자리의 높이가 20 → 32 로 커졌다.
@@ -492,6 +511,7 @@ export default function RecipeScreen() {
     ),
     [
       handleOpenRecipe,
+      handleClearCategories,
       handleToggleCategory,
       homeIsError,
       homeIsLoading,
@@ -813,18 +833,21 @@ const styles = StyleSheet.create({
   },
 
   /** 결과 수 — 검색·필터 중에만 나온다. 그냥 둘러볼 때 개수는 소음이다. */
-  resultCount: {
-    ...typography.label.xSmall,
-    paddingHorizontal: GUTTER,
+  /**
+   * 결과 머리 자리. **비어 있어도 높이를 차지한다** — 검색 전·로딩 중·결과 도착이
+   * 모두 같은 높이라 목록이 밀리지 않는다(레이아웃 시프트 방지).
+   */
+  resultHead: {
+    minHeight: 22,
+    justifyContent: "center",
+    // 칩의 글자 시작선과 맞춘다(GUTTER + 칩 안쪽 여백). 정렬 줄 바로 위라 이 줄만
+    // GUTTER 에 두면 왼쪽으로 튀어나와 보인다.
+    // 12 = 정렬 칩(size="s")의 paddingHorizontal(V2Chip SIZE.s).
+    paddingHorizontal: GUTTER + 12,
     paddingTop: spacing[4],
   },
-  /**
-   * 추정값 안내. 결과 수(또는 목록 제목) **바로 아래**, 같은 시작선에 붙는다 —
-   * 이 문장이 가리키는 것은 그 아래 줄들의 영양 수치다(머리말 §추정값 문구).
-   */
-  estimateNotice: {
-    ...typography.subtext.small,
-    paddingHorizontal: GUTTER,
-    paddingTop: spacing[2],
+  resultCount: {
+    ...typography.label.small,
+    fontWeight: "700",
   },
 })

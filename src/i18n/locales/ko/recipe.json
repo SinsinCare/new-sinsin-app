@@ -160,7 +160,11 @@
     "errorBody": "연결을 확인한 뒤 다시 해 주세요",
     "retry": "다시 시도",
     "estimateNotice": "영양 수치는 추정값이에요",
-    "writeEntry": "쓰기"
+    "writeEntry": "쓰기",
+    "category": {
+      "all": "전체",
+      "allShort": "전체"
+    }
   },
   "recipeEditor": {
     "title": "레시피 쓰기",

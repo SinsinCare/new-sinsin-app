@@ -106,11 +106,14 @@ export interface RecipeCategoryCarouselProps {
   selected: readonly string[]
   /** 눌린 카테고리의 **서버 표기**를 넘긴다. 토글 방향은 호출부가 결정한다. */
   onToggle: (categoryQueryValue: string) => void
+  /** "전체" — 고른 카테고리를 모두 푼다. */
+  onClearAll: () => void
 }
 
 export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
   selected,
   onToggle,
+  onClearAll,
 }: RecipeCategoryCarouselProps) {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
@@ -127,6 +130,69 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
         paddingHorizontal: RAIL_INSET,
       }}
     >
+      {/*
+        "전체" 를 맨 앞에 둔다.
+
+        지금까지는 고른 것을 **다시 눌러 끄는** 방법뿐이었다. 둘 이상 골랐으면 두 번
+        눌러야 하고, 무엇보다 "지금 전부 보고 있다" 는 상태를 나타내는 자리가 화면에
+        없었다 — 아무것도 안 고른 상태와 "전체를 골랐다" 가 눈으로 구분되지 않는다.
+        목록 필터의 관례대로 전체를 하나의 선택지로 세우면 두 문제가 같이 풀린다.
+
+        아이콘을 주지 않는 이유: 나머지 여섯 개는 음식 그림인데 전체만 추상 기호가
+        되면 줄의 성격이 섞인다. 같은 48 상자 안에 글자만 둔다.
+      */}
+      <Pressable
+        onPress={onClearAll}
+        accessibilityRole="button"
+        accessibilityLabel={t("list.category.all")}
+        accessibilityState={{ selected: selected.length === 0 }}
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.7 : 1,
+          width: 60,
+          alignItems: "center",
+        })}
+      >
+        <YStack alignItems="center" gap={6} paddingVertical={4}>
+          <View
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 16,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor:
+                selected.length === 0 ? surface.surface : "transparent",
+              opacity: selected.length === 0 ? 1 : 0.45,
+            }}
+          >
+            <Text
+              fontFamily="$body"
+              fontSize={15}
+              lineHeight={20}
+              fontWeight="700"
+              color={
+                selected.length === 0 ? surface.textStrong : surface.textWeak
+              }
+            >
+              {t("list.category.allShort")}
+            </Text>
+          </View>
+          <Text
+            fontFamily="$body"
+            fontSize={13}
+            lineHeight={18}
+            letterSpacing={-0.26}
+            fontWeight={selected.length === 0 ? "700" : "500"}
+            color={
+              selected.length === 0 ? surface.textStrong : surface.textWeak
+            }
+            numberOfLines={1}
+          >
+            {t("list.category.all")}
+          </Text>
+        </YStack>
+      </Pressable>
+
       {items.map(({ key, queryValue, labelKey, Icon }) => {
         const label = t(labelKey)
         const isSelected = selected.includes(queryValue)

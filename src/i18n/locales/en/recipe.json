@@ -160,7 +160,11 @@
     "errorBody": "Check your connection and try again",
     "retry": "Try again",
     "estimateNotice": "Nutrition numbers are estimates",
-    "writeEntry": "Write"
+    "writeEntry": "Write",
+    "category": {
+      "all": "All",
+      "allShort": "All"
+    }
   },
   "recipeEditor": {
     "title": "New recipe",
