@@ -268,7 +268,13 @@ export function KidneyProfileEditScreen() {
     ? `${String(diagnosisDate.month).padStart(2, "0")}/${diagnosisDate.year}`
     : ""
 
-  const greenTintBg = c.isDark ? "#1A3A2E" : "#F0FDF4"
+  /*
+    선택·강조 면. 이 화면만 초록 계열(#F0FDF4 / sub6·sub8)을 쓰고 있어서
+    가입·기록·레시피와 색이 따로 놀았다. 브랜드는 #FE7139 하나다
+    (theme/tokens.ts: "화면에서 브랜드 색이 필요하면 이걸 쓴다").
+    primary1 은 그 브랜드의 가장 옅은 틴트 — 시트의 선택 칩이 쓰는 면과 같다.
+  */
+  const selectedTintBg = c.isDark ? "#3A2318" : tokens.color.primary1.val
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
@@ -367,11 +373,13 @@ export function KidneyProfileEditScreen() {
         </View>
 
         {/* 단백질 목표 안내 */}
-        <View style={[styles.proteinHintBox, { backgroundColor: greenTintBg }]}>
+        <View
+          style={[styles.proteinHintBox, { backgroundColor: selectedTintBg }]}
+        >
           <Ionicons
             name="information-circle-outline"
             size={15}
-            color={tokens.color.sub8.val}
+            color={tokens.color.primary.val}
           />
           <ThemedText style={styles.proteinHintText}>
             {t("kidney.proteinNote")}
@@ -406,9 +414,9 @@ export function KidneyProfileEditScreen() {
                 styles.stageButton,
                 { borderColor: c.border },
                 ckdStage === option.key && {
-                  backgroundColor: greenTintBg,
+                  backgroundColor: selectedTintBg,
                   borderWidth: 1.4,
-                  borderColor: tokens.color.sub6.val,
+                  borderColor: tokens.color.primary.val,
                 },
               ]}
               onPress={() => setCkdStage(option.key)}
@@ -434,9 +442,9 @@ export function KidneyProfileEditScreen() {
               styles.stageButton,
               { borderColor: c.border },
               ckdStage === null && {
-                backgroundColor: greenTintBg,
+                backgroundColor: selectedTintBg,
                 borderWidth: 1.4,
-                borderColor: tokens.color.sub6.val,
+                borderColor: tokens.color.primary.val,
               },
             ]}
             onPress={() => {
@@ -466,13 +474,13 @@ export function KidneyProfileEditScreen() {
           <View
             style={[
               styles.dialysisIconContainer,
-              { backgroundColor: greenTintBg },
+              { backgroundColor: selectedTintBg },
             ]}
           >
             <Ionicons
               name="pulse-outline"
               size={24}
-              color={tokens.color.sub8.val}
+              color={tokens.color.primary.val}
             />
           </View>
           <View style={styles.dialysisInfo}>
@@ -489,7 +497,7 @@ export function KidneyProfileEditScreen() {
             accessibilityLabel={t("kidney.dialysis.accessibility")}
             value={onDialysis}
             onValueChange={setOnDialysis}
-            trackColor={{ false: c.border, true: tokens.color.sub8.val }}
+            trackColor={{ false: c.border, true: tokens.color.primary.val }}
             thumbColor="#FFFFFF"
             ios_backgroundColor={c.border}
           />
@@ -551,9 +559,9 @@ export function KidneyProfileEditScreen() {
                 styles.causeButton,
                 { borderColor: c.border },
                 selectedCauses.includes(cause.key) && {
-                  backgroundColor: greenTintBg,
+                  backgroundColor: selectedTintBg,
                   borderWidth: 1.4,
-                  borderColor: tokens.color.sub6.val,
+                  borderColor: tokens.color.primary.val,
                 },
               ]}
               onPress={() => toggleCause(cause.key)}
@@ -614,9 +622,9 @@ export function KidneyProfileEditScreen() {
                 styles.causeButton,
                 { borderColor: c.border },
                 selectedComorbidities.includes(opt.key) && {
-                  backgroundColor: greenTintBg,
+                  backgroundColor: selectedTintBg,
                   borderWidth: 1.4,
-                  borderColor: tokens.color.sub6.val,
+                  borderColor: tokens.color.primary.val,
                 },
               ]}
               onPress={() => toggleComorbidity(opt.key)}
@@ -675,7 +683,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "600",
-    color: tokens.color.sub6.val,
+    color: tokens.color.primary.val,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -685,7 +693,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 16 * 1.4,
     fontWeight: "600",
-    color: tokens.color.sub8.val,
+    color: tokens.color.primary.val,
   },
   subsectionTitle: {
     fontSize: 14,
@@ -701,7 +709,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    color: tokens.color.sub8.val,
+    color: tokens.color.primary.val,
   },
   inputLabel: {
     fontSize: 12,
@@ -739,7 +747,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     lineHeight: 17,
-    color: tokens.color.sub8.val,
+    color: tokens.color.primary.val,
   },
   inputGroup: {
     flex: 1,
@@ -772,7 +780,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   stageButtonTextSelected: {
-    color: tokens.color.sub8.val,
+    color: tokens.color.primary.val,
   },
   dialysisBox: {
     flexDirection: "row",
@@ -840,7 +848,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: tokens.color.sub6.val,
+    backgroundColor: tokens.color.primary.val,
     borderRadius: 8,
     paddingVertical: 16,
     paddingHorizontal: 24,
