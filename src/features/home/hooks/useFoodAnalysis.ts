@@ -47,6 +47,19 @@ export function useFoodAnalysis(
   )
   const [analyzedImageUri, setAnalyzedImageUri] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  /*
+    분석 오버레이(LoadingOverlay 는 RN Modal)가 떠 있는 동안 Alert 를 바로 부르면
+    안 된다. catch 의 Alert 와 finally 의 setIsAnalyzing(false) 가 같은 틱에 돌아서,
+    **알럿이 Modal 의 뷰컨트롤러에 붙은 채 그 Modal 이 dismiss** 된다. iOS 에서
+    이 경합의 결말은 확인을 누른 순간 터치가 죽는 앱 멈춤이다(2026-08-02 실사용 보고,
+    통화 중 상태에서 재현). 그래서 오버레이를 먼저 내리고, Modal 페이드(약 300ms)가
+    끝난 뒤에 알럿을 띄운다. 오버레이가 안 떠 있어도 지연은 무해하다.
+  */
+  const alertAfterOverlayClose = (title: string, body?: string) => {
+    setIsAnalyzing(false)
+    setTimeout(() => Alert.alert(title, body), 500)
+  }
   const [isUpdating, setIsUpdating] = useState(false)
   const [analysisStatus, setAnalysisStatus] =
     useState<FoodAnalysisStatus | null>(null)
@@ -133,7 +146,7 @@ export function useFoodAnalysis(
           method: analysisMethodRef.current,
           reason: "confirmation_unavailable",
         })
-        Alert.alert(
+        alertAfterOverlayClose(
           t("home.analysis.photoUnclearTitle"),
           t("home.analysis.photoUnclearBody"),
         )
@@ -175,7 +188,7 @@ export function useFoodAnalysis(
       if (!dismissedRef.current) {
         trackAnalyticsEvent("food_analysis_failed", { method: "photo" })
         logRecoverableError("analyzeImage error:", error)
-        Alert.alert(
+        alertAfterOverlayClose(
           t("home.analysis.photoFailedTitle"),
           t("home.analysis.photoFailedBody"),
         )
@@ -223,12 +236,12 @@ export function useFoodAnalysis(
         trackAnalyticsEvent("food_analysis_failed", { method: "text" })
         logRecoverableError("analyzeText error:", error)
         if (isTimeoutError(error)) {
-          Alert.alert(
+          alertAfterOverlayClose(
             t("home.analysis.takingLongTitle"),
             t("home.analysis.takingLongBody"),
           )
         } else {
-          Alert.alert(
+          alertAfterOverlayClose(
             t("home.analysis.textFailedTitle"),
             t("home.analysis.textFailedBody"),
           )
