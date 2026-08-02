@@ -693,7 +693,12 @@ export function RecordView({
       key: "meal",
       icon: <TileIcon name="meal" />,
       label: t("home.tile.meals"),
-      value: `${recordedMealCount} / 4`,
+      /*
+        분모를 두지 않는다 — QA(2026-08-02): "0/4끼처럼 끼니 수를 결정하지 말고
+        몇 끼 먹었는지만. 4끼가 정석인 것도 아니고." 하루 몇 끼가 맞는지는 앱이
+        정할 일이 아니다. 0끼일 때는 다른 타일들처럼 값 대신 캡션이 말한다.
+      */
+      value: recordedMealCount > 0 ? String(recordedMealCount) : null,
       unit: t("home.meal.unit"),
       caption: mealCaption,
       onPress: () => openMealSheet(),

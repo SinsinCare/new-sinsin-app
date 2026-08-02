@@ -115,6 +115,15 @@ export interface SheetValueEdit {
    * (시트들이 `visible` 마다 상태를 다시 채우는 것도 같은 이유다.)
    */
   active: boolean
+  /**
+   * 열렸는데 기록이 없으면 **바로 편집 상태로 시작**한다(키패드까지).
+   * "숫자를 눌러 직접 입력" 힌트는 발견을 돕지만, 첫 기록 사용자는 애초에
+   * 조정할 기준값이 없어서 타이핑이 유일한 길이다 — QA(2026-08-02)
+   * "기록하기에서 숫자 키패드 안 올라옴"이 그 사용자다.
+   * 판정은 호출부가 **원본 레코드**로 한다(내부 value 상태는 열림 직후
+   * 아직 hydrate 전일 수 있다).
+   */
+  autoStartWhenEmpty?: boolean
   /** 확정된 값. 지우고 나가면 null 이 온다(0 이 아니다). */
   onCommit: (next: number | null) => void
   /** 탭 영역의 접근성 라벨. "체중 직접 입력" 처럼 무엇을 입력하는지 말한다. */
@@ -160,11 +169,29 @@ function SheetEditableValue({
     setDraft(null)
   }
 
-  // 시트가 닫히면 치다 만 문자열을 버린다. 확정하지 않고 닫은 것이므로 저장도 하지 않는다.
+  /*
+    열림/닫힘 한 곳에서 처리한다.
+    - 닫히면 치다 만 문자열을 버린다(확정 안 했으니 저장도 없다).
+    - 열렸는데 자동 시작 대상이면 빈 편집으로 들어가 키패드를 올린다.
+      300ms 지연은 시트가 올라오는 애니메이션과 키보드가 겹치지 않게 하는
+      BloodPressureSheet 의 260ms 와 같은 이유다. startedRef 는 한 번 연 동안
+      한 번만 시작하게 막는다 — 없으면 blur 로 편집을 끝낼 때마다 다시 열린다.
+  */
   const active = edit.active
+  const autoStart = edit.autoStartWhenEmpty === true
+  const startedRef = useRef(false)
   useEffect(() => {
-    if (!active) setDraft(null)
-  }, [active])
+    if (!active) {
+      startedRef.current = false
+      setDraft(null)
+      return
+    }
+    if (!autoStart || startedRef.current) return
+    startedRef.current = true
+    setDraft("")
+    const timer = setTimeout(() => inputRef.current?.focus(), 300)
+    return () => clearTimeout(timer)
+  }, [active, autoStart])
 
   return (
     <View style={styles.displayBlock}>

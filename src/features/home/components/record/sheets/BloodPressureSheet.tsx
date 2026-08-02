@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
+import { useEffect, useId, useRef, useState } from "react"
+import {
+  InputAccessoryView,
+  Keyboard,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
 import { hapticStepAdvance } from "@/src/lib/haptics"
@@ -48,6 +57,12 @@ export function BloodPressureSheet({
   const systolicRef = useRef<TextInput>(null)
   const diastolicRef = useRef<TextInput>(null)
   const heartRateRef = useRef<TextInput>(null)
+  /*
+    숫자 키패드에는 완료 키가 없고, 이 시트는 더 이상 키보드에 맞춰 떠오르지 않는다
+    (snapPoints 주석). 키보드가 CTA 를 가리는 동안 내려올 유일한 길이 이 바다.
+    ID 는 인스턴스마다 달라야 한다 — recordSheetControls 의 액세서리와 같은 이유.
+  */
+  const accessoryId = useId()
 
   useEffect(() => {
     if (!visible) return
@@ -91,8 +106,9 @@ export function BloodPressureSheet({
     <AppBottomSheet
       visible={visible}
       onClose={onClose}
-      snapPoints={[80]}
-      adjustForKeyboard
+      /* 66 = 화면 2/3. 80 + 키보드 리프트는 상단이 시계·배터리를 덮었다(QA 2026-08-02).
+         키보드가 CTA 를 가리는 동안은 액세서리 "완료" 로 내린다. */
+      snapPoints={[66]}
     >
       <View style={styles.body}>
         <View style={styles.head}>
@@ -138,6 +154,9 @@ export function BloodPressureSheet({
             <View style={styles.fieldValueRow}>
               <TextInput
                 ref={systolicRef}
+                inputAccessoryViewID={
+                  Platform.OS === "ios" ? accessoryId : undefined
+                }
                 value={systolic}
                 onChangeText={(text) => {
                   setSystolic(text)
@@ -165,6 +184,9 @@ export function BloodPressureSheet({
             <View style={styles.fieldValueRow}>
               <TextInput
                 ref={diastolicRef}
+                inputAccessoryViewID={
+                  Platform.OS === "ios" ? accessoryId : undefined
+                }
                 value={diastolic}
                 onChangeText={(text) => {
                   setDiastolic(text)
@@ -196,6 +218,9 @@ export function BloodPressureSheet({
             </Text>
             <TextInput
               ref={heartRateRef}
+              inputAccessoryViewID={
+                Platform.OS === "ios" ? accessoryId : undefined
+              }
               value={heartRate}
               onChangeText={setHeartRate}
               placeholder="60"
@@ -274,11 +299,38 @@ export function BloodPressureSheet({
           )}
         </Pressable>
       </View>
+
+      {Platform.OS === "ios" ? (
+        <InputAccessoryView nativeID={accessoryId}>
+          <View
+            style={[styles.accessoryBar, { backgroundColor: surface.surface }]}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("action.done")}
+              onPress={() => Keyboard.dismiss()}
+              hitSlop={8}
+            >
+              <Text style={[styles.accessoryDone, { color: surface.brand }]}>
+                {t("action.done")}
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
     </AppBottomSheet>
   )
 }
 
 const styles = StyleSheet.create({
+  // 숫자 키패드의 유일한 탈출구(recordSheetControls 의 액세서리와 같은 규격).
+  accessoryBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  accessoryDone: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
   body: {
     paddingHorizontal: LAYOUT.screenX,
     paddingTop: 4,

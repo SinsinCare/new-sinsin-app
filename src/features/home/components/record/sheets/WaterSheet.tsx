@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
+import { useEffect, useId, useRef, useState } from "react"
+import {
+  InputAccessoryView,
+  Keyboard,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -85,6 +94,8 @@ export function WaterSheet({
   const baseRef = useRef(consumed)
 
   const pop = useSharedValue(1)
+  // 숫자 키패드 완료 바(iOS). BloodPressureSheet 의 액세서리와 같은 이유·규격.
+  const accessoryId = useId()
 
   useEffect(() => {
     if (!visible) return
@@ -161,8 +172,9 @@ export function WaterSheet({
     <AppBottomSheet
       visible={visible}
       onClose={onClose}
-      snapPoints={[isCustomOpen ? 94 : 82]}
-      adjustForKeyboard={isCustomOpen}
+      /* 직접 입력이 열려도 시트를 키우거나 밀어 올리지 않는다 — 밀어 올리면 상단이
+         시계·배터리를 덮는다(QA 2026-08-02). 입력 줄·담기는 상단쪽이라 키보드 위에 보인다. */
+      snapPoints={[82]}
     >
       <View style={styles.body}>
         <View style={styles.head}>
@@ -326,6 +338,9 @@ export function WaterSheet({
             >
               <TextInput
                 autoFocus
+                inputAccessoryViewID={
+                  Platform.OS === "ios" ? accessoryId : undefined
+                }
                 value={customText}
                 onChangeText={setCustomText}
                 placeholder="0"
@@ -457,6 +472,25 @@ export function WaterSheet({
           )}
         </Pressable>
       </View>
+
+      {Platform.OS === "ios" ? (
+        <InputAccessoryView nativeID={accessoryId}>
+          <View
+            style={[styles.accessoryBar, { backgroundColor: surface.surface }]}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("action.done")}
+              onPress={() => Keyboard.dismiss()}
+              hitSlop={8}
+            >
+              <Text style={[styles.accessoryDone, { color: surface.brand }]}>
+                {t("action.done")}
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
     </AppBottomSheet>
   )
 }
@@ -511,6 +545,13 @@ function CupButton({
 }
 
 const styles = StyleSheet.create({
+  accessoryBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  accessoryDone: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
   // 확정 CTA — RecordSheetShell 의 cta 와 같은 규격.
   cta: {
     height: LAYOUT.cta.height,

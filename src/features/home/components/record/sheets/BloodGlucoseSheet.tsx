@@ -89,8 +89,13 @@ export function BloodGlucoseSheet({
       onClose={onClose}
       title={t("home.sheet.bloodGlucose.title")}
       subtitle={t("home.sheet.bloodGlucose.subtitle")}
-      snapPoint={86}
-      adjustForKeyboard
+      /*
+        68 = 화면 2/3 근처. 86 이던 시절, 키보드가 올라오면 moveOnKeyboardChange 가
+        시트를 통째로 밀어 올려 **상단이 시계·배터리를 덮었다**(QA 2026-08-02).
+        이제 시트는 제자리에 있고 키보드가 하단을 가리는 동안은 iOS 액세서리
+        "완료" 로 내려서 CTA 에 닿는다 — 값 표시는 상단이라 타이핑 내내 보인다.
+      */
+      snapPoint={68}
       ctaLabel={
         value !== null
           ? t("home.sheet.recordValue", { value })
@@ -113,6 +118,8 @@ export function BloodGlucoseSheet({
         edit={{
           spec: GLUCOSE_INPUT,
           active: visible,
+          // 기록이 하나도 없으면 열리자마자 키패드 — QA "기록하기에서 숫자 키패드 안 올라옴".
+          autoStartWhenEmpty: records.length === 0,
           onCommit: setValue,
           accessibilityLabel: t("home.sheet.bloodGlucose.typeValue"),
           hint: t("home.sheet.typeHint"),

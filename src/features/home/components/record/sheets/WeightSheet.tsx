@@ -74,9 +74,8 @@ export function WeightSheet({
       onClose={onClose}
       title={t("home.sheet.weight.title")}
       subtitle={t("home.sheet.weight.subtitle")}
-      // 밑줄 + "직접 입력" 안내 한 줄이 늘었다. 시트 본문은 스크롤되지 않으므로
-      // 높이가 모자라면 잘리는 쪽은 맨 아래 CTA 다.
-      snapPoint={72}
+      // 62 = 키보드가 떠도 시트가 상단 시계·배터리를 덮지 않는 높이(혈당 시트 주석 참고).
+      snapPoint={62}
       ctaLabel={
         weight !== null
           ? t("home.sheet.recordValue", {
@@ -86,7 +85,6 @@ export function WeightSheet({
       }
       ctaDisabled={weight === null || weight <= 0 || weight > 300}
       ctaLoading={isSaving}
-      adjustForKeyboard
       onCtaPress={() => {
         if (weight !== null) onSubmit(weight)
       }}
@@ -97,6 +95,8 @@ export function WeightSheet({
         edit={{
           spec: WEIGHT_INPUT,
           active: visible,
+          // 기록이 없으면 열리자마자 키패드 — QA "기록하기에서 숫자 키패드 안 올라옴".
+          autoStartWhenEmpty: (today?.weightKg ?? null) === null,
           onCommit: setWeight,
           accessibilityLabel: t("home.sheet.weight.typeValue"),
           hint: t("home.sheet.typeHint"),
