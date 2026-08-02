@@ -10,13 +10,17 @@
       "image": "./assets/splash.png",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "buildNumber": "4",
       "bundleIdentifier": "com.mediology.sinsin-care",
       "appleTeamId": "HJJNV9Y5W8",
-      "associatedDomains": ["applinks:sinsincare.kr"],
+      "associatedDomains": [
+        "applinks:sinsincare.kr"
+      ],
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "신신당부",
@@ -24,7 +28,9 @@
         "CFBundleAllowMixedLocalizations": true,
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "내 주변 식당을 찾으려면 앱을 사용하는 동안 위치 접근을 허용해 주세요.",
-        "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
         "LSApplicationQueriesSchemes": [
           "instagram-stories",
           "instagram",
@@ -37,7 +43,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/app_icon_260720.png",
-        "backgroundColor": "#D8E9F5"
+        "backgroundColor": "#FFF5ED"
       },
       "package": "com.mediology.sinsinapp",
       "versionCode": 19,
@@ -56,7 +62,10 @@
               "pathPrefix": "/password-edit"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -68,8 +77,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
-          "color": "#FF5A5F"
+          "icon": "./assets/notification-icon.png",
+          "color": "#FE7139"
         }
       ],
       [
@@ -162,8 +171,14 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": ["ko", "en"],
-            "android": ["ko", "en"]
+            "ios": [
+              "ko",
+              "en"
+            ],
+            "android": [
+              "ko",
+              "en"
+            ]
           }
         }
       ]
