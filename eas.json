@@ -139,6 +139,13 @@
         "appleTeamId": "HJJNV9Y5W8"
       }
     },
+    "ios-testflight-test": {
+      "ios": {
+        "ascAppId": "6758880186",
+        "appleId": "healthierwith@gmail.com",
+        "appleTeamId": "HJJNV9Y5W8"
+      }
+    },
     "playstore": {
       "android": {
         "serviceAccountKeyPath": "./google-play-key.json",
