@@ -155,6 +155,7 @@ export function WaterSheet({
       visible={visible}
       onClose={onClose}
       snapPoints={[isCustomOpen ? 88 : 74]}
+      adjustForKeyboard={isCustomOpen}
     >
       <View style={styles.body}>
         <View style={styles.head}>

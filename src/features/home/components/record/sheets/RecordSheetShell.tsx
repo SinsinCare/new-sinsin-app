@@ -37,6 +37,8 @@ interface RecordSheetShellProps {
   ctaDisabled?: boolean
   ctaLoading?: boolean
   onCtaPress: () => void
+  /** 본문에 숫자 직접 입력이 있으면 켠다 — 키보드가 CTA 를 덮지 않게 시트를 밀어 올린다. */
+  adjustForKeyboard?: boolean
   children: ReactNode
 }
 
@@ -55,6 +57,7 @@ export function RecordSheetShell({
   ctaDisabled = false,
   ctaLoading = false,
   onCtaPress,
+  adjustForKeyboard = false,
   children,
 }: RecordSheetShellProps) {
   const { t } = useTranslation("common")
@@ -89,6 +92,7 @@ export function RecordSheetShell({
       visible={visible}
       onClose={onClose}
       snapPoints={[snapPoint]}
+      adjustForKeyboard={adjustForKeyboard}
     >
       <View style={styles.body}>
         <View style={styles.head}>

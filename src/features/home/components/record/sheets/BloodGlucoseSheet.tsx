@@ -16,10 +16,13 @@ import {
   type GlucoseElapsed,
   type GlucoseTiming,
 } from "../../../data/bloodMetricsConstants"
+import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
 import type { DateAnalysisBloodGlucoseRecord } from "@/src/types"
 import { useTranslation } from "react-i18next"
 
 const STEP = 1
+/** ± 버튼이 쓰는 경계(1~999)와 같은 값. 두 입력 방식이 서로 다른 범위를 가지면 안 된다. */
+const GLUCOSE_INPUT: SheetNumberSpec = { min: 1, max: 999, decimals: 0 }
 
 interface BloodGlucoseSheetProps {
   visible: boolean
@@ -86,7 +89,8 @@ export function BloodGlucoseSheet({
       onClose={onClose}
       title={t("home.sheet.bloodGlucose.title")}
       subtitle={t("home.sheet.bloodGlucose.subtitle")}
-      snapPoint={82}
+      snapPoint={86}
+      adjustForKeyboard
       ctaLabel={
         value !== null
           ? t("home.sheet.recordValue", { value })
@@ -106,6 +110,14 @@ export function BloodGlucoseSheet({
       <SheetValueDisplay
         value={value === null ? null : String(value)}
         unit="mg/dL"
+        edit={{
+          spec: GLUCOSE_INPUT,
+          active: visible,
+          onCommit: setValue,
+          accessibilityLabel: t("home.sheet.bloodGlucose.typeValue"),
+          hint: t("home.sheet.typeHint"),
+          doneLabel: t("action.done"),
+        }}
       />
 
       <SheetStepper

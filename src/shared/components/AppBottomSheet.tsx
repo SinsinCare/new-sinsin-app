@@ -53,6 +53,15 @@ interface AppBottomSheetProps {
   contentBottomPadding?: boolean
   dragHandleOnly?: boolean
   disableDrag?: boolean
+  /**
+   * 키보드가 올라오면 시트를 그만큼 밀어 올린다. **입력이 있는 시트는 반드시 켠다.**
+   * 시트는 화면 바닥에 붙어 있어서, 끄면 키보드가 CTA 를 통째로 덮는다 — 값을 다 치고도
+   * 저장 버튼에 닿을 수 없는 상태가 되고, 그 사실이 화면에 드러나지도 않는다.
+   *
+   * 기본값이 false 인 이유: 입력이 없는 시트에서는 키보드가 뜰 일이 없는데도 Tamagui 가
+   * 키보드 리스너를 달고 위치를 다시 계산한다. 필요한 곳에서만 켠다.
+   */
+  adjustForKeyboard?: boolean
 }
 
 export function AppBottomSheet({
@@ -65,6 +74,7 @@ export function AppBottomSheet({
   contentBottomPadding = true,
   dragHandleOnly = false,
   disableDrag = false,
+  adjustForKeyboard = false,
 }: AppBottomSheetProps) {
   const insets = useSafeAreaInsets()
   const isDark = useAppColorScheme() === "dark"
@@ -129,6 +139,7 @@ export function AppBottomSheet({
       dismissOnSnapToBottom
       dismissOnOverlayPress
       disableDrag={disableDrag}
+      moveOnKeyboardChange={adjustForKeyboard}
     >
       <Sheet.Overlay
         style={{ backgroundColor: palette.overlay }}

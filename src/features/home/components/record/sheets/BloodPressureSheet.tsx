@@ -67,7 +67,12 @@ export function BloodPressureSheet({
     diastolicValue <= 200
 
   return (
-    <AppBottomSheet visible={visible} onClose={onClose} snapPoints={[80]}>
+    <AppBottomSheet
+      visible={visible}
+      onClose={onClose}
+      snapPoints={[80]}
+      adjustForKeyboard
+    >
       <View style={styles.body}>
         <View style={styles.head}>
           <View style={styles.headText}>

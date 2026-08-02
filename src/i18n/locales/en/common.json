@@ -17,7 +17,8 @@
     "close": "Close",
     "next": "Next",
     "back": "Back",
-    "retry": "Retry"
+    "retry": "Retry",
+    "done": "Done"
   },
   "accessibility": {
     "remove": "Remove",
@@ -1291,7 +1292,8 @@
           "30M": "30 min",
           "1H": "1 hr",
           "2H": "2 hr"
-        }
+        },
+        "typeValue": "Type blood glucose"
       },
       "weight": {
         "title": "Log weight",
@@ -1302,7 +1304,8 @@
         "step": "Adjust by 0.1 kg",
         "difference": "Change from yesterday",
         "noComparisonInfo": "For a useful comparison, try to check at a similar time and under similar conditions.",
-        "comparisonInfo": "This is the change from your previous entry. Time of day, clothing, meals, and fluids can affect the number."
+        "comparisonInfo": "This is the change from your previous entry. Time of day, clothing, meals, and fluids can affect the number.",
+        "typeValue": "Type weight"
       },
       "edema": {
         "title": "Log swelling",
@@ -1314,7 +1317,8 @@
           "SEVERE": "Shoes feel too tight"
         },
         "info": "Check around your eyes in the morning and your feet and ankles in the evening."
-      }
+      },
+      "typeHint": "Tap the number to type it"
     },
     "errors": {
       "analysisFailed": "We couldn’t analyze this meal.",

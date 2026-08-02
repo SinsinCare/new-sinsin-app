@@ -10,8 +10,12 @@ import {
   SheetValueDisplay,
 } from "./recordSheetControls"
 import { decreaseWeight, increaseWeight } from "../../../utils/adjustWeight"
+import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
 import type { DateAnalysisBodyRecord } from "@/src/types"
 import { useTranslation } from "react-i18next"
+
+/** CTA 의 유효 범위(0 초과 300 이하)와 같은 경계를 쓴다 — 칠 수 있는 값과 저장할 수 있는 값이 어긋나면 안 된다. */
+const WEIGHT_INPUT: SheetNumberSpec = { min: 0.1, max: 300, decimals: 1 }
 
 interface WeightSheetProps {
   visible: boolean
@@ -70,7 +74,9 @@ export function WeightSheet({
       onClose={onClose}
       title={t("home.sheet.weight.title")}
       subtitle={t("home.sheet.weight.subtitle")}
-      snapPoint={68}
+      // 밑줄 + "직접 입력" 안내 한 줄이 늘었다. 시트 본문은 스크롤되지 않으므로
+      // 높이가 모자라면 잘리는 쪽은 맨 아래 CTA 다.
+      snapPoint={72}
       ctaLabel={
         weight !== null
           ? t("home.sheet.recordValue", {
@@ -80,6 +86,7 @@ export function WeightSheet({
       }
       ctaDisabled={weight === null || weight <= 0 || weight > 300}
       ctaLoading={isSaving}
+      adjustForKeyboard
       onCtaPress={() => {
         if (weight !== null) onSubmit(weight)
       }}
@@ -87,6 +94,14 @@ export function WeightSheet({
       <SheetValueDisplay
         value={weight === null ? null : weight.toFixed(1)}
         unit="kg"
+        edit={{
+          spec: WEIGHT_INPUT,
+          active: visible,
+          onCommit: setWeight,
+          accessibilityLabel: t("home.sheet.weight.typeValue"),
+          hint: t("home.sheet.typeHint"),
+          doneLabel: t("action.done"),
+        }}
       />
 
       <SheetStepper

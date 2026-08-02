@@ -1,5 +1,13 @@
-import { useEffect, type ReactNode } from "react"
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import {
+  InputAccessoryView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native"
 import type { StyleProp, TextInputProps, ViewStyle } from "react-native"
 import Animated, {
   Easing,
@@ -14,6 +22,11 @@ import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useTranslation } from "react-i18next"
 import { MOTION, TYPE } from "@/src/theme/surface"
+import {
+  commitSheetNumber,
+  sanitizeSheetNumberText,
+  type SheetNumberSpec,
+} from "../../../utils/sheetNumberInput"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
 const SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
@@ -29,18 +42,39 @@ const TIMING = {
  * 같은 역할에는 같은 부품만 쓴다. 화면마다 새 입력 방식을 만들지 않는다.
  */
 
-/** 값 입력 시트의 주인공. 값이 없으면 회색 플레이스홀더로 자리만 잡는다. */
+/**
+ * 값 입력 시트의 주인공. 값이 없으면 회색 플레이스홀더로 자리만 잡는다.
+ *
+ * `edit` 를 넘기면 **이 숫자 자체가 입력창이 된다.** 큰 숫자 밑에 입력 필드를 따로
+ * 다는 대신 이렇게 한 이유: 같은 값을 두 군데 그리면 어느 쪽이 진짜인지 매 순간
+ * 확인해야 하고, 스테퍼로 바꾼 값과 타이핑한 값이 어긋나 보이는 순간이 반드시 생긴다.
+ * 주인공은 하나로 두고, 스테퍼는 그 하나를 미세 조정하는 도구로 남긴다.
+ */
 export function SheetValueDisplay({
   value,
   unit,
   caption,
+  edit,
 }: {
   value: string | null
   unit: string
   caption?: string
+  edit?: SheetValueEdit
 }) {
   const surface = useSurface()
   const filled = value !== null && value !== ""
+
+  if (edit) {
+    return (
+      <SheetEditableValue
+        value={value}
+        unit={unit}
+        caption={caption}
+        edit={edit}
+      />
+    )
+  }
+
   return (
     <View style={styles.displayBlock}>
       {/* 값이 없을 때는 baseline 대신 center 로 맞춘다 — 대시는 베이스라인
@@ -65,6 +99,171 @@ export function SheetValueDisplay({
         <Text style={[styles.displayCaption, { color: surface.textWeak }]}>
           {caption}
         </Text>
+      ) : null}
+    </View>
+  )
+}
+
+export interface SheetValueEdit {
+  spec: SheetNumberSpec
+  /**
+   * 시트가 열려 있는 동안만 true.
+   *
+   * Tamagui Sheet 는 `unmountChildrenWhenHidden` 기본값이 false 라 **닫혀도 자식이
+   * 살아 있다.** 이걸 안 넘기면 편집 중에 시트를 닫았을 때 draft 가 그대로 남아서,
+   * 다음에 열면 부모가 다시 채운 값 대신 지난번에 치다 만 문자열이 보인다.
+   * (시트들이 `visible` 마다 상태를 다시 채우는 것도 같은 이유다.)
+   */
+  active: boolean
+  /** 확정된 값. 지우고 나가면 null 이 온다(0 이 아니다). */
+  onCommit: (next: number | null) => void
+  /** 탭 영역의 접근성 라벨. "체중 직접 입력" 처럼 무엇을 입력하는지 말한다. */
+  accessibilityLabel: string
+  /** 평소에 보이는 안내 한 줄("눌러서 직접 입력"). */
+  hint: string
+  /** 숫자 키패드에는 완료 키가 없다. iOS 액세서리 바에 붙일 라벨. */
+  doneLabel: string
+}
+
+/**
+ * 탭하면 편집으로 바뀌는 큰 숫자.
+ *
+ * 편집 중에는 `draft`(문자열)가 유일한 진실이다. 부모의 숫자 값을 매 글자 되돌려
+ * 받으면 "72." 나 빈 문자열 같은 중간 상태가 살아남지 못한다 — 그 규칙은
+ * `sheetNumberInput` 에 적어 뒀다.
+ */
+function SheetEditableValue({
+  value,
+  unit,
+  caption,
+  edit,
+}: {
+  value: string | null
+  unit: string
+  caption?: string
+  edit: SheetValueEdit
+}) {
+  const surface = useSurface()
+  const inputRef = useRef<TextInput>(null)
+  const [draft, setDraft] = useState<string | null>(null)
+  const editing = draft !== null
+  const filled = value !== null && value !== ""
+  /*
+    액세서리 뷰 ID 는 인스턴스마다 달라야 한다. 한 화면에 시트가 둘 이상 마운트되어
+    있을 때(닫히는 중 + 열리는 중) 같은 ID 를 쓰면 완료 버튼이 엉뚱한 입력창에 붙는다.
+  */
+  const accessoryId = useId()
+
+  const commit = () => {
+    if (draft === null) return
+    edit.onCommit(commitSheetNumber(draft, edit.spec))
+    setDraft(null)
+  }
+
+  // 시트가 닫히면 치다 만 문자열을 버린다. 확정하지 않고 닫은 것이므로 저장도 하지 않는다.
+  const active = edit.active
+  useEffect(() => {
+    if (!active) setDraft(null)
+  }, [active])
+
+  return (
+    <View style={styles.displayBlock}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={edit.accessibilityLabel}
+        onPress={() => {
+          if (editing) return
+          hapticSelection()
+          // 기존 값을 지우고 다시 치는 흐름이 압도적으로 흔하다. 빈 칸에서 시작하면
+          // 두 번 치는 셈이 되고, 값을 남겨 두면 커서 위치를 매번 고쳐야 한다.
+          // 값을 넣되 전체 선택해 두면 이어 치기도 지우기도 한 번에 된다.
+          setDraft(filled ? (value as string) : "")
+          requestAnimationFrame(() => inputRef.current?.focus())
+        }}
+        hitSlop={8}
+      >
+        <View
+          style={[styles.displayRow, !filled && styles.displayRowPlaceholder]}
+        >
+          {editing ? (
+            <TextInput
+              ref={inputRef}
+              value={draft}
+              onChangeText={(text) =>
+                setDraft(sanitizeSheetNumberText(text, edit.spec))
+              }
+              onBlur={commit}
+              onSubmitEditing={commit}
+              selectTextOnFocus
+              keyboardType={
+                edit.spec.decimals > 0 ? "decimal-pad" : "number-pad"
+              }
+              inputAccessoryViewID={
+                Platform.OS === "ios" ? accessoryId : undefined
+              }
+              placeholder="0"
+              placeholderTextColor={surface.placeholder}
+              selectionColor={surface.brand}
+              style={[styles.displayValue, { color: surface.textStrong }]}
+            />
+          ) : (
+            <Text
+              style={[
+                styles.displayValue,
+                { color: filled ? surface.textStrong : surface.placeholder },
+              ]}
+              numberOfLines={1}
+            >
+              {filled ? value : "––"}
+            </Text>
+          )}
+          <Text style={[styles.displayUnit, { color: surface.textWeak }]}>
+            {unit}
+          </Text>
+        </View>
+        {/* 편집 가능하다는 사실을 말해 주는 유일한 단서. 숫자만 크게 그려 두면
+            누를 수 있다는 걸 아무도 모른다 — 그게 지금 들어온 요청의 원인이다. */}
+        <View
+          style={[
+            styles.editUnderline,
+            {
+              backgroundColor: editing ? surface.brand : surface.surfacePressed,
+            },
+          ]}
+        />
+      </Pressable>
+
+      {caption ? (
+        <Text style={[styles.displayCaption, { color: surface.textWeak }]}>
+          {caption}
+        </Text>
+      ) : null}
+      {!editing ? (
+        <Text style={[styles.editHint, { color: surface.textMuted }]}>
+          {edit.hint}
+        </Text>
+      ) : null}
+
+      {Platform.OS === "ios" ? (
+        <InputAccessoryView nativeID={accessoryId}>
+          <View
+            style={[styles.accessoryBar, { backgroundColor: surface.surface }]}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={edit.doneLabel}
+              // blur 만 시킨다. 여기서 commit() 을 먼저 부르면 입력창이 그 자리에서
+              // 언마운트되어 ref 가 비고, blur 가 불리지 않아 키보드가 남는다.
+              // 확정은 onBlur 가 한다 — 경로를 하나로 둔다.
+              onPress={() => inputRef.current?.blur()}
+              hitSlop={8}
+            >
+              <Text style={[styles.accessoryDone, { color: surface.brand }]}>
+                {edit.doneLabel}
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
       ) : null}
     </View>
   )
@@ -518,6 +717,25 @@ const styles = StyleSheet.create({
   },
   displayUnit: { fontSize: 15, lineHeight: 22, fontWeight: "500" },
   displayCaption: { ...TYPE.cardSub, textAlign: "center" },
+
+  // 편집 가능 표시. 밑줄 하나로만 말한다 — 큰 숫자 옆에 연필 아이콘을 붙이면
+  // 시선이 숫자에서 아이콘으로 갈라진다.
+  editUnderline: {
+    height: 2,
+    borderRadius: 1,
+    marginTop: 4,
+    alignSelf: "center",
+    width: 96,
+  },
+  editHint: { fontSize: 11.5, lineHeight: 16, textAlign: "center" },
+  // 숫자 키패드에는 완료 키가 없다. iOS 는 이 바가 유일한 탈출구다.
+  accessoryBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  accessoryDone: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
 
   // 판정 배지 h28 r9
   badge: {
