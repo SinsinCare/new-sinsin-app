@@ -17,7 +17,7 @@ import { StyleSheet, Text, TextInput, View, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import { LAYOUT, TYPE, singleLineInputText } from "@/src/theme/surface"
 import { RECIPE_WRITE_LIMITS } from "@/src/features/recipe/types/recipeWrite"
 import { amountHintFor } from "@/src/features/recipe/utils/recipeAmountText"
 import type { IngredientRow } from "./writeFormState"
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   nameCell: { flex: 1.6 },
   amountCell: { flex: 1 },
-  input: { ...TYPE.value, padding: 0 },
+  input: { ...singleLineInputText(TYPE.value), padding: 0 },
   removeButton: {
     width: 28,
     height: 28,

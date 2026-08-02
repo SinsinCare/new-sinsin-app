@@ -12,7 +12,7 @@
 import { StyleSheet, Text, TextInput, View } from "react-native"
 
 import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import { LAYOUT, TYPE, singleLineInputText } from "@/src/theme/surface"
 
 interface WriteTextFieldProps {
   label: string
@@ -81,6 +81,8 @@ export function WriteTextField({
             {
               color: s.textStrong,
               textAlignVertical: multiline ? "top" : "center",
+              // 여러 줄에서는 lineHeight 가 줄 간격이라는 제 역할을 한다.
+              ...(multiline ? { lineHeight: TYPE.value.lineHeight } : null),
             },
           ]}
         />
@@ -116,7 +118,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    ...TYPE.value,
+    // 기본은 한 줄 규격(lineHeight 없음). 여러 줄일 때만 아래에서 줄 간격을 되돌려 준다 —
+    // 한 줄 입력에 lineHeight 가 있으면 iOS 가 글자를 세로로 튕긴다.
+    ...singleLineInputText(TYPE.value),
     padding: 0,
   },
   suffix: { ...TYPE.value },

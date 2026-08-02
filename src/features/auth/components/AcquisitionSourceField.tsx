@@ -30,6 +30,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { hapticSelection } from "@/src/lib/haptics"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
+import { singleLineInputText } from "@/src/theme/surface"
 import {
   getAcquisitionSourceOptions,
   type AcquisitionSourceInput,
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   reasonText: {
-    ...AUTH_TYPE.field,
+    ...singleLineInputText(AUTH_TYPE.field),
     fontWeight: "600",
     padding: 0,
   },

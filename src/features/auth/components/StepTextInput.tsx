@@ -23,6 +23,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
+import { singleLineInputText } from "@/src/theme/surface"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
 const TIMING = {
@@ -184,7 +185,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    ...AUTH_TYPE.field,
+    // lineHeight 를 빼야 한다 — 넣으면 1997 → 1997.11 자동 서식 때 글자가 세로로 튄다.
+    // singleLineInputText 머리말 참고.
+    ...singleLineInputText(AUTH_TYPE.field),
     fontWeight: "400",
     padding: 0,
   },

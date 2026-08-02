@@ -129,6 +129,31 @@ export const TYPE = {
   unit: { fontSize: 14, lineHeight: 20, letterSpacing: -0.28 },
 } as const
 
+/**
+ * **단일행 `TextInput` 의 글자 스타일.** 위 `TYPE` 토큰을 그대로 쓰지 말고 이걸 통과시킨다.
+ *
+ * `TYPE` 은 전부 `lineHeight` 를 들고 있는데, 그건 `Text` 를 위한 값이다.
+ * 한 줄짜리 `TextInput` 에 `lineHeight` 가 들어가면 **iOS 가 글자를 세로 가운데가 아니라
+ * 문단 스타일(min/maxLineHeight) 기준으로 앉힌다.** 그래서 내용이 바뀔 때마다 —
+ * 생년월일이 `1997` 에서 `1997.11` 로 자동 서식되는 순간처럼 — 글자가 위아래로 튄다.
+ * 컨테이너는 `height: 56 + alignItems: center` 로 멀쩡한데 글자만 움직이므로
+ * 패딩 문제로 보이지만, 패딩에는 아무 문제가 없다.
+ *
+ * `includeFontPadding: false` 는 안드로이드 몫이다. 폰트 위아래에 붙는 여백을 떼지 않으면
+ * 같은 필드가 두 OS 에서 다른 높이에 그려진다.
+ *
+ * 설정 화면의 `SettingsTextField` 가 처음부터 이 규칙(lineHeight 없음 +
+ * includeFontPadding false)으로 되어 있었고 증상이 없었다 — 그쪽이 기준이다.
+ *
+ * **여러 줄 입력에는 쓰지 말 것.** 거기서는 `lineHeight` 가 줄 간격을 정하는 진짜 역할을 한다.
+ */
+export function singleLineInputText<T extends { lineHeight?: number }>(
+  token: T,
+): Omit<T, "lineHeight"> & { includeFontPadding: false } {
+  const { lineHeight: _lineHeightIsForText, ...rest } = token
+  return { ...rest, includeFontPadding: false }
+}
+
 /** 화면 좌우 여백. 이 파일 안에서 파생값(레일 인셋·본문 시작선)을 계산하려고 따로 뺐다. */
 const SCREEN_X = 20
 
