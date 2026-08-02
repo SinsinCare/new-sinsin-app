@@ -55,11 +55,9 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import type { SvgProps } from "react-native-svg"
 
 import AmericanIcon from "@/assets/images/american.svg"
-import ChineseIcon from "@/assets/images/chinese.svg"
+import { pngIcon } from "@/src/shared/components/pngIcon"
 import DessertIcon from "@/assets/images/dessert.svg"
 import DrinkIcon from "@/assets/images/drink.svg"
-import JapaneseIcon from "@/assets/images/japanese.svg"
-import KoreanIcon from "@/assets/images/korean.svg"
 import SaladIcon from "@/assets/images/salad.svg"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -69,6 +67,19 @@ import {
   resolveRecipeCategoryArtKey,
   type RecipeCategoryArtKey,
 } from "./recipeCategoryArtModel"
+
+const KoreanIcon = pngIcon(
+  require("@/assets/images/cuisine-korean.png"),
+  "cuisine-korean.png",
+)
+const ChineseIcon = pngIcon(
+  require("@/assets/images/cuisine-chinese.png"),
+  "cuisine-chinese.png",
+)
+const JapaneseIcon = pngIcon(
+  require("@/assets/images/cuisine-japanese.png"),
+  "cuisine-japanese.png",
+)
 
 export interface RecipeCategoryArtEntry {
   /**
@@ -97,7 +108,10 @@ const ICON_BY_KEY = {
   salad: SaladIcon,
   dessert: DessertIcon,
   beverage: DrinkIcon,
-} as const satisfies Record<RecipeCategoryArtKey, ComponentType<SvgProps>>
+} as const satisfies Record<
+  RecipeCategoryArtKey,
+  ComponentType<Pick<SvgProps, "width" | "height" | "opacity">>
+>
 
 /**
  * 표기 표(모델) ⨯ 그림 표(위)의 조인. 순서도 모델이 정한다 — 여기서 다시 적지 않는다.

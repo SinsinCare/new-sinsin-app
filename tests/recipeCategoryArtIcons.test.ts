@@ -20,6 +20,8 @@
  */
 /* eslint-disable import/first -- RN 의존을 모듈 로드 전에 막아야 한다. */
 jest.mock("react-native", () => ({ View: "View" }))
+// pngIcon 래퍼(입체 카테고리 아이콘)가 끌고 오는 expo-image 는 ESM 원본이라 같은 이유로 목이 필요하다.
+jest.mock("expo-image", () => ({ Image: "Image" }))
 jest.mock("@expo/vector-icons/Ionicons", () => "Ionicons")
 jest.mock("../src/hooks/useSurface", () => ({
   useSurface: () => ({ surface: "#F5F5F5", textWeak: "#999999" }),
@@ -36,6 +38,16 @@ import {
   RECIPE_CATEGORY_ART_KEYS,
   RECIPE_CATEGORY_MATCH,
 } from "../src/features/recipe/components/list/recipeCategoryArtModel"
+
+/** SVG 는 트랜스포머가 파일명 문자열로, PNG 는 pngIcon 이 assetFile 정적으로 — 둘을 한 이름으로 편다. */
+function assetFileOf(icon: unknown): string {
+  if (typeof icon === "string") return icon
+  const assetFile = (icon as { assetFile?: unknown }).assetFile
+  if (typeof assetFile === "string") return assetFile
+  throw new Error(
+    "아이콘에서 자산 파일명을 읽을 수 없다 — pngIcon 을 거치지 않은 래스터인가?",
+  )
+}
 
 describe("키 → 그림 표", () => {
   it("모든 카테고리 키에 그림이 있다 (빈칸이 되는 카테고리가 없다)", () => {
@@ -71,16 +83,17 @@ describe("키 → 그림 표", () => {
       `dessert` 에 `drink.svg` 를 붙이는 식의 실수는 타입이 못 잡는다(둘 다 같은 타입이다).
     */
     const expected: Record<string, string> = {
-      korean: "korean.svg",
-      chinese: "chinese.svg",
-      japanese: "japanese.svg",
+      // 한·중·일 3종은 디자인 전달 입체 PNG(2026-08-02) — pngIcon 래퍼가 파일명을 정적으로 새긴다.
+      korean: "cuisine-korean.png",
+      chinese: "cuisine-chinese.png",
+      japanese: "cuisine-japanese.png",
       western: "american.svg",
       salad: "salad.svg",
       dessert: "dessert.svg",
       beverage: "drink.svg",
     }
     for (const entry of RECIPE_CATEGORY_ART) {
-      expect(entry.Icon).toBe(expected[entry.key])
+      expect(assetFileOf(entry.Icon)).toBe(expected[entry.key])
     }
   })
 
@@ -91,7 +104,7 @@ describe("키 → 그림 표", () => {
         "..",
         "assets",
         "images",
-        entry.Icon as unknown as string,
+        assetFileOf(entry.Icon),
       )
       expect(fs.existsSync(file)).toBe(true)
     }

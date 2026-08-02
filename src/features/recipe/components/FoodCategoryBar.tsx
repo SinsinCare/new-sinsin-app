@@ -1,17 +1,28 @@
 import React from "react"
+import { pngIcon } from "@/src/shared/components/pngIcon"
 import { Pressable, ScrollView, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, Text } from "tamagui"
 
 import WindowIcon from "@/assets/images/window.svg"
-import KoreanIcon from "@/assets/images/korean.svg"
-import ChineseIcon from "@/assets/images/chinese.svg"
-import JapaneseIcon from "@/assets/images/japanese.svg"
 import AmericanIcon from "@/assets/images/american.svg"
 import SaladIcon from "@/assets/images/salad.svg"
 import DessertIcon from "@/assets/images/dessert.svg"
 import DrinkIcon from "@/assets/images/drink.svg"
 import { useTranslation } from "react-i18next"
+
+const KoreanIcon = pngIcon(
+  require("@/assets/images/cuisine-korean.png"),
+  "cuisine-korean.png",
+)
+const ChineseIcon = pngIcon(
+  require("@/assets/images/cuisine-chinese.png"),
+  "cuisine-chinese.png",
+)
+const JapaneseIcon = pngIcon(
+  require("@/assets/images/cuisine-japanese.png"),
+  "cuisine-japanese.png",
+)
 
 const CATEGORIES = [
   { key: "all", labelKey: "category.food.all", Icon: WindowIcon },

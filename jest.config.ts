@@ -21,6 +21,10 @@ const config: Config = {
     "^.+\\.svg$": "<rootDir>/tests/helpers/svgTransformer.js",
   },
   moduleNameMapper: {
+    // 래스터 자산(입체 카테고리 아이콘 등)은 로드만 되면 된다 — 숫자 스텁으로 치환.
+    // **`^@/` 별칭보다 먼저** 서야 한다. jest 는 첫 매칭 규칙만 적용하므로, 뒤에 두면
+    // `@/assets/....png` 가 별칭 규칙에 먼저 잡혀 실제 PNG 바이트를 파싱하다 죽는다.
+    "\\.(png|jpg|jpeg|gif|webp)$": "<rootDir>/tests/helpers/assetStub.js",
     "^@/(.*)$": "<rootDir>/$1",
   },
   setupFiles: ["<rootDir>/tests/setup.ts"],

@@ -12,15 +12,32 @@ import type { SvgProps } from "react-native-svg"
 import type React from "react"
 
 import AmericanArt from "@/assets/images/american.svg"
-import ChineseArt from "@/assets/images/chinese.svg"
+import { pngIcon } from "@/src/shared/components/pngIcon"
 import DessertArt from "@/assets/images/dessert.svg"
-import JapaneseArt from "@/assets/images/japanese.svg"
-import KoreanArt from "@/assets/images/korean.svg"
 import SaladArt from "@/assets/images/salad.svg"
 
 import type { CuisineType } from "../types"
 
-export const CUISINE_ART: Partial<Record<CuisineType, React.FC<SvgProps>>> = {
+const KoreanArt = pngIcon(
+  require("@/assets/images/cuisine-korean.png"),
+  "cuisine-korean.png",
+)
+const ChineseArt = pngIcon(
+  require("@/assets/images/cuisine-chinese.png"),
+  "cuisine-chinese.png",
+)
+const JapaneseArt = pngIcon(
+  require("@/assets/images/cuisine-japanese.png"),
+  "cuisine-japanese.png",
+)
+
+// PNG 래퍼(입체 아이콘)도 담을 수 있게 width/height 계약으로 완화 — 호출부는 그 두 개만 쓴다.
+export const CUISINE_ART: Partial<
+  Record<
+    CuisineType,
+    React.ComponentType<Pick<SvgProps, "width" | "height" | "opacity">>
+  >
+> = {
   KOREAN: KoreanArt,
   CHINESE: ChineseArt,
   JAPANESE: JapaneseArt,
