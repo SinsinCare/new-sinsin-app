@@ -55,7 +55,9 @@ export const ARCHIVE_QUERY_ROOT = ["recipes", "archive"] as const
  * 저장 상태를 바꾼 뒤 **반대쪽 목록**의 캐시를 무효화할 때 쓰는 접두어.
  * 키가 `[...ARCHIVE_QUERY_ROOT, source, …]` 라 출처까지만 주면 접두어로 잡힌다.
  */
-export function archiveSourceQueryKey(source: ArchiveSource): readonly unknown[] {
+export function archiveSourceQueryKey(
+  source: ArchiveSource,
+): readonly unknown[] {
   return [...ARCHIVE_QUERY_ROOT, source]
 }
 
@@ -227,7 +229,7 @@ export function useRecipeArchiveList({
        */
       void queryClient.invalidateQueries({
         queryKey: archiveSourceQueryKey(otherArchiveSource(source)),
-      });
+      })
     },
     onError: (_error, _variables, context) => {
       for (const [key, data] of context?.snapshot ?? []) {

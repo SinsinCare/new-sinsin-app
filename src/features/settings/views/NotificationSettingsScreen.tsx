@@ -10,7 +10,7 @@ import {
 } from "react-native"
 import { Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 
@@ -37,7 +37,7 @@ type PickerTarget =
 
 export function NotificationSettingsScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")
   const { isAuthenticated } = useAuth()

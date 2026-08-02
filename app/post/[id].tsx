@@ -16,7 +16,8 @@ import { useMemo, useRef, useState } from "react"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardStickyView } from "react-native-keyboard-controller"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useLocalSearchParams, useRouter, type Href } from "expo-router"
+import { useLocalSearchParams, type Href } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -47,7 +48,7 @@ import {
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { formatTimeAgo } from "@/src/features/recipe/utils/timeAgo"
 import { rankRelatedPosts } from "@/src/features/recipe/utils/postRanking"
-import { ErrorMessage, LoadingScreen } from "@/src/shared/components"
+import { ArticleSkeleton, ErrorMessage } from "@/src/shared/components"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import type { CommunityComment } from "@/src/features/recipe/types"
@@ -69,7 +70,7 @@ function isWithdrawnAuthor(author: {
 export default function PostDetailScreen() {
   const { t, i18n } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const router = useRouter()
+  const router = useAppRouter()
   const insets = useSafeAreaInsets()
   const surface = useSurface()
   const bottomInset =
@@ -88,6 +89,7 @@ export default function PostDetailScreen() {
     comments,
     isLoading,
     isCommentsLoading,
+    isCommentsError,
     isError,
     error,
     refetch,
@@ -658,7 +660,12 @@ export default function PostDetailScreen() {
   }
 
   if (isLoading) {
-    return <LoadingScreen message={t("community.postDetail.loading")} />
+    // 제목 · 글쓴이 · 본문 · 댓글 순서를 미리 세운다 — 도착해도 읽던 위치가 안 밀린다.
+    return (
+      <View style={{ flex: 1, backgroundColor: surface.canvas }}>
+        <ArticleSkeleton variant="post" />
+      </View>
+    )
   }
 
   if (!post) {
@@ -909,6 +916,24 @@ export default function PostDetailScreen() {
             >
               {t("community.postDetail.commentsLoading")}
             </Text>
+          ) : isCommentsError && comments.length === 0 ? (
+            <View style={styles.commentsEmpty}>
+              <Text
+                style={[
+                  styles.commentsEmptyTitle,
+                  { color: surface.textStrong },
+                ]}
+              >
+                {t("community.postDetail.commentsError")}
+              </Text>
+              <Pressable onPress={() => void refetch()} hitSlop={8}>
+                <Text
+                  style={[styles.commentsEmptyTitle, { color: surface.brand }]}
+                >
+                  {t("action.retry")}
+                </Text>
+              </Pressable>
+            </View>
           ) : comments.length === 0 ? (
             <View style={styles.commentsEmpty}>
               <Text

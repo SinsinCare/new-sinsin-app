@@ -1,15 +1,24 @@
 /**
  * 조리 순서 — NYT Cooking 의 "한 단계씩 몰입" 을 가져온다(계약 §6.2).
- * 그래서 단계 본문은 이 화면에서 가장 큰 글씨다(17/26). 재료가 밀도라면 순서는 몰입이다.
+ * 그래서 단계 본문은 이 화면에서 가장 큰 글씨다(`body.mediumWeak` 17/26).
+ * 재료가 밀도라면 순서는 몰입이다.
  *
- * 번호는 원(circle)에 넣지 않고 큰 회색 숫자로 둔다 — 원을 브랜드색으로 채우면 단계마다
- * 강조가 하나씩 생겨 화면 전체가 주황으로 얼룩진다(§6.4 "한 화면에 강조는 하나").
+ * 번호는 **회색 면**의 원에 넣는다. 원 자체는 위치를 잡아 주는 표시일 뿐이고, 색은
+ * 끝까지 회색이다 — 브랜드색으로 채우면 단계마다 강조가 하나씩 생겨 화면 전체가
+ * 주황으로 얼룩진다(계약 §6.4 "한 화면에 강조는 하나").
  */
+import { StyleSheet, Text, View } from "react-native"
 import { Image } from "expo-image"
-import { Text, View, XStack, YStack } from "tamagui"
 import { useTranslation } from "react-i18next"
-import { useSurface } from "@/src/hooks/useSurface"
-import { TYPE } from "@/src/theme/surface"
+import {
+  CARD_RADIUS,
+  GUTTER,
+  SECTION_TITLE_GAP,
+  radius,
+  spacing,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
 import type { RecipeStep } from "../../types/recipeV2"
 import { StepTimerButton } from "./StepTimerButton"
 
@@ -19,57 +28,45 @@ export interface StepSectionProps {
 
 export function StepSection({ steps }: StepSectionProps) {
   const { t } = useTranslation("recipe")
-  const surface = useSurface()
+  const { colors } = useV2Theme()
 
   return (
-    <YStack gap={14}>
-      <Text
-        {...TYPE.sectionTitle}
-        fontFamily="$body"
-        fontWeight="700"
-        color={surface.textStrong}
-      >
+    <View style={styles.root}>
+      <Text style={[styles.sectionTitle, { color: colors.label.normal }]}>
         {t("detail.steps.title")}
       </Text>
 
       {steps.length === 0 ? (
-        <Text {...TYPE.caption} fontFamily="$body" color={surface.textMuted}>
+        <Text style={[styles.empty, { color: colors.label.alternative }]}>
           {t("detail.steps.empty")}
         </Text>
       ) : (
-        <YStack gap={24}>
+        <View style={styles.list}>
           {steps.map((step) => (
-            <XStack key={step.ordinal} gap={14} alignItems="flex-start">
-              <Text
-                fontSize={17}
-                lineHeight={26}
-                fontFamily="$body"
-                fontWeight="700"
-                color={surface.textWeak}
-                minWidth={20}
+            <View key={step.ordinal} style={styles.step}>
+              <View
+                style={[styles.badge, { backgroundColor: colors.fill.normal }]}
               >
-                {step.ordinal}
-              </Text>
-              <YStack flex={1} gap={12}>
                 <Text
-                  fontSize={17}
-                  lineHeight={26}
-                  letterSpacing={-0.34}
-                  fontFamily="$body"
-                  color={surface.text}
+                  style={[styles.badgeText, { color: colors.label.neutral }]}
                 >
+                  {step.ordinal}
+                </Text>
+              </View>
+              <View style={styles.stepBody}>
+                <Text style={[styles.text, { color: colors.label.normal }]}>
                   {step.text}
                 </Text>
-                {step.imageUrl && (
+                {step.imageUrl != null && step.imageUrl.length > 0 && (
                   <View
-                    borderRadius={12}
-                    overflow="hidden"
-                    backgroundColor={surface.surface}
-                    style={{ width: "100%", aspectRatio: 4 / 3 }}
+                    style={[
+                      styles.photo,
+                      { backgroundColor: colors.fill.normal },
+                    ]}
                   >
                     <Image
                       source={{ uri: step.imageUrl }}
-                      style={{ width: "100%", height: "100%" }}
+                      style={styles.photoImage}
                       contentFit="cover"
                       cachePolicy="memory-disk"
                     />
@@ -78,11 +75,37 @@ export function StepSection({ steps }: StepSectionProps) {
                 {step.timerSeconds != null && step.timerSeconds > 0 && (
                   <StepTimerButton seconds={step.timerSeconds} />
                 )}
-              </YStack>
-            </XStack>
+              </View>
+            </View>
           ))}
-        </YStack>
+        </View>
       )}
-    </YStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  root: { paddingHorizontal: GUTTER, gap: SECTION_TITLE_GAP },
+  sectionTitle: { ...typography.title.xSmall },
+  empty: { ...typography.subtext.large },
+  list: { gap: spacing[24] },
+  step: { flexDirection: "row", gap: spacing[12], alignItems: "flex-start" },
+  badge: {
+    width: 26,
+    height: 26,
+    marginTop: spacing[2],
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: { ...typography.label.xSmall },
+  stepBody: { flex: 1, gap: spacing[12] },
+  text: { ...typography.body.mediumWeak },
+  photo: {
+    width: "100%",
+    aspectRatio: 4 / 3,
+    borderRadius: CARD_RADIUS,
+    overflow: "hidden",
+  },
+  photoImage: { width: "100%", height: "100%" },
+})

@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -22,7 +22,7 @@ import { getAppLanguage, setAppLanguage, type Language } from "@/src/i18n"
 export function SettingsScreen() {
   const { t } = useTranslation("common")
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { signOut, isAuthenticated } = useAuth()
   const c = useSettingsColors()
   const { settings, updateSettings, pushEnabled, setPushConsent } =

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useLocalSearchParams, useRouter, type Href } from "expo-router"
+import { useLocalSearchParams, type Href } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
@@ -25,7 +26,7 @@ const WRITE_BUTTON_BOTTOM =
 export default function CommunityScreen() {
   const { t } = useTranslation("common")
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const params = useLocalSearchParams<{ tag?: string }>()
   const surface = useSurface()
   const [tagFilter, setTagFilter] = useState<string | null>(

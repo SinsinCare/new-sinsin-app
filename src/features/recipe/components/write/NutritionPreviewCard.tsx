@@ -87,7 +87,8 @@ export function NutritionPreviewCard({
    * 경우에도 그렇게 말했다. 그러면 사용자는 무게를 다시 적으며 헛수고한다.
    */
   const groups = groupUnmatched(data?.perIngredient ?? [])
-  const unmatchedCount = groups.unknownAmount.length + groups.notInCatalog.length
+  const unmatchedCount =
+    groups.unknownAmount.length + groups.notInCatalog.length
 
   return (
     <View

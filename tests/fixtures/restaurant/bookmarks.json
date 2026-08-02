@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "restaurantId": 317,
+      "name": "맛짱김밥천국",
+      "lat": 37.501564024429,
+      "lng": 127.024848569699,
+      "cuisineType": "KOREAN",
+      "legacyNutritionTags": [],
+      "rating": 3,
+      "reviewCount": 15,
+      "distanceKm": null,
+      "shortAddress": "서울 서초구 서초대로77길",
+      "regionSigungu": "서초구",
+      "priceRange": null,
+      "imageUrls": [
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fa212ebbdace86655a540e17b07262b2b06120486%3Foriginal",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fda71d265a09f39b200783ee403ccea3c54f2a73e%3Foriginal"
+      ],
+      "bookmarked": true,
+      "bookmarkedAt": "2026-08-01T13:56:23.600000",
+      "businessStatus": "CLOSED",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "safetySummary": null
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false
+}

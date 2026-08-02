@@ -5,19 +5,19 @@ import {
   ScrollView,
   Pressable,
   Modal,
-  ActivityIndicator,
   Alert,
   Linking,
 } from "react-native"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import * as ImagePicker from "expo-image-picker"
 import * as DocumentPicker from "expo-document-picker"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
@@ -37,7 +37,7 @@ function deriveName(uri: string, fallback: string): string {
 
 export function HealthDataUploadScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
 
@@ -465,10 +465,10 @@ export function HealthDataUploadScreen() {
               { backgroundColor: healthColors.surface },
             ]}
           >
-            <ActivityIndicator
-              size="large"
+            <V2DotLoader
+              size="l"
               color={tokens.color.sub6.val}
-              style={{ marginBottom: 16 }}
+              style={styles.loadingDots}
             />
             <ThemedText
               style={[styles.loadingTitle, { color: healthColors.text }]}
@@ -680,6 +680,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 40,
   },
+  loadingDots: { marginBottom: 16 },
   loadingCard: {
     width: "100%",
     backgroundColor: "#FFFFFF",

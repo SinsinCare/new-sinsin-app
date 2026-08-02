@@ -1,4 +1,4 @@
-type OnboardingStepType = "multi" | "only" | "input"
+type OnboardingStepType = "multi" | "only" | "input" | "date"
 
 export interface OnboardingValueOption {
   key: string
@@ -6,6 +6,8 @@ export interface OnboardingValueOption {
   type?: "text" | "number"
   unit?: string
   label?: string
+  /** input 필드 전용. 기본은 필수 — 명시적으로 false 인 필드만 비워 둔 채 넘어갈 수 있다. */
+  required?: boolean
 }
 
 export interface OnboardingStep {

@@ -1,0 +1,692 @@
+{
+  "sidos": [
+    {
+      "key": "seoul",
+      "labelKey": "restaurant.filter.regions.seoul",
+      "allKey": "seoul-all",
+      "allLabelKey": "restaurant.region.groups.seoul-all",
+      "count": 376,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "seoul-gangnam",
+          "labelKey": "restaurant.region.groups.seoul-gangnam",
+          "count": 258
+        },
+        {
+          "key": "seoul-seocho",
+          "labelKey": "restaurant.region.groups.seoul-seocho",
+          "count": 118
+        },
+        {
+          "key": "seoul-jamsil",
+          "labelKey": "restaurant.region.groups.seoul-jamsil",
+          "count": 0
+        },
+        {
+          "key": "seoul-yeongdeungpo",
+          "labelKey": "restaurant.region.groups.seoul-yeongdeungpo",
+          "count": 0
+        },
+        {
+          "key": "seoul-kondae",
+          "labelKey": "restaurant.region.groups.seoul-kondae",
+          "count": 0
+        },
+        {
+          "key": "seoul-jongno",
+          "labelKey": "restaurant.region.groups.seoul-jongno",
+          "count": 0
+        },
+        {
+          "key": "seoul-hongdae",
+          "labelKey": "restaurant.region.groups.seoul-hongdae",
+          "count": 0
+        },
+        {
+          "key": "seoul-yongsan",
+          "labelKey": "restaurant.region.groups.seoul-yongsan",
+          "count": 0
+        },
+        {
+          "key": "seoul-seongbuk",
+          "labelKey": "restaurant.region.groups.seoul-seongbuk",
+          "count": 0
+        },
+        {
+          "key": "seoul-guro",
+          "labelKey": "restaurant.region.groups.seoul-guro",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "gyeonggi",
+      "labelKey": "restaurant.filter.regions.gyeonggi",
+      "allKey": "gyeonggi-all",
+      "allLabelKey": "restaurant.region.groups.gyeonggi-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "gyeonggi-bundang",
+          "labelKey": "restaurant.region.groups.gyeonggi-bundang",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-suwon",
+          "labelKey": "restaurant.region.groups.gyeonggi-suwon",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-yongin",
+          "labelKey": "restaurant.region.groups.gyeonggi-yongin",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-anyang",
+          "labelKey": "restaurant.region.groups.gyeonggi-anyang",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-gapyeong",
+          "labelKey": "restaurant.region.groups.gyeonggi-gapyeong",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-gunpo",
+          "labelKey": "restaurant.region.groups.gyeonggi-gunpo",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-bucheon",
+          "labelKey": "restaurant.region.groups.gyeonggi-bucheon",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-pyeongtaek",
+          "labelKey": "restaurant.region.groups.gyeonggi-pyeongtaek",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-goyang",
+          "labelKey": "restaurant.region.groups.gyeonggi-goyang",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-gimpo",
+          "labelKey": "restaurant.region.groups.gyeonggi-gimpo",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-namyangju",
+          "labelKey": "restaurant.region.groups.gyeonggi-namyangju",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-hanam",
+          "labelKey": "restaurant.region.groups.gyeonggi-hanam",
+          "count": 0
+        },
+        {
+          "key": "gyeonggi-pocheon",
+          "labelKey": "restaurant.region.groups.gyeonggi-pocheon",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "incheon",
+      "labelKey": "restaurant.filter.regions.incheon",
+      "allKey": "incheon-all",
+      "allLabelKey": "restaurant.region.groups.incheon-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "incheon-guwol",
+          "labelKey": "restaurant.region.groups.incheon-guwol",
+          "count": 0
+        },
+        {
+          "key": "incheon-songdo",
+          "labelKey": "restaurant.region.groups.incheon-songdo",
+          "count": 0
+        },
+        {
+          "key": "incheon-bupyeong",
+          "labelKey": "restaurant.region.groups.incheon-bupyeong",
+          "count": 0
+        },
+        {
+          "key": "incheon-juan",
+          "labelKey": "restaurant.region.groups.incheon-juan",
+          "count": 0
+        },
+        {
+          "key": "incheon-cheongna",
+          "labelKey": "restaurant.region.groups.incheon-cheongna",
+          "count": 0
+        },
+        {
+          "key": "incheon-ganghwa",
+          "labelKey": "restaurant.region.groups.incheon-ganghwa",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "busan",
+      "labelKey": "restaurant.filter.regions.busan",
+      "allKey": "busan-all",
+      "allLabelKey": "restaurant.region.groups.busan-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "busan-haeundae",
+          "labelKey": "restaurant.region.groups.busan-haeundae",
+          "count": 0
+        },
+        {
+          "key": "busan-seomyeon",
+          "labelKey": "restaurant.region.groups.busan-seomyeon",
+          "count": 0
+        },
+        {
+          "key": "busan-nampo",
+          "labelKey": "restaurant.region.groups.busan-nampo",
+          "count": 0
+        },
+        {
+          "key": "busan-gwangalli",
+          "labelKey": "restaurant.region.groups.busan-gwangalli",
+          "count": 0
+        },
+        {
+          "key": "busan-dongnae",
+          "labelKey": "restaurant.region.groups.busan-dongnae",
+          "count": 0
+        },
+        {
+          "key": "busan-sasang",
+          "labelKey": "restaurant.region.groups.busan-sasang",
+          "count": 0
+        },
+        {
+          "key": "busan-gijang",
+          "labelKey": "restaurant.region.groups.busan-gijang",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "ulsan",
+      "labelKey": "restaurant.filter.regions.ulsan",
+      "allKey": "ulsan-all",
+      "allLabelKey": "restaurant.region.groups.ulsan-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "ulsan-samsan",
+          "labelKey": "restaurant.region.groups.ulsan-samsan",
+          "count": 0
+        },
+        {
+          "key": "ulsan-seongnam",
+          "labelKey": "restaurant.region.groups.ulsan-seongnam",
+          "count": 0
+        },
+        {
+          "key": "ulsan-ilsan",
+          "labelKey": "restaurant.region.groups.ulsan-ilsan",
+          "count": 0
+        },
+        {
+          "key": "ulsan-mugeo",
+          "labelKey": "restaurant.region.groups.ulsan-mugeo",
+          "count": 0
+        },
+        {
+          "key": "ulsan-hogye",
+          "labelKey": "restaurant.region.groups.ulsan-hogye",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "jeju",
+      "labelKey": "restaurant.filter.regions.jeju",
+      "allKey": "jeju-all",
+      "allLabelKey": "restaurant.region.groups.jeju-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "jeju-jejusi",
+          "labelKey": "restaurant.region.groups.jeju-jejusi",
+          "count": 0
+        },
+        {
+          "key": "jeju-seogwipo",
+          "labelKey": "restaurant.region.groups.jeju-seogwipo",
+          "count": 0
+        },
+        {
+          "key": "jeju-aewol",
+          "labelKey": "restaurant.region.groups.jeju-aewol",
+          "count": 0
+        },
+        {
+          "key": "jeju-seongsan",
+          "labelKey": "restaurant.region.groups.jeju-seongsan",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "gyeongnam",
+      "labelKey": "restaurant.filter.regions.gyeongnam",
+      "allKey": "gyeongnam-all",
+      "allLabelKey": "restaurant.region.groups.gyeongnam-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "gyeongnam-changwon",
+          "labelKey": "restaurant.region.groups.gyeongnam-changwon",
+          "count": 0
+        },
+        {
+          "key": "gyeongnam-jinju",
+          "labelKey": "restaurant.region.groups.gyeongnam-jinju",
+          "count": 0
+        },
+        {
+          "key": "gyeongnam-gimhae",
+          "labelKey": "restaurant.region.groups.gyeongnam-gimhae",
+          "count": 0
+        },
+        {
+          "key": "gyeongnam-tongyeong",
+          "labelKey": "restaurant.region.groups.gyeongnam-tongyeong",
+          "count": 0
+        },
+        {
+          "key": "gyeongnam-miryang",
+          "labelKey": "restaurant.region.groups.gyeongnam-miryang",
+          "count": 0
+        },
+        {
+          "key": "gyeongnam-geochang",
+          "labelKey": "restaurant.region.groups.gyeongnam-geochang",
+          "count": 0
+        },
+        {
+          "key": "gyeongnam-namhae",
+          "labelKey": "restaurant.region.groups.gyeongnam-namhae",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "daegu",
+      "labelKey": "restaurant.filter.regions.daegu",
+      "allKey": "daegu-all",
+      "allLabelKey": "restaurant.region.groups.daegu-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "daegu-dongseongno",
+          "labelKey": "restaurant.region.groups.daegu-dongseongno",
+          "count": 0
+        },
+        {
+          "key": "daegu-dongdaegu",
+          "labelKey": "restaurant.region.groups.daegu-dongdaegu",
+          "count": 0
+        },
+        {
+          "key": "daegu-dalseo",
+          "labelKey": "restaurant.region.groups.daegu-dalseo",
+          "count": 0
+        },
+        {
+          "key": "daegu-chilgok",
+          "labelKey": "restaurant.region.groups.daegu-chilgok",
+          "count": 0
+        },
+        {
+          "key": "daegu-dalseong",
+          "labelKey": "restaurant.region.groups.daegu-dalseong",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "sejong",
+      "labelKey": "restaurant.filter.regions.sejong",
+      "allKey": "sejong-all",
+      "allLabelKey": "restaurant.region.groups.sejong-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": []
+    },
+    {
+      "key": "gyeongbuk",
+      "labelKey": "restaurant.filter.regions.gyeongbuk",
+      "allKey": "gyeongbuk-all",
+      "allLabelKey": "restaurant.region.groups.gyeongbuk-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "gyeongbuk-pohang",
+          "labelKey": "restaurant.region.groups.gyeongbuk-pohang",
+          "count": 0
+        },
+        {
+          "key": "gyeongbuk-gumi",
+          "labelKey": "restaurant.region.groups.gyeongbuk-gumi",
+          "count": 0
+        },
+        {
+          "key": "gyeongbuk-andong",
+          "labelKey": "restaurant.region.groups.gyeongbuk-andong",
+          "count": 0
+        },
+        {
+          "key": "gyeongbuk-gyeongsan",
+          "labelKey": "restaurant.region.groups.gyeongbuk-gyeongsan",
+          "count": 0
+        },
+        {
+          "key": "gyeongbuk-sangju",
+          "labelKey": "restaurant.region.groups.gyeongbuk-sangju",
+          "count": 0
+        },
+        {
+          "key": "gyeongbuk-uljin",
+          "labelKey": "restaurant.region.groups.gyeongbuk-uljin",
+          "count": 0
+        },
+        {
+          "key": "gyeongbuk-goryeong",
+          "labelKey": "restaurant.region.groups.gyeongbuk-goryeong",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "gangwon",
+      "labelKey": "restaurant.filter.regions.gangwon",
+      "allKey": "gangwon-all",
+      "allLabelKey": "restaurant.region.groups.gangwon-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "gangwon-chuncheon",
+          "labelKey": "restaurant.region.groups.gangwon-chuncheon",
+          "count": 0
+        },
+        {
+          "key": "gangwon-wonju",
+          "labelKey": "restaurant.region.groups.gangwon-wonju",
+          "count": 0
+        },
+        {
+          "key": "gangwon-gangneung",
+          "labelKey": "restaurant.region.groups.gangwon-gangneung",
+          "count": 0
+        },
+        {
+          "key": "gangwon-sokcho",
+          "labelKey": "restaurant.region.groups.gangwon-sokcho",
+          "count": 0
+        },
+        {
+          "key": "gangwon-pyeongchang",
+          "labelKey": "restaurant.region.groups.gangwon-pyeongchang",
+          "count": 0
+        },
+        {
+          "key": "gangwon-cheorwon",
+          "labelKey": "restaurant.region.groups.gangwon-cheorwon",
+          "count": 0
+        },
+        {
+          "key": "gangwon-taebaek",
+          "labelKey": "restaurant.region.groups.gangwon-taebaek",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "chungnam",
+      "labelKey": "restaurant.filter.regions.chungnam",
+      "allKey": "chungnam-all",
+      "allLabelKey": "restaurant.region.groups.chungnam-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "chungnam-cheonan",
+          "labelKey": "restaurant.region.groups.chungnam-cheonan",
+          "count": 0
+        },
+        {
+          "key": "chungnam-dangjin",
+          "labelKey": "restaurant.region.groups.chungnam-dangjin",
+          "count": 0
+        },
+        {
+          "key": "chungnam-gongju",
+          "labelKey": "restaurant.region.groups.chungnam-gongju",
+          "count": 0
+        },
+        {
+          "key": "chungnam-boryeong",
+          "labelKey": "restaurant.region.groups.chungnam-boryeong",
+          "count": 0
+        },
+        {
+          "key": "chungnam-buyeo",
+          "labelKey": "restaurant.region.groups.chungnam-buyeo",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "daejeon",
+      "labelKey": "restaurant.filter.regions.daejeon",
+      "allKey": "daejeon-all",
+      "allLabelKey": "restaurant.region.groups.daejeon-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "daejeon-dunsan",
+          "labelKey": "restaurant.region.groups.daejeon-dunsan",
+          "count": 0
+        },
+        {
+          "key": "daejeon-eunhaengdong",
+          "labelKey": "restaurant.region.groups.daejeon-eunhaengdong",
+          "count": 0
+        },
+        {
+          "key": "daejeon-yuseong",
+          "labelKey": "restaurant.region.groups.daejeon-yuseong",
+          "count": 0
+        },
+        {
+          "key": "daejeon-daedong",
+          "labelKey": "restaurant.region.groups.daejeon-daedong",
+          "count": 0
+        },
+        {
+          "key": "daejeon-songgang",
+          "labelKey": "restaurant.region.groups.daejeon-songgang",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "chungbuk",
+      "labelKey": "restaurant.filter.regions.chungbuk",
+      "allKey": "chungbuk-all",
+      "allLabelKey": "restaurant.region.groups.chungbuk-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "chungbuk-cheongju",
+          "labelKey": "restaurant.region.groups.chungbuk-cheongju",
+          "count": 0
+        },
+        {
+          "key": "chungbuk-chungju",
+          "labelKey": "restaurant.region.groups.chungbuk-chungju",
+          "count": 0
+        },
+        {
+          "key": "chungbuk-eumseong",
+          "labelKey": "restaurant.region.groups.chungbuk-eumseong",
+          "count": 0
+        },
+        {
+          "key": "chungbuk-okcheon",
+          "labelKey": "restaurant.region.groups.chungbuk-okcheon",
+          "count": 0
+        },
+        {
+          "key": "chungbuk-danyang",
+          "labelKey": "restaurant.region.groups.chungbuk-danyang",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "jeonnam",
+      "labelKey": "restaurant.filter.regions.jeonnam",
+      "allKey": "jeonnam-all",
+      "allLabelKey": "restaurant.region.groups.jeonnam-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "jeonnam-yeosu",
+          "labelKey": "restaurant.region.groups.jeonnam-yeosu",
+          "count": 0
+        },
+        {
+          "key": "jeonnam-suncheon",
+          "labelKey": "restaurant.region.groups.jeonnam-suncheon",
+          "count": 0
+        },
+        {
+          "key": "jeonnam-mokpo",
+          "labelKey": "restaurant.region.groups.jeonnam-mokpo",
+          "count": 0
+        },
+        {
+          "key": "jeonnam-naju",
+          "labelKey": "restaurant.region.groups.jeonnam-naju",
+          "count": 0
+        },
+        {
+          "key": "jeonnam-haenam",
+          "labelKey": "restaurant.region.groups.jeonnam-haenam",
+          "count": 0
+        },
+        {
+          "key": "jeonnam-boseong",
+          "labelKey": "restaurant.region.groups.jeonnam-boseong",
+          "count": 0
+        },
+        {
+          "key": "jeonnam-yeonggwang",
+          "labelKey": "restaurant.region.groups.jeonnam-yeonggwang",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "gwangju",
+      "labelKey": "restaurant.filter.regions.gwangju",
+      "allKey": "gwangju-all",
+      "allLabelKey": "restaurant.region.groups.gwangju-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "gwangju-sangmu",
+          "labelKey": "restaurant.region.groups.gwangju-sangmu",
+          "count": 0
+        },
+        {
+          "key": "gwangju-chungjangno",
+          "labelKey": "restaurant.region.groups.gwangju-chungjangno",
+          "count": 0
+        },
+        {
+          "key": "gwangju-cheomdan",
+          "labelKey": "restaurant.region.groups.gwangju-cheomdan",
+          "count": 0
+        },
+        {
+          "key": "gwangju-suwan",
+          "labelKey": "restaurant.region.groups.gwangju-suwan",
+          "count": 0
+        },
+        {
+          "key": "gwangju-jinwol",
+          "labelKey": "restaurant.region.groups.gwangju-jinwol",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "key": "jeonbuk",
+      "labelKey": "restaurant.filter.regions.jeonbuk",
+      "allKey": "jeonbuk-all",
+      "allLabelKey": "restaurant.region.groups.jeonbuk-all",
+      "count": 0,
+      "ungroupedCount": 0,
+      "groups": [
+        {
+          "key": "jeonbuk-jeonju",
+          "labelKey": "restaurant.region.groups.jeonbuk-jeonju",
+          "count": 0
+        },
+        {
+          "key": "jeonbuk-gunsan",
+          "labelKey": "restaurant.region.groups.jeonbuk-gunsan",
+          "count": 0
+        },
+        {
+          "key": "jeonbuk-jeongeup",
+          "labelKey": "restaurant.region.groups.jeonbuk-jeongeup",
+          "count": 0
+        },
+        {
+          "key": "jeonbuk-namwon",
+          "labelKey": "restaurant.region.groups.jeonbuk-namwon",
+          "count": 0
+        },
+        {
+          "key": "jeonbuk-muju",
+          "labelKey": "restaurant.region.groups.jeonbuk-muju",
+          "count": 0
+        }
+      ]
+    }
+  ],
+  "unresolvedCount": 0,
+  "unknownSidos": [],
+  "unknownGroups": [],
+  "total": 376
+}

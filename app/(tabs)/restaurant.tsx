@@ -1,281 +1,69 @@
-import { useState, useMemo, useEffect, useCallback } from "react"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, View, Text, Spinner } from "tamagui"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useTranslation } from "react-i18next"
-import type { TFunction } from "i18next"
-import { RestaurantTabHeader } from "@/src/features/restaurant/components/RestaurantTabHeader"
-import { RestaurantSearchInput } from "@/src/features/restaurant/components/RestaurantSearchInput"
-import { KakaoMapWebView } from "@/src/features/restaurant/components/KakaoMapWebView"
-import { CurationTab } from "@/src/features/restaurant/components/CurationTab"
-import { PlaceSheet } from "@/src/features/restaurant/components/PlaceSheet"
-import { RestaurantReportForm } from "@/src/features/restaurant/components/RestaurantReportForm"
-import { MAP_CENTER } from "@/src/features/restaurant/data/curationData"
-import { DEFAULT_FILTER_STATE } from "@/src/features/restaurant/data/filterData"
+/**
+ * `식당` 탭.
+ *
+ * ## 이 파일이 281줄에서 이만큼 줄어든 이유
+ *
+ * 이전 버전은 좌표 표 두 개(광역 17개 + 서울 세부 10개), 열거형 매핑 세 개, fetch 오케스트레이션,
+ * DTO 매핑, 클라이언트 필터링을 route 파일 안에 들고 있었다. `docs/mobile-frontend-architecture.md`
+ * 는 route 파일에서 API 호출·상태 조율·큰 렌더 트리를 금지하고 "100줄을 넘으면 feature 화면으로
+ * 빼라" 고 못 박는데, 그 파일이 정확히 반례였다(INTEGRATION_BRIEF §C.1 이 이 점을 지적한다).
+ * 좌표는 `data/regionCatalog.ts`, 필터·정렬은 `hooks/useRestaurantFilters`, 질의는
+ * `hooks/useMapSearch`/`useRestaurantList` 가 갖고 있다.
+ *
+ * ## 플래그가 꺼졌을 때 제보 폼을 띄우지 않는다 (§F.1 / D11)
+ *
+ * 이전에는 `!restaurantTabEnabled` 일 때 `RestaurantReportForm` 을 탭 본체로 렌더했다.
+ * 그 자리가 제보 폼의 **유일한 진입점**이었기 때문에 플래그를 켜는 순간 기능 하나가
+ * 조용히 사라지는 구조였다. 이제 제보는 `app/restaurant/report.tsx` 라는 자기 route 를
+ * 갖고, 플래그가 꺼진 자리에는 `준비 중` 안내 + 그 route 로 가는 CTA 가 선다.
+ *
+ * 플래그는 여전히 존중한다 — `mobile_app_policy` 4행 전부 `feature_flags = NULL` 이라
+ * 서버에서 켜 주지 않으면 지도는 보이지 않는다. 그 사실을 코드에서 우회하지 않는다.
+ */
+
+import { useCallback, useMemo } from "react"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
+
 import {
-  restaurantService,
-  type NearbyRestaurantItem,
-} from "@/src/services/data/restaurantService"
-import type {
-  FilterState,
-  PlaceRestaurant,
-} from "@/src/features/restaurant/types"
+  RestaurantComingSoon,
+  RestaurantMapScreen,
+} from "@/src/features/restaurant"
 import { useMobilePolicy } from "@/src/features/mobilePolicy"
 import { isRestaurantTabEnabled } from "@/src/features/mobilePolicy/services/mobilePolicyService"
 
-const FOOD_TYPE_TO_API: Record<string, string> = {
-  korean: "KOREAN",
-  chinese: "CHINESE",
-  japanese: "JAPANESE",
-  american: "WESTERN",
-  world: "ETC",
-}
-
-const NUTRIENT_TO_API: Record<string, string> = {
-  "low-sugar": "LOW_SUGAR",
-  "low-salt": "LOW_SODIUM",
-  "low-potassium": "LOW_POTASSIUM",
-  "low-phosphorus": "LOW_PHOSPHORUS",
-}
-
-const CUISINE_I18N_KEY = {
-  KOREAN: "restaurant.cuisine.KOREAN",
-  JAPANESE: "restaurant.cuisine.JAPANESE",
-  CHINESE: "restaurant.cuisine.CHINESE",
-  WESTERN: "restaurant.cuisine.WESTERN",
-  ETC: "restaurant.cuisine.ETC",
-} as const
-
-const REGION_COORDS: Record<
-  string,
-  { latitude: number; longitude: number; zoomLevel: number }
-> = {
-  seoul: { latitude: 37.5665, longitude: 126.978, zoomLevel: 6 },
-  gyeonggi: { latitude: 37.4138, longitude: 127.5183, zoomLevel: 7 },
-  incheon: { latitude: 37.4563, longitude: 126.7052, zoomLevel: 6 },
-  busan: { latitude: 35.1796, longitude: 129.0756, zoomLevel: 6 },
-  jeju: { latitude: 33.4996, longitude: 126.5312, zoomLevel: 6 },
-  ulsan: { latitude: 35.5384, longitude: 129.3114, zoomLevel: 6 },
-  gyeongnam: { latitude: 35.4606, longitude: 128.2132, zoomLevel: 7 },
-  daegu: { latitude: 35.8714, longitude: 128.6014, zoomLevel: 6 },
-  gyeongbuk: { latitude: 36.4919, longitude: 128.8889, zoomLevel: 7 },
-  gangwon: { latitude: 37.8228, longitude: 128.1555, zoomLevel: 7 },
-  daejeon: { latitude: 36.3504, longitude: 127.3845, zoomLevel: 6 },
-  chungnam: { latitude: 36.5184, longitude: 126.8, zoomLevel: 7 },
-  chungbuk: { latitude: 36.6357, longitude: 127.4914, zoomLevel: 7 },
-  sejong: { latitude: 36.48, longitude: 127.289, zoomLevel: 6 },
-  jeonnam: { latitude: 34.8679, longitude: 126.991, zoomLevel: 7 },
-  gwangju: { latitude: 35.1595, longitude: 126.8526, zoomLevel: 6 },
-  jeonbuk: { latitude: 35.7175, longitude: 127.153, zoomLevel: 7 },
-}
-
-const SEOUL_SUBREGION_COORDS: Record<
-  string,
-  { latitude: number; longitude: number }
-> = {
-  gangnam: { latitude: 37.5172, longitude: 127.0473 },
-  seocho: { latitude: 37.4837, longitude: 127.0324 },
-  jamsil: { latitude: 37.5139, longitude: 127.1069 },
-  yeongdeungpo: { latitude: 37.5283, longitude: 126.8993 },
-  kondae: { latitude: 37.5408, longitude: 127.069 },
-  jongno: { latitude: 37.573, longitude: 126.9797 },
-  hongdae: { latitude: 37.5563, longitude: 126.9236 },
-  yongsan: { latitude: 37.5326, longitude: 126.9958 },
-  seongbuk: { latitude: 37.6099, longitude: 127.0539 },
-  guro: { latitude: 37.4955, longitude: 126.9268 },
-}
-
-function toPlaceRestaurant(
-  item: NearbyRestaurantItem,
-  translate: TFunction<"common">,
-): PlaceRestaurant {
-  const cuisineKey =
-    CUISINE_I18N_KEY[item.cuisineType as keyof typeof CUISINE_I18N_KEY] ??
-    "restaurant.cuisine.OTHER"
-  const cuisineTag = translate(cuisineKey)
-  const tags = [cuisineTag]
-
-  const distStr =
-    item.distanceKm < 1
-      ? `${Math.round(item.distanceKm * 1000)}m`
-      : `${item.distanceKm}km`
-
-  const parts: string[] = []
-  if (item.menuCount > 0) {
-    parts.push(translate("restaurant.menuCount", { count: item.menuCount }))
-  }
-  const description = parts.length > 0 ? parts.join(" · ") : cuisineTag
-
-  return {
-    id: String(item.restaurantId),
-    name: item.name,
-    tags,
-    description,
-    distance: distStr,
-    address: item.shortAddress ?? item.address ?? "",
-    latitude: item.lat,
-    longitude: item.lng,
-    images: [],
-    cuisineType: item.cuisineType,
-    menuCount: item.menuCount,
-    safeMenuCount: item.safeMenuCount,
-    cautionMenuCount: item.cautionMenuCount,
-    highRiskMenuCount: item.highRiskMenuCount,
-  }
-}
-
-export default function RestaurantScreen() {
-  const { t } = useTranslation("common")
-  const insets = useSafeAreaInsets()
-  const isDarkMode = useAppColorScheme() === "dark"
+export default function RestaurantTabRoute() {
+  const router = useAppRouter()
   const { policy } = useMobilePolicy()
   const restaurantTabEnabled = isRestaurantTabEnabled(policy)
-  const [activeTab, setActiveTab] = useState("place")
-  const [search, setSearch] = useState("")
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE)
-  const [restaurants, setRestaurants] = useState<PlaceRestaurant[]>([])
-  const [loading, setLoading] = useState(false)
-  const [loadError, setLoadError] = useState(false)
-  const tabs = useMemo(
-    () => [
-      { key: "place", label: t("restaurant.nearby") },
-      { key: "curation", label: t("restaurant.menuInfo") },
-    ],
-    [t],
-  )
+  // 검색 화면이 지역을 고르고 돌아올 때 좌표를 여기로 넘긴다(`app/restaurant/search.tsx`).
+  // `ts` 는 값으로 쓰지 않는다 — **같은 지역을 다시 고를 때** 파라미터가 달라지게 하는
+  // 용도다(탭은 언마운트되지 않아서 같은 좌표면 아래 useMemo 가 돌지 않는다).
+  const { lat, lng, ts } = useLocalSearchParams<{
+    lat?: string
+    lng?: string
+    ts?: string
+  }>()
 
-  const mapCenter = useMemo(() => {
-    if (filters.subRegions.length > 0) {
-      const specific = filters.subRegions.find((r) => r !== "seoul-all")
-      if (specific) {
-        const coords = SEOUL_SUBREGION_COORDS[specific]
-        if (coords) return { ...coords, zoomLevel: 5 }
-      }
-      return { latitude: 37.5665, longitude: 126.978, zoomLevel: 6 }
+  const focus = useMemo(() => {
+    const parsedLat = Number(lat)
+    const parsedLng = Number(lng)
+    // `Number(undefined)` 는 NaN, `Number("")` 는 0 이다. 0,0 은 기니만 바다 위이므로
+    // 빈 문자열이 "좌표가 있다" 로 새어 들어가지 않게 빈 값도 함께 막는다.
+    if (!lat || !lng || Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
+      return null
     }
-    if (filters.region) {
-      const coords = REGION_COORDS[filters.region]
-      if (coords) return coords
-    }
-    return {
-      latitude: MAP_CENTER.latitude,
-      longitude: MAP_CENTER.longitude,
-      zoomLevel: 5,
-    }
-  }, [filters.region, filters.subRegions])
+    return { lat: parsedLat, lng: parsedLng }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ts 는 재실행 트리거 전용
+  }, [lat, lng, ts])
 
-  const fetchRestaurants = useCallback(async () => {
-    setLoading(true)
-    setLoadError(false)
-    try {
-      const cuisineTypes = filters.foodTypes
-        .map((foodType) => FOOD_TYPE_TO_API[foodType])
-        .filter((value): value is string => Boolean(value))
-      const nutritionTags = filters.nutrients
-        .map((nutrient) => NUTRIENT_TO_API[nutrient])
-        .filter((value): value is string => Boolean(value))
-
-      const data = await restaurantService.fetchNearby(
-        mapCenter.latitude,
-        mapCenter.longitude,
-        3000,
-        cuisineTypes,
-        nutritionTags,
-      )
-      setRestaurants(data.map((item) => toPlaceRestaurant(item, t)))
-    } catch {
-      setRestaurants([])
-      setLoadError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [
-    mapCenter.latitude,
-    mapCenter.longitude,
-    filters.foodTypes,
-    filters.nutrients,
-    t,
-  ])
-
-  useEffect(() => {
-    if (restaurantTabEnabled && activeTab === "place") {
-      fetchRestaurants()
-    }
-  }, [activeTab, fetchRestaurants, restaurantTabEnabled])
-
-  const filteredRestaurants = useMemo(() => {
-    return restaurants.filter((r) => {
-      if (search.trim()) {
-        const q = search.trim().toLowerCase()
-        const matches =
-          r.name.toLowerCase().includes(q) ||
-          r.address.toLowerCase().includes(q) ||
-          r.tags.some((t) => t.toLowerCase().includes(q)) ||
-          r.description.toLowerCase().includes(q)
-        if (!matches) return false
-      }
-      if (
-        filters.foodTypes.length > 0 &&
-        !filters.foodTypes.some(
-          (foodType) => FOOD_TYPE_TO_API[foodType] === r.cuisineType,
-        )
-      )
-        return false
-      return true
-    })
-  }, [search, restaurants, filters.foodTypes])
+  const goToReport = useCallback(() => {
+    router.push("/restaurant/report")
+  }, [router])
 
   if (!restaurantTabEnabled) {
-    return <RestaurantReportForm paddingTop={insets.top} />
+    return <RestaurantComingSoon onPressReport={goToReport} />
   }
 
-  return (
-    <YStack
-      flex={1}
-      backgroundColor={isDarkMode ? "#1F1F21" : "#FCFCFC"}
-      paddingTop={insets.top}
-    >
-      <RestaurantTabHeader
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      {activeTab === "place" && (
-        <>
-          <YStack paddingHorizontal={16}>
-            <RestaurantSearchInput value={search} onChangeText={setSearch} />
-          </YStack>
-          <View flex={1} marginTop={12}>
-            {loading ? (
-              <YStack flex={1} alignItems="center" justifyContent="center">
-                <Spinner size="large" color="$primary" />
-                <Text fontSize={14} color="$colorSubtle" marginTop={8}>
-                  {t("restaurant.loadingNearby")}
-                </Text>
-              </YStack>
-            ) : (
-              <KakaoMapWebView
-                latitude={mapCenter.latitude}
-                longitude={mapCenter.longitude}
-                zoomLevel={mapCenter.zoomLevel}
-                restaurants={filteredRestaurants}
-              />
-            )}
-          </View>
-          <PlaceSheet
-            restaurants={filteredRestaurants}
-            filters={filters}
-            onFiltersChange={setFilters}
-            isError={loadError}
-            onRetry={fetchRestaurants}
-          />
-        </>
-      )}
-      {activeTab === "curation" && (
-        <View flex={1}>
-          <CurationTab />
-        </View>
-      )}
-    </YStack>
-  )
+  return <RestaurantMapScreen focus={focus} />
 }

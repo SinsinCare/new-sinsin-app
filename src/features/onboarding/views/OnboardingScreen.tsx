@@ -13,6 +13,7 @@ import {
   OnlyStepContent,
   MultiStepContent,
   InputStepContent,
+  DateStepContent,
   OnboardingQuestionHeader,
   OnboardingCompletionContent,
 } from "../components"
@@ -220,6 +221,17 @@ export function OnboardingScreen() {
                   values={currentAnswer?.inputValues ?? {}}
                   onChange={handleInputChange}
                   onSubmit={handleNext}
+                />
+              )}
+
+              {displayedStep.type === "date" && displayedStep.values[0] && (
+                <DateStepContent
+                  field={displayedStep.values[0]}
+                  value={
+                    currentAnswer?.inputValues?.[displayedStep.values[0].key] ??
+                    ""
+                  }
+                  onChange={handleInputChange}
                 />
               )}
             </ScrollView>

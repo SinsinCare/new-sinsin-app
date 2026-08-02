@@ -1,5 +1,4 @@
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { router } from "expo-router"
 import { useEffect, useState } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -10,6 +9,7 @@ import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { StatsReportScreen } from "@/src/features/stats-report/components/StatsReportScreen"
 import type { PeriodType } from "@/src/features/stats-report/types/report"
 import { useSurface } from "@/src/hooks/useSurface"
+import { useGoBack } from "@/src/shared/navigation"
 import { useSelectedDateStore } from "@/src/stores"
 import { tokens } from "@/src/theme/tokens"
 
@@ -30,6 +30,7 @@ export default function StatisticsScreen() {
   const { t } = useTranslation("common")
   const insets = useSafeAreaInsets()
   const surface = useSurface()
+  const goBack = useGoBack()
   const [period, setPeriod] = useState<PeriodType>("day")
   // 초기값 한 번만 스토어에서 읽는다(useState initializer) — 이후엔 독립.
   const [anchorDate, setAnchorDate] = useState<Date>(() =>
@@ -51,11 +52,7 @@ export default function StatisticsScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("action.back")}
-          // 리로드·딥링크로 이 페이지가 첫 화면이면 히스토리가 없다 —
-          // back 은 GO_BACK 미처리 에러를 내므로 홈으로 대체한다.
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/(tabs)/home")
-          }
+          onPress={goBack}
           hitSlop={10}
           style={({ pressed }) => [
             styles.backButton,

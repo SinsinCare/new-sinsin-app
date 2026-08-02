@@ -175,10 +175,7 @@ export function FoodResultEdit({
     if (!result) return
     const validation = validateMealTitle(editingName)
     if (!validation.isValid) {
-      Alert.alert(
-        t("foodEdit.checkMealName"),
-        t("foodEdit.enterMealName"),
-      )
+      Alert.alert(t("foodEdit.checkMealName"), t("foodEdit.enterMealName"))
       return
     }
     const newTitle = editingName.trim()
@@ -227,10 +224,7 @@ export function FoodResultEdit({
         !validateMenuAmount(food.amount).isValid,
     )
     if (hasInvalidFood) {
-      Alert.alert(
-        t("foodEdit.checkInput"),
-        t("foodEdit.checkInputBody"),
-      )
+      Alert.alert(t("foodEdit.checkInput"), t("foodEdit.checkInputBody"))
       return
     }
     const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
@@ -752,10 +746,7 @@ export function FoodResultEdit({
         </TouchableOpacity>
       </View>
 
-      <LoadingOverlay
-        visible={isUpdating}
-        message={t("foodEdit.saving")}
-      />
+      <LoadingOverlay visible={isUpdating} message={t("foodEdit.saving")} />
     </YStack>
   )
 }

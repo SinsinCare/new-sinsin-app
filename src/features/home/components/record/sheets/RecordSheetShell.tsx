@@ -1,11 +1,5 @@
 import { useEffect, type ReactNode } from "react"
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native"
+import { Pressable, StyleSheet, Text, View } from "react-native"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -20,6 +14,7 @@ import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
 import { hapticStepAdvance } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
@@ -151,7 +146,7 @@ export function RecordSheetShell({
         >
           <Animated.View style={[styles.cta, ctaStyle]}>
             {ctaLoading ? (
-              <ActivityIndicator size="small" color={surface.ctaOffText} />
+              <V2DotLoader size="s" color={surface.ctaOffText} />
             ) : null}
             <Animated.Text style={[styles.ctaLabel, ctaTextStyle]}>
               {ctaLabel}

@@ -43,6 +43,21 @@ const CKD_OPTION_KEYS: Record<number, readonly string[]> = {
     "COOKED_BY_OTHERS",
   ],
   8: ["RARELY", "WEEKLY_1", "WEEKLY_2_3", "WEEKLY_4_PLUS"],
+  // 9(진단 연·월)는 선택지가 없다 — 제목·부제만 번역한다.
+  10: [
+    "DIABETIC_KIDNEY_DISEASE",
+    "HYPERTENSION",
+    "GLOMERULONEPHRITIS",
+    "POLYCYSTIC_KIDNEY_DISEASE",
+    "OTHER",
+    "UNKNOWN",
+  ],
+}
+
+/** input 필드 라벨은 선택지가 아니라 필드 이름이라 별도 리소스를 본다. */
+const INPUT_FIELD_LABEL_KEYS: Record<string, string> = {
+  weight: "onboarding.weight",
+  height: "onboarding.height",
 }
 
 const NON_CKD_OPTION_KEYS: Record<number, readonly string[]> = {
@@ -89,10 +104,11 @@ export function localizeOnboardingStep(
     title: resourceString(`${path}.title`, step.title),
     subTitle: resourceString(`${path}.subtitle`, step.subTitle),
     values: step.values.map((option, index) => {
-      if (option.key === "weight") {
+      const labelKey = INPUT_FIELD_LABEL_KEYS[option.key]
+      if (labelKey) {
         return {
           ...option,
-          label: resourceString("onboarding.weight", option.label ?? ""),
+          label: resourceString(labelKey, option.label ?? ""),
         }
       }
 

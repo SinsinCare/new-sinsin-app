@@ -235,4 +235,37 @@ describe("보관함 화면 배선 (소스 정적 검사)", () => {
     expect(source).toContain("active.isError && active.recipes.length > 0")
     expect(source).toContain("archive.refreshFailedNote")
   })
+
+  it("목록 화면과 **같은 줄 카드**를 쓴다 — 보관함 전용 카드를 만들지 않는다", () => {
+    // 2026-07-31 이전의 실제 상태: 목록은 `RecipePhotoCard`(72pt 타일 + 96pt 고정 줄),
+    // 보관함은 옛 `RecipeListCard`. 같은 레시피가 한 앱에서 두 모양으로 보였고,
+    // 사진이 없는 카탈로그(175/175 `thumbnailUrl` = null)에서 옛 카드는 이미지 자리를
+    // 통째로 접어 **글자만 쌓인 목록**이 됐다.
+    expect(source).toContain("<RecipePhotoCard")
+    expect(source).toContain('variant="row"')
+    // 머리말이 옛 카드 이름을 **기록으로** 언급하므로 그리는 자리만 본다.
+    expect(source).not.toContain("<RecipeListCard")
+  })
+
+  it("좌우 여백이 목록 화면과 같은 격자에서 온다 (숫자를 다시 고르지 않는다)", () => {
+    // 예전에는 `LAYOUT.screenX`(20)였고 목록은 `GUTTER`(16)였다 — 두 화면을 오갈 때
+    // 왼쪽 시작선이 4pt 튀었다. 줄 사이 헤어라인의 들여쓰기도 격자에서 가져온다.
+    expect(source).toContain("GUTTER")
+    expect(source).toContain("RECIPE_ROW_TEXT_INDENT")
+    expect(source).not.toContain("LAYOUT.screenX")
+  })
+
+  it("저장 토글이 카드 안에 있다 — 카드 밖 별도 줄을 다시 만들지 않는다", () => {
+    // 카드마다 붙던 `저장 해제` 글자 줄은 (a) 줄 높이를 카드마다 바꾸고
+    // (b) 같은 동작의 문법을 목록 화면과 다르게 만들었다.
+    expect(source).toContain("onToggleSave={handleToggleSave}")
+    expect(source).not.toContain("archive.unsaveAction")
+  })
+
+  it("빈 화면·실패의 문구 판단이 화면 밖 순수 모듈에 있다", () => {
+    // JSX 안의 삼중 삼항식이면 어떤 조합에서 무슨 말을 하는지 검증할 수 없다
+    // (node 환경 jest 는 이 화면을 그리지 못한다). 판단은 archiveEmptyState.ts 에 있고
+    // 그 순서(실패 → 좁힘 → 빈 보관함)를 tests/recipeArchive.test.ts 가 못 박는다.
+    expect(source).toContain("resolveArchiveEmpty")
+  })
 })

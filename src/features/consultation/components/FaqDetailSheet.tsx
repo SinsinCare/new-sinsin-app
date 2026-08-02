@@ -3,7 +3,7 @@ import { ScrollView, Pressable, View } from "react-native"
 import { YStack, XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { tokens } from "@/src/theme/tokens"
 import { Button } from "@/src/shared/components"
 import { getCategoryMeta } from "../data/mockData"
@@ -19,7 +19,7 @@ interface FaqDetailSheetProps {
 export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
   const { t, i18n } = useTranslation()
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
 
   if (!item) return null
 

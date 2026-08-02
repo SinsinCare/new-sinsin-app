@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { StyleSheet, ScrollView } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -22,7 +23,7 @@ type AnnouncementDetail = {
 
 export function AnnouncementDetailScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")

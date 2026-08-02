@@ -110,7 +110,9 @@ export function MonthCalendarSheet({
   }
 
   const goToday = () => {
-    handleSelectDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
+    handleSelectDate(
+      new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+    )
   }
 
   // 실제 주 수만 렌더한다(4~6주). 6주 고정은 4주 달에 빈 두 줄을 남긴다.
@@ -134,7 +136,8 @@ export function MonthCalendarSheet({
     return rows
   }, [viewYear, viewMonth, weekStartsMonday])
 
-  const isToday = (day: number) => isViewingCurrentMonth && today.getDate() === day
+  const isToday = (day: number) =>
+    isViewingCurrentMonth && today.getDate() === day
   const isSelected = (day: number) =>
     selectedDate.getFullYear() === viewYear &&
     selectedDate.getMonth() === viewMonth &&
@@ -176,9 +179,7 @@ export function MonthCalendarSheet({
                     style={[
                       styles.todayPill,
                       {
-                        backgroundColor: pressed
-                          ? s.surfacePressed
-                          : s.surface,
+                        backgroundColor: pressed ? s.surfacePressed : s.surface,
                       },
                     ]}
                   >

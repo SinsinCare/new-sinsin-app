@@ -26,7 +26,8 @@ import {
   useThemeStore,
 } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
-import { resolveEntryRoute } from "@/src/shared/navigation/entryRoute"
+import { resolveGuard } from "@/src/shared/navigation/guard"
+import { useConsumeEntryUrl } from "@/src/shared/navigation/useConsumeEntryUrl"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
 import { routeFromPushData } from "@/src/services/notificationRoutingService"
@@ -36,10 +37,11 @@ import { useAnalyticsLifecycle } from "@/src/features/analytics"
 
 setupGestureHandler({ Gesture, GestureDetector })
 
-const BLOCKED_ACCOUNT_STATES = new Set(["SUSPENDED", "WITHDRAWAL_PENDING"])
-
 function RootLayoutNav() {
   const { t } = useTranslation()
+  /* 진입 URL 은 한 번만 쓰인다. 비우지 않으면 네이티브에 남아서 **리로드할 때마다**
+     같은 화면에서 시작한다(`useConsumeEntryUrl` 머리말). */
+  useConsumeEntryUrl()
   const {
     isAuthenticated,
     isLoading,
@@ -60,15 +62,11 @@ function RootLayoutNav() {
   )
   const segments = useSegments()
   const segmentPath = useMemo(() => segments.map(String), [segments])
+  /* 루트 레이아웃은 네비게이터 **바깥**이라 `useAppRouter()` 를 쓸 수 없다
+     (`src/shared/navigation/useAppRouter.ts` 머리말). 여기서는 뒤로가기를 부르지
+     않고 `replace` 만 하므로 expo-router 의 라우터를 그대로 쓴다. */
   const router = useRouter()
   const handledNotificationIdsRef = useRef(new Set<string>())
-
-  const needsOnboarding = entryGate === "ONBOARDING"
-  const needsProfile = entryGate === "PROFILE"
-  const needsAdditionalInfo =
-    entryGate === "PROFILE" &&
-    accountState === "ACTIVE" &&
-    requiresAdditionalInfo
 
   // 푸시 data.type 라우팅은 클라이언트가 소유한다. 서버는 앱 내부 경로를 모른다.
   useEffect(() => {
@@ -97,98 +95,43 @@ function RootLayoutNav() {
     return () => sub.remove()
   }, [accountState, isAuthenticated, router])
 
+  /**
+   * 진입 가드. **판정은 `resolveGuard` 가, 실행만 여기가 한다.**
+   *
+   * 판정을 이 effect 안에 두면 상태 조합을 넣어 결과를 확인할 방법이 없어서,
+   * 소셜 가입 도중 + 추가정보 필요 같은 조합은 실제 앱을 그 상태로 만들어야만
+   * 검증된다. `resolveGuard` 는 순수 함수라 `tests/navigationGuard.test.ts` 가
+   * 진리표로 검사한다.
+   *
+   * `resolveGuard` 는 **목적지가 지금 화면과 같으면 `stay` 를 돌려준다** — 종전에는
+   * 같은 곳으로도 `replace` 를 불러서 화면이 한 번 더 마운트되고, 그 사이의 입력과
+   * 스크롤 위치가 날아갔다.
+   */
   useEffect(() => {
-    if (isLoading) return
+    const decision = resolveGuard({
+      isLoading,
+      isAuthenticated,
+      accountState,
+      requiresAdditionalInfo,
+      entryGate,
+      isSignupInProgress,
+      isOnboardingInProgress,
+      segments: segmentPath,
+      isDev: __DEV__,
+    })
 
-    // v2 컴포넌트 쇼케이스: dev 전용 검증 화면.
-    //  - dev(__DEV__): 인증 리다이렉트에서 제외 → 로그인 없이 바로 확인.
-    //  - prod: 딥링크로 진입해도(로그인 유저 포함) 정규 화면으로 돌려보내 접근 차단.
-    //    (라우트 코드는 번들에 남지만 더미 데이터 컴포넌트 갤러리라 무해 + 런타임 접근은 막힌다.)
-    if (segmentPath[0] === "v2-showcase") {
-      if (__DEV__) return
-      router.replace(isAuthenticated ? "/(tabs)/home" : "/(auth)/login")
-      return
-    }
-
-    if (
-      isAuthenticated &&
-      accountState !== null &&
-      BLOCKED_ACCOUNT_STATES.has(accountState)
-    ) {
-      signOut()
-      return
-    }
-
-    const inAuthGroup = segmentPath[0] === "(auth)"
-    const inOnboarding = segmentPath[0] === "onboarding"
-    const inPublicLegalDocument =
-      segmentPath[segmentPath.length - 1] === "legal-document"
-    const inWithdrawalComplete =
-      segmentPath[0] === "(settings)" &&
-      segmentPath[1] === "withdrawal-complete"
-    const inSocialLinkEmail =
-      segmentPath[0] === "(auth)" && segmentPath[1] === "social-link-email"
-    const inProfileSetup =
-      segmentPath[0] === "(auth)" && segmentPath[1] === "profile-setup"
-
-    if (
-      !isAuthenticated &&
-      !inAuthGroup &&
-      !inPublicLegalDocument &&
-      !inWithdrawalComplete
-    ) {
-      router.replace("/(auth)/login")
-    } else if (
-      isAuthenticated &&
-      inAuthGroup &&
-      !isSignupInProgress &&
-      !inSocialLinkEmail &&
-      !((needsProfile || needsAdditionalInfo) && inProfileSetup)
-    ) {
-      // 회원가입 진행 중이면 auth 그룹에 유지.
-      // 목적지 판정은 app/index.tsx 와 같은 규칙을 써야 서로 어긋나지 않는다.
-      router.replace(
-        resolveEntryRoute({
-          isAuthenticated,
-          accountState,
-          requiresAdditionalInfo,
-          entryGate,
-        }),
-      )
-    } else if (
-      isAuthenticated &&
-      !inAuthGroup &&
-      !inOnboarding &&
-      !inProfileSetup &&
-      !inPublicLegalDocument &&
-      !isOnboardingInProgress &&
-      (needsProfile || needsAdditionalInfo)
-    ) {
-      // 필수 추가정보를 끝내기 전에는 프로필 입력으로 고정
-      router.replace("/(auth)/profile-setup")
-    } else if (
-      isAuthenticated &&
-      !inAuthGroup &&
-      !inOnboarding &&
-      !inPublicLegalDocument &&
-      !isOnboardingInProgress &&
-      needsOnboarding
-    ) {
-      // 온보딩 미완료 유저가 다른 화면에 있으면 온보딩으로 이동
-      router.replace("/onboarding")
-    }
+    if (decision.type === "redirect") router.replace(decision.href)
+    else if (decision.type === "signOut") signOut()
   }, [
-    isAuthenticated,
-    isLoading,
     accountState,
     entryGate,
-    segmentPath,
-    router,
-    isSignupInProgress,
+    isAuthenticated,
+    isLoading,
     isOnboardingInProgress,
-    needsOnboarding,
-    needsProfile,
-    needsAdditionalInfo,
+    isSignupInProgress,
+    requiresAdditionalInfo,
+    router,
+    segmentPath,
     signOut,
   ])
 
@@ -215,6 +158,11 @@ function RootLayoutNav() {
         {/* 통계 — 홈에서 밀고 들어가는 일반 페이지다. 등록해 두지 않으면
             기본값에 맡겨져 모달처럼 얹혀 보인다. */}
         <Stack.Screen name="statistics" options={{ presentation: "card" }} />
+        {/* 식당 상세·검색·목록·저장한 곳·제보 스택. `statistics` 와 같은 이유로 등록한다 —
+            빼 두면 기본값에 맡겨져 지도 탭 위에 모달처럼 얹혀 보이고, 카드 전환이 아니라
+            아래에서 올라온다. 스택 내부의 화면별 presentation 은
+            `app/restaurant/_layout.tsx` 가 정한다. */}
+        <Stack.Screen name="restaurant" options={{ presentation: "card" }} />
         {/* 스토리 뷰어 — 전체화면 몰입. 사진이 화면을 다 쓴다. */}
         <Stack.Screen
           name="stories"

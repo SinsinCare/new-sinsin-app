@@ -2,7 +2,8 @@ import React, { useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -24,7 +25,7 @@ const WITHDRAWAL_TERM_KEYS = [
 
 export function WithdrawalTermsScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { reason, detail, deleteMyPosts } = useLocalSearchParams<{
     reason?: string
     detail?: string

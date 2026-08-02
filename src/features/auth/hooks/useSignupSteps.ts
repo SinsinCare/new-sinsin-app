@@ -7,6 +7,7 @@ import { useAuth } from "@/src/hooks"
 import { ApiError } from "@/src/services/core/apiError"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { showErrorToast } from "@/src/lib/toast"
+import { useGoBack } from "@/src/shared/navigation"
 import {
   identifyAnalyticsUser,
   trackAnalyticsEvent,
@@ -260,6 +261,10 @@ export function useSignupSteps() {
     validity.canProceed,
   ])
 
+  /* 스텝 안에서의 뒤로가기는 이 훅이 상태로 처리한다. 화면 밖으로 나가는 것은
+     한 경우뿐이다 — 첫 스텝에서 뒤로. */
+  const exitSignup = useGoBack()
+
   const goBack = useCallback(() => {
     if (isSubmitting) return
     if (stepIndex > 0) {
@@ -270,14 +275,10 @@ export function useSignupSteps() {
       return
     }
 
-    // 첫 스텝에서 뒤로: 가입 진입점이라 스택이 비어 있을 수 있다. 그대로
-    // router.back() 을 부르면 GO_BACK 경고만 뜨고 아무 일도 일어나지 않는다.
-    if (router.canGoBack()) {
-      router.back()
-      return
-    }
-    router.replace("/(auth)/login")
-  }, [isSubmitting, stepIndex])
+    // 첫 스텝에서 뒤로 = 가입을 그만둔다. 가입 진입점이라 스택이 비어 있을 수
+    // 있는데, 그때의 목적지(로그인)는 라우트 그래프가 안다.
+    exitSignup()
+  }, [exitSignup, isSubmitting, stepIndex])
 
   return {
     step,

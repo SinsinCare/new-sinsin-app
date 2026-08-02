@@ -72,9 +72,7 @@ export function getHydrationGuidance({
   if (consumed / limit >= HYDRATION_NEAR_RATIO) {
     return {
       tone: "near",
-      message: english
-        ? `${remaining} mL to go`
-        : `${remaining}ml 남았어요`,
+      message: english ? `${remaining} mL to go` : `${remaining}ml 남았어요`,
     }
   }
 

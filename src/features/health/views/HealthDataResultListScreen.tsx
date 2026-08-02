@@ -1,18 +1,14 @@
 import React, { useState } from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
+import { useLoadingVisible } from "@/src/design-system-v2"
+import { HealthResultListSkeleton } from "../components/HealthSkeletons"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
@@ -62,7 +58,7 @@ function ResultRow({
 
 export function HealthDataResultListScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { t, i18n } = useTranslation("health")
   const language = i18n.resolvedLanguage ?? i18n.language
   const { healthColors } = useHealthTheme()
@@ -74,6 +70,8 @@ export function HealthDataResultListScreen() {
     refetch,
   } = useQuery(healthResultsQueryOptions())
   const error = isError ? t("result.loadError") : null
+  // 캐시 히트로 즉시 오는 경우엔 스켈레톤을 아예 그리지 않는다 (깜빡임 방지).
+  const showSkeleton = useLoadingVisible(loading)
   const [activeTab, setActiveTab] = useState<"recent" | "all">("recent")
 
   const handleRowPress = (resultId: number) => {
@@ -135,11 +133,7 @@ export function HealthDataResultListScreen() {
         ))}
       </View>
 
-      {loading && (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={tokens.color.sub6.val} />
-        </View>
-      )}
+      {showSkeleton && <HealthResultListSkeleton />}
 
       {error && !loading && (
         <View style={styles.center}>

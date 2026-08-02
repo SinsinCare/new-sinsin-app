@@ -30,7 +30,6 @@ import {
   toRecipeListQueryFilters,
 } from "../src/features/recipe/components/list/recipeListFilterModel"
 import {
-  nextFabCollapsed,
   resolveResultCount,
   shouldShowSuggestions,
 } from "../src/features/recipe/components/list/recipeListPresentation"
@@ -680,45 +679,6 @@ describe("자동완성 표시 조건", () => {
         draft: "밥",
         committedQuery: "밥",
       }),
-    ).toBe(false)
-  })
-})
-
-describe("작성 플로팅 접힘 (계약 §6.1)", () => {
-  /**
-   * `offsetY: 0, lastOffsetY: 400` 만으로는 이 규칙을 지킬 수 없다 — 실측: 맨 위
-   * 가드를 지워도 그 경우는 "위로 스크롤" 로 읽혀 false 가 나오고 테스트가 통과했다.
-   * 방향이 결정하지 않는 경우(움직임이 임계값 안)여야 가드만이 답을 낼 수 있다.
-   */
-  it("맨 위에서는 방향과 무관하게 펼친다", () => {
-    expect(
-      nextFabCollapsed({ collapsed: true, offsetY: 0, lastOffsetY: 400 }),
-    ).toBe(false)
-    // 이미 접힌 채로 맨 위에 멈춰 있다 — 방향 변화가 없으니 가드 없이는 접힌 채 남는다.
-    expect(
-      nextFabCollapsed({ collapsed: true, offsetY: 0, lastOffsetY: 0 }),
-    ).toBe(false)
-    // 맨 위에서 살짝 내렸다(임계값 안) — 가드 없이는 현재 상태(접힘)가 유지된다.
-    expect(
-      nextFabCollapsed({ collapsed: true, offsetY: 4, lastOffsetY: 0 }),
-    ).toBe(false)
-  })
-
-  it("내리면 접고 올리면 펼친다", () => {
-    expect(
-      nextFabCollapsed({ collapsed: false, offsetY: 200, lastOffsetY: 100 }),
-    ).toBe(true)
-    expect(
-      nextFabCollapsed({ collapsed: true, offsetY: 100, lastOffsetY: 200 }),
-    ).toBe(false)
-  })
-
-  it("임계값 안의 흔들림은 상태를 바꾸지 않는다", () => {
-    expect(
-      nextFabCollapsed({ collapsed: true, offsetY: 210, lastOffsetY: 200 }),
-    ).toBe(true)
-    expect(
-      nextFabCollapsed({ collapsed: false, offsetY: 210, lastOffsetY: 200 }),
     ).toBe(false)
   })
 })

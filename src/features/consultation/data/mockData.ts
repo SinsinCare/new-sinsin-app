@@ -367,18 +367,81 @@ const EN_QUICK_QUESTIONS: Record<ChatCategory, string[]> = {
 }
 
 const EN_FREQUENTLY_ASKED_QUESTIONS: FaqCardEntry[] = [
-  { id: "faq-1", category: "FOOD_DIET", title: "Meat portions", description: "How do I fit pork or duck into my meal plan?" },
-  { id: "faq-2", category: "FOOD_DIET", title: "Fruit portions", description: "How much tomato, apple, or watermelon can I have?" },
-  { id: "faq-3", category: "FOOD_DIET", title: "Lowering potassium", description: "Can soaking vegetables reduce potassium?" },
-  { id: "faq-4", category: "FOOD_DIET", title: "Tea and fluids", description: "Do barley tea and herbal tea count toward my fluid limit?" },
-  { id: "faq-5", category: "MEDICATION", title: "Supplements", description: "Can I take omega-3, magnesium, or vitamin D?" },
-  { id: "faq-6", category: "MEDICATION", title: "Pain relievers", description: "What should I check before choosing a headache medicine?" },
-  { id: "faq-7", category: "EXAM", title: "Understanding labs", description: "What can high creatinine with a normal cystatin C mean?" },
-  { id: "faq-8", category: "MEDICATION", title: "Other prescriptions", description: "Should my kidney care team review medicine from another clinician?" },
-  { id: "faq-9", category: "SYMPTOMS", title: "New symptoms", description: "I feel nauseated and notice an ammonia-like breath odor. What should I do?" },
-  { id: "faq-10", category: "SYMPTOMS", title: "Dialysis access", description: "How do fistulas and grafts differ, and how are they cared for?" },
-  { id: "faq-11", category: "FOOD_DIET", title: "Eggs and proteinuria", description: "How do egg whites and yolks differ in a kidney meal plan?" },
-  { id: "faq-12", category: "FOOD_DIET", title: "Eating out", description: "Help me compare restaurant choices with my personal limits" },
+  {
+    id: "faq-1",
+    category: "FOOD_DIET",
+    title: "Meat portions",
+    description: "How do I fit pork or duck into my meal plan?",
+  },
+  {
+    id: "faq-2",
+    category: "FOOD_DIET",
+    title: "Fruit portions",
+    description: "How much tomato, apple, or watermelon can I have?",
+  },
+  {
+    id: "faq-3",
+    category: "FOOD_DIET",
+    title: "Lowering potassium",
+    description: "Can soaking vegetables reduce potassium?",
+  },
+  {
+    id: "faq-4",
+    category: "FOOD_DIET",
+    title: "Tea and fluids",
+    description: "Do barley tea and herbal tea count toward my fluid limit?",
+  },
+  {
+    id: "faq-5",
+    category: "MEDICATION",
+    title: "Supplements",
+    description: "Can I take omega-3, magnesium, or vitamin D?",
+  },
+  {
+    id: "faq-6",
+    category: "MEDICATION",
+    title: "Pain relievers",
+    description: "What should I check before choosing a headache medicine?",
+  },
+  {
+    id: "faq-7",
+    category: "EXAM",
+    title: "Understanding labs",
+    description: "What can high creatinine with a normal cystatin C mean?",
+  },
+  {
+    id: "faq-8",
+    category: "MEDICATION",
+    title: "Other prescriptions",
+    description:
+      "Should my kidney care team review medicine from another clinician?",
+  },
+  {
+    id: "faq-9",
+    category: "SYMPTOMS",
+    title: "New symptoms",
+    description:
+      "I feel nauseated and notice an ammonia-like breath odor. What should I do?",
+  },
+  {
+    id: "faq-10",
+    category: "SYMPTOMS",
+    title: "Dialysis access",
+    description:
+      "How do fistulas and grafts differ, and how are they cared for?",
+  },
+  {
+    id: "faq-11",
+    category: "FOOD_DIET",
+    title: "Eggs and proteinuria",
+    description: "How do egg whites and yolks differ in a kidney meal plan?",
+  },
+  {
+    id: "faq-12",
+    category: "FOOD_DIET",
+    title: "Eating out",
+    description: "Help me compare restaurant choices with my personal limits",
+  },
 ]
 
 export function getLocalizedCategories(language: string): CategoryMeta[] {

@@ -3,7 +3,8 @@ import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -385,7 +386,7 @@ function renderContent(content: string, c: ReturnType<typeof useLegalColors>) {
 export default function LegalDocumentScreen() {
   const { t, i18n } = useTranslation()
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { type } = useLocalSearchParams<{ type: DocumentType }>()
   const c = useLegalColors()
 

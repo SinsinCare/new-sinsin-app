@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -10,6 +10,7 @@ import { hapticSelection } from "@/src/lib/haptics"
 import { Icon } from "@/src/shared/components/Icon"
 import { MOTION } from "@/src/theme/surface"
 import { useTranslation } from "react-i18next"
+import { FLOATING_AI_BUTTON_HEIGHT as PILL_HEIGHT } from "./floatingAiButtonLayout"
 
 /**
  * 어디서든 AI에게 묻는 전역 플로팅 필. 탭바 위 우하단 고정 —
@@ -20,16 +21,12 @@ import { useTranslation } from "react-i18next"
  * 플로팅은 쉐도우리스 규칙의 유일한 예외다. 떠 있음은 그림자만이 말할 수 있다.
  */
 
-/** 탭바 위 여백. 화면 쪽 플로팅 버튼(글쓰기)이 이 위로 쌓인다. */
-export const FLOATING_AI_BUTTON_BOTTOM = 16
-export const FLOATING_AI_BUTTON_HEIGHT = 48
-
 const PILL_BG = { light: "#1D1E20", dark: "#F4F4F6" } as const
 const PILL_CONTENT = { light: "#FFFFFF", dark: "#17181C" } as const
 
 export function FloatingAiButton({ bottom }: { bottom: number }) {
   const { t } = useTranslation("common")
-  const router = useRouter()
+  const router = useAppRouter()
   const isDark = useAppColorScheme() === "dark"
   const scale = useSharedValue(1)
 
@@ -77,8 +74,8 @@ const styles = StyleSheet.create({
     right: 20,
   },
   pill: {
-    height: FLOATING_AI_BUTTON_HEIGHT,
-    borderRadius: FLOATING_AI_BUTTON_HEIGHT / 2,
+    height: PILL_HEIGHT,
+    borderRadius: PILL_HEIGHT / 2,
     paddingLeft: 16,
     paddingRight: 18,
     flexDirection: "row",
@@ -97,3 +94,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 })
+
+/**
+ * 좌표 상수의 정본은 `floatingAiButtonLayout.ts`(순수 모듈)다. 여기서 다시 적지 않고
+ * re-export 만 한다 — 화면이 "마지막 줄이 이 필에 가리지 않을 만큼" 바닥을 비우는
+ * 계산을 jest 로 못 박아야 하는데, 이 파일은 `react-native-reanimated` 를 들여와
+ * node 환경의 jest 가 파싱하지 못한다. 자세한 이유는 그 파일 머리말.
+ */
+export {
+  FLOATING_AI_BUTTON_BOTTOM,
+  FLOATING_AI_BUTTON_COVERAGE,
+  FLOATING_AI_BUTTON_HEIGHT,
+} from "./floatingAiButtonLayout"

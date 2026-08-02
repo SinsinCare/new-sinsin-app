@@ -1,0 +1,13 @@
+{
+  "profile": {
+    "reviewerId": 1,
+    "nickName": "테스트계정",
+    "profileImageUrl": null
+  },
+  "stats": {
+    "reviewCount": 0,
+    "avgRating": null,
+    "followerCount": null,
+    "followingCount": null
+  }
+}

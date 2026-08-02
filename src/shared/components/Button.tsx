@@ -1,4 +1,5 @@
-import { Button as TamaguiButton, styled, Spinner, XStack, Text } from "tamagui"
+import { Button as TamaguiButton, styled, XStack, Text } from "tamagui"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 
 const StyledButton = styled(TamaguiButton, {
@@ -103,7 +104,7 @@ export function Button({
         flexShrink={1}
         maxWidth="100%"
       >
-        {loading && <Spinner size="small" color="white" />}
+        {loading && <V2DotLoader size="s" color="white" />}
         <Text color="white" textAlign="center" flexShrink={1} lineHeight={20}>
           {children}
         </Text>

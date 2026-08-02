@@ -267,5 +267,78 @@
     "timeoutTitle": "인증 시간이 지났어요",
     "failedTitle": "인증을 확인하지 못했어요",
     "retryVerification": "본인인증 다시 하기"
+  },
+  "checkup": {
+    "auth": {
+      "title": "건강검진 불러오고 분석하기",
+      "nameLabel": "이름",
+      "namePlaceholder": "이름을 입력해 주세요",
+      "phoneLabel": "전화번호",
+      "phonePlaceholder": "010-0000-0000",
+      "birthLabel": "생년월일",
+      "birthPlaceholder": "YYYY-MM-DD",
+      "methodLabel": "간편인증 방법",
+      "telecomLabel": "통신사",
+      "submit": "인증하기",
+      "pendingTitle": "인증 앱에서 인증을 완료해 주세요",
+      "pendingBody": "인증을 마치면 아래 버튼을 눌러 주세요.",
+      "pendingConfirm": "인증 완료했어요",
+      "errorName": "이름을 입력해 주세요",
+      "errorPhone": "휴대폰 번호 11자리를 입력해 주세요",
+      "errorBirth": "생년월일 8자리를 정확히 입력해 주세요",
+      "errorMethod": "간편인증 방법을 선택해 주세요",
+      "errorTelecom": "통신사를 선택해 주세요",
+      "methodsLoadError": "간편인증 방법을 불러오지 못했어요"
+    },
+    "list": {
+      "title": "검진 목록",
+      "visitCount_one": "{{count}}번의 방문",
+      "visitCount_other": "{{count}}번의 방문",
+      "add": "추가하기",
+      "analyze": "분석하기",
+      "selectHint": "분석할 검진을 선택해 주세요",
+      "emptyTitle": "아직 불러온 검진이 없어요",
+      "emptyBody": "건강검진을 불러오면 수치 변화를 함께 볼 수 있어요.",
+      "emptyCta": "건강검진 불러오기",
+      "loadError": "검진 목록을 불러오지 못했어요"
+    },
+    "detail": {
+      "title": "검진 목록",
+      "tabCheckups": "검진 목록",
+      "tabRecords": "검사 기록",
+      "metricsTitle": "건강 수치",
+      "ask": "질문하기",
+      "analyzing": "검진 결과를 분석하고 있어요",
+      "analyzeError": "분석에 실패했어요",
+      "referencePrefix": "참고범위",
+      "aiNotice": "앱의 일반 참고범위와 비교한 결과예요. 진단이 아니에요.",
+      "showNormal": "정상 {{count}}개 더보기",
+      "hideNormal": "정상 항목 접기",
+      "allNormal": "참고범위를 벗어난 항목이 없어요"
+    },
+    "status": {
+      "warning": "위험",
+      "caution": "주의",
+      "normal": "정상"
+    },
+    "records": {
+      "monthlyView": "월별보기",
+      "weeklyView": "주별보기",
+      "latest": "최근",
+      "deltaLabel": "지난 진단 대비",
+      "emptyTitle": "검사 기록이 없어요"
+    },
+    "calendar": {
+      "yearMonth": "{{year}}년 {{month}}월",
+      "weekdayMon": "월",
+      "weekdayTue": "화",
+      "weekdayWed": "수",
+      "weekdayThu": "목",
+      "weekdayFri": "금",
+      "weekdaySat": "토",
+      "weekdaySun": "일",
+      "prevMonth": "이전 달",
+      "nextMonth": "다음 달"
+    }
   }
 }

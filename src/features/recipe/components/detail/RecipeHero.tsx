@@ -1,195 +1,82 @@
 /**
- * 히어로 이미지와 그 위의 상단 바(계약 §6.2 "스크롤에 따라 축소, 상단에 저장/공유").
+ * 상세 맨 위의 **이미지 섹션**.
  *
- * 두 가지를 나눠 뒀다:
- *   `RecipeHeroImage` — 스크롤에 따라 움직이는 사진. 스크롤 값은 화면이 소유한다.
- *   `RecipeDetailTopBar` — 스크롤과 무관하게 고정된 뒤로/저장/공유.
- * 한 컴포넌트에 넣으면 사진과 함께 버튼도 밀려 올라가 버린다.
+ * ─── 패럴랙스와 떠 있던 상단 바를 걷어낸 이유 (되돌리기 전에 읽을 것) ─────────
+ * 종전 구현은 300pt 짜리 전면 사진 + 스크롤에 따라 움직이는 패럴랙스 + 그 위에 떠 있는
+ * 반투명 검은 원(뒤로/저장/공유)이었다. 사진이 있다는 전제로 만든 UI 인데,
+ * **실측하면 사진이 없다**: dev DB 175건 중 `image_url`/`thumbnail_url`/`detail_image_url`
+ * 이 채워진 레시피가 0건이고, 그래서 API 의 `heroImageUrl` 도 전부 null 이다.
+ * 그 결과 실제 화면은 (a) 96pt 빈 회색 띠, (b) 그 위에 뜬 검은 동그라미 세 개가
+ * 제목과 재료 목록을 가리는 모습이었다. **컨트롤을 사진 위에 얹지 않는다**(헤더는
+ * `V2ScreenHeader` 로 항상 그린다)는 그때의 결론은 그대로다.
  *
- * 색 애니메이션(흰 아이콘 ↔ 검은 아이콘)을 하지 않는 이유: `useNativeDriver` 로 색을
- * 보간할 수 없어 JS 스레드에서 프레임마다 색을 계산해야 하고, 스크롤 중에 그게 제일 먼저
- * 끊긴다. 대신 아이콘을 **반투명 검은 원**에 올린다 — 사진 위에서도, 흰 배경 위에서도 읽힌다.
+ * ─── 이번 변경: 자리를 **맨 위로 되돌리되, 빈 띠를 만들지 않는다** ──────────────
+ * 직전 판본은 사진이 **있을 때만** 본문 중간(제목·액션 아래)에 카드로 넣었다. 그래서
+ * 사진이 생긴 레시피에서도 "요리 사진 → 이름" 이라는 자연스러운 순서가 아니라 이름과
+ * 액션을 지나야 사진이 나왔다. 지면의 첫 블록은 그 페이지가 무엇인지 말해야 한다.
  *
- * 이미지가 없는 레시피(큐레이션 카탈로그에 흔하다)는 회색 자리를 300px 씩 잡지 않는다.
- * 아이콘 하나만 둔 낮은 헤더로 줄인다(`HERO_HEIGHT_EMPTY`).
+ * 그런데 자리를 위로 올리는 것만 하면 사진 0건인 지금 **상세를 열 때마다 빈 회색 띠**가
+ * 먼저 보인다 — 걷어냈던 결함이 그대로 돌아온다. 그래서 목록·보관함 카드가 쓰는 규칙을
+ * 그대로 가져왔다: 사진이 없으면 **카테고리 일러스트**를 그린다(`RecipeCategoryArt`,
+ * 같은 컴포넌트·같은 표). 자리표시자가 아니라 "이 요리가 어느 갈래인가" 를 말하는 면이라
+ * 빈칸으로 읽히지 않고, 목록에서 본 그 그림이 상세에서 커진 것이라 두 화면이 이어진다.
+ *
+ * 높이가 두 경우에 다른 것은 의도다:
+ *   - 사진: 4:3 전면. 요리 사진은 접시가 주인공이라 세로가 낮으면 잘린다.
+ *   - 일러스트: 152 짧은 띠. 같은 4:3(약 293pt)으로 그리면 작은 픅토그램 하나가 넓은
+ *     회색 판 가운데 뜬 모습이 되어 **"사진을 못 불러왔다"** 로 읽힌다(카드에서 96 → 72 로
+ *     줄인 것과 같은 판단). 짧은 띠 위의 그림은 표지 장식으로 읽힌다.
+ *
+ * 전면(full-bleed)인 이유: 이 블록만 좌우 여백이 없다. 표지는 지면의 경계까지 닿아야
+ * "머리" 로 읽히고, 여백을 주면 본문 카드 중 하나처럼 보인다. 대신 아래 제목 블록부터는
+ * 전부 `GUTTER` 에 맞으므로 화면의 시작선은 여전히 하나다.
  */
-import { Animated, Pressable, StyleSheet } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { Image } from "expo-image"
-import Ionicons from "@expo/vector-icons/Ionicons"
-import { View, XStack } from "tamagui"
-import { useTranslation } from "react-i18next"
-import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT } from "@/src/theme/surface"
+import { useV2Theme } from "@/src/design-system-v2"
 
-export const HERO_HEIGHT_IMAGE = 300
-export const HERO_HEIGHT_EMPTY = 96
+import { RecipeCategoryArt } from "../list/RecipeCategoryArt"
 
-export function heroHeight(imageUrl: string | null): number {
-  return imageUrl ? HERO_HEIGHT_IMAGE : HERO_HEIGHT_EMPTY
-}
+/** 사진이 없을 때의 띠 높이와 그림 크기. 위 머리말 §높이 참고. */
+const ART_BAND_HEIGHT = 152
+const ART_SIZE = 84
 
 export interface RecipeHeroImageProps {
   imageUrl: string | null
-  scrollY: Animated.Value
+  /** 사진이 없을 때 무엇을 그릴지 정한다. 없으면 중립 도형이 나온다. */
+  category?: string | null
 }
 
-export function RecipeHeroImage({ imageUrl, scrollY }: RecipeHeroImageProps) {
-  const surface = useSurface()
-  const height = heroHeight(imageUrl)
+export function RecipeHeroImage({
+  imageUrl,
+  category = null,
+}: RecipeHeroImageProps) {
+  const { colors } = useV2Theme()
+  const hasPhoto = imageUrl != null && imageUrl.length > 0
 
-  if (!imageUrl) {
+  if (!hasPhoto) {
     return (
-      <View
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        height={height}
-        backgroundColor={surface.surface}
-      />
+      <View style={styles.artBand}>
+        <RecipeCategoryArt category={category} artSize={ART_SIZE} />
+      </View>
     )
   }
 
-  const translateY = scrollY.interpolate({
-    inputRange: [-height, 0, height],
-    outputRange: [-height / 2, 0, height * 0.35],
-    extrapolateRight: "clamp",
-  })
-  // 위로 당길 때만 커진다(iOS 바운스). 아래로 스크롤하면 1 에서 멈춘다.
-  const scale = scrollY.interpolate({
-    inputRange: [-height, 0],
-    outputRange: [1.6, 1],
-    extrapolateRight: "clamp",
-  })
-  const opacity = scrollY.interpolate({
-    inputRange: [0, height * 0.75],
-    outputRange: [1, 0.3],
-    extrapolate: "clamp",
-  })
-
   return (
-    <Animated.View
-      style={[
-        styles.hero,
-        { height, backgroundColor: surface.surface },
-        { opacity, transform: [{ translateY }, { scale }] },
-      ]}
-      pointerEvents="none"
-    >
+    <View style={[styles.photo, { backgroundColor: colors.fill.normal }]}>
       <Image
         source={{ uri: imageUrl }}
-        style={styles.heroImage}
+        style={styles.image}
         contentFit="cover"
         cachePolicy="memory-disk"
       />
-    </Animated.View>
-  )
-}
-
-export interface RecipeDetailTopBarProps {
-  top: number
-  saved: boolean
-  onBack: () => void
-  onToggleSave: () => void
-  onShare: () => void
-  /** 저장 요청 중에는 다시 눌러도 무시한다(절대 상태라 연타 자체는 안전하다). */
-  saveBusy?: boolean
-}
-
-export function RecipeDetailTopBar({
-  top,
-  saved,
-  onBack,
-  onToggleSave,
-  onShare,
-  saveBusy = false,
-}: RecipeDetailTopBarProps) {
-  const { t } = useTranslation("recipe")
-
-  return (
-    <XStack
-      position="absolute"
-      top={top}
-      left={0}
-      right={0}
-      paddingHorizontal={LAYOUT.screenX}
-      paddingVertical={8}
-      alignItems="center"
-      justifyContent="space-between"
-      zIndex={10}
-    >
-      <CircleButton
-        icon="chevron-back"
-        label={t("detail.back")}
-        onPress={onBack}
-      />
-      <XStack gap={8}>
-        <CircleButton
-          icon={saved ? "bookmark" : "bookmark-outline"}
-          label={
-            saved
-              ? t("detail.unsaveAccessibility")
-              : t("detail.saveAccessibility")
-          }
-          selected={saved}
-          disabled={saveBusy}
-          onPress={onToggleSave}
-        />
-        <CircleButton
-          icon="share-outline"
-          label={t("detail.shareAccessibility")}
-          onPress={onShare}
-        />
-      </XStack>
-    </XStack>
-  )
-}
-
-function CircleButton({
-  icon,
-  label,
-  onPress,
-  selected = false,
-  disabled = false,
-}: {
-  icon: keyof typeof Ionicons.glyphMap
-  label: string
-  onPress: () => void
-  selected?: boolean
-  disabled?: boolean
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      hitSlop={6}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected, disabled }}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-    >
-      <View
-        width={36}
-        height={36}
-        borderRadius={18}
-        alignItems="center"
-        justifyContent="center"
-        // 사진 위·흰 배경 위 어디서나 읽히는 유일한 방법. 색을 스크롤에 맞춰 바꾸지 않는다.
-        backgroundColor="rgba(0,0,0,0.42)"
-      >
-        <Ionicons name={icon} size={19} color="#FFFFFF" />
-      </View>
-    </Pressable>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    overflow: "hidden",
-  },
-  heroImage: { width: "100%", height: "100%" },
+  /** 일러스트는 자기 면(`surface`)을 스스로 칠한다 — 여기서는 높이만 준다. */
+  artBand: { width: "100%", height: ART_BAND_HEIGHT },
+  photo: { width: "100%", aspectRatio: 4 / 3, overflow: "hidden" },
+  image: { width: "100%", height: "100%" },
 })

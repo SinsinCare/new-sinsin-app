@@ -9,6 +9,11 @@ export interface KidneyProfile {
   weightKg: number | null
   weightRecordedAt: string | null
   diagnosisDate: string | null
+  /**
+   * 온보딩에서 고른 대략 시기(WITHIN_1M 등). `diagnosisDate` 가 비었을 때만 화면이
+   * 대신 보여준다 — 날짜의 대체값이 아니라 "이 정도로만 안다"는 표시다.
+   */
+  diagnosisTiming?: string | null
   diagnosisCauses?: string[]
   diagnosisCauseOther?: string | null
   comorbidities?: string[]

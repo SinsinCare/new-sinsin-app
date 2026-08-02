@@ -2,11 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 
 import { fetchStatsReport } from "../services/statsReportService"
 import type { PeriodType, StatsReport } from "../types/report"
-import {
-  getAppLanguage,
-  normalizeLanguage,
-  type Language,
-} from "@/src/i18n"
+import { getAppLanguage, normalizeLanguage, type Language } from "@/src/i18n"
 import { useTranslation } from "react-i18next"
 import { statsReportKey as buildStatsReportKey } from "@/src/i18n/localeQueryKeys"
 

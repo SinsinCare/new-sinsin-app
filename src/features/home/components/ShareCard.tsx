@@ -13,8 +13,7 @@ function formatNutrientAmount(
   unavailable: string,
 ): string {
   if (value == null) return unavailable
-  const rounded =
-    unit === "g" ? Math.round(value * 10) / 10 : Math.round(value)
+  const rounded = unit === "g" ? Math.round(value * 10) / 10 : Math.round(value)
   return `${rounded}${unit}`
 }
 

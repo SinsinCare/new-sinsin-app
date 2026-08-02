@@ -1,32 +1,49 @@
 /**
- * 레시피 목록의 두 플로팅("레시피 쓰기" + 전역 "AI 상담") 이 겹치지 않는지 산술로 고정한다.
+ * 레시피 목록 화면에서 **떠 있는 것은 하나뿐**이고, 목록 바닥이 그것을 다 비우는지 본다.
  *
- * ## 왜 산술을 테스트하는가
+ * ## 무엇이 바뀌었나
  *
- * 이 겹침은 실제로 났고 눈으로만 고쳤다. 두 버튼은 **서로 다른 파일이 서로 다른
- * 좌표계에** 얹는다:
+ * 예전에는 이 화면에 플로팅이 둘이었다 — 화면 소유의 주황 `레시피 쓰기`(`RecipeWriteFab`)
+ * 와 전역 검정 `AI 상담`. 둘이 겹치지 않게 좌표를 맞춘 산술을 이 파일이 지켰다.
  *
- *   - `AI 상담`  : `app/(tabs)/_layout.tsx` 가 루트(화면 전체)에
- *                  `bottom = insets.bottom + TAB_BAR_HEIGHT + FLOATING_AI_BUTTON_BOTTOM`
- *   - `레시피 쓰기`: `RecipeWriteFab` 이 탭 화면 안에 `bottom = RECIPE_WRITE_FAB_BOTTOM`
+ * 그런데 **겹치지 않는 것과 가리지 않는 것은 다른 문제**다. 두 버튼은 겹치지 않으면서도
+ * 오른쪽 아래 130pt 를 점유했고, 연필 버튼이 스크롤 중 카드 글자를 덮었다(실측).
+ * 그래서 화면 소유의 플로팅을 없애고 작성 진입점을 헤더 칩으로 올렸다. 남은 것은 전역
+ * `AI 상담` 하나다.
  *
- * 탭바가 절대 위치가 아니라 **레이아웃 공간을 차지**하므로 탭 화면의 바닥은 탭바
- * 위에서 끝난다. 그래서 두 항(`insets.bottom + TAB_BAR_HEIGHT`)이 상쇄되고, 탭바 위를
- * 원점으로 보면 AI 필은 `16 ~ 64`, 쓰기 버튼은 `78 ~ 126` 을 쓴다.
+ * ## 그래서 이제 무엇을 지키는가
  *
- * 이 상쇄가 눈에 보이지 않는 것이 문제다. 다음 사람이 `RECIPE_WRITE_FAB_BOTTOM` 에
- * 탭바 높이나 안전영역을 한 번 더 더하면 **화면에서만** 다시 겹치고, 어떤 테스트도
- * 깨지지 않는다. 그래서 상수 사이의 관계를 여기에 박는다.
+ * 1. **화면이 두 번째 플로팅을 다시 만들지 않는다.** 이것이 되돌아오면 지적받은 가림이
+ *    그대로 재현된다. 소스에서 `position: "absolute"` 플로팅과 옛 컴포넌트 이름을 본다.
+ * 2. **목록 바닥이 `AI 상담` 이 덮는 구간을 다 비운다.** 안 비우면 마지막 줄은 존재하지
+ *    않는 것과 같다.
+ * 3. **그 여백을 상수에서 계산했다** — 숫자를 박으면 필을 옮기는 날 목록이 따라오지 않는다.
+ * 4. **탭바 높이·안전영역을 다시 더하지 않았다.** 탭바는 레이아웃 공간을 차지하므로 탭
+ *    화면의 바닥이 이미 탭바 위에서 끝난다. 그 항을 한 번 더 더한 것이 예전에 실제로
+ *    났던 사고이고, 더해도 **화면에서만** 어긋나 어떤 타입도 깨지지 않는다.
+ * 5. **여백이 `contentContainerStyle` 에 있다.** 예전에는 `ListFooterComponent` 에 있었고,
+ *    다음 페이지를 불러오는 동안 그 자리가 스피너로 바뀌며 여백이 통째로 사라졌다 —
+ *    `onEndReachedThreshold` 가 0.6 이라 목록 끝에서는 거의 항상 불러오는 중이라서,
+ *    실제 화면에서 마지막 줄이 탭바에 잘렸다.
  *
- * ## 왜 import 가 아니라 소스를 읽는가
+ * ## import 와 소스 읽기를 나눠 쓰는 이유
  *
- * 두 상수는 `react-native-reanimated` 를 쓰는 컴포넌트 파일에 있어 import 하면 jest 가
- * 변환하지 못한다. 그리고 소스를 읽는 편이 **더 강하다** — 값이 맞는지만 보는 것이
- * 아니라 AI 필의 상수를 **참조해서** 계산했는지(숫자를 박아 넣지 않았는지) 본다.
- * 값만 맞으면 통과하는 검사는 `78` 을 하드코딩한 코드를 놓친다.
+ * 좌표 상수는 이제 **순수 모듈**(`floatingAiButtonLayout.ts`, `recipeRowLayout.ts`)에 있어
+ * 그대로 import 한다 — 값을 정규식으로 긁어 eval 하던 예전 방식은 상수 이름이나 선언
+ * 형태가 바뀌면 검사가 스스로 죽는, 검사가 아니라 사본이었다.
+ *
+ * 반면 "화면이 무엇을 그리는가"(1·5번)는 `app/(tabs)/recipe.tsx` 가 tamagui·expo-router 를
+ * 끌고 와 node 환경 jest 로 렌더할 수 없으므로 소스를 읽어 확인한다.
  */
 import fs from "fs"
 import path from "path"
+
+import {
+  FLOATING_AI_BUTTON_BOTTOM,
+  FLOATING_AI_BUTTON_COVERAGE,
+  FLOATING_AI_BUTTON_HEIGHT,
+} from "@/src/shared/components/floatingAiButtonLayout"
+import { RECIPE_LIST_BOTTOM_INSET } from "@/src/features/recipe/components/list/recipeRowLayout"
 
 const ROOT = path.join(__dirname, "..")
 
@@ -34,87 +51,86 @@ function read(relative: string): string {
   return fs.readFileSync(path.join(ROOT, relative), "utf8")
 }
 
-function numericConst(source: string, name: string): number {
-  const match = new RegExp(`export const ${name} = (-?\\d+)`, "u").exec(source)
-  if (match?.[1] === undefined) {
-    throw new Error(`${name} 을 상수로 찾지 못했다`)
-  }
-  return Number(match[1])
-}
-
-const AI_SOURCE = read("src/shared/components/FloatingAiButton.tsx")
-const FAB_SOURCE = read(
-  "src/features/recipe/components/list/RecipeWriteFab.tsx",
+const SCREEN_SOURCE = read("app/(tabs)/recipe.tsx")
+const ROW_LAYOUT_SOURCE = read(
+  "src/features/recipe/components/list/recipeRowLayout.ts",
 )
 
-const AI_BOTTOM = numericConst(AI_SOURCE, "FLOATING_AI_BUTTON_BOTTOM")
-const AI_HEIGHT = numericConst(AI_SOURCE, "FLOATING_AI_BUTTON_HEIGHT")
-
-/** 탭바 위를 원점으로 본 AI 필의 위쪽 끝. */
-const AI_PILL_TOP = AI_BOTTOM + AI_HEIGHT
-
-/** `RecipeWriteFab` 이 선언한 두 값. 표현식이라 상수 정규식으로는 못 잡는다. */
-function fabBottomExpression(): string {
-  const match =
-    /export const RECIPE_WRITE_FAB_BOTTOM =([\s\S]*?);?\n\n/u.exec(FAB_SOURCE)
-  if (match?.[1] === undefined) {
-    throw new Error("RECIPE_WRITE_FAB_BOTTOM 선언을 찾지 못했다")
-  }
-  return match[1]
-}
-
 /**
- * 선언식의 상수 이름을 실제 값으로 바꿔 계산한다. 아는 항만 남아야 한다 — 모르는
- * 이름이 있으면 `null` 을 주고, 그 판정은 전용 테스트가 한다.
+ * 주석을 걷어낸 코드.
  *
- * **describe 본문에서 부르지 않는다.** 여기서 던지면 스위트 수집이 실패해
- * "Tests: 0 total" 이 되고, 어느 검사가 무엇을 잡았는지 알 수 없다(실측).
+ * 이 파일은 "화면이 무엇을 그리는가" 를 소스에서 확인하는데, **주석에 적힌 낱말이
+ * 검사를 통과시키거나 떨어뜨리면 안 된다.** 실제로 그랬다 — 없앤 컴포넌트를 왜
+ * 없앴는지 설명하는 주석에 그 이름이 들어 있어서, 코드에는 흔적이 없는데도
+ * "다시 만들지 않는다" 검사가 실패했다. 설명을 지워 검사를 통과시키는 것은 본말전도라
+ * 검사 쪽이 코드만 보게 만든다.
  */
-function evaluateFabBottom(): number | null {
-  const expression = fabBottomExpression()
-    .replaceAll("FLOATING_AI_BUTTON_BOTTOM", String(AI_BOTTOM))
-    .replaceAll("FLOATING_AI_BUTTON_HEIGHT", String(AI_HEIGHT))
-  if (!/^[\s\d+\-*/().]+$/u.test(expression)) return null
-  // eslint-disable-next-line no-eval
-  return eval(expression) as number
+function code(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//gu, "")
+    .replace(/^\s*\/\/.*$/gmu, "")
 }
 
-describe("레시피 목록의 두 플로팅", () => {
-  it("쓰기 버튼이 AI 필보다 위에서 시작한다", () => {
-    expect(evaluateFabBottom()).toBeGreaterThan(AI_PILL_TOP)
+const SCREEN_CODE = code(SCREEN_SOURCE)
+
+describe("레시피 목록에 떠 있는 것", () => {
+  it("필이 덮는 구간은 여백 + 높이다", () => {
+    expect(FLOATING_AI_BUTTON_COVERAGE).toBe(
+      FLOATING_AI_BUTTON_BOTTOM + FLOATING_AI_BUTTON_HEIGHT,
+    )
   })
 
-  it("두 버튼 사이에 눈에 보이는 간격이 있다", () => {
-    // 0 보다 크기만 하면 "붙어 있다" 도 통과한다. 두 개의 떠 있는 면이 서로 다른
-    // 것으로 읽히려면 간격이 필요하다.
-    const fabBottom = evaluateFabBottom()
-    expect(fabBottom).not.toBeNull()
-    expect((fabBottom ?? 0) - AI_PILL_TOP).toBeGreaterThanOrEqual(12)
+  it("목록 바닥이 필이 덮는 구간을 다 비운다", () => {
+    // 같기만 해도 "딱 붙었다" 가 통과한다. 마지막 줄과 필 사이에 눈에 보이는 틈이 있어야
+    // 그 줄이 가려진 것이 아니라 끝난 것으로 읽힌다.
+    expect(RECIPE_LIST_BOTTOM_INSET).toBeGreaterThan(FLOATING_AI_BUTTON_COVERAGE)
   })
 
-  it("아는 상수만으로 계산된다 — 좌표계를 섞는 항이 없다", () => {
-    // `null` 이면 AI 필 상수 말고 다른 이름이 식에 들어왔다는 뜻이고, 그건 다른
-    // 좌표계의 값을 섞었다는 신호다(아래 정규식 검사가 잡지 못하는 이름도 여기서 걸린다).
-    expect(evaluateFabBottom()).not.toBeNull()
-  })
-
-  it("AI 필의 상수를 참조해 계산한다 — 숫자를 박아 넣지 않았다", () => {
-    // 하드코딩이면 AI 필을 옮겼을 때 쓰기 버튼이 따라오지 않아 다시 겹친다.
-    const expression = fabBottomExpression()
-    expect(expression).toContain("FLOATING_AI_BUTTON_BOTTOM")
-    expect(expression).toContain("FLOATING_AI_BUTTON_HEIGHT")
-  })
-
-  it("목록 하단 여백이 두 버튼 전체를 비운다", () => {
-    // 마지막 카드가 영구히 가리면 그 카드는 존재하지 않는 것과 같다.
-    expect(FAB_SOURCE).toMatch(
-      /export const RECIPE_LIST_BOTTOM_SPACER =[\s\S]*?RECIPE_WRITE_FAB_BOTTOM/u,
+  it("그 여백을 필의 상수에서 계산한다 — 숫자를 박아 넣지 않았다", () => {
+    // 하드코딩이면 필을 옮겼을 때 목록이 따라오지 않아 마지막 줄이 다시 가린다.
+    expect(ROW_LAYOUT_SOURCE).toMatch(
+      /export const RECIPE_LIST_BOTTOM_INSET =[\s\S]*?FLOATING_AI_BUTTON_COVERAGE/u,
     )
   })
 
   it("탭바 높이나 안전영역을 다시 더하지 않았다 — 상쇄되는 항이다", () => {
-    // 이것이 실제로 났던 실수다. 두 항을 한 번 더 더하면 화면에서만 겹친다.
-    const expression = fabBottomExpression()
-    expect(expression).not.toMatch(/TAB_BAR_HEIGHT|insets|safeArea/iu)
+    const declaration = /export const RECIPE_LIST_BOTTOM_INSET =(.*)/u.exec(
+      ROW_LAYOUT_SOURCE,
+    )?.[1]
+    expect(declaration).toBeDefined()
+    expect(declaration).not.toMatch(/TAB_BAR_HEIGHT|insets|safeArea/iu)
+  })
+
+  it("화면이 두 번째 플로팅을 만들지 않는다", () => {
+    // 옛 컴포넌트가 되살아나면 지적받은 "연필이 카드 글자를 덮는다" 가 그대로 돌아온다.
+    expect(SCREEN_CODE).not.toContain("RecipeWriteFab")
+    // 화면이 직접 얹는 절대 위치 요소도 없어야 한다 — 이름을 바꿔 다시 만드는 길을 막는다.
+    expect(SCREEN_CODE).not.toMatch(/position:\s*"absolute"/u)
+  })
+
+  it("옛 플로팅 컴포넌트 파일이 남아 있지 않다", () => {
+    // 파일만 남겨 두면 다음 사람이 "쓰는 데가 있겠지" 하고 되살린다.
+    expect(
+      fs.existsSync(
+        path.join(ROOT, "src/features/recipe/components/list/RecipeWriteFab.tsx"),
+      ),
+    ).toBe(false)
+  })
+
+  it("바닥 여백이 목록 컨테이너에 있다 — 푸터가 아니다", () => {
+    // 푸터에 두면 다음 페이지를 부르는 동안 스피너로 바뀌면서 여백이 사라진다.
+    expect(SCREEN_CODE).toMatch(
+      /contentContainerStyle=\{\{[\s\S]*?paddingBottom:\s*RECIPE_LIST_BOTTOM_INSET/u,
+    )
+    const footer = /ListFooterComponent=\{([\s\S]*?)\n\s*\/>/u.exec(
+      SCREEN_CODE,
+    )?.[1]
+    expect(footer).toBeDefined()
+    expect(footer).not.toContain("RECIPE_LIST_BOTTOM_INSET")
+  })
+
+  it("작성 진입점이 화면에 남아 있다 — 없애 버린 것이 아니라 옮긴 것이다", () => {
+    // 가림을 고친다고 기능을 지우면 안 된다. v2 작성 폼으로 가는 길이 살아 있어야 한다.
+    expect(SCREEN_CODE).toContain('router.push("/(write)/recipe/new")')
   })
 })

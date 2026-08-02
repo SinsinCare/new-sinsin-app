@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react"
 import { StyleSheet, View, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
@@ -17,7 +18,7 @@ type ConfirmStatus = "loading" | "failed" | "timeout"
 
 export function NhisConfirmScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()

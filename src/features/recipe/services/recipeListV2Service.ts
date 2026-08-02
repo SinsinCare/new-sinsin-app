@@ -178,8 +178,16 @@ export function normalizeRecipeCard(raw: unknown): RecipeCard | null {
   if (!record) return null
   const id = asFiniteNumber(record.id)
   const name = asNullableString(record.name)
-  // id 나 이름이 없는 카드는 누를 수도, 읽을 수도 없다. 조용히 버린다.
-  if (id == null || !Number.isInteger(id) || !name) return null
+  /**
+   * id 나 이름이 없는 카드는 누를 수도, 읽을 수도 없다. 조용히 버린다.
+   *
+   * **양수까지 본다.** 종전에는 정수이기만 하면 통과해서 `id: 0`·`id: -3` 인 행이
+   * 카드가 됐다. 그런데 상세 라우트의 `parseRecipeId` 는 0 과 음수를 거절한다
+   * (`/^\d{1,9}$/` + `> 0`). 즉 목록은 누를 수 있는 카드를 만드는데 상세는 그 id 를
+   * 받지 않는 상태 — "목록이 만드는 id ≠ 상세가 받는 id" 라는, 지금 고치고 있는 결함과
+   * **정확히 같은 부류**다. 두 관문의 정의역을 여기서 맞춘다.
+   */
+  if (id == null || !Number.isInteger(id) || id <= 0 || !name) return null
   return {
     id,
     name,

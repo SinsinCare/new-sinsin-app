@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -12,7 +11,8 @@ import {
   type ViewToken,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useLocalSearchParams, useRouter, type Href } from "expo-router"
+import { useLocalSearchParams, type Href } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Animated, {
   ReduceMotion,
@@ -22,6 +22,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated"
 
+import { V2DotLoader } from "@/src/design-system-v2"
 import { hapticSelection } from "@/src/lib/haptics"
 import { MOTION } from "@/src/theme/surface"
 import { useCommunityStories } from "@/src/features/recipe/hooks/useCommunityStories"
@@ -40,7 +41,7 @@ const SORTS: StorySort[] = ["recommended", "recent"]
 
 export default function StoriesScreen() {
   const { t } = useTranslation()
-  const router = useRouter()
+  const router = useAppRouter()
   const insets = useSafeAreaInsets()
   const { height: windowHeight, width: windowWidth } = useWindowDimensions()
   const params = useLocalSearchParams<{ index?: string; sort?: string }>()
@@ -140,10 +141,7 @@ export default function StoriesScreen() {
               value: "OTHER",
             },
           ]
-          Alert.alert(
-            t("community.postDetail.reportReasonTitle"),
-            undefined,
-            [
+          Alert.alert(t("community.postDetail.reportReasonTitle"), undefined, [
             ...reasons.map((r) => ({
               text: r.label,
               onPress: async () => {
@@ -165,8 +163,7 @@ export default function StoriesScreen() {
               },
             })),
             { text: t("action.cancel"), style: "cancel" as const },
-            ],
-          )
+          ])
         },
       },
       {
@@ -265,8 +262,9 @@ export default function StoriesScreen() {
   return (
     <View style={styles.screen}>
       {isLoading && stories.length === 0 ? (
+        // 검은 배경 위 전체화면 사진 한 장이 올 자리. 링 대신 점으로 조용히 기다린다.
         <View style={styles.centered}>
-          <ActivityIndicator color="#FFFFFF" />
+          <V2DotLoader size="m" color="#FFFFFF" />
         </View>
       ) : stories.length === 0 ? (
         <View style={styles.centered}>

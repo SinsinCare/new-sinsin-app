@@ -153,9 +153,7 @@ export function MealSheet({
           </>
         )}
 
-        <SheetInfoCard>
-          {t("home.sheet.meal.info")}
-        </SheetInfoCard>
+        <SheetInfoCard>{t("home.sheet.meal.info")}</SheetInfoCard>
 
         {!recorded && !skipped ? (
           <Pressable

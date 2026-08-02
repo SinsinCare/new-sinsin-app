@@ -1,10 +1,5 @@
-export {
-  HERO_HEIGHT_EMPTY,
-  HERO_HEIGHT_IMAGE,
-  RecipeDetailTopBar,
-  RecipeHeroImage,
-  heroHeight,
-} from "./RecipeHero"
+export { RecipeHeroImage } from "./RecipeHero"
+export { RecipeActionRow } from "./RecipeActionRow"
 export { RecipeTitleBlock } from "./RecipeTitleBlock"
 export { NutritionCard } from "./NutritionCard"
 export { ProvenanceSheet } from "./ProvenanceSheet"
@@ -13,4 +8,5 @@ export { StepSection } from "./StepSection"
 export { StepTimerButton } from "./StepTimerButton"
 export { ReviewSection } from "./ReviewSection"
 export { ReviewComposer } from "./ReviewComposer"
+export { RecipeFetchErrorState } from "./RecipeFetchErrorState"
 export * from "./recipeDetailModel"

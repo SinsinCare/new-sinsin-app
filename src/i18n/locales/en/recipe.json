@@ -71,6 +71,7 @@
     "entry": "Library",
     "tabSaved": "Saved",
     "tabRecent": "Recently viewed",
+    "searchPlaceholder": "Search your library",
     "savedCount": "{{count}} saved recipes",
     "savedCount_one": "{{count}} saved recipe",
     "savedCount_other": "{{count}} saved recipes",
@@ -94,6 +95,36 @@
     "saveAction": "Save",
     "unsaveAction": "Remove from saved",
     "resaveAction": "Save again"
+  },
+  "home": {
+    "section": {
+      "breakfast": {
+        "title": "Today’s breakfast recipes",
+        "subtitle": "Morning dishes like toast, eggs, and porridge",
+        "highlight": "breakfast"
+      },
+      "lunch": {
+        "title": "Today’s lunch recipes",
+        "subtitle": "One-bowl dishes like rice bowls, noodles, and salads",
+        "highlight": "lunch"
+      },
+      "dinner": {
+        "title": "Today’s dinner recipes",
+        "subtitle": "Dishes for a full table, like soups, stews, and sides",
+        "highlight": "dinner"
+      },
+      "empty": "No recipes are sorted into this meal yet. Look through all recipes below."
+    },
+    "listTitle": "All recipes",
+    "slotState": {
+      "recorded": "Logged",
+      "skipped": "Skipped"
+    },
+    "reason": {
+      "afterRecord": "You logged {{meal}}, so we start from the next meal",
+      "afterSkip": "You skipped {{meal}}, so we start from the next meal",
+      "nextDay": "Every meal is logged for today. Starting from tomorrow’s breakfast"
+    }
   },
   "list": {
     "resultCountAtLeast": "{{count}}+ results",
@@ -127,7 +158,9 @@
     "emptyBody": "Try fewer filters or a different word",
     "errorTitle": "Couldn't load recipes",
     "errorBody": "Check your connection and try again",
-    "retry": "Try again"
+    "retry": "Try again",
+    "estimateNotice": "Nutrition numbers are estimates",
+    "writeEntry": "Write"
   },
   "recipeEditor": {
     "title": "New recipe",
@@ -321,8 +354,20 @@
   "detail": {
     "loading": "Loading the recipe",
     "notFound": "We couldn’t find this recipe",
-    "errorTitle": "We couldn’t load the recipe",
-    "errorBody": "Check your connection and try again.",
+    "error": {
+      "networkTitle": "We couldn’t load the recipe",
+      "networkBody": "Check your connection and try again.",
+      "networkRetry": "Try again",
+      "serverTitle": "Something went wrong on our server",
+      "serverBody": "Trying again in a moment usually fixes it. If it keeps happening, please wait a little.",
+      "serverRetry": "Try again",
+      "notFoundTitle": "This recipe isn’t available",
+      "notFoundBody": "It was removed, or the link is wrong. This isn’t a connection problem, and trying again won’t change it.",
+      "notFoundBack": "Back to recipes",
+      "appBugTitle": "The app hit a problem loading this",
+      "appBugBody": "This isn’t a connection problem — we sent a bad request. Please try again, and tell us if it keeps happening.",
+      "appBugRetry": "Try again"
+    },
     "retry": "Try again",
     "back": "Back",
     "saveAccessibility": "Save this recipe",
@@ -368,11 +413,25 @@
       "decrease": "Fewer servings",
       "increase": "More servings",
       "checked": "{{checked}}/{{total}} ready",
-      "fixedAmount": "This amount doesn’t change with servings",
+      "fixedAmount": "“fixed” means the amount stays the same when you change servings.",
       "excluded": "Not included in the nutrition calculation",
       "toggle": "Mark {{name}} as ready",
       "notInFoodTable": "This name isn’t in the food reference table",
-      "unknownAmount": "The amount isn’t a weight"
+      "unknownAmount": "The amount isn’t a weight",
+      "tag": {
+        "notScalable": "fixed",
+        "notCounted": "not counted"
+      },
+      "coverage": {
+        "counted": "The figures above add up {{counted}} of the {{total}} ingredients.",
+        "wholeDish": "The figures above come as one dish. They are not the ingredients below added up one by one."
+      },
+      "excludedLegend": "“not counted” ingredients were left out of the total. The real figures may be higher.",
+      "preparedLabel": "Ready",
+      "servingsBasis": "Amounts for {{count}} servings",
+      "servingsBasis_one": "Amounts for {{count}} serving",
+      "servingsBasis_other": "Amounts for {{count}} servings",
+      "preparedCount": "{{checked}}/{{total}}"
     },
     "steps": {
       "title": "Steps",
@@ -399,6 +458,13 @@
       "distributionRow": "{{star}} stars, {{amount}}",
       "starAccessibility": "Give {{star}} stars",
       "composerTitle": "How was this recipe?",
+      "ratingWords": {
+        "1": "Not for me",
+        "2": "Just okay",
+        "3": "Pretty good",
+        "4": "Really good",
+        "5": "Loved it"
+      },
       "bodyPlaceholder": "Tell us how it went (optional)",
       "bodyCounter": "{{current}}/{{max}}",
       "submit": "Post",
@@ -407,7 +473,22 @@
       "submitError": "We couldn’t post your review",
       "deleteError": "We couldn’t delete your review",
       "more": "More reviews",
-      "loading": "Loading reviews"
+      "loading": "Loading reviews",
+      "blockAuthor": "Block",
+      "blockTitle": "Block this member?",
+      "blockBody": "You will stop seeing reviews from {{name}} across the app. You can undo this in My info → Blocked list.",
+      "blockConfirm": "Block",
+      "blockDone": "Blocked"
+    },
+    "action": {
+      "save": "Save",
+      "saved": "Saved",
+      "share": "Share"
+    },
+    "meta": {
+      "reviews": "{{count}} reviews",
+      "reviews_one": "{{count}} review",
+      "reviews_other": "{{count}} reviews"
     }
   },
   "responsibility": "I’ve checked that this post doesn’t violate anyone else’s rights.",

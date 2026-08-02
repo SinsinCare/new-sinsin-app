@@ -179,7 +179,10 @@ export function WaterSheet({
               들어가지 않는데, 수분 제한 환자에게는 "얼마나 넘었나"보다 "그래서
               어떻게 하나"가 더 중요하다. 줄 수에 여유가 있는 이 시트에서 말한다.
             */}
-            {limit != null && limit > 0 && !isReferenceLimit && consumed >= limit ? (
+            {limit != null &&
+            limit > 0 &&
+            !isReferenceLimit &&
+            consumed >= limit ? (
               <Text style={[styles.subtitle, { color: surface.danger }]}>
                 {t("home.sheet.water.overLimitGuidance")}
               </Text>

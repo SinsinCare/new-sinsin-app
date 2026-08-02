@@ -10,7 +10,7 @@ import {
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
@@ -69,7 +69,7 @@ function extractFieldErrors(error: unknown): unknown {
 
 export function KidneyProfileEditScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const { data: kidneyProfile } = useKidneyProfile()
   const c = useSettingsColors()
@@ -175,12 +175,7 @@ export function KidneyProfileEditScreen() {
   }
 
   const navigateBackOrFallback = () => {
-    if (router.canGoBack()) {
-      router.back()
-      return
-    }
-
-    router.replace("/(tabs)/all")
+    router.back()
   }
 
   const handleSave = async () => {

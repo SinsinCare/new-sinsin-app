@@ -16,7 +16,9 @@
  *   `ckdGuide`/`aiSummary` 는 읽지도 않는다(필드 자체를 없앤 것이 v2 다).
  */
 import { api } from "@/src/services/core/apiClient"
+import { ApiError } from "@/src/services/core/apiError"
 import { resolveProvenance } from "../components/detail/recipeDetailModel"
+import { findMockRecipe, type MockRecipe } from "./recipeListV2MockCatalog"
 import {
   NUTRIENT_KEYS,
   type ContentLocale,
@@ -438,21 +440,31 @@ const MOCK_REVIEWS: Review[] = [
 ]
 
 /** 계약 §6.2 의 숫자를 그대로 쓴다(나트륨 376mg = 남은 양의 24% 등). */
-function mockDetailPayload(recipeId: number, locale: ContentLocale): RawRecord {
-  const state = mockState(recipeId)
+function mockDetailPayload(
+  recipe: MockRecipe,
+  locale: ContentLocale,
+): RawRecord {
+  const state = mockState(recipe.id)
   const summary = mockSummary(state)
   return {
-    id: recipeId,
-    name: "잡채덮밥",
-    summary: "당면과 채소를 간장 조금으로 볶아 밥 위에 올린 한 그릇",
+    id: recipe.id,
+    /**
+     * **이름·분류·시간은 카탈로그에서 가져온다.** 종전에는 어떤 id 로 물어도 "잡채덮밥" 을
+     * 돌려줘서, 모의 모드에서는 **누른 카드와 열린 상세가 달라도** 아무도 눈치채지
+     * 못했다(정확히 지금 고치는 결함의 부류다). 나머지 본문(재료·순서)은 계약 §6.2 예시
+     * 그대로 두는데, 12건 각각의 조리법을 지어내면 그게 또 하나의 가짜 데이터가 된다.
+     */
+    name: recipe.name,
+    summary:
+      recipe.summary ?? "당면과 채소를 간장 조금으로 볶아 밥 위에 올린 한 그릇",
     description:
       "채소를 먼저 볶아 단맛을 낸 뒤 간장을 마지막에 둘러 간을 줄였습니다. 당면은 물에 오래 불리지 않고 살짝 덜 익혀야 덮밥으로 먹기 좋습니다.",
-    category: "한식",
-    difficulty: "보통",
-    timeMin: 35,
-    servings: 1,
+    category: recipe.category,
+    difficulty: recipe.difficulty,
+    timeMin: recipe.timeMin,
+    servings: recipe.servings,
     heroImageUrl: null,
-    tags: ["한그릇", "채소"],
+    tags: recipe.tags,
     nutrition: {
       kcal: 520,
       proteinG: 7,
@@ -569,14 +581,35 @@ function mockSummary(state: MockState): RatingSummary {
   }
 }
 
+/**
+ * 모의 경로의 **존재 확인**. 카탈로그에 없는 id 면 서버와 같은 404 를 던진다.
+ *
+ * ## 왜 이 함수가 생겼나
+ *
+ * 모의 상세는 어떤 정수 id 로 물어도 레시피를 하나 만들어 돌려줬다. 그 관대함이
+ * **id 결함을 통째로 가렸다** — 목록이 서버에 없는 id 를 내보내도 모의 모드에서는 상세가
+ * 멀쩡히 열리고, 서버를 붙이는 순간에만 404 로 터진다. 목록이 만드는 id 와 상세가 받는
+ * id 가 같아야 한다는 계약을 모의 모드에서도 지키게 하는 것이 이 함수다.
+ *
+ * 코드는 서버가 실제로 주는 값을 쓴다(`COMMON_ERROR_004`, 404) — 그래야 화면의 분류기
+ * (`classifyFetchFailure`)가 실서버와 **같은 갈래**로 떨어진다.
+ */
+function assertMockRecipeExists(recipeId: number): MockRecipe {
+  const recipe = findMockRecipe(recipeId)
+  if (recipe) return recipe
+  throw new ApiError(
+    `mock: recipe ${recipeId} not found`,
+    "COMMON_ERROR_004",
+    404,
+  )
+}
+
 async function mockGetDetail(
   recipeId: number,
   locale: ContentLocale,
 ): Promise<RecipeDetailView> {
-  return mapRecipeDetail(
-    await delay(mockDetailPayload(recipeId, locale)),
-    locale,
-  )
+  const recipe = assertMockRecipeExists(recipeId)
+  return mapRecipeDetail(await delay(mockDetailPayload(recipe, locale)), locale)
 }
 
 async function mockSetSaved(
@@ -597,6 +630,9 @@ async function mockGetReviews(
   recipeId: number,
   params: ReviewListParams,
 ): Promise<ReviewListResponse> {
+  // 상세와 같은 관문. 없는 레시피의 리뷰는 서버도 404 다 — 상세만 404 나고 리뷰는
+  // 성공하면 화면이 반쯤 살아 있는, 실서버에는 없는 상태가 모의에서만 만들어진다.
+  assertMockRecipeExists(recipeId)
   const state = mockState(recipeId)
   const sorted = [...state.reviews].sort((a, b) =>
     params.sort === "helpful"

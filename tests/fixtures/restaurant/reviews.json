@@ -1,0 +1,187 @@
+{
+  "restaurantId": 317,
+  "items": [
+    {
+      "reviewId": 1695,
+      "authorName": "저염러버",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 15,
+      "authorFollowerCount": 3,
+      "rating": 5,
+      "content": "깔끔한 매장에 반찬 리필도 눈치 안 보여서 좋았어요.",
+      "imageUrls": [],
+      "keywords": [
+        "MOOD",
+        "KIND"
+      ],
+      "menuName": "제육볶음 정식",
+      "visitCount": 2,
+      "mine": false,
+      "createdAt": "2026-07-24T12:48:19.074849",
+      "updatedAt": "2026-07-24T12:48:19.074849"
+    },
+    {
+      "reviewId": 1688,
+      "authorName": "오늘도한끼",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 7,
+      "authorFollowerCount": 1,
+      "rating": 5,
+      "content": "깔끔한 매장에 반찬 리필도 눈치 안 보여서 좋았어요.",
+      "imageUrls": [],
+      "keywords": [
+        "MOOD",
+        "KIND"
+      ],
+      "menuName": "비빔밥",
+      "visitCount": 1,
+      "mine": false,
+      "createdAt": "2026-07-21T12:48:19.074730",
+      "updatedAt": "2026-07-21T12:48:19.074730"
+    },
+    {
+      "reviewId": 1689,
+      "authorName": "든든한상",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 12,
+      "authorFollowerCount": 2,
+      "rating": 5,
+      "content": "깔끔한 매장에 반찬 리필도 눈치 안 보여서 좋았어요.",
+      "imageUrls": [],
+      "keywords": [
+        "MOOD",
+        "KIND"
+      ],
+      "menuName": "된장찌개 정식",
+      "visitCount": 1,
+      "mine": false,
+      "createdAt": "2026-07-07T12:48:19.074754",
+      "updatedAt": "2026-07-07T12:48:19.074754"
+    },
+    {
+      "reviewId": 1693,
+      "authorName": "슴슴하게",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 26,
+      "authorFollowerCount": 6,
+      "rating": 5,
+      "content": "재료가 신선하고 담백해서 자주 오게 되는 곳이에요.",
+      "imageUrls": [],
+      "keywords": [
+        "TASTE"
+      ],
+      "menuName": "된장찌개 정식",
+      "visitCount": 4,
+      "mine": false,
+      "createdAt": "2026-07-03T12:48:19.074816",
+      "updatedAt": "2026-07-03T12:48:19.074816"
+    },
+    {
+      "reviewId": 1691,
+      "authorName": "슴슴하게",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 26,
+      "authorFollowerCount": 6,
+      "rating": 5,
+      "content": "재료가 신선하고 담백해서 자주 오게 되는 곳이에요.",
+      "imageUrls": [],
+      "keywords": [
+        "TASTE"
+      ],
+      "menuName": "비빔밥",
+      "visitCount": 2,
+      "mine": false,
+      "createdAt": "2026-06-18T12:48:19.074786",
+      "updatedAt": "2026-06-18T12:48:19.074786"
+    },
+    {
+      "reviewId": 1690,
+      "authorName": "신신마스터",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 20,
+      "authorFollowerCount": 5,
+      "rating": 5,
+      "content": "재료가 신선하고 담백해서 자주 오게 되는 곳이에요.",
+      "imageUrls": [],
+      "keywords": [
+        "TASTE"
+      ],
+      "menuName": "된장찌개 정식",
+      "visitCount": 2,
+      "mine": false,
+      "createdAt": "2026-06-16T12:48:19.074769",
+      "updatedAt": "2026-06-16T12:48:19.074769"
+    },
+    {
+      "reviewId": 1694,
+      "authorName": "슴슴하게",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 26,
+      "authorFollowerCount": 6,
+      "rating": 5,
+      "content": "반찬이 정갈하고 간이 세지 않아서 좋았어요.\n짜지 않게 먹을 수 있어서 부담이 덜했습니다.",
+      "imageUrls": [],
+      "keywords": [
+        "TASTE",
+        "KIND"
+      ],
+      "menuName": "된장찌개 정식",
+      "visitCount": 1,
+      "mine": false,
+      "createdAt": "2026-05-28T12:48:19.074836",
+      "updatedAt": "2026-05-28T12:48:19.074836"
+    },
+    {
+      "reviewId": 1692,
+      "authorName": "건강한끼",
+      "reviewerId": null,
+      "authorProfileImageUrl": null,
+      "authorReviewCount": 42,
+      "authorFollowerCount": 12,
+      "rating": 5,
+      "content": "사장님이 친절하시고 음식이 빨리 나와요.\n점심시간에 가도 회전이 빨라서 좋습니다.",
+      "imageUrls": [],
+      "keywords": [
+        "KIND"
+      ],
+      "menuName": "비빔밥",
+      "visitCount": 2,
+      "mine": false,
+      "createdAt": "2026-05-26T12:48:19.074803",
+      "updatedAt": "2026-05-26T12:48:19.074803"
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false,
+  "totalCount": 15,
+  "avgRating": 3,
+  "ratingBreakdown": {
+    "reviewCount": 8,
+    "ratedCount": 8,
+    "average": 5,
+    "distribution": [
+      0,
+      0,
+      0,
+      0,
+      8
+    ]
+  },
+  "keywordCounts": {
+    "KIND": 5,
+    "TASTE": 4,
+    "MOOD": 3
+  },
+  "menuCounts": {
+    "된장찌개 정식": 4,
+    "비빔밥": 3,
+    "제육볶음 정식": 1
+  }
+}

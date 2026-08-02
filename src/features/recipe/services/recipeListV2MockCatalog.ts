@@ -37,7 +37,7 @@ const MOCK_BUDGET: NutrientBudget = {
   proteinG: null,
 }
 
-interface MockRecipe {
+export interface MockRecipe {
   id: number
   name: string
   summary: string | null
@@ -492,6 +492,30 @@ function parseCursor(cursor: string | undefined): number {
 }
 
 export const MOCK_LIST_MAX_LIMIT = 50
+
+/**
+ * 이 카탈로그가 **존재한다고 주장하는 id 전부**. 목록·검색·홈이 내보내는 id 는 여기 밖으로
+ * 나가지 않는다.
+ *
+ * ## 왜 내보내나 — 모의 서버가 없는 레시피를 만들어 주고 있었다
+ *
+ * 상세의 모의 경로(`recipeDetailV2Service.mockGetDetail`)는 **어떤 정수 id 로 물어도**
+ * "잡채덮밥" 을 만들어 돌려줬다. 그래서 모의 모드에서는
+ *  1. 어떤 카드를 눌러도 상세가 열린다 → **잘못된 id 로 이동하는 결함이 보이지 않는다.**
+ *  2. 어떤 카드를 눌러도 같은 레시피가 열린다 → "누른 것과 열린 것이 다르다" 도 안 보인다.
+ * 서버를 붙이는 순간에야 404 로 터진다. 모의가 결함을 **가리는** 방향으로 관대했던 것이다.
+ *
+ * 그래서 상세가 이 집합으로 존재 여부를 확인하고, 없으면 서버와 같은 404 를 던진다.
+ * 목록이 만드는 id 와 상세가 받는 id 가 같다는 계약을 모의 모드에서도 강제하는 장치다.
+ */
+export function mockRecipeIds(): number[] {
+  return MOCK_RECIPES.map((recipe) => recipe.id)
+}
+
+/** id 로 카탈로그 레코드를 찾는다. 없으면 `null` — 서버의 404 에 해당한다. */
+export function findMockRecipe(recipeId: number): MockRecipe | null {
+  return MOCK_RECIPES.find((recipe) => recipe.id === recipeId) ?? null
+}
 
 /** 모의 `GET /recipes`. 계약 §3.1 응답 모양 그대로. */
 export function queryMockRecipeList(

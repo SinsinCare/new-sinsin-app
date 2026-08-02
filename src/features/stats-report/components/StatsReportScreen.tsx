@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
 import { useTranslation } from "react-i18next"
 
+import { V2Skeleton, V2SkeletonGroup } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { REPORT_GAP } from "@/src/shared/components/ReportSection"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
@@ -180,7 +181,7 @@ export function StatsReportScreen({
         showsVerticalScrollIndicator={false}
       >
         {isLoading ? (
-          <LoadingSkeleton s={s} />
+          <LoadingSkeleton />
         ) : isError || !data ? (
           <ErrorCard onRetry={() => refetch()} s={s} />
         ) : (
@@ -362,19 +363,14 @@ function NavButton({
 /* ─── 상태 화면 조각 ─────────────────────────────────────────── */
 
 /** 로딩 스켈레톤 — 결론·차트·리스트 자리의 회색 면 3장 */
-function LoadingSkeleton({ s }: { s: Surface }) {
+function LoadingSkeleton() {
   return (
-    <View style={styles.sections}>
-      <View
-        style={[styles.skeleton, { height: 190, backgroundColor: s.surface }]}
-      />
-      <View
-        style={[styles.skeleton, { height: 150, backgroundColor: s.surface }]}
-      />
-      <View
-        style={[styles.skeleton, { height: 120, backgroundColor: s.surface }]}
-      />
-    </View>
+    // 면 자체는 예전과 같은 3장이지만 앱 공통 시머를 탄다 — 다른 화면과 같은 리듬으로 숨 쉰다.
+    <V2SkeletonGroup style={styles.sections}>
+      <V2Skeleton height={190} radius="2xl" />
+      <V2Skeleton height={150} radius="2xl" />
+      <V2Skeleton height={120} radius="2xl" />
+    </V2SkeletonGroup>
   )
 }
 
@@ -512,8 +508,6 @@ const styles = StyleSheet.create({
   // 섹션과 섹션 사이(24)는 카드 사이(8)보다 확실히 넓다 — 그 차이가
   // "여기서 화제가 바뀐다"를 말한다. 둘이 같으면 페이지가 한 덩어리로 읽힌다.
   sections: { gap: REPORT_GAP.section, paddingTop: 4 },
-
-  skeleton: { borderRadius: LAYOUT.card.radius },
 
   card: {
     borderRadius: LAYOUT.card.radius,

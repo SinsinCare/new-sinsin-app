@@ -35,7 +35,10 @@ interface KidneyProfileCardProps {
   isDialysis: boolean
   heightCm?: number | null
   weightKg: number | null
+  /** 표시용으로 이미 포맷된 정확한 진단 시기. 없으면 `diagnosisTiming` 으로 떨어진다. */
   diagnosisDate: string | null
+  /** 온보딩에서 고른 대략 시기 키(WITHIN_6M 등). 정확한 날짜가 없을 때만 쓴다. */
+  diagnosisTiming?: string | null
   diagnosisCauses?: string[]
   diagnosisCauseOther?: string | null
   comorbidities?: string[]
@@ -81,6 +84,7 @@ export function KidneyProfileCard({
   heightCm,
   weightKg,
   diagnosisDate,
+  diagnosisTiming,
   diagnosisCauses,
   diagnosisCauseOther,
   comorbidities,
@@ -104,6 +108,22 @@ export function KidneyProfileCard({
     if (heightCm != null) return `${heightCm}${english ? " " : ""}cm`
     return null
   })()
+  /**
+   * 온보딩은 진단 시기를 다섯 구간 중 하나로만 묻고, 정확한 연·월은 선택 입력이다.
+   * 그래서 연·월을 건너뛴 사람도 "미입력"이 아니라 아는 만큼은 보여 준다. 어림값인
+   * 것은 "약" 을 붙여 드러낸다 — 구간이 진단일로 읽히면 안 된다.
+   */
+  const diagnosisDateLabel =
+    diagnosisDate ??
+    (diagnosisTiming
+      ? t("kidneyProfile.diagnosisDateApprox", {
+          value: t(
+            `medical.diagnosisTiming.${diagnosisTiming}`,
+            diagnosisTiming,
+          ),
+        })
+      : null)
+
   const conditionItems = [
     ...(diagnosisCauses ?? []).map((key) =>
       t(`medical.diagnosisCause.${key.toUpperCase()}`, key),
@@ -220,7 +240,7 @@ export function KidneyProfileCard({
         />
         <InfoRow
           label={t("kidneyProfile.diagnosisDate")}
-          value={diagnosisDate}
+          value={diagnosisDateLabel}
           surface={surface}
         />
       </View>

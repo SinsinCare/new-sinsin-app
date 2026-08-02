@@ -23,6 +23,12 @@ interface RecipeSearchFieldProps {
   onBlur: () => void
   onOpenFilters: () => void
   appliedFilterCount: number
+  /**
+   * 자리 문구. **검색 범위가 다른 화면**이 바꿔 준다 — 보관함의 검색은 내가 저장한 것
+   * 안에서만 찾으므로 "레시피를 검색해 보세요" 라고 적으면 전체 카탈로그를 찾는 것으로
+   * 읽힌다. 기본값은 목록 화면(전체 레시피)의 문구다.
+   */
+  placeholder?: string
 }
 
 export function RecipeSearchField({
@@ -34,6 +40,7 @@ export function RecipeSearchField({
   onBlur,
   onOpenFilters,
   appliedFilterCount,
+  placeholder,
 }: RecipeSearchFieldProps) {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
@@ -66,7 +73,7 @@ export function RecipeSearchField({
           onBlur={onBlur}
           onSubmitEditing={onSubmit}
           returnKeyType="search"
-          placeholder={t("feed.recipeSearchPlaceholder")}
+          placeholder={placeholder ?? t("feed.recipeSearchPlaceholder")}
           placeholderTextColor={surface.placeholder}
           autoCorrect={false}
           // 한글 입력에서 자동 대문자·완성 보정이 검색어를 바꾸는 것을 막는다.

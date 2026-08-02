@@ -4,13 +4,22 @@ export type ChatStatus = "ACTIVE" | "ARCHIVED"
 
 export type MessageRole = "USER" | "ASSISTANT" | "SYSTEM"
 
-export type ChatCategory =
-  | "FOOD_DIET"
-  | "MEDICATION"
-  | "LIFESTYLE"
-  | "SYMPTOMS"
-  | "EXAM"
-  | "NONE"
+/**
+ * 런타임 목록에서 타입을 파생시킨다.
+ *
+ * 딥링크로 들어온 분류 문자열(`consultPrompt` 경로)을 검증하려면 **값**이 필요한데,
+ * 타입만 있으면 목록을 손으로 한 벌 더 적게 되고 그 두 벌은 언젠가 갈린다.
+ */
+export const CHAT_CATEGORIES = [
+  "FOOD_DIET",
+  "MEDICATION",
+  "LIFESTYLE",
+  "SYMPTOMS",
+  "EXAM",
+  "NONE",
+] as const
+
+export type ChatCategory = (typeof CHAT_CATEGORIES)[number]
 
 export interface ChatSummary {
   conversationId: number

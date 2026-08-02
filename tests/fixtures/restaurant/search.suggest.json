@@ -1,0 +1,101 @@
+{
+  "suggestions": [
+    {
+      "type": "REGION",
+      "label": "강남",
+      "key": "seoul-gangnam",
+      "lat": 37.4979,
+      "lng": 127.0276,
+      "count": 258
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남불백 강남1호점",
+      "restaurantId": 190,
+      "lat": 37.4954644356526,
+      "lng": 127.03146867613
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남수향 본점",
+      "restaurantId": 119,
+      "lat": 37.4958098178864,
+      "lng": 127.030334595568
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남막국수&보쌈",
+      "restaurantId": 45,
+      "lat": 37.49758036360278,
+      "lng": 127.03006955971577
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남역라면집",
+      "restaurantId": 262,
+      "lat": 37.4985258529721,
+      "lng": 127.024748046033
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남김밥 공장",
+      "restaurantId": 296,
+      "lat": 37.498060552493605,
+      "lng": 127.02650525969568
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남백반집",
+      "restaurantId": 181,
+      "lat": 37.4988490136163,
+      "lng": 127.026143657154
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남혜자초밥",
+      "restaurantId": 62,
+      "lat": 37.4970037788472,
+      "lng": 127.029835242373
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "강남불고기",
+      "restaurantId": 219,
+      "lat": 37.5016297346539,
+      "lng": 127.035651146498
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "농민백암순대 강남직영점",
+      "restaurantId": 250,
+      "lat": 37.49491300989233,
+      "lng": 127.03150463098274
+    },
+    {
+      "type": "MENU",
+      "label": "비빔밥",
+      "count": 189
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "본죽&비빔밥cafe 강남점",
+      "restaurantId": 260,
+      "lat": 37.49970069286392,
+      "lng": 127.02902433515636
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "본죽&비빔밥cafe 강남역점",
+      "restaurantId": 281,
+      "lat": 37.49468408027827,
+      "lng": 127.02823308409391
+    },
+    {
+      "type": "RESTAURANT",
+      "label": "더비빔밥 강남역점",
+      "restaurantId": 266,
+      "lat": 37.495993914698,
+      "lng": 127.025267394957
+    }
+  ]
+}

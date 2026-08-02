@@ -1,18 +1,14 @@
 import React, { useMemo } from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  ActivityIndicator,
-  Dimensions,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Dimensions } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
+import { useLoadingVisible } from "@/src/design-system-v2"
+import { HealthDashboardSkeleton } from "../components/HealthSkeletons"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
@@ -241,7 +237,7 @@ function MetricChartCard({ series }: { series: MetricSeries }) {
 
 export function HealthDashboardScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { t, i18n } = useTranslation("health")
   const language = i18n.resolvedLanguage ?? i18n.language
   const { healthColors } = useHealthTheme()
@@ -253,6 +249,8 @@ export function HealthDashboardScreen() {
     refetch,
   } = useQuery(healthDashboardQueryOptions())
   const error = isError ? t("result.loadError") : null
+  // 캐시 히트로 즉시 오는 경우엔 스켈레톤을 아예 그리지 않는다 (깜빡임 방지).
+  const showSkeleton = useLoadingVisible(loading)
 
   const modules = useMemo<ModuleData[]>(() => {
     return DASHBOARD_MODULES.map((config) => {
@@ -286,11 +284,7 @@ export function HealthDashboardScreen() {
         onBack={() => router.back()}
       />
 
-      {loading && (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={tokens.color.sub6.val} />
-        </View>
-      )}
+      {showSkeleton && <HealthDashboardSkeleton />}
 
       {error && !loading && (
         <View style={styles.center}>

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Alert } from "react-native"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
@@ -22,7 +22,7 @@ function getPhoneUpdateError(error: unknown, fallback: string): string {
 }
 
 export function usePhoneNumberEditor() {
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
   const { t } = useTranslation("settings")

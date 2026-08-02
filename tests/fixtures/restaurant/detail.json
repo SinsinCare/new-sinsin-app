@@ -1,0 +1,131 @@
+{
+  "restaurantId": 317,
+  "name": "맛짱김밥천국",
+  "description": "진하게 우려낸 국물에 매콤한 다대기의 든든한 한 상",
+  "cuisineType": "KOREAN",
+  "rating": 3,
+  "reviewCount": 15,
+  "address": "서울 서초구 서초대로77길 45",
+  "shortAddress": "서울 서초구 서초대로77길",
+  "jibunAddress": null,
+  "zipcode": null,
+  "phone": null,
+  "lat": 37.501564024429,
+  "lng": 127.024848569699,
+  "regionSido": "seoul",
+  "regionGroup": "seoul-seocho",
+  "regionSigungu": "서초구",
+  "instagramUrl": null,
+  "blogUrl": null,
+  "youtubeUrl": null,
+  "imageUrls": [
+    "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fa212ebbdace86655a540e17b07262b2b06120486%3Foriginal",
+    "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fda71d265a09f39b200783ee403ccea3c54f2a73e%3Foriginal"
+  ],
+  "photoCategoryCounts": {
+    "REVIEW": 2
+  },
+  "photoCount": 2,
+  "amenities": [],
+  "parking": {
+    "available": null,
+    "free": null,
+    "note": null
+  },
+  "avgPrice": 9666,
+  "priceRange": null,
+  "bookmarked": false,
+  "businessStatus": "CLOSED",
+  "openTime": "11:30",
+  "closeTime": "21:00",
+  "breakStart": null,
+  "breakEnd": null,
+  "lastOrder": null,
+  "nextTransitionAt": "2026-08-03T11:30:00+09:00",
+  "nextOpenWeekday": "MON",
+  "nextOpenTime": "11:30",
+  "businessHours": [
+    {
+      "weekday": "MON",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "TUE",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "WED",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "THU",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "FRI",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "SAT",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "SUN",
+      "openTime": null,
+      "closeTime": null,
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": true
+    }
+  ],
+  "hoursSource": "BUSINESS_HOUR",
+  "menuCount": 6,
+  "safetySummary": {
+    "safe": 0,
+    "caution": 0,
+    "restricted": 6,
+    "unknown": 0
+  },
+  "avgSafety": "RESTRICTED",
+  "hasSafeMenu": false,
+  "profileMissing": false,
+  "proteinAxisAvailable": true,
+  "legacyNutritionTags": [],
+  "legacyRiskCounts": {
+    "SAFE": 0,
+    "CAUTION": 1,
+    "HIGH_RISK": 5
+  },
+  "legacyClosedDay": "SUN"
+}

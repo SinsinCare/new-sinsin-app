@@ -232,11 +232,7 @@ export function projectFoodAnalysisJobPresentation(
               ? "Which food is this?"
               : "We couldn’t identify a food in this photo. Choose the closest match."
             : "Review this detail before continuing."
-      const portionLabels = [
-        "A little less",
-        "Photo estimate",
-        "A little more",
-      ]
+      const portionLabels = ["A little less", "Photo estimate", "A little more"]
       return {
         ...question,
         prompt: safeEnglishCopy(question.prompt, fallbackPrompt),

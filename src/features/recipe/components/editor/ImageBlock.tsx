@@ -1,12 +1,6 @@
-import {
-  Image,
-  Pressable,
-  View,
-  ActivityIndicator,
-  StyleSheet,
-  Alert,
-} from "react-native"
+import { Image, Pressable, View, StyleSheet, Alert } from "react-native"
 import { Text } from "tamagui"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useTranslation } from "react-i18next"
@@ -59,7 +53,8 @@ export function ImageBlock({
 
         {isUploading && (
           <View style={styles.overlay}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
+            {/* 사진은 이미 보이는 상태다. 링으로 덮는 대신 점만 얹어 사진을 가리지 않는다. */}
+            <V2DotLoader size="m" color="#FFFFFF" />
           </View>
         )}
 

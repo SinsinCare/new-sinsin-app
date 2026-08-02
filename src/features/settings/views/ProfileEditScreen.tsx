@@ -12,7 +12,7 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons"
 import * as ImagePicker from "expo-image-picker"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
@@ -99,7 +99,7 @@ async function uploadProfileImage(image: ProfileImageSelection) {
 
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
   const s = useSurface()
@@ -219,10 +219,7 @@ export function ProfileEditScreen() {
       <ScreenHeader
         title={t("profile.title")}
         paddingTop={insets.top + 8}
-        // 딥링크로 첫 화면이 되면 히스토리가 없다 — back 대신 마이페이지로.
-        onBack={() =>
-          router.canGoBack() ? router.back() : router.replace("/(tabs)/all")
-        }
+        onBack={router.back}
       />
 
       <ScrollView

@@ -12,7 +12,7 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons"
 import Constants from "expo-constants"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useFocusEffect } from "@react-navigation/native"
 import { useTranslation } from "react-i18next"
 
@@ -23,19 +23,7 @@ import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
 import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
-
-function formatDiagnosisDate(
-  iso: string | null,
-  language: string,
-): string | null {
-  if (!iso) return null
-  const [year, month] = iso.split("-")
-  if (!year || !month) return null
-  return new Intl.DateTimeFormat(
-    language.startsWith("en") ? "en-US" : "ko-KR",
-    { year: "numeric", month: "long" },
-  ).format(new Date(Number(year), Number(month) - 1, 1))
-}
+import { formatDiagnosisDate } from "@/src/shared/utils/diagnosisDate"
 
 const APP_DOWNLOAD_URL =
   "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
@@ -90,7 +78,7 @@ function MenuRow({
 export function MyPageScreen() {
   const { t, i18n } = useTranslation("common")
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const surface = useSurface()
   const { data: profile, refetch: refetchProfile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
@@ -269,15 +257,27 @@ export function MyPageScreen() {
     {
       icon: "medkit-outline",
       title: t("myPage.menu.doctor"),
-      onPress: () => router.push("/(settings)/ask-doctor"),
+      // 연결된 기관 목록이 이 기능의 홈이다. 비어 있으면 그 화면이 온보딩으로 안내한다.
+      // (옛 `/(settings)/ask-doctor` 는 초대코드 경로라 남겨 두되 여기서 열지 않는다.)
+      onPress: () => router.push("/(settings)/doctor-connections"),
     },
     {
       icon: "clipboard-outline",
       title: t("myPage.menu.healthData"),
-      onPress: () => router.push("/(settings)/health-data"),
+      // 목록이 진입점이다 — 불러온 검진이 없으면 목록 화면이 본인인증으로 보낸다.
+      // 매번 인증 폼부터 열면 이미 불러온 사람에게 군더더기다.
+      onPress: () => router.push("/(settings)/checkup-list"),
     },
     {
       icon: "share-outline",
+      /**
+       * 라벨이 "공유" 에서 "내보내기" 로 바뀌었다.
+       *
+       * 이건 OS 공유 시트로 요약 텍스트를 **아무 앱에나** 내보내는 동작이지, 담당 의사와
+       * 공유하는 것이 아니다. 바로 위 행("의사 연결하고 데이터 공유하기")이 진짜 공유
+       * 기능이 되면서 두 행이 같은 의미로 읽히게 됐다 — 수신자도 범위도 감사 기록도 없는
+       * 쪽이 "공유" 를 차지하고 있으면 사용자가 잘못 고른다.
+       */
       title: t("myPage.menu.share"),
       onPress: handleShareData,
     },
@@ -420,6 +420,7 @@ export function MyPageScreen() {
               kidneyProfile.diagnosisDate,
               i18n.resolvedLanguage ?? i18n.language,
             )}
+            diagnosisTiming={kidneyProfile.diagnosisTiming}
             diagnosisCauses={kidneyProfile.diagnosisCauses}
             diagnosisCauseOther={kidneyProfile.diagnosisCauseOther}
             comorbidities={kidneyProfile.comorbidities}

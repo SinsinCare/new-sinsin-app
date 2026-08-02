@@ -2,11 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 
 import { fetchMealReport } from "../services/mealReportService"
 import type { MealReport } from "../types/report"
-import {
-  getAppLanguage,
-  normalizeLanguage,
-  type Language,
-} from "@/src/i18n"
+import { getAppLanguage, normalizeLanguage, type Language } from "@/src/i18n"
 import { useTranslation } from "react-i18next"
 import { mealReportKey as buildMealReportKey } from "@/src/i18n/localeQueryKeys"
 

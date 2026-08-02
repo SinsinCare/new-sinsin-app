@@ -5,6 +5,7 @@ import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { useGoBack } from "@/src/shared/navigation"
 import { getTerms } from "../data/terms"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import {
@@ -22,6 +23,9 @@ export function useTermsAgreement({
   socialSignupToken,
 }: UseTermsAgreementOptions = {}) {
   const { t } = useTranslation("auth")
+  // 이메일 가입에서 뒤로 = 직전 화면. 딥링크로 약관에 바로 들어왔으면
+  // 라우트 그래프가 로그인으로 보낸다.
+  const goBack = useGoBack()
   const terms = useMemo(getTerms, [t])
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -134,11 +138,7 @@ export function useTermsAgreement({
       router.replace("/(auth)/login")
       return
     }
-    if (router.canGoBack()) {
-      router.back()
-      return
-    }
-    router.replace("/(auth)/login")
+    goBack()
   }
 
   return {

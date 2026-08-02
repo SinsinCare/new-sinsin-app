@@ -129,9 +129,45 @@ export const TYPE = {
   unit: { fontSize: 14, lineHeight: 20, letterSpacing: -0.28 },
 } as const
 
+/** 화면 좌우 여백. 이 파일 안에서 파생값(레일 인셋·본문 시작선)을 계산하려고 따로 뺐다. */
+const SCREEN_X = 20
+
+/**
+ * 아이콘·번호·체크처럼 본문 **앞에 오는 표시**의 한 변, 그리고 표시와 본문 사이.
+ *
+ * 행마다 이 크기를 다시 고르면 본문 시작선이 행마다 달라진다 — 재료(24)와 조리 단계(26)가
+ * 실제로 2pt 어긋나 있었다. 눈에 띄지 않을 것 같지만, 같은 스크롤에 두 문단이 세로로
+ * 쌓이면 문단 왼쪽이 흔들리는 것으로 보인다.
+ */
+const ROW_MARKER = 26
+const ROW_MARKER_GAP = 12
+
 /** 시트 LAYOUT 표. 높이·라디우스를 여기서만 정한다. */
 export const LAYOUT = {
-  screenX: 20,
+  screenX: SCREEN_X,
+
+  /**
+   * 가로 스크롤(칩 레일·카드 캐러셀)의 **첫 항목 왼쪽 인셋**. 값은 `screenX` 와 같지만
+   * **주는 자리가 다르다** — 반드시 `contentContainerStyle` 에 준다.
+   *
+   * 가로 스크롤을 `paddingHorizontal` 을 준 컨테이너로 감싸면 뷰포트 자체가 좁아져서
+   * 마지막 항목이 화면 끝에서 잘리고, 끝까지 밀어도 다음 항목이 보이지 않는다.
+   * `contentContainerStyle` 에 주면 컨테이너는 화면 끝까지 살아 있고 내용만 들어온다.
+   */
+  railInset: SCREEN_X,
+
+  /** 선행 표시(아이콘·번호·체크)의 한 변. 위 `ROW_MARKER` 머리말 참고. */
+  rowMarker: ROW_MARKER,
+  /** 선행 표시와 본문 사이. */
+  rowMarkerGap: ROW_MARKER_GAP,
+  /**
+   * 선행 표시가 있는 행에서 **본문이 시작하는 x**(화면 왼쪽 기준).
+   *
+   * 한 화면의 시작선은 **둘**이다 — 제목·문단은 `screenX`, 표시가 붙은 행의 본문은 여기.
+   * 셋째가 생기는 순간이 "컴포넌트가 따로 노는" 순간이다.
+   */
+  rowTextIndent: SCREEN_X + ROW_MARKER + ROW_MARKER_GAP,
+
   headerHeight: 56,
   progressHeight: 3,
   /** 진행바 ~ 질문 / 질문 ~ 입력 */
@@ -144,8 +180,21 @@ export const LAYOUT = {
   /** 성별 등 선택 카드 */
   selectCard: { size: 128, radius: 20 },
   sheet: { radius: 24, handleWidth: 40, handleHeight: 4 },
-  /** 홈 섹션·카드 */
-  section: { paddingVertical: 24, paddingHorizontal: 20, gap: 8 },
+  /**
+   * 홈 섹션·카드.
+   *
+   * - `titleGap` — 섹션 제목과 그 내용 사이. 섹션마다 다시 고르면(레시피 상세가 실제로
+   *   12·14·14·14·16 이었다) 같은 스크롤 안에서 섹션마다 제목이 다른 높이로 뜬다.
+   * - `between` — 섹션과 섹션 사이. `paddingVertical` 과 같은 값이고, 섹션이 자기 여백을
+   *   갖지 않고 부모가 `gap` 으로 나눌 때 쓴다.
+   */
+  section: {
+    paddingVertical: 24,
+    paddingHorizontal: SCREEN_X,
+    gap: 8,
+    titleGap: 12,
+    between: 24,
+  },
   card: { radius: 16, padding: 18, gap: 12 },
   /** 숫자 스테퍼 같은 조작부 */
   control: { height: 44, radius: 12 },

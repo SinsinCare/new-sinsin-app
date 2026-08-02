@@ -480,5 +480,82 @@
       "confirmAccessibility": "Confirm sharing information",
       "confirm": "Done"
     }
+  },
+  "doctorLink": {
+    "intro": {
+      "title": "Connect with your doctor",
+      "headlineLead": "Connect with your doctor for",
+      "headlineHighlight": "more accurate, easier care",
+      "headlineTail": "",
+      "step1": "Link your hospital and health data easily",
+      "step2": "Share only the health data you choose",
+      "step3": "Get more accurate analysis and care",
+      "cta": "Connect"
+    },
+    "search": {
+      "title": "Connect with your doctor",
+      "headlineLead": "Fill in ",
+      "headlineHighlight": "at least one",
+      "headlineTail": " of the three\nto search for your doctor",
+      "nameLabel": "Doctor's name",
+      "namePlaceholder": "Doctor name",
+      "hospitalLabel": "Hospital",
+      "hospitalPlaceholder": "Hospital name",
+      "departmentLabel": "Department",
+      "departmentPlaceholder": "e.g. Nephrology",
+      "cta": "Search",
+      "resultTitle": "Results",
+      "resultCount_one": "{{count}} doctor",
+      "resultCount_other": "{{count}} doctors",
+      "emptyTitle": "No results",
+      "emptyBody": "Check the name or hospital and try again.",
+      "error": "Search failed",
+      "noOrganization": "No hospital info",
+      "retry": "Search again"
+    },
+    "preview": {
+      "title": "Connect with your doctor",
+      "headline": "Link your health data\nwith your doctor",
+      "noticePurpose": "Shared data is used only for care and is protected under privacy law.",
+      "noticeRevoke": "You can stop sharing at any time.",
+      "cta": "Get started",
+      "error": "We couldn't send the request"
+    },
+    "sharing": {
+      "title": "Data sharing",
+      "sectionTitle": "Data to share",
+      "examResultsTitle": "Lab results",
+      "examResultsBody": "Blood and urine test results",
+      "dietRecordsTitle": "Diet records",
+      "dietRecordsBody": "Nutrients and fluid intake",
+      "vitalsTitle": "Blood pressure · Weight",
+      "vitalsBody": "Daily values and trends",
+      "realtimeTitle": "Send data in real time",
+      "realtimeBody": "Send to the hospital as soon as you record",
+      "analyze": "Analyze",
+      "submit": "Share",
+      "saved": "Sharing settings saved",
+      "error": "We couldn't save your sharing settings",
+      "pendingNotice": "Waiting for approval. You can set the sharing scope once approved.",
+      "rejectedNotice": "This connection was rejected, so data can't be shared.",
+      "revokedNotice": "This connection was disconnected, so nothing is being shared."
+    },
+    "connections": {
+      "title": "Connect with a doctor",
+      "sectionTitle": "Connected institutions",
+      "total": "{{count}} total",
+      "add": "Add",
+      "emptyTitle": "No connected institutions yet",
+      "emptyBody": "Connecting with your doctor makes care more accurate.",
+      "statusPending": "Pending",
+      "statusApproved": "Connected",
+      "statusRejected": "Rejected",
+      "loadError": "We couldn't load your connections",
+      "revoke": "Disconnect",
+      "revokeConfirmTitle": "Disconnect?",
+      "revokeConfirmBody": "Disconnecting also stops any data you're sharing.",
+      "revokeError": "We couldn't disconnect",
+      "statusRevoked": "Disconnected"
+    }
   }
 }

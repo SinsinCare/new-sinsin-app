@@ -61,12 +61,16 @@ export interface ArchiveListParams {
 /**
  * 계약 §3.1 과 같은 이름으로 조립한다.
  *
- * **계약에 빠진 것:** §2 는 `/recipes/saved` · `/recipes/views/recent` 의 쿼리
- * 파라미터를 적지 않았다. 시안(`Home_Recipes_Saved.png`)에는 두 탭 위에 검색창과
- * 필터가 있으니 파라미터가 필요하다. 목록(`/recipes`)과 같은 이름을 쓴다고 가정했고
- * 보고서에 계약 갱신 요청으로 적었다. 로드된 페이지만 앱에서 거르는 방법은 쓰지
- * 않았다 — 다음 페이지에 있는 결과가 빠져 "검색해도 결과가 안 바뀐다"(§6.1 이 고치라던
- * 결함)가 다른 모양으로 돌아온다.
+ * **계약에 빠져 있던 것 — 2026-07-31 에 채웠다.** §2 는 `/recipes/saved` ·
+ * `/recipes/views/recent` 의 쿼리 파라미터를 적지 않았고, 서버는 앱이 보낸 `q` ·
+ * `categories` · `tags` 를 **버리고 있었다**. 화면에서는 이렇게 보였다(실측): 보관함
+ * 검색창에 낱말을 넣으면 상단은 "검색 결과 17개" 로 바뀌는데 목록은 17개 그대로 —
+ * 즉 검색창이 죽은 컨트롤이었다. 지금은 두 엔드포인트가 목록(`/recipes`)과 **같은
+ * 이름·같은 의미**로 받는다(계약 §2 표 아래, `engagement.ts::archiveNarrowingSql`,
+ * `tests/recipe/engagementFilters.test.ts`).
+ *
+ * 로드된 페이지만 앱에서 거르는 방법은 쓰지 않았다 — 다음 페이지에 있는 결과가 빠져
+ * "검색해도 결과가 안 바뀐다"(§6.1 이 고치라던 결함)가 다른 모양으로 돌아온다.
  */
 export function buildArchiveQueryParams(
   params: ArchiveListParams,

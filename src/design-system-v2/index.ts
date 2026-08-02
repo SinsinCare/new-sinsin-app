@@ -9,5 +9,6 @@
 export * from "./tokens"
 export * from "./theme"
 export * from "./hooks/useV2Theme"
+export * from "./hooks/useLoadingVisible"
 export * from "./icons"
 export * from "./components"

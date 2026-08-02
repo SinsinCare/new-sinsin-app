@@ -127,6 +127,7 @@ export function usePostDetail(postId: string) {
   const {
     data: comments = [],
     isLoading: isCommentsLoading,
+    isError: isCommentsError,
     refetch: refetchComments,
   } = useQuery({
     queryKey: ["community-post-comments", postId],
@@ -237,6 +238,14 @@ export function usePostDetail(postId: string) {
     comments,
     isLoading,
     isCommentsLoading,
+    /*
+      댓글 조회가 실패했다. 화면이 이걸 안 보면 **"아직 댓글이 없어요"** 를 띄우는데,
+      글쓴이 입장에서는 달린 댓글이 사라진 것으로 보인다.
+
+      호출부는 반드시 `isCommentsError && comments.length === 0` 으로 볼 것 — 댓글을
+      단 직후의 백그라운드 재조회가 실패했을 때 이미 그린 목록을 지우면 안 된다.
+    */
+    isCommentsError,
     isError,
     error,
     refetch,

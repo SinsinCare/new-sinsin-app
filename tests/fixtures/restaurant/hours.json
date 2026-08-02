@@ -1,0 +1,82 @@
+{
+  "restaurantId": 317,
+  "hours": [
+    {
+      "weekday": "MON",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "TUE",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "WED",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "THU",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "FRI",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "SAT",
+      "openTime": "11:30",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": false
+    },
+    {
+      "weekday": "SUN",
+      "openTime": null,
+      "closeTime": null,
+      "breakStart": null,
+      "breakEnd": null,
+      "lastOrder": null,
+      "isClosed": true
+    }
+  ],
+  "hoursSource": "BUSINESS_HOUR",
+  "today": {
+    "weekday": "SAT",
+    "businessStatus": "CLOSED",
+    "openTime": "11:30",
+    "closeTime": "21:00",
+    "breakStart": null,
+    "breakEnd": null,
+    "lastOrder": null,
+    "nextTransitionAt": "2026-08-03T11:30:00+09:00",
+    "nextOpenWeekday": "MON",
+    "nextOpenTime": "11:30"
+  },
+  "nextTransitionAt": "2026-08-03T11:30:00+09:00"
+}

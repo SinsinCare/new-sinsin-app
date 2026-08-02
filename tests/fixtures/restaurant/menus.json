@@ -1,0 +1,154 @@
+{
+  "restaurantId": 317,
+  "restaurantName": "맛짱김밥천국",
+  "menuCount": 6,
+  "truncated": false,
+  "safetySummary": {
+    "safe": 0,
+    "caution": 0,
+    "restricted": 6,
+    "unknown": 0
+  },
+  "avgSafety": "RESTRICTED",
+  "hasSafeMenu": false,
+  "profileMissing": false,
+  "proteinAxisAvailable": true,
+  "menus": [
+    {
+      "menuId": 1727,
+      "name": "된장찌개 정식",
+      "description": "칼칼한 국물과 정갈한 반찬을 균형 있게 담아낸 한 상",
+      "imageUrl": null,
+      "isSignature": true,
+      "price": 9000,
+      "calories": 500,
+      "protein": 18,
+      "sodium": 1300,
+      "potassium": 400,
+      "phosphorus": 220,
+      "safetyLevel": "RESTRICTED",
+      "safetyDriver": "sodium",
+      "safetyRatio": 1.8571428571428572,
+      "confidence": "ESTIMATED",
+      "legacyRiskLevel": "HIGH_RISK",
+      "legacyRiskNutrients": [
+        "SODIUM"
+      ]
+    },
+    {
+      "menuId": 1728,
+      "name": "김치찌개 정식",
+      "description": "칼칼한 국물과 정갈한 반찬을 균형 있게 담아낸 한 상",
+      "imageUrl": null,
+      "isSignature": false,
+      "price": 9000,
+      "calories": 480,
+      "protein": 15,
+      "sodium": 1200,
+      "potassium": 380,
+      "phosphorus": 200,
+      "safetyLevel": "RESTRICTED",
+      "safetyDriver": "sodium",
+      "safetyRatio": 1.7142857142857142,
+      "confidence": "ESTIMATED",
+      "legacyRiskLevel": "HIGH_RISK",
+      "legacyRiskNutrients": [
+        "SODIUM"
+      ]
+    },
+    {
+      "menuId": 1729,
+      "name": "비빔밥",
+      "description": "신선한 채소와 고소한 참기름 향이 어우러진 든든한 한 그릇",
+      "imageUrl": null,
+      "isSignature": false,
+      "price": 9000,
+      "calories": 520,
+      "protein": 18,
+      "sodium": 980,
+      "potassium": 450,
+      "phosphorus": 250,
+      "safetyLevel": "RESTRICTED",
+      "safetyDriver": "sodium",
+      "safetyRatio": 1.4,
+      "confidence": "ESTIMATED",
+      "legacyRiskLevel": "CAUTION",
+      "legacyRiskNutrients": [
+        "SODIUM"
+      ]
+    },
+    {
+      "menuId": 1730,
+      "name": "불고기 정식",
+      "description": "선한 채소와 담백한 생선, 정갈한 반찬을 균형 있게 담아낸 건강한 한 상",
+      "imageUrl": null,
+      "isSignature": false,
+      "price": 11000,
+      "calories": 580,
+      "protein": 28,
+      "sodium": 1050,
+      "potassium": 520,
+      "phosphorus": 280,
+      "safetyLevel": "RESTRICTED",
+      "safetyDriver": "sodium",
+      "safetyRatio": 1.5,
+      "confidence": "ESTIMATED",
+      "legacyRiskLevel": "HIGH_RISK",
+      "legacyRiskNutrients": [
+        "SODIUM",
+        "POTASSIUM",
+        "PROTEIN"
+      ]
+    },
+    {
+      "menuId": 1731,
+      "name": "제육볶음 정식",
+      "description": "선한 채소와 담백한 생선, 정갈한 반찬을 균형 있게 담아낸 건강한 한 상",
+      "imageUrl": null,
+      "isSignature": false,
+      "price": 10000,
+      "calories": 620,
+      "protein": 25,
+      "sodium": 950,
+      "potassium": 480,
+      "phosphorus": 260,
+      "safetyLevel": "RESTRICTED",
+      "safetyDriver": "sodium",
+      "safetyRatio": 1.3571428571428572,
+      "confidence": "ESTIMATED",
+      "legacyRiskLevel": "HIGH_RISK",
+      "legacyRiskNutrients": [
+        "SODIUM",
+        "PROTEIN"
+      ]
+    },
+    {
+      "menuId": 1732,
+      "name": "생선구이 정식",
+      "description": "선한 채소와 담백한 생선, 정갈한 반찬을 균형 있게 담아낸 건강한 한 상",
+      "imageUrl": null,
+      "isSignature": false,
+      "price": 10000,
+      "calories": 450,
+      "protein": 30,
+      "sodium": 680,
+      "potassium": 550,
+      "phosphorus": 300,
+      "safetyLevel": "RESTRICTED",
+      "safetyDriver": "protein",
+      "safetyRatio": 1.564129301355579,
+      "confidence": "ESTIMATED",
+      "legacyRiskLevel": "HIGH_RISK",
+      "legacyRiskNutrients": [
+        "POTASSIUM",
+        "PHOSPHORUS",
+        "PROTEIN"
+      ]
+    }
+  ],
+  "legacyRiskCounts": {
+    "SAFE": 0,
+    "CAUTION": 1,
+    "HIGH_RISK": 5
+  }
+}

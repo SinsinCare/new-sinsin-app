@@ -28,6 +28,11 @@ import {
   V2IconButton,
   V2ListRow,
   V2LoadingState,
+  V2DotLoader,
+  V2Skeleton,
+  V2SkeletonCircle,
+  V2SkeletonGroup,
+  V2SkeletonText,
   V2Modal,
   V2Option,
   V2ProgressBar,
@@ -298,6 +303,32 @@ export default function V2Showcase() {
           </V2Card>
           <V2Card variant="outlined">
             <V2LoadingState message="불러오고 있어요" />
+          </V2Card>
+        </Section>
+
+        {/* 로딩은 두 갈래다 — 결과 모양을 아는 자리는 스켈레톤, 모르는 자리는 점. */}
+        <Section title="Loading">
+          <V2Card variant="outlined">
+            <V2SkeletonGroup style={{ gap: 12 }}>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <V2SkeletonCircle size={40} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <V2Skeleton width="52%" height={16} />
+                  <V2Skeleton width="34%" height={13} />
+                </View>
+              </View>
+              <V2Skeleton height={96} radius="lg" />
+              <V2SkeletonText lines={3} lineHeight={14} />
+            </V2SkeletonGroup>
+          </V2Card>
+          <V2Card variant="outlined">
+            <View
+              style={{ flexDirection: "row", gap: 24, alignItems: "center" }}
+            >
+              <V2DotLoader size="s" />
+              <V2DotLoader size="m" />
+              <V2DotLoader size="l" />
+            </View>
           </V2Card>
           <V2Card variant="outlined">
             <V2ErrorState

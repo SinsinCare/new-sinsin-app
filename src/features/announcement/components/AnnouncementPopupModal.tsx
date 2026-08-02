@@ -231,9 +231,7 @@ export function AnnouncementPopupModal({
                   variant="fill"
                   loading={isOpeningLink}
                   accessibilityLabel={
-                    hasCta
-                      ? (notice.ctaLabel ?? undefined)
-                      : t("action.close")
+                    hasCta ? (notice.ctaLabel ?? undefined) : t("action.close")
                   }
                   onPress={() => void handlePrimaryPress()}
                   style={hasCta ? styles.actionButton : styles.primaryButton}

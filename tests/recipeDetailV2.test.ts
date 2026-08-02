@@ -60,6 +60,7 @@ import {
   recipeV2Mock,
   resetRecipeV2Mock,
 } from "@/src/features/recipe/services/recipeDetailV2Service"
+import { mockRecipeIds } from "@/src/features/recipe/services/recipeListV2MockCatalog"
 import { api } from "@/src/services/core/apiClient"
 import {
   NUTRIENT_KEYS,
@@ -69,6 +70,16 @@ import {
   type RecipeIngredient,
   type RecipeNutrition,
 } from "@/src/features/recipe/types/recipeV2"
+
+/**
+ * 이 파일이 상세를 물을 때 쓰는 id. **카탈로그가 실제로 내보내는 id** 다.
+ *
+ * 종전에는 리터럴 `7` 이었다. 모의 카탈로그(101~112)에도, dev DB(21~195)에도 없는
+ * id 다. 모의 상세가 **어떤 id 로 물어도** 레시피를 만들어 줬기 때문에 그게 통과했고,
+ * 그래서 이 파일은 "목록이 주는 id 로 상세가 열린다" 를 한 번도 확인한 적이 없었다.
+ * 리터럴 대신 카탈로그에서 뽑아 오면 카탈로그가 바뀌어도 그 계약이 따라온다.
+ */
+const MOCK_ID = mockRecipeIds()[0]
 
 const NUTRITION: RecipeNutrition = {
   kcal: 520,
@@ -117,7 +128,15 @@ function readLocale(locale: "ko" | "en"): {
     }
   }
 } {
-  const file = path.join(__dirname, "..", "src", "i18n", "locales", locale, "recipe.json")
+  const file = path.join(
+    __dirname,
+    "..",
+    "src",
+    "i18n",
+    "locales",
+    locale,
+    "recipe.json",
+  )
   return JSON.parse(fs.readFileSync(file, "utf8"))
 }
 
@@ -402,13 +421,17 @@ describe("매칭 안 된 재료의 문구는 영양 출처에 따라 갈린다",
     // 계산하지 않은 경우의 문구는 "계산" 을 언급하지 않아야 한다.
     expect(ko.notInFoodTable).not.toMatch(/계산/)
     expect(en.notInFoodTable.toLowerCase()).not.toMatch(/calculat/)
-  });
+  })
 
   it("세 문구가 서로 다른 사실을 말한다", () => {
     const ko = KO.detail.ingredients
     const en = EN.detail.ingredients
-    expect(new Set([ko.excluded, ko.unknownAmount, ko.notInFoodTable]).size).toBe(3)
-    expect(new Set([en.excluded, en.unknownAmount, en.notInFoodTable]).size).toBe(3)
+    expect(
+      new Set([ko.excluded, ko.unknownAmount, ko.notInFoodTable]).size,
+    ).toBe(3)
+    expect(
+      new Set([en.excluded, en.unknownAmount, en.notInFoodTable]).size,
+    ).toBe(3)
     // 분량을 모르는 경우에 "식품표에 없다" 고 말하지 않아야 한다 — 실제로 있을 수 있다.
     expect(ko.unknownAmount).not.toMatch(/식품표/)
     expect(en.unknownAmount.toLowerCase()).not.toMatch(/reference table/)
@@ -458,7 +481,9 @@ describe("매칭 안 된 재료의 문구는 영양 출처에 따라 갈린다",
     const [withoutGrams] = mapRecipeDetail(
       {
         id: 1,
-        ingredients: [{ ordinal: 1, name: "참기름", amountText: "소량", matched: false }],
+        ingredients: [
+          { ordinal: 1, name: "참기름", amountText: "소량", matched: false },
+        ],
       },
       "ko",
     ).ingredients
@@ -562,8 +587,8 @@ describe("모의 경로 (서버 v2 가 붙기 전)", () => {
   })
 
   it("상세는 계약 §3.3 모양으로 온다", async () => {
-    const detail = await recipeDetailV2Service.getRecipeDetail(7, "ko")
-    expect(detail.id).toBe(7)
+    const detail = await recipeDetailV2Service.getRecipeDetail(MOCK_ID, "ko")
+    expect(detail.id).toBe(MOCK_ID)
     expect(detail.nutrition).not.toBeNull()
     expect(detail.nutrition?.provenance).toBe("reference_estimate")
     expect(detail.nutrientBreakdown.map((item) => item.key)).toEqual([
@@ -582,32 +607,32 @@ describe("모의 경로 (서버 v2 가 붙기 전)", () => {
   })
 
   it("영문 요청은 번역 공백을 숨기지 않는다", async () => {
-    const detail = await recipeDetailV2Service.getRecipeDetail(7, "en")
+    const detail = await recipeDetailV2Service.getRecipeDetail(MOCK_ID, "en")
     expect(detail.localeInfo.requested).toBe("en")
     expect(detail.localeInfo.contentLocale).toBe("ko")
     expect(detail.localeInfo.fullyTranslated).toBe(false)
   })
 
   it("저장은 절대 상태이고 두 번 보내도 같은 결과다(멱등)", async () => {
-    const first = await recipeDetailV2Service.setSaved(7, true)
-    const second = await recipeDetailV2Service.setSaved(7, true)
+    const first = await recipeDetailV2Service.setSaved(MOCK_ID, true)
+    const second = await recipeDetailV2Service.setSaved(MOCK_ID, true)
     expect(first).toEqual(second)
     expect(first.saved).toBe(true)
 
-    const off = await recipeDetailV2Service.setSaved(7, false)
+    const off = await recipeDetailV2Service.setSaved(MOCK_ID, false)
     expect(off.saved).toBe(false)
     expect(off.saveCount).toBe(first.saveCount - 1)
   })
 
   it("내 리뷰 쓰기는 갱신이고 집계가 따라온다", async () => {
-    const created = await recipeDetailV2Service.upsertMyReview(7, {
+    const created = await recipeDetailV2Service.upsertMyReview(MOCK_ID, {
       rating: 5,
       body: "좋았어요",
     })
     expect(created.review.rating).toBe(5)
     const countAfterCreate = created.summary.count
 
-    const updated = await recipeDetailV2Service.upsertMyReview(7, {
+    const updated = await recipeDetailV2Service.upsertMyReview(MOCK_ID, {
       rating: 3,
       body: null,
     })
@@ -616,20 +641,20 @@ describe("모의 경로 (서버 v2 가 붙기 전)", () => {
     // 갱신이므로 개수가 늘지 않는다.
     expect(updated.summary.count).toBe(countAfterCreate)
 
-    const deleted = await recipeDetailV2Service.deleteMyReview(7)
+    const deleted = await recipeDetailV2Service.deleteMyReview(MOCK_ID)
     expect(deleted.summary.count).toBe(countAfterCreate - 1)
     // 없는 리뷰를 또 지워도 200 이다(멱등).
-    const again = await recipeDetailV2Service.deleteMyReview(7)
+    const again = await recipeDetailV2Service.deleteMyReview(MOCK_ID)
     expect(again.summary.count).toBe(deleted.summary.count)
   })
 
   it("리뷰 목록은 커서로 이어지고 마지막 페이지에서 멈춘다", async () => {
-    const first = await recipeDetailV2Service.getReviews(7, { limit: 2 })
+    const first = await recipeDetailV2Service.getReviews(MOCK_ID, { limit: 2 })
     expect(first.items).toHaveLength(2)
     expect(first.hasMore).toBe(true)
     expect(first.nextCursor).not.toBeNull()
 
-    const second = await recipeDetailV2Service.getReviews(7, {
+    const second = await recipeDetailV2Service.getReviews(MOCK_ID, {
       limit: 2,
       cursor: first.nextCursor ?? undefined,
     })
@@ -682,7 +707,7 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
         isSuccess: true,
         code: "OK",
         result: {
-          id: 7,
+          id: MOCK_ID,
           name: "잡채덮밥",
           nutrition: {
             sodiumMg: 376,
@@ -699,12 +724,12 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
       },
     })
 
-    const detail = await recipeDetailV2Service.getRecipeDetail(7, "en")
+    const detail = await recipeDetailV2Service.getRecipeDetail(MOCK_ID, "en")
 
-    expect(mockApi.get).toHaveBeenCalledWith("/recipes/7", {
+    expect(mockApi.get).toHaveBeenCalledWith(`/recipes/${MOCK_ID}`, {
       params: { locale: "en" },
     })
-    expect(detail.id).toBe(7)
+    expect(detail.id).toBe(MOCK_ID)
     expect(detail.nutrition?.provenance).toBe("computed_from_ingredients")
     expect(detail.nutrition?.sodiumMg).toBe(376)
     expect(detail.rating.average).toBe(4.7)
@@ -713,7 +738,7 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
 
   it("봉투에 result 가 없으면 빈 값으로 내려앉되 수치는 그리지 않는다", async () => {
     mockApi.get.mockResolvedValue({ data: { isSuccess: true } })
-    const detail = await recipeDetailV2Service.getRecipeDetail(7, "ko")
+    const detail = await recipeDetailV2Service.getRecipeDetail(MOCK_ID, "ko")
     // 계약 위반 응답이므로 수치는 null 이다 — 0 을 만들지 않는다(§1.1).
     expect(detail.nutrition).toBeNull()
     expect(detail.rating).toEqual({
@@ -735,7 +760,7 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
         },
       },
     })
-    const detail = await recipeDetailV2Service.getRecipeDetail(7, "ko")
+    const detail = await recipeDetailV2Service.getRecipeDetail(MOCK_ID, "ko")
     expect(detail.nutrition).toBeNull()
   })
 
@@ -743,21 +768,23 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
     mockApi.put.mockResolvedValue({
       data: { result: { saved: true, saveCount: 1229 } },
     })
-    const result = await recipeDetailV2Service.setSaved(7, true)
+    const result = await recipeDetailV2Service.setSaved(MOCK_ID, true)
 
-    expect(mockApi.put).toHaveBeenCalledWith("/recipes/7/save", { saved: true })
+    expect(mockApi.put).toHaveBeenCalledWith(`/recipes/${MOCK_ID}/save`, {
+      saved: true,
+    })
     expect(mockApi.post).not.toHaveBeenCalled()
     expect(result).toEqual({ saved: true, saveCount: 1229 })
 
     // 같은 상태를 두 번 보내는 것이 안전해야 한다 — 본문이 매번 같아야 멱등이다.
-    await recipeDetailV2Service.setSaved(7, true)
+    await recipeDetailV2Service.setSaved(MOCK_ID, true)
     expect(mockApi.put.mock.calls[0]).toEqual(mockApi.put.mock.calls[1])
   })
 
   it("조회 기록은 POST 이고 본문을 만들지 않는다", async () => {
     mockApi.post.mockResolvedValue({ data: {} })
-    await recipeDetailV2Service.recordView(7)
-    expect(mockApi.post).toHaveBeenCalledWith("/recipes/7/views")
+    await recipeDetailV2Service.recordView(MOCK_ID)
+    expect(mockApi.post).toHaveBeenCalledWith(`/recipes/${MOCK_ID}/views`)
   })
 
   it("리뷰 목록은 limit·sort 를 싣고 커서가 없으면 커서를 보내지 않는다", async () => {
@@ -783,8 +810,8 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
       },
     })
 
-    const page = await recipeDetailV2Service.getReviews(7)
-    expect(mockApi.get).toHaveBeenCalledWith("/recipes/7/reviews", {
+    const page = await recipeDetailV2Service.getReviews(MOCK_ID)
+    expect(mockApi.get).toHaveBeenCalledWith(`/recipes/${MOCK_ID}/reviews`, {
       params: { limit: 20, sort: "recent" },
     })
     /**
@@ -808,19 +835,19 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
 
   it("커서·정렬을 주면 그대로 실어 보낸다", async () => {
     mockApi.get.mockResolvedValue({ data: { result: { items: [] } } })
-    await recipeDetailV2Service.getReviews(7, {
+    await recipeDetailV2Service.getReviews(MOCK_ID, {
       limit: 5,
       cursor: "20",
       sort: "helpful",
     })
-    expect(mockApi.get).toHaveBeenCalledWith("/recipes/7/reviews", {
+    expect(mockApi.get).toHaveBeenCalledWith(`/recipes/${MOCK_ID}/reviews`, {
       params: { limit: 5, sort: "helpful", cursor: "20" },
     })
   })
 
   it("리뷰 목록이 비면 별점을 0.0 으로 만들지 않는다", async () => {
     mockApi.get.mockResolvedValue({ data: { result: { items: [] } } })
-    const page = await recipeDetailV2Service.getReviews(7)
+    const page = await recipeDetailV2Service.getReviews(MOCK_ID)
     expect(page.items).toEqual([])
     expect(page.hasMore).toBe(false)
     expect(page.nextCursor).toBeNull()
@@ -842,14 +869,17 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
         },
       },
     })
-    const result = await recipeDetailV2Service.upsertMyReview(7, {
+    const result = await recipeDetailV2Service.upsertMyReview(MOCK_ID, {
       rating: 4,
       body: "좋아요",
     })
-    expect(mockApi.put).toHaveBeenCalledWith("/recipes/7/reviews/mine", {
-      rating: 4,
-      body: "좋아요",
-    })
+    expect(mockApi.put).toHaveBeenCalledWith(
+      `/recipes/${MOCK_ID}/reviews/mine`,
+      {
+        rating: 4,
+        body: "좋아요",
+      },
+    )
     expect(result.review.rating).toBe(4)
     expect(result.review.updatedAt).toBe("2026-07-30T00:00:00.000Z")
     expect(result.summary.count).toBe(3)
@@ -859,7 +889,9 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
     mockApi.put.mockResolvedValue({
       data: { result: { summary: { average: 5, count: 1, distribution: [] } } },
     })
-    const result = await recipeDetailV2Service.upsertMyReview(7, { rating: 5 })
+    const result = await recipeDetailV2Service.upsertMyReview(MOCK_ID, {
+      rating: 5,
+    })
     // 사용자가 방금 고른 별점이다 — 화면에서 사라지면 다시 눌러야 한다.
     expect(result.review.rating).toBe(5)
     expect(result.review.body).toBeNull()
@@ -873,8 +905,10 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
         },
       },
     })
-    const result = await recipeDetailV2Service.deleteMyReview(7)
-    expect(mockApi.delete).toHaveBeenCalledWith("/recipes/7/reviews/mine")
+    const result = await recipeDetailV2Service.deleteMyReview(MOCK_ID)
+    expect(mockApi.delete).toHaveBeenCalledWith(
+      `/recipes/${MOCK_ID}/reviews/mine`,
+    )
     expect(result.summary.count).toBe(3)
   })
 
@@ -892,7 +926,7 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
         },
       },
     })
-    const detail = await recipeDetailV2Service.getRecipeDetail(7, "ko")
+    const detail = await recipeDetailV2Service.getRecipeDetail(MOCK_ID, "ko")
     const serialized = JSON.stringify(detail)
     expect(serialized).not.toContain("ckdGuide")
     expect(serialized).not.toContain("aiSummary")

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -11,11 +10,12 @@ import {
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useQueryClient } from "@tanstack/react-query"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { showErrorToast } from "@/src/lib/toast"
 import { getErrorMessage as getUserFacingErrorMessage } from "@/src/lib/errorUtils"
@@ -47,7 +47,7 @@ function getNameErrorMessage(e: unknown): string | null {
 
 export function NameEditScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
   const s = useSurface()
@@ -123,12 +123,7 @@ export function NameEditScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("shared.back")}
-            // 딥링크로 첫 화면이 되면 히스토리가 없다 — back 대신 프로필 수정으로.
-            onPress={() =>
-              router.canGoBack()
-                ? router.back()
-                : router.replace("/(settings)/profile-edit")
-            }
+            onPress={router.back}
             hitSlop={8}
           >
             <Ionicons name="chevron-back" size={24} color={s.textStrong} />
@@ -171,7 +166,7 @@ export function NameEditScreen() {
             onClear={isLoading ? undefined : handleClear}
             trailing={
               isLoading ? (
-                <ActivityIndicator size="small" color={s.textMuted} />
+                <V2DotLoader size="s" color={s.textMuted} />
               ) : undefined
             }
           />

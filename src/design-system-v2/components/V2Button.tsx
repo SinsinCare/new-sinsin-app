@@ -12,7 +12,6 @@
 
 import { type ReactNode } from "react"
 import {
-  ActivityIndicator,
   Pressable,
   type PressableProps,
   StyleSheet,
@@ -28,6 +27,7 @@ import {
   type SemanticColors,
 } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
+import { V2DotLoader } from "./V2DotLoader"
 
 export type V2ButtonSize = "s" | "m" | "l" | "xl"
 // 색상 이름은 Figma와 1:1 (축약하지 않음 — 신규 작업자가 디자인↔코드 바로 대조 가능)
@@ -40,7 +40,7 @@ export type V2ButtonProps = Omit<PressableProps, "children" | "style"> & {
   size?: V2ButtonSize
   color?: V2ButtonColor
   variant?: V2ButtonVariant
-  /** 로딩 스피너 표시 + 상호작용 차단 */
+  /** 로딩 표시(점 로더) + 상호작용 차단 */
   loading?: boolean
   /** 부모 폭으로 늘림 */
   fullWidth?: boolean
@@ -151,7 +151,8 @@ export function V2Button({
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={fg} size="small" />
+        // 라벨 자리에 그대로 들어가는 점 세 개 — 링과 달리 버튼 높이를 흔들지 않는다.
+        <V2DotLoader color={fg} size={size === "s" ? "s" : "m"} />
       ) : (
         <>
           {leftIcon}

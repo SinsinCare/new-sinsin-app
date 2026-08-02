@@ -2,9 +2,18 @@
  * 리뷰 쓰기. `PUT /recipes/{id}/reviews/mine` 은 **절대 지정**이라 처음 쓰기와 고치기가
  * 같은 화면·같은 호출이다(계약 §3.4, 멱등).
  *
- * 계약 §6.1 "등록 버튼이 비활성인데 이유가 없음" 을 고친다 — 버튼 **바로 위**에
- * 무엇이 남았는지 적는다("별점을 골라 주세요"). 별점 없이 본문만 쓰는 것은 계약이
- * 허용하지 않으므로(별점 1~5 필수) 그 이유를 숨기지 않고 그대로 말한다.
+ * 화면 문법은 가입 스텝과 같다 — **질문 하나, 답 하나**.
+ *   1. 헤더에는 닫기만 둔다. 제목을 헤더에 작게 넣으면 질문이 장식이 되고, 화면에
+ *      "제목 + 질문" 두 개의 위계가 생긴다. 질문은 본문 첫 줄에 크게 한 번만 쓴다.
+ *   2. 별점을 고르기 전에는 본문 입력을 보여 주지 않는다. 필수(별점)와 선택(본문)이
+ *      나란히 서 있으면 무엇부터 해야 하는지 사용자가 판단해야 한다. 고르면 그때
+ *      본문이 내려오고 키보드가 따라 올라온다.
+ *   3. 본문 입력은 상자를 두르지 않는다. 화면에 입력이 하나뿐이라 테두리로 영역을
+ *      나눌 이유가 없다. 글자 수는 한계에 가까워질 때만 나타난다.
+ *
+ * 계약 §6.1 "등록 버튼이 비활성인데 이유가 없음" 은 **버튼 자신이** 말한다 —
+ * 별점 전에는 버튼 글자가 "별점을 골라 주세요" 다. 버튼 위에 회색 안내문을 한 줄
+ * 더 놓으면 눈이 두 번 멈추고, 정작 눌러야 할 것과 이유가 따로 논다.
  *
  * 입력이 있는 화면이라 바텀시트가 아니라 전체 화면 Modal + KeyboardAvoidingView 다
  * (기존 `VoteSheet` 와 같은 패턴). 시트로 두면 키보드가 본문을 덮는다.
@@ -20,12 +29,22 @@ import {
   TextInput,
   View,
 } from "react-native"
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { Text, XStack, YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
+import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import type { SurfacePalette } from "@/src/theme/surface"
+import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
 import { REVIEW_BODY_MAX_LENGTH, type MyReview } from "../../types/recipeV2"
 
 export interface ReviewComposerProps {
@@ -39,6 +58,17 @@ export interface ReviewComposerProps {
 }
 
 const STARS = [1, 2, 3, 4, 5] as const
+/** 별점 → 말. 키를 문자열로 조립하면 i18n 타입이 못 따라오므로 그대로 적는다. */
+const RATING_WORD_KEYS = {
+  1: "detail.reviews.ratingWords.1",
+  2: "detail.reviews.ratingWords.2",
+  3: "detail.reviews.ratingWords.3",
+  4: "detail.reviews.ratingWords.4",
+  5: "detail.reviews.ratingWords.5",
+} as const
+const SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
+/** 글자 수는 끝이 보일 때만 알려 준다. 그전에는 세는 것 자체가 참견이다. */
+const COUNTER_VISIBLE_FROM = REVIEW_BODY_MAX_LENGTH - 200
 
 export function ReviewComposer({
   visible,
@@ -53,6 +83,7 @@ export function ReviewComposer({
   const insets = useSafeAreaInsets()
   const [rating, setRating] = useState(myReview?.rating ?? 0)
   const [body, setBody] = useState(myReview?.body ?? "")
+  const bodyRef = useRef<TextInput>(null)
 
   /**
    * **열리는 순간에만** 서버가 알고 있는 내 리뷰로 채운다.
@@ -76,6 +107,19 @@ export function ReviewComposer({
   const topPadding =
     Platform.OS === "android" ? Math.max(insets.top, 24) + 10 : 10
 
+  /**
+   * 별점을 **처음** 고른 순간에만 본문으로 커서를 넘긴다. 고칠 때마다 키보드가
+   * 튀어 오르면 별점을 다시 만지는 것이 벌처럼 느껴진다.
+   */
+  const pickRating = (star: number) => {
+    hapticSelection()
+    const first = rating === 0
+    setRating(star)
+    if (first) {
+      requestAnimationFrame(() => bodyRef.current?.focus())
+    }
+  }
+
   return (
     <Modal
       visible={visible}
@@ -89,113 +133,119 @@ export function ReviewComposer({
       >
         <XStack
           alignItems="center"
-          justifyContent="space-between"
           paddingHorizontal={LAYOUT.screenX}
           paddingTop={topPadding}
-          paddingBottom={12}
-          gap={12}
+          paddingBottom={4}
         >
           <Pressable
             onPress={onClose}
-            hitSlop={10}
+            hitSlop={12}
             accessibilityRole="button"
             accessibilityLabel={t("action.close")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
           >
-            <Ionicons name="close" size={24} color={surface.textStrong} />
+            <Ionicons name="close" size={26} color={surface.textStrong} />
           </Pressable>
-          <Text
-            {...TYPE.sheetTitle}
-            fontFamily="$body"
-            fontWeight="700"
-            color={surface.textStrong}
-          >
-            {t("detail.reviews.composerTitle")}
-          </Text>
-          <View style={styles.headerSpacer} />
         </XStack>
 
         <ScrollView
           style={styles.flex}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           bounces={false}
           overScrollMode="never"
         >
-          <XStack gap={8} justifyContent="center" paddingVertical={8}>
-            {STARS.map((star) => (
-              <Pressable
-                key={star}
-                onPress={() => setRating(star)}
-                accessibilityRole="button"
-                accessibilityLabel={t("detail.reviews.starAccessibility", {
-                  star,
-                })}
-                accessibilityState={{ selected: rating >= star }}
-                hitSlop={6}
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-              >
-                <Ionicons
-                  name={rating >= star ? "star" : "star-outline"}
-                  size={36}
-                  color={rating >= star ? surface.brand : surface.border}
-                />
-              </Pressable>
-            ))}
-          </XStack>
-
-          <YStack
-            borderRadius={LAYOUT.field.radius}
-            borderWidth={1}
-            borderColor={surface.border}
-            backgroundColor={surface.card}
-            padding={14}
-            gap={8}
+          <Text
+            {...TYPE.question}
+            fontFamily="$body"
+            fontWeight="700"
+            color={surface.textStrong}
           >
-            <TextInput
-              value={body}
-              onChangeText={setBody}
-              placeholder={t("detail.reviews.bodyPlaceholder")}
-              placeholderTextColor={surface.placeholder}
-              maxLength={REVIEW_BODY_MAX_LENGTH}
-              multiline
-              textAlignVertical="top"
-              style={[styles.bodyInput, { color: surface.textStrong }]}
-            />
-            <Text
-              {...TYPE.caption}
-              fontFamily="$body"
-              color={surface.textWeak}
-              alignSelf="flex-end"
-            >
-              {t("detail.reviews.bodyCounter", {
-                current: body.length,
-                max: REVIEW_BODY_MAX_LENGTH,
-              })}
-            </Text>
+            {t("detail.reviews.composerTitle")}
+          </Text>
+
+          <YStack marginTop={LAYOUT.questionToField} gap={10}>
+            <XStack gap={4} marginLeft={-6}>
+              {STARS.map((star) => (
+                <Star
+                  key={star}
+                  star={star}
+                  filled={rating >= star}
+                  surface={surface}
+                  label={t("detail.reviews.starAccessibility", { star })}
+                  onPress={() => pickRating(star)}
+                />
+              ))}
+            </XStack>
+
+            {/* 고른 값을 말로 되돌려 준다. 빈 줄을 자리로 남겨 별이 흔들리지 않는다. */}
+            <View style={styles.ratingWordSlot}>
+              {rating > 0 && (
+                <Animated.View key={rating} entering={FadeIn.duration(160)}>
+                  <Text
+                    {...TYPE.value}
+                    fontFamily="$body"
+                    fontWeight="600"
+                    color={surface.brand}
+                  >
+                    {t(RATING_WORD_KEYS[rating as 1 | 2 | 3 | 4 | 5])}
+                  </Text>
+                </Animated.View>
+              )}
+            </View>
           </YStack>
 
-          {hasError && (
-            <Text {...TYPE.caption} fontFamily="$body" color={surface.danger}>
-              {t("detail.reviews.submitError")}
-            </Text>
+          {/* 별점을 고르기 전에는 본문이 없다 — 지금 할 일은 하나뿐이다. */}
+          {rating > 0 && (
+            <Animated.View
+              entering={FadeInDown.duration(MOTION.duration.base)
+                .springify()
+                .reduceMotion(ReduceMotion.System)}
+              style={styles.bodyBlock}
+            >
+              <TextInput
+                ref={bodyRef}
+                value={body}
+                onChangeText={setBody}
+                placeholder={t("detail.reviews.bodyPlaceholder")}
+                placeholderTextColor={surface.placeholder}
+                maxLength={REVIEW_BODY_MAX_LENGTH}
+                multiline
+                scrollEnabled={false}
+                textAlignVertical="top"
+                style={[styles.bodyInput, { color: surface.textStrong }]}
+              />
+              {body.length >= COUNTER_VISIBLE_FROM && (
+                <Text
+                  {...TYPE.caption}
+                  fontFamily="$body"
+                  color={surface.textWeak}
+                  alignSelf="flex-end"
+                >
+                  {t("detail.reviews.bodyCounter", {
+                    current: body.length,
+                    max: REVIEW_BODY_MAX_LENGTH,
+                  })}
+                </Text>
+              )}
+            </Animated.View>
           )}
         </ScrollView>
 
         <YStack
           paddingHorizontal={LAYOUT.screenX}
           paddingBottom={Math.max(insets.bottom, 16)}
-          gap={8}
+          gap={10}
         >
-          {/* 비활성 이유를 버튼 바로 위에 적는다(§6.1). */}
-          {!canSubmit && !isSubmitting && (
+          {hasError && (
             <Text
               {...TYPE.caption}
               fontFamily="$body"
-              color={surface.textMuted}
+              color={surface.danger}
               textAlign="center"
             >
-              {t("detail.reviews.submitDisabledReason")}
+              {t("detail.reviews.submitError")}
             </Text>
           )}
           <Pressable
@@ -204,7 +254,11 @@ export function ReviewComposer({
             }
             disabled={!canSubmit}
             accessibilityRole="button"
-            accessibilityLabel={t("detail.reviews.submit")}
+            accessibilityLabel={
+              canSubmit
+                ? t("detail.reviews.submit")
+                : t("detail.reviews.submitDisabledReason")
+            }
             accessibilityState={{ disabled: !canSubmit }}
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
@@ -223,7 +277,10 @@ export function ReviewComposer({
               >
                 {isSubmitting
                   ? t("detail.reviews.submitting")
-                  : t("detail.reviews.submit")}
+                  : /* 비활성 이유를 버튼 자신이 말한다(§6.1). */
+                    canSubmit
+                    ? t("detail.reviews.submit")
+                    : t("detail.reviews.submitDisabledReason")}
               </Text>
             </YStack>
           </Pressable>
@@ -233,18 +290,74 @@ export function ReviewComposer({
   )
 }
 
+/**
+ * 별 하나. 채워지는 순간 한 번 튄다 — 점수가 "찍혔다"는 것을 눈보다 몸이 먼저 안다.
+ * 빈 별은 보더색이라 거의 보이지 않게 두고, 채운 별만 브랜드색을 갖는다.
+ */
+function Star({
+  star,
+  filled,
+  surface,
+  label,
+  onPress,
+}: {
+  star: number
+  filled: boolean
+  surface: SurfacePalette
+  label: string
+  onPress: () => void
+}) {
+  const scale = useSharedValue(1)
+  const wasFilled = useRef(filled)
+
+  useEffect(() => {
+    if (filled && !wasFilled.current) {
+      scale.value = withSpring(1.22, { ...SPRING, stiffness: 320 }, () => {
+        scale.value = withSpring(1, SPRING)
+      })
+    }
+    wasFilled.current = filled
+  }, [filled, scale])
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }))
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: filled }}
+      hitSlop={8}
+      style={styles.starHit}
+    >
+      <Animated.View style={animatedStyle}>
+        <Ionicons
+          name={filled ? "star" : "star-outline"}
+          size={40}
+          color={filled ? surface.brand : surface.border}
+        />
+      </Animated.View>
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  headerSpacer: { width: 24 },
   content: {
     paddingHorizontal: LAYOUT.screenX,
+    paddingTop: 12,
     paddingBottom: 24,
-    gap: 16,
   },
+  starHit: { padding: 6 },
+  ratingWordSlot: { height: 22, justifyContent: "center" },
+  bodyBlock: { marginTop: 28 },
   bodyInput: {
-    minHeight: 120,
-    fontSize: 15,
-    lineHeight: 22,
+    minHeight: 96,
+    fontSize: 17,
+    lineHeight: 26,
+    letterSpacing: -0.34,
     fontFamily: "Pretendard-Regular",
     padding: 0,
   },

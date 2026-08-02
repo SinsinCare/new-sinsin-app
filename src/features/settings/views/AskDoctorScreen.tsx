@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react"
 import {
-  ActivityIndicator,
   Alert,
   Keyboard,
   KeyboardAvoidingView,
@@ -14,11 +13,12 @@ import {
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { ThemedView } from "@/components/themed-view"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
@@ -69,7 +69,7 @@ const statusCopy: Record<
 
 export function AskDoctorScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const c = useSettingsColors()
   const isDarkMode = useAppColorScheme() === "dark"
@@ -336,7 +336,7 @@ export function AskDoctorScreen() {
                 onPress={submitSearch}
               >
                 {searchMutation.isPending ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <V2DotLoader size="m" color="#FFFFFF" />
                 ) : (
                   <>
                     <Ionicons name="search" size={18} color="#FFFFFF" />
@@ -471,7 +471,7 @@ function ConnectionStatusSection({
           {t("doctor.status.title")}
         </ThemedText>
         {isLoading ? (
-          <ActivityIndicator size="small" color={tokens.color.sub6.val} />
+          <V2DotLoader size="s" color={tokens.color.sub6.val} />
         ) : null}
       </View>
       {hasError && !isLoading ? (
@@ -580,7 +580,7 @@ function ConnectionRefreshState({
         onPress={onRetry}
       >
         {isRefreshing ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <V2DotLoader size="s" color="#FFFFFF" />
         ) : (
           <ThemedText style={styles.retryButtonText}>
             {t("doctor.status.retry")}
@@ -768,7 +768,7 @@ function DoctorResultCard({
         onPress={onRequest}
       >
         {isPending ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <V2DotLoader size="s" color="#FFFFFF" />
         ) : (
           <ThemedText style={styles.requestButtonText}>
             {existingConnection

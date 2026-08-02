@@ -1,10 +1,10 @@
-import { router } from "expo-router"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
+import { useGoBack } from "@/src/shared/navigation"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
 
 /**
@@ -33,6 +33,7 @@ export default function RecipeEditScreen() {
   const { t } = useTranslation("recipe")
   const s = useSurface()
   const insets = useSafeAreaInsets()
+  const goBack = useGoBack()
 
   return (
     <View
@@ -43,7 +44,7 @@ export default function RecipeEditScreen() {
     >
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={t("action.close")}

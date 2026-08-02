@@ -18,6 +18,9 @@ export * from "./spacing"
 export * from "./radius"
 export * from "./size"
 export * from "./elevation"
+// 화면 격자(GUTTER/SECTION_GAP/…). `v2Tokens` 객체에는 넣지 않는다 — 디자인 토큰이 아니라
+// 토큰으로 만든 **레이아웃 규약**이라 층이 다르다. 자세한 이유는 layout.ts 머리말.
+export * from "./layout"
 
 /** 전체 토큰 집합 — `import { v2Tokens } from "@/src/design-system-v2"` */
 export const v2Tokens = {

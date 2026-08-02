@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import { Alert } from "react-native"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { foodCameraService } from "@/src/services/data"
@@ -37,7 +37,7 @@ function confirmDeleteMeal(): Promise<boolean> {
 }
 
 export function useMealPersistenceActions() {
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const [isStartingConsultation, setIsStartingConsultation] = useState(false)
   const [isDeletingDiary, setIsDeletingDiary] = useState(false)

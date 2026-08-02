@@ -5,16 +5,18 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  ActivityIndicator,
   Alert,
 } from "react-native"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
+import { useLoadingVisible } from "@/src/design-system-v2"
+import { OcrReviewSkeleton } from "../components/HealthSkeletons"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
@@ -61,7 +63,7 @@ function formatDateInput(raw: string): string {
 
 export function OcrReviewScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
   const { reportId: reportIdParam } = useLocalSearchParams<{
@@ -72,6 +74,8 @@ export function OcrReviewScreen() {
   const [report, setReport] = useState<OcrReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 캐시/로컬 응답이 빠를 때 스켈레톤이 한 프레임 스쳐 지나가지 않게 한다.
+  const showSkeleton = useLoadingVisible(loading)
   const [measuredAt, setMeasuredAt] = useState("")
   const [items, setItems] = useState<EditableItem[]>([])
   const [customSeq, setCustomSeq] = useState(0)
@@ -200,9 +204,7 @@ export function OcrReviewScreen() {
           paddingTop={insets.top + 8}
           onBack={() => router.back()}
         />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={tokens.color.sub6.val} />
-        </View>
+        {showSkeleton ? <OcrReviewSkeleton /> : null}
       </ThemedView>
     )
   }

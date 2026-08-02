@@ -14,7 +14,9 @@ import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
 import { parseFoodConsultMessage } from "../utils/foodConsultMessage"
+import { parseExamConsultMessage } from "../utils/examConsultMessage"
 import { FoodConsultCard } from "./FoodConsultCard"
+import { ExamConsultCard } from "./ExamConsultCard"
 import { USER_BUBBLE_BG, USER_BUBBLE_TEXT } from "./chatPalette"
 
 // 아바타는 메시지마다 렌더됩니다. SVG 래퍼(base64 PNG 645KB)를 그대로 두면
@@ -332,14 +334,28 @@ export const UserBubble = memo(function UserBubble({
     () => parseFoodConsultMessage(message.content),
     [message.content],
   )
+  /*
+    건강검진 "질문하기" 원문도 같은 방식으로 카드가 된다. 식사가 아닐 때만 시도한다 —
+    두 포맷이 동시에 맞을 일은 없지만, 굳이 둘 다 파싱해서 확인할 이유도 없다.
+  */
+  const examConsult = useMemo(
+    () =>
+      foodConsult
+        ? null
+        : parseExamConsultMessage(message.content, (key, options) =>
+            String(t(key as never, options as never)),
+          ),
+    [foodConsult, message.content, t],
+  )
+  const consultCard = foodConsult != null || examConsult != null
   return (
     <XStack justifyContent="flex-end" paddingHorizontal={CHAT_GUTTER}>
       <YStack
         alignItems="flex-end"
         gap={6}
         // 영양소 2열 그리드가 숨 쉴 폭 — 카드일 때만 살짝 넓힌다.
-        width={foodConsult ? "88%" : undefined}
-        maxWidth={foodConsult ? "88%" : "78%"}
+        width={consultCard ? "88%" : undefined}
+        maxWidth={consultCard ? "88%" : "78%"}
       >
         {/* 첨부 사진은 버블 밖 독립 썸네일 — 요즘 LLM 챗 문법 그대로. */}
         {message.imageUri && (
@@ -353,6 +369,8 @@ export const UserBubble = memo(function UserBubble({
         )}
         {foodConsult ? (
           <FoodConsultCard data={foodConsult} />
+        ) : examConsult ? (
+          <ExamConsultCard data={examConsult} />
         ) : (
           message.content.length > 0 && (
             <YStack

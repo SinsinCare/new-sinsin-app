@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 
@@ -45,7 +45,7 @@ function startOfDayBefore(days: number): Date {
  */
 export default function NewStoryScreen() {
   const { t, i18n } = useTranslation()
-  const router = useRouter()
+  const router = useAppRouter()
   const insets = useSafeAreaInsets()
   const surface = useSurface()
   const bottomInset =
@@ -78,10 +78,7 @@ export default function NewStoryScreen() {
         }))
 
     return [
-      ...build(
-        todayAnalysis?.result?.diets,
-        t("community.newStory.today"),
-      ),
+      ...build(todayAnalysis?.result?.diets, t("community.newStory.today")),
       ...build(
         yesterdayAnalysis?.result?.diets,
         t("community.newStory.yesterday"),
@@ -262,10 +259,9 @@ export default function NewStoryScreen() {
                   setSelected(candidate)
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={t(
-                  "community.newStory.selectPhoto",
-                  { label: candidate.label },
-                )}
+                accessibilityLabel={t("community.newStory.selectPhoto", {
+                  label: candidate.label,
+                })}
                 accessibilityState={{ selected: isActive }}
                 style={({ pressed }) => [
                   styles.tile,

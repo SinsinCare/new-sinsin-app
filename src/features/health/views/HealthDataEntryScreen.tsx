@@ -2,7 +2,7 @@ import React from "react"
 import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -13,7 +13,7 @@ import { useHealthTheme } from "../hooks/useHealthTheme"
 
 export function HealthDataEntryScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
 

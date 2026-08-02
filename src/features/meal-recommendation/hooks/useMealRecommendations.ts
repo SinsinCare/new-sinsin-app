@@ -34,10 +34,7 @@ export function useMealRecommendations(
     mutationFn: () =>
       mealRecommendationService.refreshRecommendations(mealType, category),
     onSuccess: (newData) => {
-      queryClient.setQueryData(
-        queryKey,
-        newData,
-      )
+      queryClient.setQueryData(queryKey, newData)
     },
   })
 

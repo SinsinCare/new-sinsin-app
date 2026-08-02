@@ -57,6 +57,7 @@ const bibimbapContext: FoodConsultContext = {
       servingSizeValue: 500,
       servingSizeUnit: "g",
       calories: 550,
+      protein: 18,
       sodium: 1200,
       potassium: 600,
       phosphorus: 280,
@@ -66,6 +67,7 @@ const bibimbapContext: FoodConsultContext = {
       servingSizeValue: 1,
       servingSizeUnit: "그릇",
       calories: 50,
+      protein: 3,
       sodium: 600,
       potassium: 300,
       phosphorus: 50,
@@ -202,5 +204,21 @@ describe("parseFoodConsultMessage", () => {
 
     expect(parsed).not.toBeNull()
     expect(parsed!.totals).toHaveLength(8)
+  })
+
+  /*
+    단백질이 **음식별 줄**에 실리는지 본다. 합계 줄에는 원래 있었고 음식별 줄에만 없었는데,
+    픽스처에 `protein` 이 없어서 그 결함이 테스트를 그대로 통과했다. 콩팥병에서 단백질은
+    나트륨과 나란한 판정 축이라 조용히 빠지면 안 된다.
+  */
+  it("음식별 줄에 단백질이 실린다", () => {
+    const message = buildFoodConsultMessage(bibimbapContext, "ko", koT)
+    const bibimbapLine = message
+      .split("\n")
+      .find((line) => line.startsWith("- 비빔밥"))
+    expect(bibimbapLine).toBeDefined()
+    expect(bibimbapLine).toContain("18")
+    // 합계 줄이 아니라 그 음식 줄에서 나와야 한다.
+    expect(message.split("\n").find((l) => l.startsWith("- 미역국"))).toContain("3")
   })
 })

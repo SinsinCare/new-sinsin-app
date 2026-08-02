@@ -1,7 +1,7 @@
 import { StyleSheet, View, Pressable, Text, ScrollView } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import { useTranslation } from "react-i18next"
@@ -17,7 +17,7 @@ const CHIPS = [
 
 export function NhisAuthScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { t } = useTranslation(["health", "common"])
   const isDark = useAppColorScheme() === "dark"
 

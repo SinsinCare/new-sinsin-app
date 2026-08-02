@@ -5,15 +5,19 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  ActivityIndicator,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
+import {
+  V2DotLoader,
+  V2Skeleton,
+  V2SkeletonGroup,
+} from "@/src/design-system-v2"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
@@ -24,7 +28,7 @@ import { useHealthTheme } from "../hooks/useHealthTheme"
 
 export function NhisRequestScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const queryClient = useQueryClient()
   const { t } = useTranslation("health")
   const { healthColors } = useHealthTheme()
@@ -218,10 +222,20 @@ export function NhisRequestScreen() {
           </ThemedText>
 
           {loadingMethods ? (
-            <ActivityIndicator
-              color={tokens.color.sub6.val}
-              style={{ marginTop: 12 }}
-            />
+            // 인증 수단은 늘 같은 크기 카드 두 장이다. 링 대신 그 카드 모양을 미리 깔면
+            // 목록이 도착해도 섹션 높이가 튀지 않는다.
+            <V2SkeletonGroup
+              style={[styles.methodRow, styles.methodSkeletonRow]}
+            >
+              {[0, 1].map((index) => (
+                <V2Skeleton
+                  key={index}
+                  height={57}
+                  radius="lg"
+                  style={styles.methodSkeleton}
+                />
+              ))}
+            </V2SkeletonGroup>
           ) : (
             <View style={styles.methodRow}>
               {authMethods.map((method) => {
@@ -383,7 +397,7 @@ export function NhisRequestScreen() {
             disabled={!isFormValid() || requesting}
           >
             {requesting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <V2DotLoader size="s" color="#FFFFFF" />
             ) : (
               <ThemedText style={styles.buttonText}>
                 {t("nhis.startVerification")}
@@ -447,6 +461,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
   },
+  methodSkeletonRow: { marginTop: 12 },
+  // 실제 methodCard 와 같은 flex 배분 — 도착 후 폭이 그대로 이어진다.
+  methodSkeleton: { flex: 1 },
   methodCard: {
     flex: 1,
     paddingVertical: 18,

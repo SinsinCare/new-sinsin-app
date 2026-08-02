@@ -34,29 +34,6 @@ export function resolveResultCount(
   return { kind: hasMore ? "atLeast" : "exhausted", count: loadedCount }
 }
 
-/** 방향을 방향으로 인정하는 최소 이동량. 손가락이 떠는 정도로 버튼이 접히면 안 된다. */
-export const FAB_SCROLL_DIRECTION_THRESHOLD = 24
-
-/** 이 위치보다 위에서는 항상 펼친다 — 목록 맨 위에서 작성 버튼을 숨길 이유가 없다. */
-export const FAB_ALWAYS_EXPANDED_OFFSET = 8
-
-/**
- * 작성 플로팅을 접을지 정한다(계약 §6.1 "스크롤 내리면 축소").
- * 방향이 바뀔 때만 상태를 바꾸고, 임계값 안의 흔들림은 **현재 상태를 유지**한다 —
- * 매 프레임 토글되면 버튼이 떨면서 오히려 카드를 더 가린다.
- */
-export function nextFabCollapsed(input: {
-  collapsed: boolean
-  offsetY: number
-  lastOffsetY: number
-}): boolean {
-  if (input.offsetY <= FAB_ALWAYS_EXPANDED_OFFSET) return false
-  const delta = input.offsetY - input.lastOffsetY
-  if (delta > FAB_SCROLL_DIRECTION_THRESHOLD) return true
-  if (delta < -FAB_SCROLL_DIRECTION_THRESHOLD) return false
-  return input.collapsed
-}
-
 /**
  * 자동완성 패널을 띄울 조건. "입력했는데 아래가 안 바뀐다"(시안의 `Typing`/`Typed` 가
  * 같은 화면이었던 결함)를 막는 지점이라 조건을 한곳에 모아 테스트한다.

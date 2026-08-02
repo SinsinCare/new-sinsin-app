@@ -1,0 +1,150 @@
+{
+  "items": [
+    {
+      "restaurantId": 179,
+      "name": "크라이치즈버거 강남점",
+      "lat": 37.49706635210059,
+      "lng": 127.0317430144742,
+      "cuisineType": "WESTERN",
+      "rating": 4.8,
+      "reviewCount": 461,
+      "distanceKm": null,
+      "shortAddress": "서울 강남구 테헤란로8길",
+      "address": "서울 강남구 테헤란로8길 28",
+      "jibunAddress": null,
+      "zipcode": null,
+      "imageUrls": [
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.kakaocdn.net%2Fmystore%2FDF24AC3D05794C9DA63E624A3AB4E0CB",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.kakaocdn.net%2Fmystore%2F3CF7042FFBA0498492A66D1BB22B0BAB",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.kakaocdn.net%2Fmystore%2F9D5156DAB9C540C8A17EDE2C6F0C0114"
+      ],
+      "avgPrice": 14800,
+      "priceRange": null,
+      "regionSido": "seoul",
+      "regionGroup": "seoul-gangnam",
+      "regionSigungu": "강남구",
+      "businessStatus": "CLOSED",
+      "openTime": "11:00",
+      "closeTime": "21:30",
+      "breakStart": null,
+      "breakEnd": null,
+      "bookmarked": false,
+      "safety": {
+        "level": "RESTRICTED",
+        "menuCount": 5,
+        "safeMenuCount": 0,
+        "cautionMenuCount": 0,
+        "restrictedMenuCount": 5,
+        "unknownMenuCount": 0,
+        "hasSafeMenu": false,
+        "driverCounts": {
+          "sodium": 4,
+          "protein": 1
+        },
+        "profileMissing": false
+      },
+      "legacyNutritionTags": [
+        "LOW_SODIUM"
+      ]
+    },
+    {
+      "restaurantId": 250,
+      "name": "농민백암순대 강남직영점",
+      "lat": 37.49491300989233,
+      "lng": 127.03150463098274,
+      "cuisineType": "KOREAN",
+      "rating": 4.5,
+      "reviewCount": 625,
+      "distanceKm": null,
+      "shortAddress": "서울 강남구 역삼로3길",
+      "address": "서울 강남구 역삼로3길 20-4",
+      "jibunAddress": null,
+      "zipcode": null,
+      "imageUrls": [
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fdc313da3beca7bdb60a84e1c5b84c2314219000f%3Foriginal",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2F21440b74b2670900c796725dbbada5921e9a9605%3Foriginal",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fb3928e6420d12dba71598be5ae36b1fb75c9199b%3Foriginal"
+      ],
+      "avgPrice": 9666,
+      "priceRange": null,
+      "regionSido": "seoul",
+      "regionGroup": "seoul-gangnam",
+      "regionSigungu": "강남구",
+      "businessStatus": "CLOSED",
+      "openTime": "09:00",
+      "closeTime": "21:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "bookmarked": false,
+      "safety": {
+        "level": "RESTRICTED",
+        "menuCount": 6,
+        "safeMenuCount": 0,
+        "cautionMenuCount": 0,
+        "restrictedMenuCount": 6,
+        "unknownMenuCount": 0,
+        "hasSafeMenu": false,
+        "driverCounts": {
+          "sodium": 5,
+          "protein": 1
+        },
+        "profileMissing": false
+      },
+      "legacyNutritionTags": []
+    },
+    {
+      "restaurantId": 43,
+      "name": "해담아구찜&해물찜",
+      "lat": 37.49987846082287,
+      "lng": 127.0279048185623,
+      "cuisineType": "KOREAN",
+      "rating": 4.9,
+      "reviewCount": 190,
+      "distanceKm": null,
+      "shortAddress": "서울 강남구 강남대로96길",
+      "address": "서울 강남구 강남대로96길 11",
+      "jibunAddress": null,
+      "zipcode": null,
+      "imageUrls": [
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.kakaocdn.net%2Fmystore%2F383377D42E144E638292C5469A79E3C5",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2F84d3b64ad7b45cd27db16419e2c02ccd0d3f5ff4%3Foriginal",
+        "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2F62f4e16a8e9b2cda2002222ef9d1f93ec2e5db84%3Foriginal"
+      ],
+      "avgPrice": 9666,
+      "priceRange": null,
+      "regionSido": "seoul",
+      "regionGroup": "seoul-gangnam",
+      "regionSigungu": "강남구",
+      "businessStatus": "CLOSED",
+      "openTime": "11:00",
+      "closeTime": "22:00",
+      "breakStart": null,
+      "breakEnd": null,
+      "bookmarked": false,
+      "safety": {
+        "level": "RESTRICTED",
+        "menuCount": 6,
+        "safeMenuCount": 0,
+        "cautionMenuCount": 0,
+        "restrictedMenuCount": 6,
+        "unknownMenuCount": 0,
+        "hasSafeMenu": false,
+        "driverCounts": {
+          "sodium": 5,
+          "protein": 1
+        },
+        "profileMissing": false
+      },
+      "legacyNutritionTags": []
+    }
+  ],
+  "nextCursor": "eyJrIjoiUkVDT01NRU5ERUQiLCJ2IjoxNS4wNTIyNzM0MjgwNDY2MywiaWQiOjQzfQ",
+  "hasMore": true,
+  "total": 376,
+  "excludedForMissingData": {
+    "nutritionTags": 0
+  },
+  "profileMissing": false,
+  "distanceAvailable": false,
+  "sort": "RECOMMENDED"
+}

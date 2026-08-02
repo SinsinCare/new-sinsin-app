@@ -17,11 +17,13 @@ import {
 } from "react-native"
 import { Image as ExpoImage } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-import type { Chat, Message } from "@/src/types/chat"
+import type { Chat, ChatCategory, Message } from "@/src/types/chat"
+import { CHAT_CATEGORIES } from "@/src/types/chat"
 import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import { CATEGORY_LIST } from "@/src/features/consultation/data/mockData"
@@ -47,6 +49,10 @@ import {
   buildFoodConsultMessage,
   parseFoodConsultContext,
 } from "@/src/features/consultation/utils/foodConsultMessage"
+import {
+  buildExamConsultMessage,
+  parseExamConsultContext,
+} from "@/src/features/consultation/utils/examConsultMessage"
 import { RenameModal } from "@/src/features/consultation/components/RenameModal"
 import { chatApiService } from "@/src/services"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -58,6 +64,31 @@ import { getAppLanguage } from "@/src/i18n"
 type FoodConsultSearchParams = {
   foodConsultContext?: string | string[]
   foodConsultRequestId?: string | string[]
+  /**
+   * 범용 질문 주입.
+   *
+   * `foodConsultContext` 는 **식사 전용**이다 — 빌더가 붙이는 문장이
+   * `consult.mealPrompt`("이 식사의 영양 수치를…")로 고정돼 있어서, 검사 수치 질문을 그리로
+   * 흘리면 모델에게 "이 식사" 를 묻게 된다. 그래서 프롬프트를 그대로 받는 통로를 따로 둔다.
+   *
+   * - `consultPrompt`  보낼 문장 원문
+   * - `consultCategory` 대화 분류(`ChatCategory`). 검사 수치는 "EXAM".
+   * - `consultRequestId` 재주입 방지 키. **반드시 매번 다른 값**을 줘야 한다 —
+   *   없으면 프롬프트 문자열 자체가 키가 되어, 같은 질문을 두 번 누르면 두 번째가 조용히 무시된다.
+   */
+  consultPrompt?: string | string[]
+  consultCategory?: string | string[]
+  consultRequestId?: string | string[]
+  /**
+   * 건강검진 "질문하기" — 화면이 보고 있던 **수치를 통째로** 실어 보낸다.
+   * (JSON. `ExamConsultContext`)
+   *
+   * `consultPrompt` 만으로는 부족하다: 문장만 보내면 모델이 "결과지를 아직 보지 못해
+   * 구체적인 내용을 알기 어려워요" 라고 되묻는다 — 상담 컨텍스트 빌더가 검사 수치를
+   * 주입하지 않기 때문이다. 화면이 이미 들고 있는 값을 그대로 넘겨서 그 왕복을 없앤다.
+   */
+  examConsultContext?: string | string[]
+  examConsultRequestId?: string | string[]
 }
 
 function getParamString(value: string | string[] | undefined): string | null {
@@ -78,7 +109,7 @@ export default function ConsultScreen() {
     ? "en"
     : "ko"
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const foodConsultParams = useLocalSearchParams<FoodConsultSearchParams>()
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
@@ -352,6 +383,105 @@ export default function ConsultScreen() {
       setPendingFoodConsultMessage(null)
     }
   }, [pendingFoodConsultMessage, category, sendMessage])
+
+  /**
+   * 건강검진 컨텍스트 주입.
+   *
+   * 식사 경로와 **같은 구조**다(빌더가 만든 텍스트가 곧 프롬프트이자 저장 원문, 화면에는
+   * 파서가 복원한 카드). 분류는 항상 "EXAM" 이다 — 검사 수치 해석이 그 분류의 정의다.
+   */
+  const [pendingExamMessage, setPendingExamMessage] = useState<string | null>(
+    null,
+  )
+  const handledExamRequestRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const rawContext = getParamString(foodConsultParams.examConsultContext)
+    if (!rawContext) return
+
+    const requestId =
+      getParamString(foodConsultParams.examConsultRequestId) ?? rawContext
+    if (handledExamRequestRef.current === requestId) return
+
+    const context = parseExamConsultContext(rawContext)
+    if (!context) return
+
+    handledExamRequestRef.current = requestId
+    resetChat()
+    setInputMessage("")
+    setCategory("EXAM")
+    setPendingExamMessage(
+      buildExamConsultMessage(context, getAppLanguage(), (key, options) =>
+        String(t(key as never, options as never)),
+      ),
+    )
+  }, [
+    foodConsultParams.examConsultContext,
+    foodConsultParams.examConsultRequestId,
+    resetChat,
+    setCategory,
+    t,
+  ])
+
+  useEffect(() => {
+    if (pendingExamMessage && category === "EXAM") {
+      sendMessage(pendingExamMessage)
+      setPendingExamMessage(null)
+    }
+  }, [pendingExamMessage, category, sendMessage])
+
+  /**
+   * 범용 프롬프트 주입 (`consultPrompt` + `consultCategory`).
+   *
+   * 위 식사 경로와 **같은 대기-후-전송 구조**를 쓴다: `setCategory` 는 다음 렌더에 반영되므로
+   * 그 자리에서 바로 보내면 분류가 아직 이전 값이다. 그래서 문장을 pending 에 얹어 두고,
+   * 분류가 목표 값이 된 뒤에 보낸다.
+   *
+   * 식사 경로와 상태를 공유하지 않는 이유: 한 화면에 둘 다 들어오는 일은 없지만, 공유하면
+   * `category === "FOOD_DIET"` 조건 하나로 두 흐름을 구분할 수 없게 된다.
+   */
+  const [pendingPrompt, setPendingPrompt] = useState<{
+    text: string
+    category: ChatCategory
+  } | null>(null)
+  const handledPromptRequestRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const prompt = getParamString(foodConsultParams.consultPrompt)
+    if (!prompt?.trim()) return
+
+    // requestId 가 없으면 프롬프트 자체가 키가 된다 — 같은 질문을 다시 누르면 무시된다.
+    // 호출부가 매번 다른 값을 주는 게 맞지만, 없다고 터뜨리지는 않는다.
+    const requestId =
+      getParamString(foodConsultParams.consultRequestId) ?? prompt
+    if (handledPromptRequestRef.current === requestId) return
+    handledPromptRequestRef.current = requestId
+
+    const rawCategory = getParamString(foodConsultParams.consultCategory)
+    const nextCategory: ChatCategory = CHAT_CATEGORIES.includes(
+      rawCategory as ChatCategory,
+    )
+      ? (rawCategory as ChatCategory)
+      : "NONE"
+
+    resetChat()
+    setInputMessage("")
+    setCategory(nextCategory)
+    setPendingPrompt({ text: prompt, category: nextCategory })
+  }, [
+    foodConsultParams.consultPrompt,
+    foodConsultParams.consultCategory,
+    foodConsultParams.consultRequestId,
+    resetChat,
+    setCategory,
+  ])
+
+  useEffect(() => {
+    if (pendingPrompt && category === pendingPrompt.category) {
+      sendMessage(pendingPrompt.text)
+      setPendingPrompt(null)
+    }
+  }, [pendingPrompt, category, sendMessage])
 
   const handleSend = () => {
     if (!canSend) return

@@ -71,6 +71,7 @@
     "entry": "보관함",
     "tabSaved": "저장한 레시피",
     "tabRecent": "최근 본 기록",
+    "searchPlaceholder": "보관함에서 검색",
     "savedCount": "저장한 레시피 {{count}}개",
     "savedCount_one": "저장한 레시피 {{count}}개",
     "savedCount_other": "저장한 레시피 {{count}}개",
@@ -94,6 +95,36 @@
     "saveAction": "저장하기",
     "unsaveAction": "저장 해제",
     "resaveAction": "다시 저장"
+  },
+  "home": {
+    "section": {
+      "breakfast": {
+        "title": "오늘의 아침 레시피",
+        "subtitle": "빵·달걀·죽처럼 아침에 먹는 요리예요",
+        "highlight": "아침"
+      },
+      "lunch": {
+        "title": "오늘의 점심 레시피",
+        "subtitle": "덮밥·면·샐러드처럼 한 그릇으로 먹는 요리예요",
+        "highlight": "점심"
+      },
+      "dinner": {
+        "title": "오늘의 저녁 레시피",
+        "subtitle": "국·찌개·반찬처럼 차려 먹는 요리예요",
+        "highlight": "저녁"
+      },
+      "empty": "아직 이 끼니로 분류된 레시피가 없어요. 아래 전체 레시피에서 찾아보세요."
+    },
+    "listTitle": "전체 레시피",
+    "slotState": {
+      "recorded": "기록함",
+      "skipped": "건너뜀"
+    },
+    "reason": {
+      "afterRecord": "{{meal}}을 기록해서 다음 끼니부터 보여드려요",
+      "afterSkip": "{{meal}}을 건너뛰어서 다음 끼니부터 보여드려요",
+      "nextDay": "오늘 끼니를 다 기록했어요. 내일 아침부터 보여드려요"
+    }
   },
   "list": {
     "resultCountAtLeast": "검색 결과 {{count}}개 이상",
@@ -127,7 +158,9 @@
     "emptyBody": "필터를 줄이거나 검색어를 바꿔 보세요",
     "errorTitle": "레시피를 불러오지 못했어요",
     "errorBody": "연결을 확인한 뒤 다시 해 주세요",
-    "retry": "다시 시도"
+    "retry": "다시 시도",
+    "estimateNotice": "영양 수치는 추정값이에요",
+    "writeEntry": "쓰기"
   },
   "recipeEditor": {
     "title": "레시피 쓰기",
@@ -321,8 +354,20 @@
   "detail": {
     "loading": "레시피를 불러오고 있어요",
     "notFound": "레시피를 찾을 수 없어요",
-    "errorTitle": "레시피를 불러오지 못했어요",
-    "errorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
+    "error": {
+      "networkTitle": "레시피를 불러오지 못했어요",
+      "networkBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
+      "networkRetry": "다시 시도",
+      "serverTitle": "서버에 문제가 생겼어요",
+      "serverBody": "잠시 뒤 다시 시도하면 대개 해결돼요. 계속되면 조금 기다려 주세요.",
+      "serverRetry": "다시 시도",
+      "notFoundTitle": "이 레시피는 볼 수 없어요",
+      "notFoundBody": "지워졌거나 주소가 잘못됐어요. 인터넷 문제는 아니고, 다시 눌러도 같아요.",
+      "notFoundBack": "레시피 목록으로",
+      "appBugTitle": "앱에 문제가 생겨 불러오지 못했어요",
+      "appBugBody": "인터넷 문제는 아니에요. 저희가 잘못된 요청을 보냈어요. 다시 시도해 보시고, 계속되면 알려주세요.",
+      "appBugRetry": "다시 시도"
+    },
     "retry": "다시 시도",
     "back": "뒤로",
     "saveAccessibility": "이 레시피 저장",
@@ -368,11 +413,25 @@
       "decrease": "인분 줄이기",
       "increase": "인분 늘리기",
       "checked": "{{checked}}/{{total}} 준비했어요",
-      "fixedAmount": "인분에 따라 바뀌지 않는 양이에요",
+      "fixedAmount": "‘인분 고정’은 인분을 바꿔도 그대로인 양이에요.",
       "excluded": "영양 계산에서 빠진 재료예요",
       "toggle": "{{name}} 준비 표시",
       "notInFoodTable": "식품표에서 이 이름을 찾지 못했어요",
-      "unknownAmount": "무게를 알 수 없는 분량이에요"
+      "unknownAmount": "무게를 알 수 없는 분량이에요",
+      "tag": {
+        "notScalable": "인분 고정",
+        "notCounted": "계산 제외"
+      },
+      "coverage": {
+        "counted": "위 영양 수치는 재료 {{total}}개 중 {{counted}}개를 더해서 낸 값이에요.",
+        "wholeDish": "위 영양 수치는 한 그릇 단위로 받은 값이에요. 아래 재료를 하나씩 더해서 낸 값이 아니에요."
+      },
+      "excludedLegend": "‘계산 제외’ 재료는 합계에 넣지 않았어요. 실제 값은 이보다 클 수 있어요.",
+      "preparedLabel": "준비",
+      "servingsBasis": "{{count}}인분 기준 분량",
+      "preparedCount": "{{checked}}/{{total}}",
+      "servingsBasis_one": "{{count}}인분 기준 분량",
+      "servingsBasis_other": "{{count}}인분 기준 분량"
     },
     "steps": {
       "title": "조리 순서",
@@ -399,6 +458,13 @@
       "distributionRow": "{{star}}점 {{amount}}개",
       "starAccessibility": "{{star}}점 주기",
       "composerTitle": "이 레시피 어땠어요?",
+      "ratingWords": {
+        "1": "별로였어요",
+        "2": "아쉬웠어요",
+        "3": "괜찮았어요",
+        "4": "맛있었어요",
+        "5": "최고였어요"
+      },
       "bodyPlaceholder": "만들어 본 이야기를 적어 주세요 (선택)",
       "bodyCounter": "{{current}}/{{max}}",
       "submit": "남기기",
@@ -407,7 +473,22 @@
       "submitError": "리뷰를 남기지 못했어요",
       "deleteError": "리뷰를 지우지 못했어요",
       "more": "리뷰 더 보기",
-      "loading": "리뷰를 불러오고 있어요"
+      "loading": "리뷰를 불러오고 있어요",
+      "blockAuthor": "차단",
+      "blockTitle": "이 사용자를 차단할까요?",
+      "blockBody": "{{name}} 님이 쓴 리뷰가 앱 전체에서 보이지 않아요. 차단은 내 정보 → 차단 목록에서 해제할 수 있어요.",
+      "blockConfirm": "차단하기",
+      "blockDone": "차단했어요"
+    },
+    "action": {
+      "save": "저장",
+      "saved": "저장됨",
+      "share": "공유"
+    },
+    "meta": {
+      "reviews": "리뷰 {{count}}",
+      "reviews_one": "리뷰 {{count}}",
+      "reviews_other": "리뷰 {{count}}"
     }
   },
   "responsibility": "다른 사람의 권리를 침해하지 않는 내용인지 확인했어요.",

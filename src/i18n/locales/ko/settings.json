@@ -480,5 +480,82 @@
       "confirmAccessibility": "안내 확인",
       "confirm": "확인"
     }
+  },
+  "doctorLink": {
+    "intro": {
+      "title": "의사 선생님과 연결하기",
+      "headlineLead": "담당 의사 선생님과 연결하여",
+      "headlineHighlight": "더 정확하고 편리한 진료",
+      "headlineTail": "를 받아보세요",
+      "step1": "병원과 건강 데이터를 쉽게 연결해요",
+      "step2": "필요한 건강 데이터만 선택해 공유해요",
+      "step3": "더 정확한 분석과 진료를 받을 수 있어요",
+      "cta": "연결하기"
+    },
+    "search": {
+      "title": "의사 선생님과 연결하기",
+      "headlineLead": "아래 3가지 중 ",
+      "headlineHighlight": "하나 이상 입력",
+      "headlineTail": "하면\n의사 선생님을 검색할 수 있어요",
+      "nameLabel": "의사 선생님 성함",
+      "namePlaceholder": "의사 이름",
+      "hospitalLabel": "병원 이름",
+      "hospitalPlaceholder": "병원명",
+      "departmentLabel": "진료과",
+      "departmentPlaceholder": "예: 신장내과",
+      "cta": "병원 검색",
+      "resultTitle": "검색 결과",
+      "resultCount_one": "{{count}}명",
+      "resultCount_other": "{{count}}명",
+      "emptyTitle": "검색 결과가 없어요",
+      "emptyBody": "이름이나 병원명을 다시 확인해 주세요.",
+      "error": "검색에 실패했어요",
+      "noOrganization": "병원 정보 없음",
+      "retry": "다시 검색"
+    },
+    "preview": {
+      "title": "의사 선생님과 연결하기",
+      "headline": "담당 의사 선생님과\n내 건강 데이터를 연결해요",
+      "noticePurpose": "공유된 데이터는 진료 목적으로만 사용되며 개인정보 보호법에 따라 안전하게 보호돼요.",
+      "noticeRevoke": "사용자는 정보를 언제든지 공유를 중단할 수 있어요.",
+      "cta": "시작하기",
+      "error": "연결 요청에 실패했어요"
+    },
+    "sharing": {
+      "title": "데이터 공유 설정",
+      "sectionTitle": "공유할 데이터",
+      "examResultsTitle": "검사 기록",
+      "examResultsBody": "혈액검사, 소변검사 결과",
+      "dietRecordsTitle": "식이 기록",
+      "dietRecordsBody": "영양성분, 수분 섭취량",
+      "vitalsTitle": "혈압 · 체중",
+      "vitalsBody": "일일 수치 및 변화 추이",
+      "realtimeTitle": "실시간 데이터 전송 활성화",
+      "realtimeBody": "기록 시 즉시 병원으로 전송해요",
+      "analyze": "분석하기",
+      "submit": "공유하기",
+      "saved": "공유 설정을 저장했어요",
+      "error": "공유 설정을 저장하지 못했어요",
+      "pendingNotice": "승인 대기 중이에요. 승인되면 공유 범위를 설정할 수 있어요.",
+      "rejectedNotice": "연결이 거절되어 데이터를 공유할 수 없어요.",
+      "revokedNotice": "연결이 해지되어 데이터를 공유하고 있지 않아요."
+    },
+    "connections": {
+      "title": "의사와 연결하기",
+      "sectionTitle": "연결된 기관",
+      "total": "총 {{count}}개",
+      "add": "추가하기",
+      "emptyTitle": "아직 연결된 기관이 없어요",
+      "emptyBody": "담당 의사 선생님과 연결하면 진료가 더 정확해져요.",
+      "statusPending": "승인 대기",
+      "statusApproved": "연결됨",
+      "statusRejected": "거절됨",
+      "loadError": "연결 목록을 불러오지 못했어요",
+      "revoke": "연결 해지",
+      "revokeConfirmTitle": "연결을 해지할까요?",
+      "revokeConfirmBody": "해지하면 공유 중인 데이터도 함께 중단돼요.",
+      "revokeError": "연결을 해지하지 못했어요",
+      "statusRevoked": "해지됨"
+    }
   }
 }

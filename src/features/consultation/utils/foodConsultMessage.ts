@@ -192,6 +192,18 @@ export function buildFoodConsultMessage(
             "kcal",
             language,
           ),
+          /*
+            **단백질은 빠뜨리면 안 된다.** 합계 줄에는 있는데 음식별 줄에만 없었다.
+            콩팥병에서 단백질은 나트륨과 나란한 판정 축이고(서버의 안전도 계산도 그 둘을
+            본다), LLM 에는 하루 목표(분모)를 주면서 이 끼니의 섭취(분자)를 안 주면
+            "메뉴별로 무엇이 문제인가" 에 답할 근거가 없다. 순서는 합계 줄과 맞춘다.
+          */
+          formatNutrient(
+            food.protein,
+            translate("mealReport.nutrients.protein"),
+            "g",
+            language,
+          ),
           formatNutrient(
             food.sodium,
             translate("mealReport.nutrients.sodium"),

@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,12 +9,13 @@ import {
   View,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
+import { CommunityFeedSkeleton } from "./CommunityFeedSkeleton"
 import { PopularPostCard } from "./PopularPostCard"
 import { PostListItem } from "./PostListItem"
 import { StoryRail } from "./StoryRail"
@@ -58,7 +58,7 @@ export function FreePostTab({
 }: FreePostTabProps) {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
-  const router = useRouter()
+  const router = useAppRouter()
   const categoryLabel = useCallback(
     (key: string) => {
       const translationKey =
@@ -309,9 +309,8 @@ export function FreePostTab({
           </View>
         </>
       ) : isLoading && visiblePosts.length === 0 ? (
-        <View style={styles.emptyWrap}>
-          <ActivityIndicator color={surface.textWeak} />
-        </View>
+        // 스토리 · 인기글 · 목록이 한꺼번에 도착하면 화면이 크게 튄다. 세 자리를 미리 잡는다.
+        <CommunityFeedSkeleton />
       ) : (
         /*
          * 첫 진입 한 번만 콘텐츠 전체가 부드럽게 올라온다.

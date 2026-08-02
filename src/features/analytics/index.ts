@@ -9,6 +9,8 @@ export {
   sanitizeAnalyticsProperties,
   type AnalyticsEventName,
   type AnalyticsEventProperties,
+  type AnalyticsRestaurantEntrySource,
+  type AnalyticsRestaurantFilterAxis,
   type AnalyticsScreenName,
 } from "./events"
 export { useAnalyticsLifecycle } from "./useAnalyticsLifecycle"

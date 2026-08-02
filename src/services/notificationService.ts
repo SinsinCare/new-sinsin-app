@@ -165,28 +165,25 @@ export const notificationService = {
         {
           id: "meal-breakfast",
           hour: mealReminder.breakfastHour,
-          title: notificationCopy(
-            "notifications.scheduled.mealTitle",
-            { meal: notificationCopy("notifications.meal.breakfast") },
-          ),
+          title: notificationCopy("notifications.scheduled.mealTitle", {
+            meal: notificationCopy("notifications.meal.breakfast"),
+          }),
           body: notificationCopy("notifications.scheduled.mealBody"),
         },
         {
           id: "meal-lunch",
           hour: mealReminder.lunchHour,
-          title: notificationCopy(
-            "notifications.scheduled.mealTitle",
-            { meal: notificationCopy("notifications.meal.lunch") },
-          ),
+          title: notificationCopy("notifications.scheduled.mealTitle", {
+            meal: notificationCopy("notifications.meal.lunch"),
+          }),
           body: notificationCopy("notifications.scheduled.mealBody"),
         },
         {
           id: "meal-dinner",
           hour: mealReminder.dinnerHour,
-          title: notificationCopy(
-            "notifications.scheduled.mealTitle",
-            { meal: notificationCopy("notifications.meal.dinner") },
-          ),
+          title: notificationCopy("notifications.scheduled.mealTitle", {
+            meal: notificationCopy("notifications.meal.dinner"),
+          }),
           body: notificationCopy("notifications.scheduled.mealBody"),
         },
       ]

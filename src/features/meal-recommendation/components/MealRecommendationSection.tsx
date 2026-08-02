@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react"
-import { ScrollView, Pressable, ActivityIndicator } from "react-native"
+import { ScrollView, Pressable, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
+import { V2Skeleton, V2SkeletonGroup } from "@/src/design-system-v2"
 import { useMealRecommendations } from "../hooks/useMealRecommendations"
 import { MealTypeToggle } from "./MealTypeToggle"
 import { NutrientBudgetBar } from "./NutrientBudgetBar"
@@ -65,8 +66,7 @@ export function MealRecommendationSection({
     [toggleBookmark],
   )
 
-  const mealLabel =
-    mealType === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
+  const mealLabel = mealType === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
   const hasRecipes = (recommendations?.recipes.length ?? 0) > 0
   const hasMenus = (recommendations?.restaurantMenus.length ?? 0) > 0
   const isEmpty = !isLoading && !hasRecipes && !hasMenus
@@ -108,17 +108,20 @@ export function MealRecommendationSection({
         </XStack>
       </XStack>
 
-      {/* Loading */}
+      {/* Loading — 영양 예산 막대 + 카드 두 장이 오는 자리를 미리 잡는다.
+          가운데 링 하나로 기다리면 도착 순간 섹션 높이가 두 배로 늘어난다. */}
       {isLoading && (
-        <YStack alignItems="center" paddingVertical={20}>
-          <ActivityIndicator
-            color={tokens.color.primaryAccent.val}
-            size="small"
-          />
-          <Text fontSize={13} fontFamily="$body" color={subColor} marginTop={8}>
-            {t("mealRecommendation.loading")}
-          </Text>
-        </YStack>
+        <V2SkeletonGroup>
+          <YStack gap={12}>
+            <V2Skeleton height={4} radius="full" />
+            <V2Skeleton height={56} radius="lg" />
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              {[0, 1].map((index) => (
+                <V2Skeleton key={index} width={200} height={124} radius="2xl" />
+              ))}
+            </View>
+          </YStack>
+        </V2SkeletonGroup>
       )}
 
       {/* Content */}

@@ -111,11 +111,11 @@ export function ThreeDaysCalendar({
               weekday: "narrow",
             }).format(date)
             return (
-            <View key={date.getDay()} style={styles.cell}>
-              <Text fontSize={12} fontWeight="500" color={labelText}>
-                {label}
-              </Text>
-            </View>
+              <View key={date.getDay()} style={styles.cell}>
+                <Text fontSize={12} fontWeight="500" color={labelText}>
+                  {label}
+                </Text>
+              </View>
             )
           })}
         </XStack>

@@ -267,5 +267,78 @@
     "timeoutTitle": "Identity check expired",
     "failedTitle": "We couldn’t confirm your identity",
     "retryVerification": "Restart identity check"
+  },
+  "checkup": {
+    "auth": {
+      "title": "Import & analyze checkups",
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter your name",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "010-0000-0000",
+      "birthLabel": "Date of birth",
+      "birthPlaceholder": "YYYY-MM-DD",
+      "methodLabel": "Verification method",
+      "telecomLabel": "Carrier",
+      "submit": "Verify",
+      "pendingTitle": "Finish verification in the app",
+      "pendingBody": "Tap the button below once you're done.",
+      "pendingConfirm": "I've verified",
+      "errorName": "Enter your name",
+      "errorPhone": "Enter your 11-digit phone number",
+      "errorBirth": "Enter your 8-digit date of birth",
+      "errorMethod": "Choose a verification method",
+      "errorTelecom": "Choose your carrier",
+      "methodsLoadError": "We couldn't load the verification methods"
+    },
+    "list": {
+      "title": "Checkups",
+      "visitCount_one": "{{count}} visit",
+      "visitCount_other": "{{count}} visits",
+      "add": "Add",
+      "analyze": "Analyze",
+      "selectHint": "Select the checkups to analyze",
+      "emptyTitle": "No checkups imported yet",
+      "emptyBody": "Import a checkup to see how your numbers change over time.",
+      "emptyCta": "Import a checkup",
+      "loadError": "We couldn't load your checkups"
+    },
+    "detail": {
+      "title": "Checkups",
+      "tabCheckups": "Checkups",
+      "tabRecords": "Lab history",
+      "metricsTitle": "Health values",
+      "ask": "Ask",
+      "analyzing": "Analyzing your results",
+      "analyzeError": "Analysis failed",
+      "referencePrefix": "Reference",
+      "aiNotice": "Compared with the app's general reference range. Not a diagnosis.",
+      "showNormal": "Show {{count}} normal",
+      "hideNormal": "Hide normal items",
+      "allNormal": "Nothing outside the reference range"
+    },
+    "status": {
+      "warning": "At risk",
+      "caution": "Caution",
+      "normal": "Normal"
+    },
+    "records": {
+      "monthlyView": "Monthly",
+      "weeklyView": "Weekly",
+      "latest": "Latest",
+      "deltaLabel": "vs. previous",
+      "emptyTitle": "No lab history yet"
+    },
+    "calendar": {
+      "yearMonth": "{{month}} {{year}}",
+      "weekdayMon": "Mon",
+      "weekdayTue": "Tue",
+      "weekdayWed": "Wed",
+      "weekdayThu": "Thu",
+      "weekdayFri": "Fri",
+      "weekdaySat": "Sat",
+      "weekdaySun": "Sun",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month"
+    }
   }
 }

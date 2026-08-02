@@ -12,7 +12,8 @@ import {
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import {
   KeyboardAwareScrollView,
   KeyboardController,
@@ -31,7 +32,7 @@ import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
-import { LoadingScreen } from "@/src/shared/components"
+import { ArticleSkeleton } from "@/src/shared/components"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { useTranslation } from "react-i18next"
 
@@ -74,7 +75,7 @@ function KeyboardDismissButton({ color }: { color: string }) {
 export default function FreePostEditScreen() {
   const { t } = useTranslation("recipe")
   const { id } = useLocalSearchParams<{ id: string }>()
-  const router = useRouter()
+  const router = useAppRouter()
   const insets = useSafeAreaInsets()
   const surface = useSurface()
   const bottomInset =
@@ -111,7 +112,7 @@ export default function FreePostEditScreen() {
   }, [post, initialized])
 
   if (isLoading || !post) {
-    return <LoadingScreen message={t("freePost.loading")} />
+    return <ArticleSkeleton variant="editor" />
   }
 
   const inkBg = surface.isDark ? "#F4F4F6" : "#1D1E20"

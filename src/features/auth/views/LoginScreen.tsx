@@ -1,5 +1,6 @@
 import { Platform, Pressable, useWindowDimensions } from "react-native"
-import { YStack, XStack, Text, Spinner } from "tamagui"
+import { YStack, XStack, Text } from "tamagui"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Image } from "expo-image"
@@ -273,7 +274,7 @@ export function LoginScreen() {
           gap={14}
           paddingHorizontal={24}
         >
-          <Spinner size="large" color={tokens.color.sub6.val} />
+          <V2DotLoader size="l" color={tokens.color.sub6.val} />
           <Text
             color={colors.text}
             fontSize={17}

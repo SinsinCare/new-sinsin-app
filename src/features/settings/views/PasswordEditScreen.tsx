@@ -2,7 +2,8 @@ import React, { useState } from "react"
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useTranslation } from "react-i18next"
 
@@ -25,7 +26,7 @@ import {
 
 export function PasswordEditScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const { token } = useLocalSearchParams<{ token?: string }>()
   const s = useSurface()
   const { t } = useTranslation("settings")
@@ -100,12 +101,10 @@ export function PasswordEditScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("shared.back")}
-            // 비밀번호 재설정 딥링크로 들어오면 히스토리가 없다 — back 대신 프로필 수정으로.
-            onPress={() =>
-              router.canGoBack()
-                ? router.back()
-                : router.replace("/(settings)/profile-edit")
-            }
+            /* 비밀번호 재설정은 `https://sinsincare.kr/password-edit` 딥링크로도
+               들어온다 — 그때는 히스토리가 없고, `back()` 이 라우트 그래프가 정한
+               프로필 수정으로 대신 나간다. */
+            onPress={router.back}
             hitSlop={8}
           >
             <Ionicons name="chevron-back" size={24} color={s.textStrong} />

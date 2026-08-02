@@ -37,28 +37,48 @@
  * 근본 해결은 수정 스텁을 `app/(write)/recipe/edit/[id].tsx` 로 옮기는 것이다(그 파일은
  * 내 담당 밖이라 손대지 않았다). 둘을 같이 적용해도 충돌하지 않는다 — 실측으로 확인했다.
  * **그때도 이 파일을 `[id].tsx` 로 되돌리지 마라.** 되돌리면 같은 사고가 되돌아온다.
+ *
+ * ─── 재설계 기록 (2026-07-31) ───────────────────────────────────────────────
+ * 이 화면은 Tamagui + `useSurface`(legacy)로 그려져 있었다. design-system-v2 로 옮기면서
+ * 구조도 같이 바꿨다. 되돌리기 전에 알아야 할 실측 사실 넷:
+ *
+ *  1. **레시피 사진이 하나도 없다.** dev DB 175건 중 `image_url`/`thumbnail_url`/
+ *     `detail_image_url` 이 채워진 행이 0건이다 → `heroImageUrl` 은 항상 null.
+ *     그래서 300pt 패럴랙스 히어로와 그 위에 뜬 반투명 검은 원(뒤로/저장/공유)은
+ *     사진 위 컨트롤이 아니라 **글자 위 가림막**이었다(제목과 재료 줄을 실제로 덮었다).
+ *     지금은 `V2ScreenHeader` + 본문 안 액션 알약이고, 사진은 있을 때만 카드로 들어간다.
+ *  2. **서버는 레시피에 대한 개인 판정을 계산하지 않는다.** 응답에 있는 건 `budget` 과
+ *     `percentOfRemaining` 뿐이다. 그러니 이 화면에 "나에게 맞다/아니다" 를 만들지 마라.
+ *  3. **175/175 의 provenance 가 `reference_estimate`** 다. 영양 수치는 재료를 더한 값이
+ *     아니라 한 그릇 단위로 받은 값이고, 재료 줄의 "식품표에 없다" 는 아무 숫자도 바꾸지
+ *     않는다. 판단은 `ingredientUncertainty`/`ingredientCoverage` 한 곳에 있다.
+ *  4. **리뷰는 진짜로 붙어 있다.** `PUT /recipes/{id}/reviews/mine` 이 200 을 주고
+ *     summary 가 갱신되는 것을 확인했다. `리뷰 쓰기` 는 죽은 버튼이 아니다.
+ *
+ * 격자는 `@/src/design-system-v2` 의 `GUTTER`·`SECTION_GAP` 등을 쓴다. 식당 기능의
+ * `layout.ts` 를 import 하지 않는다 — 기능 모듈끼리 의존하면 안 된다(그 파일 머리말 참고).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import {
-  ActivityIndicator,
-  Animated,
-  Pressable,
-  Share,
-  StyleSheet,
-} from "react-native"
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { ScrollView, Share, StyleSheet, View } from "react-native"
+import { useLocalSearchParams } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { Text, View, YStack } from "tamagui"
-import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import {
+  SECTION_BAND,
+  SECTION_GAP,
+  V2ScreenHeader,
+  useV2Theme,
+} from "@/src/design-system-v2"
 import { showErrorToast } from "@/src/lib/toast"
-import { ConfirmModal } from "@/src/shared/components"
+import { ArticleSkeleton, ConfirmModal } from "@/src/shared/components"
+import { classifyFetchFailure } from "@/src/shared/utils/fetchFailure"
 import {
   IngredientSection,
   NutritionCard,
   ProvenanceSheet,
-  RecipeDetailTopBar,
+  RecipeActionRow,
+  RecipeFetchErrorState,
   RecipeHeroImage,
   RecipeTitleBlock,
   ReviewComposer,
@@ -66,13 +86,13 @@ import {
   StepSection,
   breakdownForDisplay,
   clampServings,
-  heroHeight,
   ingredientScale,
   isServingAdjustable,
   parseRecipeId,
   scaleBreakdown,
   scaleIngredients,
   scaleNutrition,
+  visibleReviews,
 } from "@/src/features/recipe/components/detail"
 import {
   flattenReviewPages,
@@ -81,19 +101,26 @@ import {
   useRecipeReviews,
   useRecipeSave,
 } from "@/src/features/recipe/hooks/useRecipeDetailV2"
+import { useBlockedUsers } from "@/src/features/recipe/hooks/useBlockedUsers"
 import type { ReviewSort } from "@/src/features/recipe/types/recipeV2"
 
 const REVIEW_SORT: ReviewSort = "recent"
 
+/**
+ * 제목이 앱바로 올라오는 스크롤 지점(벤치마크 §B-6 "헤더가 접히면 제목이 앱바로 들어간다").
+ * 제목 블록의 대략적인 높이다 — 정확한 측정을 위해 onLayout 을 붙이면 첫 프레임에
+ * 레이아웃이 한 번 더 돌고, 이 화면에서 그만한 정밀도가 필요한 곳이 없다.
+ */
+const TITLE_HANDOFF_Y = 72
+
 export default function RecipeDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const recipeId = parseRecipeId(id)
-  const router = useRouter()
+  const router = useAppRouter()
   const { t } = useTranslation("recipe")
-  const surface = useSurface()
+  const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
 
-  const scrollY = useRef(new Animated.Value(0)).current
   const detailQuery = useRecipeDetailV2(recipeId)
   const detail = detailQuery.data
   const saveMutation = useRecipeSave(recipeId)
@@ -107,7 +134,28 @@ export default function RecipeDetailRoute() {
   const [provenanceOpen, setProvenanceOpen] = useState(false)
   const [composerOpen, setComposerOpen] = useState(false)
   const [deleteAsking, setDeleteAsking] = useState(false)
+  /** 차단 확인 중인 작성자 닉네임. `null` 이면 확인 창이 없다. */
+  const [blockAsking, setBlockAsking] = useState<string | null>(null)
+  const [titleInBar, setTitleInBar] = useState(false)
   const initializedIdRef = useRef<number | null>(null)
+  const scrollRef = useRef<ScrollView>(null)
+
+  /**
+   * **레시피가 바뀌면 스크롤과 앱바 제목을 처음으로 되돌린다.**
+   *
+   * expo-router 는 같은 라우트에서 파라미터만 바뀌면 이 컴포넌트를 **다시 만들지 않는다**.
+   * 실측(딥링크 `/recipe/61` → `/recipe/71`): 화면은 새 레시피를 그렸는데 앱바에는 여전히
+   * 제목이 떠 있어서 **큰 제목과 앱바 제목이 동시에** 보였다. `titleInBar` 가 이전 레시피의
+   * 상태였기 때문이다. 스크롤 위치도 같은 이유로 남아, 긴 레시피에서 짧은 레시피로 옮기면
+   * 중간부터 보이게 된다. 둘 다 여기서 끊는다.
+   *
+   * `detail` 이 아니라 `recipeId` 에 매다는 것이 중요하다 — `detail` 은 응답이 온 뒤에야
+   * 바뀌므로 그 사이 한 프레임 동안 이전 화면의 스크롤이 남는다.
+   */
+  useEffect(() => {
+    setTitleInBar(false)
+    scrollRef.current?.scrollTo({ y: 0, animated: false })
+  }, [recipeId])
 
   // 인분은 레시피가 **바뀔 때만** 초기화한다. 저장 낙관 갱신으로 detail 객체가 새로 와도
   // 사용자가 고른 인분이 되돌아가면 안 된다.
@@ -127,6 +175,17 @@ export default function RecipeDetailRoute() {
       return next
     })
   }, [])
+
+  /**
+   * 상세에서 **나가는 길**. 오류 화면의 뒤로가기와 "레시피 목록으로" 가 둘 다 이걸 쓴다.
+   *
+   * 404 가 가장 잘 나는 경로가 딥링크(`sinsin:///recipe/1`)이고, 그때 이 화면은
+   * **스택 맨 아래**라 뒤로 갈 곳이 없다. `useAppRouter` 의 `back()` 이 그 경우
+   * 라우트 그래프가 정한 곳(레시피 탭)으로 대신 나간다.
+   */
+  const handleLeaveDetail = useCallback(() => {
+    router.back()
+  }, [router])
 
   const handleShare = useCallback(async () => {
     if (detail == null) return
@@ -206,176 +265,184 @@ export default function RecipeDetailRoute() {
     [basisServings, detail],
   )
 
-  const reviews = flattenReviewPages(reviewsQuery.data?.pages)
-  const heroTop = insets.top + 4
+  /**
+   * 차단한 사용자의 리뷰는 **그리기 전에** 뺀다.
+   *
+   * 이 앱의 다른 UGC(커뮤니티 글·댓글, 식당 후기)는 전부 신고·차단 경로를 갖고 있는데
+   * 레시피 리뷰만 없었다 — 남이 쓴 글이 내 화면에 뜨는데 치울 방법이 없는 화면이 하나
+   * 남아 있었다. 차단은 닉네임 기준이고(`blockService`) 리뷰 응답에 `authorNickName` 이
+   * 있어 서버 변경 없이 오늘 동작한다. 판정은 `visibleReviews` 한 곳에 있다.
+   *
+   * 별점 요약은 건드리지 않는다 — 그건 서버가 전체로 계산한 값이고, 한 명을 가렸다고
+   * 앱에서 평균을 다시 내면 같은 레시피의 별점이 사람마다 달라진다.
+   */
+  const { blockedNickNames, blockUser } = useBlockedUsers()
+  const reviews = useMemo(
+    () =>
+      visibleReviews(
+        flattenReviewPages(reviewsQuery.data?.pages),
+        blockedNickNames,
+      ),
+    [reviewsQuery.data?.pages, blockedNickNames],
+  )
 
+  const handleConfirmBlock = useCallback(() => {
+    if (blockAsking === null) return
+    blockUser(blockAsking)
+    setBlockAsking(null)
+  }, [blockAsking, blockUser])
+
+  /**
+   * 파라미터를 id 로 읽지 못했다(`/recipe/abc`). 서버에 물어보지도 못한 경우지만 사용자가
+   * 보는 상황은 "없는 레시피" 와 같아서 같은 화면을 쓴다.
+   */
   if (recipeId == null) {
     return (
-      <CenteredMessage
-        message={t("detail.notFound")}
-        paddingTop={insets.top + 40}
+      <RecipeFetchErrorState
+        kind={null}
+        onRetry={handleLeaveDetail}
+        onLeave={handleLeaveDetail}
       />
     )
   }
 
   if (detailQuery.isLoading) {
     return (
-      <YStack
-        flex={1}
-        backgroundColor={surface.canvas}
-        alignItems="center"
-        justifyContent="center"
-        gap={12}
+      <View
+        style={[styles.flex, { backgroundColor: colors.background.default }]}
       >
-        <ActivityIndicator color={surface.brand} />
-        <Text {...TYPE.caption} fontFamily="$body" color={surface.textMuted}>
-          {t("detail.loading")}
-        </Text>
-      </YStack>
+        <V2ScreenHeader onBack={handleLeaveDetail} />
+        <ArticleSkeleton variant="recipe" />
+      </View>
     )
   }
 
+  /**
+   * 실패를 **원인별로** 그린다. 종전에는 갈래가 하나뿐이라 404 도 "인터넷 연결을 확인" 이
+   * 됐다(`sinsin:///recipe/1` 로 재현). 분류는 `classifyFetchFailure`, 문구는
+   * `recipeFailureCopy` 가 정하고 이 화면은 고르지 않는다.
+   *
+   * `detail == null` 인데 오류도 아닌 경우(캐시 비정상)는 남는데, 그때는 우리 쪽 결함이라
+   * `REQUEST_REJECTED` 로 말한다 — "인터넷을 확인" 이라고 하지 않는 것이 핵심이다.
+   */
   if (detailQuery.isError || detail == null) {
+    const failureKind = detailQuery.isError
+      ? classifyFetchFailure(detailQuery.error, "recipe-detail")
+      : "REQUEST_REJECTED"
     return (
-      <YStack
-        flex={1}
-        backgroundColor={surface.canvas}
-        alignItems="center"
-        justifyContent="center"
-        paddingHorizontal={LAYOUT.screenX}
-        gap={8}
-      >
-        <Text {...TYPE.cardTitle} fontFamily="$body" color={surface.textStrong}>
-          {t("detail.errorTitle")}
-        </Text>
-        <Text
-          {...TYPE.caption}
-          fontFamily="$body"
-          color={surface.textMuted}
-          textAlign="center"
-        >
-          {t("detail.errorBody")}
-        </Text>
-        <Pressable
-          onPress={() => void detailQuery.refetch()}
-          accessibilityRole="button"
-          accessibilityLabel={t("detail.retry")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-        >
-          <View
-            marginTop={8}
-            height={LAYOUT.ctaCompact.height}
-            paddingHorizontal={24}
-            borderRadius={LAYOUT.ctaCompact.radius}
-            backgroundColor={surface.surface}
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text
-              {...TYPE.cta}
-              fontFamily="$body"
-              fontWeight="600"
-              color={surface.textStrong}
-            >
-              {t("detail.retry")}
-            </Text>
-          </View>
-        </Pressable>
-      </YStack>
+      <RecipeFetchErrorState
+        kind={failureKind}
+        onRetry={() => void detailQuery.refetch()}
+        onLeave={handleLeaveDetail}
+      />
     )
   }
 
   return (
-    <View flex={1} backgroundColor={surface.canvas}>
-      <RecipeHeroImage imageUrl={detail.heroImageUrl} scrollY={scrollY} />
-
-      <Animated.ScrollView
-        style={styles.flex}
-        contentContainerStyle={{
-          paddingTop: heroHeight(detail.heroImageUrl),
-          paddingBottom: insets.bottom + 48,
-        }}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
-      >
-        <YStack
-          backgroundColor={surface.canvas}
-          borderTopLeftRadius={detail.heroImageUrl ? 20 : 0}
-          borderTopRightRadius={detail.heroImageUrl ? 20 : 0}
-          paddingHorizontal={LAYOUT.screenX}
-          paddingTop={20}
-          gap={24}
-        >
-          <RecipeTitleBlock
-            name={detail.name}
-            summary={detail.summary}
-            description={detail.description}
-            category={detail.category}
-            timeMin={detail.timeMin}
-            servings={detail.servings}
-            difficulty={detail.difficulty}
-            tags={detail.tags}
-            author={detail.author}
-            saveCount={detail.saveCount}
-            authored={detail.authored}
-            localeInfo={detail.localeInfo}
-          />
-
-          <Divider />
-
-          <NutritionCard
-            nutrition={scaledNutrition}
-            breakdown={scaledBreakdown}
-            budget={detail.budget}
-            servings={basisServings}
-            onOpenProvenance={() => setProvenanceOpen(true)}
-          />
-
-          <Divider />
-
-          <IngredientSection
-            ingredients={scaledIngredients}
-            adjustable={adjustable}
-            provenance={detail.nutrition?.provenance ?? "reference_estimate"}
-            servings={selectedServings}
-            onChangeServings={(next) => setServings(clampServings(next))}
-            checkedOrdinals={checkedOrdinals}
-            onToggleChecked={handleToggleChecked}
-          />
-
-          <Divider />
-
-          <StepSection steps={detail.steps} />
-
-          <Divider />
-
-          <ReviewSection
-            rating={detail.rating}
-            myReview={detail.myReview}
-            reviews={reviews}
-            isLoading={reviewsQuery.isLoading}
-            hasMore={Boolean(reviewsQuery.hasNextPage)}
-            isFetchingMore={reviewsQuery.isFetchingNextPage}
-            onLoadMore={() => void reviewsQuery.fetchNextPage()}
-            onWrite={() => setComposerOpen(true)}
-            onDeleteMine={() => setDeleteAsking(true)}
-            isDeleting={remove.isPending}
-          />
-        </YStack>
-      </Animated.ScrollView>
-
-      <RecipeDetailTopBar
-        top={heroTop}
-        saved={detail.saved}
-        saveBusy={saveMutation.isPending}
-        onBack={() => router.back()}
-        onToggleSave={handleToggleSave}
-        onShare={() => void handleShare()}
+    // 바닥이 연회색이다. 흰 블록이 그 위에 떠 있는 것처럼 보이게 하는 값이고,
+    // 그래서 블록에 그림자나 테두리를 얹을 필요가 없다.
+    <View style={[styles.flex, { backgroundColor: colors.background.lower }]}>
+      {/*
+       * 헤더는 **항상** 있고 절대 위치가 아니다. 종전의 떠 있는 반투명 원은 사진이 없는
+       * 레시피에서 제목과 재료 줄을 덮었다(머리말 1번). 스크롤이 제목을 지나가면
+       * 앱바가 레시피 이름을 받아 든다(벤치마크 §B-6).
+       */}
+      <V2ScreenHeader
+        title={titleInBar ? detail.name : undefined}
+        onBack={handleLeaveDetail}
+        style={{ backgroundColor: colors.background.default }}
       />
+
+      <ScrollView
+        ref={scrollRef}
+        style={styles.flex}
+        contentContainerStyle={{ paddingBottom: insets.bottom + SECTION_GAP }}
+        scrollEventThrottle={32}
+        showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          const y = event.nativeEvent.contentOffset.y
+          setTitleInBar((previous) =>
+            previous === y > TITLE_HANDOFF_Y ? previous : y > TITLE_HANDOFF_Y,
+          )
+        }}
+      >
+        <View style={styles.blocks}>
+          <Block first>
+            {/*
+              이미지 섹션이 지면의 첫 블록이다 — 이 페이지가 무슨 요리인지 사진(없으면
+              카테고리 그림)이 먼저 말하고 이름이 뒤따른다. 사진이 0건인 지금도 빈 띠가
+              되지 않는 이유는 `RecipeHero` 머리말에 있다.
+            */}
+            <RecipeHeroImage
+              imageUrl={detail.heroImageUrl}
+              category={detail.category}
+            />
+            <RecipeTitleBlock
+              name={detail.name}
+              summary={detail.summary}
+              description={detail.description}
+              category={detail.category}
+              timeMin={detail.timeMin}
+              servings={detail.servings}
+              difficulty={detail.difficulty}
+              tags={detail.tags}
+              author={detail.author}
+              saveCount={detail.saveCount}
+              authored={detail.authored}
+              localeInfo={detail.localeInfo}
+              rating={detail.rating}
+            />
+            <RecipeActionRow
+              saved={detail.saved}
+              saveBusy={saveMutation.isPending}
+              onToggleSave={handleToggleSave}
+              onShare={() => void handleShare()}
+            />
+          </Block>
+
+          <Block>
+            <NutritionCard
+              nutrition={scaledNutrition}
+              breakdown={scaledBreakdown}
+              budget={detail.budget}
+              servings={basisServings}
+              onOpenProvenance={() => setProvenanceOpen(true)}
+            />
+          </Block>
+
+          <Block>
+            <IngredientSection
+              ingredients={scaledIngredients}
+              adjustable={adjustable}
+              provenance={detail.nutrition?.provenance ?? "reference_estimate"}
+              servings={selectedServings}
+              onChangeServings={(next) => setServings(clampServings(next))}
+              checkedOrdinals={checkedOrdinals}
+              onToggleChecked={handleToggleChecked}
+            />
+          </Block>
+
+          <Block>
+            <StepSection steps={detail.steps} />
+          </Block>
+
+          <Block>
+            <ReviewSection
+              rating={detail.rating}
+              myReview={detail.myReview}
+              reviews={reviews}
+              isLoading={reviewsQuery.isLoading}
+              hasMore={Boolean(reviewsQuery.hasNextPage)}
+              isFetchingMore={reviewsQuery.isFetchingNextPage}
+              onLoadMore={() => void reviewsQuery.fetchNextPage()}
+              onWrite={() => setComposerOpen(true)}
+              onDeleteMine={() => setDeleteAsking(true)}
+              isDeleting={remove.isPending}
+              onBlockAuthor={(nickName) => setBlockAsking(nickName)}
+            />
+          </Block>
+        </View>
+      </ScrollView>
 
       <ProvenanceSheet
         visible={provenanceOpen}
@@ -392,6 +459,16 @@ export default function RecipeDetailRoute() {
         onSubmit={handleSubmitReview}
       />
 
+      {/* 차단은 되돌릴 수 있지만(설정 → 차단 목록) 그 사실을 본문이 말해 준다. */}
+      <ConfirmModal
+        visible={blockAsking !== null}
+        title={t("detail.reviews.blockTitle")}
+        description={t("detail.reviews.blockBody", { name: blockAsking ?? "" })}
+        confirmText={t("detail.reviews.blockConfirm")}
+        onCancel={() => setBlockAsking(null)}
+        onConfirm={handleConfirmBlock}
+      />
+
       <ConfirmModal
         visible={deleteAsking}
         title={t("detail.reviews.deleteTitle")}
@@ -404,34 +481,43 @@ export default function RecipeDetailRoute() {
   )
 }
 
-function Divider() {
-  const surface = useSurface()
-  return <View height={1} backgroundColor={surface.hairline} />
-}
-
-function CenteredMessage({
-  message,
-  paddingTop,
+/**
+ * 섹션 하나 = 흰 블록 하나. 화면 바닥은 연회색이라 **블록 사이의 회색 띠가 곧 구분선**이다.
+ * 실선(hairline)·그림자·테두리를 쓰지 않는다 — 다섯 섹션에 선을 그으면 화면에 가로줄이
+ * 다섯 개 생기고, 그 줄들이 제목·수치와 같은 세기로 눈에 들어온다. 위계는 선이 아니라
+ * 면과 여백으로 만든다(벤치마크 §F-P4 "정보 블록을 둥근 카드로 묶는다"의 화면 버전).
+ *
+ * 안쪽 좌우 여백은 블록이 갖지 않는다 — **각 섹션 컴포넌트가 `GUTTER` 를 스스로 쓴다.**
+ * 그래야 제목·본문·재료 줄이 전부 같은 왼쪽 시작선에 선다. 여기서 한 번 더 주면
+ * 시작선이 두 겹으로 밀린다(공용 격자 `layout.ts` 머리말의 "세 번째 시작선").
+ */
+function Block({
+  children,
+  first = false,
 }: {
-  message: string
-  paddingTop: number
+  children: React.ReactNode
+  first?: boolean
 }) {
-  const surface = useSurface()
+  const { colors } = useV2Theme()
   return (
-    <YStack
-      flex={1}
-      backgroundColor={surface.canvas}
-      alignItems="center"
-      paddingTop={paddingTop}
-      paddingHorizontal={LAYOUT.screenX}
+    <View
+      style={[
+        styles.block,
+        {
+          backgroundColor: colors.background.default,
+          // 첫 블록은 헤더에 이어 붙어야 한다 — 헤더와 같은 흰 면인데 위에 여백을 주면
+          // 제목이 이유 없이 아래로 밀린 것처럼 보인다.
+          paddingTop: first ? 0 : SECTION_GAP,
+        },
+      ]}
     >
-      <Text {...TYPE.value} fontFamily="$body" color={surface.textMuted}>
-        {message}
-      </Text>
-    </YStack>
+      {children}
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  blocks: { gap: SECTION_BAND },
+  block: { paddingBottom: SECTION_GAP, gap: SECTION_GAP },
 })

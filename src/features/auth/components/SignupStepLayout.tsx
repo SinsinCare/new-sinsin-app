@@ -1,11 +1,5 @@
 import { ReactNode, useEffect, useState } from "react"
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native"
+import { Pressable, StyleSheet, Text, View } from "react-native"
 import Animated, {
   Easing,
   FadeIn,
@@ -23,6 +17,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { hapticStepAdvance } from "@/src/lib/haptics"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { AuthKeyboardFooter } from "./AuthKeyboardFooter"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
@@ -256,9 +251,7 @@ export function SignupStepLayout({
           disabled={!isCtaActive}
         >
           <Animated.View style={[styles.cta, ctaStyle]}>
-            {ctaLoading && (
-              <ActivityIndicator size="small" color={surface.ctaOffText} />
-            )}
+            {ctaLoading && <V2DotLoader size="s" color={surface.ctaOffText} />}
             <Animated.Text style={[styles.ctaLabel, ctaTextStyle]}>
               {ctaLoading
                 ? t("common.checking")

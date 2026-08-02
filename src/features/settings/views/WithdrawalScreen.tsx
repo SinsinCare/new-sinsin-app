@@ -10,7 +10,7 @@ import {
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -33,7 +33,7 @@ const WITHDRAWAL_REASON_LABEL_KEYS = [
 
 export function WithdrawalScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")
 

@@ -103,8 +103,7 @@ function NutrientDonut({
   isDark: boolean
 }) {
   const { stroke, centerColor } = donutLevelColors(percent, isDark)
-  const arcPercent =
-    percent == null ? 0 : Math.min(Math.max(percent, 0), 100)
+  const arcPercent = percent == null ? 0 : Math.min(Math.max(percent, 0), 100)
   const dash = (arcPercent / 100) * CIRC
   const displayPct =
     percent == null

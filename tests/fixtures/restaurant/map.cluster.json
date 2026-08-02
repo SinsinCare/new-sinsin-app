@@ -1,0 +1,31 @@
+{
+  "mode": "CLUSTER",
+  "zoom": 9,
+  "cellDeg": 0.096,
+  "viewport": {
+    "swLat": 37.4,
+    "swLng": 126.9,
+    "neLat": 37.6,
+    "neLng": 127.2
+  },
+  "markers": [],
+  "clusters": [
+    {
+      "key": "0.096:37.536000:127.008000",
+      "lat": 37.49776929250072,
+      "lng": 127.02893921219594,
+      "count": 376
+    }
+  ],
+  "total": 376,
+  "clusterTotal": 1,
+  "truncated": false,
+  "limitReached": false,
+  "limit": 400,
+  "excludedForMissingData": {
+    "nutritionTags": 0
+  },
+  "profileMissing": false,
+  "distanceAvailable": false,
+  "sort": "RECOMMENDED"
+}

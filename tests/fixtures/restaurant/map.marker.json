@@ -1,0 +1,2025 @@
+{
+  "mode": "MARKER",
+  "zoom": 3,
+  "cellDeg": null,
+  "viewport": {
+    "swLat": 37.49,
+    "swLng": 127.02,
+    "neLat": 37.51,
+    "neLng": 127.04
+  },
+  "markers": [
+    {
+      "restaurantId": 179,
+      "name": "크라이치즈버거 강남점",
+      "lat": 37.49706635210059,
+      "lng": 127.0317430144742,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 250,
+      "name": "농민백암순대 강남직영점",
+      "lat": 37.49491300989233,
+      "lng": 127.03150463098274,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 43,
+      "name": "해담아구찜&해물찜",
+      "lat": 37.49987846082287,
+      "lng": 127.0279048185623,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 204,
+      "name": "호보식당",
+      "lat": 37.49805664240165,
+      "lng": 127.03464976147133,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 239,
+      "name": "오늘도등심 강남점",
+      "lat": 37.4980492832259,
+      "lng": 127.031991090352,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 15,
+      "name": "전설의우대갈비 강남직영점",
+      "lat": 37.499196322642,
+      "lng": 127.028226866678,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 277,
+      "name": "풍년참숯갈비",
+      "lat": 37.494795053493824,
+      "lng": 127.02760099877939,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 84,
+      "name": "오레노라멘 강남점",
+      "lat": 37.5005037179803,
+      "lng": 127.028078079522,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 57,
+      "name": "갓덴스시 강남점",
+      "lat": 37.498777145173,
+      "lng": 127.029090699483,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 91,
+      "name": "무궁화반점 강남점",
+      "lat": 37.498900799365714,
+      "lng": 127.02819848344836,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 254,
+      "name": "원미옥",
+      "lat": 37.5004592282673,
+      "lng": 127.032888924641,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 23,
+      "name": "일편등심 강남",
+      "lat": 37.49959736693698,
+      "lng": 127.02781989720103,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 363,
+      "name": "밸런스포케 역삼점",
+      "lat": 37.5007068470736,
+      "lng": 127.033451093941,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 206,
+      "name": "육전식당 4호점",
+      "lat": 37.49906479206695,
+      "lng": 127.03490919928926,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 98,
+      "name": "반티엔야오 카오위 강남점",
+      "lat": 37.49843286149087,
+      "lng": 127.02562896506164,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 38,
+      "name": "주신당 강남점",
+      "lat": 37.49985777735972,
+      "lng": 127.02773630765405,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 276,
+      "name": "한율막국수",
+      "lat": 37.49550805146896,
+      "lng": 127.03005742054572,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 41,
+      "name": "윤이불닭발 강남점",
+      "lat": 37.4998234182862,
+      "lng": 127.028246327921,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 234,
+      "name": "담원순대 강남직영점",
+      "lat": 37.496145886665,
+      "lng": 127.030360740776,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 170,
+      "name": "스터번",
+      "lat": 37.4998868584351,
+      "lng": 127.03038713504733,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 178,
+      "name": "플랫나인",
+      "lat": 37.5004918064523,
+      "lng": 127.024947733898,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 132,
+      "name": "중경마라탕 강남2호점",
+      "lat": 37.49546533816528,
+      "lng": 127.03146302237013,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 246,
+      "name": "심가네칼국수 강남역본점",
+      "lat": 37.4953166040244,
+      "lng": 127.031717395722,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 48,
+      "name": "이자카야심 강남본점",
+      "lat": 37.4985868052738,
+      "lng": 127.026213679983,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 203,
+      "name": "거대곰탕 서초점",
+      "lat": 37.492358020786405,
+      "lng": 127.02676897797663,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 251,
+      "name": "고봉민김밥인 강남아르누보씨티점",
+      "lat": 37.493420921862615,
+      "lng": 127.02800871080662,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 340,
+      "name": "나즈드라비 본점",
+      "lat": 37.50024424973272,
+      "lng": 127.02798751037518,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 76,
+      "name": "멘노아지",
+      "lat": 37.499852843248384,
+      "lng": 127.0295072857668,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 73,
+      "name": "우동명가 기리야마본진",
+      "lat": 37.49703068320884,
+      "lng": 127.03032943513608,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 305,
+      "name": "보영만두 강남점",
+      "lat": 37.5000791278877,
+      "lng": 127.028973591253,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 83,
+      "name": "오마카세 오사이초밥 강남역점",
+      "lat": 37.5005001161066,
+      "lng": 127.028069030943,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 151,
+      "name": "봉스테이크",
+      "lat": 37.49990999976581,
+      "lng": 127.02788899777129,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 255,
+      "name": "순남시래기 신논현역점",
+      "lat": 37.50235692111788,
+      "lng": 127.02479341681058,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 164,
+      "name": "헬로브라질",
+      "lat": 37.5006083302044,
+      "lng": 127.027673254577,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 236,
+      "name": "탄탄면공방 강남점",
+      "lat": 37.49584129629105,
+      "lng": 127.03055512082534,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 376,
+      "name": "라이브볼키친",
+      "lat": 37.500848554798985,
+      "lng": 127.03567678598726,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 373,
+      "name": "무지개수프",
+      "lat": 37.4947632964303,
+      "lng": 127.0352136485,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 116,
+      "name": "무한미니훠궈",
+      "lat": 37.50042810247,
+      "lng": 127.027786278327,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 166,
+      "name": "트라가 강남역점",
+      "lat": 37.4956721937845,
+      "lng": 127.025553386789,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 248,
+      "name": "한우본",
+      "lat": 37.4978868485981,
+      "lng": 127.032913806326,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 353,
+      "name": "알라보 강남점",
+      "lat": 37.4999331851048,
+      "lng": 127.032366220354,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 369,
+      "name": "올라포케 역삼점",
+      "lat": 37.5013995847531,
+      "lng": 127.033927519154,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 190,
+      "name": "강남불백 강남1호점",
+      "lat": 37.4954644356526,
+      "lng": 127.03146867613,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 360,
+      "name": "단도락",
+      "lat": 37.4971577296398,
+      "lng": 127.033640624995,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 49,
+      "name": "사가라멘 강남역점",
+      "lat": 37.4985904092988,
+      "lng": 127.026213681243,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 59,
+      "name": "카츠왕 강남직영점",
+      "lat": 37.49936466052474,
+      "lng": 127.02884891767077,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 122,
+      "name": "중경마라탕 강남1호점",
+      "lat": 37.5012427730862,
+      "lng": 127.027092198454,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 81,
+      "name": "나무이자카야 강남4호점",
+      "lat": 37.4953032170881,
+      "lng": 127.027619278998,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 60,
+      "name": "대진도원참치 강남역점",
+      "lat": 37.49888963573744,
+      "lng": 127.02963469612766,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 106,
+      "name": "차슈밍",
+      "lat": 37.4997385506608,
+      "lng": 127.028961019845,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 295,
+      "name": "홍할머니떡볶이",
+      "lat": 37.497070048057935,
+      "lng": 127.02780312770759,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 209,
+      "name": "영동불백",
+      "lat": 37.4923323909984,
+      "lng": 127.032005613596,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 65,
+      "name": "고메스시",
+      "lat": 37.500010062768,
+      "lng": 127.027670771995,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 332,
+      "name": "던킨 원더스강남점",
+      "lat": 37.49604012452467,
+      "lng": 127.02811146424045,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 225,
+      "name": "베트남이랑",
+      "lat": 37.49894903606323,
+      "lng": 127.02609506417132,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 25,
+      "name": "팔도밀방 강남본점",
+      "lat": 37.4995296881452,
+      "lng": 127.028255264391,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 216,
+      "name": "역삼동북어집",
+      "lat": 37.4985912114461,
+      "lng": 127.036730818308,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 55,
+      "name": "야기카레",
+      "lat": 37.4977283224454,
+      "lng": 127.029298371216,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 247,
+      "name": "신복관한우육개장전문점 강남본점",
+      "lat": 37.4951373352035,
+      "lng": 127.031599714333,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 139,
+      "name": "로리스더프라임립",
+      "lat": 37.49808140984054,
+      "lng": 127.02590025308936,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 130,
+      "name": "춘리마라탕 강남점",
+      "lat": 37.5016429905049,
+      "lng": 127.026336887857,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 10,
+      "name": "뉴욕김치찌개",
+      "lat": 37.497756256439224,
+      "lng": 127.02928707350587,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 82,
+      "name": "이자카야나무 강남3호점",
+      "lat": 37.4997727257013,
+      "lng": 127.025313903915,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 213,
+      "name": "남호식당 역삼본점",
+      "lat": 37.4988076467464,
+      "lng": 127.036102156057,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 171,
+      "name": "비어룸",
+      "lat": 37.500823480875354,
+      "lng": 127.02847175544984,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 92,
+      "name": "중경마라탕 3호점",
+      "lat": 37.49855434818365,
+      "lng": 127.02630753121063,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 218,
+      "name": "반포김치찌개",
+      "lat": 37.5042764211433,
+      "lng": 127.02302409808013,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 88,
+      "name": "이케맨 강남역점",
+      "lat": 37.5006164371309,
+      "lng": 127.027682304813,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 352,
+      "name": "보울박스 역삼역점",
+      "lat": 37.4977752598545,
+      "lng": 127.032421832112,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 318,
+      "name": "장호덕손만두 서울논현점",
+      "lat": 37.5015775454598,
+      "lng": 127.02482030118,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 299,
+      "name": "힘난다떡볶이",
+      "lat": 37.4973011203909,
+      "lng": 127.029798042436,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 337,
+      "name": "두르가 강남점",
+      "lat": 37.499725035292805,
+      "lng": 127.02896214551669,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 63,
+      "name": "스시이안앤 강남역점",
+      "lat": 37.4999686818519,
+      "lng": 127.02739029459,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 362,
+      "name": "송화 본점",
+      "lat": 37.50088633084061,
+      "lng": 127.03279637739185,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 44,
+      "name": "범수산",
+      "lat": 37.497003778854335,
+      "lng": 127.02983524237301,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 86,
+      "name": "오양민돈까스",
+      "lat": 37.4959957167185,
+      "lng": 127.025267395564,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 357,
+      "name": "서울깍두기 강남역삼점",
+      "lat": 37.4953235679186,
+      "lng": 127.032614143406,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 37,
+      "name": "내가찜한닭 강남역점",
+      "lat": 37.4998550748797,
+      "lng": 127.027734044867,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 61,
+      "name": "우동명가 다카마쓰 강남본점",
+      "lat": 37.4970037788472,
+      "lng": 127.029835242373,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 269,
+      "name": "고등어식당",
+      "lat": 37.4973963097318,
+      "lng": 127.031030714288,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 52,
+      "name": "봄카츠 강남본점",
+      "lat": 37.4976670570902,
+      "lng": 127.029285907809,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 100,
+      "name": "남소관 우육도삭면",
+      "lat": 37.4996028439585,
+      "lng": 127.027516820662,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 94,
+      "name": "신복면관",
+      "lat": 37.4977382520021,
+      "lng": 127.029223738199,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 114,
+      "name": "리춘시장 강남역점",
+      "lat": 37.500289407647806,
+      "lng": 127.02752951250946,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 336,
+      "name": "오샐러드 강남점",
+      "lat": 37.49682718044277,
+      "lng": 127.02983969550976,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 85,
+      "name": "우니도 강남점",
+      "lat": 37.49527882853975,
+      "lng": 127.02788049058799,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 101,
+      "name": "따롱이훠궈 강남점",
+      "lat": 37.49835003427507,
+      "lng": 127.02532586324546,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 346,
+      "name": "찜샤브&화로구이",
+      "lat": 37.49593979570214,
+      "lng": 127.02553990794829,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 282,
+      "name": "옛고을장원김밥 서초점",
+      "lat": 37.500698943853045,
+      "lng": 127.02538885643722,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 119,
+      "name": "강남수향 본점",
+      "lat": 37.4958098178864,
+      "lng": 127.030334595568,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 222,
+      "name": "맛반맛있는매일백반",
+      "lat": 37.4909576366548,
+      "lng": 127.031323178829,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 20,
+      "name": "감성족발 강남역점",
+      "lat": 37.4992881423414,
+      "lng": 127.0285718213,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 51,
+      "name": "산원 반주헌",
+      "lat": 37.49766165302125,
+      "lng": 127.02927798967288,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 89,
+      "name": "요기야",
+      "lat": 37.4951193351223,
+      "lng": 127.027944888185,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 267,
+      "name": "남도게미밥상",
+      "lat": 37.4959921184935,
+      "lng": 127.025240254294,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 137,
+      "name": "철판목장 강남역 삼성타운점",
+      "lat": 37.4966476777357,
+      "lng": 127.026932219988,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 364,
+      "name": "송화 2호점",
+      "lat": 37.5009131192724,
+      "lng": 127.03365588066,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 270,
+      "name": "안녕숯불 강남점",
+      "lat": 37.4964377591415,
+      "lng": 127.030568933947,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 50,
+      "name": "도키메이테",
+      "lat": 37.49767967370904,
+      "lng": 127.029275734986,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 33,
+      "name": "신부자식당",
+      "lat": 37.49979748020726,
+      "lng": 127.02743546777992,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 111,
+      "name": "용용선생 강남역점",
+      "lat": 37.50013963533893,
+      "lng": 127.02839685650788,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 161,
+      "name": "알페도케밥 강남점",
+      "lat": 37.495993914698,
+      "lng": 127.025267394957,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 229,
+      "name": "성씨네삼장집 강남역점",
+      "lat": 37.5001866355288,
+      "lng": 127.02777487986,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 45,
+      "name": "강남막국수&보쌈",
+      "lat": 37.49758036360278,
+      "lng": 127.03006955971577,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 219,
+      "name": "강남불고기",
+      "lat": 37.5016297346539,
+      "lng": 127.035651146498,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 304,
+      "name": "불량펭귄",
+      "lat": 37.49558864414917,
+      "lng": 127.02842905814474,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 210,
+      "name": "밀양무안돼지국밥",
+      "lat": 37.4915796839701,
+      "lng": 127.029965384771,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 348,
+      "name": "올라포케 강남점",
+      "lat": 37.49554859504331,
+      "lng": 127.03006422176887,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 181,
+      "name": "강남백반집",
+      "lat": 37.4988490136163,
+      "lng": 127.026143657154,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 314,
+      "name": "축복덩어리",
+      "lat": 37.4943225621687,
+      "lng": 127.029116111057,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 262,
+      "name": "강남역라면집",
+      "lat": 37.4985258529721,
+      "lng": 127.024748046033,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 78,
+      "name": "동경규동 강남점",
+      "lat": 37.4968558565361,
+      "lng": 127.030451496098,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 126,
+      "name": "딤딤덕",
+      "lat": 37.5002768442662,
+      "lng": 127.030964052262,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 141,
+      "name": "카츠8 강남점",
+      "lat": 37.4966332657545,
+      "lng": 127.026914121286,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 144,
+      "name": "쿠차라 삼성서초사옥점",
+      "lat": 37.4965864082594,
+      "lng": 127.026936721364,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 68,
+      "name": "스시도온",
+      "lat": 37.4957430194836,
+      "lng": 127.027139968201,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 342,
+      "name": "안안 강남직영점",
+      "lat": 37.4994382777904,
+      "lng": 127.029915373097,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 128,
+      "name": "한성양갈비양꼬치 강남점",
+      "lat": 37.4954608868674,
+      "lng": 127.031260602341,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 21,
+      "name": "세광양대창 강남역중앙점",
+      "lat": 37.49928814234142,
+      "lng": 127.02857182130006,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 54,
+      "name": "멘야유메미루 강남점",
+      "lat": 37.4976670570902,
+      "lng": 127.029285907809,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 110,
+      "name": "2018심양양꼬치 강남점",
+      "lat": 37.5001360329387,
+      "lng": 127.028390069754,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 112,
+      "name": "안기덮밥마라탕",
+      "lat": 37.4996410830691,
+      "lng": 127.029602197263,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 201,
+      "name": "연탄마을 역삼점",
+      "lat": 37.5009492467429,
+      "lng": 127.033348289225,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 326,
+      "name": "파머스포케 강남역점",
+      "lat": 37.4976670570902,
+      "lng": 127.029285907809,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 333,
+      "name": "광장포차818",
+      "lat": 37.499635925229,
+      "lng": 127.028594571627,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 339,
+      "name": "리나스 서초삼성타운점",
+      "lat": 37.4966381631311,
+      "lng": 127.025133041402,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 371,
+      "name": "무등산수만리염소탕 강남점",
+      "lat": 37.49246945850387,
+      "lng": 127.03158049781884,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 30,
+      "name": "노랑저고리 강남점",
+      "lat": 37.49829326602763,
+      "lng": 127.0253484614826,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 328,
+      "name": "매드포갈릭 강남삼성타운점",
+      "lat": 37.496601724597085,
+      "lng": 127.02694011940008,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 19,
+      "name": "푸에르코 강남EAST",
+      "lat": 37.4963474291133,
+      "lng": 127.027852616819,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 64,
+      "name": "시선 강남2호점",
+      "lat": 37.4999758875327,
+      "lng": 127.027400475284,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 293,
+      "name": "환상의떡볶이",
+      "lat": 37.4982659058478,
+      "lng": 127.026842331546,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 99,
+      "name": "딘타이펑 강남점",
+      "lat": 37.49851845953925,
+      "lng": 127.0256176855776,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 117,
+      "name": "마라불패 강남점",
+      "lat": 37.4959939147052,
+      "lng": 127.025267394957,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 187,
+      "name": "전주콩나물국밥",
+      "lat": 37.4987872856811,
+      "lng": 127.031700769572,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 259,
+      "name": "형제특수부위 강남점",
+      "lat": 37.4999640094742,
+      "lng": 127.02810275713385,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 325,
+      "name": "오트보트",
+      "lat": 37.4976616530141,
+      "lng": 127.029277989673,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 367,
+      "name": "한뿌리죽 키친 서초점",
+      "lat": 37.49614801385113,
+      "lng": 127.02047382415878,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 280,
+      "name": "영삼이네 우정소갈비 강남역점",
+      "lat": 37.5006178557488,
+      "lng": 127.025377519927,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 127,
+      "name": "대동천",
+      "lat": 37.5007156932174,
+      "lng": 127.030738052087,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 256,
+      "name": "시골국밥",
+      "lat": 37.4958225130504,
+      "lng": 127.033375411104,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 156,
+      "name": "지니스샐러드",
+      "lat": 37.4996419840751,
+      "lng": 127.029602197619,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 300,
+      "name": "힘난다떡볶이 본점",
+      "lat": 37.497161438393,
+      "lng": 127.029900894591,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 138,
+      "name": "왁버거 강남점",
+      "lat": 37.49772922288361,
+      "lng": 127.02930063329148,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 358,
+      "name": "샐러디 역삼역점",
+      "lat": 37.5005998560746,
+      "lng": 127.032633401744,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 227,
+      "name": "소호정 강남점",
+      "lat": 37.495862780204796,
+      "lng": 127.02745664500115,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 115,
+      "name": "마유유 강남역점",
+      "lat": 37.4998546452675,
+      "lng": 127.029507286476,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 109,
+      "name": "하우마라탕",
+      "lat": 37.4997682318263,
+      "lng": 127.029172508239,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 123,
+      "name": "선궁",
+      "lat": 37.4987845817522,
+      "lng": 127.031704161063,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 42,
+      "name": "윤대감빈대떡",
+      "lat": 37.49700377971107,
+      "lng": 127.02983184982037,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 195,
+      "name": "하이웨이 서울 강남신논현점",
+      "lat": 37.5026221623351,
+      "lng": 127.027312098393,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 341,
+      "name": "프레퍼스 다이어트푸드 강남직영점",
+      "lat": 37.5002894076549,
+      "lng": 127.02752951251,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 374,
+      "name": "마리바풀",
+      "lat": 37.492122363621924,
+      "lng": 127.03234588796998,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 32,
+      "name": "도른계 강남역점",
+      "lat": 37.499734261007,
+      "lng": 127.028068744266,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 62,
+      "name": "강남혜자초밥",
+      "lat": 37.4970037788472,
+      "lng": 127.029835242373,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 97,
+      "name": "홍수 회전훠궈",
+      "lat": 37.4992881423414,
+      "lng": 127.0285718213,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 217,
+      "name": "김씨네부엌",
+      "lat": 37.491385490704204,
+      "lng": 127.03178923320199,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 205,
+      "name": "밥심",
+      "lat": 37.492227735283,
+      "lng": 127.029056497366,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 345,
+      "name": "미나리밭오리사냥",
+      "lat": 37.50028205920879,
+      "lng": 127.02812549433978,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 279,
+      "name": "봉피양제주 강남점",
+      "lat": 37.4947984175522,
+      "lng": 127.028609689443,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 8,
+      "name": "국밥쟁이 강남역점",
+      "lat": 37.498590409291616,
+      "lng": 127.02621368124245,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 159,
+      "name": "나폴리회관",
+      "lat": 37.5002223489019,
+      "lng": 127.029131972526,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 207,
+      "name": "향원",
+      "lat": 37.4924044666677,
+      "lng": 127.032023736857,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 237,
+      "name": "나주가",
+      "lat": 37.49713849618681,
+      "lng": 127.03150556587752,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 310,
+      "name": "얌샘김밥 강남점",
+      "lat": 37.4955485950361,
+      "lng": 127.030064221769,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 312,
+      "name": "종로김밥 서초진흥점",
+      "lat": 37.4970808602677,
+      "lng": 127.023666474506,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 370,
+      "name": "에그키친",
+      "lat": 37.5006992924926,
+      "lng": 127.034653244402,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 72,
+      "name": "아카사카일식 강남역본점",
+      "lat": 37.49559706678319,
+      "lng": 127.02709468219236,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 231,
+      "name": "순대생각 강남본점",
+      "lat": 37.49539427901879,
+      "lng": 127.02736035321203,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 136,
+      "name": "딜리셧부티끄",
+      "lat": 37.49766705737763,
+      "lng": 127.02928477694876,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 71,
+      "name": "일품 강남점",
+      "lat": 37.49561148366118,
+      "lng": 127.0270912949106,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 175,
+      "name": "도치피자 강남",
+      "lat": 37.5009936710604,
+      "lng": 127.028883471736,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 28,
+      "name": "황토감자탕 강남본점",
+      "lat": 37.49964422590763,
+      "lng": 127.02779164231518,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 208,
+      "name": "옛터",
+      "lat": 37.491499622858775,
+      "lng": 127.02945424564997,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 67,
+      "name": "큰물참치 강남점",
+      "lat": 37.49649294264577,
+      "lng": 127.02969820710979,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 121,
+      "name": "오한수우육면가 역삼점",
+      "lat": 37.49873599090735,
+      "lng": 127.03146665632678,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 184,
+      "name": "미례국밥 강남삼성타운점",
+      "lat": 37.4956114836612,
+      "lng": 127.027091294911,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 105,
+      "name": "일일향 강남3호점",
+      "lat": 37.4957969888219,
+      "lng": 127.027533517545,
+      "cuisineType": "CHINESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 1,
+      "name": "오맛난집",
+      "lat": 37.4982659058478,
+      "lng": 127.026842331546,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 148,
+      "name": "낙원타코 강남역점",
+      "lat": 37.49813109967333,
+      "lng": 127.02527942371906,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 162,
+      "name": "파스타우연",
+      "lat": 37.495993914698,
+      "lng": 127.025267394957,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 197,
+      "name": "본도시락 역삼역점",
+      "lat": 37.49817766751348,
+      "lng": 127.03364560600396,
+      "cuisineType": "ETC",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 309,
+      "name": "칸트푸드",
+      "lat": 37.4961458031119,
+      "lng": 127.030684160425,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 329,
+      "name": "포케올데이 서초사옥점",
+      "lat": 37.4964585174409,
+      "lng": 127.026707114345,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 228,
+      "name": "신도세기 강남역점",
+      "lat": 37.4957753575419,
+      "lng": 127.027564042081,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 252,
+      "name": "청년감자탕 강남역점",
+      "lat": 37.49530285131805,
+      "lng": 127.03259038706484,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 375,
+      "name": "삼호복집 서초점",
+      "lat": 37.4911652423752,
+      "lng": 127.029879281222,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 173,
+      "name": "트위드",
+      "lat": 37.4977413010559,
+      "lng": 127.031387078604,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 265,
+      "name": "목포명가 강남역점",
+      "lat": 37.49820458397177,
+      "lng": 127.03075737842177,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 303,
+      "name": "불량펜귄",
+      "lat": 37.4956084532145,
+      "lng": 127.028483345491,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 249,
+      "name": "전주해장국",
+      "lat": 37.5015820540518,
+      "lng": 127.024803338872,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 296,
+      "name": "강남김밥 공장",
+      "lat": 37.498060552493605,
+      "lng": 127.02650525969568,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 2,
+      "name": "미진식당",
+      "lat": 37.4978149831917,
+      "lng": 127.028628934044,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 74,
+      "name": "규카츠정 강남점",
+      "lat": 37.50031280527723,
+      "lng": 127.02765165839638,
+      "cuisineType": "JAPANESE",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 168,
+      "name": "후투타코 강남점",
+      "lat": 37.4958993657775,
+      "lng": 127.025000486196,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 194,
+      "name": "한가어죽 역삼점",
+      "lat": 37.5003223624779,
+      "lng": 127.032574474125,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 221,
+      "name": "전주식당",
+      "lat": 37.4905886659627,
+      "lng": 127.029607670529,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 361,
+      "name": "온히어 온샐러드&포케",
+      "lat": 37.49814698227022,
+      "lng": 127.03382426941488,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 167,
+      "name": "아실라",
+      "lat": 37.50073980486944,
+      "lng": 127.0279797789867,
+      "cuisineType": "WESTERN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    },
+    {
+      "restaurantId": 284,
+      "name": "찌개마을",
+      "lat": 37.4951872225557,
+      "lng": 127.030333212924,
+      "cuisineType": "KOREAN",
+      "avgSafety": "RESTRICTED",
+      "bookmarked": false,
+      "hasSafeMenu": false
+    }
+  ],
+  "clusters": [],
+  "total": 375,
+  "clusterTotal": null,
+  "truncated": true,
+  "limitReached": true,
+  "limit": 200,
+  "excludedForMissingData": {
+    "nutritionTags": 0
+  },
+  "profileMissing": false,
+  "distanceAvailable": false,
+  "sort": "RECOMMENDED"
+}

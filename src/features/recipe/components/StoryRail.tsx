@@ -1,6 +1,7 @@
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useRouter, type Href } from "expo-router"
+import { type Href } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
@@ -17,7 +18,7 @@ const CARD_HEIGHT = 152
 export function StoryRail() {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
-  const router = useRouter()
+  const router = useAppRouter()
   const { stories } = useCommunityStories("recommended")
 
   return (

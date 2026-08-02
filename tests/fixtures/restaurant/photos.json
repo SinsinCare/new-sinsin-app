@@ -1,0 +1,35 @@
+{
+  "restaurantId": 317,
+  "items": [
+    {
+      "photoId": 4474,
+      "url": "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fa212ebbdace86655a540e17b07262b2b06120486%3Foriginal",
+      "originalUrl": "https://t1.daumcdn.net/local/kakaomapPhoto/review/a212ebbdace86655a540e17b07262b2b06120486?original",
+      "category": "REVIEW",
+      "sourceReviewId": null,
+      "sourceMenuId": null,
+      "sortOrder": 0,
+      "isVideo": false,
+      "width": null,
+      "height": null
+    },
+    {
+      "photoId": 4475,
+      "url": "https://img1.kakaocdn.net/cthumb/local/R400x0/?fname=https%3A%2F%2Ft1.daumcdn.net%2Flocal%2FkakaomapPhoto%2Freview%2Fda71d265a09f39b200783ee403ccea3c54f2a73e%3Foriginal",
+      "originalUrl": "https://t1.daumcdn.net/local/kakaomapPhoto/review/da71d265a09f39b200783ee403ccea3c54f2a73e?original",
+      "category": "REVIEW",
+      "sourceReviewId": null,
+      "sourceMenuId": null,
+      "sortOrder": 1,
+      "isVideo": false,
+      "width": null,
+      "height": null
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false,
+  "total": 2,
+  "categoryCounts": {
+    "REVIEW": 2
+  }
+}

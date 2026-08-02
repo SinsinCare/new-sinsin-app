@@ -22,6 +22,13 @@ import {
   ARCHIVE_QUERY_ROOT,
   archiveSourceQueryKey,
 } from "../src/features/recipe/archive/useRecipeArchiveList"
+import { resolveArchiveEmpty } from "../src/features/recipe/archive/archiveEmptyState"
+import {
+  RECIPE_ARCHIVE_COUNT_KEYS,
+  RECIPE_ARCHIVE_TABS,
+  RECIPE_ARCHIVE_TAB_LABEL_KEYS,
+  normalizeArchiveTab,
+} from "../src/features/recipe/archive/archiveTab"
 import {
   EMPTY_RECIPE_FILTERS,
   toggleRecipeFilter,
@@ -367,6 +374,125 @@ describe("모의 서비스 (서버 붙기 전 경로)", () => {
   })
 })
 
+describe("비었을 때 무슨 말을 하는가 (순서가 전부다)", () => {
+  it("실패가 빈 보관함보다 먼저다 — 서버가 못 답한 것을 '없다' 고 말하지 않는다", () => {
+    // 셋이 동시에 참일 수 있다. 실패를 "저장한 레시피가 없어요" 로 그리면 앱이
+    // 거짓말을 하고, 사용자는 있는 것을 없다고 믿은 채 되돌릴 방법도 없다.
+    const copy = resolveArchiveEmpty({
+      isError: true,
+      isNarrowed: true,
+      tab: "saved",
+    })
+    expect(copy.kind).toBe("loadError")
+    expect(copy.action).toBe("retry")
+  })
+
+  it("좁혀서 비었으면 '둘러보기' 가 아니라 조건 풀기를 준다", () => {
+    // 보관함이 빈 게 아니라 조건이 좁은 것이다. 여기서 레시피 목록으로 내보내면
+    // 사용자가 걸어 둔 검색어·필터가 화면째로 사라진다.
+    const copy = resolveArchiveEmpty({
+      isError: false,
+      isNarrowed: true,
+      tab: "recent",
+    })
+    expect(copy.kind).toBe("narrowed")
+    expect(copy.action).toBe("clearNarrowing")
+    // 같은 동작에 두 벌의 낱말을 두지 않는다 — 목록 화면의 "전체 해제" 와 같은 키다.
+    expect(copy.actionKey).toBe("list.filterClearAll")
+  })
+
+  it("진짜 빈 보관함은 탭마다 다른 말, 같은 행동(둘러보기)", () => {
+    const saved = resolveArchiveEmpty({
+      isError: false,
+      isNarrowed: false,
+      tab: "saved",
+    })
+    const recent = resolveArchiveEmpty({
+      isError: false,
+      isNarrowed: false,
+      tab: "recent",
+    })
+    expect(saved.titleKey).toBe("archive.savedEmptyTitle")
+    expect(recent.titleKey).toBe("archive.recentEmptyTitle")
+    expect(saved.action).toBe("browse")
+    expect(recent.action).toBe("browse")
+  })
+
+  it("경고 아이콘은 실패에만 쓴다 — 빈 보관함은 사고가 아니다", () => {
+    // 아직 아무것도 저장하지 않은 화면에 경고 삼각형을 놓으면 사용자가 자기가 뭘
+    // 잘못했다고 읽는다(상세의 NOT_FOUND 를 info 로 그리는 것과 같은 이유).
+    const kinds = [
+      { input: { isError: false, isNarrowed: false, tab: "saved" as const } },
+      { input: { isError: false, isNarrowed: false, tab: "recent" as const } },
+      { input: { isError: false, isNarrowed: true, tab: "saved" as const } },
+    ]
+    for (const { input } of kinds) {
+      expect(resolveArchiveEmpty(input).icon).not.toBe("caution")
+    }
+    expect(
+      resolveArchiveEmpty({ isError: true, isNarrowed: false, tab: "saved" })
+        .icon,
+    ).toBe("caution")
+  })
+
+  it("빈 상태 문구 키가 모두 두 언어에 실제로 있다", () => {
+    // 키 이름을 표에 적어 두고 로케일에 안 넣으면 화면에 키 문자열이 그대로 뜬다.
+    const inputs = [
+      { isError: true, isNarrowed: false, tab: "saved" as const },
+      { isError: false, isNarrowed: true, tab: "saved" as const },
+      { isError: false, isNarrowed: false, tab: "saved" as const },
+      { isError: false, isNarrowed: false, tab: "recent" as const },
+    ]
+    const read = (bundle: unknown, key: string) =>
+      key
+        .split(".")
+        .reduce<unknown>(
+          (node, part) => (node as Record<string, unknown>)?.[part],
+          bundle,
+        )
+
+    for (const input of inputs) {
+      const copy = resolveArchiveEmpty(input)
+      for (const key of [copy.titleKey, copy.bodyKey, copy.actionKey]) {
+        expect(read(koRecipe, key)).toBeTruthy()
+        expect(read(enRecipe, key)).toBeTruthy()
+      }
+    }
+  })
+})
+
+describe("보관함 탭", () => {
+  it("모르는 값은 저장 탭으로 떨어진다 (딥링크가 아무 문자열이나 줄 수 있다)", () => {
+    expect(normalizeArchiveTab("recent")).toBe("recent")
+    expect(normalizeArchiveTab("saved")).toBe("saved")
+    expect(normalizeArchiveTab("")).toBe("saved")
+    expect(normalizeArchiveTab("bookmarks")).toBe("saved")
+  })
+
+  it("저장 탭이 먼저다 — 보관함에 오는 이유의 대부분이 저장한 것이다", () => {
+    expect(RECIPE_ARCHIVE_TABS).toEqual(["saved", "recent"])
+  })
+
+  it("탭 이름과 개수 문구가 두 언어에 있다", () => {
+    for (const tab of RECIPE_ARCHIVE_TABS) {
+      const label = RECIPE_ARCHIVE_TAB_LABEL_KEYS[tab].replace("archive.", "")
+      const count = RECIPE_ARCHIVE_COUNT_KEYS[tab].replace("archive.", "")
+      expect(
+        koRecipe.archive[label as keyof typeof koRecipe.archive],
+      ).toBeTruthy()
+      expect(
+        enRecipe.archive[label as keyof typeof enRecipe.archive],
+      ).toBeTruthy()
+      expect(
+        koRecipe.archive[count as keyof typeof koRecipe.archive],
+      ).toBeTruthy()
+      expect(
+        enRecipe.archive[count as keyof typeof enRecipe.archive],
+      ).toBeTruthy()
+    }
+  })
+})
+
 describe("보관함 문구 (i18n)", () => {
   afterEach(async () => {
     await i18n.changeLanguage("ko")
@@ -444,6 +570,19 @@ describe("보관함 문구 (i18n)", () => {
     expect(enRecipe.list.headlineRemaining).toContain("{{percent}}")
     expect(koRecipe.detail.nutrition.proteinNoWeight).toBeTruthy()
     expect(enRecipe.detail.nutrition.proteinNoWeight).toBeTruthy()
+  })
+
+  it("보관함 검색의 자리 문구가 목록의 것과 다르다 (찾는 범위가 다르다)", () => {
+    // 목록의 "레시피를 검색해 보세요" 를 그대로 쓰면 전체 카탈로그를 찾는 것으로
+    // 읽혀서, 저장하지 않은 레시피가 안 나오는 것을 앱의 결함으로 읽는다.
+    expect(koRecipe.archive.searchPlaceholder).toBeTruthy()
+    expect(enRecipe.archive.searchPlaceholder).toBeTruthy()
+    expect(koRecipe.archive.searchPlaceholder).not.toBe(
+      koRecipe.feed.recipeSearchPlaceholder,
+    )
+    expect(enRecipe.archive.searchPlaceholder).not.toBe(
+      enRecipe.feed.recipeSearchPlaceholder,
+    )
   })
 
   it("저장 해제 뒤 되돌리는 라벨이 두 언어에 있다 (계약 §6.4 되돌리기)", async () => {

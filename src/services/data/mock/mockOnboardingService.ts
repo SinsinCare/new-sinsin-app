@@ -24,13 +24,36 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
     step: 2,
     title: "신장 질환은 언제 진단받았나요?",
     subTitle: "",
+    // 여기 key 는 정본과 같아야 한다 — "예방 목적"을 고르면 뒤의 진단 질문 두 개가
+    // 빠지는데, 그 판정이 PREVENTIVE 키로 이뤄진다.
     type: "only",
     values: [
-      { key: "1", value: "1개월 이내" },
-      { key: "2", value: "6개월 이내" },
-      { key: "3", value: "6개월 ~ 2년 전" },
-      { key: "4", value: "2년 이상" },
-      { key: "5", value: "진단은 없고 예방 목적" },
+      { key: "WITHIN_1M", value: "1개월 이내" },
+      { key: "WITHIN_6M", value: "6개월 이내" },
+      { key: "SIX_M_TO_2Y", value: "6개월 ~ 2년 전" },
+      { key: "OVER_2Y", value: "2년 이상" },
+      { key: "PREVENTIVE", value: "진단은 없고 예방 목적" },
+    ],
+  },
+  {
+    step: 9,
+    title: "진단받은 연도와 달을 알려주세요",
+    subTitle: "선택 사항이에요. 기억나지 않으면 건너뛰어도 괜찮아요.",
+    type: "date",
+    values: [{ key: "diagnosisDate", value: "" }],
+  },
+  {
+    step: 10,
+    title: "신장 질환의 주된 원인을 알고 계신가요?",
+    subTitle: "해당되는 것을 모두 선택해 주세요.",
+    type: "multi",
+    values: [
+      { key: "DIABETIC_KIDNEY_DISEASE", value: "당뇨병성 신장 질환" },
+      { key: "HYPERTENSION", value: "고혈압" },
+      { key: "GLOMERULONEPHRITIS", value: "사구체신염" },
+      { key: "POLYCYSTIC_KIDNEY_DISEASE", value: "다낭성 신장 질환" },
+      { key: "OTHER", value: "기타" },
+      { key: "UNKNOWN", value: "잘 모르겠어요" },
     ],
   },
   {
@@ -50,12 +73,27 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     step: 4,
-    title: "현재 체중은 얼마인가요?",
+    title: "키와 체중은 얼마인가요?",
     subTitle:
-      "신장 단계·투석 여부와 함께 하루 참고 기준을 계산하는 데 사용해요",
+      "체중은 신장 단계·투석 여부와 함께 하루 참고 기준을 계산하는 데 사용해요. 키는 선택 사항이에요.",
     type: "input",
     values: [
-      { key: "weight", value: "", type: "number", unit: "kg", label: "몸무게" },
+      {
+        key: "height",
+        value: "",
+        type: "number",
+        unit: "cm",
+        label: "키",
+        required: false,
+      },
+      {
+        key: "weight",
+        value: "",
+        type: "number",
+        unit: "kg",
+        label: "몸무게",
+        required: true,
+      },
     ],
   },
   {

@@ -36,7 +36,9 @@ export function FaqCarousel({ onFaqPress }: FaqCarouselProps) {
   const { width: screenWidth } = useWindowDimensions()
   const [activeIndex, setActiveIndex] = useState(0)
   const pages = chunkArray(
-    getLocalizedFrequentlyAskedQuestions(i18n.resolvedLanguage ?? i18n.language),
+    getLocalizedFrequentlyAskedQuestions(
+      i18n.resolvedLanguage ?? i18n.language,
+    ),
     CARDS_PER_PAGE,
   )
 

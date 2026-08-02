@@ -2,7 +2,7 @@ import { Pressable, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { tokens } from "@/src/theme/tokens"
 
 interface ChatHeaderProps {
@@ -10,7 +10,7 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ title }: ChatHeaderProps) {
-  const router = useRouter()
+  const router = useAppRouter()
   const colorScheme = useAppColorScheme()
   const iconColor = colorScheme === "dark" ? "#e7e7ee" : tokens.color.grey1.val
 

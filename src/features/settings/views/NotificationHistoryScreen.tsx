@@ -6,7 +6,7 @@ import {
   Alert,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 
@@ -23,7 +23,7 @@ import appI18n from "@/src/i18n"
 
 export function NotificationHistoryScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")
 

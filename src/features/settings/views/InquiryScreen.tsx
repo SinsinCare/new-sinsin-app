@@ -13,7 +13,7 @@ import {
 import { api } from "@/src/services/core/apiClient"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -37,7 +37,7 @@ const INQUIRY_CATEGORIES = [
 
 export function InquiryScreen() {
   const insets = useSafeAreaInsets()
-  const router = useRouter()
+  const router = useAppRouter()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")
 

@@ -18,5 +18,8 @@
     },
     "outDir": ".jest-out"
   },
-  "include": ["tests/**/*"]
+  // `src/types/svg.d.ts` 를 넣지 않으면 `.svg` 를 import 하는 `.tsx` 를 (전이적으로라도)
+  // 들여오는 테스트가 TS2307 로 통째로 죽는다. 이 파일은 앱 tsconfig 를 상속하지 않으므로
+  // 선언 파일을 여기서 직접 집어 줘야 한다(실측된 결함이다).
+  "include": ["tests/**/*", "src/types/svg.d.ts"]
 }

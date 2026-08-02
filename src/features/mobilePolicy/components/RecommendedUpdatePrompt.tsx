@@ -28,8 +28,7 @@ export function RecommendedUpdatePrompt({
   const [visible, setVisible] = useState(true)
   const [openError, setOpenError] = useState<string | null>(null)
   const cardWidth = Math.min(Math.max(width - 40, 280), 372)
-  const message =
-    policy.message?.trim() || t("mobilePolicy.recommendedBody")
+  const message = policy.message?.trim() || t("mobilePolicy.recommendedBody")
 
   const handleOpenStore = async () => {
     if (!policy.storeUrl) return

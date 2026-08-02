@@ -30,8 +30,7 @@ export function MealTypeToggle({ value, onChange }: MealTypeToggleProps) {
     >
       {(["LUNCH", "DINNER"] as const).map((type) => {
         const isActive = value === type
-        const label =
-          type === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
+        const label = type === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
         return (
           <Pressable key={type} onPress={() => onChange(type)}>
             <XStack
