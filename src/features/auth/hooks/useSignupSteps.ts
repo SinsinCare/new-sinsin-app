@@ -178,14 +178,21 @@ export function useSignupSteps() {
       if (e instanceof ApiError && e.isNetworkError) {
         showErrorToast(getErrorMessage(e))
       } else {
-        setSubmitError(
-          getErrorMessage(
-            e,
-            isCompletionMode
-              ? t("profile.saveFailed")
-              : t("profile.signupFailed"),
-          ),
-        )
+        /*
+          여기서는 화면 폴백을 넘기지 않는다.
+
+          `getErrorMessage` 는 폴백이 있으면 서버 문구보다 폴백을 먼저 쓴다(의도된 규칙,
+          tests/apiError.test.ts 가 고정). 그런데 이 지점에서 서버가 돌려주는 것은
+          DUPLICATE_EMAIL · DUPLICATE_NICKNAME · SIGNUP_TOKEN_EXPIRED · INVALID_BIRTH_DATE
+          네 가지고, 전부 4xx 라 폴백에 덮여 "회원가입을 마치지 못했어요" 한 문장으로 뭉개졌다.
+          넷 다 **사용자가 직접 고쳐야 고쳐지는** 오류다 — 닉네임을 바꾸든, 이미 가입한
+          계정으로 로그인하든. 무엇을 고쳐야 하는지 말해 주지 않으면 사용자는 같은 값으로
+          다시 시도할 수밖에 없다.
+
+          폴백을 빼도 문구가 새지 않는다. `getErrorMessage` 는 카탈로그를 거치지 않은
+          문자열을 이미 걸러내고, 걸러낸 자리에는 자기 기본 문구를 넣는다.
+        */
+        setSubmitError(getErrorMessage(e))
       }
     } finally {
       setIsSubmitting(false)
@@ -205,7 +212,6 @@ export function useSignupSteps() {
     signupStore.privacyPolicyAgree,
     signupStore.signupToken,
     signupStore.termsOfServiceAgree,
-    t,
   ])
 
   const goNext = useCallback(async () => {
