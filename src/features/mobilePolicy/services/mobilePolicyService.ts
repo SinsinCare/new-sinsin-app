@@ -87,6 +87,17 @@ export function createMobilePolicyService({
   }
 
   return {
+    /**
+     * 마지막으로 성공한 정책. 네트워크를 타지 않는다(AsyncStorage 한 번).
+     *
+     * 부팅 게이트가 이걸 먼저 읽는 이유는 `evaluate` 가 **반드시 네트워크를 먼저**
+     * 기다리기 때문이다. 서버가 콜드 스타트면 `API_TIMEOUT_MS`(10초) × `maxAttempts`(2)
+     * 만큼 로딩 화면이 떠 있는다 — 실측으로 신고된 "10초 이상"이 이것이다.
+     */
+    async readCache(locale = "ko"): Promise<MobilePolicyResponse | null> {
+      return readCachedPolicy(locale)
+    },
+
     async evaluate(
       runtimeInfo: MobilePolicyRuntimeInfo,
       locale = "ko",

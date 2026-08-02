@@ -7,6 +7,7 @@ import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
 export const AUTH_LAYOUT = {
   screenX: LAYOUT.screenX,
   headerHeight: LAYOUT.headerHeight,
+  iconButton: LAYOUT.iconButton,
   progressHeight: LAYOUT.progressHeight,
   questionTop: LAYOUT.questionTop,
   questionToField: LAYOUT.questionToField,

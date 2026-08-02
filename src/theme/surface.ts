@@ -169,6 +169,21 @@ export const LAYOUT = {
   rowTextIndent: SCREEN_X + ROW_MARKER + ROW_MARKER_GAP,
 
   headerHeight: 56,
+  /**
+   * 헤더의 아이콘 버튼(뒤로가기 등).
+   *
+   * **아이콘 상자의 왼쪽 모서리를 `screenX` 에 정확히 맞추면서 터치 영역 44 를 지킨다.**
+   * 둘은 그냥은 같이 안 된다 — `padding` 만 주면 상자가 그만큼 안으로 밀려 아래 제목보다
+   * 오른쪽에서 시작하고, `padding` 을 빼면 터치 영역이 아이콘 크기(24)로 줄어든다.
+   * 그래서 padding 을 주고 같은 값을 음수 마진으로 되돌린다.
+   *
+   *     style={{ padding: LAYOUT.iconButton.pad, marginLeft: -LAYOUT.iconButton.pad }}
+   *
+   * 이걸 화면마다 눈대중으로 보정하다 `screenX - 8`, `paddingHorizontal: 4` 같은 값이
+   * 생겼고, 그래서 가입·온보딩·설정의 뒤로가기가 각각 16 / 12 / 20 에서 시작했다.
+   * 보정값을 새로 만들지 말고 이 토큰을 쓸 것.
+   */
+  iconButton: { size: 24, pad: 10 },
   progressHeight: 3,
   /** 진행바 ~ 질문 / 질문 ~ 입력 */
   questionTop: 16,

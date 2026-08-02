@@ -298,9 +298,14 @@ const styles = StyleSheet.create({
   header: {
     height: AUTH_LAYOUT.headerHeight,
     justifyContent: "center",
-    paddingHorizontal: AUTH_LAYOUT.screenX - 8,
+    paddingHorizontal: AUTH_LAYOUT.screenX,
   },
-  backButton: { padding: 4, alignSelf: "flex-start" },
+  // 아이콘 상자를 screenX 에 맞추고 터치 영역은 44 로 남긴다. LAYOUT.iconButton 머리말 참고.
+  backButton: {
+    padding: AUTH_LAYOUT.iconButton.pad,
+    marginLeft: -AUTH_LAYOUT.iconButton.pad,
+    alignSelf: "flex-start",
+  },
   progressTrack: {
     height: AUTH_LAYOUT.progressHeight,
     overflow: "hidden",

@@ -204,3 +204,37 @@ describe("mobile policy client routing", () => {
     ).toBe("https://sinsin-test-be-ummry5dxda-du.a.run.app")
   })
 })
+
+describe("mobile policy cache-first boot", () => {
+  it("캐시된 정책을 네트워크 없이 돌려준다 — 부팅 게이트가 먼저 읽는 경로", async () => {
+    const fetchPolicy = jest.fn(() => Promise.resolve(allowPolicy))
+    const storage = createStorage(allowPolicy)
+    const service = createMobilePolicyService({ fetchPolicy, storage })
+
+    const cached = await service.readCache("ko")
+
+    expect(cached).toEqual(allowPolicy)
+    expect(fetchPolicy).not.toHaveBeenCalled()
+  })
+
+  it("캐시가 없으면 null 을 준다 — 최초 실행은 네트워크를 기다려야 한다", async () => {
+    const fetchPolicy = jest.fn(() => Promise.resolve(allowPolicy))
+    const service = createMobilePolicyService({
+      fetchPolicy,
+      storage: createStorage(),
+    })
+
+    expect(await service.readCache("ko")).toBeNull()
+    expect(fetchPolicy).not.toHaveBeenCalled()
+  })
+
+  it("언어별로 캐시를 나눠 읽는다", async () => {
+    const service = createMobilePolicyService({
+      fetchPolicy: jest.fn(() => Promise.resolve(allowPolicy)),
+      storage: createStorage(allowPolicy, "ko"),
+    })
+
+    expect(await service.readCache("ko")).toEqual(allowPolicy)
+    expect(await service.readCache("en")).toBeNull()
+  })
+})
