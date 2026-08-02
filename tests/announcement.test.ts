@@ -401,3 +401,49 @@ describe("announcement entry controller", () => {
     )
   })
 })
+
+describe("announcement entry controller — 온보딩 직후 첫 홈", () => {
+  function createController(overrides: Record<string, unknown> = {}) {
+    const shown: unknown[] = []
+    const session = { checkedThisSession: false, requestAttempts: 0 }
+    const fetchActivePopup = jest.fn(() =>
+      Promise.resolve({ id: 1, title: "공지", body: "본문" } as never),
+    )
+    const controller = createAnnouncementEntryController({
+      fetchActivePopup,
+      isDismissed: () => Promise.resolve(false),
+      getSession: () => session,
+      recordAttempt: () => {
+        session.requestAttempts += 1
+      },
+      markChecked: () => {
+        session.checkedThisSession = true
+      },
+      showNotice: (notice) => shown.push(notice),
+      onError: () => undefined,
+      ...overrides,
+    })
+    return { controller, shown, session, fetchActivePopup }
+  }
+
+  it("이미 체크된 세션이면 서버에 묻지도 않고 아무것도 띄우지 않는다", async () => {
+    const { controller, shown, session, fetchActivePopup } = createController()
+    // 온보딩 완료가 markChecked() 를 미리 세워 둔 상태를 흉내낸다.
+    session.checkedThisSession = true
+
+    await controller.check()
+
+    expect(fetchActivePopup).not.toHaveBeenCalled()
+    expect(shown).toHaveLength(0)
+  })
+
+  it("다음 세션(리셋 후)에는 정상적으로 띄운다 — 영구히 숨기는 게 아니다", async () => {
+    const { controller, shown, session, fetchActivePopup } = createController()
+    session.checkedThisSession = false
+
+    await controller.check()
+
+    expect(fetchActivePopup).toHaveBeenCalledTimes(1)
+    expect(shown).toHaveLength(1)
+  })
+})

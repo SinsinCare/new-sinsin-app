@@ -9,6 +9,7 @@ import { useAuthStore } from "@/src/stores/authStore"
 import { useSignupStore } from "@/src/stores/signupStore"
 import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useAnnouncementSessionStore } from "@/src/features/announcement/state/announcementSessionStore"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 
 type Phase = "welcome" | "steps" | "complete"
@@ -332,6 +333,17 @@ export function useOnboarding() {
   const handleCompletionStart = useCallback(() => {
     trackAnalyticsEvent("onboarding_completion_cta_pressed", {})
     resetSignup()
+    /*
+      갓 가입한 사람의 **첫 홈 화면은 공지 팝업으로 덮지 않는다.**
+
+      온보딩을 막 끝낸 사람에게 앱의 첫인상은 홈이어야 하는데, 공지 팝업이 그 자리를
+      가로챘다. 아직 앱이 뭘 하는 곳인지도 모르는 상태에서 맥락 없는 전면 이미지 모달이
+      뜨니 "무섭다" 는 피드백이 나왔다. 공지가 나쁜 게 아니라 **순서가 틀렸다.**
+
+      이번 세션만 체크한 것으로 표시한다 — 앱을 다시 켜면(= 새 세션) 정상적으로 뜬다.
+      공지를 영구히 숨기는 것이 아니라 첫 인사보다 뒤로 미루는 것이다.
+    */
+    useAnnouncementSessionStore.getState().markChecked()
     router.replace("/(tabs)/home")
   }, [resetSignup])
 

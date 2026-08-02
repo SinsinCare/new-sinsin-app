@@ -45,6 +45,7 @@ export function BloodPressureSheet({
   const [systolic, setSystolic] = useState("")
   const [diastolic, setDiastolic] = useState("")
   const [heartRate, setHeartRate] = useState("")
+  const systolicRef = useRef<TextInput>(null)
   const diastolicRef = useRef<TextInput>(null)
   const heartRateRef = useRef<TextInput>(null)
 
@@ -54,6 +55,26 @@ export function BloodPressureSheet({
     setDiastolic(record ? String(record.diastolic) : "")
     setHeartRate(record?.heartRate != null ? String(record.heartRate) : "")
   }, [record, visible])
+
+  /*
+    첫 칸 자동 포커스. **`autoFocus` 로 하면 안 된다.**
+
+    이 시트는 홈이 열릴 때 `visible={false}` 인 채로 **이미 마운트된다**
+    (RecordView 가 시트 6종을 항상 렌더하고, Tamagui Sheet 는
+    `unmountChildrenWhenHidden` 기본값이 false 라 닫혀도 자식이 살아 있다).
+    `autoFocus` 는 마운트 시점에 동작하므로, 혈압 기록이 없는 사용자
+    (= 갓 가입한 사람)는 **홈에 들어서자마자 숫자 키패드가 올라왔다.**
+    공지 팝업이 그 위를 덮고 있어서 팝업을 닫는 순간 정체불명의 키패드가 드러났다.
+
+    그래서 마운트가 아니라 **열림**에 맞춰 포커스를 준다. 지연을 두는 이유는
+    시트가 올라오는 도중에 포커스를 주면 키보드가 시트를 앞질러 올라와
+    입력칸이 키보드 뒤에 깔린 채로 한 프레임 보이기 때문이다.
+  */
+  useEffect(() => {
+    if (!visible || record) return
+    const timer = setTimeout(() => systolicRef.current?.focus(), 260)
+    return () => clearTimeout(timer)
+  }, [visible, record])
 
   const systolicValue = parseVital(systolic)
   const diastolicValue = parseVital(diastolic)
@@ -116,7 +137,7 @@ export function BloodPressureSheet({
             </Text>
             <View style={styles.fieldValueRow}>
               <TextInput
-                autoFocus={!record}
+                ref={systolicRef}
                 value={systolic}
                 onChangeText={(text) => {
                   setSystolic(text)
