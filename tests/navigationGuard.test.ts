@@ -196,6 +196,35 @@ describe("navigation guard", () => {
       ).toEqual({ type: "redirect", href: "/onboarding" })
     })
 
+    /*
+      서버 가드는 accountState 로만 판정하는데 앱이 entryGate 만 보면, 두 값이 어긋난
+      계정은 "돌아다닐 수는 있지만 무엇을 눌러도 403" 에 갇힌다(2026-08-02 실제 사고).
+      온보딩으로 돌아갈 길이 화면에 없으니 스스로 빠져나올 수도 없었다.
+    */
+    it("entryGate 가 HOME 이라도 accountState 가 미완료면 온보딩으로 끌어온다", () => {
+      expect(
+        resolveGuard(
+          input({
+            entryGate: "HOME",
+            accountState: "PENDING_ONBOARDING",
+            segments: ["(tabs)", "community"],
+          }),
+        ),
+      ).toEqual({ type: "redirect", href: "/onboarding" })
+    })
+
+    it("프로필 미완료도 같은 규칙 — entryGate 와 무관하게 프로필로", () => {
+      expect(
+        resolveGuard(
+          input({
+            entryGate: "HOME",
+            accountState: "PENDING_PROFILE",
+            segments: ["(tabs)", "home"],
+          }),
+        ),
+      ).toEqual({ type: "redirect", href: "/(auth)/profile-setup" })
+    })
+
     it("leaves onboarding itself alone", () => {
       expect(
         resolveGuard(input({ ...needsOnboarding, segments: ["onboarding"] })),

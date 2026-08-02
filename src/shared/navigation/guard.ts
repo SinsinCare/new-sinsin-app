@@ -115,12 +115,28 @@ export function resolveGuard(input: GuardInput): GuardDecision {
     (at(segments, 0) === "(settings)" &&
       at(segments, 1) === "withdrawal-complete")
 
-  const needsProfile = input.entryGate === "PROFILE"
+  /*
+    관문 판정은 `entryGate` **또는** `accountState` 다 — 둘 중 하나만 봐서는 안 된다.
+
+    서버의 계정 상태 가드(`get_active_user`)는 `accountState` 로만 판정해서,
+    PENDING_ONBOARDING 계정은 스토리 작성 같은 쓰기 요청에 403 을 준다. 그런데 앱은
+    `entryGate` 만 보고 있었다. 두 값이 어긋난 계정(가입 도중 끊겼거나 서버가 상태만
+    되돌린 경우)은 **앱 안을 돌아다닐 수는 있는데 무엇을 눌러도 403** 인 상태에
+    갇혔고, 온보딩으로 돌아갈 길이 화면 어디에도 없었다(2026-08-02 QA "스토리 동작 안 함").
+
+    accountState 를 함께 보면 그 계정은 다음 화면 전환에서 자동으로 온보딩·프로필로
+    끌려가 스스로 복구된다. 별도의 "온보딩 다시하기" 버튼을 만드는 것보다 이쪽이
+    옳다 — 사용자가 자기 계정 상태를 이해하고 메뉴를 찾아 들어갈 이유가 없다.
+  */
+  const needsProfile =
+    input.entryGate === "PROFILE" || input.accountState === "PENDING_PROFILE"
   const needsAdditionalInfo =
     input.entryGate === "PROFILE" &&
     input.accountState === "ACTIVE" &&
     input.requiresAdditionalInfo
-  const needsOnboarding = input.entryGate === "ONBOARDING"
+  const needsOnboarding =
+    input.entryGate === "ONBOARDING" ||
+    input.accountState === "PENDING_ONBOARDING"
   const mustFinishProfile = needsProfile || needsAdditionalInfo
 
   if (!input.isAuthenticated) {
