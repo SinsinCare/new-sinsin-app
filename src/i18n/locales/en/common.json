@@ -1267,7 +1267,9 @@
           "halfCup": "Half cup",
           "cup": "Cup",
           "bottle": "Bottle"
-        }
+        },
+        "addCustom": "Add",
+        "chooseValue": "Tap what you drank"
       },
       "bloodPressure": {
         "title": "Log blood pressure",

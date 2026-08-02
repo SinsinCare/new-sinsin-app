@@ -1255,7 +1255,9 @@
           "halfCup": "반 컵",
           "cup": "종이컵",
           "bottle": "생수병"
-        }
+        },
+        "addCustom": "담기",
+        "chooseValue": "마신 물을 눌러 담아 주세요"
       },
       "bloodPressure": {
         "title": "혈압 기록",

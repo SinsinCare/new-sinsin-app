@@ -16,6 +16,7 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
 import { getHydrationGuidance } from "../../../utils/hydrationGuidance"
 import { SheetInfoCard } from "./recordSheetControls"
+import { V2DotLoader } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
@@ -43,14 +44,19 @@ interface WaterSheetProps {
 }
 
 /**
- * 물 기록 시트 — 확인 단계가 없다.
+ * 물 기록 시트 — 잔은 **담기고**, 저장은 CTA 한 번이다.
  *
- * 물 한 잔은 검토가 필요한 거래가 아니다. 잔을 누르는 순간 기록되고(햅틱 + 숫자가
- * 즉시 자란다), 시트는 열린 채 다음 잔을 받는다. 세 잔 마셨으면 세 번 누르면 끝 —
- * 담고 → 확인하고 → 닫는 3단계를 1단계로 줄였다.
+ * 처음에는 "물 한 잔은 검토가 필요한 거래가 아니다"라며 잔을 누르는 순간 서버에
+ * 기록했다. 그런데 이 시트만 그랬다 — 체중·혈당·혈압·부종은 전부 값을 고르고
+ * CTA 로 확정한다. 같은 홈의 시트인데 물만 규칙이 달라서, 사용자는 눌렀을 때
+ * 이미 저장된 줄 모르고 저장 버튼을 찾았다(2026-08-02 피드백: "저장 누르면
+ * 저장되어야 하는 것 아님?"). 빠른 손맛보다 **일관된 계약**이 먼저다.
  *
- * 실수 복구가 즉시 기록의 전제다: 이 시트에서 기록한 잔들은 스택으로 남고,
- * 되돌리기가 상시 자리(고정 슬롯)에서 마지막 잔을 서버까지 물린다.
+ * 그래서 탭은 로컬 스택에 담기만 하고(햅틱 + 숫자는 여전히 즉시 자란다),
+ * 서버 기록은 아래 CTA("+600mL 기록하기")가 합계로 **한 번** 보낸다.
+ * 되돌리기는 담긴 잔을 물리는 로컬 조작이 됐다 — 네트워크가 끼지 않으니
+ * 실수 복구가 오히려 빨라졌다. 저장 없이 닫으면 담긴 잔은 버려진다
+ * (다른 시트들이 입력값을 버리는 것과 같은 규칙).
  *
  * 상한은 가까워졌을 때만 말한다(hydrationGuidance) — 제한을 계속 들이대면
  * 필요한 만큼도 안 마신다는 신장내과 피드백.
@@ -107,28 +113,29 @@ export function WaterSheet({
     )
   }
 
-  const logAmount = async (amount: number) => {
+  /** 로컬에 담기만 한다. 서버는 CTA 의 commit 이 합계로 한 번 부른다. */
+  const addPending = (amount: number) => {
     if (isBusy) return
-    setIsBusy(true)
-    hapticStepAdvance()
-    // 낙관적으로 먼저 그린다 — 기록의 보상은 즉시 자라는 숫자다.
+    hapticSelection()
     setSession((prev) => [...prev, amount])
     bumpNumber()
-    const ok = await onLog(amount)
-    if (!ok) setSession((prev) => prev.slice(0, -1))
-    setIsBusy(false)
   }
 
-  const undoLast = async () => {
-    const last = session[session.length - 1]
-    if (!last || isBusy) return
-    setIsBusy(true)
+  const undoLast = () => {
+    if (session.length === 0 || isBusy) return
     hapticSelection()
     setSession((prev) => prev.slice(0, -1))
     bumpNumber()
-    const ok = await onLog(-last)
-    if (!ok) setSession((prev) => [...prev, last])
+  }
+
+  const commit = async () => {
+    if (sessionTotal <= 0 || isBusy) return
+    setIsBusy(true)
+    hapticStepAdvance()
+    const ok = await onLog(sessionTotal)
     setIsBusy(false)
+    // 실패면 담긴 잔을 그대로 두고 시트도 열어 둔다 — 다시 누르면 재시도다.
+    if (ok) onClose()
   }
 
   const customAmount = (() => {
@@ -136,9 +143,9 @@ export function WaterSheet({
     return isNaN(parsed) || parsed <= 0 ? 0 : Math.min(parsed, 3000)
   })()
 
-  const submitCustom = async () => {
+  const submitCustom = () => {
     if (customAmount <= 0) return
-    await logAmount(customAmount)
+    addPending(customAmount)
     setCustomText("")
     setIsCustomOpen(false)
   }
@@ -154,7 +161,7 @@ export function WaterSheet({
     <AppBottomSheet
       visible={visible}
       onClose={onClose}
-      snapPoints={[isCustomOpen ? 88 : 74]}
+      snapPoints={[isCustomOpen ? 94 : 82]}
       adjustForKeyboard={isCustomOpen}
     >
       <View style={styles.body}>
@@ -247,7 +254,7 @@ export function WaterSheet({
           <View style={{ flex: Math.max(0, 1 - filledRatio) }} />
         </View>
 
-        {/* 잔 버튼 — 누르면 바로 기록. 이 시트의 주인공이라 CTA 급으로 키웠다. */}
+        {/* 잔 버튼 — 누르면 담긴다(저장은 아래 CTA). 이 시트의 주인공이라 카드 크기다. */}
         <View style={styles.cupRow}>
           {PRESETS.map((preset) => {
             const anchor = t(`home.sheet.water.preset.${preset.anchorKey}`)
@@ -262,18 +269,18 @@ export function WaterSheet({
                   amount,
                 })}
                 disabled={isBusy}
-                onPress={() => void logAmount(preset.amount)}
+                onPress={() => addPending(preset.amount)}
               />
             )
           })}
         </View>
 
-        {/* 되돌리기 — 급수량을 물리는 조작이라 자리를 상시 확보한다(시프트 금지). */}
+        {/* 되돌리기 — 담긴 잔을 물리는 로컬 조작. 자리를 상시 확보한다(시프트 금지). */}
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: !canUndo }}
           accessibilityLabel={t("home.sheet.water.undoLast")}
-          onPress={() => void undoLast()}
+          onPress={undoLast}
           disabled={!canUndo}
         >
           {({ pressed }) => (
@@ -327,7 +334,7 @@ export function WaterSheet({
                 keyboardType="number-pad"
                 maxLength={4}
                 style={[styles.customInput, { color: surface.textStrong }]}
-                onSubmitEditing={() => void submitCustom()}
+                onSubmitEditing={submitCustom}
               />
               <Text style={[styles.customUnit, { color: surface.textMuted }]}>
                 mL
@@ -335,8 +342,8 @@ export function WaterSheet({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t("home.sheet.water.recordCustom")}
-              onPress={() => void submitCustom()}
+              accessibilityLabel={t("home.sheet.water.addCustom")}
+              onPress={submitCustom}
               disabled={customAmount <= 0 || isBusy}
             >
               {({ pressed }) => (
@@ -363,7 +370,7 @@ export function WaterSheet({
                       },
                     ]}
                   >
-                    {t("home.sheet.record")}
+                    {t("home.sheet.water.addCustom")}
                   </Text>
                 </View>
               )}
@@ -405,12 +412,56 @@ export function WaterSheet({
         {!isCustomOpen ? (
           <SheetInfoCard>{t("home.sheet.water.info")}</SheetInfoCard>
         ) : null}
+
+        {/* 확정 CTA — 다른 기록 시트와 같은 문법(값이 담긴 라벨, h56 r16). */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: sessionTotal <= 0 || isBusy }}
+          onPress={() => void commit()}
+          disabled={sessionTotal <= 0 || isBusy}
+        >
+          {({ pressed }) => (
+            <View
+              style={[
+                styles.cta,
+                {
+                  backgroundColor:
+                    sessionTotal > 0 && !isBusy
+                      ? surface.brand
+                      : surface.ctaOffBg,
+                  opacity: pressed && sessionTotal > 0 ? 0.92 : 1,
+                },
+              ]}
+            >
+              {isBusy ? (
+                <V2DotLoader size="s" color={surface.ctaOffText} />
+              ) : null}
+              <Text
+                style={[
+                  styles.ctaLabel,
+                  {
+                    color:
+                      sessionTotal > 0 && !isBusy
+                        ? surface.onBrand
+                        : surface.ctaOffText,
+                  },
+                ]}
+              >
+                {sessionTotal > 0
+                  ? t("home.sheet.recordValue", {
+                      value: `${formatAmount(sessionTotal)}mL`,
+                    })
+                  : t("home.sheet.water.chooseValue")}
+              </Text>
+            </View>
+          )}
+        </Pressable>
       </View>
     </AppBottomSheet>
   )
 }
 
-/** 잔 버튼. 누르는 순간 기록이라, 눌림이 확실히 보이게 카드 크기로 잡는다. */
+/** 잔 버튼. 누르는 순간 담기라, 눌림이 확실히 보이게 카드 크기로 잡는다. */
 function CupButton({
   amount,
   anchor,
@@ -460,6 +511,16 @@ function CupButton({
 }
 
 const styles = StyleSheet.create({
+  // 확정 CTA — RecordSheetShell 의 cta 와 같은 규격.
+  cta: {
+    height: LAYOUT.cta.height,
+    borderRadius: LAYOUT.cta.radius,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  ctaLabel: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
   body: {
     paddingHorizontal: LAYOUT.screenX,
     paddingTop: 4,
