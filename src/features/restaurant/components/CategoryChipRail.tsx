@@ -122,6 +122,22 @@ export function CategoryChipRail({
           />
         }
       />
+      {/*
+        "전체" 를 선택지 맨 앞에 세운다(레시피 캐러셀과 같은 판단).
+
+        지금까지 해제하는 방법은 **고른 칩을 다시 누르는 것** 하나뿐이었다. 되돌리는
+        길이 화면에 보이지 않았고, "지금 전부 보고 있다" 는 상태를 나타내는 자리도
+        없어서 아무것도 안 고른 상태가 그냥 아무 표시 없음으로 남았다.
+
+        `AI 검색` 뒤에 두는 이유: 그 칩은 시트를 여는 **액션**이고 여기서부터가
+        단일 선택 그룹이다. 그림을 주지 않는 것도 레시피 쪽과 같다 — 나머지가 전부
+        음식 일러스트인 줄에 전체만 추상 기호가 되면 줄의 성격이 섞인다.
+      */}
+      <RailChip
+        label={t("restaurant.map.allCuisines")}
+        selected={selected === null}
+        onPress={() => onSelect(null)}
+      />
       {RAIL_CUISINE_TYPES.map((spec) => {
         const Art = CUISINE_ART[spec.value]
         const isSelected = selected === spec.value

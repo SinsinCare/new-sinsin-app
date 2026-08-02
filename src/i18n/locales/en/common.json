@@ -743,6 +743,7 @@
       "bookmarkedOnly": "Saved only",
       "bookmarkedOnlyOff": "Show all restaurants",
       "aiSearch": "AI search",
+      "allCuisines": "All",
       "loading": "Looking for restaurants in this area",
       "truncated": "There are more restaurants here. Try zooming in.",
       "limitReached": "Too many results. Adding a filter will help.",

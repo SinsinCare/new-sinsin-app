@@ -160,33 +160,29 @@ export function AppBottomSheet({
           style={[styles.handleIndicator, { backgroundColor: palette.handle }]}
         />
         {/*
-          본문을 스크롤 가능하게 둔다. 예전에는 평범한 View 라, 키보드가 올라와
-          하단을 덮으면 **CTA 에 닿을 방법이 아예 없었다**(2026-08-02 QA: 혈압 입력 후
-          확인 버튼을 못 누르고 스크롤도 안 됨). 내용이 짧으면 `flexGrow` 덕에 지금과
-          똑같이 보이고, 넘칠 때만 스크롤이 생긴다 — 레이아웃은 그대로 두고 탈출구만 는다.
+          본문은 **평범한 View 여야 한다.** 한 번 ScrollView 로 바꿔 봤다가 바텀시트
+          12개가 전부 백지가 됐다(2026-08-02 QA: "암것도 안 보여"). 이유는 아래 `content`
+          의 `flex: 1` — View 에서는 프레임을 채우라는 뜻이지만, ScrollView 의
+          `contentContainerStyle` 에서는 높이가 열려 있는 축을 상대로 풀려서 컨테이너가
+          0 으로 접힌다. 게다가 스크롤이 필요한 시트는 이미 안쪽에
+          `AppBottomSheetScrollView` 를 쓰고 있어서, 껍데기까지 스크롤이면 세로 스크롤이
+          이중으로 겹친다.
 
-          `keyboardShouldPersistTaps="handled"` 가 핵심이다. 기본값이면 키보드가 떠 있을 때
-          첫 탭이 키보드 내리는 데 먹혀서, 사용자는 CTA 를 **두 번** 눌러야 한다.
+          애초에 껍데기를 스크롤로 만들 이유가 없었다. 그때 고치려던 문제
+          (혈압 입력 후 CTA 에 닿을 수 없음)의 진짜 원인은 키보드에서 빠져나올 길이
+          없던 것이고, 그건 전역 `AppKeyboardToolbar` 의 완료 버튼이 해결한다.
         */}
-        <ScrollView
-          style={styles.contentScroll}
-          contentContainerStyle={[
+        <View
+          style={[
             styles.content,
-            styles.contentGrow,
             contentBottomPadding
               ? { paddingBottom: getBottomSheetContentPadding(insets.bottom) }
               : null,
             contentContainerStyle,
           ]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          overScrollMode="never"
-          nestedScrollEnabled
         >
           {children}
-        </ScrollView>
+        </View>
       </Sheet.Frame>
     </Sheet>
   )
@@ -364,6 +360,8 @@ export function AppBottomSheetScrollView({
     <ScrollView
       bounces={false}
       overScrollMode="never"
+      // 기본값이면 키보드가 떠 있을 때 첫 탭이 키보드를 내리는 데 먹혀서 CTA 를 두 번 눌러야 한다.
+      keyboardShouldPersistTaps="handled"
       {...props}
       showsVerticalScrollIndicator={props.showsVerticalScrollIndicator ?? false}
       contentContainerStyle={[
@@ -378,9 +376,6 @@ export function AppBottomSheetScrollView({
 }
 
 const styles = StyleSheet.create({
-  // 시트 본문 스크롤러. flex:1 로 프레임을 채우고, 내용이 짧으면 contentGrow 가 편다.
-  contentScroll: { flexGrow: 0, flexShrink: 1 },
-  contentGrow: { flexGrow: 1 },
   modalRoot: {
     flex: 1,
   },

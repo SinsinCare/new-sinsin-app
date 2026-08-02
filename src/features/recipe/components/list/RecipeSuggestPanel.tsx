@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next"
 
 import { Icon } from "@/src/shared/components/Icon"
 import { useSurface } from "@/src/hooks/useSurface"
+import { GUTTER } from "@/src/design-system-v2"
 
 import type { RecipeSuggestion } from "../../types/recipeListV2"
 
@@ -42,7 +43,11 @@ export function RecipeSuggestPanel({
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}
     >
-      <YStack paddingHorizontal={20} paddingTop={12} gap={2}>
+      {/*
+        시작선은 `GUTTER`(16)다. 20 을 쓰고 있었는데, 이 패널은 검색 필드 **바로 아래**
+        에 열리고 그 필드는 16 에서 시작한다 — 4pt 어긋난 줄이 뜨고 지는 것으로 보였다.
+      */}
+      <YStack paddingHorizontal={GUTTER} paddingTop={12} gap={2}>
         <Text
           fontFamily="$body"
           fontSize={12.5}

@@ -69,6 +69,22 @@ import {
 } from "./recipeCategoryArtModel"
 
 /**
+ * 한 칸의 폭. 라벨(`샐러드`)이 그림 상자보다 넓어서 상자보다 크게 잡는다.
+ */
+const SLOT_WIDTH = 60
+/** 그림 상자 — 화면에서 **눈에 보이는 면**이고, 시작선을 맞춰야 하는 대상이다. */
+const ART_BOX = 48
+/**
+ * 레일의 좌우 인셋. `RAIL_INSET` 을 그대로 쓰면 안 된다.
+ *
+ * 칸(60)이 상자(48)보다 넓고 가운데 정렬이라, 첫 칸의 상자는 인셋보다 6pt 더
+ * 안쪽에서 시작한다. 그 6 때문에 카테고리 줄만 제목·검색바·섹션·목록(전부 16)에서
+ * 혼자 밀려 있었다. 인셋에서 그 차이를 빼면 **상자의 왼쪽 모서리**가 16 에 앉는다.
+ * 라벨은 칸 안에서 가운데 정렬이라 원래대로 둔다 — 맞춰야 하는 건 면이다.
+ */
+const RAIL_EDGE = RAIL_INSET - (SLOT_WIDTH - ART_BOX) / 2
+
+/**
  * 화면이 그리는 항목 = 모델 항목(키·서버 표기·라벨) + 그림.
  *
  * 항목 목록·순서·`기타`/`음료` 제외의 근거는 전부 `recipeCategoryArtModel.ts` 에 있다 —
@@ -127,7 +143,7 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
         gap: 4,
-        paddingHorizontal: RAIL_INSET,
+        paddingHorizontal: RAIL_EDGE,
       }}
     >
       {/*
@@ -148,15 +164,15 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
         accessibilityState={{ selected: selected.length === 0 }}
         style={({ pressed }) => ({
           opacity: pressed ? 0.7 : 1,
-          width: 60,
+          width: SLOT_WIDTH,
           alignItems: "center",
         })}
       >
         <YStack alignItems="center" gap={6} paddingVertical={4}>
           <View
             style={{
-              width: 48,
-              height: 48,
+              width: ART_BOX,
+              height: ART_BOX,
               borderRadius: 16,
               alignItems: "center",
               justifyContent: "center",
@@ -207,15 +223,15 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
             accessibilityState={{ selected: isSelected }}
             style={({ pressed }) => ({
               opacity: pressed ? 0.7 : 1,
-              width: 60,
+              width: SLOT_WIDTH,
               alignItems: "center",
             })}
           >
             <YStack alignItems="center" gap={6} paddingVertical={4}>
               <View
                 style={{
-                  width: 48,
-                  height: 48,
+                  width: ART_BOX,
+                  height: ART_BOX,
                   borderRadius: 16,
                   alignItems: "center",
                   justifyContent: "center",

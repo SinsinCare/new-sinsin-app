@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next"
 import { Icon } from "@/src/shared/components/Icon"
 import { useSurface } from "@/src/hooks/useSurface"
 import { tokens } from "@/src/theme/tokens"
+import { GUTTER } from "@/src/design-system-v2"
 
 import type {
   AppliedRecipeFilter,
@@ -43,7 +44,13 @@ export function AppliedFilterRow({
       bounces={false}
       overScrollMode="never"
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ gap: 8, paddingRight: 4 }}
+      /*
+        좌우 인셋은 **여기**(contentContainerStyle)다. 호출부가 컨테이너에
+        `paddingHorizontal` 을 주고 있었는데, 그러면 뷰포트 자체가 좁아져서 칩이 화면
+        끝까지 못 가고 16 안쪽에서 잘린다 — 더 있다는 신호가 사라진다.
+        `RecipeSortRow` 가 같은 이유로 이미 이렇게 하고 있다.
+      */
+      contentContainerStyle={{ gap: 8, paddingHorizontal: GUTTER }}
     >
       {applied.map((filter) => {
         const label = t(filter.labelKey)

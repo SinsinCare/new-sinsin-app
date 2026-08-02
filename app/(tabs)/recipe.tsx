@@ -638,9 +638,12 @@ export default function RecipeScreen() {
           {/*
             ①층에 남는다 — 스크롤해도 걸려 있는 필터가 보여야 한다. 카테고리 칩만
             캐러셀이 보이는 동안 빠진다(위 §카테고리가 사는 자리).
+
+            좌우 인셋을 여기서 주지 않는다 — 줄 안쪽(contentContainerStyle)이 갖는다.
+            여기서 주면 가로 스크롤 뷰포트가 좁아져 칩이 화면 끝에서 잘린다.
           */}
           {visibleApplied.length > 0 && (
-            <YStack paddingHorizontal={GUTTER} paddingTop={12}>
+            <YStack paddingTop={12}>
               <AppliedFilterRow
                 applied={visibleApplied}
                 onRemove={handleRemoveFilter}
