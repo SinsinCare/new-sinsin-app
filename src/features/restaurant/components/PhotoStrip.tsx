@@ -28,7 +28,7 @@
  * 스크롤 끝에서 오른쪽 여백이 사라져 사진이 화면 모서리에 딱 붙는다.
  */
 
-import { memo } from "react"
+import { memo, useState } from "react"
 import {
   ScrollView,
   StyleSheet,
@@ -84,10 +84,25 @@ export const PhotoStrip = memo(function PhotoStrip({
   */
   const real = realPhotoUrls(urls)
 
+  /*
+    로딩에 실패한 URL. 실패한 타일을 회색 상자로 남겨 두면 위 머리말이 금지한
+    "우리가 사진을 버린 화면" 과 똑같이 읽히므로, 그 타일은 **접어서 없앤다**.
+    전부 실패하면 아래의 "사진 없음" 분기(음식 종류 그림)로 자연히 내려간다.
+
+    2026-08-02 실측: 사진이 "뜨다 말다" 한 주원인은 http:// CDN URL 을 iOS ATS 가
+    차단하던 것이라 데이터에서 https 로 고쳤다. 이 onError 는 그 잔여물 —
+    만료된 블로그 이미지, 삭제된 원본 — 이 다시 회색 구멍으로 보이지 않게 하는
+    마지막 방어다.
+  */
+  const [failedUrls, setFailedUrls] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  )
+  const alive = real.filter((url) => !failedUrls.has(url))
+
   // 목업 375pt 에서 120pt. 3번째가 조금 잘려 스크롤 가능함을 알린다.
   const tile = Math.round((width - RAIL_INSET) / 3)
 
-  if (real.length === 0) {
+  if (alive.length === 0) {
     const Art = cuisineType ? CUISINE_ART[cuisineType] : undefined
     if (!Art) return null
     // 한 장짜리 자리. 사진이 아니라 **음식 종류**를 말하는 그림이므로 양·모양을 주장하지 않는다.
@@ -109,7 +124,7 @@ export const PhotoStrip = memo(function PhotoStrip({
     )
   }
 
-  const items = real.slice(0, maxCount)
+  const items = alive.slice(0, maxCount)
 
   return (
     <ScrollView
@@ -142,6 +157,14 @@ export const PhotoStrip = memo(function PhotoStrip({
               number: index + 1,
             })}
             transition={120}
+            onError={() => {
+              setFailedUrls((prev) => {
+                if (prev.has(url)) return prev
+                const next = new Set(prev)
+                next.add(url)
+                return next
+              })
+            }}
           />
         </View>
       ))}
