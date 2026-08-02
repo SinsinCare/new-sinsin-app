@@ -222,6 +222,24 @@ export default function V2Showcase() {
             />
             <V2Chip label="저염식" onRemove={() => {}} />
           </View>
+          {/* tone="neutral" — 선택이 잉크 면이다. 브랜드색을 이미 쓰고 있는 화면의
+              정렬·세그먼트 줄이 쓴다(레시피 목록의 정렬 줄). */}
+          <View style={styles.row}>
+            <V2Chip
+              label="추천"
+              size="s"
+              tone="neutral"
+              selected={chipOn}
+              onPress={() => setChipOn(true)}
+            />
+            <V2Chip
+              label="최신"
+              size="s"
+              tone="neutral"
+              selected={!chipOn}
+              onPress={() => setChipOn(false)}
+            />
+          </View>
           <V2ProgressBar value={60} color="brand" />
           <V2ProgressBar value={40} color="success" size="l" />
         </Section>

@@ -4,34 +4,44 @@
  * `빠른 조리`(quick)는 시안에 없다. 하지만 "지금 뭐 먹지" 는 실제 질의다 — 조리시간이
  * 15분인지 45분인지가 오늘 그걸 만드는지 마는지를 정한다.
  *
- * 왜 칩이 아니라 글자인가: 위의 적용된 필터 칩과 생김새가 같으면 하나는 "빼는 것",
- * 하나는 "고르는 것" 인데 사용자가 구별할 수 없다. 정렬은 항상 하나가 켜져 있고
- * 지울 수 없으므로 X 가 붙는 칩과 다른 문법을 준다(§6.4 결과 예측 가능).
- *
  * ─────────────────────────────────────────────────────────────────────────────
- * ■ 밑줄을 없앴다 — **탭이 아닌데 탭처럼 보였다**
+ * ■ 맨 글자 → **라운딩 칩**, 그리고 색은 무채색이다 (디자인 피드백)
  *
- * 켜진 항목 아래에 브랜드색 2pt 밑줄을 깔고 있었다. 그런데 이 줄은 목록과 같은
- * 스크롤에 있어서, 조금만 내리면 **고정된 검색 필드 바로 아래에 주황 밑줄 하나만**
- * 남는다. 실제 화면에서 그것은 "탭이 하나뿐인 탭바" 로 읽혔다(지적: "검색창 왼쪽
- * 아래에 붙은 정체불명의 주황 밑줄"). 밑줄은 관례상 **탭 전환**의 표시이고, 이 줄은
- * 화면을 전환하지 않으므로 그 관례를 빌리면 안 된다.
+ * 종전 판본은 밑줄도 면도 없는 **맨 글자 다섯 개**였고, 켜진 것만 주황이었다.
+ * 두 가지가 무너져 있었다:
  *
- * 켜진 항목은 이제 **낱말 자체**로 말한다(브랜드색 + 굵은 face). 같은 화면의 카테고리
- * 캐러셀이 이미 "굵기 + 색으로만 선택을 말한다" 는 문법을 쓰고 있어서, 밑줄을 빼면
- * 두 줄의 문법이 같아진다 — 사용자가 한 화면에서 두 가지 선택 표시법을 배우지 않아도 된다.
+ *  1. **누를 수 있다는 것을 모양이 말하지 않았다.** 바로 위 카테고리 캐러셀은 면을
+ *     가진 타일이고 그 위 헤더의 `보관함`·`쓰기` 도 회색 알약이다. 그 사이에 낀 회색
+ *     낱말 다섯 개는 목록의 소제목처럼 읽혔다(같은 지적으로 `보관함` 이 이미 한 번
+ *     맨 글자에서 칩으로 올라왔다 — 같은 결함이 이 줄에 남아 있었다).
+ *  2. **주황이 두 뜻을 겸했다.** 같은 화면에서 주황은 검색 필드의 `필터 1` 배지 —
+ *     "지금 결과가 좁혀져 있다" 는 신호다. 정렬은 결과를 좁히지 않는데 같은 색으로
+ *     켜져 있으니, 주황 두 개 중 무엇이 결과를 바꾼 것인지 알 수 없었다.
  *
- * ■ 글꼴은 `typography.*` 를 편다 — `fontWeight` 를 쓰지 않는다
+ * 이제 **면으로 말한다**: 안 고른 것은 옅은 회색 알약, 고른 것은 잉크 면 + 흰 글자.
+ * 무채색이라 이 화면의 주황은 다시 `필터 N` 하나뿐이다.
  *
- * Pretendard 가 굵기별 4개 파일로 로드돼 있어 face 위에 `fontWeight` 를 겹치면 iOS 에서
- * 가짜 볼드가 난다(`typography.ts` 머리말). 굵기는 face 로만 말한다.
+ * ■ 위의 적용된 필터 칩과 헷갈리지 않는가 — 세 가지가 다르다
+ *
+ * 종전 주석이 "칩으로 만들면 빼는 칩과 고르는 칩을 구별할 수 없다" 를 이유로 맨 글자를
+ * 골랐었다. 그 걱정은 **색까지 같을 때만** 성립한다. 지금 둘은 이렇게 갈린다:
+ *
+ *   적용된 필터(`AppliedFilterRow`) — 주황 틴트 면 · 주황 글자 · 오른쪽에 `×`
+ *   정렬(이 줄)                     — 무채색 면 · `×` 없음 · 항상 하나가 켜져 있다
+ *
+ * 지울 수 있는 것에만 `×` 가 붙고, 유채색은 "결과가 좁혀졌다" 쪽에만 있다.
+ *
+ * ■ 칩을 여기서 그리지 않는다 — `V2Chip`
+ *
+ * 알약 하나를 이 파일에서 또 손으로 그리면 앱 안의 다섯 번째 칩 구현이 된다(이미
+ * `V2Chip` · `SelectableChip` · `DetailFilterChip` · 헤더 알약이 있다). 치수·라디우스·
+ * 터치 타겟·글자 굵기 규칙은 DS 가 들고 있고 이 파일은 **무엇을 고르게 할지**만 정한다.
+ * `tone="neutral"` 이 위 §색의 근거다.
  */
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native"
+import { ScrollView, StyleSheet } from "react-native"
 import { useTranslation } from "react-i18next"
 
-import { useSurface } from "@/src/hooks/useSurface"
-import { RAIL_INSET, spacing, typography } from "@/src/design-system-v2"
-import { tokens } from "@/src/theme/tokens"
+import { CHIP_GAP, RAIL_INSET, V2Chip } from "@/src/design-system-v2"
 
 import { RECIPE_SORT_KEYS, type RecipeSortKey } from "../../types/recipeListV2"
 
@@ -50,7 +60,6 @@ interface RecipeSortRowProps {
 
 export function RecipeSortRow({ sort, onChange }: RecipeSortRowProps) {
   const { t } = useTranslation("recipe")
-  const surface = useSurface()
 
   return (
     <ScrollView
@@ -63,36 +72,28 @@ export function RecipeSortRow({ sort, onChange }: RecipeSortRowProps) {
         가로 스크롤은 `contentContainerStyle` 로만 여백을 준다 — 컨테이너에
         `paddingHorizontal` 을 주면 뷰포트가 좁아져 마지막 항목이 화면 끝에서 잘린다.
         왼쪽 인셋을 화면 여백(`RAIL_INSET` = `GUTTER`)과 같게 두어야 정렬 줄의 첫
-        낱말이 섹션 제목·목록 줄과 **같은 시작선**에 선다.
+        칩이 섹션 제목·목록 줄과 **같은 시작선**에 선다.
       */
       contentContainerStyle={styles.content}
     >
       {RECIPE_SORT_KEYS.map((key) => {
-        const isActive = key === sort
         const label = t(SORT_LABEL_KEYS[key])
         return (
-          <Pressable
+          <V2Chip
             key={key}
+            label={label}
+            /*
+              같은 칩을 다시 눌러도 해제되지 않는다 — 정렬은 항상 하나가 켜져 있고
+              "정렬 없음" 이라는 상태가 없다(그 점이 필터와 다르다).
+            */
+            selected={key === sort}
             onPress={() => onChange(key)}
-            accessibilityRole="button"
+            size="s"
+            tone="neutral"
+            /* 화면에는 `별점` 만 보인다. 앞뒤 맥락이 없는 스크린리더에는 그것이
+               "별점" 인지 "별점 순으로 본다" 인지 알 수 없다. */
             accessibilityLabel={t("list.sortAccessibility", { label })}
-            accessibilityState={{ selected: isActive }}
-            hitSlop={8}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <Text
-              style={[
-                isActive ? styles.labelActive : styles.label,
-                {
-                  color: isActive
-                    ? tokens.color.primary.val
-                    : surface.textMuted,
-                },
-              ]}
-            >
-              {label}
-            </Text>
-          </Pressable>
+          />
         )
       })}
     </ScrollView>
@@ -101,20 +102,8 @@ export function RecipeSortRow({ sort, onChange }: RecipeSortRowProps) {
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing[20],
+    gap: CHIP_GAP,
     paddingHorizontal: RAIL_INSET,
     alignItems: "center",
-  },
-  /**
-   * 켜짐/꺼짐이 **같은 크기·같은 줄높이**여야 한다. face 만 바뀌므로 정렬을 눌러도
-   * 줄의 높이나 낱말 위치가 튀지 않는다(굵기를 fontSize 로 흉내내면 그 순간 튄다).
-   */
-  label: {
-    ...typography.subtext.large,
-  },
-  labelActive: {
-    ...typography.label.small,
-    // `label.small`(15/19)과 `subtext.large`(15/20)의 줄높이 1pt 차이를 맞춘다.
-    lineHeight: typography.subtext.large.lineHeight,
   },
 })

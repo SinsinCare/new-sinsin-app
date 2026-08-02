@@ -1,5 +1,6 @@
 import { FeatureIntroSheet, useFeatureIntro } from "@/src/features/coach"
 import { useCallback, useRef, useEffect, useState } from "react"
+import { KeyboardStickyView } from "react-native-keyboard-controller"
 import {
   Alert,
   FlatList,
@@ -767,93 +768,105 @@ export default function ConsultScreen() {
             </>
           )}
 
-          <View
-            style={{
-              ...styles.inputContainer,
-              backgroundColor: isDarkMode
-                ? tokens.color.inputBgDark.val
-                : "#F2F2F5",
-            }}
+          {/*
+            iOS 컴포저는 KeyboardStickyView 가 든다(2026-08-02 QA: 키보드가 입력창을
+            통째로 가림). 이 화면은 modal(pageSheet)이라 KeyboardAvoidingView 의
+            padding 계산이 시트 좌표계에서 어긋난다 — 가입 화면들이 이미 검증한
+            keyboard-controller 로 이동만 맡긴다. 안드로이드는 KAV height 가 정상이라
+            그대로 둔다(둘을 겹치면 이중 보정).
+          */}
+          <KeyboardStickyView
+            enabled={Platform.OS === "ios"}
+            offset={{ closed: 0, opened: 0 }}
           >
-            {/* 전송 전 첨부 미리보기 — 인풋 위에 얹히고 X로 뺄 수 있다. */}
-            {attachedImageUri && (
-              <View style={styles.attachmentRow}>
-                <View style={styles.attachmentThumbWrap}>
-                  <ExpoImage
-                    source={{ uri: attachedImageUri }}
-                    style={styles.attachmentThumb}
-                    contentFit="cover"
-                    transition={100}
-                  />
-                  <Pressable
-                    onPress={clearAttachedImage}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("consult.removeAttachment")}
-                    style={styles.attachmentRemove}
-                  >
-                    <Icon name="x" size={12} color="#FFFFFF" />
-                  </Pressable>
+            <View
+              style={{
+                ...styles.inputContainer,
+                backgroundColor: isDarkMode
+                  ? tokens.color.inputBgDark.val
+                  : "#F2F2F5",
+              }}
+            >
+              {/* 전송 전 첨부 미리보기 — 인풋 위에 얹히고 X로 뺄 수 있다. */}
+              {attachedImageUri && (
+                <View style={styles.attachmentRow}>
+                  <View style={styles.attachmentThumbWrap}>
+                    <ExpoImage
+                      source={{ uri: attachedImageUri }}
+                      style={styles.attachmentThumb}
+                      contentFit="cover"
+                      transition={100}
+                    />
+                    <Pressable
+                      onPress={clearAttachedImage}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("consult.removeAttachment")}
+                      style={styles.attachmentRemove}
+                    >
+                      <Icon name="x" size={12} color="#FFFFFF" />
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
-            )}
-            <View style={styles.inputRow}>
-              <Pressable
-                onPress={handlePlusPress}
-                disabled={isTyping}
-                accessibilityRole="button"
-                accessibilityLabel={t("consult.openAttachmentMenu")}
-                style={({ pressed }) => ({
-                  ...styles.attachButton,
-                  opacity: pressed ? 0.6 : isTyping ? 0.4 : 1,
-                })}
-              >
-                <Icon name="paperclip" size={20} color={menuTextColor} />
-              </Pressable>
+              )}
+              <View style={styles.inputRow}>
+                <Pressable
+                  onPress={handlePlusPress}
+                  disabled={isTyping}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("consult.openAttachmentMenu")}
+                  style={({ pressed }) => ({
+                    ...styles.attachButton,
+                    opacity: pressed ? 0.6 : isTyping ? 0.4 : 1,
+                  })}
+                >
+                  <Icon name="paperclip" size={20} color={menuTextColor} />
+                </Pressable>
 
-              <TextInput
-                value={inputMessage}
-                onChangeText={setInputMessage}
-                placeholder={t("consult.placeholder")}
-                placeholderTextColor={isDarkMode ? "#66666B" : "#81818D"}
-                multiline
-                style={{
-                  ...styles.input,
-                  color: isDarkMode
-                    ? tokens.color.textDark.val
-                    : tokens.color.textLight.val,
-                }}
-                editable={!isTyping}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-
-              <Pressable
-                onPress={handleSend}
-                disabled={!canSend}
-                style={{
-                  ...styles.sendButton,
-                  backgroundColor: canSend
-                    ? isDarkMode
-                      ? tokens.color.textDarkSub.val
-                      : "#474758"
-                    : isDarkMode
-                      ? "#4E4F55"
-                      : "#CACBD5",
-                }}
-              >
-                <Icon
-                  name="fly-chat"
-                  size={16}
-                  color={
-                    isDarkMode
+                <TextInput
+                  value={inputMessage}
+                  onChangeText={setInputMessage}
+                  placeholder={t("consult.placeholder")}
+                  placeholderTextColor={isDarkMode ? "#66666B" : "#81818D"}
+                  multiline
+                  style={{
+                    ...styles.input,
+                    color: isDarkMode
                       ? tokens.color.textDark.val
-                      : tokens.color.offWhite.val
-                  }
+                      : tokens.color.textLight.val,
+                  }}
+                  editable={!isTyping}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                 />
-              </Pressable>
+
+                <Pressable
+                  onPress={handleSend}
+                  disabled={!canSend}
+                  style={{
+                    ...styles.sendButton,
+                    backgroundColor: canSend
+                      ? isDarkMode
+                        ? tokens.color.textDarkSub.val
+                        : "#474758"
+                      : isDarkMode
+                        ? "#4E4F55"
+                        : "#CACBD5",
+                  }}
+                >
+                  <Icon
+                    name="fly-chat"
+                    size={16}
+                    color={
+                      isDarkMode
+                        ? tokens.color.textDark.val
+                        : tokens.color.offWhite.val
+                    }
+                  />
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </KeyboardStickyView>
         </YStack>
       </KeyboardAwareView>
 

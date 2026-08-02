@@ -60,7 +60,13 @@ export function WriteSection({
         style={({ pressed }) => [styles.header, pressed && { opacity: 0.6 }]}
       >
         <View style={styles.headerText}>
-          <Text style={[styles.title, { color: s.textStrong }]}>{title}</Text>
+          <Text style={[styles.title, { color: s.textStrong }]}>
+            {title}
+            {/* 필수 섹션 표시 — QA(2026-08-02) "전반적으로 필수요소 강조 부족". 선택(optional) 섹션에는 없다. */}
+            {state !== "optional" ? (
+              <Text style={{ color: s.brand }}> *</Text>
+            ) : null}
+          </Text>
           <Text style={[styles.state, { color: stateColor }]}>
             {stateLabel}
           </Text>

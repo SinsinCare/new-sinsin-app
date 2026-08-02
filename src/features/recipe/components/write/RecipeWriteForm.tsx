@@ -302,6 +302,7 @@ export function RecipeWriteForm({ onClose }: RecipeWriteFormProps) {
         >
           <WriteTextField
             label={t("recipeWrite.field.name")}
+            required
             value={form.name}
             onChangeText={(name) => patch({ name })}
             placeholder={t("recipeWrite.field.namePlaceholder")}

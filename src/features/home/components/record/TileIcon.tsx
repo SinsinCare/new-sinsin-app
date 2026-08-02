@@ -1,4 +1,3 @@
-import { StyleSheet } from "react-native"
 import { Image } from "expo-image"
 
 /**
@@ -22,12 +21,20 @@ const SOURCES = {
 
 export type TileIconName = keyof typeof SOURCES
 
+/**
+ * 붓기만 2 크다. 자산의 불투명 영역이 다른 다섯 개보다 작아 같은 상자에서
+ * 시각적으로 한 뼘 작아 보인다는 QA(2026-08-02 "붓기 아이콘 살짝 키우기") —
+ * 자산을 다시 뽑는 대신 렌더 크기로 광학 보정한다.
+ */
+const SIZE_BY_NAME: Partial<Record<TileIconName, number>> = { edema: 30 }
+
 export function TileIcon({ name }: { name: TileIconName }) {
+  const size = SIZE_BY_NAME[name] ?? 28
   return (
-    <Image source={SOURCES[name]} style={styles.icon} contentFit="contain" />
+    <Image
+      source={SOURCES[name]}
+      style={{ width: size, height: size }}
+      contentFit="contain"
+    />
   )
 }
-
-const styles = StyleSheet.create({
-  icon: { width: 28, height: 28 },
-})

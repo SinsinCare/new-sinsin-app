@@ -479,7 +479,12 @@ export default function RecipeScreen() {
             </RNText>
           )}
 
-          <YStack paddingTop={spacing[10]} paddingBottom={spacing[4]}>
+          {/*
+            정렬 줄이 맨 글자에서 **칩**이 되면서 이 자리의 높이가 20 → 32 로 커졌다.
+            위아래 여백을 그대로 두면 제목·목록에서 이 줄만 떠 보인다 — 칩의 면 자체가
+            여백을 대신하므로 바깥 여백을 그만큼 줄인다(총 높이는 거의 그대로다).
+          */}
+          <YStack paddingTop={spacing[8]} paddingBottom={spacing[2]}>
             <RecipeSortRow sort={sort} onChange={setSort} />
           </YStack>
         </YStack>

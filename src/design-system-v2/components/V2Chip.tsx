@@ -6,17 +6,44 @@
 //  - Pressed   → 런타임 상호작용(Pressable의 pressed) — prop 아님
 //  - disabled  → boolean prop
 //
-// 패턴: size→치수/타이포 룩업 + selected→{bg,fg} 토큰 룩업.
+// 패턴: size→치수/타이포 룩업 + (tone, selected)→{bg,fg} 토큰 룩업.
 //  시맨틱 색은 useV2Theme(다크 자동).
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// ■ `tone` — 선택을 **무슨 색으로** 말하는가
+//
+// 종전에는 축이 없었다. 선택된 칩은 언제나 불투명 주황이었고, 그래서 "브랜드색은 화면에
+// 하나" 규칙을 지켜야 하는 화면들은 이 컴포넌트를 쓸 수 없어 각자 칩을 새로 만들었다
+// (`features/restaurant/SelectableChip`·`DetailFilterChip`, 그리고 레시피 정렬 줄은
+// 아예 칩을 포기하고 맨 글자였다). 같은 뜻의 컨트롤이 네 곳에서 네 모양이 된 상태다.
+//
+// 축을 하나 연다:
+//   `brand`   — 선택 = 불투명 주황 면 + 흰 글자. 화면에서 이 칩 줄 자체가 주인공일 때.
+//   `neutral` — 선택 = 잉크 면 + 흰 글자. **무채색**이라 브랜드색을 이미 쓰고 있는
+//               화면(레시피 목록의 필터 배지 등) 위에 얹어도 강조가 둘로 갈라지지 않는다.
+//               지도 탭의 카테고리 레일이 같은 이유로 이미 잉크 면을 쓴다.
+//
+// 두 톤 모두 **테두리가 없다** — 앱 전체가 보더리스이고, 흰 바닥 위에서는 옅은 회색 면이
+// 곧 경계다. 선택 여부는 면 + 글자 굵기 두 가지로 동시에 말한다(색맹 대비).
 
 import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native"
-import { iconSize, radius, spacing, typography } from "../tokens"
+import {
+  controlHeight,
+  iconSize,
+  radius,
+  spacing,
+  touchTarget,
+  typography,
+} from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"
 import type { V2IconName } from "../icons"
 import { useTranslation } from "react-i18next"
 
 export type V2ChipSize = "s" | "m"
+
+/** 선택 상태의 면 색. 자세한 것은 파일 머리말 §tone. */
+export type V2ChipTone = "brand" | "neutral"
 
 export type V2ChipProps = {
   /** 칩 라벨 */
@@ -25,25 +52,37 @@ export type V2ChipProps = {
   selected?: boolean
   onPress?: () => void
   size?: V2ChipSize
+  /** 선택 면의 색. 기본 `brand`(주황). 무채색이 필요하면 `neutral`. */
+  tone?: V2ChipTone
   /** 라벨 좌측 아이콘 */
   leadingIcon?: V2IconName
   /** 있으면 우측 × 표시 — 눌러 제거(칩 onPress와 분리) */
   onRemove?: () => void
   disabled?: boolean
+  /** 스크린리더용 라벨. 없으면 보이는 `label` 이 읽힌다. */
+  accessibilityLabel?: string
   style?: ViewStyle
 }
 
-/** size → 치수 + 타이포 (chip 스펙) */
+/**
+ * size → 치수 + 타이포 (chip 스펙).
+ *
+ * `text`/`textWeak` 는 **같은 크기·같은 줄높이**의 다른 굵기다 — 굵기를 fontSize 로
+ * 흉내내면 고를 때마다 칩 폭이 흔들린다. 굵기는 face 로만 말한다(`typography.ts` 머리말:
+ * Pretendard 가 굵기별 파일로 로드돼 있어 `fontWeight` 를 겹치면 iOS 에서 가짜 볼드가 난다).
+ */
 const SIZE = {
   s: {
-    height: 32,
+    height: controlHeight.sm, // 32
     paddingHorizontal: spacing[12],
-    text: typography.label.xSmall, // 13
+    text: typography.label.xSmall, // 13 semibold
+    textWeak: typography.label.xSmallWeak, // 13 medium
   },
   m: {
-    height: 38,
+    height: controlHeight.md, // 38
     paddingHorizontal: spacing[16],
-    text: typography.label.small, // 15
+    text: typography.label.small, // 15 semibold
+    textWeak: typography.label.smallWeak, // 15 medium
   },
 } as const
 
@@ -52,24 +91,38 @@ export function V2Chip({
   selected = false,
   onPress,
   size = "m",
+  tone = "brand",
   leadingIcon,
   onRemove,
   disabled = false,
+  accessibilityLabel,
   style,
 }: V2ChipProps) {
   const { t } = useTranslation()
   const { colors } = useV2Theme()
   const s = SIZE[size]
 
-  // 선택/미선택 → 배경·전경(텍스트·아이콘·×) 색
-  const bg = selected ? colors.primary.primary : colors.fill.normal
+  // (tone, selected) → 배경·전경(텍스트·아이콘·×) 색. 미선택은 두 톤이 같다 —
+  // 안 고른 칩끼리 화면마다 달라 보일 이유가 없다.
+  const selectedBg =
+    tone === "neutral" ? colors.label.normal : colors.primary.primary
+  const bg = selected ? selectedBg : colors.fill.normal
   const fg = selected ? colors.static.white : colors.label.neutral
+
+  /*
+    32/38 칩은 최소 터치 44 에 못 미친다. 박스를 키우지 않고 **세로만** hitSlop 으로
+    늘린다 — 가로로 늘리면 gap 8 인 이웃 칩과 히트 영역이 겹쳐 어느 쪽이 잡히는지
+    예측할 수 없다. `SelectableChip`·`DetailFilterChip` 과 같은 규칙이다.
+  */
+  const verticalHitSlop = Math.max(0, (touchTarget.min - s.height) / 2)
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
+      hitSlop={{ top: verticalHitSlop, bottom: verticalHitSlop }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
@@ -86,7 +139,10 @@ export function V2Chip({
       {leadingIcon && (
         <V2Icon name={leadingIcon} size={iconSize.sm} color={fg} />
       )}
-      <Text style={[s.text, { color: fg }]} numberOfLines={1}>
+      <Text
+        style={[selected ? s.text : s.textWeak, { color: fg }]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
       {onRemove && (

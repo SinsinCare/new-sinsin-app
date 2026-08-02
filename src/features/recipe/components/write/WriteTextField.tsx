@@ -16,6 +16,8 @@ import { LAYOUT, TYPE, singleLineInputText } from "@/src/theme/surface"
 
 interface WriteTextFieldProps {
   label: string
+  /** 필수 입력 — 라벨 뒤에 브랜드색 * 를 붙인다(QA 2026-08-02 필수 강조). */
+  required?: boolean
   /** "선택" 처럼 라벨 옆에 붙는 표시. */
   labelSuffix?: string | null
   value: string
@@ -33,6 +35,7 @@ interface WriteTextFieldProps {
 
 export function WriteTextField({
   label,
+  required = false,
   labelSuffix,
   value,
   onChangeText,
@@ -50,7 +53,10 @@ export function WriteTextField({
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
-        <Text style={[styles.label, { color: s.textStrong }]}>{label}</Text>
+        <Text style={[styles.label, { color: s.textStrong }]}>
+          {label}
+          {required ? <Text style={{ color: s.brand }}> *</Text> : null}
+        </Text>
         {labelSuffix ? (
           <Text style={[styles.labelSuffix, { color: s.textWeak }]}>
             {labelSuffix}

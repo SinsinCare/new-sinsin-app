@@ -179,8 +179,9 @@ const styles = StyleSheet.create({
     padding: 18,
     justifyContent: "space-between",
   },
-  tileHead: { flexDirection: "row", alignItems: "center", gap: 8 },
-  tileLabel: { fontSize: 15, lineHeight: 21, fontWeight: "600", flexShrink: 1 },
+  // QA(2026-08-02): 아이콘-라벨 간격 4 로 좁히고, 라벨은 위계상 한 단계 위로.
+  tileHead: { flexDirection: "row", alignItems: "center", gap: 4 },
+  tileLabel: { fontSize: 16, lineHeight: 22, fontWeight: "600", flexShrink: 1 },
   nowBadge: {
     marginLeft: "auto",
     paddingHorizontal: 8,

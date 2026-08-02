@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { useMemo, useState } from "react"
 import {
   Alert,
@@ -120,10 +121,15 @@ export default function NewStoryScreen() {
         caption: caption.trim() || null,
       })
       router.back()
-    } catch {
+    } catch (error) {
+      /*
+        일괄 "인터넷 연결" 문구를 쓰지 않는다 — 온보딩 미완료 계정의 403(FORBIDDEN)도
+        인터넷 탓으로 보였다(2026-08-02 QA "스토리 동작 안 함"의 실체). getErrorMessage 는
+        서버 카탈로그 문구를 그대로 보여주고, 진짜 네트워크 실패에만 연결 문구를 준다.
+      */
       Alert.alert(
         t("community.newStory.errorTitle"),
-        t("community.newStory.errorBody"),
+        getErrorMessage(error, t("community.newStory.errorBody")),
       )
     } finally {
       setIsUploading(false)
@@ -338,7 +344,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  /*
+    제목은 절대 중앙 — space-between 사이에 두면 우측 버튼 폭("올리기"/"올리는 중")이
+    바뀔 때마다 제목이 흘러 다닌다(2026-08-02 QA "스토리 올리기 글자는 고정").
+  */
   headerTitle: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    textAlign: "center",
     fontSize: 17,
     lineHeight: 24,
     letterSpacing: -0.34,
