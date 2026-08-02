@@ -14,6 +14,7 @@ import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
+import { AppKeyboardToolbar } from "@/src/shared/components/AppKeyboardToolbar"
 import { useTranslation } from "react-i18next"
 import config from "../tamagui.config"
 import { languageReady } from "@/src/i18n" // 초기화(부수효과) + 저장 언어 복원 약속
@@ -222,6 +223,12 @@ export default function RootLayout() {
                   <RootLayoutNav />
                 </AppPolicyGate>
                 <Toast />
+                {/*
+                  키보드 탈출구. 숫자 키패드에는 완료 키가 없고, InputAccessoryView 는
+                  모달(기록 시트) 안에서 렌더되지 않는다 — 전역 툴바만이 모든 입력을
+                  덮는다(AppKeyboardToolbar 머리말).
+                */}
+                <AppKeyboardToolbar />
               </PortalProvider>
             </Theme>
           </TamaguiProvider>

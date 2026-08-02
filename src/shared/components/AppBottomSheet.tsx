@@ -159,17 +159,34 @@ export function AppBottomSheet({
           }}
           style={[styles.handleIndicator, { backgroundColor: palette.handle }]}
         />
-        <View
-          style={[
+        {/*
+          본문을 스크롤 가능하게 둔다. 예전에는 평범한 View 라, 키보드가 올라와
+          하단을 덮으면 **CTA 에 닿을 방법이 아예 없었다**(2026-08-02 QA: 혈압 입력 후
+          확인 버튼을 못 누르고 스크롤도 안 됨). 내용이 짧으면 `flexGrow` 덕에 지금과
+          똑같이 보이고, 넘칠 때만 스크롤이 생긴다 — 레이아웃은 그대로 두고 탈출구만 는다.
+
+          `keyboardShouldPersistTaps="handled"` 가 핵심이다. 기본값이면 키보드가 떠 있을 때
+          첫 탭이 키보드 내리는 데 먹혀서, 사용자는 CTA 를 **두 번** 눌러야 한다.
+        */}
+        <ScrollView
+          style={styles.contentScroll}
+          contentContainerStyle={[
             styles.content,
+            styles.contentGrow,
             contentBottomPadding
               ? { paddingBottom: getBottomSheetContentPadding(insets.bottom) }
               : null,
             contentContainerStyle,
           ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          overScrollMode="never"
+          nestedScrollEnabled
         >
           {children}
-        </View>
+        </ScrollView>
       </Sheet.Frame>
     </Sheet>
   )
@@ -361,6 +378,9 @@ export function AppBottomSheetScrollView({
 }
 
 const styles = StyleSheet.create({
+  // 시트 본문 스크롤러. flex:1 로 프레임을 채우고, 내용이 짧으면 contentGrow 가 편다.
+  contentScroll: { flexGrow: 0, flexShrink: 1 },
+  contentGrow: { flexGrow: 1 },
   modalRoot: {
     flex: 1,
   },

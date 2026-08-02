@@ -123,7 +123,6 @@ export function BloodGlucoseSheet({
           onCommit: setValue,
           accessibilityLabel: t("home.sheet.bloodGlucose.typeValue"),
           hint: t("home.sheet.typeHint"),
-          doneLabel: t("action.done"),
         }}
       />
 

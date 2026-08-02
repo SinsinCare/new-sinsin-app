@@ -1,13 +1,5 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react"
-import {
-  InputAccessoryView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
 import type { StyleProp, TextInputProps, ViewStyle } from "react-native"
 import Animated, {
   Easing,
@@ -130,8 +122,6 @@ export interface SheetValueEdit {
   accessibilityLabel: string
   /** 평소에 보이는 안내 한 줄("눌러서 직접 입력"). */
   hint: string
-  /** 숫자 키패드에는 완료 키가 없다. iOS 액세서리 바에 붙일 라벨. */
-  doneLabel: string
 }
 
 /**
@@ -157,11 +147,6 @@ function SheetEditableValue({
   const [draft, setDraft] = useState<string | null>(null)
   const editing = draft !== null
   const filled = value !== null && value !== ""
-  /*
-    액세서리 뷰 ID 는 인스턴스마다 달라야 한다. 한 화면에 시트가 둘 이상 마운트되어
-    있을 때(닫히는 중 + 열리는 중) 같은 ID 를 쓰면 완료 버튼이 엉뚱한 입력창에 붙는다.
-  */
-  const accessoryId = useId()
 
   const commit = () => {
     if (draft === null) return
@@ -225,9 +210,6 @@ function SheetEditableValue({
               keyboardType={
                 edit.spec.decimals > 0 ? "decimal-pad" : "number-pad"
               }
-              inputAccessoryViewID={
-                Platform.OS === "ios" ? accessoryId : undefined
-              }
               placeholder="0"
               placeholderTextColor={surface.placeholder}
               selectionColor={surface.brand}
@@ -269,28 +251,6 @@ function SheetEditableValue({
         <Text style={[styles.editHint, { color: surface.textMuted }]}>
           {edit.hint}
         </Text>
-      ) : null}
-
-      {Platform.OS === "ios" ? (
-        <InputAccessoryView nativeID={accessoryId}>
-          <View
-            style={[styles.accessoryBar, { backgroundColor: surface.surface }]}
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={edit.doneLabel}
-              // blur 만 시킨다. 여기서 commit() 을 먼저 부르면 입력창이 그 자리에서
-              // 언마운트되어 ref 가 비고, blur 가 불리지 않아 키보드가 남는다.
-              // 확정은 onBlur 가 한다 — 경로를 하나로 둔다.
-              onPress={() => inputRef.current?.blur()}
-              hitSlop={8}
-            >
-              <Text style={[styles.accessoryDone, { color: surface.brand }]}>
-                {edit.doneLabel}
-              </Text>
-            </Pressable>
-          </View>
-        </InputAccessoryView>
       ) : null}
     </View>
   )
@@ -755,14 +715,6 @@ const styles = StyleSheet.create({
     width: 96,
   },
   editHint: { fontSize: 11.5, lineHeight: 16, textAlign: "center" },
-  // 숫자 키패드에는 완료 키가 없다. iOS 는 이 바가 유일한 탈출구다.
-  accessoryBar: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  accessoryDone: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
 
   // 판정 배지 h28 r9
   badge: {

@@ -1,14 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react"
-import {
-  InputAccessoryView,
-  Keyboard,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native"
+import { useEffect, useRef, useState } from "react"
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -94,8 +85,6 @@ export function WaterSheet({
   const baseRef = useRef(consumed)
 
   const pop = useSharedValue(1)
-  // 숫자 키패드 완료 바(iOS). BloodPressureSheet 의 액세서리와 같은 이유·규격.
-  const accessoryId = useId()
 
   useEffect(() => {
     if (!visible) return
@@ -338,9 +327,6 @@ export function WaterSheet({
             >
               <TextInput
                 autoFocus
-                inputAccessoryViewID={
-                  Platform.OS === "ios" ? accessoryId : undefined
-                }
                 value={customText}
                 onChangeText={setCustomText}
                 placeholder="0"
@@ -472,25 +458,6 @@ export function WaterSheet({
           )}
         </Pressable>
       </View>
-
-      {Platform.OS === "ios" ? (
-        <InputAccessoryView nativeID={accessoryId}>
-          <View
-            style={[styles.accessoryBar, { backgroundColor: surface.surface }]}
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("action.done")}
-              onPress={() => Keyboard.dismiss()}
-              hitSlop={8}
-            >
-              <Text style={[styles.accessoryDone, { color: surface.brand }]}>
-                {t("action.done")}
-              </Text>
-            </Pressable>
-          </View>
-        </InputAccessoryView>
-      ) : null}
     </AppBottomSheet>
   )
 }
@@ -545,13 +512,6 @@ function CupButton({
 }
 
 const styles = StyleSheet.create({
-  accessoryBar: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  accessoryDone: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
   // 확정 CTA — RecordSheetShell 의 cta 와 같은 규격.
   cta: {
     height: LAYOUT.cta.height,

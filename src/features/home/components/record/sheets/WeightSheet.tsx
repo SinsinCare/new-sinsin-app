@@ -100,7 +100,6 @@ export function WeightSheet({
           onCommit: setWeight,
           accessibilityLabel: t("home.sheet.weight.typeValue"),
           hint: t("home.sheet.typeHint"),
-          doneLabel: t("action.done"),
         }}
       />
 

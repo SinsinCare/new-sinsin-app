@@ -318,6 +318,8 @@ export function AcquisitionSourceField({
                 <Animated.ScrollView
                   bounces={false}
                   overScrollMode="never"
+                  // "기타" 입력 키보드가 떠 있어도 휠 조작이 첫 탭에 먹히지 않게.
+                  keyboardShouldPersistTaps="handled"
                   ref={scrollRef}
                   onScroll={scrollHandler}
                   scrollEventThrottle={16}

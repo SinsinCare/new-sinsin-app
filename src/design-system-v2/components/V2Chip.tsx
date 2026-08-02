@@ -102,12 +102,22 @@ export function V2Chip({
   const { colors } = useV2Theme()
   const s = SIZE[size]
 
-  // (tone, selected) → 배경·전경(텍스트·아이콘·×) 색. 미선택은 두 톤이 같다 —
-  // 안 고른 칩끼리 화면마다 달라 보일 이유가 없다.
-  const selectedBg =
-    tone === "neutral" ? colors.label.normal : colors.primary.primary
-  const bg = selected ? selectedBg : colors.fill.normal
-  const fg = selected ? colors.static.white : colors.label.neutral
+  /*
+    (tone, selected) → 배경·전경(텍스트·아이콘·×) 색. 미선택은 두 톤이 같다 —
+    안 고른 칩끼리 화면마다 달라 보일 이유가 없다.
+
+    `neutral` 의 글자는 **`static.white` 가 아니라 `background.default`** 다. 두 토큰은
+    라이트에서 둘 다 흰색이라 같아 보이지만 다크에서 갈라진다 — 다크의 `label.normal` 은
+    거의 흰색(#f9fafb)이라, 거기에 `static.white` 를 얹으면 **흰 알약에 흰 글자**가 된다.
+    `background.default` 를 쓰면 두 모드 모두 "면과 글자가 서로 뒤집힌" 알약이 된다.
+    `brand` 는 두 모드 다 주황 면이므로 흰 글자가 맞다.
+  */
+  const selectedFace =
+    tone === "neutral"
+      ? { bg: colors.label.normal, fg: colors.background.default }
+      : { bg: colors.primary.primary, fg: colors.static.white }
+  const bg = selected ? selectedFace.bg : colors.fill.normal
+  const fg = selected ? selectedFace.fg : colors.label.neutral
 
   /*
     32/38 칩은 최소 터치 44 에 못 미친다. 박스를 키우지 않고 **세로만** hitSlop 으로
