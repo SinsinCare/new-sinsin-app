@@ -18,6 +18,29 @@ type OnboardingCompletionContentProps = {
   onStart: () => void
 }
 
+/**
+ * `startAnimating`/`stopAnimating` 의 rejection 을 삼킨다.
+ *
+ * 둘 다 Promise 를 돌려주는데, 네이티브 뷰가 이미 사라졌으면 거절한다:
+ *
+ *     Error: Calling the 'stopAnimating' function has failed
+ *     → The 1st argument cannot be cast to type View<ImageView>
+ *     → Unable to find the 'ImageView' view with tag '1506'
+ *
+ * 예전에는 `void` 로 버렸는데, `void` 는 **거절을 처리하지 않는다** — 그래서
+ * 온보딩을 마치고 홈으로 넘어가는 순간(= 이 화면이 언마운트되는 순간) 타이머가
+ * 이미 떠난 뷰를 붙잡아 unhandled rejection 이 났다. 개발 빌드에서는 빨간 배너로,
+ * 릴리스에서는 조용히.
+ *
+ * 언마운트 경합은 `clearTimeout` 으로 다 막을 수 없다 — 정지 요청이 네이티브로
+ * 건너간 뒤에 뷰가 사라지는 창은 여전히 남는다. 애초에 **이 실패는 무해하다**:
+ * 정지시키려던 그림이 이미 없다는 뜻이라 화면에 아무 차이가 없다. 그러니 막으려
+ * 애쓰는 대신 거절을 명시적으로 삼킨다.
+ */
+function ignoreDetachedView(result: Promise<void> | undefined): void {
+  result?.catch(() => {})
+}
+
 export function OnboardingCompletionContent({
   onStart,
 }: OnboardingCompletionContentProps) {
@@ -30,13 +53,13 @@ export function OnboardingCompletionContent({
 
   useEffect(() => {
     if (!isLoaded || !shouldPlay) {
-      void imageRef.current?.stopAnimating()
+      ignoreDetachedView(imageRef.current?.stopAnimating())
       return
     }
 
-    void imageRef.current?.startAnimating()
+    ignoreDetachedView(imageRef.current?.startAnimating())
     const timer = setTimeout(() => {
-      void imageRef.current?.stopAnimating()
+      ignoreDetachedView(imageRef.current?.stopAnimating())
     }, COMPLETION_PARTICLE_DURATION_MS)
     return () => clearTimeout(timer)
   }, [isLoaded, shouldPlay])
