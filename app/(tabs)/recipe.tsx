@@ -78,6 +78,7 @@
  *   대한 말인지 읽히지 않았다. 이제 목록 제목(또는 결과 수) **바로 아래 한 줄**,
  *   `GUTTER` 에 맞춘 자리에 둔다 — 바로 밑에 오는 카드들의 수치를 가리키는 위치다.
  */
+import { FeatureIntroSheet, useFeatureIntro } from "@/src/features/coach"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useCallback, useMemo, useState } from "react"
 import {
@@ -147,6 +148,8 @@ import type {
 const LAYER_BAND_HEIGHT = 8
 
 export default function RecipeScreen() {
+  // 첫 진입 안내 — 끼니 슬롯·한 명 기준 수치는 화면만 봐서는 알 수 없다.
+  const recipeIntro = useFeatureIntro("recipe")
   const router = useAppRouter()
   const { t } = useTranslation("common")
   const { t: tr } = useTranslation("recipe")
@@ -504,6 +507,11 @@ export default function RecipeScreen() {
 
   return (
     <YStack flex={1} backgroundColor={surface.canvas} paddingTop={insets.top}>
+      <FeatureIntroSheet
+        feature="recipe"
+        visible={recipeIntro.visible}
+        onClose={recipeIntro.dismiss}
+      />
       <YStack paddingHorizontal={GUTTER} paddingTop={12} gap={14}>
         <XStack alignItems="center" justifyContent="space-between" gap={12}>
           <Text

@@ -1,3 +1,4 @@
+import { FeatureIntroSheet, useFeatureIntro } from "@/src/features/coach"
 import { useCallback, useRef, useEffect, useState } from "react"
 import {
   Alert,
@@ -104,6 +105,8 @@ function MessageSeparator() {
 }
 
 export default function ConsultScreen() {
+  // 첫 진입 안내 — 무엇을 물을 수 있는지와 진료 한계를 먼저 말한다.
+  const consultIntro = useFeatureIntro("consult")
   const { t, i18n } = useTranslation("common")
   const language = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
     ? "en"
@@ -551,6 +554,11 @@ export default function ConsultScreen() {
         paddingTop: Platform.OS === "ios" ? 8 : Math.max(insets.top, 12),
       }}
     >
+      <FeatureIntroSheet
+        feature="consult"
+        visible={consultIntro.visible}
+        onClose={consultIntro.dismiss}
+      />
       <KeyboardAwareView keyboardVerticalOffset={0}>
         <ConsultChatHeader
           onHistoryPress={handleHistoryPress}

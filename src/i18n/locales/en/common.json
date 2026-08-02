@@ -1656,5 +1656,56 @@
       "metricsCollapse": "Show less",
       "reference": "Reference"
     }
+  },
+  "coach": {
+    "confirm": "Got it",
+    "restaurant": {
+      "title": "A map tuned to your kidneys",
+      "subtitle": "Places are judged by your kidney profile.",
+      "row1": {
+        "title": "Badges use your profile",
+        "body": "Limit and caution badges follow your stage and targets."
+      },
+      "row2": {
+        "title": "Filter by nutrition",
+        "body": "See only places with menus that fit your sodium and potassium targets."
+      },
+      "row3": {
+        "title": "Search in plain words",
+        "body": "Try \"low-salt lunch without soup\" — just write what you want."
+      }
+    },
+    "recipe": {
+      "title": "Recipes for this meal",
+      "subtitle": "We start with the meal you are picking now.",
+      "row1": {
+        "title": "This meal first",
+        "body": "Breakfast, lunch, or dinner — we lead with the one you are choosing."
+      },
+      "row2": {
+        "title": "Numbers are per person",
+        "body": "Ingredients and nutrition are calculated for one serving."
+      },
+      "row3": {
+        "title": "Save for later",
+        "body": "Keep recipes you like and come back anytime."
+      }
+    },
+    "consult": {
+      "title": "How to ask the AI",
+      "subtitle": "It already knows your records.",
+      "row1": {
+        "title": "It sees your day",
+        "body": "Answers are grounded in your meals and readings."
+      },
+      "row2": {
+        "title": "Be specific",
+        "body": "Try \"Can I have beef soup tonight?\" — context helps."
+      },
+      "row3": {
+        "title": "Not a substitute for care",
+        "body": "Always check medication or treatment changes with your clinician."
+      }
+    }
   }
 }

@@ -29,6 +29,7 @@ import {
   RestaurantComingSoon,
   RestaurantMapScreen,
 } from "@/src/features/restaurant"
+import { FeatureIntroSheet, useFeatureIntro } from "@/src/features/coach"
 import { useMobilePolicy } from "@/src/features/mobilePolicy"
 import { isRestaurantTabEnabled } from "@/src/features/mobilePolicy/services/mobilePolicyService"
 
@@ -61,9 +62,21 @@ export default function RestaurantTabRoute() {
     router.push("/restaurant/report")
   }, [router])
 
+  // 첫 진입 안내. 탭이 꺼진 "준비중" 화면에서는 띄우지 않는다 — 없는 기능을 설명하게 된다.
+  const intro = useFeatureIntro("restaurant", restaurantTabEnabled)
+
   if (!restaurantTabEnabled) {
     return <RestaurantComingSoon onPressReport={goToReport} />
   }
 
-  return <RestaurantMapScreen focus={focus} />
+  return (
+    <>
+      <RestaurantMapScreen focus={focus} />
+      <FeatureIntroSheet
+        feature="restaurant"
+        visible={intro.visible}
+        onClose={intro.dismiss}
+      />
+    </>
+  )
 }
