@@ -1,5 +1,6 @@
 import React from "react"
 import { View, StyleSheet, Text } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useSurface } from "@/src/hooks/useSurface"
@@ -9,8 +10,20 @@ interface BottomActionBarProps {
   label: string
   onPress: () => void
   disabled?: boolean
+  /**
+   * 바닥 여백. **넘기지 않으면 시스템 바(안드로이드 내비게이션 바 · iOS 홈 인디케이터)를
+   * 스스로 피한다.**
+   *
+   * 예전 기본값은 상수 16 이었다. 지금 호출부 10곳이 전부 `insets.bottom + 16` 을
+   * 넘겨 주고 있어 화면에 드러난 적은 없지만, 안드로이드는 targetSdk 35 부터
+   * edge-to-edge 가 강제라 **깜빡하고 안 넘긴 다음 호출부의 버튼은 내비게이션 바
+   * 아래로 들어간다**(3버튼 내비게이션에서 48dp). 기본값이 안전한 쪽이어야 한다.
+   */
   paddingBottom?: number
 }
+
+/** 버튼과 화면 바닥 사이의 최소 숨통. 시스템 바 위에 이만큼 더 띄운다. */
+const BOTTOM_GAP = 16
 
 /**
  * 화면 하단의 주 행동 하나. 설정·탈퇴·문의·건강자료 화면이 전부 이걸 쓴다.
@@ -23,12 +36,18 @@ export function BottomActionBar({
   label,
   onPress,
   disabled = false,
-  paddingBottom = 16,
+  paddingBottom,
 }: BottomActionBarProps) {
   const s = useSurface()
+  const insets = useSafeAreaInsets()
 
   return (
-    <View style={[styles.bottomBar, { paddingBottom }]}>
+    <View
+      style={[
+        styles.bottomBar,
+        { paddingBottom: paddingBottom ?? insets.bottom + BOTTOM_GAP },
+      ]}
+    >
       <SurfacePressable
         onPress={onPress}
         disabled={disabled}
