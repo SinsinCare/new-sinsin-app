@@ -244,6 +244,24 @@ describe("navigation guard", () => {
         ),
       ).toEqual({ type: "stay" })
     })
+
+    it.each([["consult"], ["stories"], ["statistics"]])(
+      "kicks a feature surface (%s) opened over onboarding back to the gate",
+      (surface) => {
+        // 진행 중 STAY 는 완주 착지(탭)용이다. 여기서 전역 모달까지 허용하면
+        // iOS 가 presented 모달을 카드 위에 남겨 둬서 온보딩이 기능 화면 **뒤에
+        // 깔려 안 보인다**(2026-08-03 "AI상담이 온보딩보다 앞에").
+        expect(
+          resolveGuard(
+            input({
+              ...needsOnboarding,
+              isOnboardingInProgress: true,
+              segments: [surface],
+            }),
+          ),
+        ).toEqual({ type: "redirect", href: "/onboarding" })
+      },
+    )
   })
 
   describe("blocked accounts", () => {

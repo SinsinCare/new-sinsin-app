@@ -85,17 +85,28 @@ function RootLayoutNav() {
       }
     }
 
+    /*
+      콜드스타트 경로만이 아니라 **라이브 리스너도** 앱을 온전히 쓸 수 있는
+      계정(`canUseAppNotifications` 와 같은 조건)에서만 건다. 종전에는 리스너가
+      무조건 걸려 있어서, 온보딩·프로필 미완료 계정이 푸시를 누르면 상담 같은
+      기능 모달이 관문 화면 위로 올라왔다(관문보다 기능이 먼저). 라우팅을 버린
+      푸시는 앱을 여는 것으로 족하다 — 관문(resolveGuard)이 갈 곳을 정한다.
+    */
+    if (
+      !(isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo)
+    ) {
+      return
+    }
+
     const sub =
       Notifications.addNotificationResponseReceivedListener(handleResponse)
 
-    if (isAuthenticated && accountState === "ACTIVE") {
-      Notifications.getLastNotificationResponseAsync().then((response) => {
-        if (response) handleResponse(response)
-      })
-    }
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) handleResponse(response)
+    })
 
     return () => sub.remove()
-  }, [accountState, isAuthenticated, router])
+  }, [accountState, isAuthenticated, requiresAdditionalInfo, router])
 
   /**
    * 진입 가드. **판정은 `resolveGuard` 가, 실행만 여기가 한다.**
@@ -122,8 +133,18 @@ function RootLayoutNav() {
       isDev: __DEV__,
     })
 
-    if (decision.type === "redirect") router.replace(decision.href)
-    else if (decision.type === "signOut") signOut()
+    if (decision.type === "redirect") {
+      /*
+        관문 이동은 **떠 있는 프레젠테이션을 접고 나서** 한다. iOS 네이티브
+        스택은 replace 로 카드를 갈아끼워도 presented 모달(상담·스토리)을 그
+        위에 남겨 두므로, 모달이 열린 채 온보딩·프로필로 보내면 관문 화면이
+        모달 **뒤에 깔려 안 보인다**(2026-08-03 "온보딩이 페이지/시트 뒤에").
+        관문 리다이렉트는 전부 "여기 있으면 안 된다" 판정이라, 스택을 처음으로
+        접고 목적지 하나로 갈아끼우는 것이 맞는 의미다.
+      */
+      if (router.canDismiss()) router.dismissAll()
+      router.replace(decision.href)
+    } else if (decision.type === "signOut") signOut()
   }, [
     accountState,
     entryGate,

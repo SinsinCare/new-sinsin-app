@@ -25,13 +25,26 @@ export type EntryRoute =
 export function resolveEntryRoute(input: EntryRouteInput): EntryRoute {
   if (!input.isAuthenticated) return "/(auth)/login"
 
-  const needsProfile = input.entryGate === "PROFILE"
+  /*
+    관문 판정은 `entryGate` **또는** `accountState` 다 — resolveGuard(guard.ts)와
+    같은 규칙. 종전에는 여기가 entryGate 만 봐서, 두 값이 어긋난 계정
+    (accountState=PENDING_ONBOARDING, entryGate=HOME)이 홈에 먼저 착지해 기능
+    (AI 상담 필 등)이 온보딩보다 먼저 보였다. 가드가 뒤늦게 되돌리긴 하지만
+    잘못된 화면이 마운트됐다 밀려나는 것 자체가 이 파일이 막으려던 일이다.
+  */
+  const needsProfile =
+    input.entryGate === "PROFILE" || input.accountState === "PENDING_PROFILE"
   const needsAdditionalInfo =
     input.entryGate === "PROFILE" &&
     input.accountState === "ACTIVE" &&
     input.requiresAdditionalInfo
 
   if (needsProfile || needsAdditionalInfo) return "/(auth)/profile-setup"
-  if (input.entryGate === "ONBOARDING") return "/onboarding"
+  if (
+    input.entryGate === "ONBOARDING" ||
+    input.accountState === "PENDING_ONBOARDING"
+  ) {
+    return "/onboarding"
+  }
   return "/(tabs)/home"
 }

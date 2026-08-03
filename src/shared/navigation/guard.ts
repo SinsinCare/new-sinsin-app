@@ -165,7 +165,17 @@ export function resolveGuard(input: GuardInput): GuardDecision {
 
   if (isPublic) return STAY
   if (inOnboarding) return STAY
-  if (input.isOnboardingInProgress) return STAY
+  /*
+    온보딩 진행 중 STAY 는 **온보딩 화면과 탭**으로만 한정한다.
+
+    이 조항의 존재 이유는 완주 착지 한 순간뿐이다 — 마지막 단계가 홈으로
+    replace 하는 시점에 게이트는 아직 ONBOARDING 이라, 무제한이면 홈에 도착하지
+    못하고 되돌려진다. 그런데 종전에는 **어디든** STAY 라서, 온보딩 도중 푸시
+    탭 등으로 전역 모달(/consult 같은)이 열리면 그대로 머물게 했고, iOS 는
+    presented 모달을 카드 위에 남겨 두므로 **온보딩이 기능 화면 뒤에 깔려
+    안 보이는** z-순서 문제가 됐다(2026-08-03 "AI상담이 온보딩보다 앞에").
+  */
+  if (input.isOnboardingInProgress && at(segments, 0) === "(tabs)") return STAY
 
   // 필수 추가정보를 끝내기 전에는 프로필 입력으로 고정.
   if (mustFinishProfile) return redirect(segments, "/(auth)/profile-setup")
