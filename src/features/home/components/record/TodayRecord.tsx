@@ -147,7 +147,9 @@ export function TodayRecord({ tiles }: { tiles: TodayRecordTileData[] }) {
 const styles = StyleSheet.create({
   section: {
     // 위는 프로필 행(h56)이 이미 띄워준다 — 아래만 섹션 간격 28.
-    paddingTop: 14,
+    // 14 → 18: 위 섹션의 `식사 기록하기` CTA 와 이 섹션 제목이 붙어 보인다는
+    // 디자인 피드백(2026-08-04). 홈에서 두 섹션을 가르는 유일한 간격이다.
+    paddingTop: 18,
     paddingBottom: 28,
     paddingHorizontal: LAYOUT.screenX,
     gap: 12,

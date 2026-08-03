@@ -34,8 +34,22 @@ import {
   toggleRecipeFilter,
 } from "./recipeListFilterModel"
 
-/** 그룹 2개 + 칩 12개 짜리 시트다. 화면 절반이면 스크롤 없이 다 보인다. */
-const FILTER_SNAP_POINTS = [52, 74]
+/**
+ * 그룹 2개 + 칩 12개 짜리 시트다. 화면 58%면 스크롤 없이 머리·칩·CTA 가 다 선다.
+ *
+ * **스냅 포인트는 하나여야 한다.** 종전에는 `[52, 74]` 였는데, Tamagui Sheet 는
+ * 프레임을 **가장 큰 스냅(74%)** 높이로 눕히고 아래로 밀어 52%만 보여 준다. 즉
+ * 자식들은 74% 짜리 상자를 기준으로 배치되고, 52% 아래로 간 것은 화면 밖이다.
+ * RN ScrollView 는 기본 스타일이 `flexGrow:1`(baseVertical) 이라 그 74% 상자의
+ * 남는 높이를 전부 차지했고, 뒤따르는 `적용하기` CTA 는 화면 아래로 밀려나
+ * **버튼이 처음부터 없는 것처럼 보였다.** 고르고 X 로 닫으면 draft 가 버려지니
+ * "선택해도 적용이 안 된다" 가 된다(2026-08-04 QA).
+ *
+ * 게다가 이 시트는 `disableDrag` 라 두 번째 스냅으로 갈 방법이 애초에 없었다 —
+ * 보이지 않는 스냅이 레이아웃만 망가뜨리고 있었던 셈이다. 드래그를 막은 시트는
+ * 스냅을 하나만 둘 것(프레임 높이 = 보이는 높이).
+ */
+const FILTER_SNAP_POINTS = [58]
 
 interface RecipeFilterSheetProps {
   open: boolean
