@@ -1259,9 +1259,8 @@
         "overLimitGuidance": "You’re over your limit. Follow your care team’s guidance before adding more fluids.",
         "undoLast": "Undo last drink",
         "undoAmount": "Undo {{amount}} mL",
-        "recordCustom": "Log the amount entered",
-        "custom": "Enter another amount",
-        "customHint": "Enter an amount in mL",
+        "typeValue": "Edit today's total",
+        "typeHint": "Tap to edit the total",
         "info": "Soup and fruit also count as fluids. Half a bowl of broth counts as 100 mL.",
         "presetAccessibility": "Log {{amount}} mL using {{anchor}}",
         "preset": {
@@ -1270,7 +1269,6 @@
           "cup": "Cup",
           "bottle": "Bottle"
         },
-        "addCustom": "Add",
         "chooseValue": "Tap what you drank"
       },
       "bloodPressure": {

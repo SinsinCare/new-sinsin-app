@@ -1247,9 +1247,8 @@
         "overLimitGuidance": "기준을 넘었어요. 추가 수분은 의료진 안내를 확인해 주세요.",
         "undoLast": "마지막 잔 되돌리기",
         "undoAmount": "방금 {{amount}}mL 되돌리기",
-        "recordCustom": "입력한 양 기록하기",
-        "custom": "직접 입력",
-        "customHint": "mL 단위로 입력해요",
+        "typeValue": "오늘 총량 직접 입력",
+        "typeHint": "눌러서 총량 수정",
         "info": "국·과일에도 수분이 있어요. 국물은 반 그릇이면 100mL로 계산해요.",
         "presetAccessibility": "{{anchor}} 기준으로 {{amount}}mL 기록",
         "preset": {
@@ -1258,7 +1257,6 @@
           "cup": "종이컵",
           "bottle": "생수병"
         },
-        "addCustom": "담기",
         "chooseValue": "마신 물을 눌러 담아 주세요"
       },
       "bloodPressure": {

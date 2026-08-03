@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native"
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
 import { KeyboardController } from "react-native-keyboard-controller"
 import Animated, {
   Easing,
@@ -23,7 +16,8 @@ import { hapticSelection, hapticStepAdvance } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
 import { getHydrationGuidance } from "../../../utils/hydrationGuidance"
-import { SheetInfoCard } from "./recordSheetControls"
+import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
+import { SheetInfoCard, SheetValueDisplay } from "./recordSheetControls"
 import { useSheetKeyboardLift } from "./useSheetKeyboardLift"
 import { V2DotLoader } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
@@ -38,6 +32,9 @@ const PRESETS = [
   { amount: 200, anchorKey: "cup" },
   { amount: 500, anchorKey: "bottle" },
 ] as const
+
+/** 총량 직접 입력 경계. 4자리(9,999mL)면 어떤 하루도 담고, 입력 폭도 안 넘친다. */
+const WATER_TOTAL_INPUT: SheetNumberSpec = { min: 0, max: 9999, decimals: 0 }
 
 interface WaterSheetProps {
   visible: boolean
@@ -67,6 +64,14 @@ interface WaterSheetProps {
  * 실수 복구가 오히려 빨라졌다. 저장 없이 닫으면 담긴 잔은 버려진다
  * (다른 시트들이 입력값을 버리는 것과 같은 규칙).
  *
+ * 직접 입력도 같은 이유로 다른 시트의 문법을 따른다 — **큰 숫자(오늘 총량)를
+ * 누르면 그 자리가 입력창이 된다**(SheetValueEdit). 예전에는 "직접 입력" 행이
+ * 따로 접혀 있었는데, 같은 앱에서 체중·혈당은 숫자를 누르고 물만 다른 길을
+ * 요구하니 여기서만 길을 다시 배워야 했다(2026-08-03 피드백 "눌러서 수정
+ * 부분이 다른 데랑 UX가 다르잖아"). 총량을 고치면 이미 저장된 양(시트를 연
+ * 시점의 base) 아래로는 못 내린다 — 서버 기록은 이 시트에서 지울 수 없고,
+ * 담긴 잔(세션)만 새 총량에 맞춰 갈아끼운다.
+ *
  * 상한은 가까워졌을 때만 말한다(hydrationGuidance) — 제한을 계속 들이대면
  * 필요한 만큼도 안 마신다는 신장내과 피드백.
  */
@@ -90,8 +95,8 @@ export function WaterSheet({
   /** 이 시트에서 성공적으로 기록한 잔들. 되돌리기용 스택. */
   const [session, setSession] = useState<number[]>([])
   const [isBusy, setIsBusy] = useState(false)
-  const [isCustomOpen, setIsCustomOpen] = useState(false)
-  const [customText, setCustomText] = useState("")
+  /** 총량을 치는 도중의 값 — 안내문·게이지·CTA 가 키 입력마다 응답한다(다른 시트와 같은 규칙). */
+  const [preview, setPreview] = useState<number | null>(null)
   /** 시트를 연 시점의 총량. 열려 있는 동안 서버 refetch 로 흔들리지 않게 고정. */
   const baseRef = useRef(consumed)
 
@@ -101,21 +106,23 @@ export function WaterSheet({
     if (!visible) return
     baseRef.current = consumed
     setSession([])
-    setIsCustomOpen(false)
-    setCustomText("")
+    setPreview(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible])
 
   const sessionTotal = session.reduce((sum, amount) => sum + amount, 0)
   const total = baseRef.current + sessionTotal
+  const liveTotal = preview ?? total
+  /** 지금 CTA 가 보낼 추가분. base 아래로 고친 총량은 0 — 저장된 기록은 여기서 못 줄인다. */
+  const pendingTotal = Math.max(0, liveTotal - baseRef.current)
   const guidance = getHydrationGuidance({
-    consumed: total,
+    consumed: liveTotal,
     limit,
     isReferenceLimit,
     language,
   })
   const filledRatio =
-    limit != null && limit > 0 ? Math.min(1, total / limit) : 0
+    limit != null && limit > 0 ? Math.min(1, liveTotal / limit) : 0
 
   const bumpNumber = () => {
     pop.value = withSequence(
@@ -140,25 +147,23 @@ export function WaterSheet({
   }
 
   const commit = async () => {
-    if (sessionTotal <= 0 || isBusy) return
+    // 치는 도중 바로 CTA 를 눌러도 마지막 키 입력까지 반영되게 preview 기준으로
+    // 보낸다 — 체중 시트가 liveWeight 를 그대로 제출하는 것과 같은 규칙.
+    if (pendingTotal <= 0 || isBusy) return
     setIsBusy(true)
     hapticStepAdvance()
-    const ok = await onLog(sessionTotal)
+    const ok = await onLog(pendingTotal)
     setIsBusy(false)
     // 실패면 담긴 잔을 그대로 두고 시트도 열어 둔다 — 다시 누르면 재시도다.
     if (ok) onClose()
   }
 
-  const customAmount = (() => {
-    const parsed = parseInt(customText, 10)
-    return isNaN(parsed) || parsed <= 0 ? 0 : Math.min(parsed, 3000)
-  })()
-
-  const submitCustom = () => {
-    if (customAmount <= 0) return
-    addPending(customAmount)
-    setCustomText("")
-    setIsCustomOpen(false)
+  /** 총량 확정(blur 한 번). 담긴 잔 스택은 "새 총량 − base" 한 덩어리로 갈아끼운다. */
+  const commitTotal = (next: number | null) => {
+    // 지우고 나가면 null — 값 변경이 아니라 취소다(0 입력과 다르다).
+    if (next === null) return
+    setSession(next <= baseRef.current ? [] : [next - baseRef.current])
+    bumpNumber()
   }
 
   const canUndo = session.length > 0 && !isBusy
@@ -246,17 +251,22 @@ export function WaterSheet({
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* 오늘 총량 — 기록마다 살짝 튀며 자란다. 이 숫자가 곧 보상이다. */}
+          {/* 오늘 총량 — 기록마다 살짝 튀며 자란다. 이 숫자가 곧 보상이고,
+              누르면 그 자리가 입력창이 된다(다른 기록 시트와 같은 문법). */}
           <View style={styles.displayBlock}>
-            <Animated.View style={[styles.displayRow, numberStyle]}>
-              <Text
-                style={[styles.displayValue, { color: surface.textStrong }]}
-              >
-                {formatAmount(total)}
-              </Text>
-              <Text style={[styles.displayUnit, { color: surface.textMuted }]}>
-                mL
-              </Text>
+            <Animated.View style={numberStyle}>
+              <SheetValueDisplay
+                value={formatAmount(liveTotal)}
+                unit="mL"
+                edit={{
+                  spec: WATER_TOTAL_INPUT,
+                  active: visible,
+                  onCommit: commitTotal,
+                  onPreview: setPreview,
+                  accessibilityLabel: t("home.sheet.water.typeValue"),
+                  hint: t("home.sheet.water.typeHint"),
+                }}
+              />
             </Animated.View>
             <Text
               style={[
@@ -351,104 +361,7 @@ export function WaterSheet({
             )}
           </Pressable>
 
-          {isCustomOpen ? (
-            <View style={styles.customRow}>
-              <View
-                style={[
-                  styles.customField,
-                  { backgroundColor: surface.surface },
-                ]}
-              >
-                <TextInput
-                  autoFocus
-                  value={customText}
-                  onChangeText={setCustomText}
-                  placeholder="0"
-                  placeholderTextColor={surface.placeholder}
-                  selectionColor={surface.brand}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  style={[styles.customInput, { color: surface.textStrong }]}
-                  onSubmitEditing={submitCustom}
-                />
-                <Text style={[styles.customUnit, { color: surface.textMuted }]}>
-                  mL
-                </Text>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("home.sheet.water.addCustom")}
-                onPress={submitCustom}
-                disabled={customAmount <= 0 || isBusy}
-              >
-                {({ pressed }) => (
-                  <View
-                    style={[
-                      styles.customSubmit,
-                      {
-                        backgroundColor:
-                          customAmount > 0 && !isBusy
-                            ? surface.brand
-                            : surface.ctaOffBg,
-                        opacity: pressed ? 0.92 : 1,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.customSubmitLabel,
-                        {
-                          color:
-                            customAmount > 0 && !isBusy
-                              ? surface.onBrand
-                              : surface.ctaOffText,
-                        },
-                      ]}
-                    >
-                      {t("home.sheet.water.addCustom")}
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("home.sheet.water.custom")}
-              onPress={() => setIsCustomOpen(true)}
-            >
-              {({ pressed }) => (
-                <View
-                  style={[
-                    styles.customToggle,
-                    {
-                      backgroundColor: pressed
-                        ? surface.surfacePressed
-                        : surface.surface,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.customLabel, { color: surface.text }]}>
-                    {t("home.sheet.water.custom")}
-                  </Text>
-                  <Text
-                    style={[styles.customHint, { color: surface.textMuted }]}
-                  >
-                    {t("home.sheet.water.customHint")}
-                  </Text>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={16}
-                    color={surface.placeholder}
-                  />
-                </View>
-              )}
-            </Pressable>
-          )}
-
-          {!isCustomOpen ? (
-            <SheetInfoCard>{t("home.sheet.water.info")}</SheetInfoCard>
-          ) : null}
+          <SheetInfoCard>{t("home.sheet.water.info")}</SheetInfoCard>
         </ScrollView>
 
         {/* 확정 CTA — 다른 기록 시트와 같은 문법(값이 담긴 라벨, h56 r16). */}
@@ -484,9 +397,9 @@ export function WaterSheet({
           <Pressable
             style={styles.ctaWrap}
             accessibilityRole="button"
-            accessibilityState={{ disabled: sessionTotal <= 0 || isBusy }}
+            accessibilityState={{ disabled: pendingTotal <= 0 || isBusy }}
             onPress={() => void commit()}
-            disabled={sessionTotal <= 0 || isBusy}
+            disabled={pendingTotal <= 0 || isBusy}
           >
             {({ pressed }) => (
               <View
@@ -494,10 +407,10 @@ export function WaterSheet({
                   styles.cta,
                   {
                     backgroundColor:
-                      sessionTotal > 0 && !isBusy
+                      pendingTotal > 0 && !isBusy
                         ? surface.brand
                         : surface.ctaOffBg,
-                    opacity: pressed && sessionTotal > 0 ? 0.92 : 1,
+                    opacity: pressed && pendingTotal > 0 ? 0.92 : 1,
                   },
                 ]}
               >
@@ -509,15 +422,15 @@ export function WaterSheet({
                     styles.ctaLabel,
                     {
                       color:
-                        sessionTotal > 0 && !isBusy
+                        pendingTotal > 0 && !isBusy
                           ? surface.onBrand
                           : surface.ctaOffText,
                     },
                   ]}
                 >
-                  {sessionTotal > 0
+                  {pendingTotal > 0
                     ? t("home.sheet.recordValue", {
-                        value: `${formatAmount(sessionTotal)}mL`,
+                        value: `${formatAmount(pendingTotal)}mL`,
                       })
                     : t("home.sheet.water.chooseValue")}
                 </Text>
@@ -624,16 +537,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // 수치 타이포는 SheetValueDisplay 가 그린다(다른 시트와 같은 부품·같은 규격).
   displayBlock: { alignItems: "center", gap: 4 },
-  displayRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  displayValue: {
-    fontSize: 44,
-    lineHeight: 52,
-    letterSpacing: -1.1,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-  },
-  displayUnit: { fontSize: 15, lineHeight: 22, fontWeight: "500" },
   displayCaption: { ...TYPE.cardSub, textAlign: "center" },
   track: {
     height: 8,
@@ -662,43 +567,4 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   undoLabel: { ...TYPE.caption, fontWeight: "600" },
-  customToggle: {
-    height: 52,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  customLabel: { ...TYPE.cardTitle, fontWeight: "600", flex: 1 },
-  customHint: TYPE.cardSub,
-  customRow: { flexDirection: "row", gap: 8 },
-  customField: {
-    flex: 1,
-    height: 56,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  customInput: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: "700",
-    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
-    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
-    includeFontPadding: false,
-    fontVariant: ["tabular-nums"],
-    padding: 0,
-  },
-  customUnit: { fontSize: 15, lineHeight: 22, fontWeight: "500" },
-  customSubmit: {
-    height: 56,
-    borderRadius: 14,
-    paddingHorizontal: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  customSubmitLabel: { fontSize: 16, lineHeight: 22, fontWeight: "700" },
 })
