@@ -76,9 +76,7 @@ export function SheetValueDisplay({
     <View style={styles.displayBlock}>
       {/* 값이 없을 때는 baseline 대신 center 로 맞춘다 — 대시는 베이스라인
           한참 위에 그려져서, baseline 정렬이면 단위만 아래로 떨어져 보인다. */}
-      <View
-        style={[styles.displayRow, !filled && styles.displayRowPlaceholder]}
-      >
+      <ValueUnitRow unit={unit} placeholder={!filled}>
         <Text
           style={[
             styles.displayValue,
@@ -88,15 +86,51 @@ export function SheetValueDisplay({
         >
           {filled ? value : "––"}
         </Text>
-        <Text style={[styles.displayUnit, { color: surface.textWeak }]}>
-          {unit}
-        </Text>
-      </View>
+      </ValueUnitRow>
       {caption ? (
         <Text style={[styles.displayCaption, { color: surface.textWeak }]}>
           {caption}
         </Text>
       ) : null}
+    </View>
+  )
+}
+
+/**
+ * 수치 한 줄 — **숫자가 화면 한가운데 오고**, 단위는 그 오른쪽에 매달린다.
+ *
+ * 종전에는 `[값][단위]` 를 한 줄로 묶어 가운데 정렬했다. 그러면 가운데에 오는 것은
+ * 값+단위의 **합**이라, 정작 사람이 보는 숫자는 단위 폭의 절반만큼 왼쪽으로 밀린다
+ * (2026-08-04 "0 이 중간에 오도록"). 단위와 같은 폭의 빈 칸을 왼쪽에 두어 좌우를
+ * 대칭으로 만든다 — 폭은 단위 텍스트가 실제로 그려진 뒤 `onLayout` 으로 받는다.
+ * "mg/dL"·"kg"·"mL" 처럼 단위마다, 로케일마다 폭이 달라서 상수로 박을 수 없다.
+ */
+function ValueUnitRow({
+  unit,
+  placeholder,
+  children,
+}: {
+  unit: string
+  /** 값이 없을 때(`––`). 대시는 베이스라인 위에 그려져 center 정렬이 맞다. */
+  placeholder: boolean
+  children: ReactNode
+}) {
+  const surface = useSurface()
+  const [unitWidth, setUnitWidth] = useState(0)
+
+  return (
+    <View style={[styles.displayRow, placeholder && styles.displayRowCenter]}>
+      <View style={{ width: unitWidth }} />
+      {children}
+      <Text
+        style={[styles.displayUnit, { color: surface.textWeak }]}
+        onLayout={(event) => {
+          const next = Math.round(event.nativeEvent.layout.width)
+          setUnitWidth((current) => (current === next ? current : next))
+        }}
+      >
+        {unit}
+      </Text>
     </View>
   )
 }
@@ -134,6 +168,17 @@ export interface SheetValueEdit {
   accessibilityLabel: string
   /** 평소에 보이는 안내 한 줄("눌러서 직접 입력"). */
   hint: string
+  /**
+   * **바깥에서 값을 바꿨다**는 신호. 호출부가 스테퍼(±)로 값을 고칠 때마다 이 값을
+   * 바꾸면, 치던 문자열을 버리고 확정된 숫자를 그린다.
+   *
+   * `value` 가 바뀌는 것만 봐서는 판별할 수 없다 — `onPreview` 때문에 **타이핑 중에도**
+   * 매 글자 `value` 가 바뀌기 때문이다. 그걸 외부 변경으로 오인하면 한 글자마다
+   * 편집이 꺼져 아예 칠 수 없게 된다. 그래서 신호를 따로 받는다.
+   *
+   * 없으면 종전 그대로다. 스테퍼가 없는 시트(혈당)는 넘기지 않는다.
+   */
+  resetKey?: number
 }
 
 /**
@@ -191,6 +236,20 @@ function SheetEditableValue({
     return () => clearTimeout(timer)
   }, [active, autoStart])
 
+  /*
+    ± 를 눌렀다 → 타이핑은 끝났다. 치던 문자열을 버려야 큰 숫자가 확정값을 그린다.
+    없던 시절: 기록이 없어 빈 편집으로 시작한 상태에서 + 를 누르면 화면의 큰 숫자는
+    빈 draft 의 자리표시자(`0`)를, CTA 는 `62.8 kg 기록하기` 를 보여 줬다 — 같은 값을
+    두 얼굴로 말하는 셈이라 어느 쪽이 저장될지 알 수 없었다(2026-08-04 보고).
+  */
+  const resetKey = edit.resetKey
+  const seenResetRef = useRef(resetKey)
+  useEffect(() => {
+    if (seenResetRef.current === resetKey) return
+    seenResetRef.current = resetKey
+    setDraft(null)
+  }, [resetKey])
+
   return (
     <View style={styles.displayBlock}>
       <Pressable
@@ -207,54 +266,60 @@ function SheetEditableValue({
         }}
         hitSlop={8}
       >
-        <View
-          style={[styles.displayRow, !filled && styles.displayRowPlaceholder]}
-        >
-          {editing ? (
-            <TextInput
-              ref={inputRef}
-              value={draft}
-              onChangeText={(text) => {
-                const sanitized = sanitizeSheetNumberText(text, edit.spec)
-                setDraft(sanitized)
-                edit.onPreview?.(commitSheetNumber(sanitized, edit.spec))
-              }}
-              onBlur={commit}
-              onSubmitEditing={commit}
-              selectTextOnFocus
-              keyboardType={
-                edit.spec.decimals > 0 ? "decimal-pad" : "number-pad"
-              }
-              placeholder="0"
-              placeholderTextColor={surface.placeholder}
-              selectionColor={surface.brand}
-              style={[styles.displayValueInput, { color: surface.textStrong }]}
-            />
-          ) : (
-            <Text
+        <ValueUnitRow unit={unit} placeholder={!filled && !editing}>
+          {/* 숫자와 밑줄을 **한 칸에** 담는다. 밑줄을 줄 바깥에 두면 값+단위 전체의
+              가운데에 그려져서, 숫자와 어긋난 채 폭도 제각각이었다(2026-08-04
+              "혈당 숫자 입력 부분 라인 잘림"). 이제 밑줄은 숫자 칸의 폭을 그대로
+              따르므로 어떤 자릿수에서도 숫자 아래에 정확히 눕는다. */}
+          <View style={styles.valueSlot}>
+            {editing ? (
+              <TextInput
+                ref={inputRef}
+                value={draft}
+                onChangeText={(text) => {
+                  const sanitized = sanitizeSheetNumberText(text, edit.spec)
+                  setDraft(sanitized)
+                  edit.onPreview?.(commitSheetNumber(sanitized, edit.spec))
+                }}
+                onBlur={commit}
+                onSubmitEditing={commit}
+                selectTextOnFocus
+                keyboardType={
+                  edit.spec.decimals > 0 ? "decimal-pad" : "number-pad"
+                }
+                placeholder="0"
+                placeholderTextColor={surface.placeholder}
+                selectionColor={surface.brand}
+                style={[
+                  styles.displayValueInput,
+                  { color: surface.textStrong },
+                ]}
+              />
+            ) : (
+              <Text
+                style={[
+                  styles.displayValue,
+                  { color: filled ? surface.textStrong : surface.placeholder },
+                ]}
+                numberOfLines={1}
+              >
+                {filled ? value : "––"}
+              </Text>
+            )}
+            {/* 편집 가능하다는 사실을 말해 주는 유일한 단서. 숫자만 크게 그려 두면
+                누를 수 있다는 걸 아무도 모른다 — 그게 이 밑줄이 있는 이유다. */}
+            <View
               style={[
-                styles.displayValue,
-                { color: filled ? surface.textStrong : surface.placeholder },
+                styles.editUnderline,
+                {
+                  backgroundColor: editing
+                    ? surface.brand
+                    : surface.surfacePressed,
+                },
               ]}
-              numberOfLines={1}
-            >
-              {filled ? value : "––"}
-            </Text>
-          )}
-          <Text style={[styles.displayUnit, { color: surface.textWeak }]}>
-            {unit}
-          </Text>
-        </View>
-        {/* 편집 가능하다는 사실을 말해 주는 유일한 단서. 숫자만 크게 그려 두면
-            누를 수 있다는 걸 아무도 모른다 — 그게 지금 들어온 요청의 원인이다. */}
-        <View
-          style={[
-            styles.editUnderline,
-            {
-              backgroundColor: editing ? surface.brand : surface.surfacePressed,
-            },
-          ]}
-        />
+            />
+          </View>
+        </ValueUnitRow>
       </Pressable>
 
       {caption ? (
@@ -872,7 +937,9 @@ const styles = StyleSheet.create({
   // 수치 디스플레이 40~44/700 · 단위 15/500 · 중앙 정렬
   displayBlock: { alignItems: "center", gap: 6 },
   displayRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  displayRowPlaceholder: { alignItems: "center" },
+  displayRowCenter: { alignItems: "center" },
+  /** 숫자 + 밑줄 한 칸. 폭은 숫자가 정한다(minWidth 84, 자릿수가 늘면 함께 는다). */
+  valueSlot: { alignItems: "center" },
   // Text 로 보여줄 때. 편집으로 바뀌면 아래 displayValueInput 이 같은 자리에 선다.
   displayValue: { ...DISPLAY_VALUE, lineHeight: 52 },
   /**
@@ -891,8 +958,9 @@ const styles = StyleSheet.create({
     height: 2,
     borderRadius: 1,
     marginTop: 4,
-    alignSelf: "center",
-    width: 96,
+    // 숫자 칸(`valueSlot`)의 폭을 그대로 받는다 — 고정 96 이던 시절에는 세 자리
+    // 숫자가 밑줄 밖으로 삐져나왔다.
+    alignSelf: "stretch",
   },
   editHint: { fontSize: 11.5, lineHeight: 16, textAlign: "center" },
 

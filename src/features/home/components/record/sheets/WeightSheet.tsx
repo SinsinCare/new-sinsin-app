@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { RecordSheetShell } from "./RecordSheetShell"
 import {
   SheetInfoCard,
@@ -73,10 +73,35 @@ export function WeightSheet({
 
   const liveWeight = preview ?? weight
 
+  /**
+   * ± 의 출발점으로 쓸 **마지막으로 아는 체중**. 7일 창(`week`)에서 선택 날짜보다
+   * 앞선 기록 중 가장 최근 것을 고른다.
+   *
+   * `previous`(바로 어제)만 보던 시절에는 하루라도 걸러 재면 그 값이 `null` 이라
+   * 곧바로 상수 60 으로 떨어졌다 — 62kg 인 사람이 +를 누르면 60.1 이 나오는
+   * 상태였고, 사용자에게는 "기본이 60 으로 고정" 으로 보였다(2026-08-04 보고).
+   * 지어낸 숫자보다 **그 사람의 마지막 기록**에서 출발하는 것이 언제나 낫다.
+   */
+  const lastKnownWeight = useMemo(() => {
+    const past = (week ?? [])
+      .filter((record) => record.recordDate < endDate)
+      .sort((a, b) => (a.recordDate < b.recordDate ? 1 : -1))
+    return (
+      past.find((record) => typeof record.weightKg === "number")?.weightKg ??
+      null
+    )
+  }, [week, endDate])
+
+  /** ± 를 누른 횟수. 수치 표시가 "치던 문자열을 버릴 때" 를 아는 신호다. */
+  const [stepEpoch, setStepEpoch] = useState(0)
+
   const adjust = (fn: (current: number) => number) => {
-    const base = liveWeight ?? previousWeight ?? 60
+    /* 마지막 수단의 60 은 "아무 기록도 없는 첫 사용자" 전용이다. 그 앞의 세
+       단계(치던 값 → 어제 → 최근 기록)가 거의 항상 먼저 잡힌다. */
+    const base = liveWeight ?? previousWeight ?? lastKnownWeight ?? 60
     setWeight(Number(fn(base).toFixed(1)))
     setPreview(null)
+    setStepEpoch((current) => current + 1)
   }
 
   // ── 7일 창을 날짜별로 편다. 오늘 칸은 지금 고르는 값이 실시간 반영된다. ──
@@ -178,6 +203,7 @@ export function WeightSheet({
             autoStartWhenEmpty: (today?.weightKg ?? null) === null,
             onCommit: setWeight,
             onPreview: setPreview,
+            resetKey: stepEpoch,
             accessibilityLabel: t("home.sheet.weight.typeValue"),
             hint: t("home.sheet.weight.step"),
           }}
