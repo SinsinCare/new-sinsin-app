@@ -110,7 +110,7 @@ screens:
     module: onboarding
     description: CKD 여부 선택과 건강 정보 질문을 완료하는 화면
     auth_required: true
-    states: [welcome, loading, step, validation_error, submitting, error]
+    states: [welcome, loading, step, selection_sheet, validation_error, submitting, skip_confirming, skipping, error]
 
   - id: SCR_TABS_HOME
     name: 홈
@@ -169,6 +169,14 @@ screens:
     description: 이름, 닉네임, 성별, 프로필 사진 등 기본 프로필을 수정하는 화면
     auth_required: true
     states: [default, editing, saving, permission_denied, error]
+
+  - id: SCR_SETTINGS_PHONE_NUMBER_EDIT
+    name: 전화번호 수정
+    route: "/(settings)/phone-number-edit"
+    module: settings
+    description: 연락받을 전화번호를 수정하거나 삭제하는 화면
+    auth_required: true
+    states: [default, saving, deleting, validation_error, error]
 
   - id: SCR_SETTINGS_NAME_EDIT
     name: 이름 수정

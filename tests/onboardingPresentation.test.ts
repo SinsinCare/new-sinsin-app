@@ -3,6 +3,7 @@ import {
   ONBOARDING_SCROLL_CONTENT_STYLE,
   getOnboardingLoadingPresentation,
   normalizeOnboardingSubtitle,
+  shouldShowOnboardingQuestionLoadError,
   shouldShowOnboardingBackButton,
   shouldPlayCompletionParticles,
 } from "../src/features/onboarding/data/onboardingPresentation"
@@ -39,6 +40,15 @@ describe("onboarding presentation rules", () => {
     expect(getOnboardingLoadingPresentation(true, false)).toBe("screen")
     expect(getOnboardingLoadingPresentation(false, true)).toBe("cta")
     expect(getOnboardingLoadingPresentation(false, false)).toBe("idle")
+  })
+
+  it("shows a retryable question-load error only after loading settles", () => {
+    expect(shouldShowOnboardingQuestionLoadError(false, false, true)).toBe(true)
+    expect(shouldShowOnboardingQuestionLoadError(true, false, true)).toBe(false)
+    expect(shouldShowOnboardingQuestionLoadError(false, true, true)).toBe(false)
+    expect(shouldShowOnboardingQuestionLoadError(false, false, false)).toBe(
+      false,
+    )
   })
 
   it("keeps onboarding content scrollable above the fixed bottom action", () => {
