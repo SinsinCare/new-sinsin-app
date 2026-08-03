@@ -11,6 +11,7 @@ import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { nhisService } from "@/src/services/data/nhisService"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { refreshHealthData } from "../data/healthQueries"
 import { useHealthTheme } from "../hooks/useHealthTheme"
 
@@ -42,9 +43,11 @@ export function NhisConfirmScreen() {
         setStatus("failed")
         setErrorMessage(t("nhis.confirmFailed"))
       }
-    } catch {
+    } catch (error) {
       setStatus("failed")
-      setErrorMessage(t("nhis.confirmNetworkError"))
+      // 인증 확인이 막히는 이유는 대개 인증 앱 미응답·세션 만료다. 연결 문구로
+      // 덮으면 사용자가 인증 앱을 다시 열어 볼 생각을 못 한다.
+      setErrorMessage(getErrorMessage(error))
     }
   }
 
@@ -99,6 +102,8 @@ export function NhisConfirmScreen() {
                 : t("nhis.failedTitle")}
             </ThemedText>
             <ThemedText
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
               style={[styles.subtitle, { color: healthColors.textSecondary }]}
             >
               {errorMessage}

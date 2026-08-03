@@ -70,7 +70,7 @@ import {
   V2ScreenHeader,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { showErrorToast } from "@/src/lib/toast"
+import { presentError } from "@/src/lib/errorMessage"
 import { ArticleSkeleton, ConfirmModal } from "@/src/shared/components"
 import { classifyFetchFailure } from "@/src/shared/utils/fetchFailure"
 import {
@@ -202,9 +202,11 @@ export default function RecipeDetailRoute() {
   const handleToggleSave = useCallback(() => {
     if (detail == null || saveMutation.isPending) return
     saveMutation.mutate(!detail.saved, {
-      onError: () => showErrorToast(t("detail.saveFailed")),
+      // 화면 폴백(`저장 상태를 바꾸지 못했어요`)을 주지 않는다. 지워진 레시피를
+      // 저장하려 한 것인지 세션이 끊긴 것인지는 서버 코드만 안다.
+      onError: (error) => presentError(error, { scope: "recipe-save-toggle" }),
     })
-  }, [detail, saveMutation, t])
+  }, [detail, saveMutation])
 
   const handleSubmitReview = useCallback(
     (rating: number, body: string | null) => {
@@ -221,9 +223,10 @@ export default function RecipeDetailRoute() {
   const handleDeleteReview = useCallback(() => {
     setDeleteAsking(false)
     remove.mutate(undefined, {
-      onError: () => showErrorToast(t("detail.reviews.deleteError")),
+      onError: (error) =>
+        presentError(error, { scope: "recipe-review-delete" }),
     })
-  }, [remove, t])
+  }, [remove])
 
   const adjustable = detail != null && isServingAdjustable(detail)
   const selectedServings = servings ?? clampServings(detail?.servings ?? 1)

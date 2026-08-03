@@ -86,15 +86,14 @@
     "filteredEmptyTitle": "No recipes match",
     "filteredEmptyBody": "Try fewer words, or clear your filters",
     "loadErrorTitle": "We couldn't load this list",
-    "loadErrorBody": "Check your connection, then try again",
+    "loadErrorBody": "Try loading it again in a moment.",
     "refreshFailedNote": "We couldn't refresh, so this is the previous list",
     "retry": "Try again",
-    "saveErrorTitle": "We couldn't change the saved state",
-    "saveErrorBody": "We put it back the way it was. Check your connection, then try again.",
     "unsavedNote": "Recipes you remove drop off this list the next time it loads",
     "saveAction": "Save",
     "unsaveAction": "Remove from saved",
-    "resaveAction": "Save again"
+    "resaveAction": "Save again",
+    "saveReverted": "We put it back the way it was"
   },
   "home": {
     "section": {
@@ -157,7 +156,6 @@
     "emptyTitle": "No recipes match",
     "emptyBody": "Try fewer filters or a different word",
     "errorTitle": "Couldn't load recipes",
-    "errorBody": "Check your connection and try again",
     "retry": "Try again",
     "estimateNotice": "Nutrition numbers are estimates",
     "writeEntry": "Write",
@@ -182,8 +180,6 @@
     "stepsPlaceholder": "Add the steps in order.\nYou can include a photo with each step.",
     "successTitle": "Your recipe is live",
     "successBody": "Other community members can see it now.",
-    "errorTitle": "We couldn’t post your recipe",
-    "errorBody": "Check your connection, then try posting again.",
     "exitTitle": "Discard this recipe?",
     "exitBody": "Your draft won’t be saved."
   },
@@ -196,12 +192,6 @@
     "photoLimitTitle": "Photo limit reached",
     "photoLimitBody": "You can attach up to {{count}} photos to a post.",
     "photoProgress": "Uploading photo {{current}} of {{total}}…",
-    "uploadErrorTitle": "We couldn’t post this",
-    "uploadErrorBody": "Check your connection, then try posting again.",
-    "photoUploadErrorTitle": "We couldn’t upload your photos",
-    "photoUploadErrorBody": "Check your connection, then try uploading again.",
-    "editErrorTitle": "We couldn’t save your changes",
-    "editErrorBody": "Check your connection, then try saving again.",
     "loading": "Loading post…",
     "attachPoll": "Add poll",
     "exitTitle": "Discard this post?",
@@ -252,8 +242,6 @@
     "block": "Block",
     "reportReceivedTitle": "Report sent",
     "reportReceivedBody": "We’ll review it.",
-    "reportErrorTitle": "We couldn’t send your report",
-    "reportErrorBody": "Check your connection, then try reporting again.",
     "withdrawnUser": "Former member",
     "reportReason": {
       "spam": "Spam or advertising",
@@ -376,7 +364,6 @@
     "back": "Back",
     "saveAccessibility": "Save this recipe",
     "unsaveAccessibility": "Remove this recipe from saved",
-    "saveFailed": "We couldn’t change the saved state",
     "shareAccessibility": "Share this recipe",
     "saveCount": "{{count}} saves",
     "saveCount_one": "{{count}} save",
@@ -475,7 +462,6 @@
       "submitting": "Posting",
       "submitDisabledReason": "Pick a star rating first",
       "submitError": "We couldn’t post your review",
-      "deleteError": "We couldn’t delete your review",
       "more": "More reviews",
       "loading": "Loading reviews",
       "blockAuthor": "Block",
@@ -613,8 +599,6 @@
       "successTitle": "Your recipe is up",
       "successBody": "Other people can see it now.",
       "successUnmatched": "{{n}} ingredients were left out of the nutrition because we can’t tell their weight. A posted recipe can’t be changed yet, so next time write a weight like “150g”.",
-      "errorTitle": "We couldn't post your recipe",
-      "errorBody": "Check your connection and post it again.",
       "successUnmatchedEditable": "{{n}} ingredients were left out of the nutrition because we can’t tell their weight. Fix the amounts later and it will be worked out again."
     }
   }

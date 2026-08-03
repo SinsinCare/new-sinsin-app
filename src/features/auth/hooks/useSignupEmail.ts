@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { router } from "expo-router"
 import { useTranslation } from "react-i18next"
-import Toast from "react-native-toast-message"
+import { getErrorActionLabel, presentError } from "@/src/lib/errorMessage"
 import { showErrorToast } from "@/src/lib/toast"
 import { emailService } from "@/src/services"
 import { useSignupStore } from "@/src/stores"
 import type { EmailLoginLinkRequiredResult } from "@/src/types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { mapSignupEmailSendFailure } from "../data/signupEmailSendFailure"
+import { presentAuthFailure } from "../utils/authFailure"
 
 const TIMER_DURATION = 180
 
@@ -72,6 +73,20 @@ export function useSignupEmail() {
     setSignupToken("")
   }, [setSignupToken])
 
+  /**
+   * 발송 실패를 알린다. 문구·그릇·버튼은 서버 코드가 정한다.
+   *
+   * 예전에는 어떤 실패든 "인증번호를 보내지 못했어요. 이메일 주소와 인터넷 연결을
+   * 확인해 주세요." 한 줄이었다. 그 자리에 실제로 오는 것은 이미 보낸 번호가 아직
+   * 살아 있다거나(`OTP_ERROR_001`, 30초 뒤 재발송), 이 주소로는 메일이 못 나간다거나
+   * (`MAIL_ERROR_001`), 이미 가입된 이메일(`SIGNUP_ERROR_001`)이다 — 셋 다 인터넷과
+   * 무관하고 사용자가 할 일이 서로 다르다.
+   */
+  const reportSendFailure = (error: unknown, scope: string) => {
+    if (!codeSent) setCodeInputVisible(false)
+    setSendError(presentAuthFailure(error, { scope }))
+  }
+
   const sendEmailLoginLinkCode = async (email: string) => {
     setSendingCode(true)
     setSendError(null)
@@ -83,9 +98,8 @@ export function useSignupEmail() {
       setVerifiedEmailLinkToken(null)
       setCodeInputVisible(true)
       startTimer()
-    } catch {
-      if (!codeSent) setCodeInputVisible(false)
-      setSendError(t("emailVerification.sendFailed"))
+    } catch (error) {
+      reportSendFailure(error, "signup-email-link-send")
     } finally {
       setSendingCode(false)
     }
@@ -109,23 +123,34 @@ export function useSignupEmail() {
       setCodeInputVisible(true)
       startTimer()
     } catch (error) {
+      // 소셜로 가입된 이메일만 화면이 직접 받는다 — 연결 여부를 묻는 모달이 뒤따르고,
+      // 예라고 하면 같은 화면이 연결용 번호를 다시 보낸다.
       const sendFailure = mapSignupEmailSendFailure(error)
-      if (sendFailure?.status === "email_login_link_required") {
+      if (sendFailure) {
         setEmailLoginLinkRequired(sendFailure)
         setSendError(t("emailVerification.continueVerification"))
         setCodeInputVisible(false)
         return
       }
-      if (sendFailure?.status === "duplicate") {
-        showErrorToast(t("emailVerification.duplicate"))
-        setCodeInputVisible(false)
-        return
-      }
-      if (!codeSent) setCodeInputVisible(false)
-      setSendError(t("emailVerification.sendFailed"))
+      reportSendFailure(error, "signup-email-send")
     } finally {
       setSendingCode(false)
     }
+  }
+
+  /**
+   * 서버가 200 으로 "맞지 않는다" 고 답한 경우. 오류 봉투가 아니라 결과라서 카탈로그를
+   * 거치지 않지만, 사용자가 할 일은 `OTP_ERROR_002` 와 같다 — 같은 버튼을 붙여 준다.
+   */
+  const showCodeMismatch = (email: string) => {
+    showErrorToast(
+      t("emailVerification.checkTitle"),
+      t("emailVerification.invalidOrExpired"),
+      {
+        label: getErrorActionLabel("resendCode"),
+        onPress: () => void sendCode(email),
+      },
+    )
   }
 
   const verifyCode = async (email: string, code: string) => {
@@ -140,11 +165,7 @@ export function useSignupEmail() {
           setVerifiedEmail(email)
           setCodeVerified(true)
         } else {
-          Toast.show({
-            type: "error",
-            text1: t("emailVerification.checkTitle"),
-            text2: t("emailVerification.invalidOrExpired"),
-          })
+          showCodeMismatch(email)
         }
         return
       }
@@ -159,17 +180,16 @@ export function useSignupEmail() {
         }
         if (timerRef.current) clearInterval(timerRef.current)
       } else {
-        Toast.show({
-          type: "error",
-          text1: t("emailVerification.checkTitle"),
-          text2: t("emailVerification.invalidOrExpired"),
-        })
+        showCodeMismatch(email)
       }
-    } catch {
-      Toast.show({
-        type: "error",
-        text1: t("emailVerification.emailVerifyFailedTitle"),
-        text2: t("login.networkError"),
+    } catch (error) {
+      // 여기 오는 것의 대부분은 유효 시간이 지난 번호(`OTP_ERROR_002`)와 오타
+      // (`OTP_ERROR_003`)다. 예전에는 둘 다 "인터넷 연결을 확인한 뒤…" 로 나갔다.
+      presentError(error, {
+        scope: emailLoginLinkMode
+          ? "signup-email-link-verify"
+          : "signup-email-verify",
+        resendCode: () => void sendCode(email),
       })
     } finally {
       setVerifyingCode(false)

@@ -262,7 +262,12 @@ export function CheckupDetailScreen({
     if (resultIds.length === 0) return <CheckupDetailNoSelectionState />
     if (showSkeleton) return <CheckupDetailAnalyzingState />
     if (query.isError)
-      return <CheckupDetailErrorState onRetry={() => void query.refetch()} />
+      return (
+        <CheckupDetailErrorState
+          error={query.error}
+          onRetry={() => void query.refetch()}
+        />
+      )
     if (!analysis) return null
 
     if (tab === "checkups") {

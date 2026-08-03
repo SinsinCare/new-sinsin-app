@@ -10,6 +10,12 @@
  * `notice` 는 병기 태그에 쓴다 — 고른 태그가 카드에 안 나온다는 사실을 고르는 자리에서
  * 말해야 한다(계약 §1.2 로 화면 태그에서 걸러지기 때문이다). 나중에 카드에서 못 찾고
  * "안 저장됐나?" 하게 만들지 않는다.
+ *
+ * ## 위계
+ * 그룹 라벨("음식 종류")은 자기 칩("한식")보다 **커야** 한다. 예전에는 라벨 13 / 칩 15 라
+ * 부모가 자식보다 작았고, 세 그룹을 세로로 쌓으면 어디서 갈리는지 읽히지 않았다
+ * (실사용 피드백: "분류 제목이 항목보다 작으니 어색"). 라벨을 15/700 으로 올리고
+ * 칩 글자를 14 로 내려 한 단계를 확실히 벌린다 — 칩 자체를 키우면 줄이 밀린다.
  */
 
 import { StyleSheet, Text, View, Pressable } from "react-native"
@@ -86,7 +92,7 @@ export function WriteChipGroup({
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
   labelRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  label: { ...TYPE.label, fontWeight: "600" },
+  label: { ...TYPE.cardTitle, fontWeight: "700" },
   hint: { ...TYPE.caption, fontSize: 12 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
@@ -96,6 +102,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  chipText: { ...TYPE.value, fontWeight: "500" },
+  chipText: { ...TYPE.value, fontSize: 14, fontWeight: "500" },
   notice: { ...TYPE.caption, fontSize: 12, lineHeight: 17 },
 })

@@ -22,19 +22,40 @@ type V2ErrorStateBaseProps = {
   style?: ViewStyle
 }
 
-export type V2ErrorStateProps = V2ErrorStateBaseProps &
-  (
-    | {
-        /** 사용자가 이 화면에서 바로 복구할 수 있을 때만 제공 */
-        onRetry: () => void
-        /** 실제 행동을 나타내는 라벨. 예: "다시 불러오기" */
-        retryLabel: string
-      }
-    | {
-        onRetry?: undefined
-        retryLabel?: never
-      }
-  )
+/**
+ * 재시도 버튼은 **둘 다 있거나 둘 다 없거나**다 — 핸들러만 있으면 라벨 없는 버튼이,
+ * 라벨만 있으면 눌리지 않는 버튼이 나온다. 그래서 한 쌍으로 묶은 유니온이다.
+ *
+ * 이름을 붙여 export 하는 이유: 재시도 가능 여부가 **런타임에 정해지는** 호출부
+ * (`resolveError().retryable`)는 조건부 스프레드로 넘길 수밖에 없는데,
+ *
+ * ```tsx
+ * <V2ErrorState {...(retryable ? { onRetry, retryLabel } : {})} />
+ * ```
+ *
+ * 이렇게 쓰면 TS 가 삼항의 결과를 `{onRetry?: …; retryLabel?: …}` 로 **합쳐 버려서**
+ * 유니온의 어느 쪽도 만족하지 못한다(둘 다 옵셔널인 모양은 "핸들러 없이 라벨만" 을
+ * 허용하므로 당연히 거절된다). 호출부에서 이 타입으로 변수를 선언하면 유니온이
+ * 유지되어 그대로 통과한다:
+ *
+ * ```tsx
+ * const retry: V2ErrorStateRetry = retryable ? { onRetry, retryLabel } : {}
+ * <V2ErrorState {...retry} />
+ * ```
+ */
+export type V2ErrorStateRetry =
+  | {
+      /** 사용자가 이 화면에서 바로 복구할 수 있을 때만 제공 */
+      onRetry: () => void
+      /** 실제 행동을 나타내는 라벨. 예: "다시 불러오기" */
+      retryLabel: string
+    }
+  | {
+      onRetry?: undefined
+      retryLabel?: undefined
+    }
+
+export type V2ErrorStateProps = V2ErrorStateBaseProps & V2ErrorStateRetry
 
 export function V2ErrorState(props: V2ErrorStateProps) {
   const {
@@ -52,12 +73,23 @@ export function V2ErrorState(props: V2ErrorStateProps) {
       {/* 아이콘: 2xl(40) + 부정 상태색 */}
       <V2Icon name={icon} size="2xl" color={colors.status.negative} />
 
-      <Text style={[styles.title, { color: colors.label.normal }]}>
+      {/* 가운데 정렬은 줄바꿈 위치가 그대로 실루엣이 된다 — 어절 중간에서 끊기면
+          양쪽 여백이 들쭉날쭉해져 문장보다 먼저 눈에 띈다. 그래서 한글 어절 단위로
+          끊고(iOS), 줄 길이를 고르게 맞춘다(Android). */}
+      <Text
+        style={[styles.title, { color: colors.label.normal }]}
+        lineBreakStrategyIOS="hangul-word"
+        textBreakStrategy="balanced"
+      >
         {title}
       </Text>
 
       {description ? (
-        <Text style={[styles.description, { color: colors.label.neutral }]}>
+        <Text
+          style={[styles.description, { color: colors.label.neutral }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {description}
         </Text>
       ) : null}

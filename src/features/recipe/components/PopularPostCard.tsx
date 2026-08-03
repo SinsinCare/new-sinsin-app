@@ -1,4 +1,6 @@
-import { Image, StyleSheet, Text, View } from "react-native"
+import { StyleSheet, Text, View } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -58,7 +60,7 @@ export function PopularPostCard({
           <Image
             source={{ uri: imageUri }}
             style={[styles.thumbnail, { backgroundColor: surface.surface }]}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : null}
       </View>

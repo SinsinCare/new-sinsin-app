@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { authService } from "@/src/services"
 import { useAuthStore, useSignupStore } from "@/src/stores"
 import { showErrorToast } from "@/src/lib/toast"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
 import { useGoBack } from "@/src/shared/navigation"
 import { getTerms } from "../data/terms"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
@@ -117,7 +117,16 @@ export function useTermsAgreement({
         method: "social",
         stage: "consent",
       })
-      showErrorToast(getErrorMessage(error, t("terms.submitFailed")))
+      /* 폴백("회원가입을 마치지 못했어요")은 넘기지 않는다. 이 요청이 돌려주는 것은
+         만료된 가입 토큰(`TOKEN_ERROR_005`)·이미 가입을 마친 계정(`SIGNUP_ERROR_004`)
+         이고, 둘 다 다시 눌러서는 풀리지 않는다 — 무엇이 막고 있는지 말해 줘야 한다.
+
+         `retry` 는 통신 실패에만 붙는다(어느 코드에 어떤 버튼을 줄지는 카탈로그가
+         정한다). 동의 값이 화면에 그대로 남아 있어 다시 보내는 것이 같은 동작이다. */
+      presentError(error, {
+        scope: "social-signup-consent",
+        retry: () => void handleSocialNext(),
+      })
     } finally {
       setIsSubmitting(false)
     }

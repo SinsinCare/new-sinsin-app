@@ -31,11 +31,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
-  Alert,
   FlatList,
   type ListRenderItemInfo,
   Linking,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -43,6 +41,7 @@ import {
   type ViewStyle,
   useWindowDimensions,
 } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -65,6 +64,9 @@ import {
   selectionOrderMap,
   toggleSelection,
 } from "../utils/reviewDraft"
+import { ModalOverlayHost } from "@/src/shared/components"
+
+import { showConfirm } from "@/src/lib/dialog"
 
 /** 그리드 여백. 목업의 타일 사이는 2px 다 — 사진이 면으로 붙어 보이는 것이 의도다. */
 const GRID_GAP = 2
@@ -175,20 +177,14 @@ export function MediaPicker({
 
   const orderMap = useMemo(() => selectionOrderMap(selected), [selected])
 
-  const warnMediaPermission = useCallback(() => {
-    Alert.alert(
-      t("restaurant.mediaPicker.permissionTitle"),
-      t("restaurant.mediaPicker.permissionBody"),
-      [
-        { text: t("restaurant.mediaPicker.later"), style: "cancel" },
-        {
-          text: t("restaurant.mediaPicker.openSettings"),
-          onPress: () => {
-            void Linking.openSettings()
-          },
-        },
-      ],
-    )
+  const warnMediaPermission = useCallback(async () => {
+    const confirmed = await showConfirm({
+      title: t("restaurant.mediaPicker.permissionTitle"),
+      description: t("restaurant.mediaPicker.permissionBody"),
+      confirmLabel: t("restaurant.mediaPicker.openSettings"),
+      cancelLabel: t("restaurant.mediaPicker.later"),
+    })
+    if (confirmed) void Linking.openSettings()
   }, [t])
 
   /** OS 시트에서 가져온 항목을 풀 뒤에 붙이고, 한도 안에서 자동 선택한다. */
@@ -241,13 +237,18 @@ export function MediaPicker({
     [maxSelection, mergeIntoPool, warnMediaPermission],
   )
 
-  useEffect(() => {
-    if (!visible || autoOpenedRef.current) return
+  /*
+    자동 열기는 visible 이펙트가 아니라 Modal 의 onShow 에서 한다. 이펙트에서
+    열면 이 Modal 의 present 와 사진 피커(네이티브 VC)의 present 가 같은 틱에
+    겹친다 — iOS 프리징 계열(appModalGate 머리말). onShow 는 present 전환이
+    끝난 뒤에 오므로 겹칠 수 없다.
+  */
+  const handleShown = () => {
+    if (autoOpenedRef.current) return
     autoOpenedRef.current = true
-    void openLibrary(album)
     // 최초 1회만. `album` 변경은 아래 `selectAlbum` 이 직접 처리한다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible])
+    void openLibrary(album)
+  }
 
   const selectAlbum = useCallback(
     (target: AlbumKey) => {
@@ -261,19 +262,13 @@ export function MediaPicker({
   const takePhoto = useCallback(async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync()
     if (permission.status !== "granted") {
-      Alert.alert(
-        t("restaurant.mediaPicker.cameraPermissionTitle"),
-        t("restaurant.mediaPicker.cameraPermissionBody"),
-        [
-          { text: t("restaurant.mediaPicker.later"), style: "cancel" },
-          {
-            text: t("restaurant.mediaPicker.openSettings"),
-            onPress: () => {
-              void Linking.openSettings()
-            },
-          },
-        ],
-      )
+      const confirmed = await showConfirm({
+        title: t("restaurant.mediaPicker.cameraPermissionTitle"),
+        description: t("restaurant.mediaPicker.cameraPermissionBody"),
+        confirmLabel: t("restaurant.mediaPicker.openSettings"),
+        cancelLabel: t("restaurant.mediaPicker.later"),
+      })
+      if (confirmed) void Linking.openSettings()
       return
     }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8 })
@@ -389,10 +384,11 @@ export function MediaPicker({
   const selectedList = useMemo(() => [...selected], [selected])
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       animationType="slide"
       onRequestClose={onClose}
+      onShow={handleShown}
       statusBarTranslucent
     >
       <View
@@ -539,7 +535,10 @@ export function MediaPicker({
           </V2Button>
         </View>
       </View>
-    </Modal>
+
+      {/* 이 모달이 루트 다이얼로그를 덮으므로 안쪽에도 호스트를 둔다 (권한 안내가 여기서 뜬다) */}
+      <ModalOverlayHost />
+    </AppModal>
   )
 }
 

@@ -24,8 +24,8 @@ import {
 import { api } from "@/src/services/core/apiClient"
 import { ApiError } from "@/src/services/core/apiError"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
-import { showErrorToast } from "@/src/lib/toast"
-import { getErrorMessage as getUserFacingErrorMessage } from "@/src/lib/errorUtils"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError, resolveError } from "@/src/lib/errorMessage"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
 import { tokens } from "@/src/theme/tokens"
@@ -33,21 +33,22 @@ import i18n from "@/src/i18n"
 
 const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,14}$/
 
-function getNicknameErrorMessage(e: unknown): string | null {
-  if (e instanceof ApiError) {
-    if (e.isNetworkError) return null // toast로 처리
-    switch (e.code) {
-      case "SIGNUP_ERROR_003":
-        return i18n.t("nickname.error.duplicate", { ns: "settings" })
-      case "TOKEN_ERROR_001":
-        return i18n.t("nickname.error.sessionExpired", { ns: "settings" })
-      case "ONBOARDING_ERROR_002":
-        return i18n.t("nickname.validation", { ns: "settings" })
-      default:
-        return i18n.t("nickname.error.save", { ns: "settings" })
-    }
+/**
+ * 필드 아래 빨간 줄에 붙일 문구.
+ *
+ * 예전에는 코드별 표를 여기서 한 벌 더 들고 있었고, 그 표의 `default` 가
+ * `닉네임을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.` 였다. 서버가
+ * `SIGNUP_ERROR_003`(닉네임 중복)을 줘도 그 문장이 이겼다 — 무엇을 고쳐야 하는지
+ * 아는 쪽은 서버였는데 화면이 덮었다. 지금은 카탈로그가 답한다.
+ *
+ * `ONBOARDING_ERROR_002` 만 남긴다. 카탈로그 문구는 `목록에 있는 항목 중에서 골라
+ * 주세요` 로 **고르는 화면**을 전제하는데, 여기는 자유 입력칸이라 맞지 않는다.
+ */
+function getNicknameFieldMessage(e: unknown): string {
+  if (e instanceof ApiError && e.code === "ONBOARDING_ERROR_002") {
+    return i18n.t("nickname.validation", { ns: "settings" })
   }
-  return i18n.t("nickname.error.save", { ns: "settings" })
+  return getErrorMessage(e)
 }
 
 export function NicknameEditScreen() {
@@ -106,11 +107,17 @@ export function NicknameEditScreen() {
       await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
     } catch (e) {
-      if (e instanceof ApiError && e.isNetworkError) {
-        showErrorToast(getUserFacingErrorMessage(e))
+      // 해결이 버튼 하나로 끝나는 실패(로그인하러 가기·다시 시도)는 토스트로 보낸다.
+      // 인라인 빨간 줄에는 버튼을 달 자리가 없어서, "다시 로그인해 주세요" 를 읽고도
+      // 갈 곳이 없다. 닉네임 자체를 고쳐야 하는 실패만 입력칸 아래에 남긴다.
+      if (resolveError(e).action) {
+        presentError(e, {
+          scope: "nickname-save",
+          retry: () => void handleSave(),
+        })
         return
       }
-      setServerError(getNicknameErrorMessage(e))
+      setServerError(getNicknameFieldMessage(e))
     } finally {
       setIsLoading(false)
     }

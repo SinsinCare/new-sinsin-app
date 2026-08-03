@@ -23,7 +23,6 @@ import { useState, type ReactNode } from "react"
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import Toast from "react-native-toast-message"
 
 import {
   V2Badge,
@@ -38,6 +37,7 @@ import {
   useLoadingVisible,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { presentError, resolveError } from "@/src/lib/errorMessage"
 import { doctorLinkService } from "@/src/services/data/doctorLinkService"
 import type {
   DoctorConnection,
@@ -110,10 +110,13 @@ export function ConnectedListScreen({
       queryClient.invalidateQueries({
         queryKey: doctorLinkKeys.connections(),
       }),
-    onError: () => {
-      Toast.show({
-        type: "error",
-        text1: t("doctorLink.connections.revokeError"),
+    onError: (error, connectionId) => {
+      // `DOCTOR_ERROR_003`(이미 사라진 연결)이면 다시 눌러도 같은 답이 온다 —
+      // 카탈로그가 그때는 재시도 대신 새로고침 버튼을 준다.
+      presentError(error, {
+        scope: "doctor-revoke",
+        retry: () => revoke.mutate(connectionId),
+        refresh: () => void connections.refetch(),
       })
     },
   })
@@ -165,11 +168,21 @@ export function ConnectedListScreen({
 
   const renderBody = () => {
     if (connections.isError) {
-      return (
+      // 문구는 resolver 가 고른다. 예전 문구는 "연결 목록을 불러오지 못했어요" 하나라
+      // 세션이 끊긴 것인지 권한이 없는 것인지 구분되지 않았다.
+      const resolved = resolveError(connections.error)
+      return resolved.retryable ? (
         <V2ErrorState
-          title={t("doctorLink.connections.loadError")}
+          title={resolved.title}
+          description={resolved.body}
           onRetry={() => void connections.refetch()}
           retryLabel={t("common:action.retry")}
+          style={styles.state}
+        />
+      ) : (
+        <V2ErrorState
+          title={resolved.title}
+          description={resolved.body}
           style={styles.state}
         />
       )

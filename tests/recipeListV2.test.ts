@@ -738,7 +738,9 @@ describe("i18n — 하드코딩 문자열 대신 키가 있다", () => {
     "emptyTitle",
     "emptyBody",
     "errorTitle",
-    "errorBody",
+    // `errorBody` 는 목록에 없다. 실패 본문은 서버 코드가 정하므로
+    // (`resolveError`) 화면이 들고 있을 문장이 아니다 — 갈래와 무관하게
+    // `연결을 확인한 뒤 다시 해 주세요` 를 띄우던 것이 지운 이유다.
     "retry",
   ]
 

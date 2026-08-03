@@ -14,10 +14,12 @@
  * 수 없어서 함께 옮겼다 — 근거는 `components/RestaurantReportForm.tsx` 헤더에 있다.
  */
 
+import { useCallback, useState } from "react"
 import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import { V2Divider, V2ScreenHeader, useV2Theme } from "@/src/design-system-v2"
+import { showConfirm } from "@/src/lib/dialog"
 
 import { RestaurantReportForm } from "../components/RestaurantReportForm"
 
@@ -32,6 +34,26 @@ export function RestaurantReportScreen({
 }: RestaurantReportScreenProps) {
   const { t } = useTranslation("common")
   const { colors } = useV2Theme()
+  const [dirty, setDirty] = useState(false)
+
+  /**
+   * 채우다 만 제보를 두고 나가기 전에 한 번 묻는다 — 이 화면의 뒤로 가기는
+   * 스택을 pop 하므로 폼 상태가 통째로 사라진다. 한 칸도 안 채웠으면 묻지 않는다.
+   */
+  const handleBack = useCallback(async () => {
+    if (!dirty) {
+      onBack()
+      return
+    }
+    const confirmed = await showConfirm({
+      title: t("restaurant.report.discardTitle"),
+      description: t("restaurant.report.discardBody"),
+      confirmLabel: t("restaurant.report.discard"),
+      cancelLabel: t("restaurant.report.keepWriting"),
+      destructive: true,
+    })
+    if (confirmed) onBack()
+  }, [dirty, onBack, t])
 
   return (
     <View
@@ -43,11 +65,11 @@ export function RestaurantReportScreen({
     >
       <V2ScreenHeader
         title={t("restaurant.report.formTitle")}
-        onBack={onBack}
+        onBack={() => void handleBack()}
         safeAreaTop
       />
       <V2Divider tone="alternative" />
-      <RestaurantReportForm paddingTop={0} />
+      <RestaurantReportForm paddingTop={0} onDirtyChange={setDirty} />
     </View>
   )
 }

@@ -55,7 +55,8 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
+import { showConfirm } from "@/src/lib/dialog"
 import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 
@@ -155,6 +156,36 @@ export function ReviewWriteScreen({
   )
   const defects = useMemo(() => reviewDraftDefects(draft), [draft])
   const ready = isReviewDraftReady(draft)
+
+  /**
+   * 쓰던 후기를 두고 나가기 전에 한 번 묻는다.
+   *
+   * 이 화면은 별점·키워드·사진·본문을 다 모아야 끝나는데, 닫기(✕)가 그걸 통째로
+   * 버렸다 — 자유글·레시피 편집기에는 원래 있던 확인이 입력량이 맞먹는 여기에만
+   * 없었다. 한 칸도 안 채웠으면 묻지 않는다(문의 화면과 같은 규칙).
+   *
+   * `ready` 가 아니라 **입력 여부**로 판단한다. 별점만 찍고 나가는 사람도 그 별점을
+   * 잃는 건 마찬가지다.
+   */
+  const handleClose = useCallback(async () => {
+    const dirty =
+      rating > 0 ||
+      keywords.length > 0 ||
+      content.trim().length > 0 ||
+      photoUris.length > 0
+    if (!dirty) {
+      onClose()
+      return
+    }
+    const confirmed = await showConfirm({
+      title: t("restaurant.review.form.discardTitle"),
+      description: t("restaurant.review.form.discardBody"),
+      confirmLabel: t("restaurant.review.form.discard"),
+      cancelLabel: t("restaurant.review.form.keepWriting"),
+      destructive: true,
+    })
+    if (confirmed) onClose()
+  }, [content, keywords, onClose, photoUris, rating, t])
   const blockingMessage = defects[0]
     ? t(dynamicKey(reviewDefectMessageKey(defects[0])), {
         max: REVIEW_CONTENT_MAX,
@@ -211,7 +242,16 @@ export function ReviewWriteScreen({
       }
       onSubmitted?.(review)
     } catch (error) {
-      showErrorToast(getErrorMessage(error, t("restaurant.error.reviewFailed")))
+      /*
+        이 catch 는 후기 등록과 **사진 업로드**를 함께 받는다. 사진 쪽 실패는
+        `FOOD_CAMERA_001`(JPG·PNG 아님) · `002`(5MB 초과)로 오는데, 폴백
+        `후기를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.` 가 그 코드를 이겨서
+        사용자는 같은 사진으로 계속 다시 눌렀다. 폴백을 빼면 코드가 이긴다.
+
+        재시도 핸들러는 주지 않는다 — `등록` 버튼이 화면에 그대로 남아 있어서
+        토스트 안의 버튼이 같은 일을 한 번 더 제안하는 꼴이 된다.
+      */
+      presentError(error, { scope: "restaurant-review-write" })
     } finally {
       setUploadProgress(null)
     }
@@ -241,7 +281,7 @@ export function ReviewWriteScreen({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("restaurant.review.form.close")}
-          onPress={onClose}
+          onPress={() => void handleClose()}
           hitSlop={14}
           style={({ pressed }) => [pressed && styles.pressedRow]}
         >

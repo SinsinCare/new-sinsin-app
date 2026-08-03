@@ -1,4 +1,4 @@
-import { StyleSheet, Alert, Platform, RefreshControl, View } from "react-native"
+import { StyleSheet, Platform, RefreshControl, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -13,6 +13,10 @@ import { CharacterSection } from "./CharacterSection"
 import { RecordHomeBar } from "./RecordHomeBar"
 import { TodayRecord, type TodayRecordTileData } from "./TodayRecord"
 import { MealSheet, type MealSlotStatus } from "./sheets/MealSheet"
+import {
+  MealPhotoConfirmSheet,
+  type MealPhotoDraft,
+} from "./sheets/MealPhotoConfirmSheet"
 import { MealTimeline } from "./MealTimeline"
 import { WaterSheet } from "./sheets/WaterSheet"
 import { BloodPressureSheet } from "./sheets/BloodPressureSheet"
@@ -32,7 +36,7 @@ import { useBloodMetricsRecord } from "../../hooks/useBloodMetricsRecord"
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
-  pickImageFromGallery,
+  pickImageAssetFromGallery,
   takePhoto,
 } from "@/src/features/recipe/services/imagePickerService"
 import { FoodAnalysisResult } from "../FoodAnalysisResult"
@@ -50,7 +54,11 @@ import { mealReportKey } from "@/src/features/food-report/hooks/useMealReport"
 import { diaryResultKey } from "@/src/i18n/localeQueryKeys"
 import { toDateStr } from "../../utils/dateUtils"
 import { getGlucoseNowSuggestion } from "../../utils/recordNowSuggestion"
-import { logRecoverableError } from "@/src/lib/errorUtils"
+import { inferGlucoseContext } from "../../utils/glucoseInference"
+import { useWeightWeek } from "../../hooks/useWeightWeek"
+import { presentError } from "@/src/lib/errorMessage"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
+import { ApiError } from "@/src/services/core/apiError"
 import { pendingAnalysisRequests } from "../../storage/pendingAnalysisRequests"
 import {
   applyMealTypeChangeToMealImages,
@@ -64,6 +72,8 @@ import { appConfig } from "@/src/config/appConfig"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useFoodAnalysisRecoveryPolling } from "../../hooks/useFoodAnalysisRecoveryPolling"
 import { foodAnalysisRecovery } from "../../services/foodAnalysisRecovery"
+
+import { showErrorToast } from "@/src/lib/toast"
 
 const ANALYTICS_MEAL_SLOT: Record<
   MealType,
@@ -110,6 +120,10 @@ export function RecordView({
   const [viewDiaryResult, setViewDiaryResult] =
     useState<DiaryAnalysisResult | null>(null)
   const [viewDiaryId, setViewDiaryId] = useState<number | null>(null)
+  // 삭제 확인 미리보기("오늘 08:24")가 쓰는 기록 시각 — 다이어리 결과 API 에는 없다.
+  const [viewDiaryCreatedAt, setViewDiaryCreatedAt] = useState<string | null>(
+    null,
+  )
   const [isViewResultOpen, setIsViewResultOpen] = useState(false)
   const [viewResultMealType, setViewResultMealType] = useState<
     MealType | undefined
@@ -186,22 +200,35 @@ export function RecordView({
         return
       }
       if (job.status !== "READY" || !job.result) {
-        throw new Error(
-          job.error || job.failureMessage || t("home.errors.analysisFailed"),
+        // 잡 실패는 HTTP 오류가 아니라 응답 필드로 온다 — 코드를 실어야 카탈로그 문구와
+        // 재시도 버튼이 붙는다(`useFoodAnalysis.createAnalysisJobFailure` 머리말 참고).
+        throw new ApiError(
+          job.error || job.failureMessage || "food analysis job failed",
+          "FOOD_CAMERA_005",
+          500,
         )
       }
-      setPending({
+      /*
+        확인 pageSheet 를 먼저 내리고, 전환이 끝난 뒤에 결과를 연다. setPending 은
+        아래 effect 를 통해 결과 pageSheet 를 present 하므로, 같은 틱에 두면
+        네이티브 dismiss+present 가 겹친다 — iOS 에서 이 겹침은 앱 전체 터치가
+        죽는 계열이다(LoadingOverlay 머리말). 500ms 는 closeOverlayThenNotify 와
+        같은 근거의 여유값. 타이머가 언마운트 뒤에 울려도 pending 은 전역 스토어라
+        다음 마운트에서 열린다.
+      */
+      setPendingConfirmation(null)
+      const recovered = {
         result: job.result,
         mealType: pendingConfirmation.mealType,
         imageUri: job.result.imageUrl ?? pendingConfirmation.imageUri,
-      })
-      setPendingConfirmation(null)
+      }
+      setTimeout(() => setPending(recovered), 500)
       await pendingAnalysisRequests.remove(job.requestId)
-    } catch {
-      Alert.alert(
-        t("home.errors.confirmationTitle"),
-        t("home.errors.confirmationBody"),
-      )
+    } catch (error) {
+      presentError(error, {
+        scope: "food-analysis-confirm-recovered",
+        retry: () => void handleRecoveredConfirmation(body),
+      })
     }
   }
   const { data } = useDateAnalysis(selectedDate)
@@ -295,6 +322,10 @@ export function RecordView({
     setMealSheetPreselect(mealType)
     setOpenSheet("meal")
   }
+  // 앨범에서 고른 사진은 분석 전에 이 시트를 한 번 거친다(MealPhotoConfirmSheet 머리말).
+  const [mealPhotoDraft, setMealPhotoDraft] = useState<MealPhotoDraft | null>(
+    null,
+  )
   const { updateExtraWater } = useExtraWater()
   const {
     updateWeight,
@@ -308,6 +339,9 @@ export function RecordView({
   } = useBloodMetricsRecord()
 
   const selectedDateStr = toDateStr(selectedDate)
+
+  // 체중 시트의 7일 추세 — 시트가 열려 있는 동안만 부른다.
+  const weightWeek = useWeightWeek(selectedDateStr, openSheet === "weight")
 
   const apiDiets = data?.result.diets ?? []
   const apiMealImages = Object.fromEntries(
@@ -384,7 +418,10 @@ export function RecordView({
   const handlePendingAddToRecord = async () => {
     if (!pending) return
     if (pending.result.foodAnalysisResultId <= 0) {
-      Alert.alert(t("home.errors.notReadyTitle"), t("home.errors.notReadyBody"))
+      showErrorToast(
+        t("home.errors.notReadyTitle"),
+        t("home.errors.notReadyBody"),
+      )
       return
     }
     try {
@@ -405,8 +442,10 @@ export function RecordView({
       trackAnalyticsEvent("food_record_saved", { source: "recovered" })
     } catch (error) {
       trackAnalyticsEvent("food_record_save_failed", { source: "recovered" })
-      logRecoverableError("handlePendingAddToRecord error:", error)
-      Alert.alert(t("home.errors.saveMealTitle"), t("home.errors.saveMealBody"))
+      presentError(error, {
+        scope: "meal-diary-register-recovered",
+        retry: () => void handlePendingAddToRecord(),
+      })
     }
   }
 
@@ -423,11 +462,10 @@ export function RecordView({
       if (pending) setPending({ ...pending, result: updated })
       return updated
     } catch (error) {
-      logRecoverableError("updatePendingFoodAnalysis error:", error)
-      Alert.alert(
-        t("home.errors.saveChangesTitle"),
-        t("home.errors.saveChangesBody"),
-      )
+      presentError(error, {
+        scope: "meal-analysis-update-pending",
+        retry: () => void updatePendingFoodAnalysis(foodAnalysisResultId, body),
+      })
     } finally {
       setIsPendingUpdating(false)
     }
@@ -458,7 +496,43 @@ export function RecordView({
           source: "camera",
         }),
     })
-    if (uri) analyzeImage(uri, mealType)
+    // 앨범과 같은 규칙 — 취소하면 왔던 시트로 돌아온다(openMealGallery 머리말).
+    // 확인 단계를 따로 두지 않는 것은 iOS 카메라가 '다시 찍기 / 사진 사용'을 이미
+    // 묻기 때문이다. 여기서 또 물으면 두 번 확인이 된다.
+    if (!uri) {
+      openMealSheet(mealType)
+      return
+    }
+    analyzeImage(uri, mealType)
+  }
+
+  /**
+   * 앨범 열기. 고른 사진은 **분석으로 직행하지 않고** 확인 시트로 간다.
+   *
+   * 취소도 막다른 길로 두지 않는다. 예전에는 앨범을 여는 순간 식사 시트가 닫혀 있어서,
+   * 앨범에서 취소한 사람은 아무것도 안 열린 홈에 남았다 — 기록하러 들어왔다가 손만
+   * 씻고 나온 꼴이다. 취소하면 왔던 시트로 되돌려 놓는다.
+   *
+   * 사진을 이미 하나 들고 있을 때(= 확인 시트의 '다른 사진 고르기')는 시트를 닫지
+   * 않는다. 앨범은 네이티브 화면이라 이 시트 위에 그대로 뜨고, 취소하면 고르던 사진이
+   * 그 자리에 남는다.
+   */
+  const openMealGallery = async (mealType: MealType, isReplacing: boolean) => {
+    const picked = await pickImageAssetFromGallery({
+      onPermissionDenied: () =>
+        trackAnalyticsEvent("food_photo_permission_denied", {
+          source: "gallery",
+        }),
+    })
+    if (!picked) {
+      if (!isReplacing) openMealSheet(mealType)
+      return
+    }
+    setMealPhotoDraft({ ...picked, mealType })
+    trackAnalyticsEvent(
+      isReplacing ? "food_photo_confirm_replaced" : "food_photo_confirm_viewed",
+      { source: "gallery" },
+    )
   }
 
   const handleMealGallery = async (mealType: MealType) => {
@@ -468,13 +542,23 @@ export function RecordView({
       method: "gallery",
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
-    const uri = await pickImageFromGallery({
-      onPermissionDenied: () =>
-        trackAnalyticsEvent("food_photo_permission_denied", {
-          source: "gallery",
-        }),
-    })
-    if (uri) analyzeImage(uri, mealType)
+    await openMealGallery(mealType, false)
+  }
+
+  const handleMealPhotoConfirm = () => {
+    const draft = mealPhotoDraft
+    if (!draft) return
+    setMealPhotoDraft(null)
+    trackAnalyticsEvent("food_photo_confirm_accepted", { source: "gallery" })
+    analyzeImage(draft.uri, draft.mealType)
+  }
+
+  const handleMealPhotoCancel = () => {
+    const draft = mealPhotoDraft
+    if (!draft) return
+    setMealPhotoDraft(null)
+    trackAnalyticsEvent("food_photo_confirm_cancelled", { source: "gallery" })
+    openMealSheet(draft.mealType)
   }
 
   const handleMealText = (mealType: MealType) => {
@@ -485,6 +569,21 @@ export function RecordView({
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
     setIsTextRecordOpen(true)
+  }
+
+  /**
+   * 글 기록을 닫으면 식사 시트로 돌아온다 — 사진·앨범과 같은 규칙이다.
+   *
+   * 시트를 여는 것은 네이티브 모달(TextRecord)이 **다 내려간 뒤**여야 한다. 이 화면의
+   * pageSheet 닫힘과 다른 표면의 등장이 같은 틱에 겹쳤던 것이 2026-08-03 터치 먹통의
+   * 원인이었다(LoadingOverlay 머리말).
+   */
+  const closeTextRecord = async () => {
+    setIsTextRecordOpen(false)
+    const mealType = recordingMealTypeRef.current
+    if (!mealType) return
+    await afterModalTransitions()
+    openMealSheet(mealType)
   }
 
   const handleSkipMeal = async (mealType: MealType) => {
@@ -501,8 +600,11 @@ export function RecordView({
       trackAnalyticsEvent("food_record_skipped", {
         slot: ANALYTICS_MEAL_SLOT[mealType],
       })
-    } catch {
-      Alert.alert(t("home.errors.skipMealTitle"), t("home.errors.tryAgainBody"))
+    } catch (error) {
+      presentError(error, {
+        scope: "meal-skip",
+        retry: () => void handleSkipMeal(mealType),
+      })
     }
   }
 
@@ -522,17 +624,19 @@ export function RecordView({
         staleTime: 60_000,
       })
       .catch((error) => {
-        logRecoverableError("fetchDiaryResult error:", error)
-        Alert.alert(
-          t("home.errors.openMealTitle"),
-          t("home.errors.openMealBody"),
-        )
+        // 이 실패의 대부분인 `FOOD_CAMERA_013`(지워진 기록)은 그날 목록을 다시 받는 것이
+        // 곧 해결이다 — 당겨서 새로고침과 같은 경로를 버튼 하나로 준다.
+        presentError(error, {
+          scope: "meal-diary-open",
+          refresh: () => void refreshSelectedDate(),
+        })
         return undefined
       })
     if (result) {
       trackAnalyticsEvent("food_record_result_viewed", { source: "saved" })
       setViewDiaryResult(result)
       setViewDiaryId(diet.diaryId)
+      setViewDiaryCreatedAt(diet.createdAt)
       setViewResultMealType(mealType)
       setIsViewResultOpen(true)
     }
@@ -687,6 +791,11 @@ export function RecordView({
         language,
       })
     : { highlight: false, caption: null }
+
+  // 혈당 시트의 시점 추론 — "아침 식후 09:12 자동". 오늘 화면에서만 계산한다.
+  const glucoseInference = isViewingToday
+    ? inferGlucoseContext({ diets: apiDiets, now: new Date() })
+    : null
 
   const todayTiles: TodayRecordTileData[] = [
     {
@@ -854,6 +963,17 @@ export function RecordView({
         }}
       />
 
+      {/* 앨범에서 고른 사진의 마지막 관문 — 분석은 여기를 지나야 시작된다. */}
+      <MealPhotoConfirmSheet
+        draft={mealPhotoDraft}
+        onClose={handleMealPhotoCancel}
+        onConfirm={handleMealPhotoConfirm}
+        onPickAgain={() => {
+          if (mealPhotoDraft)
+            void openMealGallery(mealPhotoDraft.mealType, true)
+        }}
+      />
+
       <WaterSheet
         visible={openSheet === "water"}
         onClose={closeWaterSheet}
@@ -877,8 +997,7 @@ export function RecordView({
         onClose={() => setOpenSheet(null)}
         records={bloodGlucose}
         isSaving={isBloodSaving}
-        initialTiming={glucoseNow.highlight ? "AFTER_MEAL" : undefined}
-        inferenceHint={glucoseNow.caption}
+        inference={glucoseInference}
         onSubmit={(body) => void handleBloodGlucoseSubmit(body)}
       />
 
@@ -887,6 +1006,9 @@ export function RecordView({
         onClose={() => setOpenSheet(null)}
         today={bodyToday}
         previous={bodyPrevious}
+        week={weightWeek.data}
+        endDate={selectedDateStr}
+        isToday={isViewingToday}
         isSaving={isBodySaving}
         onSubmit={(weightKg) => void handleWeightSubmit(weightKg)}
       />
@@ -902,7 +1024,7 @@ export function RecordView({
       {/* ── 식사 기록 파이프라인(카메라·텍스트·AI 분석) ── */}
       <TextRecord
         open={isTextRecordOpen}
-        onClose={() => setIsTextRecordOpen(false)}
+        onClose={() => void closeTextRecord()}
         onSubmit={(text) => {
           const mealType = recordingMealTypeRef.current
           if (!mealType) return
@@ -934,6 +1056,7 @@ export function RecordView({
         updateFoodAnalysis={updateFoodAnalysis}
         diaryId={viewDiaryId ?? undefined}
         recordDate={toDateStr(selectedDate)}
+        recordedAt={viewDiaryCreatedAt ?? undefined}
         updateDiaryMealType={updateDiaryMealType}
         onDiaryDeleted={handleViewDiaryDeleted}
         onResultChange={handleViewResultChange}

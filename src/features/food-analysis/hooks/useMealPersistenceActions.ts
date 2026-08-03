@@ -1,8 +1,8 @@
 import { useRef, useState } from "react"
-import { Alert } from "react-native"
+
 import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
 import { foodCameraService } from "@/src/services/data"
 import {
   createMealConsultController,
@@ -14,37 +14,37 @@ import {
 } from "../services/mealDiaryPersistence"
 import appI18n from "@/src/i18n"
 
+import { showConfirm } from "@/src/lib/dialog"
+
 function confirmDeleteMeal(): Promise<boolean> {
-  return new Promise((resolve) => {
-    Alert.alert(
-      appI18n.t("foodResult.deleteConfirmTitle"),
-      appI18n.t("foodResult.deleteConfirmBody"),
-      [
-        {
-          text: appI18n.t("action.cancel"),
-          style: "cancel",
-          onPress: () => resolve(false),
-        },
-        {
-          text: appI18n.t("action.delete"),
-          style: "destructive",
-          onPress: () => resolve(true),
-        },
-      ],
-      { cancelable: true, onDismiss: () => resolve(false) },
-    )
+  return showConfirm({
+    title: appI18n.t("foodResult.deleteConfirmTitle"),
+    description: appI18n.t("foodResult.deleteConfirmBody"),
+    confirmLabel: appI18n.t("action.delete"),
+    cancelLabel: appI18n.t("action.cancel"),
+    destructive: true,
   })
 }
 
-export function useMealPersistenceActions() {
+export interface MealPersistenceOptions {
+  /**
+   * 삭제 확인 UI 를 바꿔 끼운다 — FoodAnalysisResult 는 무엇을 지우는지 카드로
+   * 미리 보여주는 시트(MealDeleteConfirmSheet)를 쓴다. 없으면 기본 확인창.
+   */
+  confirmDelete?: () => Promise<boolean>
+}
+
+export function useMealPersistenceActions(options?: MealPersistenceOptions) {
   const router = useAppRouter()
   const queryClient = useQueryClient()
   const [isStartingConsultation, setIsStartingConsultation] = useState(false)
   const [isDeletingDiary, setIsDeletingDiary] = useState(false)
   const routerRef = useRef(router)
   const queryClientRef = useRef(queryClient)
+  const confirmDeleteRef = useRef(options?.confirmDelete)
   routerRef.current = router
   queryClientRef.current = queryClient
+  confirmDeleteRef.current = options?.confirmDelete
 
   const refreshHome = async () => {
     await Promise.all([
@@ -69,7 +69,7 @@ export function useMealPersistenceActions() {
   >(undefined)
   if (!deleteControllerRef.current) {
     deleteControllerRef.current = createSavedMealDeleteController({
-      confirmDelete: confirmDeleteMeal,
+      confirmDelete: () => (confirmDeleteRef.current ?? confirmDeleteMeal)(),
       deleteDiary: (diaryId) => foodCameraService.deleteDiary(diaryId),
       refreshHome,
     })
@@ -83,10 +83,10 @@ export function useMealPersistenceActions() {
       await consultControllerRef.current!.start(input)
       return true
     } catch (error) {
-      Alert.alert(
-        appI18n.t("home.errors.saveMealTitle"),
-        getErrorMessage(error, appI18n.t("home.errors.saveMealBody")),
-      )
+      presentError(error, {
+        scope: "meal-consult-start",
+        retry: () => void startConsultation(input),
+      })
       return false
     } finally {
       setIsStartingConsultation(false)
@@ -98,10 +98,13 @@ export function useMealPersistenceActions() {
     try {
       return await deleteControllerRef.current!.remove(diaryId)
     } catch (error) {
-      Alert.alert(
-        appI18n.t("foodResult.deleteFailedTitle"),
-        getErrorMessage(error, appI18n.t("foodResult.deleteFailedBody")),
-      )
+      /*
+        재시도 핸들러를 주지 않는다. 이 함수의 `true` 를 받은 호출부가 시트를 닫고
+        목록을 정리하는데, 토스트 버튼에서 다시 부르면 그 뒷정리가 돌지 않는다 —
+        삭제만 되고 화면에는 지운 기록이 남는다. 문구가 원인을 말하고, 다시 지우는 것은
+        기록을 다시 눌러서 하면 된다.
+      */
+      presentError(error, { scope: "meal-diary-delete" })
       return false
     } finally {
       setIsDeletingDiary(false)

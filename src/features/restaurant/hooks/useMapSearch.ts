@@ -266,7 +266,8 @@ export function useMapSearch({
 
   const emptyReason = useMemo<EmptyReason | null>(() => {
     // 실패는 원인별로 나눈다. 400 을 "인터넷 확인" 으로 말하던 결함의 수정이고,
-    // 분류와 로그는 `classifyFetchFailure` 한 곳에 있다.
+    // 분류와 로그는 `classifyFetchFailure` 한 곳에 있다. `null` 은 "실패가 아니다"
+    // (팬·필터 변경으로 우리가 끊은 요청) — 뒤이어 오는 질의가 곧 결과를 채운다.
     if (query.isError) return classifyFetchFailure(query.error, "map")
     if (!data || total > 0) return null
     return resolveEmptyReason(filters)

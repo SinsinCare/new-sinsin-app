@@ -1,7 +1,6 @@
 import { useState } from "react"
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -98,7 +98,7 @@ export function VoteSheet({
   }
 
   return (
-    <Modal
+    <AppModal
       visible={open}
       animationType="slide"
       presentationStyle="pageSheet"
@@ -278,7 +278,7 @@ export function VoteSheet({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </AppModal>
   )
 }
 
@@ -326,8 +326,10 @@ const styles = StyleSheet.create({
   },
   titleInput: {
     fontSize: 17,
-    lineHeight: 24,
     letterSpacing: -0.34,
+    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
+    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
+    includeFontPadding: false,
     fontWeight: "700",
     fontFamily: "Pretendard-Bold",
     paddingVertical: 14,

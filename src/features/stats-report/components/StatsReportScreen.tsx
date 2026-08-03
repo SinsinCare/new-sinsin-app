@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import { V2Skeleton, V2SkeletonGroup } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
+import { resolveError, type ResolvedError } from "@/src/lib/errorMessage"
 import { REPORT_GAP } from "@/src/shared/components/ReportSection"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import type { SurfacePalette } from "@/src/theme/surface"
@@ -127,7 +128,10 @@ export function StatsReportScreen({
   const s = useSurface()
   const dateKey = toDateKey(anchorDate)
   // enabled 를 쓰지 않으므로 isPending 이 아니라 isLoading 을 본다(훅 주석 참고).
-  const { data, isLoading, isError, refetch } = useStatsReport(period, dateKey)
+  const { data, isLoading, isError, error, refetch } = useStatsReport(
+    period,
+    dateKey,
+  )
 
   const today = startOfDay(new Date())
   // 미래 기간으로는 못 간다 — 다음 기간의 시작일이 오늘을 넘으면 비활성.
@@ -183,7 +187,11 @@ export function StatsReportScreen({
         {isLoading ? (
           <LoadingSkeleton />
         ) : isError || !data ? (
-          <ErrorCard onRetry={() => refetch()} s={s} />
+          <ErrorCard
+            resolved={resolveError(error)}
+            onRetry={() => refetch()}
+            s={s}
+          />
         ) : (
           <ReportSections key={`${period}:${dateKey}`} report={data} s={s} />
         )}
@@ -374,7 +382,24 @@ function LoadingSkeleton() {
   )
 }
 
-function ErrorCard({ onRetry, s }: { onRetry: () => void; s: Surface }) {
+/**
+ * 리포트를 못 받았을 때의 카드.
+ *
+ * 예전에는 원인과 무관하게 "인터넷 연결을 확인한 뒤 다시 불러와 주세요." 한 줄이었다.
+ * 이 화면에서 실제로 자주 나는 실패는 연결이 아니라 **기록이 없는 기간**(404)과 점검
+ * (5xx)이고, 404 는 몇 번을 다시 불러도 같은 답이 온다. `resolveError` 가 원인을 고르고,
+ * `retryable` 이 false 면 다시 불러오기 버튼을 아예 그리지 않는다 — 눌러도 달라지지 않는
+ * 버튼은 "해결할 수 있다" 는 거짓말이다.
+ */
+function ErrorCard({
+  resolved,
+  onRetry,
+  s,
+}: {
+  resolved: ResolvedError
+  onRetry: () => void
+  s: Surface
+}) {
   const { t } = useTranslation("common")
   return (
     <View
@@ -383,26 +408,35 @@ function ErrorCard({ onRetry, s }: { onRetry: () => void; s: Surface }) {
         { backgroundColor: s.card, borderColor: s.hairline },
       ]}
     >
-      <Text style={[styles.errorTitle, { color: s.textStrong }]}>
-        {t("stats.errorTitle")}
-      </Text>
       <Text
-        style={[styles.errorBody, { color: s.textMuted }]}
+        style={[styles.errorTitle, { color: s.textStrong }]}
         lineBreakStrategyIOS="hangul-word"
+        textBreakStrategy="balanced"
       >
-        {t("stats.errorBody")}
+        {resolved.title}
       </Text>
-      <SurfacePressable
-        onPress={onRetry}
-        baseColor={s.surface}
-        pressedColor={s.surfacePressed}
-        style={styles.retryButton}
-        accessibilityLabel={t("stats.retryAccessibility")}
-      >
-        <Text style={[styles.retryLabel, { color: s.textStrong }]}>
-          {t("action.retry")}
+      {resolved.body ? (
+        <Text
+          style={[styles.errorBody, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
+          {resolved.body}
         </Text>
-      </SurfacePressable>
+      ) : null}
+      {resolved.retryable ? (
+        <SurfacePressable
+          onPress={onRetry}
+          baseColor={s.surface}
+          pressedColor={s.surfacePressed}
+          style={styles.retryButton}
+          accessibilityLabel={t("stats.retryAccessibility")}
+        >
+          <Text style={[styles.retryLabel, { color: s.textStrong }]}>
+            {t("action.retry")}
+          </Text>
+        </SurfacePressable>
+      ) : null}
     </View>
   )
 }

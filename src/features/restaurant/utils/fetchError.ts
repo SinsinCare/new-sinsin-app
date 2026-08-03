@@ -38,6 +38,10 @@
 import { ApiError } from "@/src/services/core/apiError"
 import { isRestaurantShapeError } from "@/src/services/data/restaurantShape"
 import { logger } from "@/src/lib/logger"
+// 배럴(`@/src/lib/errorMessage`)이 아니라 판정 모듈을 직접 집는다 — 배럴은 해결 버튼의
+// 실행부(`actions.ts` → `expo-router`)까지 끌고 오고, 그러면 이 순수 함수의 테스트가
+// 네비게이터 JSX 를 파싱하다 죽는다. 여기 필요한 것은 판정 하나뿐이다.
+import { resolveError } from "@/src/lib/errorMessage/resolve"
 
 import type { EmptyReason, ExcludedForMissingDataDto } from "../types"
 import {
@@ -106,7 +110,7 @@ export function failureSpec(reason: EmptyReason): FailureCopy | null {
 }
 
 /**
- * 실패 이유를 고르고 **로그를 남긴다.**
+ * 실패 이유를 고르고 **로그를 남긴다.** 실패가 아니면 `null`.
  *
  * 로그가 이 함수의 절반이다. 우리 쪽 결함(4xx·모양 불일치)은 화면에 한 문장만 남기고
  * 사라지므로, 어느 엔드포인트가 어떤 코드로 거절됐는지 남기지 않으면 다음 사람이 재현할
@@ -117,7 +121,22 @@ export function failureSpec(reason: EmptyReason): FailureCopy | null {
 export function classifyFetchFailure(
   error: unknown,
   scope: string,
-): FetchFailureReason {
+): FetchFailureReason | null {
+  /*
+    0) **우리가 끊은 요청.** 지도를 팬하거나 필터를 바꿀 때마다 react-query 가 이전
+       질의의 `signal` 을 끊고, axios 는 그것을 `ERR_CANCELED` + 응답 없음으로 돌려준다.
+       그 모양은 오프라인과 구별되지 않아 아래 2)에서 `NETWORK_FAILURE` 로 떨어졌고,
+       결과적으로 **지도를 움직이기만 해도** "인터넷 연결을 확인한 뒤 다시 불러와 주세요"
+       빈 상태가 스쳐 지나갔다. 사용자가 한 일의 결과가 아니므로 아무것도 그리지 않는다.
+
+       취소 코드 목록은 여기 두지 않는다 — `resolveError` 가 이미 갖고 있고, 그 표를
+       복사하면 새 코드가 늘 때 한쪽만 고쳐진다(이 파일 머리말이 경고하는 그 함정).
+  */
+  if (resolveError(error).kind === "canceled") {
+    logger.debug("[restaurant] 취소된 요청", scope)
+    return null
+  }
+
   // 1) 응답 모양이 계약과 다르다. 우리 버그이고, 통신은 성공했다.
   //    `RestaurantShapeError` 가 이미 어느 키가 없었는지 로그에 남겼으므로 여기서는
   //    화면 맥락만 덧붙인다.

@@ -146,7 +146,8 @@ export function useRestaurantList({
 
   const emptyReason = useMemo<EmptyReason | null>(() => {
     // 400(우리 요청 결함)·5xx·모양 불일치를 "인터넷 확인" 으로 뭉개지 않는다.
-    // 분류 규칙과 로그는 `classifyFetchFailure` 한 곳에 있다.
+    // 분류 규칙과 로그는 `classifyFetchFailure` 한 곳에 있다. `null` 은 실패가
+    // 아니라는 뜻이다(취소된 질의) — 빈 상태를 그리지 않고 이전 목록을 남긴다.
     if (infinite.isError) return classifyFetchFailure(infinite.error, "list")
     if (!pages || items.length > 0) return null
     return resolveEmptyReason(filters)

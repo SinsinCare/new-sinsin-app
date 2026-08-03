@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
-import type { StyleProp, TextInputProps, ViewStyle } from "react-native"
+import type {
+  StyleProp,
+  TextInputProps,
+  TextStyle,
+  ViewStyle,
+} from "react-native"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -118,6 +123,13 @@ export interface SheetValueEdit {
   autoStartWhenEmpty?: boolean
   /** 확정된 값. 지우고 나가면 null 이 온다(0 이 아니다). */
   onCommit: (next: number | null) => void
+  /**
+   * 치는 도중의 값(경계로 클램프된 미리보기). 판정 배지·구간 바·CTA 라벨이
+   * **키 입력마다** 응답하게 한다 — 확정(onCommit)은 여전히 blur 한 번뿐이다.
+   * 미리보기와 확정을 한 콜백으로 합치면 "72." 같은 중간 상태가 확정으로 새어
+   * 들어간다. 호출부는 미리보기를 별도 상태로 들고, liveValue = preview ?? value 로 읽는다.
+   */
+  onPreview?: (next: number | null) => void
   /** 탭 영역의 접근성 라벨. "체중 직접 입력" 처럼 무엇을 입력하는지 말한다. */
   accessibilityLabel: string
   /** 평소에 보이는 안내 한 줄("눌러서 직접 입력"). */
@@ -142,7 +154,6 @@ function SheetEditableValue({
   caption?: string
   edit: SheetValueEdit
 }) {
-  const { t } = useTranslation("common")
   const surface = useSurface()
   const inputRef = useRef<TextInput>(null)
   const [draft, setDraft] = useState<string | null>(null)
@@ -152,6 +163,7 @@ function SheetEditableValue({
   const commit = () => {
     if (draft === null) return
     edit.onCommit(commitSheetNumber(draft, edit.spec))
+    edit.onPreview?.(null)
     setDraft(null)
   }
 
@@ -202,9 +214,11 @@ function SheetEditableValue({
             <TextInput
               ref={inputRef}
               value={draft}
-              onChangeText={(text) =>
-                setDraft(sanitizeSheetNumberText(text, edit.spec))
-              }
+              onChangeText={(text) => {
+                const sanitized = sanitizeSheetNumberText(text, edit.spec)
+                setDraft(sanitized)
+                edit.onPreview?.(commitSheetNumber(sanitized, edit.spec))
+              }}
               onBlur={commit}
               onSubmitEditing={commit}
               selectTextOnFocus
@@ -214,7 +228,7 @@ function SheetEditableValue({
               placeholder="0"
               placeholderTextColor={surface.placeholder}
               selectionColor={surface.brand}
-              style={[styles.displayValue, { color: surface.textStrong }]}
+              style={[styles.displayValueInput, { color: surface.textStrong }]}
             />
           ) : (
             <Text
@@ -249,36 +263,14 @@ function SheetEditableValue({
         </Text>
       ) : null}
       {/*
-        평소엔 힌트, 치는 동안엔 완료 — **같은 자리**라 줄이 늘거나 줄지 않는다.
-
-        전역 키보드 툴바가 있는데도 여기에 하나 더 두는 이유: 툴바는 화면 바닥에
-        붙고, 시트가 열려 있으면 그 위를 시트·포털이 덮을 여지가 남는다(실제로 그래서
-        1.1.24 에서 안 보였다). 이 버튼은 **큰 숫자 바로 아래**, 즉 키패드가 절대
-        닿지 않는 위쪽에 있어서 무엇에도 가려지지 않는다. 눌러 blur 시키면
-        `onBlur` 가 그대로 commit 을 태우므로 값도 함께 확정된다.
+        발견을 돕는 한 줄. 편집 중에는 같은 높이의 빈 줄로 두어 아래 블록(배지·바)이
+        밀리지 않게 한다. 완료·저장은 키보드 위 도킹 바가 맡는다(KeyboardDock 머리말) —
+        예전의 인라인 "완료" 필은 도크가 생기며 물러났다. 같은 일을 하는 버튼이
+        두 곳이면 어느 쪽이 저장인지부터 다시 읽어야 한다.
       */}
-      {editing ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => inputRef.current?.blur()}
-          hitSlop={10}
-          style={({ pressed }) => [
-            styles.editDone,
-            {
-              backgroundColor: surface.surface,
-              opacity: pressed ? 0.6 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.editDoneLabel, { color: surface.textStrong }]}>
-            {t("action.done")}
-          </Text>
-        </Pressable>
-      ) : (
-        <Text style={[styles.editHint, { color: surface.textMuted }]}>
-          {edit.hint}
-        </Text>
-      )}
+      <Text style={[styles.editHint, { color: surface.textMuted }]}>
+        {editing ? " " : edit.hint}
+      </Text>
     </View>
   )
 }
@@ -714,21 +706,182 @@ export function SheetNumericField({
   )
 }
 
+export interface SheetTrendPoint {
+  /** 그 날의 값. null 이면 기록 없는 날 — 낮은 스텁이 아니라 빈 표시로 그린다. */
+  value: number | null
+  /** 오늘 칸. 지금 고르는 값이 실시간으로 반영된다 — 브랜드 틴트 + 점선 테두리. */
+  live?: boolean
+}
+
+/**
+ * 7일 추세 미니 바 — 시트 시안(2026-08-03)의 체중 추세 카드.
+ * 단일 값의 노이즈에 반응하지 않도록 흐름을 함께 보여준다. 기준선(점선)은
+ * 최근 평균 하나뿐이고 축·눈금은 없다 — 시트 안에서 차트는 문장 하나 몫이다.
+ */
+export function SheetTrendBars({
+  points,
+  baseline,
+  baselineLabel,
+  startLabel,
+  midLabel,
+  endLabel,
+}: {
+  points: SheetTrendPoint[]
+  baseline: number | null
+  baselineLabel?: string | null
+  startLabel?: string | null
+  midLabel?: string | null
+  endLabel?: string | null
+}) {
+  const surface = useSurface()
+  const values = points
+    .map((point) => point.value)
+    .filter((value): value is number => value !== null)
+  const pool = baseline !== null ? [...values, baseline] : values
+
+  // 체중은 하루 변화가 전체 대비 1% 안팎이라, 0 부터 그리면 모든 막대가 같아 보인다.
+  // 값들 주변만 확대하되 여유를 둬서 최솟값 막대도 바닥에 붙지 않게 한다.
+  const rawMin = pool.length > 0 ? Math.min(...pool) : 0
+  const rawMax = pool.length > 0 ? Math.max(...pool) : 1
+  const pad = Math.max((rawMax - rawMin) * 0.35, 0.4)
+  const lo = rawMin - pad
+  const hi = rawMax + pad
+  const ratio = (value: number) =>
+    Math.min(1, Math.max(0, (value - lo) / (hi - lo)))
+
+  const CHART_HEIGHT = 64
+  const baselineBottom =
+    baseline !== null ? ratio(baseline) * CHART_HEIGHT : null
+
+  return (
+    <View style={[trendStyles.card, { backgroundColor: surface.surface }]}>
+      {baselineLabel ? (
+        <Text style={[trendStyles.baselineLabel, { color: surface.textWeak }]}>
+          {baselineLabel}
+        </Text>
+      ) : null}
+      <View style={[trendStyles.chart, { height: CHART_HEIGHT }]}>
+        {baselineBottom !== null ? (
+          <DashedLine
+            color={surface.placeholder}
+            style={[trendStyles.baselineLine, { bottom: baselineBottom }]}
+          />
+        ) : null}
+        {points.map((point, index) => (
+          <View key={index} style={trendStyles.barSlot}>
+            {point.value === null ? (
+              <View
+                style={[
+                  trendStyles.barEmpty,
+                  { backgroundColor: surface.surfacePressed },
+                ]}
+              />
+            ) : (
+              <View
+                style={[
+                  trendStyles.bar,
+                  { height: Math.max(ratio(point.value) * CHART_HEIGHT, 8) },
+                  point.live
+                    ? {
+                        backgroundColor: surface.surfaceBrand,
+                        borderWidth: 1.2,
+                        borderStyle: "dashed",
+                        borderColor: surface.brand,
+                      }
+                    : { backgroundColor: surface.surfacePressed },
+                ]}
+              />
+            )}
+          </View>
+        ))}
+      </View>
+      {startLabel || midLabel || endLabel ? (
+        <View style={trendStyles.axisRow}>
+          <Text style={[trendStyles.axisLabel, { color: surface.textMuted }]}>
+            {startLabel ?? ""}
+          </Text>
+          <Text style={[trendStyles.axisLabel, { color: surface.textMuted }]}>
+            {midLabel ?? ""}
+          </Text>
+          <Text style={[trendStyles.axisLabel, { color: surface.textMuted }]}>
+            {endLabel ?? ""}
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  )
+}
+
+/**
+ * 점선 한 줄. RN 의 한 면짜리 dashed 보더는 iOS 에서 실선으로 그려지는 일이 있어
+ * 작은 조각을 이어 붙인다 — 넘치는 조각은 overflow 로 잘린다.
+ */
+function DashedLine({
+  color,
+  style,
+}: {
+  color: string
+  style?: StyleProp<ViewStyle>
+}) {
+  return (
+    <View pointerEvents="none" style={[trendStyles.dashRow, style]}>
+      {Array.from({ length: 80 }).map((_, index) => (
+        <View
+          key={index}
+          style={[trendStyles.dash, { backgroundColor: color }]}
+        />
+      ))}
+    </View>
+  )
+}
+
+const trendStyles = StyleSheet.create({
+  card: { borderRadius: 14, padding: 14, gap: 8 },
+  baselineLabel: { fontSize: 11.5, lineHeight: 16 },
+  chart: { flexDirection: "row", alignItems: "flex-end", gap: 6 },
+  baselineLine: { position: "absolute", left: 0, right: 0 },
+  barSlot: { flex: 1, justifyContent: "flex-end" },
+  bar: { borderRadius: 5, width: "100%" },
+  barEmpty: { height: 4, borderRadius: 2, opacity: 0.7 },
+  axisRow: { flexDirection: "row", justifyContent: "space-between" },
+  axisLabel: { fontSize: 11, lineHeight: 15 },
+  dashRow: {
+    flexDirection: "row",
+    gap: 3,
+    overflow: "hidden",
+    height: 1.2,
+  },
+  dash: { width: 3, height: 1.2, borderRadius: 1 },
+})
+
+/**
+ * 큰 수치의 글자 모양. Text(보기)와 TextInput(편집)이 **같은 자리에서 서로를 대체**하므로
+ * 줄높이를 뺀 나머지는 반드시 한 곳에서 나와야 한다 — 두 벌로 두면 편집을 켤 때 숫자가 튄다.
+ */
+const DISPLAY_VALUE = {
+  fontSize: 44,
+  letterSpacing: -1.1,
+  fontWeight: "700",
+  fontVariant: ["tabular-nums"],
+  // 값이 들어와도 단위가 옆으로 튀지 않게 세 자리 폭을 미리 잡는다.
+  minWidth: 84,
+  textAlign: "center",
+} satisfies TextStyle
+
 const styles = StyleSheet.create({
   // 수치 디스플레이 40~44/700 · 단위 15/500 · 중앙 정렬
   displayBlock: { alignItems: "center", gap: 6 },
   displayRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
   displayRowPlaceholder: { alignItems: "center" },
-  displayValue: {
-    fontSize: 44,
-    lineHeight: 52,
-    letterSpacing: -1.1,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    // 값이 들어와도 단위가 옆으로 튀지 않게 세 자리 폭을 미리 잡는다.
-    minWidth: 84,
-    textAlign: "center",
-  },
+  // Text 로 보여줄 때. 편집으로 바뀌면 아래 displayValueInput 이 같은 자리에 선다.
+  displayValue: { ...DISPLAY_VALUE, lineHeight: 52 },
+  /**
+   * 같은 수치를 **입력으로** 그릴 때. `lineHeight` 만 빠진다 —
+   * 단일행 TextInput 에 lineHeight 가 있으면 iOS 가 글자를 세로 가운데가 아니라 문단
+   * 기준으로 앉혀서, 편집을 켜는 순간 숫자가 아래로 내려앉는다(`singleLineInputText` 머리말).
+   * 44pt 폰트의 자연 줄높이가 52 와 거의 같아 두 상태의 높이는 그대로 맞는다.
+   */
+  displayValueInput: { ...DISPLAY_VALUE, includeFontPadding: false },
   displayUnit: { fontSize: 15, lineHeight: 22, fontWeight: "500" },
   displayCaption: { ...TYPE.cardSub, textAlign: "center" },
 
@@ -742,14 +895,6 @@ const styles = StyleSheet.create({
     width: 96,
   },
   editHint: { fontSize: 11.5, lineHeight: 16, textAlign: "center" },
-  // 힌트와 같은 높이(16 + 위아래 4)로 잡아 편집 진입 때 아래가 밀리지 않게 한다.
-  editDone: {
-    paddingVertical: 4,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    alignSelf: "center",
-  },
-  editDoneLabel: { fontSize: 11.5, lineHeight: 16, fontWeight: "700" },
 
   // 판정 배지 h28 r9
   badge: {
@@ -847,8 +992,10 @@ const styles = StyleSheet.create({
   fieldInput: {
     flex: 1,
     fontSize: 24,
-    lineHeight: 30,
     letterSpacing: -0.5,
+    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
+    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
+    includeFontPadding: false,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
     padding: 0,

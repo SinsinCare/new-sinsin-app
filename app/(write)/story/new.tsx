@@ -1,7 +1,5 @@
-import { getErrorMessage } from "@/src/lib/errorUtils"
 import { useMemo, useState } from "react"
 import {
-  Alert,
   Image,
   Keyboard,
   Platform,
@@ -18,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 
 import { useSurface } from "@/src/hooks/useSurface"
+import { showConfirm } from "@/src/lib/dialog"
 import { hapticSelection } from "@/src/lib/haptics"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
@@ -25,6 +24,7 @@ import { useCommunityStories } from "@/src/features/recipe/hooks/useCommunitySto
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import type { MealType } from "@/src/features/home/types"
+import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
 import { useTranslation } from "react-i18next"
 
 interface StoryCandidate {
@@ -103,6 +103,25 @@ export default function NewStoryScreen() {
     setSelected(picked)
   }
 
+  /**
+   * 고른 사진과 쓰던 캡션을 두고 나가기 전에 한 번 묻는다. 아무것도 안 골랐으면
+   * 묻지 않는다 — 잃을 것이 없는데 확인을 붙이면 그냥 한 번 더 누르게 하는 것이다.
+   */
+  const handleClose = async () => {
+    if (!selected && caption.trim().length === 0) {
+      router.back()
+      return
+    }
+    const confirmed = await showConfirm({
+      title: t("community.newStory.discardTitle"),
+      description: t("community.newStory.discardBody"),
+      confirmLabel: t("community.newStory.discard"),
+      cancelLabel: t("community.newStory.keepWriting"),
+      destructive: true,
+    })
+    if (confirmed) router.back()
+  }
+
   const handleSubmit = async () => {
     if (!selected || isSaving) return
     setIsUploading(true)
@@ -124,13 +143,16 @@ export default function NewStoryScreen() {
     } catch (error) {
       /*
         일괄 "인터넷 연결" 문구를 쓰지 않는다 — 온보딩 미완료 계정의 403(FORBIDDEN)도
-        인터넷 탓으로 보였다(2026-08-02 QA "스토리 동작 안 함"의 실체). getErrorMessage 는
-        서버 카탈로그 문구를 그대로 보여주고, 진짜 네트워크 실패에만 연결 문구를 준다.
+        인터넷 탓으로 보였다(2026-08-02 QA "스토리 동작 안 함"의 실체).
+
+        화면 폴백도 주지 않는다. `스토리를 올리지 못했어요` 는 서버가 아는 것
+        (`COMMUNITY_ERROR_014` 사진 없음, `FOOD_CAMERA_002` 5MB 초과)보다 언제나
+        덜 구체적인데, 예전 규칙에서는 그 폴백이 코드를 **이겼다**.
       */
-      Alert.alert(
-        t("community.newStory.errorTitle"),
-        getErrorMessage(error, t("community.newStory.errorBody")),
-      )
+      presentCommunityError(error, {
+        scope: "community-story-create",
+        retry: () => void handleSubmit(),
+      })
     } finally {
       setIsUploading(false)
     }
@@ -148,7 +170,7 @@ export default function NewStoryScreen() {
     >
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => void handleClose()}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel={t("action.close")}

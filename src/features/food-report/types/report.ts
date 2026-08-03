@@ -27,9 +27,13 @@ export interface ReportBudget {
   isReference: boolean
   /** 체중 미기록이면 null. 이때 이 행은 그리지 않는다 — 한도를 지어내지 않는다. */
   limit: number | null
+  /** 한도 표기("30g"). limit 이 null 이면 null. */
+  limitText: string | null
   beforeThisMeal: number
   thisMeal: number
   consumed: number
+  /** 이 끼니까지 포함한 오늘 누적 표기("39.6g"). */
+  consumedText: string
   remaining: number
   remainingText: string
   over: number

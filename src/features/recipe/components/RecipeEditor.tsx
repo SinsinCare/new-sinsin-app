@@ -7,7 +7,6 @@ import {
   Keyboard,
   Platform,
   StyleSheet,
-  Alert,
   InteractionManager,
 } from "react-native"
 import { YStack, XStack, Text, View } from "tamagui"
@@ -30,6 +29,9 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useQueryClient } from "@tanstack/react-query"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useTranslation } from "react-i18next"
+
+import { presentError } from "@/src/lib/errorMessage"
+import { showSuccessToast } from "@/src/lib/toast"
 
 const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" }
 const HEADER_TEXT = { light: "#3C3C43", dark: tokens.color.textDark.val }
@@ -199,13 +201,23 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         cookingSteps,
       })
       await queryClient.invalidateQueries({ queryKey: ["recipes"] })
-      Alert.alert(
+      // 저장은 끝났다 — 확인을 눌러야 닫히는 대신 닫으면서 알린다.
+      onClose()
+      showSuccessToast(
         t("recipeEditor.successTitle"),
         t("recipeEditor.successBody"),
-        [{ text: t("action.close"), onPress: onClose }],
       )
-    } catch {
-      Alert.alert(t("recipeEditor.errorTitle"), t("recipeEditor.errorBody"))
+    } catch (error) {
+      /*
+        본문·재료·조리순서의 사진을 먼저 올리고 레시피를 만든다. 그래서 여기 오는
+        실패의 절반은 사진 쪽이고(`FOOD_CAMERA_001`·`002`), 그건 사진을 바꾸면 바로
+        풀린다 — `인터넷 연결을 확인한 뒤 다시 올려 주세요.` 로 덮어 두면 사용자는
+        같은 사진으로 계속 다시 누른다.
+      */
+      presentError(error, {
+        scope: "recipe-create",
+        retry: () => void handleSubmit(),
+      })
     } finally {
       setIsSubmitting(false)
     }

@@ -1,17 +1,15 @@
 import { useState } from "react"
-import { Alert } from "react-native"
+
 import { useQueryClient } from "@tanstack/react-query"
 import { bloodMetricsService } from "@/src/services/data/bloodMetricsService"
-import { logRecoverableError } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
 import type {
   BloodGlucoseUpsertRequest,
   BloodPressureUpsertRequest,
 } from "@/src/types/bloodMetrics"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
-import { useTranslation } from "react-i18next"
 
 export function useBloodMetricsRecord() {
-  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -23,11 +21,11 @@ export function useBloodMetricsRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      logRecoverableError("updateBloodPressure error:", error)
-      Alert.alert(
-        t("home.errors.saveBloodPressureTitle"),
-        t("home.errors.saveBloodPressureBody"),
-      )
+      // upsert 라 같은 값을 다시 보내도 한 건이다 — 재시도가 안전하다.
+      presentError(error, {
+        scope: "blood-pressure-save",
+        retry: () => void updateBloodPressure(body),
+      })
     } finally {
       setIsLoading(false)
     }
@@ -41,11 +39,10 @@ export function useBloodMetricsRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      logRecoverableError("updateBloodGlucose error:", error)
-      Alert.alert(
-        t("home.errors.saveBloodGlucoseTitle"),
-        t("home.errors.saveBloodGlucoseBody"),
-      )
+      presentError(error, {
+        scope: "blood-glucose-save",
+        retry: () => void updateBloodGlucose(body),
+      })
     } finally {
       setIsLoading(false)
     }

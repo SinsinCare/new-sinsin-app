@@ -6,6 +6,7 @@ import type {
 } from "../../../types"
 import { MockUser, DEFAULT_MOCK_USER } from "./mockUser"
 import { appConfig } from "../../../config/appConfig"
+import { ApiError } from "../../core/apiError"
 import i18n from "@/src/i18n"
 
 const mockUsers = new Map<
@@ -34,7 +35,17 @@ export const mockAuthService: IAuthService = {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const userData = mockUsers.get(email)
     if (!userData || userData.password !== password) {
-      throw new Error(i18n.t("login.credentialsError", { ns: "auth" }))
+      /*
+        서버와 **같은 모양**으로 던진다. 평범한 `Error` 를 던지면 코드가 없어서
+        `resolveError` 가 갈래를 못 고르고 `transport.unknown`("지금은 이 작업을
+        마치지 못했어요")으로 떨어진다 — mock 로그인에서만 비밀번호 오류가 일반
+        문구로 보이는 상태가 되고, 그러면 mock 으로 문구를 확인할 수가 없다.
+      */
+      throw new ApiError(
+        i18n.t("code.LOGIN_ERROR_001.title", { ns: "errors" }),
+        "LOGIN_ERROR_001",
+        401,
+      )
     }
     currentUser = userData.user
     return {

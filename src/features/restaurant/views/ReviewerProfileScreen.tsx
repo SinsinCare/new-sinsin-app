@@ -43,8 +43,6 @@
 
 import { useCallback, useMemo, useState } from "react"
 import {
-  FlatList,
-  type ListRenderItemInfo,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -53,6 +51,8 @@ import {
   type ViewStyle,
   useWindowDimensions,
 } from "react-native"
+// 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
+import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list"
 import { Image } from "expo-image"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -63,16 +63,18 @@ import {
   V2ErrorState,
   V2Icon,
   V2Tab,
+  type V2ErrorStateRetry,
   radius,
   spacing,
   typography,
   useV2Theme,
+  SemanticColors,
 } from "@/src/design-system-v2"
-import type { SemanticColors } from "@/src/design-system-v2"
 
 import type { ReviewDto, ReviewSortOption, ReviewerProfileDto } from "../types"
 import { DEFAULT_REVIEW_SORT, REVIEW_KEYWORDS } from "../data/filterCatalog"
 import { useReviewerProfile } from "../hooks/useReviewerProfile"
+import { resolveError } from "@/src/lib/errorMessage"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 import {
   formatStatCount,
@@ -151,6 +153,7 @@ export function ReviewerProfileScreen({
     canFollow,
     isLoading,
     isError,
+    error,
     refetch,
   } = useReviewerProfile(reviewerId, sort)
 
@@ -205,6 +208,11 @@ export function ReviewerProfileScreen({
   )
 
   if (isError && !profile) {
+    const resolved = resolveError(error)
+    // 타입을 붙여 둬야 삼항의 두 갈래가 유니온으로 남는다 — 자세한 이유는 V2ErrorStateRetry.
+    const retry: V2ErrorStateRetry = resolved.retryable
+      ? { onRetry: refetch, retryLabel: t("action.retry") }
+      : {}
     return (
       <View
         style={[
@@ -217,11 +225,15 @@ export function ReviewerProfileScreen({
         ]}
       >
         <BackBar onBack={onBack} label={t("action.back")} colors={colors} />
+        {/*
+          탈퇴한 리뷰어의 프로필은 404 다. `인터넷 연결을 확인한 뒤 다시 불러와
+          주세요` + 재시도 버튼은 그 경우 두 번 거짓말한다 — 원인도 틀리고, 눌러도
+          같은 404 다. 재시도가 상태를 바꿀 수 있을 때만 버튼을 준다.
+        */}
         <V2ErrorState
-          title={t("restaurant.reviewer.loadErrorTitle")}
-          description={t("restaurant.reviewer.loadErrorBody")}
-          retryLabel={t("action.retry")}
-          onRetry={refetch}
+          title={resolved.title}
+          description={resolved.body}
+          {...retry}
         />
       </View>
     )
@@ -363,7 +375,7 @@ export function ReviewerProfileScreen({
     >
       <BackBar onBack={onBack} label={t("action.back")} colors={colors} />
 
-      <FlatList
+      <FlashList
         data={tab === TAB_REVIEWS ? reviews : []}
         keyExtractor={(item) => String(item.reviewId)}
         renderItem={renderReview}

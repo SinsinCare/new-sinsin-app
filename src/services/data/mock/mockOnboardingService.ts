@@ -15,10 +15,20 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
       { key: "3-b", value: "3b기 (eGFR 30~44)" },
       { key: "4", value: "4기 (eGFR 15~29)" },
       { key: "5", value: "5기 (eGFR 15 미만)" },
-      { key: "ing", value: "현재 투석 중이에요" },
-      { key: "have", value: "신장 결석이 있어요 (만성 질환은 아니에요)" },
       { key: "unknown", value: "잘 모르겠어요" },
     ],
+    // 같은 스텝의 두 번째 축. 스텝을 늘리지 않으려고 여기 붙어 있다.
+    followUp: {
+      title: "투석이나 이식을 받고 있나요?",
+      values: [
+        { key: "KRT_NONE", value: "아니요" },
+        { key: "KRT_HEMODIALYSIS", value: "혈액투석" },
+        { key: "KRT_PERITONEAL", value: "복막투석" },
+        { key: "KRT_TRANSPLANT", value: "이식받았어요" },
+      ],
+      requiredFor: ["4", "5", "unknown"],
+      defaultKey: "KRT_NONE",
+    },
   },
   {
     step: 2,
@@ -35,13 +45,9 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
       { key: "PREVENTIVE", value: "진단은 없고 예방 목적" },
     ],
   },
-  {
-    step: 9,
-    title: "진단받은 연도와 달을 알려주세요",
-    subTitle: "선택 사항이에요. 기억나지 않으면 건너뛰어도 괜찮아요.",
-    type: "date",
-    values: [{ key: "diagnosisDate", value: "" }],
-  },
+  // step 9(진단 연·월)는 서버 목록에서 빠졌다 — step 2(진단 시기 버킷)와 같은 사실을
+  // 두 번 묻고 있었다. 정확한 날짜는 설정 > 신장 프로필에서 지정한다.
+  // (제출 파싱은 서버에 남아 있어서 구버전 앱은 계속 보내도 저장된다.)
   {
     step: 10,
     title: "신장 질환의 주된 원인을 알고 계신가요?",
@@ -68,6 +74,8 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
       { key: "통풍", value: "통풍" },
       { key: "빈혈", value: "빈혈" },
       { key: "뼈 및 미네랄 이상", value: "뼈 및 미네랄 이상" },
+      // 결석은 병기가 아니라 동반 질환이라 여기가 제자리다.
+      { key: "KIDNEY_STONE", value: "신장결석" },
       { key: "해당없음", value: "해당 없음" },
     ],
   },

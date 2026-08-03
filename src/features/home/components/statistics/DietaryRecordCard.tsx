@@ -1,4 +1,6 @@
-import { Image, TouchableOpacity, StyleSheet } from "react-native"
+import { TouchableOpacity, StyleSheet } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, YStack } from "tamagui"
 import { MealRecord } from "../../data/dietaryRecord"
@@ -32,7 +34,7 @@ export function DietaryRecordCard({
           <Image
             source={{ uri: mealData.imageUri }}
             style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
+            contentFit="cover"
           />
         )}
         <YStack padding="$2">

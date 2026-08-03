@@ -1,5 +1,6 @@
 import React, { useState } from "react"
-import { Modal, View, Pressable, ScrollView, StyleSheet } from "react-native"
+import { View, Pressable, ScrollView, StyleSheet } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
@@ -26,7 +27,7 @@ export function DatePickerModal({
   const { t } = useTranslation("settings")
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="slide"
@@ -117,7 +118,7 @@ export function DatePickerModal({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   )
 }
 

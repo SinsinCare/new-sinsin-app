@@ -62,9 +62,9 @@ export function EmailLoginLinkPasswordScreen() {
         ),
       )
     } catch (error) {
-      setError("password", {
-        message: getErrorMessage(error, t("linkPassword.failed")),
-      })
+      // 연결 토큰 만료(`TOKEN_ERROR_005`)가 여기서 가장 흔하다. 폴백으로 덮으면
+      // "잠시 후 다시" 를 권하게 되는데, 이 실패는 기다릴수록 더 안 된다.
+      setError("password", { message: getErrorMessage(error) })
     } finally {
       setSubmitting(false)
     }

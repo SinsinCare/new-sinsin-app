@@ -1,5 +1,4 @@
 import { api } from "@/src/services/core/apiClient"
-import { ApiError } from "@/src/services/core/apiError"
 import {
   CommunityComment,
   CommunityCommentApi,
@@ -107,17 +106,21 @@ class CommunityPostService implements ICommunityPostService {
     return list.map(mapPost)
   }
 
+  /**
+   * 404 를 삼키지 않는다.
+   *
+   * 예전에는 404 를 `undefined` 로 바꿔 돌려줬는데, 그러면 서버가 준
+   * `COMMUNITY_ERROR_001`("이 글은 사라졌어요") 이 호출부에 닿지 못한다. 게다가
+   * react-query v5 는 queryFn 이 `undefined` 를 주면 **자기 오류**(`Query data cannot
+   * be undefined`)로 바꿔 버려서, 화면에는 코드도 원인도 없는 일반 문구가 떴다 —
+   * 지워진 글의 딥링크가 "인터넷을 확인" 처럼 읽히던 경로가 이것이다.
+   *
+   * 그대로 던지면 `resolveError` 가 코드로 문구를 고르고 재시도 버튼도 빼 준다.
+   */
   async getPost(id: string): Promise<CommunityMealPost | undefined> {
-    try {
-      const res = await api.get(`/community/posts/${id}`)
-      const raw = res.data.result ?? res.data.data
-      return raw ? mapPost(raw as CommunityMealPostApi) : undefined
-    } catch (e) {
-      if (e instanceof ApiError && e.statusCode === 404) {
-        return undefined
-      }
-      throw e
-    }
+    const res = await api.get(`/community/posts/${id}`)
+    const raw = res.data.result ?? res.data.data
+    return raw ? mapPost(raw as CommunityMealPostApi) : undefined
   }
 
   async createPost(post: CreateCommunityPostInput): Promise<CommunityMealPost> {

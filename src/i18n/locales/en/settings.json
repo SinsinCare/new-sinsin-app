@@ -50,8 +50,6 @@
     "changePassword": "Change",
     "saveAccessibility": "Save profile",
     "save": "Save changes",
-    "saveErrorTitle": "We couldn’t save your profile",
-    "saveErrorBody": "Try again in a moment. If you chose a photo, you can also try a different one.",
     "uploadError": "We couldn’t upload your profile photo."
   },
   "password": {
@@ -65,7 +63,6 @@
     "match": "Passwords match.",
     "mismatch": "Passwords don’t match. Check them again.",
     "wrongCurrent": "Your current password isn’t correct. Check it and try again.",
-    "saveError": "We couldn’t change your password. Try again in a moment.",
     "submit": "Change password"
   },
   "nickname": {
@@ -73,12 +70,7 @@
     "subtitle": "Use 2–14 Korean or English letters or numbers.\nYou can change this anytime.",
     "field": "Nickname",
     "available": "That nickname is available.",
-    "validation": "Use 2–14 Korean or English letters or numbers.",
-    "error": {
-      "duplicate": "That nickname is already taken. Try another one.",
-      "sessionExpired": "Your session has expired. Sign in again.",
-      "save": "We couldn’t save your nickname. Try again in a moment."
-    }
+    "validation": "Use 2–14 Korean or English letters or numbers."
   },
   "name": {
     "title": "What’s your name?",
@@ -86,11 +78,7 @@
     "field": "Name",
     "required": "Enter your name.",
     "tooLong": "Keep your name to {{max}} characters or fewer.",
-    "check": "Check the name you entered.",
-    "error": {
-      "sessionExpired": "Your session has expired. Sign in again.",
-      "save": "We couldn’t save your name. Try again in a moment."
-    }
+    "check": "Check the name you entered."
   },
   "phone": {
     "title": "What number can we reach you at?",
@@ -105,9 +93,7 @@
     "deleteAccessibility": "Delete saved phone number",
     "deleteLabel": "Delete saved phone number",
     "deleteTitle": "Delete this phone number?",
-    "deleteBody": "We’ll stop using this number for contact and any marketing you opted into.",
-    "deleteError": "We couldn’t delete your phone number. Try again in a moment.",
-    "saveError": "We couldn’t save your phone number. Try again in a moment."
+    "deleteBody": "We’ll stop using this number for contact and any marketing you opted into."
   },
   "notifications": {
     "title": "Notifications",
@@ -188,9 +174,6 @@
   "inquiry": {
     "title": "Contact support",
     "category": "Topic",
-    "selectCategory": "Choose a support topic",
-    "select": "Choose",
-    "categoryPrompt": "What can we help with?",
     "categories": {
       "app": "Using the app",
       "health": "Health records",
@@ -201,14 +184,11 @@
     },
     "subject": "Subject",
     "subjectPlaceholder": "Briefly describe your question",
+    "content": "Message",
     "contentPlaceholder": "Tell us what you need help with.",
-    "sending": "Sending…",
     "send": "Send message",
     "successTitle": "Your message was sent",
     "successBody": "We’ll review it and get back to you.",
-    "errorTitle": "We couldn’t send your message",
-    "errorBody": "Check your internet connection and try again.",
-    "confirm": "Done",
     "discardTitle": "Discard this message?",
     "discardBody": "Your draft will be deleted.",
     "discard": "Discard"
@@ -243,6 +223,7 @@
       "other": "Something else"
     },
     "customReason": "Tell us why in at least 20 characters",
+    "detailMinHint": "Enter at least {{min}} characters",
     "deletePostsTitle": "Delete my posts too",
     "deletePostsBody": "If this is off, your name will be removed but your posts will stay.",
     "next": "Continue",
@@ -258,7 +239,6 @@
     "withdraw": "Delete account",
     "defaultReason": "Deleted in the app",
     "errorTitle": "We couldn’t delete your account",
-    "errorBody": "Your account and health information are still there. Try again in a moment.",
     "confirmTitle": "Delete your Sinsin Care account?",
     "confirmBody": "You won’t be able to sign up again with the same account for 3 days.",
     "completeTitle": "Your account has been deleted",
@@ -267,7 +247,7 @@
   },
   "medical": {
     "title": "Medical references",
-    "lead": "These are some of the sources we consulted when reviewing nutrition and medical guidance in Sinsin Care. Each source has its own scope. Make treatment decisions with your care team.",
+    "lead": "These are some of the sources we consulted when reviewing nutrition and medical guidance in Sinsin Care. Each source has its own scope.",
     "search": "Search by title or organization",
     "empty": "No references match your search.",
     "open": "Open {{title}}",
@@ -335,7 +315,7 @@
         "meta": "Korean Society of Nephrology · 2023 edition"
       }
     },
-    "lastChecked": "Reference coverage reflects our last review\nLast reviewed {{date}}",
+    "lastChecked": "Last reviewed {{date}}",
     "disclaimer": "Sinsin Care doesn’t replace diagnosis or treatment.\nMake treatment decisions with your care team.",
     "privacy": "Privacy Policy",
     "privacyAccessibility": "View Privacy Policy"
@@ -385,8 +365,6 @@
       "anemia": "Anemia",
       "boneMineral": "Mineral and bone disorder"
     },
-    "errorTitle": "We couldn’t save your kidney health information",
-    "errorBody": "Your entries are still here. Try again in a moment.",
     "validation": {
       "heightRequired": "Enter your height.",
       "heightNumber": "Enter your height as a number.",
@@ -413,7 +391,6 @@
       "approved": "Connected",
       "pending": "Awaiting approval",
       "rejected": "Declined",
-      "loadError": "We couldn’t load your connections. Check your internet connection.",
       "empty": "No doctors are connected yet. Check again for new connections.",
       "unknownName": "Name unavailable",
       "unknownOrganization": "Organization unavailable",
@@ -433,8 +410,7 @@
       "connect": "Connect",
       "successTitle": "Your doctor is connected",
       "successBody": "You can now share your health records.",
-      "errorTitle": "We couldn’t verify that invitation code",
-      "errorBody": "Check all 6 digits and try connecting again."
+      "error": "Double-check the 6-digit invitation code"
     },
     "search": {
       "name": "Name",
@@ -447,15 +423,11 @@
       "action": "Search",
       "empty": "We couldn’t find a matching doctor. Try different search terms.",
       "missingTitle": "Add a search term",
-      "missingBody": "Enter a doctor’s name, hospital, or department.",
-      "errorTitle": "We couldn’t search for doctors",
-      "errorBody": "Check your search terms and try again."
+      "missingBody": "Enter a doctor’s name, hospital, or department."
     },
     "request": {
       "successTitle": "Connection request sent",
       "successBody": "You’ll be connected after the doctor approves it.",
-      "errorTitle": "We couldn’t send your connection request",
-      "errorBody": "Check your internet connection and try again.",
       "messagePlaceholder": "Add a message for the doctor (optional)",
       "alreadyAccessibility": "Connection already requested",
       "accessibility": "Request a connection with {{name}}",
@@ -509,7 +481,6 @@
       "resultCount_other": "{{count}} doctors",
       "emptyTitle": "No results",
       "emptyBody": "Check the name or hospital and try again.",
-      "error": "Search failed",
       "noOrganization": "No hospital info",
       "retry": "Search again"
     },
@@ -518,8 +489,7 @@
       "headline": "Link your health data\nwith your doctor",
       "noticePurpose": "Shared data is used only for care and is protected under privacy law.",
       "noticeRevoke": "You can stop sharing at any time.",
-      "cta": "Get started",
-      "error": "We couldn't send the request"
+      "cta": "Get started"
     },
     "sharing": {
       "title": "Data sharing",
@@ -535,7 +505,6 @@
       "analyze": "Analyze",
       "submit": "Share",
       "saved": "Sharing settings saved",
-      "error": "We couldn't save your sharing settings",
       "pendingNotice": "Waiting for approval. You can set the sharing scope once approved.",
       "rejectedNotice": "This connection was rejected, so data can't be shared.",
       "revokedNotice": "This connection was disconnected, so nothing is being shared."
@@ -550,11 +519,9 @@
       "statusPending": "Pending",
       "statusApproved": "Connected",
       "statusRejected": "Rejected",
-      "loadError": "We couldn't load your connections",
       "revoke": "Disconnect",
       "revokeConfirmTitle": "Disconnect?",
       "revokeConfirmBody": "Disconnecting also stops any data you're sharing.",
-      "revokeError": "We couldn't disconnect",
       "statusRevoked": "Disconnected"
     }
   }

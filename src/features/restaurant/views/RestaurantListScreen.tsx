@@ -25,7 +25,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, Text, View } from "react-native"
+// 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
+import { FlashList } from "@shopify/flash-list"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import {
@@ -192,7 +194,7 @@ export function RestaurantListScreen({
 
       <V2Divider />
 
-      <FlatList
+      <FlashList
         data={list.items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}

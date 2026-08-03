@@ -50,8 +50,6 @@
     "changePassword": "변경하기",
     "saveAccessibility": "프로필 저장",
     "save": "저장하기",
-    "saveErrorTitle": "프로필을 저장하지 못했어요",
-    "saveErrorBody": "잠시 후 다시 시도해 주세요. 사진을 선택했다면 다른 사진도 확인해 주세요.",
     "uploadError": "프로필 사진을 올리지 못했어요."
   },
   "password": {
@@ -65,7 +63,6 @@
     "match": "두 비밀번호가 같아요.",
     "mismatch": "두 비밀번호가 달라요. 다시 확인해 주세요.",
     "wrongCurrent": "현재 비밀번호가 맞지 않아요. 다시 확인해 주세요.",
-    "saveError": "비밀번호를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.",
     "submit": "비밀번호 변경"
   },
   "nickname": {
@@ -73,12 +70,7 @@
     "subtitle": "한글·영문·숫자 2~14자로 입력해 주세요.\n언제든 바꿀 수 있어요.",
     "field": "닉네임",
     "available": "사용할 수 있는 닉네임이에요.",
-    "validation": "한글·영문·숫자 2~14자로 입력해 주세요.",
-    "error": {
-      "duplicate": "이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요.",
-      "sessionExpired": "로그인이 만료됐어요. 다시 로그인해 주세요.",
-      "save": "닉네임을 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
-    }
+    "validation": "한글·영문·숫자 2~14자로 입력해 주세요."
   },
   "name": {
     "title": "이름이 어떻게 되세요?",
@@ -86,11 +78,7 @@
     "field": "이름",
     "required": "이름을 입력해 주세요.",
     "tooLong": "이름을 {{max}}자 이하로 입력해 주세요.",
-    "check": "입력한 이름을 다시 확인해 주세요.",
-    "error": {
-      "sessionExpired": "로그인이 만료됐어요. 다시 로그인해 주세요.",
-      "save": "이름을 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
-    }
+    "check": "입력한 이름을 다시 확인해 주세요."
   },
   "phone": {
     "title": "연락받을 번호를 알려 주세요",
@@ -105,9 +93,7 @@
     "deleteAccessibility": "저장된 전화번호 삭제",
     "deleteLabel": "저장된 전화번호 삭제",
     "deleteTitle": "전화번호를 삭제할까요?",
-    "deleteBody": "삭제하면 연락이나 동의한 마케팅 안내에 이 번호를 사용하지 않아요.",
-    "deleteError": "전화번호를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
-    "saveError": "전화번호를 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+    "deleteBody": "삭제하면 연락이나 동의한 마케팅 안내에 이 번호를 사용하지 않아요."
   },
   "notifications": {
     "title": "알림 설정",
@@ -188,9 +174,6 @@
   "inquiry": {
     "title": "1:1 문의",
     "category": "문의 종류",
-    "selectCategory": "문의 종류 선택",
-    "select": "선택",
-    "categoryPrompt": "문의 종류를 선택해 주세요",
     "categories": {
       "app": "앱 이용",
       "health": "건강 기록",
@@ -201,14 +184,11 @@
     },
     "subject": "제목",
     "subjectPlaceholder": "문의 제목",
+    "content": "내용",
     "contentPlaceholder": "궁금한 내용을 자세히 적어 주세요.",
-    "sending": "보내고 있어요",
     "send": "문의 보내기",
     "successTitle": "문의를 보냈어요",
     "successBody": "문의 내용을 확인한 뒤 답변드릴게요.",
-    "errorTitle": "문의를 보내지 못했어요",
-    "errorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
-    "confirm": "확인",
     "discardTitle": "작성을 그만할까요?",
     "discardBody": "지금 나가면 작성한 내용이 사라져요.",
     "discard": "나가기"
@@ -243,6 +223,7 @@
       "other": "기타 (직접 작성)"
     },
     "customReason": "이유를 20자 이상 적어 주세요",
+    "detailMinHint": "{{min}}자 이상 입력해 주세요",
     "deletePostsTitle": "내가 쓴 글도 삭제",
     "deletePostsBody": "끄면 작성자 이름만 지우고 글은 남겨요.",
     "next": "다음",
@@ -258,7 +239,6 @@
     "withdraw": "탈퇴",
     "defaultReason": "앱에서 직접 탈퇴",
     "errorTitle": "탈퇴하지 못했어요",
-    "errorBody": "계정과 건강 정보는 그대로 남아 있어요. 잠시 후 다시 시도해 주세요.",
     "confirmTitle": "신신당부에서 탈퇴할까요?",
     "confirmBody": "탈퇴하면 3일 동안 같은 계정으로\n다시 가입할 수 없어요.",
     "completeTitle": "회원 탈퇴가 끝났어요",
@@ -267,7 +247,7 @@
   },
   "medical": {
     "title": "의학 참고 자료",
-    "lead": "아래에는 신신당부의 영양·의료 안내를 검토할 때 참고한 자료 중 일부를 모았어요. 자료마다 적용 범위가 다르므로 치료는 담당 의료진과 상의해 결정해 주세요.",
+    "lead": "여기 모은 자료는 신신당부의 영양·의료 안내를 검토할 때 참고한 것 중 일부예요. 자료마다 적용 범위가 달라요.",
     "search": "자료 제목이나 기관명 검색",
     "empty": "검색어와 맞는 자료가 없어요",
     "open": "{{title}} 열기",
@@ -335,7 +315,7 @@
         "meta": "대한신장학회 · 2023년도 개정판"
       }
     },
-    "lastChecked": "참고 자료 범위는 마지막 확인일 기준이에요\n마지막 확인 {{date}}",
+    "lastChecked": "마지막 확인 {{date}}",
     "disclaimer": "신신당부의 정보는 진단이나 치료를 대신할 수 없어요.\n치료 계획은 담당 의료진과 상의해 주세요.",
     "privacy": "개인정보 처리방침",
     "privacyAccessibility": "개인정보 처리방침 보기"
@@ -385,8 +365,6 @@
       "anemia": "빈혈",
       "boneMineral": "골미네랄 장애"
     },
-    "errorTitle": "신장 건강 정보를 저장하지 못했어요",
-    "errorBody": "입력한 내용은 그대로 남아 있어요. 잠시 후 다시 시도해 주세요.",
     "validation": {
       "heightRequired": "키를 입력해 주세요.",
       "heightNumber": "키를 숫자로 입력해 주세요.",
@@ -413,7 +391,6 @@
       "approved": "연결됨",
       "pending": "승인 대기",
       "rejected": "거절됨",
-      "loadError": "연결 상태를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.",
       "empty": "아직 연결된 의사가 없어요. 새 연결이 생겼는지 다시 확인할 수 있어요.",
       "unknownName": "이름을 확인할 수 없어요",
       "unknownOrganization": "소속을 확인할 수 없어요",
@@ -433,8 +410,7 @@
       "connect": "연결",
       "successTitle": "담당 의사를 연결했어요",
       "successBody": "이제 건강 기록을 공유할 수 있어요.",
-      "errorTitle": "초대 코드를 확인하지 못했어요",
-      "errorBody": "코드 6자리를 다시 확인한 뒤 연결해 주세요."
+      "error": "초대 코드를 다시 확인해 주세요"
     },
     "search": {
       "name": "이름",
@@ -447,15 +423,11 @@
       "action": "검색",
       "empty": "조건에 맞는 의사를 찾지 못했어요. 검색어를 바꿔 보세요.",
       "missingTitle": "검색 조건을 입력해 주세요",
-      "missingBody": "의사 이름, 병원, 진료과 중 하나를 입력해 주세요.",
-      "errorTitle": "의사를 검색하지 못했어요",
-      "errorBody": "검색어를 확인한 뒤 다시 시도해 주세요."
+      "missingBody": "의사 이름, 병원, 진료과 중 하나를 입력해 주세요."
     },
     "request": {
       "successTitle": "연결을 요청했어요",
       "successBody": "의사가 승인하면 연결돼요.",
-      "errorTitle": "연결 요청을 보내지 못했어요",
-      "errorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
       "messagePlaceholder": "의사에게 전할 메시지 (선택)",
       "alreadyAccessibility": "이미 연결을 요청했어요",
       "accessibility": "{{name}} 의사에게 연결 요청",
@@ -509,7 +481,6 @@
       "resultCount_other": "{{count}}명",
       "emptyTitle": "검색 결과가 없어요",
       "emptyBody": "이름이나 병원명을 다시 확인해 주세요.",
-      "error": "검색에 실패했어요",
       "noOrganization": "병원 정보 없음",
       "retry": "다시 검색"
     },
@@ -518,8 +489,7 @@
       "headline": "담당 의사 선생님과\n내 건강 데이터를 연결해요",
       "noticePurpose": "공유된 데이터는 진료 목적으로만 사용되며 개인정보 보호법에 따라 안전하게 보호돼요.",
       "noticeRevoke": "사용자는 정보를 언제든지 공유를 중단할 수 있어요.",
-      "cta": "시작하기",
-      "error": "연결 요청에 실패했어요"
+      "cta": "시작하기"
     },
     "sharing": {
       "title": "데이터 공유 설정",
@@ -535,7 +505,6 @@
       "analyze": "분석하기",
       "submit": "공유하기",
       "saved": "공유 설정을 저장했어요",
-      "error": "공유 설정을 저장하지 못했어요",
       "pendingNotice": "승인 대기 중이에요. 승인되면 공유 범위를 설정할 수 있어요.",
       "rejectedNotice": "연결이 거절되어 데이터를 공유할 수 없어요.",
       "revokedNotice": "연결이 해지되어 데이터를 공유하고 있지 않아요."
@@ -550,11 +519,9 @@
       "statusPending": "승인 대기",
       "statusApproved": "연결됨",
       "statusRejected": "거절됨",
-      "loadError": "연결 목록을 불러오지 못했어요",
       "revoke": "연결 해지",
       "revokeConfirmTitle": "연결을 해지할까요?",
       "revokeConfirmBody": "해지하면 공유 중인 데이터도 함께 중단돼요.",
-      "revokeError": "연결을 해지하지 못했어요",
       "statusRevoked": "해지됨"
     }
   }

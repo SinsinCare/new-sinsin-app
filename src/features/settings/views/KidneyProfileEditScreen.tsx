@@ -6,7 +6,6 @@ import {
   Pressable,
   TextInput,
   Switch,
-  Alert,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -32,7 +31,7 @@ import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { tokens } from "@/src/theme/tokens"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
 import { STAGE_OPTIONS, hydrateStage } from "../utils/ckdStage"
 
 const COMORBIDITY_OPTIONS = [
@@ -238,10 +237,12 @@ export function KidneyProfileEditScreen() {
         return
       }
 
-      Alert.alert(
-        t("kidney.errorTitle"),
-        getErrorMessage(error, t("kidney.errorBody")),
-      )
+      // 필드 오류가 아니면 원인은 서버만 안다. 화면 폴백("신장 건강 정보를 저장하지
+      // 못했어요")은 그 원인을 덮으면서 알려 주는 것도 없었다.
+      presentError(error, {
+        scope: "kidney-profile-save",
+        retry: () => void handleSave(),
+      })
     } finally {
       setIsSubmitting(false)
     }

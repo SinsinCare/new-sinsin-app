@@ -1,8 +1,4 @@
 import {
-  ActionSheetIOS,
-  Alert,
-  Image,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -12,6 +8,12 @@ import {
   TextInput,
   View,
 } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
+import {
+  AppModal,
+  afterModalTransitions,
+} from "@/src/shared/components/AppModal"
 import { useMemo, useRef, useState } from "react"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardStickyView } from "react-native-keyboard-controller"
@@ -50,9 +52,14 @@ import { formatTimeAgo } from "@/src/features/recipe/utils/timeAgo"
 import { rankRelatedPosts } from "@/src/features/recipe/utils/postRanking"
 import { ArticleSkeleton, ErrorMessage } from "@/src/shared/components"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { resolveError } from "@/src/lib/errorMessage"
+import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
 import type { CommunityComment } from "@/src/features/recipe/types"
 import { useTranslation } from "react-i18next"
+
+import { showSuccessToast } from "@/src/lib/toast"
+
+import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 
@@ -93,6 +100,7 @@ export default function PostDetailScreen() {
     isError,
     error,
     refetch,
+    refetchComments,
     castVoteAsync,
     isVoting,
     togglePostLike,
@@ -260,54 +268,57 @@ export default function PostDetailScreen() {
     togglePostLike()
   }
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!post) return
     const href = `/free/${post.id}` as Href
+    // 더보기 시트의 dismiss 전환(V2BottomSheet 는 ~220ms 지연 언마운트)과
+    // 네이티브 스택 push 가 겹치지 않게 전이가 가라앉은 뒤 이동한다.
+    await afterModalTransitions()
     router.push(href)
   }
 
-  const handleDelete = () => {
-    Alert.alert(
-      t("community.postDetail.deletePostTitle"),
-      t("community.postDetail.deletePostBody"),
-      [
-        { text: t("action.cancel"), style: "cancel" },
-        {
-          text: t("action.delete"),
-          style: "destructive",
-          onPress: () => {
-            deletePost(post!.id)
-            router.back()
-          },
-        },
-      ],
-    )
+  const handleDelete = async () => {
+    const confirmed = await showConfirm({
+      title: t("community.postDetail.deletePostTitle"),
+      description: t("community.postDetail.deletePostBody"),
+      confirmLabel: t("action.delete"),
+      cancelLabel: t("action.cancel"),
+      destructive: true,
+    })
+    if (!confirmed) return
+    deletePost(post!.id)
+    // 확인 다이얼로그 dismiss 와 화면 pop 이 겹치지 않게(appModalGate 머리말).
+    await afterModalTransitions()
+    router.back()
   }
 
-  const handleReport = () => {
-    Alert.alert(t("community.postDetail.reportReasonTitle"), undefined, [
-      ...reportReasons.map((r) => ({
-        text: r.label,
-        onPress: async () => {
-          try {
-            await reportPostAsync({ postId: post!.id, reason: r.value })
-            Alert.alert(
-              t("community.postDetail.reportReceivedTitle"),
-              t("community.postDetail.reportReceivedBody"),
-            )
-          } catch (reportError) {
-            Alert.alert(
-              t("community.postDetail.reportErrorTitle"),
-              getErrorMessage(
-                reportError,
-                t("community.postDetail.reportErrorBody"),
-              ),
-            )
-          }
-        },
-      })),
-      { text: t("action.cancel"), style: "cancel" },
-    ])
+  const handleReport = async () => {
+    const picked = await showActionSheet({
+      title: t("community.postDetail.reportReasonTitle"),
+      actions: reportReasons.map((r) => ({ label: r.label })),
+    })
+    if (picked == null) return
+
+    try {
+      await reportPostAsync({
+        postId: post!.id,
+        reason: reportReasons[picked].value,
+      })
+      showSuccessToast(
+        t("community.postDetail.reportReceivedTitle"),
+        t("community.postDetail.reportReceivedBody"),
+      )
+    } catch (reportError) {
+      /*
+        지워진 글을 신고하면 `COMMUNITY_ERROR_001` 이 온다. 그때 할 일은 재시도가
+        아니라 목록 갱신이라, 새로고침 핸들러를 함께 준다. 이미 신고한 글
+        (`003`)은 실패가 아니므로 `presentCommunityError` 가 안내 토스트로 돌린다.
+      */
+      presentCommunityError(reportError, {
+        scope: "community-post-report",
+        refresh: () => void refetch(),
+      })
+    }
   }
 
   const handleShare = async () => {
@@ -326,65 +337,42 @@ export default function PostDetailScreen() {
     }
   }
 
-  const handleMorePress = () => {
+  const handleMorePress = async () => {
     if (!post) return
+    // 예전엔 iOS 는 ActionSheetIOS, 안드로이드는 Alert 로 갈라져 있었다.
+    // 시트 하나로 합치면 두 OS 가 같은 얼굴이 되고 분기도 사라진다.
     const withdrawnAuthor = isWithdrawnAuthor(post)
-    const options = withdrawnAuthor
-      ? [t("community.postDetail.report"), t("action.cancel")]
+    const handlers = withdrawnAuthor
+      ? [handleReport]
+      : [handleEdit, handleDelete, handleReport]
+    const actions = withdrawnAuthor
+      ? [{ label: t("community.postDetail.report") }]
       : [
-          t("community.postDetail.edit"),
-          t("action.delete"),
-          t("community.postDetail.report"),
-          t("action.cancel"),
+          { label: t("community.postDetail.edit") },
+          { label: t("action.delete"), destructive: true },
+          { label: t("community.postDetail.report") },
         ]
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options,
-          cancelButtonIndex: withdrawnAuthor ? 1 : 3,
-          destructiveButtonIndex: withdrawnAuthor ? undefined : 1,
-        },
-        (buttonIndex) => {
-          if (withdrawnAuthor) {
-            if (buttonIndex === 0) handleReport()
-            return
-          }
-          if (buttonIndex === 0) handleEdit()
-          else if (buttonIndex === 1) handleDelete()
-          else if (buttonIndex === 2) handleReport()
-        },
-      )
-    } else {
-      Alert.alert(
-        t("community.postDetail.more"),
-        "",
-        withdrawnAuthor
-          ? [
-              { text: t("community.postDetail.report"), onPress: handleReport },
-              { text: t("action.cancel"), style: "cancel" },
-            ]
-          : [
-              { text: t("community.postDetail.edit"), onPress: handleEdit },
-              {
-                text: t("action.delete"),
-                style: "destructive",
-                onPress: handleDelete,
-              },
-              { text: t("community.postDetail.report"), onPress: handleReport },
-              { text: t("action.cancel"), style: "cancel" },
-            ],
-      )
-    }
+
+    const picked = await showActionSheet({
+      title: t("community.postDetail.more"),
+      actions,
+    })
+    if (picked != null) await handlers[picked]()
   }
 
   const handleVote = async (optionIds: number[]) => {
     try {
       await castVoteAsync(optionIds)
     } catch (voteError) {
-      Alert.alert(
-        t("community.postDetail.voteErrorTitle"),
-        getErrorMessage(voteError, t("community.postDetail.voteErrorBody")),
-      )
+      /*
+        투표는 실패 갈래가 넷이고 셋은 인터넷과 무관하다 — 지워진 투표(`004`) ·
+        사라진 항목(`006`) · 하나만 고를 수 있는 투표(`007`) · 이미 참여(`005`).
+        앞의 둘은 새로고침하면 지금 상태가 보이고, `005` 는 실패가 아니다.
+      */
+      presentCommunityError(voteError, {
+        scope: "community-post-vote",
+        refresh: () => void refetch(),
+      })
     }
   }
 
@@ -414,72 +402,67 @@ export default function PostDetailScreen() {
       }
       resetCommentDraft()
     } catch (commentError) {
-      Alert.alert(
-        t("community.postDetail.commentSaveErrorTitle"),
-        getErrorMessage(
-          commentError,
-          t("community.postDetail.commentSaveErrorBody"),
-        ),
-      )
+      /*
+        답글을 쓰는 동안 상대가 댓글을 지우면 `COMMUNITY_ERROR_010`(답글 대상 없음)이
+        온다. 글 자체가 사라졌으면 `001`, 수정 중이던 댓글이면 `008`·`009` 다.
+        전부 "댓글 목록을 다시 받으면 보인다" 로 끝나는 실패라 새로고침을 붙인다.
+      */
+      presentCommunityError(commentError, {
+        scope: "community-comment-save",
+        refresh: () => void refetchComments(),
+      })
     }
   }
 
   const handleCommentReport = async (comment: CommunityComment) => {
-    Alert.alert(t("community.postDetail.reportReasonTitle"), undefined, [
-      ...reportReasons.map((r) => ({
-        text: r.label,
-        onPress: async () => {
-          try {
-            await reportComment({ commentId: comment.id, reason: r.value })
-            Alert.alert(
-              t("community.postDetail.reportReceivedTitle"),
-              t("community.postDetail.reportReceivedBody"),
-            )
-          } catch (commentError) {
-            Alert.alert(
-              t("community.postDetail.reportErrorTitle"),
-              getErrorMessage(
-                commentError,
-                t("community.postDetail.reportErrorBody"),
-              ),
-            )
-          }
-        },
-      })),
-      { text: t("action.cancel"), style: "cancel" },
-    ])
+    const picked = await showActionSheet({
+      title: t("community.postDetail.reportReasonTitle"),
+      actions: reportReasons.map((r) => ({ label: r.label })),
+    })
+    if (picked == null) return
+
+    try {
+      await reportComment({
+        commentId: comment.id,
+        reason: reportReasons[picked].value,
+      })
+      showSuccessToast(
+        t("community.postDetail.reportReceivedTitle"),
+        t("community.postDetail.reportReceivedBody"),
+      )
+    } catch (commentError) {
+      // 이미 신고한 댓글(`011`)은 안내로, 사라진 댓글(`008`)은 새로고침으로 끝난다.
+      presentCommunityError(commentError, {
+        scope: "community-comment-report",
+        refresh: () => void refetchComments(),
+      })
+    }
   }
 
-  const handleDeleteComment = (comment: CommunityComment) => {
-    Alert.alert(
-      t("community.postDetail.deleteCommentTitle"),
-      t("community.postDetail.deleteCommentBody"),
-      [
-        { text: t("action.cancel"), style: "cancel" },
-        {
-          text: t("action.delete"),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteComment(comment.id)
-            } catch (commentError) {
-              Alert.alert(
-                t("community.postDetail.commentDeleteErrorTitle"),
-                getErrorMessage(
-                  commentError,
-                  t("community.postDetail.commentDeleteErrorBody"),
-                ),
-              )
-            }
-          },
-        },
-      ],
-    )
+  const handleDeleteComment = async (comment: CommunityComment) => {
+    const confirmed = await showConfirm({
+      title: t("community.postDetail.deleteCommentTitle"),
+      description: t("community.postDetail.deleteCommentBody"),
+      confirmLabel: t("action.delete"),
+      cancelLabel: t("action.cancel"),
+      destructive: true,
+    })
+    if (!confirmed) return
+
+    try {
+      await deleteComment(comment.id)
+    } catch (commentError) {
+      // 남이 쓴 댓글을 지우려 하면 `009`, 이미 지워졌으면 `008` 이다. 둘 다
+      // "다시 시도" 로 풀리지 않는다 — 목록을 새로 받는 것이 유일한 다음 걸음이다.
+      presentCommunityError(commentError, {
+        scope: "community-comment-delete",
+        refresh: () => void refetchComments(),
+      })
+    }
   }
 
-  const handleCommentMore = (comment: CommunityComment) => {
+  const handleCommentMore = async (comment: CommunityComment) => {
     if (comment.isDeleted) return
-    const startReply = () => startReplyTo(comment)
     const startEdit = () => {
       setEditingCommentId(comment.id)
       setReplyingTo(null)
@@ -489,43 +472,23 @@ export default function PostDetailScreen() {
       setPickedMentions(comment.mentions)
       commentInputRef.current?.focus()
     }
-    const options = [
-      t("community.postDetail.reply"),
-      t("community.postDetail.edit"),
-      t("action.delete"),
-      t("community.postDetail.report"),
-      t("action.cancel"),
+    const handlers = [
+      () => startReplyTo(comment),
+      startEdit,
+      () => handleDeleteComment(comment),
+      () => handleCommentReport(comment),
     ]
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options,
-          cancelButtonIndex: 4,
-          destructiveButtonIndex: 2,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) startReply()
-          else if (buttonIndex === 1) startEdit()
-          else if (buttonIndex === 2) handleDeleteComment(comment)
-          else if (buttonIndex === 3) handleCommentReport(comment)
-        },
-      )
-      return
-    }
-    Alert.alert(t("community.postDetail.comment"), undefined, [
-      { text: t("community.postDetail.reply"), onPress: startReply },
-      { text: t("community.postDetail.edit"), onPress: startEdit },
-      {
-        text: t("action.delete"),
-        style: "destructive",
-        onPress: () => handleDeleteComment(comment),
-      },
-      {
-        text: t("community.postDetail.report"),
-        onPress: () => handleCommentReport(comment),
-      },
-      { text: t("action.cancel"), style: "cancel" },
-    ])
+
+    const picked = await showActionSheet({
+      title: t("community.postDetail.comment"),
+      actions: [
+        { label: t("community.postDetail.reply") },
+        { label: t("community.postDetail.edit") },
+        { label: t("action.delete"), destructive: true },
+        { label: t("community.postDetail.report") },
+      ],
+    })
+    if (picked != null) await handlers[picked]()
   }
 
   const handleToggleCommentLike = async (comment: CommunityComment) => {
@@ -534,10 +497,10 @@ export default function PostDetailScreen() {
     try {
       await toggleCommentLike(comment.id)
     } catch (commentError) {
-      Alert.alert(
-        t("community.postDetail.likeErrorTitle"),
-        getErrorMessage(commentError, t("community.postDetail.likeErrorBody")),
-      )
+      presentCommunityError(commentError, {
+        scope: "community-comment-like",
+        refresh: () => void refetchComments(),
+      })
     }
   }
 
@@ -639,6 +602,13 @@ export default function PostDetailScreen() {
   )
 
   if (isError) {
+    /*
+      지워진 글의 딥링크(`/post/1`)를 열면 서버는 `COMMUNITY_ERROR_001` 을 준다.
+      그런데 화면은 `글을 불러오지 못했어요 / 인터넷 연결을 확인한 뒤…` 에 **다시 시도**
+      버튼까지 그렸다 — 없는 글은 몇 번을 눌러도 없으므로 그 버튼은 거짓말이다.
+      `resolveError` 가 제목·본문과 함께 `retryable` 을 알려주니 버튼은 그때만 그린다.
+    */
+    const resolved = resolveError(error)
     return (
       <View
         style={[
@@ -650,11 +620,20 @@ export default function PostDetailScreen() {
         ]}
       >
         <ErrorMessage
-          title={t("community.postDetail.loadErrorTitle")}
-          message={getErrorMessage(error)}
-          onRetry={() => refetch()}
+          title={resolved.title}
+          message={resolved.body ?? ""}
+          onRetry={resolved.retryable ? () => void refetch() : undefined}
           retryLabel={t("community.postDetail.reload")}
         />
+        <Pressable onPress={() => router.back()} accessibilityRole="button">
+          <Text
+            style={[styles.stateAction, { color: surface.brand }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
+            {t("action.back")}
+          </Text>
+        </Pressable>
       </View>
     )
   }
@@ -679,7 +658,11 @@ export default function PostDetailScreen() {
           },
         ]}
       >
-        <Text style={[styles.stateTitle, { color: surface.textStrong }]}>
+        <Text
+          style={[styles.stateTitle, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {t("community.postDetail.notFound")}
         </Text>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
@@ -812,7 +795,7 @@ export default function PostDetailScreen() {
               <Image
                 source={{ uri: post.imageUris[0] }}
                 style={[styles.postImage, { backgroundColor: surface.surface }]}
-                resizeMode="cover"
+                contentFit="cover"
               />
             </Pressable>
           </View>
@@ -841,7 +824,7 @@ export default function PostDetailScreen() {
                     styles.stripImage,
                     { backgroundColor: surface.surface },
                   ]}
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
               </Pressable>
             ))}
@@ -1137,7 +1120,7 @@ export default function PostDetailScreen() {
       </KeyboardStickyView>
 
       {/* 이미지 전체 보기 */}
-      <Modal
+      <AppModal
         visible={previewImage !== null}
         transparent
         animationType="fade"
@@ -1153,14 +1136,14 @@ export default function PostDetailScreen() {
             <Image
               source={{ uri: previewImage }}
               style={styles.previewImage}
-              resizeMode="contain"
+              contentFit="contain"
             />
           )}
           <View style={styles.previewClose}>
             <Ionicons name="close" size={26} color="#FFFFFF" />
           </View>
         </Pressable>
-      </Modal>
+      </AppModal>
     </View>
   )
 }

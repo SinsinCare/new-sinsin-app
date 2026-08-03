@@ -40,6 +40,15 @@ export type V2TextFieldProps = Omit<TextInputProps, "style" | "editable"> & {
   /** 에러 상태. 문자열이면 helperText 대신 그 메시지를 붉게 표기 */
   error?: boolean | string
   disabled?: boolean
+  /**
+   * 남는 세로 공간을 전부 채우는 입력란. `multiline`과 함께 쓴다.
+   *
+   * 긴 글을 받는 화면(1:1 문의 본문 등)에서 고정 높이 상자를 쓰면, 상자 아래 화면 절반이
+   * 빈 흰 면으로 남는데 그 면은 **누를 수도 쓸 수도 없다** — 사용자는 글을 적으려고 들어와서
+   * 화면의 대부분이 죽어 있는 것을 본다. `grow`를 켜면 그 면이 곧 입력란이 된다.
+   * (`minHeight`는 그대로 하한으로 남는다.)
+   */
+  grow?: boolean
   /** 루트 컨테이너 스타일 (V2Button의 prop style 규약과 동일) */
   style?: ViewStyle
   /** 입력(TextInput) 스타일 override */
@@ -58,6 +67,7 @@ export function V2TextField({
   helperText,
   error = false,
   disabled = false,
+  grow = false,
   style,
   inputStyle,
   multiline,
@@ -115,9 +125,15 @@ export function V2TextField({
   let fieldStyle: ViewStyle
   if (isBox) {
     // Box bg: Disabled=fill.normal → Focused=primary.primaryWeak(오렌지 틴트) → 기본 background.default.
+    //
+    // **`grow` 는 포커스 틴트를 받지 않는다.** 오렌지 틴트는 54pt 상자 하나를 물들이는
+    // *힌트* 로 설계된 값이다. 화면 높이를 다 먹는 입력란에 같은 값을 칠하면 화면 절반이
+    // 옅은 주황 면이 되어, 힌트가 아니라 **배경색**으로 읽힌다 — 그 순간 화면의 유일한
+    // 브랜드색이어야 할 하단 CTA 와 강조가 갈라진다. 큰 작성면의 포커스는 캐럿과 키보드가
+    // 이미 말하고 있으므로 면은 중립으로 둔다.
     const bg = disabled
       ? colors.fill.normal
-      : focused
+      : focused && !grow
         ? colors.primary.primaryWeak
         : colors.background.default
     // 보정: 원 스펙은 Box가 Focused/Error에도 border를 line.normal로 고정(접근성 갭).
@@ -152,8 +168,14 @@ export function V2TextField({
     }
   }
 
+  // grow: 필드가 부모의 남는 높이를 먹는다. 행 컨테이너의 교차축 정렬을 stretch 로 바꿔야
+  //  안쪽 TextInput 도 같이 늘어난다(기본 center 는 입력을 한 줄 높이로 가둔다).
+  if (grow) {
+    fieldStyle = { ...fieldStyle, flex: 1, alignItems: "stretch" }
+  }
+
   return (
-    <View style={[styles.root, style]}>
+    <View style={[styles.root, grow && styles.grow, style]}>
       {label != null && (
         <Text style={[typography.subtext.mediumStrong, { color: labelColor }]}>
           {label}
@@ -202,6 +224,8 @@ const styles = StyleSheet.create({
   root: {
     gap: spacing[6],
   },
+  // grow: 라벨·필드 스택 자체가 부모의 남는 높이를 차지해야 필드도 늘어날 수 있다.
+  grow: { flex: 1 },
   field: {
     flexDirection: "row",
     alignItems: "center",

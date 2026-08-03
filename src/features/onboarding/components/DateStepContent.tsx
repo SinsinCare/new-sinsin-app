@@ -109,7 +109,10 @@ const styles = StyleSheet.create({
     ...AUTH_TYPE.field,
     fontWeight: "600",
   },
-  clear: { alignSelf: "flex-start" },
+  // 지우기는 **필드 오른쪽 끝**에 건다. 왼쪽에 두면 질문·라벨과 같은 시작선에 서서
+  // 새로운 문단처럼 읽히는데, 실제로는 바로 위 값에 딸린 부속 동작이다.
+  // 오른쪽 끝은 값을 여는 chevron 과 같은 x 라 "이 필드를 만지는 자리" 로 묶인다.
+  clear: { alignSelf: "flex-end" },
   clearText: {
     ...AUTH_TYPE.helper,
     fontWeight: "600",

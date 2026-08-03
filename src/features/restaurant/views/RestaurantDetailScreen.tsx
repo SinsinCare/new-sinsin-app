@@ -84,12 +84,14 @@ import {
   V2ErrorState,
   V2Icon,
   V2Tab,
+  type V2ErrorStateRetry,
 } from "@/src/design-system-v2"
 import {
   trackAnalyticsEvent,
   type AnalyticsRestaurantEntrySource,
 } from "@/src/features/analytics"
 import { restaurantDeepLink } from "@/src/shared/utils/deepLink"
+import { resolveError } from "@/src/lib/errorMessage"
 
 import { GUTTER, RAIL_INSET, SECTION_GAP } from "../layout"
 import { isNearBottom, loadMoreLead } from "../utils/autoPaginate"
@@ -278,7 +280,7 @@ function RestaurantDetailBody({
   const [reportReviewId, setReportReviewId] = useState<number | null>(null)
   const [routeSheetOpen, setRouteSheetOpen] = useState(false)
 
-  const { detail, cardHint, isError, refetch } =
+  const { detail, cardHint, isError, error, refetch } =
     useRestaurantDetail(restaurantId)
   const menus = useRestaurantMenus(restaurantId)
   const { toggleBookmark } = useBookmark()
@@ -470,16 +472,26 @@ function RestaurantDetailBody({
   }
 
   if (isError && !detail) {
+    /*
+      문 닫은 식당의 링크를 열면 404 다. 그런데 문구는 갈래와 무관하게
+      `식당 정보를 불러오지 못했어요 / 인터넷 연결을 확인한 뒤 다시 불러와 주세요` 였고,
+      **없는 식당에 다시 불러오기 버튼**까지 달려 있었다 — 몇 번을 눌러도 같은 404 다.
+      `resolveError` 가 `retryable` 로 그걸 알려주니 그때만 버튼을 그린다.
+    */
+    const resolved = resolveError(error)
+    // 타입을 붙여 둬야 삼항의 두 갈래가 유니온으로 남는다 — 자세한 이유는 V2ErrorStateRetry.
+    const retry: V2ErrorStateRetry = resolved.retryable
+      ? { onRetry: refetch, retryLabel: t("restaurant.error.detailRetry") }
+      : {}
     return (
       <View
         style={[styles.screen, { backgroundColor: colors.background.default }]}
       >
         {header}
         <V2ErrorState
-          title={t("restaurant.error.detailTitle")}
-          description={t("restaurant.error.detailBody")}
-          onRetry={refetch}
-          retryLabel={t("restaurant.error.detailRetry")}
+          title={resolved.title}
+          description={resolved.body}
+          {...retry}
         />
       </View>
     )

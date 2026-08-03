@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import {
-  Alert,
   Keyboard,
   Platform,
   Pressable,
@@ -34,7 +33,10 @@ import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerSe
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import { ArticleSkeleton } from "@/src/shared/components"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
+import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
 import { useTranslation } from "react-i18next"
+
+import { showInfoToast } from "@/src/lib/toast"
 
 const MAX_IMAGES = 5
 const POST_CATEGORY_LABEL_KEYS = {
@@ -81,7 +83,7 @@ export default function FreePostEditScreen() {
   const bottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 24) : insets.bottom
 
-  const { post, isLoading } = usePostDetail(id!)
+  const { post, isLoading, refetch } = usePostDetail(id!)
   const { updatePost, isUpdating } = useCommunityPosts()
 
   const [selectedCategory, setSelectedCategory] = useState("")
@@ -151,7 +153,7 @@ export default function FreePostEditScreen() {
     Keyboard.dismiss()
     const remaining = MAX_IMAGES - images.length
     if (remaining <= 0) {
-      Alert.alert(
+      showInfoToast(
         t("freePost.photoLimitTitle"),
         t("freePost.photoLimitBody", { count: MAX_IMAGES }),
       )
@@ -189,12 +191,14 @@ export default function FreePostEditScreen() {
           imageObjectPaths.push(uploaded.objectPath)
         }
       }
-    } catch {
+    } catch (error) {
       setIsUploading(false)
-      Alert.alert(
-        t("freePost.photoUploadErrorTitle"),
-        t("freePost.photoUploadErrorBody"),
-      )
+      // 형식·용량(`FOOD_CAMERA_001`·`002`)은 사진을 바꾸면 바로 풀린다. 그걸
+      // "인터넷 연결을 확인" 으로 덮으면 같은 사진으로 계속 다시 누르게 된다.
+      presentCommunityError(error, {
+        scope: "community-post-edit-photo",
+        retry: () => void handleSubmit(),
+      })
       return
     }
     setIsUploading(false)
@@ -209,11 +213,13 @@ export default function FreePostEditScreen() {
       },
       {
         onSuccess: () => router.back(),
-        onError: () =>
-          Alert.alert(
-            t("freePost.editErrorTitle"),
-            t("freePost.editErrorBody"),
-          ),
+        // 남의 글을 고치려 하면 `COMMUNITY_ERROR_002`, 그 사이 지워졌으면 `001` 이다.
+        // 둘 다 재시도가 아니라 목록을 다시 받는 것으로 끝난다.
+        onError: (error) =>
+          presentCommunityError(error, {
+            scope: "community-post-edit",
+            refresh: () => void refetch(),
+          }),
       },
     )
   }
@@ -481,8 +487,10 @@ const styles = StyleSheet.create({
   },
   titleInput: {
     fontSize: 19,
-    lineHeight: 26,
     letterSpacing: -0.38,
+    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
+    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
+    includeFontPadding: false,
     fontWeight: "700",
     fontFamily: "Pretendard-Bold",
     paddingVertical: 14,

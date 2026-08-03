@@ -25,8 +25,6 @@
   },
   "result": {
     "title": "Health checkup results",
-    "loadError": "We couldn’t load your health checkup results.\nCheck your internet connection and reload.",
-    "detailLoadError": "We couldn’t load this health checkup result.\nCheck your internet connection and reload.",
     "emptyTitle": "No health checkup result to show",
     "emptyDescription": "Import your results to see the values and date here.",
     "listEmpty": "You haven’t imported any health checkup results yet.\nImport your results to see them here.",
@@ -256,12 +254,10 @@
     },
     "carrier": "Mobile carrier",
     "requestRejected": "We couldn’t start the identity check. Review your information and verification method.",
-    "requestNetworkError": "We couldn’t start the identity check. Check your internet connection and try again.",
     "pendingInstructions": "Finish the identity check in the app you selected.\nWhen you’re done, return here to import your results.",
     "verified": "I’m verified",
     "confirmTimeout": "The identity check expired. Go back and start it again.",
     "confirmFailed": "The identity check may be incomplete, or some information may not match. Go back and review it.",
-    "confirmNetworkError": "We couldn’t confirm the identity check. Check your internet connection and try again.",
     "loadingTitle": "Importing your health checkups",
     "loadingDescription": "Keep this screen open while we confirm the results.",
     "timeoutTitle": "Identity check expired",
@@ -299,8 +295,7 @@
       "selectHint": "Select the checkups to analyze",
       "emptyTitle": "No checkups imported yet",
       "emptyBody": "Import a checkup to see how your numbers change over time.",
-      "emptyCta": "Import a checkup",
-      "loadError": "We couldn't load your checkups"
+      "emptyCta": "Import a checkup"
     },
     "detail": {
       "title": "Checkups",
@@ -309,7 +304,6 @@
       "metricsTitle": "Health values",
       "ask": "Ask",
       "analyzing": "Analyzing your results",
-      "analyzeError": "Analysis failed",
       "referencePrefix": "Reference",
       "aiNotice": "Compared with the app's general reference range. Not a diagnosis.",
       "showNormal": "Show {{count}} normal",

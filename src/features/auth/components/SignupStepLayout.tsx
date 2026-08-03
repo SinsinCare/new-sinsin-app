@@ -267,6 +267,10 @@ export function SignupStepLayout({
 /**
  * 입력 아래 한 줄. 오류면 브랜드색, 아니면 도움말 톤.
  * 라벨은 두지 않는다 — 질문이 이미 라벨이라 같은 말을 두 번 쓰게 된다.
+ *
+ * 줄바꿈 규칙은 토스트·다이얼로그와 같은 것을 쓴다(`shared/components/Toast.tsx`).
+ * 이 자리에 들어오는 오류 문구가 "원인 + 해결" 두 문장이라 대부분 두 줄을 넘기는데,
+ * 기본 규칙은 어절 한가운데를 끊어 "인증번호를 보낼 수 없어 / 요" 처럼 읽힌다.
  */
 export function StepHelperText({
   message,
@@ -282,6 +286,8 @@ export function StepHelperText({
       exiting={FadeOut.duration(AUTH_MOTION.duration.fast)}
     >
       <Text
+        lineBreakStrategyIOS="hangul-word"
+        textBreakStrategy="balanced"
         style={[
           styles.helper,
           { color: tone === "error" ? surface.brand : surface.textWeak },

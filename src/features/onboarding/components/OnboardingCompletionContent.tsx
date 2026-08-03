@@ -80,10 +80,11 @@ export function OnboardingCompletionContent({
         onError={() => setIsLoaded(false)}
       />
 
+      {/* 위계: 그림(축하) → 제목(무슨 일이 끝났는지) → 보조문(그래서 뭘 해주는지) → CTA.
+          캐릭터가 제목 위로 올라간 건 완료 화면의 시선 순서가 그림부터이기 때문이다.
+          제목만 Bold 28, 보조문은 Regular 17 + 낮은 명도로 두 단 떨어뜨려 굵기·크기·색이
+          같은 방향을 가리키게 했다. */}
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.label.normal }]}>
-          {t("onboarding.completionTitle")}
-        </Text>
         {/* 시트의 완료 캐릭터. 글자만 있던 화면이라 축하가 문구 하나로만 남아 있었다. */}
         <Image
           source={require("../../../../assets/images/signup-complete-character.png")}
@@ -91,6 +92,20 @@ export function OnboardingCompletionContent({
           contentFit="contain"
           accessibilityIgnoresInvertColors
         />
+        <Text
+          style={[styles.title, { color: colors.label.normal }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
+          {t("onboarding.completionTitle")}
+        </Text>
+        <Text
+          style={[styles.subtitle, { color: colors.label.neutral }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
+          {t("onboarding.completionSubtitle")}
+        </Text>
       </View>
 
       <V2BottomCTA
@@ -116,9 +131,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: spacing[20],
   },
+  character: { width: 208, height: 230 },
   title: {
     ...typography.display.medium,
     textAlign: "center",
+    marginTop: spacing[24],
   },
-  character: { width: 208, height: 230, marginTop: spacing[24] },
+  subtitle: {
+    ...typography.body.mediumWeak,
+    textAlign: "center",
+    marginTop: spacing[12],
+  },
 })

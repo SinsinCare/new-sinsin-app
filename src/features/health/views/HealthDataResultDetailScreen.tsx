@@ -13,6 +13,7 @@ import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { Button } from "@/src/shared/components/Button"
+import { resolveError } from "@/src/lib/errorMessage"
 import { healthResultDetailQueryOptions } from "../data/healthQueries"
 import { formatHealthDate } from "../data/dashboardMetrics"
 import { useHealthTheme } from "../hooks/useHealthTheme"
@@ -137,10 +138,13 @@ export function HealthDataResultDetailScreen() {
     data = null,
     isLoading: loading,
     isError,
+    error: queryError,
     isFetching,
     refetch,
   } = useQuery(healthResultDetailQueryOptions(resultId ?? ""))
-  const error = isError ? t("result.detailLoadError") : null
+  // 문구를 화면이 짓지 않는다. 예전 문구는 어떤 실패든 "인터넷 연결을 확인한 뒤
+  // 다시 불러와 주세요" 였는데, 여기서 실제로 오는 실패는 세션 만료·없는 회차 쪽이다.
+  const failure = isError ? resolveError(queryError) : null
   // 캐시 히트로 즉시 오는 경우엔 스켈레톤을 아예 그리지 않는다 (깜빡임 방지).
   const showSkeleton = useLoadingVisible(loading)
   const judgementCopy = getJudgementCopyKeys(data?.judgementCode)
@@ -157,27 +161,32 @@ export function HealthDataResultDetailScreen() {
 
       {showSkeleton && <HealthResultDetailSkeleton />}
 
-      {error && !loading && (
+      {failure && !loading && (
         <View style={styles.center}>
           <ThemedText
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
             style={[styles.errorText, { color: healthColors.textSecondary }]}
           >
-            {error}
+            {failure.body ? `${failure.title}\n${failure.body}` : failure.title}
           </ThemedText>
-          <View style={styles.stateAction}>
-            <Button
-              buttonSize="small"
-              fullWidth
-              loading={isFetching}
-              onPress={() => void refetch()}
-            >
-              {t("actions.retryLoad")}
-            </Button>
-          </View>
+          {/* 재시도로 답이 달라지지 않는 실패(없는 회차·권한)에는 버튼을 두지 않는다. */}
+          {failure.retryable && (
+            <View style={styles.stateAction}>
+              <Button
+                buttonSize="small"
+                fullWidth
+                loading={isFetching}
+                onPress={() => void refetch()}
+              >
+                {t("actions.retryLoad")}
+              </Button>
+            </View>
+          )}
         </View>
       )}
 
-      {!loading && !error && !data && (
+      {!loading && !failure && !data && (
         <View style={styles.center}>
           <ThemedText style={[styles.emptyTitle, { color: healthColors.text }]}>
             {t("result.emptyTitle")}

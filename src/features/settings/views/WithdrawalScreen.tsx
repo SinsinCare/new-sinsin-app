@@ -20,6 +20,8 @@ import { ToggleItem } from "@/src/features/settings/components"
 import {
   WITHDRAWAL_REASONS,
   WITHDRAWAL_OTHER_INDEX,
+  WITHDRAWAL_DETAIL_MIN,
+  WITHDRAWAL_DETAIL_MAX,
 } from "@/src/features/settings/data/constants"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 
@@ -43,9 +45,9 @@ export function WithdrawalScreen() {
 
   const isOtherSelected = selectedIndex === WITHDRAWAL_OTHER_INDEX
   const trimmedCustomReason = customReason.trim()
+  const isDetailTooShort = trimmedCustomReason.length < WITHDRAWAL_DETAIL_MIN
   const isActive =
-    selectedIndex !== null &&
-    (!isOtherSelected || trimmedCustomReason.length >= 20)
+    selectedIndex !== null && (!isOtherSelected || !isDetailTooShort)
 
   const handleSubmit = () => {
     if (selectedIndex === null) return
@@ -110,18 +112,40 @@ export function WithdrawalScreen() {
                 </Pressable>
 
                 {index === WITHDRAWAL_OTHER_INDEX && (
-                  <TextInput
-                    style={[
-                      styles.customInput,
-                      { backgroundColor: c.secondaryBg, color: c.text },
-                    ]}
-                    multiline
-                    placeholder={t("withdrawal.customReason")}
-                    placeholderTextColor={c.textTertiary}
-                    value={customReason}
-                    onChangeText={setCustomReason}
-                    textAlignVertical="top"
-                  />
+                  <>
+                    <TextInput
+                      style={[
+                        styles.customInput,
+                        { backgroundColor: c.secondaryBg, color: c.text },
+                      ]}
+                      multiline
+                      placeholder={t("withdrawal.customReason")}
+                      placeholderTextColor={c.textTertiary}
+                      value={customReason}
+                      onChangeText={setCustomReason}
+                      // 직접 쓰기 시작한 사람은 "기타" 를 고른 것이다. 선택을 안 해서
+                      // 다음 버튼이 잠긴 채 이유를 알 수 없던 길을 막는다.
+                      onFocus={() => setSelectedIndex(WITHDRAWAL_OTHER_INDEX)}
+                      maxLength={WITHDRAWAL_DETAIL_MAX}
+                      textAlignVertical="top"
+                    />
+                    <View style={styles.counterRow}>
+                      <ThemedText
+                        style={[styles.counterHint, { color: c.textMuted }]}
+                      >
+                        {isDetailTooShort
+                          ? t("withdrawal.detailMinHint", {
+                              min: WITHDRAWAL_DETAIL_MIN,
+                            })
+                          : ""}
+                      </ThemedText>
+                      <ThemedText
+                        style={[styles.counterText, { color: c.textMuted }]}
+                      >
+                        {customReason.length}/{WITHDRAWAL_DETAIL_MAX}
+                      </ThemedText>
+                    </View>
+                  </>
                 )}
               </React.Fragment>
             ))}
@@ -187,6 +211,23 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 14,
     marginTop: 4,
+  },
+  counterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginTop: 6,
+    paddingHorizontal: 4,
+  },
+  counterHint: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  counterText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   postOptionBox: {
     marginTop: 24,

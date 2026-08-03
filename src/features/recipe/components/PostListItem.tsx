@@ -1,4 +1,6 @@
-import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, Text, View } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -6,8 +8,13 @@ import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { reportService } from "@/src/services/reportService"
 import type { ReportReason } from "@/src/services/reportService"
 import { formatTimeAgo } from "../utils/timeAgo"
+import { presentCommunityError } from "../utils/communityError"
 import { TagChips } from "./TagChips"
 import { useTranslation } from "react-i18next"
+
+import { showSuccessToast } from "@/src/lib/toast"
+
+import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 interface PostListItemProps {
   category: string
@@ -49,7 +56,7 @@ export function PostListItem({
       ? t("freePost.selfName")
       : authorName
 
-  const handleReport = () => {
+  const handleReport = async () => {
     const reasons: { label: string; value: ReportReason }[] = [
       { label: t("post.reportReason.spam"), value: "SPAM" },
       { label: t("post.reportReason.harassment"), value: "HARASSMENT" },
@@ -63,54 +70,50 @@ export function PostListItem({
       },
       { label: t("post.reportReason.other"), value: "OTHER" },
     ]
-    Alert.alert(t("post.reportTitle"), undefined, [
-      ...reasons.map((r) => ({
-        text: r.label,
-        onPress: async () => {
-          try {
-            await reportService.reportUser({
-              targetNickName: authorName,
-              reason: r.value,
-            })
-            Alert.alert(
-              t("post.reportReceivedTitle"),
-              t("post.reportReceivedBody"),
-            )
-          } catch {
-            Alert.alert(t("post.reportErrorTitle"), t("post.reportErrorBody"))
-          }
-        },
-      })),
-      { text: t("action.cancel"), style: "cancel" as const },
-    ])
+    const picked = await showActionSheet({
+      title: t("post.reportTitle"),
+      actions: reasons.map((r) => ({ label: r.label })),
+    })
+    if (picked == null) return
+
+    try {
+      await reportService.reportUser({
+        targetNickName: authorName,
+        reason: reasons[picked].value,
+      })
+      showSuccessToast(
+        t("post.reportReceivedTitle"),
+        t("post.reportReceivedBody"),
+      )
+    } catch (error) {
+      // 이미 신고한 사람을 다시 신고하는 것은 실수가 아니다 — 목록에는 접수
+      // 여부가 남지 않으므로 확인할 방법이 없다. 그래서 안내 토스트로 받는다.
+      presentCommunityError(error, { scope: "community-user-report" })
+    }
   }
 
-  const handleMorePress = () => {
-    Alert.alert(authorName, undefined, [
-      {
-        text: t("post.reportPost"),
-        onPress: handleReport,
-      },
-      {
-        text: t("post.blockUser"),
-        style: "destructive",
-        onPress: () => {
-          Alert.alert(
-            t("post.blockTitle", { author: displayAuthorName }),
-            t("post.blockBody"),
-            [
-              { text: t("action.cancel"), style: "cancel" },
-              {
-                text: t("post.block"),
-                style: "destructive",
-                onPress: () => onBlock?.(authorName),
-              },
-            ],
-          )
-        },
-      },
-      { text: t("action.cancel"), style: "cancel" },
-    ])
+  const handleMorePress = async () => {
+    const picked = await showActionSheet({
+      title: authorName,
+      actions: [
+        { label: t("post.reportPost") },
+        { label: t("post.blockUser"), destructive: true },
+      ],
+    })
+    if (picked === 0) {
+      await handleReport()
+      return
+    }
+    if (picked !== 1) return
+
+    const confirmed = await showConfirm({
+      title: t("post.blockTitle", { author: displayAuthorName }),
+      description: t("post.blockBody"),
+      confirmLabel: t("post.block"),
+      cancelLabel: t("action.cancel"),
+      destructive: true,
+    })
+    if (confirmed) onBlock?.(authorName)
   }
 
   return (
@@ -165,7 +168,7 @@ export function PostListItem({
           <Image
             source={{ uri: imageUri }}
             style={[styles.thumbnail, { backgroundColor: surface.surface }]}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : null}
       </View>

@@ -92,6 +92,11 @@ export const WITHDRAWAL_REASONS = [
 ]
 export const WITHDRAWAL_OTHER_INDEX = 4
 
+/** "기타" 상세 사유 하한. 이 값 미만이면 다음 버튼이 잠긴다. */
+export const WITHDRAWAL_DETAIL_MIN = 20
+/** 상세 사유 상한. 서버 `detail` 스키마(maxLength 500)와 같은 값이어야 한다. */
+export const WITHDRAWAL_DETAIL_MAX = 500
+
 // 회원탈퇴 약관
 export const WITHDRAWAL_NOTICE =
   "회원 탈퇴 시 계정 정보와 건강 관리 데이터는 복구할 수 없도록 삭제됩니다. 관련 법령에 따라 보관할 의무가 있는 자료와 익명 처리된 커뮤니티 게시글은 정책에 따라 보존될 수 있습니다."

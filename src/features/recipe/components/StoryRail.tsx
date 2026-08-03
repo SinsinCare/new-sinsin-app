@@ -1,4 +1,6 @@
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native"
+import { ScrollView, StyleSheet, Text, View } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -92,7 +94,7 @@ export function StoryRail() {
               <Image
                 source={{ uri: story.imageUri }}
                 style={styles.cardImage}
-                resizeMode="cover"
+                contentFit="cover"
               />
               <View style={styles.cardScrim}>
                 <Text style={styles.cardAuthor} numberOfLines={1}>

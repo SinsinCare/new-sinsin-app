@@ -63,7 +63,8 @@ export function RecipeSearchField({
             flex: 1,
             padding: 0,
             fontSize: 15,
-            lineHeight: 20,
+            // 단일행 입력엔 lineHeight 없음 (surface.ts `singleLineInputText` 머리말)
+            includeFontPadding: false,
             fontWeight: "500",
             color: surface.textStrong,
           }}

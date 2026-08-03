@@ -179,7 +179,12 @@ export function CheckupCalendarScreen({
     if (resultIds.length === 0) return <CheckupDetailNoSelectionState />
     if (showSkeleton) return <CheckupDetailAnalyzingState />
     if (query.isError)
-      return <CheckupDetailErrorState onRetry={() => void query.refetch()} />
+      return (
+        <CheckupDetailErrorState
+          error={query.error}
+          onRetry={() => void query.refetch()}
+        />
+      )
     /*
      * `useLoadingVisible` 이 스켈레톤을 억제하는 첫 180ms 동안 `analysis` 는 아직 undefined 다.
      * 그때 그냥 진행하면 `daysByKey` 가 비고 `active` 가 **오늘 달**로 떨어져 빈 달력을 그렸다가,

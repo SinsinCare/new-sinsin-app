@@ -24,7 +24,6 @@
 
 import { useCallback, useMemo, useState } from "react"
 import {
-  Alert,
   Keyboard,
   Platform,
   StyleSheet,
@@ -86,6 +85,9 @@ import {
   SUCCESS_UNMATCHED_COPY_KEY,
 } from "./writeCopy"
 import { unmatchedNames } from "./nutritionPreviewView"
+
+import { presentError } from "@/src/lib/errorMessage"
+import { showSuccessToast } from "@/src/lib/toast"
 
 interface RecipeWriteFormProps {
   onClose: () => void
@@ -196,12 +198,11 @@ export function RecipeWriteForm({ onClose }: RecipeWriteFormProps) {
       created = await recipeWriteService.createRecipe(
         toCreateRecipeRequest(form),
       )
-    } catch {
+    } catch (error) {
       setSubmitting(false)
-      Alert.alert(
-        t("recipeWrite.result.errorTitle"),
-        t("recipeWrite.result.errorBody"),
-      )
+      // 폴백(`레시피를 올리지 못했어요 / 인터넷 연결을 확인…`)을 넘기지 않는다.
+      // 실제로 여기 오는 것은 대부분 400 — 서버가 어느 값이 문제인지 알고 있다.
+      presentError(error, { scope: "recipe-write-create" })
       return
     }
     setSubmitting(false)
@@ -212,7 +213,9 @@ export function RecipeWriteForm({ onClose }: RecipeWriteFormProps) {
     const missed = Array.isArray(created.nutrition?.unmatchedIngredients)
       ? unmatchedNames(created.nutrition)
       : []
-    Alert.alert(
+    // 등록은 이미 성공했다 — 확인을 누르게 붙잡지 않고 닫으면서 알린다.
+    onClose()
+    showSuccessToast(
       t("recipeWrite.result.successTitle"),
       missed.length > 0
         ? `${t("recipeWrite.result.successBody")}\n\n${t(
@@ -220,7 +223,6 @@ export function RecipeWriteForm({ onClose }: RecipeWriteFormProps) {
             { n: missed.length },
           )}`
         : t("recipeWrite.result.successBody"),
-      [{ text: t("action.close"), onPress: onClose }],
     )
   }, [evaluation.canSubmit, form, onClose, queryClient, submitting, t])
 

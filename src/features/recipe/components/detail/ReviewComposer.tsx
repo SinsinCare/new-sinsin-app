@@ -21,7 +21,6 @@
 import { useEffect, useRef, useState } from "react"
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -29,6 +28,7 @@ import {
   TextInput,
   View,
 } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -121,7 +121,7 @@ export function ReviewComposer({
   }
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       animationType="slide"
       onRequestClose={onClose}
@@ -286,7 +286,7 @@ export function ReviewComposer({
           </Pressable>
         </YStack>
       </KeyboardAvoidingView>
-    </Modal>
+    </AppModal>
   )
 }
 

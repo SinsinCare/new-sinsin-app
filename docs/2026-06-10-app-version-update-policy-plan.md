@@ -2,7 +2,7 @@
 
 작성일: 2026-06-10
 기준안: 선택지 B - 서버 권위 모바일 런타임 정책 API
-대상 repo: `sinsin-rn`, `sinsin-be`, `sinsin-admin-dashboard`
+대상 repo: `sinsin-rn`, `sinsin-be-legacy-py`, `sinsin-admin-dashboard`
 
 현재 확인 기준:
 
@@ -361,7 +361,7 @@
 
 권장 배포 단위:
 
-- `sinsin-be`: FastAPI API service
+- `sinsin-be-legacy-py`: FastAPI API service
 - `sinsin-admin-dashboard`: Next.js 관리자 service
 - `sinsin-doctor-dashboard`: 의사 대시보드 service 또는 정적 assets service
 - `sinsin-promo-web`: 프로모션 웹 service 또는 정적 hosting
@@ -372,7 +372,7 @@
 - Cloud Run production 배포만 production Cloud SQL과 연결한다.
 - 관리자 보드의 production service는 Secret Manager에서 DB/API/session/TOTP secrets를 읽는다.
 - 통계 조회는 가능하면 read-only DB 계정을 사용한다.
-- 정책 변경 쓰기는 admin dashboard가 DB에 직접 쓰지 않고 `sinsin-be` admin API를 호출한다.
+- 정책 변경 쓰기는 admin dashboard가 DB에 직접 쓰지 않고 `sinsin-be-legacy-py` admin API를 호출한다.
 - 관리자 service에는 Cloud Armor, IAP, 사내 IP allowlist, 또는 추가 접근 보호를 검토한다.
 - 저트래픽 관리자/프로모션 페이지는 `min-instances=0`을 기본값으로 두고, 사용성이 필요한 핵심 API만 별도 기준으로 `min-instances`를 판단한다.
 

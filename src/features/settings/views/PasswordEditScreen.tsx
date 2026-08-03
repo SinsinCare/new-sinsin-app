@@ -79,12 +79,16 @@ export function PasswordEditScreen() {
         router.back()
       }
     } catch (e: unknown) {
+      // 변경 흐름의 400·403 은 사실상 "현재 비밀번호가 틀렸다" 하나뿐이라 여기서만
+      // 화면이 더 정확하다. 나머지는 서버 코드가 말하게 둔다 — 예전 폴백
+      // (`비밀번호를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.`)이 만료된 재설정
+      // 링크(`TOKEN_ERROR_005`)까지 같은 문장으로 덮고 있었다.
       setSubmitError(
         !isResetFlow &&
           e instanceof ApiError &&
           (e.statusCode === 400 || e.statusCode === 403)
           ? t("password.wrongCurrent")
-          : getErrorMessage(e, t("password.saveError")),
+          : getErrorMessage(e),
       )
     } finally {
       setIsSubmitting(false)

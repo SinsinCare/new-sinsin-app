@@ -1,14 +1,12 @@
 import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useState } from "react"
-import { Alert } from "react-native"
+
 import { EdemaLevel } from "../types"
-import { logRecoverableError } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
 import { useQueryClient } from "@tanstack/react-query"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
-import { useTranslation } from "react-i18next"
 
 export function useWeightEdemaRecord() {
-  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -17,14 +15,16 @@ export function useWeightEdemaRecord() {
     try {
       await weightEdemaService.updateWeight(weightKg, date)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", date] })
+      // 체중 시트의 7일 추세도 같은 저장을 본다.
+      queryClient.invalidateQueries({ queryKey: ["weightRecords"] })
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      logRecoverableError("updateWeight error:", error)
-      Alert.alert(
-        t("home.errors.saveWeightTitle"),
-        t("home.errors.saveWeightBody"),
-      )
+      // upsert 라 같은 값을 다시 보내도 한 건이다 — 재시도가 안전하다.
+      presentError(error, {
+        scope: "weight-save",
+        retry: () => void updateWeight(weightKg, date),
+      })
     } finally {
       setIsLoading(false)
     }
@@ -38,11 +38,10 @@ export function useWeightEdemaRecord() {
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})
-      logRecoverableError("updateEdema error:", error)
-      Alert.alert(
-        t("home.errors.saveEdemaTitle"),
-        t("home.errors.saveEdemaBody"),
-      )
+      presentError(error, {
+        scope: "edema-save",
+        retry: () => void updateEdema(edemaLevel, date),
+      })
     } finally {
       setIsLoading(false)
     }

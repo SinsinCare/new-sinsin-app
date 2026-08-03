@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react"
-import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -18,6 +18,9 @@ import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSett
 import { notificationService } from "@/src/services/notificationService"
 import { tokens } from "@/src/theme/tokens"
 import { getAppLanguage, setAppLanguage, type Language } from "@/src/i18n"
+
+import { showErrorToast } from "@/src/lib/toast"
+import { presentError } from "@/src/lib/errorMessage"
 
 export function SettingsScreen() {
   const { t } = useTranslation("common")
@@ -47,7 +50,7 @@ export function SettingsScreen() {
     try {
       await setAppLanguage(language)
     } catch {
-      Alert.alert(
+      showErrorToast(
         t("settings.language.changeErrorTitle"),
         t("settings.language.changeErrorBody"),
       )
@@ -74,16 +77,18 @@ export function SettingsScreen() {
     try {
       const ok = await setPushConsent(value)
       if (value && !ok) {
-        showOpenSettingsAlert(
+        void showOpenSettingsAlert(
           t("settings.notifications.disabledTitle"),
           t("settings.notifications.disabledBody"),
         )
       }
-    } catch {
-      Alert.alert(
-        t("settings.notifications.saveErrorTitle"),
-        t("settings.notifications.saveErrorBody"),
-      )
+    } catch (error) {
+      // 오류를 버리고 고정 문구를 띄우던 자리. 푸시 동의 저장은 서버로 나가는 요청이라
+      // 실패 원인이 세션 만료·요청 몰림일 때가 많은데, 둘 다 사용자가 할 일이 다르다.
+      presentError(error, {
+        scope: "push-consent",
+        retry: () => void handlePushToggle(value),
+      })
     }
   }
 

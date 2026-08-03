@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { LinearGradient } from "expo-linear-gradient"
-import { Image, StyleSheet, Text, View } from "react-native"
+import { StyleSheet, Text, View } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
 import BreakfastGraphic from "@/assets/images/meal-breakfast.svg"
@@ -168,7 +170,7 @@ function MealCard({
         <Image
           source={{ uri: imageUri }}
           style={StyleSheet.absoluteFill}
-          resizeMode="cover"
+          contentFit="cover"
         />
         {/* 얇은 전면 스크림 + 진한 하단 그라데이션 — 밝은 사진(흰 그릇·우유)
             위에서도 글자와 체크가 항상 읽힌다. 그라데이션만으로는 사진 상단의

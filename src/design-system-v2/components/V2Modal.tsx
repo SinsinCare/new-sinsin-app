@@ -14,7 +14,9 @@
 //  - Figma 토큰 오타 `label/nomal` → `label.normal`로 사용.
 //  - Alert/Confirm 버튼영역 구조 차이 반영: Alert=우측 정렬 단일 버튼, Confirm=가로 분할 / 세로 스택.
 
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, Text, View } from "react-native"
+// 네이티브 Modal 직접 사용 금지 — 전이 직렬화 게이트를 통과해야 한다(AppModal 머리말)
+import { AppModal } from "@/src/shared/components/AppModal"
 import { radius, spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 // 배럴(../components) 대신 직접 경로 import — 순환참조 방지
@@ -91,7 +93,7 @@ export function V2Modal({
   ) : null
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="fade"
@@ -110,8 +112,13 @@ export function V2Modal({
         >
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
+            {/* 제목·본문 모두 한글 어절 단위로 끊는다. 없으면 iOS 가 어절 중간에서
+                줄을 넘겨 `인증번호를 보낼 수 없어` / `요` 같은 줄이 나온다 — 한 번
+                읽고 바로 행동해야 하는 안내문에서 특히 나쁘다. */}
             <Text
               style={[typography.title.small, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {title}
             </Text>
@@ -121,6 +128,8 @@ export function V2Modal({
                   typography.subtext.large,
                   { color: colors.label.neutral },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
+                textBreakStrategy="balanced"
               >
                 {description}
               </Text>
@@ -153,7 +162,7 @@ export function V2Modal({
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+    </AppModal>
   )
 }
 

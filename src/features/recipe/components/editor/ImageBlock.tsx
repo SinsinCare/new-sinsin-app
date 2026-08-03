@@ -1,9 +1,11 @@
-import { Image, Pressable, View, StyleSheet, Alert } from "react-native"
+import { Image, Pressable, View, StyleSheet } from "react-native"
 import { Text } from "tamagui"
 import { V2DotLoader } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useTranslation } from "react-i18next"
+
+import { showConfirm } from "@/src/lib/dialog"
 
 const DELETE_BTN_BG = "rgba(0,0,0,0.5)"
 const DELETE_BTN_ICON = "#FFFFFF"
@@ -35,11 +37,15 @@ export function ImageBlock({
   const { t } = useTranslation("recipe")
   const scheme = useAppColorScheme()
 
-  const handleDelete = () => {
-    Alert.alert(t("media.deletePhotoTitle"), t("media.deletePhotoBody"), [
-      { text: t("action.cancel"), style: "cancel" },
-      { text: t("action.delete"), style: "destructive", onPress: onDelete },
-    ])
+  const handleDelete = async () => {
+    const confirmed = await showConfirm({
+      title: t("media.deletePhotoTitle"),
+      description: t("media.deletePhotoBody"),
+      confirmLabel: t("action.delete"),
+      cancelLabel: t("action.cancel"),
+      destructive: true,
+    })
+    if (confirmed) onDelete()
   }
 
   return (

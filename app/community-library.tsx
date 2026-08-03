@@ -1,12 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native"
+import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native"
+import { FlashList } from "@shopify/flash-list"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useLocalSearchParams, type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -21,6 +15,11 @@ import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile
 import { useTranslation } from "react-i18next"
 
 const TABS = ["mine", "liked", "bookmarked"] as const
+
+/** 목록 줄 사이 간격 — 예전 listWrap 의 gap(10)을 분리자로 옮겼다. */
+function ListGap() {
+  return <View style={styles.listGap} />
+}
 
 type LibraryTab = (typeof TABS)[number]
 
@@ -181,27 +180,12 @@ export default function CommunityLibraryScreen() {
         </View>
       </View>
 
-      <ScrollView
-        bounces={false}
-        overScrollMode="never"
-        alwaysBounceVertical
-        style={styles.flex}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={surface.textMuted}
-            colors={[surface.brand]}
-            progressBackgroundColor={surface.isDark ? surface.card : "#FFFFFF"}
-          />
-        }
-      >
-        <View style={styles.listWrap}>
-          {activePosts.map((post) => (
+      {/* 예전 ScrollView + map — 가상화가 없어 보관함이 클수록 전 항목이 마운트됐다. */}
+      <FlashList
+        data={activePosts}
+        renderItem={({ item: post }) => (
+          <View style={styles.listItemWrap}>
             <PostListItem
-              key={`${activeTab}-${post.id}`}
               category={categoryLabel(post.category)}
               createdAt={post.createdAt}
               title={post.title}
@@ -216,19 +200,35 @@ export default function CommunityLibraryScreen() {
               onBlock={blockUser}
               isWithdrawnAuthor={post.authorId === null}
             />
-          ))}
-          {activePosts.length === 0 && (
-            <View style={styles.emptyWrap}>
-              <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
-                {emptyCopy.title}
-              </Text>
-              <Text style={[styles.emptySub, { color: surface.textMuted }]}>
-                {emptyCopy.sub}
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+          </View>
+        )}
+        keyExtractor={(post) => `${activeTab}-${post.id}`}
+        ItemSeparatorComponent={ListGap}
+        ListHeaderComponent={<View style={styles.listTopGap} />}
+        ListEmptyComponent={
+          <View style={styles.emptyWrap}>
+            <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
+              {emptyCopy.title}
+            </Text>
+            <Text style={[styles.emptySub, { color: surface.textMuted }]}>
+              {emptyCopy.sub}
+            </Text>
+          </View>
+        }
+        bounces={false}
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={surface.textMuted}
+            colors={[surface.brand]}
+            progressBackgroundColor={surface.isDark ? surface.card : "#FFFFFF"}
+          />
+        }
+      />
     </View>
   )
 }
@@ -289,10 +289,14 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard-Bold",
   },
 
-  listWrap: {
+  listItemWrap: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    gap: 10,
+  },
+  listGap: {
+    height: 10,
+  },
+  listTopGap: {
+    height: 12,
   },
   emptyWrap: {
     alignItems: "center",

@@ -181,7 +181,7 @@ describe("runtime mobile policy environment", () => {
   it("defaults to production for unknown backend URLs", () => {
     expect(
       resolveMobilePolicyEnvironment({
-        backendUrl: "https://sinsin-be.example.com",
+        backendUrl: "https://sinsin-be-legacy-py.example.com",
       }),
     ).toBe("production")
   })

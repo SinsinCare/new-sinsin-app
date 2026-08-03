@@ -1,42 +1,20 @@
-import { useEffect, useRef, useState } from "react"
-import { Animated, Pressable, StyleSheet, View } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text, XStack } from "tamagui"
-import { tokens } from "@/src/theme/tokens"
+import { V2Modal } from "@/src/design-system-v2"
 
-/* ── useFadeVisibility hook ── */
-
-function useFadeVisibility(visible: boolean, duration: number) {
-  const opacity = useRef(new Animated.Value(0)).current
-  const wasVisible = useRef(false)
-  const [shouldRender, setShouldRender] = useState(false)
-
-  useEffect(() => {
-    if (visible) {
-      wasVisible.current = true
-      setShouldRender(true)
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration,
-        useNativeDriver: true,
-      }).start()
-    } else if (wasVisible.current) {
-      wasVisible.current = false
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) setShouldRender(false)
-      })
-    }
-  }, [visible, opacity, duration])
-
-  return { opacity, shouldRender }
-}
-
-/* ── ConfirmExitModal ── */
-
+/**
+ * "쓰던 걸 두고 나갈까요" 확인 — 이제 V2Modal 한 겹 껍데기다.
+ *
+ * 예전엔 Tamagui + 자체 페이드 애니메이션(absoluteFill 오버레이)으로 따로
+ * 구현돼 있었다. 확인창이 화면마다 다른 얼굴로 뜨던 시절의 유물이라
+ * ConfirmModal 과 함께 흡수했다 — V2Modal 도 Modal 의 fade 로 같은 등장을 준다.
+ *
+ * **주의.** 옛 구현은 RN Modal 이 아니라 뷰트리 안의 오버레이였고, 지금은
+ * 진짜 RN Modal 이다. 그래서 이미 열려 있는 RN Modal **안에서는 못 쓴다**
+ * (iOS 가 present 를 거부한다 — V2DialogHost 머리말 참고). 현재 호출부는
+ * 전부 라우트 화면이라 해당 없음.
+ *
+ * props 는 그대로 두어 기존 호출부를 건드리지 않는다. **새 코드는 이것 대신
+ * `showConfirm`(src/lib/dialog.ts)을 쓸 것.**
+ */
 interface ConfirmExitModalProps {
   visible: boolean
   title: string
@@ -47,8 +25,6 @@ interface ConfirmExitModalProps {
   onConfirm: () => void
 }
 
-const FADE_DURATION = 200
-
 export function ConfirmExitModal({
   visible,
   title,
@@ -58,131 +34,16 @@ export function ConfirmExitModal({
   onCancel,
   onConfirm,
 }: ConfirmExitModalProps) {
-  const colorScheme = useAppColorScheme()
-  const isDarkMode = colorScheme === "dark"
-  const { opacity, shouldRender } = useFadeVisibility(visible, FADE_DURATION)
-
-  const textColor = isDarkMode
-    ? tokens.color.textDark.val
-    : tokens.color.textLight.val
-  const secondaryTextColor = isDarkMode
-    ? tokens.color.textDarkSub.val
-    : "#81818D"
-  const cardBg = isDarkMode
-    ? tokens.color.appBgDark.val
-    : tokens.color.pureWhite.val
-  const borderColor = isDarkMode
-    ? tokens.color.cardBgDark.val
-    : tokens.color.borderLight.val
-  const backdropBg = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.3)"
-
-  if (!shouldRender) return null
-
   return (
-    <Animated.View
-      style={[StyleSheet.absoluteFill, { opacity }]}
-      pointerEvents={visible ? "auto" : "none"}
-    >
-      <Pressable
-        style={[
-          StyleSheet.absoluteFill,
-          styles.backdrop,
-          { backgroundColor: backdropBg },
-        ]}
-        onPress={onCancel}
-      >
-        <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
-          <View style={styles.cardContent}>
-            <Text
-              fontFamily="$body"
-              fontSize={18}
-              lineHeight={24}
-              fontWeight="700"
-              color={textColor}
-              textAlign="center"
-              marginBottom={8}
-            >
-              {title}
-            </Text>
-
-            <Text
-              fontFamily="$body"
-              fontSize={15}
-              lineHeight={20}
-              fontWeight="500"
-              color={secondaryTextColor}
-              textAlign="center"
-            >
-              {description}
-            </Text>
-          </View>
-
-          <XStack style={{ borderTopWidth: 1, borderColor }}>
-            <Pressable
-              onPress={onCancel}
-              style={({ pressed }) => ({
-                ...styles.button,
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Text
-                fontFamily="$body"
-                fontSize={14}
-                lineHeight={18}
-                fontWeight="400"
-                color={textColor}
-                textAlign="center"
-              >
-                {cancelLabel}
-              </Text>
-            </Pressable>
-
-            <View style={{ width: 1, backgroundColor: borderColor }} />
-
-            <Pressable
-              onPress={onConfirm}
-              style={({ pressed }) => ({
-                ...styles.button,
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Text
-                fontFamily="$body"
-                fontSize={14}
-                lineHeight={18}
-                fontWeight="600"
-                color={textColor}
-                textAlign="center"
-              >
-                {confirmLabel}
-              </Text>
-            </Pressable>
-          </XStack>
-        </Pressable>
-      </Pressable>
-    </Animated.View>
+    <V2Modal
+      visible={visible}
+      title={title}
+      description={description}
+      primaryLabel={confirmLabel}
+      onPrimary={onConfirm}
+      secondaryLabel={cancelLabel}
+      onSecondary={onCancel}
+      onRequestClose={onCancel}
+    />
   )
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  card: {
-    width: "100%",
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  cardContent: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 20,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-})

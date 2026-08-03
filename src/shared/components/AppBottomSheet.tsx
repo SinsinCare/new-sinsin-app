@@ -2,7 +2,6 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import {
   BackHandler,
   GestureResponderEvent,
-  Modal,
   Pressable,
   ScrollView,
   type ScrollViewProps,
@@ -12,6 +11,7 @@ import {
   View,
   ViewStyle,
 } from "react-native"
+import { AppModal } from "./AppModal"
 import { Sheet } from "@tamagui/sheet"
 import {
   Gesture,
@@ -292,7 +292,7 @@ function HandleOnlyBottomSheet({
   }))
 
   return (
-    <Modal
+    <AppModal
       animationType="none"
       transparent
       statusBarTranslucent
@@ -337,7 +337,7 @@ function HandleOnlyBottomSheet({
           </View>
         </Animated.View>
       </GestureHandlerRootView>
-    </Modal>
+    </AppModal>
   )
 }
 

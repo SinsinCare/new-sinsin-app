@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { StyleSheet, View, ScrollView, Pressable, Alert } from "react-native"
+import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams } from "expo-router"
@@ -8,14 +8,14 @@ import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
-import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { DotItem } from "@/src/features/settings/components"
 import { userService } from "@/src/services/auth"
 import { clearClientSession } from "@/src/services/core/sessionCleanup"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { logger } from "@/src/lib/logger"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
+import { showConfirm } from "@/src/lib/dialog"
 
 const WITHDRAWAL_TERM_KEYS = [
   "withdrawal.terms.1",
@@ -35,11 +35,17 @@ export function WithdrawalTermsScreen() {
   const { t } = useTranslation("settings")
 
   const [agreed, setAgreed] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleWithdraw = async () => {
-    setModalVisible(false)
+    const confirmed = await showConfirm({
+      title: t("withdrawal.confirmTitle"),
+      description: t("withdrawal.confirmBody"),
+      confirmLabel: t("withdrawal.withdraw"),
+      destructive: true,
+    })
+    if (!confirmed) return
+
     setLoading(true)
     try {
       await userService.deleteAccount(
@@ -51,10 +57,13 @@ export function WithdrawalTermsScreen() {
       router.replace("/(settings)/withdrawal-complete")
     } catch (err) {
       logger.error("[WithdrawalTermsScreen] 탈퇴 실패", err)
-      Alert.alert(
-        t("withdrawal.errorTitle"),
-        getErrorMessage(err, t("withdrawal.errorBody")),
-      )
+      // 재시도 핸들러는 주지 않는다. 토스트 버튼 한 번으로 계정 삭제가 다시 나가는
+      // 것은 이 동작의 무게에 맞지 않는다 — 확인 다이얼로그부터 다시 거치게 둔다.
+      // `WITHDRAW_ERROR_001`(이미 접수된 탈퇴)은 카탈로그가 로그인 버튼을 붙여 준다.
+      presentError(err, {
+        scope: "account-withdraw",
+        fallback: t("withdrawal.errorTitle"),
+      })
     } finally {
       setLoading(false)
     }
@@ -121,16 +130,7 @@ export function WithdrawalTermsScreen() {
         label={t("withdrawal.withdraw")}
         disabled={!agreed || loading}
         paddingBottom={insets.bottom + 16}
-        onPress={() => setModalVisible(true)}
-      />
-
-      <ConfirmModal
-        visible={modalVisible}
-        title={t("withdrawal.confirmTitle")}
-        description={t("withdrawal.confirmBody")}
-        confirmText={t("withdrawal.withdraw")}
-        onCancel={() => setModalVisible(false)}
-        onConfirm={handleWithdraw}
+        onPress={handleWithdraw}
       />
     </ThemedView>
   )

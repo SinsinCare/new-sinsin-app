@@ -113,7 +113,9 @@ export function WriteTextField({
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
   labelRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  label: { ...TYPE.label, fontWeight: "600" },
+  // 칸 라벨은 `WriteChipGroup` 의 그룹 라벨과 **같은 급**이어야 한다. 한쪽만 올리면
+  // 같은 섹션 안의 "조리 시간"(칸)과 "난이도"(칩)가 다른 크기로 서서 위계가 깨진다.
+  label: { ...TYPE.cardTitle, fontWeight: "700" },
   labelSuffix: { ...TYPE.caption, fontSize: 12 },
   field: {
     flexDirection: "row",

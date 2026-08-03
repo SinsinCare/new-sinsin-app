@@ -20,6 +20,14 @@
     "retry": "다시 해 보기",
     "done": "완료"
   },
+  "permission": {
+    "photoTitle": "사진 접근이 꺼져 있어요",
+    "photoBody": "설정에서 사진 접근을 켜면 앨범에서 사진을 고를 수 있어요.",
+    "cameraTitle": "카메라 접근이 꺼져 있어요",
+    "cameraBody": "설정에서 카메라를 켜면 사진을 찍어 기록할 수 있어요.",
+    "openSettings": "설정 열기",
+    "notNow": "나중에"
+  },
   "accessibility": {
     "remove": "제거",
     "clear": "지우기"
@@ -30,7 +38,7 @@
   "announcement": {
     "linkErrorTitle": "링크를 열 수 없어요",
     "invalidLinkBody": "연결할 주소가 올바르지 않아요. 공지에서 다른 안내를 확인해 주세요.",
-    "openLinkErrorBody": "인터넷 연결을 확인한 뒤 다시 열어 주세요.",
+    "openLinkErrorBody": "잠시 뒤 다시 눌러 주세요. 계속되면 주소가 바뀌었을 수 있어요.",
     "image": "{{title}} 공지 이미지",
     "new": "새로운 소식",
     "close": "공지 닫기",
@@ -59,7 +67,7 @@
     "requiredBody": "신신당부를 계속 이용하려면 앱을 최신 버전으로 업데이트해 주세요.",
     "recommendedTitle": "새 버전이 나왔어요",
     "recommendedBody": "더 안정적으로 이용할 수 있는 버전이에요. 지금 업데이트할 수 있어요.",
-    "storeError": "스토어를 열지 못했어요. 인터넷 연결을 확인한 뒤 다시 해 주세요.",
+    "storeError": "스토어를 열지 못했어요. 잠시 뒤 다시 눌러 주세요.",
     "update": "업데이트",
     "later": "나중에"
   },
@@ -201,25 +209,14 @@
       },
       "reportReceivedTitle": "신고를 접수했어요",
       "reportReceivedBody": "신고 내용을 확인할게요.",
-      "reportErrorTitle": "신고를 접수하지 못했어요",
-      "reportErrorBody": "인터넷 연결을 확인한 뒤 다시 신고해 주세요.",
       "shareMessage": "{{title}}\n\n{{description}}\n\n신신당부에서 이 글을 함께 읽어 보세요\n{{url}}",
-      "voteErrorTitle": "투표를 반영하지 못했어요",
-      "voteErrorBody": "인터넷 연결을 확인한 뒤 다시 투표해 주세요.",
-      "commentSaveErrorTitle": "댓글을 저장하지 못했어요",
-      "commentSaveErrorBody": "인터넷 연결을 확인한 뒤 다시 저장해 주세요.",
       "deleteCommentTitle": "이 댓글을 삭제할까요?",
       "deleteCommentBody": "삭제한 댓글은 되돌릴 수 없어요.",
-      "commentDeleteErrorTitle": "댓글을 삭제하지 못했어요",
-      "commentDeleteErrorBody": "잠시 후 다시 삭제해 주세요.",
       "reply": "답글",
       "comment": "댓글",
-      "likeErrorTitle": "좋아요를 반영하지 못했어요",
-      "likeErrorBody": "인터넷 연결을 확인한 뒤 좋아요를 다시 눌러 주세요.",
       "deletedComment": "삭제된 댓글이에요",
       "likeComment": "댓글 좋아요",
       "commentMore": "댓글 옵션",
-      "loadErrorTitle": "글을 불러오지 못했어요",
       "reload": "글 다시 불러오기",
       "loading": "글을 불러오고 있어요",
       "notFound": "이 글을 찾지 못했어요",
@@ -269,8 +266,6 @@
       "today": "오늘",
       "yesterday": "어제",
       "galleryPhoto": "갤러리 사진",
-      "errorTitle": "스토리를 올리지 못했어요",
-      "errorBody": "인터넷 연결을 확인한 뒤 다시 올려 주세요.",
       "title": "스토리 올리기",
       "add": "스토리 올리기",
       "saving": "올리는 중",
@@ -283,7 +278,11 @@
       "noMealPhotos": "아직 기록한 식사 사진이 없어요. 갤러리에서 골라 올릴 수 있어요.",
       "captionLabel": "한마디 (선택)",
       "captionPlaceholder": "오늘 이 한 끼는 어땠나요?",
-      "notice": "스토리는 올린 뒤 24시간 동안만 보여요"
+      "notice": "스토리는 올린 뒤 24시간 동안만 보여요",
+      "discardTitle": "올리려던 스토리를 지울까요?",
+      "discardBody": "지금 나가면 고른 사진과 적은 글이 남지 않아요.",
+      "discard": "지우고 나가기",
+      "keepWriting": "계속 쓰기"
     },
     "library": {
       "tabs": {
@@ -321,8 +320,6 @@
     "menuCount_other": "메뉴 {{count}}개",
     "searchPlaceholder": "식당 이름이나 주소를 검색해 보세요",
     "searchAccessibility": "식당 검색",
-    "loadErrorTitle": "주변 식당을 불러오지 못했어요",
-    "loadErrorBody": "인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
     "reload": "식당 다시 불러오기",
     "emptyTitle": "조건에 맞는 식당을 찾지 못했어요",
     "emptyBody": "검색어나 필터를 바꾸면 다른 식당을 볼 수 있어요.",
@@ -475,7 +472,6 @@
       "openSettings": "설정 열기",
       "successTitle": "식당 정보를 보냈어요",
       "successBody": "보내주신 내용을 확인할게요.",
-      "failure": "식당 정보를 보내지 못했어요. 인터넷 연결을 확인한 뒤 다시 보내 주세요.",
       "introTitle": "추천하고 싶은 식당이 있나요?",
       "introBody": "싱겁게 주문하기 좋았던 식당과 메뉴를 알려 주세요. 보내주신 내용은 확인한 뒤 반영할게요.",
       "formTitle": "식당 알려주기",
@@ -508,7 +504,11 @@
         "nameRequired": "식당 이름을 입력해 주세요.",
         "categoryRequired": "음식 종류를 입력해 주세요.",
         "tooManyPhotos": "사진은 최대 {{count}}장까지 첨부할 수 있어요."
-      }
+      },
+      "discardTitle": "쓰던 제보를 지울까요?",
+      "discardBody": "지금 나가면 적은 내용과 사진이 남지 않아요.",
+      "discard": "지우고 나가기",
+      "keepWriting": "계속 쓰기"
     },
     "distance": {
       "meters": "{{value}}미터",
@@ -766,11 +766,8 @@
       "mapTitle": "지도를 불러오지 못했어요",
       "mapRetry": "지도 다시 불러오기",
       "detailTitle": "식당 정보를 불러오지 못했어요",
-      "detailBody": "인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
+      "detailBody": "잠시 뒤 다시 불러와 주세요.",
       "detailRetry": "다시 불러오기",
-      "bookmarkFailed": "저장하지 못했어요. 다시 눌러 주세요",
-      "reviewFailed": "후기를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
-      "reportFailed": "신고를 보내지 못했어요. 잠시 후 다시 시도해 주세요.",
       "serverTitle": "서버에 문제가 생겼어요",
       "serverBody": "잠시 뒤 다시 시도하면 대개 해결돼요. 계속되면 조금 기다려 주세요.",
       "serverRetry": "다시 시도",
@@ -816,7 +813,7 @@
       "appliedTitle": "적용할 조건",
       "noFilters": "말씀하신 내용에서 옮길 수 있는 조건을 찾지 못했어요.",
       "errorTitle": "조건을 정리하지 못했어요",
-      "errorBody": "인터넷 연결을 확인한 뒤 다시 물어봐 주세요.",
+      "errorBody": "잠시 뒤 다시 물어봐 주세요.",
       "apply": "이 조건으로 보기",
       "retry": "다시 물어보기"
     },
@@ -935,7 +932,11 @@
         "photoProgress": "사진을 올리고 있어요 ({{current}}/{{total}})",
         "photoRemove": "{{index}}번째 사진 빼기",
         "photoCount": "사진 {{current}}/{{max}}",
-        "guidelineBody": "장소와 무관한 내용, 광고, 개인정보가 담긴 후기는 안내 없이 지워질 수 있어요.\n욕설·비방·명예훼손성 표현은 누군가에게 상처가 됩니다.\n메뉴와 방문 경험을 사실대로 적어 주시면 다른 분들에게 큰 도움이 돼요."
+        "guidelineBody": "장소와 무관한 내용, 광고, 개인정보가 담긴 후기는 안내 없이 지워질 수 있어요.\n욕설·비방·명예훼손성 표현은 누군가에게 상처가 됩니다.\n메뉴와 방문 경험을 사실대로 적어 주시면 다른 분들에게 큰 도움이 돼요.",
+        "discardTitle": "쓰던 후기를 지울까요?",
+        "discardBody": "지금 나가면 별점·사진·적은 내용이 남지 않아요.",
+        "discard": "지우고 나가기",
+        "keepWriting": "계속 쓰기"
       },
       "reportDetailPlaceholder": "어떤 점이 문제인지 적어 주시면 확인이 빨라져요. (선택)",
       "reportOwn": "내가 쓴 후기는 신고할 수 없어요",
@@ -957,8 +958,6 @@
       "postsEmptyBody": "게시글은 커뮤니티에서 확인할 수 있어요.",
       "reviewsUnavailableTitle": "작성한 후기를 불러올 수 없어요",
       "reviewsUnavailableBody": "이 사람이 쓴 후기 목록은 아직 제공되지 않아요. 식당 상세의 후기 탭에서 볼 수 있어요.",
-      "loadErrorTitle": "프로필을 불러오지 못했어요",
-      "loadErrorBody": "인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
       "summaryAllLabel": "전체",
       "summaryRatingLabel": "평점"
     },
@@ -1041,8 +1040,6 @@
       "month": "월"
     },
     "periodReport": "{{period}}간 리포트",
-    "errorTitle": "통계를 불러오지 못했어요",
-    "errorBody": "인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
     "retryAccessibility": "통계 다시 불러오기",
     "lowDataTitle": "아직 판단할 기록이 부족해요",
     "mealsRecorded": "{{recorded}}/{{expected}}끼 · {{rate}}%",
@@ -1098,7 +1095,11 @@
       "title": "식사를 글로 기록해요",
       "placeholder": "먹은 음식과 양을 적어 주세요",
       "example": "예: 샐러드 1인분, 고기 150g, 계란 1개, 우유 1컵",
-      "checkNutrients": "영양소 확인하기"
+      "checkNutrients": "영양소 확인하기",
+      "discardTitle": "쓰던 내용을 지울까요?",
+      "discardBody": "지금 나가면 적은 내용은 남지 않아요.",
+      "discard": "지우고 나가기",
+      "keepWriting": "계속 쓰기"
     },
     "analysis": {
       "readyTitle": "식사 결과가 준비됐어요",
@@ -1106,13 +1107,7 @@
       "readyMealBody": "{{meal}} 식사의 영양소와 조절할 점을 확인해 보세요.",
       "readyGenericBody": "식사 기록에서 영양소와 조절할 점을 확인해 보세요.",
       "photoUnclearTitle": "사진만으로는 음식을 확인하기 어려워요",
-      "photoUnclearBody": "다른 각도로 다시 찍거나 음식 이름을 글로 입력해 주세요.",
-      "photoFailedTitle": "사진에서 식사를 확인하지 못했어요",
-      "photoFailedBody": "음식이 선명하게 보이는 사진으로 다시 해 주세요. 연결이 불안정하다면 잠시 후 다시 시도해 주세요.",
-      "takingLongTitle": "결과를 준비하는 데 시간이 더 걸리고 있어요",
-      "takingLongBody": "이 화면을 닫고 나중에 결과를 다시 확인해 주세요.",
-      "textFailedTitle": "적어 주신 식사를 확인하지 못했어요",
-      "textFailedBody": "입력한 내용은 그대로 두고, 연결을 확인한 뒤 다시 해 주세요."
+      "photoUnclearBody": "다른 각도로 다시 찍거나 음식 이름을 글로 입력해 주세요."
     },
     "undoRecord": "되돌리기",
     "tile": {
@@ -1238,6 +1233,12 @@
         "info": "먹은 음식과 양만 남기면 나트륨·칼륨·인을 확인할 수 있어요.",
         "skip": "오늘은 건너뛰기"
       },
+      "mealPhoto": {
+        "title": "이 사진으로 기록할까요?",
+        "photoLabel": "고른 사진 미리보기",
+        "confirm": "이 사진으로 분석하기",
+        "pickAgain": "다른 사진 고르기"
+      },
       "water": {
         "title": "물 기록",
         "subtitle": "마신 만큼 눌러 주세요",
@@ -1267,12 +1268,14 @@
         "diastolic": "이완기 (아래)",
         "heartRate": "심박수",
         "noPrevious": "아직 비교할 혈압 기록이 없어요",
-        "enterBoth": "수축기·이완기를 입력해 주세요"
+        "enterBoth": "수축기·이완기를 입력해 주세요",
+        "currentValue": "지금 값은",
+        "judgmentPending": "수축기·이완기를 넣으면 바로 판정해요"
       },
       "bloodGlucose": {
         "title": "혈당 기록",
         "subtitle": "혈당을 잰 시점과 수치를 골라 주세요",
-        "chooseValue": "혈당 수치를 골라 주세요",
+        "chooseValue": "혈당 수치를 입력해 주세요",
         "decrease": "혈당 1 낮추기",
         "increase": "혈당 1 높이기",
         "step": "1씩 조절해요",
@@ -1284,11 +1287,13 @@
           "1H": "1시간",
           "2H": "2시간"
         },
-        "typeValue": "혈당 수치 직접 입력"
+        "typeValue": "혈당 수치 직접 입력",
+        "autoAfterMeal": "{{meal}} 식후 {{time}} · 자동",
+        "autoFasting": "공복 · 자동"
       },
       "weight": {
         "title": "체중 기록",
-        "subtitle": "가능하면 매일 비슷한 시간과 조건에서 재 주세요",
+        "subtitle": "아침 화장실 다녀온 뒤가 가장 정확해요",
         "chooseValue": "체중을 골라 주세요",
         "decrease": "체중 0.1kg 줄이기",
         "increase": "체중 0.1kg 늘리기",
@@ -1296,7 +1301,13 @@
         "difference": "어제와 차이",
         "noComparisonInfo": "전날과 비교하려면 가능하면 같은 시간과 비슷한 조건에서 기록해 주세요.",
         "comparisonInfo": "전날 기록과의 차이예요. 측정 시간, 옷, 식사와 수분 상태에 따라 값이 달라질 수 있어요.",
-        "typeValue": "체중 직접 입력"
+        "typeValue": "체중 직접 입력",
+        "weekAverage": "7일 평균",
+        "trendCaption": "최근 7일",
+        "guidanceUp": "어제보다 {{amount}} 많아요. 이틀 연속이면 진료 때 알려주세요.",
+        "guidanceUpStreak": "어제보다 {{amount}} 많아요. 이틀 연속 늘었어요 — 진료 때 알려주세요.",
+        "guidanceDown": "어제보다 {{amount}} 적어요. 같은 시간·조건에서 재면 흐름이 정확해져요.",
+        "guidanceSame": "어제와 같아요. 꾸준한 기록이 추세를 만들어요."
       },
       "edema": {
         "title": "붓기 기록",
@@ -1309,36 +1320,20 @@
         },
         "info": "아침에 눈두덩이, 저녁에 발·발목을 보면 하루 변화가 가장 잘 보여요."
       },
-      "typeHint": "숫자를 눌러 직접 입력"
+      "typeHint": "숫자를 눌러 직접 입력",
+      "today": "오늘",
+      "targetBadge": "{{label}} · 목표 {{min}}–{{max}}",
+      "targetOnly": "목표 {{min}}–{{max}}",
+      "judgment": {
+        "normal": "정상",
+        "high": "높음",
+        "low": "낮음",
+        "veryHigh": "매우 높음"
+      }
     },
     "errors": {
-      "analysisFailed": "식단 분석에 실패했어요.",
-      "confirmationTitle": "음식 확인을 마치지 못했어요",
-      "confirmationBody": "연결이 잠시 불안정할 수 있어요. 선택한 내용은 그대로 두었으니 다시 눌러 주세요.",
       "notReadyTitle": "아직 식사를 기록할 수 없어요",
-      "notReadyBody": "결과를 준비하고 있어요. 잠시 후 ‘기록에 추가하기’를 다시 눌러 주세요.",
-      "saveMealTitle": "식사 기록을 저장하지 못했어요",
-      "saveMealBody": "연결이 잠시 불안정할 수 있어요. 잠시 후 ‘기록에 추가하기’를 다시 눌러 주세요.",
-      "saveChangesTitle": "바꾼 내용을 저장하지 못했어요",
-      "saveChangesBody": "입력한 내용은 그대로 있어요. 연결을 확인한 뒤 ‘저장’을 다시 눌러 주세요.",
-      "skipMealTitle": "식사를 건너뛰지 못했어요",
-      "tryAgainBody": "연결이 잠시 불안정할 수 있어요. 잠시 후 다시 눌러 주세요.",
-      "openMealTitle": "식사 기록을 열지 못했어요",
-      "openMealBody": "연결이 잠시 불안정할 수 있어요. 잠시 후 식사 카드를 다시 눌러 주세요.",
-      "renameMealTitle": "식사 이름을 바꾸지 못했어요",
-      "renameMealBody": "입력한 이름은 그대로 있어요. 잠시 후 다시 저장해 주세요.",
-      "changeMealTypeTitle": "끼니를 바꾸지 못했어요",
-      "changeMealTypeBody": "연결을 확인한 뒤 끼니를 다시 골라 주세요.",
-      "saveBloodPressureTitle": "혈압을 저장하지 못했어요",
-      "saveBloodPressureBody": "입력한 수치를 확인하고 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
-      "saveBloodGlucoseTitle": "혈당을 저장하지 못했어요",
-      "saveBloodGlucoseBody": "입력한 수치와 측정 시점을 확인하고 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
-      "saveWeightTitle": "체중을 저장하지 못했어요",
-      "saveWeightBody": "입력한 체중을 확인하고 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
-      "saveEdemaTitle": "붓기를 저장하지 못했어요",
-      "saveEdemaBody": "고른 상태는 그대로 있어요. 잠시 후 ‘기록하기’를 다시 눌러 주세요.",
-      "saveWaterTitle": "마신 물을 기록하지 못했어요",
-      "saveWaterBody": "화면의 양은 원래대로 돌려놓았어요. 연결을 확인한 뒤 다시 눌러 주세요."
+      "notReadyBody": "결과를 준비하고 있어요. 잠시 후 ‘기록에 추가하기’를 다시 눌러 주세요."
     }
   },
   "mealReport": {
@@ -1355,7 +1350,7 @@
     "untilLimit": "기준까지 {{amount}}",
     "remaining": "{{amount}} 남음",
     "byFood": "음식별로 살펴보면",
-    "relevantNutrients": "살펴볼 영양소만",
+    "relevantNutrients": "이 음식에서 문제되는 영양소",
     "foodDailyPercent": "{{nutrient}} {{amount}} · 하루 기준의 {{percent}}%",
     "swaps": "이렇게 바꾸면 편해요",
     "nutritionFacts": "영양성분표",
@@ -1372,7 +1367,10 @@
       "potassium": "칼륨",
       "phosphorus": "인",
       "water": "수분"
-    }
+    },
+    "scaleDaily": "하루 기준 {{limit}} 중 {{consumed}}",
+    "scaleReference": "참고 기준 {{limit}} 중 {{consumed}}",
+    "limitIs": "기준 {{amount}}"
   },
   "foodResult": {
     "shareInstagram": "인스타그램 스토리에 공유",
@@ -1400,18 +1398,16 @@
     "openAllReferences": "참고 문헌 전체 보기",
     "openReferences": "참고 문헌 보기",
     "story": "스토리에 올리기",
-    "storyCaption": "오늘 한 끼, 24시간만\n이웃에게 보여요",
+    "storyCaption": "오늘 한 끼, 24시간만\n사람들에게 보여요",
     "community": "커뮤니티에 묻기",
-    "communityCaption": "이 식사 기록을\n이웃과 나눠요",
+    "communityCaption": "이 식사 기록을\n사람들과 나눠요",
     "askMore": "이 식사 더 물어보기",
     "openingConsult": "상담을 열고 있어요",
     "askMoreCaption": "궁금한 점을 이어서 물어보세요",
     "delete": "식사 기록 삭제",
     "deleting": "삭제하는 중",
-    "deleteConfirmTitle": "식사 기록을 삭제할까요?",
-    "deleteConfirmBody": "삭제한 기록은 되돌릴 수 없어요.",
-    "deleteFailedTitle": "기록을 삭제하지 못했어요",
-    "deleteFailedBody": "연결을 확인한 뒤 잠시 후 다시 삭제해 주세요.",
+    "deleteConfirmTitle": "이 기록을 지울까요?",
+    "deleteConfirmBody": "지운 기록은 되돌릴 수 없어요. 사진만 바꾸고 싶다면 수정을 눌러 주세요.",
     "addToLog": "기록에 추가하기",
     "adding": "기록하는 중",
     "unsavedTitle": "아직 이 식사를 저장하지 않았어요.",
@@ -1430,7 +1426,11 @@
       "RECIPE": "레시피 기준 계산",
       "INGREDIENT_ESTIMATE": "재료로 추정",
       "AI_ESTIMATE": "사진으로 추정"
-    }
+    },
+    "deleteKeep": "그대로 두기",
+    "deleteAction": "지우기",
+    "deletePreviewPhoto": "사진 1장",
+    "deletePreviewFallback": "식사 기록"
   },
   "foodEdit": {
     "checkMealName": "식사 이름을 확인해 주세요",
@@ -1525,9 +1525,7 @@
       "marketing": "혜택·소식 알림",
       "marketingDescription": "새 소식과 혜택을 알림으로 받아요.",
       "disabledTitle": "알림이 꺼져 있어요",
-      "disabledBody": "알림을 받으려면 휴대폰 설정에서 신신당부 알림을 켜 주세요.",
-      "saveErrorTitle": "알림 설정을 저장하지 못했어요",
-      "saveErrorBody": "인터넷 연결을 확인한 뒤 다시 시도해 주세요."
+      "disabledBody": "알림을 받으려면 휴대폰 설정에서 신신당부 알림을 켜 주세요."
     },
     "legal": {
       "terms": "서비스 이용약관",
@@ -1565,6 +1563,7 @@
     "references": "의학 참고 문헌 보기",
     "category": "카테고리",
     "placeholder": "궁금한 내용을 적어보세요",
+    "send": "질문 보내기",
     "copied": "답변을 복사했어요",
     "choosePhoto": "사진에서 선택",
     "takePhoto": "사진 찍기",
@@ -1692,5 +1691,8 @@
         "body": "약이나 치료 변경은 꼭 의료진과 상의해 주세요."
       }
     }
+  },
+  "keyboard": {
+    "dismiss": "키보드 내리기"
   }
 }

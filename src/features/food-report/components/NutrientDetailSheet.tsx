@@ -47,6 +47,10 @@ export function NutrientDetailSheet({
 
   // 한도는 budgets 에만 있다. 없는 영양소는 % 를 만들지 않는다.
   const limits = new Map(facts.budgets.map((b) => [b.nutrient, b.limit]))
+  // 표기는 서버가 준다 — 여기서 반올림하면 예산 카드의 "30g" 과 어긋난다.
+  const limitTexts = new Map(
+    facts.budgets.map((b) => [b.nutrient, b.limitText]),
+  )
 
   return (
     <View style={[styles.panel, { borderTopColor: s.hairline }]}>
@@ -96,9 +100,19 @@ export function NutrientDetailSheet({
             key={row.key}
             style={[styles.row, { borderBottomColor: s.hairline }]}
           >
-            <Text style={[styles.cell, { color: s.text, flex: 1 }]}>
-              {t(`mealReport.nutrients.${row.key}`)}
-            </Text>
+            {/* "기준 대비 116%" 만 있으면 기준이 얼마인지 알 수 없다. 한도를 아는
+                영양소는 이름 밑에 그 숫자를 적는다(실사용 피드백). */}
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cell, { color: s.text }]}>
+                {t(`mealReport.nutrients.${row.key}`)}
+              </Text>
+              {/* truthy 검사 — 이 필드가 없던 시절 리포트면 undefined 다. */}
+              {limitTexts.get(row.key) && (
+                <Text style={[styles.limit, { color: s.textWeak }]}>
+                  {t("mealReport.limitIs", { amount: limitTexts.get(row.key) })}
+                </Text>
+              )}
+            </View>
             <Text
               style={[
                 styles.cell,
@@ -170,6 +184,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   cell: { ...TYPE.value },
+  limit: { ...TYPE.cardSub, fontVariant: ["tabular-nums"], marginTop: 1 },
   tabular: { fontVariant: ["tabular-nums"] },
   notice: { ...TYPE.cardSub, marginTop: 18 },
 })

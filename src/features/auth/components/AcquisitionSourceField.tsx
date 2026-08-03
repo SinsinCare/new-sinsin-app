@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import {
   KeyboardAvoidingView,
-  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import Animated, {
   Easing,
   FadeIn,
@@ -270,7 +270,7 @@ export function AcquisitionSourceField({
         )}
       </Pressable>
 
-      <Modal
+      <AppModal
         visible={isOpen}
         transparent
         statusBarTranslucent
@@ -414,7 +414,7 @@ export function AcquisitionSourceField({
             </View>
           </Animated.View>
         </KeyboardAvoidingView>
-      </Modal>
+      </AppModal>
     </View>
   )
 }

@@ -97,8 +97,10 @@ const styles = StyleSheet.create({
     minHeight: 36,
     paddingVertical: 6,
     fontSize: 15,
-    lineHeight: 20,
     letterSpacing: -0.3,
+    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
+    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
+    includeFontPadding: false,
     fontFamily: "Pretendard-Regular",
   },
 })

@@ -50,6 +50,7 @@ export function OnboardingScreen() {
     handleWelcomeConfirm,
     retrySteps,
     handleOnlySelect,
+    handleFollowUpSelect,
     handleMultiToggle,
     handleInputChange,
     handleNext,
@@ -144,11 +145,14 @@ export function OnboardingScreen() {
           >
             {t("onboarding.loadFailedTitle")}
           </Text>
+          {/* 서버가 준 원인 문장은 어절이 길다 — 어절 중간에서 끊기지 않게 줄바꿈을 맡긴다. */}
           <Text
             color={textSub}
             fontSize={15}
             lineHeight={22}
             textAlign="center"
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {stepsLoadError ?? t("onboarding.loadFailedFallback")}
           </Text>
@@ -204,6 +208,13 @@ export function OnboardingScreen() {
                   options={displayedStep.values}
                   selectedKeys={currentAnswer?.selectedKeys ?? []}
                   onSelect={handleOnlySelect}
+                  followUp={displayedStep.followUp}
+                  followUpKey={
+                    currentAnswer?.selectedKeys?.find((key) =>
+                      key.startsWith("KRT_"),
+                    ) ?? null
+                  }
+                  onFollowUpSelect={handleFollowUpSelect}
                 />
               )}
 

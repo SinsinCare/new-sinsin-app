@@ -82,7 +82,6 @@ import { FeatureIntroSheet, useFeatureIntro } from "@/src/features/coach"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useCallback, useMemo, useState } from "react"
 import {
-  FlatList,
   Keyboard,
   Pressable,
   RefreshControl,
@@ -90,6 +89,8 @@ import {
   View as RNView,
   Text as RNText,
 } from "react-native"
+// 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
+import { FlashList } from "@shopify/flash-list"
 import { Text, View, XStack, YStack } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -140,6 +141,7 @@ import {
 import { useRecipeHome } from "@/src/features/recipe/hooks/useRecipeHome"
 import { useRecipeListV2 } from "@/src/features/recipe/hooks/useRecipeListV2"
 import { useRecipeSearch } from "@/src/features/recipe/hooks/useRecipeSearch"
+import { resolveError } from "@/src/lib/errorMessage"
 import type {
   RecipeCard,
   RecipeSortKey,
@@ -169,6 +171,13 @@ export default function RecipeScreen() {
     filters,
     sort,
   })
+  /**
+   * 목록 조회가 실패했을 때 그릴 문장. **화면이 고르지 않는다** — 예전에는 갈래가
+   * 하나뿐이라 400 도 500 도 `연결을 확인한 뒤 다시 해 주세요` 였다.
+   *
+   * `isError` 가 아닐 때도 계산되지만 그 값은 쓰이지 않는다(빈 목록은 오류가 아니다).
+   */
+  const listFailure = useMemo(() => resolveError(list.error), [list.error])
   /**
    * 훅이 돌려주는 객체는 매 렌더 새로 만들어진다. 머리말 `useMemo` 의 의존성으로 객체를
    * 그대로 넣으면 렌더마다 머리말이 새로 만들어져(캐러셀 넷이 딸려 있다) 메모가 무의미해진다.
@@ -652,7 +661,7 @@ export default function RecipeScreen() {
             </YStack>
           )}
 
-          <FlatList
+          <FlashList
             data={list.items}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
@@ -673,14 +682,10 @@ export default function RecipeScreen() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
-            initialNumToRender={6}
-            maxToRenderPerBatch={6}
-            windowSize={7}
             /*
-              `removeClippedSubviews` 를 뺐다. 머리말에 가로 ScrollView 가 넷(카테고리 +
-              섹션 3) 들어오면서, 안드로이드에서 이 옵션은 화면 밖으로 나간 가로 스크롤의
-              내용을 떼어 내고 되돌아왔을 때 다시 붙이지 못해 **빈 캐러셀**을 남긴다.
-              목록 줄은 카드 하나가 가벼워 이 옵션 없이도 스크롤이 끊기지 않는다.
+              FlatList 시절의 initialNumToRender/windowSize 튜닝과 "removeClippedSubviews
+              를 못 쓴다"는 안드로이드 빈 캐러셀 우회는 FlashList 로 오면서 걷어냈다 —
+              리사이클링이 그 둘이 하던 일을 대신한다(2026-08 마이그레이션).
             */
             onEndReached={list.loadMore}
             onEndReachedThreshold={0.6}
@@ -703,24 +708,36 @@ export default function RecipeScreen() {
                   alignItems="center"
                   gap={6}
                 >
+                  {/*
+                    문구를 화면이 고르지 않는다. `레시피를 불러오지 못했어요 /
+                    연결을 확인한 뒤 다시 해 주세요` 는 400·500 에도 똑같이 떴고,
+                    그러면 사용자는 고칠 수 없는 자기 와이파이를 의심한다.
+                  */}
                   <Text
                     fontFamily="$body"
                     fontSize={15}
                     lineHeight={21}
                     fontWeight="600"
                     color={surface.textStrong}
-                  >
-                    {tr("list.errorTitle")}
-                  </Text>
-                  <Text
-                    fontFamily="$body"
-                    fontSize={13}
-                    lineHeight={19}
-                    color={surface.textMuted}
                     textAlign="center"
+                    lineBreakStrategyIOS="hangul-word"
+                    textBreakStrategy="balanced"
                   >
-                    {tr("list.errorBody")}
+                    {listFailure.title}
                   </Text>
+                  {listFailure.body ? (
+                    <Text
+                      fontFamily="$body"
+                      fontSize={13}
+                      lineHeight={19}
+                      color={surface.textMuted}
+                      textAlign="center"
+                      lineBreakStrategyIOS="hangul-word"
+                      textBreakStrategy="balanced"
+                    >
+                      {listFailure.body}
+                    </Text>
+                  ) : null}
                   <Pressable
                     onPress={() => void list.refetch()}
                     accessibilityRole="button"

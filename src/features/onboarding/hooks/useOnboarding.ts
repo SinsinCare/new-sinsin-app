@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react"
-import { Alert, BackHandler } from "react-native"
+import { BackHandler } from "react-native"
 import { router } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { onboardingService } from "@/src/services/data/onboardingService"
@@ -11,14 +11,43 @@ import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useAnnouncementSessionStore } from "@/src/features/announcement/state/announcementSessionStore"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
+
+import { showErrorToast } from "@/src/lib/toast"
 
 type Phase = "welcome" | "steps" | "complete"
 
 /** CKD 흐름의 진단 시기 질문. 여기서 "예방 목적"을 고르면 진단 자체가 없다. */
 const DIAGNOSIS_TIMING_STEP = 2
 const PREVENTIVE_KEY = "PREVENTIVE"
-/** 진단이 없으면 물을 수 없는 질문들 — 진단 연·월, 진단 원인. */
+/**
+ * 진단이 없으면 물을 수 없는 질문들 — 진단 연·월, 진단 원인.
+ *
+ * 9(진단 연·월)는 서버 질문 목록에서 빠졌지만 목록에 **남겨 둔다.** 구버전 서버에
+ * 붙으면 그 스텝이 여전히 내려오고, 그때도 예방 목적 사용자에게는 숨겨야 한다.
+ * 새 서버에서는 목록에 없으니 이 필터가 그냥 아무 일도 하지 않는다.
+ */
 const DIAGNOSIS_ONLY_STEPS = [9, 10]
+
+/**
+ * 후속 질문(투석·이식)의 답은 **같은 스텝의 selectedKeys 에 함께** 담는다.
+ *
+ * 별도 스텝도, 별도 저장 슬롯도 만들지 않았다. 그래서 진행률·뒤로가기·복원·제출이
+ * 전부 손대지 않은 채 그대로 동작한다. 두 축은 키 접두사로 갈린다.
+ */
+const FOLLOW_UP_KEY_PREFIX = "KRT_"
+
+function isFollowUpKey(key: string): boolean {
+  return key.startsWith(FOLLOW_UP_KEY_PREFIX)
+}
+
+function primaryKeyOf(selectedKeys: string[] | undefined): string | undefined {
+  return selectedKeys?.find((key) => !isFollowUpKey(key))
+}
+
+function followUpKeyOf(selectedKeys: string[] | undefined): string | undefined {
+  return selectedKeys?.find(isFollowUpKey)
+}
 
 /**
  * 진단받은 적 없는 사용자에게 "언제 진단받았는지"와 "원인이 무엇인지"를 묻지 않는다.
@@ -114,11 +143,20 @@ export function useOnboarding() {
         trackAnalyticsEvent("onboarding_steps_loaded", {
           step_count: data.length,
         })
-      } catch {
+      } catch (error) {
+        // 뒤늦게 도착한 옛 시도의 실패로 화면을 덮지 않는다 — 진단 여부를 바꿔 다시
+        // 부르면 앞선 요청은 버려진 요청이고, 사용자가 한 일의 결과가 아니다.
         if (attempt !== loadStepsAttemptRef.current) return
         setLoadedSteps([])
         setPhase("steps")
-        setStepsLoadError(t("onboarding.loadFailed"))
+        /*
+          "인터넷 연결을 확인한 뒤…" 를 걷었다. 이 화면은 로그인 직후에 뜨므로 연결이
+          끊긴 상태로 여기까지 오기 어렵다 — 실제로 흔한 것은 점검·5xx 다. 원인은
+          `resolveError` 가 고르고, 다음 걸음(다시 불러오기 / 진단 여부 다시 선택)은
+          화면 아래 두 버튼이 이미 말한다.
+        */
+        // 취소된 요청이면 빈 문자열이 온다 — 그때는 화면이 자기 폴백 문장을 쓰게 둔다.
+        setStepsLoadError(getErrorMessage(error) || null)
         trackAnalyticsEvent("onboarding_steps_load_failed", {})
       } finally {
         if (attempt === loadStepsAttemptRef.current) {
@@ -221,15 +259,55 @@ export function useOnboarding() {
         return true
       })
     }
-    return (currentAnswer.selectedKeys?.length ?? 0) > 0
+    const primary = primaryKeyOf(currentAnswer.selectedKeys)
+    if (primary === undefined) return false
+
+    // 후속 질문이 필수인 선택지에서는 답이 있어야 넘어간다. 나머지 선택지에서는
+    // 기본값이 미리 들어가 있으므로 사실상 바로 통과한다.
+    const followUp = currentStep.followUp
+    if (followUp?.requiredFor.includes(primary)) {
+      return followUpKeyOf(currentAnswer.selectedKeys) !== undefined
+    }
+    return true
   }, [currentStep, currentAnswer])
 
   const handleOnlySelect = (key: string) => {
     if (!currentStep) return
+    const followUp = currentStep.followUp
+    const keys = [key]
+
+    if (followUp) {
+      const previous = followUpKeyOf(currentAnswer?.selectedKeys)
+      const mustAnswer = followUp.requiredFor.includes(key)
+      // 4·5기와 "잘 모르겠어요"에서는 기본값을 끌고 오지 않는다. 앞에서 1기를 고르며
+      // 자동으로 붙은 "아니요"가 그대로 따라오면, 정작 투석 여부가 중요한 사람이
+      // 질문을 한 번도 보지 않고 통과한다. 단백질 한도가 0.6 과 1.2 로 갈리는 자리다.
+      const carried =
+        previous !== undefined &&
+        !(mustAnswer && previous === followUp.defaultKey)
+          ? previous
+          : mustAnswer
+            ? undefined
+            : (followUp.defaultKey ?? undefined)
+      if (carried !== undefined) keys.push(carried)
+    }
+
     setAnswer(currentStep.step, {
       step: currentStep.step,
       type: "only",
-      selectedKeys: [key],
+      selectedKeys: keys,
+    })
+  }
+
+  const handleFollowUpSelect = (key: string) => {
+    if (!currentStep) return
+    const primary = primaryKeyOf(currentAnswer?.selectedKeys)
+    // 본 질문에 답하기 전에는 후속 질문이 보이지 않으므로 여기 오지 않는다.
+    if (primary === undefined) return
+    setAnswer(currentStep.step, {
+      step: currentStep.step,
+      type: "only",
+      selectedKeys: [primary, key],
     })
   }
 
@@ -259,7 +337,7 @@ export function useOnboarding() {
 
   const completeOnboarding = async () => {
     if (!user || hasCkd === null) {
-      Alert.alert(
+      showErrorToast(
         t("onboarding.saveFailedTitle"),
         t("onboarding.loginRequired"),
       )
@@ -288,10 +366,16 @@ export function useOnboarding() {
       setPhase("complete")
     } catch (error) {
       trackAnalyticsEvent("onboarding_submit_failed", {})
-      Alert.alert(
-        t("onboarding.saveFailedTitle"),
-        getErrorMessage(error, t("onboarding.saveFailed")),
-      )
+      /*
+        폴백("입력한 내용을 저장하지 못했어요")을 걷었다. 그것이 서버 코드를 이겨서,
+        `ONBOARDING_ERROR_001`(빠뜨린 항목)·`002`(목록에 없는 값)·`003`(이미 마침)이
+        전부 같은 한 줄로 뭉개졌다. 003 은 특히 재시도해도 영원히 같은 실패라, 카탈로그가
+        주는 "홈으로" 버튼이 유일한 출구다.
+      */
+      presentError(error, {
+        scope: "onboarding-submit",
+        retry: () => void completeOnboarding(),
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -377,6 +461,7 @@ export function useOnboarding() {
     handleWelcomeConfirm,
     retrySteps,
     handleOnlySelect,
+    handleFollowUpSelect,
     handleMultiToggle,
     handleInputChange,
     handleNext,

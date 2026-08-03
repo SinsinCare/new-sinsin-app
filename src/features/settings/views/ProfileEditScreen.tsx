@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   Pressable,
-  Alert,
   Image,
   LayoutAnimation,
   Text,
@@ -25,12 +24,13 @@ import { ApiError } from "@/src/services/core/apiError"
 import { tokenService } from "@/src/services/core/tokenService"
 import { getBackendUrl } from "@/src/config/appConfig"
 import i18n, { getAppLanguage } from "@/src/i18n"
-import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
 import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
 import { tokens } from "@/src/theme/tokens"
 
+import { showActionSheet } from "@/src/lib/dialog"
 type Gender = "MALE" | "FEMALE" | "OTHER"
 type ProfileImageSelection = {
   uri: string
@@ -126,56 +126,54 @@ export function ProfileEditScreen() {
     setGender(nextGender)
   }
 
-  const handlePickProfileImage = () => {
-    Alert.alert(t("profile.photo.change"), t("profile.photo.sourcePrompt"), [
-      {
-        text: t("profile.photo.take"),
-        onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync()
-          if (status !== "granted") {
-            showOpenSettingsAlert(
-              t("profile.photo.cameraPermissionTitle"),
-              t("profile.photo.cameraPermissionBody"),
-            )
-            return
-          }
-          const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          })
-          if (!result.canceled && result.assets[0]) {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-            setProfileImage(toProfileImageSelection(result.assets[0]))
-          }
-        },
-      },
-      {
-        text: t("profile.photo.choose"),
-        onPress: async () => {
-          const { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync()
-          if (status !== "granted") {
-            showOpenSettingsAlert(
-              t("profile.photo.libraryPermissionTitle"),
-              t("profile.photo.libraryPermissionBody"),
-            )
-            return
-          }
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ["images"],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          })
-          if (!result.canceled && result.assets[0]) {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-            setProfileImage(toProfileImageSelection(result.assets[0]))
-          }
-        },
-      },
-      { text: t("shared.cancel"), style: "cancel" },
-    ])
+  const handlePickProfileImage = async () => {
+    const picked = await showActionSheet({
+      title: t("profile.photo.change"),
+      description: t("profile.photo.sourcePrompt"),
+      actions: [
+        { label: t("profile.photo.take") },
+        { label: t("profile.photo.choose") },
+      ],
+      cancelLabel: t("shared.cancel"),
+    })
+    if (picked == null) return
+
+    const fromCamera = picked === 0
+    const { status } = fromCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== "granted") {
+      await showOpenSettingsAlert(
+        t(
+          fromCamera
+            ? "profile.photo.cameraPermissionTitle"
+            : "profile.photo.libraryPermissionTitle",
+        ),
+        t(
+          fromCamera
+            ? "profile.photo.cameraPermissionBody"
+            : "profile.photo.libraryPermissionBody",
+        ),
+      )
+      return
+    }
+
+    const result = fromCamera
+      ? await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        })
+      : await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        })
+    if (!result.canceled && result.assets[0]) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+      setProfileImage(toProfileImageSelection(result.assets[0]))
+    }
   }
 
   const handleSave = async () => {
@@ -203,10 +201,13 @@ export function ProfileEditScreen() {
       await queryClient.refetchQueries({ queryKey: ["myPageProfile"] })
       router.back()
     } catch (error) {
-      Alert.alert(
-        t("profile.saveErrorTitle"),
-        getErrorMessage(error, t("profile.saveErrorBody")),
-      )
+      // 사진 업로드와 성별 저장이 한 흐름이라 실패 원인이 서로 다르다(용량 초과·
+      // 형식 거절·세션 만료). 화면이 "프로필을 저장하지 못했어요" 로 덮으면 어느 쪽이
+      // 문제였는지 사라진다 — 서버 코드가 말하게 두고 재시도만 붙인다.
+      presentError(error, {
+        scope: "profile-save",
+        retry: () => void handleSave(),
+      })
     } finally {
       setIsSaving(false)
     }

@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
-import {
-  Alert,
-  Image,
-  Modal,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-} from "react-native"
+import { Image, Platform, TextInput, TouchableOpacity } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, View, XStack, YStack } from "tamagui"
@@ -35,6 +29,8 @@ import {
 } from "../utils/foodEditUtils"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useTranslation } from "react-i18next"
+
+import { showErrorToast } from "@/src/lib/toast"
 
 type UnitTranslationKey =
   | "foodEdit.unit.serving"
@@ -175,7 +171,7 @@ export function FoodResultEdit({
     if (!result) return
     const validation = validateMealTitle(editingName)
     if (!validation.isValid) {
-      Alert.alert(t("foodEdit.checkMealName"), t("foodEdit.enterMealName"))
+      showErrorToast(t("foodEdit.checkMealName"), t("foodEdit.enterMealName"))
       return
     }
     const newTitle = editingName.trim()
@@ -224,7 +220,7 @@ export function FoodResultEdit({
         !validateMenuAmount(food.amount).isValid,
     )
     if (hasInvalidFood) {
-      Alert.alert(t("foodEdit.checkInput"), t("foodEdit.checkInputBody"))
+      showErrorToast(t("foodEdit.checkInput"), t("foodEdit.checkInputBody"))
       return
     }
     const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
@@ -433,7 +429,7 @@ export function FoodResultEdit({
           </YStack>
         </XStack>
 
-        <Modal
+        <AppModal
           visible={isNameEdit}
           animationType="fade"
           transparent
@@ -517,7 +513,7 @@ export function FoodResultEdit({
               </XStack>
             </YStack>
           </View>
-        </Modal>
+        </AppModal>
 
         <YStack gap="$3">
           <XStack justifyContent="space-between" paddingHorizontal="$5">
@@ -746,7 +742,12 @@ export function FoodResultEdit({
         </TouchableOpacity>
       </View>
 
-      <LoadingOverlay visible={isUpdating} message={t("foodEdit.saving")} />
+      {/* 결과 pageSheet(네이티브 Modal) 안이라 루트 포털은 뒤에 깔린다 — inline. */}
+      <LoadingOverlay
+        visible={isUpdating}
+        message={t("foodEdit.saving")}
+        inline
+      />
     </YStack>
   )
 }

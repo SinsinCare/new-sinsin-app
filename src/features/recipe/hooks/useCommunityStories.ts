@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
+import { presentError } from "@/src/lib/errorMessage"
 import { communityStoryService } from "../services/communityStoryService"
 import type {
   CommunityStory,
@@ -36,6 +37,16 @@ export function useCommunityStories(sort: StorySort = "recommended") {
   const deleteStoryMutation = useMutation({
     mutationFn: (storyId: string) => communityStoryService.deleteStory(storyId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: STORIES_KEY })
+    },
+    /*
+      삭제 실패를 아무도 받지 않고 있었다. 사용자는 확인까지 누른 뒤 스토리가 그대로
+      남아 있는 것을 보고 버튼이 죽었다고 판단한다. 여기 오는 대부분은
+      `COMMUNITY_ERROR_012`(올린 지 24시간이 지나 이미 만료) — "사라졌어요" 한 줄이면
+      납득되는 실패인데, 그 문장이 한 번도 화면에 닿은 적이 없었다.
+    */
+    onError: (error) => {
+      presentError(error, { scope: "community-story-delete" })
       queryClient.invalidateQueries({ queryKey: STORIES_KEY })
     },
   })

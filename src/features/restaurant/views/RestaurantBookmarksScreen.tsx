@@ -19,7 +19,9 @@
  */
 
 import { useCallback } from "react"
-import { FlatList, StyleSheet, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
+// 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
+import { FlashList } from "@shopify/flash-list"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
@@ -88,7 +90,7 @@ export function RestaurantBookmarksScreen({
         safeAreaTop
       />
       <V2Divider tone="alternative" />
-      <FlatList
+      <FlashList
         data={list.items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}

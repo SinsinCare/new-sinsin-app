@@ -4,11 +4,11 @@ import { router, useLocalSearchParams } from "expo-router"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/src/hooks/useAuth"
-import { getErrorMessage } from "@/src/lib/errorUtils"
 import { showErrorToast } from "@/src/lib/toast"
 import { ResendCodeLink, StepHelperText, StepTextInput } from "../components"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
+import { presentAuthFailure } from "../utils/authFailure"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import type { EmailForm } from "../types"
@@ -122,9 +122,7 @@ export function SocialLinkEmailScreen() {
       startTimer()
     } catch (error) {
       if (!codeSent) setCodeInputVisible(false)
-      setSendError(
-        getErrorMessage(error, t("emailVerification.sendFailedCheckEmail")),
-      )
+      setSendError(presentAuthFailure(error, { scope: "social-link-send" }))
     } finally {
       setSendingCode(false)
     }
@@ -162,7 +160,9 @@ export function SocialLinkEmailScreen() {
         ),
       )
     } catch (error) {
-      setSendError(getErrorMessage(error, t("emailVerification.verifyFailed")))
+      // 이미 다른 계정이 쓰고 있는 이메일(`SIGNUP_ERROR_001`)이면 카탈로그가
+      // 다이얼로그로 올린다 — 이 화면에서 고칠 수 없고 로그인으로 가야 한다.
+      setSendError(presentAuthFailure(error, { scope: "social-link-verify" }))
     } finally {
       setVerifyingCode(false)
     }

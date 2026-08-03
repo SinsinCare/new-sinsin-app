@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 import {
-  Alert,
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -10,6 +8,8 @@ import {
   useWindowDimensions,
   type ViewToken,
 } from "react-native"
+// 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useLocalSearchParams, type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -34,7 +34,12 @@ import type {
   CommunityStory,
   StorySort,
 } from "@/src/features/recipe/types/story"
+import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
 import { useTranslation } from "react-i18next"
+
+import { showSuccessToast } from "@/src/lib/toast"
+
+import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 const SORTS: StorySort[] = ["recommended", "recent"]
@@ -99,92 +104,85 @@ export default function StoriesScreen() {
     [],
   )
 
-  const handleMore = (story: CommunityStory) => {
+  const handleMore = async (story: CommunityStory) => {
     if (story.isMine) {
-      Alert.alert(
-        t("community.stories.deleteTitle"),
-        t("community.stories.deleteBody"),
-        [
-          {
-            text: t("action.delete"),
-            style: "destructive",
-            onPress: () => deleteStory(story.id),
-          },
-          { text: t("action.cancel"), style: "cancel" },
-        ],
-      )
+      const confirmed = await showConfirm({
+        title: t("community.stories.deleteTitle"),
+        description: t("community.stories.deleteBody"),
+        confirmLabel: t("action.delete"),
+        cancelLabel: t("action.cancel"),
+        destructive: true,
+      })
+      if (confirmed) deleteStory(story.id)
       return
     }
-    Alert.alert(story.authorName, undefined, [
+
+    const picked = await showActionSheet({
+      title: story.authorName,
+      actions: [
+        { label: t("community.stories.report") },
+        { label: t("community.stories.blockUser"), destructive: true },
+      ],
+    })
+    if (picked === 0) {
+      await reportStory(story)
+      return
+    }
+    if (picked !== 1) return
+
+    const confirmed = await showConfirm({
+      title: t("community.stories.blockTitle", { name: story.authorName }),
+      description: t("community.stories.blockBody"),
+      confirmLabel: t("community.stories.block"),
+      cancelLabel: t("action.cancel"),
+      destructive: true,
+    })
+    if (confirmed) blockUser(story.authorName)
+  }
+
+  const reportStory = async (story: CommunityStory) => {
+    const reasons: { label: string; value: ReportReason }[] = [
       {
-        text: t("community.stories.report"),
-        onPress: () => {
-          const reasons: { label: string; value: ReportReason }[] = [
-            {
-              label: t("community.postDetail.reportReasons.spam"),
-              value: "SPAM",
-            },
-            {
-              label: t("community.postDetail.reportReasons.harassment"),
-              value: "HARASSMENT",
-            },
-            {
-              label: t("community.postDetail.reportReasons.inappropriate"),
-              value: "INAPPROPRIATE_CONTENT",
-            },
-            {
-              label: t("community.postDetail.reportReasons.falseInformation"),
-              value: "FALSE_INFORMATION",
-            },
-            {
-              label: t("community.postDetail.reportReasons.other"),
-              value: "OTHER",
-            },
-          ]
-          Alert.alert(t("community.postDetail.reportReasonTitle"), undefined, [
-            ...reasons.map((r) => ({
-              text: r.label,
-              onPress: async () => {
-                try {
-                  await reportService.reportUser({
-                    targetNickName: story.authorName,
-                    reason: r.value,
-                  })
-                  Alert.alert(
-                    t("community.postDetail.reportReceivedTitle"),
-                    t("community.postDetail.reportReceivedBody"),
-                  )
-                } catch {
-                  Alert.alert(
-                    t("community.postDetail.reportErrorTitle"),
-                    t("community.postDetail.reportErrorBody"),
-                  )
-                }
-              },
-            })),
-            { text: t("action.cancel"), style: "cancel" as const },
-          ])
-        },
+        label: t("community.postDetail.reportReasons.spam"),
+        value: "SPAM",
       },
       {
-        text: t("community.stories.blockUser"),
-        style: "destructive",
-        onPress: () =>
-          Alert.alert(
-            t("community.stories.blockTitle", { name: story.authorName }),
-            t("community.stories.blockBody"),
-            [
-              { text: t("action.cancel"), style: "cancel" },
-              {
-                text: t("community.stories.block"),
-                style: "destructive",
-                onPress: () => blockUser(story.authorName),
-              },
-            ],
-          ),
+        label: t("community.postDetail.reportReasons.harassment"),
+        value: "HARASSMENT",
       },
-      { text: t("action.cancel"), style: "cancel" },
-    ])
+      {
+        label: t("community.postDetail.reportReasons.inappropriate"),
+        value: "INAPPROPRIATE_CONTENT",
+      },
+      {
+        label: t("community.postDetail.reportReasons.falseInformation"),
+        value: "FALSE_INFORMATION",
+      },
+      {
+        label: t("community.postDetail.reportReasons.other"),
+        value: "OTHER",
+      },
+    ]
+    const picked = await showActionSheet({
+      title: t("community.postDetail.reportReasonTitle"),
+      actions: reasons.map((r) => ({ label: r.label })),
+    })
+    if (picked == null) return
+
+    try {
+      await reportService.reportUser({
+        targetNickName: story.authorName,
+        reason: reasons[picked].value,
+      })
+      showSuccessToast(
+        t("community.postDetail.reportReceivedTitle"),
+        t("community.postDetail.reportReceivedBody"),
+      )
+    } catch (error) {
+      // `catch {}` 로 오류를 받지도 않고 있었다 — 이미 신고한 사람이든 만료된
+      // 스토리든 화면에는 같은 "인터넷 연결" 한 줄만 떴다.
+      presentCommunityError(error, { scope: "community-story-report" })
+    }
   }
 
   const renderStory = ({ item }: { item: CommunityStory }) => (
@@ -192,7 +190,7 @@ export default function StoriesScreen() {
       <Image
         source={{ uri: item.imageUri }}
         style={styles.image}
-        resizeMode="contain"
+        contentFit="contain"
       />
 
       {/* 오른쪽 액션 레일 */}

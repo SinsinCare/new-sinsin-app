@@ -1,9 +1,9 @@
 import { useRef, useState } from "react"
-import { Alert } from "react-native"
+
 import { useQueryClient } from "@tanstack/react-query"
 import { foodCameraService } from "@/src/services/data"
-import { isApiErrorLike } from "@/src/services/core/apiError"
-import { logRecoverableError } from "@/src/lib/errorUtils"
+import { ApiError } from "@/src/services/core/apiError"
+import { presentError } from "@/src/lib/errorMessage"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
 import { markFoodAnalysisRequestHandled } from "../services/foodAnalysisRequestState"
@@ -24,15 +24,54 @@ import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { appConfig } from "@/src/config/appConfig"
 import { useTranslation } from "react-i18next"
 
+import { showErrorToast } from "@/src/lib/toast"
+
 function createFoodAnalysisRequestId(): string {
   const randomPart = Math.random().toString(36).slice(2, 10)
   return `food-${Date.now().toString(36)}-${randomPart}`
 }
 
-function isTimeoutError(error: unknown): boolean {
-  if (isApiErrorLike(error)) return error.code === "ECONNABORTED"
-  if (!error || typeof error !== "object") return false
-  return (error as { code?: unknown }).code === "ECONNABORTED"
+/**
+ * 레거시 교정을 거친 결과에서 v2 리비전 손잡이를 떼어 낸다.
+ *
+ * 서버는 `PATCH /analysis-results/{id}` 를 받으면 그 분석의 v2 소비 투영을 은퇴시킨다
+ * (`repository.retireV2Projection`) — 손으로 고친 자유 텍스트 음식은 카탈로그 리비전으로
+ * 만들 수 없기 때문이다. 앱이 들고 있던 `revision` 을 그대로 두면 다음번 "먹은 양만"
+ * 수정이 옛 `baseRevisionId` 로 `PATCH /consumption` 을 쳐서 409 로 튕긴다. 화면에는
+ * "변경사항을 저장하지 못했어요"만 뜨고 사용자는 이유를 알 수 없다.
+ *
+ * 교정 응답에는 이 키들이 아예 없으므로, 병합하는 쪽(`{...prev, ...updated}`)에서
+ * 옛 값이 살아남는다. 그래서 **명시적으로 undefined 를 실어** 덮어쓴다.
+ */
+function dropRetiredRevision(
+  updated: FoodAnalysisUpdateResult,
+): FoodAnalysisUpdateResult {
+  return {
+    ...updated,
+    revision: undefined,
+    revisionId: undefined,
+    consumptionRevision: undefined,
+  }
+}
+
+/**
+ * 서버가 분석 잡을 `FAILED` 로 닫았을 때의 오류.
+ *
+ * 잡 실패는 HTTP 오류가 아니라 **폴링 응답의 필드**(`job.error`)로 온다 — 코드가 없어서
+ * 그냥 `Error` 로 던지면 `resolveError` 가 8번 폴백("지금은 이 작업을 마치지 못했어요")
+ * 까지 떨어지고, 재시도 버튼도 없이 끝난다. 이 실패의 의미는 정확히
+ * `FOOD_CAMERA_005`(분석 실패)이므로 그 코드를 실어 카탈로그 문구와 재시도 버튼을 쓴다.
+ *
+ * `statusCode` 를 주는 것은 형식이 아니라 **분기 때문**이다. 상태코드가 없으면
+ * `resolveError` 가 "응답이 아예 오지 않았다"로 보고 와이파이를 확인하라고 말한다 —
+ * 응답은 왔고 그 안에 실패가 적혀 있었다.
+ */
+function createAnalysisJobFailure(job: FoodAnalysisJob): ApiError {
+  return new ApiError(
+    job.error || job.failureMessage || "food analysis job failed",
+    "FOOD_CAMERA_005",
+    500,
+  )
 }
 
 export function useFoodAnalysis(
@@ -49,16 +88,21 @@ export function useFoodAnalysis(
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   /*
-    분석 오버레이(LoadingOverlay 는 RN Modal)가 떠 있는 동안 Alert 를 바로 부르면
-    안 된다. catch 의 Alert 와 finally 의 setIsAnalyzing(false) 가 같은 틱에 돌아서,
-    **알럿이 Modal 의 뷰컨트롤러에 붙은 채 그 Modal 이 dismiss** 된다. iOS 에서
-    이 경합의 결말은 확인을 누른 순간 터치가 죽는 앱 멈춤이다(2026-08-02 실사용 보고,
-    통화 중 상태에서 재현). 그래서 오버레이를 먼저 내리고, Modal 페이드(약 300ms)가
-    끝난 뒤에 알럿을 띄운다. 오버레이가 안 떠 있어도 지연은 무해하다.
+    분석 오버레이가 떠 있는 동안 결과를 바로 알리면 안 된다. 예전엔 Alert 이었고,
+    catch 의 Alert 와 finally 의 setIsAnalyzing(false) 가 같은 틱에 돌아서
+    **알럿이 Modal 의 뷰컨트롤러에 붙은 채 그 Modal 이 dismiss** 됐다. iOS 에서
+    이 경합의 결말은 확인을 누른 순간 터치가 죽는 앱 멈춤이다(2026-08-02 실사용
+    보고, 통화 중 상태에서 재현).
+
+    오버레이가 RN Modal 을 벗고 루트 포털이 된 지금도 지연은 그대로 필요하다 —
+    포털 호스트는 PortalProvider 자식들(토스트 호스트 포함) **뒤에** 그려지므로
+    오버레이가 살아 있는 동안 띄운 토스트는 그 아래 깔려 눈에 닿지 않는다.
+    오버레이를 먼저 내리고 퇴장 페이드가 끝난 뒤에 알린다. 오버레이가 안 떠
+    있어도 지연은 무해하다.
   */
-  const alertAfterOverlayClose = (title: string, body?: string) => {
+  const closeOverlayThenNotify = (notify: () => void) => {
     setIsAnalyzing(false)
-    setTimeout(() => Alert.alert(title, body), 500)
+    setTimeout(notify, 500)
   }
   const [isUpdating, setIsUpdating] = useState(false)
   const [analysisStatus, setAnalysisStatus] =
@@ -67,10 +111,20 @@ export function useFoodAnalysis(
     useState<FoodAnalysisJob | null>(null)
   const queryClient = useQueryClient()
 
-  // 수정 후 서버 데이터로 재동기화 (목록/존재여부 쿼리)
+  /**
+   * 수정 후 서버 데이터로 재동기화.
+   *
+   * 목록·존재여부만으로는 **모자란다.** 한 끼 상세(`diaryResult`)는 staleTime 60초,
+   * 한 끼 리포트(`mealReport`)는 5분이라, 고친 직후 다시 열면 그 창 안에서는 캐시에
+   * 남은 옛 숫자가 그대로 나온다 — 서버는 이미 새 값인데 화면만 안 바뀌는 상태다.
+   * 리포트는 서버가 교정 때 지우므로(`mealReport.invalidate`) 여기서 캐시만 버리면
+   * 다음 조회가 새 문장을 받는다.
+   */
   const refetchDiaryQueries = async () => {
     await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+    await queryClient.invalidateQueries({ queryKey: ["diaryResult"] })
+    await queryClient.invalidateQueries({ queryKey: ["mealReport"] })
   }
 
   // 분석 도중 X 버튼으로 나갔는지 추적 (ref: async closure에서 최신값 보장)
@@ -146,17 +200,18 @@ export function useFoodAnalysis(
           method: analysisMethodRef.current,
           reason: "confirmation_unavailable",
         })
-        alertAfterOverlayClose(
-          t("home.analysis.photoUnclearTitle"),
-          t("home.analysis.photoUnclearBody"),
+        // 오류가 아니라 이 빌드의 한계다 — 던질 것이 없으니 문구를 직접 쥐고 알린다.
+        closeOverlayThenNotify(() =>
+          showErrorToast(
+            t("home.analysis.photoUnclearTitle"),
+            t("home.analysis.photoUnclearBody"),
+          ),
         )
         return
       }
       if (job.status === "FAILED") {
         await pendingAnalysisRequests.remove(requestId)
-        throw new Error(
-          job.error || job.failureMessage || t("home.errors.analysisFailed"),
-        )
+        throw createAnalysisJobFailure(job)
       }
 
       await new Promise((resolve) =>
@@ -185,12 +240,14 @@ export function useFoodAnalysis(
       const job = await foodCameraService.createAnalysis(uri, requestId)
       await resolveJob(job, requestId, mealType, uri)
     } catch (error) {
+      // X 로 나간 뒤 도착한 실패는 알리지 않는다 — 사용자가 이미 이 흐름을 떠났다.
       if (!dismissedRef.current) {
         trackAnalyticsEvent("food_analysis_failed", { method: "photo" })
-        logRecoverableError("analyzeImage error:", error)
-        alertAfterOverlayClose(
-          t("home.analysis.photoFailedTitle"),
-          t("home.analysis.photoFailedBody"),
+        closeOverlayThenNotify(() =>
+          presentError(error, {
+            scope: "food-analysis-photo",
+            retry: () => void analyzeImage(uri, mealType),
+          }),
         )
       }
     } finally {
@@ -234,18 +291,17 @@ export function useFoodAnalysis(
     } catch (error) {
       if (!dismissedRef.current) {
         trackAnalyticsEvent("food_analysis_failed", { method: "text" })
-        logRecoverableError("analyzeText error:", error)
-        if (isTimeoutError(error)) {
-          alertAfterOverlayClose(
-            t("home.analysis.takingLongTitle"),
-            t("home.analysis.takingLongBody"),
-          )
-        } else {
-          alertAfterOverlayClose(
-            t("home.analysis.textFailedTitle"),
-            t("home.analysis.textFailedBody"),
-          )
-        }
+        /*
+          타임아웃을 손으로 갈라 보던 분기를 걷었다. `resolveError` 가 타임아웃·오프라인·
+          `FOOD_CAMERA_009`(내용이 너무 짧음)·`FOOD_CAMERA_010`(요청 몰림)을 각각 다른
+          문구로 나눈다 — 예전에는 셋 다 "연결을 확인한 뒤 다시 해 주세요" 였다.
+        */
+        closeOverlayThenNotify(() =>
+          presentError(error, {
+            scope: "food-analysis-text",
+            retry: () => void analyzeText(text, mealType),
+          }),
+        )
       }
     } finally {
       setIsAnalyzing(false)
@@ -281,12 +337,16 @@ export function useFoodAnalysis(
         analyzedMealType,
         analyzedImageUri,
       )
-    } catch {
-      Alert.alert(
-        t("home.errors.confirmationTitle"),
-        t("home.errors.confirmationBody"),
-      )
+    } catch (error) {
+      // 고른 답은 돌려놓는다 — 되묻지 않아야 재시도가 "같은 것을 다시 누르기"로 끝난다.
       setConfirmationJob(confirmationJob)
+      // 오버레이(루트 포털)가 살아 있는 동안 띄운 토스트는 그 아래 깔려 보이지 않는다.
+      closeOverlayThenNotify(() =>
+        presentError(error, {
+          scope: "food-analysis-confirm",
+          retry: () => void confirmAnalysis(body),
+        }),
+      )
     } finally {
       setIsAnalyzing(false)
     }
@@ -303,7 +363,10 @@ export function useFoodAnalysis(
   ) => {
     if (!analysisResult || !analyzedMealType) return
     if (analysisResult.foodAnalysisResultId <= 0) {
-      Alert.alert(t("home.errors.notReadyTitle"), t("home.errors.notReadyBody"))
+      showErrorToast(
+        t("home.errors.notReadyTitle"),
+        t("home.errors.notReadyBody"),
+      )
       return
     }
     const date = toDateStr(selectedDate)
@@ -317,8 +380,10 @@ export function useFoodAnalysis(
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
       trackAnalyticsEvent("food_record_save_failed", { source: "fresh" })
-      logRecoverableError("registerDiary error:", error)
-      Alert.alert(t("home.errors.saveMealTitle"), t("home.errors.saveMealBody"))
+      presentError(error, {
+        scope: "meal-diary-register",
+        retry: () => void registerDiary(selectedDate, onSuccess),
+      })
     }
   }
 
@@ -329,8 +394,16 @@ export function useFoodAnalysis(
       const response = await foodCameraService.fetchDiaryResult(diaryId)
       return response
     } catch (error) {
-      logRecoverableError("fetchDiaryResult error:", error)
-      Alert.alert(t("home.errors.openMealTitle"), t("home.errors.openMealBody"))
+      /*
+        재시도 핸들러는 주지 않는다 — 이 함수의 결과는 **호출부가 받아 화면을 여는 데**
+        쓰인다. 토스트 버튼에서 다시 불러 봐야 받은 값이 갈 곳이 없다. 대신 새로고침을
+        준다: 이 실패의 대부분인 `FOOD_CAMERA_013`(지워진 기록)은 목록을 새로 받는 것이
+        곧 해결이다.
+      */
+      presentError(error, {
+        scope: "meal-diary-open",
+        refresh: () => void refetchDiaryQueries(),
+      })
     }
   }
 
@@ -395,18 +468,23 @@ export function useFoodAnalysis(
               },
             )
           ).result
-        : await foodCameraService.updateFoodAnalysis(foodAnalysisResultId, body)
+        : dropRetiredRevision(
+            await foodCameraService.updateFoodAnalysis(
+              foodAnalysisResultId,
+              body,
+            ),
+          )
       if (!updated) throw new Error("수정된 식단 결과를 불러오지 못했어요.")
       setAnalysisResult(updated)
       onUpdateSuccess?.(updated)
       await refetchDiaryQueries()
       return updated
     } catch (error) {
-      logRecoverableError("updateFoodAnalysis error:", error)
-      Alert.alert(
-        t("home.errors.saveChangesTitle"),
-        t("home.errors.saveChangesBody"),
-      )
+      presentError(error, {
+        scope: "meal-analysis-update",
+        retry: () =>
+          void updateFoodAnalysis(foodAnalysisResultId, body, sourceResult),
+      })
     } finally {
       setIsUpdating(false)
     }
@@ -424,11 +502,10 @@ export function useFoodAnalysis(
       await refetchDiaryQueries()
       return response
     } catch (error) {
-      logRecoverableError("updateFoodTitle error:", error)
-      Alert.alert(
-        t("home.errors.renameMealTitle"),
-        t("home.errors.renameMealBody"),
-      )
+      presentError(error, {
+        scope: "meal-title-update",
+        retry: () => void updateFoodTitle(foodAnalysisResultId, title),
+      })
     }
   }
 
@@ -444,11 +521,10 @@ export function useFoodAnalysis(
       await refetchDiaryQueries()
       return result
     } catch (error) {
-      logRecoverableError("updateDiaryMealType error:", error)
-      Alert.alert(
-        t("home.errors.changeMealTypeTitle"),
-        t("home.errors.changeMealTypeBody"),
-      )
+      presentError(error, {
+        scope: "meal-type-update",
+        retry: () => void updateDiaryMealType(diaryId, mealType),
+      })
     }
   }
 

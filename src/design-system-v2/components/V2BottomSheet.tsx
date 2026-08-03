@@ -17,13 +17,14 @@ import { type ReactNode, useEffect, useRef, useState } from "react"
 import {
   Animated,
   Easing,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from "react-native"
+// 네이티브 Modal 직접 사용 금지 — 전이 직렬화 게이트를 통과해야 한다(AppModal 머리말)
+import { AppModal } from "@/src/shared/components/AppModal"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { radius, spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
@@ -44,11 +45,18 @@ export type V2BottomSheetProps = {
   /** 주 액션 라벨 (Brand/Fill) */
   primaryLabel?: string
   onPrimary?: () => void
+  /**
+   * 주 액션 버튼 색. 삭제처럼 파괴적인 동작만 "danger" — 레드는 지우기에만 쓴다.
+   * 기본은 brand.
+   */
+  primaryColor?: "brand" | "danger"
   /** 보조 액션 라벨 (Neutral/Weak) */
   secondaryLabel?: string
   onSecondary?: () => void
   /** 뒤 배경 딤(스크림) 표시. 기본 true (false여도 탭-투-클로즈는 유지) */
   dim?: boolean
+  /** 우상단 닫기(✕). 확인 비용을 의도적으로 남기는 시트(삭제 확인 등)에서 켠다. */
+  showClose?: boolean
 }
 
 /**
@@ -75,9 +83,11 @@ export function V2BottomSheet({
   children,
   primaryLabel,
   onPrimary,
+  primaryColor = "brand",
   secondaryLabel,
   onSecondary,
   dim = true,
+  showClose = false,
 }: V2BottomSheetProps) {
   const { t } = useTranslation()
   const { colors } = useV2Theme()
@@ -139,7 +149,7 @@ export function V2BottomSheet({
   }, [visible])
 
   return (
-    <Modal
+    <AppModal
       visible={rendered}
       transparent
       animationType="none"
@@ -184,6 +194,36 @@ export function V2BottomSheet({
             />
           </View>
 
+          {/* 우상단 닫기(옵션) — 타이틀과 같은 높이에 앉는다. */}
+          {showClose && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("action.close")}
+              onPress={onClose}
+              hitSlop={10}
+              style={styles.closeButton}
+            >
+              {({ pressed }) => (
+                <View
+                  style={[
+                    styles.closeCircle,
+                    {
+                      backgroundColor: pressed
+                        ? colors.fill.pressed
+                        : colors.fill.normal,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.closeGlyph, { color: colors.label.neutral }]}
+                  >
+                    ✕
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          )}
+
           {/* 2) 헤더 — Title(옵션) + SubTitle(옵션) */}
           {!!title && (
             <Text style={[styles.title, { color: colors.label.normal }]}>
@@ -217,7 +257,7 @@ export function V2BottomSheet({
               {hasPrimary && (
                 <V2Button
                   size="xl"
-                  color="brand"
+                  color={primaryColor === "danger" ? "danger" : "brand"}
                   variant="fill"
                   fullWidth={!hasTwoButtons}
                   style={hasTwoButtons ? styles.footerButton : undefined}
@@ -230,7 +270,7 @@ export function V2BottomSheet({
           )}
         </Animated.View>
       </View>
-    </Modal>
+    </AppModal>
   )
 }
 
@@ -274,4 +314,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[24],
   },
   footerButton: { flex: 1 },
+  closeButton: {
+    position: "absolute",
+    top: spacing[20] + 12,
+    right: spacing[20],
+    zIndex: 1,
+  },
+  closeCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeGlyph: { fontSize: 15, lineHeight: 18, fontWeight: "600" },
 })

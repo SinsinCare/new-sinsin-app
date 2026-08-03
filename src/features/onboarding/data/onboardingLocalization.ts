@@ -2,6 +2,9 @@ import i18n, { getAppLanguage } from "@/src/i18n"
 import type { OnboardingStep } from "../types"
 
 const CKD_OPTION_KEYS: Record<number, readonly string[]> = {
+  // 1단계는 병기만 담는다. 투석·이식은 같은 스텝의 followUp 으로, 결석은 3단계로 갔다.
+  // DIALYSIS·KIDNEY_STONE 은 구버전 서버에 붙었을 때를 위해 목록에 남긴다 —
+  // 서버가 아직 옛 선택지를 내려주면 번역이라도 붙어야 한다.
   1: [
     "STAGE_1",
     "STAGE_2",
@@ -21,6 +24,7 @@ const CKD_OPTION_KEYS: Record<number, readonly string[]> = {
     "GOUT",
     "ANEMIA",
     "BONE_MINERAL",
+    "KIDNEY_STONE",
     "NONE",
   ],
   5: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"],
@@ -60,6 +64,11 @@ const INPUT_FIELD_LABEL_KEYS: Record<string, string> = {
   height: "onboarding.height",
 }
 
+/** 같은 스텝의 두 번째 축. 병기 키와 접두사로 갈리므로 목록도 따로 둔다. */
+const CKD_FOLLOW_UP_KEYS: Record<number, readonly string[]> = {
+  1: ["KRT_NONE", "KRT_HEMODIALYSIS", "KRT_PERITONEAL", "KRT_TRANSPLANT"],
+}
+
 const NON_CKD_OPTION_KEYS: Record<number, readonly string[]> = {
   1: [
     "HYPERTENSION",
@@ -67,6 +76,7 @@ const NON_CKD_OPTION_KEYS: Record<number, readonly string[]> = {
     "HIGH_PROTEIN_DIET",
     "FAMILY_HISTORY",
     "ABNORMAL_TEST",
+    "KIDNEY_STONE",
     "NONE",
     "UNKNOWN",
   ],
@@ -99,10 +109,34 @@ export function localizeOnboardingStep(
   const optionKeys =
     flow === "ckd" ? CKD_OPTION_KEYS[step.step] : NON_CKD_OPTION_KEYS[step.step]
 
+  const followUpKeys =
+    flow === "ckd" ? CKD_FOLLOW_UP_KEYS[step.step] : undefined
+  const followUp =
+    step.followUp && followUpKeys
+      ? {
+          ...step.followUp,
+          title: resourceString(`${path}.followUp.title`, step.followUp.title),
+          values: step.followUp.values.map((option, index) => {
+            const resourceKey = followUpKeys.includes(option.key)
+              ? option.key
+              : followUpKeys[index]
+            if (!resourceKey) return option
+            return {
+              ...option,
+              value: resourceString(
+                `${path}.followUp.options.${resourceKey}`,
+                option.value,
+              ),
+            }
+          }),
+        }
+      : (step.followUp ?? null)
+
   return {
     ...step,
     title: resourceString(`${path}.title`, step.title),
     subTitle: resourceString(`${path}.subtitle`, step.subTitle),
+    followUp,
     values: step.values.map((option, index) => {
       const labelKey = INPUT_FIELD_LABEL_KEYS[option.key]
       if (labelKey) {

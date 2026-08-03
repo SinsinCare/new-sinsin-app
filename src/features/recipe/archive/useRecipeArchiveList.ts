@@ -25,6 +25,7 @@ import {
 import { useTranslation } from "react-i18next"
 
 import { normalizeLanguage } from "@/src/i18n"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 
 import {
   toRecipeListQueryFilters,
@@ -100,8 +101,15 @@ export interface UseRecipeArchiveListResult {
   retry: () => void
   /** 절대 상태 지정(계약 §2.1). 낙관 갱신 후 실패하면 되돌린다. */
   setSaved: (recipeId: number, saved: boolean) => void
-  /** 저장 요청이 실패했는가. 화면이 안내를 띄운 뒤 `clearSaveError()`. */
-  saveFailed: boolean
+  /**
+   * 저장 요청이 실패한 이유. 없으면 `null`.
+   *
+   * `boolean` 이었을 때 화면이 그리던 문장은 실패의 종류와 무관하게
+   * `원래대로 돌려 뒀어요. 인터넷 연결을 확인한 뒤 다시 해 주세요.` 하나였다.
+   * 지워진 레시피(404)도, 만료된 세션(401)도 같은 말을 들었다. 이유는
+   * `getErrorMessage` 가 서버 코드로 고르고, 여기서는 그 문장을 나른다.
+   */
+  saveError: string | null
   clearSaveError: () => void
 }
 
@@ -114,7 +122,7 @@ export function useRecipeArchiveList({
   const { i18n } = useTranslation()
   const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
   const queryClient = useQueryClient()
-  const [saveFailed, setSaveFailed] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // 캐시 키는 **서버로 나가는 값**으로 만든다. 화면 키(`low-salt`)로 만들면 매핑이
   // 바뀔 때 캐시가 안 갈려 이전 결과가 그대로 보인다.
@@ -231,11 +239,11 @@ export function useRecipeArchiveList({
         queryKey: archiveSourceQueryKey(otherArchiveSource(source)),
       })
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       for (const [key, data] of context?.snapshot ?? []) {
         queryClient.setQueryData(key, data)
       }
-      setSaveFailed(true)
+      setSaveError(getErrorMessage(error))
     },
   })
 
@@ -250,7 +258,7 @@ export function useRecipeArchiveList({
   const mutate = saveMutation.mutate
   const setSaved = useCallback(
     (recipeId: number, saved: boolean) => {
-      setSaveFailed(false)
+      setSaveError(null)
       mutate({ recipeId, saved })
     },
     [mutate],
@@ -268,7 +276,7 @@ export function useRecipeArchiveList({
   const retry = useCallback(() => {
     void refetch()
   }, [refetch])
-  const clearSaveError = useCallback(() => setSaveFailed(false), [])
+  const clearSaveError = useCallback(() => setSaveError(null), [])
 
   return {
     recipes,
@@ -283,7 +291,7 @@ export function useRecipeArchiveList({
     refresh,
     retry,
     setSaved,
-    saveFailed,
+    saveError,
     clearSaveError,
   }
 }

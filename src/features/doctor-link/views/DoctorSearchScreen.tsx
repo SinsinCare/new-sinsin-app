@@ -41,6 +41,7 @@ import {
   useLoadingVisible,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { resolveError } from "@/src/lib/errorMessage"
 import type { DoctorCard, DoctorSearchParams } from "@/src/types/doctorLink"
 
 import { DoctorRow } from "../components/DoctorCards"
@@ -73,6 +74,7 @@ export function DoctorSearchScreen({
   )
   // 캐시가 답하면 로더를 아예 띄우지 않는다(깜빡임 방지).
   const showLoading = useLoadingVisible(submitted !== null && search.isPending)
+  const searchFailure = search.isError ? resolveError(search.error) : null
 
   const update = (key: keyof typeof EMPTY_FORM, value: string) => {
     setForm((current) => ({ ...current, [key]: value }))
@@ -146,13 +148,22 @@ export function DoctorSearchScreen({
             <View style={styles.results}>
               {showLoading ? (
                 <V2LoadingState />
-              ) : search.isError ? (
-                <V2ErrorState
-                  title={t("doctorLink.search.error")}
-                  // 재시도가 없으면 사용자는 하단 CTA 를 다시 누르는 걸 스스로 알아내야 한다.
-                  onRetry={() => void search.refetch()}
-                  retryLabel={t("doctorLink.search.retry")}
-                />
+              ) : searchFailure ? (
+                // `DOCTOR_ERROR_001`(조건 미입력)처럼 조건을 바꿔야 하는 실패는
+                // 같은 조건으로 다시 불러도 답이 같다 — 재시도를 그리지 않는다.
+                searchFailure.retryable ? (
+                  <V2ErrorState
+                    title={searchFailure.title}
+                    description={searchFailure.body}
+                    onRetry={() => void search.refetch()}
+                    retryLabel={t("doctorLink.search.retry")}
+                  />
+                ) : (
+                  <V2ErrorState
+                    title={searchFailure.title}
+                    description={searchFailure.body}
+                  />
+                )
               ) : search.isPending ? null : results.length === 0 ? (
                 <V2EmptyState
                   title={t("doctorLink.search.emptyTitle")}

@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  Alert,
 } from "react-native"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -25,6 +24,8 @@ import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
 import type { OcrConfirmItem, OcrReport } from "@/src/features/health/types"
 import { useHealthTheme } from "../hooks/useHealthTheme"
+
+import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
 
 // 화면에서 편집 가능한 항목 (id는 React 리스트 key 용 로컬 식별자)
 type EditableItem = {
@@ -144,7 +145,7 @@ export function OcrReviewScreen() {
     if (saving || alreadyConfirmed) return
 
     if (!DATE_PATTERN.test(measuredAt)) {
-      Alert.alert(
+      showErrorToast(
         t("ocrReview.invalidDateTitle"),
         t("ocrReview.invalidDateDescription"),
       )
@@ -163,7 +164,7 @@ export function OcrReviewScreen() {
       }))
 
     if (!payloadItems.some((i) => i.include && i.examValue)) {
-      Alert.alert(
+      showErrorToast(
         t("ocrReview.noItemsTitle"),
         t("ocrReview.noItemsDescription"),
       )
@@ -176,19 +177,15 @@ export function OcrReviewScreen() {
         measuredAt,
         items: payloadItems,
       })
-      Alert.alert(
+      // 저장은 끝났다 — 확인을 받아 낼 이유가 없으니 화면을 닫으며 알린다.
+      router.dismissAll()
+      showSuccessToast(
         t("ocrReview.saveSuccessTitle"),
         t("ocrReview.saveSuccessDescription", { count: result.savedCount }),
-        [
-          {
-            text: t("actions.confirm"),
-            onPress: () => router.dismissAll(),
-          },
-        ],
       )
     } catch (err) {
       logger.error("[ocr] confirm failed", err)
-      Alert.alert(t("ocrReview.saveErrorTitle"), getOcrErrorMessage(err))
+      showErrorToast(t("ocrReview.saveErrorTitle"), getOcrErrorMessage(err))
     } finally {
       setSaving(false)
     }

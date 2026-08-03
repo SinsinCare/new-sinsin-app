@@ -87,6 +87,16 @@ export type AnalyticsEventProperties = {
     slot: AnalyticsMealSlot
   }
   food_photo_permission_denied: { source: "camera" | "gallery" }
+  /*
+    고른 사진의 확인 단계. 앨범은 탭 한 번으로 사진을 돌려주므로 실수 선택이 그대로
+    분석으로 가던 자리다 — 여기서 되돌린 비율(replaced·cancelled ÷ viewed)이 그 실수가
+    실제로 얼마나 있었는지를 말해 준다. 카메라 경로는 iOS 가 같은 확인을 이미 갖고 있어
+    지금은 gallery 만 쏜다.
+  */
+  food_photo_confirm_viewed: { source: "gallery" | "camera" }
+  food_photo_confirm_accepted: { source: "gallery" | "camera" }
+  food_photo_confirm_replaced: { source: "gallery" | "camera" }
+  food_photo_confirm_cancelled: { source: "gallery" | "camera" }
   food_analysis_started: { method: "photo" | "text" }
   food_analysis_succeeded: { method: "photo" | "text" }
   food_analysis_failed: {

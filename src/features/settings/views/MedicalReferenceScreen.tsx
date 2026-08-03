@@ -298,16 +298,10 @@ export function MedicalReferenceScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* 리드 문장 — 카드 없이 조용한 본문 한 단락. */}
-        <Text
-          style={[styles.lead, { color: surface.textMuted }]}
-          lineBreakStrategyIOS="hangul-word"
-          textBreakStrategy="balanced"
-        >
-          {t("medical.lead")}
-        </Text>
-
-        {/* 검색 필드 — 보더 없는 흰 면. */}
+        {/* 검색 필드 — 보더 없는 흰 면. 헤더 바로 아래가 첫 줄이다.
+            자료 범위 설명은 위가 아니라 목록 아래 푸터로 내렸다: 검색은 화면에
+            들어오자마자 손에 닿아야 하고, 설명문은 iOS 그룹 리스트처럼 목록을
+            다 본 뒤에 읽는 각주 자리가 맞다. */}
         <View style={[styles.searchBar, { backgroundColor: fieldBg }]}>
           <Ionicons name="search" size={17} color={surface.textWeak} />
           <TextInput
@@ -350,14 +344,22 @@ export function MedicalReferenceScreen() {
           </Text>
         )}
 
-        {/* 갱신·면책 — 하나의 푸터 스택. 카드도 보더도 없이 가운데 정렬 캡션 위계. */}
+        {/* 범위·면책·갱신 — 하나의 푸터 스택. 카드도 보더도 없이 가운데 정렬 캡션 위계.
+            산문(범위 → 면책) 먼저, 헤어라인 뒤에 메타(확인일)와 링크. */}
         <View style={styles.footer}>
           <Text
-            style={[styles.updateText, { color: surface.placeholder }]}
+            style={[styles.scopeText, { color: surface.textMuted }]}
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
           >
-            {t("medical.lastChecked", { date: LAST_UPDATED })}
+            {t("medical.lead")}
+          </Text>
+          <Text
+            style={[styles.disclaimerText, { color: surface.placeholder }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
+            {t("medical.disclaimer")}
           </Text>
           <View
             style={[
@@ -366,11 +368,11 @@ export function MedicalReferenceScreen() {
             ]}
           />
           <Text
-            style={[styles.disclaimerText, { color: surface.placeholder }]}
+            style={[styles.updateText, { color: surface.placeholder }]}
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
           >
-            {t("medical.disclaimer")}
+            {t("medical.lastChecked", { date: LAST_UPDATED })}
           </Text>
           <Pressable
             onPress={() =>
@@ -409,15 +411,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 4,
-  },
-
-  lead: {
-    fontSize: 14,
-    lineHeight: 21,
-    letterSpacing: -0.28,
-    fontFamily: "Pretendard-Regular",
-    marginBottom: 16,
+    paddingTop: 8,
   },
 
   searchBar: {
@@ -535,8 +529,16 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: "center",
     gap: 8,
-    marginTop: 28,
+    marginTop: 32,
     paddingHorizontal: 12,
+  },
+  // 자료 범위 설명 — 푸터에서 유일하게 조금 진한 줄. 면책·확인일보다 한 단 위.
+  scopeText: {
+    fontSize: 13,
+    lineHeight: 19,
+    letterSpacing: -0.26,
+    textAlign: "center",
+    fontFamily: "Pretendard-Regular",
   },
   disclaimerText: {
     fontSize: 11.5,

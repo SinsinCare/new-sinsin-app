@@ -1,13 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
+  BackHandler,
   Linking,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from "react-native"
+import { Portal } from "@tamagui/portal"
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { Download } from "@/src/shared/components/lucide"
 import { Text, XStack, YStack } from "tamagui"
 
@@ -20,15 +22,47 @@ interface RecommendedUpdatePromptProps {
   policy: MobilePolicyResponse
 }
 
+/**
+ * 권장 업데이트 안내.
+ *
+ * **RN Modal 이 아니다 — 일부러.** 마운트 즉시 뜨는 앱 시작 팝업이라, 같은 시점에
+ * 홈의 공지 팝업·복구된 분석 결과(pageSheet)와 present 가 겹칠 수 있다. iOS 에서
+ * 네이티브 모달 전환 둘이 겹치면 앱 전체 터치가 죽는다(LoadingOverlay 머리말).
+ * 루트 포털 JS 오버레이로 그려 시작 시점 경쟁에서 빠진다.
+ */
 export function RecommendedUpdatePrompt({
   policy,
 }: RecommendedUpdatePromptProps) {
+  const [visible, setVisible] = useState(true)
+  if (!visible) return null
+  return (
+    <Portal>
+      <RecommendedUpdateCard
+        policy={policy}
+        onClose={() => setVisible(false)}
+      />
+    </Portal>
+  )
+}
+
+function RecommendedUpdateCard({
+  policy,
+  onClose,
+}: RecommendedUpdatePromptProps & { onClose: () => void }) {
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
-  const [visible, setVisible] = useState(true)
   const [openError, setOpenError] = useState<string | null>(null)
   const cardWidth = Math.min(Math.max(width - 40, 280), 372)
   const message = policy.message?.trim() || t("mobilePolicy.recommendedBody")
+
+  // 네이티브 Modal 시절의 onRequestClose 와 같게, 안드로이드 뒤로가기는 닫기다.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onClose()
+      return true
+    })
+    return () => sub.remove()
+  }, [onClose])
 
   const handleOpenStore = async () => {
     if (!policy.storeUrl) return
@@ -41,13 +75,14 @@ export function RecommendedUpdatePrompt({
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setVisible(false)}
+    <Animated.View
+      entering={FadeIn.duration(200)}
+      exiting={FadeOut.duration(150)}
+      style={StyleSheet.absoluteFill}
+      // 뒤 화면 조작을 막는 게 딤의 역할 — 손잡이 없는 View 는 탭이 새므로 응답자를 자처한다.
+      onStartShouldSetResponder={() => true}
     >
-      <View style={styles.dim}>
+      <View style={styles.dim} accessibilityViewIsModal>
         <ScrollView
           bounces={false}
           overScrollMode="never"
@@ -132,7 +167,7 @@ export function RecommendedUpdatePrompt({
                 styles.skipButton,
                 pressed && styles.skipButtonPressed,
               ]}
-              onPress={() => setVisible(false)}
+              onPress={onClose}
             >
               <Text
                 fontSize={14}
@@ -147,7 +182,7 @@ export function RecommendedUpdatePrompt({
           </YStack>
         </ScrollView>
       </View>
-    </Modal>
+    </Animated.View>
   )
 }
 

@@ -20,6 +20,14 @@
     "retry": "Retry",
     "done": "Done"
   },
+  "permission": {
+    "photoTitle": "Photo access is off",
+    "photoBody": "Turn on photo access in Settings to choose a photo from your library.",
+    "cameraTitle": "Camera access is off",
+    "cameraBody": "Turn on the camera in Settings to take a photo for your log.",
+    "openSettings": "Open Settings",
+    "notNow": "Not now"
+  },
   "accessibility": {
     "remove": "Remove",
     "clear": "Clear"
@@ -30,7 +38,7 @@
   "announcement": {
     "linkErrorTitle": "We couldn’t open that link",
     "invalidLinkBody": "The link in this announcement isn’t valid. Check the announcement for another way to continue.",
-    "openLinkErrorBody": "Check your connection, then open the link again.",
+    "openLinkErrorBody": "Try again in a moment. The address may have changed.",
     "image": "Image for {{title}}",
     "new": "What’s new",
     "close": "Close announcement",
@@ -59,7 +67,7 @@
     "requiredBody": "Install the latest version to keep using Sinsin Care.",
     "recommendedTitle": "An update is available",
     "recommendedBody": "A newer, more reliable version is ready to install.",
-    "storeError": "We couldn’t open the app store. Check your connection and try again.",
+    "storeError": "We couldn't open the store. Try again in a moment.",
     "update": "Update now",
     "later": "Not now"
   },
@@ -201,25 +209,14 @@
       },
       "reportReceivedTitle": "Report received",
       "reportReceivedBody": "We’ll review it.",
-      "reportErrorTitle": "We couldn’t submit your report",
-      "reportErrorBody": "Check your connection, then try reporting it again.",
       "shareMessage": "{{title}}\n\n{{description}}\n\nRead this post on Sinsin Care\n{{url}}",
-      "voteErrorTitle": "We couldn’t save your vote",
-      "voteErrorBody": "Check your connection, then vote again.",
-      "commentSaveErrorTitle": "We couldn’t save your comment",
-      "commentSaveErrorBody": "Check your connection, then try saving it again.",
       "deleteCommentTitle": "Delete this comment?",
       "deleteCommentBody": "You won’t be able to get it back.",
-      "commentDeleteErrorTitle": "We couldn’t delete your comment",
-      "commentDeleteErrorBody": "Wait a moment, then try deleting it again.",
       "reply": "Reply",
       "comment": "Comment",
-      "likeErrorTitle": "We couldn’t update your like",
-      "likeErrorBody": "Check your connection, then tap Like again.",
       "deletedComment": "This comment was deleted",
       "likeComment": "Like comment",
       "commentMore": "Comment options",
-      "loadErrorTitle": "We couldn’t load this post",
       "reload": "Reload post",
       "loading": "Loading post…",
       "notFound": "We couldn’t find this post",
@@ -277,8 +274,6 @@
       "today": "Today",
       "yesterday": "Yesterday",
       "galleryPhoto": "Photo library",
-      "errorTitle": "We couldn’t post your story",
-      "errorBody": "Check your connection, then try posting it again.",
       "title": "New story",
       "add": "Post story",
       "saving": "Posting…",
@@ -291,7 +286,11 @@
       "noMealPhotos": "No meal photos yet. You can choose one from your photo library.",
       "captionLabel": "Caption (optional)",
       "captionPlaceholder": "How was this meal?",
-      "notice": "Your story will be visible for 24 hours."
+      "notice": "Your story will be visible for 24 hours.",
+      "discardTitle": "Discard this story?",
+      "discardBody": "If you leave now, the photo you picked and your caption won’t be saved.",
+      "discard": "Discard and leave",
+      "keepWriting": "Keep writing"
     },
     "library": {
       "tabs": {
@@ -329,8 +328,6 @@
     "menuCount_other": "{{count}} menu items",
     "searchPlaceholder": "Search by restaurant or address",
     "searchAccessibility": "Search restaurants",
-    "loadErrorTitle": "We couldn’t load nearby restaurants",
-    "loadErrorBody": "Check your connection, then reload the list.",
     "reload": "Reload restaurants",
     "emptyTitle": "No restaurants match your search",
     "emptyBody": "Try a different search or adjust your filters.",
@@ -483,7 +480,6 @@
       "openSettings": "Open Settings",
       "successTitle": "Thanks — we got it",
       "successBody": "We’ll review the details you sent.",
-      "failure": "We couldn’t send the restaurant details. Check your connection, then try again.",
       "introTitle": "Know a restaurant worth sharing?",
       "introBody": "Tell us where it was easy to order a less salty meal. We’ll review your submission before adding it.",
       "formTitle": "Share a restaurant",
@@ -516,7 +512,11 @@
         "nameRequired": "Enter the restaurant name.",
         "categoryRequired": "Enter the cuisine.",
         "tooManyPhotos": "You can add up to {{count}} photos."
-      }
+      },
+      "discardTitle": "Discard this report?",
+      "discardBody": "If you leave now, what you typed and the photos won’t be saved.",
+      "discard": "Discard and leave",
+      "keepWriting": "Keep writing"
     },
     "distance": {
       "meters": "{{value}} meters",
@@ -774,11 +774,8 @@
       "mapTitle": "Couldn't load the map",
       "mapRetry": "Reload map",
       "detailTitle": "Could not load restaurant details",
-      "detailBody": "Check your internet connection and load again.",
+      "detailBody": "Try loading it again in a moment.",
       "detailRetry": "Load again",
-      "bookmarkFailed": "Couldn't save. Tap again to retry",
-      "reviewFailed": "Could not post your review. Please try again in a moment.",
-      "reportFailed": "Could not send your report. Please try again in a moment.",
       "serverTitle": "Something went wrong on our server",
       "serverBody": "Trying again in a moment usually fixes it. If it keeps happening, please wait a little.",
       "serverRetry": "Try again",
@@ -824,7 +821,7 @@
       "appliedTitle": "Filters to apply",
       "noFilters": "We could not turn what you said into filters.",
       "errorTitle": "Could not sort out your request",
-      "errorBody": "Check your connection and ask again.",
+      "errorBody": "Try asking again in a moment.",
       "apply": "Show these results",
       "retry": "Ask again"
     },
@@ -943,7 +940,11 @@
         "photoProgress": "Uploading photos ({{current}}/{{total}})",
         "photoRemove": "Remove photo {{index}}",
         "photoCount": "Photos {{current}}/{{max}}",
-        "guidelineBody": "Reviews that are unrelated to the place, promotional, or contain personal information may be removed without notice.\nAbusive, defamatory, or insulting language hurts real people.\nWriting honestly about the menu and your visit helps others the most."
+        "guidelineBody": "Reviews that are unrelated to the place, promotional, or contain personal information may be removed without notice.\nAbusive, defamatory, or insulting language hurts real people.\nWriting honestly about the menu and your visit helps others the most.",
+        "discardTitle": "Discard this review?",
+        "discardBody": "If you leave now, your rating, photos, and text won’t be saved.",
+        "discard": "Discard and leave",
+        "keepWriting": "Keep writing"
       },
       "reportDetailPlaceholder": "Tell us what is wrong so we can check faster. (optional)",
       "reportOwn": "You cannot report your own review",
@@ -965,8 +966,6 @@
       "postsEmptyBody": "Posts live in the community tab.",
       "reviewsUnavailableTitle": "Reviews aren't available here",
       "reviewsUnavailableBody": "This reviewer's list isn't served yet. You can still read their reviews on each restaurant page.",
-      "loadErrorTitle": "We couldn’t load this profile",
-      "loadErrorBody": "Check your connection and try again.",
       "summaryAllLabel": "All",
       "summaryRatingLabel": "Rating"
     },
@@ -1051,8 +1050,6 @@
       "month": "Month"
     },
     "periodReport": "{{period}} report",
-    "errorTitle": "We couldn’t load your trends",
-    "errorBody": "Check your connection, then try again.",
     "retryAccessibility": "Reload trends",
     "lowDataTitle": "A little more data will make this clearer",
     "mealsRecorded": "{{recorded}} of {{expected}} meals · {{rate}}%",
@@ -1108,7 +1105,11 @@
       "title": "Describe your meal",
       "placeholder": "Add each food and how much you ate",
       "example": "Example: 1 serving salad, 5 oz meat, 1 egg, 1 cup milk",
-      "checkNutrients": "Check nutrients"
+      "checkNutrients": "Check nutrients",
+      "discardTitle": "Discard what you wrote?",
+      "discardBody": "If you leave now, this text won’t be saved.",
+      "discard": "Discard and leave",
+      "keepWriting": "Keep writing"
     },
     "analysis": {
       "readyTitle": "Your meal results are ready",
@@ -1116,13 +1117,7 @@
       "readyMealBody": "Review the nutrients and notes for {{meal}}.",
       "readyGenericBody": "Open your meal log to review the nutrients and notes.",
       "photoUnclearTitle": "We couldn’t identify the food in this photo",
-      "photoUnclearBody": "Try another angle or describe the meal instead.",
-      "photoFailedTitle": "We couldn’t read this meal photo",
-      "photoFailedBody": "Try a clear photo with the food in view. If your connection is unstable, wait a moment and try again.",
-      "takingLongTitle": "This is taking longer than usual",
-      "takingLongBody": "You can close this screen and check for the result again later.",
-      "textFailedTitle": "We couldn’t check that meal",
-      "textFailedBody": "Your description is still here. Check your connection, then try again."
+      "photoUnclearBody": "Try another angle or describe the meal instead."
     },
     "undoRecord": "Undo",
     "tile": {
@@ -1250,6 +1245,12 @@
         "info": "Add the foods and portions to check sodium, potassium, and phosphorus.",
         "skip": "Skip this meal today"
       },
+      "mealPhoto": {
+        "title": "Log this photo?",
+        "photoLabel": "Selected photo preview",
+        "confirm": "Analyze this photo",
+        "pickAgain": "Choose another photo"
+      },
       "water": {
         "title": "Log water",
         "subtitle": "Tap the amount you drank",
@@ -1279,12 +1280,14 @@
         "diastolic": "Diastolic",
         "heartRate": "Heart rate",
         "noPrevious": "No previous blood pressure reading to compare",
-        "enterBoth": "Enter systolic and diastolic values"
+        "enterBoth": "Enter systolic and diastolic values",
+        "currentValue": "This reading is",
+        "judgmentPending": "Enter both values to see where you stand"
       },
       "bloodGlucose": {
         "title": "Log blood sugar",
         "subtitle": "Pick when you checked, then set the number",
-        "chooseValue": "Set your reading to continue",
+        "chooseValue": "Enter your blood sugar",
         "decrease": "Lower blood sugar by 1",
         "increase": "Raise blood sugar by 1",
         "step": "Steps of 1",
@@ -1296,11 +1299,13 @@
           "1H": "1 hr",
           "2H": "2 hr"
         },
-        "typeValue": "Type blood glucose"
+        "typeValue": "Type blood glucose",
+        "autoAfterMeal": "After {{meal}} {{time}} · Auto",
+        "autoFasting": "Fasting · Auto"
       },
       "weight": {
         "title": "Log weight",
-        "subtitle": "Try to check at a similar time and under similar conditions each day",
+        "subtitle": "Most accurate after your morning bathroom trip",
         "chooseValue": "Choose your weight",
         "decrease": "Lower weight by 0.1 kg",
         "increase": "Raise weight by 0.1 kg",
@@ -1308,7 +1313,13 @@
         "difference": "Change from yesterday",
         "noComparisonInfo": "For a useful comparison, try to check at a similar time and under similar conditions.",
         "comparisonInfo": "This is the change from your previous entry. Time of day, clothing, meals, and fluids can affect the number.",
-        "typeValue": "Type weight"
+        "typeValue": "Type weight",
+        "weekAverage": "7-day avg",
+        "trendCaption": "Last 7 days",
+        "guidanceUp": "Up {{amount}} from yesterday. If it rises two days in a row, tell your care team.",
+        "guidanceUpStreak": "Up {{amount}} from yesterday — two days in a row. Tell your care team at your next visit.",
+        "guidanceDown": "Down {{amount}} from yesterday. Weighing at the same time keeps the trend accurate.",
+        "guidanceSame": "Same as yesterday. Consistent logging builds the trend."
       },
       "edema": {
         "title": "Log swelling",
@@ -1321,36 +1332,20 @@
         },
         "info": "Check around your eyes in the morning and your feet and ankles in the evening."
       },
-      "typeHint": "Tap the number to type it"
+      "typeHint": "Tap the number to type it",
+      "today": "Today",
+      "targetBadge": "{{label}} · Target {{min}}–{{max}}",
+      "targetOnly": "Target {{min}}–{{max}}",
+      "judgment": {
+        "normal": "Normal",
+        "high": "High",
+        "low": "Low",
+        "veryHigh": "Very high"
+      }
     },
     "errors": {
-      "analysisFailed": "We couldn’t analyze this meal.",
-      "confirmationTitle": "We couldn’t finish checking the food",
-      "confirmationBody": "Your choices are still here. Check your connection, then try again.",
       "notReadyTitle": "This meal isn’t ready to save yet",
-      "notReadyBody": "We’re still preparing the result. Try “Add to log” again in a moment.",
-      "saveMealTitle": "We couldn’t save this meal",
-      "saveMealBody": "Check your connection, then try “Add to log” again.",
-      "saveChangesTitle": "We couldn’t save your changes",
-      "saveChangesBody": "Your edits are still here. Check your connection, then tap Save again.",
-      "skipMealTitle": "We couldn’t mark this meal as skipped",
-      "tryAgainBody": "Check your connection, then try again.",
-      "openMealTitle": "We couldn’t open this meal",
-      "openMealBody": "Check your connection, then tap the meal card again.",
-      "renameMealTitle": "We couldn’t rename this meal",
-      "renameMealBody": "Your new name is still here. Wait a moment, then save again.",
-      "changeMealTypeTitle": "We couldn’t move this meal",
-      "changeMealTypeBody": "Check your connection, then choose the meal again.",
-      "saveBloodPressureTitle": "We couldn’t save your blood pressure",
-      "saveBloodPressureBody": "Check the numbers, then tap Log again in a moment.",
-      "saveBloodGlucoseTitle": "We couldn’t save your blood sugar",
-      "saveBloodGlucoseBody": "Check the reading and when you took it, then tap Log again.",
-      "saveWeightTitle": "We couldn’t save your weight",
-      "saveWeightBody": "Check the number, then tap Log again in a moment.",
-      "saveEdemaTitle": "We couldn’t save your swelling check",
-      "saveEdemaBody": "Your selection is still here. Wait a moment, then tap Log again.",
-      "saveWaterTitle": "We couldn’t save that water",
-      "saveWaterBody": "We restored the previous amount. Check your connection, then try again."
+      "notReadyBody": "We’re still preparing the result. Try “Add to log” again in a moment."
     }
   },
   "mealReport": {
@@ -1367,7 +1362,7 @@
     "untilLimit": "{{amount}} before the reference limit",
     "remaining": "{{amount}} remaining",
     "byFood": "Food-by-food",
-    "relevantNutrients": "Only nutrients worth a closer look",
+    "relevantNutrients": "The nutrient that matters in each food",
     "foodDailyPercent": "{{nutrient}} {{amount}} · {{percent}}% of your daily limit",
     "swaps": "Easier swaps",
     "nutritionFacts": "Nutrition facts",
@@ -1384,7 +1379,10 @@
       "potassium": "Potassium",
       "phosphorus": "Phosphorus",
       "water": "Fluids"
-    }
+    },
+    "scaleDaily": "{{consumed}} of the {{limit}} daily limit",
+    "scaleReference": "{{consumed}} of the {{limit}} reference limit",
+    "limitIs": "limit {{amount}}"
   },
   "foodResult": {
     "shareInstagram": "Share to Instagram Stories",
@@ -1414,18 +1412,16 @@
     "openAllReferences": "View all medical references",
     "openReferences": "View medical references",
     "story": "Share to your story",
-    "storyCaption": "Neighbors can see this meal\nfor 24 hours",
+    "storyCaption": "People here can see this meal\nfor 24 hours",
     "community": "Ask the community",
-    "communityCaption": "Share this meal\nwith your neighbors",
+    "communityCaption": "Share this meal\nwith people here",
     "askMore": "Ask about this meal",
     "openingConsult": "Opening your chat…",
     "askMoreCaption": "Keep going with any questions you have.",
     "delete": "Delete meal log",
     "deleting": "Deleting…",
-    "deleteConfirmTitle": "Delete this meal log?",
-    "deleteConfirmBody": "You won’t be able to recover it.",
-    "deleteFailedTitle": "We couldn’t delete this meal log",
-    "deleteFailedBody": "Check your connection, then try again in a moment.",
+    "deleteConfirmTitle": "Delete this record?",
+    "deleteConfirmBody": "Deleted records can't be restored. If you only want to change the photo, tap Edit instead.",
     "addToLog": "Add to log",
     "adding": "Adding…",
     "unsavedTitle": "This meal hasn’t been saved yet.",
@@ -1444,7 +1440,11 @@
       "RECIPE": "Recipe-based calculation",
       "INGREDIENT_ESTIMATE": "Estimated from ingredients",
       "AI_ESTIMATE": "Estimated from the photo"
-    }
+    },
+    "deleteKeep": "Keep it",
+    "deleteAction": "Delete",
+    "deletePreviewPhoto": "1 photo",
+    "deletePreviewFallback": "Meal record"
   },
   "foodEdit": {
     "checkMealName": "Check the meal name",
@@ -1539,9 +1539,7 @@
       "marketing": "News and offers",
       "marketingDescription": "Get occasional product news and offers.",
       "disabledTitle": "Notifications are off",
-      "disabledBody": "Turn on Sinsin Care notifications in your device settings.",
-      "saveErrorTitle": "We couldn’t save your notification settings",
-      "saveErrorBody": "Check your connection, then try again."
+      "disabledBody": "Turn on Sinsin Care notifications in your device settings."
     },
     "legal": {
       "terms": "Terms of service",
@@ -1579,6 +1577,7 @@
     "references": "View medical references",
     "category": "Topic",
     "placeholder": "Ask a question",
+    "send": "Send question",
     "copied": "Answer copied",
     "choosePhoto": "Choose a photo",
     "takePhoto": "Take a photo",
@@ -1708,5 +1707,8 @@
         "body": "Always check medication or treatment changes with your clinician."
       }
     }
+  },
+  "keyboard": {
+    "dismiss": "Hide keyboard"
   }
 }

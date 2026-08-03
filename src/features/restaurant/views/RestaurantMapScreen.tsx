@@ -76,12 +76,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import {
-  FlatList,
-  StyleSheet,
-  View,
-  type LayoutChangeEvent,
-} from "react-native"
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native"
+// 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
+import { FlashList } from "@shopify/flash-list"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -1290,7 +1287,7 @@ export function RestaurantMapScreen({
           {filterRow}
           {notice}
           <V2Divider tone="alternative" />
-          <FlatList
+          <FlashList
             data={list.items}
             keyExtractor={(item) => String(item.restaurantId)}
             renderItem={({ item }) => (

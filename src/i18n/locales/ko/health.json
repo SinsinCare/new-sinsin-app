@@ -25,8 +25,6 @@
   },
   "result": {
     "title": "검진 결과",
-    "loadError": "검진 결과를 불러오지 못했어요.\n인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
-    "detailLoadError": "이 검진 결과를 불러오지 못했어요.\n인터넷 연결을 확인한 뒤 다시 불러와 주세요.",
     "emptyTitle": "확인할 검진 결과가 없어요.",
     "emptyDescription": "검사 결과를 가져오면 수치와 날짜를 여기서 볼 수 있어요.",
     "listEmpty": "아직 가져온 검진 결과가 없어요.\n검사 결과를 가져오면 여기서 볼 수 있어요.",
@@ -256,12 +254,10 @@
     },
     "carrier": "통신사 선택",
     "requestRejected": "본인인증을 시작하지 못했어요. 입력한 정보와 인증 수단을 확인해 주세요.",
-    "requestNetworkError": "연결이 원활하지 않아 본인인증을 시작하지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.",
     "pendingInstructions": "선택한 인증 앱에서 본인인증을 마쳐 주세요.\n마쳤다면 아래 버튼을 눌러 검진 결과를 가져오세요.",
     "verified": "인증했어요",
     "confirmTimeout": "정해진 시간 안에 인증을 확인하지 못했어요. 이전 화면에서 본인인증을 다시 시작해 주세요.",
     "confirmFailed": "인증 앱에서 완료되지 않았거나 입력 정보가 다를 수 있어요. 이전 화면에서 확인해 주세요.",
-    "confirmNetworkError": "인터넷 연결이 원활하지 않아 인증 결과를 확인하지 못했어요. 연결을 확인한 뒤 다시 해 주세요.",
     "loadingTitle": "검진 결과를 가져오고 있어요",
     "loadingDescription": "확인이 끝날 때까지 잠시 기다려 주세요.",
     "timeoutTitle": "인증 시간이 지났어요",
@@ -299,8 +295,7 @@
       "selectHint": "분석할 검진을 선택해 주세요",
       "emptyTitle": "아직 불러온 검진이 없어요",
       "emptyBody": "건강검진을 불러오면 수치 변화를 함께 볼 수 있어요.",
-      "emptyCta": "건강검진 불러오기",
-      "loadError": "검진 목록을 불러오지 못했어요"
+      "emptyCta": "건강검진 불러오기"
     },
     "detail": {
       "title": "검진 목록",
@@ -309,7 +304,6 @@
       "metricsTitle": "건강 수치",
       "ask": "질문하기",
       "analyzing": "검진 결과를 분석하고 있어요",
-      "analyzeError": "분석에 실패했어요",
       "referencePrefix": "참고범위",
       "aiNotice": "앱의 일반 참고범위와 비교한 결과예요. 진단이 아니에요.",
       "showNormal": "정상 {{count}}개 더보기",

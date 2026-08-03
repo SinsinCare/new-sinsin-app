@@ -1,9 +1,7 @@
 import React, { useRef, useState } from "react"
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -34,6 +33,9 @@ import {
 } from "@/src/services/doctorService"
 import { tokens } from "@/src/theme/tokens"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError } from "@/src/lib/errorMessage"
+
+import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
 
 type Mode = "code" | "search"
 
@@ -99,13 +101,19 @@ export function AskDoctorScreen() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY })
       setDoctorCode("")
-      Alert.alert(t("doctor.code.successTitle"), t("doctor.code.successBody"))
+      showSuccessToast(
+        t("doctor.code.successTitle"),
+        t("doctor.code.successBody"),
+      )
     },
     onError: (error) => {
-      Alert.alert(
-        t("doctor.code.errorTitle"),
-        getErrorMessage(error, t("doctor.code.errorBody")),
-      )
+      // 코드 자체가 없거나 만료됐을 때 서버가 코드를 안 실어 주면, 여기서 유일하게
+      // 남는 단서가 "6자리를 다시 확인하라" 다. 그때만 쓰인다(코드가 오면 코드가 이긴다).
+      presentError(error, {
+        scope: "doctor-enroll",
+        fallback: t("doctor.code.error"),
+        retry: submitCode,
+      })
     },
   })
 
@@ -115,10 +123,9 @@ export function AskDoctorScreen() {
       setSearchResult(result.items)
     },
     onError: (error) => {
-      Alert.alert(
-        t("doctor.search.errorTitle"),
-        getErrorMessage(error, t("doctor.search.errorBody")),
-      )
+      // `DOCTOR_ERROR_001`(조건 미입력) · `DOCTOR_ERROR_002`(결과 없음)가 무엇을
+      // 바꿔야 하는지까지 말해 준다. 예전 폴백은 "인터넷 연결을 확인" 이었다.
+      presentError(error, { scope: "doctor-search", retry: submitSearch })
     },
   })
 
@@ -126,16 +133,18 @@ export function AskDoctorScreen() {
     mutationFn: requestDoctorConnection,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY })
-      Alert.alert(
+      showSuccessToast(
         t("doctor.request.successTitle"),
         t("doctor.request.successBody"),
       )
     },
-    onError: (error) => {
-      Alert.alert(
-        t("doctor.request.errorTitle"),
-        getErrorMessage(error, t("doctor.request.errorBody")),
-      )
+    onError: (error, variables) => {
+      // `DOCTOR_ERROR_004`(승인 전 공유 설정) 처럼 재시도가 소용없는 실패에도
+      // 카탈로그가 "선생님이 연결을 수락하면 알려 드릴게요" 를 준다.
+      presentError(error, {
+        scope: "doctor-request",
+        retry: () => requestMutation.mutate(variables),
+      })
     },
   })
 
@@ -154,7 +163,7 @@ export function AskDoctorScreen() {
       department: department.trim() || undefined,
     }
     if (!payload.name && !payload.hospital && !payload.department) {
-      Alert.alert(
+      showErrorToast(
         t("doctor.search.missingTitle"),
         t("doctor.search.missingBody"),
       )
@@ -195,7 +204,7 @@ export function AskDoctorScreen() {
             colors={c}
             isLoading={connectionsQuery.isLoading}
             isRefreshing={connectionsQuery.isFetching}
-            hasError={connectionsQuery.isError}
+            error={connectionsQuery.isError ? connectionsQuery.error : null}
             connections={connections}
             onRetry={() => {
               void connectionsQuery.refetch()
@@ -452,14 +461,15 @@ function ConnectionStatusSection({
   colors,
   isLoading,
   isRefreshing,
-  hasError,
+  error,
   connections,
   onRetry,
 }: {
   colors: ReturnType<typeof useSettingsColors>
   isLoading: boolean
   isRefreshing: boolean
-  hasError: boolean
+  /** 실패했을 때의 오류. 문구는 여기서 짓지 않고 resolver 가 고른다. */
+  error: unknown
   connections: DoctorConnection[]
   onRetry: () => void
 }) {
@@ -474,16 +484,18 @@ function ConnectionStatusSection({
           <V2DotLoader size="s" color={tokens.color.sub6.val} />
         ) : null}
       </View>
-      {hasError && !isLoading ? (
+      {error != null && !isLoading ? (
+        // 아이콘이 `cloud-offline` 이었다. 목록 조회가 실패하는 대부분은 연결이 아니라
+        // 세션 만료·권한이라, 구름 아이콘 자체가 이미 원인을 잘못 말하고 있었다.
         <ConnectionRefreshState
           colors={colors}
-          icon="cloud-offline-outline"
-          message={t("doctor.status.loadError")}
+          icon="alert-circle-outline"
+          message={getErrorMessage(error)}
           isRefreshing={isRefreshing}
           onRetry={onRetry}
         />
       ) : null}
-      {!hasError && connections.length === 0 && !isLoading ? (
+      {error == null && connections.length === 0 && !isLoading ? (
         <ConnectionRefreshState
           colors={colors}
           icon="person-add-outline"
@@ -567,7 +579,11 @@ function ConnectionRefreshState({
     >
       <View style={styles.emptyStateCopy}>
         <Ionicons name={icon} size={20} color={colors.textTertiary} />
-        <ThemedText style={[styles.emptyText, { color: colors.textSub }]}>
+        <ThemedText
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+          style={[styles.emptyText, { color: colors.textSub }]}
+        >
           {message}
         </ThemedText>
       </View>
@@ -794,7 +810,7 @@ function TermsModal({
 }) {
   const { t } = useTranslation("settings")
   return (
-    <Modal
+    <AppModal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
@@ -862,7 +878,7 @@ function TermsModal({
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   )
 }
 

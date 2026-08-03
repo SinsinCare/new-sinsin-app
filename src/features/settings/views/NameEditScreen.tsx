@@ -17,8 +17,8 @@ import { useTranslation } from "react-i18next"
 import { ThemedView } from "@/components/themed-view"
 import { V2DotLoader } from "@/src/design-system-v2"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
-import { showErrorToast } from "@/src/lib/toast"
-import { getErrorMessage as getUserFacingErrorMessage } from "@/src/lib/errorUtils"
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import { presentError, resolveError } from "@/src/lib/errorMessage"
 import { ApiError } from "@/src/services/core/apiError"
 import { api } from "@/src/services/core/apiClient"
 import { useSurface } from "@/src/hooks/useSurface"
@@ -30,19 +30,19 @@ import { useMyPageProfile } from "../hooks/useMyPageProfile"
 
 const NAME_MAX_LENGTH = 20
 
-function getNameErrorMessage(e: unknown): string | null {
-  if (e instanceof ApiError) {
-    if (e.isNetworkError) return null
-    switch (e.code) {
-      case "TOKEN_ERROR_001":
-        return i18n.t("name.error.sessionExpired", { ns: "settings" })
-      case "ONBOARDING_ERROR_002":
-        return i18n.t("name.check", { ns: "settings" })
-      default:
-        return i18n.t("name.error.save", { ns: "settings" })
-    }
+/**
+ * 필드 아래 빨간 줄에 붙일 문구. `NicknameEditScreen` 과 같은 규칙이다 —
+ * 코드별 표를 화면이 또 들고 있으면 그 표의 `default`(`이름을 저장하지 못했어요…`)가
+ * 서버가 준 진짜 원인을 덮는다.
+ *
+ * `ONBOARDING_ERROR_002` 만 남긴다. 카탈로그 문구가 목록에서 고르는 화면을 전제해서
+ * 자유 입력칸인 여기에는 맞지 않는다.
+ */
+function getNameFieldMessage(e: unknown): string {
+  if (e instanceof ApiError && e.code === "ONBOARDING_ERROR_002") {
+    return i18n.t("name.check", { ns: "settings" })
   }
-  return i18n.t("name.error.save", { ns: "settings" })
+  return getErrorMessage(e)
 }
 
 export function NameEditScreen() {
@@ -101,11 +101,12 @@ export function NameEditScreen() {
       await queryClient.invalidateQueries({ queryKey: ["myPageProfile"] })
       router.back()
     } catch (e) {
-      if (e instanceof ApiError && e.isNetworkError) {
-        showErrorToast(getUserFacingErrorMessage(e))
+      // 버튼 하나로 끝나는 실패는 토스트로 — 인라인 문구에는 버튼 자리가 없다.
+      if (resolveError(e).action) {
+        presentError(e, { scope: "name-save", retry: () => void handleSave() })
         return
       }
-      setServerError(getNameErrorMessage(e))
+      setServerError(getNameFieldMessage(e))
     } finally {
       setIsLoading(false)
     }

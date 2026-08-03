@@ -49,7 +49,8 @@ export function SearchInput({ placeholder, ...props }: SearchInputProps) {
           flex: 1,
           fontWeight: "500",
           fontSize: 14,
-          lineHeight: 20,
+          // 단일행 입력엔 lineHeight 없음 (surface.ts `singleLineInputText` 머리말)
+          includeFontPadding: false,
           color: palette.text,
           padding: 0,
         }}

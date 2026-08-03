@@ -89,7 +89,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  label: { ...TYPE.label, fontWeight: "600" },
+  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipGroup`).
+  label: { ...TYPE.cardTitle, fontWeight: "700" },
   control: {
     flexDirection: "row",
     alignItems: "center",

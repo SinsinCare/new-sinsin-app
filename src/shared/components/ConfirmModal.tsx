@@ -1,15 +1,24 @@
-import React from "react"
-import { Modal, View, Pressable, StyleSheet } from "react-native"
-
-import { ThemedText } from "@/components/themed-text"
+import { V2Modal } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
+/**
+ * 확인 다이얼로그 — 이제 V2Modal 한 겹 껍데기다.
+ *
+ * 예전엔 흰 배경(#FFFFFF)과 글자색을 직접 박아 놓은 자체 구현이라, iOS 알럿을
+ * 흉내 내면서도 다크모드에서 홀로 하얗게 떴다. 앱 안에 확인창이 네 종류
+ * (이것 · ConfirmExitModal · V2Modal · OS Alert) 돌아다니던 시절의 유물이다.
+ *
+ * props 는 그대로 두어 기존 호출부를 건드리지 않는다. **새 코드는 이것 대신
+ * `showConfirm`(src/lib/dialog.ts)을 쓸 것** — 상태 두 줄이 필요 없다.
+ */
 interface ConfirmModalProps {
   visible: boolean
   title: string
   description?: string
   cancelText?: string
   confirmText?: string
+  /** 되돌릴 수 없는 액션 — 주 버튼을 Danger/Fill 로 */
+  destructive?: boolean
   onCancel: () => void
   onConfirm: () => void | Promise<void>
 }
@@ -20,124 +29,23 @@ export function ConfirmModal({
   description,
   cancelText,
   confirmText,
+  destructive = false,
   onCancel,
   onConfirm,
 }: ConfirmModalProps) {
   const { t } = useTranslation()
-  const resolvedCancelText = cancelText ?? t("action.cancel")
-  const resolvedConfirmText = confirmText ?? t("action.confirm")
 
   return (
-    <Modal
+    <V2Modal
       visible={visible}
-      transparent
-      animationType="fade"
+      title={title}
+      description={description}
+      destructive={destructive}
+      primaryLabel={confirmText ?? t("action.confirm")}
+      onPrimary={() => void onConfirm()}
+      secondaryLabel={cancelText ?? t("action.cancel")}
+      onSecondary={onCancel}
       onRequestClose={onCancel}
-    >
-      <View style={styles.dim}>
-        <View style={styles.popup}>
-          <View style={styles.popupContent}>
-            <ThemedText style={styles.popupTitle}>{title}</ThemedText>
-            {description && (
-              <ThemedText style={styles.popupDescription}>
-                {description}
-              </ThemedText>
-            )}
-          </View>
-          <View style={styles.popupButtons}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.popupButton,
-                styles.popupButtonCancel,
-                pressed && styles.popupButtonPressed,
-              ]}
-              onPress={onCancel}
-            >
-              <ThemedText style={styles.popupButtonCancelText}>
-                {resolvedCancelText}
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.popupButton,
-                pressed && styles.popupButtonPressed,
-              ]}
-              onPress={onConfirm}
-            >
-              <ThemedText style={styles.popupButtonConfirmText}>
-                {resolvedConfirmText}
-              </ThemedText>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
+    />
   )
 }
-
-const styles = StyleSheet.create({
-  dim: {
-    flex: 1,
-    backgroundColor: "#0000006B",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  popup: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  popupContent: {
-    paddingTop: 32,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 8,
-    alignItems: "center",
-  },
-  popupTitle: {
-    fontSize: 18,
-    lineHeight: 18 * 1.4,
-    fontWeight: "600",
-    color: "#17191C",
-    textAlign: "center",
-  },
-  popupDescription: {
-    fontSize: 15,
-    lineHeight: 15 * 1.4,
-    fontWeight: "500",
-    color: "#2E323AE0",
-    textAlign: "center",
-  },
-  popupButtons: {
-    flexDirection: "row",
-    borderTopWidth: 0.6,
-    borderTopColor: "#DADFE699",
-  },
-  popupButton: {
-    flex: 1,
-    padding: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  popupButtonCancel: {
-    borderRightWidth: 0.6,
-    borderRightColor: "#DADFE699",
-  },
-  popupButtonPressed: {
-    backgroundColor: "#F9F9F9",
-  },
-  popupButtonCancelText: {
-    fontSize: 14,
-    lineHeight: 14 * 1.4,
-    fontWeight: "400",
-    color: "#2E323AE0",
-  },
-  popupButtonConfirmText: {
-    fontSize: 14,
-    lineHeight: 14 * 1.4,
-    fontWeight: "600",
-    color: "#000000",
-  },
-})

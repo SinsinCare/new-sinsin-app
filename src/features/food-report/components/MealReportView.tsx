@@ -426,6 +426,26 @@ function BudgetRow({
           }}
         />
       </View>
+      {/* 기준이 얼마인지 화면에 있어야 한다. 예전에는 "9.6g 초과" 만 있어서
+          한도(0.6 × 50kg = 30g)가 어디에도 보이지 않았다 — 넘긴 양만으로는
+          많이 넘긴 건지 조금인지 환자가 판단할 수 없다.
+
+          `null` 비교가 아니라 truthy 검사다: 이 필드가 없던 시절에 저장된 리포트가
+          섞여 들어오면 `undefined` 라, `!== null` 로 걸면 "하루 기준 undefined 중
+          undefined" 가 그려진다. 서버는 정책 버전을 올려 옛 리포트를 다시 만들지만
+          (`POLICY_VERSION` v8), 화면이 그 약속에 기대야 할 이유는 없다. */}
+      {budget.limitText && budget.consumedText && (
+        <Text
+          style={[styles.budgetScale, styles.tabular, { color: s.textWeak }]}
+        >
+          {t(
+            budget.isReference
+              ? "mealReport.scaleReference"
+              : "mealReport.scaleDaily",
+            { limit: budget.limitText, consumed: budget.consumedText },
+          )}
+        </Text>
+      )}
     </View>
   )
 }
@@ -634,6 +654,7 @@ const styles = StyleSheet.create({
   referenceTag: { fontSize: 11, lineHeight: 15, letterSpacing: -0.22 },
   budgetValue: { ...TYPE.caption, fontWeight: "700" },
   budgetTrack: { height: 6, borderRadius: 999, overflow: "hidden" },
+  budgetScale: { ...TYPE.cardSub },
 
   // 열량은 카드 밖 한 줄 — 예산 카드와 같은 무게로 서면 안 된다.
   energyRow: {

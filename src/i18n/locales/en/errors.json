@@ -1,0 +1,370 @@
+{
+  "action": {
+    "retry": "Try again",
+    "refresh": "Refresh",
+    "goBack": "Go back",
+    "goHome": "Go home",
+    "goLogin": "Sign in",
+    "goSignup": "Create account",
+    "resetPassword": "Reset password",
+    "resendCode": "Send a new code",
+    "completeProfile": "Finish profile",
+    "openInquiry": "Contact us"
+  },
+  "transport": {
+    "offline": {
+      "title": "We couldn't reach the server",
+      "body": "Check that Wi-Fi or mobile data is on, then try again."
+    },
+    "timeout": {
+      "title": "This is taking longer than usual",
+      "body": "Your connection may be unstable, or the server is busy. Try again in a moment."
+    },
+    "server": {
+      "title": "Something broke on our side",
+      "body": "This isn't your fault. We're on it — try again in a moment."
+    },
+    "rateLimited": {
+      "title": "A lot of requests are coming in",
+      "body": "Waiting about a minute usually clears it up."
+    },
+    "sessionExpired": {
+      "title": "Please sign in again",
+      "body": "Your session expired for security. Signing in takes you right back to where you were."
+    },
+    "forbidden": {
+      "title": "This account can't open that screen",
+      "body": "Check that you're signed in to the right account. Contact us if it keeps happening."
+    },
+    "notFound": {
+      "title": "We couldn't find that",
+      "body": "It may have been deleted or moved. Go back and open it again."
+    },
+    "conflict": {
+      "title": "This may already be updated",
+      "body": "Refresh the screen to see the current state."
+    },
+    "badRequest": {
+      "title": "Check what you entered",
+      "body": "Something is missing or in the wrong format."
+    },
+    "unknown": {
+      "title": "We couldn't finish that",
+      "body": "Try again in a moment. If it keeps happening, contact us and we'll look into it."
+    }
+  },
+  "code": {
+    "COMMON_ERROR_001": {
+      "title": "Check what you entered",
+      "body": "Something is missing or in the wrong format."
+    },
+    "COMMON_ERROR_002": {
+      "title": "Please sign in again",
+      "body": "Your session expired. Signing in lets you pick up where you left off."
+    },
+    "COMMON_ERROR_003": {
+      "title": "This account can't open that screen",
+      "body": "Check that you're signed in to the right account. Contact us if it keeps happening."
+    },
+    "COMMON_ERROR_004": {
+      "title": "We couldn't find that",
+      "body": "It may have been deleted or moved. Go back and open it again."
+    },
+    "COMMON_ERROR_005": {
+      "title": "Something broke on our side",
+      "body": "This isn't your fault. Try again in a moment."
+    },
+    "TOKEN_ERROR_001": {
+      "title": "Please sign in again",
+      "body": "We couldn't confirm your session. Signing in lets you pick up where you left off."
+    },
+    "TOKEN_ERROR_002": {
+      "title": "Please sign in again",
+      "body": "Your session is no longer valid. Signing in lets you pick up where you left off."
+    },
+    "TOKEN_ERROR_003": {
+      "title": "Please sign in again",
+      "body": "Your session expired for security. Signing in takes you right back to where you were."
+    },
+    "TOKEN_ERROR_004": {
+      "title": "Please sign in again",
+      "body": "You were signed out automatically after a long time away."
+    },
+    "TOKEN_ERROR_005": {
+      "title": "Your signup session expired",
+      "body": "Verify your email again and you can continue signing up."
+    },
+    "TOKEN_ERROR_006": {
+      "title": "Your password reset expired",
+      "body": "Request a new verification code and start again."
+    },
+    "LOGIN_ERROR_001": {
+      "title": "That email or password doesn't match",
+      "body": "Check for typos and capital letters. You can reset your password if you don't remember it."
+    },
+    "SIGNUP_ERROR_001": {
+      "title": "This email already has an account",
+      "body": "You can sign in with it right now. Reset your password if you don't remember it."
+    },
+    "SIGNUP_ERROR_002": {
+      "title": "Check your date of birth",
+      "body": "Make sure it's a real date and not in the future."
+    },
+    "SIGNUP_ERROR_003": {
+      "title": "That nickname is taken",
+      "body": "Add a number to the end, or try another nickname."
+    },
+    "SIGNUP_ERROR_004": {
+      "title": "You already have an account",
+      "body": "Sign in and you can start using it right away."
+    },
+    "MAIL_ERROR_001": {
+      "title": "We can't send a code to this address",
+      "body": "Check the address for typos. A personal email usually works when a work or school one doesn't."
+    },
+    "MAIL_ERROR_002": {
+      "title": "The verification email didn't go out",
+      "body": "Request it again in a moment. If it keeps failing, try a different email address."
+    },
+    "OTP_ERROR_001": {
+      "title": "We already sent a code",
+      "body": "Check your inbox and spam folder. You can request a new code in 30 seconds."
+    },
+    "OTP_ERROR_002": {
+      "title": "That code expired",
+      "body": "Request a new code and enter it again."
+    },
+    "OTP_ERROR_003": {
+      "title": "That code doesn't match",
+      "body": "Check the 6 digits in the email. If you asked for several, the newest one works."
+    },
+    "AUTH_ERROR_001": {
+      "title": "No account uses this email",
+      "body": "Check the address. If you haven't signed up yet, you can create an account with it."
+    },
+    "AUTH_ERROR_002": {
+      "title": "Social sign-in didn't finish",
+      "body": "Tap it once more. You can also sign in with email if it keeps failing."
+    },
+    "AUTH_ERROR_003": {
+      "title": "That sign-in method isn't supported yet",
+      "body": "Use Google, Apple, Kakao, or email instead."
+    },
+    "AUTH_ERROR_004": {
+      "title": "We didn't get an email from that account",
+      "body": "Allow email sharing when you sign in. You can also sign up with email directly."
+    },
+    "AUTH_ERROR_005": {
+      "title": "Finish your profile to use this",
+      "body": "It takes about a minute. You can continue right now."
+    },
+    "AUTH_ERROR_006": {
+      "title": "This account was deleted",
+      "body": "Sign up again with the same email to come back. Past records can't be restored."
+    },
+    "AUTH_ERROR_007": {
+      "title": "This account is suspended",
+      "body": "Contact us and we'll explain the reason and how to restore it."
+    },
+    "AUTH_ERROR_008": {
+      "title": "This account is being deleted",
+      "body": "Cancel the deletion and you can sign in with it again."
+    },
+    "AUTH_ERROR_009": {
+      "title": "This email is registered through social sign-in",
+      "body": "Sign in with that social account, or verify your identity to connect email sign-in."
+    },
+    "AUTH_ERROR_010": {
+      "title": "There's nothing more to fill in",
+      "body": "Your profile is already complete. Head home to keep going."
+    },
+    "AUTH_ERROR_011": {
+      "title": "Accept the terms to finish signing up",
+      "body": "Review the required terms and agree to them."
+    },
+    "AUTH_ERROR_012": {
+      "title": "Your signup session expired",
+      "body": "Start again from the sign-in screen and you can continue."
+    },
+    "CHAT_ERROR_001": {
+      "title": "This conversation is gone",
+      "body": "It may have been deleted here or on another device. Pick one from the list."
+    },
+    "CHAT_ERROR_002": {
+      "title": "This account can't open that conversation",
+      "body": "Sign in with the account that created this conversation."
+    },
+    "CHAT_ERROR_004": {
+      "title": "Write something to send",
+      "body": "One character is enough to send a message."
+    },
+    "ONBOARDING_ERROR_001": {
+      "title": "Some answers are still missing",
+      "body": "Fill in the marked items and you can move on."
+    },
+    "ONBOARDING_ERROR_002": {
+      "title": "Check the value you picked",
+      "body": "Choose one of the options in the list."
+    },
+    "ONBOARDING_ERROR_003": {
+      "title": "You already finished this",
+      "body": "Head home to keep going."
+    },
+    "WITHDRAW_ERROR_001": {
+      "title": "Deletion is already requested",
+      "body": "To cancel it, continue from the sign-in screen."
+    },
+    "COMMUNITY_ERROR_001": {
+      "title": "This post is gone",
+      "body": "The author may have deleted it. Refresh the list to see current posts."
+    },
+    "COMMUNITY_ERROR_002": {
+      "title": "You can only change your own posts",
+      "body": "If you wrote it on another account, sign in with that one."
+    },
+    "COMMUNITY_ERROR_003": {
+      "title": "You already reported this post",
+      "body": "We're reviewing it. There's no need to report it again."
+    },
+    "COMMUNITY_ERROR_004": {
+      "title": "This poll is gone",
+      "body": "The author may have deleted it. Refresh the list."
+    },
+    "COMMUNITY_ERROR_005": {
+      "title": "You already voted in this poll",
+      "body": "The results are right below."
+    },
+    "COMMUNITY_ERROR_006": {
+      "title": "That option isn't there anymore",
+      "body": "The poll may have been edited. Refresh and choose again."
+    },
+    "COMMUNITY_ERROR_007": {
+      "title": "This poll takes one choice",
+      "body": "Narrow it down to one and you can vote."
+    },
+    "COMMUNITY_ERROR_008": {
+      "title": "This comment is gone",
+      "body": "The author may have deleted it. Refresh to see current comments."
+    },
+    "COMMUNITY_ERROR_009": {
+      "title": "You can only change your own comments",
+      "body": "If you wrote it on another account, sign in with that one."
+    },
+    "COMMUNITY_ERROR_010": {
+      "title": "The comment you're replying to is gone",
+      "body": "Refresh and write your reply again."
+    },
+    "COMMUNITY_ERROR_011": {
+      "title": "You already reported this comment",
+      "body": "We're reviewing it. There's no need to report it again."
+    },
+    "COMMUNITY_ERROR_012": {
+      "title": "This story is gone",
+      "body": "Stories disappear automatically 24 hours after they're posted."
+    },
+    "COMMUNITY_ERROR_013": {
+      "title": "You can only delete your own stories",
+      "body": "If you posted it on another account, sign in with that one."
+    },
+    "COMMUNITY_ERROR_014": {
+      "title": "Pick one photo",
+      "body": "A story needs a photo before you can post it."
+    },
+    "FOOD_CAMERA_001": {
+      "title": "Use a JPG or PNG photo",
+      "body": "For other formats, edit and save the photo in your gallery to convert it to JPG."
+    },
+    "FOOD_CAMERA_002": {
+      "title": "That photo is over 5 MB",
+      "body": "Pick another photo, or shrink it in your editor before uploading."
+    },
+    "FOOD_CAMERA_003": {
+      "title": "We couldn't find food in this photo",
+      "body": "Retake it in good light with the food filling the frame. You can also type it in instead."
+    },
+    "FOOD_CAMERA_004": {
+      "title": "The analysis is taking a while",
+      "body": "Try again in a moment. Large photos take longer."
+    },
+    "FOOD_CAMERA_005": {
+      "title": "We couldn't analyze this meal",
+      "body": "Try again in a moment. You can also type it in to record it."
+    },
+    "FOOD_CAMERA_006": {
+      "title": "The photo didn't upload",
+      "body": "Try again in a moment. If it keeps failing, use a different photo."
+    },
+    "FOOD_CAMERA_007": {
+      "title": "This analysis is gone",
+      "body": "It may have been deleted from your records. Pick one from the list."
+    },
+    "FOOD_CAMERA_008": {
+      "title": "The photo didn't load",
+      "body": "Open it again in a moment."
+    },
+    "FOOD_CAMERA_009": {
+      "title": "Tell us a bit more about the meal",
+      "body": "Something like \"a bowl of brown rice, miso soup\" — names and amounts are enough to analyze."
+    },
+    "FOOD_CAMERA_010": {
+      "title": "A lot of analyses are running",
+      "body": "Waiting about a minute usually clears it up."
+    },
+    "FOOD_CAMERA_011": {
+      "title": "The start date is after the end date",
+      "body": "Pick a start date that comes before the end date."
+    },
+    "FOOD_CAMERA_013": {
+      "title": "This meal record is gone",
+      "body": "It may have been deleted. Refresh the list to see current records."
+    },
+    "FOOD_CAMERA_015": {
+      "title": "Name this meal",
+      "body": "One character is enough to save it."
+    },
+    "HC_ERROR_001": {
+      "title": "Pick a different verification method",
+      "body": "Choose one of the methods shown on screen."
+    },
+    "HC_ERROR_002": {
+      "title": "Your verification expired",
+      "body": "Verify again from the start to load your screening results."
+    },
+    "HC_ERROR_003": {
+      "title": "No confirmation came from the auth app",
+      "body": "Open the auth app, approve the request, then try again."
+    },
+    "HC_ERROR_004": {
+      "title": "We couldn't find this screening result",
+      "body": "Pick one from the list."
+    },
+    "HC_ERROR_005": {
+      "title": "The provider didn't return your results",
+      "body": "Records can be unavailable during the health service's maintenance window. Try again in a moment."
+    },
+    "HC_ERROR_006": {
+      "title": "Pick the results to analyze",
+      "body": "Choose at least one and you can run the analysis."
+    },
+    "HC_ERROR_007": {
+      "title": "We couldn't read your screening results",
+      "body": "Try again in a moment. If it keeps happening, contact us and we'll look into it."
+    },
+    "DOCTOR_ERROR_001": {
+      "title": "Enter a name, hospital, or department",
+      "body": "Any one of them is enough to search."
+    },
+    "DOCTOR_ERROR_002": {
+      "title": "No doctor matched that search",
+      "body": "Try part of the name or the hospital name instead."
+    },
+    "DOCTOR_ERROR_003": {
+      "title": "That connection is gone",
+      "body": "It may have been disconnected. Refresh the list."
+    },
+    "DOCTOR_ERROR_004": {
+      "title": "Sharing opens once the connection is approved",
+      "body": "We'll let you know when your doctor accepts."
+    }
+  }
+}

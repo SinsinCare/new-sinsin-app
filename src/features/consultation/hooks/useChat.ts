@@ -12,6 +12,8 @@ import {
 import { chatApiService } from "@/src/services"
 import { useMutation } from "@tanstack/react-query"
 import { logger } from "@/src/lib/logger"
+import { presentError } from "@/src/lib/errorMessage"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import {
   CHAT_UNAVAILABLE_MESSAGE,
   CHAT_UNAVAILABLE_MESSAGE_EN,
@@ -23,16 +25,32 @@ import { getAppLanguage } from "@/src/i18n"
 // 남아 있는 id 와 겹치지 않는다. 서버 id(양수)와는 부호로 구분된다.
 let optimisticMsgId = -(Date.now() % 1_000_000_000)
 
-function createChatUnavailableMessage(conversationId: number | null): Message {
+/**
+ * 대화를 만들지 못했을 때 답변 자리에 놓는 말풍선.
+ *
+ * 예전에는 원인과 무관하게 늘 "연결이 잠시 불안정할 수 있으니" 였다. 실제로 이 자리에
+ * 오는 실패의 상당수는 연결과 무관하다 — 만료된 로그인, `CHAT_ERROR_004`(빈 내용).
+ * 그래서 문구는 `resolveError` 가 고르고, 그것이 말할 게 없을 때만 상담 화면의 문장으로
+ * 돌아간다. 이 말풍선은 마지막 답변이므로 "답변 다시 받기" 가 그대로 붙는다 —
+ * 해결책이 이미 한 번의 탭 거리에 있다(토스 원칙 5).
+ *
+ * 요청 취소는 `getErrorMessage` 가 빈 문자열을 준다. 그때는 말풍선을 만들지 않는다.
+ */
+function createChatUnavailableMessage(
+  conversationId: number | null,
+  error: unknown,
+): Message | null {
   const language = getAppLanguage()
+  const content = getErrorMessage(
+    error,
+    language === "en" ? CHAT_UNAVAILABLE_MESSAGE_EN : CHAT_UNAVAILABLE_MESSAGE,
+  )
+  if (!content) return null
   return {
     id: optimisticMsgId--,
     conversationId: conversationId ?? -1,
     role: "assistant",
-    content:
-      language === "en"
-        ? CHAT_UNAVAILABLE_MESSAGE_EN
-        : CHAT_UNAVAILABLE_MESSAGE,
+    content,
     createdAt: new Date(),
   }
 }
@@ -265,11 +283,14 @@ export function useChat() {
             activeConvId = conversation.id
             convIdRef.current = activeConvId
             setConversationId(activeConvId)
-          } catch {
-            setMessages((prev) => [
-              ...prev,
-              createChatUnavailableMessage(activeConvId),
-            ])
+          } catch (error) {
+            const failureMessage = createChatUnavailableMessage(
+              activeConvId,
+              error,
+            )
+            if (failureMessage) {
+              setMessages((prev) => [...prev, failureMessage])
+            }
             setIsTyping(false)
             return
           }
@@ -304,8 +325,18 @@ export function useChat() {
         setCategory(conversation.category ?? null)
         setMessages(loadedMessages)
         setLastError(null)
-      } catch (err) {
-        logger.error("Failed to load conversation", err)
+      } catch (error) {
+        /*
+          예전에는 로그만 남기고 **화면에는 아무 일도 일어나지 않았다** — 기록 목록에서
+          누른 상담이 열리지 않는데 이유도 없었다. `CHAT_ERROR_001`(지워진 상담)·
+          `CHAT_ERROR_002`(다른 계정의 상담)는 여기서 가장 흔한 실패이고, 둘 다 사용자가
+          할 일이 분명하다.
+
+          맥락형 핸들러는 주지 않는다: `CHAT_ERROR_001` 의 기본 액션은 뒤로가기인데,
+          이 화면에서의 뒤로가기는 상담 자체를 닫는 것이라 "목록에서 다시 고르기" 라는
+          안내와 반대로 움직인다.
+        */
+        presentError(error, { scope: "consult-load-conversation" })
       }
     },
     [isSending],

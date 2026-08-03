@@ -17,6 +17,7 @@ import {
 } from "../data/passwordValidation"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
+import { presentAuthFailure } from "../utils/authFailure"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 
 const TIMER_DURATION = 180
@@ -104,9 +105,10 @@ export function ForgotPasswordScreen() {
       setStep("otp")
       startTimer()
     } catch (error) {
-      setSendError(
-        getErrorMessage(error, t("emailVerification.sendFailedCheckEmail")),
-      )
+      // 가입한 적 없는 이메일(`AUTH_ERROR_001`)이 이 화면의 가장 흔한 실패다.
+      // 폴백("이메일 주소를 확인한 뒤 다시 시도해 주세요")으로 덮으면 주소가
+      // 틀렸는지 계정이 없는지를 사용자가 끝내 구분할 수 없다.
+      setSendError(presentAuthFailure(error, { scope: "password-reset-send" }))
     } finally {
       setSendingCode(false)
     }
@@ -129,7 +131,9 @@ export function ForgotPasswordScreen() {
         setSendError(t("emailVerification.invalidOrExpired"))
       }
     } catch (error) {
-      setSendError(getErrorMessage(error, t("emailVerification.verifyFailed")))
+      setSendError(
+        presentAuthFailure(error, { scope: "password-reset-verify" }),
+      )
     } finally {
       setVerifyingCode(false)
     }
@@ -142,8 +146,10 @@ export function ForgotPasswordScreen() {
       await passwordService.changePassword(data.password, resetToken)
       router.replace("/(auth)/login")
     } catch (error) {
+      // 재설정 토큰이 만료됐다는 것(`TOKEN_ERROR_006`)이 여기서 가장 흔하다.
+      // "잠시 후 다시 시도해 주세요" 로 덮으면 기다릴수록 더 안 되는 안내가 된다.
       passwordForm.setError("password", {
-        message: getErrorMessage(error, t("forgotPassword.changeFailed")),
+        message: getErrorMessage(error),
       })
     } finally {
       setResettingPassword(false)

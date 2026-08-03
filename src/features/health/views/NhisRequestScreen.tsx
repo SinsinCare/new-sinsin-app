@@ -22,6 +22,7 @@ import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { nhisService } from "@/src/services/data/nhisService"
+import { getErrorMessage, logRecoverableError } from "@/src/lib/errorUtils"
 import type { AuthMethodRs } from "@/src/types/nhis"
 import { refreshHealthData } from "../data/healthQueries"
 import { useHealthTheme } from "../hooks/useHealthTheme"
@@ -52,7 +53,11 @@ export function NhisRequestScreen() {
     nhisService
       .getAuthMethod()
       .then(setAuthMethods)
-      .catch(() => {})
+      // 목록이 빈 채로 남으면 CTA 가 영영 잠긴다. 화면 문구는 새 흐름
+      // (`CheckupAuthScreen`)이 이미 갖고 있으므로, 여기서는 최소한 원인을 남긴다.
+      .catch((error: unknown) =>
+        logRecoverableError("[nhis] 인증수단 조회 실패", error),
+      )
       .finally(() => setLoadingMethods(false))
   }, [])
 
@@ -83,8 +88,10 @@ export function NhisRequestScreen() {
       } else {
         setRequestError(t("nhis.requestRejected"))
       }
-    } catch {
-      setRequestError(t("nhis.requestNetworkError"))
+    } catch (error) {
+      // 공단 점검(`HC_ERROR_005`)·인증 만료(`HC_ERROR_002`)가 대부분인 자리다.
+      // 그걸 "인터넷 연결을 확인" 으로 말하면 사용자가 고칠 수 없는 것을 고치러 간다.
+      setRequestError(getErrorMessage(error))
     } finally {
       setRequesting(false)
     }
@@ -335,6 +342,8 @@ export function NhisRequestScreen() {
               color={healthColors.negative}
             />
             <ThemedText
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
               style={[styles.errorText, { color: healthColors.negative }]}
             >
               {requestError}

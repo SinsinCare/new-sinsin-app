@@ -8,6 +8,8 @@ import {
   TextInput,
   View,
 } from "react-native"
+// 리사이클링 리스트 — 피드는 ScrollView+map 대신 FlashList(v2, 추정치 불필요)
+import { FlashList } from "@shopify/flash-list"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useAppRouter } from "@/src/shared/navigation"
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
@@ -172,27 +174,40 @@ export function FreePostTab({
   const showRecent = searchFocused && !isSearching && recentSearches.length > 0
 
   const listPosts = isSearching ? searchResults : filteredPosts
+  const showSkeleton = !isSearching && isLoading && visiblePosts.length === 0
 
-  return (
-    <ScrollView
-      bounces={false}
-      overScrollMode="never"
-      style={styles.flex}
-      contentContainerStyle={{ paddingBottom: contentBottomPadding }}
-      showsVerticalScrollIndicator={false}
-      alwaysBounceVertical
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor={surface.textMuted}
-          colors={[surface.brand]}
-          progressBackgroundColor={surface.isDark ? surface.card : "#FFFFFF"}
+  const renderPost = useCallback(
+    ({ item: post }: { item: (typeof posts)[number] }) => (
+      <View style={styles.listItemWrap}>
+        <PostListItem
+          category={categoryLabel(post.category)}
+          createdAt={post.createdAt}
+          title={post.title}
+          summary={post.description}
+          imageUri={post.imageUri}
+          authorName={post.authorName}
+          likeCount={post.likes}
+          commentCount={post.comments}
+          tags={post.tags}
+          onPress={() => router.push(`/post/${post.id}`)}
+          onPressTag={handleTagPress}
+          onBlock={blockUser}
+          isWithdrawnAuthor={isWithdrawnAuthor(post)}
         />
-      }
-    >
+      </View>
+    ),
+    [categoryLabel, router, handleTagPress, blockUser],
+  )
+
+  /*
+    피드 전체가 하나의 FlashList 다(예전엔 ScrollView + map — 가상화가 없어
+    글이 쌓일수록 전 항목이 마운트됐다). 헤더(검색·스토리·인기·카테고리·정렬)는
+    ListHeaderComponent 로 들어간다. 검색 인풋이 헤더 안에 있어도 트리 모양이
+    단계 간에 같아서 리컨실리에이션이 포커스를 유지한다 — 단계별로 스크롤러를
+    갈아끼우면 인풋이 리마운트되어 타이핑 중 포커스를 잃는다.
+  */
+  const listHeader = (
+    <>
       {/* 검색 — 서버 검색 API가 없어 전량 로드된 피드를 클라이언트에서 거른다. */}
       <View style={styles.searchWrap}>
         <View
@@ -271,50 +286,18 @@ export function FreePostTab({
       </View>
 
       {isSearching ? (
-        <>
-          <Text style={[styles.sectionLabel, { color: surface.textMuted }]}>
-            {t("feed.results", { count: searchResults.length })}
-          </Text>
-          <View style={styles.listWrap}>
-            {searchResults.map((post) => (
-              <PostListItem
-                key={post.id}
-                category={categoryLabel(post.category)}
-                createdAt={post.createdAt}
-                title={post.title}
-                summary={post.description}
-                imageUri={post.imageUri}
-                authorName={post.authorName}
-                likeCount={post.likes}
-                commentCount={post.comments}
-                tags={post.tags}
-                onPress={() => router.push(`/post/${post.id}`)}
-                onPressTag={handleTagPress}
-                onBlock={blockUser}
-                isWithdrawnAuthor={isWithdrawnAuthor(post)}
-              />
-            ))}
-            {searchResults.length === 0 && (
-              <View style={styles.emptyWrap}>
-                <Text
-                  style={[styles.emptyTitle, { color: surface.textStrong }]}
-                >
-                  {t("feed.noResultsTitle")}
-                </Text>
-                <Text style={[styles.emptySub, { color: surface.textMuted }]}>
-                  {t("feed.noResultsBody")}
-                </Text>
-              </View>
-            )}
-          </View>
-        </>
-      ) : isLoading && visiblePosts.length === 0 ? (
+        <Text style={[styles.sectionLabel, { color: surface.textMuted }]}>
+          {t("feed.results", { count: searchResults.length })}
+        </Text>
+      ) : showSkeleton ? (
         // 스토리 · 인기글 · 목록이 한꺼번에 도착하면 화면이 크게 튄다. 세 자리를 미리 잡는다.
         <CommunityFeedSkeleton />
       ) : (
         /*
-         * 첫 진입 한 번만 콘텐츠 전체가 부드럽게 올라온다.
+         * 첫 진입 한 번만 머리(스토리·인기·카테고리)가 부드럽게 올라온다.
          * 카드별 스태거는 필터·정렬 변경 때마다 재생돼 산만해서 걷어냈다.
+         * (FlashList 전환으로 목록 줄은 페이드 없이 바로 선다 — 머리가 화면을
+         * 채우고 있어 체감 차이는 없다.)
          */
         <Animated.View
           entering={FadeInDown.duration(280).reduceMotion(ReduceMotion.System)}
@@ -482,44 +465,62 @@ export function FreePostTab({
               )
             })}
           </View>
-
-          {/* 글 목록 */}
-          <View style={styles.listWrap}>
-            {listPosts.map((post) => (
-              <PostListItem
-                key={post.id}
-                category={categoryLabel(post.category)}
-                createdAt={post.createdAt}
-                title={post.title}
-                summary={post.description}
-                imageUri={post.imageUri}
-                authorName={post.authorName}
-                likeCount={post.likes}
-                commentCount={post.comments}
-                tags={post.tags}
-                onPress={() => router.push(`/post/${post.id}`)}
-                onPressTag={handleTagPress}
-                onBlock={blockUser}
-                isWithdrawnAuthor={isWithdrawnAuthor(post)}
-              />
-            ))}
-            {listPosts.length === 0 && (
-              <View style={styles.emptyWrap}>
-                <Text
-                  style={[styles.emptyTitle, { color: surface.textStrong }]}
-                >
-                  {t("feed.emptyTitle")}
-                </Text>
-                <Text style={[styles.emptySub, { color: surface.textMuted }]}>
-                  {t("feed.emptyBody")}
-                </Text>
-              </View>
-            )}
-          </View>
         </Animated.View>
       )}
-    </ScrollView>
+      <View style={styles.listTopGap} />
+    </>
   )
+
+  const listEmpty = showSkeleton ? null : isSearching ? (
+    <View style={styles.emptyWrap}>
+      <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
+        {t("feed.noResultsTitle")}
+      </Text>
+      <Text style={[styles.emptySub, { color: surface.textMuted }]}>
+        {t("feed.noResultsBody")}
+      </Text>
+    </View>
+  ) : (
+    <View style={styles.emptyWrap}>
+      <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
+        {t("feed.emptyTitle")}
+      </Text>
+      <Text style={[styles.emptySub, { color: surface.textMuted }]}>
+        {t("feed.emptyBody")}
+      </Text>
+    </View>
+  )
+
+  return (
+    <FlashList
+      data={showSkeleton ? [] : listPosts}
+      renderItem={renderPost}
+      keyExtractor={(post) => String(post.id)}
+      ItemSeparatorComponent={ListGap}
+      ListHeaderComponent={listHeader}
+      ListEmptyComponent={listEmpty}
+      bounces={false}
+      overScrollMode="never"
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      contentContainerStyle={{ paddingBottom: contentBottomPadding }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={surface.textMuted}
+          colors={[surface.brand]}
+          progressBackgroundColor={surface.isDark ? surface.card : "#FFFFFF"}
+        />
+      }
+    />
+  )
+}
+
+/** 목록 줄 사이 간격 — 예전 listWrap 의 gap(10)을 분리자로 옮겼다. */
+function ListGap() {
+  return <View style={styles.listGap} />
 }
 
 const styles = StyleSheet.create({
@@ -668,10 +669,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Pretendard-Bold",
   },
-  listWrap: {
+  listItemWrap: {
     paddingHorizontal: 20,
-    paddingTop: 8,
-    gap: 10,
+  },
+  listGap: {
+    height: 10,
+  },
+  listTopGap: {
+    height: 8,
   },
 
   emptyWrap: {

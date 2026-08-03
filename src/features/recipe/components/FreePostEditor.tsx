@@ -1,9 +1,7 @@
 import { useState } from "react"
 import {
-  Alert,
   Image,
   Keyboard,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -12,6 +10,10 @@ import {
   TextInput,
   View,
 } from "react-native"
+import {
+  AppModal,
+  afterModalTransitions,
+} from "@/src/shared/components/AppModal"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -39,7 +41,10 @@ import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
+import { presentError } from "@/src/lib/errorMessage"
 import { useTranslation } from "react-i18next"
+
+import { showInfoToast } from "@/src/lib/toast"
 
 /** 서버 정책과 같은 값 — community_post_image 테이블이 게시글당 5장을 받는다. */
 const MAX_IMAGES = 5
@@ -141,7 +146,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     Keyboard.dismiss()
     const remaining = MAX_IMAGES - images.length
     if (remaining <= 0) {
-      Alert.alert(
+      showInfoToast(
         t("freePost.photoLimitTitle"),
         t("freePost.photoLimitBody", { count: MAX_IMAGES }),
       )
@@ -228,8 +233,16 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         vote: votes[0] ?? null,
       })
       onClose()
-    } catch {
-      Alert.alert(t("freePost.uploadErrorTitle"), t("freePost.uploadErrorBody"))
+    } catch (error) {
+      /*
+        여기서 가장 흔한 실패는 글이 아니라 **사진**이다 — 5MB 초과(`FOOD_CAMERA_002`),
+        JPG·PNG 가 아닌 형식(`001`). 둘 다 "다른 사진을 고르면 된다" 로 끝나는데
+        `글을 올리지 못했어요 / 인터넷 연결을 확인…` 이 그 사실을 가리고 있었다.
+      */
+      presentError(error, {
+        scope: "community-post-create",
+        retry: () => void handleSubmit(),
+      })
     } finally {
       setIsSubmitting(false)
       setSubmitStatus(null)
@@ -469,7 +482,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
       )}
 
       {/* Image Preview Modal */}
-      <Modal
+      <AppModal
         visible={previewImage !== null}
         transparent
         animationType="fade"
@@ -493,7 +506,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
             <Ionicons name="close" size={26} color="#FFFFFF" />
           </Pressable>
         </Pressable>
-      </Modal>
+      </AppModal>
 
       {/* Confirm Exit Modal */}
       <ConfirmExitModal
@@ -504,8 +517,10 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         confirmLabel={t("action.exit")}
         onCancel={() => setConfirmExitVisible(false)}
         onConfirm={() => {
+          // 확인 모달 dismiss 와 화면 pop(네이티브 전환)이 겹치지 않게
+          // 전이가 가라앉은 뒤 나간다(appModalGate 머리말).
           setConfirmExitVisible(false)
-          onClose()
+          void afterModalTransitions().then(onClose)
         }}
       />
     </View>
@@ -574,8 +589,10 @@ const styles = StyleSheet.create({
   },
   titleInput: {
     fontSize: 19,
-    lineHeight: 26,
     letterSpacing: -0.38,
+    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
+    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
+    includeFontPadding: false,
     fontWeight: "700",
     fontFamily: "Pretendard-Bold",
     paddingVertical: 14,

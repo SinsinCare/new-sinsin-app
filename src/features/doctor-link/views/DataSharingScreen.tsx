@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Toast from "react-native-toast-message"
 
+import { presentError, resolveError } from "@/src/lib/errorMessage"
+
 import {
   V2BottomCTA,
   V2ErrorState,
@@ -135,13 +137,19 @@ export function DataSharingScreen({
       Toast.show({ type: "success", text1: t("doctorLink.sharing.saved") })
       onSaved?.()
     },
-    onError: () => {
-      Toast.show({ type: "error", text1: t("doctorLink.sharing.error") })
+    onError: (error, next) => {
+      // 승인 전 연결은 서버가 `DOCTOR_ERROR_004` 로 막는다 — "연결이 승인된 뒤에
+      // 공유를 설정할 수 있어요" 가 화면의 고정 문구보다 정확하다.
+      presentError(error, {
+        scope: "doctor-sharing-save",
+        retry: () => save.mutate(next),
+      })
     },
   })
 
   const canEdit = status === "APPROVED"
   const showLoading = useLoadingVisible(sharing.isLoading)
+  const sharingFailure = sharing.isError ? resolveError(sharing.error) : null
 
   const setField = (key: keyof SharingDraft) => (next: boolean) => {
     setDraft((prev) => (prev ? { ...prev, [key]: next } : prev))
@@ -154,13 +162,25 @@ export function DataSharingScreen({
       <ScrollView contentContainerStyle={styles.content}>
         <DoctorBrandCard doctor={doctor} />
 
-        {sharing.isError ? (
-          <V2ErrorState
-            title={t("common:state.error")}
-            onRetry={() => void sharing.refetch()}
-            retryLabel={t("common:action.retry")}
-            style={styles.state}
-          />
+        {/* `common:state.error`("문제가 생겼어요") 한 줄이던 자리. 공유 설정을 못 읽는
+            이유는 연결이 해지됐거나(`DOCTOR_ERROR_003`) 세션이 끊긴 쪽이 대부분이고,
+            둘 다 여기서 다시 부른다고 풀리지 않는다. */}
+        {sharingFailure ? (
+          sharingFailure.retryable ? (
+            <V2ErrorState
+              title={sharingFailure.title}
+              description={sharingFailure.body}
+              onRetry={() => void sharing.refetch()}
+              retryLabel={t("common:action.retry")}
+              style={styles.state}
+            />
+          ) : (
+            <V2ErrorState
+              title={sharingFailure.title}
+              description={sharingFailure.body}
+              style={styles.state}
+            />
+          )
         ) : draft == null ? (
           showLoading ? (
             <V2LoadingState style={styles.state} />

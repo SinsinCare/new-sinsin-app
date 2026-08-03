@@ -119,7 +119,8 @@ const THUMB = 76
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
   labelRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  label: { ...TYPE.label, fontWeight: "600" },
+  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipGroup`).
+  label: { ...TYPE.cardTitle, fontWeight: "700" },
   optional: { ...TYPE.caption, fontSize: 12 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   thumbWrap: { width: THUMB, height: THUMB },

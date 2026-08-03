@@ -37,6 +37,7 @@ import {
   useLoadingVisible,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { resolveError } from "@/src/lib/errorMessage"
 import { useAppRouter } from "@/src/shared/navigation"
 import type { HealthCheckResultsRs } from "@/src/types/nhis"
 
@@ -125,6 +126,9 @@ export function CheckupListScreen({
   const language = i18n.language
 
   if (query.isError) {
+    // 재시도해도 같은 답이 오는 실패(404·권한)에는 버튼을 그리지 않는다. 누를 것을
+    // 주면 사용자는 그게 통할 때까지 누른다.
+    const resolved = resolveError(query.error)
     return (
       <View
         style={[styles.root, { backgroundColor: colors.background.default }]}
@@ -133,12 +137,21 @@ export function CheckupListScreen({
           title={t("checkup.list.title")}
           onBack={() => router.back()}
         />
-        <V2ErrorState
-          style={styles.fill}
-          title={t("checkup.list.loadError")}
-          onRetry={() => void query.refetch()}
-          retryLabel={tCommon("action.retry")}
-        />
+        {resolved.retryable ? (
+          <V2ErrorState
+            style={styles.fill}
+            title={resolved.title}
+            description={resolved.body}
+            onRetry={() => void query.refetch()}
+            retryLabel={tCommon("action.retry")}
+          />
+        ) : (
+          <V2ErrorState
+            style={styles.fill}
+            title={resolved.title}
+            description={resolved.body}
+          />
+        )}
       </View>
     )
   }

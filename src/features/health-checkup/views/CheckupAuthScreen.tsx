@@ -46,6 +46,7 @@ import {
   useLoadingVisible,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { useAppRouter } from "@/src/shared/navigation"
 import { nhisService } from "@/src/services/data/nhisService"
 import type { AuthMethodRs } from "@/src/types/nhis"
@@ -180,8 +181,12 @@ export function CheckupAuthScreen({ onDone }: { onDone?: () => void }) {
         return
       }
       setSubmitError(t("nhis.requestRejected"))
-    } catch {
-      setSubmitError(t("nhis.requestNetworkError"))
+    } catch (error) {
+      // 여기서 오는 실패는 대부분 연결이 아니다 — 공단 점검(`HC_ERROR_005`), 인증
+      // 만료(`HC_ERROR_002`), 인증 앱 미응답(`HC_ERROR_003`). 예전에는 셋 다
+      // "인터넷 연결을 확인한 뒤 다시 눌러 주세요" 로 나갔고, 서버가 준 원문은
+      // `CODEF 요청에 실패했습니다.` 라 그대로 쓸 수도 없었다.
+      setSubmitError(getErrorMessage(error))
     } finally {
       setSubmitting(false)
     }
@@ -213,8 +218,8 @@ export function CheckupAuthScreen({ onDone }: { onDone?: () => void }) {
           ? t("nhis.timeoutTitle")
           : t("nhis.failedTitle"),
       )
-    } catch {
-      setConfirmError(t("nhis.confirmNetworkError"))
+    } catch (error) {
+      setConfirmError(getErrorMessage(error))
     } finally {
       setConfirming(false)
     }
@@ -258,6 +263,8 @@ export function CheckupAuthScreen({ onDone }: { onDone?: () => void }) {
               </Text>
               {confirmError != null && (
                 <Text
+                  lineBreakStrategyIOS="hangul-word"
+                  textBreakStrategy="balanced"
                   style={[
                     typography.subtext.large,
                     { color: colors.status.negative },
@@ -325,12 +332,17 @@ export function CheckupAuthScreen({ onDone }: { onDone?: () => void }) {
                 ) : methodsFailed ? (
                   <View style={styles.inlineError}>
                     <Text
+                      lineBreakStrategyIOS="hangul-word"
+                      textBreakStrategy="balanced"
                       style={[
                         typography.subtext.large,
                         { color: colors.status.negative },
                       ]}
                     >
-                      {t("checkup.auth.methodsLoadError")}
+                      {/* 빈 목록은 오류 객체가 없다 — 그때만 화면이 문구를 짓는다. */}
+                      {methodsQuery.error
+                        ? getErrorMessage(methodsQuery.error)
+                        : t("checkup.auth.methodsLoadError")}
                     </Text>
                     <V2Button
                       size="s"
@@ -408,6 +420,8 @@ export function CheckupAuthScreen({ onDone }: { onDone?: () => void }) {
 
               {submitError != null && (
                 <Text
+                  lineBreakStrategyIOS="hangul-word"
+                  textBreakStrategy="balanced"
                   style={[
                     typography.subtext.large,
                     { color: colors.status.negative },

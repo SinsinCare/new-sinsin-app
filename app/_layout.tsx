@@ -14,7 +14,7 @@ import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
-import { AppKeyboardToolbar } from "@/src/shared/components/AppKeyboardToolbar"
+import { AppKeyboardSurface } from "@/src/shared/components/AppKeyboardSurface"
 import { useTranslation } from "react-i18next"
 import config from "../tamagui.config"
 import { languageReady } from "@/src/i18n" // 초기화(부수효과) + 저장 언어 복원 약속
@@ -27,6 +27,7 @@ import {
   useThemeStore,
 } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
+import { V2DialogHost } from "@/src/design-system-v2"
 import { resolveGuard } from "@/src/shared/navigation/guard"
 import { useConsumeEntryUrl } from "@/src/shared/navigation/useConsumeEntryUrl"
 import { useNotifications } from "@/src/hooks/useNotifications"
@@ -223,11 +224,18 @@ export default function RootLayout() {
                   <RootLayoutNav />
                 </AppPolicyGate>
                 <Toast />
+                {/*
+                  showConfirm/showAlert 의 기본 호스트. 화면 단위 호출은 전부
+                  여기로 온다. RN Modal 안에서 부르는 확인창은 그 모달 안에
+                  <V2DialogHost/> 를 하나 더 얹어야 한다 — 이유는 그쪽 머리말.
+                */}
+                <V2DialogHost />
               </PortalProvider>
               {/*
                 키보드 탈출구. 숫자 키패드에는 완료 키가 없고, InputAccessoryView 는
                 시트 안에서 렌더되지 않는다 — 전역 툴바만이 모든 입력을 덮는다
-                (AppKeyboardToolbar 머리말).
+                (AppKeyboardToolbar 머리말). 기록 시트가 열려 있으면 툴바 대신
+                키보드 도킹 CTA 가 선다(AppKeyboardSurface / KeyboardDock 머리말).
 
                 **`PortalProvider` 밖에 둔다.** 안에 두면 안 보인다. 그 provider 는
                 자식을 그린 **뒤에** 포털 호스트를 그리고(`[children, PortalHost]`),
@@ -236,7 +244,7 @@ export default function RootLayout() {
                 뒤에 깔려 화면에 나오지 않는다 — 1.1.24 QA "여전히 키보드가 가린다" 가
                 이것이다. 밖으로 빼면 마지막에 그려져 시트 위에 선다.
               */}
-              <AppKeyboardToolbar />
+              <AppKeyboardSurface />
             </Theme>
           </TamaguiProvider>
         </QueryClientProvider>

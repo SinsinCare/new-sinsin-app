@@ -25,8 +25,7 @@ export function judgeGlucose(
   timing: GlucoseTiming,
 ): VitalStatus {
   if (value === null) return "none"
-  const min = timing === "AFTER_MEAL" ? 90 : 70
-  const max = timing === "AFTER_MEAL" ? 139 : 99
+  const { min, max } = getGlucoseTarget(timing)
   return value >= min && value <= max ? "normal" : "caution"
 }
 
@@ -44,7 +43,8 @@ export function getGlucoseTarget(timing: GlucoseTiming): {
   min: number
   max: number
 } {
-  return timing === "AFTER_MEAL" ? { min: 90, max: 139 } : { min: 70, max: 99 }
+  // 식후 90–180 은 홈 시트 시안(2026-08-03)의 값이다. 식전·공복은 기존 70–99 유지.
+  return timing === "AFTER_MEAL" ? { min: 90, max: 180 } : { min: 70, max: 99 }
 }
 
 export const BLOOD_PRESSURE_RANGE = { min: 90, max: 160 } as const
@@ -91,4 +91,44 @@ export function judgeGlucoseDetailed(
   if (base === "none") return "none"
   if (value !== null && value >= GLUCOSE_DANGER_FROM) return "danger"
   return base
+}
+
+/**
+ * 시트 배지가 쓰는 판정 한 벌 — 톤(색)과 방향(높음/낮음)을 함께 준다.
+ * "주의" 한 단어보다 "높음/낮음"이 다음 행동(재측정·기록 후 상담)을 정한다.
+ * 라벨 문자열은 화면이 i18n 으로 그린다(`home.sheet.judgment.*`).
+ */
+export interface VitalJudgment {
+  tone: "normal" | "caution" | "danger"
+  direction: "in" | "high" | "low"
+}
+
+export function judgeGlucoseValue(
+  value: number | null,
+  timing: GlucoseTiming,
+): VitalJudgment | null {
+  if (value === null) return null
+  const { min, max } = getGlucoseTarget(timing)
+  if (value >= GLUCOSE_DANGER_FROM) return { tone: "danger", direction: "high" }
+  if (value > max) return { tone: "caution", direction: "high" }
+  if (value < min) return { tone: "caution", direction: "low" }
+  return { tone: "normal", direction: "in" }
+}
+
+export function judgeBloodPressureValue(
+  systolic: number | null,
+  diastolic: number | null,
+): VitalJudgment | null {
+  if (systolic === null || diastolic === null) return null
+  if (
+    systolic >= BLOOD_PRESSURE_DANGER.systolic ||
+    diastolic >= BLOOD_PRESSURE_DANGER.diastolic
+  ) {
+    return { tone: "danger", direction: "high" }
+  }
+  if (systolic < 90 || diastolic < 60)
+    return { tone: "caution", direction: "low" }
+  if (systolic >= 120 || diastolic >= 80)
+    return { tone: "caution", direction: "high" }
+  return { tone: "normal", direction: "in" }
 }

@@ -92,8 +92,11 @@ export function SignupEmailScreen() {
   const ctaLabel = awaitingCode
     ? t("common.confirm")
     : t("emailVerification.sendCode")
+  /* 번호 칸이 떠 있는 동안의 `sendError` 는 **재전송** 실패다(인증 실패는 토스트로
+     나간다). 그때 확인 버튼까지 잠그면 "이미 보냈어요, 메일함을 확인해 주세요"
+     (`OTP_ERROR_001`)를 읽은 사용자가 손에 든 번호를 넣지 못한다. */
   const ctaDisabled = awaitingCode
-    ? code.length !== 6 || verifyingCode || !!sendError
+    ? code.length !== 6 || verifyingCode
     : !emailValid || sendingCode
   const onCtaPress = awaitingCode ? handleVerifyCode : handleSendCode
 

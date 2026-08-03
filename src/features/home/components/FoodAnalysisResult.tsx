@@ -1,12 +1,5 @@
-import {
-  Modal,
-  ScrollView,
-  Image,
-  Alert,
-  ActionSheetIOS,
-  Platform,
-  Pressable,
-} from "react-native"
+import { ScrollView, Image, Pressable } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { router } from "expo-router"
 import { YStack, XStack, Text, View } from "tamagui"
@@ -33,7 +26,13 @@ import { useMealReport } from "@/src/features/food-report/hooks/useMealReport"
 import { FoodNutrientDonuts } from "./FoodNutrientDonuts"
 import { ShareCard } from "./ShareCard"
 import { useMealPersistenceActions } from "@/src/features/food-analysis"
+import { MealDeleteConfirmSheet } from "./MealDeleteConfirmSheet"
 import { useTranslation } from "react-i18next"
+
+import { ModalOverlayHost } from "@/src/shared/components"
+
+import { showErrorToast } from "@/src/lib/toast"
+import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 interface FoodAnalysisResultProps {
   result: FoodCameraAnalyzeResult | null
@@ -55,6 +54,8 @@ interface FoodAnalysisResultProps {
     mealType: string,
   ) => Promise<{ diaryId: number; mealType: string } | undefined>
   recordDate?: string
+  /** 이 기록을 남긴 시각(서버 createdAt, naive UTC). 삭제 확인 미리보기가 쓴다. */
+  recordedAt?: string
   onDiaryDeleted?: () => void
   onResultChange?: (result: FoodCameraAnalyzeResult) => void
   onMealTypeChange?: (change: FoodAnalysisMealTypeChange) => void
@@ -220,6 +221,7 @@ export function FoodAnalysisResult({
   diaryId,
   updateDiaryMealType,
   recordDate,
+  recordedAt,
   onDiaryDeleted,
   onResultChange,
   onMealTypeChange,
@@ -229,7 +231,6 @@ export function FoodAnalysisResult({
     ? "en"
     : "ko"
   const insets = useSafeAreaInsets()
-  const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
   const [isAddingToRecord, setIsAddingToRecord] = useState(false)
   const [displayResult, setDisplayResult] =
@@ -241,12 +242,23 @@ export function FoodAnalysisResult({
     imageUri ?? result?.imageUrl ?? undefined,
   )
   const [imageFailed, setImageFailed] = useState(false)
+  /**
+   * 삭제 확인 시트의 대기표. 컨트롤러의 confirmDelete 프라미스를 시트의
+   * 그대로 두기/지우기 버튼이 풀어 준다 — 무엇을 지우는지 카드로 먼저 보여주는
+   * 시트(MealDeleteConfirmSheet)가 기본 확인창을 대신한다.
+   */
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    resolve: (confirmed: boolean) => void
+  } | null>(null)
   const {
     startConsultation,
     deleteSavedMeal,
     isStartingConsultation,
     isDeletingDiary,
-  } = useMealPersistenceActions()
+  } = useMealPersistenceActions({
+    confirmDelete: () =>
+      new Promise<boolean>((resolve) => setDeleteConfirm({ resolve })),
+  })
 
   useEffect(() => {
     setDisplayResult(result)
@@ -279,87 +291,71 @@ export function FoodAnalysisResult({
   const shareCardRef = useRef<ViewShot>(null)
   const FACEBOOK_APP_ID = "1306082818293951"
 
+  const shareToSystemSheet = useCallback(async () => {
+    const uri = await captureRef(shareCardRef, {
+      format: "png",
+      quality: 1,
+      result: "tmpfile",
+    })
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(uri, {
+        mimeType: "image/png",
+        UTI: "public.png",
+      })
+    }
+  }, [])
+
+  const shareToInstagramStories = useCallback(async () => {
+    const base64 = await captureRef(shareCardRef, {
+      format: "png",
+      quality: 1,
+      result: "base64",
+    })
+    await Share.shareSingle({
+      social: Social.InstagramStories,
+      appId: FACEBOOK_APP_ID,
+      stickerImage: `data:image/png;base64,${base64}`,
+      backgroundBottomColor: "#FFFFFF",
+      backgroundTopColor: "#FFFFFF",
+    })
+  }, [])
+
+  /**
+   * 공유. 예전엔 iOS 만 ActionSheetIOS 로 물었고 안드로이드는 묻지 않은 채
+   * 인스타를 먼저 시도하다 실패하면 일반 공유로 넘어갔다 — 같은 버튼이 OS 마다
+   * 다르게 굴었다. 이제 두 OS 모두 같은 시트에서 고른다.
+   */
   const handleShare = useCallback(async () => {
     if (!shareCardRef.current) return
 
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [
-            t("foodResult.shareInstagram"),
-            t("foodResult.shareOther"),
-            t("action.cancel"),
-          ],
-          cancelButtonIndex: 2,
-        },
-        async (buttonIndex) => {
-          try {
-            if (buttonIndex === 0) {
-              // base64로 캡처하여 Instagram Stories에 직접 공유
-              const base64 = await captureRef(shareCardRef, {
-                format: "png",
-                quality: 1,
-                result: "base64",
-              })
-              await Share.shareSingle({
-                social: Social.InstagramStories,
-                appId: FACEBOOK_APP_ID,
-                stickerImage: `data:image/png;base64,${base64}`,
-                backgroundBottomColor: "#FFFFFF",
-                backgroundTopColor: "#FFFFFF",
-              })
-            } else if (buttonIndex === 1) {
-              // 파일로 캡처하여 시스템 공유 시트
-              const uri = await captureRef(shareCardRef, {
-                format: "png",
-                quality: 1,
-                result: "tmpfile",
-              })
-              if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(uri, {
-                  mimeType: "image/png",
-                  UTI: "public.png",
-                })
-              }
-            }
-          } catch {
-            Alert.alert(
-              t("foodResult.instagramErrorTitle"),
-              t("foodResult.instagramErrorBody"),
-            )
-          }
-        },
-      )
-    } else {
-      // Android: Instagram Stories 시도 후 실패 시 일반 공유
-      try {
-        const base64 = await captureRef(shareCardRef, {
-          format: "png",
-          quality: 1,
-          result: "base64",
-        })
-        await Share.shareSingle({
-          social: Social.InstagramStories,
-          appId: FACEBOOK_APP_ID,
-          stickerImage: `data:image/png;base64,${base64}`,
-          backgroundBottomColor: "#FFFFFF",
-          backgroundTopColor: "#FFFFFF",
-        })
-      } catch {
-        const uri = await captureRef(shareCardRef, {
-          format: "png",
-          quality: 1,
-          result: "tmpfile",
-        })
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(uri, {
-            mimeType: "image/png",
-            UTI: "public.png",
-          })
+    const picked = await showActionSheet({
+      actions: [
+        { label: t("foodResult.shareInstagram") },
+        { label: t("foodResult.shareOther") },
+      ],
+      cancelLabel: t("action.cancel"),
+    })
+    if (picked == null) return
+
+    try {
+      if (picked === 0) await shareToInstagramStories()
+      else await shareToSystemSheet()
+    } catch {
+      // 인스타가 없거나 실패해도 공유 자체는 살려 준다.
+      if (picked === 0) {
+        try {
+          await shareToSystemSheet()
+          return
+        } catch {
+          // 아래 공통 안내로 떨어진다
         }
       }
+      showErrorToast(
+        t("foodResult.instagramErrorTitle"),
+        t("foodResult.instagramErrorBody"),
+      )
     }
-  }, [t])
+  }, [t, shareToInstagramStories, shareToSystemSheet])
 
   if (!displayResult) return null
 
@@ -369,12 +365,27 @@ export function FoodAnalysisResult({
     setIsEdit(true)
   }
 
-  const handleClosePress = () => {
-    if (showAddButton) {
-      setShowExitConfirm(true)
-    } else {
+  /**
+   * 아직 기록에 담지 않은 결과를 두고 나가는 자리.
+   *
+   * 예전엔 이 확인창만 손으로 만든 `absoluteFill` 오버레이였다 — 앱의 확인창을
+   * V2Modal 로 모을 때 여기만 남았고, 정작 사용자가 제일 자주 보는 확인창이
+   * 혼자 다른 얼굴이었다. `showConfirm` 은 이 화면 안의 `<ModalOverlayHost />`
+   * 를 타므로 열린 RN Modal 안에서도 뜬다(ModalOverlayHost 머리말).
+   */
+  const handleClosePress = async () => {
+    if (!showAddButton) {
       onClose()
+      return
     }
+    const confirmed = await showConfirm({
+      title: t("foodResult.unsavedTitle"),
+      description: t("foodResult.unsavedBody"),
+      confirmLabel: t("foodResult.leaveWithoutSaving"),
+      cancelLabel: t("foodResult.returnToResult"),
+      destructive: true,
+    })
+    if (confirmed) onClose()
   }
 
   const servingsLabel = t("foodResult.servings", {
@@ -434,11 +445,11 @@ export function FoodAnalysisResult({
   }
 
   return (
-    <Modal
+    <AppModal
       visible={open}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={handleClosePress}
+      onRequestClose={() => void handleClosePress()}
     >
       <YStack flex={1} backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}>
         {/* Header */}
@@ -483,7 +494,7 @@ export function FoodAnalysisResult({
             {t("foodResult.title")}
           </Text>
           <Pressable
-            onPress={handleClosePress}
+            onPress={() => void handleClosePress()}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={t("foodResult.close")}
@@ -912,8 +923,11 @@ export function FoodAnalysisResult({
 
           {/* 의료 정보 출처 — 본문과 경쟁하지 않는 조용한 푸터.
               카드·이모지·유채색 링크를 걷어냈다: 출처는 신뢰의 근거이지
-              눌러 달라고 조르는 배너가 아니다. */}
-          <YStack marginHorizontal={20} marginTop={28} gap={10}>
+              눌러 달라고 조르는 배너가 아니다.
+
+              간격은 4의 배수로만 둔다(20·8). 28+10 이던 예전 값은 본문 섹션
+              사이(24)보다 넓어서, 조용한 푸터가 오히려 새 섹션처럼 떠 보였다. */}
+          <YStack marginHorizontal={20} marginTop={20} gap={8}>
             <View
               height={0.5}
               backgroundColor={
@@ -1128,110 +1142,6 @@ export function FoodAnalysisResult({
         mealType={displayMealType}
       />
 
-      {/* 나가기 확인 오버레이 */}
-      {showExitConfirm && (
-        <YStack
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          backgroundColor="rgba(0,0,0,0.5)"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <YStack
-            backgroundColor={
-              isDarkMode
-                ? tokens.color.cardBgDark.val
-                : tokens.color.offWhite.val
-            }
-            borderRadius={15}
-            overflow="hidden"
-          >
-            <YStack
-              paddingHorizontal="$10"
-              paddingTop="$8"
-              paddingBottom="$6"
-              gap="$2"
-            >
-              <Text
-                fontSize={16}
-                fontWeight="600"
-                textAlign="center"
-                color={isDarkMode ? "$textDark" : "$color"}
-              >
-                {t("foodResult.unsavedTitle")}
-              </Text>
-              <Text
-                fontSize={14}
-                color="$colorSubtle"
-                textAlign="center"
-                lineHeight={22}
-              >
-                {t("foodResult.unsavedBody")}
-              </Text>
-            </YStack>
-
-            <View
-              height={1}
-              backgroundColor={isDarkMode ? tokens.color.grey2.val : "#E5E5E5"}
-            />
-
-            <XStack>
-              <Pressable
-                onPress={() => {
-                  setShowExitConfirm(false)
-                  onClose()
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t("foodResult.leaveWithoutSaving")}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <YStack alignItems="center" paddingVertical="$4">
-                  <Text
-                    color={tokens.color.primary9.val}
-                    fontSize={15}
-                    fontWeight="500"
-                  >
-                    {t("foodResult.leaveWithoutSaving")}
-                  </Text>
-                </YStack>
-              </Pressable>
-
-              <View
-                width={1}
-                backgroundColor={
-                  isDarkMode ? tokens.color.grey2.val : "#E5E5E5"
-                }
-              />
-
-              <Pressable
-                onPress={() => setShowExitConfirm(false)}
-                accessibilityRole="button"
-                accessibilityLabel={t("foodResult.returnToResult")}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                <YStack alignItems="center" paddingVertical="$4">
-                  <Text
-                    fontSize={15}
-                    fontWeight="500"
-                    color={isDarkMode ? "$textDark" : "$color"}
-                  >
-                    {t("foodResult.returnToResult")}
-                  </Text>
-                </YStack>
-              </Pressable>
-            </XStack>
-          </YStack>
-        </YStack>
-      )}
       {isEdit && (
         <FoodResultEdit
           result={effectiveResult}
@@ -1247,6 +1157,27 @@ export function FoodAnalysisResult({
           onMealTypeChange={handleMealTypeChange}
         />
       )}
-    </Modal>
+
+      {/* 삭제는 되돌릴 수 없다 — 무엇을 지우는지 카드로 먼저 보여주고 묻는다. */}
+      <MealDeleteConfirmSheet
+        visible={deleteConfirm !== null}
+        preview={{
+          mealType: displayMealType ?? null,
+          imageUri: displayImageUri ?? effectiveResult.imageUrl ?? null,
+          recordedAt: recordedAt ?? null,
+        }}
+        onKeep={() => {
+          deleteConfirm?.resolve(false)
+          setDeleteConfirm(null)
+        }}
+        onDelete={() => {
+          deleteConfirm?.resolve(true)
+          setDeleteConfirm(null)
+        }}
+      />
+
+      {/* 이 모달이 루트 토스트/다이얼로그를 덮으므로 안쪽에도 호스트를 둔다 */}
+      <ModalOverlayHost />
+    </AppModal>
   )
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Modal, Pressable, ScrollView, StyleSheet } from "react-native"
+import { Pressable, ScrollView, StyleSheet } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Text, XStack, YStack } from "tamagui"
 import { GlassmorphicCard } from "@/src/shared/components"
@@ -77,7 +78,7 @@ export function FoodAnalysisConfirmation({
   }
 
   return (
-    <Modal
+    <AppModal
       visible={job?.status === "NEEDS_CONFIRMATION"}
       animationType="slide"
       presentationStyle="fullScreen"
@@ -191,7 +192,7 @@ export function FoodAnalysisConfirmation({
           />
         </YStack>
       </SafeAreaView>
-    </Modal>
+    </AppModal>
   )
 }
 

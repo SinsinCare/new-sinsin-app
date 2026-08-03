@@ -1,13 +1,9 @@
 import React, { useState } from "react"
+import { StyleSheet, View, ScrollView, Pressable, Linking } from "react-native"
 import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-  Modal,
-  Alert,
-  Linking,
-} from "react-native"
+  AppModal,
+  afterModalTransitions,
+} from "@/src/shared/components/AppModal"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -26,6 +22,10 @@ import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
 import type { OcrUploadFile } from "@/src/features/health/types"
 import { useHealthTheme } from "../hooks/useHealthTheme"
+
+import { showErrorToast } from "@/src/lib/toast"
+
+import { showConfirm } from "@/src/lib/dialog"
 
 const MAX_FILES = 5
 
@@ -48,17 +48,15 @@ export function HealthDataUploadScreen() {
     if (files.length >= MAX_FILES) return
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
     if (status !== "granted") {
-      Alert.alert(
-        t("upload.cameraPermissionTitle"),
-        t("upload.cameraPermissionDescription"),
-        [
-          { text: t("actions.cancel"), style: "cancel" },
-          {
-            text: t("actions.openSettings"),
-            onPress: () => void Linking.openSettings(),
-          },
-        ],
+      if (
+        await showConfirm({
+          title: t("upload.cameraPermissionTitle"),
+          description: t("upload.cameraPermissionDescription"),
+          confirmLabel: t("actions.openSettings"),
+          cancelLabel: t("actions.cancel"),
+        })
       )
+        void Linking.openSettings()
       return
     }
 
@@ -81,17 +79,15 @@ export function HealthDataUploadScreen() {
     if (files.length >= MAX_FILES) return
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
-      Alert.alert(
-        t("upload.photoPermissionTitle"),
-        t("upload.photoPermissionDescription"),
-        [
-          { text: t("actions.cancel"), style: "cancel" },
-          {
-            text: t("actions.openSettings"),
-            onPress: () => void Linking.openSettings(),
-          },
-        ],
+      if (
+        await showConfirm({
+          title: t("upload.photoPermissionTitle"),
+          description: t("upload.photoPermissionDescription"),
+          confirmLabel: t("actions.openSettings"),
+          cancelLabel: t("actions.cancel"),
+        })
       )
+        void Linking.openSettings()
       return
     }
 
@@ -143,13 +139,19 @@ export function HealthDataUploadScreen() {
     setAnalyzing(true)
     try {
       const report = await examOcrService.uploadOcr(files[0])
+      // 오버레이 dismiss 전환과 네이티브 스택 push 가 겹치지 않게, 내리고
+      // 전이가 가라앉은 뒤 이동한다(appModalGate 머리말).
+      setAnalyzing(false)
+      await afterModalTransitions()
       router.push({
         pathname: "/(settings)/health-ocr-review",
         params: { reportId: String(report.reportId) },
       })
     } catch (error) {
       logger.error("[ocr] upload failed", error)
-      Alert.alert(t("upload.readErrorTitle"), getOcrErrorMessage(error))
+      // 분석 오버레이(RN Modal)가 루트 토스트를 덮으므로 먼저 내리고 알린다.
+      setAnalyzing(false)
+      showErrorToast(t("upload.readErrorTitle"), getOcrErrorMessage(error))
     } finally {
       setAnalyzing(false)
     }
@@ -457,7 +459,7 @@ export function HealthDataUploadScreen() {
         onPress={handleAnalyze}
       />
 
-      <Modal visible={analyzing} transparent animationType="fade">
+      <AppModal visible={analyzing} transparent animationType="fade">
         <View style={styles.loadingOverlay}>
           <View
             style={[
@@ -485,7 +487,7 @@ export function HealthDataUploadScreen() {
             </ThemedText>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </ThemedView>
   )
 }

@@ -23,10 +23,15 @@
  */
 
 import { useCallback, useRef } from "react"
-import { showErrorToast } from "@/src/lib/toast"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
+// 판정 모듈을 직접 집는다. 배럴은 `presentError` → `dialog`(react-native) ·
+// `actions`(expo-router) 까지 끌고 오고, 둘 다 미변환이라 이 훅을 들여오는 스위트가
+// **파싱 단계에서 통째로 죽는다**(`tests/restaurantBookmarkOptimistic.test.ts` 는
+// react-dom/server 로 훅을 직접 돌린다). 여기 필요한 것은 문구 하나뿐이다.
+import { resolveError } from "@/src/lib/errorMessage/resolve"
+import { showErrorToast } from "@/src/lib/toast"
 import { normalizeLanguage } from "@/src/i18n"
 import { restaurantService } from "@/src/services/data/restaurantService"
 
@@ -91,7 +96,7 @@ export interface UseBookmarkResult {
 }
 
 export function useBookmark(): UseBookmarkResult {
-  const { t, i18n } = useTranslation("common")
+  const { i18n } = useTranslation("common")
   const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
   const queryClient = useQueryClient()
   const inFlight = useRef<Set<number>>(new Set())
@@ -188,7 +193,7 @@ export function useBookmark(): UseBookmarkResult {
       return context
     },
 
-    onError: (_error, { restaurantId }, context) => {
+    onError: (error, { restaurantId }, context) => {
       if (!context) return
       // 스냅샷을 그대로 되돌린다. 부분 롤백은 화면 간 불일치를 남긴다.
       for (const [key, value] of context.map) {
@@ -208,8 +213,14 @@ export function useBookmark(): UseBookmarkResult {
         **되돌린 사실을 말한다.** 낙관 갱신이 조용히 원복되면, 사용자 눈에는 북마크가
         켜졌다가 저절로 꺼진 것으로 보인다 — 누른 것이 안 먹혔는지 앱이 이상한 건지
         구분할 방법이 없다. 저장 실패는 다시 누르면 되는 종류라 토스트 한 줄이면 된다.
+
+        그 한 줄을 여기서 고르지 않는다. `저장하지 못했어요` 는 서버가 아는 것(만료된
+        세션·없는 식당)보다 언제나 덜 구체적인데, 예전 규칙에서는 화면 폴백이 서버
+        코드를 **이겼다**. 북마크 표시는 이미 원래대로 돌아가 있으므로 다시 누르는
+        것이 곧 재시도다 — 토스트에 버튼을 하나 더 얹지 않는다.
       */
-      showErrorToast(t("restaurant.error.bookmarkFailed"))
+      const resolved = resolveError(error)
+      if (!resolved.silent) showErrorToast(resolved.title, resolved.body)
     },
 
     onSuccess: (result) => {

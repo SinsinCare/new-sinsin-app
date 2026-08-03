@@ -174,7 +174,11 @@ export function FieldHelp({
   const color =
     tone === "error" ? s.danger : tone === "valid" ? s.brand : s.textMuted
   return (
-    <Text style={[styles.help, { color }]} lineBreakStrategyIOS="hangul-word">
+    <Text
+      style={[styles.help, { color }]}
+      lineBreakStrategyIOS="hangul-word"
+      textBreakStrategy="balanced"
+    >
       {text}
     </Text>
   )

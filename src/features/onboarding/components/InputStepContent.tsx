@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import i18n from "@/src/i18n"
 import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "@/src/features/auth/data/authSurface"
+import { singleLineInputText } from "@/src/theme/surface"
 import type { OnboardingValueOption } from "../types"
 
 interface InputStepContentProps {
@@ -100,7 +101,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    ...AUTH_TYPE.field,
+    // 값(`AUTH_TYPE.field`)을 그대로 쓰면 lineHeight 가 딸려 와 iOS 가 글자를 세로 가운데가
+    // 아니라 문단 기준으로 앉힌다 — 컨테이너는 height 56 + center 로 멀쩡한데 글자만
+    // 아래로 내려앉아 상하 여백이 달라 보인다. 자세한 것은 `singleLineInputText` 머리말.
+    ...singleLineInputText(AUTH_TYPE.field),
     fontWeight: "600",
     padding: 0,
   },

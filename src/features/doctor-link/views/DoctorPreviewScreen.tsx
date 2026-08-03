@@ -17,6 +17,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { getErrorMessage } from "@/src/lib/errorUtils"
 import { doctorLinkService } from "@/src/services/data/doctorLinkService"
 import type { DoctorCard, DoctorConnection } from "@/src/types/doctorLink"
 
@@ -101,12 +102,16 @@ export function DoctorPreviewScreen({
 
         {connect.isError && (
           <Text
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
             style={[
               typography.subtext.medium,
               { color: colors.status.negative },
             ]}
           >
-            {t("doctorLink.preview.error")}
+            {/* 고정 문구 한 줄이던 자리. 이미 보낸 요청·해지된 연결처럼 CTA 를 다시
+                눌러도 소용없는 실패가 여기로 오는데, 그걸 구분해 주지 않았다. */}
+            {getErrorMessage(connect.error)}
           </Text>
         )}
       </ScrollView>

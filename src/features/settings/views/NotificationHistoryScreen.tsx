@@ -1,10 +1,4 @@
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  Alert,
-} from "react-native"
+import { ScrollView, StyleSheet, View, TouchableOpacity } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -21,6 +15,7 @@ import {
 } from "@/src/stores/notificationHistoryStore"
 import appI18n from "@/src/i18n"
 
+import { showConfirm } from "@/src/lib/dialog"
 export function NotificationHistoryScreen() {
   const insets = useSafeAreaInsets()
   const router = useAppRouter()
@@ -68,20 +63,16 @@ export function NotificationHistoryScreen() {
                 accessibilityLabel={t(
                   "notifications.history.clearAccessibility",
                 )}
-                onPress={() =>
-                  Alert.alert(
-                    t("notifications.history.clearTitle"),
-                    t("notifications.history.clearBody"),
-                    [
-                      { text: t("shared.cancel"), style: "cancel" },
-                      {
-                        text: t("shared.delete"),
-                        style: "destructive",
-                        onPress: clearAll,
-                      },
-                    ],
-                  )
-                }
+                onPress={async () => {
+                  const confirmed = await showConfirm({
+                    title: t("notifications.history.clearTitle"),
+                    description: t("notifications.history.clearBody"),
+                    confirmLabel: t("shared.delete"),
+                    cancelLabel: t("shared.cancel"),
+                    destructive: true,
+                  })
+                  if (confirmed) clearAll()
+                }}
               >
                 <ThemedText
                   style={[styles.clearBtn, { color: c.textTertiary }]}

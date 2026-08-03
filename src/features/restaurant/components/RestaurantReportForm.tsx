@@ -22,9 +22,8 @@
  * 실수로 지우기 쉬운 대신 무엇이 일어날지 분명하다.
  */
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -57,8 +56,21 @@ import {
 import { getRestaurantReportPalette } from "../utils/restaurantReportPresentation"
 import { RestaurantReportSection } from "./RestaurantReportSection"
 
+import { getErrorMessage } from "@/src/lib/errorUtils"
+import { showSuccessToast } from "@/src/lib/toast"
+
+import { showConfirm } from "@/src/lib/dialog"
+
 interface RestaurantReportFormProps {
   paddingTop: number
+  /**
+   * 채우다 만 제보가 있는지 껍데기에 알린다.
+   *
+   * 뒤로 가기 버튼은 이 폼이 아니라 화면 껍데기(`RestaurantReportScreen`)가 갖고 있어서,
+   * "지우고 나갈까요"를 물을 수 있는 쪽과 무엇이 지워지는지 아는 쪽이 갈려 있다.
+   * 상태를 위로 올리는 대신 **더러움 한 비트만** 올려 보낸다.
+   */
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 /** 썸네일 한 변. 3열 wrap 에서 가로 여백을 뺀 값이 아니라 목업 없는 화면의 고정값이다. */
@@ -75,6 +87,7 @@ const emptyDraft = {
 
 export function RestaurantReportForm({
   paddingTop,
+  onDirtyChange,
 }: RestaurantReportFormProps) {
   const { t } = useTranslation("common")
   const theme = useV2Theme()
@@ -94,6 +107,14 @@ export function RestaurantReportForm({
     setDraft((current) => ({ ...current, [key]: value }))
   }, [])
 
+  // 등록에 성공하면 폼이 비므로 이 값도 저절로 false 로 돌아간다.
+  const isDirty =
+    photos.length > 0 ||
+    Object.values(draft).some((value) => value.trim().length > 0)
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
   const addPhotos = useCallback(async () => {
     if (photos.length >= MAX_RESTAURANT_REPORT_PHOTOS) {
       setError(
@@ -106,19 +127,13 @@ export function RestaurantReportForm({
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
-      Alert.alert(
-        t("restaurant.report.permissionTitle"),
-        t("restaurant.report.permissionBody"),
-        [
-          { text: t("restaurant.report.later"), style: "cancel" },
-          {
-            text: t("restaurant.report.openSettings"),
-            onPress: () => {
-              void Linking.openSettings()
-            },
-          },
-        ],
-      )
+      const confirmed = await showConfirm({
+        title: t("restaurant.report.permissionTitle"),
+        description: t("restaurant.report.permissionBody"),
+        confirmLabel: t("restaurant.report.openSettings"),
+        cancelLabel: t("restaurant.report.later"),
+      })
+      if (confirmed) void Linking.openSettings()
       return
     }
 
@@ -162,12 +177,18 @@ export function RestaurantReportForm({
       await restaurantReportService.submitReport({ draft, photos })
       setDraft(emptyDraft)
       setPhotos([])
-      Alert.alert(
+      showSuccessToast(
         t("restaurant.report.successTitle"),
         t("restaurant.report.successBody"),
       )
-    } catch {
-      setError(t("restaurant.report.failure"))
+    } catch (submitError) {
+      /*
+        제보에는 사진이 붙는다. 그래서 여기 오는 실패의 상당수는 제보가 아니라 사진
+        쪽이고(`FOOD_CAMERA_001` 형식, `002` 5MB 초과), 둘 다 사진을 바꾸면 바로
+        풀린다. 그런데 문구는 어떤 실패든 `인터넷 연결을 확인한 뒤 다시 보내 주세요`
+        하나였다 — 사용자는 같은 사진으로 계속 다시 눌렀다.
+      */
+      setError(getErrorMessage(submitError))
     } finally {
       setIsSubmitting(false)
     }

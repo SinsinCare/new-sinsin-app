@@ -33,8 +33,8 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { getErrorMessage } from "@/src/lib/errorUtils"
-import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
+import { presentError } from "@/src/lib/errorMessage"
+import { showSuccessToast } from "@/src/lib/toast"
 import { restaurantService } from "@/src/services/data/restaurantService"
 
 /**
@@ -103,7 +103,12 @@ export function ReviewReportSheet({
       onReported?.(result)
       onClose()
     } catch (error) {
-      showErrorToast(getErrorMessage(error, t("restaurant.error.reportFailed")))
+      /*
+        폴백(`신고를 보내지 못했어요. 잠시 후 다시…`)을 넘기지 않는다. 예전 규칙에서는
+        그 문장이 **서버 코드를 이겨서**, 같은 후기를 두 번 신고했을 때(서버의 유니크
+        제약) 무엇이 문제인지 끝내 알 수 없었다. 지금은 코드가 먼저다.
+      */
+      presentError(error, { scope: "restaurant-review-report" })
     }
   }, [
     detail,

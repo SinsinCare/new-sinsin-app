@@ -84,7 +84,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
-  FlatList,
   Keyboard,
   Pressable,
   RefreshControl,
@@ -92,6 +91,8 @@ import {
   Text,
   View,
 } from "react-native"
+// 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
+import { FlashList } from "@shopify/flash-list"
 import { type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -370,15 +371,23 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
           </Pressable>
         )}
 
-        {/* 저장에 실패하면 되돌렸다는 사실까지 말한다. 누르면 닫힌다. */}
-        {active.saveFailed && (
+        {/*
+          저장에 실패하면 **되돌렸다는 사실**을 먼저 말하고, 그 다음에 원인을 붙인다.
+          원인 문장은 화면이 고르지 않는다 — 예전에는 어떤 실패든 "인터넷 연결을
+          확인한 뒤 다시 해 주세요" 였다. 누르면 닫힌다.
+        */}
+        {active.saveError && (
           <Pressable
             onPress={active.clearSaveError}
             accessibilityRole="alert"
-            accessibilityLabel={t("archive.saveErrorTitle")}
+            accessibilityLabel={t("archive.saveReverted")}
           >
-            <Text style={[styles.note, { color: surface.danger }]}>
-              {`${t("archive.saveErrorTitle")} · ${t("archive.saveErrorBody")}`}
+            <Text
+              style={[styles.note, { color: surface.danger }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
+              {`${t("archive.saveReverted")} · ${active.saveError}`}
             </Text>
           </Pressable>
         )}
@@ -474,7 +483,7 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
         )}
       </View>
 
-      <FlatList
+      <FlashList
         /*
           탭을 바꾸면 목록을 처음부터 본다. `key` 없이 두면 저장 탭에서 20줄쯤 내려간
           스크롤 위치가 최근 탭에 그대로 남아, 다른 목록의 중간에서 시작한다.
@@ -495,9 +504,6 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        initialNumToRender={8}
-        maxToRenderPerBatch={8}
-        windowSize={7}
         onEndReached={active.loadMore}
         onEndReachedThreshold={0.6}
         refreshControl={

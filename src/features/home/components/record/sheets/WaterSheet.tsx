@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native"
+import { KeyboardController } from "react-native-keyboard-controller"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -16,6 +24,7 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
 import { getHydrationGuidance } from "../../../utils/hydrationGuidance"
 import { SheetInfoCard } from "./recordSheetControls"
+import { useSheetKeyboardLift } from "./useSheetKeyboardLift"
 import { V2DotLoader } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
@@ -76,6 +85,8 @@ export function WaterSheet({
   const numberLocale = language === "en" ? "en-US" : "ko-KR"
   const formatAmount = (value: number) => value.toLocaleString(numberLocale)
   const surface = useSurface()
+  /* 직접 입력의 키패드가 CTA 를 덮지 않게 — 다른 기록 시트와 같은 규칙을 쓴다. */
+  const { bodyStyle, snapPoints, keyboardShown } = useSheetKeyboardLift(82)
   /** 이 시트에서 성공적으로 기록한 잔들. 되돌리기용 스택. */
   const [session, setSession] = useState<number[]>([])
   const [isBusy, setIsBusy] = useState(false)
@@ -161,11 +172,18 @@ export function WaterSheet({
     <AppBottomSheet
       visible={visible}
       onClose={onClose}
-      /* 직접 입력이 열려도 시트를 키우거나 밀어 올리지 않는다 — 밀어 올리면 상단이
-         시계·배터리를 덮는다(QA 2026-08-02). 입력 줄·담기는 상단쪽이라 키보드 위에 보인다. */
-      snapPoints={[82]}
+      /*
+        시트를 밀어 올리지는 않는다 — 밀어 올리면 상단이 시계·배터리를 덮는다
+        (QA 2026-08-02). 대신 직접 입력의 키패드가 뜨면 시트가 커지고 CTA 가
+        키패드 위로 떠오른다(useSheetKeyboardLift 머리말).
+
+        예전 주석은 "입력 줄·담기는 상단쪽이라 키보드 위에 보인다"고 적어 두었는데
+        **CTA 는 아래에 있어서 그대로 덮였다** — 값을 치고도 담을 수가 없었다.
+      */
+      snapPoints={snapPoints}
+      contentBottomPadding={false}
     >
-      <View style={styles.body}>
+      <Animated.View style={[styles.body, bodyStyle]}>
         <View style={styles.head}>
           <View style={styles.headText}>
             <Text style={[styles.title, { color: surface.textStrong }]}>
@@ -220,244 +238,294 @@ export function WaterSheet({
           </Pressable>
         </View>
 
-        {/* 오늘 총량 — 기록마다 살짝 튀며 자란다. 이 숫자가 곧 보상이다. */}
-        <View style={styles.displayBlock}>
-          <Animated.View style={[styles.displayRow, numberStyle]}>
-            <Text style={[styles.displayValue, { color: surface.textStrong }]}>
-              {formatAmount(total)}
-            </Text>
-            <Text style={[styles.displayUnit, { color: surface.textMuted }]}>
-              mL
-            </Text>
-          </Animated.View>
-          <Text
-            style={[
-              styles.displayCaption,
-              {
-                color:
-                  guidance.tone === "relaxed"
-                    ? surface.placeholder
-                    : surface.brand,
-              },
-            ]}
-          >
-            {guidance.message}
-          </Text>
-        </View>
-
-        <View style={[styles.track, { backgroundColor: surface.surface }]}>
-          <View
-            style={[
-              styles.trackFill,
-              { flex: filledRatio, backgroundColor: surface.brand },
-            ]}
-          />
-          <View style={{ flex: Math.max(0, 1 - filledRatio) }} />
-        </View>
-
-        {/* 잔 버튼 — 누르면 담긴다(저장은 아래 CTA). 이 시트의 주인공이라 카드 크기다. */}
-        <View style={styles.cupRow}>
-          {PRESETS.map((preset) => {
-            const anchor = t(`home.sheet.water.preset.${preset.anchorKey}`)
-            const amount = formatAmount(preset.amount)
-            return (
-              <CupButton
-                key={preset.amount}
-                amount={amount}
-                anchor={anchor}
-                accessibilityLabel={t("home.sheet.water.presetAccessibility", {
-                  anchor,
-                  amount,
-                })}
-                disabled={isBusy}
-                onPress={() => addPending(preset.amount)}
-              />
-            )
-          })}
-        </View>
-
-        {/* 되돌리기 — 담긴 잔을 물리는 로컬 조작. 자리를 상시 확보한다(시프트 금지). */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canUndo }}
-          accessibilityLabel={t("home.sheet.water.undoLast")}
-          onPress={undoLast}
-          disabled={!canUndo}
+        {/* 키보드가 눌러 온 만큼 본문이 좁아진다 — 그 몫을 스크롤이 흡수한다. */}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {({ pressed }) => (
-            <View
+          {/* 오늘 총량 — 기록마다 살짝 튀며 자란다. 이 숫자가 곧 보상이다. */}
+          <View style={styles.displayBlock}>
+            <Animated.View style={[styles.displayRow, numberStyle]}>
+              <Text
+                style={[styles.displayValue, { color: surface.textStrong }]}
+              >
+                {formatAmount(total)}
+              </Text>
+              <Text style={[styles.displayUnit, { color: surface.textMuted }]}>
+                mL
+              </Text>
+            </Animated.View>
+            <Text
               style={[
-                styles.undoButton,
+                styles.displayCaption,
                 {
-                  backgroundColor: canUndo
-                    ? pressed
-                      ? surface.surfacePressed
-                      : surface.surface
-                    : surface.ctaOffBg,
+                  color:
+                    guidance.tone === "relaxed"
+                      ? surface.placeholder
+                      : surface.brand,
                 },
               ]}
             >
-              <Ionicons
-                name="arrow-undo-outline"
-                size={16}
-                color={canUndo ? surface.textStrong : surface.ctaOffText}
-              />
-              <Text
-                style={[
-                  styles.undoLabel,
-                  {
-                    color: canUndo ? surface.textStrong : surface.ctaOffText,
-                  },
-                ]}
-              >
-                {canUndo
-                  ? t("home.sheet.water.undoAmount", {
-                      amount: formatAmount(lastAmount),
-                    })
-                  : t("home.sheet.water.undoLast")}
-              </Text>
-            </View>
-          )}
-        </Pressable>
-
-        {isCustomOpen ? (
-          <View style={styles.customRow}>
-            <View
-              style={[styles.customField, { backgroundColor: surface.surface }]}
-            >
-              <TextInput
-                autoFocus
-                value={customText}
-                onChangeText={setCustomText}
-                placeholder="0"
-                placeholderTextColor={surface.placeholder}
-                selectionColor={surface.brand}
-                keyboardType="number-pad"
-                maxLength={4}
-                style={[styles.customInput, { color: surface.textStrong }]}
-                onSubmitEditing={submitCustom}
-              />
-              <Text style={[styles.customUnit, { color: surface.textMuted }]}>
-                mL
-              </Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("home.sheet.water.addCustom")}
-              onPress={submitCustom}
-              disabled={customAmount <= 0 || isBusy}
-            >
-              {({ pressed }) => (
-                <View
-                  style={[
-                    styles.customSubmit,
-                    {
-                      backgroundColor:
-                        customAmount > 0 && !isBusy
-                          ? surface.brand
-                          : surface.ctaOffBg,
-                      opacity: pressed ? 0.92 : 1,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.customSubmitLabel,
-                      {
-                        color:
-                          customAmount > 0 && !isBusy
-                            ? surface.onBrand
-                            : surface.ctaOffText,
-                      },
-                    ]}
-                  >
-                    {t("home.sheet.water.addCustom")}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
+              {guidance.message}
+            </Text>
           </View>
-        ) : (
+
+          <View style={[styles.track, { backgroundColor: surface.surface }]}>
+            <View
+              style={[
+                styles.trackFill,
+                { flex: filledRatio, backgroundColor: surface.brand },
+              ]}
+            />
+            <View style={{ flex: Math.max(0, 1 - filledRatio) }} />
+          </View>
+
+          {/* 잔 버튼 — 누르면 담긴다(저장은 아래 CTA). 이 시트의 주인공이라 카드 크기다. */}
+          <View style={styles.cupRow}>
+            {PRESETS.map((preset) => {
+              const anchor = t(`home.sheet.water.preset.${preset.anchorKey}`)
+              const amount = formatAmount(preset.amount)
+              return (
+                <CupButton
+                  key={preset.amount}
+                  amount={amount}
+                  anchor={anchor}
+                  accessibilityLabel={t(
+                    "home.sheet.water.presetAccessibility",
+                    {
+                      anchor,
+                      amount,
+                    },
+                  )}
+                  disabled={isBusy}
+                  onPress={() => addPending(preset.amount)}
+                />
+              )
+            })}
+          </View>
+
+          {/* 되돌리기 — 담긴 잔을 물리는 로컬 조작. 자리를 상시 확보한다(시프트 금지). */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t("home.sheet.water.custom")}
-            onPress={() => setIsCustomOpen(true)}
+            accessibilityState={{ disabled: !canUndo }}
+            accessibilityLabel={t("home.sheet.water.undoLast")}
+            onPress={undoLast}
+            disabled={!canUndo}
           >
             {({ pressed }) => (
               <View
                 style={[
-                  styles.customToggle,
+                  styles.undoButton,
                   {
-                    backgroundColor: pressed
-                      ? surface.surfacePressed
-                      : surface.surface,
+                    backgroundColor: canUndo
+                      ? pressed
+                        ? surface.surfacePressed
+                        : surface.surface
+                      : surface.ctaOffBg,
                   },
                 ]}
               >
-                <Text style={[styles.customLabel, { color: surface.text }]}>
-                  {t("home.sheet.water.custom")}
-                </Text>
-                <Text style={[styles.customHint, { color: surface.textMuted }]}>
-                  {t("home.sheet.water.customHint")}
-                </Text>
                 <Ionicons
-                  name="chevron-forward"
+                  name="arrow-undo-outline"
                   size={16}
-                  color={surface.placeholder}
+                  color={canUndo ? surface.textStrong : surface.ctaOffText}
                 />
+                <Text
+                  style={[
+                    styles.undoLabel,
+                    {
+                      color: canUndo ? surface.textStrong : surface.ctaOffText,
+                    },
+                  ]}
+                >
+                  {canUndo
+                    ? t("home.sheet.water.undoAmount", {
+                        amount: formatAmount(lastAmount),
+                      })
+                    : t("home.sheet.water.undoLast")}
+                </Text>
               </View>
             )}
           </Pressable>
-        )}
 
-        {!isCustomOpen ? (
-          <SheetInfoCard>{t("home.sheet.water.info")}</SheetInfoCard>
-        ) : null}
+          {isCustomOpen ? (
+            <View style={styles.customRow}>
+              <View
+                style={[
+                  styles.customField,
+                  { backgroundColor: surface.surface },
+                ]}
+              >
+                <TextInput
+                  autoFocus
+                  value={customText}
+                  onChangeText={setCustomText}
+                  placeholder="0"
+                  placeholderTextColor={surface.placeholder}
+                  selectionColor={surface.brand}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  style={[styles.customInput, { color: surface.textStrong }]}
+                  onSubmitEditing={submitCustom}
+                />
+                <Text style={[styles.customUnit, { color: surface.textMuted }]}>
+                  mL
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("home.sheet.water.addCustom")}
+                onPress={submitCustom}
+                disabled={customAmount <= 0 || isBusy}
+              >
+                {({ pressed }) => (
+                  <View
+                    style={[
+                      styles.customSubmit,
+                      {
+                        backgroundColor:
+                          customAmount > 0 && !isBusy
+                            ? surface.brand
+                            : surface.ctaOffBg,
+                        opacity: pressed ? 0.92 : 1,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.customSubmitLabel,
+                        {
+                          color:
+                            customAmount > 0 && !isBusy
+                              ? surface.onBrand
+                              : surface.ctaOffText,
+                        },
+                      ]}
+                    >
+                      {t("home.sheet.water.addCustom")}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("home.sheet.water.custom")}
+              onPress={() => setIsCustomOpen(true)}
+            >
+              {({ pressed }) => (
+                <View
+                  style={[
+                    styles.customToggle,
+                    {
+                      backgroundColor: pressed
+                        ? surface.surfacePressed
+                        : surface.surface,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.customLabel, { color: surface.text }]}>
+                    {t("home.sheet.water.custom")}
+                  </Text>
+                  <Text
+                    style={[styles.customHint, { color: surface.textMuted }]}
+                  >
+                    {t("home.sheet.water.customHint")}
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={16}
+                    color={surface.placeholder}
+                  />
+                </View>
+              )}
+            </Pressable>
+          )}
+
+          {!isCustomOpen ? (
+            <SheetInfoCard>{t("home.sheet.water.info")}</SheetInfoCard>
+          ) : null}
+        </ScrollView>
 
         {/* 확정 CTA — 다른 기록 시트와 같은 문법(값이 담긴 라벨, h56 r16). */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: sessionTotal <= 0 || isBusy }}
-          onPress={() => void commit()}
-          disabled={sessionTotal <= 0 || isBusy}
-        >
-          {({ pressed }) => (
-            <View
-              style={[
-                styles.cta,
-                {
-                  backgroundColor:
-                    sessionTotal > 0 && !isBusy
-                      ? surface.brand
-                      : surface.ctaOffBg,
-                  opacity: pressed && sessionTotal > 0 ? 0.92 : 1,
-                },
-              ]}
+        <View style={styles.ctaRow}>
+          {/* 숫자 키패드에는 완료 키가 없다. 키보드가 떠 있을 때만 서는 탈출구. */}
+          {keyboardShown ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("keyboard.dismiss")}
+              onPress={() => KeyboardController.dismiss()}
+              hitSlop={6}
             >
-              {isBusy ? (
-                <V2DotLoader size="s" color={surface.ctaOffText} />
-              ) : null}
-              <Text
+              {({ pressed }) => (
+                <View
+                  style={[
+                    styles.dismiss,
+                    {
+                      backgroundColor: pressed
+                        ? surface.surfacePressed
+                        : surface.surface,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="chevron-down"
+                    size={22}
+                    color={surface.textStrong}
+                  />
+                </View>
+              )}
+            </Pressable>
+          ) : null}
+          <Pressable
+            style={styles.ctaWrap}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: sessionTotal <= 0 || isBusy }}
+            onPress={() => void commit()}
+            disabled={sessionTotal <= 0 || isBusy}
+          >
+            {({ pressed }) => (
+              <View
                 style={[
-                  styles.ctaLabel,
+                  styles.cta,
                   {
-                    color:
+                    backgroundColor:
                       sessionTotal > 0 && !isBusy
-                        ? surface.onBrand
-                        : surface.ctaOffText,
+                        ? surface.brand
+                        : surface.ctaOffBg,
+                    opacity: pressed && sessionTotal > 0 ? 0.92 : 1,
                   },
                 ]}
               >
-                {sessionTotal > 0
-                  ? t("home.sheet.recordValue", {
-                      value: `${formatAmount(sessionTotal)}mL`,
-                    })
-                  : t("home.sheet.water.chooseValue")}
-              </Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
+                {isBusy ? (
+                  <V2DotLoader size="s" color={surface.ctaOffText} />
+                ) : null}
+                <Text
+                  style={[
+                    styles.ctaLabel,
+                    {
+                      color:
+                        sessionTotal > 0 && !isBusy
+                          ? surface.onBrand
+                          : surface.ctaOffText,
+                    },
+                  ]}
+                >
+                  {sessionTotal > 0
+                    ? t("home.sheet.recordValue", {
+                        value: `${formatAmount(sessionTotal)}mL`,
+                      })
+                    : t("home.sheet.water.chooseValue")}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+      </Animated.View>
     </AppBottomSheet>
   )
 }
@@ -523,9 +591,22 @@ const styles = StyleSheet.create({
   },
   ctaLabel: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
   body: {
+    // 프레임 높이를 채워야 머리·본문·CTA 세로 열이 성립한다(스크롤이 여기서 갈린다).
+    flex: 1,
     paddingHorizontal: LAYOUT.screenX,
     paddingTop: 4,
     gap: 16,
+  },
+  scroll: { flexGrow: 1, flexShrink: 1 },
+  scrollContent: { gap: 16, paddingBottom: 2 },
+  ctaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  ctaWrap: { flex: 1 },
+  dismiss: {
+    width: LAYOUT.cta.height,
+    height: LAYOUT.cta.height,
+    borderRadius: LAYOUT.cta.radius,
+    alignItems: "center",
+    justifyContent: "center",
   },
   head: {
     flexDirection: "row",
@@ -604,8 +685,10 @@ const styles = StyleSheet.create({
   customInput: {
     flex: 1,
     fontSize: 24,
-    lineHeight: 30,
     fontWeight: "700",
+    // 단일행 입력엔 lineHeight 를 주지 않는다 — iOS 가 글자를 문단 기준으로 앉혀
+    // 상하 여백이 어긋난다(surface.ts `singleLineInputText` 머리말).
+    includeFontPadding: false,
     fontVariant: ["tabular-nums"],
     padding: 0,
   },

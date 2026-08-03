@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   Share,
-  Alert,
   Image,
 } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -25,6 +24,7 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
 import { formatDiagnosisDate } from "@/src/shared/utils/diagnosisDate"
 
+import { showErrorToast, showInfoToast } from "@/src/lib/toast"
 const APP_DOWNLOAD_URL =
   "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
 
@@ -94,7 +94,7 @@ export function MyPageScreen() {
   const handleShareData = useCallback(async () => {
     const hasData = kidneyProfile || todayAnalysis?.result?.analysis
     if (!hasData) {
-      Alert.alert(t("myPage.share.emptyTitle"), t("myPage.share.emptyBody"))
+      showInfoToast(t("myPage.share.emptyTitle"), t("myPage.share.emptyBody"))
       return
     }
 
@@ -227,7 +227,7 @@ export function MyPageScreen() {
         message: lines.join("\n"),
       })
     } catch {
-      Alert.alert(t("myPage.share.errorTitle"), t("myPage.share.errorBody"))
+      showErrorToast(t("myPage.share.errorTitle"), t("myPage.share.errorBody"))
     }
   }, [
     profile,

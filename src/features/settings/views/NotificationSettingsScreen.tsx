@@ -5,9 +5,9 @@ import {
   View,
   Switch,
   TouchableOpacity,
-  Modal,
   Platform,
 } from "react-native"
+import { AppModal } from "@/src/shared/components/AppModal"
 import { Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -55,7 +55,7 @@ export function NotificationSettingsScreen() {
     if (value) {
       const granted = await requestAndEnable()
       if (!granted) {
-        showOpenSettingsAlert(
+        void showOpenSettingsAlert(
           t("notifications.permissionTitle"),
           t("notifications.permissionBody"),
         )
@@ -75,7 +75,7 @@ export function NotificationSettingsScreen() {
     if (value) {
       const granted = await requestAndEnable()
       if (!granted) {
-        showOpenSettingsAlert(
+        void showOpenSettingsAlert(
           t("notifications.permissionTitle"),
           t("notifications.permissionBody"),
         )
@@ -95,7 +95,7 @@ export function NotificationSettingsScreen() {
     if (value) {
       const granted = await requestAndEnable()
       if (!granted) {
-        showOpenSettingsAlert(
+        void showOpenSettingsAlert(
           t("notifications.permissionTitle"),
           t("notifications.permissionBody"),
         )
@@ -520,7 +520,7 @@ export function NotificationSettingsScreen() {
       </ScrollView>
 
       {/* 시간 선택 모달 */}
-      <Modal
+      <AppModal
         visible={pickerTarget !== null}
         transparent
         animationType="fade"
@@ -591,7 +591,7 @@ export function NotificationSettingsScreen() {
             </ScrollView>
           </View>
         </TouchableOpacity>
-      </Modal>
+      </AppModal>
     </ThemedView>
   )
 }

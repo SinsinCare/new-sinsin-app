@@ -9,11 +9,13 @@ import { initReactI18next } from "react-i18next"
 
 import enAuth from "./locales/en/auth.json"
 import enCommon from "./locales/en/common.json"
+import enErrors from "./locales/en/errors.json"
 import enHealth from "./locales/en/health.json"
 import enRecipe from "./locales/en/recipe.json"
 import enSettings from "./locales/en/settings.json"
 import koAuth from "./locales/ko/auth.json"
 import koCommon from "./locales/ko/common.json"
+import koErrors from "./locales/ko/errors.json"
 import koHealth from "./locales/ko/health.json"
 import koRecipe from "./locales/ko/recipe.json"
 import koSettings from "./locales/ko/settings.json"
@@ -29,6 +31,7 @@ export const resources = {
   ko: {
     auth: koAuth,
     common: koCommon,
+    errors: koErrors,
     health: koHealth,
     recipe: koRecipe,
     settings: koSettings,
@@ -36,6 +39,7 @@ export const resources = {
   en: {
     auth: enAuth,
     common: enCommon,
+    errors: enErrors,
     health: enHealth,
     recipe: enRecipe,
     settings: enSettings,
@@ -59,7 +63,7 @@ void i18n.use(initReactI18next).init({
   lng: detectLanguage(),
   fallbackLng: "ko",
   defaultNS,
-  ns: ["auth", "common", "health", "recipe", "settings"],
+  ns: ["auth", "common", "errors", "health", "recipe", "settings"],
   interpolation: { escapeValue: false }, // RN은 XSS 이스케이프 불필요
   returnNull: false,
 })

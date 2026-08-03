@@ -12,6 +12,8 @@
 import { StyleSheet, Text, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
+import { resolveError } from "@/src/lib/errorMessage"
+
 import {
   GUTTER,
   V2EmptyState,
@@ -62,13 +64,40 @@ export function CheckupDetailAnalyzingState() {
   )
 }
 
-export function CheckupDetailErrorState({ onRetry }: { onRetry: () => void }) {
-  const { t } = useTranslation("health")
+/**
+ * 분석이 실패했을 때.
+ *
+ * `분석에 실패했어요` 한 줄만 그리던 자리다. 그 문장은 무엇이 막혔는지도, 다음에
+ * 뭘 하면 되는지도 말하지 않는다 — 실제로 여기서 오는 실패는 회차가 사라졌거나
+ * (`HC_ERROR_004`) 결과지를 읽지 못한 것(`HC_ERROR_007`)이고 둘의 해결이 다르다.
+ *
+ * 재시도 버튼은 **재시도로 답이 달라질 때만** 그린다. 없는 회차를 다시 부르는 버튼은
+ * 누를수록 같은 화면만 돌아온다.
+ */
+export function CheckupDetailErrorState({
+  error,
+  onRetry,
+}: {
+  error: unknown
+  onRetry: () => void
+}) {
   const { t: tCommon } = useTranslation("common")
+  const resolved = resolveError(error)
+
+  if (!resolved.retryable) {
+    return (
+      <V2ErrorState
+        title={resolved.title}
+        description={resolved.body}
+        style={styles.state}
+      />
+    )
+  }
 
   return (
     <V2ErrorState
-      title={t("checkup.detail.analyzeError")}
+      title={resolved.title}
+      description={resolved.body}
       onRetry={onRetry}
       retryLabel={tCommon("action.retry")}
       style={styles.state}

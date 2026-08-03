@@ -1,5 +1,6 @@
 export type {
   OnboardingValueOption,
+  OnboardingFollowUp,
   OnboardingStep,
   OnboardingAnswer,
   OnboardingSubmitRequest,

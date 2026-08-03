@@ -65,6 +65,8 @@ export function convertStepRsToSteps(
     subTitle: rs.subTitle,
     type: rs.type,
     values: rs.type === "input" ? rs.values.map(toInputField) : rs.values,
+    // 서버가 안 보내면 없는 것으로 둔다 — 구버전 서버에 붙어도 화면이 비지 않는다.
+    followUp: rs.followUp ?? null,
   }))
 }
 
