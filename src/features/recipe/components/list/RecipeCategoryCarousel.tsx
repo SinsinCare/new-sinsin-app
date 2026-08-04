@@ -120,9 +120,12 @@ export interface RecipeCategoryCarouselProps {
    * 그 함수가 이미 키 → 서버 표기 변환의 정본이다.
    */
   selected: readonly string[]
-  /** 눌린 카테고리의 **서버 표기**를 넘긴다. 토글 방향은 호출부가 결정한다. */
+  /**
+   * 눌린 카테고리의 **서버 표기**. 같은 것을 다시 누르면 해제이므로 호출부는
+   * "이것 하나만 선택" 으로 처리한다(단일 선택 — 컴포넌트 머리말 참고).
+   */
   onToggle: (categoryQueryValue: string) => void
-  /** "전체" — 고른 카테고리를 모두 푼다. */
+  /** 고른 카테고리를 모두 푼다. 선택된 칩을 다시 눌렀을 때 쓴다. */
   onClearAll: () => void
 }
 
@@ -147,68 +150,14 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
       }}
     >
       {/*
-        "전체" 를 맨 앞에 둔다.
+        "전체" 칩은 두지 않는다.
 
-        지금까지는 고른 것을 **다시 눌러 끄는** 방법뿐이었다. 둘 이상 골랐으면 두 번
-        눌러야 하고, 무엇보다 "지금 전부 보고 있다" 는 상태를 나타내는 자리가 화면에
-        없었다 — 아무것도 안 고른 상태와 "전체를 골랐다" 가 눈으로 구분되지 않는다.
-        목록 필터의 관례대로 전체를 하나의 선택지로 세우면 두 문제가 같이 풀린다.
-
-        아이콘을 주지 않는 이유: 나머지 여섯 개는 음식 그림인데 전체만 추상 기호가
-        되면 줄의 성격이 섞인다. 같은 48 상자 안에 글자만 둔다.
+        한때 맨 앞에 세웠던 이유는 "고른 것을 되돌리는 길이 화면에 없다" 였다. 그런데
+        단일 선택으로 바꾸고 나니 그 문제가 사라졌다 — 고른 칩을 **다시 누르면**
+        해제이고, 그게 한 번의 탭이다. 전체 칩은 그 자리에서 "선택 없음" 을 한 번 더
+        말하는 중복 표시가 되고, 줄의 성격도 흐린다(나머지는 전부 음식 그림인데 그것만
+        글자다).
       */}
-      <Pressable
-        onPress={onClearAll}
-        accessibilityRole="button"
-        accessibilityLabel={t("list.category.all")}
-        accessibilityState={{ selected: selected.length === 0 }}
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.7 : 1,
-          width: SLOT_WIDTH,
-          alignItems: "center",
-        })}
-      >
-        <YStack alignItems="center" gap={6} paddingVertical={4}>
-          <View
-            style={{
-              width: ART_BOX,
-              height: ART_BOX,
-              borderRadius: 16,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor:
-                selected.length === 0 ? surface.surface : "transparent",
-              opacity: selected.length === 0 ? 1 : 0.45,
-            }}
-          >
-            <Text
-              fontFamily="$body"
-              fontSize={15}
-              lineHeight={20}
-              fontWeight="700"
-              color={
-                selected.length === 0 ? surface.textStrong : surface.textWeak
-              }
-            >
-              {t("list.category.allShort")}
-            </Text>
-          </View>
-          <Text
-            fontFamily="$body"
-            fontSize={13}
-            lineHeight={18}
-            letterSpacing={-0.26}
-            fontWeight={selected.length === 0 ? "700" : "500"}
-            color={
-              selected.length === 0 ? surface.textStrong : surface.textWeak
-            }
-            numberOfLines={1}
-          >
-            {t("list.category.all")}
-          </Text>
-        </YStack>
-      </Pressable>
-
       {items.map(({ key, queryValue, labelKey, Icon }) => {
         const label = t(labelKey)
         const isSelected = selected.includes(queryValue)
@@ -216,7 +165,8 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
         return (
           <Pressable
             key={key}
-            onPress={() => onToggle(queryValue)}
+            // 같은 칩을 다시 누르면 해제된다(단일 선택 토글 — 지도 레일과 같은 규칙).
+            onPress={() => (isSelected ? onClearAll() : onToggle(queryValue))}
             accessibilityRole="button"
             // 아이콘만 두지 않는다 — 라벨과 선택 여부를 스크린리더가 읽어야 한다.
             accessibilityLabel={label}

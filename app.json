@@ -154,7 +154,10 @@
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
             ],
-            "compileSdkVersion": 36
+            "compileSdkVersion": 36,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# 카카오 SDK — 리플렉션으로 응답 DTO 를 채운다. 이름이 지워지면 로그인 응답 파싱이 죽는다.\n-keep class com.kakao.sdk.**.model.* { <fields>; }\n-keep class * extends com.google.gson.TypeAdapter\n# Google Sign-In / GMS — 내부에서 이름으로 찾는 클래스들.\n-keep class com.google.android.gms.** { *; }\n-dontwarn com.google.android.gms.**\n# 크래시 로그를 읽을 수 있게 줄 번호를 남긴다(매핑 파일과 짝).\n-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile"
           }
         }
       ],

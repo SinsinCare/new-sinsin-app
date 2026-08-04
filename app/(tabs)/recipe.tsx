@@ -133,7 +133,7 @@ import {
   resolveRecipeBrowseLayout,
   visibleAppliedRecipeFilters,
   clearRecipeFilterGroup,
-  toggleRecipeFilter,
+  selectSingleRecipeFilter,
   toRecipeListQueryFilters,
   type RecipeFilterGroupKey,
   type RecipeFilterSelection,
@@ -289,7 +289,9 @@ export default function RecipeScreen() {
   const handleToggleCategory = useCallback((categoryQueryValue: string) => {
     const optionKey = recipeCategoryOptionKeyForQueryValue(categoryQueryValue)
     if (optionKey == null) return
-    setFilters((prev) => toggleRecipeFilter(prev, "category", optionKey))
+    // 카테고리는 **한 번에 하나**다(2026-08-04). 여러 개를 고르면 목록이 길어지고
+    // 사용자가 원한 것은 "이 종류만 보기" 였다.
+    setFilters((prev) => selectSingleRecipeFilter(prev, "category", optionKey))
   }, [])
 
   const handleClearCategories = useCallback(() => {

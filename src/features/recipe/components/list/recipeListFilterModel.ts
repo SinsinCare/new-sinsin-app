@@ -138,6 +138,26 @@ export function toggleRecipeFilter(
   return { ...selection, [group]: next }
 }
 
+/**
+ * 한 그룹을 **하나만** 고르게 한다. 이미 그것이면 해제(빈 배열).
+ *
+ * 카테고리가 여기 해당한다 — 둘 이상 고르면 목록이 카테고리별로 뭉쳐 나와
+ * 스크롤이 길어졌고(2026-08-04 보고), 그걸 서버에서 번갈아 섞어 풀었지만
+ * 애초에 **여러 개를 고를 이유가 없다**는 결론이 뒤에 나왔다. 다중 선택을 지우는
+ * 대신 이 함수를 쓰는 그룹만 단일로 만든다 — 태그처럼 여러 개가 자연스러운
+ * 그룹은 `toggleRecipeFilter` 를 그대로 쓴다.
+ */
+export function selectSingleRecipeFilter(
+  selection: RecipeFilterSelection,
+  group: RecipeFilterGroupKey,
+  optionKey: string,
+): RecipeFilterSelection {
+  const current = selection[group] ?? []
+  const next =
+    current.length === 1 && current[0] === optionKey ? [] : [optionKey]
+  return { ...selection, [group]: next }
+}
+
 export function removeRecipeFilter(
   selection: RecipeFilterSelection,
   group: RecipeFilterGroupKey,

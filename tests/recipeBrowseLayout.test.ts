@@ -225,6 +225,11 @@ describe("화면이 이 판정을 실제로 쓴다", () => {
     // 두 표기가 다 `string` 이라 tsc 가 잡지 못하는 지점이다.
     expect(screen).toContain("toRecipeListQueryFilters(filters).categories")
     expect(screen).toContain("recipeCategoryOptionKeyForQueryValue(")
-    expect(screen).toContain('toggleRecipeFilter(prev, "category", optionKey)')
+    // 카테고리는 **한 번에 하나**다(2026-08-04). 다중 토글로 되돌리면 목록이 다시
+    // 카테고리별로 뭉쳐 나오므로, 화면이 쓰는 함수를 여기서 못 박는다.
+    expect(screen).toContain(
+      'selectSingleRecipeFilter(prev, "category", optionKey)',
+    )
+    expect(screen).not.toContain('toggleRecipeFilter(prev, "category"')
   })
 })

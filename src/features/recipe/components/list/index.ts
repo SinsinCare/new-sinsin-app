@@ -110,6 +110,7 @@ export {
   RECIPE_FILTER_GROUP_VIEWS,
   RECIPE_FILTER_GROUPS,
   removeRecipeFilter,
+  selectSingleRecipeFilter,
   toggleRecipeFilter,
   toRecipeListQueryFilters,
 } from "./recipeListFilterModel"
