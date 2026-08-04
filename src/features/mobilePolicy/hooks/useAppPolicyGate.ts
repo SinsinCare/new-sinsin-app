@@ -92,9 +92,22 @@ export function useAppPolicyGate() {
   }, [language, run, service])
 
   const policy = evaluation?.policy ?? null
+  /*
+    **개발 빌드는 업데이트 관문을 그리지 않는다** (기능 플래그는 그대로 받는다).
+
+    관문이 보내는 버전은 `nativeApplicationVersion` — 스토어 빌드에서는 그게 진실
+    이지만, dev client 는 바이너리가 옛것이고 JS 만 최신이다. 스토어에서 업데이트할
+    수 없는 물건에 "새 버전으로 업데이트해 주세요" 를 강제하면 개발이 통째로 막힌다
+    (2026-08-04 실제 발생: 테스트 정책에 임계값을 넣자 공유 dev client 가 즉시
+    차단됐다). 유지보수 모드 차단도 같은 이유로 dev 에서는 열어 둔다 — 점검 중에
+    고치는 사람이 개발자다.
+  */
   const isBlocking =
-    policy !== null && isBlockingMobilePolicyDecision(policy.decision)
-  const shouldRecommendUpdate = policy?.decision === "recommend_update"
+    !__DEV__ &&
+    policy !== null &&
+    isBlockingMobilePolicyDecision(policy.decision)
+  const shouldRecommendUpdate =
+    !__DEV__ && policy?.decision === "recommend_update"
 
   return {
     status,

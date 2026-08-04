@@ -314,6 +314,31 @@ export function RecordView({
 
   // ── 기록 시트 상태 ──────────────────────────────────────────────
   const [openSheet, setOpenSheet] = useState<RecordSheetKind | null>(null)
+  /**
+   * **한 번이라도 열린 시트만 마운트한다.**
+   *
+   * 종전에는 기록 시트 다섯을 전부 `visible=false` 로 항상 마운트했다. Tamagui
+   * Sheet 는 닫힘을 "화면 밖으로 옮긴 상태" 로 그리는데, 안드로이드(신아키텍처 +
+   * targetSdk 36 edge-to-edge)에서 부팅 직후 닫힘 위치가 잡히기 전의 시트가
+   * 그대로 보였다 — "혈당 기록 시트가 누르지도 않았는데 앱 켜자마자 올라온다"
+   * (2026-08-04 QA, 안드로이드). 닫힌 시트를 부팅에 그리지 않으면 이 계열이
+   * 통째로 사라진다. 한 번 연 뒤에는 계속 마운트를 유지한다 — 시트들의 상태
+   * 재수화(hydrate)가 "닫힘→열림 전이" 를 기준으로 하기 때문에 동작이 같다.
+   */
+  const [mountedSheets, setMountedSheets] = useState<Set<RecordSheetKind>>(
+    () => new Set(),
+  )
+  useEffect(() => {
+    if (openSheet === null) return
+    setMountedSheets((current) => {
+      if (current.has(openSheet)) return current
+      const next = new Set(current)
+      next.add(openSheet)
+      return next
+    })
+  }, [openSheet])
+  const isSheetMounted = (kind: RecordSheetKind) =>
+    openSheet === kind || mountedSheets.has(kind)
   // 타임라인 카드로 진입하면 그 끼니가 선택된 채 시트가 열린다.
   const [mealSheetPreselect, setMealSheetPreselect] = useState<MealType | null>(
     null,
@@ -974,52 +999,62 @@ export function RecordView({
         }}
       />
 
-      <WaterSheet
-        visible={openSheet === "water"}
-        onClose={closeWaterSheet}
-        consumed={consumedWater}
-        limit={fluidMl}
-        isReferenceLimit={isNutrientLimitFallback}
-        onLog={handleWaterLog}
-      />
+      {isSheetMounted("water") && (
+        <WaterSheet
+          visible={openSheet === "water"}
+          onClose={closeWaterSheet}
+          consumed={consumedWater}
+          limit={fluidMl}
+          isReferenceLimit={isNutrientLimitFallback}
+          onLog={handleWaterLog}
+        />
+      )}
 
-      <BloodPressureSheet
-        visible={openSheet === "bloodPressure"}
-        onClose={() => setOpenSheet(null)}
-        record={bloodPressure}
-        previousRecord={previousBloodPressure}
-        isSaving={isBloodSaving}
-        onSubmit={(body) => void handleBloodPressureSubmit(body)}
-      />
+      {isSheetMounted("bloodPressure") && (
+        <BloodPressureSheet
+          visible={openSheet === "bloodPressure"}
+          onClose={() => setOpenSheet(null)}
+          record={bloodPressure}
+          previousRecord={previousBloodPressure}
+          isSaving={isBloodSaving}
+          onSubmit={(body) => void handleBloodPressureSubmit(body)}
+        />
+      )}
 
-      <BloodGlucoseSheet
-        visible={openSheet === "bloodGlucose"}
-        onClose={() => setOpenSheet(null)}
-        records={bloodGlucose}
-        isSaving={isBloodSaving}
-        inference={glucoseInference}
-        onSubmit={(body) => void handleBloodGlucoseSubmit(body)}
-      />
+      {isSheetMounted("bloodGlucose") && (
+        <BloodGlucoseSheet
+          visible={openSheet === "bloodGlucose"}
+          onClose={() => setOpenSheet(null)}
+          records={bloodGlucose}
+          isSaving={isBloodSaving}
+          inference={glucoseInference}
+          onSubmit={(body) => void handleBloodGlucoseSubmit(body)}
+        />
+      )}
 
-      <WeightSheet
-        visible={openSheet === "weight"}
-        onClose={() => setOpenSheet(null)}
-        today={bodyToday}
-        previous={bodyPrevious}
-        week={weightWeek.data}
-        endDate={selectedDateStr}
-        isToday={isViewingToday}
-        isSaving={isBodySaving}
-        onSubmit={(weightKg) => void handleWeightSubmit(weightKg)}
-      />
+      {isSheetMounted("weight") && (
+        <WeightSheet
+          visible={openSheet === "weight"}
+          onClose={() => setOpenSheet(null)}
+          today={bodyToday}
+          previous={bodyPrevious}
+          week={weightWeek.data}
+          endDate={selectedDateStr}
+          isToday={isViewingToday}
+          isSaving={isBodySaving}
+          onSubmit={(weightKg) => void handleWeightSubmit(weightKg)}
+        />
+      )}
 
-      <EdemaSheet
-        visible={openSheet === "edema"}
-        onClose={() => setOpenSheet(null)}
-        today={bodyToday}
-        isSaving={isBodySaving}
-        onSubmit={(edemaLevel) => void handleEdemaSubmit(edemaLevel)}
-      />
+      {isSheetMounted("edema") && (
+        <EdemaSheet
+          visible={openSheet === "edema"}
+          onClose={() => setOpenSheet(null)}
+          today={bodyToday}
+          isSaving={isBodySaving}
+          onSubmit={(edemaLevel) => void handleEdemaSubmit(edemaLevel)}
+        />
+      )}
 
       {/* ── 식사 기록 파이프라인(카메라·텍스트·AI 분석) ── */}
       <TextRecord
