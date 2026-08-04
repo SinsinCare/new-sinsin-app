@@ -55,8 +55,17 @@ export function BloodPressureSheet({
   const diastolicRef = useRef<TextInput>(null)
   const heartRateRef = useRef<TextInput>(null)
 
+  /*
+    **닫힘→열림 전이에서만** 저장값을 채운다. `record` 를 deps 에 두고 매번 채우면,
+    시트가 열려 있는 동안 홈이 refetch 를 마칠 때(예: 다른 기록 저장 직후) 새 record
+    객체가 내려와 **치던 값이 서버 값으로 덮인다** — 혈당 시트의 "시점을 바꾸면 입력이
+    사라진다"(2026-08-04 QA)와 같은 계열이다. 열려 있는 동안의 진실은 사용자의 손이다.
+  */
+  const wasVisibleRef = useRef(false)
   useEffect(() => {
-    if (!visible) return
+    const wasVisible = wasVisibleRef.current
+    wasVisibleRef.current = visible
+    if (!visible || wasVisible) return
     setSystolic(record ? String(record.systolic) : "")
     setDiastolic(record ? String(record.diastolic) : "")
     setHeartRate(record?.heartRate != null ? String(record.heartRate) : "")

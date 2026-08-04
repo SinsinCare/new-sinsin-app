@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { StyleSheet, View } from "react-native"
 import { RecordSheetShell } from "./RecordSheetShell"
 import { SheetInfoCard, SheetOptionCard } from "./recordSheetControls"
@@ -32,8 +32,15 @@ export function EdemaSheet({
   const { t } = useTranslation("common")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
 
+  /*
+    **닫힘→열림 전이에서만** 저장값을 채운다 — 열려 있는 동안 홈 refetch 가 오면
+    고른 선택이 서버 값으로 되돌아갔다(혈압 시트 같은 자리의 주석 참고, 2026-08-04).
+  */
+  const wasVisibleRef = useRef(false)
   useEffect(() => {
-    if (!visible) return
+    const wasVisible = wasVisibleRef.current
+    wasVisibleRef.current = visible
+    if (!visible || wasVisible) return
     setEdemaLevel(normalizeEdemaLevel(today?.edemaLevel))
   }, [today, visible])
 

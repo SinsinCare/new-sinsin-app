@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { RecordSheetShell } from "./RecordSheetShell"
 import {
   SheetInfoCard,
@@ -65,8 +65,16 @@ export function WeightSheet({
 
   const previousWeight = previous?.weightKg ?? null
 
+  /*
+    **닫힘→열림 전이에서만** 저장값을 채운다. `today` 를 deps 로 매번 채우면 시트가
+    열려 있는 동안 홈 refetch 가 새 객체를 내려보낼 때 고르던 값이 덮인다
+    (혈압 시트 같은 자리의 주석 참고 — 같은 계열, 2026-08-04).
+  */
+  const wasVisibleRef = useRef(false)
   useEffect(() => {
-    if (!visible) return
+    const wasVisible = wasVisibleRef.current
+    wasVisibleRef.current = visible
+    if (!visible || wasVisible) return
     setWeight(today?.weightKg ?? null)
     setPreview(null)
   }, [today, visible])

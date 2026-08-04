@@ -78,10 +78,23 @@ export function BloodGlucoseSheet({
   /** 칩을 한 번이라도 만졌으면 "자동" 표시를 내린다 — 이제 사용자의 선택이다. */
   const [touched, setTouched] = useState(false)
 
+  /**
+   * 측정 시점을 바꿨다. **그 시점에 이미 기록이 있을 때만** 값을 갈아끼운다.
+   *
+   * 종전에는 기록이 없으면 `null` 로 지웠다. 그래서 공복으로 숫자를 쳐 넣고 식후로
+   * 바꾸면 방금 친 값이 사라지고 CTA 가 꺼졌다 — 사용자는 같은 숫자를 다시 쳐야
+   * 했다(2026-08-04 QA, 안드로이드 에뮬레이터). 칩을 누르는 것은 "이 수치는 사실
+   * 식후였다" 는 **라벨 정정**이지 입력 취소가 아니다.
+   *
+   * 반대로 그 시점에 저장된 수치가 있으면 그것을 보여 주는 게 맞다 — 다른 시점의
+   * 기록은 **다른 측정**이고, 그 자리에 남의 숫자를 얹어 두면 덮어쓰기를 유도한다.
+   */
   const hydrate = (nextTiming: GlucoseTiming) => {
     const record = records.find((r) => r.timing === nextTiming) ?? null
-    setValue(record ? record.value : null)
-    setPreview(null)
+    if (record) {
+      setValue(record.value)
+      setPreview(null)
+    }
     setElapsed(
       (record?.elapsed as GlucoseElapsed | null) ?? inference?.elapsed ?? "2H",
     )
