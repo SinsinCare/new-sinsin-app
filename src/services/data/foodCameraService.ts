@@ -13,7 +13,7 @@ import type {
   FoodCameraDiaryRegisterResponse,
   FoodTitleUpdateResponse,
 } from "../../types"
-import { isMockMode } from "../../config/appConfig"
+import { getBackendUrl, isMockMode } from "../../config/appConfig"
 import { getAppLanguage } from "../../i18n"
 import {
   normalizeFoodAnalysisResult,
@@ -21,8 +21,7 @@ import {
 } from "../../shared/utils/foodAnalysisResult"
 import { api, ApiError, authenticatedFetch } from "../core"
 import { isAxiosError } from "axios"
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
-import * as FileSystem from "expo-file-system/legacy"
+import { prepareImageUpload } from "../../shared/utils/preparedImageUpload"
 
 const ANALYZE_TEXT_TIMEOUT_MS = 180000
 const FOOD_ANALYSIS_UPDATE_TIMEOUT_MS = 180000
@@ -78,33 +77,6 @@ function normalizeAnalysisJob(input: FoodAnalysisJob): FoodAnalysisJob {
   return projectFoodAnalysisJobPresentation(normalizedJob)
 }
 
-async function compressImage(uri: string): Promise<string> {
-  try {
-    let sourceUri = uri
-
-    // file:// 카메라 URI는 expo-image-manipulator 접근 권한 문제로
-    // 캐시 디렉토리에 복사 후 처리
-    if (uri.startsWith("file://")) {
-      const dest = `${FileSystem.cacheDirectory}food_tmp_${Date.now()}.jpg`
-      await FileSystem.copyAsync({ from: uri, to: dest })
-      sourceUri = dest
-    }
-
-    const context = ImageManipulator.manipulate(sourceUri)
-    context.resize({ width: 1024 })
-    const image = await context.renderAsync()
-    const result = await image.saveAsync({
-      format: SaveFormat.JPEG,
-      compress: 0.5,
-    })
-    context.release()
-    image.release()
-    return result.uri
-  } catch {
-    return uri
-  }
-}
-
 export const foodCameraService = {
   async createAnalysis(
     imageUri: string,
@@ -123,52 +95,60 @@ export const foodCameraService = {
       })
     }
 
-    const compressedUri = await compressImage(imageUri)
-    const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
+    const prepared = await prepareImageUpload(imageUri, {
+      width: 1024,
+      compress: 0.5,
+      cachePrefix: "food_tmp",
+    })
+    const baseURL = getBackendUrl()
     const fileName = `food_${Date.now()}.jpg`
-    const response = await authenticatedFetch(
-      `${baseURL}/food-analyses`,
-      () => {
-        const formData = new FormData()
-        formData.append("image", {
-          uri: compressedUri,
-          name: fileName,
-          type: "image/jpeg",
-        } as unknown as Blob)
-        formData.append("requestId", requestId)
-        formData.append("mode", mode)
-        formData.append("language", language)
+    try {
+      const response = await authenticatedFetch(
+        `${baseURL}/food-analyses`,
+        () => {
+          const formData = new FormData()
+          formData.append("image", {
+            uri: prepared.uri,
+            name: fileName,
+            type: "image/jpeg",
+          } as unknown as Blob)
+          formData.append("requestId", requestId)
+          formData.append("mode", mode)
+          formData.append("language", language)
+          return {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Idempotency-Key": requestId,
+            },
+            body: formData as unknown as RequestInit["body"],
+          }
+        },
+      )
+
+      if (isUnsupportedV2Status(response.status)) {
+        const result = await this.analyze(imageUri, requestId)
         return {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Idempotency-Key": requestId,
-          },
-          body: formData as unknown as RequestInit["body"],
+          analysisId: String(result.foodAnalysisResultId),
+          requestId,
+          status: "READY",
+          result: { ...result, status: "READY", requestId },
         }
-      },
-    )
-
-    if (isUnsupportedV2Status(response.status)) {
-      const result = await this.analyze(imageUri, requestId)
-      return {
-        analysisId: String(result.foodAnalysisResultId),
-        requestId,
-        status: "READY",
-        result: { ...result, status: "READY", requestId },
       }
-    }
 
-    const json = (await response.json()) as {
-      isSuccess?: boolean
-      message?: string
-      code?: string
-      result?: FoodAnalysisJob
+      const json = (await response.json()) as {
+        isSuccess?: boolean
+        message?: string
+        code?: string
+        result?: FoodAnalysisJob
+      }
+      if (!response.ok || json.isSuccess === false || !json.result) {
+        throw createFoodAnalysisError(response.status, json.code)
+      }
+      return normalizeAnalysisJob(json.result)
+    } finally {
+      await prepared.cleanup()
     }
-    if (!response.ok || json.isSuccess === false || !json.result) {
-      throw createFoodAnalysisError(response.status, json.code)
-    }
-    return normalizeAnalysisJob(json.result)
   },
 
   async fetchAnalysis(analysisId: string): Promise<FoodAnalysisJob> {
@@ -237,40 +217,49 @@ export const foodCameraService = {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
       result = await mockFoodCameraService.analyze()
     } else {
-      const compressedUri = await compressImage(imageUri)
+      const prepared = await prepareImageUpload(imageUri, {
+        width: 1024,
+        compress: 0.5,
+        cachePrefix: "food_tmp",
+      })
 
-      const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
+      const baseURL = getBackendUrl()
       const fileName = `food_${Date.now()}.jpg`
-      const fetchResponse = await authenticatedFetch(
-        `${baseURL}/food-camera/analyze`,
-        () => {
-          const formData = new FormData()
-          formData.append("image", {
-            uri: compressedUri,
-            name: fileName,
-            type: "image/jpeg",
-          } as unknown as Blob)
-          if (requestId) {
-            formData.append("requestId", requestId)
-          }
-          formData.append("language", language)
-          return {
-            method: "POST",
-            headers: { Accept: "application/json" },
-            body: formData as unknown as RequestInit["body"],
-          }
-        },
-      )
-      const json = (await fetchResponse.json()) as {
-        isSuccess?: boolean
-        message?: string
-        code?: string
-        result?: FoodCameraAnalyzeResult
+      try {
+        const fetchResponse = await authenticatedFetch(
+          `${baseURL}/food-camera/analyze`,
+          () => {
+            const formData = new FormData()
+            formData.append("image", {
+              uri: prepared.uri,
+              name: fileName,
+              type: "image/jpeg",
+            } as unknown as Blob)
+            if (requestId) {
+              formData.append("requestId", requestId)
+            }
+            formData.append("language", language)
+            return {
+              method: "POST",
+              headers: { Accept: "application/json" },
+              body: formData as unknown as RequestInit["body"],
+            }
+          },
+          { timeoutMs: 120_000 },
+        )
+        const json = (await fetchResponse.json()) as {
+          isSuccess?: boolean
+          message?: string
+          code?: string
+          result?: FoodCameraAnalyzeResult
+        }
+        if (!fetchResponse.ok || json?.isSuccess === false) {
+          throw createFoodAnalysisError(fetchResponse.status, json?.code)
+        }
+        result = json.result as FoodCameraAnalyzeResult
+      } finally {
+        await prepared.cleanup()
       }
-      if (!fetchResponse.ok || json?.isSuccess === false) {
-        throw createFoodAnalysisError(fetchResponse.status, json?.code)
-      }
-      result = json.result as FoodCameraAnalyzeResult
     }
     return normalizeFoodAnalysisResult(result)
   },

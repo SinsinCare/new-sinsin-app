@@ -1,10 +1,8 @@
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator"
-import * as FileSystem from "expo-file-system/legacy"
-
-import { api } from "../core"
+import { api, authenticatedFetch } from "../core"
 import { ApiError } from "../core/apiError"
-import { tokenService } from "../core/tokenService"
 import { getAppLanguage } from "@/src/i18n"
+import { getBackendUrl } from "@/src/config/appConfig"
+import { prepareImageUpload } from "@/src/shared/utils/preparedImageUpload"
 import type {
   OcrConfirmRequest,
   OcrConfirmResult,
@@ -25,30 +23,6 @@ type OcrUploadResponse = {
  * - 10MB 제한을 넘지 않도록 JPEG 0.85로 압축
  * 실패 시 원본 URI를 그대로 반환합니다.
  */
-async function prepareImage(uri: string): Promise<string> {
-  try {
-    let sourceUri = uri
-    // file:// 카메라 URI는 manipulator 접근 권한 이슈로 캐시 디렉토리에 복사 후 처리
-    if (uri.startsWith("file://")) {
-      const dest = `${FileSystem.cacheDirectory}ocr_tmp_${Date.now()}.jpg`
-      await FileSystem.copyAsync({ from: uri, to: dest })
-      sourceUri = dest
-    }
-    const context = ImageManipulator.manipulate(sourceUri)
-    context.resize({ width: 2000 })
-    const image = await context.renderAsync()
-    const result = await image.saveAsync({
-      format: SaveFormat.JPEG,
-      compress: 0.85,
-    })
-    context.release()
-    image.release()
-    return result.uri
-  } catch {
-    return uri
-  }
-}
-
 export const examOcrService = {
   /**
    * ① 검사지 업로드 & OCR 추출 (status: PENDING, 아직 저장되지 않음)
@@ -59,49 +33,58 @@ export const examOcrService = {
    */
   async uploadOcr(file: OcrUploadFile): Promise<OcrReport> {
     const isPdf = file.kind === "pdf"
-    const uploadUri = isPdf ? file.uri : await prepareImage(file.uri)
+    const prepared = isPdf
+      ? { uri: file.uri, cleanup: async () => undefined }
+      : await prepareImageUpload(file.uri, {
+          width: 2000,
+          compress: 0.85,
+          cachePrefix: "ocr_tmp",
+        })
     const uploadName =
       file.name ||
       (isPdf ? `lab_report_${Date.now()}.pdf` : `lab_report_${Date.now()}.jpg`)
     const uploadType = isPdf ? "application/pdf" : "image/jpeg"
 
-    const formData = new FormData()
-    formData.append("file", {
-      uri: uploadUri,
-      name: uploadName,
-      type: uploadType,
-    } as unknown as Blob)
-
-    const baseURL = process.env.EXPO_PUBLIC_BACKEND_URL
-    const token = await tokenService.getAccessToken()
-    const res = await fetch(`${baseURL}/user/exam-results/ocr`, {
-      method: "POST",
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-        Accept: "application/json",
-        "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
-      },
-      body: formData as unknown as RequestInit["body"],
-    })
-
-    let json: OcrUploadResponse | null = null
     try {
-      json = (await res.json()) as OcrUploadResponse
-    } catch {
-      // 본문이 비어있거나 JSON이 아닌 경우 무시하고 상태코드로 처리
-    }
-
-    if (!res.ok || json?.isSuccess === false) {
-      throw new ApiError(
-        getAppLanguage() === "en"
-          ? "We couldn’t read this lab report. Check the file and upload it again."
-          : "검사지를 읽지 못했어요. 파일을 확인하고 다시 올려 주세요.",
-        json?.code || `HTTP_${res.status}`,
-        res.status,
+      const res = await authenticatedFetch(
+        `${getBackendUrl()}/user/exam-results/ocr`,
+        () => {
+          const formData = new FormData()
+          formData.append("file", {
+            uri: prepared.uri,
+            name: uploadName,
+            type: uploadType,
+          } as unknown as Blob)
+          return {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            body: formData as unknown as RequestInit["body"],
+          }
+        },
+        { timeoutMs: 120_000 },
       )
-    }
 
-    return json!.result as OcrReport
+      let json: OcrUploadResponse | null = null
+      try {
+        json = (await res.json()) as OcrUploadResponse
+      } catch {
+        // 본문이 비어있거나 JSON이 아닌 경우 무시하고 상태코드로 처리
+      }
+
+      if (!res.ok || json?.isSuccess === false || !json?.result) {
+        throw new ApiError(
+          getAppLanguage() === "en"
+            ? "We couldn’t read this lab report. Check the file and upload it again."
+            : "검사지를 읽지 못했어요. 파일을 확인하고 다시 올려 주세요.",
+          json?.code || `HTTP_${res.status}`,
+          res.status,
+        )
+      }
+
+      return json.result
+    } finally {
+      await prepared.cleanup()
+    }
   },
 
   /**

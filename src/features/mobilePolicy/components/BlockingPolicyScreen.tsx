@@ -7,6 +7,7 @@ import { Button } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import type { MobilePolicyResponse } from "../types"
 import { useTranslation } from "react-i18next"
+import { normalizeStoreUrl } from "@/src/shared/utils/externalUrl"
 
 interface BlockingPolicyScreenProps {
   policy: MobilePolicyResponse
@@ -15,7 +16,8 @@ interface BlockingPolicyScreenProps {
 export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
   const { t } = useTranslation()
   const [openError, setOpenError] = useState<string | null>(null)
-  const canOpenStore = Boolean(policy.storeUrl)
+  const storeUrl = policy.storeUrl ? normalizeStoreUrl(policy.storeUrl) : null
+  const canOpenStore = Boolean(storeUrl)
   const title =
     policy.decision === "maintenance"
       ? t("mobilePolicy.maintenanceTitle")
@@ -35,9 +37,9 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
   }, [])
 
   const handleOpenStore = async () => {
-    if (!policy.storeUrl) return
+    if (!storeUrl) return
     try {
-      await Linking.openURL(policy.storeUrl)
+      await Linking.openURL(storeUrl)
       setOpenError(null)
     } catch {
       setOpenError(t("mobilePolicy.storeError"))

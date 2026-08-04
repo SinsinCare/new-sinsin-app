@@ -44,6 +44,7 @@ import {
   V2Icon,
 } from "@/src/design-system-v2"
 import { showSuccessToast } from "@/src/lib/toast"
+import { normalizeHttpsUrl, phoneUrl } from "@/src/shared/utils/externalUrl"
 
 import { ITEM_GAP, ROW_ICON_GAP } from "../../layout"
 import { useRestaurantHours } from "../../hooks/useRestaurantHours"
@@ -132,7 +133,8 @@ export function DetailInfoRows({ restaurantId, detail }: DetailInfoRowsProps) {
           <View style={[styles.rowBody, styles.inlineRow]}>
             <Pressable
               onPress={() => {
-                void Linking.openURL(`tel:${detail.phone}`)
+                const target = phoneUrl(detail.phone as string)
+                if (target) void Linking.openURL(target)
               }}
               accessibilityRole="link"
               accessibilityState={{ disabled: false }}
@@ -219,13 +221,15 @@ function CopyButton({
 
 function ExternalLink({ label, url }: { label: string; url: string }) {
   const { colors } = useV2Theme()
+  const target = normalizeHttpsUrl(url)
   return (
     <Pressable
       onPress={() => {
-        void Linking.openURL(url)
+        if (target) void Linking.openURL(target)
       }}
       accessibilityRole="link"
-      accessibilityState={{ disabled: false }}
+      accessibilityState={{ disabled: !target }}
+      disabled={!target}
       accessibilityLabel={label}
       hitSlop={spacing[8]}
       style={({ pressed }) => [pressed && styles.pressedText]}

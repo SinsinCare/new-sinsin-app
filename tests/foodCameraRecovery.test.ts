@@ -51,6 +51,15 @@ jest.mock("expo-image-manipulator", () => ({
 jest.mock("expo-file-system/legacy", () => ({
   cacheDirectory: "file://cache/",
   copyAsync: jest.fn(),
+  deleteAsync: jest.fn(async () => undefined),
+}))
+
+jest.mock("react-native", () => ({
+  Image: {
+    getSize: jest.fn((_uri: string, onSuccess: (width: number) => void) =>
+      onSuccess(3_000),
+    ),
+  },
 }))
 
 function createMemoryStorage(initial?: Record<string, string>) {

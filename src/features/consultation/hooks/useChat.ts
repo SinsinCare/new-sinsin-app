@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { LayoutAnimation } from "react-native"
 import {
   asChatStreamError,
@@ -92,6 +92,15 @@ export function useChat() {
    * 연타가 같은 턴에 두 스트림을 띄우고, 답변이 두 개 쌓인다.
    */
   const inFlightRef = useRef(false)
+  const requestControllerRef = useRef<AbortController | null>(null)
+
+  useEffect(
+    () => () => {
+      requestControllerRef.current?.abort()
+      requestControllerRef.current = null
+    },
+    [],
+  )
 
   const { mutateAsync: createChatMutate, isPending: isCreating } = useMutation({
     mutationFn: async (category: ChatCategory) => {
@@ -110,11 +119,13 @@ export function useChat() {
         content,
         userCategory,
         imageUri,
+        signal,
       }: {
         conversationId: number
         content: string
         userCategory: ChatCategory
         imageUri?: string
+        signal?: AbortSignal
       }) => {
         const streamingMsgId = optimisticMsgId--
         let placeholderAdded = false
@@ -150,6 +161,7 @@ export function useChat() {
               }
             },
             imageUri,
+            signal,
           )
 
           setMessages((prev) =>
@@ -158,10 +170,12 @@ export function useChat() {
           return assistantMsg
         } catch (error) {
           const streamError = asChatStreamError(error)
-          setLastError(streamError)
-          setMessages((prev) =>
-            reconcileStreamFailure(prev, streamingMsgId, convId, streamError),
-          )
+          if (streamError.code !== "ABORTED") {
+            setLastError(streamError)
+            setMessages((prev) =>
+              reconcileStreamFailure(prev, streamingMsgId, convId, streamError),
+            )
+          }
           throw streamError
         }
       },
@@ -179,10 +193,12 @@ export function useChat() {
         content,
         userCategory,
         imageUri,
+        signal,
       }: {
         content: string
         userCategory: ChatCategory
         imageUri?: string
+        signal?: AbortSignal
       }) => {
         const streamingMsgId = optimisticMsgId--
         let placeholderAdded = false
@@ -219,6 +235,7 @@ export function useChat() {
               }
             },
             imageUri,
+            signal,
           )
 
           setMessages((prev) =>
@@ -227,15 +244,17 @@ export function useChat() {
           return assistantMsg
         } catch (error) {
           const streamError = asChatStreamError(error)
-          setLastError(streamError)
-          setMessages((prev) =>
-            reconcileStreamFailure(
-              prev,
-              streamingMsgId,
-              activeConversationId,
-              streamError,
-            ),
-          )
+          if (streamError.code !== "ABORTED") {
+            setLastError(streamError)
+            setMessages((prev) =>
+              reconcileStreamFailure(
+                prev,
+                streamingMsgId,
+                activeConversationId,
+                streamError,
+              ),
+            )
+          }
           throw streamError
         }
       },
@@ -258,6 +277,8 @@ export function useChat() {
       // 사진만 보내는 것도 유효한 메시지다 — 텍스트 없이도 통과시킨다.
       if ((!trimmed && !imageUri) || inFlightRef.current) return
       inFlightRef.current = true
+      const controller = new AbortController()
+      requestControllerRef.current = controller
 
       try {
         // Optimistic UI: 유저 버블 + 타이핑 표시를 즉시 보여줌
@@ -280,6 +301,12 @@ export function useChat() {
             const conversation = await createChatMutate(
               categoryRef.current ?? "NONE",
             )
+            if (
+              controller.signal.aborted ||
+              requestControllerRef.current !== controller
+            ) {
+              return
+            }
             activeConvId = conversation.id
             convIdRef.current = activeConvId
             setConversationId(activeConvId)
@@ -302,12 +329,16 @@ export function useChat() {
             content: trimmed,
             userCategory: categoryRef.current ?? "NONE",
             imageUri,
+            signal: controller.signal,
           })
         } catch {
           setIsTyping(false)
         }
       } finally {
-        inFlightRef.current = false
+        if (requestControllerRef.current === controller) {
+          requestControllerRef.current = null
+          inFlightRef.current = false
+        }
       }
     },
     [createChatMutate, sendMsgMutate],
@@ -315,7 +346,7 @@ export function useChat() {
 
   const loadConversation = useCallback(
     async (targetConvId: number) => {
-      if (isSending) return
+      if (inFlightRef.current || isSending) return
 
       try {
         const { conversation, messages: loadedMessages } =
@@ -343,6 +374,9 @@ export function useChat() {
   )
 
   const resetChat = useCallback(() => {
+    requestControllerRef.current?.abort()
+    requestControllerRef.current = null
+    inFlightRef.current = false
     convIdRef.current = null
     setConversationId(null)
     setCategory(null)
@@ -379,6 +413,8 @@ export function useChat() {
     }
 
     inFlightRef.current = true
+    const controller = new AbortController()
+    requestControllerRef.current = controller
     try {
       // 폴백 답변이 접히고 그 자리에 타이핑이 들어오게 — 툭 끊기지 않는다.
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
@@ -390,11 +426,15 @@ export function useChat() {
         content: lastUserMsg.content,
         userCategory: categoryRef.current ?? "NONE",
         imageUri: lastUserMsg.imageUri,
+        signal: controller.signal,
       })
     } catch {
       // The mutation already reconciles the placeholder to a retryable error.
     } finally {
-      inFlightRef.current = false
+      if (requestControllerRef.current === controller) {
+        requestControllerRef.current = null
+        inFlightRef.current = false
+      }
     }
   }, [regenerateMutate, sendMessage])
 

@@ -10,7 +10,10 @@ import {
   signInWithSocialProvider as nativeSocialSignIn,
   isUserCancelledError,
 } from "../services/auth/socialAuthService"
-import { clearClientSession } from "../services/core/sessionCleanup"
+import {
+  clearClientSession,
+  clearClientSessionState,
+} from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
 import {
   identifyAnalyticsUser,
@@ -99,8 +102,6 @@ export function useAuth() {
   )
 
   useEffect(() => {
-    if (sessionRestorePromise) return
-
     const restore = async () => {
       trackAnalyticsEvent("auth_session_restore_started", {})
       try {
@@ -113,13 +114,26 @@ export function useAuth() {
       } catch (error) {
         trackAnalyticsEvent("auth_session_restore_failed", {})
         logger.debug("[useAuth] restore failed", error)
-        await clearClientSession()
+        // 서버에 닿지 못한 것만으로 안전 저장된 refresh token을 삭제하지 않는다.
+        // 캐시와 사용자 상태는 비워 민감 데이터가 비인증 화면에 남지 않게 한다.
+        clearClientSessionState()
+        sessionRestorePromise = null
       }
     }
 
     // 취소하지 않습니다. 첫 호출처가 언마운트돼도 복구 결과는 스토어에 반영돼야
     // 나머지 호출처가 로딩 상태에 갇히지 않습니다.
-    sessionRestorePromise = restore()
+    const startRestore = () => {
+      sessionRestorePromise ??= restore()
+    }
+    startRestore()
+
+    // 첫 부팅이 오프라인이었던 경우 토큰을 지우지 않고, 다시 활성화됐을 때 한 번 더
+    // 복구한다. 여러 useAuth 호출처가 있어도 전역 promise가 요청을 한 발로 합친다.
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active" && sessionRestorePromise === null) startRestore()
+    })
+    return () => subscription.remove()
   }, [applyAuthSession])
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -235,20 +249,23 @@ export function useAuth() {
     return result
   }
 
-  const signOut = async (reason: AuthSignOutReason = "automatic") => {
-    try {
-      await authService.signOut()
-    } finally {
+  const signOut = useCallback(
+    async (reason: AuthSignOutReason = "automatic") => {
       try {
-        await persistSocialReauthenticationIntentForSignOut(reason)
+        await authService.signOut()
       } finally {
-        resetAnalyticsIdentity()
-        await clearClientSession()
-        resetProfile()
-        resetAuth()
+        try {
+          await persistSocialReauthenticationIntentForSignOut(reason)
+        } finally {
+          resetAnalyticsIdentity()
+          await clearClientSession()
+          resetProfile()
+          resetAuth()
+        }
       }
-    }
-  }
+    },
+    [resetAuth, resetProfile],
+  )
 
   useEffect(() => {
     if (!isAuthenticated || sessionPersistence !== "ephemeral") return

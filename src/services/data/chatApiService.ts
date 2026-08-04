@@ -13,6 +13,7 @@ import type {
 } from "../../types/chat"
 import {
   ChatStreamError,
+  MAX_CHAT_MESSAGE_CONTENT_LENGTH,
   mapChatSummary,
   mapChatCreate,
   mapChatDetail,
@@ -22,9 +23,13 @@ import type { ApiResponse } from "../../types/api"
 import { getBackendUrl, isMockMode } from "../../config/appConfig"
 import { api, refreshAccessToken, tokenService } from "../core"
 import { getAppLanguage } from "@/src/i18n"
+import { prepareImageUpload } from "@/src/shared/utils/preparedImageUpload"
 
 const BASE_URL = getBackendUrl()
 export const CHAT_STREAM_TIMEOUT_MS = 120_000
+export const CHAT_STREAM_MAX_FRAME_CHARS = 256 * 1024
+export const CHAT_STREAM_MAX_CONTENT_CHARS = 128 * 1024
+export const CHAT_STREAM_MAX_WIRE_CHARS = 1024 * 1024
 
 interface SseEvent {
   event: string
@@ -43,6 +48,7 @@ interface ChatXMLHttpRequest {
   open(method: string, url: string): void
   setRequestHeader(name: string, value: string): void
   send(body: unknown): void
+  abort(): void
 }
 
 interface ChatXMLHttpRequestConstructor {
@@ -64,6 +70,9 @@ class SseEventParser {
   push(chunk: string) {
     this.buffer += chunk
     this.drain(false)
+    if (this.buffer.length > CHAT_STREAM_MAX_FRAME_CHARS) {
+      throw streamTooLargeError()
+    }
   }
 
   finish() {
@@ -77,6 +86,9 @@ class SseEventParser {
     while (match) {
       const frame = this.buffer.slice(0, match.index)
       this.buffer = this.buffer.slice(match.index + match[0].length)
+      if (frame.length > CHAT_STREAM_MAX_FRAME_CHARS) {
+        throw streamTooLargeError()
+      }
       this.processFrame(frame)
       match = delimiter.exec(this.buffer)
     }
@@ -84,6 +96,9 @@ class SseEventParser {
     if (flush && this.buffer.length > 0) {
       const frame = this.buffer
       this.buffer = ""
+      if (frame.length > CHAT_STREAM_MAX_FRAME_CHARS) {
+        throw streamTooLargeError()
+      }
       this.processFrame(frame)
     }
   }
@@ -107,6 +122,15 @@ class SseEventParser {
       this.onEvent({ event, data: dataLines.join("\n") })
     }
   }
+}
+
+function streamTooLargeError(): ChatStreamError {
+  return new ChatStreamError({
+    code: "STREAM_TOO_LARGE",
+    message: "Chat stream exceeded the client safety limit",
+    retryable: false,
+    partialContentAvailable: false,
+  })
 }
 
 function parseEventPayload(data: string): Record<string, unknown> {
@@ -175,8 +199,30 @@ export function createRealChatService(): ChatService {
       onChunk?: (text: string) => void,
       /** 첨부 이미지 로컬 URI. 있으면 IMAGE 메시지로 보내고 서버가 멀티모달로 해석한다. */
       imageUri?: string,
+      signal?: AbortSignal,
     ) {
-      const token = await tokenService.getAccessToken()
+      if (content.length > MAX_CHAT_MESSAGE_CONTENT_LENGTH) {
+        throw new ChatStreamError({
+          code: "MESSAGE_TOO_LONG",
+          message: `Message exceeds ${MAX_CHAT_MESSAGE_CONTENT_LENGTH} characters`,
+          retryable: false,
+          partialContentAvailable: false,
+        })
+      }
+      const preparedImage = imageUri
+        ? await prepareImageUpload(imageUri, {
+            width: 1600,
+            compress: 0.78,
+            cachePrefix: "chat_tmp",
+          })
+        : null
+      let token: string | null
+      try {
+        token = await tokenService.getAccessToken()
+      } catch (error) {
+        await preparedImage?.cleanup()
+        throw error
+      }
 
       const buildFormData = () => {
         const formData = new FormData()
@@ -187,20 +233,12 @@ export function createRealChatService(): ChatService {
           imageUri ? (content.trim() ? "MIXED" : "IMAGE") : "TEXT",
         )
         formData.append("userCategory", userCategory)
-        if (imageUri) {
-          const name = imageUri.split("/").pop() || "photo.jpg"
-          const extension = name.split(".").pop()?.toLowerCase()
-          const type =
-            extension === "png"
-              ? "image/png"
-              : extension === "webp"
-                ? "image/webp"
-                : "image/jpeg"
+        if (preparedImage) {
           // RN FormData 파일 파트 — fetch/XHR 이 멀티파트로 직렬화한다.
           formData.append("files", {
-            uri: imageUri,
-            name,
-            type,
+            uri: preparedImage.uri,
+            name: `chat_${Date.now()}.jpg`,
+            type: "image/jpeg",
           } as unknown as Blob)
         }
         return formData
@@ -212,6 +250,18 @@ export function createRealChatService(): ChatService {
       ): Promise<ReturnType<typeof mapMessage>> =>
         new Promise((resolve, reject) => {
           const xhr = createXMLHttpRequest()
+          const abortFromCaller = () => xhr.abort()
+          if (signal?.aborted) {
+            reject(
+              new ChatStreamError({
+                code: "ABORTED",
+                message: "Chat stream was aborted",
+                retryable: true,
+                partialContentAvailable: false,
+              }),
+            )
+            return
+          }
           xhr.open(
             "POST",
             `${BASE_URL}/chat/conversations/${conversationId}/messages`,
@@ -234,13 +284,35 @@ export function createRealChatService(): ChatService {
           const resolveOnce = (message: ReturnType<typeof mapMessage>) => {
             if (settled) return
             settled = true
+            signal?.removeEventListener("abort", abortFromCaller)
             resolve(message)
           }
 
           const rejectOnce = (error: unknown) => {
             if (settled) return
             settled = true
+            signal?.removeEventListener("abort", abortFromCaller)
             reject(error)
+          }
+
+          const failStream = (error: unknown) => {
+            if (error instanceof ChatStreamError) {
+              const partialContent = error.partialContent ?? fullContent
+              rejectOnce(
+                new ChatStreamError({
+                  code: error.code,
+                  message: error.message,
+                  retryable: error.retryable,
+                  partialContentAvailable:
+                    error.partialContentAvailable || partialContent.length > 0,
+                  finishReason: error.finishReason,
+                  partialContent: partialContent || undefined,
+                }),
+              )
+            } else {
+              rejectOnce(error)
+            }
+            xhr.abort()
           }
 
           const parser = new SseEventParser(({ event, data }) => {
@@ -287,6 +359,12 @@ export function createRealChatService(): ChatService {
                     partialContent: fullContent || undefined,
                   })
                 }
+                if (
+                  chunk.content.length >
+                  CHAT_STREAM_MAX_CONTENT_CHARS - fullContent.length
+                ) {
+                  throw streamTooLargeError()
+                }
                 fullContent += chunk.content
                 onChunk?.(fullContent)
                 return
@@ -331,36 +409,36 @@ export function createRealChatService(): ChatService {
                 })
               }
             } catch (error) {
-              if (error instanceof ChatStreamError) {
-                const partialContent = error.partialContent ?? fullContent
-                rejectOnce(
-                  new ChatStreamError({
-                    code: error.code,
-                    message: error.message,
-                    retryable: error.retryable,
-                    partialContentAvailable:
-                      error.partialContentAvailable ||
-                      partialContent.length > 0,
-                    finishReason: error.finishReason,
-                    partialContent: partialContent || undefined,
-                  }),
-                )
-              } else {
-                rejectOnce(error)
-              }
+              failStream(error)
             }
           })
 
-          xhr.onprogress = () => {
-            const newData = xhr.responseText.substring(processedLength)
-            processedLength = xhr.responseText.length
-            parser.push(newData)
+          const processProgress = () => {
+            if (settled) return
+            try {
+              if (xhr.responseText.length > CHAT_STREAM_MAX_WIRE_CHARS) {
+                throw streamTooLargeError()
+              }
+              const newData = xhr.responseText.substring(processedLength)
+              processedLength = xhr.responseText.length
+              parser.push(newData)
+            } catch (error) {
+              failStream(error)
+            }
           }
+
+          xhr.onprogress = processProgress
 
           xhr.onload = async () => {
             if (settled) return
             if (xhr.status >= 200 && xhr.status < 300) {
-              parser.finish()
+              processProgress()
+              if (settled) return
+              try {
+                parser.finish()
+              } catch (error) {
+                failStream(error)
+              }
               if (settled) return
 
               const completion = doneEvent as ChatStreamDoneEvent | null
@@ -392,8 +470,12 @@ export function createRealChatService(): ChatService {
               )
             } else if (xhr.status === 401 && retryOnUnauthorized) {
               try {
-                const newToken = await refreshAccessToken()
-                resolveOnce(await sendWithToken(newToken, false))
+                const currentToken = await tokenService.getAccessToken()
+                const retryToken =
+                  currentToken && currentToken !== accessToken
+                    ? currentToken
+                    : await refreshAccessToken()
+                resolveOnce(await sendWithToken(retryToken, false))
               } catch (error) {
                 rejectOnce(error)
               }
@@ -446,10 +528,19 @@ export function createRealChatService(): ChatService {
             )
           }
 
+          if (signal?.aborted) {
+            xhr.onabort?.()
+            return
+          }
+          signal?.addEventListener("abort", abortFromCaller, { once: true })
           xhr.send(buildFormData())
         })
 
-      return sendWithToken(token, true)
+      try {
+        return await sendWithToken(token, true)
+      } finally {
+        await preparedImage?.cleanup()
+      }
     },
 
     async generateSummary(conversationId: number) {
@@ -486,13 +577,14 @@ export const chatApiService: ChatService = {
   deleteChat: (id) => getChatApiService().deleteChat(id),
   renameChat: (id, title) => getChatApiService().renameChat(id, title),
   getMessages: (id) => getChatApiService().getMessages(id),
-  sendMessage: (id, content, userCategory, onChunk, imageUri) =>
+  sendMessage: (id, content, userCategory, onChunk, imageUri, signal) =>
     getChatApiService().sendMessage(
       id,
       content,
       userCategory,
       onChunk,
       imageUri,
+      signal,
     ),
   generateSummary: (id) => getChatApiService().generateSummary(id),
 }

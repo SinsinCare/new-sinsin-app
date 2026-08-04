@@ -1,4 +1,4 @@
-const ALLOWED_SCHEMES = new Set(["http:", "https:", "sinsin:"])
+const ALLOWED_SCHEMES = new Set(["https:", "sinsin:"])
 const WEB_HOST_WITHOUT_SCHEME =
   /^(?:www\.)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#].*)?$/i
 
@@ -13,7 +13,8 @@ export function normalizeAnnouncementLink(value: string): string | null {
   try {
     const url = new URL(candidate)
     if (!ALLOWED_SCHEMES.has(url.protocol)) return null
-    if ((url.protocol === "http:" || url.protocol === "https:") && !url.host) {
+    if (url.username || url.password) return null
+    if (url.protocol === "https:" && !url.host) {
       return null
     }
     if (url.protocol === "sinsin:" && !url.host && !url.pathname) return null

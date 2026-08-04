@@ -1,7 +1,8 @@
 import axios, { type AxiosInstance, isAxiosError } from "axios"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
-import { refreshAccessToken } from "./authSession"
+import { createSessionExpiredError, refreshAccessToken } from "./authSession"
+import { clearClientSession } from "./sessionCleanup"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
 import { getBackendUrl } from "../../config/appConfig"
@@ -157,8 +158,8 @@ function addErrorInterceptor(instance: AxiosInstance) {
       return Promise.reject(new ApiError(message, code, undefined, true))
     }
     const { status, data } = error.response
-    if (status !== 401) {
-      reportError({
+    if (status >= 500) {
+      void reportError({
         status_code: status,
         method: error.config?.method?.toUpperCase(),
         path: error.config?.url,
@@ -203,13 +204,32 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response?.status !== 401 || !originalRequest) {
       return Promise.reject(error)
     }
 
+    if (originalRequest._retry) {
+      await clearClientSession({ requireFreshSocialProviderSelection: true })
+      return Promise.reject(createSessionExpiredError())
+    }
+
     originalRequest._retry = true
+    originalRequest.headers ??= {}
 
     try {
+      const currentAccessToken = await tokenService.getAccessToken()
+      const sentAuthorization =
+        typeof originalRequest.headers?.get === "function"
+          ? originalRequest.headers.get("Authorization")
+          : originalRequest.headers?.Authorization
+      if (
+        currentAccessToken &&
+        sentAuthorization !== `Bearer ${currentAccessToken}`
+      ) {
+        originalRequest.headers.Authorization = `Bearer ${currentAccessToken}`
+        return api(originalRequest)
+      }
+
       const newAccessToken = await refreshAccessToken()
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return api(originalRequest)

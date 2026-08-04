@@ -1,3 +1,17 @@
+import {
+  CHAT_STREAM_MAX_CONTENT_CHARS,
+  CHAT_STREAM_MAX_FRAME_CHARS,
+  CHAT_STREAM_MAX_WIRE_CHARS,
+  CHAT_STREAM_TIMEOUT_MS,
+  createRealChatService,
+} from "../src/services/data/chatApiService"
+import { getAppLanguage } from "../src/i18n"
+import {
+  ChatStreamError,
+  reconcileStreamedMessage,
+  type Message,
+} from "../src/types/chat"
+
 jest.mock("../src/config/appConfig", () => ({
   getBackendUrl: () => "https://example.test",
   isMockMode: () => false,
@@ -15,16 +29,12 @@ jest.mock("../src/i18n", () => ({
   getAppLanguage: jest.fn(() => "ko"),
 }))
 
-import {
-  CHAT_STREAM_TIMEOUT_MS,
-  createRealChatService,
-} from "../src/services/data/chatApiService"
-import { getAppLanguage } from "../src/i18n"
-import {
-  ChatStreamError,
-  reconcileStreamedMessage,
-  type Message,
-} from "../src/types/chat"
+jest.mock("../src/shared/utils/preparedImageUpload", () => ({
+  prepareImageUpload: jest.fn(async (uri: string) => ({
+    uri,
+    cleanup: jest.fn(async () => undefined),
+  })),
+}))
 
 const mockGetAppLanguage = getAppLanguage as jest.MockedFunction<
   typeof getAppLanguage
@@ -49,6 +59,7 @@ class MockXMLHttpRequest {
   open = jest.fn()
   setRequestHeader = jest.fn()
   send = jest.fn()
+  abort = jest.fn(() => this.onabort?.())
 
   appendResponse(chunk: string) {
     this.responseText += chunk
@@ -68,6 +79,24 @@ function event(name: string, payload: unknown): string {
 async function startRequest(onChunk?: (content: string) => void) {
   const service = createRealChatService()
   const promise = service.sendMessage(7, "질문", "NONE", onChunk)
+  await Promise.resolve()
+  await Promise.resolve()
+  const xhr =
+    MockXMLHttpRequest.instances[MockXMLHttpRequest.instances.length - 1]
+  if (!xhr) throw new Error("XMLHttpRequest was not created")
+  return { promise, xhr }
+}
+
+async function startAbortableRequest(signal: AbortSignal) {
+  const service = createRealChatService()
+  const promise = service.sendMessage(
+    7,
+    "질문",
+    "NONE",
+    undefined,
+    undefined,
+    signal,
+  )
   await Promise.resolve()
   await Promise.resolve()
   const xhr =
@@ -178,6 +207,65 @@ describe("chat SSE streaming", () => {
 
     expect(xhr.timeout).toBe(CHAT_STREAM_TIMEOUT_MS)
     xhr.ontimeout?.()
+    await rejection
+  })
+
+  it("aborts the native request when the caller signal is cancelled", async () => {
+    const controller = new AbortController()
+    const { promise, xhr } = await startAbortableRequest(controller.signal)
+    const rejection = expect(promise).rejects.toMatchObject({
+      code: "ABORTED",
+      partialContentAvailable: false,
+    })
+
+    controller.abort()
+
+    expect(xhr.abort).toHaveBeenCalledTimes(1)
+    await rejection
+  })
+
+  it("aborts a delimiter-free SSE frame above the parser limit", async () => {
+    const { promise, xhr } = await startRequest()
+    const rejection = expect(promise).rejects.toMatchObject({
+      code: "STREAM_TOO_LARGE",
+      retryable: false,
+    })
+
+    xhr.appendResponse("x".repeat(CHAT_STREAM_MAX_FRAME_CHARS + 1))
+
+    expect(xhr.abort).toHaveBeenCalledTimes(1)
+    await rejection
+  })
+
+  it("aborts accumulated assistant content above the output limit", async () => {
+    const { promise, xhr } = await startRequest()
+    const rejection = expect(promise).rejects.toMatchObject({
+      code: "STREAM_TOO_LARGE",
+      retryable: false,
+    })
+
+    xhr.appendResponse(
+      event("chunk", {
+        content: "가".repeat(CHAT_STREAM_MAX_CONTENT_CHARS + 1),
+      }),
+    )
+
+    expect(xhr.abort).toHaveBeenCalledTimes(1)
+    await rejection
+  })
+
+  it("aborts total SSE wire data above the request limit", async () => {
+    const { promise, xhr } = await startRequest()
+    const rejection = expect(promise).rejects.toMatchObject({
+      code: "STREAM_TOO_LARGE",
+      retryable: false,
+    })
+
+    xhr.appendResponse(
+      ":\n\n".repeat(Math.ceil(CHAT_STREAM_MAX_WIRE_CHARS / 3) + 1),
+    )
+
+    expect(xhr.abort).toHaveBeenCalledTimes(1)
     await rejection
   })
 

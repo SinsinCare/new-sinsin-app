@@ -17,6 +17,7 @@ import { Button } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import type { MobilePolicyResponse } from "../types"
 import { useTranslation } from "react-i18next"
+import { normalizeStoreUrl } from "@/src/shared/utils/externalUrl"
 
 interface RecommendedUpdatePromptProps {
   policy: MobilePolicyResponse
@@ -54,6 +55,7 @@ function RecommendedUpdateCard({
   const [openError, setOpenError] = useState<string | null>(null)
   const cardWidth = Math.min(Math.max(width - 40, 280), 372)
   const message = policy.message?.trim() || t("mobilePolicy.recommendedBody")
+  const storeUrl = policy.storeUrl ? normalizeStoreUrl(policy.storeUrl) : null
 
   // 네이티브 Modal 시절의 onRequestClose 와 같게, 안드로이드 뒤로가기는 닫기다.
   useEffect(() => {
@@ -65,9 +67,9 @@ function RecommendedUpdateCard({
   }, [onClose])
 
   const handleOpenStore = async () => {
-    if (!policy.storeUrl) return
+    if (!storeUrl) return
     try {
-      await Linking.openURL(policy.storeUrl)
+      await Linking.openURL(storeUrl)
       setOpenError(null)
     } catch {
       setOpenError(t("mobilePolicy.storeError"))
@@ -144,7 +146,7 @@ function RecommendedUpdateCard({
             <Button
               fullWidth
               buttonSize="large"
-              disabled={!policy.storeUrl}
+              disabled={!storeUrl}
               onPress={handleOpenStore}
             >
               {t("mobilePolicy.update")}

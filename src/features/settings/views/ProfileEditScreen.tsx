@@ -21,14 +21,15 @@ import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { api } from "@/src/services/core/apiClient"
 import { ApiError } from "@/src/services/core/apiError"
-import { tokenService } from "@/src/services/core/tokenService"
+import { authenticatedFetch } from "@/src/services/core/authenticatedFetch"
 import { getBackendUrl } from "@/src/config/appConfig"
-import i18n, { getAppLanguage } from "@/src/i18n"
+import i18n from "@/src/i18n"
 import { presentError } from "@/src/lib/errorMessage"
 import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
 import { tokens } from "@/src/theme/tokens"
+import { prepareImageUpload } from "@/src/shared/utils/preparedImageUpload"
 
 import { showActionSheet } from "@/src/lib/dialog"
 type Gender = "MALE" | "FEMALE" | "OTHER"
@@ -48,7 +49,7 @@ const GENDER_OPTIONS = [
   { key: "MALE", labelKey: "profile.gender.male" },
   { key: "FEMALE", labelKey: "profile.gender.female" },
   { key: "OTHER", labelKey: "profile.gender.other" },
-] as const satisfies ReadonlyArray<{ key: Gender; labelKey: string }>
+] as const satisfies readonly { key: Gender; labelKey: string }[]
 
 function toProfileImageSelection(
   asset: ImagePicker.ImagePickerAsset,
@@ -63,37 +64,46 @@ function toProfileImageSelection(
 }
 
 async function uploadProfileImage(image: ProfileImageSelection) {
-  const formData = new FormData()
-  formData.append("image", {
-    uri: image.uri,
-    name: image.name,
-    type: image.type,
-  } as unknown as Blob)
-
-  const token = await tokenService.getAccessToken()
-  const response = await fetch(`${getBackendUrl()}/user/profile/image`, {
-    method: "PATCH",
-    headers: {
-      Authorization: token ? `Bearer ${token}` : "",
-      Accept: "application/json",
-      "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
-    },
-    body: formData as unknown as RequestInit["body"],
+  const prepared = await prepareImageUpload(image.uri, {
+    width: 1024,
+    compress: 0.8,
+    cachePrefix: "profile_tmp",
   })
-
-  let json: ProfileImageUploadResponse | null = null
   try {
-    json = (await response.json()) as ProfileImageUploadResponse
-  } catch {
-    // JSON이 아닌 응답은 상태코드 기반 오류로 처리한다.
-  }
-
-  if (!response.ok || json?.isSuccess === false) {
-    throw new ApiError(
-      json?.message || i18n.t("profile.uploadError", { ns: "settings" }),
-      json?.code || `HTTP_${response.status}`,
-      response.status,
+    const response = await authenticatedFetch(
+      `${getBackendUrl()}/user/profile/image`,
+      () => {
+        const formData = new FormData()
+        formData.append("image", {
+          uri: prepared.uri,
+          name: `profile_${Date.now()}.jpg`,
+          type: "image/jpeg",
+        } as unknown as Blob)
+        return {
+          method: "PATCH",
+          headers: { Accept: "application/json" },
+          body: formData as unknown as RequestInit["body"],
+        }
+      },
+      { timeoutMs: 60_000 },
     )
+
+    let json: ProfileImageUploadResponse | null = null
+    try {
+      json = (await response.json()) as ProfileImageUploadResponse
+    } catch {
+      // JSON이 아닌 응답은 상태코드 기반 오류로 처리한다.
+    }
+
+    if (!response.ok || json?.isSuccess === false) {
+      throw new ApiError(
+        json?.message || i18n.t("profile.uploadError", { ns: "settings" }),
+        json?.code || `HTTP_${response.status}`,
+        response.status,
+      )
+    }
+  } finally {
+    await prepared.cleanup()
   }
 }
 

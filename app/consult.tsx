@@ -28,7 +28,10 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import type { Chat, ChatCategory, Message } from "@/src/types/chat"
-import { CHAT_CATEGORIES } from "@/src/types/chat"
+import {
+  CHAT_CATEGORIES,
+  MAX_CHAT_MESSAGE_CONTENT_LENGTH,
+} from "@/src/types/chat"
 import type { FaqCardEntry } from "@/src/features/consultation/types"
 
 import { CATEGORY_LIST } from "@/src/features/consultation/data/mockData"
@@ -884,6 +887,7 @@ export default function ConsultScreen() {
                 placeholder={t("consult.placeholder")}
                 placeholderTextColor={isDarkMode ? "#66666B" : "#81818D"}
                 multiline
+                maxLength={MAX_CHAT_MESSAGE_CONTENT_LENGTH}
                 style={{
                   ...styles.input,
                   color: isDarkMode

@@ -349,6 +349,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
               placeholder={t("freePost.bodyPlaceholder")}
               placeholderTextColor={surface.placeholder}
               multiline
+              maxLength={20_000}
               textAlignVertical="top"
               style={[styles.bodyInput, { color: surface.textStrong }]}
             />

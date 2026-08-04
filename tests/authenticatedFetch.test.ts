@@ -183,4 +183,58 @@ describe("authenticatedFetch", () => {
       requireFreshSocialProviderSelection: true,
     })
   })
+
+  it("reuses a token rotated by another request instead of refreshing again", async () => {
+    mockedTokenService.getAccessToken
+      .mockResolvedValueOnce("stale-access")
+      .mockResolvedValueOnce("already-rotated-access")
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValueOnce(mockResponse(401))
+      .mockResolvedValueOnce(mockResponse(202))
+
+    await expect(
+      authenticatedFetch("https://backend.test/api/v1/food-analyses", () => ({
+        method: "POST",
+      })),
+    ).resolves.toMatchObject({ status: 202 })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(mockedTokenService.setTokens).not.toHaveBeenCalled()
+    expect(mockedClearClientSession).not.toHaveBeenCalled()
+  })
+
+  it("preserves the session when refresh is temporarily unavailable", async () => {
+    jest
+      .spyOn(global, "fetch")
+      .mockResolvedValueOnce(mockResponse(401))
+      .mockResolvedValueOnce(mockResponse(503))
+
+    await expect(
+      authenticatedFetch("https://backend.test/api/v1/food-analyses", () => ({
+        method: "POST",
+      })),
+    ).rejects.toMatchObject({ code: "HTTP_503", statusCode: 503 })
+    expect(mockedClearClientSession).not.toHaveBeenCalled()
+  })
+
+  it("never sends bearer credentials outside the configured backend path", async () => {
+    const fetchMock = jest.spyOn(global, "fetch")
+
+    await expect(
+      authenticatedFetch("https://evil.test/collect", () => ({
+        method: "POST",
+      })),
+    ).rejects.toThrow(
+      "Authenticated requests must target the configured backend",
+    )
+    await expect(
+      authenticatedFetch("https://backend.test/not-api", () => ({
+        method: "POST",
+      })),
+    ).rejects.toThrow(
+      "Authenticated requests must target the configured backend",
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })

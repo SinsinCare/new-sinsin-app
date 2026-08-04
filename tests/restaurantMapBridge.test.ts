@@ -109,10 +109,21 @@ describe("parseMapEvent — 형식이 깨진 메시지는 조용히 버린다", 
     expect(parseMapEvent(raw)).toBeNull()
   })
 
-  it("페이로드 모양까지는 검사하지 않는다 (HTML 과 같은 커밋에서 바뀐다)", () => {
-    expect(parseMapEvent('{"type":"markerClick"}')).toEqual({
-      type: "markerClick",
-    })
+  it("알려진 이벤트도 페이로드가 계약과 다르면 버린다", () => {
+    expect(parseMapEvent('{"type":"markerClick"}')).toBeNull()
+    expect(
+      parseMapEvent('{"type":"markerClick","payload":{"id":-1}}'),
+    ).toBeNull()
+    expect(
+      parseMapEvent(
+        '{"type":"clusterClick","payload":{"lat":91,"lng":127,"count":2}}',
+      ),
+    ).toBeNull()
+    expect(
+      parseMapEvent(
+        '{"type":"idle","payload":{"center":{"lat":37.5,"lng":127},"bounds":{"swLat":37.6,"swLng":126.9,"neLat":37.4,"neLng":127.1},"zoom":4}}',
+      ),
+    ).toBeNull()
   })
 })
 

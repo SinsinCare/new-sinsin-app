@@ -7,6 +7,8 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   useWindowDimensions,
+  AppState,
+  type AppStateStatus,
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Text, XStack, YStack } from "tamagui"
@@ -91,9 +93,38 @@ export function StatisticsView({
   useEffect(() => {
     if (!isActive) return
 
-    refetch()
-    const interval = setInterval(refetch, 30000)
-    return () => clearInterval(interval)
+    let interval: ReturnType<typeof setInterval> | null = null
+    let refreshInFlight = false
+
+    const refreshOnce = async () => {
+      if (refreshInFlight) return
+      refreshInFlight = true
+      try {
+        await refetch()
+      } finally {
+        refreshInFlight = false
+      }
+    }
+    const stopPolling = () => {
+      if (interval !== null) clearInterval(interval)
+      interval = null
+    }
+    const startPolling = () => {
+      if (interval !== null) return
+      void refreshOnce()
+      interval = setInterval(() => void refreshOnce(), 30_000)
+    }
+    const handleAppState = (state: AppStateStatus) => {
+      if (state === "active") startPolling()
+      else stopPolling()
+    }
+
+    if (AppState.currentState === "active") startPolling()
+    const subscription = AppState.addEventListener("change", handleAppState)
+    return () => {
+      stopPolling()
+      subscription.remove()
+    }
   }, [isActive, refetch])
 
   const handleDietCardPress = async (mealType: MealType) => {

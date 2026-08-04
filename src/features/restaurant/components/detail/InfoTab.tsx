@@ -32,6 +32,7 @@ import { CARD_GAP } from "../../layout"
 import type { Amenity, RestaurantDetailDto } from "../../types"
 import { DetailCard } from "./DetailCard"
 import { DetailSection } from "./DetailSection"
+import { normalizeHttpsUrl } from "@/src/shared/utils/externalUrl"
 
 /**
  * 편의시설 → v2 아이콘. 목업 -13 의 6종과 1:1 이고, 새 토큰이 서버에서 오면
@@ -196,13 +197,15 @@ function SnsLink({
   url: string
 }) {
   const { colors } = useV2Theme()
+  const target = normalizeHttpsUrl(url)
   return (
     <Pressable
       onPress={() => {
-        void Linking.openURL(url)
+        if (target) void Linking.openURL(target)
       }}
       accessibilityRole="link"
-      accessibilityState={{ disabled: false }}
+      accessibilityState={{ disabled: !target }}
+      disabled={!target}
       accessibilityLabel={label}
       hitSlop={spacing[8]}
       style={({ pressed }) => [styles.snsRow, pressed && styles.pressed]}

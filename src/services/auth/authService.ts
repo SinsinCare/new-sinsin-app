@@ -179,8 +179,7 @@ function getRealAuthService(): IAuthService {
       displayName?: string | null,
     ) {
       logger.debug("[authService] signInWithSocial 시작", provider, {
-        idTokenLength: idToken?.length,
-        idTokenPrefix: idToken?.slice(0, 30),
+        hasIdToken: idToken.length > 0,
       })
 
       let data: ApiResponse<LoginResult> | null = null
@@ -490,10 +489,10 @@ function getRealAuthService(): IAuthService {
           return null
         }
         logger.debug("[authService] restoreSession failed", error)
-        await clearClientSession({
-          requireFreshSocialProviderSelection: true,
-        })
-        return null
+        // 오프라인·timeout·5xx는 토큰이 무효라는 증거가 아니다. 여기서 지우면
+        // 잠깐의 통신 장애가 영구 로그아웃이 된다. 호출자가 비인증 화면으로 안전하게
+        // 내리되 다음 실행에서 복구할 수 있도록 오류를 전달한다.
+        throw error
       }
     },
   }

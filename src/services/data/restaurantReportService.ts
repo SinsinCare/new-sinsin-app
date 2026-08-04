@@ -1,12 +1,15 @@
 import type * as ImagePicker from "expo-image-picker"
-import { api } from "../core"
+import { api, ApiError, authenticatedFetch } from "../core"
 import {
   MAX_RESTAURANT_REPORT_PHOTOS,
   validateRestaurantReportDraft,
 } from "@/src/features/restaurant/utils/restaurantReportValidation"
+import { prepareImageUpload } from "@/src/shared/utils/preparedImageUpload"
+import { getBackendUrl } from "@/src/config/appConfig"
 
 const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+const PHOTO_UPLOAD_CONCURRENCY = 2
 
 export interface RestaurantReportDraft {
   name: string
@@ -55,17 +58,78 @@ async function uploadPhoto(
   asset: ImagePicker.ImagePickerAsset,
   index: number,
 ): Promise<string> {
-  const formData = new FormData()
-  formData.append("image", {
-    uri: asset.uri,
-    name: buildFileName(asset, index),
-    type: normalizeMimeType(asset),
-  } as unknown as Blob)
-
-  const response = await api.post("/restaurant-reports/photo", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const prepared = await prepareImageUpload(asset.uri, {
+    width: 1600,
+    compress: 0.78,
+    cachePrefix: "restaurant_report_tmp",
   })
-  return response.data.result.objectPath as string
+  try {
+    const originalName = buildFileName(asset, index)
+    const uploadName = /\.[^.]+$/u.test(originalName)
+      ? originalName.replace(/\.[^.]+$/u, ".jpg")
+      : `${originalName}.jpg`
+    const response = await authenticatedFetch(
+      `${getBackendUrl()}/restaurant-reports/photo`,
+      () => {
+        const retryFormData = new FormData()
+        retryFormData.append("image", {
+          uri: prepared.uri,
+          name: uploadName,
+          type: "image/jpeg",
+        } as unknown as Blob)
+        return {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: retryFormData as unknown as RequestInit["body"],
+        }
+      },
+      { timeoutMs: 60_000 },
+    )
+    const json = (await response.json()) as {
+      isSuccess?: boolean
+      code?: string
+      message?: string
+      result?: { objectPath?: string }
+    }
+    const objectPath = json.result?.objectPath
+    if (!response.ok || json.isSuccess === false || !objectPath) {
+      throw new ApiError(
+        json.message ?? "",
+        json.code || `HTTP_${response.status}`,
+        response.status,
+      )
+    }
+    return objectPath
+  } finally {
+    await prepared.cleanup()
+  }
+}
+
+async function uploadPhotosBounded(
+  photos: ImagePicker.ImagePickerAsset[],
+): Promise<string[]> {
+  const objectPaths = new Array<string>(photos.length)
+  let nextIndex = 0
+  let firstError: unknown
+
+  const worker = async () => {
+    while (firstError === undefined) {
+      const index = nextIndex
+      nextIndex += 1
+      if (index >= photos.length) return
+
+      try {
+        objectPaths[index] = await uploadPhoto(photos[index], index)
+      } catch (error) {
+        firstError = error
+      }
+    }
+  }
+
+  const workerCount = Math.min(PHOTO_UPLOAD_CONCURRENCY, photos.length)
+  await Promise.all(Array.from({ length: workerCount }, worker))
+  if (firstError !== undefined) throw firstError
+  return objectPaths
 }
 
 export const restaurantReportService = {
@@ -77,9 +141,9 @@ export const restaurantReportService = {
     if (validation) throw new Error(validation)
     assertPhotoConstraints(photos)
 
-    const photoObjectPaths = await Promise.all(
-      photos.map((photo, index) => uploadPhoto(photo, index)),
-    )
+    // 두 작업만 동시에 prepare→upload→cleanup 하여 native image buffer를 제한하면서
+    // 완전 순차 처리의 지연은 피한다. 결과 배열은 사용자가 고른 순서를 보존한다.
+    const photoObjectPaths = await uploadPhotosBounded(photos)
 
     const response = await api.post("/restaurant-reports", {
       name: draft.name.trim(),

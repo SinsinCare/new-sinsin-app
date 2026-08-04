@@ -3,6 +3,7 @@ import { getAppLanguage } from "@/src/i18n"
 import { ApiError } from "./apiError"
 import { clearClientSession } from "./sessionCleanup"
 import { tokenService } from "./tokenService"
+import { FetchTimeoutError, fetchWithTimeout } from "./fetchWithTimeout"
 
 const TOKEN_REFRESH_TIMEOUT_MS = 10000
 type TokenRefreshResponse = {
@@ -17,6 +18,58 @@ type TokenRefreshResponse = {
 
 let refreshPromise: Promise<string> | null = null
 
+function createRefreshUnavailableError(error?: unknown): ApiError {
+  const timedOut = error instanceof FetchTimeoutError
+  const isEnglish = getAppLanguage() === "en"
+  return new ApiError(
+    timedOut
+      ? isEnglish
+        ? "The response is taking longer than expected. Try again in a moment."
+        : "응답이 늦어지고 있어요. 잠시 후 다시 해 주세요."
+      : isEnglish
+        ? "Check your internet connection and try again."
+        : "인터넷 연결을 확인한 뒤 다시 해 주세요.",
+    timedOut ? "ECONNABORTED" : "NETWORK_ERROR",
+    undefined,
+    true,
+  )
+}
+
+function createRefreshServerError(status: number): ApiError {
+  const isEnglish = getAppLanguage() === "en"
+  return new ApiError(
+    status === 429
+      ? isEnglish
+        ? "We’re getting a lot of requests right now. Try again in a moment."
+        : "이용이 잠시 몰리고 있어요. 잠시 뒤 다시 해 주세요."
+      : isEnglish
+        ? "Something went wrong on our side. Try again in a moment."
+        : "서비스에 문제가 생겼어요. 잠시 후 다시 해 주세요.",
+    `HTTP_${status}`,
+    status,
+  )
+}
+
+function refreshWasRejected(
+  response: Response,
+  _data: TokenRefreshResponse & { code?: unknown },
+): boolean {
+  // refresh 전용 엔드포인트의 400은 body 검증 실패를 포함해 현재 refresh token으로
+  // 회복할 수 없는 요청이다. 429/5xx/네트워크 오류만 일시 실패로 보존한다.
+  return (
+    response.status === 400 ||
+    response.status === 401 ||
+    response.status === 403
+  )
+}
+
+async function expireClientSession(): Promise<never> {
+  await clearClientSession({
+    requireFreshSocialProviderSelection: true,
+  }).catch(() => undefined)
+  throw createSessionExpiredError()
+}
+
 export function createSessionExpiredError(): ApiError {
   return new ApiError(
     getAppLanguage() === "en"
@@ -29,21 +82,14 @@ export function createSessionExpiredError(): ApiError {
 }
 
 async function requestNewAccessToken(): Promise<string> {
+  const refreshToken = await tokenService.getRefreshToken()
+  if (!refreshToken) return expireClientSession()
+
+  let response: Response
   try {
-    const refreshToken = await tokenService.getRefreshToken()
-    if (!refreshToken) {
-      throw new Error("No refresh token")
-    }
-
-    const controller = new AbortController()
-    const timeout = setTimeout(
-      () => controller.abort(),
-      TOKEN_REFRESH_TIMEOUT_MS,
-    )
-
-    let response: Response
-    try {
-      response = await fetch(`${getBackendUrl()}/auth/tokens/refresh`, {
+    response = await fetchWithTimeout(
+      `${getBackendUrl()}/auth/tokens/refresh`,
+      {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -51,24 +97,37 @@ async function requestNewAccessToken(): Promise<string> {
           "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
         },
         body: JSON.stringify({ refreshToken }),
-        signal: controller.signal as unknown as RequestInit["signal"],
-      })
-    } finally {
-      clearTimeout(timeout)
-    }
+      },
+      TOKEN_REFRESH_TIMEOUT_MS,
+    )
+  } catch (error) {
+    throw createRefreshUnavailableError(error)
+  }
 
-    const data = (await response.json()) as TokenRefreshResponse
-    const accessToken = data.result?.accessToken
-    const newRefreshToken = data.result?.refreshToken
-    if (
-      !response.ok ||
-      data.isSuccess === false ||
-      !accessToken ||
-      !newRefreshToken
-    ) {
-      throw new Error(data.message || `HTTP ${response.status}`)
+  let data: TokenRefreshResponse & { code?: unknown }
+  try {
+    data = (await response.json()) as TokenRefreshResponse & { code?: unknown }
+  } catch {
+    if (response.status === 401 || response.status === 403) {
+      return expireClientSession()
     }
+    throw createRefreshServerError(response.status || 500)
+  }
 
+  if (refreshWasRejected(response, data)) return expireClientSession()
+
+  const accessToken = data.result?.accessToken
+  const newRefreshToken = data.result?.refreshToken
+  if (
+    !response.ok ||
+    data.isSuccess === false ||
+    !accessToken ||
+    !newRefreshToken
+  ) {
+    throw createRefreshServerError(response.status || 500)
+  }
+
+  try {
     await tokenService.setTokens(
       accessToken,
       newRefreshToken,
@@ -76,11 +135,11 @@ async function requestNewAccessToken(): Promise<string> {
         ? "ephemeral"
         : "persistent",
     )
-    return accessToken
   } catch {
-    await clearClientSession({ requireFreshSocialProviderSelection: true })
-    throw createSessionExpiredError()
+    // 회전된 refresh token을 안전하게 저장하지 못하면 이전 토큰은 이미 무효일 수 있다.
+    return expireClientSession()
   }
+  return accessToken
 }
 
 /**

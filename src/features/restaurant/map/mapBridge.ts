@@ -141,18 +141,113 @@ export type MapEvent =
 
 /** 알 수 없는 문자열이 왔을 때 조용히 무시하기 위한 파서. */
 export function parseMapEvent(raw: string): MapEvent | null {
+  if (raw.length > 20_000) return null
   let value: unknown
   try {
     value = JSON.parse(raw)
   } catch {
     return null
   }
-  if (typeof value !== "object" || value === null) return null
-  const type = (value as { type?: unknown }).type
-  if (typeof type !== "string") return null
-  // 페이로드 모양까지 검사하지 않는다. HTML 과 이 파일은 같은 커밋에서 함께 바뀌므로
-  // 여기서 방어할 대상은 "형식이 깨진 메시지" 뿐이고, 그건 위 두 검사로 걸린다.
-  return value as MapEvent
+  if (!isRecord(value)) return null
+  const type = value.type
+  const payload = value.payload
+
+  if (type === "ready") {
+    return payload === undefined || isReadyPayload(payload)
+      ? (value as MapEvent)
+      : null
+  }
+  if (type === "dragStart" || type === "mapClick") return { type }
+  if (type === "markerClick") {
+    return isRecord(payload) && isPositiveInteger(payload.id)
+      ? { type, payload: { id: payload.id } }
+      : null
+  }
+  if (type === "clusterClick") {
+    const count = isRecord(payload) ? payload.count : undefined
+    return isRecord(payload) && isPositiveInteger(count) && isLatLng(payload)
+      ? {
+          type,
+          payload: {
+            lat: payload.lat,
+            lng: payload.lng,
+            count,
+          },
+        }
+      : null
+  }
+  if (type === "idle") {
+    return isRecord(payload) &&
+      isRecord(payload.center) &&
+      isLatLng(payload.center) &&
+      isRecord(payload.bounds) &&
+      isBounds(payload.bounds) &&
+      isFiniteNumber(payload.zoom)
+      ? (value as MapEvent)
+      : null
+  }
+  if (type === "error") {
+    return isRecord(payload) &&
+      typeof payload.message === "string" &&
+      payload.message.length <= 500
+      ? { type, payload: { message: payload.message } }
+      : null
+  }
+  return null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value)
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && (value as number) > 0
+}
+
+function isLatLng(
+  value: Record<string, unknown>,
+): value is Record<"lat" | "lng", number> {
+  return (
+    isFiniteNumber(value.lat) &&
+    value.lat >= -90 &&
+    value.lat <= 90 &&
+    isFiniteNumber(value.lng) &&
+    value.lng >= -180 &&
+    value.lng <= 180
+  )
+}
+
+function isBounds(value: Record<string, unknown>): boolean {
+  return (
+    isFiniteNumber(value.swLat) &&
+    value.swLat >= -90 &&
+    value.swLat <= 90 &&
+    isFiniteNumber(value.neLat) &&
+    value.neLat >= -90 &&
+    value.neLat <= 90 &&
+    value.swLat <= value.neLat &&
+    isFiniteNumber(value.swLng) &&
+    value.swLng >= -180 &&
+    value.swLng <= 180 &&
+    isFiniteNumber(value.neLng) &&
+    value.neLng >= -180 &&
+    value.neLng <= 180 &&
+    value.swLng <= value.neLng
+  )
+}
+
+function isReadyPayload(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value.width) &&
+    value.width >= 0 &&
+    isFiniteNumber(value.height) &&
+    value.height >= 0
+  )
 }
 
 /* ────────────────────────── RN → web ────────────────────────── */

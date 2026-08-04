@@ -19,6 +19,9 @@ export const CHAT_CATEGORIES = [
   "NONE",
 ] as const
 
+/** Backend MAX_MESSAGE_CONTENT_LENGTH와 같은 요청 상한. */
+export const MAX_CHAT_MESSAGE_CONTENT_LENGTH = 20_000
+
 export type ChatCategory = (typeof CHAT_CATEGORIES)[number]
 
 export interface ChatSummary {
@@ -70,7 +73,7 @@ export interface MessageData {
 export type MessageType = "TEXT" | "IMAGE" | "MIXED"
 
 export interface MessageSendRequest {
-  content: string // max 5000 chars
+  content: string // max 20,000 chars
   messageType: MessageType
   userCategory: ChatCategory
   files?: File[] // binary files for IMAGE/MIXED
@@ -321,6 +324,7 @@ export interface ChatService {
     userCategory: ChatCategory,
     onChunk?: (text: string) => void,
     imageUri?: string,
+    signal?: AbortSignal,
   ): Promise<Message>
 
   /** 대화 요약 생성 */

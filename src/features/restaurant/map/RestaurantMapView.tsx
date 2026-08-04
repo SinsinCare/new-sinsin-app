@@ -31,6 +31,7 @@ import { WebView, type WebViewMessageEvent } from "react-native-webview"
 
 import { clampZoom } from "../utils/requestGuards"
 import { buildMapHtml } from "./mapHtml"
+import { isAllowedMapNavigation, mapOriginWhitelist } from "./mapNavigation"
 import {
   FALLBACK_CENTER,
   MAP_ZOOM,
@@ -249,17 +250,27 @@ export const RestaurantMapView = forwardRef<
       ref={webRef}
       source={source}
       style={styles.web}
-      originWhitelist={["*"]}
+      originWhitelist={MAP_ORIGIN_WHITELIST}
+      onShouldStartLoadWithRequest={(request) =>
+        isAllowedMapNavigation(request.url, SOURCE_BASE_URL)
+      }
       onMessage={handleMessage}
       javaScriptEnabled
       domStorageEnabled
+      allowFileAccess={false}
+      allowFileAccessFromFileURLs={false}
+      allowUniversalAccessFromFileURLs={false}
+      javaScriptCanOpenWindowsAutomatically={false}
+      setSupportMultipleWindows={false}
+      sharedCookiesEnabled={false}
+      thirdPartyCookiesEnabled={false}
       // 지도가 스크롤을 직접 처리한다. WebView 스크롤을 켜면 팬이 두 번 먹는다.
       scrollEnabled={false}
       bounces={false}
       overScrollMode="never"
       allowsBackForwardNavigationGestures={false}
-      // 안드로이드에서 카카오 타일이 http 로 오는 경로가 있어 혼합 콘텐츠를 허용한다.
-      mixedContentMode="always"
+      // 문서와 SDK가 모두 HTTPS다. 평문 하위 리소스가 브릿지 권한을 공유하지 못하게 한다.
+      mixedContentMode="never"
       // WebView 자체가 죽었을 때(프로세스 킬·렌더 실패)도 화면이 멈추지 않게 한다.
       onError={() => onMapError?.("webview load error")}
       onRenderProcessGone={() => onMapError?.("webview render process gone")}
@@ -323,6 +334,8 @@ export const RestaurantMapView = forwardRef<
  */
 const SOURCE_BASE_URL =
   process.env["EXPO_PUBLIC_KAKAO_MAP_BASE_URL"] ?? "https://localhost:8081"
+
+const MAP_ORIGIN_WHITELIST = mapOriginWhitelist(SOURCE_BASE_URL)
 
 function MissingKeyNotice({
   onMapError,

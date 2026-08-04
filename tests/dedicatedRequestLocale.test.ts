@@ -1,3 +1,6 @@
+/* Mock factories must be registered before imports that load their native modules. */
+/* eslint-disable import/first */
+
 const mockAccessToken = jest.fn()
 const mockMobilePolicyGet = jest.fn()
 const mockAxiosCreate = jest.fn((_config?: unknown) => ({
@@ -13,6 +16,22 @@ jest.mock("../src/services/core", () => ({
     get: jest.fn(),
     post: jest.fn(),
   },
+  authenticatedFetch: jest.fn(
+    async (url: string, createRequest: () => RequestInit) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getAppLanguage } = require("../src/i18n") as {
+        getAppLanguage: () => string
+      }
+      const init = await createRequest()
+      return fetch(url, {
+        ...init,
+        headers: {
+          ...(init.headers as Record<string, string>),
+          "Accept-Language": getAppLanguage() === "en" ? "en-US" : "ko-KR",
+        },
+      })
+    },
+  ),
 }))
 
 jest.mock("../src/services/core/tokenService", () => ({
@@ -35,6 +54,15 @@ jest.mock("expo-image-manipulator", () => ({
 jest.mock("expo-file-system/legacy", () => ({
   cacheDirectory: "file://cache/",
   copyAsync: jest.fn(),
+  deleteAsync: jest.fn(async () => undefined),
+}))
+
+jest.mock("react-native", () => ({
+  Image: {
+    getSize: jest.fn((_uri: string, onSuccess: (width: number) => void) =>
+      onSuccess(3_000),
+    ),
+  },
 }))
 
 jest.mock("axios", () => ({
@@ -105,12 +133,12 @@ describe("dedicated request locale headers", () => {
       "community",
     )
 
-    expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({
-      "Accept-Language": "en-US",
-    })
-    expect(fetchMock.mock.calls[1][1]?.headers).toMatchObject({
-      "Accept-Language": "ko-KR",
-    })
+    expect(
+      new Headers(fetchMock.mock.calls[0][1]?.headers).get("Accept-Language"),
+    ).toBe("en-US")
+    expect(
+      new Headers(fetchMock.mock.calls[1][1]?.headers).get("Accept-Language"),
+    ).toBe("ko-KR")
   })
 
   it("re-evaluates the language whenever launch policy is fetched", async () => {

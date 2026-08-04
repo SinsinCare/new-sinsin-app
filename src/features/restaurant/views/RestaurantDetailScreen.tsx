@@ -72,6 +72,7 @@ import { Image } from "expo-image"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
+import { phoneUrl } from "@/src/shared/utils/externalUrl"
 
 import {
   barHeight,
@@ -549,7 +550,8 @@ function RestaurantDetailBody({
             icon: "phone" as const,
             emphasis: "secondary" as const,
             onPress: () => {
-              void Linking.openURL(`tel:${detail.phone}`)
+              const target = phoneUrl(detail.phone as string)
+              if (target) void Linking.openURL(target)
             },
           },
         ]
