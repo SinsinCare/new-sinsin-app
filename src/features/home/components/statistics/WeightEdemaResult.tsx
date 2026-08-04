@@ -4,6 +4,7 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useTranslation } from "react-i18next"
 
 import { normalizeEdemaLevel } from "@/src/features/home/data/EdemaConstants"
+import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 
 interface WeightEdemaResultProps {
   bodyRecords?: {
@@ -57,7 +58,9 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
             fontWeight="600"
             color={isDarkMode ? "$textDark" : "$black"}
           >
-            {todayWeight > 0 ? `${todayWeight}kg` : t("stats.body.noRecord")}
+            {todayWeight > 0
+              ? `${roundForDisplay(todayWeight, 1)}kg`
+              : t("stats.body.noRecord")}
           </Text>
           <Text
             paddingTop="$2"
@@ -67,7 +70,7 @@ export function WeightEdemaResult({ bodyRecords }: WeightEdemaResultProps) {
           >
             {t("stats.body.previous")}:{" "}
             {previousWeight > 0
-              ? `${previousWeight}kg`
+              ? `${roundForDisplay(previousWeight, 1)}kg`
               : t("stats.body.noRecord")}
           </Text>
         </YStack>

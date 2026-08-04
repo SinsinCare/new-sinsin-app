@@ -1,4 +1,5 @@
 import React, { useCallback } from "react"
+import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 import {
   StyleSheet,
   View,
@@ -135,7 +136,7 @@ export function MyPageScreen() {
       }
       if (kidneyProfile.weightKg) {
         lines.push(
-          `• ${t("myPage.share.weight")}: ${kidneyProfile.weightKg} kg`,
+          `• ${t("myPage.share.weight")}: ${roundForDisplay(kidneyProfile.weightKg, 1)} kg`,
         )
       }
       if (

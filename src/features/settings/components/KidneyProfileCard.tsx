@@ -1,4 +1,5 @@
 import React from "react"
+import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 import { View, Text, Pressable, StyleSheet } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
@@ -101,10 +102,12 @@ export function KidneyProfileCard({
 
   const heightWeightLabel = (() => {
     if (heightCm != null && weightKg != null)
-      return `${heightCm}${english ? " " : ""}cm · ${weightKg}${
-        english ? " " : ""
-      }kg`
-    if (weightKg != null) return `${weightKg}${english ? " " : ""}kg`
+      return `${heightCm}${english ? " " : ""}cm · ${roundForDisplay(
+        weightKg,
+        1,
+      )}${english ? " " : ""}kg`
+    if (weightKg != null)
+      return `${roundForDisplay(weightKg, 1)}${english ? " " : ""}kg`
     if (heightCm != null) return `${heightCm}${english ? " " : ""}cm`
     return null
   })()

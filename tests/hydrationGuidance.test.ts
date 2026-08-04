@@ -50,4 +50,30 @@ describe("getHydrationGuidance — 개인 기준은 가까워졌을 때만 말�
       message: "내 기준 미설정",
     })
   })
+
+  /*
+    IEEE 754 잔재가 문장으로 새어 나오던 회귀. `1500 - 1860.9` 는
+    `-360.90000000000009` 라, 반올림 없이 넣으면 화면에 그 숫자가 그대로 보였다
+    (QA 2026-08-04: "기준보다 360.9000000000001ml 많아요").
+  */
+  it("초과량을 부동소수점 잔재 없이 말한다", () => {
+    const g = getHydrationGuidance({ consumed: 1860.9, limit: 1500 })
+    expect(g.tone).toBe("over")
+    expect(g.message).toBe("기준보다 361ml 많아요")
+    expect(g.message).not.toMatch(/\d\.\d{3,}/)
+  })
+
+  it("남은 양도 정수로 말한다", () => {
+    const g = getHydrationGuidance({ consumed: 1100.7, limit: 1500 })
+    expect(g.tone).toBe("near")
+    expect(g.message).toBe("399ml 남았어요")
+    expect(g.message).not.toMatch(/\d\.\d{3,}/)
+  })
+
+  it("반올림이 판정을 바꾸지는 않는다 — 0.4mL 초과는 여전히 초과다", () => {
+    const g = getHydrationGuidance({ consumed: 1500.4, limit: 1500 })
+    expect(g.tone).toBe("over")
+    // 표시는 0 이지만 "딱 맞아요"(remaining === 0) 로 넘어가지 않는다.
+    expect(g.message).toBe("기준보다 0ml 많아요")
+  })
 })

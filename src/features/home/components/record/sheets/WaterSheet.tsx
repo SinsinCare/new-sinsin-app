@@ -15,6 +15,7 @@ import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
 import { hapticSelection, hapticStepAdvance } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
+import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 import { getHydrationGuidance } from "../../../utils/hydrationGuidance"
 import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
 import { SheetInfoCard, SheetValueDisplay } from "./recordSheetControls"
@@ -88,7 +89,13 @@ export function WaterSheet({
     ? "en"
     : "ko"
   const numberLocale = language === "en" ? "en-US" : "ko-KR"
-  const formatAmount = (value: number) => value.toLocaleString(numberLocale)
+  /*
+    mL 은 정수로 보여준다. 서버 값이 double 이라 `toLocaleString` 만 거치면
+    누적 합이 `1,860.9` 처럼 의미 없는 소수를 달고 나온다 — 0.9mL 를 구분해서
+    마시는 사람은 없다. 접는 것은 표시뿐이고 서버로 보내는 증감은 원시값이다.
+  */
+  const formatAmount = (value: number) =>
+    roundForDisplay(value).toLocaleString(numberLocale)
   const surface = useSurface()
   /* 직접 입력의 키패드가 CTA 를 덮지 않게 — 다른 기록 시트와 같은 규칙을 쓴다. */
   const { bodyStyle, snapPoints, keyboardShown } = useSheetKeyboardLift(82)

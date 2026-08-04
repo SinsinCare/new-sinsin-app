@@ -14,6 +14,8 @@
  * "더 마셔야 한다"고 말하면 이번엔 반대쪽으로 미는 화면이 된다.
  */
 
+import { roundForDisplay } from "@/src/shared/utils/displayNumber"
+
 export type HydrationTone = "relaxed" | "near" | "over"
 
 export interface HydrationGuidance {
@@ -54,6 +56,13 @@ export function getHydrationGuidance({
   }
 
   const remaining = limit - consumed
+  /*
+    문장에 넣는 것은 **반올림한 mL** 이다. 원시값을 그대로 흘리면
+    `1500 - 1860.9 = -360.90000000000009` 가 그대로 읽힌다(QA 2026-08-04).
+    구간 판정(`remaining <= 0`)은 여전히 원시값으로 한다 — 0.4mL 를 반올림으로
+    0 으로 만들어 "딱 맞아요" 라고 말하면 그건 표시가 아니라 사실을 바꾸는 것이다.
+  */
+  const remainingText = roundForDisplay(Math.abs(remaining))
 
   if (remaining <= 0) {
     return {
@@ -64,15 +73,17 @@ export function getHydrationGuidance({
             ? "At your limit"
             : "기준에 딱 맞아요"
           : english
-            ? `${Math.abs(remaining)} mL over your limit`
-            : `기준보다 ${Math.abs(remaining)}ml 많아요`,
+            ? `${remainingText} mL over your limit`
+            : `기준보다 ${remainingText}ml 많아요`,
     }
   }
 
   if (consumed / limit >= HYDRATION_NEAR_RATIO) {
     return {
       tone: "near",
-      message: english ? `${remaining} mL to go` : `${remaining}ml 남았어요`,
+      message: english
+        ? `${remainingText} mL to go`
+        : `${remainingText}ml 남았어요`,
     }
   }
 
