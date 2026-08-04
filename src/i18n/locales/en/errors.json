@@ -365,6 +365,10 @@
     "DOCTOR_ERROR_004": {
       "title": "Sharing opens once the connection is approved",
       "body": "We'll let you know when your doctor accepts."
+    },
+    "SOCIAL_CONFIG_ERROR": {
+      "title": "Social sign-in isn’t available on this build",
+      "body": "This is an app configuration issue, not your connection. Please use email sign-in and let us know so we can fix it."
     }
   }
 }

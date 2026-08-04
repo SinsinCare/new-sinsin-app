@@ -36,6 +36,38 @@ function createGoogleCancelledError() {
   })
 }
 
+/**
+ * 구글의 `DEVELOPER_ERROR` — **앱 설정이 서버(GCP)에 등록된 것과 다르다**는 뜻이다.
+ * 안드로이드에서는 대개 이 빌드를 서명한 키의 SHA-1 지문이 OAuth 클라이언트에
+ * 등록돼 있지 않을 때 난다. 계정 선택창까지는 시스템이 띄우므로 **로그인이 되는
+ * 것처럼 보이다가** 그 다음에 실패한다.
+ *
+ * 안드로이드 네이티브 모듈은 코드를 숫자 문자열로 준다
+ * (`String.valueOf(CommonStatusCodes.DEVELOPER_ERROR)` = `"10"`). 메시지 쪽도 함께
+ * 보는 이유는 iOS·버전에 따라 이름 문자열로 오는 경우가 있어서다.
+ */
+function isGoogleDeveloperError(e: unknown): boolean {
+  const err = e as { code?: unknown; message?: unknown }
+  const code = typeof err?.code === "string" ? err.code : ""
+  const message = typeof err?.message === "string" ? err.message : ""
+  return code === "10" || message.includes("DEVELOPER_ERROR")
+}
+
+/**
+ * 설정 오류를 **설정 오류라고** 말하는 에러.
+ *
+ * 이걸 세우지 않으면 SDK 원본 에러(`{message, code}`)가 그대로 올라가는데, 그 모양이
+ * `isApiErrorLike` 를 통과해 "응답 없음 = 오프라인" 으로 분류됐다. 와이파이가 멀쩡한
+ * 사용자에게 "와이파이를 확인해 주세요" 라고 말하는, 사용자가 절대 고칠 수 없는
+ * 안내였다(2026-08-04 QA). 코드는 카탈로그(`errors.json`)가 문구를 갖는 열쇠다.
+ */
+function createSocialConfigError(provider: "google" | "kakao") {
+  return Object.assign(
+    new Error(`${provider} sign-in is not configured for this build`),
+    { code: "SOCIAL_CONFIG_ERROR" },
+  )
+}
+
 GoogleSignin.configure({
   webClientId: GOOGLE_WEB_CLIENT_ID,
   iosClientId: GOOGLE_IOS_CLIENT_ID,
@@ -78,6 +110,9 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
       logger.error("[Google SignIn] signIn 실패", e)
       if (isErrorWithCode(e)) {
         logger.debug("[Google SignIn] 에러 코드:", e.code)
+      }
+      if (isGoogleDeveloperError(e)) {
+        throw createSocialConfigError("google")
       }
     }
     throw e
@@ -180,10 +215,7 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
 
   try {
     await initializeKakaoSDK(KAKAO_NATIVE_APP_KEY)
-    logger.debug(
-      "[Kakao SignIn] SDK 초기화 완료, appKey:",
-      KAKAO_NATIVE_APP_KEY,
-    )
+    logger.debug("[Kakao SignIn] SDK 초기화 완료")
   } catch (e) {
     logger.error("[Kakao SignIn] SDK 초기화 실패", e)
     throw e
@@ -191,8 +223,8 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
 
   if (Platform.OS === "android") {
     try {
-      const keyHash = await getKeyHashAndroid()
-      logger.debug("[Kakao SignIn] keyHash:", keyHash)
+      await getKeyHashAndroid()
+      logger.debug("[Kakao SignIn] Android 키 해시 확인 완료")
     } catch (e) {
       logger.error("[Kakao SignIn] keyHash 조회 실패", e)
     }
@@ -209,8 +241,6 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     logger.debug("[Kakao SignIn] login 완료", {
       hasAccessToken: !!token.accessToken,
       hasIdToken: !!token.idToken,
-      tokenType: token.tokenType,
-      scopes: token.scopes,
     })
   } catch (e: unknown) {
     if (isUserCancelledError(e)) {
@@ -220,11 +250,8 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     const err = e as Record<string, unknown>
     logger.error("[Kakao SignIn] login 실패", {
       name: e instanceof Error ? e.name : "unknown",
-      message: e instanceof Error ? e.message : String(e),
       code: err?.code,
       domain: err?.domain,
-      nativeError: err?.nativeError,
-      userInfo: err?.userInfo,
     })
     throw e
   }

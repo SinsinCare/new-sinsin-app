@@ -37,7 +37,7 @@
 
 import i18n, { getAppLanguage } from "@/src/i18n"
 import type errorsResources from "@/src/i18n/locales/ko/errors.json"
-import { isApiErrorLike } from "@/src/services/core/apiError"
+import { ApiError, isApiErrorLike } from "@/src/services/core/apiError"
 import {
   getErrorBehavior,
   type ErrorActionId,
@@ -192,8 +192,26 @@ export function resolveError(
     return build({ title: "", kind: "canceled", silent: true, action: null })
   }
 
-  // 2) 응답이 아예 오지 않았다. **인터넷을 언급해도 되는 유일한 자리.**
-  if (api?.isNetworkError === true || (api && status === undefined)) {
+  /*
+    2) 응답이 아예 오지 않았다. **인터넷을 언급해도 되는 유일한 자리.**
+
+    두 번째 조건에 `error instanceof ApiError` 가 붙어 있는 이유:
+    `isApiErrorLike` 는 `message`·`code` 가 문자열이면 **무엇이든** 참이다. 그런데
+    구글·카카오 로그인 SDK 의 에러가 정확히 그 모양(`{message, code:"DEVELOPER_ERROR"}`)
+    이라, 상태코드가 없다는 이유로 전부 "와이파이를 확인해 주세요" 가 됐다.
+    안드로이드에서 서명 지문이 등록되지 않아 나는 설정 오류가 **네트워크 장애로**
+    보고됐고, 와이파이가 멀쩡한 사용자는 고칠 수 없는 것을 고치려 했다
+    (2026-08-04: "실제로 와이파이 잘 작동하는데 네트워크 환경 에러라고 나옴").
+
+    우리 HTTP 계층은 응답이 없을 때 `isNetworkError=true` 를 실어 준다
+    (`apiClient.ts` 의 `new ApiError(message, code, undefined, true)`). 그러니 첫
+    조건만으로 진짜 전송 실패는 이미 잡힌다. 두 번째는 그 계층에서 온 것이 확실할
+    때만 도는 안전망으로 좁힌다 — 남의 SDK 에러는 여기 오면 안 된다.
+  */
+  if (
+    api?.isNetworkError === true ||
+    (error instanceof ApiError && status === undefined)
+  ) {
     const isTimeout = !!code && TIMEOUT_CODES.has(code)
     const kind: ErrorKind = isTimeout ? "timeout" : "offline"
     const copy = transportCopy(isTimeout ? "timeout" : "offline")
