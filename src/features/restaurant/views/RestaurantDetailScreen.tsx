@@ -59,7 +59,6 @@ import {
   Linking,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -74,6 +73,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { phoneUrl } from "@/src/shared/utils/externalUrl"
 
+import { shareContent } from "@/src/shared/utils/share"
 import {
   barHeight,
   iconSize,
@@ -377,8 +377,12 @@ function RestaurantDetailBody({
 
   const handleShare = useCallback(() => {
     if (restaurantId === null) return
-    void Share.share({
-      message: `${t("restaurant.detail.shareMessage", { name })}\n${restaurantDeepLink(restaurantId)}`,
+    // 링크를 본문에 손으로 붙이지 않는다 — iOS 는 `url` 을 따로 받아야 미리보기를
+    // 그리고, 안드로이드는 본문에 붙어야 간다. 그 차이는 `shareContent` 가 흡수한다.
+    void shareContent({
+      body: t("restaurant.detail.shareMessage", { name }),
+      link: restaurantDeepLink(restaurantId),
+      scope: "restaurant-detail",
     })
   }, [name, restaurantId, t])
 

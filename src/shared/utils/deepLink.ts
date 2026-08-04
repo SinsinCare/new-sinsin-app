@@ -61,3 +61,13 @@ export function buildDeepLink(path: string): string {
 export function restaurantDeepLink(restaurantId: number | string): string {
   return buildDeepLink(`/restaurant/${restaurantId}`)
 }
+
+/** 레시피 상세 딥링크. 공유가 링크 없이 이름만 나가던 것을 고치며 추가했다. */
+export function recipeDeepLink(recipeId: number | string): string {
+  return buildDeepLink(`/recipe/${recipeId}`)
+}
+
+/** 커뮤니티 글 상세 딥링크. */
+export function communityPostDeepLink(postId: number | string): string {
+  return buildDeepLink(`/post/${postId}`)
+}

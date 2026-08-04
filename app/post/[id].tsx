@@ -60,6 +60,8 @@ import { useTranslation } from "react-i18next"
 import { showSuccessToast } from "@/src/lib/toast"
 
 import { showActionSheet, showConfirm } from "@/src/lib/dialog"
+import { communityPostDeepLink } from "@/src/shared/utils/deepLink"
+import { shareContent } from "@/src/shared/utils/share"
 
 const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 
@@ -323,18 +325,17 @@ export default function PostDetailScreen() {
 
   const handleShare = async () => {
     if (!post) return
-    hapticSelection()
-    try {
-      await Share.share({
-        message: t("community.postDetail.shareMessage", {
-          title: post.title,
-          description: post.description,
-          url: APP_DOWNLOAD_URL,
-        }),
-      })
-    } catch {
-      // 사용자가 공유를 취소한 경우 조용히 넘어간다.
-    }
+    // 앱을 이미 깐 사람은 글로 바로 가고, 안 깐 사람은 스토어로 간다.
+    // 스토어 URL 만 보내던 시절에는 전자가 앱을 열고 글을 다시 찾아야 했다.
+    void shareContent({
+      body: t("community.postDetail.shareMessage", {
+        title: post.title,
+        description: post.description,
+        url: APP_DOWNLOAD_URL,
+      }),
+      link: communityPostDeepLink(post.id),
+      scope: "community-post-detail",
+    })
   }
 
   const handleMorePress = async () => {

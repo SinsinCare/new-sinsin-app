@@ -59,7 +59,7 @@
  * `layout.ts` 를 import 하지 않는다 — 기능 모듈끼리 의존하면 안 된다(그 파일 머리말 참고).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ScrollView, Share, StyleSheet, View } from "react-native"
+import { ScrollView, StyleSheet, View } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -73,6 +73,8 @@ import {
 import { presentError } from "@/src/lib/errorMessage"
 import { ArticleSkeleton, ConfirmModal } from "@/src/shared/components"
 import { classifyFetchFailure } from "@/src/shared/utils/fetchFailure"
+import { recipeDeepLink } from "@/src/shared/utils/deepLink"
+import { shareContent } from "@/src/shared/utils/share"
 import {
   IngredientSection,
   NutritionCard,
@@ -187,16 +189,17 @@ export default function RecipeDetailRoute() {
     router.back()
   }, [router])
 
-  const handleShare = useCallback(async () => {
+  const handleShare = useCallback(() => {
     if (detail == null) return
-    const message = [detail.name, detail.summary]
-      .filter((line): line is string => Boolean(line))
-      .join("\n")
-    try {
-      await Share.share({ message })
-    } catch {
-      // 공유 시트를 닫은 것도 여기로 온다. 실패를 알릴 일이 아니다.
-    }
+    // 링크를 함께 보낸다 — 예전에는 이름과 요약만 나가서 받은 사람이 그 레시피로
+    // 갈 방법이 없었다(QA 2026-08-05 "음식 이름만 텍스트로 공유").
+    void shareContent({
+      body: [detail.name, detail.summary]
+        .filter((line): line is string => Boolean(line))
+        .join("\n"),
+      link: recipeDeepLink(detail.id),
+      scope: "recipe-detail",
+    })
   }, [detail])
 
   const handleToggleSave = useCallback(() => {
