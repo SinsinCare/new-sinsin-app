@@ -1261,6 +1261,7 @@
         "undoAmount": "Undo {{amount}} mL",
         "typeValue": "Edit today's total",
         "typeHint": "Tap to edit the total",
+        "removeValue": "Remove {{value}}",
         "info": "Soup and fruit also count as fluids. Half a bowl of broth counts as 100 mL.",
         "presetAccessibility": "Log {{amount}} mL using {{anchor}}",
         "preset": {

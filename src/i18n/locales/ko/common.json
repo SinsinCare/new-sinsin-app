@@ -1249,6 +1249,7 @@
         "undoAmount": "방금 {{amount}}mL 되돌리기",
         "typeValue": "오늘 총량 직접 입력",
         "typeHint": "눌러서 총량 수정",
+        "removeValue": "{{value}} 덜어내기",
         "info": "국·과일에도 수분이 있어요. 국물은 반 그릇이면 100mL로 계산해요.",
         "presetAccessibility": "{{anchor}} 기준으로 {{amount}}mL 기록",
         "preset": {

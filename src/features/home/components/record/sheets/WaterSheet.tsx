@@ -113,8 +113,17 @@ export function WaterSheet({
   const sessionTotal = session.reduce((sum, amount) => sum + amount, 0)
   const total = baseRef.current + sessionTotal
   const liveTotal = preview ?? total
-  /** 지금 CTA 가 보낼 추가분. base 아래로 고친 총량은 0 — 저장된 기록은 여기서 못 줄인다. */
-  const pendingTotal = Math.max(0, liveTotal - baseRef.current)
+  /**
+   * CTA 가 보낼 증감. **음수도 보낸다** — 총량을 낮추면 그만큼 덜어낸다.
+   *
+   * 종전에는 `max(0, …)` 로 잘라서 이미 저장된 양은 앱에서 되돌릴 길이 아예 없었다.
+   * "마지막 잔 되돌리기" 는 이 시트에서 방금 담은 것만 무르는 로컬 조작이라,
+   * 어제·아까 잘못 기록한 물은 지울 수 없었다(2026-08-04 QA 정설아).
+   * 서버는 처음부터 뺄 수 있었다 — `PATCH …/extra-water` 의 `deltaWater` 는
+   * `[-10,000, +10,000]` 이고 결과를 0 에서 접는다(clinicalBounds·applyExtraWaterDelta).
+   * 즉 막고 있던 것은 화면뿐이었다.
+   */
+  const pendingDelta = liveTotal - baseRef.current
   const guidance = getHydrationGuidance({
     consumed: liveTotal,
     limit,
@@ -149,20 +158,24 @@ export function WaterSheet({
   const commit = async () => {
     // 치는 도중 바로 CTA 를 눌러도 마지막 키 입력까지 반영되게 preview 기준으로
     // 보낸다 — 체중 시트가 liveWeight 를 그대로 제출하는 것과 같은 규칙.
-    if (pendingTotal <= 0 || isBusy) return
+    if (pendingDelta === 0 || isBusy) return
     setIsBusy(true)
     hapticStepAdvance()
-    const ok = await onLog(pendingTotal)
+    const ok = await onLog(pendingDelta)
     setIsBusy(false)
     // 실패면 담긴 잔을 그대로 두고 시트도 열어 둔다 — 다시 누르면 재시도다.
     if (ok) onClose()
   }
 
-  /** 총량 확정(blur 한 번). 담긴 잔 스택은 "새 총량 − base" 한 덩어리로 갈아끼운다. */
+  /**
+   * 총량 확정(blur 한 번). 담긴 잔 스택을 "새 총량 − base" 한 덩어리로 갈아끼운다.
+   * 낮춰 적으면 그 덩어리가 음수이고, 그대로 CTA 의 증감이 된다(0 으로 적으면 그날 물이 비워진다).
+   */
   const commitTotal = (next: number | null) => {
     // 지우고 나가면 null — 값 변경이 아니라 취소다(0 입력과 다르다).
     if (next === null) return
-    setSession(next <= baseRef.current ? [] : [next - baseRef.current])
+    const delta = next - baseRef.current
+    setSession(delta === 0 ? [] : [delta])
     bumpNumber()
   }
 
@@ -351,9 +364,11 @@ export function WaterSheet({
                     },
                   ]}
                 >
+                  {/* 총량을 낮춰 적으면 스택의 한 칸이 음수다. 라벨은 크기만 말한다 —
+                      "−400mL 되돌리기" 는 부호가 두 번 겹쳐 방향이 헷갈린다. */}
                   {canUndo
                     ? t("home.sheet.water.undoAmount", {
-                        amount: formatAmount(lastAmount),
+                        amount: formatAmount(Math.abs(lastAmount)),
                       })
                     : t("home.sheet.water.undoLast")}
                 </Text>
@@ -397,45 +412,48 @@ export function WaterSheet({
           <Pressable
             style={styles.ctaWrap}
             accessibilityRole="button"
-            accessibilityState={{ disabled: pendingTotal <= 0 || isBusy }}
+            accessibilityState={{ disabled: pendingDelta === 0 || isBusy }}
             onPress={() => void commit()}
-            disabled={pendingTotal <= 0 || isBusy}
+            disabled={pendingDelta === 0 || isBusy}
           >
-            {({ pressed }) => (
-              <View
-                style={[
-                  styles.cta,
-                  {
-                    backgroundColor:
-                      pendingTotal > 0 && !isBusy
+            {({ pressed }) => {
+              const active = pendingDelta !== 0 && !isBusy
+              return (
+                <View
+                  style={[
+                    styles.cta,
+                    {
+                      backgroundColor: active
                         ? surface.brand
                         : surface.ctaOffBg,
-                    opacity: pressed && pendingTotal > 0 ? 0.92 : 1,
-                  },
-                ]}
-              >
-                {isBusy ? (
-                  <V2DotLoader size="s" color={surface.ctaOffText} />
-                ) : null}
-                <Text
-                  style={[
-                    styles.ctaLabel,
-                    {
-                      color:
-                        pendingTotal > 0 && !isBusy
-                          ? surface.onBrand
-                          : surface.ctaOffText,
+                      opacity: pressed && active ? 0.92 : 1,
                     },
                   ]}
                 >
-                  {pendingTotal > 0
-                    ? t("home.sheet.recordValue", {
-                        value: `${formatAmount(pendingTotal)}mL`,
-                      })
-                    : t("home.sheet.water.chooseValue")}
-                </Text>
-              </View>
-            )}
+                  {isBusy ? (
+                    <V2DotLoader size="s" color={surface.ctaOffText} />
+                  ) : null}
+                  <Text
+                    style={[
+                      styles.ctaLabel,
+                      { color: active ? surface.onBrand : surface.ctaOffText },
+                    ]}
+                  >
+                    {/* 방향을 라벨이 말한다. 덜어내는 것을 "기록하기" 라고 부르면
+                        누르기 전에 무슨 일이 일어날지 알 수 없다. */}
+                    {pendingDelta > 0
+                      ? t("home.sheet.recordValue", {
+                          value: `${formatAmount(pendingDelta)}mL`,
+                        })
+                      : pendingDelta < 0
+                        ? t("home.sheet.water.removeValue", {
+                            value: `${formatAmount(-pendingDelta)}mL`,
+                          })
+                        : t("home.sheet.water.chooseValue")}
+                  </Text>
+                </View>
+              )
+            }}
           </Pressable>
         </View>
       </Animated.View>
