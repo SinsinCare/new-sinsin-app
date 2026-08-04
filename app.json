@@ -2,7 +2,7 @@
   "expo": {
     "name": "신신당부",
     "slug": "sinsin-rn",
-    "version": "1.1.31",
+    "version": "1.1.32",
     "orientation": "default",
     "icon": "./assets/branding/app_icon_260720.png",
     "userInterfaceStyle": "automatic",
@@ -41,6 +41,7 @@
       }
     },
     "android": {
+      "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/app_icon_260720.png",
         "backgroundColor": "#FFF5ED"
@@ -149,10 +150,11 @@
           "android": {
             "newArchEnabled": true,
             "minSdkVersion": 24,
-            "targetSdkVersion": 35,
+            "targetSdkVersion": 36,
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
-            ]
+            ],
+            "compileSdkVersion": 36
           }
         }
       ],
