@@ -383,8 +383,50 @@ export function RestaurantMapScreen({
 
   useEffect(() => {
     if (mapError === null) return
-    trackAnalyticsEvent("restaurant_map_degraded", {})
+    trackAnalyticsEvent("restaurant_map_degraded", {
+      reason: degradedReason(mapError),
+    })
   }, [mapError])
+
+  /**
+   * **0건이면 시트를 올려 이유를 보여 준다.**
+   *
+   * 빈 상태 문구(`MapEmptyState`)는 시트 **안**에 산다. 그런데 시트는 접힘 스냅에서
+   * 손잡이와 필터 칩만 보이므로, 결과가 0건이 되면 사용자가 보는 것은 **아무 설명도 없는
+   * 빈 지도**다. 실측(2026-08-05, 안드로이드): 지역을 `홍대/합정/마포` + 음식 종류 `한식`
+   * 으로 바꾸면 카메라는 홍대로 잘 갔지만 마커가 하나도 없고 화면 어디에도 이유가 없었다.
+   * QA 가 보고한 "지역·음식종류를 골라 검색했는데 식당이 지도에 안 나온다" 가 이것이다 —
+   * 필터가 고장 난 것이 아니라 **0건이라고 말해 주지 않은 것**이다.
+   *
+   * 그래서 검색이 끝나 0건이 되면 시트를 mid 로 올린다. 규칙을 여기 한 곳에 두면 지역·
+   * 음식 종류·영양 기준·AI 검색·`이 지역 검색` 어디로 0건이 되든 같은 설명을 받는다.
+   *
+   * - **가져오는 중에는 올리지 않는다.** 새 영역으로 이동하는 사이 잠깐 0건이 되는데,
+   *   그때 올리면 시트가 오르내리며 깜빡인다(`keepPreviousData` 가 있어도 필터가 바뀌면
+   *   빈 구간이 생긴다).
+   * - **0건으로 바뀌는 순간에만** 올린다. 회차(`searchSeq`)로 세지 않는 이유: 필터만
+   *   바꾸면 뷰포트 검색이 아니라 회차가 안 오른다(질의는 filterKey 로 다시 나간다).
+   *   전이로 판정하면 지역·음식 종류·AI 검색·`이 지역 검색` 이 전부 같은 규칙을 받는다.
+   *   0건이 이어지는 동안 사용자가 시트를 다시 내리면 그 뜻을 존중한다 — 다시 밀어
+   *   올리지 않는다.
+   * - 지도가 죽었을 때는 이미 목록이 전체 화면이라 할 일이 없다.
+   */
+  const wasEmptyRef = useRef(false)
+  useEffect(() => {
+    if (mapError !== null) return
+    if (mapSearch.isFetching || mapSearch.isLoading) return
+    const isEmpty = mapSearch.emptyReason !== null
+    const becameEmpty = isEmpty && !wasEmptyRef.current
+    wasEmptyRef.current = isEmpty
+    if (!becameEmpty) return
+    if (sheetIndexRef.current >= SHEET_SNAP.MID) return
+    sheetRef.current?.snapToIndex(SHEET_SNAP.MID)
+  }, [
+    mapError,
+    mapSearch.emptyReason,
+    mapSearch.isFetching,
+    mapSearch.isLoading,
+  ])
 
   /* ── 지도 ↔ 데이터 동기화 ─────────────────────────────── */
 
@@ -801,6 +843,11 @@ export function RestaurantMapScreen({
   }, [])
 
   const handleMapError = useCallback((message: string) => {
+    if (__DEV__) {
+      // 사용자 화면은 일반 문구지만, 원인 문자열(도메인 미등록 401·타임아웃·설정 누락)은
+      // 여기에만 있다. dev 에서 회색 지도를 만났을 때 이 로그가 진단의 시작점이다.
+      console.warn(`[restaurant-map] degraded: ${message}`)
+    }
     setMapError(message)
   }, [])
 
@@ -1439,6 +1486,23 @@ function toMapMarker(dto: {
  * 고르지 않기 위한 근사다. 정확한 값은 카카오가 계산해 `idle` 로 알려 주므로 여기서는
  * 넘칠 것이 확실한 선택만 걸러 낸다.
  */
+/**
+ * 지도 실패 문자열 → 분석 이벤트의 범주. 원인 문자열은 세 곳에서 온다 —
+ * RestaurantMapView 의 설정 오류("… is not set"), mapHtml 의 SDK 실패
+ * ("failed to load"·"namespace missing"·"timed out"), WebView 핸들러("webview …").
+ * 자유 텍스트는 분석으로 못 보내므로(새니타이저·집계 불가) 여기서 접는다.
+ */
+function degradedReason(
+  message: string,
+): "config" | "sdk_load" | "sdk_timeout" | "webview_crash" | "other" {
+  if (message.includes("is not set")) return "config"
+  if (message.includes("timed out")) return "sdk_timeout"
+  if (message.includes("failed to load")) return "sdk_load"
+  if (message.includes("namespace missing")) return "sdk_load"
+  if (message.includes("webview")) return "webview_crash"
+  return "other"
+}
+
 function widenLevel(current: number, bounds: MapBounds | null): number {
   const diagonal = bounds ? bboxDiagonalKm(bounds) : 0
   // 두 단계가 목표(목업의 "넓혀서" 는 눈에 보이게 넓어져야 한다). 넘치면 한 단계.

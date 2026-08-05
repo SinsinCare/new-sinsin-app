@@ -5,7 +5,7 @@ import {
 } from "../src/shared/utils/externalUrl"
 import {
   isAllowedMapNavigation,
-  mapOriginWhitelist,
+  MAP_ORIGIN_WHITELIST,
 } from "../src/features/restaurant/map/mapNavigation"
 
 describe("external URL boundaries", () => {
@@ -36,13 +36,19 @@ describe("external URL boundaries", () => {
 describe("restaurant map WebView navigation boundary", () => {
   const base = "https://maps.example.test/embedded/map"
 
-  it("allows the inline document and same-origin base path only", () => {
+  it("allows only the inline document and the base document itself", () => {
     expect(isAllowedMapNavigation("about:blank", base)).toBe(true)
     expect(isAllowedMapNavigation(base, base)).toBe(true)
-    expect(isAllowedMapNavigation(`${base}/child?x=1`, base)).toBe(true)
+    // iOS 가 최초 loadHTMLString 내비게이션에 싣는 url 은 끝 `/` 가 붙을 수 있다.
+    expect(isAllowedMapNavigation(`${base}/`, base)).toBe(true)
   })
 
   it.each([
+    // baseUrl 의 origin 은 실존하는 웹사이트다. 하위 경로·쿼리를 허용하면 그 사이트가
+    // 브릿지 권한을 가진 채 WebView 안에 렌더될 수 있다 — 문서 그 자체만 허용한다.
+    `${base}/child?x=1`,
+    `${base}?x=1`,
+    `${base}#fragment`,
     "http://maps.example.test/embedded/map",
     "https://evil.example/embedded/map",
     "https://maps.example.test/other",
@@ -51,12 +57,50 @@ describe("restaurant map WebView navigation boundary", () => {
   ])("rejects untrusted top-level navigation: %s", (target) => {
     expect(isAllowedMapNavigation(target, base)).toBe(false)
   })
+})
 
-  it("does not whitelist invalid or plaintext base URLs", () => {
-    expect(mapOriginWhitelist(base)).toEqual([
-      "https://maps.example.test/*",
-      "about:*",
-    ])
-    expect(mapOriginWhitelist("http://maps.example.test/")).toEqual(["about:*"])
+describe("restaurant map WebView originWhitelist", () => {
+  /**
+   * react-native-webview v13.16.0 의 whitelist 매칭을 **그대로** 복제한다
+   * (node_modules/react-native-webview/src/WebViewShared.tsx).
+   *
+   * 핵심 의미 두 가지 — 이걸 몰라서 지도가 죽었다(2026-08-05):
+   * 1. 패턴은 URL 전체가 아니라 origin(`scheme://host[:port]`, 경로·끝 슬래시 없음)에
+   *    `^패턴` 정규식으로 매칭된다.
+   * 2. 탈락한 내비게이션은 차단이 아니라 **Linking.openURL 로 앱 밖 브라우저에 열린다.**
+   *    iOS 는 최초 loadHTMLString(url = baseUrl)도 이 매처에 넣으므로, 최초 로드가
+   *    탈락하면 식당 탭이 사파리(앱 다운로드 랜딩)로 튕기고 지도는 회색으로 남는다.
+   */
+  const extractOrigin = (url: string): string => {
+    const result = /^[A-Za-z][A-Za-z0-9+\-.]+:(\/\/)?[^/]*/.exec(url)
+    return result === null ? "" : result[0]
+  }
+  const escapeRegExp = (text: string) =>
+    text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&")
+  const originWhitelistToRegex = (originWhitelist: string): string =>
+    `^${escapeRegExp(originWhitelist).replace(/\\\*/g, ".*")}`
+  const passesWhitelist = (whitelist: readonly string[], url: string) => {
+    const origin = extractOrigin(url)
+    return ["about:blank", ...whitelist]
+      .map(originWhitelistToRegex)
+      .some((x) => new RegExp(x).test(origin))
+  }
+
+  it.each([
+    "https://sinsincare.kr",
+    "https://sinsincare.kr/",
+    "https://localhost:8081",
+    "https://localhost:8081/",
+    "about:blank",
+  ])("initial document load passes the library matcher: %s", (url) => {
+    expect(passesWhitelist(MAP_ORIGIN_WHITELIST, url)).toBe(true)
+  })
+
+  it("regression: the old `origin/*` pattern never matches an origin", () => {
+    // 예전 값이 왜 잘못이었는지 고정한다 — origin 에는 경로도 끝 슬래시도 없어서
+    // `/*` 로 끝나는 패턴은 무엇과도 일치하지 않고, 모든 로드가 사파리로 튕긴다.
+    expect(
+      passesWhitelist(["https://sinsincare.kr/*"], "https://sinsincare.kr"),
+    ).toBe(false)
   })
 })

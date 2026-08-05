@@ -31,7 +31,7 @@ import { WebView, type WebViewMessageEvent } from "react-native-webview"
 
 import { clampZoom } from "../utils/requestGuards"
 import { buildMapHtml } from "./mapHtml"
-import { isAllowedMapNavigation, mapOriginWhitelist } from "./mapNavigation"
+import { isAllowedMapNavigation, MAP_ORIGIN_WHITELIST } from "./mapNavigation"
 import {
   FALLBACK_CENTER,
   MAP_ZOOM,
@@ -242,7 +242,13 @@ export const RestaurantMapView = forwardRef<
    * 리스트 모드로 내려가게 한다.
    */
   if (!jsKey) {
-    return <MissingKeyNotice onMapError={onMapError} />
+    return <ConfigErrorNotice reason="jsKey" onMapError={onMapError} />
+  }
+  /* 문서 주소가 없으면 WebView 를 띄우지 않는다. 띄우면 baseUrl 없이 로드돼 카카오가
+     Referer 를 못 보고 401 을 주거나, iOS 가 없는 origin 을 열려다 오류 페이지를 그린다.
+     둘 다 사용자에게는 "지도가 회색" 으로 보인다 — 설정 오류라고 말하는 편이 낫다. */
+  if (!SOURCE_BASE_URL) {
+    return <ConfigErrorNotice reason="baseUrl" onMapError={onMapError} />
   }
 
   return (
@@ -250,11 +256,32 @@ export const RestaurantMapView = forwardRef<
       ref={webRef}
       source={source}
       style={styles.web}
+      /*
+        whitelist 는 전부 통과("*")다 — 실수가 아니다. 이 라이브러리의 whitelist 는
+        패턴을 URL 의 origin(경로 없음)에 대는 별도 매처이고, **탈락한 URL 을 차단이
+        아니라 `Linking.openURL` 로 사파리에 연다.** iOS 는 최초 loadHTMLString 의
+        내비게이션도 이 매처에 넣으므로, 여기서 탈락하면 식당 탭이 앱 밖 사파리로
+        튕긴다(실측 2026-08-05 — 예전 `https://…/*` 패턴이 정확히 그랬다).
+        실제 판정은 아래 `isAllowedMapNavigation` 한 곳만 한다. mapNavigation.ts 참고.
+      */
       originWhitelist={MAP_ORIGIN_WHITELIST}
       onShouldStartLoadWithRequest={(request) =>
         isAllowedMapNavigation(request.url, SOURCE_BASE_URL)
       }
       onMessage={handleMessage}
+      /*
+        **시스템 글자 크기가 지도 부품의 크기를 바꾸지 못하게 한다(안드로이드).**
+
+        안드로이드 WebView 는 기본적으로 `textZoom` 을 시스템 글꼴 배율에 맞춰 올린다.
+        그런데 이 지도의 부품은 전부 **고정 픽셀**이다 — 클러스터 배지는 40/48/58px 원이고
+        글자만 13/14/15px 이다. 글자만 1.15~1.3배가 되면 숫자가 원 안에서 균형을 잃고
+        (원 밖으로 번지거나 한쪽으로 치우쳐 보인다), 상호명 라벨은 겹침 판정(`placed`)이
+        계산한 상자보다 커져 서로 겹친다. 접근성 배율을 존중해야 하는 곳은 앱의 텍스트지
+        지도 위 아이콘의 내부 치수가 아니다 — 지도 자체는 핀치로 확대할 수 있다.
+
+        iOS 는 이 prop 을 무시한다(WKWebView 는 동적 타입을 자동 적용하지 않는다).
+      */
+      textZoom={100}
       javaScriptEnabled
       domStorageEnabled
       allowFileAccess={false}
@@ -325,21 +352,37 @@ export const RestaurantMapView = forwardRef<
  * 동작하지 않는 상태였고, 실제로 등록된 것은 프로토타입이 쓰던 `http://localhost:8081` 이다.
  * 코드에 있는 값을 근거로 삼지 말고 위처럼 직접 재 볼 것.
  *
- * ## 운영 빌드에서는 이 값으로 안 된다
+ * ## 릴리스 빌드에 `localhost` 를 **흘려보내지 않는다** (2026-08-05)
  *
- * `localhost:8081` 은 Metro 개발 서버 주소다. 릴리스 빌드에는 Metro 가 없으므로
- * **앱의 실제 도메인을 카카오 콘솔에 등록하고** `EXPO_PUBLIC_KAKAO_MAP_BASE_URL` 로
- * 넘겨야 한다. 그때까지 릴리스 빌드의 지도는 리스트 모드로 내려간다 —
- * 조용히 죽지는 않지만 지도는 없다.
+ * `localhost:8081` 은 Metro 개발 서버 주소다. 그런데 이 값이 `??` 폴백이라 **환경변수를
+ * 안 넣은 릴리스 빌드에도 그대로 실려 나갔다.** 어느 EAS 프로필도 이 변수를 주지
+ * 않았으므로 지금까지 나간 TestFlight·Play 빌드는 **전부** 존재하지 않는 origin 을
+ * 문서 주소로 삼았고, 지도는 뜨지 않았다(사용자 보고 2026-08-05).
+ *
+ * 폴백이 문제를 숨겼다. 값이 없으면 개발 기본값으로 조용히 굴러가는 대신, 릴리스에서는
+ * **설정 오류로 드러낸다** — 화면이 "지도를 불러오지 못했어요 + 다시 시도" 를 그린다.
+ * 회색 사각형이나 사파리 오류 페이지보다 낫고, 무엇보다 빌드를 낸 사람이 바로 안다.
+ *
+ * 값을 넣을 때 주의: **카카오 콘솔에 등록된 도메인과 정확히 같아야 한다**(위 실측표).
+ * 등록은 콘솔 작업이라 코드로 못 한다.
  */
-const SOURCE_BASE_URL =
-  process.env["EXPO_PUBLIC_KAKAO_MAP_BASE_URL"] ?? "https://localhost:8081"
+const DEV_MAP_BASE_URL = "https://localhost:8081"
 
-const MAP_ORIGIN_WHITELIST = mapOriginWhitelist(SOURCE_BASE_URL)
+/** 설정에서 온 지도 문서 주소. 릴리스인데 비어 있으면 `null` — 지도를 띄우지 않는다. */
+const SOURCE_BASE_URL: string | null =
+  process.env["EXPO_PUBLIC_KAKAO_MAP_BASE_URL"] ??
+  (__DEV__ ? DEV_MAP_BASE_URL : null)
 
-function MissingKeyNotice({
+const CONFIG_ERROR_MESSAGE: Readonly<Record<"jsKey" | "baseUrl", string>> = {
+  jsKey: "EXPO_PUBLIC_KAKAO_JS_KEY is not set",
+  baseUrl: "EXPO_PUBLIC_KAKAO_MAP_BASE_URL is not set",
+}
+
+function ConfigErrorNotice({
+  reason,
   onMapError,
 }: {
+  reason: "jsKey" | "baseUrl"
   onMapError?: (message: string) => void
 }) {
   /*
@@ -350,8 +393,8 @@ function MissingKeyNotice({
     여기서 렌더 부수효과를 남겨 두지 않는다. `useEffect` 는 커밋 뒤에 돌므로 지연도 필요 없다.
   */
   useEffect(() => {
-    onMapError?.("EXPO_PUBLIC_KAKAO_JS_KEY is not set")
-  }, [onMapError])
+    onMapError?.(CONFIG_ERROR_MESSAGE[reason])
+  }, [onMapError, reason])
   return <View style={styles.placeholder} />
 }
 

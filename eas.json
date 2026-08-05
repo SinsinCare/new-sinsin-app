@@ -22,6 +22,7 @@
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
         "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr",
         "EXPO_PUBLIC_RECIPE_V2_MOCK": "false",
         "EXPO_PUBLIC_FOOD_ANALYSIS_CONFIRMATION_ENABLED": "false"
       },
@@ -42,6 +43,7 @@
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
         "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr",
         "EXPO_PUBLIC_RECIPE_V2_MOCK": "false",
         "EXPO_PUBLIC_FOOD_ANALYSIS_CONFIRMATION_ENABLED": "false"
       },
@@ -63,6 +65,7 @@
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
         "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr",
         "EXPO_PUBLIC_RECIPE_V2_MOCK": "false",
         "EXPO_PUBLIC_FOOD_ANALYSIS_CONFIRMATION_ENABLED": "false"
       }
@@ -78,7 +81,8 @@
         "EXPO_PUBLIC_APP_ENV": "test",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
-        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
+        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr"
       },
       "android": {
         "buildType": "apk"
@@ -97,7 +101,8 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
-        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
+        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr"
       }
     },
     "playstore": {
@@ -113,7 +118,8 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
-        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
+        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr"
       }
     },
     "production": {
@@ -128,7 +134,8 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com",
-        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb"
+        "EXPO_PUBLIC_KAKAO_JS_KEY": "64d5c86597a6b16f2a3c4772897613eb",
+        "EXPO_PUBLIC_KAKAO_MAP_BASE_URL": "https://sinsincare.kr"
       }
     }
   },

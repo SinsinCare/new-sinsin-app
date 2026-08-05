@@ -185,8 +185,17 @@ export type AnalyticsEventProperties = {
   restaurant_location_permission: {
     result: "granted" | "denied" | "undetermined"
   }
-  /** 지도 SDK 로드 실패 → 리스트 모드로 내려간 횟수. 키 만료를 조용히 넘기지 않는다. */
-  restaurant_map_degraded: Record<string, never>
+  /**
+   * 지도 SDK 로드 실패 → 리스트 모드로 내려간 횟수. 키 만료를 조용히 넘기지 않는다.
+   *
+   * `reason` 은 범주형이다 — 원인 문자열(도메인·URL 포함)은 PII 새니타이저가 막고,
+   * 막지 않더라도 자유 텍스트는 집계가 안 된다. `config` 는 env 미설정,
+   * `sdk_load` 는 스크립트 로드 실패(도메인 미등록 401 이 대표), `sdk_timeout` 은
+   * 12초 마감, `webview_crash` 는 WebView 프로세스 사망이다.
+   */
+  restaurant_map_degraded: {
+    reason: "config" | "sdk_load" | "sdk_timeout" | "webview_crash" | "other"
+  }
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventProperties

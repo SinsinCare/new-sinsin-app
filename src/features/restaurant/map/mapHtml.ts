@@ -57,6 +57,7 @@
  * "이미 `limit` 에 잘려서 받은 마커 수" 라 참값이 아니다.
  */
 
+import { MAP_FONT_FACE_CSS } from "./mapFont.generated"
 import { MAP_NAMESPACE, MAP_ZOOM, type LatLng } from "./mapBridge"
 
 /** 디자인 토큰과 같은 값. WebView 안이라 토큰 모듈을 import 할 수 없어 리터럴이다. */
@@ -83,12 +84,35 @@ export function buildMapHtml({
   center,
   level = MAP_ZOOM.DEFAULT,
 }: MapHtmlOptions): string {
+  /*
+   * ## referrer 를 보내지 않는다 — 지도 생사를 카카오 콘솔에서 분리한다 (2026-08-05)
+   *
+   * 카카오 JS SDK 는 sdk.js 요청의 Referer 가 콘솔 "웹 플랫폼" 에 등록된 도메인과
+   * 다르면 401 을 준다. 이 WebView 의 문서는 네트워크에서 오지 않고(loadHTMLString)
+   * baseUrl 로 origin 만 빌려 쓰는 합성 문서라, 그 검사가 지키는 것이 없다 — 키는
+   * 어차피 앱 바이너리에 실려 있다. 그런데 그 대가로 "콘솔에서 도메인 하나를 지우면
+   * 이미 배포된 전 세계 앱의 지도가 일제히 죽는" 원격 스위치가 생겼고, 실제로 오늘
+   * sinsincare.kr 등록이 바뀌면서 200→401 로 뒤집혀 지도가 죽었다(실측: 같은 날
+   * 07:39 에 200, 08:00 에 401).
+   *
+   * 카카오는 Referer 가 **없는** 요청을 항상 통과시킨다(실측 200 · 브라우저의 강한
+   * 개인정보 설정과 같은 표준 동작이라 막을 수 없는 경로다). 그래서 문서 전체를
+   * no-referrer 로 선언한다 — sdk.js 도, sdk 가 내부에서 끼워 넣는 kakao.js 도, 타일도
+   * 문서의 referrer 정책을 상속한다. 콘솔 등록은 더 이상 지도의 생사를 쥐지 않는다.
+   *
+   * baseUrl 이 여전히 필요한 이유: sdk.js 는 로더일 뿐이고 본체(kakao.js)를 문서의
+   * 프로토콜로 받아 온다. baseUrl 이 https 가 아니면 iOS ATS 가 평문 본체 요청을
+   * 막는다(RestaurantMapView 의 실측 주석). 즉 baseUrl 은 "https 인 아무 주소" 면
+   * 기능하지만, 내비게이션 정책(mapNavigation)의 기준점이므로 실제 소유 도메인을 쓴다.
+   */
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
+<meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <style>
+${MAP_FONT_FACE_CSS}
   /* 텍스트 선택·콜아웃을 끈다. 마커 라벨/말풍선은 글자라서 롱프레스하면 iOS 가 돋보기와
      복사 메뉴를 띄우고, 그 뒤 첫 탭이 메뉴 닫기에 소비돼 마커가 안 열린다.
      상속되므로 자식 셀렉터를 따로 두지 않는다. */
@@ -96,8 +120,12 @@ export function buildMapHtml({
                -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   #map { width: 100%; height: 100%; }
 
-  /* 마커 폰트. Pretendard 는 WebView 에 없으므로 시스템 한글 폰트로 떨어진다. */
-  .mk, .cl { font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
+  /* 마커 폰트.
+     WebView 는 앱이 expo-font 로 올린 Pretendard 를 **볼 수 없다.** 그래서 예전에는 지도
+     위 글자만 시스템 폰트로 렌더됐다 — 앱의 다른 모든 글자가 Pretendard 인데 지도만 달랐다.
+     지금은 위 @font-face 로 Pretendard 부분집합(KS X 1001 2,350자 + ASCII)을 직접 싣는다
+     (scripts/build-map-font.py). 그 범위 밖 글자는 뒤의 시스템 스택이 그대로 받는다. */
+  .mk, .cl { font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
 
   /* ── 마커 앵커 ──
      1×1 이다. 좌표에 정확히 놓이고, 보이는 것들은 전부 이 점 기준 absolute 다.
@@ -162,15 +190,42 @@ export function buildMapHtml({
   .mk.sel .ring { background: ${BRAND}; border-color: #fff;
                   box-shadow: 0 2px 6px rgba(42,42,55,0.32); }
 
-  /* ── 클러스터: 개수 배지. 구간별로 크기를 키운다. ── */
-  .cl { position: relative; display: flex; align-items: center; justify-content: center;
-        border-radius: 50%; background: ${BRAND}; color: #fff; font-weight: 700;
+  /* ── 클러스터: 개수 배지. 구간별로 크기를 키운다. ──
+
+     §숫자를 원의 정중앙에 놓는 방법 (2026-08-05 수정)
+
+     (주의: 이 파일은 통째로 템플릿 리터럴이라 주석에도 백틱을 쓸 수 없다.)
+
+     예전에는 .cl 자체가 flex 컨테이너이고 숫자가 **익명 텍스트**였다. 그러면 세로
+     정렬의 기준이 글자가 아니라 폰트가 정한 라인박스가 되어, WebView 가 고른 대체
+     폰트(안드로이드는 Noto Sans CJK / Roboto, iOS 는 Apple SD Gothic Neo)의
+     ascent·descent 차이만큼 숫자가 위아래로 밀린다. 폰트를 우리가 고를 수 없으므로
+     **라인박스에 기대지 않는 배치**로 바꾼다.
+
+     .cl .n 은 원 상자를 꽉 채우는 절대배치 자식이고, 자기 안에서 다시 flex 중앙
+     정렬한다. line-height:1 로 반이격(half-leading)을 글꼴 크기에서만 나오게 하고,
+     테두리(3px)를 뺀 **콘텐츠 상자**를 채우므로 테두리 두께가 바뀌어도 중심이 안 움직인다.
+     tabular-nums 는 자릿수가 달라도 폭이 흔들리지 않게 한다(46 과 11 의 중심이 같다).
+
+     기울어진 원인 하나가 더 있었는데 CSS 밖이다 — 안드로이드 WebView 의 textZoom 이
+     시스템 글꼴 배율만큼 글자만 키웠다. 그건 RestaurantMapView 의 textZoom 100 이 막는다. */
+  .cl { position: relative; border-radius: 50%; background: ${BRAND}; color: #fff;
+        font-weight: 700;
         box-shadow: 0 2px 10px rgba(254,113,57,0.42);
         /* 반투명 흰 테로 배경 지도와 분리한다. */
         border: 3px solid rgba(255,255,255,0.9); box-sizing: border-box; }
+  .cl .n { position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+           display: flex; align-items: center; justify-content: center;
+           line-height: 1; text-align: center;
+           font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;
+           /* 폰트 메트릭 보정. 부팅 때 실제 글꼴을 재서 채운다(아래 measureDigitNudge).
+              단위가 em 이라 s1/s2/s3 의 글자 크기마다 알아서 비례한다. */
+           transform: translateY(var(--cl-nudge, 0em)); }
   .cl.s1 { width: 40px; height: 40px; font-size: 13px; }
   .cl.s2 { width: 48px; height: 48px; font-size: 14px; }
   .cl.s3 { width: 58px; height: 58px; font-size: 15px; }
+  /* 999+ 는 네 글자다. s3 의 지름으로도 빠듯해서 이때만 한 단계 줄인다. */
+  .cl.wide { font-size: 13px; }
 
   /* ── 내 위치: 점 + 반투명 헤일로. 헤일로는 정확도가 아니라 존재감 표시다. ── */
   .ul { position: relative; width: 1px; height: 1px; }
@@ -695,13 +750,115 @@ export function buildMapHtml({
 
   /* ── 클러스터 ────────────────────────────────────────── */
 
+  /**
+   * 숫자를 원의 **눈에 보이는** 중앙에 놓기 위한 보정값(em)을 실제 글꼴에서 잰다.
+   *
+   * CSS 의 세로 중앙 정렬은 글자가 아니라 **폰트 상자**(ascent+descent)를 가운데 놓는다.
+   * 그런데 숫자의 잉크는 baseline 위 cap-height 안에만 있어서, ascent 와 descent 가
+   * 비대칭인 글꼴에서는 상자를 맞춰도 숫자가 위나 아래로 밀린다. 이 앱은 WebView 가
+   * 고르는 대체 글꼴(안드로이드 Noto Sans CJK/Roboto, iOS Apple SD Gothic Neo)을 쓰므로
+   * 그 비대칭을 **미리 알 수 없다** — 상수로 박으면 다른 기기에서 다시 틀어진다.
+   * 실측(안드로이드 API36, 2026-08-05): 보정 없이 숫자가 약 0.05em 아래로 앉았다.
+   *
+   * 그래서 캔버스로 한 번 잰다. 잉크 중심(actualBoundingBox)과 폰트 상자 중심
+   * (fontBoundingBox)의 차이가 곧 밀린 양이고, 그만큼 반대로 옮기면 된다.
+   * 값은 em 이라 s1/s2/s3 의 글자 크기에 자동으로 비례한다.
+   *
+   * 메트릭을 못 구하는 오래된 WebView 에서는 0 을 써서 **예전과 같은 배치**로 남는다 —
+   * 보정이 없어서 조금 밀릴 뿐, 깨지지는 않는다.
+   */
+  /**
+   * 숫자 잉크의 세로 중심(대문자 높이의 절반)이 baseline 에서 얼마나 위인지.
+   *
+   * 폰트마다 0.70~0.73 사이이고(Roboto .711 · Noto Sans .714 · Apple SD Gothic Neo .72),
+   * 14px 기준으로 그 폭은 0.07px 다 — 재는 것보다 상수가 정확도에서 손해가 없고
+   * 훨씬 단순하다. 잉크를 직접 재려면 캔버스에 그려 픽셀을 훑어야 하는데,
+   * **캔버스와 레이아웃이 같은 폰트를 고르지 않는다**(실측: 같은 font-family 문자열로
+   * 캔버스는 Roboto, 레이아웃은 Noto Sans CJK 를 잡았다). 그래서 캔버스 메트릭으로
+   * 보정하면 방향까지 틀린다 — 이 코드가 실제로 그렇게 틀렸었다.
+   */
+  var CAP_HEIGHT_RATIO = 0.715;
+
+  function measureDigitNudge() {
+    try {
+      if (!document.body) return 0;
+      var size = 100;
+      var probe = document.createElement('div');
+      /* line-height 는 font **뒤에** 와야 한다. font 는 단축 속성이라 앞에 적어 둔
+         line-height 를 normal 로 되돌린다 — 그러면 라인박스가 1em 이 아니게 되고
+         (실측 1.4514em) 아래 boxCenter 계산이 통째로 틀어진다. 실제로 그렇게 틀렸었고,
+         결과값이 0.3em 이라 아래 이상값 방어에 걸려 보정이 조용히 0 이 됐다.
+         (이 파일은 통째로 템플릿 리터럴이라 주석에도 백틱을 쓸 수 없다.) */
+      probe.style.cssText =
+        'position:absolute;visibility:hidden;left:-9999px;top:0;' +
+        /* **실제로 그려지는 스택과 같아야 한다.** 여기에 Pretendard 를 빠뜨리면 폴백
+           폰트의 메트릭으로 보정하게 되고, 정작 Pretendard 로 그려질 때 그만큼 반대로
+           밀린다(실측: 숫자가 4px 위로 떴다). */
+        "font:700 " + size +
+          "px 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;" +
+        'line-height:1;';
+      var glyphs = document.createElement('span');
+      glyphs.textContent = '0';
+      // 높이 0 인 인라인 블록은 **아랫변이 baseline 에 붙는다.** 레이아웃이 실제로 고른
+      // 폰트의 baseline 을 알아내는 표준 수법이고, 캔버스와 달리 폰트 선택이 어긋날 수 없다.
+      var strut = document.createElement('span');
+      strut.style.cssText = 'display:inline-block;width:0;height:0;';
+      probe.appendChild(glyphs);
+      probe.appendChild(strut);
+      document.body.appendChild(probe);
+      var boxTop = probe.getBoundingClientRect().top;
+      var baseline = strut.getBoundingClientRect().bottom;
+      document.body.removeChild(probe);
+      // line-height:1 이므로 라인박스 높이 = size, 그 중앙이 지금 원의 중앙에 놓인다.
+      var boxCenter = boxTop + size / 2;
+      var inkCenter = baseline - (size * CAP_HEIGHT_RATIO) / 2;
+      var delta = (inkCenter - boxCenter) / size;
+      // 이상값 방어: 0.2em 을 넘는 보정은 잰 값이 이상한 것이다. 그때는 보정하지 않는다.
+      if (!isFinite(delta) || Math.abs(delta) > 0.2) return 0;
+      return delta;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function applyDigitNudge() {
+    document.documentElement.style.setProperty(
+      '--cl-nudge', (-measureDigitNudge()).toFixed(4) + 'em',
+    );
+  }
+
+  /*
+    **폰트를 실제로 불러온 뒤에 잰다.**
+
+    Pretendard 는 @font-face 로 싣고 font-display 가 block 이라, 그 글꼴을 쓰는 요소가
+    화면에 생기기 전까지는 **요청조차 되지 않는다.** 그래서 document.fonts.ready 만
+    기다리면 아직 아무것도 대기 중이 아니라 즉시 resolve 되고, 프로브는 폴백 폰트를
+    잰다 — 실측으로 그때 숫자가 4px 위로 떴다. fonts.load 로 직접 당겨 온 뒤 잰다.
+
+    첫 값은 지금 한 번 채워 둔다. 폰트가 못 오는 경우(오래된 WebView·데이터 URI 거부)에도
+    폴백 기준으로는 맞아 있어야 하기 때문이다.
+  */
+  applyDigitNudge();
+  if (document.fonts && document.fonts.load) {
+    document.fonts
+      .load("700 100px Pretendard")
+      .then(applyDigitNudge)
+      .catch(function () {});
+  }
+
   function clusterSize(count) { return count >= 100 ? 's3' : (count >= 10 ? 's2' : 's1'); }
 
   function clusterEl(item) {
     var el = document.createElement('div');
-    el.className = 'cl ' + clusterSize(item.count);
     // 999 를 넘으면 자릿수가 늘어 원을 깨뜨린다. 목업의 '999+' 규칙과 같게 자른다.
-    el.textContent = item.count > 999 ? '999+' : String(item.count);
+    var text = item.count > 999 ? '999+' : String(item.count);
+    el.className = 'cl ' + clusterSize(item.count) + (text.length >= 4 ? ' wide' : '');
+    /* 숫자를 익명 텍스트로 두지 않고 자식 상자에 담는다 — 세로 중앙 정렬이 폰트
+       라인박스가 아니라 상자 기준이 되어야 대체 폰트가 달라져도 안 밀린다(위 CSS). */
+    var label = document.createElement('span');
+    label.className = 'n';
+    label.textContent = text;
+    el.appendChild(label);
     el.setAttribute('role', 'button');
     el.setAttribute('aria-label', clusterLabel(item));
     return addTap(el, function () {
@@ -1048,18 +1205,28 @@ export function buildMapHtml({
     post('ready', { width: box ? box.clientWidth : -1, height: box ? box.clientHeight : -1 });
   }
 
+  /* 실패 메시지에 문서 origin 을 싣는다. 카카오는 Referer(= 이 문서의 baseUrl)가
+     콘솔에 등록된 도메인과 다르면 401 을 주는데, 스크립트 onerror 에는 상태 코드가
+     없어서 "failed to load" 만으로는 (a) 도메인 미등록 (b) 네트워크 (c) 키 문제를
+     구분할 수 없다. origin 이 로그·분석 이벤트에 실려 오면, 회색 지도 제보를 받았을 때
+     어느 문서 주소로 나간 빌드인지 — 즉 콘솔에 무엇을 등록해야 하는지 — 바로 안다
+     (실측 2026-08-05: 콘솔 등록이 바뀌어 sinsincare.kr 이 200→401 로 뒤집혔다). */
+  function sdkContext() {
+    return ' (origin=' + location.origin + ', online=' + navigator.onLine + ')';
+  }
+
   var sdk = document.createElement('script');
   sdk.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(jsKey)}&autoload=false';
-  sdk.onerror = function () { fail('kakao sdk script failed to load'); };
+  sdk.onerror = function () { fail('kakao sdk script failed to load' + sdkContext()); };
   sdk.onload = function () {
-    if (!window.kakao || !window.kakao.maps) { fail('kakao namespace missing after load'); return; }
+    if (!window.kakao || !window.kakao.maps) { fail('kakao namespace missing after load' + sdkContext()); return; }
     try { kakao.maps.load(boot); } catch (e) { fail('kakao.maps.load threw: ' + e); }
   };
   document.head.appendChild(sdk);
 
   // 스크립트 태그가 onerror 도 onload 도 안 부르는 경우가 있다(프록시가 200 에 빈 본문을
   // 돌려줄 때). 지도가 안 뜬 채 조용히 끝나지 않게 마감 시한을 둔다.
-  setTimeout(function () { if (!map) fail('kakao sdk load timed out'); }, 12000);
+  setTimeout(function () { if (!map) fail('kakao sdk load timed out' + sdkContext()); }, 12000);
 })();
 </script>
 </body>
