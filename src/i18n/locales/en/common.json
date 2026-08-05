@@ -1021,12 +1021,29 @@
     }
   },
   "stats": {
+      "glucose": {
+        "title": "Blood sugar trend",
+        "loading": "Loading your blood sugar records.",
+        "empty": "No blood sugar logged this week. Log one from Home and the trend appears here.",
+        "average": "Average",
+        "inTarget": "In range",
+        "recordedDays": "Days logged",
+        "daysValue": "{{count}}",
+        "range": "Low {{min}} · High {{max}} mg/dL this week",
+        "worstCell": "{{cell}} was outside the range most often · {{count}}x",
+        "timingShort": {
+          "FASTING": "Fasting",
+          "BEFORE_MEAL": " pre",
+          "AFTER_MEAL": " post"
+        }
+      },
     "title": "Trends",
     "tabs": {
       "nutrients": "Nutrients",
       "mealGuide": "Meal guide",
       "mealLog": "Meal log",
-      "body": "Weight & swelling"
+      "body": "Weight & swelling",
+      "glucose": "Blood sugar"
     },
     "previousWeek": "Previous week",
     "nextWeek": "Next week",
@@ -1292,6 +1309,7 @@
         "step": "Steps of 1",
         "timing": "When you checked",
         "mealTiming": "Around a meal",
+        "mealSlot": "Meal",
         "elapsed": "How long after eating?",
         "elapsedOption": {
           "30M": "30 min",

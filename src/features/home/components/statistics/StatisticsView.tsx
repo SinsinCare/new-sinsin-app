@@ -19,6 +19,9 @@ import { DietaryRecord } from "./DietaryRecord"
 import { WeekCalendar } from "./WeekCalendar"
 import { MealType, StatisticsTab } from "../../types"
 import { WeightEdemaResult } from "./WeightEdemaResult"
+import { GlucoseTrendSection } from "./GlucoseTrendSection"
+import { useGlucoseWeek } from "../../hooks/useGlucoseWeek"
+import { toDateStr } from "../../utils/dateUtils"
 import { StatisticsTabBar } from "./StatisticsTabBar"
 import { getWeekLabel } from "../../utils/getWeekDays"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
@@ -31,7 +34,13 @@ import { MonthCalendarSheet } from "./MonthCalendarSheet"
 import { isSkippedDiet } from "../../utils/mealRecordUtils"
 import { useTranslation } from "react-i18next"
 
-const TAB_ORDER: StatisticsTab[] = ["intake", "guide", "record", "weight"]
+const TAB_ORDER: StatisticsTab[] = [
+  "intake",
+  "guide",
+  "record",
+  "weight",
+  "glucose",
+]
 
 const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -67,6 +76,9 @@ export function StatisticsView({
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
   const isProgrammaticScroll = useRef(false)
   const { data, isLoading, refetch } = useDateAnalysis(selectedDate)
+  // 혈당 추이는 선택한 날로 끝나는 7일 창을 본다. 통계 탭이 떠 있을 때만 부른다.
+  const selectedDateStr = toDateStr(selectedDate)
+  const glucoseWeek = useGlucoseWeek(selectedDateStr, isActive)
   const { data: recordedDates = [] } = useDiaryExistence(selectedDate)
   const { height: windowHeight } = useWindowDimensions()
   const {
@@ -343,6 +355,18 @@ export function StatisticsView({
               }}
             >
               <WeightEdemaResult bodyRecords={data?.result.bodyRecords} />
+            </View>
+
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.glucose = e.nativeEvent.layout.y
+              }}
+            >
+              <GlucoseTrendSection
+                records={glucoseWeek.data}
+                selectedDate={selectedDateStr}
+                isLoading={glucoseWeek.isLoading}
+              />
             </View>
           </>
         )}

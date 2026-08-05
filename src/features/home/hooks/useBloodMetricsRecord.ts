@@ -36,6 +36,9 @@ export function useBloodMetricsRecord() {
     try {
       await bloodMetricsService.updateBloodGlucose(body)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", body.date] })
+      // 통계의 7일 추이도 같은 사실을 본다. 여기서 안 털면 방금 적은 수치가
+      // 홈에는 뜨는데 통계에는 없는 상태로 최대 1분(staleTime) 갈린다.
+      queryClient.invalidateQueries({ queryKey: ["bloodGlucoseRecords"] })
       trackAnalyticsEvent("health_entry_save_succeeded", {})
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {})

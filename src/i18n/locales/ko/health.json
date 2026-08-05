@@ -262,6 +262,9 @@
     "loadingDescription": "확인이 끝날 때까지 잠시 기다려 주세요.",
     "timeoutTitle": "인증 시간이 지났어요",
     "failedTitle": "인증을 확인하지 못했어요",
+    "noResultsTitle": "등록된 건강검진 내역이 없어요",
+    "noResultsDescription": "본인인증은 정상적으로 끝났어요. 보험공단에 등록된 검진 기록이 아직 없습니다. 검진을 받으신 뒤 다시 불러와 주세요.",
+    "noResultsCta": "확인",
     "retryVerification": "본인인증 다시 하기"
   },
   "checkup": {

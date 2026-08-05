@@ -2,6 +2,7 @@ import type { DateAnalysisDiet } from "@/src/types"
 import { isSkippedDiet } from "./mealRecordUtils"
 import type {
   GlucoseElapsed,
+  GlucoseSlot,
   GlucoseTiming,
 } from "../data/bloodMetricsConstants"
 import type { MealType } from "../types"
@@ -14,10 +15,27 @@ const FASTING_HOUR_END = 11
 export interface GlucoseContextInference {
   timing: GlucoseTiming
   elapsed: GlucoseElapsed | null
+  /**
+   * 저장할 끼니 칸. `mealType` 을 저장 축의 값으로 옮긴 것이다 —
+   * 화면이 이 변환을 다시 하지 않게 여기서 한 번만 한다(간식은 칸이 없어 `""`).
+   */
+  slot: GlucoseSlot
   /** 추론의 근거 끼니. 라벨은 화면이 `t("meal.<type>")` 로 그린다. */
   mealType: MealType | null
   /** 근거 끼니를 기록한 시각("09:12"). 없으면 시간 없는 추론(공복)이다. */
   mealTime: string | null
+}
+
+/**
+ * 끼니 종류 → 혈당 격자의 칸. **간식은 칸이 없다** — 종이 혈당 일지에 간식 줄이 없고,
+ * 서버 유니크도 세 끼니만 받는다. 간식 뒤 측정은 끼니를 모르는 식후로 남긴다.
+ */
+function slotForMeal(mealType: MealType): GlucoseSlot {
+  return mealType === "BREAKFAST" ||
+    mealType === "LUNCH" ||
+    mealType === "DINNER"
+    ? mealType
+    : ""
 }
 
 /**
@@ -60,6 +78,7 @@ export function inferGlucoseContext({
       return {
         timing: "FASTING",
         elapsed: null,
+        slot: "",
         mealType: null,
         mealTime: null,
       }
@@ -83,6 +102,7 @@ export function inferGlucoseContext({
   return {
     timing: "AFTER_MEAL",
     elapsed,
+    slot: slotForMeal(latest.diet.mealType),
     mealType: latest.diet.mealType,
     mealTime: `${hours}:${minutes}`,
   }

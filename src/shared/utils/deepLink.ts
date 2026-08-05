@@ -71,3 +71,14 @@ export function recipeDeepLink(recipeId: number | string): string {
 export function communityPostDeepLink(postId: number | string): string {
   return buildDeepLink(`/post/${postId}`)
 }
+
+/**
+ * **어느 기기에서든 알맞은 스토어로 보내는 한 줄.** 공유 문구에 싣는 설치 링크다.
+ *
+ * 종전에는 두 화면(`MyPageScreen`·게시글 상세)이 App Store URL 을 각각 하드코딩했다.
+ * 그래서 안드로이드 사용자가 받은 링크도 앱스토어를 열었다 — 설치할 수 없는 곳이다.
+ * 플랫폼을 앱이 분기해서 고르는 방법도 있지만, **보내는 사람의 기기와 받는 사람의
+ * 기기는 다르다.** 공유는 그 둘이 갈리는 자리라 앱이 고를 수 있는 정답이 없다.
+ * 그래서 판정을 링크 자체에 맡긴다 — 이 URL 이 열린 기기를 보고 스토어를 고른다.
+ */
+export const STORE_REDIRECT_URL = "https://sinsincare.kr/store-redirect"

@@ -224,6 +224,11 @@ export interface DateAnalysisBloodPressureRecord {
 
 export interface DateAnalysisBloodGlucoseRecord {
   value: number
+  /**
+   * 끼니 축(서버 마이그레이션 081). `""` 는 공복이거나 "모름"이다 —
+   * 축이 생기기 전 기록과 구버전 앱이 남긴 기록. 구서버 응답에는 이 키가 아예 없다.
+   */
+  slot?: "BREAKFAST" | "LUNCH" | "DINNER" | ""
   timing: "FASTING" | "BEFORE_MEAL" | "AFTER_MEAL"
   elapsed: "30M" | "1H" | "2H" | null
   recordDate: string

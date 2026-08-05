@@ -13,9 +13,12 @@ import {
 } from "./recordSheetControls"
 import {
   GLUCOSE_ELAPSED_OPTIONS,
+  GLUCOSE_SLOT_OPTIONS,
   type GlucoseElapsed,
+  type GlucoseSlot,
   type GlucoseTiming,
 } from "../../../data/bloodMetricsConstants"
+import { findGlucoseCell, slotForSubmit } from "../../../utils/glucoseGrid"
 import {
   GLUCOSE_DANGER_FROM,
   GLUCOSE_RANGE,
@@ -47,6 +50,7 @@ interface BloodGlucoseSheetProps {
     value: number
     timing: GlucoseTiming
     elapsed: GlucoseElapsed | null
+    slot: Exclude<GlucoseSlot, ""> | null
   }) => void
 }
 
@@ -57,8 +61,17 @@ interface BloodGlucoseSheetProps {
  * 화면 이동 없이 닿는 게 기록의 보상이다. 시점은 앱이 먼저 안다: 오늘 끼니
  * 기록에서 식후·경과를 추론해 기본값으로 깔고, 틀렸을 때만 고치게 한다.
  *
- * 저장은 서버가 받는 값(식전·식후·공복 + 식후 경과)만 묻는다. 화면에만 있는
- * 선택지를 만들면 사용자가 고른 값이 어디에도 남지 않는다.
+ * ## 끼니 줄은 식전/식후일 때만 선다
+ *
+ * 이 시트에는 한동안 아침/점심/저녁이 없었다. 넣을 수 없어서였다 — 서버 유니크가
+ * `(user, date, timing)` 이라 고른 끼니를 실을 칸이 표에 없었고, 화면에만 있는 선택지는
+ * 사용자가 고른 값이 어디에도 남지 않는다. 마이그레이션 081 이 그 칸을 만들었고
+ * (`utils/glucoseGrid.ts` 머리말), QA 2026-08-05 "기존에 있던 아침/점심/저녁 버튼이
+ * 없습니다" 가 그제야 고칠 수 있는 결함이 됐다.
+ *
+ * 다만 줄을 **항상** 세우지는 않는다. 공복은 끼니에 매이지 않으므로(서버도 400 으로
+ * 막는다) 그때는 줄이 없다. 경과(30분/1시간/2시간)가 식후에만 서는 것과 같은 규칙이다 —
+ * 고를 수 없는 것을 회색으로 띄워 두지 않는다.
  */
 export function BloodGlucoseSheet({
   visible,
@@ -71,6 +84,7 @@ export function BloodGlucoseSheet({
   const { t } = useTranslation("common")
   const surface = useSurface()
   const [timing, setTiming] = useState<GlucoseTiming>("FASTING")
+  const [slot, setSlot] = useState<GlucoseSlot>("")
   const [elapsed, setElapsed] = useState<GlucoseElapsed>("2H")
   const [value, setValue] = useState<number | null>(null)
   /** 치는 도중의 값 — 배지·바·CTA 가 키 입력마다 응답한다(onPreview 머리말). */
@@ -79,18 +93,20 @@ export function BloodGlucoseSheet({
   const [touched, setTouched] = useState(false)
 
   /**
-   * 측정 시점을 바꿨다. **그 시점에 이미 기록이 있을 때만** 값을 갈아끼운다.
+   * 격자의 칸(끼니·시점)을 바꿨다. **그 칸에 이미 기록이 있을 때만** 값을 갈아끼운다.
    *
    * 종전에는 기록이 없으면 `null` 로 지웠다. 그래서 공복으로 숫자를 쳐 넣고 식후로
    * 바꾸면 방금 친 값이 사라지고 CTA 가 꺼졌다 — 사용자는 같은 숫자를 다시 쳐야
    * 했다(2026-08-04 QA, 안드로이드 에뮬레이터). 칩을 누르는 것은 "이 수치는 사실
    * 식후였다" 는 **라벨 정정**이지 입력 취소가 아니다.
    *
-   * 반대로 그 시점에 저장된 수치가 있으면 그것을 보여 주는 게 맞다 — 다른 시점의
+   * 반대로 그 칸에 저장된 수치가 있으면 그것을 보여 주는 게 맞다 — 다른 칸의
    * 기록은 **다른 측정**이고, 그 자리에 남의 숫자를 얹어 두면 덮어쓰기를 유도한다.
+   * 칸은 끼니까지 봐야 정해진다: 시점만 맞춰 찾으면 아침 식후 값이 저녁 식후 자리에
+   * 떠서, 사용자가 그대로 저장하는 순간 아침 수치가 저녁 수치로 복제된다.
    */
-  const hydrate = (nextTiming: GlucoseTiming) => {
-    const record = records.find((r) => r.timing === nextTiming) ?? null
+  const hydrate = (cell: { slot: GlucoseSlot; timing: GlucoseTiming }) => {
+    const record = findGlucoseCell(records, cell)
     if (record) {
       setValue(record.value)
       setPreview(null)
@@ -102,10 +118,18 @@ export function BloodGlucoseSheet({
 
   useEffect(() => {
     if (!visible) return
-    const initial = inference?.timing ?? records[0]?.timing ?? "FASTING"
-    setTiming(initial)
+    const initialTiming = inference?.timing ?? records[0]?.timing ?? "FASTING"
+    const initialSlot: GlucoseSlot =
+      initialTiming === "FASTING"
+        ? ""
+        : (inference?.slot ?? records[0]?.slot ?? "")
+    setTiming(initialTiming)
+    setSlot(initialSlot)
     setTouched(false)
-    const record = records.find((r) => r.timing === initial) ?? null
+    const record = findGlucoseCell(records, {
+      slot: initialSlot,
+      timing: initialTiming,
+    })
     setValue(record ? record.value : null)
     setPreview(null)
     setElapsed(
@@ -161,6 +185,7 @@ export function BloodGlucoseSheet({
           value: liveValue,
           timing,
           elapsed: timing === "AFTER_MEAL" ? elapsed : null,
+          slot: slotForSubmit({ slot, timing }),
         })
       }}
     >
@@ -233,13 +258,42 @@ export function BloodGlucoseSheet({
               onCard
               onPress={() => {
                 setTouched(true)
+                // 공복은 끼니에 매이지 않는다. 식전/식후로 돌아왔을 때 직전에 고른
+                // 끼니가 살아 있도록, 공복으로 갈 때도 `slot` 자체는 지우지 않는다 —
+                // 저장에 실리는 값은 `slotForSubmit` 이 시점을 보고 정한다.
+                const nextSlot: GlucoseSlot = option === "FASTING" ? "" : slot
                 setTiming(option)
-                hydrate(option)
+                setSlot(nextSlot)
+                hydrate({ slot: nextSlot, timing: option })
               }}
               style={styles.grow}
             />
           ))}
         </SheetChipRow>
+
+        {timing === "FASTING" ? null : (
+          <>
+            <SheetFieldLabel>
+              {t("home.sheet.bloodGlucose.mealSlot")}
+            </SheetFieldLabel>
+            <SheetChipRow grow>
+              {GLUCOSE_SLOT_OPTIONS.map((option) => (
+                <SheetChip
+                  key={option}
+                  label={t(`meal.${option}`)}
+                  selected={slot === option}
+                  onCard
+                  onPress={() => {
+                    setTouched(true)
+                    setSlot(option)
+                    hydrate({ slot: option, timing })
+                  }}
+                  style={styles.grow}
+                />
+              ))}
+            </SheetChipRow>
+          </>
+        )}
 
         {timing === "AFTER_MEAL" ? (
           <>

@@ -2,7 +2,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -60,14 +59,17 @@ import { useTranslation } from "react-i18next"
 import { showSuccessToast } from "@/src/lib/toast"
 
 import { showActionSheet, showConfirm } from "@/src/lib/dialog"
-import { communityPostDeepLink } from "@/src/shared/utils/deepLink"
+import {
+  communityPostDeepLink,
+  STORE_REDIRECT_URL,
+} from "@/src/shared/utils/deepLink"
 import { shareContent } from "@/src/shared/utils/share"
 
 const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 
 const WITHDRAWN_AUTHOR_NAME = "탈퇴한 사용자"
-const APP_DOWNLOAD_URL =
-  "https://apps.apple.com/us/app/%EC%8B%A0%EC%8B%A0%EB%8B%B9%EB%B6%80/id6758880186"
+/** 설치 링크는 한 곳에서만 짓는다(`deepLink.ts` 머리말). */
+const APP_DOWNLOAD_URL = STORE_REDIRECT_URL
 
 function isWithdrawnAuthor(author: {
   authorId?: number | null

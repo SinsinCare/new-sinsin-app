@@ -10,6 +10,7 @@ const TABS = [
   { key: "guide", labelKey: "stats.tabs.mealGuide" },
   { key: "record", labelKey: "stats.tabs.mealLog" },
   { key: "weight", labelKey: "stats.tabs.body" },
+  { key: "glucose", labelKey: "stats.tabs.glucose" },
 ] as const satisfies readonly {
   key: StatisticsTab
   labelKey:
@@ -17,6 +18,7 @@ const TABS = [
     | "stats.tabs.mealGuide"
     | "stats.tabs.mealLog"
     | "stats.tabs.body"
+    | "stats.tabs.glucose"
 }[]
 
 interface StatisticsTabBarProps {

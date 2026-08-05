@@ -74,6 +74,7 @@ import { useFoodAnalysisRecoveryPolling } from "../../hooks/useFoodAnalysisRecov
 import { foodAnalysisRecovery } from "../../services/foodAnalysisRecovery"
 
 import { showErrorToast } from "@/src/lib/toast"
+import { orderGlucoseByDay } from "../../utils/glucoseGrid"
 
 const ANALYTICS_MEAL_SLOT: Record<
   MealType,
@@ -743,6 +744,8 @@ export function RecordView({
     value: number
     timing: (typeof bloodGlucose)[number]["timing"]
     elapsed: "30M" | "1H" | "2H" | null
+    // 끼니. 시트가 `slotForSubmit` 으로 이미 정했다 — 공복이면 null 이다.
+    slot: "BREAKFAST" | "LUNCH" | "DINNER" | null
   }) => {
     await updateBloodGlucose({ ...body, date: selectedDateStr })
     setOpenSheet(null)
@@ -778,7 +781,21 @@ export function RecordView({
         ? t("home.meal.remaining", { meal: mainMealLabels[nextMainMeal] })
         : t("home.meal.complete")
 
-  const latestGlucose = bloodGlucose.at(-1) ?? null
+  /*
+    타일이 말하는 "최근"은 **하루의 차례에서 가장 뒤** 다(공복 → 아침 전/후 → … → 저녁 후).
+    입력 순(`at(-1)`)으로 고르면, 저녁 식후를 적은 뒤 빠뜨린 공복을 채워 넣는 순간
+    타일이 아침의 숫자로 되돌아간다 — 하루가 거꾸로 가는 것처럼 보인다.
+  */
+  const latestGlucose = orderGlucoseByDay(bloodGlucose).at(-1) ?? null
+  /** "아침 식후" — 끼니를 모르는 옛 기록은 시점만 말한다. */
+  const latestGlucoseLabel = latestGlucose
+    ? [
+        latestGlucose.slot ? t(`meal.${latestGlucose.slot}`) : null,
+        t(`home.bloodGlucose.timing.${latestGlucose.timing}`),
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : null
   const todayWeightKg = bodyToday?.weightKg ?? null
   // 서버에 남아 있는 구 표기(SOME)를 화면이 아는 단계로 맞춘다 — 그대로 두면
   // 번역 키가 그대로 렌더된다.
@@ -872,7 +889,7 @@ export function RecordView({
         glucoseNow.caption ??
         (latestGlucose
           ? t("home.bloodGlucose.latest", {
-              timing: t(`home.bloodGlucose.timing.${latestGlucose.timing}`),
+              timing: latestGlucoseLabel,
               extra:
                 bloodGlucose.length > 1
                   ? t("home.bloodGlucose.extra", {

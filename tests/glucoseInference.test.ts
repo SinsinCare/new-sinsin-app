@@ -34,6 +34,8 @@ describe("glucose context inference", () => {
     expect(result).toEqual({
       timing: "AFTER_MEAL",
       elapsed: "2H",
+      // 추론한 끼니는 저장 축의 값으로도 실린다 — 화면이 이 변환을 다시 하지 않는다.
+      slot: "BREAKFAST",
       mealType: "BREAKFAST",
       mealTime: localTime(twoHoursAgo),
     })
@@ -79,11 +81,24 @@ describe("glucose context inference", () => {
     expect(result).toBeNull()
   })
 
+  it("간식 뒤 측정은 끼니 칸이 없다 — 아침·점심·저녁에 억지로 넣지 않는다", () => {
+    // 종이 혈당 일지에 간식 줄이 없고, 서버 유니크도 세 끼니만 받는다.
+    const oneHourAgo = new Date(2026, 7, 3, 15, 0)
+    const result = inferGlucoseContext({
+      diets: [dietAt(oneHourAgo, "SNACKS")],
+      now: new Date(2026, 7, 3, 16, 0),
+    })
+    expect(result?.mealType).toBe("SNACKS")
+    expect(result?.slot).toBe("")
+  })
+
   it("infers fasting on a meal-less morning, but not in the afternoon", () => {
     const morning = new Date(2026, 7, 3, 8, 30)
     expect(inferGlucoseContext({ diets: [], now: morning })).toEqual({
       timing: "FASTING",
       elapsed: null,
+      // 공복은 끼니에 매이지 않는다(서버도 그 조합을 400 으로 막는다).
+      slot: "",
       mealType: null,
       mealTime: null,
     })

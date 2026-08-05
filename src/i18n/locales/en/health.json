@@ -262,6 +262,9 @@
     "loadingDescription": "Keep this screen open while we confirm the results.",
     "timeoutTitle": "Identity check expired",
     "failedTitle": "We couldn’t confirm your identity",
+    "noResultsTitle": "No health screening records found",
+    "noResultsDescription": "Identity verification succeeded. NHIS has no screening records for you yet. Come back after your next screening.",
+    "noResultsCta": "OK",
     "retryVerification": "Restart identity check"
   },
   "checkup": {

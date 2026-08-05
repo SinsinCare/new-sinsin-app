@@ -1013,12 +1013,29 @@
     }
   },
   "stats": {
+      "glucose": {
+        "title": "혈당 추이",
+        "loading": "혈당 기록을 불러오는 중이에요.",
+        "empty": "이 주에 기록한 혈당이 없어요. 홈에서 기록하면 여기에 추이가 그려져요.",
+        "average": "평균",
+        "inTarget": "목표 안",
+        "recordedDays": "기록한 날",
+        "daysValue": "{{count}}일",
+        "range": "이 주 최저 {{min}} · 최고 {{max}} mg/dL",
+        "worstCell": "{{cell}} 이(가) 목표를 가장 자주 벗어났어요 · {{count}}회",
+        "timingShort": {
+          "FASTING": "공복",
+          "BEFORE_MEAL": "전",
+          "AFTER_MEAL": "후"
+        }
+      },
     "title": "통계",
     "tabs": {
       "nutrients": "영양소",
       "mealGuide": "식사 조절",
       "mealLog": "식사 기록",
-      "body": "체중·붓기"
+      "body": "체중·붓기",
+      "glucose": "혈당"
     },
     "previousWeek": "이전 주",
     "nextWeek": "다음 주",
@@ -1280,6 +1297,7 @@
         "step": "1씩 조절해요",
         "timing": "측정 시점",
         "mealTiming": "식사 기준",
+        "mealSlot": "끼니",
         "elapsed": "식사 후 얼마나 지났나요",
         "elapsedOption": {
           "30M": "30분",

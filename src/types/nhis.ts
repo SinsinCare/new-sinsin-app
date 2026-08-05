@@ -24,9 +24,26 @@ export interface HealthCheckRequestRs {
   message?: string
 }
 
+/**
+ * 확인 흐름이 끝날 수 있는 네 갈래. 서버 계약(`healthcheck/service.ts::confirmOutcome`)과
+ * 같은 집합이다 — `string` 으로 두면 화면이 `else` 로 뭉개고, 실제로 "기록 없음" 이
+ * "인증 실패" 로 보였다(2026-08-05).
+ */
+export type HealthCheckConfirmStatus =
+  | "SUCCESS"
+  | "NO_RESULTS"
+  | "FAILED"
+  | "TIMEOUT"
+
 export interface HealthCheckConfirmRs {
   requestId: string
-  status: string
+  status: HealthCheckConfirmStatus
+  /**
+   * **다시 해 볼 만한가.** 화면이 스스로 판단하지 않는다 — `NO_RESULTS` 는 인증이
+   * 성공했고 기록이 없는 것이라 재시도해도 같다. 서버가 아는 것을 서버가 말한다.
+   */
+  retryable?: boolean
+  /** 사용자에게 보일 한 줄. 화면 고정 문구보다 이것이 언제나 더 구체적이다. */
   message?: string
   resultId?: number
 }
