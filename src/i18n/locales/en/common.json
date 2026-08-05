@@ -751,7 +751,9 @@
       "excludedForMissingData": "{{count}} places without nutrition details were left out.",
       "markerAccessibility": "{{name}}, safety {{safety}}",
       "clusterAccessibility": "{{count}} restaurants here, tap to zoom in",
-      "sheetHandleAccessibility": "Resize restaurant list"
+      "sheetHandleAccessibility": "Resize restaurant list",
+      "outsideCoverageTitle": "You're outside the service area",
+      "outsideCoverageBody": "The map covers restaurants in South Korea only."
     },
     "empty": {
       "noDataHereTitle": "No restaurants here yet",

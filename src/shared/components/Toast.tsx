@@ -3,8 +3,10 @@ import RNToast, {
   type ToastConfig,
   type ToastConfigParams,
 } from "react-native-toast-message"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import type { ToastProps } from "@/src/lib/toast"
+import { aboveTabBarSpace } from "@/src/shared/utils/bottomSafeArea"
 
 /**
  * 토스식 토스트 — 어두운 필 하나가 하단에 뜬다. 상단의 옅은 색 배너는
@@ -122,11 +124,19 @@ const toastConfig: ToastConfig = {
 }
 
 export function Toast() {
+  const insets = useSafeAreaInsets()
   return (
     <RNToast
       config={toastConfig}
       position="bottom"
-      bottomOffset={48}
+      /*
+        하단 오프셋은 `bottomSafeArea` 의 탭바-위 규칙 하나에서 온다. 예전 상수 48 은
+        홈 인디케이터(34pt)를 뺀 나머지가 14pt 뿐이라 **탭바(49pt)를 정확히 덮었다** —
+        토스트가 내비게이션을 가리면 통보가 방해가 된다(실측 2026-08-05, 지도 화면).
+        탭바가 없는 화면에서는 그만큼 위에 뜨는데, 토스트는 어차피 화면 아래 모서리가
+        아니라 살짝 떠 있는 것이 정상 위치라 한 가지 규칙으로 통일한다.
+      */
+      bottomOffset={aboveTabBarSpace(insets.bottom)}
       visibilityTime={3500}
     />
   )

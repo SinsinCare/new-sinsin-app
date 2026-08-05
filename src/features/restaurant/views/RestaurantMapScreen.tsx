@@ -96,6 +96,7 @@ import {
 } from "@/src/design-system-v2"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { logger } from "@/src/lib/logger"
+import { showInfoToast } from "@/src/lib/toast"
 
 import type {
   CuisineType,
@@ -111,6 +112,7 @@ import {
   type RestaurantMapHandle,
 } from "../map/RestaurantMapView"
 import { centerFor } from "../data/regionCatalog"
+import { isWithinKakaoCoverage } from "../utils/kakaoCoverage"
 import { isMapTouchEcho } from "../utils/pressIntent"
 import { nextClusterZoom } from "../utils/viewportAction"
 import {
@@ -535,8 +537,15 @@ export function RestaurantMapScreen({
       것이지 처음으로 돌아가는 것이 아니다.
       마지막이 내 위치다 — 권한이 이미 허용돼 있으면 조용히 옮긴다(묻지는 않는다).
     */
-    const start =
-      focus ?? pendingViewportRef.current?.center ?? myLocation.coords
+    /* 내 위치는 커버리지 안일 때만 시작점이 된다. 해외 좌표(시뮬레이터 기본 위치 포함)로
+       시작하면 사용자는 빈 베이지 타일 앞에서 시작한다 — 기본 중심(국내)이 낫다.
+       focus 와 마지막 뷰포트는 국내에서만 만들어지는 값이라 거르지 않는다. */
+    const userStart =
+      myLocation.coords &&
+      isWithinKakaoCoverage(myLocation.coords.lat, myLocation.coords.lng)
+        ? myLocation.coords
+        : null
+    const start = focus ?? pendingViewportRef.current?.center ?? userStart
     if (start) {
       mapRef.current?.moveTo(start.lat, start.lng, { animate: false })
       // 여기서 옮겼으면 아래 "늦게 온 위치" 이펙트는 할 일이 없다.
@@ -586,6 +595,9 @@ export function RestaurantMapScreen({
     if (centeredOnUserRef.current) return
     if (focus) return
     if (userMovedMapRef.current) return
+    // 커버리지 밖 좌표로는 자동 이동하지 않는다 — 기본 중심(국내)이 빈 타일보다 낫다.
+    // 배너도 띄우지 않는다: 사용자가 누른 것이 아니라 설명할 행동이 없다.
+    if (!isWithinKakaoCoverage(coords.lat, coords.lng)) return
     centeredOnUserRef.current = true
     mapRef.current?.moveTo(coords.lat, coords.lng, { animate: false })
     armedSearchRef.current = true
@@ -928,6 +940,17 @@ export function RestaurantMapScreen({
         result: coords ? "granted" : "denied",
       })
       if (!coords) return
+      /* 커버리지 밖(해외·시뮬레이터 기본 위치)이면 옮기지 않는다. 카카오는 그 좌표에서
+         오류 없이 빈 타일을 그리므로, 옮기면 "지도가 회색으로 죽었다" 가 된다(실측
+         2026-08-05). 조용히 무시하지 않고 이유를 말한다 — 버튼이 반응하지 않는 것처럼
+         보이는 것이 최악이다. 통보는 앱 규약대로 Toast 다(선택=V2Modal · 통보=Toast). */
+      if (!isWithinKakaoCoverage(coords.lat, coords.lng)) {
+        showInfoToast(
+          t("restaurant.map.outsideCoverageTitle"),
+          t("restaurant.map.outsideCoverageBody"),
+        )
+        return
+      }
       // 사용자가 직접 누른 이동이다. 진입 시 자동 이동 이펙트가 뒤늦게 또 옮기지 않게 한다.
       centeredOnUserRef.current = true
       /*
@@ -944,7 +967,7 @@ export function RestaurantMapScreen({
       armedSearchRef.current = true
       mapRef.current?.moveTo(coords.lat, coords.lng)
     })()
-  }, [myLocation])
+  }, [myLocation, t])
 
   const handleSelectCuisine = useCallback(
     (type: CuisineType | null) => {
