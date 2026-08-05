@@ -81,9 +81,18 @@ export function KidneyProfileEditScreen() {
 
   const [heightVal, setHeightVal] = useState("")
   const [weightVal, setWeightVal] = useState("")
-  // 정본 stage 키를 그대로 들고 있는다. 예전에는 number 라 3A/3B 를 표현할 수 없었고,
-  // 저장할 때 3 -> STAGE_3A 로 굳어져 3B 환자의 제한이 조용히 완화됐다.
-  const [ckdStage, setCkdStage] = useState<string | null>(null)
+  /*
+    정본 stage 키를 그대로 들고 있는다. 예전에는 number 라 3A/3B 를 표현할 수 없었고,
+    저장할 때 3 -> STAGE_3A 로 굳어져 3B 환자의 제한이 조용히 완화됐다.
+
+    **세 값이다**: 단계 키 · `null`(사용자가 `없음` 을 고름) · `undefined`(아직 모른다 —
+    프로필을 못 불러왔거나 서버 값이 아는 표기가 아니다). 예전에는 `undefined` 자리가
+    없어서 초기값이 곧 `없음` 이었고, 프로필이 도착하기 전이나 값이 낯설 때 저장을 누르면
+    `ckdStage: null` 이 나가 **서버가 CKD 를 지웠다**(hasCkd=false). 사용자에게는
+    "5기였던 게 입력 전이 됐다" 로만 보인다(QA 2026-08-05). 지우는 것은 사용자가
+    `없음` 을 직접 골랐을 때만 일어나야 한다.
+  */
+  const [ckdStage, setCkdStage] = useState<string | null | undefined>(undefined)
   const [onDialysis, setOnDialysis] = useState(false)
   const [diagnosisDate, setDiagnosisDate] = useState<{
     year: number
@@ -195,18 +204,28 @@ export function KidneyProfileEditScreen() {
     setErrors({})
     setIsSubmitting(true)
     try {
-      const ckdStageStr = onDialysis
-        ? "DIALYSIS"
-        : ckdStage != null
-          ? ckdStage
-          : null
       const diagnosisDateStr = diagnosisDate
         ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
         : null
       const heightNum = Number(heightVal.trim())
 
+      /*
+        **병기 축은 정해졌을 때만 보낸다.**
+
+        서버는 키가 없으면 "건드리지 마라", `null` 이면 "CKD 아님으로 지워라" 로 읽는다
+        (백엔드 `presentCkdStage`). `undefined`(= 아직 모른다)를 `null` 로 접어 보내면
+        불러오지 못한 화면이 저장 한 번으로 병기를 지운다 — 위 상태 주석의 그 사고다.
+        투석 토글은 병기와 직교하므로 언제나 보낸다.
+      */
+      const stageAxis =
+        onDialysis === true
+          ? { ckdStage: "DIALYSIS" }
+          : ckdStage === undefined
+            ? {}
+            : { ckdStage }
+
       await api.patch("/user/profile/kidney", {
-        ckdStage: ckdStageStr,
+        ...stageAxis,
         isDialysis: onDialysis,
         ...(diagnosisDateStr !== null
           ? { diagnosisDate: diagnosisDateStr }
