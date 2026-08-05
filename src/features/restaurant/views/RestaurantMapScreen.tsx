@@ -114,6 +114,7 @@ import {
 import { centerFor } from "../data/regionCatalog"
 import { isWithinKakaoCoverage } from "../utils/kakaoCoverage"
 import { isMapTouchEcho } from "../utils/pressIntent"
+import { selectionAfterCardPress } from "../utils/selectedFirstCard"
 import { nextClusterZoom } from "../utils/viewportAction"
 import {
   isSilentlyEmptyMap,
@@ -1010,7 +1011,10 @@ export function RestaurantMapScreen({
       /* 지도가 방금 처리한 터치가 카드 press 로 배달된 것이면 버린다.
        **마커 탭이 상세를 밀어 올리는 일은 여기서 끝난다**(`lastMapTouchRef` 주석). */
       if (isMapTouchEcho(Date.now(), lastMapTouchRef.current)) return
-      setSelection({ id: card.restaurantId, origin: "CARD" })
+      /* 같은 곳(=마커로 골라 맨 위에 고정된 카드)을 눌러 상세로 들어갈 때는 출처를
+         강등하지 않는다 — 강등하면 상세 뒤에서 고정이 풀려, 돌아온 화면이 "마커는
+         그대로인데 첫 카드가 사라진" 상태가 된다(selectionAfterCardPress 주석, 재발 버그). */
+      setSelection((prev) => selectionAfterCardPress(prev, card.restaurantId))
       /* 카드 탭도 **모드 경계를 넘는다.** 진입 배율(4)은 클러스터 구간이고 FOCUSED(2)는
          마커 구간이라, 예약을 걸지 않으면 상세를 보고 돌아왔을 때 지도가 확대된 채
          이전 배율의 개수 배지를 그리고 있다. `handleClusterPress` 와 같은 부류 —

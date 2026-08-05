@@ -23,6 +23,33 @@
 
 import type { LatLng, RestaurantCardDto, RestaurantDetailDto } from "../types"
 
+/** 지도 화면의 선택 상태. 출처가 재정렬 여부를 정한다(화면 state 와 같은 모양). */
+export interface MapSelection {
+  id: number
+  origin: "MARKER" | "CARD"
+}
+
+/**
+ * 카드 탭이 만드는 **다음 선택**. 같은 곳이면 이전 선택을 그대로 돌려준다.
+ *
+ * 카드 탭이 무조건 `origin: "CARD"` 를 쓰면, 마커로 골라 **맨 위에 고정된 카드**를
+ * 눌러 상세로 들어가는 순간 출처가 강등되고 고정 조건(`origin === "MARKER"`)이 죽는다.
+ * 상세 화면 뒤에서 목록이 원래 순서로 돌아가므로, 돌아온 사용자는 "마커는 그대로인데
+ * 첫 카드가 사라진" 화면을 본다 — 실제로 그렇게 보고됐다(2026-08-05, 재발).
+ *
+ * 같은 곳을 다시 누르는 탭은 화면을 바꾸지 않는 것이 맞다: 이미 0번인 카드는 origin 이
+ * MARKER 로 남아도 아무것도 튀지 않고, CARD 였다면 어차피 재정렬이 없다. 다른 곳을
+ * 눌렀을 때만 CARD 출처의 새 선택을 만든다 — 그때 재정렬하면 방금 누른 카드가 손가락
+ * 밑에서 위로 튀기 때문이다(화면 `selection` 주석).
+ */
+export function selectionAfterCardPress(
+  prev: MapSelection | null,
+  cardId: number,
+): MapSelection {
+  if (prev !== null && prev.id === cardId) return prev
+  return { id: cardId, origin: "CARD" }
+}
+
 /**
  * 고른 곳을 맨 앞으로 올린 목록. **원본 배열을 변형하지 않는다.**
  *

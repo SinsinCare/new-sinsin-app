@@ -17,6 +17,7 @@
 import {
   detailToCard,
   orderSelectedFirst,
+  selectionAfterCardPress,
 } from "../src/features/restaurant/utils/selectedFirstCard"
 import { cardSafetyBadges } from "../src/features/restaurant/utils/cardSafetyBadge"
 import type {
@@ -81,6 +82,31 @@ describe("orderSelectedFirst — 고른 곳을 0번으로", () => {
     const result = orderSelectedFirst(nextPage, 99, card(99))
     expect(ids(result)).toEqual([99, 1, 2, 3, 4, 100])
     expect(new Set(ids(result)).size).toBe(result.length)
+  })
+})
+
+describe("selectionAfterCardPress — 카드 탭이 만드는 다음 선택", () => {
+  it("다른 곳을 누르면 CARD 출처의 새 선택이다 (재정렬로 손가락 밑에서 튀지 않게)", () => {
+    expect(selectionAfterCardPress({ id: 1, origin: "MARKER" }, 2)).toEqual({
+      id: 2,
+      origin: "CARD",
+    })
+    expect(selectionAfterCardPress(null, 2)).toEqual({
+      id: 2,
+      origin: "CARD",
+    })
+  })
+
+  it("재발 방지: 마커로 골라 고정된 카드를 눌러도 MARKER 출처가 유지된다", () => {
+    // 강등되면 상세 화면 뒤에서 고정 조건(origin === MARKER)이 죽고,
+    // 돌아온 화면이 "마커는 그대로인데 첫 카드는 사라진" 상태가 된다(2026-08-05 보고).
+    const prev = { id: 7, origin: "MARKER" as const }
+    expect(selectionAfterCardPress(prev, 7)).toBe(prev)
+  })
+
+  it("같은 곳의 CARD 선택은 그대로다 — 상태가 헛되이 바뀌지 않는다", () => {
+    const prev = { id: 7, origin: "CARD" as const }
+    expect(selectionAfterCardPress(prev, 7)).toBe(prev)
   })
 })
 
