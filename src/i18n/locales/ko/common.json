@@ -1013,22 +1013,22 @@
     }
   },
   "stats": {
-      "glucose": {
-        "title": "혈당 추이",
-        "loading": "혈당 기록을 불러오는 중이에요.",
-        "empty": "이 주에 기록한 혈당이 없어요. 홈에서 기록하면 여기에 추이가 그려져요.",
-        "average": "평균",
-        "inTarget": "목표 안",
-        "recordedDays": "기록한 날",
-        "daysValue": "{{count}}일",
-        "range": "이 주 최저 {{min}} · 최고 {{max}} mg/dL",
-        "worstCell": "{{cell}} 이(가) 목표를 가장 자주 벗어났어요 · {{count}}회",
-        "timingShort": {
-          "FASTING": "공복",
-          "BEFORE_MEAL": "전",
-          "AFTER_MEAL": "후"
-        }
-      },
+    "glucose": {
+      "title": "혈당 추이",
+      "loading": "혈당 기록을 불러오는 중이에요.",
+      "empty": "이 주에 기록한 혈당이 없어요. 홈에서 기록하면 여기에 추이가 그려져요.",
+      "average": "평균",
+      "inTarget": "목표 안",
+      "recordedDays": "기록한 날",
+      "daysValue": "{{count}}일",
+      "range": "이 주 최저 {{min}} · 최고 {{max}} mg/dL",
+      "worstCell": "{{cell}} 이(가) 목표를 가장 자주 벗어났어요 · {{count}}회",
+      "timingShort": {
+        "FASTING": "공복",
+        "BEFORE_MEAL": "전",
+        "AFTER_MEAL": "후"
+      }
+    },
     "title": "통계",
     "tabs": {
       "nutrients": "영양소",
@@ -1059,6 +1059,7 @@
     "periodReport": "{{period}}간 리포트",
     "retryAccessibility": "통계 다시 불러오기",
     "lowDataTitle": "아직 판단할 기록이 부족해요",
+    "lowDataTitleSome": "기록한 만큼만 보여드려요",
     "mealsRecorded": "{{recorded}}/{{expected}}끼 · {{rate}}%",
     "lowDataBody": "지금은 기록이 적어 흐름만 참고해 주세요. 끼니를 더 기록하면 더 정확히 볼 수 있어요.",
     "calendar": {

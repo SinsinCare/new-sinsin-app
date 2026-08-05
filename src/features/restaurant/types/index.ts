@@ -396,6 +396,16 @@ export interface AiSearchFilters {
   sort: SortOption | null
   openNow: boolean | null
   maxPrice: number | null
+  /**
+   * 서버가 뽑아낸 **음식 이름**(삼계탕 등). 그대로 텍스트 검색어(`q`)로 쓴다.
+   *
+   * 음식 종류 축만 쓰던 시절에는 `삼계탕` 이 `한식 전체`가 되어 사용자가 찾은 음식이
+   * 아닌 목록이 나왔다(QA 2026-08-05). 서버의 `q` 는 상호·지점·주소와 **메뉴명**을
+   * 함께 보므로 이 값이 그 음식을 실제로 파는 곳으로 좁힌다.
+   *
+   * 구버전 서버는 이 필드를 보내지 않는다 — 그때는 `undefined` 이고 검색어가 비워진다.
+   */
+  q?: string | null
 }
 
 /**

@@ -479,7 +479,9 @@
       "reviews": "{{count}} reviews",
       "reviews_one": "{{count}} review",
       "reviews_other": "{{count}} reviews"
-    }
+    },
+    "shareMessage": "[Sinsin recipe] {{name}}\n\n{{summary}}\n\nIngredients and steps are in the Sinsin Care app\n{{url}}",
+    "shareMessageNoSummary": "[Sinsin recipe] {{name}}\n\nIngredients and steps are in the Sinsin Care app\n{{url}}"
   },
   "responsibility": "I’ve checked that this post doesn’t violate anyone else’s rights.",
   "recipeWrite": {

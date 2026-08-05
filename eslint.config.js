@@ -36,6 +36,9 @@ module.exports = defineConfig([
       "web-build/",
       "ios/",
       "android/",
+      // 폰트 base64 가 든 생성물. 손으로 고치지 않으므로 포맷 규칙을 물릴 이유가 없다
+      // (만드는 곳은 scripts/build-map-font.py).
+      "src/features/restaurant/map/mapFont.generated.ts",
     ],
   },
   {

@@ -453,6 +453,10 @@ function LowDataNotice({
   s: Surface
 }) {
   const { t } = useTranslation("common")
+  /* 기록이 **하나라도 있으면** "아직 판단할 기록이 부족해요"라고 말하지 않는다.
+     한 끼를 적은 사람에게 기록이 없다는 뜻으로 읽혀서, 자기 기록이 안 들어간
+     것으로 오해한다(QA 2026-08-05). 표본이 작다는 사실은 아래 본문이 말한다. */
+  const hasSomeRecords = reliability.mealsRecorded > 0
   return (
     <View
       style={[
@@ -462,7 +466,7 @@ function LowDataNotice({
     >
       <View style={styles.noticeHead}>
         <Text style={[styles.noticeTitle, { color: s.textStrong }]}>
-          {t("stats.lowDataTitle")}
+          {t(hasSomeRecords ? "stats.lowDataTitleSome" : "stats.lowDataTitle")}
         </Text>
         <Text
           style={[styles.noticeMeta, styles.tabular, { color: s.textWeak }]}

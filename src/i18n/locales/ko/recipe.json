@@ -479,7 +479,9 @@
       "reviews": "리뷰 {{count}}",
       "reviews_one": "리뷰 {{count}}",
       "reviews_other": "리뷰 {{count}}"
-    }
+    },
+    "shareMessage": "[신신당부 레시피] {{name}}\n\n{{summary}}\n\n재료와 만드는 법은 신신당부 앱에서 볼 수 있어요\n{{url}}",
+    "shareMessageNoSummary": "[신신당부 레시피] {{name}}\n\n재료와 만드는 법은 신신당부 앱에서 볼 수 있어요\n{{url}}"
   },
   "responsibility": "다른 사람의 권리를 침해하지 않는 내용인지 확인했어요.",
   "recipeWrite": {

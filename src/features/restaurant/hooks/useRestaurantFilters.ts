@@ -250,9 +250,19 @@ export function useRestaurantFilters(
 
   const applyAiFilters = useCallback((ai: AiSearchFilters) => {
     const { regionGroups, regionSidos } = splitAiRegionKeys(ai.regionGroups)
+    /*
+      **음식 이름은 축이 아니라 검색어로 들어간다.**
+
+      `삼계탕` 은 종류 축에서 `한식` 으로 접히는데, 그것만 적용하면 조건이 넓어져
+      한식 전체가 나온다(QA 2026-08-05). 서버가 음식 이름을 `q` 로 따로 돌려주므로
+      그 값을 검색어에 실어 상호·메뉴명에서 걸리게 한다. 서버가 안 주면(구버전) 빈
+      문자열로 두어 예전 동작 그대로다 — 이전 질의의 검색어가 남지는 않게 한다.
+    */
+    const query = ai.q ?? ""
     setFilters((prev) => {
       const next: FilterState = {
         ...prev,
+        query,
         cuisineTypes: ai.cuisineTypes,
         nutritionTags: ai.nutritionTags,
         regionGroups,
@@ -264,6 +274,7 @@ export function useRestaurantFilters(
     })
     setDraft((prev) => ({
       ...prev,
+      query,
       cuisineTypes: ai.cuisineTypes,
       nutritionTags: ai.nutritionTags,
       regionGroups,

@@ -4,3 +4,6 @@ dist/
 ios/
 android/
 *.lock
+
+# 폰트 base64 가 든 생성물(scripts/build-map-font.py). 포맷하지 않는다.
+src/features/restaurant/map/mapFont.generated.ts

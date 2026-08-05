@@ -73,7 +73,7 @@ import {
 import { presentError } from "@/src/lib/errorMessage"
 import { ArticleSkeleton, ConfirmModal } from "@/src/shared/components"
 import { classifyFetchFailure } from "@/src/shared/utils/fetchFailure"
-import { recipeDeepLink } from "@/src/shared/utils/deepLink"
+import { STORE_REDIRECT_URL, recipeDeepLink } from "@/src/shared/utils/deepLink"
 import { shareContent } from "@/src/shared/utils/share"
 import {
   IngredientSection,
@@ -191,16 +191,32 @@ export default function RecipeDetailRoute() {
 
   const handleShare = useCallback(() => {
     if (detail == null) return
-    // 링크를 함께 보낸다 — 예전에는 이름과 요약만 나가서 받은 사람이 그 레시피로
-    // 갈 방법이 없었다(QA 2026-08-05 "음식 이름만 텍스트로 공유").
+    /*
+      **레시피는 레시피처럼 말한다.**
+
+      예전 본문은 `이름 + 요약` 두 줄이었다. 그건 식당 공유(`{이름} — 신신당부에서
+      확인해 보세요`)와 모양이 같아서, 받은 사람은 이게 식당인지 음식인지 레시피인지
+      알 수 없었다(QA 2026-08-05 "레시피 공유 메시지가 식당처럼 나간다"). 그래서
+      무엇을 보내는지(`[신신당부 레시피]`)와 무엇을 얻는지(재료·만드는 법)를 본문이
+      직접 말한다.
+
+      링크는 두 종류가 필요하다. 딥링크는 **앱이 깔린 사람**을 그 레시피로 바로
+      보내지만, 안 깔린 사람에게는 눌러지지도 않는 문자열이다. 그래서 본문에는
+      스토어로 보내는 https 링크를 싣고(게시글 공유가 쓰는 것과 같은 한 줄),
+      딥링크는 `link` 로 넘긴다.
+    */
+    const summary = detail.summary?.trim() ?? ""
     void shareContent({
-      body: [detail.name, detail.summary]
-        .filter((line): line is string => Boolean(line))
-        .join("\n"),
+      body: t(
+        summary.length > 0
+          ? "detail.shareMessage"
+          : "detail.shareMessageNoSummary",
+        { name: detail.name, summary, url: STORE_REDIRECT_URL },
+      ),
       link: recipeDeepLink(detail.id),
       scope: "recipe-detail",
     })
-  }, [detail])
+  }, [detail, t])
 
   const handleToggleSave = useCallback(() => {
     if (detail == null || saveMutation.isPending) return

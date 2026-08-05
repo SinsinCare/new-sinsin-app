@@ -683,26 +683,28 @@ export function FoodAnalysisResult({
 
           {(effectiveResult.revision ||
             effectiveResult.consumptionRevision) && (
-            <XStack
+            /* 한 줄에 나란히 두지 않는다. RN 의 Text 는 flexShrink 기본값이 0이라
+               행 안에서 줄지 않고 **상자 밖으로 그대로 넘친다** — 좁은 기기와 큰 글자
+               설정에서 "먹은 양을 바꾸면…" 이 카드를 뚫고 나가던 것이 그것이다.
+               기준 라벨과 안내문은 길이가 서로 독립이므로 세로로 쌓는다. */
+            <YStack
               marginHorizontal="$4"
               marginTop="$3"
               paddingHorizontal="$3"
               paddingVertical="$2"
               borderRadius="$4"
               backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-              alignItems="center"
-              justifyContent="space-between"
-              gap="$2"
+              gap="$1"
             >
               <Text fontSize="$3" fontWeight="600" color="$sub8">
                 {effectiveResult.consumptionRevision
                   ? t("foodResult.consumedBasis")
                   : t("foodResult.photoBasis")}
               </Text>
-              <Text fontSize="$3" color="$colorSubtle" textAlign="right">
+              <Text fontSize="$3" color="$colorSubtle">
                 {t("foodResult.amountHint")}
               </Text>
-            </XStack>
+            </YStack>
           )}
 
           {/* 인사이트 리포트 — 판정·근거·남은 예산·음식별 이유·대체.

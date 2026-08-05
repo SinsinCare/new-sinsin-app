@@ -126,6 +126,11 @@ export function AiSearchSheet({
 
   const result = ai.result
   const appliedKeys = result ? filterLabelKeys(result.filters) : []
+  /* 음식 이름은 i18n 키가 아니라 사용자가 친 말 그대로다(서버가 질의의 부분문자열만
+     통과시킨다). 그래서 키 목록과 섞지 않고 맨 앞에 따로 그린다 — 결과를 가장 크게
+     좁히는 조건이라 사용자가 먼저 봐야 한다. */
+  const dishTerm = result?.filters.q?.trim() ?? ""
+  const appliedCount = appliedKeys.length + (dishTerm === "" ? 0 : 1)
 
   return (
     <V2BottomSheet
@@ -157,7 +162,13 @@ export function AiSearchSheet({
         bounces={false}
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
-        style={{ maxHeight: Math.round(windowHeight * MAX_BODY_RATIO) }}
+        keyboardShouldPersistTaps="handled"
+        /* `flexShrink: 1` 이 있어야 키보드가 떠서 시트가 최대 높이에 닿았을 때
+           이 영역이 먼저 줄어든다. 없으면 시트가 잘리면서 아래 CTA 가 사라진다. */
+        style={{
+          maxHeight: Math.round(windowHeight * MAX_BODY_RATIO),
+          flexShrink: 1,
+        }}
         contentContainerStyle={styles.body}
       >
         {ai.isPending ? (
@@ -210,7 +221,7 @@ export function AiSearchSheet({
               </Text>
             </View>
 
-            {appliedKeys.length > 0 ? (
+            {appliedCount > 0 ? (
               <View style={styles.block}>
                 <Text
                   style={[
@@ -221,6 +232,11 @@ export function AiSearchSheet({
                   {t("restaurant.aiSearch.appliedTitle")}
                 </Text>
                 <View style={styles.badges}>
+                  {dishTerm === "" ? null : (
+                    <V2Badge size="m" color="brand" variant="weak">
+                      {dishTerm}
+                    </V2Badge>
+                  )}
                   {appliedKeys.map((key) => (
                     <V2Badge key={key} size="m" color="brand" variant="weak">
                       {t(dynamicKey(key))}
@@ -255,7 +271,7 @@ export function AiSearchSheet({
         ) : null}
       </ScrollView>
 
-      {result && appliedKeys.length > 0 ? (
+      {result && appliedCount > 0 ? (
         <View style={styles.footer}>
           <V2Button
             size="xl"
@@ -271,7 +287,7 @@ export function AiSearchSheet({
               // 사용자의 병기를 드러낸다. 결과의 모양만 본다.
               trackAnalyticsEvent("restaurant_ai_search", {
                 fallback: result.fallback,
-                filter_count: appliedKeys.length,
+                filter_count: appliedCount,
                 unmatched_count: result.unmatchedTerms.length,
               })
               onApply(result.filters)

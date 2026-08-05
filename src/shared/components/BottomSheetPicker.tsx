@@ -14,6 +14,8 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { YStack, XStack, Text } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+
+import { bottomBarSpace } from "@/src/shared/utils/bottomSafeArea"
 import { tokens } from "@/src/theme/tokens"
 import { useTranslation } from "react-i18next"
 
@@ -164,7 +166,9 @@ export function BottomSheetPicker({
               styles.sheet,
               {
                 transform: [{ translateY }],
-                paddingBottom: insets.bottom,
+                /* 시스템 바가 0 인 기기에서도 마지막 항목이 화면 모서리에 붙지
+                   않게 최소 여백을 보장한다(`bottomBarSpace` 머리말). */
+                paddingBottom: bottomBarSpace(insets.bottom),
                 backgroundColor: colors.sheetBg,
               },
             ]}

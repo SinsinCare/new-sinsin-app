@@ -221,10 +221,28 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     throw e
   }
 
+  /*
+    안드로이드에서 카카오 로그인이 막히는 원인은 거의 언제나 **키 해시 미등록**이다.
+    그런데 이 빌드의 키 해시가 무엇인지 밖에서는 알 수 없다 —
+
+      · EAS 내부 배포(APK)  → 업로드 키로 서명된다
+      · Play 설치본          → 구글이 **Play 앱 서명 키로 다시 서명**한다 (다른 해시)
+      · 로컬 디버그 빌드     → debug.keystore (또 다른 해시)
+
+    같은 앱인데 셋의 해시가 전부 다르고, 셋 다 카카오 콘솔에 등록돼 있어야 한다.
+    종전에는 이 값을 **구해 놓고 버렸다**(`await getKeyHashAndroid()` 뒤 결과 미사용).
+    그래서 "안드에서 카카오 로그인이 안 된다"는 보고가 와도 어느 해시가 빠졌는지
+    아무도 답할 수 없었고, 매번 키스토어를 뒤져 추측해야 했다.
+
+    값을 로그로 남긴다. 실패 로그에도 함께 실어서, QA 가 문제가 난 **바로 그 기기**의
+    해시를 그대로 읽어 콘솔에 넣을 수 있게 한다. 비밀이 아니다 — 인증서 공개키의
+    지문이고 APK 를 받은 사람이면 누구나 계산할 수 있다.
+  */
+  let androidKeyHash: string | null = null
   if (Platform.OS === "android") {
     try {
-      await getKeyHashAndroid()
-      logger.debug("[Kakao SignIn] Android 키 해시 확인 완료")
+      androidKeyHash = (await getKeyHashAndroid()) ?? null
+      logger.debug("[Kakao SignIn] Android 키 해시", androidKeyHash)
     } catch (e) {
       logger.error("[Kakao SignIn] keyHash 조회 실패", e)
     }
@@ -252,6 +270,8 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
       name: e instanceof Error ? e.name : "unknown",
       code: err?.code,
       domain: err?.domain,
+      // 실패한 그 기기의 키 해시. 미등록이면 이 값을 카카오 콘솔에 넣으면 끝난다.
+      androidKeyHash,
     })
     throw e
   }

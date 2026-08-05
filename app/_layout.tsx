@@ -14,6 +14,10 @@ import { Stack, useRouter, useSegments } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context"
 import { AppKeyboardSurface } from "@/src/shared/components/AppKeyboardSurface"
 import { useTranslation } from "react-i18next"
 import config from "../tamagui.config"
@@ -236,23 +240,45 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <QueryClientProvider client={queryClient}>
-          <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
-            <Theme name={effectiveScheme}>
-              <PortalProvider>
-                <AppPolicyGate>
-                  <RootLayoutNav />
-                </AppPolicyGate>
-                <Toast />
-                {/*
+      {/*
+        ── 세이프 에어리어는 **여기 하나**에서 나온다 ──────────────────────────
+
+        예전에는 이 자리에 provider 가 없었다. 그러면 인셋을 세워 주는 것은
+        `@react-navigation` 이 네비게이터 **안쪽에** 다는 `SafeAreaProviderCompat` 뿐인데,
+        그 구조에 문제가 둘 있다.
+
+        1. **네비게이터 밖 화면은 provider 가 없다.** 아래 `Toast`·`V2DialogHost`·
+           `AppKeyboardSurface`, 그리고 `isLoading` 일 때 네비게이터 대신 그리는
+           `LoadingScreen` 이 전부 그 밖이다. 하단에 무언가를 붙이는 순간 기준이 없다.
+        2. **인셋을 모를 때 0 으로 시작한다.** `SafeAreaProviderCompat` 은
+           `initialWindowMetrics` 가 null 이면(안드로이드에서 흔하다) `insets` 를 전부 0 인
+           값으로 만들어 **먼저 그린다.** 그 한 프레임에 하단 바는 안드로이드 내비게이션 바
+           밑에 깔리고, 그때 값을 붙잡아 둔 계산(`useMemo(…, [])`·ref 캐시)은 **끝까지 0 을
+           쓴다.** 기기·타이밍에 따라 "하단이 내비게이션 바에 가린다" 가 되는 경로가 이것이다.
+
+        그래서 트리 맨 위에 하나를 세우고, **모르면 0 이라고 하지 않는다** —
+        `initialMetrics` 에 `initialWindowMetrics` 를 그대로 넘긴다. 값이 있으면 첫
+        프레임부터 정확하고, null 이면 provider 가 실측될 때까지 자식을 그리지 않는다.
+        한 프레임 늦는 대신 **틀린 값으로 그리는 프레임이 없다.**
+      */}
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <KeyboardProvider>
+          <QueryClientProvider client={queryClient}>
+            <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
+              <Theme name={effectiveScheme}>
+                <PortalProvider>
+                  <AppPolicyGate>
+                    <RootLayoutNav />
+                  </AppPolicyGate>
+                  <Toast />
+                  {/*
                   showConfirm/showAlert 의 기본 호스트. 화면 단위 호출은 전부
                   여기로 온다. RN Modal 안에서 부르는 확인창은 그 모달 안에
                   <V2DialogHost/> 를 하나 더 얹어야 한다 — 이유는 그쪽 머리말.
                 */}
-                <V2DialogHost />
-              </PortalProvider>
-              {/*
+                  <V2DialogHost />
+                </PortalProvider>
+                {/*
                 키보드 탈출구. 숫자 키패드에는 완료 키가 없고, InputAccessoryView 는
                 시트 안에서 렌더되지 않는다 — 전역 툴바만이 모든 입력을 덮는다
                 (AppKeyboardToolbar 머리말). 기록 시트가 열려 있으면 툴바 대신
@@ -265,11 +291,12 @@ export default function RootLayout() {
                 뒤에 깔려 화면에 나오지 않는다 — 1.1.24 QA "여전히 키보드가 가린다" 가
                 이것이다. 밖으로 빼면 마지막에 그려져 시트 위에 선다.
               */}
-              <AppKeyboardSurface />
-            </Theme>
-          </TamaguiProvider>
-        </QueryClientProvider>
-      </KeyboardProvider>
+                <AppKeyboardSurface />
+              </Theme>
+            </TamaguiProvider>
+          </QueryClientProvider>
+        </KeyboardProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }

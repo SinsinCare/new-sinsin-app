@@ -1021,22 +1021,22 @@
     }
   },
   "stats": {
-      "glucose": {
-        "title": "Blood sugar trend",
-        "loading": "Loading your blood sugar records.",
-        "empty": "No blood sugar logged this week. Log one from Home and the trend appears here.",
-        "average": "Average",
-        "inTarget": "In range",
-        "recordedDays": "Days logged",
-        "daysValue": "{{count}}",
-        "range": "Low {{min}} · High {{max}} mg/dL this week",
-        "worstCell": "{{cell}} was outside the range most often · {{count}}x",
-        "timingShort": {
-          "FASTING": "Fasting",
-          "BEFORE_MEAL": " pre",
-          "AFTER_MEAL": " post"
-        }
-      },
+    "glucose": {
+      "title": "Blood sugar trend",
+      "loading": "Loading your blood sugar records.",
+      "empty": "No blood sugar logged this week. Log one from Home and the trend appears here.",
+      "average": "Average",
+      "inTarget": "In range",
+      "recordedDays": "Days logged",
+      "daysValue": "{{count}}",
+      "range": "Low {{min}} · High {{max}} mg/dL this week",
+      "worstCell": "{{cell}} was outside the range most often · {{count}}x",
+      "timingShort": {
+        "FASTING": "Fasting",
+        "BEFORE_MEAL": " pre",
+        "AFTER_MEAL": " post"
+      }
+    },
     "title": "Trends",
     "tabs": {
       "nutrients": "Nutrients",
@@ -1069,6 +1069,7 @@
     "periodReport": "{{period}} report",
     "retryAccessibility": "Reload trends",
     "lowDataTitle": "A little more data will make this clearer",
+    "lowDataTitleSome": "Showing what you’ve logged so far",
     "mealsRecorded": "{{recorded}} of {{expected}} meals · {{rate}}%",
     "lowDataBody": "For now, use this as a rough pattern. Log a few more meals for a more reliable view.",
     "calendar": {

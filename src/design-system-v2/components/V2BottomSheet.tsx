@@ -25,6 +25,7 @@ import {
 } from "react-native"
 // 네이티브 Modal 직접 사용 금지 — 전이 직렬화 게이트를 통과해야 한다(AppModal 머리말)
 import { AppModal } from "@/src/shared/components/AppModal"
+import { useKeyboardState } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { radius, spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
@@ -93,6 +94,29 @@ export function V2BottomSheet({
   const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
   const { height: screenHeight } = useWindowDimensions()
+  /*
+    ── 키보드를 시트가 **직접** 피한다 ──────────────────────────────
+
+    안드로이드에서는 RN Modal 이 자기 Dialog 윈도를 갖는데, react-native-keyboard-
+    controller 가 그 윈도에 `SOFT_INPUT_ADJUST_NOTHING` 을 강제로 건다
+    (modal/ModalAttachedWatcher.kt, "imitating edge-to-edge mode behavior").
+    그래서 키보드가 떠도 **창이 줄지 않고 시트도 움직이지 않는다** — 하단 앵커라
+    시트가 통째로 키보드 뒤로 들어가고, 사용자에게는 "입력창을 눌렀는데 아무 일도
+    안 일어난다"로 보인다(QA 2026-08-05, 안드로이드 태블릿의 AI 검색). 태블릿은
+    키보드가 화면의 절반을 먹어서 증상이 특히 심하다. iOS 의 RN Modal 도 마찬가지로
+    키보드를 피해 주지 않는다.
+
+    그래서 대응을 **시트 안에** 둔다(기록 시트가 같은 이유로 같은 선택을 했다 —
+    features/home/.../useSheetKeyboardLift.ts). 같은 라이브러리가 모달 윈도의
+    키보드 이벤트를 위로 흘려주므로 높이는 여기서도 정확하다.
+
+    올리는 방법은 **바닥 여백**이지 translateY 가 아니다. translateY 로 밀면 시트
+    아랫변이 화면 밖으로 나가 배경이 끊기고, 열기/닫기 슬라이드와 같은 변환을
+    두 곳에서 쓰게 된다. 여백으로 올리면 시트 배경은 화면 바닥까지 그대로 있고
+    (키보드가 그 위를 덮는다) 콘텐츠만 키보드 위로 뜬다.
+  */
+  const keyboardHeight = useKeyboardState((state) => state.height)
+  const keyboardLift = Math.max(0, keyboardHeight - insets.bottom)
 
   const hasPrimary = !!primaryLabel
   const hasSecondary = !!secondaryLabel
@@ -178,8 +202,11 @@ export function V2BottomSheet({
             styles.sheet,
             {
               backgroundColor: colors.background.default,
-              // 하단 내부 패딩 20 + safe-area 하단
-              paddingBottom: spacing[20] + insets.bottom,
+              // 하단 내부 패딩 20 + safe-area 하단 + (키보드가 떠 있으면) 키보드 높이
+              paddingBottom: spacing[20] + insets.bottom + keyboardLift,
+              /* 키보드가 화면을 반 넘게 먹는 태블릿에서 시트가 상태바를 뚫지 않게 막는다.
+                 넘치면 소비처의 ScrollView 가 스크롤을 맡는다. */
+              maxHeight: screenHeight - insets.top,
               transform: [{ translateY }],
             },
           ]}

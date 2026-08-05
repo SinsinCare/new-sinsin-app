@@ -28,6 +28,19 @@ import { presentCommunityError } from "@/src/features/recipe/utils/communityErro
 import { useTranslation } from "react-i18next"
 
 interface StoryCandidate {
+  /**
+   * 이 후보의 **변하지 않는 이름**. `uri` 를 정체로 쓰면 안 되기 때문에 따로 둔다.
+   *
+   * 서버 사진의 `uri` 는 **서명 URL** 이라 조회할 때마다 문자열이 달라진다
+   * (`displayImageUrl` 이 매번 새로 서명한다). 그래서 목록이 한 번 다시 불려 오면
+   * 같은 끼니 사진인데도 `uri` 가 달라지고, 그 값을 정체로 쓰던 화면은
+   *  - 고른 표시(테두리)를 잃고,
+   *  - 미리보기가 **낡은 서명 URL** 을 계속 들고 있다가 만료되면 빈 칸이 된다.
+   * QA 가 본 "사진을 바꾸면 골랐던 음식 사진이 안 보인다" 가 그 모양이다.
+   *
+   * 끼니 사진은 `날짜-끼니`, 갤러리 사진은 로컬 URI 를 정체로 쓴다.
+   */
+  id: string
   /** 서버에 이미 있는 사진이면 URL, 갤러리에서 고른 사진이면 로컬 URI. */
   uri: string
   isRemote: boolean
@@ -68,20 +81,27 @@ export default function NewStoryScreen() {
   const mealCandidates = useMemo<StoryCandidate[]>(() => {
     const build = (
       diets: { mealType: MealType; imageUrl: string | null }[] | undefined,
+      dayKey: string,
       dayLabel: string,
     ) =>
       (diets ?? [])
         .filter((diet) => !!diet.imageUrl)
         .map((diet) => ({
+          id: `${dayKey}:${diet.mealType}`,
           uri: diet.imageUrl as string,
           isRemote: true,
           label: `${dayLabel} ${t(`meal.${diet.mealType}`)}`.trim(),
         }))
 
     return [
-      ...build(todayAnalysis?.result?.diets, t("community.newStory.today")),
+      ...build(
+        todayAnalysis?.result?.diets,
+        "today",
+        t("community.newStory.today"),
+      ),
       ...build(
         yesterdayAnalysis?.result?.diets,
+        "yesterday",
         t("community.newStory.yesterday"),
       ),
     ]
@@ -90,11 +110,31 @@ export default function NewStoryScreen() {
   const candidates = [...pickedFromGallery, ...mealCandidates]
   const isSaving = isCreating || isUploading
 
+  /**
+   * 고른 후보를 **목록의 최신 값으로** 따라가게 한다.
+   *
+   * 서버 사진의 URL 은 조회할 때마다 새로 서명되므로, 고른 시점의 문자열을 그대로
+   * 들고 있으면 미리보기가 낡은 URL 을 가리킨다(만료되면 빈 칸). 정체(`id`)가 같은
+   * 후보를 찾아 URL 만 갈아 끼운다 — 사용자의 선택은 그대로 두고 주소만 새것으로.
+   * 목록에서 아예 사라진 후보(어제 사진이 만 이틀이 되어 빠진 경우)는 그대로 둔다:
+   * 고른 것을 말없이 놓아 버리는 것보다 낫다.
+   */
+  const selectedCandidate = useMemo(() => {
+    if (selected === null) return null
+    const fresh = candidates.find((item) => item.id === selected.id)
+    return fresh ?? selected
+    // `candidates` 는 매 렌더 새 배열이라 의존성에 넣으면 매번 새로 계산된다.
+    // 실제로 값이 바뀌는 것은 아래 둘이다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, mealCandidates, pickedFromGallery])
+
   const handlePickFromGallery = async () => {
     Keyboard.dismiss()
     const uris = await pickMultipleImages(1)
     if (uris.length === 0) return
     const picked: StoryCandidate = {
+      // 갤러리 사진은 로컬 URI 가 곧 정체다 — 서명이 붙지 않으므로 변하지 않는다.
+      id: uris[0],
       uri: uris[0],
       isRemote: false,
       label: t("community.newStory.galleryPhoto"),
@@ -123,19 +163,19 @@ export default function NewStoryScreen() {
   }
 
   const handleSubmit = async () => {
-    if (!selected || isSaving) return
+    if (!selectedCandidate || isSaving) return
     setIsUploading(true)
     try {
       let imageObjectPath: string | null = null
-      if (!selected.isRemote) {
+      if (!selectedCandidate.isRemote) {
         const uploaded = await imageUploadService.uploadImage(
-          selected.uri,
+          selectedCandidate.uri,
           "community",
         )
         imageObjectPath = uploaded.objectPath
       }
       await createStoryAsync({
-        imageUri: selected.isRemote ? selected.uri : null,
+        imageUri: selectedCandidate.isRemote ? selectedCandidate.uri : null,
         imageObjectPath,
         caption: caption.trim() || null,
       })
@@ -225,9 +265,9 @@ export default function NewStoryScreen() {
             { backgroundColor: surface.isDark ? "#1A1A1D" : surface.surface },
           ]}
         >
-          {selected ? (
+          {selectedCandidate ? (
             <Image
-              source={{ uri: selected.uri }}
+              source={{ uri: selectedCandidate.uri }}
               style={styles.previewImage}
               resizeMode="cover"
             />
@@ -245,9 +285,11 @@ export default function NewStoryScreen() {
               </Text>
             </View>
           )}
-          {selected && (
+          {selectedCandidate && (
             <View style={styles.previewBadge}>
-              <Text style={styles.previewBadgeText}>{selected.label}</Text>
+              <Text style={styles.previewBadgeText}>
+                {selectedCandidate.label}
+              </Text>
             </View>
           )}
         </View>
@@ -277,11 +319,14 @@ export default function NewStoryScreen() {
             </Text>
           </SurfacePressable>
 
-          {candidates.map((candidate, index) => {
-            const isActive = selected?.uri === candidate.uri
+          {candidates.map((candidate) => {
+            const isActive = selected?.id === candidate.id
             return (
               <Pressable
-                key={`${candidate.uri}-${index}`}
+                /* 키는 **정체**로 준다. 예전에는 `uri-index` 라, 갤러리에서 한 장
+                   고르면 앞에 끼어들어 뒤의 모든 끼니 타일의 키가 밀렸고 전부
+                   다시 마운트됐다(안드로이드에서 사진이 잠깐 사라져 보인다). */
+                key={candidate.id}
                 onPress={() => {
                   hapticSelection()
                   setSelected(candidate)
