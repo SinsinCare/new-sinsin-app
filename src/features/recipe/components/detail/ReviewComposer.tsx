@@ -5,10 +5,14 @@
  * 화면 문법은 가입 스텝과 같다 — **질문 하나, 답 하나**.
  *   1. 헤더에는 닫기만 둔다. 제목을 헤더에 작게 넣으면 질문이 장식이 되고, 화면에
  *      "제목 + 질문" 두 개의 위계가 생긴다. 질문은 본문 첫 줄에 크게 한 번만 쓴다.
- *   2. 별점을 고르기 전에는 본문 입력을 보여 주지 않는다. 필수(별점)와 선택(본문)이
- *      나란히 서 있으면 무엇부터 해야 하는지 사용자가 판단해야 한다. 고르면 그때
- *      본문이 내려오고 키보드가 따라 올라온다.
- *   3. 본문 입력은 상자를 두르지 않는다. 화면에 입력이 하나뿐이라 테두리로 영역을
+ *   2. **무엇을 평가하는지 먼저 보여 준다.** 질문 위에 레시피 사진과 이름을 한 줄로
+ *      둔다 — 상세에서 열리므로 문맥이 자명해 보이지만, 전체화면 모달이 덮는 순간
+ *      화면에는 "이 레시피"가 가리키는 대상이 남지 않는다.
+ *   3. 본문 입력은 **처음부터 함께 보여 준다.** 예전에는 별점을 고르기 전까지 감췄는데,
+ *      그러면 화면 가운데가 통째로 비어 미완성으로 읽혔다(QA 2026-08-06). 순서는
+ *      감추기가 아니라 **자리와 말**로 세운다: 별점이 위, 본문은 "선택" 이라고 적힌
+ *      아래 칸이고, 등록 버튼은 별점 전까지 "별점을 골라 주세요" 라고 말한다.
+ *   4. 본문 입력은 상자를 두르지 않는다. 화면에 입력이 하나뿐이라 테두리로 영역을
  *      나눌 이유가 없다. 글자 수는 한계에 가까워질 때만 나타난다.
  *
  * 계약 §6.1 "등록 버튼이 비활성인데 이유가 없음" 은 **버튼 자신이** 말한다 —
@@ -28,10 +32,10 @@ import {
   TextInput,
   View,
 } from "react-native"
+import { Image } from "expo-image"
 import { AppModal } from "@/src/shared/components/AppModal"
 import Animated, {
   FadeIn,
-  FadeInDown,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
@@ -46,10 +50,14 @@ import { useSurface } from "@/src/hooks/useSurface"
 import type { SurfacePalette } from "@/src/theme/surface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
 import { REVIEW_BODY_MAX_LENGTH, type MyReview } from "../../types/recipeV2"
+import { stablePhotoCacheKey } from "../list/recipeCardFormat"
 
 export interface ReviewComposerProps {
   visible: boolean
   onClose: () => void
+  /** 무엇을 평가하는지. 사진이 없으면 이름만 나온다 — 자리를 비워 두지 않는다. */
+  recipeName: string
+  recipeImageUrl: string | null
   myReview: MyReview | null
   isSubmitting: boolean
   /** 실패했으면 true — 문구는 이 컴포넌트가 고른다. */
@@ -73,6 +81,8 @@ const COUNTER_VISIBLE_FROM = REVIEW_BODY_MAX_LENGTH - 200
 export function ReviewComposer({
   visible,
   onClose,
+  recipeName,
+  recipeImageUrl,
   myReview,
   isSubmitting,
   hasError,
@@ -157,6 +167,32 @@ export function ReviewComposer({
           bounces={false}
           overScrollMode="never"
         >
+          {/* 무엇을 평가하는지. 모달이 상세를 덮으므로 대상이 화면에 남아야 한다. */}
+          <XStack alignItems="center" gap={12} marginBottom={20}>
+            {recipeImageUrl != null && recipeImageUrl.length > 0 && (
+              <Image
+                source={{
+                  uri: recipeImageUrl,
+                  cacheKey: stablePhotoCacheKey(recipeImageUrl),
+                }}
+                style={styles.recipeThumb}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+            )}
+            <Text
+              {...TYPE.value}
+              flex={1}
+              fontFamily="$body"
+              fontWeight="600"
+              color={surface.textWeak}
+              numberOfLines={2}
+              lineBreakStrategyIOS="hangul-word"
+            >
+              {recipeName}
+            </Text>
+          </XStack>
+
           <Text
             {...TYPE.question}
             fontFamily="$body"
@@ -199,42 +235,46 @@ export function ReviewComposer({
             </View>
           </YStack>
 
-          {/* 별점을 고르기 전에는 본문이 없다 — 지금 할 일은 하나뿐이다. */}
-          {rating > 0 && (
-            <Animated.View
-              entering={FadeInDown.duration(MOTION.duration.base)
-                .springify()
-                .reduceMotion(ReduceMotion.System)}
-              style={styles.bodyBlock}
+          {/* 본문은 처음부터 자리에 있다. 순서는 감추기가 아니라 "선택" 이라는 말과
+              등록 버튼의 문구로 세운다 — 감추면 화면이 비어 미완성으로 읽혔다. */}
+          <View style={styles.bodyBlock}>
+            <Text
+              {...TYPE.caption}
+              fontFamily="$body"
+              fontWeight="600"
+              color={surface.textWeak}
+              marginBottom={8}
+              lineBreakStrategyIOS="hangul-word"
             >
-              <TextInput
-                ref={bodyRef}
-                value={body}
-                onChangeText={setBody}
-                placeholder={t("detail.reviews.bodyPlaceholder")}
-                placeholderTextColor={surface.placeholder}
-                maxLength={REVIEW_BODY_MAX_LENGTH}
-                multiline
-                scrollEnabled={false}
-                textAlignVertical="top"
-                style={[styles.bodyInput, { color: surface.textStrong }]}
-              />
-              {body.length >= COUNTER_VISIBLE_FROM && (
-                <Text
-                  {...TYPE.caption}
-                  fontFamily="$body"
-                  color={surface.textWeak}
-                  alignSelf="flex-end"
-                  lineBreakStrategyIOS="hangul-word"
-                >
-                  {t("detail.reviews.bodyCounter", {
-                    current: body.length,
-                    max: REVIEW_BODY_MAX_LENGTH,
-                  })}
-                </Text>
-              )}
-            </Animated.View>
-          )}
+              {t("detail.reviews.bodyLabel")}
+            </Text>
+            <TextInput
+              ref={bodyRef}
+              value={body}
+              onChangeText={setBody}
+              placeholder={t("detail.reviews.bodyPlaceholder")}
+              placeholderTextColor={surface.placeholder}
+              maxLength={REVIEW_BODY_MAX_LENGTH}
+              multiline
+              scrollEnabled={false}
+              textAlignVertical="top"
+              style={[styles.bodyInput, { color: surface.textStrong }]}
+            />
+            {body.length >= COUNTER_VISIBLE_FROM && (
+              <Text
+                {...TYPE.caption}
+                fontFamily="$body"
+                color={surface.textWeak}
+                alignSelf="flex-end"
+                lineBreakStrategyIOS="hangul-word"
+              >
+                {t("detail.reviews.bodyCounter", {
+                  current: body.length,
+                  max: REVIEW_BODY_MAX_LENGTH,
+                })}
+              </Text>
+            )}
+          </View>
         </ScrollView>
 
         <YStack
@@ -352,15 +392,20 @@ function Star({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  /* 남는 높이를 본문 칸이 가져간다 — 안 그러면 입력 아래가 빈 채로 남아
+     화면이 미완성으로 읽힌다(QA 2026-08-06). 넓어진 만큼 탭 영역도 커진다. */
   content: {
+    flexGrow: 1,
     paddingHorizontal: LAYOUT.screenX,
     paddingTop: 12,
     paddingBottom: 24,
   },
   starHit: { padding: 6 },
   ratingWordSlot: { height: 22, justifyContent: "center" },
-  bodyBlock: { marginTop: 28 },
+  recipeThumb: { width: 48, height: 48, borderRadius: 10 },
+  bodyBlock: { flex: 1, marginTop: 28 },
   bodyInput: {
+    flex: 1,
     minHeight: 96,
     fontSize: 17,
     lineHeight: 26,

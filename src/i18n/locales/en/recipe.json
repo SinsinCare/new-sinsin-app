@@ -456,7 +456,8 @@
         "4": "Really good",
         "5": "Loved it"
       },
-      "bodyPlaceholder": "Tell us how it went (optional)",
+      "bodyLabel": "Optional",
+      "bodyPlaceholder": "Tell us how it went",
       "bodyCounter": "{{current}}/{{max}}",
       "submit": "Post",
       "submitting": "Posting",

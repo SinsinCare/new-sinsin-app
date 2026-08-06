@@ -475,6 +475,8 @@ export default function RecipeDetailRoute() {
       <ReviewComposer
         visible={composerOpen}
         onClose={() => setComposerOpen(false)}
+        recipeName={detail.name}
+        recipeImageUrl={detail.heroImageUrl}
         myReview={detail.myReview}
         isSubmitting={upsert.isPending}
         hasError={upsert.isError}
