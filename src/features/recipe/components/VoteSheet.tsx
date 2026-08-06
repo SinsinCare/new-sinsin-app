@@ -45,8 +45,8 @@ export function VoteSheet({
   const { t } = useTranslation("recipe")
   const surface = useSurface()
   const insets = useSafeAreaInsets()
-  const topPadding =
-    Platform.OS === "android" ? Math.max(insets.top, 24) + 10 : 10
+  /* 전체화면 Modal 은 양쪽 OS 모두 상태바까지 덮는다 — ReviewComposer 와 같은 규칙. */
+  const topPadding = Math.max(insets.top, 24) + 10
 
   const [title, setTitle] = useState(initialData?.title ?? "")
   const [options, setOptions] = useState<string[]>(

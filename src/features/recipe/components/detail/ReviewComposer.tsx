@@ -104,8 +104,9 @@ export function ReviewComposer({
   }, [myReview, visible])
 
   const canSubmit = rating >= 1 && rating <= 5 && !isSubmitting
-  const topPadding =
-    Platform.OS === "android" ? Math.max(insets.top, 24) + 10 : 10
+  /* 전체화면 Modal 은 **양쪽 OS 모두 상태바까지 덮는다.** iOS 만 10 을 주던 때는
+     닫기 X 가 시계와 같은 높이에 깔려 눌리지 않았다(QA 2026-08-06). */
+  const topPadding = Math.max(insets.top, 24) + 10
 
   /**
    * 별점을 **처음** 고른 순간에만 본문으로 커서를 넘긴다. 고칠 때마다 키보드가
