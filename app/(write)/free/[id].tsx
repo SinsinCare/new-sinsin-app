@@ -30,6 +30,7 @@ import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategor
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
+import { isConfidentlyNotMine } from "@/src/features/recipe/utils/contentOwnership"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import { ArticleSkeleton } from "@/src/shared/components"
@@ -101,15 +102,12 @@ export default function FreePostEditScreen() {
 
   /*
     진입 가드 — 이 화면은 상세의 "수정" 메뉴(내 글에만 보인다)로만 오지만, 백스택
-    복원·딥링크로 남의 글 id 가 들어올 수 있다. 글과 프로필이 **둘 다 도착한 뒤**
-    닉네임이 어긋나면 닫는다. 프로필 미로딩 상태에서 접으면 내 글 수정까지
-    튕겨 내므로, 여기서는 확정된 불일치에만 반응한다(저장은 어차피 서버가
-    `COMMUNITY_ERROR_002` 로 거절한다).
+    복원·딥링크로 남의 글 id 가 들어올 수 있다. **확정된 불일치에만** 반응한다:
+    모르는 동안 접으면 내 글 수정까지 튕겨 낸다(`isConfidentlyNotMine` 머리말).
+    저장은 어차피 서버가 `COMMUNITY_ERROR_002` 로 거절한다.
   */
   const isForeignPost =
-    post != null &&
-    myProfile?.nickName != null &&
-    post.authorName !== myProfile.nickName
+    post != null && isConfidentlyNotMine(post, myProfile?.nickName)
 
   useEffect(() => {
     if (isForeignPost) router.back()

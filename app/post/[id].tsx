@@ -64,10 +64,13 @@ import {
   STORE_REDIRECT_URL,
 } from "@/src/shared/utils/deepLink"
 import { shareContent } from "@/src/shared/utils/share"
+import {
+  isMyContent,
+  WITHDRAWN_AUTHOR_NAME,
+} from "@/src/features/recipe/utils/contentOwnership"
 
 const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 
-const WITHDRAWN_AUTHOR_NAME = "탈퇴한 사용자"
 /** 설치 링크는 한 곳에서만 짓는다(`deepLink.ts` 머리말). */
 const APP_DOWNLOAD_URL = STORE_REDIRECT_URL
 
@@ -341,19 +344,15 @@ export default function PostDetailScreen() {
   }
 
   /*
-    수정·삭제는 **내 것에만** 보인다. 예전엔 모든 글·댓글에 셋 다 띄우고 서버의
-    거절(403)에 기댔는데, QA(2026-08-06)가 정확히 짚었다 — 남의 글에서 삭제를
-    누를 수 있는 것 자체가 잘못이고, 눌러도 조용히 실패해 더 이상했다.
-    판정은 이 파일의 멘션 로직과 같은 닉네임 대조다. 프로필이 아직 안 왔으면
-    (myNickName === undefined) 내 것이 아닌 걸로 접는다 — 신고만 보이는 잠깐이
-    남의 글에 삭제가 보이는 잠깐보다 낫다.
+    수정·삭제는 **내 것에만** 보인다. 판정은 이 화면이 하지 않는다 —
+    `contentOwnership` 이 서버의 `isMine` 을 읽는다(머리말에 이유가 있다).
   */
-  const isMyContent = (authorName: string) =>
-    myProfile?.nickName != null && authorName === myProfile.nickName
+  const mineOf = (content: Parameters<typeof isMyContent>[0]) =>
+    isMyContent(content, myProfile?.nickName)
 
   const handleMorePress = async () => {
     if (!post) return
-    const mine = !isWithdrawnAuthor(post) && isMyContent(post.authorName)
+    const mine = mineOf(post)
 
     // 남의 글에서 남은 행동은 신고 하나 — 항목 하나짜리 중간 메뉴를 거치지
     // 않고 신고 사유 시트로 바로 간다(QA 2026-08-06: "선택지 1개에 시트냐").
@@ -488,9 +487,13 @@ export default function PostDetailScreen() {
       commentInputRef.current?.focus()
     }
     // 글과 같은 규칙 — 수정·삭제는 내 댓글에만, 남의 댓글엔 답글·신고만.
-    const mine = isMyContent(comment.authorName)
+    const mine = mineOf(comment)
     const handlers = mine
-      ? [() => startReplyTo(comment), startEdit, () => handleDeleteComment(comment)]
+      ? [
+          () => startReplyTo(comment),
+          startEdit,
+          () => handleDeleteComment(comment),
+        ]
       : [() => startReplyTo(comment), () => handleCommentReport(comment)]
     const actions = mine
       ? [

@@ -11,6 +11,7 @@ import { hapticSelection } from "@/src/lib/haptics"
 import { PostListItem } from "@/src/features/recipe/components/PostListItem"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { useBlockedUsers } from "@/src/features/recipe/hooks/useBlockedUsers"
+import { isMyContent } from "@/src/features/recipe/utils/contentOwnership"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { useTranslation } from "react-i18next"
 
@@ -52,9 +53,7 @@ export default function CommunityLibraryScreen() {
 
   const listsByTab = useMemo<Record<LibraryTab, typeof visiblePosts>>(
     () => ({
-      mine: myNickName
-        ? visiblePosts.filter((p) => p.authorName === myNickName)
-        : [],
+      mine: visiblePosts.filter((p) => isMyContent(p, myNickName)),
       liked: visiblePosts.filter((p) => p.liked),
       bookmarked: visiblePosts.filter((p) => p.bookmarked),
     }),
@@ -203,7 +202,7 @@ export default function CommunityLibraryScreen() {
               onPressTag={handleTagPress}
               onBlock={blockUser}
               isWithdrawnAuthor={post.authorId === null}
-              isMine={myNickName != null && post.authorName === myNickName}
+              isMine={isMyContent(post, myNickName)}
             />
           </View>
         )}

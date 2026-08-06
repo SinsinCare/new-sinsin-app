@@ -28,6 +28,7 @@ import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile
 import { useRecentCommunitySearches } from "../hooks/useRecentCommunitySearches"
 import { getHotScore, rankPopularPosts } from "../utils/postRanking"
 import { useTranslation } from "react-i18next"
+import { isMyContent } from "../utils/contentOwnership"
 
 interface FreePostTabProps {
   tagFilter?: string | null
@@ -197,7 +198,7 @@ export function FreePostTab({
           onPressTag={handleTagPress}
           onBlock={blockUser}
           isWithdrawnAuthor={isWithdrawnAuthor(post)}
-          isMine={myNickName != null && post.authorName === myNickName}
+          isMine={isMyContent(post, myNickName)}
         />
       </View>
     ),

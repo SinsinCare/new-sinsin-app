@@ -69,6 +69,8 @@ export interface CommunityCommentApi {
   postId: string | number
   parentCommentId?: string | number | null
   authorId?: number | null
+  /** 서버가 내려주는 소유자 판정. 앱이 다시 계산하지 않는다 — `contentOwnership` 참고. */
+  isMine?: boolean | null
   authorName: string
   content: string
   mentions?: string[] | null
@@ -85,6 +87,8 @@ export interface CommunityComment {
   postId: string
   parentCommentId: string | null
   authorId?: number | null
+  /** 서버가 내려주는 소유자 판정(옛 서버면 undefined). `isMyContent()` 로만 읽을 것. */
+  isMine?: boolean | null
   authorName: string
   content: string
   /** 본문의 '@닉네임' 중 서버가 실제 참여자로 확인한 것만. */
@@ -101,6 +105,7 @@ export interface CommunityComment {
 export interface CommunityMealPostApi {
   id: string | number
   authorId?: number | null
+  isMine?: boolean | null
   authorName: string
   authorRole: string
   category: string
@@ -122,6 +127,8 @@ export interface CommunityMealPostApi {
 export interface CommunityMealPost {
   id: string
   authorId?: number | null
+  /** 서버가 내려주는 소유자 판정(옛 서버면 undefined). `isMyContent()` 로만 읽을 것. */
+  isMine?: boolean | null
   authorName: string
   authorRole: string
   category: string

@@ -51,6 +51,8 @@ function mapPost(raw: CommunityMealPostApi): CommunityMealPost {
   return {
     id: String(raw.id),
     authorId: raw.authorId ?? null,
+    // 옛 서버는 안 보낸다 — undefined 로 남겨 `isMyContent()` 가 옛 경로를 타게 한다.
+    isMine: raw.isMine ?? undefined,
     authorName: raw.authorName,
     authorRole: raw.authorRole,
     category: raw.category,
@@ -81,6 +83,7 @@ export function mapCommunityComment(
         ? null
         : String(raw.parentCommentId),
     authorId: raw.authorId ?? null,
+    isMine: raw.isMine ?? undefined,
     authorName: raw.authorName,
     content: raw.content,
     mentions: raw.mentions ?? [],
