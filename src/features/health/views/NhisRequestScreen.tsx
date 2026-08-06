@@ -368,6 +368,7 @@ export function NhisRequestScreen() {
             />
             <ThemedText
               style={[styles.pendingText, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("nhis.pendingInstructions")}
             </ThemedText>

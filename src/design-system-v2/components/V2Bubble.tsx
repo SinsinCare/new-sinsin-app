@@ -112,6 +112,8 @@ export function V2Bubble({
           style={[BODY_TEXT, styles.text, { color: colors.label.normal }]}
           // oneLine=한 줄 고정 / multi=줄바꿈 허용
           numberOfLines={variant === "oneLine" ? 1 : undefined}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
         >
           {children}
         </Text>

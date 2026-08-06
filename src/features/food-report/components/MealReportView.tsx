@@ -100,7 +100,10 @@ function AnchorCard({ report, s }: { report: MealReport; s: Surface }) {
       <View style={styles.badgeRow}>
         <View style={[styles.badge, { backgroundColor: s.surface }]}>
           <View style={[styles.badgeDot, { backgroundColor: tone.dot }]} />
-          <Text style={[styles.badgeText, { color: tone.fg }]}>
+          <Text
+            style={[styles.badgeText, { color: tone.fg }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {facts.focus
               ? `${facts.focus.nutrientLabel} ${facts.mealVerdict.label}`
               : facts.mealVerdict.label}
@@ -437,6 +440,7 @@ function BudgetRow({
       {budget.limitText && budget.consumedText && (
         <Text
           style={[styles.budgetScale, styles.tabular, { color: s.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t(
             budget.isReference
@@ -503,6 +507,7 @@ function FoodBreakdownSection({
                   styles.tabular,
                   { color: s.textWeak },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {food.dailyPercent !== null
                   ? t("mealReport.foodDailyPercent", {

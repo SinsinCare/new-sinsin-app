@@ -97,12 +97,18 @@ export function IngredientSection({
 
   return (
     <View style={styles.root}>
-      <Text style={[styles.sectionTitle, { color: colors.label.normal }]}>
+      <Text
+        style={[styles.sectionTitle, { color: colors.label.normal }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("detail.ingredients.title")}
       </Text>
 
       {ingredients.length === 0 ? (
-        <Text style={[styles.note, { color: colors.label.alternative }]}>
+        <Text
+          style={[styles.note, { color: colors.label.alternative }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("detail.ingredients.empty")}
         </Text>
       ) : (
@@ -120,6 +126,7 @@ export function IngredientSection({
             >
               <Text
                 style={[styles.servingsBasis, { color: colors.label.neutral }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("detail.ingredients.servingsBasis", { count: servings })}
               </Text>
@@ -132,6 +139,8 @@ export function IngredientSection({
                 />
                 <Text
                   style={[styles.servingsValue, { color: colors.label.normal }]}
+                  lineBreakStrategyIOS="hangul-word"
+                  textBreakStrategy="balanced"
                 >
                   {t("curated.servings", { count: servings })}
                 </Text>
@@ -156,6 +165,7 @@ export function IngredientSection({
             <View style={styles.progressHead}>
               <Text
                 style={[styles.progressLabel, { color: colors.label.neutral }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("detail.ingredients.preparedLabel")}
               </Text>
@@ -169,6 +179,7 @@ export function IngredientSection({
                         : colors.label.assistive,
                   },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {/*
                  * 왼쪽 라벨이 이미 "준비" 다. 여기서 `checked`("0/10 준비했어요")를 쓰면

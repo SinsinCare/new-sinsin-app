@@ -108,7 +108,11 @@ export function AnnouncementListScreen() {
           showsVerticalScrollIndicator={false}
         >
           {announcements.length === 0 ? (
-            <Text style={[styles.empty, { color: colors.label.alternative }]}>
+            <Text
+              style={[styles.empty, { color: colors.label.alternative }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
               {t("announcements.empty")}
             </Text>
           ) : (
@@ -130,6 +134,7 @@ export function AnnouncementListScreen() {
                 >
                   <Text
                     style={[styles.itemTitle, { color: colors.label.normal }]}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {item.title}
                   </Text>

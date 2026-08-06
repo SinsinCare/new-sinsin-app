@@ -126,6 +126,7 @@ function RecommendedUpdateCard({
                 color="$color"
                 letterSpacing={0}
                 maxFontSizeMultiplier={1.2}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("mobilePolicy.recommendedTitle")}
               </Text>
@@ -139,6 +140,7 @@ function RecommendedUpdateCard({
                 color="$colorSubtle"
                 letterSpacing={0}
                 maxFontSizeMultiplier={1.15}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {message}
               </Text>
@@ -160,6 +162,8 @@ function RecommendedUpdateCard({
                 width="100%"
                 flexShrink={1}
                 maxFontSizeMultiplier={1.15}
+                lineBreakStrategyIOS="hangul-word"
+                textBreakStrategy="balanced"
               >
                 {openError}
               </Text>

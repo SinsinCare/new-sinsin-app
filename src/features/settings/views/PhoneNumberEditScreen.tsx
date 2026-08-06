@@ -83,7 +83,10 @@ export function PhoneNumberEditScreen() {
 
           {profile?.hasPhoneNumber && (
             <View style={[styles.currentPhone, { backgroundColor: s.card }]}>
-              <Text style={[styles.currentPhoneLabel, { color: s.textMuted }]}>
+              <Text
+                style={[styles.currentPhoneLabel, { color: s.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("phone.current")}
               </Text>
               <Text style={[styles.currentPhoneValue, { color: s.textStrong }]}>

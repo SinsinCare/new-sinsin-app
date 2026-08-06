@@ -32,7 +32,10 @@ export function FoodList({ rows, s }: { rows: FoodRow[]; s: Surface }) {
             </Text>
             <StatusBadge level={row.badgeLevel} label={row.badgeLabel} s={s} />
           </View>
-          <Text style={[styles.meta, styles.tabular, { color: s.textWeak }]}>
+          <Text
+            style={[styles.meta, styles.tabular, { color: s.textWeak }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {row.timeText} · {row.metricText}
           </Text>
         </ItemCard>

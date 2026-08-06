@@ -73,6 +73,7 @@ export function ImageBlock({
               color={ERROR_TEXT[scheme]}
               fontWeight="600"
               fontFamily="$body"
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("media.uploadFailed")}
             </Text>
@@ -83,6 +84,7 @@ export function ImageBlock({
                   color={RETRY_COLOR[scheme]}
                   fontWeight="600"
                   fontFamily="$body"
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("media.retryUpload")}
                 </Text>
@@ -93,6 +95,7 @@ export function ImageBlock({
                   color={ERROR_TEXT[scheme]}
                   fontWeight="600"
                   fontFamily="$body"
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("action.delete")}
                 </Text>

@@ -45,6 +45,8 @@ export function ConsumedAmountSelector({
             <Text
               key={preset.step}
               accessibilityState={{ selected }}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
               style={[
                 styles.description,
                 selected

@@ -154,6 +154,7 @@ export function HomeTab({
                     typography.subtext.medium,
                     { color: colors.label.assistive },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("restaurant.safety.mealBasis")}
                 </Text>
@@ -162,6 +163,7 @@ export function HomeTab({
                     typography.subtext.small,
                     { color: colors.label.assistive },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("restaurant.safety.disclaimer")}
                 </Text>

@@ -275,13 +275,19 @@ export function ProfileEditScreen() {
               <Ionicons name="camera" size={13} color={s.onBrand} />
             </View>
           </Pressable>
-          <Text style={[styles.avatarHint, { color: s.textMuted }]}>
+          <Text
+            style={[styles.avatarHint, { color: s.textMuted }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("profile.photo.hint")}
           </Text>
         </View>
 
         {/* 내 정보 — 한 줄 행: 라벨은 왼쪽, 값은 오른쪽 */}
-        <Text style={[styles.groupTitle, { color: s.textMuted }]}>
+        <Text
+          style={[styles.groupTitle, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("profile.section.personal")}
         </Text>
         <View style={[styles.card, { backgroundColor: s.card }]}>
@@ -382,7 +388,10 @@ export function ProfileEditScreen() {
         </View>
 
         {/* 보안 */}
-        <Text style={[styles.groupTitle, { color: s.textMuted }]}>
+        <Text
+          style={[styles.groupTitle, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("profile.section.security")}
         </Text>
         <View style={[styles.card, { backgroundColor: s.card }]}>

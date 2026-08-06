@@ -104,6 +104,7 @@ export function WriteTypeSheet({
                   fontWeight="700"
                   fontFamily="$body"
                   color={isDark ? TITLE_COLOR.dark : TITLE_COLOR.light}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t(option.titleKey)}
                 </Text>
@@ -112,6 +113,7 @@ export function WriteTypeSheet({
                   fontWeight="400"
                   fontFamily="$body"
                   color={isDark ? DESC_COLOR.dark : DESC_COLOR.light}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t(option.descriptionKey)}
                 </Text>

@@ -20,7 +20,12 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
         alignItems="center"
         paddingHorizontal="$5"
       >
-        <Text fontSize="$5" fontWeight="700" color="$grey3">
+        <Text
+          fontSize="$5"
+          fontWeight="700"
+          color="$grey3"
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("consult.faqTitle")}
         </Text>
         <Text
@@ -31,6 +36,7 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
           borderRadius={12}
           paddingHorizontal={10}
           paddingVertical={2}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("consult.questionCount", { count: items.length })}
         </Text>

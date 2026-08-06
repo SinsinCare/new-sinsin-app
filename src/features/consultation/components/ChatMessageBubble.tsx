@@ -458,6 +458,7 @@ export const AssistantBubble = memo(function AssistantBubble({
                   fontWeight="600"
                   color={iconColor}
                   lineHeight={18}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("consult.regenerate")}
                 </Text>

@@ -89,7 +89,10 @@ export function ReviewSection({
     <View style={styles.root}>
       <View style={styles.head}>
         <View style={styles.headLeft}>
-          <Text style={[styles.sectionTitle, { color: colors.label.normal }]}>
+          <Text
+            style={[styles.sectionTitle, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.reviews.title")}
           </Text>
           {/* 별점 영역은 리뷰가 있을 때만 존재한다. */}
@@ -110,6 +113,7 @@ export function ReviewSection({
                   styles.ratingCount,
                   { color: colors.label.alternative },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("detail.reviews.count", { count: rating.count })}
               </Text>
@@ -131,7 +135,10 @@ export function ReviewSection({
             },
           ]}
         >
-          <Text style={[styles.writeLabel, { color: colors.static.white }]}>
+          <Text
+            style={[styles.writeLabel, { color: colors.static.white }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {myReview
               ? t("detail.reviews.editMine")
               : t("detail.reviews.write")}
@@ -186,7 +193,10 @@ export function ReviewSection({
 
       {myReview != null && (
         <View style={styles.mineRow}>
-          <Text style={[styles.mineLabel, { color: colors.label.alternative }]}>
+          <Text
+            style={[styles.mineLabel, { color: colors.label.alternative }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.reviews.mine")}
           </Text>
           <Pressable
@@ -199,7 +209,10 @@ export function ReviewSection({
               opacity: pressed || isDeleting ? 0.5 : 1,
             })}
           >
-            <Text style={[styles.mineAction, { color: colors.label.neutral }]}>
+            <Text
+              style={[styles.mineAction, { color: colors.label.neutral }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("detail.reviews.deleteMine")}
             </Text>
           </Pressable>
@@ -227,10 +240,16 @@ export function ReviewSection({
         </V2SkeletonGroup>
       ) : reviews.length === 0 ? (
         <View style={styles.emptyBlock}>
-          <Text style={[styles.emptyTitle, { color: colors.label.normal }]}>
+          <Text
+            style={[styles.emptyTitle, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.reviews.empty")}
           </Text>
-          <Text style={[styles.emptyBody, { color: colors.label.alternative }]}>
+          <Text
+            style={[styles.emptyBody, { color: colors.label.alternative }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.reviews.emptyBody")}
           </Text>
         </View>
@@ -261,7 +280,10 @@ export function ReviewSection({
           {isFetchingMore ? (
             <V2DotLoader size="s" color={colors.label.alternative} />
           ) : (
-            <Text style={[styles.moreLabel, { color: colors.label.normal }]}>
+            <Text
+              style={[styles.moreLabel, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("detail.reviews.more")}
             </Text>
           )}
@@ -295,7 +317,10 @@ function ReviewCard({
           {review.authorNickName}
         </Text>
         {review.mine && (
-          <Text style={[styles.cardMeta, { color: colors.primary.primary }]}>
+          <Text
+            style={[styles.cardMeta, { color: colors.primary.primary }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.reviews.mine")}
           </Text>
         )}
@@ -322,7 +347,10 @@ function ReviewCard({
               pressed && styles.pressed,
             ]}
           >
-            <Text style={[styles.cardMeta, { color: colors.label.assistive }]}>
+            <Text
+              style={[styles.cardMeta, { color: colors.label.assistive }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("detail.reviews.blockAuthor")}
             </Text>
           </Pressable>

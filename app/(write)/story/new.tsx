@@ -218,7 +218,11 @@ export default function NewStoryScreen() {
         >
           <Ionicons name="close" size={24} color={surface.textStrong} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
+        <Text
+          style={[styles.headerTitle, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {t("community.newStory.title")}
         </Text>
         <SurfacePressable
@@ -242,6 +246,7 @@ export default function NewStoryScreen() {
               styles.submitLabel,
               { color: selected ? inkContent : surface.ctaOffText },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {isSaving
               ? t("community.newStory.saving")
@@ -280,6 +285,7 @@ export default function NewStoryScreen() {
               />
               <Text
                 style={[styles.previewEmptyText, { color: surface.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.newStory.choosePhoto")}
               </Text>
@@ -295,7 +301,10 @@ export default function NewStoryScreen() {
         </View>
 
         {/* 사진 고르기 */}
-        <Text style={[styles.sectionLabel, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.sectionLabel, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("community.newStory.recentMeals")}
         </Text>
         <ScrollView
@@ -314,7 +323,10 @@ export default function NewStoryScreen() {
             style={styles.galleryTile}
           >
             <Ionicons name="add" size={22} color={surface.textMuted} />
-            <Text style={[styles.galleryLabel, { color: surface.textMuted }]}>
+            <Text
+              style={[styles.galleryLabel, { color: surface.textMuted }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("community.newStory.gallery")}
             </Text>
           </SurfacePressable>
@@ -358,13 +370,19 @@ export default function NewStoryScreen() {
         </ScrollView>
 
         {candidates.length === 0 && (
-          <Text style={[styles.hint, { color: surface.textWeak }]}>
+          <Text
+            style={[styles.hint, { color: surface.textWeak }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("community.newStory.noMealPhotos")}
           </Text>
         )}
 
         {/* 한마디 */}
-        <Text style={[styles.sectionLabel, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.sectionLabel, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("community.newStory.captionLabel")}
         </Text>
         <View style={styles.captionWrap}>
@@ -388,7 +406,11 @@ export default function NewStoryScreen() {
           </Text>
         </View>
 
-        <Text style={[styles.notice, { color: surface.textWeak }]}>
+        <Text
+          style={[styles.notice, { color: surface.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {t("community.newStory.notice")}
         </Text>
       </KeyboardAwareScrollView>

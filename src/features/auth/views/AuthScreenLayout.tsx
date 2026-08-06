@@ -66,11 +66,16 @@ export function AuthScreenLayout({
           fontWeight="700"
           color={surface.textStrong}
           marginBottom={subtitle ? 8 : 0}
+          lineBreakStrategyIOS="hangul-word"
         >
           {title}
         </Text>
         {subtitle && (
-          <Text {...AUTH_TYPE.subtitle} color={surface.textWeak}>
+          <Text
+            {...AUTH_TYPE.subtitle}
+            color={surface.textWeak}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {subtitle}
           </Text>
         )}

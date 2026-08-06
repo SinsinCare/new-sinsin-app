@@ -372,7 +372,10 @@ export function MyPageScreen() {
             >
               {profile?.nickName ?? t("myPage.userFallback")}
             </Text>
-            <Text style={[styles.profileSub, { color: surface.textMuted }]}>
+            <Text
+              style={[styles.profileSub, { color: surface.textMuted }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {profileSub
                 ? `${profileSub} · ${t("myPage.editProfile")}`
                 : t("myPage.editProfile")}
@@ -382,7 +385,10 @@ export function MyPageScreen() {
         </Pressable>
 
         {/* 신장 프로필 */}
-        <Text style={[styles.sectionHeader, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.sectionHeader, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("myPage.kidneyHealth")}
         </Text>
         {!kidneyProfile ? (
@@ -431,7 +437,10 @@ export function MyPageScreen() {
         )}
 
         {/* 메뉴 — 헤어라인으로만 나눈 카드 그룹. */}
-        <Text style={[styles.sectionHeader, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.sectionHeader, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("myPage.healthManagement")}
         </Text>
         <View style={[styles.menuGroup, { backgroundColor: surface.card }]}>
@@ -445,7 +454,10 @@ export function MyPageScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionHeader, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.sectionHeader, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("myPage.support")}
         </Text>
         <View style={[styles.menuGroup, { backgroundColor: surface.card }]}>

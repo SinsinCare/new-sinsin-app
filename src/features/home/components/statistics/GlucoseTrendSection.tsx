@@ -59,7 +59,11 @@ export function GlucoseTrendSection({
 
       <View style={[styles.card, { backgroundColor: surface.surface }]}>
         {model.summary.count === 0 ? (
-          <Text style={[styles.empty, { color: surface.textWeak }]}>
+          <Text
+            style={[styles.empty, { color: surface.textWeak }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t(isLoading ? "stats.glucose.loading" : "stats.glucose.empty")}
           </Text>
         ) : (
@@ -286,11 +290,17 @@ function Caption({ model }: { model: GlucoseTrendModel }) {
 
   return (
     <View style={styles.captionBlock}>
-      <Text style={[styles.caption, { color: surface.textWeak }]}>
+      <Text
+        style={[styles.caption, { color: surface.textWeak }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("stats.glucose.range", { min, max })}
       </Text>
       {worstLabel ? (
-        <Text style={[styles.caption, { color: surface.textWeak }]}>
+        <Text
+          style={[styles.caption, { color: surface.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("stats.glucose.worstCell", {
             cell: worstLabel,
             count: worstCell?.overCount ?? 0,

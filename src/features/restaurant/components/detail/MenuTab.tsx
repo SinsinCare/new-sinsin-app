@@ -108,6 +108,7 @@ export function MenuTab({
             styles.confidence,
             { color: colors.label.alternative },
           ]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t(dynamicKey(CONFIDENCE_KEY[confidence]))}
         </Text>
@@ -131,6 +132,7 @@ export function MenuTab({
               typography.subtext.medium,
               { color: colors.label.alternative },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.detail.menuTruncated")}
           </Text>
@@ -142,17 +144,20 @@ export function MenuTab({
               typography.subtext.medium,
               { color: colors.label.assistive },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.safety.mealBasis")}
           </Text>
         )}
         <Text
           style={[typography.subtext.medium, { color: colors.label.assistive }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("restaurant.safety.menuNotice")}
         </Text>
         <Text
           style={[typography.subtext.small, { color: colors.label.assistive }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("restaurant.safety.disclaimer")}
         </Text>

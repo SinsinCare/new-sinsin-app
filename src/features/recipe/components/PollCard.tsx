@@ -102,10 +102,16 @@ export function PollCard({
   return (
     <View style={[styles.card, { backgroundColor: surface.surface }]}>
       <View style={styles.headerRow}>
-        <Text style={[styles.title, { color: surface.brand }]}>
+        <Text
+          style={[styles.title, { color: surface.brand }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("poll.label")}
         </Text>
-        <Text style={[styles.meta, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.meta, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {hasVoted
             ? t("poll.participants", { count: vote.totalCount })
             : vote.allowMultiple
@@ -235,6 +241,7 @@ export function PollCard({
               styles.submitLabel,
               { color: canSubmit ? inkContent : surface.ctaOffText },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {isSubmitting
               ? t("poll.submitting")

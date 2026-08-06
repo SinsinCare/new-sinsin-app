@@ -79,6 +79,7 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
         </View>
         <ThemedText
           style={[cardStyles.statusTitle, { color: healthColors.text }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t(`dashboard.modules.${config.translationKey}.title`)}
         </ThemedText>
@@ -173,6 +174,7 @@ function ModuleStatusCard({ data }: { data: ModuleData }) {
             cardStyles.placeholderText,
             { color: healthColors.textAssistive },
           ]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t(`dashboard.modules.${config.translationKey}.description`)}
         </ThemedText>
@@ -322,11 +324,16 @@ export function HealthDashboardScreen() {
             size={48}
             color={healthColors.textAssistive}
           />
-          <ThemedText style={[styles.emptyText, { color: healthColors.text }]}>
+          <ThemedText
+            style={[styles.emptyText, { color: healthColors.text }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("dashboard.emptyTitle")}
           </ThemedText>
           <ThemedText
             style={[styles.emptySub, { color: healthColors.textSecondary }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("dashboard.emptyDescription")}
           </ThemedText>
@@ -397,6 +404,7 @@ export function HealthDashboardScreen() {
               styles.referenceNote,
               { color: healthColors.textSecondary },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("dashboard.referenceNote")}
           </ThemedText>
@@ -425,6 +433,7 @@ export function HealthDashboardScreen() {
                 styles.placeholderText,
                 { color: healthColors.textAssistive },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("dashboard.noTrend")}
             </ThemedText>

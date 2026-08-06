@@ -252,6 +252,7 @@ function Field({
             typography.subtext.mediumStrong,
             { color: colors.label.normal },
           ]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {label}
         </Text>

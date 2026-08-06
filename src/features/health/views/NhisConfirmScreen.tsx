@@ -143,11 +143,17 @@ export function NhisConfirmScreen() {
                 color={tokens.color.sub6.val}
               />
             </View>
-            <ThemedText style={[styles.title, { color: healthColors.text }]}>
+            <ThemedText
+              style={[styles.title, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
               {t("nhis.loadingTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.subtitle, { color: healthColors.textSecondary }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("nhis.loadingDescription")}
             </ThemedText>
@@ -165,7 +171,11 @@ export function NhisConfirmScreen() {
                 }
               />
             </View>
-            <ThemedText style={[styles.title, { color: healthColors.text }]}>
+            <ThemedText
+              style={[styles.title, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
               {outcomeTitle}
             </ThemedText>
             <ThemedText

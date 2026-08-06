@@ -173,6 +173,7 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
               fontWeight="600"
               fontFamily="$body"
               color={palette.tagText}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("curated.estimatedBadge")}
             </Text>

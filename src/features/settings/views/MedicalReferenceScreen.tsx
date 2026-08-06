@@ -205,7 +205,10 @@ function ReferenceRow({
         >
           {item.title}
         </Text>
-        <Text style={[styles.itemMeta, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.itemMeta, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {item.meta}
         </Text>
       </View>
@@ -321,6 +324,7 @@ export function MedicalReferenceScreen() {
             <View key={section.id}>
               <Text
                 style={[styles.sectionHeader, { color: surface.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {section.header}
               </Text>
@@ -339,7 +343,11 @@ export function MedicalReferenceScreen() {
             </View>
           ))
         ) : (
-          <Text style={[styles.emptyText, { color: surface.textMuted }]}>
+          <Text
+            style={[styles.emptyText, { color: surface.textMuted }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("medical.empty")}
           </Text>
         )}

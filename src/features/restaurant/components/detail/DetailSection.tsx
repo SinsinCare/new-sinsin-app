@@ -46,7 +46,10 @@ export function DetailSection({
 
   const header = (
     <View style={styles.headerRow}>
-      <Text style={[typography.title.xSmall, { color: colors.label.normal }]}>
+      <Text
+        style={[typography.title.xSmall, { color: colors.label.normal }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {title}
       </Text>
       {count !== null && (

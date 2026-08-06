@@ -87,6 +87,7 @@ export function LocationPermissionBanner({
           styles.message,
           { color: colors.label.neutral },
         ]}
+        lineBreakStrategyIOS="hangul-word"
       >
         {t("restaurant.permission.deniedBanner")}
       </Text>

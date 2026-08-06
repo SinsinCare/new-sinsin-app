@@ -255,6 +255,7 @@ export function ReviewCard({
           <Text
             style={[typography.subtext.large, { color: colors.label.normal }]}
             numberOfLines={expanded ? undefined : CONTENT_LINES}
+            lineBreakStrategyIOS="hangul-word"
           >
             {review.content}
           </Text>

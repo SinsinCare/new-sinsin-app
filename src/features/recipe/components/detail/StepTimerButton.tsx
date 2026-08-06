@@ -127,7 +127,12 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
           hitSlop={6}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <Text {...TYPE.caption} fontFamily="$body" color={surface.textMuted}>
+          <Text
+            {...TYPE.caption}
+            fontFamily="$body"
+            color={surface.textMuted}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.steps.timerReset")}
           </Text>
         </Pressable>

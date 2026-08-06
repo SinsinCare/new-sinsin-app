@@ -123,7 +123,10 @@ export default function CommunityLibraryScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={surface.textStrong} />
         </Pressable>
-        <Text style={[styles.appBarTitle, { color: surface.textStrong }]}>
+        <Text
+          style={[styles.appBarTitle, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("community.myActivity")}
         </Text>
         <View style={styles.appBarSpacer} />
@@ -170,6 +173,7 @@ export default function CommunityLibraryScreen() {
                         ]
                       : { color: surface.textMuted },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t(`community.library.tabs.${tab}`)}
                   {count > 0 ? ` ${count}` : ""}
@@ -199,6 +203,7 @@ export default function CommunityLibraryScreen() {
               onPressTag={handleTagPress}
               onBlock={blockUser}
               isWithdrawnAuthor={post.authorId === null}
+              isMine={myNickName != null && post.authorName === myNickName}
             />
           </View>
         )}

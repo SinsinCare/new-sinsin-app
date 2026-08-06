@@ -491,6 +491,7 @@ export function SheetNotice({ message }: { message: string }) {
         noticeStyles.text,
         { color: colors.label.alternative },
       ]}
+      lineBreakStrategyIOS="hangul-word"
     >
       {message}
     </Text>

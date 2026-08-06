@@ -44,7 +44,11 @@ export function RecordResultCard({
         )}
       </XStack>
       {subtitle && (
-        <Text fontSize={13} color="$color.grey5">
+        <Text
+          fontSize={13}
+          color="$color.grey5"
+          lineBreakStrategyIOS="hangul-word"
+        >
           {subtitle}
         </Text>
       )}

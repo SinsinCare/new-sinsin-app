@@ -30,6 +30,12 @@ interface PostListItemProps {
   onPressTag?: (tag: string) => void
   onBlock?: (authorName: string) => void
   isWithdrawnAuthor?: boolean
+  /**
+   * 내 글이면 케밥(신고·차단)을 그리지 않는다 — 자기 자신을 신고·차단하는 메뉴는
+   * 서버 거절에 기대는 UI 다(QA 2026-08-06, `app/post/[id].tsx` 와 같은 규칙).
+   * 프로필 미로딩(undefined)은 "내 것 아님" 으로 접는다.
+   */
+  isMine?: boolean
 }
 
 /** 피드 카드 — 회색 바닥 위의 흰 카드. 제목·미리보기 왼쪽, 사진은 오른쪽 섬네일. */
@@ -47,6 +53,7 @@ export function PostListItem({
   onPressTag,
   onBlock,
   isWithdrawnAuthor = false,
+  isMine = false,
 }: PostListItemProps) {
   const { t, i18n } = useTranslation("recipe")
   const surface = useSurface()
@@ -130,7 +137,7 @@ export function PostListItem({
         >
           {category} · {formatTimeAgo(createdAt, i18n.language)}
         </Text>
-        {!isWithdrawnAuthor && (
+        {!isWithdrawnAuthor && !isMine && (
           <Pressable
             onPress={handleMorePress}
             hitSlop={10}

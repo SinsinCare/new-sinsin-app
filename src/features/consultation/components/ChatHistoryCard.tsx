@@ -115,6 +115,7 @@ export function ChatHistoryCard({
             fontWeight="400"
             color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
             numberOfLines={2}
+            lineBreakStrategyIOS="hangul-word"
           >
             {content}
           </Text>
@@ -161,7 +162,10 @@ export function ChatHistoryCard({
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={[styles.menuItemText, { color: textColor }]}>
+              <Text
+                style={[styles.menuItemText, { color: textColor }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("consult.history.rename")}
               </Text>
               <Icon name="pencil" size={20} color={textColor} />
@@ -178,7 +182,10 @@ export function ChatHistoryCard({
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={[styles.menuItemText, { color: deleteColor }]}>
+              <Text
+                style={[styles.menuItemText, { color: deleteColor }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("consult.history.delete")}
               </Text>
               <Icon name="trashcan" size={20} color={deleteColor} />

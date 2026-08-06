@@ -54,10 +54,18 @@ export default function RecipeEditScreen() {
         </Pressable>
       </View>
       <View style={styles.body}>
-        <Text style={[styles.title, { color: s.textStrong }]}>
+        <Text
+          style={[styles.title, { color: s.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {t("recipeWrite.editUnavailableTitle")}
         </Text>
-        <Text style={[styles.description, { color: s.textMuted }]}>
+        <Text
+          style={[styles.description, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {t("recipeWrite.editUnavailableBody")}
         </Text>
       </View>

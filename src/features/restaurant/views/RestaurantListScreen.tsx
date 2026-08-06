@@ -97,7 +97,8 @@ export function RestaurantListScreen({
   const [aiOpen, setAiOpen] = useState(false)
   const [filterSection, setFilterSection] = useState<FilterAxis | null>(null)
 
-  /* 좌표가 없으면 `거리순` 은 서버가 계산할 근거가 없다. 정렬을 조용히 기본값으로 되돌린다 —
+  /* 좌표가 없으면(커버리지 밖도 위치 없음으로 접힌다 — `useMyLocation` 머리말) `거리순` 은
+     서버가 계산할 근거가 없다. 정렬을 조용히 기본값으로 되돌린다 —
      막아 두기만 하면 이미 고른 상태로 들어온 사용자가 영영 아무 정렬도 못 받는다. */
   const sanitize = filters.sanitizeSortForLocation
   const hasCoords = location.coords !== null
@@ -226,7 +227,7 @@ export function RestaurantListScreen({
         onClose={() => setSortOpen(false)}
         value={filters.filters.sort}
         onSubmit={filters.setSort}
-        distanceDisabled={location.isDistanceSortDisabled}
+        distanceDisabledReason={location.distanceSortDisabledReason}
       />
 
       <FilterSheet

@@ -81,6 +81,7 @@ export function InfoTab({ detail }: InfoTabProps) {
                 typography.subtext.large,
                 { color: colors.label.assistive },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.amenity.empty")}
             </Text>
@@ -99,6 +100,8 @@ export function InfoTab({ detail }: InfoTabProps) {
                       styles.gridLabel,
                       { color: colors.label.neutral },
                     ]}
+                    lineBreakStrategyIOS="hangul-word"
+                    textBreakStrategy="balanced"
                   >
                     {t(`restaurant.amenity.${amenity}`)}
                   </Text>
@@ -121,6 +124,7 @@ export function InfoTab({ detail }: InfoTabProps) {
                 styles.parkingNote,
                 { color: colors.label.neutral },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {parking.note}
             </Text>

@@ -106,6 +106,7 @@ export function RecipeFilterSheet({
             lineHeight={22}
             fontWeight="700"
             color={surface.textStrong}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("filter.title")}
           </Text>
@@ -127,6 +128,7 @@ export function RecipeFilterSheet({
               lineHeight={20}
               fontWeight="600"
               color={surface.textMuted}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("list.filterClearAll")}
             </Text>
@@ -148,6 +150,7 @@ export function RecipeFilterSheet({
                 lineHeight={20}
                 fontWeight="700"
                 color={surface.textStrong}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t(group.titleKey)}
               </Text>
@@ -187,6 +190,7 @@ export function RecipeFilterSheet({
                               ? tokens.color.primary.val
                               : surface.textMuted
                           }
+                          lineBreakStrategyIOS="hangul-word"
                         >
                           {t(option.labelKey)}
                         </Text>
@@ -223,6 +227,7 @@ export function RecipeFilterSheet({
                 lineHeight={22}
                 fontWeight="700"
                 color="#FFFFFF"
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("action.apply")}
               </Text>
@@ -234,6 +239,7 @@ export function RecipeFilterSheet({
                   lineHeight={20}
                   fontWeight="600"
                   color="#FFFFFFCC"
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("list.filterApplied", { count: draftCount })}
                 </Text>

@@ -171,6 +171,7 @@ export function CategoryFilterSheet({
             fontWeight="600"
             fontFamily="$body"
             color={colors.title}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("filter.title")}
           </Text>
@@ -184,6 +185,7 @@ export function CategoryFilterSheet({
               fontWeight="600"
               fontFamily="$body"
               color={colors.apply}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("action.apply")}
             </Text>
@@ -201,6 +203,7 @@ export function CategoryFilterSheet({
                 fontWeight="700"
                 fontFamily="$body"
                 color={sectionTitleColor}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t(section.titleKey)}
               </Text>

@@ -13,8 +13,15 @@ import { V2Button } from "./V2Button"
 import { V2Icon } from "./V2Icon"
 
 type V2ErrorStateBaseProps = {
-  /** 상단 아이콘. 기본 'caution' (status.negative 색으로 칠함) */
+  /** 상단 아이콘. 기본 'caution' */
   icon?: V2IconName
+  /**
+   * 아이콘의 감정 온도. 기본 'negative'(빨강)는 데이터 유실·권한 거부처럼
+   * 사용자가 무언가 잃을 수 있는 상황용이다. 지도 로드 실패·일시적 네트워크
+   * 문제처럼 **다시 시도하면 그만인 상태**는 'quiet'(그레이) — 빨간 경고는
+   * 그 화면을 사고 현장처럼 읽히게 한다(QA 2026-08-06, 식당 지도).
+   */
+  tone?: "negative" | "quiet"
   /** 사용자가 처한 상황을 구체적으로 설명하는 제목 */
   title: string
   /** 부가 설명 (옵션) */
@@ -60,6 +67,7 @@ export type V2ErrorStateProps = V2ErrorStateBaseProps & V2ErrorStateRetry
 export function V2ErrorState(props: V2ErrorStateProps) {
   const {
     icon = "caution",
+    tone = "negative",
     title,
     description,
     onRetry,
@@ -70,8 +78,14 @@ export function V2ErrorState(props: V2ErrorStateProps) {
 
   return (
     <View style={[styles.root, style]}>
-      {/* 아이콘: 2xl(40) + 부정 상태색 */}
-      <V2Icon name={icon} size="2xl" color={colors.status.negative} />
+      {/* 아이콘: 2xl(40). negative=부정 상태색, quiet=보조 그레이 */}
+      <V2Icon
+        name={icon}
+        size="2xl"
+        color={
+          tone === "quiet" ? colors.label.assistive : colors.status.negative
+        }
+      />
 
       {/* 가운데 정렬은 줄바꿈 위치가 그대로 실루엣이 된다 — 어절 중간에서 끊기면
           양쪽 여백이 들쭉날쭉해져 문장보다 먼저 눈에 띈다. 그래서 한글 어절 단위로

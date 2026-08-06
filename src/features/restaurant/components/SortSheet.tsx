@@ -11,6 +11,9 @@
  *
  * 좌표가 없으면 서버가 `distanceKm` 을 계산하지 못해 정렬이 무의미해진다. 칩을 감추지 않고
  * disabled 로 두고 이유를 적는다 — 목록에서 옵션이 사라지면 사용자는 기능이 없는 줄 안다.
+ * 이유는 둘이고 문구가 다르다: 위치가 없으면 "위치를 켜면 …" 이 맞지만, 커버리지 밖(해외)
+ * 사용자에게 그 문구는 거짓말이다 — 위치를 켜도 소용없다. 그래서 boolean 이 아니라
+ * 이유(`DistanceSortDisabledReason`)를 받는다.
  *
  * ## `V2Option` 을 쓰는 이유
  *
@@ -33,7 +36,7 @@ import { SHEET_GUTTER } from "../layout"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 
 import { SORT_OPTIONS } from "../data/filterCatalog"
-import type { SortOption } from "../types"
+import type { DistanceSortDisabledReason, SortOption } from "../types"
 
 export interface SortSheetProps {
   visible: boolean
@@ -42,8 +45,8 @@ export interface SortSheetProps {
   value: SortOption
   /** `다음` 을 눌렀을 때만 확정된다. 행을 누르는 것만으로는 질의가 나가지 않는다. */
   onSubmit: (sort: SortOption) => void
-  /** 위치 권한이 없다. `거리순` 을 비활성한다. */
-  distanceDisabled?: boolean
+  /** `거리순` 을 쓸 수 없는 이유. `null`/생략이면 쓸 수 있다. 이유마다 문구가 다르다(헤더). */
+  distanceDisabledReason?: DistanceSortDisabledReason | null
 }
 
 /** 목업의 옵션 행 높이(72). `controlHeight` 에 대응 값이 없어 리터럴 + 주석으로 둔다. */
@@ -61,7 +64,7 @@ export function SortSheet({
   onClose,
   value,
   onSubmit,
-  distanceDisabled = false,
+  distanceDisabledReason = null,
 }: SortSheetProps) {
   const { t } = useTranslation("common")
   const { height: windowHeight } = useWindowDimensions()
@@ -93,13 +96,20 @@ export function SortSheet({
       >
         <View style={styles.listInner}>
           {SORT_OPTIONS.map((option) => {
-            const isDisabled = option.requiresLocation && distanceDisabled
+            const isDisabled =
+              option.requiresLocation && distanceDisabledReason !== null
             return (
               <V2Option
                 key={option.value}
                 label={t(dynamicKey(option.labelKey))}
                 description={
-                  isDisabled ? t("restaurant.sort.distanceDisabled") : undefined
+                  isDisabled
+                    ? t(
+                        distanceDisabledReason === "OUTSIDE_COVERAGE"
+                          ? "restaurant.sort.distanceDisabledOutsideCoverage"
+                          : "restaurant.sort.distanceDisabled",
+                      )
+                    : undefined
                 }
                 selected={selected === option.value}
                 disabled={isDisabled}

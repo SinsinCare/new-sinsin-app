@@ -62,6 +62,7 @@ export function BottomActionBar({
             styles.buttonText,
             { color: disabled ? s.ctaOffText : s.onBrand },
           ]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {label}
         </Text>

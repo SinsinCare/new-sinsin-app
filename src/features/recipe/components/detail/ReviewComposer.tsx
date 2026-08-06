@@ -161,6 +161,7 @@ export function ReviewComposer({
             fontFamily="$body"
             fontWeight="700"
             color={surface.textStrong}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("detail.reviews.composerTitle")}
           </Text>
@@ -188,6 +189,7 @@ export function ReviewComposer({
                     fontFamily="$body"
                     fontWeight="600"
                     color={surface.brand}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {t(RATING_WORD_KEYS[rating as 1 | 2 | 3 | 4 | 5])}
                   </Text>
@@ -222,6 +224,7 @@ export function ReviewComposer({
                   fontFamily="$body"
                   color={surface.textWeak}
                   alignSelf="flex-end"
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("detail.reviews.bodyCounter", {
                     current: body.length,
@@ -244,6 +247,8 @@ export function ReviewComposer({
               fontFamily="$body"
               color={surface.danger}
               textAlign="center"
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("detail.reviews.submitError")}
             </Text>
@@ -274,6 +279,7 @@ export function ReviewComposer({
                 fontFamily="$body"
                 fontWeight="600"
                 color={canSubmit ? surface.onBrand : surface.ctaOffText}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {isSubmitting
                   ? t("detail.reviews.submitting")

@@ -597,7 +597,8 @@
       "PRICE_HIGH": "가격 높은순",
       "PRICE_LOW": "가격 낮은순",
       "DISTANCE": "거리순",
-      "distanceDisabled": "위치를 켜면 거리순으로 볼 수 있어요"
+      "distanceDisabled": "위치를 켜면 거리순으로 볼 수 있어요",
+      "distanceDisabledOutsideCoverage": "현재 위치가 서비스 지역 밖이라 쓸 수 없어요"
     },
     "reviewSort": {
       "LATEST": "최신순",

@@ -80,7 +80,10 @@ export function MealTimeline({
       </View>
 
       {recordedCount === 0 && (
-        <Text style={[styles.emptyCaption, { color: s.textMuted }]}>
+        <Text
+          style={[styles.emptyCaption, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("home.timeline.empty")}
         </Text>
       )}
@@ -157,6 +160,14 @@ function MealCard({
   // SurfacePressable 은 면 색을 보간한다 — "transparent" 를 넘기면 워클릿이
   // 죽어 카드가 통째로 사라진다(실제로 겪었다). 래퍼 자신이 카드 면이 된다.
 
+  /*
+    세 분기가 전부 SurfacePressable 이라 React 는 인스턴스를 재사용한다. 예전에는
+    그 재사용이 안드로이드 릴리즈에서 "기록된 끼니가 민짜 회색 상자"로 보이던
+    QA(2026-08-06)의 원인이었다 — 데이터 도착으로 빈 카드 → 사진 카드로 자식이
+    통째로 바뀌면 새 자식이 그려지지 않았다. 지금은 SurfacePressable 자신이
+    자식 구성 변화를 감지해 리마운트한다(childrenShapeKey 머리말). 여기서
+    분기별 key 를 다시 달 필요는 없다.
+  */
   // ── 기록됨 + 사진: 사진이 카드 전체를 채우고 글자는 하단 그라데이션 위 ──
   if (recorded && imageUri) {
     return (

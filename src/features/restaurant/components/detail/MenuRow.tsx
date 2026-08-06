@@ -210,6 +210,7 @@ export function MenuRow({
               typography.caption.small,
               { color: colors.label.alternative },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {metaLine}
           </Text>
@@ -219,6 +220,7 @@ export function MenuRow({
           <Text
             style={[typography.subtext.large, { color: colors.label.neutral }]}
             numberOfLines={DESCRIPTION_LINES}
+            lineBreakStrategyIOS="hangul-word"
           >
             {menu.description}
           </Text>

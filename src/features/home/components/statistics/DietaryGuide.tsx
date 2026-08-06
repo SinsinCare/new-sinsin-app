@@ -30,6 +30,7 @@ export function DietaryGuide({
           fontSize={14}
           color={isDarkMode ? "$textDark" : "$black"}
           lineHeight={18}
+          lineBreakStrategyIOS="hangul-word"
         >
           {dietaryGuide ?? t("stats.dietaryGuide.empty")}
         </Text>
@@ -42,6 +43,7 @@ export function DietaryGuide({
             fontWeight="500"
             color="$colorSubtle"
             paddingTop="$3"
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("stats.dietaryGuide.nextMeal")}
           </Text>

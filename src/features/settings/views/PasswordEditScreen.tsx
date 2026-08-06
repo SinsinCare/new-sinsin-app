@@ -189,7 +189,10 @@ export function PasswordEditScreen() {
         </KeyboardAwareScrollView>
 
         {submitError && (
-          <Text style={[styles.submitError, { color: s.danger }]}>
+          <Text
+            style={[styles.submitError, { color: s.danger }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {submitError}
           </Text>
         )}

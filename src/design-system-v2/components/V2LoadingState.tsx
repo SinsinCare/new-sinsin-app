@@ -52,7 +52,11 @@ export function V2LoadingState({
         size={size === "small" ? "s" : "m"}
       />
       {message ? (
-        <Text style={[styles.message, { color: colors.label.neutral }]}>
+        <Text
+          style={[styles.message, { color: colors.label.neutral }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {message}
         </Text>
       ) : null}

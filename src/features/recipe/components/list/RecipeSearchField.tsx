@@ -123,6 +123,7 @@ export function RecipeSearchField({
             lineHeight={20}
             fontWeight="600"
             color={hasFilters ? tokens.color.primary.val : surface.textMuted}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("list.filterOpen")}
           </Text>

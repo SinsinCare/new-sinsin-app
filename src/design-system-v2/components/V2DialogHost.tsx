@@ -105,6 +105,10 @@ export function V2DialogHost() {
         secondaryLabel={current?.cancelLabel ?? t("action.cancel")}
         onSecondary={() => settle(null)}
       >
+        {/* 맨 텍스트 줄은 "누를 수 있다"가 안 읽혀 시트가 미완처럼 보였다
+            (QA 2026-08-06). 앱의 다른 시트 옵션과 같은 문법 — 면 있는 카드
+            행으로 그린다. 항목이 하나뿐인 경우는 애초에 여기로 오지 않는다
+            (dialog.ts 가 확인 다이얼로그로 강등). */}
         <View style={styles.actions}>
           {current?.actions?.map((action, index) => (
             <Pressable
@@ -113,7 +117,11 @@ export function V2DialogHost() {
               onPress={() => settle(index)}
               style={({ pressed }) => [
                 styles.action,
-                pressed && { backgroundColor: colors.fill.normal },
+                {
+                  backgroundColor: pressed
+                    ? colors.fill.normal
+                    : colors.fill.alternative,
+                },
               ]}
             >
               <Text
@@ -125,6 +133,7 @@ export function V2DialogHost() {
                       : colors.label.normal,
                   },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {action.label}
               </Text>
@@ -137,11 +146,17 @@ export function V2DialogHost() {
 }
 
 const styles = StyleSheet.create({
-  actions: { paddingVertical: spacing[4] },
-  action: {
-    paddingVertical: spacing[16],
+  /* V2 시트의 내부 거터는 24 다(헤더·푸터·닫기 버튼 전부). 여기만 20 을 쓰면
+     제목과 행의 왼쪽 라인이 어긋난다 — 실제로 어긋났었다(QA 2026-08-06). */
+  actions: {
+    paddingVertical: spacing[4],
     paddingHorizontal: spacing[24],
-    minHeight: 44,
+    gap: spacing[8],
+  },
+  action: {
+    minHeight: 56,
+    paddingHorizontal: spacing[20],
+    borderRadius: 14,
     justifyContent: "center",
   },
 })

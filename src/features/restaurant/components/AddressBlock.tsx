@@ -229,6 +229,7 @@ function AddressRow({
           styles.value,
           { color: colors.label.neutral },
         ]}
+        lineBreakStrategyIOS="hangul-word"
       >
         {value}
       </Text>

@@ -95,7 +95,10 @@ export default function PrivacySettingsScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={c.iconBack} />
         </Pressable>
-        <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
+        <ThemedText
+          style={[styles.headerTitle, { color: c.headerText }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("settings.privacy.title")}
         </ThemedText>
         <View style={{ width: 24 }} />
@@ -112,7 +115,10 @@ export default function PrivacySettingsScreen() {
       >
         {/* Terms & Policies Section */}
         <View style={styles.section}>
-          <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
+          <ThemedText
+            style={[styles.sectionTitle, { color: c.textSub }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("settings.privacy.policies")}
           </ThemedText>
           <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>
@@ -133,7 +139,10 @@ export default function PrivacySettingsScreen() {
 
         {/* Account Management Section */}
         <View style={styles.section}>
-          <ThemedText style={[styles.sectionTitle, { color: c.textSub }]}>
+          <ThemedText
+            style={[styles.sectionTitle, { color: c.textSub }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("settings.privacy.account")}
           </ThemedText>
           <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>

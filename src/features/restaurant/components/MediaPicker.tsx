@@ -313,6 +313,8 @@ export function MediaPicker({
                 styles.cameraLabel,
                 { color: colors.label.neutral },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("restaurant.review.form.mediaPick")}
             </Text>
@@ -520,6 +522,8 @@ export function MediaPicker({
                 styles.limitText,
                 { color: colors.status.negative },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("restaurant.mediaPicker.limit", { count: maxSelection })}
             </Text>

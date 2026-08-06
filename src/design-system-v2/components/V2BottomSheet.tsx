@@ -253,12 +253,18 @@ export function V2BottomSheet({
 
           {/* 2) 헤더 — Title(옵션) + SubTitle(옵션) */}
           {!!title && (
-            <Text style={[styles.title, { color: colors.label.normal }]}>
+            <Text
+              style={[styles.title, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {title}
             </Text>
           )}
           {!!subTitle && (
-            <Text style={[styles.subTitle, { color: colors.label.neutral }]}>
+            <Text
+              style={[styles.subTitle, { color: colors.label.neutral }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {subTitle}
             </Text>
           )}
@@ -267,6 +273,12 @@ export function V2BottomSheet({
           {children}
 
           {/* 4) 푸터 — Button Area (V2Button size xl) */}
+          {/*
+            버튼이 하나여도 `styles.footerButton`(flex:1) 을 준다. 푸터가 row 라
+            `fullWidth`(alignSelf:stretch)는 **세로로만** 늘어난다 — 그래서 취소
+            하나짜리 시트의 버튼이 왼쪽에 알약만 하게 붙어 있었다(QA 2026-08-06).
+            row 안에서 가로를 채우는 건 flex 뿐이다.
+          */}
           {hasFooter && (
             <View style={styles.footer}>
               {hasSecondary && (
@@ -274,8 +286,7 @@ export function V2BottomSheet({
                   size="xl"
                   color="neutral"
                   variant="weak"
-                  fullWidth={!hasTwoButtons}
-                  style={hasTwoButtons ? styles.footerButton : undefined}
+                  style={styles.footerButton}
                   onPress={onSecondary}
                 >
                   {secondaryLabel}
@@ -286,8 +297,7 @@ export function V2BottomSheet({
                   size="xl"
                   color={primaryColor === "danger" ? "danger" : "brand"}
                   variant="fill"
-                  fullWidth={!hasTwoButtons}
-                  style={hasTwoButtons ? styles.footerButton : undefined}
+                  style={styles.footerButton}
                   onPress={onPrimary}
                 >
                   {primaryLabel}

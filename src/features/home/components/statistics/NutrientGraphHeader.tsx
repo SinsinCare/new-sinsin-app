@@ -53,7 +53,12 @@ export function NutrientGraphHeader({
             : t("stats.nutrientGraph.personalReference")}
         </Text>
       </XStack>
-      <Text fontSize={11} color="$colorSubtle" marginTop={1}>
+      <Text
+        fontSize={11}
+        color="$colorSubtle"
+        marginTop={1}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {isReferenceLimit
           ? t("stats.nutrientGraph.generalBody")
           : nutrientKey === "protein"

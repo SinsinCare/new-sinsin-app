@@ -37,7 +37,10 @@ export function MentionSuggestions({
       exiting={FadeOut.duration(100).reduceMotion(ReduceMotion.System)}
       style={[styles.wrap, { backgroundColor: surface.surface }]}
     >
-      <Text style={[styles.label, { color: surface.textMuted }]}>
+      <Text
+        style={[styles.label, { color: surface.textMuted }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("tag.participants")}
       </Text>
       <ScrollView
@@ -79,7 +82,10 @@ export function MentionSuggestions({
                   { backgroundColor: surface.surfaceBrand },
                 ]}
               >
-                <Text style={[styles.badgeText, { color: surface.brand }]}>
+                <Text
+                  style={[styles.badgeText, { color: surface.brand }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("tag.author")}
                 </Text>
               </View>

@@ -125,7 +125,10 @@ export function VoteSheet({
             >
               <Ionicons name="close" size={24} color={surface.textStrong} />
             </Pressable>
-            <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
+            <Text
+              style={[styles.headerTitle, { color: surface.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {initialData ? t("poll.editTitle") : t("poll.createTitle")}
             </Text>
             <SurfacePressable
@@ -154,6 +157,7 @@ export function VoteSheet({
                   styles.completeLabel,
                   { color: canComplete ? inkContent : surface.ctaOffText },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {initialData ? t("action.save") : t("poll.attach")}
               </Text>
@@ -239,13 +243,19 @@ export function VoteSheet({
               ]}
             >
               <Ionicons name="add" size={18} color={surface.textStrong} />
-              <Text style={[styles.addLabel, { color: surface.textStrong }]}>
+              <Text
+                style={[styles.addLabel, { color: surface.textStrong }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("poll.addOption")}
               </Text>
             </SurfacePressable>
 
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleLabel, { color: surface.textStrong }]}>
+              <Text
+                style={[styles.toggleLabel, { color: surface.textStrong }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("poll.allowMultiple")}
               </Text>
               <Switch
@@ -264,14 +274,23 @@ export function VoteSheet({
 
             <View style={styles.hints}>
               {hasDuplicateOptions && (
-                <Text style={[styles.hintText, { color: surface.danger }]}>
+                <Text
+                  style={[styles.hintText, { color: surface.danger }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("poll.duplicateError")}
                 </Text>
               )}
-              <Text style={[styles.hintText, { color: surface.textMuted }]}>
+              <Text
+                style={[styles.hintText, { color: surface.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("poll.lockedHint")}
               </Text>
-              <Text style={[styles.hintSub, { color: surface.textWeak }]}>
+              <Text
+                style={[styles.hintSub, { color: surface.textWeak }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("poll.optionLimit")}
               </Text>
             </View>

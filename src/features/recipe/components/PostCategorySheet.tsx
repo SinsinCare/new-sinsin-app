@@ -59,7 +59,10 @@ export function PostCategorySheet({
         ]}
       >
         <AppBottomSheetScrollView contentContainerStyle={styles.sheetContent}>
-          <Text style={[styles.sheetTitle, { color: surface.textStrong }]}>
+          <Text
+            style={[styles.sheetTitle, { color: surface.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("freePost.topicTitle")}
           </Text>
           {categories.map((cat) => {
@@ -81,6 +84,7 @@ export function PostCategorySheet({
                       ? [styles.rowLabelSelected, { color: surface.textStrong }]
                       : { color: surface.text },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {POST_CATEGORY_LABEL_KEYS[
                     cat.key as keyof typeof POST_CATEGORY_LABEL_KEYS

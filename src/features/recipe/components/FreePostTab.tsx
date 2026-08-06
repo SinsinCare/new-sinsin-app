@@ -24,6 +24,7 @@ import { StoryRail } from "./StoryRail"
 import { FREE_POST_CATEGORIES } from "../data/freePostCategories"
 import { useCommunityPosts } from "../hooks/useCommunityPosts"
 import { useBlockedUsers } from "../hooks/useBlockedUsers"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { useRecentCommunitySearches } from "../hooks/useRecentCommunitySearches"
 import { getHotScore, rankPopularPosts } from "../utils/postRanking"
 import { useTranslation } from "react-i18next"
@@ -88,6 +89,9 @@ export function FreePostTab({
 
   const { posts, isLoading, refetch } = useCommunityPosts(tagFilter)
   const { blockedNickNames, blockUser } = useBlockedUsers()
+  // 내 글 케밥(신고·차단) 게이트용. 미로딩(undefined)이면 "내 것 아님" 으로 접는다.
+  const { data: myProfile } = useMyPageProfile()
+  const myNickName = myProfile?.nickName ?? null
   const { recentSearches, addRecentSearch, clearRecentSearches } =
     useRecentCommunitySearches()
 
@@ -193,10 +197,11 @@ export function FreePostTab({
           onPressTag={handleTagPress}
           onBlock={blockUser}
           isWithdrawnAuthor={isWithdrawnAuthor(post)}
+          isMine={myNickName != null && post.authorName === myNickName}
         />
       </View>
     ),
-    [categoryLabel, router, handleTagPress, blockUser],
+    [categoryLabel, router, handleTagPress, blockUser, myNickName],
   )
 
   /*
@@ -251,7 +256,10 @@ export function FreePostTab({
         {showRecent && (
           <View style={styles.recentWrap}>
             <View style={styles.recentHeader}>
-              <Text style={[styles.recentLabel, { color: surface.textMuted }]}>
+              <Text
+                style={[styles.recentLabel, { color: surface.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("feed.recentSearches")}
               </Text>
               <Pressable
@@ -259,7 +267,10 @@ export function FreePostTab({
                 hitSlop={8}
                 accessibilityRole="button"
               >
-                <Text style={[styles.recentClear, { color: surface.textWeak }]}>
+                <Text
+                  style={[styles.recentClear, { color: surface.textWeak }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("feed.clearAll")}
                 </Text>
               </Pressable>
@@ -286,7 +297,10 @@ export function FreePostTab({
       </View>
 
       {isSearching ? (
-        <Text style={[styles.sectionLabel, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.sectionLabel, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("feed.results", { count: searchResults.length })}
         </Text>
       ) : showSkeleton ? (
@@ -308,7 +322,10 @@ export function FreePostTab({
           {/* 인기글 — 공감을 받은 글만 올라온다. */}
           {popularPosts.length > 0 && (
             <>
-              <Text style={[styles.sectionLabel, { color: surface.textMuted }]}>
+              <Text
+                style={[styles.sectionLabel, { color: surface.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("feed.popular")}
               </Text>
               <ScrollView
@@ -473,19 +490,31 @@ export function FreePostTab({
 
   const listEmpty = showSkeleton ? null : isSearching ? (
     <View style={styles.emptyWrap}>
-      <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
+      <Text
+        style={[styles.emptyTitle, { color: surface.textStrong }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("feed.noResultsTitle")}
       </Text>
-      <Text style={[styles.emptySub, { color: surface.textMuted }]}>
+      <Text
+        style={[styles.emptySub, { color: surface.textMuted }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("feed.noResultsBody")}
       </Text>
     </View>
   ) : (
     <View style={styles.emptyWrap}>
-      <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
+      <Text
+        style={[styles.emptyTitle, { color: surface.textStrong }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("feed.emptyTitle")}
       </Text>
-      <Text style={[styles.emptySub, { color: surface.textMuted }]}>
+      <Text
+        style={[styles.emptySub, { color: surface.textMuted }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("feed.emptyBody")}
       </Text>
     </View>

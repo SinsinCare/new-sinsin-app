@@ -93,12 +93,16 @@ export function V2Option({
       ) : null}
 
       <View style={styles.textColumn}>
-        <Text style={[typography.title.xSmall, { color: colors.label.normal }]}>
+        <Text
+          style={[typography.title.xSmall, { color: colors.label.normal }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {label}
         </Text>
         {description ? (
           <Text
             style={[typography.subtext.medium, { color: colors.label.neutral }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {description}
           </Text>

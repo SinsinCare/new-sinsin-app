@@ -57,7 +57,10 @@ export function NutrientDetailSheet({
       <Text style={[styles.title, { color: s.textStrong }]}>
         {t("mealReport.nutritionFacts")}
       </Text>
-      <Text style={[styles.sub, { color: s.textMuted }]}>
+      <Text
+        style={[styles.sub, { color: s.textMuted }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {facts.mealName} · {t("mealReport.profileReference")}
       </Text>
 

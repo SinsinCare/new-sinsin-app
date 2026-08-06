@@ -71,7 +71,10 @@ export function MealSheet({
             <Text style={[styles.title, { color: surface.textStrong }]}>
               {t("home.timeline.title")}
             </Text>
-            <Text style={[styles.subtitle, { color: surface.textWeak }]}>
+            <Text
+              style={[styles.subtitle, { color: surface.textWeak }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {recorded
                 ? t("home.sheet.meal.alreadyRecorded", { meal: mealLabel })
                 : t("home.sheet.meal.willRecordAs", { meal: mealLabel })}
@@ -215,10 +218,15 @@ function PrimaryAction({
         >
           <Ionicons name={icon} size={22} color={surface.onBrand} />
           <View style={styles.primaryText}>
-            <Text style={[styles.primaryTitle, { color: surface.onBrand }]}>
+            <Text
+              style={[styles.primaryTitle, { color: surface.onBrand }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {title}
             </Text>
-            <Text style={styles.primaryDesc}>{description}</Text>
+            <Text style={styles.primaryDesc} lineBreakStrategyIOS="hangul-word">
+              {description}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={surface.onBrand} />
         </View>

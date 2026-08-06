@@ -30,10 +30,16 @@ export function WeeklyCompareCard({
       ]}
     >
       <View style={styles.sectionHead}>
-        <Text style={[styles.sectionTitle, { color: s.textStrong }]}>
+        <Text
+          style={[styles.sectionTitle, { color: s.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {data.title}
         </Text>
-        <Text style={[styles.sectionCaption, { color: s.textWeak }]}>
+        <Text
+          style={[styles.sectionCaption, { color: s.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {data.caption}
         </Text>
       </View>

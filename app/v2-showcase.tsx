@@ -252,10 +252,20 @@ export default function V2Showcase() {
 
         <Section title="Card">
           <V2Card variant="outlined">
-            <Text style={{ color: colors.label.normal }}>outlined 카드</Text>
+            <Text
+              style={{ color: colors.label.normal }}
+              lineBreakStrategyIOS="hangul-word"
+            >
+              outlined 카드
+            </Text>
           </V2Card>
           <V2Card variant="elevated">
-            <Text style={{ color: colors.label.normal }}>elevated 카드</Text>
+            <Text
+              style={{ color: colors.label.normal }}
+              lineBreakStrategyIOS="hangul-word"
+            >
+              elevated 카드
+            </Text>
           </V2Card>
         </Section>
 

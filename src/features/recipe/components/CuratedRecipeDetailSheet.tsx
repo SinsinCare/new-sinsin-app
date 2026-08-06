@@ -199,7 +199,12 @@ export function CuratedRecipeDetailSheet({
                 </Text>
               </XStack>
               {recipe.time_min > 0 && (
-                <Text fontSize={12} fontFamily="$body" color={palette.sub}>
+                <Text
+                  fontSize={12}
+                  fontFamily="$body"
+                  color={palette.sub}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("curated.minutes", { count: recipe.time_min })}
                 </Text>
               )}
@@ -209,7 +214,12 @@ export function CuratedRecipeDetailSheet({
                 </Text>
               )}
               {recipe.servings > 0 && (
-                <Text fontSize={12} fontFamily="$body" color={palette.sub}>
+                <Text
+                  fontSize={12}
+                  fontFamily="$body"
+                  color={palette.sub}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   · {t("curated.servings", { count: recipe.servings })}
                 </Text>
               )}
@@ -289,6 +299,7 @@ export function CuratedRecipeDetailSheet({
                   fontWeight="700"
                   fontFamily="$body"
                   color={palette.sectionTitle}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("curated.englishContentGapTitle")}
                 </Text>
@@ -297,13 +308,19 @@ export function CuratedRecipeDetailSheet({
                   fontFamily="$body"
                   color={palette.sub}
                   lineHeight={20}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("curated.englishContentGapBody")}
                 </Text>
               </YStack>
 
               <XStack gap={8} flexWrap="wrap">
-                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                <Text
+                  fontSize={13}
+                  fontFamily="$body"
+                  color={palette.sub}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("curated.ingredientCount", {
                     count: contentPresentation.ingredientCount,
                   })}
@@ -311,7 +328,12 @@ export function CuratedRecipeDetailSheet({
                 <Text fontSize={13} fontFamily="$body" color={palette.sub}>
                   ·
                 </Text>
-                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                <Text
+                  fontSize={13}
+                  fontFamily="$body"
+                  color={palette.sub}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("curated.stepCount", {
                     count: contentPresentation.stepCount,
                   })}
@@ -336,6 +358,7 @@ export function CuratedRecipeDetailSheet({
                   fontWeight="700"
                   fontFamily="$body"
                   color={palette.categoryText}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t(
                     showOriginal
@@ -346,13 +369,23 @@ export function CuratedRecipeDetailSheet({
               </Pressable>
 
               {showOriginal && originalRecipeQuery.isLoading && (
-                <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                <Text
+                  fontSize={13}
+                  fontFamily="$body"
+                  color={palette.sub}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("curated.loadingOriginal")}
                 </Text>
               )}
               {showOriginal && originalRecipeQuery.isError && (
                 <YStack gap={6}>
-                  <Text fontSize={13} fontFamily="$body" color={palette.sub}>
+                  <Text
+                    fontSize={13}
+                    fontFamily="$body"
+                    color={palette.sub}
+                    lineBreakStrategyIOS="hangul-word"
+                  >
                     {t("curated.originalLoadError")}
                   </Text>
                   <Pressable
@@ -365,6 +398,7 @@ export function CuratedRecipeDetailSheet({
                       fontWeight="700"
                       fontFamily="$body"
                       color={palette.categoryText}
+                      lineBreakStrategyIOS="hangul-word"
                     >
                       {t("curated.retryOriginal")}
                     </Text>
@@ -377,6 +411,7 @@ export function CuratedRecipeDetailSheet({
                   fontWeight="600"
                   fontFamily="$body"
                   color={palette.sub}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("curated.originalKoreanLabel")}
                 </Text>
@@ -396,6 +431,7 @@ export function CuratedRecipeDetailSheet({
               fontWeight="600"
               fontFamily="$body"
               color={palette.categoryText}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("curated.estimateTitle")}
             </Text>
@@ -404,6 +440,7 @@ export function CuratedRecipeDetailSheet({
               fontFamily="$body"
               color={palette.sub}
               lineHeight={20}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("curated.estimateBody")}
             </Text>
@@ -416,6 +453,7 @@ export function CuratedRecipeDetailSheet({
               fontWeight="700"
               fontFamily="$body"
               color={palette.sectionTitle}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("curated.nutritionTitle")}
             </Text>
@@ -459,6 +497,7 @@ export function CuratedRecipeDetailSheet({
                 fontWeight="700"
                 fontFamily="$body"
                 color={palette.sectionTitle}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("curated.ingredients", { count: recipe.servings })}
               </Text>
@@ -497,6 +536,7 @@ export function CuratedRecipeDetailSheet({
                 fontWeight="700"
                 fontFamily="$body"
                 color={palette.sectionTitle}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("curated.steps")}
               </Text>

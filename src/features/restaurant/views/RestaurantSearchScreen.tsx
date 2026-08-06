@@ -230,7 +230,10 @@ function RecentList({
   return (
     <View>
       <View style={styles.sectionHeader}>
-        <Text style={[typography.label.small, { color: colors.label.normal }]}>
+        <Text
+          style={[typography.label.small, { color: colors.label.normal }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("restaurant.search.recentTitle")}
         </Text>
         {keywords.length > 0 ? (
@@ -259,6 +262,7 @@ function RecentList({
             styles.emptyLine,
             { color: colors.label.alternative },
           ]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("restaurant.search.recentEmpty")}
         </Text>
@@ -320,6 +324,7 @@ function SuggestionList({
           styles.emptyLine,
           { color: colors.label.alternative },
         ]}
+        lineBreakStrategyIOS="hangul-word"
       >
         {t("restaurant.search.noSuggestion")}
       </Text>

@@ -132,7 +132,11 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
             placeholder={t("home.textRecord.placeholder")}
             textAlign="center"
           />
-          <Text color="$colorSubtle" fontWeight="600">
+          <Text
+            color="$colorSubtle"
+            fontWeight="600"
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("home.textRecord.example")}
           </Text>
         </YStack>

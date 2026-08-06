@@ -188,11 +188,17 @@ export function HealthDataResultDetailScreen() {
 
       {!loading && !failure && !data && (
         <View style={styles.center}>
-          <ThemedText style={[styles.emptyTitle, { color: healthColors.text }]}>
+          <ThemedText
+            style={[styles.emptyTitle, { color: healthColors.text }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("result.emptyTitle")}
           </ThemedText>
           <ThemedText
             style={[styles.emptySub, { color: healthColors.textSecondary }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("result.emptyDescription")}
           </ThemedText>
@@ -237,6 +243,7 @@ export function HealthDataResultDetailScreen() {
                 styles.headerPlace,
                 { color: healthColors.textSecondary },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {data.checkupPlace}
             </ThemedText>
@@ -252,6 +259,7 @@ export function HealthDataResultDetailScreen() {
                     styles.judgementText,
                     { color: healthColors.positive },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("result.overallAssessment", {
                     assessment: judgementCopy
@@ -265,6 +273,7 @@ export function HealthDataResultDetailScreen() {
                       styles.judgementDescription,
                       { color: healthColors.textSecondary },
                     ]}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {judgementCopy
                       ? t(judgementCopy.description)

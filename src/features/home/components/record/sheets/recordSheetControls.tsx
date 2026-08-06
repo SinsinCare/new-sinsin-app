@@ -88,7 +88,11 @@ export function SheetValueDisplay({
         </Text>
       </ValueUnitRow>
       {caption ? (
-        <Text style={[styles.displayCaption, { color: surface.textWeak }]}>
+        <Text
+          style={[styles.displayCaption, { color: surface.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {caption}
         </Text>
       ) : null}
@@ -323,7 +327,11 @@ function SheetEditableValue({
       </Pressable>
 
       {caption ? (
-        <Text style={[styles.displayCaption, { color: surface.textWeak }]}>
+        <Text
+          style={[styles.displayCaption, { color: surface.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {caption}
         </Text>
       ) : null}
@@ -585,12 +593,19 @@ export function SheetChip({
       style={style}
     >
       <Animated.View style={[styles.chip, chipStyle]}>
-        <Animated.Text style={[styles.chipLabel, labelStyle]}>
+        <Animated.Text
+          style={[styles.chipLabel, labelStyle]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {showCheck && selected ? "✓ " : ""}
           {label}
         </Animated.Text>
         {anchor ? (
-          <Animated.Text style={[styles.chipAnchor, anchorStyle]}>
+          <Animated.Text
+            style={[styles.chipAnchor, anchorStyle]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {anchor}
           </Animated.Text>
         ) : null}
@@ -679,7 +694,11 @@ export function SheetOptionCard({
         <Animated.Text style={[styles.optionLabel, labelStyle]}>
           {label}
         </Animated.Text>
-        <Animated.Text style={[styles.optionDesc, descStyle]} numberOfLines={2}>
+        <Animated.Text
+          style={[styles.optionDesc, descStyle]}
+          numberOfLines={2}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {description}
         </Animated.Text>
       </Animated.View>
@@ -692,7 +711,12 @@ export function SheetInfoCard({ children }: { children: string }) {
   const surface = useSurface()
   return (
     <View style={[styles.infoCard, { backgroundColor: surface.surface }]}>
-      <Text style={[styles.infoText, { color: surface.text }]}>{children}</Text>
+      <Text
+        style={[styles.infoText, { color: surface.text }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
+        {children}
+      </Text>
     </View>
   )
 }

@@ -209,11 +209,15 @@ export function RestaurantReportForm({
         ]}
       >
         <View style={styles.intro}>
-          <Text style={[typography.display.small, { color: palette.text }]}>
+          <Text
+            style={[typography.display.small, { color: palette.text }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("restaurant.report.introTitle")}
           </Text>
           <Text
             style={[typography.label.smallWeak, { color: palette.subText }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.report.introBody")}
           </Text>
@@ -228,7 +232,10 @@ export function RestaurantReportForm({
             },
           ]}
         >
-          <Text style={[typography.title.xSmall, { color: palette.text }]}>
+          <Text
+            style={[typography.title.xSmall, { color: palette.text }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("restaurant.report.formTitle")}
           </Text>
 
@@ -242,6 +249,7 @@ export function RestaurantReportForm({
                   backgroundColor: palette.errorBackground,
                 },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {error}
             </Text>

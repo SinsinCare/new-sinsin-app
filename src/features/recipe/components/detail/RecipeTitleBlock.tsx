@@ -156,7 +156,10 @@ export function RecipeTitleBlock({
                 {formatAverage(rating.average)}
               </Text>
               <MetaDot color={colors.label.assistive} />
-              <Text style={[styles.meta, { color: colors.label.alternative }]}>
+              <Text
+                style={[styles.meta, { color: colors.label.alternative }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("detail.meta.reviews", { count: rating.count })}
               </Text>
             </>
@@ -182,7 +185,10 @@ export function RecipeTitleBlock({
             </Text>
           ))}
           {authored && (
-            <Text style={[styles.credit, { color: colors.primary.primary }]}>
+            <Text
+              style={[styles.credit, { color: colors.primary.primary }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("detail.authored")}
             </Text>
           )}
@@ -209,11 +215,15 @@ export function RecipeTitleBlock({
         <View
           style={[styles.notice, { backgroundColor: colors.fill.alternative }]}
         >
-          <Text style={[styles.noticeTitle, { color: colors.label.normal }]}>
+          <Text
+            style={[styles.noticeTitle, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.localeGapTitle")}
           </Text>
           <Text
             style={[styles.noticeBody, { color: colors.label.alternative }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("detail.localeGapBody")}
           </Text>

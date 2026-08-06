@@ -128,6 +128,7 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
                 fontSize="$3"
                 fontWeight="600"
                 color={tokens.color.sub7.val}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("consult.answer")}
               </Text>
@@ -149,7 +150,12 @@ export function FaqDetailSheet({ item, open, onClose }: FaqDetailSheetProps) {
             >
               <XStack alignItems="center" gap="$2">
                 <Ionicons name="chatbubble" size={18} color="white" />
-                <Text fontSize="$4" fontWeight="600" color="white">
+                <Text
+                  fontSize="$4"
+                  fontWeight="600"
+                  color="white"
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("consult.askMore")}
                 </Text>
               </XStack>

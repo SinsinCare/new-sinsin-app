@@ -214,7 +214,10 @@ export function WaterSheet({
             <Text style={[styles.title, { color: surface.textStrong }]}>
               {t("home.sheet.water.title")}
             </Text>
-            <Text style={[styles.subtitle, { color: surface.textMuted }]}>
+            <Text
+              style={[styles.subtitle, { color: surface.textMuted }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("home.sheet.water.subtitle")}
               {limit != null && limit > 0
                 ? isReferenceLimit
@@ -235,7 +238,10 @@ export function WaterSheet({
             limit > 0 &&
             !isReferenceLimit &&
             consumed >= limit ? (
-              <Text style={[styles.subtitle, { color: surface.danger }]}>
+              <Text
+                style={[styles.subtitle, { color: surface.danger }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("home.sheet.water.overLimitGuidance")}
               </Text>
             ) : null}
@@ -298,6 +304,8 @@ export function WaterSheet({
                       : surface.brand,
                 },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {guidance.message}
             </Text>

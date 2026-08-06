@@ -54,6 +54,7 @@ export function ContentResponsibilityCheck({
           fontWeight="400"
           fontFamily="$body"
           color={TEXT_COLOR[scheme]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("responsibility")}
         </Text>

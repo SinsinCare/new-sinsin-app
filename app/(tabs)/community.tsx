@@ -50,7 +50,10 @@ export default function CommunityScreen() {
       ]}
     >
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
+        <Text
+          style={[styles.headerTitle, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("community.title")}
         </Text>
         <View style={styles.headerActions}>
@@ -119,7 +122,10 @@ export default function CommunityScreen() {
           style={styles.writeButton}
         >
           <Ionicons name="add" size={18} color={surface.onBrand} />
-          <Text style={[styles.writeLabel, { color: surface.onBrand }]}>
+          <Text
+            style={[styles.writeLabel, { color: surface.onBrand }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("community.write")}
           </Text>
         </SurfacePressable>

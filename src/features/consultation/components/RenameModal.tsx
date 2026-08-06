@@ -75,6 +75,8 @@ export function RenameModal({
             color={textColor}
             textAlign="center"
             marginBottom={16}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("consult.renameTitle")}
           </Text>
@@ -112,6 +114,8 @@ export function RenameModal({
               fontWeight="500"
               color={textColor}
               textAlign="center"
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("action.cancel")}
             </Text>
@@ -132,6 +136,8 @@ export function RenameModal({
               fontWeight="500"
               color={textColor}
               textAlign="center"
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("action.save")}
             </Text>

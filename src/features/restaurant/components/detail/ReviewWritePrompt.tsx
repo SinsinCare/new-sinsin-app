@@ -49,7 +49,10 @@ export function ReviewWritePrompt({
 
   return (
     <View style={[styles.card, style]}>
-      <Text style={[typography.title.small, { color: colors.label.normal }]}>
+      <Text
+        style={[typography.title.small, { color: colors.label.normal }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {before}
         {at >= 0 && (
           <Text style={{ color: colors.primary.primary }}>
@@ -60,6 +63,7 @@ export function ReviewWritePrompt({
       </Text>
       <Text
         style={[typography.subtext.medium, { color: colors.label.neutral }]}
+        lineBreakStrategyIOS="hangul-word"
       >
         {t("restaurant.review.writePromptBody")}
       </Text>

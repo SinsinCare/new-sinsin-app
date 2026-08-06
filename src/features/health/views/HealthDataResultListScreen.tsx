@@ -44,6 +44,7 @@ function ResultRow({
         </ThemedText>
         <ThemedText
           style={[rowStyles.place, { color: healthColors.textSecondary }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {item.checkupPlace}
         </ThemedText>
@@ -171,7 +172,11 @@ export function HealthDataResultListScreen() {
             size={48}
             color={healthColors.textAssistive}
           />
-          <ThemedText style={[styles.emptyText, { color: healthColors.text }]}>
+          <ThemedText
+            style={[styles.emptyText, { color: healthColors.text }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("result.listEmpty")}
           </ThemedText>
           <View style={styles.stateAction}>
@@ -242,6 +247,7 @@ export function HealthDataResultListScreen() {
                       styles.latestPlace,
                       { color: healthColors.textSecondary },
                     ]}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {latestResult.checkupPlace}
                   </ThemedText>

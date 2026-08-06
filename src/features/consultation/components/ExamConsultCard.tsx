@@ -98,6 +98,7 @@ export function ExamConsultCard({ data }: { data: ExamConsultCardData }) {
           fontWeight="600"
           letterSpacing={-0.1}
           color={tone.muted}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("consult.examCard.eyebrow")}
           {data.dateLabel ? ` · ${data.dateLabel}` : ""}
@@ -179,7 +180,12 @@ export function ExamConsultCard({ data }: { data: ExamConsultCardData }) {
                 justifyContent="space-between"
                 opacity={pressed ? 0.55 : 1}
               >
-                <Text fontSize={13} lineHeight={18} color={tone.soft}>
+                <Text
+                  fontSize={13}
+                  lineHeight={18}
+                  color={tone.soft}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {expanded
                     ? t("consult.examCard.metricsCollapse")
                     : t("consult.examCard.metricsToggle", { count: hidden })}

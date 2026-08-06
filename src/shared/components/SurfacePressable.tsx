@@ -18,6 +18,7 @@ import Animated, {
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { MOTION } from "@/src/theme/surface"
+import { childrenShapeKey } from "./childrenShapeKey"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
 const SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
@@ -89,7 +90,15 @@ export function SurfacePressable({
         press.value = withSpring(0, SPRING)
       }}
     >
-      <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>
+      {/* key: 자식 구성이 통째로 바뀌면 리마운트 — childrenShapeKey 머리말 참고.
+          안드로이드 릴리즈에서 살아 있는 Animated.View 의 자식 전면 교체가
+          그려지지 않는 것을 래퍼가 직접 막는다. 콜사이트는 아무것도 몰라도 된다. */}
+      <Animated.View
+        key={childrenShapeKey(children)}
+        style={[style, animatedStyle]}
+      >
+        {children}
+      </Animated.View>
     </Pressable>
   )
 }

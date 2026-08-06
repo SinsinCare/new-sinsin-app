@@ -53,7 +53,12 @@ export function StatusBadge({
         },
       ]}
     >
-      <Text style={[styles.label, { color: tone.fg }]}>{label}</Text>
+      <Text
+        style={[styles.label, { color: tone.fg }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
+        {label}
+      </Text>
     </View>
   )
 }

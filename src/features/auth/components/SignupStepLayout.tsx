@@ -210,11 +210,17 @@ export function SignupStepLayout({
           exiting={makeExiting(direction)}
           style={styles.step}
         >
-          <Text style={[styles.question, { color: surface.textStrong }]}>
+          <Text
+            style={[styles.question, { color: surface.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {title}
           </Text>
           {subtitle ? (
-            <Text style={[styles.subtitle, { color: surface.textWeak }]}>
+            <Text
+              style={[styles.subtitle, { color: surface.textWeak }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {subtitle}
             </Text>
           ) : null}
@@ -232,7 +238,11 @@ export function SignupStepLayout({
             entering={FadeIn.duration(AUTH_MOTION.duration.fast)}
             exiting={FadeOut}
           >
-            <Text style={[styles.footerError, { color: surface.brand }]}>
+            <Text
+              style={[styles.footerError, { color: surface.brand }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
               {errorMessage}
             </Text>
           </Animated.View>

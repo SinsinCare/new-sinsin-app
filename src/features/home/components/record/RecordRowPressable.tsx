@@ -12,6 +12,7 @@ import Animated, {
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { MOTION } from "@/src/theme/surface"
+import { childrenShapeKey } from "@/src/shared/components/childrenShapeKey"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
 const SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
@@ -73,7 +74,13 @@ export function RecordRowPressable({
         press.value = withSpring(0, SPRING)
       }}
     >
-      <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>
+      {/* key: 자식 구성이 통째로 바뀌면 리마운트 — childrenShapeKey 머리말 참고. */}
+      <Animated.View
+        key={childrenShapeKey(children)}
+        style={[style, animatedStyle]}
+      >
+        {children}
+      </Animated.View>
     </Pressable>
   )
 }

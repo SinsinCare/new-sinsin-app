@@ -154,7 +154,12 @@ export function CharacterSection({
       <View style={[styles.bubbleWrap, { marginTop: insets.top + 12 }]}>
         <View style={styles.bubble}>
           {lines.map((l, index) => (
-            <Text key={index} style={styles.bubbleLine}>
+            <Text
+              key={index}
+              style={styles.bubbleLine}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
               {l.pre}
               <Text style={styles.bubbleKeyword}>{l.keyword}</Text>
               {l.post}

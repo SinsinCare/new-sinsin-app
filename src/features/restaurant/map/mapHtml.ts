@@ -120,6 +120,18 @@ ${MAP_FONT_FACE_CSS}
                -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   #map { width: 100%; height: 100%; }
 
+  /* 기본 지도 톤 다운.
+     카카오 JS SDK 는 지도 스타일 API 가 없다(네이티브 v2 전용). 대신 타일이 <img>
+     로 그려지고 우리 마커·클러스터는 CustomOverlay 의 **div** 라서, 이미지에만
+     필터를 걸면 바탕 지도만 채도가 내려가고 오렌지 마커·안전 배지는 원색을
+     지킨다 — 기본 스타일의 노란 도로·주황 POI 라벨이 브랜드 마커와 경쟁하던
+     문제(QA 2026-08-06)의 유일한 조절점이다. 값은 마커 대비 실측으로 골랐다. */
+  /* 기본 지도 톤 다운은 CSS 셀렉터가 아니라 boot()의 toneDownTiles() 가 한다.
+     실측 결과 셀렉터로는 안 된다: 타일은 img/canvas 가 아니라 div background-image 고,
+     팬 구조도 추측대로가 아니었다(#map 루트 필터는 마커까지 죽이고, first-child
+     계열 셀렉터는 마커 팬만 맞췄다). 그래서 런타임에 타일 URL(daumcdn)로 요소를
+     찾아 그 부모 팬에만 filter 를 건다 — SDK 가 DOM 구조를 바꿔도 살아남는다. */
+
   /* 마커 폰트.
      WebView 는 앱이 expo-font 로 올린 Pretendard 를 **볼 수 없다.** 그래서 예전에는 지도
      위 글자만 시스템 폰트로 렌더됐다 — 앱의 다른 모든 글자가 Pretendard 인데 지도만 달랐다.
@@ -1103,6 +1115,62 @@ ${MAP_FONT_FACE_CSS}
     } catch (e) { fail('map init failed: ' + e); return; }
 
     kakao.maps.event.addListener(map, 'idle', postIdle);
+
+    /*
+      기본 지도 톤 다운(스타일 검토, 2026-08-06). 카카오 JS SDK 는 지도 스타일
+      API 가 없어서(네이티브 v2 전용) 이것이 유일한 조절점이다. 기본 스타일의
+      노란 도로·주황/보라 POI 라벨이 브랜드 오렌지 마커·안전 배지와 경쟁하던
+      것을, 타일 팬에만 채도를 내려 해결한다 — 마커는 CustomOverlay 팬이라
+      원색 그대로다. 타일 요소는 src/backgroundImage 에 daumcdn 이 들어 있는
+      것으로 식별하고, 그 부모(타일 팬)에 filter 를 한 번만 건다. 줌 레벨이
+      바뀌면 팬이 새로 생길 수 있어 idle 마다 재확인한다(가드로 중복 방지).
+    */
+    var TILE_FILTER = 'saturate(0.55) brightness(1.03)';
+    function toneTileImg(el) {
+      /* 타일 URL 만( mts.daumcdn.net/api/v1/tile/… ) — 카카오 로고·저작권 이미지는
+         같은 CDN 이라 호스트로 거르면 로고까지 탁해진다. */
+      if (el.tagName !== 'IMG' || el.__sinsinToned) return;
+      var src = el.getAttribute('src') || '';
+      if (src.indexOf('/tile/') === -1) return;
+      el.__sinsinToned = true;
+      el.style.filter = TILE_FILTER;
+    }
+    function toneDownTiles() {
+      try {
+        var root = document.getElementById('map');
+        if (!root) return;
+        var imgs = root.querySelectorAll('img');
+        for (var i = 0; i < imgs.length; i++) toneTileImg(imgs[i]);
+      } catch (e) { /* 스타일은 실패해도 지도는 살아야 한다 */ }
+    }
+    toneDownTiles();
+    /* 팬·줌으로 새 타일 <img> 가 계속 생긴다 — 옵저버가 붙는 즉시 칠한다. */
+    try {
+      new MutationObserver(function (muts) {
+        for (var m = 0; m < muts.length; m++) {
+          var mut = muts[m];
+          /* 초기 타일은 <img> 가 src 없이 붙은 뒤 나중에 src 가 세팅된다 —
+             childList 만 보면 첫 화면 타일을 전부 놓친다(실측). */
+          if (mut.type === 'attributes') { toneTileImg(mut.target); continue; }
+          var added = mut.addedNodes;
+          for (var a = 0; a < added.length; a++) {
+            var node = added[a];
+            if (node.nodeType !== 1) continue;
+            toneTileImg(node);
+            if (node.querySelectorAll) {
+              var imgs = node.querySelectorAll('img');
+              for (var i = 0; i < imgs.length; i++) toneTileImg(imgs[i]);
+            }
+          }
+        }
+      }).observe(document.getElementById('map'), {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['src'],
+      });
+    } catch (e) { /* 옵저버 실패 시에도 idle 훅이 남는다 */ }
+    kakao.maps.event.addListener(map, 'idle', toneDownTiles);
 
     kakao.maps.event.addListener(map, 'dragstart', function () { post('dragStart', {}); });
 

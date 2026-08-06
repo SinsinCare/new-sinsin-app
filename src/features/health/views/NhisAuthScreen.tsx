@@ -85,10 +85,18 @@ export function NhisAuthScreen() {
 
         {/* 타이틀 */}
         <View style={styles.textSection}>
-          <Text style={[styles.title, { color: textPrimary }]}>
+          <Text
+            style={[styles.title, { color: textPrimary }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("nhis.authTitle")}
           </Text>
-          <Text style={[styles.subtitle, { color: textSub }]}>
+          <Text
+            style={[styles.subtitle, { color: textSub }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("nhis.authDescription")}
           </Text>
         </View>
@@ -133,7 +141,11 @@ export function NhisAuthScreen() {
         </Pressable>
 
         {/* 하단 안내 */}
-        <Text style={[styles.privacyNote, { color: textSub }]}>
+        <Text
+          style={[styles.privacyNote, { color: textSub }]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
+        >
           {t("nhis.authNote")}
         </Text>
       </ScrollView>

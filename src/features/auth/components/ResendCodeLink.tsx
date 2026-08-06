@@ -17,7 +17,10 @@ export function ResendCodeLink({ onPress, disabled }: ResendCodeLinkProps) {
   const { t } = useTranslation("auth")
   return (
     <View style={styles.row}>
-      <Text style={[styles.hint, { color: surface.textWeak }]}>
+      <Text
+        style={[styles.hint, { color: surface.textWeak }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("emailVerification.resendPrompt")}
       </Text>
       <Pressable

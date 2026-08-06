@@ -605,7 +605,8 @@
       "PRICE_HIGH": "Price: high to low",
       "PRICE_LOW": "Price: low to high",
       "DISTANCE": "Nearest",
-      "distanceDisabled": "Turn on location to sort by distance"
+      "distanceDisabled": "Turn on location to sort by distance",
+      "distanceDisabledOutsideCoverage": "Not available outside the service area"
     },
     "reviewSort": {
       "LATEST": "Newest",

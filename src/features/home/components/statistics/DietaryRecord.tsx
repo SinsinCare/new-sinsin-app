@@ -46,7 +46,12 @@ export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
         >
           {t("stats.dietary.title")}
         </Text>
-        <Text fontSize={14} fontWeight="500" color="$colorSubtle">
+        <Text
+          fontSize={14}
+          fontWeight="500"
+          color="$colorSubtle"
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("stats.dietary.body")}
         </Text>
       </YStack>

@@ -210,7 +210,7 @@ export default function StoriesScreen() {
               color={item.liked ? "#FE7139" : "#FFFFFF"}
             />
           </Animated.View>
-          <Text style={styles.actionLabel}>
+          <Text style={styles.actionLabel} lineBreakStrategyIOS="hangul-word">
             {item.likes > 0 ? item.likes : t("community.postDetail.like")}
           </Text>
         </Pressable>
@@ -266,10 +266,10 @@ export default function StoriesScreen() {
         </View>
       ) : stories.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>
+          <Text style={styles.emptyTitle} lineBreakStrategyIOS="hangul-word">
             {t("community.stories.emptyTitle")}
           </Text>
-          <Text style={styles.emptySub}>
+          <Text style={styles.emptySub} lineBreakStrategyIOS="hangul-word">
             {t("community.stories.emptyBody")}
           </Text>
         </View>
@@ -323,6 +323,7 @@ export default function StoriesScreen() {
               >
                 <Text
                   style={[styles.sortLabel, selected && styles.sortLabelActive]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {item === "recommended"
                     ? t("community.stories.recommended")
@@ -344,15 +345,20 @@ export default function StoriesScreen() {
         </Pressable>
       </View>
 
-      {/* 진행 표시 — 몇 번째를 보고 있는지. */}
+      {/* 진행 표시 — 몇 번째를 보고 있는지.
+          점 스택을 **세로**로, 왼쪽 가장자리 세로 중앙에 둔다. 예전의 하단 가로
+          점 줄은 "좌우로 넘기는 캐러셀"로 읽혔는데 실제 내비게이션은 릴스식
+          세로 페이징이라 어긋났다(QA 2026-08-06). 인디케이터가 이동 축과 같은
+          방향으로 쌓여 있으면 그 자체가 "위아래로 넘긴다"는 안내가 된다.
+          현재 위치는 세로로 긴 필 — 축을 한 번 더 말한다. */}
       {stories.length > 1 && (
-        <View style={[styles.progressRow, { bottom: insets.bottom + 12 }]}>
+        <View style={styles.progressCol} pointerEvents="none">
           {stories.slice(0, 12).map((story, index) => (
             <View
               key={story.id}
               style={[
                 styles.progressDot,
-                index === activeIndex && styles.progressDotActive,
+                index === Math.min(activeIndex, 11) && styles.progressDotActive,
               ]}
             />
           ))}
@@ -489,21 +495,23 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.92)",
   },
 
-  progressRow: {
+  progressCol: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    flexDirection: "row",
+    left: 10,
+    top: 0,
+    bottom: 0,
     justifyContent: "center",
-    gap: 4,
+    alignItems: "center",
+    gap: 5,
   },
   progressDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "rgba(255,255,255,0.3)",
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.35)",
   },
   progressDotActive: {
+    height: 16,
     backgroundColor: "#FFFFFF",
   },
 })

@@ -61,7 +61,10 @@ export default function StatisticsScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={surface.textStrong} />
         </Pressable>
-        <Text style={[styles.title, { color: surface.textStrong }]}>
+        <Text
+          style={[styles.title, { color: surface.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("stats.title")}
         </Text>
         {/* 좌우 균형용 — 타이틀을 정확히 가운데 둔다 */}

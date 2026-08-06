@@ -27,10 +27,16 @@ export function StoryRail() {
     <View style={styles.section}>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Text style={[styles.title, { color: surface.textStrong }]}>
+          <Text
+            style={[styles.title, { color: surface.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("story.title")}
           </Text>
-          <Text style={[styles.subtitle, { color: surface.textMuted }]}>
+          <Text
+            style={[styles.subtitle, { color: surface.textMuted }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("story.subtitle")}
           </Text>
         </View>
@@ -42,7 +48,10 @@ export function StoryRail() {
           style={styles.createPill}
         >
           <Ionicons name="add" size={15} color={surface.textStrong} />
-          <Text style={[styles.createLabel, { color: surface.textStrong }]}>
+          <Text
+            style={[styles.createLabel, { color: surface.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("story.create")}
           </Text>
         </SurfacePressable>
@@ -64,10 +73,16 @@ export function StoryRail() {
             <Ionicons name="camera" size={18} color={surface.brand} />
           </View>
           <View style={styles.emptyText}>
-            <Text style={[styles.emptyTitle, { color: surface.textStrong }]}>
+            <Text
+              style={[styles.emptyTitle, { color: surface.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("story.emptyTitle")}
             </Text>
-            <Text style={[styles.emptySub, { color: surface.textMuted }]}>
+            <Text
+              style={[styles.emptySub, { color: surface.textMuted }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("story.emptyBody")}
             </Text>
           </View>

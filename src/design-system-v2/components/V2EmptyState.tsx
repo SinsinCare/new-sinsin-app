@@ -46,6 +46,8 @@ export function V2EmptyState({
           styles.title,
           { color: colors.label.normal },
         ]}
+        lineBreakStrategyIOS="hangul-word"
+        textBreakStrategy="balanced"
       >
         {title}
       </Text>
@@ -57,6 +59,8 @@ export function V2EmptyState({
             styles.description,
             { color: colors.label.neutral },
           ]}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
         >
           {description}
         </Text>

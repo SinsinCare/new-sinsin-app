@@ -118,6 +118,24 @@ export function showActionSheet(
   options: ActionSheetOptions,
 ): Promise<DialogResult> {
   const { actions, cancelLabel, ...rest } = options
+
+  /*
+    선택지가 **하나**면 시트가 아니다 — 제목 아래 항목 한 줄과 취소만 있는
+    시트는 미완성처럼 읽힌다(QA 2026-08-06). 이 파일의 규칙("셋 이상=시트,
+    둘 이하=다이얼로그")대로 확인 다이얼로그로 강등한다. 반환 계약은 같다:
+    항목을 골랐으면 그 인덱스(=0), 취소면 null.
+  */
+  if (actions.length === 1) {
+    return dispatch({
+      ...rest,
+      title: rest.title ?? "",
+      confirmLabel: actions[0].label,
+      destructive: actions[0].destructive,
+      cancelLabel,
+      kind: "confirm",
+    }).then((r) => (r === 0 ? 0 : null))
+  }
+
   return dispatch({
     ...rest,
     title: rest.title ?? "",

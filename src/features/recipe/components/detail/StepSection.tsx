@@ -32,12 +32,18 @@ export function StepSection({ steps }: StepSectionProps) {
 
   return (
     <View style={styles.root}>
-      <Text style={[styles.sectionTitle, { color: colors.label.normal }]}>
+      <Text
+        style={[styles.sectionTitle, { color: colors.label.normal }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("detail.steps.title")}
       </Text>
 
       {steps.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.label.alternative }]}>
+        <Text
+          style={[styles.empty, { color: colors.label.alternative }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("detail.steps.empty")}
         </Text>
       ) : (

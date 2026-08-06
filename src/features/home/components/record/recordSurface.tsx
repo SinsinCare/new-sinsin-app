@@ -42,11 +42,17 @@ export function RecordSection({
     <View style={[styles.section, { backgroundColor: surface.canvas }]}>
       <View style={styles.sectionHead}>
         <View style={styles.sectionHeadText}>
-          <Text style={[styles.sectionTitle, { color: surface.textStrong }]}>
+          <Text
+            style={[styles.sectionTitle, { color: surface.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {title}
           </Text>
           {subtitle ? (
-            <Text style={[styles.sectionSub, { color: surface.textWeak }]}>
+            <Text
+              style={[styles.sectionSub, { color: surface.textWeak }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {subtitle}
             </Text>
           ) : null}
@@ -116,11 +122,17 @@ export function RecordCardHead({
   const surface = useSurface()
   return (
     <View style={styles.cardHead}>
-      <Text style={[styles.cardTitle, { color: surface.textStrong }]}>
+      <Text
+        style={[styles.cardTitle, { color: surface.textStrong }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {title}
       </Text>
       {hint ? (
-        <Text style={[styles.cardHint, { color: surface.textWeak }]}>
+        <Text
+          style={[styles.cardHint, { color: surface.textWeak }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {hint}
         </Text>
       ) : null}

@@ -15,7 +15,12 @@ export function CategorySection({ onCategoryPress }: CategorySectionProps) {
   )
   return (
     <YStack paddingHorizontal="$5" gap="$3">
-      <Text fontSize="$5" fontWeight="700" color="$grey3">
+      <Text
+        fontSize="$5"
+        fontWeight="700"
+        color="$grey3"
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("consult.heroTitle").replace("\n", " ")}
       </Text>
 

@@ -219,6 +219,8 @@ export function OcrReviewScreen() {
         <View style={styles.center}>
           <ThemedText
             style={[styles.errorText, { color: healthColors.textSecondary }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {error ?? t("ocrReview.fallbackLoadError")}
           </ThemedText>
@@ -260,11 +262,15 @@ export function OcrReviewScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <ThemedText style={[styles.title, { color: healthColors.text }]}>
+        <ThemedText
+          style={[styles.title, { color: healthColors.text }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("ocrReview.heading")}
         </ThemedText>
         <ThemedText
           style={[styles.subtitle, { color: healthColors.textSecondary }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("ocrReview.description")}
         </ThemedText>
@@ -292,6 +298,7 @@ export function OcrReviewScreen() {
             />
             <ThemedText
               style={[styles.confirmedText, { color: healthColors.positive }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("ocrReview.alreadySaved")}
             </ThemedText>
@@ -333,6 +340,7 @@ export function OcrReviewScreen() {
           {!report.measuredAt && (
             <ThemedText
               style={[styles.dateHint, { color: healthColors.cautionary }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("ocrReview.missingDate")}
             </ThemedText>

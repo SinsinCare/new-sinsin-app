@@ -55,6 +55,7 @@ export function RecipeSuggestPanel({
           fontWeight="600"
           color={surface.textWeak}
           paddingBottom={6}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("list.suggestTitle")}
         </Text>
@@ -96,6 +97,7 @@ export function RecipeSuggestPanel({
             lineHeight={19}
             color={surface.textWeak}
             paddingVertical={10}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("list.suggestEmpty")}
           </Text>

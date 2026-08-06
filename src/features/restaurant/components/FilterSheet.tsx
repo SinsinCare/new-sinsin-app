@@ -203,6 +203,7 @@ export function FilterSheet({
         >
           <Text
             style={[typography.label.medium, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.filter.region")}
           </Text>
@@ -250,6 +251,7 @@ export function FilterSheet({
         >
           <Text
             style={[typography.label.medium, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.filter.nutrient")}
           </Text>
@@ -274,6 +276,7 @@ export function FilterSheet({
         >
           <Text
             style={[typography.label.medium, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.filter.foodType")}
           </Text>
@@ -298,6 +301,7 @@ export function FilterSheet({
               styles.notice,
               { color: colors.label.neutral },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("restaurant.filter.unbackedNotice")}
           </Text>

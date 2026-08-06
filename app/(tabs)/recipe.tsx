@@ -556,6 +556,7 @@ export default function RecipeScreen() {
             lineHeight={30}
             fontWeight="700"
             color={surface.textStrong}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("recipe.title")}
           </Text>

@@ -278,10 +278,16 @@ export function RecipeWriteForm({ onClose }: RecipeWriteFormProps) {
         >
           <Ionicons name="close" size={24} color={s.textStrong} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: s.textStrong }]}>
+        <Text
+          style={[styles.headerTitle, { color: s.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("recipeWrite.title")}
         </Text>
-        <Text style={[styles.progress, { color: s.textMuted }]}>
+        <Text
+          style={[styles.progress, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("recipeWrite.progress", {
             done: evaluation.doneCount,
             total: evaluation.totalCount,

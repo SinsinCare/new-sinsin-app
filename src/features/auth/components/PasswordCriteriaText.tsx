@@ -20,7 +20,9 @@ export function PasswordCriteriaText({ password }: PasswordCriteriaTextProps) {
   const color = state === "invalid" ? surface.brand : surface.textWeak
 
   return (
-    <Text style={[styles.text, { color }]}>{getPasswordCriteriaText()}</Text>
+    <Text style={[styles.text, { color }]} lineBreakStrategyIOS="hangul-word">
+      {getPasswordCriteriaText()}
+    </Text>
   )
 }
 

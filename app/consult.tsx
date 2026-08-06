@@ -643,6 +643,7 @@ export default function ConsultScreen() {
                       ? tokens.color.textDark.val
                       : tokens.color.textLight.val
                   }
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("consult.heroTitle")}
                 </Text>
@@ -681,6 +682,7 @@ export default function ConsultScreen() {
                     ? tokens.color.textDarkSub.val
                     : tokens.color.textLightSub.val
                 }
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("consult.popularQuestions")}
               </Text>
@@ -726,6 +728,7 @@ export default function ConsultScreen() {
                       isDarkMode ? tokens.color.textDarkSub.val : "#4E5056"
                     }
                     opacity={pressed ? 0.5 : 1}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {t("consult.references")}
                   </Text>
@@ -806,7 +809,12 @@ export default function ConsultScreen() {
           */}
           {isIdle && (
             <YStack gap={8}>
-              <Text fontSize={12} color="#81818d" lineHeight={16}>
+              <Text
+                fontSize={12}
+                color="#81818d"
+                lineHeight={16}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("consult.category")}
               </Text>
               <ScrollView
@@ -998,6 +1006,7 @@ export default function ConsultScreen() {
             >
               <Text
                 style={[attachStyles.menuItemText, { color: menuTextColor }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("consult.choosePhoto")}
               </Text>
@@ -1017,6 +1026,7 @@ export default function ConsultScreen() {
             >
               <Text
                 style={[attachStyles.menuItemText, { color: menuTextColor }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("consult.takePhoto")}
               </Text>

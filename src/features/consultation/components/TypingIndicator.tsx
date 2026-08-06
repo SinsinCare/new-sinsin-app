@@ -70,7 +70,12 @@ export function TypingIndicator() {
   return (
     <XStack alignItems="center" paddingHorizontal={20}>
       <XStack alignItems="center" gap={8}>
-        <Text fontSize={14} lineHeight={20} color={textColor}>
+        <Text
+          fontSize={14}
+          lineHeight={20}
+          color={textColor}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("consult.organizing")}
         </Text>
         <XStack alignItems="center" gap={4}>

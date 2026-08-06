@@ -124,11 +124,17 @@ export function RecordSheetShell({
       <Animated.View style={[styles.body, bodyStyle]}>
         <View style={styles.head}>
           <View style={styles.headText}>
-            <Text style={[styles.title, { color: surface.textStrong }]}>
+            <Text
+              style={[styles.title, { color: surface.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {title}
             </Text>
             {subtitle ? (
-              <Text style={[styles.subtitle, { color: surface.textWeak }]}>
+              <Text
+                style={[styles.subtitle, { color: surface.textWeak }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {subtitle}
               </Text>
             ) : null}

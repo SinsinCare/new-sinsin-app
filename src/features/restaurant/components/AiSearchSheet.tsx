@@ -199,6 +199,7 @@ export function AiSearchSheet({
                     typography.subtext.medium,
                     { color: colors.label.neutral },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("restaurant.aiSearch.fallback")}
                 </Text>
@@ -208,6 +209,7 @@ export function AiSearchSheet({
             <View style={styles.block}>
               <Text
                 style={[typography.label.small, { color: colors.label.normal }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("restaurant.aiSearch.rationaleTitle")}
               </Text>
@@ -216,6 +218,7 @@ export function AiSearchSheet({
                   typography.body.xSmall,
                   { color: colors.label.neutral },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {result.rationale}
               </Text>
@@ -228,6 +231,7 @@ export function AiSearchSheet({
                     typography.label.small,
                     { color: colors.label.normal },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("restaurant.aiSearch.appliedTitle")}
                 </Text>
@@ -250,6 +254,7 @@ export function AiSearchSheet({
                   typography.subtext.medium,
                   { color: colors.label.neutral },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("restaurant.aiSearch.noFilters")}
               </Text>
@@ -261,6 +266,7 @@ export function AiSearchSheet({
                   typography.subtext.medium,
                   { color: colors.accentForeground.orange },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("restaurant.aiSearch.unmatched", {
                   terms: result.unmatchedTerms.join(", "),

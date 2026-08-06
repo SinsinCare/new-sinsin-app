@@ -105,6 +105,7 @@ export function AppliedFilterRow({
               lineHeight={18}
               fontWeight="600"
               color={surface.textMuted}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("list.filterClearAll")}
             </Text>

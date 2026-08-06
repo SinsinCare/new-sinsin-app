@@ -299,7 +299,10 @@ export function AcquisitionSourceField({
               style={[styles.handle, { backgroundColor: surface.hairline }]}
             />
 
-            <Text style={[styles.sheetTitle, { color: surface.textStrong }]}>
+            <Text
+              style={[styles.sheetTitle, { color: surface.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {phase === "list"
                 ? t("acquisition.sheetTitle")
                 : t("acquisition.otherTitle")}

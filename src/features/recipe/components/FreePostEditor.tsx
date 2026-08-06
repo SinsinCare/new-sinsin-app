@@ -287,6 +287,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
               styles.submitLabel,
               { color: canSubmit ? inkContent : surface.ctaOffText },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {isSubmitting
               ? (submitStatus ?? t("action.uploading"))

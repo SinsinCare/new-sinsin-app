@@ -651,6 +651,7 @@ function ProfileReviewRow({
       <Text
         numberOfLines={expanded ? undefined : CONTENT_COLLAPSED_LINES}
         style={[typography.subtext.large, { color: colors.label.neutral }]}
+        lineBreakStrategyIOS="hangul-word"
       >
         {review.content}
       </Text>

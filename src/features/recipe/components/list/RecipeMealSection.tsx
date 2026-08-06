@@ -189,6 +189,8 @@ export const RecipeMealSection = memo(function RecipeMealSection({
               letterSpacing={TYPE.caption.letterSpacing}
               color={surface.textMuted}
               textAlign="center"
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t(RECIPE_HOME_EMPTY_COPY_KEY)}
             </Text>

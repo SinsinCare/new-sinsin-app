@@ -178,6 +178,7 @@ function LoadingOverlayBody({
           fontWeight="600"
           marginTop="$4"
           color={isDarkMode ? "$textDark" : "$black"}
+          lineBreakStrategyIOS="hangul-word"
         >
           {`${statusMessage}${dots}`}
         </Text>
@@ -189,6 +190,8 @@ function LoadingOverlayBody({
           marginHorizontal="$4"
           color="$colorSubtle"
           lineHeight={20}
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="balanced"
         >
           {t(TIP_KEYS[tipIndex])}
         </Text>
@@ -201,6 +204,8 @@ function LoadingOverlayBody({
             marginTop="$6"
             marginHorizontal="$6"
             lineHeight={18}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("foodLoading.dismissHint")}
           </Text>

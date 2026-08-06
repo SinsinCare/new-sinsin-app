@@ -69,6 +69,8 @@ function SocialButton({
             {...AUTH_TYPE.cta}
             fontWeight="600"
             marginRight={24}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {label}
           </Text>
@@ -143,6 +145,8 @@ export function LoginScreen() {
             lineHeight={24}
             fontWeight="500"
             textAlign="center"
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("login.heroEyebrow")}
           </Text>
@@ -281,6 +285,8 @@ export function LoginScreen() {
             fontWeight="600"
             lineHeight={24}
             textAlign="center"
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {socialLoadingMessage}
           </Text>
@@ -289,6 +295,8 @@ export function LoginScreen() {
             fontSize={14}
             lineHeight={20}
             textAlign="center"
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("login.checkingAccount")}
           </Text>

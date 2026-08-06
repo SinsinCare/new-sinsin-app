@@ -178,11 +178,15 @@ export function HealthDataUploadScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={[styles.title, { color: healthColors.text }]}>
+        <ThemedText
+          style={[styles.title, { color: healthColors.text }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("upload.title")}
         </ThemedText>
         <ThemedText
           style={[styles.subtitle, { color: healthColors.textSecondary }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("upload.subtitle")}
         </ThemedText>
@@ -414,6 +418,8 @@ export function HealthDataUploadScreen() {
                 styles.maxReachedText,
                 { color: healthColors.cautionary },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("upload.maxFiles", { count: MAX_FILES })}
             </ThemedText>
@@ -444,6 +450,7 @@ export function HealthDataUploadScreen() {
               />
               <ThemedText
                 style={[styles.tipText, { color: healthColors.textSecondary }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t(tipKey)}
               </ThemedText>
@@ -474,6 +481,8 @@ export function HealthDataUploadScreen() {
             />
             <ThemedText
               style={[styles.loadingTitle, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("upload.readingTitle")}
             </ThemedText>
@@ -482,6 +491,8 @@ export function HealthDataUploadScreen() {
                 styles.loadingSubtitle,
                 { color: healthColors.textSecondary },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {t("upload.readingDescription")}
             </ThemedText>

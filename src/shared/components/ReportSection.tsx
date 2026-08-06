@@ -52,9 +52,19 @@ export function SectionHeader({
   const s = useSurface()
   return (
     <View style={styles.header}>
-      <Text style={[styles.title, { color: s.textStrong }]}>{title}</Text>
+      <Text
+        style={[styles.title, { color: s.textStrong }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
+        {title}
+      </Text>
       {!!caption && (
-        <Text style={[styles.caption, { color: s.textMuted }]}>{caption}</Text>
+        <Text
+          style={[styles.caption, { color: s.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
+          {caption}
+        </Text>
       )}
     </View>
   )

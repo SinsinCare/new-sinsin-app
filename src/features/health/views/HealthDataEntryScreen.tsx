@@ -36,11 +36,15 @@ export function HealthDataEntryScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={[styles.title, { color: healthColors.text }]}>
+        <ThemedText
+          style={[styles.title, { color: healthColors.text }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("entry.title")}
         </ThemedText>
         <ThemedText
           style={[styles.subtitle, { color: healthColors.textSecondary }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("entry.subtitle")}
         </ThemedText>
@@ -72,11 +76,13 @@ export function HealthDataEntryScreen() {
           <View style={styles.optionContent}>
             <ThemedText
               style={[styles.optionTitle, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("entry.nhisTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("entry.nhisDescription")}
             </ThemedText>
@@ -131,11 +137,13 @@ export function HealthDataEntryScreen() {
           <View style={styles.optionContent}>
             <ThemedText
               style={[styles.optionTitle, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("entry.fileTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("entry.fileDescription")}
             </ThemedText>
@@ -174,11 +182,13 @@ export function HealthDataEntryScreen() {
           <View style={styles.optionContent}>
             <ThemedText
               style={[styles.optionTitle, { color: healthColors.text }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("entry.dashboardTitle")}
             </ThemedText>
             <ThemedText
               style={[styles.optionDesc, { color: healthColors.textSecondary }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("entry.dashboardDescription")}
             </ThemedText>
@@ -199,6 +209,7 @@ export function HealthDataEntryScreen() {
           />
           <ThemedText
             style={[styles.securityText, { color: healthColors.textSecondary }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("entry.usageNote")}
           </ThemedText>
@@ -228,6 +239,8 @@ export function HealthDataEntryScreen() {
           </View>
           <ThemedText
             style={[styles.trustText, { color: healthColors.textSecondary }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
           >
             {t("entry.comparisonNote")}
           </ThemedText>

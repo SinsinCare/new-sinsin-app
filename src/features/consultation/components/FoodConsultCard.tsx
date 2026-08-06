@@ -82,6 +82,7 @@ export function FoodConsultCard({ data }: { data: FoodConsultCardData }) {
           fontWeight="600"
           letterSpacing={-0.1}
           color={tone.muted}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("consult.foodCard.eyebrow")}
           {metaLine ? ` · ${metaLine}` : ""}
@@ -154,6 +155,7 @@ export function FoodConsultCard({ data }: { data: FoodConsultCardData }) {
                   lineHeight={18}
                   fontWeight="600"
                   color={tone.soft}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("consult.foodCard.foodsToggle")}
                 </Text>

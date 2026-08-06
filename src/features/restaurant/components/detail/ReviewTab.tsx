@@ -235,6 +235,7 @@ export function ReviewTab({
       <View style={styles.sortRow}>
         <Text
           style={[typography.subtext.medium, { color: colors.label.neutral }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("restaurant.review.filterSummary", {
             axis: t("restaurant.review.filterKeyword"),

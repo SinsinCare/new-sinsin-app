@@ -92,10 +92,16 @@ export function NutritionCard({
             { backgroundColor: colors.fill.alternative },
           ]}
         >
-          <Text style={[styles.tileLabel, { color: colors.label.normal }]}>
+          <Text
+            style={[styles.tileLabel, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.nutrition.unavailableTitle")}
           </Text>
-          <Text style={[styles.basis, { color: colors.label.alternative }]}>
+          <Text
+            style={[styles.basis, { color: colors.label.alternative }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.nutrition.unavailableBody")}
           </Text>
         </View>
@@ -108,7 +114,10 @@ export function NutritionCard({
   return (
     <View style={styles.root}>
       <View style={styles.head}>
-        <Text style={[styles.sectionTitle, { color: colors.label.normal }]}>
+        <Text
+          style={[styles.sectionTitle, { color: colors.label.normal }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("curated.nutritionTitle")}
         </Text>
         {/*
@@ -129,14 +138,20 @@ export function NutritionCard({
             },
           ]}
         >
-          <Text style={[styles.badgeText, { color: colors.label.neutral }]}>
+          <Text
+            style={[styles.badgeText, { color: colors.label.neutral }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t(PROVENANCE_BADGE_KEYS[nutrition.provenance])}
           </Text>
           <V2Icon name="info" size={14} color={colors.label.alternative} />
         </Pressable>
       </View>
 
-      <Text style={[styles.basis, { color: colors.label.alternative }]}>
+      <Text
+        style={[styles.basis, { color: colors.label.alternative }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("detail.nutrition.basis", { count: servings })}
         {" · "}
         {/* 열량은 막대를 갖지 않는다 — CKD 참고량은 나트륨·칼륨·인·단백질 넷이다. */}
@@ -166,11 +181,15 @@ export function NutritionCard({
             { backgroundColor: colors.fill.alternative },
           ]}
         >
-          <Text style={[styles.unmatchedTitle, { color: colors.label.normal }]}>
+          <Text
+            style={[styles.unmatchedTitle, { color: colors.label.normal }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.nutrition.unmatchedTitle")}
           </Text>
           <Text
             style={[styles.unmatchedBody, { color: colors.label.alternative }]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("detail.nutrition.unmatchedBody")}
           </Text>
@@ -217,7 +236,10 @@ function NutrientTile({
 
   return (
     <View style={[styles.tile, { backgroundColor: colors.fill.alternative }]}>
-      <Text style={[styles.tileLabel, { color: colors.label.alternative }]}>
+      <Text
+        style={[styles.tileLabel, { color: colors.label.alternative }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t(NUTRIENT_LABEL_KEYS[headline.key])}
       </Text>
 

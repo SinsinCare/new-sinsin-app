@@ -52,11 +52,13 @@ export function ProfileMissingNotice({ style }: ProfileMissingNoticeProps) {
       <View style={styles.texts}>
         <Text
           style={[typography.label.small, { color: colors.primary.primary }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("restaurant.safety.profileMissingTitle")}
         </Text>
         <Text
           style={[typography.subtext.medium, { color: colors.label.neutral }]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("restaurant.safety.profileMissingBody")}
         </Text>

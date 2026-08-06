@@ -1033,6 +1033,13 @@ export interface MyLocationState {
   isRequesting: boolean
 }
 
+/**
+ * `거리순` 을 쓸 수 없는 이유. boolean 으로 뭉개지 않는 이유는 문구가 달라서다 —
+ * `NO_LOCATION` 은 "위치를 켜면 …" 이 맞지만, `OUTSIDE_COVERAGE`(해외)는 위치를
+ * 켜도 소용없으므로 그렇게 말하면 거짓말이 된다. 판정은 `useMyLocation`, 문구는 `SortSheet`.
+ */
+export type DistanceSortDisabledReason = "NO_LOCATION" | "OUTSIDE_COVERAGE"
+
 /* ────────────────────────── 빈 상태 구분 ────────────────────────── */
 
 /**

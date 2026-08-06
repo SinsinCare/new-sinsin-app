@@ -23,7 +23,7 @@ export function FaqCard({ item, onPress }: FaqCardProps) {
         justifyContent="space-between"
         borderColor="$borderColor"
       >
-        <Text fontSize="$4" color="$color" fontWeight="500" numberOfLines={2}>
+        <Text fontSize="$4" color="$color" fontWeight="500" numberOfLines={2} lineBreakStrategyIOS="hangul-word">
           {item.question}
         </Text>
 

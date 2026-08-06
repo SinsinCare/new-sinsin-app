@@ -608,6 +608,7 @@ function RestaurantDetailBody({
             <Text
               style={[typography.title.small, { color: colors.label.normal }]}
               numberOfLines={2}
+              lineBreakStrategyIOS="hangul-word"
             >
               {name}
             </Text>
@@ -637,6 +638,7 @@ function RestaurantDetailBody({
                   typography.subtext.large,
                   { color: colors.label.neutral },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {detail.description}
               </Text>

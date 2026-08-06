@@ -103,10 +103,16 @@ export function FoodAnalysisConfirmation({
               fontSize="$7"
               fontWeight="700"
               color={isDarkMode ? "$textDark" : "$color"}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("foodConfirmation.title")}
             </Text>
-            <Text fontSize="$4" lineHeight={21} color="$colorSubtle">
+            <Text
+              fontSize="$4"
+              lineHeight={21}
+              color="$colorSubtle"
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("foodConfirmation.body")}
             </Text>
           </YStack>
@@ -128,6 +134,7 @@ export function FoodAnalysisConfirmation({
                       fontSize="$5"
                       fontWeight="600"
                       color={isDarkMode ? "$textDark" : "$color"}
+                      lineBreakStrategyIOS="hangul-word"
                     >
                       {question.prompt}
                     </Text>
@@ -163,6 +170,7 @@ export function FoodAnalysisConfirmation({
                                 fontSize="$4"
                                 fontWeight={selected ? "600" : "500"}
                                 color={selected ? "$sub8" : "$colorSubtle"}
+                                lineBreakStrategyIOS="hangul-word"
                               >
                                 {option.label}
                               </Text>

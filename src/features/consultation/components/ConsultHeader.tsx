@@ -20,6 +20,8 @@ export function ConsultHeader() {
         fontWeight="700"
         color="$color"
         textAlign="center"
+        lineBreakStrategyIOS="hangul-word"
+        textBreakStrategy="balanced"
       >
         {t("consult.shortTitle")}
       </Text>

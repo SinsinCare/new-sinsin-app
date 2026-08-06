@@ -109,7 +109,13 @@ export function CategoryChipRail({
         styles.content,
         { paddingLeft: insetHorizontal, paddingRight: insetHorizontal },
       ]}
-      style={style}
+      /*
+        ScrollView 는 자식을 자기 높이에 맞춰 자른다 — FLOATING_SHADOW(반경 8,
+        오프셋 2)가 칩 위아래에서 뚝 끊겨 "칩이 잘려 보인다"(QA 2026-08-06).
+        안쪽 세로 패딩으로 그림자 자리를 만들고, 같은 값의 네거티브 마진으로
+        상쇄해 바깥 레이아웃 리듬은 그대로 둔다.
+      */
+      style={[styles.rail, style]}
     >
       <RailChip
         label={t("restaurant.map.aiSearch")}
@@ -208,7 +214,12 @@ function RailChip({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: CHIP_GAP, alignItems: "center" },
+  rail: { marginVertical: -spacing[12] },
+  content: {
+    gap: CHIP_GAP,
+    alignItems: "center",
+    paddingVertical: spacing[12],
+  },
   chip: {
     flexDirection: "row",
     alignItems: "center",

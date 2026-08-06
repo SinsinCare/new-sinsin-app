@@ -340,25 +340,37 @@ export default function PostDetailScreen() {
     })
   }
 
+  /*
+    수정·삭제는 **내 것에만** 보인다. 예전엔 모든 글·댓글에 셋 다 띄우고 서버의
+    거절(403)에 기댔는데, QA(2026-08-06)가 정확히 짚었다 — 남의 글에서 삭제를
+    누를 수 있는 것 자체가 잘못이고, 눌러도 조용히 실패해 더 이상했다.
+    판정은 이 파일의 멘션 로직과 같은 닉네임 대조다. 프로필이 아직 안 왔으면
+    (myNickName === undefined) 내 것이 아닌 걸로 접는다 — 신고만 보이는 잠깐이
+    남의 글에 삭제가 보이는 잠깐보다 낫다.
+  */
+  const isMyContent = (authorName: string) =>
+    myProfile?.nickName != null && authorName === myProfile.nickName
+
   const handleMorePress = async () => {
     if (!post) return
+    const mine = !isWithdrawnAuthor(post) && isMyContent(post.authorName)
+
+    // 남의 글에서 남은 행동은 신고 하나 — 항목 하나짜리 중간 메뉴를 거치지
+    // 않고 신고 사유 시트로 바로 간다(QA 2026-08-06: "선택지 1개에 시트냐").
+    if (!mine) {
+      await handleReport()
+      return
+    }
+
     // 예전엔 iOS 는 ActionSheetIOS, 안드로이드는 Alert 로 갈라져 있었다.
     // 시트 하나로 합치면 두 OS 가 같은 얼굴이 되고 분기도 사라진다.
-    const withdrawnAuthor = isWithdrawnAuthor(post)
-    const handlers = withdrawnAuthor
-      ? [handleReport]
-      : [handleEdit, handleDelete, handleReport]
-    const actions = withdrawnAuthor
-      ? [{ label: t("community.postDetail.report") }]
-      : [
-          { label: t("community.postDetail.edit") },
-          { label: t("action.delete"), destructive: true },
-          { label: t("community.postDetail.report") },
-        ]
-
+    const handlers = [handleEdit, handleDelete]
     const picked = await showActionSheet({
       title: t("community.postDetail.more"),
-      actions,
+      actions: [
+        { label: t("community.postDetail.edit") },
+        { label: t("action.delete"), destructive: true },
+      ],
     })
     if (picked != null) await handlers[picked]()
   }
@@ -475,21 +487,25 @@ export default function PostDetailScreen() {
       setPickedMentions(comment.mentions)
       commentInputRef.current?.focus()
     }
-    const handlers = [
-      () => startReplyTo(comment),
-      startEdit,
-      () => handleDeleteComment(comment),
-      () => handleCommentReport(comment),
-    ]
+    // 글과 같은 규칙 — 수정·삭제는 내 댓글에만, 남의 댓글엔 답글·신고만.
+    const mine = isMyContent(comment.authorName)
+    const handlers = mine
+      ? [() => startReplyTo(comment), startEdit, () => handleDeleteComment(comment)]
+      : [() => startReplyTo(comment), () => handleCommentReport(comment)]
+    const actions = mine
+      ? [
+          { label: t("community.postDetail.reply") },
+          { label: t("community.postDetail.edit") },
+          { label: t("action.delete"), destructive: true },
+        ]
+      : [
+          { label: t("community.postDetail.reply") },
+          { label: t("community.postDetail.report") },
+        ]
 
     const picked = await showActionSheet({
       title: t("community.postDetail.comment"),
-      actions: [
-        { label: t("community.postDetail.reply") },
-        { label: t("community.postDetail.edit") },
-        { label: t("action.delete"), destructive: true },
-        { label: t("community.postDetail.report") },
-      ],
+      actions,
     })
     if (picked != null) await handlers[picked]()
   }
@@ -520,7 +536,10 @@ export default function PostDetailScreen() {
         </View>
         <View style={styles.commentBody}>
           <View style={styles.commentNameRow}>
-            <Text style={[styles.commentName, { color: surface.textStrong }]}>
+            <Text
+              style={[styles.commentName, { color: surface.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {isWithdrawnAuthor(comment)
                 ? t("community.postDetail.withdrawnUser")
                 : comment.authorName}
@@ -577,6 +596,7 @@ export default function PostDetailScreen() {
                       styles.commentActionText,
                       { color: surface.textWeak },
                     ]}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {t("community.postDetail.reply")}
                   </Text>
@@ -669,7 +689,11 @@ export default function PostDetailScreen() {
           {t("community.postDetail.notFound")}
         </Text>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
-          <Text style={[styles.stateAction, { color: surface.brand }]}>
+          <Text
+            style={[styles.stateAction, { color: surface.brand }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("action.back")}
           </Text>
         </Pressable>
@@ -760,7 +784,10 @@ export default function PostDetailScreen() {
             <Ionicons name="person" size={19} color={surface.textWeak} />
           </View>
           <View style={styles.authorText}>
-            <Text style={[styles.authorName, { color: surface.textStrong }]}>
+            <Text
+              style={[styles.authorName, { color: surface.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {withdrawnAuthor
                 ? t("community.postDetail.withdrawnUser")
                 : post.authorName}
@@ -873,6 +900,7 @@ export default function PostDetailScreen() {
                 styles.likeLabel,
                 { color: post.liked ? surface.brand : surface.textMuted },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("community.postDetail.likeCount", { count: post.likes })}
             </Text>
@@ -891,7 +919,10 @@ export default function PostDetailScreen() {
 
         {/* 댓글 */}
         <View style={styles.commentsSection}>
-          <Text style={[styles.commentsTitle, { color: surface.textStrong }]}>
+          <Text
+            style={[styles.commentsTitle, { color: surface.textStrong }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("community.postDetail.commentCount", {
               count: post.comments,
             })}
@@ -899,6 +930,7 @@ export default function PostDetailScreen() {
           {isCommentsLoading ? (
             <Text
               style={[styles.commentsLoading, { color: surface.textMuted }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("community.postDetail.commentsLoading")}
             </Text>
@@ -909,12 +941,14 @@ export default function PostDetailScreen() {
                   styles.commentsEmptyTitle,
                   { color: surface.textStrong },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.commentsError")}
               </Text>
               <Pressable onPress={() => void refetch()} hitSlop={8}>
                 <Text
                   style={[styles.commentsEmptyTitle, { color: surface.brand }]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("action.retry")}
                 </Text>
@@ -927,11 +961,13 @@ export default function PostDetailScreen() {
                   styles.commentsEmptyTitle,
                   { color: surface.textStrong },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.noComments")}
               </Text>
               <Text
                 style={[styles.commentsEmptySub, { color: surface.textMuted }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.firstComment")}
               </Text>
@@ -955,6 +991,7 @@ export default function PostDetailScreen() {
             <View style={styles.relatedSection}>
               <Text
                 style={[styles.relatedTitle, { color: surface.textStrong }]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.related")}
               </Text>

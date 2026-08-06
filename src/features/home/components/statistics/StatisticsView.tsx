@@ -286,7 +286,13 @@ export function StatisticsView({
             gap="$4"
           >
             <Icon name="circle-character" size={40} />
-            <Text fontSize="$4" fontWeight="600" color="$colorSubtle">
+            <Text
+              fontSize="$4"
+              fontWeight="600"
+              color="$colorSubtle"
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+            >
               {t("stats.emptyPeriod")}
             </Text>
             <TouchableOpacity onPress={onGoToRecord}>

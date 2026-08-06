@@ -61,6 +61,7 @@ export function MapUtilityFooter({
           styles.prompt,
           { color: colors.label.alternative },
         ]}
+        lineBreakStrategyIOS="hangul-word"
       >
         {t("restaurant.report.entryPrompt")}
       </Text>

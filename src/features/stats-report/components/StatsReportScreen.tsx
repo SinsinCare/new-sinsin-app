@@ -465,7 +465,10 @@ function LowDataNotice({
       ]}
     >
       <View style={styles.noticeHead}>
-        <Text style={[styles.noticeTitle, { color: s.textStrong }]}>
+        <Text
+          style={[styles.noticeTitle, { color: s.textStrong }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t(hasSomeRecords ? "stats.lowDataTitleSome" : "stats.lowDataTitle")}
         </Text>
         <Text

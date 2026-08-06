@@ -34,7 +34,10 @@ export function RestaurantReportSection({
 }: RestaurantReportSectionProps) {
   return (
     <View style={[styles.root, { backgroundColor, borderColor }]}>
-      <Text style={[typography.label.small, { color: textColor }]}>
+      <Text
+        style={[typography.label.small, { color: textColor }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {title}
       </Text>
       {children}

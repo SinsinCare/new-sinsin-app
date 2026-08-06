@@ -342,7 +342,7 @@ export function RestaurantMapScreen({
     enabled: mapError !== null || mapSearch.committedBounds !== null,
   })
 
-  /** 위치 권한이 사라지면 `거리순` 을 조용히 기본값으로 되돌린다. */
+  /** 위치 권한이 사라지거나 커버리지 밖이면 `거리순` 을 조용히 기본값으로 되돌린다. */
   useEffect(() => {
     controls.sanitizeSortForLocation(myLocation.coords !== null)
   }, [controls, myLocation.coords])
@@ -538,15 +538,11 @@ export function RestaurantMapScreen({
       것이지 처음으로 돌아가는 것이 아니다.
       마지막이 내 위치다 — 권한이 이미 허용돼 있으면 조용히 옮긴다(묻지는 않는다).
     */
-    /* 내 위치는 커버리지 안일 때만 시작점이 된다. 해외 좌표(시뮬레이터 기본 위치 포함)로
-       시작하면 사용자는 빈 베이지 타일 앞에서 시작한다 — 기본 중심(국내)이 낫다.
-       focus 와 마지막 뷰포트는 국내에서만 만들어지는 값이라 거르지 않는다. */
-    const userStart =
-      myLocation.coords &&
-      isWithinKakaoCoverage(myLocation.coords.lat, myLocation.coords.lng)
-        ? myLocation.coords
-        : null
-    const start = focus ?? pendingViewportRef.current?.center ?? userStart
+    /* 내 위치는 커버리지 안일 때만 시작점이 된다 — 해외 좌표로 시작하면 사용자는 빈
+       베이지 타일 앞에서 시작한다. 판정은 `useMyLocation` 이 이미 했다(커버리지 밖이면
+       `coords` 가 `null`). focus 와 마지막 뷰포트는 국내에서만 만들어지는 값이라 거르지 않는다. */
+    const start =
+      focus ?? pendingViewportRef.current?.center ?? myLocation.coords
     if (start) {
       mapRef.current?.moveTo(start.lat, start.lng, { animate: false })
       // 여기서 옮겼으면 아래 "늦게 온 위치" 이펙트는 할 일이 없다.
@@ -596,9 +592,8 @@ export function RestaurantMapScreen({
     if (centeredOnUserRef.current) return
     if (focus) return
     if (userMovedMapRef.current) return
-    // 커버리지 밖 좌표로는 자동 이동하지 않는다 — 기본 중심(국내)이 빈 타일보다 낫다.
-    // 배너도 띄우지 않는다: 사용자가 누른 것이 아니라 설명할 행동이 없다.
-    if (!isWithinKakaoCoverage(coords.lat, coords.lng)) return
+    // 커버리지 밖 좌표는 `useMyLocation` 이 `null` 로 접으므로 여기 오지 않는다 —
+    // 그때는 자동 이동도 배너도 없다(사용자가 누른 것이 아니라 설명할 행동이 없다).
     centeredOnUserRef.current = true
     mapRef.current?.moveTo(coords.lat, coords.lng, { animate: false })
     armedSearchRef.current = true
@@ -1314,7 +1309,7 @@ export function RestaurantMapScreen({
         onClose={() => setSortSheetOpen(false)}
         value={filters.sort}
         onSubmit={handleSubmitSort}
-        distanceDisabled={myLocation.isDistanceSortDisabled}
+        distanceDisabledReason={myLocation.distanceSortDisabledReason}
       />
       <FilterSheet
         visible={filterSection !== null}
@@ -1351,7 +1346,11 @@ export function RestaurantMapScreen({
         {/* 오버레이는 absolute 라 흐름에서 빠진다 — 실측 높이만큼 아래로 내려야 겹치지 않는다.
             상수(예: insets.top + 122)를 쓰면 다른 화면 크기에서 어긋난다(§F.11). */}
         <View style={[styles.degraded, { paddingTop: topOverlayHeight }]}>
+          {/* quiet: 지도 로드 실패는 다시 시도하면 그만인 상태다. 빨간 경고는
+              이 화면을 사고 현장처럼 읽히게 해서 그레이 톤으로 낮춘다 — 아래
+              목록은 지도 없이도 정상 동작하고 있음을 시각적으로도 말해야 한다. */}
           <V2ErrorState
+            tone="quiet"
             title={t("restaurant.error.mapTitle")}
             description={t("restaurant.error.mapRetryBody")}
             retryLabel={t("restaurant.error.mapRetry")}
@@ -1361,40 +1360,45 @@ export function RestaurantMapScreen({
           {filterRow}
           {notice}
           <V2Divider tone="alternative" />
-          <FlashList
-            data={list.items}
-            keyExtractor={(item) => String(item.restaurantId)}
-            renderItem={({ item }) => (
-              <RestaurantCard
-                card={item}
-                selected={item.restaurantId === selectedId}
-                onPress={() => handlePressCard(item)}
-              />
-            )}
-            ItemSeparatorComponent={Separator}
-            ListEmptyComponent={
-              list.isLoading ? (
-                <SkeletonList />
-              ) : list.emptyReason ? (
-                /* `onWidenMap` 을 넘기지 않는다 — 이 분기에는 지도가 없다.
+          {/* FlashList 는 flex 컬럼에서 스스로 남은 높이를 차지하지 않는다 —
+              래퍼 없이는 높이 0 으로 접혀, 목록이 "영원히 빈 화면"으로 보였다
+              (QA 2026-08-06: 지도 실패 화면 아래가 통째로 공백). */}
+          <View style={styles.degradedListArea}>
+            <FlashList
+              data={list.items}
+              keyExtractor={(item) => String(item.restaurantId)}
+              renderItem={({ item }) => (
+                <RestaurantCard
+                  card={item}
+                  selected={item.restaurantId === selectedId}
+                  onPress={() => handlePressCard(item)}
+                />
+              )}
+              ItemSeparatorComponent={Separator}
+              ListEmptyComponent={
+                list.isLoading ? (
+                  <SkeletonList />
+                ) : list.emptyReason ? (
+                  /* `onWidenMap` 을 넘기지 않는다 — 이 분기에는 지도가 없다.
                    넘기면 `NO_DATA_HERE` 에 `지도 넓혀서 다시 찾기` 가 서고, 눌러도
                    `mapRef.current` 가 null 이라 영원히 아무 일이 없다. */
-                <MapEmptyState
-                  reason={list.emptyReason}
-                  onResetFilters={handleResetFilters}
-                  onRetry={handleRetry}
-                />
-              ) : null
-            }
-            ListFooterComponent={utilityFooter}
-            onEndReached={list.loadMore}
-            onEndReachedThreshold={0.4}
-            bounces={false}
-            overScrollMode="never"
-            contentContainerStyle={{
-              paddingBottom: insets.bottom + spacing[16],
-            }}
-          />
+                  <MapEmptyState
+                    reason={list.emptyReason}
+                    onResetFilters={handleResetFilters}
+                    onRetry={handleRetry}
+                  />
+                ) : null
+              }
+              ListFooterComponent={utilityFooter}
+              onEndReached={list.loadMore}
+              onEndReachedThreshold={0.4}
+              bounces={false}
+              overScrollMode="never"
+              contentContainerStyle={{
+                paddingBottom: insets.bottom + spacing[16],
+              }}
+            />
+          </View>
         </View>
         {sheets}
       </View>
@@ -1584,6 +1588,7 @@ const styles = StyleSheet.create({
   },
   fabs: { alignSelf: "flex-end" },
   degraded: { flex: 1 },
+  degradedListArea: { flex: 1 },
   degradedNotice: {
     paddingHorizontal: SIDE,
     paddingVertical: spacing[8],

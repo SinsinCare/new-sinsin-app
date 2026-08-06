@@ -59,7 +59,13 @@ export function FilterChipRow({
       bounces={false}
       overScrollMode="never"
       contentContainerStyle={styles.content}
-      style={style}
+      /*
+        가로 칩 레일은 세로로 자라면 안 된다. ScrollView 기본 스타일에는
+        flexGrow:1 이 있어서, flex 컬럼(지도 실패 화면)에 놓이면 아래 목록과
+        남은 높이를 반반 나눠 갖고 칩을 그 한가운데 띄웠다 — 칩 위아래로
+        유령 여백 ~100pt 씩(QA 2026-08-06). 칩 높이만 차지하게 못 박는다.
+      */
+      style={[styles.rail, style]}
     >
       <SelectableChip
         size="s"
@@ -98,6 +104,7 @@ export function FilterChipRow({
 }
 
 const styles = StyleSheet.create({
+  rail: { flexGrow: 0 },
   content: {
     flexDirection: "row",
     alignItems: "center",

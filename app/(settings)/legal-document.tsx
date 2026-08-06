@@ -406,13 +406,19 @@ export default function LegalDocumentScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={c.icon} />
           </Pressable>
-          <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
+          <ThemedText
+            style={[styles.headerTitle, { color: c.headerText }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("legalDocument.title")}
           </ThemedText>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.emptyContainer}>
-          <ThemedText style={[styles.bodyText, { color: c.body }]}>
+          <ThemedText
+            style={[styles.bodyText, { color: c.body }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("legalDocument.notFound")}
           </ThemedText>
         </View>
@@ -432,7 +438,10 @@ export default function LegalDocumentScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={c.icon} />
         </Pressable>
-        <ThemedText style={[styles.headerTitle, { color: c.headerText }]}>
+        <ThemedText
+          style={[styles.headerTitle, { color: c.headerText }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {isPrivacyPolicy
             ? t("settings.legal.privacy")
             : t("settings.legal.terms")}
@@ -449,13 +458,19 @@ export default function LegalDocumentScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={[styles.documentHeading, { color: c.heading }]}>
+        <ThemedText
+          style={[styles.documentHeading, { color: c.heading }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {isPrivacyPolicy
             ? t("settings.legal.privacy")
             : t("legalDocument.termsHeading")}
         </ThemedText>
         {i18n.language.startsWith("en") && (
-          <ThemedText style={[styles.noteText, { color: c.note }]}>
+          <ThemedText
+            style={[styles.noteText, { color: c.note }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("legalDocument.officialKoreanNotice")}
           </ThemedText>
         )}

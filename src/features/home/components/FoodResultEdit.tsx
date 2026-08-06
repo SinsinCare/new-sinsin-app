@@ -379,6 +379,7 @@ export function FoodResultEdit({
                 fontWeight="600"
                 paddingLeft="$1"
                 color={isDarkMode ? "$textDark" : "$black"}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {mealName}{" "}
               </Text>
@@ -708,7 +709,12 @@ export function FoodResultEdit({
               >
                 {t("foodEdit.howMuchBroth")}
               </Text>
-              <Text fontSize={13} color="$colorSubtle" paddingLeft={4}>
+              <Text
+                fontSize={13}
+                color="$colorSubtle"
+                paddingLeft={4}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("foodEdit.brothHint")}
               </Text>
               <ConsumedAmountSelector

@@ -308,11 +308,13 @@ export function ReviewWriteScreen({
                 typography.title.small,
                 { color: colors.primary.primary },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {restaurantName}
             </Text>
             <Text
               style={[typography.title.small, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.review.form.title")}
             </Text>
@@ -322,6 +324,7 @@ export function ReviewWriteScreen({
           <View style={styles.section}>
             <Text
               style={[typography.title.xSmall, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.review.form.ratingQuestion")}
             </Text>
@@ -380,6 +383,7 @@ export function ReviewWriteScreen({
           <View style={styles.section}>
             <Text
               style={[typography.title.xSmall, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.review.form.keywordQuestion")}
             </Text>
@@ -388,6 +392,7 @@ export function ReviewWriteScreen({
                 typography.subtext.large,
                 { color: colors.label.assistive },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.review.form.keywordHint")}
             </Text>
@@ -447,6 +452,7 @@ export function ReviewWriteScreen({
           <View style={styles.section}>
             <Text
               style={[typography.title.xSmall, { color: colors.label.normal }]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.review.form.contentQuestion")}
             </Text>
@@ -455,6 +461,7 @@ export function ReviewWriteScreen({
                 typography.subtext.large,
                 { color: colors.label.assistive },
               ]}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("restaurant.review.form.contentHint")}
             </Text>
@@ -492,6 +499,8 @@ export function ReviewWriteScreen({
                     styles.keywordLabel,
                     { color: colors.label.neutral },
                   ]}
+                  lineBreakStrategyIOS="hangul-word"
+                  textBreakStrategy="balanced"
                 >
                   {t("restaurant.review.form.mediaPick")}
                 </Text>
@@ -598,6 +607,7 @@ export function ReviewWriteScreen({
                   styles.guideline,
                   { color: colors.label.neutral },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("restaurant.review.form.guideline")}
               </Text>
@@ -621,6 +631,8 @@ export function ReviewWriteScreen({
                 styles.footerHint,
                 { color: colors.label.neutral },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {uploadProgress}
             </Text>
@@ -631,6 +643,8 @@ export function ReviewWriteScreen({
                 styles.footerHint,
                 { color: colors.status.negative },
               ]}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
             >
               {blockingMessage}
             </Text>

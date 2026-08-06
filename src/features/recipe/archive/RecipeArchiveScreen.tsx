@@ -343,7 +343,10 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
         )}
 
         {hasUnsavedRow && (
-          <Text style={[styles.note, { color: surface.textWeak }]}>
+          <Text
+            style={[styles.note, { color: surface.textWeak }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("archive.unsavedNote")}
           </Text>
         )}
@@ -365,7 +368,10 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
             hitSlop={6}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Text style={[styles.note, { color: surface.danger }]}>
+            <Text
+              style={[styles.note, { color: surface.danger }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {`${t("archive.refreshFailedNote")} · ${t("archive.retry")}`}
             </Text>
           </Pressable>

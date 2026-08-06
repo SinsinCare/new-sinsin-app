@@ -81,7 +81,10 @@ export default function AppInfoScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={c.icon} />
         </Pressable>
-        <ThemedText style={[styles.headerTitle, { color: c.text }]}>
+        <ThemedText
+          style={[styles.headerTitle, { color: c.text }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("settings.appInfo.title")}
         </ThemedText>
         <View style={{ width: 24 }} />
@@ -108,7 +111,10 @@ export default function AppInfoScreen() {
         {/* Customer Center Section */}
         <View style={styles.section}>
           <View style={[styles.sectionContent, { backgroundColor: c.cardBg }]}>
-            <ThemedText style={[styles.sectionTitle, { color: c.text }]}>
+            <ThemedText
+              style={[styles.sectionTitle, { color: c.text }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("settings.appInfo.support")}
             </ThemedText>
             <InfoRow
@@ -127,16 +133,31 @@ export default function AppInfoScreen() {
 
         {/* Company Footer */}
         <View style={styles.footer}>
-          <ThemedText style={[styles.footerCompany, { color: c.textValue }]}>
+          <ThemedText
+            style={[styles.footerCompany, { color: c.textValue }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("settings.appInfo.company")}
           </ThemedText>
-          <ThemedText style={[styles.footerText, { color: c.textSub }]}>
+          <ThemedText
+            style={[styles.footerText, { color: c.textSub }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("settings.appInfo.business")}
           </ThemedText>
-          <ThemedText style={[styles.footerText, { color: c.textSub }]}>
+          <ThemedText
+            style={[styles.footerText, { color: c.textSub }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("settings.appInfo.address")}
           </ThemedText>
-          <ThemedText style={[styles.footerText, { color: c.textSub }]}>
+          <ThemedText
+            style={[styles.footerText, { color: c.textSub }]}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+          >
             {t("settings.appInfo.copyright")}
           </ThemedText>
         </View>

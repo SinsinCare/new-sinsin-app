@@ -124,7 +124,12 @@ function ShareActionCard({
           >
             {title}
           </Text>
-          <Text fontSize={11.5} lineHeight={16} color="$colorSubtle">
+          <Text
+            fontSize={11.5}
+            lineHeight={16}
+            color="$colorSubtle"
+            lineBreakStrategyIOS="hangul-word"
+          >
             {caption}
           </Text>
         </YStack>
@@ -541,6 +546,7 @@ export function FoodAnalysisResult({
               color={isDarkMode ? "$textDark" : "$color"}
               flexShrink={1}
               flex={1}
+              lineBreakStrategyIOS="hangul-word"
             >
               {effectiveResult.title}{" "}
               <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
@@ -664,7 +670,11 @@ export function FoodAnalysisResult({
                   >
                     {t("foodResult.textMeal")}
                   </Text>
-                  <Text fontSize={12.5} color="$colorSubtle">
+                  <Text
+                    fontSize={12.5}
+                    color="$colorSubtle"
+                    lineBreakStrategyIOS="hangul-word"
+                  >
                     {t("foodResult.textMealHint")}
                   </Text>
                 </YStack>
@@ -701,7 +711,11 @@ export function FoodAnalysisResult({
                   ? t("foodResult.consumedBasis")
                   : t("foodResult.photoBasis")}
               </Text>
-              <Text fontSize="$3" color="$colorSubtle">
+              <Text
+                fontSize="$3"
+                color="$colorSubtle"
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("foodResult.amountHint")}
               </Text>
             </YStack>
@@ -757,6 +771,7 @@ export function FoodAnalysisResult({
                 color={isDarkMode ? "$textDark" : "$color"}
                 lineHeight={22}
                 fontWeight="600"
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("foodResult.reportUnavailable")}
               </Text>
@@ -824,6 +839,7 @@ export function FoodAnalysisResult({
                     color="$colorSubtle"
                     flex={1}
                     lineHeight={20}
+                    lineBreakStrategyIOS="hangul-word"
                   >
                     {t("foodResult.chartExplanation")}
                   </Text>
@@ -936,7 +952,12 @@ export function FoodAnalysisResult({
                 isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(23,24,28,0.06)"
               }
             />
-            <Text fontSize={12} color="$colorSubtle" lineHeight={18}>
+            <Text
+              fontSize={12}
+              color="$colorSubtle"
+              lineHeight={18}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("foodResult.referencesNote")}
             </Text>
             <Pressable
@@ -1042,7 +1063,11 @@ export function FoodAnalysisResult({
                       ? t("foodResult.openingConsult")
                       : t("foodResult.askMore")}
                   </Text>
-                  <Text fontSize={12.5} color="$colorSubtle">
+                  <Text
+                    fontSize={12.5}
+                    color="$colorSubtle"
+                    lineBreakStrategyIOS="hangul-word"
+                  >
                     {t("foodResult.askMoreCaption")}
                   </Text>
                 </YStack>

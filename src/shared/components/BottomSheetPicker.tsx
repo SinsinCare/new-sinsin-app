@@ -109,6 +109,7 @@ export function BottomSheetPicker({
             color={colors.label}
             letterSpacing={-0.3}
             lineHeight={18.2}
+            lineBreakStrategyIOS="hangul-word"
           >
             {label}
           </Text>

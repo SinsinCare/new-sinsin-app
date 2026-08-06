@@ -165,7 +165,10 @@ const ChatHistoryHeader = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation("common")
   return (
     <View style={styles.header}>
-      <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
+      <Text
+        style={[styles.headerTitle, { color: surface.textStrong }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {t("consult.history.title")}
       </Text>
       <Pressable
@@ -282,7 +285,10 @@ const ChatHistoryContent = ({
                 ]}
               >
                 <Icon name="plus" size={18} color={inkContent} />
-                <Text style={[styles.newChatLabel, { color: inkContent }]}>
+                <Text
+                  style={[styles.newChatLabel, { color: inkContent }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("consult.history.new")}
                 </Text>
               </View>
@@ -317,10 +323,16 @@ const ChatHistoryContent = ({
 
         {isEmpty && (
           <View style={styles.empty}>
-            <Text style={[styles.emptyTitle, { color: surface.textMuted }]}>
+            <Text
+              style={[styles.emptyTitle, { color: surface.textMuted }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("consult.history.emptyTitle")}
             </Text>
-            <Text style={[styles.emptySub, { color: surface.placeholder }]}>
+            <Text
+              style={[styles.emptySub, { color: surface.placeholder }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("consult.history.emptyBody")}
             </Text>
           </View>
@@ -445,6 +457,7 @@ const ChatHistoryContent = ({
               >
                 <Text
                   style={[styles.actionLabel, { color: surface.textStrong }]}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("consult.history.rename")}
                 </Text>
@@ -467,7 +480,10 @@ const ChatHistoryContent = ({
                   pressed && { backgroundColor: surface.surfacePressed },
                 ]}
               >
-                <Text style={[styles.actionLabel, { color: surface.danger }]}>
+                <Text
+                  style={[styles.actionLabel, { color: surface.danger }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("consult.history.delete")}
                 </Text>
                 <Icon name="trashcan" size={18} color={surface.danger} />
@@ -488,6 +504,7 @@ const ChatHistoryContent = ({
                   styles.actionCancelLabel,
                   { color: surface.textStrong },
                 ]}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t("action.cancel")}
               </Text>

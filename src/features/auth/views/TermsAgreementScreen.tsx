@@ -72,7 +72,10 @@ export function TermsAgreementScreen({
               ]}
             >
               <CheckCircle checked={allChecked} size={24} />
-              <Text style={[styles.allLabel, { color: surface.textStrong }]}>
+              <Text
+                style={[styles.allLabel, { color: surface.textStrong }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t("terms.agreeAll")}
               </Text>
             </View>
@@ -92,6 +95,7 @@ export function TermsAgreementScreen({
                 <Text
                   style={[styles.rowLabel, { color: surface.text }]}
                   numberOfLines={2}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {term.required ? t("terms.required") : t("terms.optional")}{" "}
                   {term.label}

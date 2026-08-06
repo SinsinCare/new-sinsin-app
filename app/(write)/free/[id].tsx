@@ -29,6 +29,7 @@ import { TagInput } from "@/src/features/recipe/components/TagInput"
 import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
+import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import { ArticleSkeleton } from "@/src/shared/components"
@@ -85,6 +86,7 @@ export default function FreePostEditScreen() {
 
   const { post, isLoading, refetch } = usePostDetail(id!)
   const { updatePost, isUpdating } = useCommunityPosts()
+  const { data: myProfile } = useMyPageProfile()
 
   const [selectedCategory, setSelectedCategory] = useState("")
   const [title, setTitle] = useState("")
@@ -96,6 +98,22 @@ export default function FreePostEditScreen() {
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [initialized, setInitialized] = useState(false)
+
+  /*
+    진입 가드 — 이 화면은 상세의 "수정" 메뉴(내 글에만 보인다)로만 오지만, 백스택
+    복원·딥링크로 남의 글 id 가 들어올 수 있다. 글과 프로필이 **둘 다 도착한 뒤**
+    닉네임이 어긋나면 닫는다. 프로필 미로딩 상태에서 접으면 내 글 수정까지
+    튕겨 내므로, 여기서는 확정된 불일치에만 반응한다(저장은 어차피 서버가
+    `COMMUNITY_ERROR_002` 로 거절한다).
+  */
+  const isForeignPost =
+    post != null &&
+    myProfile?.nickName != null &&
+    post.authorName !== myProfile.nickName
+
+  useEffect(() => {
+    if (isForeignPost) router.back()
+  }, [isForeignPost, router])
 
   useEffect(() => {
     if (post && !initialized) {
@@ -113,7 +131,8 @@ export default function FreePostEditScreen() {
     }
   }, [post, initialized])
 
-  if (isLoading || !post) {
+  // 남의 글로 판정되면 back() 이 도는 한 프레임 동안 편집 폼 대신 스켈레톤을 둔다.
+  if (isLoading || !post || isForeignPost) {
     return <ArticleSkeleton variant="editor" />
   }
 
@@ -268,6 +287,7 @@ export default function FreePostEditScreen() {
               styles.submitLabel,
               { color: canSubmit ? inkContent : surface.ctaOffText },
             ]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {isSaving ? t("action.saving") : t("action.save")}
           </Text>

@@ -178,6 +178,12 @@ export function MealPhotoConfirmSheet({
 const styles = StyleSheet.create({
   frame: {
     width: "100%",
+    /*
+      세로 사진은 maxHeight 에 걸리는 순간 Yoga 가 aspectRatio 로 폭을 다시
+      줄인다 — 그 좁아진 프레임이 부모 기본 정렬(flex-start)로 왼쪽에 붙어
+      "사진이 쏠려 보인다"(QA 2026-08-06). 좁아질 때는 가운데로 온다.
+    */
+    alignSelf: "center",
     borderRadius: 16,
     overflow: "hidden",
   },

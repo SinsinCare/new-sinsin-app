@@ -54,7 +54,10 @@ export function EmailLoginScreen() {
       buttonLoading={isLoading}
       buttonAccessory={
         <View style={styles.signupRow}>
-          <Text style={[styles.signupHint, { color: surface.textWeak }]}>
+          <Text
+            style={[styles.signupHint, { color: surface.textWeak }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("login.newHere")}
           </Text>
           <Pressable

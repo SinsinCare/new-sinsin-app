@@ -56,12 +56,18 @@ export function ProvenanceSheet({
           fontFamily="$body"
           fontWeight="700"
           color={surface.textStrong}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("detail.nutrition.provenanceTitle")}
         </Text>
 
         {nutrition == null ? (
-          <Text {...TYPE.value} fontFamily="$body" color={surface.textMuted}>
+          <Text
+            {...TYPE.value}
+            fontFamily="$body"
+            color={surface.textMuted}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.nutrition.unavailableBody")}
           </Text>
         ) : (
@@ -79,6 +85,7 @@ export function ProvenanceSheet({
                 fontFamily="$body"
                 fontWeight="600"
                 color={surface.textStrong}
+                lineBreakStrategyIOS="hangul-word"
               >
                 {t(PROVENANCE_BADGE_KEYS[nutrition.provenance])}
               </Text>
@@ -89,6 +96,7 @@ export function ProvenanceSheet({
               fontFamily="$body"
               color={surface.text}
               lineHeight={23}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t(PROVENANCE_EXPLAIN_KEYS[nutrition.provenance])}
             </Text>
@@ -98,6 +106,7 @@ export function ProvenanceSheet({
               fontFamily="$body"
               color={surface.textMuted}
               lineHeight={20}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("detail.nutrition.explainScope")}
             </Text>
@@ -114,6 +123,7 @@ export function ProvenanceSheet({
                   fontFamily="$body"
                   fontWeight="600"
                   color={surface.textStrong}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("detail.nutrition.unmatchedTitle")}
                 </Text>
@@ -122,6 +132,7 @@ export function ProvenanceSheet({
                   fontFamily="$body"
                   color={surface.textMuted}
                   lineHeight={20}
+                  lineBreakStrategyIOS="hangul-word"
                 >
                   {t("detail.nutrition.unmatchedBody")}
                 </Text>
@@ -155,6 +166,7 @@ export function ProvenanceSheet({
               fontFamily="$body"
               fontWeight="600"
               color={surface.textStrong}
+              lineBreakStrategyIOS="hangul-word"
             >
               {t("action.close")}
             </Text>

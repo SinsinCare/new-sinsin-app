@@ -112,7 +112,10 @@ export function MealDeleteConfirmSheet({
           </View>
         </View>
 
-        <Text style={[styles.bodyText, { color: colors.label.neutral }]}>
+        <Text
+          style={[styles.bodyText, { color: colors.label.neutral }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("foodResult.deleteConfirmBody")}
         </Text>
       </View>

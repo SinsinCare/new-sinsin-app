@@ -272,6 +272,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               ? IMAGE_BUTTON_DISABLED[scheme]
               : IMAGE_BUTTON_TEXT[scheme]
           }
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("action.addPhoto")}
         </Text>
@@ -301,6 +302,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           fontWeight="500"
           fontFamily="$body"
           color={HEADER_TEXT[scheme]}
+          lineBreakStrategyIOS="hangul-word"
         >
           {t("recipeEditor.title")}
         </Text>
@@ -317,6 +319,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             fontWeight="600"
             fontFamily="$body"
             color={registerColor}
+            lineBreakStrategyIOS="hangul-word"
           >
             {isSubmitting ? t("action.uploading") : t("action.upload")}
           </Text>
@@ -340,6 +343,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             fontWeight="400"
             fontFamily="$body"
             color={LABEL_COLOR[scheme]}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("recipeEditor.titleLabel")}
           </Text>
@@ -373,6 +377,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             fontFamily="$body"
             color={SECTION_TITLE_COLOR[scheme]}
             marginBottom={4}
+            lineBreakStrategyIOS="hangul-word"
           >
             {t("recipeEditor.summaryLabel")}
           </Text>

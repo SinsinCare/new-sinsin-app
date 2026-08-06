@@ -59,7 +59,10 @@ function InfoRow({
   const { t } = useTranslation("common")
   return (
     <View style={styles.infoRow}>
-      <Text style={[styles.infoLabel, { color: surface.textMuted }]}>
+      <Text
+        style={[styles.infoLabel, { color: surface.textMuted }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
         {label}
       </Text>
       {value ? (
@@ -153,7 +156,10 @@ export function KidneyProfileCard({
     >
       {/* 라벨 + 투석 배지 */}
       <View style={styles.cardHeader}>
-        <Text style={[styles.stageLabel, { color: surface.textMuted }]}>
+        <Text
+          style={[styles.stageLabel, { color: surface.textMuted }]}
+          lineBreakStrategyIOS="hangul-word"
+        >
           {t("kidneyProfile.stage")}
         </Text>
         <View
@@ -251,7 +257,10 @@ export function KidneyProfileCard({
       {/* 동반 질환·진단 원인 — 회색 면 칩. */}
       {conditionItems.length > 0 && (
         <View style={styles.conditionSection}>
-          <Text style={[styles.infoLabel, { color: surface.textMuted }]}>
+          <Text
+            style={[styles.infoLabel, { color: surface.textMuted }]}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("kidneyProfile.conditions")}
           </Text>
           <View style={styles.conditionChips}>
