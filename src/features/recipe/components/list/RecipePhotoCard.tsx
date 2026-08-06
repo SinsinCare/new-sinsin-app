@@ -301,6 +301,7 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
           <Text
             style={[styles.carouselName, { color: surface.textStrong }]}
             numberOfLines={2}
+            lineBreakStrategyIOS="hangul-word"
           >
             {card.name}
           </Text>
@@ -407,7 +408,10 @@ function PhotoWell({
     >
       {slot.kind === "photo" ? (
         <Image
-          source={{ uri: slot.uri }}
+          source={{ uri: slot.uri, cacheKey: slot.cacheKey }}
+          /* FlashList 가 셀을 재활용하면 새 사진이 뜰 때까지 **직전 음식 사진**이
+             남는다 — recyclingKey 가 바뀌면 expo-image 가 이전 그림을 즉시 비운다. */
+          recyclingKey={slot.cacheKey}
           style={styles.wellFill}
           contentFit="cover"
           cachePolicy="memory-disk"

@@ -258,8 +258,19 @@ export function resolveHeadlineEmphasis(
  * JSX 밖에 둔다.
  */
 export type CardPhotoSlot =
-  | { kind: "photo"; uri: string }
+  | { kind: "photo"; uri: string; cacheKey: string }
   | { kind: "art"; category: string | null }
+
+/**
+ * 서버 `thumbnailUrl` 은 GCS **서명 URL** 이라 쿼리(서명·만료)가 응답마다 다르다.
+ * expo-image 는 기본으로 URL 전체를 캐시 키로 쓰므로, 같은 사진이 재조회마다 캐시
+ * 미스가 나서 목록 전체가 다시 내려온다(스크롤 중 사진이 하나씩 갈아끼워지는 증상).
+ * 경로 부분만 캐시 키로 쓰면 서명이 돌아도 같은 객체는 같은 키다.
+ */
+export function stablePhotoCacheKey(uri: string): string {
+  const queryStart = uri.indexOf("?")
+  return queryStart === -1 ? uri : uri.slice(0, queryStart)
+}
 
 /**
  * 빈 문자열·공백만 있는 `thumbnailUrl` 을 **없는 것으로 취급한다.**
@@ -270,7 +281,8 @@ export type CardPhotoSlot =
  */
 export function resolveCardPhotoSlot(card: RecipeCard): CardPhotoSlot {
   const uri = card.thumbnailUrl?.trim()
-  if (uri != null && uri !== "") return { kind: "photo", uri }
+  if (uri != null && uri !== "")
+    return { kind: "photo", uri, cacheKey: stablePhotoCacheKey(uri) }
   return { kind: "art", category: card.category }
 }
 

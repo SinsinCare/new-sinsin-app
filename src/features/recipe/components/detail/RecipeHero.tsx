@@ -36,6 +36,7 @@ import { Image } from "expo-image"
 import { useV2Theme } from "@/src/design-system-v2"
 
 import { RecipeCategoryArt } from "../list/RecipeCategoryArt"
+import { stablePhotoCacheKey } from "../list/recipeCardFormat"
 
 /** 사진이 없을 때의 띠 높이와 그림 크기. 위 머리말 §높이 참고. */
 const ART_BAND_HEIGHT = 152
@@ -65,7 +66,9 @@ export function RecipeHeroImage({
   return (
     <View style={[styles.photo, { backgroundColor: colors.fill.normal }]}>
       <Image
-        source={{ uri: imageUrl }}
+        /* 목록과 같은 객체는 같은 캐시 키 — 서명 URL 이 매 응답 달라도 목록에서
+           받아 둔 사진을 그대로 재사용해 상세 진입 시 재다운로드가 없다. */
+        source={{ uri: imageUrl, cacheKey: stablePhotoCacheKey(imageUrl) }}
         style={styles.image}
         contentFit="cover"
         cachePolicy="memory-disk"
