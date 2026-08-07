@@ -22,7 +22,9 @@
  * 아래 카드의 주황 요소와 구분되지 않는다. 값의 정의는 `SelectableChip` 헤더에 있다.
  */
 
-import { ScrollView, StyleSheet, type ViewStyle } from "react-native"
+import { StyleSheet, type ViewStyle } from "react-native"
+// 시트 안의 가로 스크롤은 RNGH 것을 쓴다 — 이유는 `PhotoStrip` 의 같은 import 주석에.
+import { ScrollView } from "react-native-gesture-handler"
 import { useTranslation } from "react-i18next"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 

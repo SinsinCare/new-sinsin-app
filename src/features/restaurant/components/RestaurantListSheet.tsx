@@ -21,11 +21,19 @@
  * 기존 `PlaceSheet` 는 모든 식당을 `.map()` 으로 `ScrollView` 에 쏟아붓고, 각 행이 사진 5장을
  * 가로 `ScrollView` 로 물고 있었다. 100곳이면 이미지 500장이 한 번에 마운트된다.
  *
- * ## `enableContentPanningGesture={false}` — 핸들만 끈다
+ * ## 시트는 **목록을 끌어도** 움직인다 (콘텐츠 팬)
  *
- * 카드마다 가로 사진 스트립이 있다. 콘텐츠 팬을 켜면 가로 스와이프와 세로 팬이 같은
- * 제스처 영역에서 다투고, 안드로이드에서 사진을 옆으로 넘기려다 시트가 접힌다.
- * `PlaceSheet` 가 같은 이유로 이미 이 설정이었다 — 저장소의 실측 결론을 유지한다.
+ * 한때 `enableContentPanningGesture={false}` 였다. 카드의 가로 사진 스트립이 세로 팬과
+ * 다퉜기 때문인데, 그 대가가 컸다 — 시트를 움직일 수 있는 곳이 **핸들 블록 22px** 뿐이라,
+ * 네이버·카카오 지도를 쓰던 사람이 목록을 잡아 끌면 아무 일도 일어나지 않았다(QA).
+ *
+ * 충돌의 진짜 원인은 콘텐츠 팬이 아니라 **가로 스크롤뷰가 RN 기본 구현**이었다는 것이다.
+ * 그건 react-native-gesture-handler 의 제스처 체계 밖이라 세로 팬과 중재될 수 없다.
+ * 시트 안의 가로 스크롤(사진 스트립·필터칩 행)을 RNGH `ScrollView` 로 바꾸면 같은 체계
+ * 안에서 방향으로 갈린다 — 가로는 스트립이, 세로는 시트가 가져간다.
+ *
+ * 세로끼리(목록 스크롤 vs 시트 팬)는 gorhom 이 순서로 나눈다: 목록이 맨 위가 아니면
+ * 스크롤이 먼저고, 맨 위에서 더 당길 때 시트가 내려간다.
  *
  * ## `enableDynamicSizing={false}` 는 필수다
  *
@@ -91,8 +99,14 @@ import { GUTTER } from "../layout"
 
 /** 핸들 블록: 위 여백 + 바 + 아래 여백. collapsed 스냅 계산의 상수 항이다. */
 const HANDLE_BAR_HEIGHT = 4
-const HANDLE_PADDING_TOP = spacing[10]
-const HANDLE_PADDING_BOTTOM = spacing[8]
+/*
+  핸들 **블록**의 여백. 바 자체는 목업대로 36×4 로 두되, 그 위아래 여백을 넓혀
+  손가락이 닿는 면을 키운다. 종전 값(10/8)이면 블록이 22px 이라 화면 맨 위 모서리를
+  정확히 집어야 시트가 움직였다 — 지도 앱에서 기대하는 감각이 아니다.
+  접힘 높이는 이 상수에서 유도되므로(§collapsed 스냅) 여기만 바꾸면 따라온다.
+*/
+const HANDLE_PADDING_TOP = spacing[16]
+const HANDLE_PADDING_BOTTOM = spacing[12]
 const HANDLE_BLOCK_HEIGHT =
   HANDLE_PADDING_TOP + HANDLE_BAR_HEIGHT + HANDLE_PADDING_BOTTOM
 
@@ -381,8 +395,15 @@ export const RestaurantListSheet = forwardRef<
       // v5 기본값 true 를 반드시 끈다 — 켜져 있으면 스냅 인덱스가 밀린다(파일 상단 주석).
       enableDynamicSizing={false}
       topInset={topInset}
-      // 가로 사진 스트립과 세로 팬이 다투지 않게 핸들만 끈다(파일 상단 주석).
-      enableContentPanningGesture={false}
+      /*
+        **목록을 끌어도 시트가 움직인다.** 지도 앱에서 사람들이 기대하는 동작이고,
+        이게 없으면 핸들 몇십 px 이 유일한 손잡이가 된다. 가로 스트립과의 충돌은
+        스크롤뷰를 RNGH 것으로 바꿔서 푼다(`PhotoStrip` import 주석).
+
+        목록이 맨 위가 아닐 때는 gorhom 이 스크롤을 먼저 주고, 맨 위에서 더 당기면
+        그때 시트가 내려간다 — 두 동작이 순서로 갈리므로 서로를 뺏지 않는다.
+      */
+      enableContentPanningGesture
       onChange={onSnapChange}
       animatedPosition={animatedPosition}
       backgroundStyle={[

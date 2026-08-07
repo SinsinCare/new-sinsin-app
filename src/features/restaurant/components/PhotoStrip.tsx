@@ -30,12 +30,21 @@
 
 import { memo, useState } from "react"
 import {
-  ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
   type ViewStyle,
 } from "react-native"
+/*
+  **RN 기본 ScrollView 가 아니라 제스처 핸들러 것을 쓴다.**
+
+  이 스트립은 지도 시트 안에 있고, 시트는 손가락으로 올리고 내린다(세로 팬). RN 의
+  ScrollView 는 RNGH 제스처 체계 밖이라 두 방향이 서로를 중재하지 못한다 — 그래서
+  예전에는 시트의 콘텐츠 팬을 통째로 꺼서 피했고, 그 대가로 **핸들 22px 로만** 시트를
+  움직일 수 있었다. RNGH ScrollView 는 같은 체계 안에서 방향으로 갈리므로 가로는
+  사진이, 세로는 시트가 가져간다.
+*/
+import { ScrollView } from "react-native-gesture-handler"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
