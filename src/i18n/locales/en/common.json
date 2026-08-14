@@ -561,7 +561,6 @@
       "evidence": {
         "amountMg": "{{nutrient}} {{value}}mg",
         "amountG": "{{nutrient}} {{value}}g",
-        "multiple": "{{times}}x one meal's share",
         "percent": "{{percent}}% of one meal's share"
       },
       "confidence": {
@@ -1410,6 +1409,8 @@
     "shareOther": "Share with another app",
     "instagramErrorTitle": "We couldn’t open Instagram",
     "instagramErrorBody": "Make sure Instagram is installed, then try again.",
+    "shareErrorTitle": "Couldn’t share",
+    "shareErrorBody": "Please try again in a moment.",
     "share": "Share meal results",
     "title": "Meal results",
     "close": "Close meal results",

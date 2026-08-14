@@ -3,7 +3,7 @@
  *
  * ```
  * [제한] 순대국밥                      [썸네일 88×72]
- * 나트륨 1,300mg · 한 끼 기준의 1.9배
+ * 나트륨 1,300mg · 한 끼 기준의 186%
  * 진하게 우려낸 순대국밥에 매콤한 다대기와 정갈한
  * 반찬을 곁들인 든든한 한 상
  * 12,000원
@@ -137,16 +137,13 @@ export function MenuRow({
         value: evidence.amount.toLocaleString("ko-KR"),
       })
     : null
+  // 크기는 백분율 하나다 — 행마다 단위가 갈리면 목록을 비교할 수 없다(menuSafetyEvidence.ts).
   const magnitudeText =
     evidence === null
       ? null
-      : evidence.magnitude.kind === "multiple"
-        ? t("restaurant.safety.evidence.multiple", {
-            times: evidence.magnitude.value.toFixed(1),
-          })
-        : t("restaurant.safety.evidence.percent", {
-            percent: evidence.magnitude.value,
-          })
+      : t("restaurant.safety.evidence.percent", {
+          percent: evidence.magnitude.value,
+        })
 
   const reasonKey = REASON_KEY[menu.safetyLevel]
   const driver = menu.safetyDriver

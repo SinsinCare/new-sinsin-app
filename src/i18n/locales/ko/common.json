@@ -553,7 +553,6 @@
       "evidence": {
         "amountMg": "{{nutrient}} {{value}}mg",
         "amountG": "{{nutrient}} {{value}}g",
-        "multiple": "한 끼 기준의 {{times}}배",
         "percent": "한 끼 기준의 {{percent}}%"
       },
       "confidence": {
@@ -1398,6 +1397,8 @@
     "shareOther": "다른 앱으로 공유",
     "instagramErrorTitle": "인스타그램으로 열지 못했어요",
     "instagramErrorBody": "인스타그램이 설치되어 있는지 확인한 뒤 다시 해 주세요.",
+    "shareErrorTitle": "공유하지 못했어요",
+    "shareErrorBody": "잠시 후 다시 시도해 주세요.",
     "share": "식사 결과 공유",
     "title": "식사 결과",
     "close": "식사 결과 닫기",
