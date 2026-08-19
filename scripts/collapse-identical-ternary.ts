@@ -38,17 +38,28 @@ function collapse(src: string): { out: string; count: number } {
 }
 
 /**
- * 접고 나면 `cond ?` 앞의 조건식이 통째로 남는다:
+ * `cond ? A : A` 전체를 잡아 `A` 로 접는다.
  *
- *     backgroundColor: isDarkMode colors.background.default
+ * ## 정규식이 JSX 를 넘어가면 코드를 삼킨다 (2026-08-19 사고)
  *
- * 이걸 정리하려면 조건식의 시작을 알아야 하는데, 그건 문맥마다 달라 안전하지 않다.
- * 그래서 **삼항 전체**를 잡는다 — `식별자 ? X : X` 형태만.
+ * 처음엔 조건식을 `[^?]+?` 로 느슨하게 잡았다. 그러면 `?` 가 나올 때까지 **줄바꿈도
+ * 태그도 넘어서** 훑기 때문에 이런 게 통째로 조건식이 된다:
+ *
+ *     '</V2Text>\n<V2Text color={isDarkMode ? colors.label.normal : colors.label.normal'
+ *      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 여기까지 삼켜서 닫는 태그가 사라졌다
+ *
+ * 그래서 조건식을 **한 줄 · 중괄호 밖으로 나가지 않는 범위**로 묶는다:
+ *   - 줄바꿈 금지 (`[^\n?{}<>]`)
+ *   - `<` `>` 금지 → JSX 태그 경계를 넘지 못한다
+ *   - `{` `}` 금지 → 표현식 블록을 벗어나지 못한다
+ *
+ * 이 제약 때문에 `a.b === "x" ? …` 같은 흔한 형태는 잡히고, 여러 줄에 걸친 복잡한
+ * 조건은 **일부러 놓친다**. 놓치는 쪽이 삼키는 쪽보다 안전하다.
  */
 function collapseWhole(src: string): { out: string; count: number } {
   let count = 0
   const re =
-    /(?:[A-Za-z_$][\w$]*(?:\s*(?:===|!==|==|!=|>|<|>=|<=)\s*[^?]+?)?)\s*\?\s*((?:\w+\.)+\w+(?:\.val)?)\s*:\s*((?:\w+\.)+\w+(?:\.val)?)/g
+    /(?:[A-Za-z_$][\w$.]*(?:\s*(?:===|!==|==|!=)\s*[^\n?{}<>]+?)?)\s*\?\s*((?:\w+\.)+\w+(?:\.val)?)\s*:\s*((?:\w+\.)+\w+(?:\.val)?)/g
   const out = src.replace(re, (whole, a: string, b: string) => {
     if (a !== b) return whole
     count++

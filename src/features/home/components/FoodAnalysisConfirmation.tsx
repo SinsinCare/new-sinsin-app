@@ -1,15 +1,21 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import {
+  useV2Theme,
+  V2HStack,
+  V2Text,
+  V2VStack,
+  V2BottomCTA,
+} from "@/src/design-system-v2"
 import { Pressable, ScrollView, StyleSheet } from "react-native"
 import { AppModal } from "@/src/shared/components/AppModal"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { Text, XStack, YStack } from "tamagui"
 import { GlassmorphicCard } from "@/src/shared/components"
-import { V2BottomCTA } from "@/src/design-system-v2"
 import type {
   FoodAnalysisConfirmationRequest,
   FoodAnalysisConfirmationOption,
   FoodAnalysisJob,
 } from "@/src/types"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import { useTranslation } from "react-i18next"
@@ -28,6 +34,7 @@ export function FoodAnalysisConfirmation({
   onSubmit,
   onClose,
 }: FoodAnalysisConfirmationProps) {
+  const { colors } = useV2Theme()
   const { t } = useTranslation("common")
   const [answers, setAnswers] = useState<
     Record<string, FoodAnalysisConfirmationOption>
@@ -38,13 +45,45 @@ export function FoodAnalysisConfirmation({
 
   useEffect(() => setAnswers({}), [job?.analysisId])
 
+  /*
+    진입은 **분석 하나당 1회**다. 이 컴포넌트는 홈이 살아 있는 내내 마운트돼 있고
+    답을 고를 때마다 리렌더되므로, 렌더 본문이나 마운트에서 쏘면 한 번의 확인 화면이
+    선택지 수만큼의 행이 된다.
+
+    질문 문구와 선택지 원문은 어떤 속성으로도 나가지 않는다 — 둘 다 음식명이다.
+  */
+  const viewedAnalysisRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (job?.status !== "NEEDS_CONFIRMATION") return
+    if (viewedAnalysisRef.current === job.analysisId) return
+    viewedAnalysisRef.current = job.analysisId
+    trackAnalyticsEvent("food_analysis_confirm_viewed", {
+      question_count: job.confirmationQuestions?.length ?? 0,
+    })
+  }, [job?.status, job?.analysisId, job?.confirmationQuestions])
+
   const canSubmit =
     questions.length > 0 &&
     questions.every((question) => answers[question.questionId])
 
+  /**
+   * 건너뛰기 — 분석이 미완으로 남는 자리. 그때까지 고른 답의 **개수**만 싣는다.
+   * 질문을 몇 개까지 답하다 포기하는지가 곧 "질문 수를 줄일까" 의 근거다.
+   */
+  const handleDefer = () => {
+    trackAnalyticsEvent("food_analysis_confirm_deferred", {
+      question_count: questions.length,
+      picked_count: Object.keys(answers).length,
+    })
+    onClose()
+  }
+
   const handleSubmit = async () => {
     if (!canSubmit) return
     setIsSubmitting(true)
+    trackAnalyticsEvent("food_analysis_confirm_submitted", {
+      question_count: questions.length,
+    })
     try {
       const grouped = new Map<
         string,
@@ -97,25 +136,23 @@ export function FoodAnalysisConfirmation({
           },
         ]}
       >
-        <YStack flex={1} paddingTop="$4" gap="$4">
-          <YStack paddingHorizontal="$4" gap="$2">
-            <Text
-              fontSize="$7"
-              fontWeight="700"
-              color={isDarkMode ? "$textDark" : "$color"}
+        <V2VStack flex={1} paddingTop={16} gap={16}>
+          <V2VStack paddingHorizontal={16} gap={8}>
+            <V2Text
+              color={colors.label.normal}
               lineBreakStrategyIOS="hangul-word"
+              style={{ fontSize: 17, fontWeight: "700" }}
             >
               {t("foodConfirmation.title")}
-            </Text>
-            <Text
-              fontSize="$4"
-              lineHeight={21}
-              color="$colorSubtle"
+            </V2Text>
+            <V2Text
+              color={colors.label.alternative}
               lineBreakStrategyIOS="hangul-word"
+              style={{ fontSize: 14, lineHeight: 21 }}
             >
               {t("foodConfirmation.body")}
-            </Text>
-          </YStack>
+            </V2Text>
+          </V2VStack>
 
           <ScrollView
             bounces={false}
@@ -126,19 +163,18 @@ export function FoodAnalysisConfirmation({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <YStack gap="$4">
+            <V2VStack gap={16}>
               {questions.map((question) => (
                 <GlassmorphicCard key={question.questionId} padding={16}>
-                  <YStack gap="$3">
-                    <Text
-                      fontSize="$5"
-                      fontWeight="600"
-                      color={isDarkMode ? "$textDark" : "$color"}
+                  <V2VStack gap={12}>
+                    <V2Text
+                      color={colors.label.normal}
                       lineBreakStrategyIOS="hangul-word"
+                      style={{ fontSize: 15, fontWeight: "600" }}
                     >
                       {question.prompt}
-                    </Text>
-                    <XStack flexWrap="wrap" gap="$2">
+                    </V2Text>
+                    <V2HStack wrap="wrap" gap={8}>
                       {question.options.map((option) => {
                         const selected =
                           answers[question.questionId]?.value === option.value
@@ -154,41 +190,51 @@ export function FoodAnalysisConfirmation({
                               }))
                             }
                           >
-                            <YStack
-                              minHeight={48}
-                              justifyContent="center"
-                              borderRadius="$6"
-                              borderWidth={1}
-                              borderColor={selected ? "$sub6" : "$borderColor"}
-                              backgroundColor={
-                                selected ? "$sub1" : "$cardBackground"
-                              }
-                              paddingHorizontal="$4"
-                              paddingVertical="$3"
+                            <V2VStack
+                              justify="center"
+                              paddingHorizontal={16}
+                              paddingVertical={12}
+                              style={{
+                                minHeight: 48,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: selected
+                                  ? tokens.color.sub6.val
+                                  : colors.line.normal,
+                                backgroundColor: selected
+                                  ? tokens.color.sub1.val
+                                  : colors.background.lower,
+                              }}
                             >
-                              <Text
-                                fontSize="$4"
-                                fontWeight={selected ? "600" : "500"}
-                                color={selected ? "$sub8" : "$colorSubtle"}
+                              <V2Text
+                                color={
+                                  selected
+                                    ? tokens.color.sub8.val
+                                    : colors.label.alternative
+                                }
                                 lineBreakStrategyIOS="hangul-word"
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: selected ? "600" : "500",
+                                }}
                               >
                                 {option.label}
-                              </Text>
-                            </YStack>
+                              </V2Text>
+                            </V2VStack>
                           </Pressable>
                         )
                       })}
-                    </XStack>
-                  </YStack>
+                    </V2HStack>
+                  </V2VStack>
                 </GlassmorphicCard>
               ))}
-            </YStack>
+            </V2VStack>
           </ScrollView>
 
           <V2BottomCTA
             layout="horizontal"
             secondaryLabel={t("foodConfirmation.skip")}
-            onSecondary={onClose}
+            onSecondary={handleDefer}
             primaryLabel={t("foodConfirmation.continue")}
             onPrimary={() => {
               void handleSubmit()
@@ -198,7 +244,7 @@ export function FoodAnalysisConfirmation({
               loading: isSubmitting,
             }}
           />
-        </YStack>
+        </V2VStack>
       </SafeAreaView>
     </AppModal>
   )

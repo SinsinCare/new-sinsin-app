@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useV2Theme, V2Box, V2Text } from "@/src/design-system-v2"
 import { BackHandler, StyleSheet, TouchableOpacity } from "react-native"
 import { Portal } from "@/src/shared/components/Portal"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
@@ -12,7 +13,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated"
-import { Text, View } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
@@ -64,6 +64,7 @@ export function LoadingOverlay({
   status,
   inline,
 }: LoadingOverlayProps) {
+  const { colors } = useV2Theme()
   if (!visible) return null
   const body = (
     <LoadingOverlayBody
@@ -80,6 +81,7 @@ function LoadingOverlayBody({
   onDismiss,
   status,
 }: Omit<LoadingOverlayProps, "visible" | "inline">) {
+  const { colors } = useV2Theme()
   const { t } = useTranslation("common")
   const [dots, setDots] = useState(".")
   const [tipIndex, setTipIndex] = useState(getRandomTipIndex)
@@ -140,11 +142,11 @@ function LoadingOverlayBody({
       // 떠 있는 동안 아래를 잠그는 게 이 막의 역할이므로 응답자를 자처한다.
       onStartShouldSetResponder={() => true}
     >
-      <View
+      <V2Box
         flex={1}
-        backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
-        alignItems="center"
-        justifyContent="center"
+        align="center"
+        justify="center"
+        style={{ backgroundColor: colors.background.default }}
       >
         {/* X 버튼: 3초 후 표시 */}
         {showDismiss && onDismiss && (
@@ -173,44 +175,46 @@ function LoadingOverlayBody({
         <Animated.View style={floatStyle}>
           <Icon name="loading" size={55} />
         </Animated.View>
-        <Text
-          fontSize={18}
-          fontWeight="600"
-          marginTop="$4"
-          color={isDarkMode ? "$textDark" : "$black"}
+        <V2Text
+          color={colors.label.normal}
           lineBreakStrategyIOS="hangul-word"
+          style={{ fontSize: 18, fontWeight: "600", marginTop: 16 }}
         >
           {`${statusMessage}${dots}`}
-        </Text>
-        <Text
-          fontSize={14}
-          fontWeight="500"
-          textAlign="center"
-          marginTop="$3"
-          marginHorizontal="$4"
-          color="$colorSubtle"
-          lineHeight={20}
+        </V2Text>
+        <V2Text
+          color={colors.label.alternative}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
+          style={{
+            fontSize: 14,
+            fontWeight: "500",
+            textAlign: "center",
+            marginTop: 12,
+            marginHorizontal: 16,
+            lineHeight: 20,
+          }}
         >
           {t(TIP_KEYS[tipIndex])}
-        </Text>
+        </V2Text>
 
         {showDismiss && onDismiss && (
-          <Text
-            fontSize={13}
-            color="$colorSubtle"
-            textAlign="center"
-            marginTop="$6"
-            marginHorizontal="$6"
-            lineHeight={18}
+          <V2Text
+            color={colors.label.alternative}
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{
+              fontSize: 13,
+              textAlign: "center",
+              marginTop: 24,
+              marginHorizontal: 24,
+              lineHeight: 18,
+            }}
           >
             {t("foodLoading.dismissHint")}
-          </Text>
+          </V2Text>
         )}
-      </View>
+      </V2Box>
     </Animated.View>
   )
 }

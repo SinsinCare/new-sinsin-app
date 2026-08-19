@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import {
+  useV2Theme,
+  V2Box,
+  V2HStack,
+  V2Text,
+  V2VStack,
+} from "@/src/design-system-v2"
+import {
   BackHandler,
   Linking,
   Pressable,
@@ -11,7 +18,6 @@ import {
 import { Portal } from "@/src/shared/components/Portal"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { Download } from "@/src/shared/components/lucide"
-import { Text, XStack, YStack } from "tamagui"
 
 import { Button } from "@/src/shared/components"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
@@ -52,6 +58,7 @@ function RecommendedUpdateCard({
   onClose,
 }: RecommendedUpdatePromptProps & { onClose: () => void }) {
   const { t } = useTranslation()
+  const { colors } = useV2Theme()
   const { width } = useWindowDimensions()
   const [openError, setOpenError] = useState<string | null>(null)
   const cardWidth = Math.min(Math.max(width - 40, 280), 372)
@@ -103,7 +110,7 @@ function RecommendedUpdateCard({
       // 뒤 화면 조작을 막는 게 딤의 역할 — 손잡이 없는 View 는 탭이 새므로 응답자를 자처한다.
       onStartShouldSetResponder={() => true}
     >
-      <View style={styles.dim} accessibilityViewIsModal>
+      <V2Box accessibilityViewIsModal style={styles.dim}>
         <ScrollView
           bounces={false}
           overScrollMode="never"
@@ -111,59 +118,71 @@ function RecommendedUpdateCard({
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <YStack
-            width={cardWidth}
-            maxWidth="100%"
-            gap="$5"
-            paddingHorizontal="$5"
-            paddingTop="$6"
-            paddingBottom="$5"
-            borderRadius="$8"
-            backgroundColor="$cardBackground"
-            borderWidth={1}
-            borderColor="$borderColor"
+          <V2VStack
+            gap={20}
+            paddingHorizontal={20}
+            paddingTop={24}
+            paddingBottom={20}
+            style={{
+              width: cardWidth,
+              maxWidth: "100%",
+              borderRadius: 16,
+              backgroundColor: colors.background.lower,
+              borderWidth: 1,
+              borderColor: colors.line.normal,
+            }}
           >
-            <XStack gap="$3" alignItems="center" width="100%" minWidth={0}>
-              <YStack
-                width={44}
-                height={44}
-                borderRadius="$12"
-                alignItems="center"
-                justifyContent="center"
-                backgroundColor="$secondaryLight"
-                flexShrink={0}
+            <V2HStack
+              gap={12}
+              align="center"
+              style={{ width: "100%", minWidth: 0 }}
+            >
+              <V2VStack
+                align="center"
+                justify="center"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 48,
+                  backgroundColor: colors.accentForeground.greenWeak,
+                  flexShrink: 0,
+                }}
               >
                 <Download size={22} color={tokens.color.sub7.val} />
-              </YStack>
-              <Text
-                flex={1}
-                flexShrink={1}
-                minWidth={0}
-                fontSize={19}
-                lineHeight={25}
-                fontWeight="700"
-                color="$color"
-                letterSpacing={0}
+              </V2VStack>
+              <V2Text
+                color={colors.label.normal}
                 maxFontSizeMultiplier={1.2}
                 lineBreakStrategyIOS="hangul-word"
+                style={{
+                  flex: 1,
+                  flexShrink: 1,
+                  minWidth: 0,
+                  fontSize: 19,
+                  lineHeight: 25,
+                  fontWeight: "700",
+                  letterSpacing: 0,
+                }}
               >
                 {t("mobilePolicy.recommendedTitle")}
-              </Text>
-            </XStack>
-            <YStack gap="$2" width="100%" minWidth={0}>
-              <Text
-                width="100%"
-                flexShrink={1}
-                fontSize={15}
-                lineHeight={23}
-                color="$colorSubtle"
-                letterSpacing={0}
+              </V2Text>
+            </V2HStack>
+            <V2VStack gap={8} style={{ width: "100%", minWidth: 0 }}>
+              <V2Text
+                color={colors.label.alternative}
                 maxFontSizeMultiplier={1.15}
                 lineBreakStrategyIOS="hangul-word"
+                style={{
+                  width: "100%",
+                  flexShrink: 1,
+                  fontSize: 15,
+                  lineHeight: 23,
+                  letterSpacing: 0,
+                }}
               >
                 {message}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
             <Button
               fullWidth
               buttonSize="large"
@@ -173,19 +192,21 @@ function RecommendedUpdateCard({
               {t("mobilePolicy.update")}
             </Button>
             {openError && (
-              <Text
-                fontSize={13}
-                lineHeight={18}
-                color="$danger"
-                textAlign="center"
-                width="100%"
-                flexShrink={1}
+              <V2Text
+                color={colors.status.negative}
                 maxFontSizeMultiplier={1.15}
                 lineBreakStrategyIOS="hangul-word"
                 textBreakStrategy="balanced"
+                style={{
+                  fontSize: 13,
+                  lineHeight: 18,
+                  textAlign: "center",
+                  width: "100%",
+                  flexShrink: 1,
+                }}
               >
                 {openError}
-              </Text>
+              </V2Text>
             )}
             <Pressable
               style={({ pressed }) => [
@@ -199,19 +220,21 @@ function RecommendedUpdateCard({
                 onClose()
               }}
             >
-              <Text
-                fontSize={14}
-                fontWeight="600"
+              <V2Text
                 color={tokens.color.grey5.val}
-                textAlign="center"
-                lineHeight={20}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  textAlign: "center",
+                  lineHeight: 20,
+                }}
               >
                 {t("mobilePolicy.later")}
-              </Text>
+              </V2Text>
             </Pressable>
-          </YStack>
+          </V2VStack>
         </ScrollView>
-      </View>
+      </V2Box>
     </Animated.View>
   )
 }

@@ -1,8 +1,14 @@
 import { ScrollView, Image, Pressable } from "react-native"
+import {
+  useV2Theme,
+  V2Box,
+  V2HStack,
+  V2Text,
+  V2VStack,
+} from "@/src/design-system-v2"
 import { AppModal } from "@/src/shared/components/AppModal"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { router } from "expo-router"
-import { YStack, XStack, Text, View } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ViewShot, { captureRef } from "react-native-view-shot"
@@ -98,6 +104,7 @@ function ShareActionCard({
   isDarkMode: boolean
   onPress: () => void
 }) {
+  const { colors } = useV2Theme()
   return (
     <Pressable
       onPress={onPress}
@@ -105,21 +112,22 @@ function ShareActionCard({
       accessibilityLabel={title}
       style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}
     >
-      <YStack
-        backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-        borderRadius={20}
+      <V2VStack
         paddingVertical={14}
         paddingHorizontal={14}
         gap={8}
         flex={1}
+        style={{ backgroundColor: colors.background.lower, borderRadius: 20 }}
       >
-        <XStack
-          width={34}
-          height={34}
-          borderRadius={999}
-          backgroundColor={isDarkMode ? "#2E2E33" : "#F2F3F5"}
-          alignItems="center"
-          justifyContent="center"
+        <V2HStack
+          align="center"
+          justify="center"
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 999,
+            backgroundColor: isDarkMode ? "#2E2E33" : "#F2F3F5",
+          }}
         >
           <Ionicons
             name={icon}
@@ -128,25 +136,23 @@ function ShareActionCard({
               isDarkMode ? tokens.color.textDarkSub.val : tokens.color.grey4.val
             }
           />
-        </XStack>
-        <YStack gap={2}>
-          <Text
-            fontSize={14}
-            fontWeight="700"
-            color={isDarkMode ? "$textDark" : "$color"}
+        </V2HStack>
+        <V2VStack gap={2}>
+          <V2Text
+            color={colors.label.normal}
+            style={{ fontSize: 14, fontWeight: "700" }}
           >
             {title}
-          </Text>
-          <Text
-            fontSize={11.5}
-            lineHeight={16}
-            color="$colorSubtle"
+          </V2Text>
+          <V2Text
+            color={colors.label.alternative}
             lineBreakStrategyIOS="hangul-word"
+            style={{ fontSize: 11.5, lineHeight: 16 }}
           >
             {caption}
-          </Text>
-        </YStack>
-      </YStack>
+          </V2Text>
+        </V2VStack>
+      </V2VStack>
     </Pressable>
   )
 }
@@ -245,6 +251,7 @@ export function FoodAnalysisResult({
   onResultChange,
   onMealTypeChange,
 }: FoodAnalysisResultProps) {
+  const { colors } = useV2Theme()
   const { t, i18n } = useTranslation("common")
   const language = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
     ? "en"
@@ -629,14 +636,14 @@ export function FoodAnalysisResult({
       presentationStyle="pageSheet"
       onRequestClose={() => void handleClosePress()}
     >
-      <YStack flex={1} backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}>
+      <V2VStack flex={1} style={{ backgroundColor: colors.background.default }}>
         {/* Header */}
-        <XStack
-          alignItems="center"
+        <V2HStack
+          align="center"
           paddingHorizontal={12}
           paddingTop={30}
           paddingBottom={10}
-          backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
+          style={{ backgroundColor: colors.background.default }}
         >
           <Pressable
             onPress={handleShare}
@@ -645,11 +652,10 @@ export function FoodAnalysisResult({
             accessibilityLabel={t("foodResult.share")}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <XStack
-              width={40}
-              height={40}
-              alignItems="center"
-              justifyContent="center"
+            <V2HStack
+              align="center"
+              justify="center"
+              style={{ width: 40, height: 40 }}
             >
               <Ionicons
                 name="share-outline"
@@ -660,17 +666,19 @@ export function FoodAnalysisResult({
                     : tokens.color.grey3.val
                 }
               />
-            </XStack>
+            </V2HStack>
           </Pressable>
-          <Text
-            fontSize="$5"
-            fontWeight="600"
-            color={isDarkMode ? "$textDark" : "$color"}
-            textAlign="center"
-            flex={1}
+          <V2Text
+            color={colors.label.normal}
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              textAlign: "center",
+              flex: 1,
+            }}
           >
             {t("foodResult.title")}
-          </Text>
+          </V2Text>
           <Pressable
             onPress={() => void handleClosePress()}
             hitSlop={8}
@@ -678,11 +686,10 @@ export function FoodAnalysisResult({
             accessibilityLabel={t("foodResult.close")}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <XStack
-              width={40}
-              height={40}
-              alignItems="center"
-              justifyContent="center"
+            <V2HStack
+              align="center"
+              justify="center"
+              style={{ width: 40, height: 40 }}
             >
               <Ionicons
                 name="close"
@@ -693,9 +700,9 @@ export function FoodAnalysisResult({
                     : tokens.color.grey3.val
                 }
               />
-            </XStack>
+            </V2HStack>
           </Pressable>
-        </XStack>
+        </V2HStack>
 
         <ScrollView
           bounces={false}
@@ -707,36 +714,43 @@ export function FoodAnalysisResult({
           }}
         >
           {/* 음식 제목 + 식사 타입 */}
-          <XStack
-            paddingHorizontal="$4"
-            paddingVertical="$3"
-            alignItems="flex-start"
-            gap="$2"
+          <V2HStack
+            paddingHorizontal={16}
+            paddingVertical={12}
+            align="flex-start"
+            gap={8}
           >
-            <Text
-              fontSize={22}
-              fontWeight="700"
-              color={isDarkMode ? "$textDark" : "$color"}
-              flexShrink={1}
-              flex={1}
+            <V2Text
+              color={colors.label.normal}
               lineBreakStrategyIOS="hangul-word"
+              style={{
+                fontSize: 22,
+                fontWeight: "700",
+                flexShrink: 1,
+                flex: 1,
+              }}
             >
               {effectiveResult.title}{" "}
-              <Text fontSize="$4" color="$colorSubtle" fontWeight="700">
+              <V2Text
+                color={colors.label.alternative}
+                style={{ fontSize: 14, fontWeight: "700" }}
+              >
                 {servingsLabel}
-              </Text>
-            </Text>
+              </V2Text>
+            </V2Text>
             {displayMealType && (
-              <XStack
-                alignItems="center"
-                gap="$1"
-                backgroundColor={
-                  isDarkMode ? "$cardBgDark" : "$backgroundFocus"
-                }
-                paddingHorizontal="$3"
+              <V2HStack
+                align="center"
+                gap={4}
+                paddingHorizontal={12}
                 paddingVertical={6}
-                borderRadius="$8"
-                flexShrink={0}
+                style={{
+                  backgroundColor: isDarkMode
+                    ? colors.background.lower
+                    : colors.fill.normal,
+                  borderRadius: 16,
+                  flexShrink: 0,
+                }}
               >
                 <Ionicons
                   name={
@@ -751,21 +765,26 @@ export function FoodAnalysisResult({
                       : tokens.color.black.val
                   }
                 />
-                <Text
-                  fontSize={14}
-                  color={isDarkMode ? "$textDark" : "$color"}
-                  fontWeight="500"
+                <V2Text
+                  color={colors.label.normal}
+                  style={{ fontSize: 14, fontWeight: "500" }}
                 >
                   {t(`meal.${displayMealType}`)}
-                </Text>
-              </XStack>
+                </V2Text>
+              </V2HStack>
             )}
-          </XStack>
+          </V2HStack>
 
           {/* 음식 이미지 — 없거나 로드에 실패하면 아래 컴팩트 행으로 대신한다.
               빈 회색 박스 220pt 를 그대로 두면 글로 기록한 식사가 "고장난 화면"처럼 보인다. */}
           {displayImageUri && !imageFailed && (
-            <View marginHorizontal="$4" borderRadius={16} overflow="hidden">
+            <V2Box
+              style={{
+                marginHorizontal: 16,
+                borderRadius: 16,
+                overflow: "hidden",
+              }}
+            >
               <Image
                 source={{ uri: displayImageUri }}
                 style={{ width: "100%", height: 220, resizeMode: "cover" }}
@@ -782,21 +801,26 @@ export function FoodAnalysisResult({
                   opacity: pressed ? 0.5 : 0.9,
                 })}
               >
-                <XStack
-                  alignItems="center"
-                  backgroundColor="$offWhite"
-                  borderRadius={8}
+                <V2HStack
+                  align="center"
                   paddingHorizontal={9}
                   paddingVertical={7}
                   gap={3}
+                  style={{
+                    backgroundColor: colors.background.lower,
+                    borderRadius: 8,
+                  }}
                 >
                   <Icon name="edit" size={18} />
-                  <Text fontSize={12} fontWeight="600" color="$color.grey4">
+                  <V2Text
+                    color={tokens.color.grey4.val}
+                    style={{ fontSize: 12, fontWeight: "600" }}
+                  >
                     {t("foodResult.edit")}
-                  </Text>
-                </XStack>
+                  </V2Text>
+                </V2HStack>
               </Pressable>
-            </View>
+            </V2Box>
           )}
 
           {/* 사진 없는 기록(글로 남긴 식사 등) — 수정 진입을 잃지 않으면서 화면을 낭비하지 않는다 */}
@@ -807,23 +831,29 @@ export function FoodAnalysisResult({
               accessibilityLabel={t("foodResult.edit")}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <XStack
-                marginHorizontal="$4"
+              <V2HStack
                 paddingHorizontal={16}
                 paddingVertical={14}
-                borderRadius={16}
-                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-                alignItems="center"
+                align="center"
                 gap={10}
+                style={{
+                  marginHorizontal: 16,
+                  borderRadius: 16,
+                  backgroundColor: colors.background.lower,
+                }}
               >
                 {/* 아이콘 사각형도 그레이 — 수정 진입은 안내지 액션 촉구가 아니다 */}
-                <XStack
-                  width={36}
-                  height={36}
-                  borderRadius={12}
-                  backgroundColor={isDarkMode ? "$cardBgDark" : "#F2F3F5"}
-                  alignItems="center"
-                  justifyContent="center"
+                <V2HStack
+                  align="center"
+                  justify="center"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    backgroundColor: isDarkMode
+                      ? colors.background.lower
+                      : "#F2F3F5",
+                  }}
                 >
                   <Ionicons
                     name="create-outline"
@@ -834,23 +864,22 @@ export function FoodAnalysisResult({
                         : tokens.color.grey3.val
                     }
                   />
-                </XStack>
-                <YStack flex={1}>
-                  <Text
-                    fontSize={14}
-                    fontWeight="600"
-                    color={isDarkMode ? "$textDark" : "$color"}
+                </V2HStack>
+                <V2VStack flex={1}>
+                  <V2Text
+                    color={colors.label.normal}
+                    style={{ fontSize: 14, fontWeight: "600" }}
                   >
                     {t("foodResult.textMeal")}
-                  </Text>
-                  <Text
-                    fontSize={12.5}
-                    color="$colorSubtle"
+                  </V2Text>
+                  <V2Text
+                    color={colors.label.alternative}
                     lineBreakStrategyIOS="hangul-word"
+                    style={{ fontSize: 12.5 }}
                   >
                     {t("foodResult.textMealHint")}
-                  </Text>
-                </YStack>
+                  </V2Text>
+                </V2VStack>
                 <Ionicons
                   name="chevron-forward"
                   size={16}
@@ -860,7 +889,7 @@ export function FoodAnalysisResult({
                       : tokens.color.grey3.val
                   }
                 />
-              </XStack>
+              </V2HStack>
             </Pressable>
           )}
 
@@ -870,28 +899,33 @@ export function FoodAnalysisResult({
                행 안에서 줄지 않고 **상자 밖으로 그대로 넘친다** — 좁은 기기와 큰 글자
                설정에서 "먹은 양을 바꾸면…" 이 카드를 뚫고 나가던 것이 그것이다.
                기준 라벨과 안내문은 길이가 서로 독립이므로 세로로 쌓는다. */
-            <YStack
-              marginHorizontal="$4"
-              marginTop="$3"
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-              borderRadius="$4"
-              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-              gap="$1"
+            <V2VStack
+              paddingHorizontal={12}
+              paddingVertical={8}
+              gap={4}
+              style={{
+                marginHorizontal: 16,
+                marginTop: 12,
+                borderRadius: 8,
+                backgroundColor: colors.background.lower,
+              }}
             >
-              <Text fontSize="$3" fontWeight="600" color="$sub8">
+              <V2Text
+                color={tokens.color.sub8.val}
+                style={{ fontSize: 12, fontWeight: "600" }}
+              >
                 {effectiveResult.consumptionRevision
                   ? t("foodResult.consumedBasis")
                   : t("foodResult.photoBasis")}
-              </Text>
-              <Text
-                fontSize="$3"
-                color="$colorSubtle"
+              </V2Text>
+              <V2Text
+                color={colors.label.alternative}
                 lineBreakStrategyIOS="hangul-word"
+                style={{ fontSize: 12 }}
               >
                 {t("foodResult.amountHint")}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           )}
 
           {/* 인사이트 리포트 — 판정·근거·남은 예산·음식별 이유·대체.
@@ -901,54 +935,61 @@ export function FoodAnalysisResult({
               리포트로 바꾸면 "2초 보이다 사라지는 글"이 된다(실제 사용자 피드백) —
               폴백은 로딩이 아니라 **실패**에만 쓴다. */}
           {mealReport ? (
-            <YStack marginHorizontal="$4" marginTop="$4">
+            <V2VStack style={{ marginHorizontal: 16, marginTop: 16 }}>
               <MealReportView report={mealReport} />
-            </YStack>
+            </V2VStack>
           ) : isReportPending ? (
-            <YStack
-              marginHorizontal="$4"
-              marginTop="$4"
-              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-              borderRadius={16}
+            <V2VStack
               padding={18}
               gap={10}
+              style={{
+                marginHorizontal: 16,
+                marginTop: 16,
+                backgroundColor: colors.background.lower,
+                borderRadius: 16,
+              }}
             >
               {[168, 260, 210].map((width, i) => (
-                <View
+                <V2Box
                   key={i}
-                  width={width}
-                  height={i === 1 ? 22 : 13}
-                  borderRadius={6}
-                  backgroundColor={
-                    isDarkMode ? "rgba(255,255,255,0.07)" : "#F2F3F5"
-                  }
+                  style={{
+                    width: width,
+                    height: i === 1 ? 22 : 13,
+                    borderRadius: 6,
+                    backgroundColor: isDarkMode
+                      ? "rgba(255,255,255,0.07)"
+                      : "#F2F3F5",
+                  }}
                 />
               ))}
-            </YStack>
+            </V2VStack>
           ) : (
             /* 리포트 조회가 실패하면 레거시 AI 평가문을 다시 노출하지 않는다.
                 예전 평가문은 현재 책임·근거 정책을 거치지 않았기 때문이다. */
-            <YStack
-              marginHorizontal="$4"
-              marginTop="$4"
-              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-              borderRadius="$4"
-              padding="$4"
-              gap="$2"
+            <V2VStack
+              padding={16}
+              gap={8}
+              style={{
+                marginHorizontal: 16,
+                marginTop: 16,
+                backgroundColor: colors.background.lower,
+                borderRadius: 8,
+              }}
             >
-              <Text fontSize="$3" color="$colorSubtle" fontWeight="600">
+              <V2Text
+                color={colors.label.alternative}
+                style={{ fontSize: 12, fontWeight: "600" }}
+              >
                 {t("foodResult.nutrientsReady")}
-              </Text>
-              <Text
-                fontSize="$4"
-                color={isDarkMode ? "$textDark" : "$color"}
-                lineHeight={22}
-                fontWeight="600"
+              </V2Text>
+              <V2Text
+                color={colors.label.normal}
                 lineBreakStrategyIOS="hangul-word"
+                style={{ fontSize: 14, lineHeight: 22, fontWeight: "600" }}
               >
                 {t("foodResult.reportUnavailable")}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           )}
 
           {/* 아래 수치 블록은 리포트가 뜨면 감춘다 — 리포트의 "남은 예산"과
@@ -957,140 +998,151 @@ export function FoodAnalysisResult({
           {!mealReport && !isReportPending && (
             <>
               {/* 총 열량 */}
-              <YStack
-                marginHorizontal="$4"
-                marginTop="$3"
-                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-                borderRadius="$4"
-                padding="$4"
+              <V2VStack
+                padding={16}
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 12,
+                  backgroundColor: colors.background.lower,
+                  borderRadius: 8,
+                }}
               >
-                <Text
-                  fontSize="$4"
-                  fontWeight="600"
-                  color={isDarkMode ? "$textDark" : "$color"}
+                <V2Text
+                  color={colors.label.normal}
+                  style={{ fontSize: 14, fontWeight: "600" }}
                 >
                   {t("foodResult.totalCalories")}
-                </Text>
-                <XStack alignItems="baseline" gap="$1">
-                  <Text
-                    fontSize={30}
-                    fontWeight="600"
-                    color={isDarkMode ? "$textDark" : "$color"}
+                </V2Text>
+                <V2HStack align="baseline" gap={4}>
+                  <V2Text
+                    color={colors.label.normal}
+                    style={{ fontSize: 30, fontWeight: "600" }}
                   >
                     {Math.round(effectiveResult.total.calories)}
-                  </Text>
-                  <Text fontSize="$5" color="$colorSubtle" fontWeight="500">
+                  </V2Text>
+                  <V2Text
+                    color={colors.label.alternative}
+                    style={{ fontSize: 15, fontWeight: "500" }}
+                  >
                     Kcal
-                  </Text>
-                </XStack>
-                <View height="$2" />
+                  </V2Text>
+                </V2HStack>
+                <V2Box style={{ height: 8 }} />
                 <MacroBar
                   carbs={effectiveResult.total.carbohydrates}
                   protein={effectiveResult.total.protein}
                   fat={effectiveResult.total.fat}
                 />
-              </YStack>
+              </V2VStack>
 
               {/* 식단 세부 분석 */}
-              <YStack marginHorizontal="$4" marginTop="$5" gap="$3">
-                <Text
-                  fontSize={22}
-                  fontWeight="700"
-                  color={isDarkMode ? "$textDark" : "$color"}
+              <V2VStack
+                gap={12}
+                style={{ marginHorizontal: 16, marginTop: 20 }}
+              >
+                <V2Text
+                  color={colors.label.normal}
+                  style={{ fontSize: 22, fontWeight: "700" }}
                 >
                   {t("foodResult.nutrientDetails")}
-                </Text>
-                <XStack
-                  alignItems="flex-start"
-                  gap="$2"
+                </V2Text>
+                <V2HStack
+                  align="flex-start"
+                  gap={8}
                   paddingHorizontal={2}
-                  marginTop={-4}
+                  style={{ marginTop: -4 }}
                 >
                   <Icon name="info" size={16} color={tokens.color.grey6.val} />
-                  <Text
-                    fontSize="$3"
-                    color="$colorSubtle"
-                    flex={1}
-                    lineHeight={20}
+                  <V2Text
+                    color={colors.label.alternative}
                     lineBreakStrategyIOS="hangul-word"
+                    style={{ fontSize: 12, flex: 1, lineHeight: 20 }}
                   >
                     {t("foodResult.chartExplanation")}
-                  </Text>
-                </XStack>
+                  </V2Text>
+                </V2HStack>
                 {effectiveResult.foods.map((food, i) => {
                   const restriction = getRestrictionStyle(food.restrictionLevel)
                   return (
-                    <YStack
+                    <V2VStack
                       key={i}
-                      backgroundColor={
-                        isDarkMode ? "$cardBgDark" : "$cardBackground"
-                      }
-                      borderRadius="$4"
-                      padding="$4"
-                      paddingVertical="$5"
-                      gap="$3"
+                      padding={16}
+                      paddingVertical={20}
+                      gap={12}
+                      style={{
+                        backgroundColor: colors.background.lower,
+                        borderRadius: 8,
+                      }}
                     >
-                      <XStack
-                        alignItems="center"
-                        justifyContent="space-between"
+                      <V2HStack
+                        align="center"
+                        justify="space-between"
                         paddingBottom={8}
-                        gap="$2"
+                        gap={8}
                       >
-                        <XStack
-                          alignItems="baseline"
-                          gap="$1"
+                        <V2HStack
+                          align="baseline"
+                          gap={4}
                           flex={1}
-                          flexShrink={1}
+                          style={{ flexShrink: 1 }}
                         >
-                          <Text
-                            fontSize="$4"
-                            fontWeight="600"
-                            color={isDarkMode ? "$textDark" : "$color"}
+                          <V2Text
+                            color={colors.label.normal}
                             numberOfLines={1}
-                            flexShrink={1}
+                            style={{
+                              fontSize: 14,
+                              fontWeight: "600",
+                              flexShrink: 1,
+                            }}
                           >
                             {food.name}
-                          </Text>
-                          <XStack paddingHorizontal={1}>
-                            <Text
-                              fontSize="$3"
-                              color="$colorSubtle"
-                              flexShrink={0}
+                          </V2Text>
+                          <V2HStack paddingHorizontal={1}>
+                            <V2Text
+                              color={colors.label.alternative}
+                              style={{ fontSize: 12, flexShrink: 0 }}
                             >
                               {formatFoodPortion(
                                 food.servingSizeValue,
                                 food.servingSizeUnit,
                                 language,
                               )}
-                            </Text>
-                          </XStack>
-                        </XStack>
-                        <View
+                            </V2Text>
+                          </V2HStack>
+                        </V2HStack>
+                        <V2Box
                           paddingHorizontal={8}
                           paddingVertical={4}
-                          borderRadius={8}
-                          backgroundColor={restriction.bg}
-                          flexShrink={0}
+                          style={{
+                            borderRadius: 8,
+                            backgroundColor: restriction.bg,
+                            flexShrink: 0,
+                          }}
                         >
-                          <Text
-                            fontSize="$3"
-                            fontWeight="500"
+                          <V2Text
                             color={restriction.color}
+                            style={{ fontSize: 12, fontWeight: "500" }}
                           >
                             {t(restriction.labelKey)}
-                          </Text>
-                        </View>
-                      </XStack>
+                          </V2Text>
+                        </V2Box>
+                      </V2HStack>
 
                       {(food.provenance || food.analyzedGrams != null) && (
-                        <XStack gap="$2" flexWrap="wrap" marginTop={-6}>
+                        <V2HStack gap={8} wrap="wrap" style={{ marginTop: -6 }}>
                           {food.provenance && (
-                            <Text fontSize="$3" color="$colorSubtle">
+                            <V2Text
+                              color={colors.label.alternative}
+                              style={{ fontSize: 12 }}
+                            >
                               {t(`foodResult.provenance.${food.provenance}`)}
-                            </Text>
+                            </V2Text>
                           )}
                           {food.analyzedGrams != null && (
-                            <Text fontSize="$3" color="$colorSubtle">
+                            <V2Text
+                              color={colors.label.alternative}
+                              style={{ fontSize: 12 }}
+                            >
                               {t("foodResult.inPhoto", {
                                 amount: Math.round(food.analyzedGrams),
                               })}
@@ -1099,16 +1151,16 @@ export function FoodAnalysisResult({
                                     amount: Math.round(food.consumedGrams),
                                   })}`
                                 : ""}
-                            </Text>
+                            </V2Text>
                           )}
-                        </XStack>
+                        </V2HStack>
                       )}
 
                       <FoodNutrientDonuts food={food} />
-                    </YStack>
+                    </V2VStack>
                   )
                 })}
-              </YStack>
+              </V2VStack>
             </>
           )}
 
@@ -1118,21 +1170,22 @@ export function FoodAnalysisResult({
 
               간격은 4의 배수로만 둔다(20·8). 28+10 이던 예전 값은 본문 섹션
               사이(24)보다 넓어서, 조용한 푸터가 오히려 새 섹션처럼 떠 보였다. */}
-          <YStack marginHorizontal={20} marginTop={20} gap={8}>
-            <View
-              height={0.5}
-              backgroundColor={
-                isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(23,24,28,0.06)"
-              }
+          <V2VStack gap={8} style={{ marginHorizontal: 20, marginTop: 20 }}>
+            <V2Box
+              style={{
+                height: 0.5,
+                backgroundColor: isDarkMode
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(23,24,28,0.06)",
+              }}
             />
-            <Text
-              fontSize={12}
-              color="$colorSubtle"
-              lineHeight={18}
+            <V2Text
+              color={colors.label.alternative}
               lineBreakStrategyIOS="hangul-word"
+              style={{ fontSize: 12, lineHeight: 18 }}
             >
               {t("foodResult.referencesNote")}
-            </Text>
+            </V2Text>
             <Pressable
               onPress={() => {
                 onClose()
@@ -1143,14 +1196,17 @@ export function FoodAnalysisResult({
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               hitSlop={8}
             >
-              <XStack alignItems="center" gap={2}>
-                <Text
-                  fontSize={12.5}
-                  fontWeight="600"
-                  color={isDarkMode ? "$textDarkSub" : "$colorSubtle"}
+              <V2HStack align="center" gap={2}>
+                <V2Text
+                  color={
+                    isDarkMode
+                      ? tokens.color.textDarkSub.val
+                      : colors.label.alternative
+                  }
+                  style={{ fontSize: 12.5, fontWeight: "600" }}
                 >
                   {t("foodResult.openReferences")}
-                </Text>
+                </V2Text>
                 <Ionicons
                   name="chevron-forward"
                   size={12}
@@ -1160,16 +1216,16 @@ export function FoodAnalysisResult({
                       : tokens.color.grey3.val
                   }
                 />
-              </XStack>
+              </V2HStack>
             </Pressable>
-          </YStack>
+          </V2VStack>
 
           {/* ── 다음 행동 — 리포트를 읽고 나서 할 수 있는 일들.
               공유 두 장(스토리·커뮤니티)을 나란히, 그 아래 AI 질문을
               전폭 행으로. 셋 다 흰 카드라 위계는 크기와 자리로만 말한다. */}
-          <YStack marginHorizontal={15} marginTop={16} gap={10}>
+          <V2VStack gap={10} style={{ marginHorizontal: 15, marginTop: 16 }}>
             {diaryId != null && displayImageUri && !imageFailed && (
-              <XStack gap={10}>
+              <V2HStack gap={10}>
                 <ShareActionCard
                   icon="sparkles-outline"
                   title={t("foodResult.story")}
@@ -1190,7 +1246,7 @@ export function FoodAnalysisResult({
                     router.push("/(write)/free/new")
                   }}
                 />
-              </XStack>
+              </V2HStack>
             )}
 
             <Pressable
@@ -1202,48 +1258,51 @@ export function FoodAnalysisResult({
                 opacity: isStartingConsultation ? 0.6 : pressed ? 0.85 : 1,
               })}
             >
-              <XStack
-                alignItems="center"
+              <V2HStack
+                align="center"
                 gap={12}
                 paddingVertical={14}
                 paddingHorizontal={16}
-                backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-                borderRadius={20}
+                style={{
+                  backgroundColor: colors.background.lower,
+                  borderRadius: 20,
+                }}
               >
-                <XStack
-                  width={38}
-                  height={38}
-                  borderRadius={999}
-                  backgroundColor={
-                    isDarkMode ? "rgba(254,113,57,0.18)" : "#FFF6F2"
-                  }
-                  alignItems="center"
-                  justifyContent="center"
+                <V2HStack
+                  align="center"
+                  justify="center"
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 999,
+                    backgroundColor: isDarkMode
+                      ? "rgba(254,113,57,0.18)"
+                      : "#FFF6F2",
+                  }}
                 >
                   <Ionicons
                     name="chatbubble-ellipses"
                     size={18}
                     color={tokens.color.primary.val}
                   />
-                </XStack>
-                <YStack flex={1} gap={1}>
-                  <Text
-                    fontSize={15}
-                    fontWeight="700"
-                    color={isDarkMode ? "$textDark" : "$color"}
+                </V2HStack>
+                <V2VStack flex={1} gap={1}>
+                  <V2Text
+                    color={colors.label.normal}
+                    style={{ fontSize: 15, fontWeight: "700" }}
                   >
                     {isStartingConsultation
                       ? t("foodResult.openingConsult")
                       : t("foodResult.askMore")}
-                  </Text>
-                  <Text
-                    fontSize={12.5}
-                    color="$colorSubtle"
+                  </V2Text>
+                  <V2Text
+                    color={colors.label.alternative}
                     lineBreakStrategyIOS="hangul-word"
+                    style={{ fontSize: 12.5 }}
                   >
                     {t("foodResult.askMoreCaption")}
-                  </Text>
-                </YStack>
+                  </V2Text>
+                </V2VStack>
                 <Ionicons
                   name="chevron-forward"
                   size={16}
@@ -1253,9 +1312,9 @@ export function FoodAnalysisResult({
                       : tokens.color.grey3.val
                   }
                 />
-              </XStack>
+              </V2HStack>
             </Pressable>
-          </YStack>
+          </V2VStack>
 
           {diaryId != null && (
             <Pressable
@@ -1267,44 +1326,44 @@ export function FoodAnalysisResult({
                 opacity: isDeletingDiary ? 0.6 : pressed ? 0.7 : 1,
               })}
             >
-              <XStack
-                alignItems="center"
-                justifyContent="center"
+              <V2HStack
+                align="center"
+                justify="center"
                 gap={6}
-                marginTop={10}
                 paddingVertical={15}
-                marginHorizontal={15}
+                style={{ marginTop: 10, marginHorizontal: 15 }}
               >
                 <Ionicons
                   name="trash-outline"
                   size={18}
                   color={tokens.color.primary9.val}
                 />
-                <Text
-                  fontSize={15}
-                  fontWeight="500"
+                <V2Text
                   color={tokens.color.primary9.val}
+                  style={{ fontSize: 15, fontWeight: "500" }}
                 >
                   {isDeletingDiary
                     ? t("foodResult.deleting")
                     : t("foodResult.delete")}
-                </Text>
-              </XStack>
+                </V2Text>
+              </V2HStack>
             </Pressable>
           )}
         </ScrollView>
 
         {/* 하단 고정 버튼 */}
         {showAddButton && (
-          <YStack
-            position="absolute"
-            bottom={0}
-            left={0}
-            right={0}
-            backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
+          <V2VStack
             paddingHorizontal={16}
             paddingTop={12}
             paddingBottom={insets.bottom + 12}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: colors.background.default,
+            }}
           >
             <Pressable
               onPress={handleAddToRecordPress}
@@ -1316,23 +1375,28 @@ export function FoodAnalysisResult({
                 opacity: isAddingToRecord ? 0.7 : pressed ? 0.8 : 1,
               })}
             >
-              <YStack
-                backgroundColor={tokens.color.primary7.val}
-                borderRadius={30}
-                height={54}
-                alignItems="center"
-                justifyContent="center"
+              <V2VStack
+                align="center"
+                justify="center"
+                style={{
+                  backgroundColor: tokens.color.primary7.val,
+                  borderRadius: 30,
+                  height: 54,
+                }}
               >
-                <Text color="white" fontSize={16} fontWeight="700">
+                <V2Text
+                  color="white"
+                  style={{ fontSize: 16, fontWeight: "700" }}
+                >
                   {isAddingToRecord
                     ? t("foodResult.adding")
                     : t("foodResult.addToLog")}
-                </Text>
-              </YStack>
+                </V2Text>
+              </V2VStack>
             </Pressable>
-          </YStack>
+          </V2VStack>
         )}
-      </YStack>
+      </V2VStack>
 
       {/* 공유 카드 (offscreen) */}
       <ShareCard

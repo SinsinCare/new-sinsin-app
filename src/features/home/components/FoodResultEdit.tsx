@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from "react"
+import {
+  useV2Theme,
+  V2Box,
+  V2HStack,
+  V2Text,
+  V2VStack,
+  V2Button,
+  V2SegmentControl,
+  V2TextField,
+} from "@/src/design-system-v2"
 import { Image, Platform, TextInput, TouchableOpacity } from "react-native"
 import { AppModal } from "@/src/shared/components/AppModal"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text, View, XStack, YStack } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import {
   FoodAnalysisUpdateRequest,
@@ -11,7 +20,6 @@ import {
   FoodCameraAnalyzeResult,
 } from "@/src/types"
 import { Icon } from "@/src/shared/components"
-import { V2Button, V2SegmentControl, V2TextField } from "@/src/design-system-v2"
 import { LoadingOverlay } from "./LoadingOverlay"
 import { ConsumedAmountSelector } from "./ConsumedAmountSelector"
 import { UNIT_OPTIONS } from "../data/foodEditConstants"
@@ -104,6 +112,7 @@ export function FoodResultEdit({
   onAnalysisChange,
   onMealTypeChange,
 }: FoodResultEditProps) {
+  const { colors } = useV2Theme()
   const { t } = useTranslation("common")
   const unitSegments = useMemo(
     () =>
@@ -205,15 +214,77 @@ export function FoodResultEdit({
     ? tokens.color.appBgDark.val
     : tokens.color.grey8.val
 
+  /**
+   * 무엇이 바뀌었는지 한 곳에서 판정한다.
+   *
+   * 제출과 취소가 **같은 판정**을 써야 한다 — 취소의 `changed` 가 제출과 다른 기준이면
+   * "고치다 말고 취소" 와 "열어만 보고 닫음" 을 가르는 그 숫자를 믿을 수 없다.
+   */
+  const describeChanges = () => {
+    if (!result) {
+      return {
+        eatenPercentageChanged: false,
+        brothPercentageChanged: false,
+        foodsChanged: false,
+        mealTypeChanged: false,
+      }
+    }
+    const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
+    const initialBrothStep = getInitialEatenStep(
+      result.brothConsumedRatio == null
+        ? result.eatenPercentage
+        : result.brothConsumedRatio * 100,
+    )
+    return {
+      eatenPercentageChanged: eatenStep !== initialEatenStep,
+      brothPercentageChanged: hasBroth && brothStep !== initialBrothStep,
+      foodsChanged:
+        foods.length !== result.foods.length ||
+        foods.some((f, i) => {
+          const orig = result.foods[i]
+          return (
+            f.name !== orig.name ||
+            Number(f.amount) !== orig.servingSizeValue ||
+            f.unit !== orig.servingSizeUnit
+          )
+        }),
+      mealTypeChanged:
+        diaryId != null &&
+        updateDiaryMealType != null &&
+        selectedMealType != null &&
+        mealType != null &&
+        selectedMealType !== mealType,
+    }
+  }
+
   const handleCancel = () => {
     if (titleChanged) {
+      /*
+        이름 변경은 그 자리에서 서버에 반영된다 — 되돌릴 것이 없으므로 취소가 아니라
+        성공이다. 그래서 이 갈래는 `_cancelled` 로 세지 않는다.
+      */
       trackAnalyticsEvent("food_record_edit_succeeded", {
         items_changed: false,
         consumption_changed: false,
         slot_changed: false,
         label_changed: true,
       })
+      onClose()
+      return
     }
+    /*
+      수정 화면까지 갔다가 되돌아 나온 사람. `changed` 가 '고치다 말고 취소' 와
+      '열어만 보고 닫음' 을 가른다 — 앞은 입력 UI, 뒤는 진입점 문구 문제다.
+    */
+    const changes = describeChanges()
+    trackAnalyticsEvent("food_record_edit_cancelled", {
+      source,
+      changed:
+        changes.eatenPercentageChanged ||
+        changes.brothPercentageChanged ||
+        changes.foodsChanged ||
+        changes.mealTypeChanged,
+    })
     onClose()
   }
 
@@ -228,31 +299,12 @@ export function FoodResultEdit({
       showErrorToast(t("foodEdit.checkInput"), t("foodEdit.checkInputBody"))
       return
     }
-    const initialEatenStep = getInitialEatenStep(result.eatenPercentage)
-    const eatenPercentageChanged = eatenStep !== initialEatenStep
-    const initialBrothStep = getInitialEatenStep(
-      result.brothConsumedRatio == null
-        ? result.eatenPercentage
-        : result.brothConsumedRatio * 100,
-    )
-    const brothPercentageChanged = hasBroth && brothStep !== initialBrothStep
-    const foodsChanged =
-      foods.length !== result.foods.length ||
-      foods.some((f, i) => {
-        const orig = result.foods[i]
-        return (
-          f.name !== orig.name ||
-          Number(f.amount) !== orig.servingSizeValue ||
-          f.unit !== orig.servingSizeUnit
-        )
-      })
-    const mealTypeChanged =
-      diaryId != null &&
-      updateDiaryMealType != null &&
-      selectedMealType != null &&
-      mealType != null &&
-      selectedMealType !== mealType
-
+    const {
+      eatenPercentageChanged,
+      brothPercentageChanged,
+      foodsChanged,
+      mealTypeChanged,
+    } = describeChanges()
     if (
       !eatenPercentageChanged &&
       !brothPercentageChanged &&
@@ -292,7 +344,19 @@ export function FoodResultEdit({
         ok = false
       }
     }
-    if (ok && mealTypeChanged) {
+    /*
+      `mealTypeChanged` 가 참이면 아래 넷은 모두 non-null 이다(describeChanges 참조).
+      다만 판정이 함수 밖으로 나가면서 tsc 의 좁히기가 여기까지 따라오지 못하므로
+      **한 번 더 확인**한다 — 단언(`!`)으로 덮지 않는다.
+    */
+    if (
+      ok &&
+      mealTypeChanged &&
+      updateDiaryMealType != null &&
+      diaryId != null &&
+      selectedMealType != null &&
+      mealType != null
+    ) {
       const changed = await updateDiaryMealType(diaryId, selectedMealType)
       if (changed) {
         onMealTypeChange?.({
@@ -319,38 +383,42 @@ export function FoodResultEdit({
   }
 
   return (
-    <YStack
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}
-      zIndex={10}
+    <V2VStack
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: colors.background.default,
+        zIndex: 10,
+      }}
     >
-      <XStack
-        paddingHorizontal="$8"
-        paddingVertical="$10"
-        justifyContent="space-between"
+      <V2HStack
+        paddingHorizontal={32}
+        paddingVertical={40}
+        justify="space-between"
       >
         <TouchableOpacity
           onPress={handleCancel}
           hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
         >
-          <Text fontSize={16} fontWeight={500} color="$colorSubtle">
+          <V2Text
+            color={colors.label.alternative}
+            style={{ fontSize: 16, fontWeight: 500 }}
+          >
             {t("action.cancel")}
-          </Text>
+          </V2Text>
         </TouchableOpacity>
-        <Text
-          fontSize={17}
-          fontWeight={700}
-          color={isDarkMode ? "$textDark" : "$black"}
+        <V2Text
+          color={colors.label.normal}
+          style={{ fontSize: 17, fontWeight: 700 }}
         >
           {t("foodResult.edit")}
-        </Text>
+        </V2Text>
         {/* 저장은 하단 CTA 하나로 — 헤더 우측은 폭만 맞춘다 */}
-        <View width={40} />
-      </XStack>
+        <V2Box style={{ width: 40 }} />
+      </V2HStack>
 
       <KeyboardAwareScrollView
         bounces={false}
@@ -363,9 +431,11 @@ export function FoodResultEdit({
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         showsVerticalScrollIndicator={false}
       >
-        <XStack>
+        <V2HStack>
           {imageUri && (
-            <View marginLeft={19} marginRight={13} overflow="hidden">
+            <V2Box
+              style={{ marginLeft: 19, marginRight: 13, overflow: "hidden" }}
+            >
               <Image
                 source={{ uri: imageUri }}
                 style={{
@@ -375,23 +445,21 @@ export function FoodResultEdit({
                   borderRadius: 10,
                 }}
               />
-            </View>
+            </V2Box>
           )}
-          <YStack gap="$2" justifyContent="center">
-            <XStack>
-              <Text
-                fontSize={18}
-                fontWeight="600"
-                paddingLeft="$1"
-                color={isDarkMode ? "$textDark" : "$black"}
+          <V2VStack gap={8} justify="center">
+            <V2HStack>
+              <V2Text
+                color={colors.label.normal}
                 lineBreakStrategyIOS="hangul-word"
+                style={{ fontSize: 18, fontWeight: "600", paddingLeft: 4 }}
               >
                 {mealName}{" "}
-              </Text>
+              </V2Text>
               <Icon name="edit" size={22} onPress={handleNameEdit} />
-            </XStack>
+            </V2HStack>
 
-            <XStack justifyContent="space-between" alignItems="center" gap={4}>
+            <V2HStack justify="space-between" align="center" gap={4}>
               {MEAL_OPTIONS.map((opt) => {
                 const isSelected = selectedMealType === opt.type
                 return (
@@ -408,7 +476,7 @@ export function FoodResultEdit({
                       paddingVertical: 6,
                     }}
                   >
-                    <XStack alignItems="center" gap={3}>
+                    <V2HStack align="center" gap={3}>
                       <Icon
                         name={opt.icon}
                         size={16}
@@ -418,22 +486,26 @@ export function FoodResultEdit({
                             : tokens.color.grey6.val
                         }
                       />
-                      <Text
-                        fontSize={15}
-                        fontWeight={isSelected ? 700 : 500}
+                      <V2Text
                         color={
-                          isSelected ? tokens.color.primary.val : "$colorSubtle"
+                          isSelected
+                            ? tokens.color.primary.val
+                            : colors.label.alternative
                         }
+                        style={{
+                          fontSize: 15,
+                          fontWeight: isSelected ? 700 : 500,
+                        }}
                       >
                         {t(`meal.${opt.type}`)}
-                      </Text>
-                    </XStack>
+                      </V2Text>
+                    </V2HStack>
                   </TouchableOpacity>
                 )
               })}
-            </XStack>
-          </YStack>
-        </XStack>
+            </V2HStack>
+          </V2VStack>
+        </V2HStack>
 
         <AppModal
           visible={isNameEdit}
@@ -441,33 +513,37 @@ export function FoodResultEdit({
           transparent
           onRequestClose={() => setIsNameEdit(false)}
         >
-          <View
+          <V2Box
             flex={1}
-            justifyContent="center"
-            alignItems="center"
-            backgroundColor="rgba(0,0,0,0.4)"
+            justify="center"
+            align="center"
+            style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
           >
-            <YStack
-              backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-              borderRadius="$5"
-              width={280}
-              overflow="hidden"
+            <V2VStack
+              style={{
+                backgroundColor: colors.background.lower,
+                borderRadius: 10,
+                width: 280,
+                overflow: "hidden",
+              }}
             >
-              <YStack paddingHorizontal="$5" paddingVertical="$6" gap="$4">
-                <Text
-                  fontSize={16}
-                  fontWeight={600}
-                  textAlign="center"
-                  color={isDarkMode ? "$textDark" : "$black"}
+              <V2VStack paddingHorizontal={20} paddingVertical={24} gap={16}>
+                <V2Text
+                  color={colors.label.normal}
+                  style={{ fontSize: 16, fontWeight: 600, textAlign: "center" }}
                 >
                   {t("foodEdit.renameMeal")}
-                </Text>
-                <View
-                  borderWidth={1}
-                  borderColor={isDarkMode ? "$grey3" : "$borderColor"}
-                  borderRadius="$5"
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
+                </V2Text>
+                <V2Box
+                  paddingHorizontal={12}
+                  paddingVertical={8}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isDarkMode
+                      ? tokens.color.grey3.val
+                      : colors.line.normal,
+                    borderRadius: 10,
+                  }}
                 >
                   <TextInput
                     ref={nameEditInputRef}
@@ -480,76 +556,93 @@ export function FoodResultEdit({
                     style={{
                       fontSize: 14,
                       color: textColor,
-                      fontWeight: "500",
+                      // 굵기는 face 로 말한다 — RN 은 굵기 prop 만으로는
+                      // Pretendard 를 못 고르고 OS 기본 서체로 떨어진다
+                      // (tests/typefaceLineage 가 지키는 계약).
+                      fontFamily: "Pretendard-Medium",
                     }}
                   />
-                </View>
-              </YStack>
+                </V2Box>
+              </V2VStack>
 
-              <View
-                height={1}
-                backgroundColor={isDarkMode ? "$grey3" : "$borderColor"}
+              <V2Box
+                style={{
+                  height: 1,
+                  backgroundColor: isDarkMode
+                    ? tokens.color.grey3.val
+                    : colors.line.normal,
+                }}
               />
 
-              <XStack>
+              <V2HStack>
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, alignItems: "center" }}
                   onPress={() => setIsNameEdit(false)}
                 >
-                  <Text fontSize={16} color="$colorSubtle">
+                  <V2Text
+                    color={colors.label.alternative}
+                    style={{ fontSize: 16 }}
+                  >
                     {t("action.cancel")}
-                  </Text>
+                  </V2Text>
                 </TouchableOpacity>
-                <View
-                  width={1}
-                  backgroundColor={isDarkMode ? "$grey3" : "$borderColor"}
+                <V2Box
+                  style={{
+                    width: 1,
+                    backgroundColor: isDarkMode
+                      ? tokens.color.grey3.val
+                      : colors.line.normal,
+                  }}
                 />
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, alignItems: "center" }}
                   onPress={handleTitleEdit}
                 >
-                  <Text
-                    fontSize={16}
-                    fontWeight={600}
+                  <V2Text
                     color={tokens.color.primary.val}
+                    style={{ fontSize: 16, fontWeight: 600 }}
                   >
                     {t("action.confirm")}
-                  </Text>
+                  </V2Text>
                 </TouchableOpacity>
-              </XStack>
-            </YStack>
-          </View>
+              </V2HStack>
+            </V2VStack>
+          </V2Box>
         </AppModal>
 
-        <YStack gap="$3">
-          <XStack justifyContent="space-between" paddingHorizontal="$5">
-            <Text
-              fontSize={17}
-              fontWeight={600}
-              color={isDarkMode ? "$textDark" : "$black"}
+        <V2VStack gap={12}>
+          <V2HStack justify="space-between" paddingHorizontal={20}>
+            <V2Text
+              color={colors.label.normal}
+              style={{ fontSize: 17, fontWeight: 600 }}
             >
               {t("foodEdit.foodsAndAmounts")}
-            </Text>
+            </V2Text>
             <TouchableOpacity onPress={handleAddMenu}>
-              <XStack paddingRight="$1" gap={3}>
+              <V2HStack paddingRight={4} gap={3}>
                 <Icon name="plus" size={17} />
-                <Text fontSize={15} fontWeight={600} color="$colorSubtle">
+                <V2Text
+                  color={colors.label.alternative}
+                  style={{ fontSize: 15, fontWeight: 600 }}
+                >
                   {t("foodEdit.addMenu")}
-                </Text>
-              </XStack>
+                </V2Text>
+              </V2HStack>
             </TouchableOpacity>
-          </XStack>
+          </V2HStack>
 
-          <View
-            backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-            marginHorizontal="$4"
-            borderRadius="$5"
-            paddingHorizontal="$4"
-            paddingVertical="$5"
+          <V2Box
+            paddingHorizontal={16}
+            paddingVertical={20}
+            style={{
+              backgroundColor: colors.background.lower,
+              marginHorizontal: 16,
+              borderRadius: 10,
+            }}
           >
-            <YStack gap="$3">
+            <V2VStack gap={12}>
               {addStep === "name" && (
-                <XStack alignItems="flex-start" paddingVertical="$2" gap="$2">
+                <V2HStack align="flex-start" paddingVertical={8} gap={8}>
                   <V2TextField
                     autoFocus
                     value={newMenuName}
@@ -567,16 +660,16 @@ export function FoodResultEdit({
                   >
                     {t("action.confirm")}
                   </V2Button>
-                </XStack>
+                </V2HStack>
               )}
               {addStep === "amount" && (
-                <YStack gap="$3">
-                  <XStack alignItems="center" gap="$3">
-                    <Text fontWeight={500} fontSize={15} flex={1}>
+                <V2VStack gap={12}>
+                  <V2HStack align="center" gap={12}>
+                    <V2Text style={{ fontWeight: 500, fontSize: 15, flex: 1 }}>
                       {newMenuName}
-                    </Text>
-                  </XStack>
-                  <XStack alignItems="flex-start" gap="$2">
+                    </V2Text>
+                  </V2HStack>
+                  <V2HStack align="flex-start" gap={8}>
                     <V2TextField
                       autoFocus
                       value={newMenuAmount}
@@ -599,7 +692,7 @@ export function FoodResultEdit({
                       alignment="fixed"
                       style={{ flex: 2 }}
                     />
-                  </XStack>
+                  </V2HStack>
                   <V2Button
                     size="m"
                     fullWidth
@@ -608,10 +701,10 @@ export function FoodResultEdit({
                   >
                     {t("action.confirm")}
                   </V2Button>
-                </YStack>
+                </V2VStack>
               )}
               {foods.map((f, i) => (
-                <XStack key={i} alignItems="center" gap="$2">
+                <V2HStack key={i} align="center" gap={8}>
                   <TextInput
                     value={f.name}
                     onChangeText={(v) => handleFoodNameChange(i, v)}
@@ -643,18 +736,20 @@ export function FoodResultEdit({
                       color: textColor,
                     }}
                   />
-                  <Text
-                    fontSize={
-                      getUnitTranslationKey(f.unit) === "foodEdit.unit.serving"
-                        ? 12
-                        : 14
-                    }
-                    width={21}
-                    textAlign="center"
-                    color={isDarkMode ? "$textDark" : "$black"}
+                  <V2Text
+                    color={colors.label.normal}
+                    style={{
+                      fontSize:
+                        getUnitTranslationKey(f.unit) ===
+                        "foodEdit.unit.serving"
+                          ? 12
+                          : 14,
+                      width: 21,
+                      textAlign: "center",
+                    }}
                   >
                     {getUnitLabel(f.unit)}
-                  </Text>
+                  </V2Text>
                   <TouchableOpacity
                     onPress={() => handleDelete(i)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -662,78 +757,83 @@ export function FoodResultEdit({
                       name: f.name || t("foodEdit.menu"),
                     })}
                   >
-                    <View
-                      width={22}
-                      height={22}
-                      borderRadius={11}
-                      backgroundColor={isDarkMode ? "#3A3A40" : "#DADCE0"}
-                      alignItems="center"
-                      justifyContent="center"
+                    <V2Box
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: isDarkMode ? "#3A3A40" : "#DADCE0",
+                      }}
                     >
-                      <Text
-                        fontSize={15}
-                        lineHeight={17}
-                        fontWeight="600"
-                        color={isDarkMode ? "$textDark" : "#5A5C63"}
-                        textAlign="center"
+                      <V2Text
+                        color={isDarkMode ? colors.label.normal : "#5A5C63"}
+                        style={{
+                          fontSize: 15,
+                          lineHeight: 17,
+                          fontWeight: "600",
+                          textAlign: "center",
+                        }}
                       >
                         ×
-                      </Text>
-                    </View>
+                      </V2Text>
+                    </V2Box>
                   </TouchableOpacity>
-                </XStack>
+                </V2HStack>
               ))}
-            </YStack>
-          </View>
-        </YStack>
+            </V2VStack>
+          </V2Box>
+        </V2VStack>
 
-        <View
-          backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-          marginHorizontal="$4"
-          borderRadius="$5"
-          paddingHorizontal="$4"
-          paddingVertical="$5"
+        <V2Box
+          paddingHorizontal={16}
+          paddingVertical={20}
+          style={{
+            backgroundColor: colors.background.lower,
+            marginHorizontal: 16,
+            borderRadius: 10,
+          }}
         >
-          <Text
-            fontSize={16}
-            fontWeight={600}
-            marginBottom="$4"
-            paddingLeft={4}
-            color={isDarkMode ? "$textDark" : "$black"}
+          <V2Text
+            color={colors.label.normal}
+            style={{
+              fontSize: 16,
+              fontWeight: 600,
+              marginBottom: 16,
+              paddingLeft: 4,
+            }}
           >
             {t("foodEdit.howMuch")}
-          </Text>
+          </V2Text>
           <ConsumedAmountSelector value={eatenStep} onChange={setEatenStep} />
           {hasBroth && (
-            <YStack marginTop="$5" gap="$3">
-              <Text
-                fontSize={15}
-                fontWeight={600}
-                paddingLeft={4}
-                color={isDarkMode ? "$textDark" : "$black"}
+            <V2VStack gap={12} style={{ marginTop: 20 }}>
+              <V2Text
+                color={colors.label.normal}
+                style={{ fontSize: 15, fontWeight: 600, paddingLeft: 4 }}
               >
                 {t("foodEdit.howMuchBroth")}
-              </Text>
-              <Text
-                fontSize={13}
-                color="$colorSubtle"
-                paddingLeft={4}
+              </V2Text>
+              <V2Text
+                color={colors.label.alternative}
                 lineBreakStrategyIOS="hangul-word"
+                style={{ fontSize: 13, paddingLeft: 4 }}
               >
                 {t("foodEdit.brothHint")}
-              </Text>
+              </V2Text>
               <ConsumedAmountSelector
                 value={brothStep}
                 onChange={setBrothStep}
                 accessibilityLabel={t("foodEdit.chooseBrothAmount")}
               />
-            </YStack>
+            </V2VStack>
           )}
-        </View>
+        </V2Box>
       </KeyboardAwareScrollView>
 
       {/* 저장은 손이 닿는 하단 한 곳 — 헤더 우측 텍스트 버튼보다 놓치지 않는다 */}
-      <View paddingHorizontal={20} paddingTop={10} paddingBottom={34}>
+      <V2Box paddingHorizontal={20} paddingTop={10} paddingBottom={34}>
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={isUpdating}
@@ -747,11 +847,11 @@ export function FoodResultEdit({
             opacity: isUpdating ? 0.6 : 1,
           }}
         >
-          <Text fontSize={16} fontWeight={700} color="#FFFFFF">
+          <V2Text color="#FFFFFF" style={{ fontSize: 16, fontWeight: 700 }}>
             {t("action.save")}
-          </Text>
+          </V2Text>
         </TouchableOpacity>
-      </View>
+      </V2Box>
 
       {/* 결과 pageSheet(네이티브 Modal) 안이라 루트 포털은 뒤에 깔린다 — inline. */}
       <LoadingOverlay
@@ -759,6 +859,6 @@ export function FoodResultEdit({
         message={t("foodEdit.saving")}
         inline
       />
-    </YStack>
+    </V2VStack>
   )
 }

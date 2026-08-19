@@ -55,6 +55,9 @@ export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
    */
   const handleClose = async () => {
     if (text.trim().length === 0) {
+      // 한 글자도 안 쓰고 닫은 것 — 글 경로에서 가장 흔한 이탈이고 지금까지
+      // 아무 흔적도 없었다. `filled:false` 가 그 몫이다.
+      trackAnalyticsEvent("food_text_record_discarded", { filled: false })
       onClose()
       return
     }
@@ -65,7 +68,11 @@ export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
       cancelLabel: t("home.textRecord.keepWriting"),
       destructive: true,
     })
-    if (confirmed) onClose()
+    // 확인창에서 되돌아온 사람은 아직 안 나갔다 — 버린 순간에만 센다.
+    if (confirmed) {
+      trackAnalyticsEvent("food_text_record_discarded", { filled: true })
+      onClose()
+    }
   }
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const isDarkMode = useAppColorScheme() === "dark"

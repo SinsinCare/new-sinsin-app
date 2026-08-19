@@ -255,6 +255,16 @@ function rewrite(src: string): { out: string; skipped?: string } {
         keep.push(raw ? `${renamed}=${raw}` : renamed)
         continue
       }
+      /*
+        값 없는 boolean prop(`accessibilityViewIsModal`, `pointerEvents` 없이 쓰는
+        플래그 등)은 **style 로 접을 수 없다** — `{ key: }` 가 되어 구문이 깨진다.
+        실측: RecommendedUpdatePrompt 가 이 형태였다. 스타일이 아닌 것이 확실하므로
+        prop 으로 그대로 넘긴다.
+      */
+      if (!raw) {
+        keep.push(renamed)
+        continue
+      }
       // style 로 접는다
       const key = STYLE_KEY[renamed] ?? renamed
       const val = raw.startsWith("{") ? raw.slice(1, -1) : raw
