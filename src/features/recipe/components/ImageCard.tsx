@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
-import { Image } from "react-native"
+import { Image, StyleSheet } from "react-native"
+
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, YStack, Text } from "tamagui"
 import { Icon } from "@/src/shared/components"
 
 const ICON_COLOR = {
@@ -37,44 +38,44 @@ export function ImageCard({
     }
   }, [imageUri])
 
+  const iconColor = ICON_COLOR[isDark ? "dark" : "light"]
+
   return (
-    <YStack borderRadius={10} overflow="hidden">
-      <YStack aspectRatio={aspectRatio}>
+    /*
+      `position: absolute` 인 지표 줄이 이 카드 기준으로 놓여야 한다.
+      tamagui 는 relative 가 기본이었지만 RN 은 아니므로 명시한다.
+    */
+    <V2VStack style={styles.card}>
+      <V2VStack style={{ aspectRatio }}>
         <Image
           source={errored ? PLACEHOLDER : { uri: imageUri }}
           onError={() => setErrored(true)}
-          style={{ width: "100%", height: "100%" }}
+          style={styles.image}
           resizeMode="cover"
         />
-      </YStack>
-      <XStack
-        position="absolute"
-        bottom={12}
-        right={12}
-        alignItems="center"
-        gap="$3"
-      >
-        <XStack alignItems="center" gap="$1">
-          <Icon
-            name="hands-clap"
-            size={20}
-            color={ICON_COLOR[isDark ? "dark" : "light"]}
-          />
-          <Text fontSize={14} lineHeight={20} fontWeight="500" color="white">
+      </V2VStack>
+      <V2HStack align="center" gap={12} style={styles.stats}>
+        <V2HStack align="center" gap={4}>
+          <Icon name="hands-clap" size={20} color={iconColor} />
+          {/* 사진 위 글자라 면 색과 무관하게 흰색 고정. */}
+          <V2Text style={styles.count} color="white">
             {likeCount}
-          </Text>
-        </XStack>
-        <XStack alignItems="center" gap="$1">
-          <Icon
-            name="message"
-            size={20}
-            color={ICON_COLOR[isDark ? "dark" : "light"]}
-          />
-          <Text fontSize={14} lineHeight={20} fontWeight="500" color="white">
+          </V2Text>
+        </V2HStack>
+        <V2HStack align="center" gap={4}>
+          <Icon name="message" size={20} color={iconColor} />
+          <V2Text style={styles.count} color="white">
             {commentCount}
-          </Text>
-        </XStack>
-      </XStack>
-    </YStack>
+          </V2Text>
+        </V2HStack>
+      </V2HStack>
+    </V2VStack>
   )
 }
+
+const styles = StyleSheet.create({
+  card: { borderRadius: 10, overflow: "hidden", position: "relative" },
+  image: { width: "100%", height: "100%" },
+  stats: { position: "absolute", bottom: 12, right: 12 },
+  count: { fontSize: 14, lineHeight: 20, fontWeight: "500" },
+})

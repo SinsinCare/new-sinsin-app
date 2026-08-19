@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   BackHandler,
   Linking,
@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native"
-import { Portal } from "@tamagui/portal"
+import { Portal } from "@/src/shared/components/Portal"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { Image } from "expo-image"
 import {
@@ -20,6 +20,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { normalizeAnnouncementLink } from "../data/announcementLink"
 import type { AnnouncementNotice } from "../types"
 import { announcementPopupStyles as styles } from "./announcementPopupStyles"
@@ -77,13 +78,37 @@ function AnnouncementPopupCard({
   const [isOpeningLink, setIsOpeningLink] = useState(false)
   const { colors } = useV2Theme()
 
-  const close = (dismissPermanently = dontShowAgain) => {
+  /* 카드는 공지 하나당 한 번 마운트된다(부모가 `key={notice.id}` 로 갈아끼운다) —
+     노출도 그 수명당 한 번이다. 공지 id 는 싣지 않는다: 어느 공지였는지는 이 이벤트가
+     답할 질문이 아니고, 홈 인터스티셜이 식사 기록을 얼마나 밀어내는지가 질문이다. */
+  const viewReportedRef = useRef(false)
+  useEffect(() => {
+    if (viewReportedRef.current) return
+    viewReportedRef.current = true
+    trackAnalyticsEvent("home_notice_viewed", {})
+  }, [])
+
+  /**
+   * @param mode 닫은 손잡이. CTA 가 없는 공지의 기본 버튼은 확인이자 닫기라 `close` 다.
+   */
+  const close = (mode: "close" | "cta", dismissPermanently = dontShowAgain) => {
+    trackAnalyticsEvent("home_notice_dismissed", {
+      mode,
+      suppressed: dismissPermanently,
+    })
     void onClose(dismissPermanently)
   }
 
   // 네이티브 Modal 시절의 onRequestClose 와 같게, 안드로이드 뒤로가기는 닫기다.
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      /* `close` 를 쓰지 않는다 — 그것은 렌더마다 새로 만들어지는 함수라 의존성에 넣으면
+         체크박스를 누를 때마다 리스너를 다시 건다. 하드웨어 백은 '오늘 하루 안 보기'
+         상태와 무관하게 항상 임시 닫기다(종전 동작 유지). */
+      trackAnalyticsEvent("home_notice_dismissed", {
+        mode: "back",
+        suppressed: false,
+      })
       void onClose(false)
       return true
     })
@@ -94,7 +119,7 @@ function AnnouncementPopupCard({
   const handlePrimaryPress = async () => {
     const hasCta = Boolean(notice.ctaLabel && notice.linkUrl)
     if (!hasCta || !notice.linkUrl) {
-      close()
+      close("close")
       return
     }
 
@@ -120,7 +145,7 @@ function AnnouncementPopupCard({
       setIsOpeningLink(false)
     }
 
-    close()
+    close("cta")
   }
 
   const hasCta = Boolean(notice.ctaLabel && notice.linkUrl)
@@ -138,7 +163,7 @@ function AnnouncementPopupCard({
       >
         <View
           accessibilityViewIsModal
-          onAccessibilityEscape={() => close(false)}
+          onAccessibilityEscape={() => close("close", false)}
           style={[
             styles.card,
             {
@@ -189,7 +214,7 @@ function AnnouncementPopupCard({
                 size="s"
                 variant="fill"
                 accessibilityLabel={t("announcement.close")}
-                onPress={() => close()}
+                onPress={() => close("close")}
               />
             </View>
 
@@ -259,7 +284,7 @@ function AnnouncementPopupCard({
                     color="neutral"
                     variant="weak"
                     accessibilityLabel={t("announcement.close")}
-                    onPress={() => close()}
+                    onPress={() => close("close")}
                     style={styles.actionButton}
                   >
                     {t("action.close")}

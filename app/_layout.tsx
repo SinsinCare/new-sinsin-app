@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Appearance, useColorScheme } from "react-native"
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler"
+import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { TamaguiProvider, Theme } from "tamagui"
-import { setupGestureHandler } from "@tamagui/sheet/setup-gesture-handler"
-import { PortalProvider } from "@tamagui/portal"
+import { PortalProvider } from "@/src/shared/components/Portal"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useFonts } from "expo-font"
 import { Stack, useRouter, useSegments } from "expo-router"
@@ -40,8 +35,6 @@ import { routeFromPushData } from "@/src/services/notificationRoutingService"
 import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
 import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
 import { useAnalyticsLifecycle } from "@/src/features/analytics"
-
-setupGestureHandler({ Gesture, GestureDetector })
 
 function RootLayoutNav() {
   const { t } = useTranslation()
@@ -163,7 +156,7 @@ function RootLayoutNav() {
   ])
 
   if (isLoading) {
-    return <LoadingScreen message={t("brand.opening")} />
+    return <LoadingScreen surface="app_root" message={t("brand.opening")} />
   }
 
   return (
@@ -285,11 +278,11 @@ export default function RootLayout() {
                 키보드 도킹 CTA 가 선다(AppKeyboardSurface / KeyboardDock 머리말).
 
                 **`PortalProvider` 밖에 둔다.** 안에 두면 안 보인다. 그 provider 는
-                자식을 그린 **뒤에** 포털 호스트를 그리고(`[children, PortalHost]`),
-                Tamagui Sheet 는 RN Modal 이 아니라 그 호스트로 들어간다. 즉 시트는
-                언제나 provider 자식들 위에 얹히므로, 툴바를 자식으로 두면 시트 프레임
-                뒤에 깔려 화면에 나오지 않는다 — 1.1.24 QA "여전히 키보드가 가린다" 가
-                이것이다. 밖으로 빼면 마지막에 그려져 시트 위에 선다.
+                자식을 그린 **뒤에** 포털 층을 그리므로(shared/components/Portal),
+                포털로 올라간 것은 언제나 provider 자식들 위에 얹힌다. 툴바를 자식으로
+                두면 그 아래 깔려 화면에 나오지 않는다 — 1.1.24 QA "여전히 키보드가
+                가린다" 가 이것이다. 밖으로 빼면 마지막에 그려져 위에 선다.
+                (2026-08-19 이전에는 @tamagui/portal 이었고 순서 규칙은 같다.)
               */}
                 <AppKeyboardSurface />
               </Theme>

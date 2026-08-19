@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   BackHandler,
   Linking,
@@ -8,12 +8,13 @@ import {
   useWindowDimensions,
   View,
 } from "react-native"
-import { Portal } from "@tamagui/portal"
+import { Portal } from "@/src/shared/components/Portal"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { Download } from "@/src/shared/components/lucide"
 import { Text, XStack, YStack } from "tamagui"
 
 import { Button } from "@/src/shared/components"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { tokens } from "@/src/theme/tokens"
 import type { MobilePolicyResponse } from "../types"
 import { useTranslation } from "react-i18next"
@@ -57,9 +58,19 @@ function RecommendedUpdateCard({
   const message = policy.message?.trim() || t("mobilePolicy.recommendedBody")
   const storeUrl = policy.storeUrl ? normalizeStoreUrl(policy.storeUrl) : null
 
+  /* 이 카드는 보일 때만 마운트된다(부모가 `visible` 로 갈아끼운다) — 마운트당 한 번.
+     렌더 본문에서 쏘면 리렌더마다 같은 안내가 여러 번 세어진다(설계 §2 P3). */
+  const viewReportedRef = useRef(false)
+  useEffect(() => {
+    if (viewReportedRef.current) return
+    viewReportedRef.current = true
+    trackAnalyticsEvent("app_update_prompt_viewed", {})
+  }, [])
+
   // 네이티브 Modal 시절의 onRequestClose 와 같게, 안드로이드 뒤로가기는 닫기다.
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      trackAnalyticsEvent("app_update_prompt_dismissed", { mode: "back" })
       onClose()
       return true
     })
@@ -68,12 +79,20 @@ function RecommendedUpdateCard({
 
   const handleOpenStore = async () => {
     if (!storeUrl) return
+    // 계측은 try 밖에서 — 이유는 BlockingPolicyScreen 의 같은 자리 주석에 있다.
+    let opened = false
     try {
       await Linking.openURL(storeUrl)
+      opened = true
       setOpenError(null)
     } catch {
       setOpenError(t("mobilePolicy.storeError"))
     }
+    trackAnalyticsEvent("app_policy_store_opened", {
+      decision: policy.decision,
+      blocked: false,
+      result: opened ? "opened" : "failed",
+    })
   }
 
   return (
@@ -173,7 +192,12 @@ function RecommendedUpdateCard({
                 styles.skipButton,
                 pressed && styles.skipButtonPressed,
               ]}
-              onPress={onClose}
+              onPress={() => {
+                trackAnalyticsEvent("app_update_prompt_dismissed", {
+                  mode: "later",
+                })
+                onClose()
+              }}
             >
               <Text
                 fontSize={14}

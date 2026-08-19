@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { BackHandler, StyleSheet, TouchableOpacity } from "react-native"
-import { Portal } from "@tamagui/portal"
+import { Portal } from "@/src/shared/components/Portal"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Animated, {
   Easing,
