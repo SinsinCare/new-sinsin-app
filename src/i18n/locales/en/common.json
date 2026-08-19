@@ -1406,9 +1406,12 @@
   },
   "foodResult": {
     "shareInstagram": "Share to Instagram Stories",
+    "shareKakao": "Share to KakaoTalk",
     "shareOther": "Share with another app",
     "instagramErrorTitle": "We couldn’t open Instagram",
     "instagramErrorBody": "Make sure Instagram is installed, then try again.",
+    "kakaoErrorTitle": "We couldn’t open KakaoTalk",
+    "kakaoErrorBody": "Make sure KakaoTalk is installed, then try again.",
     "shareErrorTitle": "Couldn’t share",
     "shareErrorBody": "Please try again in a moment.",
     "share": "Share meal results",

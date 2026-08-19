@@ -28,13 +28,26 @@ import { ShareCard } from "./ShareCard"
 import { useMealPersistenceActions } from "@/src/features/food-analysis"
 import { MealDeleteConfirmSheet } from "./MealDeleteConfirmSheet"
 import { useTranslation } from "react-i18next"
+import {
+  trackAnalyticsEvent,
+  type AnalyticsFoodRecordSource,
+} from "@/src/features/analytics"
 
-import { ModalOverlayHost } from "@/src/shared/components"
+import {
+  ModalOverlayHost,
+  afterSiblingModalsGone,
+} from "@/src/shared/components"
 
 import { showErrorToast } from "@/src/lib/toast"
 import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 interface FoodAnalysisResultProps {
+  /**
+   * 어느 결과 화면인가. 같은 컴포넌트가 세 번 서는데(방금 분석 · 저장된 기록 ·
+   * 복구된 결과) 셋은 전환율이 다른 별개의 여정이고, 화면 축은 셋 다 `home` 이라
+   * 절대 안 갈린다. 선택 값이 아니라 **필수**인 이유가 이것이다.
+   */
+  source: AnalyticsFoodRecordSource
   result: FoodCameraAnalyzeResult | null
   open: boolean
   onClose: () => void
@@ -214,6 +227,7 @@ function formatFoodPortion(
 }
 
 export function FoodAnalysisResult({
+  source,
   result,
   open,
   onClose,
@@ -278,9 +292,19 @@ export function FoodAnalysisResult({
     setImageFailed(false)
   }, [imageUri, result?.imageUrl])
 
+  /**
+   * 이 결과를 한 번이라도 손봤는가. 저장 없이 나간 사람 중 **고쳐 놓고도 버린** 몫이
+   * 여기서만 갈린다 — "결과가 틀렸다" 와 "고쳐도 안 맞았다" 는 처방이 다르다.
+   *
+   * state 가 아니라 ref 인 이유는 이 값이 아무것도 그리지 않기 때문이다. state 로 두면
+   * 수정할 때마다 결과 화면 전체가 한 번 더 그려진다.
+   */
+  const editedRef = useRef(false)
+
   useEffect(() => {
     setIsAddingToRecord(false)
     setIsEdit(false)
+    editedRef.current = false
   }, [result?.foodAnalysisResultId])
 
   // 리포트는 서버가 만들어 저장한다. 실패해도 화면은 예전 한줄평으로 버틴다.
@@ -296,18 +320,47 @@ export function FoodAnalysisResult({
   const shareCardRef = useRef<ViewShot>(null)
   const FACEBOOK_APP_ID = "1306082818293951"
 
+  /*
+    ■ 이 화면의 공유가 두 번 깨졌다 — 원인이 서로 다르다
+
+    (1) 2026-08-10 "눌러도 아무 일도 안 일어남"
+        공유 시트는 RN 모달이 아니라 **네이티브 present** 다. iOS 는 present/dismiss 가
+        이미 진행 중이면 새 present 를 **조용히 거부한다**. 액션시트의 dismiss 전환이
+        끝나기 전이라 매번 거부됐다. → `afterModalTransitions()` 로 전이 큐를 기다렸다.
+
+    (2) 2026-08-19 "시트가 컴포넌트 뒤에 떠서 안 보임"  ← 지금 고치는 것
+        (1)의 대기로는 부족했다. 전이 큐가 비었다는 건 "움직이는 모달이 없다" 이지
+        **"떠 있는 모달이 없다"** 가 아니다. 액션시트가 가만히 떠 있으면 큐는 비어 있다.
+
+        그 상태에서 공유를 부르면 계층이 어긋난다 — expo-sharing 은
+        `keyWindow.rootViewController` 에서 **topmost 까지 타고 올라가** present 하는데
+        (expo-modules-core `Utilities.swift`), RN Modal 은 자기 뷰트리의
+        `reactViewController` 에 present 한다(topmost 탐색 없음). 이 화면은
+        `presentationStyle="pageSheet"` 라 밑의 VC 가 살아 있어서, 둘이 고른 VC 가
+        갈리면 활동 시트가 **pageSheet 뒤로 들어간다.** 거부가 아니라 "떠 있는데 안 보임".
+
+        → `afterSiblingModalsGone(1)`. 시간이 아니라 **레지스트리가 비는 것**을 기다린다.
+        인자 1 은 이 결과 모달 자신 — 그건 남아 있어야 한다.
+  */
   const shareToSystemSheet = useCallback(async () => {
     const uri = await captureRef(shareCardRef, {
       format: "png",
       quality: 1,
       result: "tmpfile",
     })
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri, {
-        mimeType: "image/png",
-        UTI: "public.png",
-      })
+    await afterSiblingModalsGone(1)
+    /*
+      **못 쓰면 조용히 넘어가지 않는다.** 종전에는 `if (available)` 뿐이라 사용할 수 없을 때
+      아무 일도 일어나지 않았다 — 고장이 정상처럼 보이는 바로 그 모양이다. 던지면 호출부가
+      안내를 띄운다.
+    */
+    if (!(await Sharing.isAvailableAsync())) {
+      throw new Error("sharing_unavailable")
     }
+    await Sharing.shareAsync(uri, {
+      mimeType: "image/png",
+      UTI: "public.png",
+    })
   }, [])
 
   const shareToInstagramStories = useCallback(async () => {
@@ -316,6 +369,8 @@ export function FoodAnalysisResult({
       quality: 1,
       result: "base64",
     })
+    // 인스타그램도 네이티브 present 다 — 위 `shareToSystemSheet` 와 같은 이유로 기다린다.
+    await afterSiblingModalsGone(1)
     await Share.shareSingle({
       social: Social.InstagramStories,
       appId: FACEBOOK_APP_ID,
@@ -326,15 +381,49 @@ export function FoodAnalysisResult({
   }, [])
 
   /**
+   * 카카오톡으로 공유.
+   *
+   * **`react-native-share` 의 `Social` enum 에 카카오가 없다**(facebook·instagram·
+   * whatsapp·telegram… 뿐). 그래서 `shareSingle` 로는 못 보낸다. 대신 시스템 공유
+   * 시트를 열되 **카카오톡을 목적지로 지목**하는 방식이 아니라, iOS 활동 시트에서
+   * 사용자가 카카오톡을 고르게 한다 — 우리가 하는 일은 이미지 파일을 그쪽으로
+   * 넘길 수 있는 상태로 만들어 시트를 여는 것까지다.
+   *
+   * `app.json` 의 `LSApplicationQueriesSchemes` 에 `kakaotalk`·`kakaolink` 가
+   * 이미 있으므로 활동 시트에 카카오톡이 노출된다. 설치돼 있지 않으면 목록에
+   * 안 뜨고, 그건 실패가 아니라 정상이다.
+   */
+  const shareToKakao = useCallback(async () => {
+    const uri = await captureRef(shareCardRef, {
+      format: "png",
+      quality: 1,
+      result: "tmpfile",
+    })
+    await afterSiblingModalsGone(1)
+    if (!(await Sharing.isAvailableAsync())) {
+      throw new Error("sharing_unavailable")
+    }
+    await Sharing.shareAsync(uri, {
+      mimeType: "image/png",
+      UTI: "public.png",
+      dialogTitle: t("foodResult.shareKakao"),
+    })
+  }, [t])
+
+  /**
    * 공유. 예전엔 iOS 만 ActionSheetIOS 로 물었고 안드로이드는 묻지 않은 채
    * 인스타를 먼저 시도하다 실패하면 일반 공유로 넘어갔다 — 같은 버튼이 OS 마다
    * 다르게 굴었다. 이제 두 OS 모두 같은 시트에서 고른다.
+   *
+   * 카카오톡을 **따로 뺀 이유**: 국내 사용자의 공유는 사실상 카톡 하나다.
+   * `다른 앱으로 공유` 안에 묻어 두면 활동 시트에서 한 번 더 찾아야 한다.
    */
   const handleShare = useCallback(async () => {
     if (!shareCardRef.current) return
 
     const picked = await showActionSheet({
       actions: [
+        { label: t("foodResult.shareKakao") },
         { label: t("foodResult.shareInstagram") },
         { label: t("foodResult.shareOther") },
       ],
@@ -343,24 +432,34 @@ export function FoodAnalysisResult({
     if (picked == null) return
 
     try {
-      if (picked === 0) await shareToInstagramStories()
+      if (picked === 0) await shareToKakao()
+      else if (picked === 1) await shareToInstagramStories()
       else await shareToSystemSheet()
     } catch {
       // 인스타가 없거나 실패해도 공유 자체는 살려 준다.
-      if (picked === 0) {
+      if (picked === 1) {
         try {
           await shareToSystemSheet()
           return
         } catch {
           // 아래 공통 안내로 떨어진다
         }
+        showErrorToast(
+          t("foodResult.instagramErrorTitle"),
+          t("foodResult.instagramErrorBody"),
+        )
+        return
       }
+      /*
+        `다른 앱으로 공유` 가 실패했는데 "인스타그램으로 열지 못했어요" 를 띄우던 자리다.
+        고르지도 않은 앱 이름이 나오면 사용자는 자기가 뭘 잘못 눌렀는지 되짚게 된다.
+      */
       showErrorToast(
-        t("foodResult.instagramErrorTitle"),
-        t("foodResult.instagramErrorBody"),
+        t("foodResult.shareErrorTitle"),
+        t("foodResult.shareErrorBody"),
       )
     }
-  }, [t, shareToInstagramStories, shareToSystemSheet])
+  }, [t, shareToKakao, shareToInstagramStories, shareToSystemSheet])
 
   if (!displayResult) return null
 
@@ -380,9 +479,22 @@ export function FoodAnalysisResult({
    */
   const handleClosePress = async () => {
     if (!showAddButton) {
+      // 저장본은 이미 기록에 있다 — 잃을 것이 없으니 묻지 않고, 셀 이탈도 없다.
       onClose()
       return
     }
+    /*
+      확인창을 **띄운 수**와 **그래도 나간 수**가 둘 다 있어야 문구가 붙잡고 있는지
+      보인다. 하나만 세면 문구를 고쳐도 좋아졌는지 알 수 없다.
+
+      저장 버튼이 있는 두 자리(신규·복구)만 여기 온다.
+    */
+    const exitSource = source === "recovered" ? "recovered" : "fresh"
+    const edited = editedRef.current
+    trackAnalyticsEvent("food_record_leave_prompted", {
+      source: exitSource,
+      edited,
+    })
     const confirmed = await showConfirm({
       title: t("foodResult.unsavedTitle"),
       description: t("foodResult.unsavedBody"),
@@ -390,7 +502,14 @@ export function FoodAnalysisResult({
       cancelLabel: t("foodResult.returnToResult"),
       destructive: true,
     })
-    if (confirmed) onClose()
+    if (confirmed) {
+      // 이 여정에서 가장 비싼 이탈 — 서버 분석을 이미 한 번 태우고도 기록이 안 남는다.
+      trackAnalyticsEvent("food_record_result_abandoned", {
+        source: exitSource,
+        edited,
+      })
+      onClose()
+    }
   }
 
   const servingsLabel = t("foodResult.servings", {
@@ -410,6 +529,15 @@ export function FoodAnalysisResult({
 
   const handleAskAboutMealPress = async () => {
     if (isStartingConsultation) return
+    /*
+      결과 화면에서 나가는 **네 번째 문**(설계 §J2-0 정정 2). 이건 이탈이 아니라 이
+      여정 최대의 전환이고, 이 이름이 없으면 상담으로 빠져나간 사람이
+      `food_record_result_abandoned` 에 섞여 가장 값비싼 이탈이 부풀어 보인다.
+
+      실패는 여기가 아니라 `useMealPersistenceActions` 의 catch 가 센다 — 그래야
+      한 사건이 한 자리에서만 나가고, 실패의 갈래(`fail_kind`)가 오류 정본에서 온다.
+    */
+    trackAnalyticsEvent("food_record_consult_started", { source })
     const started = await startConsultation({
       result: effectiveResult,
       mealType: displayMealType,
@@ -423,17 +551,25 @@ export function FoodAnalysisResult({
     if (diaryId == null || isDeletingDiary) return
     const deleted = await deleteSavedMeal(diaryId)
     if (!deleted) return
+    /*
+      **지워진 뒤에만** 센다. 확인 시트를 연 것은 의도이지 삭제가 아니고, 그 의도는
+      `sheet_opened{surface:'home_meal_delete'}` 가 이미 세고 있다 — 두 이름의 차가
+      곧 확인 시트가 되돌린 오조작이다.
+    */
+    trackAnalyticsEvent("food_record_deleted", { source: "saved" })
     onClose()
     onDiaryDeleted?.()
   }
 
   const handleResultChange = (updated: FoodCameraAnalyzeResult) => {
+    editedRef.current = true
     setDisplayResult(updated)
     if (updated.imageUrl) setDisplayImageUri(updated.imageUrl)
     onResultChange?.(updated)
   }
 
   const handleTitleChange = (title: string) => {
+    editedRef.current = true
     setDisplayResult((prev) => (prev ? { ...prev, title } : prev))
   }
 
@@ -442,6 +578,7 @@ export function FoodAnalysisResult({
     fromMealType: MealType
     toMealType: MealType
   }) => {
+    editedRef.current = true
     setDisplayMealType(change.toMealType)
     onMealTypeChange?.({
       ...change,
@@ -1171,6 +1308,7 @@ export function FoodAnalysisResult({
 
       {isEdit && (
         <FoodResultEdit
+          source={source}
           result={effectiveResult}
           imageUri={displayImageUri}
           onClose={() => setIsEdit(false)}

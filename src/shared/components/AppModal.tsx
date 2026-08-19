@@ -3,6 +3,7 @@ import { Modal, type ModalProps, Platform } from "react-native"
 import { logger } from "@/src/lib/logger"
 import {
   afterModalTransitions,
+  afterSiblingModalsGone,
   allocateModalId,
   enqueueTransition,
   markModalGone,
@@ -151,4 +152,4 @@ function IosGatedModal({
   )
 }
 
-export { afterModalTransitions }
+export { afterModalTransitions, afterSiblingModalsGone }

@@ -141,3 +141,45 @@ export async function afterModalTransitions(): Promise<void> {
   await whenTransitionsIdle()
   await delay(80)
 }
+
+/**
+ * `afterModalTransitions()` 에 더해 **형제 모달이 실제로 사라질 때까지** 기다린다.
+ *
+ * ■ 왜 따로 필요한가 (2026-08-19, 식사 결과 공유가 시트 뒤에 떴다)
+ *
+ * `afterModalTransitions()` 는 **전이 큐**만 본다. 큐가 비었다는 것은 "움직이는
+ * 중인 모달이 없다" 는 뜻이지 **"떠 있는 모달이 없다"** 가 아니다. 두 값은 다르다:
+ * 액션시트가 자기 자리에 가만히 떠 있으면 큐는 비어 있고 `visibleModalCount()` 는 1 이다.
+ *
+ * 그 차이가 공유에서 터졌다. `UIActivityViewController`(expo-sharing)와 RN Modal 은
+ * **서로 다른 VC 를 골라 present 한다**:
+ *
+ * | 쪽          | present 대상                                            |
+ * |-------------|---------------------------------------------------------|
+ * | RN Modal    | 자기 뷰트리의 `reactViewController` — topmost 탐색 없음  |
+ * | expo-sharing| `keyWindow.rootViewController` 에서 **topmost 까지 순회** |
+ *   (expo-modules-core `Utilities.swift` `currentViewController()`)
+ *
+ * 그래서 액션시트가 아직 붙어 있는 채로 공유를 부르면 iOS 가 고른 topmost 와
+ * pageSheet 로 뜬 결과 모달의 계층이 어긋나 **활동 시트가 뒤로 들어간다.**
+ * 거부되는 게 아니라 **떠 있는데 안 보인다** — 예외도 없고 로그도 없다.
+ *
+ * `delay` 를 늘리는 것으로는 못 고친다. 시간 문제가 아니라 **계층 문제**다.
+ * 그래서 시간이 아니라 **레지스트리가 비는 것**(내 조상들만 남는 것)을 기다린다.
+ *
+ * @param depth 내 중첩 깊이. 이 수만큼은 남아 있어도 정상이다(내 조상들).
+ *              결과 모달 안에서 부르면 1 — 그 모달 자신은 남아 있어야 한다.
+ */
+export async function afterSiblingModalsGone(depth = 0): Promise<void> {
+  await afterModalTransitions()
+  // 형제가 남아 있으면 사라질 때까지. 큐 밖에서 기다린다 — 큐 안에서 기다리면
+  // 그 형제의 dismiss 전이까지 막아 데드락이 된다(이 파일 머리말 2번).
+  let guard = 0
+  while (visibleModalCount() > depth && guard < 40) {
+    guard += 1
+    await Promise.race([whenRegistryChanges(), delay(50)])
+  }
+  // 레지스트리는 dismiss 완료 시점에 지워지지만 UIKit 의 teardown 이
+  // 몇 프레임 더 남는다 — 그 뒤에 present 해야 계층이 확정된다.
+  await delay(120)
+}

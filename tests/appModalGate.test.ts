@@ -1,5 +1,6 @@
 import {
   afterModalTransitions,
+  afterSiblingModalsGone,
   allocateModalId,
   enqueueTransition,
   markModalGone,
@@ -152,5 +153,59 @@ describe("afterModalTransitions", () => {
     await job
     await waiter
     expect(settled).toBe(true)
+  })
+})
+
+/*
+  회귀 고정 — 2026-08-19 "공유 시트가 컴포넌트 뒤에 떠서 안 보임".
+
+  `afterModalTransitions` 는 **전이 큐**만 본다. 큐가 비었다는 건 "움직이는 모달이
+  없다" 이지 "떠 있는 모달이 없다" 가 아니다. 그 차이 때문에 액션시트가 붙어 있는
+  채로 `UIActivityViewController` 가 present 돼 pageSheet 뒤로 들어갔다.
+  (원인 전문은 appModalGate.ts 의 `afterSiblingModalsGone` 머리말)
+*/
+describe("afterSiblingModalsGone", () => {
+  test("큐가 비어도 형제 모달이 떠 있으면 기다린다 — 이게 afterModalTransitions 와의 차이", async () => {
+    const sibling = allocateModalId()
+    markModalPresented(sibling)
+    expect(pendingTransitionCount()).toBe(0) // 큐는 비어 있다
+    expect(visibleModalCount()).toBe(1) // 그런데 모달은 떠 있다
+
+    let settled = false
+    const waiter = afterSiblingModalsGone(0).then(() => {
+      settled = true
+    })
+
+    // 큐가 비어 있으므로 afterModalTransitions 였다면 여기서 이미 통과했다.
+    await delay(250)
+    expect(settled).toBe(false)
+
+    markModalGone(sibling)
+    await waiter
+    expect(settled).toBe(true)
+  })
+
+  test("depth 만큼의 조상은 떠 있어도 통과한다 — 자기가 속한 모달까지 기다리면 영영 안 열린다", async () => {
+    const self = allocateModalId()
+    markModalPresented(self)
+
+    let settled = false
+    await afterSiblingModalsGone(1).then(() => {
+      settled = true
+    })
+    expect(settled).toBe(true)
+    expect(visibleModalCount()).toBe(1) // 자기 모달은 그대로 살아 있다
+
+    markModalGone(self)
+  })
+
+  test("형제가 끝내 안 사라져도 무한 대기하지 않는다", async () => {
+    const stuck = allocateModalId()
+    markModalPresented(stuck)
+
+    await afterSiblingModalsGone(0) // guard 상한에서 빠져나온다
+    expect(visibleModalCount()).toBe(1)
+
+    markModalGone(stuck)
   })
 })
