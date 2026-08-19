@@ -119,6 +119,18 @@ const RENAME: Record<string, string> = {
   flexWrap: "wrap",
 }
 
+/**
+ * 그냥 **버리는** prop.
+ *
+ * `fontFamily="$body"` 는 tamagui 의 기본 폰트(= `Pretendard-Regular`)를 가리킨다.
+ * `V2Text` 는 `fontWeight` 를 보고 Pretendard face 를 스스로 고르므로, 이 값을
+ * 옮기면 오히려 **weight 가 무시되고 전부 Regular 로 그려진다**(face 가 이미 있으면
+ * V2Text 가 변환을 건너뛴다). 실측: meal-recommendation 6파일이 전부 이 형태다.
+ *
+ * 다른 face 를 명시한 경우(`$heading` 등)는 여기 넣지 않는다 — 그건 의미가 있다.
+ */
+const DROP_PROP = new Map<string, string>([["fontFamily", "$body"]])
+
 type Skip = { file: string; reason: string }
 
 function listFiles(): string[] {
@@ -185,6 +197,8 @@ function inspect(src: string): { ok: boolean; reason?: string } {
     for (const kv of body.matchAll(/(\w+)=(?:"(\$[^"]*)"|\{"(\$[^"]*)"\})/g)) {
       const prop = kv[1]
       const val = kv[2] ?? kv[3]
+      // 버릴 prop 은 해석할 필요가 없다(DROP_PROP 머리말).
+      if (DROP_PROP.get(prop) === val) continue
       if (resolveToken(prop, val) === null)
         return { ok: false, reason: `해석 불가 토큰: ${prop}=${val}` }
     }
@@ -271,6 +285,9 @@ function transform(src: string): string {
           existingStyle = exprVal ?? `"${strVal}"`
           continue
         }
+
+        // 버리는 prop(DROP_PROP 머리말) — 옮기면 오히려 틀린다.
+        if (strVal !== undefined && DROP_PROP.get(prop) === strVal) continue
 
         // $토큰 → 숫자
         const tokenSrc = strVal ?? exprVal?.match(/^"(\$[^"]*)"$/)?.[1] ?? ""

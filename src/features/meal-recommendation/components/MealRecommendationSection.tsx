@@ -1,11 +1,16 @@
 import { useState, useCallback } from "react"
 import { ScrollView, Pressable, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text } from "tamagui"
+import {
+  V2HStack,
+  V2Text,
+  V2VStack,
+  V2Skeleton,
+  V2SkeletonGroup,
+} from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
-import { V2Skeleton, V2SkeletonGroup } from "@/src/design-system-v2"
 import { useMealRecommendations } from "../hooks/useMealRecommendations"
 import { MealTypeToggle } from "./MealTypeToggle"
 import { NutrientBudgetBar } from "./NutrientBudgetBar"
@@ -74,23 +79,18 @@ export function MealRecommendationSection({
   return (
     <GlassmorphicCard variant="elevated" gap={14}>
       {/* Header */}
-      <XStack justifyContent="space-between" alignItems="center">
-        <XStack gap={8} alignItems="center">
+      <V2HStack justify="space-between" align="center">
+        <V2HStack gap={8} align="center">
           <Ionicons
             name="sparkles"
             size={18}
             color={tokens.color.primaryAccent.val}
           />
-          <Text
-            fontSize={16}
-            fontFamily="$body"
-            fontWeight="700"
-            color={textColor}
-          >
+          <V2Text color={textColor} style={{ fontSize: 16, fontWeight: "700" }}>
             {t("mealRecommendation.title", { meal: mealLabel })}
-          </Text>
-        </XStack>
-        <XStack gap={8} alignItems="center">
+          </V2Text>
+        </V2HStack>
+        <V2HStack gap={8} align="center">
           <MealTypeToggle value={mealType} onChange={setMealType} />
           <Pressable
             onPress={() => refresh()}
@@ -105,14 +105,14 @@ export function MealRecommendationSection({
               color={isRefreshing ? subColor : tokens.color.primaryAccent.val}
             />
           </Pressable>
-        </XStack>
-      </XStack>
+        </V2HStack>
+      </V2HStack>
 
       {/* Loading — 영양 예산 막대 + 카드 두 장이 오는 자리를 미리 잡는다.
           가운데 링 하나로 기다리면 도착 순간 섹션 높이가 두 배로 늘어난다. */}
       {isLoading && (
         <V2SkeletonGroup>
-          <YStack gap={12}>
+          <V2VStack gap={12}>
             <V2Skeleton height={4} radius="full" />
             <V2Skeleton height={56} radius="lg" />
             <View style={{ flexDirection: "row", gap: 12 }}>
@@ -120,7 +120,7 @@ export function MealRecommendationSection({
                 <V2Skeleton key={index} width={200} height={124} radius="2xl" />
               ))}
             </View>
-          </YStack>
+          </V2VStack>
         </V2SkeletonGroup>
       )}
 
@@ -137,15 +137,13 @@ export function MealRecommendationSection({
 
           {/* Recipe Cards */}
           {hasRecipes && (category === "recipe" || category === "all") && (
-            <YStack gap={8}>
-              <Text
-                fontSize={13}
-                fontFamily="$body"
-                fontWeight="600"
+            <V2VStack gap={8}>
+              <V2Text
                 color={subColor}
+                style={{ fontSize: 13, fontWeight: "600" }}
               >
                 {t("mealRecommendation.recipes")}
-              </Text>
+              </V2Text>
               <ScrollView
                 bounces={false}
                 overScrollMode="never"
@@ -162,20 +160,18 @@ export function MealRecommendationSection({
                   />
                 ))}
               </ScrollView>
-            </YStack>
+            </V2VStack>
           )}
 
           {/* Restaurant Menu Cards */}
           {hasMenus && (category === "restaurant" || category === "all") && (
-            <YStack gap={8}>
-              <Text
-                fontSize={13}
-                fontFamily="$body"
-                fontWeight="600"
+            <V2VStack gap={8}>
+              <V2Text
                 color={subColor}
+                style={{ fontSize: 13, fontWeight: "600" }}
               >
                 {t("mealRecommendation.restaurantMenus")}
-              </Text>
+              </V2Text>
               <ScrollView
                 bounces={false}
                 overScrollMode="never"
@@ -192,23 +188,20 @@ export function MealRecommendationSection({
                   />
                 ))}
               </ScrollView>
-            </YStack>
+            </V2VStack>
           )}
 
           {/* Empty state */}
           {isEmpty && (
-            <YStack alignItems="center" paddingVertical={16}>
+            <V2VStack align="center" paddingVertical={16}>
               <Ionicons name="leaf-outline" size={32} color={subColor} />
-              <Text
-                fontSize={13}
-                fontFamily="$body"
+              <V2Text
                 color={subColor}
-                marginTop={8}
-                textAlign="center"
+                style={{ fontSize: 13, marginTop: 8, textAlign: "center" }}
               >
                 {t("mealRecommendation.empty")}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           )}
         </>
       )}

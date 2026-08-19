@@ -1,8 +1,10 @@
+import { StyleSheet, View } from "react-native"
+import { useTranslation } from "react-i18next"
+
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, YStack, Text, View } from "tamagui"
 import { tokens } from "@/src/theme/tokens"
 import type { NutrientBudget } from "../types"
-import { useTranslation } from "react-i18next"
 
 interface NutrientBarProps {
   label: string
@@ -19,29 +21,36 @@ function NutrientBar({ label, remaining, unit, color }: NutrientBarProps) {
     ? tokens.color.textDarkSub.val
     : tokens.color.grey5.val
 
+  /*
+    막대는 "남았다/넘었다" 만 보여 준다 — 남은 양에 비례하지 않는다.
+    (원본 계산 그대로: 0 또는 100%. 중간값이 없다.)
+  */
+  const fillPercent =
+    remaining == null ? 0 : Math.min(100, Math.max(10, remaining > 0 ? 100 : 0))
+
   return (
-    <YStack flex={1} alignItems="center" gap={2}>
-      <Text fontSize={11} fontFamily="$body" color={subColor}>
+    <V2VStack flex={1} align="center" gap={2}>
+      <V2Text color={subColor} style={styles.caption}>
         {label}
-      </Text>
+      </V2Text>
       <View
-        height={4}
-        width="100%"
-        borderRadius={2}
-        backgroundColor={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}
+        style={[
+          styles.track,
+          {
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.1)"
+              : "rgba(0,0,0,0.06)",
+          },
+        ]}
       >
         <View
-          height={4}
-          width={`${
-            remaining == null
-              ? 0
-              : Math.min(100, Math.max(10, remaining > 0 ? 100 : 0))
-          }%`}
-          borderRadius={2}
-          backgroundColor={color}
+          style={[
+            styles.fill,
+            { width: `${fillPercent}%`, backgroundColor: color },
+          ]}
         />
       </View>
-      <Text fontSize={11} fontFamily="$body" fontWeight="600" color={color}>
+      <V2Text color={color} style={styles.value}>
         {remaining == null
           ? t("mealRecommendation.weightNeeded")
           : remaining > 0
@@ -52,8 +61,8 @@ function NutrientBar({ label, remaining, unit, color }: NutrientBarProps) {
                 unit,
               })
             : t("mealRecommendation.overLimit")}
-      </Text>
-    </YStack>
+      </V2Text>
+    </V2VStack>
   )
 }
 
@@ -64,7 +73,7 @@ interface NutrientBudgetBarProps {
 export function NutrientBudgetBar({ budget }: NutrientBudgetBarProps) {
   const { t } = useTranslation()
   return (
-    <XStack gap={8}>
+    <V2HStack gap={8}>
       <NutrientBar
         label={t("nutrient.sodium")}
         remaining={budget.sodiumMg}
@@ -89,6 +98,14 @@ export function NutrientBudgetBar({ budget }: NutrientBudgetBarProps) {
         unit="g"
         color="#0369A1"
       />
-    </XStack>
+    </V2HStack>
   )
 }
+
+const styles = StyleSheet.create({
+  /* `fontFamily="$body"` 는 옮기지 않는다 — V2Text 가 weight 로 face 를 고른다. */
+  caption: { fontSize: 11 },
+  value: { fontSize: 11, fontWeight: "600" },
+  track: { height: 4, width: "100%", borderRadius: 2 },
+  fill: { height: 4, borderRadius: 2 },
+})

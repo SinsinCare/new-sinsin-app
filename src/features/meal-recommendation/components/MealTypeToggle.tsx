@@ -1,6 +1,6 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, Text } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import type { MealType } from "../types"
 import { useTranslation } from "react-i18next"
@@ -22,35 +22,37 @@ export function MealTypeToggle({ value, onChange }: MealTypeToggleProps) {
   const activeBg = isDark ? "rgba(238,97,69,0.15)" : "rgba(238,97,69,0.1)"
 
   return (
-    <XStack
+    <V2HStack
       gap={4}
-      backgroundColor={isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"}
-      borderRadius={20}
       padding={3}
+      style={{
+        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        borderRadius: 20,
+      }}
     >
       {(["LUNCH", "DINNER"] as const).map((type) => {
         const isActive = value === type
         const label = type === "LUNCH" ? t("meal.LUNCH") : t("meal.DINNER")
         return (
           <Pressable key={type} onPress={() => onChange(type)}>
-            <XStack
+            <V2HStack
               paddingHorizontal={14}
               paddingVertical={6}
-              borderRadius={16}
-              backgroundColor={isActive ? activeBg : "transparent"}
+              style={{
+                borderRadius: 16,
+                backgroundColor: isActive ? activeBg : "transparent",
+              }}
             >
-              <Text
-                fontSize={13}
-                fontFamily="$body"
-                fontWeight={isActive ? "700" : "500"}
+              <V2Text
                 color={isActive ? activeColor : inactiveColor}
+                style={{ fontSize: 13, fontWeight: isActive ? "700" : "500" }}
               >
                 {label}
-              </Text>
-            </XStack>
+              </V2Text>
+            </V2HStack>
           </Pressable>
         )
       })}
-    </XStack>
+    </V2HStack>
   )
 }

@@ -1,5 +1,5 @@
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, Text } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 
@@ -19,14 +19,16 @@ export function AiRecommendationSummary({
     : tokens.color.textLight.val
 
   return (
-    <XStack
-      backgroundColor={bgColor}
-      borderRadius={12}
+    <V2HStack
       padding={12}
       gap={8}
-      alignItems="flex-start"
-      borderWidth={1}
-      borderColor={isDark ? "rgba(238,97,69,0.15)" : "rgba(238,97,69,0.12)"}
+      align="flex-start"
+      style={{
+        backgroundColor: bgColor,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: isDark ? "rgba(238,97,69,0.15)" : "rgba(238,97,69,0.12)",
+      }}
     >
       <Ionicons
         name="sparkles"
@@ -34,15 +36,12 @@ export function AiRecommendationSummary({
         color={tokens.color.primaryAccent.val}
         style={{ marginTop: 1 }}
       />
-      <Text
-        flex={1}
-        fontSize={13}
-        fontFamily="$body"
-        lineHeight={20}
+      <V2Text
         color={textColor}
+        style={{ flex: 1, fontSize: 13, lineHeight: 20 }}
       >
         {summary}
-      </Text>
-    </XStack>
+      </V2Text>
+    </V2HStack>
   )
 }
