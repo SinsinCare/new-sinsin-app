@@ -1,40 +1,41 @@
-import { Platform, useWindowDimensions } from "react-native"
-import { Input, Label, YStack, Text, styled, InputProps } from "tamagui"
+import {
+  Platform,
+  StyleSheet,
+  TextInput,
+  useWindowDimensions,
+  type TextInputProps,
+} from "react-native"
 import { useState } from "react"
+
+import { useV2Theme, V2Text, V2VStack } from "@/src/design-system-v2"
 
 const ANDROID_MAX_FONT_SCALE = 1.3
 const INPUT_BASE_HEIGHT = 48
 const INPUT_LINE_HEIGHT = 22
 const INPUT_VERTICAL_PADDING = 14
 
-const StyledInput = styled(Input, {
-  name: "SinsinInput",
-  backgroundColor: "$cardBackground",
-  borderWidth: 1,
-  borderColor: "$borderColor",
-  borderRadius: "$3",
-  height: 48,
-  paddingHorizontal: "$3",
-  fontSize: 16,
-
-  focusStyle: {
-    borderColor: "$primary",
-    borderWidth: 2,
-  },
-
-  variants: {
-    error: {
-      true: {
-        borderColor: "$danger",
-      },
-    },
-  } as const,
-})
-
-interface TextFieldProps extends Omit<InputProps, "size"> {
+/**
+ * 한 줄 입력 필드.
+ *
+ * ■ tamagui `styled(Input)` + `Label` 이었다 (2026-08-19 이행)
+ *
+ *   `Input`/`Label`/`styled` 는 tamagui 를 붙들던 구조적 의존점이다. RN `TextInput`
+ *   으로 내려도 잃는 것이 없다 — 이 필드가 tamagui 에서 실제로 받던 것은
+ *   배경·테두리·포커스 색과 높이 계산뿐이고, 그건 전부 여기 그대로 있다.
+ *
+ *   `Label` 은 접근성상 `TextInput` 과 묶이지 않는 단순 텍스트였으므로
+ *   `V2Text` 로 대체하고 `accessibilityLabel` 로 연결을 명시했다 — 오히려 나아진다.
+ *
+ * ■ 안드로이드 높이 계산은 손대지 않았다
+ *
+ *   글꼴 배율이 커지면 48 고정 높이에서 글자가 잘린다. 그 계산(폰트 배율 상한 1.3,
+ *   줄높이+패딩으로 최소 높이 산출)은 tamagui 와 무관한 로직이라 그대로 옮겼다.
+ */
+interface TextFieldProps extends Omit<TextInputProps, "style"> {
   label?: string
   error?: string
   helper?: string
+  style?: TextInputProps["style"]
 }
 
 export function TextField({
@@ -46,6 +47,7 @@ export function TextField({
   style,
   ...props
 }: TextFieldProps) {
+  const { colors } = useV2Theme()
   const [isFocused, setIsFocused] = useState(false)
   const { fontScale } = useWindowDimensions()
   const androidFontScale = Math.min(fontScale, ANDROID_MAX_FONT_SCALE)
@@ -55,39 +57,53 @@ export function TextField({
       INPUT_LINE_HEIGHT * androidFontScale + INPUT_VERTICAL_PADDING * 2,
     ),
   )
+  const height =
+    Platform.OS === "android" ? androidInputHeight : INPUT_BASE_HEIGHT
+
+  const borderColor = error
+    ? colors.status.negative
+    : isFocused
+      ? colors.primary.primary
+      : colors.line.normal
 
   return (
-    <YStack gap="$1.5">
+    <V2VStack gap={6}>
       {label && (
-        <Label
-          size="$4"
-          fontSize={14}
-          color={error ? "$danger" : isFocused ? "$primary" : "$color"}
+        <V2Text
+          color={
+            error
+              ? colors.status.negative
+              : isFocused
+                ? colors.primary.primary
+                : colors.label.strong
+          }
+          style={styles.label}
         >
           {label}
-        </Label>
+        </V2Text>
       )}
-      <StyledInput
-        size="$4"
+      <TextInput
+        accessibilityLabel={label}
+        placeholderTextColor={colors.label.assistive}
         {...props}
-        height={
-          Platform.OS === "android" ? androidInputHeight : INPUT_BASE_HEIGHT
-        }
-        minHeight={
-          Platform.OS === "android" ? androidInputHeight : INPUT_BASE_HEIGHT
-        }
-        paddingVertical={Platform.OS === "android" ? 0 : undefined}
-        textAlignVertical={Platform.OS === "android" ? "center" : undefined}
         maxFontSizeMultiplier={
           Platform.OS === "android" ? ANDROID_MAX_FONT_SCALE : undefined
         }
+        textAlignVertical={Platform.OS === "android" ? "center" : undefined}
         style={[
+          styles.input,
           {
-            lineHeight: INPUT_LINE_HEIGHT,
+            height,
+            minHeight: height,
+            backgroundColor: colors.background.default,
+            borderColor,
+            // 포커스 때 선이 굵어진다(tamagui focusStyle 을 옮긴 것).
+            borderWidth: isFocused && !error ? 2 : 1,
+            color: colors.label.strong,
+            paddingVertical: Platform.OS === "android" ? 0 : undefined,
           },
           style,
         ]}
-        error={!!error}
         onFocus={(event) => {
           setIsFocused(true)
           onFocus?.(event)
@@ -98,10 +114,25 @@ export function TextField({
         }}
       />
       {(error || helper) && (
-        <Text fontSize={12} color={error ? "$danger" : "$colorSubtle"}>
+        <V2Text
+          color={error ? colors.status.negative : colors.label.neutral}
+          style={styles.helper}
+        >
           {error || helper}
-        </Text>
+        </V2Text>
       )}
-    </YStack>
+    </V2VStack>
   )
 }
+
+const styles = StyleSheet.create({
+  label: { fontSize: 14 },
+  input: {
+    // tamagui `borderRadius="$3"` = radius 스케일 6.
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    lineHeight: INPUT_LINE_HEIGHT,
+  },
+  helper: { fontSize: 12 },
+})

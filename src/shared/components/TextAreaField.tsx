@@ -9,7 +9,7 @@ import {
   type TextStyle,
   useWindowDimensions,
 } from "react-native"
-import { Label, Text, YStack } from "tamagui"
+import { useV2Theme, V2Text, V2VStack } from "@/src/design-system-v2"
 
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
@@ -51,6 +51,7 @@ export function TextAreaField({
   ...props
 }: TextAreaFieldProps) {
   const [isFocused, setIsFocused] = useState(false)
+  const { colors } = useV2Theme()
   const isDarkMode = useAppColorScheme() === "dark"
   const { fontScale } = useWindowDimensions()
   const androidFontScale = Math.min(fontScale, ANDROID_MAX_FONT_SCALE)
@@ -76,17 +77,23 @@ export function TextAreaField({
     (isDarkMode ? tokens.color.textDark.val : tokens.color.textLight.val)
 
   return (
-    <YStack gap="$1.5">
+    <V2VStack gap={6}>
       {label && (
-        <Label
-          size="$4"
-          fontSize={14}
-          color={error ? "$danger" : isFocused ? "$primary" : "$color"}
+        <V2Text
+          style={{ fontSize: 14 }}
+          color={
+            error
+              ? colors.status.negative
+              : isFocused
+                ? colors.primary.primary
+                : colors.label.strong
+          }
         >
           {label}
-        </Label>
+        </V2Text>
       )}
       <TextInput
+        accessibilityLabel={label}
         {...props}
         multiline
         style={[
@@ -115,11 +122,14 @@ export function TextAreaField({
         }}
       />
       {(error || helper) && (
-        <Text fontSize={12} color={error ? "$danger" : "$colorSubtle"}>
+        <V2Text
+          style={{ fontSize: 12 }}
+          color={error ? colors.status.negative : colors.label.neutral}
+        >
           {error || helper}
-        </Text>
+        </V2Text>
       )}
-    </YStack>
+    </V2VStack>
   )
 }
 

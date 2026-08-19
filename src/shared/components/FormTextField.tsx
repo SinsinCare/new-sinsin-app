@@ -1,7 +1,8 @@
 import { useState, useRef, type ComponentRef } from "react"
 import { Pressable, Keyboard, type KeyboardTypeOptions } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text, Input } from "tamagui"
+import { TextInput } from "react-native"
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { tokens } from "../../theme/tokens"
 import {
   Controller,
@@ -79,9 +80,10 @@ export function FormTextField<T extends FieldValues>({
 }: FormTextFieldProps<T>) {
   const [isFocused, setIsFocused] = useState(false)
   const [passwordVisible, setPasswordVisible] = useState(false)
-  const inputRef = useRef<ComponentRef<typeof Input>>(null)
+  const inputRef = useRef<TextInput>(null)
   const config = INPUT_TYPE_CONFIG[inputType]
   const isDark = useAppColorScheme() === "dark"
+  const { colors } = useV2Theme()
   const shouldShowPasswordToggle =
     inputType === "password" && showPasswordToggle
 
@@ -114,36 +116,40 @@ export function FormTextField<T extends FieldValues>({
         })
 
         return (
-          <YStack>
+          <V2VStack>
             {label && (
-              <Text
-                fontSize={13}
-                fontWeight="500"
+              <V2Text
                 color={getLabelColor(validationState)}
-                letterSpacing={-0.3}
-                lineHeight={18.2}
-                paddingBottom={10}
+                style={{
+                  fontSize: 13,
+                  fontWeight: "500",
+                  letterSpacing: -0.3,
+                  lineHeight: 18.2,
+                  paddingBottom: 10,
+                }}
               >
                 {label}
-              </Text>
+              </V2Text>
             )}
-            <XStack
-              backgroundColor={isDark ? "#2A2A32" : "white"}
-              borderWidth={1}
-              borderColor={getBorderColor(validationState)}
-              borderRadius={8}
-              height={52}
-              alignItems="center"
+            <V2HStack
+              align="center"
               paddingLeft={16}
               paddingRight={
                 shouldShowPasswordToggle || (value && isFocused && clearable)
                   ? 8
                   : 16
               }
+              style={{
+                backgroundColor: isDark ? "#2A2A32" : "white",
+                borderWidth: 1,
+                borderColor: getBorderColor(validationState),
+                borderRadius: 8,
+                height: 52,
+              }}
             >
-              <Input
+              <TextInput
                 ref={inputRef}
-                flex={1}
+                accessibilityLabel={label}
                 value={value ?? ""}
                 onChangeText={(text) => {
                   onChange(text)
@@ -159,13 +165,17 @@ export function FormTextField<T extends FieldValues>({
                     : config.secureTextEntry
                 }
                 autoFocus={autoFocus}
-                backgroundColor="transparent"
-                borderWidth={0}
-                height={50}
-                paddingHorizontal={0}
-                fontSize={16}
-                color="$color"
-                letterSpacing={-0.3}
+                placeholderTextColor={colors.label.assistive}
+                style={{
+                  flex: 1,
+                  backgroundColor: "transparent",
+                  borderWidth: 0,
+                  height: 50,
+                  paddingHorizontal: 0,
+                  fontSize: 16,
+                  color: colors.label.strong,
+                  letterSpacing: -0.3,
+                }}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => {
                   setIsFocused(false)
@@ -203,18 +213,16 @@ export function FormTextField<T extends FieldValues>({
                   />
                 </Pressable>
               ) : null}
-            </XStack>
+            </V2HStack>
             {error?.message && (
-              <Text
-                fontSize={12}
-                color="$danger"
-                letterSpacing={-0.3}
-                paddingTop={6}
+              <V2Text
+                color={colors.status.negative}
+                style={{ fontSize: 12, letterSpacing: -0.3, paddingTop: 6 }}
               >
                 {error.message}
-              </Text>
+              </V2Text>
             )}
-          </YStack>
+          </V2VStack>
         )
       }}
     />
