@@ -1,10 +1,10 @@
+import { useTranslation } from "react-i18next"
+
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { DietaryRecordCard } from "./DietaryRecordCard"
 import { MealRecord } from "../../data/dietaryRecord"
 import { MealType } from "../../types"
 import { DateAnalysisDiet } from "@/src/types"
-import { Text, XStack, YStack } from "tamagui"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { useTranslation } from "react-i18next"
 
 const ALL_MEAL_TYPES: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
 
@@ -15,6 +15,7 @@ interface DietaryRecordProps {
 
 export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
   const { t, i18n } = useTranslation()
+  const { colors } = useV2Theme()
   const mealRecords: MealRecord[] = ALL_MEAL_TYPES.map((mealType) => {
     const diet = diets.find((d) => d.mealType === mealType)
     const time = diet
@@ -34,28 +35,25 @@ export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
       imageUri: diet?.imageUrl ?? null,
     }
   })
-  const isDarkMode = useAppColorScheme() === "dark"
 
   return (
-    <YStack paddingVertical="$4" gap="$3">
-      <YStack gap="$1">
-        <Text
-          fontSize={20}
-          fontWeight="600"
-          color={isDarkMode ? "$textDark" : "$black"}
+    <V2VStack paddingVertical={16} gap={12}>
+      <V2VStack gap={4}>
+        <V2Text
+          color={colors.label.strong}
+          style={{ fontSize: 20, fontWeight: "600" }}
         >
           {t("stats.dietary.title")}
-        </Text>
-        <Text
-          fontSize={14}
-          fontWeight="500"
-          color="$colorSubtle"
+        </V2Text>
+        <V2Text
+          color={colors.label.neutral}
+          style={{ fontSize: 14, fontWeight: "500" }}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("stats.dietary.body")}
-        </Text>
-      </YStack>
-      <XStack width="100%" justifyContent="center" gap="$2">
+        </V2Text>
+      </V2VStack>
+      <V2HStack justify="center" gap={8} style={{ width: "100%" }}>
         {mealRecords.map((m) => (
           <DietaryRecordCard
             key={m.id}
@@ -63,7 +61,7 @@ export function DietaryRecord({ diets, onSelectMealType }: DietaryRecordProps) {
             onPress={() => onSelectMealType(m.mealType)}
           />
         ))}
-      </XStack>
-    </YStack>
+      </V2HStack>
+    </V2VStack>
   )
 }

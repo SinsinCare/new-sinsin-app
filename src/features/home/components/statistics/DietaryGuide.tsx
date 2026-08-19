@@ -1,7 +1,8 @@
-import { Text, XStack, YStack } from "tamagui"
-import { DietaryGuideContainer } from "./DietaryGuideContainer"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { StyleSheet } from "react-native"
 import { useTranslation } from "react-i18next"
+
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
+import { DietaryGuideContainer } from "./DietaryGuideContainer"
 
 interface DietaryGuideProps {
   dietaryGuide?: string
@@ -13,60 +14,70 @@ export function DietaryGuide({
   cautionFoods,
 }: DietaryGuideProps) {
   const { t } = useTranslation()
-  const isDarkMode = useAppColorScheme() === "dark"
+  const { colors } = useV2Theme()
 
+  /*
+    원래 `isDarkMode ? "$textDark" : "$black"` 이었다. v2 `label.strong` 이 스킴에
+    맞는 값을 이미 들고 있어 분기가 사라진다 — `useAppColorScheme()` 도 불필요해졌다.
+  */
   return (
-    <YStack paddingVertical="$3" gap="$3">
-      <Text
-        fontSize={20}
-        fontWeight="600"
-        color={isDarkMode ? "$textDark" : "$black"}
+    <V2VStack paddingVertical={12} gap={12}>
+      <V2Text
+        color={colors.label.strong}
+        style={{ fontSize: 20, fontWeight: "600" }}
       >
         {t("stats.dietaryGuide.title")}
-      </Text>
+      </V2Text>
 
       <DietaryGuideContainer title={t("stats.dietaryGuide.today")} isSummary>
-        <Text
-          fontSize={14}
-          color={isDarkMode ? "$textDark" : "$black"}
-          lineHeight={18}
+        <V2Text
+          color={colors.label.strong}
+          style={{ fontSize: 14, lineHeight: 18 }}
           lineBreakStrategyIOS="hangul-word"
         >
           {dietaryGuide ?? t("stats.dietaryGuide.empty")}
-        </Text>
+        </V2Text>
       </DietaryGuideContainer>
 
       {cautionFoods && cautionFoods.length > 0 && (
         <>
-          <Text
-            fontSize={15}
-            fontWeight="500"
-            color="$colorSubtle"
-            paddingTop="$3"
+          <V2Text
+            color={colors.label.neutral}
+            style={styles.nextMeal}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("stats.dietaryGuide.nextMeal")}
-          </Text>
+          </V2Text>
           <DietaryGuideContainer title={t("stats.dietaryGuide.foods")}>
-            <XStack flexWrap="wrap" gap="$2">
+            <V2HStack wrap="wrap" gap={8}>
               {cautionFoods.map((food) => (
-                <Text
+                /* `$primary2`(브랜드 옅은 면) → v2 primary.primaryWeak */
+                <V2Text
                   key={food}
-                  fontSize={13}
-                  fontWeight="600"
-                  backgroundColor="$primary2"
-                  color="$primary"
-                  paddingHorizontal="$2"
-                  paddingVertical="$1.5"
-                  borderRadius="$4"
+                  color={colors.primary.primary}
+                  style={[
+                    styles.foodChip,
+                    { backgroundColor: colors.primary.primaryWeak },
+                  ]}
                 >
                   {food}
-                </Text>
+                </V2Text>
               ))}
-            </XStack>
+            </V2HStack>
           </DietaryGuideContainer>
         </>
       )}
-    </YStack>
+    </V2VStack>
   )
 }
+
+const styles = StyleSheet.create({
+  nextMeal: { fontSize: 15, fontWeight: "500", paddingTop: 12 },
+  foodChip: {
+    fontSize: 13,
+    fontWeight: "600",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+})

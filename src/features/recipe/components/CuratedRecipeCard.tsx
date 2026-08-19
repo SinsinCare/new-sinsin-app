@@ -1,7 +1,7 @@
 import { memo } from "react"
 import { Pressable } from "react-native"
 import { Image } from "expo-image"
-import { YStack, XStack, Text, View } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
@@ -87,99 +87,46 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
       onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
-      <YStack
-        backgroundColor={palette.bg}
-        borderRadius={12}
-        padding={image ? 12 : 14}
-        gap={image ? 8 : 10}
-        borderWidth={1}
-        borderColor={palette.border}
-        minHeight={image ? undefined : 178}
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: isDark ? 0 : 0.06,
-          shadowRadius: 4,
-          elevation: 1,
-        }}
-      >
+      <V2VStack padding={image ? 12 : 14} gap={image ? 8 : 10} style={{ backgroundColor: palette.bg, borderRadius: 12, borderWidth: 1, borderColor: palette.border, minHeight: image ? undefined : 178 }}>
         {/* Recipe image */}
         {image && (
-          <View
-            borderRadius={8}
-            overflow="hidden"
-            backgroundColor={palette.tagBg}
-            style={{ aspectRatio: 1, width: "100%" }}
-          >
+          <V2Box style={[{ aspectRatio: 1, width: "100%" }, { borderRadius: 8, overflow: "hidden", backgroundColor: palette.tagBg }]}>
             <Image
               source={typeof image === "string" ? { uri: image } : image}
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
               cachePolicy="memory-disk"
             />
-          </View>
+          </V2Box>
         )}
         {!image && (
-          <View
-            height={4}
-            width={42}
-            borderRadius={999}
-            backgroundColor={palette.accent}
-          />
+          <V2Box style={{ height: 4, width: 42, borderRadius: 999, backgroundColor: palette.accent }}/>
         )}
 
         {/* Meta: category · difficulty · time */}
-        <Text
-          fontSize={12}
-          fontFamily="$body"
-          color={palette.sub}
-          numberOfLines={1}
-        >
+        <V2Text color={palette.sub} numberOfLines={1} style={{ fontSize: 12 }}>
           {categoryLabel} · {difficultyLabel} · {timeLabel}
-        </Text>
+        </V2Text>
 
         {/* Title */}
-        <Text
-          fontSize={15}
-          fontWeight="600"
-          fontFamily="$body"
-          color={palette.title}
-          numberOfLines={2}
-          lineHeight={22}
-        >
+        <V2Text color={palette.title} numberOfLines={2} style={{ fontSize: 15, fontWeight: "600", lineHeight: 22 }}>
           {recipe.name}
-        </Text>
+        </V2Text>
 
         {/* Description */}
-        <Text
-          fontSize={13}
-          fontFamily="$body"
-          color={palette.sub}
-          numberOfLines={1}
-        >
+        <V2Text color={palette.sub} numberOfLines={1} style={{ fontSize: 13 }}>
           {recipe.description}
-        </Text>
+        </V2Text>
 
         {/* 영양·CKD 적합성은 임상 검수 전이므로 중립 상태만 보여 준다. */}
-        <XStack>
-          <XStack
-            paddingHorizontal={8}
-            paddingVertical={4}
-            borderRadius={8}
-            backgroundColor={palette.tagBg}
-          >
-            <Text
-              fontSize={12}
-              fontWeight="600"
-              fontFamily="$body"
-              color={palette.tagText}
-              lineBreakStrategyIOS="hangul-word"
-            >
+        <V2HStack>
+          <V2HStack paddingHorizontal={8} paddingVertical={4} style={{ borderRadius: 8, backgroundColor: palette.tagBg }}>
+            <V2Text color={palette.tagText} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 12, fontWeight: "600" }}>
               {t("curated.estimatedBadge")}
-            </Text>
-          </XStack>
-        </XStack>
-      </YStack>
+            </V2Text>
+          </V2HStack>
+        </V2HStack>
+      </V2VStack>
     </Pressable>
   )
 })

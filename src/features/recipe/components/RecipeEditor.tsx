@@ -1,6 +1,5 @@
 import { useState } from "react"
 import {
-  TextInput,
   Pressable,
   Modal,
   Image,
@@ -9,7 +8,8 @@ import {
   StyleSheet,
   InteractionManager,
 } from "react-native"
-import { YStack, XStack, Text, View } from "tamagui"
+import { TextInput } from "@/src/shared/components/AppText"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 import {
@@ -228,20 +228,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
     : REGISTER_DISABLED[scheme]
 
   const renderSectionHeader = (label: string, target: EditorTarget) => (
-    <XStack
-      alignItems="center"
-      justifyContent="space-between"
-      marginBottom={10}
-    >
-      <Text
-        fontSize={14}
-        lineHeight={20}
-        fontWeight="500"
-        fontFamily="$body"
-        color={SECTION_LABEL[scheme]}
-      >
+    <V2HStack align="center" justify="space-between" style={{ marginBottom: 10 }}>
+      <V2Text color={SECTION_LABEL[scheme]} style={{ fontSize: 14, lineHeight: 20, fontWeight: "500" }}>
         {label}
-      </Text>
+      </V2Text>
       <Pressable
         onPress={() => handleAddImage(target)}
         disabled={imageDisabled}
@@ -262,33 +252,21 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               : IMAGE_BUTTON_TEXT[scheme]
           }
         />
-        <Text
-          fontSize={13}
-          lineHeight={18}
-          fontWeight="500"
-          fontFamily="$body"
-          color={
+        <V2Text color={
             imageDisabled
               ? IMAGE_BUTTON_DISABLED[scheme]
               : IMAGE_BUTTON_TEXT[scheme]
-          }
-          lineBreakStrategyIOS="hangul-word"
-        >
+          } lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 18, fontWeight: "500" }}>
           {t("action.addPhoto")}
-        </Text>
+        </V2Text>
       </Pressable>
-    </XStack>
+    </V2HStack>
   )
 
   return (
-    <YStack flex={1} backgroundColor={BG_COLOR[scheme]} paddingTop={insets.top}>
+    <V2VStack flex={1} style={{ backgroundColor: BG_COLOR[scheme], paddingTop: insets.top }}>
       {/* Header */}
-      <XStack
-        paddingHorizontal={20}
-        paddingVertical={12}
-        alignItems="center"
-        justifyContent="space-between"
-      >
+      <V2HStack paddingHorizontal={20} paddingVertical={12} align="center" justify="space-between">
         <Pressable
           onPress={handleClose}
           hitSlop={8}
@@ -296,16 +274,9 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         >
           <Icon name="x" size={24} color={HEADER_TEXT[scheme]} />
         </Pressable>
-        <Text
-          fontSize={16}
-          lineHeight={22}
-          fontWeight="500"
-          fontFamily="$body"
-          color={HEADER_TEXT[scheme]}
-          lineBreakStrategyIOS="hangul-word"
-        >
+        <V2Text color={HEADER_TEXT[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 16, lineHeight: 22, fontWeight: "500" }}>
           {t("recipeEditor.title")}
-        </Text>
+        </V2Text>
         <Pressable
           onPress={handleSubmit}
           disabled={!canSubmit || isSubmitting}
@@ -314,17 +285,11 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             opacity: pressed && canSubmit ? 0.7 : 1,
           })}
         >
-          <Text
-            fontSize={16}
-            fontWeight="600"
-            fontFamily="$body"
-            color={registerColor}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text color={registerColor} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 16, fontWeight: "600" }}>
             {isSubmitting ? t("action.uploading") : t("action.upload")}
-          </Text>
+          </V2Text>
         </Pressable>
-      </XStack>
+      </V2HStack>
 
       <KeyboardAwareScrollView
         bounces={false}
@@ -337,16 +302,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       >
         {/* Title */}
-        <YStack paddingHorizontal={16} paddingTop={20} gap={4}>
-          <Text
-            fontSize={12}
-            fontWeight="400"
-            fontFamily="$body"
-            color={LABEL_COLOR[scheme]}
-            lineBreakStrategyIOS="hangul-word"
-          >
+        <V2VStack paddingHorizontal={16} gap={4} style={{ paddingTop: 20 }}>
+          <V2Text color={LABEL_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 12, fontWeight: "400" }}>
             {t("recipeEditor.titleLabel")}
-          </Text>
+          </V2Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
@@ -360,27 +319,16 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               },
             ]}
           />
-        </YStack>
+        </V2VStack>
         {/* Primary color divider bar */}
-        <View
-          height={12}
-          backgroundColor={
+        <V2Box style={{ height: 12, backgroundColor: 
             scheme === "dark" ? PRIMARY_BAR.dark : PRIMARY_BAR.light
-          }
-        />
+           }}/>
         {/* Summary */}
-        <YStack paddingHorizontal={16} paddingTop={16}>
-          <Text
-            fontWeight="500"
-            fontSize={14}
-            lineHeight={20}
-            fontFamily="$body"
-            color={SECTION_TITLE_COLOR[scheme]}
-            marginBottom={4}
-            lineBreakStrategyIOS="hangul-word"
-          >
+        <V2VStack paddingHorizontal={16} style={{ paddingTop: 16 }}>
+          <V2Text color={SECTION_TITLE_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "500", fontSize: 14, lineHeight: 20, marginBottom: 4 }}>
             {t("recipeEditor.summaryLabel")}
-          </Text>
+          </V2Text>
           <TextInput
             value={summary}
             onChangeText={setSummary}
@@ -395,10 +343,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
               },
             ]}
           />
-        </YStack>
+        </V2VStack>
 
         {/* Tags */}
-        <YStack paddingHorizontal={16} paddingTop={20}>
+        <V2VStack paddingHorizontal={16} style={{ paddingTop: 20 }}>
           <TagSelector
             label={t("recipeEditor.cuisineLabel")}
             tags={CUISINE_TAGS}
@@ -407,12 +355,11 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             getLabel={(tag) =>
               t(CUISINE_LABEL_KEYS[tag as keyof typeof CUISINE_LABEL_KEYS])
             }
-            chipTheme="tertiary"
           />
-        </YStack>
+        </V2VStack>
 
         {/* Description BlockEditor */}
-        <YStack paddingHorizontal={16} paddingTop={20}>
+        <V2VStack paddingHorizontal={16} style={{ paddingTop: 20 }}>
           {renderSectionHeader(t("recipeEditor.descriptionLabel"), "desc")}
           <BlockEditor
             blocks={descEditor.blocks}
@@ -425,10 +372,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             onUpdateTextBlock={descEditor.updateTextBlock}
             onDeleteImage={descEditor.deleteImage}
           />
-        </YStack>
+        </V2VStack>
 
         {/* Ingredients BlockEditor */}
-        <YStack paddingHorizontal={16} paddingTop={20}>
+        <V2VStack paddingHorizontal={16} style={{ paddingTop: 20 }}>
           {renderSectionHeader(t("recipeEditor.ingredientsLabel"), "ingred")}
           <BlockEditor
             blocks={ingredEditor.blocks}
@@ -441,10 +388,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             onUpdateTextBlock={ingredEditor.updateTextBlock}
             onDeleteImage={ingredEditor.deleteImage}
           />
-        </YStack>
+        </V2VStack>
 
         {/* Cooking Steps BlockEditor */}
-        <YStack paddingHorizontal={16} paddingTop={20}>
+        <V2VStack paddingHorizontal={16} style={{ paddingTop: 20 }}>
           {renderSectionHeader(t("recipeEditor.stepsLabel"), "steps")}
           <BlockEditor
             blocks={stepsEditor.blocks}
@@ -457,15 +404,15 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             onUpdateTextBlock={stepsEditor.updateTextBlock}
             onDeleteImage={stepsEditor.deleteImage}
           />
-        </YStack>
+        </V2VStack>
 
-        <YStack paddingHorizontal={16} paddingTop={20} paddingBottom={8}>
+        <V2VStack paddingHorizontal={16} style={{ paddingTop: 20, paddingBottom: 8 }}>
           <ContentResponsibilityCheck
             value={responsibilityAgreed}
             onChange={setResponsibilityAgreed}
             disabled={isSubmitting}
           />
-        </YStack>
+        </V2VStack>
       </KeyboardAwareScrollView>
 
       {/* Image Preview Modal */}
@@ -497,6 +444,8 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
 
       {/* Confirm Exit Modal */}
       <ConfirmExitModal
+        surface="recipe_edit"
+        hasDraft={hasAnyContent}
         visible={confirmExitVisible}
         title={t("recipeEditor.exitTitle")}
         description={t("recipeEditor.exitBody")}
@@ -508,7 +457,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           onClose()
         }}
       />
-    </YStack>
+    </V2VStack>
   )
 }
 

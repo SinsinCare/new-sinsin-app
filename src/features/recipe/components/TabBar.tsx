@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { Pressable, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text } from "tamagui"
+import { V2Text } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 
 const COLORS = {
@@ -57,16 +57,9 @@ export function TopTabBar<T extends string = string>({
           onPress={() => handlePress(tab.key)}
           hitSlop={8}
         >
-          <Text
-            fontSize={18}
-            lineHeight={24}
-            fontWeight={"600"}
-            fontFamily="$body"
-            color={activeTab === tab.key ? palette.active : palette.inactive}
-            paddingVertical={10}
-          >
+          <V2Text color={activeTab === tab.key ? palette.active : palette.inactive} style={{ fontSize: 18, lineHeight: 24, fontWeight: "600", paddingVertical: 10 }}>
             {tab.label}
-          </Text>
+          </V2Text>
         </Pressable>
       ))}
     </View>

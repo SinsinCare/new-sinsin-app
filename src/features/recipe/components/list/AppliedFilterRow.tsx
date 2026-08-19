@@ -8,7 +8,7 @@
  * 걸려 있다고 읽는다.
  */
 import { Pressable, ScrollView } from "react-native"
-import { Text, XStack } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 import { Icon } from "@/src/shared/components/Icon"
@@ -62,26 +62,12 @@ export function AppliedFilterRow({
             accessibilityLabel={t("list.filterRemove", { label })}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <XStack
-              alignItems="center"
-              gap={5}
-              height={32}
-              paddingLeft={12}
-              paddingRight={9}
-              borderRadius={10}
-              backgroundColor={surface.surfaceBrand}
-            >
-              <Text
-                fontFamily="$body"
-                fontSize={13}
-                lineHeight={18}
-                fontWeight="600"
-                color={tokens.color.primary.val}
-              >
+            <V2HStack align="center" gap={5} style={{ height: 32, paddingLeft: 12, paddingRight: 9, borderRadius: 10, backgroundColor: surface.surfaceBrand }}>
+              <V2Text color={tokens.color.primary.val} style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}>
                 {label}
-              </Text>
+              </V2Text>
               <Icon name="x" size={13} color={tokens.color.primary.val} />
-            </XStack>
+            </V2HStack>
           </Pressable>
         )
       })}
@@ -93,23 +79,11 @@ export function AppliedFilterRow({
           accessibilityLabel={t("list.filterClearAll")}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <XStack
-            alignItems="center"
-            height={32}
-            paddingHorizontal={12}
-            borderRadius={10}
-          >
-            <Text
-              fontFamily="$body"
-              fontSize={13}
-              lineHeight={18}
-              fontWeight="600"
-              color={surface.textMuted}
-              lineBreakStrategyIOS="hangul-word"
-            >
+          <V2HStack align="center" paddingHorizontal={12} style={{ height: 32, borderRadius: 10 }}>
+            <V2Text color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}>
               {t("list.filterClearAll")}
-            </Text>
-          </XStack>
+            </V2Text>
+          </V2HStack>
         </Pressable>
       )}
     </ScrollView>

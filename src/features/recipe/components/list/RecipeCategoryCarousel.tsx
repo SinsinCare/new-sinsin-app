@@ -55,7 +55,7 @@
  */
 import { memo, useMemo } from "react"
 import { Pressable, ScrollView, View } from "react-native"
-import { Text, YStack } from "tamagui"
+import { V2Text, V2VStack } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -177,7 +177,7 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
               alignItems: "center",
             })}
           >
-            <YStack alignItems="center" gap={6} paddingVertical={4}>
+            <V2VStack align="center" gap={6} paddingVertical={4}>
               <View
                 style={{
                   width: ART_BOX,
@@ -194,19 +194,10 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
               >
                 <Icon width={34} height={34} />
               </View>
-              <Text
-                fontFamily="$body"
-                fontSize={13}
-                lineHeight={18}
-                letterSpacing={-0.26}
-                // 굵기 + 색으로만 선택을 말한다.
-                fontWeight={isSelected ? "700" : "500"}
-                color={isSelected ? surface.textStrong : surface.textWeak}
-                numberOfLines={1}
-              >
+              <V2Text color={isSelected ? surface.textStrong : surface.textWeak} numberOfLines={1} style={{ fontSize: 13, lineHeight: 18, letterSpacing: -0.26, fontWeight: isSelected ? "700" : "500" }}>
                 {label}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           </Pressable>
         )
       })}

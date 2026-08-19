@@ -29,9 +29,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
 import { Image } from "expo-image"
 import { AppModal } from "@/src/shared/components/AppModal"
 import Animated, {
@@ -42,7 +42,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { Text, XStack, YStack } from "tamagui"
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { hapticSelection } from "@/src/lib/haptics"
@@ -142,12 +142,7 @@ export function ReviewComposer({
         style={[styles.flex, { backgroundColor: surface.canvas }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <XStack
-          alignItems="center"
-          paddingHorizontal={LAYOUT.screenX}
-          paddingTop={topPadding}
-          paddingBottom={4}
-        >
+        <V2HStack align="center" paddingHorizontal={LAYOUT.screenX} style={{ paddingTop: topPadding, paddingBottom: 4 }}>
           <Pressable
             onPress={onClose}
             hitSlop={12}
@@ -157,7 +152,7 @@ export function ReviewComposer({
           >
             <Ionicons name="close" size={26} color={surface.textStrong} />
           </Pressable>
-        </XStack>
+        </V2HStack>
 
         <ScrollView
           style={styles.flex}
@@ -168,7 +163,7 @@ export function ReviewComposer({
           overScrollMode="never"
         >
           {/* 무엇을 평가하는지. 모달이 상세를 덮으므로 대상이 화면에 남아야 한다. */}
-          <XStack alignItems="center" gap={12} marginBottom={20}>
+          <V2HStack align="center" gap={12} style={{ marginBottom: 20 }}>
             {recipeImageUrl != null && recipeImageUrl.length > 0 && (
               <Image
                 source={{
@@ -180,31 +175,17 @@ export function ReviewComposer({
                 cachePolicy="memory-disk"
               />
             )}
-            <Text
-              {...TYPE.value}
-              flex={1}
-              fontFamily="$body"
-              fontWeight="600"
-              color={surface.textWeak}
-              numberOfLines={2}
-              lineBreakStrategyIOS="hangul-word"
-            >
+            <V2Text {...TYPE.value} color={surface.textWeak} numberOfLines={2} lineBreakStrategyIOS="hangul-word" style={{ flex: 1, fontWeight: "600" }}>
               {recipeName}
-            </Text>
-          </XStack>
+            </V2Text>
+          </V2HStack>
 
-          <Text
-            {...TYPE.question}
-            fontFamily="$body"
-            fontWeight="700"
-            color={surface.textStrong}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text {...TYPE.question} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "700" }}>
             {t("detail.reviews.composerTitle")}
-          </Text>
+          </V2Text>
 
-          <YStack marginTop={LAYOUT.questionToField} gap={10}>
-            <XStack gap={4} marginLeft={-6}>
+          <V2VStack gap={10} style={{ marginTop: LAYOUT.questionToField }}>
+            <V2HStack gap={4} style={{ marginLeft: -6 }}>
               {STARS.map((star) => (
                 <Star
                   key={star}
@@ -215,39 +196,26 @@ export function ReviewComposer({
                   onPress={() => pickRating(star)}
                 />
               ))}
-            </XStack>
+            </V2HStack>
 
             {/* 고른 값을 말로 되돌려 준다. 빈 줄을 자리로 남겨 별이 흔들리지 않는다. */}
             <View style={styles.ratingWordSlot}>
               {rating > 0 && (
                 <Animated.View key={rating} entering={FadeIn.duration(160)}>
-                  <Text
-                    {...TYPE.value}
-                    fontFamily="$body"
-                    fontWeight="600"
-                    color={surface.brand}
-                    lineBreakStrategyIOS="hangul-word"
-                  >
+                  <V2Text {...TYPE.value} color={surface.brand} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                     {t(RATING_WORD_KEYS[rating as 1 | 2 | 3 | 4 | 5])}
-                  </Text>
+                  </V2Text>
                 </Animated.View>
               )}
             </View>
-          </YStack>
+          </V2VStack>
 
           {/* 본문은 처음부터 자리에 있다. 순서는 감추기가 아니라 "선택" 이라는 말과
               등록 버튼의 문구로 세운다 — 감추면 화면이 비어 미완성으로 읽혔다. */}
           <View style={styles.bodyBlock}>
-            <Text
-              {...TYPE.caption}
-              fontFamily="$body"
-              fontWeight="600"
-              color={surface.textWeak}
-              marginBottom={8}
-              lineBreakStrategyIOS="hangul-word"
-            >
+            <V2Text {...TYPE.caption} color={surface.textWeak} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600", marginBottom: 8 }}>
               {t("detail.reviews.bodyLabel")}
-            </Text>
+            </V2Text>
             <TextInput
               ref={bodyRef}
               value={body}
@@ -261,38 +229,21 @@ export function ReviewComposer({
               style={[styles.bodyInput, { color: surface.textStrong }]}
             />
             {body.length >= COUNTER_VISIBLE_FROM && (
-              <Text
-                {...TYPE.caption}
-                fontFamily="$body"
-                color={surface.textWeak}
-                alignSelf="flex-end"
-                lineBreakStrategyIOS="hangul-word"
-              >
+              <V2Text {...TYPE.caption} color={surface.textWeak} lineBreakStrategyIOS="hangul-word" style={{ alignSelf: "flex-end" }}>
                 {t("detail.reviews.bodyCounter", {
                   current: body.length,
                   max: REVIEW_BODY_MAX_LENGTH,
                 })}
-              </Text>
+              </V2Text>
             )}
           </View>
         </ScrollView>
 
-        <YStack
-          paddingHorizontal={LAYOUT.screenX}
-          paddingBottom={Math.max(insets.bottom, 16)}
-          gap={10}
-        >
+        <V2VStack paddingHorizontal={LAYOUT.screenX} gap={10} style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
           {hasError && (
-            <Text
-              {...TYPE.caption}
-              fontFamily="$body"
-              color={surface.danger}
-              textAlign="center"
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-            >
+            <V2Text {...TYPE.caption} color={surface.danger} lineBreakStrategyIOS="hangul-word" textBreakStrategy="balanced" style={{ textAlign: "center" }}>
               {t("detail.reviews.submitError")}
-            </Text>
+            </V2Text>
           )}
           <Pressable
             onPress={() =>
@@ -308,30 +259,18 @@ export function ReviewComposer({
             accessibilityState={{ disabled: !canSubmit }}
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
-            <YStack
-              height={LAYOUT.cta.height}
-              borderRadius={LAYOUT.cta.radius}
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor={canSubmit ? surface.brand : surface.ctaOffBg}
-            >
-              <Text
-                {...TYPE.cta}
-                fontFamily="$body"
-                fontWeight="600"
-                color={canSubmit ? surface.onBrand : surface.ctaOffText}
-                lineBreakStrategyIOS="hangul-word"
-              >
+            <V2VStack align="center" justify="center" style={{ height: LAYOUT.cta.height, borderRadius: LAYOUT.cta.radius, backgroundColor: canSubmit ? surface.brand : surface.ctaOffBg }}>
+              <V2Text {...TYPE.cta} color={canSubmit ? surface.onBrand : surface.ctaOffText} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                 {isSubmitting
                   ? t("detail.reviews.submitting")
                   : /* 비활성 이유를 버튼 자신이 말한다(§6.1). */
                     canSubmit
                     ? t("detail.reviews.submit")
                     : t("detail.reviews.submitDisabledReason")}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           </Pressable>
-        </YStack>
+        </V2VStack>
       </KeyboardAvoidingView>
     </AppModal>
   )

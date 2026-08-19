@@ -15,7 +15,7 @@
  */
 import { memo } from "react"
 import { ScrollView } from "react-native"
-import { Text, View, XStack, YStack } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -100,65 +100,35 @@ export const RecipeMealSection = memo(function RecipeMealSection({
   const badgeKey = mealSlotStateBadgeKey(section.state)
 
   return (
-    <YStack gap={SECTION_TITLE_GAP}>
-      <YStack paddingHorizontal={GUTTER} gap={2}>
-        <XStack gap={6} alignItems="center">
-          <Text
-            fontFamily="$body"
-            fontSize={TYPE.sectionTitle.fontSize}
-            lineHeight={TYPE.sectionTitle.lineHeight}
-            letterSpacing={TYPE.sectionTitle.letterSpacing}
-            fontWeight="700"
-            color={badgeKey === null ? surface.textStrong : surface.textMuted}
-            numberOfLines={1}
-            flexShrink={1}
-          >
+    <V2VStack gap={SECTION_TITLE_GAP}>
+      <V2VStack paddingHorizontal={GUTTER} gap={2}>
+        <V2HStack gap={6} align="center">
+          <V2Text color={badgeKey === null ? surface.textStrong : surface.textMuted} numberOfLines={1} style={{ fontSize: TYPE.sectionTitle.fontSize, lineHeight: TYPE.sectionTitle.lineHeight, letterSpacing: TYPE.sectionTitle.letterSpacing, fontWeight: "700", flexShrink: 1 }}>
             {parts.before}
             {parts.match !== "" && (
-              <Text
-                color={
+              <V2Text color={
                   // 끝난 끼니는 브랜드색을 잃는다 — 강조는 지금 고를 끼니의 것이다.
                   badgeKey === null
                     ? tokens.color.primary.val
                     : surface.textMuted
-                }
-              >
+                }>
                 {parts.match}
-              </Text>
+              </V2Text>
             )}
             {parts.after}
-          </Text>
+          </V2Text>
           {badgeKey !== null && (
-            <View
-              borderRadius={999}
-              backgroundColor={surface.surface}
-              paddingHorizontal={8}
-              paddingVertical={2}
-            >
-              <Text
-                fontFamily="$body"
-                fontSize={TYPE.caption.fontSize}
-                lineHeight={TYPE.caption.lineHeight}
-                letterSpacing={TYPE.caption.letterSpacing}
-                color={surface.textMuted}
-                numberOfLines={1}
-              >
+            <V2Box paddingHorizontal={8} paddingVertical={2} style={{ borderRadius: 999, backgroundColor: surface.surface }}>
+              <V2Text color={surface.textMuted} numberOfLines={1} style={{ fontSize: TYPE.caption.fontSize, lineHeight: TYPE.caption.lineHeight, letterSpacing: TYPE.caption.letterSpacing }}>
                 {t(badgeKey)}
-              </Text>
-            </View>
+              </V2Text>
+            </V2Box>
           )}
-        </XStack>
-        <Text
-          fontFamily="$body"
-          fontSize={TYPE.cardSub.fontSize}
-          lineHeight={TYPE.cardSub.lineHeight}
-          letterSpacing={TYPE.cardSub.letterSpacing}
-          color={surface.textMuted}
-          numberOfLines={1}
-        >
+        </V2HStack>
+        <V2Text color={surface.textMuted} numberOfLines={1} style={{ fontSize: TYPE.cardSub.fontSize, lineHeight: TYPE.cardSub.lineHeight, letterSpacing: TYPE.cardSub.letterSpacing }}>
           {subtitle}
-        </Text>
-      </YStack>
+        </V2Text>
+      </V2VStack>
 
       {body === "loading" ? (
         /*
@@ -167,35 +137,21 @@ export const RecipeMealSection = memo(function RecipeMealSection({
           (빈 섹션에 회색 덩어리를 깔지 않는 것과는 다른 이야기다 — 저기는 "없다" 이고
           여기는 "오는 중" 이다.)
         */
-        <View height={CARD_SLOT_HEIGHT}>
+        <V2Box style={{ height: CARD_SLOT_HEIGHT }}>
           <RecipeCarouselSkeleton />
-        </View>
+        </V2Box>
       ) : body === "empty" ? (
         /*
           빈 섹션. **왜 비었는지 말한다**(지시 1). 카드 자리에 회색 덩어리를 깔지 않는
           이유는 목록 카드와 같다 — 없는 것을 있는 것처럼 만들지 않는다.
         */
-        <View paddingHorizontal={GUTTER}>
-          <View
-            borderRadius={CARD_RADIUS}
-            backgroundColor={surface.surface}
-            paddingVertical={22}
-            paddingHorizontal={16}
-          >
-            <Text
-              fontFamily="$body"
-              fontSize={TYPE.caption.fontSize}
-              lineHeight={TYPE.caption.lineHeight}
-              letterSpacing={TYPE.caption.letterSpacing}
-              color={surface.textMuted}
-              textAlign="center"
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-            >
+        <V2Box paddingHorizontal={GUTTER}>
+          <V2Box paddingVertical={22} paddingHorizontal={16} style={{ borderRadius: CARD_RADIUS, backgroundColor: surface.surface }}>
+            <V2Text color={surface.textMuted} lineBreakStrategyIOS="hangul-word" textBreakStrategy="balanced" style={{ fontSize: TYPE.caption.fontSize, lineHeight: TYPE.caption.lineHeight, letterSpacing: TYPE.caption.letterSpacing, textAlign: "center" }}>
               {t(RECIPE_HOME_EMPTY_COPY_KEY)}
-            </Text>
-          </View>
-        </View>
+            </V2Text>
+          </V2Box>
+        </V2Box>
       ) : (
         <ScrollView
           horizontal
@@ -221,6 +177,6 @@ export const RecipeMealSection = memo(function RecipeMealSection({
           ))}
         </ScrollView>
       )}
-    </YStack>
+    </V2VStack>
   )
 })

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { View, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text, useTheme } from "tamagui"
+import { useV2Theme, V2Text } from "@/src/design-system-v2"
 import { tokens } from "../../../../theme/tokens"
 import { CIRCLE_SIZE } from "../../data/nutrientConstants"
 import { clampTranslateX, fmt } from "../../utils/graphUtils"
@@ -41,11 +41,18 @@ export function NutrientBarSection({
   const [maxValW, setMaxValW] = useState(0)
   const [barWidth, setBarWidth] = useState(0)
 
-  const theme = useTheme()
+  const { colors } = useV2Theme()
   const isDark = useAppColorScheme() === "dark"
-  const colorFillNormal = theme.secondary.val
-  const colorFillOver = theme.warning.val
-  const colorTrack = theme.borderColor.val
+  /*
+    tamagui `useTheme()` 로 읽던 세 색을 v2 로 옮겼다:
+      theme.secondary   → status.positive  (정상 채움 — 이 앱에서 안전은 초록)
+      theme.warning     → status.cautionary(초과분)
+      theme.borderColor → line.normal      (트랙)
+    themes.ts 가 이미 그 셋을 v2 값으로 정의하고 있어 값이 그대로다.
+  */
+  const colorFillNormal = colors.status.positive
+  const colorFillOver = colors.status.cautionary
+  const colorTrack = colors.line.normal
   const colorLimitTick = tokens.color.grey7.val
   const circleBg = isDark ? tokens.color.appBgDark.val : "white"
   const separatorColor = isDark ? tokens.color.appBgDark.val : "white"
@@ -194,10 +201,10 @@ export function NutrientBarSection({
             )}
           </View>
 
-          {/* 원형 인디케이터 - 바 끝점에 센터 */}
+          {/* 원형 인디케이터 - 채움 영역 안쪽, 오른쪽 끝을 채움 끝점에 맞춤 */}
           {!isEmpty &&
             (intakeAtRightEdge ? (
-              // 오른쪽 끝: 반절 튀어나오게
+              // 오른쪽 끝: 바 끝에서 살짝(CIRCLE_SIZE/10) 튀어나오게
               <View
                 style={[styles.circleWrapper, { right: -(CIRCLE_SIZE / 10) }]}
               >
@@ -209,7 +216,7 @@ export function NutrientBarSection({
                 />
               </View>
             ) : (
-              // fillPct 위치: 센터 정렬
+              // fillPct 위치: 원 오른쪽 끝을 채움 끝점에 정렬
               <View
                 style={[
                   styles.circleWrapper,
@@ -235,24 +242,24 @@ export function NutrientBarSection({
         {isEmpty ? (
           // 미섭취: 0 왼쪽, max 오른쪽
           <>
-            <Text fontSize={11} color="$colorSubtle">
+            <V2Text style={styles.scaleText} color={colors.label.neutral}>
               {fmt(0, numberLocale)}
               {unit}
-            </Text>
+            </V2Text>
             <View style={styles.scaleAbsRight}>
-              <Text fontSize={11} color="$colorSubtle">
+              <V2Text style={styles.scaleText} color={colors.label.neutral}>
                 {fmt(max, numberLocale)}
                 {unit}
-              </Text>
+              </V2Text>
             </View>
           </>
         ) : atLimit ? (
           // 제한도달: current만 오른쪽
           <View style={styles.scaleAbsRight}>
-            <Text fontSize={11} color="$colorSubtle">
+            <V2Text style={styles.scaleText} color={colors.label.neutral}>
               {fmt(current, numberLocale)}
               {unit}
-            </Text>
+            </V2Text>
           </View>
         ) : isOver ? (
           // 초과: max를 limitPct% 중앙, current를 오른쪽, 겹침 방지
@@ -276,19 +283,19 @@ export function NutrientBarSection({
               ]}
               onLayout={(e) => setMaxValW(e.nativeEvent.layout.width)}
             >
-              <Text fontSize={11} color="$colorSubtle">
+              <V2Text style={styles.scaleText} color={colors.label.neutral}>
                 {fmt(max, numberLocale)}
                 {unit}
-              </Text>
+              </V2Text>
             </View>
             <View
               style={styles.scaleAbsRight}
               onLayout={(e) => setCurrentValW(e.nativeEvent.layout.width)}
             >
-              <Text fontSize={11} color="$colorSubtle">
+              <V2Text style={styles.scaleText} color={colors.label.neutral}>
                 {fmt(current, numberLocale)}
                 {unit}
-              </Text>
+              </V2Text>
             </View>
           </>
         ) : (
@@ -313,19 +320,19 @@ export function NutrientBarSection({
               ]}
               onLayout={(e) => setCurrentValW(e.nativeEvent.layout.width)}
             >
-              <Text fontSize={11} color="$colorSubtle">
+              <V2Text style={styles.scaleText} color={colors.label.neutral}>
                 {fmt(current, numberLocale)}
                 {unit}
-              </Text>
+              </V2Text>
             </View>
             <View
               style={styles.scaleAbsRight}
               onLayout={(e) => setMaxValW(e.nativeEvent.layout.width)}
             >
-              <Text fontSize={11} color="$colorSubtle">
+              <V2Text style={styles.scaleText} color={colors.label.neutral}>
                 {fmt(max, numberLocale)}
                 {unit}
-              </Text>
+              </V2Text>
             </View>
           </>
         )}
@@ -394,6 +401,7 @@ const styles = StyleSheet.create({
   scaleAbsCenter: {
     position: "absolute",
   },
+  scaleText: { fontSize: 11 },
   scaleAbsRight: {
     position: "absolute",
     right: 0,

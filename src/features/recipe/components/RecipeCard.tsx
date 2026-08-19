@@ -1,9 +1,9 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, XStack, Text } from "tamagui"
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import { ImageCard } from "./ImageCard"
-import { FilterChip } from "./FilterChip"
+import { V2Chip } from "@/src/design-system-v2"
 
 export interface RecipeCardTags {
   nutrition?: string[]
@@ -44,50 +44,30 @@ export function RecipeCard({
       accessibilityLabel={title}
       style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
-      <YStack gap={10}>
+      <V2VStack gap={10}>
         <ImageCard
           imageUri={imageUri}
           likeCount={likeCount}
           commentCount={commentCount}
         />
 
-        <XStack flexWrap="wrap" gap={6} paddingHorizontal={2}>
-          {tags.nutrition?.map((label) => (
-            <FilterChip
-              key={`n-${label}`}
-              label={`#${label}`}
-              theme="primary"
-              selected
-            />
+        {/* 태그는 **읽기 전용 표시**다 — 누를 수 없으므로 고른 상태로 그리지 않는다.
+            예전에는 영양/병기/국가를 각각 다른 색(주황·틸·회색)으로 칠했는데,
+            셋 다 그냥 태그라 색이 뜻하는 게 없었다. 한 얼굴로 모은다. */}
+        <V2HStack wrap="wrap" gap={6} paddingHorizontal={2}>
+          {[
+            ...(tags.nutrition ?? []).map((l) => ({ key: `n-${l}`, label: l })),
+            ...(tags.stage ?? []).map((l) => ({ key: `s-${l}`, label: l })),
+            ...(tags.country ?? []).map((l) => ({ key: `c-${l}`, label: l })),
+          ].map(({ key, label }) => (
+            <V2Chip key={key} label={`#${label}`} size="s" />
           ))}
-          {tags.stage?.map((label) => (
-            <FilterChip
-              key={`s-${label}`}
-              label={`#${label}`}
-              theme="sub"
-              selected
-            />
-          ))}
-          {tags.country?.map((label) => (
-            <FilterChip
-              key={`c-${label}`}
-              label={`#${label}`}
-              theme="tertiary"
-              selected
-            />
-          ))}
-        </XStack>
+        </V2HStack>
 
-        <Text
-          fontSize={18}
-          fontWeight="700"
-          fontFamily="$body"
-          color={titleColor}
-          paddingHorizontal={2}
-        >
+        <V2Text color={titleColor} style={{ fontSize: 18, fontWeight: "700", paddingHorizontal: 2 }}>
           {title}
-        </Text>
-      </YStack>
+        </V2Text>
+      </V2VStack>
     </Pressable>
   )
 }

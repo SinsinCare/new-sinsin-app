@@ -13,7 +13,7 @@
 import { useEffect, useState } from "react"
 import { Pressable } from "react-native"
 import * as Haptics from "expo-haptics"
-import { Text, XStack } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { useSurface } from "@/src/hooks/useSurface"
@@ -85,37 +85,23 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
   }
 
   return (
-    <XStack alignItems="center" gap={8} alignSelf="flex-start">
+    <V2HStack align="center" gap={8} style={{ alignSelf: "flex-start" }}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={actionLabel}
         style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
       >
-        <XStack
-          alignItems="center"
-          gap={6}
-          height={LAYOUT.chip.height}
-          paddingHorizontal={12}
-          borderRadius={LAYOUT.chip.radius}
-          borderWidth={1}
-          borderColor={running ? surface.brand : surface.border}
-          backgroundColor={running ? surface.surfaceBrand : surface.card}
-        >
+        <V2HStack align="center" gap={6} paddingHorizontal={12} style={{ height: LAYOUT.chip.height, borderRadius: LAYOUT.chip.radius, borderWidth: 1, borderColor: running ? surface.brand : surface.border, backgroundColor: running ? surface.surfaceBrand : surface.card }}>
           <Ionicons
             name={running ? "pause" : done ? "refresh" : "timer-outline"}
             size={14}
             color={running ? surface.brand : surface.textMuted}
           />
-          <Text
-            {...TYPE.caption}
-            fontFamily="$body"
-            fontWeight="600"
-            color={running ? surface.brand : surface.textStrong}
-          >
+          <V2Text {...TYPE.caption} color={running ? surface.brand : surface.textStrong} style={{ fontWeight: "600" }}>
             {label}
-          </Text>
-        </XStack>
+          </V2Text>
+        </V2HStack>
       </Pressable>
 
       {/* 멈춘 상태에서 되돌릴 길을 항상 남긴다(§6.4 되돌리기). */}
@@ -127,16 +113,11 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
           hitSlop={6}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <Text
-            {...TYPE.caption}
-            fontFamily="$body"
-            color={surface.textMuted}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text {...TYPE.caption} color={surface.textMuted} lineBreakStrategyIOS="hangul-word">
             {t("detail.steps.timerReset")}
-          </Text>
+          </V2Text>
         </Pressable>
       )}
-    </XStack>
+    </V2HStack>
   )
 }

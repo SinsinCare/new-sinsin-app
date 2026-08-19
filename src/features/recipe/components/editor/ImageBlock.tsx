@@ -1,5 +1,5 @@
 import { Image, Pressable, View, StyleSheet } from "react-native"
-import { Text } from "tamagui"
+import { V2Text } from "@/src/design-system-v2"
 import { V2DotLoader } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
@@ -68,37 +68,19 @@ export function ImageBlock({
           <View
             style={[styles.errorOverlay, { backgroundColor: ERROR_BG[scheme] }]}
           >
-            <Text
-              fontSize={14}
-              color={ERROR_TEXT[scheme]}
-              fontWeight="600"
-              fontFamily="$body"
-              lineBreakStrategyIOS="hangul-word"
-            >
+            <V2Text color={ERROR_TEXT[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 14, fontWeight: "600" }}>
               {t("media.uploadFailed")}
-            </Text>
+            </V2Text>
             <View style={styles.errorActions}>
               <Pressable onPress={onRetry} style={styles.errorBtn}>
-                <Text
-                  fontSize={13}
-                  color={RETRY_COLOR[scheme]}
-                  fontWeight="600"
-                  fontFamily="$body"
-                  lineBreakStrategyIOS="hangul-word"
-                >
+                <V2Text color={RETRY_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, fontWeight: "600" }}>
                   {t("media.retryUpload")}
-                </Text>
+                </V2Text>
               </Pressable>
               <Pressable onPress={onDelete} style={styles.errorBtn}>
-                <Text
-                  fontSize={13}
-                  color={ERROR_TEXT[scheme]}
-                  fontWeight="600"
-                  fontFamily="$body"
-                  lineBreakStrategyIOS="hangul-word"
-                >
+                <V2Text color={ERROR_TEXT[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, fontWeight: "600" }}>
                   {t("action.delete")}
-                </Text>
+                </V2Text>
               </Pressable>
             </View>
           </View>
@@ -107,14 +89,9 @@ export function ImageBlock({
 
       {!uploadFailed && (
         <Pressable onPress={handleDelete} style={styles.deleteBtn} hitSlop={8}>
-          <Text
-            fontSize={14}
-            color={DELETE_BTN_ICON}
-            fontWeight="700"
-            fontFamily="$body"
-          >
+          <V2Text color={DELETE_BTN_ICON} style={{ fontSize: 14, fontWeight: "700" }}>
             ✕
-          </Text>
+          </V2Text>
         </Pressable>
       )}
     </View>

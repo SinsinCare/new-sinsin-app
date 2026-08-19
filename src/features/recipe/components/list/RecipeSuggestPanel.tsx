@@ -10,7 +10,7 @@
  *    안 그러면 "밥" 을 지우고 "국" 을 쳤는데 밥 목록이 남아 있다.
  */
 import { Pressable, ScrollView } from "react-native"
-import { Text, View, XStack, YStack } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 import { Icon } from "@/src/shared/components/Icon"
@@ -47,18 +47,10 @@ export function RecipeSuggestPanel({
         시작선은 `GUTTER`(16)다. 20 을 쓰고 있었는데, 이 패널은 검색 필드 **바로 아래**
         에 열리고 그 필드는 16 에서 시작한다 — 4pt 어긋난 줄이 뜨고 지는 것으로 보였다.
       */}
-      <YStack paddingHorizontal={GUTTER} paddingTop={12} gap={2}>
-        <Text
-          fontFamily="$body"
-          fontSize={12.5}
-          lineHeight={18}
-          fontWeight="600"
-          color={surface.textWeak}
-          paddingBottom={6}
-          lineBreakStrategyIOS="hangul-word"
-        >
+      <V2VStack paddingHorizontal={GUTTER} gap={2} style={{ paddingTop: 12 }}>
+        <V2Text color={surface.textWeak} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 12.5, lineHeight: 18, fontWeight: "600", paddingBottom: 6 }}>
           {t("list.suggestTitle")}
-        </Text>
+        </V2Text>
 
         {suggestions.map((suggestion) => (
           <Pressable
@@ -70,46 +62,28 @@ export function RecipeSuggestPanel({
             })}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
-            <XStack alignItems="center" gap={10} paddingVertical={11}>
+            <V2HStack align="center" gap={10} paddingVertical={11}>
               <Icon
                 name={suggestion.kind === "recipe" ? "recipe" : "hashtag"}
                 size={16}
                 color={surface.textWeak}
               />
-              <Text
-                flex={1}
-                fontFamily="$body"
-                fontSize={15}
-                lineHeight={21}
-                color={surface.textStrong}
-                numberOfLines={1}
-              >
+              <V2Text color={surface.textStrong} numberOfLines={1} style={{ flex: 1, fontSize: 15, lineHeight: 21 }}>
                 {suggestion.text}
-              </Text>
-            </XStack>
+              </V2Text>
+            </V2HStack>
           </Pressable>
         ))}
 
         {!isSuggesting && suggestions.length === 0 && trimmed.length > 0 && (
-          <Text
-            fontFamily="$body"
-            fontSize={13}
-            lineHeight={19}
-            color={surface.textWeak}
-            paddingVertical={10}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text color={surface.textWeak} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 19, paddingVertical: 10 }}>
             {t("list.suggestEmpty")}
-          </Text>
+          </V2Text>
         )}
 
         {trimmed.length > 0 && (
           <>
-            <View
-              height={1}
-              backgroundColor={surface.hairline}
-              marginVertical={6}
-            />
+            <V2Box style={{ height: 1, backgroundColor: surface.hairline, marginVertical: 6 }}/>
             <Pressable
               onPress={() => onSelect(trimmed)}
               accessibilityRole="button"
@@ -118,28 +92,20 @@ export function RecipeSuggestPanel({
               })}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <XStack alignItems="center" gap={10} paddingVertical={11}>
+              <V2HStack align="center" gap={10} paddingVertical={11}>
                 <Icon
                   name="magnifyingglass"
                   size={16}
                   color={surface.textWeak}
                 />
-                <Text
-                  flex={1}
-                  fontFamily="$body"
-                  fontSize={15}
-                  lineHeight={21}
-                  fontWeight="600"
-                  color={surface.text}
-                  numberOfLines={1}
-                >
+                <V2Text color={surface.text} numberOfLines={1} style={{ flex: 1, fontSize: 15, lineHeight: 21, fontWeight: "600" }}>
                   {t("list.suggestKeyword", { text: trimmed })}
-                </Text>
-              </XStack>
+                </V2Text>
+              </V2HStack>
             </Pressable>
           </>
         )}
-      </YStack>
+      </V2VStack>
     </ScrollView>
   )
 }

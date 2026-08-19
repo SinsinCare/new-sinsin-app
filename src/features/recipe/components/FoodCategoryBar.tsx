@@ -2,7 +2,7 @@ import React from "react"
 import { pngIcon } from "@/src/shared/components/pngIcon"
 import { Pressable, ScrollView, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { YStack, Text } from "tamagui"
+import { V2Text, V2VStack } from "@/src/design-system-v2"
 
 import WindowIcon from "@/assets/images/window.svg"
 import AmericanIcon from "@/assets/images/american.svg"
@@ -91,7 +91,7 @@ export function FoodCategoryBar({
               width: 60,
             })}
           >
-            <YStack alignItems="center" gap={6} opacity={opacity}>
+            <V2VStack align="center" gap={6} style={{ opacity: opacity }}>
               <View
                 style={{
                   width: 38,
@@ -102,15 +102,10 @@ export function FoodCategoryBar({
               >
                 <Icon height={34} />
               </View>
-              <Text
-                fontSize={13}
-                fontWeight="500"
-                fontFamily="$body"
-                color={activeTextColor}
-              >
+              <V2Text color={activeTextColor} style={{ fontSize: 13, fontWeight: "500" }}>
                 {label}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           </Pressable>
         )
       })}

@@ -1,8 +1,9 @@
 import { ReactNode } from "react"
-import { TouchableOpacity } from "react-native"
-import { Text, XStack, YStack } from "tamagui"
+import { StyleSheet, TouchableOpacity } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
+
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 
 interface RecordResultCardProps {
   type: string
@@ -20,68 +21,74 @@ export function RecordResultCard({
   children,
 }: RecordResultCardProps) {
   const { t } = useTranslation()
+  const { colors } = useV2Theme()
   const isHorizontal = type === "edema"
 
   const titleSection = (
-    <YStack
-      flex={isHorizontal ? 1 : undefined}
-      justifyContent="center"
-      gap="$1"
-    >
-      <XStack justifyContent="space-between" alignItems="center">
-        <Text fontSize={18} fontWeight="600" color="$gray12">
+    <V2VStack flex={isHorizontal ? 1 : undefined} justify="center" gap={4}>
+      <V2HStack justify="space-between" align="center">
+        {/* `$gray12`(가장 진한 글자) → v2 label.strong */}
+        <V2Text token="title.xSmall" color={colors.label.strong}>
           {title}
-        </Text>
+        </V2Text>
         {onReset && (
           <TouchableOpacity onPress={onReset}>
-            <XStack alignItems="center" gap={2}>
-              <Text fontSize="$3" color="$color.grey5">
+            <V2HStack align="center" gap={2}>
+              {/* `$color.grey5` → 보조 글자 */}
+              <V2Text token="caption.medium" color={colors.label.neutral}>
                 {t("home.undoRecord")}
-              </Text>
+              </V2Text>
               <Ionicons name="refresh" size={14} color="#999" />
-            </XStack>
+            </V2HStack>
           </TouchableOpacity>
         )}
-      </XStack>
+      </V2HStack>
       {subtitle && (
-        <Text
-          fontSize={13}
-          color="$color.grey5"
+        <V2Text
+          color={colors.label.neutral}
+          style={styles.subtitle}
           lineBreakStrategyIOS="hangul-word"
         >
           {subtitle}
-        </Text>
+        </V2Text>
       )}
-    </YStack>
+    </V2VStack>
   )
+
+  const surface = {
+    backgroundColor: colors.background.default,
+    borderRadius: 12,
+  }
 
   if (isHorizontal) {
     return (
-      <XStack
-        backgroundColor="$cardBackground"
-        borderRadius="$6"
-        paddingVertical="$4"
-        paddingHorizontal="$5"
-        alignItems="flex-start"
+      <V2HStack
+        paddingVertical={16}
+        paddingHorizontal={20}
+        align="flex-start"
+        style={surface}
       >
         {titleSection}
-        <YStack gap="$2">{children}</YStack>
-      </XStack>
+        <V2VStack gap={8}>{children}</V2VStack>
+      </V2HStack>
     )
   }
 
   return (
-    <XStack
-      backgroundColor="$cardBackground"
-      borderRadius="$6"
-      paddingVertical="$4"
-      paddingHorizontal="$4"
-      gap="$3"
+    <V2HStack
+      paddingVertical={16}
+      paddingHorizontal={16}
+      gap={12}
+      style={surface}
     >
-      <YStack flex={1} gap="$1">
+      <V2VStack flex={1} gap={4}>
         {titleSection}
         {children}
-      </YStack>
-    </XStack>
+      </V2VStack>
+    </V2HStack>
   )
 }
+
+const styles = StyleSheet.create({
+  subtitle: { fontSize: 13 },
+})

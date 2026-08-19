@@ -6,8 +6,9 @@
  * `AppliedFilterRow` 에 항상 보인다. 버튼에 적용 개수를 얹어 시트를 열기 전에도
  * 몇 개가 걸려 있는지 보이게 한다(§6.4 "결과 예측 가능").
  */
-import { Pressable, TextInput } from "react-native"
-import { XStack, Text, View } from "tamagui"
+import { Pressable } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
+import { V2Box, V2HStack, V2Text } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 import { Icon } from "@/src/shared/components/Icon"
@@ -47,16 +48,8 @@ export function RecipeSearchField({
   const hasFilters = appliedFilterCount > 0
 
   return (
-    <XStack gap={10} alignItems="center">
-      <XStack
-        flex={1}
-        alignItems="center"
-        gap={8}
-        height={44}
-        paddingHorizontal={14}
-        borderRadius={14}
-        backgroundColor={surface.surface}
-      >
+    <V2HStack gap={10} align="center">
+      <V2HStack flex={1} align="center" gap={8} paddingHorizontal={14} style={{ height: 44, borderRadius: 14, backgroundColor: surface.surface }}>
         <Icon name="magnifyingglass" size={18} color={surface.textWeak} />
         <TextInput
           style={{
@@ -91,7 +84,7 @@ export function RecipeSearchField({
             <Icon name="x" size={16} color={surface.textWeak} />
           </Pressable>
         )}
-      </XStack>
+      </V2HStack>
 
       <Pressable
         onPress={onOpenFilters}
@@ -104,52 +97,24 @@ export function RecipeSearchField({
         accessibilityState={{ selected: hasFilters }}
         style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
       >
-        <XStack
-          alignItems="center"
-          gap={6}
-          height={44}
-          paddingHorizontal={14}
-          borderRadius={14}
-          backgroundColor={hasFilters ? surface.surfaceBrand : surface.surface}
-        >
+        <V2HStack align="center" gap={6} paddingHorizontal={14} style={{ height: 44, borderRadius: 14, backgroundColor: hasFilters ? surface.surfaceBrand : surface.surface }}>
           <Icon
             name="filter"
             size={18}
             color={hasFilters ? tokens.color.primary.val : surface.textMuted}
           />
-          <Text
-            fontFamily="$body"
-            fontSize={14}
-            lineHeight={20}
-            fontWeight="600"
-            color={hasFilters ? tokens.color.primary.val : surface.textMuted}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text color={hasFilters ? tokens.color.primary.val : surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 14, lineHeight: 20, fontWeight: "600" }}>
             {t("list.filterOpen")}
-          </Text>
+          </V2Text>
           {hasFilters && (
-            <View
-              minWidth={18}
-              height={18}
-              borderRadius={9}
-              alignItems="center"
-              justifyContent="center"
-              paddingHorizontal={5}
-              backgroundColor={tokens.color.primary.val}
-            >
-              <Text
-                fontFamily="$body"
-                fontSize={11}
-                lineHeight={16}
-                fontWeight="700"
-                color="#FFFFFF"
-              >
+            <V2Box align="center" justify="center" paddingHorizontal={5} style={{ minWidth: 18, height: 18, borderRadius: 9, backgroundColor: tokens.color.primary.val }}>
+              <V2Text color="#FFFFFF" style={{ fontSize: 11, lineHeight: 16, fontWeight: "700" }}>
                 {appliedFilterCount}
-              </Text>
-            </View>
+              </V2Text>
+            </V2Box>
           )}
-        </XStack>
+        </V2HStack>
       </Pressable>
-    </XStack>
+    </V2HStack>
   )
 }

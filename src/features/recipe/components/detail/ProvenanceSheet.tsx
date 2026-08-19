@@ -6,9 +6,9 @@
  * 이 레시피가 나에게 맞는지에 대한 판단이 아니라는 것(§1.3).
  */
 import { Pressable } from "react-native"
-import { Text, XStack, YStack } from "tamagui"
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
-import { AppBottomSheet } from "@/src/shared/components"
+import { V2BottomSheet } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
 import type { RecipeNutrition } from "../../types/recipeV2"
@@ -28,8 +28,11 @@ const PROVENANCE_EXPLAIN_KEYS = {
   nutritionist_reviewed: "detail.nutrition.explain.nutritionist_reviewed",
 } as const
 
-const SNAP_POINTS = [52]
-
+/*
+  고정 스냅(52%)을 버렸다. 시트가 **콘텐츠 높이로 자란다**(`V2BottomSheet` → gorhom
+  `enableDynamicSizing`). 종전에는 설명이 두세 줄로 늘어나는 조합(667pt 기기)에서
+  아래쪽 안내가 52% 밖으로 밀렸고, 스크롤도 없어 읽을 방법이 없었다.
+*/
 export interface ProvenanceSheetProps {
   visible: boolean
   onClose: () => void
@@ -45,107 +48,50 @@ export function ProvenanceSheet({
   const surface = useSurface()
 
   return (
-    <AppBottomSheet
+    <V2BottomSheet
+      surface="recipe_provenance"
       visible={visible}
       onClose={onClose}
-      snapPoints={SNAP_POINTS}
     >
-      <YStack paddingHorizontal={LAYOUT.screenX} paddingTop={8} gap={16}>
-        <Text
-          {...TYPE.sheetTitle}
-          fontFamily="$body"
-          fontWeight="700"
-          color={surface.textStrong}
-          lineBreakStrategyIOS="hangul-word"
-        >
+      <V2VStack paddingHorizontal={LAYOUT.screenX} gap={16} style={{ paddingTop: 8 }}>
+        <V2Text {...TYPE.sheetTitle} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "700" }}>
           {t("detail.nutrition.provenanceTitle")}
-        </Text>
+        </V2Text>
 
         {nutrition == null ? (
-          <Text
-            {...TYPE.value}
-            fontFamily="$body"
-            color={surface.textMuted}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text {...TYPE.value} color={surface.textMuted} lineBreakStrategyIOS="hangul-word">
             {t("detail.nutrition.unavailableBody")}
-          </Text>
+          </V2Text>
         ) : (
-          <YStack gap={14}>
-            <XStack
-              alignSelf="flex-start"
-              height={LAYOUT.badge.height}
-              paddingHorizontal={10}
-              alignItems="center"
-              borderRadius={LAYOUT.badge.radius}
-              backgroundColor={surface.surface}
-            >
-              <Text
-                {...TYPE.caption}
-                fontFamily="$body"
-                fontWeight="600"
-                color={surface.textStrong}
-                lineBreakStrategyIOS="hangul-word"
-              >
+          <V2VStack gap={14}>
+            <V2HStack paddingHorizontal={10} align="center" style={{ alignSelf: "flex-start", height: LAYOUT.badge.height, borderRadius: LAYOUT.badge.radius, backgroundColor: surface.surface }}>
+              <V2Text {...TYPE.caption} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                 {t(PROVENANCE_BADGE_KEYS[nutrition.provenance])}
-              </Text>
-            </XStack>
+              </V2Text>
+            </V2HStack>
 
-            <Text
-              {...TYPE.value}
-              fontFamily="$body"
-              color={surface.text}
-              lineHeight={23}
-              lineBreakStrategyIOS="hangul-word"
-            >
+            <V2Text {...TYPE.value} color={surface.text} lineBreakStrategyIOS="hangul-word" style={{ lineHeight: 23 }}>
               {t(PROVENANCE_EXPLAIN_KEYS[nutrition.provenance])}
-            </Text>
+            </V2Text>
 
-            <Text
-              {...TYPE.caption}
-              fontFamily="$body"
-              color={surface.textMuted}
-              lineHeight={20}
-              lineBreakStrategyIOS="hangul-word"
-            >
+            <V2Text {...TYPE.caption} color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ lineHeight: 20 }}>
               {t("detail.nutrition.explainScope")}
-            </Text>
+            </V2Text>
 
             {nutrition.unmatchedIngredients.length > 0 && (
-              <YStack
-                gap={4}
-                padding={14}
-                borderRadius={12}
-                backgroundColor={surface.surface}
-              >
-                <Text
-                  {...TYPE.caption}
-                  fontFamily="$body"
-                  fontWeight="600"
-                  color={surface.textStrong}
-                  lineBreakStrategyIOS="hangul-word"
-                >
+              <V2VStack gap={4} padding={14} style={{ borderRadius: 12, backgroundColor: surface.surface }}>
+                <V2Text {...TYPE.caption} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                   {t("detail.nutrition.unmatchedTitle")}
-                </Text>
-                <Text
-                  {...TYPE.caption}
-                  fontFamily="$body"
-                  color={surface.textMuted}
-                  lineHeight={20}
-                  lineBreakStrategyIOS="hangul-word"
-                >
+                </V2Text>
+                <V2Text {...TYPE.caption} color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ lineHeight: 20 }}>
                   {t("detail.nutrition.unmatchedBody")}
-                </Text>
-                <Text
-                  {...TYPE.caption}
-                  fontFamily="$body"
-                  color={surface.textMuted}
-                >
+                </V2Text>
+                <V2Text {...TYPE.caption} color={surface.textMuted}>
                   {nutrition.unmatchedIngredients.join(" · ")}
-                </Text>
-              </YStack>
+                </V2Text>
+              </V2VStack>
             )}
-          </YStack>
+          </V2VStack>
         )}
 
         <Pressable
@@ -154,25 +100,13 @@ export function ProvenanceSheet({
           accessibilityLabel={t("action.close")}
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
         >
-          <YStack
-            height={LAYOUT.ctaCompact.height}
-            borderRadius={LAYOUT.ctaCompact.radius}
-            backgroundColor={surface.surface}
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text
-              {...TYPE.cta}
-              fontFamily="$body"
-              fontWeight="600"
-              color={surface.textStrong}
-              lineBreakStrategyIOS="hangul-word"
-            >
+          <V2VStack align="center" justify="center" style={{ height: LAYOUT.ctaCompact.height, borderRadius: LAYOUT.ctaCompact.radius, backgroundColor: surface.surface }}>
+            <V2Text {...TYPE.cta} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
               {t("action.close")}
-            </Text>
-          </YStack>
+            </V2Text>
+          </V2VStack>
         </Pressable>
-      </YStack>
-    </AppBottomSheet>
+      </V2VStack>
+    </V2BottomSheet>
   )
 }

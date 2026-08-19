@@ -12,14 +12,11 @@
  *    닫기로 나가면 원래대로 돌아간다(되돌리기 가능, §6.4).
  */
 import { useEffect, useState } from "react"
-import { Pressable } from "react-native"
-import { Text, XStack, YStack } from "tamagui"
+import { Pressable, useWindowDimensions } from "react-native"
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
-import {
-  AppBottomSheet,
-  AppBottomSheetScrollView,
-} from "@/src/shared/components"
+import { V2BottomSheet, V2SheetScrollView } from "@/src/design-system-v2"
 import { Icon } from "@/src/shared/components/Icon"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
@@ -35,21 +32,16 @@ import {
 } from "./recipeListFilterModel"
 
 /**
- * 그룹 2개 + 칩 12개 짜리 시트다. 화면 58%면 스크롤 없이 머리·칩·CTA 가 다 선다.
+ * 그룹 2개 + 칩 12개 짜리 시트.
  *
- * **스냅 포인트는 하나여야 한다.** 종전에는 `[52, 74]` 였는데, Tamagui Sheet 는
- * 프레임을 **가장 큰 스냅(74%)** 높이로 눕히고 아래로 밀어 52%만 보여 준다. 즉
- * 자식들은 74% 짜리 상자를 기준으로 배치되고, 52% 아래로 간 것은 화면 밖이다.
- * RN ScrollView 는 기본 스타일이 `flexGrow:1`(baseVertical) 이라 그 74% 상자의
- * 남는 높이를 전부 차지했고, 뒤따르는 `적용하기` CTA 는 화면 아래로 밀려나
- * **버튼이 처음부터 없는 것처럼 보였다.** 고르고 X 로 닫으면 draft 가 버려지니
- * "선택해도 적용이 안 된다" 가 된다(2026-08-04 QA).
+ * **고정 스냅과 `disableDrag` 를 함께 버렸다.** 그 둘은 Tamagui 시트의 함정을 피하려던
+ * 대응이었다 — 프레임이 **가장 큰 스냅** 높이로 눕는 탓에, 스냅이 둘이면 자식이 큰 상자를
+ * 기준으로 배치되고 `적용하기` CTA 가 화면 밖으로 밀려났다(2026-08-04 QA:
+ * "선택해도 적용이 안 된다"). 그래서 스냅을 하나로 줄이고 드래그를 막아 두었다.
  *
- * 게다가 이 시트는 `disableDrag` 라 두 번째 스냅으로 갈 방법이 애초에 없었다 —
- * 보이지 않는 스냅이 레이아웃만 망가뜨리고 있었던 셈이다. 드래그를 막은 시트는
- * 스냅을 하나만 둘 것(프레임 높이 = 보이는 높이).
+ * `V2BottomSheet` 는 콘텐츠 높이로 자라므로 그 함정 자체가 없다. 스냅 상수도, 드래그를
+ * 막을 이유도 사라졌다 — 오히려 아래로 쓸어 닫기가 돌아온다.
  */
-const FILTER_SNAP_POINTS = [58]
 
 interface RecipeFilterSheetProps {
   open: boolean
@@ -66,6 +58,7 @@ export function RecipeFilterSheet({
 }: RecipeFilterSheetProps) {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
+  const { height: windowHeight } = useWindowDimensions()
   const [draft, setDraft] = useState<RecipeFilterSelection>(
     selection ?? EMPTY_RECIPE_FILTERS,
   )
@@ -77,20 +70,9 @@ export function RecipeFilterSheet({
   const draftCount = countRecipeFilters(draft)
 
   return (
-    <AppBottomSheet
-      visible={open}
-      onClose={onClose}
-      snapPoints={FILTER_SNAP_POINTS}
-      disableDrag
-    >
-      <YStack flex={1} backgroundColor={surface.canvas} paddingTop={4}>
-        <XStack
-          paddingHorizontal={LAYOUT.screenX}
-          paddingTop={4}
-          paddingBottom={14}
-          alignItems="center"
-          justifyContent="space-between"
-        >
+    <V2BottomSheet surface="recipe_filter" visible={open} onClose={onClose}>
+      <V2VStack style={{ backgroundColor: surface.canvas, paddingTop: 4 }}>
+        <V2HStack paddingHorizontal={LAYOUT.screenX} align="center" justify="space-between" style={{ paddingTop: 4, paddingBottom: 14 }}>
           <Pressable
             onPress={onClose}
             hitSlop={8}
@@ -100,16 +82,9 @@ export function RecipeFilterSheet({
           >
             <Icon name="x" size={22} color={surface.textStrong} />
           </Pressable>
-          <Text
-            fontFamily="$body"
-            fontSize={16}
-            lineHeight={22}
-            fontWeight="700"
-            color={surface.textStrong}
-            lineBreakStrategyIOS="hangul-word"
-          >
+          <V2Text color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 16, lineHeight: 22, fontWeight: "700" }}>
             {t("filter.title")}
-          </Text>
+          </V2Text>
           {/* 되돌리는 길을 고르는 화면 안에 둔다 — 시안에는 해제 수단이 없었다. */}
           <Pressable
             onPress={() => setDraft(clearRecipeFilters())}
@@ -122,20 +97,15 @@ export function RecipeFilterSheet({
               opacity: draftCount === 0 ? 0.35 : pressed ? 0.7 : 1,
             })}
           >
-            <Text
-              fontFamily="$body"
-              fontSize={14}
-              lineHeight={20}
-              fontWeight="600"
-              color={surface.textMuted}
-              lineBreakStrategyIOS="hangul-word"
-            >
+            <V2Text color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 14, lineHeight: 20, fontWeight: "600" }}>
               {t("list.filterClearAll")}
-            </Text>
+            </V2Text>
           </Pressable>
-        </XStack>
+        </V2HStack>
 
-        <AppBottomSheetScrollView
+        <V2SheetScrollView
+          /* 칩이 늘어도 시트가 화면을 다 먹지 않게 하는 상한. */
+          style={{ maxHeight: Math.round(windowHeight * 0.55) }}
           contentContainerStyle={{
             paddingHorizontal: LAYOUT.screenX,
             gap: 22,
@@ -143,18 +113,11 @@ export function RecipeFilterSheet({
           }}
         >
           {RECIPE_FILTER_GROUP_VIEWS.map((group) => (
-            <YStack key={group.key} gap={10}>
-              <Text
-                fontFamily="$body"
-                fontSize={14}
-                lineHeight={20}
-                fontWeight="700"
-                color={surface.textStrong}
-                lineBreakStrategyIOS="hangul-word"
-              >
+            <V2VStack key={group.key} gap={10}>
+              <V2Text color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 14, lineHeight: 20, fontWeight: "700" }}>
                 {t(group.titleKey)}
-              </Text>
-              <XStack flexWrap="wrap" gap={8}>
+              </V2Text>
+              <V2HStack wrap="wrap" gap={8}>
                 {group.options.map((option) => {
                   const isSelected =
                     draft[group.key]?.includes(option.key) ?? false
@@ -171,39 +134,26 @@ export function RecipeFilterSheet({
                       accessibilityState={{ selected: isSelected }}
                       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                     >
-                      <XStack
-                        alignItems="center"
-                        height={LAYOUT.chip.height}
-                        paddingHorizontal={14}
-                        borderRadius={LAYOUT.chip.radius}
-                        backgroundColor={
+                      <V2HStack align="center" paddingHorizontal={14} style={{ height: LAYOUT.chip.height, borderRadius: LAYOUT.chip.radius, backgroundColor: 
                           isSelected ? surface.surfaceBrand : surface.surface
-                        }
-                      >
-                        <Text
-                          fontFamily="$body"
-                          fontSize={13.5}
-                          lineHeight={19}
-                          fontWeight={isSelected ? "700" : "500"}
-                          color={
+                         }}>
+                        <V2Text color={
                             isSelected
                               ? tokens.color.primary.val
                               : surface.textMuted
-                          }
-                          lineBreakStrategyIOS="hangul-word"
-                        >
+                          } lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13.5, lineHeight: 19, fontWeight: isSelected ? "700" : "500" }}>
                           {t(option.labelKey)}
-                        </Text>
-                      </XStack>
+                        </V2Text>
+                      </V2HStack>
                     </Pressable>
                   )
                 })}
-              </XStack>
-            </YStack>
+              </V2HStack>
+            </V2VStack>
           ))}
-        </AppBottomSheetScrollView>
+        </V2SheetScrollView>
 
-        <YStack paddingHorizontal={LAYOUT.screenX} paddingTop={8}>
+        <V2VStack paddingHorizontal={LAYOUT.screenX} style={{ paddingTop: 8 }}>
           <Pressable
             onPress={() => {
               onApply(draft)
@@ -213,41 +163,20 @@ export function RecipeFilterSheet({
             accessibilityLabel={t("action.apply")}
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
-            <XStack
-              height={LAYOUT.cta.height}
-              borderRadius={LAYOUT.cta.radius}
-              alignItems="center"
-              justifyContent="center"
-              gap={8}
-              backgroundColor={tokens.color.primary.val}
-            >
-              <Text
-                fontFamily="$body"
-                fontSize={16}
-                lineHeight={22}
-                fontWeight="700"
-                color="#FFFFFF"
-                lineBreakStrategyIOS="hangul-word"
-              >
+            <V2HStack align="center" justify="center" gap={8} style={{ height: LAYOUT.cta.height, borderRadius: LAYOUT.cta.radius, backgroundColor: tokens.color.primary.val }}>
+              <V2Text color="#FFFFFF" lineBreakStrategyIOS="hangul-word" style={{ fontSize: 16, lineHeight: 22, fontWeight: "700" }}>
                 {t("action.apply")}
-              </Text>
+              </V2Text>
               {/* 누르기 전에 몇 개가 걸리는지 보인다(§6.4). */}
               {draftCount > 0 && (
-                <Text
-                  fontFamily="$body"
-                  fontSize={14}
-                  lineHeight={20}
-                  fontWeight="600"
-                  color="#FFFFFFCC"
-                  lineBreakStrategyIOS="hangul-word"
-                >
+                <V2Text color="#FFFFFFCC" lineBreakStrategyIOS="hangul-word" style={{ fontSize: 14, lineHeight: 20, fontWeight: "600" }}>
                   {t("list.filterApplied", { count: draftCount })}
-                </Text>
+                </V2Text>
               )}
-            </XStack>
+            </V2HStack>
           </Pressable>
-        </YStack>
-      </YStack>
-    </AppBottomSheet>
+        </V2VStack>
+      </V2VStack>
+    </V2BottomSheet>
   )
 }

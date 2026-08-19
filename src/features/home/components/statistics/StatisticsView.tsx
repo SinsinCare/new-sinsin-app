@@ -11,7 +11,7 @@ import {
   type AppStateStatus,
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text, XStack, YStack } from "tamagui"
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { IntakeSummary } from "./IntakeSummary"
 import { DietaryGuide } from "./DietaryGuide"
@@ -101,6 +101,7 @@ export function StatisticsView({
   const hasDiets = (data?.result.diets.length ?? 0) > 0
   const isEmpty = !isLoading && !hasDiets
   const isDarkMode = useAppColorScheme() === "dark"
+  const { colors } = useV2Theme()
 
   useEffect(() => {
     if (!isActive) return
@@ -223,8 +224,8 @@ export function StatisticsView({
         scrollEventThrottle={16}
       >
         {/* index 0: 헤더 (주간 네비 + 달력) */}
-        <YStack gap="$3" paddingBottom="$2">
-          <XStack justifyContent="center" alignItems="center" gap="$3">
+        <V2VStack gap={12} paddingBottom={8}>
+          <V2HStack justify="center" align="center" gap={12}>
             <TouchableOpacity
               onPress={goToPrevWeek}
               accessibilityRole="button"
@@ -237,16 +238,12 @@ export function StatisticsView({
               accessibilityRole="button"
               accessibilityLabel={t("stats.openCalendar")}
             >
-              <XStack alignItems="center" gap="$2">
-                <Text
-                  fontSize="$5"
-                  fontWeight="600"
-                  color={isDarkMode ? "$textDark" : "$black"}
-                >
+              <V2HStack align="center" gap={8}>
+                <V2Text token="title.small" color={colors.label.strong}>
                   {getWeekLabel(selectedDate, i18n.language)}
-                </Text>
+                </V2Text>
                 <Ionicons name="calendar-outline" size={18} color="#999" />
-              </XStack>
+              </V2HStack>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={goToNextWeek}
@@ -255,17 +252,17 @@ export function StatisticsView({
             >
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
-          </XStack>
+          </V2HStack>
           <WeekCalendar
             selectedDate={selectedDate}
             onSelectDate={handleSelectDate}
             recordedDates={recordedDates}
             disableFuture
           />
-        </YStack>
+        </V2VStack>
 
         {/* index 1: sticky 탭바 */}
-        <YStack
+        <V2VStack
           onLayout={(e) => {
             tabBarHeight.current = e.nativeEvent.layout.height
           }}
@@ -274,43 +271,42 @@ export function StatisticsView({
             selectedTab={selectedTab}
             onSelectTab={handleTabPress}
           />
-          <YStack height={1} backgroundColor="$gray4" />
-        </YStack>
+          <View style={{ height: 1, backgroundColor: colors.line.normal }} />
+        </V2VStack>
 
         {/* 섹션 - 기록 없으면 빈 상태, 있으면 모두 렌더링 */}
         {isEmpty || isLoading ? (
-          <YStack
-            minHeight={windowHeight * 0.45}
-            justifyContent="center"
-            alignItems="center"
-            gap="$4"
+          <V2VStack
+            justify="center"
+            align="center"
+            gap={16}
+            style={{ minHeight: windowHeight * 0.45 }}
           >
             <Icon name="circle-character" size={40} />
-            <Text
-              fontSize="$4"
-              fontWeight="600"
-              color="$colorSubtle"
+            <V2Text
+              color={colors.label.neutral}
+              style={{ fontSize: 14, fontWeight: "600" }}
               lineBreakStrategyIOS="hangul-word"
               textBreakStrategy="balanced"
             >
               {t("stats.emptyPeriod")}
-            </Text>
+            </V2Text>
             <TouchableOpacity onPress={onGoToRecord}>
-              <Text
-                fontSize="$4"
-                color="$colorSubtle"
-                fontWeight="600"
-                backgroundColor={
-                  isDarkMode ? "$cardBgDark" : "$backgroundFocus"
-                }
-                paddingHorizontal="$3"
-                paddingVertical="$2.5"
-                borderRadius="$8"
+              <V2Text
+                color={colors.label.neutral}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  backgroundColor: colors.fill.normal,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  borderRadius: 16,
+                }}
               >
                 {t("stats.logMeal")}
-              </Text>
+              </V2Text>
             </TouchableOpacity>
-          </YStack>
+          </V2VStack>
         ) : (
           <>
             <View
@@ -341,7 +337,10 @@ export function StatisticsView({
               />
             </View>
 
+            {/* 통계에서 여는 것도 **저장된 기록**이다 — 신규 결과와 같은 칸에 담기면
+                '결과를 보고도 안 담았다' 가 담을 것이 없는 화면까지 세게 된다. */}
             <FoodAnalysisResult
+              source="saved"
               result={diaryResult}
               open={isResultOpen}
               onClose={() => setIsResultOpen(false)}

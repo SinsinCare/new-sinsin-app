@@ -1,7 +1,6 @@
-import { YStack } from "tamagui"
+import { useV2Theme, V2VStack } from "@/src/design-system-v2"
 import { NutrientBarSection } from "./NutrientBarSection"
 import { NutrientGraphHeader } from "./NutrientGraphHeader"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import type { NutrientKey } from "@/src/features/nutrition/hooks/useNutrientLimits"
 import { useTranslation } from "react-i18next"
 
@@ -29,14 +28,13 @@ export function NutrientGraph({
   const fillPct = totalMax > 0 ? (current / totalMax) * 100 : 0
   const limitPct = totalMax > 0 ? (max / totalMax) * 100 : 100
 
-  const isDarkMode = useAppColorScheme() === "dark"
+  const { colors } = useV2Theme()
 
   return (
-    <YStack
-      backgroundColor={isDarkMode ? "$cardBgDark" : "$cardBackground"}
-      borderRadius={12}
+    <V2VStack
       padding={16}
       gap={5}
+      style={{ backgroundColor: colors.background.default, borderRadius: 12 }}
     >
       <NutrientGraphHeader
         nutrientKey={nutrientKey}
@@ -61,6 +59,6 @@ export function NutrientGraph({
             : t("stats.nutrientGraph.personalReference")
         }
       />
-    </YStack>
+    </V2VStack>
   )
 }

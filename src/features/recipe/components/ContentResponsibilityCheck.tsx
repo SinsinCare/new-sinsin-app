@@ -1,5 +1,5 @@
 import { Pressable } from "react-native"
-import { XStack, Text } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import { Checkbox } from "@/src/shared/components"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
@@ -31,16 +31,7 @@ export function ContentResponsibilityCheck({
   }
 
   return (
-    <XStack
-      alignItems="flex-start"
-      gap={10}
-      padding={14}
-      borderRadius={8}
-      borderWidth={1}
-      borderColor={BOX_BORDER[scheme]}
-      backgroundColor={BOX_BG[scheme]}
-      opacity={disabled ? 0.6 : 1}
-    >
+    <V2HStack align="flex-start" gap={10} padding={14} style={{ borderRadius: 8, borderWidth: 1, borderColor: BOX_BORDER[scheme], backgroundColor: BOX_BG[scheme], opacity: disabled ? 0.6 : 1 }}>
       <Checkbox
         checked={value}
         onToggle={toggle}
@@ -48,17 +39,10 @@ export function ContentResponsibilityCheck({
         disabled={disabled}
       />
       <Pressable onPress={toggle} disabled={disabled} style={{ flex: 1 }}>
-        <Text
-          fontSize={13}
-          lineHeight={19}
-          fontWeight="400"
-          fontFamily="$body"
-          color={TEXT_COLOR[scheme]}
-          lineBreakStrategyIOS="hangul-word"
-        >
+        <V2Text color={TEXT_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 19, fontWeight: "400" }}>
           {t("responsibility")}
-        </Text>
+        </V2Text>
       </Pressable>
-    </XStack>
+    </V2HStack>
   )
 }
