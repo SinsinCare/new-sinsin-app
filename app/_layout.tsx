@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Appearance, useColorScheme } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
-import { TamaguiProvider, Theme } from "tamagui"
 import { PortalProvider } from "@/src/shared/components/Portal"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useFonts } from "expo-font"
@@ -15,7 +14,6 @@ import {
 } from "react-native-safe-area-context"
 import { AppKeyboardSurface } from "@/src/shared/components/AppKeyboardSurface"
 import { useTranslation } from "react-i18next"
-import config from "../tamagui.config"
 import { languageReady } from "@/src/i18n" // 초기화(부수효과) + 저장 언어 복원 약속
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
@@ -215,14 +213,16 @@ export default function RootLayout() {
     }
   }, [])
   const themeMode = useThemeStore((s) => s.themeMode)
-  const systemScheme = useColorScheme()
-  const effectiveScheme =
-    themeMode === "system"
-      ? systemScheme === "dark"
-        ? "dark"
-        : "light"
-      : themeMode
 
+  /*
+    테마 전환은 **`Appearance.setColorScheme` 한 곳**에서만 일어난다.
+
+    예전에는 여기서 계산한 `effectiveScheme` 을 `<TamaguiProvider defaultTheme>` 과
+    `<Theme name>` 에도 내려 줬는데, tamagui 를 걷어낸 지금은 소비자가 없다.
+    v2 계보(`useV2Theme`)와 레거시 계보(`useAppColorScheme`)는 둘 다
+    `useAppColorScheme` → RN `Appearance` 를 보므로, 아래 한 줄이면 두 계보가 함께
+    돈다. 계산값을 남겨 두면 "여기서도 테마를 정하나?" 하고 읽히므로 지웠다.
+  */
   useEffect(() => {
     Appearance.setColorScheme(
       themeMode === "system" ? "unspecified" : themeMode,
@@ -257,21 +257,19 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <KeyboardProvider>
           <QueryClientProvider client={queryClient}>
-            <TamaguiProvider config={config} defaultTheme={effectiveScheme}>
-              <Theme name={effectiveScheme}>
-                <PortalProvider>
-                  <AppPolicyGate>
-                    <RootLayoutNav />
-                  </AppPolicyGate>
-                  <Toast />
-                  {/*
-                  showConfirm/showAlert 의 기본 호스트. 화면 단위 호출은 전부
-                  여기로 온다. RN Modal 안에서 부르는 확인창은 그 모달 안에
-                  <V2DialogHost/> 를 하나 더 얹어야 한다 — 이유는 그쪽 머리말.
-                */}
-                  <V2DialogHost />
-                </PortalProvider>
-                {/*
+            <PortalProvider>
+              <AppPolicyGate>
+                <RootLayoutNav />
+              </AppPolicyGate>
+              <Toast />
+              {/*
+                showConfirm/showAlert 의 기본 호스트. 화면 단위 호출은 전부
+                여기로 온다. RN Modal 안에서 부르는 확인창은 그 모달 안에
+                <V2DialogHost/> 를 하나 더 얹어야 한다 — 이유는 그쪽 머리말.
+              */}
+              <V2DialogHost />
+            </PortalProvider>
+            {/*
                 키보드 탈출구. 숫자 키패드에는 완료 키가 없고, InputAccessoryView 는
                 시트 안에서 렌더되지 않는다 — 전역 툴바만이 모든 입력을 덮는다
                 (AppKeyboardToolbar 머리말). 기록 시트가 열려 있으면 툴바 대신
@@ -284,9 +282,7 @@ export default function RootLayout() {
                 가린다" 가 이것이다. 밖으로 빼면 마지막에 그려져 위에 선다.
                 (2026-08-19 이전에는 @tamagui/portal 이었고 순서 규칙은 같다.)
               */}
-                <AppKeyboardSurface />
-              </Theme>
-            </TamaguiProvider>
+            <AppKeyboardSurface />
           </QueryClientProvider>
         </KeyboardProvider>
       </SafeAreaProvider>
