@@ -301,6 +301,18 @@ export function FoodAnalysisResult({
    */
   const editedRef = useRef(false)
 
+  /**
+   * 나가기 확인창이 이미 떠 있는가. `handleClosePress` 의 재진입을 막는다.
+   *
+   * **이 훅은 조기 반환(`if (!displayResult) return null`)보다 위에 있어야 한다.**
+   * 아래에 두면 결과가 없을 때는 호출되지 않고 생기면 호출돼 렌더마다 훅 개수가
+   * 달라진다 — `Rendered more hooks than during the previous render` 로 화면이 죽는다.
+   * (실제로 그렇게 한 번 깨뜨렸다. 이 파일은 조기 반환이 중간에 있어서 특히 쉽다.)
+   *
+   * 왜 필요한지는 `handleClosePress` 머리말에 적었다.
+   */
+  const closingRef = useRef(false)
+
   useEffect(() => {
     setIsAddingToRecord(false)
     setIsEdit(false)
@@ -476,6 +488,20 @@ export function FoodAnalysisResult({
    * V2Modal 로 모을 때 여기만 남았고, 정작 사용자가 제일 자주 보는 확인창이
    * 혼자 다른 얼굴이었다. `showConfirm` 은 이 화면 안의 `<ModalOverlayHost />`
    * 를 타므로 열린 RN Modal 안에서도 뜬다(ModalOverlayHost 머리말).
+   *
+   * ■ **확인창이 두 장 뜨던 것** (2026-08-19 수정)
+   *
+   *   이 화면에는 나가는 문이 **둘**이다 — 헤더의 `✕` 와 `onRequestClose`
+   *   (iOS pageSheet 아래로 쓸어내리기 · 안드로이드 뒤로가기). 둘 다 이 함수를
+   *   부르는데 `await showConfirm(...)` 는 **사용자가 답할 때까지 돌아오지 않는다.**
+   *   그 사이 다른 문이 한 번 더 열리면 요청이 **큐에 두 개** 쌓인다.
+   *
+   *   `V2DialogHost` 는 큐를 순서대로 비우므로(그쪽 `settle` 주석) 사용자에게는
+   *   **한 장을 닫으면 똑같은 것이 또 뜨는** 것으로 보인다. 실제 제보가 그 모양이었다.
+   *
+   *   특히 pageSheet 은 확인창이 떠 있는 동안에도 시트를 계속 끌 수 있어서
+   *   재진입이 쉽다. 그래서 `closingRef` 로 **한 번에 하나만** 통과시킨다.
+   *   그 ref 는 조기 반환보다 **위에서** 선언한다(훅 규칙 — 그쪽 주석 참고).
    */
   const handleClosePress = async () => {
     if (!showAddButton) {
@@ -483,6 +509,9 @@ export function FoodAnalysisResult({
       onClose()
       return
     }
+    // 확인창이 이미 떠 있으면 두 번째 문은 무시한다(위 머리말).
+    if (closingRef.current) return
+    closingRef.current = true
     /*
       확인창을 **띄운 수**와 **그래도 나간 수**가 둘 다 있어야 문구가 붙잡고 있는지
       보인다. 하나만 세면 문구를 고쳐도 좋아졌는지 알 수 없다.
@@ -495,20 +524,27 @@ export function FoodAnalysisResult({
       source: exitSource,
       edited,
     })
-    const confirmed = await showConfirm({
-      title: t("foodResult.unsavedTitle"),
-      description: t("foodResult.unsavedBody"),
-      confirmLabel: t("foodResult.leaveWithoutSaving"),
-      cancelLabel: t("foodResult.returnToResult"),
-      destructive: true,
-    })
-    if (confirmed) {
-      // 이 여정에서 가장 비싼 이탈 — 서버 분석을 이미 한 번 태우고도 기록이 안 남는다.
-      trackAnalyticsEvent("food_record_result_abandoned", {
-        source: exitSource,
-        edited,
+    try {
+      const confirmed = await showConfirm({
+        title: t("foodResult.unsavedTitle"),
+        description: t("foodResult.unsavedBody"),
+        confirmLabel: t("foodResult.leaveWithoutSaving"),
+        cancelLabel: t("foodResult.returnToResult"),
+        destructive: true,
       })
-      onClose()
+      if (confirmed) {
+        // 이 여정에서 가장 비싼 이탈 — 서버 분석을 이미 한 번 태우고도 기록이 안 남는다.
+        trackAnalyticsEvent("food_record_result_abandoned", {
+          source: exitSource,
+          edited,
+        })
+        onClose()
+      }
+    } finally {
+      // 머물기를 골랐으면 다음 시도에 다시 물어야 한다. 나가는 경우에도 풀어 둔다 —
+      // 이 컴포넌트는 언마운트되지 않고 `open` 만 false 가 되므로(RecordView 가 셋을
+      // 항상 세운다) 잠금이 남으면 **다음 번에 확인창이 영영 안 뜬다.**
+      closingRef.current = false
     }
   }
 

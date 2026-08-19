@@ -41,11 +41,34 @@ export type V2ModalProps = {
   secondaryLabel?: string
   /** 보조 액션 콜백 */
   onSecondary?: () => void
-  /** Confirm 2버튼 배치 (기본 가로) */
+  /** Confirm 2버튼 배치 (기본은 라벨 길이를 보고 자동으로 고른다) */
   buttonLayout?: V2ModalButtonLayout
   /** 파괴적 액션 — 주 액션을 Danger/Fill로 */
   destructive?: boolean
 }
+
+/**
+ * 가로 분할에서 한 버튼이 쓸 수 있는 글자 수의 실측 상한.
+ *
+ * ■ 왜 필요한가 (2026-08-19, `기록하지 않고...`)
+ *
+ *   `V2Button` 은 라벨을 `numberOfLines={1}` 로 그린다 — 버튼 높이가 문구에 따라
+ *   흔들리지 않게 하려는 의도적 선택이다. 그런데 가로 분할은 각 버튼이 **화면 폭의
+ *   절반 남짓**(카드 최대 320 - 좌우 패딩 32 - 간격 8, 둘로 나누면 ≈140pt)이라
+ *   긴 한글 라벨이 그대로 잘렸다. 실제로 `기록하지 않고 나가기` 가
+ *   **`기록하지 않고...`** 로 잘려, 되돌릴 수 없는 액션인데 **무엇을 하는 버튼인지가
+ *   잘린 자리에 있었다.**
+ *
+ *   문구를 짧게 고치는 것으로도 그 화면은 낫지만, 다음에 긴 라벨을 넘기는 호출부가
+ *   생기면 똑같이 잘린다. 그래서 **컴포넌트가 스스로 판단**한다.
+ *
+ *   기준값은 `title.small`(15pt Medium) 기준 한글 폭 실측에서 왔다. 실측 문구:
+ *   `기록하지 않고 나가기`(11자) 는 잘렸고 `결과로 돌아가기`(8자·공백 포함) 는
+ *   턱걸이로 들어갔다. 턱걸이를 기준으로 잡으면 폰트·기기가 조금만 달라져도 다시
+ *   잘리므로 **한 칸 여유를 두고 7 로 잡는다.** 영문은 글자당 폭이 절반쯤이라 이
+ *   기준이 보수적이지만, **잘려서 못 읽는 것보다 세로로 쌓이는 편이 항상 낫다.**
+ */
+const HORIZONTAL_LABEL_LIMIT = 7
 
 export function V2Modal({
   visible,
@@ -56,13 +79,22 @@ export function V2Modal({
   onPrimary,
   secondaryLabel,
   onSecondary,
-  buttonLayout = "horizontal",
+  buttonLayout,
   destructive = false,
 }: V2ModalProps) {
   const { colors } = useV2Theme()
   // secondaryLabel 유무로 Alert(1버튼) / Confirm(2버튼) 결정
   const isConfirm = secondaryLabel != null
-  const isVertical = buttonLayout === "vertical"
+  /*
+    배치를 명시하지 않으면 **라벨이 정한다**(HORIZONTAL_LABEL_LIMIT 머리말).
+    호출부가 `buttonLayout` 을 주면 그 뜻을 존중한다 — 짧은 라벨인데도 세로로
+    쌓고 싶은 화면이 있을 수 있고, 자동 판정이 그것까지 뒤집으면 안 된다.
+  */
+  const tooLongForRow =
+    primaryLabel.length > HORIZONTAL_LABEL_LIMIT ||
+    (secondaryLabel?.length ?? 0) > HORIZONTAL_LABEL_LIMIT
+  const isVertical =
+    buttonLayout != null ? buttonLayout === "vertical" : tooLongForRow
 
   // 주 액션 — Brand/Fill (destructive면 Danger/Fill)
   const primaryButton = (
