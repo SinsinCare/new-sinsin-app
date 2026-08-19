@@ -8,7 +8,7 @@ import {
   Platform,
 } from "react-native"
 import { AppModal } from "@/src/shared/components/AppModal"
-import { Text } from "tamagui"
+import { V2Text } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -367,17 +367,16 @@ export function NotificationSettingsScreen() {
                           })
                         }
                       >
-                        <Text
-                          fontSize={13}
-                          fontWeight="500"
+                        <V2Text
                           color={
                             categories.waterReminder.intervalHours === h
                               ? "white"
                               : c.textSub
                           }
+                          style={{ fontSize: 13, fontWeight: "500" }}
                         >
                           {t("notifications.water.intervalHours", { count: h })}
-                        </Text>
+                        </V2Text>
                       </TouchableOpacity>
                     ))}
                   </View>

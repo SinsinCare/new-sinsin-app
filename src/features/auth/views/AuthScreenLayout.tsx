@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
 } from "react-native"
-import { YStack, Text } from "tamagui"
+import { V2Text, V2VStack } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -58,29 +58,28 @@ export function AuthScreenLayout({
 
   const content = (
     <>
-      <YStack flex={scrollable ? 1 : undefined}>
+      <V2VStack flex={scrollable ? 1 : undefined}>
         {/* 질문 위계는 스텝 화면과 같은 스케일을 쓴다(24/700 → 15/weak).
             화면마다 제목 크기가 다르면 같은 흐름으로 안 읽힌다. */}
-        <Text
+        <V2Text
           {...AUTH_TYPE.question}
-          fontWeight="700"
           color={surface.textStrong}
-          marginBottom={subtitle ? 8 : 0}
           lineBreakStrategyIOS="hangul-word"
+          style={{ fontWeight: "700", marginBottom: subtitle ? 8 : 0 }}
         >
           {title}
-        </Text>
+        </V2Text>
         {subtitle && (
-          <Text
+          <V2Text
             {...AUTH_TYPE.subtitle}
             color={surface.textWeak}
             lineBreakStrategyIOS="hangul-word"
           >
             {subtitle}
-          </Text>
+          </V2Text>
         )}
         {children}
-      </YStack>
+      </V2VStack>
     </>
   )
 
@@ -98,27 +97,30 @@ export function AuthScreenLayout({
       >
         {/* 비활성 CTA 는 브랜드색을 옅게 깔지 않는다 — 흐린 주황은 "곧 눌린다"처럼
             보여 계속 누르게 만든다. 아예 회색 면으로 빠진다. */}
-        <YStack
-          backgroundColor={
-            !buttonDisabled && !buttonLoading ? surface.brand : surface.ctaOffBg
-          }
-          height={AUTH_LAYOUT.ctaHeight}
-          borderRadius={AUTH_LAYOUT.radius.cta}
-          alignItems="center"
-          justifyContent="center"
+        <V2VStack
+          align="center"
+          justify="center"
+          style={{
+            backgroundColor:
+              !buttonDisabled && !buttonLoading
+                ? surface.brand
+                : surface.ctaOffBg,
+            height: AUTH_LAYOUT.ctaHeight,
+            borderRadius: AUTH_LAYOUT.radius.cta,
+          }}
         >
-          <Text
+          <V2Text
             color={
               !buttonDisabled && !buttonLoading
                 ? surface.onBrand
                 : surface.ctaOffText
             }
             {...AUTH_TYPE.cta}
-            fontWeight="600"
+            style={{ fontWeight: "600" }}
           >
             {buttonLabel}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
       </Pressable>
     </>
   )
@@ -128,7 +130,9 @@ export function AuthScreenLayout({
       {footerContent}
     </AuthKeyboardFooter>
   ) : (
-    <YStack paddingBottom={insets.bottom + 24}>{footerContent}</YStack>
+    <V2VStack style={{ paddingBottom: insets.bottom + 24 }}>
+      {footerContent}
+    </V2VStack>
   )
 
   const scrollContent = keyboardAvoiding ? (
@@ -160,22 +164,25 @@ export function AuthScreenLayout({
   )
 
   const body = scrollable ? (
-    <YStack flex={1} paddingHorizontal={20}>
+    <V2VStack flex={1} paddingHorizontal={20}>
       {scrollContent}
       {footer}
-    </YStack>
+    </V2VStack>
   ) : (
-    <YStack flex={1} paddingHorizontal={20} justifyContent="space-between">
+    <V2VStack flex={1} paddingHorizontal={20} justify="space-between">
       {content}
       {footer}
-    </YStack>
+    </V2VStack>
   )
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <YStack flex={1} backgroundColor={surface.canvas} paddingTop={insets.top}>
+      <V2VStack
+        flex={1}
+        style={{ backgroundColor: surface.canvas, paddingTop: insets.top }}
+      >
         {showHeader && (
-          <YStack height={56} justifyContent="center">
+          <V2VStack justify="center" style={{ height: 56 }}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("common.back")}
@@ -184,11 +191,11 @@ export function AuthScreenLayout({
             >
               <Ionicons name="chevron-back" size={24} color={colors.icon} />
             </Pressable>
-          </YStack>
+          </V2VStack>
         )}
 
         {body}
-      </YStack>
+      </V2VStack>
     </TouchableWithoutFeedback>
   )
 }

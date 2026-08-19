@@ -1,7 +1,7 @@
 import { forwardRef } from "react"
 import { Image, StyleSheet } from "react-native"
 import ViewShot from "react-native-view-shot"
-import { View, Text, XStack, YStack } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodCameraAnalyzeResult } from "@/src/types"
 import type { MealType } from "../types"
@@ -42,56 +42,55 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
         options={{ format: "png", quality: 1, result: "tmpfile" }}
         style={styles.offscreen}
       >
-        <View style={styles.card}>
+        <V2Box style={styles.card}>
           {/* 상단 앱 브랜딩 */}
-          <XStack alignItems="center" gap={8} paddingBottom={12}>
+          <V2HStack align="center" gap={8} style={{ paddingBottom: 12 }}>
             <Image
               source={require("@/assets/icon.png")}
               style={styles.appIcon}
             />
-            <Text style={styles.appName}>{t("brand.name")}</Text>
-          </XStack>
+            <V2Text style={styles.appName}>{t("brand.name")}</V2Text>
+          </V2HStack>
 
           {/* 음식 이미지 */}
           {imageUri && (
-            <View style={styles.imageWrapper}>
+            <V2Box style={styles.imageWrapper}>
               <Image
                 source={{ uri: imageUri }}
                 style={styles.foodImage}
                 resizeMode="cover"
               />
-            </View>
+            </V2Box>
           )}
 
           {/* 음식 제목 + 식사 타입 */}
-          <XStack
-            alignItems="center"
-            justifyContent="space-between"
-            paddingTop={14}
-            paddingBottom={4}
+          <V2HStack
+            align="center"
+            justify="space-between"
+            style={{ paddingTop: 14, paddingBottom: 4 }}
           >
-            <Text style={styles.title} numberOfLines={1}>
+            <V2Text numberOfLines={1} style={styles.title}>
               {result.title}
-            </Text>
+            </V2Text>
             {mealType && (
-              <View style={styles.mealBadge}>
-                <Text style={styles.mealBadgeText}>
+              <V2Box style={styles.mealBadge}>
+                <V2Text style={styles.mealBadgeText}>
                   {t(`meal.${mealType}`)}
-                </Text>
-              </View>
+                </V2Text>
+              </V2Box>
             )}
-          </XStack>
+          </V2HStack>
 
           {/* 총 칼로리 */}
-          <XStack alignItems="baseline" gap={4} paddingBottom={10}>
-            <Text style={styles.calorieValue}>
+          <V2HStack align="baseline" gap={4} style={{ paddingBottom: 10 }}>
+            <V2Text style={styles.calorieValue}>
               {Math.round(result.total.calories)}
-            </Text>
-            <Text style={styles.calorieUnit}>Kcal</Text>
-          </XStack>
+            </V2Text>
+            <V2Text style={styles.calorieUnit}>Kcal</V2Text>
+          </V2HStack>
 
           {/* 탄단지 바 */}
-          <XStack gap={10} paddingBottom={8}>
+          <V2HStack gap={10} style={{ paddingBottom: 8 }}>
             {[
               {
                 label: t("mealReport.nutrients.carbohydrates"),
@@ -109,16 +108,16 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
                 color: tokens.color.sub4.val,
               },
             ].map(({ label, value, color }) => (
-              <XStack key={label} alignItems="center" gap={4}>
-                <View style={[styles.macroDot, { backgroundColor: color }]} />
-                <Text style={styles.macroText}>
+              <V2HStack key={label} align="center" gap={4}>
+                <V2Box style={[styles.macroDot, { backgroundColor: color }]} />
+                <V2Text style={styles.macroText}>
                   {label} {value}
-                </Text>
-              </XStack>
+                </V2Text>
+              </V2HStack>
             ))}
-          </XStack>
-          <XStack height={22} borderRadius={4} overflow="hidden">
-            <View
+          </V2HStack>
+          <V2HStack style={{ height: 22, borderRadius: 4, overflow: "hidden" }}>
+            <V2Box
               style={[
                 styles.barSegment,
                 {
@@ -129,19 +128,21 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
                 },
               ]}
             >
-              {carbPct >= 8 && <Text style={styles.barLabel}>{carbPct}%</Text>}
-            </View>
-            <View
+              {carbPct >= 8 && (
+                <V2Text style={styles.barLabel}>{carbPct}%</V2Text>
+              )}
+            </V2Box>
+            <V2Box
               style={[
                 styles.barSegment,
                 { flex: proteinPct, backgroundColor: tokens.color.sub6.val },
               ]}
             >
               {proteinPct >= 8 && (
-                <Text style={styles.barLabel}>{proteinPct}%</Text>
+                <V2Text style={styles.barLabel}>{proteinPct}%</V2Text>
               )}
-            </View>
-            <View
+            </V2Box>
+            <V2Box
               style={[
                 styles.barSegment,
                 {
@@ -152,15 +153,16 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
                 },
               ]}
             >
-              {fatPct >= 8 && <Text style={styles.barLabel}>{fatPct}%</Text>}
-            </View>
-          </XStack>
+              {fatPct >= 8 && (
+                <V2Text style={styles.barLabel}>{fatPct}%</V2Text>
+              )}
+            </V2Box>
+          </V2HStack>
 
           {/* 신장 관련 영양소 */}
-          <XStack
-            justifyContent="space-between"
-            paddingTop={14}
-            paddingBottom={6}
+          <V2HStack
+            justify="space-between"
+            style={{ paddingTop: 14, paddingBottom: 6 }}
           >
             {[
               {
@@ -192,27 +194,27 @@ export const ShareCard = forwardRef<ViewShot, ShareCardProps>(
                 value: `${Math.round(total.protein * 10) / 10}g`,
               },
             ].map(({ label, value }) => (
-              <YStack key={label} alignItems="center" gap={2}>
-                <Text style={styles.nutrientLabel}>{label}</Text>
-                <Text style={styles.nutrientValue}>{value}</Text>
-              </YStack>
+              <V2VStack key={label} align="center" gap={2}>
+                <V2Text style={styles.nutrientLabel}>{label}</V2Text>
+                <V2Text style={styles.nutrientValue}>{value}</V2Text>
+              </V2VStack>
             ))}
-          </XStack>
+          </V2HStack>
 
           {/* 하단 브랜딩 */}
-          <XStack
-            alignItems="center"
-            justifyContent="center"
-            paddingTop={14}
+          <V2HStack
+            align="center"
+            justify="center"
             gap={6}
+            style={{ paddingTop: 14 }}
           >
             <Image
               source={require("@/assets/icon.png")}
               style={styles.footerIcon}
             />
-            <Text style={styles.footerText}>{t("brand.tagline")}</Text>
-          </XStack>
-        </View>
+            <V2Text style={styles.footerText}>{t("brand.tagline")}</V2Text>
+          </V2HStack>
+        </V2Box>
       </ViewShot>
     )
   },

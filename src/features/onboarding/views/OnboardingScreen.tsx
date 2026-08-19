@@ -1,6 +1,5 @@
 import { Keyboard, ScrollView, TouchableWithoutFeedback } from "react-native"
-import { V2BottomCTA } from "@/src/design-system-v2"
-import { Text, YStack } from "tamagui"
+import { V2BottomCTA, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useSurface } from "@/src/hooks/useSurface"
@@ -72,7 +71,10 @@ export function OnboardingScreen() {
 
   if (phase === "welcome") {
     return (
-      <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
+      <V2VStack
+        flex={1}
+        style={{ backgroundColor: bg, paddingTop: insets.top }}
+      >
         <OnboardingHeader
           currentStepIndex={-1}
           totalSteps={0}
@@ -82,7 +84,7 @@ export function OnboardingScreen() {
           showBack={false}
         />
 
-        <YStack flex={1}>
+        <V2VStack flex={1}>
           <ScrollView
             bounces={false}
             overScrollMode="never"
@@ -111,8 +113,8 @@ export function OnboardingScreen() {
               loading: loadingPresentation === "cta",
             }}
           />
-        </YStack>
-      </YStack>
+        </V2VStack>
+      </V2VStack>
     )
   }
 
@@ -122,7 +124,10 @@ export function OnboardingScreen() {
 
   if (steps.length === 0) {
     return (
-      <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
+      <V2VStack
+        flex={1}
+        style={{ backgroundColor: bg, paddingTop: insets.top }}
+      >
         <OnboardingHeader
           currentStepIndex={0}
           totalSteps={0}
@@ -131,32 +136,23 @@ export function OnboardingScreen() {
           showCounter={false}
           showBack
         />
-        <YStack
-          flex={1}
-          justifyContent="center"
-          paddingHorizontal={24}
-          gap={10}
-        >
-          <Text
+        <V2VStack flex={1} justify="center" paddingHorizontal={24} gap={10}>
+          <V2Text
             color={textColor}
-            fontSize={22}
-            fontWeight="700"
-            textAlign="center"
+            style={{ fontSize: 22, fontWeight: "700", textAlign: "center" }}
           >
             {t("onboarding.loadFailedTitle")}
-          </Text>
+          </V2Text>
           {/* 서버가 준 원인 문장은 어절이 길다 — 어절 중간에서 끊기지 않게 줄바꿈을 맡긴다. */}
-          <Text
+          <V2Text
             color={textSub}
-            fontSize={15}
-            lineHeight={22}
-            textAlign="center"
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{ fontSize: 15, lineHeight: 22, textAlign: "center" }}
           >
             {stepsLoadError ?? t("onboarding.loadFailedFallback")}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
         <V2BottomCTA
           primaryLabel={t("onboarding.retryQuestions")}
           onPrimary={retrySteps}
@@ -168,13 +164,16 @@ export function OnboardingScreen() {
             loading: isLoadingSteps,
           }}
         />
-      </YStack>
+      </V2VStack>
     )
   }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <YStack flex={1} backgroundColor={bg} paddingTop={insets.top}>
+      <V2VStack
+        flex={1}
+        style={{ backgroundColor: bg, paddingTop: insets.top }}
+      >
         <OnboardingHeader
           currentStepIndex={currentStepIndex}
           totalSteps={steps.length}
@@ -186,7 +185,7 @@ export function OnboardingScreen() {
         <ProgressBar current={currentStepIndex} total={steps.length} />
 
         <KeyboardAwareView>
-          <YStack flex={1}>
+          <V2VStack flex={1}>
             <ScrollView
               bounces={false}
               overScrollMode="never"
@@ -255,9 +254,9 @@ export function OnboardingScreen() {
                 loading: isSubmitting,
               }}
             />
-          </YStack>
+          </V2VStack>
         </KeyboardAwareView>
-      </YStack>
+      </V2VStack>
     </TouchableWithoutFeedback>
   )
 }

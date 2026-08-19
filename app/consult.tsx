@@ -37,7 +37,7 @@ import type { FaqCardEntry } from "@/src/features/consultation/types"
 import { CATEGORY_LIST } from "@/src/features/consultation/data/mockData"
 import { useChat } from "@/src/features/consultation/hooks/useChat"
 
-import { YStack, Text } from "tamagui"
+import { V2Text, V2VStack } from "@/src/design-system-v2"
 import { Chip } from "@/src/shared/components/Chip"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -626,30 +626,30 @@ export default function ConsultScreen() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           >
-            <YStack paddingHorizontal={20} gap={14}>
+            <V2VStack paddingHorizontal={20} gap={14}>
               <ExpoImage
                 source={require("@/assets/images/home-record-character.png")}
                 style={{ width: 64, height: 64 }}
                 contentFit="contain"
               />
-              <YStack gap={6}>
-                <Text
-                  fontSize={23}
-                  lineHeight={32}
-                  fontWeight="700"
-                  letterSpacing={-0.4}
+              <V2VStack gap={6}>
+                <V2Text
                   color={
                     isDarkMode
                       ? tokens.color.textDark.val
                       : tokens.color.textLight.val
                   }
                   lineBreakStrategyIOS="hangul-word"
+                  style={{
+                    fontSize: 23,
+                    lineHeight: 32,
+                    fontWeight: "700",
+                    letterSpacing: -0.4,
+                  }}
                 >
                   {t("consult.heroTitle")}
-                </Text>
-                <Text
-                  fontSize={15}
-                  lineHeight={22}
+                </V2Text>
+                <V2Text
                   color={
                     isDarkMode
                       ? tokens.color.textDarkSub.val
@@ -657,11 +657,12 @@ export default function ConsultScreen() {
                   }
                   lineBreakStrategyIOS="hangul-word"
                   textBreakStrategy="balanced"
+                  style={{ fontSize: 15, lineHeight: 22 }}
                 >
                   {t("consult.heroBody")}
-                </Text>
-              </YStack>
-            </YStack>
+                </V2Text>
+              </V2VStack>
+            </V2VStack>
 
             {/*
               자리가 남으면 여백이 되고, 모자라면 24pt 만 남기고 스크롤에 넘긴다.
@@ -671,47 +672,51 @@ export default function ConsultScreen() {
             */}
             <View style={{ flexGrow: 1, flexShrink: 0, flexBasis: 24 }} />
 
-            <YStack gap={10}>
-              <Text
-                paddingHorizontal={20}
-                fontSize={13.5}
-                lineHeight={19}
-                fontWeight="600"
+            <V2VStack gap={10}>
+              <V2Text
                 color={
                   isDarkMode
                     ? tokens.color.textDarkSub.val
                     : tokens.color.textLightSub.val
                 }
                 lineBreakStrategyIOS="hangul-word"
+                style={{
+                  paddingHorizontal: 20,
+                  fontSize: 13.5,
+                  lineHeight: 19,
+                  fontWeight: "600",
+                }}
               >
                 {t("consult.popularQuestions")}
-              </Text>
+              </V2Text>
               <FaqCarousel onFaqPress={handleFaqPress} />
-            </YStack>
+            </V2VStack>
 
             {/* 면책·출처는 조용한 한 블록 — 회색 위계만으로 말한다.
                 포인트 컬러·이모지를 얹으면 CTA 로 오독되고 시스템 밖으로 튄다. */}
-            <YStack
-              alignItems="center"
+            <V2VStack
+              align="center"
               gap={6}
               paddingHorizontal={24}
-              paddingTop={16}
+              style={{ paddingTop: 16 }}
             >
-              <Text
-                fontSize={11.5}
-                letterSpacing={-0.2}
+              <V2Text
                 color={
                   isDarkMode
                     ? tokens.color.textLightMuted.val
                     : tokens.color.textLightSub.val
                 }
-                textAlign="center"
-                lineHeight={17}
                 lineBreakStrategyIOS="hangul-word"
                 textBreakStrategy="balanced"
+                style={{
+                  fontSize: 11.5,
+                  letterSpacing: -0.2,
+                  textAlign: "center",
+                  lineHeight: 17,
+                }}
               >
                 {t("consult.disclaimer")}
-              </Text>
+              </V2Text>
               <Pressable
                 onPress={() => router.push("/(settings)/medical-reference")}
                 hitSlop={8}
@@ -719,22 +724,24 @@ export default function ConsultScreen() {
                 accessibilityLabel={t("consult.references")}
               >
                 {({ pressed }) => (
-                  <Text
-                    fontSize={12}
-                    lineHeight={17}
-                    letterSpacing={-0.24}
-                    fontWeight="600"
+                  <V2Text
                     color={
                       isDarkMode ? tokens.color.textDarkSub.val : "#4E5056"
                     }
-                    opacity={pressed ? 0.5 : 1}
                     lineBreakStrategyIOS="hangul-word"
+                    style={{
+                      fontSize: 12,
+                      lineHeight: 17,
+                      letterSpacing: -0.24,
+                      fontWeight: "600",
+                      opacity: pressed ? 0.5 : 1,
+                    }}
                   >
                     {t("consult.references")}
-                  </Text>
+                  </V2Text>
                 )}
               </Pressable>
-            </YStack>
+            </V2VStack>
           </ScrollView>
         ) : (
           <FlatList
@@ -794,11 +801,10 @@ export default function ConsultScreen() {
           바닥 여백은 위 Animated.View 가 혼자 맡는다 — 여기서 다시 인셋을 주면
           그 순간 보정이 두 겹이 된다.
         */}
-        <YStack
-          backgroundColor="transparent"
-          paddingTop={8}
+        <V2VStack
           paddingHorizontal={20}
           gap={8}
+          style={{ backgroundColor: "transparent", paddingTop: 8 }}
         >
           {/*
             주제 칩은 **빈 화면이면 늘 보인다**. 예전엔 인풋 포커스에만 나타나서,
@@ -808,15 +814,14 @@ export default function ConsultScreen() {
             만든 전환이라 납득된다.
           */}
           {isIdle && (
-            <YStack gap={8}>
-              <Text
-                fontSize={12}
+            <V2VStack gap={8}>
+              <V2Text
                 color="#81818d"
-                lineHeight={16}
                 lineBreakStrategyIOS="hangul-word"
+                style={{ fontSize: 12, lineHeight: 16 }}
               >
                 {t("consult.category")}
-              </Text>
+              </V2Text>
               <ScrollView
                 bounces={false}
                 overScrollMode="never"
@@ -838,7 +843,7 @@ export default function ConsultScreen() {
                   />
                 ))}
               </ScrollView>
-            </YStack>
+            </V2VStack>
           )}
 
           <View
@@ -933,7 +938,7 @@ export default function ConsultScreen() {
               </Pressable>
             </View>
           </View>
-        </YStack>
+        </V2VStack>
       </Animated.View>
 
       {/* 복사 토스트 — 레이아웃 밖 플로팅. 화면을 밀지 않는다.
@@ -1004,12 +1009,12 @@ export default function ConsultScreen() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text
-                style={[attachStyles.menuItemText, { color: menuTextColor }]}
+              <V2Text
                 lineBreakStrategyIOS="hangul-word"
+                style={[attachStyles.menuItemText, { color: menuTextColor }]}
               >
                 {t("consult.choosePhoto")}
-              </Text>
+              </V2Text>
               <Icon name="gallery" size={20} color={menuTextColor} />
             </Pressable>
 
@@ -1024,12 +1029,12 @@ export default function ConsultScreen() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text
-                style={[attachStyles.menuItemText, { color: menuTextColor }]}
+              <V2Text
                 lineBreakStrategyIOS="hangul-word"
+                style={[attachStyles.menuItemText, { color: menuTextColor }]}
               >
                 {t("consult.takePhoto")}
-              </Text>
+              </V2Text>
               <Icon name="paperclip" size={20} color={menuTextColor} />
             </Pressable>
           </Animated.View>

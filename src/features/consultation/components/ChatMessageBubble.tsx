@@ -6,7 +6,7 @@ import Markdown, {
   type RenderRules,
 } from "react-native-markdown-display"
 import markdownItCjkFriendly from "markdown-it-cjk-friendly"
-import { YStack, Text, XStack, View } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
@@ -241,12 +241,14 @@ export function AssistantAvatar() {
   const isDarkMode = colorScheme === "dark"
 
   return (
-    <View
-      width={36}
-      height={36}
-      borderRadius={18}
-      overflow="hidden"
-      marginTop="$1"
+    <V2Box
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        overflow: "hidden",
+        marginTop: 4,
+      }}
     >
       <Image
         source={isDarkMode ? AVATAR_DARK : AVATAR_LIGHT}
@@ -254,7 +256,7 @@ export function AssistantAvatar() {
         contentFit="contain"
         transition={0}
       />
-    </View>
+    </V2Box>
   )
 }
 
@@ -349,13 +351,14 @@ export const UserBubble = memo(function UserBubble({
   )
   const consultCard = foodConsult != null || examConsult != null
   return (
-    <XStack justifyContent="flex-end" paddingHorizontal={CHAT_GUTTER}>
-      <YStack
-        alignItems="flex-end"
+    <V2HStack justify="flex-end" paddingHorizontal={CHAT_GUTTER}>
+      <V2VStack
+        align="flex-end"
         gap={6}
-        // 영양소 2열 그리드가 숨 쉴 폭 — 카드일 때만 살짝 넓힌다.
-        width={consultCard ? "88%" : undefined}
-        maxWidth={consultCard ? "88%" : "78%"}
+        style={{
+          width: consultCard ? "88%" : undefined,
+          maxWidth: consultCard ? "88%" : "78%",
+        }}
       >
         {/* 첨부 사진은 버블 밖 독립 썸네일 — 요즘 LLM 챗 문법 그대로. */}
         {message.imageUri && (
@@ -373,27 +376,27 @@ export const UserBubble = memo(function UserBubble({
           <ExamConsultCard data={examConsult} />
         ) : (
           message.content.length > 0 && (
-            <YStack
-              backgroundColor={USER_BUBBLE_BG[scheme]}
-              borderRadius={20}
+            <V2VStack
               paddingHorizontal={16}
               paddingVertical={10}
+              style={{
+                backgroundColor: USER_BUBBLE_BG[scheme],
+                borderRadius: 20,
+              }}
             >
-              <Text
-                fontSize={15}
-                lineHeight={22}
-                letterSpacing={-0.2}
+              <V2Text
                 color={USER_BUBBLE_TEXT[scheme]}
                 lineBreakStrategyIOS="hangul-word"
                 textBreakStrategy="balanced"
+                style={{ fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
               >
                 {message.content}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           )
         )}
-      </YStack>
-    </XStack>
+      </V2VStack>
+    </V2HStack>
   )
 })
 
@@ -424,7 +427,7 @@ export const AssistantBubble = memo(function AssistantBubble({
   // AI 답변은 버블도 아바타도 없다 — 전폭 본문과 여백이 곧 위계다.
   // 오른쪽의 컴팩트한 사용자 버블과 대비되어 화자가 저절로 구분된다.
   return (
-    <YStack paddingHorizontal={CHAT_GUTTER} gap="$2.5">
+    <V2VStack paddingHorizontal={CHAT_GUTTER} gap={10}>
       <Markdown
         markdownit={markdownItInstance}
         rules={markdownRules}
@@ -434,7 +437,7 @@ export const AssistantBubble = memo(function AssistantBubble({
       </Markdown>
       {/* 액션은 답변이 다 드러난 뒤에만 — 쓰는 중에 아이콘이 밀려다니지 않게. */}
       {!isRevealing && (
-        <XStack gap="$3">
+        <V2HStack gap={12}>
           <Pressable
             onPress={() => onCopy?.(message.content)}
             hitSlop={8}
@@ -451,22 +454,20 @@ export const AssistantBubble = memo(function AssistantBubble({
               accessibilityLabel={t("consult.regenerate")}
               style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
             >
-              <XStack alignItems="center" gap={5}>
+              <V2HStack align="center" gap={5}>
                 <Icon name="reset" size={18} color={iconColor} />
-                <Text
-                  fontSize={12}
-                  fontWeight="600"
+                <V2Text
                   color={iconColor}
-                  lineHeight={18}
                   lineBreakStrategyIOS="hangul-word"
+                  style={{ fontSize: 12, fontWeight: "600", lineHeight: 18 }}
                 >
                   {t("consult.regenerate")}
-                </Text>
-              </XStack>
+                </V2Text>
+              </V2HStack>
             </Pressable>
           )}
-        </XStack>
+        </V2HStack>
       )}
-    </YStack>
+    </V2VStack>
   )
 })

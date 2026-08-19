@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack } from "tamagui"
+import { V2HStack } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -34,18 +34,22 @@ export function EditorToolbar({
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
 
   return (
-    <XStack
+    <V2HStack
       paddingHorizontal={20}
-      paddingTop={10}
-      paddingBottom={10 + insets.bottom}
-      style={{
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: TOOLBAR_BORDER[scheme],
-      }}
-      backgroundColor={TOOLBAR_BG[scheme]}
-      alignItems="center"
+      align="center"
+      style={[
+        {
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: TOOLBAR_BORDER[scheme],
+        },
+        {
+          paddingTop: 10,
+          paddingBottom: 10 + insets.bottom,
+          backgroundColor: TOOLBAR_BG[scheme],
+        },
+      ]}
     >
-      <XStack gap={20} flex={1}>
+      <V2HStack gap={20} flex={1}>
         <Pressable
           onPress={onAddImage}
           disabled={imageDisabled}
@@ -60,7 +64,7 @@ export function EditorToolbar({
             color={imageDisabled ? ICON_DISABLED[scheme] : ICON_COLOR[scheme]}
           />
         </Pressable>
-      </XStack>
+      </V2HStack>
       {isKeyboardVisible && (
         <Pressable
           onPress={() => KeyboardController.dismiss()}
@@ -70,6 +74,6 @@ export function EditorToolbar({
           <Icon name="keyboard" size={24} color={ICON_COLOR[scheme]} />
         </Pressable>
       )}
-    </XStack>
+    </V2HStack>
   )
 }

@@ -6,7 +6,7 @@ import {
   View,
   StyleSheet,
 } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -76,22 +76,24 @@ export function ChatHistoryCard({
           paddingVertical: 14,
         })}
       >
-        <YStack gap={8}>
-          <XStack justifyContent="space-between" alignItems="center">
-            <Text
-              fontSize={15}
-              lineHeight={20}
-              fontWeight="600"
+        <V2VStack gap={8}>
+          <V2HStack justify="space-between" align="center">
+            <V2Text
               color={
                 isDarkMode
                   ? tokens.color.textDark.val
                   : tokens.color.textLight.val
               }
-              flex={1}
               numberOfLines={1}
+              style={{
+                fontSize: 15,
+                lineHeight: 20,
+                fontWeight: "600",
+                flex: 1,
+              }}
             >
               {summary}
-            </Text>
+            </V2Text>
             <Pressable
               onPress={handleEllipsisPress}
               hitSlop={8}
@@ -107,28 +109,24 @@ export function ChatHistoryCard({
                 }
               />
             </Pressable>
-          </XStack>
+          </V2HStack>
 
-          <Text
-            fontSize={14}
-            lineHeight={20}
-            fontWeight="400"
+          <V2Text
             color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
             numberOfLines={2}
             lineBreakStrategyIOS="hangul-word"
+            style={{ fontSize: 14, lineHeight: 20, fontWeight: "400" }}
           >
             {content}
-          </Text>
+          </V2Text>
 
-          <Text
-            fontSize={13}
-            lineHeight={16}
-            fontWeight="400"
+          <V2Text
             color={isDarkMode ? "#66666B" : "#81818D"}
+            style={{ fontSize: 13, lineHeight: 16, fontWeight: "400" }}
           >
             {formatDate(timestamp, i18n.language)}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
       </Pressable>
 
       <Modal
@@ -162,12 +160,12 @@ export function ChatHistoryCard({
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text
-                style={[styles.menuItemText, { color: textColor }]}
+              <V2Text
                 lineBreakStrategyIOS="hangul-word"
+                style={[styles.menuItemText, { color: textColor }]}
               >
                 {t("consult.history.rename")}
-              </Text>
+              </V2Text>
               <Icon name="pencil" size={20} color={textColor} />
             </Pressable>
 
@@ -182,12 +180,12 @@ export function ChatHistoryCard({
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text
-                style={[styles.menuItemText, { color: deleteColor }]}
+              <V2Text
                 lineBreakStrategyIOS="hangul-word"
+                style={[styles.menuItemText, { color: deleteColor }]}
               >
                 {t("consult.history.delete")}
-              </Text>
+              </V2Text>
               <Icon name="trashcan" size={20} color={deleteColor} />
             </Pressable>
           </View>

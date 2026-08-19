@@ -1,6 +1,6 @@
 import { ScrollView, Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text } from "tamagui"
+import { V2Text } from "@/src/design-system-v2"
 import { StatisticsTab } from "../../types"
 import { tokens } from "@/src/theme/tokens"
 import { useTranslation } from "react-i18next"
@@ -60,9 +60,7 @@ export function StatisticsTabBar({
               isSelected && { backgroundColor: bgColor },
             ]}
           >
-            <Text
-              fontSize="$4"
-              fontWeight="600"
+            <V2Text
               color={
                 isSelected
                   ? isDarkMode
@@ -72,9 +70,10 @@ export function StatisticsTabBar({
                     ? tokens.color.textDarkSub.val
                     : tokens.color.grey5.val
               }
+              style={{ fontSize: 14, fontWeight: "600" }}
             >
               {t(tab.labelKey)}
-            </Text>
+            </V2Text>
           </Pressable>
         )
       })}

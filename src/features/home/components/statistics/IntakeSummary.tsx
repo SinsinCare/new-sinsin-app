@@ -1,4 +1,4 @@
-import { YStack } from "tamagui"
+import { V2VStack } from "@/src/design-system-v2"
 import { NutrientGraph } from "./NutrientGraph"
 import {
   NutrientKey,
@@ -29,7 +29,7 @@ export function IntakeSummary({ analysis }: IntakeSummaryProps) {
   }
 
   return (
-    <YStack paddingVertical="$3" gap="$3">
+    <V2VStack paddingVertical={12} gap={12}>
       {bars.map((limit) => (
         <NutrientGraph
           key={limit.nutrient}
@@ -40,6 +40,6 @@ export function IntakeSummary({ analysis }: IntakeSummaryProps) {
           isReferenceLimit={isFallback}
         />
       ))}
-    </YStack>
+    </V2VStack>
   )
 }

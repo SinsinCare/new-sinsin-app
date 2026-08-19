@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, Text } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import Animated, {
   Easing,
   cancelAnimation,
@@ -68,17 +68,16 @@ export function TypingIndicator() {
 
   // AI 답변과 같은 자리(전폭 왼끝·거터 20)에서 시작한다 — 아바타 없이.
   return (
-    <XStack alignItems="center" paddingHorizontal={20}>
-      <XStack alignItems="center" gap={8}>
-        <Text
-          fontSize={14}
-          lineHeight={20}
+    <V2HStack align="center" paddingHorizontal={20}>
+      <V2HStack align="center" gap={8}>
+        <V2Text
           color={textColor}
           lineBreakStrategyIOS="hangul-word"
+          style={{ fontSize: 14, lineHeight: 20 }}
         >
           {t("consult.organizing")}
-        </Text>
-        <XStack alignItems="center" gap={4}>
+        </V2Text>
+        <V2HStack align="center" gap={4}>
           {Array.from({ length: DOT_COUNT }, (_, index) => (
             <PulseDot
               key={index}
@@ -87,9 +86,9 @@ export function TypingIndicator() {
               color={textColor}
             />
           ))}
-        </XStack>
-      </XStack>
-    </XStack>
+        </V2HStack>
+      </V2HStack>
+    </V2HStack>
   )
 }
 

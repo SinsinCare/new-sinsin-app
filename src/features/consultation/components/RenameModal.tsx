@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Pressable, TextInput, StyleSheet, View } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text, XStack } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import { useTranslation } from "react-i18next"
 
@@ -68,18 +68,20 @@ export function RenameModal({
     >
       <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
         <View style={styles.cardContent}>
-          <Text
-            fontSize={16}
-            lineHeight={20}
-            fontWeight="600"
+          <V2Text
             color={textColor}
-            textAlign="center"
-            marginBottom={16}
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{
+              fontSize: 16,
+              lineHeight: 20,
+              fontWeight: "600",
+              textAlign: "center",
+              marginBottom: 16,
+            }}
           >
             {t("consult.renameTitle")}
-          </Text>
+          </V2Text>
 
           <TextInput
             ref={inputRef}
@@ -100,7 +102,7 @@ export function RenameModal({
           />
         </View>
 
-        <XStack style={{ borderTopWidth: 1, borderColor }}>
+        <V2HStack style={{ borderTopWidth: 1, borderColor }}>
           <Pressable
             onPress={onCancel}
             style={({ pressed }) => ({
@@ -108,17 +110,19 @@ export function RenameModal({
               opacity: pressed ? 0.6 : 1,
             })}
           >
-            <Text
-              fontSize={14}
-              lineHeight={20}
-              fontWeight="500"
+            <V2Text
               color={textColor}
-              textAlign="center"
               lineBreakStrategyIOS="hangul-word"
               textBreakStrategy="balanced"
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                fontWeight: "500",
+                textAlign: "center",
+              }}
             >
               {t("action.cancel")}
-            </Text>
+            </V2Text>
           </Pressable>
 
           <View style={{ width: 1, backgroundColor: borderColor }} />
@@ -130,19 +134,21 @@ export function RenameModal({
               opacity: pressed ? 0.6 : 1,
             })}
           >
-            <Text
-              fontSize={14}
-              lineHeight={20}
-              fontWeight="500"
+            <V2Text
               color={textColor}
-              textAlign="center"
               lineBreakStrategyIOS="hangul-word"
               textBreakStrategy="balanced"
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                fontWeight: "500",
+                textAlign: "center",
+              }}
             >
               {t("action.save")}
-            </Text>
+            </V2Text>
           </Pressable>
-        </XStack>
+        </V2HStack>
       </Pressable>
     </Pressable>
   )

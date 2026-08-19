@@ -1,5 +1,5 @@
 import { Pressable } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
+import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { useSurface } from "@/src/hooks/useSurface"
@@ -29,10 +29,10 @@ export function OnboardingHeader({
   const textSub = surface.textWeak
 
   return (
-    <XStack
-      height={LAYOUT.headerHeight}
-      alignItems="center"
+    <V2HStack
+      align="center"
       paddingHorizontal={LAYOUT.screenX}
+      style={{ height: LAYOUT.headerHeight }}
     >
       {shouldShowBack ? (
         <Pressable
@@ -53,29 +53,31 @@ export function OnboardingHeader({
           />
         </Pressable>
       ) : (
-        <YStack width={LAYOUT.iconButton.size} />
+        <V2VStack style={{ width: LAYOUT.iconButton.size }} />
       )}
-      <YStack flex={1} alignItems="center">
+      <V2VStack flex={1} align="center">
         {title ? (
-          <Text
-            fontSize={TYPE.cardTitle.fontSize}
-            fontWeight="600"
+          <V2Text
             color={textColor}
-            letterSpacing={TYPE.cardTitle.letterSpacing}
+            style={{
+              fontSize: TYPE.cardTitle.fontSize,
+              fontWeight: "600",
+              letterSpacing: TYPE.cardTitle.letterSpacing,
+            }}
           >
             {title}
-          </Text>
+          </V2Text>
         ) : null}
-      </YStack>
+      </V2VStack>
       {showCounter && totalSteps > 0 ? (
-        <YStack alignItems="flex-end">
-          <Text fontSize={TYPE.caption.fontSize} color={textSub}>
+        <V2VStack align="flex-end">
+          <V2Text color={textSub} style={{ fontSize: TYPE.caption.fontSize }}>
             {currentStepIndex + 1}/{totalSteps}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
       ) : (
-        <YStack width={LAYOUT.iconButton.size} />
+        <V2VStack style={{ width: LAYOUT.iconButton.size }} />
       )}
-    </XStack>
+    </V2HStack>
   )
 }

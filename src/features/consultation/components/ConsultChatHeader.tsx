@@ -1,6 +1,6 @@
 import { Pressable } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, Text } from "tamagui"
+import { V2HStack, V2Text } from "@/src/design-system-v2"
 import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import { useTranslation } from "react-i18next"
@@ -24,9 +24,9 @@ export function ConsultChatHeader({
 
   return (
     <>
-      <XStack paddingHorizontal={20} paddingVertical="$3" alignItems="center">
+      <V2HStack paddingHorizontal={20} paddingVertical={12} align="center">
         {/* 좌우 슬롯을 같은 flex로 잡아 제목이 항상 정중앙에 온다. */}
-        <XStack flex={1} alignItems="center" justifyContent="flex-start">
+        <V2HStack flex={1} align="center" justify="flex-start">
           {onClosePress ? (
             <Pressable
               onPress={onClosePress}
@@ -41,18 +41,17 @@ export function ConsultChatHeader({
               <Icon name="history" size={24} color={headerColor} />
             </Pressable>
           )}
-        </XStack>
+        </V2HStack>
 
-        <Text
-          fontSize="$5"
-          fontWeight="700"
+        <V2Text
           color={headerColor}
           numberOfLines={1}
+          style={{ fontSize: 16, fontWeight: "700" }}
         >
           {t("consult.chatTitle")}
-        </Text>
+        </V2Text>
 
-        <XStack flex={1} alignItems="center" justifyContent="flex-end" gap={18}>
+        <V2HStack flex={1} align="center" justify="flex-end" gap={18}>
           {onClosePress && (
             <Pressable onPress={onHistoryPress} hitSlop={8}>
               <Icon name="history" size={24} color={headerColor} />
@@ -61,8 +60,8 @@ export function ConsultChatHeader({
           <Pressable onPress={onNewChatPress} hitSlop={8}>
             <Icon name="plus" size={24} color={headerColor} />
           </Pressable>
-        </XStack>
-      </XStack>
+        </V2HStack>
+      </V2HStack>
     </>
   )
 }
