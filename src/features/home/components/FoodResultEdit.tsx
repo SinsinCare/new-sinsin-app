@@ -28,6 +28,7 @@ import {
   validateMealTitle,
 } from "../utils/foodEditUtils"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
+import type { AnalyticsFoodRecordSource } from "@/src/features/analytics/events"
 import { useTranslation } from "react-i18next"
 
 import { showErrorToast } from "@/src/lib/toast"
@@ -63,6 +64,8 @@ function getUnitTranslationKey(unit: string): UnitTranslationKey | undefined {
 }
 
 interface FoodResultEditProps {
+  /** 어디서 수정에 들어왔는지 — 진입 계측에만 쓴다. */
+  source: AnalyticsFoodRecordSource
   result: FoodCameraAnalyzeResult | null
   imageUri?: string
   onClose: () => void
@@ -88,6 +91,7 @@ interface FoodResultEditProps {
 }
 
 export function FoodResultEdit({
+  source,
   result,
   imageUri,
   onClose,
@@ -151,9 +155,10 @@ export function FoodResultEdit({
   )
   const [titleChanged, setTitleChanged] = useState(false)
 
+  // 이 화면은 `isEdit` 일 때만 마운트되므로 마운트 1회 = 수정 진입 1회다.
   useEffect(() => {
-    trackAnalyticsEvent("food_record_edit_started", {})
-  }, [])
+    trackAnalyticsEvent("food_record_edit_started", { source })
+  }, [source])
   const hasBroth =
     result?.foods.some(
       (food) =>

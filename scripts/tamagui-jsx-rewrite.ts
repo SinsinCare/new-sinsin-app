@@ -39,7 +39,13 @@ const RENAME: Record<string, string> = {
   flexWrap: "wrap",
 }
 
-/** V2Stack 이 prop 으로 받는 것. 나머지는 style 로 접는다. */
+/**
+ * V2Stack 이 prop 으로 받는 것. 나머지는 style 로 접는다.
+ *
+ * ⚠️ `onPress`·접근성·`hitSlop` 은 **스타일이 아니다.** 여기 없으면 style 객체로
+ * 새고, 그러면 버튼이 눌리지 않거나 스크린리더가 못 읽는다 — tsc 가 잡아 주긴
+ * 하지만(실측: TextRecord 닫기 버튼) 애초에 안 만드는 편이 낫다.
+ */
 const STACK_PROP = new Set([
   "gap",
   "flex",
@@ -53,6 +59,31 @@ const STACK_PROP = new Set([
   "align",
   "justify",
   "wrap",
+  "onPress",
+  "onLayout",
+  "hitSlop",
+  "activeOpacity",
+  "accessibilityRole",
+  "accessibilityLabel",
+  "accessibilityState",
+  "accessible",
+  "testID",
+  "pointerEvents",
+  "collapsable",
+])
+
+/**
+ * 옮기지 않고 **버리는** prop.
+ *
+ * `pressStyle` 은 tamagui 전용이다. v2 는 `V2Stack` 의 `activeOpacity`(기본 0.7)로
+ * 같은 효과를 내므로 그대로 옮기면 style 에 쓰레기가 남는다. 실측상 이 레포의
+ * `pressStyle` 은 전부 `{ opacity: 0.7 }` 이라 기본값과 같다.
+ */
+const DROP_PROP = new Set([
+  "pressStyle",
+  "hoverStyle",
+  "focusStyle",
+  "animation",
 ])
 
 /** V2Text 는 레이아웃을 받지 않는다(글자만 그린다). */
@@ -218,6 +249,7 @@ function rewrite(src: string): { out: string; skipped?: string } {
         existingStyle = raw.startsWith("{") ? raw.slice(1, -1) : raw
         continue
       }
+      if (DROP_PROP.has(name)) continue
       const renamed = RENAME[name] ?? name
       if (allowed.has(renamed)) {
         keep.push(raw ? `${renamed}=${raw}` : renamed)

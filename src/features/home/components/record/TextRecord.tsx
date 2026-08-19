@@ -8,11 +8,11 @@ import {
 } from "react-native"
 import { AppModal } from "@/src/shared/components/AppModal"
 import { ModalOverlayHost } from "@/src/shared/components"
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { showConfirm } from "@/src/lib/dialog"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import type { AnalyticsMealSlot } from "@/src/features/analytics/events"
-import { Text, XStack, YStack } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -27,6 +27,7 @@ interface TextRecordProps {
 
 export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
   const { t } = useTranslation()
+  const { colors } = useV2Theme()
   const [text, setText] = useState("")
 
   /*
@@ -95,44 +96,43 @@ export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
       presentationStyle="pageSheet"
       onRequestClose={() => void handleClose()}
     >
-      <YStack flex={1} backgroundColor={isDarkMode ? "$appBgDark" : "$appBg"}>
-        <XStack
-          alignItems="center"
-          justifyContent="center"
+      <V2VStack flex={1} style={{ backgroundColor: colors.background.default }}>
+        <V2HStack
+          align="center"
+          justify="center"
           paddingTop={30}
           paddingBottom={10}
         >
-          <Text
-            fontSize={18}
-            fontWeight="600"
-            textAlign="center"
-            color={isDarkMode ? "$textDark" : "$black"}
+          <V2Text
+            color={colors.label.normal}
+            style={{ fontSize: 18, fontWeight: "600", textAlign: "center" }}
           >
             {t("home.textRecord.title")}
-          </Text>
-          <XStack
-            position="absolute"
-            top={20}
-            right={12}
-            width={40}
-            height={40}
-            alignItems="center"
-            justifyContent="center"
+          </V2Text>
+          <V2HStack
+            align="center"
+            justify="center"
             onPress={() => void handleClose()}
-            pressStyle={{ opacity: 0.7 }}
             accessibilityRole="button"
             accessibilityLabel={t("action.close")}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 12,
+              width: 40,
+              height: 40,
+            }}
           >
             <Ionicons name="close" size={22} color={tokens.color.grey3.val} />
-          </XStack>
-        </XStack>
+          </V2HStack>
+        </V2HStack>
 
-        <YStack
+        <V2VStack
           flex={1}
-          alignItems="center"
-          justifyContent="center"
+          align="center"
+          justify="center"
           paddingBottom={keyboardHeight > 0 ? 10 : 80}
-          gap="$4"
+          gap={16}
         >
           <TextInput
             style={[
@@ -148,14 +148,14 @@ export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
             placeholder={t("home.textRecord.placeholder")}
             textAlign="center"
           />
-          <Text
-            color="$colorSubtle"
-            fontWeight="600"
+          <V2Text
+            color={colors.label.alternative}
             lineBreakStrategyIOS="hangul-word"
+            style={{ fontWeight: "600" }}
           >
             {t("home.textRecord.example")}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
 
         <TouchableOpacity
           onPress={() => onSubmit(text)}
@@ -166,15 +166,14 @@ export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
           ]}
           disabled={!text}
         >
-          <Text
-            fontSize={18}
-            fontWeight="600"
-            color={text ? "$color.pureWhite" : "$colorSubtle"}
+          <V2Text
+            color={text ? colors.static.white : colors.label.alternative}
+            style={{ fontSize: 18, fontWeight: "600" }}
           >
             {t("home.textRecord.checkNutrients")}
-          </Text>
+          </V2Text>
         </TouchableOpacity>
-      </YStack>
+      </V2VStack>
       {/* RN Modal 안에서 다이얼로그·토스트가 뜨려면 이 안에도 호스트가 있어야 한다. */}
       <ModalOverlayHost />
     </AppModal>

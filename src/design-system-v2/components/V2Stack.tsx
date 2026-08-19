@@ -32,6 +32,8 @@ import {
   type StyleProp,
   type ViewProps,
   type ViewStyle,
+  Pressable,
+  type PressableProps,
 } from "react-native"
 
 import { spacing, type Spacing } from "../tokens"
@@ -73,6 +75,28 @@ export interface V2StackProps extends Omit<ViewProps, "style"> {
   paddingBottom?: GapValue
   paddingLeft?: GapValue
   paddingRight?: GapValue
+  /**
+   * 누를 수 있는 스택.
+   *
+   * ■ 왜 Stack 이 터치를 받나 (2026-08-19 추가)
+   *
+   *   tamagui 의 `XStack`/`YStack` 은 `onPress` 를 그냥 받는다. 그래서 이 레포에는
+   *   **스택 자체가 버튼인** 자리가 많다(닫기 버튼, 행 전체 탭 등). v2 로 옮길 때
+   *   그걸 `Pressable` 로 감싸면 뷰가 한 겹 늘고 레이아웃이 미묘하게 달라진다 —
+   *   `flex` 나 `position: absolute` 가 걸린 자리에서 특히 그렇다.
+   *
+   *   실측: `TextRecord` 의 닫기 버튼이 이 형태였고, 이 prop 이 없어서 `onPress` 가
+   *   `style` 로 새어 tsc 가 잡았다. 규칙이 없으면 옮기는 사람마다 다르게 처리한다.
+   *
+   * ■ 눌림 표시
+   *
+   *   tamagui `pressStyle={{ opacity: 0.7 }}` 을 대신해 눌린 동안 `activeOpacity`
+   *   (기본 0.7)를 적용한다. 앱 전체가 같은 값을 쓰도록 여기서 기본값을 준다.
+   */
+  onPress?: () => void
+  /** `onPress` 가 있을 때 눌린 동안의 불투명도. 기본 0.7. */
+  activeOpacity?: number
+  hitSlop?: PressableProps["hitSlop"]
   style?: StyleProp<ViewStyle>
 }
 
@@ -94,38 +118,60 @@ const Stack = forwardRef<View, DirectionalProps>(function Stack(
     paddingBottom,
     paddingLeft,
     paddingRight,
+    onPress,
+    activeOpacity = 0.7,
+    hitSlop,
     style,
     ...rest
   },
   ref,
 ) {
+  const layout = [
+    { flexDirection: direction },
+    gap !== undefined && { gap: resolve(gap) },
+    justify !== undefined && { justifyContent: justify },
+    align !== undefined && { alignItems: align },
+    flex !== undefined && { flex },
+    wrap !== undefined && { flexWrap: wrap },
+    padding !== undefined && { padding: resolve(padding) },
+    paddingHorizontal !== undefined && {
+      paddingHorizontal: resolve(paddingHorizontal),
+    },
+    paddingVertical !== undefined && {
+      paddingVertical: resolve(paddingVertical),
+    },
+    paddingTop !== undefined && { paddingTop: resolve(paddingTop) },
+    paddingBottom !== undefined && {
+      paddingBottom: resolve(paddingBottom),
+    },
+    paddingLeft !== undefined && { paddingLeft: resolve(paddingLeft) },
+    paddingRight !== undefined && { paddingRight: resolve(paddingRight) },
+  ]
+
+  /*
+    `onPress` 가 있으면 Pressable 로 그린다. 없으면 View 그대로 —
+    모든 스택을 Pressable 로 만들면 터치 처리가 붙어 스크롤 성능이 떨어진다.
+  */
+  if (onPress) {
+    return (
+      <Pressable
+        ref={ref}
+        onPress={onPress}
+        hitSlop={hitSlop}
+        style={({ pressed }) => [
+          ...layout,
+          style,
+          pressed && { opacity: activeOpacity },
+        ]}
+        {...rest}
+      >
+        {children}
+      </Pressable>
+    )
+  }
+
   return (
-    <View
-      ref={ref}
-      style={[
-        { flexDirection: direction },
-        gap !== undefined && { gap: resolve(gap) },
-        justify !== undefined && { justifyContent: justify },
-        align !== undefined && { alignItems: align },
-        flex !== undefined && { flex },
-        wrap !== undefined && { flexWrap: wrap },
-        padding !== undefined && { padding: resolve(padding) },
-        paddingHorizontal !== undefined && {
-          paddingHorizontal: resolve(paddingHorizontal),
-        },
-        paddingVertical !== undefined && {
-          paddingVertical: resolve(paddingVertical),
-        },
-        paddingTop !== undefined && { paddingTop: resolve(paddingTop) },
-        paddingBottom !== undefined && {
-          paddingBottom: resolve(paddingBottom),
-        },
-        paddingLeft !== undefined && { paddingLeft: resolve(paddingLeft) },
-        paddingRight !== undefined && { paddingRight: resolve(paddingRight) },
-        style,
-      ]}
-      {...rest}
-    >
+    <View ref={ref} style={[...layout, style]} {...rest}>
       {children}
     </View>
   )

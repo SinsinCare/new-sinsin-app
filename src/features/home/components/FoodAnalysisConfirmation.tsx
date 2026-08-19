@@ -128,7 +128,7 @@ export function FoodAnalysisConfirmation({
           >
             <YStack gap="$4">
               {questions.map((question) => (
-                <GlassmorphicCard key={question.questionId} padding="$4">
+                <GlassmorphicCard key={question.questionId} padding={16}>
                   <YStack gap="$3">
                     <Text
                       fontSize="$5"
