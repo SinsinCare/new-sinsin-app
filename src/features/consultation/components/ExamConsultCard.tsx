@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { LayoutAnimation, Pressable, StyleSheet } from "react-native"
 import { useTranslation } from "react-i18next"
-import { Text, View, XStack, YStack } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components/Icon"
@@ -50,7 +50,11 @@ const STATUS_DOT: Record<Exclude<ExamMetricStatus, "normal">, string> = {
 }
 
 function Hairline({ color }: { color: string }) {
-  return <View height={StyleSheet.hairlineWidth} backgroundColor={color} />
+  return (
+    <V2Box
+      style={{ height: StyleSheet.hairlineWidth, backgroundColor: color }}
+    />
+  )
 }
 
 /**
@@ -82,91 +86,98 @@ export function ExamConsultCard({ data }: { data: ExamConsultCardData }) {
   }
 
   return (
-    <YStack
-      alignSelf="stretch"
-      backgroundColor={USER_BUBBLE_BG[scheme]}
-      borderRadius={20}
+    <V2VStack
       paddingHorizontal={18}
       paddingVertical={16}
       gap={14}
+      style={{
+        alignSelf: "stretch",
+        backgroundColor: USER_BUBBLE_BG[scheme],
+        borderRadius: 20,
+      }}
     >
       {/* 무엇에 대한 카드인지 — 출처(건강검진)와 검진일은 한 줄로 조용히 */}
-      <YStack gap={3}>
-        <Text
-          fontSize={12}
-          lineHeight={16}
-          fontWeight="600"
-          letterSpacing={-0.1}
+      <V2VStack gap={3}>
+        <V2Text
           color={tone.muted}
           lineBreakStrategyIOS="hangul-word"
+          style={{
+            fontSize: 12,
+            lineHeight: 16,
+            fontWeight: "600",
+            letterSpacing: -0.1,
+          }}
         >
           {t("consult.examCard.eyebrow")}
           {data.dateLabel ? ` · ${data.dateLabel}` : ""}
-        </Text>
+        </V2Text>
         {data.countsLabel && (
-          <Text
-            fontSize={17}
-            lineHeight={24}
-            fontWeight="700"
-            letterSpacing={-0.34}
+          <V2Text
             color={ink}
+            style={{
+              fontSize: 17,
+              lineHeight: 24,
+              fontWeight: "700",
+              letterSpacing: -0.34,
+            }}
           >
             {data.countsLabel}
-          </Text>
+          </V2Text>
         )}
-      </YStack>
+      </V2VStack>
 
       {visible.length > 0 && (
         <>
           <Hairline color={tone.hairline} />
-          <YStack gap={10}>
+          <V2VStack gap={10}>
             {visible.map((metric, index) => (
-              <XStack
-                key={`${metric.label}:${index}`}
-                alignItems="center"
-                gap={8}
-              >
+              <V2HStack key={`${metric.label}:${index}`} align="center" gap={8}>
                 {metric.status && metric.status !== "normal" && (
-                  <View
-                    width={6}
-                    height={6}
-                    borderRadius={3}
-                    backgroundColor={STATUS_DOT[metric.status]}
+                  <V2Box
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: STATUS_DOT[metric.status],
+                    }}
                   />
                 )}
-                <Text
-                  flex={1}
-                  fontSize={14}
-                  lineHeight={20}
+                <V2Text
                   color={tone.soft}
                   numberOfLines={1}
+                  style={{ flex: 1, fontSize: 14, lineHeight: 20 }}
                 >
                   {metric.label}
-                </Text>
-                <XStack alignItems="baseline" gap={3}>
-                  <Text
-                    fontSize={15}
-                    lineHeight={21}
-                    fontWeight="700"
-                    letterSpacing={-0.3}
+                </V2Text>
+                <V2HStack align="baseline" gap={3}>
+                  <V2Text
                     color={ink}
+                    style={{
+                      fontSize: 15,
+                      lineHeight: 21,
+                      fontWeight: "700",
+                      letterSpacing: -0.3,
+                    }}
                   >
                     {metric.value}
-                  </Text>
+                  </V2Text>
                   {metric.unit !== "" && (
-                    <Text fontSize={12} lineHeight={16} color={tone.muted}>
+                    <V2Text
+                      color={tone.muted}
+                      style={{ fontSize: 12, lineHeight: 16 }}
+                    >
                       {metric.unit}
-                    </Text>
+                    </V2Text>
                   )}
-                </XStack>
-              </XStack>
+                </V2HStack>
+              </V2HStack>
             ))}
-          </YStack>
+          </V2VStack>
         </>
       )}
 
       {hidden > 0 && (
-        <YStack gap={12}>
+        <V2VStack gap={12}>
           <Hairline color={tone.hairline} />
           <Pressable
             onPress={toggle}
@@ -175,30 +186,35 @@ export function ExamConsultCard({ data }: { data: ExamConsultCardData }) {
             accessibilityState={{ expanded }}
           >
             {({ pressed }) => (
-              <XStack
-                alignItems="center"
-                justifyContent="space-between"
-                opacity={pressed ? 0.55 : 1}
+              <V2HStack
+                align="center"
+                justify="space-between"
+                style={{ opacity: pressed ? 0.55 : 1 }}
               >
-                <Text
-                  fontSize={13}
-                  lineHeight={18}
+                <V2Text
                   color={tone.soft}
                   lineBreakStrategyIOS="hangul-word"
+                  style={{ fontSize: 13, lineHeight: 18 }}
                 >
                   {expanded
                     ? t("consult.examCard.metricsCollapse")
                     : t("consult.examCard.metricsToggle", { count: hidden })}
-                </Text>
-                {/* 아이콘 세트에 chevron-up/down 이 없다. 식사 카드와 같이 하나를 돌려 쓴다. */}
-                <View rotate={expanded ? "-90deg" : "90deg"} opacity={0.62}>
+                </V2Text>
+                {/* 아이콘 세트에 chevron-up/down 이 없다. 식사 카드와 같이 하나를 돌려 쓴다.
+                    tamagui 는 `rotate` 를 직접 받지만 RN 은 `transform` 배열이어야 한다. */}
+                <V2Box
+                  style={{
+                    transform: [{ rotate: expanded ? "-90deg" : "90deg" }],
+                    opacity: 0.62,
+                  }}
+                >
                   <Icon name="chevron-right" size={14} color={tone.soft} />
-                </View>
-              </XStack>
+                </V2Box>
+              </V2HStack>
             )}
           </Pressable>
-        </YStack>
+        </V2VStack>
       )}
-    </YStack>
+    </V2VStack>
   )
 }

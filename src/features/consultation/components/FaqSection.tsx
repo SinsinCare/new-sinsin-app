@@ -1,9 +1,10 @@
-import { XStack, YStack, Text } from "tamagui"
-import { ScrollView } from "react-native"
+import { ScrollView, StyleSheet } from "react-native"
+import { useTranslation } from "react-i18next"
+
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import { FaqCard } from "./FaqCard"
 import type { FaqItem } from "../types"
-import { useTranslation } from "react-i18next"
 
 interface FaqSectionProps {
   items: FaqItem[]
@@ -12,35 +13,34 @@ interface FaqSectionProps {
 
 export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
   const { t } = useTranslation()
+  const { colors } = useV2Theme()
+
   return (
-    <YStack gap="$3">
+    <V2VStack gap={12}>
       {/* Section header */}
-      <XStack
-        justifyContent="space-between"
-        alignItems="center"
-        paddingHorizontal="$5"
-      >
-        <Text
-          fontSize="$5"
-          fontWeight="700"
-          color="$grey3"
+      <V2HStack justify="space-between" align="center" paddingHorizontal={20}>
+        {/* `$grey3`(테마가 뒤집어 주던 진한 회색) → 의미대로 섹션 제목 색. */}
+        <V2Text
+          token="title.small"
+          color={colors.label.strong}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("consult.faqTitle")}
-        </Text>
-        <Text
-          fontSize="$3"
-          fontWeight="600"
-          backgroundColor={tokens.color.sub1.val}
+        </V2Text>
+        {/*
+          개수 배지. 브랜드 옅은 면 위에 브랜드 진한 글자 — sub1/sub7 은 앱의
+          브랜드 스케일이라 v2 로 옮기지 않고 그대로 둔다(themes.ts 도 같은 값을
+          `primary` 램프의 hover/press 단으로 쓴다).
+        */}
+        <V2Text
+          token="label.smallStrong"
           color={tokens.color.sub7.val}
-          borderRadius={12}
-          paddingHorizontal={10}
-          paddingVertical={2}
+          style={styles.countBadge}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("consult.questionCount", { count: items.length })}
-        </Text>
-      </XStack>
+        </V2Text>
+      </V2HStack>
 
       {/* Horizontal FAQ list */}
       <ScrollView
@@ -48,16 +48,26 @@ export function FaqSection({ items, onFaqPress }: FaqSectionProps) {
         overScrollMode="never"
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          flexDirection: "row",
-          gap: 12,
-          paddingHorizontal: 20,
-        }}
+        contentContainerStyle={styles.list}
       >
         {items.map((item) => (
           <FaqCard key={item.id} item={item} onPress={onFaqPress} />
         ))}
       </ScrollView>
-    </YStack>
+    </V2VStack>
   )
 }
+
+const styles = StyleSheet.create({
+  countBadge: {
+    backgroundColor: tokens.color.sub1.val,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  list: {
+    flexDirection: "row",
+    gap: 12,
+    paddingHorizontal: 20,
+  },
+})

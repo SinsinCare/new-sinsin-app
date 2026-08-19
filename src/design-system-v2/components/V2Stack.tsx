@@ -63,6 +63,16 @@ export interface V2StackProps extends Omit<ViewProps, "style"> {
   padding?: GapValue
   paddingHorizontal?: GapValue
   paddingVertical?: GapValue
+  /*
+    방향별 패딩. tamagui 에서 옮겨 오는 코드가 `paddingTop`/`paddingBottom` 을
+    자주 쓴다(실측: 상위 prop 20위 안에 둘 다 있다). 없으면 매번 `style` 로
+    빠져나가야 해서 이행 diff 가 커지고, 무엇보다 "어떤 건 prop, 어떤 건 style"
+    이라는 일관성 없는 코드가 남는다.
+  */
+  paddingTop?: GapValue
+  paddingBottom?: GapValue
+  paddingLeft?: GapValue
+  paddingRight?: GapValue
   style?: StyleProp<ViewStyle>
 }
 
@@ -80,6 +90,10 @@ const Stack = forwardRef<View, DirectionalProps>(function Stack(
     padding,
     paddingHorizontal,
     paddingVertical,
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
     style,
     ...rest
   },
@@ -102,6 +116,12 @@ const Stack = forwardRef<View, DirectionalProps>(function Stack(
         paddingVertical !== undefined && {
           paddingVertical: resolve(paddingVertical),
         },
+        paddingTop !== undefined && { paddingTop: resolve(paddingTop) },
+        paddingBottom !== undefined && {
+          paddingBottom: resolve(paddingBottom),
+        },
+        paddingLeft !== undefined && { paddingLeft: resolve(paddingLeft) },
+        paddingRight !== undefined && { paddingRight: resolve(paddingRight) },
         style,
       ]}
       {...rest}

@@ -1,8 +1,9 @@
-import { ScrollView, Pressable } from "react-native"
-import { Text, XStack } from "tamagui"
+import { ScrollView, Pressable, StyleSheet } from "react-native"
+import { useTranslation } from "react-i18next"
+
+import { useV2Theme, V2HStack, V2Text } from "@/src/design-system-v2"
 import type { ChatCategory } from "@/src/types/chat"
 import { getLocalizedQuickQuestions } from "../data/mockData"
-import { useTranslation } from "react-i18next"
 
 interface QuickQuestionChipsProps {
   category: ChatCategory
@@ -16,6 +17,7 @@ export function QuickQuestionChips({
   disabled,
 }: QuickQuestionChipsProps) {
   const { i18n } = useTranslation("common")
+  const { colors } = useV2Theme()
   const questions = getLocalizedQuickQuestions(
     category,
     i18n.resolvedLanguage ?? i18n.language,
@@ -30,11 +32,7 @@ export function QuickQuestionChips({
       horizontal
       showsHorizontalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        gap: 8,
-      }}
+      contentContainerStyle={styles.list}
     >
       {questions.map((q) => (
         <Pressable
@@ -42,20 +40,35 @@ export function QuickQuestionChips({
           onPress={() => !disabled && onSelect(q.text)}
           style={{ opacity: disabled ? 0.5 : 1 }}
         >
-          <XStack
-            paddingHorizontal="$3"
-            paddingVertical="$2"
-            borderRadius="$10"
-            borderWidth={1}
-            borderColor="$grey8"
-            backgroundColor="$background"
+          {/*
+            테마 토큰 대응(themes.ts):
+              $grey8      → 옅은 선   = line.normal
+              $background → 바탕 면   = background.default
+              $grey3      → 본문 글자 = label.normal
+            `borderRadius="$10"` 은 radius 스케일 24 — 칩 높이(약 32)에서 pill 로 보인다.
+          */}
+          <V2HStack
+            paddingHorizontal={12}
+            paddingVertical={8}
+            style={[
+              styles.chip,
+              {
+                borderColor: colors.line.normal,
+                backgroundColor: colors.background.default,
+              },
+            ]}
           >
-            <Text fontSize="$3" color="$grey3">
+            <V2Text token="caption.medium" color={colors.label.normal}>
               {q.text}
-            </Text>
-          </XStack>
+            </V2Text>
+          </V2HStack>
         </Pressable>
       ))}
     </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  list: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
+  chip: { borderRadius: 24, borderWidth: 1 },
+})

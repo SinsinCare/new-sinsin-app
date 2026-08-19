@@ -156,7 +156,12 @@ function inspect(src: string): { ok: boolean; reason?: string } {
   const imported = new Set(
     imp[1]
       .split(",")
-      .map((s) => s.trim().split(/\s+as\s+/)[0].trim())
+      .map((s) =>
+        s
+          .trim()
+          .split(/\s+as\s+/)[0]
+          .trim(),
+      )
       .filter(Boolean),
   )
 
@@ -177,16 +182,18 @@ function inspect(src: string): { ok: boolean; reason?: string } {
   for (const m of src.matchAll(tagRe)) {
     const body = m[2] ?? ""
     if (!body.includes("$")) continue
-    for (const kv of body.matchAll(
-      /(\w+)=(?:"(\$[^"]*)"|\{"(\$[^"]*)"\})/g,
-    )) {
+    for (const kv of body.matchAll(/(\w+)=(?:"(\$[^"]*)"|\{"(\$[^"]*)"\})/g)) {
       const prop = kv[1]
       const val = kv[2] ?? kv[3]
       if (resolveToken(prop, val) === null)
         return { ok: false, reason: `해석 불가 토큰: ${prop}=${val}` }
     }
-    // 위 패턴으로 소진되지 않은 `$` 가 남아 있으면(삼항식·템플릿 등) 사람에게 넘긴다.
-    const consumed = body.replace(/(\w+)=(?:"(\$[^"]*)"|\{"(\$[^"]*)"\})/g, "")
+    // 위 패턴으로 소진되지 않은 `$` 가 남아 있으면(삼항식 등) 사람에게 넘긴다.
+    // 단 **템플릿 리터럴의 `${}`** 는 토큰이 아니다 — `` `${a}:${b}` `` 같은 key 계산이
+    // 흔한데, 그것까지 토큰으로 오인하면 멀쩡한 파일을 통째로 건너뛴다(실측: 2파일).
+    const consumed = body
+      .replace(/(\w+)=(?:"(\$[^"]*)"|\{"(\$[^"]*)"\})/g, "")
+      .replace(/`[^`]*`/g, "")
     if (consumed.includes("$"))
       return { ok: false, reason: "표현식 안의 토큰(삼항식 등)" }
   }
@@ -198,7 +205,9 @@ function inspect(src: string): { ok: boolean; reason?: string } {
     RN 은 `static` 이 기본이므로 같은 값을 옮기면 **아무 일도 일어나지 않는다.**
     옮겨도 티가 안 나는 종류라 특히 위험하다 — 사람이 보게 남긴다.
   */
-  if (/<(?:XStack|YStack|Text|View)[^>]*\s(?:top|bottom|left|right)=/s.test(src))
+  if (
+    /<(?:XStack|YStack|Text|View)[^>]*\s(?:top|bottom|left|right)=/s.test(src)
+  )
     return { ok: false, reason: "위치 prop(position 기본값이 다름)" }
 
   return { ok: true }
@@ -216,7 +225,12 @@ function transform(src: string): string {
   if (!imp) return src
   const tagNames = imp[1]
     .split(",")
-    .map((s) => s.trim().split(/\s+as\s+/)[0].trim())
+    .map((s) =>
+      s
+        .trim()
+        .split(/\s+as\s+/)[0]
+        .trim(),
+    )
     .filter((n) => n in TAG)
   if (!tagNames.length) return src
 
@@ -241,7 +255,8 @@ function transform(src: string): string {
       */
       let existingStyle: string | null = null
 
-      const attrRe = /(\w+)=(?:"([^"]*)"|\{((?:[^{}]|\{[^{}]*\})*)\})|(\{\.\.\.[^}]+\})/g
+      const attrRe =
+        /(\w+)=(?:"([^"]*)"|\{((?:[^{}]|\{[^{}]*\})*)\})|(\{\.\.\.[^}]+\})/g
       for (const m of body.matchAll(attrRe)) {
         if (m[4]) {
           keep.push(m[4]) // 스프레드는 그대로
@@ -258,7 +273,7 @@ function transform(src: string): string {
         }
 
         // $토큰 → 숫자
-        const tokenSrc = strVal ?? (exprVal?.match(/^"(\$[^"]*)"$/)?.[1] ?? "")
+        const tokenSrc = strVal ?? exprVal?.match(/^"(\$[^"]*)"$/)?.[1] ?? ""
         if (tokenSrc.startsWith("$")) {
           const n = resolveToken(prop, tokenSrc)
           if (n === null) throw new Error(`해석 불가: ${prop}=${tokenSrc}`)
@@ -339,10 +354,24 @@ function verify(out: string): string | null {
   if (/<\/(XStack|YStack)>/.test(out)) return "닫는 태그가 안 바뀐 것이 있다"
 
   // 4) 한 태그에 style 이 두 번 — JSX 가 깨진다
-  for (const m of out.matchAll(/<V2(?:HStack|VStack|Box|Text)(\s[^>]*?)\/?>/gs)) {
+  for (const m of out.matchAll(
+    /<V2(?:HStack|VStack|Box|Text)(\s[^>]*?)\/?>/gs,
+  )) {
     const styleCount = (m[1].match(/\bstyle=/g) ?? []).length
     if (styleCount > 1) return "한 태그에 style 이 두 번 붙었다"
   }
+
+  /*
+    5) RN 스타일이 아닌 변환 prop.
+
+    tamagui 는 `rotate="90deg"` / `scale={1.1}` 을 직접 받지만 RN 은
+    `transform: [{ rotate: … }]` 배열이어야 한다. 그대로 옮기면 tsc 가 잡아 주긴
+    하지만(실측: ExamConsultCard·FoodConsultCard) 스크립트가 안 만드는 편이 낫다.
+  */
+  const transformish = out.match(
+    /style=\{\{[^}]*\b(rotate|scale|scaleX|scaleY|translateX|translateY)\s*:/,
+  )
+  if (transformish) return `transform 계열이 style 로 샜다: ${transformish[1]}`
 
   return null
 }
@@ -374,7 +403,9 @@ function main() {
     }
   }
 
-  console.log(`\n${WRITE ? "✍️  적용" : "🔍 DRY-RUN"} — 대상 ${files.length}파일\n`)
+  console.log(
+    `\n${WRITE ? "✍️  적용" : "🔍 DRY-RUN"} — 대상 ${files.length}파일\n`,
+  )
   console.log(`  ✅ 변환 ${changed.length}`)
   console.log(`  ⏭️  건너뜀 ${skipped.length}\n`)
 
@@ -393,7 +424,9 @@ function main() {
     console.log(`   ${n}×  ${reason}`)
 
   if (!WRITE)
-    console.log("\n실제 적용하려면 --write 를 붙인다. 적용 후 tsc·eslint·화면 확인 필수.")
+    console.log(
+      "\n실제 적용하려면 --write 를 붙인다. 적용 후 tsc·eslint·화면 확인 필수.",
+    )
 }
 
 main()

@@ -1,7 +1,8 @@
-import { Pressable, View } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { XStack, Text } from "tamagui"
+import { Pressable, StyleSheet, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
+
+import { useV2Theme, V2HStack, V2Text } from "@/src/design-system-v2"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useAppRouter } from "@/src/shared/navigation"
 import { tokens } from "@/src/theme/tokens"
 
@@ -11,29 +12,39 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ title }: ChatHeaderProps) {
   const router = useAppRouter()
+  const { colors } = useV2Theme()
   const colorScheme = useAppColorScheme()
   const iconColor = colorScheme === "dark" ? "#e7e7ee" : tokens.color.grey1.val
 
   return (
     <>
-      <XStack paddingHorizontal="$4" paddingVertical="$3" alignItems="center">
+      <V2HStack paddingHorizontal={16} paddingVertical={12} align="center">
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={iconColor} />
         </Pressable>
-        <Text
-          fontSize="$5"
-          fontWeight="700"
-          color="$color"
-          flex={1}
-          textAlign="center"
+        {/*
+          `$color` 는 themes.ts 에서 `s.textStrong` → v2 `label.strong`.
+          `flex={1}` 은 V2Text 가 받지 않으므로(글자만 그린다) style 로 준다 —
+          가운데 정렬을 위해 남는 폭을 이 글자가 먹어야 한다.
+        */}
+        <V2Text
+          token="title.small"
+          color={colors.label.strong}
+          style={styles.title}
           numberOfLines={1}
         >
           {title}
-        </Text>
+        </V2Text>
         {/* Spacer to balance back button */}
-        <View style={{ width: 24 }} />
-      </XStack>
-      <View style={{ height: 1, backgroundColor: tokens.color.grey8.val }} />
+        <View style={styles.spacer} />
+      </V2HStack>
+      <View style={styles.divider} />
     </>
   )
 }
+
+const styles = StyleSheet.create({
+  title: { flex: 1, textAlign: "center" },
+  spacer: { width: 24 },
+  divider: { height: 1, backgroundColor: tokens.color.grey8.val },
+})

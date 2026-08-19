@@ -1,7 +1,7 @@
-import { Text } from "tamagui"
 import { Pressable, View, Animated } from "react-native"
 import { useRef, useCallback } from "react"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { useV2Theme, V2Text } from "@/src/design-system-v2"
 import { GlassmorphicCard } from "@/src/shared/components/GlassmorphicCard"
 import type { CategoryMeta, ChatCategory } from "../types"
 
@@ -12,6 +12,7 @@ interface CategoryCardProps {
 
 export function CategoryCard({ category, onPress }: CategoryCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current
+  const { colors } = useV2Theme()
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
@@ -40,10 +41,10 @@ export function CategoryCard({ category, onPress }: CategoryCardProps) {
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <GlassmorphicCard
           variant="flat"
-          padding="$3"
-          gap="$2"
-          alignItems="flex-start"
-          borderColor="$borderColor"
+          padding={12}
+          gap={8}
+          align="flex-start"
+          style={{ borderColor: colors.line.normal }}
         >
           <View
             style={{
@@ -61,9 +62,9 @@ export function CategoryCard({ category, onPress }: CategoryCardProps) {
               color={category.color}
             />
           </View>
-          <Text fontSize="$4" fontWeight="600" color="$color">
+          <V2Text token="body.mediumWeak" color={colors.label.strong}>
             {category.label}
-          </Text>
+          </V2Text>
         </GlassmorphicCard>
       </Animated.View>
     </Pressable>

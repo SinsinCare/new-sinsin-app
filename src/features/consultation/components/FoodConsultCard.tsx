@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { LayoutAnimation, Pressable, StyleSheet } from "react-native"
 import { useTranslation } from "react-i18next"
-import { Text, View, XStack, YStack } from "tamagui"
+import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components/Icon"
@@ -37,7 +37,11 @@ const CARD_TONE: Record<
 }
 
 function Hairline({ color }: { color: string }) {
-  return <View height={StyleSheet.hairlineWidth} backgroundColor={color} />
+  return (
+    <V2Box
+      style={{ height: StyleSheet.hairlineWidth, backgroundColor: color }}
+    />
+  )
 }
 
 /**
@@ -66,76 +70,89 @@ export function FoodConsultCard({ data }: { data: FoodConsultCardData }) {
   }
 
   return (
-    <YStack
-      alignSelf="stretch"
-      backgroundColor={USER_BUBBLE_BG[scheme]}
-      borderRadius={20}
+    <V2VStack
       paddingHorizontal={18}
       paddingVertical={16}
       gap={14}
+      style={{
+        alignSelf: "stretch",
+        backgroundColor: USER_BUBBLE_BG[scheme],
+        borderRadius: 20,
+      }}
     >
       {/* 무엇에 대한 카드인지 — 출처(식사 기록)와 끼니·양은 한 줄로 조용히 */}
-      <YStack gap={3}>
-        <Text
-          fontSize={12}
-          lineHeight={16}
-          fontWeight="600"
-          letterSpacing={-0.1}
+      <V2VStack gap={3}>
+        <V2Text
           color={tone.muted}
           lineBreakStrategyIOS="hangul-word"
+          style={{
+            fontSize: 12,
+            lineHeight: 16,
+            fontWeight: "600",
+            letterSpacing: -0.1,
+          }}
         >
           {t("consult.foodCard.eyebrow")}
           {metaLine ? ` · ${metaLine}` : ""}
-        </Text>
-        <Text
-          fontSize={17}
-          lineHeight={24}
-          fontWeight="700"
-          letterSpacing={-0.34}
+        </V2Text>
+        <V2Text
           color={ink}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
+          style={{
+            fontSize: 17,
+            lineHeight: 24,
+            fontWeight: "700",
+            letterSpacing: -0.34,
+          }}
         >
           {data.title}
-        </Text>
-      </YStack>
+        </V2Text>
+      </V2VStack>
 
       {data.totals.length > 0 && (
         <>
           <Hairline color={tone.hairline} />
-          <XStack flexWrap="wrap" rowGap={12}>
+          <V2HStack wrap="wrap" style={{ rowGap: 12 }}>
             {data.totals.map((nutrient, index) => (
-              <YStack
+              <V2VStack
                 key={`${nutrient.label}:${index}`}
-                width="50%"
                 gap={2}
-                paddingRight={index % 2 === 0 ? 10 : 0}
+                style={{ width: "50%", paddingRight: index % 2 === 0 ? 10 : 0 }}
               >
-                <Text fontSize={12} lineHeight={16} color={tone.muted}>
+                <V2Text
+                  color={tone.muted}
+                  style={{ fontSize: 12, lineHeight: 16 }}
+                >
                   {resolveNutrientLabel(nutrient.label, translate)}
-                </Text>
-                <XStack alignItems="baseline" gap={3}>
-                  <Text
-                    fontSize={16}
-                    lineHeight={22}
-                    fontWeight="700"
-                    letterSpacing={-0.32}
+                </V2Text>
+                <V2HStack align="baseline" gap={3}>
+                  <V2Text
                     color={ink}
+                    style={{
+                      fontSize: 16,
+                      lineHeight: 22,
+                      fontWeight: "700",
+                      letterSpacing: -0.32,
+                    }}
                   >
                     {nutrient.amount}
-                  </Text>
-                  <Text fontSize={12} lineHeight={16} color={tone.muted}>
+                  </V2Text>
+                  <V2Text
+                    color={tone.muted}
+                    style={{ fontSize: 12, lineHeight: 16 }}
+                  >
                     {nutrient.unit}
-                  </Text>
-                </XStack>
-              </YStack>
+                  </V2Text>
+                </V2HStack>
+              </V2VStack>
             ))}
-          </XStack>
+          </V2HStack>
         </>
       )}
 
       {data.foods.length > 0 && (
-        <YStack gap={12}>
+        <V2VStack gap={12}>
           <Hairline color={tone.hairline} />
           <Pressable
             onPress={toggleFoods}
@@ -145,67 +162,70 @@ export function FoodConsultCard({ data }: { data: FoodConsultCardData }) {
             accessibilityLabel={t("consult.foodCard.foodsToggle")}
           >
             {({ pressed }) => (
-              <XStack
-                alignItems="center"
-                justifyContent="space-between"
-                opacity={pressed ? 0.55 : 1}
+              <V2HStack
+                align="center"
+                justify="space-between"
+                style={{ opacity: pressed ? 0.55 : 1 }}
               >
-                <Text
-                  fontSize={13}
-                  lineHeight={18}
-                  fontWeight="600"
+                <V2Text
                   color={tone.soft}
                   lineBreakStrategyIOS="hangul-word"
+                  style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}
                 >
                   {t("consult.foodCard.foodsToggle")}
-                </Text>
-                <View rotate={foodsOpen ? "-90deg" : "90deg"} opacity={0.62}>
+                </V2Text>
+                {/* tamagui 는 `rotate` 를 직접 받지만 RN 은 `transform` 배열이어야 한다. */}
+                <V2Box
+                  style={{
+                    transform: [{ rotate: foodsOpen ? "-90deg" : "90deg" }],
+                    opacity: 0.62,
+                  }}
+                >
                   <Icon name="chevron-right" size={14} color={tone.soft} />
-                </View>
-              </XStack>
+                </V2Box>
+              </V2HStack>
             )}
           </Pressable>
           {foodsOpen &&
             data.foods.map((food, index) => (
-              <YStack key={`${food.name}:${index}`} gap={3}>
-                <Text
-                  fontSize={13}
-                  lineHeight={18}
-                  fontWeight="600"
+              <V2VStack key={`${food.name}:${index}`} gap={3}>
+                <V2Text
                   color={ink}
+                  style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}
                 >
                   {food.name}
-                </Text>
+                </V2Text>
                 {food.nutrients.length > 0 && (
-                  <Text fontSize={12} lineHeight={17} color={tone.muted}>
+                  <V2Text
+                    color={tone.muted}
+                    style={{ fontSize: 12, lineHeight: 17 }}
+                  >
                     {food.nutrients
                       .map(
                         (nutrient) =>
                           `${resolveNutrientLabel(nutrient.label, translate)} ${nutrient.amount}${nutrient.unit}`,
                       )
                       .join(" · ")}
-                  </Text>
+                  </V2Text>
                 )}
-              </YStack>
+              </V2VStack>
             ))}
-        </YStack>
+        </V2VStack>
       )}
 
       {data.prompt.length > 0 && (
-        <YStack gap={12}>
+        <V2VStack gap={12}>
           <Hairline color={tone.hairline} />
-          <Text
-            fontSize={13}
-            lineHeight={19}
-            letterSpacing={-0.13}
+          <V2Text
             color={tone.soft}
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{ fontSize: 13, lineHeight: 19, letterSpacing: -0.13 }}
           >
             {data.prompt}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
       )}
-    </YStack>
+    </V2VStack>
   )
 }
