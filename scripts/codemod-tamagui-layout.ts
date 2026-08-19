@@ -112,6 +112,24 @@ const NATIVE_PROP = new Set([
   "children",
 ])
 
+/**
+ * `V2Text` 가 **prop 으로** 받아야 하는 것들 — style 에 넣으면 tsc 가 잡는다.
+ *
+ * `lineBreakStrategyIOS`·`textBreakStrategy` 는 RN `Text` 의 **prop** 이지 스타일이
+ * 아니다. 한글 줄바꿈 품질에 직접 영향을 주는 값이라(이 앱은 거의 모든 본문에 쓴다)
+ * 조용히 사라지면 문장이 어절 중간에서 끊긴다. 실측: LoginScreen 4곳.
+ */
+const TEXT_PASSTHROUGH = new Set([
+  "numberOfLines",
+  "ellipsizeMode",
+  "lineBreakStrategyIOS",
+  "textBreakStrategy",
+  "selectable",
+  "adjustsFontSizeToFit",
+  "maxFontSizeMultiplier",
+  "allowFontScaling",
+])
+
 /** align/justify 는 이름이 다르다. */
 const RENAME: Record<string, string> = {
   alignItems: "align",
@@ -295,7 +313,10 @@ function transform(src: string): string {
           const n = resolveToken(prop, tokenSrc)
           if (n === null) throw new Error(`해석 불가: ${prop}=${tokenSrc}`)
           const name = RENAME[prop] ?? prop
-          if (NATIVE_PROP.has(name) && !(isText && TEXT_ONLY_REJECT.has(name)))
+          if (
+            (TEXT_PASSTHROUGH.has(name) && isText) ||
+            (NATIVE_PROP.has(name) && !(isText && TEXT_ONLY_REJECT.has(name)))
+          )
             keep.push(`${name}={${n}}`)
           else styles.push(`${name}: ${n}`)
           continue
@@ -304,7 +325,8 @@ function transform(src: string): string {
         const name = RENAME[prop] ?? prop
         // V2Text 는 레이아웃 prop 을 안 받는다 → style 로 접는다.
         const asProp =
-          NATIVE_PROP.has(name) && !(isText && TEXT_ONLY_REJECT.has(name))
+          (TEXT_PASSTHROUGH.has(name) && isText) ||
+          (NATIVE_PROP.has(name) && !(isText && TEXT_ONLY_REJECT.has(name)))
         if (asProp) {
           keep.push(`${name}=${raw}`)
         } else if (strVal !== undefined) {

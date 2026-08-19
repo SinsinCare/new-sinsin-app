@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import { BackHandler, Linking, ScrollView, StyleSheet } from "react-native"
 import { AlertTriangle } from "@/src/shared/components/lucide"
-import { Text, YStack } from "tamagui"
+import { useV2Theme, V2Text, V2VStack } from "@/src/design-system-v2"
 
 import { Button } from "@/src/shared/components"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { tokens } from "@/src/theme/tokens"
 import type { MobilePolicyResponse } from "../types"
 import { useTranslation } from "react-i18next"
@@ -15,6 +16,7 @@ interface BlockingPolicyScreenProps {
 
 export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
   const { t } = useTranslation()
+  const { colors } = useV2Theme()
   const [openError, setOpenError] = useState<string | null>(null)
   const storeUrl = policy.storeUrl ? normalizeStoreUrl(policy.storeUrl) : null
   const canOpenStore = Boolean(storeUrl)
@@ -38,16 +40,28 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
 
   const handleOpenStore = async () => {
     if (!storeUrl) return
+    /* 계측은 try **밖**에서 한다. 안에 두면 발화가 던지는 날 스토어는 열렸는데 오류 문구가
+       뜨고 이벤트가 두 번 나간다 — 지금 trackAnalyticsEvent 는 삼키지만, 그 사실에 화면
+       동작을 기대게 두지 않는다.
+       실패도 남긴다. 이 화면에서 스토어가 안 열리면 **나가는 길이 하나도 없다** —
+       성공만 세면 그 사람들은 "버튼을 안 눌렀다" 와 같아 보인다. */
+    let opened = false
     try {
       await Linking.openURL(storeUrl)
+      opened = true
       setOpenError(null)
     } catch {
       setOpenError(t("mobilePolicy.storeError"))
     }
+    trackAnalyticsEvent("app_policy_store_opened", {
+      decision: policy.decision,
+      blocked: true,
+      result: opened ? "opened" : "failed",
+    })
   }
 
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <V2VStack flex={1} style={{ backgroundColor: colors.background.default }}>
       <ScrollView
         bounces={false}
         overScrollMode="never"
@@ -55,46 +69,50 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <YStack
-          width="100%"
-          maxWidth={360}
-          alignItems="center"
-          gap="$4"
-          padding="$6"
-          borderRadius="$6"
-          backgroundColor="$cardBackground"
-          borderWidth={1}
-          borderColor="$borderColor"
+        <V2VStack
+          align="center"
+          gap={16}
+          padding={24}
+          style={{
+            width: "100%",
+            maxWidth: 360,
+            borderRadius: 12,
+            backgroundColor: colors.background.default,
+            borderWidth: 1,
+            borderColor: colors.line.normal,
+          }}
         >
-          <YStack
-            width={64}
-            height={64}
-            borderRadius="$12"
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor="$dangerBackground"
+          <V2VStack
+            align="center"
+            justify="center"
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 48,
+              backgroundColor: colors.accentForeground.redWeak,
+            }}
           >
             <AlertTriangle size={30} color={tokens.color.primary8.val} />
-          </YStack>
-          <YStack gap="$2" alignItems="center">
-            <Text
-              fontSize={22}
-              lineHeight={30}
-              fontWeight="700"
-              color="$color"
-              textAlign="center"
+          </V2VStack>
+          <V2VStack gap={8} align="center">
+            <V2Text
+              color={colors.label.strong}
+              style={{
+                fontSize: 22,
+                lineHeight: 30,
+                fontWeight: "700",
+                textAlign: "center",
+              }}
             >
               {title}
-            </Text>
-            <Text
-              fontSize={15}
-              lineHeight={22}
-              color="$colorSubtle"
-              textAlign="center"
+            </V2Text>
+            <V2Text
+              color={colors.label.neutral}
+              style={{ fontSize: 15, lineHeight: 22, textAlign: "center" }}
             >
               {message}
-            </Text>
-          </YStack>
+            </V2Text>
+          </V2VStack>
           {policy.decision !== "maintenance" && (
             <Button
               fullWidth
@@ -106,18 +124,16 @@ export function BlockingPolicyScreen({ policy }: BlockingPolicyScreenProps) {
             </Button>
           )}
           {openError && (
-            <Text
-              fontSize={13}
-              lineHeight={18}
-              color="$danger"
-              textAlign="center"
+            <V2Text
+              color={colors.status.negative}
+              style={{ fontSize: 13, lineHeight: 18, textAlign: "center" }}
             >
               {openError}
-            </Text>
+            </V2Text>
           )}
-        </YStack>
+        </V2VStack>
       </ScrollView>
-    </YStack>
+    </V2VStack>
   )
 }
 

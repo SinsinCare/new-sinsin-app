@@ -10,20 +10,40 @@ import { AppModal } from "@/src/shared/components/AppModal"
 import { ModalOverlayHost } from "@/src/shared/components"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { showConfirm } from "@/src/lib/dialog"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
+import type { AnalyticsMealSlot } from "@/src/features/analytics/events"
 import { Text, XStack, YStack } from "tamagui"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 interface TextRecordProps {
   open: boolean
+  /** 어느 끼니 자리에서 열렸는지 — 진입 이벤트에만 쓴다. */
+  slot: AnalyticsMealSlot
   onClose: () => void
   onSubmit: (text: string) => void
 }
 
-export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
+export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
   const { t } = useTranslation()
   const [text, setText] = useState("")
+
+  /*
+    진입은 **열릴 때 1회**다. 닫히면 다시 셀 수 있게 되돌린다 — 이 컴포넌트는
+    언마운트되지 않고 `open` 만 false 가 되므로 ref 를 직접 내려야 한다.
+  */
+  const openedRef = useRef(false)
+  useEffect(() => {
+    if (!open) {
+      setText("")
+      openedRef.current = false
+      return
+    }
+    if (openedRef.current) return
+    openedRef.current = true
+    trackAnalyticsEvent("food_text_record_viewed", { slot })
+  }, [open, slot])
 
   /**
    * 쓰던 글을 두고 나가기 전에 한 번 묻는다.
@@ -51,10 +71,6 @@ export function TextRecord({ open, onClose, onSubmit }: TextRecordProps) {
   const inactiveBg = isDarkMode
     ? tokens.color.grey3.val
     : tokens.color.grey8.val
-
-  useEffect(() => {
-    if (!open) setText("")
-  }, [open])
 
   useEffect(() => {
     const show = Keyboard.addListener(

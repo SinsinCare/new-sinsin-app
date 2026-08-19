@@ -1,6 +1,5 @@
 import { Platform, Pressable, useWindowDimensions } from "react-native"
-import { YStack, XStack, Text } from "tamagui"
-import { V2DotLoader } from "@/src/design-system-v2"
+import { V2HStack, V2Text, V2VStack, V2DotLoader } from "@/src/design-system-v2"
 import { Link, router } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Image } from "expo-image"
@@ -50,31 +49,35 @@ function SocialButton({
       disabled={disabled}
     >
       {({ pressed }) => (
-        <XStack
-          backgroundColor={bg}
-          height={AUTH_LAYOUT.ctaHeight}
-          borderRadius={AUTH_LAYOUT.radius.cta}
-          alignItems="center"
+        <V2HStack
+          align="center"
           paddingHorizontal={20}
-          opacity={disabled ? 0.6 : pressed ? 0.92 : 1}
+          style={{
+            backgroundColor: bg,
+            height: AUTH_LAYOUT.ctaHeight,
+            borderRadius: AUTH_LAYOUT.radius.cta,
+            opacity: disabled ? 0.6 : pressed ? 0.92 : 1,
+          }}
         >
           {/* 아이콘은 왼쪽 고정, 라벨은 버튼 중앙 — 목업과 같은 배치 */}
-          <XStack width={24} alignItems="center" justifyContent="center">
+          <V2HStack align="center" justify="center" style={{ width: 24 }}>
             {icon}
-          </XStack>
-          <Text
-            flex={1}
-            textAlign="center"
+          </V2HStack>
+          <V2Text
             color={color}
             {...AUTH_TYPE.cta}
-            fontWeight="600"
-            marginRight={24}
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontWeight: "600",
+              marginRight: 24,
+            }}
           >
             {label}
-          </Text>
-        </XStack>
+          </V2Text>
+        </V2HStack>
       )}
     </Pressable>
   )
@@ -102,7 +105,10 @@ export function LoginScreen() {
   }
 
   return (
-    <YStack flex={1} backgroundColor={surface.canvas} position="relative">
+    <V2VStack
+      flex={1}
+      style={{ backgroundColor: surface.canvas, position: "relative" }}
+    >
       {/* 배경 일러스트. 타이틀이 이미지에 구워져 있어서 top:0 으로 두면
           다이나믹 아일랜드·상태바에 물린다. 안전영역만큼 내려서 시작한다. */}
       <Image
@@ -127,51 +133,59 @@ export function LoginScreen() {
       {/* 한국어 타이틀은 이미지에 포함돼 있다. 영어에서는 해당 영역을 가리고
           실제 텍스트를 올려 언어 전환과 접근성 글꼴 크기를 함께 지원한다. */}
       {isEnglish && (
-        <YStack
-          position="absolute"
-          zIndex={1}
-          top={insets.top + BG_TOP_OFFSET}
-          left={0}
-          width={width}
-          height={width * 0.31}
-          backgroundColor="#FFFEFE"
-          alignItems="center"
-          justifyContent="center"
+        <V2VStack
+          align="center"
+          justify="center"
           paddingTop={6}
+          style={{
+            position: "absolute",
+            zIndex: 1,
+            top: insets.top + BG_TOP_OFFSET,
+            left: 0,
+            width: width,
+            height: width * 0.31,
+            backgroundColor: "#FFFEFE",
+          }}
         >
-          <Text
+          <V2Text
             color="#9B9B9B"
-            fontSize={18}
-            lineHeight={24}
-            fontWeight="500"
-            textAlign="center"
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{
+              fontSize: 18,
+              lineHeight: 24,
+              fontWeight: "500",
+              textAlign: "center",
+            }}
           >
             {t("login.heroEyebrow")}
-          </Text>
-          <Text
+          </V2Text>
+          <V2Text
             color={surface.brand}
-            fontSize={36}
-            lineHeight={43}
-            fontWeight="700"
-            textAlign="center"
+            style={{
+              fontSize: 36,
+              lineHeight: 43,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
           >
             {t("login.heroBrand")}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
       )}
-      <YStack flex={1} />
+      <V2VStack flex={1} />
 
       {/* 하단 시트 */}
-      <YStack
-        backgroundColor={surface.canvas}
-        borderTopLeftRadius={AUTH_LAYOUT.radius.sheet}
-        borderTopRightRadius={AUTH_LAYOUT.radius.sheet}
+      <V2VStack
         paddingHorizontal={AUTH_LAYOUT.screenX}
         paddingTop={28}
         paddingBottom={insets.bottom + 20}
         gap={10}
+        style={{
+          backgroundColor: surface.canvas,
+          borderTopLeftRadius: AUTH_LAYOUT.radius.sheet,
+          borderTopRightRadius: AUTH_LAYOUT.radius.sheet,
+        }}
       >
         <ConfirmModal
           visible={!!withdrawalPending}
@@ -193,18 +207,24 @@ export function LoginScreen() {
           onPress={handleEmailLogin}
         >
           {({ pressed }) => (
-            <YStack
-              backgroundColor={surface.brand}
-              height={AUTH_LAYOUT.ctaHeight}
-              borderRadius={AUTH_LAYOUT.radius.cta}
-              alignItems="center"
-              justifyContent="center"
-              opacity={pressed ? 0.92 : 1}
+            <V2VStack
+              align="center"
+              justify="center"
+              style={{
+                backgroundColor: surface.brand,
+                height: AUTH_LAYOUT.ctaHeight,
+                borderRadius: AUTH_LAYOUT.radius.cta,
+                opacity: pressed ? 0.92 : 1,
+              }}
             >
-              <Text color={surface.onBrand} {...AUTH_TYPE.cta} fontWeight="600">
+              <V2Text
+                color={surface.onBrand}
+                {...AUTH_TYPE.cta}
+                style={{ fontWeight: "600" }}
+              >
                 {t("login.emailButton")}
-              </Text>
-            </YStack>
+              </V2Text>
+            </V2VStack>
           )}
         </Pressable>
 
@@ -239,69 +259,76 @@ export function LoginScreen() {
           />
         )}
 
-        <XStack
-          justifyContent="center"
-          alignItems="center"
+        <V2HStack
+          justify="center"
+          align="center"
           gap={6}
-          marginTop={8}
+          style={{ marginTop: 8 }}
         >
-          <Text color={colors.textSub} fontSize={13} letterSpacing={-0.26}>
+          <V2Text
+            color={colors.textSub}
+            style={{ fontSize: 13, letterSpacing: -0.26 }}
+          >
             {t("login.newHere")}
-          </Text>
+          </V2Text>
           <Link href="/(auth)/terms-agreement" asChild>
-            <Text
+            <V2Text
               color={colors.text}
-              fontSize={13}
-              fontWeight="600"
-              letterSpacing={-0.26}
-              textDecorationLine="underline"
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                letterSpacing: -0.26,
+                textDecorationLine: "underline",
+              }}
             >
               {t("login.signUp")}
-            </Text>
+            </V2Text>
           </Link>
-        </XStack>
-      </YStack>
+        </V2HStack>
+      </V2VStack>
 
       {socialLoading && (
-        <YStack
-          position="absolute"
-          top={0}
-          right={0}
-          bottom={0}
-          left={0}
-          zIndex={10}
-          backgroundColor={
-            colors.isDark ? "rgba(28,28,30,0.92)" : "rgba(255,255,255,0.92)"
-          }
-          justifyContent="center"
-          alignItems="center"
+        <V2VStack
+          justify="center"
+          align="center"
           gap={14}
           paddingHorizontal={24}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            zIndex: 10,
+            backgroundColor: colors.isDark
+              ? "rgba(28,28,30,0.92)"
+              : "rgba(255,255,255,0.92)",
+          }}
         >
           <V2DotLoader size="l" color={tokens.color.sub6.val} />
-          <Text
+          <V2Text
             color={colors.text}
-            fontSize={17}
-            fontWeight="600"
-            lineHeight={24}
-            textAlign="center"
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{
+              fontSize: 17,
+              fontWeight: "600",
+              lineHeight: 24,
+              textAlign: "center",
+            }}
           >
             {socialLoadingMessage}
-          </Text>
-          <Text
+          </V2Text>
+          <V2Text
             color={colors.textSub}
-            fontSize={14}
-            lineHeight={20}
-            textAlign="center"
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
+            style={{ fontSize: 14, lineHeight: 20, textAlign: "center" }}
           >
             {t("login.checkingAccount")}
-          </Text>
-        </YStack>
+          </V2Text>
+        </V2VStack>
       )}
-    </YStack>
+    </V2VStack>
   )
 }

@@ -5,7 +5,7 @@ import {
   View as RNView,
 } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { Text, XStack, YStack, View } from "tamagui"
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
 import { useRef } from "react"
@@ -42,6 +42,7 @@ export function ThreeDaysCalendar({
 }: ThreeDaysCalendarProps) {
   const { i18n } = useTranslation("common")
   const isDark = useAppColorScheme() === "dark"
+  const { colors } = useV2Theme()
   const today = new Date()
   const week = getSundayWeek(selectedDate)
   const locale = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
@@ -83,17 +84,16 @@ export function ThreeDaysCalendar({
 
   return (
     <RNView {...panResponder.panHandlers}>
-      <YStack gap="$2" paddingBottom="$1">
+      <V2VStack gap={8} paddingBottom={4}>
         {/* 월 헤더 */}
         <Pressable onPress={onMonthPress} hitSlop={8}>
-          <XStack alignItems="center" gap="$1" paddingHorizontal="$1">
-            <Text
-              fontSize={22}
-              fontWeight="700"
-              color={isDark ? "$textDark" : "$color"}
+          <V2HStack align="center" gap={4} paddingHorizontal={4}>
+            <V2Text
+              color={colors.label.strong}
+              style={{ fontSize: 22, fontWeight: "700" }}
             >
               {monthLabel}
-            </Text>
+            </V2Text>
             <Ionicons
               name="chevron-forward"
               size={18}
@@ -101,27 +101,30 @@ export function ThreeDaysCalendar({
                 isDark ? tokens.color.textDark.val : tokens.color.black.val
               }
             />
-          </XStack>
+          </V2HStack>
         </Pressable>
 
         {/* 요일 레이블 */}
-        <XStack justifyContent="space-between" paddingHorizontal="$1">
+        <V2HStack justify="space-between" paddingHorizontal={4}>
           {week.map((date) => {
             const label = new Intl.DateTimeFormat(locale, {
               weekday: "narrow",
             }).format(date)
             return (
-              <View key={date.getDay()} style={styles.cell}>
-                <Text fontSize={12} fontWeight="500" color={labelText}>
+              <RNView key={date.getDay()} style={styles.cell}>
+                <V2Text
+                  color={labelText}
+                  style={{ fontSize: 12, fontWeight: "500" }}
+                >
                   {label}
-                </Text>
-              </View>
+                </V2Text>
+              </RNView>
             )
           })}
-        </XStack>
+        </V2HStack>
 
         {/* 날짜 행 */}
-        <XStack justifyContent="space-between" paddingHorizontal="$1">
+        <V2HStack justify="space-between" paddingHorizontal={4}>
           {week.map((date) => {
             const isSelected = isSameDay(date, selectedDate)
             const hasRecord = recordedDates.some((r) => isSameDay(r, date))
@@ -151,26 +154,28 @@ export function ThreeDaysCalendar({
                 onPress={() => !isFuture && onSelectDate(date)}
                 disabled={isFuture}
               >
-                <View
+                <RNView
                   style={[
                     styles.cell,
                     styles.dateCell,
                     { backgroundColor: cellBg },
                   ]}
                 >
-                  <Text
-                    fontSize={16}
-                    fontWeight={isSelected ? "700" : "500"}
-                    style={{ color: textColor }}
+                  <V2Text
+                    color={textColor}
+                    style={{
+                      fontSize: 16,
+                      fontWeight: isSelected ? "700" : "500",
+                    }}
                   >
                     {date.getDate()}
-                  </Text>
-                </View>
+                  </V2Text>
+                </RNView>
               </Pressable>
             )
           })}
-        </XStack>
-      </YStack>
+        </V2HStack>
+      </V2VStack>
     </RNView>
   )
 }

@@ -1,6 +1,7 @@
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Svg, { Circle } from "react-native-svg"
-import { XStack, YStack, Text } from "tamagui"
+import { View } from "react-native"
+import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodCameraFood } from "@/src/types"
 import {
@@ -103,6 +104,7 @@ function NutrientDonut({
   isDark: boolean
 }) {
   const { stroke, centerColor } = donutLevelColors(percent, isDark)
+  const { colors } = useV2Theme()
   const arcPercent = percent == null ? 0 : Math.min(Math.max(percent, 0), 100)
   const dash = (arcPercent / 100) * CIRC
   const displayPct =
@@ -123,18 +125,20 @@ function NutrientDonut({
     : tokens.color.grey8.val
 
   return (
-    <YStack
+    <V2VStack
       flex={1}
-      alignItems="center"
-      paddingVertical="$1"
+      align="center"
+      paddingVertical={4}
       paddingHorizontal={2}
-      minWidth={0}
+      style={{ minWidth: 0 }}
     >
-      <YStack
-        position="relative"
-        width={DONUT_SIZE}
-        height={DONUT_SIZE}
-        alignSelf="center"
+      <View
+        style={{
+          position: "relative",
+          width: DONUT_SIZE,
+          height: DONUT_SIZE,
+          alignSelf: "center",
+        }}
       >
         <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
           <Circle
@@ -157,46 +161,46 @@ function NutrientDonut({
             transform={`rotate(-90 ${CX} ${CY})`}
           />
         </Svg>
-        <YStack
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          alignItems="center"
-          justifyContent="center"
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
           pointerEvents="none"
         >
-          <Text
-            fontSize={14}
-            lineHeight={18}
-            fontWeight="800"
+          <V2Text
             color={centerColor}
+            style={{ fontSize: 14, lineHeight: 18, fontWeight: "800" }}
           >
             {centerLabel}
-          </Text>
-        </YStack>
-      </YStack>
-      <Text
-        fontSize="$4"
-        fontWeight="600"
-        color={isDark ? "$textDark" : "$color"}
-        marginTop={6}
-        textAlign="center"
+          </V2Text>
+        </View>
+      </View>
+      <V2Text
+        color={colors.label.strong}
+        style={{
+          fontSize: 14,
+          fontWeight: "600",
+          marginTop: 6,
+          textAlign: "center",
+        }}
         numberOfLines={1}
       >
         {label}
-      </Text>
-      <Text
-        fontSize="$5"
-        fontWeight="700"
-        color={isDark ? "$textDark" : "$color"}
-        textAlign="center"
+      </V2Text>
+      <V2Text
+        color={colors.label.strong}
+        style={{ fontSize: 15, fontWeight: "700", textAlign: "center" }}
         numberOfLines={1}
       >
         {amountStr}
-      </Text>
-    </YStack>
+      </V2Text>
+    </V2VStack>
   )
 }
 
@@ -210,7 +214,7 @@ export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
   const limits = useNutrientLimits()
 
   return (
-    <XStack gap="$2" alignItems="stretch">
+    <V2HStack gap={8} align="stretch">
       {NUTRIENT_KEYS.map((key) => {
         const limit = dailyLimitFor(key, limits)
         const amount = valueFor(food, key)
@@ -229,6 +233,6 @@ export function FoodNutrientDonuts({ food }: FoodNutrientDonutsProps) {
           />
         )
       })}
-    </XStack>
+    </V2HStack>
   )
 }
