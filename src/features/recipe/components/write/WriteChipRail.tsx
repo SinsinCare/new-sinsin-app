@@ -167,8 +167,12 @@ const styles = StyleSheet.create({
     12px 은 스케일에 `cardSub`(12/16) 로 이미 있다. 예전에는 `caption`(13/18) 위에
     크기만 덮어써서 12px 글자가 13px 용 행간을 끌고 다녔다 — `hint` 는 12/18,
     `notice` 는 손으로 적은 12/17. **12/17 도 12/18 도 v2 스케일에 없는 조합**이고,
-    그 바람에 한 화면 안에서 12px 글자의 행간이 16·17·18 셋으로 갈렸다(이번 회차에
-    `WriteTextField.labelSuffix` 를 비롯한 나머지는 전부 `cardSub` 로 옮겼다).
+    그 바람에 한 화면 안에서 12px 글자의 행간이 16·17·18 셋으로 갈렸다 — 같은 화면에
+    나란히 선 두 `선택`(사진 라벨 옆 12/18, 조리 시간 라벨 옆 12/16)이 눈에 보이던 결과다.
+    작성 화면의 12px 은 이제 전부 `cardSub` 를 가리킨다(`WriteTextField.labelSuffix`,
+    `PhotoPickerRow` 의 `optional`·`limit`, `ServingsStepper.note`,
+    `StepSummaryField.detail`, `AuthorContextRow.notice`). 남은 곳은
+    `NutritionPreviewCard` 하나인데 이 화면 슬라이스 밖이라 건드리지 않았다.
     보이는 글자 크기는 그대로고 이름만 정본을 가리킨다 — `TYPE` 표의 "크기를 여기서
     새로 정하지 말라" 는 규칙이 원래 가리키던 자리다.
   */

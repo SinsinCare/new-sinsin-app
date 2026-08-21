@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   labelRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
   // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipRail`).
   label: { ...TYPE.cardTitle, fontWeight: "700" },
-  optional: { ...TYPE.caption, fontSize: 12 },
+  optional: { ...TYPE.cardSub },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   thumbWrap: { width: THUMB, height: THUMB },
   thumb: {
@@ -175,5 +175,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  limit: { ...TYPE.caption, fontSize: 12 },
+  limit: { ...TYPE.cardSub },
 })

@@ -143,7 +143,7 @@ export function RecipeWriteScreen({ onClose }: RecipeWriteScreenProps) {
     사람에게 "이제 등록할 수 있어요" 라고 적힌 채 버튼만 꺼진 막다른 길이 생긴다 —
     이 줄이 존재하는 이유가 정확히 그 결함이었다.
 
-    순서: 사진 업로드 → 못 적은 필수 → 범위 오류 → 준비됨.
+    순서: 사진 업로드 → 올리다 실패한 사진 → 못 적은 필수 → 범위 오류 → 준비됨.
     필수 미입력이 범위 오류보다 급하다(아직 못 적은 것이 먼저다).
   */
   const statusText = evaluation.photosUploading

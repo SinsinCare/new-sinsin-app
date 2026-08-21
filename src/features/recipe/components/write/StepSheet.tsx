@@ -465,7 +465,7 @@ export function StepSheet({
         ref={listRef}
         scrollEnabled={fromIndex === null}
         onContentSizeChange={handleContentSizeChange}
-        style={{ maxHeight: listMaxHeight }}
+        style={[{ maxHeight: listMaxHeight }, styles.listBox]}
         contentContainerStyle={styles.list}
       >
         {rows.map((row, index) => {
@@ -529,11 +529,16 @@ export function StepSheet({
               자식이라 아래 슬롭이 곧장 부모 밖인데 hitSlop 은 부모 경계를 넘지 못한다.
               그 여백이 4 이던 동안 여기 적힌 44 는 실제로 41 이었다(`list` 주석).
 
-              위쪽 7 은 행 사이 간격(`ROW_GAP` 10) 안에서 바로 위 행 ✕ 의 hitSlop(8)과
-              5pt 겹친다. 겹치는 자리는 `+` 가 가져간다(트리에서 뒤라 위에 그려진다).
-              그 5pt 를 `+` 에 주는 쪽을 택한 이유는 결과의 무게가 다르기 때문이다 —
-              잘못 눌리면 줄이 하나 **느는** 것이고, 반대로 기울이면 적어 둔 줄이 지워진다.
-              ✕ 는 자기 28 상자와 나머지 슬롭을 그대로 들고 있다.
+              위쪽 7 은 행 사이 간격(`ROW_GAP` 10)의 아래 7 을 가져간다. **겹치는 것이
+              아니다** — 바로 위 행 ✕ 의 아래 hitSlop 8 은 자기 행 안에서 끝난다(28 짜리
+              ✕ 가 48 짜리 행에 세로 가운데 정렬이라 아래로 10 이 남고, 슬롭 8 은 밑변
+              2pt 안쪽에서 멈춘다). 같은 규칙으로 그 슬롭도 부모 밖인 `ROW_GAP` 에는
+              못 들어온다. 그래서 간격 10 의 위 3 + 행 안 2 = **5pt 는 어느 과녁도 아닌
+              빈 띠**다.
+
+              그 5pt 를 `+` 쪽으로 더 내밀지 않는 이유는 결과의 무게가 다르기 때문이다 —
+              `+` 가 잘못 눌리면 줄이 하나 **느는** 것이지만, ✕ 쪽으로 기울이면 적어 둔
+              줄이 지워진다. 둘 다 44 는 이미 채웠으므로 경계는 비워 두는 편이 안전하다.
             */
             hitSlop={{ top: 7, bottom: 7 }}
             style={({ pressed }) => [
@@ -574,32 +579,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[24],
     paddingTop: spacing[12],
     /*
-      보이는 아래 여백은 예전과 같은 4 다(7 − 3). 스크롤 끝이 CTA 에 붙지 않게 두던 그 4
-      이고, 시트 바닥 여백은 시트 몫이라 여기선 조금만 준다.
-
       7 은 간격이 아니라 **과녁**이다. `+` 줄은 이 콘텐츠 컨테이너의 마지막 자식이라 아래
       hitSlop 7 이 곧장 부모 밖인데, hitSlop 은 부모 경계를 넘지 못한다(RN
       `ViewPropTypes.d.ts`: "The touch area never extends past the parent view bounds.").
       여백이 4 뿐이던 동안 `+` 가 약속한 44 는 실제로 30 + 7 + 4 = **41** 이었다.
-      그래서 프레임만 7 로 늘리고 늘어난 3 을 음수 마진으로 되돌린다 —
-      `IngredientEditor` 의 `wrap`(paddingBottom 7 / marginBottom −7)과 같은 짝이다.
 
-      스크롤 콘텐츠라 한 겹 더 확인해야 한다: 늘어난 7 이 스크롤 **뷰포트 안**인가.
-      이 `ScrollView` 는 높이를 콘텐츠에서 받고 `maxHeight` 로만 잘리므로 끝까지 내렸을
-      때든 콘텐츠가 짧을 때든 컨테이너 아래 끝 = 뷰포트 아래 끝이고, 그 7 은 양쪽 프레임
-      안에 든다. 음수 마진은 콘텐츠 크기에서 빠지므로 목록 높이도 예전 그대로다.
+      늘어난 7 은 `styles.listBox`(ScrollView 의 `style`)의 `marginBottom: -7` 로 되돌린다.
+      **음수 마진이 왜 콘텐츠가 아니라 저기 걸려야 하는지가 이 주석의 요점이다.** 스크롤
+      콘텐츠 크기는 자식의 **프레임**들을 합친 것이라(`ReactCommon/.../ScrollViewShadowNode.cpp`
+      : `contentBoundingRect.unionInPlace(childNode->getLayoutMetrics().frame)`) 여기
+      contentContainer 에 음수 마진을 걸어도 콘텐츠에서 빠지지 않는다. 대신 높이가 auto 인
+      ScrollView **자신**이 자식의 margin box 만큼 줄어들어, 콘텐츠가 뷰포트보다 그만큼
+      길어진다 — 늘린 7 중 그만큼이 뷰포트 밖으로 밀려 잘리고 41 이 그대로 남는다.
+      `style` 쪽에 걸면 뷰포트가 7 을 온전히 품고 바깥에서 보이는 여백만 줄어든다.
+      `WriteChipRail` 의 `rail`(style, 음수 마진) / `railContent`(contentContainer, 패딩)
+      짝이 같은 배선이다.
 
       7 은 `spacing` 사다리에 없다(4px 그리드 + 2px 마이크로). 있을 이유도 없다 — 이 수는
       간격 스케일이 아니라 `+` 의 hitSlop 7 에서 나온다.
     */
     paddingBottom: 7,
-    marginBottom: -3,
   },
+  /*
+    바깥에서 보이는 아래 여백은 0 근처로 되돌린다. 스크롤 끝이 CTA 에 붙지 않게 두는 여백은
+    시트 몫이고(`V2BottomSheet` 의 푸터 간격), 여기 7 은 여백이 아니라 과녁이기 때문이다.
+  */
+  listBox: { marginBottom: -7 },
   addButton: {
     /*
       30 은 시안 값이지만 **고정이 아니라 하한**이다. `height: 30` 이면 글자 배율을
-      키운 기기(2.0)에서 라벨이 상자를 넘어 잘렸다. 기본 배율에서는 6 + 18(TYPE.caption
-      의 lineHeight) + 6 = 30 이라 픽셀이 그대로고, 커진 만큼만 상자가 같이 자란다.
+      키운 기기(2.0)에서 라벨이 상자를 넘어 잘렸다. 기본 배율에서는 콘텐츠가
+      4 + 18(TYPE.caption 의 lineHeight) + 4 + 보더 2 = 28 이라 이 하한이 높이를 정해
+      시안 그대로 30 이고(아래 `paddingVertical` 주석), 글자가 커져 28 이 30 을 넘어서는
+      순간부터 커진 만큼만 상자가 같이 자란다.
     */
     minHeight: 30,
     /*

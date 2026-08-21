@@ -148,5 +148,5 @@ const styles = StyleSheet.create({
   },
   body: { flex: 1, gap: 2 },
   value: { ...TYPE.value },
-  detail: { ...TYPE.caption, fontSize: 12, lineHeight: 17 },
+  detail: { ...TYPE.cardSub },
 })

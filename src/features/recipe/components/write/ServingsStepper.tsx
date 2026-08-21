@@ -112,5 +112,5 @@ const styles = StyleSheet.create({
     minWidth: 56,
     textAlign: "center",
   },
-  note: { ...TYPE.caption, fontSize: 12, lineHeight: 17 },
+  note: { ...TYPE.cardSub },
 })
