@@ -28,7 +28,14 @@
  * 브라우저 전역이 없어도 되고, 잡고 싶은 것은 실행 결과가 아니라 문법 오류다.
  */
 
-import { buildMapHtml } from "@/src/features/restaurant/map/mapHtml"
+import { primitives } from "@/src/design-system-v2/tokens/colors"
+import {
+  MAP_MARKER_FILL,
+  MAP_MARKER_RING,
+  MAP_MARKER_SHADOW,
+  MAP_MARKER_SIZE,
+  buildMapHtml,
+} from "@/src/features/restaurant/map/mapHtml"
 
 /** 실제 호출부와 같은 모양의 입력. 키는 아무 문자열이어도 문법에는 영향이 없다. */
 function html(): string {
@@ -37,6 +44,19 @@ function html(): string {
     center: { lat: 37.4979, lng: 127.0276 },
     level: 4,
   })
+}
+
+/**
+ * 생성된 `<style>` 에서 규칙 하나를 통째로 꺼낸다.
+ * 시각 계약을 `toContain` 한 줄로 확인하면 다른 규칙에 같은 문자열이 있을 때 통과해
+ * 버린다 — 예컨대 `.mk .ring` 과 `.mk.sel .ring` 은 같은 속성을 반대로 쓴다.
+ */
+function cssRule(source: string, selector: string): string {
+  const at = source.indexOf(`\n  ${selector} {`)
+  if (at === -1) throw new Error(`CSS 규칙을 찾을 수 없습니다: ${selector}`)
+  const end = source.indexOf("}", at)
+  if (end === -1) throw new Error(`닫히지 않은 CSS 규칙입니다: ${selector}`)
+  return source.slice(at, end + 1)
 }
 
 /** `<script>` 안쪽만 꺼낸다. 바깥 HTML 은 JS 로 파싱할 수 없다. */
@@ -191,6 +211,93 @@ describe("buildMapHtml", () => {
     /* zoom_start 로 대신하면 안 된다 — 앱이 부른 setLevel(클러스터 파고들기 직후)에서도
        울려서 스스로 예약한 재검색을 지운다. */
     expect(script).not.toContain("'zoom_start'")
+  })
+
+  /**
+   * **마커는 도넛이다 — 시안 실측 (2026-08-20)**
+   *
+   * 시안 원본 SVG 는 마커마다 원 두 개를 겹쳐 그린다:
+   *   `circle r=10 fill=#F9FAFB` + `circle r=8 stroke=#FE7139 stroke-width=4`.
+   * 3배 렌더 타일에서 잰 값도 같다 — 바깥 60px · 링 띠 12px · 안쪽 36px
+   * (A3_1 의 마커 5개, A3_2, A4_1 전부 동일) → 3으로 나눠 20 / 4 / 12.
+   *
+   * 종전 기대값(링 3px)이 정본이 아닌 이유는 그 값이 시안에 없기 때문이다. 반대로
+   * '브랜드 채움 + 밝은 테두리' 도 시안의 마커가 아니다 — 그건 같은 SVG 에서
+   * `circle r=8.25 fill=#FE7139 stroke=#F9FAFB` 로 그려지는 **내 위치 점**이다.
+   */
+  it("기본 마커가 시안 치수(20 / 링 4)와 밝은 원판을 쓴다", () => {
+    expect(MAP_MARKER_SIZE).toBe(20)
+    expect(MAP_MARKER_RING).toBe(4)
+
+    /* 원판 색은 **여기서만** 고정된다.
+
+       아래 CSS 단언(`background: ${MAP_MARKER_FILL}`)은 프로덕션 CSS 가 보간하는 것과
+       같은 상수를 기대값으로 쓰므로 값이 무엇이든 참인 항진명제다 — 그것만으로는 원판을
+       #fff 로 되돌려도 초록이다. 치수(20/4)는 리터럴로 박혀 있는데 색만 안 박혀 있던 것이
+       이 it 의 구멍이었다.
+
+       값은 시안 SVG 의 안쪽 원(#F9FAFB)이고 그것이 곧 grayscale.50 이다. 두 줄을 함께
+       두는 이유: 토큰 대조는 '리터럴로 되돌아가는 것'을, 리터럴 못은 '토큰 팔레트가
+       조용히 바뀌는 것'을 각각 잡는다. */
+    expect(MAP_MARKER_FILL).toBe(primitives.grayscale[50])
+    expect(MAP_MARKER_FILL.toUpperCase()).toBe("#F9FAFB")
+
+    const ring = cssRule(html(), ".mk .ring")
+    expect(ring).toContain(`width: ${MAP_MARKER_SIZE}px`)
+    expect(ring).toContain(`height: ${MAP_MARKER_SIZE}px`)
+    // 앵커(1×1)의 원점이 좌표다. 원판은 그 점을 중심으로 놓여야 한다.
+    expect(ring).toContain(`left: ${-MAP_MARKER_SIZE / 2}px`)
+    expect(ring).toContain(`top: ${-MAP_MARKER_SIZE / 2}px`)
+    // 링은 상자 안쪽으로 그린다 — border-box 가 아니면 바깥 지름이 28 이 된다.
+    expect(ring).toContain("box-sizing: border-box")
+    expect(ring).toMatch(
+      new RegExp(`border:\\s*${MAP_MARKER_RING}px solid #FE7139`, "i"),
+    )
+    expect(ring).toContain(`background: ${MAP_MARKER_FILL}`)
+    // 시안 필터: offset 0 · stdDeviation 1(= CSS 2px) · label.alternative 색.
+    expect(MAP_MARKER_SHADOW).toBe("0 0 2px rgba(55,56,60,0.51)")
+    expect(ring).toContain(`box-shadow: ${MAP_MARKER_SHADOW}`)
+
+    /* 라벨 크기는 시안과 이미 같다(13/600). 못을 박아 두는 이유는 이 값이 **비례로
+       추정하면 틀리기 때문**이다 — 한글 잉크는 약 0.87em 이라, 3배 타일에서 잰 잉크
+       34px 를 다른 텍스트와 견주다 보면 15px 로 읽히기 쉽다. 실제 Pretendard SemiBold
+       를 3배로 렌더하면 12px→32 · 13px→34 · 14px→38 · 15px→40 이라 13px 이 정답이다.
+       라벨 위치(top:13px)도 마찬가지로 맞다: 시안은 좌표에서 잉크 윗변까지 44.5px(3배),
+       이 CSS 는 45.5px 로 1 device px 차이다. */
+    const name = cssRule(html(), ".mk .name")
+    expect(name).toContain("font-size: 13px")
+    expect(name).toContain("font-weight: 600")
+    expect(name).toContain("top: 13px")
+  })
+
+  /**
+   * **선택은 채움의 반전으로 말한다 — 그 반전이 성립하려면 기본이 채움이 아니어야 한다.**
+   *
+   * 링을 4px 로 두껍게 하면서 채움/링을 뒤집고 싶은 유혹이 있는데(브랜드 채움 + 흰
+   * 테두리), 그러면 기본 마커가 선택 마커와 같은 모습이 되어 **선택이 사라진다.**
+   * 남는 신호는 말풍선 하나뿐인데 말풍선은 겹침 판정에 밀리고 화면 밖으로도 나간다.
+   *
+   * 그래서 두 상태가 정확히 서로의 반전인지 — 같은 두 색을 채움/테두리에서 맞바꾸는지 —
+   * 를 고정한다. 색 이름을 바꾸는 것은 되지만 둘이 같아지는 것은 안 된다.
+   */
+  it("선택 마커는 기본 마커의 정확한 반전이라 구분이 사라지지 않는다", () => {
+    const source = html()
+    const base = cssRule(source, ".mk .ring")
+    const selected = cssRule(source, ".mk.sel .ring")
+
+    // 기본: 밝은 채움 + 브랜드 테두리.
+    expect(base).toContain(`background: ${MAP_MARKER_FILL}`)
+    expect(base).toMatch(/border:\s*\d+px solid #FE7139/i)
+    // 선택: 브랜드 채움 + 밝은 테두리. 두 값이 정확히 맞바뀐다.
+    expect(selected).toMatch(/background:\s*#FE7139/i)
+    expect(selected).toContain(`border-color: ${MAP_MARKER_FILL}`)
+    // 같은 채움이 되면(= 반전이 사라지면) 선택은 눈에 보이지 않는다.
+    expect(selected).not.toContain(`background: ${MAP_MARKER_FILL}`)
+    // 깊이도 한 단 다르다 — 기본은 시안의 평평한 2px 헤일로, 선택은 아래로 진 그림자.
+    expect(selected).not.toContain(MAP_MARKER_SHADOW)
+    // 링 자체는 남는다. 지우면 말풍선 꼬리가 아무것도 없는 자리를 가리킨다(2026-07-31).
+    expect(selected).not.toContain("display: none")
+    expect(cssRule(source, ".mk.sel .name")).toContain("display: none")
   })
 
   /**

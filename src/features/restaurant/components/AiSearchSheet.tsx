@@ -134,6 +134,7 @@ export function AiSearchSheet({
 
   return (
     <V2BottomSheet
+      surface="restaurant_ai_search"
       visible={visible}
       onClose={onClose}
       title={t("restaurant.aiSearch.title")}
@@ -177,6 +178,7 @@ export function AiSearchSheet({
 
         {!ai.isPending && ai.isError ? (
           <V2ErrorState
+            surface="restaurant_ai_search"
             title={t("restaurant.aiSearch.errorTitle")}
             description={t("restaurant.aiSearch.errorBody")}
             onRetry={submit}

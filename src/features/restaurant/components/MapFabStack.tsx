@@ -35,7 +35,7 @@ import {
   type V2IconName,
 } from "@/src/design-system-v2"
 
-import { FLOATING_SHADOW } from "./mapFloating"
+import { FLOATING_SHADOW, mapOverlayChrome } from "./mapFloating"
 
 const SIZE = touchTarget.min // 44
 
@@ -99,7 +99,8 @@ function Fab({
   busy?: boolean
   onPress: () => void
 }) {
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
+  const chrome = mapOverlayChrome({ mode, ...colors })
   return (
     <Pressable
       accessibilityRole="button"
@@ -112,7 +113,7 @@ function Fab({
       style={({ pressed }) => [
         styles.fab,
         FLOATING_SHADOW,
-        { backgroundColor: colors.background.default },
+        chrome,
         pressed && styles.pressed,
       ]}
     >

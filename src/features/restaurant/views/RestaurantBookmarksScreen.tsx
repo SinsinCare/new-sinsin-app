@@ -101,6 +101,7 @@ export function RestaurantBookmarksScreen({
           ) : list.isError ? (
             <View style={styles.state}>
               <V2ErrorState
+                surface="restaurant_bookmarks"
                 title={t("restaurant.error.listTitle")}
                 description={t("restaurant.error.listBody")}
                 retryLabel={t("restaurant.error.listRetry")}
@@ -110,6 +111,7 @@ export function RestaurantBookmarksScreen({
           ) : (
             <View style={styles.state}>
               <V2EmptyState
+                surface="restaurant_bookmarks"
                 icon="bookmark"
                 title={t("restaurant.empty.bookmarkTitle")}
                 description={t("restaurant.empty.bookmarkBody")}

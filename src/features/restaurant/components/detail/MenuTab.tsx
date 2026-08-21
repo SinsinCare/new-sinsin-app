@@ -84,6 +84,7 @@ export function MenuTab({
   if (isError) {
     return (
       <V2ErrorState
+        surface="restaurant_detail_menu"
         title={t("restaurant.error.detailTitle")}
         description={t("restaurant.error.detailBody")}
         onRetry={onRetry}
@@ -93,7 +94,12 @@ export function MenuTab({
   }
 
   if (menus.length === 0) {
-    return <V2EmptyState title={t("restaurant.empty.menuTitle")} />
+    return (
+      <V2EmptyState
+        surface="restaurant_detail_menu"
+        title={t("restaurant.empty.menuTitle")}
+      />
+    )
   }
 
   return (

@@ -16,9 +16,16 @@
  * 것보다 실패를 알리고 다시 시도하게 하는 쪽이 낫다. 업로드 경로도 그쪽과 **같은
  * `imageUploadService`** 를 쓴다 — 두 번째 업로드 메커니즘을 만들지 않는다.
  *
- * 서버가 받는 값은 서명 URL 이 아니라 **오브젝트 경로**다. `ReviewSubmitPayload.imageUrls`
- * 라는 필드명이 URL 처럼 보이지만 `restaurant_report.photo_object_paths` 와 같은 규약이라
- * `uploaded.objectPath` 를 넣는다. `imageUrl` 을 넣으면 만료된 서명이 DB 에 굳는다.
+ * 보내는 키는 **`imageObjectPaths`** 다. 서버 스키마(`sinsin-be-bun` 의
+ * `src/domains/restaurant/schemas.ts::createReviewBody`)가 이 이름의 정본이고, 값은 서명
+ * URL 이 아니라 `uploaded.objectPath` — 서명은 15분마다 회전하므로 URL 을 넣으면 만료된
+ * 링크가 DB 에 굳는다.
+ *
+ * 이 이름이 틀리면 **아무도 안 터진다.** 서버의 TypeBox 는 non-strict 라 모르는 키를 그냥
+ * 통과시키고, 스키마에 없는 키는 읽히지도 않는다. 실제로 앱은 오랫동안 `imageUrls` 로
+ * 보내고 있었고 요청은 200, 후기는 저장, 사진만 사라졌다 — 서버·앱 어디에도 오류가 남지
+ * 않았다. 그래서 본문 조립은 `utils/reviewDraft.ts::reviewSubmitBody` 한 곳에만 두고
+ * `tests/restaurantReviewSubmitContract.test.ts` 가 서버 스키마 파일과 키를 대조한다.
  *
  * ## 되돌리지 말 것
  *
@@ -37,11 +44,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
   type ViewStyle,
 } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import { Image } from "expo-image"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -57,7 +63,6 @@ import {
 } from "@/src/design-system-v2"
 import { presentError } from "@/src/lib/errorMessage"
 import { showConfirm } from "@/src/lib/dialog"
-import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 
 import type { ReviewDto, ReviewKeyword } from "../types"
@@ -70,6 +75,7 @@ import {
   isReviewDraftReady,
   reviewDefectMessageKey,
   reviewDraftDefects,
+  showReviewPhotoNotice,
 } from "../utils/reviewDraft"
 import { MediaPicker } from "../components/MediaPicker"
 
@@ -228,18 +234,25 @@ export function ReviewWriteScreen({
         rating,
         content: content.trim(),
         keywords: [...keywords],
-        imageUrls: objectPaths,
+        imageObjectPaths: objectPaths,
       })
       /*
-        `-1` 은 **후기는 저장됐는데 사진 색인만 실패**한 상태다. 이걸 실패로 접으면
-        사용자가 같은 글을 또 쓰고 후기가 두 벌이 된다. 성공으로 두되 사진에 대해서만
-        따로 말한다.
+        사진이 빠진 것은 **실패로 접지 않는다** — 후기 본문은 이미 저장됐고, 여기서 실패로
+        돌리면 사용자가 같은 글을 또 써서 후기가 두 벌이 된다. 성공으로 두되 사진에 대해서만
+        사실대로 말한다.
+
+        판정·문구·톤·토스트 표면까지 전부 `reviewDraft.ts::showReviewPhotoNotice` 가 정한다.
+        이 화면에는 **분기가 하나도 없다** — 예전에는 표면 셋을 여기서 골랐고, 그 분기
+        **앞에** 이른 return 한 줄만 넣으면(`if (photosIndexed >= 0) { …성공 토스트…; return }`)
+        출시됐던 결함이 소스 검사를 전부 통과한 채 되살아났다. 화면이 못 고르면 화면에서
+        틀릴 수도 없다.
+
+        아래 두 줄 사이에 `return` 을 끼우는 것도 같은 결함이므로 계약 테스트가 막는다.
       */
-      if (photosIndexed === -1) {
-        showErrorToast(t("restaurant.review.form.donePhotosFailed"))
-      } else {
-        showSuccessToast(t("restaurant.review.form.done"))
-      }
+      showReviewPhotoNotice(
+        { sent: objectPaths.length, indexed: photosIndexed },
+        (key, params) => t(dynamicKey(key), params),
+      )
       onSubmitted?.(review)
     } catch (error) {
       /*
@@ -268,7 +281,6 @@ export function ReviewWriteScreen({
   ])
 
   const counterCurrent = content.length
-
   return (
     <View
       style={[

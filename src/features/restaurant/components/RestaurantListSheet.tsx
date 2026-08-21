@@ -40,20 +40,32 @@
  * v5 는 이 값이 기본 `true` 라서, 명시한 스냅 포인트 **위에** 콘텐츠 높이 스냅을 하나 더
  * 끼워 넣는다. 그러면 `snapToIndex(2)` 가 expanded 가 아닌 곳으로 간다.
  *
- * ## 스크롤 중에는 카드 press 를 내보내지 않는다
+ * ## 스크롤과 탭은 **제스처 체계가** 가른다 (2026-08-17 에 규칙이 바뀌었다)
  *
- * `BottomSheetFlatList` 는 react-native-gesture-handler 의 `Gesture.Native()` 로 감싸인
- * 스크롤뷰다. 그 네이티브 제스처가 터치를 가져가도 **RN 의 JS 리스폰더는 취소를 받지
- * 못하고**, 손을 떼는 순간 그 touchend 가 카드의 `onPress` 가 된다 — 세로로 훑기만 했는데
- * 상세가 열렸다(실측 2026-07-31, `utils/pressIntent` 헤더에 전말이 있다).
+ * 한때 이 파일은 스크롤의 시작·끝 시각을 적어 두고 그 직후 250ms 안에 올라온 카드
+ * press 를 버렸다. 카드 쪽에도 "8px 넘게 움직였으면 탭이 아니다" 는 판정이 있었다.
+ * 둘 다 `BottomSheetFlatList`(RNGH `Gesture.Native()`)가 터치를 가져가도 **RN 의 JS
+ * 리스폰더에는 취소가 전달되지 않는** 문제를 밖에서 막으려던 것이다.
  *
- * 카드 쪽에도 이동 거리 판정이 있지만(8px), 그것은 **좌표를 볼 수 있을 때**의 방어다.
- * 여기서는 시트가 스스로 아는 사실 — "지금 손가락이 목록을 끌고 있다" — 로 한 번 더
- * 막는다. 두 규칙 다 `utils/pressIntent` 의 순수 함수이고 기기 없이 테스트된다.
+ * 그 방어는 **마우스에서만 공짜였다.** 시뮬레이터의 마우스 탭은 이동 0px·즉시 release 라
+ * 어떤 임계값에도 걸리지 않는다. 실제 손가락은 탭 한 번에 10–20pt 씩 구른다 — 실측:
+ * 12pt 굴린 탭은 화면에 아무 일도 일어나지 않았다. 사용자가 말한 "터치가 잘 안 먹힌다" 가
+ * 이것이다(프로덕션의 손, 개발의 마우스).
+ *
+ * 그래서 카드의 press 를 **RNGH 의 `Pressable`** 로 바꿨다(`RestaurantCard` 헤더).
+ * 그러면 press 가 스크롤·시트 팬과 **같은 제스처 체계 안에서** 중재되어, 스크롤이
+ * 시작되는 순간 네이티브가 press 를 취소한다 — 거리·시간 임계값이 아예 필요 없다.
+ * 이 파일이 스크롤 시각을 추적하지 않는 이유이고, `utils/pressIntent` 가 사라진 이유다.
+ *
+ * ## 손을 뗐을 때 갈 스냅도 우리가 정한다
+ *
+ * 기본 규칙(`놓은 위치 + 0.2 × 속도` 의 최근접)은 손가락 속도에서 무너진다 —
+ * `../sheetGestureHandlers` 와 `../sheetSnap` 의 `resolveDetentIndex` 머리말 참고.
  */
 
 import {
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -71,8 +83,11 @@ import {
 import type { ReactNode } from "react"
 
 import { SHEET_MID_RATIO, SHEET_SNAP } from "../sheetSnap"
+import { useSheetGestureEventsHandlers } from "../sheetGestureHandlers"
+import { useSheetScrollEventsHandlers } from "../sheetScrollHandlers"
 import BottomSheet, {
   BottomSheetFlatList,
+  useBottomSheetSpringConfigs,
   type BottomSheetFlatListMethods,
 } from "@gorhom/bottom-sheet"
 import type { SharedValue } from "react-native-reanimated"
@@ -87,7 +102,6 @@ import {
 } from "@/src/design-system-v2"
 
 import type { EmptyReason, RestaurantCardDto } from "../types"
-import { isScrollEcho } from "../utils/pressIntent"
 import { MapEmptyState } from "./MapEmptyState"
 import { RestaurantCard } from "./RestaurantCard"
 import {
@@ -103,6 +117,9 @@ const HANDLE_BAR_HEIGHT = 4
   핸들 **블록**의 여백. 바 자체는 목업대로 36×4 로 두되, 그 위아래 여백을 넓혀
   손가락이 닿는 면을 키운다. 종전 값(10/8)이면 블록이 22px 이라 화면 맨 위 모서리를
   정확히 집어야 시트가 움직였다 — 지도 앱에서 기대하는 감각이 아니다.
+  32pt 는 최소 터치 타겟 44 에 못 미치지만 **여기서 더 키우지 않는다** — 접힘 높이가
+  그대로 지도를 먹고, 콘텐츠 팬이 켜져 있어 접힘에서도 칩 줄까지 포함한 ~95pt 전체가
+  손잡이이기 때문이다. 이 블록은 유일한 통로가 아니다.
   접힘 높이는 이 상수에서 유도되므로(§collapsed 스냅) 여기만 바꾸면 따라온다.
 */
 const HANDLE_PADDING_TOP = spacing[16]
@@ -112,6 +129,12 @@ const HANDLE_BLOCK_HEIGHT =
 
 /** sticky 블록을 아직 못 재기 전의 임시값. 첫 프레임에만 쓰이고 곧 실측으로 대체된다. */
 const STICKY_HEADER_FALLBACK_HEIGHT = 62
+
+/**
+ * 시트 팬이 시작되는 세로 이동(pt). 근거는 `<BottomSheet activeOffsetY>` 자리의 주석에 있다.
+ * 배열 리터럴을 인라인으로 두면 렌더마다 새 배열이라 제스처가 다시 만들어진다.
+ */
+const SHEET_PAN_ACTIVATION_OFFSET: [number, number] = [-10, 10]
 
 /** 스냅 인덱스에 이름을 붙인다 — 숫자 0/1/2 가 코드에 흩어지면 뜻을 잃는다. */
 /**
@@ -232,7 +255,7 @@ export const RestaurantListSheet = forwardRef<
   ref,
 ) {
   const { t } = useTranslation("common")
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
   const sheetRef = useRef<BottomSheet>(null)
   const listRef = useRef<BottomSheetFlatListMethods>(null)
   const [stickyHeaderHeight, setStickyHeaderHeight] = useState(
@@ -268,13 +291,35 @@ export const RestaurantListSheet = forwardRef<
     [collapsedHeight],
   )
 
+  /**
+   * 스냅 애니메이션.
+   *
+   * `damping`/`stiffness` 대신 **`duration` + `dampingRatio`** 를 쓴다. 물리 상수로 적으면
+   * 끝나는 시점이 rest 임계값에 달려 있어(기본 0.01px) 눈에 안 보이는 꼬리가 0.5초씩
+   * 남고, 스냅 완료 콜백(`onChange` → 카카오 `relayout`)이 그만큼 늦게 온다.
+   * 여기서는 **280ms 에 끝난다는 사실 자체가 계약**이다.
+   *
+   * `dampingRatio: 1` = 임계감쇠라 되튐이 없다. 스프링이므로 제스처 속도는 그대로 이어진다.
+   */
+  const animationConfigs = useBottomSheetSpringConfigs({
+    duration: 280,
+    dampingRatio: 1,
+    overshootClamping: true,
+  })
+
   useImperativeHandle(
     ref,
     (): RestaurantListSheetHandle => ({
       snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
       collapse: () => sheetRef.current?.snapToIndex(SHEET_SNAP.COLLAPSED),
       scrollToTop: () => {
-        listRef.current?.scrollToOffset({ offset: 0, animated: true })
+        /*
+          `animated: false` 다. 마커 탭은 시트 스냅 애니메이션과 **동시에** 이것을 부르는데,
+          목록을 이미 한참 내려 둔 상태라면 애니메이션 스크롤이 수천 px 를 훑으며 그 사이
+          모든 행을 마운트한다 — 스냅이 끊긴다. 어차피 사용자는 시트가 올라오는 것을 보고
+          있으므로 목록이 순간이동해도 눈에 띄지 않는다.
+        */
+        listRef.current?.scrollToOffset({ offset: 0, animated: false })
       },
     }),
     [],
@@ -285,47 +330,38 @@ export const RestaurantListSheet = forwardRef<
     [],
   )
 
+  /*
+    스크롤 시각을 더 이상 추적하지 않는다. 카드가 RNGH `Pressable` 이라 스크롤이 시작되면
+    네이티브가 press 를 **취소**하고, 취소된 press 는 애초에 `onPress` 를 내보내지 않는다
+    (파일 머리말 §스크롤과 탭). `onScrollBeginDrag`/`onMomentumScrollEnd` 를 넘기지 않는
+    것도 같은 이유다 — 그 prop 들은 gorhom 이 자기 reanimated 스크롤 핸들러와 합쳐야
+    하는 자리라, 쓰지 않을 값을 굳이 통과시키지 않는다.
+  */
+
   /**
-   * 손가락이 목록을 끌고 있는가 / 마지막으로 끝난 시각. state 가 아니라 ref 인 이유는
-   * 이 값이 렌더에 쓰이지 않기 때문이다 — state 로 두면 스크롤 시작·끝마다 목록 전체가
-   * 다시 그려진다.
+   * `renderItem` 은 **선택이 바뀌어도 같은 함수**여야 한다.
+   *
+   * 예전에는 `selectedId` 가 의존성이라 마커를 누를 때마다 `renderItem` 이 새 함수가 되고,
+   * `FlatList` 가 **마운트된 카드를 전부** 다시 그렸다(사진 스트립까지). 하필 그 순간은
+   * 시트가 올라오는 애니메이션 중이라, 사용자에게는 "누른 직후 0.1–0.3초 멈칫" 으로
+   * 보인다 — 탭이 안 먹은 것처럼 읽히는 그 멈칫이다.
+   *
+   * 선택 값은 ref 로 읽고, 다시 그릴 대상은 `extraData` 로 알린다. `VirtualizedList` 는
+   * `extraData` 가 바뀌면 **보이는 행만** 갱신한다.
    */
-  const draggingRef = useRef(false)
-  const scrollEndAtRef = useRef(0)
-
-  const handleScrollBeginDrag = useCallback(() => {
-    draggingRef.current = true
-  }, [])
-
-  const handleScrollEndDrag = useCallback(() => {
-    draggingRef.current = false
-    scrollEndAtRef.current = Date.now()
-  }, [])
-
-  const handleMomentumScrollEnd = useCallback(() => {
-    draggingRef.current = false
-    scrollEndAtRef.current = Date.now()
-  }, [])
-
-  const handlePressCard = useCallback(
-    (item: RestaurantCardDto, index: number) => {
-      // 스크롤이 뱉어 낸 press 는 사용자의 탭이 아니다(파일 상단 주석).
-      if (isScrollEcho(Date.now(), draggingRef.current, scrollEndAtRef.current))
-        return
-      onPressCard?.(item, index)
-    },
-    [onPressCard],
-  )
+  const selectedIdRef = useRef(selectedId)
+  selectedIdRef.current = selectedId
 
   const renderItem = useCallback(
     ({ item, index }: { item: RestaurantCardDto; index: number }) => (
-      <RestaurantCard
-        card={item}
-        selected={item.restaurantId === selectedId}
-        onPress={onPressCard ? () => handlePressCard(item, index) : undefined}
+      <SheetRow
+        item={item}
+        index={index}
+        selected={item.restaurantId === selectedIdRef.current}
+        onPress={onPressCard}
       />
     ),
-    [handlePressCard, onPressCard, selectedId],
+    [onPressCard],
   )
 
   /**
@@ -336,13 +372,22 @@ export const RestaurantListSheet = forwardRef<
    */
   const listHeader = useMemo(() => {
     if (!leadingSkeleton) return null
+    /*
+      **이끌 것이 없으면 자리표시자도 없다.** 이 스켈레톤은 "곧 여기에 들어올 첫 카드"
+      의 자리다. 그런데 목록이 0건이고 이유까지 정해진 상태(빈 상태·실패 문구가 그려지는
+      상태)에서는 들어올 카드가 없다 — 그때 그리면 맥동하는 회색 카드가 `인터넷 연결을
+      확인해 주세요` 위에 얹혀, 화면이 로딩 중인지 실패인지 말해 주지 않게 된다.
+      게다가 그 높이만큼 빈 상태의 행동 버튼을 아래로 밀어낸다(중간 스냅에서는 스크롤이
+      잠겨 있어 밀려난 만큼이 그대로 사라진다).
+    */
+    if (items.length === 0 && emptyReason !== null) return null
     return (
       <View>
         <RestaurantCardSkeleton />
         <V2Divider tone="alternative" />
       </View>
     )
-  }, [leadingSkeleton])
+  }, [leadingSkeleton, items.length, emptyReason])
 
   const listEmpty = useMemo(() => {
     if (loading) {
@@ -396,6 +441,15 @@ export const RestaurantListSheet = forwardRef<
       enableDynamicSizing={false}
       topInset={topInset}
       /*
+        **탭 바가 화면 위에 떠 있으므로 시트도 그만큼 올려 앉힌다**(2026-08-18).
+        탭 바는 상단 모서리가 깎여 있어 그 뒤로 화면이 보여야 하고, 그러려면 화면이
+        바 아래까지 그려져야 한다. 그 결과 이 시트의 컨테이너도 바 뒤까지 늘어나서,
+        접힘 높이(핸들+sticky 블록)를 바닥에서 재면 sticky 블록이 통째로 바에 가린다.
+        `bottomInset` 은 gorhom 이 시트 전체를 그만큼 띄우는 값이라 접힘·중간·확장이
+        한꺼번에 같이 올라간다 — 스냅 비율은 건드리지 않는다.
+      */
+      bottomInset={bottomInset}
+      /*
         **목록을 끌어도 시트가 움직인다.** 지도 앱에서 사람들이 기대하는 동작이고,
         이게 없으면 핸들 몇십 px 이 유일한 손잡이가 된다. 가로 스트립과의 충돌은
         스크롤뷰를 RNGH 것으로 바꿔서 푼다(`PhotoStrip` import 주석).
@@ -404,15 +458,75 @@ export const RestaurantListSheet = forwardRef<
         그때 시트가 내려간다 — 두 동작이 순서로 갈리므로 서로를 뺏지 않는다.
       */
       enableContentPanningGesture
+      /*
+        **팬은 10pt 를 움직인 뒤에 시작한다.** 이 한 줄이 "손가락으로는 터치가 안 먹는다" 의
+        정체다(실측 2026-08-17).
+
+        기본값에는 활성화 임계값이 **없다.** 그래서 콘텐츠 팬(`Gesture.Pan`)이 2–4pt 만
+        움직여도 활성화되고, RNGH 중재에서 카드의 press 가 **취소**된다. 취소된 press 는
+        아무 일도 하지 않으므로 화면에서는 "눌렀는데 반응이 없다" 로 보인다.
+        시뮬레이터의 마우스 클릭은 이동이 정확히 0pt 라 이 경로를 **절대** 밟지 않는다 —
+        그래서 개발 내내 멀쩡했고 실기기에서만 문제였다. 실측: 4pt 만 흔들어도 상세가
+        열리지 않았고, 0pt 로 누르면 열렸다.
+
+        10 은 iOS 스크롤뷰(≈10pt)와 안드로이드 `ViewConfiguration.touchSlop`(8dp)이 쓰는
+        값이다. 이보다 작게 잡으면 탭이 다시 죽고, 크게 잡으면 시트가 굼떠 보인다.
+        가로 이동은 이제 팬을 깨우지 않는다 — `activeOffsetY` 는 **세로 이동으로만**
+        활성화를 허용하므로, 사진 스트립·칩 줄을 가로로 끄는 동안 시트가 끼어들지 않는다.
+
+        임계값을 넘는 순간 `translationY` 에는 이미 10pt 가 쌓여 있어서 시트가 그만큼
+        튄다. 그 보정은 `../sheetGestureHandlers` 의 `handleOnChange` 가 한다.
+      */
+      activeOffsetY={SHEET_PAN_ACTIVATION_OFFSET}
+      /*
+        **오버드래그를 끈다 — 그림이 아니라 레이아웃 때문이다.**
+
+        gorhom 은 콘텐츠 컨테이너의 `paddingBottom` 을 `overDragResistanceFactor` 로 계산하는데
+        그 식이 `animatedPosition` 을 읽는다(`BottomSheetContent`). 즉 시트를 끄는 **매
+        프레임마다 컨테이너 높이가 새 목표로 애니메이션**되고, 그때마다 레이아웃 패스가
+        돈다. 시트가 손가락을 무겁게 따라오던 이유다. 0 을 주면 그 값이 상수가 되어
+        드래그가 순수 transform 이 된다.
+
+        잃는 것은 최상단에서 더 당길 때의 고무줄뿐이다. `enablePanDownToClose` 가 꺼져 있어
+        아래쪽 고무줄은 원래 없었다.
+      */
+      overDragResistanceFactor={0}
+      /*
+        **손을 뗐을 때 갈 스냅은 우리가 정한다.** 라이브러리 기본값은 손가락 속도에서
+        스냅을 건너뛰고("전체 → 접힘"), 짧은 플릭은 아예 무시한다 —
+        `../sheetGestureHandlers` 머리말에 실측과 새 규칙이 있다.
+      */
+      gestureEventsHandlersHook={useSheetGestureEventsHandlers}
+      /*
+        기본 애니메이션은 **플랫폼마다 다른 물건**이다: iOS 는 과감쇠 스프링
+        (damping 500 / stiffness 1000 / mass 3 — 느린 꼬리가 남아 뭉근하다), 안드로이드는
+        250ms timing 이라 **손짓의 속도가 통째로 버려진다**. 같은 화면이 두 감각을 가질
+        이유가 없으므로 한 스프링으로 통일한다. 스프링이어야 제스처 속도가 이어진다.
+      */
+      animationConfigs={animationConfigs}
       onChange={onSnapChange}
       animatedPosition={animatedPosition}
       backgroundStyle={[
         styles.background,
-        { backgroundColor: colors.background.default },
+        {
+          backgroundColor: colors.background.default,
+          // 지도와 같은 L의 면 위에서는 라운드 경계를 hairline이 맡는다.
+          borderTopWidth: 1,
+          borderTopColor: colors.line.alternative,
+        },
       ]}
-      // 목업의 시트는 지도 위에 뜬 흰 면이다. 지도(컬러 타일)와의 톤 차이가 곧 경계라
-      // 선을 얹지 않는다 — 대신 그림자로 살짝 띄운다.
-      style={[styles.sheet, style]}
+      /*
+        라이트 지도에서는 0.1 그림자로 충분했지만 다크 타일에서는 검은 그림자가 거의
+        사라진다. 면은 본문과 이어지게 유지하고 다크에서만 그림자 알파를 올린다.
+      */
+      style={[
+        styles.sheet,
+        {
+          shadowColor: mode === "dark" ? colors.static.black : "rgb(0, 27, 55)",
+          shadowOpacity: mode === "dark" ? 0.34 : 0.1,
+        },
+        style,
+      ]}
       handleComponent={renderHandle}
     >
       {hasStickyHeader && (
@@ -422,10 +536,14 @@ export const RestaurantListSheet = forwardRef<
             칩, 칩과 안내문이 서로 붙어 있었고, 안내문이 없는 상태(필터가 걸린 화면)에서는
             칩이 구분선·탭바에 그대로 닿았다. 접힘 높이는 이 블록을 `onLayout` 으로 재서
             따라오므로(§collapsed 스냅) 여백을 늘려도 매직 넘버가 생기지 않는다.
+
+            칩 밑 구분선은 **일부러 없다** (2026-08-19 지적). 시트가 접힌 상태에서 이
+            선이 탭바 바로 위에 떠서, 탭바 모서리 삼각형과 시트가 하나로 이어져 보여야
+            할 자리를 가로로 끊고 있었다. sticky 경계는 선 없이도 읽힌다 — 스크롤하면
+            카드가 이 블록 **밑으로** 지나가는 것 자체가 경계다.
           */}
           <View style={styles.stickyRow}>{filterRow}</View>
           {notice}
-          <V2Divider tone="alternative" />
         </View>
       )}
       <BottomSheetFlatList
@@ -442,19 +560,70 @@ export const RestaurantListSheet = forwardRef<
             {listFooter}
           </>
         }
+        /*
+          **시트가 기억하는 스크롤 오프셋을 실제 값과 맞춘다.** 이게 없으면 목록이 줄어들
+          때(0건 필터·희소 지역) 낡은 오프셋이 남아 **펼침 상태에서 시트가 얼어붙는다** —
+          핸들로만 내려간다. 근거와 재현은 `../sheetScrollHandlers` 머리말에.
+        */
+        scrollEventsHandlersHook={useSheetScrollEventsHandlers}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
-        /* 손가락 스크롤의 시작·끝만 본다. 프로그램 스크롤(`scrollToTop`)은 여기 걸리지
-           않아야 한다 — 걸리면 마커를 누른 직후의 정상적인 카드 탭이 막힌다. */
-        onScrollBeginDrag={handleScrollBeginDrag}
-        onScrollEndDrag={handleScrollEndDrag}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
+        /*
+          선택이 바뀐 것을 목록에 알린다. `renderItem` 자체는 바뀌지 않으므로(위 주석)
+          이 값이 없으면 하이라이트가 갱신되지 않는다.
+        */
+        extraData={selectedId}
+        /*
+          **가상화 창을 좁힌다.** gorhom 은 콘텐츠를 **항상 펼침 높이로** 눕히므로
+          (`BottomSheetContent` 의 height = 최대 스냅 높이), 시트가 접혀 있어도 목록의
+          뷰포트는 화면 전체다. 기본값(`windowSize` 21)이면 그 큰 뷰포트의 21배를 채우려
+          들어 20건 한 쪽이 통째로 마운트되고, 카드마다 사진이 최대 6장이라 진입 직후와
+          마커 탭 직후에 JS·디코딩이 몰린다 — 그 순간이 바로 사용자가 탭을 기다리는 때다.
+        */
+        windowSize={5}
+        initialNumToRender={4}
+        maxToRenderPerBatch={4}
         bounces={false}
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomInset + spacing[16] }}
       />
     </BottomSheet>
+  )
+})
+
+/**
+ * 목록 한 줄. `RestaurantCard` 를 감싸기만 하는 얇은 층인데, **여기 있어야 하는 이유**가 있다.
+ *
+ * `FlatList` 의 `renderItem` 은 `extraData` 가 바뀔 때 보이는 행마다 다시 불린다. 그때
+ * `onPress={() => onPressCard(item, index)}` 처럼 인라인 화살표를 만들면 매번 새 함수라
+ * `memo(RestaurantCard)` 가 **한 번도 걸러 내지 못한다** — 마커를 누를 때마다 화면에 있는
+ * 카드가 사진 스트립까지 통째로 다시 그려졌다.
+ *
+ * 이 컴포넌트가 그 화살표를 자기 안에서 `useCallback` 으로 들고 있으면, 바뀐 것이 선택
+ * 상태뿐일 때 `selected` 가 실제로 달라진 **두 줄만** 다시 그려진다.
+ */
+const SheetRow = memo(function SheetRow({
+  item,
+  index,
+  selected,
+  onPress,
+}: {
+  item: RestaurantCardDto
+  index: number
+  selected: boolean
+  onPress?: (card: RestaurantCardDto, index: number) => void
+}) {
+  const handlePress = useCallback(() => {
+    onPress?.(item, index)
+  }, [onPress, item, index])
+
+  return (
+    <RestaurantCard
+      card={item}
+      selected={selected}
+      onPress={onPress ? handlePress : undefined}
+    />
   )
 })
 

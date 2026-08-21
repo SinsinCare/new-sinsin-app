@@ -23,6 +23,21 @@
  * 사진이나 후기 조회가 실패해도 정보 요약과 메뉴는 이미 있다. 그래서 실패한 섹션만
  * 조용히 빼고 나머지를 그린다 — 여기서 `V2ErrorState` 를 띄우면 사진 하나 때문에
  * 주소와 영업시간이 사라진다. 전용 탭에서는 같은 실패가 재시도 버튼으로 드러난다.
+ *
+ * ## 정보 요약은 카드가 아니라 **평면**이다 (2026-08-20 시안)
+ *
+ * 앞 판본은 이 네 줄을 `DetailCard`(회색 면 + 안여백 16 + 반경 12)로 묶었다. 그 판단의
+ * 근거는 "선은 덩어리를 말하지 못한다" 였고 그 관찰 자체는 지금도 옳다. 바뀐 것은
+ * **덩어리를 무엇이 말하는가**다 — 시안(C1_2)을 3배 렌더에서 재 보면 정보 네 줄은
+ * x=0..375 전 구간이 순백(255,255,255)이고 회색 면도 둥근 모서리도 없다. 그 대신
+ * 정보 블록과 메뉴 섹션 사이에 **전폭 회색 띠**가 있다(y 363–374px = 4.00pt,
+ * rgb(247,247,247) = `background.lower`). 같은 띠가 C2_2·C3_2(두 곳)·D5_1 에도 있다.
+ *
+ * 즉 시안에서 경계를 그리는 것은 카드의 테두리가 아니라 **섹션 사이의 띠**이고,
+ * 그 띠는 이 파일이 이미 `V2Divider variant="thick"` 으로 그리고 있었다. 면을 없애도
+ * 경계가 약해지지 않는 이유가 그것이다 — 오히려 우리 띠(16)가 시안(4)보다 두껍다.
+ * 카드를 지우면서 얻는 것은 화면 좌우 여백과 카드 안여백이 겹쳐 만들던 **세 번째
+ * 좌측 시작선(32)** 이 사라지는 것이다(격자 정본은 `layout.ts` 머리말).
  */
 
 import {
@@ -51,7 +66,6 @@ import { useRestaurantPhotos } from "../../hooks/useRestaurantPhotos"
 import type { MenuItemDto, PhotoDto, RestaurantDetailDto } from "../../types"
 import { menuConfidenceMode } from "../../utils/menuSafetyEvidence"
 import { reviewPhotos } from "./reviewPhotos"
-import { DetailCard } from "./DetailCard"
 import { DetailInfoRows } from "./DetailInfoRows"
 import { DetailSection } from "./DetailSection"
 import { MenuRow } from "./MenuRow"
@@ -114,11 +128,13 @@ export function HomeTab({
 
   return (
     <View>
-      {/* 영업시간·주소·전화·링크는 한 주제다. 선이 아니라 둥근 면으로 묶는다. */}
+      {/*
+        영업시간·주소·전화·링크는 한 주제다. 그 덩어리를 말하는 것은 이 블록을 감싼
+        면이 아니라 **다음 섹션과의 사이에 있는 전폭 띠**다(머리말 참고). 그래서 여기는
+        흰 바탕 위 평면이고, 좌우 여백은 화면 정본 `GUTTER` 하나뿐이다.
+      */}
       <View style={styles.infoBlock}>
-        <DetailCard>
-          <DetailInfoRows restaurantId={restaurantId} detail={detail} />
-        </DetailCard>
+        <DetailInfoRows restaurantId={restaurantId} detail={detail} />
       </View>
 
       {previewMenus.length > 0 && (

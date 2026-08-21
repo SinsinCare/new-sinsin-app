@@ -39,6 +39,7 @@
  */
 
 import type { LatLng, MapBounds, SafetyLevel } from "../map/mapBridge"
+import type { ReviewReportServerReason } from "../utils/reviewReportReasons"
 
 export type { LatLng, MapBounds, SafetyLevel }
 
@@ -896,16 +897,41 @@ export interface ReviewerProfileResponse {
   stats: ReviewerStatsDto
 }
 
+/**
+ * `POST /restaurants/:id/reviews` 본문.
+ *
+ * 필드 이름은 **서버 스키마가 정본**이다(`sinsin-be-bun/src/domains/restaurant/schemas.ts`
+ * 의 `createReviewBody`). 여기 이름을 바꾸면 요청은 여전히 200 이고 후기도 저장되지만
+ * 서버가 안 읽는 키가 되어 **값만 조용히 사라진다** — TypeBox 가 non-strict 라 모르는 키를
+ * 막지 않는다. `imageUrls` 로 보내던 시절이 정확히 그랬다.
+ */
 export interface ReviewSubmitPayload {
   rating: number
   content: string
   keywords: ReviewKeyword[]
   menuName?: string | null
-  imageUrls?: string[]
+  /** 업로드가 끝난 **오브젝트 경로**(`uploads/…`). 서명 URL 이 아니다. */
+  imageObjectPaths?: string[]
 }
 
+/**
+ * `POST /restaurants/reviews/:id/report` 본문.
+ *
+ * 두 필드 모두 **서버 어휘**다. `reason` 은 `REVIEW_REPORT_REASON_PATTERN`
+ * (`SPAM|HARASSMENT|INAPPROPRIATE_CONTENT|FALSE_INFORMATION|OTHER`) 에 맞아야 하고
+ * 벗어나면 400 이다 — 화면의 사유 코드를 여기에 그대로 담지 말 것. 그 변환과
+ * `detail` 첫 줄 형식(`[UI사유코드]` + 다음 줄부터 사용자 입력)은
+ * `features/restaurant/utils/reviewReportReasons` 가 혼자 만든다.
+ *
+ * `reason` 은 **서버 열거형 유니온**이다(`string` 이 아니다). `string` 으로 열어 두면
+ * 새 화면이 화면 어휘(`ETC`·`PRIVACY` …)를 그대로 담아도 타입이 통과하고, 그 요청은
+ * 런타임에 400 으로 죽는다 — 이 계약이 막으려던 결함이 바로 그 모양이었다. 계약 테스트는
+ * "부르는 파일 목록" 을 소스에서 유도하지만 목록에 안 든 새 파일까지 막지는 못하므로,
+ * 마지막 그물은 타입이어야 한다.
+ */
 export interface ReviewReportPayload {
-  reason: string
+  reason: ReviewReportServerReason
+  /** 비워 보내지 않는다 — 서버 행에 `''` 가 남으면 "사유 없음" 과 구분되지 않는다. */
   detail?: string | null
 }
 

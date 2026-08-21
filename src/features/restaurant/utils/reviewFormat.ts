@@ -9,12 +9,21 @@
  * i18n 리소스(`restaurant.review.dateFormat`)로 두고 조각만 여기서 만든다.
  * 그러면 영어에서는 `07.21 Tue` 로 어순을 바꿀 수 있다 — 코드 수정 없이.
  *
- * ## 타임존
+ * ## 타임존 — **읽기와 그리기는 다른 규칙이다**
  *
- * 서버의 `createdAt` 은 naive-UTC 문자열이다. 화면은 사용자 기기 시각으로 보여 주는 것이
- * 맞으므로 `new Date()` 의 로컬 게터를 쓴다. 영업시간(KST 고정)과는 규칙이 다르다 —
- * 영업 여부는 가게가 있는 곳의 시간이고, 후기 날짜는 읽는 사람의 시간이다.
+ * 서버의 `createdAt` 은 오프셋 표기가 없는 UTC 다(`2026-08-20T10:59:07.030000`;
+ * bun 서버의 `pgTimestampToPythonIso` 가 그 모양을 만든다). 그리는 것은 사용자 기기
+ * 시각이 맞지만 — 영업 여부는 가게가 있는 곳의 시간, 후기 날짜는 읽는 사람의 시간 —
+ * **그렇다고 파싱까지 로컬로 하면 안 된다.** ES 명세는 오프셋 없는 date-time 을 로컬로
+ * 읽으므로 `new Date(iso)` 는 KST 에서 정확히 9시간 이르게 읽히고, 00:30 에 쓴 후기가
+ * **전날 날짜**로 나온다. 종전 주석은 "그래서 로컬 게터가 맞다" 로 끝났는데, 그 결론이
+ * 바로 결함이었다.
+ *
+ * 그래서 **읽기는 UTC(`parseServerDate`), 그리기는 로컬 게터**다. 두 규칙이 다 필요하다.
+ * (`tests/serverDateRendering.test.ts` 가 KST 로 못 박아 검사한다.)
  */
+
+import { parseServerDate } from "@/src/shared/utils/serverDate"
 
 import type { ReviewKeyword } from "../types"
 
@@ -37,7 +46,8 @@ export interface ReviewDateParts {
  */
 export function reviewDateParts(iso: string | null): ReviewDateParts | null {
   if (!iso) return null
-  const parsed = new Date(iso)
+  // 읽기는 UTC, 아래 게터는 로컬. 이유는 이 파일 머리말의 "타임존".
+  const parsed = parseServerDate(iso)
   if (Number.isNaN(parsed.getTime())) return null
   return {
     month: pad2(parsed.getMonth() + 1),

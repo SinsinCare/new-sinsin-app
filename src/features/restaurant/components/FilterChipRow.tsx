@@ -105,13 +105,28 @@ export function FilterChipRow({
   )
 }
 
+/**
+ * 칩을 44pt 로 만들되 **줄의 자리는 그대로** 두는 값.
+ *
+ * 칩 자체는 목업대로 32pt 다. 그런데 이 줄은 시트가 접혀 있을 때 화면에 남는 **유일한
+ * 컨트롤**이라, 32pt 짜리 과녁 네 개가 곧 "터치가 잘 안 먹힌다" 가 된다(hitSlop 을 칩에
+ * 줘도 스크롤뷰 프레임이 32pt 라 바깥은 잘려 나간다 — 프레임을 키워야 한다).
+ *
+ * `contentContainerStyle` 로 위아래를 6 씩 벌려 프레임을 44 로 만들고, 같은 값을 음수
+ * 마진으로 되돌려 **레이아웃 상자는 32pt 그대로** 둔다. 접힘 높이는 이 줄을 `onLayout`
+ * 으로 재서 정해지므로(시트의 §collapsed 스냅) 이렇게 하지 않으면 접힘이 12pt 자란다.
+ * 같은 기법을 `CategoryChipRail` 이 이미 쓴다.
+ */
+const RAIL_TOUCH_PAD = 6
+
 const styles = StyleSheet.create({
-  rail: { flexGrow: 0 },
+  rail: { flexGrow: 0, marginVertical: -RAIL_TOUCH_PAD },
   content: {
     flexDirection: "row",
     alignItems: "center",
     gap: CHIP_GAP,
     // 가로 스크롤 인셋은 `contentContainerStyle` 쪽이다 — 컨테이너에 주면 끝에서 잘린다.
     paddingHorizontal: RAIL_INSET,
+    paddingVertical: RAIL_TOUCH_PAD,
   },
 })

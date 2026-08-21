@@ -31,9 +31,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import * as ImagePicker from "expo-image-picker"
 import { useTranslation } from "react-i18next"
 

@@ -83,7 +83,10 @@ export const NUTRITION_TAGS: readonly FilterChipSpec<NutritionTag>[] = [
  * `railOnly: false` 로 두고 필터 시트에만 노출한다.
  */
 export interface CuisineChipSpec extends FilterChipSpec<CuisineType> {
-  /** 지도 홈 카테고리 레일에 올릴 칩인지. 레일은 목업 순서를 그대로 지킨다. */
+  /**
+   * 지도 홈 카테고리 레일에 올릴 칩인지 — **오르는지만** 정한다.
+   * 레일 안의 순서는 이 표가 아니라 `RAIL_ORDER` 다(시안과 목업이 갈린다).
+   */
   onRail: boolean
 }
 
@@ -134,9 +137,43 @@ export const CUISINE_TYPES: readonly CuisineChipSpec[] = [
   },
 ] as const
 
-/** 지도 홈 칩 레일용. `AI 검색` 칩은 선택이 아니라 액션이므로 여기 들어오지 않는다. */
+/**
+ * 레일의 **순서**는 카탈로그가 아니라 시안이 정한다.
+ *
+ * `A3_1`·`A6_1` 을 보면 `AI 검색` 다음이 한식 · 중식 · 일식 · **샐러드** 다. 필터 시트가
+ * 따르는 목업 -23 의 순서(`한식 중식 일식 양식 …`)와 네 번째부터 갈린다. 종전처럼
+ * `CUISINE_TYPES.filter(onRail)` 로 두면 카탈로그 순서가 조용히 새어 들어와 다섯 번째
+ * 칩이 `양식` 으로 나온다 — 화면에 보이는 네 칩 중 하나가 시안과 달랐다.
+ *
+ * `양식` 을 빼지는 않는다(데이터가 73건 있는 실제 축이다). 순서만 뒤로 민다.
+ *
+ * 여기 없는 `onRail` 칩은 맨 뒤로 간다 — 새 칩이 조용히 **맨 앞**에 끼는 것보다 낫다.
+ * 그 상태는 `restaurantFilterCatalog.test.ts` 가 "레일 순서표가 onRail 집합을 전부
+ * 덮는다" 로 잡는다.
+ */
+const RAIL_ORDER: readonly CuisineType[] = [
+  "KOREAN",
+  "CHINESE",
+  "JAPANESE",
+  "SALAD",
+  "WESTERN",
+  "DESSERT",
+]
+
+const railRank = (value: CuisineType): number => {
+  const at = RAIL_ORDER.indexOf(value)
+  return at < 0 ? RAIL_ORDER.length : at
+}
+
+/**
+ * 지도 홈 칩 레일용. `AI 검색` 칩은 선택이 아니라 액션이므로 여기 들어오지 않는다.
+ *
+ * 레일에 **오르는지**는 카탈로그(`onRail`)가, 그 안의 **순서**는 `RAIL_ORDER` 가 정한다.
+ */
 export const RAIL_CUISINE_TYPES: readonly CuisineChipSpec[] =
-  CUISINE_TYPES.filter((item) => item.onRail)
+  CUISINE_TYPES.filter((item) => item.onRail).sort(
+    (a, b) => railRank(a.value) - railRank(b.value),
+  )
 
 /* ────────────────────────── 정렬 ────────────────────────── */
 

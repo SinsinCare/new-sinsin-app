@@ -49,6 +49,7 @@ export function RestaurantReviewWriteScreen({
   if (restaurantId === null) {
     return (
       <V2ErrorState
+        surface="restaurant_review_write"
         title={t("restaurant.notFound")}
         description={t("restaurant.error.detailBody")}
         retryLabel={t("action.back")}
@@ -61,6 +62,7 @@ export function RestaurantReviewWriteScreen({
     if (detail.isError) {
       return (
         <V2ErrorState
+          surface="restaurant_review_write"
           title={t("restaurant.error.detailTitle")}
           description={t("restaurant.error.detailBody")}
           retryLabel={t("restaurant.error.detailRetry")}

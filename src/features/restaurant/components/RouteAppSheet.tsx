@@ -74,6 +74,7 @@ export function RouteAppSheet({
 
   return (
     <V2BottomSheet
+      surface="restaurant_route_app"
       visible={visible}
       onClose={onClose}
       title={t("restaurant.route.title")}

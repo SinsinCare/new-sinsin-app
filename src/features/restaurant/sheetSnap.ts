@@ -102,3 +102,127 @@ export function deriveSheetContainerHeight(
   if (collapsedPosition <= 0 || collapsedHeight <= 0) return null
   return collapsedPosition + collapsedHeight
 }
+
+/* ── 손을 뗐을 때 **어느 스냅으로 갈 것인가** ─────────────────────────── */
+
+/**
+ * "튕겼다"(flick) 고 인정하는 최소 속도(pt/s).
+ *
+ * 손가락 플릭은 보통 1,000–4,000pt/s 이고, 천천히 끌어다 놓는 동작은 200pt/s 아래에서
+ * 끝난다. 300 은 그 사이의 값이다.
+ *
+ * **이동 거리로는 방향을 만들지 않는다.** 한때 "24pt 넘게 끌었으면 한 칸 옮긴다" 는
+ * 규칙도 같이 뒀는데, 그러면 천천히 96pt 만 끌어 올려도 시트가 화면 전체로 올라간다 —
+ * 고치려던 "너무 올라간다" 를 다른 얼굴로 되살리는 것이다(테스트가 먼저 잡았다).
+ * 천천히 끄는 동작의 뜻은 "여기에 놓겠다" 이므로 **놓은 자리**가 답이고, 던지는 동작의
+ * 뜻은 "다음 칸으로 보내겠다" 이므로 그때만 한 칸을 준다.
+ */
+export const DETENT_FLICK_VELOCITY_PT_PER_SEC = 300
+
+export interface DetentDecision {
+  /** 스냅 위치 배열. **인덱스 0 이 가장 낮은 시트**(= y 가 가장 큼)다. */
+  detents: readonly number[]
+  /** 제스처가 시작될 때의 시트 윗변 y. */
+  startPosition: number
+  /** 손을 뗀 순간의 시트 윗변 y. */
+  releasePosition: number
+  /** 세로 속도. **양수가 아래로**(제스처 핸들러의 부호 그대로). */
+  velocityY: number
+  flickVelocity?: number
+}
+
+/**
+ * 손을 뗐을 때 갈 스냅의 **인덱스**.
+ *
+ * ## 왜 라이브러리 기본값을 쓰지 않는가 (실측 2026-08-17)
+ *
+ * gorhom 의 기본 규칙은 redash 의 `snapPoint` 하나다 — `놓은 위치 + 0.2 × 속도` 에서
+ * **가장 가까운** 스냅. 이 규칙은 마우스로는 멀쩡하고 손가락에서 무너진다:
+ *
+ * - 시뮬레이터에서 마우스로 끌면 속도가 ~280pt/s 라 `0.2 × v` 가 56pt 뿐이다.
+ *   그래서 개발 중에는 늘 한 칸씩 얌전히 움직였다.
+ * - 실제 손가락 플릭은 3,000pt/s 가 예사다. 그러면 투영이 **600pt** — 화면의 3분의 2를
+ *   손가락이 가지도 않은 곳으로 건너뛴다. 실측: 전체(펼침)에서 180pt 만 튕겨 내렸는데
+ *   중간을 지나쳐 **접힘까지** 내려갔다.
+ * - 반대쪽 실패도 같은 뿌리다. 스냅 간격이 ~370pt 라 **185pt 넘게 끌지 않으면**
+ *   제자리로 되돌아온다 — 짧게 튕겨 올리면 "아무 일도 안 일어난다".
+ *
+ * 두 증상이 합쳐진 것이 사용자가 말한 "너무 올렸다 내렸다" 다: 조금 끌면 안 가고,
+ * 튕기면 끝까지 간다. 그래서 매번 다시 맞춰야 한다.
+ *
+ * ## 새 규칙 — 두 가지 동작을 **다르게** 읽는다
+ *
+ * - **천천히 끌어다 놓았다**(속도 < 임계값): 뜻은 "여기에 놓겠다" 이므로
+ *   **놓은 자리에서 가장 가까운 스냅**으로 간다. 속도로 투영하지 않는다.
+ *   그래서 화면 끝까지 끌면 두 칸도 가고(손가락이 실제로 갔으니까), 조금만 끌면
+ *   제자리로 돌아온다(손가락이 안 갔으니까). 둘 다 눈에 보이는 대로다.
+ * - **튕겼다**(속도 ≥ 임계값): 뜻은 "다음 칸으로 보내겠다" 이므로 그 방향으로
+ *   **딱 한 칸**. 손가락이 이미 더 갔으면 그쪽을 존중한다(둘 중 더 먼 쪽).
+ *
+ * 한 문장으로: **시트는 손가락이 간 곳보다 더 가지 않는다 — 튕겼을 때 한 칸만 예외다.**
+ *
+ * 이러면 (a) 30pt 짜리 짧은 플릭도 반드시 한 칸 움직이고(종전에는 185pt 를 넘겨야 했다),
+ * (b) 아무리 빠르게 튕겨도 스냅을 건너뛰지 않는다.
+ *
+ * 순수 함수라 기기 없이 검증된다(`tests/restaurantSheetDetent.test.ts`).
+ *
+ * ## 이 함수가 **자기완결적**이어야 하는 이유 (실측 2026-08-17)
+ *
+ * 제스처 핸들러(UI 스레드 워클릿)에서 불린다. 그래서 `"worklet"` 지시자가 필요하고,
+ * 더 중요하게는 **모듈 안의 다른 함수를 부르면 안 된다.** 처음에는 `nearestDetentIndex`,
+ * `clampIndex` 를 모듈 상단에 따로 두었는데, jest 는 전부 통과했고 기기에서는 첫 제스처에
+ * `nearestDetentIndex is not a function (it is undefined)` 로 죽었다 — 워클릿 런타임에는
+ * 그 모듈 바인딩이 없다. 헬퍼로 쪼개고 싶어지면 **그 유혹이 이 주석의 대상**이다.
+ */
+export function resolveDetentIndex({
+  detents,
+  startPosition,
+  releasePosition,
+  velocityY,
+  flickVelocity = DETENT_FLICK_VELOCITY_PT_PER_SEC,
+}: DetentDecision): number {
+  "worklet"
+  const last = detents.length - 1
+  if (last < 0) return 0
+
+  // 놓은 자리에서 가장 가까운 스냅.
+  let posIdx = 0
+  let posBest = Number.POSITIVE_INFINITY
+  for (let index = 0; index <= last; index += 1) {
+    const distance = Math.abs(detents[index] - releasePosition)
+    if (distance < posBest) {
+      posBest = distance
+      posIdx = index
+    }
+  }
+
+  const flicked =
+    Number.isFinite(velocityY) && Math.abs(velocityY) >= flickVelocity
+  if (!flicked) return posIdx
+
+  /*
+    인덱스가 커질수록 시트는 **높아진다**(y 가 작아진다). 그래서 위로 튕기는 것(velocityY < 0)이
+    +1 이다. 방향을 이동량이 아니라 속도로 읽는 이유: 아래로 끌다가 마지막에 위로 튕겨
+    놓는 동작의 뜻은 "올린다" 인데, 이동량만 보면 정반대로 읽는다.
+  */
+  const direction = velocityY < 0 ? 1 : -1
+
+  // 제스처가 시작된 스냅.
+  let startIdx = 0
+  let startBest = Number.POSITIVE_INFINITY
+  for (let index = 0; index <= last; index += 1) {
+    const distance = Math.abs(detents[index] - startPosition)
+    if (distance < startBest) {
+      startBest = distance
+      startIdx = index
+    }
+  }
+
+  // 손가락이 간 곳과 한 칸 중, 튕긴 **방향으로 더 먼 쪽**.
+  const stepIdx = startIdx + direction
+  const candidate =
+    direction > 0 ? Math.max(posIdx, stepIdx) : Math.min(posIdx, stepIdx)
+  if (candidate < 0) return 0
+  if (candidate > last) return last
+  return candidate
+}

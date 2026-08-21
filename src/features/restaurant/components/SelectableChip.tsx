@@ -40,7 +40,8 @@
  * 문법으로 말하고 있었던 셈이라 면 쪽으로 통일했다. 자세한 것은 `styles.base` 주석.
  */
 
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
 import {
   iconSize,

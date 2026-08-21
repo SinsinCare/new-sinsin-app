@@ -32,6 +32,10 @@ import type {
   ReviewSubmitPayload,
 } from "../types"
 import { DEFAULT_REVIEW_SORT } from "../data/filterCatalog"
+import {
+  buildReviewReportPayload,
+  type ReviewReportReasonCode,
+} from "../utils/reviewReportReasons"
 import { restaurantKeys } from "./restaurantQueryKeys"
 
 export const REVIEW_PAGE_SIZE = 10
@@ -61,16 +65,43 @@ export interface UseRestaurantReviewsResult {
   loadMore: () => void
   refetch: () => void
   /**
-   * 응답은 봉투다 — `photosIndexed` 가 `-1` 이면 **본문은 저장됐고 사진만 실패**다.
-   * 호출부가 그 경우를 성공으로 접되 사용자에게 사진 이야기를 따로 해 줘야 한다.
+   * 응답은 봉투다 — 본문은 저장됐는데 **사진만 어긋난** 경우가 200 으로 온다.
+   *
+   * **`photosIndexed` 를 여기서 읽어 판정하지 말 것.** 이 자리의 옛 주석은
+   * "`-1` 이면 사진만 실패" 만 말했는데, 그 판정은 앱이 필드 이름을 틀리게 보내던 내내
+   * **한 번도 켜지지 않았다** — 사진이 전멸해도 서버는 "사진이 없었다"는 뜻의 `0` 을
+   * 돌려줬고, 사용자는 사진을 고르고 성공 토스트를 봤다. 이 값 하나로는 아무것도
+   * 못 가린다: `0` 은 0장 보냈으면 정상이고 3장 보냈으면 전멸, `-1` 은 사진은 저장됐고
+   * 사진 탭 색인만 실패한 **다른 사실**이다.
+   *
+   * 판정 정본은 `utils/reviewDraft.ts` 로 옮겨갔다. 화면은 보낸 장수와 이 값을 함께
+   * **`reviewPhotoNotice({ sent, indexed })` 한 번**만 부르고, 문구 키·톤·보간값을
+   * 그대로 쓴다 — 그 함수 머리말대로 판정과 표를 나눠 부르기 시작하면 화면마다
+   * 어긋난다.
    */
   submitReview: (
     payload: ReviewSubmitPayload,
   ) => Promise<{ review: ReviewDto; photosIndexed: number }>
   isSubmitting: boolean
+  /**
+   * `reason` 은 **화면 어휘**(`REVIEW_REPORT_REASONS[].code`)다. 서버 열거형이 아니다 —
+   * 서버 어휘로 옮기는 일은 `buildReviewReportPayload` 만 한다.
+   *
+   * 타입을 `string` 으로 두지 않는 이유: 그 상태의 이 훅은 받은 값을 매핑도 `[CODE]`
+   * 앞머리도 없이 그대로 서버에 넘겼다. 지금 호출부가 없다는 것이 안전하다는 뜻은
+   * 아니다 — 다음 화면(작성자 프로필 신고 등)이 이 훅을 집는 순간 "다섯 중 넷이 400"
+   * 결함이 그대로 되살아나고, 그때도 빨개지는 테스트는 없었다.
+   */
   reportReview: (args: {
     reviewId: number
-    reason: string
+    reason: ReviewReportReasonCode
+    /**
+     * 자유입력 사유(`ETC`)일 때만 실린다. 다른 사유의 본문은 빌더가 버린다.
+     *
+     * 반대로 **`ETC` 인데 이 값이 비면 뮤테이션이 거부된다**(빌더가 던진다). 이 훅에는
+     * 시트의 `canSubmit` 같은 게이팅이 없어서, 접어 주면 사용자가 쓴 글이 사라진 채
+     * `[ETC]` 만 남은 신고가 조용히 접수된다 — 콘솔이 읽어도 아무것도 모르는 행이다.
+     */
     detail?: string | null
   }) => Promise<{ reviewId: number; status: string }>
   isReporting: boolean
@@ -172,13 +203,15 @@ export function useRestaurantReviews({
   const reportMutation = useMutation({
     mutationFn: (args: {
       reviewId: number
-      reason: string
+      reason: ReviewReportReasonCode
       detail?: string | null
     }) =>
-      restaurantService.reportReview(args.reviewId, {
-        reason: args.reason,
-        detail: args.detail ?? null,
-      }),
+      restaurantService.reportReview(
+        args.reviewId,
+        // 시트(`ReviewReportSheet`)와 **같은 변환**을 탄다. 신고가 나가는 경로가 둘인데
+        // 한쪽만 옮기면 남은 쪽이 그대로 400 이다 — 그게 이번에 고친 결함의 모양이다.
+        buildReviewReportPayload(args.reason, args.detail ?? ""),
+      ),
   })
 
   const loadMore = useCallback(() => {

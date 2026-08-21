@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next"
 import { normalizeLanguage } from "@/src/i18n"
 import { restaurantService } from "@/src/services/data/restaurantService"
 
-import type { LatLng, RestaurantCardDto, RestaurantDetailDto } from "../types"
+import type { RestaurantCardDto, RestaurantDetailDto } from "../types"
 import {
   DETAIL_STALE_TIME_MS,
   RESTAURANT_LIST_KEY,
@@ -34,9 +34,13 @@ export interface UseRestaurantDetailResult {
   refetch: () => void
 }
 
+/**
+ * 좌표를 받지 않는다. `GET /restaurants/:id` 는 앵커 좌표를 읽지 않고 응답에
+ * `distanceKm` 도 없다(`restaurantService.fetchDetail` 머리말) — 받아 두면 다음 사람이
+ * 거리가 오는 줄로 읽는다.
+ */
 export function useRestaurantDetail(
   restaurantId: number | null,
-  userLocation: LatLng | null = null,
 ): UseRestaurantDetailResult {
   const { i18n } = useTranslation()
   const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
@@ -64,11 +68,7 @@ export function useRestaurantDetail(
     queryKey: restaurantKeys.detail(language, restaurantId ?? 0),
     enabled: restaurantId !== null,
     staleTime: DETAIL_STALE_TIME_MS,
-    queryFn: () =>
-      restaurantService.fetchDetail(restaurantId as number, {
-        userLat: userLocation?.lat ?? null,
-        userLng: userLocation?.lng ?? null,
-      }),
+    queryFn: () => restaurantService.fetchDetail(restaurantId as number),
   })
 
   return {

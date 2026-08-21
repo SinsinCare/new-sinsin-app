@@ -9,8 +9,8 @@
  * 은 깨끗한데 런타임에는 모든 필드가 `undefined` 였다. 실제로 터진 곳:
  *
  * ```
- * RestaurantCard.tsx:106  Cannot read property 'slice' of undefined
- *                         (card.nutritionBadges 가 응답에 아예 없었다)
+ * RestaurantCard.tsx  Cannot read property 'slice' of undefined
+ *                     (card.nutritionBadges.slice(...) — 그 필드가 응답에 아예 없었다)
  * ```
  *
  * 그리고 그것은 하나가 아니었다. 같은 응답에서 `closingTime`→`closeTime`,
@@ -57,7 +57,13 @@ export class RestaurantShapeError extends Error {
     readonly endpoint: string,
     /** 없거나 모양이 틀린 키 목록. */
     readonly missing: readonly string[],
-    /** `items[0]` 처럼 어느 위치였는지. 최상위면 빈 문자열. */
+    /**
+     * `items[0]`·`filters`·`[0]` 처럼 응답 **안에서** 어느 위치였는지. 최상위면 빈 문자열.
+     *
+     * 이 문자열은 **응답에 실제로 있는 경로**여야 한다. 봉투 없는 응답(`/nearby`)에
+     * `items[0]` 이라고 적으면 이 파일이 하려는 일(비난의 방향을 바로잡는 것)과
+     * 정반대로, 존재하지 않는 컨테이너를 범인으로 지목하게 된다.
+     */
     readonly at: string,
   ) {
     const where = at ? `${endpoint} 의 ${at}` : endpoint
@@ -110,13 +116,27 @@ export function requireShape<T>(
   value: unknown,
   endpoint: string,
   keys: readonly string[],
+  /**
+   * 중첩 객체를 볼 때의 **응답 안 위치**(`ai-search` 의 `filters`, `/hours` 의 `today`,
+   * 후기 작성 응답의 `review`). 최상위면 비운다.
+   *
+   * 중첩을 검사하면서 이 인자를 비워 두면 봉투가 없어서 죽은 것과 봉투 안이 비어서 죽은
+   * 것이 **같은 문장**으로 나온다 — 이 인자가 존재하는 이유가 정확히 그 상황이다.
+   * 중첩 객체를 검사하는 자리에서는 엔드포인트 문자열에 위치를 섞지 말고 여기에 적을 것
+   * (그러면 `endpoint` 가 기계 분류용 값이 아니게 된다).
+   */
+  at = "",
 ): T {
   const missing = collectMissing(value, keys)
   if (missing) {
     // 던지기 전에 남긴다. 던진 오류는 react-query 가 잡아 화면 상태로 바꾸므로,
     // 어느 키가 문제였는지는 로그에만 남는다. 토큰·개인정보는 담지 않는다.
-    logger.error("[restaurant] 응답 모양 불일치", endpoint, missing.join(","))
-    throw new RestaurantShapeError(endpoint, missing, "")
+    logger.error(
+      "[restaurant] 응답 모양 불일치",
+      at ? `${endpoint} ${at}` : endpoint,
+      missing.join(","),
+    )
+    throw new RestaurantShapeError(endpoint, missing, at)
   }
   return value as T
 }
@@ -133,11 +153,17 @@ export function requireItemShape(
   items: readonly unknown[],
   endpoint: string,
   keys: readonly string[],
+  /**
+   * 이 배열이 응답에서 **어느 키에 담겨 있었나**. 오류 위치가 `<container>[N]` 이 된다.
+   * 최상위가 배열이라 담긴 키가 없으면(`/nearby`) 빈 문자열을 줘서 `[N]` 으로 만든다 —
+   * 기본값을 그대로 쓰면 응답에 **없는 `items` 키**를 범인으로 지목한다.
+   */
+  container = "items",
 ): void {
   for (let index = 0; index < items.length; index += 1) {
     const missing = collectMissing(items[index], keys)
     if (missing) {
-      const at = `items[${index}]`
+      const at = container ? `${container}[${index}]` : `[${index}]`
       logger.error(
         "[restaurant] 응답 항목 모양 불일치",
         `${endpoint} ${at}`,
@@ -146,6 +172,29 @@ export function requireItemShape(
       throw new RestaurantShapeError(endpoint, missing, at)
     }
   }
+}
+
+/**
+ * **최상위가 배열인** 응답을 검사하고 그대로 돌려준다. 지금은 레거시 `/nearby` 하나다.
+ *
+ * `requireShape` 를 쓸 수 없다 — `isRecord` 가 배열을 객체가 아니라고 거절하므로
+ * 정상 응답이 항상 죽는다. 배열 검사를 서비스 쪽에 인라인으로 두는 길도 있었지만,
+ * 그러면 `as` 캐스트가 그 자리에 남아 이 파일이 막으려는 습관이 그대로 돌아온다.
+ */
+export function requireArrayShape<T>(
+  value: unknown,
+  endpoint: string,
+  keys: readonly string[],
+): T[] {
+  if (!Array.isArray(value)) {
+    // 목록이 봉투(`{ items: [...] }`)로 바뀌는 드리프트가 이 자리에서 잡힌다.
+    logger.error("[restaurant] 응답이 배열이 아님", endpoint)
+    throw new RestaurantShapeError(endpoint, ["(응답이 배열이 아닙니다)"], "")
+  }
+  /* 담긴 키가 **없다** — 이 응답에는 `items` 가 아예 없으므로 위치는 `[0]` 이다.
+     `items[0]` 이라고 적으면 다음 사람이 응답에서 찾을 수 없는 경로를 뒤진다. */
+  requireItemShape(value, endpoint, keys, "")
+  return value as T[]
 }
 
 /* ────────────────────────── 엔드포인트별 필수 키 ────────────────────────── */
@@ -158,6 +207,41 @@ export function requireItemShape(
  * 여기에 키를 더할 때는 그 키를 화면이 실제로 읽는지 확인할 것. 읽지 않는 키를 필수로
  * 걸면 서버가 정리(deprecate)할 때 앱이 이유 없이 죽는다.
  */
+
+/**
+ * 레거시 `GET /restaurants/nearby` 의 항목 1건. **최상위가 배열이라** 이 표만
+ * `requireArrayShape` 로 쓴다.
+ *
+ * **오늘 이 표를 읽는 화면은 없다.** `fetchNearby` 의 호출부는 테스트 둘뿐이고
+ * (`restaurantI18n`·`restaurantResponseGuards`), 그래서 `avgRiskLevel` 과 세 개의 개수도
+ * 지금은 아무 배지의 근거가 아니다 — 카드 안전도는 `/search` 의 `safety` 에서 나온다
+ * (`utils/cardSafetyBadge.ts`). 즉 이 표는 위 `엔드포인트별 필수 키` 머리말의
+ * 규칙("읽는지 확인하고 걸어라")의 **예외**이고, 예외인 이유는 하나다: 배포된 구버전
+ * 빌드 때문에 서버 라우트가 남아 있어서 그 함수가 되살아날 수 있다. 되살아나는 날
+ * 조용히 반쯤 그리지 않게 하려고 미리 걸어 둔다.
+ *
+ * 서버 `cardPayload` 가 실제로 조립하는 키 중, 앱 타입이 **필수로 선언한 것**만 건다.
+ *
+ * `phone` 은 **일부러 뺐다.** `NearbyRestaurantItem` 은 `phone: string | null` 로
+ * 필수 선언하고 있지만 `cardPayload` 는 그 키를 조립하지 않는다 — 필수로 걸면 정상
+ * 응답이 전부 죽는다. 선언 쪽이 틀렸고, 읽는 곳이 없어서 아무도 못 봤을 뿐이다.
+ * `shortAddress`·`rating`·`openTime` 류는 앱이 옵셔널로 선언했으므로 걸지 않는다.
+ */
+export const NEARBY_CARD_KEYS = [
+  "restaurantId",
+  "name",
+  "lat",
+  "lng",
+  "cuisineType",
+  "distanceKm",
+  // 카드 사진. 배열이 아니면 `.slice(0, 3)` 이 화면에서 터진다.
+  "imageUrls[]",
+  "menuCount",
+  "safeMenuCount",
+  "cautionMenuCount",
+  "highRiskMenuCount",
+  "avgRiskLevel",
+] as const
 
 /** E1 `/map` 최상위. `markers`·`clusters` 는 모드에 따라 비지만 **키는 항상 있다.** */
 export const MAP_KEYS = [
@@ -227,6 +311,49 @@ export const BOOKMARK_CARD_KEYS = [
 /** E3 `/search/suggest`. 항목의 선택 키(`lat`/`restaurantId`/`key`)는 **없을 수 있다.** */
 export const SUGGEST_KEYS = ["suggestions[]"] as const
 export const SUGGESTION_KEYS = ["type", "label"] as const
+
+/**
+ * E4 `POST /ai-search` 최상위.
+ *
+ * `fallback` 을 필수로 거는 것이 이 표의 핵심이다. 키가 사라지면 `isFallback` 이 조용히
+ * `false` 가 되어, LLM 없이 키워드 매칭으로 만든 결과를 **AI 가 읽은 것처럼** 보여 준다
+ * (`useAiSearch` 머리말이 금지하는 바로 그 동작이다). `unmatchedTerms` 는 시트가
+ * `.length`/`.join` 을 바로 부르므로 배열임까지 본다.
+ *
+ * **404 는 이 표의 관할이 아니다.** 라우트가 조건부 등록이라(서버 `routes.ts` E4) `ai`
+ * 의존성을 받지 못한 서버에는 경로 자체가 없다. 그 404 는 axios 가 먼저 던지므로 여기까지
+ * 오지 않는다 — 서비스에서 검사 순서를 바꾸지 말 것.
+ *
+ * 그때 앱이 무엇을 하는지는 **실제로 확인한 대로 적는다**: `CategoryChipRail` 은 `AI 검색`
+ * 칩을 조건 없이 그리고, `useAiSearch` 는 던진 오류를 `isError` 로 바꿀 뿐이다. 즉 칩은
+ * 그대로 있고 시트 안에서 오류 + 재시도가 보인다 — **숨기지 않는다.** (서버 쪽 주석은
+ * "앱이 칩을 숨긴다" 고 적혀 있지만 그건 앱에 없는 동작이다. 옮겨 적지 말 것.)
+ * 덧붙여 실제 배포에서는 `app.ts` 가 `ai` 를 무조건 주입하므로 이 404 자체가 안 난다 —
+ * 이 경계는 `ai` 없이 앱을 세우는 서버 테스트에서만 살아 있다.
+ */
+export const AI_SEARCH_KEYS = [
+  "filters",
+  "rationale",
+  "unmatchedTerms[]",
+  "fallback",
+] as const
+
+/**
+ * 그 응답의 `filters` **중첩 객체**. 세 배열은 `AiSearchSheet.filterLabelKeys` 가
+ * `for...of` 로 바로 도는 자리라, 하나만 없어도 `undefined is not iterable` 로 시트가
+ * 통째로 죽는다.
+ *
+ * `q`(음식 이름)는 넣지 않는다 — 구버전 서버가 보내지 않는 필드이고 앱도 옵셔널로
+ * 선언했다. 넣으면 구버전 서버에 붙은 앱에서 AI 검색이 항상 실패한다.
+ */
+export const AI_SEARCH_FILTER_KEYS = [
+  "cuisineTypes[]",
+  "nutritionTags[]",
+  "regionGroups[]",
+  "sort",
+  "openNow",
+  "maxPrice",
+] as const
 
 /** E5 `/regions`. */
 export const REGION_KEYS = [
@@ -369,15 +496,15 @@ export const REVIEWS_KEYS = [
 ] as const
 
 /**
- * 후기 1건. 작성자 네 필드가 **평평하게** 있는지 본다 — 앱이 `author` 중첩 객체를
- * 기대해서 `review.author.reviewerId` 가 후기 탭과 홈 탭을 함께 죽였다.
- */
-/**
  * `POST /:id/reviews` 최상위. **후기가 아니라 봉투다.**
  * 이 표가 없으면 앱이 봉투를 후기로 착각해, 등록 성공 뒤에 실패 토스트가 뜬다.
  */
 export const REVIEW_CREATE_KEYS = ["review", "photosIndexed"] as const
 
+/**
+ * 후기 1건. 작성자 네 필드가 **평평하게** 있는지 본다 — 앱이 `author` 중첩 객체를
+ * 기대해서 `review.author.reviewerId` 가 후기 탭과 홈 탭을 함께 죽였다.
+ */
 export const REVIEW_ITEM_KEYS = [
   "reviewId",
   "authorName",
@@ -392,6 +519,27 @@ export const REVIEW_ITEM_KEYS = [
   "visitCount",
   "mine",
   "createdAt",
+] as const
+
+/**
+ * E11 `POST /reviews/:id/report` 최상위.
+ *
+ * `status` 가 없으면 신고 성공 토스트 뒤에 `undefined` 를 든 콜백이 화면으로 흘러간다.
+ *
+ * `alreadyReported` 는 **앱이 읽는다** — 시트가 이 값으로 `reportAlready`/`reportDone`
+ * 토스트를 가른다. 없으면 어제 접수된 신고가 방금 접수된 것처럼 말한다. 필수로 걸어도
+ * 되는 근거는 서버 코드다: `createReviewReport` 의 성공 반환이 **하나뿐이고** 거기서
+ * `alreadyReported: !row.inserted` 로 항상 채운다(나머지 두 갈래는 `NOT_FOUND`·
+ * `FORBIDDEN` 을 던져 200 이 아니다). 옵셔널로 두면 "안 온 것" 과 "첫 신고" 가 같은
+ * 모양이 되는데, 그 둘은 사용자에게 다른 문장이다.
+ *
+ * `reportId`·`createdAt` 은 서버가 함께 주지만 **앱이 읽지 않으므로 걸지 않는다**
+ * (읽지 않는 키를 필수로 걸면 서버가 정리하는 날 이유 없이 죽는다).
+ */
+export const REVIEW_REPORT_KEYS = [
+  "reviewId",
+  "status",
+  "alreadyReported",
 ] as const
 
 /** E8 `GET /:id/hours` 최상위. */

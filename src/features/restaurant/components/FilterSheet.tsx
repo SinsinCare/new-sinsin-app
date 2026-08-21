@@ -182,6 +182,7 @@ export function FilterSheet({
 
   return (
     <V2BottomSheet
+      surface="restaurant_filter"
       visible={visible}
       onClose={onClose}
       title={t("restaurant.filter.title")}

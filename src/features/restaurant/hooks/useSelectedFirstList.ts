@@ -43,8 +43,14 @@ export interface UseSelectedFirstListParams {
   items: RestaurantCardDto[]
   /** 지도 마커로 고른 식당. `null` 이면 원래 순서 그대로다. */
   selectedId: number | null
-  userLocation: LatLng | null
-  /** 고른 마커의 좌표. 상세가 좌표를 안 줄 때의 폴백이다. */
+  /**
+   * 고른 마커의 좌표. 상세가 좌표를 안 줄 때의 폴백이다.
+   *
+   * **사용자 위치가 아니다.** 예전에는 `userLocation` 도 함께 받아 상세 요청에 실었지만
+   * `GET /restaurants/:id` 는 앵커 좌표를 읽지 않는다(`fetchDetail` 머리말). 그래서
+   * 이 훅이 만드는 폴백 카드의 `distanceKm` 은 `null` 이고, 그건 결함이 아니라 사실이다 —
+   * 거리를 채우려면 아래 (b), 즉 서버가 앵커를 받는 목록 경로로 옮겨야 한다.
+   */
   selectedCoords?: LatLng | null
 }
 
@@ -60,7 +66,6 @@ export interface UseSelectedFirstListResult {
 export function useSelectedFirstList({
   items,
   selectedId,
-  userLocation,
   selectedCoords = null,
 }: UseSelectedFirstListParams): UseSelectedFirstListResult {
   const inList = useMemo(
@@ -72,7 +77,7 @@ export function useSelectedFirstList({
 
   /* 목록에 이미 있으면 요청하지 않는다. `null` 을 넘기면 훅이 질의를 끈다 —
      페이지가 더 로드돼 그 가게가 목록에 들어오는 순간 이 요청도 조용히 멎는다. */
-  const detail = useRestaurantDetail(inList ? null : selectedId, userLocation)
+  const detail = useRestaurantDetail(inList ? null : selectedId)
 
   const fallbackCard = useMemo<RestaurantCardDto | null>(() => {
     if (selectedId === null || inList) return null

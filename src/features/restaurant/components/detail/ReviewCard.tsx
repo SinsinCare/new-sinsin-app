@@ -45,10 +45,14 @@
  * `4번째 방문`·`😋 맛`·`+2` 가 테두리 없는 옅은 회색 면이고, 같은 칩을 그리는
  * `ReviewerProfileScreen`·`RestaurantPhotoViewerScreen` 도 그 토큰을 쓴다.
  *
- * ## 날짜를 `Intl` 없이 만든다
+ * ## 날짜 조각은 `utils/reviewFormat.ts` 것을 쓴다 (여기 두 번째 벌이 있었다)
  *
- * Hermes 에 `Intl.DateTimeFormat` 관련 API 는 신뢰할 수 없고 저장소 eslint 가
- * `Intl.*` 상당수를 금지한다. `MM.DD.요일` 은 게터 세 개로 충분하다.
+ * `MM.DD.요일` 을 만드는 `reviewDateParts` 가 이 파일 안에 한 벌 더 있었다. 같은 이름·같은
+ * 반환 모양인데 파싱만 `Date.parse(iso)` 였고, 그래서 **후기 카드만** 9시간 이르게 읽혔다 —
+ * 서버가 오프셋 표기 없는 UTC 를 주는데 ES 명세는 그런 문자열을 로컬로 읽기 때문이다
+ * (00:30 에 쓴 후기가 전날 날짜로 나왔다). 사본이 있는 한 한쪽만 고쳐도 화면 셋 중 하나는
+ * 계속 틀리므로, 사본을 지우고 작성자 프로필·사진 뷰어와 **같은 함수**를 부른다.
+ * (Hermes 에서 `Intl.*` 을 쓰지 않는 이유는 그 파일 머리말에 있다.)
  */
 
 import { useState } from "react"
@@ -65,8 +69,11 @@ import {
   V2Icon,
 } from "@/src/design-system-v2"
 
+import { dynamicKey } from "@/src/i18n/dynamicKey"
+
 import { REVIEW_KEYWORDS } from "../../data/filterCatalog"
 import type { ReviewDto } from "../../types"
+import { reviewDateParts } from "../../utils/reviewFormat"
 import { reviewAuthorOf } from "./reviewAuthor"
 import { StarRow } from "./StarRating"
 
@@ -78,20 +85,6 @@ const PHOTO_COLUMNS = 3
 
 /** 아바타 지름. 목업 40. */
 const AVATAR_SIZE = 40
-
-/**
- * `Date.getDay()` 인덱스(0=일요일) → 짧은 요일 키. 배열 순서가 곧 매핑이라
- * 요일 계산식을 화면에 흘리지 않는다.
- */
-const SHORT_WEEKDAY_KEY = [
-  "restaurant.weekdayShort.SUN",
-  "restaurant.weekdayShort.MON",
-  "restaurant.weekdayShort.TUE",
-  "restaurant.weekdayShort.WED",
-  "restaurant.weekdayShort.THU",
-  "restaurant.weekdayShort.FRI",
-  "restaurant.weekdayShort.SAT",
-] as const
 
 const KEYWORD_INDEX = new Map(REVIEW_KEYWORDS.map((k) => [k.value, k] as const))
 
@@ -312,7 +305,7 @@ export function ReviewCard({
             {t("restaurant.review.date", {
               month: dateParts.month,
               day: dateParts.day,
-              weekday: t(dateParts.weekdayKey),
+              weekday: t(dynamicKey(dateParts.weekdayKey)),
             })}
           </Text>
         )}
@@ -331,26 +324,6 @@ function TagPill({ label }: { label: string }) {
       </Text>
     </View>
   )
-}
-
-/**
- * `2026-07-21T…` → `{ month:"07", day:"21", weekdayKey:"…TUE" }`.
- * 파싱이 안 되면 `null` — 잘못된 날짜를 그리는 대신 날짜 줄을 비운다.
- * 문자열 조립은 화면이 `t()` 로 한다(로케일마다 순서가 다르다).
- */
-function reviewDateParts(iso: string): {
-  month: string
-  day: string
-  weekdayKey: (typeof SHORT_WEEKDAY_KEY)[number]
-} | null {
-  const at = Date.parse(iso)
-  if (Number.isNaN(at)) return null
-  const date = new Date(at)
-  return {
-    month: String(date.getMonth() + 1).padStart(2, "0"),
-    day: String(date.getDate()).padStart(2, "0"),
-    weekdayKey: SHORT_WEEKDAY_KEY[date.getDay()],
-  }
 }
 
 const styles = StyleSheet.create({

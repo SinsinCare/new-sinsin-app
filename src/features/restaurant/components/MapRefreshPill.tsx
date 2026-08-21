@@ -34,7 +34,7 @@ import {
   useV2Theme,
 } from "@/src/design-system-v2"
 
-import { FLOATING_SHADOW } from "./mapFloating"
+import { FLOATING_SHADOW, mapOverlayChrome } from "./mapFloating"
 
 export interface MapRefreshPillProps {
   /** 지도가 마지막 검색 이후 움직였다. `false` 면 아무 것도 그리지 않는다. */
@@ -54,7 +54,8 @@ export function MapRefreshPill({
   style,
 }: MapRefreshPillProps) {
   const { t } = useTranslation("common")
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
+  const chrome = mapOverlayChrome({ mode, ...colors })
 
   if (!visible) return null
 
@@ -73,7 +74,7 @@ export function MapRefreshPill({
       style={({ pressed }) => [
         styles.root,
         FLOATING_SHADOW,
-        { backgroundColor: colors.background.default },
+        chrome,
         pressed && styles.pressed,
         // 상한 초과는 "지금은 못 한다" 이므로 흐리게 두고, 로딩은 진행 중이므로 흐리지 않는다.
         tooLarge && styles.disabled,

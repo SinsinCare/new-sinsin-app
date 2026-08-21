@@ -202,6 +202,10 @@ export function RestaurantListScreen({
         ItemSeparatorComponent={Separator}
         onEndReached={list.loadMore}
         onEndReachedThreshold={0.4}
+        // FlashList v2는 chat용 visible-position 유지가 기본이다. 빈 목록에서 첫 페이지가
+        // 붙을 때 그 위치를 보존하면 상단에 수백 pt spacer가 남는다. 검색 결과는 항상
+        // 첫 카드가 헤더 바로 아래에서 시작해야 하므로 끈다.
+        maintainVisibleContentPosition={{ disabled: true }}
         bounces={false}
         overScrollMode="never"
         contentContainerStyle={[
@@ -291,6 +295,7 @@ function ListEmpty({
   if (failure) {
     return (
       <V2ErrorState
+        surface="restaurant_list"
         title={t(dynamicKey(failure.titleKey))}
         description={t(dynamicKey(failure.bodyKey))}
         onRetry={onRetry}
@@ -308,6 +313,7 @@ function ListEmpty({
     })
     return (
       <V2EmptyState
+        surface="restaurant_list"
         title={t("restaurant.empty.filteredTitle")}
         description={
           unbacked
@@ -322,6 +328,7 @@ function ListEmpty({
 
   return (
     <V2EmptyState
+      surface="restaurant_list"
       title={t("restaurant.empty.noDataHereTitle")}
       description={t("restaurant.empty.noDataHereBody")}
     />

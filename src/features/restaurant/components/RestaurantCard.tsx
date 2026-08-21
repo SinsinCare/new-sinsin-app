@@ -23,7 +23,7 @@
  *
  * ## 배지는 `safety` 에서 **유도**한다 (이 카드가 죽었던 자리)
  *
- * 이 파일 106번째 줄이 `card.nutritionBadges.slice(...)` 였고, 그 필드는 응답에 **없다.**
+ * 배지 줄이 `card.nutritionBadges.slice(...)` 였고, 그 필드는 응답에 **없다.**
  * `Cannot read property 'slice' of undefined` 로 목록 전체가 죽었다. DTO 가 손으로 쓴
  * `interface` + `as` 캐스트였기 때문에 타입스크립트는 아무 말도 하지 않았다.
  *
@@ -48,34 +48,39 @@
  * 근거였는데, 토큰 이름보다 **한 기능 안에서 같은 값이 한 곳에서 온다**는 것이 먼저다.
  * 이 규칙은 `detail/StarRating.tsx` 헤더와 같은 문장을 공유한다.
  *
- * ## 끄는 동작은 press 가 아니다 (유령 내비게이션)
+ * ## press 는 **RNGH 의 것**이다 (유령 내비게이션이 사라진 자리)
  *
  * 이 카드는 지도 시트의 `BottomSheetFlatList` 안에 산다. 그 스크롤뷰는
  * react-native-gesture-handler 의 `Gesture.Native()` 에 감싸여 있고, 그 네이티브 제스처가
  * 터치를 가져가도 **RN 의 JS 리스폰더에는 취소가 전달되지 않는다.** 그래서 세로로 스크롤만
  * 했는데 손을 떼는 순간 `onPress` 가 불려 상세가 열렸다(실측 2026-07-31).
  *
- * 그래서 이 컴포넌트는 **누른 지점과 뗀 지점이 같을 때만** press 로 센다. 판정은
- * `utils/pressIntent` 의 `isTapGesture` 한 곳에 있고 WebView 마커 shim 과 같은 8px 이다.
- * 규칙을 여기 인라인으로 적으면 카드·칩·푸터가 각자 다른 임계값을 갖게 된다.
+ * 한동안 그것을 **좌표로** 막았다 — 누른 지점과 뗀 지점이 8px 넘게 다르면 press 로 세지
+ * 않았다. 그 규칙은 **마우스에서만 공짜였다.** 시뮬레이터의 마우스 탭은 이동이 정확히
+ * 0px 이라 절대 걸리지 않는다. 실제 손가락은 탭 한 번에 10–20pt 를 구른다 —
+ * 실측(2026-08-17): 12pt 굴린 탭에 화면은 **아무 반응도 하지 않았다.** 개발 중에는
+ * 멀쩡하고 사용자 손에서만 "터치가 안 먹는" 전형적인 모양이다.
+ *
+ * 그래서 좌표 판정을 버리고 press 자체를 제스처 체계 안으로 옮겼다:
+ * `react-native-gesture-handler` 의 `Pressable`. 이것은 네이티브 버튼(`Gesture.Native()`)
+ * 위에 서 있어서, 감싸고 있는 스크롤뷰가 스크롤을 시작하면 **네이티브가 press 를
+ * 취소한다.** 취소된 press 는 `onPress` 를 내보내지 않는다. 즉 "얼마나 움직였나" 를
+ * 우리가 잴 필요가 없고, 그 판정은 각 플랫폼이 자기 손가락 기준으로 한다.
+ *
+ * `react-native` 의 `Pressable` 로 되돌리지 말 것 — 되돌리는 순간 유령 내비게이션과
+ * 8px 임계값이 함께 돌아온다.
  */
 
-import { memo, useCallback, useRef, useState } from "react"
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type GestureResponderEvent,
-  type ViewStyle,
-} from "react-native"
+import { memo, useCallback, useState } from "react"
+import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+// press 를 스크롤·시트 팬과 같은 체계에서 중재시킨다(파일 머리말). RN 것이 아니다.
+import { Pressable } from "react-native-gesture-handler"
 import { useTranslation } from "react-i18next"
 
 import {
   V2Icon,
   radius,
   spacing,
-  touchTarget,
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
@@ -90,7 +95,6 @@ import {
   showsAnalysisPendingChip,
 } from "../utils/cardSafetyBadge"
 import { formatDistanceKm } from "../utils/distance"
-import { isTapGesture, type TapPoint } from "../utils/pressIntent"
 import { AddressBlock } from "./AddressBlock"
 import { BusinessStatusText } from "./BusinessStatusText"
 import { PhotoStrip } from "./PhotoStrip"
@@ -102,8 +106,19 @@ const SIDE = GUTTER
 
 const STAR_SIZE = 15
 const CHEVRON_SIZE = 16
-/** `subtext.large`(줄높이 20) 한 줄을 44 터치 타겟까지 hitSlop 으로 넓힌다. */
-const LOCATION_HIT_SLOP = Math.round((touchTarget.min - 20) / 2)
+/**
+ * 주소 줄의 hitSlop.
+ *
+ * 예전에는 `(44 − 20) / 2 = 12` 로 이 **보조** 컨트롤을 44pt 터치 타겟까지 넓혔다.
+ * 그런데 이 줄은 카드 **한가운데**에 있고, 카드의 본래 동작(상세로 가기)과 같은 면을
+ * 두고 다툰다 — 44pt 는 카드 높이(~155pt)의 3분의 1이라, 엄지로 카드 가운데를 누르면
+ * 상세가 아니라 주소가 펼쳐졌다. "터치가 엉뚱하게 먹는다" 의 한 갈래다.
+ *
+ * 44 는 **단독으로 서 있는** 컨트롤의 기준이다. 더 큰 주 동작 안에 든 보조 컨트롤은
+ * 자기 글줄만 가져가고 나머지를 주 동작에 넘기는 쪽이 옳다(셰브론이 그 자리를 가리킨다).
+ * 6 은 글줄 20 → 32pt: 여전히 누를 수 있으면서 카드의 80% 를 상세에 돌려준다.
+ */
+const LOCATION_HIT_SLOP = 6
 
 export interface RestaurantCardProps {
   /**
@@ -132,36 +147,7 @@ export const RestaurantCard = memo(function RestaurantCard({
   const { colors } = useV2Theme()
   const [addressOpen, setAddressOpen] = useState(false)
 
-  /**
-   * 손가락이 닿은 지점. 뗀 지점과 8px 넘게 다르면 그것은 스크롤이지 탭이 아니다.
-   * `null` 은 "좌표를 못 봤다" 이고, 그때는 막지 않는다(`isTapGesture` 주석).
-   */
-  const pressOriginRef = useRef<TapPoint | null>(null)
-  /** 주소 줄은 카드 안의 별도 Pressable 이라 자기 시작점을 따로 들고 있어야 한다. */
-  const addressOriginRef = useRef<TapPoint | null>(null)
-
-  const handlePressIn = useCallback((event: GestureResponderEvent) => {
-    pressOriginRef.current = touchPoint(event)
-  }, [])
-
-  const handlePress = useCallback(
-    (event: GestureResponderEvent) => {
-      const origin = pressOriginRef.current
-      pressOriginRef.current = null
-      if (!isTapGesture(origin, touchPoint(event))) return
-      onPress?.()
-    },
-    [onPress],
-  )
-
-  const handleAddressPressIn = useCallback((event: GestureResponderEvent) => {
-    addressOriginRef.current = touchPoint(event)
-  }, [])
-
-  const toggleAddress = useCallback((event: GestureResponderEvent) => {
-    const origin = addressOriginRef.current
-    addressOriginRef.current = null
-    if (!isTapGesture(origin, touchPoint(event))) return
+  const toggleAddress = useCallback(() => {
     setAddressOpen((prev) => !prev)
   }, [])
 
@@ -207,9 +193,7 @@ export const RestaurantCard = memo(function RestaurantCard({
       accessibilityLabel={
         ratingLabel ? `${card.name}, ${ratingLabel}` : card.name
       }
-      // 끄는 동작을 press 로 세지 않는다(파일 헤더). `onPress` 를 그대로 넘기지 말 것.
-      onPressIn={handlePressIn}
-      onPress={onPress ? handlePress : undefined}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.root,
         {
@@ -317,7 +301,6 @@ export const RestaurantCard = memo(function RestaurantCard({
             // 주소 상세가 없으면 펼칠 것이 없다 — 셰브론도 빼고 눌리지도 않게 한다.
             disabled={!hasAddressDetail}
             hitSlop={LOCATION_HIT_SLOP}
-            onPressIn={handleAddressPressIn}
             onPress={toggleAddress}
             style={({ pressed }) => [
               styles.locationRow,
@@ -365,21 +348,6 @@ export const RestaurantCard = memo(function RestaurantCard({
     </Pressable>
   )
 })
-
-/**
- * 터치 이벤트에서 화면 좌표를 꺼낸다.
- *
- * `pageX`/`pageY` 를 쓰는 이유: `locationX` 는 **누른 뷰 기준**이라 목록이 스크롤되면
- * 같은 손가락 위치가 다른 값이 된다. 시작점과 끝점을 비교하는 데 쓸 수 없다.
- * 값이 없는 이벤트(합성 이벤트)면 `null` 을 돌려주고, 그때는 판정을 하지 않는다.
- */
-function touchPoint(event: GestureResponderEvent): TapPoint | null {
-  const native = event?.nativeEvent
-  if (!native) return null
-  const { pageX, pageY } = native
-  if (typeof pageX !== "number" || typeof pageY !== "number") return null
-  return { x: pageX, y: pageY }
-}
 
 /**
  * 보조·음식종류 배지. 회색 면 + 회색 글자, pill. 목업의 `[저단백] [한식]` 자리다.

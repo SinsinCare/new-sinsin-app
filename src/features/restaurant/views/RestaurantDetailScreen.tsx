@@ -4,23 +4,35 @@
  * ```
  * ‹  (스크롤하면 상호명이 헤더에 등장)
  * ── 히어로 ─────────────────────────
- * 신신국밥
- * 한식 · ★ 4.0 · 리뷰 1,413 ›
+ * 신신국밥 [한식]
+ * ★ 4.0 · 리뷰 1,413 ›
  * 진하게 우려낸 국밥에 매콤한 다대기의 든든한 한 상
- * [✨ 진단하기] [☎ 전화] [↗ 공유] [🔖 저장]
  * [대표사진 가로 캐러셀]
  * ── sticky ────────────────────────
  * 홈 | 메뉴 | 사진 | 후기 | 정보
  * ── 탭 본문 ───────────────────────
- * [✨ 진단하기] [☎ 전화] [↗ 공유] [🔖 저장]   ← 액션 행을 지나친 뒤에만 하단 고정
+ * ── 하단 고정(항상) ────────────────
+ * 🔖  ↗  📞          길찾기  [ 진단하기 ]
  * ```
  *
- * ## 액션은 **한 벌**이다 (아이콘 바 + pill 행을 둘 다 두지 않는다)
+ * ## 액션은 **한 벌**이고 자리도 **한 곳**이다
  *
- * 예전에는 하단에 라벨 없는 아이콘 세 개(`🔖 ↗ 📞`)와 `진단하기` 버튼이 상주했다.
- * 위에 pill 행을 새로 두면서 그 바를 **없애고**, 같은 pill 행이 히어로를 지나가는
- * 순간 하단에 고정되게 했다. 같은 네 가지 일을 서로 다른 두 모양으로 동시에 그리면
- * 사용자는 둘이 다른 것이라고 읽는다 — 여기서 고른 것은 "하나를 두 자리에" 다.
+ * 판본이 세 번 바뀐 자리라 결론만 적으면 다시 뒤집히므로 계보를 남긴다.
+ *
+ * 1. 처음: 하단에 라벨 없는 아이콘 세 개(`🔖 ↗ 📞`) + `진단하기`. 무엇을 할 수 있는
+ *    화면인지가 제목 옆에서 읽히지 않았다.
+ * 2. 다음: 히어로 아래에 라벨 pill 행을 두고, 스크롤로 그 행을 지나치면 **같은 행**을
+ *    하단에 고정. 읽히기는 했지만 같은 버튼이 화면에서 사라졌다 다시 나타났다.
+ * 3. 지금(시안): 히어로에는 액션이 없고(제목 → 평점 → 소개 → 사진), 하단 바가
+ *    **스크롤과 무관하게 항상** 상주한다. 시안 여섯 장(C1_2·C2_2~C6_2)이 전부 같은 바다.
+ *
+ * 3번은 1번으로의 회귀처럼 보이지만 다르다. 1번의 결함은 "액션이 아래에만 있다" 가 아니라
+ * **주요 액션이 무엇인지 안 보인다** 였고, 지금은 바 안에서 글자를 가진 것이 `진단하기`
+ * 하나뿐이라 그 결함이 남지 않는다. 대신 2번이 만든 "같은 버튼이 두 자리에" 도 사라졌다.
+ *
+ * 그래서 이 파일에서 사라진 것들: 히어로 pill 행, 그 행의 아래 끝을 재던 `actionRowBottom`,
+ * 그 값으로 바를 켜고 끄던 `actionsPinned`·`actionBarHidden`·`pointerEvents` 토글.
+ * 되살릴 이유가 생기면 2번의 결함부터 다시 읽을 것.
  *
  * ## 이 화면이 옛 화면을 대체한다
  *
@@ -98,7 +110,6 @@ import { GUTTER, RAIL_INSET, SECTION_GAP } from "../layout"
 import { isNearBottom, loadMoreLead } from "../utils/autoPaginate"
 import {
   DetailActionBar,
-  DetailActionPills,
   type DetailAction,
 } from "../components/detail/DetailActionPills"
 import { DetailMetaLine } from "../components/detail/DetailMetaLine"
@@ -255,13 +266,6 @@ function RestaurantDetailBody({
   const [heroHeight, setHeroHeight] = useState(0)
   const [actionBarHeight, setActionBarHeight] = useState(0)
   const [showTitle, setShowTitle] = useState(false)
-  /**
-   * 히어로 안 액션 pill 행의 **아래 끝**(콘텐츠 좌표). 이 지점을 지나면 같은 행을
-   * 하단에 고정한다 — 상수로 박지 않고 `onLayout` 으로 잰다(글꼴 크기를 키운
-   * 사용자에게서도 어긋나지 않는다).
-   */
-  const [actionRowBottom, setActionRowBottom] = useState(0)
-  const [actionsPinned, setActionsPinned] = useState(false)
   /** 히어로 캐러셀에서 지금 보이는 장. 페이지 표시(`2/5`)의 근거다. */
   const [photoIndex, setPhotoIndex] = useState(0)
   /**
@@ -326,10 +330,6 @@ function RestaurantDetailBody({
       const next = heroHeight > 0 && y >= heroHeight - TITLE_LEAD
       // 임계값을 넘는 순간에만 상태를 뒤집는다. 매 프레임 setState 하면 화면 전체가 리렌더된다.
       setShowTitle((prev) => (prev === next ? prev : next))
-      // 액션 행이 화면 위로 사라진 뒤에만 하단 고정을 켠다. 두 자리에 동시에 보이면
-      // 같은 버튼이 두 개인 것처럼 읽힌다.
-      const pinned = actionRowBottom > 0 && y >= actionRowBottom
-      setActionsPinned((prev) => (prev === pinned ? prev : pinned))
 
       // 탭을 떠났다 돌아왔을 때 읽던 자리로 되돌리기 위해 기억한다. 복원 스크롤이
       // 스스로 발화시킨 이벤트로 저장값을 덮지 않게, 복원 대기 중에는 쓰지 않는다.
@@ -348,7 +348,7 @@ function RestaurantDetailBody({
       if (near && !wasNear.current) setEndTick((n) => n + 1)
       wasNear.current = near
     },
-    [actionRowBottom, heroHeight, tab],
+    [heroHeight, tab],
   )
 
   const handleTabChange = useCallback(
@@ -471,7 +471,10 @@ function RestaurantDetailBody({
         style={[styles.screen, { backgroundColor: colors.background.default }]}
       >
         {header}
-        <V2ErrorState title={t("restaurant.notFound")} />
+        <V2ErrorState
+          surface="restaurant_detail"
+          title={t("restaurant.notFound")}
+        />
       </View>
     )
   }
@@ -494,6 +497,7 @@ function RestaurantDetailBody({
       >
         {header}
         <V2ErrorState
+          surface="restaurant_detail"
           title={resolved.title}
           description={resolved.body}
           {...retry}
@@ -514,38 +518,43 @@ function RestaurantDetailBody({
   }
 
   /*
-    액션 한 벌. 히어로 안과 하단 고정 바가 **같은 배열**을 받는다 — 두 곳에서 각자
-    조립하면 한쪽에만 전화 pill 이 빠지는 식으로 갈라진다.
+    액션 한 벌. **배열 순서가 곧 바에 그려지는 순서**다(`DetailActionBar` 는 순서를 정하지
+    않는다). 그래서 여기서는 왼쪽부터 읽히는 대로 적는다: `저장 · 공유 · 전화 · 길찾기`,
+    그리고 오른쪽 끝의 `진단하기`.
 
-    전화번호가 없으면 `전화` pill 자체를 만들지 않는다. 눌러도 아무 일 없는 버튼을
-    남기지 않는 것이 이 기능 전체의 규칙이다(프로토타입의 죽은 버튼 12개).
+    앞 세 개와 그 순서는 시안 그대로다(C1_2·C4_2 의 `🔖 ↗ 📞`). 네 번째 `길찾기` 는
+    시안에 없다 — **지우면 앱에서 길찾기로 가는 유일한 문이 닫히므로** 우리가 더한다.
+    자리를 맨 오른쪽(= CTA 바로 옆)에 둔 이유: 이 화면에서 판단이 끝난 사용자의 다음
+    행동은 "간다" 이므로, 보조 넷 중에서는 `진단하기` 에 가장 가까이 있어야 한다.
+
+    조건부 액션은 아예 만들지 않는다. 눌러도 아무 일 없는 버튼을 남기지 않는 것이 이 기능
+    전체의 규칙이다(프로토타입의 죽은 버튼 12개).
+      - 전화번호가 없으면 `전화` 없음.
+      - 좌표가 없으면 `길찾기` 없음 — 이름만으로 지도 앱을 열면 동명 가게로 안내하게 되고,
+        그건 없는 것보다 나쁘다(`utils/mapAppLinks` 머리말).
+
+    `진단하기` 에는 `icon` 이 없다 — 시안의 CTA 는 글자뿐이다. `길찾기` 에도 없는데
+    이유가 다르다: 줄 수 있는 글리프가 없어서다(바로 아래 그 액션의 주석). 그래서 이 바는
+    **아이콘 셋 + 글자 둘**이고, 채움은 여전히 하나다(`DetailActionPills` 머리말).
   */
   const actions: DetailAction[] = [
     {
-      key: "diagnose",
-      label: t("restaurant.detail.actionDiagnose"),
-      icon: "sparkle",
-      emphasis: "primary",
-      onPress: handleDiagnose,
+      key: "bookmark",
+      label: detail.bookmarked
+        ? t("restaurant.detail.actionSaved")
+        : t("restaurant.detail.actionSave"),
+      icon: detail.bookmarked ? "bookmarkFilled" : "bookmark",
+      emphasis: "secondary",
+      selected: detail.bookmarked,
+      onPress: () => handleToggleBookmark(detail.bookmarked),
     },
-    /*
-      길찾기. **좌표가 있을 때만** 만든다 — 이름만으로 지도 앱을 열면 동명 가게로
-      안내하게 되고, 그건 없는 것보다 나쁘다(`utils/mapAppLinks` 머리말).
-
-      전화보다 앞에 두는 이유: 이 화면에서 판단이 끝난 사용자의 다음 행동은 "간다" 다.
-      국내 지도·맛집 서비스가 예외 없이 길찾기를 첫 보조 액션으로 두는 순서를 따른다.
-    */
-    ...(canRouteTo({ lat: detail.lat, lng: detail.lng, name: detail.name })
-      ? [
-          {
-            key: "route",
-            label: t("restaurant.detail.actionRoute"),
-            icon: "mapPin" as const,
-            emphasis: "secondary" as const,
-            onPress: () => setRouteSheetOpen(true),
-          },
-        ]
-      : []),
+    {
+      key: "share",
+      label: t("restaurant.detail.actionShare"),
+      icon: "share",
+      emphasis: "secondary",
+      onPress: handleShare,
+    },
     ...(detail.phone
       ? [
           {
@@ -560,22 +569,32 @@ function RestaurantDetailBody({
           },
         ]
       : []),
+    ...(canRouteTo({ lat: detail.lat, lng: detail.lng, name: detail.name })
+      ? [
+          {
+            /*
+              **글리프가 없다 — 일부러다.** 앞 판본은 `mapPin` 이었는데 같은 화면의 주소
+              행(`DetailInfoRows`)이 이미 그 글리프를 쓴다. 한 화면에서 같은 그림이
+              "여기가 주소" 와 "여기를 눌러 길을 찾아라" 를 동시에 뜻하면 둘 다 안 읽힌다.
+              라벨을 지우기 전에는 `길찾기` 라는 보이는 글자가 그 모호함을 막고 있었다.
+
+              구분되는 글리프는 `iconRegistry` 에 없다(내비게이션 화살표 계열이 한 종도
+              없다). 그래서 `icon` 을 비우면 바가 이 액션을 **글자로** 그린다 —
+              시안의 아이콘 셋은 손대지 않은 채 남고, 우리가 더한 넷째는 더한 것처럼
+              보인다. 자세한 근거는 `DetailActionPills` 머리말.
+            */
+            key: "route",
+            label: t("restaurant.detail.actionRoute"),
+            emphasis: "secondary" as const,
+            onPress: () => setRouteSheetOpen(true),
+          },
+        ]
+      : []),
     {
-      key: "share",
-      label: t("restaurant.detail.actionShare"),
-      icon: "share",
-      emphasis: "secondary",
-      onPress: handleShare,
-    },
-    {
-      key: "bookmark",
-      label: detail.bookmarked
-        ? t("restaurant.detail.actionSaved")
-        : t("restaurant.detail.actionSave"),
-      icon: detail.bookmarked ? "bookmarkFilled" : "bookmark",
-      emphasis: "secondary",
-      selected: detail.bookmarked,
-      onPress: () => handleToggleBookmark(detail.bookmarked),
+      key: "diagnose",
+      label: t("restaurant.detail.actionDiagnose"),
+      emphasis: "primary",
+      onPress: handleDiagnose,
     },
   ]
 
@@ -605,13 +624,27 @@ function RestaurantDetailBody({
           }
         >
           <View style={styles.hero}>
-            <Text
-              style={[typography.title.small, { color: colors.label.normal }]}
-              numberOfLines={2}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {name}
-            </Text>
+            {/*
+              상호명 + 음식 종류 칩. 시안 C1_1 은 `한식` 을 메타 줄에서 **빼서** 여기로
+              올렸다 — 칩이 하나 늘어난 것이 아니라 축이 자리를 옮긴 것이라, 아래
+              `DetailMetaLine` 에는 같은 값을 넘기지 않는다(`cuisineLabel={null}`).
+            */}
+            <View style={styles.titleRow}>
+              <Text
+                style={[
+                  typography.title.small,
+                  styles.title,
+                  { color: colors.label.normal },
+                ]}
+                numberOfLines={2}
+                lineBreakStrategyIOS="hangul-word"
+              >
+                {name}
+              </Text>
+              <CuisineChip
+                label={t(`restaurant.cuisine.${detail.cuisineType}`)}
+              />
+            </View>
 
             {/*
               음식 종류·평점·리뷰 수를 **한 줄**로 잇는다(`DetailMetaLine`).
@@ -623,9 +656,34 @@ function RestaurantDetailBody({
               개인화 등급(`avgSafety`)을 대신 넣는 것도 아니다: 한 식당에 제한 메뉴와
               안전 메뉴가 함께 있어서 식당 단위 등급을 배지로 단언하면 사용자가
               "이 집은 가도 되는 곳" 을 색 하나로 판단하게 된다. 등급은 메뉴 탭이 말한다.
+
+              ── 2026-08-20: 시안의 칩 두 개 중 하나만 그린다 ────────────────────
+              시안(C1_1)의 상호명 줄은 `신신국밥 [저단백] [한식]` 이다. `한식` 은 위
+              `styles.titleRow` 에서 그리고, **`저단백` 은 만들지 않는다.** 화면만 보고
+              "빠뜨렸네" 로 읽지 말 것 — 두 칩의 근거가 서로 다르다.
+
+                - `저단백` 은 `NutritionTag.LOW_PROTEIN` 이고, 그 값의 출처는 위 문단이
+                  말하는 정적 `restaurant.nutrition_tags` CSV 다. 수집 시각에 메뉴 평균으로
+                  붙인 라벨이라 **환자별 기준을 모른다** — 5기·투석 환자와 1기 환자가 같은
+                  `저단백` 을 본다. 백엔드는 이 문자열을 `nonclinicalTags()` 로 거르고 있고,
+                  히어로에 칩으로 그리면 그 검열을 **우회하는 두 번째 경로**가 생긴다.
+                  개인 기준으로 계산된 값은 `safety` 이고, 그건 메뉴 단위로만 뜻이 있다.
+                  이건 취향이 아니라 안전 판단이라 시안이 요구해도 바뀌지 않는다.
+                - `한식` 은 임상 주장이 아니라 사실이고 `detail.cuisineType` 이라는 정상
+                  필드에서 온다. 앞 판본은 "배지는 종류가 여러 개일 때 값어치가 있고
+                  `cuisineType` 은 단수다" 를 근거로 이것도 거절했는데, 그건 **취향
+                  판단이었지 안전 근거가 아니었다.** 게다가 시안이 한 일은 칩을 하나
+                  더한 것이 아니라 이 축을 메타 줄에서 **빼서 칩으로 올린 것**이다 —
+                  그래서 여기서 그리고 메타 줄에는 넘기지 않는다. 축이 두 곳에 동시에
+                  나오는 것이야말로 옛 `868식당 [한식] / ★ 4.9 · 한식` 의 결함이다.
             */}
             <DetailMetaLine
-              cuisineLabel={t(`restaurant.cuisine.${detail.cuisineType}`)}
+              /*
+                `null` 이다. 음식 종류는 위 칩이 말한다 — 여기에도 넣으면 같은 축이 한
+                화면에 두 번 나온다(바로 위 문단). 이 prop 이 `string | null` 인 것은
+                그런 자리를 위해 원래부터 열려 있던 문이다.
+              */
+              cuisineLabel={null}
               rating={rating}
               reviewCount={reviewCount}
               onPressRating={() => handleTabChange("review")}
@@ -646,20 +704,10 @@ function RestaurantDetailBody({
           </View>
 
           {/*
-            액션 pill 행. `styles.hero` **밖**에 두는 것이 중요하다 — 안에 두면 히어로의
-            좌우 여백이 가로 스크롤의 컨테이너 폭을 줄여 마지막 pill 이 오른쪽에서
-            잘린다. 좌우 인셋은 스크롤 안쪽(`RAIL_INSET`)이 만든다.
+            소개 바로 아래가 사진이다. 여기 있던 액션 pill 행은 하단 바 한 곳으로 옮겼다
+            (머리말 "액션은 한 벌이고 자리도 한 곳이다"). 소개 ↔ 사진 사이 여백은
+            `styles.hero` 의 `paddingBottom` 이 만든다.
           */}
-          <View
-            onLayout={(event: LayoutChangeEvent) => {
-              const { y, height } = event.nativeEvent.layout
-              setActionRowBottom(y + height)
-            }}
-            style={styles.heroActions}
-          >
-            <DetailActionPills actions={actions} />
-          </View>
-
           {detail.imageUrls.length > 0 && (
             <View>
               <ScrollView
@@ -840,14 +888,14 @@ function RestaurantDetailBody({
       </ScrollView>
 
       {/*
-        하단 고정 액션. **항상 마운트해 두고 보이기만 켠다.**
+        하단 고정 액션. **항상 보인다** — 스크롤 위치로 켜고 끄지 않는다(머리말).
 
-        스크롤 위치에 따라 마운트/언마운트하면 (a) 높이를 그때그때 재게 되어 본문 하단
-        여백이 스크롤 도중에 바뀌고 내용이 튀며, (b) 고정이 켜지는 첫 프레임에 바가
-        아래에서 튀어 올라온다. 자리는 늘 잡아 두고 `opacity` 로만 나타낸다.
+        높이는 여기서 재서 스크롤의 `paddingBottom` 으로 되먹인다. 상수로 박으면 안전영역이
+        없는 기기와 홈 인디케이터가 있는 기기에서 마지막 줄이 바 뒤에 숨거나 빈 띠가 남는다.
 
-        안 보일 때 `pointerEvents="none"` 이 반드시 함께 가야 한다 — 투명한 바가
-        화면 아래를 덮은 채 남으면 본문의 마지막 줄을 누를 수 없다.
+        `paddingBottom` 의 하한이 필요한 이유: 안전영역이 0 인 기기(홈 버튼 안드로이드)에서
+        그대로 0 을 주면 CTA 가 화면 맨 아래 모서리에 닿는다. 시안의 34 는 홈 인디케이터
+        안전영역 그 자체라 여기서 흉내내지 않고 `insets` 에서 받는다.
       */}
       <DetailActionBar
         actions={actions}
@@ -855,8 +903,6 @@ function RestaurantDetailBody({
         onLayout={(event: LayoutChangeEvent) =>
           setActionBarHeight(event.nativeEvent.layout.height)
         }
-        pointerEvents={actionsPinned ? "auto" : "none"}
-        style={!actionsPinned && styles.actionBarHidden}
       />
 
       {/* 신고 시트는 스크롤 밖 형제로 둔다 — 후기 탭 안에 두면 탭을 옮기는 순간
@@ -873,6 +919,47 @@ function RestaurantDetailBody({
         onClose={() => setRouteSheetOpen(false)}
         target={{ lat: detail.lat, lng: detail.lng, name: detail.name }}
       />
+    </View>
+  )
+}
+
+/**
+ * 상호명 옆의 **음식 종류 칩** (시안 C1_1 의 `한식`).
+ *
+ * ## 치수는 3배 렌더 PNG 실측이고 전부 토큰 위에 떨어진다
+ *
+ * | 항목 | 실측(pt) | 토큰 |
+ * |---|---|---|
+ * | 높이 | 20.0 | `label.xSmall` 의 lineHeight 16 + `spacing[2]`×2 |
+ * | 모서리 | 10.3 (= 높이의 절반) | `radius.full` |
+ * | 좌우 안여백 | 7.5~8 | `spacing[8]` |
+ * | 면 | `rgb(244,244,245)` | `fill.normal`(`#70737c14` over white) |
+ * | 글자 | 13, 획 굵기가 `진단하기` 와 같다 | `typography.label.xSmall` |
+ * | 글자색 | `rgb(105,106,109)` | `label.neutral`(위 면 위에 합성한 값과 일치) |
+ * | 상호명과의 간격 | 8.2 | `spacing[8]` |
+ *
+ * 면 색이 `line.alternative` 와 같은 알파(`#70737c14`)라 그쪽으로도 계산이 맞지만,
+ * 여기서 칠하는 것은 선이 아니라 **면**이므로 `fill.normal` 이 정본이다.
+ *
+ * ## DS 의 `V2Badge` 를 쓰지 않는다
+ *
+ * `V2Badge size="m"` 이 여백·타이포까지 이 값과 같은데(8 / 2 / 13 SemiBold) **색이
+ * 다르다** — `neutral/weak` 의 면은 `label.disable`(#dedee0 상당)이라 시안보다 한 단계
+ * 진하고, 그것을 `style` 로 덮어쓰면 배지의 색 이름이 거짓말이 된다. 모서리도 배지는
+ * `radius.lg` 인데 실측은 pill 이다(`radius.ts` 머리말: pill 은 언제나 `radius.full`).
+ * DS 에 이 조합이 생기면 이 조각을 지우고 갈아탄다 — 같은 판단을 `OutlinePill` 이 먼저 했다.
+ */
+function CuisineChip({ label }: { label: string }) {
+  const { colors } = useV2Theme()
+
+  return (
+    <View style={[styles.cuisineChip, { backgroundColor: colors.fill.normal }]}>
+      <Text
+        numberOfLines={1}
+        style={[typography.label.xSmall, { color: colors.label.neutral }]}
+      >
+        {label}
+      </Text>
     </View>
   )
 }
@@ -972,11 +1059,34 @@ const styles = StyleSheet.create({
     gap: spacing[6],
     paddingHorizontal: GUTTER,
     paddingTop: spacing[12],
-    // 액션 pill 행이 바로 아래에 오므로 히어로 자체의 아래 여백은 줄인다.
-    paddingBottom: spacing[12],
+    /*
+      소개 ↔ 사진 사이 여백. 액션 pill 행이 이 자리에 있던 동안에는 `12` 였고 나머지 `16` 을
+      그 행이 들고 있었다. 행이 하단 바로 옮겨 갔으므로 여백은 여기로 합친다.
+
+      값 `16` 은 시안 실측이다: 소개 글줄 상자의 아래가 174.3pt, 첫 사진의 위가 190pt 라
+      15.7 이고 사다리에서 `spacing[16]` 이다.
+    */
+    paddingBottom: spacing[16],
   },
-  // 가로 스크롤이라 좌우 여백을 갖지 않는다(스크롤 안쪽 `RAIL_INSET` 이 맡는다).
-  heroActions: { paddingBottom: spacing[16] },
+  /**
+   * 상호명 + 음식 종류 칩. 시안에서 칩의 세로 중심(122.0)이 상호명 잉크의 세로
+   * 중심(121.8)과 겹치므로 `center` 다.
+   *
+   * 상호명이 길면 **칩이 아니라 상호명이 접힌다**(`flexShrink` 는 제목에만 있다) —
+   * 칩을 줄이면 `한식` 이 `한…` 이 되어 아무 것도 말하지 못하는 상자만 남는다.
+   */
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[8],
+  },
+  title: { flexShrink: 1 },
+  /** 치수 근거는 `CuisineChip` 머리말 표. 높이는 글줄(16) + 위아래 2 로 저절로 20 이 된다. */
+  cuisineChip: {
+    paddingHorizontal: spacing[8],
+    paddingVertical: spacing[2],
+    borderRadius: radius.full,
+  },
   carousel: { gap: CAROUSEL_GAP, paddingHorizontal: CAROUSEL_INSET },
   carouselImage: { borderRadius: radius.lg },
   // 지금 보이는 장의 오른쪽 아래. `CAROUSEL_PEEK` 만큼 안쪽이라 다음 장 위로 넘어가지 않는다.
@@ -988,11 +1098,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
     borderRadius: radius.full,
   },
-  /*
-    숨김은 `display: "none"` 이 아니라 투명이다. `display` 를 끄면 높이가 0이 되어
-    본문 하단 여백(`actionBarHeight`)이 함께 무너지고, 다시 켜질 때 내용이 튄다.
-  */
-  actionBarHidden: { opacity: 0 },
   pressed: { opacity: 0.85 },
   pressedCard: { opacity: 0.9 },
 })

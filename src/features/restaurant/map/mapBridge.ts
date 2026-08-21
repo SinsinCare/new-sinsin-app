@@ -287,6 +287,8 @@ function call(method: string, ...args: unknown[]): string {
  *
  * 프로토타입에 **없어서 문제가 됐던** 것들에 ★ 를 달았다.
  */
+export type MapColorScheme = "light" | "dark"
+
 export interface MapCommands {
   /** 마커 교체. 전체 교체다 — diff 는 web 쪽이 한다. */
   setMarkers(items: MapMarker[]): void
@@ -346,6 +348,11 @@ export interface MapCommands {
    * 리소스에 같은 뜻의 키가 있는데도 영어 로케일 사용자가 한국어를 들었다.
    */
   setStrings(strings: MapStrings): void
+  /**
+   * ★ 베이스맵 색상 전환. HTML 을 다시 만들지 않고 이미 떠 있는 타일을 다시 칠한다.
+   * WebView 리로드는 카메라·마커·선택을 초기화하므로 테마 변경에 쓰면 안 된다.
+   */
+  setColorScheme(scheme: MapColorScheme): void
 }
 
 /**
@@ -393,6 +400,7 @@ export const mapScript = {
   panBy: (dx: number, dy: number) => call("panBy", dx, dy),
   relayout: () => call("relayout"),
   setStrings: (strings: MapStrings) => call("setStrings", strings),
+  setColorScheme: (scheme: MapColorScheme) => call("setColorScheme", scheme),
 } satisfies {
   [K in keyof MapCommands]: (...args: Parameters<MapCommands[K]>) => string
 }

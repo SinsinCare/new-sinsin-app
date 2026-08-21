@@ -2,12 +2,30 @@
  * 메뉴 한 줄. **이 기능의 핵심 화면 요소**다 — 목업 -14.
  *
  * ```
- * [제한] 순대국밥                      [썸네일 88×72]
+ * [제한] 순대국밥                      [썸네일 86×86]
  * 나트륨 1,300mg · 한 끼 기준의 186%
  * 진하게 우려낸 순대국밥에 매콤한 다대기와 정갈한
  * 반찬을 곁들인 든든한 한 상
  * 12,000원
  * ```
+ *
+ * ## 조판은 시안 실측이다 (2026-08-20, C1_2 3배 렌더)
+ *
+ * 잉크 높이는 임계값에 따라 흔들리므로 **글자 이송(advance)** 으로 잰다. Pretendard 의
+ * 한글 이송은 0.864em, 공백 0.251em, 숫자 0.66em(Bold)이라 픽셀에서 크기가 역산된다.
+ *
+ * - 이름 `신신백숙` 음절 이송 12.67·13.67·12.33 → 평균 12.89 = **15pt**(0.864×15=12.96).
+ *   `순대국밥` 도 잉크 폭 51.0 으로 같은 값이다. 세로획 6–7px(=2.0–2.3pt)라 **Bold**.
+ *   → `label.smallStrong`. 앞 판본의 `title.xSmall`(17)은 한 단계 컸다.
+ * - 설명 `3음절+공백` 묶음이 34.0 으로 세 번 반복 → 34.0/(3×0.864+0.251) = **11.96 ≈ 12pt**,
+ *   줄 피치 16.0 실측 → `subtext.small`(12/16). 세로획 2–3px 로 Regular.
+ *   앞 판본은 `subtext.large`(15/20)라 설명이 이름만큼 커 보였다.
+ * - 가격 `0`→`0` 이송 9.67·9.33 → 15pt 대(Bold 0.66×15=9.9), 세로획 5–6px → **15 Bold**.
+ *   → `label.smallStrong`. 이름과 같은 크기·굵기인 것이 시안 그대로다.
+ *
+ * **근거 줄(`label.smallWeak` 15 medium)은 줄이지 않는다.** 시안에 없는 줄이라 실측
+ * 대상이 아니고, 이 화면에서 사용자가 실제로 행동을 정하는 한 줄이다. 설명이 12 로
+ * 내려가면서 위계는 오히려 또렷해졌다 — 이름 15 Bold · 근거 15 Medium · 설명 12 Regular.
  *
  * ## 배지는 서버가 사용자 기준으로 계산한 값만 쓴다
  *
@@ -67,8 +85,25 @@ import { menuSafetyEvidence } from "../../utils/menuSafetyEvidence"
 import { safetyBadge } from "../../utils/safetyBadge"
 import { SafetyBadge } from "../SafetyBadge"
 
-/** 목업의 썸네일 치수. 1:1 이 아니라 가로로 넓다(88×72). */
-const THUMBNAIL = { width: 88, height: 72 } as const
+/**
+ * 썸네일 치수. **정사각 86**이고, 3배 렌더 실측이다(2026-08-20 시안 C1_2).
+ *
+ * 두 줄 다 x=807..1064px 에서 흰색으로 끊기고(=269.0..355.0pt, 258px=86.00pt),
+ * 세로도 583..841px 로 같은 258px 다. 오른쪽 끝 355.0 은 시안의 우측 여백 20 이다
+ * (우리는 `GUTTER` 16 이라 4pt 더 오른쪽에 붙는다 — 화면 정본을 시안보다 앞세운다).
+ *
+ * 앞 판본의 `88×72`(가로로 넓은 직사각)는 **옛 목업**의 값이다. 가로형은 정사각과
+ * 달리 사진마다 위아래가 잘려 나가는 축이 정해져 있어서(음식 사진은 세로 중앙이
+ * 접시다) 국밥 한 그릇이 그릇 테두리로만 보이는 행이 실제로 있었다.
+ *
+ * 모서리 반경은 그대로 `radius.sm`(8). 실측 코너 곡선(꼭대기 줄에서 20px 들여쓰기,
+ * 3px 아래 11px, 6px 아래 8px …)이 반경 24px=8pt 의 원호와 1px 안에서 맞는다.
+ *
+ * **`export` 인 것이 계약이다.** 로딩 자리표시(`DetailSkeletons`)가 이 자리를 미리
+ * 그려야 하는데, 거기에 같은 수를 손으로 적어 두면 여기만 바뀌는 날 스켈레톤이 옛
+ * 치수로 남는다(실제로 `88×72` 로 남아 있었다). 미러를 만들지 말고 이 값을 가져갈 것.
+ */
+export const THUMBNAIL = 86
 
 /** 설명 클램프 줄 수. 목업 -14 그대로. */
 const DESCRIPTION_LINES = 2
@@ -174,7 +209,7 @@ export function MenuRow({
           )}
           <Text
             style={[
-              typography.title.xSmall,
+              typography.label.smallStrong,
               styles.name,
               { color: colors.label.normal },
             ]}
@@ -215,7 +250,7 @@ export function MenuRow({
 
         {menu.description && (
           <Text
-            style={[typography.subtext.large, { color: colors.label.neutral }]}
+            style={[typography.subtext.small, { color: colors.label.neutral }]}
             numberOfLines={DESCRIPTION_LINES}
             lineBreakStrategyIOS="hangul-word"
           >
@@ -226,7 +261,7 @@ export function MenuRow({
         {menu.price !== null && (
           <Text
             style={[
-              typography.label.mediumStrong,
+              typography.label.smallStrong,
               { color: colors.label.normal },
             ]}
           >
@@ -290,8 +325,8 @@ const styles = StyleSheet.create({
   // 배지가 고정폭이므로 이름이 남은 폭을 다 쓰고 말줄임한다.
   name: { flex: 1 },
   thumbnail: {
-    width: THUMBNAIL.width,
-    height: THUMBNAIL.height,
+    width: THUMBNAIL,
+    height: THUMBNAIL,
     borderRadius: radius.sm,
   },
   thumbnailEmpty: { alignItems: "center", justifyContent: "center" },

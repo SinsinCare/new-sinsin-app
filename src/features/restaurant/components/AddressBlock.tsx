@@ -46,8 +46,16 @@ import { showSuccessToast } from "@/src/lib/toast"
 /** 라벨 → 값 표기. `text` = `도로명 : 값`(카드), `badge` = `[지번] 값`(상세). */
 export type AddressLabelStyle = "text" | "badge"
 
-/** `subtext.large` 의 줄높이. hitSlop 계산의 기준 높이다. */
-const TEXT_HEIGHT = 20
+/**
+ * 이 블록의 본문 타이포. **13pt** 다 — 시안(C1_2) 3배 렌더에서 도로명 주소의 한글 음절
+ * 이송이 33.6px 이고 0.864em 으로 나누면 12.96 이다(15 였다면 38.9px). `복사` 도 같은
+ * 크기여야 한다: 앞 판본은 여기만 `subtext.large`(15)라, 바로 아래 전화 행의 `복사`
+ * (`DetailInfoRows` 는 13)와 **나란히 놓인 같은 단어가 두 크기**로 보였다.
+ */
+const TEXT = typography.subtext.medium
+
+/** 그 본문 한 줄의 높이. hitSlop 계산의 기준이므로 토큰에서 끌어온다(베끼면 갈라진다). */
+const TEXT_HEIGHT = TEXT.lineHeight
 const CHEVRON_SIZE = 16
 
 export interface AddressBlockProps {
@@ -214,21 +222,12 @@ function AddressRow({
           </Text>
         </View>
       ) : (
-        <Text
-          style={[
-            typography.subtext.large,
-            { color: colors.label.alternative },
-          ]}
-        >
+        <Text style={[TEXT, { color: colors.label.alternative }]}>
           {`${label} : `}
         </Text>
       )}
       <Text
-        style={[
-          typography.subtext.large,
-          styles.value,
-          { color: colors.label.neutral },
-        ]}
+        style={[TEXT, styles.value, { color: colors.label.neutral }]}
         lineBreakStrategyIOS="hangul-word"
       >
         {value}
@@ -241,13 +240,7 @@ function AddressRow({
         onPress={handleCopy}
         style={({ pressed }) => [pressed && styles.pressed]}
       >
-        <Text
-          style={[
-            typography.subtext.large,
-            styles.copy,
-            { color: colors.primary.primary },
-          ]}
-        >
+        <Text style={[TEXT, styles.copy, { color: colors.primary.primary }]}>
           {justCopied
             ? t("restaurant.address.copiedShort")
             : t("restaurant.address.copy")}

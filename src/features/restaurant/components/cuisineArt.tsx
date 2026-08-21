@@ -31,12 +31,16 @@ const JapaneseArt = pngIcon(
   "cuisine-japanese.png",
 )
 
-// PNG 래퍼(입체 아이콘)도 담을 수 있게 width/height 계약으로 완화 — 호출부는 그 두 개만 쓴다.
+/**
+ * PNG 래퍼(입체 아이콘)도 담을 수 있게 **`width`/`height` 두 개로만** 계약을 좁혔다.
+ *
+ * `opacity` 가 한때 있었다. 지도 칩이 안 고른 카테고리를 45% 로 흐리게 그리던 때의
+ * 잔재인데, 새 시안은 미선택 칩도 그림을 100% 로 그린다(`CategoryChipRail` 머리말
+ * §총천연색 — 실측 근거 포함). 계약에서 빼 두면 "흐리게" 가 다시 들어올 때 tsc 가 먼저
+ * 막는다. 상태는 그림이 아니라 **칩**(테두리·면·굵기)이 말한다.
+ */
 export const CUISINE_ART: Partial<
-  Record<
-    CuisineType,
-    React.ComponentType<Pick<SvgProps, "width" | "height" | "opacity">>
-  >
+  Record<CuisineType, React.ComponentType<Pick<SvgProps, "width" | "height">>>
 > = {
   KOREAN: KoreanArt,
   CHINESE: ChineseArt,

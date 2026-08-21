@@ -30,6 +30,8 @@ import type { AxiosRequestConfig } from "axios"
 
 import { api } from "../core"
 import {
+  AI_SEARCH_FILTER_KEYS,
+  AI_SEARCH_KEYS,
   BOOKMARK_CARD_KEYS,
   BOOKMARK_LIST_KEYS,
   BOOKMARK_TOGGLE_KEYS,
@@ -43,6 +45,7 @@ import {
   MAP_MARKER_KEYS,
   MENUS_KEYS,
   MENU_KEYS,
+  NEARBY_CARD_KEYS,
   PHOTOS_KEYS,
   PHOTO_KEYS,
   REGION_KEYS,
@@ -51,8 +54,10 @@ import {
   REVIEWS_KEYS,
   REVIEW_CREATE_KEYS,
   REVIEW_ITEM_KEYS,
+  REVIEW_REPORT_KEYS,
   SUGGESTION_KEYS,
   SUGGEST_KEYS,
+  requireArrayShape,
   requireItemShape,
   requireShape,
 } from "./restaurantShape"
@@ -86,13 +91,21 @@ import type {
   SearchSuggestResponse,
   SortOption,
 } from "@/src/features/restaurant/types"
+import { reviewSubmitBody } from "@/src/features/restaurant/utils/reviewDraft"
 
 /* ────────────────────────── 레거시 경로 (지우지 않는다) ────────────────────────── */
 
 /**
- * `GET /restaurants/nearby` 응답. 새 지도 화면은 `/map`+`/search` 를 쓰지만
- * `app/(tabs)/restaurant.tsx` 와 `tests/restaurantI18n.test.ts` 가 아직 이 경로를 쓴다.
- * **누락돼 있던 필드를 채웠다** — 백엔드 `cardPayload` 가 실제로 주는 값들이다.
+ * `GET /restaurants/nearby` 응답.
+ *
+ * **오늘 이 경로를 부르는 화면은 없다.** 이 주석은 한동안 `app/(tabs)/restaurant.tsx` 가
+ * 쓴다고 적혀 있었지만 사실이 아니다 — 그 탭은 `RestaurantMapScreen` 을 세우고 질의는
+ * `useMapSearch`/`useRestaurantList`(= `/map`+`/search`)가 한다. `fetchNearby` 의 호출부는
+ * 테스트 둘뿐이다(`restaurantI18n`·`restaurantResponseGuards`).
+ *
+ * 그런데도 지우지 않는 이유는 **배포된 구버전 빌드**다. 스토어에 나가 있는 앱이 아직 이
+ * 경로를 부르고 있어서 서버 라우트가 살아 있고, 그 빌드가 다 사라지기 전까지 이쪽 계약도
+ * 같이 남는다. 타입은 백엔드 `cardPayload` 가 실제로 주는 값에 맞춰 채워 뒀다.
  */
 export interface NearbyRestaurantItem {
   restaurantId: number
@@ -213,7 +226,13 @@ export const restaurantService = {
           nutritionTags.length > 0 ? nutritionTags.join(",") : undefined,
       },
     })
-    return response.data.result as NearbyRestaurantItem[]
+    /* 이 경로만 **최상위가 배열**이다(다른 응답과 달리 봉투가 없다). `requireShape` 는
+       배열을 거절하므로 여기서는 `requireArrayShape` 를 쓴다. */
+    return requireArrayShape<NearbyRestaurantItem>(
+      response.data.result,
+      "GET /restaurants/nearby",
+      NEARBY_CARD_KEYS,
+    )
   },
 
   /**
@@ -257,8 +276,18 @@ export const restaurantService = {
       "GET /restaurants/map",
       MAP_KEYS,
     )
-    requireItemShape(result.markers, "GET /restaurants/map", MAP_MARKER_KEYS)
-    requireItemShape(result.clusters, "GET /restaurants/map", MAP_CLUSTER_KEYS)
+    requireItemShape(
+      result.markers,
+      "GET /restaurants/map",
+      MAP_MARKER_KEYS,
+      "markers",
+    )
+    requireItemShape(
+      result.clusters,
+      "GET /restaurants/map",
+      MAP_CLUSTER_KEYS,
+      "clusters",
+    )
     return result
   },
 
@@ -341,6 +370,7 @@ export const restaurantService = {
       result.suggestions,
       "GET /restaurants/search/suggest",
       SUGGESTION_KEYS,
+      "suggestions",
     )
     return result
   },
@@ -367,7 +397,27 @@ export const restaurantService = {
     const response = await api.post("/restaurants/ai-search", payload, {
       signal,
     })
-    return response.data.result as AiSearchResult
+    /*
+      **여기까지 왔으면 200 이다.** 이 라우트는 조건부 등록이라(서버 `routes.ts` E4)
+      모델 의존성이 없는 서버에는 경로가 아예 없고 404 가 온다 — 그건 axios 가 먼저
+      던지므로 아래 검사에 닿지 않는다. 순서를 뒤집어 응답 본문을 먼저 검사하면 "없는
+      기능" 이 "형식이 어긋났어요" 로 바뀌어 사용자에게 나간다. 바꾸지 말 것.
+    */
+    const endpoint = "POST /restaurants/ai-search"
+    const result = requireShape<AiSearchResult>(
+      response.data.result,
+      endpoint,
+      AI_SEARCH_KEYS,
+    )
+    // `filters` 는 중첩이라 최상위 검사가 안을 보지 않는다. 세 배열은 시트가 `for...of`
+    // 로 바로 도는 자리다(`AiSearchSheet.filterLabelKeys`).
+    requireShape<AiSearchResult["filters"]>(
+      result.filters,
+      endpoint,
+      AI_SEARCH_FILTER_KEYS,
+      "filters",
+    )
+    return result
   },
 
   /** E5 `GET /restaurants/regions` — 지역 facet 트리(칩에 실제 개수를 붙이기 위한 것). */
@@ -380,7 +430,12 @@ export const restaurantService = {
     )
     // `labelKey` 가 없으면 칩이 빈 글자가 된다(서버가 표시 문구를 보내지 않으므로
     // 폴백할 곳이 아예 없다). `sidos` 만 보면 충분하다 — `groups` 는 같은 조립 함수가 만든다.
-    requireItemShape(result.sidos, "GET /restaurants/regions", REGION_SIDO_KEYS)
+    requireItemShape(
+      result.sidos,
+      "GET /restaurants/regions",
+      REGION_SIDO_KEYS,
+      "sidos",
+    )
     return result
   },
 
@@ -447,7 +502,9 @@ export const restaurantService = {
       endpoint,
       HOURS_KEYS,
     )
-    requireShape(result.today, `${endpoint} 의 today`, HOURS_TODAY_KEYS)
+    /* 위치는 `at` 인자로 말한다 — 엔드포인트 문자열에 섞으면 `endpoint` 가 기계 분류용
+       값이 아니게 되고, 같은 파일 안에 중첩 표기 관습이 두 벌 생긴다. */
+    requireShape(result.today, endpoint, HOURS_TODAY_KEYS, "today")
     return result
   },
 
@@ -459,8 +516,14 @@ export const restaurantService = {
    * 읽다 터졌다 — 성공 토스트가 뜬 직후 실패 토스트가 이어지는 증상이다. 캐스트는
    * 컴파일 타임에 아무것도 검사하지 않으므로 `requireShape` 로 실제 모양을 본다.
    *
-   * `photosIndexed` 는 **`-1` 이 실패**다. 후기 본문은 저장됐는데 사진만 색인에
-   * 실패한 상태라 등록 자체를 실패로 접으면 안 된다 — 사용자가 같은 글을 또 쓴다.
+   * `photosIndexed` 는 **혼자서는 성공·실패를 못 가린다**: `-1` 은 사진이 있었는데 색인
+   * 실패, `0` 은 사진이 없었다는 뜻이다. 보낸 장수와 함께 읽어야 한다 —
+   * `reviewDraft.ts::reviewPhotoOutcome` 이 그 판정의 정본이고, 화면은 그것만 본다.
+   * 어느 경우든 등록 자체를 실패로 접으면 안 된다 — 사용자가 같은 글을 또 쓴다.
+   *
+   * 본문은 `reviewSubmitBody` 로 조립한다. `payload` 를 그대로 던지면 필드 이름이 갈려도
+   * 아무도 안 터진다(서버 TypeBox 는 non-strict 라 모르는 키를 그냥 통과시킨다) —
+   * 한 곳으로 모아 두어야 계약 테스트가 서버 스키마와 대조할 수 있다.
    */
   async createReview(
     restaurantId: number,
@@ -468,17 +531,20 @@ export const restaurantService = {
   ): Promise<{ review: ReviewDto; photosIndexed: number }> {
     const response = await api.post(
       `/restaurants/${restaurantId}/reviews`,
-      payload,
+      reviewSubmitBody(payload),
     )
     const result = requireShape<{ review: ReviewDto; photosIndexed: number }>(
       response.data.result,
       "POST /restaurants/:id/reviews",
       REVIEW_CREATE_KEYS,
     )
+    /* 위치를 `at` 으로 넘긴다. 안 넘기면 봉투가 통째로 비었을 때와 봉투 **안**의 후기가
+       비었을 때가 같은 문장으로 나와서, 서버를 볼지 후기 조립을 볼지 알 수 없다. */
     requireShape(
       result.review,
       "POST /restaurants/:id/reviews",
       REVIEW_ITEM_KEYS,
+      "review",
     )
     return result
   },
@@ -520,16 +586,35 @@ export const restaurantService = {
     return result
   },
 
-  /** E11 `POST /restaurants/reviews/:id/report` — 신고. */
+  /**
+   * E11 `POST /restaurants/reviews/:id/report` — 신고.
+   *
+   * 같은 사람의 두 번째 신고는 오류가 아니라 **200 + `alreadyReported: true`** 다
+   * (중복은 `uq_restaurant_review_report` 가 막고, 서버는 상태 코드를 가르지 않는다).
+   * 그래서 그 값을 타입에 싣는다 — 버리면 시트가 이미 접수된 신고를 방금 접수된 것처럼
+   * 말한다. 키가 항상 온다는 근거는 `REVIEW_REPORT_KEYS` 머리말에 적었다.
+   */
   async reportReview(
     reviewId: number,
     payload: ReviewReportPayload,
-  ): Promise<{ reviewId: number; status: string }> {
+  ): Promise<{
+    reviewId: number
+    status: string
+    alreadyReported: boolean
+  }> {
     const response = await api.post(
       `/restaurants/reviews/${reviewId}/report`,
       payload,
     )
-    return response.data.result as { reviewId: number; status: string }
+    return requireShape<{
+      reviewId: number
+      status: string
+      alreadyReported: boolean
+    }>(
+      response.data.result,
+      "POST /restaurants/reviews/:id/report",
+      REVIEW_REPORT_KEYS,
+    )
   },
 
   /**
@@ -581,18 +666,22 @@ export const restaurantService = {
 
   /**
    * `GET /restaurants/:id` — 상세.
-   * `userLat`/`userLng` 를 주면 거리도 계산해 준다(없으면 거리 줄을 감춘다).
+   *
+   * ## 좌표를 보내지 않는다 — **여기서 거리는 오지 않는다**
+   *
+   * 앱은 오랫동안 `userLat`/`userLng` 를 실어 보냈고 이 주석은 "거리도 계산해 준다" 고
+   * 적혀 있었다. 둘 다 사실이 아니었다. 서버 핸들러는 이 경로의 `query` 를 아예
+   * 구조분해하지 않고(`domains/restaurant/routes.ts` 의 `.get("/:restaurant_id")`),
+   * `getRestaurantDetail` 도 앵커 좌표를 인자로 받지 않는다. 응답 DTO
+   * (`RestaurantDetailDto`)에는 `distanceKm` 필드 자체가 없다.
+   *
+   * 즉 이 파라미터는 **캐시 키와 로그만 늘리고 아무 일도 하지 않았다.** 다시 붙이지 말 것 —
+   * 거리가 필요하면 목록·지도 카드의 `distanceKm` 에서 온다(`/search` 가 앵커를 받아
+   * 같은 공식으로 계산한다). 상세만 열어 둔 화면에서 거리를 말하려면 서버 E-계약이
+   * 앵커를 받도록 먼저 바꿔야 하고, 그 길은 `useSelectedFirstList` 머리말의 (b) 다.
    */
-  async fetchDetail(
-    restaurantId: number,
-    params: { userLat?: number | null; userLng?: number | null } = {},
-  ): Promise<RestaurantDetailDto> {
-    const response = await api.get(`/restaurants/${restaurantId}`, {
-      params: {
-        userLat: params.userLat ?? undefined,
-        userLng: params.userLng ?? undefined,
-      },
-    })
+  async fetchDetail(restaurantId: number): Promise<RestaurantDetailDto> {
+    const response = await api.get(`/restaurants/${restaurantId}`)
     return requireShape<RestaurantDetailDto>(
       response.data.result,
       "GET /restaurants/:id",
@@ -616,7 +705,7 @@ export const restaurantService = {
       MENUS_KEYS,
     )
     // 판정 삼각형이 빠지면 근거 없는 빈 배지가 그려진다 — 조용히 넘기지 않는다.
-    requireItemShape(result.menus, endpoint, MENU_KEYS)
+    requireItemShape(result.menus, endpoint, MENU_KEYS, "menus")
     return result
   },
 }

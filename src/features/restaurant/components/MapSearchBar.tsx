@@ -31,7 +31,7 @@ import {
   useV2Theme,
 } from "@/src/design-system-v2"
 
-import { FLOATING_SHADOW } from "./mapFloating"
+import { FLOATING_SHADOW, mapOverlayChrome } from "./mapFloating"
 
 /** 목업 h48. `controlHeight.lg` 와 같은 값이다. */
 const HEIGHT = 48
@@ -53,18 +53,12 @@ export function MapSearchBar({
   style,
 }: MapSearchBarProps) {
   const { t } = useTranslation("common")
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
   const hasQuery = query.trim().length > 0
+  const chrome = mapOverlayChrome({ mode, ...colors })
 
   return (
-    <View
-      style={[
-        styles.root,
-        FLOATING_SHADOW,
-        { backgroundColor: colors.background.default },
-        style,
-      ]}
-    >
+    <View style={[styles.root, FLOATING_SHADOW, chrome, style]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("restaurant.searchAccessibility")}

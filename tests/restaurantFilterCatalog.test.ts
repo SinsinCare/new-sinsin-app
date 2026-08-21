@@ -123,15 +123,45 @@ describe("hasUnbackedSelection — 빈 상태 문구를 고르는 근거", () =>
 })
 
 describe("칩 레일 (지도 홈)", () => {
-  it("목업 순서 6칩이고 세계음식은 레일에 없다", () => {
+  /*
+    2026-08-21. 레일 순서를 잡는 테스트가 없어서, 구현이 `CUISINE_TYPES.filter(onRail)`
+    로 카탈로그 순서를 그대로 흘려보내는 것을 아무도 못 봤다 — 화면에 보이는 다섯 칩 중
+    다섯 번째가 시안의 `샐러드` 가 아니라 `양식` 이었다.
+  */
+  it("순서는 시안(A3_1·A6_1)이 정한다 — 네 번째가 `샐러드` 다", () => {
     expect(RAIL_CUISINE_TYPES.map((c) => c.value)).toEqual([
       "KOREAN",
       "CHINESE",
       "JAPANESE",
-      "WESTERN",
       "SALAD",
+      "WESTERN",
       "DESSERT",
     ])
+    // 시안에서 실제로 화면에 보이는 것은 `AI 검색` 뒤의 네 칩까지다. 라벨로도 못 박는다.
+    expect(
+      RAIL_CUISINE_TYPES.slice(0, 4).map(
+        (c) =>
+          koCommon.restaurant.cuisine[
+            c.value as keyof typeof koCommon.restaurant.cuisine
+          ],
+      ),
+    ).toEqual(["한식", "중식", "일식", "샐러드"])
+  })
+
+  it("그 순서는 카탈로그 순서와 **다르다** — filter() 로 되돌리면 여기서 걸린다", () => {
+    // 필터 시트는 목업 -23 의 `한식 중식 일식 양식 …` 을 그대로 쓴다. 두 줄이 갈린다.
+    const catalogOrder = CUISINE_TYPES.filter((c) => c.onRail).map(
+      (c) => c.value,
+    )
+    expect(catalogOrder).not.toEqual(RAIL_CUISINE_TYPES.map((c) => c.value))
+    expect(catalogOrder[3]).toBe("WESTERN")
+  })
+
+  it("`양식` 을 빼지 않았다 — 순서만 밀렸다 (기능 후퇴 금지)", () => {
+    expect(RAIL_CUISINE_TYPES.map((c) => c.value)).toContain("WESTERN")
+    expect(RAIL_CUISINE_TYPES).toHaveLength(
+      CUISINE_TYPES.filter((c) => c.onRail).length,
+    )
     // ETC 는 DB 에 28건이 있어 필터 시트에는 필요하지만 목업 레일에는 없다.
     expect(RAIL_CUISINE_TYPES.map((c) => c.value)).not.toContain("ETC")
     expect(CUISINE_TYPES.map((c) => c.value)).toContain("ETC")

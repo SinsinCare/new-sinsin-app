@@ -46,11 +46,49 @@ import {
 import { showSuccessToast } from "@/src/lib/toast"
 import { normalizeHttpsUrl, phoneUrl } from "@/src/shared/utils/externalUrl"
 
-import { ITEM_GAP, ROW_ICON_GAP } from "../../layout"
+import { ROW_ICON, ROW_ICON_GAP } from "../../layout"
 import { useRestaurantHours } from "../../hooks/useRestaurantHours"
 import type { RestaurantDetailDto, TodayHoursDto } from "../../types"
 import { AddressBlock } from "../AddressBlock"
 import { BusinessStatusText } from "../BusinessStatusText"
+
+/**
+ * 행 본문의 타이포. 시안(C1_2) 3배 렌더에서 네 행 전부 **13pt** 다 — 한글 음절 이송이
+ * `서울/강남구/선릉로86길`(주소) 33.6px · `까지`(영업시간) 34px 이고, 0.864em 으로 나누면
+ * 12.96 · 13.1 이다(15 였다면 38.9px 여야 한다). 숫자만 있는 전화번호도 잉크 높이 28px 로
+ * 같은 값이다. 앞 판본의 `subtext.large`(15/20)는 두 단계 위였다.
+ */
+const ROW_TEXT = typography.subtext.medium
+
+/**
+ * 정보 행의 세로 피치. 아이콘 상자(`ROW_ICON` 20) + 행 간격(`ROW_ICON_GAP` 8) = **28**,
+ * 시안 실측값이다(주소→전화 28.0 · 전화→링크 28.0).
+ */
+const ROW_PITCH = ROW_ICON + ROW_ICON_GAP
+
+/**
+ * 행 안 텍스트 링크의 hitSlop. **세로만 좁다.**
+ *
+ * 텍스트 링크는 글리프 높이(13pt 본문 = 18)만큼만 차지해서 손끝 최소치 44 에 못 미친다.
+ * 그래서 오랫동안 사방 `spacing[8]` 로 메웠는데, 행 간격이 `ITEM_GAP`(16, 피치 36)에서
+ * `spacing[8]`(피치 28)로 반 줄면서 **위아래 행의 슬롭이 서로 겹치게 됐다** —
+ * 18 + 8×2 = 34 > 28. 겹친 구간의 승자는 z-order 상 뒤에 그려지는 아래 행이라, 위 행
+ * 바로 밑을 겨눈 탭이 아래 행 동작을 실행한다(주소 밑을 누르면 전화가 걸린다).
+ *
+ * 피치 28 은 시안이 정한 값이라 손대지 않는다. 대신 세로 슬롭을 `(피치 − 글리프) / 2`
+ * 로 잡아 두 행의 슬롭이 정확히 맞닿기만 하게 한다: (28 − 18) / 2 = **5**. 가로는 옆
+ * 행이 없으므로 그대로 8 이다.
+ *
+ * 세로 44 를 포기한 것이 아니라, **44 를 채우려다 옆 것을 훔치는 상태**를 그만둔 것이다.
+ * 44 가 꼭 필요하면 글리프 상자를 키워야지 슬롭을 더 벌려서 될 일이 아니다.
+ */
+const ROW_VERTICAL_HIT_SLOP = (ROW_PITCH - ROW_TEXT.lineHeight) / 2
+const ROW_HIT_SLOP = {
+  top: ROW_VERTICAL_HIT_SLOP,
+  bottom: ROW_VERTICAL_HIT_SLOP,
+  left: spacing[8],
+  right: spacing[8],
+} as const
 
 export interface DetailInfoRowsProps {
   restaurantId: number
@@ -139,15 +177,11 @@ export function DetailInfoRows({ restaurantId, detail }: DetailInfoRowsProps) {
               accessibilityRole="link"
               accessibilityState={{ disabled: false }}
               accessibilityLabel={t("restaurant.detail.call")}
-              hitSlop={spacing[8]}
+              hitSlop={ROW_HIT_SLOP}
               style={({ pressed }) => [pressed && styles.pressedText]}
             >
               <Text
-                style={[
-                  typography.subtext.large,
-                  styles.link,
-                  { color: colors.label.normal },
-                ]}
+                style={[ROW_TEXT, styles.link, { color: colors.label.normal }]}
               >
                 {detail.phone}
               </Text>
@@ -203,16 +237,10 @@ function CopyButton({
       accessibilityRole="button"
       accessibilityState={{ disabled: false }}
       accessibilityLabel={label}
-      hitSlop={spacing[8]}
+      hitSlop={ROW_HIT_SLOP}
       style={({ pressed }) => [pressed && styles.pressedText]}
     >
-      <Text
-        style={[
-          typography.subtext.medium,
-          styles.link,
-          { color: colors.primary.primary },
-        ]}
-      >
+      <Text style={[ROW_TEXT, styles.link, { color: colors.primary.primary }]}>
         {label}
       </Text>
     </Pressable>
@@ -231,16 +259,10 @@ function ExternalLink({ label, url }: { label: string; url: string }) {
       accessibilityState={{ disabled: !target }}
       disabled={!target}
       accessibilityLabel={label}
-      hitSlop={spacing[8]}
+      hitSlop={ROW_HIT_SLOP}
       style={({ pressed }) => [pressed && styles.pressedText]}
     >
-      <Text
-        style={[
-          typography.subtext.large,
-          styles.link,
-          { color: colors.label.normal },
-        ]}
-      >
+      <Text style={[ROW_TEXT, styles.link, { color: colors.label.normal }]}>
         {label}
       </Text>
     </Pressable>
@@ -248,7 +270,17 @@ function ExternalLink({ label, url }: { label: string; url: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: ITEM_GAP },
+  /*
+    행 사이 8. 시안(C1_2) 3배 렌더에서 아이콘 잉크의 세로 중심을 재면 행 피치가
+    **28.0pt** 로 일정하다(주소→전화 28.0 · 전화→링크 28.0). 행 높이를 정하는 것은
+    둘 중 큰 쪽인 아이콘 상자(`iconSize.sm` 20)이고(본문 `ROW_TEXT` 는 18),
+    20 + 8 = 28 이 그 값이다. 이 피치가 `ROW_HIT_SLOP` 의 세로 한도를 정한다.
+
+    앞 판본은 `ITEM_GAP`(16, 목록 항목 간격)을 썼다 — 피치 36 이라 네 줄이 한 문단이
+    아니라 네 개의 항목처럼 흩어졌다. 카드 면이 사라진 지금은 이 간격이 "이 넷은 한
+    덩어리" 를 말하는 유일한 장치이므로 항목 간격이 아니라 문단 행간을 쓴다.
+  */
+  container: { gap: spacing[8] },
   /*
     아이콘은 첫 줄에 맞춘다 — 주소가 세 줄로 늘어나도 아이콘이 가운데로 떠내려가지 않게.
 

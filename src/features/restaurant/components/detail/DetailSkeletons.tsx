@@ -6,8 +6,15 @@
  * 다시 펼쳐지는 것이 눈에 띈다. 탭마다 자기 모양을 미리 그려 두면 전환이 "채워지는" 것으로
  * 보인다.
  *
- * 치수는 각 탭이 실제로 쓰는 값에서 가져온다 — 메뉴 썸네일 88×72, 후기 아바타 40,
- * 사진 2열 masonry. 눈대중으로 잡으면 도착 순간 어긋난다.
+ * 치수는 각 탭이 실제로 쓰는 값에서 **가져온다**. 눈대중으로 잡으면 도착 순간 어긋난다.
+ *
+ * ## 숫자를 베끼지 말고 import 할 것
+ *
+ * 이 머리말은 한동안 `메뉴 썸네일 88×72` 라고 적혀 있었고 아래 상수도 그랬다. 그 사이
+ * `MenuRow` 의 썸네일은 정사각 86 으로 바뀌었고(시안 C1_2 실측), 스켈레톤만 옛 치수로
+ * 남아 로딩→도착 순간 가로 2pt·세로 14pt 가 튀었다 — 이 파일이 존재하는 이유를 정확히
+ * 위반한 것이다. 그래서 메뉴 썸네일은 `MenuRow` 가 export 하는 값을 그대로 쓴다.
+ * 아직 미러인 것(후기 아바타 40 · 사진 2열)도 같은 방식으로 옮길 것.
  */
 
 import { StyleSheet, View, useWindowDimensions } from "react-native"
@@ -21,9 +28,8 @@ import {
 } from "@/src/design-system-v2"
 
 import { GUTTER } from "../../layout"
+import { THUMBNAIL as MENU_THUMBNAIL } from "./MenuRow"
 
-/** MenuRow 의 썸네일 (MenuRow.tsx THUMBNAIL) */
-const MENU_THUMBNAIL = { width: 88, height: 72 } as const
 /** ReviewCard 의 아바타 (ReviewCard.tsx AVATAR_SIZE) */
 const REVIEW_AVATAR = 40
 /** PhotoTab 의 격자 (COLUMNS · GAP) */
@@ -48,8 +54,8 @@ export function MenuTabSkeleton({ count = 4 }: MenuTabSkeletonProps) {
             <V2Skeleton width="80%" height={13} />
           </View>
           <V2Skeleton
-            width={MENU_THUMBNAIL.width}
-            height={MENU_THUMBNAIL.height}
+            width={MENU_THUMBNAIL}
+            height={MENU_THUMBNAIL}
             radius="sm"
           />
         </View>

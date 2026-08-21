@@ -231,6 +231,7 @@ export function ReviewerProfileScreen({
           같은 404 다. 재시도가 상태를 바꿀 수 있을 때만 버튼을 준다.
         */}
         <V2ErrorState
+          surface="restaurant_reviewer"
           title={resolved.title}
           description={resolved.body}
           {...retry}
@@ -393,12 +394,14 @@ export function ReviewerProfileScreen({
             <ReviewTabSkeleton />
           ) : tab === TAB_POSTS ? (
             <V2EmptyState
+              surface="restaurant_reviewer"
               icon="book"
               title={t("restaurant.reviewer.postsEmptyTitle")}
               description={t("restaurant.reviewer.postsEmptyBody")}
             />
           ) : reviewsAvailable ? (
             <V2EmptyState
+              surface="restaurant_reviewer"
               icon="chat"
               title={t("restaurant.empty.reviewTitle")}
               description={t("restaurant.empty.reviewBody")}
@@ -407,6 +410,7 @@ export function ReviewerProfileScreen({
             /* 서버가 이 목록을 주지 않는다(계약 E13). `후기가 없어요` 로 쓰면
                "이 사람은 후기를 안 썼다" 는 거짓이 되므로 문구를 분리한다. */
             <V2EmptyState
+              surface="restaurant_reviewer"
               icon="chat"
               title={t("restaurant.reviewer.reviewsUnavailableTitle")}
               description={t("restaurant.reviewer.reviewsUnavailableBody")}

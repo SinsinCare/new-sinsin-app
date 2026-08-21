@@ -156,6 +156,7 @@ export function ReviewTab({
   if (isError) {
     return (
       <V2ErrorState
+        surface="restaurant_detail_review"
         title={t("restaurant.error.detailTitle")}
         description={t("restaurant.error.detailBody")}
         onRetry={refetch}
@@ -268,6 +269,7 @@ export function ReviewTab({
 
       {reviews.length === 0 ? (
         <V2EmptyState
+          surface="restaurant_detail_review"
           title={t("restaurant.empty.reviewTitle")}
           description={t("restaurant.empty.reviewBody")}
         />

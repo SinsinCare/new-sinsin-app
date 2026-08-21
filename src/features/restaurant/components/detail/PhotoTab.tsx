@@ -325,13 +325,17 @@ export function PhotoTab({
         <PhotoTabSkeleton />
       ) : isError ? (
         <V2ErrorState
+          surface="restaurant_detail_photo"
           title={t("restaurant.error.detailTitle")}
           description={t("restaurant.error.detailBody")}
           onRetry={refetch}
           retryLabel={t("restaurant.error.detailRetry")}
         />
       ) : photos.length === 0 ? (
-        <V2EmptyState title={t("restaurant.empty.photoTitle")} />
+        <V2EmptyState
+          surface="restaurant_detail_photo"
+          title={t("restaurant.empty.photoTitle")}
+        />
       ) : (
         <View style={styles.masonry}>
           {columns.map((bucket, columnIndex) => (

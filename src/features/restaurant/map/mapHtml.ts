@@ -57,16 +57,122 @@
  * "이미 `limit` 에 잘려서 받은 마커 수" 라 참값이 아니다.
  */
 
-import { MAP_FONT_FACE_CSS } from "./mapFont.generated"
-import { MAP_NAMESPACE, MAP_ZOOM, type LatLng } from "./mapBridge"
+import {
+  primitives,
+  semanticDark,
+  semanticLight,
+} from "@/src/design-system-v2/tokens/colors"
 
-/** 디자인 토큰과 같은 값. WebView 안이라 토큰 모듈을 import 할 수 없어 리터럴이다. */
-const BRAND = "#FE7139"
+import { MAP_FONT_FACE_CSS } from "./mapFont.generated"
+import {
+  MAP_NAMESPACE,
+  MAP_ZOOM,
+  type LatLng,
+  type MapColorScheme,
+} from "./mapBridge"
+
+/*
+ * ## 색은 토큰에서 온다 — 이 모듈은 WebView 가 아니라 RN 번들에서 돈다
+ *
+ * "생성 HTML 은 토큰 런타임을 볼 수 없다" 는 말은 이 파일에 해당하지 않는다. 여기서
+ * 도는 코드는 평범한 RN 모듈이고, 문자열 보간도 **RN 쪽에서** 끝난 뒤 완성된 HTML 만
+ * WebView 로 건너간다(아래 MAP_TILE_FILTER 등이 JSON.stringify 로 주입되는 것과 같다).
+ * 그러므로 지도 색에 리터럴 hex 를 새로 박을 이유가 없다 — 토큰에서 파생시킨다.
+ * 파생할 토큰이 정말 없는 값(카카오 타일 바닥색)만 예외이고, 그 자리에는 왜 없는지를
+ * 적는다.
+ */
+
+/** 브랜드 정본. 라이트·다크 모두 같은 값이라 시맨틱이 아니라 원시색에서 받는다. */
+const BRAND = primitives.orange[700] // #fe7139
+
+/**
+ * Kakao Web API에는 다크 베이스맵 옵션이 없다(ROADMAP/SKYVIEW 등 타입만 제공).
+ * 타일 이미지만 필터링해 CustomOverlay 마커·클러스터는 원색을 유지한다.
+ *
+ * 다크 필터 순서:
+ *  - invert + hue-rotate: 흰 도로면을 어둡게, 검은 라벨을 밝게 뒤집되 색상 방향 복원
+ *  - saturate: POI 색이 브랜드 오렌지 마커와 경쟁하지 않게 낮춤
+ *  - brightness/contrast: #1f1f21 앱 바닥과 자연스럽게 이어지는 명도 범위로 조정
+ */
+export const MAP_TILE_FILTER: Readonly<Record<MapColorScheme, string>> = {
+  light: "saturate(0.55) brightness(1.03)",
+  dark: "invert(0.9) hue-rotate(180deg) saturate(0.38) brightness(0.78) contrast(0.92)",
+}
+
+/**
+ * 타일 사이가 비거나 로딩 중일 때 보이는 WebView 바닥.
+ *
+ * 라이트 값은 디자인 토큰이 아니라 **카카오 베이스맵의 지면색**이다(타일 사이가 벌어졌을
+ * 때 이음매가 안 보이게 하는 것이 목적이므로, 앱 배경색과 같아지면 오히려 틈이 드러난다).
+ * 대응 토큰이 없어 리터럴로 남긴다 — 토큰 팔레트에 이 색이 없는 것이 그 근거다.
+ */
+export const MAP_BACKGROUND: Readonly<Record<MapColorScheme, string>> = {
+  // eslint-disable-next-line no-restricted-syntax -- 카카오 타일 지면색. 대응하는 디자인 토큰이 없다.
+  light: "#EAE8E4",
+  dark: semanticDark.background.default, // #1f1f21
+}
+
+/**
+ * 클러스터 깊이. 라이트에서 오렌지 광원을 쓰면 흰 지도 위에 네온처럼 번지므로
+ * 중립 그림자를 쓴다. 다크에서는 어두운 타일에서 브랜드 클러스터를 분리하는 정도의
+ * 오렌지 깊이를 유지하되 기존 0.42보다 낮춘다.
+ */
+export const MAP_CLUSTER_SHADOW: Readonly<Record<MapColorScheme, string>> = {
+  light: "0 1px 4px rgba(42,42,55,0.18)",
+  dark: "0 2px 10px rgba(254,113,57,0.32)",
+}
+
+/**
+ * ── 식당 마커 (시안 정본, 2026-08-20) ──────────────────────────
+ *
+ * 시안(Figma Light)의 마커는 **도넛**이다. 원본 SVG 가 마커마다 이 두 원을 그린다:
+ *
+ *     g filter=drop-shadow
+ *       circle r=10 fill=#F9FAFB                    ← 원판, 지름 20
+ *       circle r=8  stroke=#FE7139 stroke-width=4   ← 링, r 6~10 구간
+ *
+ * 3배 렌더 타일에서 잰 값도 같다(A3_1 의 마커 5개 · A3_2 · A4_1 전부): 바깥 60px,
+ * 링 띠 12px, 안쪽 36px → 3으로 나눠 **바깥 20 · 링 4 · 안쪽 12**.
+ *
+ * 즉 시안의 채움은 **브랜드색이 아니다.** 종전 구현(흰 채움 + 브랜드 링 3)과 다른 것은
+ * 링 두께와 원판 색뿐이므로 채움/링을 뒤집지 않는다 — 뒤집으면 아래 `.mk.sel` 의
+ * 선택 표현(채움 반전)과 기본이 같은 모습이 되어 **선택이 안 보인다.**
+ * ('브랜드 채움 + 밝은 테두리' 는 시안에서 마커가 아니라 **내 위치 점**의 모습이다:
+ *  같은 SVG 에 circle r=8.25 fill=#FE7139 stroke=#F9FAFB stroke-width=2.5 로 있다.)
+ *
+ * 원판 색 #f9fafb 는 grayscale.50 — 모드에 걸리지 않은 원시색이라 다크에서도 그대로
+ * 둔다(오늘의 #fff 과 같은 자리이며, 어두운 타일 위에서 링 안이 '뚫린 구멍'으로 읽힌다).
+ */
+export const MAP_MARKER_SIZE = 20
+export const MAP_MARKER_RING = 4
+export const MAP_MARKER_FILL = primitives.grayscale[50] // #f9fafb
+/**
+ * 마커 그림자. 시안의 Figma 필터는 offset 없음 · feGaussianBlur stdDeviation 1 ·
+ * 색 rgb(55,56,60) alpha 0.51 이다. CSS blur 반경은 stdDeviation 의 2배라 2px 이고,
+ * 그 색은 label.alternative(#37383c82)와 같은 값이다(0x82 = 130/255 = 0.51).
+ * 실측으로도 링 바로 바깥 픽셀이 #D0D0D1 로 한 단 어둡다.
+ */
+export const MAP_MARKER_SHADOW = "0 0 2px rgba(55,56,60,0.51)"
+
+/**
+ * 상호명 라벨 색. 시안은 **브랜드색이 아니라 본문색**으로 적는다 — 3배 타일에서 라벨
+ * 글자의 잉크가 전부 #2A2A37(= label.normal)이었고 #FE7139 는 한 픽셀도 없었다.
+ * 마커가 이미 브랜드색이므로 라벨까지 주황이면 지도 위 주황 면적이 두 배가 되고,
+ * 카카오 기본 지도의 주황 POI 라벨과도 섞인다.
+ *
+ * 다크에서 #2a2a37 을 그대로 쓰면 halo(#1f1f21)와 같은 어둠에 묻혀 **글자가 사라진다.**
+ * 그래서 halo 와 똑같이 모드별 값을 주입한다(다크의 label.normal 은 grayscale.50).
+ */
+export const MAP_LABEL_COLOR: Readonly<Record<MapColorScheme, string>> = {
+  light: semanticLight.label.normal, // #2a2a37
+  dark: semanticDark.label.normal, // #f9fafb
+}
 
 export interface MapHtmlOptions {
   jsKey: string
   center: LatLng
   level?: number
+  colorScheme?: MapColorScheme
 }
 
 /**
@@ -83,6 +189,7 @@ export function buildMapHtml({
   jsKey,
   center,
   level = MAP_ZOOM.DEFAULT,
+  colorScheme = "light",
 }: MapHtmlOptions): string {
   /*
    * ## referrer 를 보내지 않는다 — 지도 생사를 카카오 콘솔에서 분리한다 (2026-08-05)
@@ -116,9 +223,9 @@ ${MAP_FONT_FACE_CSS}
   /* 텍스트 선택·콜아웃을 끈다. 마커 라벨/말풍선은 글자라서 롱프레스하면 iOS 가 돋보기와
      복사 메뉴를 띄우고, 그 뒤 첫 탭이 메뉴 닫기에 소비돼 마커가 안 열린다.
      상속되므로 자식 셀렉터를 따로 두지 않는다. */
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #EAE8E4;
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: ${MAP_BACKGROUND[colorScheme]};
                -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  #map { width: 100%; height: 100%; }
+  #map { width: 100%; height: 100%; background: ${MAP_BACKGROUND[colorScheme]}; }
 
   /* 기본 지도 톤 다운.
      카카오 JS SDK 는 지도 스타일 API 가 없다(네이티브 v2 전용). 대신 타일이 <img>
@@ -148,15 +255,28 @@ ${MAP_FONT_FACE_CSS}
      보이는 요소를 키우는 대신 이걸 쓴다 — 시각 크기는 디자인이 정한 값이다. */
   .mk .hit { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; }
 
-  /* 기본 마커: 흰 채움 + 브랜드 링. 목업의 링 마커 그대로. */
-  .mk .ring { position: absolute; left: -10px; top: -10px; width: 20px; height: 20px;
-              border-radius: 50%; background: #fff; border: 3px solid ${BRAND};
-              box-shadow: 0 1px 3px rgba(42,42,55,0.28); box-sizing: border-box; }
+  /* 기본 마커: 밝은 원판 + 브랜드 링(도넛). 치수·색의 근거는 위 MAP_MARKER_* 주석. */
+  .mk .ring { position: absolute; left: ${-MAP_MARKER_SIZE / 2}px; top: ${-MAP_MARKER_SIZE / 2}px;
+              width: ${MAP_MARKER_SIZE}px; height: ${MAP_MARKER_SIZE}px;
+              border-radius: 50%; background: ${MAP_MARKER_FILL}; border: ${MAP_MARKER_RING}px solid ${BRAND};
+              box-shadow: ${MAP_MARKER_SHADOW}; box-sizing: border-box; }
 
-  /* 상호명 라벨. 확대했을 때만 붙는다(겹침 방지). 배경이 무엇이든 읽히도록 흰 외곽선. */
+  /* 상호명 라벨. 확대했을 때만 붙는다(겹침 방지). 배경이 무엇이든 읽히도록 외곽선.
+     halo 색은 applyMapColorScheme 이 타일 바닥에 맞춰 바꾼다.
+
+     13px/600 은 시안과 같다(2026-08-20 확인). 크기는 눈으로 재지 말고 **글자 잉크
+     높이**로 재야 한다: 3배 타일에서 라벨 잉크가 34px 인데, 같은 Pretendard SemiBold
+     로 실제 렌더해 보면 12px→32 · 13px→34 · 14px→38 · 15px→40 이다. 즉 13px 이다.
+     (한글 잉크는 약 0.87em 이라 '지도 pill 이 15px 이니 같아 보이면 15px' 같은 비례
+      추정은 두 단계나 틀린다 — 시안의 pill·칩 쪽이 오히려 13px 이다.)
+
+     색은 var 로 받는다 — 라이트는 본문색, 다크는 밝은 본문색이어야 하고 그 전환을
+     applyMapColorScheme 이 halo 와 한자리에서 한다. var 의 폴백은 초기 모드값이다. */
   .mk .name { position: absolute; left: 0; top: 13px; transform: translateX(-50%);
-              font-size: 13px; font-weight: 600; color: ${BRAND}; white-space: nowrap;
-              text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
+              font-size: 13px; font-weight: 600; white-space: nowrap;
+              color: var(--map-label-color, ${MAP_LABEL_COLOR[colorScheme]});
+              text-shadow: 0 0 3px var(--map-label-halo, #fff), 0 0 3px var(--map-label-halo, #fff),
+                           0 0 3px var(--map-label-halo, #fff), 0 0 2px var(--map-label-halo, #fff); }
 
   /* ── 선택 말풍선 ──
      배치는 **앵커 원점(= 좌표) 기준**이고 부모 상자 크기에 의존하지 않는다:
@@ -193,13 +313,24 @@ ${MAP_FONT_FACE_CSS}
     지도 앱들은 반대로 한다: 선택하면 핀을 **더 또렷하게** 만들고 라벨을 그 위에 얹는다.
     핀이 남아 있어야 '이 말풍선은 저 점의 것' 이 눈으로 이어진다.
 
-    그래서 링은 남기고 **채움을 뒤집는다**(흰 채움 → 브랜드 채움). 선택은 색이 아니라
+    그래서 링은 남기고 **채움을 뒤집는다**(밝은 채움 → 브랜드 채움). 선택은 색이 아니라
     채움의 반전으로 말하므로 색각 이상에서도 갈린다. 상호명 라벨(.name)만 숨긴다 —
     말풍선이 같은 이름을 더 크게 말하고 있어서 두 번 적을 이유가 없다.
+
+    §반전이 성립하려면 기본이 채움이 아니어야 한다 (2026-08-20)
+
+    시안에 맞춰 링을 3 → 4 로 두껍게 하면서도 **채움/링을 뒤집지 않은 이유가 여기다.**
+    기본을 '브랜드 채움 + 밝은 테두리' 로 바꾸면 선택 상태와 같은 모습이 되고, 그러면
+    선택을 말하는 것은 말풍선 하나뿐이 된다 — 말풍선은 겹침 판정에 밀려 위치가 달라지고
+    화면 밖으로도 나가므로, 점 자체가 달라지지 않으면 '어느 점을 골랐는지' 를 잃는다.
+    시안의 마커도 도넛이므로(위 MAP_MARKER_* 주석) 반전은 시안과 어긋나지도 않는다.
+
+    두 상태는 정확히 서로의 반전이다 — 같은 두 색을 채움/테두리에서 맞바꾼다. 깊이도
+    한 단 다르다(기본은 시안의 0 0 2px, 선택은 더 깊고 아래로 진 그림자).
   */
   .mk.sel .bubble { display: inline-flex; }
   .mk.sel .name { display: none; }
-  .mk.sel .ring { background: ${BRAND}; border-color: #fff;
+  .mk.sel .ring { background: ${BRAND}; border-color: ${MAP_MARKER_FILL};
                   box-shadow: 0 2px 6px rgba(42,42,55,0.32); }
 
   /* ── 클러스터: 개수 배지. 구간별로 크기를 키운다. ──
@@ -223,7 +354,7 @@ ${MAP_FONT_FACE_CSS}
      시스템 글꼴 배율만큼 글자만 키웠다. 그건 RestaurantMapView 의 textZoom 100 이 막는다. */
   .cl { position: relative; border-radius: 50%; background: ${BRAND}; color: #fff;
         font-weight: 700;
-        box-shadow: 0 2px 10px rgba(254,113,57,0.42);
+        box-shadow: var(--cluster-shadow);
         /* 반투명 흰 테로 배경 지도와 분리한다. */
         border: 3px solid rgba(255,255,255,0.9); box-sizing: border-box; }
   .cl .n { position: absolute; left: 0; top: 0; right: 0; bottom: 0;
@@ -292,6 +423,23 @@ ${MAP_FONT_FACE_CSS}
   */
   var lastMarkerTapAt = 0;
 
+  /*
+    ── 베이스맵 테마 ────────────────────────────────────────────
+
+    Kakao Web API 는 다크 베이스맵을 제공하지 않는다. 지도 전체에 filter 를 걸면 우리
+    CustomOverlay 마커·클러스터까지 반전되므로, /tile/ 이미지만 골라 칠한다.
+
+    테마를 바꿀 때 HTML 을 다시 만들지 않는다 — WebView 리로드는 SDK 재다운로드,
+    카메라 초기화, 선택 마커 해제를 일으킨다. setColorScheme 명령이 이 변수와 이미
+    그려진 타일을 갱신한다.
+  */
+  var mapColorScheme = ${JSON.stringify(colorScheme)};
+  var TILE_FILTERS = ${JSON.stringify(MAP_TILE_FILTER)};
+  var MAP_BACKGROUNDS = ${JSON.stringify(MAP_BACKGROUND)};
+  var CLUSTER_SHADOWS = ${JSON.stringify(MAP_CLUSTER_SHADOW)};
+  var LABEL_COLORS = ${JSON.stringify(MAP_LABEL_COLOR)};
+  var TILE_FILTER = TILE_FILTERS[mapColorScheme];
+
   function post(type, payload) {
     if (!window.ReactNativeWebView) return;
     window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload || {} }));
@@ -303,6 +451,50 @@ ${MAP_FONT_FACE_CSS}
   function arg(raw) {
     if (raw === undefined || raw === null) return null;
     try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+
+  /** 타일 하나를 현재 테마로 칠한다. 같은 필터면 DOM 쓰기를 건너뛴다. */
+  function toneTileImg(el) {
+    if (!el || el.tagName !== 'IMG') return;
+    var src = el.getAttribute('src') || '';
+    // 카카오 로고·저작권 이미지도 같은 CDN 이다. /tile/ 경로만 베이스맵이다.
+    if (src.indexOf('/tile/') === -1) return;
+    if (el.__sinsinTileFilter === TILE_FILTER) return;
+    el.__sinsinTileFilter = TILE_FILTER;
+    el.style.filter = TILE_FILTER;
+  }
+
+  /** 이미 그려진 타일 전체를 현재 테마로 다시 칠한다. */
+  function toneDownTiles() {
+    try {
+      var root = document.getElementById('map');
+      if (!root) return;
+      var imgs = root.querySelectorAll('img');
+      for (var i = 0; i < imgs.length; i++) toneTileImg(imgs[i]);
+    } catch (e) { /* 스타일 실패가 지도 기능을 죽이면 안 된다 */ }
+  }
+
+  /**
+   * 배경·타일·상호명 외곽선을 한 번에 전환한다.
+   * HTML 은 유지하므로 카메라·마커·선택 상태도 유지된다.
+   */
+  function applyMapColorScheme(next) {
+    mapColorScheme = next === 'dark' ? 'dark' : 'light';
+    TILE_FILTER = TILE_FILTERS[mapColorScheme];
+    var bg = MAP_BACKGROUNDS[mapColorScheme];
+    document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
+    var root = document.getElementById('map');
+    if (root) {
+      root.style.backgroundColor = bg;
+      root.style.setProperty('--cluster-shadow', CLUSTER_SHADOWS[mapColorScheme]);
+      // 상호명 라벨의 흰 외곽선은 다크 타일에서 번져 보인다. 타일 바닥색을 halo 로 쓴다.
+      root.style.setProperty('--map-label-halo', mapColorScheme === 'dark' ? '#1f1f21' : '#ffffff');
+      /* 글자색도 같은 자리에서 뒤집는다. 시안의 라벨은 본문색(label.normal)이라
+         다크에서 라이트 값을 그대로 쓰면 halo 와 같은 어둠에 묻혀 글자가 사라진다. */
+      root.style.setProperty('--map-label-color', LABEL_COLORS[mapColorScheme]);
+    }
+    toneDownTiles();
   }
 
   function clamp(level) { return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, level)); }
@@ -1094,6 +1286,14 @@ ${MAP_FONT_FACE_CSS}
       refreshLabels();
     },
 
+    setColorScheme: function (raw) {
+      var next = arg(raw);
+      applyMapColorScheme(next);
+      // applyMapColorScheme 안에서도 칠하지만 이 호출을 명시적으로 남긴다 —
+      // 동적 전환이 기존 타일까지 갱신한다는 계약을 테스트가 이 지점에서 검증한다.
+      toneDownTiles();
+    },
+
     relayout: function () {
       if (!map) return;
       // 시트 스냅으로 지도의 보이는 높이가 바뀌면 카카오는 스스로 알지 못한다.
@@ -1117,34 +1317,11 @@ ${MAP_FONT_FACE_CSS}
     kakao.maps.event.addListener(map, 'idle', postIdle);
 
     /*
-      기본 지도 톤 다운(스타일 검토, 2026-08-06). 카카오 JS SDK 는 지도 스타일
-      API 가 없어서(네이티브 v2 전용) 이것이 유일한 조절점이다. 기본 스타일의
-      노란 도로·주황/보라 POI 라벨이 브랜드 오렌지 마커·안전 배지와 경쟁하던
-      것을, 타일 팬에만 채도를 내려 해결한다 — 마커는 CustomOverlay 팬이라
-      원색 그대로다. 타일 요소는 src/backgroundImage 에 daumcdn 이 들어 있는
-      것으로 식별하고, 그 부모(타일 팬)에 filter 를 한 번만 건다. 줌 레벨이
-      바뀌면 팬이 새로 생길 수 있어 idle 마다 재확인한다(가드로 중복 방지).
+      초기 배경·타일 필터 적용. 타일 함수는 boot 밖에 있어 setColorScheme 명령도 같은
+      경로를 쓴다 — 초기와 런타임 전환이 갈라지면 한쪽만 다크가 되는 사고가 난다.
     */
-    var TILE_FILTER = 'saturate(0.55) brightness(1.03)';
-    function toneTileImg(el) {
-      /* 타일 URL 만( mts.daumcdn.net/api/v1/tile/… ) — 카카오 로고·저작권 이미지는
-         같은 CDN 이라 호스트로 거르면 로고까지 탁해진다. */
-      if (el.tagName !== 'IMG' || el.__sinsinToned) return;
-      var src = el.getAttribute('src') || '';
-      if (src.indexOf('/tile/') === -1) return;
-      el.__sinsinToned = true;
-      el.style.filter = TILE_FILTER;
-    }
-    function toneDownTiles() {
-      try {
-        var root = document.getElementById('map');
-        if (!root) return;
-        var imgs = root.querySelectorAll('img');
-        for (var i = 0; i < imgs.length; i++) toneTileImg(imgs[i]);
-      } catch (e) { /* 스타일은 실패해도 지도는 살아야 한다 */ }
-    }
-    toneDownTiles();
-    /* 팬·줌으로 새 타일 <img> 가 계속 생긴다 — 옵저버가 붙는 즉시 칠한다. */
+    applyMapColorScheme(mapColorScheme);
+    /* 팬·줌으로 새 타일 <img> 가 계속 생긴다 — 옵저버가 붙는 즉시 현재 테마로 칠한다. */
     try {
       new MutationObserver(function (muts) {
         for (var m = 0; m < muts.length; m++) {

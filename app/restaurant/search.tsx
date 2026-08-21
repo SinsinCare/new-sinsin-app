@@ -9,8 +9,9 @@
  *   블록에서도 0건이 나온다(§F.18 이 같은 함정을 기록한다). 좌표가 있으면 좌표를 쓴다.
  * - **직접 입력** → 리스트 전용 모드(-8/-21).
  *
- * 지역 제안의 좌표는 `/restaurant?lat=..&lng=..` 로 지도 탭에 넘긴다 —
- * `router.push` 로 지도를 한 장 더 쌓으면 WebView 와 카카오 SDK 가 두 번 뜬다.
+ * 지역 제안의 좌표는 `/restaurant?lat=..&lng=..` 로 지도 탭에 **`dismissTo`** 로 넘긴다 —
+ * `push` 는 물론 `navigate` 로도 지도가 한 장 더 쌓여 WebView 와 카카오 SDK 가 두 번 뜬다
+ * (이유는 아래 `selectRegion` 주석).
  */
 
 import { useCallback } from "react"
@@ -64,7 +65,22 @@ export default function RestaurantSearchRoute() {
         })
         return
       }
-      router.navigate({
+      /*
+        `dismissTo`(POP_TO) 다. 이 화면은 루트 Stack 의 `restaurant` 스택 안이라 탭
+        **밖**이고(`app/_layout.tsx` 가 `restaurant` 를 화면으로 등록한다), 거기서
+        `/(tabs)/restaurant` 로 가려 하면 expo-router 가 루트 Stack 에서 갈라진다고 보고
+        화면 이름 `(tabs)` 로 액션을 만든다. `navigate` 는 되돌아가 주지 않는다 —
+        StackRouter 의 NAVIGATE 갈래는 지금 떠 있는 화면과 이름이 같을 때(또는
+        `getId`/`payload.pop` 이 있을 때)만 기존 라우트를 재사용하는데 expo-router 는 둘 다
+        주지 않으므로, `push` 와 똑같이 `["(tabs)","restaurant","(tabs)"]` 가 되어
+        **지도 WebView 와 카카오 SDK 가 두 번 뜬다**(이 파일 머리말이 피하려던 바로 그것).
+        POP_TO 는 이미 있는 `(tabs)` 로 되돌아가면서 params 를 그 라우트에 얹으므로
+        (StackRouter 의 POP_TO 갈래가 `createParamsFromAction` 으로 새 params 를 만들고,
+         `useNavigationBuilder` 가 그 `{screen, params}` 를 이미 떠 있는 탭 네비게이터에
+         NAVIGATE 로 흘려보낸다) 아래 `ts` 재선택 장치도 그대로 산다.
+        근거와 회귀 검사는 `tests/tabRouteNavigation.test.ts`.
+      */
+      router.dismissTo({
         pathname: "/(tabs)/restaurant",
         /*
           `ts` 는 **같은 지역을 다시 고를 수 있게** 하는 값이다. 탭은 언마운트되지 않으므로

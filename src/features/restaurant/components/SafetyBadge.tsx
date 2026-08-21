@@ -21,7 +21,8 @@
  * Bold 를 흉내내면 iOS 에서 가짜 볼드가 되므로 굵기는 포기하고 크기를 맞췄다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
 
 import { radius, spacing, typography, useV2Theme } from "@/src/design-system-v2"

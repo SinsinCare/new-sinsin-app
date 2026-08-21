@@ -34,6 +34,7 @@ import {
 } from "@/src/design-system-v2"
 
 import type { LocationPermissionState } from "../types"
+import { FLOATING_SHADOW } from "./mapFloating"
 
 export interface LocationPermissionBannerProps {
   status: LocationPermissionState
@@ -72,7 +73,11 @@ export function LocationPermissionBanner({
       accessibilityRole="alert"
       style={[
         styles.root,
-        { backgroundColor: colors.primary.primaryWeak },
+        FLOATING_SHADOW,
+        {
+          backgroundColor: colors.primary.primaryWeak,
+          borderColor: colors.line.alternative,
+        },
         style,
       ]}
     >
@@ -135,6 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[12],
     paddingVertical: spacing[10],
     borderRadius: radius.md,
+    borderWidth: 1,
   },
   // 문구가 길어도 액션 버튼을 화면 밖으로 밀지 않는다.
   message: { flex: 1 },

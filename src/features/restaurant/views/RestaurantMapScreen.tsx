@@ -86,6 +86,7 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { TAB_BAR_HEIGHT } from "@/src/shared/utils/bottomSafeArea"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -113,7 +114,6 @@ import {
 } from "../map/RestaurantMapView"
 import { centerFor } from "../data/regionCatalog"
 import { isWithinKakaoCoverage } from "../utils/kakaoCoverage"
-import { isMapTouchEcho } from "../utils/pressIntent"
 import { selectionAfterCardPress } from "../utils/selectedFirstCard"
 import { nextClusterZoom } from "../utils/viewportAction"
 import {
@@ -267,14 +267,16 @@ export function RestaurantMapScreen({
   /**
    * 지도가 마지막으로 처리한 터치의 시각.
    *
-   * 지도(WebView)와 시트는 형제이고, 시트의 카드 press 는 RN 의 JS 리스폰더를 타고 온다.
-   * 그 리스폰더가 제스처 핸들러에게 터치를 빼앗기고도 풀리지 않으면 **지도 위의 마커 탭이
-   * 카드 press 로 배달된다** — 마커를 한 번 눌렀는데 마커가 선택되면서 동시에 목록 첫
-   * 카드의 상세가 push 되던 것이 그것이다(실측 2026-07-31, `utils/pressIntent` 헤더).
+   * **예전에는 이 값이 카드 press 를 막는 데도 쓰였다.** 지도(WebView)와 시트는 형제이고
+   * 카드 press 가 RN 의 JS 리스폰더를 타고 오던 시절에는, 그 리스폰더가 제스처 핸들러에게
+   * 터치를 빼앗기고도 풀리지 않아 **마커 탭이 카드 press 로 배달**됐다(실측 2026-07-31).
+   * 그래서 지도 터치 직후 400ms 동안 카드 press 를 통째로 버렸다.
    *
-   * 그래서 지도가 터치를 처리할 때마다 여기에 시각을 적고, 그 직후에 도착한 카드 press 를
-   * `handlePressCard` 가 버린다. **마커 탭은 절대 상세를 밀어 올리지 않는다** 는 규칙이
-   * 이 ref 한 개로 성립한다.
+   * 그 창은 **손가락에서 정상적인 탭을 잡아먹는다** — 지도를 팬해서 원하는 곳을 찾고 곧장
+   * 카드를 누르는 것은 이 화면의 가장 흔한 동선이다. 카드가 RNGH `Pressable` 이 되면서
+   * 배달 경로 자체가 사라졌으므로(`RestaurantCard` 머리말) 창을 없앴다.
+   *
+   * 값은 남는다 — 지도 쪽 상호작용의 시각은 마커/클러스터/빈 지도 탭이 각자 기록한다.
    */
   const lastMapTouchRef = useRef(0)
 
@@ -407,26 +409,50 @@ export function RestaurantMapScreen({
    * - **가져오는 중에는 올리지 않는다.** 새 영역으로 이동하는 사이 잠깐 0건이 되는데,
    *   그때 올리면 시트가 오르내리며 깜빡인다(`keepPreviousData` 가 있어도 필터가 바뀌면
    *   빈 구간이 생긴다).
-   * - **0건으로 바뀌는 순간에만** 올린다. 회차(`searchSeq`)로 세지 않는 이유: 필터만
-   *   바꾸면 뷰포트 검색이 아니라 회차가 안 오른다(질의는 filterKey 로 다시 나간다).
-   *   전이로 판정하면 지역·음식 종류·AI 검색·`이 지역 검색` 이 전부 같은 규칙을 받는다.
-   *   0건이 이어지는 동안 사용자가 시트를 다시 내리면 그 뜻을 존중한다 — 다시 밀어
-   *   올리지 않는다.
+   * - **검색이 끝난 순간에만** 올린다. "0건으로 바뀌는 순간" 만 보던 시절에는
+   *   **두 번째 빈 지역부터 설명이 영영 안 떴다**: 첫 빈 지역에서 시트가 올라오고,
+   *   사용자가 지도를 옮기면 시트가 내려가고(`handleDragStart`), 거기서 다시 검색해도
+   *   `0건 → 0건` 이라 전이가 없어 아무 말도 하지 않는다. 남는 화면은 마커 없는 지도 +
+   *   접힌 시트, 즉 이 이펙트가 없애려던 바로 그 그림이다. 데이터가 강남 한 블록뿐인
+   *   지금은 **연속 0건이 예외가 아니라 기본**이라 이 구멍이 늘 열려 있었다.
+   *
+   *   그래서 판정을 "**방금 검색이 끝났고 그 결과가 0건이다**" 로 바꿨다. 이러면
+   *   사용자가 아무것도 묻지 않는 동안에는 절대 올라오지 않으므로 "시트를 내려 둔 뜻을
+   *   존중한다" 는 성질이 그대로 유지되고, 새로 물을 때마다 답은 받는다.
+   *   전이(`becameEmpty`)도 함께 남긴다 — 캐시가 신선해 네트워크 요청이 아예 안 나가는
+   *   경로에서는 `isFetching` 이 흔들리지 않기 때문이다.
    * - 지도가 죽었을 때는 이미 목록이 전체 화면이라 할 일이 없다.
    */
   const wasEmptyRef = useRef(false)
+  /** 직전 렌더에서 지도 질의가 돌고 있었는가. 검색 **완료 시점**을 잡는 데 쓴다. */
+  const wasFetchingRef = useRef(false)
   useEffect(() => {
     if (mapError !== null) return
-    if (mapSearch.isFetching || mapSearch.isLoading) return
+    const fetching = mapSearch.isFetching || mapSearch.isLoading
+    const justFinished = wasFetchingRef.current && !fetching
+    wasFetchingRef.current = fetching
+    if (fetching) return
+    /*
+      **실패는 0건이 아니다.** `emptyReason` 은 오류일 때도 값이 있어서, 예전에는 네트워크가
+      한 번 끊길 때마다 시트가 스스로 중간까지 올라왔다 — 사용자가 시트를 내리는 중에도.
+      화면은 이미 그 둘을 구분해 놓았으므로(D12) 여기서 뭉개면 안 된다.
+
+      **판정 자체를 건너뛴다**(오류를 "비어 있지 않다" 로 읽지 않는다). 그렇게 읽으면
+      `wasEmptyRef` 가 풀려서, 0건 지역에서 네트워크가 한 번 끊겼다 붙는 것만으로
+      사용자가 일부러 내려 둔 시트가 다시 올라온다.
+    */
+    if (mapSearch.isError) return
     const isEmpty = mapSearch.emptyReason !== null
     const becameEmpty = isEmpty && !wasEmptyRef.current
     wasEmptyRef.current = isEmpty
-    if (!becameEmpty) return
+    if (!isEmpty) return
+    if (!justFinished && !becameEmpty) return
     if (sheetIndexRef.current >= SHEET_SNAP.MID) return
     sheetRef.current?.snapToIndex(SHEET_SNAP.MID)
   }, [
     mapError,
     mapSearch.emptyReason,
+    mapSearch.isError,
     mapSearch.isFetching,
     mapSearch.isLoading,
   ])
@@ -836,8 +862,34 @@ export function RestaurantMapScreen({
 
   const handleDragStart = useCallback(() => {
     lastMapTouchRef.current = Date.now()
-    // 손가락이 지도에 닿는 순간 시트를 접는다. 지도를 보려는 의사 표시다.
-    sheetRef.current?.collapse()
+    /*
+      **지도를 만졌다고 시트를 바닥까지 내리지 않는다 — 한 칸만 내린다.**
+
+      종전에는 무조건 `collapse()`(접힘) 였다. 그 한 줄이 "너무 올렸다 내렸다" 의 큰 축이다:
+      접힘은 핸들 + 칩 줄뿐이라 **카드가 한 장도 안 보이는** 상태이고, 지도를 조금 움직일
+      때마다 거기로 떨어지니 목록을 볼 때마다 다시 끌어 올려야 했다. 게다가 카카오의
+      `dragstart` 는 **손가락 두 개가 닿는 순간에도** 나온다(`map/mapHtml.ts` 의
+      멀티터치 분기) — 즉 지도를 확대/축소하려고 두 손가락을 얹기만 해도 시트가 내려갔다.
+
+      한 칸만 내리면 두 의도가 다 산다: 전체에서 지도를 만지면 중간(지도 절반 + 카드)으로,
+      중간에서 만지면 접힘으로. 이미 접혀 있으면 할 일이 없다.
+    */
+    /*
+      **0건 설명은 지도를 만졌다고 치우지 않는다.** 시트가 0건의 이유를 들고 있을 때
+      접힘까지 내리면 화면에 남는 것은 마커 없는 지도와 핸들뿐이고, 그것이 이 화면이
+      가장 피하려는 상태다(§0건이면 시트를 올린다). 특히 카카오 `dragstart` 는 손가락
+      **두 개가 닿기만 해도** 나오므로, 빈 지도를 넓혀 보려고 핀치하는 순간 설명이
+      사라지는 일이 생긴다 — 사용자가 가장 자연스럽게 하는 다음 동작이 그것이다.
+      그래서 설명을 들고 있는 동안에는 중간까지만 내려간다.
+    */
+    const floor =
+      !mapSearch.isError && mapSearch.emptyReason !== null
+        ? SHEET_SNAP.MID
+        : SHEET_SNAP.COLLAPSED
+    const index = sheetIndexRef.current
+    if (index > floor) {
+      sheetRef.current?.snapToIndex(index - 1)
+    }
     // 카메라는 이제 사용자의 것이다. 늦게 오는 내 위치가 빼앗지 못하게 표시하고,
     // 소비되지 않고 남아 있던 자동검색 예약도 버린다 — 남기면 이 팬이 그걸 먹어
     // D7 이 금지한 "팬 유발 자동 재조회" 가 된다.
@@ -848,7 +900,7 @@ export function RestaurantMapScreen({
        유일한 트리거다. 이 한 줄이 없으면 첫 확정이 거절된 경우(0×0 컨테이너의 첫 idle)
        예외가 살아남아 **이 팬이 끝날 때 자동 검색**이 돈다 — 정확히 D7 이 금지하는 것이다. */
     didInitialSearch.current = true
-  }, [])
+  }, [mapSearch.emptyReason, mapSearch.isError])
 
   const handleMapError = useCallback((message: string) => {
     if (__DEV__) {
@@ -884,7 +936,15 @@ export function RestaurantMapScreen({
     if (collapsedSheetHeightRef.current === height) return
     collapsedSheetHeightRef.current = height
     sheetContainerHeightRef.current = null
-    observedSnapTopRef.current.clear()
+    /*
+      **접힘 관측만 버린다.** 예전에는 `.clear()` 로 전부 지웠는데, 접힘 높이는 안내 문구가
+      한 줄 늘고 주는 것만으로 바뀐다(결과가 적은 지역에서 특히 자주 — `영양 정보가 아직
+      없는 N곳은 빠졌어요`·`지도를 확대해 보세요`). 그때마다 mid/expanded 의 **정확한**
+      관측값까지 함께 버려지면, 바로 다음 마커 탭이 다시 예측값으로 계산해 카메라가
+      "조금 어긋난 자리에 멈췄다가 다시" 움직인다 — `sheetSnap` 이 없앤 그 증상이다.
+      mid·expanded 의 위치는 접힘 높이와 무관하므로 지울 이유가 없다.
+    */
+    observedSnapTopRef.current.delete(SHEET_SNAP.COLLAPSED)
   }, [])
 
   const handleSnapChange = useCallback(
@@ -997,15 +1057,11 @@ export function RestaurantMapScreen({
   const sheetList = useSelectedFirstList({
     items: list.items,
     selectedId: selection?.origin === "MARKER" ? selection.id : null,
-    userLocation: myLocation.coords,
     selectedCoords: selectedMarker,
   })
 
   const handlePressCard = useCallback(
     (card: RestaurantCardDto) => {
-      /* 지도가 방금 처리한 터치가 카드 press 로 배달된 것이면 버린다.
-       **마커 탭이 상세를 밀어 올리는 일은 여기서 끝난다**(`lastMapTouchRef` 주석). */
-      if (isMapTouchEcho(Date.now(), lastMapTouchRef.current)) return
       /* 같은 곳(=마커로 골라 맨 위에 고정된 카드)을 눌러 상세로 들어갈 때는 출처를
          강등하지 않는다 — 강등하면 상세 뒤에서 고정이 풀려, 돌아온 화면이 "마커는
          그대로인데 첫 카드가 사라진" 상태가 된다(selectionAfterCardPress 주석, 재발 버그). */
@@ -1134,14 +1190,23 @@ export function RestaurantMapScreen({
 
   /**
    * 시트 위쪽에 뜨는 컨트롤. 시트를 따라 올라간다.
-   * `bottom` 을 애니메이션하는 이유: FAB 스택 높이가 상태(스피너/아이콘)에 따라 달라져
-   * `translateY` 로는 기준점을 고정할 수 없다.
+   *
+   * **`bottom` 이 아니라 `translateY` 를 애니메이션한다.** `bottom` 은 레이아웃 속성이라
+   * 시트를 끄는 **매 프레임마다 레이아웃 패스**가 돌았다 — 드래그가 무겁게 느껴지고
+   * FAB·pill 이 시트 모서리를 한 박자 늦게 따라오던 원인이다(안드로이드에서 특히).
+   * transform 은 레이아웃을 건드리지 않는다.
+   *
+   * 기준점은 `bottom: spacing[12]`(정적)이고, 거기서 시트가 차지한 높이만큼 위로 민다.
+   * FAB 스택의 높이가 상태에 따라 달라져도 `bottom` 기준이라 문제가 없다 —
+   * 예전 주석이 걱정하던 것은 `top` 기준으로 옮길 때의 이야기다.
    */
   const floatingStyle = useAnimatedStyle(() => ({
-    bottom:
-      containerHeight > 0
-        ? containerHeight - sheetPosition.value + spacing[12]
-        : spacing[12],
+    transform: [
+      {
+        translateY:
+          containerHeight > 0 ? -(containerHeight - sheetPosition.value) : 0,
+      },
+    ],
   }))
 
   /**
@@ -1350,6 +1415,7 @@ export function RestaurantMapScreen({
               이 화면을 사고 현장처럼 읽히게 해서 그레이 톤으로 낮춘다 — 아래
               목록은 지도 없이도 정상 동작하고 있음을 시각적으로도 말해야 한다. */}
           <V2ErrorState
+            surface="restaurant_map"
             tone="quiet"
             title={t("restaurant.error.mapTitle")}
             description={t("restaurant.error.mapRetryBody")}
@@ -1478,7 +1544,7 @@ export function RestaurantMapScreen({
         onResetFilters={handleResetFilters}
         onRetry={handleRetry}
         topInset={insets.top}
-        bottomInset={insets.bottom}
+        bottomInset={insets.bottom + TAB_BAR_HEIGHT}
       />
 
       {sheets}
@@ -1584,6 +1650,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: SIDE,
     right: SIDE,
+    // 정적 기준점. 시트를 따라가는 이동은 transform 이 한다(`floatingStyle` 주석).
+    bottom: spacing[12],
     gap: spacing[8],
   },
   fabs: { alignSelf: "flex-end" },

@@ -82,6 +82,7 @@ export function SortSheet({
 
   return (
     <V2BottomSheet
+      surface="restaurant_sort"
       visible={visible}
       onClose={onClose}
       title={t("restaurant.sort.title")}

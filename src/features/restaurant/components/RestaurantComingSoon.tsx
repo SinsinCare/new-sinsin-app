@@ -50,6 +50,7 @@ export function RestaurantComingSoon({
       ]}
     >
       <V2EmptyState
+        surface="restaurant_coming_soon"
         icon="mapPin"
         title={t("restaurant.comingSoon.title")}
         description={t("restaurant.comingSoon.body")}

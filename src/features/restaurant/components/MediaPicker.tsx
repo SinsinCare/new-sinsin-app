@@ -495,6 +495,7 @@ export function MediaPicker({
           ListFooterComponent={
             pool.length === 0 ? (
               <V2EmptyState
+                surface="restaurant_media_picker"
                 icon="gallery"
                 title={t("restaurant.mediaPicker.emptyTitle")}
                 description={t("restaurant.mediaPicker.emptyBody")}

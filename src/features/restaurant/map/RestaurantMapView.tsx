@@ -30,7 +30,8 @@ import { StyleSheet, View } from "react-native"
 import { WebView, type WebViewMessageEvent } from "react-native-webview"
 
 import { clampZoom } from "../utils/requestGuards"
-import { buildMapHtml } from "./mapHtml"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { MAP_BACKGROUND, buildMapHtml } from "./mapHtml"
 import { isAllowedMapNavigation, MAP_ORIGIN_WHITELIST } from "./mapNavigation"
 import {
   FALLBACK_CENTER,
@@ -40,6 +41,7 @@ import {
   type LatLng,
   type MapBounds,
   type MapCluster,
+  type MapColorScheme,
   type MapCommands,
   type MapMarker,
   type MapPadding,
@@ -103,6 +105,7 @@ export const RestaurantMapView = forwardRef<
   },
   ref,
 ) {
+  const colorScheme: MapColorScheme = useAppColorScheme()
   const webRef = useRef<WebView>(null)
   const readyRef = useRef(false)
   /** ready 전에 들어온 주입 스크립트. 순서를 지켜 흘려보내야 한다. */
@@ -118,6 +121,8 @@ export const RestaurantMapView = forwardRef<
         jsKey: jsKey ?? "",
         center: initialCenter,
         level: initialLevel,
+        // 최초 페인트부터 맞는 배경을 보여 플래시를 막는다. 이후 전환은 명령으로만.
+        colorScheme,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -156,6 +161,8 @@ export const RestaurantMapView = forwardRef<
       panBy: (dx: number, dy: number) => send(mapScript.panBy(dx, dy)),
       relayout: () => send(mapScript.relayout()),
       setStrings: (next: MapStrings) => send(mapScript.setStrings(next)),
+      setColorScheme: (next: MapColorScheme) =>
+        send(mapScript.setColorScheme(next)),
     }),
     [send],
   )
@@ -168,6 +175,15 @@ export const RestaurantMapView = forwardRef<
     if (!strings) return
     send(mapScript.setStrings(strings))
   }, [send, strings])
+
+  /**
+   * 앱 테마가 바뀌면 **기존 페이지에 명령만** 보낸다. `html` 의존성에 colorScheme 을
+   * 넣으면 WebView가 리로드되어 카메라·마커·선택 상태가 전부 초기화된다.
+   * ready 전 전환도 `send` 큐가 보존한다.
+   */
+  useEffect(() => {
+    send(mapScript.setColorScheme(colorScheme))
+  }, [colorScheme, send])
 
   const handleMessage = useCallback(
     (event: WebViewMessageEvent) => {
@@ -242,20 +258,32 @@ export const RestaurantMapView = forwardRef<
    * 리스트 모드로 내려가게 한다.
    */
   if (!jsKey) {
-    return <ConfigErrorNotice reason="jsKey" onMapError={onMapError} />
+    return (
+      <ConfigErrorNotice
+        reason="jsKey"
+        backgroundColor={MAP_BACKGROUND[colorScheme]}
+        onMapError={onMapError}
+      />
+    )
   }
   /* 문서 주소가 없으면 WebView 를 띄우지 않는다. 띄우면 baseUrl 없이 로드돼 카카오가
      Referer 를 못 보고 401 을 주거나, iOS 가 없는 origin 을 열려다 오류 페이지를 그린다.
      둘 다 사용자에게는 "지도가 회색" 으로 보인다 — 설정 오류라고 말하는 편이 낫다. */
   if (!SOURCE_BASE_URL) {
-    return <ConfigErrorNotice reason="baseUrl" onMapError={onMapError} />
+    return (
+      <ConfigErrorNotice
+        reason="baseUrl"
+        backgroundColor={MAP_BACKGROUND[colorScheme]}
+        onMapError={onMapError}
+      />
+    )
   }
 
   return (
     <WebView
       ref={webRef}
       source={source}
-      style={styles.web}
+      style={[styles.web, { backgroundColor: MAP_BACKGROUND[colorScheme] }]}
       /*
         whitelist 는 전부 통과("*")다 — 실수가 아니다. 이 라이브러리의 whitelist 는
         패턴을 URL 의 origin(경로 없음)에 대는 별도 매처이고, **탈락한 URL 을 차단이
@@ -380,9 +408,11 @@ const CONFIG_ERROR_MESSAGE: Readonly<Record<"jsKey" | "baseUrl", string>> = {
 
 function ConfigErrorNotice({
   reason,
+  backgroundColor,
   onMapError,
 }: {
   reason: "jsKey" | "baseUrl"
+  backgroundColor: string
   onMapError?: (message: string) => void
 }) {
   /*
@@ -395,10 +425,10 @@ function ConfigErrorNotice({
   useEffect(() => {
     onMapError?.(CONFIG_ERROR_MESSAGE[reason])
   }, [onMapError, reason])
-  return <View style={styles.placeholder} />
+  return <View style={[styles.placeholder, { backgroundColor }]} />
 }
 
 const styles = StyleSheet.create({
-  web: { flex: 1, backgroundColor: "#EAE8E4" },
-  placeholder: { flex: 1, backgroundColor: "#EAE8E4" },
+  web: { flex: 1 },
+  placeholder: { flex: 1 },
 })

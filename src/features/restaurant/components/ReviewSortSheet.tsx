@@ -51,6 +51,7 @@ export function ReviewSortSheet({
 
   return (
     <V2BottomSheet
+      surface="restaurant_review_sort"
       visible={visible}
       onClose={onClose}
       title={t("restaurant.sort.title")}

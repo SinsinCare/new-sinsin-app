@@ -35,6 +35,24 @@ import { dynamicKey } from "@/src/i18n/dynamicKey"
 import type { BusinessStatusCode, Weekday } from "../types"
 import { useBusinessStatus } from "../hooks/useBusinessStatus"
 
+/**
+ * 상태 줄의 본문 타이포. **13pt** 다 — 시안(C1_2) 3배 렌더에서 `까지` 의 한글 음절 이송이
+ * 34px 이고 0.864em 으로 나누면 13.1 이다(15 였다면 38.9px 여야 한다). `21:30` 의 숫자
+ * 이송 22–24px 도 Regular 0.596em 기준 13pt(23.2px)와 맞는다.
+ *
+ * 앞 판본은 `subtext.large`(15/20)였고, 그래서 이 줄만 아래 세 정보 행보다 2pt 컸다.
+ * 라스트오더 조각은 처음부터 13 이었으므로 이제 한 줄 안의 크기가 하나다.
+ */
+const SUB_TEXT = typography.subtext.medium
+
+/**
+ * 상태 낱말(`영업중`)의 타이포. 같은 실측에서 음절 이송 33px → **13pt** 다(15 면 38.9px).
+ * 굵기는 그대로 Medium 을 쓴다 — 이 라운드가 고치라고 한 것은 크기이고, 굵기를 바꾸려면
+ * 근거가 더 있어야 한다. (참고: 같은 임계값에서 잰 세로획이 4.9px = 0.127em 로 `메뉴`
+ * 17 Bold(0.118em)보다도 두껍다. 시안은 Bold 로 보이지만 13pt Bold 라벨 토큰이 없다.)
+ */
+const LABEL_TEXT = typography.label.xSmallWeak
+
 export interface BusinessStatusTextProps {
   status: BusinessStatusCode
   /** `HH:MM`. `OPEN` 일 때의 마감 시각. */
@@ -118,24 +136,19 @@ export function BusinessStatusText({
       // 지우면 카드 높이가 흔들리고, 사용자는 정보가 사라진 이유를 모른다.
       style={[styles.row, isStale && styles.stale, style]}
     >
-      <Text style={[typography.label.smallWeak, { color: view.color }]}>
-        {label}
-      </Text>
+      <Text style={[LABEL_TEXT, { color: view.color }]}>{label}</Text>
       {sub !== null && (
         <>
           <Text
             // 구분자는 정보가 아니다. 스크린리더가 "가운뎃점" 을 읽지 않게 숨긴다.
             accessibilityElementsHidden
             importantForAccessibility="no"
-            style={[
-              typography.subtext.large,
-              { color: colors.label.assistive },
-            ]}
+            style={[SUB_TEXT, { color: colors.label.assistive }]}
           >
             {dot}
           </Text>
           <Text
-            style={[typography.subtext.large, { color: colors.label.neutral }]}
+            style={[SUB_TEXT, { color: colors.label.neutral }]}
             numberOfLines={1}
           >
             {sub}
@@ -147,18 +160,12 @@ export function BusinessStatusText({
           <Text
             accessibilityElementsHidden
             importantForAccessibility="no"
-            style={[
-              typography.subtext.medium,
-              { color: colors.label.assistive },
-            ]}
+            style={[SUB_TEXT, { color: colors.label.assistive }]}
           >
             {dot}
           </Text>
           <Text
-            style={[
-              typography.subtext.medium,
-              { color: colors.label.alternative },
-            ]}
+            style={[SUB_TEXT, { color: colors.label.alternative }]}
             numberOfLines={1}
           >
             {lastOrderText}
