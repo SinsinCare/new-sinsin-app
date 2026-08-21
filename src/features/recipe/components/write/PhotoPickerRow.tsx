@@ -10,13 +10,22 @@
  * 사용자는 등록된 레시피에서 사진이 빠진 것을 나중에 발견한다.
  */
 
-import { Image, StyleSheet, Text, View, Pressable } from "react-native"
+import { Image, StyleSheet, View, Pressable } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
+import { semanticLight } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
 import { RECIPE_WRITE_LIMITS } from "@/src/features/recipe/types/recipeWrite"
 import type { PhotoRow } from "./writeFormState"
+
+/**
+ * 사진 위에 얹는 글자·글리프. **모드를 따라가지 않는다** — 바닥이 사용자의 사진이라
+ * 라이트/다크 어느 쪽에서도 같은 흰색이어야 읽힌다. 그래서 `s.textStrong` 이 아니라
+ * v2 의 `static.white` 다(`static` 이 "모드와 무관" 이라는 뜻이다).
+ */
+const OVERLAY_INK = semanticLight.static.white
 
 interface PhotoPickerRowProps {
   label: string
@@ -86,7 +95,7 @@ export function PhotoPickerRow({
               hitSlop={6}
               style={styles.removeButton}
             >
-              <Ionicons name="close" size={14} color="#FFFFFF" />
+              <Ionicons name="close" size={14} color={OVERLAY_INK} />
             </Pressable>
           </View>
         ))}
@@ -119,7 +128,7 @@ const THUMB = 76
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
   labelRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipGroup`).
+  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipRail`).
   label: { ...TYPE.cardTitle, fontWeight: "700" },
   optional: { ...TYPE.caption, fontSize: 12 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -141,12 +150,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 2,
   },
-  overlayText: { ...TYPE.caption, fontSize: 11, color: "#FFFFFF" },
+  overlayText: { ...TYPE.caption, fontSize: 11, color: OVERLAY_INK },
   overlayAction: {
     ...TYPE.caption,
     fontSize: 11,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: OVERLAY_INK,
   },
   removeButton: {
     position: "absolute",

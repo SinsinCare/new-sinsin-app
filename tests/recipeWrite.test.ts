@@ -9,17 +9,24 @@ jest.mock("../src/services/core/apiClient", () => ({
   },
 }))
 
+import { deriveAuthorContextTags } from "../src/features/recipe/components/write/authorContextTags"
+import { STAGE_TAGS } from "../src/features/recipe/data/recipeTags"
 import {
   amountHintFor,
   isCompositeIngredient,
   parseAmountToGrams,
 } from "../src/features/recipe/utils/recipeAmountText"
 import {
+  RECIPE_WRITE_REQUIREMENTS,
   createEmptyRecipeWriteForm,
   evaluateRecipeWriteForm,
   hasAnyRecipeWriteContent,
+  joinIngredientAmount,
   moveItem,
+  parseTimeMin,
   resolveDropIndex,
+  staticOffsetFor,
+  summarizeSteps,
   toCreateRecipeRequest,
   toPreviewIngredients,
   toPreviewRequest,
@@ -66,8 +73,8 @@ function filledForm(): RecipeWriteFormState {
     summary: "간단하게 먹기 좋은 가지덮밥이에요",
     category: "한식",
     ingredients: [
-      { id: "i1", name: "닭가슴살", amountText: "100g" },
-      { id: "i2", name: "가지", amountText: "150g" },
+      { id: "i1", name: "닭가슴살", amountText: "100g", countText: "" },
+      { id: "i2", name: "가지", amountText: "150g", countText: "" },
     ],
     steps: [{ id: "s1", text: "가지를 채 썰어 볶아요." }],
   })
@@ -161,8 +168,8 @@ describe("줄마다 붙는 분량 힌트", () => {
 describe("무엇이 남았는가 (시안 writing-16 의 결함)", () => {
   it("빈 폼은 필수 5개가 전부 남는다", () => {
     const result = evaluateRecipeWriteForm(form())
-    expect(result.totalCount).toBe(5)
-    expect(result.doneCount).toBe(0)
+    // `doneCount`/`totalCount` 로 세던 자리다. 화면이 그 수치를 안 그리게 된 뒤로
+    // 읽는 곳이 테스트뿐이라 지웠다 — 남은 계약은 **무엇이 남았는지**와 그 순서다.
     expect(result.missing).toEqual([
       "name",
       "summary",
@@ -182,7 +189,7 @@ describe("무엇이 남았는가 (시안 writing-16 의 결함)", () => {
   })
 
   it("모든 필수 항목에 문구 열쇠가 있다", () => {
-    for (const { id } of evaluateRecipeWriteForm(form()).requirements) {
+    for (const id of RECIPE_WRITE_REQUIREMENTS) {
       const key = MISSING_COPY_KEY[id].split(".").slice(1)
       const ko = key.reduce<Record<string, unknown> | string | undefined>(
         (node, part) =>
@@ -204,17 +211,33 @@ describe("무엇이 남았는가 (시안 writing-16 의 결함)", () => {
     expect(result.missing).toContain("category")
   })
 
-  it("다 채우면 등록할 수 있고 섹션 상태가 완료로 바뀐다", () => {
+  it("다 채우면 등록할 수 있다", () => {
     const result = evaluateRecipeWriteForm(filledForm())
     expect(result.missing).toEqual([])
     expect(result.canSubmit).toBe(true)
-    expect(result.sectionState).toEqual({
-      basic: "done",
-      classify: "done",
-      ingredients: "done",
-      steps: "done",
-      description: "optional",
+  })
+
+  /*
+    올리다 **실패한** 사진도 막는다. 실패한 사진은 `objectPath` 가 없어 전송에서 조용히
+    걸러지는데, 사진은 한 장뿐이고 수정 API 가 없어 **사진 없는 레시피가 확정된다.**
+    타일의 "지우기" 로 언제든 빠져나올 수 있으므로 사용자가 갇히지도 않는다.
+  */
+  it("사진 업로드가 실패한 채로는 등록을 막는다", () => {
+    const state = form({
+      ...filledForm(),
+      photos: [
+        {
+          id: "p1",
+          localUri: "file://a.jpg",
+          objectPath: null,
+          status: "failed",
+        },
+      ],
     })
+    const result = evaluateRecipeWriteForm(state)
+    expect(result.missing).toEqual([])
+    expect(result.photosFailed).toBe(true)
+    expect(result.canSubmit).toBe(false)
   })
 
   it("사진이 올라가는 중이면 남은 것이 없어도 등록을 막는다", () => {
@@ -235,18 +258,82 @@ describe("무엇이 남았는가 (시안 writing-16 의 결함)", () => {
     expect(result.canSubmit).toBe(false)
   })
 
-  it("한 섹션에 남은 것이 하나라도 있으면 그 섹션은 미완이다", () => {
+  /*
+    예전에는 이 자리에서 **섹션 상태**(`sectionState.basic === "incomplete"`)를 봤다.
+    화면이 아코디언이던 시절 접힌 머리글이 그 값을 그렸기 때문이다. 평면 스크롤이
+    되면서 머리글이 사라졌고 섹션 개념 자체가 코드에서 없어졌다 — 지금 남은 신호는
+    등록 버튼 위 한 줄뿐이라, **그 한 줄이 무엇을 말하는지**를 대신 못 박는다.
+  */
+  it("한 가지라도 안 적었으면 등록이 막히고, 버튼 위에 그 항목이 뜬다", () => {
     const state = form({ ...filledForm(), summary: "" })
-    expect(evaluateRecipeWriteForm(state).sectionState.basic).toBe("incomplete")
+    const result = evaluateRecipeWriteForm(state)
+    expect(result.canSubmit).toBe(false)
+    // `missing[0]` 이 곧 `WriteSubmitBar` 의 상태 줄이다(같은 계산에서 나온다).
+    expect(result.missing).toEqual(["summary"])
   })
 
   it("아무것도 안 적은 폼은 나가기 확인을 띄우지 않는다", () => {
     expect(hasAnyRecipeWriteContent(form())).toBe(false)
     expect(hasAnyRecipeWriteContent(form({ servings: 1 }))).toBe(false)
     expect(hasAnyRecipeWriteContent(form({ name: "가" }))).toBe(true)
-    expect(hasAnyRecipeWriteContent(form({ stageTags: ["CKD 3기"] }))).toBe(
+    expect(hasAnyRecipeWriteContent(form({ stageTags: ["CKD3"] }))).toBe(
       true,
     )
+  })
+})
+
+describe("조리 시간 — 범위 밖을 '안 적음' 과 구분한다 (P2-19)", () => {
+  /*
+    예전 `parseTimeMin` 은 `number | null` 이었고 범위 밖도 `null` 이었다. 칸이
+    4자리를 받으니 `9999` 는 손가락으로 칠 수 있는데, 그 상태로 등록하면 **아무 말
+    없이** 조리 시간만 빠진 레시피가 올라갔다(서버는 같은 값을 400 으로 거절한다).
+    아래 경계표가 그 뭉개짐이 돌아오지 못하게 막는다.
+  */
+  it("빈 칸은 '안 적음' 이다 — 선택 항목이라 오류가 아니다", () => {
+    expect(parseTimeMin("")).toBeNull()
+    expect(parseTimeMin("   ")).toBeNull()
+  })
+
+  it.each([
+    ["1", 1],
+    ["35", 35],
+    ["1440", 1440],
+  ])("경계 안쪽은 값을 그대로 준다: %s", (text, value) => {
+    expect(parseTimeMin(text)).toEqual({ ok: true, value })
+  })
+
+  it.each(["0", "1441", "9999", "99999"])(
+    "경계 밖은 null 이 아니라 이유가 붙는다: %s",
+    (text) => {
+      expect(parseTimeMin(text)).toEqual({ ok: false, reason: "out_of_range" })
+    },
+  )
+
+  it("숫자가 아닌 글자는 '안 적음' 이다 — 범위 오류로 부르지 않는다", () => {
+    // 칸이 `[^0-9]` 를 지우고 받으므로 폼에는 들어올 수 없는 값이다. 그래도
+    // 범위 오류로 말하면 "1~1440 사이로 적어 주세요" 가 뜨는데, 사용자는 애초에
+    // 숫자를 적은 적이 없다.
+    expect(parseTimeMin("0x10")).toBeNull()
+    expect(parseTimeMin("35분")).toBeNull()
+  })
+
+  it("범위 밖이면 등록을 막는다 — 수정 경로가 없어서 되돌릴 수 없다", () => {
+    // `RECIPE_EDIT_ENABLED === false`. 값이 빠진 채로 올라가면 영영 못 고친다.
+    const bad = evaluateRecipeWriteForm({
+      ...filledForm(),
+      timeMinText: "9999",
+    })
+    expect(bad.missing).toEqual([])
+    expect(bad.timeMinOutOfRange).toBe(true)
+    expect(bad.canSubmit).toBe(false)
+  })
+
+  it("빈 칸·정상 범위는 등록을 막지 않는다", () => {
+    for (const timeMinText of ["", "1", "1440"]) {
+      const result = evaluateRecipeWriteForm({ ...filledForm(), timeMinText })
+      expect(result.timeMinOutOfRange).toBe(false)
+      expect(result.canSubmit).toBe(true)
+    }
   })
 })
 
@@ -254,10 +341,10 @@ describe("미리보기 요청 만들기 (계약 §3.5)", () => {
   it("이름과 분량이 다 있는 줄만 보낸다", () => {
     const state = form({
       ingredients: [
-        { id: "1", name: "닭가슴살", amountText: "100g" },
-        { id: "2", name: "가지", amountText: "" },
-        { id: "3", name: "", amountText: "15ml" },
-        { id: "4", name: "  간장  ", amountText: "  15ml  " },
+        { id: "1", name: "닭가슴살", amountText: "100g", countText: "" },
+        { id: "2", name: "가지", amountText: "", countText: "" },
+        { id: "3", name: "", amountText: "15ml", countText: "" },
+        { id: "4", name: "  간장  ", amountText: "  15ml  ", countText: "" },
       ],
     })
     expect(toPreviewIngredients(state)).toEqual([
@@ -266,11 +353,28 @@ describe("미리보기 요청 만들기 (계약 §3.5)", () => {
     ])
   })
 
+  it("단위 칸이 비고 수량 칸만 있는 줄도 보낸다", () => {
+    // 서버가 `1개` 를 못 읽는 것은 사실이고, 그 사실은 `unmatchedIngredients` 로
+    // 돌아와야 한다. 앱이 미리 삼키면 사용자는 그 재료가 빠진 줄도 모른다.
+    const state = form({
+      ingredients: [
+        { id: "1", name: "가지", amountText: "", countText: "1개" },
+      ],
+    })
+    expect(toPreviewIngredients(state)).toEqual([
+      { name: "가지", amountText: "1개" },
+    ])
+  })
+
   it("보낼 재료가 없으면 요청 자체를 만들지 않는다", () => {
     expect(toPreviewRequest(form())).toBeNull()
     expect(
       toPreviewRequest(
-        form({ ingredients: [{ id: "1", name: "가지", amountText: "" }] }),
+        form({
+          ingredients: [
+            { id: "1", name: "가지", amountText: "", countText: "" },
+          ],
+        }),
       ),
     ).toBeNull()
   })
@@ -281,6 +385,7 @@ describe("미리보기 요청 만들기 (계약 §3.5)", () => {
         id: `i${i}`,
         name: "가".repeat(120),
         amountText: "1".repeat(50),
+        countText: "",
       })),
     })
     const ingredients = toPreviewIngredients(state)
@@ -296,7 +401,9 @@ describe("미리보기 요청 만들기 (계약 §3.5)", () => {
   it("인분이 요청에 그대로 들어간다 — 서버가 이 값으로 1인분을 만든다", () => {
     const state = form({
       servings: 4,
-      ingredients: [{ id: "1", name: "가지", amountText: "150g" }],
+      ingredients: [
+        { id: "1", name: "가지", amountText: "150g", countText: "" },
+      ],
     })
     expect(toPreviewRequest(state)?.servings).toBe(4)
   })
@@ -311,18 +418,25 @@ describe("작성 요청 만들기 (계약 §3.6)", () => {
     const state = form({
       ...filledForm(),
       nutritionTags: ["저염", "저인"],
-      stageTags: ["CKD 3기"],
+      stageTags: ["CKD3"],
     })
     const request = toCreateRecipeRequest(state)
     expect(request.category).toBe("한식")
-    expect(request.tags).toEqual(["저염", "저인", "CKD 3기"])
+    expect(request.tags).toEqual(["저염", "저인", "CKD3"])
   })
 
   it("빈 선택 항목은 null 로 보낸다 — 빈 문자열을 저장하지 않는다", () => {
     const request = toCreateRecipeRequest(filledForm())
     expect(request.description).toBeNull()
     expect(request.timeMin).toBeNull()
-    expect(request.difficulty).toBeNull()
+  })
+
+  it("난이도는 아예 보내지 않는다 — 폼에서 사라진 항목이다", () => {
+    // 와이어 타입(`CreateRecipeRequestV2.difficulty`)에는 남아 있지만 작성 폼은 더는
+    // 채우지 않는다. `null` 을 보내면 "작성자가 난이도를 비웠다" 는 뜻이 되므로,
+    // 아예 키를 만들지 않는 쪽이 정직하다.
+    expect(toCreateRecipeRequest(filledForm()).difficulty).toBeUndefined()
+    expect("difficulty" in toCreateRecipeRequest(filledForm())).toBe(false)
   })
 
   it("한 줄 소개가 비면 빈 문자열이 아니라 null 이다", () => {
@@ -347,11 +461,13 @@ describe("작성 요청 만들기 (계약 §3.6)", () => {
     expect(toPreviewRequest({ ...base, servings: 99 })?.servings).toBe(20)
   })
 
-  it("조리 시간은 십진수만 받고 범위를 벗어나면 null 이다", () => {
+  it("조리 시간은 십진수만 싣고 범위 밖은 null 로 보낸다", () => {
     const base = filledForm()
     expect(toCreateRecipeRequest({ ...base, timeMinText: "35" }).timeMin).toBe(
       35,
     )
+    // 범위 밖은 `canSubmit` 이 이미 막지만(위 describe), 이 함수만 부르는 경로가
+    // 생겼을 때 `9999` 를 그대로 실으면 서버가 400 을 낸다 — 와이어에는 null 이다.
     expect(
       toCreateRecipeRequest({ ...base, timeMinText: "0" }).timeMin,
     ).toBeNull()
@@ -384,15 +500,17 @@ describe("작성 요청 만들기 (계약 §3.6)", () => {
     const request = toCreateRecipeRequest({
       ...filledForm(),
       ingredients: [
-        { id: "1", name: "가지", amountText: "150g" },
-        { id: "2", name: "", amountText: "" },
+        { id: "1", name: "가지", amountText: "150g", countText: "1개" },
+        { id: "2", name: "", amountText: "", countText: "" },
       ],
       steps: [
         { id: "1", text: "볶아요." },
         { id: "2", text: "   " },
       ],
     })
-    expect(request.ingredients).toEqual([{ name: "가지", amountText: "150g" }])
+    expect(request.ingredients).toEqual([
+      { name: "가지", amountText: "150g 1개" },
+    ])
     expect(request.steps).toEqual([{ text: "볶아요.", imageObjectPath: null }])
   })
 
@@ -400,6 +518,128 @@ describe("작성 요청 만들기 (계약 §3.6)", () => {
     expect(
       toCreateRecipeRequest(filledForm()).nutritionOverride,
     ).toBeUndefined()
+  })
+})
+
+describe("재료 세 칸 → 서버 한 칸 (SPEC §6.5)", () => {
+  it("그램이 실린 칸이 항상 앞이다", () => {
+    // 순서가 뒤집히면 서버 파서가 `1개` 를 먼저 읽고 환산을 포기해서, 100g 이라고
+    // 분명히 적은 재료가 나트륨 합산에서 통째로 빠진다.
+    expect(joinIngredientAmount("100g", "1개")).toBe("100g 1개")
+    expect(parseAmountToGrams(joinIngredientAmount("100g", "1개"))).toBe(100)
+  })
+
+  it("한 칸만 있으면 그 칸만 남는다", () => {
+    expect(joinIngredientAmount("150g", "")).toBe("150g")
+    expect(joinIngredientAmount("", "1큰술")).toBe("1큰술")
+  })
+
+  it("둘 다 비었거나 공백뿐이면 빈 문자열이다", () => {
+    expect(joinIngredientAmount("", "")).toBe("")
+    expect(joinIngredientAmount("   ", "\t\n")).toBe("")
+  })
+
+  it("칸마다 앞뒤 공백을 털어 낸다 — 앞 공백은 파서 정규식을 흔든다", () => {
+    expect(joinIngredientAmount("  100g  ", "  2개  ")).toBe("100g 2개")
+    expect(joinIngredientAmount("   ", "  2개  ")).toBe("2개")
+  })
+
+  it("수량 칸만 채운 줄은 서버가 못 읽는다 — 그것이 의도다", () => {
+    // 앱이 억지로 환산하면 그 추측이 그대로 나트륨 수치가 된다.
+    expect(parseAmountToGrams(joinIngredientAmount("", "1큰술반"))).toBeNull()
+  })
+
+  it("합산 상한 40 을 넘으면 단어 경계에서 자른다", () => {
+    const long = joinIngredientAmount("1".repeat(38), "큰술")
+    // 38 + 1 + 2 = 41 → 40 에서 자르면 `큰` 하나가 남는다. 토막난 단어는 버린다.
+    expect(long).toBe("1".repeat(38))
+    expect(long.length).toBeLessThanOrEqual(
+      RECIPE_WRITE_LIMITS.ingredientAmountMax,
+    )
+  })
+
+  it("첫 토막 하나가 이미 상한보다 길면 버릴 단어가 없어 그대로 자른다", () => {
+    const cut = joinIngredientAmount("1".repeat(50), "")
+    expect(cut).toHaveLength(RECIPE_WRITE_LIMITS.ingredientAmountMax)
+  })
+
+  it("경계가 마침 공백에 떨어지면 앞 단어가 온전히 남는다", () => {
+    // 40 + 공백 + 뒤 → slice(0,40) 이 이미 단어 하나로 끝난다.
+    const cut = joinIngredientAmount("1".repeat(40), "2개")
+    expect(cut).toBe("1".repeat(40))
+  })
+
+  it("칸별 상한 둘을 더해도 합산 상한을 넘지 않는다", () => {
+    expect(
+      RECIPE_WRITE_LIMITS.ingredientUnitMax +
+        1 +
+        RECIPE_WRITE_LIMITS.ingredientCountMax,
+    ).toBeLessThanOrEqual(RECIPE_WRITE_LIMITS.ingredientAmountMax)
+  })
+
+  it("칸을 꽉 채워도 잘리지 않는다 — 손으로 친 글자는 사라지지 않는다", () => {
+    const joined = joinIngredientAmount(
+      "가".repeat(RECIPE_WRITE_LIMITS.ingredientUnitMax),
+      "나".repeat(RECIPE_WRITE_LIMITS.ingredientCountMax),
+    )
+    expect(joined).toHaveLength(RECIPE_WRITE_LIMITS.ingredientAmountMax)
+  })
+})
+
+describe("조리 순서 요약 (SPEC §6.6)", () => {
+  it("아무것도 없으면 0단계이고 미리보기가 없다", () => {
+    expect(summarizeSteps([])).toEqual({ count: 0, firstText: null })
+    expect(summarizeSteps([{ id: "s1", text: "" }])).toEqual({
+      count: 0,
+      firstText: null,
+    })
+    expect(summarizeSteps([{ id: "s1", text: "   " }])).toEqual({
+      count: 0,
+      firstText: null,
+    })
+  })
+
+  it("한 단계면 그 단계가 미리보기다 — 앞뒤 공백은 턴다", () => {
+    expect(summarizeSteps([{ id: "s1", text: "  가지를 볶아요.  " }])).toEqual({
+      count: 1,
+      firstText: "가지를 볶아요.",
+    })
+  })
+
+  it("여러 단계면 개수를 세고 첫 단계만 미리 보인다", () => {
+    expect(
+      summarizeSteps([
+        { id: "s1", text: "가지를 썬다." },
+        { id: "s2", text: "볶는다." },
+        { id: "s3", text: "밥에 얹는다." },
+      ]),
+    ).toEqual({ count: 3, firstText: "가지를 썬다." })
+  })
+
+  it("중간에 빈 줄이 섞이면 세지 않는다", () => {
+    // 지우려고 글자만 비워 둔 줄을 세면, 시트를 열기 전까지 그 거짓을 확인할 수 없다.
+    expect(
+      summarizeSteps([
+        { id: "s1", text: "썬다." },
+        { id: "s2", text: "  " },
+        { id: "s3", text: "볶는다." },
+      ]),
+    ).toEqual({ count: 2, firstText: "썬다." })
+  })
+
+  it("첫 줄이 비었으면 채워진 첫 줄을 미리 보인다", () => {
+    expect(
+      summarizeSteps([
+        { id: "s1", text: "" },
+        { id: "s2", text: "볶는다." },
+      ]),
+    ).toEqual({ count: 1, firstText: "볶는다." })
+  })
+
+  it("한국어를 만들지 않는다 — 문구는 화면이 i18n 으로 고른다", () => {
+    const summary = summarizeSteps([{ id: "s1", text: "볶는다." }])
+    expect(Object.keys(summary).sort()).toEqual(["count", "firstText"])
+    expect(typeof summary.count).toBe("number")
   })
 })
 
@@ -772,5 +1012,251 @@ describe("i18n", () => {
     const en = leaves(enRecipe.recipeWrite).sort()
     expect(en).toEqual(ko)
     expect(ko.length).toBeGreaterThan(50)
+  })
+})
+
+/* ══════════════════════ 작성자 신장 상태 → 태그 ══════════════════════ */
+
+describe("작성자 상태에서 태그를 뽑는다 — 고르게 하지 않는다", () => {
+  /**
+   * 서버로 나갈 값만 꺼낸다. 어휘·순서를 볼 때 쓴다.
+   * 화면 문구 열쇠는 아래 별도 케이스에서 본다 — 두 축이 섞이면 실패가 어느 쪽
+   * 때문인지 읽히지 않는다.
+   */
+  const valuesOf = (context: Parameters<typeof deriveAuthorContextTags>[0]) =>
+    deriveAuthorContextTags(context).map((tag) => tag.value)
+
+  /** ko 로케일에서 점 표기 열쇠를 따라간다. 없으면 `undefined`. */
+  const leafAt = (bundle: unknown, key: string): unknown =>
+    key
+      .split(".")
+      .reduce<unknown>(
+        (node, part) =>
+          node !== null && typeof node === "object"
+            ? (node as Record<string, unknown>)[part]
+            : undefined,
+        bundle,
+      )
+
+  it("병기를 태그로 옮긴다 (3a·3b 는 같은 검색 칸이다)", () => {
+    const at = (ckdStage: string) => valuesOf({ ckdStage, isDialysis: false })
+    expect(at("STAGE_3A")).toEqual(["CKD3"])
+    expect(at("STAGE_3B")).toEqual(["CKD3"])
+    expect(at("STAGE_4")).toEqual(["CKD4"])
+    expect(at("STAGE_5")).toEqual(["CKD5"])
+  })
+
+  it("숫자만 저장된 낡은 행도 읽는다 (`3` 은 엄격한 쪽인 3b 다)", () => {
+    // `ckd_stage` 컬럼에는 enum 도 CHECK 도 없어서 숫자만 든 행이 실제로 있다.
+    expect(valuesOf({ ckdStage: "4", isDialysis: false })).toEqual(["CKD4"])
+    expect(valuesOf({ ckdStage: "3", isDialysis: false })).toEqual(["CKD3"])
+  })
+
+  it("CKD 1·2기는 태그를 만들지 않는다 — 어휘에도 없고 식이제한도 없다", () => {
+    expect(
+      deriveAuthorContextTags({ ckdStage: "STAGE_1", isDialysis: false }),
+    ).toEqual([])
+    expect(
+      deriveAuthorContextTags({ ckdStage: "STAGE_2", isDialysis: false }),
+    ).toEqual([])
+  })
+
+  it("모르는 병기는 지어내지 않는다", () => {
+    expect(
+      deriveAuthorContextTags({ ckdStage: null, isDialysis: false }),
+    ).toEqual([])
+    expect(
+      deriveAuthorContextTags({ ckdStage: "", isDialysis: false }),
+    ).toEqual([])
+    expect(
+      deriveAuthorContextTags({ ckdStage: "몰라요", isDialysis: false }),
+    ).toEqual([])
+    expect(deriveAuthorContextTags(null)).toEqual([])
+    expect(deriveAuthorContextTags(undefined)).toEqual([])
+  })
+
+  it("투석은 병기와 다른 축이다 — 병기 컬럼이 DIALYSIS 여도 답이 나온다", () => {
+    // 투석을 켜면 서버의 `ckd_stage` 가 `"DIALYSIS"` 로 들어간다(`toServerStage`).
+    // 그러면 병기 축은 아무 말도 못 하므로 투석 축이 대신 답해야 한다.
+    expect(valuesOf({ ckdStage: "DIALYSIS", isDialysis: true })).toEqual([
+      "투석환자",
+    ])
+  })
+
+  /*
+    카탈로그 175건이 `#CKD3`·`#투석환자` 로 저장돼 있다(개발 DB 실측 2026-08-21).
+    앱이 다른 표기를 쓰면 병기로 거르는 화면에서 두 집단이 영영 안 만난다 —
+    태그 질의가 부분일치라 `%CKD3%` 는 `CKD 3기` 를 못 잡는다.
+  */
+  it("병기 태그가 카탈로그 정본 표기와 같다", () => {
+    const values = valuesOf({ ckdStage: "STAGE_4", isDialysis: false })
+    expect(values).toEqual(["CKD4"])
+    // 공백도 `기` 도 붙지 않는다. 붙는 순간 `%CKD4%` 검색에서 빠진다.
+    for (const value of values) {
+      expect(value).not.toMatch(/\s|기$/u)
+    }
+  })
+
+  it("투석 태그는 서버 정본(`투석환자`)과 같은 문자열이다", () => {
+    /*
+      `TAG_KO_BY_INPUT["dialysis"] = "투석환자"` 라서 카탈로그는 `투석환자` 로
+      저장돼 있다. 앱만 `투석` 을 보내면 `%투석환자%` 필터에서 통째로 빠진다.
+      반대 방향은 부분일치(`tags contains`)라 손해가 없다 — `투석` 으로 걸러도
+      `투석환자` 가 걸린다. 이 단언이 그 정렬을 붙잡는다.
+    */
+    expect(valuesOf({ ckdStage: null, isDialysis: true })).toEqual(["투석환자"])
+    expect("투석환자").toContain("투석")
+  })
+
+  it("동반 질환을 좁은 쪽에서 넓은 쪽으로 옮긴다", () => {
+    expect(
+      valuesOf({
+        ckdStage: "STAGE_4",
+        isDialysis: false,
+        comorbidities: ["DIABETES", "HYPERTENSION"],
+      }),
+    ).toEqual(["CKD4", "당뇨 동반", "고혈압 동반"])
+  })
+
+  /*
+    **이 테스트가 없어서 버그가 살아 있었다.** 표가 `DIABETIC_KIDNEY_DISEASE`(진단 원인
+    어휘)로 잠겨 있었는데 함수는 `comorbidities`(동반 질환 어휘)만 읽어서, 당뇨를 등록한
+    사람에게 `당뇨 동반` 이 한 번도 안 붙었다. 픽스처도 같은 잘못된 키를 쓰고 있어
+    전부 초록이었다 — 그래서 **두 축을 각각** 못 박는다.
+  */
+  it("동반 질환 축(DIABETES)에서 당뇨가 붙는다", () => {
+    expect(
+      valuesOf({
+        ckdStage: null,
+        isDialysis: false,
+        comorbidities: ["DIABETES"],
+      }),
+    ).toEqual(["당뇨 동반"])
+  })
+
+  it("진단 원인 축(DIABETIC_KIDNEY_DISEASE)에서도 붙는다 — 좁은 것에서 넓은 것으로", () => {
+    expect(
+      valuesOf({
+        ckdStage: null,
+        isDialysis: false,
+        diagnosisCauses: ["DIABETIC_KIDNEY_DISEASE"],
+      }),
+    ).toEqual(["당뇨 동반"])
+  })
+
+  it("두 축이 같은 사실을 말하면 태그는 하나다", () => {
+    expect(
+      valuesOf({
+        ckdStage: null,
+        isDialysis: false,
+        comorbidities: ["DIABETES"],
+        diagnosisCauses: ["DIABETIC_KIDNEY_DISEASE"],
+      }),
+    ).toEqual(["당뇨 동반"])
+  })
+
+  it("모르는 동반 질환 키는 버린다", () => {
+    expect(
+      deriveAuthorContextTags({
+        ckdStage: null,
+        isDialysis: false,
+        comorbidities: ["SOMETHING_NEW", ""],
+      }),
+    ).toEqual([])
+  })
+
+  it("화면에는 한국어가 아니라 문구 열쇠를 준다", () => {
+    /*
+      값을 그대로 화면에 이어 붙이던 때, en 로케일에서
+      `Written for my own needs (CKD 5기 · 당뇨 동반)` 이 나왔다. 값은 서버 검색
+      어휘라 번역할 수 없으므로, 화면이 쓸 열쇠를 따로 준다.
+    */
+    expect(
+      deriveAuthorContextTags({
+        ckdStage: "STAGE_5",
+        isDialysis: true,
+        comorbidities: ["DIABETES", "HYPERTENSION"],
+      }),
+    ).toEqual([
+      { value: "투석환자", labelKey: "category.stage.dialysis" },
+      { value: "CKD5", labelKey: "category.stage.ckd5" },
+      { value: "당뇨 동반", labelKey: "category.stage.diabetes" },
+      { value: "고혈압 동반", labelKey: "category.stage.hypertension" },
+    ])
+  })
+
+  it("나오는 값은 정본 어휘 안이고, 문구 열쇠는 ko·en 둘 다에 있다", () => {
+    /*
+      예전에는 `STAGE_5` 하나만 훑어서 3a·3b·4기 칸의 오타를 못 잡았다. 병기 표의
+      네 칸을 전부 지나가게 한다.
+
+      투석과 병기를 같이 켠 것은 실제 프로필 모양이 아니라(투석이면 `ckd_stage` 가
+      `"DIALYSIS"` 다) **한 번에 표를 최대로 훑기 위한** 조합이다.
+    */
+    const stageKeys = ["STAGE_3A", "STAGE_3B", "STAGE_4", "STAGE_5"]
+    for (const ckdStage of stageKeys) {
+      const every = deriveAuthorContextTags({
+        ckdStage,
+        isDialysis: true,
+        comorbidities: ["DIABETES", "HYPERTENSION"],
+      })
+      expect(every).toHaveLength(4)
+      for (const tag of every) {
+        expect(STAGE_TAGS as readonly string[]).toContain(tag.value)
+        // 열쇠만 맞고 문구가 없으면 화면에 열쇠가 그대로 뜬다. 양쪽 로케일을 본다.
+        expect(typeof leafAt(koRecipe, tag.labelKey)).toBe("string")
+        expect(typeof leafAt(enRecipe, tag.labelKey)).toBe("string")
+      }
+    }
+  })
+
+  it("순서가 고정이다 — 같은 사람에게 매번 같은 문장이 보여야 한다", () => {
+    const tags = valuesOf({
+      ckdStage: "STAGE_5",
+      isDialysis: true,
+      comorbidities: ["HYPERTENSION", "DIABETES"],
+    })
+    expect(tags).toEqual(["투석환자", "CKD5", "당뇨 동반", "고혈압 동반"])
+  })
+})
+
+describe("드래그 중 비켜나는 거리 — 잡은 행이 지나간 만큼만", () => {
+  const H = 60
+
+  it("드래그가 아니면 아무도 안 움직인다", () => {
+    expect(staticOffsetFor(0, null, null, H)).toBe(0)
+    expect(staticOffsetFor(0, 1, null, H)).toBe(0)
+    expect(staticOffsetFor(0, null, 1, H)).toBe(0)
+  })
+
+  it("잡은 행 자신은 0 이다 — 손가락을 따라가는 값이 따로 있다", () => {
+    expect(staticOffsetFor(2, 2, 0, H)).toBe(0)
+  })
+
+  it("아래로 끌면 사이에 낀 행들이 위로 올라온다", () => {
+    // 0번을 2번 자리로: 1·2번이 한 칸씩 위로(-H), 3번은 그대로.
+    expect(staticOffsetFor(1, 0, 2, H)).toBe(-H)
+    expect(staticOffsetFor(2, 0, 2, H)).toBe(-H)
+    expect(staticOffsetFor(3, 0, 2, H)).toBe(0)
+  })
+
+  it("위로 끌면 사이에 낀 행들이 아래로 내려간다", () => {
+    // 3번을 1번 자리로: 1·2번이 한 칸씩 아래로(+H), 0번은 그대로.
+    expect(staticOffsetFor(1, 3, 1, H)).toBe(H)
+    expect(staticOffsetFor(2, 3, 1, H)).toBe(H)
+    expect(staticOffsetFor(0, 3, 1, H)).toBe(0)
+  })
+
+  it("제자리에 놓으면 아무도 안 움직인다", () => {
+    for (const i of [0, 1, 2, 3]) expect(staticOffsetFor(i, 1, 1, H)).toBe(0)
+  })
+
+  it("높이를 아직 못 쟀으면(0) 움직임도 0 이다", () => {
+    /*
+      `-draggedHeight` 라 값이 `-0` 으로 나온다. `toBe` 는 `Object.is` 라
+      `-0` 과 `0` 을 다르게 보지만, 이 값이 가는 곳은 `translateY` 하나뿐이고
+      거기서 둘은 같은 그림이다. 그래서 **수치가 같은가**를 묻는다.
+    */
+    expect(staticOffsetFor(1, 0, 2, 0) === 0).toBe(true)
   })
 })

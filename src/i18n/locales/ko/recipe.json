@@ -13,7 +13,9 @@
     "keepEditing": "계속 수정",
     "addPhoto": "사진 추가",
     "addTag": "태그 추가",
-    "dismissKeyboard": "키보드 내리기"
+    "dismissKeyboard": "키보드 내리기",
+    "back": "뒤로",
+    "clear": "지우기"
   },
   "category": {
     "post": {
@@ -43,13 +45,6 @@
       "low-phosphorus": "저인",
       "high-calorie": "고열량"
     },
-    "stage": {
-      "ckd3": "CKD 3기",
-      "ckd4": "CKD 4기",
-      "ckd5": "CKD 5기",
-      "diabetes": "당뇨 동반",
-      "hypertension": "고혈압 동반"
-    },
     "cuisineValue": {
       "한식": "한식",
       "중식": "중식",
@@ -58,6 +53,14 @@
       "샐러드": "샐러드",
       "디저트": "디저트",
       "음료": "음료"
+    },
+    "stage": {
+      "ckd3": "CKD 3기",
+      "ckd4": "CKD 4기",
+      "ckd5": "CKD 5기",
+      "diabetes": "당뇨 동반",
+      "hypertension": "고혈압 동반",
+      "dialysis": "투석 중"
     }
   },
   "filter": {
@@ -184,12 +187,21 @@
     "exitBody": "지금까지 쓴 내용은 저장되지 않아요."
   },
   "freePost": {
+    "formTitle": "글쓰기",
+    "photoVideo": "사진/영상",
+    "categoryLabel": "카테고리",
+    "optional": "선택",
+    "titleLabel": "제목",
+    "tagsLabel": "태그",
+    "descriptionLabel": "설명 작성",
+    "descriptionPlaceholder": "내용을 입력해 주세요.",
+    "register": "등록",
     "titlePlaceholder": "제목을 적어 주세요",
     "bodyPlaceholder": "오늘 먹은 것, 식단 고민, 생활 팁을 자유롭게 나눠 보세요.\n서로를 존중하는 말로 이야기해 주세요.",
     "editBodyPlaceholder": "식단 고민이나 일상을 자유롭게 적어 주세요",
     "topicTitle": "글 주제",
     "topicAccessibility": "글 주제 선택, 현재 {{category}}",
-    "photoLimitTitle": "사진 추가",
+    "photoLimitTitle": "사진을 더 넣을 수 없어요",
     "photoLimitBody": "사진은 게시글당 {{count}}장까지 첨부할 수 있어요.",
     "photoProgress": "사진 {{current}}/{{total}} 올리는 중",
     "loading": "글을 불러오고 있어요",
@@ -216,9 +228,13 @@
     "all": "전체",
     "clearTagFilter": "{{tag}} 태그 필터 해제",
     "sortRecent": "최신순",
+    "sortViews": "조회순",
     "sortPopular": "인기순",
     "emptyTitle": "아직 글이 없어요",
-    "emptyBody": "첫 글을 남겨 이야기를 시작해 보세요"
+    "emptyBody": "첫 글을 남겨 이야기를 시작해 보세요",
+    "errorRetry": "다시 불러오기",
+    "loadMore": "더 보기",
+    "loadMoreRetry": "다시 시도"
   },
   "story": {
     "title": "스토리",
@@ -234,22 +250,21 @@
   "post": {
     "more": "게시글 더보기",
     "popularAccessibility": "인기글 {{rank}}위 {{title}}",
-    "reportTitle": "신고할 이유를 골라 주세요",
+    "viewCount": "조회 {{count}}",
+    "viewCount_one": "조회 {{count}}",
+    "viewCount_other": "조회 {{count}}",
+    "likeCount": "좋아요 {{count}}",
+    "likeCount_one": "좋아요 {{count}}",
+    "likeCount_other": "좋아요 {{count}}",
+    "commentCount": "댓글 {{count}}",
+    "commentCount_one": "댓글 {{count}}",
+    "commentCount_other": "댓글 {{count}}",
     "reportPost": "이 글 신고하기",
     "blockUser": "이 사용자 차단하기",
     "blockTitle": "{{author}}님을 차단할까요?",
     "blockBody": "차단하면 이 사용자의 글이 바로 보이지 않아요.",
     "block": "차단",
-    "reportReceivedTitle": "신고를 접수했어요",
-    "reportReceivedBody": "신고 내용을 확인할게요.",
-    "withdrawnUser": "탈퇴한 사용자",
-    "reportReason": {
-      "spam": "스팸 또는 광고",
-      "harassment": "괴롭힘 또는 혐오 표현",
-      "inappropriate": "부적절한 콘텐츠",
-      "falseInformation": "거짓 정보",
-      "other": "기타"
-    }
+    "withdrawnUser": "탈퇴한 사용자"
   },
   "poll": {
     "label": "투표",
@@ -335,13 +350,13 @@
     "search": "{{tag}} 태그 검색",
     "participants": "이 글에 참여한 사람",
     "mention": "{{name}} 태그하기",
-    "author": "글쓴이"
-  },
-  "writeType": {
-    "recipeTitle": "레시피",
-    "recipeBody": "내가 먹어 본 방법과 조리법을 나눠요",
-    "postTitle": "자유글",
-    "postBody": "식단 고민이나 일상을 나눠요"
+    "author": "글쓴이",
+    "refusedLimitTitle": "태그는 {{max}}개까지예요",
+    "refusedLimitBody": "붙어 있는 태그를 지우면 새 태그를 넣을 수 있어요.",
+    "refusedTooLongTitle": "태그가 너무 길어요",
+    "refusedTooLongBody": "태그 하나는 {{max}}자까지 쓸 수 있어요.",
+    "refusedInvalidTitle": "이 태그는 넣을 수 없어요",
+    "refusedInvalidBody": "빈칸이나 보이지 않는 글자만으로는 태그를 만들 수 없어요."
   },
   "detail": {
     "loading": "레시피를 불러오고 있어요",
@@ -486,26 +501,13 @@
   },
   "responsibility": "다른 사람의 권리를 침해하지 않는 내용인지 확인했어요.",
   "recipeWrite": {
-    "title": "레시피 쓰기",
-    "progress": "필수 {{done}}/{{total}}",
+    "title": "레시피 작성하기",
     "editUnavailableTitle": "레시피 수정은 아직 없어요",
     "editUnavailableBody": "지금은 새 레시피를 올리는 것만 할 수 있어요. 고칠 내용이 있으면 새로 올려 주세요.",
-    "section": {
-      "basic": "기본 정보",
-      "classify": "분류",
-      "ingredients": "재료",
-      "steps": "조리 순서",
-      "description": "설명"
-    },
-    "sectionState": {
-      "done": "다 적었어요",
-      "incomplete": "남았어요",
-      "optional": "선택"
-    },
     "field": {
       "name": "제목",
-      "namePlaceholder": "어떤 레시피인가요?",
-      "summary": "한 줄 소개",
+      "namePlaceholder": "제목을 입력해 주세요",
+      "summary": "한줄 소개",
       "summaryPlaceholder": "맛과 특징을 한 줄로 알려 주세요",
       "timeMin": "조리 시간",
       "timeMinPlaceholder": "35",
@@ -513,13 +515,13 @@
       "servings": "몇 명이 먹을 양",
       "servingsValue": "{{value}}명",
       "servingsNote": "적어 준 재료 전체가 몇 명이 먹을 양인지 알려 주세요. 영양은 한 명 기준으로 계산해요.",
-      "difficulty": "난이도",
-      "description": "설명",
-      "descriptionPlaceholder": "간을 줄인 방법이나 직접 먹어 본 팁을 적어 주세요. 안 적어도 등록할 수 있어요.",
+      "description": "설명 작성",
+      "descriptionPlaceholder": "신장 건강을 고려한 저염·균형 식단 레시피를 나누는 공간입니다.\n\n재료 양, 조리 방법, 간을 줄인 팁 등을 함께 적어 주시면 다른 분들께 큰 도움이 됩니다.",
       "counter": "{{length}}/{{max}}",
       "optionalMark": "선택",
       "servingsDecrease": "인원 줄이기",
-      "servingsIncrease": "인원 늘리기"
+      "servingsIncrease": "인원 늘리기",
+      "timeMinRange": "1~1440분 사이로 적어 주세요"
     },
     "photo": {
       "label": "사진",
@@ -528,26 +530,33 @@
       "failed": "못 올렸어요",
       "retry": "다시 올리기",
       "remove": "사진 삭제",
-      "limitReached": "사진은 {{max}}장까지 넣을 수 있어요"
+      "limitReached": "대표 사진은 {{max}}장까지 올릴 수 있어요"
     },
     "classify": {
       "categoryLabel": "음식 종류",
       "categoryHint": "하나만 고를 수 있어요",
       "nutritionLabel": "영양 기준",
-      "stageLabel": "신장질환 병기",
-      "stageNotice": "이 태그는 검색에 쓰이고 레시피 카드에는 표시되지 않아요."
+      "searchOnlyNotice": "검색에만 쓰이고 레시피 카드에는 표시되지 않아요"
     },
     "ingredient": {
+      "label": "재료 입력",
       "namePlaceholder": "재료명",
-      "amountPlaceholder": "분량 (예: 100g)",
+      "unitPlaceholder": "100g",
+      "countPlaceholder": "1개",
       "add": "재료 추가",
       "remove": "{{name}} 삭제",
       "removeEmpty": "빈 재료 줄 삭제",
       "limitReached": "재료는 {{max}}개까지 적을 수 있어요",
       "hintMissing": "분량을 적으면 영양 계산에 들어가요",
-      "hintUnmeasurable": "무게를 알 수 없는 표기예요. “150g” 처럼 적어 주세요"
+      "hintUnmeasurable": "무게를 알 수 없는 표기예요. “150g” 처럼 적어 주세요",
+      "unitLabel": "무게",
+      "countLabel": "개수"
     },
     "step": {
+      "fieldLabel": "조리 순서",
+      "fieldPlaceholder": "조리 순서를 입력해 주세요",
+      "sheetTitle": "조리순서",
+      "sheetConfirm": "확인",
       "placeholder": "{{index}}번째로 무엇을 하나요?",
       "add": "순서 추가",
       "remove": "{{index}}번째 순서 삭제",
@@ -555,7 +564,9 @@
       "dragHint": "손잡이를 잡고 끌면 순서를 바꿀 수 있어요",
       "dragHandle": "{{index}}번째 순서 옮기기",
       "moveUp": "위로 옮기기",
-      "moveDown": "아래로 옮기기"
+      "moveDown": "아래로 옮기기",
+      "fieldSummary_one": "조리 순서 {{count}}단계",
+      "fieldSummary_other": "조리 순서 {{count}}단계"
     },
     "nutrition": {
       "title": "영양",
@@ -585,14 +596,15 @@
       "label": "등록",
       "submitting": "올리는 중",
       "uploadingPhotos": "사진을 올리는 중이에요",
-      "ready": "이제 등록할 수 있어요"
+      "ready": "이제 등록할 수 있어요",
+      "photoFailed": "사진을 다시 올리거나 지워 주세요"
     },
     "missing": {
-      "name": "제목을 적어주세요",
-      "summary": "한 줄 소개를 적어주세요",
-      "category": "음식 종류를 골라주세요",
-      "ingredients": "재료를 한 가지 이상 적어주세요",
-      "steps": "조리 순서를 한 단계 이상 적어주세요"
+      "name": "제목을 적어 주세요",
+      "summary": "한줄 소개를 적어 주세요",
+      "category": "음식 종류를 골라 주세요",
+      "ingredients": "재료를 한 가지 이상 적어 주세요",
+      "steps": "조리 순서를 한 단계 이상 적어 주세요"
     },
     "exit": {
       "title": "레시피 작성을\n그만둘까요?",
@@ -603,6 +615,9 @@
       "successBody": "다른 분들도 이제 볼 수 있어요.",
       "successUnmatched": "재료 {{n}}개는 무게를 몰라 영양 계산에서 빠졌어요. 올린 레시피는 아직 고칠 수 없어서, 다음에는 “150g” 처럼 무게로 적어 주세요.",
       "successUnmatchedEditable": "재료 {{n}}개는 무게를 몰라 영양 계산에서 빠졌어요. 나중에 분량을 고쳐 적으면 다시 계산돼요."
+    },
+    "authorContext": {
+      "label": "내 기준({{tags}})으로 적었어요"
     }
   }
 }

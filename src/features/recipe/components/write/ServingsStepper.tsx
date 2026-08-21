@@ -6,7 +6,8 @@
  * 사용자는 앱이 멈춘 줄 안다.
  */
 
-import { StyleSheet, Text, View, Pressable } from "react-native"
+import { StyleSheet, View, Pressable } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipGroup`).
+  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipRail`).
   label: { ...TYPE.cardTitle, fontWeight: "700" },
   control: {
     flexDirection: "row",

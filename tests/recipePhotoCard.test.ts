@@ -78,6 +78,8 @@ describe("사진 자리 — 한 판정이 사진과 일러스트를 모두 정�
     expect(slot).toEqual({
       kind: "photo",
       uri: "https://cdn.example.com/a.jpg",
+      // 서명 URL 은 15분마다 회전한다 — 쿼리를 뗀 값이 캐시 열쇠다.
+      cacheKey: "https://cdn.example.com/a.jpg",
     })
   })
 

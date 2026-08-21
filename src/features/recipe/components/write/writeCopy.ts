@@ -4,20 +4,20 @@
  * 값을 리터럴 유니온으로 두는 이유: `t()` 는 `i18next.d.ts` 로 키를 타입 검사한다.
  * `as const` 가 없으면 `string` 이 되어 오타가 컴파일을 통과한다.
  *
- * 태그·난이도 라벨은 **이미 있는 키를 재사용한다**(`category.food.*`,
- * `category.nutrition.*`, `category.stage.*`, `curated.difficulty.*`). 같은 말을
- * 두 번 번역해 두면 한쪽만 고쳐질 때 화면 안에서 같은 태그가 다르게 불린다.
+ * 태그 라벨은 **이미 있는 키를 재사용한다**(여기서 쓰는 것은 `category.food.*` ·
+ * `category.nutrition.*` 둘이다). 같은 말을 두 번 번역해 두면 한쪽만 고쳐질 때
+ * 화면 안에서 같은 태그가 다르게 불린다.
+ *
+ * 작성 갈래가 쓰는 나머지 두 무리는 여기 없다 — `category.stage.*` 는
+ * `authorContextTags.ts`, `curated.difficulty.*` 는 상세·카탈로그 카드 쪽이 붙들고 있다
+ * (아래 두 잔량 주석 참고). 열쇠 표는 그 값을 **만드는 파일 옆**에 둔다.
  */
 
 import {
   CUISINE_TAGS,
   NUTRITION_TAGS,
-  STAGE_TAGS,
 } from "@/src/features/recipe/data/recipeTags"
-import type {
-  RecipeWriteRequirementId,
-  RecipeWriteSectionId,
-} from "./writeFormState"
+import type { RecipeWriteRequirementId } from "./writeFormState"
 import type { NutrientKey } from "@/src/features/recipe/types/recipeWrite"
 
 export const MISSING_COPY_KEY = {
@@ -30,8 +30,8 @@ export const MISSING_COPY_KEY = {
 
 /**
  * 올린 레시피를 **고칠 수 있는가.** 계약 §2 의 엔드포인트 표에 `PUT /recipes/{id}` 가
- * 없다 — 서버에 수정 경로가 없어서 `app/(write)/recipe/[id].tsx` 도 "수정은 아직
- * 없어요" 만 띄운다.
+ * 없다 — 서버에 수정 경로가 없어서 `app/(write)/recipe/edit/[id].tsx` 도 "수정은 아직
+ * 없어요" 만 띄운다(그 파일은 상세 화면과 URL 이 겹쳐 `edit/` 아래로 옮겨졌다).
  *
  * 이 상수가 없을 때 실제로 벌어진 일: 등록 성공 알림이 "나중에 분량을 고쳐 적으면
  * 다시 계산돼요" 라고 말했다. 무게를 못 읽은 재료가 있는 작성자는 그 말을 믿고 수정
@@ -47,19 +47,12 @@ export const SUCCESS_UNMATCHED_COPY_KEY = RECIPE_EDIT_ENABLED
   ? "recipeWrite.result.successUnmatchedEditable"
   : "recipeWrite.result.successUnmatched"
 
-export const SECTION_TITLE_KEY = {
-  basic: "recipeWrite.section.basic",
-  classify: "recipeWrite.section.classify",
-  ingredients: "recipeWrite.section.ingredients",
-  steps: "recipeWrite.section.steps",
-  description: "recipeWrite.section.description",
-} as const satisfies Record<RecipeWriteSectionId, string>
-
-export const SECTION_STATE_KEY = {
-  done: "recipeWrite.sectionState.done",
-  incomplete: "recipeWrite.sectionState.incomplete",
-  optional: "recipeWrite.sectionState.optional",
-} as const
+/*
+  `SECTION_TITLE_KEY` · `SECTION_STATE_KEY` 가 여기 있었다. 아코디언 머리글의 제목과
+  상태("다 적었어요")를 가리키던 표인데, 화면이 평면 스크롤이 되면서 머리글 자체가
+  없어졌다. 두 표를 읽는 곳이 하나도 남지 않아 지웠다(`recipeWrite.section.*` ·
+  `recipeWrite.sectionState.*` 로케일 키도 같이 지웠다).
+*/
 
 /** 영양소 이름은 상세 화면과 같은 키를 쓴다. */
 export const NUTRIENT_NAME_KEY = {
@@ -94,14 +87,6 @@ export interface WriteChipOption {
     | "category.nutrition.low-potassium"
     | "category.nutrition.low-phosphorus"
     | "category.nutrition.high-calorie"
-    | "category.stage.ckd3"
-    | "category.stage.ckd4"
-    | "category.stage.ckd5"
-    | "category.stage.diabetes"
-    | "category.stage.hypertension"
-    | "curated.difficulty.easy"
-    | "curated.difficulty.medium"
-    | "curated.difficulty.hard"
 }
 
 const CUISINE_LABEL_KEY = {
@@ -122,13 +107,18 @@ const NUTRITION_LABEL_KEY = {
   고열량: "category.nutrition.high-calorie",
 } as const
 
-const STAGE_LABEL_KEY = {
-  "CKD 3기": "category.stage.ckd3",
-  "CKD 4기": "category.stage.ckd4",
-  "CKD 5기": "category.stage.ckd5",
-  "당뇨 동반": "category.stage.diabetes",
-  "고혈압 동반": "category.stage.hypertension",
-} as const
+/*
+  `STAGE_LABEL_KEY` 와 `STAGE_TAG_OPTIONS`(신장질환 병기 칩 다섯 개)가 여기 있었다.
+  그 줄은 이제 칩 레일이 아니라 프로필에서 파생되는 한 줄 진술이다
+  (`authorContextTags.ts` 머리말). 고르는 목록이 없어졌으므로 이 파일의 라벨 표는
+  없앴다.
+
+  **`category.stage.*` 로케일 키는 살아 있다.** 한때 같이 지웠지만, 파생된 태그도
+  화면에 문구로 그려져야 해서(en 로케일 문장 한가운데 한국어가 박히던 결함) 되살렸다.
+  지금 그 열쇠를 붙들고 있는 유니온은 여기가 아니라
+  `authorContextTags.ts::AuthorContextTag.labelKey` 다 — **만드는 쪽 옆에 둔다**는
+  같은 규칙이라, 이 파일의 `WriteChipOption` 에는 도로 넣지 않는다.
+*/
 
 export const CATEGORY_OPTIONS: WriteChipOption[] = CUISINE_TAGS.map(
   (value) => ({
@@ -141,14 +131,14 @@ export const NUTRITION_TAG_OPTIONS: WriteChipOption[] = NUTRITION_TAGS.map(
   (value) => ({ value, labelKey: NUTRITION_LABEL_KEY[value] }),
 )
 
-export const STAGE_TAG_OPTIONS: WriteChipOption[] = STAGE_TAGS.map((value) => ({
-  value,
-  labelKey: STAGE_LABEL_KEY[value],
-}))
+/*
+  `DIFFICULTY_OPTIONS`(쉬움·보통·어려움)가 여기 있었다. 작성 화면에서 난이도를 뺐고
+  (시안에 없고, 상세의 메타 한 줄에만 쓰이는 자유 문자열이다) 다른 호출부가 없어 지웠다.
 
-/** 난이도 값은 한국어 정본(`쉬움`/`보통`/`어려움`)이고 화면 문구만 로케일을 따른다. */
-export const DIFFICULTY_OPTIONS: WriteChipOption[] = [
-  { value: "쉬움", labelKey: "curated.difficulty.easy" },
-  { value: "보통", labelKey: "curated.difficulty.medium" },
-  { value: "어려움", labelKey: "curated.difficulty.hard" },
-]
+  목록만 지우고 `WriteChipOption.labelKey` 유니온에는 `curated.difficulty.*` 세 줄이
+  남아 있었는데, **그 값을 만드는 곳이 하나도 없어** 유니온에서도 뺐다. 죽은 갈래를
+  남겨 두면 "작성 칩이 난이도도 그릴 수 있다" 는 잘못된 신호가 된다.
+
+  **`curated.difficulty.*` 로케일 키는 살아 있다** — 카탈로그 레시피 카드
+  (`CuratedRecipeCard`)와 상세의 `RecipeTitleBlock` 이 서버가 준 난이도를 그릴 때 쓴다.
+*/

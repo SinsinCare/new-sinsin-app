@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -14,7 +15,7 @@ import { LAYOUT, TYPE } from "@/src/theme/surface"
  * 그래서 이 화면은 폼을 띄우지 않고 **왜 없는지**를 말한다. 예전에는 "레시피 수정"
  * 이라는 제목만 있는 빈 화면이었는데, 그건 로딩이 멈춘 것처럼 보인다.
  *
- * 서버에 수정이 생기면 `RecipeWriteForm` 에 초기값을 넣는 경로만 더하면 된다
+ * 서버에 수정이 생기면 `RecipeWriteScreen` 에 초기값을 넣는 경로만 더하면 된다
  * (폼 상태가 `createEmptyRecipeWriteForm()` 한 곳에서 나오게 만들어 두었다).
  *
  * ## 왜 `edit/` 아래로 옮겼는가

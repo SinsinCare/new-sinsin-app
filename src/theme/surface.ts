@@ -1,17 +1,34 @@
-import { tokens } from "./tokens"
+import { over } from "../design-system-v2/tokens/blend"
+import { semanticDark, semanticLight } from "../design-system-v2/tokens/colors"
+import {
+  typography,
+  type TextStyleToken,
+} from "../design-system-v2/tokens/typography"
 
 /**
- * 서비스 표면 규칙 — "신신당부 전체 화면 구현 시트" 의 COLOR / TYPE / LAYOUT 을 옮긴 것.
- * 가입·온보딩·홈(기록)이 같은 값을 본다. 화면마다 회색을 새로 고르지 않는다.
+ * 서비스 표면 규칙 — 화면 골격(면·보더·글자 3단)의 값 표.
  *
- * ■ 색
- *   면(surface)·보더(border)·글자 3단(textStrong / text / textWeak)만 쓴다.
- *   유채색 면은 선택·기록 완료 표시에만(브랜드 틴트). 그림자는 쓰지 않는다.
+ * ■ 값의 출처는 이제 하나다 (2026-08-17)
+ *   아래 팔레트는 **손으로 고른 회색이 아니라 `design-system-v2` 시맨틱에서 파생한 값**이다.
+ *   정본은 Figma `Design-system_Mobile`(node-id=20-2) → `design-system-v2/tokens/colors.ts`.
+ *   이 파일을 쓰는 화면 78개는 **한 줄도 고치지 않고** v2 와 같은 색을 보게 된다.
+ *   같은 역할에 다른 값을 쓰던 세 계보(v2 / surface / tamagui)를 접는 작업의 첫 단계다.
+ *   경위와 남은 항목: `docs/design/2026-08-17-design-consistency-plan.md`.
+ *
+ *   **여기에 새 리터럴 hex 를 적지 말 것.** 필요한 색이 v2 에 없으면 그건 토큰이 없는 것이고,
+ *   토큰을 먼저 정해야 한다. 아래 `over()` 로 v2 값을 합성하는 것까지가 허용 범위다.
+ *
+ * ■ 인터페이스는 그대로다
+ *   `SurfacePalette` 의 키 21개는 하나도 늘거나 줄지 않았다. 호출부는 아무것도 모른다.
+ *
+ * ■ 알파를 그대로 두는 것과 합성하는 것
+ *   글자·선(label/line)은 **알파를 그대로 둔다** — 어떤 면 위에 얹혀도 같은 위계로 읽힌다.
+ *   면(canvas/card/surface…)은 **바닥 위로 합성해 불투명하게 만든다** — 이 값들은
+ *   `interpolateColor` 의 끝점(SurfacePressable)이거나 통째로 교체되는 배경이라,
+ *   알파로 두면 눌린 순간 카드가 사라진다.
  *
  * ■ 브랜드
- *   시트는 #FF6B2D 로 표기돼 있고 앱 토큰은 #FE7139 다. 두 오렌지를 섞으면 화면마다
- *   브랜드가 달라 보이므로 앱 토큰 하나만 쓴다. 시트 값으로 통일하려면
- *   theme/tokens.ts 의 primary 한 줄만 바꾸면 전 화면이 따라온다.
+ *   `#FE7139` 하나. v2 `primary.primary` 와 이미 일치하므로 손대지 않는다.
  *
  * 순수 상수·함수만 둔다(RN 의존 없음).
  */
@@ -21,8 +38,19 @@ export interface SurfacePalette {
   canvas: string
   /** 입력·칩 등 한 단계 떠 있는 면 */
   surface: string
+  /**
+   * `surface` 보다 **한 단계 얕은** 면. 같은 화면에 우물이 둘 있을 때 둘을 가른다 —
+   * 예: 레시피 작성의 `+` 추가 줄(surface)과 그 아래 설명 입력(여기). 같은 값을 쓰면
+   * 두 블록이 한 덩어리로 붙어 보인다.
+   */
+  surfaceSunken: string
   /** 눌린 면 */
   surfacePressed: string
+  /**
+   * 섹션과 섹션 사이의 **가로 전체 띠**. 카드 경계선 대신 쓰는 굵은 여백이라
+   * `hairline`(선)과 역할이 다르다 — 선은 목록 안을 가르고, 이 띠는 화면을 가른다.
+   */
+  band: string
   /** 선택된 면(브랜드 틴트) */
   surfaceBrand: string
   /** 카드 면. 라이트에서는 바닥(회색) 위의 흰 카드다. */
@@ -33,11 +61,9 @@ export interface SurfacePalette {
   hairline: string
   textStrong: string
   text: string
-  /**
-   * 라벨·보조 문장. 본문(text)보다 한 단계 물러서고 캡션(placeholder)보다는 진하다.
-   * 라이트·다크가 같은 두 회색을 역할만 바꿔 쓴다(#747678 ↔ #A5A7A9).
-   */
+  /** 라벨·보조 문장. 본문(text)보다 한 단계 물러선다. */
   textMuted: string
+  /** 가장 옅은 글자. 지금은 `placeholder` 와 같은 단이다 — 아래 파생부 주석 참고. */
   textWeak: string
   placeholder: string
   brand: string
@@ -45,7 +71,7 @@ export interface SurfacePalette {
   /** 비활성 CTA. 브랜드색을 흐리게 깔지 않는다. */
   ctaOffBg: string
   ctaOffText: string
-  /** 사진 없이 기록만 된 카드(시트: #FFF4EF / 다크 #2A2A2C) */
+  /** 사진 없이 기록만 된 카드. 브랜드 틴트 한 벌을 `surfaceBrand` 와 같이 쓴다. */
   recordedTint: string
   /** 위험 신호. 리포트·경고 전용이며 브랜드색과 겸하지 않는다. */
   danger: string
@@ -60,73 +86,154 @@ export interface SurfacePalette {
   caution: string
 }
 
-const LIGHT: SurfacePalette = {
-  canvas: "#FFFFFF",
-  surface: "#F2F3F5",
-  surfacePressed: "#E8EAED",
-  surfaceBrand: "#FFF6F2",
-  card: "#FFFFFF",
-  border: "#E1E2E4",
-  hairline: "rgba(23,24,28,0.06)",
-  textStrong: "#17181C",
-  text: "#3A3C42",
-  textMuted: "#747678",
-  textWeak: "#8A8D95",
-  placeholder: "#A5A7A9",
-  brand: tokens.color.primary.val,
-  onBrand: "#FFFFFF",
-  ctaOffBg: "#F2F3F5",
-  ctaOffText: "#A5A8AE",
-  recordedTint: "#FFF4EF",
-  danger: "#C81E12",
-  caution: "#B45309",
+/**
+ * v2 시맨틱 한 벌에서 표면 팔레트를 만든다. 라이트·다크가 **같은 규칙**을 탄다 —
+ * 모드마다 다른 규칙을 쓰면 그게 곧 다음 드리프트의 씨앗이다.
+ *
+ * 1:1 대응이 없어 판단이 들어간 자리는 각 줄에 이유를 적었다. 그 넷뿐이다.
+ */
+function derive(v2: typeof semanticLight, isDark: boolean): SurfacePalette {
+  const {
+    label,
+    line,
+    fill,
+    background,
+    primary,
+    status,
+    static: staticColors,
+  } = v2
+
+  /** 화면 바닥. 모든 면 합성의 기준면이다. */
+  const canvas = background.default
+
+  /**
+   * 층은 `fill.normal` 을 **한 겹씩 더 얹어서** 만든다 — 바닥 → 카드 → 우물 → 눌림.
+   * 규칙이 하나라 라이트에선 층마다 어두워지고 다크에선 층마다 밝아진다.
+   * 즉 두 모드 모두 **바닥에서 멀어지는 쪽**이 위층이고, 눌림도 같은 방향으로 읽힌다.
+   * (v2 의 `fill.pressed` 는 두 모드 다 어두워지는 값이라 다크에서 방향이 뒤집힌다.
+   *  V2Button·V2Card·V2ListRow 가 pressed 를 opacity 로 처리하는 것도 같은 이유다.)
+   *
+   * 다크의 첫 겹은 정확히 `background.lower`(#313135)로 떨어진다 —
+   * v2 팔레트가 자기 자신과 맞물려 있다는 확인이다.
+   *
+   * **라이트에서 카드만 예외**로 바닥과 같은 흰 면이다. 이 앱의 라이트는
+   * "회색 바닥 위 흰 카드"이고 그 바닥은 화면이 `appBg`(=background.lower)로 깐다.
+   * 카드를 한 겹 더 올리면 흰 카드가 회색이 되어 층이 뒤집힌다.
+   */
+  const card = isDark ? over(fill.normal, canvas) : canvas
+  /** 입력칸·칩처럼 카드 안에 파인/뜬 면. */
+  const well = over(fill.normal, card)
+
+  return {
+    canvas,
+    surface: well,
+    // 우물의 얕은 단. `fill.alternative`(5%)는 `fill.normal`(8%)보다 한 겹 옅다.
+    surfaceSunken: over(fill.alternative, card),
+    surfacePressed: over(fill.normal, well),
+    // 화면을 가르는 띠. v2 가 이미 "바닥보다 한 단 낮은 배경" 으로 정의해 둔 값이다.
+    band: background.lower,
+
+    // 선택·기록완료 표시의 브랜드 틴트.
+    // 라이트는 Figma 의 primary-weak. 다크는 Figma 가 라이트와 같은 값(#fff1eb)을 둬서
+    // 그대로 쓰면 거의 흰 면이 된다(§1-B-2, 디자이너 확인 대기). 확인 전까지는
+    // **primary 를 18% 로 깐 기존 값**을 유지하되 리터럴 대신 primary 토큰에서 파생한다.
+    surfaceBrand: isDark
+      ? over(`${primary.primary}2e`, canvas)
+      : over(primary.primaryWeak, canvas),
+
+    // 다크 카드 값은 예전 tamagui 의 cardBgDark(#313138)와 사실상 같은 색으로 떨어진다
+    // — 두 계보가 여기서 만난다.
+    card,
+
+    border: line.normal,
+    hairline: line.alternative,
+
+    // 글자 4단은 v2 label 사다리를 그대로 탄다. 알파를 유지해 어떤 면 위에서도 같은 위계.
+    textStrong: label.normal,
+    text: label.neutral,
+    textMuted: label.alternative,
+    // v2 label 사다리에 textMuted 와 placeholder 사이 단이 없다.
+    // 없는 단을 지어내는 대신 **가장 옅은 단으로 합친다** — 위계는 넷이면 충분하다.
+    textWeak: label.assistive,
+    placeholder: label.assistive,
+
+    brand: primary.primary,
+    onBrand: staticColors.white,
+
+    // 비활성 CTA. V2Button 의 disabled 와 같은 면(fill.normal)을 쓴다.
+    ctaOffBg: well,
+    // V2Button 은 disabled 전경에 label.disable 을 쓰지만 그 값은 위 면 위에서 1.3:1 이라
+    // 사실상 안 보인다. 비활성 CTA 는 "지금은 못 누른다"가 읽혀야 하므로 한 단 진한 쪽을 쓴다.
+    ctaOffText: label.assistive,
+
+    // 사진 없이 기록만 된 카드. 예전엔 surfaceBrand 와 2pt 다른 별도 틴트였는데
+    // 두 개를 유지할 이유가 없어 **브랜드 틴트 한 벌로 합쳤다**.
+    recordedTint: isDark
+      ? over(`${primary.primary}2e`, canvas)
+      : over(primary.primaryWeak, canvas),
+
+    danger: status.negative,
+    caution: status.cautionary,
+  }
 }
 
-const DARK: SurfacePalette = {
-  canvas: "#1F1F21",
-  surface: "#26262A",
-  surfacePressed: "#323238",
-  surfaceBrand: "rgba(254,113,57,0.18)",
-  card: "#232326",
-  border: "#3A3A40",
-  hairline: "rgba(255,255,255,0.08)",
-  textStrong: "#F5F5F7",
-  text: "#DCDCE2",
-  textMuted: "#A5A7A9",
-  textWeak: "#93959D",
-  placeholder: "#747678",
-  brand: tokens.color.primary.val,
-  onBrand: "#FFFFFF",
-  ctaOffBg: "#2E2E33",
-  ctaOffText: "#7A7D85",
-  recordedTint: "#2A2A2C",
-  danger: "#FF5A4D",
-  caution: "#FBBF24",
-}
+const LIGHT: SurfacePalette = derive(semanticLight, false)
+const DARK: SurfacePalette = derive(semanticDark, true)
 
 export function getSurfacePalette(isDark: boolean): SurfacePalette {
   return isDark ? DARK : LIGHT
 }
 
-/** 시트 TYPE 표. 크기가 곧 위계다 — 화면마다 다시 정하지 않는다. */
+/**
+ * 정본 텍스트 토큰에서 **크기·행간·자간만** 떼어 낸다.
+ *
+ * `TYPE` 은 호출부가 `fontWeight` 로 굵기를 정하는 표라, face 를 같이 넘기면
+ * 이미 굵은 face 위에 합성 볼드가 한 번 더 얹힌다. 굵기는 `AppText` 가 face 로 바꾼다.
+ */
+function sizeOf(token: TextStyleToken) {
+  return {
+    fontSize: token.fontSize,
+    lineHeight: token.lineHeight,
+    letterSpacing: token.letterSpacing,
+  } as const
+}
+
+/**
+ * TYPE 표 — **v2 `typography` 스케일 위의 별칭**이다 (2026-08-17).
+ *
+ * 예전에는 여기 크기·행간·자간을 손으로 적었고, 그래서
+ *  - 자간이 11개 토큰 전부 음수였다(정본은 전부 0),
+ *  - 스케일에 없는 크기(16·18·12.5)가 섞였고,
+ *  - `label` 과 `caption` 이 같은 값인데 이름만 둘, `value` 와 `cardTitle` 은
+ *    같은 15px 인데 행간이 22/21 로 갈렸다.
+ * 같은 15px 텍스트가 탭마다 다른 폭으로 그려지던 원인이 이 표다.
+ *
+ * 이제 각 키는 정본 토큰 하나를 가리킨다. **크기를 여기서 새로 정하지 않는다** —
+ * 필요한 크기가 스케일에 없으면 그건 스케일을 늘릴 일이지 여기 숫자를 적을 일이 아니다.
+ *
+ * 굵기는 값에 들어 있지 않다. 호출부가 `fontWeight` 로 준 굵기는
+ * `shared/components/AppText` 의 `Text` 가 Pretendard face 로 바꿔 준다 —
+ * 그 파일 머리말 참고(그게 없으면 OS 기본 서체로 그려진다).
+ */
 export const TYPE = {
   /** 가입 스텝 질문. 2줄 고정 */
-  question: { fontSize: 20, lineHeight: 30, letterSpacing: -0.4 },
+  question: sizeOf(typography.title.smallXWeak), // 20/27
   /** 필드 라벨 */
-  label: { fontSize: 13, lineHeight: 18, letterSpacing: -0.26 },
+  label: sizeOf(typography.subtext.medium), // 13/18
   /** 필드 값 */
-  value: { fontSize: 15, lineHeight: 22, letterSpacing: -0.3 },
-  cta: { fontSize: 16, lineHeight: 22, letterSpacing: -0.32 },
-  sheetTitle: { fontSize: 17, lineHeight: 24, letterSpacing: -0.34 },
-  /** 홈 섹션 타이틀 */
-  sectionTitle: { fontSize: 18, lineHeight: 25, letterSpacing: -0.36 },
+  value: sizeOf(typography.subtext.large), // 15/20
+  /** CTA 라벨. v2 스케일에 16 이 없다 — 버튼(large)의 정본은 label.medium 이다. */
+  cta: sizeOf(typography.label.medium), // 17/21
+  sheetTitle: sizeOf(typography.title.xSmall), // 17/23
+  /** 섹션 타이틀. 식당 탭(정본 구현)이 쓰는 값과 같은 것으로 맞췄다 — 예전 18px 은 스케일 밖. */
+  sectionTitle: sizeOf(typography.title.xSmall), // 17/23
   /** 홈 카드 타이틀 + 보조 */
-  cardTitle: { fontSize: 15, lineHeight: 21, letterSpacing: -0.3 },
-  cardSub: { fontSize: 12.5, lineHeight: 18, letterSpacing: -0.25 },
-  caption: { fontSize: 13, lineHeight: 18, letterSpacing: -0.26 },
+  cardTitle: sizeOf(typography.label.small), // 15/19
+  cardSub: sizeOf(typography.subtext.small), // 12/16 (예전 12.5 — 정수 아닌 크기였다)
+  caption: sizeOf(typography.subtext.medium), // 13/18
   /** 기록 수치 + 단위 */
-  numeric: { fontSize: 28, lineHeight: 34, letterSpacing: -0.7 },
-  unit: { fontSize: 14, lineHeight: 20, letterSpacing: -0.28 },
+  numeric: sizeOf(typography.display.medium), // 28/38
+  unit: sizeOf(typography.caption.medium), // 14/16
 } as const
 
 /**
@@ -235,6 +342,18 @@ export const LAYOUT = {
     titleGap: 12,
     between: 24,
   },
+  /**
+   * **스크롤하지 않는 머리(제목·검색·세그먼트) 와 그 아래 목록 사이.**
+   *
+   * 이 값은 장식이 아니라 기능이다 — 머리가 고정이면 목록은 그 밑변에서 **잘린다.**
+   * 여백이 없으면 스크롤한 순간 카드 사진이 검색창에 딱 붙어 잘려서, 층이 겹친 것이
+   * 아니라 **사진이 깨진 것처럼** 보인다(2026-08-18 레시피 탭 실측, 사용자 지적).
+   *
+   * 실제로 화면마다 제각각이었다 — 레시피 0 · 커뮤니티 4 · 내 활동 4 · 보관함 4 ·
+   * 마이페이지 12. 0 과 4 는 둘 다 "붙어 잘린다" 쪽이다. `section.titleGap` 과 같은
+   * 12 로 맞춰 머리가 하나의 띠로 읽히게 한다.
+   */
+  stickyHeaderGap: 12,
   card: { radius: 16, padding: 18, gap: 12 },
   /** 숫자 스테퍼 같은 조작부 */
   control: { height: 44, radius: 12 },

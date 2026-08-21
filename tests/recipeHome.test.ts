@@ -48,6 +48,7 @@ import {
   orderFromCurrentSlot,
   toRecipeHomeCache,
 } from "../src/features/recipe/types/recipeHome"
+import { RECIPE_LIST_QUERY_ROOT } from "../src/features/recipe/hooks/useRecipeListV2"
 import type { RecipeListResponse } from "../src/features/recipe/types/recipeListV2"
 
 const rawCard = (id: number, extra: Record<string, unknown> = {}) => ({
@@ -131,7 +132,15 @@ describe("섹션 순서는 서버 응답 순서다 (앱이 시계로 재정렬�
     // 렌더 테스트가 불가능한 화면이라 소스로 못 박는다. `sort`/`orderFromCurrentSlot`
     // 이 화면에 들어오면 섹션 순서가 기기 시계에 좌우된다.
     const screen = fs.readFileSync(
-      path.join(__dirname, "..", "app", "(tabs)", "recipe.tsx"),
+      path.join(
+        __dirname,
+        "..",
+        "src",
+        "features",
+        "recipe",
+        "views",
+        "RecipeHomeScreen.tsx",
+      ),
       "utf8",
     )
     expect(screen).toContain("homeSections.map((section) =>")
@@ -235,7 +244,15 @@ describe("빈 섹션도 온다 — 감추지 않는다", () => {
     // `section.empty` 가 "아래 전체 레시피에서 찾아보세요" 로 끝난다 — `home.listTitle`
     // 이 섹션 **아래**에 실제로 있어야 그 문장이 참이다.
     const screen = fs.readFileSync(
-      path.join(__dirname, "..", "app", "(tabs)", "recipe.tsx"),
+      path.join(
+        __dirname,
+        "..",
+        "src",
+        "features",
+        "recipe",
+        "views",
+        "RecipeHomeScreen.tsx",
+      ),
       "utf8",
     )
     expect(screen).toContain("RECIPE_HOME_LIST_TITLE_KEY")
@@ -460,7 +477,12 @@ describe("저장 상태가 섹션 카드에도 반영된다", () => {
       ),
       "utf8",
     )
-    expect(detail).toContain('const LIST_QUERY_ROOT = ["recipes-v2"] as const')
+    // 예전에는 상세가 뿌리를 **다시 적었다**. 지금은 목록 레인이 내보낸 상수를
+    // 그대로 들여온다 — 한쪽만 바뀌어 조용히 갈라지는 경로가 아예 없어진 것이다.
+    expect(detail).toContain(
+      'import { RECIPE_LIST_QUERY_ROOT as LIST_QUERY_ROOT } from "./useRecipeListV2"',
+    )
+    expect(RECIPE_LIST_QUERY_ROOT[0]).toBe("recipes-v2")
     expect(RECIPE_HOME_QUERY_ROOT[0]).toBe("recipes-v2")
     // 홈 키의 2번째 칸은 `"home"`, 목록 키의 2번째 칸은 로케일(ko/en)이라 겹칠 수 없다.
     expect(RECIPE_HOME_QUERY_ROOT[1]).toBe("home")

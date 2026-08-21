@@ -111,6 +111,12 @@ export interface CreateRecipeRequestV2 {
   tags?: string[]
   timeMin?: number | null
   servings?: number | null
+  /**
+   * **와이어에는 남아 있지만 작성 화면은 더 이상 채우지 않는다.** 난이도는 상세 메타
+   * 한 줄에만 쓰이던 자유 문자열이라 폼에서 뺐다(시안에도 없다). 필드를 지우지 않는
+   * 이유는 서버가 여전히 받고, 큐레이션 레시피가 값을 실어 오기 때문이다 — 타입에서
+   * 지우면 그 갈래가 타입 에러를 낸다.
+   */
   difficulty?: string | null
   imageObjectPaths?: string[]
   ingredients: NutritionPreviewIngredient[]
@@ -138,6 +144,9 @@ export interface CreatedRecipeSummary {
 /**
  * 계약 §3.5 / §3.6 의 상한. 서버가 거절하기 전에 앱이 먼저 막는다 —
  * 400 을 받고 나서 "무엇이 문제였는지" 를 사용자가 알 수 없는 것이 더 나쁘다.
+ *
+ * 예외는 `imageMax` 하나다. 그건 서버 상한(10)을 **옮겨 적은 값이 아니라 더 좁힌**
+ * 값이다 — 서버가 받아 주기는 해도 보관하지 않기 때문이다(그 항목 머리말).
  */
 export const RECIPE_WRITE_LIMITS = {
   nameMax: 200,
@@ -150,10 +159,53 @@ export const RECIPE_WRITE_LIMITS = {
   timeMinMax: 1440,
   servingsMin: 1,
   servingsMax: 20,
-  imageMax: 5,
+  /**
+   * **1 이다. 5 가 아니다 — 서버가 첫 장만 저장하기 때문이다.**
+   *
+   * `sinsin-be-bun/src/domains/recipe/authoring.ts` 는 받은 배열에서 한 장만 꺼낸다.
+   *
+   *     const imagePaths = normalizeImagePaths(deps.storage, request.imageObjectPaths);
+   *     ...
+   *     imageUrl: imagePaths[0] ?? null,
+   *
+   * 그리고 그 한 값이 INSERT 에서 **세 컬럼 모두**에 같은 값으로 들어간다
+   * (`image_url, thumbnail_url, detail_image_url` ← `${input.imageUrl}` 세 번).
+   * 둘째 장부터는 들어갈 칸 자체가 없다. 서버 상한 `MAX_IMAGE_PATHS = 10` 은
+   * "요청에 그만큼 실려도 400 을 내지 않는다" 는 뜻이지 "보관한다" 는 뜻이 아니다.
+   *
+   * 그래서 5 를 두면 화면이 5장을 올리게 해 놓고 등록 순간 4장을 조용히 버린다.
+   * 수정 API 도 없어(`writeCopy.ts::RECIPE_EDIT_ENABLED === false`) 작성자가
+   * 되돌릴 길이 없다 — 조용한 폴백이 고장을 정상처럼 보이게 하는 그 형태다.
+   *
+   * 버린 대안: 5장을 그대로 받고 등록 뒤에 "한 장만 저장됐어요" 를 띄우기. 이미
+   * 잃은 뒤에 알리는 것이라 사용자가 할 수 있는 일이 없다. 못 지킬 약속을 애초에
+   * 하지 않는 쪽을 골랐다.
+   *
+   * **서버에 다중 이미지 저장이 생기면(별도 표든 컬럼이든) 이 값을 되돌린다.**
+   * 그때 고칠 곳은 여기 하나다 — `PhotoPickerRow`(`atLimit`) ·
+   * `useRecipeWriteScreen.addPhotos`(`remaining`) · `writeFormState`(`slice`) 셋 다
+   * 이 상수만 읽는다.
+   */
+  imageMax: 1,
   ingredientMax: 50,
   ingredientNameMax: 100,
+  /**
+   * 서버가 받는 `amountText` 하나의 상한(계약 §3.5). 화면은 이 칸을 **단위·수량 두
+   * 칸으로 나눠 받고** `joinIngredientAmount` 로 합쳐 보내므로, 이 값은 **합친 뒤**의
+   * 상한이다. 칸별 상한은 아래 둘이다.
+   */
   ingredientAmountMax: 40,
+  /**
+   * 단위 칸(그램이 실리는 칸) · 수량 칸의 `maxLength`.
+   *
+   * 20 + 1(사이 공백) + 19 = 40 이라 **두 칸을 꽉 채워도 합산 상한을 넘지 않는다.**
+   * 합친 뒤에 자르는 방법도 있었지만 그러면 사용자가 다 적은 글자가 등록 순간
+   * 조용히 사라진다 — 칸에서 미리 막으면 안 들어가는 것이 손가락에 보인다.
+   * 그램이 실리는 쪽에 한 글자를 더 준 이유: `1 1/2큰술 (200g)` 처럼 단위 칸이
+   * 길어지는 표기가 실제로 있고, 서버 파서가 읽는 것도 그 칸이다.
+   */
+  ingredientUnitMax: 20,
+  ingredientCountMax: 19,
   stepMax: 30,
   stepTextMax: 1000,
 } as const

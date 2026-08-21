@@ -13,7 +13,9 @@
     "keepEditing": "Keep editing",
     "addPhoto": "Add photo",
     "addTag": "Add tag",
-    "dismissKeyboard": "Dismiss keyboard"
+    "dismissKeyboard": "Dismiss keyboard",
+    "back": "Back",
+    "clear": "Clear"
   },
   "category": {
     "post": {
@@ -43,13 +45,6 @@
       "low-phosphorus": "Lower phosphorus",
       "high-calorie": "Higher calorie"
     },
-    "stage": {
-      "ckd3": "CKD stage 3",
-      "ckd4": "CKD stage 4",
-      "ckd5": "CKD stage 5",
-      "diabetes": "With diabetes",
-      "hypertension": "With high blood pressure"
-    },
     "cuisineValue": {
       "한식": "Korean",
       "중식": "Chinese",
@@ -58,6 +53,14 @@
       "샐러드": "Salads",
       "디저트": "Desserts",
       "음료": "Drinks"
+    },
+    "stage": {
+      "ckd3": "CKD stage 3",
+      "ckd4": "CKD stage 4",
+      "ckd5": "CKD stage 5",
+      "diabetes": "With diabetes",
+      "hypertension": "With high blood pressure",
+      "dialysis": "On dialysis"
     }
   },
   "filter": {
@@ -184,6 +187,15 @@
     "exitBody": "Your draft won’t be saved."
   },
   "freePost": {
+    "formTitle": "Write",
+    "photoVideo": "Photo/video",
+    "categoryLabel": "Category",
+    "optional": "Optional",
+    "titleLabel": "Title",
+    "tagsLabel": "Tags",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Write your post.",
+    "register": "Publish",
     "titlePlaceholder": "Add a title",
     "bodyPlaceholder": "Share a meal, a question, or something that helped you today.\nPlease keep the conversation respectful.",
     "editBodyPlaceholder": "Share a meal question or something from your day",
@@ -216,9 +228,13 @@
     "all": "All",
     "clearTagFilter": "Remove the {{tag}} tag filter",
     "sortRecent": "Newest",
+    "sortViews": "Most viewed",
     "sortPopular": "Popular",
     "emptyTitle": "No posts yet",
-    "emptyBody": "Start the conversation with the first post."
+    "emptyBody": "Start the conversation with the first post.",
+    "errorRetry": "Try again",
+    "loadMore": "Show more",
+    "loadMoreRetry": "Try again"
   },
   "story": {
     "title": "Stories",
@@ -234,22 +250,21 @@
   "post": {
     "more": "More post options",
     "popularAccessibility": "Popular post number {{rank}}: {{title}}",
-    "reportTitle": "Why are you reporting this post?",
+    "viewCount": "{{count}} views",
+    "viewCount_one": "{{count}} view",
+    "viewCount_other": "{{count}} views",
+    "likeCount": "{{count}} likes",
+    "likeCount_one": "{{count}} like",
+    "likeCount_other": "{{count}} likes",
+    "commentCount": "{{count}} comments",
+    "commentCount_one": "{{count}} comment",
+    "commentCount_other": "{{count}} comments",
     "reportPost": "Report this post",
     "blockUser": "Block this person",
     "blockTitle": "Block {{author}}?",
     "blockBody": "You’ll stop seeing this person’s posts right away.",
     "block": "Block",
-    "reportReceivedTitle": "Report sent",
-    "reportReceivedBody": "We’ll review it.",
-    "withdrawnUser": "Former member",
-    "reportReason": {
-      "spam": "Spam or advertising",
-      "harassment": "Harassment or hate speech",
-      "inappropriate": "Inappropriate content",
-      "falseInformation": "False information",
-      "other": "Something else"
-    }
+    "withdrawnUser": "Former member"
   },
   "poll": {
     "label": "Poll",
@@ -335,13 +350,13 @@
     "search": "Search the {{tag}} tag",
     "participants": "People in this conversation",
     "mention": "Mention {{name}}",
-    "author": "Author"
-  },
-  "writeType": {
-    "recipeTitle": "Recipe",
-    "recipeBody": "Share a dish you’ve made and what worked",
-    "postTitle": "Post",
-    "postBody": "Share a meal question or something from your day"
+    "author": "Author",
+    "refusedLimitTitle": "Up to {{max}} tags",
+    "refusedLimitBody": "Remove one of the tags to add another.",
+    "refusedTooLongTitle": "That tag is too long",
+    "refusedTooLongBody": "A tag can be up to {{max}} characters.",
+    "refusedInvalidTitle": "That tag can't be added",
+    "refusedInvalidBody": "A tag can't be made of spaces or invisible characters only."
   },
   "detail": {
     "loading": "Loading the recipe",
@@ -487,24 +502,11 @@
   "responsibility": "I’ve checked that this post doesn’t violate anyone else’s rights.",
   "recipeWrite": {
     "title": "Write a recipe",
-    "progress": "Required {{done}}/{{total}}",
     "editUnavailableTitle": "Editing a recipe isn't available yet",
     "editUnavailableBody": "For now you can only post a new recipe. Post it again if you need to change something.",
-    "section": {
-      "basic": "Basics",
-      "classify": "Category",
-      "ingredients": "Ingredients",
-      "steps": "Steps",
-      "description": "Notes"
-    },
-    "sectionState": {
-      "done": "Complete",
-      "incomplete": "Not done",
-      "optional": "Optional"
-    },
     "field": {
       "name": "Title",
-      "namePlaceholder": "What is this recipe?",
+      "namePlaceholder": "Enter a title",
       "summary": "One-line intro",
       "summaryPlaceholder": "Describe the taste in one line",
       "timeMin": "Cooking time",
@@ -513,41 +515,48 @@
       "servings": "Servings",
       "servingsValue": "{{value}} servings",
       "servingsNote": "Tell us how many servings the ingredients above make. Nutrition is shown per serving.",
-      "difficulty": "Difficulty",
-      "description": "Notes",
-      "descriptionPlaceholder": "Share how you cut the salt, or tips from cooking it yourself. You can post without this.",
+      "description": "Description",
+      "descriptionPlaceholder": "This is a space for sharing low-sodium, balanced recipes that look after kidney health.\n\nWriting down the amounts, how you cooked it, and any tips for cutting salt is a big help to everyone else.",
       "counter": "{{length}}/{{max}}",
       "optionalMark": "Optional",
       "servingsDecrease": "Fewer servings",
-      "servingsIncrease": "More servings"
+      "servingsIncrease": "More servings",
+      "timeMinRange": "Enter a value between 1 and 1440 minutes"
     },
     "photo": {
-      "label": "Photos",
+      "label": "Photo",
       "add": "Add photo",
       "uploading": "Uploading",
       "failed": "Upload failed",
       "retry": "Upload again",
       "remove": "Remove photo",
-      "limitReached": "You can add up to {{max}} photos"
+      "limitReached": "You’ve reached the photo limit ({{max}})"
     },
     "classify": {
       "categoryLabel": "Cuisine",
       "categoryHint": "Pick one",
       "nutritionLabel": "Nutrition focus",
-      "stageLabel": "Kidney disease stage",
-      "stageNotice": "This tag is used for search only and is not shown on the recipe card."
+      "searchOnlyNotice": "Used for search only — not shown on the recipe card"
     },
     "ingredient": {
+      "label": "Ingredients",
       "namePlaceholder": "Ingredient",
-      "amountPlaceholder": "Amount (e.g. 100g)",
+      "unitPlaceholder": "100g",
+      "countPlaceholder": "1 pc",
       "add": "Add ingredient",
       "remove": "Remove {{name}}",
       "removeEmpty": "Remove empty ingredient row",
       "limitReached": "You can add up to {{max}} ingredients",
       "hintMissing": "Add an amount and it counts toward nutrition",
-      "hintUnmeasurable": "We can't tell the weight. Write it like “150g”"
+      "hintUnmeasurable": "We can't tell the weight. Write it like “150g”",
+      "unitLabel": "Weight",
+      "countLabel": "Quantity"
     },
     "step": {
+      "fieldLabel": "Steps",
+      "fieldPlaceholder": "Enter the cooking steps",
+      "sheetTitle": "Steps",
+      "sheetConfirm": "Done",
       "placeholder": "What happens in step {{index}}?",
       "add": "Add step",
       "remove": "Remove step {{index}}",
@@ -555,7 +564,9 @@
       "dragHint": "Hold the handle and drag to reorder",
       "dragHandle": "Move step {{index}}",
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "fieldSummary_one": "{{count}} step",
+      "fieldSummary_other": "{{count}} steps"
     },
     "nutrition": {
       "title": "Nutrition",
@@ -585,7 +596,8 @@
       "label": "Post",
       "submitting": "Posting",
       "uploadingPhotos": "Photos are still uploading",
-      "ready": "Ready to post"
+      "ready": "Ready to post",
+      "photoFailed": "Retry the photo upload or remove it"
     },
     "missing": {
       "name": "Add a title",
@@ -603,6 +615,9 @@
       "successBody": "Other people can see it now.",
       "successUnmatched": "{{n}} ingredients were left out of the nutrition because we can’t tell their weight. A posted recipe can’t be changed yet, so next time write a weight like “150g”.",
       "successUnmatchedEditable": "{{n}} ingredients were left out of the nutrition because we can’t tell their weight. Fix the amounts later and it will be worked out again."
+    },
+    "authorContext": {
+      "label": "Written for my own needs ({{tags}})"
     }
   }
 }
