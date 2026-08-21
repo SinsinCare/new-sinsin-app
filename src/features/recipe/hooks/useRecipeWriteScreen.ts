@@ -57,24 +57,40 @@ interface UseRecipeWriteScreenArgs {
   onSubmitted: (result: RecipeWriteSubmitResult) => void
   /** 등록 실패. `presentError` 로 보낼 원본 오류를 그대로 넘긴다. */
   onSubmitFailed: (error: unknown) => void
+  /**
+   * 수정할 레시피 id. 주면 **수정**(`PUT`), 없으면 **작성**(`POST`)이다.
+   * 화면 구조는 같고 보내는 곳만 다르다 — 계약 §3.8 이 작성과 같은 본문을 받는다.
+   */
+  recipeId?: number
+  /**
+   * 폼 초기값. 수정 화면이 상세를 `recipeDetailToWriteForm` 으로 되돌려 넣는다.
+   *
+   * **한 번만 읽는다**(`useState` 초기화). 이후 서버가 다시 불려도 사용자가 고치던
+   * 값을 덮어쓰지 않는다 — 입력 중에 글자가 되돌아가는 것만큼 나쁜 것이 없다.
+   */
+  initialForm?: RecipeWriteFormState
 }
 
 export function useRecipeWriteScreen({
   onSubmitted,
   onSubmitFailed,
+  recipeId,
+  initialForm,
 }: UseRecipeWriteScreenArgs) {
   const queryClient = useQueryClient()
 
   const [form, setForm] = useState<RecipeWriteFormState>(
-    createEmptyRecipeWriteForm,
+    () => initialForm ?? createEmptyRecipeWriteForm(),
   )
   const [submitting, setSubmitting] = useState(false)
   /*
     `submitting` 은 **그리기 위한** 값이고, 이건 **막기 위한** 값이다.
     상태만으로 막으면 같은 틱에 들어온 두 번째 탭이 아직 `false` 를 본다 —
     React 는 이 핸들러가 끝난 뒤에야 다시 그리기 때문이다. 그 틈으로 `POST /recipes`
-    가 두 번 나가면 사용자에게는 **레시피가 두 개 올라간다.** 되돌릴 방법이 없다
-    (서버에 삭제 경로가 없다). ref 는 대입 즉시 보이므로 그 틈이 없다.
+    가 두 번 나가면 사용자에게는 **레시피가 두 개 올라간다.** 이제 `DELETE`(계약 §3.8)
+    가 있어 지울 수는 있지만, 사용자가 두 개를 발견하고 하나를 지우는 일 자체가
+    우리가 만든 일이다. ref 는 대입 즉시 보이므로 그 틈이 없다.
+    (수정은 같은 id 를 덮어쓰므로 두 번 나가도 결과가 같다 — 잠금은 작성 때문이다.)
   */
   const submitLockRef = useRef(false)
   const [exitVisible, setExitVisible] = useState(false)
@@ -309,9 +325,11 @@ export function useRecipeWriteScreen({
 
     let created
     try {
-      created = await recipeWriteService.createRecipe(
-        toCreateRecipeRequest(form),
-      )
+      const request = toCreateRecipeRequest(form)
+      created =
+        recipeId === undefined
+          ? await recipeWriteService.createRecipe(request)
+          : await recipeWriteService.updateRecipe(recipeId, request)
     } catch (error) {
       submitLockRef.current = false
       setSubmitting(false)

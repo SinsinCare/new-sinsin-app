@@ -59,9 +59,20 @@
  * `layout.ts` 를 import 하지 않는다 — 기능 모듈끼리 의존하면 안 된다(그 파일 머리말 참고).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ScrollView, StyleSheet, View } from "react-native"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import type { Href } from "expo-router"
+import { useQueryClient } from "@tanstack/react-query"
+import {
+  recipeV2Keys,
+} from "@/src/features/recipe/hooks/useRecipeDetailV2"
+import { ARCHIVE_QUERY_ROOT } from "@/src/features/recipe/archive/useRecipeArchiveList"
+import { showActionSheet, showConfirm } from "@/src/lib/dialog"
+import { showSuccessToast } from "@/src/lib/toast"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
+import { recipeWriteService } from "@/src/features/recipe/services/recipeWriteService"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import {
@@ -103,6 +114,8 @@ import {
   useRecipeReviews,
   useRecipeSave,
 } from "@/src/features/recipe/hooks/useRecipeDetailV2"
+import { RECIPE_DETAIL_REFRESH } from "@/src/features/recipe/refresh/scopes"
+import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
 import { useBlockedUsers } from "@/src/features/recipe/hooks/useBlockedUsers"
 import type { ReviewSort } from "@/src/features/recipe/types/recipeV2"
 
@@ -124,11 +137,22 @@ export default function RecipeDetailRoute() {
   const insets = useSafeAreaInsets()
 
   const detailQuery = useRecipeDetailV2(recipeId)
+  /*
+    상세에도 당김이 없었다 — 남이 방금 쓴 리뷰를 보려면 나갔다 다시 들어와야 했고,
+    캐시가 살아 있으면 그래도 같은 화면이었다. 뿌리가 `recipe-v2`(단수) 라
+    본문과 리뷰만 따라오고 뒤에 깔린 목록은 건드리지 않는다.
+  */
+  const refreshable = useRefreshable({
+    queryKeys: RECIPE_DETAIL_REFRESH,
+    scope: "recipe-detail",
+  })
+  useRevalidateOnReturn({ queryKeys: RECIPE_DETAIL_REFRESH })
   const detail = detailQuery.data
   const saveMutation = useRecipeSave(recipeId)
   const reviewsQuery = useRecipeReviews(recipeId, REVIEW_SORT)
   const { upsert, remove } = useMyReview(recipeId, REVIEW_SORT)
 
+  const queryClient = useQueryClient()
   const [servings, setServings] = useState<number | null>(null)
   const [checkedOrdinals, setCheckedOrdinals] = useState<Set<number>>(
     () => new Set(),
@@ -188,6 +212,71 @@ export default function RecipeDetailRoute() {
   const handleLeaveDetail = useCallback(() => {
     router.back()
   }, [router])
+
+  /*
+    ══════════════════ 내 레시피 — 수정 · 내리기 (계약 §3.8) ══════════════════
+
+    **소유권은 서버가 정한다**(`detail.authored`). 앱이 닉네임을 비교해서 정하지
+    않는다 — 화면이 "내 것" 이라고 믿는 것과 서버가 아는 것이 갈리면 그 차이는
+    조용히 틀린 쪽으로 기운다(`content-ownership-server-authority`).
+    서버도 `PUT`·`DELETE` 를 403 으로 막으므로 이 버튼은 **편의**이지 방벽이 아니다.
+  */
+  const [deleting, setDeleting] = useState(false)
+
+  const handleEditRecipe = useCallback(async () => {
+    if (detail == null) return
+    // 시트 dismiss 전환(~220ms 지연 언마운트)과 스택 push 가 겹치지 않게 가라앉힌다.
+    await afterModalTransitions()
+    router.push(`/recipe/edit/${detail.id}` as Href)
+  }, [detail, router])
+
+  /*
+    **내려간 것을 확인한 뒤에만 나간다.** 커뮤니티 글 삭제에서 실측된 결함이 그것이다 —
+    요청을 쏘고 바로 back() 하면, 실패했을 때 사용자는 사라진 줄 알고 나가고 화면은
+    아무 말도 하지 않는다. 실패하면 지우려던 레시피 위에 남아 이유를 듣는다.
+  */
+  const handleDeleteRecipe = useCallback(async () => {
+    if (detail == null || deleting) return
+    const confirmed = await showConfirm({
+      title: t("recipeWrite.deleteTitle"),
+      description: t("recipeWrite.deleteBody"),
+      confirmLabel: t("recipeWrite.deleteConfirm"),
+      cancelLabel: t("action.cancel"),
+      destructive: true,
+    })
+    if (!confirmed) return
+    await afterModalTransitions()
+
+    setDeleting(true)
+    try {
+      await recipeWriteService.deleteRecipe(detail.id)
+    } catch (error) {
+      setDeleting(false)
+      presentError(error, { scope: "recipe-delete" })
+      return
+    }
+    /*
+      내린 레시피는 목록·검색·홈·보관함 어디에도 남으면 안 된다. 서버가 `is_active`
+      로 이미 막지만, 캐시에 남아 있으면 사용자는 방금 내린 것을 다시 본다.
+      상세 캐시까지 지운다 — 뒤로 갔다 앞으로 오면 404 가 될 자리다.
+    */
+    await queryClient.invalidateQueries({ queryKey: recipeV2Keys.root })
+    await queryClient.invalidateQueries({ queryKey: ARCHIVE_QUERY_ROOT })
+    handleLeaveDetail()
+    showSuccessToast(t("recipeWrite.deleted"))
+  }, [detail, deleting, t, queryClient, handleLeaveDetail])
+
+  const handleMoreRecipe = useCallback(async () => {
+    const picked = await showActionSheet({
+      title: undefined,
+      actions: [
+        { label: t("recipeWrite.editAction") },
+        { label: t("recipeWrite.deleteConfirm"), destructive: true },
+      ],
+    })
+    if (picked === 0) await handleEditRecipe()
+    else if (picked === 1) await handleDeleteRecipe()
+  }, [t, handleEditRecipe, handleDeleteRecipe])
 
   const handleShare = useCallback(() => {
     if (detail == null) return
@@ -292,20 +381,28 @@ export default function RecipeDetailRoute() {
    *
    * 이 앱의 다른 UGC(커뮤니티 글·댓글, 식당 후기)는 전부 신고·차단 경로를 갖고 있는데
    * 레시피 리뷰만 없었다 — 남이 쓴 글이 내 화면에 뜨는데 치울 방법이 없는 화면이 하나
-   * 남아 있었다. 차단은 닉네임 기준이고(`blockService`) 리뷰 응답에 `authorNickName` 이
-   * 있어 서버 변경 없이 오늘 동작한다. 판정은 `visibleReviews` 한 곳에 있다.
+   * 남아 있었다.
+   *
+   * 차단은 **사람 id** 기준이다(서버 alembic 088). 리뷰 응답의 `authorId` 가 그 축이고,
+   * 판정은 커뮤니티와 같은 `isAuthorBlocked` 한 곳이다 — `visibleReviews` 는 순서와
+   * "내 리뷰는 안 접는다" 만 책임진다.
+   *
+   * 서버도 같은 기준으로 이미 걸러서 준다. 여기 필터가 남아 있는 이유는 **차단 직후
+   * 한 박자**다 — 서버 필터는 다음 조회부터 듣고, 이미 받아 둔 쪽에는 방금 차단한
+   * 사람의 리뷰가 그대로 들어 있다.
    *
    * 별점 요약은 건드리지 않는다 — 그건 서버가 전체로 계산한 값이고, 한 명을 가렸다고
-   * 앱에서 평균을 다시 내면 같은 레시피의 별점이 사람마다 달라진다.
+   * 앱에서 평균을 다시 내면 같은 레시피의 별점이 사람마다 달라진다. 그래서 목록 수와
+   * 요약 수가 다를 수 있고, 그게 정상이다.
    */
-  const { blockedNickNames, blockUser } = useBlockedUsers()
+  const { blockedAuthors, blockUser } = useBlockedUsers()
   const reviews = useMemo(
     () =>
       visibleReviews(
         flattenReviewPages(reviewsQuery.data?.pages),
-        blockedNickNames,
+        blockedAuthors,
       ),
-    [reviewsQuery.data?.pages, blockedNickNames],
+    [reviewsQuery.data?.pages, blockedAuthors],
   )
 
   const handleConfirmBlock = useCallback(() => {
@@ -373,6 +470,25 @@ export default function RecipeDetailRoute() {
         title={titleInBar ? detail.name : undefined}
         onBack={handleLeaveDetail}
         style={{ backgroundColor: colors.background.default }}
+        right={
+          /* 내 레시피에만 나온다. 남의 것에는 아무것도 더 붙이지 않는다. */
+          detail.authored ? (
+            <Pressable
+              onPress={handleMoreRecipe}
+              disabled={deleting}
+              accessibilityRole="button"
+              accessibilityLabel={t("recipeWrite.more")}
+              hitSlop={12}
+              style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+            >
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={22}
+                color={deleting ? colors.label.assistive : colors.label.normal}
+              />
+            </Pressable>
+          ) : undefined
+        }
       />
 
       <ScrollView
@@ -380,6 +496,7 @@ export default function RecipeDetailRoute() {
         style={styles.flex}
         contentContainerStyle={{ paddingBottom: insets.bottom + SECTION_GAP }}
         scrollEventThrottle={32}
+        {...refreshable.scrollProps}
         showsVerticalScrollIndicator={false}
         onScroll={(event) => {
           const y = event.nativeEvent.contentOffset.y

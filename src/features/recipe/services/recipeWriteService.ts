@@ -52,6 +52,31 @@ export const recipeWriteService = {
     const { data } = await api.post("/recipes", request)
     return data.result as CreatedRecipeSummary
   },
+
+  /**
+   * 계약 §3.8. 본문은 작성과 **같은 스키마**다 — 부분 수정이 아니라 전체 교체라
+   * 폼이 들고 있는 값을 그대로 보낸다.
+   *
+   * 서버가 소유자를 판정한다(403). **앱이 닉네임을 비교해서 막지 않는다** — 화면이
+   * "내 것"이라고 믿는 것과 서버가 아는 것이 갈리면 그 차이는 조용히 틀린 쪽으로 기운다.
+   */
+  async updateRecipe(
+    recipeId: number,
+    request: CreateRecipeRequestV2,
+  ): Promise<CreatedRecipeSummary> {
+    if (recipeWriteApiConfig.useMock) return mockCreateRecipe(request)
+    const { data } = await api.put(`/recipes/${recipeId}`, request)
+    return data.result as CreatedRecipeSummary
+  },
+
+  /**
+   * 계약 §3.8. 소프트 삭제라 서버에서 `is_active=false` 가 되고 목록·검색·상세에서
+   * 사라진다. **멱등**이므로 재시도해도 안전하다.
+   */
+  async deleteRecipe(recipeId: number): Promise<void> {
+    if (recipeWriteApiConfig.useMock) return
+    await api.delete(`/recipes/${recipeId}`)
+  },
 }
 
 /* ══════════════════════════ 모의 경로 ══════════════════════════ */

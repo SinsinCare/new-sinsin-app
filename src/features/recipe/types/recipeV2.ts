@@ -90,6 +90,15 @@ export interface MyReview {
 
 export interface Review {
   id: number
+  /**
+   * 글쓴이의 **사람 id**. 차단 판정의 신원 축이다(서버 alembic 088).
+   *
+   * `null` 은 "글쓴이가 누구인지 서버도 모른다" 이고, 그때 `authorNickName` 도 `""` 다 —
+   * 서버가 같은 조인에서 둘을 함께 비운다. 이 필드를 내보내기 전 서버는 값 자체가 없어
+   * `undefined` 로 온다. 둘 다 "모른다" 라서 판정은 `isAuthorBlocked` 한 곳에서 `!= null`
+   * 로 본다: **모르면 안 접는다.**
+   */
+  authorId: number | null
   authorNickName: string
   rating: number
   body: string | null
@@ -192,6 +201,16 @@ export interface RecipeDetail {
   /** 원본 기준 인분 */
   servings: number | null
   heroImageUrl: string | null
+  /**
+   * 저장된 원본 경로(`uploads/…`). 수정 화면이 사진을 되돌려 보낼 때 쓴다 —
+   * `heroImageUrl` 은 서명 URL 이라 경로로 못 쓴다.
+   */
+  heroImageObjectPath: string | null
+  /**
+   * 걸러지지 않은 태그. **작성자 본인일 때만** 오고 남에게는 `null` 이다.
+   * `tags` 는 임상 토큰이 빠진 결과라 그쪽으로 폼을 채우면 수정할 때마다 태그가 날아간다.
+   */
+  authoredTags: string[] | null
   tags: string[]
   /** servings 1인분 기준 */
   nutrition: RecipeNutrition

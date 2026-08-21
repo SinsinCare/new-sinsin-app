@@ -618,6 +618,18 @@
     },
     "authorContext": {
       "label": "내 기준({{tags}})으로 적었어요"
-    }
+    },
+    "editLoadFailedTitle": "레시피를 불러오지 못했어요",
+    "editLoadFailedBody": "잠시 뒤에 다시 시도해 주세요.",
+    "editNotMineTitle": "내가 올린 레시피만 고칠 수 있어요",
+    "editNotMineBody": "다른 분이 올린 레시피와 추천 레시피는 수정할 수 없어요.",
+    "editSubmitted": "레시피를 수정했어요",
+    "deleteTitle": "이 레시피를 내릴까요?",
+    "deleteBody": "목록과 검색에서 사라져요. 저장해 둔 분들에게도 보이지 않아요.",
+    "deleteConfirm": "내리기",
+    "deleted": "레시피를 내렸어요",
+    "deleteFailed": "레시피를 내리지 못했어요",
+    "editAction": "수정하기",
+    "more": "더보기"
   }
 }

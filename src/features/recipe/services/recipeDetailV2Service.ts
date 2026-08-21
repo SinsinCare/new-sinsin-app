@@ -239,6 +239,13 @@ export function mapRecipeDetail(
     timeMin: nullableNum(record.timeMin),
     servings: nullableNum(record.servings),
     heroImageUrl: nullableStr(record.heroImageUrl),
+    heroImageObjectPath: nullableStr(record.heroImageObjectPath),
+    /*
+      **`null` 과 빈 배열을 구별한다.** `null` 은 "남의 레시피라 안 준다" 이고
+      빈 배열은 "내 레시피인데 태그를 하나도 안 골랐다" 이다. 둘을 뭉개면 수정 화면이
+      "모른다" 를 "없다" 로 읽어, 태그를 지운 적 없는 사용자의 태그를 지운다.
+    */
+    authoredTags: record.authoredTags == null ? null : strList(record.authoredTags),
     tags: strList(record.tags),
     nutrition: mapNutrition(record.nutrition),
     budget: mapBudget(record.budget),
@@ -271,6 +278,9 @@ function mapReviewList(raw: unknown): ReviewListResponse {
       const reviewRecord = asRecord(item)
       return {
         id: num(reviewRecord.id),
+        // 필드가 없는 옛 서버는 `null` 이 된다 — "모른다" 와 같은 뜻이고, 판정이
+        // 그때 이름 축으로 되돌아간다(`isAuthorBlocked`). 0 으로 채우면 안 된다.
+        authorId: nullableNum(reviewRecord.authorId),
         authorNickName: str(reviewRecord.authorNickName),
         rating: num(reviewRecord.rating),
         body: nullableStr(reviewRecord.body),
@@ -407,6 +417,7 @@ function delay<T>(value: T): Promise<T> {
 const MOCK_REVIEWS: Review[] = [
   {
     id: 9001,
+    authorId: 9101,
     authorNickName: "잔잔한하루",
     rating: 5,
     body: "간을 반으로 줄여도 충분히 맛있었어요. 당면은 살짝 덜 익혀야 좋아요.",
@@ -415,6 +426,7 @@ const MOCK_REVIEWS: Review[] = [
   },
   {
     id: 9002,
+    authorId: 9102,
     authorNickName: "물한잔",
     rating: 4,
     body: "양파를 더 넣으니 단맛이 살아요. 다음엔 참기름을 조금만.",
@@ -423,6 +435,7 @@ const MOCK_REVIEWS: Review[] = [
   },
   {
     id: 9003,
+    authorId: 9103,
     authorNickName: "저녁담당",
     rating: 5,
     body: null,
@@ -431,6 +444,7 @@ const MOCK_REVIEWS: Review[] = [
   },
   {
     id: 9004,
+    authorId: 9104,
     authorNickName: "봄나물",
     rating: 3,
     body: "재료 손질이 생각보다 오래 걸렸어요.",
@@ -464,6 +478,10 @@ function mockDetailPayload(
     timeMin: recipe.timeMin,
     servings: recipe.servings,
     heroImageUrl: null,
+    heroImageObjectPath: null,
+    // 목에도 임상 태그를 싣는다 — 이게 비어 있으면 목 모드에서 수정 왕복이
+    // 성공한 것처럼 보이고, 실제 서버에서만 태그가 날아간다.
+    authoredTags: ["저염", "CKD3"],
     tags: recipe.tags,
     nutrition: {
       kcal: 520,
@@ -665,6 +683,8 @@ async function mockUpsertReview(
   } else {
     state.reviews.unshift({
       id: 1,
+      // 목 전용 자리표시자. 실서버는 로그인한 사람의 id 를 준다.
+      authorId: 9100,
       authorNickName: "나",
       rating: request.rating,
       body: request.body ?? null,

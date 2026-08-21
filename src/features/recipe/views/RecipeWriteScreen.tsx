@@ -62,6 +62,7 @@ import { PhotoPickerRow } from "@/src/features/recipe/components/write/PhotoPick
 import { NutritionPreviewCard } from "@/src/features/recipe/components/write/NutritionPreviewCard"
 import { WriteSubmitBar } from "@/src/features/recipe/components/write/WriteSubmitBar"
 import { useRecipeWriteScreen } from "@/src/features/recipe/hooks/useRecipeWriteScreen"
+import type { RecipeWriteFormState } from "@/src/features/recipe/components/write/writeFormState"
 import {
   CATEGORY_OPTIONS,
   MISSING_COPY_KEY,
@@ -85,9 +86,20 @@ const SUBMIT_BAR_FALLBACK = 140
 
 interface RecipeWriteScreenProps {
   onClose: () => void
+  /**
+   * 주면 **수정** 화면이 된다(계약 §3.8). 화면 구조·검증·제출 바는 작성과 같고
+   * 보내는 곳만 `PUT` 으로 바뀐다 — 두 화면을 따로 만들면 상한과 문구가 갈라진다.
+   */
+  recipeId?: number
+  /** 수정일 때 폼 초기값(`recipeDetailToWriteForm`). */
+  initialForm?: RecipeWriteFormState
 }
 
-export function RecipeWriteScreen({ onClose }: RecipeWriteScreenProps) {
+export function RecipeWriteScreen({
+  onClose,
+  recipeId,
+  initialForm,
+}: RecipeWriteScreenProps) {
   /*
     네임스페이스는 `recipe` 하나만 든다. 뒤로·지우기 같은 일반 동사는 `common` 에도
     있지만, 배열(`useTranslation(["recipe","common"])`)로 들면 `tests/i18nKeyExistence.test.ts`
@@ -116,13 +128,18 @@ export function RecipeWriteScreen({ onClose }: RecipeWriteScreenProps) {
   const allowExitRef = useRef(false)
 
   const screen = useRecipeWriteScreen({
+    recipeId,
+    initialForm,
     onSubmitted: ({ unmatchedCount }) => {
       // 등록은 이미 성공했다 — 확인을 누르게 붙잡지 않고 닫으면서 알린다.
       // 초안 가드도 통과시킨다: 올린 레시피는 두고 나갈 초안이 아니다(아래 머리말).
       allowExitRef.current = true
       onClose()
       showSuccessToast(
-        t("recipeWrite.result.successTitle"),
+        // 수정인데 "올렸어요" 라고 하면 거짓이다. 본문(빠진 재료 안내)은 양쪽 같다.
+        recipeId === undefined
+          ? t("recipeWrite.result.successTitle")
+          : t("recipeWrite.editSubmitted"),
         unmatchedCount > 0
           ? `${t("recipeWrite.result.successBody")}\n\n${t(
               SUCCESS_UNMATCHED_COPY_KEY,
@@ -132,7 +149,9 @@ export function RecipeWriteScreen({ onClose }: RecipeWriteScreenProps) {
       )
     },
     onSubmitFailed: (error) =>
-      presentError(error, { scope: "recipe-write-create" }),
+      presentError(error, {
+        scope: recipeId === undefined ? "recipe-write-create" : "recipe-write-update",
+      }),
   })
 
   const { form, evaluation, preview, stepSummary } = screen

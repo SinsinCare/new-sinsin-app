@@ -12,6 +12,10 @@ jest.mock("../src/services/core/apiClient", () => ({
 import { deriveAuthorContextTags } from "../src/features/recipe/components/write/authorContextTags"
 import { STAGE_TAGS } from "../src/features/recipe/data/recipeTags"
 import {
+  canEditFrom,
+  recipeDetailToWriteForm,
+} from "../src/features/recipe/components/write/writeFormState"
+import {
   amountHintFor,
   isCompositeIngredient,
   parseAmountToGrams,
@@ -1258,5 +1262,102 @@ describe("드래그 중 비켜나는 거리 — 잡은 행이 지나간 만큼�
       거기서 둘은 같은 그림이다. 그래서 **수치가 같은가**를 묻는다.
     */
     expect(staticOffsetFor(1, 0, 2, 0) === 0).toBe(true)
+  })
+})
+
+/**
+ * **수정 왕복** — 상세 → 폼 → 요청이 값을 잃지 않는가.
+ *
+ * 수정은 전체 교체라 폼이 못 담은 값은 저장하는 순간 조용히 사라진다. 실제로
+ * 구현 중에 두 번 그럴 뻔했고(태그·사진), 둘 다 **서버 응답에 값이 없어서** 생긴
+ * 일이라 앱 코드만 보면 안 보인다. 그래서 왕복 자체를 테스트로 붙든다.
+ */
+describe("recipeDetailToWriteForm — 수정 왕복", () => {
+  const detail = {
+    name: "저염 된장국",
+    summary: "간을 줄인 된장국",
+    description: "설명",
+    category: "한식",
+    timeMin: 20,
+    servings: 2,
+    heroImageObjectPath: "uploads/recipe/abc.jpg",
+    authoredTags: ["저염", "CKD3", "한식"],
+    ingredients: [
+      { name: "두부", amountText: "70g" },
+      { name: "대파", amountText: "1대" },
+    ],
+    steps: [{ text: "물을 끓인다" }, { text: "된장을 푼다" }],
+  }
+
+  test("임상 태그가 살아 돌아온다", () => {
+    // `detail.tags` 로 채웠다면 여기가 전부 빈 배열이 된다.
+    const form = recipeDetailToWriteForm(detail)
+    expect(form.nutritionTags).toEqual(["저염"])
+    expect(form.stageTags).toEqual(["CKD3"])
+  })
+
+  test("사진은 경로로 실린다 — 글자만 고쳐도 남는다", () => {
+    const form = recipeDetailToWriteForm(detail)
+    expect(form.photos).toHaveLength(1)
+    expect(form.photos[0]?.objectPath).toBe("uploads/recipe/abc.jpg")
+    // 올릴 것이 없으므로 곧장 ready 다. uploading 이면 등록 버튼이 막힌다.
+    expect(form.photos[0]?.status).toBe("ready")
+  })
+
+  test("폼을 그대로 다시 보내면 값이 보존된다", () => {
+    const request = toCreateRecipeRequest(recipeDetailToWriteForm(detail))
+    expect(request.name).toBe("저염 된장국")
+    expect(request.category).toBe("한식")
+    expect(request.timeMin).toBe(20)
+    expect(request.servings).toBe(2)
+    expect(request.imageObjectPaths).toEqual(["uploads/recipe/abc.jpg"])
+    // 재료 수량은 단위 칸에 통째로 들어가므로 합칠 때 원문 그대로 나온다.
+    expect(request.ingredients).toEqual([
+      { name: "두부", amountText: "70g" },
+      { name: "대파", amountText: "1대" },
+    ])
+    expect(request.steps.map((row) => row.text)).toEqual([
+      "물을 끓인다",
+      "된장을 푼다",
+    ])
+    // 태그는 영양 + 병기가 합쳐져 나간다.
+    expect(request.tags).toEqual(expect.arrayContaining(["저염", "CKD3"]))
+  })
+
+  test("사진이 없으면 빈 목록이다", () => {
+    const form = recipeDetailToWriteForm({ ...detail, heroImageObjectPath: null })
+    expect(form.photos).toEqual([])
+  })
+
+  test("서버가 인분을 안 주면 1이다", () => {
+    // 2 로 두면 서버가 전체 영양을 2로 나눠 1인분 나트륨을 절반으로 말한다.
+    expect(recipeDetailToWriteForm({ ...detail, servings: null }).servings).toBe(1)
+  })
+
+  test("빈 재료·순서는 한 줄씩 미리 놓는다", () => {
+    const form = recipeDetailToWriteForm({ ...detail, ingredients: [], steps: [] })
+    expect(form.ingredients).toHaveLength(1)
+    expect(form.steps).toHaveLength(1)
+    expect(form.ingredients[0]?.name).toBe("")
+  })
+})
+
+describe("canEditFrom — 모르면 열지 않는다", () => {
+  test("내 것이고 원본 태그가 오면 연다", () => {
+    expect(canEditFrom({ authored: true, authoredTags: ["저염"] })).toBe(true)
+    // 태그를 하나도 안 고른 내 레시피. 빈 배열은 "없다"이지 "모른다"가 아니다.
+    expect(canEditFrom({ authored: true, authoredTags: [] })).toBe(true)
+  })
+
+  test("남의 것이면 안 연다", () => {
+    expect(canEditFrom({ authored: false, authoredTags: null })).toBe(false)
+  })
+
+  /**
+   * 서버가 `authored: true` 인데 원본 태그를 안 준 경우 — 계약이 어긋난 것이다.
+   * 그대로 열면 태그를 지운 적 없는 사용자의 태그가 저장하는 순간 지워진다.
+   */
+  test("내 것이라는데 원본 태그가 없으면 안 연다", () => {
+    expect(canEditFrom({ authored: true, authoredTags: null })).toBe(false)
   })
 })

@@ -19,6 +19,10 @@ import {
   type NutritionPreviewIngredient,
   type NutritionPreviewRequest,
 } from "@/src/features/recipe/types/recipeWrite"
+import {
+  NUTRITION_TAGS,
+  STAGE_TAGS,
+} from "@/src/features/recipe/data/recipeTags"
 
 /* ══════════════════════════ 폼 상태 ══════════════════════════ */
 
@@ -558,4 +562,105 @@ export function hasAnyRecipeWriteContent(state: RecipeWriteFormState): boolean {
     state.ingredients.some(isFilledIngredient) ||
     state.steps.some(isFilledStep)
   )
+}
+
+/* ══════════════════════════ 상세 → 폼 (수정 화면) ══════════════════════════ */
+
+/**
+ * 서버 상세를 작성 폼으로 되돌린다. `toCreateRecipeRequest` 의 **역함수**다.
+ *
+ * ## 이 함수가 지키는 것은 "잃지 않는 것" 하나다
+ * 수정은 전체 교체라, 폼이 못 담은 값은 **저장하는 순간 사라진다.** 조용히.
+ * 그래서 되돌릴 수 없는 세 곳을 각각 못 박아 둔다.
+ *
+ * 1. **태그** — `detail.tags` 는 임상 토큰이 걸러진 결과라 작성 화면이 고르는 태그가
+ *    하나도 없다. 반드시 `authoredTags`(작성자 본인에게만 오는 원본)를 쓴다.
+ *    `null` 이면 "모른다" 이지 "없다" 가 아니므로 **수정 화면을 열지 않는다**
+ *    (호출부가 `canEditFrom` 으로 먼저 막는다).
+ * 2. **사진** — `heroImageUrl` 은 서명 URL 이라 되보낼 수 없다. `heroImageObjectPath`
+ *    를 그대로 실어야 글자만 고쳤을 때 사진이 남는다.
+ * 3. **재료 수량** — 폼은 단위 칸과 개수 칸으로 나뉘지만 서버는 합친 문자열 하나만
+ *    돌려준다. 쪼개 넣으려 하지 말고 **단위 칸에 통째로** 넣는다.
+ *    `joinIngredientAmount(x, "")` 가 `x` 라서 왕복이 그대로 보존된다.
+ */
+export function recipeDetailToWriteForm(detail: {
+  name: string
+  summary: string | null
+  description: string | null
+  category: string
+  timeMin: number | null
+  servings: number | null
+  heroImageObjectPath: string | null
+  authoredTags: readonly string[] | null
+  ingredients: readonly { name: string; amountText: string }[]
+  steps: readonly { text: string }[]
+}): RecipeWriteFormState {
+  const owned = detail.authoredTags ?? []
+  const nutritionTags = NUTRITION_TAGS.filter((tag) => owned.includes(tag))
+  const stageTags = STAGE_TAGS.filter((tag) => owned.includes(tag))
+
+  const ingredients = detail.ingredients
+    .filter((row) => row.name.trim().length > 0)
+    .map((row) => ({
+      id: nextRowId("ing"),
+      name: row.name,
+      // 서버 문자열을 통째로 단위 칸에. 개수 칸은 비운다(위 머리말 3).
+      amountText: row.amountText,
+      countText: "",
+    }))
+
+  const steps = detail.steps
+    .filter((row) => row.text.trim().length > 0)
+    .map((row) => ({ id: nextRowId("step"), text: row.text }))
+
+  return {
+    name: detail.name,
+    summary: detail.summary ?? "",
+    description: detail.description ?? "",
+    category: detail.category,
+    nutritionTags,
+    stageTags,
+    timeMinText: detail.timeMin === null ? "" : String(detail.timeMin),
+    /*
+      서버가 `null` 을 주면 1 이다 — 빈 폼과 같은 이유로 2 를 쓰지 않는다.
+      인분을 크게 잡으면 서버가 전체 영양을 그만큼 나눠 **1인분 나트륨을 낮게 말한다.**
+    */
+    servings: detail.servings ?? 1,
+    photos:
+      detail.heroImageObjectPath === null
+        ? []
+        : [
+            {
+              id: nextRowId("photo"),
+              /*
+                이미 서버에 있는 사진이라 올릴 것이 없다 — 곧장 `ready` 다.
+                `localUri` 를 비워 두면 목록이 빈 칸을 그리므로 호출부가 표시용
+                URL(`heroImageUrl`)을 넣어 준다.
+              */
+              localUri: "",
+              objectPath: detail.heroImageObjectPath,
+              status: "ready" as const,
+            },
+          ],
+    // 빈 폼과 같은 규칙: 한 줄은 미리 놓아 무엇을 적는 자리인지 보이게 한다.
+    ingredients: ingredients.length > 0 ? ingredients : [emptyIngredientRow()],
+    steps: steps.length > 0 ? steps : [emptyStepRow()],
+  }
+}
+
+/**
+ * 이 상세로 수정 화면을 열어도 되는가.
+ *
+ * `authored` 는 **서버가 판정한 소유권**이다(`content-ownership-server-authority`).
+ * 앱이 닉네임을 비교해서 정하지 않는다.
+ *
+ * `authoredTags` 가 `null` 인데 `authored` 가 참이면 서버와 앱의 계약이 어긋난 것이다.
+ * 그 상태로 폼을 열면 태그를 지운 적 없는 사용자의 태그가 지워지므로 **열지 않는다** —
+ * 모르는 것을 아는 척하는 것보다 못 여는 편이 낫다(`predictable-ux-over-fallbacks`).
+ */
+export function canEditFrom(detail: {
+  authored: boolean
+  authoredTags: readonly string[] | null
+}): boolean {
+  return detail.authored && detail.authoredTags !== null
 }

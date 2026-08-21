@@ -618,6 +618,18 @@
     },
     "authorContext": {
       "label": "Written for my own needs ({{tags}})"
-    }
+    },
+    "editLoadFailedTitle": "Couldn't load this recipe",
+    "editLoadFailedBody": "Please try again in a moment.",
+    "editNotMineTitle": "You can only edit recipes you posted",
+    "editNotMineBody": "Recipes from other people and recommended recipes can't be edited.",
+    "editSubmitted": "Recipe updated",
+    "deleteTitle": "Take this recipe down?",
+    "deleteBody": "It disappears from lists and search, including for people who saved it.",
+    "deleteConfirm": "Take down",
+    "deleted": "Recipe taken down",
+    "deleteFailed": "Couldn't take the recipe down",
+    "editAction": "Edit",
+    "more": "More"
   }
 }
