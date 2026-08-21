@@ -31,6 +31,7 @@ import { MealType } from "../../types"
 import { normalizeEdemaLevel, type EdemaLevel } from "../../data/EdemaConstants"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useExtraWater } from "../../hooks/useExtraWater"
+import { displayedWaterIntake } from "../../utils/waterIntake"
 import { useWeightEdemaRecord } from "../../hooks/useWeightEdemaRecord"
 import { useBloodMetricsRecord } from "../../hooks/useBloodMetricsRecord"
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
@@ -416,9 +417,8 @@ export function RecordView({
   const backgroundVariant: "low" | "high" =
     hasSelectedDateRecord && withinLimits ? "high" : "low"
 
-  const serverExtraWater = data?.result.analysis?.extraWater ?? 0
-  // 국·과일 수분(analysis.water)까지 합쳐야 "제한까지 남은 양"이 맞다.
-  const consumedWater = (data?.result.analysis?.water ?? 0) + serverExtraWater
+  // 표기는 전부 사용자가 입력한 수분 기준이다(2026-08-21 결정 — 근거는 헬퍼 머리말).
+  const consumedWater = displayedWaterIntake(data?.result.analysis)
   const hydration = getHydrationGuidance({
     consumed: consumedWater,
     limit: fluidMl,
