@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
-import { Animated, Image, StyleSheet, Text, View } from "react-native"
+import { Animated, Image, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import type { ImageSourcePropType } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"

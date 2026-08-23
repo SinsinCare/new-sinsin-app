@@ -36,6 +36,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { parseServerDate } from "../../services/communityPostService"
 import { formatTimeAgo } from "../../utils/timeAgo"
 import type { MyReview, RatingSummary, Review } from "../../types/recipeV2"
 import {
@@ -304,10 +305,15 @@ function ReviewCard({
 }) {
   const { t } = useTranslation("recipe")
   const { colors } = useV2Theme()
-  const createdAt = new Date(review.createdAt)
-  const dateText = Number.isNaN(createdAt.getTime())
-    ? ""
-    : formatTimeAgo(createdAt, language)
+  /*
+    `new Date(review.createdAt)` 이면 안 된다. 서버는 타임존 표기가 없는 UTC
+    (`2026-08-20T10:59:07.030000`)를 주고, ES 명세는 **오프셋 없는 date-time 을
+    로컬로** 읽는다 — KST 에서 정확히 9시간 이르게 읽힌다. 한 시간 전에 쓴 리뷰가
+    "10시간 전" 으로, 00:30 에 쓴 리뷰가 전날 날짜로 나오던 자리다.
+    커뮤니티 쪽이 전부 멀쩡했던 이유는 그쪽만 `parseServerDate` 를 지나기 때문이다.
+  */
+  const createdAt = parseServerDate(review.createdAt)
+  const dateText = formatTimeAgo(createdAt, language)
 
   return (
     // 리뷰 한 건 = 회색 면 하나. 밑줄로 나누면 리뷰가 쌓일수록 가로줄만 쌓인다.

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { router } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { AuthScreenLayout } from "./AuthScreenLayout"

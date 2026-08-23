@@ -199,17 +199,22 @@ export function FoodAnalysisConfirmation({
                                 borderRadius: 12,
                                 borderWidth: 1,
                                 borderColor: selected
-                                  ? tokens.color.sub6.val
+                                  ? colors.primary.primary
                                   : colors.line.normal,
+                                /*
+                                  예전 `sub1=#FFF3EC` 는 라이트 전용 면이라 다크에서 옵션
+                                  하나만 흰 카드로 튀었다. accent orangeWeak 는 같은 의미의
+                                  오렌지 틴트를 모드별 알파로 제공한다.
+                                */
                                 backgroundColor: selected
-                                  ? tokens.color.sub1.val
+                                  ? colors.accentForeground.orangeWeak
                                   : colors.background.lower,
                               }}
                             >
                               <V2Text
                                 color={
                                   selected
-                                    ? tokens.color.sub8.val
+                                    ? colors.accentForeground.orange
                                     : colors.label.alternative
                                 }
                                 lineBreakStrategyIOS="hangul-word"

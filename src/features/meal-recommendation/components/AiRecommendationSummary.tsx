@@ -1,6 +1,5 @@
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { V2HStack, V2Text } from "@/src/design-system-v2"
-import Ionicons from "@expo/vector-icons/Ionicons"
+import { V2HStack, V2Icon, V2Text } from "@/src/design-system-v2"
 import { tokens } from "@/src/theme/tokens"
 
 interface AiRecommendationSummaryProps {
@@ -30,12 +29,7 @@ export function AiRecommendationSummary({
         borderColor: isDark ? "rgba(238,97,69,0.15)" : "rgba(238,97,69,0.12)",
       }}
     >
-      <Ionicons
-        name="sparkles"
-        size={16}
-        color={tokens.color.primaryAccent.val}
-        style={{ marginTop: 1 }}
-      />
+      <V2Icon name="sparkle" size={16} style={{ marginTop: 1 }} />
       <V2Text
         color={textColor}
         style={{ flex: 1, fontSize: 13, lineHeight: 20 }}

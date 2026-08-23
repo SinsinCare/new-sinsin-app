@@ -60,13 +60,46 @@ export const CONTEXTUAL_ACTIONS = new Set<ErrorActionId>([
  *
  * 기본은 `toast` 다. `dialog` 는 **사용자가 진짜 고를 게 있거나**(가입된 이메일 → 로그인),
  * **인지하지 못하면 계속 같은 벽에 부딪히는**(탈퇴·정지 계정) 실패에만 준다.
+ *
+ * `info` 는 셋째 갈래다 — 아래 `INFO_CODES` 참고.
  */
-export type ErrorSurface = "toast" | "dialog"
+export type ErrorSurface = "toast" | "dialog" | "info"
 
 export type ErrorBehavior = {
   action: ErrorActionId | null
   surface: ErrorSurface
 }
+
+/**
+ * **"이미 했어요" 는 실패가 아니다** — 붉은 오류가 아니라 안내로 담는 코드.
+ *
+ * 기준은 하나다: 사용자가 원하던 상태가 **이미 이루어져 있는가.** 신고 버튼은 목록·상세·
+ * 스토리에 흩어져 있고 접수 여부가 화면에 남지 않아서, 같은 글을 두 번 신고하는 것은
+ * 실수가 아니라 정상 동선이다. 그때 "접수된 신고를 확인하고 있어요" 라는 **안심시키는
+ * 문장**을 경고색으로 띄우면, 사용자는 자기가 뭘 잘못했는지 찾다가 실제로 다시 신고한다.
+ *
+ * 없는 글·지워진 댓글(`001`·`008`)은 여기 들어오지 않는다. 그건 원하던 일이 일어나지
+ * **않은** 것이고, 새로고침이라는 할 일이 남아 있다.
+ *
+ * ■ 왜 화면(`communityError.ts`)이 아니라 카탈로그에 있나
+ *
+ * 예전에는 커뮤니티 유틸이 `presentError` **앞에서** 이 세 코드를 가로채 `showInfoToast`
+ * 로 보냈다. 색은 맞았지만 그 갈래는 `app_error_presented` 를 한 행도 남기지 않았다 —
+ * 그 이벤트를 쏘는 지점은 `present.ts` 하나뿐이고(`tests/analyticsCrossCutting.test.ts`
+ * 의 "통로는 하나다"), 유틸에서 한 번 더 쏘면 그 계약이 깨진다. 그래서 "이미 했어요"
+ * 는 **판정**이고 판정은 카탈로그에 산다. `present.ts` 가 이 판정을 `showInfoToast`
+ * 로 보내면 통로 하나로 계측까지 따라온다.
+ *
+ * `COMMUNITY_ERROR_005`(이미 참여한 투표)에 `refresh` 액션이 붙어 있는 것은 문구가
+ * "결과는 바로 아래에서 볼 수 있어요" 라고 약속하기 때문이다. 그 약속을 지키려면
+ * 화면이 지금 상태를 다시 받아야 한다 — `present.ts` 가 안내 갈래에서 호출부의
+ * `refresh` 를 **버튼으로 미루지 않고 그 자리에서** 돌린다.
+ */
+const INFO_CODES = new Set([
+  "COMMUNITY_ERROR_003", // 이미 신고한 글
+  "COMMUNITY_ERROR_005", // 이미 참여한 투표
+  "COMMUNITY_ERROR_011", // 이미 신고한 댓글
+])
 
 const DIALOG_CODES = new Set([
   "SIGNUP_ERROR_001", // 이미 가입된 이메일 — 로그인이라는 선택지가 있다
@@ -115,6 +148,8 @@ const ACTION_BY_CODE: Readonly<Record<string, ErrorActionId>> = {
 
   COMMUNITY_ERROR_001: "refresh",
   COMMUNITY_ERROR_004: "refresh",
+  // 안내 갈래(`INFO_CODES`)의 `refresh` 는 버튼이 아니라 **지금 도는 것**이다.
+  COMMUNITY_ERROR_005: "refresh",
   COMMUNITY_ERROR_006: "refresh",
   COMMUNITY_ERROR_008: "refresh",
   COMMUNITY_ERROR_010: "refresh",
@@ -135,6 +170,12 @@ const ACTION_BY_CODE: Readonly<Record<string, ErrorActionId>> = {
   DOCTOR_ERROR_003: "refresh",
 }
 
+/** 이 코드를 어느 그릇에 담는가. 안내가 다이얼로그·토스트보다 앞선다. */
+function surfaceFor(code: string): ErrorSurface {
+  if (INFO_CODES.has(code)) return "info"
+  return DIALOG_CODES.has(code) ? "dialog" : "toast"
+}
+
 /**
  * 앱이 문구를 갖고 있는 코드 전부. `tests/errorGuidance.test.ts` 가 이 목록과
  * `errors.json` 의 키가 어긋나지 않는지 지킨다.
@@ -149,6 +190,6 @@ export function getErrorBehavior(
   if (!code) return { action: null, surface: "toast" }
   return {
     action: ACTION_BY_CODE[code] ?? null,
-    surface: DIALOG_CODES.has(code) ? "dialog" : "toast",
+    surface: surfaceFor(code),
   }
 }

@@ -6,10 +6,9 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
-  TextInput,
   View,
 } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import { AppModal } from "@/src/shared/components/AppModal"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -18,6 +17,8 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useTranslation } from "react-i18next"
+
+import { hasDuplicateVoteOptions } from "@/src/features/recipe/utils/voteOptions"
 
 export interface VoteData {
   /** 투표 질문(선택). */
@@ -62,9 +63,7 @@ export function VoteSheet({
   const filledOptions = options
     .map((opt) => opt.trim())
     .filter((opt) => opt.length > 0)
-  const hasDuplicateOptions =
-    new Set(filledOptions.map((opt) => opt.toLocaleLowerCase())).size !==
-    filledOptions.length
+  const hasDuplicateOptions = hasDuplicateVoteOptions(filledOptions)
   const canComplete =
     filledOptions.length >= MIN_OPTIONS && !hasDuplicateOptions
 
@@ -177,6 +176,12 @@ export function VoteSheet({
               value={title}
               onChangeText={setTitle}
               placeholder={t("poll.questionPlaceholder")}
+              /*
+                **`surface.text` 는 입력된 글자의 색**이고, 두 줄 아래에서 이 칸의
+                값은 `surface.textStrong` 으로 그려진다. 플레이스홀더를 그 사이 단으로
+                두면 "이미 적혀 있는 값" 으로 읽혀 사용자가 지우려고 탭한다.
+                placeholder 단(`label.assistive`)이 이 자리를 위해 있는 값이다.
+              */
               placeholderTextColor={surface.placeholder}
               maxLength={100}
               style={[
@@ -222,7 +227,7 @@ export function VoteSheet({
                       <Ionicons
                         name="remove-circle-outline"
                         size={22}
-                        color={surface.textWeak}
+                        color={surface.text}
                       />
                     </Pressable>
                   )}
@@ -282,13 +287,13 @@ export function VoteSheet({
                 </Text>
               )}
               <Text
-                style={[styles.hintText, { color: surface.textMuted }]}
+                style={[styles.hintText, { color: surface.text }]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("poll.lockedHint")}
               </Text>
               <Text
-                style={[styles.hintSub, { color: surface.textWeak }]}
+                style={[styles.hintSub, { color: surface.text }]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("poll.optionLimit")}

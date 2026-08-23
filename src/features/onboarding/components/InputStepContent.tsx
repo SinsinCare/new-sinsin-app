@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TextInput, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
 import i18n from "@/src/i18n"
 import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"

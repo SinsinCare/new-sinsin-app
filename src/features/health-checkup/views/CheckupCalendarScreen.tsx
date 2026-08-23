@@ -91,6 +91,7 @@ export function CheckupCalendarScreen({
   const analysis = query.data
   const showSkeleton = useLoadingVisible(
     query.isLoading && resultIds.length > 0,
+    { surface: "checkup_calendar" },
   )
 
   /**

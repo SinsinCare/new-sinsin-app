@@ -120,6 +120,11 @@ import { MenuTab } from "../components/detail/MenuTab"
 import { PhotoTab } from "../components/detail/PhotoTab"
 import { ReviewTab } from "../components/detail/ReviewTab"
 import { ReviewReportSheet } from "../components/ReviewReportSheet"
+import {
+  RestaurantConsultSheetHost,
+  type RestaurantConsultRequest,
+} from "../components/consult"
+import type { ConsultQuestion } from "../consult/types"
 import { RouteAppSheet } from "../components/RouteAppSheet"
 import { canRouteTo } from "../utils/mapAppLinks"
 import { restaurantDetailInstanceKey } from "../utils/detailInstanceKey"
@@ -284,6 +289,17 @@ function RestaurantDetailBody({
    */
   const [reportReviewId, setReportReviewId] = useState<number | null>(null)
   const [routeSheetOpen, setRouteSheetOpen] = useState(false)
+  /**
+   * `AI 식단 상담` 시트. 신고·길찾기 시트와 같은 이유로 이 화면이 직접 갖는다.
+   *
+   * 상태가 **둘**인 것은 시트가 "열려 있는가" 와 "무엇을 자동 전송할 것인가" 가 서로
+   * 독립이기 때문이다. `질문하기` 로 열면 `consultRequest` 는 `null` 이고(빈 상태),
+   * 닫았다가 다시 열어도 앞선 요청이 다시 나가면 안 된다 — 재전송을 막는 것은
+   * 호스트 안의 `requestId` 이고, 그래서 여기서는 **누를 때마다 새 id** 를 만든다.
+   */
+  const [consultOpen, setConsultOpen] = useState(false)
+  const [consultRequest, setConsultRequest] =
+    useState<RestaurantConsultRequest | null>(null)
 
   const { detail, cardHint, isError, error, refetch } =
     useRestaurantDetail(restaurantId)
@@ -400,6 +416,37 @@ function RestaurantDetailBody({
       params: buildDiagnoseParams(restaurantId, name, menus.menus),
     })
   }, [menus.menus, name, restaurantId, router])
+
+  /**
+   * 홈 탭의 `AI 식단 상담` → 시트.
+   *
+   * `handleDiagnose` 와 **일부러 다른 답을 하게** 되어 있다. 진단은 화면을 떠나
+   * 메뉴 8건 전량의 영양소 숫자를 상담에 실어 보내는 일회성 전량 대조고, 이 시트는
+   * 제자리에서 **질문이 지목한 것만** 놓고 이어서 묻는 대화다. 시트가 같은 컨텍스트를
+   * 실으면 `진단하기` 가 중복이 되므로 여기서 `buildDiagnoseParams` 를 재사용하지 않는다.
+   *
+   * 계측은 두 곳으로 나뉜다 — 어떤 질문이 눌렸는지는 `AiConsultSection` 이
+   * (`restaurant_ai_consult_question_tap`), 열림 자체는 `V2BottomSheet` 이 서페이스로
+   * 센다. 그래서 `질문하기`(=`null`)에는 따로 이벤트가 없다: 열림 수에서 질문 탭 수를
+   * 빼면 그것이 빈 상태로 연 횟수다.
+   */
+  const handleAskAi = useCallback(
+    (question: ConsultQuestion | null) => {
+      if (restaurantId === null) return
+      setConsultRequest(
+        question
+          ? {
+              question,
+              // 같은 질문을 두 번 눌러도 새 요청이어야 한다 — 문자열을 키로 쓰면
+              // 두 번째가 조용히 무시된다.
+              requestId: `restaurant-${restaurantId}-${question.kind}-${Date.now()}`,
+            }
+          : null,
+      )
+      setConsultOpen(true)
+    },
+    [restaurantId],
+  )
 
   const handleToggleBookmark = useCallback(
     (bookmarked: boolean) => {
@@ -845,6 +892,7 @@ function RestaurantDetailBody({
                   onWriteReview={onWriteReview}
                   onOpenPhotos={onOpenPhotos}
                   onPressReviewAuthor={onPressReviewAuthor}
+                  onAskAi={handleAskAi}
                 />
               )}
               {value === "menu" && (
@@ -918,6 +966,26 @@ function RestaurantDetailBody({
         visible={routeSheetOpen}
         onClose={() => setRouteSheetOpen(false)}
         target={{ lat: detail.lat, lng: detail.lng, name: detail.name }}
+      />
+
+      {/*
+        `AI 식단 상담`. 스크롤 밖 형제인 것은 위 둘과 같은 이유지만, 여기는 조건이 하나 더
+        붙는다 — 이 호스트는 시트가 아니라 **대화를 소유**한다(`useChat`). 홈 탭 안에 두면
+        탭을 옮기는 순간 언마운트되어 진행 중인 답변이 끊기고, `visible` 로 감싸면 시트를
+        닫을 때마다 대화가 통째로 사라진다. 상세 화면이 사는 동안 항상 마운트돼 있어야
+        "물어보고 닫았다가 다시 열면 답이 와 있다" 가 성립한다.
+
+        화면을 떠날 때의 정리는 `RestaurantDetailBody` 의 인스턴스 키 리마운트가 한다
+        (`RestaurantDetailScreen` 머리말) — 그때 `useChat` 의 정리 이펙트가 스트림을 끊는다.
+      */}
+      <RestaurantConsultSheetHost
+        visible={consultOpen}
+        onClose={() => setConsultOpen(false)}
+        restaurantId={restaurantId}
+        restaurantName={detail.name}
+        cuisineType={detail.cuisineType}
+        menus={menus.menus}
+        request={consultRequest}
       />
     </View>
   )

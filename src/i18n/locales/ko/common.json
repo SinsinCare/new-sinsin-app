@@ -190,9 +190,13 @@
       "popularKeywords": "인기 검색어",
       "noResultsTitle": "검색 결과가 없어요",
       "noResultsBody": "단어나 태그를 바꿔 검색해 보세요",
+      "entryEmptyBody": "아직 모아 둔 검색어도 인기 글도 없어요\n찾고 싶은 말을 입력해 보세요",
+      "emptyAction": "인기 검색어 보기",
       "errorRetry": "다시 검색하기",
       "loadMore": "더 보기",
-      "loadMoreRetry": "다시 시도"
+      "loadMoreRetry": "다시 시도",
+      "endOfList": "마지막 결과까지 다 봤어요",
+      "backToTop": "맨 위로"
     },
     "popular": {
       "title": "인기글",
@@ -202,8 +206,23 @@
       "month": "월간",
       "all": "전체",
       "empty": "아직 인기글이 없어요",
+      "emptyAllBody": "글이 쌓이면 여기에 모아 볼게요",
+      "emptyPeriod": "이 기간에는 아직 인기글이 없어요",
+      "emptyWiden": "{{period}} 보기",
+      "emptyFiltered": "이 분류에는 아직 인기글이 없어요",
+      "emptyClearCategory": "전체 보기",
       "errorRetry": "다시 불러오기",
       "write": "글쓰기"
+    },
+    "trending": {
+      "title": "요즘 이야기 중",
+      "all": "전체",
+      "allAccessibility": "인기글 전체 보기"
+    },
+    "neighbors": {
+      "title": "요즘 글 쓰는 이웃",
+      "reason": "{{reason}} 이야기를 나누는 이웃이에요",
+      "latestPostLabel": "최근 글"
     },
     "author": {
       "openProfile": "{{name}}님의 프로필 보기",
@@ -221,7 +240,9 @@
       "emptyFollowers": "아직 팔로워가 없어요",
       "emptyFollowing": "아직 팔로우한 사람이 없어요",
       "notFound": "이 작성자를 찾지 못했어요",
-      "suggested": "이런 작성자도 만나보세요"
+      "suggested": "이런 작성자도 만나보세요",
+      "followerCount": "팔로워 {{count}}",
+      "postCount": "게시글 {{count}}"
     },
     "reportForm": {
       "title": "신고하기",
@@ -238,6 +259,12 @@
       "confirm": "확인",
       "submit": "신고하기",
       "success": "신고를 접수했어요"
+    },
+    "sort": {
+      "title": "정렬 기준",
+      "recent": "최신순",
+      "views": "조회순",
+      "popular": "인기순"
     },
     "myActivity": "내 활동",
     "bookmarks": "북마크한 글",
@@ -351,17 +378,18 @@
         "bookmarked": "북마크"
       },
       "empty": {
+        "browse": "글 둘러보기",
         "mine": {
           "title": "아직 쓴 글이 없어요",
-          "body": "커뮤니티에 첫 글을 남겨 보세요"
+          "body": "쓴 글은 여기에 모여요"
         },
         "liked": {
           "title": "좋아요를 누른 글이 없어요",
-          "body": "마음에 드는 글에 좋아요를 눌러 보세요"
+          "body": "읽은 글에 좋아요를 누르면 여기에 모여요"
         },
         "bookmarked": {
           "title": "북마크한 글이 없어요",
-          "body": "다시 보고 싶은 글을 북마크해 보세요"
+          "body": "다시 보고 싶은 글을 북마크하면 여기에 모여요"
         }
       }
     }
@@ -523,6 +551,30 @@
       "actionSave": "저장",
       "actionSaved": "저장됨",
       "actionRoute": "길찾기"
+    },
+    "consult": {
+      "sectionTitle": "AI 식단 상담",
+      "sectionTitleAccent": "AI",
+      "sectionTitleRest": "식단 상담",
+      "sectionSubtitle": "궁금한 점을 물어보세요!",
+      "askCta": "질문하기",
+      "questionAccessibility": "추천 질문 {{index}}. {{question}}",
+      "sheetTitle": "AI 식단 상담",
+      "sheetClose": "상담 닫기",
+      "emptyTitle": "궁금한 식단이나 메뉴를\n편하게 물어보세요.",
+      "placeholder": "AI에게 질문해보세요",
+      "shareAnswer": "답변 공유",
+      "context": {
+        "restaurant": "식당",
+        "cuisine": "분류",
+        "menus": "메뉴"
+      },
+      "q": {
+        "driver": "{{driver}}이 가장 많은 메뉴는 어떤 건가요?",
+        "recommend": "신장 환자에게 추천하는 메뉴는 무엇인가요?",
+        "compare": "{{first}}{{conj}} {{second}} 중 어느 쪽이 신장에 부담이 될까요?",
+        "avoid": "피해야 할 반찬이 있나요?"
+      }
     },
     "report": {
       "maxPhotos": "사진은 최대 {{count}}장까지 첨부할 수 있어요.",

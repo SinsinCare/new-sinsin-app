@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import type {
   StyleProp,
   TextInputProps,
@@ -16,6 +17,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { hapticSelection } from "@/src/lib/haptics"
+/*
+  시트 안의 입력은 평범한 `TextInput` 이 아니다 — 그러면 gorhom 이 포커스를 모르고
+  키보드 이벤트를 버려서 시트가 제자리에 남는다(V2SheetTextInput 머리말).
+*/
+import {
+  V2SheetTextInput,
+  type V2SheetTextInputRef,
+} from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useTranslation } from "react-i18next"
 import { MOTION, TYPE } from "@/src/theme/surface"
@@ -204,7 +213,7 @@ function SheetEditableValue({
   edit: SheetValueEdit
 }) {
   const surface = useSurface()
-  const inputRef = useRef<TextInput>(null)
+  const inputRef = useRef<V2SheetTextInputRef>(null)
   const [draft, setDraft] = useState<string | null>(null)
   const editing = draft !== null
   const filled = value !== null && value !== ""
@@ -277,7 +286,7 @@ function SheetEditableValue({
               따르므로 어떤 자릿수에서도 숫자 아래에 정확히 눕는다. */}
           <View style={styles.valueSlot}>
             {editing ? (
-              <TextInput
+              <V2SheetTextInput
                 ref={inputRef}
                 value={draft}
                 onChangeText={(text) => {
@@ -775,7 +784,7 @@ export function SheetNumericField({
     <View style={[styles.fieldGroup, containerStyle]}>
       <SheetFieldLabel>{label}</SheetFieldLabel>
       <View style={[styles.fieldBox, { backgroundColor: surface.surface }]}>
-        <TextInput
+        <V2SheetTextInput
           {...inputProps}
           value={value}
           onChangeText={onChangeText}

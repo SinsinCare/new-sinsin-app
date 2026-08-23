@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import { REPORT_CARD } from "@/src/shared/components/ReportSection"
 import type { SurfacePalette } from "@/src/theme/surface"

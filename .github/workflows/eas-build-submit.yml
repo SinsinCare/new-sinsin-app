@@ -52,9 +52,15 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      # 프로파일↔백엔드 짝을 빌드 전에 검사한다. 스토어에 나간 iOS 1.2.1 은
+      # 테스트 백엔드를 보는 프로파일에서 나왔다 — 여기서 먼저 깨져야 한다.
+      - name: Check release config
+        run: npm run check:release-config
+
       - name: Build & Submit (tag push)
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          npm run check:release-config -- --profile production
           eas build \
             --platform all \
             --profile production \

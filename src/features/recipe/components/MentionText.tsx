@@ -1,4 +1,5 @@
-import { StyleSheet, Text, type StyleProp, type TextStyle } from "react-native"
+import { StyleSheet, type StyleProp, type TextStyle } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { splitMentionSegments } from "../utils/commentMentions"

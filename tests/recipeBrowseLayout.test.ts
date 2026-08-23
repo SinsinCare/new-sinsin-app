@@ -201,7 +201,15 @@ describe("화면이 이 판정을 실제로 쓴다", () => {
    * expo-router 를 끌고 와 렌더 테스트가 불가능하므로 소스로 못 박는다.
    */
   const screen = fs.readFileSync(
-    path.join(__dirname, "..", "app", "(tabs)", "recipe.tsx"),
+    path.join(
+      __dirname,
+      "..",
+      "src",
+      "features",
+      "recipe",
+      "views",
+      "RecipeHomeScreen.tsx",
+    ),
     "utf8",
   )
 

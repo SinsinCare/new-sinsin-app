@@ -5,17 +5,13 @@ import {
   type TextInputSelectionChangeEventData,
   StyleSheet,
 } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { tokens } from "@/src/theme/tokens"
+import { useSurface } from "@/src/hooks/useSurface"
 
-const TEXT_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
-const PLACEHOLDER_COLOR = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightMuted.val,
-}
+/*
+  색은 `useSurface()` 에서 온다. 예전에는 `{ light, dark }` 두 벌을 손으로 들고 있었고
+  **다크 칸에 라이트 토큰**(`textLightSub`·`textLightMuted`)이 들어 있었다 — 다크에서
+  본문과 플레이스홀더가 사실상 같은 밝기가 되어, 빈 칸이 이미 적힌 칸으로 읽혔다.
+*/
 
 interface TextBlockProps {
   content: string
@@ -36,7 +32,7 @@ export function TextBlock({
   placeholder,
   autoFocus,
 }: TextBlockProps) {
-  const scheme = useAppColorScheme()
+  const surface = useSurface()
 
   const handleSelectionChange = useCallback(
     (e: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
@@ -53,11 +49,11 @@ export function TextBlock({
       onFocus={onFocus}
       onBlur={onBlur}
       placeholder={placeholder}
-      placeholderTextColor={PLACEHOLDER_COLOR[scheme]}
+      placeholderTextColor={surface.placeholder}
       multiline
       scrollEnabled={false}
       autoFocus={autoFocus}
-      style={[styles.input, { color: TEXT_COLOR[scheme] }]}
+      style={[styles.input, { color: surface.textStrong }]}
     />
   )
 }

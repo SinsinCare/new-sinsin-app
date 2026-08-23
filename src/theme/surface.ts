@@ -1,5 +1,6 @@
 import { over } from "../design-system-v2/tokens/blend"
 import { semanticDark, semanticLight } from "../design-system-v2/tokens/colors"
+import { getSurfaceLayers } from "../design-system-v2/tokens/layers"
 import {
   typography,
   type TextStyleToken,
@@ -17,6 +18,12 @@ import {
  *
  *   **여기에 새 리터럴 hex 를 적지 말 것.** 필요한 색이 v2 에 없으면 그건 토큰이 없는 것이고,
  *   토큰을 먼저 정해야 한다. 아래 `over()` 로 v2 값을 합성하는 것까지가 허용 범위다.
+ *
+ * ■ **면의 정본은 이제 사다리다** (2026-08-22)
+ *   회색 면의 층은 `design-system-v2/tokens/layers.ts` 가 정한다. 이 파일은 그 단들에
+ *   **레거시 이름을 붙이는 어댑터**일 뿐이다 — `card` 는 `planes.content`, `surface` 는
+ *   `planes.well`, `bed` 는 `planes.bed` 다(매핑 전문은 아래 `derive` 머리말).
+ *   여기서 새 면을 계산하지 마라. 필요한 회색이 사다리에 없으면 **단을 먼저 정한다.**
  *
  * ■ 인터페이스는 그대로다
  *   `SurfacePalette` 의 키 21개는 하나도 늘거나 줄지 않았다. 호출부는 아무것도 모른다.
@@ -36,6 +43,20 @@ import {
 export interface SurfacePalette {
   /** 화면 바닥 */
   canvas: string
+  /**
+   * **화면이 실제로 까는 바닥.** 아래 `canvas` 와 헷갈리지 말 것 — `canvas` 는 "합성의
+   * 기준면"(라이트에서 흰색)이고, 이쪽은 **눈에 보이는 페이지 바닥**이다.
+   *
+   * 이 칸이 생기기 전에는 화면 8곳이 각자 `isDark ? canvas : surface` 라고 적었다.
+   * 같은 뜻을 여덟 번 적으면 그중 하나가 어긋나는 날이 오고, 실제로 그날이 왔다 —
+   * 설정 편집 폼 넷이 tamagui `appBg` 로 같은 값을 다른 이름으로 깔다가 그 위의
+   * 입력칸과 값이 겹쳤다(`SettingsTextField` 머리말 §우물).
+   *
+   * ⚠ **`isDark` 로 고르지 않는다.** 규칙은 "카드가 아닌 쪽" 이다 — 라이트는 카드가
+   * 바닥(흰색)과 같은 예외라 바닥이 한 겹 아래 우물이고, 다크는 카드가 이미 한 겹
+   * 위라 바닥이 곧 `canvas` 다. 그 예외를 다시 쓰는 대신 **예외로부터 계산**한다.
+   */
+  bed: string
   /** 입력·칩 등 한 단계 떠 있는 면 */
   surface: string
   /**
@@ -90,50 +111,50 @@ export interface SurfacePalette {
  * v2 시맨틱 한 벌에서 표면 팔레트를 만든다. 라이트·다크가 **같은 규칙**을 탄다 —
  * 모드마다 다른 규칙을 쓰면 그게 곧 다음 드리프트의 씨앗이다.
  *
- * 1:1 대응이 없어 판단이 들어간 자리는 각 줄에 이유를 적었다. 그 넷뿐이다.
+ * ■ 면은 **이제 여기서 정하지 않는다** (2026-08-22)
+ *
+ * 층(면의 사다리)은 `design-system-v2/tokens/layers.ts` 가 정본이고, 이 함수는 거기에
+ * **이름만 붙인다.** 예전에는 이 파일이 팔레트를 만들면서 층까지 같이 정했다 —
+ * `card` 의 라이트 예외도, 우물 두 겹도, 바닥이 "카드가 아닌 쪽" 이라는 것도 전부
+ * 여기 있었다. 그러면 층을 물어볼 곳이 어댑터 한 곳뿐이라, v2 를 보는 화면
+ * (`useV2Theme`)은 층을 알 방법이 없었고 회색이 필요하면 골라야 했다.
+ *
+ * **값은 한 바이트도 안 바뀐다.** 계산식이 통째로 옮겨 간 것이고, 대조는
+ * `tests/surfaceLadderGuard.test.ts` §L2 가 사다리 이전 팔레트 전체를 떠서 맞춘다.
+ *
+ * 아래 매핑이 어댑터 이름 ↔ 사다리 단의 전부다:
+ *
+ *   canvas        planes[basePlane]  (= `background.default`. 라이트 content · 다크 bed)
+ *   bed           planes.bed
+ *   card          planes.content
+ *   surface       planes.well
+ *   surfaceSunken planes.wellShallow
+ *   surfacePressed planes.pressed
+ *   band          planes.band
+ *   ctaOffBg      planes.well
+ *
+ * 1:1 대응이 없어 판단이 들어간 자리는 각 줄에 이유를 적었다.
  */
 function derive(v2: typeof semanticLight, isDark: boolean): SurfacePalette {
-  const {
-    label,
-    line,
-    fill,
-    background,
-    primary,
-    status,
-    static: staticColors,
-  } = v2
-
-  /** 화면 바닥. 모든 면 합성의 기준면이다. */
-  const canvas = background.default
+  const { label, line, primary, status, static: staticColors } = v2
+  const { planes, basePlane } = getSurfaceLayers(isDark)
 
   /**
-   * 층은 `fill.normal` 을 **한 겹씩 더 얹어서** 만든다 — 바닥 → 카드 → 우물 → 눌림.
-   * 규칙이 하나라 라이트에선 층마다 어두워지고 다크에선 층마다 밝아진다.
-   * 즉 두 모드 모두 **바닥에서 멀어지는 쪽**이 위층이고, 눌림도 같은 방향으로 읽힌다.
-   * (v2 의 `fill.pressed` 는 두 모드 다 어두워지는 값이라 다크에서 방향이 뒤집힌다.
-   *  V2Button·V2Card·V2ListRow 가 pressed 를 opacity 로 처리하는 것도 같은 이유다.)
-   *
-   * 다크의 첫 겹은 정확히 `background.lower`(#313135)로 떨어진다 —
-   * v2 팔레트가 자기 자신과 맞물려 있다는 확인이다.
-   *
-   * **라이트에서 카드만 예외**로 바닥과 같은 흰 면이다. 이 앱의 라이트는
-   * "회색 바닥 위 흰 카드"이고 그 바닥은 화면이 `appBg`(=background.lower)로 깐다.
-   * 카드를 한 겹 더 올리면 흰 카드가 회색이 되어 층이 뒤집힌다.
+   * 합성의 기준면(`background.default`). **아래 `bed` 와 헷갈리지 말 것** —
+   * 이쪽은 "합성의 기준면"(라이트에서 흰색)이고, `bed` 는 눈에 보이는 페이지 바닥이다.
+   * 사다리에서는 라이트 `content` · 다크 `bed` 단이다.
    */
-  const card = isDark ? over(fill.normal, canvas) : canvas
-  /** 입력칸·칩처럼 카드 안에 파인/뜬 면. */
-  const well = over(fill.normal, card)
+  const canvas = planes[basePlane]
 
   return {
     canvas,
-    surface: well,
-    // 우물의 얕은 단. `fill.alternative`(5%)는 `fill.normal`(8%)보다 한 겹 옅다.
-    surfaceSunken: over(fill.alternative, card),
-    surfacePressed: over(fill.normal, well),
-    // 화면을 가르는 띠. v2 가 이미 "바닥보다 한 단 낮은 배경" 으로 정의해 둔 값이다.
-    band: background.lower,
+    bed: planes.bed,
+    surface: planes.well,
+    surfaceSunken: planes.wellShallow,
+    surfacePressed: planes.pressed,
+    band: planes.band,
 
-    // 선택·기록완료 표시의 브랜드 틴트.
+    // 선택·기록완료 표시의 브랜드 틴트. **회색이 아니라 색**이라 사다리 밖이다.
     // 라이트는 Figma 의 primary-weak. 다크는 Figma 가 라이트와 같은 값(#fff1eb)을 둬서
     // 그대로 쓰면 거의 흰 면이 된다(§1-B-2, 디자이너 확인 대기). 확인 전까지는
     // **primary 를 18% 로 깐 기존 값**을 유지하되 리터럴 대신 primary 토큰에서 파생한다.
@@ -143,7 +164,7 @@ function derive(v2: typeof semanticLight, isDark: boolean): SurfacePalette {
 
     // 다크 카드 값은 예전 tamagui 의 cardBgDark(#313138)와 사실상 같은 색으로 떨어진다
     // — 두 계보가 여기서 만난다.
-    card,
+    card: planes.content,
 
     border: line.normal,
     hairline: line.alternative,
@@ -160,8 +181,8 @@ function derive(v2: typeof semanticLight, isDark: boolean): SurfacePalette {
     brand: primary.primary,
     onBrand: staticColors.white,
 
-    // 비활성 CTA. V2Button 의 disabled 와 같은 면(fill.normal)을 쓴다.
-    ctaOffBg: well,
+    // 비활성 CTA. 우물과 같은 단이다(V2Button 의 disabled 와 같은 면).
+    ctaOffBg: planes.well,
     // V2Button 은 disabled 전경에 label.disable 을 쓰지만 그 값은 위 면 위에서 1.3:1 이라
     // 사실상 안 보인다. 비활성 CTA 는 "지금은 못 누른다"가 읽혀야 하므로 한 단 진한 쪽을 쓴다.
     ctaOffText: label.assistive,
@@ -352,6 +373,11 @@ export const LAYOUT = {
    * 실제로 화면마다 제각각이었다 — 레시피 0 · 커뮤니티 4 · 내 활동 4 · 보관함 4 ·
    * 마이페이지 12. 0 과 4 는 둘 다 "붙어 잘린다" 쪽이다. `section.titleGap` 과 같은
    * 12 로 맞춰 머리가 하나의 띠로 읽히게 한다.
+   *
+   * **잘리는 자리는 화면마다 다르고, 옮겨 다닌다.** 레시피 홈은 2026-08-21 에 카테고리
+   * 레일이 고정층으로 올라가면서 그 경계가 검색창 밑변 → **레일 밑변**으로 내려갔다.
+   * 값이 아니라 **자리**가 바뀐 것이므로 이 상수는 그대로고, 화면이 이 패딩을 어느
+   * 상자에 다느냐만 따라 내려간다(`recipeHomeStickyLayout.ts` 의 `RECIPE_STICKY`).
    */
   stickyHeaderGap: 12,
   card: { radius: 16, padding: 18, gap: 12 },

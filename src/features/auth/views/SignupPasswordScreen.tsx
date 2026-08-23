@@ -9,9 +9,11 @@ import {
 } from "../components"
 import { useSignupPassword } from "../hooks"
 import {
+  PASSWORD_FIELD_ORDER,
   getConfirmPasswordRules,
   getPasswordRules,
 } from "../data/passwordValidation"
+import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
 import { AUTH_LAYOUT } from "../data/authSurface"
 import type { PasswordForm } from "../types"
 
@@ -37,7 +39,13 @@ export function SignupPasswordScreen() {
       subtitle={t("password.createSubtitle")}
       buttonLabel={t("common.next")}
       buttonDisabled={!isValid}
-      onSubmit={handleSubmit(handleNext)}
+      onSubmit={handleSubmit(handleNext, (errors) =>
+        trackFormValidationFailed(
+          "signup_password",
+          PASSWORD_FIELD_ORDER,
+          errors,
+        ),
+      )}
       keyboardAvoiding
     >
       <View style={styles.body}>

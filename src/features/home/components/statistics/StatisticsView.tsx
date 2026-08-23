@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { floatingAiButtonScrollInset } from "@/src/shared/components/floatingAiButtonLayout"
 import {
   TouchableOpacity,
   ScrollView,
@@ -102,6 +104,7 @@ export function StatisticsView({
   const isEmpty = !isLoading && !hasDiets
   const isDarkMode = useAppColorScheme() === "dark"
   const { colors } = useV2Theme()
+  const insets = useSafeAreaInsets()
 
   useEffect(() => {
     if (!isActive) return
@@ -218,7 +221,11 @@ export function StatisticsView({
         overScrollMode="never"
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          // 필이 덮는 높이는 화면 바닥 기준이다(floatingAiButtonScrollInset 머리말).
+          { paddingBottom: floatingAiButtonScrollInset(insets.bottom, 24) },
+        ]}
         stickyHeaderIndices={[1]}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -391,7 +398,5 @@ export function StatisticsView({
 const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 10,
-    // 우하단 AI 상담 필(16+48)에 마지막 카드가 가리지 않게 그 높이만큼 비운다.
-    paddingBottom: 88,
   },
 })

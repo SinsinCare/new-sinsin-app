@@ -58,6 +58,7 @@ import {
   nutritionTagLabelKey,
   sortLabelKey,
 } from "../src/features/restaurant/data/filterCatalog"
+import { RESTAURANT_CONSULT_NUTRIENT_KEYS } from "../src/features/restaurant/consult/restaurantConsultMessage"
 import { REGION_CATALOG } from "../src/features/restaurant/data/regionCatalog"
 import type {
   Amenity,
@@ -600,6 +601,19 @@ const GENERATED_KEYS: readonly {
       sido.groups.map((group) => group.labelKey),
     ),
   },
+  {
+    /*
+      식당 AI 상담이 프롬프트에 싣는 영양소 라벨. 식사 리포트와 **같은 키**를 쓴다
+      (`mealReport.nutrients.*`) — 같은 낱말을 두 벌 번역할 이유가 없다. 다만 그
+      키가 `restaurant.` 밖에 있어서, 여기 열거하지 않으면 이 파일의 스캔이
+      "열거되지 않은 접두어" 로 잡는다. 정의역은 빌더가 단독으로 소유한다.
+    */
+    label: "상담 프롬프트 영양소",
+    namespace: "common",
+    keys: RESTAURANT_CONSULT_NUTRIENT_KEYS.map(
+      (key) => `mealReport.nutrients.${key}`,
+    ),
+  },
 ]
 
 /**
@@ -623,6 +637,7 @@ const ENUMERATED_PREFIXES: readonly string[] = [
   "restaurant.filter.regions.",
   "restaurant.region.groups.",
   "restaurant.route.app.",
+  "mealReport.nutrients.",
 ]
 
 /* ────────────────────────── 검사 ────────────────────────── */

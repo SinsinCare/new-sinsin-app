@@ -1,7 +1,10 @@
 /**
- * 인기글·추천글 랭킹. 서버 랭킹 API가 없으므로 전량 로드된 피드 위에서
- * 순수 함수로 계산한다. 시간이 지날수록 점수가 식는 핫 랭킹(HN 방식)이라
- * "좋아요 수 절대값"이 아니라 "지금 뜨거운 글"이 위로 온다.
+ * 이어 읽을 글(연관 추천) 랭킹. 순수 함수라 상세 화면(`app/post/[id].tsx`)이
+ * 로드해 둔 후보 위에서 계산한다. 시간이 지날수록 점수가 식는 핫 스코어(HN 방식)를
+ * 신호 하나로 섞는다 — "좋아요 수 절대값"이 아니라 "지금 뜨거운 글"이 위로 온다.
+ *
+ * 인기글 랭킹(`rankPopularPosts`)은 은퇴했다 — 피드가 커서 페이지로 바뀌며 "전량
+ * 로드된 피드" 가 사라졌고, 인기글은 서버 인기 API(`/community/posts/popular`)가 정본이다.
  */
 
 interface RankablePost {
@@ -24,24 +27,6 @@ export function getHotScore(
   )
   const engagement = post.likes * 3 + post.comments * 2
   return engagement / Math.pow(ageHours + 2, 1.5)
-}
-
-/** 참여가 있는 글만, 핫 스코어 내림차순(동률이면 최신순). */
-export function rankPopularPosts<T extends RankablePost>(
-  posts: T[],
-  now: Date,
-  limit = 5,
-): T[] {
-  return posts
-    .filter((p) => p.likes + p.comments > 0)
-    .map((p) => ({ post: p, score: getHotScore(p, now) }))
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        b.post.createdAt.getTime() - a.post.createdAt.getTime(),
-    )
-    .slice(0, limit)
-    .map((entry) => entry.post)
 }
 
 /**

@@ -1,12 +1,5 @@
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native"
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
 import {
@@ -19,6 +12,7 @@ import { KeyboardStickyView } from "react-native-keyboard-controller"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useLocalSearchParams, type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -31,10 +25,19 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
 import { MOTION } from "@/src/theme/surface"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
-import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
-import { useBlockedUsers } from "@/src/features/recipe/hooks/useBlockedUsers"
+import {
+  POSTS_KEY,
+  useCommunityPosts,
+} from "@/src/features/recipe/hooks/useCommunityPosts"
+import {
+  isAuthorBlocked,
+  useBlockedUsers,
+} from "@/src/features/recipe/hooks/useBlockedUsers"
+import { COMMUNITY_POST_REFRESH } from "@/src/features/recipe/refresh/scopes"
+import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
 import { PollCard } from "@/src/features/recipe/components/PollCard"
 import { TagChips } from "@/src/features/recipe/components/TagChips"
+import { NextPageErrorRow } from "@/src/features/recipe/components/NextPageErrorRow"
 import { MentionText } from "@/src/features/recipe/components/MentionText"
 import {
   MentionSuggestions,
@@ -64,8 +67,15 @@ import {
   STORE_REDIRECT_URL,
 } from "@/src/shared/utils/deepLink"
 import { shareContent } from "@/src/shared/utils/share"
+/*
+  탈퇴 판정(`isWithdrawnAuthor`)은 **여기서 다시 적지 않는다.** 이 파일에는
+  `author.authorId === null || author.authorName === WITHDRAWN_AUTHOR_NAME` 를 그대로
+  베낀 사본이 있었다 — 소유자·탈퇴 판정은 한 곳에만 산다는 규칙(`contentOwnership`
+  머리말)의 정확히 그 위반이고, 두 벌이면 한쪽만 고치는 사고가 난다.
+*/
 import {
   isMyContent,
+  isWithdrawnAuthor,
   WITHDRAWN_AUTHOR_NAME,
 } from "@/src/features/recipe/utils/contentOwnership"
 
@@ -74,19 +84,13 @@ const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 /** 설치 링크는 한 곳에서만 짓는다(`deepLink.ts` 머리말). */
 const APP_DOWNLOAD_URL = STORE_REDIRECT_URL
 
-function isWithdrawnAuthor(author: {
-  authorId?: number | null
-  authorName: string
-}) {
-  return author.authorId === null || author.authorName === WITHDRAWN_AUTHOR_NAME
-}
-
 export default function PostDetailScreen() {
   const { t, i18n } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useAppRouter()
   const insets = useSafeAreaInsets()
   const surface = useSurface()
+  const queryClient = useQueryClient()
   const bottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 16) : insets.bottom
   const [commentText, setCommentText] = useState("")
@@ -106,6 +110,7 @@ export default function PostDetailScreen() {
     isCommentsError,
     isError,
     error,
+    isPostGone,
     refetch,
     refetchComments,
     castVoteAsync,
@@ -120,11 +125,71 @@ export default function PostDetailScreen() {
     isCreatingComment,
     isUpdatingComment,
   } = usePostDetail(id!)
-  const { posts, deletePost, reportPostAsync } = useCommunityPosts()
-  const { blockedNickNames } = useBlockedUsers()
+  /*
+    작성자의 "다른 글" 후보와 `deletePost` 때문에 피드 훅이 여기 붙는다. 관찰 여부는
+    **캐시가 정한다**(`observe: "cold-only"`).
+
+    피드를 보다 들어온 사람에게는 관찰하지 않는다 — 옵저버를 하나 더 마운트하는
+    것만으로 이미 낡은 무한 쿼리의 **페이지 전부**가 다시 날아간다(3페이지 스크롤 뒤
+    글을 열면 GET 3개). 캐시에 있는 것만 읽는다.
+
+    그런데 그냥 `false` 로 두면 **푸시 알림·공유 링크로 앱을 콜드 스타트한 사람**에게는
+    피드 캐시가 아예 없어서 `relatedPosts` 가 항상 빈 배열이고, 아래 섹션이 통째로
+    사라진다(그런 섹션이 있었다는 흔적도 남지 않는다). 그래서 캐시가 비었을 때만
+    켠다 — 그때 나가는 요청은 **첫 장 하나**뿐이다(이 화면에는 `fetchNextPage` 가 없다).
+
+    판정 기준은 **기본 조합**이다(이 호출에 인자가 없다). 그래서 `category=diet` 를
+    보다 들어온 사람은 피드를 세 장 스크롤했어도 "콜드" 로 판정돼 요청이 한 번 나간다 —
+    관련글이 읽는 캐시가 바로 그 기본 조합이라 그에게는 실제로 읽을 데이터가 없다.
+    의도한 동작이고 대가는 첫 장 하나다(`useCommunityPosts` 의 `observe` 머리말).
+
+    그 **한 번의 요청이 실패하면** 섹션을 조용히 지우지 않는다(아래 `relatedFailed`) —
+    재시도는 두 번뿐이고, 상세의 새로고침 스코프에는 피드가 없어서
+    (`COMMUNITY_POST_REFRESH`) 그대로 두면 이 화면이 살아 있는 내내 복구되지 않는다.
+  */
+  const {
+    posts,
+    deletePostAsync,
+    isDeleting,
+    isError: isRelatedError,
+    error: relatedError,
+    refetch: refetchRelated,
+  } = useCommunityPosts({ observe: "cold-only" })
+  const { blockedAuthors } = useBlockedUsers()
+
+  /*
+    상세에는 당김이 아예 없었다. 댓글이 달렸는지 보려면 뒤로 갔다 다시 들어와야 했고,
+    그마저 목록 캐시가 살아 있으면 같은 화면이 다시 그려졌다.
+    본문·댓글을 한 스코프로 묶는다 — 댓글만 새로 오면 상단 좋아요 수와 어긋난다.
+  */
+  const refreshable = useRefreshable({
+    queryKeys: COMMUNITY_POST_REFRESH,
+    scope: "community-post",
+    /*
+      피드는 이 스코프에 없다(`COMMUNITY_POST_REFRESH` 머리말) — 여기서 당길 때마다
+      피드가 들고 있던 페이지를 전부 다시 받던 자리다. 좋아요·북마크·댓글 수는
+      `patchPostInFeedCaches` 가 이미 계보에 반영하므로, 남은 것은 낡음 표시뿐이다.
+    */
+    extra: () =>
+      queryClient.invalidateQueries({
+        queryKey: POSTS_KEY,
+        refetchType: "none",
+      }),
+  })
+  useRevalidateOnReturn({ queryKeys: COMMUNITY_POST_REFRESH })
 
   const inkBg = surface.isDark ? "#F4F4F6" : "#1D1E20"
   const inkContent = surface.isDark ? "#17181C" : "#FFFFFF"
+  /**
+   * 본문↔댓글 · 댓글↔이어 읽을 글 경계의 두꺼운 밴드. 두 자리가 같은 값이다.
+   *
+   * 값은 `surface.band` 다 — 토큰 표가 **이 개념 그대로** 정의해 둔 자리다
+   * ("화면을 가르는 띠" · `src/theme/surface.ts`). 예전에는 다크만 손으로 고른
+   * `#26262A` 였는데, 그 값은 v2 팔레트 어디에도 없어서 팔레트가 움직여도 혼자
+   * 따라오지 않는 면이었다. 같은 띠를 그리는 건강검진 목록(`background.lower`)과
+   * 레시피 작성(`s.band`)이 이미 이 토큰을 쓴다.
+   */
+  const sectionBandBg = surface.band
   const reportReasons: { label: string; value: string }[] = [
     {
       label: t("community.postDetail.reportReasons.spam"),
@@ -166,14 +231,34 @@ export default function PostDetailScreen() {
     }
   }
 
-  /** 이어 읽을 글 — 태그·카테고리·핫스코어 기반, 차단한 작성자의 글은 제외. */
+  /**
+   * 이어 읽을 글 — 태그·카테고리·핫스코어 기반, 차단한 작성자의 글은 제외.
+   *
+   * 필터 식은 피드·검색·인기·스토리·보관함과 **글자 그대로 같다** — 탈퇴 글쓴이는
+   * 면제다. 여기만 면제가 빠져 있어서, `탈퇴한 사용자` 라는 라벨이 이름 축에 앉는
+   * 순간(지금 프로덕션 파이썬 서버는 차단 목록에 id 칸이 없어 **모든 행**이 그렇다)
+   * 같은 글이 피드에는 서고 이 섹션에서는 사라졌다.
+   */
   const relatedPosts = useMemo(() => {
     if (!post) return []
     const candidates = posts.filter(
-      (p) => !blockedNickNames.includes(p.authorName),
+      (p) => isWithdrawnAuthor(p) || !isAuthorBlocked(blockedAuthors, p),
     )
     return rankRelatedPosts(post, candidates, new Date(), 3)
-  }, [post, posts, blockedNickNames])
+  }, [post, posts, blockedAuthors])
+
+  /*
+    **후보를 못 받았다는 사실은 말한다.** 콜드 스타트(푸시·공유 링크)에서 켜지는
+    그 한 번의 피드 요청이 실패하면 후보가 0개고, 예전에는 섹션이 통째로 사라졌다 —
+    실패한 적이 있다는 흔적이 어디에도 남지 않는 조용한 축소다. 게다가 재조회할
+    경로가 없다: 재시도 2회 뒤 포기하고, `refetchOnWindowFocus` 는 꺼져 있고,
+    상세의 새로고침 스코프에는 피드가 **일부러** 빠져 있다(`COMMUNITY_POST_REFRESH`).
+    그래서 화면이 살아 있는 내내 복구되지 않는다. 머리글과 조용한 재시도를 세운다.
+
+    `relatedPosts` 가 아니라 `posts` 로 판정한다 — 후보는 받았는데 닿는 글이 없는
+    경우(정상)와 아예 못 받은 경우(실패)는 다른 사실이다.
+  */
+  const relatedFailed = isRelatedError && posts.length === 0
 
   /** 태그할 수 있는 사람 = 글쓴이 + 댓글 단 사람. 나 자신과 탈퇴 계정은 뺀다. */
   const { data: myProfile } = useMyPageProfile()
@@ -284,7 +369,20 @@ export default function PostDetailScreen() {
     router.push(href)
   }
 
+  /*
+    **지워진 것을 확인한 뒤에만 나간다.**
+
+    예전에는 `deletePost(id)` 를 쏘고 곧바로 `router.back()` 했다. 실패는 훅이 조용히
+    삼켰고(`onError` 는 재조회만 걸었는데, 삭제가 실패하는 가장 흔한 이유가 회선이
+    없어서라 그 재조회도 못 나간다) 낙관 삭제는 그대로 굳었다 — 글은 피드·검색·인기
+    에서 사라지고, 아무 말도 없고, 다음 자연 재검증이 며칠 뒤 되살린다.
+    지금은 훅이 확정 뒤에만 지우고(`useCommunityPosts` 의 삭제 머리말), 이 화면은
+    성공했을 때만 나간다. 실패하면 지우려던 글 위에 남아 이유를 듣는다.
+  */
   const handleDelete = async () => {
+    // 요청이 떠 있는 동안 한 번 더 지우면 두 번째는 `COMMUNITY_ERROR_001` 로 돌아온다 —
+    // 실제로는 지워진 것인데 화면은 "이 글은 사라졌어요" 를 실패처럼 말하게 된다.
+    if (isDeleting) return
     const confirmed = await showConfirm({
       title: t("community.postDetail.deletePostTitle"),
       description: t("community.postDetail.deletePostBody"),
@@ -293,39 +391,29 @@ export default function PostDetailScreen() {
       destructive: true,
     })
     if (!confirmed) return
-    deletePost(post!.id)
-    // 확인 다이얼로그 dismiss 와 화면 pop 이 겹치지 않게(appModalGate 머리말).
+    // 확인 다이얼로그 dismiss 와 다음 전이가 겹치지 않게(appModalGate 머리말).
     await afterModalTransitions()
+    try {
+      await deletePostAsync(post!.id)
+    } catch (deleteError) {
+      /*
+        이미 지워진 글(`COMMUNITY_ERROR_001`)이면 새로고침이 답이고 — 그때 상세 쿼리가
+        404 를 받아 이 화면이 묘비로 바뀐다 — 남의 글(`002`)이면 다시 시도해도 같다.
+        전송 실패는 회선이 돌아온 뒤 한 번 더 누르면 된다.
+      */
+      presentCommunityError(deleteError, {
+        scope: "community-post-delete",
+        refresh: () => void refetch(),
+      })
+      return
+    }
     router.back()
   }
 
   const handleReport = async () => {
-    const picked = await showActionSheet({
-      title: t("community.postDetail.reportReasonTitle"),
-      actions: reportReasons.map((r) => ({ label: r.label })),
-    })
-    if (picked == null) return
-
-    try {
-      await reportPostAsync({
-        postId: post!.id,
-        reason: reportReasons[picked].value,
-      })
-      showSuccessToast(
-        t("community.postDetail.reportReceivedTitle"),
-        t("community.postDetail.reportReceivedBody"),
-      )
-    } catch (reportError) {
-      /*
-        지워진 글을 신고하면 `COMMUNITY_ERROR_001` 이 온다. 그때 할 일은 재시도가
-        아니라 목록 갱신이라, 새로고침 핸들러를 함께 준다. 이미 신고한 글
-        (`003`)은 실패가 아니므로 `presentCommunityError` 가 안내 토스트로 돌린다.
-      */
-      presentCommunityError(reportError, {
-        scope: "community-post-report",
-        refresh: () => void refetch(),
-      })
-    }
+    if (!post) return
+    await afterModalTransitions()
+    router.push(`/community/report?postId=${post.id}` as Href)
   }
 
   const handleShare = async () => {
@@ -421,6 +509,23 @@ export default function PostDetailScreen() {
         온다. 글 자체가 사라졌으면 `001`, 수정 중이던 댓글이면 `008`·`009` 다.
         전부 "댓글 목록을 다시 받으면 보인다" 로 끝나는 실패라 새로고침을 붙인다.
       */
+      const resolved = resolveError(commentError)
+      /*
+        **대상이 없어진 수정은 겨눔을 푼다.** `setEditingCommentId(null)` 이 `await`
+        뒤에 있어서, 사라진 댓글(`008`)·남의 댓글(`009`)을 고치려다 실패하면 입력 바가
+        그 댓글에 고정된 채 남았다. 사용자가 안내대로 새로고침하면 그 댓글은 트리에서
+        사라지는데 바는 여전히 "댓글 수정 중" 이고, 보내기는 영원히 같은 오류를 낸다.
+        **전송 실패·5xx 는 그대로 겨눈 채 둔다** — 대상은 아직 있고 다시 시도가 정답이다.
+        초안까지 비우는 이유: 겨눔만 풀면 다음 전송이 그 글을 **새 댓글로** 올린다.
+      */
+      const targetVanished =
+        resolved.code === "COMMUNITY_ERROR_008" ||
+        resolved.code === "COMMUNITY_ERROR_009" ||
+        resolved.kind === "notFound"
+      if (editingCommentId && targetVanished) {
+        setEditingCommentId(null)
+        resetCommentDraft()
+      }
       presentCommunityError(commentError, {
         scope: "community-comment-save",
         refresh: () => void refetchComments(),
@@ -475,7 +580,21 @@ export default function PostDetailScreen() {
     }
   }
 
-  const handleCommentMore = async (comment: CommunityComment) => {
+  /**
+   * 댓글의 ⋯ 메뉴.
+   *
+   * `isReply` 를 받는 이유: 서버는 **답글의 답글을 받지 않는다**(`INVALID_COMMENT_PARENT`).
+   * 인라인 "답글" 버튼은 그래서 `!isReply` 로 잠겨 있는데 이 시트만 잠기지 않아서,
+   * 답글에서 ⋯ → 답글 을 고르면 입력 바가 그 답글에 고정되고 전송은 **언제나** 실패했다.
+   * 게다가 그때 뜨는 안내는 "답글을 달 댓글이 사라졌어요 / 새로고침한 뒤 다시 달아
+   * 주세요"(`COMMUNITY_ERROR_010`) 다 — 댓글은 사라지지 않았고, 새로고침해도 그대로고,
+   * 다시 시도해도 똑같이 실패한다. 빠져나가는 길은 아무도 가리키지 않는 ✕ 하나였다.
+   * 애초에 고를 수 없게 한다.
+   */
+  const handleCommentMore = async (
+    comment: CommunityComment,
+    isReply: boolean,
+  ) => {
     if (comment.isDeleted) return
     const startEdit = () => {
       setEditingCommentId(comment.id)
@@ -487,30 +606,42 @@ export default function PostDetailScreen() {
       commentInputRef.current?.focus()
     }
     // 글과 같은 규칙 — 수정·삭제는 내 댓글에만, 남의 댓글엔 답글·신고만.
+    // 답글에는 "답글" 이 아예 없다(서버가 못 받는다 · 위 머리말).
     const mine = mineOf(comment)
-    const handlers = mine
-      ? [
-          () => startReplyTo(comment),
-          startEdit,
-          () => handleDeleteComment(comment),
-        ]
-      : [() => startReplyTo(comment), () => handleCommentReport(comment)]
-    const actions = mine
-      ? [
-          { label: t("community.postDetail.reply") },
-          { label: t("community.postDetail.edit") },
-          { label: t("action.delete"), destructive: true },
-        ]
+    const replyEntry = isReply
+      ? []
       : [
-          { label: t("community.postDetail.reply") },
-          { label: t("community.postDetail.report") },
+          {
+            handler: () => startReplyTo(comment),
+            action: { label: t("community.postDetail.reply") },
+          },
         ]
+    const entries = [
+      ...replyEntry,
+      ...(mine
+        ? [
+            {
+              handler: startEdit,
+              action: { label: t("community.postDetail.edit") },
+            },
+            {
+              handler: () => handleDeleteComment(comment),
+              action: { label: t("action.delete"), destructive: true },
+            },
+          ]
+        : [
+            {
+              handler: () => handleCommentReport(comment),
+              action: { label: t("community.postDetail.report") },
+            },
+          ]),
+    ]
 
     const picked = await showActionSheet({
       title: t("community.postDetail.comment"),
-      actions,
+      actions: entries.map((entry) => entry.action),
     })
-    if (picked != null) await handlers[picked]()
+    if (picked != null) await entries[picked].handler()
   }
 
   const handleToggleCommentLike = async (comment: CommunityComment) => {
@@ -535,22 +666,31 @@ export default function PostDetailScreen() {
         <View
           style={[styles.commentAvatar, { backgroundColor: surface.surface }]}
         >
-          <Ionicons name="person" size={15} color={surface.textWeak} />
+          <Ionicons name="person" size={15} color={surface.text} />
         </View>
         <View style={styles.commentBody}>
-          <View style={styles.commentNameRow}>
-            <Text
-              style={[styles.commentName, { color: surface.textStrong }]}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {isWithdrawnAuthor(comment)
-                ? t("community.postDetail.withdrawnUser")
-                : comment.authorName}
-            </Text>
-            <Text style={[styles.commentTime, { color: surface.textWeak }]}>
-              {formatTimeAgo(comment.createdAt, i18n.language)}
-            </Text>
-          </View>
+          {/*
+            **지워진 댓글은 글쓴이를 밝히지 않는다.** 이 줄이 아래 `isDeleted` 가드
+            밖에 있어서 묘비가 "철수 · 3시간 전 / 삭제된 댓글이에요" 로 떴다 — 서버는
+            지울 때 멘션을 일부러 비워 흔적을 없애는데(`authorName` 은 트리를 그리려고
+            계속 보낸다) 앱이 그 이름을 도로 세우고 있었다. 남는 것은 답글이 매달릴
+            자리 하나면 된다.
+          */}
+          {!comment.isDeleted && (
+            <View style={styles.commentNameRow}>
+              <Text
+                style={[styles.commentName, { color: surface.textStrong }]}
+                lineBreakStrategyIOS="hangul-word"
+              >
+                {isWithdrawnAuthor(comment)
+                  ? t("community.postDetail.withdrawnUser")
+                  : comment.authorName}
+              </Text>
+              <Text style={[styles.commentTime, { color: surface.text }]}>
+                {formatTimeAgo(comment.createdAt, i18n.language)}
+              </Text>
+            </View>
+          )}
           <MentionText
             content={
               comment.isDeleted
@@ -573,14 +713,14 @@ export default function PostDetailScreen() {
                 <Ionicons
                   name={comment.liked ? "heart" : "heart-outline"}
                   size={14}
-                  color={comment.liked ? surface.brand : surface.textWeak}
+                  color={comment.liked ? surface.brand : surface.text}
                 />
                 {comment.likes > 0 && (
                   <Text
                     style={[
                       styles.commentActionText,
                       {
-                        color: comment.liked ? surface.brand : surface.textWeak,
+                        color: comment.liked ? surface.brand : surface.text,
                       },
                     ]}
                   >
@@ -595,10 +735,7 @@ export default function PostDetailScreen() {
                   accessibilityRole="button"
                 >
                   <Text
-                    style={[
-                      styles.commentActionText,
-                      { color: surface.textWeak },
-                    ]}
+                    style={[styles.commentActionText, { color: surface.text }]}
                     lineBreakStrategyIOS="hangul-word"
                   >
                     {t("community.postDetail.reply")}
@@ -611,14 +748,14 @@ export default function PostDetailScreen() {
         {!comment.isDeleted && (
           <Pressable
             hitSlop={10}
-            onPress={() => handleCommentMore(comment)}
+            onPress={() => handleCommentMore(comment, isReply)}
             accessibilityRole="button"
             accessibilityLabel={t("community.postDetail.commentMore")}
           >
             <Ionicons
               name="ellipsis-horizontal"
               size={16}
-              color={surface.textWeak}
+              color={surface.text}
             />
           </Pressable>
         )}
@@ -627,8 +764,23 @@ export default function PostDetailScreen() {
     </View>
   )
 
-  if (isError) {
+  if (isError && (!post || isPostGone)) {
     /*
+      **본문이 있으면 오류 화면이 이기지 않는다 — 글이 정말 사라진 게 아니라면.**
+      react-query 는 재조회가 실패해도 들고 있던 `data` 를 그대로 두고 `status` 만
+      `"error"` 로 바꾼다 — 그래서 `isError && post` 는 도달 가능한 상태다. 그때 이
+      화면을 그리면 비행기 모드에서 당긴 사용자가 읽던 글이 통째로 사라지고(뒤로 갔다
+      와도 캐시가 error 라 그대로), 느린 회선에서는 본문이 뜬 몇 초 뒤 오류로 바뀐다.
+      당김 실패는 `useRefreshable` 의 토스트가 이미 비파괴적으로 말한다 — 목록 세
+      화면(R5)과 같은 규칙이다.
+
+      **예외가 하나 있다: 서버가 "이 글은 없다" 고 말했을 때**(`isPostGone` —
+      `COMMUNITY_ERROR_001`·404). 상세 쿼리는 계보에서 `initialData` 를 받으므로
+      목록에서 들어오면 `post` 가 **항상** 있고, 그래서 이 화면은 남이 지운 글 위에서도
+      멀쩡해 보였다: 하트는 눌렸다 튕기고, 북마크도 같고, 수정은 낡은 사본으로 편집기를
+      열고, 공유는 성공해서 받는 사람만 묘비를 본다. 그 사본으로 할 수 있는 일이 하나도
+      없으므로 그때는 묘비가 이긴다(피드 행은 훅이 함께 지운다 · `usePostDetail`).
+
       지워진 글의 딥링크(`/post/1`)를 열면 서버는 `COMMUNITY_ERROR_001` 을 준다.
       그런데 화면은 `글을 불러오지 못했어요 / 인터넷 연결을 확인한 뒤…` 에 **다시 시도**
       버튼까지 그렸다 — 없는 글은 몇 번을 눌러도 없으므로 그 버튼은 거짓말이다.
@@ -732,11 +884,7 @@ export default function PostDetailScreen() {
             accessibilityLabel={t("community.postDetail.share")}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
-            <Ionicons
-              name="share-outline"
-              size={22}
-              color={surface.textMuted}
-            />
+            <Ionicons name="share-outline" size={22} color={surface.text} />
           </Pressable>
           <Pressable
             hitSlop={10}
@@ -751,7 +899,7 @@ export default function PostDetailScreen() {
             <Ionicons
               name={post.bookmarked ? "bookmark" : "bookmark-outline"}
               size={21}
-              color={post.bookmarked ? surface.brand : surface.textMuted}
+              color={post.bookmarked ? surface.brand : surface.text}
             />
           </Pressable>
           <Pressable
@@ -764,27 +912,45 @@ export default function PostDetailScreen() {
             <Ionicons
               name="ellipsis-horizontal"
               size={22}
-              color={surface.textMuted}
+              color={surface.text}
             />
           </Pressable>
         </View>
       </View>
 
       <ScrollView
-        bounces={false}
-        overScrollMode="never"
         style={styles.flex}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomInset + 96 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        {...refreshable.scrollProps}
       >
         {/* 작성자 */}
-        <View style={styles.authorRow}>
+        <Pressable
+          onPress={() => {
+            if (post.authorId != null) {
+              router.push(`/community/author/${post.authorId}` as Href)
+            }
+          }}
+          disabled={post.authorId == null || withdrawnAuthor}
+          accessibilityRole={post.authorId == null ? undefined : "button"}
+          accessibilityLabel={
+            post.authorId == null
+              ? undefined
+              : t("community.author.openProfile", {
+                  name: post.authorName,
+                })
+          }
+          style={({ pressed }) => [
+            styles.authorRow,
+            pressed && { opacity: 0.65 },
+          ]}
+        >
           <View
             style={[styles.authorAvatar, { backgroundColor: surface.surface }]}
           >
-            <Ionicons name="person" size={19} color={surface.textWeak} />
+            <Ionicons name="person" size={19} color={surface.text} />
           </View>
           <View style={styles.authorText}>
             <Text
@@ -795,12 +961,15 @@ export default function PostDetailScreen() {
                 ? t("community.postDetail.withdrawnUser")
                 : post.authorName}
             </Text>
-            <Text style={[styles.authorSub, { color: surface.textMuted }]}>
+            <Text style={[styles.authorSub, { color: surface.text }]}>
               {getCategoryLabel(post.category)} ·{" "}
               {formatTimeAgo(post.createdAt, i18n.language)}
             </Text>
           </View>
-        </View>
+          {post.authorId != null && !withdrawnAuthor && (
+            <Ionicons name="chevron-forward" size={16} color={surface.text} />
+          )}
+        </Pressable>
 
         {/* 제목·본문 */}
         <Text
@@ -882,6 +1051,16 @@ export default function PostDetailScreen() {
 
         {/* 좋아요 */}
         <View style={styles.engagementRow}>
+          <Text style={[styles.viewCount, { color: surface.text }]}>
+            {/*
+              천 단위는 **문구 쪽**에서 끊는다(`"조회 {{count, number}}"`).
+              여기서 `formatCount()` 로 미리 끊어 `{{formattedCount}}` 로 넘기려면
+              같은 열쇠를 부르는 `CommunityPopularScreen` 도 같이 고쳐야 하는데,
+              한쪽만 고치면 다른 화면에 `{{formattedCount}}` 가 글자 그대로 찍힌다.
+              복수형(`viewCount_one`/`_other`)도 `count` 로 그대로 갈린다.
+            */}
+            {t("community.postDetail.viewCount", { count: post.views ?? 0 })}
+          </Text>
           <SurfacePressable
             onPress={handleToggleLike}
             hitSlop={4}
@@ -895,13 +1074,13 @@ export default function PostDetailScreen() {
               <Ionicons
                 name={post.liked ? "heart" : "heart-outline"}
                 size={16}
-                color={post.liked ? surface.brand : surface.textMuted}
+                color={post.liked ? surface.brand : surface.text}
               />
             </Animated.View>
             <Text
               style={[
                 styles.likeLabel,
-                { color: post.liked ? surface.brand : surface.textMuted },
+                { color: post.liked ? surface.brand : surface.text },
               ]}
               lineBreakStrategyIOS="hangul-word"
             >
@@ -912,12 +1091,7 @@ export default function PostDetailScreen() {
 
         {/* 본문 ↔ 댓글 경계 — 두꺼운 회색 밴드 하나로 가른다. */}
         <View
-          style={[
-            styles.sectionBand,
-            {
-              backgroundColor: surface.isDark ? "#26262A" : surface.surface,
-            },
-          ]}
+          style={[styles.sectionBand, { backgroundColor: sectionBandBg }]}
         />
 
         {/* 댓글 */}
@@ -932,7 +1106,7 @@ export default function PostDetailScreen() {
           </Text>
           {isCommentsLoading ? (
             <Text
-              style={[styles.commentsLoading, { color: surface.textMuted }]}
+              style={[styles.commentsLoading, { color: surface.text }]}
               lineBreakStrategyIOS="hangul-word"
             >
               {t("community.postDetail.commentsLoading")}
@@ -948,7 +1122,9 @@ export default function PostDetailScreen() {
               >
                 {t("community.postDetail.commentsError")}
               </Text>
-              <Pressable onPress={() => void refetch()} hitSlop={8}>
+              {/* 실패한 것은 **댓글** 쿼리다 — `refetch()`(본문)를 부르면 이 자리는
+                  몇 번을 눌러도 오류에서 못 나온다. */}
+              <Pressable onPress={() => void refetchComments()} hitSlop={8}>
                 <Text
                   style={[styles.commentsEmptyTitle, { color: surface.brand }]}
                   lineBreakStrategyIOS="hangul-word"
@@ -969,7 +1145,7 @@ export default function PostDetailScreen() {
                 {t("community.postDetail.noComments")}
               </Text>
               <Text
-                style={[styles.commentsEmptySub, { color: surface.textMuted }]}
+                style={[styles.commentsEmptySub, { color: surface.text }]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.firstComment")}
@@ -980,16 +1156,15 @@ export default function PostDetailScreen() {
           )}
         </View>
 
-        {/* 이어 읽을 글 — 태그·카테고리가 닿아 있는 글을 골라준다. */}
-        {relatedPosts.length > 0 && (
+        {/*
+          이어 읽을 글 — 태그·카테고리가 닿아 있는 글을 골라준다.
+          후보 조회가 실패했을 때도(그때만) 머리글은 세운다: 있던 섹션이 흔적 없이
+          사라지는 대신 무슨 일이 있었는지 말하고 다시 받을 기회를 준다(`relatedFailed`).
+        */}
+        {relatedPosts.length > 0 || relatedFailed ? (
           <>
             <View
-              style={[
-                styles.sectionBand,
-                {
-                  backgroundColor: surface.isDark ? "#26262A" : surface.surface,
-                },
-              ]}
+              style={[styles.sectionBand, { backgroundColor: sectionBandBg }]}
             />
             <View style={styles.relatedSection}>
               <Text
@@ -998,6 +1173,18 @@ export default function PostDetailScreen() {
               >
                 {t("community.postDetail.related")}
               </Text>
+              {relatedFailed ? (
+                /*
+                  목록 두 화면(R5)의 꼬리와 **같은 조용한 행**이다 — 문구 하나와
+                  재시도 하나. 여기서 눌리는 것은 후보 목록의 첫 장이라 회선이
+                  돌아오면 그대로 섹션이 선다.
+                */
+                <NextPageErrorRow
+                  title={resolveError(relatedError).title}
+                  retryLabel={t("action.retry")}
+                  onRetry={() => void refetchRelated()}
+                />
+              ) : null}
               {relatedPosts.map((related) => (
                 <SurfacePressable
                   key={related.id}
@@ -1007,7 +1194,7 @@ export default function PostDetailScreen() {
                   style={styles.relatedCard}
                 >
                   <Text
-                    style={[styles.relatedMeta, { color: surface.textWeak }]}
+                    style={[styles.relatedMeta, { color: surface.text }]}
                     numberOfLines={1}
                   >
                     {getCategoryLabel(related.category)} ·{" "}
@@ -1028,7 +1215,7 @@ export default function PostDetailScreen() {
               ))}
             </View>
           </>
-        )}
+        ) : null}
       </ScrollView>
 
       {/* 댓글 입력 바 */}
@@ -1060,7 +1247,7 @@ export default function PostDetailScreen() {
               ]}
             >
               <Text
-                style={[styles.inputContextText, { color: surface.textMuted }]}
+                style={[styles.inputContextText, { color: surface.text }]}
                 numberOfLines={1}
               >
                 {editingCommentId
@@ -1079,7 +1266,7 @@ export default function PostDetailScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t("community.postDetail.cancelReply")}
               >
-                <Ionicons name="close" size={15} color={surface.textWeak} />
+                <Ionicons name="close" size={15} color={surface.text} />
               </Pressable>
             </View>
           )}
@@ -1136,6 +1323,13 @@ export default function PostDetailScreen() {
               disabled={
                 isCreatingComment || isUpdatingComment || !commentText.trim()
               }
+              /*
+                원은 36pt 다 — 손끝 최소치(44pt)보다 8pt 작다. 좋아요 버튼이 같은
+                줄에서 쓰는 방법 그대로 `hitSlop` 으로 사방 4pt 를 채워 44pt 를
+                만든다. 원을 키우면 입력 바의 높이가 따라 커지므로 그리는 크기는
+                두고 **닿는 크기만** 넓힌다.
+              */
+              hitSlop={4}
               accessibilityLabel={
                 editingCommentId
                   ? t("community.postDetail.saveComment")
@@ -1330,6 +1524,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  viewCount: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    letterSpacing: -0.25,
+    fontFamily: "Pretendard-Regular",
   },
   likeButton: {
     height: 40,
@@ -1404,9 +1606,19 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard-Regular",
     paddingVertical: 12,
   },
+  /*
+    위·아래를 **같은 수로 주면 위가 더 커 보인다.** 이 블록 바로 위에는 `댓글 0`
+    머리가 있고, 그 줄의 글자 상자(21)와 제 아래 여백(8)이 눈에는 **빈 공간의 일부**로
+    읽힌다 — 왼쪽 끝에 짧은 글자 하나뿐이라 그 줄의 나머지 폭이 통째로 여백처럼 보인다.
+    반대로 아래에는 그런 것이 없다. 그래서 숫자가 대칭이어도 그림은 위로 쏠린다.
+
+    아래에 그 머리 줄만큼(21)을 더해 눈으로 맞춘다. 실기기에서 보고 정한 값이다 —
+    산술로 대칭을 만들면 이 결함이 그대로 돌아온다.
+  */
   commentsEmpty: {
     alignItems: "center",
-    paddingVertical: 36,
+    paddingTop: 36,
+    paddingBottom: 57,
     gap: 4,
   },
   commentsEmptyTitle: {

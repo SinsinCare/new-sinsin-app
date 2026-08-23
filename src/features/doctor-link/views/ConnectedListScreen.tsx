@@ -96,7 +96,9 @@ export function ConnectedListScreen({
   const queryClient = useQueryClient()
 
   const connections = useQuery(doctorConnectionsQuery())
-  const showLoading = useLoadingVisible(connections.isLoading)
+  const showLoading = useLoadingVisible(connections.isLoading, {
+    surface: "doctor_connections",
+  })
 
   /** 확인 다이얼로그가 붙잡고 있는 연결. null 이면 다이얼로그가 닫힌 상태. */
   const [pendingRevoke, setPendingRevoke] = useState<DoctorConnection | null>(
@@ -173,6 +175,7 @@ export function ConnectedListScreen({
       const resolved = resolveError(connections.error)
       return resolved.retryable ? (
         <V2ErrorState
+          surface="doctor_connections"
           title={resolved.title}
           description={resolved.body}
           onRetry={() => void connections.refetch()}
@@ -181,6 +184,7 @@ export function ConnectedListScreen({
         />
       ) : (
         <V2ErrorState
+          surface="doctor_connections"
           title={resolved.title}
           description={resolved.body}
           style={styles.state}
@@ -195,6 +199,7 @@ export function ConnectedListScreen({
     if (items.length === 0) {
       return (
         <V2EmptyState
+          surface="doctor_connections"
           icon="doctor"
           title={t("doctorLink.connections.emptyTitle")}
           description={t("doctorLink.connections.emptyBody")}

@@ -29,6 +29,7 @@ import {
   showsSaveCount,
   visibleReviews,
 } from "@/src/features/recipe/components/detail/recipeDetailModel"
+import type { BlockedAuthors } from "@/src/features/recipe/utils/blockedAuthors"
 import type { RecipeIngredient } from "@/src/features/recipe/types/recipeV2"
 import koRecipe from "../src/i18n/locales/ko/recipe.json"
 import enRecipe from "../src/i18n/locales/en/recipe.json"
@@ -284,8 +285,15 @@ describe("i18n — 새 키가 ko/en 양쪽에 있다", () => {
  * 그 판정이 이 함수다.
  */
 describe("visibleReviews", () => {
-  const review = (id: number, authorNickName: string, mine = false) => ({
+  /** `authorId` 가 신원, `authorNickName` 은 그때그때의 라벨이다. */
+  const review = (
+    id: number,
+    authorId: number | null,
+    authorNickName: string,
+    mine = false,
+  ) => ({
     id,
+    authorId,
     authorNickName,
     mine,
     rating: 5,
@@ -293,29 +301,70 @@ describe("visibleReviews", () => {
     createdAt: "2026-07-31T00:00:00Z",
   })
 
-  it("차단 목록이 비면 원본 순서 그대로다", () => {
-    const list = [review(1, "가"), review(2, "나")]
-    expect(visibleReviews(list, []).map((r) => r.id)).toEqual([1, 2])
+  const blocks = (
+    ids: number[] = [],
+    unresolvedNames: string[] = [],
+  ): BlockedAuthors => ({
+    ids: new Set(ids),
+    unresolvedNames: new Set(unresolvedNames),
   })
 
-  it("차단한 작성자의 리뷰만 빠진다", () => {
-    const list = [review(1, "가"), review(2, "나"), review(3, "다")]
-    expect(visibleReviews(list, ["나"]).map((r) => r.id)).toEqual([1, 3])
+  it("차단 목록이 비면 원본 순서 그대로다", () => {
+    const list = [review(1, 10, "가"), review(2, 20, "나")]
+    expect(visibleReviews(list, blocks()).map((r) => r.id)).toEqual([1, 2])
+  })
+
+  it("사람으로 건 차단이면 그 사람의 리뷰만 빠진다", () => {
+    const list = [review(1, 10, "가"), review(2, 20, "나"), review(3, 30, "다")]
+    expect(visibleReviews(list, blocks([20])).map((r) => r.id)).toEqual([1, 3])
+  })
+
+  it("**개명해도 차단이 풀리지 않는다** — 닉네임 축이 무너지던 자리", () => {
+    // 차단할 당시 라벨은 "나" 였는데 그 사람이 개명했다. id 는 그대로다.
+    const list = [review(1, 10, "가"), review(2, 20, "완전히다른이름")]
+    expect(visibleReviews(list, blocks([20])).map((r) => r.id)).toEqual([1])
+  })
+
+  it("**비워진 닉네임을 가져간 제3자는 가려지지 않는다** — 차단의 승계", () => {
+    // 20번을 "나" 로 차단해 뒀는데, 20번이 개명해 비운 "나" 를 99번이 가져갔다.
+    const list = [review(1, 99, "나"), review(2, 20, "옮긴이름")]
+    expect(visibleReviews(list, blocks([20])).map((r) => r.id)).toEqual([1])
+  })
+
+  it("아직 사람으로 못 푼 차단은 이름으로 계속 걸린다 — 088 은 가시성을 넓히지 않는다", () => {
+    const list = [review(1, 10, "가"), review(2, 20, "나")]
+    expect(visibleReviews(list, blocks([], ["나"])).map((r) => r.id)).toEqual([1])
+  })
+
+  it("글쓴이를 모르면(authorId 없음) 접지 않는다 — 모르는 것을 숨기지 않는다", () => {
+    // 탈퇴로 신원이 끊긴 리뷰(`authorId: null`)와 이 필드를 안 주던 옛 서버(`undefined`).
+    const list = [
+      review(1, null, ""),
+      { ...review(2, null, "누구"), authorId: undefined },
+      review(3, 20, "나"),
+    ]
+    expect(visibleReviews(list, blocks([20])).map((r) => r.id)).toEqual([1, 2])
   })
 
   it("**내 리뷰는 숨기지 않는다** — 내가 쓴 글이 사라지면 데이터가 사라진 것으로 읽힌다", () => {
-    const list = [review(1, "나", true), review(2, "나")]
-    expect(visibleReviews(list, ["나"]).map((r) => r.id)).toEqual([1])
+    const list = [review(1, 20, "나", true), review(2, 20, "나")]
+    expect(visibleReviews(list, blocks([20])).map((r) => r.id)).toEqual([1])
   })
 
-  it("공백·대소문자 차이로 차단이 새지 않는다", () => {
-    const list = [review(1, " Nana "), review(2, "NANA"), review(3, "다")]
-    expect(visibleReviews(list, ["nana"]).map((r) => r.id)).toEqual([3])
+  it("이름 축은 **정확히 일치**로만 건다 — 헐거우면 남의 리뷰를 가린다", () => {
+    /*
+      예전에는 트림+소문자로 비교했다. 그런데 `users.nick_name` 은 대소문자를 구별하는
+      유니크라 `Nana` 와 `NANA` 는 **서로 다른 사람**이다. 헐겁게 비교하면 차단한 적 없는
+      사람이 이 기기에서만 가려진다 — 088 이 없애려는 승계 결함과 같은 종류다.
+      서버(`notBlocked`)도 정확히 일치로 거르므로, 여기서만 다르면 두 필터가 갈라진다.
+    */
+    const list = [review(1, null, " Nana "), review(2, null, "NANA"), review(3, null, "nana")]
+    expect(visibleReviews(list, blocks([], ["nana"])).map((r) => r.id)).toEqual([1, 2])
   })
 
   it("원본 배열을 바꾸지 않는다", () => {
-    const list = [review(1, "가"), review(2, "나")]
-    visibleReviews(list, ["가"])
+    const list = [review(1, 10, "가"), review(2, 20, "나")]
+    visibleReviews(list, blocks([10]))
     expect(list).toHaveLength(2)
   })
 })

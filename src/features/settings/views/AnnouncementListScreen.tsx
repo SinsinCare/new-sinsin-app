@@ -23,7 +23,8 @@
  * 그건 디자인이 아니라 동작이고, 이 작업의 범위가 아니다.
  */
 import { useEffect, useState } from "react"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
@@ -43,6 +44,7 @@ import { announcementService } from "@/src/features/announcement/services/announ
 import type { AnnouncementNotice } from "@/src/features/announcement/types"
 import { ANNOUNCEMENTS } from "@/src/features/settings/data/constants"
 import appI18n, { getAppLanguage } from "@/src/i18n"
+import { parseServerDate } from "@/src/shared/utils/serverDate"
 
 type AnnouncementListItem = {
   id: string
@@ -192,9 +194,21 @@ function getFallbackTitle(id: string): string {
   }
 }
 
+/**
+ * 서버 `createdAt` → 사용자 로케일 날짜.
+ *
+ * 서버는 **오프셋 표기가 없는 UTC** 를 준다(`2026-08-20T10:59:07.030000` — bun
+ * `user/service.ts`). ES 명세는 그런 문자열을 **로컬**로 읽으므로 맨 `new Date(value)`
+ * 는 KST 에서 9시간 이르게 읽혔고, 그래서 자정 근처(00:00~09:00 KST)에 올라온 공지가
+ * **전날 날짜**로 나왔다. `parseServerDate` 가 UTC 로 읽고, 그리는 것은 그대로 기기
+ * 로컬 날짜다 — 읽는 사람의 "며칠" 이 맞다. 이미 `Z`/`+09:00` 이 붙은 값은 건드리지
+ * 않으므로 서버가 표기를 붙여도 반대로 어긋나지 않는다.
+ *
+ * 번들 폴백(`ANNOUNCEMENTS`)은 이미 `YYYY.MM.DD` 라 위 조기 반환으로 그대로 나간다.
+ */
 function formatNoticeDate(value: string): string {
   if (/^\d{4}\.\d{2}\.\d{2}/.test(value)) return value
-  const date = new Date(value)
+  const date = parseServerDate(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString(getAppLanguage() === "en" ? "en-US" : "ko-KR")
 }

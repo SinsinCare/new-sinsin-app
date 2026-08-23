@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
+import { V2BottomSheet } from "@/src/design-system-v2"
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
@@ -64,7 +65,14 @@ export function MealSheet({
   const mealLabel = t(`meal.${mealType}`)
 
   return (
-    <AppBottomSheet visible={visible} onClose={onClose} snapPoints={[72]}>
+    /* 고정 72% 스냅을 버렸다. 큰 글씨(접근성 텍스트 크기)나 작은 기기에서는 마지막
+       `오늘은 건너뛰기` 와 안내 카드가 72% 밖으로 밀려났고, 스크롤이 없어 닿을 수
+       없었다. 이제 시트가 내용 높이에 맞춰 자란다. */
+    <V2BottomSheet
+      surface="home_meal_record"
+      visible={visible}
+      onClose={onClose}
+    >
       <View style={styles.body}>
         <View style={styles.head}>
           <View style={styles.headText}>
@@ -183,7 +191,7 @@ export function MealSheet({
           </Pressable>
         ) : null}
       </View>
-    </AppBottomSheet>
+    </V2BottomSheet>
   )
 }
 

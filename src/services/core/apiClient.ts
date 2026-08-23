@@ -2,7 +2,7 @@ import axios, { type AxiosInstance, isAxiosError } from "axios"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
 import { createSessionExpiredError, refreshAccessToken } from "./authSession"
-import { clearClientSession } from "./sessionCleanup"
+import { clearClientSessionOn401 } from "./sessionCleanup"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
 import { getBackendUrl } from "../../config/appConfig"
@@ -209,7 +209,8 @@ api.interceptors.response.use(
     }
 
     if (originalRequest._retry) {
-      await clearClientSession({ requireFreshSocialProviderSelection: true })
+      // 목 인증에서는 지우지 않는다 — clearClientSessionOn401 머리말.
+      await clearClientSessionOn401()
       return Promise.reject(createSessionExpiredError())
     }
 

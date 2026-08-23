@@ -31,6 +31,19 @@ export interface OwnableContent {
 }
 
 /**
+ * 탈퇴한 글쓴이인가. 피드·검색·인기 화면이 차단 필터에서 같은 질문을 하는데,
+ * 화면마다 `authorId === null || authorName === …` 을 다시 적으면 한 곳만
+ * 고치는 사고가 난다(닉네임 비교 금지 규칙과 같은 이유). 판정은 여기 한 벌이다.
+ */
+export function isWithdrawnAuthor(
+  content: Pick<OwnableContent, "authorId" | "authorName">,
+): boolean {
+  return (
+    content.authorId === null || content.authorName === WITHDRAWN_AUTHOR_NAME
+  )
+}
+
+/**
  * 서버가 `isMine` 을 내려주지 않던 시절과의 다리.
  *
  * **없애는 조건**: 프로덕션·테스트 서버 양쪽이 `isMine` 을 내보내고, 그보다 오래된
@@ -46,10 +59,7 @@ export function isMyContent(
   myNickName: string | null | undefined,
 ): boolean {
   // 탈퇴한 글쓴이의 글은 누구의 것도 아니다. 이름이 겹쳐도 여기서 걸린다.
-  if (
-    content.authorId === null ||
-    content.authorName === WITHDRAWN_AUTHOR_NAME
-  ) {
+  if (isWithdrawnAuthor(content)) {
     return false
   }
 
@@ -75,10 +85,7 @@ export function isConfidentlyNotMine(
   content: OwnableContent,
   myNickName: string | null | undefined,
 ): boolean {
-  if (
-    content.authorId === null ||
-    content.authorName === WITHDRAWN_AUTHOR_NAME
-  ) {
+  if (isWithdrawnAuthor(content)) {
     return true
   }
   if (typeof content.isMine === "boolean") return !content.isMine

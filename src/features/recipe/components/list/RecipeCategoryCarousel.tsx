@@ -62,6 +62,7 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { RAIL_INSET } from "@/src/design-system-v2"
 
 import { RECIPE_CATEGORY_ART } from "./RecipeCategoryArt"
+import { RECIPE_CATEGORY_RAIL } from "./recipeHomeStickyLayout"
 import {
   buildRecipeCategoryCarouselItems,
   type RecipeCategoryArtKey,
@@ -69,11 +70,14 @@ import {
 } from "./recipeCategoryArtModel"
 
 /**
- * 한 칸의 폭. 라벨(`샐러드`)이 그림 상자보다 넓어서 상자보다 크게 잡는다.
+ * 칸·상자·여백의 실측값은 **`recipeHomeStickyLayout.ts` 에 있다.**
+ *
+ * 2026-08-21 에 이 레일이 목록 머리에서 **고정층**으로 올라왔다(스크롤에 영향받지
+ * 않는다 — 커뮤니티 탭과 같은 문법). 고정층은 스크롤하지 않으므로 여기 붙는 1pt 는
+ * 목록에서 영구히 빠지는 1pt 이고, 그래서 이 레일의 높이는 화면의 예산에 들어간다.
+ * 숫자를 이 파일에 다시 적으면 그 예산 산술이 조용히 거짓이 된다 — 그 모듈이 정본이다.
  */
-const SLOT_WIDTH = 60
-/** 그림 상자 — 화면에서 **눈에 보이는 면**이고, 시작선을 맞춰야 하는 대상이다. */
-const ART_BOX = 48
+const { slotWidth: SLOT_WIDTH, artBox: ART_BOX } = RECIPE_CATEGORY_RAIL
 /**
  * 레일의 좌우 인셋. `RAIL_INSET` 을 그대로 쓰면 안 된다.
  *
@@ -177,7 +181,11 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
               alignItems: "center",
             })}
           >
-            <V2VStack align="center" gap={6} paddingVertical={4}>
+            <V2VStack
+              align="center"
+              gap={RECIPE_CATEGORY_RAIL.artLabelGap}
+              paddingVertical={RECIPE_CATEGORY_RAIL.slotPadV}
+            >
               <View
                 style={{
                   width: ART_BOX,
@@ -194,7 +202,16 @@ export const RecipeCategoryCarousel = memo(function RecipeCategoryCarousel({
               >
                 <Icon width={34} height={34} />
               </View>
-              <V2Text color={isSelected ? surface.textStrong : surface.textWeak} numberOfLines={1} style={{ fontSize: 13, lineHeight: 18, letterSpacing: -0.26, fontWeight: isSelected ? "700" : "500" }}>
+              <V2Text
+                color={isSelected ? surface.textStrong : surface.textWeak}
+                numberOfLines={1}
+                style={{
+                  fontSize: 13,
+                  lineHeight: RECIPE_CATEGORY_RAIL.labelLineHeight,
+                  letterSpacing: -0.26,
+                  fontWeight: isSelected ? "700" : "500",
+                }}
+              >
                 {label}
               </V2Text>
             </V2VStack>

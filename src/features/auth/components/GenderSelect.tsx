@@ -1,5 +1,6 @@
 import { useEffect } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Animated, {
   Easing,
   ReduceMotion,

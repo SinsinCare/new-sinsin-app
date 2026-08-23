@@ -19,48 +19,20 @@
  *  - **꼬리의 `index` 는 잘린다** (`global-state/routeInfo.js`). 그래서
  *    `app/recipe/[id]/index.tsx` 의 키는 `recipe/[id]` 이지 `recipe/[id]/index` 가 아니다.
  *  - `_layout`(껍데기)과 `+`(라우터 특수 파일)은 라우트가 아니다.
+ *
+ * 스캐너 자체는 `tests/helpers/appRouteKeys.ts` 에 있다 — 화면명 표(`events.ts`)도 같은
+ * 키 규칙으로 검사받아야 하고, 규칙이 두 벌이면 한쪽만 헐거워진다.
  */
-import fs from "fs"
-import path from "path"
-
 import {
   hasRouteParent,
   knownRouteKeys,
   resolveBackRoute,
 } from "../src/shared/navigation/routeGraph"
 
-const APP_DIR = path.join(__dirname, "..", "app")
-
-function isRouteFile(name: string): boolean {
-  if (!/\.(tsx|jsx|ts|js)$/u.test(name)) return false
-  const base = name.replace(/\.(tsx|jsx|ts|js)$/u, "")
-  if (base.startsWith("_")) return false
-  if (base.startsWith("+")) return false
-  return true
-}
-
-/** 파일 경로 → `useSegments()` 가 돌려줄 키. */
-function toRouteKey(relative: string): string {
-  const segments = relative.replace(/\.(tsx|jsx|ts|js)$/u, "").split(path.sep)
-  if (segments[segments.length - 1] === "index") segments.pop()
-  return segments.join("/")
-}
-
-function collectRouteKeys(dir: string, prefix = ""): string[] {
-  const out: string[] = []
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const relative = prefix === "" ? entry.name : path.join(prefix, entry.name)
-    if (entry.isDirectory()) {
-      out.push(...collectRouteKeys(path.join(dir, entry.name), relative))
-    } else if (isRouteFile(entry.name)) {
-      out.push(toRouteKey(relative))
-    }
-  }
-  return out
-}
+import { collectRouteKeys } from "./helpers/appRouteKeys"
 
 describe("route graph", () => {
-  const fileKeys = collectRouteKeys(APP_DIR)
+  const fileKeys = collectRouteKeys()
 
   it("finds the app's routes at all (검사 자체가 비어 있지 않은지)", () => {
     expect(fileKeys.length).toBeGreaterThan(30)

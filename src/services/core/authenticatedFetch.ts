@@ -1,4 +1,4 @@
-import { clearClientSession } from "./sessionCleanup"
+import { clearClientSessionOn401 } from "./sessionCleanup"
 import { createSessionExpiredError, refreshAccessToken } from "./authSession"
 import { tokenService } from "./tokenService"
 import { getAppLanguage } from "@/src/i18n"
@@ -77,7 +77,8 @@ export async function authenticatedFetch(
     const currentTokenResponse = await send(currentAccessToken)
     if (currentTokenResponse.status !== 401) return currentTokenResponse
 
-    await clearClientSession({ requireFreshSocialProviderSelection: true })
+    // 목 인증에서는 지우지 않는다 — clearClientSessionOn401 머리말.
+    await clearClientSessionOn401()
     throw createSessionExpiredError()
   }
 
@@ -85,6 +86,7 @@ export async function authenticatedFetch(
   const retryResponse = await send(newAccessToken)
   if (retryResponse.status !== 401) return retryResponse
 
-  await clearClientSession({ requireFreshSocialProviderSelection: true })
+  // 목 인증에서는 지우지 않는다 — clearClientSessionOn401 머리말.
+  await clearClientSessionOn401()
   throw createSessionExpiredError()
 }

@@ -139,14 +139,23 @@ function resolveColors(
     // 같은 자리의 레시피 필터 진입점(연회색 면, 테두리 없음)과 문법이 달라진다.
     // 면으로 세운다 — 흰 시트 위에서 옅은 회색 면이 곧 경계다.
     return {
-      bg: colors.fill.normal,
+      // `fill.control` — 아래 outline 갈래와 같은 이유다(그쪽 주석).
+      bg: colors.fill.control,
       fg: colors.label.neutral,
     }
   }
   // 회색 컨테이너 안에서는 흰 면 자체가 경계다(위 `onSurface` 주석). 그 밖에서는
   // 흰 시트 위이므로 반대로 옅은 회색 면으로 칩을 세운다 — 테두리를 얹지 않는다.
   return {
-    bg: onSurface ? colors.background.default : colors.fill.normal,
+    /*
+      면은 `fill.control` 이다 — `fill.normal` 이 아니다(2026-08-21).
+      위 §보더리스가 "옅은 회색 면이 곧 경계다" 로 정해 둔 그 면인데, `fill.normal` 은
+      스켈레톤·배지 같은 장식면과 겸하던 칸이라 흰 시트 위에서 ΔL* 3.79 로 경계 노릇을
+      못 했다. `V2Chip` 미선택 면과 **같은 칸**으로 간다 — 같은 뜻의 컨트롤이 탭마다
+      다른 면을 갖는 것도 결함이다. 근거는 `tokens/colors.ts` 의 `fill.control` 머리말.
+      회색 컨테이너 안(`onSurface`)은 흰 면이 경계이므로 그대로다.
+    */
+    bg: onSurface ? colors.background.default : colors.fill.control,
     fg: colors.label.neutral,
   }
 }

@@ -16,6 +16,17 @@
 //    Figma "Green" → 실제 초록                  → 여기선  `green`
 //    Figma "Teal"  → 실제 파랑(#19a4d2)         → 여기선  `blue`
 
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// ■ `shape="pill"` 의 실제 높이 (커뮤니티 리디자인 §4-G2)
+//
+// 시안의 마이크로 배지는 **21** 이고, 스펙은 그 값을 `xs` + 세로 여백 4 로 적었다.
+// RN 에서 그 조합의 실제 높이는 **23** 이다 — `caption.xSmall` 의 lineHeight 가 15 라
+// 4 + 15 + 4 = 23. 21 을 만들려면 여백이 3(토큰에 없다)이거나 라인박스가 13 이어야 한다.
+// 여기서는 **스펙이 적은 값(4)을 그대로** 두고 차이를 기록만 한다. 라인박스를 임의로
+// 줄이면 토큰 밖 타이포가 하나 생기고, 높이를 고정하면 글자 크기 변화를 안 따라간다.
+// 행 높이 공식(16 + 21 + 8 + …)을 쓰는 쪽은 이 2px 을 알고 있어야 한다.
+
 import { type ReactNode } from "react"
 import { StyleSheet, Text, View, type ViewStyle } from "react-native"
 import { radius, spacing, typography, type SemanticColors } from "../tokens"
@@ -30,7 +41,14 @@ export type V2BadgeColor =
   | "red"
   | "green"
   | "blue"
+  | "ink"
+  | "onMedia"
 export type V2BadgeVariant = "fill" | "weak"
+/**
+ * 모서리. 기본 `rounded` = size 별 radius 사다리(오늘의 렌더 그대로).
+ * `pill` = `radius.full` + xs 의 세로 여백 확대 — 목록의 마이크로 배지용.
+ */
+export type V2BadgeShape = "rounded" | "pill"
 
 export type V2BadgeProps = {
   /** 배지 라벨 (문자열 권장) */
@@ -38,6 +56,8 @@ export type V2BadgeProps = {
   size?: V2BadgeSize
   color?: V2BadgeColor
   variant?: V2BadgeVariant
+  /** 모서리 모양. 기본 `rounded`(기존 렌더 유지) */
+  shape?: V2BadgeShape
   style?: ViewStyle
 }
 
@@ -54,24 +74,29 @@ const SIZE = {
   xs: {
     paddingHorizontal: spacing[8], // 스펙 7 → 8
     paddingVertical: spacing[2], // 스펙 3 → 2
+    // pill 일 때만 커진다 — 목록의 마이크로 배지가 더 큰 세로 여백을 요구한다(아래 표).
+    pillPaddingVertical: spacing[4],
     borderRadius: radius.sm, // 스펙 9 → 8
     text: typography.caption.xSmall, // 10 SemiBold (스펙 10 SemiBold 정확 일치)
   },
   s: {
     paddingHorizontal: spacing[8], // 스펙 7 → 8
     paddingVertical: spacing[2], // 스펙 3 → 2
+    pillPaddingVertical: spacing[2],
     borderRadius: radius.md, // 스펙 11 → 10
     text: typography.caption.small, // 11 Medium (스펙 12 근접)
   },
   m: {
     paddingHorizontal: spacing[8], // 스펙 7 → 8
     paddingVertical: spacing[2], // 스펙 3 → 2
+    pillPaddingVertical: spacing[2],
     borderRadius: radius.lg, // 스펙 12
     text: typography.label.xSmall, // 13 SemiBold (스펙 13, Bold→SemiBold 근사)
   },
   l: {
     paddingHorizontal: spacing[8], // 스펙 8
     paddingVertical: spacing[4], // 스펙 4
+    pillPaddingVertical: spacing[4],
     borderRadius: radius.lg, // 스펙 13 → 12
     text: typography.caption.medium, // 14 Medium (스펙 14, Bold→Medium 근사)
   },
@@ -130,6 +155,34 @@ function resolveColors(
         fg: colors.accentForeground.blue,
       },
     },
+    /*
+      목록의 마이크로 배지 계열. `neutral` 과 같은 회색 가족이지만 **면이 곧 정의**라
+      따로 둔다 — `neutral` 의 두 칸은 이미 앱의 다른 화면 3곳이 쓰고 있고(주차 유·무료,
+      검색 제안 종류, 연결 해지), 그 값을 커뮤니티 시안에 맞춰 갈아 끼우면 그 3곳이
+      같이 변한다. 새 이름으로 열어 **고른 곳만** 바뀌게 한다.
+
+        fill — 카테고리 배지(`질문·상담`): 잉크 면 + 뒤집힌 글자
+        weak — 태그 칩: `fill.normal` 면 + `label.neutral` 글자
+                (= 안 고른 `V2Chip` 과 같은 면. 시안이 요구한 `neutral/weak` 면이다)
+
+      **글자가 `static.white` 가 아니라 `background.default`** 인 이유는 `V2Chip` 의
+      `neutral` 톤과 같다: 다크의 `label.neutral` 은 **밝은** 회색이라 흰 글자를 얹으면
+      회색 면에 흰 글자가 된다. 라이트에서는 두 토큰이 같은 흰색이라 시안과 정확히 같고,
+      다크에서만 면과 글자가 서로 뒤집힌다.
+    */
+    ink: {
+      fill: { bg: colors.label.neutral, fg: colors.background.default },
+      weak: { bg: colors.fill.normal, fg: colors.label.neutral },
+    },
+    /*
+      사진 위에 얹는 배지(스토리 뷰어 `저염식`). 사진에는 모드가 없으므로 두 모드 모두
+      **같은** 흰 면 + 브랜드 글자다 — 그래서 `static.white` 이고, `variant` 축이 없다
+      (면이 하나뿐인 것을 두 칸으로 나눠 적으면 없는 선택지를 있는 것처럼 만든다).
+    */
+    onMedia: {
+      fill: { bg: colors.static.white, fg: colors.primary.primary },
+      weak: { bg: colors.static.white, fg: colors.primary.primary },
+    },
   } as const
   return map[color][variant]
 }
@@ -139,11 +192,13 @@ export function V2Badge({
   size = "l",
   color = "brand",
   variant = "fill",
+  shape = "rounded",
   style,
 }: V2BadgeProps) {
   const { colors } = useV2Theme()
   const s = SIZE[size]
   const { bg, fg } = resolveColors(color, variant, colors)
+  const isPill = shape === "pill"
 
   return (
     <View
@@ -151,8 +206,8 @@ export function V2Badge({
         styles.base,
         {
           paddingHorizontal: s.paddingHorizontal,
-          paddingVertical: s.paddingVertical,
-          borderRadius: s.borderRadius,
+          paddingVertical: isPill ? s.pillPaddingVertical : s.paddingVertical,
+          borderRadius: isPill ? radius.full : s.borderRadius,
           backgroundColor: bg,
         },
         style,

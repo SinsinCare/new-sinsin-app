@@ -103,6 +103,36 @@ export function deriveSheetContainerHeight(
   return collapsedPosition + collapsedHeight
 }
 
+/* ── 지도의 "루트 상태" ─────────────────────────────────────────────── */
+
+/**
+ * **지도 탭을 다시 눌렀을 때 되돌릴 것이 남았는가.**
+ *
+ * 다른 네 탭의 루트 상태는 "목록 맨 위" 지만 지도에는 그런 축이 없다. 지도의 루트는
+ * **내 위치 + 기본(접힘) 스냅**이다 — 카카오맵·네이버지도가 같은 자리에서 하는 일이고,
+ * 이 화면의 진입 상태이기도 하다.
+ *
+ * 화면의 `if` 로 두지 않는 이유는 이 파일 머리말 그대로다: 렌더러 없는 이 저장소의
+ * jest 가 화면 안의 조건은 못 보고, 이건 **조용히 틀리는** 종류의 판정이다(틀려도
+ * 화면은 멀쩡하고, 탭만 영영 새로고침에 도달하지 못한다).
+ *
+ * 위치를 모르면(권한 거부 · 커버리지 밖) **카메라 축은 아예 없는 것으로 친다.**
+ * 그러지 않으면 되돌릴 수 없는 조건을 영원히 만족하지 못해, 그 사용자의 지도 탭은
+ * 재탭할 때마다 시트만 접고 4번(다시 받기)에 절대 도달하지 못한다.
+ */
+export function isMapAtRootState(state: {
+  /** 지금 시트 스냅 인덱스. */
+  sheetIndex: number
+  /** 되돌릴 좌표를 갖고 있는가(`useMyLocation` 이 커버리지까지 판정한 뒤의 값). */
+  hasMyLocation: boolean
+  /** 카메라가 마지막으로 그 좌표에 놓였고 그 뒤로 옮겨지지 않았는가. */
+  atMyLocation: boolean
+}): boolean {
+  if (state.sheetIndex !== SHEET_SNAP.COLLAPSED) return false
+  if (!state.hasMyLocation) return true
+  return state.atMyLocation
+}
+
 /* ── 손을 뗐을 때 **어느 스냅으로 갈 것인가** ─────────────────────────── */
 
 /**

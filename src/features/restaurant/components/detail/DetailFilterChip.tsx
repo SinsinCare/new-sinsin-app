@@ -73,7 +73,7 @@ export function DetailFilterChip({
      칩 폭이 흔들리지 않는다. */
   const backgroundColor = selected
     ? colors.primary.primaryWeak
-    : colors.fill.normal
+    : colors.fill.control
   const borderColor = selected ? colors.primary.primary : "transparent"
   const labelColor = selected ? colors.label.normal : colors.label.neutral
   const countColor = selected ? colors.label.neutral : colors.label.assistive

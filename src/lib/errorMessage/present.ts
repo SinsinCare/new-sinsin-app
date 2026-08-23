@@ -19,9 +19,13 @@
  */
 
 import i18n from "@/src/i18n"
+import {
+  toErrorPresentedProperties,
+  trackAnalyticsEvent,
+} from "@/src/features/analytics"
 import { logger } from "../logger"
 import { showConfirm, showAlert } from "../dialog"
-import { showErrorToast } from "../toast"
+import { showErrorToast, showInfoToast } from "../toast"
 import { resolveErrorAction, type ErrorActionHandlers } from "./actions"
 import {
   getErrorActionLabel,
@@ -49,9 +53,40 @@ export function presentError(
   const resolved = resolveError(error, { fallback })
 
   logResolved(resolved, scope, error)
+  /* 조용한 실패도 센다 — 사용자에게 안 보였다는 사실 자체가 정보다(이 계측이
+     `silent` 를 속성으로 갖는 이유). `silent` 반환보다 **앞**에 있어야 한다. */
+  trackAnalyticsEvent(
+    "app_error_presented",
+    toErrorPresentedProperties(resolved),
+  )
   if (resolved.silent) return resolved
 
-  const onPress = resolveErrorAction(resolved.action, handlers)
+  /*
+    안내(`surface: "info"`) — **"이미 했어요" 는 실패가 아니다.**
+
+    카탈로그가 "사용자가 원하던 상태가 이미 이루어져 있다" 고 판정한 코드다
+    (`catalog.ts` 의 `INFO_CODES`). 여기서 바꾸는 것은 **색과 그릇 하나뿐**이고
+    문구는 그대로 카탈로그의 것을 쓴다.
+
+    이 갈래가 이 파일 안에 있는 것이 요점이다. 예전에는 커뮤니티 유틸이
+    `presentError` **앞에서** 가로챘고, 그래서 세 코드는 오류 브레이크다운에 한 행도
+    안 남았다("이미 신고했어요" 가 하루 몇 번 뜨는지를 셀 수 없었다). 통로를 지나게
+    두면 위의 `trackAnalyticsEvent` 가 그 수를 그냥 세어 준다.
+
+    **버튼은 그리지 않는다.** 안내에 남은 할 일은 "화면이 따라오는 것" 하나뿐이라,
+    호출부가 준 `refresh` 를 버튼으로 미루지 않고 지금 돌린다 — `COMMUNITY_ERROR_005`
+    의 문구가 "결과는 바로 아래에서 볼 수 있어요" 라고 약속하는데, 새로고침이 없으면
+    그 아래에는 여전히 투표 전 라디오 버튼이 남아 있다. `resolveErrorAction` 을 거치지
+    않는 이유는 그쪽이 `app_error_action_pressed` 를 함께 쏘기 때문이다 — 아무도 누르지
+    않은 버튼을 눌렀다고 세면 "이 안내가 실제로 문제를 풀어 줬는가" 를 못 묻게 된다.
+  */
+  if (resolved.surface === "info") {
+    if (resolved.action === "refresh") handlers.refresh?.()
+    showInfoToast(resolved.title, resolved.body)
+    return resolved
+  }
+
+  const onPress = resolveErrorAction(resolved.action, handlers, resolved.kind)
   // 액션 id 와 핸들러가 **둘 다** 있을 때만 버튼이 산다.
   const button =
     resolved.action && onPress

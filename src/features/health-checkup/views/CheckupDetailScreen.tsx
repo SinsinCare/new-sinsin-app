@@ -113,6 +113,7 @@ export function CheckupDetailScreen({
   // 캐시가 살아 있으면 응답이 즉시 온다. 그때 스켈레톤을 깜빡이지 않게 하는 기존 관례.
   const showSkeleton = useLoadingVisible(
     query.isLoading && resultIds.length > 0,
+    { surface: "checkup_detail" },
   )
 
   /**
@@ -439,6 +440,7 @@ export function CheckupDetailScreen({
     if (timeline.length === 0) {
       return (
         <V2EmptyState
+          surface="checkup_detail"
           icon="report"
           title={t("checkup.records.emptyTitle")}
           style={styles.state}
@@ -537,6 +539,7 @@ export function CheckupDetailScreen({
       {body()}
 
       <V2BottomSheet
+        surface="checkup_round_picker"
         visible={roundSheetOpen}
         onClose={() => setRoundSheetOpen(false)}
       >

@@ -16,6 +16,9 @@
 /* eslint-disable import/first -- i18n 인스턴스가 모듈 로드 시 초기화된다. */
 jest.mock("../src/services/core/apiClient", () => ({ api: {} }))
 
+import fs from "node:fs"
+import path from "node:path"
+
 import enRecipe from "../src/i18n/locales/en/recipe.json"
 import koRecipe from "../src/i18n/locales/ko/recipe.json"
 import i18n from "../src/i18n"
@@ -23,11 +26,13 @@ import i18n from "../src/i18n"
 import {
   mealSectionCopyKeys,
   mealSlotStateBadgeKey,
+  mealSlotWordKey,
   RECIPE_HOME_EMPTY_COPY_KEY,
   RECIPE_HOME_LIST_TITLE_KEY,
   resolveSlotReasonCopy,
   splitTitleHighlight,
 } from "../src/features/recipe/components/list/recipeHomePresentation"
+import type { MealSectionDay } from "../src/features/recipe/components/list/recipeHomePresentation"
 import {
   MEAL_SLOTS,
   MEAL_SLOT_STATES,
@@ -36,6 +41,9 @@ import {
 
 const LOCALES = { ko: koRecipe, en: enRecipe } as const
 type LocaleKey = keyof typeof LOCALES
+
+/** 섹션이 말할 수 있는 날 전부. 날이 늘면 `MealSectionDay` 가 이 배열을 컴파일에서 깬다. */
+const DAYS = ["TODAY", "NEXT_DAY"] as const satisfies readonly MealSectionDay[]
 
 /** 점 표기 키를 리소스 객체에서 꺼낸다. 없으면 undefined — 그게 곧 결함이다. */
 function lookup(resource: unknown, key: string): unknown {
@@ -59,14 +67,22 @@ function lookup(resource: unknown, key: string): unknown {
  */
 const ALL_KEYS = [
   ...MEAL_SLOTS.flatMap((slot) => {
-    const keys = mealSectionCopyKeys(slot)
-    return [keys.title, keys.subtitle, keys.highlight] as const
+    const today = mealSectionCopyKeys(slot, "TODAY")
+    const nextDay = mealSectionCopyKeys(slot, "NEXT_DAY")
+    // 제목은 날마다 다르고 부제목·강조어는 같다 — 그 성질도 아래에서 따로 본다.
+    return [
+      today.title,
+      nextDay.title,
+      today.subtitle,
+      today.highlight,
+    ] as const
   }),
   RECIPE_HOME_EMPTY_COPY_KEY,
   RECIPE_HOME_LIST_TITLE_KEY,
   /*
     끼니 결정 문안. 배지는 끝난 두 상태에만 있고(`OPEN` 은 null — 아직 안 먹은 끼니에는
-    아무것도 안 붙는다), 이유 문장은 시계 그대로가 아닌 세 경우에만 있다.
+    아무것도 안 붙는다), 이유 문장은 **전진한 두 경우에만** 있다 — 시계 그대로면 말할
+    것이 없고, 하루가 넘어간 것은 제목(`titleNextDay`)이 이미 말한다.
   */
   ...MEAL_SLOT_STATES.map((state) => mealSlotStateBadgeKey(state)).filter(
     (key): key is Exclude<typeof key, null> => key !== null,
@@ -92,12 +108,12 @@ afterAll(async () => {
 describe("키가 모든 언어에 있다", () => {
   it("검사할 키를 실제로 모았다", () => {
     // 키 조립이 깨지면 아래 검사가 조용히 통과한다.
-    expect(ALL_KEYS).toHaveLength(16)
+    expect(ALL_KEYS).toHaveLength(18)
     expect(new Set(ALL_KEYS).size).toBe(ALL_KEYS.length)
   })
 
   for (const locale of Object.keys(LOCALES) as LocaleKey[]) {
-    it(`${locale} — 16개 키가 다 있고 빈 문자열이 아니다`, () => {
+    it(`${locale} — 18개 키가 다 있고 빈 문자열이 아니다`, () => {
       for (const key of ALL_KEYS) {
         const value = lookup(LOCALES[locale], key)
         expect(typeof value).toBe("string")
@@ -130,16 +146,22 @@ describe("키가 모든 언어에 있다", () => {
 
 describe("강조어는 제목 안의 부분 문자열이다", () => {
   for (const locale of Object.keys(LOCALES) as LocaleKey[]) {
-    it(`${locale} — 세 슬롯 모두 제목에서 강조어를 찾아 쪼갤 수 있다`, () => {
-      for (const slot of MEAL_SLOTS) {
-        const keys = mealSectionCopyKeys(slot)
-        const title = lookup(LOCALES[locale], keys.title) as string
-        const highlight = lookup(LOCALES[locale], keys.highlight) as string
-        // 못 찾으면 강조가 사라진다(제목은 남지만 시안의 주황 낱말이 없어진다).
-        expect(title).toContain(highlight)
-        const parts = splitTitleHighlight(title, highlight)
-        expect(parts.match).toBe(highlight)
-        expect(parts.before + parts.match + parts.after).toBe(title)
+    it(`${locale} — 두 날 × 세 슬롯 모두 제목에서 강조어를 찾아 쪼갤 수 있다`, () => {
+      /*
+        내일 제목에서도 낱말이 살아 있어야 한다 — `mealSlotWordKey` 가 날을 묻지 않는
+        근거가 이것이고, 여기가 무너지면 하루가 넘어간 날에만 강조가 사라진다.
+      */
+      for (const day of DAYS) {
+        for (const slot of MEAL_SLOTS) {
+          const keys = mealSectionCopyKeys(slot, day)
+          const title = lookup(LOCALES[locale], keys.title) as string
+          const highlight = lookup(LOCALES[locale], keys.highlight) as string
+          // 못 찾으면 강조가 사라진다(제목은 남지만 시안의 주황 낱말이 없어진다).
+          expect(title).toContain(highlight)
+          const parts = splitTitleHighlight(title, highlight)
+          expect(parts.match).toBe(highlight)
+          expect(parts.before + parts.match + parts.after).toBe(title)
+        }
       }
     })
   }
@@ -240,6 +262,153 @@ describe("없는 기능을 문구로 약속하지 않는다", () => {
   })
 })
 
+/**
+ * ── 제목이 말하는 날 ────────────────────────────────────────────────────────
+ *
+ * 이 화면의 결함은 군더더기가 아니라 **모순**이었다. 세 끼가 다 끝난 밤에 회색 한 줄은
+ * "내일 아침부터 보여드려요" 라 하고, 두 줄 아래 제목은 "오늘의 아침 레시피" 라 했다.
+ * 실제로 보여 주는 것은 내일 아침이므로 **제목이 거짓말을 하고 있었다.**
+ *
+ * 여기서는 리소스 쪽 절반(제목 문자열이 어느 날을 말하는가)을 못 박는다. 나머지 절반
+ * (어느 섹션이 어느 날인가)은 `recipeHomeSlotDecision.test.ts` 가 판정과 붙여서 본다.
+ */
+describe("제목이 말하는 날", () => {
+  const DAY_WORDS = {
+    ko: { TODAY: /오늘/u, NEXT_DAY: /내일/u },
+    en: { TODAY: /\btoday\b/iu, NEXT_DAY: /\btomorrow\b/iu },
+  } as const satisfies Record<LocaleKey, Record<MealSectionDay, RegExp>>
+
+  const OTHER_DAY = { TODAY: "NEXT_DAY", NEXT_DAY: "TODAY" } as const
+
+  for (const locale of Object.keys(LOCALES) as LocaleKey[]) {
+    it(`${locale} — 제목이 자기 날을 말하고 다른 날은 말하지 않는다`, () => {
+      for (const day of DAYS) {
+        for (const slot of MEAL_SLOTS) {
+          const title = lookup(
+            LOCALES[locale],
+            mealSectionCopyKeys(slot, day).title,
+          ) as string
+          expect(title).toMatch(DAY_WORDS[locale][day])
+          // 한 제목이 두 날을 다 말하면 어느 쪽이 참인지 알 수 없다.
+          expect(title).not.toMatch(DAY_WORDS[locale][OTHER_DAY[day]])
+        }
+      }
+    })
+  }
+
+  it("두 날의 제목이 서로 다르다 — 키만 늘리고 문구를 복사하지 않았다", () => {
+    for (const resource of Object.values(LOCALES)) {
+      for (const slot of MEAL_SLOTS) {
+        const today = lookup(resource, mealSectionCopyKeys(slot, "TODAY").title)
+        const next = lookup(
+          resource,
+          mealSectionCopyKeys(slot, "NEXT_DAY").title,
+        )
+        expect(today).not.toBe(next)
+      }
+    }
+  })
+})
+
+/**
+ * ── 남긴 문구가 같은 말을 두 번 하지 않는다 ──────────────────────────────────
+ *
+ * `afterRecord` · `afterSkip` 을 남긴 근거는 **제목에 없는 것을 말한다**는 것 하나다:
+ * 제목은 도착한 끼니를 말하고, 이 문장은 **원인이 된 끼니**를 말한다. 그 근거가 문구
+ * 손질로 조용히 사라지면(예: 날을 말하기 시작하면) 남길 이유도 같이 사라진다.
+ */
+describe("남긴 이유 문장은 제목이 못 하는 말만 한다", () => {
+  const REASON_KEYS = ["afterRecord", "afterSkip"] as const
+
+  it("원인 끼니를 치환할 자리가 있다 — 그게 제목에 없는 정보다", () => {
+    for (const resource of Object.values(LOCALES)) {
+      for (const key of REASON_KEYS) {
+        expect(resource.home.reason[key]).toContain("{{meal}}")
+      }
+    }
+  })
+
+  it("날을 말하지 않는다 — 날은 제목의 몫이다", () => {
+    for (const key of REASON_KEYS) {
+      expect(koRecipe.home.reason[key]).not.toMatch(/오늘|내일/u)
+      expect(enRecipe.home.reason[key]).not.toMatch(/\b(today|tomorrow)\b/iu)
+    }
+  })
+
+  it("기록과 건너뜀이 서로 다른 문장이다", () => {
+    for (const resource of Object.values(LOCALES)) {
+      expect(resource.home.reason.afterRecord).not.toBe(
+        resource.home.reason.afterSkip,
+      )
+    }
+  })
+
+  it("낱말 키는 제목의 강조어와 같은 키다 — 두 곳이 갈라지지 않는다", () => {
+    for (const slot of MEAL_SLOTS) {
+      expect(mealSlotWordKey(slot)).toBe(
+        mealSectionCopyKeys(slot, "TODAY").highlight,
+      )
+      expect(mealSlotWordKey(slot)).toBe(
+        mealSectionCopyKeys(slot, "NEXT_DAY").highlight,
+      )
+    }
+  })
+})
+
+/**
+ * ── 지운 키를 아무도 부르지 않는다 ──────────────────────────────────────────
+ *
+ * `home.reason.nextDay` 를 지웠다. 키를 지우는 것보다 위험한 것은 **부르는 곳을 남겨
+ * 두는 것**이다 — i18next 는 없는 키에 대해 예외도 로그도 아닌 **키 문자열 그 자체**를
+ * 돌려주므로, 화면에 `home.reason.nextDay` 라고 찍힌다(그 사고가 실제로 한 번 났다:
+ * `tests/i18nKeyExistence.test.ts` 머리말).
+ *
+ * 증명은 그 파일과 같은 방식이다 — 소스를 **실제로 읽어** 리터럴을 센다.
+ */
+describe("지운 키를 부르는 곳이 없다", () => {
+  const REPO_ROOT = path.resolve(__dirname, "..")
+
+  function walkSources(directory: string): string[] {
+    return fs
+      .readdirSync(directory, { withFileTypes: true })
+      .flatMap((entry) => {
+        const child = path.join(directory, entry.name)
+        if (entry.isDirectory()) {
+          return entry.name === "node_modules" ? [] : walkSources(child)
+        }
+        return /\.tsx?$/.test(entry.name) ? [child] : []
+      })
+  }
+
+  const SOURCES = ["src", "app"]
+    .map((root) => path.join(REPO_ROOT, root))
+    .flatMap(walkSources)
+    .map((file) => fs.readFileSync(file, "utf8"))
+
+  it("스캔이 헛돌지 않는다 — 살아 있는 형제 키는 실제로 찾아낸다", () => {
+    // 이 단언이 없으면 아래 "없다" 는 파일을 하나도 안 읽어도 통과한다.
+    expect(SOURCES.length).toBeGreaterThan(100)
+    expect(
+      SOURCES.some((text) => text.includes("home.reason.afterRecord")),
+    ).toBe(true)
+  })
+
+  it("`home.reason.nextDay` 가 소스에 없다", () => {
+    expect(SOURCES.some((text) => text.includes("home.reason.nextDay"))).toBe(
+      false,
+    )
+  })
+
+  it("`home.reason.nextDay` 가 리소스에도 없다", () => {
+    for (const resource of Object.values(LOCALES)) {
+      expect(Object.keys(resource.home.reason).sort()).toEqual([
+        "afterRecord",
+        "afterSkip",
+      ])
+    }
+  })
+})
+
 describe("세 섹션이 서로 다른 것을 말한다", () => {
   it("부제목 셋이 서로 다르다 — 제목만 다른 같은 목록이 아니다", () => {
     // 계약 §2 가 점심·저녁을 요리 성격으로 가른 이유가 "제목만 다른 같은 목록" 방지다.
@@ -247,7 +416,10 @@ describe("세 섹션이 서로 다른 것을 말한다", () => {
     for (const resource of [koRecipe, enRecipe]) {
       const subtitles = MEAL_SLOTS.map(
         (slot) =>
-          lookup(resource, mealSectionCopyKeys(slot).subtitle) as string,
+          lookup(
+            resource,
+            mealSectionCopyKeys(slot, "TODAY").subtitle,
+          ) as string,
       )
       expect(new Set(subtitles).size).toBe(3)
     }
@@ -262,11 +434,14 @@ describe("세 섹션이 서로 다른 것을 말한다", () => {
 
   it("제목 셋과 강조어 셋이 서로 다르다", () => {
     for (const resource of [koRecipe, enRecipe]) {
-      for (const leaf of ["title", "highlight"] as const) {
-        const values = MEAL_SLOTS.map(
-          (slot) => lookup(resource, mealSectionCopyKeys(slot)[leaf]) as string,
-        )
-        expect(new Set(values).size).toBe(3)
+      for (const day of DAYS) {
+        for (const leaf of ["title", "highlight"] as const) {
+          const values = MEAL_SLOTS.map(
+            (slot) =>
+              lookup(resource, mealSectionCopyKeys(slot, day)[leaf]) as string,
+          )
+          expect(new Set(values).size).toBe(3)
+        }
       }
     }
   })

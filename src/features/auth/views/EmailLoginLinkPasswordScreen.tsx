@@ -6,15 +6,18 @@ import { StyleSheet, View } from "react-native"
 import { useAuth } from "@/src/hooks/useAuth"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { showErrorToast } from "@/src/lib/toast"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import {
   PasswordCriteriaText,
   StepHelperText,
   StepTextInput,
 } from "../components"
 import {
+  PASSWORD_FIELD_ORDER,
   getConfirmPasswordRules,
   getPasswordRules,
 } from "../data/passwordValidation"
+import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
 import { AUTH_LAYOUT } from "../data/authSurface"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import { AuthScreenLayout } from "./AuthScreenLayout"
@@ -54,6 +57,13 @@ export function EmailLoginLinkPasswordScreen() {
     setSubmitting(true)
     try {
       const result = await completeEmailLoginLink(tokenValue, data.password)
+      /* 반대 방향의 연결(`social-link-email`)과 **같은 이름**으로 센다. 화면명이 둘 다
+         `account_link` 로 접혀 있어 화면 축으로는 방향이 안 갈리므로, 방향은 `mode` 가
+         진다. 실패(대부분 만료된 연결 토큰 `TOKEN_ERROR_005`)는 폼 필드 아래로 나가고
+         `app_error_presented` 와 나란히 읽는다. */
+      trackAnalyticsEvent("auth_account_link_completed", {
+        mode: "email_password",
+      })
       router.replace(
         getDestinationForAccountState(
           result.accountState,
@@ -81,7 +91,13 @@ export function EmailLoginLinkPasswordScreen() {
       buttonLabel={t("linkPassword.connect")}
       buttonDisabled={submitting}
       buttonLoading={submitting}
-      onSubmit={handleSubmit(submit)}
+      onSubmit={handleSubmit(submit, (errors) =>
+        trackFormValidationFailed(
+          "account_link_password",
+          PASSWORD_FIELD_ORDER,
+          errors,
+        ),
+      )}
       keyboardAvoiding
     >
       <View style={styles.body}>

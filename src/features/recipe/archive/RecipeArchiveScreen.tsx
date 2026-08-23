@@ -83,16 +83,10 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Keyboard,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native"
+import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
 import { FlashList } from "@shopify/flash-list"
+import { LAYOUT } from "@/src/theme/surface"
 import { type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -109,7 +103,8 @@ import {
   typography,
 } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
-import { tokens } from "@/src/theme/tokens"
+import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
+import { RECIPE_ARCHIVE_REFRESH } from "../refresh/scopes"
 
 import {
   AppliedFilterRow,
@@ -162,7 +157,6 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
   const [filters, setFilters] =
     useState<RecipeFilterSelection>(EMPTY_RECIPE_FILTERS)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setQuery(draft.trim()), SEARCH_DEBOUNCE_MS)
@@ -206,15 +200,15 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
     setTab(normalizeArchiveTab(value))
   }, [])
 
-  const handleRefresh = useCallback(async () => {
-    if (refreshing) return
-    setRefreshing(true)
-    try {
-      await active.refresh()
-    } finally {
-      setRefreshing(false)
-    }
-  }, [active, refreshing])
+  /*
+    보관함 두 탭(저장 / 최근)이 한 뿌리를 쓴다 — 저장 탭에서 당기면 최근 탭도 최신이 된다.
+    `type: "active"` 라 화면에 안 붙은 탭까지 깨우지는 않는다.
+  */
+  const refreshable = useRefreshable({
+    queryKeys: RECIPE_ARCHIVE_REFRESH,
+    scope: "recipe-archive",
+  })
+  useRevalidateOnReturn({ queryKeys: RECIPE_ARCHIVE_REFRESH })
 
   const handleRemoveFilter = useCallback(
     (group: RecipeFilterGroupKey, optionKey: string) => {
@@ -245,9 +239,22 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
   }, [])
 
   const goToRecipeList = useCallback(() => {
-    // `/recipe` 는 탭의 목록 화면(`app/(tabs)/recipe.tsx`)이다. `navigate` 는 이미
-    // 스택에 있으면 그리로 돌아가고 없으면 밀어 넣는다.
-    router.navigate("/recipe" as Href)
+    /*
+      `/recipe` 는 탭의 목록 화면(`app/(tabs)/recipe.tsx`)이고, 이 화면은 탭 **밖**이다 —
+      두 라우트(`app/recipe/saved.tsx`·`recent.tsx`)가 루트 Stack 의 `recipe` 그룹에
+      얹혀 있으므로 루트 스택은 언제나 `["(tabs)", "recipe"]` 다.
+
+      그래서 expo-router 의 `findDivergentState` 는 **루트 Stack 에서** 갈라진다고 보고
+      화면 이름 `(tabs)` 로 액션을 만든다. 여기서 `navigate` 는 되돌아가지 않는다 —
+      StackRouter 의 NAVIGATE 갈래는 **지금 떠 있는 화면과 이름이 같을 때**(또는
+      `getId`/`payload.pop` 이 있을 때)만 기존 라우트를 재사용하는데 expo-router 는 둘 다
+      주지 않으므로, `push` 와 똑같이 `["(tabs)","recipe","(tabs)"]` 로 탭 네비게이터를
+      한 벌 더 쌓는다(종전 주석의 "이미 스택에 있으면 그리로 돌아가고" 는 사실이 아니었다).
+      `dismissTo`(POP_TO)만이 스택을 뒤로 훑어 이미 있는 `(tabs)` 로 되돌아간다.
+      (근거는 `tests/tabRouteNavigation.test.ts` 머리말 — 두 패키지를 실제로 돌려 확인했고,
+       테스트 자체는 이 자리가 `dismissTo` 로 남아 있는지를 지킨다.)
+    */
+    router.dismissTo("/recipe" as Href)
   }, [router])
 
   const handleOpenRecipe = useCallback(
@@ -425,6 +432,7 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
       return (
         <View style={styles.emptyWrap}>
           <V2ErrorState
+            surface="recipe_archive"
             icon={copy.icon}
             title={t(copy.titleKey)}
             description={t(copy.bodyKey)}
@@ -438,6 +446,7 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
     return (
       <View style={styles.emptyWrap}>
         <V2EmptyState
+          surface="recipe_archive"
           icon={copy.icon}
           title={t(copy.titleKey)}
           description={t(copy.bodyKey)}
@@ -500,7 +509,8 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
         renderItem={renderItem}
         style={styles.list}
         contentContainerStyle={{
-          paddingTop: spacing[4],
+          // 고정 머리(탭·필터) 와 목록 사이 — LAYOUT.stickyHeaderGap 규칙.
+          paddingTop: LAYOUT.stickyHeaderGap,
           // 이 화면은 탭 밖(루트 스택)이라 전역 `AI 상담` 필이 없다 — 목록 화면처럼
           // 필 높이를 비우면 바닥에 빈 구간만 생긴다. 홈 인디케이터만 피한다.
           paddingBottom: insets.bottom + SECTION_GAP,
@@ -512,15 +522,7 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
         keyboardDismissMode="on-drag"
         onEndReached={active.loadMore}
         onEndReachedThreshold={0.6}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={tokens.color.primary.val}
-            colors={[tokens.color.primary.val]}
-            progressBackgroundColor={surface.card}
-          />
-        }
+        {...refreshable.scrollProps}
         ListEmptyComponent={emptyBody()}
         ListFooterComponent={
           // 다음 페이지도 같은 줄 모양으로 이어 붙는다 — 링이 끼어들면 목록의 리듬이 끊긴다.

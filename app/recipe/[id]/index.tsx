@@ -67,6 +67,11 @@ import type { Href } from "expo-router"
 import { useQueryClient } from "@tanstack/react-query"
 import {
   recipeV2Keys,
+  flattenReviewPages,
+  useMyReview,
+  useRecipeDetailV2,
+  useRecipeReviews,
+  useRecipeSave,
 } from "@/src/features/recipe/hooks/useRecipeDetailV2"
 import { ARCHIVE_QUERY_ROOT } from "@/src/features/recipe/archive/useRecipeArchiveList"
 import { showActionSheet, showConfirm } from "@/src/lib/dialog"
@@ -107,13 +112,6 @@ import {
   scaleNutrition,
   visibleReviews,
 } from "@/src/features/recipe/components/detail"
-import {
-  flattenReviewPages,
-  useMyReview,
-  useRecipeDetailV2,
-  useRecipeReviews,
-  useRecipeSave,
-} from "@/src/features/recipe/hooks/useRecipeDetailV2"
 import { RECIPE_DETAIL_REFRESH } from "@/src/features/recipe/refresh/scopes"
 import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
 import { useBlockedUsers } from "@/src/features/recipe/hooks/useBlockedUsers"
@@ -133,7 +131,7 @@ export default function RecipeDetailRoute() {
   const recipeId = parseRecipeId(id)
   const router = useAppRouter()
   const { t } = useTranslation("recipe")
-  const { colors } = useV2Theme()
+  const { colors, surface } = useV2Theme()
   const insets = useSafeAreaInsets()
 
   const detailQuery = useRecipeDetailV2(recipeId)
@@ -458,9 +456,27 @@ export default function RecipeDetailRoute() {
   }
 
   return (
-    // 바닥이 연회색이다. 흰 블록이 그 위에 떠 있는 것처럼 보이게 하는 값이고,
-    // 그래서 블록에 그림자나 테두리를 얹을 필요가 없다.
-    <View style={[styles.flex, { backgroundColor: colors.background.lower }]}>
+    /*
+      바닥이 연회색이다. 흰 블록이 그 위에 떠 있는 것처럼 보이게 하는 값이고,
+      그래서 블록에 그림자나 테두리를 얹을 필요가 없다.
+
+      **값은 `background.lower`(#f7f7f7)였다 — 그 의도가 성립하지 않는 값이었다**
+      (2026-08-22). 흰 블록과의 명도차가 ΔL* **2.77** 뿐이라 블록이 뜨는 게 아니라
+      바닥과 같은 평면으로 읽혔다. 우물(라이트 #eaeaec)로 내리면 같은 경계가
+      **7.25** 가 된다 — 커뮤니티 피드·홈·마이페이지가 이미 쓰는 그 바닥이고,
+      그래서 레시피 상세가 앱의 다른 "카드가 뜬 화면" 들과 같은 재료로 읽힌다.
+      층의 정본은 `community/SectionHeader` 머리말 §층의 정본.
+      다크는 `canvas`(#1f1f21)이고 블록(`background.default`)도 같은 값이라
+      **예전과 똑같다** — 다크에서 층을 만드는 것은 원래 카드 쪽이었다.
+    */
+    <View
+      style={[
+        styles.flex,
+        {
+          backgroundColor: surface.bed,
+        },
+      ]}
+    >
       {/*
        * 헤더는 **항상** 있고 절대 위치가 아니다. 종전의 떠 있는 반투명 원은 사진이 없는
        * 레시피에서 제목과 재료 줄을 덮었다(머리말 1번). 스크롤이 제목을 지나가면

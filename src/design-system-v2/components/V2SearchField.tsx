@@ -83,7 +83,10 @@ export function V2SearchField({
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.fill.normal },
+        // 필드 면은 `fill.control` — 검색창은 **컨트롤**이라 흰 헤더 위에서 보여야 한다.
+        // (`fill.normal` 은 장식면과 겸하던 칸이라 흰 면 위 ΔL* 3.79 였다. 근거는
+        //  `tokens/colors.ts` 의 `fill.control` 머리말.)
+        { backgroundColor: colors.fill.control },
         disabled && styles.disabled, // 스펙엔 없음 → 내용 흐리게로 비활성 표현(보정)
         style,
       ]}

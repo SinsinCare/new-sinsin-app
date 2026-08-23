@@ -1,5 +1,6 @@
 import { useMemo } from "react"
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native"
+import { StyleSheet, View, useWindowDimensions } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Svg, { Circle, Line, Path, Rect } from "react-native-svg"
 import { useTranslation } from "react-i18next"
 

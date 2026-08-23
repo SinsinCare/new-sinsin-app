@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  type TextInputProps,
-  View,
-} from "react-native"
+import { Pressable, StyleSheet, type TextInputProps, View } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -45,6 +39,35 @@ interface SettingsTextFieldProps extends TextInputProps {
  * 테두리·밑줄 없이 회색 면 하나로 그리고, 상태는 라벨 색과 커서가 말한다.
  * 오류는 색으로만 알리지 않는다 — 한 번 흔들고 이유는 아래 한 줄로 쓴다.
  * (예전 설정 화면들은 밑줄 + 구 초록(sub6)이라 가입 흐름과 따로 놀았다.)
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ■ **이 필드는 우물(`s.surface`)이다 — 그래서 흰 페이지 위에서만 성립한다** (2026-08-22)
+ *
+ * 테두리가 없으므로 이 필드를 보이게 하는 것은 **면 하나**뿐이다. 그런데 `s.surface` 는
+ * 라이트에서 **화면 바닥과 같은 토큰**이다(`theme/surface.ts` 의 `well` — 8개 화면이
+ * `isDark ? canvas : surface` 로 그 값을 바닥에 깐다). 즉 이 필드를 **바닥 위에 바로
+ * 놓으면 필드가 바닥에 녹는다.**
+ *
+ * 실제로 그랬다. 이 넷(`NicknameEdit` · `NameEdit` · `PasswordEdit` · `PhoneNumberEdit`)이
+ * 페이지 바닥으로 `tokens.color.appBg` 를 깔았는데, 앞선 작업이 그 토큰을 우물로 통일하면서
+ * 바닥과 필드가 **같은 값**이 됐다: 라이트 ΔL* **7.25 → 0.00**(#f7f7f7 위 #f4f4f5 이던
+ * 시절엔 2.77 로 간신히 갈렸다). `lightContrastAudit` §8 이 커뮤니티 고정층에 대해
+ * 미리 적어 둔 함정 — "고정층을 바닥색으로 칠하면 검색 필드가 사라진다" — 이 이미
+ * 여기서 터져 있었던 것이다.
+ *
+ * 고르는 길은 둘이었다:
+ *   (a) 필드를 `fill.control` 로 옮긴다 — 그 값은 **흰 면 위** 기준으로 정해진 천장이라
+ *       (`tokens/colors.ts` §fill.control) 회색 바닥 위에서는 ΔL* **4.56** 밖에 안 되고,
+ *       덤으로 다크 필드가 #3f3f45 → #313135 로 같이 움직인다.
+ *   (b) **페이지를 흰 면으로 올린다** — 필드는 한 줄도 안 고치고 ΔL* **7.25** 를 되찾는다.
+ *       다크는 `canvas` 가 곧 `appBgDark`(#1f1f21)라 **한 픽셀도 안 움직인다.**
+ * **(b) 를 골랐다.** 이 화면들엔 원래 바닥이 없다 — 폼 한 장이 곧 콘텐츠 면이고,
+ * `useSettingsColors` 를 쓰는 설정 화면 14개도 이미 라이트 페이지를 흰색으로 둔다.
+ * 갈라져 있던 것은 이 넷뿐이었다.
+ *
+ * ⚠ **새 화면에서 이 컴포넌트를 회색 바닥 위에 놓지 마라.** 그 화면은 흰 페이지이거나,
+ * 최소한 이 필드가 앉는 상자가 흰 면이어야 한다. 규칙은 일반 가드가 지킨다
+ * (`tests/lightContrastAudit.test.ts` §9 — "바닥과 그 위의 면은 같은 값일 수 없다").
  */
 export function SettingsTextField({
   label,

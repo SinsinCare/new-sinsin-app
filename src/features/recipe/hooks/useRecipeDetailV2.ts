@@ -41,21 +41,21 @@ import type {
  * 하므로 여기서만 그쪽을 들여온다. (§3.1 타입 중복은 보고에 적었다.)
  */
 import type { RecipeListResponse as ListPageResponse } from "../types/recipeListV2"
-
-const REVIEW_PAGE_SIZE = 20
-
 /**
  * 목록 캐시의 루트 키. 상세에서 저장을 켜고 뒤로 나갔을 때 카드의 북마크가 옛 값이면
  * 커뮤니티 좋아요에서 났던 것과 같은 모양의 결함이다(§6.4). 그래서 저장 응답의 **절대값**을
  * 상세·목록·아카이브 세 캐시에 **쓴다** — 무효화(재조회)가 아니다. 재조회로 처리하면
  * 응답이 오는 사이 북마크가 꺼졌다 도로 켜진다.
  *
- * 키는 각 레인의 원본에서 실측해 왔다: 목록 `["recipes-v2", …]`(`useRecipeListV2.ts`),
- * 아카이브 `["recipes","archive", …]`(`ARCHIVE_QUERY_ROOT`). 페이지 패치는 아카이브 레인이
- * 내보낸 `patchSavedStateInPages` 를 **그대로 재사용**한다 — 같은 규칙(저장 해제해도 행을
- * 지우지 않는다)이 두 곳에서 갈라지지 않게 하려는 것이다.
+ * 이제 두 뿌리 다 **각 레인이 내보낸 상수를 import** 한다(목록 `RECIPE_LIST_QUERY_ROOT`,
+ * 아카이브 `ARCHIVE_QUERY_ROOT`). 예전에는 목록 쪽만 여기 `["recipes-v2"]` 로 베껴
+ * 두었고, 목록 레인이 키를 바꾸면 tsc 도 테스트도 아무 말 없이 **저장 반영만 조용히
+ * 죽었다** — `tests/recipeDetailV2.test.ts` 가 두 소스의 문자열을 대조하는 검사를 들고
+ * 있던 이유가 그것이다. 이제 컴파일 시점에 묶인다.
  */
-const LIST_QUERY_ROOT = ["recipes-v2"] as const
+import { RECIPE_LIST_QUERY_ROOT as LIST_QUERY_ROOT } from "./useRecipeListV2"
+
+const REVIEW_PAGE_SIZE = 20
 
 /** 무한 목록 캐시의 모양(`useInfiniteQuery` 의 `InfiniteData`). */
 interface InfiniteListCache {
@@ -64,6 +64,8 @@ interface InfiniteListCache {
 }
 
 export const recipeV2Keys = {
+  /** 상세·리뷰의 뿌리. 목록/홈의 `recipes-v2`(복수) 와 **다른 문자열**이다. */
+  root: ["recipe-v2"] as const,
   detail: (locale: Language, recipeId: number) =>
     ["recipe-v2", "detail", locale, recipeId] as const,
   reviews: (recipeId: number, sort: ReviewSort) =>

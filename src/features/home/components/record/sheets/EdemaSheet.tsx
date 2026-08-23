@@ -8,6 +8,7 @@ import {
   type EdemaLevel,
 } from "../../../data/EdemaConstants"
 import type { DateAnalysisBodyRecord } from "@/src/types"
+import { useHealthEntryInput } from "../../../hooks/useHealthEntryInput"
 import { useTranslation } from "react-i18next"
 
 /**
@@ -31,6 +32,7 @@ export function EdemaSheet({
 }: EdemaSheetProps) {
   const { t } = useTranslation("common")
   const [edemaLevel, setEdemaLevel] = useState<EdemaLevel | null>(null)
+  const markInput = useHealthEntryInput("edema", visible)
 
   /*
     **닫힘→열림 전이에서만** 저장값을 채운다 — 열려 있는 동안 홈 refetch 가 오면
@@ -46,11 +48,11 @@ export function EdemaSheet({
 
   return (
     <RecordSheetShell
+      surface="home_edema"
       visible={visible}
       onClose={onClose}
       title={t("home.sheet.edema.title")}
       subtitle={t("home.sheet.edema.subtitle")}
-      snapPoint={56}
       ctaLabel={
         edemaLevel
           ? t("home.sheet.recordValue", {
@@ -71,7 +73,10 @@ export function EdemaSheet({
             label={t(`home.edema.level.${option}`)}
             description={t(`home.sheet.edema.description.${option}`)}
             selected={edemaLevel === option}
-            onPress={() => setEdemaLevel(option)}
+            onPress={() => {
+              markInput("card")
+              setEdemaLevel(option)
+            }}
           />
         ))}
       </View>

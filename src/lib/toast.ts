@@ -24,7 +24,7 @@ export type ToastProps = {
 }
 
 function show(
-  type: "error" | "success" | "info",
+  type: "error" | "success" | "caution" | "info",
   title: string,
   body?: string,
   action?: ToastAction,
@@ -53,6 +53,18 @@ export function showSuccessToast(
   action?: ToastAction,
 ) {
   show("success", title, body, action)
+}
+
+/**
+ * 실패는 아닌데 그냥 넘기면 안 되는 것 — 부분 저장, 오래된 값, 곧 만료되는 것.
+ * Figma 토스트 세트(571-2529)의 넷 중 하나다. 오류(빨강)와 나누어 쓴다.
+ */
+export function showCautionToast(
+  title: string,
+  body?: string,
+  action?: ToastAction,
+) {
+  show("caution", title, body, action)
 }
 
 export function showInfoToast(

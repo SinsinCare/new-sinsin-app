@@ -16,7 +16,13 @@ export interface CommunityStoryApi {
 
 export interface CommunityStory {
   id: string
-  authorId: number | null
+  /**
+   * 글쓴이의 사람 id. **세 값이 서로 다른 뜻이다** — 숫자는 그 사람, `null` 은 탈퇴
+   * (서버 익명화), `undefined` 는 **서버가 안 보냈다**. 매퍼가 뒤 둘을 뭉개면
+   * `isWithdrawnAuthor` 가 전원을 탈퇴자로 읽어 차단 필터가 꺼진다
+   * (`communityStoryService.mapCommunityStory` 머리말). 글·댓글과 같은 모양이다.
+   */
+  authorId?: number | null
   authorName: string
   imageUri: string
   caption: string | null

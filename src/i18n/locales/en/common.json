@@ -190,9 +190,13 @@
       "popularKeywords": "Popular searches",
       "noResultsTitle": "No matches found",
       "noResultsBody": "Try a different word or tag.",
+      "entryEmptyBody": "No recent searches or popular posts yet.\nType what you are looking for.",
+      "emptyAction": "See popular searches",
       "errorRetry": "Search again",
       "loadMore": "Show more",
-      "loadMoreRetry": "Try again"
+      "loadMoreRetry": "Try again",
+      "endOfList": "That’s every result.",
+      "backToTop": "Back to top"
     },
     "popular": {
       "title": "Popular",
@@ -202,8 +206,23 @@
       "month": "Monthly",
       "all": "All",
       "empty": "No popular posts yet",
+      "emptyAllBody": "We will gather posts here as they come in.",
+      "emptyPeriod": "No popular posts in this period yet",
+      "emptyWiden": "See {{period}}",
+      "emptyFiltered": "No popular posts in this category yet",
+      "emptyClearCategory": "See all categories",
       "errorRetry": "Try again",
       "write": "Write"
+    },
+    "trending": {
+      "title": "Recently discussed",
+      "all": "All",
+      "allAccessibility": "See all popular posts"
+    },
+    "neighbors": {
+      "title": "Neighbors posting lately",
+      "reason": "Neighbors sharing about {{reason}}",
+      "latestPostLabel": "Latest"
     },
     "author": {
       "openProfile": "View {{name}}'s profile",
@@ -221,7 +240,9 @@
       "emptyFollowers": "No followers yet",
       "emptyFollowing": "Not following anyone yet",
       "notFound": "We couldn't find this author",
-      "suggested": "More authors to meet"
+      "suggested": "More authors to meet",
+      "followerCount": "{{count}} followers",
+      "postCount": "{{count}} posts"
     },
     "reportForm": {
       "title": "Report",
@@ -238,6 +259,12 @@
       "confirm": "Confirm",
       "submit": "Submit report",
       "success": "Report submitted"
+    },
+    "sort": {
+      "title": "Sort by",
+      "recent": "Latest",
+      "views": "Most viewed",
+      "popular": "Most popular"
     },
     "myActivity": "Your activity",
     "bookmarks": "Saved posts",
@@ -361,17 +388,18 @@
         "bookmarked": "Saved"
       },
       "empty": {
+        "browse": "Browse posts",
         "mine": {
           "title": "You haven’t posted yet",
-          "body": "Share your first post with the community."
+          "body": "Posts you write show up here."
         },
         "liked": {
           "title": "No liked posts yet",
-          "body": "Tap Like when you find a post that helps."
+          "body": "Posts you like show up here."
         },
         "bookmarked": {
           "title": "No saved posts yet",
-          "body": "Save posts you want to come back to."
+          "body": "Posts you save show up here."
         }
       }
     }
@@ -533,6 +561,30 @@
       "actionSave": "Save",
       "actionSaved": "Saved",
       "actionRoute": "Directions"
+    },
+    "consult": {
+      "sectionTitle": "AI diet consult",
+      "sectionTitleAccent": "AI",
+      "sectionTitleRest": "diet consult",
+      "sectionSubtitle": "Ask anything you are wondering about.",
+      "askCta": "Ask a question",
+      "questionAccessibility": "Suggested question {{index}}. {{question}}",
+      "sheetTitle": "AI diet consult",
+      "sheetClose": "Close consult",
+      "emptyTitle": "Ask us anything about\nthe menu or your meals.",
+      "placeholder": "Ask AI a question",
+      "shareAnswer": "Share this answer",
+      "context": {
+        "restaurant": "Restaurant",
+        "cuisine": "Cuisine",
+        "menus": "Menu items"
+      },
+      "q": {
+        "driver": "Which menu item has the most {{driver}}?",
+        "recommend": "Which menu items do you recommend for someone with kidney disease?",
+        "compare": "Between {{first}} and {{second}}, which one is harder on the kidneys?",
+        "avoid": "Are there any side dishes I should avoid?"
+      }
     },
     "report": {
       "maxPhotos": "You can add up to {{count}} photos.",

@@ -1,21 +1,30 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useRef } from "react"
+import { floatingAiButtonScrollInset } from "@/src/shared/components/floatingAiButtonLayout"
+import { CONTENT_BREATHING_ROOM } from "@/src/shared/utils/bottomSafeArea"
 import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 import {
   StyleSheet,
   View,
-  Text,
   ScrollView,
   Pressable,
   Share,
   Image,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
+import { typography } from "@/src/design-system-v2/tokens"
+import { LAYOUT } from "@/src/theme/surface"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import Constants from "expo-constants"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useAppRouter } from "@/src/shared/navigation"
+import {
+  isAtScrollTop,
+  useAppRouter,
+  useRegisterTabReset,
+} from "@/src/shared/navigation"
 import { useFocusEffect } from "@react-navigation/native"
 import { useTranslation } from "react-i18next"
 
+import { getBackendBadge } from "@/src/config/appConfig"
 import { KidneyProfileCard } from "@/src/features/settings/components"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
@@ -92,6 +101,31 @@ export function MyPageScreen() {
       refetchProfile()
     }, [refetchProfile]),
   )
+
+  /*
+    ── 내정보 탭을 다시 눌렀을 때 ─────────────────────────────────────────────
+    목록형이라 루트 상태는 맨 위다. 그리고 **거기서 끝난다.**
+
+    예전에는 맨 위면 프로필을 다시 받았다(`refresh: refetchProfile`). 걷어냈다 —
+    탭 탭은 이동 제스처지 조회 제스처다(`tabReset.ts` 머리말 §4번). 이 화면에서는
+    그 칸이 특히 값이 없었다: **위 `useFocusEffect` 가 이 탭에 올 때마다 이미 같은
+    것을 다시 받는다.** 즉 재탭이 하던 일은 "방금 받은 것을 한 번 더" 였고, 화면에는
+    아무 변화도 없어서 사용자에게는 아무 일도 안 일어난 것과 같았다.
+
+    4번(복구)도 등록하지 않는다. 이 화면에는 되살릴 **고장난 상태가 없다** — 조회가
+    실패해도 전면 오류를 세우지 않고 빈 값과 대체 문구(`myPage.userFallback`)로 서고,
+    다음 focus 가 알아서 다시 받는다. 복구할 것이 없으면 그 칸은 비워 둔다.
+
+    스크롤은 애니메이션이고 포커스는 옮기지 않는다(스크린리더 커서를 빼앗지 않는다).
+  */
+  const scrollRef = useRef<ScrollView>(null)
+  const scrollOffsetRef = useRef(0)
+  useRegisterTabReset("all", {
+    content: {
+      isAtRoot: () => isAtScrollTop(scrollOffsetRef.current),
+      reset: () => scrollRef.current?.scrollTo({ y: 0, animated: true }),
+    },
+  })
 
   const handleShareData = useCallback(async () => {
     const hasData = kidneyProfile || todayAnalysis?.result?.analysis
@@ -304,8 +338,11 @@ export function MyPageScreen() {
   ]
 
   // 층 규칙: 라이트는 회색 바닥 위 흰 카드, 다크는 짙은 바닥 위 옅은 카드.
-  const screenBg = surface.isDark ? surface.canvas : surface.surface
+  const screenBg = surface.bed
   const appVersion = Constants.expoConfig?.version
+  // 운영 빌드면 null 이라 아무것도 안 붙는다. 테스트 백엔드를 보는 빌드만 정체를 밝힌다
+  // (스토어에 나간 1.2.1 이 그랬다 — `appConfig.getBackendBadge` 머리말).
+  const backendBadge = getBackendBadge()
 
   return (
     <View style={[styles.container, { backgroundColor: screenBg }]}>
@@ -332,11 +369,29 @@ export function MyPageScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
+        onScroll={(event) => {
+          scrollOffsetRef.current = event.nativeEvent.contentOffset.y
+        }}
+        scrollEventThrottle={16}
         bounces={false}
         overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + 112 },
+          /*
+            스크롤 여백은 **탭바 위**가 원점이다(`tabBarStyle: position:"absolute"` 라
+            화면은 바닥까지 내려오지만, 이 padding 은 목록 끝에 더해지는 값이라
+            탭바·안전영역을 다시 더하면 그만큼 빈 구멍이 생긴다).
+
+            그래서 `insets.bottom` 을 더하지 않고, 우하단 AI 상담 필이 덮는 구간만
+            비운다. 숫자를 박으면 필을 옮기는 날 따라오지 않는다.
+          */
+          {
+            paddingBottom: floatingAiButtonScrollInset(
+              insets.bottom,
+              CONTENT_BREATHING_ROOM,
+            ),
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -386,7 +441,7 @@ export function MyPageScreen() {
 
         {/* 신장 프로필 */}
         <Text
-          style={[styles.sectionHeader, { color: surface.textMuted }]}
+          style={[styles.sectionHeader, { color: surface.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("myPage.kidneyHealth")}
@@ -438,7 +493,7 @@ export function MyPageScreen() {
 
         {/* 메뉴 — 헤어라인으로만 나눈 카드 그룹. */}
         <Text
-          style={[styles.sectionHeader, { color: surface.textMuted }]}
+          style={[styles.sectionHeader, { color: surface.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("myPage.healthManagement")}
@@ -455,7 +510,7 @@ export function MyPageScreen() {
         </View>
 
         <Text
-          style={[styles.sectionHeader, { color: surface.textMuted }]}
+          style={[styles.sectionHeader, { color: surface.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("myPage.support")}
@@ -475,6 +530,7 @@ export function MyPageScreen() {
         {appVersion && (
           <Text style={[styles.versionText, { color: surface.placeholder }]}>
             {t("brand.name")} {appVersion}
+            {backendBadge ? ` · ${backendBadge}` : ""}
           </Text>
         )}
       </ScrollView>
@@ -491,15 +547,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    // 고정 머리 ↔ 스크롤 콘텐츠 규칙(LAYOUT.stickyHeaderGap). 이 화면은 원래 12 였다.
+    paddingBottom: LAYOUT.stickyHeaderGap,
   },
-  headerTitle: {
-    fontSize: 22,
-    lineHeight: 30,
-    letterSpacing: -0.44,
-    fontWeight: "700",
-    fontFamily: "Pretendard-Bold",
-  },
+  /* 화면 제목 — 커뮤니티 탭과 같은 정본 토큰(22/30 Bold). 자간 0, 굵기는 face 로만. */
+  headerTitle: typography.title.medium,
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -538,6 +590,20 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard-Regular",
   },
 
+  /*
+    ■ **색은 `surface.text`(= `label.neutral`)다 — `textMuted` 가 아니다** (2026-08-22)
+
+    (B) 섹션 라벨(`SectionHeader` 머리말: 바닥 위 이름표 + 그 아래 흰 카드)이 오래
+    `textMuted`(= `label.alternative`)였는데, 화면 바닥 위에서 **2.68:1** 이다 —
+    본문 기준 4.5 는커녕 큰 글자 기준 3 에도 못 미친다(13.5 SemiBold 는 큰 글자가
+    아니다: 기준은 18.66 이상 또는 14 이상 Bold).
+
+    **값은 안 고쳤다.** `label.alternative` 는 146곳이 보고 식당 상세 시안 실측에
+    묶여 있다. 고친 것은 **부르는 쪽의 토큰 선택**이고, 그건 이 감사가 커뮤니티에서
+    이미 낸 결론이다(`design-system-v2/tokens/colors.ts` §label 사다리 — "읽혀야 하는
+    글자의 바닥은 `neutral`"). 바닥 위 **4.72:1**, 다크도 3.00 → **5.79** 로 같이
+    올라간다(거기서도 4.5 밖이었다). 계산은 `tests/lightContrastAudit.test.ts` §11.
+  */
   sectionHeader: {
     paddingTop: 24,
     paddingBottom: 10,

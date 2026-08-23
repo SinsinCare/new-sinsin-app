@@ -1,4 +1,4 @@
-type OnboardingStepType = "multi" | "only" | "input" | "date"
+export type OnboardingStepType = "multi" | "only" | "input" | "date"
 
 export interface OnboardingValueOption {
   key: string

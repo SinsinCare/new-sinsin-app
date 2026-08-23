@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"
-import { StyleSheet, Text, View } from "react-native"
+import { useEffect, useRef, useState } from "react"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useSurface } from "@/src/hooks/useSurface"
 import { TYPE } from "@/src/theme/surface"
 import { RecordSheetShell } from "./RecordSheetShell"
@@ -28,6 +29,8 @@ import {
 import type { GlucoseContextInference } from "../../../utils/glucoseInference"
 import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
 import type { DateAnalysisBloodGlucoseRecord } from "@/src/types"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useHealthEntryInput } from "../../../hooks/useHealthEntryInput"
 import { useTranslation } from "react-i18next"
 
 /** 직접 입력의 경계(1~999). 입력 방식마다 범위가 다르면 안 된다. */
@@ -91,6 +94,26 @@ export function BloodGlucoseSheet({
   const [preview, setPreview] = useState<number | null>(null)
   /** 칩을 한 번이라도 만졌으면 "자동" 표시를 내린다 — 이제 사용자의 선택이다. */
   const [touched, setTouched] = useState(false)
+  const markInput = useHealthEntryInput("blood_glucose", visible)
+  /**
+   * 시트가 **열릴 때 앱이 깔아 둔** 시점·끼니. `health_entry_context_adjusted.auto` 가
+   * 이것과 비교한다 — 사람이 칩을 만졌다가 결국 같은 값으로 돌아오는 것과, 다른 값으로
+   * 고치는 것은 뜻이 반대다(뒤가 추론 오류다).
+   */
+  const openedContextRef = useRef<{ timing: GlucoseTiming; slot: GlucoseSlot }>(
+    { timing: "FASTING", slot: "" },
+  )
+
+  /** 시점·끼니 칩 조작. **값이 아니라 맥락**이라 입력 시작으로 세지 않는다. */
+  const trackContext = (next: { timing: GlucoseTiming; slot: GlucoseSlot }) => {
+    trackAnalyticsEvent("health_entry_context_adjusted", {
+      metric: "blood_glucose",
+      timing: next.timing,
+      auto:
+        next.timing === openedContextRef.current.timing &&
+        next.slot === openedContextRef.current.slot,
+    })
+  }
 
   /**
    * 격자의 칸(끼니·시점)을 바꿨다. **그 칸에 이미 기록이 있을 때만** 값을 갈아끼운다.
@@ -125,6 +148,7 @@ export function BloodGlucoseSheet({
         : (inference?.slot ?? records[0]?.slot ?? "")
     setTiming(initialTiming)
     setSlot(initialSlot)
+    openedContextRef.current = { timing: initialTiming, slot: initialSlot }
     setTouched(false)
     const record = findGlucoseCell(records, {
       slot: initialSlot,
@@ -164,14 +188,10 @@ export function BloodGlucoseSheet({
 
   return (
     <RecordSheetShell
+      surface="home_blood_glucose"
       visible={visible}
       onClose={onClose}
       title={t("home.sheet.bloodGlucose.title")}
-      /*
-        66 = 화면 2/3 근처. 시트는 키보드가 떠도 제자리다 — 상단이 시계·배터리를
-        덮던 QA(2026-08-02) 재발 방지. 키보드 위에는 도킹 CTA 가 선다(KeyboardDock).
-      */
-      snapPoint={66}
       ctaLabel={
         liveValue !== null
           ? t("home.sheet.recordValue", { value: liveValue })
@@ -197,8 +217,14 @@ export function BloodGlucoseSheet({
           active: visible,
           // 기록이 하나도 없으면 열리자마자 키패드 — QA "기록하기에서 숫자 키패드 안 올라옴".
           autoStartWhenEmpty: records.length === 0,
-          onCommit: setValue,
-          onPreview: setPreview,
+          onCommit: (next) => {
+            if (next !== null) markInput("keypad")
+            setValue(next)
+          },
+          onPreview: (next) => {
+            if (next !== null) markInput("keypad")
+            setPreview(next)
+          },
           accessibilityLabel: t("home.sheet.bloodGlucose.typeValue"),
           hint: t("home.sheet.typeHint"),
         }}
@@ -262,6 +288,7 @@ export function BloodGlucoseSheet({
                 // 끼니가 살아 있도록, 공복으로 갈 때도 `slot` 자체는 지우지 않는다 —
                 // 저장에 실리는 값은 `slotForSubmit` 이 시점을 보고 정한다.
                 const nextSlot: GlucoseSlot = option === "FASTING" ? "" : slot
+                trackContext({ timing: option, slot: nextSlot })
                 setTiming(option)
                 setSlot(nextSlot)
                 hydrate({ slot: nextSlot, timing: option })
@@ -285,6 +312,7 @@ export function BloodGlucoseSheet({
                   onCard
                   onPress={() => {
                     setTouched(true)
+                    trackContext({ timing, slot: option })
                     setSlot(option)
                     hydrate({ slot: option, timing })
                   }}

@@ -15,7 +15,17 @@ import { useV2Theme } from "../hooks/useV2Theme"
 
 // 색상 이름은 Figma와 1:1 (축약하지 않음 — 디자인↔코드 바로 대조 가능)
 export type V2ProgressBarSize = "s" | "m" | "l"
-export type V2ProgressBarColor = "brand" | "danger" | "success" | "neutral"
+/**
+ * fill 색. `static` 만 Figma 밖이다 — 사진 **위에** 얹히는 진행바(스토리 뷰어)용으로,
+ * 두 모드 모두 흰색이다. 사진에는 모드가 없으므로 `label.*` 로 그리면 다크에서
+ * 밝은 사진 위에 밝은 회색 바가 되어 사라진다.
+ */
+export type V2ProgressBarColor =
+  | "brand"
+  | "danger"
+  | "success"
+  | "neutral"
+  | "static"
 
 export type V2ProgressBarProps = {
   /** 진행률 0~100. 범위를 벗어나면 내부에서 clamp */
@@ -46,6 +56,7 @@ function resolveFillColor(
     danger: colors.status.negative,
     success: colors.status.positive,
     neutral: colors.label.alternative,
+    static: colors.static.white, // 모드 공통 흰색 — 사진 위 전용
   } as const
   return map[color]
 }

@@ -13,8 +13,10 @@ import type { Message } from "@/src/types/chat"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
+import { parseRestaurantConsultMessage } from "@/src/features/restaurant/consult/restaurantConsultMessage"
 import { parseFoodConsultMessage } from "../utils/foodConsultMessage"
 import { parseExamConsultMessage } from "../utils/examConsultMessage"
+import { resolveConsultUserCard } from "../utils/consultUserMessage"
 import { FoodConsultCard } from "./FoodConsultCard"
 import { ExamConsultCard } from "./ExamConsultCard"
 import { USER_BUBBLE_BG, USER_BUBBLE_TEXT } from "./chatPalette"
@@ -31,12 +33,20 @@ export const CHAT_GUTTER = 20
  * 한국어 문장은 `**강조**입니다`처럼 닫는 별표 뒤에 조사가 바로 붙는데,
  * CommonMark 의 플랭킹 규칙이 이를 강조 종료로 인정하지 않아 `**`가
  * 리터럴로 노출된다. cjk-friendly 플러그인이 그 규칙을 CJK 기준으로 고친다.
+ *
+ * ## 왜 export 인가 — 이 파일이 앱의 **답변 렌더 정본**이다
+ *
+ * 식당 상세의 `AI 식단 상담` 시트도 같은 스트림을 그린다. 거기서 MarkdownIt 를 새로
+ * 만들면 cjk-friendly 를 빠뜨린 판이 하나 더 생기고, 그때 별표가 리터럴로 새는 화면은
+ * **상담 화면이 아니라 시트 쪽**이라 여기 테스트로는 안 잡힌다. 인스턴스를 나눠 쓰면
+ * 그 갈래가 애초에 생기지 않는다(파서 인스턴스는 상태가 없어 공유해도 안전하다).
  */
-const markdownItInstance = MarkdownIt({ typographer: true }).use(
+export const markdownItInstance = MarkdownIt({ typographer: true }).use(
   markdownItCjkFriendly,
 )
 
-interface MarkdownPalette {
+/** 마크다운 본문이 쓰는 6색. 소비처가 자기 면에 맞는 한 벌을 떠서 넘긴다. */
+export interface MarkdownPalette {
   text: string
   muted: string
   surface: string
@@ -68,8 +78,13 @@ const MARKDOWN_PALETTE: Record<"light" | "dark", MarkdownPalette> = {
  * 본문 15/24 를 기준으로 헤딩·리스트·구분선·인용까지 같은 결로 정돈한다.
  * 헤딩은 화면 제목이 아니라 답변 안의 소제목이라 크게 띄우지 않고,
  * 구분선·인용·코드는 면과 헤어라인으로만 위계를 만든다(보더리스 원칙).
+ *
+ * **팔레트를 인자로 받는 것이 요점이다.** 아래 두 벌(라이트·다크)은 *전폭 배경* 위에
+ * 얹히는 값이라, 회색 버블(`background.lower`) 안에 그대로 쓰면 `surface`/`codeBg`
+ * (#F5F6F8 / #F2F3F5)가 버블 면과 거의 같은 색이 되어 **인용과 코드가 사라진다.**
+ * 그래서 식당 상담 시트는 이 함수를 부르되 자기 팔레트를 새로 떠서 넘긴다.
  */
-function makeMarkdownStyles(palette: MarkdownPalette) {
+export function makeMarkdownStyles(palette: MarkdownPalette) {
   return StyleSheet.create({
     body: {
       fontSize: 15,
@@ -223,7 +238,8 @@ const markdownStylesLight = makeMarkdownStyles(MARKDOWN_PALETTE.light)
 const markdownStylesDark = makeMarkdownStyles(MARKDOWN_PALETTE.dark)
 
 // 한국어가 단어 중간에서 꺾이지 않게 본문 텍스트 그룹에 어절 줄바꿈을 건다.
-const markdownRules: RenderRules = {
+// 답변을 그리는 다른 표면(식당 상담 시트)도 같은 규칙을 써야 줄바꿈이 갈리지 않는다.
+export const markdownRules: RenderRules = {
   textgroup: (node, children, _parent, mdStyles) => (
     <RNText
       key={node.key}
@@ -236,23 +252,31 @@ const markdownRules: RenderRules = {
   ),
 }
 
-export function AssistantAvatar() {
+/**
+ * 마스코트 원형 아바타.
+ *
+ * `size` 는 **더할 수만 있는 선택 인자**다. 기본 36 은 지금까지의 값 그대로이고,
+ * 식당 상담 시트만 40 을 준다(시안 실측). 크기를 소비처가 정하게 두는 이유는
+ * 아바타 이미지 자산이 하나뿐이기 때문이다 — 표면마다 파일을 복제하면 다크 자산이
+ * 갈리고, 그때 어느 쪽이 정본인지 아무도 모른다.
+ */
+export function AssistantAvatar({ size = 36 }: { size?: number } = {}) {
   const colorScheme = useAppColorScheme()
   const isDarkMode = colorScheme === "dark"
 
   return (
     <V2Box
       style={{
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
         overflow: "hidden",
         marginTop: 4,
       }}
     >
       <Image
         source={isDarkMode ? AVATAR_DARK : AVATAR_LIGHT}
-        style={{ width: 36, height: 36 }}
+        style={{ width: size, height: size }}
         contentFit="contain"
         transition={0}
       />
@@ -269,8 +293,11 @@ const REVEAL_MIN_STEP = 2
  * SSE 청크는 네트워크 사정대로 몰려 들어와 그대로 그리면 따다닥 끊긴다.
  * 도착분을 버퍼로 받고 일정한 틱으로 흘려보내면 이어 쓰듯 매끄럽게 보인다.
  * 히스토리 로드처럼 처음부터 완성된 내용은 그대로 보여준다(초기값).
+ *
+ * 식당 상담 시트도 같은 스트림을 받는다 — 드러내기 속도가 표면마다 다르면 같은
+ * 답변이 화면에 따라 다른 속도로 써지는데, 그건 사용자가 설명할 수 없는 차이다.
  */
-function useSmoothStreamingText(content: string): string {
+export function useSmoothStreamingText(content: string): string {
   const [displayed, setDisplayed] = useState(content)
   const displayedRef = useRef(content)
   const targetRef = useRef(content)
@@ -330,26 +357,36 @@ export const UserBubble = memo(function UserBubble({
 }) {
   const scheme = useAppColorScheme() === "dark" ? "dark" : "light"
   const { t } = useTranslation()
-  // 식이리포트 "물어보기" 원문이면 텍스트 덩어리 대신 구조화된 카드로 보여준다.
-  // 서버에는 텍스트만 저장되므로 히스토리 재로드도 이 파싱을 그대로 탄다.
-  const foodConsult = useMemo(
-    () => parseFoodConsultMessage(message.content),
-    [message.content],
-  )
   /*
-    건강검진 "질문하기" 원문도 같은 방식으로 카드가 된다. 식사가 아닐 때만 시도한다 —
-    두 포맷이 동시에 맞을 일은 없지만, 굳이 둘 다 파싱해서 확인할 이유도 없다.
+    빌더가 만든 원문이면 텍스트 덩어리 대신 구조화된 카드로 보여준다. 서버에는 텍스트만
+    저장되므로 **히스토리 재로드도 이 파싱을 그대로 탄다** — 상담 기록에서 다시 연 대화가
+    곧 이 경로다.
+
+    세 파서(식당·식사·검진)의 **순서와 판정 근거는 여기 있지 않다.** 셋이 서로의 원문을
+    통과시키는 방식이 비대칭이라(식당 원문이 식사 파서에 걸리고, 식당 파서는 식사·검진
+    원문을 전부 통과시킨다) 순서를 화면마다 적으면 표면이 늘 때마다 같은 함정을 다시 밟는다.
+    `resolveConsultUserCard` 가 그 정본이고, 근거는 그 파일 머리말에 있다.
   */
-  const examConsult = useMemo(
+  const consult = useMemo(
     () =>
-      foodConsult
-        ? null
-        : parseExamConsultMessage(message.content, (key, options) =>
+      resolveConsultUserCard({
+        restaurant: () => parseRestaurantConsultMessage(message.content),
+        food: () => parseFoodConsultMessage(message.content),
+        exam: () =>
+          parseExamConsultMessage(message.content, (key, options) =>
             String(t(key as never, options as never)),
           ),
-    [foodConsult, message.content, t],
+      }),
+    [message.content, t],
   )
-  const consultCard = foodConsult != null || examConsult != null
+  const consultCard = consult?.kind === "food" || consult?.kind === "exam"
+  /*
+    식당 시트는 질문 뒤에 `[식당]`/`[분류]`/`[메뉴]` 블록을 매달아 보낸다. 그 원문을 그대로
+    그리면 버블에 메뉴 영양소 숫자가 통째로 뜬다 — 시트의 `ConsultUserBubble` 과 같은 계약으로
+    **질문 한 줄만** 남긴다. 파싱이 안 되면 원문이 곧 질문이다(안전한 실패).
+  */
+  const bubbleText =
+    consult?.kind === "restaurant" ? consult.question : message.content
   return (
     <V2HStack justify="flex-end" paddingHorizontal={CHAT_GUTTER}>
       <V2VStack
@@ -370,12 +407,12 @@ export const UserBubble = memo(function UserBubble({
             accessibilityLabel={t("consult.attachedPhoto")}
           />
         )}
-        {foodConsult ? (
-          <FoodConsultCard data={foodConsult} />
-        ) : examConsult ? (
-          <ExamConsultCard data={examConsult} />
+        {consult?.kind === "food" ? (
+          <FoodConsultCard data={consult.data} />
+        ) : consult?.kind === "exam" ? (
+          <ExamConsultCard data={consult.data} />
         ) : (
-          message.content.length > 0 && (
+          bubbleText.length > 0 && (
             <V2VStack
               paddingHorizontal={16}
               paddingVertical={10}
@@ -390,7 +427,7 @@ export const UserBubble = memo(function UserBubble({
                 textBreakStrategy="balanced"
                 style={{ fontSize: 15, lineHeight: 22, letterSpacing: -0.2 }}
               >
-                {message.content}
+                {bubbleText}
               </V2Text>
             </V2VStack>
           )

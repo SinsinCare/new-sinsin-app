@@ -51,6 +51,11 @@ export function useTermsAgreement({
   const canSubmit = requiredChecked
 
   const toggleAll = useCallback(() => {
+    trackAnalyticsEvent("auth_terms_item_toggled", {
+      item: "all",
+      agreed: !allChecked,
+      method: mode,
+    })
     if (allChecked) {
       setAgreed({})
     } else {
@@ -60,14 +65,31 @@ export function useTermsAgreement({
       })
       setAgreed(next)
     }
-  }, [allChecked, terms])
+  }, [allChecked, mode, terms])
 
-  const toggleItem = useCallback((id: string) => {
-    setAgreed((prev) => ({ ...prev, [id]: !prev[id] }))
-  }, [])
+  const toggleItem = useCallback(
+    (id: string) => {
+      /* 발화를 `setAgreed` 의 업데이터 **안**에 두지 않는다. 업데이터는 React 가 두 번
+         부를 수 있어(StrictMode·동시 렌더) 한 번의 탭이 두 행이 된다. 다음 값은 지금
+         화면에 보이는 상태로 계산한다. */
+      const next = !agreed[id]
+      /* 약관 id 는 `terms.ts` 가 정한 세 값이다. 그 밖의 값은 세지 않는다 — 자유
+         문자열이 들어가면 브레이크다운이 배포마다 다른 행으로 흩어진다. */
+      if (id === "service" || id === "privacy" || id === "marketing") {
+        trackAnalyticsEvent("auth_terms_item_toggled", {
+          item: id,
+          agreed: next,
+          method: mode,
+        })
+      }
+      setAgreed((prev) => ({ ...prev, [id]: !prev[id] }))
+    },
+    [agreed, mode],
+  )
 
   const handleEmailNext = () => {
     if (!canSubmit) return
+    trackAnalyticsEvent("auth_terms_submitted", { method: "email" })
     trackAnalyticsEvent("auth_signup_started", { method: "email" })
     reset()
     setSignupInProgress(true)
@@ -79,6 +101,10 @@ export function useTermsAgreement({
 
   const handleSocialNext = async () => {
     if (!canSubmit || isSubmitting) return
+    /* 서버 왕복 **전**에 쏜다. 이 이름이 세는 것은 "약관 관문을 넘겼다" 이고, 그 뒤의
+       실패(만료된 가입 토큰·이미 가입을 마친 계정)는 `auth_signup_failed{stage:'consent'}`
+       가 따로 센다. 성공 시점에 쏘면 두 사건이 한 이름으로 뭉개진다. */
+    trackAnalyticsEvent("auth_terms_submitted", { method: "social" })
     if (!socialSignupToken) {
       reset()
       showErrorToast(t("terms.expired"))

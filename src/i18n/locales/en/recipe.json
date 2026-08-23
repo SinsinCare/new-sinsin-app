@@ -102,16 +102,19 @@
     "section": {
       "breakfast": {
         "title": "Today’s breakfast recipes",
+        "titleNextDay": "Tomorrow’s breakfast recipes",
         "subtitle": "Morning dishes like toast, eggs, and porridge",
         "highlight": "breakfast"
       },
       "lunch": {
         "title": "Today’s lunch recipes",
+        "titleNextDay": "Tomorrow’s lunch recipes",
         "subtitle": "One-bowl dishes like rice bowls, noodles, and salads",
         "highlight": "lunch"
       },
       "dinner": {
         "title": "Today’s dinner recipes",
+        "titleNextDay": "Tomorrow’s dinner recipes",
         "subtitle": "Dishes for a full table, like soups, stews, and sides",
         "highlight": "dinner"
       },
@@ -124,8 +127,7 @@
     },
     "reason": {
       "afterRecord": "You logged {{meal}}, so we start from the next meal",
-      "afterSkip": "You skipped {{meal}}, so we start from the next meal",
-      "nextDay": "Every meal is logged for today. Starting from tomorrow’s breakfast"
+      "afterSkip": "You skipped {{meal}}, so we start from the next meal"
     }
   },
   "list": {
@@ -234,7 +236,9 @@
     "emptyBody": "Start the conversation with the first post.",
     "errorRetry": "Try again",
     "loadMore": "Show more",
-    "loadMoreRetry": "Try again"
+    "loadMoreRetry": "Try again",
+    "endOfList": "That’s every post.",
+    "backToTop": "Back to top"
   },
   "story": {
     "title": "Stories",
@@ -244,11 +248,14 @@
     "createFirstAccessibility": "Add the first story",
     "emptyTitle": "No stories yet",
     "emptyBody": "Share a photo from today’s meal.",
+    "emptyLine": "Share today’s meal for 24 hours",
+    "emptyAction": "Share a story",
     "accessibility": "{{author}}’s story",
     "mine": "Your story"
   },
   "post": {
-    "more": "More post options",
+    "more": "See more posts",
+    "moreActions": "More actions",
     "popularAccessibility": "Popular post number {{rank}}: {{title}}",
     "viewCount": "{{count}} views",
     "viewCount_one": "{{count}} view",

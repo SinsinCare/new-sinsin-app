@@ -285,9 +285,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: "#FFFFFF",
   },
-  optionCardPressed: {
-    backgroundColor: "#F8FAFC",
-  },
+
   optionIconWrapper: {
     width: 48,
     height: 48,

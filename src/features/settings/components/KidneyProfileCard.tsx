@@ -1,6 +1,7 @@
 import React from "react"
 import { roundForDisplay } from "@/src/shared/utils/displayNumber"
-import { View, Text, Pressable, StyleSheet } from "react-native"
+import { View, Pressable, StyleSheet } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"

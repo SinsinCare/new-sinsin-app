@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TextInputProps,
-  View,
-} from "react-native"
+import { Pressable, StyleSheet, TextInputProps, View } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import Animated, {
   Easing,
   ReduceMotion,

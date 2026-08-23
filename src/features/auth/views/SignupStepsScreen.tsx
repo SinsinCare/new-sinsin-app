@@ -45,6 +45,7 @@ export function SignupStepsScreen() {
     isPrefilling,
     goNext,
     goBack,
+    reportStepInputBlocked,
   } = useSignupSteps()
 
   const copy = getSignupStepCopy()[step]
@@ -72,6 +73,9 @@ export function SignupStepsScreen() {
   const submitStep = () => {
     if (!validity.canProceed) {
       hapticInvalid()
+      // CTA 는 비활성이므로 여기 오는 것은 키보드 엔터 제출뿐이다. 그래도 세는 이유는
+      // 이것이 이 화면에서 "눌렀는데 안 됐다" 가 남길 수 있는 **유일한** 흔적이라서다.
+      reportStepInputBlocked()
       return
     }
     if (isLastStep) Keyboard.dismiss()

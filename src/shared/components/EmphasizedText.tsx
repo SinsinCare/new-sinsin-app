@@ -1,4 +1,4 @@
-import { Text } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 /**
  * 문장 속 양(量)만 강조하는 텍스트 — 두 리포트(식사·통계)가 같이 쓴다.

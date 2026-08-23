@@ -5,6 +5,8 @@ import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showErrorToast } from "@/src/lib/toast"
+import { toAnalyticsFailKind } from "@/src/lib/errorMessage"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { ResendCodeLink, StepHelperText, StepTextInput } from "../components"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
@@ -19,6 +21,8 @@ import type {
 
 const TIMER_DURATION = 180
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/** 세 인증 화면이 같은 눈금을 쓴다(`useSignupEmail`·`ForgotPasswordScreen`). */
+const MAX_TRACKED_ATTEMPT = 10
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
@@ -60,6 +64,7 @@ export function SocialLinkEmailScreen() {
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const attemptRef = useRef(0)
 
   const providerValue = isSocialProvider(provider) ? provider : null
   const tokenValue =
@@ -117,6 +122,11 @@ export function SocialLinkEmailScreen() {
     setSendError(null)
     try {
       await sendSocialLinkEmailCode(tokenValue, getValues("email"))
+      attemptRef.current += 1
+      trackAnalyticsEvent("auth_code_requested", {
+        source: "social_link",
+        attempt_no: Math.min(attemptRef.current, MAX_TRACKED_ATTEMPT),
+      })
       setCodeSent(true)
       setCodeInputVisible(true)
       startTimer()
@@ -139,6 +149,12 @@ export function SocialLinkEmailScreen() {
         getValues("email"),
         getValues("code"),
       )
+      /* 인증이 통과한 순간이 이 곁길의 완주다. 그 뒤 갈 곳이 약관 화면(신규 소셜
+         가입으로 이어지는 경우)이든 계정 상태에 맞는 화면이든 **연결 자체는 끝났다** —
+         두 갈래를 나누면 같은 성공이 두 숫자로 갈린다. */
+      trackAnalyticsEvent("auth_account_link_completed", {
+        mode: "social_email",
+      })
       if (isSocialSignupConsentRequiredResult(result)) {
         router.replace({
           pathname: "/(auth)/terms-agreement",
@@ -162,6 +178,10 @@ export function SocialLinkEmailScreen() {
     } catch (error) {
       // 이미 다른 계정이 쓰고 있는 이메일(`SIGNUP_ERROR_001`)이면 카탈로그가
       // 다이얼로그로 올린다 — 이 화면에서 고칠 수 없고 로그인으로 가야 한다.
+      trackAnalyticsEvent("auth_code_verify_failed", {
+        source: "social_link",
+        fail_kind: toAnalyticsFailKind(error),
+      })
       setSendError(presentAuthFailure(error, { scope: "social-link-verify" }))
     } finally {
       setVerifyingCode(false)
@@ -169,6 +189,18 @@ export function SocialLinkEmailScreen() {
   }
 
   const codeExpired = !sendError && timer === 0 && codeSent
+
+  // 타이머는 매초 갱신된다 — false→true 전이에서만 1회.
+  const expiredTrackedRef = useRef(false)
+  useEffect(() => {
+    if (!codeExpired) {
+      expiredTrackedRef.current = false
+      return
+    }
+    if (expiredTrackedRef.current) return
+    expiredTrackedRef.current = true
+    trackAnalyticsEvent("auth_code_expired", { source: "social_link" })
+  }, [codeExpired])
 
   const ctaLabel = codeInputVisible
     ? t("common.confirm")

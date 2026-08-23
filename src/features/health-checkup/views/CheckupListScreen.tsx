@@ -99,7 +99,9 @@ export function CheckupListScreen({
   const { colors } = useV2Theme()
 
   const query = useQuery(checkupResultsQuery())
-  const showSkeleton = useLoadingVisible(query.isLoading)
+  const showSkeleton = useLoadingVisible(query.isLoading, {
+    surface: "checkup_list",
+  })
 
   const [checked, setChecked] = useState<ReadonlySet<number>>(new Set())
   const toggle = useCallback((resultId: number) => {
@@ -139,6 +141,7 @@ export function CheckupListScreen({
         />
         {resolved.retryable ? (
           <V2ErrorState
+            surface="checkup_list"
             style={styles.fill}
             title={resolved.title}
             description={resolved.body}
@@ -147,6 +150,7 @@ export function CheckupListScreen({
           />
         ) : (
           <V2ErrorState
+            surface="checkup_list"
             style={styles.fill}
             title={resolved.title}
             description={resolved.body}
@@ -175,6 +179,7 @@ export function CheckupListScreen({
         <View style={styles.fill} />
       ) : sections.length === 0 ? (
         <V2EmptyState
+          surface="checkup_list"
           style={styles.fill}
           title={t("checkup.list.emptyTitle")}
           description={t("checkup.list.emptyBody")}

@@ -168,6 +168,102 @@ function stripQuery(path: string): string {
 }
 
 /**
+ * 위 표의 세 갈래에 붙인 이름. 종전에는 뒤 둘이 똑같이 `false` 로 뭉개져 **버려진
+ * 이유가 남지 않았다** — "우리 링크인데 화면이 없다"(공유 링크가 죽었다는 뜻)와
+ * "남의 로그인 콜백"(정상)은 정반대의 사건인데 구분할 방법이 없었다.
+ */
+export type EntryUrlVerdict = "routed" | "unknown_route" | "foreign_scheme"
+
+/** 판정만 한다. 아무것도 기록하지 않으므로 호출부가 몇 번을 불러도 안전하다. */
+export function classifyEntryUrl(url: string): EntryUrlVerdict {
+  const { own, path } = parse(url)
+  // 남의 스킴은 우리가 판단할 대상이 아니다. SDK 가 네이티브에서 처리한다.
+  if (!own) return "foreign_scheme"
+  return isKnownRoutePath(path) ? "routed" : "unknown_route"
+}
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 접힌 목적지 — 로그인 관문에 막혀 못 간 화면 한 개.
+ *
+ * ■ 고치는 증상: 로그아웃 상태에서 받은 공유 링크는 목적지가 사라진다
+ *
+ * `sinsin:///post/482` 를 로그인하지 않은 사람이 누르면 라우터는 그 화면을 열고,
+ * 진입 가드(`guard.ts`)가 곧바로 `/(auth)/login` 으로 갈아 끼운다. 그 순간
+ * **어디로 가려 했는지는 아무 데도 남지 않았다.** 로그인을 마치면
+ * `resolveEntryRoute` 가 홈으로 보내고 링크는 조용히 버려진다 — 공유 링크가
+ * 겨냥하는 사람이 정확히 "아직 로그인하지 않은 사람" 인데 말이다.
+ *
+ * 그래서 가드가 로그인으로 보내는 순간 목적지를 한 칸에 적어 두고, 관문을 전부
+ * 통과해 앱 안에 착지한 **딱 한 번** 꺼내 쓴다(`app/_layout.tsx`).
+ *
+ * ■ 왜 메모리에만 두는가 (AsyncStorage 가 아니라)
+ *
+ * 앱을 껐다 켜도 살아남으면 **관계없는 나중 로그인에 되살아난다.** 어제 받은
+ * 공유 링크 때문에 오늘 아침 앱을 켠 사람이 홈이 아니라 남의 글로 떨어지는
+ * 식이다. 게다가 저장은 비동기라, 동기 함수인 가드가 도는 첫 프레임에는 값이
+ * 아직 없다 — "있을 때도 있고 없을 때도 있는" 복원이 된다.
+ *
+ * 잃는 것은 없다: 앱이 완전히 종료된 뒤 같은 링크로 다시 열리면 **OS 가 그 URL 을
+ * 다시 넘겨 주므로** 이 흐름 전체가 처음부터 다시 돈다. 링크 없이 그냥 켠 것이라면
+ * 목적지가 없는 게 맞다.
+ *
+ * ■ 무엇을 적지 않는가
+ *
+ * 관문 화면 자신(`/login`·`/onboarding`·`/profile-setup`)과 진입 기본값(`/home`),
+ * 그리고 우리 라우트가 아닌 경로. 앞엣것을 적으면 로그인 → 로그인으로 되돌아가는
+ * 고리가 생기고, 뒤엣것은 `+not-found` 로 데려간다.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * 관문 자체이거나 어차피 착지하는 곳. `routeGraph` 의 실제 파일 목록에서 만든다 —
+ * 손으로 유지하는 두 번째 목록을 두면 화면이 늘 때 조용히 어긋난다.
+ */
+const GATE_PATHS: ReadonlySet<string> = new Set([
+  // 진입 라우트. `app/index.tsx` 는 라우트 표에 이름이 없다(`/` 그 자체다).
+  "/",
+  ...knownRouteKeys()
+    .filter(
+      (key) =>
+        key.startsWith("(auth)/") ||
+        key === "onboarding" ||
+        key === "(tabs)/home",
+    )
+    .map((key) => `/${toUrlPattern(key).join("/")}`),
+])
+
+/** 한 칸뿐이다. 마지막으로 막힌 목적지가 사용자가 방금 하려던 일이다. */
+let pendingEntryPath: string | null = null
+
+/**
+ * 가드가 로그인으로 보내면서 "여기로 가려던 참이었다" 를 적어 둔다.
+ * `path` 는 `usePathname()` 이 주는 실제 경로(`/post/482`) — 세그먼트
+ * (`/post/[id]`)가 아니다.
+ */
+export function rememberEntryIntent(path: string): void {
+  const clean = stripQuery(path.trim())
+  if (clean === "" || GATE_PATHS.has(clean)) return
+  if (!isKnownRoutePath(clean)) return
+  pendingEntryPath = clean
+}
+
+/**
+ * 꺼내면서 **비운다.** 한 번 쓰면 없는 것이 이 값의 계약이다 — 남겨 두면 다음
+ * 로그인·다음 화면 전환에 한 번 더 튀어 고리가 된다.
+ */
+export function takeEntryIntent(): string | null {
+  const path = pendingEntryPath
+  pendingEntryPath = null
+  return path
+}
+
+/** 세션이 끊기는 등 목적지가 더 이상 이 사람의 것이 아닐 때. */
+export function clearEntryIntent(): void {
+  pendingEntryPath = null
+}
+
+/**
  * 라우터가 이 URL 로 화면을 옮겨도 되는가.
  *
  * 거짓이면 호출처(`app/+native-intent.tsx`)가 `null` 을 돌려주고, expo-router 는
@@ -175,8 +271,5 @@ function stripQuery(path: string): string {
  * 화면을 옮기지 않는다.
  */
 export function isRoutableEntryUrl(url: string): boolean {
-  const { own, path } = parse(url)
-  // 남의 스킴은 우리가 판단할 대상이 아니다. SDK 가 네이티브에서 처리한다.
-  if (!own) return false
-  return isKnownRoutePath(path)
+  return classifyEntryUrl(url) === "routed"
 }

@@ -6,10 +6,9 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import { AppModal } from "@/src/shared/components/AppModal"
 import Animated, {
   Easing,

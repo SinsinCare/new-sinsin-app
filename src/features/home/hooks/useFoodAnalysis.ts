@@ -3,7 +3,7 @@ import { useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { foodCameraService } from "@/src/services/data"
 import { ApiError } from "@/src/services/core/apiError"
-import { presentError } from "@/src/lib/errorMessage"
+import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
 import { markFoodAnalysisRequestHandled } from "../services/foodAnalysisRequestState"
@@ -20,7 +20,7 @@ import type {
 } from "@/src/types"
 import { MealType } from "../types"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
-import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { toDurationBucket, trackAnalyticsEvent } from "@/src/features/analytics"
 import { appConfig } from "@/src/config/appConfig"
 import { useTranslation } from "react-i18next"
 
@@ -130,6 +130,32 @@ export function useFoodAnalysis(
   // 분석 도중 X 버튼으로 나갔는지 추적 (ref: async closure에서 최신값 보장)
   const dismissedRef = useRef(false)
   const analysisMethodRef = useRef<"photo" | "text">("photo")
+  /**
+   * 이번 분석이 시작된 시각. `wait_bucket`(포기·실패까지 몇 초)의 기준이고, 원값(ms)은
+   * 이벤트에 싣지 않는다 — 서버 질의에 백분위가 없어 ms 로는 아무 그림도 안 나온다.
+   */
+  const analysisStartedAtRef = useRef<number>(0)
+  /** 나갈 때의 마지막 잡 상태. state 는 async 클로저에서 옛 값을 보므로 ref 로 둔다. */
+  const lastStatusRef = useRef<FoodAnalysisStatus | null>(null)
+  /**
+   * 이미 쏜 진행 전이. 폴링은 0.5~1.5초마다 도는데 상태는 두 번밖에 안 바뀌므로,
+   * `analysisId`+상태를 키로 잠가 **분석 1건당 최대 2행**으로 묶는다. "직전 상태와
+   * 다른가" 로는 모자란다 — 확인 질문에 답하고 다시 폴링에 들어가면 같은 분석이
+   * `PERCEIVING` 을 두 번 지날 수 있다.
+   */
+  const progressedRef = useRef<Set<string>>(new Set())
+
+  const beginAnalysis = (method: "photo" | "text") => {
+    dismissedRef.current = false
+    analysisMethodRef.current = method
+    analysisStartedAtRef.current = Date.now()
+    lastStatusRef.current = null
+    progressedRef.current = new Set()
+  }
+
+  /** 분석 시작부터 지금까지의 대기 — 실패·포기 이벤트가 같은 눈금을 쓴다. */
+  const waitBucketSinceStart = () =>
+    toDurationBucket(Date.now() - analysisStartedAtRef.current)
 
   const setPending = usePendingAnalysisStore((s) => s.setPending)
   const addNotification = useNotificationHistoryStore((s) => s.addNotification)
@@ -171,6 +197,22 @@ export function useFoodAnalysis(
     const startedAt = Date.now()
     while (!dismissedRef.current) {
       setAnalysisStatus(job.status)
+      lastStatusRef.current = job.status
+      /*
+        진행 전이. `QUEUED` 는 `food_analysis_started` 와 같은 틱이라 쏘지 않는다 —
+        한 사건이 두 행이 되고, 퍼널에서 둘을 인접 스텝으로 쓰면 초 정밀도 엄격
+        부등호에 걸려 그 사용자가 통째로 빠진다(설계 §J2-4 2).
+      */
+      if (job.status === "PERCEIVING" || job.status === "RESOLVING") {
+        const key = `${job.analysisId}:${job.status}`
+        if (!progressedRef.current.has(key)) {
+          progressedRef.current.add(key)
+          trackAnalyticsEvent("food_analysis_progressed", {
+            method: analysisMethodRef.current,
+            status: job.status,
+          })
+        }
+      }
       await pendingAnalysisRequests.add({
         requestId,
         analysisId: job.analysisId,
@@ -198,6 +240,9 @@ export function useFoodAnalysis(
         setAnalysisStatus("FAILED")
         trackAnalyticsEvent("food_analysis_failed", {
           method: analysisMethodRef.current,
+          fail_kind: "confirmation_unavailable",
+          wait_bucket: waitBucketSinceStart(),
+          // 옛 키. 기존 대시보드 질의가 이 값을 보고 있어 전환 기간 동안 같이 싣는다.
           reason: "confirmation_unavailable",
         })
         // 오류가 아니라 이 빌드의 한계다 — 던질 것이 없으니 문구를 직접 쥐고 알린다.
@@ -222,8 +267,7 @@ export function useFoodAnalysis(
   }
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
-    dismissedRef.current = false
-    analysisMethodRef.current = "photo"
+    beginAnalysis("photo")
     const requestId = createFoodAnalysisRequestId()
     trackAnalyticsEvent("food_analysis_started", { method: "photo" })
     try {
@@ -242,7 +286,12 @@ export function useFoodAnalysis(
     } catch (error) {
       // X 로 나간 뒤 도착한 실패는 알리지 않는다 — 사용자가 이미 이 흐름을 떠났다.
       if (!dismissedRef.current) {
-        trackAnalyticsEvent("food_analysis_failed", { method: "photo" })
+        trackAnalyticsEvent("food_analysis_failed", {
+          method: "photo",
+          // 갈래 판정은 `resolveError` 하나가 정본이다 — 여기서 다시 짓지 않는다.
+          fail_kind: toAnalyticsFailKind(error),
+          wait_bucket: waitBucketSinceStart(),
+        })
         closeOverlayThenNotify(() =>
           presentError(error, {
             scope: "food-analysis-photo",
@@ -256,8 +305,7 @@ export function useFoodAnalysis(
   }
 
   const analyzeText = async (text: string, mealType: MealType) => {
-    dismissedRef.current = false
-    analysisMethodRef.current = "text"
+    beginAnalysis("text")
     const requestId = createFoodAnalysisRequestId()
     trackAnalyticsEvent("food_analysis_started", { method: "text" })
     try {
@@ -290,7 +338,11 @@ export function useFoodAnalysis(
       trackAnalyticsEvent("food_record_result_viewed", { source: "fresh" })
     } catch (error) {
       if (!dismissedRef.current) {
-        trackAnalyticsEvent("food_analysis_failed", { method: "text" })
+        trackAnalyticsEvent("food_analysis_failed", {
+          method: "text",
+          fail_kind: toAnalyticsFailKind(error),
+          wait_bucket: waitBucketSinceStart(),
+        })
         /*
           타임아웃을 손으로 갈라 보던 분기를 걷었다. `resolveError` 가 타임아웃·오프라인·
           `FOOD_CAMERA_009`(내용이 너무 짧음)·`FOOD_CAMERA_010`(요청 몰림)을 각각 다른
@@ -310,8 +362,19 @@ export function useFoodAnalysis(
 
   // 로딩 중 X 버튼 탭 시 호출
   const dismissAnalysis = () => {
+    /*
+      "몇 초 기다리다 포기하는가" 가 로딩 문구·타임아웃 정책의 유일한 근거다.
+      `NONE` 은 첫 응답조차 오기 전 — 느린 분석이 아니라 **느린 업로드**이므로
+      고칠 곳이 다르다.
+    */
+    const last = lastStatusRef.current
     trackAnalyticsEvent("food_analysis_dismissed", {
       method: analysisMethodRef.current,
+      status:
+        last === "QUEUED" || last === "PERCEIVING" || last === "RESOLVING"
+          ? last
+          : "NONE",
+      wait_bucket: waitBucketSinceStart(),
     })
     dismissedRef.current = true
     setIsAnalyzing(false)
@@ -363,6 +426,12 @@ export function useFoodAnalysis(
   ) => {
     if (!analysisResult || !analyzedMealType) return
     if (analysisResult.foodAnalysisResultId <= 0) {
+      // 요청이 나가지도 않은 실패. `presentError` 를 안 지나가므로 공용 통로에도
+      // 한 행도 안 남는다 — 서버 실패와 갈라 두어야 고칠 곳이 정해진다.
+      trackAnalyticsEvent("food_record_save_failed", {
+        source: "fresh",
+        fail_kind: "not_ready",
+      })
       showErrorToast(
         t("home.errors.notReadyTitle"),
         t("home.errors.notReadyBody"),
@@ -379,7 +448,10 @@ export function useFoodAnalysis(
       trackAnalyticsEvent("food_record_saved", { source: "fresh" })
       onSuccess(analyzedMealType, analyzedImageUri)
     } catch (error) {
-      trackAnalyticsEvent("food_record_save_failed", { source: "fresh" })
+      trackAnalyticsEvent("food_record_save_failed", {
+        source: "fresh",
+        fail_kind: toAnalyticsFailKind(error),
+      })
       presentError(error, {
         scope: "meal-diary-register",
         retry: () => void registerDiary(selectedDate, onSuccess),

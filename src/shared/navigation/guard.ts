@@ -58,6 +58,19 @@ export type GuardDecision =
 
 const STAY: GuardDecision = { type: "stay" }
 
+/**
+ * 로그인 관문의 주소. 상수인 이유는 하나 — **호출부가 이 문자열을 다시 적지 않게**
+ * 하려고. `app/_layout.tsx` 는 "지금 판정이 로그인으로 보내는 것인가" 를 알아야
+ * 접힌 목적지를 적어 둘 수 있는데(`entryIntent.ts`), 거기에 문자열을 한 벌 더 두면
+ * 이 파일이 목적지를 바꾸는 날 조용히 어긋난다.
+ */
+const LOGIN_HREF: Href = "/(auth)/login"
+
+/** 이 판정이 "먼저 로그인하라" 인가. 판정 자체는 바꾸지 않는다(순수 함수 유지). */
+export function isLoginRedirect(decision: GuardDecision): boolean {
+  return decision.type === "redirect" && decision.href === LOGIN_HREF
+}
+
 function at(segments: readonly string[], index: number): string | undefined {
   return segments[index]
 }
@@ -88,7 +101,7 @@ export function resolveGuard(input: GuardInput): GuardDecision {
     if (input.isDev) return STAY
     return redirect(
       segments,
-      input.isAuthenticated ? "/(tabs)/home" : "/(auth)/login",
+      input.isAuthenticated ? "/(tabs)/home" : LOGIN_HREF,
     )
   }
 
@@ -141,7 +154,7 @@ export function resolveGuard(input: GuardInput): GuardDecision {
 
   if (!input.isAuthenticated) {
     if (inAuthGroup || isPublic) return STAY
-    return redirect(segments, "/(auth)/login")
+    return redirect(segments, LOGIN_HREF)
   }
 
   if (inAuthGroup) {

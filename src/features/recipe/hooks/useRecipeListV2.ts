@@ -29,6 +29,12 @@ import type {
   RecipeSortKey,
 } from "../types/recipeListV2"
 
+/**
+ * 목록·홈이 함께 쓰는 뿌리(`useRecipeHome.ts` 의 `RECIPE_HOME_QUERY_ROOT` 와 같은 칸).
+ * 저장 상태 패치가 접두 일치로 훑는 그 뿌리이고, 새로고침 스코프도 이걸로 잡는다.
+ */
+export const RECIPE_LIST_QUERY_ROOT = ["recipes-v2"] as const
+
 export interface UseRecipeListV2Params {
   /** 확정된 검색어. 입력 중(초안)이 아니라 확정된 것만 목록을 바꾼다. */
   query: string
@@ -52,7 +58,7 @@ export function useRecipeListV2({
   const infinite = useInfiniteQuery({
     // 로케일이 키에 들어간다 — 언어를 바꾸면 표시용 카테고리·난이도가 달라진다.
     queryKey: [
-      "recipes-v2",
+      ...RECIPE_LIST_QUERY_ROOT,
       language,
       trimmedQuery,
       categories.join(","),

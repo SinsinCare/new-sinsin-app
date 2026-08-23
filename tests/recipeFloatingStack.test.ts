@@ -43,7 +43,7 @@ import {
   FLOATING_AI_BUTTON_COVERAGE,
   FLOATING_AI_BUTTON_HEIGHT,
 } from "@/src/shared/components/floatingAiButtonLayout"
-import { RECIPE_LIST_BOTTOM_INSET } from "@/src/features/recipe/components/list/recipeRowLayout"
+import { recipeListBottomInset } from "@/src/features/recipe/components/list/recipeRowLayout"
 
 const ROOT = path.join(__dirname, "..")
 
@@ -51,7 +51,7 @@ function read(relative: string): string {
   return fs.readFileSync(path.join(ROOT, relative), "utf8")
 }
 
-const SCREEN_SOURCE = read("app/(tabs)/recipe.tsx")
+const SCREEN_SOURCE = read("src/features/recipe/views/RecipeHomeScreen.tsx")
 const ROW_LAYOUT_SOURCE = read(
   "src/features/recipe/components/list/recipeRowLayout.ts",
 )
@@ -66,9 +66,7 @@ const ROW_LAYOUT_SOURCE = read(
  * 검사 쪽이 코드만 보게 만든다.
  */
 function code(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//gu, "")
-    .replace(/^\s*\/\/.*$/gmu, "")
+  return source.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/^\s*\/\/.*$/gmu, "")
 }
 
 const SCREEN_CODE = code(SCREEN_SOURCE)
@@ -83,36 +81,59 @@ describe("레시피 목록에 떠 있는 것", () => {
   it("목록 바닥이 필이 덮는 구간을 다 비운다", () => {
     // 같기만 해도 "딱 붙었다" 가 통과한다. 마지막 줄과 필 사이에 눈에 보이는 틈이 있어야
     // 그 줄이 가려진 것이 아니라 끝난 것으로 읽힌다.
-    expect(RECIPE_LIST_BOTTOM_INSET).toBeGreaterThan(FLOATING_AI_BUTTON_COVERAGE)
+    expect(recipeListBottomInset(34)).toBeGreaterThan(
+      FLOATING_AI_BUTTON_COVERAGE,
+    )
   })
 
   it("그 여백을 필의 상수에서 계산한다 — 숫자를 박아 넣지 않았다", () => {
     // 하드코딩이면 필을 옮겼을 때 목록이 따라오지 않아 마지막 줄이 다시 가린다.
     expect(ROW_LAYOUT_SOURCE).toMatch(
-      /export const RECIPE_LIST_BOTTOM_INSET =[\s\S]*?FLOATING_AI_BUTTON_COVERAGE/u,
+      /export function recipeListBottomInset[\s\S]*?floatingAiButtonScrollInset/u,
     )
   })
 
-  it("탭바 높이나 안전영역을 다시 더하지 않았다 — 상쇄되는 항이다", () => {
-    const declaration = /export const RECIPE_LIST_BOTTOM_INSET =(.*)/u.exec(
-      ROW_LAYOUT_SOURCE,
-    )?.[1]
+  it("안전영역과 탭바를 함께 더한다 — 탭바가 absolute 라 상쇄되지 않는다", () => {
+    /*
+      2026-08-19 정정. 예전에는 "탭바가 레이아웃 공간을 차지하므로 그 항을 더하면
+      안 된다" 를 지켰는데, `tabBarStyle: { position: "absolute" }` 라 그 전제가
+      틀렸다. 콘텐츠가 화면 바닥까지 내려오므로 필을 피하려면 그 항을 **더해야** 한다.
+    */
+    const declaration =
+      /export function recipeListBottomInset[\s\S]*?\n\}/u.exec(
+        ROW_LAYOUT_SOURCE,
+      )?.[0]
     expect(declaration).toBeDefined()
-    expect(declaration).not.toMatch(/TAB_BAR_HEIGHT|insets|safeArea/iu)
+    expect(declaration).toMatch(/floatingAiButtonScrollInset/u)
   })
 
-  it("화면이 두 번째 플로팅을 만들지 않는다", () => {
-    // 옛 컴포넌트가 되살아나면 지적받은 "연필이 카드 글자를 덮는다" 가 그대로 돌아온다.
+  it("화면이 직접 절대 위치 플로팅을 만들지 않는다", () => {
+    /*
+      2026-08-19 갱신. 이 화면에는 이제 작성 플로팅이 **있다** — 커뮤니티와 같은
+      자리, 같은 규칙(`FloatingWriteButton`)이다. 헤더 칩만으로는 목록을 한참 내린
+      뒤 작성하려면 맨 위로 돌아와야 했다.
+
+      되돌린 것이 아니라 **자리를 옮겨 다시 세운** 것이다. 옛 `RecipeWriteFab` 은
+      화면 소유의 절대 위치 요소라 스크롤 중 카드 글자를 덮었다. 지금 것은
+      전역 `AI 상담` 필 위에 쌓이고, 목록 바닥이 그 둘을 다 비운다.
+
+      그래서 검사는 "플로팅이 없다" 가 아니라 **"화면이 좌표를 직접 만들지 않는다"**
+      가 된다 — 공용 컴포넌트를 쓰는 한 두 탭이 같이 움직인다.
+    */
     expect(SCREEN_CODE).not.toContain("RecipeWriteFab")
-    // 화면이 직접 얹는 절대 위치 요소도 없어야 한다 — 이름을 바꿔 다시 만드는 길을 막는다.
     expect(SCREEN_CODE).not.toMatch(/position:\s*"absolute"/u)
+    // 작성 진입점은 공용 컴포넌트로 선다.
+    expect(SCREEN_CODE).toContain("FloatingWriteButton")
   })
 
   it("옛 플로팅 컴포넌트 파일이 남아 있지 않다", () => {
     // 파일만 남겨 두면 다음 사람이 "쓰는 데가 있겠지" 하고 되살린다.
     expect(
       fs.existsSync(
-        path.join(ROOT, "src/features/recipe/components/list/RecipeWriteFab.tsx"),
+        path.join(
+          ROOT,
+          "src/features/recipe/components/list/RecipeWriteFab.tsx",
+        ),
       ),
     ).toBe(false)
   })
@@ -120,13 +141,13 @@ describe("레시피 목록에 떠 있는 것", () => {
   it("바닥 여백이 목록 컨테이너에 있다 — 푸터가 아니다", () => {
     // 푸터에 두면 다음 페이지를 부르는 동안 스피너로 바뀌면서 여백이 사라진다.
     expect(SCREEN_CODE).toMatch(
-      /contentContainerStyle=\{\{[\s\S]*?paddingBottom:\s*RECIPE_LIST_BOTTOM_INSET/u,
+      /contentContainerStyle=\{\{[\s\S]*?paddingBottom:\s*recipeListBottomInset/u,
     )
     const footer = /ListFooterComponent=\{([\s\S]*?)\n\s*\/>/u.exec(
       SCREEN_CODE,
     )?.[1]
     expect(footer).toBeDefined()
-    expect(footer).not.toContain("RECIPE_LIST_BOTTOM_INSET")
+    expect(footer).not.toContain("recipeListBottomInset")
   })
 
   it("작성 진입점이 화면에 남아 있다 — 없애 버린 것이 아니라 옮긴 것이다", () => {

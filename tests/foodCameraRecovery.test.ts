@@ -190,6 +190,7 @@ describe("food analysis recovery", () => {
 
     await expect(recovery.recoverPendingAnalyses()).resolves.toEqual({
       recoveredCount: 1,
+      expiredCount: 0,
       remainingCount: 0,
     })
 
@@ -200,6 +201,51 @@ describe("food analysis recovery", () => {
     })
     expect(markHandledRequestId).toHaveBeenCalledWith("food-req-2")
     await expect(pendingRequests.getAll()).resolves.toEqual([])
+  })
+
+  /*
+    TTL(10분)을 넘긴 대기는 **결과를 보여 주지도 못하고** 버려진다. 사용자 쪽에서는
+    "분석하다 말았는데 아무 일도 안 일어났다" 이고, 종전에는 이 손실이 `false`(=못
+    살렸다) 안에 진행 중인 것과 함께 뭉쳐 있어서 셀 수가 없었다. 이 수가 곧
+    `food_recovery_swept{expired_count}` 다(설계 §9-④).
+  */
+  it("counts TTL-expired requests apart from the ones still in flight", async () => {
+    const pendingRequests = createPendingAnalysisRequestStorage(
+      createMemoryStorage({
+        [PENDING_ANALYSIS_REQUESTS_KEY]: JSON.stringify([
+          {
+            requestId: "food-req-expired",
+            mealType: "LUNCH",
+            imageUri: null,
+            startedAt: 0,
+          },
+          {
+            requestId: "food-req-in-flight",
+            mealType: "DINNER",
+            imageUri: null,
+            startedAt: 600_000,
+          },
+        ]),
+      }),
+    )
+    const fetchByRequestId = jest.fn(() => Promise.resolve(null))
+    const recovery = createFoodAnalysisRecovery({
+      pendingRequests,
+      fetchByRequestId,
+      setPending: jest.fn(),
+      markHandledRequestId: jest.fn(),
+      // 첫 건은 시작 10분 1초 뒤, 둘째 건은 아직 1초밖에 안 지났다.
+      now: () => 601_000,
+    } satisfies FoodAnalysisRecoveryDeps)
+
+    await expect(recovery.recoverPendingAnalyses()).resolves.toEqual({
+      recoveredCount: 0,
+      expiredCount: 1,
+      remainingCount: 1,
+    })
+    // 시효가 지난 건은 서버에 물어보지도 않는다 — 남은 하나만 조회한다.
+    expect(fetchByRequestId).toHaveBeenCalledTimes(1)
+    expect(fetchByRequestId).toHaveBeenCalledWith("food-req-in-flight")
   })
 
   it("keeps unfinished requests for a later recovery attempt", async () => {

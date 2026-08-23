@@ -3,6 +3,7 @@ import { Keyboard, StyleSheet, Text, View } from "react-native"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { ConfirmModal } from "@/src/shared/components"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { ResendCodeLink, StepHelperText, StepTextInput } from "../components"
 import { useSignupEmail } from "../hooks"
@@ -34,6 +35,7 @@ export function SignupEmailScreen() {
     sendingCode,
     verifyingCode,
     emailLoginLinkRequired,
+    emailLoginLinkMode,
     sendCode,
     verifyCode,
     resetVerificationState,
@@ -76,7 +78,33 @@ export function SignupEmailScreen() {
 
   const emailValid = EMAIL_PATTERN.test(email.trim())
   const awaitingCode = codeInputVisible && !isCurrentEmailVerified
-  const codeExpired = !sendError && timer === 0 && codeSent
+  /*
+    `awaitingCode` 가 조건에 들어 있어야 한다. 이메일 연결 모드의 **인증 성공** 분기가
+    `setTimer(0)` 을 부르면서 `codeSent` 는 true 로 남기므로, 그 가드가 없으면 통과한
+    사람이 만료로 찍힌다 — 화면은 이 값을 `awaitingCode` 블록 안에서만 읽어 안 드러났지만
+    계측은 블록 밖이라 그대로 나갔다(지표가 뒤집히는 자리다).
+  */
+  const codeExpired = awaitingCode && !sendError && timer === 0 && codeSent
+
+  /*
+    3분 타이머가 끝날 때까지 번호를 못 넣은 사람. **메일 지연의 직접 증거**다.
+
+    타이머는 매초 `timer` 를 갈아 끼우므로 렌더 본문에서 쏘면 한 번의 만료가 수십 행이
+    된다. false→true 전이에서만 1회 쏜다 — 이메일을 바꾸면 `resetVerificationState` 가
+    `codeSent` 를 내려 조건이 풀리고, 그 다음 만료는 다시 셀 수 있다.
+  */
+  const expiredTrackedRef = useRef(false)
+  useEffect(() => {
+    if (!codeExpired) {
+      expiredTrackedRef.current = false
+      return
+    }
+    if (expiredTrackedRef.current) return
+    expiredTrackedRef.current = true
+    trackAnalyticsEvent("auth_code_expired", {
+      source: emailLoginLinkMode ? "email_link" : "signup",
+    })
+  }, [codeExpired, emailLoginLinkMode])
 
   const handleSendCode = async () => {
     Keyboard.dismiss()

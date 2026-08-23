@@ -6,9 +6,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
 import { AppModal } from "@/src/shared/components/AppModal"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -400,7 +400,6 @@ export function AskDoctorScreen() {
         <BottomActionBar
           label={t("doctor.code.connect")}
           disabled={!canSubmitCode}
-          paddingBottom={insets.bottom + 16}
           onPress={submitCode}
         />
       ) : null}

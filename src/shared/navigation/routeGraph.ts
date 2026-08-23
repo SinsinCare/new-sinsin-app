@@ -114,6 +114,7 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   // 홈이 앱의 루트다. 나머지 탭에서의 뒤로가기는 안드로이드 하드웨어 백의 관례대로 홈.
   "(tabs)/home": null,
   "(tabs)/community": "/(tabs)/home",
+  "(tabs)/community-popular": "/(tabs)/community",
   "(tabs)/recipe": "/(tabs)/home",
   "(tabs)/restaurant": "/(tabs)/home",
   "(tabs)/all": "/(tabs)/home",
@@ -123,6 +124,12 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   statistics: "/(tabs)/home",
   stories: "/(tabs)/community",
   "community-library": "/(tabs)/community",
+  // 검색은 퍼널 중간이다. 딥링크로 들어온 사람을 빈 검색으로 되돌리는 것은
+  // 나가는 게 아니므로 피드(탭 루트)로 보낸다 — 식당 검색과 같은 규칙.
+  "community/search": "/(tabs)/community",
+  "community/author/[id]": "/(tabs)/community",
+  "community/connections": (params) => communityAuthor(params),
+  "community/report": (params) => communityReportPost(params),
   "post/[id]": "/(tabs)/community",
   "v2-showcase": "/(tabs)/home",
 
@@ -214,6 +221,18 @@ function restaurantDetail(params: RouteParams): ParentRoute {
   const id = param(params, "id")
   if (!id) return "/(tabs)/restaurant"
   return `/restaurant/${id}` as Href
+}
+
+function communityAuthor(params: RouteParams): ParentRoute {
+  const id = param(params, "id")
+  if (!id) return "/(tabs)/community"
+  return `/community/author/${id}` as Href
+}
+
+function communityReportPost(params: RouteParams): ParentRoute {
+  const postId = param(params, "postId")
+  if (!postId) return "/(tabs)/community"
+  return `/post/${postId}` as Href
 }
 
 function post(params: RouteParams): ParentRoute {

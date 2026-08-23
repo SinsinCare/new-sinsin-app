@@ -11,12 +11,9 @@
  *
  * 렌더 없이 검증할 수 있게 판정과 격자를 전부 순수 모듈에 두었다(이 저장소의 관용구).
  */
+import { GUTTER, ITEM_GAP } from "@/src/design-system-v2/tokens/layout"
 import {
-  GUTTER,
-  ITEM_GAP,
-} from "@/src/design-system-v2/tokens/layout"
-import {
-  RECIPE_LIST_BOTTOM_INSET,
+  recipeListBottomInset,
   RECIPE_ROW_ART,
   RECIPE_ROW_HEIGHT,
   RECIPE_ROW_PAD_V,
@@ -107,7 +104,8 @@ describe("목록 줄의 격자", () => {
   })
 
   it("바닥 여백은 AI 필이 덮는 구간보다 항목 간격만큼 더 크다", () => {
-    expect(RECIPE_LIST_BOTTOM_INSET - ITEM_GAP).toBe(64)
+    // 필이 덮는 높이는 화면 바닥 기준이라 안전영역·탭바를 포함한다.
+    expect(recipeListBottomInset(34) - ITEM_GAP).toBe(34 + 52 + 64)
   })
 })
 
@@ -163,7 +161,9 @@ describe("메타 한 줄 — 데이터가 줄 수를 바꾸지 못한다", () =>
   })
 
   it("빈 조각은 가운뎃점을 남기지 않는다", () => {
-    expect(joinMetaParts([null, "35분", "", null, "1인분"])).toBe("35분 · 1인분")
+    expect(joinMetaParts([null, "35분", "", null, "1인분"])).toBe(
+      "35분 · 1인분",
+    )
     expect(joinMetaParts([null, null])).toBe("")
   })
 })
@@ -187,9 +187,9 @@ describe("영양 줄의 무게 — 강조는 산수일 때만", () => {
   })
 
   it("1인분이 오늘 남은 양을 넘을 때만 강조한다", () => {
-    expect(resolveHeadlineEmphasis(headline(HEADLINE_OVER_BUDGET_PERCENT))).toBe(
-      "overBudget",
-    )
+    expect(
+      resolveHeadlineEmphasis(headline(HEADLINE_OVER_BUDGET_PERCENT)),
+    ).toBe("overBudget")
     expect(resolveHeadlineEmphasis(headline(140))).toBe("overBudget")
   })
 

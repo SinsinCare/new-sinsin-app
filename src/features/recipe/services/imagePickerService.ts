@@ -7,6 +7,11 @@ import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 
 interface ImagePickerTrackingOptions {
   onPermissionDenied?: () => void
+  /**
+   * 허용된 순간. 거부율의 **분모**다 — 종전에는 거부만 알려 줘서 "권한 거부가 늘었다" 와
+   * "카메라를 여는 사람이 줄었다" 가 대시보드에서 같은 모양이었다.
+   */
+  onPermissionGranted?: () => void
 }
 
 export interface PickedImageAsset {
@@ -37,7 +42,10 @@ async function ensurePermission(
     kind === "camera"
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync()
-  if (status === "granted") return true
+  if (status === "granted") {
+    options.onPermissionGranted?.()
+    return true
+  }
 
   options.onPermissionDenied?.()
   // 키를 `permission.${kind}Title` 로 조립하지 않는다 — 정적으로 못 찾는 키는

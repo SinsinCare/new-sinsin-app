@@ -105,9 +105,12 @@ function ActionPill({
       style={({ pressed }) => [
         styles.pill,
         {
+          // 미선택 면은 `fill.control` 이다 — 이 필은 `selected` 를 갖는 **토글**이고
+          // (저장), 칩과 같은 문법(연한 브랜드 면 ↔ 회색 면)으로 상태를 말한다.
+          // 회색 쪽이 `fill.normal` 이면 흰 상세 화면 위에서 필 모양이 안 잡힌다.
           backgroundColor: selected
             ? colors.primary.primaryWeak
-            : colors.fill.normal,
+            : colors.fill.control,
           opacity: pressed || disabled ? 0.6 : 1,
         },
       ]}

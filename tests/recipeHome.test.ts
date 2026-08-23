@@ -495,16 +495,33 @@ describe("섹션 문안 조립", () => {
     // 키를 리터럴로 적어 두었으므로(tsc 가 존재를 검사한다) 슬롯 낱말과 어긋날 수 있다.
     for (const slot of MEAL_SLOTS) {
       const leaf = MEAL_SLOT_I18N[slot]
-      const keys = mealSectionCopyKeys(slot)
+      const keys = mealSectionCopyKeys(slot, "TODAY")
       expect(keys.title).toBe(`home.section.${leaf}.title`)
       expect(keys.subtitle).toBe(`home.section.${leaf}.subtitle`)
       expect(keys.highlight).toBe(`home.section.${leaf}.highlight`)
+      // 내일 제목만 다른 키를 읽는다 — 부제목·강조어는 날과 무관하다.
+      const nextDay = mealSectionCopyKeys(slot, "NEXT_DAY")
+      expect(nextDay.title).toBe(`home.section.${leaf}.titleNextDay`)
+      expect(nextDay.subtitle).toBe(keys.subtitle)
+      expect(nextDay.highlight).toBe(keys.highlight)
     }
   })
 
   it("세 슬롯의 키가 서로 다르다 — 두 섹션이 같은 문구를 읽지 않는다", () => {
-    const titles = MEAL_SLOTS.map((slot) => mealSectionCopyKeys(slot).title)
-    expect(new Set(titles).size).toBe(3)
+    for (const day of ["TODAY", "NEXT_DAY"] as const) {
+      const titles = MEAL_SLOTS.map(
+        (slot) => mealSectionCopyKeys(slot, day).title,
+      )
+      expect(new Set(titles).size).toBe(3)
+    }
+  })
+
+  it("여섯 제목 키가 모두 다르다 — 날이 슬롯 키를 덮어쓰지 않는다", () => {
+    const all = MEAL_SLOTS.flatMap((slot) => [
+      mealSectionCopyKeys(slot, "TODAY").title,
+      mealSectionCopyKeys(slot, "NEXT_DAY").title,
+    ])
+    expect(new Set(all).size).toBe(6)
   })
 
   it("제목 안의 낱말 하나만 잘라 낸다", () => {

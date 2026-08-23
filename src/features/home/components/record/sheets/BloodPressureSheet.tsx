@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
+import {
+  V2SheetTextInput,
+  type V2SheetTextInputRef,
+} from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { TYPE } from "@/src/theme/surface"
 import { RecordSheetShell } from "./RecordSheetShell"
@@ -12,6 +17,7 @@ import {
   parseVital,
 } from "../../../utils/vitalsJudgment"
 import type { DateAnalysisBloodPressureRecord } from "@/src/types"
+import { useHealthEntryInput } from "../../../hooks/useHealthEntryInput"
 import { useTranslation } from "react-i18next"
 
 interface BloodPressureSheetProps {
@@ -51,9 +57,18 @@ export function BloodPressureSheet({
   const [systolic, setSystolic] = useState("")
   const [diastolic, setDiastolic] = useState("")
   const [heartRate, setHeartRate] = useState("")
-  const systolicRef = useRef<TextInput>(null)
-  const diastolicRef = useRef<TextInput>(null)
-  const heartRateRef = useRef<TextInput>(null)
+  const systolicRef = useRef<V2SheetTextInputRef>(null)
+  const diastolicRef = useRef<V2SheetTextInputRef>(null)
+  const heartRateRef = useRef<V2SheetTextInputRef>(null)
+  const markInput = useHealthEntryInput("blood_pressure", visible)
+  /*
+    세 칸 어디든 **첫 글자**가 이 시트의 입력 시작이다(수축기만 보면, 이미 기록이 있어
+    수축기가 채워진 채 열린 사람이 이완기부터 고치는 경우가 통째로 빠진다).
+    자릿수마다 오는 콜백이지만 훅이 이번 열림의 한 번만 통과시킨다.
+  */
+  const onVitalTyped = (next: string) => {
+    if (next.length > 0) markInput("keypad")
+  }
 
   /*
     **닫힘→열림 전이에서만** 저장값을 채운다. `record` 를 deps 에 두고 매번 채우면,
@@ -75,10 +90,11 @@ export function BloodPressureSheet({
     첫 칸 자동 포커스. **`autoFocus` 로 하면 안 된다.**
 
     이 시트는 홈이 열릴 때 `visible={false}` 인 채로 이미 마운트된다(RecordView 가
-    시트를 항상 렌더하고 Tamagui Sheet 는 닫혀도 자식을 살려 둔다). `autoFocus` 는
-    마운트 시점에 동작해서, 혈압 기록이 없는 사용자는 홈에 들어서자마자 키패드가
-    올라왔다. 그래서 마운트가 아니라 **열림**에 맞추고, 시트 등장 애니메이션을
-    키보드가 앞지르지 않도록 지연을 둔다.
+    시트를 항상 렌더한다). `autoFocus` 는 마운트 시점에 동작해서, 혈압 기록이 없는
+    사용자는 홈에 들어서자마자 키패드가 올라왔다 — 시트가 닫혀도 자식을 살려 두던
+    Tamagui 시절의 사고다. 지금은 닫히면 자식이 언마운트되지만, `autoFocus` 는 여전히
+    쓰지 않는다: 시트가 올라오는 애니메이션을 키보드가 앞지르면 gorhom 이 열림과
+    키보드 리프트를 동시에 계산하게 된다. 그래서 **열림**에 맞추고 지연을 둔다.
   */
   useEffect(() => {
     if (!visible || record) return
@@ -110,12 +126,11 @@ export function BloodPressureSheet({
 
   return (
     <RecordSheetShell
+      surface="home_blood_pressure"
       visible={visible}
       onClose={onClose}
       title={t("home.sheet.bloodPressure.title")}
       subtitle={t("home.sheet.bloodPressure.subtitle")}
-      /* 66 = 화면 2/3. 시트는 키보드가 떠도 제자리 — 저장은 키보드 위 도킹 CTA 가 잇는다. */
-      snapPoint={66}
       ctaLabel={
         canSubmit
           ? t("home.sheet.recordValue", {
@@ -145,10 +160,11 @@ export function BloodPressureSheet({
             {t("home.sheet.bloodPressure.systolic")}
           </Text>
           <View style={styles.fieldValueRow}>
-            <TextInput
+            <V2SheetTextInput
               ref={systolicRef}
               value={systolic}
               onChangeText={(text) => {
+                onVitalTyped(text)
                 setSystolic(text)
                 if (text.length >= 3) diastolicRef.current?.focus()
               }}
@@ -177,10 +193,13 @@ export function BloodPressureSheet({
             {t("home.sheet.bloodPressure.diastolic")}
           </Text>
           <View style={styles.fieldValueRow}>
-            <TextInput
+            <V2SheetTextInput
               ref={diastolicRef}
               value={diastolic}
-              onChangeText={setDiastolic}
+              onChangeText={(text) => {
+                onVitalTyped(text)
+                setDiastolic(text)
+              }}
               placeholder="80"
               placeholderTextColor={surface.placeholder}
               selectionColor={surface.brand}
@@ -199,10 +218,9 @@ export function BloodPressureSheet({
         판정 줄 — 넣는 순간 배지가 이 자리에서 응답한다. 높이를 미리 잡아 두어
         판정이 생겨도 아래(바·CTA)가 한 픽셀도 밀리지 않는다.
 
-        **값 바로 아래**여야 한다. 키패드가 떠 있는 동안 시트에서 보이는 높이는
-        머리 + 카드 두어 개뿐이다(2026-08-03 실측). 판정을 심박수 뒤에 두면 정작
-        타이핑하는 내내 스크롤 밖에 있어서, 입력에 곧바로 응답한다는 이 시트의
-        전제가 무너진다. 곁가지인 심박수가 아래로 간다.
+        **값 바로 아래**여야 한다. 판정을 심박수 뒤로 밀면 타이핑하는 손과 그 응답이
+        멀어지고(키패드가 떠 있는 동안 눈이 머무는 곳은 값 근처다), 입력에 곧바로
+        응답한다는 이 시트의 전제가 무너진다. 곁가지인 심박수가 아래로 간다.
       */}
       <View style={styles.judgeBlock}>
         <View style={styles.judgeRow}>
@@ -247,10 +265,13 @@ export function BloodPressureSheet({
           <Text style={[styles.pulseLabel, { color: surface.textStrong }]}>
             {t("home.sheet.bloodPressure.heartRate")}
           </Text>
-          <TextInput
+          <V2SheetTextInput
             ref={heartRateRef}
             value={heartRate}
-            onChangeText={setHeartRate}
+            onChangeText={(text) => {
+              onVitalTyped(text)
+              setHeartRate(text)
+            }}
             placeholder="60"
             placeholderTextColor={surface.placeholder}
             selectionColor={surface.brand}

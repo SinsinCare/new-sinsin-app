@@ -1,7 +1,7 @@
 import { getBackendUrl } from "../../config/appConfig"
 import { getAppLanguage } from "@/src/i18n"
 import { ApiError } from "./apiError"
-import { clearClientSession } from "./sessionCleanup"
+import { clearClientSessionOn401 } from "./sessionCleanup"
 import { tokenService } from "./tokenService"
 import { FetchTimeoutError, fetchWithTimeout } from "./fetchWithTimeout"
 
@@ -64,9 +64,8 @@ function refreshWasRejected(
 }
 
 async function expireClientSession(): Promise<never> {
-  await clearClientSession({
-    requireFreshSocialProviderSelection: true,
-  }).catch(() => undefined)
+  // 목 인증에서는 지우지 않는다 — clearClientSessionOn401 머리말.
+  await clearClientSessionOn401()
   throw createSessionExpiredError()
 }
 

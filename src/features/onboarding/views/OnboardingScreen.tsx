@@ -66,7 +66,9 @@ export function OnboardingScreen() {
     : currentStep
 
   if (loadingPresentation === "screen") {
-    return <LoadingScreen message={t("onboarding.loading")} />
+    return (
+      <LoadingScreen surface="onboarding" message={t("onboarding.loading")} />
+    )
   }
 
   if (phase === "welcome") {

@@ -7,10 +7,10 @@ import {
   Appearance,
   ScrollView,
   StyleSheet,
-  Text,
   useColorScheme,
   View,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { SafeAreaView } from "react-native-safe-area-context"
 import {
   useV2Theme,
@@ -40,6 +40,7 @@ import {
   V2SearchField,
   V2SegmentControl,
   V2Switch,
+  V2ToastCard,
   V2Tab,
   V2TabBar,
   V2TextField,
@@ -311,6 +312,23 @@ export default function V2Showcase() {
           </V2Button>
         </Section>
 
+        {/* 토스트는 뜨고 사라지는 층이라 실제로 띄우면 비교가 어렵다.
+            네 변형을 나란히 세워 둔다 — 얼굴이 갈라지면 여기서 먼저 보인다. */}
+        <Section title="Toast (성공 / 주의 / 오류 / 기본)">
+          <V2ToastCard variant="success" title="기록을 저장했어요" />
+          <V2ToastCard
+            variant="caution"
+            title="사진 없이 저장했어요"
+            message="사진은 나중에 상세에서 더할 수 있어요."
+          />
+          <V2ToastCard
+            variant="error"
+            title="저장하지 못했어요"
+            message="잠시 뒤 다시 시도해 주세요."
+          />
+          <V2ToastCard variant="default" title="복사했어요" />
+        </Section>
+
         <Section title="Icons (12)">
           <View style={styles.iconGrid}>
             {ICONS.map((n) => (
@@ -322,6 +340,7 @@ export default function V2Showcase() {
         <Section title="States">
           <V2Card variant="outlined">
             <V2EmptyState
+              surface="dev_showcase"
               icon="file"
               title="기록이 없어요"
               description="첫 기록을 남겨 보세요"
@@ -360,6 +379,7 @@ export default function V2Showcase() {
           </V2Card>
           <V2Card variant="outlined">
             <V2ErrorState
+              surface="dev_showcase"
               title="건강 기록을 불러오지 못했어요"
               description="인터넷 연결을 확인한 뒤 다시 불러와 주세요."
               onRetry={() => {}}
@@ -393,6 +413,7 @@ export default function V2Showcase() {
       />
 
       <V2BottomSheet
+        surface="dev_showcase"
         visible={sheet}
         onClose={() => setSheet(false)}
         title="옵션 선택"

@@ -22,12 +22,20 @@
 //   `neutral` — 선택 = 잉크 면 + 흰 글자. **무채색**이라 브랜드색을 이미 쓰고 있는
 //               화면(레시피 목록의 필터 배지 등) 위에 얹어도 강조가 둘로 갈라지지 않는다.
 //               지도 탭의 카테고리 레일이 같은 이유로 이미 잉크 면을 쓴다.
+//   `brandSoft` — 선택 = **연한 브랜드 면 + 1px 브랜드 테두리 + 브랜드 글자**.
+//               불투명 주황이 너무 센 자리용이다(커뮤니티 필터 레일은 칩이 여덟 개고
+//               레일 자체가 주인공이 아니다). 아래 "테두리가 없다" 의 유일한 예외 —
+//               연한 면은 흰 바닥 위에서 경계를 못 만들어 테두리가 면의 일부다.
 //
-// 두 톤 모두 **테두리가 없다** — 앱 전체가 보더리스이고, 흰 바닥 위에서는 옅은 회색 면이
-// 곧 경계다. 선택 여부는 면 + 글자 굵기 두 가지로 동시에 말한다(색맹 대비).
+// `brand`·`neutral` 은 **테두리가 없다** — 앱 전체가 보더리스이고, 흰 바닥 위에서는 옅은
+// 회색 면이 곧 경계다. 선택 여부는 면 + 글자 굵기 두 가지로 동시에 말한다(색맹 대비).
+//
+// 테두리는 **선택됐을 때만** 그린다. 안 고른 칩은 세 톤이 모두 같은 모양이어야 하고
+// (아래 미선택 규칙), 미선택에 투명 테두리를 깔면 폭이 2 늘어나 레일 전체가 밀린다.
 
 import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native"
 import {
+  borderWidth,
   controlHeight,
   iconSize,
   radius,
@@ -43,7 +51,7 @@ import { useTranslation } from "react-i18next"
 export type V2ChipSize = "s" | "m"
 
 /** 선택 상태의 면 색. 자세한 것은 파일 머리말 §tone. */
-export type V2ChipTone = "brand" | "neutral"
+export type V2ChipTone = "brand" | "neutral" | "brandSoft"
 
 export type V2ChipProps = {
   /** 칩 라벨 */
@@ -61,6 +69,15 @@ export type V2ChipProps = {
   disabled?: boolean
   /** 스크린리더용 라벨. 없으면 보이는 `label` 이 읽힌다. */
   accessibilityLabel?: string
+  /**
+   * 선택해도 라벨 굵기를 안 바꾼다(기본 false — 오늘의 동작 그대로).
+   *
+   * 굵기가 바뀌면 글자 폭이 바뀌고, 그러면 칩 폭이 바뀐다. 가로 레일에서는
+   * 고른 칩 하나 때문에 뒤의 칩들이 통째로 밀린다 — 손가락 아래가 흔들린다.
+   * 커뮤니티 카테고리 레일 실측이 **양쪽 상태 모두 SemiBold** 라, 켜면
+   * 미선택도 선택 쪽 굵기(`text`)로 고정한다(Medium 고정이 아니다).
+   */
+  fixedLabelWeight?: boolean
   style?: ViewStyle
 }
 
@@ -96,6 +113,7 @@ export function V2Chip({
   onRemove,
   disabled = false,
   accessibilityLabel,
+  fixedLabelWeight = false,
   style,
 }: V2ChipProps) {
   const { t } = useTranslation()
@@ -114,10 +132,40 @@ export function V2Chip({
   */
   const selectedFace =
     tone === "neutral"
-      ? { bg: colors.label.normal, fg: colors.background.default }
-      : { bg: colors.primary.primary, fg: colors.static.white }
-  const bg = selected ? selectedFace.bg : colors.fill.normal
+      ? { bg: colors.label.normal, fg: colors.background.default, border: null }
+      : tone === "brandSoft"
+        ? {
+            bg: colors.primary.primaryWeak,
+            fg: colors.primary.primary,
+            border: colors.primary.primary,
+          }
+        : { bg: colors.primary.primary, fg: colors.static.white, border: null }
+  /*
+    미선택 면은 `fill.control` 이다 — `fill.normal` 이 아니다(2026-08-21).
+
+    이 칩은 **보더리스**라(위 머리말) 면이 곧 경계다. 그런데 `fill.normal` 은 스켈레톤·
+    사진 자리·태그 배지 같은 **장식면**이 같이 쓰는 칸이라 "안 튀는" 쪽으로 잡혀 있고,
+    흰 고정 헤더 위에서 ΔL* 3.79 로 사실상 알약이 안 보였다. 역할을 가른 칸이
+    `fill.control`(**5.25**)이고, 그 값이 왜 거기서 멈추는지(칩 라벨 4.522 가 천장이다)는
+    `tokens/colors.ts` 의 그 칸 머리말이 표로 들고 있다.
+
+    **선택 쪽은 한 값도 안 바뀐다.** 세 톤 중 가장 아슬아슬한 `brandSoft`(연한 브랜드
+    면)와의 명도차는 오히려 1.84 → 3.31 로 벌어졌다 — 그 톤은 선택 면이 미선택보다
+    **밝기** 때문이다. `brand` 30.44 · `neutral` 77.18 은 원래 넉넉하다.
+  */
+  const bg = selected ? selectedFace.bg : colors.fill.control
   const fg = selected ? selectedFace.fg : colors.label.neutral
+  const borderColor = selected ? selectedFace.border : null
+
+  /*
+    테두리는 상자를 **키우지 않는다.** RN 은 테두리를 패딩 바깥에 그리므로, 그냥 얹으면
+    고른 칩만 폭이 2 늘어 레일의 뒷 칩들이 옆으로 밀린다. 그만큼 가로 패딩에서 빼서
+    바깥 치수를 미선택과 같게 유지한다(시안의 padH 12 도 바깥 모서리 기준이다).
+  */
+  const paddingHorizontal =
+    borderColor === null
+      ? s.paddingHorizontal
+      : s.paddingHorizontal - borderWidth.thin
 
   /*
     32/38 칩은 최소 터치 44 에 못 미친다. 박스를 키우지 않고 **세로만** hitSlop 으로
@@ -138,8 +186,12 @@ export function V2Chip({
         styles.base,
         {
           height: s.height,
-          paddingHorizontal: s.paddingHorizontal,
+          paddingHorizontal,
           backgroundColor: bg,
+        },
+        borderColor !== null && {
+          borderWidth: borderWidth.thin,
+          borderColor,
         },
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
@@ -150,7 +202,10 @@ export function V2Chip({
         <V2Icon name={leadingIcon} size={iconSize.sm} color={fg} />
       )}
       <Text
-        style={[selected ? s.text : s.textWeak, { color: fg }]}
+        style={[
+          selected || fixedLabelWeight ? s.text : s.textWeak,
+          { color: fg },
+        ]}
         numberOfLines={1}
       >
         {label}

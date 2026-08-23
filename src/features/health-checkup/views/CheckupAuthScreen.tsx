@@ -114,7 +114,9 @@ export function CheckupAuthScreen({ onDone }: { onDone?: () => void }) {
     () => methodsQuery.data ?? [],
     [methodsQuery.data],
   )
-  const showMethodsSkeleton = useLoadingVisible(methodsQuery.isLoading)
+  const showMethodsSkeleton = useLoadingVisible(methodsQuery.isLoading, {
+    surface: "checkup_auth",
+  })
 
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")

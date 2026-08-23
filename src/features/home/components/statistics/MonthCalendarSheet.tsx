@@ -1,10 +1,11 @@
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useEffect, useMemo, useState } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
-import { AppBottomSheet } from "@/src/shared/components"
+import { V2BottomSheet } from "@/src/design-system-v2"
 import { LAYOUT } from "@/src/theme/surface"
 
 import { useMonthDiaryExistence } from "../../hooks/useMonthDiaryExistence"
@@ -153,11 +154,13 @@ export function MonthCalendarSheet({
   }).format(new Date(viewYear, viewMonth, 1))
 
   return (
-    <AppBottomSheet
+    /* 고정 56% 스냅을 버렸다. 6주짜리 달에서는 마지막 주 행이 56% 밖으로 잘렸고
+       (SE 계열 375×667) Tamagui 프레임이 `overflow:hidden` 이라 스크롤로도 못 갔다.
+       이제 시트가 달력 높이에 맞춰 자란다. */
+    <V2BottomSheet
+      surface="statistics_month_picker"
       visible={visible}
       onClose={onClose}
-      snapPoints={[56]}
-      initialSnapIndex={0}
     >
       <View style={styles.body}>
         {/* ── 헤더: 타이틀(주인) · 오늘 지름길 · 월 이동 ── */}
@@ -302,7 +305,7 @@ export function MonthCalendarSheet({
           ))}
         </View>
       </View>
-    </AppBottomSheet>
+    </V2BottomSheet>
   )
 }
 

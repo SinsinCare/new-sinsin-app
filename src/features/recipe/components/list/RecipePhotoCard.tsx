@@ -90,7 +90,8 @@
  * "따로 노는" 화면을 만드는 셈이다. 팔레트 이전은 화면 전체를 한 번에 옮길 때 한다.
  */
 import { memo } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"

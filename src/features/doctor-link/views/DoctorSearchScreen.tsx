@@ -73,7 +73,10 @@ export function DoctorSearchScreen({
     doctorSearchQuery(submitted ?? {}, submitted !== null),
   )
   // 캐시가 답하면 로더를 아예 띄우지 않는다(깜빡임 방지).
-  const showLoading = useLoadingVisible(submitted !== null && search.isPending)
+  const showLoading = useLoadingVisible(
+    submitted !== null && search.isPending,
+    { surface: "doctor_search" },
+  )
   const searchFailure = search.isError ? resolveError(search.error) : null
 
   const update = (key: keyof typeof EMPTY_FORM, value: string) => {
@@ -153,6 +156,7 @@ export function DoctorSearchScreen({
                 // 같은 조건으로 다시 불러도 답이 같다 — 재시도를 그리지 않는다.
                 searchFailure.retryable ? (
                   <V2ErrorState
+                    surface="doctor_search"
                     title={searchFailure.title}
                     description={searchFailure.body}
                     onRetry={() => void search.refetch()}
@@ -160,12 +164,14 @@ export function DoctorSearchScreen({
                   />
                 ) : (
                   <V2ErrorState
+                    surface="doctor_search"
                     title={searchFailure.title}
                     description={searchFailure.body}
                   />
                 )
               ) : search.isPending ? null : results.length === 0 ? (
                 <V2EmptyState
+                  surface="doctor_search"
                   title={t("doctorLink.search.emptyTitle")}
                   description={t("doctorLink.search.emptyBody")}
                 />

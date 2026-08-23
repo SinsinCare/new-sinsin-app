@@ -7,10 +7,16 @@ import type {
   StorySort,
 } from "../types/story"
 
+/**
+ * 스토리 매퍼. `authorId` 규칙은 글·댓글과 **같다** — 서버가 안 보낸 것을 `null`
+ * (= 탈퇴)로 지어내지 않는다. `null` 로 뭉개면 `isWithdrawnAuthor` 가 전원을 탈퇴자로
+ * 읽고, 탈퇴자는 차단 필터에서 면제라 레일·뷰어의 차단 필터가 통째로 꺼진다
+ * (`communityPostService.mapPost` 머리말 · 2026-08-21).
+ */
 export function mapCommunityStory(raw: CommunityStoryApi): CommunityStory {
   return {
     id: String(raw.id),
-    authorId: raw.authorId ?? null,
+    authorId: raw.authorId,
     authorName: raw.authorName,
     imageUri: raw.imageUri,
     caption: raw.caption ?? null,

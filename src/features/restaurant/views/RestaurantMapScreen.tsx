@@ -84,7 +84,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated"
 import { LinearGradient } from "expo-linear-gradient"
-import { useAppRouter } from "@/src/shared/navigation"
+import { useAppRouter, useRegisterTabReset } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { TAB_BAR_HEIGHT } from "@/src/shared/utils/bottomSafeArea"
 import { useTranslation } from "react-i18next"
@@ -147,6 +147,7 @@ import {
   SHEET_MID_RATIO,
   SHEET_SNAP,
   deriveSheetContainerHeight,
+  isMapAtRootState,
   predictSheetTop,
   shouldRefocusAfterSnap,
   SheetNotice,
@@ -180,7 +181,7 @@ export function RestaurantMapScreen({
   focus = null,
 }: RestaurantMapScreenProps = {}) {
   const { t } = useTranslation("common")
-  const { colors } = useV2Theme()
+  const { colors, surface } = useV2Theme()
   const insets = useSafeAreaInsets()
   const router = useAppRouter()
 
@@ -190,6 +191,9 @@ export function RestaurantMapScreen({
   const controls = useRestaurantFilters()
   const { filters } = controls
   const myLocation = useMyLocation()
+  /* 콜백이 만들어진 렌더가 아니라 **지금** 좌표를 봐야 한다(`useGoBack` 과 같은 모양). */
+  const myLocationRef = useRef(myLocation.coords)
+  myLocationRef.current = myLocation.coords
 
   /** 지도 SDK 가 죽었다. `null` 이면 정상. */
   const [mapError, setMapError] = useState<string | null>(null)
@@ -296,6 +300,15 @@ export function RestaurantMapScreen({
   const userMovedMapRef = useRef(false)
   /** 진입 시 내 위치로 옮기는 일을 이미 했는가(마운트당 한 번). */
   const centeredOnUserRef = useRef(false)
+  /**
+   * **카메라가 지금 내 위치에 있는가.** `centeredOnUserRef`(마운트당 한 번 했는가)나
+   * `userMovedMapRef`(한 번이라도 만졌는가)와 다른 축이다 — 저 둘은 한 번 켜지면 다시
+   * 꺼지지 않아서 "지금 어디를 보고 있는가" 를 말하지 못한다.
+   *
+   * 탭을 다시 눌렀을 때 **이미 루트 상태인지** 판정하는 데 쓴다(`useRegisterTabReset`).
+   * 이 값이 없으면 지도 탭은 재중심을 무한히 반복하고 새로고침(4번)에 영영 못 간다.
+   */
+  const atMyLocationRef = useRef(false)
   /**
    * 아직 결과를 보고하지 않은 검색.
    *
@@ -573,6 +586,9 @@ export function RestaurantMapScreen({
       mapRef.current?.moveTo(start.lat, start.lng, { animate: false })
       // 여기서 옮겼으면 아래 "늦게 온 위치" 이펙트는 할 일이 없다.
       centeredOnUserRef.current = true
+      /* 세 후보 중 **내 위치로** 시작했을 때만 루트 상태다. 검색으로 고른 지역이나
+         마지막으로 보던 자리에서 시작했으면 탭 재탭이 되돌릴 곳이 남아 있다. */
+      atMyLocationRef.current = start === myLocation.coords
     }
     if (myLocation.coords) {
       mapRef.current?.setUserLocation(myLocation.coords)
@@ -621,6 +637,7 @@ export function RestaurantMapScreen({
     // 커버리지 밖 좌표는 `useMyLocation` 이 `null` 로 접으므로 여기 오지 않는다 —
     // 그때는 자동 이동도 배너도 없다(사용자가 누른 것이 아니라 설명할 행동이 없다).
     centeredOnUserRef.current = true
+    atMyLocationRef.current = true
     mapRef.current?.moveTo(coords.lat, coords.lng, { animate: false })
     armedSearchRef.current = true
   }, [focus, myLocation.coords])
@@ -645,6 +662,7 @@ export function RestaurantMapScreen({
     appliedFocusRef.current = focus
     // 목적지가 정해졌으므로 내 위치로 옮기는 일은 하지 않는다.
     centeredOnUserRef.current = true
+    atMyLocationRef.current = false
     mapRef.current?.moveTo(focus.lat, focus.lng, { zoom: MAP_ZOOM.DEFAULT })
     armedSearchRef.current = true
   }, [focus])
@@ -736,6 +754,8 @@ export function RestaurantMapScreen({
       const sheetTop = sheetTopOverride ?? sheetPositionRef.current
       const padBottom =
         containerHeight > 0 ? Math.max(0, containerHeight - sheetTop) : 0
+      // 마커·클러스터로 파고들면 카메라는 더 이상 내 위치가 아니다(탭 재탭의 루트 판정).
+      atMyLocationRef.current = false
       mapRef.current?.focusMarker(lat, lng, {
         padTop: topOverlayHeight,
         padBottom,
@@ -894,6 +914,7 @@ export function RestaurantMapScreen({
     // 소비되지 않고 남아 있던 자동검색 예약도 버린다 — 남기면 이 팬이 그걸 먹어
     // D7 이 금지한 "팬 유발 자동 재조회" 가 된다.
     userMovedMapRef.current = true
+    atMyLocationRef.current = false
     armedSearchRef.current = false
     /* 최초검색 예외도 여기서 끝난다. 그 예외의 목적은 **사용자가 아무것도 하기 전에**
        첫 화면을 채우는 것이다. 손이 지도에 닿은 순간 그 목적은 지났고, 이후로는 pill 이
@@ -1009,6 +1030,7 @@ export function RestaurantMapScreen({
       }
       // 사용자가 직접 누른 이동이다. 진입 시 자동 이동 이펙트가 뒤늦게 또 옮기지 않게 한다.
       centeredOnUserRef.current = true
+      atMyLocationRef.current = true
       /*
         **배율은 건드리지 않는다.** 종전에는 `zoom: DEFAULT(4)` 를 얹었는데, 4 는 클러스터
         임계값과 같은 값이라 낱개 마커를 보던 사용자가 이 버튼을 누르면 보고 있던 마커들이
@@ -1185,6 +1207,99 @@ export function RestaurantMapScreen({
     mapSearch.refetch()
     list.refetch()
   }, [list, mapSearch])
+
+  /* ── 탭을 다시 눌렀을 때 ─────────────────────────────────────────────────
+     **식당은 목록이 아니라 지도다.** 다른 네 탭의 루트 상태는 "맨 위" 지만 여기서는
+     그런 축이 없다 — 지도의 루트는 **내 위치 + 기본(접힘) 스냅**이다. 카카오맵·
+     네이버지도가 같은 자리에서 하는 일이고, 이 화면의 진입 상태이기도 하다
+     (`index={SHEET_SNAP.COLLAPSED}` · 진입 시 내 위치로 카메라).
+
+     **필터·검색어는 지우지 않는다.** 탭 한 번에 고른 것이 사라지면 사용자는 자기가
+     무엇을 잃었는지 모른다. `controls.resetAll()` 은 빈 결과 화면의 명시적 버튼에만 있다.
+
+     두 가지를 한 걸음으로 묶는 것은 규칙 위반이 아니다 — 지도의 "루트 상태" 가
+     원래 그 두 값의 쌍이다(스냅만 접으면 카메라는 남의 동네에 남고, 카메라만
+     옮기면 목록이 화면을 덮은 채다). 사다리의 다른 칸과는 섞지 않는다.
+  */
+  const resetMapToRoot = useCallback(() => {
+    sheetRef.current?.snapToIndex(SHEET_SNAP.COLLAPSED)
+    const coords = myLocationRef.current
+    /* 좌표가 없으면 **묻지 않는다.** 탭을 누른 것은 위치 권한을 달라는 말이 아니다 —
+       그 대화는 `내 위치` FAB 과 권한 배너가 한다(`handleMyLocation`). 여기서는
+       되돌릴 수 있는 것(시트)만 되돌린다. */
+    if (!coords) return
+    atMyLocationRef.current = true
+    /* 배율은 건드리지 않는다(`handleMyLocation` 과 같은 이유 — 보고 있던 마커가
+       클러스터로 뭉치면 안 된다). 앱이 옮긴 카메라이므로 재검색을 예약한다:
+       없으면 "내 위치로 왔는데 목록은 강남 그대로" 가 된다. */
+    armedSearchRef.current = true
+    mapRef.current?.moveTo(coords.lat, coords.lng)
+  }, [])
+
+  useRegisterTabReset("restaurant", {
+    /*
+      열려 있는 것을 **위에서부터 하나씩** 놓는다. 한 번에 다 닫으면 사용자는 자기
+      탭이 무엇을 했는지 알 수 없다(사다리의 규칙과 같은 이유).
+
+      ⚠️ 정렬·필터·AI 검색 시트는 `V2BottomSheet` → `AppModal` → RN `Modal` 이라
+      **탭 바까지 덮는다.** 즉 그 셋이 떠 있는 동안에는 이 탭을 누를 방법이 지금은
+      없다. 그래도 등록해 두는 이유는 마커 선택 때문이다 — 그것은 지도면 위의
+      상태라 탭 바가 살아 있고, 실제로 이 칸을 밟는 유일한 경로다.
+      (시트 계보가 모달 밖으로 나오는 날 저 셋도 저절로 맞게 동작한다.)
+    */
+    overlay: {
+      isOpen: () =>
+        aiSearchOpen ||
+        filterSection !== null ||
+        sortSheetOpen ||
+        selection !== null,
+      close: () => {
+        if (aiSearchOpen) {
+          setAiSearchOpen(false)
+          return
+        }
+        if (filterSection !== null) {
+          setFilterSection(null)
+          return
+        }
+        if (sortSheetOpen) {
+          setSortSheetOpen(false)
+          return
+        }
+        setSelection(null)
+      },
+    },
+    /* 지도가 죽어 목록만 남은 화면에는 되돌릴 지도가 없다 — 등록하지 않아 사다리가
+       다음 칸(다시 시도)으로 떨어지게 둔다. 등록해 두면 3번에서 아무 일도 안 하고
+       멈춘다(`tabReset.ts` 머리말: 등록되지 않은 칸은 없는 것으로 친다). */
+    content:
+      mapError === null
+        ? {
+            isAtRoot: () =>
+              isMapAtRootState({
+                sheetIndex: sheetIndexRef.current,
+                hasMyLocation: myLocationRef.current !== null,
+                atMyLocation: atMyLocationRef.current,
+              }),
+            reset: resetMapToRoot,
+          }
+        : undefined,
+    /*
+      4번은 **지도가 죽었을 때만** 산다.
+
+      예전에는 `mapError === null ? handleRetry : retryMap` 이었다 — 멀쩡한 지도에서도
+      루트 상태면 지도와 목록을 다시 받았다. 그 갈래를 걷어냈다: 탭 탭은 이동
+      제스처지 조회 제스처가 아니고(`tabReset.ts` 머리말 §4번), 여기서는 한 가지가 더
+      나빴다 — `handleRetry` 는 `enabled` 가드를 우회하는 `refetch()` 두 개라
+      뷰포트가 확정되기 전에 눌리면 **전국 조회**와 `viewport not committed` 를 만든다
+      (`tests/restaurantRetryGuard.test.ts`. 훅이 그 구멍을 막았지만, 애초에 부를
+      이유가 없는 호출자였다).
+
+      `retryMap` 은 그대로 둔다. 지도가 죽으면 화면에 남는 것은 오류면뿐이고, 그때
+      재탭은 화면의 `다시 시도` 와 **같은 일**을 한다 — 사용자가 고를 수 있는 유일한 길.
+    */
+    recover: mapError === null ? undefined : retryMap,
+  })
 
   /* ── 파생값 ─────────────────────────────────────────── */
 
@@ -1474,7 +1589,15 @@ export function RestaurantMapScreen({
   return (
     <View
       onLayout={handleContainerLayout}
-      style={[styles.root, { backgroundColor: colors.background.lower }]}
+      /*
+        지도가 붙기 전 한 프레임에만 보이는 면이다. 값은 `background.lower`(#f7f7f7)
+        였는데 그건 **띠와 말풍선 전용**이지 화면 바닥이 아니다 — 앱의 라이트 바닥은
+        둘뿐이고(`community/SectionHeader` 머리말 §층의 정본) 이 화면만 셋째 회색을
+        들고 있었다. 보이든 안 보이든 정본 밖의 값을 남겨 두면 다음 사람이 그걸
+        선례로 삼는다. 다크는 `bed` 가 `canvas`(#1f1f21)라 값이 달라지지만, 이 면은
+        지도에 완전히 덮이는 자리라 화면에는 아무 변화가 없다.
+      */
+      style={[styles.root, { backgroundColor: surface.bed }]}
     >
       {/* 로딩 중에도 절대 언마운트하지 않는다(파일 상단 1번). */}
       <View style={StyleSheet.absoluteFill}>

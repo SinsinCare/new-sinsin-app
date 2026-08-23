@@ -146,6 +146,7 @@ export {
   SHEET_MID_RATIO,
   SHEET_SNAP,
   deriveSheetContainerHeight,
+  isMapAtRootState,
   predictSheetTop,
   shouldRefocusAfterSnap,
 } from "../sheetSnap"

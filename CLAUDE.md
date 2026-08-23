@@ -75,7 +75,7 @@ npm run deploy:prod        # EAS production build and auto-submit
 
 - `app/_layout.tsx` - Root layout with providers (Tamagui, React Query, Pretendard fonts) and auth-based navigation
 - `app/(auth)/` - Authentication routes: login, email-login, signup, profile-setup
-- `app/(tabs)/` - Main app with bottom tab navigation: home, consult, recipe, restaurant, all
+- `app/(tabs)/` - Main app with bottom tab navigation: home, community, recipe, restaurant, all (상담은 탭이 아니라 `app/consult.tsx` 모달 라우트)
 - Auth state determines routing: unauthenticated → `/(auth)/login`, authenticated → `/(tabs)/home`
 
 ### State Management
@@ -106,16 +106,24 @@ npm run deploy:prod        # EAS production build and auto-submit
 - `api.ts` - API request/response types
 - `auth.ts` - Auth API types: SignupRequest, LoginResult, SignupResult, TokenRefreshResult, OtpVerifyResult
 
-### Design System (`src/theme/`)
+### Design System — 정본은 `src/design-system-v2/`
 
-Custom Tamagui configuration with Figma-mapped design tokens:
+Figma `Design-system_Mobile` 의 코드 포팅본. **색·타이포·간격의 정본은 여기 하나다.**
 
-- `tokens.ts` - Color (Primary coral/red, Sub teal/green, Greyscale), space, size, radius tokens
-- `fonts.ts` - Pretendard KR font (Regular/Medium/SemiBold/Bold) with typography scale
-- `themes.ts` - Light/dark theme definitions with semantic color mapping
-- `tamagui.config.ts` - Combines tokens, fonts, themes into Tamagui config
+- `tokens/colors.ts` - 원시 팔레트 + 시맨틱(light/dark). Figma Style Guide(node-id=20-2) 대조본
+- `tokens/typography.ts` - Pretendard 텍스트 스타일. **굵기는 `fontFamily`(face)로만 말한다**
+- `tokens/blend.ts` - `over()`. 알파 토큰을 불투명 값으로 합성할 때만 쓴다(색을 새로 고르지 않는다)
+- `components/V2*.tsx` - 버튼·시트·칩·토스트 등. 새 화면은 여기서 고른다
+- `hooks/useV2Theme.ts` - 현재 모드의 시맨틱 색. 앱의 테마 토글(`themeStore`)을 본다
 
-See `docs/design-tokens.md` for full usage guide.
+`src/theme/` 은 **레거시 계보의 어댑터**다 — `surface.ts`(useSurface) · `tokens.ts`(tamagui 원시) ·
+`themes.ts`(tamagui 테마) 모두 위 v2 시맨틱에서 파생한다. 값을 고칠 일이 있으면 v2 를 고친다.
+새 화면에서 tamagui 를 직접 쓰거나 리터럴 hex 를 적으면 eslint 가 경고한다.
+
+- `fonts.ts` - tamagui 의 weight→Pretendard face 매핑. RN `Text` 는 `shared/components/AppText`
+  를 통해야 face 를 받는다(그 파일 머리말 참고 — 안 그러면 OS 기본 서체로 그려진다)
+
+진행 상황과 남은 작업: `docs/design/2026-08-17-design-consistency-plan.md`
 
 ### Shared UI Components (`src/shared/components/`)
 

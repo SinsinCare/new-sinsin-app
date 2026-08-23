@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
 import { RecordRowPressable } from "./RecordRowPressable"

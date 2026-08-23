@@ -18,9 +18,11 @@
  * 시작하고, 실행 중이면 화면을 옮기지 않는다. 홈으로 **보내지** 않는 것이 중요하다:
  * 카카오 로그인 콜백이 돌아온 순간에 홈으로 튕기면 로그인 흐름이 끊긴다.
  */
-// 배럴(`@/src/shared/navigation`)이 아니라 파일을 직접 집는다 — 이 모듈은 라우터보다
-// 먼저 로드되므로 훅 모듈까지 딸려 들어올 이유가 없다.
-import { isRoutableEntryUrl } from "@/src/shared/navigation/entryIntent"
+// 배럴(`@/src/shared/navigation`·`@/src/features/analytics`)이 아니라 파일을 직접
+// 집는다 — 이 모듈은 라우터보다 먼저 로드되므로 훅 모듈(expo-router 를 다시 들여온다)
+// 까지 딸려 들어올 이유가 없다.
+import { classifyEntryUrl } from "@/src/shared/navigation/entryIntent"
+import { trackAnalyticsEvent } from "@/src/features/analytics/analyticsClient"
 
 export function redirectSystemPath({
   path,
@@ -29,7 +31,13 @@ export function redirectSystemPath({
   initial: boolean
 }): string | null {
   try {
-    return isRoutableEntryUrl(path) ? path : null
+    /* 판정 셋을 **전부** 남긴다. 버려지는 둘(우리 것인데 없는 라우트 · 남의 스킴)이
+       오히려 알아야 할 쪽이다 — 앞엣것은 공유·푸시 링크가 죽었다는 신호이고,
+       뒤엣것이 0 이면 소셜 로그인 콜백이 이 관문에 아예 안 들어오고 있다는 뜻이다.
+       URL 원문은 싣지 않는다(경로에 글·식당 id 가 그대로 들어 있다). */
+    const verdict = classifyEntryUrl(path)
+    trackAnalyticsEvent("app_entry_from_link", { verdict })
+    return verdict === "routed" ? path : null
   } catch {
     // 여기서 던지면 앱이 아예 뜨지 않는다. 판단이 안 되면 라우팅하지 않는 쪽으로.
     return null

@@ -4,7 +4,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { PortalProvider } from "@/src/shared/components/Portal"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useFonts } from "expo-font"
-import { Stack, useRouter, useSegments } from "expo-router"
+import {
+  Stack,
+  useRouter,
+  usePathname,
+  useSegments,
+  type Href,
+} from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
@@ -25,7 +31,12 @@ import {
 } from "@/src/stores"
 import { LoadingScreen, Toast } from "@/src/shared/components"
 import { V2DialogHost } from "@/src/design-system-v2"
-import { resolveGuard } from "@/src/shared/navigation/guard"
+import { isLoginRedirect, resolveGuard } from "@/src/shared/navigation/guard"
+import {
+  clearEntryIntent,
+  rememberEntryIntent,
+  takeEntryIntent,
+} from "@/src/shared/navigation/entryIntent"
 import { useConsumeEntryUrl } from "@/src/shared/navigation/useConsumeEntryUrl"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
@@ -49,8 +60,11 @@ function RootLayoutNav() {
   } = useAuth()
   const user = useAuthStore((s) => s.user)
   useAnalyticsLifecycle(user, isLoading)
-  const canUseAppNotifications =
+  /* 관문을 **전부** 통과한 상태. 알림을 걸어도 되는 조건이자, 로그인 관문에
+     접혔던 목적지를 되살려도 되는 조건이다(둘 다 "앱을 온전히 쓸 수 있는가" 다). */
+  const isFullyEntered =
     isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo
+  const canUseAppNotifications = isFullyEntered
   useNotifications(canUseAppNotifications)
   useFoodAnalysisRecovery(canUseAppNotifications)
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
@@ -59,6 +73,9 @@ function RootLayoutNav() {
   )
   const segments = useSegments()
   const segmentPath = useMemo(() => segments.map(String), [segments])
+  /* 세그먼트는 **라우트 이름**이라 `/post/[id]` 다. 접힌 목적지를 되살리려면 값이
+     들어간 실제 경로(`/post/482`)가 필요하므로 여기서 따로 읽는다. */
+  const pathname = usePathname()
   /* 루트 레이아웃은 네비게이터 **바깥**이라 `useAppRouter()` 를 쓸 수 없다
      (`src/shared/navigation/useAppRouter.ts` 머리말). 여기서는 뒤로가기를 부르지
      않고 `replace` 만 하므로 expo-router 의 라우터를 그대로 쓴다. */
@@ -130,6 +147,14 @@ function RootLayoutNav() {
 
     if (decision.type === "redirect") {
       /*
+        로그인으로 보내는 판정이면 **가려던 곳을 적어 둔다.** 여기서 적지 않으면
+        로그아웃 상태로 받은 공유 링크(`/post/482` 딥링크)는 목적지가 통째로
+        사라진다 — 로그인을 마쳐도 `resolveEntryRoute` 가 홈으로 보낼 뿐이다.
+        적어 둔 값은 관문을 전부 통과해 탭에 착지한 뒤 아래에서 **한 번만** 쓴다.
+        (메모리에만 산다. 이유는 `entryIntent.ts` 머리말.)
+      */
+      if (isLoginRedirect(decision)) rememberEntryIntent(pathname)
+      /*
         관문 이동은 **떠 있는 프레젠테이션을 접고 나서** 한다. iOS 네이티브
         스택은 replace 로 카드를 갈아끼워도 presented 모달(상담·스토리)을 그
         위에 남겨 두므로, 모달이 열린 채 온보딩·프로필로 보내면 관문 화면이
@@ -139,14 +164,42 @@ function RootLayoutNav() {
       */
       if (router.canDismiss()) router.dismissAll()
       router.replace(decision.href)
-    } else if (decision.type === "signOut") signOut()
+      return
+    }
+
+    if (decision.type === "signOut") {
+      // 세션이 끊긴다 — 접어 뒀던 목적지는 더 이상 이 사람의 것이 아니다.
+      clearEntryIntent()
+      signOut()
+      return
+    }
+
+    /*
+      여기부터는 `stay` — 가드가 더 할 말이 없다. 그때만 접힌 목적지를 꺼낸다.
+
+      조건 둘이 함께 있어야 한다:
+       - `isFullyEntered`: ACTIVE 이고 추가정보도 끝났다. 이게 없으면 프로필·온보딩
+         관문 화면 위로 목적지를 얹어 관문을 **건너뛰게** 된다.
+       - `(tabs)` 에 착지했다: `stay` 는 약관·탈퇴완료 같은 공개 화면과 가입 진행 중인
+         인증 화면에서도 참이다. 앱 안에 실제로 들어온 순간에만 되살린다.
+
+      고리는 생기지 않는다 — `takeEntryIntent()` 가 꺼내면서 칸을 비우고,
+      `rememberEntryIntent` 는 관문 화면 자신을 적지 않는다. `push` 가 아니라
+      `navigate` 인 이유는 목적지가 탭 라우트일 때 탭 네비게이터가 한 벌 더
+      쌓이지 않게 하기 위해서다.
+    */
+    if (!isFullyEntered || segmentPath[0] !== "(tabs)") return
+    const pending = takeEntryIntent()
+    if (pending) router.navigate(pending as Href)
   }, [
     accountState,
     entryGate,
     isAuthenticated,
+    isFullyEntered,
     isLoading,
     isOnboardingInProgress,
     isSignupInProgress,
+    pathname,
     requiresAdditionalInfo,
     router,
     segmentPath,

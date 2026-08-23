@@ -13,6 +13,7 @@ import { addDaysToDateStr } from "../../../hooks/useWeightWeek"
 import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
 import type { DateAnalysisBodyRecord } from "@/src/types"
 import type { WeightRangeRecord } from "@/src/types/weightEdema"
+import { useHealthEntryInput } from "../../../hooks/useHealthEntryInput"
 import { useTranslation } from "react-i18next"
 
 /** CTA 의 유효 범위(0 초과 300 이하)와 같은 경계를 쓴다 — 칠 수 있는 값과 저장할 수 있는 값이 어긋나면 안 된다. */
@@ -102,8 +103,11 @@ export function WeightSheet({
 
   /** ± 를 누른 횟수. 수치 표시가 "치던 문자열을 버릴 때" 를 아는 신호다. */
   const [stepEpoch, setStepEpoch] = useState(0)
+  const markInput = useHealthEntryInput("weight", visible)
 
   const adjust = (fn: (current: number) => number) => {
+    // 누를 때마다 오는 콜백이지만 훅이 이번 열림의 한 번만 통과시킨다.
+    markInput("stepper")
     /* 마지막 수단의 60 은 "아무 기록도 없는 첫 사용자" 전용이다. 그 앞의 세
        단계(치던 값 → 어제 → 최근 기록)가 거의 항상 먼저 잡힌다. */
     const base = liveWeight ?? previousWeight ?? lastKnownWeight ?? 60
@@ -175,12 +179,11 @@ export function WeightSheet({
 
   return (
     <RecordSheetShell
+      surface="home_weight"
       visible={visible}
       onClose={onClose}
       title={t("home.sheet.weight.title")}
       subtitle={t("home.sheet.weight.subtitle")}
-      // 시트는 키보드가 떠도 제자리(QA 2026-08-02) — 저장은 키보드 위 도킹 CTA 가 잇는다.
-      snapPoint={74}
       ctaLabel={
         liveWeight !== null
           ? t("home.sheet.recordValue", {
@@ -209,8 +212,14 @@ export function WeightSheet({
             active: visible,
             // 기록이 없으면 열리자마자 키패드 — QA "기록하기에서 숫자 키패드 안 올라옴".
             autoStartWhenEmpty: (today?.weightKg ?? null) === null,
-            onCommit: setWeight,
-            onPreview: setPreview,
+            onCommit: (next) => {
+              if (next !== null) markInput("keypad")
+              setWeight(next)
+            },
+            onPreview: (next) => {
+              if (next !== null) markInput("keypad")
+              setPreview(next)
+            },
             resetKey: stepEpoch,
             accessibilityLabel: t("home.sheet.weight.typeValue"),
             hint: t("home.sheet.weight.step"),

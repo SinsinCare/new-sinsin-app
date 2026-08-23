@@ -9,7 +9,9 @@
  */
 
 import { router } from "expo-router"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { CONTEXTUAL_ACTIONS, type ErrorActionId } from "./catalog"
+import type { ErrorKind } from "./resolve"
 
 /**
  * 호출부가 채워 주는 맥락형 핸들러. 안 주면 그 버튼은 그리지 않는다.
@@ -39,11 +41,19 @@ const NAVIGATE: Record<string, () => void> = {
  */
 export function resolveErrorAction(
   action: ErrorActionId | null,
-  handlers: ErrorActionHandlers = {},
+  handlers: ErrorActionHandlers,
+  kind: ErrorKind,
 ): (() => void) | null {
   if (!action) return null
-  if (CONTEXTUAL_ACTIONS.has(action)) {
-    return handlers[action as keyof ErrorActionHandlers] ?? null
+  const run = CONTEXTUAL_ACTIONS.has(action)
+    ? (handlers[action as keyof ErrorActionHandlers] ?? null)
+    : (NAVIGATE[action] ?? null)
+  if (!run) return null
+
+  /* 계측은 **누른 순간**에 붙는다. 여기서 곧바로 쏘면 그려지기만 하고 아무도 안 누른
+     버튼까지 세어, "이 안내가 실제로 문제를 풀어 줬는가" 를 물을 수 없게 된다. */
+  return () => {
+    trackAnalyticsEvent("app_error_action_pressed", { action, kind })
+    run()
   }
-  return NAVIGATE[action] ?? null
 }

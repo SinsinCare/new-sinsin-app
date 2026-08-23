@@ -15,16 +15,19 @@
  */
 import { memo } from "react"
 import { ScrollView } from "react-native"
-import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
-import { useTranslation } from "react-i18next"
-
-import { useSurface } from "@/src/hooks/useSurface"
 import {
+  V2Box,
+  V2HStack,
+  V2Text,
+  V2VStack,
   CARD_RADIUS,
   GUTTER,
   RAIL_INSET,
   SECTION_TITLE_GAP,
 } from "@/src/design-system-v2"
+import { useTranslation } from "react-i18next"
+
+import { useSurface } from "@/src/hooks/useSurface"
 import { TYPE } from "@/src/theme/surface"
 import { tokens } from "@/src/theme/tokens"
 
@@ -37,11 +40,12 @@ import type { RecipeCard } from "../../types/recipeListV2"
  */
 import {
   mealSectionCopyKeys,
-  mealSlotStateBadgeKey,
   RECIPE_HOME_EMPTY_COPY_KEY,
+  resolveMealSectionBadgeKey,
   resolveMealSectionBody,
   splitTitleHighlight,
 } from "./recipeHomePresentation"
+import type { MealSectionDay } from "./recipeHomePresentation"
 /**
  * 사진 카드는 **다른 갈래의 파일**이다(목록 줄과 섹션 카드가 같은 컴포넌트여야 한다).
  * 배럴(`./index.ts`)도 내 소유가 아니라 파일 경로로 직접 들여온다.
@@ -55,6 +59,12 @@ import { RecipeCarouselSkeleton } from "./RecipeSkeletons"
 
 interface RecipeMealSectionProps {
   section: RecipeHomeSection
+  /**
+   * 이 섹션이 말하는 날. **기본값을 두지 않는다** — 안 넘기면 "오늘" 로 굳는데, 내일
+   * 아침 카드를 "오늘의 아침 레시피" 아래 그리던 것이 바로 이번에 고친 결함이다.
+   * 판단은 `resolveMealSectionDay`(순수)가 하고 화면이 그 값을 내려 준다.
+   */
+  day: MealSectionDay
   onPressItem: (card: RecipeCard) => void
   /** 첫 조회 중. 제목은 그리고 카드 자리만 비운다 — 섹션이 나중에 튀어나오지 않게. */
   isLoading?: boolean
@@ -74,6 +84,7 @@ const CARD_SLOT_HEIGHT = Math.round((RECIPE_PHOTO_CARD_WIDTH * 3) / 4) + 86
 
 export const RecipeMealSection = memo(function RecipeMealSection({
   section,
+  day,
   onPressItem,
   isLoading = false,
 }: RecipeMealSectionProps) {
@@ -88,7 +99,7 @@ export const RecipeMealSection = memo(function RecipeMealSection({
     isLoading,
     itemCount: section.items.length,
   })
-  const copy = mealSectionCopyKeys(section.slot)
+  const copy = mealSectionCopyKeys(section.slot, day)
   const title = t(copy.title)
   const subtitle = t(copy.subtitle)
   const parts = splitTitleHighlight(title, t(copy.highlight))
@@ -96,36 +107,71 @@ export const RecipeMealSection = memo(function RecipeMealSection({
    * 끝난 끼니의 배지. 이 섹션이 **왜 뒤로 밀렸는지**를 그 자리에서 말한다 — 순서만
    * 바뀌고 표시가 없으면 "왜 아침이 맨 아래로 갔지" 가 남는다. 색은 그레이스케일이다:
    * 브랜드색은 "지금 고를 것" 한 곳에만 쓰고, 끝난 것은 물러서야 한다.
+   *
+   * 배지가 말하는 것은 **오늘**의 사실이라 날을 같이 넘긴다 — 내일을 말하는 섹션에
+   * 오늘의 `기록함` 이 붙으면 제목과 배지가 서로 다른 날을 말한다.
    */
-  const badgeKey = mealSlotStateBadgeKey(section.state)
+  const badgeKey = resolveMealSectionBadgeKey({ state: section.state, day })
 
   return (
     <V2VStack gap={SECTION_TITLE_GAP}>
       <V2VStack paddingHorizontal={GUTTER} gap={2}>
         <V2HStack gap={6} align="center">
-          <V2Text color={badgeKey === null ? surface.textStrong : surface.textMuted} numberOfLines={1} style={{ fontSize: TYPE.sectionTitle.fontSize, lineHeight: TYPE.sectionTitle.lineHeight, letterSpacing: TYPE.sectionTitle.letterSpacing, fontWeight: "700", flexShrink: 1 }}>
+          <V2Text
+            color={badgeKey === null ? surface.textStrong : surface.textMuted}
+            numberOfLines={1}
+            style={{
+              fontSize: TYPE.sectionTitle.fontSize,
+              lineHeight: TYPE.sectionTitle.lineHeight,
+              letterSpacing: TYPE.sectionTitle.letterSpacing,
+              fontWeight: "700",
+              flexShrink: 1,
+            }}
+          >
             {parts.before}
             {parts.match !== "" && (
-              <V2Text color={
+              <V2Text
+                color={
                   // 끝난 끼니는 브랜드색을 잃는다 — 강조는 지금 고를 끼니의 것이다.
                   badgeKey === null
                     ? tokens.color.primary.val
                     : surface.textMuted
-                }>
+                }
+              >
                 {parts.match}
               </V2Text>
             )}
             {parts.after}
           </V2Text>
           {badgeKey !== null && (
-            <V2Box paddingHorizontal={8} paddingVertical={2} style={{ borderRadius: 999, backgroundColor: surface.surface }}>
-              <V2Text color={surface.textMuted} numberOfLines={1} style={{ fontSize: TYPE.caption.fontSize, lineHeight: TYPE.caption.lineHeight, letterSpacing: TYPE.caption.letterSpacing }}>
+            <V2Box
+              paddingHorizontal={8}
+              paddingVertical={2}
+              style={{ borderRadius: 999, backgroundColor: surface.surface }}
+            >
+              <V2Text
+                color={surface.textMuted}
+                numberOfLines={1}
+                style={{
+                  fontSize: TYPE.caption.fontSize,
+                  lineHeight: TYPE.caption.lineHeight,
+                  letterSpacing: TYPE.caption.letterSpacing,
+                }}
+              >
                 {t(badgeKey)}
               </V2Text>
             </V2Box>
           )}
         </V2HStack>
-        <V2Text color={surface.textMuted} numberOfLines={1} style={{ fontSize: TYPE.cardSub.fontSize, lineHeight: TYPE.cardSub.lineHeight, letterSpacing: TYPE.cardSub.letterSpacing }}>
+        <V2Text
+          color={surface.textMuted}
+          numberOfLines={1}
+          style={{
+            fontSize: TYPE.cardSub.fontSize,
+            lineHeight: TYPE.cardSub.lineHeight,
+            letterSpacing: TYPE.cardSub.letterSpacing,
+          }}
+        >
           {subtitle}
         </V2Text>
       </V2VStack>
@@ -146,8 +192,25 @@ export const RecipeMealSection = memo(function RecipeMealSection({
           이유는 목록 카드와 같다 — 없는 것을 있는 것처럼 만들지 않는다.
         */
         <V2Box paddingHorizontal={GUTTER}>
-          <V2Box paddingVertical={22} paddingHorizontal={16} style={{ borderRadius: CARD_RADIUS, backgroundColor: surface.surface }}>
-            <V2Text color={surface.textMuted} lineBreakStrategyIOS="hangul-word" textBreakStrategy="balanced" style={{ fontSize: TYPE.caption.fontSize, lineHeight: TYPE.caption.lineHeight, letterSpacing: TYPE.caption.letterSpacing, textAlign: "center" }}>
+          <V2Box
+            paddingVertical={22}
+            paddingHorizontal={16}
+            style={{
+              borderRadius: CARD_RADIUS,
+              backgroundColor: surface.surface,
+            }}
+          >
+            <V2Text
+              color={surface.textMuted}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+              style={{
+                fontSize: TYPE.caption.fontSize,
+                lineHeight: TYPE.caption.lineHeight,
+                letterSpacing: TYPE.caption.letterSpacing,
+                textAlign: "center",
+              }}
+            >
               {t(RECIPE_HOME_EMPTY_COPY_KEY)}
             </V2Text>
           </V2Box>

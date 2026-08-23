@@ -57,12 +57,30 @@ describe("하단 안전영역 규칙", () => {
     )
   })
 
-  it("탭바 높이는 탭 레이아웃과 같은 값이다", () => {
-    // 두 곳이 갈리면 플로팅 필이 탭바를 덮거나 뜬다. 값을 옮겨 적지 말 것.
+  it("탭 레이아웃은 탭바 높이를 옮겨 적지 않고 가져다 쓴다", () => {
+    /*
+     * 예전에는 `app/(tabs)/_layout.tsx` 가 같은 수(49)를 **자기 상수로 또 적었고**,
+     * 이 테스트는 두 숫자가 같은지만 봤다. 2026-08-18 에 탭바를 `V2TabBar` 로 바꾸며
+     * 높이가 52 로 바뀌자 두 곳을 다 고쳐야 했다 — 그게 애초에 문제였다.
+     *
+     * 이제는 레이아웃이 **이 모듈에서 가져다 쓴다.** 숫자가 하나뿐이면 갈릴 수 없으므로,
+     * 값이 같은지가 아니라 **자기 상수를 다시 만들지 않았는지**를 검사한다.
+     */
     const layout = readFileSync(
       join(__dirname, "../app/(tabs)/_layout.tsx"),
       "utf8",
     )
-    expect(layout).toContain(`const TAB_BAR_HEIGHT = ${TAB_BAR_HEIGHT}`)
+    expect(layout).toContain("TAB_BAR_HEIGHT")
+    expect(layout).toContain("@/src/shared/utils/bottomSafeArea")
+    expect(layout).not.toMatch(/const\s+TAB_BAR_HEIGHT\s*=/)
+  })
+
+  it("탭바 높이는 V2TabBar 의 실제 치수와 맞는다", () => {
+    // 상단 테두리 1 + 상단 패딩 8 + 아이템(패딩 1 + 아이콘 24 + 간격 3 + 라벨 14 + 패딩 1).
+    // 컴포넌트 치수가 바뀌면 여기서 먼저 걸린다 — 안 그러면 플로팅 필이 바를 덮는다.
+    const BORDER = 1
+    const PADDING_TOP = 8
+    const ITEM = 1 + 24 + 3 + 14 + 1
+    expect(TAB_BAR_HEIGHT).toBe(BORDER + PADDING_TOP + ITEM)
   })
 })

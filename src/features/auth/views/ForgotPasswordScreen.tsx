@@ -5,6 +5,8 @@ import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { emailService, passwordService } from "@/src/services"
 import { getErrorMessage } from "@/src/lib/errorUtils"
+import { toAnalyticsFailKind } from "@/src/lib/errorMessage"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import {
   PasswordCriteriaText,
   ResendCodeLink,
@@ -12,9 +14,11 @@ import {
   StepTextInput,
 } from "../components"
 import {
+  PASSWORD_FIELD_ORDER,
   getConfirmPasswordRules,
   getPasswordRules,
 } from "../data/passwordValidation"
+import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import { presentAuthFailure } from "../utils/authFailure"
@@ -22,6 +26,8 @@ import { AuthScreenLayout } from "./AuthScreenLayout"
 
 const TIMER_DURATION = 180
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/** `useSignupEmail` 과 같은 상한. 두 화면의 `attempt_no` 가 같은 눈금이어야 비교된다. */
+const MAX_TRACKED_ATTEMPT = 10
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60)
@@ -59,6 +65,7 @@ export function ForgotPasswordScreen() {
   const [resettingPassword, setResettingPassword] = useState(false)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const attemptRef = useRef(0)
 
   const emailOtpForm = useForm<EmailOtpForm>({
     defaultValues: { email: "", code: "" },
@@ -101,6 +108,13 @@ export function ForgotPasswordScreen() {
     setSendError(null)
     try {
       await emailService.sendPasswordResetCode(emailOtpForm.getValues("email"))
+      /* 성공한 뒤에 쏜다 — 그래야 `screen:password_reset` → 이 이벤트의 하락이 곧
+         "가입한 적 없는 이메일(`AUTH_ERROR_001`)로 막힌 사람" 이다. */
+      attemptRef.current += 1
+      trackAnalyticsEvent("auth_code_requested", {
+        source: "password_reset",
+        attempt_no: Math.min(attemptRef.current, MAX_TRACKED_ATTEMPT),
+      })
       setCodeSent(true)
       setStep("otp")
       startTimer()
@@ -128,9 +142,19 @@ export function ForgotPasswordScreen() {
         if (timerRef.current) clearInterval(timerRef.current)
         setStep("password")
       } else {
+        // 서버가 200 으로 "맞지 않는다" 고 답한 경우. 오류 봉투가 아니라 인라인 한 줄로
+        // 끝나므로 `app_error_presented` 에 아무 흔적이 없다.
+        trackAnalyticsEvent("auth_code_verify_failed", {
+          source: "password_reset",
+          fail_kind: "mismatch",
+        })
         setSendError(t("emailVerification.invalidOrExpired"))
       }
     } catch (error) {
+      trackAnalyticsEvent("auth_code_verify_failed", {
+        source: "password_reset",
+        fail_kind: toAnalyticsFailKind(error),
+      })
       setSendError(
         presentAuthFailure(error, { scope: "password-reset-verify" }),
       )
@@ -144,6 +168,9 @@ export function ForgotPasswordScreen() {
     setResettingPassword(true)
     try {
       await passwordService.changePassword(data.password, resetToken)
+      /* 로그인 못 하는 사람이 **스스로 복구에 성공한** 순간. `router.replace` 전에
+         쏜다 — 화면이 사라진 뒤에는 이 컴포넌트가 아무 것도 못 쏜다. */
+      trackAnalyticsEvent("auth_password_reset_completed", {})
       router.replace("/(auth)/login")
     } catch (error) {
       // 재설정 토큰이 만료됐다는 것(`TOKEN_ERROR_006`)이 여기서 가장 흔하다.
@@ -157,6 +184,18 @@ export function ForgotPasswordScreen() {
   }
 
   const codeExpired = step === "otp" && !sendError && timer === 0 && codeSent
+
+  // 타이머는 매초 갱신된다 — false→true 전이에서만 1회. (`SignupEmailScreen` 과 같은 규약)
+  const expiredTrackedRef = useRef(false)
+  useEffect(() => {
+    if (!codeExpired) {
+      expiredTrackedRef.current = false
+      return
+    }
+    if (expiredTrackedRef.current) return
+    expiredTrackedRef.current = true
+    trackAnalyticsEvent("auth_code_expired", { source: "password_reset" })
+  }, [codeExpired])
 
   const ctaLabel =
     step === "email"
@@ -175,7 +214,13 @@ export function ForgotPasswordScreen() {
       ? handleSendCode
       : step === "otp"
         ? handleVerifyCode
-        : passwordForm.handleSubmit(handleResetPassword)
+        : passwordForm.handleSubmit(handleResetPassword, (errors) =>
+            trackFormValidationFailed(
+              "password_reset_new",
+              PASSWORD_FIELD_ORDER,
+              errors,
+            ),
+          )
 
   return (
     <AuthScreenLayout

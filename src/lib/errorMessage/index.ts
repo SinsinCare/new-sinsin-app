@@ -8,6 +8,7 @@ export {
 export {
   resolveError,
   getErrorActionLabel,
+  toAnalyticsFailKind,
   type ErrorKind,
   type ResolvedError,
   type ResolveOptions,

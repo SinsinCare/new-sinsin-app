@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -64,10 +65,17 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 6,
   },
+  /*
+    고정 높이 28 + 행간 18 이라 글자 크기를 1.55배쯤 올리면 `#저염` 의 위아래가
+    잘렸다. 상한(`maxFontSizeMultiplier`)을 거는 대신 상자를 자라게 둔다 — 이 칩은
+    줄바꿈되는 행 안이라 자랄 자리가 있다(같은 판단이 `CommunityPopularScreen` 의
+    칩·배지 주석에 적혀 있다). 1배에서는 18 + 5*2 = 28 로 픽셀이 그대로다.
+  */
   chip: {
-    height: 28,
+    minHeight: 28,
     borderRadius: 8,
     paddingHorizontal: 10,
+    paddingVertical: 5,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,

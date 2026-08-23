@@ -4,10 +4,10 @@ import {
   View,
   ScrollView,
   Pressable,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -164,7 +164,6 @@ export function WithdrawalScreen() {
         <BottomActionBar
           label={t("withdrawal.next")}
           disabled={!isActive}
-          paddingBottom={insets.bottom + 16}
           onPress={handleSubmit}
         />
       </KeyboardAvoidingView>

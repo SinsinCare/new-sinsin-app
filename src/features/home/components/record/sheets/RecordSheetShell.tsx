@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -9,14 +10,16 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated"
-import { KeyboardController } from "react-native-keyboard-controller"
+import {
+  KeyboardController,
+  useKeyboardState,
+} from "react-native-keyboard-controller"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
-import { useSheetKeyboardLift } from "./useSheetKeyboardLift"
 import { hapticStepAdvance } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
-import { V2DotLoader } from "@/src/design-system-v2"
+import { V2BottomSheet, V2DotLoader } from "@/src/design-system-v2"
+import type { AnalyticsSurface } from "@/src/features/analytics"
 import { useTranslation } from "react-i18next"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
@@ -28,19 +31,17 @@ const TIMING = {
 }
 
 interface RecordSheetShellProps {
+  /** 어느 기록 시트인가. 뼈대가 공용이라 이걸 안 받으면 5종이 한 칸에 뭉친다. */
+  surface: AnalyticsSurface
   visible: boolean
   onClose: () => void
   title: string
   subtitle?: string
-  /** 화면 높이 대비 %. 입력 필드가 있으면 키보드 몫까지 크게 잡는다. */
-  snapPoint: number
   /** 값이 담긴 CTA 라벨 — "저장" 대신 "200ml 기록하기". */
   ctaLabel: string
   ctaDisabled?: boolean
   ctaLoading?: boolean
   onCtaPress: () => void
-  /** 본문에 숫자 직접 입력이 있으면 켠다 — 키보드가 CTA 를 덮지 않게 시트를 밀어 올린다. */
-  adjustForKeyboard?: boolean
   children: ReactNode
 }
 
@@ -49,7 +50,15 @@ interface RecordSheetShellProps {
  * CTA 는 가입 스텝과 같은 문법으로 움직인다: 활성화되는 순간 회색 면이 브랜드색으로
  * 물들고, 누르면 살짝 눌린다. 시트 안에서도 주인공은 CTA 하나다.
  *
- * ## 키보드 — 왜 CTA 가 시트 안에서 떠오르는가
+ * ## 높이 — 고정 % 스냅을 버렸다
+ *
+ * 예전에는 소비처가 `snapPoint`(화면 대비 %)를 넘겼다. 사진 한 장의 비율마다 그 수를
+ * 다시 계산해야 했고(MealPhotoConfirmSheet 의 `SHEET_CHROME` 산수), 큰 글씨나 작은
+ * 기기에서는 마지막 줄이 스냅 밖으로 밀려 닿을 수 없었다. 지금은 시트가 **콘텐츠
+ * 높이대로** 선다(`V2BottomSheet` = gorhom `enableDynamicSizing`) — 그래서 여기 본문은
+ * `flex:1` 도, 안쪽 `ScrollView` 도 쓰지 않는다. 머리·본문·CTA 를 그냥 쌓으면 된다.
+ *
+ * ## 키보드 — 시트가 통째로 떠오른다
  *
  * 키보드 위에 바를 세우는 길은 하나뿐인 줄 알았다: 루트에 `KeyboardStickyView`(전역
  * 툴바·도크)를 두는 것. **그건 이 시트 위로 못 올라온다.** `KeyboardToolbar` 조차
@@ -57,28 +66,27 @@ interface RecordSheetShellProps {
  * 키보드가 아니라 앱 뷰 계층에 사는 평범한 뷰다. 기록 시트는 그보다 위에 그려지므로
  * 루트에 무엇을 두든 시트 뒤에 깔린다 — 2026-08-03 실측: 키패드를 올리면 CTA·판정·
  * 구간 바가 전부 덮이고, 주황 CTA 가 반투명 키패드 **뒤로** 비쳤다. 1.1.24·1.1.25 가
- * 연달아 "여전히 키보드가 가린다" 로 돌아온 이유가 이것이다.
+ * 연달아 "여전히 키보드가 가린다" 로 돌아온 이유가 이것이다. 그래서 키보드에서
+ * 빠져나올 문(아래 ✓ 대신 v 버튼)은 지금도 이 시트 **안에** 있다.
  *
- * 그래서 CTA 를 시트 **안에** 두고, 본문 아래 여백을 키보드 높이만큼 키운다. 시트는
- * 한 픽셀도 안 움직이고(상단이 시계·배터리를 덮던 QA 2026-08-02 재발 방지), CTA 만
- * 키보드 위로 떠오른다. 눌린 만큼 좁아진 본문은 스크롤로 흡수한다 — 값·판정·칩 중
- * 어느 것도 닿을 수 없는 곳에 남지 않는다.
- *
- * 껍데기(`Sheet.Frame` 의 content)는 여전히 **View 여야 한다.** 거길 ScrollView 로
- * 바꿨다가 시트 12개가 백지가 됐다(AppBottomSheet 머리말). 스크롤은 여기, 높이가
- * 확정된 세로 열(머리 · 본문 · CTA) 안쪽에서만 연다.
+ * CTA 를 키보드 위로 올리는 일 자체는 이제 gorhom 이 한다 — 시트를 키보드 높이만큼
+ * 밀어 올린다(`keyboardBehavior="interactive"`, 안드로이드는 `adjustResize` 로 창이
+ * 줄면서 같은 결과). 자작 대응(`useSheetKeyboardLift`: 스냅을 90% 로 키우고 본문
+ * 패딩으로 CTA 를 밀어올리기)은 걷어냈다. **단, 시트 안의 입력은 반드시
+ * `V2SheetTextInput` 이어야 한다** — 평범한 `TextInput` 이면 gorhom 이 포커스를 모르고
+ * 키보드 이벤트를 버려서 시트가 제자리에 남는다(V2SheetTextInput 머리말).
  */
 export function RecordSheetShell({
+  // 이 파일의 `surface` 는 이미 디자인 토큰 묶음이다(`useSurface()`) — 계측 축은 이름을 비껴 준다.
+  surface: analyticsSurface,
   visible,
   onClose,
   title,
   subtitle,
-  snapPoint,
   ctaLabel,
   ctaDisabled = false,
   ctaLoading = false,
   onCtaPress,
-  adjustForKeyboard = false,
   children,
 }: RecordSheetShellProps) {
   const { t } = useTranslation("common")
@@ -87,9 +95,12 @@ export function RecordSheetShell({
   const activeness = useSharedValue(ctaActive ? 1 : 0)
   const press = useSharedValue(0)
 
-  // 키보드 대응은 시트 안에서 — 왜 그런지는 useSheetKeyboardLift 머리말.
-  const { bodyStyle, snapPoints, keyboardShown } =
-    useSheetKeyboardLift(snapPoint)
+  /*
+    키패드 탈출구를 띄울지만 결정한다. 셀렉터를 주는 이유는 높이까지 구독하면 키보드가
+    오르는 내내 매 프레임 리렌더되기 때문 — 시트를 움직이는 건 gorhom 이고 여기는
+    버튼 하나의 유무만 안다.
+  */
+  const keyboardShown = useKeyboardState((state) => state.isVisible)
 
   useEffect(() => {
     activeness.value = withTiming(ctaActive ? 1 : 0, TIMING)
@@ -113,15 +124,12 @@ export function RecordSheetShell({
   }))
 
   return (
-    <AppBottomSheet
+    <V2BottomSheet
+      surface={analyticsSurface}
       visible={visible}
       onClose={onClose}
-      snapPoints={snapPoints}
-      adjustForKeyboard={adjustForKeyboard}
-      /* 바닥 여백은 키보드에 맞춰 여기서 직접 준다 — 두 겹이면 CTA 가 두 번 밀린다. */
-      contentBottomPadding={false}
     >
-      <Animated.View style={[styles.body, bodyStyle]}>
+      <View style={styles.body}>
         <View style={styles.head}>
           <View style={styles.headText}>
             <Text
@@ -163,20 +171,11 @@ export function RecordSheetShell({
         </View>
 
         {/*
-          키보드가 눌러 온 만큼 본문이 좁아진다. 스크롤을 여기 두면 값·판정·칩이
-          화면 밖으로 밀리는 대신 손이 닿는 곳에 남는다. `keyboardShouldPersistTaps`
-          는 키패드가 떠 있는 채로 칩을 한 번에 고르기 위한 것 — 없으면 첫 탭이
-          키보드 닫기에 먹힌다.
+          본문은 그냥 쌓인다 — 시트가 콘텐츠 높이대로 서므로 스크롤로 흡수할 넘침이
+          없다(머리말 §높이). 예전에는 여기 `ScrollView` 가 있었는데, 그건 키보드가
+          고정 높이 프레임을 눌러 오던 시절의 완충재였다.
         */}
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          {children}
-        </ScrollView>
+        <View style={styles.content}>{children}</View>
 
         <View style={styles.ctaRow}>
           {/*
@@ -244,26 +243,20 @@ export function RecordSheetShell({
             </Animated.View>
           </Pressable>
         </View>
-      </Animated.View>
-    </AppBottomSheet>
+      </View>
+    </V2BottomSheet>
   )
 }
 
 const styles = StyleSheet.create({
   body: {
-    // 프레임 높이를 채워야 머리·본문·CTA 의 세로 열이 성립한다(스크롤이 여기서 갈린다).
-    flex: 1,
     paddingHorizontal: LAYOUT.screenX,
     paddingTop: 4,
     // 카드 간격 10 · 섹션 간격 28 사이 — 시트 안의 블록 간격
     gap: 18,
   },
-  /*
-    남는 높이를 본문이 먹는다 — 그래야 CTA 가 시트 바닥(키보드가 뜨면 키보드 바로 위)에
-    붙는다. 본문이 넘치면 flexShrink 로 눌리고 그만큼 스크롤이 생긴다.
-  */
-  scroll: { flexGrow: 1, flexShrink: 1 },
-  scrollContent: { gap: 18, paddingBottom: 2 },
+  // children 사이 간격은 본문이 준다(예전 scrollContent 와 같은 18).
+  content: { gap: 18 },
   ctaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   ctaWrap: { flex: 1 },
   dismiss: {

@@ -1,11 +1,22 @@
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
+import { useEffect, useRef } from "react"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
 import { useTranslation } from "react-i18next"
 
-import { V2Skeleton, V2SkeletonGroup } from "@/src/design-system-v2"
+import {
+  useLoadingVisible,
+  V2Skeleton,
+  V2SkeletonGroup,
+} from "@/src/design-system-v2"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useSurface } from "@/src/hooks/useSurface"
-import { resolveError, type ResolvedError } from "@/src/lib/errorMessage"
+import {
+  resolveError,
+  toAnalyticsFailKind,
+  type ResolvedError,
+} from "@/src/lib/errorMessage"
 import { REPORT_GAP } from "@/src/shared/components/ReportSection"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import type { SurfacePalette } from "@/src/theme/surface"
@@ -133,6 +144,75 @@ export function StatsReportScreen({
     dateKey,
   )
 
+  /*
+    ── 요구·완료·대기·실패 (설계 §J2) ──────────────────────────────────────────
+    요구는 React Query 의 `queryFn` 이 **아니라** 여기서 센다. staleTime 이 5분이라
+    ‹ › 로 오간 기간은 대부분 캐시 히트이고, 그러면 queryFn 이 아예 안 돌아 분모가
+    조용히 반토막 난다 — 그 상태의 완주율은 100% 를 넘는다.
+  */
+  const requestedRef = useRef<{ period: PeriodType; dateKey: string } | null>(
+    null,
+  )
+  useEffect(() => {
+    const previous = requestedRef.current
+    if (previous?.period === period && previous.dateKey === dateKey) return
+    requestedRef.current = { period, dateKey }
+    trackAnalyticsEvent("stats_report_requested", {
+      period,
+      entry:
+        previous === null
+          ? "enter"
+          : previous.period === period
+            ? "shift"
+            : "period",
+    })
+  }, [period, dateKey])
+
+  // 완료는 **한 벌당 1회**. 리포트가 도착한 뒤에도 이 화면은 스크롤·테마로 리렌더된다.
+  const viewedRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!data) return
+    const key = `${period}:${dateKey}`
+    if (viewedRef.current === key) return
+    viewedRef.current = key
+    trackAnalyticsEvent("stats_report_viewed", {
+      period,
+      reliability: data.reliability.level,
+    })
+  }, [data, period, dateKey])
+
+  /*
+    실패는 **여정 이름**으로 센다. 공용 통로 둘 다 여기 닿지 않기 때문이다 —
+    `error_state_viewed` 는 `V2ErrorState` 한 곳에서만 나가는 것이 계약인데 이 화면은
+    자기 카드(`ErrorCard`)를 그리고, `presentError` 도 안 부르므로
+    `app_error_presented` 에도 한 행이 없다. 여기서 안 세면 어디에서도 안 세어진다.
+  */
+  const errorShownRef = useRef<string | null>(null)
+  const resolved = isError ? resolveError(error) : null
+  useEffect(() => {
+    const key = `${period}:${dateKey}`
+    if (!isError) {
+      // 재시도로 풀린 기간은 다시 실패하면 다시 센다(같은 기간의 두 번째 실패는 새 사건이다).
+      if (errorShownRef.current === key) errorShownRef.current = null
+      return
+    }
+    if (errorShownRef.current === key) return
+    errorShownRef.current = key
+    trackAnalyticsEvent("stats_report_failed", {
+      period,
+      // 이 화면에서 가장 흔한 실패는 장애가 아니라 **기록이 없는 기간**(404)이다.
+      fail_kind: toAnalyticsFailKind(error),
+    })
+  }, [isError, error, period, dateKey])
+
+  /*
+    대기도 공용 통로다. `useLoadingVisible` 을 태우면 `wait_perceived` 가 따라오고,
+    덤으로 캐시 히트에서 스켈레톤이 한 프레임 번쩍이던 것도 사라진다.
+  */
+  const showSkeleton = useLoadingVisible(isLoading, {
+    surface: "statistics_report",
+  })
+
   const today = startOfDay(new Date())
   // 미래 기간으로는 못 간다 — 다음 기간의 시작일이 오늘을 넘으면 비활성.
   const nextDisabled =
@@ -184,11 +264,15 @@ export function StatsReportScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* 로딩 중에는 스켈레톤이거나 **아무것도 아니다**(문턱 아래의 빠른 응답).
+            여기서 오류 가지로 떨어지면 캐시 히트마다 오류 카드가 한 프레임 번쩍인다. */}
         {isLoading ? (
-          <LoadingSkeleton />
+          showSkeleton ? (
+            <LoadingSkeleton />
+          ) : null
         ) : isError || !data ? (
           <ErrorCard
-            resolved={resolveError(error)}
+            resolved={resolved ?? resolveError(error)}
             onRetry={() => refetch()}
             s={s}
           />

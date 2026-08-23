@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { spacing } from "@/src/design-system-v2"
 import { TYPE } from "@/src/theme/surface"
 import { normalizeOnboardingSubtitle } from "../data/onboardingPresentation"

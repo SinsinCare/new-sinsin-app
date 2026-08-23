@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { router } from "expo-router"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -8,9 +9,13 @@ import { StepTextInput, StepHelperText } from "../components"
 import { useEmailLogin } from "../hooks"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_TYPE } from "../data/authSurface"
+import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
 import type { LoginForm } from "../types"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** 화면에 놓인 순서. `first_fail` 이 화면과 같은 답을 내려면 필요하다. */
+const LOGIN_FIELDS = ["email", "password"] as const
 
 /**
  * 이메일 로그인. 가입 스텝과 같은 규격을 쓴다 — 라벨 13/18, 필드 h56 r14(포커스 시
@@ -71,7 +76,9 @@ export function EmailLoginScreen() {
           </Pressable>
         </View>
       }
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, (errors) =>
+        trackFormValidationFailed("email_login", LOGIN_FIELDS, errors),
+      )}
     >
       <ConfirmModal
         visible={!!withdrawalPending}
@@ -146,7 +153,13 @@ export function EmailLoginScreen() {
                 textContentType="password"
                 autoComplete="current-password"
                 returnKeyType="done"
-                onSubmitEditing={handleSubmit(onSubmit)}
+                onSubmitEditing={handleSubmit(onSubmit, (errors) =>
+                  trackFormValidationFailed(
+                    "email_login",
+                    LOGIN_FIELDS,
+                    errors,
+                  ),
+                )}
                 hasError={!!loginError}
               />
               {loginError ? (

@@ -17,7 +17,8 @@
  */
 
 import { useState } from "react"
-import { StyleSheet, Text, View, Pressable } from "react-native"
+import { StyleSheet, View, Pressable } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useAppRouter } from "@/src/shared/navigation"
 import Animated, {
   useAnimatedStyle,
@@ -59,7 +60,8 @@ export function FloatingAiButton({ bottom }: { bottom: number }) {
           { backgroundColor: isDark ? PILL_BG.dark : PILL_BG.light },
         ]}
       >
-        <Icon name="sparkle" size={18} color={contentColor} />
+        {/* 두 톤 채움이라 tint 를 받지 않는다 — registry 의 sparkle 주석. */}
+        <Icon name="sparkle" size={18} />
         <Text style={[styles.label, { color: contentColor }]}>
           {t("consult.shortTitle")}
         </Text>
@@ -105,4 +107,6 @@ export {
   FLOATING_AI_BUTTON_BOTTOM,
   FLOATING_AI_BUTTON_COVERAGE,
   FLOATING_AI_BUTTON_HEIGHT,
+  floatingAiButtonBottomInScreen,
+  floatingAiButtonScrollInset,
 } from "./floatingAiButtonLayout"

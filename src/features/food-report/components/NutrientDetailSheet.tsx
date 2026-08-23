@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { TYPE } from "@/src/theme/surface"

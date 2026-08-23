@@ -28,6 +28,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useAuth } from "@/src/hooks"
 import { logger } from "@/src/lib/logger"
 import { resolveEntryRoute, useAppRouter } from "@/src/shared/navigation"
@@ -40,8 +41,11 @@ export default function NotFoundScreen() {
   const { isAuthenticated, accountState, requiresAdditionalInfo, entryGate } =
     useAuth()
 
+  /* 경로 하나당 한 번. 이 화면에 도달했다는 것은 위 머리말대로 **둘 다 버그**이므로
+     경로마다 세는 것이 맞다 — 경로는 남기지 않는다(dev 화면에만 그린다). */
   useEffect(() => {
     logger.debug("[router] unmatched route", pathname)
+    trackAnalyticsEvent("app_dead_route_viewed", {})
   }, [pathname])
 
   return (
@@ -50,6 +54,7 @@ export default function NotFoundScreen() {
       <V2Screen>
         <View style={styles.body}>
           <V2EmptyState
+            surface="not_found"
             icon="caution"
             title={t("notFound.title")}
             description={t("notFound.description")}

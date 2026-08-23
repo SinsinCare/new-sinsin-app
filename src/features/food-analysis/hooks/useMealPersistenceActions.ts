@@ -2,7 +2,8 @@ import { useRef, useState } from "react"
 
 import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import { presentError } from "@/src/lib/errorMessage"
+import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { foodCameraService } from "@/src/services/data"
 import {
   createMealConsultController,
@@ -83,6 +84,14 @@ export function useMealPersistenceActions(options?: MealPersistenceOptions) {
       await consultControllerRef.current!.start(input)
       return true
     } catch (error) {
+      /*
+        실재하는 실패다 — 상담은 아직 저장 안 된 결과를 서버에 **먼저** 만들어야 해서
+        (`ensureMealDiary`) 여기서 400/5xx 가 난다. `source` 는 싣지 않는다: 이 훅은
+        어느 결과 화면에서 불렸는지 모르고, 지어내면 `_started` 와 축이 어긋난다.
+      */
+      trackAnalyticsEvent("food_record_consult_failed", {
+        fail_kind: toAnalyticsFailKind(error),
+      })
       presentError(error, {
         scope: "meal-consult-start",
         retry: () => void startConsultation(input),
@@ -104,6 +113,10 @@ export function useMealPersistenceActions(options?: MealPersistenceOptions) {
         삭제만 되고 화면에는 지운 기록이 남는다. 문구가 원인을 말하고, 다시 지우는 것은
         기록을 다시 눌러서 하면 된다.
       */
+      // 재시도 버튼이 없는 경로다(위 주석) — 실패하면 거기서 끝나므로, 안 세면 영원히 모른다.
+      trackAnalyticsEvent("food_record_delete_failed", {
+        fail_kind: toAnalyticsFailKind(error),
+      })
       presentError(error, { scope: "meal-diary-delete" })
       return false
     } finally {

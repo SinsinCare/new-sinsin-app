@@ -63,7 +63,7 @@ export { RecipeSuggestPanel } from "./RecipeSuggestPanel"
  * 파싱하지 못해 "마지막 줄이 필에 가리지 않는가" 를 검증할 수 없다.
  */
 export {
-  RECIPE_LIST_BOTTOM_INSET,
+  recipeListBottomInset,
   RECIPE_ROW_ART,
   RECIPE_ROW_HEIGHT,
   RECIPE_ROW_PAD_V,
@@ -127,9 +127,11 @@ export {
   categoryFilterAffordances,
   mealSectionCopyKeys,
   mealSlotStateBadgeKey,
+  mealSlotWordKey,
   RECIPE_HOME_EMPTY_COPY_KEY,
   RECIPE_HOME_LIST_TITLE_KEY,
   resolveMealSectionBody,
+  resolveMealSectionDay,
   resolveRecipeBrowseLayout,
   resolveSlotReasonCopy,
   splitTitleHighlight,
@@ -138,11 +140,24 @@ export {
 export type {
   CategoryFilterAffordance,
   MealSectionBody,
+  MealSectionDay,
   RecipeBrowseLayout,
   RecipeBrowseLayoutInput,
   SlotReasonCopy,
   SplitTitle,
 } from "./recipeHomePresentation"
+
+/** 고정층(①)의 세로 격자와 예산. 산술의 정본은 그 파일 머리말에 있다. */
+export {
+  RECIPE_CATEGORY_RAIL,
+  RECIPE_SEARCH_FIELD_HEIGHT,
+  RECIPE_STICKY,
+  RECIPE_STICKY_BUDGET,
+  RECIPE_STICKY_BUDGET_SCREEN_HEIGHT,
+  RECIPE_STICKY_TITLE_ROW,
+  recipeCategoryRailHeight,
+  recipeHomeStickyHeight,
+} from "./recipeHomeStickyLayout"
 
 export {
   resolveResultCount,

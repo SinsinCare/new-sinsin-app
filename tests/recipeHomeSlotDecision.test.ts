@@ -25,9 +25,14 @@ import {
   normalizeRecipeHomeResponse,
 } from "../src/features/recipe/services/recipeHomeService"
 import {
+  mealSectionCopyKeys,
   mealSlotStateBadgeKey,
+  resolveMealSectionBadgeKey,
+  resolveMealSectionDay,
   resolveSlotReasonCopy,
 } from "../src/features/recipe/components/list/recipeHomePresentation"
+import enRecipe from "../src/i18n/locales/en/recipe.json"
+import koRecipe from "../src/i18n/locales/ko/recipe.json"
 import type {
   MealSlot,
   SlotDecision,
@@ -154,11 +159,148 @@ describe("이유 문장", () => {
     expect(record?.key).not.toBe(skip?.key)
   })
 
-  it("내일 아침 문장에는 치환할 끼니가 없다", () => {
-    const copy = resolveSlotReasonCopy(
-      decision({ reason: "NEXT_DAY", isNextDay: true }),
-    )
-    expect(copy?.mealSlot).toBeNull()
+  /**
+   * 예전에는 여기에 "오늘 끼니를 다 기록했어요. 내일 아침부터 보여드려요" 가 있었고,
+   * 두 줄 아래 제목은 "오늘의 아침 레시피" 였다 — **한 화면이 서로 다른 날을 말했다.**
+   * 날은 이제 제목이 말하므로 이 줄은 같은 말의 두 번째 사본이 된다.
+   */
+  it("하루가 넘어간 것은 문장이 아니라 제목이 말한다", () => {
+    expect(
+      resolveSlotReasonCopy(decision({ reason: "NEXT_DAY", isNextDay: true })),
+    ).toBeNull()
+  })
+
+  it("남은 두 문장은 언제나 원인 끼니를 말한다 — 치환이 빌 수 없다", () => {
+    for (const reason of ["AFTER_RECORD", "AFTER_SKIP"] as const) {
+      for (const clockSlot of ["BREAKFAST", "LUNCH", "DINNER"] as const) {
+        const copy = resolveSlotReasonCopy(decision({ reason, clockSlot }))
+        expect(copy?.mealSlot).toBe(clockSlot)
+      }
+    }
+  })
+})
+
+/* ══════════════════ 제목이 말하는 날 = 실제로 보여 주는 날 ══════════════════ */
+
+/**
+ * 이번 결함 그 자체를 못 박는다.
+ *
+ * 판정(`SlotDecision`)과 문안(제목 문자열)은 **다른 파일에 산다.** 한쪽만 봐서는
+ * "내일 아침을 오늘이라고 부르는" 상태를 잡을 수 없다 — 실제로 그 상태로 배포돼 있었다.
+ * 그래서 두 쪽을 붙여 놓고, 어떤 판정에서도 어긋나지 않는지 본다.
+ */
+describe("어떤 판정에서도 제목의 날과 보여 주는 날이 같다", () => {
+  const DAY_WORDS = {
+    ko: { TODAY: /오늘/u, NEXT_DAY: /내일/u },
+    en: { TODAY: /\btoday\b/iu, NEXT_DAY: /\btomorrow\b/iu },
+  } as const
+
+  /** 점 표기 키로 리소스에서 문자열을 꺼낸다. */
+  function title(
+    resource: typeof koRecipe,
+    slot: MealSlot,
+    day: "TODAY" | "NEXT_DAY",
+  ): string {
+    const leaf = mealSectionCopyKeys(slot, day).title.split(".").at(-1)
+    const section = resource.home.section[
+      slot.toLowerCase() as "breakfast" | "lunch" | "dinner"
+    ] as Record<string, string>
+    return section[leaf as string]
+  }
+
+  it("넘어간 슬롯만 내일이고, 나머지 두 섹션은 오늘이다", () => {
+    const next = decision({
+      slot: "BREAKFAST",
+      reason: "NEXT_DAY",
+      clockSlot: "DINNER",
+      isNextDay: true,
+    })
+    expect(resolveMealSectionDay("BREAKFAST", next)).toBe("NEXT_DAY")
+    // 이 둘에는 오늘의 `기록함`·`건너뜀` 배지가 붙는다 — 제목이 내일이면 배지와 어긋난다.
+    expect(resolveMealSectionDay("LUNCH", next)).toBe("TODAY")
+    expect(resolveMealSectionDay("DINNER", next)).toBe("TODAY")
+  })
+
+  it("하루가 안 넘어갔으면 세 섹션이 다 오늘이다", () => {
+    for (const reason of ["CLOCK", "AFTER_RECORD", "AFTER_SKIP"] as const) {
+      const today = decision({ reason, slot: "LUNCH", clockSlot: "BREAKFAST" })
+      for (const slot of ["BREAKFAST", "LUNCH", "DINNER"] as const) {
+        expect(resolveMealSectionDay(slot, today)).toBe("TODAY")
+      }
+    }
+  })
+
+  it("판정이 없으면 오늘이다 — 모르는 것을 내일이라고 하지 않는다", () => {
+    for (const slot of ["BREAKFAST", "LUNCH", "DINNER"] as const) {
+      expect(resolveMealSectionDay(slot, null)).toBe("TODAY")
+    }
+  })
+
+  it("27가지 하루 × 세 시각 전부에서 제목이 판정과 어긋나지 않는다", () => {
+    const ORIGINAL = process.env.EXPO_PUBLIC_RECIPE_HOME_MOCK_STATE
+    const values = ["OPEN", "RECORDED", "SKIPPED"] as const
+    let sawNextDay = false
+    try {
+      for (const b of values) {
+        for (const l of values) {
+          for (const d of values) {
+            for (const hour of [9, 13, 19]) {
+              process.env.EXPO_PUBLIC_RECIPE_HOME_MOCK_STATE = `BREAKFAST:${b},LUNCH:${l},DINNER:${d}`
+              const home = buildMockRecipeHome(kst(hour))
+              if (home.slotDecision.isNextDay) sawNextDay = true
+              for (const section of home.sections) {
+                const day = resolveMealSectionDay(
+                  section.slot,
+                  home.slotDecision,
+                )
+                /*
+                  이 섹션이 내일인 것은 **판정이 그 슬롯을 내일이라고 했을 때뿐**이다.
+                  제목 문자열이 그 판정과 같은 낱말을 쓰는지 두 언어로 확인한다.
+                */
+                expect(day).toBe(
+                  home.slotDecision.isNextDay &&
+                    home.slotDecision.slot === section.slot
+                    ? "NEXT_DAY"
+                    : "TODAY",
+                )
+                for (const [locale, resource] of [
+                  ["ko", koRecipe],
+                  ["en", enRecipe],
+                ] as const) {
+                  const text = title(resource, section.slot, day)
+                  expect(text).toMatch(DAY_WORDS[locale][day])
+                  expect(text).not.toMatch(
+                    DAY_WORDS[locale][day === "TODAY" ? "NEXT_DAY" : "TODAY"],
+                  )
+                }
+                /*
+                  배지는 **오늘의** 사실이다(`기록함`·`건너뜀`). 내일이라고 말하는 섹션에
+                  오늘의 배지가 붙으면 모순을 자리만 옮긴 것이 된다.
+                */
+                if (day === "NEXT_DAY") {
+                  expect(
+                    resolveMealSectionBadgeKey({ state: section.state, day }),
+                  ).toBeNull()
+                }
+              }
+              /*
+                하루가 넘어간 날에는 이유 문장이 없다 — 제목이 이미 그 말을 했다.
+                남아 있으면 사용자가 본 그 "있으나 없으나" 한 줄이 돌아온 것이다.
+              */
+              if (home.slotDecision.isNextDay) {
+                expect(resolveSlotReasonCopy(home.slotDecision)).toBeNull()
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      if (ORIGINAL === undefined)
+        delete process.env.EXPO_PUBLIC_RECIPE_HOME_MOCK_STATE
+      else process.env.EXPO_PUBLIC_RECIPE_HOME_MOCK_STATE = ORIGINAL
+    }
+    // 넘어가는 날을 한 번도 못 밟았으면 위 반복 전체가 헛돈 것이다.
+    expect(sawNextDay).toBe(true)
   })
 })
 
@@ -171,6 +313,25 @@ describe("배지", () => {
     expect(mealSlotStateBadgeKey("RECORDED")).not.toBe(
       mealSlotStateBadgeKey("SKIPPED"),
     )
+  })
+
+  /**
+   * `state` 는 **오늘** 그 끼니를 어떻게 했는가다. 세 끼를 다 기록한 밤에는 아침 슬롯의
+   * 섹션이 "내일 아침" 을 말하게 되는데, 거기에 오늘의 `기록함` 이 그대로 붙으면 제목과
+   * 배지가 서로 다른 날을 말한다 — 이번에 없앤 모순이 자리만 옮겨 되살아난다.
+   */
+  it("내일을 말하는 섹션에는 오늘의 배지가 붙지 않는다", () => {
+    for (const state of ["OPEN", "RECORDED", "SKIPPED"] as const) {
+      expect(resolveMealSectionBadgeKey({ state, day: "NEXT_DAY" })).toBeNull()
+    }
+  })
+
+  it("오늘을 말하는 섹션의 배지는 종전 그대로다", () => {
+    for (const state of ["OPEN", "RECORDED", "SKIPPED"] as const) {
+      expect(resolveMealSectionBadgeKey({ state, day: "TODAY" })).toBe(
+        mealSlotStateBadgeKey(state),
+      )
+    }
   })
 })
 

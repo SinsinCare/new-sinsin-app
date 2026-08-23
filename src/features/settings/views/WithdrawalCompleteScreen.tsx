@@ -33,7 +33,6 @@ export function WithdrawalCompleteScreen() {
 
       <BottomActionBar
         label={t("withdrawal.signIn")}
-        paddingBottom={insets.bottom + 16}
         onPress={handleComplete}
       />
     </ThemedView>

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { router } from "expo-router"
 import { useAuth } from "@/src/hooks"
 import { presentError } from "@/src/lib/errorMessage"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import type { LoginForm } from "../types"
 import { presentAuthFailure } from "../utils/authFailure"
@@ -31,6 +32,11 @@ export function useEmailLogin() {
       // 로그인할지 묻는 모달과 취소 토큰이 필요해서다.
       const pending = getWithdrawalPendingResult(e)
       if (pending) {
+        /* 소셜 쪽과 **같은 이름**으로 센다. 종전에는 이 경로에 아무 흔적이 없어
+           "탈퇴 대기 계정이 로그인을 시도했다" 는 사실이 소셜 진입로에서만 보였다. */
+        trackAnalyticsEvent("auth_withdrawal_prompt_viewed", {
+          source: "email",
+        })
         setWithdrawalPending(pending)
         return
       }

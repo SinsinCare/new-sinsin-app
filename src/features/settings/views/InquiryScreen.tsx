@@ -31,29 +31,38 @@
  * 세 라벨이 한 곳에서 나와야 크기·색·간격이 영영 어긋나지 않는다.
  */
 
-import { useMemo, useState, type ReactNode } from "react"
+import { useCallback, useMemo, useState, type ReactNode } from "react"
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native"
+import { Image } from "expo-image"
+import * as ImagePicker from "expo-image-picker"
 import { useTranslation } from "react-i18next"
 
 import {
   GUTTER,
   V2BottomCTA,
   V2Chip,
+  V2Icon,
   V2ScreenHeader,
   V2TextField,
+  radius,
   spacing,
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { api } from "@/src/services/core/apiClient"
+import {
+  MAX_INQUIRY_PHOTOS,
+  submitInquiry,
+} from "@/src/services/data/inquiryService"
+import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
 import { showConfirm } from "@/src/lib/dialog"
-import { showSuccessToast } from "@/src/lib/toast"
+import { showCautionToast, showSuccessToast } from "@/src/lib/toast"
 import { presentError } from "@/src/lib/errorMessage"
 import { useAppRouter } from "@/src/shared/navigation"
 
@@ -81,6 +90,7 @@ export function InquiryScreen() {
   const [category, setCategory] = useState<string | null>(null)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   /*
@@ -99,9 +109,50 @@ export function InquiryScreen() {
   const trimmedTitle = title.trim()
   const trimmedContent = content.trim()
   const isDirty =
-    !!category || trimmedTitle.length > 0 || trimmedContent.length > 0
+    !!category ||
+    trimmedTitle.length > 0 ||
+    trimmedContent.length > 0 ||
+    photos.length > 0
   const canSubmit =
     !!category && trimmedTitle.length > 0 && trimmedContent.length > 0
+
+  /*
+    사진 고르기. **남은 자리만큼만 고르게 한다** — 6장을 고르게 해 놓고 5장에서 자르면
+    사라진 한 장의 이유를 사용자가 알 수 없다(`MediaPicker` 머리말과 같은 규칙).
+  */
+  const handleAddPhotos = useCallback(async () => {
+    const remaining = MAX_INQUIRY_PHOTOS - photos.length
+    if (remaining <= 0 || isSubmitting) return
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== "granted") {
+      await showOpenSettingsAlert(
+        t("inquiry.photoPermissionTitle"),
+        t("inquiry.photoPermissionBody"),
+      )
+      return
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+      quality: 1,
+    })
+    if (result.canceled) return
+
+    // OS 가 한도를 지키지 않는 경우가 있다(안드로이드 일부 갤러리). 여기서 한 번 더 자르고,
+    // 자를 일이 생겼으면 조용히 넘어가지 않는다.
+    const picked = result.assets.slice(0, remaining)
+    if (result.assets.length > picked.length) {
+      showCautionToast(t("inquiry.photoLimit", { count: MAX_INQUIRY_PHOTOS }))
+    }
+    setPhotos((current) => [...current, ...picked])
+  }, [isSubmitting, photos.length, t])
+
+  const handleRemovePhoto = useCallback((uri: string) => {
+    setPhotos((current) => current.filter((photo) => photo.uri !== uri))
+  }, [])
 
   const handleBack = async () => {
     if (isDirty) {
@@ -116,8 +167,10 @@ export function InquiryScreen() {
     router.back()
   }
 
-  // /user/inquiries는 현재 제목과 본문만 받는다.
-  // 첨부 계약이 생기기 전에는 사진이 전송되는 것처럼 보이는 UI를 노출하지 않는다.
+  /*
+    사진이 있으면 멀티파트, 없으면 JSON — 경로 선택은 `submitInquiry` 안에 있다.
+    사진 있는 문의는 줄이기 + 업로드가 걸려 몇 초 더 걸린다. 그동안 버튼은 로딩 상태다.
+  */
   const handleSubmit = async () => {
     if (!canSubmit || isSubmitting) return
     setIsSubmitting(true)
@@ -126,9 +179,10 @@ export function InquiryScreen() {
         INQUIRY_CATEGORIES.find((item) => item.value === category)?.labelKey ??
           "inquiry.categories.other",
       )
-      await api.post("/user/inquiries", {
+      await submitInquiry({
         subject: `[${categoryLabel}] ${trimmedTitle}`,
         content: trimmedContent,
+        photos,
       })
       // 접수는 끝났다 — 확인을 눌러야 돌아가는 대신 돌아가면서 알린다.
       router.back()
@@ -215,6 +269,71 @@ export function InquiryScreen() {
               disabled={isSubmitting}
             />
           </Field>
+
+          {/* 4) 사진 — 붙일 것이 있을 때만 자리를 차지한다. 타일은 정사각형 한 줄이다. */}
+          <Field
+            label={t("inquiry.photos")}
+            trailing={
+              <Text
+                style={[
+                  typography.subtext.small,
+                  { color: colors.label.assistive },
+                ]}
+              >
+                {photos.length}/{MAX_INQUIRY_PHOTOS}
+              </Text>
+            }
+          >
+            <View style={styles.photos}>
+              {photos.map((photo) => (
+                <View key={photo.uri} style={styles.photoTile}>
+                  <Image
+                    source={{ uri: photo.uri }}
+                    style={styles.photoImage}
+                    contentFit="cover"
+                  />
+                  {/* 지우기는 타일 위 작은 원이지만 탭 영역은 hitSlop 으로 44 를 채운다. */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("inquiry.photoRemove")}
+                    onPress={() => handleRemovePhoto(photo.uri)}
+                    disabled={isSubmitting}
+                    hitSlop={12}
+                    style={[
+                      styles.photoRemove,
+                      { backgroundColor: colors.label.normal },
+                    ]}
+                  >
+                    <V2Icon
+                      name="close"
+                      size={12}
+                      color={colors.background.default}
+                    />
+                  </Pressable>
+                </View>
+              ))}
+
+              {photos.length < MAX_INQUIRY_PHOTOS ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("inquiry.photoAdd")}
+                  onPress={() => void handleAddPhotos()}
+                  disabled={isSubmitting}
+                  style={[
+                    styles.photoTile,
+                    styles.photoAdd,
+                    { borderColor: colors.line.normal },
+                  ]}
+                >
+                  <V2Icon
+                    name="camera"
+                    size={20}
+                    color={colors.label.alternative}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+          </Field>
         </View>
 
         <V2BottomCTA
@@ -278,6 +397,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  photos: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[8],
+    marginTop: spacing[2],
+  },
+  photoTile: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.sm,
+    overflow: "visible",
+  },
+  photoImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: radius.sm,
+  },
+  photoRemove: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoAdd: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
   },
   chips: {
     flexDirection: "row",

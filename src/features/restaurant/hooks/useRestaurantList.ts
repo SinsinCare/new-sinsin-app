@@ -153,6 +153,18 @@ export function useRestaurantList({
     return resolveEmptyReason(filters)
   }, [infinite.isError, infinite.error, pages, items.length, filters])
 
+  /*
+    `enabled` 가 꺼져 있어도 `refetch()` 는 실행된다(기전은 `useMapSearch` 의 같은
+    주석). 여기서는 그게 **조용한 쪽이라 더 나쁘다** — 지도가 뷰포트를 확정하기 전에는
+    `bounds` 가 `null` 이고, bbox 도 지역 필터도 없는 요청은 서버에서 **전국**이 된다.
+    그 요청은 실패하지 않고 **성공해서** 엉뚱한 카드로 목록을 채운다. 위 `enabled` 가
+    막으려던 바로 그 한 발이라, 재시도가 그 가드를 우회하면 가드가 없는 것과 같다.
+  */
+  const refetch = useCallback(() => {
+    if (!enabled) return
+    void infinite.refetch()
+  }, [enabled, infinite])
+
   const loadMore = useCallback(() => {
     if (infinite.hasNextPage && !infinite.isFetchingNextPage) {
       void infinite.fetchNextPage()
@@ -175,6 +187,6 @@ export function useRestaurantList({
     error: infinite.error,
     emptyReason,
     loadMore,
-    refetch: infinite.refetch,
+    refetch,
   }
 }

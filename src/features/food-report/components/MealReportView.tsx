@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons"
 import { useMemo, useState } from "react"
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
 
 import { useSurface } from "@/src/hooks/useSurface"

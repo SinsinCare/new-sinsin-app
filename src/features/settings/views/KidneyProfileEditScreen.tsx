@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-  TextInput,
-  Switch,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Pressable, Switch } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"

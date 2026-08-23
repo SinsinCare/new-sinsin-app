@@ -6,8 +6,8 @@ import {
   Pressable,
   Image,
   LayoutAnimation,
-  Text,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import * as ImagePicker from "expo-image-picker"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -254,15 +254,21 @@ export function ProfileEditScreen() {
             ]}
             onPress={handlePickProfileImage}
           >
+            {/*
+              빈 아바타는 **바닥에서 한 평면 떨어진 면**이다. `s.surface`(우물)였는데
+              이 화면의 바닥이 바로 그 우물이라 라이트에서 원이 통째로 사라졌다
+              (ΔL* 0.00 — 바닥이 `background.lower` 이던 시절엔 1.0 이라 원래도
+              거의 안 보였다). 여기서는 그 "한 평면" 이 카드다: 라이트 ΔL* **7.25**.
+              (마이페이지의 같은 아바타는 흰 카드 **안**이라 반대로 우물이 맞다.)
+              다크는 #3f3f45 → #313135 로 바닥과 ΔL* 8.64 — 다른 카드들과 같은 단이다.
+            */}
             {profileImage || profile?.profileImage ? (
               <Image
                 source={{ uri: profileImage?.uri ?? profile?.profileImage }}
                 style={styles.avatarCircle}
               />
             ) : (
-              <View
-                style={[styles.avatarCircle, { backgroundColor: s.surface }]}
-              >
+              <View style={[styles.avatarCircle, { backgroundColor: s.card }]}>
                 <Ionicons name="person" size={38} color={s.textWeak} />
               </View>
             )}
@@ -285,7 +291,7 @@ export function ProfileEditScreen() {
 
         {/* 내 정보 — 한 줄 행: 라벨은 왼쪽, 값은 오른쪽 */}
         <Text
-          style={[styles.groupTitle, { color: s.textMuted }]}
+          style={[styles.groupTitle, { color: s.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("profile.section.personal")}
@@ -389,7 +395,7 @@ export function ProfileEditScreen() {
 
         {/* 보안 */}
         <Text
-          style={[styles.groupTitle, { color: s.textMuted }]}
+          style={[styles.groupTitle, { color: s.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("profile.section.security")}
@@ -516,6 +522,20 @@ const styles = StyleSheet.create({
   avatarHint: {
     ...TYPE.cardSub,
   },
+  /*
+    ■ **색은 `surface.text`(= `label.neutral`)다 — `textMuted` 가 아니다** (2026-08-22)
+
+    (B) 섹션 라벨(`SectionHeader` 머리말: 바닥 위 이름표 + 그 아래 흰 카드)이 오래
+    `textMuted`(= `label.alternative`)였는데, 화면 바닥 위에서 **2.68:1** 이다 —
+    본문 기준 4.5 는커녕 큰 글자 기준 3 에도 못 미친다(13.5 SemiBold 는 큰 글자가
+    아니다: 기준은 18.66 이상 또는 14 이상 Bold).
+
+    **값은 안 고쳤다.** `label.alternative` 는 146곳이 보고 식당 상세 시안 실측에
+    묶여 있다. 고친 것은 **부르는 쪽의 토큰 선택**이고, 그건 이 감사가 커뮤니티에서
+    이미 낸 결론이다(`design-system-v2/tokens/colors.ts` §label 사다리 — "읽혀야 하는
+    글자의 바닥은 `neutral`"). 바닥 위 **4.72:1**, 다크도 3.00 → **5.79** 로 같이
+    올라간다(거기서도 4.5 밖이었다). 계산은 `tests/lightContrastAudit.test.ts` §11.
+  */
   groupTitle: {
     ...TYPE.caption,
     fontWeight: "600",

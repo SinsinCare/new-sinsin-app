@@ -462,7 +462,6 @@ export function HealthDataUploadScreen() {
       <BottomActionBar
         label={analyzing ? t("upload.readingResults") : t("upload.readResults")}
         disabled={files.length === 0 || analyzing}
-        paddingBottom={insets.bottom + 16}
         onPress={handleAnalyze}
       />
 
@@ -617,9 +616,7 @@ const styles = StyleSheet.create({
     gap: 2,
     backgroundColor: "#F8FAFC",
   },
-  addSlotButtonPressed: {
-    backgroundColor: "#F0F2F5",
-  },
+
   addSlotText: {
     fontSize: 11,
     color: "#94A3B8",
@@ -640,9 +637,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
   },
-  pickButtonPressed: {
-    backgroundColor: "#F0FDF4",
-  },
+
   pickButtonDisabled: {
     opacity: 0.5,
   },

@@ -30,6 +30,7 @@ import { Platform, Share } from "react-native"
 
 import { hapticSelection } from "@/src/lib/haptics"
 import { logger } from "@/src/lib/logger"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import { buildSharePayload, type SharePayloadInput } from "./sharePayload"
 
 export { buildSharePayload } from "./sharePayload"
@@ -42,9 +43,24 @@ export interface ShareContentInput extends SharePayloadInput {
 /**
  * 공유 시트를 연다. 취소는 조용히, 실패는 로그로 남긴다.
  * 호출부는 `await` 하지 않아도 된다 — 이 함수는 던지지 않는다.
+ *
+ * ■ **왜 `afterModalTransitions()` 를 먼저 기다리나** (2026-08-10 회귀)
+ *
+ * 공유 시트는 RN 모달이 아니라 **네이티브 present** 다. iOS 는 이미 present/dismiss 가
+ * 진행 중이면 새 present 를 **조용히 거부한다** — 예외도 안 나고 아무 일도 안 일어난다.
+ * 그래서 "공유 버튼을 눌렀는데 아무 반응이 없다" 로 보고된다.
+ *
+ * 실제로 그렇게 깨졌다: 식단 분석 결과의 `다른 앱으로 공유` 는 하단 시트에서 고른 **직후**
+ * 공유 시트를 띄우는데, 그 시트의 dismiss 전환이 아직 돌고 있었다. 같은 화면의 이미지
+ * 선택기는 이미 이 대기를 하고 있었다(`recipe/services/imagePickerService.ts`) — 공유만
+ * 빠져 있었고, `AppModal` 머리말이 **`Share` 를 콕 집어** 이 대기를 요구하고 있었다.
+ *
+ * 대기를 호출부가 아니라 여기에 두는 이유: 공유 버튼은 계속 늘어나고, 그때마다 이 규칙을
+ * 기억해야 한다면 언젠가 또 빠진다. 전이가 없으면 즉시 resolve 하므로 비용도 없다.
  */
 export async function shareContent(input: ShareContentInput): Promise<void> {
   hapticSelection()
+  await afterModalTransitions()
   try {
     await Share.share(buildSharePayload(input, Platform.OS))
   } catch (error) {

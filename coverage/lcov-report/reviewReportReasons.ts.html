@@ -1,0 +1,553 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for reviewReportReasons.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="prettify.css" />
+    <link rel="stylesheet" href="base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="index.html">All files</a> reviewReportReasons.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>17/17</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">77.77% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>7/9</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>3/3</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>14/14</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * 후기 신고 사유 — **화면의 어휘**를 **서버의 어휘**로 옮기는 표.
+ *
+ * ## 왜 표가 필요한가 (이 파일이 고친 결함)
+ *
+ * 시트는 `SPAM | IRRELEVANT | ABUSE | PRIVACY | ETC` 를 그대로 서버에 보내고 있었다.
+ * 서버가 받는 값은 `SPAM | HARASSMENT | INAPPROPRIATE_CONTENT | FALSE_INFORMATION |
+ * OTHER`(`restaurant/schemas.ts` 의 `REVIEW_REPORT_REASON_PATTERN`) 이라 겹치는 것은
+ * `SPAM` 하나뿐 — **다섯 중 넷이 400 이었다.** 사용자에게는 "신고가 안 되는 앱"이었다.
+ *
+ * 서버 열거형은 못 바꾼다. 서버가 와이어 계약의 정본이고 배포 주기도 다르며, 그 값
+ * 공간은 커뮤니티 신고와 **일부러** 같은 것이다(같은 파일 머리말: 두 번째 어휘를 만들면
+ * 운영 콘솔이 신고를 표별로 다른 사유 집합으로 세게 된다). 그러니 옮기는 쪽은 앱이다 —
+ * 커뮤니티 신고 화면(`CommunityReportScreen`)이 이미 그렇게 하고 있다.
+ *
+ * ## 어느 UI 사유를 어느 서버 값에 붙였나
+ *
+ * | 화면 사유 | 서버 값 | 근거 |
+ * | --- | --- | --- |
+ * | 주문과 관련없는 내용 | `INAPPROPRIATE_CONTENT` | 후기가 놓일 자리에 놓이지 않았다는 신고다. 서버 어휘에 "주제 이탈" 이 없어 가장 가까운 일반 통에 넣는다. |
+ * | 음식점·메뉴와 관련 없는 내용 | `INAPPROPRIATE_CONTENT` | 위와 같은 종류(주제 이탈). 축만 주문→가게로 다르다. |
+ * | 욕설·비방 | `HARASSMENT` | 커뮤니티의 `harassment` 와 같은 값. 사람을 향한 표현은 한 통에 모인다. |
+ * | 광고·홍보 | `SPAM` | 원래부터 유일하게 맞던 값. |
+ * | 개인정보 노출 | `INAPPROPRIATE_CONTENT` | 커뮤니티 `privacy` 선례를 그대로 따른다. |
+ * | 리뷰 무단 복사 | `INAPPROPRIATE_CONTENT` | 커뮤니티 `copyright` 선례를 그대로 따른다. |
+ * | 기타 | `OTHER` | 직접 입력한 문장이 곧 사유다. |
+ *
+ * **`FALSE_INFORMATION` 은 일부러 비워 둔다.** 시안의 일곱 사유 중 "허위 정보" 에
+ * 해당하는 것이 없다. 통을 고르게 채우려고 주제 이탈을 여기 붙이면 운영 콘솔의
+ * "허위 정보" 집계가 실제로는 주제 이탈이 되어, 있는 지표보다 **틀린 지표**가 된다.
+ *
+ * ## `detail` 앞머리 — 접힌 사유를 살려 보낸다 (되돌리지 말 것)
+ *
+ * 일곱이 다섯으로, 그중 넷이 한 값으로 접힌다. 서버 행만 보면 운영자는
+ * `INAPPROPRIATE_CONTENT` 더미 안에서 "개인정보 노출" 과 "주문과 무관" 을 구분할 수
+ * 없다 — 신고를 받아 놓고 무엇을 신고당했는지 모르는 상태다. 그래서 `detail` 의
+ * **첫 줄**에 사용자가 실제로 고른 UI 사유 코드를 싣는다.
+ *
+ *     [PRIVACY]
+ *     (사용자가 직접 쓴 내용이 있으면 둘째 줄부터)
+ *
+ * 형식 규칙(**깨지 말 것**):
+ *  - 첫 줄은 `[CODE]` **하나뿐**이고, 사용자가 쓴 글자는 절대 첫 줄에 오지 않는다.
+ *    사용자가 `[SPAM]` 이라고 적어도 그건 둘째 줄 이후라 읽는 쪽은 헷갈릴 일이 없다 —
+ *    파서는 **첫 줄만** 코드로 읽는다.
+ *  - 코드는 **로케일과 무관한 상수**다. 라벨(`광고·홍보`/`Advertising`)을 실으면 같은
+ *    사유가 신고자의 언어에 따라 두 문자열로 쌓여 콘솔이 그걸 다시 묶어야 한다.
+ *  - 상한을 넘으면 **사용자 본문을 자르고 코드는 남긴다.** 코드가 잘리면 이 필드의
+ *    존재 이유가 사라지고, 500자를 넘긴 본문은 서버에서 400 이 된다.
+ */
+&nbsp;
+/** 서버가 받는 값. `REVIEW_REPORT_REASON_PATTERN` 과 같은 집합이어야 한다. */
+export const REVIEW_REPORT_SERVER_REASONS = [
+  "SPAM",
+  "HARASSMENT",
+  "INAPPROPRIATE_CONTENT",
+  "FALSE_INFORMATION",
+  "OTHER",
+] as const
+&nbsp;
+export type ReviewReportServerReason =
+  (typeof REVIEW_REPORT_SERVER_REASONS)[number]
+&nbsp;
+/**
+ * 시안(Figma)의 일곱 줄. **순서가 곧 화면 순서**다.
+ *
+ * `code` 는 서버 열거형과 **한 글자도 겹치지 않게** 지었다. 겹쳐 두면 어느 쪽 어휘를
+ * 들고 있는지 눈으로 구분되지 않아, 예전처럼 UI 값이 그대로 서버로 새는 사고가
+ * 조용히 반복된다.
+ */
+export const REVIEW_REPORT_REASONS = [
+  {
+    code: "ORDER_IRRELEVANT",
+    labelKey: "restaurant.review.reportReasons.ORDER_IRRELEVANT",
+    serverReason: "INAPPROPRIATE_CONTENT",
+  },
+  {
+    code: "PLACE_IRRELEVANT",
+    labelKey: "restaurant.review.reportReasons.PLACE_IRRELEVANT",
+    serverReason: "INAPPROPRIATE_CONTENT",
+  },
+  {
+    code: "ABUSE",
+    labelKey: "restaurant.review.reportReasons.ABUSE",
+    serverReason: "HARASSMENT",
+  },
+  {
+    code: "ADVERTISING",
+    labelKey: "restaurant.review.reportReasons.ADVERTISING",
+    serverReason: "SPAM",
+  },
+  {
+    code: "PRIVACY",
+    labelKey: "restaurant.review.reportReasons.PRIVACY",
+    serverReason: "INAPPROPRIATE_CONTENT",
+  },
+  {
+    code: "COPIED_REVIEW",
+    labelKey: "restaurant.review.reportReasons.COPIED_REVIEW",
+    serverReason: "INAPPROPRIATE_CONTENT",
+  },
+  {
+    code: "ETC",
+    labelKey: "restaurant.review.reportReasons.ETC",
+    serverReason: "OTHER",
+  },
+] as const satisfies readonly {
+  code: string
+  labelKey: string
+  serverReason: ReviewReportServerReason
+}[]
+&nbsp;
+export type ReviewReportReasonCode =
+  (typeof REVIEW_REPORT_REASONS)[number]["code"]
+&nbsp;
+/** 직접 입력을 요구하는 사유. 이 줄만 본문 없이는 보낼 수 없다. */
+export const REVIEW_REPORT_FREE_TEXT_CODE =
+  "ETC" satisfies ReviewReportReasonCode
+&nbsp;
+/**
+ * 서버 `MAX_REVIEW_REPORT_DETAIL_LENGTH`(500). TypeBox 의 `maxLength` 는 UTF-16 단위로
+ * 세므로 여기서도 `String.length` 로 잰다 — 코드포인트로 재면 이모지가 섞인 순간
+ * 통과시킨 문장이 서버에서 400 이 된다.
+ */
+export const REVIEW_REPORT_DETAIL_MAX = 500
+&nbsp;
+/**
+ * 화면 사유 + (선택) 직접 입력 → 서버로 보낼 본문.
+ *
+ * `detail` 은 **절대 비지 않는다.** 항상 첫 줄에 사유 코드가 있으므로, 예전처럼
+ * `''` 과 "사유 없음" 이 같은 모양이 되는 일이 없다.
+ */
+export function buildReviewReportPayload(
+  code: ReviewReportReasonCode,
+  freeText = "",
+): { reason: ReviewReportServerReason; detail: string } {
+  const reason =
+    REVIEW_REPORT_REASONS.find((item) =&gt; item.code === code)?.serverReason ??
+<span class="branch-1 cbranch-no" title="branch not covered" >    "OTHER"</span>
+  const head = `[${code}]`
+  const body = freeText.trim()
+  if (body.length === 0) return { reason, detail: head }
+  // 줄바꿈 한 칸까지 계산해서 남은 자리에만 본문을 담는다.
+  return {
+    reason,
+    detail: `${head}\n${clampUtf16(body, REVIEW_REPORT_DETAIL_MAX - head.length - 1)}`,
+  }
+}
+&nbsp;
+/** 자를 때 서러게이트 쌍을 반으로 가르지 않는다 — 이모지 하나가 깨진 글자로 남는다. */
+function clampUtf16(text: string, max: number): string {
+  if (text.length &lt;= max) return text
+  const cut = text.slice(0, Math.max(0, max))
+  const last = cut.charCodeAt(cut.length - 1)
+  return last &gt;= 0xd800 &amp;&amp; last &lt;= 0xdbff ? <span class="branch-0 cbranch-no" title="branch not covered" >cut.slice(0, -1) </span>: cut
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-08-20T09:25:38.240Z
+            </div>
+        <script src="prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="sorter.js"></script>
+        <script src="block-navigation.js"></script>
+    </body>
+</html>
+    

@@ -26,12 +26,26 @@ import { V2Icon } from "./V2Icon"
 import { useTranslation } from "react-i18next"
 
 export type V2ScreenHeaderOS = "ios" | "android"
+/** 제목 정렬. 기본 `leading`(Toss 식 좌측 정렬 — 기존 21개 화면의 모양) */
+export type V2ScreenHeaderTitleAlign = "leading" | "center"
+/** 리딩 액션의 글리프. 기본 `back`. `close` 는 "이 흐름을 접는다"(신고·글쓰기) */
+export type V2ScreenHeaderLeading = "back" | "close"
 
 export type V2ScreenHeaderProps = {
-  /** 화면 제목 (1줄, 넘치면 말줄임). 뒤로가기 우측에 좌측정렬 */
+  /** 화면 제목 (1줄, 넘치면 말줄임). 기본은 뒤로가기 우측에 좌측정렬 */
   title?: string
-  /** 넘기면 뒤로가기 버튼 표시 + 눌림 콜백 */
+  /** 넘기면 리딩 버튼 표시 + 눌림 콜백 (글리프는 `leading` 이 정한다) */
   onBack?: () => void
+  /**
+   * 제목 정렬. 기본 `leading`.
+   *
+   * `center` 는 제목을 **바 전체의 가운데**에 놓는다(남는 폭의 가운데가 아니다) —
+   * 리딩/우측 슬롯 위에 절대 배치로 얹고, 양쪽에 터치 타깃만큼 여백을 남겨
+   * 긴 제목이 아이콘 밑으로 숨는 대신 말줄임되게 한다.
+   */
+  titleAlign?: V2ScreenHeaderTitleAlign
+  /** 리딩 글리프. 기본 `back`(iOS chevron / Android arrow) */
+  leading?: V2ScreenHeaderLeading
   /** 우측 액션 슬롯 — 보통 V2IconButton 1~2개 또는 텍스트 라벨 */
   right?: ReactNode
   /** 바 높이·뒤로가기 아이콘 모양. 기본 현재 Platform 자동 */
@@ -47,6 +61,8 @@ export function V2ScreenHeader({
   right,
   os = Platform.OS === "android" ? "android" : "ios",
   safeAreaTop = true,
+  titleAlign = "leading",
+  leading = "back",
   style,
 }: V2ScreenHeaderProps) {
   const { t } = useTranslation()
@@ -56,6 +72,28 @@ export function V2ScreenHeader({
   // OS별 바 높이(iOS 44 / Android 54)와 뒤로가기 터치 타깃(44 / 48)
   const bar = os === "ios" ? barHeight.appBarIOS : barHeight.appBarAndroid
   const backTouch = os === "ios" ? touchTarget.min : touchTarget.android
+  const isCentered = titleAlign === "center"
+
+  /*
+    제목 글리프/라벨은 **한 벌만** 만들고 두 정렬이 나눠 쓴다. 두 벌로 두면 한쪽에만
+    타이포를 고치는 사고가 난다(가운데 제목이 15 Bold 로 남는 부류).
+  */
+  const titleText =
+    title == null ? null : (
+      <Text
+        accessibilityRole="header"
+        numberOfLines={1}
+        style={[
+          typography.label.small,
+          styles.title,
+          { color: colors.label.strong },
+          // 뒤로가기 없이 제목이 좌측 끝에 놓일 때만 선행 여백
+          !isCentered && onBack == null && styles.titleLeadingPad,
+        ]}
+      >
+        {title}
+      </Text>
+    )
 
   return (
     <View
@@ -68,12 +106,14 @@ export function V2ScreenHeader({
       ]}
     >
       <View style={[styles.bar, { height: bar }]}>
-        {/* Left: 뒤로가기 + 제목(좌측정렬). flex:1로 우측 슬롯을 끝으로 밀어냄 */}
+        {/* Left: 리딩 액션 + 제목(좌측정렬). flex:1로 우측 슬롯을 끝으로 밀어냄 */}
         <View style={styles.left}>
           {onBack != null && (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t("action.back")}
+              accessibilityLabel={t(
+                leading === "close" ? "action.close" : "action.back",
+              )}
               onPress={onBack}
               style={({ pressed }) => [
                 styles.backButton,
@@ -81,33 +121,44 @@ export function V2ScreenHeader({
                 pressed && styles.pressed,
               ]}
             >
-              {/* 뒤로가기: 세트 시스템 글리프 사용(iOS chevron / Android arrow) */}
+              {/*
+                리딩 글리프: 세트 시스템 글리프. back 은 OS 를 따르고(iOS chevron /
+                Android arrow), close 는 두 OS 공통 ✕ 다 — 닫기에는 OS 관습이 없다.
+                색은 두 글리프 모두 `label.normal` 이다. 시안은 `#2E2F33@88%`
+                (= `label.neutral`)로 그렸지만 오프토큰이라 DS 값으로 스냅한다(§0.1).
+              */}
               <V2Icon
-                name={os === "ios" ? "chevronLeft" : "arrowBack"}
+                name={
+                  leading === "close"
+                    ? "close"
+                    : os === "ios"
+                      ? "chevronLeft"
+                      : "arrowBack"
+                }
                 size="md"
                 color={colors.label.normal}
               />
             </Pressable>
           )}
-          {title != null && (
-            <Text
-              accessibilityRole="header"
-              numberOfLines={1}
-              style={[
-                typography.label.small,
-                styles.title,
-                { color: colors.label.strong },
-                // 뒤로가기 없이 제목이 좌측 끝에 놓일 때만 선행 여백
-                onBack == null && styles.titleLeadingPad,
-              ]}
-            >
-              {title}
-            </Text>
-          )}
+          {!isCentered && titleText}
         </View>
 
         {/* Right: 우측 액션 슬롯(오른쪽 정렬) */}
         {right != null && <View style={styles.right}>{right}</View>}
+
+        {/*
+          가운데 제목은 **마지막에** 절대 배치로 얹는다. 흐름에 두면 리딩 폭만큼
+          오른쪽으로 밀려 "가운데" 가 아니게 된다. 터치는 통과시킨다 — 제목이 우측
+          액션 위를 덮고 있어도 눌리는 것은 액션이어야 한다.
+        */}
+        {isCentered && titleText != null && (
+          <View
+            pointerEvents="none"
+            style={[styles.centerTitle, { paddingHorizontal: backTouch }]}
+          >
+            {titleText}
+          </View>
+        )}
       </View>
     </View>
   )
@@ -135,6 +186,12 @@ const styles = StyleSheet.create({
   },
   titleLeadingPad: {
     paddingLeft: spacing[8],
+  },
+  // 바를 통째로 덮는 층. 좌우 여백(터치 타깃 폭)은 대칭이라 가운데는 바의 가운데다.
+  centerTitle: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
   },
   right: {
     flexDirection: "row",

@@ -21,7 +21,7 @@
  * 서버에서 켜 주지 않으면 지도는 보이지 않는다. 그 사실을 코드에서 우회하지 않는다.
  */
 
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 
@@ -32,11 +32,16 @@ import {
 import { FeatureIntroSheet, useFeatureIntro } from "@/src/features/coach"
 import { useMobilePolicy } from "@/src/features/mobilePolicy"
 import { isRestaurantTabEnabled } from "@/src/features/mobilePolicy/services/mobilePolicyService"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 export default function RestaurantTabRoute() {
   const router = useAppRouter()
-  const { policy } = useMobilePolicy()
+  const { policy, source } = useMobilePolicy()
   const restaurantTabEnabled = isRestaurantTabEnabled(policy)
+  /* 계측은 화면(`RestaurantComingSoon`)이 아니라 여기서 한다 — 그 화면은 정책이
+     **어디서 왔는지**를 모르고, 이 이벤트의 값은 거의 전부 거기 있다(설계 §9-②).
+     정책이 아직 없으면 `"none"`: `null` 을 실으면 새니타이저가 키째로 떨군다. */
+  const policySource = source ?? "none"
   // 검색 화면이 지역을 고르고 돌아올 때 좌표를 여기로 넘긴다(`app/restaurant/search.tsx`).
   // `ts` 는 값으로 쓰지 않는다 — **같은 지역을 다시 고를 때** 파라미터가 달라지게 하는
   // 용도다(탭은 언마운트되지 않아서 같은 좌표면 아래 useMemo 가 돌지 않는다).
@@ -58,9 +63,27 @@ export default function RestaurantTabRoute() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ts 는 재실행 트리거 전용
   }, [lat, lng, ts])
 
+  /* 탭은 언마운트되지 않으므로 마운트 가드로는 부족하다. 정책 출처가 바뀌면
+     (폴백 → 서버) 그건 **다른 사건**이라 다시 센다 — 같은 값으로는 다시 안 쏜다. */
+  const viewedSourceRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (restaurantTabEnabled) {
+      viewedSourceRef.current = null
+      return
+    }
+    if (viewedSourceRef.current === policySource) return
+    viewedSourceRef.current = policySource
+    trackAnalyticsEvent("restaurant_coming_soon_viewed", {
+      source: policySource,
+    })
+  }, [policySource, restaurantTabEnabled])
+
   const goToReport = useCallback(() => {
+    trackAnalyticsEvent("restaurant_coming_soon_report_pressed", {
+      source: policySource,
+    })
     router.push("/restaurant/report")
-  }, [router])
+  }, [policySource, router])
 
   // 첫 진입 안내. 탭이 꺼진 "준비중" 화면에서는 띄우지 않는다 — 없는 기능을 설명하게 된다.
   const intro = useFeatureIntro("restaurant", restaurantTabEnabled)

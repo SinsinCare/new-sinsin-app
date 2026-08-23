@@ -18,12 +18,19 @@ import { useV2Theme } from "../hooks/useV2Theme"
 export type V2DividerVariant = "hairline" | "thick"
 // line/* 패밀리 강조 단계 (colors.line 키와 1:1 — 축약하지 않음)
 export type V2DividerTone = "normal" | "neutral" | "alternative" | "strong"
+/** thick 블록 높이. 두 값뿐 — 임의 px 을 열면 밴드 높이가 화면마다 갈린다 */
+export type V2DividerThickSize = 8 | 16
 
 export type V2DividerProps = {
-  /** hairline=1px 실선(기본) · thick=16px 회색 스페이서 블록 */
+  /** hairline=1px 실선(기본) · thick=회색 스페이서 블록(기본 16px) */
   variant?: V2DividerVariant
   /** hairline 색상 — line/* 강조 단계. thick에는 미적용 */
   tone?: V2DividerTone
+  /**
+   * thick 블록의 높이. 기본 **16**(Figma 원값). 커뮤니티 시안의 섹션 밴드는 **8** 이다.
+   * hairline 에는 미적용(1px 은 `borderWidth.thin` 고정).
+   */
+  size?: V2DividerThickSize
   /** 좌측 인셋(px). true=24, 숫자=해당 px, 미지정/false=full-bleed. hairline 전용 */
   inset?: boolean | number
   /**
@@ -45,6 +52,7 @@ function resolveInset(inset: V2DividerProps["inset"]): number {
 export function V2Divider({
   variant = "hairline",
   tone = "neutral",
+  size = 16,
   inset = false,
   // orientation은 현재 horizontal 고정 — 구조 문서화 목적의 prop
   orientation = "horizontal",
@@ -52,13 +60,13 @@ export function V2Divider({
 }: V2DividerProps) {
   const { colors } = useV2Theme()
 
-  // Thick: 라인이 아니라 두 섹션 사이를 벌리는 16px 회색 블록 (full-bleed)
+  // Thick: 라인이 아니라 두 섹션 사이를 벌리는 회색 블록 (full-bleed, 기본 16px)
   if (variant === "thick") {
     return (
       <View
         style={[
           styles.thick,
-          { backgroundColor: colors.background.lower },
+          { height: spacing[size], backgroundColor: colors.background.lower },
           style,
         ]}
       />
@@ -78,5 +86,6 @@ const styles = StyleSheet.create({
   // 부모 폭으로 확장 (Figma flex-[1_0_0]). 자식은 기본 alignItems:stretch로 content 폭을 채움
   hairlineWrap: { alignSelf: "stretch" },
   hairline: { height: borderWidth.thin },
-  thick: { alignSelf: "stretch", height: spacing[16] },
+  // 높이는 `size` 가 정한다(기본 16) — 여기 두면 스타일 배열에서 조용히 덮인다.
+  thick: { alignSelf: "stretch" },
 })

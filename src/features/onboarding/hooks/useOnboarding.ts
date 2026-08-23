@@ -11,7 +11,7 @@ import type { OnboardingStep } from "../types"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useAnnouncementSessionStore } from "@/src/features/announcement/state/announcementSessionStore"
 import { getErrorMessage } from "@/src/lib/errorUtils"
-import { presentError } from "@/src/lib/errorMessage"
+import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
 
 import { showErrorToast } from "@/src/lib/toast"
 
@@ -134,7 +134,11 @@ export function useOnboarding() {
           setLoadedSteps([])
           setPhase("steps")
           setStepsLoadError(t("onboarding.noQuestions"))
-          trackAnalyticsEvent("onboarding_steps_load_failed", {})
+          /* 200 인데 0건이다. 오류가 아니라서 어떤 오류 통로도 안 지나가고, 지금까지는
+             5xx 와 **같은 한 숫자**였다 — 고칠 대상이 서로 완전히 다른데도. */
+          trackAnalyticsEvent("onboarding_steps_load_failed", {
+            fail_kind: "empty",
+          })
           return
         }
         setLoadedSteps(data)
@@ -157,7 +161,11 @@ export function useOnboarding() {
         */
         // 취소된 요청이면 빈 문자열이 온다 — 그때는 화면이 자기 폴백 문장을 쓰게 둔다.
         setStepsLoadError(getErrorMessage(error) || null)
-        trackAnalyticsEvent("onboarding_steps_load_failed", {})
+        /* 이 갈래도 `presentError` 를 안 부른다 — 화면이 문장 하나와 버튼 둘을 직접
+           그린다. 그래서 `app_error_presented` 로 대체되지 않는다. */
+        trackAnalyticsEvent("onboarding_steps_load_failed", {
+          fail_kind: toAnalyticsFailKind(error),
+        })
       } finally {
         if (attempt === loadStepsAttemptRef.current) {
           setIsLoadingSteps(false)
@@ -196,6 +204,9 @@ export function useOnboarding() {
 
   const handleWelcomeConfirm = () => {
     if (hasCkd === null || isLoadingSteps) return
+    /* 온보딩 첫 관문의 통과. **선택값(진단 여부)은 싣지 않는다** — 건강 정보이고,
+       중립적인 키로 우회하는 것도 같은 우회다. 통과 여부만 센다. */
+    trackAnalyticsEvent("onboarding_welcome_confirmed", {})
     void loadSteps(hasCkd)
   }
 
@@ -224,6 +235,27 @@ export function useOnboarding() {
   const isLastStep = currentStepIndex === steps.length - 1
   const currentAnswer = currentStep ? answers[currentStep.step] : undefined
 
+  /*
+    진단 여부를 묻는 첫 화면. `onboarding_started` 는 마운트마다 나가지만, 저장된 진행이
+    있으면 welcome 을 **건너뛰고** 바로 질문으로 간다(위 initialize) — 그래서 started 를
+    welcome 통과율의 분모로 쓰면 복귀자가 섞인다.
+
+    `isInitializing` 가드가 없으면 안 된다: `phase` 의 초기값이 'welcome' 이라 복원 중인
+    사람도 한 프레임 동안 여기 있다. 되돌아온 경우(`onboarding_welcome_returned`)에는
+    다시 세는 것이 맞다 — 그건 새로 그려진 화면이다.
+  */
+  const welcomeViewedRef = useRef(false)
+  useEffect(() => {
+    if (isInitializing) return
+    if (phase !== "welcome") {
+      welcomeViewedRef.current = false
+      return
+    }
+    if (welcomeViewedRef.current) return
+    welcomeViewedRef.current = true
+    trackAnalyticsEvent("onboarding_welcome_viewed", {})
+  }, [isInitializing, phase])
+
   useEffect(() => {
     if (phase !== "steps" || isLoadingSteps || !currentStep) return
     const viewKey = `${currentStepIndex}:${steps.length}`
@@ -232,6 +264,9 @@ export function useOnboarding() {
     trackAnalyticsEvent("onboarding_step_viewed", {
       step_index: currentStepIndex,
       step_count: steps.length,
+      // 인덱스는 분기에 따라 같은 번호가 다른 질문을 가리킨다. 유형이라도 있어야
+      // "입력형에서만 막힌다" 같은 판정이 된다. 서버 질문번호는 일부러 안 싣는다.
+      step_kind: currentStep.type,
     })
   }, [currentStep, currentStepIndex, isLoadingSteps, phase, steps.length])
 
@@ -382,10 +417,11 @@ export function useOnboarding() {
   }
 
   const handleNext = () => {
-    if (isSubmitting || !hasValidAnswer()) return
+    if (isSubmitting || !hasValidAnswer() || !currentStep) return
     trackAnalyticsEvent("onboarding_step_completed", {
       step_index: currentStepIndex,
       step_count: steps.length,
+      step_kind: currentStep.type,
     })
     if (isLastStep) {
       completeOnboarding()
@@ -397,6 +433,10 @@ export function useOnboarding() {
   const handleBack = useCallback(() => {
     if (phase === "complete") return
     if (phase === "steps" && (steps.length === 0 || currentStepIndex === 0)) {
+      /* 진행이 **초기화되는 유일한 자리**다(아래 `resetProgress`). 첫 질문에서 되돌아온
+         것과 실패 화면에서 '진단 다시 선택' 을 누른 것이 여기로 합쳐지는데, 둘 다 앞선
+         답을 버린다는 점에서 같은 사건이다. 여기를 왕복하는 사람은 갇힌 사람이다. */
+      trackAnalyticsEvent("onboarding_welcome_returned", {})
       loadStepsAttemptRef.current += 1
       setIsLoadingSteps(false)
       setStepsLoadError(null)
@@ -404,6 +444,12 @@ export function useOnboarding() {
       setLoadedSteps([])
       resetProgress()
     } else if (currentStepIndex > 0) {
+      /* 순번 퍼널(같은 이름 8회)은 뒤로 갔다 다시 완료하면 순번이 밀리는 **상한
+         추정치**다. 그 오차의 크기를 재는 것이 이 수의 유일한 쓸모다. */
+      trackAnalyticsEvent("onboarding_step_reverted", {
+        step_index: currentStepIndex,
+        step_count: steps.length,
+      })
       setCurrentStepIndex(currentStepIndex - 1)
     }
   }, [

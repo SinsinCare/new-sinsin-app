@@ -7,6 +7,7 @@ import {
   V2VStack,
   V2Skeleton,
   V2SkeletonGroup,
+  V2Icon,
 } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { tokens } from "@/src/theme/tokens"
@@ -81,11 +82,7 @@ export function MealRecommendationSection({
       {/* Header */}
       <V2HStack justify="space-between" align="center">
         <V2HStack gap={8} align="center">
-          <Ionicons
-            name="sparkles"
-            size={18}
-            color={tokens.color.primaryAccent.val}
-          />
+          <V2Icon name="sparkle" size={18} />
           <V2Text color={textColor} style={{ fontSize: 16, fontWeight: "700" }}>
             {t("mealRecommendation.title", { meal: mealLabel })}
           </V2Text>

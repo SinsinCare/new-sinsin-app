@@ -143,6 +143,21 @@ export function NotificationHistoryScreen() {
   )
 }
 
+/**
+ * **여기 오는 값은 서버 시각이 아니다 — `parseServerDate` 를 씌우지 말 것.**
+ *
+ * 앱의 다른 목록(커뮤니티·후기·공지·상담)은 오프셋 표기가 없는 UTC 를 서버에서 받아
+ * 맨 `new Date()` 로 읽으면 KST 에서 9시간 어긋난다. 이 화면만 사정이 다르다:
+ * 알림 내역을 주는 **엔드포인트가 서버에 없고**(bun·구서버 모두 알림은 발송 경로뿐이다),
+ * 목록은 기기 안에서 만들어진다 — `useFoodAnalysis` 가 분석 완료 때
+ * `notificationHistoryStore.addNotification` 을 부르면 저장소가
+ * `timestamp: new Date().toISOString()` 를 찍는다. 즉 언제나 `Z` 가 붙은 값이다.
+ *
+ * 여기에 UTC 보정을 한 겹 더 얹으면 **반대 방향으로 9시간** 어긋난다. (오늘의
+ * `parseServerDate` 는 오프셋이 붙은 문자열을 그대로 흘려보내므로 당장은 무해하지만,
+ * 그렇게 적어 두면 "이 값도 서버에서 온다" 는 틀린 사실을 코드가 주장하게 된다.)
+ * `tests/serverDateRendering.test.ts` 가 이 자리를 그대로 지킨다.
+ */
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)

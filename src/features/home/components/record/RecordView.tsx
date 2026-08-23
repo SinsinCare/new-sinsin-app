@@ -1,4 +1,5 @@
 import { StyleSheet, Platform, RefreshControl, View } from "react-native"
+import { floatingAiButtonScrollInset } from "@/src/shared/components/floatingAiButtonLayout"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -26,7 +27,7 @@ import { EdemaSheet } from "./sheets/EdemaSheet"
 import { TileIcon } from "./TileIcon"
 import { getHydrationGuidance } from "../../utils/hydrationGuidance"
 import { useSurface } from "@/src/hooks/useSurface"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { isAtScrollTop, useRegisterTabReset } from "@/src/shared/navigation"
 import { MealType } from "../../types"
 import { normalizeEdemaLevel, type EdemaLevel } from "../../data/EdemaConstants"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
@@ -57,25 +58,30 @@ import { toDateStr } from "../../utils/dateUtils"
 import { getGlucoseNowSuggestion } from "../../utils/recordNowSuggestion"
 import { inferGlucoseContext } from "../../utils/glucoseInference"
 import { useWeightWeek } from "../../hooks/useWeightWeek"
-import { presentError } from "@/src/lib/errorMessage"
+import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
 import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import { ApiError } from "@/src/services/core/apiError"
 import { pendingAnalysisRequests } from "../../storage/pendingAnalysisRequests"
 import {
   applyMealTypeChangeToMealImages,
   applyMealTypeChangeToRecordedMeals,
+  inferMealTypeFromTime,
   isSkippedDiet,
   toSkippedMealMap,
   type MealImageMap,
   type RecordedMealMap,
 } from "../../utils/mealRecordUtils"
 import { appConfig } from "@/src/config/appConfig"
-import { trackAnalyticsEvent } from "@/src/features/analytics"
+import {
+  trackAnalyticsEvent,
+  type AnalyticsHealthMetric,
+  type AnalyticsMealSheetEntry,
+} from "@/src/features/analytics"
 import { useFoodAnalysisRecoveryPolling } from "../../hooks/useFoodAnalysisRecoveryPolling"
 import { foodAnalysisRecovery } from "../../services/foodAnalysisRecovery"
 
 import { showErrorToast } from "@/src/lib/toast"
-import { orderGlucoseByDay } from "../../utils/glucoseGrid"
+import { findGlucoseCell, orderGlucoseByDay } from "../../utils/glucoseGrid"
 
 const ANALYTICS_MEAL_SLOT: Record<
   MealType,
@@ -116,7 +122,6 @@ export function RecordView({
     : "ko"
   const insets = useSafeAreaInsets()
   const surface = useSurface()
-  const isDark = useAppColorScheme() === "dark"
   const queryClient = useQueryClient()
   useFoodAnalysisRecoveryPolling()
   const [viewDiaryResult, setViewDiaryResult] =
@@ -161,7 +166,20 @@ export function RecordView({
   )
   const [isPendingOpen, setIsPendingOpen] = useState(false)
   const [isPendingUpdating, setIsPendingUpdating] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  /**
+   * 누가 이 새로고침을 시작했는가. `boolean` 이 아닌 이유가 결함 하나다 —
+   * `RefreshControl` 의 `refreshing` 은 **제스처일 때만** 켜야 한다. 제스처 없이 켜면
+   * iOS 가 스피너를 보여 주려고 스크롤을 `contentOffset.y -= 컨트롤 높이` 로 내려 두고
+   * 끝날 때의 복원은 조건부라, 부를 때마다 위 여백이 **누적**된다(RN 의
+   * `RCTRefreshControl.m`. 자세한 사정과 실측은 `shared/refresh/useRefreshable` 머리말 4번).
+   *
+   * 이 화면은 아직 그 훅을 지나지 않으므로(아래 `RefreshControl` 주석) 같은 규칙을
+   * 여기서 손으로 지킨다. 한 칸에 출처를 담아 **파생**시키는 것이 요점이다 — 두 개의
+   * boolean 으로 두면 "제스처가 아닌데 스피너가 켜진" 조합이 다시 표현 가능해진다.
+   */
+  const [refreshSource, setRefreshSource] = useState<"gesture" | "code" | null>(
+    null,
+  )
   const refreshPromiseRef = useRef<Promise<void> | null>(null)
   const pendingResultViewedRef = useRef<number | null>(null)
 
@@ -280,34 +298,46 @@ export function RecordView({
   const previousBloodPressure = previousData?.result.bloodPressure ?? null
   const { data: streak = 0 } = useStreak()
 
-  const refreshSelectedDate = useCallback((): Promise<void> => {
-    if (refreshPromiseRef.current) return refreshPromiseRef.current
+  /**
+   * 그날 기록을 다시 받는다.
+   *
+   * `source` 의 기본값이 `"code"` 인 것은 실수 방지다 — 새 호출자가 아무것도 안 적으면
+   * **스피너 없는 쪽**으로 떨어진다. 위 `refreshSource` 머리말의 여백 누적은 그 반대로
+   * 기본값을 잡았을 때만 다시 열린다.
+   */
+  const refreshSelectedDate = useCallback(
+    (source: "gesture" | "code" = "code"): Promise<void> => {
+      if (refreshPromiseRef.current) return refreshPromiseRef.current
 
-    setIsRefreshing(true)
-    const runRefresh = async () => {
-      try {
-        await Promise.all([
-          foodAnalysisRecovery.recoverPendingAnalyses(),
-          queryClient.refetchQueries({
-            queryKey: dateAnalysisKey(toDateStr(selectedDate), language),
-            exact: true,
-          }),
-          queryClient.refetchQueries({ queryKey: ["diaryExistence"] }),
-        ])
-      } finally {
-        refreshPromiseRef.current = null
-        setIsRefreshing(false)
+      setRefreshSource(source)
+      const runRefresh = async () => {
+        try {
+          await Promise.all([
+            foodAnalysisRecovery.recoverPendingAnalyses(),
+            queryClient.refetchQueries({
+              queryKey: dateAnalysisKey(toDateStr(selectedDate), language),
+              exact: true,
+            }),
+            queryClient.refetchQueries({ queryKey: ["diaryExistence"] }),
+          ])
+        } finally {
+          refreshPromiseRef.current = null
+          setRefreshSource(null)
+        }
       }
-    }
 
-    const refreshPromise = runRefresh()
-    refreshPromiseRef.current = refreshPromise
-    return refreshPromise
-  }, [language, queryClient, selectedDate])
+      const refreshPromise = runRefresh()
+      refreshPromiseRef.current = refreshPromise
+      return refreshPromise
+    },
+    [language, queryClient, selectedDate],
+  )
 
   const [mealImages, setMealImages] = useState<MealImageMap>({})
   const [recordedMeals, setRecordedMeals] = useState<RecordedMealMap>({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
+  const [textRecordMealType, setTextRecordMealType] =
+    useState<MealType>("BREAKFAST")
   const recordingMealTypeRef = useRef<MealType | null>(null)
   useEffect(() => {
     setMealImages({})
@@ -345,9 +375,35 @@ export function RecordView({
   const [mealSheetPreselect, setMealSheetPreselect] = useState<MealType | null>(
     null,
   )
+  /** 시트를 그냥 연다. 취소 뒤 되돌려 놓는 **재개** 경로가 이걸 쓴다(계측 없음). */
   const openMealSheet = (mealType: MealType | null = null) => {
     setMealSheetPreselect(mealType)
     setOpenSheet("meal")
+  }
+
+  /**
+   * 사람이 **문을 열어** 기록을 시작했다 — 이 여정 퍼널의 두 번째 스텝이다.
+   *
+   * 재개(`openMealSheet`)와 나눠 둔 이유는 분모 때문이다. 앨범에서 취소하면 코드가 시트를
+   * 다시 열어 주는데, 거기서도 쏘면 한 사람의 한 번의 시도가 진입 두 행이 되어
+   * 1→2 가 이탈처럼 부풀고 2→3(방법 고르기)이 함께 꺼진다.
+   *
+   * `recorded` 는 그 끼니가 이미 기록돼 시트가 '결과 보기' 모드로 열리는 경우다 —
+   * 기록 시도가 **일어날 수 없는** 열림이라 분모에서 빼야 2→3 하락이 사실이 된다.
+   */
+  const openMealSheetFrom = (
+    entry: AnalyticsMealSheetEntry,
+    mealType: MealType | null = null,
+  ) => {
+    // 시트가 고를 끼니와 같은 규칙으로 판정한다(MealSheet 의 initialMealType 분기).
+    const initialMeal = mealType ?? inferMealTypeFromTime(new Date())
+    const skipped = apiSkippedMeals[initialMeal] ?? false
+    trackAnalyticsEvent("food_record_sheet_viewed", {
+      slot: ANALYTICS_MEAL_SLOT[initialMeal],
+      entry,
+      recorded: (mergedRecordedMeals[initialMeal] ?? false) && !skipped,
+    })
+    openMealSheet(mealType)
   }
   // 앨범에서 고른 사진은 분석 전에 이 시트를 한 번 거친다(MealPhotoConfirmSheet 머리말).
   const [mealPhotoDraft, setMealPhotoDraft] = useState<MealPhotoDraft | null>(
@@ -444,6 +500,15 @@ export function RecordView({
   const handlePendingAddToRecord = async () => {
     if (!pending) return
     if (pending.result.foodAnalysisResultId <= 0) {
+      /*
+        요청이 **나가지도 않은** 실패다. 토스트를 직접 띄우므로 `presentError` 를 안
+        지나가고, 따라서 `app_error_presented` 에도 한 행도 안 남는다 — 이 이름이
+        없으면 "담기를 눌렀는데 아무 일도 안 일어났다" 가 통계에서 사라진다.
+      */
+      trackAnalyticsEvent("food_record_save_failed", {
+        source: "recovered",
+        fail_kind: "not_ready",
+      })
       showErrorToast(
         t("home.errors.notReadyTitle"),
         t("home.errors.notReadyBody"),
@@ -467,7 +532,10 @@ export function RecordView({
       await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
       trackAnalyticsEvent("food_record_saved", { source: "recovered" })
     } catch (error) {
-      trackAnalyticsEvent("food_record_save_failed", { source: "recovered" })
+      trackAnalyticsEvent("food_record_save_failed", {
+        source: "recovered",
+        fail_kind: toAnalyticsFailKind(error),
+      })
       presentError(error, {
         scope: "meal-diary-register-recovered",
         retry: () => void handlePendingAddToRecord(),
@@ -516,16 +584,31 @@ export function RecordView({
       method: "camera",
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
+    let granted = false
     const uri = await takePhoto({
       onPermissionDenied: () =>
         trackAnalyticsEvent("food_photo_permission_denied", {
           source: "camera",
         }),
+      onPermissionGranted: () => {
+        granted = true
+        trackAnalyticsEvent("food_photo_permission_granted", {
+          source: "camera",
+        })
+      },
     })
     // 앨범과 같은 규칙 — 취소하면 왔던 시트로 돌아온다(openMealGallery 머리말).
     // 확인 단계를 따로 두지 않는 것은 iOS 카메라가 '다시 찍기 / 사진 사용'을 이미
     // 묻기 때문이다. 여기서 또 물으면 두 번 확인이 된다.
     if (!uri) {
+      // 권한 벽에서 멈춘 것은 **취소가 아니다.** 여기서 갈라 두지 않으면 거부한 사람이
+      // denied 와 cancelled 두 이름에 동시에 세어져 두 비율이 같이 부풀어 오른다.
+      if (granted) {
+        trackAnalyticsEvent("food_photo_picker_cancelled", {
+          source: "camera",
+          replacing: false,
+        })
+      }
       openMealSheet(mealType)
       return
     }
@@ -544,13 +627,28 @@ export function RecordView({
    * 그 자리에 남는다.
    */
   const openMealGallery = async (mealType: MealType, isReplacing: boolean) => {
+    let granted = false
     const picked = await pickImageAssetFromGallery({
       onPermissionDenied: () =>
         trackAnalyticsEvent("food_photo_permission_denied", {
           source: "gallery",
         }),
+      onPermissionGranted: () => {
+        granted = true
+        trackAnalyticsEvent("food_photo_permission_granted", {
+          source: "gallery",
+        })
+      },
     })
     if (!picked) {
+      // `replacing` 이면 고르던 사진이 그대로 남으므로 **이탈이 아니다** — 값으로 갈라
+      // 두지 않으면 '다른 사진 고르기' 를 눌렀다 만 사람이 앨범 취소율을 밀어 올린다.
+      if (granted) {
+        trackAnalyticsEvent("food_photo_picker_cancelled", {
+          source: "gallery",
+          replacing: isReplacing,
+        })
+      }
       if (!isReplacing) openMealSheet(mealType)
       return
     }
@@ -594,6 +692,9 @@ export function RecordView({
       method: "text",
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
+    // 계측용으로 상태를 따로 둔다 — `recordingMealTypeRef` 는 렌더를 안 깨우므로
+    // 그것을 렌더에서 읽으면 열림 이벤트가 직전 끼니를 실을 수 있다.
+    setTextRecordMealType(mealType)
     setIsTextRecordOpen(true)
   }
 
@@ -721,7 +822,18 @@ export function RecordView({
       시트가 로컬 스택으로 총량을 그리므로 흔들면 이중 계산된다. */
   const handleWaterLog = async (delta: number): Promise<boolean> => {
     if (delta === 0) return false
-    return updateExtraWater(selectedDateStr, delta)
+    return updateExtraWater(selectedDateStr, delta, consumedWater > 0)
+  }
+
+  /**
+   * CTA 를 누른 순간을 지표별로 못 박는다. 이것만 있고 성공·실패가 없는 구간이
+   * 네트워크 유실·앱 종료다.
+   *
+   * 물은 여기 없다 — 그 시트만 잔을 로컬에 쌓았다가 CTA 가 합계로 한 번 보내므로
+   * `item_count`(담은 잔 수)를 시트 자신만 안다(`WaterSheet.commit`).
+   */
+  const trackHealthSaveStarted = (metric: AnalyticsHealthMetric) => {
+    trackAnalyticsEvent("health_entry_save_started", { metric, item_count: 1 })
   }
 
   const closeWaterSheet = () => {
@@ -736,7 +848,11 @@ export function RecordView({
     diastolic: number
     heartRate: number | null
   }) => {
-    await updateBloodPressure({ ...body, date: selectedDateStr })
+    trackHealthSaveStarted("blood_pressure")
+    await updateBloodPressure(
+      { ...body, date: selectedDateStr },
+      bloodPressure !== null,
+    )
     setOpenSheet(null)
   }
 
@@ -747,17 +863,30 @@ export function RecordView({
     // 끼니. 시트가 `slotForSubmit` 으로 이미 정했다 — 공복이면 null 이다.
     slot: "BREAKFAST" | "LUNCH" | "DINNER" | null
   }) => {
-    await updateBloodGlucose({ ...body, date: selectedDateStr })
+    trackHealthSaveStarted("blood_glucose")
+    /*
+      `existing` 은 그 **칸**(끼니×시점)에 이미 기록이 있었는가다. 하루 안에 여러 번
+      재는 지표라 "그날 혈당 기록이 있다" 로 보면 두 번째 측정이 전부 수정으로 세어진다.
+    */
+    await updateBloodGlucose(
+      { ...body, date: selectedDateStr },
+      findGlucoseCell(bloodGlucose, {
+        slot: body.slot ?? "",
+        timing: body.timing,
+      }) !== null,
+    )
     setOpenSheet(null)
   }
 
   const handleWeightSubmit = async (weightKg: number) => {
-    await updateWeight(weightKg, selectedDateStr)
+    trackHealthSaveStarted("weight")
+    await updateWeight(weightKg, selectedDateStr, todayWeightKg !== null)
     setOpenSheet(null)
   }
 
   const handleEdemaSubmit = async (edemaLevel: EdemaLevel) => {
-    await updateEdema(edemaLevel, selectedDateStr)
+    trackHealthSaveStarted("edema")
+    await updateEdema(edemaLevel, selectedDateStr, todayEdema !== null)
     setOpenSheet(null)
   }
 
@@ -852,7 +981,7 @@ export function RecordView({
       value: recordedMealCount > 0 ? String(recordedMealCount) : null,
       unit: t("home.meal.unit"),
       caption: mealCaption,
-      onPress: () => openMealSheet(),
+      onPress: () => openMealSheetFrom("tile"),
     },
     {
       key: "water",
@@ -921,6 +1050,34 @@ export function RecordView({
     },
   ]
 
+  /*
+    ── 탭을 다시 눌렀을 때 이 화면이 되돌릴 수 있는 것 ────────────────────────
+    홈의 리셋 재료는 두 곳에 나뉘어 있다: **달력 시트**는 라우트 파일이 열고 닫고
+    (`app/(tabs)/home.tsx`), **스크롤**은 여기 있다. 등록소는 능력별로 합치므로
+    두 곳이 각자 자기 것만 등록한다(`tabReset.ts` 머리말 마지막 절).
+
+    **4번(복구)은 등록하지 않는다.** 예전에는 `refresh: refreshSelectedDate` 였다 —
+    맨 위에서 한 번 더 누르면 그날 기록을 다시 받았다. 탭 탭은 이동 제스처지 조회
+    제스처가 아니고(`tabReset.ts` 머리말 §4번), 다시 받는 길은 이 화면에 이미 둘 있다:
+    아래 `RefreshControl`(당겨서 새로고침)과 날짜를 다시 고르는 것. 게다가 이 화면에는
+    되살릴 **고장난 상태 자체가 없다** — 조회가 실패해도 화면은 서고 실패는 토스트로
+    말한다(`presentError`). 복구할 것이 없으면 그 칸은 비워 두는 것이 맞다.
+
+    스크롤은 **애니메이션**으로 올린다. `animated:false` 로 순간이동시키면 VoiceOver 의
+    읽기 위치가 화면과 어긋난 채 남는다 — 여기서는 포커스를 옮기지 않고(프로그램적
+    포커스 이동 없음) 화면만 움직여, 스크린리더가 자기 커서를 따라오게 둔다.
+  */
+  const scrollRef = useRef<React.ComponentRef<
+    typeof KeyboardAwareScrollView
+  > | null>(null)
+  const scrollOffsetRef = useRef(0)
+  useRegisterTabReset("home", {
+    content: {
+      isAtRoot: () => isAtScrollTop(scrollOffsetRef.current),
+      reset: () => scrollRef.current?.scrollTo({ y: 0, animated: true }),
+    },
+  })
+
   const mealSlots = Object.fromEntries(
     mealTypes.map((type) => [
       type,
@@ -935,15 +1092,30 @@ export function RecordView({
 
   return (
     <KeyboardAwareScrollView
-      bounces={false}
-      overScrollMode="never"
+      ref={scrollRef}
+      onScroll={(event) => {
+        scrollOffsetRef.current = event.nativeEvent.contentOffset.y
+      }}
+      scrollEventThrottle={16}
+      /*
+        `bounces={false}` 가 여기 있었다 — iOS 의 UIRefreshControl 은 맨 위에서 더
+        당겨질 때만 발동하므로 아래 RefreshControl 이 한 번도 불리지 않았다.
+        (커뮤니티·레시피에서 같은 조합을 걷어내며 lint 가 잡아냈다.)
+        새 화면은 `src/shared/refresh` 의 `useRefreshable` 을 쓴다. **이 화면은 아직
+        아니다** — 그 훅은 `type: "active"` 로만 다시 받는데 여기 `["diaryExistence"]`
+        는 달력 점을 그리는 쿼리라 관찰자가 없는 순간에도 다시 받아야 한다(옮기면
+        새로고침 뒤 달력이 어제 상태로 남는 조합이 생긴다). 그래서 컨트롤은 여기 남고,
+        **제스처/프로그램 분리만 같은 규칙으로** 지킨다(위 `refreshSource` 머리말).
+        `tests/pullToRefreshGuard.test.ts` 가 이 예외를 이름으로 못 박아 둔다.
+      */
       // 목업의 층: 회색 바닥 위 흰 카드(라이트) / 짙은 바닥 위 옅은 카드(다크).
-      style={{ backgroundColor: isDark ? surface.canvas : surface.surface }}
+      style={{ backgroundColor: surface.bed }}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={() => void refreshSelectedDate()}
+          /* **제스처일 때만** 켠다. 파생값이라 어긋날 수 없다(`refreshSource` 머리말). */
+          refreshing={refreshSource === "gesture"}
+          onRefresh={() => void refreshSelectedDate("gesture")}
           tintColor={tokens.color.sub6.val}
           colors={[tokens.color.sub6.val]}
         />
@@ -968,7 +1140,19 @@ export function RecordView({
       <View
         style={[
           styles.bodyPanel,
-          { backgroundColor: isDark ? surface.canvas : surface.surface },
+          { backgroundColor: surface.bed },
+          /*
+            우하단 AI 상담 필에 마지막 타일(붓기·체중 행)이 가리지 않게 비운다.
+
+            ⚠️ 두 가지를 함께 지켜야 한다.
+            1) 여백은 **이 패널 안쪽**에 둔다. `contentContainerStyle` 에 주면 이
+               패널이 `flexGrow: 1` 로 남는 공간을 다 먹으면서 여백이 패널 바깥으로
+               밀려 타일이 그대로 바닥에 붙는다.
+            2) 크기는 `COVERAGE`(64) 가 아니라 **`insets + 탭바 + COVERAGE`** 다.
+               탭바가 `position:"absolute"` 라 이 화면은 화면 바닥까지 내려오므로,
+               필이 실제로 덮는 높이는 바닥에서 150pt 다(iPhone 17 Pro).
+          */
+          { paddingBottom: floatingAiButtonScrollInset(insets.bottom) },
         ]}
       >
         <RecordHomeBar
@@ -982,8 +1166,10 @@ export function RecordView({
         <MealTimeline
           slots={mealSlots}
           onPressRecorded={(mealType) => void handleViewMealResult(mealType)}
-          onPressEmpty={(mealType) => openMealSheet(mealType)}
-          onPressRecord={() => openMealSheet()}
+          onPressEmpty={(mealType) =>
+            openMealSheetFrom("timeline_empty", mealType)
+          }
+          onPressRecord={() => openMealSheetFrom("timeline_cta")}
         />
 
         <TodayRecord tiles={todayTiles} />
@@ -1076,6 +1262,7 @@ export function RecordView({
       {/* ── 식사 기록 파이프라인(카메라·텍스트·AI 분석) ── */}
       <TextRecord
         open={isTextRecordOpen}
+        slot={ANALYTICS_MEAL_SLOT[textRecordMealType]}
         onClose={() => void closeTextRecord()}
         onSubmit={(text) => {
           const mealType = recordingMealTypeRef.current
@@ -1085,7 +1272,14 @@ export function RecordView({
         }}
       />
 
+      {/*
+        같은 컴포넌트가 세 번 서는데 셋은 **다른 여정**이다(방금 분석한 결과 · 저장된
+        기록을 다시 연 것 · 대기 중에 나갔다 복구된 것). 화면 축은 셋 다 `home` 이라
+        안 갈리므로 `source` 를 여기서 못 박는다 — 안 넘기면 '결과를 보고도 안 담았다'
+        가 세 여정의 합이 되어 어느 쪽이 새는지 영영 못 본다.
+      */}
       <FoodAnalysisResult
+        source="fresh"
         result={analysisResult}
         open={isResultOpen}
         onClose={closeResult}
@@ -1098,6 +1292,7 @@ export function RecordView({
       />
 
       <FoodAnalysisResult
+        source="saved"
         result={viewDiaryResult}
         open={isViewResultOpen}
         onClose={() => setIsViewResultOpen(false)}
@@ -1116,6 +1311,7 @@ export function RecordView({
       />
 
       <FoodAnalysisResult
+        source="recovered"
         result={pending?.result ?? null}
         open={isPendingOpen}
         onClose={() => {
@@ -1160,8 +1356,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     // 패널이 화면 바닥까지 회색을 채우도록 세로로 자란다.
     flexGrow: 1,
-    // 우하단 AI 상담 필(16+48)에 마지막 타일이 가리지 않게 그 높이만큼 비운다.
-    paddingBottom: 80,
   },
   bodyPanel: {
     flexGrow: 1,

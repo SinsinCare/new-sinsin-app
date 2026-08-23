@@ -24,6 +24,7 @@
  * - `provenance` 가 계약에 없는 값이면 `resolveProvenance` 가 null 을 준다. 영양 카드는
  *   그때 수치를 그리지 않는다(계약 §1.1).
  */
+import { isAuthorBlocked, type BlockedAuthors } from "../../utils/blockedAuthors"
 import {
   type IngredientMatchReason,
   RECIPE_NUTRITION_PROVENANCES,
@@ -508,28 +509,51 @@ export function unmatchedCopyKey(
  * 있어야 한다)에도 걸린다.
  *
  * 서버에 레시피 리뷰 신고 테이블이 아직 없으므로(도메인마다 별 표를 쓰는 구조다)
- * **이미 있는 차단**을 먼저 붙인다. 차단은 닉네임 기준이고(`blockService`), 리뷰
- * 응답에 `authorNickName` 이 있어 서버 변경 없이 오늘 동작한다.
+ * **이미 있는 차단**을 먼저 붙인다.
+ *
+ * ## 판정은 커뮤니티와 **같은 함수**다
+ *
+ * 서버 리뷰 응답에 `authorId` 가 실리면서(alembic 088 후속) 여기도 신원 축으로 옮겼다.
+ * 이 함수는 이제 순서와 `mine` 예외만 책임지고, "이 사람을 접는가" 는 전부
+ * `isAuthorBlocked` 한 곳이 답한다 — 화면마다 규칙을 다시 적으면 그중 하나만 낡는다.
+ *
+ * 옮기기 전 닉네임 축에서는 두 결함이 있었고, 둘 다 사라졌다:
+ *
+ *  - 차단한 사람이 개명하면 그 사람의 리뷰가 다시 보였다(차단 회피).
+ *  - 비어 버린 그 닉네임을 가져간 제3자의 리뷰가 이 기기에서만 가려졌다(승계).
  *
  * ## 규칙
  *
- *  - **내 리뷰는 절대 숨기지 않는다.** 닉네임이 우연히 차단 목록에 있어도(자기 자신을
- *    차단하는 경로는 없지만, 닉네임은 바뀔 수 있다) 내가 쓴 글이 내 화면에서 사라지면
- *    그건 데이터가 사라진 것으로 읽힌다.
- *  - 비교는 **트림 + 대소문자 무시**다. 닉네임 표기가 한 글자 다르다고 차단이 풀리면
- *    사용자는 차단이 안 먹는다고 느낀다.
+ *  - **내 리뷰는 절대 숨기지 않는다.** 내 id 가 어쩌다 차단 목록에 있어도 내가 쓴 글이
+ *    내 화면에서 사라지면 그건 데이터가 사라진 것으로 읽힌다. 서버도 같은 예외를 둔다
+ *    (`notBlocked` 의 `rv.user_id = 나`).
+ *  - 이름 비교는 **정확히 일치**다. 예전에는 트림+소문자였는데, `users.nick_name` 은
+ *    대소문자를 구별하는 유니크라 `Nana` 와 `NANA` 는 **서로 다른 사람**이다. 헐겁게
+ *    비교하면 차단한 적 없는 사람이 가려진다 — 088 이 없애려는 승계 결함과 같은 종류다.
+ *    서버도 정확히 일치로 거른다.
  *  - 별점 요약(평균·개수)은 그대로 둔다 — 그건 서버가 전체로 계산한 값이고, 한 명을
- *    가렸다고 평균을 앱에서 다시 계산하면 화면마다 다른 별점이 뜬다.
+ *    가렸다고 평균을 앱에서 다시 계산하면 화면마다 다른 별점이 뜬다. 서버도 요약은
+ *    차단으로 줄이지 않으므로, 목록 수와 요약 수가 다른 것이 **정상**이다.
+ *
+ * ## 서버가 이미 걸렀는데 왜 앱에도 남기나
+ *
+ * 차단 직후 한 박자를 메운다. 서버 필터는 다음 조회부터 듣고, 그 사이 이미 받아 둔
+ * 쪽에는 방금 차단한 사람의 리뷰가 그대로 들어 있다.
  */
 export function visibleReviews<
-  T extends { authorNickName: string; mine: boolean },
->(reviews: readonly T[], blockedNickNames: readonly string[]): T[] {
-  if (blockedNickNames.length === 0) return [...reviews]
-  const blocked = new Set(
-    blockedNickNames.map((name) => name.trim().toLowerCase()),
-  )
+  T extends { authorId?: number | null; authorNickName: string; mine: boolean },
+>(reviews: readonly T[], blockedAuthors: BlockedAuthors): T[] {
+  if (blockedAuthors.ids.size === 0 && blockedAuthors.unresolvedNames.size === 0) {
+    return [...reviews]
+  }
   return reviews.filter(
     (review) =>
-      review.mine || !blocked.has(review.authorNickName.trim().toLowerCase()),
+      review.mine ||
+      !isAuthorBlocked(blockedAuthors, {
+        authorId: review.authorId,
+        // 커뮤니티는 `authorName`, 리뷰는 `authorNickName` 이다(서버 계약이 그렇다).
+        // 판정 함수는 하나여야 하므로 여기서 이름만 맞춰 넘긴다.
+        authorName: review.authorNickName,
+      }),
   )
 }

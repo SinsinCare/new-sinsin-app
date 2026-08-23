@@ -3,12 +3,30 @@ import { AppState } from "react-native"
 import { useSegments } from "expo-router"
 import type { AppUser } from "@/src/services/types/serviceTypes"
 import {
-  flushAnalytics,
+  initAnalyticsLifecycle,
   identifyAnalyticsUser,
+  notifyAppBackgrounded,
+  notifyAppForegrounded,
   resetAnalyticsIdentity,
   trackAnalyticsEvent,
 } from "./analyticsClient"
-import { getAnalyticsScreenName, getAnalyticsSignupStep } from "./events"
+import {
+  getAnalyticsScreenName,
+  getAnalyticsSignupStep,
+  toDurationBucket,
+} from "./events"
+import { ScreenDwellTracker, type ScreenExitSignal } from "./screenDwell"
+
+function emitScreenExits(signals: readonly ScreenExitSignal[]): void {
+  for (const signal of signals) {
+    trackAnalyticsEvent("screen_exited", {
+      screen: signal.screen,
+      reason: signal.reason,
+      dwell_seconds: signal.dwellSeconds,
+      dwell_bucket: toDurationBucket(signal.dwellSeconds * 1_000),
+    })
+  }
+}
 
 export function useAnalyticsLifecycle(
   user: AppUser | null,
@@ -24,7 +42,10 @@ export function useAnalyticsLifecycle(
     () => getAnalyticsSignupStep(routeSegments),
     [routeSegments],
   )
-  const lastScreenRef = useRef<string | null>(null)
+  const dwellTrackerRef = useRef<ScreenDwellTracker | null>(null)
+  if (dwellTrackerRef.current === null) {
+    dwellTrackerRef.current = new ScreenDwellTracker()
+  }
   const lastSignupStepRef = useRef<string | null>(null)
   const loginViewedRef = useRef(false)
 
@@ -39,14 +60,20 @@ export function useAnalyticsLifecycle(
   useEffect(() => {
     if (isAuthLoading || launchTrackedRef.current) return
     launchTrackedRef.current = true
+    // 설치·업데이트·세션 시작 수명주기는 클라이언트가 자동으로 수집한다.
+    initAnalyticsLifecycle()
     trackAnalyticsEvent("app_launch_started", {})
   }, [isAuthLoading])
 
   useEffect(() => {
     if (isAuthLoading) return
-    if (lastScreenRef.current === screenName) return
-    lastScreenRef.current = screenName
-    trackAnalyticsEvent("screen_viewed", { screen: screenName })
+    const tracker = dwellTrackerRef.current
+    if (tracker === null) return
+    const transition = tracker.enter(screenName, Date.now())
+    emitScreenExits(transition.exits)
+    if (transition.entered) {
+      trackAnalyticsEvent("screen_viewed", { screen: screenName })
+    }
   }, [isAuthLoading, screenName])
 
   useEffect(() => {
@@ -74,7 +101,19 @@ export function useAnalyticsLifecycle(
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "background") flushAnalytics()
+      const tracker = dwellTrackerRef.current
+      const now = Date.now()
+      if (state === "background") {
+        if (tracker !== null) emitScreenExits(tracker.background(now))
+        notifyAppBackgrounded()
+      }
+      if (state === "active") {
+        notifyAppForegrounded()
+        const resumedScreen = tracker?.resume(now) ?? null
+        if (resumedScreen !== null) {
+          trackAnalyticsEvent("screen_viewed", { screen: resumedScreen })
+        }
+      }
     })
     return () => subscription.remove()
   }, [])

@@ -1,4 +1,5 @@
-import { StyleSheet, View, Pressable, Text, ScrollView } from "react-native"
+import { StyleSheet, View, Pressable, ScrollView } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"

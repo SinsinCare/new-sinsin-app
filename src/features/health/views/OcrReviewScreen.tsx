@@ -1,11 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-  TextInput,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -76,7 +71,9 @@ export function OcrReviewScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   // 캐시/로컬 응답이 빠를 때 스켈레톤이 한 프레임 스쳐 지나가지 않게 한다.
-  const showSkeleton = useLoadingVisible(loading)
+  const showSkeleton = useLoadingVisible(loading, {
+    surface: "exam_ocr_review",
+  })
   const [measuredAt, setMeasuredAt] = useState("")
   const [items, setItems] = useState<EditableItem[]>([])
   const [customSeq, setCustomSeq] = useState(0)
@@ -543,7 +540,6 @@ export function OcrReviewScreen() {
       <BottomActionBar
         label={saving ? t("actions.saving") : t("actions.save")}
         disabled={saving || alreadyConfirmed || includedCount === 0}
-        paddingBottom={insets.bottom + 16}
         onPress={handleSave}
       />
     </ThemedView>
@@ -767,9 +763,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginTop: 4,
   },
-  addItemButtonPressed: {
-    backgroundColor: "#F0FDF4",
-  },
+
   addItemText: {
     fontSize: 14,
     fontWeight: "600",

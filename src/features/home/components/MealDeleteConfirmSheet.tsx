@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View } from "react-native"
+import { Image, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { V2BottomSheet, useV2Theme } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
@@ -61,6 +62,7 @@ export function MealDeleteConfirmSheet({
 
   return (
     <V2BottomSheet
+      surface="home_meal_delete"
       visible={visible}
       onClose={onKeep}
       title={t("foodResult.deleteConfirmTitle")}

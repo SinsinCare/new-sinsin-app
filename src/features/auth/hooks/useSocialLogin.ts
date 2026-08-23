@@ -4,6 +4,7 @@ import { router } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/src/hooks/useAuth"
 import { presentError } from "@/src/lib/errorMessage"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import type { SocialProvider, WithdrawalPendingResult } from "@/src/types"
 import {
   getSocialLoginErrorAction,
@@ -46,12 +47,25 @@ export function useSocialLogin() {
         provider,
         isUserCancelledError,
       )
+      /* 취소는 여기서 세지 않는다 — `useAuth` 의 catch 가 이미
+         `auth_social_login_cancelled` 로 갈라 놓았다(그쪽이 유일하게 배타적인 자리다). */
       if (action.type === "cancelled") return
       if (action.type === "withdrawal_pending") {
+        /* 이 갈래에는 `auth_social_login_blocked` 를 쏘지 않는다. 바로 다음 줄이
+           탈퇴 확인 모달을 띄우므로 같은 사건이 두 이름으로 세어지고, 그러면
+           '소셜 막힘' 총량과 '탈퇴 모달 노출' 총량이 서로를 중복 포함한다
+           (설계 §J1-0 정정 3). 이 갈래의 정본은 아래 한 이름이다. */
+        trackAnalyticsEvent("auth_withdrawal_prompt_viewed", {
+          source: "social",
+        })
         setWithdrawalPending(action.result)
         return
       }
       if (action.type === "provider_email_required") {
+        trackAnalyticsEvent("auth_social_login_blocked", {
+          provider,
+          fail_kind: "provider_email_required",
+        })
         Toast.show({
           type: "error",
           text1: action.title,
@@ -61,6 +75,10 @@ export function useSocialLogin() {
         return
       }
       if (action.type === "legacy_social_link_required") {
+        trackAnalyticsEvent("auth_social_login_blocked", {
+          provider,
+          fail_kind: "link_required",
+        })
         router.push({
           pathname: "./social-link-email",
           params: {
@@ -75,6 +93,10 @@ export function useSocialLogin() {
          한 줄이었는데, 그 자리에 오는 것은 확인이 덜 끝난 소셜 토큰(`AUTH_ERROR_002`,
          다시 누르면 된다)·지원하지 않는 방식(`AUTH_ERROR_003`)·정지된 계정
          (`AUTH_ERROR_007`)이라 사용자가 할 일이 서로 다르다. */
+      trackAnalyticsEvent("auth_social_login_blocked", {
+        provider,
+        fail_kind: "generic",
+      })
       presentError(error, {
         scope: `social-login-${provider}`,
         retry: () => void loginWithProvider(provider),

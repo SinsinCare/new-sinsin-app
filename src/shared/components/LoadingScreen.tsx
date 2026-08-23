@@ -33,6 +33,7 @@ import {
   useLoadingVisible,
   useV2Theme,
 } from "@/src/design-system-v2"
+import type { AnalyticsSurface } from "@/src/features/analytics"
 
 const MARK_DARK = require("@/assets/images/Sin_dark.png")
 const MARK_LIGHT = require("@/assets/images/Sin_light.png")
@@ -45,10 +46,12 @@ const BREATH_MS = 900
 const MESSAGE_DELAY_MS = 900
 
 interface LoadingScreenProps {
+  /** 무엇을 여는 동안인가. 이 화면은 부팅 경로마다 다른 뜻이라 호출부가 정한다. */
+  surface: AnalyticsSurface
   message?: string
 }
 
-export function LoadingScreen({ message }: LoadingScreenProps) {
+export function LoadingScreen({ surface, message }: LoadingScreenProps) {
   const { t } = useTranslation()
   const { colors } = useV2Theme()
   const scheme = useColorScheme()
@@ -57,6 +60,7 @@ export function LoadingScreen({ message }: LoadingScreenProps) {
   // `isLoading=true` 를 고정으로 넘긴다 — 이 화면이 떠 있는 동안은 언제나 로딩 중이고,
   // 훅은 "얼마나 지났는가" 만 판단한다.
   const showMessage = useLoadingVisible(true, {
+    surface,
     delay: MESSAGE_DELAY_MS,
     minDuration: 0,
   })

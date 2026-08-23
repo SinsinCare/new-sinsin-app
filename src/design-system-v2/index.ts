@@ -12,3 +12,9 @@ export * from "./hooks/useV2Theme"
 export * from "./hooks/useLoadingVisible"
 export * from "./icons"
 export * from "./components"
+
+export {
+  TAB_BAR_CORNER_RADIUS,
+  tabBarBackdrop,
+  tabBarFace,
+} from "./components/V2TabBar"

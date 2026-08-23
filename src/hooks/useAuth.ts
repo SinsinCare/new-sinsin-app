@@ -15,6 +15,7 @@ import {
   clearClientSessionState,
 } from "../services/core/sessionCleanup"
 import { logger } from "@/src/lib/logger"
+import { toAnalyticsFailKind } from "@/src/lib/errorMessage"
 import {
   identifyAnalyticsUser,
   resetAnalyticsIdentity,
@@ -145,7 +146,12 @@ export function useAuth() {
       trackAnalyticsEvent("auth_email_login_succeeded", {})
       return result
     } catch (error) {
-      trackAnalyticsEvent("auth_email_login_failed", {})
+      /* 인증 화면의 실패는 대부분 필드 아래 한 줄로 끝나고 `presentError` 를 지나가지
+         않는다(`presentAuthFailure` 가 다이얼로그 갈래만 넘긴다). 그래서 갈래를 여기서
+         같이 싣지 않으면 "비밀번호가 틀렸다" 와 "가입한 적이 없다" 가 영원히 한 숫자다. */
+      trackAnalyticsEvent("auth_email_login_failed", {
+        fail_kind: toAnalyticsFailKind(error),
+      })
       throw error
     }
   }
@@ -177,7 +183,22 @@ export function useAuth() {
       trackAnalyticsEvent("auth_social_login_succeeded", { provider })
       return result
     } catch (error) {
-      trackAnalyticsEvent("auth_social_login_failed", { provider })
+      /*
+        취소는 실패가 아니다.
+
+        종전에는 이 catch 가 전부를 `auth_social_login_failed` 로 세었다 — 사용자가
+        구글/카카오 시트를 그냥 닫은 것까지. 그래서 대시보드의 '소셜 실패율' 은 실패가
+        아니라 '취소+실패' 였고, 장애 지표로 쓸 수 없었다(설계 §J1-4).
+
+        가르는 자리를 여기로 잡은 이유는 **여기가 유일하게 배타적**이기 때문이다.
+        호출부(`useSocialLogin`)도 같은 판정을 하지만 그쪽은 이 catch 뒤에 돌아서,
+        거기서 취소를 쏘면 이미 나간 failed 를 되돌릴 수 없다.
+      */
+      if (isUserCancelledError(error)) {
+        trackAnalyticsEvent("auth_social_login_cancelled", { provider })
+      } else {
+        trackAnalyticsEvent("auth_social_login_failed", { provider })
+      }
       throw error
     }
   }
@@ -251,12 +272,29 @@ export function useAuth() {
 
   const signOut = useCallback(
     async (reason: AuthSignOutReason = "automatic") => {
+      /*
+        **맨 앞에서 쏜다.** 아래 `finally` 사슬은 서버 로그아웃이 실패해도 세션을
+        비우므로, 이 함수에 들어온 것 자체가 곧 로그아웃이다. 뒤로 미루면 서버가
+        느린 날의 자동 로그아웃이 백그라운드 종료에 잘려 통째로 사라진다.
+
+        `reason` 을 나누는 이유는 이 둘이 **정반대의 사건**이기 때문이다.
+        `'automatic'` 은 `sessionPersistence:'ephemeral'` 계정이 백그라운드로 들어가는
+        즉시 잘린 것으로 사용자가 원한 적이 없고, 그 코호트는 앱을 잠깐 내렸다 올릴
+        때마다 로그인 화면을 다시 만나 로그인 퍼널 분모에 재로그인을 섞는다(설계 §9-⑤).
+      */
+      trackAnalyticsEvent("auth_signed_out", { reason })
       try {
         await authService.signOut()
       } finally {
         try {
           await persistSocialReauthenticationIntentForSignOut(reason)
         } finally {
+          /*
+            익명 id 는 **기기 축이라 로그아웃해도 유지된다**(`analyticsClient` 머리말).
+            그래서 로그아웃 뒤 이 기기에서 쌓인 익명 이벤트는, 다음에 로그인한 사람이
+            누구든 서버의 소급 귀속으로 **그 사람에게 붙는다.** 공용 기기·계정 전환이
+            섞인 데이터를 개인 단위로 읽으면 안 된다는 뜻이다.
+          */
           resetAnalyticsIdentity()
           await clearClientSession()
           resetProfile()

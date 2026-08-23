@@ -1,7 +1,8 @@
 /**
  * 홈 탭 (목업 -9 / -18 / -19 / -20).
  *
- * 순서: 정보 요약 → 메뉴 3개 → 사진 6칸 + `사진 전체보기` → 후기 요약 + 3개 + `후기 더보기`.
+ * 순서: 정보 요약 → 메뉴 3개 → 사진 6칸 + `사진 전체보기` → **AI 식단 상담** →
+ * 후기 요약 + 3개 + `후기 더보기`.
  *
  * ## 왜 여기서 사진·후기를 각자 조회하는가
  *
@@ -47,6 +48,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native"
+import { useMemo } from "react"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
@@ -61,11 +63,14 @@ import {
 } from "@/src/design-system-v2"
 
 import { GUTTER, SECTION_GAP } from "../../layout"
+import { buildConsultQuestions } from "../../consult/suggestedQuestions"
+import type { ConsultQuestion } from "../../consult/types"
 import { useRestaurantReviews } from "../../hooks/useRestaurantReviews"
 import { useRestaurantPhotos } from "../../hooks/useRestaurantPhotos"
 import type { MenuItemDto, PhotoDto, RestaurantDetailDto } from "../../types"
 import { menuConfidenceMode } from "../../utils/menuSafetyEvidence"
 import { reviewPhotos } from "./reviewPhotos"
+import { AiConsultSection } from "./AiConsultSection"
 import { DetailInfoRows } from "./DetailInfoRows"
 import { DetailSection } from "./DetailSection"
 import { MenuRow } from "./MenuRow"
@@ -95,6 +100,14 @@ export interface HomeTabProps {
   onWriteReview?: () => void
   onOpenPhotos?: (photos: PhotoDto[], index: number) => void
   onPressReviewAuthor?: (reviewerId: number) => void
+  /**
+   * `AI 식단 상담` 진입. 추천 질문 행이면 그 질문, `질문하기` 면 `null` 이 온다.
+   *
+   * **선택 prop 이 아니다.** 이 화면에서 상담 시트로 가는 문은 이것 하나뿐이라, 안 주면
+   * 질문 행이 눌리기만 하고 아무 일도 일어나지 않는 섹션이 남는다. 필수로 두면 배선을
+   * 빠뜨린 순간 컴파일이 막는다 — `ReviewWritePrompt` 가 `onPress` 를 필수로 둔 것과 같다.
+   */
+  onAskAi: (question: ConsultQuestion | null) => void
 }
 
 export function HomeTab({
@@ -108,6 +121,7 @@ export function HomeTab({
   onWriteReview,
   onOpenPhotos,
   onPressReviewAuthor,
+  onAskAi,
 }: HomeTabProps) {
   const { t } = useTranslation("common")
   const { colors } = useV2Theme()
@@ -122,6 +136,26 @@ export function HomeTab({
   const previewConfidence = menuConfidenceMode(previewMenus)
   const previewPhotos = photos.slice(0, PREVIEW.photos)
   const previewReviews = reviews.slice(0, PREVIEW.reviews)
+
+  /*
+    추천 질문은 **여기서** 만든다. 섹션 안에서 만들면 개수를 밖에서 알 수 없어
+    앞뒤 띠(`V2Divider variant="thick"`)를 조건부로 그리지 못한다 — 질문이 0개인 식당에서
+    띠 두 개가 붙어 빈 회색 덩어리가 남는다. 사진·후기 블록도 같은 이유로 개수를 먼저 센다.
+
+    전부 결정적이라(모델도 난수도 시각도 쓰지 않는다) 같은 식당·같은 프로필이면 언제나
+    같은 질문이 같은 순서로 나온다. `t` 가 의존성에 있는 것은 로케일이 바뀌면 문장이
+    바뀌어야 하기 때문이다.
+  */
+  const consultQuestions = useMemo(
+    () =>
+      buildConsultQuestions({
+        menus,
+        cuisineType: detail.cuisineType,
+        profileMissing: menusProfileMissing,
+        t: (key, options) => String(t(key as never, options as never)),
+      }),
+    [menus, detail.cuisineType, menusProfileMissing, t],
+  )
 
   const photoSize =
     (width - GUTTER * 2 - PHOTO_GAP * (PHOTO_COLUMNS - 1)) / PHOTO_COLUMNS
@@ -254,6 +288,23 @@ export function HomeTab({
               />
             </View>
           </DetailSection>
+        </>
+      )}
+
+      {/*
+        시안 순서는 `사진 → 사진 전체보기 → [띠] → AI 식단 상담 → [띠] → 후기` 다
+        (C4_1 + E1_2). 자리를 옮기지 말 것 — 이 섹션이 **스크롤로 지나가며 만나는** 것이
+        하단 바의 `진단하기` 와 갈리는 지점이다. 맨 위로 올리면 판정 CTA 와 자리가 겹쳐
+        두 진입이 같은 것을 요구하는 것처럼 읽힌다.
+      */}
+      {consultQuestions.length > 0 && (
+        <>
+          <V2Divider variant="thick" />
+          <AiConsultSection
+            restaurantId={restaurantId}
+            questions={consultQuestions}
+            onAsk={onAskAi}
+          />
         </>
       )}
 

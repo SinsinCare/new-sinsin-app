@@ -1,11 +1,18 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import RNToast, {
   type ToastConfig,
   type ToastConfigParams,
 } from "react-native-toast-message"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import Ionicons from "@expo/vector-icons/Ionicons"
+import {
+  V2ToastCard,
+  type V2ToastVariant,
+} from "@/src/design-system-v2/components/V2Toast"
+import { radius, spacing, typography } from "@/src/design-system-v2/tokens"
+import { semanticLight } from "@/src/design-system-v2/tokens/colors"
 import type { ToastProps } from "@/src/lib/toast"
+import { LAYOUT } from "@/src/theme/surface"
 import { aboveTabBarSpace } from "@/src/shared/utils/bottomSafeArea"
 
 /**
@@ -39,44 +46,16 @@ function ToastBase({
   text1,
   text2,
   props,
-  icon,
-  iconColor,
-}: ToastConfigParams<ToastProps> & {
-  icon: keyof typeof Ionicons.glyphMap
-  iconColor: string
-}) {
-  const action = props?.action
+  variant,
+}: ToastConfigParams<ToastProps> & { variant: V2ToastVariant }) {
   return (
-    <View style={styles.card}>
-      <View style={styles.row}>
-        <Ionicons name={icon} size={20} color={iconColor} style={styles.icon} />
-        <View style={styles.texts}>
-          {text1 ? (
-            <Text
-              style={styles.title}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-              numberOfLines={2}
-            >
-              {text1}
-            </Text>
-          ) : null}
-          {text2 ? (
-            <Text
-              style={styles.message}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-              // 해결 방법이 잘리면 토스트가 하는 일이 없어진다. 넉넉히 두고,
-              // 문구 길이는 `errors.json` 쪽에서 짧게 유지한다(최장 48자).
-              numberOfLines={4}
-            >
-              {text2}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-      {action ? (
-        <View style={styles.actionRow}>
+    <View style={styles.slot}>
+      <V2ToastCard
+        variant={variant}
+        title={text1 ?? ""}
+        message={text2}
+        action={props?.action}
+        renderAction={(action) => (
           <Pressable
             onPress={() => {
               RNToast.hide()
@@ -93,32 +72,32 @@ function ToastBase({
               {action.label}
             </Text>
           </Pressable>
-        </View>
-      ) : null}
+        )}
+      />
     </View>
   )
 }
 
 const toastConfig: ToastConfig = {
   error: (props) => (
-    <ToastBase
-      {...(props as ToastConfigParams<ToastProps>)}
-      icon="alert-circle"
-      iconColor="#FF6B5E"
-    />
+    <ToastBase {...(props as ToastConfigParams<ToastProps>)} variant="error" />
   ),
   success: (props) => (
     <ToastBase
       {...(props as ToastConfigParams<ToastProps>)}
-      icon="checkmark-circle"
-      iconColor="#34D399"
+      variant="success"
+    />
+  ),
+  caution: (props) => (
+    <ToastBase
+      {...(props as ToastConfigParams<ToastProps>)}
+      variant="caution"
     />
   ),
   info: (props) => (
     <ToastBase
       {...(props as ToastConfigParams<ToastProps>)}
-      icon="information-circle"
-      iconColor="#9DA0A8"
+      variant="default"
     />
   ),
 }
@@ -142,60 +121,20 @@ export function Toast() {
   )
 }
 
-/** 아이콘 폭(20) + 아이콘과 글줄 사이(10). 버튼 줄을 글줄에 맞춰 들여쓸 때 쓴다. */
-const TEXT_INDENT = 30
-
 const styles = StyleSheet.create({
-  // 라이트/다크 공용 다크 카드. 본문 위 어디에 떠도 한 가지 얼굴로 읽힌다.
-  card: {
-    marginHorizontal: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: "rgba(28,29,34,0.96)",
-  },
-  // 아이콘은 제목 첫 줄에 맞춘다. 두세 줄짜리 안내에서 가운데 정렬하면
-  // 아이콘이 본문 옆으로 내려가 제목과의 관계가 끊긴다.
-  row: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  icon: { flexShrink: 0, marginTop: 1 },
-  texts: { flexShrink: 1, flexGrow: 1 },
-  // 위계: 제목은 굵기(600)와 완전 불투명한 흰색으로, 본문은 크기(-2)와
-  // 투명도(0.7)로 내린다. 크기만으로 나누면 어두운 배경에서 둘 다 강해 보인다.
-  title: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    fontWeight: "600",
-  },
-  message: {
-    color: "rgba(255,255,255,0.70)",
-    fontSize: 13,
-    // 두세 줄이 되는 안내라 줄 사이를 18 → 19 로 벌린다.
-    lineHeight: 19,
-    letterSpacing: -0.26,
-    fontWeight: "400",
-    marginTop: 3,
-  },
-  actionRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-    marginLeft: TEXT_INDENT,
-  },
+  /** 카드 자체의 여백·면·글자는 V2ToastCard 가 정한다. 여기서는 화면 좌우 여백만. */
+  slot: { marginHorizontal: LAYOUT.screenX },
   // 어두운 필 위의 버튼이라 테두리 없이 옅은 면으로만 구분한다.
+  // 흰색 알파는 `static.white` 에서 만든다(리터럴 rgba 를 새로 적지 않는다).
   action: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.14)",
+    paddingHorizontal: spacing[12],
+    paddingVertical: spacing[8],
+    borderRadius: radius.md,
+    backgroundColor: `${semanticLight.static.white}24`,
   },
-  actionPressed: { backgroundColor: "rgba(255,255,255,0.24)" },
+  actionPressed: { backgroundColor: `${semanticLight.static.white}3d` },
   actionLabel: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    lineHeight: 18,
-    letterSpacing: -0.26,
-    fontWeight: "600",
+    ...typography.label.xSmall,
+    color: semanticLight.static.white,
   },
 })

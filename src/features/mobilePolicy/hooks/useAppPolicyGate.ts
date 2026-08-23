@@ -4,6 +4,11 @@ import { useTranslation } from "react-i18next"
 
 import { getMobilePolicyRuntimeInfo } from "@/src/config/runtimeInfo"
 import { normalizeLanguage } from "@/src/i18n"
+import {
+  initAnalyticsLifecycle,
+  toDurationBucket,
+  trackAnalyticsEvent,
+} from "@/src/features/analytics"
 import { fetchMobilePolicy } from "../services/mobilePolicyClient"
 import {
   createMobilePolicyService,
@@ -13,6 +18,41 @@ import type { MobilePolicyEvaluation } from "../types"
 
 type AppPolicyGateStatus = "checking" | "ready"
 
+/**
+ * 같은 판정을 두 번 세지 않기 위한 열쇠. 부팅 경로는 캐시로 한 번, 뒤따르는 재검증으로
+ * 또 한 번 `evaluation` 을 갈아끼우는데, 답이 같으면 그건 **한 번의 판정**이다.
+ * 셋 중 하나라도 달라지면(캐시 allow → 서버 force_update) 그건 새 사건이라 다시 센다.
+ */
+export function policyEvaluationKey(properties: {
+  decision: string
+  source: string
+  blocked: boolean
+}): string {
+  return `${properties.decision}:${properties.source}:${properties.blocked}`
+}
+
+/**
+ * 정책 게이트.
+ *
+ * ■ 계측이 **여기** 있는 이유 (설계 §9-①)
+ *
+ * 이 훅은 `RootLayoutNav` 밖에 산다. 앱의 계측 수명주기(`useAnalyticsLifecycle`·
+ * `app_launch_started`)는 전부 그 **안**이라, 게이트가 차단 화면을 그리면 그 실행은
+ * 이벤트를 한 개도 남기지 않는다. 강제 업데이트 화면은 안드로이드 뒤로가기까지 막는
+ * 100% 이탈 지점인데 관측이 구조적으로 불가능했고, 동시에 DAU 분모가 조용히 줄어
+ * **차단된 사람과 앱을 켜지 않은 사람이 같아 보였다.**
+ *
+ * 그래서 계측 초기화를 여기서 직접 한다. `RootLayoutNav` 가 열리면 같은 함수를 한 번
+ * 더 부르지만 `initAnalyticsLifecycle` 은 멱등이다(`analyticsClient.ts` 의
+ * `lifecycleInitialized`) — 설치·업데이트 신호가 두 벌 나가지 않는다.
+ *
+ * ■ 개발 중에는 이 코호트가 재현되지 않는다
+ *
+ * `__DEV__` 에서는 아래 `isBlocking`·`shouldRecommendUpdate` 가 통째로 꺼진다. 즉
+ * 차단 화면·권장 안내의 이벤트는 **스토어 빌드에서만** 나가고, `app_policy_evaluated`
+ * 만 `blocked:false` 로 개발 기기에서도 나간다. 로컬에서 안 보인다고 안 붙은 것이
+ * 아니다 — 확인하려면 `!__DEV__` 빌드가 필요하다.
+ */
 export function useAppPolicyGate() {
   const { i18n } = useTranslation()
   const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
@@ -21,6 +61,13 @@ export function useAppPolicyGate() {
     null,
   )
   const requestIdRef = useRef(0)
+  const reportedKeyRef = useRef<string | null>(null)
+
+  /* **이 훅의 첫 effect 여야 한다.** 아래 판정 effect 보다 먼저 돌아야 설치·업데이트
+     신호가 정책 이벤트보다 앞선 순번(seq)을 받는다. */
+  useEffect(() => {
+    initAnalyticsLifecycle()
+  }, [])
 
   const service = useMemo(
     () =>
@@ -41,11 +88,28 @@ export function useAppPolicyGate() {
       const requestId = requestIdRef.current + 1
       requestIdRef.current = requestId
       if (!silent) setStatus("checking")
+      const startedAtMs = Date.now()
       const nextEvaluation = await service.evaluate(
         getMobilePolicyRuntimeInfo(),
         language,
       )
+      /* 앞질린 검사는 화면에도 안 쓰이므로 계측에도 안 쓴다 — 스테일 가드 **뒤**에서 쏜다.
+         언어 변경이나 차단 화면의 "다시 시도"가 진행 중인 검사를 앞지르면, 버려진 검사가
+         남긴 행만큼 게이트 대기 수가 부풀어 있었다. */
       if (requestId !== requestIdRef.current) return
+
+      /* 사람이 **실제로 기다린** 대기만 센다. `silent` 는 캐시로 화면을 이미 연 뒤의
+         재검증이라 아무도 기다리지 않고 있다. 빠른 판정까지 남기면 이 이벤트가 앱 실행
+         수만큼 나가므로 느린 쪽만 남긴다 — 이 이벤트의 존재 자체가 곧 신호다. */
+      if (!silent) {
+        const waitBucket = toDurationBucket(Date.now() - startedAtMs)
+        if (waitBucket === "slow" || waitBucket === "very_slow") {
+          trackAnalyticsEvent("app_policy_check_slow", {
+            wait_bucket: waitBucket,
+            source: nextEvaluation.source,
+          })
+        }
+      }
       setEvaluation(nextEvaluation)
       setStatus("ready")
     },
@@ -108,6 +172,19 @@ export function useAppPolicyGate() {
     isBlockingMobilePolicyDecision(policy.decision)
   const shouldRecommendUpdate =
     !__DEV__ && policy?.decision === "recommend_update"
+
+  useEffect(() => {
+    if (!evaluation) return
+    const properties = {
+      decision: evaluation.policy.decision,
+      source: evaluation.source,
+      blocked: isBlocking,
+    }
+    const key = policyEvaluationKey(properties)
+    if (reportedKeyRef.current === key) return
+    reportedKeyRef.current = key
+    trackAnalyticsEvent("app_policy_evaluated", properties)
+  }, [evaluation, isBlocking])
 
   return {
     status,

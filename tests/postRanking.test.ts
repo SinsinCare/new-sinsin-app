@@ -1,6 +1,5 @@
 import {
   getHotScore,
-  rankPopularPosts,
   rankRelatedPosts,
 } from "@/src/features/recipe/utils/postRanking"
 
@@ -44,29 +43,6 @@ describe("getHotScore", () => {
     const future = post("a", { likes: 5, ageHours: -2 })
     const now = post("b", { likes: 5, ageHours: 0 })
     expect(getHotScore(future, NOW)).toBe(getHotScore(now, NOW))
-  })
-})
-
-describe("rankPopularPosts", () => {
-  it("참여가 없는 글은 인기글이 되지 않는다", () => {
-    const ranked = rankPopularPosts([post("a"), post("b", { likes: 1 })], NOW)
-    expect(ranked.map((p) => p.id)).toEqual(["b"])
-  })
-
-  it("오래된 대박글보다 지금 달아오르는 글이 위로 온다", () => {
-    const oldHit = post("old", { likes: 30, ageHours: 24 * 7 })
-    const rising = post("rising", { likes: 6, comments: 2, ageHours: 2 })
-    const ranked = rankPopularPosts([oldHit, rising], NOW)
-    expect(ranked[0].id).toBe("rising")
-  })
-
-  it("limit 만큼만 돌려준다", () => {
-    const posts = [
-      post("a", { likes: 3 }),
-      post("b", { likes: 2 }),
-      post("c", { likes: 1 }),
-    ]
-    expect(rankPopularPosts(posts, NOW, 2)).toHaveLength(2)
   })
 })
 

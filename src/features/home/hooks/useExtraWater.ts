@@ -1,6 +1,6 @@
 import { foodCameraService } from "@/src/services/data"
 
-import { presentError } from "@/src/lib/errorMessage"
+import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 export function useExtraWater() {
@@ -8,13 +8,21 @@ export function useExtraWater() {
   const updateExtraWater = async (
     date: string,
     deltaWater: number,
+    /** 그날 이미 마신 양이 있었는가 — 새 기록과 덧기록/정정을 가른다. */
+    existing: boolean,
   ): Promise<boolean> => {
     try {
       await foodCameraService.updateExtraWater(date, deltaWater)
-      trackAnalyticsEvent("health_entry_save_succeeded", {})
+      trackAnalyticsEvent("health_entry_save_succeeded", {
+        metric: "water",
+        existing,
+      })
       return true
     } catch (error) {
-      trackAnalyticsEvent("health_entry_save_failed", {})
+      trackAnalyticsEvent("health_entry_save_failed", {
+        metric: "water",
+        fail_kind: toAnalyticsFailKind(error),
+      })
       /*
         재시도 버튼을 달지 않는다. 이 API 는 **누적이 아니라 증감(delta)** 이고,
         실패해도 물 시트는 담긴 잔을 그대로 둔 채 열려 있다(`WaterSheet.commit`) —

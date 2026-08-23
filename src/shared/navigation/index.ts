@@ -7,6 +7,7 @@
 //  useAppRouter : `useRouter()` 자리에 들어가는 라우터 (back 만 다르다)
 //  entryIntent  : 라우터에 넘기기 전 진입 URL 검사
 //  useConsumeEntryUrl : 진입 URL 을 한 번만 쓰이게 한다 (리로드 재생 차단)
+//  tabReset     : 보고 있는 탭을 다시 눌렀을 때의 사다리 (한 번 누르면 한 걸음)
 
 export * from "./entryRoute"
 export * from "./guard"
@@ -15,3 +16,5 @@ export * from "./useGoBack"
 export * from "./useAppRouter"
 export * from "./entryIntent"
 export * from "./useConsumeEntryUrl"
+export * from "./tabReset"
+export * from "./TabResetProvider"

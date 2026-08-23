@@ -1,16 +1,18 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
+  AppState,
   Image,
   Keyboard,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { useNavigation } from "expo-router"
+import { usePreventRemove } from "@react-navigation/native"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -18,6 +20,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSurface } from "@/src/hooks/useSurface"
 import { showConfirm } from "@/src/lib/dialog"
 import { hapticSelection } from "@/src/lib/haptics"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useCommunityStories } from "@/src/features/recipe/hooks/useCommunityStories"
@@ -47,10 +50,52 @@ interface StoryCandidate {
   label: string
 }
 
-function startOfDayBefore(days: number): Date {
-  const date = new Date()
-  date.setDate(date.getDate() - days)
-  return date
+function startOfDay(date: Date): Date {
+  const start = new Date(date)
+  start.setHours(0, 0, 0, 0)
+  return start
+}
+
+/**
+ * **"오늘" 은 마운트한 순간이 아니라 지금이다.**
+ *
+ * 종전에는 `useMemo(() => new Date(), [])` 였다. 작성기를 열어 둔 채 자정을 넘기면
+ * 그 값은 어제에 멈춰 있고, 화면은 어제 먹은 사진에 계속 `오늘` 이라고 써 붙였다
+ * (끼니 사진 목록 자체도 `useDateAnalysis(today)` 로 뽑으니 **틀린 날짜의 사진**을
+ * 고르게 된다). 스토리는 하루만 사는 글이라 날짜가 곧 그 글의 의미다.
+ *
+ * 그래서 날짜를 상태로 들고, 다시 잴 이유가 생길 때만 잰다:
+ *  - 앱이 다시 앞으로 나올 때 (밤에 덮어 두고 아침에 다시 여는 실제 경로)
+ *  - 다음 자정 (앱을 켜 둔 채 넘어가는 경로)
+ * 값은 **하루에 한 번만** 바뀐다(자정 기준으로 잘라 두므로) — 렌더마다 새 Date 를
+ * 만드는 것과 달리 아래 `useMemo` 들이 헛돌지 않는다.
+ */
+function useCurrentDay(): Date {
+  const [day, setDay] = useState(() => startOfDay(new Date()))
+
+  useEffect(() => {
+    const sync = () => {
+      const now = startOfDay(new Date())
+      // 같은 날이면 **같은 객체를 그대로** 돌려준다(불필요한 리렌더·재조회 차단).
+      setDay((prev) => (prev.getTime() === now.getTime() ? prev : now))
+    }
+    const subscription = AppState.addEventListener("change", (status) => {
+      if (status === "active") sync()
+    })
+    // 자정까지 남은 시간. `day` 가 바뀌면 이 effect 가 다시 돌아 다음 자정을 잡는다.
+    const nextMidnight = new Date(day)
+    nextMidnight.setDate(nextMidnight.getDate() + 1)
+    const timer = setTimeout(
+      sync,
+      Math.max(0, nextMidnight.getTime() - Date.now()),
+    )
+    return () => {
+      subscription.remove()
+      clearTimeout(timer)
+    }
+  }, [day])
+
+  return day
 }
 
 /**
@@ -65,8 +110,12 @@ export default function NewStoryScreen() {
   const bottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 24) : insets.bottom
 
-  const today = useMemo(() => new Date(), [])
-  const yesterday = useMemo(() => startOfDayBefore(1), [])
+  const today = useCurrentDay()
+  const yesterday = useMemo(() => {
+    const date = new Date(today)
+    date.setDate(date.getDate() - 1)
+    return date
+  }, [today])
   const { data: todayAnalysis } = useDateAnalysis(today)
   const { data: yesterdayAnalysis } = useDateAnalysis(yesterday)
   const { createStoryAsync, isCreating } = useCommunityStories("recommended")
@@ -77,6 +126,9 @@ export default function NewStoryScreen() {
     [],
   )
   const [isUploading, setIsUploading] = useState(false)
+  /* 초안 가드(아래 `usePreventRemove`)를 통과시키는 깃발 — 그 머리말 참고. */
+  const navigation = useNavigation()
+  const allowExitRef = useRef(false)
 
   const mealCandidates = useMemo<StoryCandidate[]>(() => {
     const build = (
@@ -143,12 +195,15 @@ export default function NewStoryScreen() {
     setSelected(picked)
   }
 
+  /** 두고 나갈 것이 있는가 — 고른 사진이나 쓰던 캡션. */
+  const hasDraft = selected !== null || caption.trim().length > 0
+
   /**
    * 고른 사진과 쓰던 캡션을 두고 나가기 전에 한 번 묻는다. 아무것도 안 골랐으면
    * 묻지 않는다 — 잃을 것이 없는데 확인을 붙이면 그냥 한 번 더 누르게 하는 것이다.
    */
   const handleClose = async () => {
-    if (!selected && caption.trim().length === 0) {
+    if (!hasDraft) {
       router.back()
       return
     }
@@ -159,8 +214,41 @@ export default function NewStoryScreen() {
       cancelLabel: t("community.newStory.keepWriting"),
       destructive: true,
     })
-    if (confirmed) router.back()
+    if (!confirmed) return
+    // 여기부터의 이탈은 사용자가 이미 고른 것이다(아래 `allowExitRef` 머리말).
+    allowExitRef.current = true
+    /*
+      `showConfirm` 의 promise 는 모달이 **닫히기 전에** resolve 된다. 그대로 나가면
+      확인 모달의 dismiss 와 화면 pop(네이티브 전환)이 겹치는데, iOS 에서 두 전환이
+      겹치면 UITransitionView 가 남아 **앱 전체 터치가 죽는다**(`appModalGate` 머리말,
+      2026-08-03). 작성 화면 둘(`FreePostEditor`·`RecipeWriteScreen`)이 이미 같은
+      처방이고 여기만 빠져 있었다.
+    */
+    await afterModalTransitions()
+    router.back()
   }
+
+  /*
+    ── 안드로이드 하드웨어 백 ────────────────────────────────────────────────
+    ✕ 를 거치지 않는 길이다. `app/(write)/_layout.tsx` 의 `gestureEnabled: false` 는
+    **iOS 전용**이라(native-stack 이 안드로이드에서는 그 값을 무조건 false 로 넘긴다 —
+    시스템 백을 JS 에서 처리하기 때문) 안드로이드에서는 백 한 번에 고른 사진과 캡션이
+    확인 없이 사라졌다. 확인창은 새로 만들지 않는다 — ✕ 와 **같은** `handleClose` 를
+    부른다(같은 화면이 두 얼굴로 묻지 않게).
+
+    가드는 이탈의 **출처를 가리지 않는다**: 확인 뒤의 `router.back()` 도, 올리기 성공
+    뒤의 `router.back()` 도 초안이 남은 채로 나가는 길이라 같이 잡힌다. 나가기로
+    **결정한** 순간 `allowExitRef` 를 세우고, 가드는 잡아 둔 그 동작을 그대로 다시
+    던진다(공식 처방 `navigation.dispatch(data.action)` — 다시 던진 동작은 이미 이
+    화면을 지나온 것으로 표시돼 있어 두 번 잡히지 않는다).
+  */
+  usePreventRemove(hasDraft, ({ data }) => {
+    if (allowExitRef.current) {
+      navigation.dispatch(data.action)
+      return
+    }
+    void handleClose()
+  })
 
   const handleSubmit = async () => {
     if (!selectedCandidate || isSaving) return
@@ -179,6 +267,8 @@ export default function NewStoryScreen() {
         imageObjectPath,
         caption: caption.trim() || null,
       })
+      // 올렸으면 두고 나갈 초안이 아니다 — 초안 가드를 통과시킨다(위 머리말).
+      allowExitRef.current = true
       router.back()
     } catch (error) {
       /*

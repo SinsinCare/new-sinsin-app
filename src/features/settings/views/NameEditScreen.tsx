@@ -5,9 +5,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -23,7 +23,6 @@ import { ApiError } from "@/src/services/core/apiError"
 import { api } from "@/src/services/core/apiClient"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
-import { tokens } from "@/src/theme/tokens"
 import i18n from "@/src/i18n"
 import { FieldHelp, SettingsTextField } from "../components/SettingsTextField"
 import { useMyPageProfile } from "../hooks/useMyPageProfile"
@@ -112,7 +111,13 @@ export function NameEditScreen() {
     }
   }
 
-  const pageBg = s.isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val
+  /*
+    **흰 페이지다.** 전에는 `appBg`(라이트 #eaeaec = 화면 바닥/우물)였는데, 그 값은
+    `SettingsTextField` 의 입력 면과 **같은 토큰**이라 필드가 바닥에 녹아 사라졌다
+    (라이트 ΔL* 7.25 → 0.00). 근거와 다른 선택지는 그 컴포넌트 머리말 §우물.
+    `canvas` 는 다크에서 `appBgDark`(#1f1f21)와 같은 값이라 다크는 안 움직인다.
+  */
+  const pageBg = s.canvas
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: pageBg }]}>
@@ -180,7 +185,6 @@ export function NameEditScreen() {
         <BottomActionBar
           label={t("shared.save")}
           disabled={!profile || !isFormatValid || isLoading || !!serverError}
-          paddingBottom={insets.bottom + 16}
           onPress={handleSave}
         />
       </KeyboardAvoidingView>

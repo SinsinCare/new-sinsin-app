@@ -4,9 +4,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Animated, {
@@ -133,7 +133,7 @@ const ChatHistorySheetLayout = ({
           styles.sheetFrame,
           {
             top: Math.max(insets.top, 12) + 8,
-            backgroundColor: surface.isDark ? surface.canvas : surface.surface,
+            backgroundColor: surface.bed,
           },
         ]}
       >

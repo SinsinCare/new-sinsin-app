@@ -11,6 +11,14 @@ const passwordTypePatterns = [
 
 export type PasswordCriteriaState = "empty" | "invalid" | "valid"
 
+/**
+ * 비밀번호 폼의 **화면 순서**. `form_validation_failed` 의 `first_fail` 을 고를 때 쓴다 —
+ * `react-hook-form` 의 errors 키 순서는 화면 순서를 보장하지 않아서, "먼저 막힌 칸" 을
+ * 거기서 읽으면 화면마다 다른 답이 나온다. 세 화면(가입·재설정·계정 연결)이 같은 두 칸을
+ * 같은 순서로 쓰므로 여기 한 벌만 둔다.
+ */
+export const PASSWORD_FIELD_ORDER = ["password", "confirmPassword"] as const
+
 export const passwordCriteriaText = i18n.t("validation.passwordCriteria", {
   ns: "auth",
 })

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import type { SurfacePalette } from "@/src/theme/surface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"

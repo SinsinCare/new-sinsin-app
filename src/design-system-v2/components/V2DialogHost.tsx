@@ -98,6 +98,7 @@ export function V2DialogHost() {
       />
 
       <V2BottomSheet
+        surface="dialog_action_sheet"
         visible={isSheet}
         onClose={() => settle(null)}
         title={current?.title || undefined}

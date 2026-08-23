@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
-import { KeyboardController } from "react-native-keyboard-controller"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
+import {
+  KeyboardController,
+  useKeyboardState,
+} from "react-native-keyboard-controller"
 import Animated, {
   Easing,
   ReduceMotion,
@@ -11,7 +15,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
 import { hapticSelection, hapticStepAdvance } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, MOTION, TYPE } from "@/src/theme/surface"
@@ -19,8 +22,9 @@ import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 import { getHydrationGuidance } from "../../../utils/hydrationGuidance"
 import type { SheetNumberSpec } from "../../../utils/sheetNumberInput"
 import { SheetInfoCard, SheetValueDisplay } from "./recordSheetControls"
-import { useSheetKeyboardLift } from "./useSheetKeyboardLift"
-import { V2DotLoader } from "@/src/design-system-v2"
+import { V2BottomSheet, V2DotLoader } from "@/src/design-system-v2"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { useHealthEntryInput } from "../../../hooks/useHealthEntryInput"
 import { useTranslation } from "react-i18next"
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1)
@@ -97,8 +101,8 @@ export function WaterSheet({
   const formatAmount = (value: number) =>
     roundForDisplay(value).toLocaleString(numberLocale)
   const surface = useSurface()
-  /* 직접 입력의 키패드가 CTA 를 덮지 않게 — 다른 기록 시트와 같은 규칙을 쓴다. */
-  const { bodyStyle, snapPoints, keyboardShown } = useSheetKeyboardLift(82)
+  /* 키패드 탈출구(v)를 띄울지만 본다 — 시트를 키보드 위로 올리는 건 gorhom 이다. */
+  const keyboardShown = useKeyboardState((state) => state.isVisible)
   /** 이 시트에서 성공적으로 기록한 잔들. 되돌리기용 스택. */
   const [session, setSession] = useState<number[]>([])
   const [isBusy, setIsBusy] = useState(false)
@@ -147,9 +151,13 @@ export function WaterSheet({
     )
   }
 
+  const markInput = useHealthEntryInput("water", visible)
+
   /** 로컬에 담기만 한다. 서버는 CTA 의 commit 이 합계로 한 번 부른다. */
   const addPending = (amount: number) => {
     if (isBusy) return
+    // 잔마다 쏘지 않는다 — 훅이 이번 열림의 첫 잔 하나만 통과시킨다.
+    markInput("preset")
     hapticSelection()
     setSession((prev) => [...prev, amount])
     bumpNumber()
@@ -166,6 +174,15 @@ export function WaterSheet({
     // 치는 도중 바로 CTA 를 눌러도 마지막 키 입력까지 반영되게 preview 기준으로
     // 보낸다 — 체중 시트가 liveWeight 를 그대로 제출하는 것과 같은 규칙.
     if (pendingDelta === 0 || isBusy) return
+    /*
+      CTA 를 누른 순간. 이 시트만 서버 요청이 잔마다가 아니라 여기 한 번이라
+      `item_count`(이번에 담은 잔 수)가 여기서만 알 수 있다 — 다른 지표는 언제나 1이다.
+      결과 이벤트 없이 이것만 남은 구간이 곧 네트워크 유실·앱 종료다.
+    */
+    trackAnalyticsEvent("health_entry_save_started", {
+      metric: "water",
+      item_count: session.length,
+    })
     setIsBusy(true)
     hapticStepAdvance()
     const ok = await onLog(pendingDelta)
@@ -181,6 +198,7 @@ export function WaterSheet({
   const commitTotal = (next: number | null) => {
     // 지우고 나가면 null — 값 변경이 아니라 취소다(0 입력과 다르다).
     if (next === null) return
+    markInput("keypad")
     const delta = next - baseRef.current
     setSession(delta === 0 ? [] : [delta])
     bumpNumber()
@@ -194,21 +212,17 @@ export function WaterSheet({
   }))
 
   return (
-    <AppBottomSheet
+    /*
+      높이도 키보드도 시트가 알아서 한다 — 콘텐츠 높이대로 서고, 총량 직접 입력의
+      키패드가 뜨면 gorhom 이 시트를 그만큼 밀어 올려 CTA 가 키패드 위에 남는다
+      (RecordSheetShell 머리말 §키보드). 82% 고정 스냅 + 자작 리프트는 걷어냈다.
+    */
+    <V2BottomSheet
+      surface="home_water_record"
       visible={visible}
       onClose={onClose}
-      /*
-        시트를 밀어 올리지는 않는다 — 밀어 올리면 상단이 시계·배터리를 덮는다
-        (QA 2026-08-02). 대신 직접 입력의 키패드가 뜨면 시트가 커지고 CTA 가
-        키패드 위로 떠오른다(useSheetKeyboardLift 머리말).
-
-        예전 주석은 "입력 줄·담기는 상단쪽이라 키보드 위에 보인다"고 적어 두었는데
-        **CTA 는 아래에 있어서 그대로 덮였다** — 값을 치고도 담을 수가 없었다.
-      */
-      snapPoints={snapPoints}
-      contentBottomPadding={false}
     >
-      <Animated.View style={[styles.body, bodyStyle]}>
+      <View style={styles.body}>
         <View style={styles.head}>
           <View style={styles.headText}>
             <Text style={[styles.title, { color: surface.textStrong }]}>
@@ -269,14 +283,7 @@ export function WaterSheet({
           </Pressable>
         </View>
 
-        {/* 키보드가 눌러 온 만큼 본문이 좁아진다 — 그 몫을 스크롤이 흡수한다. */}
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
+        <View style={styles.content}>
           {/* 오늘 총량 — 기록마다 살짝 튀며 자란다. 이 숫자가 곧 보상이고,
               누르면 그 자리가 입력창이 된다(다른 기록 시트와 같은 문법). */}
           <View style={styles.displayBlock}>
@@ -392,7 +399,7 @@ export function WaterSheet({
           </Pressable>
 
           <SheetInfoCard>{t("home.sheet.water.info")}</SheetInfoCard>
-        </ScrollView>
+        </View>
 
         {/* 확정 CTA — 다른 기록 시트와 같은 문법(값이 담긴 라벨, h56 r16). */}
         <View style={styles.ctaRow}>
@@ -471,8 +478,8 @@ export function WaterSheet({
             }}
           </Pressable>
         </View>
-      </Animated.View>
-    </AppBottomSheet>
+      </View>
+    </V2BottomSheet>
   )
 }
 
@@ -537,14 +544,11 @@ const styles = StyleSheet.create({
   },
   ctaLabel: { fontSize: 17, lineHeight: 24, fontWeight: "700" },
   body: {
-    // 프레임 높이를 채워야 머리·본문·CTA 세로 열이 성립한다(스크롤이 여기서 갈린다).
-    flex: 1,
     paddingHorizontal: LAYOUT.screenX,
     paddingTop: 4,
     gap: 16,
   },
-  scroll: { flexGrow: 1, flexShrink: 1 },
-  scrollContent: { gap: 16, paddingBottom: 2 },
+  content: { gap: 16 },
   ctaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   ctaWrap: { flex: 1 },
   dismiss: {

@@ -35,6 +35,8 @@
  * "다시 로그인해 주세요" 를 읽는다.
  */
 
+import { CancelledError } from "@tanstack/react-query"
+
 import i18n, { getAppLanguage } from "@/src/i18n"
 import type errorsResources from "@/src/i18n/locales/ko/errors.json"
 import { ApiError, isApiErrorLike } from "@/src/services/core/apiError"
@@ -187,8 +189,19 @@ export function resolveError(
     }
   }
 
-  // 1) 우리가 취소한 요청. 사용자가 한 일의 결과가 아니므로 알리지 않는다.
-  if (code && CANCEL_CODES.has(code)) {
+  /*
+    1) 우리가 취소한 요청. 사용자가 한 일의 결과가 아니므로 알리지 않는다.
+
+    갈래가 둘이다. axios 가 던지는 취소는 `code` 가 있어서 `CANCEL_CODES` 로 잡힌다.
+    react-query 가 던지는 취소(`cancelQueries` · `cancelRefetch:true`)는 **query-core 의
+    `CancelledError`** 인데, 그 객체에는 `code` 도 `name` 도 없다(생성자가 `message` 에만
+    `"CancelledError"` 를 넣는다). 그래서 `isApiErrorLike` 가 거짓이고, 아무 갈래에도
+    안 걸려 맨 아래 "알 수 없는 오류" 로 떨어졌다 — 당겨서 새로고침을 하는 동안 좋아요를
+    누르면(그 취소가 당김 요청을 접는다) 사용자가 아무 것도 안 한 자리에서 붉은 토스트가
+    떴다. `useRefreshable` 은 "취소된 요청은 아무것도 그리지 않는다" 고 적어 두고 있었고,
+    그 약속이 지켜지는 곳이 바로 여기다. 타입으로 정확히 판별한다(문자열 대조 아님).
+  */
+  if (error instanceof CancelledError || (code && CANCEL_CODES.has(code))) {
     return build({ title: "", kind: "canceled", silent: true, action: null })
   }
 
@@ -306,4 +319,29 @@ export function resolveError(
 /** 액션 라벨. 버튼을 그리는 쪽에서 쓴다. */
 export function getErrorActionLabel(action: ErrorActionId): string {
   return i18n.t(`action.${action}`, { ns: "errors" })
+}
+
+/**
+ * 실패 하나를 분석 이벤트의 `fail_kind` **값**으로 접는다.
+ *
+ * ■ 왜 여기에 있나
+ *
+ * 갈래 판정의 정본은 `resolveError` 하나다. 호출부마다 `e instanceof ApiError ? e.code
+ * : "network"` 를 다시 적으면 같은 실패가 화면·로그·분석에서 서로 다른 말을 하게 된다.
+ * 이 함수는 판정을 **다시 짓지 않고** 값만 옮긴다(`toErrorPresentedProperties` 와 같은
+ * 역할이고, 그쪽은 통로가 있는 실패, 이쪽은 통로 없이 인라인으로 끝나는 실패다).
+ *
+ * ■ 왜 `code ?? kind` 인가
+ *
+ * 서버 도메인 코드가 있으면 그것이 가장 좁은 구분이다(`OTP_ERROR_002` 만료 vs
+ * `OTP_ERROR_003` 오타는 고칠 대상이 다르다). 없으면 범주로 접는다 — 전송 실패는
+ * 코드가 없고, 그때 `"unknown"` 대신 `null` 을 실으면 새니타이저가 **키째로** 떨궈
+ * 그 실패가 브레이크다운에서 통째로 사라진다.
+ *
+ * 값은 열거형이지만 서버가 코드를 늘리면 값도 는다 — 카디널리티가 문제가 되면
+ * 대시보드에서 접지, 여기서 미리 뭉개지 않는다(뭉개면 되돌릴 수 없다).
+ */
+export function toAnalyticsFailKind(error: unknown): string {
+  const resolved = resolveError(error)
+  return resolved.code ?? resolved.kind
 }

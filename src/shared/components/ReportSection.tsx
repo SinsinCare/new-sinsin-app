@@ -1,11 +1,6 @@
 import type { ReactNode } from "react"
-import {
-  StyleSheet,
-  Text,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native"
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"

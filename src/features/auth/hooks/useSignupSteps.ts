@@ -11,6 +11,7 @@ import { useGoBack } from "@/src/shared/navigation"
 import {
   identifyAnalyticsUser,
   trackAnalyticsEvent,
+  type AnalyticsSignupMode,
 } from "@/src/features/analytics"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
 import { isProfileSetupCompletionMode } from "../utils/profileSetupMode"
@@ -76,6 +77,21 @@ export function useSignupSteps() {
     sessionPersistence,
     requiresAdditionalInfo,
   })
+
+  /*
+    이 라우트가 하는 세 가지 일 중 무엇인가. **여섯 질문의 모든 진행 이벤트가 이 값을
+    싣는다** — 안 실으면 '가입 완주율' 에 이미 가입한 사람의 backfill 이 섞이고,
+    서버 퍼널의 `prop:mode=signup` 스코프는 그 키를 안 싣는 스텝을 통째로 떨군다
+    (설계 §J1-0 정정 2).
+
+    판정 순서가 중요하다: backfill 은 `isCompletionMode` 의 조건도 만족하므로
+    (`accountState==='ACTIVE' && requiresAdditionalInfo`) 먼저 본다.
+  */
+  const analyticsMode: AnalyticsSignupMode = isBackfillMode
+    ? "backfill"
+    : isCompletionMode
+      ? "completion"
+      : "signup"
 
   const step = SIGNUP_STEP_IDS[stepIndex]
   const isLastStep = stepIndex === SIGNUP_STEP_IDS.length - 1
@@ -149,6 +165,29 @@ export function useSignupSteps() {
         return
       }
 
+      /*
+        **이메일 인증을 안 거쳤으면 여기서 멈춘다.**
+
+        `signupToken`·`password` 는 이 화면이 아니라 앞의 signup-email·signup-password
+        에서 스토어에 담긴다. 그런데 스토어는 온보딩 끝에서만 비워지므로, 소셜로 가입한
+        뒤 로그아웃하고 다시 `회원가입` 으로 들어오면 **여섯 스텝을 다 채우고도 그 둘이
+        빈 채**로 남는다. 그대로 쏘면 서버가 `signupToken: minLength 1` 에서 잘라
+        `잘못된 요청입니다` 만 돌려주고, 화면에는 마지막 스텝(경로) 아래에 그 문구가
+        떠서 **"경로 입력이 고장났다"처럼 보인다** — 2026-08-19 제보가 정확히 이것이고,
+        경로를 무엇으로 고르든 실패한 이유도 이것이다.
+
+        고칠 수 있는 사람에게 고칠 수 있는 곳을 준다: 이메일 인증 단계로 돌려보낸다.
+      */
+      if (!signupStore.signupToken || !signupStore.password) {
+        trackAnalyticsEvent("auth_signup_failed", {
+          method: "email",
+          stage: "account",
+        })
+        setSubmitError(t("signup.steps.verificationExpired"))
+        router.replace("/(auth)/signup-email")
+        return
+      }
+
       const result = await authService.signup({
         ...payload,
         signupToken: signupStore.signupToken,
@@ -197,6 +236,7 @@ export function useSignupSteps() {
     completeProfile,
     draft,
     isCompletionMode,
+    t,
     setAccountState,
     setEntryGate,
     setNicknameStore,
@@ -227,13 +267,27 @@ export function useSignupSteps() {
           draft.nickname.trim(),
         )
         if (!available) {
+          /* 이 여정에서 **서버 왕복 뒤에야** 알려 주는 유일한 실패다. 200 응답이라
+             오류 통로를 안 지나가므로 이 이름이 없으면 어디에도 안 남는다. */
+          trackAnalyticsEvent("auth_signup_step_blocked", {
+            step,
+            fail_kind: "taken",
+            mode: analyticsMode,
+          })
           setStepError(t("profile.nickname.taken"))
           return false
         }
       } catch (e: unknown) {
         if (e instanceof ApiError && e.isNetworkError) {
+          /* 통신 실패는 여기서 세지 않는다 — `presentError` 를 지나가므로
+             `app_error_presented{kind:'offline'}` 가 이미 같은 사건을 센다. */
           presentError(e, { scope: "nickname-check" })
         } else {
+          trackAnalyticsEvent("auth_signup_step_blocked", {
+            step,
+            fail_kind: "server",
+            mode: analyticsMode,
+          })
           // "닉네임을 확인하지 못했어요" 는 이미 쓰고 있는 닉네임(`SIGNUP_ERROR_003`)
           // 까지 덮었다. 무엇을 고쳐야 하는지는 서버 코드만 안다.
           setStepError(getErrorMessage(e))
@@ -243,6 +297,20 @@ export function useSignupSteps() {
         setIsChecking(false)
       }
     }
+
+    /*
+      여섯 질문의 **성공 축**. 마지막 질문은 제출을 태우기 직전에 쏜다 — 제출 실패로
+      되돌아오더라도 그 질문 자체는 끝낸 것이고, 제출 실패는 `auth_signup_failed` 가
+      따로 센다.
+
+      전진이 확정된 뒤(중복 확인까지 통과한 뒤)여야 한다. 앞에 두면 닉네임 중복으로
+      막힌 사람이 통과한 것으로 세어진다.
+    */
+    trackAnalyticsEvent("auth_signup_step_completed", {
+      step,
+      step_index: stepIndex,
+      mode: analyticsMode,
+    })
 
     if (isLastStep) {
       await submit()
@@ -254,16 +322,33 @@ export function useSignupSteps() {
     setStepIndex((prev) => prev + 1)
     return true
   }, [
+    analyticsMode,
     draft.nickname,
     isChecking,
     isLastStep,
     isPrefilling,
     isSubmitting,
     step,
+    stepIndex,
     submit,
     t,
     validity.canProceed,
   ])
+
+  /**
+   * CTA 가 비활성인 채로 제출이 시도된 경우(엔터 키). 화면이 `hapticInvalid` 를 울리는
+   * 그 자리에서 부른다.
+   *
+   * 훅이 이 함수를 내주는 이유는 `mode`·`step` 을 화면으로 흘리지 않기 위해서다 —
+   * 화면이 스스로 이벤트를 조립하기 시작하면 같은 이름의 속성이 두 곳에서 갈린다.
+   */
+  const reportStepInputBlocked = useCallback(() => {
+    trackAnalyticsEvent("auth_signup_step_blocked", {
+      step,
+      fail_kind: "invalid_input",
+      mode: analyticsMode,
+    })
+  }, [analyticsMode, step])
 
   /* 스텝 안에서의 뒤로가기는 이 훅이 상태로 처리한다. 화면 밖으로 나가는 것은
      한 경우뿐이다 — 첫 스텝에서 뒤로. */
@@ -272,6 +357,13 @@ export function useSignupSteps() {
   const goBack = useCallback(() => {
     if (isSubmitting) return
     if (stepIndex > 0) {
+      // 뒤로가기가 몰리는 질문 = 답을 잘못 이해했거나 앞 답을 고치고 싶은 질문.
+      // 순번 퍼널(같은 이름 6회)이 상한 추정치인 이유의 **크기**가 이 수다.
+      trackAnalyticsEvent("auth_signup_step_reverted", {
+        step,
+        step_index: stepIndex,
+        mode: analyticsMode,
+      })
       setStepError("")
       setSubmitError("")
       setDirection("backward")
@@ -279,10 +371,14 @@ export function useSignupSteps() {
       return
     }
 
-    // 첫 스텝에서 뒤로 = 가입을 그만둔다. 가입 진입점이라 스택이 비어 있을 수
-    // 있는데, 그때의 목적지(로그인)는 라우트 그래프가 안다.
+    /* 첫 스텝에서 뒤로 = 가입을 그만둔다. 가입 진입점이라 스택이 비어 있을 수
+       있는데, 그때의 목적지(로그인)는 라우트 그래프가 안다.
+
+       여기에 `*_abandoned` 를 새로 짓지 않는다 — `exitSignup` 은 `useGoBack` 이고
+       그 통로가 이미 `nav_back{from_screen:'signup_profile'}` 을 쏜다. 이 화면에서
+       `useGoBack` 이 불리는 자리는 여기 하나뿐이라 두 수가 같다. */
     exitSignup()
-  }, [exitSignup, isSubmitting, stepIndex])
+  }, [analyticsMode, exitSignup, isSubmitting, step, stepIndex])
 
   return {
     step,
@@ -303,5 +399,6 @@ export function useSignupSteps() {
     isPrefilling,
     goNext,
     goBack,
+    reportStepInputBlocked,
   }
 }

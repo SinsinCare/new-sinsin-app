@@ -83,6 +83,7 @@ export function RecipeFetchErrorState({
       <V2ScreenHeader onBack={onLeave} />
       <View style={styles.body}>
         <V2ErrorState
+          surface="recipe_detail"
           icon={icon}
           title={t(copy.titleKey)}
           description={t(copy.bodyKey)}

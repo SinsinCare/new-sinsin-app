@@ -16,7 +16,19 @@ const PENDING_ANALYSIS_TTL_MS = 10 * 60 * 1000
 export interface FoodAnalysisRecoveryResult {
   recoveredCount: number
   remainingCount: number
+  /**
+   * TTL(10분)을 넘겨 **결과를 보여 주지도 못하고 버린** 건수. 사용자 쪽에서는
+   * "분석하다 말았는데 아무 일도 안 일어났다" 이고, 지금까지 이 손실은 어디에도
+   * 남지 않았다(설계 §9-④). 세는 곳은 아래 `runRecovery` 의 첫 분기 하나뿐이다.
+   */
+  expiredCount: number
 }
+
+/**
+ * 대기 하나를 훑은 결과. 종전에는 `boolean` 이라 "못 살렸다" 안에 **폐기**와
+ * **아직 진행 중**이 섞여 있었다 — 그 둘은 정반대의 사건이다.
+ */
+type RecoveryOutcome = "recovered" | "expired" | "pending"
 
 export interface FoodAnalysisRecoveryDeps {
   pendingRequests: {
@@ -61,14 +73,14 @@ function resolveRecoveredImageUri(
 }
 
 export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
-  const inFlightRequests = new Map<string, Promise<boolean>>()
+  const inFlightRequests = new Map<string, Promise<RecoveryOutcome>>()
 
   async function runRecovery(
     pending: PendingAnalysisRequest,
-  ): Promise<boolean> {
+  ): Promise<RecoveryOutcome> {
     if (deps.now() - pending.startedAt > PENDING_ANALYSIS_TTL_MS) {
       await deps.pendingRequests.remove(pending.requestId)
-      return false
+      return "expired"
     }
 
     const job = await deps.fetchJobByRequestId?.(pending.requestId)
@@ -79,14 +91,14 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
           mealType: pending.mealType,
           imageUri: pending.imageUri,
         })
-        return true
+        return "recovered"
       }
 
       // 확인 UI가 없는 빌드에서는 사용자가 이 상태를 끝낼 수 없다. 진행 중인
       // 것처럼 보존하지 않고 실패한 미완료 요청을 정리한다.
       deps.markHandledRequestId(pending.requestId)
       await deps.pendingRequests.remove(pending.requestId)
-      return false
+      return "pending"
     }
     const result =
       job?.status === "READY"
@@ -94,7 +106,7 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
         : job
           ? null
           : await deps.fetchByRequestId(pending.requestId)
-    if (!result) return false
+    if (!result) return "pending"
 
     deps.markHandledRequestId(pending.requestId)
     deps.setPending({
@@ -103,10 +115,12 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
       imageUri: resolveRecoveredImageUri(result, pending),
     })
     await deps.pendingRequests.remove(pending.requestId)
-    return true
+    return "recovered"
   }
 
-  function recoverOne(pending: PendingAnalysisRequest): Promise<boolean> {
+  function recoverOne(
+    pending: PendingAnalysisRequest,
+  ): Promise<RecoveryOutcome> {
     const existing = inFlightRequests.get(pending.requestId)
     if (existing) return existing
 
@@ -123,15 +137,18 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
     async recoverPendingAnalyses(): Promise<FoodAnalysisRecoveryResult> {
       const pendingList = await deps.pendingRequests.getAll()
       let recoveredCount = 0
+      let expiredCount = 0
       for (const pending of pendingList) {
         try {
-          if (await recoverOne(pending)) recoveredCount += 1
+          const outcome = await recoverOne(pending)
+          if (outcome === "recovered") recoveredCount += 1
+          else if (outcome === "expired") expiredCount += 1
         } catch {
           // 복구 실패는 다음 앱 진입/포그라운드 전환에서 다시 시도한다.
         }
       }
       const remaining = await deps.pendingRequests.getAll()
-      return { recoveredCount, remainingCount: remaining.length }
+      return { recoveredCount, expiredCount, remainingCount: remaining.length }
     },
     async recoverFoodAnalysisRequest(requestId: string): Promise<void> {
       const pendingList = await deps.pendingRequests.getAll()

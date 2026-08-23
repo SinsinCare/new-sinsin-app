@@ -1,9 +1,7 @@
-import { useState, useRef, type ComponentRef } from "react"
+import { useState, useRef } from "react"
 import { Pressable, Keyboard, type KeyboardTypeOptions } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { TextInput } from "react-native"
 import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
-import { tokens } from "../../theme/tokens"
 import {
   Controller,
   type Control,
@@ -82,22 +80,27 @@ export function FormTextField<T extends FieldValues>({
   const [passwordVisible, setPasswordVisible] = useState(false)
   const inputRef = useRef<TextInput>(null)
   const config = INPUT_TYPE_CONFIG[inputType]
-  const isDark = useAppColorScheme() === "dark"
-  const { colors } = useV2Theme()
+  const { colors, mode } = useV2Theme()
   const shouldShowPasswordToggle =
     inputType === "password" && showPasswordToggle
 
+  /*
+    tamagui 제거 뒤에도 `$danger`·`$primary` 같은 문자열이 남아 있었다. RN 은 이 값을
+    토큰으로 해석하지 않으므로 포커스/오류 선이 플랫폼별로 무시되거나 경고가 났다.
+    이 컴포넌트는 현재 호출 0건이지만 shared index의 공개 API라 재사용 즉시 깨지는
+    상태였다 — v2 semantic 색을 직접 반환한다.
+  */
   const getBorderColor = (state: ReturnType<typeof getFormValidationState>) => {
-    if (state === "invalid") return "$danger"
-    if (state === "valid") return tokens.color.sub6.val
-    if (isFocused) return "$primary"
-    return "$borderColor"
+    if (state === "invalid") return colors.status.negative
+    if (state === "valid") return colors.status.positive
+    if (isFocused) return colors.primary.primary
+    return colors.line.normal
   }
   const getLabelColor = (state: ReturnType<typeof getFormValidationState>) => {
-    if (state === "invalid") return "$danger"
-    if (state === "valid") return tokens.color.sub6.val
-    if (isFocused) return "$primary"
-    return "$color"
+    if (state === "invalid") return colors.status.negative
+    if (state === "valid") return colors.status.positive
+    if (isFocused) return colors.primary.primary
+    return colors.label.normal
   }
 
   return (
@@ -140,7 +143,10 @@ export function FormTextField<T extends FieldValues>({
                   : 16
               }
               style={{
-                backgroundColor: isDark ? "#2A2A32" : "white",
+                backgroundColor:
+                  mode === "dark"
+                    ? colors.background.lower
+                    : colors.background.default,
                 borderWidth: 1,
                 borderColor: getBorderColor(validationState),
                 borderRadius: 8,
@@ -194,7 +200,7 @@ export function FormTextField<T extends FieldValues>({
                   <Ionicons
                     name={passwordVisible ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={tokens.color.grey5.val}
+                    color={colors.label.assistive}
                   />
                 </Pressable>
               ) : value && isFocused && clearable ? (
@@ -209,7 +215,7 @@ export function FormTextField<T extends FieldValues>({
                   <Ionicons
                     name="close-circle"
                     size={20}
-                    color={tokens.color.grey5.val}
+                    color={colors.label.assistive}
                   />
                 </Pressable>
               ) : null}

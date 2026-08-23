@@ -34,8 +34,22 @@
  */
 export const MIN_BOTTOM_GAP = 16
 
-/** RN bottom-tabs 의 바 높이. `app/(tabs)/_layout.tsx` 와 같은 값이어야 한다. */
-export const TAB_BAR_HEIGHT = 49
+/**
+ * 하단 탭 바의 **시스템 바 위 높이**(safe-area 여백은 뺀 값).
+ *
+ * `V2TabBar`(Figma node 61:5948)의 치수를 더한 값이다 —
+ * 상단 테두리 1 + 상단 패딩 8 + 아이템(패딩 1 + 아이콘 24 + 간격 3 + 라벨 14 + 패딩 1) = **52**.
+ *
+ * v2 의 `barHeight.tabBar`(62)와 다른 수를 쓰는 이유: 그 토큰은 safe-area 가 없는 기기에서
+ * 바가 차지하는 **전체** 높이(위 52 + 하단 패딩 11 ≈ 62)다. 여기서 필요한 것은
+ * `bottomBarSpace()` 가 이미 시스템 바 몫을 더한 뒤에 **추가로** 올려야 할 높이라,
+ * 하단 패딩을 뺀 쪽이 맞다. (safe-area 기기: 34 + 52 ≈ `barHeight.tabBarSafe` 84)
+ *
+ * 예전 값 49 는 react-navigation 기본 바의 높이였다. 2026-08-17 에 탭 바를 정본
+ * 컴포넌트로 바꾸면서 3pt 높아졌다. 이 값이 틀리면 탭바 위에 뜨는 것들
+ * (AI 상담 필·토스트)이 바에 겹치거나 뜬다.
+ */
+export const TAB_BAR_HEIGHT = 52
 
 /** 콘텐츠가 하단 바에 닿지 않도록 두는 숨 쉴 공간(pt). */
 export const CONTENT_BREATHING_ROOM = 24

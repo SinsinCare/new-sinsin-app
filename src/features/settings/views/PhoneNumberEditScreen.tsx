@@ -5,9 +5,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -18,7 +18,6 @@ import { V2DotLoader } from "@/src/design-system-v2"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
-import { tokens } from "@/src/theme/tokens"
 import { FieldHelp, SettingsTextField } from "../components/SettingsTextField"
 import { usePhoneNumberEditor } from "../hooks/usePhoneNumberEditor"
 
@@ -39,7 +38,13 @@ export function PhoneNumberEditScreen() {
     handleDelete,
   } = usePhoneNumberEditor()
 
-  const pageBg = s.isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val
+  /*
+    **흰 페이지다.** 전에는 `appBg`(라이트 #eaeaec = 화면 바닥/우물)였는데, 그 값은
+    `SettingsTextField` 의 입력 면과 **같은 토큰**이라 필드가 바닥에 녹아 사라졌다
+    (라이트 ΔL* 7.25 → 0.00). 근거와 다른 선택지는 그 컴포넌트 머리말 §우물.
+    `canvas` 는 다크에서 `appBgDark`(#1f1f21)와 같은 값이라 다크는 안 움직인다.
+  */
+  const pageBg = s.canvas
   const isBusy = isSaving || isDeleting
 
   return (
@@ -81,8 +86,15 @@ export function PhoneNumberEditScreen() {
             {t("phone.subtitle")}
           </Text>
 
+          {/*
+            페이지가 흰 면이 되면서 `s.card`(흰색)로는 이 블록이 사라진다 —
+            라이트 ΔL* 7.25 → 0.00. 옆의 입력칸과 **같은 우물**로 내린다: 둘 다
+            "흰 페이지에 파인 상자" 라 같은 평면이 맞고, 면 값이 하나 줄어든다.
+            다크는 #313135 → #3f3f45 로 한 단 올라가지만 바닥(#1f1f21)과는
+            여전히 ΔL* 15.0 이라 더 또렷해진다.
+          */}
           {profile?.hasPhoneNumber && (
-            <View style={[styles.currentPhone, { backgroundColor: s.card }]}>
+            <View style={[styles.currentPhone, { backgroundColor: s.surface }]}>
               <Text
                 style={[styles.currentPhoneLabel, { color: s.textMuted }]}
                 lineBreakStrategyIOS="hangul-word"
@@ -147,7 +159,6 @@ export function PhoneNumberEditScreen() {
             profile?.hasPhoneNumber ? t("shared.change") : t("shared.save")
           }
           disabled={!canSave}
-          paddingBottom={insets.bottom + 16}
           onPress={handleSave}
         />
       </KeyboardAvoidingView>

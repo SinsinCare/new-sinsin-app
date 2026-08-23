@@ -264,6 +264,26 @@ export function useMapSearch({
   const data = query.data
   const total = data?.total ?? 0
 
+  /*
+    **`refetch()` 는 `enabled` 를 보지 않는다.** react-query v5 의 경로가
+    `QueryObserver.refetch` → `fetch` → `query.fetch` 인데 그 어디에도 `enabled`
+    검사가 없다(`@tanstack/query-core` 실측). 즉 위에서 `enabled: committed !== null`
+    로 막아 둔 상태에서도 화면의 `다시 시도` 나 탭 재탭이 `queryFn` 을 **그대로**
+    실행한다.
+
+    그러면 타입 좁히기용으로 둔 `throw new Error("viewport not committed")` 가
+    실제로 던져지고, `classifyFetchFailure` 가 그것을 사용자에게 조회 실패로 보여 준다
+    (`[restaurant] 알 수 없는 조회 실패 map viewport not committed`). 뷰포트가 아직
+    안 정해진 것은 **실패가 아니라 아직 이른 것**이다.
+
+    전제를 아는 것은 이 훅이므로 막는 것도 여기다 — 부르는 쪽마다 `committed` 를
+    다시 검사하게 하면 새 호출자가 생길 때마다 같은 결함이 다시 열린다.
+  */
+  const refetch = useCallback(() => {
+    if (committed === null) return
+    void query.refetch()
+  }, [committed, query])
+
   const emptyReason = useMemo<EmptyReason | null>(() => {
     // 실패는 원인별로 나눈다. 400 을 "인터넷 확인" 으로 말하던 결함의 수정이고,
     // 분류와 로그는 `classifyFetchFailure` 한 곳에 있다. `null` 은 "실패가 아니다"
@@ -295,7 +315,7 @@ export function useMapSearch({
     committedBounds: committed?.bounds ?? null,
     onViewportChange,
     searchThisArea,
-    refetch: query.refetch,
+    refetch,
   }
 }
 

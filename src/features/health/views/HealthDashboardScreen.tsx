@@ -256,7 +256,9 @@ export function HealthDashboardScreen() {
   // 다시 불러와 주세요" 였는데, 여기서 실제로 오는 실패는 세션 만료·없는 회차 쪽이다.
   const failure = isError ? resolveError(queryError) : null
   // 캐시 히트로 즉시 오는 경우엔 스켈레톤을 아예 그리지 않는다 (깜빡임 방지).
-  const showSkeleton = useLoadingVisible(loading)
+  const showSkeleton = useLoadingVisible(loading, {
+    surface: "health_dashboard",
+  })
 
   const modules = useMemo<ModuleData[]>(() => {
     return DASHBOARD_MODULES.map((config) => {

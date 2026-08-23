@@ -833,6 +833,57 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
     expect(page.summary.average).toBe(4.5)
   })
 
+  it("서버가 준 `authorId` 를 그대로 싣는다 — 여기서 잃으면 차단의 신원 축이 죽는다", async () => {
+    /*
+      매퍼가 이 필드를 버리면 `blockedAuthors.ids` 가 아무 리뷰와도 안 맞고, 차단 필터가
+      조용히 이름 축으로 되돌아간다(개명 회피 · 제3자 승계). 화면에서는 아무 신호가 없다 —
+      "차단했는데 아직 보인다" 는 사용자만 알고 로그에는 안 남는다. 그래서 이음매에서 못 박는다.
+
+      세 갈래를 한 번에 본다:
+        · 서버가 사람을 안다        → 그 id 그대로
+        · 이 필드를 안 주던 옛 서버 → `null`("모른다")
+        · 서버도 모른다(탈퇴)       → `null`
+      뒤 둘이 `0` 이 되면 안 된다. 0 은 "id 를 안다" 로 읽혀 엉뚱한 판정을 만든다.
+    */
+    mockApi.get.mockResolvedValue({
+      data: {
+        result: {
+          items: [
+            {
+              id: 1,
+              authorId: 77,
+              authorNickName: "아는사람",
+              rating: 5,
+              body: null,
+              createdAt: "2026-08-21T00:00:00Z",
+              mine: false,
+            },
+            {
+              id: 2,
+              authorNickName: "옛서버라필드가없다",
+              rating: 4,
+              body: null,
+              createdAt: "2026-08-21T00:00:00Z",
+              mine: false,
+            },
+            {
+              id: 3,
+              authorId: null,
+              authorNickName: "",
+              rating: 3,
+              body: null,
+              createdAt: "2026-08-21T00:00:00Z",
+              mine: false,
+            },
+          ],
+        },
+      },
+    })
+
+    const page = await recipeDetailV2Service.getReviews(MOCK_ID)
+    expect(page.items.map((review) => review.authorId)).toEqual([77, null, null])
+  })
+
   it("커서·정렬을 주면 그대로 실어 보낸다", async () => {
     mockApi.get.mockResolvedValue({ data: { result: { items: [] } } })
     await recipeDetailV2Service.getReviews(MOCK_ID, {
@@ -938,13 +989,20 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
 
 /**
  * 목록 캐시 키의 문자열 결합. 상세에서 저장을 켜면 목록·아카이브 카드의 북마크도 같이
- * 바뀌어야 한다(§6.4). 아카이브는 `ARCHIVE_QUERY_ROOT` 를 import 해서 **컴파일 시점에**
- * 묶여 있지만, 목록(`useRecipeListV2.ts`)은 키를 인라인 배열로 쓰므로 문자열이 두 곳에
- * 있다. 목록 레인이 키를 바꾸면 tsc 도 테스트도 아무 말을 하지 않고 **저장 반영만 조용히
- * 죽는다** — 정확히 커뮤니티 좋아요에서 났던 결함의 모양이다. 그래서 원본을 읽어 못 박는다.
+ * 바뀌어야 한다(§6.4).
+ *
+ * **예전에는** 아카이브만 `ARCHIVE_QUERY_ROOT` 를 import 해서 컴파일 시점에 묶여 있었고,
+ * 목록은 상세 훅이 `const LIST_QUERY_ROOT = ["recipes-v2"]` 로 **문자열을 베껴** 들고
+ * 있었다. 목록 레인이 키를 바꾸면 tsc 도 테스트도 아무 말 없이 저장 반영만 조용히 죽는
+ * 상태라, 이 검사가 두 소스의 문자열을 읽어 대조하고 있었다.
+ *
+ * 이제 목록도 `RECIPE_LIST_QUERY_ROOT` 를 내보내고 상세가 그것을 import 한다 —
+ * 갈라질 문자열 자체가 없어졌다(당겨서 새로고침 스코프가 같은 상수를 쓰면서 함께 정리).
+ * 그래서 검사도 "두 값이 같은가" 가 아니라 **"import 로 묶여 있는가"** 로 바뀐다.
+ * 값 자체는 한 곳에만 있으므로 거기서 한 번만 못 박는다.
  */
 describe("목록 캐시 키가 상세의 저장 반영과 붙어 있는가", () => {
-  it("목록 훅의 queryKey 첫 원소가 상세 훅이 쓰는 루트와 같다", () => {
+  it("목록 루트는 import 로 묶여 있어 문자열이 두 곳에 없다", () => {
     const listSource = fs.readFileSync(
       path.join(__dirname, "../src/features/recipe/hooks/useRecipeListV2.ts"),
       "utf8",
@@ -954,20 +1012,21 @@ describe("목록 캐시 키가 상세의 저장 반영과 붙어 있는가", () 
       "utf8",
     )
 
-    // 목록 훅의 `queryKey: [` 바로 다음 문자열 리터럴을 뽑는다.
-    const listRoot = listSource.match(
-      /queryKey:\s*\[\s*(?:\/\/[^\n]*\n\s*)*"([^"]+)"/,
+    // 값은 목록 레인 한 곳에만 산다.
+    expect(listSource).toMatch(
+      /export const RECIPE_LIST_QUERY_ROOT = \[\s*"recipes-v2"\s*\] as const/u,
     )
-    expect(listRoot).not.toBeNull()
+    // 그리고 목록 훅 자신의 queryKey 가 그 상수를 펼쳐 쓴다.
+    expect(listSource).toMatch(/queryKey:\s*\[\s*\.\.\.RECIPE_LIST_QUERY_ROOT/u)
 
-    const detailRoot = detailHookSource.match(
-      /const LIST_QUERY_ROOT = \[\s*"([^"]+)"/,
+    // 상세는 베끼지 않고 들여온다.
+    expect(detailHookSource).toMatch(
+      /import \{[\s\S]*?RECIPE_LIST_QUERY_ROOT[\s\S]*?\} from "\.\/useRecipeListV2"/u,
     )
-    expect(detailRoot).not.toBeNull()
-
-    expect(detailRoot?.[1]).toBe(listRoot?.[1])
-    // 값이 실제로 무엇인지도 남긴다 — 둘이 같이 틀리는 것을 막는다.
-    expect(listRoot?.[1]).toBe("recipes-v2")
+    const detailCode = detailHookSource
+      .replace(/\/\*[\s\S]*?\*\//gu, "")
+      .replace(/^\s*\/\/.*$/gmu, "")
+    expect(detailCode).not.toMatch(/\[\s*"recipes-v2"/u)
   })
 
   it("아카이브 루트는 import 로 묶여 있어 문자열이 두 곳에 없다", () => {

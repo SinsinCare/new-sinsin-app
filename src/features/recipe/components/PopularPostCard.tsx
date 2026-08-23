@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -6,6 +7,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSurface } from "@/src/hooks/useSurface"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useTranslation } from "react-i18next"
+import { formatCount } from "../utils/displayNumber"
 
 interface PopularPostCardProps {
   rank: number
@@ -27,7 +29,7 @@ export function PopularPostCard({
   commentCount,
   onPress,
 }: PopularPostCardProps) {
-  const { t } = useTranslation("recipe")
+  const { t, i18n } = useTranslation("recipe")
   const surface = useSurface()
 
   return (
@@ -40,7 +42,7 @@ export function PopularPostCard({
       <View style={styles.headerRow}>
         <Text style={[styles.rank, { color: surface.brand }]}>{rank}</Text>
         <Text
-          style={[styles.category, { color: surface.textMuted }]}
+          style={[styles.category, { color: surface.text }]}
           numberOfLines={1}
         >
           {category}
@@ -67,19 +69,15 @@ export function PopularPostCard({
 
       <View style={styles.counts}>
         <View style={styles.countItem}>
-          <Ionicons name="heart-outline" size={13} color={surface.textWeak} />
-          <Text style={[styles.countText, { color: surface.textMuted }]}>
-            {likeCount}
+          <Ionicons name="heart-outline" size={13} color={surface.text} />
+          <Text style={[styles.countText, { color: surface.text }]}>
+            {formatCount(likeCount, i18n.language)}
           </Text>
         </View>
         <View style={styles.countItem}>
-          <Ionicons
-            name="chatbubble-outline"
-            size={12}
-            color={surface.textWeak}
-          />
-          <Text style={[styles.countText, { color: surface.textMuted }]}>
-            {commentCount}
+          <Ionicons name="chatbubble-outline" size={12} color={surface.text} />
+          <Text style={[styles.countText, { color: surface.text }]}>
+            {formatCount(commentCount, i18n.language)}
           </Text>
         </View>
       </View>

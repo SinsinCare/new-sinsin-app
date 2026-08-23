@@ -5,7 +5,12 @@
 //   아이콘(기본 caution) → 제목 → (옵션)설명 → (옵션)재시도 버튼.
 // 재시도(onRetry)가 있을 때만 하단에 V2Button을 노출한다.
 
+import { useEffect, useRef } from "react"
 import { type ViewStyle, StyleSheet, Text, View } from "react-native"
+import {
+  trackAnalyticsEvent,
+  type AnalyticsSurface,
+} from "@/src/features/analytics"
 import { spacing, typography } from "../tokens"
 import { type V2IconName } from "../icons"
 import { useV2Theme } from "../hooks/useV2Theme"
@@ -13,6 +18,11 @@ import { V2Button } from "./V2Button"
 import { V2Icon } from "./V2Icon"
 
 type V2ErrorStateBaseProps = {
+  /**
+   * 이 오류 상태가 사는 자리 (필수). `error_state_viewed` 의 유일한 구분축이다 —
+   * 기본값을 두면 새 화면이 조용히 남의 칸으로 들어간다.
+   */
+  surface: AnalyticsSurface
   /** 상단 아이콘. 기본 'caution' */
   icon?: V2IconName
   /**
@@ -66,6 +76,7 @@ export type V2ErrorStateProps = V2ErrorStateBaseProps & V2ErrorStateRetry
 
 export function V2ErrorState(props: V2ErrorStateProps) {
   const {
+    surface,
     icon = "caution",
     tone = "negative",
     title,
@@ -75,6 +86,16 @@ export function V2ErrorState(props: V2ErrorStateProps) {
     style,
   } = props
   const { colors } = useV2Theme()
+
+  /* 마운트당 한 번(설계 §2 P3). `onRetry` 는 대개 인라인 화살표라 의존성에 넣으면
+     매 렌더가 새 값이 되므로, 재시도 가능 여부는 첫 그림의 것으로 고정한다. */
+  const retryable = Boolean(onRetry)
+  const reported = useRef(false)
+  useEffect(() => {
+    if (reported.current) return
+    reported.current = true
+    trackAnalyticsEvent("error_state_viewed", { surface, retryable })
+  }, [surface, retryable])
 
   return (
     <View style={[styles.root, style]}>

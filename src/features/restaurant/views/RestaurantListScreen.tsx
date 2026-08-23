@@ -146,14 +146,17 @@ export function RestaurantListScreen({
         { backgroundColor: colors.background.default, paddingTop: insets.top },
       ]}
     >
-      {/* 목업 -8: 검색바가 아니라 **검색바 모양의 회색 필드**다. 안에 ‹ 와 쿼리가 같이 있다. */}
+      {/* 목업 -8: 검색바가 아니라 **검색바 모양의 회색 필드**다. 안에 ‹ 와 쿼리가 같이 있다.
+          면은 `fill.control` — 이 줄이 앉는 바닥이 `background.default`(라이트는 흰색)라
+          `fill.normal`(흰 면 위 ΔL* 3.79)로는 "회색 필드" 라는 말 자체가 성립하지 않는다.
+          커뮤니티 피드의 같은 입구와 같은 판정이다(`tokens/colors.ts` §fill.control). */}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("restaurant.list.headerAccessibility")}
         onPress={onPressSearchField}
         style={({ pressed }) => [
           styles.headerField,
-          { backgroundColor: colors.fill.normal },
+          { backgroundColor: colors.fill.control },
           pressed && styles.pressedRow,
         ]}
       >

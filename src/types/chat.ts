@@ -1,5 +1,9 @@
 // === API DTO Types (match backend response exactly) ===
 
+/* 아래 매퍼가 쓰는 순수 함수 하나. 의존이 없는 모듈이라 이 타입 파일이 전송 계층을
+   끌고 오지 않는다(그 판단의 이유는 `serverDate.ts` 머리말). */
+import { parseServerDate } from "@/src/shared/utils/serverDate"
+
 export type ChatStatus = "ACTIVE" | "ARCHIVED"
 
 export type MessageRole = "USER" | "ASSISTANT" | "SYSTEM"
@@ -230,7 +234,18 @@ export function dropLastTurn(messages: Message[]): Message[] {
   return messages.slice(0, lastUserIndex)
 }
 
-// === Mapper Functions ===
+/*
+  === Mapper Functions ===
+
+  DTO 의 `createdAt`/`updatedAt` 은 **오프셋 표기가 없는 UTC** 다
+  (`2026-08-20T10:59:07.030000` — bun 서버 `chat/service.ts` 가 `pgTimestampToPythonIso`
+  로 만든다). ES 명세는 오프셋 없는 date-time 을 **로컬**로 읽으므로 맨 `new Date(dto.…)`
+  는 KST 에서 9시간 이르게 읽혔다. 상담 목록은 그 값을 "오늘/어제/이번 주" 로 묶고
+  (`ChatHistorySheet` 의 `bucketOf`) 줄마다 시:분을 찍으므로, 자정 근처의 대화가 **전날
+  칸으로 내려가고** 시각도 아홉 시간 어긋났다. `parseServerDate` 가 그 한 겹을 세운다 —
+  이미 `Z`/`+09:00` 이 붙어 온 값에는 손대지 않으므로 서버가 표기를 붙이기 시작해도
+  반대 방향으로 어긋나지 않는다. (`tests/serverDateRendering.test.ts`)
+*/
 
 export function mapChatSummary(dto: ChatSummary): Chat {
   return {
@@ -241,8 +256,8 @@ export function mapChatSummary(dto: ChatSummary): Chat {
     category: dto.category,
     categoryLabel: dto.categoryLabel ?? undefined,
     messageCount: dto.messageCount,
-    createdAt: new Date(dto.createdAt),
-    updatedAt: new Date(dto.updatedAt),
+    createdAt: parseServerDate(dto.createdAt),
+    updatedAt: parseServerDate(dto.updatedAt),
   }
 }
 
@@ -258,8 +273,8 @@ export function mapChatDetail(dto: ChatDetail): {
       status: dto.status,
       category: dto.category,
       categoryLabel: dto.categoryLabel ?? undefined,
-      createdAt: new Date(dto.createdAt),
-      updatedAt: new Date(dto.updatedAt),
+      createdAt: parseServerDate(dto.createdAt),
+      updatedAt: parseServerDate(dto.updatedAt),
     },
     messages: dto.messages.map((m) => mapMessage(m, dto.conversationId)),
   }
@@ -273,7 +288,7 @@ export function mapMessage(dto: MessageData, conversationId: number): Message {
     content: dto.content,
     aiCategory: dto.category ?? undefined,
     aiCategoryLabel: dto.categoryLabel ?? undefined,
-    createdAt: new Date(dto.createdAt),
+    createdAt: parseServerDate(dto.createdAt),
   }
 }
 
@@ -285,8 +300,8 @@ export function mapChatCreate(dto: ChatCreate): { conversation: Chat } {
       status: "ACTIVE",
       category: dto.category,
       categoryLabel: dto.categoryLabel ?? undefined,
-      createdAt: new Date(dto.createdAt),
-      updatedAt: new Date(dto.createdAt),
+      createdAt: parseServerDate(dto.createdAt),
+      updatedAt: parseServerDate(dto.createdAt),
     },
   }
 }

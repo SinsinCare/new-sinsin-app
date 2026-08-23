@@ -14,11 +14,12 @@
  */
 
 import type { ComponentProps } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 
-import { AppBottomSheet } from "@/src/shared/components/AppBottomSheet"
+import { V2BottomSheet } from "@/src/design-system-v2"
 import { hapticStepAdvance } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
@@ -62,8 +63,9 @@ export function FeatureIntroSheet({
   const surface = useSurface()
   const icons = ROW_ICONS[feature]
 
+  // 고정 56% 스냅을 버리고 콘텐츠 높이로 자라게 한다(`V2BottomSheet` → gorhom 동적 사이징).
   return (
-    <AppBottomSheet visible={visible} onClose={onClose} snapPoints={[56]}>
+    <V2BottomSheet surface="feature_intro" visible={visible} onClose={onClose}>
       <View style={styles.body}>
         <View style={styles.headText}>
           <Text style={[styles.title, { color: surface.textStrong }]}>
@@ -115,7 +117,7 @@ export function FeatureIntroSheet({
           )}
         </Pressable>
       </View>
-    </AppBottomSheet>
+    </V2BottomSheet>
   )
 }
 

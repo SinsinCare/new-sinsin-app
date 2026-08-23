@@ -33,7 +33,12 @@ export function AppPolicyGate({ children }: AppPolicyGateProps) {
     useAppPolicyGate()
 
   if (status === "checking") {
-    return <LoadingScreen message={t("mobilePolicy.opening")} />
+    return (
+      <LoadingScreen
+        surface="policy_gate"
+        message={t("mobilePolicy.opening")}
+      />
+    )
   }
 
   if (policy && isBlocking) {

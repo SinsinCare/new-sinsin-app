@@ -1,5 +1,15 @@
 import { over } from "../design-system-v2/tokens/blend"
 import { semanticDark, semanticLight } from "../design-system-v2/tokens/colors"
+import { getSurfaceLayers } from "../design-system-v2/tokens/layers"
+
+/*
+  면(회색)은 **사다리에서 집는다.** 예전에는 이 파일이 `over(...)` 로 몇 개를 다시
+  계산했고, 그래서 같은 단의 식이 두 곳에 살았다(`cardBgDark`). 값은 그대로고 출처만
+  하나가 됐다 — 정본은 `design-system-v2/tokens/layers.ts`.
+*/
+const LIGHT_PLANES = getSurfaceLayers(false).planes
+const DARK_LAYERS = getSurfaceLayers(true)
+const DARK_PLANES = DARK_LAYERS.planes
 
 /**
  * tamagui `createTokens` 를 대신하는 최소 구현 (2026-08-19).
@@ -22,7 +32,6 @@ import { semanticDark, semanticLight } from "../design-system-v2/tokens/colors"
  *   `.val` 이 원래 리터럴과 같은지, 빠진 키가 없는지, 스케일이 숫자인지.
  */
 type Token<T> = { key: string; name: string; val: T }
-type TokenTable<T> = Record<string, Token<T>>
 
 function wrap<T, S extends Record<string, T>>(
   group: string,
@@ -116,15 +125,34 @@ export const tokens = createTokens({
     //    합성(over)은 알파 토큰을 불투명 문자열로 바꿔야 하는 자리에만 쓴다.
 
     // App screen background
-    /** 라이트 화면 바닥. 카드가 얹히는 회색 면 = v2 background.lower */
-    appBg: semanticLight.background.lower,
-    appBgDark: semanticDark.background.default,
-    cardBgDark: over(semanticDark.fill.normal, semanticDark.background.default),
-    /** 다크 입력 면. 카드보다 한 단계 가라앉은 우물이라 fill.background 를 쓴다. */
-    inputBgDark: over(
-      semanticDark.fill.background,
-      semanticDark.background.default,
-    ),
+    /**
+     * 라이트 화면 바닥. 카드가 얹히는 회색 면.
+     *
+     * **`background.lower`(#f7f7f7)였다.** 그 값은 흰 카드와 ΔL* 2.77 뿐이라 바닥이
+     * 사실상 안 보였고, 더 나쁜 것은 **한 탭 안에 바닥이 둘**이었다는 것이다 —
+     * 홈 탭 껍데기는 여기(#f7f7f7), 그 안의 기록 화면(`RecordView`)은
+     * `surface.surface`(#f4f4f5)를 깔았다. 같은 화면에서 두 회색이 만난다.
+     *
+     * 이제 둘 다 사다리의 **`bed` 한 단**을 본다(ΔL* 7.25 · 다크의 84%).
+     * 값을 여기 다시 적지 않는 이유가 그것이다 — 사본을 만들면 다음에 한쪽만 고쳐진다.
+     * 근거와 계산은 `design-system-v2/tokens/layers.ts` 의 `well`/`bed` 단 주석.
+     *
+     * `background.lower` 자체는 **안 건드렸다.** 그건 식당 상세의 시안 실측
+     * rgb(247,247,247)이고 섹션 띠(사다리의 `band` 단)가 그 값을 쓴다.
+     */
+    appBg: LIGHT_PLANES.bed,
+    appBgDark: DARK_PLANES.bed,
+    /*
+      다크 카드. 예전엔 `over(fill.normal, background.default)` 라고 **여기서 다시
+      계산**했다 — 사다리의 `content` 단과 같은 식을 두 곳이 각자 들고 있던 것이다.
+      값은 그대로(`#313135`)고, 계산이 한 곳으로 접혔다(2026-08-22).
+    */
+    cardBgDark: DARK_PLANES.content,
+    /**
+     * 다크 입력 면. 카드보다 한 단계 가라앉은 우물이라 `fill.background` 표식을
+     * 다크의 기준면(= 바닥) 위에 얹은 값이다(`#2f3033`).
+     */
+    inputBgDark: DARK_LAYERS.on("background", "bed"),
     borderDark: over(semanticDark.line.normal, semanticDark.background.default),
     textDark: semanticDark.label.normal,
     textDarkSub: over(

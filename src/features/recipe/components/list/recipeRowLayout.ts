@@ -38,7 +38,7 @@
 import { GUTTER, ITEM_GAP } from "@/src/design-system-v2/tokens/layout"
 import { radius } from "@/src/design-system-v2/tokens/radius"
 import { spacing } from "@/src/design-system-v2/tokens/spacing"
-import { FLOATING_AI_BUTTON_COVERAGE } from "@/src/shared/components/floatingAiButtonLayout"
+import { floatingAiButtonScrollInset } from "@/src/shared/components/floatingAiButtonLayout"
 
 /**
  * 목록 줄의 썸네일 한 변.
@@ -87,12 +87,22 @@ export const RECIPE_ROW_HEIGHT = RECIPE_ROW_THUMB + RECIPE_ROW_PAD_V * 2
 /**
  * 목록 맨 아래에 비워 둘 높이.
  *
- * 전역 `AI 상담` 필이 화면 오른쪽 아래 `16 ~ 64` 를 영구히 덮는다. 그만큼을 비우지
- * 않으면 **마지막 줄은 존재하지 않는 것과 같다** — 스크롤을 끝까지 내려도 필에 가린다.
+ * 전역 `AI 상담` 필이 화면 오른쪽 아래를 영구히 덮는다. 그만큼을 비우지 않으면
+ * **마지막 줄은 존재하지 않는 것과 같다** — 스크롤을 끝까지 내려도 필에 가린다.
  *
- * `FLOATING_AI_BUTTON_COVERAGE` 를 **참조해서** 계산한다. 숫자를 박으면 필을 옮기는 날
- * 목록이 따라오지 않는다. 탭바 높이·안전영역은 **더하지 않는다** — 탭바는 레이아웃
- * 공간을 차지하므로 탭 화면의 바닥이 이미 탭바 위에서 끝난다(그 항을 한 번 더 더한
- * 것이 예전에 실제로 났던 사고다).
+ * ## 🔴 안전영역과 탭바를 **더해야** 한다 (2026-08-19 정정)
+ *
+ * 예전 주석은 "탭바는 레이아웃 공간을 차지하므로 그 항을 더하면 안 된다" 고 적었다.
+ * **틀렸다.** `app/(tabs)/_layout.tsx` 는 `tabBarStyle: { position: "absolute" }`
+ * 를 쓰고, 절대 위치 탭바는 레이아웃 공간을 차지하지 않는다 — 탭 화면의 콘텐츠는
+ * 화면 맨 아래까지 내려온다.
+ *
+ * 그래서 필이 실제로 덮는 높이는 콘텐츠 끝 기준 `insets.bottom + 탭바 + 64` 다
+ * (iPhone 17 Pro: 150pt). `COVERAGE`(64) 만 비우면 86pt 가 모자라 마지막 줄이
+ * 가린다 — 홈 탭의 "붓기" 카드에서 실제로 그랬다.
+ *
+ * @param safeAreaBottom `useSafeAreaInsets().bottom`
  */
-export const RECIPE_LIST_BOTTOM_INSET = FLOATING_AI_BUTTON_COVERAGE + ITEM_GAP
+export function recipeListBottomInset(safeAreaBottom: number): number {
+  return floatingAiButtonScrollInset(safeAreaBottom, ITEM_GAP)
+}

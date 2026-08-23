@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
 import { Image, StyleSheet } from "react-native"
+import { useTranslation } from "react-i18next"
 
 import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { Icon } from "@/src/shared/components"
+import { formatCount } from "../utils/displayNumber"
 
 const ICON_COLOR = {
   light: "#FF9775",
@@ -23,6 +25,8 @@ export function ImageCard({
   likeCount,
   commentCount,
 }: ImageCardProps) {
+  // 그릴 문구는 없지만 **언어는 필요하다** — 수의 자릿수 구분을 기기가 정하면 안 된다.
+  const { i18n } = useTranslation()
   const colorScheme = useAppColorScheme()
   const isDark = colorScheme === "dark"
   const [errored, setErrored] = useState(false)
@@ -59,13 +63,13 @@ export function ImageCard({
           <Icon name="hands-clap" size={20} color={iconColor} />
           {/* 사진 위 글자라 면 색과 무관하게 흰색 고정. */}
           <V2Text style={styles.count} color="white">
-            {likeCount}
+            {formatCount(likeCount, i18n.language)}
           </V2Text>
         </V2HStack>
         <V2HStack align="center" gap={4}>
           <Icon name="message" size={20} color={iconColor} />
           <V2Text style={styles.count} color="white">
-            {commentCount}
+            {formatCount(commentCount, i18n.language)}
           </V2Text>
         </V2HStack>
       </V2HStack>

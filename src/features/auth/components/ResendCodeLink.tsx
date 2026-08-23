@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_TYPE } from "../data/authSurface"

@@ -148,7 +148,9 @@ export function DataSharingScreen({
   })
 
   const canEdit = status === "APPROVED"
-  const showLoading = useLoadingVisible(sharing.isLoading)
+  const showLoading = useLoadingVisible(sharing.isLoading, {
+    surface: "doctor_sharing",
+  })
   const sharingFailure = sharing.isError ? resolveError(sharing.error) : null
 
   const setField = (key: keyof SharingDraft) => (next: boolean) => {
@@ -168,6 +170,7 @@ export function DataSharingScreen({
         {sharingFailure ? (
           sharingFailure.retryable ? (
             <V2ErrorState
+              surface="doctor_sharing"
               title={sharingFailure.title}
               description={sharingFailure.body}
               onRetry={() => void sharing.refetch()}
@@ -176,6 +179,7 @@ export function DataSharingScreen({
             />
           ) : (
             <V2ErrorState
+              surface="doctor_sharing"
               title={sharingFailure.title}
               description={sharingFailure.body}
               style={styles.state}

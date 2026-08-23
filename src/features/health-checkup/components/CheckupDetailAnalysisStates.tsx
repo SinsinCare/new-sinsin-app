@@ -87,6 +87,7 @@ export function CheckupDetailErrorState({
   if (!resolved.retryable) {
     return (
       <V2ErrorState
+        surface="checkup_detail_analysis"
         title={resolved.title}
         description={resolved.body}
         style={styles.state}
@@ -96,6 +97,7 @@ export function CheckupDetailErrorState({
 
   return (
     <V2ErrorState
+      surface="checkup_detail_analysis"
       title={resolved.title}
       description={resolved.body}
       onRetry={onRetry}
@@ -114,6 +116,7 @@ export function CheckupDetailNoSelectionState() {
 
   return (
     <V2EmptyState
+      surface="checkup_detail_analysis"
       icon="file"
       title={t("checkup.list.emptyTitle")}
       description={t("checkup.list.emptyBody")}

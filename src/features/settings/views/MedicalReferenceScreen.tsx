@@ -1,13 +1,6 @@
 import React, { useState } from "react"
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  TextInput,
-  Linking,
-} from "react-native"
+import { View, StyleSheet, ScrollView, Pressable, Linking } from "react-native"
+import { Text, TextInput } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -15,6 +8,7 @@ import { useTranslation } from "react-i18next"
 
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useSurface } from "@/src/hooks/useSurface"
+import { matchesReferenceQuery } from "@/src/features/settings/utils/referenceSearch"
 
 // -----------------------------------------
 // 데이터 타입 정의
@@ -267,20 +261,14 @@ export function MedicalReferenceScreen() {
   const filteredSections = localizedSections
     .map((section) => ({
       ...section,
-      items: section.items.filter(
-        (item) =>
-          item.title
-            .toLocaleLowerCase()
-            .includes(searchQuery.toLocaleLowerCase()) ||
-          item.meta
-            .toLocaleLowerCase()
-            .includes(searchQuery.toLocaleLowerCase()),
+      items: section.items.filter((item) =>
+        matchesReferenceQuery(item, searchQuery),
       ),
     }))
     .filter((section) => section.items.length > 0)
 
   // 홈과 같은 층 규칙: 라이트는 회색 바닥 위 흰 카드, 다크는 짙은 바닥 위 옅은 카드.
-  const screenBg = surface.isDark ? surface.canvas : surface.surface
+  const screenBg = surface.bed
   const fieldBg = surface.isDark ? surface.surface : surface.card
 
   return (
@@ -323,7 +311,7 @@ export function MedicalReferenceScreen() {
           filteredSections.map((section) => (
             <View key={section.id}>
               <Text
-                style={[styles.sectionHeader, { color: surface.textMuted }]}
+                style={[styles.sectionHeader, { color: surface.text }]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {section.header}
@@ -438,6 +426,20 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
+  /*
+    ■ **색은 `surface.text`(= `label.neutral`)다 — `textMuted` 가 아니다** (2026-08-22)
+
+    (B) 섹션 라벨(`SectionHeader` 머리말: 바닥 위 이름표 + 그 아래 흰 카드)이 오래
+    `textMuted`(= `label.alternative`)였는데, 화면 바닥 위에서 **2.68:1** 이다 —
+    본문 기준 4.5 는커녕 큰 글자 기준 3 에도 못 미친다(13.5 SemiBold 는 큰 글자가
+    아니다: 기준은 18.66 이상 또는 14 이상 Bold).
+
+    **값은 안 고쳤다.** `label.alternative` 는 146곳이 보고 식당 상세 시안 실측에
+    묶여 있다. 고친 것은 **부르는 쪽의 토큰 선택**이고, 그건 이 감사가 커뮤니티에서
+    이미 낸 결론이다(`design-system-v2/tokens/colors.ts` §label 사다리 — "읽혀야 하는
+    글자의 바닥은 `neutral`"). 바닥 위 **4.72:1**, 다크도 3.00 → **5.79** 로 같이
+    올라간다(거기서도 4.5 밖이었다). 계산은 `tests/lightContrastAudit.test.ts` §11.
+  */
   sectionHeader: {
     paddingTop: 24,
     paddingBottom: 10,

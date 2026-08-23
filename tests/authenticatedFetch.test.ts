@@ -1,5 +1,5 @@
 import { authenticatedFetch } from "../src/services/core/authenticatedFetch"
-import { clearClientSession } from "../src/services/core/sessionCleanup"
+import { clearClientSessionOn401 } from "../src/services/core/sessionCleanup"
 import { tokenService } from "../src/services/core/tokenService"
 
 jest.mock("../src/config/appConfig", () => ({
@@ -15,12 +15,13 @@ jest.mock("../src/services/core/tokenService", () => ({
 }))
 
 jest.mock("../src/services/core/sessionCleanup", () => ({
-  clearClientSession: jest.fn(),
+  // 401 로 끝나는 세션 정리는 이 한 곳을 통한다 — 목 인증에서는 지우지 않는 분기가 여기 산다.
+  clearClientSessionOn401: jest.fn(),
 }))
 
 const mockedTokenService = tokenService as jest.Mocked<typeof tokenService>
-const mockedClearClientSession = clearClientSession as jest.MockedFunction<
-  typeof clearClientSession
+const mockedClearClientSession = clearClientSessionOn401 as jest.MockedFunction<
+  typeof clearClientSessionOn401
 >
 
 function mockResponse(
@@ -179,9 +180,7 @@ describe("authenticatedFetch", () => {
         "로그인 시간이 지났어요. 안전한 이용을 위해 다시 로그인해 주세요.",
       statusCode: 401,
     })
-    expect(mockedClearClientSession).toHaveBeenCalledWith({
-      requireFreshSocialProviderSelection: true,
-    })
+    expect(mockedClearClientSession).toHaveBeenCalled()
   })
 
   it("reuses a token rotated by another request instead of refreshing again", async () => {

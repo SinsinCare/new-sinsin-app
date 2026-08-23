@@ -1,22 +1,23 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { Text } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import { type Href } from "expo-router"
+import { useAppRouter } from "@/src/shared/navigation"
+import { afterModalTransitions } from "@/src/shared/components/AppModal"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
-import { reportService } from "@/src/services/reportService"
-import type { ReportReason } from "@/src/services/reportService"
+import { formatCount } from "../utils/displayNumber"
 import { formatTimeAgo } from "../utils/timeAgo"
-import { presentCommunityError } from "../utils/communityError"
 import { TagChips } from "./TagChips"
 import { useTranslation } from "react-i18next"
-
-import { showSuccessToast } from "@/src/lib/toast"
 
 import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 interface PostListItemProps {
+  postId: string
   category: string
   createdAt: Date
   title: string
@@ -25,6 +26,8 @@ interface PostListItemProps {
   authorName: string
   likeCount: number
   commentCount: number
+  /** 조회수. 넘기지 않으면(옛 호출부) 눈 아이콘 자체를 그리지 않는다. */
+  viewCount?: number
   tags?: string[]
   onPress?: () => void
   onPressTag?: (tag: string) => void
@@ -40,6 +43,7 @@ interface PostListItemProps {
 
 /** 피드 카드 — 회색 바닥 위의 흰 카드. 제목·미리보기 왼쪽, 사진은 오른쪽 섬네일. */
 export function PostListItem({
+  postId,
   category,
   createdAt,
   title,
@@ -48,6 +52,7 @@ export function PostListItem({
   authorName,
   likeCount,
   commentCount,
+  viewCount,
   tags = [],
   onPress,
   onPressTag,
@@ -57,47 +62,19 @@ export function PostListItem({
 }: PostListItemProps) {
   const { t, i18n } = useTranslation("recipe")
   const surface = useSurface()
+  const router = useAppRouter()
+  /*
+    **닉네임을 신원으로 쓰지 않는다.** 예전에는 `authorName === "나"` 였다 — 서버가
+    한국어로 준 표시 이름을 코드에 박아 둔 한국어 리터럴과 비교한 것이라, 같은 앱이
+    `Accept-Language: en-US` 로 요청하면 그 비교는 영영 거짓이 된다. 그리고 이 리터럴은
+    `contentOwnership.ts` 가 소유자 판정 사고(QA 2026-08-06)의 출처로 지목한 바로 그
+    줄이다. 판정은 서버가 준 `isMine` 하나로만 한다(프로필 미로딩은 "내 것 아님").
+  */
   const displayAuthorName = isWithdrawnAuthor
     ? t("post.withdrawnUser")
-    : authorName === "나"
+    : isMine
       ? t("freePost.selfName")
       : authorName
-
-  const handleReport = async () => {
-    const reasons: { label: string; value: ReportReason }[] = [
-      { label: t("post.reportReason.spam"), value: "SPAM" },
-      { label: t("post.reportReason.harassment"), value: "HARASSMENT" },
-      {
-        label: t("post.reportReason.inappropriate"),
-        value: "INAPPROPRIATE_CONTENT",
-      },
-      {
-        label: t("post.reportReason.falseInformation"),
-        value: "FALSE_INFORMATION",
-      },
-      { label: t("post.reportReason.other"), value: "OTHER" },
-    ]
-    const picked = await showActionSheet({
-      title: t("post.reportTitle"),
-      actions: reasons.map((r) => ({ label: r.label })),
-    })
-    if (picked == null) return
-
-    try {
-      await reportService.reportUser({
-        targetNickName: authorName,
-        reason: reasons[picked].value,
-      })
-      showSuccessToast(
-        t("post.reportReceivedTitle"),
-        t("post.reportReceivedBody"),
-      )
-    } catch (error) {
-      // 이미 신고한 사람을 다시 신고하는 것은 실수가 아니다 — 목록에는 접수
-      // 여부가 남지 않으므로 확인할 방법이 없다. 그래서 안내 토스트로 받는다.
-      presentCommunityError(error, { scope: "community-user-report" })
-    }
-  }
 
   const handleMorePress = async () => {
     const picked = await showActionSheet({
@@ -108,7 +85,8 @@ export function PostListItem({
       ],
     })
     if (picked === 0) {
-      await handleReport()
+      await afterModalTransitions()
+      router.push(`/community/report?postId=${postId}` as Href)
       return
     }
     if (picked !== 1) return
@@ -132,7 +110,7 @@ export function PostListItem({
     >
       <View style={styles.metaRow}>
         <Text
-          style={[styles.metaText, { color: surface.textWeak }]}
+          style={[styles.metaText, { color: surface.text }]}
           numberOfLines={1}
         >
           {category} · {formatTimeAgo(createdAt, i18n.language)}
@@ -142,12 +120,12 @@ export function PostListItem({
             onPress={handleMorePress}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={t("post.more")}
+            accessibilityLabel={t("post.moreActions")}
           >
             <Ionicons
               name="ellipsis-horizontal"
               size={16}
-              color={surface.textWeak}
+              color={surface.text}
             />
           </Pressable>
         )}
@@ -184,26 +162,47 @@ export function PostListItem({
 
       <View style={styles.footerRow}>
         <Text
-          style={[styles.metaText, { color: surface.textWeak }]}
+          style={[styles.metaText, { color: surface.text }]}
           numberOfLines={1}
         >
           {displayAuthorName}
         </Text>
+        {/*
+          아이콘은 눈으로만 뜻을 말한다. 라벨이 없으면 스크린리더에는 `481` `3` 처럼
+          **맥락 없는 수**만 읽히므로, 셋 다 이름을 갖는다(조회에만 있었다).
+        */}
         <View style={styles.counts}>
-          <View style={styles.countItem}>
-            <Ionicons name="heart-outline" size={14} color={surface.textWeak} />
-            <Text style={[styles.countText, { color: surface.textMuted }]}>
-              {likeCount}
+          {viewCount != null && (
+            <View
+              style={styles.countItem}
+              accessibilityLabel={t("post.viewCount", { count: viewCount })}
+            >
+              <Ionicons name="eye-outline" size={14} color={surface.text} />
+              <Text style={[styles.countText, { color: surface.text }]}>
+                {formatCount(viewCount, i18n.language)}
+              </Text>
+            </View>
+          )}
+          <View
+            style={styles.countItem}
+            accessibilityLabel={t("post.likeCount", { count: likeCount })}
+          >
+            <Ionicons name="heart-outline" size={14} color={surface.text} />
+            <Text style={[styles.countText, { color: surface.text }]}>
+              {formatCount(likeCount, i18n.language)}
             </Text>
           </View>
-          <View style={styles.countItem}>
+          <View
+            style={styles.countItem}
+            accessibilityLabel={t("post.commentCount", { count: commentCount })}
+          >
             <Ionicons
               name="chatbubble-outline"
               size={13}
-              color={surface.textWeak}
+              color={surface.text}
             />
-            <Text style={[styles.countText, { color: surface.textMuted }]}>
-              {commentCount}
+            <Text style={[styles.countText, { color: surface.text }]}>
+              {formatCount(commentCount, i18n.language)}
             </Text>
           </View>
         </View>

@@ -129,7 +129,6 @@ export function WithdrawalTermsScreen() {
       <BottomActionBar
         label={t("withdrawal.withdraw")}
         disabled={!agreed || loading}
-        paddingBottom={insets.bottom + 16}
         onPress={handleWithdraw}
       />
     </ThemedView>

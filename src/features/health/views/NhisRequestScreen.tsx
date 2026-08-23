@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react"
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Pressable,
-  TextInput,
-} from "react-native"
+import { StyleSheet, View, ScrollView, Pressable } from "react-native"
+import { TextInput } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -19,7 +14,6 @@ import {
   V2SkeletonGroup,
 } from "@/src/design-system-v2"
 import { ThemedView } from "@/components/themed-view"
-import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { nhisService } from "@/src/services/data/nhisService"
 import { getErrorMessage, logRecoverableError } from "@/src/lib/errorUtils"
@@ -32,7 +26,7 @@ export function NhisRequestScreen() {
   const router = useAppRouter()
   const queryClient = useQueryClient()
   const { t } = useTranslation("health")
-  const { healthColors } = useHealthTheme()
+  const { healthColors, colors } = useHealthTheme()
 
   const [authMethods, setAuthMethods] = useState<AuthMethodRs[]>([])
   const [loadingMethods, setLoadingMethods] = useState(true)
@@ -104,6 +98,9 @@ export function NhisRequestScreen() {
       params: { requestId },
     })
   }
+
+  const canRequest = isFormValid()
+  const requestDisabled = !canRequest || requesting
 
   return (
     <ThemedView
@@ -266,7 +263,10 @@ export function NhisRequestScreen() {
                         backgroundColor: healthColors.surfaceMuted,
                         borderColor: healthColors.line,
                       },
-                      isSelected && styles.methodCardSelected,
+                      isSelected && {
+                        borderColor: colors.primary.primary,
+                        backgroundColor: colors.accentForeground.orangeWeak,
+                      },
                     ]}
                     onPress={() => {
                       setSelectedMethod(method)
@@ -277,7 +277,7 @@ export function NhisRequestScreen() {
                       style={[
                         styles.methodName,
                         { color: healthColors.textSecondary },
-                        isSelected && styles.methodNameSelected,
+                        isSelected && { color: colors.primary.primary },
                       ]}
                     >
                       {methodName}
@@ -308,7 +308,10 @@ export function NhisRequestScreen() {
                         backgroundColor: healthColors.surfaceMuted,
                         borderColor: healthColors.line,
                       },
-                      selectedTelecom === t.code && styles.telecomChipSelected,
+                      selectedTelecom === t.code && {
+                        borderColor: colors.primary.primary,
+                        backgroundColor: colors.accentForeground.orangeWeak,
+                      },
                     ]}
                     onPress={() => setSelectedTelecom(t.code)}
                   >
@@ -316,8 +319,10 @@ export function NhisRequestScreen() {
                       style={[
                         styles.telecomChipText,
                         { color: healthColors.textSecondary },
-                        selectedTelecom === t.code &&
-                          styles.telecomChipTextSelected,
+                        selectedTelecom === t.code && {
+                          color: colors.primary.primary,
+                          fontWeight: "600",
+                        },
                       ]}
                     >
                       {t.label}
@@ -364,7 +369,7 @@ export function NhisRequestScreen() {
             <Ionicons
               name="phone-portrait-outline"
               size={20}
-              color={tokens.color.sub8.val}
+              color={healthColors.positive}
             />
             <ThemedText
               style={[styles.pendingText, { color: healthColors.text }]}
@@ -387,13 +392,21 @@ export function NhisRequestScreen() {
         ]}
       >
         {requestId ? (
-          <Pressable style={styles.confirmButton} onPress={handleConfirm}>
+          <Pressable
+            style={[
+              styles.confirmButton,
+              { backgroundColor: colors.primary.primary },
+            ]}
+            onPress={handleConfirm}
+          >
             <Ionicons
               name="checkmark-circle-outline"
               size={20}
-              color="#FFFFFF"
+              color={colors.static.white}
             />
-            <ThemedText style={styles.buttonText}>
+            <ThemedText
+              style={[styles.buttonText, { color: colors.static.white }]}
+            >
               {t("nhis.verified")}
             </ThemedText>
           </Pressable>
@@ -401,15 +414,29 @@ export function NhisRequestScreen() {
           <Pressable
             style={[
               styles.requestButton,
-              (!isFormValid() || requesting) && styles.buttonDisabled,
+              {
+                // 요청 중에는 진행 중인 브랜드 버튼을 유지하고, 입력 부족일 때만 중립화.
+                backgroundColor: canRequest
+                  ? colors.primary.primary
+                  : healthColors.surfaceMuted,
+              },
             ]}
             onPress={handleRequest}
-            disabled={!isFormValid() || requesting}
+            disabled={requestDisabled}
           >
             {requesting ? (
-              <V2DotLoader size="s" color="#FFFFFF" />
+              <V2DotLoader size="s" color={colors.static.white} />
             ) : (
-              <ThemedText style={styles.buttonText}>
+              <ThemedText
+                style={[
+                  styles.buttonText,
+                  {
+                    color: canRequest
+                      ? colors.static.white
+                      : healthColors.textAssistive,
+                  },
+                ]}
+              >
                 {t("nhis.startVerification")}
               </ThemedText>
             )}
@@ -423,7 +450,6 @@ export function NhisRequestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -432,13 +458,11 @@ const styles = StyleSheet.create({
   section: {
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F2F5",
     gap: 12,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#17191C",
   },
   row: {
     flexDirection: "row",
@@ -454,18 +478,14 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 13,
-    color: "#64748B",
     fontWeight: "500",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: "#17191C",
-    backgroundColor: "#FAFAFA",
   },
   methodRow: {
     flexDirection: "row",
@@ -479,22 +499,12 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FAFAFA",
-  },
-  methodCardSelected: {
-    borderColor: tokens.color.sub6.val,
-    backgroundColor: "#F0FDF9",
   },
   methodName: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#374151",
-  },
-  methodNameSelected: {
-    color: tokens.color.sub8.val,
   },
   telecomRow: {
     flexDirection: "row",
@@ -506,68 +516,48 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#FAFAFA",
-  },
-  telecomChipSelected: {
-    borderColor: tokens.color.sub6.val,
-    backgroundColor: "#F0FDF9",
   },
   telecomChipText: {
     fontSize: 14,
-    color: "#374151",
-  },
-  telecomChipTextSelected: {
-    color: tokens.color.sub8.val,
-    fontWeight: "600",
   },
   errorBox: {
     flexDirection: "row",
     gap: 8,
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
     borderRadius: 10,
     padding: 12,
     marginTop: 16,
   },
   errorText: {
     fontSize: 13,
-    color: "#DC2626",
     flex: 1,
   },
   pendingBox: {
     flexDirection: "row",
     gap: 12,
     alignItems: "flex-start",
-    backgroundColor: "#F0FDF9",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#BBF7D0",
     marginTop: 16,
   },
   pendingText: {
     fontSize: 14,
     lineHeight: 20,
-    color: tokens.color.sub8.val,
     flex: 1,
   },
   footer: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#F0F2F5",
   },
   requestButton: {
-    backgroundColor: tokens.color.sub6.val,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   confirmButton: {
-    backgroundColor: tokens.color.sub6.val,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
@@ -575,12 +565,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
-  buttonDisabled: {
-    backgroundColor: "#C5C8CE",
-  },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
   },
 })

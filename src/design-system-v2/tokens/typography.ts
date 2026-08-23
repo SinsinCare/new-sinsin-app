@@ -150,6 +150,19 @@ export const typography = {
       lineHeight: 20,
       letterSpacing: 0,
     },
+    /*
+      15 Medium / lh 20. `mediumStrong` 이 `medium` 에 대해 그런 것처럼, `large` 의 굵은 짝이다.
+      커뮤니티 재디자인의 **목록 게시글 제목**이 4개 구역(feed-drag·feed-home·search·popular)에서
+      전부 이 조합이었는데 정본에 없었다 — `label.smallWeak` 는 15/19, `subtext.large` 는 15/20
+      **Regular** 이라 둘 다 아니다. lh 20 이어야 행 높이 공식의 텍스트열 74(20+4+20+12+18)가
+      나온다(00-MASTER §4-G9 · §5.3 · §2.1).
+    */
+    largeStrong: {
+      fontFamily: fontFamily.medium,
+      fontSize: 15,
+      lineHeight: 20,
+      letterSpacing: 0,
+    },
   },
   label: {
     xSmallWeak: {
