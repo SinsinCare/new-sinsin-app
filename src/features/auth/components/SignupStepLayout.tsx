@@ -120,6 +120,15 @@ interface SignupStepLayoutProps {
   /** 0~1. 진행바. 생략하면 안 그린다. */
   progress?: number
   onBack?: () => void
+  /**
+   * 뒤로 컨트롤의 접근성 이름. 기본은 "이전 단계" 다.
+   *
+   * 같은 자리의 같은 버튼이 **한 스텝 뒤로**가 아니라 **여기서 나가기**일 때가 있다
+   * (프로필 입력 첫 스텝 — `useSignupSteps` 의 `requiresSignOutToExit`). 화면으로는
+   * 진행바가 비어 있는 것으로 구분되지만 화면 낭독기에는 그 단서가 없어서, 나가는
+   * 버튼을 "이전 단계" 라고 읽어 주면 눌러 보기 전에는 알 수 없다.
+   */
+  backLabel?: string
   ctaLabel?: string
   ctaDisabled?: boolean
   ctaLoading?: boolean
@@ -136,6 +145,7 @@ export function SignupStepLayout({
   subtitle,
   progress,
   onBack,
+  backLabel,
   ctaLabel,
   ctaDisabled,
   ctaLoading,
@@ -188,7 +198,7 @@ export function SignupStepLayout({
         {onBack && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t("common.previousStep")}
+            accessibilityLabel={backLabel ?? t("common.previousStep")}
             onPress={onBack}
             hitSlop={12}
             style={styles.backButton}

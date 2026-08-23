@@ -36,6 +36,7 @@ export function SignupStepsScreen() {
     progress,
     isLastStep,
     isCompletionMode,
+    requiresSignOutToExit,
     draft,
     updateDraft,
     validity,
@@ -50,25 +51,40 @@ export function SignupStepsScreen() {
 
   const copy = getSignupStepCopy()[step]
   const fieldError = stepError || validity.message
-  const canGoBack = stepIndex > 0 || !isCompletionMode
 
-  // 소셜 가입 도중에는 첫 스텝에서 빠져나갈 곳이 없다(로그인은 이미 끝났다).
-  // 그 경우에만 하드웨어 백을 삼키고, 나머지는 한 스텝 뒤로 보낸다.
+  /*
+    ■ 옛 주석이 틀렸던 자리 (실기기 영상, 2026-08-23)
+
+    여기에는 "소셜 가입 도중에는 첫 스텝에서 빠져나갈 곳이 없다(로그인은 이미 끝났다)"
+    가 적혀 있었고, 그 전제로 **하드웨어 백을 삼켰다**(`return isCompletionMode`).
+    전제가 틀렸다 — 로그인이 끝났다는 것은 나갈 곳이 없다는 뜻이 아니다.
+    **로그아웃해서 로그인 화면으로 돌아갈 수 있다.**
+
+    그리고 그 화면은 `canGoBack === false` 라 헤더 컨트롤도 없고 제스처도 꺼져 있었다.
+    안드로이드는 하드웨어 백을 삼켜서 갇혔고, **iOS 는 하드웨어 백 자체가 없어
+    `BackHandler` 가 돌지도 않았다** — 즉 iOS 사용자에게는 시트를 끝까지 완주하는 것
+    말고 아무 통로도 남아 있지 않았다. 카카오 로그인이 안 되는 계정이 여기 들어오면
+    앱 삭제가 유일한 탈출이었다.
+
+    이제 **두 경로가 같은 `goBack` 하나를 지난다.** 한쪽만 고치면 반쪽만 고쳐진다.
+  */
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (stepIndex > 0) {
-        goBack()
-        return true
-      }
-      return isCompletionMode
+      goBack()
+      return true
     })
     return () => sub.remove()
-  }, [goBack, isCompletionMode, stepIndex])
+  }, [goBack])
 
   useEffect(() => {
-    navigation.setOptions({ gestureEnabled: canGoBack && stepIndex === 0 })
+    /* 엣지 스와이프는 `goBack` 을 지나지 않고 네이티브가 바로 팝한다. 로그아웃해야만
+       나갈 수 있는 상태에서 켜 두면 확인창도 로그아웃도 없이 화면만 사라지고, 세션이
+       남은 채라 가드가 곧바로 이리로 되돌려 놓는다. */
+    navigation.setOptions({
+      gestureEnabled: stepIndex === 0 && !requiresSignOutToExit,
+    })
     return () => navigation.setOptions({ gestureEnabled: true })
-  }, [canGoBack, navigation, stepIndex])
+  }, [navigation, requiresSignOutToExit, stepIndex])
 
   const submitStep = () => {
     if (!validity.canProceed) {
@@ -89,7 +105,11 @@ export function SignupStepsScreen() {
       title={copy.title}
       subtitle={copy.subtitle}
       progress={progress}
-      onBack={canGoBack ? goBack : undefined}
+      /* 컨트롤은 **항상** 그린다 — iOS 에는 이것 말고 나갈 방법이 없다. */
+      onBack={goBack}
+      backLabel={
+        requiresSignOutToExit ? t("signup.steps.exit.control") : undefined
+      }
       ctaLabel={
         isLastStep
           ? isCompletionMode

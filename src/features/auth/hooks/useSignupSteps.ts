@@ -13,8 +13,12 @@ import {
   trackAnalyticsEvent,
   type AnalyticsSignupMode,
 } from "@/src/features/analytics"
+import { showConfirm } from "@/src/lib/dialog"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
-import { isProfileSetupCompletionMode } from "../utils/profileSetupMode"
+import {
+  isProfileSetupCompletionMode,
+  resolveProfileSetupExit,
+} from "../utils/profileSetupMode"
 import {
   EMPTY_SIGNUP_DRAFT,
   SIGNUP_STEP_IDS,
@@ -56,8 +60,10 @@ export function useSignupSteps() {
     entryGate,
     sessionPersistence,
     requiresAdditionalInfo,
+    isAuthenticated,
     completeProfile,
     getProfile,
+    signOut,
   } = useAuth()
 
   const [draft, setDraft] = useState<SignupDraft>(EMPTY_SIGNUP_DRAFT)
@@ -69,6 +75,9 @@ export function useSignupSteps() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPrefilling, setIsPrefilling] = useState(false)
   const initialNickname = useRef("")
+  /* 확인창이 떠 있는 동안 들어오는 두 번째 요청을 접는다. 하드웨어 백과 헤더 컨트롤이
+     같은 함수를 지나므로, 막지 않으면 `V2DialogHost` 의 큐에 같은 확인창이 쌓인다. */
+  const isExiting = useRef(false)
 
   const isBackfillMode = accountState === "ACTIVE" && requiresAdditionalInfo
   const isCompletionMode = isProfileSetupCompletionMode({
@@ -92,6 +101,15 @@ export function useSignupSteps() {
     : isCompletionMode
       ? "completion"
       : "signup"
+
+  /* 첫 스텝에서 나가려 할 때 갈 수 있는 곳. 판정 근거는 `resolveProfileSetupExit`
+     머리말 — 이 화면에 갇히느냐는 완성/backfill 이 아니라 **루트 가드가 붙잡느냐**로
+     갈린다. */
+  const exitRoute = resolveProfileSetupExit({
+    accountState,
+    entryGate,
+    isAuthenticated,
+  })
 
   const step = SIGNUP_STEP_IDS[stepIndex]
   const isLastStep = stepIndex === SIGNUP_STEP_IDS.length - 1
@@ -354,6 +372,46 @@ export function useSignupSteps() {
      한 경우뿐이다 — 첫 스텝에서 뒤로. */
   const exitSignup = useGoBack()
 
+  /**
+   * 로그아웃하고 로그인 화면으로 — 가드가 붙잡는 상태에서 **유일하게 열려 있는 문**.
+   *
+   * ■ 즉시 나가지 않고 먼저 묻는 이유
+   *
+   * 이 자리를 떠나면 지금까지 입력한 여섯 질문의 답이 사라지고 **세션까지 끊긴다.**
+   * 되돌리려면 소셜 로그인을 처음부터 다시 해야 한다 — 실수로 스친 뒤로가기가
+   * 그렇게 되면 안 된다. 선택을 묻는 표면은 이 저장소 규칙대로 `V2Modal` 이고,
+   * 훅에서는 그 선언형 컴포넌트를 못 쓰므로 명령형 껍데기(`showConfirm`)로 부른다.
+   *
+   * ■ `signOut("explicit")` 인 이유
+   *
+   * `"automatic"` 은 임시 세션이 백그라운드에서 잘린 것 — **사용자가 원한 적 없는**
+   * 로그아웃이라 로그인 퍼널의 재로그인 분모를 설명하는 데 쓰인다(`useAuth` 의 해당
+   * 주석). 여기는 사용자가 확인창에서 직접 고른 것이라 그 코호트에 섞이면 안 된다.
+   *
+   * ■ 목적지를 직접 지정하는 이유
+   *
+   * 로그아웃 뒤에도 가드는 우리를 옮겨 주지 않는다 — 인증 그룹 안의 비로그인 사용자는
+   * `STAY` 다(`resolveGuard`). 여기서 보내지 않으면 로그아웃된 채 같은 화면에 남는다.
+   */
+  const exitBySigningOut = useCallback(async () => {
+    if (isExiting.current) return
+    isExiting.current = true
+    try {
+      const confirmed = await showConfirm({
+        title: t("signup.steps.exit.title"),
+        description: t("signup.steps.exit.description"),
+        confirmLabel: t("signup.steps.exit.confirm"),
+        cancelLabel: t("signup.steps.exit.cancel"),
+        destructive: true,
+      })
+      if (!confirmed) return
+      await signOut("explicit")
+      router.replace("/(auth)/login")
+    } finally {
+      isExiting.current = false
+    }
+  }, [signOut, t])
+
   const goBack = useCallback(() => {
     if (isSubmitting) return
     if (stepIndex > 0) {
@@ -371,14 +429,32 @@ export function useSignupSteps() {
       return
     }
 
-    /* 첫 스텝에서 뒤로 = 가입을 그만둔다. 가입 진입점이라 스택이 비어 있을 수
-       있는데, 그때의 목적지(로그인)는 라우트 그래프가 안다.
+    /* 첫 스텝에서 뒤로 = 여기서 나간다. **나갈 곳이 두 가지다.**
+
+       가드가 이 상태를 프로필 입력에 붙잡아 두는 경우(소셜 가입 도중 등)에는 앱
+       쪽으로 돌아가 봐야 다음 판정이 곧바로 되돌려 놓는다. 그 상태의 문은 로그아웃
+       하나뿐이라 확인을 받고 로그인 화면으로 보낸다.
+
+       붙잡히지 않는 경우(이메일 가입 · gate 가 이미 넘어간 backfill)는 종전 그대로다.
+       가입 진입점이라 스택이 비어 있을 수 있는데, 그때의 목적지는 라우트 그래프가 안다.
 
        여기에 `*_abandoned` 를 새로 짓지 않는다 — `exitSignup` 은 `useGoBack` 이고
-       그 통로가 이미 `nav_back{from_screen:'signup_profile'}` 을 쏜다. 이 화면에서
-       `useGoBack` 이 불리는 자리는 여기 하나뿐이라 두 수가 같다. */
+       그 통로가 이미 `nav_back{from_screen:'signup_profile'}` 을 쏜다. 로그아웃 갈래는
+       `auth_signed_out{reason:'explicit'}` 이 같은 자리를 센다. */
+    if (exitRoute === "signOut") {
+      void exitBySigningOut()
+      return
+    }
     exitSignup()
-  }, [analyticsMode, exitSignup, isSubmitting, step, stepIndex])
+  }, [
+    analyticsMode,
+    exitBySigningOut,
+    exitRoute,
+    exitSignup,
+    isSubmitting,
+    step,
+    stepIndex,
+  ])
 
   return {
     step,
@@ -388,6 +464,12 @@ export function useSignupSteps() {
     progress: getSignupStepProgress(stepIndex),
     isLastStep,
     isCompletionMode,
+    /**
+     * 지금 이 화면에서 나가려면 **로그아웃해야 하는가**. 화면이 두 가지에 쓴다:
+     * 탈출 컨트롤의 접근성 이름(그 버튼이 하는 일이 "이전 단계" 가 아니다)과,
+     * iOS 엣지 스와이프 차단(제스처는 `goBack` 을 안 지나고 네이티브가 바로 팝한다).
+     */
+    requiresSignOutToExit: stepIndex === 0 && exitRoute === "signOut",
     draft,
     updateDraft,
     /** 현재 스텝 입력 자체의 판정. 입력 전에는 조용하다. */
