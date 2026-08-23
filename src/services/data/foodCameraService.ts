@@ -20,7 +20,6 @@ import {
   projectFoodAnalysisJobPresentation,
 } from "../../shared/utils/foodAnalysisResult"
 import { api, ApiError, authenticatedFetch } from "../core"
-import { isAxiosError } from "axios"
 import { prepareImageUpload } from "../../shared/utils/preparedImageUpload"
 
 const ANALYZE_TEXT_TIMEOUT_MS = 180000
@@ -166,10 +165,16 @@ export const foodCameraService = {
       const job = unwrapResult<FoodAnalysisJob | null>(response.data)
       return job ? normalizeAnalysisJob(job) : null
     } catch (err) {
-      if (
-        isAxiosError(err) &&
-        isUnsupportedV2Status(err.response?.status ?? 0)
-      ) {
+      /*
+        `api` 는 응답 인터셉터에서 **모든** HTTP 오류를 `ApiError` 로 바꿔 던진다
+        (`apiClient.ts`). 그래서 예전의 `isAxiosError(err)` 는 **항상 거짓**이었고,
+        이 폴백은 한 번도 실행되지 않았다 — v2 잡이 없는 레거시 분석(텍스트 등록이
+        전부 그렇다)은 404 를 그대로 위로 던졌다. 복구 폴링이 같은 404 를 TTL(10분)
+        내내 두드리기만 하고, 서버에 **이미 저장돼 있는** 결과를 못 찾던 자리다
+        (2026-08-23 로그: 대기 6건 × 5초 간격 404).
+      */
+      const status = err instanceof ApiError ? (err.statusCode ?? 0) : 0
+      if (isUnsupportedV2Status(status)) {
         const result = await this.fetchByRequestId(requestId)
         return result
           ? {
