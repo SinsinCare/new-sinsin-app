@@ -137,9 +137,19 @@ export function withDeadline(
  * `dialog.ts` 가 이 대기를 Promise 계약 안에 포함한다. 50ms 는 React 상태 변경이
  * dismiss 전이를 큐에 넣을 시간을 주고, 큐가 빈 뒤 짧은 버퍼를 더 둔다.
  */
+/**
+ * 큐가 비길 기다리는 상한. `dialog.ts` 가 모든 명령형 다이얼로그의 Promise 를 이
+ * 대기 뒤로 옮긴 뒤로, 여기서 안 풀리면 **확인창을 누른 화면이 통째로 멈춘다** —
+ * 콜백이 영영 안 돌아오므로 사용자에게는 앱이 얼어붙은 것과 구별되지 않는다.
+ * 큐의 각 작업은 이미 유한하지만(withDeadline·TEARDOWN_SETTLE_MS), 그 사실에
+ * 기대는 것과 상한을 두는 것은 다르다 — 새 작업이 하나 추가될 때마다 그 가정이
+ * 다시 참이어야 하기 때문이다.
+ */
+const TRANSITIONS_IDLE_DEADLINE_MS = 2_000
+
 export async function afterModalTransitions(): Promise<void> {
   await delay(50)
-  await whenTransitionsIdle()
+  await withDeadline(whenTransitionsIdle(), TRANSITIONS_IDLE_DEADLINE_MS)
   await delay(80)
 }
 

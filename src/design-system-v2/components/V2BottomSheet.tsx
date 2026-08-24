@@ -72,6 +72,7 @@ import {
 import {
   Keyboard,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -483,27 +484,57 @@ export function V2BottomSheet({
     [requestClose],
   )
 
+  /*
+    ── 스크림 탭은 **우리 것**이다 (2026-08-24, 열리는 중 탭이 삼켜지던 결함) ──────
+
+    gorhom 의 `BottomSheetBackdrop` 은 자기 터치 가능 여부를 UI 스레드 애니메이션
+    값으로 판정하고 그 결과를 `runOnJS` → `setState` 로 넘긴다
+    (`BottomSheetBackdrop.tsx` 의 `useAnimatedReaction`). 그 반응은 마운트 직후
+    `animatedIndex <= disappearsOnIndex` 가 참이라 **먼저 `pointerEvents: "none"`
+    으로 내려간 뒤**, 인덱스가 -1 을 벗어나고 나서야 왕복을 거쳐 `"auto"` 로 돌아온다.
+
+    그래서 시트가 올라오는 첫 ~100ms 동안 스크림은 **보이는데 눌리지 않는다.**
+    사용자에게는 "딤을 눌렀는데 아무 일도 없고 시트가 계속 올라온다" 로 보인다
+    (실측 2026-08-24, 릴리즈 빌드: 0·50·100ms 에 탭하면 시트가 그대로 열린 채
+    남고 150ms 부터 정상. 픽셀 오라클로 판정).
+
+    딤 그리기는 계속 gorhom 에게 맡기고(인덱스에 따른 페이드가 그쪽 일이다),
+    **누르는 층만 우리가 깐다.** 이 층은 `pointerEvents` 를 남에게 위임하지 않으므로
+    열림 애니메이션의 어느 시점에도 살아 있다. gorhom 의 `pressBehavior` 는 끈다 —
+    닫기는 `requestClose` → 부모 `visible=false` → 우리 effect 의 `close()` 라는
+    한 줄기로만 흐르는 편이 신호가 겹치지 않는다.
+
+    이 층은 gorhom 트리에서 시트 컨테이너보다 **먼저** 렌더되므로(BottomSheet.tsx
+    의 `BackdropComponent` → `BottomSheetHostingContainer` 순서) 시트 자신을 덮지
+    않는다.
+  */
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        opacity={dim ? 1 : 0}
-        pressBehavior="close"
-        // 라이브러리 완료 신호가 유실돼도 부모 visible 과 마감시한을 즉시 내린다.
-        onPress={requestClose}
-        /*
-          `opacity` 를 1 로 두고 색을 `background.dim` 으로 준다 — 딤의 농도는 토큰이
-          정한다. `dim={false}` 여도 스크림은 남는다(탭-투-클로즈를 잃지 않기 위해).
-        */
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: dim ? colors.background.dim : "transparent" },
-        ]}
-      />
+      <>
+        <BottomSheetBackdrop
+          {...props}
+          appearsOnIndex={0}
+          disappearsOnIndex={-1}
+          opacity={dim ? 1 : 0}
+          pressBehavior="none"
+          /*
+            `opacity` 를 1 로 두고 색을 `background.dim` 으로 준다 — 딤의 농도는 토큰이
+            정한다. `dim={false}` 여도 스크림은 남는다(탭-투-클로즈를 잃지 않기 위해).
+          */
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: dim ? colors.background.dim : "transparent" },
+          ]}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("action.close")}
+          onPress={requestClose}
+          style={StyleSheet.absoluteFill}
+        />
+      </>
     ),
-    [colors.background.dim, dim, requestClose],
+    [colors.background.dim, dim, requestClose, t],
   )
 
   /** 핸들. 인라인 화살표로 넘기면 매 렌더 새 타입이 되어 드래그 도중 제스처가 끊긴다. */

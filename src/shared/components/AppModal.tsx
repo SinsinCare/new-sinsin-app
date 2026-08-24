@@ -43,6 +43,23 @@ const ModalDepthContext = createContext(0)
 const TRANSITION_DEADLINE_MS = 800
 /** 언마운트 teardown 은 완료 신호가 없다 — 전환 길이만큼 큐를 잡아 둔다. */
 const TEARDOWN_SETTLE_MS = 600
+/**
+ * 형제가 사라지길 기다리는 상한. 이 값을 넘기면 **기다림을 포기하고 present 한다.**
+ *
+ * 종전에는 `await whenRegistryChanges()` 를 조건이 맞을 때까지 무한히 돌았다. 그
+ * 대기는 "레지스트리가 **다음에** 변할 때" 만 풀리므로, 해제 신호를 한 번이라도
+ * 잃으면 **영원히** 풀리지 않는다. 그리고 이 게이트는 앱의 모든 모달이 지나는
+ * 길목이라, 한 번 잃으면 그 뒤의 모든 시트·확인창·다이얼로그가 뜨지 않는다 —
+ * 사용자에게는 "버튼을 눌러도 아무 일도 안 일어난다 = 앱이 얼었다" 로 보인다.
+ * 이 파일의 다른 모든 대기(`withDeadline`)와 `afterSiblingModalsGone` 의 루프는
+ * 이미 유한한데 여기만 아니었다.
+ *
+ * 포기하고 present 하는 쪽이 옳은 이유: 최악의 결과가 다르다. 계속 기다리면 앱이
+ * 죽고, 포기하면 iOS 가 그 present 를 거부할 수 있을 뿐이다(그 경우 사용자는 다시
+ * 누르면 된다). 회복 가능한 실패와 회복 불가능한 정지 중 어느 쪽인지는 비교할 필요가
+ * 없다.
+ */
+const SIBLING_WAIT_DEADLINE_MS = 2_500
 
 function IosGatedModal({
   visible = false,
@@ -70,23 +87,47 @@ function IosGatedModal({
     if (visible) {
       void (async () => {
         for (;;) {
-          // 형제가 보이는 동안은 큐 밖에서 기다린다 — 큐 안에서 기다리면
-          // 그 형제의 dismiss 전이까지 막아 데드락이 된다.
+          /*
+            형제가 보이는 동안은 큐 밖에서 기다린다 — 큐 안에서 기다리면 그 형제의
+            dismiss 전이까지 막아 데드락이 된다.
+
+            조건이 `!== depth` 가 아니라 `> depth` 인 이유: 내가 기다려야 하는 것은
+            **나보다 많이** 떠 있는 경우뿐이다. 조상이 먼저 걷혀 수가 depth 아래로
+            내려가면 그 수는 다시 올라오지 않으므로, `!==` 로 재면 영원히 못 빠져
+            나온다. 그 상태에서 나는 그냥 뜨면 된다.
+
+            그리고 이 대기에는 상한이 있다(`SIBLING_WAIT_DEADLINE_MS`). 근거는 그
+            상수 주석에.
+          */
           let waited = false
-          while (isCurrent() && visibleModalCount() !== depth) {
+          const waitUntil = Date.now() + SIBLING_WAIT_DEADLINE_MS
+          while (isCurrent() && visibleModalCount() > depth) {
+            const remaining = waitUntil - Date.now()
+            if (remaining <= 0) {
+              logger.error(
+                `[AppModal] 형제 대기 상한 초과 — 그대로 present 한다: depth=${depth}, visible=${visibleModalCount()}`,
+              )
+              break
+            }
             if (!waited) {
               waited = true
               logger.debug(
                 `[AppModal] present 대기: depth=${depth}, visible=${visibleModalCount()}`,
               )
             }
-            await whenRegistryChanges()
+            await withDeadline(whenRegistryChanges(), remaining)
           }
           if (!isCurrent()) return
           const outcome = await enqueueTransition(async () => {
             if (!isCurrent()) return "cancelled" as const
-            // 차례가 오는 사이 다른 형제가 떴을 수 있다 — 다시 대기로.
-            if (visibleModalCount() !== depth) return "retry" as const
+            /*
+              차례가 오는 사이 다른 형제가 떴을 수 있다 — 다시 대기로. 단 위 루프가
+              상한을 넘겨 빠져나온 경우에는 재시도하지 않는다. 그러면 "대기 → 상한 →
+              재시도 → 대기" 가 무한히 도는, 마감시한을 둔 의미가 없는 고리가 된다.
+            */
+            if (visibleModalCount() > depth && Date.now() < waitUntil) {
+              return "retry" as const
+            }
             markModalPresented(id)
             mountedRef.current = true
             const shown = new Promise<void>((resolve) => {
