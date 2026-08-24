@@ -229,6 +229,22 @@ export default function TabLayout() {
     <TabResetProvider>
       <View style={{ flex: 1 }}>
         <Tabs
+          /*
+            ── 뒤로가기는 **방금 있던 탭**으로 (2026-08-24) ──────────────────────
+            기본값은 `firstRoute` 다: 첫 탭(홈)이 아닌 어디서든 GO_BACK 이 **홈으로**
+            간다. 그래서 `인기글`(탭 네비게이터 안에 사는 화면, `href: null`)에서
+            뒤로가면 커뮤니티가 아니라 앱 홈으로 떨어졌다 — 사용자가 겪은 그 증상이다.
+
+            `routeGraph` 에 `(tabs)/community-popular → /(tabs)/community` 라고
+            적혀 있는데도 그 표가 안 먹었던 이유가 여기다. 그 표는 `useGoBack` 이
+            **히스토리가 없을 때만** 본다. 탭 라우터가 GO_BACK 을 자기가 처리해
+            버리니 `canGoBack()` 은 참이고, 표는 읽히지도 않았다.
+
+            `history` 는 "마지막으로 보고 있던 탭" 으로 되돌린다 — 인기글에서는
+            커뮤니티로, 커뮤니티에서는 홈(거기서 왔다면)으로. 탭을 옮겨 다닌 경로가
+            그대로 되감기므로, 표의 폴백(딥링크·푸시 진입)과도 뜻이 어긋나지 않는다.
+          */
+          backBehavior="history"
           screenOptions={{
             headerShown: false,
             /* 바가 떠 있으므로 화면은 바 뒤까지 채운다 — 깎인 모서리에 화면이 보이려면

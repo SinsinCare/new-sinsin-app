@@ -40,6 +40,7 @@ import { TagInput } from "@/src/features/recipe/components/TagInput"
 import { ContentResponsibilityCheck } from "@/src/features/recipe/components/ContentResponsibilityCheck"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
+import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import { presentError, resolveError } from "@/src/lib/errorMessage"
@@ -353,15 +354,17 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     >
       {/* 디자인 정본: 뒤로가기 + 중앙 제목. 등록 CTA는 하단 전체 폭이다. */}
       <View style={[styles.header, { borderBottomColor: surface.hairline }]}>
-        <Pressable
+        {/*
+          `Pressable + hitSlop` 이 아니라 `HeaderIconButton` 이다 — 44/48 규격 상자를
+          음수 마진으로 제자리에 넣는다(그 파일 머리말). 이 버튼은 초안을 들고
+          나가는 유일한 문이라 "눌렀는데 안 먹었다" 의 비용이 특히 크다.
+        */}
+        <HeaderIconButton
           onPress={handleClose}
-          hitSlop={10}
-          accessibilityRole="button"
           accessibilityLabel={tCommon("action.back")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
           <Ionicons name="chevron-back" size={24} color={surface.textStrong} />
-        </Pressable>
+        </HeaderIconButton>
         <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
           {t("freePost.formTitle")}
         </Text>

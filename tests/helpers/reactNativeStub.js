@@ -17,4 +17,30 @@ const Platform = {
   select: (spec) => (spec && "ios" in spec ? spec.ios : spec && spec.default),
 }
 
-module.exports = { Platform }
+/*
+  `StyleSheet.create` 는 컴포넌트가 아니라 **값**이다. RN 도 요즘은 넣은 객체를 그대로
+  돌려주므로 항등 함수면 동작이 같다 — 흉내가 아니라 같은 계약이다. 모듈 최상단에서
+  불리는 함수라, 이게 없으면 스타일을 쓰는 공용 컴포넌트를 **로드만 해도** 죽는다.
+*/
+const StyleSheet = {
+  create: (styles) => styles,
+  absoluteFill: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  get absoluteFillObject() {
+    return this.absoluteFill
+  },
+  hairlineWidth: 1,
+  flatten: (style) =>
+    Array.isArray(style)
+      ? style.flat(Infinity).filter(Boolean).reduce((a, s) => ({ ...a, ...s }), {})
+      : (style ?? {}),
+}
+
+/*
+  엘리먼트의 `type` 자리를 채우는 **표식**이다. 렌더하지 않고 props 만 읽는 테스트
+  (터치 상자 치수 등)를 위해 둔다 — 눌림·접근성 같은 동작은 여기에 없고, 그것을
+  검증하려는 테스트는 렌더러가 필요하다는 뜻이다(머리말).
+*/
+const Pressable = "Pressable"
+const View = "View"
+
+module.exports = { Platform, StyleSheet, Pressable, View }

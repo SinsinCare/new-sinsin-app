@@ -25,6 +25,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { Text, TextInput } from "@/src/shared/components/AppText"
+import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import { FlashList, type FlashListRef } from "@shopify/flash-list"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
@@ -324,15 +325,12 @@ export function CommunitySearchScreen() {
     >
       {/* 헤더 — 뒤로가기 + 검색 인풋 한 줄. */}
       <View style={styles.header}>
-        <Pressable
+        <HeaderIconButton
           onPress={() => router.back()}
-          hitSlop={10}
-          accessibilityRole="button"
           accessibilityLabel={t("action.back")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
           <Ionicons name="chevron-back" size={24} color={surface.textStrong} />
-        </Pressable>
+        </HeaderIconButton>
         <View
           style={[
             styles.searchField,

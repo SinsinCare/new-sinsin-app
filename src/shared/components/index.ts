@@ -1,6 +1,11 @@
 export { GlassmorphicCard } from "./GlassmorphicCard"
 export { ConfirmModal } from "./ConfirmModal"
 export { ScreenHeader } from "./ScreenHeader"
+export {
+  HeaderIconButton,
+  HEADER_TOUCH_SIZE,
+  headerActionRowRoom,
+} from "./HeaderIconButton"
 export { BottomActionBar } from "./BottomActionBar"
 export {
   AppModal,

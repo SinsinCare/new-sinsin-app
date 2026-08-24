@@ -99,6 +99,12 @@ import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Button } from "./V2Button"
 import { useTranslation } from "react-i18next"
 
+/**
+ * 닫힘 신호(`onChange(-1)`)가 유실됐을 때 모달을 강제로 걷는 마감시한.
+ * gorhom 의 닫힘 애니메이션은 길어야 ~350ms 라 정상 경로가 이 값에 닿는 일은 없다.
+ */
+const CLOSE_DEADLINE_MS = 900
+
 export type V2BottomSheetProps = {
   /**
    * 어느 시트인가 (필수). `sheet_opened`/`sheet_dismissed` 는 이름이 하나뿐이라
@@ -326,7 +332,27 @@ export function V2BottomSheet({
     if (!rendered) return
     closingByPropRef.current = true
     sheetRef.current?.close()
-    // `rendered` 는 애니메이션이 끝난 뒤 `onChange(-1)` 에서 내린다(아래).
+
+    /*
+      ── 언마운트를 `onChange(-1)` **하나에만** 걸지 않는다 ────────────────────
+      `rendered` 가 true 인 동안 이 시트는 전면 네이티브 모달(`AppModal`)이다.
+      투명하고 스크림도 사라진 상태라 **화면은 멀쩡해 보이는데 아래의 모든 탭이
+      죽는다.** 그리고 `AppModal` 의 전역 게이트는 "형제 모달이 보이는 동안"
+      다른 모달의 present 를 미루므로, 하나가 이 상태로 굳으면 앱의 모든
+      시트·확인창이 같이 안 뜬다.
+
+      그 하나뿐인 탈출구가 gorhom 의 `onChange(-1)` 이었다. 그런데 그 신호는
+      **안 올 수 있다**: 아직 열린 적이 없어 인덱스가 이미 -1 이면 `close()` 는
+      아무 변화도 만들지 않고(따라서 `onChange` 도 없고), `sheetRef` 가 아직
+      안 붙은 틱에 `visible` 이 꺼지면 `close()` 자체가 no-op 이다.
+
+      그래서 마감시한을 둔다. 정상 경로에서는 항상 `onChange(-1)` 가 먼저 오고,
+      이 타이머는 **굳은 경우에만** 늦게 도착해 모달을 걷어 낸다. 늦게 걷히는
+      시트(최악 애니메이션 한 번 분량)와 앱 전체가 굳는 것 중 어느 쪽이 나은지는
+      비교할 필요가 없다.
+    */
+    const timer = setTimeout(() => setRendered(false), CLOSE_DEADLINE_MS)
+    return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible])
 

@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native"
 import { Text, TextInput } from "@/src/shared/components/AppText"
+import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useNavigation } from "expo-router"
@@ -450,15 +451,12 @@ export default function FreePostEditScreen() {
     >
       {/* 헤더 */}
       <View style={styles.header}>
-        <Pressable
+        <HeaderIconButton
           onPress={handleClose}
-          hitSlop={10}
-          accessibilityRole="button"
           accessibilityLabel={t("action.close")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
           <Ionicons name="close" size={24} color={surface.textStrong} />
-        </Pressable>
+        </HeaderIconButton>
         <SurfacePressable
           onPress={handleSubmit}
           disabled={!canSubmit || isSaving}

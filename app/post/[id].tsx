@@ -52,7 +52,12 @@ import {
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { formatTimeAgo } from "@/src/features/recipe/utils/timeAgo"
 import { rankRelatedPosts } from "@/src/features/recipe/utils/postRanking"
-import { ArticleSkeleton, ErrorMessage } from "@/src/shared/components"
+import {
+  ArticleSkeleton,
+  ErrorMessage,
+  HeaderIconButton,
+  headerActionRowRoom,
+} from "@/src/shared/components"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { resolveError } from "@/src/lib/errorMessage"
 import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
@@ -867,54 +872,45 @@ export default function PostDetailScreen() {
     >
       {/* 앱바 */}
       <View style={styles.appBar}>
-        <Pressable
+        <HeaderIconButton
           onPress={() => router.back()}
-          hitSlop={10}
-          accessibilityRole="button"
           accessibilityLabel={t("action.back")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
           <Ionicons name="chevron-back" size={24} color={surface.textStrong} />
-        </Pressable>
+        </HeaderIconButton>
         <View style={styles.appBarActions}>
-          <Pressable
-            hitSlop={10}
+          <HeaderIconButton
             onPress={handleShare}
-            accessibilityRole="button"
             accessibilityLabel={t("community.postDetail.share")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            visualSize={22}
           >
             <Ionicons name="share-outline" size={22} color={surface.text} />
-          </Pressable>
-          <Pressable
-            hitSlop={10}
+          </HeaderIconButton>
+          <HeaderIconButton
             onPress={() => {
               hapticSelection()
               togglePostBookmark()
             }}
-            accessibilityRole="button"
             accessibilityLabel={t("community.postDetail.bookmark")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            visualSize={22}
           >
             <Ionicons
               name={post.bookmarked ? "bookmark" : "bookmark-outline"}
               size={21}
               color={post.bookmarked ? surface.brand : surface.text}
             />
-          </Pressable>
-          <Pressable
-            hitSlop={10}
+          </HeaderIconButton>
+          <HeaderIconButton
             onPress={handleMorePress}
-            accessibilityRole="button"
             accessibilityLabel={t("community.postDetail.more")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            visualSize={22}
           >
             <Ionicons
               name="ellipsis-horizontal"
               size={22}
               color={surface.text}
             />
-          </Pressable>
+          </HeaderIconButton>
         </View>
       </View>
 
@@ -1426,6 +1422,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
+    /*
+      규격 터치 상자(44/48)가 이 행 **안쪽**에 들어오게 자리를 만든다. 안드로이드는
+      부모 경계 밖 터치를 자식에게 안 준다 — 이게 없으면 상자를 키워도 위아래·좌우로
+      넘친 절반이 죽는다. 행이 차지하는 자리와 아이콘 위치는 그대로다(그 함수 주석).
+    */
+    ...headerActionRowRoom(22),
   },
 
   authorRow: {

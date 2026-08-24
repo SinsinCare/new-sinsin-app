@@ -10,6 +10,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
 import { useSurface } from "@/src/hooks/useSurface"
+import {
+  HeaderIconButton,
+  headerActionRowRoom,
+} from "@/src/shared/components"
 import { useV2Theme } from "@/src/design-system-v2/hooks/useV2Theme"
 import { FreePostTab } from "@/src/features/recipe/components/FreePostTab"
 import { FLOATING_AI_BUTTON_COVERAGE } from "@/src/shared/components/FloatingAiButton"
@@ -90,50 +94,41 @@ export default function CommunityScreen() {
           {t("community.title")}
         </Text>
         <View style={styles.headerActions}>
-          <Pressable
+          <HeaderIconButton
             onPress={() => router.push("/community-library" as Href)}
-            hitSlop={8}
-            accessibilityRole="button"
             accessibilityLabel={t("community.myActivity")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <Ionicons
               name="person-circle-outline"
               size={24}
               color={surface.textMuted}
             />
-          </Pressable>
-          <Pressable
+          </HeaderIconButton>
+          <HeaderIconButton
             onPress={() =>
               router.push({
                 pathname: "/community-library",
                 params: { tab: "bookmarked" },
               } as Href)
             }
-            hitSlop={8}
-            accessibilityRole="button"
             accessibilityLabel={t("community.bookmarks")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <Ionicons
               name="bookmark-outline"
               size={21}
               color={surface.textMuted}
             />
-          </Pressable>
-          <Pressable
+          </HeaderIconButton>
+          <HeaderIconButton
             onPress={() => router.push("/(settings)/announcements" as Href)}
-            hitSlop={8}
-            accessibilityRole="button"
             accessibilityLabel={t("myPage.menu.announcements")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <Ionicons
               name="notifications-outline"
               size={22}
               color={surface.textMuted}
             />
-          </Pressable>
+          </HeaderIconButton>
         </View>
       </View>
 
@@ -195,6 +190,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
+    // 규격 터치 상자가 이 행 안쪽에 들어오도록(안드로이드 부모 경계) — 그 함수 주석.
+    ...headerActionRowRoom(24),
   },
   /*
     화면 제목. 정본 토큰(22/30 Bold)이 손으로 적던 값과 크기·행간이 같다 —
