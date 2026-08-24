@@ -221,6 +221,9 @@ eas build --platform ios --profile development
 # Test backend (설치용 APK 생성)
 eas build --platform android --profile test
 
+# Test backend (Play 내부 테스트용 AAB 생성)
+npm run build:test:android:aab
+
 # Production backend (Play Store internal track)
 eas build --platform android --profile playstore
 

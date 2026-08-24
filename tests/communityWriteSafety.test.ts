@@ -623,6 +623,37 @@ describe("글쓰기 화면", () => {
 
   it("올린 뒤에는 그 글로 데려간다(필터 걸린 피드에 떨구지 않는다)", () => {
     const source = read(EDITOR)
-    expect(source).toContain("router.replace(`/post/${created.id}` as Href)")
+    expect(source).toContain("router.replace(`/post/${createdPostId}` as Href)")
+  })
+
+  /*
+    2026-08-25 회귀. 성공 분기에서 곧장 `router.replace` 를 부르면 초안 가드가
+    그 REPLACE 를 가로채고, 되던진 액션은 `(write)` 스택에 `post/[id]` 가 없어서
+    버려진다 — 폼이 그대로 남고 거기서 한 번 더 누르면 **같은 글이 두 벌** 올라간다
+    (만들기 경로에 멱등키가 없다). 그래서 두 가지를 고정한다.
+  */
+  it("가드를 끈 뒤에 이동한다 — 성공 분기에서 곧장 replace 하지 않는다", () => {
+    const source = read(EDITOR)
+    // 가드는 등록 성공(=id 가 생김) 이후 꺼진다.
+    expect(source).toContain(
+      "usePreventRemove(hasContent && createdPostId === null",
+    )
+    // 이동은 성공 분기가 아니라 그 뒤의 effect 에서.
+    const submitBlock = source.slice(
+      source.indexOf("const handleSubmit"),
+      source.indexOf("submitRef.current = handleSubmit"),
+    )
+    expect(submitBlock).toContain("setCreatedPostId(created.id)")
+    expect(submitBlock).not.toContain("router.replace")
+  })
+
+  it("올라간 폼은 두 번 올라가지 않는다 — 이동을 기다리는 사이의 두 번째 탭을 막는다", () => {
+    const source = read(EDITOR)
+    expect(source).toContain(
+      "if (!canSubmit || isSubmitting || submittedRef.current) return",
+    )
+    expect(source).toContain("submittedRef.current = true")
+    // CTA 도 그 사이에는 눌리지 않는다.
+    expect(source).toContain("disabled={!canSubmit || isSubmitting || submitted}")
   })
 })

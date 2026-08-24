@@ -6,7 +6,10 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin"
 import * as AppleAuthentication from "expo-apple-authentication"
-import { login as kakaoLogin } from "@react-native-kakao/user"
+import {
+  isKakaoTalkLoginAvailable,
+  login as kakaoLogin,
+} from "@react-native-kakao/user"
 import { initializeKakaoSDK, getKeyHashAndroid } from "@react-native-kakao/core"
 import { logger } from "@/src/lib/logger"
 import type { SocialProvider } from "@/src/types"
@@ -14,8 +17,8 @@ import {
   consumeSocialReauthenticationIntent,
   isSocialReauthenticationRequired,
 } from "./authService"
+import { KAKAO_NATIVE_APP_KEY } from "@/src/config/kakaoConfig"
 
-const KAKAO_NATIVE_APP_KEY = "709c22f6c6227095a316851f1f902189"
 const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ||
   "87899379852-pepl4lt3g4k4hunof8h7rvb4hougrskt.apps.googleusercontent.com"
@@ -328,14 +331,38 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
 
   let token
   try {
-    token = await withKakaoReturnDeadline(
-      requiresReauthentication
-        ? kakaoLogin({
-            useKakaoAccountLogin: true,
-            prompts: ["SelectAccount"],
-          })
-        : kakaoLogin(),
-    )
+    if (requiresReauthentication) {
+      token = await withKakaoReturnDeadline(
+        kakaoLogin({
+          useKakaoAccountLogin: true,
+          prompts: ["SelectAccount"],
+        }),
+      )
+    } else {
+      let talkAvailable = false
+      try {
+        talkAvailable = await isKakaoTalkLoginAvailable()
+      } catch (availabilityError) {
+        // native login()도 같은 가용성 판정을 하므로 조회 실패만으로 로그인을 막지 않는다.
+        logger.debug(
+          "[Kakao SignIn] KakaoTalk 가용성 조회 실패",
+          availabilityError,
+        )
+      }
+
+      try {
+        token = await withKakaoReturnDeadline(kakaoLogin())
+      } catch (talkError) {
+        if (!talkAvailable || isUserCancelledError(talkError)) throw talkError
+        logger.debug(
+          "[Kakao SignIn] KakaoTalk 로그인 실패 — Account 로그인으로 1회 전환",
+          { fallback: "account" },
+        )
+        token = await withKakaoReturnDeadline(
+          kakaoLogin({ useKakaoAccountLogin: true }),
+        )
+      }
+    }
     logger.debug("[Kakao SignIn] login 완료", {
       hasAccessToken: !!token.accessToken,
       hasIdToken: !!token.idToken,
@@ -356,13 +383,26 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
     throw e
   }
 
+  const accessToken =
+    typeof token.accessToken === "string" ? token.accessToken.trim() : ""
+  if (!accessToken) {
+    logger.error("[Kakao SignIn] accessToken 없음")
+    throw Object.assign(
+      new Error(
+        "카카오에서 로그인 정보를 받지 못했어요. 다시 로그인해 주세요.",
+      ),
+      { code: "SOCIAL_PROVIDER_TOKEN_MISSING" },
+    )
+  }
+
   if (requiresReauthentication) {
     await consumeSocialReauthenticationIntent()
   }
 
   return {
     provider: "kakao",
-    idToken: token.accessToken,
+    // 백엔드 필드명은 provider 공용 `idToken` 이지만, Kakao 계약은 access token 이다.
+    idToken: accessToken,
     email: null,
     displayName: null,
   }

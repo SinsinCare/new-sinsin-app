@@ -9,11 +9,17 @@ export default function TermsAgreement() {
   const params = useLocalSearchParams<{
     mode?: string | string[]
     socialSignupToken?: string | string[]
+    authAttemptId?: string | string[]
   }>()
   const mode = getParamValue(params.mode) === "social" ? "social" : "email"
   const socialSignupToken = getParamValue(params.socialSignupToken)
+  const authAttemptId = getParamValue(params.authAttemptId)
 
   return (
-    <TermsAgreementScreen mode={mode} socialSignupToken={socialSignupToken} />
+    <TermsAgreementScreen
+      mode={mode}
+      socialSignupToken={socialSignupToken}
+      authAttemptId={authAttemptId}
+    />
   )
 }

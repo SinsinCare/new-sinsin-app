@@ -11,6 +11,7 @@ import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 interface TermsAgreementScreenProps {
   mode?: "email" | "social"
   socialSignupToken?: string
+  authAttemptId?: string
 }
 
 /**
@@ -23,6 +24,7 @@ interface TermsAgreementScreenProps {
 export function TermsAgreementScreen({
   mode = "email",
   socialSignupToken,
+  authAttemptId,
 }: TermsAgreementScreenProps) {
   const { t } = useTranslation("auth")
   const {
@@ -35,7 +37,7 @@ export function TermsAgreementScreen({
     toggleItem,
     handleBack,
     handleNext,
-  } = useTermsAgreement({ mode, socialSignupToken })
+  } = useTermsAgreement({ mode, socialSignupToken, authAttemptId })
   const surface = useAuthSurface()
 
   const openLegalDocument = (documentType: string) => {

@@ -1,4 +1,5 @@
-import axios, { type AxiosInstance, isAxiosError } from "axios"
+import { create, type AxiosInstance, isAxiosError } from "axios"
+import { Platform } from "react-native"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
 import { createSessionExpiredError, refreshAccessToken } from "./authSession"
@@ -6,6 +7,7 @@ import { clearClientSessionOn401 } from "./sessionCleanup"
 import { logger } from "@/src/lib/logger"
 import { reportError } from "../errorService"
 import { getBackendUrl } from "../../config/appConfig"
+import { getMobilePolicyRuntimeInfo } from "../../config/runtimeInfo"
 import { getAppLanguage } from "@/src/i18n"
 
 const BASE_URL = getBackendUrl()
@@ -85,14 +87,14 @@ function getSafeApiMessage(
 }
 
 // 인증 불필요 엔드포인트용 (로그인, 회원가입, OTP 등)
-export const publicApi = axios.create({
+export const publicApi = create({
   baseURL: BASE_URL,
   timeout: API_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 })
 
 // 인증 필요 엔드포인트용
-export const api = axios.create({
+export const api = create({
   baseURL: BASE_URL,
   timeout: API_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
@@ -106,8 +108,36 @@ function addLanguageInterceptor(instance: AxiosInstance) {
   })
 }
 
+let cachedRuntimeHeaders: Readonly<Record<string, string>> | null = null
+
+function getRuntimeHeaders(): Readonly<Record<string, string>> {
+  if (cachedRuntimeHeaders) return cachedRuntimeHeaders
+  const runtime = getMobilePolicyRuntimeInfo()
+  const requestPlatform =
+    Platform.OS === "android" || Platform.OS === "ios" ? Platform.OS : "web"
+  cachedRuntimeHeaders = {
+    "X-App-Version": runtime.appVersion,
+    "X-App-Build": String(runtime.buildNumber),
+    "X-App-Env": runtime.environment,
+    // mobile-policy는 네이티브 두 플랫폼만 다루지만 API client는 Expo web도 돈다.
+    "X-App-Platform": requestPlatform,
+  }
+  return cachedRuntimeHeaders
+}
+
+function addRuntimeInterceptor(instance: AxiosInstance) {
+  instance.interceptors.request.use((config) => {
+    for (const [name, value] of Object.entries(getRuntimeHeaders())) {
+      config.headers[name] = value
+    }
+    return config
+  })
+}
+
 addLanguageInterceptor(publicApi)
 addLanguageInterceptor(api)
+addRuntimeInterceptor(publicApi)
+addRuntimeInterceptor(api)
 
 // isSuccess 체크: HTTP 200이지만 비즈니스 에러인 경우 ApiError throw
 function addIsSuccessInterceptor(instance: AxiosInstance) {

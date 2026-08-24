@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import Toast from "react-native-toast-message"
-import { router } from "expo-router"
+import { router, useFocusEffect } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/src/hooks/useAuth"
 import { presentError } from "@/src/lib/errorMessage"
@@ -23,9 +23,33 @@ export function useSocialLogin() {
   const [withdrawalPending, setWithdrawalPending] =
     useState<WithdrawalPendingResult | null>(null)
   const [isCancellingWithdrawal, setIsCancellingWithdrawal] = useState(false)
+  const socialLoginInFlightRef = useRef(false)
+
+  /*
+    내비게이션이 시도를 가져간 갈래(409 약관 동의 push·이메일 연결 push·세션 적용)는
+    래치를 잠근 채 떠난다 — 그 화면이 흐름을 잇는 동안 뒤늦은 두 번째 탭이 새 시도를
+    겹치지 않게. 그런데 push 는 이 화면을 언마운트하지 않으므로, 사용자가 위 화면에서
+    **뒤로 돌아오면** 잠긴 래치가 그대로 살아 소셜 버튼 전부가 조용히 죽는다
+    (2026-08-25 리뷰 적발: 카카오 신규계정 409 → 약관 → 뒤로 → 어떤 소셜 버튼도
+    무반응, 스피너도 없음, 앱 재시작 전까지 — 사용자가 보고한 "카카오 로그인이 안
+    된다"의 재생산이다).
+
+    이 화면이 내비게이션 포커스를 되찾았다는 것은 위 화면이 흐름을 끝냈거나 사용자가
+    포기했다는 뜻이므로 그 순간 래치를 푼다. 카카오 커스텀 탭·구글 시트가 떠 있는
+    동안은 라우터 포커스가 바뀌지 않으므로(앱 상태만 background) 진행 중인 같은 화면
+    시도를 여기서 풀어 버리는 일은 없다.
+  */
+  useFocusEffect(
+    useCallback(() => {
+      socialLoginInFlightRef.current = false
+    }, []),
+  )
 
   const loginWithProvider = async (provider: SocialProvider) => {
-    if (socialLoading) return
+    // 같은 render에서 잡힌 onPress가 React commit 전에 두 번 호출돼도 한 번만 들어간다.
+    if (socialLoginInFlightRef.current) return
+    socialLoginInFlightRef.current = true
+    let navigationOwnsAttempt = false
 
     setSocialLoading(true)
     setCurrentProvider(provider)
@@ -39,8 +63,15 @@ export function useSocialLogin() {
             mode: "social",
             provider: action.provider,
             socialSignupToken: action.socialSignupToken,
+            ...(action.authAttemptId
+              ? { authAttemptId: action.authAttemptId }
+              : {}),
           },
         })
+        navigationOwnsAttempt = true
+      } else {
+        // 기존 계정 로그인은 useAuth가 이미 세션을 적용해 루트 가드가 화면을 넘긴다.
+        navigationOwnsAttempt = true
       }
     } catch (error) {
       const action = getSocialLoginErrorAction(
@@ -75,7 +106,7 @@ export function useSocialLogin() {
         })
         return
       }
-      if (action.type === "legacy_social_link_required") {
+      if (action.type === "social_link_required") {
         trackAnalyticsEvent("auth_social_login_blocked", {
           provider,
           fail_kind: "link_required",
@@ -85,8 +116,12 @@ export function useSocialLogin() {
           params: {
             provider: action.provider,
             socialLinkToken: action.socialLinkToken,
+            ...(action.authAttemptId
+              ? { authAttemptId: action.authAttemptId }
+              : {}),
           },
         })
+        navigationOwnsAttempt = true
         return
       }
 
@@ -103,6 +138,7 @@ export function useSocialLogin() {
         retry: () => void loginWithProvider(provider),
       })
     } finally {
+      if (!navigationOwnsAttempt) socialLoginInFlightRef.current = false
       setSocialLoading(false)
       setCurrentProvider(null)
     }

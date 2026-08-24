@@ -25,7 +25,12 @@ export function Checkbox({
   const labelColor = isDark ? tokens.color.textDark.val : "#3F444F"
 
   return (
-    <Pressable onPress={onToggle} disabled={disabled}>
+    /*
+      상자는 22pt 라 그대로 두면 손가락 규격(44pt)의 절반이다 — 라벨 없이 상자만
+      쓰는 자리(동의 체크 등)에서는 눌러도 안 눌리는 일이 실제로 났다.
+      `hitSlop` 은 레이아웃을 건드리지 않고 판정 상자만 넓힌다.
+    */
+    <Pressable onPress={onToggle} disabled={disabled} hitSlop={11}>
       <V2HStack align="center" gap={10}>
         {/* 상자는 크기가 prop 으로 오므로 인라인 스타일이다 — 토큰으로 못 접는다. */}
         <View

@@ -24,10 +24,15 @@ import { isMockUser } from "../../config/appConfig"
 import { api, clearClientSession, publicApi, tokenService } from "../core"
 import { isApiErrorLike } from "../core/apiError"
 import { logger } from "@/src/lib/logger"
+import { authAttemptRequestConfig, createAuthAttemptId } from "./authAttemptId"
 
 const SOCIAL_REAUTHENTICATION_INTENT_KEY =
   "@sinsin/next-social-login-reauthentication"
 const SOCIAL_REAUTHENTICATION_INTENT_VALUE = "required"
+const SOCIAL_LINK_REQUIRED_CODES = new Set([
+  "AUTH_ERROR_004",
+  "SOCIAL_EMAIL_NOT_FOUND",
+])
 
 export type AuthSignOutReason = "automatic" | "explicit"
 
@@ -106,6 +111,14 @@ async function persistSessionTokens(result: AuthTokenResult): Promise<void> {
   )
 }
 
+function throwIfRestoreWasCancelled(signal?: AbortSignal): void {
+  if (!signal?.aborted) return
+  throw Object.assign(new Error("session restore was cancelled"), {
+    name: "AbortError",
+    code: "ERR_CANCELED",
+  })
+}
+
 function toAuthSessionResult(
   result: AuthTokenResult,
   fallback: AppUser,
@@ -132,6 +145,7 @@ function getSocialSignupConsentRequiredResult(
   code: string | undefined,
   result: unknown,
   fallbackProvider?: SocialProvider,
+  authAttemptId?: string,
 ): SocialSignupConsentRequiredResult | null {
   if (!code || !SOCIAL_CONSENT_REQUIRED_CODES.has(code)) return null
   if (!result || typeof result !== "object") return null
@@ -155,19 +169,37 @@ function getSocialSignupConsentRequiredResult(
     status: "SOCIAL_CONSENT_REQUIRED",
     provider,
     socialSignupToken: payload.socialSignupToken,
+    ...(authAttemptId ? { authAttemptId } : {}),
   }
 }
 
 function getSocialSignupConsentRequiredFromError(
   error: unknown,
   fallbackProvider?: SocialProvider,
+  authAttemptId?: string,
 ): SocialSignupConsentRequiredResult | null {
   if (!isApiErrorLike(error)) return null
   return getSocialSignupConsentRequiredResult(
     error.code,
     error.result,
     fallbackProvider,
+    authAttemptId,
   )
+}
+
+function attachAuthAttemptIdToSocialLinkError(
+  error: unknown,
+  authAttemptId: string,
+): unknown {
+  if (!isApiErrorLike(error) || !SOCIAL_LINK_REQUIRED_CODES.has(error.code)) {
+    return error
+  }
+  if (!error.result || typeof error.result !== "object") return error
+  error.result = {
+    ...(error.result as Record<string, unknown>),
+    authAttemptId,
+  }
+  return error
 }
 
 function getRealAuthService(): IAuthService {
@@ -178,6 +210,7 @@ function getRealAuthService(): IAuthService {
       email?: string | null,
       displayName?: string | null,
     ) {
+      const authAttemptId = createAuthAttemptId()
       logger.debug("[authService] signInWithSocial 시작", provider, {
         hasIdToken: idToken.length > 0,
       })
@@ -186,12 +219,17 @@ function getRealAuthService(): IAuthService {
       try {
         const response = await publicApi.post<
           ApiResponse<LoginResult | SocialSignupConsentRequiredResult>
-        >("/auth/social-login", { provider, idToken })
+        >(
+          "/auth/social-login",
+          { provider, idToken },
+          authAttemptRequestConfig(authAttemptId),
+        )
         const responseData = response.data
         const consentRequired = getSocialSignupConsentRequiredResult(
           responseData.code,
           responseData.result,
           provider,
+          authAttemptId,
         )
         if (consentRequired) {
           logger.debug("[authService] social signup consent required", provider)
@@ -207,18 +245,23 @@ function getRealAuthService(): IAuthService {
         const consentRequired = getSocialSignupConsentRequiredFromError(
           error,
           provider,
+          authAttemptId,
         )
         if (consentRequired) {
           logger.debug("[authService] social signup consent required", provider)
           return consentRequired
         }
 
+        const correlatedError = attachAuthAttemptIdToSocialLinkError(
+          error,
+          authAttemptId,
+        )
         if (
-          error !== null &&
-          typeof error === "object" &&
-          "isAxiosError" in error
+          correlatedError !== null &&
+          typeof correlatedError === "object" &&
+          "isAxiosError" in correlatedError
         ) {
-          const axErr = error as {
+          const axErr = correlatedError as {
             isAxiosError: boolean
             message: string
             response?: { status: number }
@@ -233,12 +276,15 @@ function getRealAuthService(): IAuthService {
             status: axErr.response?.status,
             hasRequest: !!axErr.request,
           })
-        } else if (error instanceof Error) {
-          logger.debug("[authService] social login 실패", error.message)
+        } else if (correlatedError instanceof Error) {
+          logger.debug(
+            "[authService] social login 실패",
+            correlatedError.message,
+          )
         } else {
           logger.debug("[authService] social login 실패", "unknown error")
         }
-        throw error
+        throw correlatedError
       }
 
       if (!data) {
@@ -281,36 +327,45 @@ function getRealAuthService(): IAuthService {
     async sendSocialLinkEmailCode(
       socialLinkToken: string,
       email: string,
+      authAttemptId?: string,
     ): Promise<void> {
-      await publicApi.post<ApiResponse>("/auth/social-link/email/otp/send", {
-        socialLinkToken,
-        email,
-      })
+      await publicApi.post<ApiResponse>(
+        "/auth/social-link/email/otp/send",
+        { socialLinkToken, email },
+        authAttemptRequestConfig(authAttemptId),
+      )
     },
 
     async verifySocialLinkEmailCode(
       socialLinkToken: string,
       email: string,
       code: string,
+      authAttemptId?: string,
     ) {
       let data: ApiResponse<LoginResult> | null = null
       try {
         const response = await publicApi.post<
           ApiResponse<LoginResult | SocialSignupConsentRequiredResult>
-        >("/auth/social-link/email/otp/verify", {
-          socialLinkToken,
-          email,
-          authKey: code,
-        })
+        >(
+          "/auth/social-link/email/otp/verify",
+          { socialLinkToken, email, authKey: code },
+          authAttemptRequestConfig(authAttemptId),
+        )
         const responseData = response.data
         const consentRequired = getSocialSignupConsentRequiredResult(
           responseData.code,
           responseData.result,
+          undefined,
+          authAttemptId,
         )
         if (consentRequired) return consentRequired
         data = responseData as ApiResponse<LoginResult>
       } catch (error: unknown) {
-        const consentRequired = getSocialSignupConsentRequiredFromError(error)
+        const consentRequired = getSocialSignupConsentRequiredFromError(
+          error,
+          undefined,
+          authAttemptId,
+        )
         if (consentRequired) return consentRequired
         throw error
       }
@@ -404,10 +459,12 @@ function getRealAuthService(): IAuthService {
 
     async completeSocialSignup(
       request: SocialSignupRequest,
+      authAttemptId?: string,
     ): Promise<AuthSessionResult> {
       const { data } = await publicApi.post<ApiResponse<LoginResult>>(
         "/auth/social-signup",
         request,
+        authAttemptRequestConfig(authAttemptId),
       )
 
       await persistSessionTokens(data.result)
@@ -462,23 +519,59 @@ function getRealAuthService(): IAuthService {
       })
     },
 
-    async restoreSession(): Promise<AuthSessionResult | null> {
+    async restoreSession(
+      signal?: AbortSignal,
+    ): Promise<AuthSessionResult | null> {
+      throwIfRestoreWasCancelled(signal)
       const refreshToken = await tokenService.getPersistedRefreshToken()
       if (!refreshToken) return null
 
       try {
+        throwIfRestoreWasCancelled(signal)
+        /*
+          abort 신호를 **와이어에는 걸지 않는다** — 판정은 응답 도착 뒤에 한다.
+
+          이 요청이 서버에 닿는 순간 리프레시 회전은 이미 시작이다: 서버는 단일
+          compare-and-swap 회전이라(sinsin-be-bun auth service — "직전 토큰은 그
+          순간 죽는다", refresh_token 은 사용자당 한 행) 응답을 받든 못 받든 옛
+          토큰은 죽는다. 여기서 연결을 끊으면 새 토큰이 전선 위에서 유실되고,
+          기기에 남는 것은 방금 죽은 옛 토큰뿐이다. 그 상태에서 사용자가 소셜
+          창을 취소하면 finally 가 복구를 재시작 → 401 → 세션 삭제 — "복구 중
+          소셜 버튼을 탭했다가 취소하면 조용히 로그아웃"(2026-08-25 리뷰).
+          dispatch 전 취소는 위 throwIfRestoreWasCancelled 가 이미 막았으므로
+          (회전 시작 전 = 자르기에 안전한 유일한 지점), 여기부터는 정산까지 간다.
+        */
         const { data } = await publicApi.post<ApiResponse<TokenRefreshResult>>(
           "/auth/tokens/refresh",
           { refreshToken },
         )
 
-        await persistSessionTokens(data.result)
+        /*
+          회전된 토큰은 저장에 관한 한 결코 "낡은 값"이 아니다 — abort 됐어도
+          저장한다. abort 가 막아야 하는 것은 **세션 적용**(interactive 로그인과의
+          화면 경합)뿐이므로 취소 판정은 저장 뒤로 미룬다.
+
+          단, 클라이언트 CAS 하나는 지킨다: 이 복구가 떠 있는 동안 interactive
+          로그인이 이미 새 세션을 저장했다면(저장된 리프레시가 이 요청에 쓴 값과
+          다르다) 그쪽이 더 최신이므로 덮어쓰지 않는다 — 서버는 사용자당 한 행이라
+          늦게 온 이 회전분을 얹으면 방금 로그인한 세션을 도로 죽인다.
+        */
+        const storedRefreshToken = await tokenService.getPersistedRefreshToken()
+        if (storedRefreshToken === refreshToken) {
+          await persistSessionTokens(data.result)
+        }
+        throwIfRestoreWasCancelled(signal)
         return toAuthSessionResult(data.result, {
           uid: "restored-user",
           email: null,
           displayName: null,
         })
       } catch (error) {
+        // interactive 소셜 로그인이 이 복구를 중단한 뒤 401/403 응답이 늦게 도착할 수
+        // 있다. 그 응답은 이미 폐기된 시도의 결과이므로, 이전 세션을 지우는 근거로
+        // 쓰면 안 된다. 특히 네이티브 로그인 취소 시에는 보존한 세션을 다시 복구해야
+        // 하므로 abort 판정을 인증 오류 처리보다 반드시 먼저 한다.
+        throwIfRestoreWasCancelled(signal)
         if (
           isApiErrorLike(error) &&
           (error.statusCode === 401 || error.statusCode === 403)
@@ -518,20 +611,29 @@ export const authService: IAuthService = {
     getAuthService().signInWithEmail(email, password),
   signInWithSocial: (provider, idToken, email, displayName) =>
     getAuthService().signInWithSocial(provider, idToken, email, displayName),
-  sendSocialLinkEmailCode: (socialLinkToken, email) =>
-    getAuthService().sendSocialLinkEmailCode(socialLinkToken, email),
-  verifySocialLinkEmailCode: (socialLinkToken, email, code) =>
-    getAuthService().verifySocialLinkEmailCode(socialLinkToken, email, code),
+  sendSocialLinkEmailCode: (socialLinkToken, email, authAttemptId) =>
+    getAuthService().sendSocialLinkEmailCode(
+      socialLinkToken,
+      email,
+      authAttemptId,
+    ),
+  verifySocialLinkEmailCode: (socialLinkToken, email, code, authAttemptId) =>
+    getAuthService().verifySocialLinkEmailCode(
+      socialLinkToken,
+      email,
+      code,
+      authAttemptId,
+    ),
   completeEmailLoginLink: (emailLinkToken, password) =>
     getAuthService().completeEmailLoginLink(emailLinkToken, password),
   completeProfile: (request) => getAuthService().completeProfile(request),
   getProfile: () => getAuthService().getProfile(),
   signup: (request) => getAuthService().signup(request),
-  completeSocialSignup: (request) =>
-    getAuthService().completeSocialSignup(request),
+  completeSocialSignup: (request, authAttemptId) =>
+    getAuthService().completeSocialSignup(request, authAttemptId),
   cancelWithdrawal: (cancelToken) =>
     getAuthService().cancelWithdrawal(cancelToken),
   signOut: () => getAuthService().signOut(),
   promoteSession: () => getAuthService().promoteSession(),
-  restoreSession: () => getAuthService().restoreSession(),
+  restoreSession: (signal) => getAuthService().restoreSession(signal),
 }

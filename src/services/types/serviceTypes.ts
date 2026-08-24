@@ -37,11 +37,16 @@ export interface IAuthService {
     email?: string | null,
     displayName?: string | null,
   ): Promise<SocialAuthSessionResult>
-  sendSocialLinkEmailCode(socialLinkToken: string, email: string): Promise<void>
+  sendSocialLinkEmailCode(
+    socialLinkToken: string,
+    email: string,
+    authAttemptId?: string,
+  ): Promise<void>
   verifySocialLinkEmailCode(
     socialLinkToken: string,
     email: string,
     code: string,
+    authAttemptId?: string,
   ): Promise<SocialAuthSessionResult>
   completeEmailLoginLink(
     emailLinkToken: string,
@@ -50,9 +55,12 @@ export interface IAuthService {
   completeProfile(request: ProfileCompleteRequest): Promise<AuthSessionResult>
   getProfile(): Promise<AuthProfile>
   signup(request: SignupRequest): Promise<AuthSessionResult>
-  completeSocialSignup(request: SocialSignupRequest): Promise<AuthSessionResult>
+  completeSocialSignup(
+    request: SocialSignupRequest,
+    authAttemptId?: string,
+  ): Promise<AuthSessionResult>
   cancelWithdrawal(cancelToken: string): Promise<AuthSessionResult>
   signOut(): Promise<void>
   promoteSession(): Promise<AuthSessionResult>
-  restoreSession(): Promise<AuthSessionResult | null>
+  restoreSession(signal?: AbortSignal): Promise<AuthSessionResult | null>
 }

@@ -22,6 +22,7 @@
     "build:test": "npm run build:test:android && npm run build:test:ios",
     "build:test:ios": "eas build --platform ios --profile ios-testflight-test",
     "build:test:android": "eas build --platform android --profile test",
+    "build:test:android:aab": "eas build --platform android --profile test-aab",
     "check:release-config": "node scripts/check-release-config.js",
     "build:prod": "npm run check:release-config -- --profile production && eas build --platform all --profile production",
     "build:prod:ios": "npm run check:release-config -- --profile testflight && eas build --platform ios --profile testflight",

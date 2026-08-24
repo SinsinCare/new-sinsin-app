@@ -18,6 +18,7 @@ import type {
   SocialProvider,
   SocialSignupConsentRequiredResult,
 } from "@/src/types"
+import { normalizeAuthAttemptId } from "@/src/services/auth/authAttemptId"
 
 const TIMER_DURATION = 180
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -50,9 +51,10 @@ function isSocialSignupConsentRequiredResult(
  */
 export function SocialLinkEmailScreen() {
   const { t } = useTranslation("auth")
-  const { provider, socialLinkToken } = useLocalSearchParams<{
+  const { provider, socialLinkToken, authAttemptId } = useLocalSearchParams<{
     provider?: string
     socialLinkToken?: string
+    authAttemptId?: string
   }>()
   const { sendSocialLinkEmailCode, verifySocialLinkEmailCode } = useAuth()
   const surface = useAuthSurface()
@@ -65,12 +67,15 @@ export function SocialLinkEmailScreen() {
   const [verifyingCode, setVerifyingCode] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const attemptRef = useRef(0)
+  const sendCodeInFlightRef = useRef(false)
+  const verifyCodeInFlightRef = useRef(false)
 
   const providerValue = isSocialProvider(provider) ? provider : null
   const tokenValue =
     typeof socialLinkToken === "string" && socialLinkToken.length > 0
       ? socialLinkToken
       : null
+  const attemptIdValue = normalizeAuthAttemptId(authAttemptId)
   const providerLabels: Record<SocialProvider, string> = {
     google: t("social.providerGoogle"),
     apple: t("social.providerApple"),
@@ -116,12 +121,23 @@ export function SocialLinkEmailScreen() {
   }
 
   const handleSendCode = async () => {
-    if (!tokenValue) return
+    if (
+      !tokenValue ||
+      sendCodeInFlightRef.current ||
+      verifyCodeInFlightRef.current
+    ) {
+      return
+    }
+    sendCodeInFlightRef.current = true
     Keyboard.dismiss()
     setSendingCode(true)
     setSendError(null)
     try {
-      await sendSocialLinkEmailCode(tokenValue, getValues("email"))
+      await sendSocialLinkEmailCode(
+        tokenValue,
+        getValues("email"),
+        attemptIdValue,
+      )
       attemptRef.current += 1
       trackAnalyticsEvent("auth_code_requested", {
         source: "social_link",
@@ -134,12 +150,21 @@ export function SocialLinkEmailScreen() {
       if (!codeSent) setCodeInputVisible(false)
       setSendError(presentAuthFailure(error, { scope: "social-link-send" }))
     } finally {
+      sendCodeInFlightRef.current = false
       setSendingCode(false)
     }
   }
 
   const handleVerifyCode = async () => {
-    if (!tokenValue) return
+    if (
+      !tokenValue ||
+      verifyCodeInFlightRef.current ||
+      sendCodeInFlightRef.current
+    ) {
+      return
+    }
+    verifyCodeInFlightRef.current = true
+    let verificationCompleted = false
     Keyboard.dismiss()
     setVerifyingCode(true)
     setSendError(null)
@@ -148,7 +173,11 @@ export function SocialLinkEmailScreen() {
         tokenValue,
         getValues("email"),
         getValues("code"),
+        attemptIdValue,
       )
+      // 성공한 OTP/socialLinkToken은 재사용하지 않는다. 화면 전환 직전 같은 handler가
+      // 다시 호출돼도 검증 요청은 한 번뿐이어야 한다.
+      verificationCompleted = true
       /* 인증이 통과한 순간이 이 곁길의 완주다. 그 뒤 갈 곳이 약관 화면(신규 소셜
          가입으로 이어지는 경우)이든 계정 상태에 맞는 화면이든 **연결 자체는 끝났다** —
          두 갈래를 나누면 같은 성공이 두 숫자로 갈린다. */
@@ -162,6 +191,9 @@ export function SocialLinkEmailScreen() {
             mode: "social",
             provider: result.provider,
             socialSignupToken: result.socialSignupToken,
+            ...(result.authAttemptId
+              ? { authAttemptId: result.authAttemptId }
+              : {}),
           },
         })
         return
@@ -184,6 +216,7 @@ export function SocialLinkEmailScreen() {
       })
       setSendError(presentAuthFailure(error, { scope: "social-link-verify" }))
     } finally {
+      if (!verificationCompleted) verifyCodeInFlightRef.current = false
       setVerifyingCode(false)
     }
   }
@@ -289,7 +322,7 @@ export function SocialLinkEmailScreen() {
                 ) : null}
                 <ResendCodeLink
                   onPress={handleSendCode}
-                  disabled={sendingCode}
+                  disabled={sendingCode || verifyingCode}
                 />
               </View>
             )}

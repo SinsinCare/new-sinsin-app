@@ -14,6 +14,7 @@ const mockConsumeSocialReauthenticationIntent = jest.fn(async () => {
   mockReauthenticationRequired = false
 })
 const mockKakaoLogin = jest.fn()
+const mockIsKakaoTalkLoginAvailable = jest.fn()
 const mockAppleSignIn = jest.fn()
 
 jest.mock("@react-native-google-signin/google-signin", () => ({
@@ -54,6 +55,7 @@ jest.mock("expo-apple-authentication", () => ({
 }))
 
 jest.mock("@react-native-kakao/user", () => ({
+  isKakaoTalkLoginAvailable: mockIsKakaoTalkLoginAvailable,
   login: mockKakaoLogin,
 }))
 
@@ -108,6 +110,7 @@ describe("socialAuthService", () => {
       tokenType: "bearer",
       scopes: [],
     })
+    mockIsKakaoTalkLoginAvailable.mockResolvedValue(false)
     mockAppleSignIn.mockResolvedValue({
       identityToken: "apple-identity-token",
       email: null,
@@ -189,6 +192,54 @@ describe("socialAuthService", () => {
     expect(mockGoogleSignin.signOut).not.toHaveBeenCalled()
     expect(mockAppleSignIn).not.toHaveBeenCalled()
     expect(mockConsumeSocialReauthenticationIntent).toHaveBeenCalledTimes(1)
+  })
+
+  it("rejects an empty Kakao access token before consuming reauthentication intent", async () => {
+    mockReauthenticationRequired = true
+    mockKakaoLogin.mockResolvedValueOnce({
+      accessToken: "   ",
+      idToken: null,
+      scopes: [],
+    })
+
+    await expect(signInWithKakao()).rejects.toMatchObject({
+      code: "SOCIAL_PROVIDER_TOKEN_MISSING",
+    })
+
+    expect(mockConsumeSocialReauthenticationIntent).not.toHaveBeenCalled()
+    expect(logger.error).toHaveBeenCalledWith("[Kakao SignIn] accessToken 없음")
+  })
+
+  it("falls back once from KakaoTalk failure to Kakao Account login", async () => {
+    mockIsKakaoTalkLoginAvailable.mockResolvedValueOnce(true)
+    mockKakaoLogin
+      .mockRejectedValueOnce(
+        Object.assign(new Error("talk failed"), { code: "TalkError" }),
+      )
+      .mockResolvedValueOnce({
+        accessToken: "account-access-token",
+        idToken: null,
+        scopes: [],
+      })
+
+    await expect(signInWithKakao()).resolves.toMatchObject({
+      provider: "kakao",
+      idToken: "account-access-token",
+    })
+    expect(mockKakaoLogin).toHaveBeenNthCalledWith(1)
+    expect(mockKakaoLogin).toHaveBeenNthCalledWith(2, {
+      useKakaoAccountLogin: true,
+    })
+  })
+
+  it("does not turn KakaoTalk cancellation into an Account-login prompt", async () => {
+    mockIsKakaoTalkLoginAvailable.mockResolvedValueOnce(true)
+    mockKakaoLogin.mockRejectedValueOnce(
+      Object.assign(new Error("cancelled"), { code: "Cancelled" }),
+    )
+
+    await expect(signInWithKakao()).rejects.toMatchObject({ code: "Cancelled" })
+    expect(mockKakaoLogin).toHaveBeenCalledTimes(1)
   })
 
   describe("카카오 복귀 마감시한 — 인증 화면에서 그냥 돌아오면 취소다", () => {

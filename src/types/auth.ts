@@ -117,12 +117,16 @@ export interface ProfileCompleteResult {
 export interface SocialLinkRequiredResult {
   provider: SocialProvider
   socialLinkToken: string
+  /** 소셜 로그인부터 이메일 OTP와 약관 제출까지 잇는 비식별 correlation id. */
+  authAttemptId?: string
 }
 
 export interface SocialSignupConsentRequiredResult {
   status: "SOCIAL_CONSENT_REQUIRED"
   provider: SocialProvider
   socialSignupToken: string
+  /** 서버 토큰이 아닌 비식별 요청 correlation id. social-signup 로그까지만 이어 간다. */
+  authAttemptId?: string
 }
 
 export interface SocialSignupRequest {

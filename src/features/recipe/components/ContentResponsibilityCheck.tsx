@@ -31,15 +31,36 @@ export function ContentResponsibilityCheck({
   }
 
   return (
-    <V2HStack align="flex-start" gap={10} padding={14} style={{ borderRadius: 8, borderWidth: 1, borderColor: BOX_BORDER[scheme], backgroundColor: BOX_BG[scheme], opacity: disabled ? 0.6 : 1 }}>
+    <V2HStack
+      align="center"
+      gap={10}
+      paddingHorizontal={14}
+      paddingVertical={8}
+      style={{
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: BOX_BORDER[scheme],
+        backgroundColor: BOX_BG[scheme],
+        opacity: disabled ? 0.6 : 1,
+      }}
+    >
       <Checkbox
         checked={value}
         onToggle={toggle}
         size={22}
         disabled={disabled}
       />
-      <Pressable onPress={toggle} disabled={disabled} style={{ flex: 1 }}>
-        <V2Text color={TEXT_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 19, fontWeight: "400" }}>
+      {/* 문구도 함께 눌린다 — 상자 하나만 노리게 하면 손가락 규격에 못 미친다. */}
+      <Pressable
+        onPress={toggle}
+        disabled={disabled}
+        style={{ flex: 1, paddingVertical: 8 }}
+      >
+        <V2Text
+          color={TEXT_COLOR[scheme]}
+          lineBreakStrategyIOS="hangul-word"
+          style={{ fontSize: 13, lineHeight: 19, fontWeight: "400" }}
+        >
           {t("responsibility")}
         </V2Text>
       </Pressable>

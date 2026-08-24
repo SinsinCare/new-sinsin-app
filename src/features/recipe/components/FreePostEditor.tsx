@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { usePreventRemove } from "@react-navigation/native"
 import { useNavigation } from "expo-router"
 import {
@@ -25,6 +25,7 @@ import {
 } from "react-native-keyboard-controller"
 
 import { useSurface } from "@/src/hooks/useSurface"
+import { useSuppressGlobalKeyboardToolbar } from "@/src/stores/keyboardToolbarStore"
 import { hapticSelection } from "@/src/lib/haptics"
 import { Icon } from "@/src/shared/components/Icon"
 import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
@@ -92,6 +93,13 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const surface = useSurface()
   const bottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 24) : insets.bottom
+  /*
+    이 화면은 사진·투표·키보드 내리기·등록을 **자기 도크**로 키보드 위에 세운다.
+    전역 툴바까지 뜨면 바가 두 겹이 되고 키보드를 내리는 버튼이 두 개가 된다
+    (그 스토어 머리말). 도크가 탈출구(자판 아이콘)를 들고 있으므로 끌 자격이 있다.
+  */
+  useSuppressGlobalKeyboardToolbar()
+  const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
 
   const [selectedCategory, setSelectedCategory] = useState(
     FREE_POST_CATEGORIES[0].key,
@@ -107,6 +115,11 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [editingVoteIndex, setEditingVoteIndex] = useState<number | null>(null)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  /** 등록에 성공한 글의 id. 세워지면 가드가 꺼지고 그 글로 이동한다. */
+  const [createdPostId, setCreatedPostId] = useState<string | null>(null)
+  const submittedRef = useRef(false)
+  /** 하단 도크의 실측 높이 — 스크롤이 입력을 도크 위로 올릴 때 쓴다. */
+  const [dockHeight, setDockHeight] = useState(0)
   const [submitStatus, setSubmitStatus] = useState<string | null>(null)
   const [responsibilityAgreed, setResponsibilityAgreed] = useState(false)
   const router = useAppRouter()
@@ -141,6 +154,8 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
 
   const canSubmit =
     title.trim().length > 0 && body.trim().length > 0 && responsibilityAgreed
+  /** 이미 올라간 폼. 이동을 기다리는 동안 CTA·동의를 다시 만지지 못하게 한다. */
+  const submitted = createdPostId !== null
 
   const handleOpenCategorySheet = () => {
     Keyboard.dismiss()
@@ -176,18 +191,29 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
 
     ── `allowExitRef` — 화면 **스스로** 나가는 길은 통과시킨다 ──────────────────
     가드는 이탈의 **출처를 가리지 않는다.** 하드웨어 백뿐 아니라 확인창의 "나가기" 가
-    부르는 `onClose()`(= `router.back()`)와 등록 성공 뒤의 `router.replace` 도 같이
-    잡힌다 — 초안은 그때도 그대로 있기 때문이다. 그대로 두면 확인창이 되뜨거나(가둠),
-    글을 올리고 나서 "쓰던 걸 두고 나갈까요" 를 보게 된다.
+    부르는 `onClose()`(= `router.back()`)도 같이 잡힌다 — 초안은 그때도 그대로 있기
+    때문이다. 그대로 두면 확인창이 되뜬다(가둠).
 
     그래서 나가기로 **결정한** 순간 이 깃발을 세우고, 가드는 잡아 둔 그 동작을 그대로
     다시 던진다. 다시 던진 동작은 이미 이 화면을 지나온 것으로 표시돼 있어
     (react-navigation 의 `shouldPreventRemove`) 두 번 잡히지 않는다 — 공식 문서의
     `navigation.dispatch(data.action)` 처방이 이것이다.
+
+    ── 되던지기로 **안 되는** 경우: 등록 성공 뒤의 `router.replace` ─────────────
+    그 처방은 **같은 네비게이터가 처리할 수 있는 동작**일 때만 성립한다. 뒤로가기는
+    이 스택이 처리하지만, `post/[id]` 로의 REPLACE 는 `(write)` 스택에 그 라우트가
+    없어서 되던지는 순간 갈 곳을 잃고 조용히 버려진다(2026-08-25 실측: 등록은 됐는데
+    폼이 그대로 남았고, 거기서 한 번 더 누르니 같은 글이 한 벌 더 올라갔다).
+    그 길은 되던지지 않고 **가드를 끈 다음 렌더에서** 이동한다 — 아래 `createPostId`.
   */
   const navigation = useNavigation()
   const allowExitRef = useRef(false)
-  usePreventRemove(hasContent, ({ data }) => {
+  /*
+    등록에 성공한 뒤에는 가드를 **아예 끈다**(되던지기에 기대지 않는다 —
+    `handleSubmit` 성공 분기 머리말). 초안은 그대로지만 이미 서버에 올라갔으므로
+    두고 나갈 것이 없다.
+  */
+  usePreventRemove(hasContent && createdPostId === null, ({ data }) => {
     if (allowExitRef.current) {
       navigation.dispatch(data.action)
       return
@@ -195,6 +221,12 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     Keyboard.dismiss()
     setConfirmExitVisible(true)
   })
+
+  /* 가드가 꺼진 렌더에서 올린 글로 이동한다. */
+  useEffect(() => {
+    if (createdPostId === null) return
+    router.replace(`/post/${createdPostId}` as Href)
+  }, [createdPostId, router])
 
   const handlePickImages = async () => {
     Keyboard.dismiss()
@@ -248,7 +280,10 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   }
 
   const handleSubmit = async () => {
-    if (!canSubmit || isSubmitting) return
+    // 한 번 올라간 폼은 두 번 올라가지 않는다 — 성공 뒤 이동까지의 한 프레임 동안
+    // `isSubmitting` 은 이미 false 다(아래 `finally`). 만들기 경로에 멱등키가 없어서
+    // 그 틈의 두 번째 탭이 **두 번째 글**이 된다.
+    if (!canSubmit || isSubmitting || submittedRef.current) return
     setIsSubmitting(true)
     /*
       만들기 요청이 **나갔는가.** 나가기 전(사진 업로드 중)의 실패는 서버에 글이 없으니
@@ -306,8 +341,23 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         일이 없다.
       */
       // 등록에 성공했으면 두고 나갈 초안이 아니다 — 초안 가드를 통과시킨다(위 머리말).
+      /*
+        **이동은 여기서 하지 않는다.** 가드(`usePreventRemove`)가 켜져 있는 동안의
+        `router.replace` 는 `beforeRemove` 에 잡히고, 가드가 되던지는 REPLACE 는
+        원래 dispatch 가 겨눴던 네비게이터를 잃는다 — `(write)` 스택에는
+        `post/[id]` 라우트가 없어서 그 액션이 **조용히 버려진다.**
+        결과는 "등록은 됐는데 폼이 그대로" 이고, 그 화면에서 한 번 더 누르면
+        **같은 글이 한 벌 더** 올라간다(만들기 경로에 멱등키가 없다).
+        2026-08-25 실측: 테스트 서버에 같은 글이 두 벌 생겼다.
+
+        그래서 성공을 상태로만 남기고, 가드가 꺼진 **다음 렌더**에서 이동한다
+        (아래 `useEffect`). `usePreventRemove` 의 리스너는 최신 렌더의
+        `preventRemove` 를 읽으므로(`useLatestCallback`) 그 시점의 replace 는
+        가로채이지 않고 그대로 나간다.
+      */
+      submittedRef.current = true
       allowExitRef.current = true
-      router.replace(`/post/${created.id}` as Href)
+      setCreatedPostId(created.id)
     } catch (error) {
       /*
         여기서 가장 흔한 실패는 글이 아니라 **사진**이다 — 5MB 초과(`FOOD_CAMERA_002`),
@@ -371,14 +421,19 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* 제목·본문 */}
+      {/*
+        제목·본문.
+        `bottomOffset` = 포커스된 입력과 키보드 사이에 둘 여유 = **도크 높이**.
+        상수로 적으면 동의 문구가 두 줄로 접히는 기기에서 그만큼 어긋나므로
+        실제로 잰 값(`dockHeight`)을 쓰고, 아직 못 쟀으면 예전 값으로 시작한다.
+      */}
       <View style={styles.flex}>
         <KeyboardAwareScrollView
           bounces={false}
           overScrollMode="never"
           style={styles.flex}
           contentContainerStyle={styles.editorContent}
-          bottomOffset={bottomInset + 72}
+          bottomOffset={dockHeight > 0 ? dockHeight : bottomInset + 72}
           disableScrollOnKeyboardHide
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={
@@ -519,91 +574,113 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
                 />
               </View>
             ))}
+          </View>
+        </KeyboardAwareScrollView>
+
+        {/*
+          ── 하단 도크 ────────────────────────────────────────────────────────
+          툴바·동의·등록을 **한 덩어리**로 올린다. 셋이 따로 놀면 키보드 위에
+          면이 여러 겹으로 쌓이고, 그 사이의 죽은 여백(툴바 pb 8 + 등록바 pt 4)이
+          "왜 여기가 비어 있지" 로 보인다. 배경·해어라인은 도크가 한 번만 그린다.
+
+          **동의 체크가 여기 있는 이유**: 이것이 등록 CTA 의 게이트인데
+          (`canSubmit`) 스크롤 맨 아래에 있어서, 제목·본문을 다 쓴 사람이
+          "등록이 왜 회색이지" 를 알 방법이 없었다 — 키보드가 올라오면 더더욱
+          안 보인다. 판정과 그 이유는 같은 자리에 있어야 한다.
+
+          **이동은 KeyboardStickyView, 여백은 padding.** offset(=transform)으로
+          여백 차이를 상쇄하면 그려지는 자리와 눌리는 자리가 어긋난다
+          (`AuthKeyboardFooter` 머리말 — CTA 아래쪽이 먹통이던 그 버그).
+          그래서 offset 은 0 으로 두고 아래 인셋만 padding 으로 걷는다.
+        */}
+        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+          <View
+            onLayout={(event) => setDockHeight(event.nativeEvent.layout.height)}
+            style={[
+              styles.dock,
+              {
+                borderTopColor: surface.hairline,
+                backgroundColor: surface.canvas,
+              },
+            ]}
+          >
+            {/* 툴바 */}
+            <View style={styles.toolbar}>
+              <View style={styles.toolbarActions}>
+                <Pressable
+                  onPress={handlePickImages}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("action.addPhoto")}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                >
+                  <Ionicons
+                    name="image-outline"
+                    size={23}
+                    color={toolbarIconColor}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={handleOpenVoteSheet}
+                  disabled={votes.length >= 1}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("freePost.attachPoll")}
+                  style={({ pressed }) => ({
+                    opacity: votes.length >= 1 ? 0.3 : pressed ? 0.6 : 1,
+                  })}
+                >
+                  <Ionicons
+                    name="podium-outline"
+                    size={22}
+                    color={toolbarIconColor}
+                  />
+                </Pressable>
+              </View>
+              <KeyboardDismissButton color={toolbarIconColor} />
+            </View>
 
             <View style={styles.responsibilityWrap}>
               <ContentResponsibilityCheck
                 value={responsibilityAgreed}
                 onChange={setResponsibilityAgreed}
-                disabled={isSubmitting}
+                disabled={isSubmitting || submitted}
               />
             </View>
-          </View>
-        </KeyboardAwareScrollView>
 
-        <KeyboardStickyView offset={{ closed: 0, opened: bottomInset }}>
-          {/* 툴바 */}
-          <View
-            style={[
-              styles.toolbar,
-              {
-                borderTopColor: surface.hairline,
-                backgroundColor: surface.canvas,
-                paddingBottom: 8,
-              },
-            ]}
-          >
-            <View style={styles.toolbarActions}>
-              <Pressable
-                onPress={handlePickImages}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t("action.addPhoto")}
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-              >
-                <Ionicons
-                  name="image-outline"
-                  size={23}
-                  color={toolbarIconColor}
-                />
-              </Pressable>
-              <Pressable
-                onPress={handleOpenVoteSheet}
-                disabled={votes.length >= 1}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t("freePost.attachPoll")}
-                style={({ pressed }) => ({
-                  opacity: votes.length >= 1 ? 0.3 : pressed ? 0.6 : 1,
-                })}
-              >
-                <Ionicons
-                  name="podium-outline"
-                  size={22}
-                  color={toolbarIconColor}
-                />
-              </Pressable>
-            </View>
-            <KeyboardDismissButton color={toolbarIconColor} />
-          </View>
-          <View
-            style={[
-              styles.submitBar,
-              {
-                backgroundColor: surface.canvas,
-                paddingBottom: 14 + bottomInset,
-              },
-            ]}
-          >
-            <SurfacePressable
-              onPress={handleSubmit}
-              disabled={!canSubmit || isSubmitting}
-              accessibilityState={{ disabled: !canSubmit || isSubmitting }}
-              baseColor={canSubmit ? surface.brand : surface.ctaOffBg}
-              pressedColor={canSubmit ? surface.brand : surface.ctaOffBg}
-              pressScale={0.98}
-              style={styles.submitFull}
+            <View
+              style={[
+                styles.submitBar,
+                {
+                  // 키보드가 떠 있으면 그것이 이미 홈 인디케이터를 덮는다 —
+                  // 안전영역을 한 번 더 걷으면 CTA 와 자판 사이가 벌어진다.
+                  paddingBottom: isKeyboardVisible ? 12 : 14 + bottomInset,
+                },
+              ]}
             >
-              <Text
-                style={[
-                  styles.submitLabel,
-                  { color: canSubmit ? surface.onBrand : surface.ctaOffText },
-                ]}
+              <SurfacePressable
+                onPress={handleSubmit}
+                disabled={!canSubmit || isSubmitting || submitted}
+                accessibilityState={{
+                  disabled: !canSubmit || isSubmitting || submitted,
+                }}
+                baseColor={canSubmit ? surface.brand : surface.ctaOffBg}
+                pressedColor={canSubmit ? surface.brand : surface.ctaOffBg}
+                pressScale={0.98}
+                style={styles.submitFull}
               >
-                {isSubmitting
-                  ? (submitStatus ?? t("action.uploading"))
-                  : t("freePost.register")}
-              </Text>
-            </SurfacePressable>
+                <Text
+                  style={[
+                    styles.submitLabel,
+                    { color: canSubmit ? surface.onBrand : surface.ctaOffText },
+                  ]}
+                >
+                  {isSubmitting
+                    ? (submitStatus ?? t("action.uploading"))
+                    : t("freePost.register")}
+                </Text>
+              </SurfacePressable>
+            </View>
           </View>
         </KeyboardStickyView>
       </View>
@@ -799,19 +876,20 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontFamily: "Pretendard-Regular",
   },
-  responsibilityWrap: {
-    paddingBottom: 4,
-  },
   voteAttachWrap: {
     marginBottom: 2,
   },
 
+  /* 도크 — 면과 해어라인은 여기서 한 번만. 안쪽 줄들은 여백만 갖는다. */
+  dock: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   toolbar: {
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 12,
+    paddingBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   toolbarActions: {
     flex: 1,
@@ -819,9 +897,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 22,
   },
+  responsibilityWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
   submitBar: {
     paddingHorizontal: 20,
-    paddingTop: 4,
   },
   submitFull: {
     height: 54,

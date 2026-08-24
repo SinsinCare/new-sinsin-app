@@ -63,6 +63,7 @@ Build commands:
 npm run build:test         # EAS test build, all platforms, test backend
 npm run build:test:ios     # EAS test build, iOS only
 npm run build:test:android # EAS test build, Android APK
+npm run build:test:android:aab # EAS test build, Play internal-test AAB
 npm run build:prod         # EAS production build, all platforms, production backend
 npm run build:prod:ios     # EAS production build, iOS only
 npm run build:prod:android # EAS production build, Android only

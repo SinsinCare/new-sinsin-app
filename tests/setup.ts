@@ -5,7 +5,9 @@ jest.mock("expo-localization", () => ({
   getLocales: () => [{ languageCode: "ko", languageTag: "ko-KR" }],
 }))
 jest.mock("@react-native-async-storage/async-storage", () =>
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
+  jest.requireActual(
+    "@react-native-async-storage/async-storage/jest/async-storage-mock",
+  ),
 )
 
 // 프로젝트 루트 .env (EXPO_PUBLIC_BACKEND_URL 등)
@@ -43,6 +45,12 @@ jest.mock("expo-constants", () => ({
   default: { expoConfig: { version: "0.0.0-test" } },
 }))
 
+jest.mock("expo-application", () => ({
+  __esModule: true,
+  nativeApplicationVersion: "0.0.0-test",
+  nativeBuildVersion: "84",
+}))
+
 /*
   `expo-router` 는 변환되지 않은 JSX 를 담고 있다. 분석 배럴(`features/analytics/index.ts`)이
   `useAnalyticsLifecycle` 을 통해 이걸 재수출하므로, **배럴을 쓰는 모듈은 전부** 여기 걸린다.
@@ -61,4 +69,19 @@ jest.mock("expo-router", () => ({
   useSegments: () => [],
   useNavigation: () => ({ addListener: () => () => {} }),
   useLocalSearchParams: () => ({}),
+  /*
+    렌더러가 없으니 포커스 전이를 흉내낼 수 없다 — 실물 의미에 맞게 "같은 콜백은
+    한 번만" 부른다(실물도 재렌더에는 다시 부르지 않고 포커스 전이에만 부른다.
+    하네스의 useCallback 이 의존성을 존중하므로 콜백 정체성이 그 구분을 대신한다).
+    재포커스 전이 자체를 재야 하는 테스트는 이 목을 스위트 안에서 덮어써서 콜백을
+    손에 쥐고 직접 부른다(tests/socialLoginRefocusRelease.test.ts).
+  */
+  useFocusEffect: (() => {
+    const seen = new WeakSet<object>()
+    return (callback: () => undefined | (() => void)) => {
+      if (seen.has(callback)) return
+      seen.add(callback)
+      callback()
+    }
+  })(),
 }))

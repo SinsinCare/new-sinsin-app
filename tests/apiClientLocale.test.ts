@@ -1,6 +1,6 @@
 /* eslint-disable import/first */
 jest.mock("../src/config/appConfig", () => ({
-  getBackendUrl: () => "https://backend.test/api/v1",
+  getBackendUrl: () => "https://backend-test.example/api/v1",
 }))
 
 jest.mock("../src/services/core/tokenService", () => ({
@@ -62,5 +62,16 @@ describe("shared API client locale header", () => {
     expect(
       publicRequests.map((request) => request.headers.get("Accept-Language")),
     ).toEqual(["en-US", "ko-KR"])
+  })
+
+  it("attaches non-sensitive build identity to every API request", async () => {
+    await Promise.all([api.get("/user/profile"), publicApi.get("/auth/check")])
+
+    for (const request of [protectedRequests[0], publicRequests[0]]) {
+      expect(request?.headers.get("X-App-Version")).toBe("0.0.0-test")
+      expect(request?.headers.get("X-App-Build")).toBe("84")
+      expect(request?.headers.get("X-App-Env")).toBe("test")
+      expect(request?.headers.get("X-App-Platform")).toBe("ios")
+    }
   })
 })

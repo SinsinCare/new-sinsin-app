@@ -8,7 +8,7 @@ const isCancelled = (error: unknown) =>
   error instanceof Error && error.message === "cancelled"
 
 describe("social login flow", () => {
-  it("prioritizes provider-email guidance over a legacy social-link token", () => {
+  it("uses a valid social-link token before provider-email guidance", () => {
     const error = new ApiError(
       "provider email required",
       "AUTH_ERROR_004",
@@ -19,15 +19,36 @@ describe("social login flow", () => {
         reason: "PROVIDER_EMAIL_REQUIRED",
         providerEmailRequired: true,
         provider: "google",
-        socialLinkToken: "legacy-token",
+        socialLinkToken: "recovery-token",
       },
     )
 
     expect(getSocialLoginErrorAction(error, "google", isCancelled)).toEqual({
-      type: "provider_email_required",
+      type: "social_link_required",
       provider: "google",
-      title: "Google에서 이메일을 받지 못했어요",
-      message: expect.stringContaining("이메일 공유를 허용"),
+      socialLinkToken: "recovery-token",
+    })
+  })
+
+  it("carries a valid auth attempt id into the manual email recovery route", () => {
+    const error = new ApiError(
+      "provider email required",
+      "AUTH_ERROR_004",
+      400,
+      false,
+      undefined,
+      {
+        provider: "kakao",
+        socialLinkToken: "recovery-token",
+        authAttemptId: "12345678-1234-4123-8123-123456789abc",
+      },
+    )
+
+    expect(getSocialLoginErrorAction(error, "kakao", isCancelled)).toEqual({
+      type: "social_link_required",
+      provider: "kakao",
+      socialLinkToken: "recovery-token",
+      authAttemptId: "12345678-1234-4123-8123-123456789abc",
     })
   })
 
@@ -64,11 +85,13 @@ describe("social login flow", () => {
         status: "SOCIAL_CONSENT_REQUIRED",
         provider: "kakao",
         socialSignupToken: "signup-token",
+        authAttemptId: "12345678-1234-4123-8123-123456789abc",
       }),
     ).toEqual({
       type: "consent_required",
       provider: "kakao",
       socialSignupToken: "signup-token",
+      authAttemptId: "12345678-1234-4123-8123-123456789abc",
     })
   })
 
@@ -114,27 +137,27 @@ describe("social login flow", () => {
     ).toEqual({ type: "cancelled" })
   })
 
-  it("falls back to the legacy manual email flow only without provider-email markers", () => {
+  it("uses the manual email recovery flow without provider-email markers too", () => {
     const error = new ApiError(
-      "legacy social link required",
+      "social link recovery required",
       "SOCIAL_EMAIL_NOT_FOUND",
       400,
       false,
       undefined,
       {
         provider: "apple",
-        socialLinkToken: "legacy-token",
+        socialLinkToken: "recovery-token",
       },
     )
 
     expect(getSocialLoginErrorAction(error, "apple", isCancelled)).toEqual({
-      type: "legacy_social_link_required",
+      type: "social_link_required",
       provider: "apple",
-      socialLinkToken: "legacy-token",
+      socialLinkToken: "recovery-token",
     })
   })
 
-  it("keeps unknown and malformed legacy errors on the generic path", () => {
+  it("keeps unknown and malformed errors on the generic path", () => {
     const malformedLegacyError = new ApiError(
       "missing token",
       "AUTH_ERROR_004",

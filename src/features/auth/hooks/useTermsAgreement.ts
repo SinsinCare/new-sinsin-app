@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useRef } from "react"
 import { router } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { authService } from "@/src/services"
@@ -16,11 +16,13 @@ import {
 interface UseTermsAgreementOptions {
   mode?: "email" | "social"
   socialSignupToken?: string
+  authAttemptId?: string
 }
 
 export function useTermsAgreement({
   mode = "email",
   socialSignupToken,
+  authAttemptId,
 }: UseTermsAgreementOptions = {}) {
   const { t } = useTranslation("auth")
   // 이메일 가입에서 뒤로 = 직전 화면. 딥링크로 약관에 바로 들어왔으면
@@ -29,6 +31,7 @@ export function useTermsAgreement({
   const terms = useMemo(getTerms, [t])
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const socialSubmitInFlightRef = useRef(false)
   const {
     reset,
     setTermsOfServiceAgree,
@@ -100,12 +103,14 @@ export function useTermsAgreement({
   }
 
   const handleSocialNext = async () => {
-    if (!canSubmit || isSubmitting) return
+    if (!canSubmit || socialSubmitInFlightRef.current) return
+    socialSubmitInFlightRef.current = true
     /* 서버 왕복 **전**에 쏜다. 이 이름이 세는 것은 "약관 관문을 넘겼다" 이고, 그 뒤의
        실패(만료된 가입 토큰·이미 가입을 마친 계정)는 `auth_signup_failed{stage:'consent'}`
        가 따로 센다. 성공 시점에 쏘면 두 사건이 한 이름으로 뭉개진다. */
     trackAnalyticsEvent("auth_terms_submitted", { method: "social" })
     if (!socialSignupToken) {
+      socialSubmitInFlightRef.current = false
       reset()
       showErrorToast(t("terms.expired"))
       router.replace("/(auth)/login")
@@ -113,13 +118,20 @@ export function useTermsAgreement({
     }
 
     setIsSubmitting(true)
+    let signupCompleted = false
     try {
-      const result = await authService.completeSocialSignup({
-        socialSignupToken,
-        termsOfServiceAgree: !!agreed["service"],
-        privacyPolicyAgree: !!agreed["privacy"],
-        marketingAgree: !!agreed["marketing"],
-      })
+      const result = await authService.completeSocialSignup(
+        {
+          socialSignupToken,
+          termsOfServiceAgree: !!agreed["service"],
+          privacyPolicyAgree: !!agreed["privacy"],
+          marketingAgree: !!agreed["marketing"],
+        },
+        authAttemptId,
+      )
+      // socialSignupToken은 성공하는 순간 소비됐다. 화면 전환 중 같은 캡처 핸들러가
+      // 다시 불려도 두 번째 POST를 보내면 안 된다.
+      signupCompleted = true
 
       reset()
       setUser(result.user)
@@ -154,6 +166,7 @@ export function useTermsAgreement({
         retry: () => void handleSocialNext(),
       })
     } finally {
+      if (!signupCompleted) socialSubmitInFlightRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -167,10 +180,10 @@ export function useTermsAgreement({
   }
 
   const handleBack = () => {
-    if (isSubmitting) return
+    if (socialSubmitInFlightRef.current) return
     if (mode === "social") {
       reset()
-      router.replace("/(auth)/login")
+      goBack()
       return
     }
     goBack()

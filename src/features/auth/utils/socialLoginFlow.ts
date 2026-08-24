@@ -1,5 +1,6 @@
 import i18n from "@/src/i18n"
 import { isApiErrorLike } from "@/src/services/core/apiError"
+import { normalizeAuthAttemptId } from "@/src/services/auth/authAttemptId"
 import type {
   SocialProvider,
   SocialSignupConsentRequiredResult,
@@ -36,6 +37,7 @@ export type SocialLoginSuccessAction =
       type: "consent_required"
       provider: SocialProvider
       socialSignupToken: string
+      authAttemptId?: string
     }
 
 export type SocialLoginErrorAction =
@@ -48,9 +50,10 @@ export type SocialLoginErrorAction =
       message: string
     }
   | {
-      type: "legacy_social_link_required"
+      type: "social_link_required"
       provider: SocialProvider
       socialLinkToken: string
+      authAttemptId?: string
     }
   | { type: "generic" }
 
@@ -88,7 +91,7 @@ function getProviderEmailRequiredAction(
   }
 }
 
-function getLegacySocialLinkRequiredAction(
+function getSocialLinkRequiredAction(
   error: unknown,
 ): SocialLoginErrorAction | null {
   if (!isApiErrorLike(error) || !SOCIAL_LINK_REQUIRED_CODES.has(error.code)) {
@@ -98,15 +101,17 @@ function getLegacySocialLinkRequiredAction(
   const result = getErrorResult(error)
   if (!result) return null
   const { provider, socialLinkToken } = result
+  const authAttemptId = normalizeAuthAttemptId(result.authAttemptId)
   if (
     isSocialProvider(provider) &&
     typeof socialLinkToken === "string" &&
     socialLinkToken.length > 0
   ) {
     return {
-      type: "legacy_social_link_required",
+      type: "social_link_required",
       provider,
       socialLinkToken,
+      ...(authAttemptId ? { authAttemptId } : {}),
     }
   }
   return null
@@ -120,6 +125,7 @@ export function getSocialLoginSuccessAction(
       type: "consent_required",
       provider: result.provider,
       socialSignupToken: result.socialSignupToken,
+      ...(result.authAttemptId ? { authAttemptId: result.authAttemptId } : {}),
     }
   }
   return { type: "completed" }
@@ -137,14 +143,17 @@ export function getSocialLoginErrorAction(
     return { type: "withdrawal_pending", result: withdrawalPending }
   }
 
+  // Bun은 이메일을 받지 못한 경우에도 사용자가 직접 이메일을 인증할 수 있는
+  // socialLinkToken 을 준다. 이 토큰을 안내 토스트보다 먼저 소비해야 복구 화면으로
+  // 이어진다. 토큰이 없거나 깨졌을 때만 제공자별 안내를 안전한 폴백으로 쓴다.
+  const socialLinkRequired = getSocialLinkRequiredAction(error)
+  if (socialLinkRequired) return socialLinkRequired
+
   const providerEmailRequired = getProviderEmailRequiredAction(
     error,
     requestedProvider,
   )
   if (providerEmailRequired) return providerEmailRequired
-
-  const legacySocialLinkRequired = getLegacySocialLinkRequiredAction(error)
-  if (legacySocialLinkRequired) return legacySocialLinkRequired
 
   return { type: "generic" }
 }
