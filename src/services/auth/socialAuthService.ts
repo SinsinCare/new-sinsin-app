@@ -1,4 +1,4 @@
-import { Platform } from "react-native"
+import { AppState, Platform } from "react-native"
 import {
   GoogleSignin,
   isCancelledResponse,
@@ -209,6 +209,84 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
   }
 }
 
+/*
+  안드로이드 카카오 로그인의 고착 탈출구.
+
+  카카오 인증 화면(커스텀 탭 또는 카톡 앱)에서 **완료하지도 닫지도 않고** 제스처·최근앱
+  으로 그냥 앱에 돌아오면, `AuthCodeHandlerActivity` 가 결과를 전달하지 못한 채 파괴되고
+  네이티브 `login()` 프라미스가 영원히 안 풀린다(2026-08-24 에뮬레이터 릴리즈 빌드로
+  재현 — 로그캣에서 결과 없는 activity 파괴 확인, 90초+ 미정산). 그러면
+  `socialLoading` 이 영구 true 로 남아 "Logging you in…" 오버레이가 로그인 화면 전체를
+  잠근다 — 사용자에게는 "카카오 로그인이 안 된다"로 보인다. 탭의 ✕ 로 닫는 경로는
+  SDK 가 취소를 정상 전달하므로, 깨진 것은 이 복귀 경로 하나다.
+
+  처방은 V2BottomSheet 의 마감시한과 같은 계열이다: 앱이 포그라운드로 돌아온 뒤
+  유예시간 안에 프라미스가 정산되지 않으면 취소로 판정한다. 유예를 두는 이유 —
+  **정상 성공도 포그라운드에서 끝난다**: 리다이렉트가 오면 앱이 전면으로 오고 그 뒤에
+  토큰 교환(네트워크)이 돈다. 유예가 짧으면 느린 네트워크의 성공을 자르므로 넉넉히
+  잡는다. 다시 인증 화면으로 나가면(background) 시계를 멈춘다.
+
+  취소(`code: "Cancelled"`)로 판정하는 것은 폴백이 아니라 사실의 기술이다 — 사용자는
+  인증을 끝내지 않고 돌아왔다. `isUserCancelledError` 가 이 코드를 취소로 분류해
+  조용히 버튼이 풀린다.
+*/
+const KAKAO_RETURN_SETTLE_GRACE_MS = 10_000
+
+function withKakaoReturnDeadline<T>(promise: Promise<T>): Promise<T> {
+  if (Platform.OS !== "android") return promise
+  return new Promise<T>((resolve, reject) => {
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let settled = false
+    const clearTimer = () => {
+      if (timer !== null) {
+        clearTimeout(timer)
+        timer = null
+      }
+    }
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (settled) return
+      if (state !== "active") {
+        // 다시 인증 화면으로 나갔다 — 사용자가 그쪽에서 진행 중이므로 시계를 멈춘다.
+        clearTimer()
+        return
+      }
+      clearTimer()
+      timer = setTimeout(() => {
+        if (settled) return
+        settled = true
+        subscription.remove()
+        logger.error(
+          "[Kakao SignIn] 인증 화면에서 복귀 후 미정산 — 취소로 처리",
+          { graceMs: KAKAO_RETURN_SETTLE_GRACE_MS },
+        )
+        reject(
+          Object.assign(
+            new Error("kakao login unresolved after returning to app"),
+            { code: "Cancelled" },
+          ),
+        )
+      }, KAKAO_RETURN_SETTLE_GRACE_MS)
+    })
+    const finalize = () => {
+      settled = true
+      clearTimer()
+      subscription.remove()
+    }
+    promise.then(
+      (value) => {
+        if (settled) return
+        finalize()
+        resolve(value)
+      },
+      (error: unknown) => {
+        if (settled) return
+        finalize()
+        reject(error)
+      },
+    )
+  })
+}
+
 export async function signInWithKakao(): Promise<SocialAuthResult> {
   logger.debug("[Kakao SignIn] 시작")
   const requiresReauthentication = await isSocialReauthenticationRequired()
@@ -250,12 +328,14 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
 
   let token
   try {
-    token = requiresReauthentication
-      ? await kakaoLogin({
-          useKakaoAccountLogin: true,
-          prompts: ["SelectAccount"],
-        })
-      : await kakaoLogin()
+    token = await withKakaoReturnDeadline(
+      requiresReauthentication
+        ? kakaoLogin({
+            useKakaoAccountLogin: true,
+            prompts: ["SelectAccount"],
+          })
+        : kakaoLogin(),
+    )
     logger.debug("[Kakao SignIn] login 완료", {
       hasAccessToken: !!token.accessToken,
       hasIdToken: !!token.idToken,

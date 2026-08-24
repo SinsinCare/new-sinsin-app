@@ -25,7 +25,23 @@ jest.mock("@react-native-google-signin/google-signin", () => ({
   },
 }))
 
+/*
+  AppState 는 `withKakaoReturnDeadline` 이 "인증 화면에서 앱으로 돌아온 순간"을 아는
+  유일한 신호다. 테스트가 전이를 직접 쏠 수 있게 리스너를 밖으로 노출한다.
+*/
+const appStateListeners = new Set<(state: string) => void>()
+const emitAppState = (state: string) => {
+  for (const listener of [...appStateListeners]) listener(state)
+}
+const mockAppState = {
+  addEventListener: jest.fn((_type: string, listener: (s: string) => void) => {
+    appStateListeners.add(listener)
+    return { remove: () => appStateListeners.delete(listener) }
+  }),
+}
+
 jest.mock("react-native", () => ({
+  AppState: mockAppState,
   Platform: mockPlatform,
 }))
 
@@ -71,6 +87,7 @@ import { logger } from "../src/lib/logger"
 describe("socialAuthService", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    appStateListeners.clear()
     mockPlatform.OS = "android"
     mockReauthenticationRequired = false
     mockGoogleSignin.hasPlayServices.mockResolvedValue(true)
@@ -172,6 +189,103 @@ describe("socialAuthService", () => {
     expect(mockGoogleSignin.signOut).not.toHaveBeenCalled()
     expect(mockAppleSignIn).not.toHaveBeenCalled()
     expect(mockConsumeSocialReauthenticationIntent).toHaveBeenCalledTimes(1)
+  })
+
+  describe("카카오 복귀 마감시한 — 인증 화면에서 그냥 돌아오면 취소다", () => {
+    /*
+      2026-08-24 재현: 커스텀 탭을 닫지 않고 앱으로 돌아오면 AuthCodeHandlerActivity 가
+      결과 없이 파괴되고 네이티브 login() 이 영원히 안 풀린다. 이 스위트는 그 상황을
+      "안 풀리는 프라미스"로 흉내 내고, 마감시한이 취소로 정산하는지를 본다.
+    */
+    const GRACE_MS = 10_000
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    const flushMicrotasks = () => jest.advanceTimersByTimeAsync(0)
+
+    it("복귀 후 유예가 지나도록 미정산이면 Cancelled 로 거절한다", async () => {
+      mockKakaoLogin.mockReturnValueOnce(new Promise(() => {}))
+
+      const attempt = signInWithKakao()
+      const settled = attempt.catch((e: unknown) => e)
+      await flushMicrotasks()
+      expect(appStateListeners.size).toBe(1)
+
+      emitAppState("background")
+      emitAppState("active")
+      await jest.advanceTimersByTimeAsync(GRACE_MS)
+
+      const error = (await settled) as Error & { code?: string }
+      expect(error.code).toBe("Cancelled")
+      expect(isUserCancelledError(error)).toBe(true)
+      // 진단은 남긴다 — 취소 분류라도 이 갈래는 결함 신호라서 error 로 찍는다.
+      expect(logger.error).toHaveBeenCalledWith(
+        "[Kakao SignIn] 인증 화면에서 복귀 후 미정산 — 취소로 처리",
+        expect.objectContaining({ graceMs: GRACE_MS }),
+      )
+      // 리스너 잔류 = 다음 로그인 시도에서 유령 시계가 돈다.
+      expect(appStateListeners.size).toBe(0)
+    })
+
+    it("유예 안에 성공하면 그대로 성공이고 시계는 걷힌다", async () => {
+      let resolveLogin!: (token: unknown) => void
+      mockKakaoLogin.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveLogin = resolve
+        }),
+      )
+
+      const attempt = signInWithKakao()
+      await flushMicrotasks()
+      emitAppState("background")
+      emitAppState("active")
+      // 정상 성공도 포그라운드에서 토큰 교환이 돈다 — 유예 안의 지연은 성공이어야 한다.
+      await jest.advanceTimersByTimeAsync(GRACE_MS - 1_000)
+      resolveLogin({
+        accessToken: "kakao-access-token",
+        idToken: null,
+        scopes: [],
+      })
+
+      await expect(attempt).resolves.toMatchObject({ provider: "kakao" })
+      expect(appStateListeners.size).toBe(0)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it("다시 인증 화면으로 나가면 시계를 멈춘다", async () => {
+      mockKakaoLogin.mockReturnValueOnce(new Promise(() => {}))
+
+      const attempt = signInWithKakao()
+      const settled = attempt.catch((e: unknown) => e)
+      await flushMicrotasks()
+
+      emitAppState("background")
+      emitAppState("active")
+      await jest.advanceTimersByTimeAsync(GRACE_MS - 1)
+      emitAppState("background")
+      // 인증 화면에 머무는 동안은 아무리 지나도 취소하지 않는다.
+      await jest.advanceTimersByTimeAsync(GRACE_MS * 3)
+      expect(logger.error).not.toHaveBeenCalled()
+
+      emitAppState("active")
+      await jest.advanceTimersByTimeAsync(GRACE_MS)
+      const error = (await settled) as Error & { code?: string }
+      expect(error.code).toBe("Cancelled")
+    })
+
+    it("iOS 는 감싸지 않는다 — ASWebAuthenticationSession 이 복귀를 스스로 정산한다", async () => {
+      mockPlatform.OS = "ios"
+
+      await expect(signInWithKakao()).resolves.toMatchObject({
+        provider: "kakao",
+      })
+      expect(mockAppState.addEventListener).not.toHaveBeenCalled()
+    })
   })
 
   it("keeps Apple on the OS authentication UI without invoking other providers", async () => {

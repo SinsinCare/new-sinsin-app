@@ -2,8 +2,15 @@
 const isDev =
   (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ === true
 
+/*
+  `keyhash` 는 여기 넣지 않는다 — 안드로이드 키 해시는 서명 인증서 공개키의 지문이라
+  APK 를 받은 사람이면 누구나 계산할 수 있는 값이고, 카카오 로그인 실패 로그에 실어
+  "어느 해시가 콘솔에 빠졌는지"를 QA 가 그대로 읽게 하는 것이 목적이다
+  (`socialAuthService.signInWithKakao` 머리말). 실제로 2026-08-24 `Misconfigured`
+  진단 때 이 값이 `[REDACTED]` 로 지워져 있어 의도가 죽어 있었다.
+*/
 const SENSITIVE_KEY =
-  /token|authorization|password|passcode|secret|cookie|authkey|otp|keyhash|nativeappkey|userinfo|nativeerror|email|phone|displayname|fullname|userid|uid/iu
+  /token|authorization|password|passcode|secret|cookie|authkey|otp|nativeappkey|userinfo|nativeerror|email|phone|displayname|fullname|userid|uid/iu
 const MAX_LOG_DEPTH = 4
 const MAX_LOG_ITEMS = 30
 const MAX_LOG_STRING_LENGTH = 2_000
