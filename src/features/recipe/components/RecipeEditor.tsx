@@ -1,7 +1,6 @@
 import { useState } from "react"
 import {
   Pressable,
-  Modal,
   Image,
   Keyboard,
   Platform,
@@ -9,7 +8,13 @@ import {
   InteractionManager,
 } from "react-native"
 import { TextInput } from "@/src/shared/components/AppText"
-import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
+import {
+  V2Box,
+  V2HStack,
+  V2Text,
+  V2VStack,
+  useV2Theme,
+} from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/src/shared/components/Icon"
 import {
@@ -24,48 +29,16 @@ import type { ContentBlock } from "@/src/features/recipe/types"
 import { CUISINE_TAGS } from "@/src/features/recipe/data/recipeTags"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
 import { ContentResponsibilityCheck } from "@/src/features/recipe/components/ContentResponsibilityCheck"
-import { tokens } from "@/src/theme/tokens"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useQueryClient } from "@tanstack/react-query"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useTranslation } from "react-i18next"
 
 import { presentError } from "@/src/lib/errorMessage"
 import { showSuccessToast } from "@/src/lib/toast"
-
-const BG_COLOR = { light: "#FCFCFC", dark: "#2A2A30" }
-const HEADER_TEXT = { light: "#3C3C43", dark: tokens.color.textDark.val }
-const REGISTER_ACTIVE = {
-  light: tokens.color.sub6.val,
-  dark: tokens.color.sub6.val,
-}
-const REGISTER_DISABLED = { light: "#81818D", dark: "#81818D" }
-const DIVIDER = { light: "#E5E5EA", dark: "#1F1F21" }
-const TITLE_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
-const PLACEHOLDER = {
-  light: tokens.color.textLightSub.val,
-  dark: tokens.color.textLightMuted.val,
-}
-const LABEL_COLOR = { light: "#666677", dark: "#858591" }
-const SECTION_TITLE_COLOR = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
-const INPUT_BORDER_COLOR = {
-  light: tokens.color.textLightSub.val,
-  dark: "#858591",
-}
-const SECTION_LABEL = {
-  light: tokens.color.textLight.val,
-  dark: tokens.color.textDark.val,
-}
-const PRIMARY_BAR = { light: "#F1F1F3", dark: "#1F1F21" }
-const IMAGE_BUTTON_BG = { light: "#F3F4F6", dark: "#3A3A42" }
-const IMAGE_BUTTON_TEXT = { light: "#3C3C43", dark: "#F5F6FA" }
-const IMAGE_BUTTON_DISABLED = { light: "#A0A3AA", dark: "#858591" }
+import {
+  AppModal,
+  afterModalTransitions,
+} from "@/src/shared/components/AppModal"
 
 const MAX_TOTAL_IMAGES = 10
 type EditorTarget = "desc" | "ingred" | "steps"
@@ -104,7 +77,7 @@ async function uploadImageBlocks(
 
 export function RecipeEditor({ onClose }: RecipeEditorProps) {
   const { t } = useTranslation("recipe")
-  const scheme = useAppColorScheme()
+  const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
   const queryClient = useQueryClient()
   const bottomInset =
@@ -224,12 +197,19 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   }
 
   const registerColor = canSubmit
-    ? REGISTER_ACTIVE[scheme]
-    : REGISTER_DISABLED[scheme]
+    ? colors.primary.primary
+    : colors.label.assistive
 
   const renderSectionHeader = (label: string, target: EditorTarget) => (
-    <V2HStack align="center" justify="space-between" style={{ marginBottom: 10 }}>
-      <V2Text color={SECTION_LABEL[scheme]} style={{ fontSize: 14, lineHeight: 20, fontWeight: "500" }}>
+    <V2HStack
+      align="center"
+      justify="space-between"
+      style={{ marginBottom: 10 }}
+    >
+      <V2Text
+        color={colors.label.normal}
+        style={{ fontSize: 14, lineHeight: 20, fontWeight: "500" }}
+      >
         {label}
       </V2Text>
       <Pressable
@@ -238,7 +218,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         hitSlop={8}
         style={({ pressed }) => [
           styles.imageButton,
-          { backgroundColor: IMAGE_BUTTON_BG[scheme] },
+          { backgroundColor: colors.fill.alternative },
           pressed && !imageDisabled && { opacity: 0.72 },
           imageDisabled && { opacity: 0.5 },
         ]}
@@ -246,17 +226,13 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         <Icon
           name="gallery"
           size={18}
-          color={
-            imageDisabled
-              ? IMAGE_BUTTON_DISABLED[scheme]
-              : IMAGE_BUTTON_TEXT[scheme]
-          }
+          color={imageDisabled ? colors.label.assistive : colors.label.normal}
         />
-        <V2Text color={
-            imageDisabled
-              ? IMAGE_BUTTON_DISABLED[scheme]
-              : IMAGE_BUTTON_TEXT[scheme]
-          } lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 18, fontWeight: "500" }}>
+        <V2Text
+          color={imageDisabled ? colors.label.assistive : colors.label.normal}
+          lineBreakStrategyIOS="hangul-word"
+          style={{ fontSize: 13, lineHeight: 18, fontWeight: "500" }}
+        >
           {t("action.addPhoto")}
         </V2Text>
       </Pressable>
@@ -264,17 +240,32 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
   )
 
   return (
-    <V2VStack flex={1} style={{ backgroundColor: BG_COLOR[scheme], paddingTop: insets.top }}>
+    <V2VStack
+      flex={1}
+      style={{
+        backgroundColor: colors.background.default,
+        paddingTop: insets.top,
+      }}
+    >
       {/* Header */}
-      <V2HStack paddingHorizontal={20} paddingVertical={12} align="center" justify="space-between">
+      <V2HStack
+        paddingHorizontal={20}
+        paddingVertical={12}
+        align="center"
+        justify="space-between"
+      >
         <Pressable
           onPress={handleClose}
           hitSlop={8}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <Icon name="x" size={24} color={HEADER_TEXT[scheme]} />
+          <Icon name="x" size={24} color={colors.label.normal} />
         </Pressable>
-        <V2Text color={HEADER_TEXT[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 16, lineHeight: 22, fontWeight: "500" }}>
+        <V2Text
+          color={colors.label.normal}
+          lineBreakStrategyIOS="hangul-word"
+          style={{ fontSize: 16, lineHeight: 22, fontWeight: "500" }}
+        >
           {t("recipeEditor.title")}
         </V2Text>
         <Pressable
@@ -285,7 +276,11 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             opacity: pressed && canSubmit ? 0.7 : 1,
           })}
         >
-          <V2Text color={registerColor} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 16, fontWeight: "600" }}>
+          <V2Text
+            color={registerColor}
+            lineBreakStrategyIOS="hangul-word"
+            style={{ fontSize: 16, fontWeight: "600" }}
+          >
             {isSubmitting ? t("action.uploading") : t("action.upload")}
           </V2Text>
         </Pressable>
@@ -303,43 +298,54 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
       >
         {/* Title */}
         <V2VStack paddingHorizontal={16} gap={4} style={{ paddingTop: 20 }}>
-          <V2Text color={LABEL_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 12, fontWeight: "400" }}>
+          <V2Text
+            color={colors.label.neutral}
+            lineBreakStrategyIOS="hangul-word"
+            style={{ fontSize: 12, fontWeight: "400" }}
+          >
             {t("recipeEditor.titleLabel")}
           </V2Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
             placeholder={t("recipeEditor.titlePlaceholder")}
-            placeholderTextColor={PLACEHOLDER[scheme]}
+            placeholderTextColor={colors.label.assistive}
             style={[
               styles.titleInput,
               {
-                color: TITLE_COLOR[scheme],
-                borderBottomColor: DIVIDER[scheme],
+                color: colors.label.normal,
+                borderBottomColor: colors.line.normal,
               },
             ]}
           />
         </V2VStack>
         {/* Primary color divider bar */}
-        <V2Box style={{ height: 12, backgroundColor: 
-            scheme === "dark" ? PRIMARY_BAR.dark : PRIMARY_BAR.light
-           }}/>
+        <V2Box style={{ height: 12, backgroundColor: colors.fill.normal }} />
         {/* Summary */}
         <V2VStack paddingHorizontal={16} style={{ paddingTop: 16 }}>
-          <V2Text color={SECTION_TITLE_COLOR[scheme]} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "500", fontSize: 14, lineHeight: 20, marginBottom: 4 }}>
+          <V2Text
+            color={colors.label.normal}
+            lineBreakStrategyIOS="hangul-word"
+            style={{
+              fontWeight: "500",
+              fontSize: 14,
+              lineHeight: 20,
+              marginBottom: 4,
+            }}
+          >
             {t("recipeEditor.summaryLabel")}
           </V2Text>
           <TextInput
             value={summary}
             onChangeText={setSummary}
             placeholder={t("recipeEditor.summaryPlaceholder")}
-            placeholderTextColor={PLACEHOLDER[scheme]}
+            placeholderTextColor={colors.label.assistive}
             multiline
             style={[
               styles.fieldInput,
               {
-                color: TITLE_COLOR[scheme],
-                borderColor: INPUT_BORDER_COLOR[scheme],
+                color: colors.label.normal,
+                borderColor: colors.line.normal,
               },
             ]}
           />
@@ -406,7 +412,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
           />
         </V2VStack>
 
-        <V2VStack paddingHorizontal={16} style={{ paddingTop: 20, paddingBottom: 8 }}>
+        <V2VStack
+          paddingHorizontal={16}
+          style={{ paddingTop: 20, paddingBottom: 8 }}
+        >
           <ContentResponsibilityCheck
             value={responsibilityAgreed}
             onChange={setResponsibilityAgreed}
@@ -416,7 +425,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
       </KeyboardAwareScrollView>
 
       {/* Image Preview Modal */}
-      <Modal
+      <AppModal
         visible={previewImage !== null}
         transparent
         animationType="fade"
@@ -437,10 +446,10 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             onPress={() => setPreviewImage(null)}
             style={styles.previewClose}
           >
-            <Icon name="x" size={24} color="#FFFFFF" />
+            <Icon name="x" size={24} color={colors.static.white} />
           </Pressable>
         </Pressable>
-      </Modal>
+      </AppModal>
 
       {/* Confirm Exit Modal */}
       <ConfirmExitModal
@@ -454,7 +463,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
         onCancel={() => setConfirmExitVisible(false)}
         onConfirm={() => {
           setConfirmExitVisible(false)
-          onClose()
+          void afterModalTransitions().then(onClose)
         }}
       />
     </V2VStack>

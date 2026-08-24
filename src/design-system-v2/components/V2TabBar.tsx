@@ -163,7 +163,9 @@ export function V2TabBar({
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             accessibilityLabel={item.label}
-            onPress={() => onChange(item.value)}
+            onPress={() => {
+              if (!selected) onChange(item.value)
+            }}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
             <View style={styles.iconWrap}>

@@ -229,8 +229,13 @@ export function V2Menu({
               key={item.key}
               accessibilityRole="menuitem"
               onPress={() => {
-                item.onSelect()
-                onClose()
+                // 선택 처리에서 예외가 나도 전면 포인터 막은 반드시 내린다. 그렇지
+                // 않으면 오류 경로에서 보이지 않는 포털이 아래 스크롤을 계속 먹는다.
+                try {
+                  item.onSelect()
+                } finally {
+                  onClose()
+                }
               }}
               style={({ pressed }) => [
                 styles.item,

@@ -122,6 +122,16 @@ describe("V2TextField — 기본값은 오늘의 상자 그대로", () => {
     expect(field.borderRadius).toBeUndefined()
     expect(field.paddingHorizontal).toBe(0)
   })
+
+  it("포커스 중 disabled로 바뀐 line은 브랜드 밑줄을 남기지 않는다", () => {
+    const { field } = v2FieldChrome({
+      ...base,
+      variant: "line",
+      focused: true,
+      disabled: true,
+    })
+    expect(field.borderBottomColor).toBe(semanticLight.line.normal)
+  })
 })
 
 describe("V2TextField — tone='filled' (G16)", () => {

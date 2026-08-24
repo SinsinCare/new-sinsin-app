@@ -6,6 +6,7 @@ import { useAuth } from "@/src/hooks/useAuth"
 import { presentError } from "@/src/lib/errorMessage"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import type { SocialProvider, WithdrawalPendingResult } from "@/src/types"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import {
   getSocialLoginErrorAction,
   getSocialLoginSuccessAction,
@@ -112,8 +113,12 @@ export function useSocialLogin() {
 
     setIsCancellingWithdrawal(true)
     try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
-      setWithdrawalPending(null)
+      await cancelWithdrawal(withdrawalPending.cancelToken, {
+        beforeSessionApply: async () => {
+          setWithdrawalPending(null)
+          await afterModalTransitions()
+        },
+      })
     } catch (error) {
       // 취소 토큰은 아직 손에 있다(모달을 닫지 않았다). 다시 시도가 실제로 같은
       // 동작을 다시 하는 자리다.

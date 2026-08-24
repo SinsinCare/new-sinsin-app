@@ -139,6 +139,7 @@ export function V2Modal({
       >
         {/* 카드 — 내부 탭이 스크림으로 전파되지 않도록 흡수 */}
         <Pressable
+          accessible={false}
           style={[styles.card, { backgroundColor: colors.background.default }]}
           onPress={() => {}}
         >

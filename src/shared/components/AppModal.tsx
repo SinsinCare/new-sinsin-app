@@ -103,7 +103,19 @@ function IosGatedModal({
       void enqueueTransition(async () => {
         // present 차례가 오기 전에 취소된 경우 — 내릴 것이 없다.
         if (!mountedRef.current) return
-        if (!isCurrent()) return
+        /*
+          dismiss 는 세대가 바뀌어도 취소하지 않는다.
+
+          visible: true → false → true 가 dismiss 차례 전에 빠르게 이어지면 마지막
+          true 가 generation 을 갱신한다. 예전 코드는 이 false 작업을 "낡았다"고
+          버렸지만, 이미 떠 있는 네이티브 Modal 과 레지스트리는 그대로였다. 새 true
+          작업은 `visibleModalCount() !== depth` 에서 자기 자신이 사라지길 기다리므로
+          영원히 진행하지 못하고, 투명 모달이 아래 스크롤을 계속 먹었다.
+
+          이미 떠 있는 것을 먼저 완전히 dismiss 한 뒤 최신 true 가 다시 present 하는
+          것이 유일하게 직렬화되는 순서다. 뒤에 false 가 한 번 더 와도 그 작업은
+          `mountedRef.current === false` 에서 안전하게 끝난다.
+        */
         mountedRef.current = false
         const gone = new Promise<void>((resolve) => {
           dismissResolveRef.current = resolve

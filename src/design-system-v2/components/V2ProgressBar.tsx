@@ -46,6 +46,12 @@ const SIZE_HEIGHT = {
   l: 8,
 } as const
 
+/** 외부 계산 실패가 NaN으로 새어도 RN에 `NaN%`와 잘못된 접근성 값을 넘기지 않는다. */
+export function normalizeV2ProgressValue(value: number): number {
+  if (Number.isNaN(value)) return 0
+  return Math.min(100, Math.max(0, value))
+}
+
 /** color → fill 색 토큰 (트랙 색은 4색 공통 fill.normal, fill만 변경) */
 function resolveFillColor(
   color: V2ProgressBarColor,
@@ -71,7 +77,7 @@ export function V2ProgressBar({
   const height = SIZE_HEIGHT[size]
   const fillColor = resolveFillColor(color, colors)
   // 0~100 clamp 후 fill 폭(%)으로 사용
-  const clamped = Math.min(100, Math.max(0, value))
+  const clamped = normalizeV2ProgressValue(value)
 
   return (
     <View

@@ -41,6 +41,7 @@ export function V2Switch({
   onValueChange,
   disabled = false,
   style,
+  accessibilityState,
   ...rest
 }: V2SwitchProps) {
   const { colors } = useV2Theme()
@@ -51,8 +52,13 @@ export function V2Switch({
 
   return (
     <Pressable
+      {...rest}
       accessibilityRole="switch"
-      accessibilityState={{ checked: value, disabled: isDisabled }}
+      accessibilityState={{
+        ...accessibilityState,
+        checked: value,
+        disabled: isDisabled,
+      }}
       disabled={isDisabled}
       onPress={() => onValueChange?.(!value)}
       style={[
@@ -61,7 +67,6 @@ export function V2Switch({
         isDisabled && styles.disabled,
         style,
       ]}
-      {...rest}
     >
       {/* thumb: 항상 흰색. On이면 오른쪽·Off면 왼쪽에 정적 배치(travel 20). */}
       <View

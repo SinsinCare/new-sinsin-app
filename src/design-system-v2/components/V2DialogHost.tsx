@@ -36,6 +36,7 @@ import { useV2Theme } from "../hooks/useV2Theme"
 import { spacing, typography } from "../tokens"
 
 type QueueItem = {
+  id: number
   request: DialogRequest
   resolve: (result: DialogResult) => void
 }
@@ -44,6 +45,7 @@ export function V2DialogHost() {
   const { t } = useTranslation()
   const { colors } = useV2Theme()
   const [queue, setQueue] = useState<QueueItem[]>([])
+  const nextIdRef = useRef(1)
 
   // 큐를 렌더 없이 읽기 위한 거울 — 언마운트 정리에서 쓴다
   const queueRef = useRef<QueueItem[]>([])
@@ -53,7 +55,12 @@ export function V2DialogHost() {
     const unregister = registerDialogHost(
       (request) =>
         new Promise<DialogResult>((resolve) => {
-          setQueue((prev) => [...prev, { request, resolve }])
+          const item = { id: nextIdRef.current++, request, resolve }
+          const next = [...queueRef.current, item]
+          // 등록은 React 배치보다 먼저 연속해서 들어올 수 있다. ref를 먼저 갱신해야
+          // 같은 틱의 두 번째 요청이 첫 번째 요청을 덮어쓰지 않는다.
+          queueRef.current = next
+          setQueue(next)
         }),
     )
     return () => {
@@ -64,17 +71,20 @@ export function V2DialogHost() {
     }
   }, [])
 
-  // 머리 하나를 답과 함께 보낸다. 뒤가 남아 있으면 표면은 닫지 않고
-  // 내용만 갈아끼운다 — dismiss/present 를 왕복하면 iOS 가 뒤엣것을 흘린다.
-  const settle = useCallback((result: DialogResult) => {
-    setQueue((prev) => {
-      const [head, ...rest] = prev
-      head?.resolve(result)
-      return rest
-    })
+  // 렌더된 머리 **그 요청만** 답과 함께 보낸다. 버튼을 빠르게 두 번 눌러 같은
+  // 콜백이 두 번 와도 뒤의 요청까지 꺼내면 안 된다. setState updater 안에서 Promise를
+  // resolve 하면 Strict Mode 재실행 때 부수효과가 반복되므로 ref를 권위 상태로 쓴다.
+  const settle = useCallback((id: number | undefined, result: DialogResult) => {
+    if (id == null) return
+    const [head, ...rest] = queueRef.current
+    if (head?.id !== id) return
+    queueRef.current = rest
+    head.resolve(result)
+    setQueue(rest)
   }, [])
 
-  const current = queue[0]?.request
+  const currentItem = queue[0]
+  const current = currentItem?.request
   const isSheet = current?.kind === "sheet"
 
   return (
@@ -86,25 +96,25 @@ export function V2DialogHost() {
         destructive={current?.destructive}
         buttonLayout={current?.buttonLayout}
         primaryLabel={current?.confirmLabel ?? t("action.confirm")}
-        onPrimary={() => settle(0)}
+        onPrimary={() => settle(currentItem?.id, 0)}
         // alert 은 버튼 하나 — secondaryLabel 을 안 주면 V2Modal 이 Alert 로 그린다
         secondaryLabel={
           current?.kind === "confirm"
             ? (current.cancelLabel ?? t("action.cancel"))
             : undefined
         }
-        onSecondary={() => settle(null)}
-        onRequestClose={() => settle(null)}
+        onSecondary={() => settle(currentItem?.id, null)}
+        onRequestClose={() => settle(currentItem?.id, null)}
       />
 
       <V2BottomSheet
         surface="dialog_action_sheet"
         visible={isSheet}
-        onClose={() => settle(null)}
+        onClose={() => settle(currentItem?.id, null)}
         title={current?.title || undefined}
         subTitle={current?.description}
         secondaryLabel={current?.cancelLabel ?? t("action.cancel")}
-        onSecondary={() => settle(null)}
+        onSecondary={() => settle(currentItem?.id, null)}
       >
         {/* 맨 텍스트 줄은 "누를 수 있다"가 안 읽혀 시트가 미완처럼 보였다
             (QA 2026-08-06). 앱의 다른 시트 옵션과 같은 문법 — 면 있는 카드
@@ -115,7 +125,7 @@ export function V2DialogHost() {
             <Pressable
               key={`${action.label}-${index}`}
               accessibilityRole="button"
-              onPress={() => settle(index)}
+              onPress={() => settle(currentItem?.id, index)}
               style={({ pressed }) => [
                 styles.action,
                 {

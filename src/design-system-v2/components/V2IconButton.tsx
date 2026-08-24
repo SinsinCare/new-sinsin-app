@@ -82,20 +82,23 @@ export function V2IconButton({
   variant = "clear",
   disabled = false,
   style,
+  accessibilityState,
+  hitSlop: requestedHitSlop,
   ...rest
 }: V2IconButtonProps) {
   const { colors } = useV2Theme()
   const s = SIZE[size]
   const variantStyle = resolveVariant(variant, colors)
   // 작은 사이즈는 hit-slop으로 최소 터치타겟(44) 확보 — l(48)은 0
-  const hitSlop = Math.max(0, (touchTarget.min - s.box) / 2)
+  const defaultHitSlop = Math.max(0, (touchTarget.min - s.box) / 2)
 
   return (
     <Pressable
+      {...rest}
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={{ ...accessibilityState, disabled }}
       disabled={disabled}
-      hitSlop={hitSlop}
+      hitSlop={requestedHitSlop ?? defaultHitSlop}
       style={({ pressed }) => [
         styles.base,
         {
@@ -108,7 +111,6 @@ export function V2IconButton({
         disabled && styles.disabled,
         style,
       ]}
-      {...rest}
     >
       {name ? (
         <V2Icon name={name} size={s.icon} color={colors.label.neutral} />

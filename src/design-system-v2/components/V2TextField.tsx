@@ -166,7 +166,7 @@ export function v2FieldChrome(args: {
     // Line 밑줄색: Error=negative → Focused=primary → 기본 line.normal (라벨은 그대로).
     const underline = error
       ? colors.status.negative
-      : focused
+      : focused && !disabled
         ? colors.primary.primary
         : colors.line.normal
     return {
@@ -269,6 +269,7 @@ export function V2TextField({
   onBlur,
   placeholderTextColor,
   selectionColor,
+  accessibilityState,
   ...rest
 }: V2TextFieldProps) {
   const { t } = useTranslation()
@@ -336,7 +337,8 @@ export function V2TextField({
 
       <View style={[styles.field, fieldStyle]}>
         <Input
-          accessibilityState={{ disabled }}
+          {...rest}
+          accessibilityState={{ ...accessibilityState, disabled }}
           editable={!disabled}
           multiline={multiline}
           value={value}
@@ -354,7 +356,6 @@ export function V2TextField({
             disabled && styles.inputDisabled, // 값 opacity 30% (스펙)
             inputStyle,
           ]}
-          {...rest}
           onFocus={focusHandler}
           onBlur={blurHandler}
         />

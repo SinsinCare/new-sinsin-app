@@ -263,8 +263,18 @@ export function useAuth() {
 
   const getProfile = useCallback(() => authService.getProfile(), [])
 
-  const cancelWithdrawal = async (cancelToken: string) => {
+  const cancelWithdrawal = async (
+    cancelToken: string,
+    options?: { beforeSessionApply?: () => Promise<void> },
+  ) => {
     const result = await authService.cancelWithdrawal(cancelToken)
+    /*
+      탈퇴 취소 확인창처럼 성공 즉시 화면이 바뀌는 호출부는 RN Modal 을 먼저 완전히
+      내려야 한다. 세션을 먼저 적용하면 루트 가드의 replace 와 모달 dismiss 가 겹쳐
+      iOS 에 투명한 전환 뷰가 남는다. API 실패 때는 콜백을 부르지 않으므로 확인창과
+      취소 토큰을 그대로 보존해 재시도할 수 있다.
+    */
+    await options?.beforeSessionApply?.()
     applyAuthSession(result)
     trackAnalyticsEvent("auth_withdrawal_cancelled", {})
     return result

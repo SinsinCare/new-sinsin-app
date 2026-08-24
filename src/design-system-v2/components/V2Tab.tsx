@@ -96,7 +96,11 @@ export function V2Tab({
         key={item.value}
         accessibilityRole="tab"
         accessibilityState={{ selected }}
-        onPress={() => onChange(item.value)}
+        // 이미 고른 탭의 재탭은 값 변경이 아니다. 라우터·데이터 초기화 같은
+        // 소비자 부수효과를 중복 실행하지 않는다.
+        onPress={() => {
+          if (!selected) onChange(item.value)
+        }}
         style={({ pressed }) => [
           styles.item,
           {

@@ -8,6 +8,7 @@ import type { LoginForm } from "../types"
 import { presentAuthFailure } from "../utils/authFailure"
 import { getWithdrawalPendingResult } from "../utils/withdrawalPending"
 import type { WithdrawalPendingResult } from "@/src/types"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 
 export function useEmailLogin() {
   const { signInWithEmail, cancelWithdrawal, isLoading } = useAuth()
@@ -54,8 +55,12 @@ export function useEmailLogin() {
     if (!withdrawalPending || isCancellingWithdrawal) return
     setIsCancellingWithdrawal(true)
     try {
-      await cancelWithdrawal(withdrawalPending.cancelToken)
-      setWithdrawalPending(null)
+      await cancelWithdrawal(withdrawalPending.cancelToken, {
+        beforeSessionApply: async () => {
+          setWithdrawalPending(null)
+          await afterModalTransitions()
+        },
+      })
       router.replace("/(tabs)/home")
     } catch (e: unknown) {
       // 취소 토큰은 아직 손에 있다(모달을 닫지 않았다). 그래서 다시 시도가

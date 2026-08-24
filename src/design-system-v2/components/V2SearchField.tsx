@@ -28,7 +28,7 @@ import { useTranslation } from "react-i18next"
 // style/editable은 자체 관리(style·disabled로 노출)하므로 함께 제외. 나머지는 그대로 스프레드.
 export type V2SearchFieldProps = Omit<
   TextInputProps,
-  "style" | "editable" | "value" | "onChangeText" | "placeholder"
+  "style" | "editable" | "value" | "onChangeText" | "placeholder" | "multiline"
 > & {
   /** 현재 검색어 (controlled) */
   value: string
@@ -59,6 +59,7 @@ export function V2SearchField({
   inputStyle,
   placeholderTextColor,
   selectionColor,
+  accessibilityState,
   ...rest
 }: V2SearchFieldProps) {
   const { t } = useTranslation()
@@ -95,9 +96,11 @@ export function V2SearchField({
       <V2Icon name="search" size="md" color={colors.label.neutral} />
 
       <TextInput
+        {...rest}
         accessibilityRole="search"
-        accessibilityState={{ disabled }}
+        accessibilityState={{ ...accessibilityState, disabled }}
         editable={!disabled}
+        multiline={false}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -110,7 +113,6 @@ export function V2SearchField({
           { color: colors.label.normal }, // 값 색 label/normal (스펙 오타 nomal→normal 정정)
           inputStyle,
         ]}
-        {...rest}
       />
 
       {/* Trailing: Clear(x-circle) — 값 있을 때만. 탭 타깃 44는 hitSlop으로 확보. */}

@@ -318,6 +318,27 @@ describe("V2Menu — 항목", () => {
     expect(log).toEqual(["views", "close"])
   })
 
+  it("onSelect가 실패해도 메뉴는 닫힌다 — 투명 포인터 막을 남기지 않는다", () => {
+    const close = jest.fn()
+    const { overlay } = open({
+      items: [
+        {
+          key: "broken",
+          label: "실패하는 선택",
+          onSelect: () => {
+            throw new Error("selection failed")
+          },
+        },
+      ],
+      onClose: close,
+    })
+
+    expect(() => {
+      ;(oneRow(overlay, 0).props.onPress as () => void)()
+    }).toThrow("selection failed")
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
   it("D3 — 파괴적 어포던스가 없다. 항목에 무엇을 더 얹어도 그림이 같다", () => {
     /*
       01-DECISIONS D3: 이 표면은 비파괴 **선택** 전용이고 수정·삭제·신고는 시트에

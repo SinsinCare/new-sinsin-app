@@ -133,8 +133,9 @@ export function withDeadline(
  * router.back()
  * ```
  *
- * 다이얼로그의 promise 는 모달이 **닫히기 전에** resolve 되므로(50ms 는 그
- * 상태 변경이 dismiss 전이를 큐에 넣을 시간), 큐가 빈 뒤 짧은 버퍼를 더 둔다.
+ * 선언형 모달은 상태를 내린 직후 이 함수를 직접 부른다. 명령형 다이얼로그는
+ * `dialog.ts` 가 이 대기를 Promise 계약 안에 포함한다. 50ms 는 React 상태 변경이
+ * dismiss 전이를 큐에 넣을 시간을 주고, 큐가 빈 뒤 짧은 버퍼를 더 둔다.
  */
 export async function afterModalTransitions(): Promise<void> {
   await delay(50)

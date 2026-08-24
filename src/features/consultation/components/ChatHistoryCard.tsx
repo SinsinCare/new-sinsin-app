@@ -2,16 +2,17 @@ import { useState } from "react"
 import {
   GestureResponderEvent,
   Pressable,
-  Modal,
   View,
   StyleSheet,
 } from "react-native"
-import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
+import { V2HStack, V2Text, V2VStack, useV2Theme } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { Icon } from "@/src/shared/components/Icon"
-import { tokens } from "@/src/theme/tokens"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { useTranslation } from "react-i18next"
+import {
+  AppModal,
+  afterModalTransitions,
+} from "@/src/shared/components/AppModal"
 
 function formatDate(timestamp: string, language: string): string {
   const date = new Date(timestamp)
@@ -45,8 +46,7 @@ export function ChatHistoryCard({
   onDelete,
 }: ChatHistoryCardProps) {
   const { t, i18n } = useTranslation()
-  const colorScheme = useAppColorScheme()
-  const isDarkMode = colorScheme === "dark"
+  const { colors, mode } = useV2Theme()
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 })
@@ -57,10 +57,8 @@ export function ChatHistoryCard({
     setMenuOpen(true)
   }
 
-  const textColor = isDarkMode
-    ? tokens.color.textDark.val
-    : tokens.color.textLight.val
-  const deleteColor = tokens.color.primary9.val
+  const textColor = colors.label.normal
+  const deleteColor = colors.status.negative
 
   return (
     <>
@@ -68,9 +66,7 @@ export function ChatHistoryCard({
         onPress={onPress}
         style={({ pressed }) => ({
           opacity: pressed ? 0.7 : 1,
-          backgroundColor: isDarkMode
-            ? tokens.color.inputBgDark.val
-            : tokens.color.offWhite.val,
+          backgroundColor: colors.background.lower,
           borderRadius: 16,
           paddingHorizontal: 20,
           paddingVertical: 14,
@@ -79,11 +75,7 @@ export function ChatHistoryCard({
         <V2VStack gap={8}>
           <V2HStack justify="space-between" align="center">
             <V2Text
-              color={
-                isDarkMode
-                  ? tokens.color.textDark.val
-                  : tokens.color.textLight.val
-              }
+              color={colors.label.normal}
               numberOfLines={1}
               style={{
                 fontSize: 15,
@@ -102,17 +94,13 @@ export function ChatHistoryCard({
               <Ionicons
                 name="ellipsis-horizontal"
                 size={20}
-                color={
-                  isDarkMode
-                    ? tokens.color.textDark.val
-                    : tokens.color.textLight.val
-                }
+                color={colors.label.normal}
               />
             </Pressable>
           </V2HStack>
 
           <V2Text
-            color={isDarkMode ? tokens.color.textDarkSub.val : "#474758"}
+            color={colors.label.neutral}
             numberOfLines={2}
             lineBreakStrategyIOS="hangul-word"
             style={{ fontSize: 14, lineHeight: 20, fontWeight: "400" }}
@@ -121,7 +109,7 @@ export function ChatHistoryCard({
           </V2Text>
 
           <V2Text
-            color={isDarkMode ? "#66666B" : "#81818D"}
+            color={colors.label.alternative}
             style={{ fontSize: 13, lineHeight: 16, fontWeight: "400" }}
           >
             {formatDate(timestamp, i18n.language)}
@@ -129,7 +117,7 @@ export function ChatHistoryCard({
         </V2VStack>
       </Pressable>
 
-      <Modal
+      <AppModal
         visible={menuOpen}
         transparent
         animationType="fade"
@@ -142,17 +130,17 @@ export function ChatHistoryCard({
               {
                 top: menuPosition.top,
                 right: menuPosition.right,
-                backgroundColor: isDarkMode
-                  ? tokens.color.inputBgDark.val
-                  : tokens.color.pureWhite.val,
-                shadowOpacity: isDarkMode ? 0.4 : 0.15,
+                backgroundColor: colors.background.default,
+                shadowColor: colors.static.black,
+                shadowOpacity: mode === "dark" ? 0.4 : 0.15,
               },
             ]}
           >
             {/* 제목 바꾸기 */}
             <Pressable
-              onPress={() => {
+              onPress={async () => {
                 setMenuOpen(false)
+                await afterModalTransitions()
                 onRename?.()
               }}
               style={({ pressed }) => ({
@@ -171,8 +159,9 @@ export function ChatHistoryCard({
 
             {/* 삭제하기 */}
             <Pressable
-              onPress={() => {
+              onPress={async () => {
                 setMenuOpen(false)
+                await afterModalTransitions()
                 onDelete?.()
               }}
               style={({ pressed }) => ({
@@ -190,7 +179,7 @@ export function ChatHistoryCard({
             </Pressable>
           </View>
         </Pressable>
-      </Modal>
+      </AppModal>
     </>
   )
 }
@@ -203,7 +192,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     minWidth: 160,
     borderRadius: 12,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,

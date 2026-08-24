@@ -21,6 +21,7 @@ import { getAppLanguage, setAppLanguage, type Language } from "@/src/i18n"
 
 import { showErrorToast } from "@/src/lib/toast"
 import { presentError } from "@/src/lib/errorMessage"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 
 export function SettingsScreen() {
   const { t } = useTranslation("common")
@@ -321,9 +322,10 @@ export function SettingsScreen() {
         description={t("settings.account.logoutBody")}
         confirmText={t("settings.account.logout")}
         onCancel={() => setLogoutModalVisible(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           setLogoutModalVisible(false)
-          signOut("explicit")
+          await afterModalTransitions()
+          await signOut("explicit")
         }}
       />
     </ThemedView>

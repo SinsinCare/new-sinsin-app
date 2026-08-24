@@ -72,8 +72,10 @@ describe("surface palette", () => {
     )
     ;[false, true].forEach((isDark) => {
       const p = getSurfacePalette(isDark)
-      // 합성으로 만든 면(7개)은 정의상 팔레트에 없다 — 그 외는 전부 토큰 값 그대로여야 한다.
+      // 합성으로 만든 면(8개)은 정의상 팔레트에 없다 — 그 외는 전부 토큰 값 그대로여야 한다.
       // `surfaceSunken` 은 `over(fill.alternative, card)` 다(레시피 작성의 설명 칸).
+      // `bed` 는 라이트에서 두 겹 합성한 `well`, 다크에서 base다. 모드마다 같은 키를
+      // 검사하므로 합성 칸으로 분류해야 라이트의 정상 파생값을 손색으로 오인하지 않는다.
       // **`band` 는 여기 없다** — 그건 `background.lower` 를 그대로 가리키므로
       // 토큰 값 검사를 통과해야 맞다. 통과 못 하면 그때는 진짜 드리프트다.
       const composed = new Set([
@@ -82,6 +84,7 @@ describe("surface palette", () => {
         "surfacePressed",
         "surfaceBrand",
         "card",
+        "bed",
         "ctaOffBg",
         "recordedTint",
       ])

@@ -120,6 +120,7 @@ export function V2Button({
   leftIcon,
   rightIcon,
   style,
+  accessibilityState,
   ...rest
 }: V2ButtonProps) {
   const { colors } = useV2Theme()
@@ -133,8 +134,13 @@ export function V2Button({
 
   return (
     <Pressable
+      {...rest}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      accessibilityState={{
+        ...accessibilityState,
+        disabled: isDisabled,
+        busy: loading,
+      }}
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
@@ -148,7 +154,6 @@ export function V2Button({
         pressed && !isDisabled && styles.pressed,
         style,
       ]}
-      {...rest}
     >
       {loading ? (
         // 라벨 자리에 그대로 들어가는 점 세 개 — 링과 달리 버튼 높이를 흔들지 않는다.

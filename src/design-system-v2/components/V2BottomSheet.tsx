@@ -317,17 +317,53 @@ export function V2BottomSheet({
    */
   const sheetRef = useRef<BottomSheet>(null)
   const [rendered, setRendered] = useState(visible)
+  /** 콜백이 애니메이션 뒤늦은 신호를 받을 때도 부모의 최신 의도를 읽는다. */
+  const desiredVisibleRef = useRef(visible)
+  desiredVisibleRef.current = visible
   /**
    * 지금의 닫힘이 **부모가 시킨 것**인가(=`visible` 이 false 가 됐다). 사용자가 직접
    * 스크림·드래그·뒤로가기로 닫은 경우와 갈라야 `onClose` 가 두 번 불리지 않는다.
    */
   const closingByPropRef = useRef(false)
+  /**
+   * 한 번의 닫힘 동작에서 부모에게 `onClose` 를 한 번만 보낸다.
+   *
+   * backdrop 탭은 `onPress` 와 `onAnimate(..., -1)`, 완료 뒤 `onChange(-1)`까지
+   * 세 신호를 낼 수 있다. 셋 중 하나만 믿으면 그 신호가 유실될 때 전면 모달이
+   * 남고, 셋을 그대로 부모에게 보내면 화면별 닫기 부수효과가 중복 실행된다.
+   */
+  const closeRequestedRef = useRef(false)
+
+  const requestClose = useCallback(() => {
+    if (closeRequestedRef.current) return
+    closeRequestedRef.current = true
+    onClose()
+  }, [onClose])
 
   useEffect(() => {
     if (visible) {
-      closingByPropRef.current = false
+      closeRequestedRef.current = false
       setRendered(true)
-      return
+      /*
+        false → true 가 이전 닫힘 애니메이션 중에 오면 BottomSheet 컴포넌트는 아직
+        마운트돼 있어 `index={0}` 이 다시 적용되지 않는다. AppModal 만 재표시되고
+        gorhom 인스턴스는 -1 에 남으면 투명 전면 모달이 다시 스크롤을 먹는다.
+
+        다음 프레임에 명시적으로 0번 스냅을 복구한다. 처음 여는 경우에도 같은 호출은
+        멱등이고, 그 전에 다시 false 가 오면 정리 함수가 예약을 취소한다.
+      */
+      const frame = requestAnimationFrame(() =>
+        sheetRef.current?.snapToIndex(0),
+      )
+      // `snapToIndex(0)` 이 이미 0이라 onChange를 만들지 않는 드문 경우에도
+      // programmatic-close 표식이 영원히 남아 다음 드래그 닫기를 막지 않게 한다.
+      const releaseClosing = setTimeout(() => {
+        if (desiredVisibleRef.current) closingByPropRef.current = false
+      }, CLOSE_DEADLINE_MS)
+      return () => {
+        cancelAnimationFrame(frame)
+        clearTimeout(releaseClosing)
+      }
     }
     if (!rendered) return
     closingByPropRef.current = true
@@ -410,13 +446,41 @@ export function V2BottomSheet({
 
   const handleSheetChange = useCallback(
     (index: number) => {
-      if (index !== -1) return
+      if (index !== -1) {
+        // 새 열림이 실제로 도착한 뒤에야 이전 programmatic close 표식을 푼다.
+        closingByPropRef.current = false
+        return
+      }
+
+      if (desiredVisibleRef.current && closingByPropRef.current) {
+        // false → true 재열기 뒤에 도착한 **이전 닫힘** 완료 신호다. 새 표면을
+        // 내리지 말고 부모가 원하는 열린 스냅을 다시 확정한다.
+        sheetRef.current?.snapToIndex(0)
+        return
+      }
+
       setRendered(false)
       // 부모가 시킨 닫힘이면 이미 알고 있다 — 다시 알리면 두 번 닫힌다.
       if (closingByPropRef.current) return
-      onClose()
+      requestClose()
     },
-    [onClose],
+    [requestClose],
+  )
+
+  /*
+    사용자가 핸들을 내려 닫는 경우에도 **애니메이션 시작 시점**에 부모 visible 을
+    내린다. 종전에는 완료 신호 `onChange(-1)` 만 기다렸고, 그 신호가 빠지면
+    `visible=false` 에 걸린 CLOSE_DEADLINE_MS 안전장치조차 시작되지 않았다.
+
+    backdrop 은 아래 `onPress` 에서 먼저 요청하지만 `requestClose` 가 한 번으로 접는다.
+    부모가 이미 visible 을 내린 programmatic close 는 `closingByPropRef` 로 건너뛴다.
+  */
+  const handleSheetAnimate = useCallback(
+    (_fromIndex: number, toIndex: number) => {
+      if (toIndex !== -1 || closingByPropRef.current) return
+      requestClose()
+    },
+    [requestClose],
   )
 
   const renderBackdrop = useCallback(
@@ -427,6 +491,8 @@ export function V2BottomSheet({
         disappearsOnIndex={-1}
         opacity={dim ? 1 : 0}
         pressBehavior="close"
+        // 라이브러리 완료 신호가 유실돼도 부모 visible 과 마감시한을 즉시 내린다.
+        onPress={requestClose}
         /*
           `opacity` 를 1 로 두고 색을 `background.dim` 으로 준다 — 딤의 농도는 토큰이
           정한다. `dim={false}` 여도 스크림은 남는다(탭-투-클로즈를 잃지 않기 위해).
@@ -437,7 +503,7 @@ export function V2BottomSheet({
         ]}
       />
     ),
-    [colors.background.dim, dim],
+    [colors.background.dim, dim, requestClose],
   )
 
   /** 핸들. 인라인 화살표로 넘기면 매 렌더 새 타입이 되어 드래그 도중 제스처가 끊긴다. */
@@ -534,7 +600,7 @@ export function V2BottomSheet({
     <>
       {/* 우상단 닫기(옵션) — 타이틀과 같은 높이에 앉는다. */}
       {showClose && (
-        <V2SheetCloseButton onPress={onClose} label={t("action.close")} />
+        <V2SheetCloseButton onPress={requestClose} label={t("action.close")} />
       )}
 
       {!!title && (
@@ -597,7 +663,7 @@ export function V2BottomSheet({
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={requestClose}
     >
       {/* 네이티브 모달 안에서 RNGH 가 살려면 루트가 모달 **안쪽**에 있어야 한다(안드로이드). */}
       <GestureHandlerRootView style={styles.root}>
@@ -636,6 +702,7 @@ export function V2BottomSheet({
           */
           android_keyboardInputMode="adjustPan"
           bottomInset={0}
+          onAnimate={handleSheetAnimate}
           onChange={handleSheetChange}
           backdropComponent={renderBackdrop}
           handleComponent={renderHandle}

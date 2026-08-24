@@ -14,6 +14,10 @@
 // 하나 더 얹을 수 있게 하고, 호출은 **마지막에 등록된 호스트**로 간다.
 
 import { Alert } from "react-native"
+import {
+  afterSiblingModalsGone,
+  visibleModalCount,
+} from "@/src/shared/components/appModalGate"
 
 export type DialogButtonLayout = "horizontal" | "vertical"
 
@@ -147,7 +151,31 @@ export function showActionSheet(
 
 function dispatch(request: DialogRequest): Promise<DialogResult> {
   const host = activeHost()
-  return host ? host(request) : nativeFallback(request)
+  const result = host ? host(request) : nativeFallback(request)
+
+  /*
+    버튼 콜백은 RN Modal 의 dismiss 애니메이션보다 먼저 온다. 여기서 그대로 호출부를
+    깨우면 다음 줄의 router.back/replace, 이미지 피커, 로그아웃에 따른 루트 전환이
+    dismiss 와 겹쳐 iOS 에 `UITransitionView` 가 남고 아래 화면의 스크롤이 죽는다.
+
+    모든 `showConfirm`/`showAlert`/`showActionSheet` 호출부가 같은 함정을 다시 풀지
+    않도록 명령형 다이얼로그의 Promise 자체를 "표면이 내려간 뒤"의 약속으로 만든다.
+    네이티브 Alert 폴백도 짧은 안정화 구간을 함께 지나므로 초기 마운트 경로가 더
+    위험한 계약으로 갈리지 않는다.
+  */
+  return result.then(async (value) => {
+    /* 버튼 콜백 시점에는 이 다이얼로그 자신도 레지스트리에 들어 있다. 하나를 뺀 수가
+       남아 있어야 할 조상 깊이다. 요청 시점의 수를 저장하면 이미 다른 다이얼로그가
+       떠 있어 큐에 들어간 두 번째 요청이 첫 번째를 조상으로 오인한다. */
+    const parentModalDepth = host
+      ? Math.max(0, visibleModalCount() - 1)
+      : visibleModalCount()
+    /* V2BottomSheet 는 gorhom 닫힘 애니메이션 뒤에야 AppModal dismiss 를 시작한다.
+       전이 큐만 기다리면 그 사이 큐가 비어 있어 너무 일찍 통과하므로, 레지스트리가
+       호출 전의 조상 깊이로 실제로 돌아올 때까지 기다린다. */
+    await afterSiblingModalsGone(parentModalDepth)
+    return value
+  })
 }
 
 /**

@@ -62,6 +62,8 @@ export function V2Checkbox({
   disabled = false,
   onChange,
   style,
+  accessibilityState,
+  hitSlop: requestedHitSlop,
   ...rest
 }: V2CheckboxProps) {
   const { colors } = useV2Theme()
@@ -82,10 +84,11 @@ export function V2Checkbox({
 
   return (
     <Pressable
+      {...rest}
       accessibilityRole="checkbox"
-      accessibilityState={{ checked, disabled }}
+      accessibilityState={{ ...accessibilityState, checked, disabled }}
       disabled={disabled}
-      hitSlop={slop}
+      hitSlop={requestedHitSlop ?? slop}
       onPress={() => onChange?.(!checked)}
       style={({ pressed }) => [
         { width: px, height: px },
@@ -93,7 +96,6 @@ export function V2Checkbox({
         disabled && styles.disabled,
         style,
       ]}
-      {...rest}
     >
       <Svg width={px} height={px} viewBox={`0 0 ${px} ${px}`}>
         {variant === "circle" && (
