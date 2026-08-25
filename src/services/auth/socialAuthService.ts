@@ -57,6 +57,35 @@ function isGoogleDeveloperError(e: unknown): boolean {
 }
 
 /**
+ * 카카오판 "이 빌드의 설정이 서버(카카오 콘솔)와 다르다".
+ *
+ * 안드로이드에서는 대개 **이 설치본을 서명한 키의 해시가 콘솔에 미등록**일 때 난다 —
+ * 같은 앱이라도 debug/업로드/Play 재서명 세 해시가 전부 다르다(아래 keyHash 주석).
+ * 웹 동의 화면까지는 정상으로 끝나고 SDK 토큰 발급에서 거절되므로, 사용자에게는
+ * "카카오 로그인을 다 했는데 안 된다" 로 보인다(2026-08-25 실기기 보고).
+ *
+ * 구글의 `DEVELOPER_ERROR` 와 똑같은 이유로 번역이 필요하다: 날것으로 던지면
+ * `isApiErrorLike` 도 오프라인 판정도 아니라서 마지막 폴백(`transport.unknown`,
+ * "지금은 이 작업을 마치지 못했어요")으로 떨어진다 — 사용자가 고칠 수 없는 문제를
+ * "잠시 뒤 다시 시도" 로 안내하는, 2026-08-04 구글 QA 와 동일한 오진이다.
+ *
+ * `Misconfigured` 는 RNCKakao 가 카카오 SDK 의 ClientError(reason=Misconfigured)를
+ * 넘겨주는 코드이고(2026-08-24 에뮬레이터 실측: 미등록 해시에서
+ * `{code:"Misconfigured", message:"Android keyHash validation failed."}`),
+ * KOE 는 kauth 오류 페이지 계열이다.
+ */
+function isKakaoMisconfiguredError(e: unknown): boolean {
+  const err = e as { code?: unknown; message?: unknown }
+  const code = typeof err?.code === "string" ? err.code : ""
+  const message = typeof err?.message === "string" ? err.message : ""
+  return (
+    code === "Misconfigured" ||
+    message.includes("keyHash") ||
+    message.includes("KOE")
+  )
+}
+
+/**
  * 설정 오류를 **설정 오류라고** 말하는 에러.
  *
  * 이걸 세우지 않으면 SDK 원본 에러(`{message, code}`)가 그대로 올라가는데, 그 모양이
@@ -380,6 +409,10 @@ export async function signInWithKakao(): Promise<SocialAuthResult> {
       // 실패한 그 기기의 키 해시. 미등록이면 이 값을 카카오 콘솔에 넣으면 끝난다.
       androidKeyHash,
     })
+    // 구글 DEVELOPER_ERROR 와 같은 번역 — 근거는 isKakaoMisconfiguredError 머리말.
+    if (isKakaoMisconfiguredError(e)) {
+      throw createSocialConfigError("kakao")
+    }
     throw e
   }
 

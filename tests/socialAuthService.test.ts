@@ -210,6 +210,29 @@ describe("socialAuthService", () => {
     expect(logger.error).toHaveBeenCalledWith("[Kakao SignIn] accessToken 없음")
   })
 
+  it("키 해시 미등록(Misconfigured)은 설정 오류로 번역된다 — transport.unknown 오진 방지", async () => {
+    /*
+      2026-08-25 실기기 보고의 재현: 카카오 웹 동의는 끝났는데 SDK 토큰 발급이
+      Misconfigured 로 거절되면, 날것 에러는 API 오류도 오프라인도 아니라서
+      "지금은 이 작업을 마치지 못했어요"(transport.unknown) 로 떨어졌다.
+      사용자가 고칠 수 없는 문제는 그렇게 말해야 한다 — SOCIAL_CONFIG_ERROR.
+    */
+    mockKakaoLogin.mockRejectedValueOnce(
+      Object.assign(new Error("Android keyHash validation failed."), {
+        code: "Misconfigured",
+      }),
+    )
+
+    await expect(signInWithKakao()).rejects.toMatchObject({
+      code: "SOCIAL_CONFIG_ERROR",
+    })
+    // 진단용 키 해시 로그는 그대로 남는다.
+    expect(logger.error).toHaveBeenCalledWith(
+      "[Kakao SignIn] login 실패",
+      expect.objectContaining({ code: "Misconfigured" }),
+    )
+  })
+
   it("falls back once from KakaoTalk failure to Kakao Account login", async () => {
     mockIsKakaoTalkLoginAvailable.mockResolvedValueOnce(true)
     mockKakaoLogin
