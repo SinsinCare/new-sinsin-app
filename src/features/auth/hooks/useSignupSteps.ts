@@ -83,8 +83,8 @@ export function useSignupSteps() {
   const isCompletionMode = isProfileSetupCompletionMode({
     accountState,
     entryGate,
-    sessionPersistence,
     requiresAdditionalInfo,
+    isAuthenticated,
   })
 
   /*
@@ -197,9 +197,20 @@ export function useSignupSteps() {
         고칠 수 있는 사람에게 고칠 수 있는 곳을 준다: 이메일 인증 단계로 돌려보낸다.
       */
       if (!signupStore.signupToken || !signupStore.password) {
+        /*
+          여기 오는 것은 이메일 인증을 안 거친 signup 모드뿐이어야 한다. 로그인된
+          사용자가 여기 왔다면 모드 판정이 어긋난 것이고(2026-08-25 무한 루프 —
+          지금은 `isProfileSetupCompletionMode` 가 가드와 정렬돼 막혀 있다), 그때
+          "어느 스토어 값이 오염됐는지"가 이 이벤트에 남아야 다음 진단이 로그
+          없이도 된다. 실기기에서 그 궤적을 쫓을 유일한 흔적이 이 이벤트였다.
+        */
         trackAnalyticsEvent("auth_signup_failed", {
           method: "email",
           stage: "account",
+          account_state: accountState ?? "none",
+          entry_gate: entryGate,
+          session_persistence: sessionPersistence,
+          is_authenticated: isAuthenticated,
         })
         setSubmitError(t("signup.steps.verificationExpired"))
         router.replace("/(auth)/signup-email")
@@ -251,9 +262,13 @@ export function useSignupSteps() {
       setIsSubmitting(false)
     }
   }, [
+    accountState,
     completeProfile,
     draft,
+    entryGate,
+    isAuthenticated,
     isCompletionMode,
+    sessionPersistence,
     t,
     setAccountState,
     setEntryGate,

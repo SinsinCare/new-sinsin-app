@@ -3,23 +3,44 @@ import type { EntryGate, SessionPersistence } from "@/src/types"
 interface ProfileSetupModeInput {
   accountState: string | null
   entryGate: EntryGate
-  sessionPersistence: SessionPersistence
+  /** @deprecated 판정에서 제외됐다 — 가드와 같은 축만 본다(아래 머리말). 호출부 호환용. */
+  sessionPersistence?: SessionPersistence
   requiresAdditionalInfo: boolean
+  isAuthenticated: boolean
 }
 
 /**
- * The server entry gate is authoritative for an incomplete signup session.
- * Account state alone may still be a legacy value while the user must complete
- * their profile before reaching onboarding.
+ * **가드가 붙잡는 상태는 전부 완성 모드다** — 이 판정은 루트 가드
+ * (`shared/navigation/guard.ts` 의 `mustFinishProfile`: `entryGate === "PROFILE" ||
+ * accountState === "PENDING_PROFILE" || 추가정보`)와 같은 축을 봐야 한다.
+ *
+ * ■ 왜 (2026-08-25 실기기, "닉네임으로 자꾸 되돌아감. 무한반복")
+ *
+ * 예전 판정은 `entryGate === "PROFILE" && sessionPersistence === "ephemeral"` 로
+ * 가드보다 좁았다. 카카오로 로그인한 PENDING_PROFILE 사용자의 스토어가 어떤 경로로든
+ * 그 좁은 조건을 벗어나면(실측: 여섯 스텝의 mode 가 전부 "signup" 으로 발화),
+ * 제출이 **이메일 가입 분기**를 타고 — 소셜 사용자에게는 없는 `signupToken` 이 비어
+ * — `signup-email` 로 replace 하는데, 가드는 여전히 그 사용자를 붙잡고 있으므로
+ * 즉시 profile-setup 으로 되돌린다. 리마운트로 입력은 비워지고, 사용자는 여섯 스텝을
+ * 다시 채우고, 같은 자리에서 또 튕긴다 — 탈출구가 로그아웃뿐인 무한 루프다.
+ *
+ * 가드가 붙잡았다 = 이 화면의 제출로만 나갈 수 있다 = 그 제출은
+ * `POST /user/profile/complete` 여야 한다. 둘의 판정이 갈라지면 어긋난 폭만큼이
+ * 전부 루프다. 그래서 **넓히는 쪽이 아니라 같게 만드는 쪽**이 맞다.
+ *
+ * `isAuthenticated` 를 함께 보는 이유: 이메일 가입은 **로그인 전에** 이 화면을
+ * 지나므로(계정이 아직 없다) 가드의 대상이 아니고, 그쪽은 계속 signup 모드여야 한다.
  */
 export function isProfileSetupCompletionMode({
   accountState,
   entryGate,
-  sessionPersistence,
   requiresAdditionalInfo,
+  isAuthenticated,
 }: ProfileSetupModeInput) {
+  if (!isAuthenticated) return false
   return (
-    (entryGate === "PROFILE" && sessionPersistence === "ephemeral") ||
+    entryGate === "PROFILE" ||
+    accountState === "PENDING_PROFILE" ||
     (accountState === "ACTIVE" && requiresAdditionalInfo)
   )
 }

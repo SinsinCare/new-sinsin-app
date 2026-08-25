@@ -620,6 +620,16 @@ export type AnalyticsEventProperties = {
   auth_signup_failed: {
     method: AnalyticsSignupMethod
     stage: "consent" | "account" | "profile"
+    /*
+      아래 넷은 `stage:'account'` 의 "인증 없이 이메일 분기에 도달" 갈래만 싣는다.
+      로그인된 사용자가 거기 왔다면 완성 모드 판정이 어긋난 것인데(2026-08-25 실기기
+      무한 루프), 그 궤적을 쫓을 유일한 흔적이 이 이벤트라 — 어느 스토어 값이
+      오염됐는지가 여기 남아야 다음 진단이 기기 로그 없이 끝난다.
+    */
+    account_state?: string
+    entry_gate?: string
+    session_persistence?: string
+    is_authenticated?: boolean
   }
   /**
    * 계정 연결 곁길의 완주. 방향이 둘이라 `mode` 로 가른다 — `social_email` 은 구계정
