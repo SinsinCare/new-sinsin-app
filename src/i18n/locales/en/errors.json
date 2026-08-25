@@ -367,7 +367,7 @@
       "body": "We'll let you know when your doctor accepts."
     },
     "SOCIAL_CONFIG_ERROR": {
-      "title": "Social sign-in isn’t available on this build",
+      "title": "Social sign-in isn’t available in this version",
       "body": "This is an app configuration issue, not your connection. Please use email sign-in and let us know so we can fix it."
     }
   }
