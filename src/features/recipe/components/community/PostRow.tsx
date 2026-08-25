@@ -40,6 +40,10 @@ import { V2Text } from "@/src/design-system-v2/components/V2Text"
 import { useV2Theme } from "@/src/design-system-v2/hooks/useV2Theme"
 import { radius } from "@/src/design-system-v2/tokens/radius"
 import { spacing } from "@/src/design-system-v2/tokens/spacing"
+import {
+  remoteImageSource,
+  stableImageCacheKey,
+} from "@/src/shared/images/remoteImageSource"
 
 import type { CommunityMealPost } from "../../types"
 import { formatTimeAgo } from "../../utils/timeAgo"
@@ -239,7 +243,9 @@ export function PostRow({
 
           {thumbnail ? (
             <Image
-              source={{ uri: thumbnail }}
+              source={remoteImageSource(thumbnail)}
+              // FlashList 재활용 시 이전 행의 사진이 잠깐 비치지 않게 — 키는 서명 회전에 불변.
+              recyclingKey={stableImageCacheKey(thumbnail) ?? thumbnail}
               style={[
                 styles.thumbnail,
                 { backgroundColor: colors.fill.normal },

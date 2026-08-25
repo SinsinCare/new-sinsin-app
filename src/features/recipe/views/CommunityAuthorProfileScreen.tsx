@@ -15,6 +15,7 @@ import { afterModalTransitions } from "@/src/shared/components/AppModal"
 import { showConfirm } from "@/src/lib/dialog"
 import { resolveError } from "@/src/lib/errorMessage"
 import { ArticleSkeleton, ErrorMessage } from "@/src/shared/components"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useCommunityAuthor } from "../hooks/useCommunityAuthor"
 import { useCommunityPosts } from "../hooks/useCommunityPosts"
 import { PostListItem } from "../components/PostListItem"
@@ -206,7 +207,7 @@ export function CommunityAuthorProfileScreen() {
           <View style={[styles.avatar, { backgroundColor: surface.surface }]}>
             {profile.profileImageUrl ? (
               <Image
-                source={{ uri: profile.profileImageUrl }}
+                source={remoteImageSource(profile.profileImageUrl)}
                 style={styles.avatarImage}
               />
             ) : (

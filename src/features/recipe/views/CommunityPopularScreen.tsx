@@ -22,6 +22,7 @@ import {
   V2SkeletonGroup,
   type V2ErrorStateRetry,
 } from "@/src/design-system-v2"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useCommunityPopularPosts } from "../hooks/useCommunityPopularPosts"
 import { isAuthorBlocked, useBlockedUsers } from "../hooks/useBlockedUsers"
 import { COMMUNITY_POPULAR_REFRESH } from "../refresh/scopes"
@@ -241,7 +242,7 @@ export function CommunityPopularScreen() {
         </View>
         {item.imageUri && (
           <Image
-            source={{ uri: item.imageUri }}
+            source={remoteImageSource(item.imageUri)}
             style={[styles.thumbnail, { backgroundColor: surface.surface }]}
             contentFit="cover"
           />

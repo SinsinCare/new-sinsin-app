@@ -16,6 +16,7 @@ import {
   V2SkeletonGroup,
 } from "@/src/design-system-v2"
 import { ErrorMessage } from "@/src/shared/components"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useCommunityFollowList } from "../hooks/useCommunityAuthor"
 import type { CommunityAuthorSummary } from "../types"
 
@@ -47,7 +48,7 @@ function ConnectionRow({ author }: { author: CommunityAuthorSummary }) {
       <View style={[styles.avatar, { backgroundColor: surface.surface }]}>
         {author.profileImageUrl ? (
           <Image
-            source={{ uri: author.profileImageUrl }}
+            source={remoteImageSource(author.profileImageUrl)}
             style={styles.avatarImage}
           />
         ) : (

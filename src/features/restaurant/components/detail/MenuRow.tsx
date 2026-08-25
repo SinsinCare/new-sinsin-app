@@ -79,6 +79,7 @@ import {
   useV2Theme,
 } from "@/src/design-system-v2"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import type { MenuItemDto, SafetyLevel } from "../../types"
 import { menuSafetyEvidence } from "../../utils/menuSafetyEvidence"
@@ -284,7 +285,7 @@ export function MenuRow({
       */}
       {menu.imageUrl ? (
         <Image
-          source={{ uri: menu.imageUrl }}
+          source={remoteImageSource(menu.imageUrl)}
           style={styles.thumbnail}
           contentFit="cover"
           // 메뉴 사진은 장식이다. 이름·가격이 이미 같은 행에 있어 다시 읽힐 필요가 없다.

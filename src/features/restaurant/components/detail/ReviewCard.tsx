@@ -59,6 +59,7 @@ import { useState } from "react"
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import {
   iconSize,
@@ -155,7 +156,7 @@ export function ReviewCard({
         >
           {author.avatarUrl ? (
             <Image
-              source={{ uri: author.avatarUrl }}
+              source={remoteImageSource(author.avatarUrl)}
               style={styles.avatar}
               contentFit="cover"
             />
@@ -228,7 +229,7 @@ export function ReviewCard({
               ]}
             >
               <Image
-                source={{ uri: url }}
+                source={remoteImageSource(url)}
                 style={[
                   styles.photo,
                   { backgroundColor: colors.fill.alternative },

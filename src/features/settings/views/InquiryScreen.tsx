@@ -64,6 +64,7 @@ import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSett
 import { showConfirm } from "@/src/lib/dialog"
 import { showCautionToast, showSuccessToast } from "@/src/lib/toast"
 import { presentError } from "@/src/lib/errorMessage"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useAppRouter } from "@/src/shared/navigation"
 
 /** 서버 계약(`inquiryCreateBody` / `user_inquiry`)과 같은 값. 여기서 임의로 낮추지 말 것. */
@@ -288,7 +289,7 @@ export function InquiryScreen() {
               {photos.map((photo) => (
                 <View key={photo.uri} style={styles.photoTile}>
                   <Image
-                    source={{ uri: photo.uri }}
+                    source={remoteImageSource(photo.uri)}
                     style={styles.photoImage}
                     contentFit="cover"
                   />

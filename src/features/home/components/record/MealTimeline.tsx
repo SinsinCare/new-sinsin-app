@@ -13,6 +13,7 @@ import SnackGraphic from "@/assets/images/meal-snack.svg"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { TYPE } from "@/src/theme/surface"
 
 import { MEAL_OPTIONS } from "../../data/mealConstants"
@@ -180,7 +181,7 @@ function MealCard({
         accessibilityLabel={a11y}
       >
         <Image
-          source={{ uri: imageUri }}
+          source={remoteImageSource(imageUri)}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
         />

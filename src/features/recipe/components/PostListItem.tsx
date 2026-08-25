@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -151,7 +152,7 @@ export function PostListItem({
         </View>
         {imageUri ? (
           <Image
-            source={{ uri: imageUri }}
+            source={remoteImageSource(imageUri)}
             style={[styles.thumbnail, { backgroundColor: surface.surface }]}
             contentFit="cover"
           />

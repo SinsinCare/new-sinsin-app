@@ -5,6 +5,7 @@ import {
   afterModalTransitions,
 } from "@/src/shared/components/AppModal"
 import { Image } from "expo-image"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -251,7 +252,7 @@ export function HealthDataUploadScreen() {
                   </View>
                 ) : (
                   <Image
-                    source={{ uri: file.uri }}
+                    source={remoteImageSource(file.uri)}
                     style={styles.thumb}
                     contentFit="cover"
                   />

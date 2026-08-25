@@ -6,6 +6,7 @@ import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
 import type { CuratedRecipe } from "../data/curatedRecipeTypes"
 import { useTranslation } from "react-i18next"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 const CATEGORY_KEYS = {
   한식: "category.food.korean",
@@ -87,12 +88,33 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
       onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
-      <V2VStack padding={image ? 12 : 14} gap={image ? 8 : 10} style={{ backgroundColor: palette.bg, borderRadius: 12, borderWidth: 1, borderColor: palette.border, minHeight: image ? undefined : 178 }}>
+      <V2VStack
+        padding={image ? 12 : 14}
+        gap={image ? 8 : 10}
+        style={{
+          backgroundColor: palette.bg,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: palette.border,
+          minHeight: image ? undefined : 178,
+        }}
+      >
         {/* Recipe image */}
         {image && (
-          <V2Box style={[{ aspectRatio: 1, width: "100%" }, { borderRadius: 8, overflow: "hidden", backgroundColor: palette.tagBg }]}>
+          <V2Box
+            style={[
+              { aspectRatio: 1, width: "100%" },
+              {
+                borderRadius: 8,
+                overflow: "hidden",
+                backgroundColor: palette.tagBg,
+              },
+            ]}
+          >
             <Image
-              source={typeof image === "string" ? { uri: image } : image}
+              source={
+                typeof image === "string" ? remoteImageSource(image) : image
+              }
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -100,7 +122,14 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
           </V2Box>
         )}
         {!image && (
-          <V2Box style={{ height: 4, width: 42, borderRadius: 999, backgroundColor: palette.accent }}/>
+          <V2Box
+            style={{
+              height: 4,
+              width: 42,
+              borderRadius: 999,
+              backgroundColor: palette.accent,
+            }}
+          />
         )}
 
         {/* Meta: category · difficulty · time */}
@@ -109,7 +138,11 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
         </V2Text>
 
         {/* Title */}
-        <V2Text color={palette.title} numberOfLines={2} style={{ fontSize: 15, fontWeight: "600", lineHeight: 22 }}>
+        <V2Text
+          color={palette.title}
+          numberOfLines={2}
+          style={{ fontSize: 15, fontWeight: "600", lineHeight: 22 }}
+        >
           {recipe.name}
         </V2Text>
 
@@ -120,8 +153,16 @@ export const CuratedRecipeCard = memo(function CuratedRecipeCard({
 
         {/* 영양·CKD 적합성은 임상 검수 전이므로 중립 상태만 보여 준다. */}
         <V2HStack>
-          <V2HStack paddingHorizontal={8} paddingVertical={4} style={{ borderRadius: 8, backgroundColor: palette.tagBg }}>
-            <V2Text color={palette.tagText} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 12, fontWeight: "600" }}>
+          <V2HStack
+            paddingHorizontal={8}
+            paddingVertical={4}
+            style={{ borderRadius: 8, backgroundColor: palette.tagBg }}
+          >
+            <V2Text
+              color={palette.tagText}
+              lineBreakStrategyIOS="hangul-word"
+              style={{ fontSize: 12, fontWeight: "600" }}
+            >
               {t("curated.estimatedBadge")}
             </V2Text>
           </V2HStack>

@@ -52,6 +52,7 @@ import {
 import { Image } from "expo-image"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import {
   V2Icon,
@@ -201,7 +202,7 @@ export function RestaurantPhotoViewerScreen({
       <View style={[styles.page, { width: frame.width, height: frame.height }]}>
         {/* 뒤: 같은 사진을 프레임에 꽉 채우고 흐리게 — 세로 사진의 위/아래 띠가 된다. */}
         <Image
-          source={{ uri: item.originalUrl ?? item.url }}
+          source={remoteImageSource(item.originalUrl ?? item.url)}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           blurRadius={BACKDROP_BLUR}
@@ -210,7 +211,7 @@ export function RestaurantPhotoViewerScreen({
         />
         {/* 앞: 잘리지 않는 본 사진. */}
         <Image
-          source={{ uri: item.originalUrl ?? item.url }}
+          source={remoteImageSource(item.originalUrl ?? item.url)}
           style={styles.pageImage}
           contentFit="contain"
           transition={160}
@@ -376,7 +377,7 @@ export function RestaurantPhotoViewerScreen({
               >
                 {author.avatarUrl ? (
                   <Image
-                    source={{ uri: author.avatarUrl }}
+                    source={remoteImageSource(author.avatarUrl)}
                     style={styles.avatarImage}
                     contentFit="cover"
                   />

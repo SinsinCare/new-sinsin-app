@@ -36,6 +36,10 @@ import {
 } from "react-native"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
+import {
+  remoteImageSource,
+  stableImageCacheKey,
+} from "@/src/shared/images/remoteImageSource"
 
 import { V2Divider } from "@/src/design-system-v2/components/V2Divider"
 import { V2Text } from "@/src/design-system-v2/components/V2Text"
@@ -139,7 +143,9 @@ export function CompactPostRow({ post, onPress, style }: CompactPostRowProps) {
         {thumbnail ? (
           <View>
             <Image
-              source={{ uri: thumbnail }}
+              source={remoteImageSource(thumbnail)}
+              // FlashList 재활용 시 이전 행의 사진이 잠깐 비치지 않게 — 키는 서명 회전에 불변.
+              recyclingKey={stableImageCacheKey(thumbnail) ?? thumbnail}
               style={[
                 styles.thumbnail,
                 { backgroundColor: colors.fill.normal },

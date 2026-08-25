@@ -218,6 +218,15 @@ export function buildMapHtml({
 <meta charset="utf-8" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<!--
+  DNS+TLS 를 파싱과 병렬로 돌린다. 이 HTML 은 폰트 439KB(base64)와 ~1,000줄 스크립트를
+  파싱한 **뒤에야** sdk 태그를 만들므로(맨 끝 동적 생성), preconnect 가 없으면 그 파싱
+  시간 동안 네트워크가 완전히 논다. 호스트 셋: SDK 로더(dapi) → 본체(t1.daumcdn) →
+  타일(map.daumcdn 계열은 서브도메인이 흩어져 있어 대표만).
+-->
+<link rel="preconnect" href="https://dapi.kakao.com" crossorigin />
+<link rel="preconnect" href="https://t1.daumcdn.net" crossorigin />
+<link rel="dns-prefetch" href="https://map.daumcdn.net" />
 <style>
 ${MAP_FONT_FACE_CSS}
   /* 텍스트 선택·콜아웃을 끈다. 마커 라벨/말풍선은 글자라서 롱프레스하면 iOS 가 돋보기와

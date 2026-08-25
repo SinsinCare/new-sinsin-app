@@ -56,6 +56,7 @@ import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list"
 import { Image } from "expo-image"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import {
   V2Button,
@@ -253,7 +254,7 @@ export function ReviewerProfileScreen({
           {/* 서버 키는 `profileImageUrl` 이다(`avatarUrl` 이 아니다). */}
           {profile?.profileImageUrl ? (
             <Image
-              source={{ uri: profile.profileImageUrl }}
+              source={remoteImageSource(profile.profileImageUrl)}
               style={styles.avatarImage}
               contentFit="cover"
             />
@@ -642,7 +643,7 @@ function ProfileReviewRow({
               style={({ pressed }) => [pressed && styles.pressedCard]}
             >
               <Image
-                source={{ uri: url }}
+                source={remoteImageSource(url)}
                 style={[styles.photo, { width: photoSize, height: photoSize }]}
                 contentFit="cover"
                 transition={120}

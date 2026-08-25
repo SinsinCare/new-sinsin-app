@@ -49,6 +49,7 @@ import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
 import { radius, spacing, useV2Theme } from "@/src/design-system-v2"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import { RAIL_INSET } from "../layout"
 import type { CuisineType } from "../types"
@@ -158,7 +159,7 @@ export const PhotoStrip = memo(function PhotoStrip({
           ]}
         >
           <Image
-            source={{ uri: url }}
+            source={remoteImageSource(url)}
             style={styles.image}
             contentFit="cover"
             accessibilityLabel={t("restaurant.photoAccessibility", {

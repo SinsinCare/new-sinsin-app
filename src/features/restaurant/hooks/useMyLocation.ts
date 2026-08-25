@@ -101,6 +101,28 @@ export function useMyLocation(): UseMyLocationResult {
           }
           return
         }
+        /*
+          콜드 GPS 픽스는 1~3초 — 그동안 지도는 폴백(강남)으로 뜨고, 좌표가 늦게
+          도착하면 카메라 점프 + **두 번째 검색**이 돈다(타일·질의 이중 지불).
+          OS 가 들고 있는 마지막 좌표(`getLastKnownPositionAsync`)는 즉시 반환이라
+          먼저 깔아 두고, 정확한 픽스가 오면 덮어쓴다. 낡은 좌표(이사·여행)여도
+          카메라 시작점 용도라 해가 없고, 커버리지 판정은 좌표를 **소비하는 쪽**
+          (useMyLocation 반환값을 받는 화면의 isWithinKakaoCoverage 접기)이 하므로
+          여기서 어느 좌표를 주든 규칙이 그대로 통과한다.
+        */
+        const lastKnown = await Location.getLastKnownPositionAsync()
+        if (cancelled || !mounted.current) return
+        if (lastKnown !== null) {
+          setState({
+            status: "granted",
+            coords: {
+              lat: lastKnown.coords.latitude,
+              lng: lastKnown.coords.longitude,
+            },
+            blockedForever: false,
+            isRequesting: false,
+          })
+        }
         const position = await Location.getCurrentPositionAsync({})
         if (cancelled || !mounted.current) return
         setState({

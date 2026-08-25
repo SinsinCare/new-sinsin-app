@@ -17,6 +17,7 @@ import {
   Linking,
 } from "react-native"
 import { Image as ExpoImage } from "expo-image"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import * as ImagePicker from "expo-image-picker"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -859,7 +860,7 @@ export default function ConsultScreen() {
               <View style={styles.attachmentRow}>
                 <View style={styles.attachmentThumbWrap}>
                   <ExpoImage
-                    source={{ uri: attachedImageUri }}
+                    source={remoteImageSource(attachedImageUri)}
                     style={styles.attachmentThumb}
                     contentFit="cover"
                     transition={100}

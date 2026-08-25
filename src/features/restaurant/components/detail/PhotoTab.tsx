@@ -83,6 +83,7 @@ import {
   V2ErrorState,
   V2Icon,
 } from "@/src/design-system-v2"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import { PhotoTabSkeleton } from "./DetailSkeletons"
 import { CHIP_GAP, GUTTER, RAIL_INSET } from "../../layout"
@@ -236,7 +237,9 @@ export function PhotoTab({
     }
 
     for (const photo of todo) {
-      void Image.loadAsync(photo.url, {
+      // 렌더(remoteImageSource)와 같은 캐시 키로 워밍해야 미리 받은 것이 실제로 맞는다 —
+      // 키가 다르면 워밍이 캐시 미스로 끝나 두 번 내려받는다.
+      void Image.loadAsync(remoteImageSource(photo.url), {
         maxWidth: MEASURE_MAX_PX,
         maxHeight: MEASURE_MAX_PX,
       })
@@ -354,7 +357,7 @@ export function PhotoTab({
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <Image
-                    source={{ uri: photo.url }}
+                    source={remoteImageSource(photo.url)}
                     style={[
                       styles.tile,
                       {

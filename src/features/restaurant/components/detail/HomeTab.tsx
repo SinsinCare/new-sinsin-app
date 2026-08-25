@@ -61,6 +61,7 @@ import {
   V2Divider,
   V2Icon,
 } from "@/src/design-system-v2"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import { GUTTER, SECTION_GAP } from "../../layout"
 import { buildConsultQuestions } from "../../consult/suggestedQuestions"
@@ -251,7 +252,7 @@ export function HomeTab({
                   style={({ pressed }) => [pressed && styles.pressedCard]}
                 >
                   <Image
-                    source={{ uri: photo.url }}
+                    source={remoteImageSource(photo.url)}
                     style={[
                       styles.photoTile,
                       {

@@ -15,6 +15,7 @@ import { ThemedView } from "@/components/themed-view"
 import { tokens } from "@/src/theme/tokens"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { examOcrService, getOcrErrorMessage } from "@/src/services/data"
 import { logger } from "@/src/lib/logger"
 import type { OcrConfirmItem, OcrReport } from "@/src/features/health/types"
@@ -275,7 +276,7 @@ export function OcrReviewScreen() {
         {/* 원본 검사지 미리보기 */}
         {report.imageUrl ? (
           <Image
-            source={{ uri: report.imageUrl }}
+            source={remoteImageSource(report.imageUrl)}
             style={styles.preview}
             contentFit="cover"
           />

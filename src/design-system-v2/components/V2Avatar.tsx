@@ -30,6 +30,10 @@ import { useState } from "react"
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
+import {
+  remoteImageSource,
+  stableImageCacheKey,
+} from "@/src/shared/images/remoteImageSource"
 
 import { radius } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
@@ -81,11 +85,13 @@ export function V2Avatar({
     >
       {showPhoto ? (
         <Image
-          source={{ uri: source }}
+          source={remoteImageSource(source)}
           style={styles.photo}
           contentFit="cover"
           // FlashList 는 행을 재활용한다 — 키가 없으면 새 행에 옛 사진이 한 프레임 남는다.
-          recyclingKey={source}
+          // 키는 서명 회전(15분)에 불변 — URL 이 바뀌어도 같은 사진이면 리셋하지 않는다.
+          // onError 의 failedUri 비교는 uri 기준 그대로: 새 서명 URL 이 오면 재시도가 풀린다.
+          recyclingKey={stableImageCacheKey(source) ?? source}
           onError={() => setFailedUri(source)}
         />
       ) : (

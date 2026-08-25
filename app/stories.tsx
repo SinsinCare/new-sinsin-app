@@ -10,6 +10,7 @@ import {
 import { Text } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useLocalSearchParams, type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -262,7 +263,7 @@ export default function StoriesScreen() {
   const renderStory = ({ item }: { item: CommunityStory }) => (
     <View style={{ width: windowWidth, height: windowHeight }}>
       <Image
-        source={{ uri: item.imageUri }}
+        source={remoteImageSource(item.imageUri)}
         style={styles.image}
         contentFit="contain"
       />

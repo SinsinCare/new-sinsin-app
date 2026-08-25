@@ -58,6 +58,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import {
   REVIEW_MAX_PHOTOS,
@@ -340,7 +341,7 @@ export function MediaPicker({
           style={({ pressed }) => [tile, pressed && styles.pressedTile]}
         >
           <Image
-            source={{ uri: item.uri }}
+            source={remoteImageSource(item.uri)}
             style={styles.tileImage}
             contentFit="cover"
             transition={120}

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { TYPE } from "@/src/theme/surface"
 import { RecordSheetShell } from "./RecordSheetShell"
 import type { MealType } from "../../../types"
@@ -113,7 +114,7 @@ export function MealPhotoConfirmSheet({
           <Image
             accessibilityIgnoresInvertColors
             accessibilityLabel={t("home.sheet.mealPhoto.photoLabel")}
-            source={{ uri: photo.uri }}
+            source={remoteImageSource(photo.uri)}
             style={StyleSheet.absoluteFill}
             contentFit="contain"
             transition={140}

@@ -104,6 +104,7 @@ import {
   type AnalyticsRestaurantEntrySource,
 } from "@/src/features/analytics"
 import { restaurantDeepLink } from "@/src/shared/utils/deepLink"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { resolveError } from "@/src/lib/errorMessage"
 
 import { GUTTER, RAIL_INSET, SECTION_GAP } from "../layout"
@@ -787,7 +788,7 @@ function RestaurantDetailBody({
                     style={({ pressed }) => [pressed && styles.pressedCard]}
                   >
                     <Image
-                      source={{ uri: url }}
+                      source={remoteImageSource(url)}
                       style={[
                         styles.carouselImage,
                         { width: carouselWidth, height: carouselHeight },

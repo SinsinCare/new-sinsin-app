@@ -11,6 +11,7 @@ import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
 import { Image } from "expo-image"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useTranslation } from "react-i18next"
 
 import { parseRestaurantConsultMessage } from "@/src/features/restaurant/consult/restaurantConsultMessage"
@@ -400,7 +401,7 @@ export const UserBubble = memo(function UserBubble({
         {/* 첨부 사진은 버블 밖 독립 썸네일 — 요즘 LLM 챗 문법 그대로. */}
         {message.imageUri && (
           <Image
-            source={{ uri: message.imageUri }}
+            source={remoteImageSource(message.imageUri)}
             style={{ width: 180, height: 180, borderRadius: 18 }}
             contentFit="cover"
             transition={120}

@@ -19,6 +19,7 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import type { RecipeStep } from "../../types/recipeV2"
 import { StepTimerButton } from "./StepTimerButton"
 
@@ -71,7 +72,7 @@ export function StepSection({ steps }: StepSectionProps) {
                     ]}
                   >
                     <Image
-                      source={{ uri: step.imageUrl }}
+                      source={remoteImageSource(step.imageUrl)}
                       style={styles.photoImage}
                       contentFit="cover"
                       cachePolicy="memory-disk"

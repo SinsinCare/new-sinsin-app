@@ -63,6 +63,7 @@ import { resolveError } from "@/src/lib/errorMessage"
 import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
 import type { CommunityComment } from "@/src/features/recipe/types"
 import { useTranslation } from "react-i18next"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import { showSuccessToast } from "@/src/lib/toast"
 
@@ -991,7 +992,7 @@ export default function PostDetailScreen() {
               accessibilityLabel={t("community.postDetail.enlargePhoto")}
             >
               <Image
-                source={{ uri: post.imageUris[0] }}
+                source={remoteImageSource(post.imageUris[0])}
                 style={[styles.postImage, { backgroundColor: surface.surface }]}
                 contentFit="cover"
               />
@@ -1017,7 +1018,7 @@ export default function PostDetailScreen() {
                 )}
               >
                 <Image
-                  source={{ uri }}
+                  source={remoteImageSource(uri)}
                   style={[
                     styles.stripImage,
                     { backgroundColor: surface.surface },
@@ -1367,7 +1368,7 @@ export default function PostDetailScreen() {
         >
           {previewImage && (
             <Image
-              source={{ uri: previewImage }}
+              source={remoteImageSource(previewImage)}
               style={styles.previewImage}
               contentFit="contain"
             />

@@ -11,6 +11,7 @@ import {
 import { Portal } from "@/src/shared/components/Portal"
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated"
 import { Image } from "expo-image"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import {
   V2Badge,
   V2Button,
@@ -174,7 +175,7 @@ function AnnouncementPopupCard({
         >
           {notice.imageUrl && (
             <Image
-              source={{ uri: notice.imageUrl }}
+              source={remoteImageSource(notice.imageUrl)}
               style={[
                 styles.heroImage,
                 { backgroundColor: colors.fill.background },

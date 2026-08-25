@@ -225,10 +225,17 @@ describe("V2Avatar — 사진", () => {
     const [image, ...rest] = findAll(root, "Image")
     if (!image) throw new Error("사진이 없다")
     expect(rest).toEqual([])
-    expect(image.props.source).toEqual({ uri: SIGNED })
+    /*
+      source 의 cacheKey 는 **쿼리(서명)를 뗀 경로**여야 한다 — 서명이 15분마다 돌아도
+      같은 사진이면 디스크 캐시가 살아남는 계약(shared/images/remoteImageSource).
+    */
+    expect(image.props.source).toEqual({
+      uri: SIGNED,
+      cacheKey: "https://cdn.example.com/avatar.jpg",
+    })
     expect(image.props.contentFit).toBe("cover")
-    // FlashList 재활용 — 키가 없으면 새 행에 옛 사진이 한 프레임 남는다.
-    expect(image.props.recyclingKey).toBe(SIGNED)
+    // FlashList 재활용 키도 서명 회전에 불변이어야 한다 — 회전마다 리셋되면 키의 의미가 없다.
+    expect(image.props.recyclingKey).toBe("https://cdn.example.com/avatar.jpg")
     expect(styleOf(image)).toEqual({ width: "100%", height: "100%" })
   })
 
@@ -259,7 +266,11 @@ describe("V2Avatar — 사진", () => {
     expect(findAll(avatar({ size: 48, uri: SIGNED }), "Image")).toEqual([])
     // 서명만 새로 돈 URL 이면 다시 사진을 건다.
     const retried = findAll(avatar({ size: 48, uri: RESIGNED }), "Image")[0]
-    expect(retried?.props.source).toEqual({ uri: RESIGNED })
+    expect(retried?.props.source).toEqual({
+      uri: RESIGNED,
+      // 서명이 돌아도 캐시 키는 같은 값 — 재시도가 캐시를 버리지 않는다.
+      cacheKey: "https://cdn.example.com/avatar.jpg",
+    })
   })
 })
 

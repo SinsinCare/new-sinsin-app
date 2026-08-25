@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import { useV2Theme, V2Text, V2VStack } from "@/src/design-system-v2"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { MealRecord } from "../../data/dietaryRecord"
 
 interface DietaryRecordCardProps {
@@ -41,7 +42,7 @@ export function DietaryRecordCard({
       >
         {mealData.imageUri && (
           <Image
-            source={{ uri: mealData.imageUri }}
+            source={remoteImageSource(mealData.imageUri)}
             style={StyleSheet.absoluteFillObject}
             contentFit="cover"
           />
