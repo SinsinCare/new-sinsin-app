@@ -37,7 +37,8 @@
           "kakaokompassauth",
           "kakaolink",
           "kakaotalk"
-        ]
+        ],
+        "NSMicrophoneUsageDescription": "사진 촬영 화면 구성에 필요한 항목으로, 마이크를 실제로 사용하지 않습니다."
       }
     },
     "android": {
@@ -86,7 +87,7 @@
         "expo-camera",
         {
           "cameraPermission": "음식 사진으로 식단을 기록하려면 카메라 접근을 허용해 주세요.",
-          "microphonePermission": false,
+          "microphonePermission": "사진 촬영 화면 구성에 필요한 항목으로, 마이크를 실제로 사용하지 않습니다.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false
         }
@@ -95,7 +96,7 @@
         "expo-image-picker",
         {
           "photosPermission": "앨범의 음식 사진으로 식단을 기록하려면 사진 접근을 허용해 주세요.",
-          "microphonePermission": false
+          "microphonePermission": "사진 촬영 화면 구성에 필요한 항목으로, 마이크를 실제로 사용하지 않습니다."
         }
       ],
       "expo-font",
