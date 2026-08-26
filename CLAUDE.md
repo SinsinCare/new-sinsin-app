@@ -54,6 +54,11 @@ Branch and environment policy:
 - Use `npm run ios:prod`, `npm run android:prod`, or `npm run start:prod` for local work against the production backend.
 - Use `npm run build:test:*` for TestFlight/internal Google Play test builds that should use the test backend.
 - Use `npm run build:prod:*` or `npm run deploy:prod` only for production backend builds.
+- iOS test and production builds share ONE TestFlight (same bundle id). A production
+  submission becomes TestFlight's newest build, and testers who tap Apple's update
+  prompt silently switch to the production backend. After ANY production iOS submission,
+  a test build must follow to reclaim the top — `npm run deploy:ios` chains this
+  automatically (`reclaim:testflight-top`); manual `eas submit` must follow the same rule.
 - Local environment values must be loaded from gitignored env files such as `.env.test` and `.env.production`.
 - Do not commit backend URLs or other environment values.
 
