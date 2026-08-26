@@ -21,6 +21,18 @@ const TEST_BACKEND =
 // 스토어에 "출시"해도 되는 프로파일. 운영 백엔드를 본다.
 const RELEASE_PROFILES = new Set(["production", "testflight", "playstore"])
 
+/**
+ * 결제를 실제로 출시하는가.
+ *
+ * `false` 인 동안에는 RevenueCat 키가 없어도 릴리스 빌드가 나간다 — 스토어 상품이
+ * 아직 없어서 결제 기능이 출시 대상이 아니고, 키가 없으면 SDK 가 설정되지 않아
+ * 페이월이 열리지 않는다(`src/config/revenueCatConfig.ts`).
+ *
+ * **App Store / Play 상품이 준비되고 결제를 켜는 날 `true` 로 바꾼다.** 그때부터
+ * "키 없이 릴리스" 가 막힌다 — 결제가 조용히 꺼진 채 출시되는 것을 막는 장치다.
+ */
+const BILLING_SHIPS = false
+
 // 스토어 배포 자격증명이 필요하지만(TestFlight·Play 내부 트랙) 테스트 백엔드를 본다.
 // 여기 있는 빌드는 절대 공개 출시하면 안 된다.
 const TEST_STORE_PROFILES = new Set([
@@ -107,6 +119,41 @@ function collectViolations(profiles) {
         `${name}: 릴리스 프로파일인데 EXPO_PUBLIC_APP_ENV 가 production 이 아니다 → ${profile.env?.EXPO_PUBLIC_APP_ENV ?? "(없음)"}`,
       )
     }
+
+    /*
+      결제 키.
+
+      **Test Store 키로 출시하는 것은 언제나 사고다.** `test_…` 키는 결제창이 뜨고
+      구매도 "성공" 하는데 돈이 오가지 않는다. 그 빌드가 스토어에 나가면 **모두가
+      무료로 프리미엄을 켠다** — 화면상으로는 아무 문제가 없어서 리뷰에서도, QA 에서도
+      안 잡힌다. 그래서 이 검사는 `BILLING_SHIPS` 와 무관하게 항상 돈다.
+
+      "키가 아예 없는 것" 은 지금은 **정상**이다. 스토어 상품이 아직 없어서 결제 기능이
+      출시 대상이 아니고, 이 상태에서는 SDK 가 설정되지 않아 페이월이 열리지 않는다.
+      결제를 실제로 출시하는 날 아래 `BILLING_SHIPS` 를 `true` 로 바꾸면, 그때부터
+      "키가 없으면 릴리스 불가" 가 된다.
+    */
+    for (const [key, expectedPrefix] of [
+      ["EXPO_PUBLIC_RC_IOS_KEY", "appl_"],
+      ["EXPO_PUBLIC_RC_ANDROID_KEY", "goog_"],
+    ]) {
+      const value = profile.env?.[key]
+      if (!value) {
+        if (BILLING_SHIPS) {
+          violations.push(
+            `${name}: 릴리스 프로파일인데 ${key} 가 없다. 결제가 꺼진 채 출시된다.`,
+          )
+        }
+      } else if (value.startsWith("test_")) {
+        violations.push(
+          `${name}: ${key} 가 Test Store 키다. 이 빌드가 나가면 모두가 무료로 프리미엄을 켠다 (${expectedPrefix} 키여야 한다).`,
+        )
+      } else if (!value.startsWith(expectedPrefix)) {
+        violations.push(
+          `${name}: ${key} 가 ${expectedPrefix} 로 시작하지 않는다 → ${value.slice(0, 6)}…`,
+        )
+      }
+    }
   }
 
   return violations
@@ -117,7 +164,53 @@ function requestedProfile(argv) {
   return index === -1 ? undefined : argv[index + 1]
 }
 
-function main() {
+/*
+  운영 버전 정책 등록 가드.
+
+  스토어 1.2.3 제출 직후(2026-08-26) 운영 mobile-policy 가 그 버전에
+  force_update(unknown_version) 를 주고 있었다 — production 환경은 미등록 버전을
+  차단하는 설계인데 출시 절차에 "버전 등록" 단계가 없었다. 그대로 나갔으면 심사
+  리뷰어와 업데이트 사용자 전원이 실행 즉시 막혔다. 기존 스토어 바이너리는
+  environment=test(미등록 allow)를 물어서 이 함정이 한 번도 드러나지 않았던 것.
+
+  그래서 릴리스 빌드 전에 서버에 직접 물어본다 — 이번 버전이 운영 정책에서
+  allow 가 아니면 빌드를 막는다. 등록은 어드민 콘솔의 모바일 버전 정책 화면에서.
+  정책 서버에 닿을 수 없을 때도 막는다(조용히 건너뛰면 함정이 되살아난다) —
+  급하면 SKIP_POLICY_CHECK=1 로 명시적으로만 통과.
+*/
+async function checkProductionVersionRegistered() {
+  const appJson = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "..", "app.json"), "utf8"),
+  )
+  const version = appJson.expo.version
+  const base = PRODUCTION_BACKEND.replace(/\/api\/v1$/, "")
+  const failures = []
+
+  for (const platform of ["ios", "android"]) {
+    const url =
+      `${base}/public/mobile-policy?platform=${platform}&environment=production` +
+      // apiContractVersion 은 src/config/runtimeInfo.ts 의 API_CONTRACT_VERSION 과 짝.
+      `&appVersion=${encodeURIComponent(version)}&buildNumber=0&apiContractVersion=1`
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+      const policy = await response.json()
+      if (policy.decision !== "allow") {
+        failures.push(
+          `${platform} ${version}: 운영 정책 판정 ${policy.decision}(${policy.reason}) — ` +
+            "어드민 콘솔의 모바일 버전 정책에서 이 버전을 등록해야 출시 후 앱이 열린다.",
+        )
+      }
+    } catch (error) {
+      failures.push(
+        `${platform} ${version}: 운영 정책 서버에 물을 수 없다(${error?.message ?? error}) — ` +
+          "등록 여부를 직접 확인했고 급하면 SKIP_POLICY_CHECK=1 로 통과.",
+      )
+    }
+  }
+  return failures
+}
+
+async function main() {
   const profiles = readBuildProfiles()
   const violations = collectViolations(profiles)
 
@@ -139,6 +232,15 @@ function main() {
         : "",
     )
     process.exit(1)
+  }
+
+  if (profile && RELEASE_PROFILES.has(profile) && !process.env.SKIP_POLICY_CHECK) {
+    const failures = await checkProductionVersionRegistered()
+    if (failures.length > 0) {
+      console.error("운영 버전 정책 가드에 걸렸다:")
+      for (const failure of failures) console.error(`  - ${failure}`)
+      process.exit(1)
+    }
   }
 
   console.log(
