@@ -12,6 +12,8 @@ import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
+import Constants from "expo-constants"
+import { resolveBuildNumber } from "@/src/config/runtimeInfo"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
@@ -36,6 +38,10 @@ export default function AppInfoScreen() {
   const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const c = useInfoColors()
+
+  const buildNumber = resolveBuildNumber(
+    Platform.OS === "android" ? "android" : "ios",
+  )
 
   const InfoRow = ({
     label,
@@ -126,6 +132,17 @@ export default function AppInfoScreen() {
               label={t("settings.appInfo.website")}
               value="www.mediology.ai"
               onPress={() => Linking.openURL("https://www.mediology.ai")}
+            />
+            {/*
+              **버전은 사용자가 읽을 수 있어야 한다.** 예전에는 앱 어디에도 없어서
+              "안 돼요" 라는 제보를 받을 때마다 어느 빌드인지 되물어야 했고, 사용자는
+              답할 방법이 없었다. 2026-08-30 에 그 확인 한 번에 40분이 갔다.
+              빌드 번호는 정책 게이트·분석과 같은 함수로 읽는다 — 세 곳이 다른 값을
+              말하면 이 화면을 읽어 준 사람의 말이 로그와 안 맞는다.
+            */}
+            <InfoRow
+              label={t("settings.appInfo.version")}
+              value={`${Constants.expoConfig?.version ?? "-"} (${buildNumber > 0 ? buildNumber : "-"})`}
               isLast
             />
           </View>
