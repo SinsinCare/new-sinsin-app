@@ -15,7 +15,14 @@ function resolvePlatform(): MobilePolicyPlatform {
   return Platform.OS === "android" ? "android" : "ios"
 }
 
-function resolveBuildNumber(platform: MobilePolicyPlatform): number {
+/**
+ * **네이티브가 먼저다.** `app.json` 의 `ios.buildNumber`·`android.versionCode` 는
+ * 릴리스마다 손으로 올리지 않아서 여러 버전이 같은 값으로 굳는다(실측: 1.1.5·1.1.26·
+ * 1.1.35 가 전부 `4`). EAS 가 빌드할 때 붙이는 진짜 번호는 `Application.nativeBuildVersion`
+ * 에만 있다. 분석 컨텍스트도 이 함수를 쓴다 — 두 곳이 다른 값을 보내면 로그의 빌드와
+ * DB 의 빌드가 갈리고, 그 상태로는 "어느 빌드에서 난 일인가" 를 못 정한다(2026-08-30).
+ */
+export function resolveBuildNumber(platform: MobilePolicyPlatform): number {
   const nativeBuildVersion = Number(Application.nativeBuildVersion)
   if (Number.isFinite(nativeBuildVersion) && nativeBuildVersion > 0) {
     return nativeBuildVersion
