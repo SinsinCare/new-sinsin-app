@@ -25,7 +25,21 @@ describe("external URL boundaries", () => {
     expect(normalizeStoreUrl("market://details?id=kr.sinsin")).toBe(
       "market://details?id=kr.sinsin",
     )
+    // TestFlight 초대 링크 — 테스트 빌드 차단 화면의 유일한 출구다.
+    expect(normalizeStoreUrl("https://testflight.apple.com/join/abc123")).toBe(
+      "https://testflight.apple.com/join/abc123",
+    )
+    // 안드로이드 내부 테스트 옵트인은 호스트가 play.google.com 이라 그대로 통과한다.
+    expect(
+      normalizeStoreUrl(
+        "https://play.google.com/apps/testing/com.mediology.sinsinapp",
+      ),
+    ).toBe("https://play.google.com/apps/testing/com.mediology.sinsinapp")
     expect(normalizeStoreUrl("https://evil.example/fake-store")).toBeNull()
+    // 허용 호스트를 하위 도메인으로 흉내 내는 주소는 계속 막힌다.
+    expect(
+      normalizeStoreUrl("https://testflight.apple.com.evil.example/join/x"),
+    ).toBeNull()
     expect(normalizeStoreUrl("market://evil?id=kr.sinsin")).toBeNull()
     expect(normalizeStoreUrl("intent://details?id=kr.sinsin")).toBeNull()
     expect(phoneUrl("+82 10-1234-5678")).toBe("tel:+821012345678")
