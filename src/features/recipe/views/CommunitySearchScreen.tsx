@@ -306,6 +306,11 @@ export function CommunitySearchScreen() {
         tags={post.tags}
         onPress={() => router.push(`/post/${post.id}` as Href)}
         onPressTag={handleTagPress}
+        onPressAuthor={
+          post.authorId == null
+            ? undefined
+            : () => router.push(`/community/author/${post.authorId}` as Href)
+        }
         onBlock={blockUser}
         isWithdrawnAuthor={isWithdrawnAuthor(post)}
         isMine={isMyContent(post, myNickName)}

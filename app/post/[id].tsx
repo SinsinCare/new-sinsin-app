@@ -684,14 +684,42 @@ export default function PostDetailScreen() {
           */}
           {!comment.isDeleted && (
             <View style={styles.commentNameRow}>
-              <Text
-                style={[styles.commentName, { color: surface.textStrong }]}
-                lineBreakStrategyIOS="hangul-word"
+              {/*
+                댓글 이름도 프로필로 간다 — 글 상세의 작성자 행(위)과 같은 규칙이다.
+                예전에는 이 이름이 평문이라, 같은 화면 안에서 위쪽 이름은 눌리고
+                아래쪽 이름은 안 눌렸다. 탈퇴·익명(`authorId === null`)은 갈 곳이
+                없으므로 `disabled` 로 두고 평문처럼 보이게 둔다.
+              */}
+              <Pressable
+                onPress={() => {
+                  if (comment.authorId != null) {
+                    router.push(`/community/author/${comment.authorId}` as Href)
+                  }
+                }}
+                disabled={
+                  comment.authorId == null || isWithdrawnAuthor(comment)
+                }
+                hitSlop={8}
+                accessibilityRole={
+                  comment.authorId == null ? undefined : "button"
+                }
+                accessibilityLabel={
+                  comment.authorId == null
+                    ? undefined
+                    : t("community.author.openProfile", {
+                        name: comment.authorName,
+                      })
+                }
               >
-                {isWithdrawnAuthor(comment)
-                  ? t("community.postDetail.withdrawnUser")
-                  : comment.authorName}
-              </Text>
+                <Text
+                  style={[styles.commentName, { color: surface.textStrong }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
+                  {isWithdrawnAuthor(comment)
+                    ? t("community.postDetail.withdrawnUser")
+                    : comment.authorName}
+                </Text>
+              </Pressable>
               <Text style={[styles.commentTime, { color: surface.text }]}>
                 {formatTimeAgo(comment.createdAt, i18n.language)}
               </Text>

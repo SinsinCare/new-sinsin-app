@@ -32,6 +32,12 @@ interface PostListItemProps {
   tags?: string[]
   onPress?: () => void
   onPressTag?: (tag: string) => void
+  /**
+   * 작성자 이름을 눌렀을 때. **넘기지 않으면 이름은 평문 그대로**다 — 카드 전체가
+   * 글로 가는 Pressable 이라, 이름만 따로 눌리게 하려면 부르는 쪽이 갈 곳을 줘야 한다.
+   * 탈퇴·익명(`isWithdrawnAuthor`)이면 갈 곳이 없어 이 콜백이 있어도 안 그린다.
+   */
+  onPressAuthor?: () => void
   onBlock?: (authorName: string) => void
   isWithdrawnAuthor?: boolean
   /**
@@ -57,11 +63,14 @@ export function PostListItem({
   tags = [],
   onPress,
   onPressTag,
+  onPressAuthor,
   onBlock,
   isWithdrawnAuthor = false,
   isMine = false,
 }: PostListItemProps) {
   const { t, i18n } = useTranslation("recipe")
+  /* 프로필 열기 라벨은 `common` 에 있다(`community.author.openProfile`). */
+  const { t: tCommon } = useTranslation("common")
   const surface = useSurface()
   const router = useAppRouter()
   /*
@@ -162,12 +171,30 @@ export function PostListItem({
       {tags.length > 0 && <TagChips tags={tags} onPressTag={onPressTag} />}
 
       <View style={styles.footerRow}>
-        <Text
-          style={[styles.metaText, { color: surface.text }]}
-          numberOfLines={1}
-        >
-          {displayAuthorName}
-        </Text>
+        {onPressAuthor && !isWithdrawnAuthor ? (
+          <Pressable
+            onPress={onPressAuthor}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={tCommon("community.author.openProfile", {
+              name: displayAuthorName,
+            })}
+          >
+            <Text
+              style={[styles.metaText, { color: surface.text }]}
+              numberOfLines={1}
+            >
+              {displayAuthorName}
+            </Text>
+          </Pressable>
+        ) : (
+          <Text
+            style={[styles.metaText, { color: surface.text }]}
+            numberOfLines={1}
+          >
+            {displayAuthorName}
+          </Text>
+        )}
         {/*
           아이콘은 눈으로만 뜻을 말한다. 라벨이 없으면 스크린리더에는 `481` `3` 처럼
           **맥락 없는 수**만 읽히므로, 셋 다 이름을 갖는다(조회에만 있었다).
