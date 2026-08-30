@@ -36,6 +36,7 @@ import { formatDiagnosisDate } from "@/src/shared/utils/diagnosisDate"
 
 import { showErrorToast, showInfoToast } from "@/src/lib/toast"
 import { STORE_REDIRECT_URL } from "@/src/shared/utils/deepLink"
+import { PlanCard, useBilling } from "@/src/features/billing"
 /** 설치 링크는 한 곳에서만 짓는다(`deepLink.ts` 머리말). */
 const APP_DOWNLOAD_URL = STORE_REDIRECT_URL
 
@@ -118,6 +119,7 @@ export function MyPageScreen() {
 
     스크롤은 애니메이션이고 포커스는 옮기지 않는다(스크린리더 커서를 빼앗지 않는다).
   */
+  const billing = useBilling()
   const scrollRef = useRef<ScrollView>(null)
   const scrollOffsetRef = useRef(0)
   useRegisterTabReset("all", {
@@ -490,6 +492,15 @@ export function MyPageScreen() {
             onEditPress={() => router.push("/(settings)/kidney-profile-edit")}
           />
         )}
+
+        {/*
+          구독 카드. 페이월은 **막혔을 때만** 열리므로, 아직 한도에 안 닿은 사람은
+          프리미엄이 있다는 것조차 모른다. 결제한 사람에게는 갱신일과 관리 경로를 준다.
+        */}
+        <PlanCard
+          status={billing.status}
+          onManagePress={() => router.push("/(settings)/subscription")}
+        />
 
         {/* 메뉴 — 헤어라인으로만 나눈 카드 그룹. */}
         <Text

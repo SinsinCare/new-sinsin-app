@@ -46,6 +46,11 @@ export type ErrorActionId =
   | "resetPassword"
   | "completeProfile"
   | "openInquiry"
+  /**
+   * 페이월을 연다. **이동형이 아니다** — 화면을 바꾸는 대신 시트를 얹는다.
+   * 실행은 `present.ts` 의 페이월 갈래가 직접 한다(`resolveErrorAction` 을 안 탄다).
+   */
+  | "openPaywall"
 
 /** 호출부가 핸들러를 줘야만 살아나는 액션. */
 export const CONTEXTUAL_ACTIONS = new Set<ErrorActionId>([
@@ -63,7 +68,7 @@ export const CONTEXTUAL_ACTIONS = new Set<ErrorActionId>([
  *
  * `info` 는 셋째 갈래다 — 아래 `INFO_CODES` 참고.
  */
-export type ErrorSurface = "toast" | "dialog" | "info"
+export type ErrorSurface = "toast" | "dialog" | "info" | "paywall"
 
 export type ErrorBehavior = {
   action: ErrorActionId | null
@@ -99,6 +104,22 @@ const INFO_CODES = new Set([
   "COMMUNITY_ERROR_003", // 이미 신고한 글
   "COMMUNITY_ERROR_005", // 이미 참여한 투표
   "COMMUNITY_ERROR_011", // 이미 신고한 댓글
+])
+
+/**
+ * **결제하면 열리는 실패.** 오류가 아니라 제안이라 토스트를 띄우지 않는다 —
+ * 페이월 자체가 응답이다.
+ *
+ * 왜 여기(카탈로그)에 있나: `INFO_CODES` 와 같은 이유다. 화면마다 402 를 가로채면
+ * `app_error_presented` 가 한 행도 안 남아서, **어떤 잠금이 결제를 만드는지**를 셀 수
+ * 없게 된다. 통로를 지나게 두면 `present.ts` 의 계측이 그 수를 그냥 세어 준다.
+ *
+ * 502(`BILLING_ERROR_003`)는 여기 없다. 그건 "구독이 없다" 가 아니라 **"확인하지
+ * 못했다"** 이고, 그때 페이월을 띄우면 이미 돈을 낸 사람에게 결제를 또 권하는 것이 된다.
+ */
+const PAYWALL_CODES = new Set([
+  "BILLING_ERROR_001", // 구독 필요
+  "BILLING_ERROR_002", // 무료 횟수 소진
 ])
 
 const DIALOG_CODES = new Set([
@@ -168,10 +189,16 @@ const ACTION_BY_CODE: Readonly<Record<string, ErrorActionId>> = {
   HC_ERROR_007: "openInquiry",
 
   DOCTOR_ERROR_003: "refresh",
+
+  BILLING_ERROR_001: "openPaywall",
+  BILLING_ERROR_002: "openPaywall",
+  // 확인하지 못한 것이지 구독이 없는 것이 아니다 — 다시 해 보는 것이 유일한 할 일이다.
+  BILLING_ERROR_003: "retry",
 }
 
 /** 이 코드를 어느 그릇에 담는가. 안내가 다이얼로그·토스트보다 앞선다. */
 function surfaceFor(code: string): ErrorSurface {
+  if (PAYWALL_CODES.has(code)) return "paywall"
   if (INFO_CODES.has(code)) return "info"
   return DIALOG_CODES.has(code) ? "dialog" : "toast"
 }

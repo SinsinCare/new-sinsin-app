@@ -26,6 +26,11 @@ import {
 import { logger } from "../logger"
 import { showConfirm, showAlert } from "../dialog"
 import { showErrorToast, showInfoToast } from "../toast"
+import { openPaywall } from "@/src/features/billing/paywallHost"
+import {
+  SERVER_GATE_ENTRY,
+  type PaywallReason,
+} from "@/src/features/billing/types"
 import { resolveErrorAction, type ErrorActionHandlers } from "./actions"
 import {
   getErrorActionLabel,
@@ -80,6 +85,32 @@ export function presentError(
     않는 이유는 그쪽이 `app_error_action_pressed` 를 함께 쏘기 때문이다 — 아무도 누르지
     않은 버튼을 눌렀다고 세면 "이 안내가 실제로 문제를 풀어 줬는가" 를 못 묻게 된다.
   */
+  /*
+    페이월(`surface: "paywall"`) — **결제하면 열리는 실패는 오류가 아니라 제안이다.**
+
+    토스트를 띄우지 않는다. 페이월 시트 자체가 응답이고, 그 위에 붉은 토스트가 겹치면
+    사용자는 "뭔가 잘못했다" 로 읽는다(기획서 §02 "탭하면 페이월 바텀시트").
+
+    `entry_point` 는 서버 응답의 capability 에서 만든다 — 서버가 막은 요청은 화면이
+    아니라 응답에서 오므로, 어느 잠금이 결제를 만들었는지 알 방법이 이것뿐이다.
+    매핑이 없으면 `server_gate` 로 떨어지고, 그 값이 대시보드에 보이면 표가 빠진 것이다.
+
+    이 갈래가 `presentError` **안**에 있는 것이 요점이다. 화면마다 402 를 가로채면
+    위의 `trackAnalyticsEvent` 가 한 행도 못 세고, 그러면 "어떤 잠금이 결제를 만드는가"
+    를 물을 수 없게 된다(`INFO_CODES` 갈래와 같은 이유).
+  */
+  if (resolved.surface === "paywall") {
+    const reason = paywallReasonOf(error)
+    openPaywall({
+      entry:
+        (reason === null ? undefined : SERVER_GATE_ENTRY[reason.capability]) ??
+        "server_gate",
+      reason,
+      ...(reason === null ? {} : { capability: reason.capability }),
+    })
+    return resolved
+  }
+
   if (resolved.surface === "info") {
     if (resolved.action === "refresh") handlers.refresh?.()
     showInfoToast(resolved.title, resolved.body)
@@ -144,4 +175,21 @@ function logResolved(
     return
   }
   logger.error(label, resolved.kind, resolved.code ?? "-", error)
+}
+
+/**
+ * 402 응답이 실어 보낸 `result`. 서버는 여기에 capability·한도·재개 시각을 담는다
+ * (`domains/billing/guard.ts` 의 `paywallError`).
+ *
+ * 모양이 다르면 **null 로 접는다** — 페이월은 이유 없이도 열려야 하고, 파싱 실패로
+ * 결제 유도를 통째로 잃는 것이 가장 나쁘다.
+ */
+function paywallReasonOf(error: unknown): PaywallReason | null {
+  if (!error || typeof error !== "object") return null
+  const result = (error as { result?: unknown }).result
+  if (!result || typeof result !== "object") return null
+  const candidate = result as Partial<PaywallReason>
+  return typeof candidate.capability === "string"
+    ? (candidate as PaywallReason)
+    : null
 }

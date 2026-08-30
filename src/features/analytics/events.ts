@@ -36,6 +36,42 @@ import type { OnboardingStepType } from "@/src/types/onboarding"
  * 1:1 이라 뜻이 안 변하는 6개(`home`·`community`·`recipe`·`consult`·`onboarding`·
  * `community_post`)만 문자열을 그대로 쓴다.
  */
+/**
+ * 페이월이 열린 자리. 기획서 §06 의 `entry_point` 표를 그대로 옮긴 것이다.
+ *
+ * **이 값이 이 기능의 전부다.** 어느 잠금이 실제로 결제를 만드는지는 이것 말고 알
+ * 방법이 없다 — 페이월 판은 하나라 화면명으로는 구분되지 않는다.
+ *
+ * `server_gate` 는 서버 402 가 열었는데 capability→진입지점 매핑이 없을 때의 값이다.
+ * **대시보드에 이 값이 보이면 표가 빠진 것**이고, `features/billing/types.ts` 의
+ * `SERVER_GATE_ENTRY` 에 한 줄을 더해야 한다.
+ */
+export type AnalyticsPaywallEntry =
+  | "stats_day_metric"
+  | "stats_day_prev_date"
+  | "stats_week_insight"
+  | "stats_week_chart"
+  | "stats_week_metric_switch"
+  | "stats_month_metric"
+  | "stats_month_weekly"
+  | "stats_month_sticky"
+  | "restaurant_filter_nutrition"
+  | "restaurant_ai_search"
+  | "restaurant_menu_all"
+  | "restaurant_diagnose"
+  | "restaurant_bookmark"
+  | "meal_scan_limit"
+  | "meal_analysis_metric"
+  | "ai_chat_limit"
+  | "report_export"
+  | "settings_subscription"
+  | "home_banner"
+  | "push_weekly_ready"
+  | "server_gate"
+
+/** 구독 등급. 페이월 이벤트의 분모를 가르는 축이다. */
+export type AnalyticsPlan = "free" | "premium" | "care_plus"
+
 export type AnalyticsScreenName =
   // ── 루트 ───────────────────────────────────────────────────────────────────
   | "entry"
@@ -92,6 +128,8 @@ export type AnalyticsScreenName =
   | "profile_field_edit"
   | "kidney_profile"
   | "notification_settings"
+  // 구독 관리. 페이월(`billing_paywall`)은 시트라 화면 축이 아니다 — 여기는 라우트다.
+  | "subscription"
   | "notification_inbox"
   | "announcements"
   | "inquiry"
@@ -269,6 +307,9 @@ export type AnalyticsSurface =
   | "dev_showcase"
   | "dialog_action_sheet"
   | "feature_intro"
+  // 결제 페이월 시트. 열리는 자리는 20곳이 넘지만 **판은 하나**라 여기서 이름을
+  // 새로 짓지 않는다 — 어디서 열렸는지는 `paywall_shown.entry` 가 센다.
+  | "billing_paywall"
   // ── 홈 기록 시트 ───────────────────────────────────────────────────────────
   | "home_meal_record"
   | "home_meal_photo_confirm"
@@ -1362,6 +1403,53 @@ export type AnalyticsEventProperties = {
    */
   restaurant_coming_soon_viewed: { source: AnalyticsPolicySource }
   restaurant_coming_soon_report_pressed: { source: AnalyticsPolicySource }
+
+  /* ── 구독 결제 ──────────────────────────────────────────────────────────── */
+
+  /**
+   * 페이월이 떠오른 순간. **`entry` 가 이 이벤트의 전부다** — 어느 잠금이 결제를
+   * 만드는지는 이 축으로만 물을 수 있다.
+   *
+   * `reason` 은 왜 막혔는지다. `quota_exhausted`(무료 횟수 소진)와
+   * `subscription_required`(애초에 유료)는 사용자의 마음가짐이 전혀 다르다 —
+   * 앞쪽은 이미 써 본 사람이고 뒤쪽은 아직 못 써 본 사람이다.
+   *
+   * 금액은 싣지 않는다. 매출의 정본은 RevenueCat 대시보드이고, 여기에 또 실으면
+   * 두 숫자가 어긋나는 날 어느 쪽이 맞는지 아무도 모른다.
+   */
+  paywall_shown: {
+    entry: AnalyticsPaywallEntry
+    plan: AnalyticsPlan
+    reason: "quota_exhausted" | "subscription_required" | "browse"
+    capability: string
+  }
+  /**
+   * 결제하지 않고 닫았다. `dwell_bucket` 이 있는 이유는 **0초 이탈과 20초 고민이
+   * 다른 사건**이기 때문이다 — 앞쪽은 페이월이 잘못된 자리에서 뜬 것이고, 뒤쪽은
+   * 문구나 가격의 문제다.
+   */
+  paywall_dismissed: {
+    entry: AnalyticsPaywallEntry
+    dwell_bucket: AnalyticsDurationBucket
+  }
+  purchase_started: { entry: AnalyticsPaywallEntry; packageType: string }
+  purchase_completed: { entry: AnalyticsPaywallEntry; packageType: string }
+  /**
+   * `kind: "cancelled"` 는 **실패가 아니다.** 사용자가 결제창을 닫은 것이고, 이걸
+   * 오류와 같은 통에 세면 결제 실패율이 실제의 몇 배로 보인다.
+   */
+  purchase_failed: {
+    entry: AnalyticsPaywallEntry
+    packageType: string
+    kind: "cancelled" | "store" | "network" | "unknown"
+  }
+  restore_completed: { restored: boolean }
+  /**
+   * 무료 횟수를 다 쓴 순간. `paywall_shown` 과 따로 세는 이유는 **소진이 곧 페이월은
+   * 아니기 때문**이다 — 잔량 뱃지를 보고 그냥 나가는 사람이 있고, 그 사람들은
+   * 페이월을 본 적이 없다.
+   */
+  quota_exhausted: { capability: string; limit: number }
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventProperties
@@ -1501,6 +1589,7 @@ const ROUTE_SCREEN: Record<string, AnalyticsScreenName> = {
   "(settings)/password-edit": "profile_field_edit",
   "(settings)/kidney-profile-edit": "kidney_profile",
   "(settings)/notification-settings": "notification_settings",
+  "(settings)/subscription": "subscription",
   "(settings)/notifications": "notification_inbox",
   // 목록과 상세는 같은 읽기 동선의 두 칸이다(2:1).
   "(settings)/announcements": "announcements",

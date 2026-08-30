@@ -9,7 +9,8 @@
     "resetPassword": "비밀번호 재설정",
     "resendCode": "새 인증번호 받기",
     "completeProfile": "프로필 입력하기",
-    "openInquiry": "문의하기"
+    "openInquiry": "문의하기",
+    "openPaywall": "프리미엄 보기"
   },
   "transport": {
     "offline": {
@@ -369,6 +370,18 @@
     "SOCIAL_CONFIG_ERROR": {
       "title": "이 버전에서는 소셜 로그인을 쓸 수 없어요",
       "body": "앱 설정 문제라 인터넷과는 무관해요. 이메일 로그인을 이용해 주시고, 문의를 보내 주시면 확인해 드릴게요."
+    },
+    "BILLING_ERROR_001": {
+      "title": "프리미엄에서 열 수 있어요",
+      "body": "구독하면 이 기능을 바로 쓸 수 있어요."
+    },
+    "BILLING_ERROR_002": {
+      "title": "무료로 쓸 수 있는 횟수를 다 썼어요",
+      "body": "정해진 시각이 지나면 다시 열려요. 지금 이어서 쓰려면 프리미엄으로 바꿔 보세요."
+    },
+    "BILLING_ERROR_003": {
+      "title": "구독 정보를 확인하지 못했어요",
+      "body": "잠시 후 다시 시도해 주세요. 이미 결제하셨다면 그대로 유지돼요."
     }
   }
 }

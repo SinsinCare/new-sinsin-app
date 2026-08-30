@@ -26,6 +26,7 @@ import { appConfig, getBackendUrl } from "@/src/config/appConfig"
 import { fetchWithTimeout } from "@/src/services/core/fetchWithTimeout"
 import { tokenService } from "@/src/services/core/tokenService"
 import { logger } from "@/src/lib/logger"
+import { jitter } from "@/src/lib/backoff"
 import { getDeviceContext } from "./deviceContext"
 
 const ANON_ID_KEY = "sinsin.analytics.anonymousId"
@@ -473,8 +474,18 @@ export async function flushQueue(): Promise<void> {
       await logBatchOutcome(response, batch.length)
     }
   } catch (error) {
-    // 네트워크 실패 — 큐에 남겨 두고 지수 백오프.
-    nextRetryAtMs = Date.now() + retryDelayMs
+    /*
+      네트워크 실패 — 큐에 남겨 두고 지수 백오프. **지터를 씌운다.**
+
+      이 코드는 우리가 가진 재시도 중 **주체가 가장 많다**(서버 인스턴스는 몇 대지만
+      앱은 설치 수만큼이다). 고정 간격이면 우리 서버가 5분 죽었다 살아나는 순간
+      설치 기반 전체가 같은 시점에 동시에 돌아온다 — 살아나자마자 다시 넘어지고,
+      그 다음 재시도도 여전히 정렬돼 있다.
+
+      상한(`retryDelayMs`)은 그대로 두 배씩 자라고, **기다리는 시간에만** 지터를
+      씌운다(`[d/2, d]`). 그래야 "최대 150초" 라는 계약이 유지된다.
+    */
+    nextRetryAtMs = Date.now() + jitter(retryDelayMs)
     retryDelayMs = Math.min(RETRY_MAX_MS, retryDelayMs * 2)
     logger.debug("[analytics] flush deferred", error)
   } finally {

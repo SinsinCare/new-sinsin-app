@@ -2,6 +2,17 @@ import { useAuthStore, useSignupStore, useUserStore } from "@/src/stores"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { isMockUser } from "@/src/config/appConfig"
 import { queryClient } from "./queryClient"
+/*
+  배럴(`@/src/features/billing`)이 아니라 **좁은 경로로** 들여온다.
+
+  배럴은 `BillingProvider` → `billingApi` → `services/core` 를 끌고 오는데, 이 파일이
+  바로 `services/core` 안에 있다 — 순환이다. 실제로 `apiClient` 가 모듈 로드 시점에
+  `getBackendUrl()` 을 부르므로, 그 순환이 닿는 순간 **env 없는 어떤 실행에서도
+  세션 정리 모듈이 통째로 죽는다**(테스트 4스위트가 그렇게 넘어갔다).
+
+  `purchasesClient` 는 SDK 와 설정만 본다. 여기서 필요한 것도 그것뿐이다.
+*/
+import { forgetUser as forgetPurchasesUser } from "@/src/features/billing/purchases/purchasesClient"
 import { tokenService } from "./tokenService"
 
 const SOCIAL_REAUTHENTICATION_INTENT_KEY =
@@ -15,6 +26,18 @@ export type ClearClientSessionOptions = {
 export function clearClientSessionState(): void {
   useUserStore.getState().reset()
   useAuthStore.getState().reset()
+  /*
+    결제 SDK 도 잊는다.
+
+    **안 하면 같은 기기의 다음 사용자가 앞사람의 구매를 본다.** RevenueCat 은
+    `configure` 한 app_user_id 를 로컬에 캐시하고, 로그아웃해도 그 상태가 남는다.
+    권한 판정 자체는 서버가 하므로 실제로 프리미엄이 열리지는 않지만, 페이월이
+    "이미 구독 중" 으로 뜨는 등 화면이 앞사람 것을 보여 준다.
+
+    `void` 로 흘린다 — 세션 정리가 SDK 응답을 기다릴 이유가 없고, 실패해도
+    (이미 익명이면 SDK 가 던진다) 정리는 계속돼야 한다.
+  */
+  void forgetPurchasesUser()
   /*
     가입 중간 상태도 같이 버린다.
 

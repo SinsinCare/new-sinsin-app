@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query"
 import { isApiErrorLike } from "./apiError"
+import { backoffMs } from "@/src/lib/backoff"
 
 export function shouldRetryQuery(
   failureCount: number,
@@ -16,8 +17,18 @@ export function shouldRetryQuery(
   return status === 408 || status >= 500
 }
 
+/**
+ * 재시도 간격. **지터가 들어 있다.**
+ *
+ * 고정 간격이면 서버가 살아나는 순간 **설치 기반 전체가 같은 시점에** 다시 온다 —
+ * 1초 뒤에 한 번, 2초 뒤에 또 한 번, 정확히 정렬된 채로. 서버는 회복하자마자 평소의
+ * N배를 맞고 다시 넘어지고, 그 다음 재시도도 여전히 정렬돼 있다.
+ *
+ * equal jitter 라 실제 대기는 `[d/2, d]` 다. 상한이 그대로여서 "최대 8초" 라는 계약이
+ * 유지되고, 하한이 있어서 아직 아픈 서버를 즉시 다시 때리지 않는다(`lib/backoff.ts`).
+ */
 export function queryRetryDelay(attemptIndex: number): number {
-  return Math.min(1_000 * 2 ** attemptIndex, 8_000)
+  return backoffMs(attemptIndex, { baseMs: 1_000, maxMs: 8_000 })
 }
 
 export const queryClient = new QueryClient({

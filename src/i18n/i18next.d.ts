@@ -3,6 +3,7 @@
 import "i18next"
 
 import type auth from "./locales/ko/auth.json"
+import type billing from "./locales/ko/billing.json"
 import type common from "./locales/ko/common.json"
 import type errors from "./locales/ko/errors.json"
 import type health from "./locales/ko/health.json"
@@ -14,6 +15,7 @@ declare module "i18next" {
     defaultNS: "common"
     resources: {
       auth: typeof auth
+      billing: typeof billing
       common: typeof common
       errors: typeof errors
       health: typeof health

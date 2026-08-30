@@ -170,6 +170,7 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   "(settings)/password-edit": "/(settings)/profile-edit",
   "(settings)/kidney-profile-edit": "/(tabs)/all",
   "(settings)/notification-settings": "/(settings)",
+  "(settings)/subscription": "/(settings)",
   "(settings)/notifications": "/(tabs)/all",
   "(settings)/announcements": "/(tabs)/all",
   "(settings)/announcement-detail": "/(settings)/announcements",

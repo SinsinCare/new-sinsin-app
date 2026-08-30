@@ -69,6 +69,47 @@ function collectViolations(profiles) {
     const appEnv = env.EXPO_PUBLIC_APP_ENV
     const distribution = resolveDistribution(profile)
 
+    /*
+      **Test Store 키(`test_…`)는 dev client 빌드에만 들어갈 수 있다.**
+
+      예전 규칙은 "store 배포에만 금지" 였다. 그건 이유를 반만 본 것이다 — 진짜 이유는
+      배포 채널이 아니라 **빌드 구성**이다. RevenueCat SDK 가 Release 구성에서 Test Store
+      키를 보면 **의도적으로 앱을 죽인다**:
+
+        iOS   RevenueCat 5.85.0 · Sources/Purchasing/Configuration.swift
+              checkForSimulatedStoreAPIKeyInRelease → `#if !DEBUG` 안에서 `fatalError`
+        안드   purchases-android 10.18.1 · PurchasesFactory.kt
+              !isDebugBuild() 이면 SimulatedStoreErrorDialogActivity 를 띄우고
+              "will crash the app when the user dismisses it"
+
+      (버전 사슬: react-native-purchases 10.8.0 → PurchasesHybridCommon 18.32.1 →
+      RevenueCat 5.85.0 / com.revenuecat.purchases:purchases 10.18.1)
+
+      EAS 는 `developmentClient: true` 가 아닌 모든 프로파일을 **Release 로** 짓는다.
+      그러니 `test` · `ios-test-simulator` · `ios-test-device` 처럼 internal 배포라도
+      Test Store 키가 들어가면 그 빌드는 **로그인 직후 죽는다**. 실제로 2026-08-26 에
+      그 조합으로 세 프로파일이 나갔다(iOS 88 · Android 94).
+
+      그래서 Test Store 로 결제를 만져 보는 자리는 **dev client 하나**다 —
+      `npm run start:test` 가 `.env.test` 의 `EXPO_PUBLIC_RC_TEST_KEY` 를 싣는다.
+      스토어 트랙 테스트 빌드(TestFlight · Play 내부)에서 결제를 보려면 Test Store 가
+      아니라 **진짜 스토어 상품**이 있어야 한다 — `docs/billing-store-setup.md`.
+    */
+    if (profile.developmentClient !== true) {
+      for (const key of [
+        "EXPO_PUBLIC_RC_IOS_KEY",
+        "EXPO_PUBLIC_RC_ANDROID_KEY",
+        "EXPO_PUBLIC_RC_TEST_KEY",
+      ]) {
+        const value = env[key]
+        if (value && value.startsWith("test_")) {
+          violations.push(
+            `${name}: 릴리스 구성으로 지어지는 프로파일에 ${key} 가 Test Store 키(test_…)다. RevenueCat SDK 가 Release 빌드에서 이 키를 보면 앱을 죽인다 — dev client(developmentClient: true)에서만 쓸 수 있다.`,
+          )
+        }
+      }
+    }
+
     if (!backendUrl) continue
 
     if (appEnv === "production" && backendUrl !== PRODUCTION_BACKEND) {
@@ -131,10 +172,9 @@ function collectViolations(profiles) {
     /*
       결제 키.
 
-      **Test Store 키로 출시하는 것은 언제나 사고다.** `test_…` 키는 결제창이 뜨고
-      구매도 "성공" 하는데 돈이 오가지 않는다. 그 빌드가 스토어에 나가면 **모두가
-      무료로 프리미엄을 켠다** — 화면상으로는 아무 문제가 없어서 리뷰에서도, QA 에서도
-      안 잡힌다. 그래서 이 검사는 `BILLING_SHIPS` 와 무관하게 항상 돈다.
+      **Test Store 키 차단은 위(store 배포 전체)에서 이미 했다.** 여기서는 릴리스
+      프로파일에만 해당하는 두 가지를 본다 — 키가 **있는가**(`BILLING_SHIPS` 가 켜진
+      뒤부터)와 **올바른 접두사인가**.
 
       "키가 아예 없는 것" 은 지금은 **정상**이다. 스토어 상품이 아직 없어서 결제 기능이
       출시 대상이 아니고, 이 상태에서는 SDK 가 설정되지 않아 페이월이 열리지 않는다.
@@ -242,7 +282,11 @@ async function main() {
     process.exit(1)
   }
 
-  if (profile && RELEASE_PROFILES.has(profile) && !process.env.SKIP_POLICY_CHECK) {
+  if (
+    profile &&
+    RELEASE_PROFILES.has(profile) &&
+    !process.env.SKIP_POLICY_CHECK
+  ) {
     const failures = await checkProductionVersionRegistered()
     if (failures.length > 0) {
       console.error("운영 버전 정책 가드에 걸렸다:")

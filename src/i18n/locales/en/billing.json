@@ -1,0 +1,68 @@
+{
+  "plan": {
+    "free": "Free",
+    "premium": "Premium",
+    "carePlus": "Care+",
+    "currentLabel": "Current plan",
+    "name": {
+      "free": "Free",
+      "premium": "Premium",
+      "care_plus": "Care+"
+    },
+    "badge": {
+      "active": "Active",
+      "cancelled": "Ends soon"
+    },
+    "renewsOn": "Renews on {{date}}",
+    "activeUntil": "Available until {{date}}",
+    "manage": "Manage subscription",
+    "perDayHook": "Unlimited AI scans and chat for {{price}} a day",
+    "upgradeCta": "Start Premium"
+  },
+  "paywall": {
+    "title": "Keep going with Premium",
+    "reason": {
+      "quotaDay": "You've used today's {{limit}} {{label}}",
+      "quotaMonth": "You've used this month's {{limit}} {{label}}",
+      "cap": "Free plans can save up to {{limit}}",
+      "subscription": "{{label}} is a Premium feature"
+    },
+    "resetsAt": "Opens up again {{when}}",
+    "benefits": {
+      "unlimited": "Unlimited AI scans and chats",
+      "trend": "Full weekly and monthly trends",
+      "history": "All of your past records"
+    },
+    "monthlyEquivalent": "{{price}} / month",
+    "discount": "{{percent}}% off",
+    "cta": "Start Premium",
+    "restore": "Restore purchases",
+    "unavailable": "We couldn't load the plans",
+    "unavailableBody": "Try opening this again in a moment. If you've already paid, nothing is lost.",
+    "legal": "Your subscription renews automatically unless you cancel before the period ends. You can cancel any time from your store's subscription settings.",
+    "testStore": "Test purchase (no real charge)",
+    "perDay": "{{price}} a day"
+  },
+  "quota": {
+    "remainingDay": "{{remaining}} left today",
+    "remainingMonth": "{{remaining}} left this month",
+    "remainingCap": "{{remaining}} left",
+    "exhausted": "All used"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "currentPlan": "Current plan",
+    "renewsAt": "Renews {{date}}",
+    "expiresAt": "Access until {{date}}",
+    "willNotRenew": "Auto-renew is off",
+    "billingIssue": "Check your payment method",
+    "billingIssueBody": "Everything keeps working while we sort this out.",
+    "manage": "Manage in store",
+    "restore": "Restore purchases",
+    "restoreDone": "We restored your purchases",
+    "restoreEmpty": "Nothing to restore",
+    "upgrade": "Start Premium",
+    "free": "You're on the free plan",
+    "freeBody": "One AI scan a day and ten chats a month."
+  }
+}

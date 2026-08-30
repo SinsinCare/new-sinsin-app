@@ -9,7 +9,8 @@
     "resetPassword": "Reset password",
     "resendCode": "Send a new code",
     "completeProfile": "Finish profile",
-    "openInquiry": "Contact us"
+    "openInquiry": "Contact us",
+    "openPaywall": "See Premium"
   },
   "transport": {
     "offline": {
@@ -369,6 +370,18 @@
     "SOCIAL_CONFIG_ERROR": {
       "title": "Social sign-in isn’t available in this version",
       "body": "This is an app configuration issue, not your connection. Please use email sign-in and let us know so we can fix it."
+    },
+    "BILLING_ERROR_001": {
+      "title": "This one is part of Premium",
+      "body": "Subscribe and you can use it right away."
+    },
+    "BILLING_ERROR_002": {
+      "title": "You've used all your free tries",
+      "body": "They open up again next period. Premium removes the limit."
+    },
+    "BILLING_ERROR_003": {
+      "title": "We couldn't check your subscription",
+      "body": "Try again in a moment. If you've already paid, nothing is lost."
     }
   }
 }

@@ -8,12 +8,14 @@ import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 
 import enAuth from "./locales/en/auth.json"
+import enBilling from "./locales/en/billing.json"
 import enCommon from "./locales/en/common.json"
 import enErrors from "./locales/en/errors.json"
 import enHealth from "./locales/en/health.json"
 import enRecipe from "./locales/en/recipe.json"
 import enSettings from "./locales/en/settings.json"
 import koAuth from "./locales/ko/auth.json"
+import koBilling from "./locales/ko/billing.json"
 import koCommon from "./locales/ko/common.json"
 import koErrors from "./locales/ko/errors.json"
 import koHealth from "./locales/ko/health.json"
@@ -30,6 +32,7 @@ const LANGUAGE_STORAGE_KEY = "sinsin:language"
 export const resources = {
   ko: {
     auth: koAuth,
+    billing: koBilling,
     common: koCommon,
     errors: koErrors,
     health: koHealth,
@@ -38,6 +41,7 @@ export const resources = {
   },
   en: {
     auth: enAuth,
+    billing: enBilling,
     common: enCommon,
     errors: enErrors,
     health: enHealth,
@@ -63,7 +67,7 @@ void i18n.use(initReactI18next).init({
   lng: detectLanguage(),
   fallbackLng: "ko",
   defaultNS,
-  ns: ["auth", "common", "errors", "health", "recipe", "settings"],
+  ns: ["auth", "billing", "common", "errors", "health", "recipe", "settings"],
   interpolation: { escapeValue: false }, // RN은 XSS 이스케이프 불필요
   returnNull: false,
 })

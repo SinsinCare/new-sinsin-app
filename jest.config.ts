@@ -37,6 +37,12 @@ const config: Config = {
       (개별 `jest.mock` 은 여전히 이 매퍼보다 우선한다.)
     */
     "^expo-linear-gradient$": "<rootDir>/tests/helpers/linearGradientStub.js",
+    /*
+      `react-native-purchases` 도 같은 벽이다. 사슬이 짧아서 특히 넓게 번진다 —
+      `sessionCleanup` 이 결제 모듈을 들여오고, 그 세션 정리는 결제와 무관한 스위트가
+      잔뜩 들여온다(그 파일 머리말 참고).
+    */
+    "^react-native-purchases$": "<rootDir>/tests/helpers/purchasesStub.js",
     "^@/(.*)$": "<rootDir>/$1",
   },
   setupFiles: ["<rootDir>/tests/setup.ts"],

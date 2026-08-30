@@ -253,6 +253,26 @@ export function SettingsScreen() {
           style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
         />
 
+        {/* 구독 — 기획서 §05. 약관보다 위다(사용자가 찾는 빈도가 다르다). */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("subscription.title", { ns: "billing" })}
+          style={({ pressed }) => [
+            styles.navItem,
+            pressed && { backgroundColor: c.pressedBg },
+          ]}
+          onPress={() => router.push("/(settings)/subscription")}
+        >
+          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
+            {t("subscription.title", { ns: "billing" })}
+          </ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
+        </Pressable>
+
+        <View
+          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
+        />
+
         {/* 약관 */}
         {[
           {

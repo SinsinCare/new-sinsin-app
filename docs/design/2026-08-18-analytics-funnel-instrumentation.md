@@ -1,6 +1,12 @@
 # 제품 분석 계측 설계 — 단계별 이탈 관측
 
-2026-08-18 · 대상: `sinsin-rn`(SDK·호출부) · `sinsin-be-bun/src/domains/analytics`(인제스천·질의) · `sinsin-analytics`(대시보드)
+2026-08-18 · 대상: `sinsin-rn`(SDK·호출부) · `sinsin-be-bun/src/domains/analytics`(인제스천·미러)
+
+> ⚠️ **2026-08-26 갱신 — 이 문서의 대시보드 부분은 더 이상 유효하지 않다.**
+> 자사 질의 계층(`/admin-api/v1/analytics/*` 18개)과 Pulse 대시보드(`sinsin-analytics`)는
+> 은퇴했고 **Mixpanel 이 분석 정본**이다. 이 문서의 **계측 설계(이벤트 이름·속성·화면 축)는
+> 그대로 유효하고**, 달라진 것은 그 이벤트를 어디서 보느냐뿐이다.
+> 근거와 남은 계약: `sinsin-be-bun/docs/mixpanel-primary.md`.
 
 > 이 문서는 "믹스패널식 단계별 계측"의 시스템 설계다. 실제 전송은 Mixpanel 이 아니라 자사 파이프라인으로 가지만
 > (SDK 공개 API 는 Mixpanel 시절과 동일: `trackAnalyticsEvent(name, props)`), 퍼널·이탈을 읽는 방식은 같다.
@@ -177,7 +183,7 @@ sN:      join scoped sc on sc.person = p.person
 ### 배포·호환
 
 - 화면명은 서버에서 자유 문자열이다(`routes.ts:43` 은 `maxLength:120` 뿐, enum·체크제약·조인 없음). **앱 배포만으로 끝난다** — 서버 배포·alembic·프리즈마 마이그레이션 전부 불필요.
-- 대시보드도 무변경이다(`sinsin-analytics/src/views/funnels.tsx:299` 의 스텝 입력은 자유 텍스트, 화면 목록은 저장된 데이터에서 만든다).
+- 대시보드도 무변경이다 — 당시엔 Pulse 의 퍼널 화면이 자유 텍스트 입력이었고, **지금은 Mixpanel 의 퍼널이 같은 성질이다**(이벤트 이름을 그대로 넣으면 된다. 등록·화이트리스트가 없다).
 - **소급 복원은 불가능하다.** 행에 남는 것은 `screen_name` 값 하나뿐이고 라우트 경로는 어디에도 저장되지 않는다. 이미 쌓인 `other`/`profile` 은 영구히 혼합 버킷이다. 백필 시도 금지.
 - **의미가 좁아지는 토큰은 유지하지 말고 은퇴시킨다.** 1:1 인 `home`·`community`·`recipe`·`consult`·`onboarding`·`community_post` 6개만 문자열을 그대로 쓴다.
   `profile`·`health`·`signup`·`notifications`·`community_write`·`restaurant` 는 새 문자열로 갈아탄다 — 같은 이름의 숫자가 배포일에 조용히 절반으로 줄어드는 것보다,

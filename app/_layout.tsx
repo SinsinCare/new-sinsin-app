@@ -40,6 +40,7 @@ import {
 import { useConsumeEntryUrl } from "@/src/shared/navigation/useConsumeEntryUrl"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
+import { BillingProvider, PaywallHost } from "@/src/features/billing"
 import { routeFromPushData } from "@/src/services/notificationRoutingService"
 import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
 import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
@@ -311,9 +312,31 @@ export default function RootLayout() {
         <KeyboardProvider>
           <QueryClientProvider client={queryClient}>
             <PortalProvider>
-              <AppPolicyGate>
-                <RootLayoutNav />
-              </AppPolicyGate>
+              {/*
+                결제 상태 공급자.
+
+                **`AppPolicyGate` 를 감싼다** — 게이트 안쪽이 아니다. 아래
+                `PaywallHost` 가 `useBilling` 을 쓰고, 그 호스트는 앱 트리 **바깥**에
+                있어야 어느 화면 위에서든 시트를 얹을 수 있다. 둘 다 만족하는 자리가
+                여기뿐이다.
+
+                차단 화면(강제 업데이트·점검)에서 결제를 물어보지 않는 것은 배치가
+                아니라 프로바이더 안의 `enabled` 가 맡는다 — 세션이 완전히 열린
+                상태에서만 질의한다(그 파일 머리말).
+
+                **`QueryClientProvider` 아래여야 한다** — 상태를 react-query 로 들고 있다.
+              */}
+              <BillingProvider>
+                <AppPolicyGate>
+                  <RootLayoutNav />
+                </AppPolicyGate>
+                {/*
+                  페이월의 기본 호스트. 서버가 402 를 주면 `presentError` 가 여기로
+                  요청을 보낸다 — 화면마다 사전 검사를 붙이지 않아도 우회로가 안 생기는
+                  이유가 이 한 줄이다(`features/billing/paywallHost.ts` 머리말).
+                */}
+                <PaywallHost />
+              </BillingProvider>
               <Toast />
               {/*
                 showConfirm/showAlert 의 기본 호스트. 화면 단위 호출은 전부
