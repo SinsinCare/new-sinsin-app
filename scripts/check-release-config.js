@@ -39,7 +39,7 @@ const RELEASE_PROFILES = new Set(["production", "testflight", "playstore"])
  * **App Store / Play 상품이 준비되고 결제를 켜는 날 `true` 로 바꾼다.** 그때부터
  * "키 없이 릴리스" 가 막힌다 — 결제가 조용히 꺼진 채 출시되는 것을 막는 장치다.
  */
-const BILLING_SHIPS = false
+const BILLING_SHIPS = true
 
 // 스토어 배포 자격증명이 필요하지만(TestFlight·Play 내부 트랙) 테스트 백엔드를 본다.
 // 여기 있는 빌드는 절대 공개 출시하면 안 된다.

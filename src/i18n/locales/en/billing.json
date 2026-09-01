@@ -41,7 +41,9 @@
     "unavailableBody": "Try opening this again in a moment. If you've already paid, nothing is lost.",
     "legal": "Your subscription renews automatically unless you cancel before the period ends. You can cancel any time from your store's subscription settings.",
     "testStore": "Test purchase (no real charge)",
-    "perDay": "{{price}} a day"
+    "perDay": "{{price}} a day",
+    "benefitsTitle": "What Premium unlocks",
+    "retry": "Try again"
   },
   "quota": {
     "remainingDay": "{{remaining}} left today",

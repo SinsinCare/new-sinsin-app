@@ -59,6 +59,7 @@ export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
   const [selected, setSelected] = useState<string>(ANNUAL)
   const [busy, setBusy] = useState(false)
   const [openedAt, setOpenedAt] = useState<number | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
 
   const visible = request !== null
   const entry = request?.entry ?? "server_gate"
@@ -75,7 +76,23 @@ export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
       reason: request?.reason?.reason ?? "browse",
       capability: request?.reason?.capability ?? request?.capability ?? "none",
     })
+    /*
+      **요청 객체 하나에만 반응한다.** 호스트는 페이월을 열 때마다 새 객체를 넣으므로,
+      이미 열려 있는 상태에서 다른 잠금이 열려도(예: 페이월 위에서 다른 API 가 402)
+      계측과 상품 선택이 새 요청 기준으로 다시 잡힌다.
 
+      `status?.plan` 을 넣지 않는 이유: 구매 직후 plan 이 바뀌는데, 그때 이 훅이 다시
+      돌면 **방금 결제한 사람에게 `paywall_shown` 이 한 번 더 찍힌다.**
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request])
+
+  /*
+    상품 로드는 계측과 별도 이펙트다 — [다시 시도]가 로드만 다시 돌려야
+    `paywall_shown` 이 중복으로 찍히지 않는다.
+  */
+  useEffect(() => {
+    if (!visible) return
     let cancelled = false
     setLoading(true)
     void loadCurrentOffering().then((result) => {
@@ -90,16 +107,12 @@ export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
     return () => {
       cancelled = true
     }
-    /*
-      **요청 객체 하나에만 반응한다.** 호스트는 페이월을 열 때마다 새 객체를 넣으므로,
-      이미 열려 있는 상태에서 다른 잠금이 열려도(예: 페이월 위에서 다른 API 가 402)
-      계측과 상품 선택이 새 요청 기준으로 다시 잡힌다.
-
-      `status?.plan` 을 넣지 않는 이유: 구매 직후 plan 이 바뀌는데, 그때 이 훅이 다시
-      돌면 **방금 결제한 사람에게 `paywall_shown` 이 한 번 더 찍힌다.**
-    */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [request])
+  }, [request, reloadToken])
+
+  const retry = useCallback(() => {
+    setReloadToken((token) => token + 1)
+  }, [])
 
   const close = useCallback(() => {
     if (openedAt !== null) {
@@ -208,18 +221,39 @@ export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
             >
               {t("paywall.unavailableBody")}
             </V2Text>
+            <V2Button
+              variant="weak"
+              color="neutral"
+              size="s"
+              onPress={retry}
+              style={styles.retryButton}
+            >
+              {t("paywall.retry")}
+            </V2Button>
           </View>
         ) : (
           <>
-            <View style={styles.benefits}>
+            <View
+              style={[
+                styles.benefits,
+                { backgroundColor: colors.fill.alternative },
+              ]}
+            >
+              <V2Text token="subtext.small" color={colors.label.assistive}>
+                {t("paywall.benefitsTitle")}
+              </V2Text>
               {(["unlimited", "trend", "history"] as const).map((key) => (
-                <V2Text
-                  key={key}
-                  token="body.mediumWeak"
-                  color={colors.label.normal}
-                >
-                  {t(`paywall.benefits.${key}`)}
-                </V2Text>
+                <View key={key} style={styles.benefitRow}>
+                  <View
+                    style={[
+                      styles.benefitDot,
+                      { backgroundColor: colors.primary.primary },
+                    ]}
+                  />
+                  <V2Text token="body.mediumWeak" color={colors.label.normal}>
+                    {t(`paywall.benefits.${key}`)}
+                  </V2Text>
+                </View>
               ))}
             </View>
 
@@ -325,6 +359,19 @@ function PlanRow({
   */
   const perDay = perDayPrice(item)
 
+  /*
+    환산가는 가격 **아랫줄**에 모아 그린다. 배지·환산가·가격을 한 줄에 다 넣으면
+    연간 행이 좁은 화면 폭에서 줄바꿈으로 무너진다(390pt 에서 재현됨).
+  */
+  const equivalents = [
+    perDay !== null ? t("paywall.perDay", { price: perDay }) : null,
+    perMonth !== null
+      ? t("paywall.monthlyEquivalent", { price: perMonth })
+      : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(" · ")
+
   return (
     <V2Button
       variant={selected ? "fill" : "weak"}
@@ -340,39 +387,33 @@ function PlanRow({
           {item.title}
         </V2Text>
         <View style={styles.planPrices}>
-          {perDay !== null ? (
+          <View style={styles.planPriceRow}>
+            {discount !== null && discount > 0 ? (
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: colors.primary.primaryWeak },
+                ]}
+              >
+                <V2Text token="subtext.small" color={colors.primary.primary}>
+                  {t("paywall.discount", { percent: discount })}
+                </V2Text>
+              </View>
+            ) : null}
+            <V2Text
+              token="title.xSmallWeak"
+              color={selected ? colors.static.white : colors.label.normal}
+            >
+              {item.priceString}
+            </V2Text>
+          </View>
+          {equivalents.length > 0 ? (
             <V2Text
               token="subtext.small"
               color={selected ? colors.static.white : colors.label.alternative}
             >
-              {t("paywall.perDay", { price: perDay })}
+              {equivalents}
             </V2Text>
-          ) : null}
-          {perMonth !== null ? (
-            <V2Text
-              token="subtext.small"
-              color={selected ? colors.static.white : colors.label.alternative}
-            >
-              {t("paywall.monthlyEquivalent", { price: perMonth })}
-            </V2Text>
-          ) : null}
-          <V2Text
-            token="title.xSmallWeak"
-            color={selected ? colors.static.white : colors.label.normal}
-          >
-            {item.priceString}
-          </V2Text>
-          {discount !== null && discount > 0 ? (
-            <View
-              style={[
-                styles.badge,
-                { backgroundColor: colors.primary.primaryWeak },
-              ]}
-            >
-              <V2Text token="subtext.small" color={colors.primary.primary}>
-                {t("paywall.discount", { percent: discount })}
-              </V2Text>
-            </View>
           ) : null}
         </View>
       </View>
@@ -394,7 +435,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[24],
   },
   centerText: { textAlign: "center" },
-  benefits: { gap: spacing[6] },
+  benefits: {
+    gap: spacing[6],
+    padding: spacing[16],
+    borderRadius: radius.xl,
+  },
+  benefitRow: { flexDirection: "row", alignItems: "center", gap: spacing[8] },
+  retryButton: { marginTop: spacing[4] },
+  benefitDot: { width: 6, height: 6, borderRadius: 3 },
   plans: { gap: spacing[8] },
   planButton: { height: "auto", paddingVertical: spacing[12] },
   planRow: {
@@ -403,7 +451,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing[8],
   },
-  planPrices: { flexDirection: "row", alignItems: "center", gap: spacing[6] },
+  planPrices: { alignItems: "flex-end", gap: spacing[2] },
+  planPriceRow: { flexDirection: "row", alignItems: "center", gap: spacing[6] },
   badge: {
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],

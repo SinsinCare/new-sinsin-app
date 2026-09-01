@@ -41,7 +41,9 @@
     "unavailableBody": "잠시 후 다시 열어 주세요. 이미 결제하셨다면 그대로 유지돼요.",
     "legal": "구독은 기간이 끝나기 전에 해지하지 않으면 자동으로 갱신돼요. 해지는 스토어의 구독 관리에서 언제든지 할 수 있어요.",
     "testStore": "테스트 결제 (실제 청구 없음)",
-    "perDay": "하루 {{price}}꼴"
+    "perDay": "하루 {{price}}꼴",
+    "benefitsTitle": "프리미엄으로 열리는 것",
+    "retry": "다시 시도"
   },
   "quota": {
     "remainingDay": "오늘 {{remaining}}회 남음",
