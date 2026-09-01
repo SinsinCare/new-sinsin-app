@@ -316,8 +316,25 @@ function isUserCancelled(error: unknown): boolean {
 
 function describeError(error: unknown): string {
   if (!error || typeof error !== "object") return "unknown"
-  const candidate = error as { code?: unknown; message?: unknown }
-  return String(candidate.code ?? candidate.message ?? "unknown")
+  const candidate = error as {
+    code?: unknown
+    message?: unknown
+    underlyingErrorMessage?: unknown
+  }
+  /*
+    **코드와 문장을 같이 남긴다.** 코드만 남기면 진단이 한 번 더 돈다 — 실제로 `23`
+    하나만 보고 그 뜻을 찾느라 왕복이 있었다(2026-09-01). 23=CONFIGURATION_ERROR 는
+    "등록된 상품을 스토어에서 하나도 못 가져왔다" 는 뜻이고, 그 사정은
+    `underlyingErrorMessage` 에 담겨 온다.
+  */
+  const parts = [
+    candidate.code,
+    candidate.message,
+    candidate.underlyingErrorMessage,
+  ]
+    .filter((part) => part !== undefined && part !== null && part !== "")
+    .map((part) => String(part))
+  return parts.length === 0 ? "unknown" : parts.join(" · ")
 }
 
 /** 테스트가 상태를 되돌린다. 프로덕션 경로에서는 부르지 않는다. */
