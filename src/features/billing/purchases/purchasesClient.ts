@@ -144,24 +144,83 @@ export interface CurrentOffering {
 }
 
 /**
+ * 상품을 못 가져온 **이유**. `null` 하나로는 네 가지 서로 다른 사고가 구분되지 않는다 —
+ * 실제로 그래서 스토어 연동을 뚫는 데 하루가 갔다(2026-09-01).
+ *
+ *   notConfigured  SDK 가 안 켜졌다. 키가 없거나 `identify` 전이다 → **앱 설정 문제**
+ *   error          `getOfferings` 가 던졌다 → **네트워크·키 오류**
+ *   noCurrent      RC 는 답했는데 current 오퍼링이 없다 → **대시보드 구성 문제**
+ *   emptyPackages  오퍼링은 있는데 패키지가 0개다 → **스토어가 상품을 안 준다**
+ *                  (계약 미활성·상품 미전파·번들 ID 불일치가 전부 여기로 떨어진다)
+ */
+export type OfferingDiagnostic =
+  | { readonly kind: "ok"; readonly count: number }
+  | { readonly kind: "notConfigured"; readonly keyPrefix: string }
+  | { readonly kind: "error"; readonly message: string }
+  | { readonly kind: "noCurrent"; readonly offeringIds: readonly string[] }
+  | { readonly kind: "emptyPackages"; readonly offeringId: string }
+
+let lastDiagnostic: OfferingDiagnostic = { kind: "ok", count: 0 }
+
+/** 마지막 `loadCurrentOffering` 이 실패한 이유. 테스트 빌드 화면이 그대로 보여 준다. */
+export function lastOfferingDiagnostic(): OfferingDiagnostic {
+  return lastDiagnostic
+}
+
+/** 사람이 읽을 한 줄. **키 전체를 찍지 않는다** — 앞 9자만 신원 확인용으로 남긴다. */
+export function formatOfferingDiagnostic(d: OfferingDiagnostic): string {
+  switch (d.kind) {
+    case "ok":
+      return `상품 ${d.count}개`
+    case "notConfigured":
+      return `SDK 미설정 (키 ${d.keyPrefix || "없음"})`
+    case "error":
+      return `조회 실패: ${d.message}`
+    case "noCurrent":
+      return `current 오퍼링 없음 (전체: ${d.offeringIds.join(",") || "0개"})`
+    case "emptyPackages":
+      return `스토어가 상품을 안 줌 (오퍼링 ${d.offeringId}, 패키지 0개)`
+  }
+}
+
+/**
  * 지금 보여 줄 상품들. 없으면 null(키 미설정·오프라인·오퍼링 미구성).
  *
  * **null 을 "무료 사용자" 로 읽으면 안 된다.** 상품을 못 가져온 것뿐이고, 그때 화면은
- * 페이월 대신 "잠시 후 다시" 를 그려야 한다.
+ * 페이월 대신 "잠시 후 다시" 를 그려야 한다. 왜 못 가져왔는지는
+ * `lastOfferingDiagnostic()` 에 남는다.
  */
 export async function loadCurrentOffering(): Promise<CurrentOffering | null> {
-  if (!configured) return null
+  if (!configured) {
+    lastDiagnostic = {
+      kind: "notConfigured",
+      keyPrefix: getRevenueCatApiKey().slice(0, 9),
+    }
+    return null
+  }
   try {
     const offerings = await Purchases.getOfferings()
     const current: PurchasesOffering | null = offerings.current
-    if (current === null) return null
+    if (current === null) {
+      lastDiagnostic = {
+        kind: "noCurrent",
+        offeringIds: Object.keys(offerings.all ?? {}),
+      }
+      return null
+    }
+    const packages = current.availablePackages.map(toOfferingPackage)
+    lastDiagnostic =
+      packages.length === 0
+        ? { kind: "emptyPackages", offeringId: current.identifier }
+        : { kind: "ok", count: packages.length }
     return {
       id: current.identifier,
-      packages: current.availablePackages.map(toOfferingPackage),
+      packages,
       metadata: (current.metadata ?? {}) as Readonly<Record<string, unknown>>,
     }
   } catch (error) {
     logger.warn("[purchases] offerings 조회 실패", error)
+    lastDiagnostic = { kind: "error", message: describeError(error) }
     return null
   }
 }

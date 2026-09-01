@@ -25,11 +25,14 @@ import {
   spacing,
   radius,
 } from "@/src/design-system-v2"
+import { isProductionBackend } from "@/src/config/appConfig"
 import { isTestStoreKey } from "@/src/config/revenueCatConfig"
 import { toDurationBucket, trackAnalyticsEvent } from "@/src/features/analytics"
 import { showErrorToast, showInfoToast } from "@/src/lib/toast"
 import { useBilling } from "../BillingProvider"
 import {
+  formatOfferingDiagnostic,
+  lastOfferingDiagnostic,
   loadCurrentOffering,
   purchase,
   restore,
@@ -230,6 +233,19 @@ export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
             >
               {t("paywall.retry")}
             </V2Button>
+            {/*
+              **테스트 백엔드에서만** 실패 이유를 그대로 보여 준다. 사용자에게는 쓸모없는
+              문자열이지만, 스토어 연동을 뚫을 때는 이 한 줄이 기기 로그를 대신한다.
+            */}
+            {!isProductionBackend() ? (
+              <V2Text
+                token="subtext.small"
+                color={colors.label.assistive}
+                style={styles.centerText}
+              >
+                {formatOfferingDiagnostic(lastOfferingDiagnostic())}
+              </V2Text>
+            ) : null}
           </View>
         ) : (
           <>
