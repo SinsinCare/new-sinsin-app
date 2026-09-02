@@ -10,7 +10,7 @@ const SECURE_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 }
 
-type TokenPersistence = "persistent" | "ephemeral"
+export type TokenPersistence = "persistent" | "ephemeral"
 type Tokens = { accessToken: string; refreshToken: string }
 
 let persistentTokens: Tokens | null = null
@@ -202,6 +202,16 @@ export const tokenService = {
       restorableRefreshToken = null
       await removeLegacyTokens()
     })
+  },
+
+  /**
+   * 지금 세션이 어느 방식으로 들려 있는가. 세션을 **갈아 끼울 때**(비밀번호 변경 뒤
+   * 서버가 새 토큰을 주는 경우) 같은 방식으로 다시 넣기 위해 읽는다 — 임시 세션을
+   * 영속으로 승격시키면 "로그인 유지 안 함" 을 고른 사용자의 선택이 조용히 뒤집힌다.
+   */
+  async getPersistence(): Promise<TokenPersistence> {
+    await hydrateTokens()
+    return ephemeralTokens !== null ? "ephemeral" : "persistent"
   },
 
   async clearTokens(): Promise<void> {

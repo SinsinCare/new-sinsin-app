@@ -159,6 +159,13 @@ import { SortSheet } from "../components/SortSheet"
 import { GUTTER } from "../layout"
 const SIDE = GUTTER
 
+/**
+ * 위치 결론을 기다리는 상한(ms). 허용 상태의 마지막 좌표는 즉시 오고, 권한 팝업은
+ * 사용자 손에 달렸으니 상한은 **팝업이 아니라 GPS** 를 위한 것이다 — 팝업이 떠 있는
+ * 동안은 `resolved` 가 안 오지만 그때 지도가 뒤에서 강남으로 떠도 해는 없다.
+ */
+const MAP_GATE_TIMEOUT_MS = 2500
+
 /*
   클러스터 파고들기의 배율은 이제 여기 없다 — `utils/viewportAction`의 `CLUSTER_ZOOM_STEP`
   (레벨 −2 = 4배)이 정본이다. 종전의 `CLUSTER_ZOOM_FACTOR`(뷰포트를 1/4 로 줄인 상자를
@@ -194,6 +201,26 @@ export function RestaurantMapScreen({
   /* 콜백이 만들어진 렌더가 아니라 **지금** 좌표를 봐야 한다(`useGoBack` 과 같은 모양). */
   const myLocationRef = useRef(myLocation.coords)
   myLocationRef.current = myLocation.coords
+
+  /**
+   * 지도를 띄울 준비가 됐는가 — **위치의 결론이 난 뒤**에만 참이다.
+   *
+   * `initialCenter` 는 마운트 전용이라 좌표가 늦게 오면 강남에서 떴다가 점프한다
+   * (그 점프를 보정하던 것이 아래 "늦게 도착한 내 위치" 이펙트다). 이제 첫 진입에서
+   * 권한을 묻고(`useMyLocation` 머리말) 그 결론(`resolved`)을 기다렸다가 띄우므로,
+   * 허용이면 **처음부터 내 위치**로, 거부면 처음부터 강남으로 뜬다. 상한 시간을 두는
+   * 이유: GPS 가 영영 답하지 않는 기기에서 지도도 영영 안 뜨면 안 된다.
+   */
+  const [mapGateOpen, setMapGateOpen] = useState(false)
+  useEffect(() => {
+    if (mapGateOpen) return
+    if (myLocation.resolved) {
+      setMapGateOpen(true)
+      return
+    }
+    const timer = setTimeout(() => setMapGateOpen(true), MAP_GATE_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [mapGateOpen, myLocation.resolved])
 
   /** 지도 SDK 가 죽었다. `null` 이면 정상. */
   const [mapError, setMapError] = useState<string | null>(null)
@@ -1599,25 +1626,28 @@ export function RestaurantMapScreen({
       */
       style={[styles.root, { backgroundColor: surface.bed }]}
     >
-      {/* 로딩 중에도 절대 언마운트하지 않는다(파일 상단 1번). */}
+      {/* 로딩 중에도 절대 언마운트하지 않는다(파일 상단 1번). 단 **처음 띄우는 것**은
+          위치의 결론을 기다린다(`mapGateOpen`) — 언마운트가 아니라 지연 마운트다. */}
       <View style={StyleSheet.absoluteFill}>
-        <RestaurantMapView
-          /* `retryMap` 이 이 값을 올려 WebView 를 새로 마운트한다. HTML 은 마운트 시
+        {mapGateOpen && (
+          <RestaurantMapView
+            /* `retryMap` 이 이 값을 올려 WebView 를 새로 마운트한다. HTML 은 마운트 시
              한 번만 만들어지므로 재시도 = 재마운트다. */
-          key={mapMountKey}
-          ref={mapRef}
-          jsKey={process.env.EXPO_PUBLIC_KAKAO_JS_KEY}
-          initialCenter={myLocation.coords ?? FALLBACK_CENTER}
-          initialLevel={MAP_ZOOM.DEFAULT}
-          strings={mapStrings}
-          onReady={handleMapReady}
-          onIdle={handleIdle}
-          onMarkerPress={handleMarkerPress}
-          onClusterPress={handleClusterPress}
-          onMapPress={handleMapPress}
-          onDragStart={handleDragStart}
-          onMapError={handleMapError}
-        />
+            key={mapMountKey}
+            ref={mapRef}
+            jsKey={process.env.EXPO_PUBLIC_KAKAO_JS_KEY}
+            initialCenter={myLocation.coords ?? FALLBACK_CENTER}
+            initialLevel={MAP_ZOOM.DEFAULT}
+            strings={mapStrings}
+            onReady={handleMapReady}
+            onIdle={handleIdle}
+            onMarkerPress={handleMarkerPress}
+            onClusterPress={handleClusterPress}
+            onMapPress={handleMapPress}
+            onDragStart={handleDragStart}
+            onMapError={handleMapError}
+          />
+        )}
       </View>
 
       {topOverlay}

@@ -32,6 +32,7 @@ import { WebView, type WebViewMessageEvent } from "react-native-webview"
 import { clampZoom } from "../utils/requestGuards"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { MAP_BACKGROUND, buildMapHtml } from "./mapHtml"
+import { createReviveController } from "./reviveController"
 import { isAllowedMapNavigation, MAP_ORIGIN_WHITELIST } from "./mapNavigation"
 import {
   FALLBACK_CENTER,
@@ -47,6 +48,9 @@ import {
   type MapPadding,
   type MapStrings,
 } from "./mapBridge"
+
+/** 한 마운트에서 프로세스 회수를 되살려 주는 횟수. 넘기면 SDK 실패로 본다. */
+const MAX_REVIVES = 3
 
 export interface MapViewport {
   center: LatLng
@@ -110,6 +114,36 @@ export const RestaurantMapView = forwardRef<
   const readyRef = useRef(false)
   /** ready 전에 들어온 주입 스크립트. 순서를 지켜 흘려보내야 한다. */
   const queueRef = useRef<string[]>([])
+  /**
+   * 마지막 `idle` 뷰포트. 콘텐츠 프로세스가 죽었다 살아나면(아래 `revive`) 페이지는
+   * 마운트 시점의 `initialCenter` 로 다시 뜨는데, 사용자는 그 사이 다른 동네를 보고
+   * 있었다 — 살아난 지도는 **보던 자리**로 돌아와야지 처음으로 돌아가면 안 된다.
+   */
+  const lastViewportRef = useRef<MapViewport | null>(null)
+  /* 되살릴 때 현재 값을 봐야 한다 — 이펙트가 잡아 둔 값은 마운트 당시 것이다. */
+  const colorSchemeRef = useRef(colorScheme)
+  colorSchemeRef.current = colorScheme
+  const stringsRef = useRef(strings)
+  stringsRef.current = strings
+  const onMapErrorRef = useRef(onMapError)
+  onMapErrorRef.current = onMapError
+  /**
+   * 프로세스 회수를 되살리는 판단(`reviveController` 머리말). 마운트당 하나 — 화면의
+   * `retryMap` 은 key 로 재마운트하므로 그때 횟수도 새로 센다.
+   */
+  const reviveRef = useRef(
+    createReviveController({
+      maxRevives: MAX_REVIVES,
+      reload: () => {
+        readyRef.current = false
+        // 죽기 전에 쌓인 명령은 옛 페이지 것이다. ready 가 오면 화면이 현재 상태를
+        // 다시 밀어 넣으므로(`handleMapReady`) 버려도 잃는 것이 없다.
+        queueRef.current = []
+        webRef.current?.reload()
+      },
+      fail: (reason) => onMapErrorRef.current?.(reason),
+    }),
+  )
 
   /**
    * 마운트 시 한 번만. 의존성 배열이 비어 있는 것은 의도다(위 주석 1번).
@@ -192,6 +226,30 @@ export const RestaurantMapView = forwardRef<
 
       switch (message.type) {
         case "ready":
+          if (reviveRef.current.consumeReady()) {
+            /*
+              되살아난 페이지는 마운트 시점의 초기값으로 떠 있다. 큐보다 **먼저**, 직접
+              주입한다 — 보던 자리·현재 테마·현재 언어를 되돌린 뒤에 화면의 재주입을
+              받아야 마커가 엉뚱한 자리에 찍히지 않는다.
+            */
+            const last = lastViewportRef.current
+            if (last !== null) {
+              webRef.current?.injectJavaScript(
+                mapScript.moveTo(last.center.lat, last.center.lng, {
+                  zoom: last.zoom,
+                  animate: false,
+                }),
+              )
+            }
+            webRef.current?.injectJavaScript(
+              mapScript.setColorScheme(colorSchemeRef.current),
+            )
+            if (stringsRef.current) {
+              webRef.current?.injectJavaScript(
+                mapScript.setStrings(stringsRef.current),
+              )
+            }
+          }
           readyRef.current = true
           flushQueue()
           onReady?.()
@@ -202,10 +260,14 @@ export const RestaurantMapView = forwardRef<
              화면의 분석 이벤트·`widenLevel` 계산·질의가 각각 다른 값을 보게 되고,
              그중 하나라도 소수/범위 밖이면 서버가 400 을 낸다(실측: `zoom=4.5` →
              `int_parsing`, `zoom=0` → `greater_than_equal`). */
-          onIdle?.({
-            ...message.payload,
-            zoom: clampZoom(message.payload.zoom),
-          })
+          {
+            const viewport: MapViewport = {
+              ...message.payload,
+              zoom: clampZoom(message.payload.zoom),
+            }
+            lastViewportRef.current = viewport
+            onIdle?.(viewport)
+          }
           return
         case "markerClick":
           onMarkerPress?.(message.payload.id)
@@ -326,11 +388,14 @@ export const RestaurantMapView = forwardRef<
       allowsBackForwardNavigationGestures={false}
       // 문서와 SDK가 모두 HTTPS다. 평문 하위 리소스가 브릿지 권한을 공유하지 못하게 한다.
       mixedContentMode="never"
-      // WebView 자체가 죽었을 때(프로세스 킬·렌더 실패)도 화면이 멈추지 않게 한다.
+      // 페이지 로드 자체가 실패한 것은 설정·네트워크 문제라 실패로 올린다.
       onError={() => onMapError?.("webview load error")}
-      onRenderProcessGone={() => onMapError?.("webview render process gone")}
+      // 프로세스가 죽은 것은 실패가 아니다 — 다시 로드한다(`reviveController` 머리말).
+      onRenderProcessGone={() =>
+        reviveRef.current.processGone("webview render process gone")
+      }
       onContentProcessDidTerminate={() =>
-        onMapError?.("webview content process terminated")
+        reviveRef.current.processGone("webview content process terminated")
       }
     />
   )

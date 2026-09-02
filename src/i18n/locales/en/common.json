@@ -1641,13 +1641,25 @@
       "RESOLVING": "Calculating nutrients for what you ate"
     },
     "tips": {
-      "first": "We’re checking each food and portion.",
-      "second": "Broth and sauces can affect the estimate too.",
-      "third": "We’re getting ready to compare this meal with your personal limits.",
-      "fourth": "Clear photos help us make a better estimate.",
-      "fifth": "You’ll be able to edit the foods and portions before saving."
+      "t01": "Before dialysis, CKD stages 3–5 usually call for less protein. Your own target comes from your profile.",
+      "t02": "Keep salt under 5 g a day. Leaving the broth behind makes a real difference.",
+      "t03": "Vegetables can be high in potassium too. Blanching them first helps.",
+      "t04": "Phosphorus in processed foods is absorbed more easily, so it needs extra care.",
+      "t05": "Cutting protein out entirely can lead to malnutrition. The right amount matters.",
+      "t06": "Logging meals for just three days shows your average sodium intake.",
+      "t07": "Your eating pattern over the past month can be linked to changes in GFR.",
+      "t08": "Keeping a steady record can help slow the decline of kidney function.",
+      "t09": "Managing meals together with family raises the odds of sticking with it.",
+      "t10": "Potassium can swing within a single day depending on what you eat.",
+      "t11": "High phosphorus levels can be linked to itching.",
+      "t12": "Too much sodium affects blood pressure and can lower GFR.",
+      "t13": "A sudden jump in weight can be a sign of fluid retention.",
+      "t14": "We estimate potassium, phosphorus, and sodium from the ingredients in your photo.",
+      "t15": "The same foods combined differently can change the nutrition risk.",
+      "t16": "Even the same dish can burden the kidneys differently depending on how it's cooked."
     },
-    "dismissHint": "You can close this screen.\nCome back later to view the result."
+    "dismissHint": "You can close this screen.\nCome back later to view the result.",
+    "tipLabel": "TIP"
   },
   "kidneyProfile": {
     "add": "Add",

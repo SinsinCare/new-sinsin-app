@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useV2Theme, V2Box, V2Text } from "@/src/design-system-v2"
 import { BackHandler, StyleSheet, TouchableOpacity } from "react-native"
 import { Portal } from "@/src/shared/components/Portal"
@@ -18,6 +18,11 @@ import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodAnalysisStatus } from "@/src/types"
 import { useTranslation } from "react-i18next"
+import {
+  LOADING_TIP_INTERVAL_MS,
+  LOADING_TIP_KEYS,
+  createTipCycler,
+} from "./loadingTips"
 
 /**
  * 분석·저장 동안 화면 전체를 덮는 로딩 막.
@@ -45,18 +50,6 @@ interface LoadingOverlayProps {
   inline?: boolean
 }
 
-const TIP_KEYS = [
-  "foodLoading.tips.first",
-  "foodLoading.tips.second",
-  "foodLoading.tips.third",
-  "foodLoading.tips.fourth",
-  "foodLoading.tips.fifth",
-] as const
-
-function getRandomTipIndex() {
-  return Math.floor(Math.random() * TIP_KEYS.length)
-}
-
 export function LoadingOverlay({
   visible,
   message,
@@ -64,7 +57,6 @@ export function LoadingOverlay({
   status,
   inline,
 }: LoadingOverlayProps) {
-  const { colors } = useV2Theme()
   if (!visible) return null
   const body = (
     <LoadingOverlayBody
@@ -84,7 +76,12 @@ function LoadingOverlayBody({
   const { colors } = useV2Theme()
   const { t } = useTranslation("common")
   const [dots, setDots] = useState(".")
-  const [tipIndex, setTipIndex] = useState(getRandomTipIndex)
+  /*
+    팁 순서는 마운트마다 새로 섞는다(`loadingTips` 머리말). ref 인 이유: 순환기는
+    상태가 아니라 **다음 팁을 아는 장치**고, 렌더마다 다시 만들면 순서가 초기화된다.
+  */
+  const tipCycler = useRef(createTipCycler(LOADING_TIP_KEYS.length))
+  const [tipIndex, setTipIndex] = useState(() => tipCycler.current.current())
   const [showDismiss, setShowDismiss] = useState(false)
   const floatY = useSharedValue(0)
   const floatStyle = useAnimatedStyle(() => ({
@@ -113,8 +110,8 @@ function LoadingOverlayBody({
       setDots((d) => (d.length >= 3 ? "." : d + "."))
     }, 500)
     const tipInterval = setInterval(() => {
-      setTipIndex(getRandomTipIndex())
-    }, 7000)
+      setTipIndex(tipCycler.current.next())
+    }, LOADING_TIP_INTERVAL_MS)
     const dismissTimer = setTimeout(() => {
       setShowDismiss(true)
     }, 3000)
@@ -182,21 +179,42 @@ function LoadingOverlayBody({
         >
           {`${statusMessage}${dots}`}
         </V2Text>
+        {/*
+          팁 한 장. 라벨은 "안내" 가 아니라 **읽을거리**라는 신호다 — 상태 문장(위)과
+          같은 층으로 읽히면 "이것도 진행 상황인가" 로 오독한다. 문장은 `key` 로 갈아
+          끼워 바뀔 때마다 새로 페이드인한다.
+        */}
         <V2Text
-          color={colors.label.alternative}
-          lineBreakStrategyIOS="hangul-word"
-          textBreakStrategy="balanced"
+          color={colors.label.assistive}
           style={{
-            fontSize: 14,
-            fontWeight: "500",
-            textAlign: "center",
-            marginTop: 12,
-            marginHorizontal: 16,
-            lineHeight: 20,
+            fontSize: 11,
+            fontWeight: "600",
+            letterSpacing: 1.2,
+            marginTop: 20,
           }}
         >
-          {t(TIP_KEYS[tipIndex])}
+          {t("foodLoading.tipLabel")}
         </V2Text>
+        <Animated.View
+          key={tipIndex}
+          entering={FadeIn.duration(260)}
+          style={{ marginHorizontal: 24 }}
+        >
+          <V2Text
+            color={colors.label.alternative}
+            lineBreakStrategyIOS="hangul-word"
+            textBreakStrategy="balanced"
+            style={{
+              fontSize: 14,
+              fontWeight: "500",
+              textAlign: "center",
+              marginTop: 6,
+              lineHeight: 21,
+            }}
+          >
+            {t(LOADING_TIP_KEYS[tipIndex] ?? LOADING_TIP_KEYS[0])}
+          </V2Text>
+        </Animated.View>
 
         {showDismiss && onDismiss && (
           <V2Text

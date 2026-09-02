@@ -16,6 +16,7 @@ import {
 } from "@/src/features/settings/components/SettingsTextField"
 import { passwordService } from "@/src/services"
 import { ApiError } from "@/src/services/core/apiError"
+import { tokenService } from "@/src/services/core/tokenService"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
@@ -67,7 +68,7 @@ export function PasswordEditScreen() {
     setIsSubmitting(true)
     setSubmitError(null)
     try {
-      await passwordService.changePassword(
+      const session = await passwordService.changePassword(
         password,
         token,
         isResetFlow ? undefined : currentPassword,
@@ -75,20 +76,38 @@ export function PasswordEditScreen() {
       if (token) {
         // deeplink 진입: 로그인 화면으로
         router.replace("/(auth)/login")
-      } else {
-        router.back()
+        return
       }
+      /*
+        서버는 바꾸는 순간 이 계정의 리프레시 토큰을 전부 지우고(다른 기기의 침입자
+        세션까지) **이 세션 몫만 새로 발급**해 돌려준다. 받아 넣지 않으면 액세스 토큰이
+        만료되는 한 시간 뒤 조용히 로그아웃된다 — "바꿨더니 나중에 튕긴다" 의 원인.
+        들려 있던 방식(영속/임시)은 그대로 — 사용자가 고른 "로그인 유지" 를 여기서
+        뒤집지 않는다.
+      */
+      if (session !== null) {
+        await tokenService.setTokens(
+          session.accessToken,
+          session.refreshToken,
+          await tokenService.getPersistence(),
+        )
+      }
+      router.back()
     } catch (e: unknown) {
-      // 변경 흐름의 400·403 은 사실상 "현재 비밀번호가 틀렸다" 하나뿐이라 여기서만
-      // 화면이 더 정확하다. 나머지는 서버 코드가 말하게 둔다 — 예전 폴백
-      // (`비밀번호를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.`)이 만료된 재설정
-      // 링크(`TOKEN_ERROR_005`)까지 같은 문장으로 덮고 있었다.
+      /*
+        서버 코드로 가른다 — 상태 코드로 가르면 틀린다. 현재 비밀번호 불일치는
+        `LOGIN_ERROR_001`(401 — 세션 만료가 아니다, `apiClient` 의 401 가드 주석),
+        새 비밀번호가 현재 것과 같으면 `COMMON_ERROR_001`(400). 예전에는 400·403 을
+        전부 "현재 비밀번호가 틀렸다" 로 읽어서 같은 비밀번호를 넣은 사람이 현재
+        비밀번호를 의심했다. 나머지는 서버 문장이 말하게 둔다(만료된 재설정 링크 등).
+      */
+      const code = e instanceof ApiError ? e.code : null
       setSubmitError(
-        !isResetFlow &&
-          e instanceof ApiError &&
-          (e.statusCode === 400 || e.statusCode === 403)
+        !isResetFlow && code === "LOGIN_ERROR_001"
           ? t("password.wrongCurrent")
-          : getErrorMessage(e),
+          : !isResetFlow && code === "COMMON_ERROR_001"
+            ? t("password.sameAsCurrent")
+            : getErrorMessage(e),
       )
     } finally {
       setIsSubmitting(false)

@@ -155,8 +155,9 @@ const SEARCH_FIELD_HEIGHT = touchTarget.min
  * 검색 줄의 위·아래 여백(`SEARCH_TO_RAIL_GAP`)뿐이다 — 44 는 최소 터치 타겟이고
  * 52 는 레일이 이미 조인 밀도(`results`, 시안 실측)다.
  *
- * 새로고침 스피너도 이 값만큼 내려서 돈다(`useRefreshable.spinnerOffset` — "고정층의
- * 높이를 넘겨 주면 그 아래에서 돌기 시작한다"). 층이 자라면 두 곳이 같이 따라간다.
+ * 새로고침 스피너와는 **무관하다.** 이 층은 목록 밖의 형제 뷰라 스피너는 자연히 그
+ * 아래에서 돈다 — `spinnerOffset` 으로 이 값을 넘기면 스피너가 콘텐츠 안으로 밀린다
+ * (`useRefreshable` 호출부 주석).
  */
 export const PINNED_HEADER_HEIGHT =
   SEARCH_TO_RAIL_GAP +
@@ -484,12 +485,12 @@ export function FreePostTab({
     queryKeys: COMMUNITY_FEED_REFRESH,
     scope: "community-feed",
     /*
-      새로고침 스피너는 **고정층 아래**에서 돈다. 예전에는 그 층이 검색 필드뿐이라
-      높이를 `onLayout` 으로 쟀는데, 이제 두 줄의 두께가 전부 상수에서 나온다
-      (`PINNED_HEADER_HEIGHT` — 레일 밀도를 바꾸면 여기도 같이 따라간다).
-      실측할 것이 없어졌으므로 상태 한 칸도 같이 사라졌다.
+      `spinnerOffset` 을 **주지 않는다.** 고정층(`pinnedHeader`)은 목록 **밖의 형제 뷰**라
+      목록의 0pt 가 이미 그 층 바로 아래다. 예전에는 검색 줄이 목록 **위에 겹쳐** 있어
+      그 높이만큼 내렸는데, 층이 목록 밖으로 나간 뒤에도 값이 남아 스피너가 콘텐츠
+      안쪽 112pt 에서 돌았다(첫 글 위에 겹쳐 그려짐 — 2026-09-01 실측). iOS 도
+      `RCTRefreshControl` 이 이 값을 프레임에 그대로 더하므로 양쪽 다 밀린다.
     */
-    spinnerOffset: PINNED_HEADER_HEIGHT,
     onBeforeRefresh: trimPagesBeforeRefresh,
   })
   // 탭을 다녀오거나 앱을 다시 열면 낡은 것만 조용히 새로 받는다.

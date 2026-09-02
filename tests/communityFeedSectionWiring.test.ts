@@ -809,15 +809,16 @@ describe("필터 바 — 목록 밖 형제이지 목록 항목이 아니다", ()
     expect(trailing.props.value).toBe("recent")
   })
 
-  it("새로고침 스피너는 그 바 **아래**에서 돈다", () => {
+  it("새로고침 스피너를 목록 안으로 밀지 않는다 — 오프셋 없음", () => {
     screen()
-    // 고정층이 스피너를 덮으면 당겨도 아무 일이 안 일어난 것처럼 보인다.
     expect(mockRefreshableArgs).toHaveLength(1)
-    // 필터 **한 줄**이 아니라 검색까지 포함한 두 줄 전체다.
-    expect(mockRefreshableArgs[0]?.spinnerOffset).toBe(PINNED_HEADER_HEIGHT)
-    expect(mockRefreshableArgs[0]?.spinnerOffset).toBeGreaterThan(
-      categoryChipRailHeight("results"),
-    )
+    /*
+      예전 기대는 `spinnerOffset === PINNED_HEADER_HEIGHT`(112) 였다 — 고정층이 목록
+      **위에 겹쳐** 있던 시절의 값이다. 지금 고정층은 목록 밖의 형제 뷰라(위 "목록 밖
+      형제" 케이스) 목록의 0pt 가 이미 그 아래이고, 112 를 주면 iOS·안드 모두 스피너가
+      첫 글 위에 겹쳐 돌았다(2026-09-01 실측). 이 테스트는 그 값이 되돌아오는 것을 막는다.
+    */
+    expect(mockRefreshableArgs[0]?.spinnerOffset).toBeUndefined()
   })
 
   it("카테고리는 서버 키 그대로 올라가고 `전체` 는 `null` 이다", () => {

@@ -1,12 +1,22 @@
 /**
  * 위치 권한 3상태 + 좌표. `BUILD_CONTRACT §3.5` 그대로.
  *
- * ## 진입 시 권한을 묻지 않는다
+ * ## 첫 진입에서 한 번 묻는다 (2026-09-01 개정)
  *
- * 지도를 열자마자 시스템 권한 팝업을 띄우면 사용자는 앱이 뭘 하려는지 모른 채 거부를
- * 누른다. 그리고 iOS 는 한 번 거부하면 다시 못 묻는다 — 그 한 번이 영구 손실이다.
- * 그래서 `undetermined` 에서는 **아무 것도 하지 않고**, `내 위치` FAB 를 눌렀을 때만
- * `request()` 를 부른다. 그 시점에는 사용자가 무엇을 원하는지 스스로 말한 것이다.
+ * 처음 설계는 진입 시 묻지 않고 `내 위치` FAB 에서만 물었다 — 맥락 없는 팝업은 거부로
+ * 끝나기 쉽고 iOS 는 한 번 거부하면 다시 못 묻기 때문이다. 제품 결정으로 뒤집었다:
+ * **지도는 켜자마자 내 위치여야 한다.** 그래서 `undetermined` 이면 진입 직후 시스템
+ * 팝업을 한 번 띄운다. 그 뒤로는 시스템이 기억한다 — 허용이면 매번 조용히 좌표를
+ * 채우고, 거부면 폴백(강남)으로 열며 다시 묻지 않는다(`내 위치` 를 눌렀을 때만
+ * `request()` 가 한 번 더 시도한다). 안드로이드의 "이번만" 거부도 `undetermined` 로
+ * 돌아오지 않으므로 진입 팝업은 설치당 한 번이다.
+ *
+ * ## `resolved` — 지도가 기다릴 신호
+ *
+ * 화면은 지도를 **위치가 정해진 뒤에** 띄운다(`initialCenter` 는 마운트 전용이라
+ * 나중에 온 좌표로는 바꿀 수 없다 — 강남에서 떴다가 점프하는 것이 옛 증상). 권한
+ * 거부·첫 좌표 도착·조회 실패 중 무엇이든 한 번 결론이 나면 `resolved` 가 참이 된다.
+ * 화면은 여기에 상한 시간을 따로 건다(GPS 가 영영 안 오면 지도도 영영 안 뜬다).
  *
  * ## 거부는 실패가 아니다
  *
@@ -62,6 +72,102 @@ export interface UseMyLocationResult extends MyLocationState {
   request: () => Promise<LatLng | null>
   /** `거리순` 을 쓸 수 없는 이유. `null` 이면 쓸 수 있다. 문구 분기는 `SortSheet`. */
   distanceSortDisabledReason: DistanceSortDisabledReason | null
+  /** 진입 시 권한·첫 좌표의 결론이 났는가(파일 머리말 §resolved). */
+  resolved: boolean
+}
+
+/* ───────────────────── 진입 시 결론 내리기 (순수 절차) ───────────────────── */
+
+/** `expo-location` 응답 중 이 절차가 보는 것만. 테스트가 가짜를 넣기 쉽게 좁힌다. */
+export interface EntryPermission {
+  readonly status: "granted" | "denied" | "undetermined"
+  readonly canAskAgain?: boolean
+}
+export interface EntryPosition {
+  readonly coords: { readonly latitude: number; readonly longitude: number }
+}
+export interface EntryLocationPorts {
+  getPermission(): Promise<EntryPermission>
+  requestPermission(): Promise<EntryPermission>
+  getLastKnown(): Promise<EntryPosition | null>
+  getCurrent(): Promise<EntryPosition>
+}
+export interface EntryLocationSink {
+  setState(updater: (prev: MyLocationState) => MyLocationState): void
+  /** 결론이 났다 — 지도가 떠도 된다. 여러 번 불려도 된다. */
+  settle(): void
+  /** 언마운트·재실행으로 이 절차의 결과를 버려야 하는가. 매 단계 뒤에 본다. */
+  isStale(): boolean
+}
+
+function granted(position: EntryPosition): MyLocationState {
+  return {
+    status: "granted",
+    coords: { lat: position.coords.latitude, lng: position.coords.longitude },
+    blockedForever: false,
+    isRequesting: false,
+  }
+}
+
+/**
+ * 진입 절차. 훅의 이펙트가 그대로 부르고, 테스트는 가짜 포트로 돌린다 — 이 파일의
+ * 제품 규칙("첫 진입에서 한 번 묻는다", "거부는 실패가 아니다")이 여기 한 곳에 있다.
+ *
+ * 1. 권한을 **조회**한다(팝업 없음).
+ * 2. `undetermined` 면 **요청**한다(팝업 한 번).
+ * 3. 허용이 아니면 결론 — `denied` 만 기록하고 끝난다.
+ * 4. 허용이면 마지막 좌표를 먼저 깔고(즉시) 결론을 낸 뒤, 정확한 픽스로 덮어쓴다.
+ * 5. 어느 단계에서 실패해도 결론은 난다 — 지도는 폴백으로 뜨면 된다.
+ */
+export async function settleLocationOnEntry(
+  ports: EntryLocationPorts,
+  sink: EntryLocationSink,
+): Promise<void> {
+  try {
+    let permission = await ports.getPermission()
+    if (sink.isStale()) return
+    if (permission.status === "undetermined") {
+      permission = await ports.requestPermission()
+      if (sink.isStale()) return
+    }
+    if (permission.status !== "granted") {
+      /*
+        물었는데 거부했거나(방금), 예전에 거부해 둔 상태다. 둘 다 `denied` 다 —
+        팝업을 봤으니 `undetermined` 로 남길 이유가 없다. 응답이 아직
+        `undetermined` 인 드문 경우(시스템이 팝업을 못 띄움)만 그대로 둔다.
+      */
+      if (permission.status === "denied") {
+        const blockedForever = permission.canAskAgain === false
+        sink.setState((prev) => ({ ...prev, status: "denied", blockedForever }))
+      }
+      sink.settle()
+      return
+    }
+    /*
+      콜드 GPS 픽스는 1~3초 — 그동안 지도는 폴백(강남)으로 뜨고, 좌표가 늦게
+      도착하면 카메라 점프 + **두 번째 검색**이 돈다(타일·질의 이중 지불).
+      OS 가 들고 있는 마지막 좌표(`getLastKnownPositionAsync`)는 즉시 반환이라
+      먼저 깔아 두고, 정확한 픽스가 오면 덮어쓴다. 낡은 좌표(이사·여행)여도
+      카메라 시작점 용도라 해가 없고, 커버리지 판정은 좌표를 **소비하는 쪽**
+      (useMyLocation 반환값을 받는 화면의 isWithinKakaoCoverage 접기)이 하므로
+      여기서 어느 좌표를 주든 규칙이 그대로 통과한다.
+    */
+    const lastKnown = await ports.getLastKnown()
+    if (sink.isStale()) return
+    if (lastKnown !== null) {
+      sink.setState(() => granted(lastKnown))
+      // 시작점으로는 충분하다 — 지도는 여기서 뜨고, 정확한 픽스는 덮어쓴다.
+      sink.settle()
+    }
+    const position = await ports.getCurrent()
+    if (sink.isStale()) return
+    sink.setState(() => granted(position))
+    sink.settle()
+  } catch {
+    // 위치 조회 실패는 권한 문제와 다르다(GPS 꺼짐 등). 상태를 건드리지 않고
+    // 폴백 중심으로 계속 동작한다 — 사용자에게 알릴 만한 일이 아니다.
+    if (!sink.isStale()) sink.settle()
+  }
 }
 
 export function useMyLocation(): UseMyLocationResult {
@@ -71,6 +177,7 @@ export function useMyLocation(): UseMyLocationResult {
     blockedForever: false,
     isRequesting: false,
   })
+  const [resolved, setResolved] = useState(false)
   const mounted = useRef(true)
 
   useEffect(() => {
@@ -81,64 +188,24 @@ export function useMyLocation(): UseMyLocationResult {
   }, [])
 
   /**
-   * 이미 허용된 상태라면 묻지 않고 조용히 좌표를 채운다. `getForegroundPermissionsAsync`
-   * 는 **요청이 아니라 조회**라서 팝업이 뜨지 않는다 — 진입 시 호출해도 안전한 유일한 API 다.
+   * 진입 시: 이미 허용이면 조용히 좌표를 채우고, 아직 안 물었으면 **한 번 묻는다**
+   * (파일 머리말). 절차 자체는 `settleLocationOnEntry` — 여기는 수명만 잇는다.
    */
   useEffect(() => {
     let cancelled = false
-    void (async () => {
-      try {
-        const permission = await Location.getForegroundPermissionsAsync()
-        if (cancelled || !mounted.current) return
-        if (permission.status !== "granted") {
-          // `undetermined` 를 `denied` 로 승격하지 않는다. 아직 아무 것도 묻지 않았다.
-          if (permission.status === "denied") {
-            setState((prev) => ({
-              ...prev,
-              status: "denied",
-              blockedForever: permission.canAskAgain === false,
-            }))
-          }
-          return
-        }
-        /*
-          콜드 GPS 픽스는 1~3초 — 그동안 지도는 폴백(강남)으로 뜨고, 좌표가 늦게
-          도착하면 카메라 점프 + **두 번째 검색**이 돈다(타일·질의 이중 지불).
-          OS 가 들고 있는 마지막 좌표(`getLastKnownPositionAsync`)는 즉시 반환이라
-          먼저 깔아 두고, 정확한 픽스가 오면 덮어쓴다. 낡은 좌표(이사·여행)여도
-          카메라 시작점 용도라 해가 없고, 커버리지 판정은 좌표를 **소비하는 쪽**
-          (useMyLocation 반환값을 받는 화면의 isWithinKakaoCoverage 접기)이 하므로
-          여기서 어느 좌표를 주든 규칙이 그대로 통과한다.
-        */
-        const lastKnown = await Location.getLastKnownPositionAsync()
-        if (cancelled || !mounted.current) return
-        if (lastKnown !== null) {
-          setState({
-            status: "granted",
-            coords: {
-              lat: lastKnown.coords.latitude,
-              lng: lastKnown.coords.longitude,
-            },
-            blockedForever: false,
-            isRequesting: false,
-          })
-        }
-        const position = await Location.getCurrentPositionAsync({})
-        if (cancelled || !mounted.current) return
-        setState({
-          status: "granted",
-          coords: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          },
-          blockedForever: false,
-          isRequesting: false,
-        })
-      } catch {
-        // 위치 조회 실패는 권한 문제와 다르다(GPS 꺼짐 등). 상태를 건드리지 않고
-        // 폴백 중심으로 계속 동작한다 — 사용자에게 알릴 만한 일이 아니다.
-      }
-    })()
+    void settleLocationOnEntry(
+      {
+        getPermission: () => Location.getForegroundPermissionsAsync(),
+        requestPermission: () => Location.requestForegroundPermissionsAsync(),
+        getLastKnown: () => Location.getLastKnownPositionAsync(),
+        getCurrent: () => Location.getCurrentPositionAsync({}),
+      },
+      {
+        setState,
+        settle: () => setResolved(true),
+        isStale: () => cancelled || !mounted.current,
+      },
+    )
     return () => {
       cancelled = true
     }
@@ -199,5 +266,6 @@ export function useMyLocation(): UseMyLocationResult {
         : state.coords !== null
           ? "OUTSIDE_COVERAGE"
           : "NO_LOCATION",
+    resolved,
   }
 }

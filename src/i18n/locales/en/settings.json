@@ -63,7 +63,8 @@
     "match": "Passwords match.",
     "mismatch": "Passwords don’t match. Check them again.",
     "wrongCurrent": "Your current password isn’t correct. Check it and try again.",
-    "submit": "Change password"
+    "submit": "Change password",
+    "sameAsCurrent": "Your new password is the same as the current one. Choose a different password."
   },
   "nickname": {
     "title": "What should we call you?",

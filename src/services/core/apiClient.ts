@@ -238,6 +238,23 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    /*
+      401 이 전부 "세션이 죽었다" 는 아니다. `PATCH /user/password` 는 현재 비밀번호가
+      틀리면 `LOGIN_ERROR_001`(401) 을 준다 — 세션은 멀쩡한데 이 갈래로 들어오면 토큰을
+      갱신하고 재시도한 뒤(또 401) 세션을 지워 **오타 한 번에 로그아웃**됐다(2026-09-01
+      실측). 서버가 코드를 붙여 보냈고 그것이 토큰 오류(`TOKEN_ERROR_*`)가 아니면 세션
+      문제가 아니므로 그대로 올린다 — 화면이 자기 말로 답한다. 코드가 없는 401(게이트웨이
+      등)은 예전처럼 갱신을 시도한다.
+    */
+    const responseCode: unknown = error.response?.data?.code
+    if (
+      typeof responseCode === "string" &&
+      responseCode !== "" &&
+      !responseCode.startsWith("TOKEN_ERROR_")
+    ) {
+      return Promise.reject(error)
+    }
+
     if (originalRequest._retry) {
       // 목 인증에서는 지우지 않는다 — clearClientSessionOn401 머리말.
       await clearClientSessionOn401()
