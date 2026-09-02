@@ -19,7 +19,28 @@ const config: Config = {
       `src/types/svg.d.ts` 가 담당한다 — 둘 중 하나만 있으면 여전히 죽는다.
     */
     "^.+\\.svg$": "<rootDir>/tests/helpers/svgTransformer.js",
+    /*
+      `markdown-it-cjk-friendly` 와 그것이 쓰는 `get-east-asian-width` 는 ESM 으로만
+      배포된다. jest 의 CJS 런타임은 그것을 그대로 못 읽으므로 이 두 패키지의 JS 만
+      babel 로 CJS 로 내려 받는다 — 아래 `transformIgnorePatterns` 와 한 벌이다.
+      (ts-jest 는 `.mjs` 를 ESM 그대로 내보내서 쓸 수 없었다.) 플러그인이 import 하는
+      `markdown-it/lib/common/utils.mjs` 는 다시 ESM 전용 `mdurl`·`uc.micro` 를 끌고
+      오므로 그 사슬은 따라가지 않고, 같은 헬퍼를 가진 CJS 빌드의 `utils` 로 매핑한다
+      (`tests/helpers/markdownItUtilsStub.js`). 상담 말풍선의 파서가 이 플러그인을
+      쓰므로 플러그인 자체를 스텁으로 바꾸면 "한국어 굵게가 안 먹는" 회귀를 못 본다.
+    */
+    "^.+\\.m?js$": [
+      "babel-jest",
+      {
+        babelrc: false,
+        configFile: false,
+        plugins: ["@babel/plugin-transform-modules-commonjs"],
+      },
+    ],
   },
+  transformIgnorePatterns: [
+    "/node_modules/(?!(markdown-it-cjk-friendly|get-east-asian-width)/)",
+  ],
   moduleNameMapper: {
     // 래스터 자산(입체 카테고리 아이콘 등)은 로드만 되면 된다 — 숫자 스텁으로 치환.
     // **`^@/` 별칭보다 먼저** 서야 한다. jest 는 첫 매칭 규칙만 적용하므로, 뒤에 두면
@@ -43,6 +64,9 @@ const config: Config = {
       잔뜩 들여온다(그 파일 머리말 참고).
     */
     "^react-native-purchases$": "<rootDir>/tests/helpers/purchasesStub.js",
+    // ESM 전용 유틸을 CJS 빌드의 같은 헬퍼로 — 위 transform 주석 참고.
+    "^markdown-it/lib/common/utils\\.mjs$":
+      "<rootDir>/tests/helpers/markdownItUtilsStub.js",
     "^@/(.*)$": "<rootDir>/$1",
   },
   setupFiles: ["<rootDir>/tests/setup.ts"],

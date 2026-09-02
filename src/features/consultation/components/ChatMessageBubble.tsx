@@ -1,11 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react"
 import { Pressable, StyleSheet, Text as RNText } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import Markdown, {
-  MarkdownIt,
-  type RenderRules,
-} from "react-native-markdown-display"
-import markdownItCjkFriendly from "markdown-it-cjk-friendly"
+import Markdown, { type RenderRules } from "react-native-markdown-display"
 import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import { Icon } from "@/src/shared/components/Icon"
 import { tokens } from "@/src/theme/tokens"
@@ -18,6 +14,10 @@ import { parseRestaurantConsultMessage } from "@/src/features/restaurant/consult
 import { parseFoodConsultMessage } from "../utils/foodConsultMessage"
 import { parseExamConsultMessage } from "../utils/examConsultMessage"
 import { resolveConsultUserCard } from "../utils/consultUserMessage"
+import {
+  markdownItInstance,
+  normalizeAssistantMarkdown,
+} from "../utils/chatMarkdown"
 import { FoodConsultCard } from "./FoodConsultCard"
 import { ExamConsultCard } from "./ExamConsultCard"
 import { USER_BUBBLE_BG, USER_BUBBLE_TEXT } from "./chatPalette"
@@ -31,20 +31,12 @@ const AVATAR_LIGHT = require("@/assets/images/Sin_light.png")
 export const CHAT_GUTTER = 20
 
 /**
- * 한국어 문장은 `**강조**입니다`처럼 닫는 별표 뒤에 조사가 바로 붙는데,
- * CommonMark 의 플랭킹 규칙이 이를 강조 종료로 인정하지 않아 `**`가
- * 리터럴로 노출된다. cjk-friendly 플러그인이 그 규칙을 CJK 기준으로 고친다.
- *
- * ## 왜 export 인가 — 이 파일이 앱의 **답변 렌더 정본**이다
- *
- * 식당 상세의 `AI 식단 상담` 시트도 같은 스트림을 그린다. 거기서 MarkdownIt 를 새로
- * 만들면 cjk-friendly 를 빠뜨린 판이 하나 더 생기고, 그때 별표가 리터럴로 새는 화면은
- * **상담 화면이 아니라 시트 쪽**이라 여기 테스트로는 안 잡힌다. 인스턴스를 나눠 쓰면
- * 그 갈래가 애초에 생기지 않는다(파서 인스턴스는 상태가 없어 공유해도 안전하다).
+ * 파서·정규화의 정본은 `utils/chatMarkdown.ts` 다(`breaks: true` 의 근거도 거기).
+ * 식당 상담 시트가 여기서 가져다 쓰므로 재수출을 유지한다 — 인스턴스를 나눠 쓰면
+ * cjk-friendly 나 breaks 를 빠뜨린 판이 시트 쪽에 생기고, 그 화면은 여기 테스트로
+ * 안 잡힌다.
  */
-export const markdownItInstance = MarkdownIt({ typographer: true }).use(
-  markdownItCjkFriendly,
-)
+export { markdownItInstance, normalizeAssistantMarkdown }
 
 /** 마크다운 본문이 쓰는 6색. 소비처가 자기 면에 맞는 한 벌을 떠서 넘긴다. */
 export interface MarkdownPalette {
@@ -461,6 +453,8 @@ export const AssistantBubble = memo(function AssistantBubble({
   const iconColor = isDarkMode ? "#66666B" : tokens.color.textLightSub.val
   const displayedContent = useSmoothStreamingText(message.content)
   const isRevealing = displayedContent !== message.content
+  // 화면 결함(줄 끝 공백·과잉 빈 줄)만 걷어낸다. 뜻은 그대로 — `chatMarkdown` 머리말.
+  const markdownContent = normalizeAssistantMarkdown(displayedContent)
 
   // AI 답변은 버블도 아바타도 없다 — 전폭 본문과 여백이 곧 위계다.
   // 오른쪽의 컴팩트한 사용자 버블과 대비되어 화자가 저절로 구분된다.
@@ -471,7 +465,7 @@ export const AssistantBubble = memo(function AssistantBubble({
         rules={markdownRules}
         style={isDarkMode ? markdownStylesDark : markdownStylesLight}
       >
-        {displayedContent}
+        {markdownContent}
       </Markdown>
       {/* 액션은 답변이 다 드러난 뒤에만 — 쓰는 중에 아이콘이 밀려다니지 않게. */}
       {!isRevealing && (

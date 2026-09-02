@@ -60,6 +60,7 @@ import {
   makeMarkdownStyles,
   markdownItInstance,
   markdownRules,
+  normalizeAssistantMarkdown,
   useSmoothStreamingText,
 } from "@/src/features/consultation/components/ChatMessageBubble"
 import type { Message } from "@/src/types/chat"
@@ -232,7 +233,7 @@ export const ConsultAssistantBubble = memo(function ConsultAssistantBubble({
             rules={markdownRules}
             style={scheme === "dark" ? MARKDOWN_DARK : MARKDOWN_LIGHT}
           >
-            {displayed}
+            {normalizeAssistantMarkdown(displayed)}
           </Markdown>
         </V2VStack>
       </V2HStack>
