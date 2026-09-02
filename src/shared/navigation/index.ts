@@ -4,7 +4,8 @@
 //  guard        : 지금 이 화면에 있어도 되는가 (루트 레이아웃이 실행한다)
 //  routeGraph   : 화면 → 히스토리가 없을 때 뒤로 갈 곳
 //  useGoBack    : 화면이 쓰는 유일한 뒤로가기
-//  useAppRouter : `useRouter()` 자리에 들어가는 라우터 (back 만 다르다)
+//  useAppRouter : `useRouter()` 자리에 들어가는 라우터 (back·push 가 다르다)
+//  pushGuard    : 같은 href 연타를 한 번으로 접는 빗장 (같은 상세가 겹쳐 쌓이는 결함)
 //  entryIntent  : 라우터에 넘기기 전 진입 URL 검사
 //  useConsumeEntryUrl : 진입 URL 을 한 번만 쓰이게 한다 (리로드 재생 차단)
 //  tabReset     : 보고 있는 탭을 다시 눌렀을 때의 사다리 (한 번 누르면 한 걸음)
@@ -14,6 +15,7 @@ export * from "./guard"
 export * from "./routeGraph"
 export * from "./useGoBack"
 export * from "./useAppRouter"
+export * from "./pushGuard"
 export * from "./entryIntent"
 export * from "./useConsumeEntryUrl"
 export * from "./tabReset"
