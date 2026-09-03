@@ -90,6 +90,10 @@ function AnchorCard({ report, s }: { report: MealReport; s: Surface }) {
   // 아직 여유가 있으면 brand("지금 쓸 수 있는 양"), 넘겼으면 danger.
   // 초과 숫자를 CTA 색으로 칠하면 나쁜 소식이 광고처럼 읽힌다.
   const accent = facts.focus?.level === "OVER" ? s.danger : s.brand
+  /* 헤드라인이 가리키는 영양소의 하루 한도. 한도를 모르는 영양소면 캡션을 접는다. */
+  const focusLimitText =
+    facts.budgets.find((b) => b.nutrient === facts.focus?.nutrient)?.limitText ??
+    null
 
   return (
     <View
@@ -147,6 +151,19 @@ function AnchorCard({ report, s }: { report: MealReport; s: Surface }) {
 
       {facts.split && (
         <MealSplitBar split={facts.split} accent={accent} s={s} />
+      )}
+
+      {/*
+        하루 권장량은 **헤드라인에서 내려온 문장**이다. 예전에는 서버가 "오늘 더 드실 수
+        있는 인은 43mg이에요. 하루 참고 기준은 900mg이에요. 남은 3끼에 나누면…" 세 문장을
+        한 줄로 붙여 보냈고, 그 덩어리가 카드 위쪽 세 줄을 먹었다(2026-09-03 PM 피드백).
+        헤드라인은 한 문장만 남기고, 한도 숫자는 **읽을 사람만 읽도록** 여기 작은 글씨로
+        둔다. 숫자는 서버가 `limitText` 로 이미 보내므로 화면이 다시 만들지 않는다.
+      */}
+      {focusLimitText !== null && (
+        <Text style={[styles.dailyLimit, { color: s.textWeak }]}>
+          {t("mealReport.dailyLimit", { limit: focusLimitText })}
+        </Text>
       )}
 
       {!!prose.plainly && (
@@ -637,6 +654,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   evidence: { ...TYPE.caption },
+  dailyLimit: { ...TYPE.caption, marginTop: -2 },
 
   splitWrap: { gap: 7, marginTop: 2 },
   splitTrack: { flexDirection: "row", height: 8, gap: 2 },

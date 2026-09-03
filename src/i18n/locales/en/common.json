@@ -1522,7 +1522,8 @@
     },
     "scaleDaily": "{{consumed}} of the {{limit}} daily limit",
     "scaleReference": "{{consumed}} of the {{limit}} reference limit",
-    "limitIs": "limit {{amount}}"
+    "limitIs": "limit {{amount}}",
+    "dailyLimit": "Daily limit {{limit}}"
   },
   "foodResult": {
     "shareInstagram": "Share to Instagram Stories",
@@ -1641,11 +1642,11 @@
       "RESOLVING": "Calculating nutrients for what you ate"
     },
     "tips": {
-      "t01": "Before dialysis, CKD stages 3–5 usually call for less protein. Your own target comes from your profile.",
-      "t02": "Keep salt under 5 g a day. Leaving the broth behind makes a real difference.",
-      "t03": "Vegetables can be high in potassium too. Blanching them first helps.",
+      "t01": "Before dialysis, CKD stages 3–5 usually call for less protein.\nYour own target comes from your profile.",
+      "t02": "Keep salt under 5 g a day.\nLeaving the broth behind makes a real difference.",
+      "t03": "Vegetables can be high in potassium too.\nBlanching them first helps.",
       "t04": "Phosphorus in processed foods is absorbed more easily, so it needs extra care.",
-      "t05": "Cutting protein out entirely can lead to malnutrition. The right amount matters.",
+      "t05": "Cutting protein out entirely can lead to malnutrition.\nThe right amount matters.",
       "t06": "Logging meals for just three days shows your average sodium intake.",
       "t07": "Your eating pattern over the past month can be linked to changes in GFR.",
       "t08": "Keeping a steady record can help slow the decline of kidney function.",

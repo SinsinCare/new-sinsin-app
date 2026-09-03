@@ -1209,11 +1209,11 @@
     },
     "nutrientGraph": {
       "dailyIntake": "하루 섭취량",
-      "generalReference": "일반 참고 기준",
+      "generalReference": "일반 권장량",
       "personalReference": "내 프로필 기준",
-      "generalBody": "프로필을 불러오기 전에 쓰는 일반 참고값이에요.",
-      "proteinBody": "등록한 신장 단계·투석 여부·체중으로 계산한 참고값이에요. 의료진 목표가 있으면 그 값을 따르세요.",
-      "personalBody": "등록한 신장 단계·투석 여부로 계산한 참고값이에요. 의료진 목표가 있으면 그 값을 따르세요."
+      "generalBody": "프로필을 불러오기 전에 쓰는 일반 권장량이에요.",
+      "proteinBody": "등록한 신장 단계·투석 여부·체중으로 계산한 권장량이에요. 의료진 목표가 있으면 그 값을 따르세요.",
+      "personalBody": "등록한 신장 단계·투석 여부로 계산한 권장량이에요. 의료진 목표가 있으면 그 값을 따르세요."
     },
     "dietaryGuide": {
       "title": "식사 조절",
@@ -1380,7 +1380,7 @@
       "water": {
         "title": "물 기록",
         "subtitle": "마신 만큼 눌러 주세요",
-        "referenceLimit": "일반 참고 기준 {{limit}}mL",
+        "referenceLimit": "일반 권장량 {{limit}}mL",
         "personalLimit": "내 프로필 기준 {{limit}}mL",
         "overLimitGuidance": "기준을 넘었어요. 더 마셔도 되는지는 의료진에게 확인해 주세요.",
         "undoLast": "마지막 잔 되돌리기",
@@ -1480,12 +1480,12 @@
     "atAGlance": "한눈에 보면",
     "focus": "확인할 항목 · {{nutrient}}",
     "comparison": "영양 수치 비교",
-    "profileReference": "프로필에 저장된 참고 기준",
-    "energyReferencePercent": "체중으로 계산한 참고값의 {{percent}}%",
+    "profileReference": "프로필에 저장된 권장량",
+    "energyReferencePercent": "체중으로 계산한 권장량의 {{percent}}%",
     "showDetails": "상세 영양표 보기",
     "hideDetails": "상세 영양표 접기",
     "over": "{{amount}} 초과",
-    "untilLimit": "기준까지 {{amount}}",
+    "untilLimit": "권장량까지 {{amount}}",
     "remaining": "{{amount}} 남음",
     "byFood": "음식별로 살펴보면",
     "relevantNutrients": "이 음식에서 주의할 영양소",
@@ -1506,9 +1506,10 @@
       "phosphorus": "인",
       "water": "수분"
     },
-    "scaleDaily": "하루 기준 {{limit}} 중 {{consumed}}",
-    "scaleReference": "참고 기준 {{limit}} 중 {{consumed}}",
-    "limitIs": "기준 {{amount}}"
+    "scaleDaily": "하루 권장량 {{limit}} 중 {{consumed}}",
+    "scaleReference": "하루 권장량 {{limit}} 중 {{consumed}}",
+    "limitIs": "기준 {{amount}}",
+    "dailyLimit": "하루 권장량 {{limit}}"
   },
   "foodResult": {
     "shareInstagram": "인스타그램 스토리에 공유",
@@ -1537,7 +1538,7 @@
     "chartExplanation": "원 그래프는 내 프로필의 하루 기준 중 이 음식이 차지하는 비율이에요.",
     "inPhoto": "사진 속 {{amount}}g",
     "consumed": "섭취 {{amount}}g",
-    "referencesNote": "앱의 영양소 참고 기준을 정할 때 KDIGO 2024, 대한신장학회 CKD 영양 권고안, 한국영양학회 식품성분DB를 참고했어요. 사진에서 추정한 값은 진료를 대신하지 않아요. 개인 기준은 담당 의료진의 안내를 먼저 따라 주세요.",
+    "referencesNote": "앱의 영양소 권장량을 정할 때 KDIGO 2024, 대한신장학회 CKD 영양 권고안, 한국영양학회 식품성분DB를 참고했어요. 사진에서 추정한 값은 진료를 대신하지 않아요. 개인 기준은 담당 의료진의 안내를 먼저 따라 주세요.",
     "openAllReferences": "참고 문헌 전체 보기",
     "openReferences": "참고 문헌 보기",
     "story": "스토리에 올리기",
@@ -1559,9 +1560,9 @@
     "returnToResult": "계속 보기",
     "unavailable": "확인 안 됨",
     "restriction": {
-      "safe": "내 참고 기준 안",
-      "caution": "내 참고 기준 초과",
-      "restricted": "내 참고 기준 크게 초과",
+      "safe": "내 권장량 안",
+      "caution": "내 권장량 초과",
+      "restricted": "내 권장량 크게 초과",
       "unknown": "확인 안 됨"
     },
     "provenance": {

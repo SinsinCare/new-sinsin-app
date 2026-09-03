@@ -83,7 +83,7 @@ const MOCK_ONBOARDING_STEPS: OnboardingStep[] = [
     step: 4,
     title: "키와 체중은 얼마인가요?",
     subTitle:
-      "체중은 신장 단계·투석 여부와 함께 하루 참고 기준을 계산하는 데 사용해요. 키는 선택 사항이에요.",
+      "체중은 신장 단계·투석 여부와 함께 하루 권장량을 계산하는 데 사용해요. 키는 선택 사항이에요.",
     type: "input",
     values: [
       {

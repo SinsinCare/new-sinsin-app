@@ -23,6 +23,11 @@ import {
   LOADING_TIP_KEYS,
   createTipCycler,
 } from "./loadingTips"
+import { BalancedText } from "./BalancedText"
+import { splitParagraphs } from "./balanceTextWidth"
+
+/** 팁 문단의 좌우 여백. BalancedText 가 쓸 수 있는 폭을 이 값으로 계산한다. */
+const TIP_HORIZONTAL_MARGIN = 24
 
 /**
  * 분석·저장 동안 화면 전체를 덮는 로딩 막.
@@ -198,22 +203,35 @@ function LoadingOverlayBody({
         <Animated.View
           key={tipIndex}
           entering={FadeIn.duration(260)}
-          style={{ marginHorizontal: 24 }}
+          style={{
+            marginHorizontal: TIP_HORIZONTAL_MARGIN,
+            alignItems: "center",
+          }}
         >
-          <V2Text
-            color={colors.label.alternative}
-            lineBreakStrategyIOS="hangul-word"
-            textBreakStrategy="balanced"
-            style={{
-              fontSize: 14,
-              fontWeight: "500",
-              textAlign: "center",
-              marginTop: 6,
-              lineHeight: 21,
-            }}
-          >
-            {t(LOADING_TIP_KEYS[tipIndex] ?? LOADING_TIP_KEYS[0])}
-          </V2Text>
+          {/*
+            iOS 엔 balanced 가 없어 마지막 줄에 단어 하나만 남곤 했다 — 줄 폭을 재서 고르게
+            맞춘다. 문장 경계(`\n`)는 문단으로 나눠 문단마다 따로 맞춘다(BalancedText 머리말).
+          */}
+          {splitParagraphs(
+            t(LOADING_TIP_KEYS[tipIndex] ?? LOADING_TIP_KEYS[0]),
+          ).map((paragraph, index) => (
+            <BalancedText
+              key={index}
+              horizontalInset={TIP_HORIZONTAL_MARGIN * 2}
+              color={colors.label.alternative}
+              lineBreakStrategyIOS="hangul-word"
+              textBreakStrategy="balanced"
+              style={{
+                fontSize: 14,
+                fontWeight: "500",
+                textAlign: "center",
+                marginTop: index === 0 ? 6 : 0,
+                lineHeight: 21,
+              }}
+            >
+              {paragraph}
+            </BalancedText>
+          ))}
         </Animated.View>
 
         {showDismiss && onDismiss && (

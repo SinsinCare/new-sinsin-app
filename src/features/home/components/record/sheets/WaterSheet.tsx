@@ -46,7 +46,7 @@ interface WaterSheetProps {
   onClose: () => void
   /** 시트가 열리던 시점의 오늘 총량. 열려 있는 동안은 시트가 로그를 직접 더한다. */
   consumed: number
-  /** 서버가 등록한 신장 건강 정보로 계산한 하루 참고 기준. */
+  /** 서버가 등록한 신장 건강 정보로 계산한 하루 권장량. */
   limit: number | null
   /** 프로필을 못 받아 일반 참고값을 쓰는 중인지 여부. */
   isReferenceLimit: boolean

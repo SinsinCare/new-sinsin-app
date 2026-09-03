@@ -21,8 +21,8 @@ export interface ReportBudget {
   nutrient: string
   label: string
   /**
-   * 칼륨·인처럼 혈청 수치 없이는 단정할 수 없는 "참고 기준"인지.
-   * 참고 기준은 "남음" 같은 예산 언어 대신 기준 대비 여유로 말한다.
+   * 칼륨·인처럼 혈청 수치 없이는 단정할 수 없는 쪽인지(화면 표기는 "권장량", 2026-09-03).
+   * 이런 영양소는 "남음" 같은 예산 언어 대신 권장량 대비 여유로 말한다.
    */
   isReference: boolean
   /** 체중 미기록이면 null. 이때 이 행은 그리지 않는다 — 한도를 지어내지 않는다. */
@@ -97,7 +97,7 @@ export interface ReportFacts {
   swaps: ReportSwap[]
   cookingTip: string
   mealTotal: Record<string, number>
-  /** 이 끼니 열량이 체중 기반 참고값에서 차지하는 비율. 체중을 모르면 null. */
+  /** 이 끼니 열량이 체중으로 계산한 참고값에서 차지하는 비율. 체중을 모르면 null. */
   energyPercent: number | null
 }
 
