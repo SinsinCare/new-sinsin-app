@@ -1046,16 +1046,24 @@ export default function ConsultScreen() {
 }
 
 const styles = StyleSheet.create({
+  /*
+    iOS 의 여러 줄 TextInput 은 `lineHeight` 를 주면 **플레이스홀더만 아래로 내려간다** —
+    입력 글자는 줄 높이 안에서 가운데 앉는데 플레이스홀더 라벨은 그 보정을 받지 못해
+    행의 아이콘·입력 글자보다 낮게 그려진다(2026-09-02 신고, 시뮬레이터에서도 보인다).
+    iOS 는 줄 높이를 시스템 기본(≈19)에 맡기고 세로 여백으로 높이를 맞춘다. 안드로이드는
+    이 결함이 없고 `lineHeight` 가 없으면 한글 자간이 답답해져 그대로 둔다.
+  */
   input: {
     flex: 1,
     fontSize: 16,
     includeFontPadding: false,
     minHeight: 32,
     maxHeight: 120,
-    lineHeight: 22,
+    ...Platform.select({
+      ios: { paddingTop: 6, paddingBottom: 6 },
+      default: { lineHeight: 22, paddingVertical: 5, textAlignVertical: "center" as const },
+    }),
     padding: 0,
-    paddingVertical: 5,
-    textAlignVertical: "center",
   },
   inputContainer: {
     borderRadius: 20,

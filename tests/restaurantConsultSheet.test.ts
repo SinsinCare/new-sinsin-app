@@ -547,8 +547,11 @@ describe("답변 렌더는 /consult 정본을 나눠 쓴다", () => {
     "makeMarkdownStyles",
     "AssistantAvatar",
   ])("%s 가 export 되어 있다", (symbol) => {
+    // 마크다운 파서 정본은 `utils/chatMarkdown.ts` 로 옮겨졌고(2026-09-02, 두 표면이
+    // 같은 파서·정규화를 쓰게), ChatMessageBubble 은 `export { … }` 로 다시 내보낸다.
+    // 어느 꼴이든 이 파일에서 가져갈 수 있으면 된다.
     expect(canonical).toMatch(
-      new RegExp(`export (const|function) ${symbol}\\b`),
+      new RegExp(`export (const|function) ${symbol}\\b|export \\{[^}]*\\b${symbol}\\b[^}]*\\}`),
     )
   })
 

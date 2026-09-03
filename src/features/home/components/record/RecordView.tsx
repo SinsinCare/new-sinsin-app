@@ -59,7 +59,10 @@ import { getGlucoseNowSuggestion } from "../../utils/recordNowSuggestion"
 import { inferGlucoseContext } from "../../utils/glucoseInference"
 import { useWeightWeek } from "../../hooks/useWeightWeek"
 import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
-import { afterModalTransitions } from "@/src/shared/components/appModalGate"
+import {
+  afterModalTransitions,
+  afterSiblingModalsGone,
+} from "@/src/shared/components/appModalGate"
 import { ApiError } from "@/src/services/core/apiError"
 import { pendingAnalysisRequests } from "../../storage/pendingAnalysisRequests"
 import {
@@ -584,6 +587,9 @@ export function RecordView({
       method: "camera",
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
+    // 식사 시트(RN Modal)가 **완전히 사라진 뒤에** 네이티브 카메라를 띄운다 — 아래
+    // handleMealGallery 머리말의 얼음 결함과 같은 이유다.
+    await afterSiblingModalsGone()
     let granted = false
     const uri = await takePhoto({
       onPermissionDenied: () =>
@@ -659,6 +665,18 @@ export function RecordView({
     )
   }
 
+  /**
+   * 앨범 버튼. 시트를 내리는 **같은 틱에** 네이티브 피커를 present 하면 iOS 가 두
+   * 전이를 겹쳐 놓고 멈춘다 — 시트는 닫히는데 앨범은 안 뜨고 홈이 터치를 안 받는
+   * "앱이 얼었다"(2026-09-02 재발 신고, 예전에도 있었다).
+   *
+   * `afterModalTransitions()` 만으로는 **부족했다**(2026-09-03 시뮬레이터 재현): 전이
+   * 큐가 비어도 시트의 RN Modal VC 가 아직 떠 있으면 expo-image-picker 가 그 VC 를
+   * topmost 로 잡아 거기에 present 하고, 그 VC 가 곧 사라지면서 피커는 뜨지 않은 채
+   * 창의 터치만 막힌다 — 예외도 로그도 없다. 그래서 공유(`FoodAnalysisResult`)와 같은
+   * `afterSiblingModalsGone()` 으로 **레지스트리가 빌 때까지** 기다린다.
+   * `tests/mealPickerAfterModal.test.ts` 가 이 순서를 지킨다.
+   */
   const handleMealGallery = async (mealType: MealType) => {
     setOpenSheet(null)
     startMealRecord(mealType)
@@ -666,6 +684,7 @@ export function RecordView({
       method: "gallery",
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
+    await afterSiblingModalsGone()
     await openMealGallery(mealType, false)
   }
 
