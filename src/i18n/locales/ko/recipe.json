@@ -133,7 +133,7 @@
   "list": {
     "resultCountAtLeast": "검색 결과 {{count}}개 이상",
     "suggestTitle": "이런 레시피가 있어요",
-    "suggestKeyword": "'{{text}}' 로 검색",
+    "suggestKeyword": "'{{text}}'로 검색",
     "suggestEmpty": "비슷한 이름이 없어요. 그대로 검색해 볼 수 있어요.",
     "searchAccessibility": "{{text}} 검색",
     "filterOpen": "필터",
@@ -312,7 +312,7 @@
     },
     "estimatedBadge": "영양 수치는 추정값",
     "estimateTitle": "영양 수치 안내",
-    "estimateBody": "표시된 값은 일반 식품 자료로 계산한 추정값이에요. 실제 재료와 양에 따라 달라질 수 있고, 이 레시피가 개인에게 맞는지를 판단한 결과는 아니에요.",
+    "estimateBody": "여기 보이는 값은 일반 식품 자료로 계산한 추정값이에요. 실제 재료와 양에 따라 달라질 수 있어요. 이 레시피가 나에게 맞는지 판단한 결과는 아니에요.",
     "nutritionTitle": "영양 정보",
     "sodium": "나트륨",
     "potassium": "칼륨",
@@ -376,10 +376,10 @@
       "serverBody": "잠시 뒤 다시 시도하면 대개 해결돼요. 계속되면 조금 기다려 주세요.",
       "serverRetry": "다시 시도",
       "notFoundTitle": "이 레시피는 볼 수 없어요",
-      "notFoundBody": "지워졌거나 주소가 잘못됐어요. 인터넷 문제는 아니고, 다시 눌러도 같아요.",
+      "notFoundBody": "지워졌거나 주소가 잘못됐어요. 인터넷 문제는 아니라서 다시 눌러도 같아요.",
       "notFoundBack": "레시피 목록으로",
       "appBugTitle": "앱에 문제가 생겨 불러오지 못했어요",
-      "appBugBody": "인터넷 문제는 아니에요. 저희가 잘못된 요청을 보냈어요. 다시 시도해 보시고, 계속되면 알려주세요.",
+      "appBugBody": "인터넷 문제는 아니에요. 저희가 잘못된 요청을 보냈어요. 다시 시도해 보시고 계속되면 알려 주세요.",
       "appBugRetry": "다시 시도"
     },
     "retry": "다시 시도",
@@ -392,7 +392,7 @@
     "saveCount_other": "저장 {{count}}",
     "authored": "내가 쓴 레시피",
     "localeGapTitle": "재료와 조리 순서는 한국어 원문이에요",
-    "localeGapBody": "번역이 준비되면 자동으로 바뀝니다. 그때까지 원문을 그대로 보여드려요.",
+    "localeGapBody": "번역이 준비되면 자동으로 바뀌어요. 그때까지 원문을 그대로 보여드려요.",
     "nutrition": {
       "basis": "{{count}}명 기준",
       "basis_one": "{{count}}명 기준",
@@ -414,11 +414,11 @@
         "author_supplied": "레시피를 쓴 사람이 직접 적어 넣은 값이에요.",
         "nutritionist_reviewed": "영양사가 확인한 값이에요."
       },
-      "explainScope": "여기 있는 숫자는 내 기록에서 뺀 남은 참고량과 이 레시피의 수치를 나눈 결과예요. 이 레시피가 나에게 맞는지를 판단한 결과는 아니에요.",
+      "explainScope": "여기 있는 숫자는 오늘 남은 양에서 이 레시피가 차지하는 비율이에요. 이 레시피가 나에게 맞는지 판단한 결과는 아니에요.",
       "unmatchedTitle": "일부 재료는 계산에서 빠졌어요",
       "unmatchedBody": "식품표에서 찾지 못한 재료는 합계에 넣지 않았어요. 실제 값은 이보다 클 수 있어요.",
       "unavailableTitle": "영양 수치를 보여드릴 수 없어요",
-      "unavailableBody": "수치의 출처를 확인할 수 없어서 그리지 않았어요."
+      "unavailableBody": "출처를 확인할 수 없는 수치라서 보여드리지 않아요."
     },
     "ingredients": {
       "title": "재료",
@@ -489,7 +489,7 @@
       "loading": "리뷰를 불러오고 있어요",
       "blockAuthor": "차단",
       "blockTitle": "이 사용자를 차단할까요?",
-      "blockBody": "{{name}} 님이 쓴 리뷰가 앱 전체에서 보이지 않아요. 차단은 내 정보 → 차단 목록에서 해제할 수 있어요.",
+      "blockBody": "{{name}}님이 쓴 리뷰가 앱 전체에서 보이지 않아요. 차단은 내 정보 → 차단 목록에서 해제할 수 있어요.",
       "blockConfirm": "차단하기",
       "blockDone": "차단했어요"
     },
@@ -510,20 +510,20 @@
   "recipeWrite": {
     "title": "레시피 작성하기",
     "editUnavailableTitle": "레시피 수정은 아직 없어요",
-    "editUnavailableBody": "지금은 새 레시피를 올리는 것만 할 수 있어요. 고칠 내용이 있으면 새로 올려 주세요.",
+    "editUnavailableBody": "지금은 새 레시피만 올릴 수 있어요. 고칠 내용이 있으면 새로 올려 주세요.",
     "field": {
       "name": "제목",
       "namePlaceholder": "제목을 입력해 주세요",
-      "summary": "한줄 소개",
+      "summary": "한 줄 소개",
       "summaryPlaceholder": "맛과 특징을 한 줄로 알려 주세요",
       "timeMin": "조리 시간",
       "timeMinPlaceholder": "35",
       "timeMinUnit": "분",
       "servings": "몇 명이 먹을 양",
       "servingsValue": "{{value}}명",
-      "servingsNote": "적어 준 재료 전체가 몇 명이 먹을 양인지 알려 주세요. 영양은 한 명 기준으로 계산해요.",
+      "servingsNote": "적은 재료 전체가 몇 명이 먹을 양인지 알려 주세요. 영양은 한 명 기준으로 계산해요.",
       "description": "설명 작성",
-      "descriptionPlaceholder": "신장 건강을 고려한 저염·균형 식단 레시피를 나누는 공간입니다.\n\n재료 양, 조리 방법, 간을 줄인 팁 등을 함께 적어 주시면 다른 분들께 큰 도움이 됩니다.",
+      "descriptionPlaceholder": "신장 건강을 생각한 저염·균형 식단 레시피를 나누는 공간이에요.\n\n재료 양, 조리 방법, 간을 줄인 팁을 함께 적어 주시면 다른 분들께 큰 도움이 돼요.",
       "counter": "{{length}}/{{max}}",
       "optionalMark": "선택",
       "servingsDecrease": "인원 줄이기",
@@ -543,7 +543,7 @@
       "categoryLabel": "음식 종류",
       "categoryHint": "하나만 고를 수 있어요",
       "nutritionLabel": "영양 기준",
-      "searchOnlyNotice": "검색에만 쓰이고 레시피 카드에는 표시되지 않아요"
+      "searchOnlyNotice": "검색에만 쓰고 레시피 카드에는 보이지 않아요"
     },
     "ingredient": {
       "label": "재료 입력",
@@ -555,14 +555,14 @@
       "removeEmpty": "빈 재료 줄 삭제",
       "limitReached": "재료는 {{max}}개까지 적을 수 있어요",
       "hintMissing": "분량을 적으면 영양 계산에 들어가요",
-      "hintUnmeasurable": "무게를 알 수 없는 표기예요. “150g” 처럼 적어 주세요",
+      "hintUnmeasurable": "무게를 알 수 없는 표기예요. “150g”처럼 적어 주세요",
       "unitLabel": "무게",
       "countLabel": "개수"
     },
     "step": {
       "fieldLabel": "조리 순서",
       "fieldPlaceholder": "조리 순서를 입력해 주세요",
-      "sheetTitle": "조리순서",
+      "sheetTitle": "조리 순서",
       "sheetConfirm": "확인",
       "placeholder": "{{index}}번째로 무엇을 하나요?",
       "add": "순서 추가",
@@ -587,7 +587,7 @@
       "percent": "오늘 남은 양의 {{percent}}%",
       "noPercent": "남은 양을 계산할 수 없어요",
       "proteinNoWeight": "체중을 기록하면 계산할 수 있어요",
-      "provenanceNote": "적어 준 재료와 분량을 식품 성분표로 계산한 값이에요. 영양사가 검수한 값은 아니에요.",
+      "provenanceNote": "적은 재료와 분량을 식품 성분표로 계산한 값이에요. 영양사가 검수한 값은 아니에요.",
       "provenance": {
         "reference_estimate": "추정값",
         "computed_from_ingredients": "재료로 계산",
@@ -595,9 +595,9 @@
         "nutritionist_reviewed": "영양사 검수"
       },
       "unmatchedTitle": "계산에서 빠진 재료 {{n}}개",
-      "unmatchedItem": "“{{name}}” 은 무게를 몰라 계산에서 빠졌어요",
-      "unmatchedHelp": "“150g” 처럼 무게로 적으면 계산에 들어가요.",
-      "unmatchedNotFound": "“{{name}}” 은 식품 성분표에서 찾지 못했어요"
+      "unmatchedItem": "“{{name}}”은 무게를 몰라 계산에서 빠졌어요",
+      "unmatchedHelp": "“150g”처럼 무게로 적으면 계산에 들어가요.",
+      "unmatchedNotFound": "“{{name}}”은 식품 성분표에서 찾지 못했어요"
     },
     "submit": {
       "label": "등록",
@@ -608,7 +608,7 @@
     },
     "missing": {
       "name": "제목을 적어 주세요",
-      "summary": "한줄 소개를 적어 주세요",
+      "summary": "한 줄 소개를 적어 주세요",
       "category": "음식 종류를 골라 주세요",
       "ingredients": "재료를 한 가지 이상 적어 주세요",
       "steps": "조리 순서를 한 단계 이상 적어 주세요"
@@ -620,7 +620,7 @@
     "result": {
       "successTitle": "레시피를 올렸어요",
       "successBody": "다른 분들도 이제 볼 수 있어요.",
-      "successUnmatched": "재료 {{n}}개는 무게를 몰라 영양 계산에서 빠졌어요. 올린 레시피는 아직 고칠 수 없어서, 다음에는 “150g” 처럼 무게로 적어 주세요.",
+      "successUnmatched": "재료 {{n}}개는 무게를 몰라 영양 계산에서 빠졌어요. 올린 레시피는 아직 고칠 수 없어서 다음에는 “150g”처럼 무게로 적어 주세요.",
       "successUnmatchedEditable": "재료 {{n}}개는 무게를 몰라 영양 계산에서 빠졌어요. 나중에 분량을 고쳐 적으면 다시 계산돼요."
     },
     "authorContext": {
