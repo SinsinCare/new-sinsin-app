@@ -5,7 +5,7 @@
  *
  * 1. 지도(전체 화면, 상태바 아래까지)
  * 2. 상단 오버레이 — 검색바 + 카테고리 칩 레일 + 위치 권한 배너
- * 3. 우하단 FAB 스택(저장한 곳만 / 내 위치) + 하단 중앙 `현재 지도에서 찾기` pill
+ * 3. 우하단 내 위치 버튼 + 하단 중앙 `현재 지도에서 찾기` pill (저장 필터는 검색바)
  * 4. 식당 목록 시트
  *
  * ## 지켜야 하는 다섯 가지
@@ -84,6 +84,8 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated"
 import { LinearGradient } from "expo-linear-gradient"
+import { useFocusEffect } from "@react-navigation/native"
+import { setStatusBarStyle } from "expo-status-bar"
 import { useAppRouter, useRegisterTabReset } from "@/src/shared/navigation"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { TAB_BAR_HEIGHT } from "@/src/shared/utils/bottomSafeArea"
@@ -188,7 +190,14 @@ export function RestaurantMapScreen({
   focus = null,
 }: RestaurantMapScreenProps = {}) {
   const { t } = useTranslation("common")
-  const { colors, surface } = useV2Theme()
+  const { colors, surface, mode } = useV2Theme()
+  // Tab entry has no native-stack transitionEnd event.
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle(mode === "dark" ? "light" : "dark")
+    }, [mode]),
+  )
+  const [isListExpanded, setIsListExpanded] = useState(false)
   const insets = useSafeAreaInsets()
   const router = useAppRouter()
 
@@ -997,6 +1006,7 @@ export function RestaurantMapScreen({
 
   const handleSnapChange = useCallback(
     (index: number, position: number) => {
+      setIsListExpanded(index === SHEET_SNAP.EXPANDED)
       sheetIndexRef.current = index
       sheetPositionRef.current = position
       // 보이는 높이가 바뀌었다고 카카오에 알린다. 안 알리면 타일이 잘린 채 남는다.
@@ -1458,7 +1468,11 @@ export function RestaurantMapScreen({
     <View
       // `box-none`: 오버레이의 빈 공간은 지도에 터치를 흘려보낸다. 안 주면 상단 1/4 이
       // 눌리지 않는 죽은 영역이 된다.
-      pointerEvents="box-none"
+      pointerEvents={isListExpanded ? "none" : "box-none"}
+      accessibilityElementsHidden={isListExpanded}
+      importantForAccessibility={
+        isListExpanded ? "no-hide-descendants" : "auto"
+      }
       onLayout={handleTopOverlayLayout}
       style={[styles.topOverlay, { paddingTop: insets.top + spacing[8] }]}
     >
@@ -1479,6 +1493,8 @@ export function RestaurantMapScreen({
       />
       <MapSearchBar
         query={filters.query}
+        bookmarkedOnly={filters.bookmarkedOnly}
+        onToggleBookmarkedOnly={controls.toggleBookmarkedOnly}
         onPress={() => router.push("/restaurant/search")}
         onClear={() => controls.setQuery("")}
         style={styles.searchBar}
@@ -1652,13 +1668,28 @@ export function RestaurantMapScreen({
 
       {topOverlay}
 
+      {isListExpanded && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.statusScrim,
+            { height: insets.top, backgroundColor: colors.background.default },
+          ]}
+        />
+      )}
       <Animated.View
-        pointerEvents="box-none"
-        style={[styles.floatingArea, floatingStyle]}
+        accessibilityElementsHidden={isListExpanded}
+        importantForAccessibility={
+          isListExpanded ? "no-hide-descendants" : "auto"
+        }
+        pointerEvents={isListExpanded ? "none" : "box-none"}
+        style={[
+          styles.floatingArea,
+          floatingStyle,
+          isListExpanded && { opacity: 0 },
+        ]}
       >
         <MapFabStack
-          bookmarkedOnly={filters.bookmarkedOnly}
-          onToggleBookmarkedOnly={controls.toggleBookmarkedOnly}
           onPressMyLocation={handleMyLocation}
           locating={myLocation.isRequesting}
           style={styles.fabs}
@@ -1674,6 +1705,8 @@ export function RestaurantMapScreen({
       <RestaurantListSheet
         ref={sheetRef}
         items={sheetList.items}
+        total={list.isError ? null : list.total}
+        bookmarkedOnly={filters.bookmarkedOnly}
         filterRow={filterRow}
         notice={notice}
         leadingSkeleton={sheetList.leadingSkeleton}

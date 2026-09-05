@@ -111,7 +111,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[6],
-    height: 40,
+    minHeight: 44,
+    paddingVertical: spacing[10],
     paddingHorizontal: spacing[16],
     borderRadius: radius.full,
     // 화면 중앙에 뜬다. 부모가 alignItems:center 를 주지 않아도 스스로 폭을 hug 한다.

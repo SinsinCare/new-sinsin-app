@@ -1,45 +1,3 @@
-/**
- * 목업의 **아웃라인 선택** 칩. `V2Chip` 으로는 만들 수 없어서 여기서 한 번만 만든다.
- *
- * `V2Chip` 은 `selected` 일 때 면을 `primary.primary` 로 채우고 글자를 흰색으로 바꾼다.
- * 목업(-2 / -5 / -8 / -23 / -24)의 카테고리·필터·트레이 칩은 그게 아니다. `style` prop 은
- * 루트에만 닿으므로 글자색을 바꿀 수 없다 — 글자색이 컴포넌트 내부에서 `selected` 로
- * 결정되기 때문이다.
- *
- * `V2Chip` 에 축을 더하지 않은 이유: 채워지는 선택(`fill`)은 필터 시트의 시도 칩(-22)이
- * 실제로 쓰고 있어 지울 수 없고, DS 컴포넌트에 새 축을 여는 결정은 이 화면 하나가
- * 내릴 범위를 넘는다. 대신 DS 규칙은 그대로 지킨다 — 모듈 레벨 `SIZE` 룩업 +
- * `resolveColors()`, `fontWeight` 금지(무게는 fontFamily 에만 있다), pill 은 `radius.full`,
- * 작은 컨트롤은 hitSlop 으로 44 확보, `style` 은 마지막에 적용.
- *
- * ## 선택 상태의 면은 **흰색이 아니다** (목업 픽셀 실측)
- *
- * 처음 구현은 "선택 = 흰 면 + 주황 테두리·글자" 였는데, 목업을 4배로 확대해 픽셀을 뽑아
- * 보니 선택된 칩의 면은 전부 `#FFF9F6`(회색 컨테이너 위에서는 `#FCF6F3`)이다. 흰 면 위
- * 반투명 주황이라는 뜻이고, 그 값이 정확히 `primary.primaryWeak`(`#fff4f099`)와 같다.
- * 즉 목업은 처음부터 토큰을 쓰고 있었고 코드만 흰색으로 굳어 있었다.
- *
- * 미선택 면도 문맥마다 다르다. 아래 표의 면 값은 전부 실측값이다.
- *
- * | variant | 쓰는 곳 | 미선택 면 | 선택 글자 |
- * |---|---|---|---|
- * | `fill` | 필터 시트 시도 칩 (-22/-24) | `#F9FAFB` = `fill.normal` | 흰색(면이 주황) |
- * | `outline` | 필터 시트 영양·음식 칩, 트레이 칩 (-23/-24) | `#F9FAFB` = `fill.normal` | 주황 |
- * | `outline` + `onSurface` | 회색 컨테이너 안 세부 지역 칩 (-24) | `#FFFFFF` | 주황 |
- * | `quiet` | 시트/리스트 상단 필터칩 행 (-5/-8/-21) | `#F9FAFB` = `fill.normal` | **gray-900** |
- *
- * `quiet` 만 선택 글자가 어두운 이유는 그 행이 지도·목록 **본문 위에 상시 노출**되기
- * 때문이다. 네 칩이 동시에 주황 글자가 되면 시트 머리가 주황 덩어리로 읽혀 그 아래
- * 카드의 주황 요소(별점·저장 표시)와 구분되지 않는다. 필터 시트는 모달이라 그 문제가 없다.
- *
- * ## 테두리는 **어느 상태에도 없다** (2026-07-31)
- *
- * 목업은 선택을 1.5pt 브랜드 테두리로 말했고 `quiet` 의 미선택은 회색 테두리로 떠 있었다.
- * 그런데 같은 역할의 컨트롤이 레시피 탭에서는 이미 **면으로만** 말한다(필터 진입점은
- * 연회색 면 → 걸리면 주황 틴트 면, 카테고리 레일은 면 + 굵기). 한 앱에서 같은 뜻을 두
- * 문법으로 말하고 있었던 셈이라 면 쪽으로 통일했다. 자세한 것은 `styles.base` 주석.
- */
-
 import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
@@ -57,15 +15,8 @@ import {
 
 export type SelectableChipSize = "s" | "m"
 
-/**
- * `fill` — 선택 시 **불투명** 주황 면 + 흰 글자(목업 -22 의 시도 칩. 유일하게 면을 채운다).
- * `outline` — 선택 시 주황 틴트 면 + 주황 글자(필터 시트 칩, 트레이 칩).
- * `quiet` — 선택 시 주황 틴트 면 + **gray-900 글자**(시트/리스트 상단 필터칩 행).
- *
- * 세 값의 차이와 근거는 파일 헤더의 표에 있다. 이름의 `outline` 은 역사적 이름이고
- * 테두리를 그리지 않는다(헤더 §테두리).
- */
-export type SelectableChipVariant = "fill" | "outline" | "quiet"
+/** fill: 브랜드 강조, outline: 필터 시트, quiet: 결과 위의 가벼운 테두리 컨트롤. */
+export type SelectableChipVariant = "fill" | "outline" | "quiet" | "text"
 
 export interface SelectableChipProps {
   label: string
@@ -128,19 +79,13 @@ function resolveColors(
       }
     }
     return {
-      // 반투명 주황. 흰 면 위에서 `#FFF9F6`, 회색 컨테이너 위에서 `#FCF6F3` 가 되어
-      // 목업의 두 실측값을 한 토큰으로 맞춘다. **테두리는 없다**(아래 §보더리스).
-      bg: colors.primary.primaryWeak,
-      fg: variant === "quiet" ? colors.label.normal : colors.primary.primary,
+      bg: colors.label.normal,
+      fg: colors.background.default,
     }
   }
-  if (variant === "quiet") {
-    // 흰 시트 머리 위에 상시 노출되는 행. 종전에는 흰 면 + 회색 테두리였는데, 그러면
-    // 같은 자리의 레시피 필터 진입점(연회색 면, 테두리 없음)과 문법이 달라진다.
-    // 면으로 세운다 — 흰 시트 위에서 옅은 회색 면이 곧 경계다.
+  if (variant === "quiet" || variant === "text") {
     return {
-      // `fill.control` — 아래 outline 갈래와 같은 이유다(그쪽 주석).
-      bg: colors.fill.control,
+      bg: "transparent",
       fg: colors.label.neutral,
     }
   }
@@ -180,31 +125,41 @@ export function SelectableChip({
   const s = SIZE[size]
   const palette = resolveColors(variant, selected, onSurface, colors)
 
-  /* 32px 칩은 최소 터치 44 에 못 미친다. 박스를 키우지 않고 hitSlop 으로 늘린다 —
-     **세로만** 늘린다. 가로로 늘리면 gap 8 인 이웃 칩과 히트 영역이 겹쳐, 두 칩 사이를
-     누를 때 어느 쪽이 잡히는지 예측할 수 없게 된다. */
-  const verticalHitSlop = Math.max(0, (touchTarget.min - s.height) / 2)
-
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
-      hitSlop={{ top: verticalHitSlop, bottom: verticalHitSlop }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         {
-          height: s.height,
+          minHeight: Math.max(touchTarget.min, s.height),
+          paddingVertical: spacing[8],
           paddingHorizontal: s.paddingHorizontal,
-          backgroundColor: palette.bg,
+          backgroundColor:
+            variant === "quiet" || variant === "text"
+              ? "transparent"
+              : palette.bg,
         },
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}
     >
+      {(variant === "quiet" || (variant === "text" && selected)) && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.quietSurface,
+            {
+              backgroundColor: palette.bg,
+              borderColor: selected ? palette.bg : colors.line.neutral,
+            },
+          ]}
+        />
+      )}
       {leadingIcon ? (
         <V2Icon name={leadingIcon} size={s.icon} color={palette.fg} />
       ) : null}
@@ -222,11 +177,22 @@ export function SelectableChip({
         <View
           style={[
             styles.countBadge,
-            { backgroundColor: colors.primary.primary },
+            {
+              backgroundColor: selected
+                ? colors.background.default
+                : colors.label.normal,
+            },
           ]}
         >
           <Text
-            style={[typography.caption.xSmall, { color: colors.static.white }]}
+            style={[
+              typography.caption.small,
+              {
+                color: selected
+                  ? colors.label.normal
+                  : colors.background.default,
+              },
+            ]}
             numberOfLines={1}
           >
             {String(count)}
@@ -271,22 +237,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing[6],
     borderRadius: radius.full, // pill
-    /*
-      §보더리스 — 테두리를 그리지 않는다(2026-07-31).
-
-      종전에는 선택 상태를 1.5pt 브랜드 테두리로 말했다(목업 -2/-5/-23/-24 실측). 그런데
-      앱의 나머지(레시피 목록·보관함·상세)는 **면과 여백으로만** 구획하는 규칙이라, 같은
-      역할의 칩이 탭마다 다른 문법을 갖고 있었다. 선택은 이제 면이 말한다 — `fill` 은
-      불투명 주황, 나머지는 주황 틴트 면이고 테두리는 두 상태 모두 없다.
-
-      `borderWidth` 자체를 남겨 둔 이유는 없다. 값을 0 으로 두면 다음 사람이 "왜 0인가" 를
-      묻게 되므로 속성을 지웠고, 폭이 상태에 따라 흔들리지 않는다는 성질은 그대로다.
-    */
+  },
+  quietSurface: {
+    ...StyleSheet.absoluteFillObject,
+    top: spacing[6],
+    bottom: spacing[6],
+    borderWidth: 1,
+    borderRadius: radius.full,
   },
   /** 라벨 뒤 개수 배지. 레시피 필터 버튼(18×18 원)과 같은 치수다. */
   countBadge: {
     minWidth: 18,
-    height: 18,
+    minHeight: 20,
+    paddingVertical: spacing[2],
     borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",

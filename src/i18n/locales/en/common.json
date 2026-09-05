@@ -486,7 +486,8 @@
         "lowSalt": "Lower sodium",
         "lowPotassium": "Lower potassium",
         "lowPhosphorus": "Lower phosphorus"
-      }
+      },
+      "applyResults": "Show restaurants"
     },
     "cuisine": {
       "KOREAN": "Korean",
@@ -642,6 +643,10 @@
       "LOW_SODIUM": "Low sodium",
       "LOW_POTASSIUM": "Low potassium",
       "LOW_PHOSPHORUS": "Low phosphorus"
+    },
+    "card": {
+      "nutritionReference": "Nutrition",
+      "photoUnavailable": "No photo"
     },
     "safety": {
       "RESTRICTED": "Over limit",
@@ -851,7 +856,7 @@
       }
     },
     "map": {
-      "searchPlaceholder": "Search for a restaurant",
+      "searchPlaceholder": "Search areas, places, food",
       "searchThisArea": "Search this area",
       "myLocation": "Go to my location",
       "bookmarkedOnly": "Saved only",
@@ -867,7 +872,18 @@
       "clusterAccessibility": "{{count}} restaurants here, tap to zoom in",
       "sheetHandleAccessibility": "Resize restaurant list",
       "outsideCoverageTitle": "You're outside the service area",
-      "outsideCoverageBody": "The map covers restaurants in South Korea only."
+      "outsideCoverageBody": "The map covers restaurants in South Korea only.",
+      "resultsTitle": "Places in this area",
+      "findingResults": "Finding restaurants",
+      "resultsHint": "Explore matching places",
+      "resultCount": "{{count}} places",
+      "showList": "Expand restaurant list",
+      "showMap": "Expand map",
+      "listView": "List",
+      "mapView": "Map",
+      "mapAction": "View map",
+      "listAction": "View list",
+      "savedResultsTitle": "Saved restaurants"
     },
     "empty": {
       "noDataHereTitle": "No restaurants here yet",

@@ -119,32 +119,13 @@ export const MAP_BACKGROUND: Readonly<Record<MapColorScheme, string>> = {
  */
 export const MAP_CLUSTER_SHADOW: Readonly<Record<MapColorScheme, string>> = {
   light: "0 1px 4px rgba(42,42,55,0.18)",
-  dark: "0 2px 10px rgba(254,113,57,0.32)",
+  dark: "0 2px 8px rgba(0,0,0,0.28)",
 }
 
-/**
- * ── 식당 마커 (시안 정본, 2026-08-20) ──────────────────────────
- *
- * 시안(Figma Light)의 마커는 **도넛**이다. 원본 SVG 가 마커마다 이 두 원을 그린다:
- *
- *     g filter=drop-shadow
- *       circle r=10 fill=#F9FAFB                    ← 원판, 지름 20
- *       circle r=8  stroke=#FE7139 stroke-width=4   ← 링, r 6~10 구간
- *
- * 3배 렌더 타일에서 잰 값도 같다(A3_1 의 마커 5개 · A3_2 · A4_1 전부): 바깥 60px,
- * 링 띠 12px, 안쪽 36px → 3으로 나눠 **바깥 20 · 링 4 · 안쪽 12**.
- *
- * 즉 시안의 채움은 **브랜드색이 아니다.** 종전 구현(흰 채움 + 브랜드 링 3)과 다른 것은
- * 링 두께와 원판 색뿐이므로 채움/링을 뒤집지 않는다 — 뒤집으면 아래 `.mk.sel` 의
- * 선택 표현(채움 반전)과 기본이 같은 모습이 되어 **선택이 안 보인다.**
- * ('브랜드 채움 + 밝은 테두리' 는 시안에서 마커가 아니라 **내 위치 점**의 모습이다:
- *  같은 SVG 에 circle r=8.25 fill=#FE7139 stroke=#F9FAFB stroke-width=2.5 로 있다.)
- *
- * 원판 색 #f9fafb 는 grayscale.50 — 모드에 걸리지 않은 원시색이라 다크에서도 그대로
- * 둔다(오늘의 #fff 과 같은 자리이며, 어두운 타일 위에서 링 안이 '뚫린 구멍'으로 읽힌다).
- */
-export const MAP_MARKER_SIZE = 20
-export const MAP_MARKER_RING = 4
+/** 중립색 기본 핀. 선택한 식당은 주황색 채움과 이름 말풍선으로 구분한다. */
+export const MAP_MARKER_SIZE = 16
+export const MAP_MARKER_RING = 2
+export const MAP_MARKER_BORDER = primitives.grayscale[500]
 export const MAP_MARKER_FILL = primitives.grayscale[50] // #f9fafb
 /**
  * 마커 그림자. 시안의 Figma 필터는 offset 없음 · feGaussianBlur stdDeviation 1 ·
@@ -267,22 +248,13 @@ ${MAP_FONT_FACE_CSS}
   /* 기본 마커: 밝은 원판 + 브랜드 링(도넛). 치수·색의 근거는 위 MAP_MARKER_* 주석. */
   .mk .ring { position: absolute; left: ${-MAP_MARKER_SIZE / 2}px; top: ${-MAP_MARKER_SIZE / 2}px;
               width: ${MAP_MARKER_SIZE}px; height: ${MAP_MARKER_SIZE}px;
-              border-radius: 50%; background: ${MAP_MARKER_FILL}; border: ${MAP_MARKER_RING}px solid ${BRAND};
+              border-radius: 50%; background: ${MAP_MARKER_FILL}; border: ${MAP_MARKER_RING}px solid ${MAP_MARKER_BORDER};
               box-shadow: ${MAP_MARKER_SHADOW}; box-sizing: border-box; }
 
-  /* 상호명 라벨. 확대했을 때만 붙는다(겹침 방지). 배경이 무엇이든 읽히도록 외곽선.
-     halo 색은 applyMapColorScheme 이 타일 바닥에 맞춰 바꾼다.
-
-     13px/600 은 시안과 같다(2026-08-20 확인). 크기는 눈으로 재지 말고 **글자 잉크
-     높이**로 재야 한다: 3배 타일에서 라벨 잉크가 34px 인데, 같은 Pretendard SemiBold
-     로 실제 렌더해 보면 12px→32 · 13px→34 · 14px→38 · 15px→40 이다. 즉 13px 이다.
-     (한글 잉크는 약 0.87em 이라 '지도 pill 이 15px 이니 같아 보이면 15px' 같은 비례
-      추정은 두 단계나 틀린다 — 시안의 pill·칩 쪽이 오히려 13px 이다.)
-
-     색은 var 로 받는다 — 라이트는 본문색, 다크는 밝은 본문색이어야 하고 그 전환을
-     applyMapColorScheme 이 halo 와 한자리에서 한다. var 의 폴백은 초기 모드값이다. */
+  /* 지도 이름은 거리명보다 과하게 강조하지 않는다. 전체 이름은 선택 말풍선과 카드에서 확인한다. */
   .mk .name { position: absolute; left: 0; top: 13px; transform: translateX(-50%);
-              font-size: 13px; font-weight: 600; white-space: nowrap;
+              font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap;
+              max-width: 132px; overflow: hidden; text-overflow: ellipsis;
               color: var(--map-label-color, ${MAP_LABEL_COLOR[colorScheme]});
               text-shadow: 0 0 3px var(--map-label-halo, #fff), 0 0 3px var(--map-label-halo, #fff),
                            0 0 3px var(--map-label-halo, #fff), 0 0 2px var(--map-label-halo, #fff); }
@@ -361,11 +333,12 @@ ${MAP_FONT_FACE_CSS}
 
      기울어진 원인 하나가 더 있었는데 CSS 밖이다 — 안드로이드 WebView 의 textZoom 이
      시스템 글꼴 배율만큼 글자만 키웠다. 그건 RestaurantMapView 의 textZoom 100 이 막는다. */
-  .cl { position: relative; border-radius: 50%; background: ${BRAND}; color: #fff;
-        font-weight: 700;
-        box-shadow: var(--cluster-shadow);
-        /* 반투명 흰 테로 배경 지도와 분리한다. */
-        border: 3px solid rgba(255,255,255,0.9); box-sizing: border-box; }
+  /* Smaller visible circles retain a 44px interaction area. */
+  .cl { position: relative; width: 44px; height: 44px; color: var(--map-label-color); font-weight: 700; }
+  .cl::before { content: ''; position: absolute; left: 50%; top: 50%;
+        width: var(--cluster-size); height: var(--cluster-size); transform: translate(-50%, -50%);
+        border-radius: 50%; background: var(--cluster-bg); box-shadow: var(--cluster-shadow);
+        border: 1px solid var(--cluster-border); box-sizing: border-box; pointer-events: none; }
   .cl .n { position: absolute; left: 0; top: 0; right: 0; bottom: 0;
            display: flex; align-items: center; justify-content: center;
            line-height: 1; text-align: center;
@@ -373,11 +346,11 @@ ${MAP_FONT_FACE_CSS}
            /* 폰트 메트릭 보정. 부팅 때 실제 글꼴을 재서 채운다(아래 measureDigitNudge).
               단위가 em 이라 s1/s2/s3 의 글자 크기마다 알아서 비례한다. */
            transform: translateY(var(--cl-nudge, 0em)); }
-  .cl.s1 { width: 40px; height: 40px; font-size: 13px; }
-  .cl.s2 { width: 48px; height: 48px; font-size: 14px; }
-  .cl.s3 { width: 58px; height: 58px; font-size: 15px; }
+  .cl.s1 { --cluster-size: 30px; font-size: 12px; }
+  .cl.s2 { --cluster-size: 34px; font-size: 12px; }
+  .cl.s3 { --cluster-size: 40px; font-size: 13px; }
   /* 999+ 는 네 글자다. s3 의 지름으로도 빠듯해서 이때만 한 단계 줄인다. */
-  .cl.wide { font-size: 13px; }
+  .cl.wide { font-size: 12px; }
 
   /* ── 내 위치: 점 + 반투명 헤일로. 헤일로는 정확도가 아니라 존재감 표시다. ── */
   .ul { position: relative; width: 1px; height: 1px; }
@@ -497,6 +470,8 @@ ${MAP_FONT_FACE_CSS}
     if (root) {
       root.style.backgroundColor = bg;
       root.style.setProperty('--cluster-shadow', CLUSTER_SHADOWS[mapColorScheme]);
+      root.style.setProperty('--cluster-bg', mapColorScheme === 'dark' ? '${semanticDark.background.lower}' : '${semanticLight.background.default}');
+      root.style.setProperty('--cluster-border', mapColorScheme === 'dark' ? '${semanticDark.line.neutral}' : '${semanticLight.line.neutral}');
       // 상호명 라벨의 흰 외곽선은 다크 타일에서 번져 보인다. 타일 바닥색을 halo 로 쓴다.
       root.style.setProperty('--map-label-halo', mapColorScheme === 'dark' ? '#1f1f21' : '#ffffff');
       /* 글자색도 같은 자리에서 뒤집는다. 시안의 라벨은 본문색(label.normal)이라
@@ -907,6 +882,13 @@ ${MAP_FONT_FACE_CSS}
     커지는 것은 n 이 아니라 placed 다.
   */
   function applyLabelCollision(live) {
+    var box = document.getElementById('map');
+    var width = box ? box.clientWidth : 0;
+    var height = box ? box.clientHeight : 0;
+    // Keep place names sparse enough to read the streets between them.
+    // Pins and their accessible names remain available when a visual label is hidden.
+    var budget = Math.max(3, Math.min(12, Math.floor(width * height / 28000)));
+    var shown = 0;
     var order = [];
     var selectedEntry = null;
     var i;
@@ -938,26 +920,32 @@ ${MAP_FONT_FACE_CSS}
       if (!name) continue;
       var lw = cell.entry.labelW, lh = cell.entry.labelH;
       if (lw <= 0 || lh <= 0) {
-        /* 붙이자마자 잰 값이 0 이었다(레이아웃이 아직 안 돈 드문 경로). 없는 크기로
-           겹침을 판정하느니 그냥 보여 준다 — 오늘까지의 동작이고, 라벨이 사라지는
-           쪽보다 낫다. */
-        name.style.display = '';
-        continue;
+        // A not-yet-measured name must still obey density and overlap limits.
+        lw = Math.min(132, Math.max(24, cell.entry.item.name.length * 12));
+        lh = 16;
       }
       // CSS: 앵커 기준 left 50% / top 13px 에 가운데 정렬.
       var l = cell.x - lw / 2, t = cell.y + 13;
       var r = l + lw, bo = t + lh;
-      var blocked = false;
+      var blocked = shown >= budget || l < 12 || r > width - 12 || t < 12 || bo > height - 12;
+      // A label must not run into another restaurant's pin.
+      for (var n = 0; !blocked && n < live.length; n++) {
+        if (live[n] === cell) continue;
+        if (l < live[n].x + 12 && r > live[n].x - 12 &&
+            t < live[n].y + 12 && bo > live[n].y - 12) blocked = true;
+      }
       for (var p = 0; p < placed.length; p++) {
         var q = placed[p];
-        // 2px 는 숨 쉴 틈이다. 딱 붙은 두 라벨은 겹치지 않아도 한 단어로 읽힌다.
-        if (l < q[2] + 2 && r + 2 > q[0] && t < q[3] + 2 && bo + 2 > q[1]) {
+        if (l < q[2] + 8 && r + 8 > q[0] && t < q[3] + 8 && bo + 8 > q[1]) {
           blocked = true;
           break;
         }
       }
       name.style.display = blocked ? 'none' : '';
-      if (!blocked) placed.push([l, t, r, bo]);
+      if (!blocked) {
+        placed.push([l, t, r, bo]);
+        shown++;
+      }
     }
   }
 

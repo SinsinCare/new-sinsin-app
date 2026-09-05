@@ -24,5 +24,9 @@ export function isStockPhotoUrl(url: string): boolean {
 
 /** 실사진만 남긴다. 하나도 없으면 빈 배열 — 호출부가 대체 표시를 고른다. */
 export function realPhotoUrls(urls: readonly string[]): string[] {
-  return urls.filter((url) => !isStockPhotoUrl(url))
+  return [
+    ...new Set(
+      urls.filter((url) => url.trim().length > 0 && !isStockPhotoUrl(url)),
+    ),
+  ]
 }

@@ -13,10 +13,19 @@
  */
 
 import { Stack } from "expo-router"
+import { setStatusBarStyle } from "expo-status-bar"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
 export default function RestaurantLayout() {
+  const colorScheme = useAppColorScheme()
   return (
-    <Stack screenOptions={{ headerShown: false, headerShadowVisible: false }}>
+    <Stack
+      screenOptions={{ headerShown: false, headerShadowVisible: false }}
+      screenListeners={{
+        transitionEnd: () =>
+          setStatusBarStyle(colorScheme === "dark" ? "light" : "dark"),
+      }}
+    >
       <Stack.Screen name="[id]/index" />
       <Stack.Screen name="[id]/photos" options={{ presentation: "modal" }} />
       <Stack.Screen

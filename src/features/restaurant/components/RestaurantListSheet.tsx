@@ -102,6 +102,7 @@ import {
 } from "@/src/design-system-v2"
 
 import type { EmptyReason, RestaurantCardDto } from "../types"
+import { MapResultsHeader } from "./MapResultsHeader"
 import { MapEmptyState } from "./MapEmptyState"
 import { RestaurantCard } from "./RestaurantCard"
 import {
@@ -167,6 +168,8 @@ export interface RestaurantListSheetHandle {
 }
 
 export interface RestaurantListSheetProps {
+  bookmarkedOnly?: boolean
+  total?: number | null
   items: RestaurantCardDto[]
   /**
    * sticky 필터칩 행. `FilterChipRow` 는 filters 배치가 소유하므로 시트가 직접 만들지 않고
@@ -233,6 +236,8 @@ export const RestaurantListSheet = forwardRef<
 >(function RestaurantListSheet(
   {
     items,
+    total = null,
+    bookmarkedOnly = false,
     filterRow,
     notice,
     leadingSkeleton = false,
@@ -257,6 +262,7 @@ export const RestaurantListSheet = forwardRef<
 ) {
   const { t } = useTranslation("common")
   const { colors, mode } = useV2Theme()
+  const [expanded, setExpanded] = useState(false)
   const sheetRef = useRef<BottomSheet>(null)
   const listRef = useRef<BottomSheetFlatListMethods>(null)
   const [stickyHeaderHeight, setStickyHeaderHeight] = useState(
@@ -273,7 +279,7 @@ export const RestaurantListSheet = forwardRef<
    * sticky 블록(필터칩 행 + 안내)을 그리는가. 안내만 있을 때도 그려야 한다 —
    * `truncated`("지도를 확대해 보세요")는 시트가 접혀 있을 때 가장 필요한 문구다.
    */
-  const hasStickyHeader = filterRow !== undefined || notice !== undefined
+  const hasStickyHeader = true
 
   /**
    * collapsed 는 "핸들 + sticky 블록" 만 보이는 높이다. 목업 §2.7 그대로.
@@ -436,6 +442,7 @@ export const RestaurantListSheet = forwardRef<
   return (
     <BottomSheet
       ref={sheetRef}
+      accessible={false}
       index={SHEET_SNAP.COLLAPSED}
       snapPoints={snapPoints}
       // v5 기본값 true 를 반드시 끈다 — 켜져 있으면 스냅 인덱스가 밀린다(파일 상단 주석).
@@ -505,7 +512,10 @@ export const RestaurantListSheet = forwardRef<
         이유가 없으므로 한 스프링으로 통일한다. 스프링이어야 제스처 속도가 이어진다.
       */
       animationConfigs={animationConfigs}
-      onChange={onSnapChange}
+      onChange={(index, position) => {
+        setExpanded(index === SHEET_SNAP.EXPANDED)
+        onSnapChange?.(index, position)
+      }}
       animatedPosition={animatedPosition}
       backgroundStyle={[
         styles.background,
@@ -532,6 +542,18 @@ export const RestaurantListSheet = forwardRef<
     >
       {hasStickyHeader && (
         <View onLayout={handleStickyHeaderLayout}>
+          <MapResultsHeader
+            bookmarkedOnly={bookmarkedOnly}
+            total={total}
+            loading={loading}
+            expanded={expanded}
+            onShowMap={() =>
+              sheetRef.current?.snapToIndex(SHEET_SNAP.COLLAPSED)
+            }
+            onShowList={() =>
+              sheetRef.current?.snapToIndex(SHEET_SNAP.EXPANDED)
+            }
+          />
           {/*
             시트 머리의 세로 격자. 종전에는 칩 줄에 세로 여백이 **아예 없어서** 핸들과
             칩, 칩과 안내문이 서로 붙어 있었고, 안내문이 없는 상태(필터가 걸린 화면)에서는
@@ -656,8 +678,7 @@ const styles = StyleSheet.create({
    * 숨 틈을 정한다. 종전에는 0 이라 핸들·칩·안내문이 한 덩어리로 붙어 보였다.
    */
   stickyRow: {
-    paddingTop: spacing[8],
-    paddingBottom: spacing[10],
+    paddingBottom: spacing[8],
   },
   handleArea: {
     alignItems: "center",

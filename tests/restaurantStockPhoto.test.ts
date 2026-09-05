@@ -10,8 +10,10 @@ import {
   realPhotoUrls,
 } from "../src/features/restaurant/utils/stockPhoto"
 
-const STOCK = "https://sinsin-test-be-ummry5dxda-du.a.run.app/static/food/food_05.jpg"
-const REAL = "https://storage.googleapis.com/sinsin/uploads/restaurant/912/a1b2.jpg"
+const STOCK =
+  "https://sinsin-test-be-ummry5dxda-du.a.run.app/static/food/food_05.jpg"
+const REAL =
+  "https://storage.googleapis.com/sinsin/uploads/restaurant/912/a1b2.jpg"
 
 describe("stockPhoto", () => {
   it("시드 스톡을 알아본다", () => {
@@ -28,6 +30,14 @@ describe("stockPhoto", () => {
 
   it("전부 스톡이면 빈 배열 — 호출부가 대체 표시를 고른다", () => {
     expect(realPhotoUrls([STOCK, STOCK])).toEqual([])
+  })
+
+  it("중복 URL과 빈 URL을 제거하고 실제 사진 순서를 보존한다", () => {
+    const second = REAL + "?second"
+    expect(realPhotoUrls([REAL, "", STOCK, REAL, second])).toEqual([
+      REAL,
+      second,
+    ])
   })
 
   it("빈 목록도 그대로 빈 목록", () => {

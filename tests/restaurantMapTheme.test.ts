@@ -49,12 +49,12 @@ describe("restaurant map color scheme", () => {
     expect(html).toContain(JSON.stringify(MAP_TILE_FILTER.dark))
   })
 
-  it("라이트 클러스터는 주황 네온이 아니라 중립 elevation을 쓴다", () => {
+  it("클러스터는 두 테마 모두 중립 elevation을 쓴다", () => {
     /* 값을 **심볼에서** 본다. 예전에는 파일 원문을 읽어 `/light:\s*"..."/` 로 봤는데,
        그 정규식은 파일 안 아무 `light:` 나 물면 통과한다(타일 필터·배경도 같은 모양이다) —
        정작 클러스터 그림자를 주황으로 되돌려도 다른 `light:` 가 대신 매칭돼 초록이었다. */
     expect(MAP_CLUSTER_SHADOW.light).not.toContain("254,113,57")
-    expect(MAP_CLUSTER_SHADOW.dark).toContain("254,113,57")
+    expect(MAP_CLUSTER_SHADOW.dark).not.toContain("254,113,57")
 
     const html = buildMapHtml({ ...BASE, colorScheme: "light" })
     expect(html).toContain("box-shadow: var(--cluster-shadow)")
