@@ -208,6 +208,6 @@
   "pending_other": "저장할 변경 {{count}}개",
   "legacy_one": "이전에 남긴 간편 복용 기록 {{count}}회는 그대로 보관돼요.",
   "legacy_other": "이전에 남긴 간편 복용 기록 {{count}}회는 그대로 보관돼요.",
-  "takenOnlyLine_one": "{{taken}}회 복용",
-  "takenOnlyLine_other": "{{taken}}회 복용"
+  "takenOnlyLine_one": "{{count}}회 복용",
+  "takenOnlyLine_other": "{{count}}회 복용"
 }

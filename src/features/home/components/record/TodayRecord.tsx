@@ -18,9 +18,12 @@ export interface TodayRecordTileData {
 }
 
 /**
- * 오늘의 건강기록 — 2열 격자. 시안(2026-09-04, `home.svg`) 실측:
+ * 오늘의 건강기록 — 2열 격자. 시안(2026-09-04, `home.svg`) 실측은
  * 타일 164×112 · r16 · 간격 7 · 보더 1(#70737C 8%) · 안쪽 위 20/옆 16 ·
- * 아이콘 24 + 라벨 14 · 8 아래 값 18/700(단위 14) · 비면 "기록 없음" 18/500.
+ * 아이콘 24 + 라벨 14 · 8 아래 값 18/700(단위 14) · 비면 "기록 없음" 18/500 이었으나
+ * 실기기에서 글자가 너무 작다는 피드백(2026-09-08)으로 한 단계 키웠다:
+ * 라벨 16/600 · 값 22/700(단위 15) · "기록 없음" 20/500 · 안쪽 위 16.
+ * 값 칸의 가장 긴 문구는 약 타일의 "3/3 복용"·혈압 "120 / 80" 이라 22 로도 한 줄에 든다.
  * 내용은 **위로 붙는다**(값 아래가 비어 있는 것이 시안이다).
  *
  * 여섯 지표가 늘 같은 자리에 서고, 누르면 그 자리에서 기록 시트가 열린다.
@@ -133,33 +136,33 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     borderWidth: 1,
-    paddingTop: 20,
+    paddingTop: 16,
     paddingHorizontal: 16,
     paddingBottom: 16,
     gap: 8,
   },
-  tileHead: { flexDirection: "row", alignItems: "center", gap: 4 },
+  tileHead: { flexDirection: "row", alignItems: "center", gap: 8 },
   tileLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    letterSpacing: -0.28,
-    fontWeight: "500",
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: -0.32,
+    fontWeight: "600",
     flexShrink: 1,
   },
   valueRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
   value: {
-    fontSize: 18,
-    lineHeight: 24,
-    letterSpacing: -0.36,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.44,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
     flexShrink: 1,
   },
-  unit: { fontSize: 14, lineHeight: 20, fontWeight: "500" },
+  unit: { fontSize: 15, lineHeight: 20, fontWeight: "500" },
   empty: {
-    fontSize: 18,
-    lineHeight: 24,
-    letterSpacing: -0.36,
+    fontSize: 20,
+    lineHeight: 28,
+    letterSpacing: -0.4,
     fontWeight: "500",
   },
 })

@@ -34,6 +34,7 @@ import {
 } from "react-native"
 
 import { fontFamily, typography } from "../tokens/typography"
+import { useV2Theme } from "../hooks/useV2Theme"
 
 /** `"title.small"` 처럼 점으로 잇는 토큰 경로. */
 export type TypographyToken =
@@ -98,15 +99,23 @@ export interface V2TextProps extends Omit<RNTextProps, "style"> {
 
 export const V2Text = forwardRef<ComponentRef<typeof RNText>, V2TextProps>(
   function V2Text({ token, color, style, children, ...rest }, ref) {
+    const { colors } = useV2Theme()
     const flat = StyleSheet.flatten([tokenStyle(token), style]) as
       | TextStyle
       | undefined
     const resolved = applyFace(flat)
+    // 색을 아무도 안 주면 RN 기본값(검정)이 아니라 테마의 본문색을 쓴다.
+    // 2026-09-08 상담 기록 목록: 제목 V2Text 에 color 가 없어 다크에서 검은 바탕 위 검은 글자였다.
+    // 색은 prop > style > 테마 순으로 결정되고, 명시한 색은 그대로 존중한다.
+    const themed =
+      color === undefined && flat?.color === undefined
+        ? { color: colors.label.normal }
+        : undefined
 
     return (
       <RNText
         ref={ref}
-        style={[resolved, color !== undefined && { color }]}
+        style={[resolved, themed, color !== undefined && { color }]}
         // 한글 줄바꿈을 어절 단위로 — 앱 전체가 한국어라 기본값이다.
         lineBreakStrategyIOS="hangul-word"
         {...rest}

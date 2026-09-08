@@ -82,7 +82,15 @@ describe("다크 모드 상호작용 색", () => {
     이제 값을 얹기만 한다. 그래서 이 검사도 그 파일을 본다. 실제 대비(상대휘도 4.5:1)는
     `restaurantCategoryChip.test.ts` 가 해석된 값으로 잰다.
   */
-  it("카테고리 레일은 뒤집히는 면(label.*)을 선택 표시로 쓰지 않는다", () => {
+  /*
+    2026-09-05(cf7679c) 압축 지도 시안에서 선택 칩이 다시 **잉크 면(label.normal)** 이 됐다.
+    그래서 이 검사는 "label.* 면을 쓰지 않는다" 가 아니라 위 규칙 그대로 — 면이
+    뒤집히는 토큰이면 글자는 그 반대로 뒤집히는 짝(background.default)이어야 하고,
+    static.white 는 안 된다 — 를 본다. 해석된 값의 실제 대비(라이트·다크 4.5:1)는
+    `restaurantCategoryChip.test.ts` 가 잰다. 2026-09-08 다크 점검에서 오래된 형태의
+    이 검사가 그 시안 변경에 뒤처져 실패하고 있었다.
+  */
+  it("카테고리 레일의 선택 면이 label.* 이면 글자는 background.default 다", () => {
     const rail = code(
       readFileSync(
         join(ROOT, "src/features/restaurant/components/CategoryChipRail.tsx"),
@@ -95,12 +103,18 @@ describe("다크 모드 상호작용 색", () => {
         "utf-8",
       ),
     )
+    expect(surface).toMatch(
+      /backgroundColor:\s*active\s*\?\s*colors\.label\.normal/u,
+    )
+    expect(surface).toMatch(
+      /color:\s*active\s*\?\s*colors\.background\.default\s*:\s*colors\.label\.normal/u,
+    )
     for (const source of [rail, surface]) {
-      expect(source).not.toMatch(/backgroundColor:[\s\S]{0,90}?\.label\.\w+/u)
-      // 글자는 상태로 갈리지 않는다 — 갈리지 않으면 "반대로 뒤집히는 짝" 문제도 없다.
-      expect(source).not.toMatch(/color:\s*active\s*\?/u)
+      expect(source).not.toMatch(/static\.white/u)
     }
-    expect(surface).toContain("color: colors.label.normal")
+    // 컴포넌트는 면을 다시 정하지 않고 surface 의 값을 얹기만 한다.
+    expect(rail).toMatch(/surface\.backgroundColor/u)
+    expect(rail).toMatch(/color: surface\.color/u)
   })
 
   it("음식 확인 옵션의 선택 면은 라이트 전용 sub1을 쓰지 않는다", () => {
