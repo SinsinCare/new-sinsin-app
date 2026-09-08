@@ -427,9 +427,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: primitives.opacityBlack[600],
+    // 카메라 위 캡션 필은 음식 카메라와 같은 흰 필이다 — 면에 원시 팔레트를 쓰지 않는다(§L4).
+    backgroundColor: semanticLight.static.white,
   },
-  stepText: { ...typography.caption.small, color: semanticLight.static.white },
+  stepText: { ...typography.caption.small, color: semanticLight.label.normal },
   frameWrap: {
     position: "absolute",
     left: 0,

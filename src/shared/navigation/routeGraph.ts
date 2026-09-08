@@ -131,6 +131,8 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   "medication/manage": "/record/medication",
   "medication/edit": "/record/medication",
   "medication/photo": "/record/medication",
+  // 앱 내 카메라는 사진 화면의 하위 단계다 — 히스토리가 없으면 사진 화면으로.
+  "medication/camera": "/medication/photo",
   "medication/candidates": "/record/medication",
   "record/water": "/(tabs)/home",
   "record/blood-pressure": "/(tabs)/home",
