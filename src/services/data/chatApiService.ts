@@ -29,6 +29,9 @@ import { prepareImageUpload } from "@/src/shared/utils/preparedImageUpload"
 
 const BASE_URL = getBackendUrl()
 export const CHAT_STREAM_TIMEOUT_MS = 120_000
+// XHR timeout은 Android에서 디스패처 큐 대기 중에는 시작되지 않으므로,
+// 첫 응답 바이트가 이 시간 안에 오지 않으면 JS측에서 직접 중단한다.
+export const CHAT_STREAM_FIRST_BYTE_TIMEOUT_MS = 20_000
 export const CHAT_STREAM_MAX_FRAME_CHARS = 256 * 1024
 export const CHAT_STREAM_MAX_CONTENT_CHARS = 128 * 1024
 export const CHAT_STREAM_MAX_WIRE_CHARS = 1024 * 1024
@@ -305,10 +308,20 @@ export function createRealChatService(): ChatService {
           let doneEvent: ChatStreamDoneEvent | null = null
           let processedLength = 0
           let settled = false
+          let receivedAnyResponse = false
+          let firstByteTimedOut = false
+
+          const firstByteTimer = setTimeout(() => {
+            if (!settled && !receivedAnyResponse) {
+              firstByteTimedOut = true
+              xhr.abort()
+            }
+          }, CHAT_STREAM_FIRST_BYTE_TIMEOUT_MS)
 
           const resolveOnce = (message: ReturnType<typeof mapMessage>) => {
             if (settled) return
             settled = true
+            clearTimeout(firstByteTimer)
             signal?.removeEventListener("abort", abortFromCaller)
             resolve(message)
           }
@@ -316,6 +329,7 @@ export function createRealChatService(): ChatService {
           const rejectOnce = (error: unknown) => {
             if (settled) return
             settled = true
+            clearTimeout(firstByteTimer)
             signal?.removeEventListener("abort", abortFromCaller)
             reject(error)
           }
@@ -445,6 +459,7 @@ export function createRealChatService(): ChatService {
           })
 
           const processProgress = () => {
+            receivedAnyResponse = true
             if (settled) return
             try {
               if (xhr.responseText.length > CHAT_STREAM_MAX_WIRE_CHARS) {
@@ -461,6 +476,7 @@ export function createRealChatService(): ChatService {
           xhr.onprogress = processProgress
 
           xhr.onload = async () => {
+            receivedAnyResponse = true
             if (settled) return
             if (xhr.status >= 200 && xhr.status < 300) {
               processProgress()
@@ -551,8 +567,10 @@ export function createRealChatService(): ChatService {
           xhr.onabort = () => {
             rejectOnce(
               new ChatStreamError({
-                code: "ABORTED",
-                message: "Chat stream was aborted",
+                code: firstByteTimedOut ? "TIMEOUT" : "ABORTED",
+                message: firstByteTimedOut
+                  ? "Chat stream received no response in time"
+                  : "Chat stream was aborted",
                 retryable: true,
                 partialContentAvailable: fullContent.length > 0,
                 partialContent: fullContent || undefined,

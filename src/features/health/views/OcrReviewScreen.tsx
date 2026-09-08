@@ -23,7 +23,7 @@ import { useHealthTheme } from "../hooks/useHealthTheme"
 
 import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
 
-// 화면에서 편집 가능한 항목 (id는 React 리스트 key 용 로컬 식별자)
+// 화면에서 편집 가능한 항목 (key는 React 리스트 key 용 로컬 식별자)
 type EditableItem = {
   key: string
   itemId?: number // 서버 추출 항목만 존재. 사용자 추가 항목은 undefined

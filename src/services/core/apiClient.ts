@@ -1,4 +1,12 @@
-import { create, type AxiosInstance, isAxiosError } from "axios"
+import {
+  AxiosError,
+  type AxiosAdapter,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  create,
+  getAdapter,
+  isAxiosError,
+} from "axios"
 import { Platform } from "react-native"
 import { ApiError } from "./apiError"
 import { tokenService } from "./tokenService"
@@ -12,6 +20,8 @@ import { getAppLanguage } from "@/src/i18n"
 
 const BASE_URL = getBackendUrl()
 const API_TIMEOUT_MS = 10000
+// 네이티브 큐 대기(okhttp 디스패처 등)까지 감안한 JS측 데드라인 여유분
+const DISPATCH_DEADLINE_GRACE_MS = 5000
 
 function getStatusFallbackMessage(status?: number): string {
   const isEnglish = getAppLanguage() === "en"
@@ -99,6 +109,92 @@ export const api = create({
   timeout: API_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 })
+
+function isRetryableNetworkError(error: unknown): boolean {
+  if (error instanceof ApiError) return error.isNetworkError
+  if (isAxiosError(error)) {
+    return !error.response && error.code !== "ERR_CANCELED"
+  }
+  return false
+}
+
+function createDeadlineError(config: InternalAxiosRequestConfig): AxiosError {
+  // 응답 인터셉터(addErrorInterceptor)가 ECONNABORTED 를 언어에 맞는 문구로 바꾼다.
+  return new AxiosError(
+    "Request deadline exceeded",
+    AxiosError.ECONNABORTED,
+    config,
+  )
+}
+
+/**
+ * axios의 XHR timeout은 Android에서 okhttp callTimeout으로 매핑되는데,
+ * callTimeout은 디스패처 큐 대기 중에는 시작되지 않습니다. timeout 없는 요청이
+ * host별 동시 실행 슬롯(5개)을 점유하면 큐에 갇힌 요청은 영원히 settle하지 않으므로,
+ * JS측 타이머로 모든 요청에 절대 데드라인을 강제합니다. 데드라인 abort는 큐에 대기
+ * 중인 네이티브 호출도 취소하며, 죽은 keep-alive 소켓을 닫아 커넥션 풀을 회복시킵니다.
+ * 네트워크 계층 실패(응답 없음)는 멱등 요청(GET/HEAD)에 한해 새 연결로 1회 재시도합니다.
+ */
+export function createDeadlineAdapter(baseAdapter: AxiosAdapter): AxiosAdapter {
+  const attempt = async (config: InternalAxiosRequestConfig) => {
+    const timeoutMs =
+      typeof config.timeout === "number" && config.timeout > 0
+        ? config.timeout
+        : API_TIMEOUT_MS
+    const controller = new AbortController()
+    const externalSignal = config.signal
+    const onExternalAbort = () => controller.abort()
+    if (externalSignal?.aborted) {
+      controller.abort()
+    } else {
+      externalSignal?.addEventListener?.("abort", onExternalAbort)
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let deadlineHit = false
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        deadlineHit = true
+        controller.abort()
+        reject(createDeadlineError(config))
+      }, timeoutMs + DISPATCH_DEADLINE_GRACE_MS)
+    })
+
+    const pending = baseAdapter({ ...config, signal: controller.signal })
+    try {
+      return await Promise.race([pending, deadline])
+    } catch (error) {
+      if (deadlineHit) {
+        pending.catch(() => {}) // 데드라인 이후 늦게 거부되는 부유 프로미스 무해화
+        throw createDeadlineError(config)
+      }
+      throw error
+    } finally {
+      clearTimeout(timer)
+      externalSignal?.removeEventListener?.("abort", onExternalAbort)
+    }
+  }
+
+  return async (config) => {
+    // timeout: 0은 호출부가 의도한 무제한 대기이므로 데드라인을 강제하지 않는다.
+    if (config.timeout === 0) return baseAdapter(config)
+
+    try {
+      return await attempt(config)
+    } catch (error) {
+      const method = (config.method ?? "get").toLowerCase()
+      const isIdempotent = method === "get" || method === "head"
+      if (isIdempotent && isRetryableNetworkError(error)) {
+        return attempt(config)
+      }
+      throw error
+    }
+  }
+}
+
+const deadlineAdapter = createDeadlineAdapter(getAdapter(api.defaults.adapter))
+publicApi.defaults.adapter = deadlineAdapter
+api.defaults.adapter = deadlineAdapter
 
 function addLanguageInterceptor(instance: AxiosInstance) {
   instance.interceptors.request.use((config) => {

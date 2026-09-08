@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance, type AxiosResponse } from "axios"
 
-/** 앱의 `EXPO_PUBLIC_BACKEND_URL`과 동일한 기준 URL 사용 */
+/** TEST_BASE_URL이 있으면 그것을, 없으면 앱의 `EXPO_PUBLIC_BACKEND_URL`을 기준 URL로 사용 */
 const configuredBaseUrl =
   process.env.TEST_BASE_URL || process.env.EXPO_PUBLIC_BACKEND_URL
 

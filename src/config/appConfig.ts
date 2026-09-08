@@ -80,7 +80,7 @@ function reportBackendMismatch(backendUrl: string): void {
 
 /**
  * Mock 모드를 사용하는 경우:
- * - EXPO_PUBLIC_USE_MOCK_AUTH=true 명시적 설정
+ * - EXPO_PUBLIC_USE_MOCK_MODE=true 명시적 설정
  */
 export function isMockMode(): boolean {
   return appConfig.useMockMode

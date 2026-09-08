@@ -9,7 +9,7 @@ import { getAppLanguage, type Language } from "@/src/i18n"
 
 const delay = (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// 카테고리별 목 응답
+// 언어별 목 응답 풀 (카테고리 무관, 랜덤 선택)
 const MOCK_REPLIES: Record<Language, string[]> = {
   ko: [
     "신장 건강에서 어떤 점이 궁금한지 편하게 말씀해 주세요.",

@@ -144,7 +144,7 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
           if (outcome === "recovered") recoveredCount += 1
           else if (outcome === "expired") expiredCount += 1
         } catch {
-          // 복구 실패는 다음 앱 진입/포그라운드 전환에서 다시 시도한다.
+          // 복구 실패는 폴링(5초 간격)과 다음 포그라운드 전환에서 다시 시도한다.
         }
       }
       const remaining = await deps.pendingRequests.getAll()

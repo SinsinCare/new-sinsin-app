@@ -223,7 +223,7 @@ export function HealthDataUploadScreen() {
           {/* 파일 썸네일 그리드 */}
           <View style={styles.thumbGrid}>
             {files.map((file, index) => (
-              // 썸네일 wrapper는 overflow:visible 명시 — X버튼은 내부에 위치
+              // 썸네일 wrapper는 overflow:hidden — X버튼은 클리핑되지 않도록 썸네일 내부에 위치
               <View key={`${file.uri}-${index}`} style={styles.thumbWrapper}>
                 {file.kind === "pdf" ? (
                   <View

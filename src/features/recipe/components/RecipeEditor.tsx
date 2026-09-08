@@ -319,7 +319,7 @@ export function RecipeEditor({ onClose }: RecipeEditorProps) {
             ]}
           />
         </V2VStack>
-        {/* Primary color divider bar */}
+        {/* Section divider bar */}
         <V2Box style={{ height: 12, backgroundColor: colors.fill.normal }} />
         {/* Summary */}
         <V2VStack paddingHorizontal={16} style={{ paddingTop: 16 }}>

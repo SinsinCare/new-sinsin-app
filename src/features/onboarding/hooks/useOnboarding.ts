@@ -481,7 +481,7 @@ export function useOnboarding() {
   useEffect(() => {
     const onBackPress = () => {
       if (phase === "welcome" || phase === "complete") {
-        return true // welcome에서는 뒤로 가기 차단 (앱 종료 방지)
+        return true // welcome/complete에서는 뒤로 가기 차단 (앱 종료 방지)
       }
       handleBack()
       return true

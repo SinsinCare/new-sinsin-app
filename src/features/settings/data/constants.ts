@@ -50,7 +50,7 @@ export const YEARS = Array.from(
   (_, i) => 1990 + i,
 ).reverse()
 
-// 공지사항 mock 데이터
+// 공지사항 fallback 데이터 (공지 API 실패 시 표시)
 export type Announcement = {
   id: string
   title: string

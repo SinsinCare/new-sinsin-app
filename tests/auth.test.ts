@@ -131,7 +131,7 @@ describe("Auth API", () => {
   })
 
   // ────────────────────────────────────────────────
-  // 이메일 중복 확인
+  // 닉네임·이메일 중복 확인
   // ────────────────────────────────────────────────
   describe("GET /auth/signup/nickname/verify", () => {
     it("랜덤 닉네임 사용 가능 여부 (백엔드에 따라 400 검증 응답 가능)", async () => {
@@ -299,7 +299,7 @@ describe("Auth API", () => {
   })
 
   // ────────────────────────────────────────────────
-  // 비밀번호 재설정 이메일 전송 (앱 resendVerificationCode)
+  // 비밀번호 재설정 이메일 전송 (앱 미사용 엔드포인트 — 앱은 sendPasswordResetCode로 /auth/password/email/otp/send 사용)
   // ────────────────────────────────────────────────
   describe("POST /auth/password/email/send", () => {
     itIfCreds(

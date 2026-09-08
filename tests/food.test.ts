@@ -106,7 +106,7 @@ describeAuth("Food Camera API", () => {
       assertSuccess(res.data)
 
       const result = res.data.result
-      // kidneyEvaluation 또는 cautionFoods 같은 안전 평가 필드 존재 여부
+      // 응답 result 존재만 확인 (안전 평가 필드 구조는 백엔드별로 상이해 미검증)
       expect(result).toBeTruthy()
     })
 
