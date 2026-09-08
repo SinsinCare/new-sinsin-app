@@ -10,6 +10,7 @@
  */
 
 export { BillingProvider, useBilling } from "./BillingProvider"
+export { isBillingHidden } from "./billingVisibility"
 export { PaywallHost } from "./components/PaywallHost"
 export { PlanCard } from "./components/PlanCard"
 export { QuotaBadge } from "./components/QuotaBadge"

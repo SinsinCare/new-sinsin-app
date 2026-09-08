@@ -26,6 +26,7 @@ import {
 import { logger } from "../logger"
 import { showConfirm, showAlert } from "../dialog"
 import { showErrorToast, showInfoToast } from "../toast"
+import { isBillingHidden } from "@/src/features/billing/billingVisibility"
 import { openPaywall } from "@/src/features/billing/paywallHost"
 import {
   SERVER_GATE_ENTRY,
@@ -99,7 +100,8 @@ export function presentError(
     위의 `trackAnalyticsEvent` 가 한 행도 못 세고, 그러면 "어떤 잠금이 결제를 만드는가"
     를 물을 수 없게 된다(`INFO_CODES` 갈래와 같은 이유).
   */
-  if (resolved.surface === "paywall") {
+  // 결제 기능이 숨겨진 동안은 페이월 대신 일반 안내(토스트)로 떨어진다.
+  if (resolved.surface === "paywall" && !isBillingHidden()) {
     const reason = paywallReasonOf(error)
     openPaywall({
       entry:

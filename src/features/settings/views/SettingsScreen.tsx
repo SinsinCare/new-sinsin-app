@@ -15,6 +15,7 @@ import { AccountPreferenceSheet } from "../components/AccountPreferenceSheet"
 import { useSettingsScreen } from "../hooks/useSettingsScreen"
 import type { ThemeMode } from "@/src/stores/themeStore"
 import type { Language } from "@/src/i18n"
+import { isBillingHidden } from "@/src/features/billing/billingVisibility"
 
 export function SettingsScreen() {
   const { t } = useTranslation("common")
@@ -82,11 +83,13 @@ export function SettingsScreen() {
             icon="person-outline"
             onPress={() => router.push("/(settings)/profile-edit")}
           />
-          <AccountRow
-            title={t("subscription.title", { ns: "billing" })}
-            icon="card-outline"
-            onPress={() => router.push("/(settings)/subscription")}
-          />
+          {!isBillingHidden() && (
+            <AccountRow
+              title={t("subscription.title", { ns: "billing" })}
+              icon="card-outline"
+              onPress={() => router.push("/(settings)/subscription")}
+            />
+          )}
         </AccountSection>
         <AccountSection title={copy("accountOverview.appPreferences")}>
           <AccountRow

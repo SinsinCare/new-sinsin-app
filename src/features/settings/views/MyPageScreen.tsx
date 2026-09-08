@@ -22,6 +22,7 @@ import { useKidneyProfile } from "../hooks/useKidneyProfile"
 import { AccountRow } from "../components/AccountPrimitives"
 import { AccountMembershipCard } from "../components/AccountMembershipCard"
 import { AccountHealthSummary } from "../components/AccountHealthSummary"
+import { isBillingHidden } from "@/src/features/billing/billingVisibility"
 
 export function MyPageScreen() {
   const { t } = useTranslation("common")
@@ -172,7 +173,7 @@ export function MyPageScreen() {
           onEdit={() => router.push("/(settings)/kidney-profile-edit")}
           onRetry={() => void kidneyQuery.refetch()}
         />
-        <AccountMembershipCard />
+        {!isBillingHidden() && <AccountMembershipCard />}
         <View
           style={[
             styles.support,

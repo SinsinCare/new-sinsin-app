@@ -31,6 +31,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuthStore } from "@/src/stores"
 import { logger } from "@/src/lib/logger"
 import { BILLING_QUERY_KEY, billingApi } from "./services/billingApi"
+import { isBillingHidden } from "./billingVisibility"
 import {
   forgetUser,
   identify,
@@ -78,8 +79,13 @@ export function BillingProvider({ children }: { children: ReactNode }) {
   )
 
   /* 관문을 전부 통과한 상태에서만 묻는다(머리말). `app/_layout.tsx` 와 같은 조건이다. */
+  // 결제 기능이 숨겨진 동안은 서버에 묻지도, SDK 를 켜지도 않는다 — `status` 가 null 이라
+  // 모든 capability 가 "모른다 = 열림" 으로 판정된다(`useFeatureAccess` 머리말).
   const enabled =
-    isAuthenticated && accountState === "ACTIVE" && !requiresAdditionalInfo
+    isAuthenticated &&
+    accountState === "ACTIVE" &&
+    !requiresAdditionalInfo &&
+    !isBillingHidden()
 
   const query = useQuery({
     queryKey: BILLING_QUERY_KEY,

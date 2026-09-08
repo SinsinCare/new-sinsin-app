@@ -17,6 +17,7 @@
  * 아무것도 안 해도, 402 가 오면 페이월이 뜬다.
  */
 
+import { isBillingHidden } from "./billingVisibility"
 import type { CapabilityKey, PaywallEntry, PaywallReason } from "./types"
 
 export interface PaywallRequest {
@@ -51,5 +52,7 @@ export function registerPaywallHost(handler: PaywallHandler): () => void {
  * 결제와 무관한 화면이 결제 때문에 깨진다.
  */
 export function openPaywall(request: PaywallRequest): void {
+  // 결제 기능이 숨겨진 동안은 어디서 불려도 열지 않는다(`billingVisibility.ts`).
+  if (isBillingHidden()) return
   hosts[hosts.length - 1]?.(request)
 }
