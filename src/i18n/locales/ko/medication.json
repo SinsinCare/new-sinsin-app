@@ -202,5 +202,6 @@
   "candidatesTitleLow": "비슷한 약을 찾았어요. 맞는지 확인해 주세요",
   "similarity": "유사도 {{percent}}%",
   "topMatch": "가장 비슷해요",
-  "candidatesHint": "AI가 찾아드렸다고 확정하지 않아요. 각인·모양을 실물과 대조하고 맞는 약만 선택해 주세요."
+  "candidatesHint": "AI가 찾아드렸다고 확정하지 않아요. 각인·모양을 실물과 대조하고 맞는 약만 선택해 주세요.",
+  "observedImprint": "사진에서 읽은 각인 · {{imprint}}"
 }

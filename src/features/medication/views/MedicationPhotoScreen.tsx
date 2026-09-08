@@ -111,6 +111,7 @@ export function MedicationPhotoScreen() {
             response.items,
             response.matches ?? [],
             response.confidence ?? "none",
+            response.observed ?? null,
           )
         router.push("/medication/candidates")
       } else {

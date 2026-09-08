@@ -3,6 +3,7 @@ import { create } from "zustand"
 import type {
   CandidateMatch,
   Drug,
+  ObservedFeatures,
   Plan,
   RecognitionConfidence,
   Slot,
@@ -20,6 +21,7 @@ interface FlowState {
   candidates: Drug[]
   matches: CandidateMatch[]
   confidence: RecognitionConfidence
+  observed: ObservedFeatures | null
   start: (date: string) => void
   select: (
     drug: Drug | null,
@@ -34,6 +36,7 @@ interface FlowState {
     candidates: Drug[],
     matches?: CandidateMatch[],
     confidence?: RecognitionConfidence,
+    observed?: ObservedFeatures | null,
   ) => void
   clear: () => void
 }
@@ -49,6 +52,7 @@ const initial = () => ({
   candidates: [],
   matches: [],
   confidence: "none" as const,
+  observed: null,
 })
 export const useMedicationFlowStore = create<FlowState>((set, get) => ({
   ...initial(),
@@ -80,6 +84,7 @@ export const useMedicationFlowStore = create<FlowState>((set, get) => ({
       candidates: [],
       matches: [],
       confidence: "none",
+      observed: null,
     })
   },
   clearAdded: () => set({ addedSlot: null, addedId: null }),
@@ -89,8 +94,12 @@ export const useMedicationFlowStore = create<FlowState>((set, get) => ({
     )
     set({ photos })
   },
-  setCandidates: (candidates, matches = [], confidence = "none") =>
-    set({ candidates, matches, confidence }),
+  setCandidates: (
+    candidates,
+    matches = [],
+    confidence = "none",
+    observed = null,
+  ) => set({ candidates, matches, confidence, observed }),
   clear: () => {
     discardMedicationPhotos(get().photos)
     set(initial())

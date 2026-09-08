@@ -102,7 +102,11 @@ export function MedicationEditorScreen() {
               placeholderTextColor={s.textMuted}
               style={[
                 medStyles.field,
-                { flex: 1, backgroundColor: s.surfaceSunken, color: s.textStrong },
+                {
+                  flex: 1,
+                  backgroundColor: s.surfaceSunken,
+                  color: s.textStrong,
+                },
               ]}
             />
             <Pressable

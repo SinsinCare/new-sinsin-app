@@ -25,7 +25,8 @@ export function MedicationCandidatesScreen() {
     select = useMedicationSelection(),
     items = useMedicationFlowStore((state) => state.candidates),
     matches = useMedicationFlowStore((state) => state.matches),
-    confidence = useMedicationFlowStore((state) => state.confidence)
+    confidence = useMedicationFlowStore((state) => state.confidence),
+    observed = useMedicationFlowStore((state) => state.observed)
   const topId = confidence === "high" ? (items[0]?.id ?? null) : null
   const [selected, setSelected] = useState<string | null>(topId),
     [busy, setBusy] = useState(false)
@@ -55,6 +56,20 @@ export function MedicationCandidatesScreen() {
       <V2Text style={FORM.body} color={s.text}>
         {t("candidatesBody")}
       </V2Text>
+      {/* 사진에서 읽은 각인·모양(RQ-41·45) — 후보 줄의 각인과 나란히 대조하라고 보여 준다. */}
+      {observed && (observed.imprints.length || observed.shape) ? (
+        <View style={[medStyles.note, { backgroundColor: s.surfaceSunken }]}>
+          <V2Text style={FORM.hint} color={s.textStrong}>
+            {t("observedImprint", {
+              imprint: observed.imprints.join(" · ") || t("unknown"),
+            })}
+          </V2Text>
+          <V2Text style={FORM.hint} color={s.text}>
+            {[observed.shape, ...observed.colors].filter(Boolean).join(" · ") ||
+              t("unknown")}
+          </V2Text>
+        </View>
+      ) : null}
       {items.length ? (
         items.map((drug) => {
           const score = scoreOf(drug.id)

@@ -68,7 +68,8 @@ export const medicationApi = {
     return (
       await api.post(`${ROOT}/recognize`, body, {
         signal,
-        timeout: 12000,
+        // 실측(2026-09-08): 앞·뒤 2장 판독에 5~16초. 서버 마감 20초보다 길게 둔다.
+        timeout: 30000,
         headers: { "Content-Type": "multipart/form-data" },
       })
     ).data.result

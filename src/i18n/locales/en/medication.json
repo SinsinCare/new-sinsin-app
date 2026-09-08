@@ -202,5 +202,6 @@
   "candidatesTitleLow": "We found similar pills. Please check whether one matches",
   "similarity": "{{percent}}% similar",
   "topMatch": "Closest match",
-  "candidatesHint": "AI does not confirm a match. Compare the imprint and shape with the pill in hand and choose only if it matches."
+  "candidatesHint": "AI does not confirm a match. Compare the imprint and shape with the pill in hand and choose only if it matches.",
+  "observedImprint": "Imprint read from photo · {{imprint}}"
 }

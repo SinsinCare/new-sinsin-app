@@ -138,7 +138,9 @@ export function MedicationDiaryPage({
             ) : null}
             {empty ? (
               <View style={[styles.empty, { paddingVertical: S[8] }]}>
-                <View style={[styles.card, { backgroundColor: s.surfaceSunken }]}>
+                <View
+                  style={[styles.card, { backgroundColor: s.surfaceSunken }]}
+                >
                   <Ionicons
                     accessible={false}
                     name="medical-outline"

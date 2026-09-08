@@ -113,8 +113,15 @@ export interface CandidateMatch {
   score: number
   parts: { imprint: number; appearance: number; context: number }
 }
+export interface ObservedFeatures {
+  /** 사진에서 읽은 각인 토큰. 후보의 각인과 눈으로 대조하는 데 쓴다(RQ-45). */
+  imprints: string[]
+  shape: string
+  colors: string[]
+}
 export interface RecognitionResult {
   status: "candidates" | "no_match" | "poor_image" | "unavailable"
+  observed?: ObservedFeatures
   /** AC-15~17 분기. high 면 1순위를 강조·선택해 둔다. */
   confidence: RecognitionConfidence
   items: Drug[]
