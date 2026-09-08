@@ -1,5 +1,9 @@
 import { over } from "../design-system-v2/tokens/blend"
-import { semanticDark, semanticLight } from "../design-system-v2/tokens/colors"
+import {
+  primitives,
+  semanticDark,
+  semanticLight,
+} from "../design-system-v2/tokens/colors"
 import { getSurfaceLayers } from "../design-system-v2/tokens/layers"
 import {
   typography,
@@ -203,6 +207,14 @@ const DARK: SurfacePalette = derive(semanticDark, true)
 
 export function getSurfacePalette(isDark: boolean): SurfacePalette {
   return isDark ? DARK : LIGHT
+}
+
+/** Small body text on an inset neutral panel needs an opaque dark-mode label. */
+export function surfaceBodyText(surface: {
+  isDark: boolean
+  text: string
+}): string {
+  return surface.isDark ? primitives.grayscale[400] : surface.text
 }
 
 /**

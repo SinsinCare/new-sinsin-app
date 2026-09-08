@@ -1,7 +1,9 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
+import { CategoryChipRail } from "../components/community/CategoryChipRail"
+import { CommunityFeedSkeleton } from "../components/CommunityFeedSkeleton"
 import { useMemo, useState } from "react"
-import { Pressable, ScrollView, StyleSheet, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { FlashList } from "@shopify/flash-list"
-import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -12,25 +14,20 @@ import { useAppRouter } from "@/src/shared/navigation"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
 import { resolveError } from "@/src/lib/errorMessage"
-import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
-import { FloatingWriteButton } from "@/src/shared/components/FloatingWriteButton"
+import { CommunityWriteButton } from "../components/community/CommunityWriteButton"
+import { PostListItem } from "../components/PostListItem"
 import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
 import {
   V2EmptyState,
   V2ErrorState,
-  V2Skeleton,
-  V2SkeletonGroup,
   type V2ErrorStateRetry,
 } from "@/src/design-system-v2"
-import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useCommunityPopularPosts } from "../hooks/useCommunityPopularPosts"
 import { isAuthorBlocked, useBlockedUsers } from "../hooks/useBlockedUsers"
 import { COMMUNITY_POPULAR_REFRESH } from "../refresh/scopes"
 import { FREE_POST_CATEGORIES } from "../data/freePostCategories"
 import type { CommunityMealPost, CommunityPopularPeriod } from "../types"
 import { isWithdrawnAuthor } from "../utils/contentOwnership"
-import { formatCount } from "../utils/displayNumber"
-import { formatTimeAgo } from "../utils/timeAgo"
 
 const PERIODS: CommunityPopularPeriod[] = ["realtime", "week", "month"]
 const PERIOD_LABEL_KEYS = {
@@ -71,7 +68,7 @@ const CATEGORY_LABEL_KEYS = {
 } as const
 
 export function CommunityPopularScreen() {
-  const { t, i18n } = useTranslation("common")
+  const { t } = useTranslation("common")
   const { t: tRecipe } = useTranslation("recipe")
   const router = useAppRouter()
   const insets = useSafeAreaInsets()
@@ -163,92 +160,30 @@ export function CommunityPopularScreen() {
     item: CommunityMealPost
     index: number
   }) => (
-    <Pressable
-      onPress={() => router.push(`/post/${item.id}` as Href)}
-      accessibilityRole="button"
-      accessibilityLabel={item.title}
-      style={({ pressed }) => [
-        styles.rankRow,
-        { backgroundColor: surface.card, opacity: pressed ? 0.66 : 1 },
-      ]}
-    >
-      <View style={styles.rankLine}>
-        <View
-          style={[styles.rankBadge, { backgroundColor: surface.surfaceBrand }]}
-        >
-          <Text style={[styles.rankText, { color: surface.brand }]}>
-            {index + 1}
-          </Text>
-        </View>
-        <View
-          style={[styles.categoryBadge, { backgroundColor: surface.textMuted }]}
-        >
-          <Text style={[styles.categoryBadgeText, { color: surface.onBrand }]}>
-            {t(
-              CATEGORY_LABEL_KEYS[
-                item.category as keyof typeof CATEGORY_LABEL_KEYS
-              ] ?? "community.popular.all",
-            )}
-          </Text>
-        </View>
-      </View>
-
-      {item.tags.length > 0 && (
-        <View style={styles.tags}>
-          {item.tags.slice(0, 4).map((tag) => (
-            <View
-              key={tag}
-              style={[styles.tag, { backgroundColor: surface.surface }]}
-            >
-              <Text style={[styles.tagText, { color: surface.text }]}>
-                {tag}
-              </Text>
-            </View>
-          ))}
-        </View>
+    <PostListItem
+      postId={item.id}
+      rank={index + 1}
+      category={t(
+        CATEGORY_LABEL_KEYS[
+          item.category as keyof typeof CATEGORY_LABEL_KEYS
+        ] ?? "community.popular.all",
       )}
-
-      <View style={styles.postBody}>
-        <View style={styles.postCopy}>
-          <Text
-            style={[styles.title, { color: surface.textStrong }]}
-            numberOfLines={2}
-            lineBreakStrategyIOS="hangul-word"
-          >
-            {item.title}
-          </Text>
-          <Text
-            style={[styles.summary, { color: surface.text }]}
-            numberOfLines={1}
-          >
-            {item.description}
-          </Text>
-          <View style={styles.metrics}>
-            <Text style={[styles.metric, { color: surface.text }]}>
-              {t("community.postDetail.viewCount", { count: item.views ?? 0 })}
-            </Text>
-            <Ionicons name="heart" size={12} color={surface.text} />
-            <Text style={[styles.metric, { color: surface.text }]}>
-              {formatCount(item.likes, i18n.language)}
-            </Text>
-            <Ionicons name="chatbubble" size={11} color={surface.text} />
-            <Text style={[styles.metric, { color: surface.text }]}>
-              {formatCount(item.comments, i18n.language)}
-            </Text>
-            <Text style={[styles.metricTime, { color: surface.text }]}>
-              {formatTimeAgo(item.createdAt, i18n.language)}
-            </Text>
-          </View>
-        </View>
-        {item.imageUri && (
-          <Image
-            source={remoteImageSource(item.imageUri)}
-            style={[styles.thumbnail, { backgroundColor: surface.surface }]}
-            contentFit="cover"
-          />
-        )}
-      </View>
-    </Pressable>
+      createdAt={item.createdAt}
+      title={item.title}
+      summary={item.description}
+      imageUri={item.imageUri}
+      authorName={item.authorName}
+      likeCount={item.likes}
+      commentCount={item.comments}
+      viewCount={item.views}
+      isWithdrawnAuthor={isWithdrawnAuthor(item)}
+      onPress={() => router.push(`/post/${item.id}` as Href)}
+      onPressAuthor={
+        item.authorId == null
+          ? undefined
+          : () => router.push(`/community/author/${item.authorId}` as Href)
+      }
+    />
   )
 
   return (
@@ -262,7 +197,7 @@ export function CommunityPopularScreen() {
       */
       style={[
         styles.screen,
-        { backgroundColor: surface.bed, paddingTop: insets.top },
+        { backgroundColor: surface.canvas, paddingTop: insets.top },
       ]}
     >
       {/*
@@ -272,7 +207,7 @@ export function CommunityPopularScreen() {
         고정층을 바닥색으로 칠하면 칩이 통째로 사라진다.
       */}
       <View style={{ backgroundColor: surface.card }}>
-        <View style={[styles.header, { borderBottomColor: surface.hairline }]}>
+        <View style={[styles.header, { borderBottomColor: surface.border }]}>
           <Pressable
             onPress={() => router.back()}
             hitSlop={10}
@@ -299,7 +234,7 @@ export function CommunityPopularScreen() {
         </View>
 
         <View
-          style={[styles.periodRow, { borderBottomColor: surface.hairline }]}
+          style={[styles.periodRow, { borderBottomColor: surface.border }]}
         >
           {PERIODS.map((item) => {
             const selected = period === item
@@ -331,38 +266,15 @@ export function CommunityPopularScreen() {
           })}
         </View>
 
-        <ScrollView
-          horizontal
-          style={styles.categoryRailScroll}
-          showsHorizontalScrollIndicator={false}
-          bounces={false}
-          contentContainerStyle={styles.categoryRail}
-        >
-          {categories.map((item) => {
-            const selected = category === item.key
-            return (
-              <SurfacePressable
-                key={item.key ?? "all"}
-                onPress={() => setCategory(item.key)}
-                accessibilityState={{ selected }}
-                baseColor={selected ? surface.surfaceBrand : surface.surface}
-                style={[
-                  styles.categoryChip,
-                  selected && { borderColor: surface.brand },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    { color: selected ? surface.brand : surface.text },
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </SurfacePressable>
-            )
-          })}
-        </ScrollView>
+        <CategoryChipRail
+          density="results"
+          items={categories.filter(
+            (item): item is { key: string; label: string } => item.key !== null,
+          )}
+          value={category}
+          onChange={setCategory}
+          allLabel={t("community.popular.all")}
+        />
       </View>
 
       <FlashList
@@ -373,13 +285,7 @@ export function CommunityPopularScreen() {
           isLoading ? (
             /* 순위 행 자리 스켈레톤 — 목록이 온다는 것을 미리 말한다(링 스피너 금지). */
             <View style={styles.skeletonWrap}>
-              <V2SkeletonGroup>
-                {[0, 1, 2, 3, 4].map((index) => (
-                  <View key={index} style={styles.skeletonItem}>
-                    <V2Skeleton width="100%" height={104} radius="xl" />
-                  </View>
-                ))}
-              </V2SkeletonGroup>
+              <CommunityFeedSkeleton />
             </View>
           ) : isError ? (
             /*
@@ -422,11 +328,7 @@ export function CommunityPopularScreen() {
         {...refreshable.scrollProps}
       />
 
-      <FloatingWriteButton
-        label={t("community.popular.write")}
-        accessibilityLabel={t("community.writeAccessibility")}
-        onPress={() => router.push("/free/new" as Href)}
-      />
+      <CommunityWriteButton />
     </View>
   )
 }
@@ -465,7 +367,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: borderWidth.thin,
   },
   headerTitle: {
     fontSize: 17,
@@ -476,7 +378,7 @@ const styles = StyleSheet.create({
   periodRow: {
     height: 52,
     flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: borderWidth.thin,
   },
   periodButton: {
     flex: 1,

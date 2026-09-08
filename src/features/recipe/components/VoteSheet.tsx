@@ -1,3 +1,4 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { useState } from "react"
 import {
   KeyboardAvoidingView,
@@ -140,13 +141,13 @@ export function VoteSheet({
                   : t("poll.attachAccessibility")
               }
               accessibilityState={{ disabled: !canComplete }}
-              baseColor={canComplete ? inkBg : surface.ctaOffBg}
+              baseColor={canComplete ? inkBg : surface.surfaceSunken}
               pressedColor={
                 canComplete
                   ? surface.isDark
                     ? "#DADAE0"
                     : "#34363A"
-                  : surface.ctaOffBg
+                  : surface.surfaceSunken
               }
               pressScale={0.94}
               style={styles.completePill}
@@ -188,7 +189,7 @@ export function VoteSheet({
                 styles.titleInput,
                 {
                   color: surface.textStrong,
-                  borderBottomColor: surface.hairline,
+                  borderBottomColor: surface.border,
                 },
               ]}
             />
@@ -208,7 +209,7 @@ export function VoteSheet({
                       styles.optionInput,
                       {
                         color: surface.textStrong,
-                        backgroundColor: surface.surface,
+                        backgroundColor: surface.surfaceSunken,
                       },
                     ]}
                   />
@@ -240,7 +241,7 @@ export function VoteSheet({
               disabled={options.length >= MAX_OPTIONS}
               haptic={false}
               accessibilityLabel={t("poll.addOption")}
-              baseColor={surface.surface}
+              baseColor={surface.surfaceSunken}
               pressScale={0.98}
               style={[
                 styles.addButton,
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard-Bold",
     paddingVertical: 14,
     marginBottom: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: borderWidth.thin,
   },
   optionList: {
     gap: 10,

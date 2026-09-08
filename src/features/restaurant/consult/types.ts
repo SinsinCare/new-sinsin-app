@@ -67,6 +67,7 @@ export interface ConsultQuestion {
  * 단위는 `MenuItemDto` 와 같다 — 열량 kcal, 단백질 g, 나머지 셋 mg.
  */
 export interface ConsultMenuFact {
+  portionReference?: import("@/src/features/nutrition/utils/portionReference").PortionReference
   name: string
   calories: number | null
   protein: number | null

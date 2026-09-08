@@ -36,7 +36,7 @@ export function MentionSuggestions({
     <Animated.View
       entering={FadeIn.duration(140).reduceMotion(ReduceMotion.System)}
       exiting={FadeOut.duration(100).reduceMotion(ReduceMotion.System)}
-      style={[styles.wrap, { backgroundColor: surface.surface }]}
+      style={[styles.wrap, { backgroundColor: surface.surfaceSunken }]}
     >
       <Text
         style={[styles.label, { color: surface.textMuted }]}
@@ -58,16 +58,11 @@ export function MentionSuggestions({
             accessibilityLabel={t("tag.mention", {
               name: candidate.nickName,
             })}
-            baseColor={surface.surface}
+            baseColor={surface.surfaceSunken}
             pressScale={0.99}
             style={styles.row}
           >
-            <View
-              style={[
-                styles.avatar,
-                { backgroundColor: surface.isDark ? "#3A3A40" : "#FFFFFF" },
-              ]}
-            >
+            <View style={[styles.avatar, { backgroundColor: surface.card }]}>
               <Ionicons name="person" size={13} color={surface.textWeak} />
             </View>
             <Text

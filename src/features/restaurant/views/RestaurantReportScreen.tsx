@@ -14,11 +14,12 @@
  * 수 없어서 함께 옮겼다 — 근거는 `components/RestaurantReportForm.tsx` 헤더에 있다.
  */
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import { V2Divider, V2ScreenHeader, useV2Theme } from "@/src/design-system-v2"
+import { useNavigation, usePreventRemove } from "@react-navigation/native"
 import { showConfirm } from "@/src/lib/dialog"
 
 import { RestaurantReportForm } from "../components/RestaurantReportForm"
@@ -36,24 +37,47 @@ export function RestaurantReportScreen({
   const { colors } = useV2Theme()
   const [dirty, setDirty] = useState(false)
 
-  /**
-   * 채우다 만 제보를 두고 나가기 전에 한 번 묻는다 — 이 화면의 뒤로 가기는
-   * 스택을 pop 하므로 폼 상태가 통째로 사라진다. 한 칸도 안 채웠으면 묻지 않는다.
-   */
-  const handleBack = useCallback(async () => {
-    if (!dirty) {
-      onBack()
+  const navigation = useNavigation()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+  const busy = useRef(false)
+  const prompting = useRef(false)
+  const allowExit = useRef(false)
+  const onSubmittingChange = useCallback((value: boolean) => {
+    busy.current = value
+    setIsSubmitting(value)
+  }, [])
+  usePreventRemove(dirty || isSubmitting, async ({ data }) => {
+    if (!mounted.current) return
+    if (allowExit.current) {
+      navigation.dispatch(data.action)
       return
     }
-    const confirmed = await showConfirm({
-      title: t("restaurant.report.discardTitle"),
-      description: t("restaurant.report.discardBody"),
-      confirmLabel: t("restaurant.report.discard"),
-      cancelLabel: t("restaurant.report.keepWriting"),
-      destructive: true,
-    })
-    if (confirmed) onBack()
-  }, [dirty, onBack, t])
+    if (busy.current || prompting.current) return
+    prompting.current = true
+    try {
+      const confirmed = await showConfirm({
+        title: t("restaurant.report.discardTitle"),
+        description: t("restaurant.report.discardBody"),
+        confirmLabel: t("restaurant.report.discard"),
+        cancelLabel: t("restaurant.report.keepWriting"),
+        destructive: true,
+        buttonLayout: "vertical",
+      })
+      if (confirmed && mounted.current && !busy.current) {
+        allowExit.current = true
+        navigation.dispatch(data.action)
+      }
+    } finally {
+      prompting.current = false
+    }
+  })
 
   return (
     <View
@@ -65,11 +89,17 @@ export function RestaurantReportScreen({
     >
       <V2ScreenHeader
         title={t("restaurant.report.formTitle")}
-        onBack={() => void handleBack()}
+        onBack={() => {
+          if (!busy.current) onBack()
+        }}
         safeAreaTop
       />
       <V2Divider tone="alternative" />
-      <RestaurantReportForm paddingTop={0} onDirtyChange={setDirty} />
+      <RestaurantReportForm
+        paddingTop={0}
+        onDirtyChange={setDirty}
+        onSubmittingChange={onSubmittingChange}
+      />
     </View>
   )
 }

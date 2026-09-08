@@ -54,6 +54,7 @@ import { useTranslation } from "react-i18next"
 
 import {
   V2Button,
+  V2DialogHost,
   V2Icon,
   V2Modal,
   radius,
@@ -61,13 +62,11 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { presentError } from "@/src/lib/errorMessage"
-import { showConfirm } from "@/src/lib/dialog"
-import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 
 import type { ReviewDto, ReviewKeyword } from "../types"
 import { REVIEW_KEYWORDS } from "../data/filterCatalog"
 import { useRestaurantReviews } from "../hooks/useRestaurantReviews"
+import { useReviewEditorLifecycle } from "../hooks/useReviewEditorLifecycle"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 import {
   REVIEW_CONTENT_MAX,
@@ -75,7 +74,6 @@ import {
   isReviewDraftReady,
   reviewDefectMessageKey,
   reviewDraftDefects,
-  showReviewPhotoNotice,
 } from "../utils/reviewDraft"
 import { MediaPicker } from "../components/MediaPicker"
 
@@ -124,7 +122,7 @@ export function ReviewWriteScreen({
    * "등록 후 목록·평점분해·상세를 함께 무효화" 하는 규칙을 여기서 다시 쓰는 쪽이 위험하다 —
    * 한쪽만 털면 별점은 4.2 인데 리뷰 수는 그대로인 화면이 남는다.
    */
-  const { submitReview, isSubmitting } = useRestaurantReviews({ restaurantId })
+  const { submitReview } = useRestaurantReviews({ restaurantId })
 
   const [rating, setRating] = useState(0)
   const [keywords, setKeywords] = useState<readonly ReviewKeyword[]>([])
@@ -132,7 +130,6 @@ export function ReviewWriteScreen({
   const [photoUris, setPhotoUris] = useState<readonly string[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [touched, setTouched] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [guidelinesOpen, setGuidelinesOpen] = useState(false)
 
   /**
@@ -163,35 +160,8 @@ export function ReviewWriteScreen({
   const defects = useMemo(() => reviewDraftDefects(draft), [draft])
   const ready = isReviewDraftReady(draft)
 
-  /**
-   * 쓰던 후기를 두고 나가기 전에 한 번 묻는다.
-   *
-   * 이 화면은 별점·키워드·사진·본문을 다 모아야 끝나는데, 닫기(✕)가 그걸 통째로
-   * 버렸다 — 자유글·레시피 편집기에는 원래 있던 확인이 입력량이 맞먹는 여기에만
-   * 없었다. 한 칸도 안 채웠으면 묻지 않는다(문의 화면과 같은 규칙).
-   *
-   * `ready` 가 아니라 **입력 여부**로 판단한다. 별점만 찍고 나가는 사람도 그 별점을
-   * 잃는 건 마찬가지다.
-   */
-  const handleClose = useCallback(async () => {
-    const dirty =
-      rating > 0 ||
-      keywords.length > 0 ||
-      content.trim().length > 0 ||
-      photoUris.length > 0
-    if (!dirty) {
-      onClose()
-      return
-    }
-    const confirmed = await showConfirm({
-      title: t("restaurant.review.form.discardTitle"),
-      description: t("restaurant.review.form.discardBody"),
-      confirmLabel: t("restaurant.review.form.discard"),
-      cancelLabel: t("restaurant.review.form.keepWriting"),
-      destructive: true,
-    })
-    if (confirmed) onClose()
-  }, [content, keywords, onClose, photoUris, rating, t])
+  const { submit, requestClose, isSubmitting, uploadProgress } =
+    useReviewEditorLifecycle({ draft, submitReview, onClose, onSubmitted })
   const blockingMessage = defects[0]
     ? t(dynamicKey(reviewDefectMessageKey(defects[0])), {
         max: REVIEW_CONTENT_MAX,
@@ -211,75 +181,6 @@ export function ReviewWriteScreen({
     setPhotoUris((current) => current.filter((item) => item !== uri))
   }, [])
 
-  const submit = useCallback(async () => {
-    if (!ready || isSubmitting) return
-    try {
-      /* 사진 전량 업로드 → 하나라도 실패하면 등록하지 않는다. */
-      const objectPaths: string[] = []
-      for (const [index, uri] of photoUris.entries()) {
-        if (photoUris.length > 1) {
-          setUploadProgress(
-            t("restaurant.review.form.photoProgress", {
-              current: index + 1,
-              total: photoUris.length,
-            }),
-          )
-        }
-        const uploaded = await imageUploadService.uploadImage(uri, "general")
-        objectPaths.push(uploaded.objectPath)
-      }
-      setUploadProgress(null)
-
-      const { review, photosIndexed } = await submitReview({
-        rating,
-        content: content.trim(),
-        keywords: [...keywords],
-        imageObjectPaths: objectPaths,
-      })
-      /*
-        사진이 빠진 것은 **실패로 접지 않는다** — 후기 본문은 이미 저장됐고, 여기서 실패로
-        돌리면 사용자가 같은 글을 또 써서 후기가 두 벌이 된다. 성공으로 두되 사진에 대해서만
-        사실대로 말한다.
-
-        판정·문구·톤·토스트 표면까지 전부 `reviewDraft.ts::showReviewPhotoNotice` 가 정한다.
-        이 화면에는 **분기가 하나도 없다** — 예전에는 표면 셋을 여기서 골랐고, 그 분기
-        **앞에** 이른 return 한 줄만 넣으면(`if (photosIndexed >= 0) { …성공 토스트…; return }`)
-        출시됐던 결함이 소스 검사를 전부 통과한 채 되살아났다. 화면이 못 고르면 화면에서
-        틀릴 수도 없다.
-
-        아래 두 줄 사이에 `return` 을 끼우는 것도 같은 결함이므로 계약 테스트가 막는다.
-      */
-      showReviewPhotoNotice(
-        { sent: objectPaths.length, indexed: photosIndexed },
-        (key, params) => t(dynamicKey(key), params),
-      )
-      onSubmitted?.(review)
-    } catch (error) {
-      /*
-        이 catch 는 후기 등록과 **사진 업로드**를 함께 받는다. 사진 쪽 실패는
-        `FOOD_CAMERA_001`(JPG·PNG 아님) · `002`(5MB 초과)로 오는데, 폴백
-        `후기를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.` 가 그 코드를 이겨서
-        사용자는 같은 사진으로 계속 다시 눌렀다. 폴백을 빼면 코드가 이긴다.
-
-        재시도 핸들러는 주지 않는다 — `등록` 버튼이 화면에 그대로 남아 있어서
-        토스트 안의 버튼이 같은 일을 한 번 더 제안하는 꼴이 된다.
-      */
-      presentError(error, { scope: "restaurant-review-write" })
-    } finally {
-      setUploadProgress(null)
-    }
-  }, [
-    content,
-    isSubmitting,
-    keywords,
-    onSubmitted,
-    photoUris,
-    rating,
-    ready,
-    submitReview,
-    t,
-  ])
-
   const counterCurrent = content.length
   return (
     <View
@@ -293,7 +194,9 @@ export function ReviewWriteScreen({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("restaurant.review.form.close")}
-          onPress={() => void handleClose()}
+          onPress={() => void requestClose()}
+          disabled={isSubmitting}
+          accessibilityState={{ disabled: isSubmitting }}
           hitSlop={14}
           style={({ pressed }) => [pressed && styles.pressedRow]}
         >
@@ -351,7 +254,11 @@ export function ReviewWriteScreen({
                   <Pressable
                     key={value}
                     accessibilityRole="radio"
-                    accessibilityState={{ selected: filled }}
+                    disabled={isSubmitting}
+                    accessibilityState={{
+                      selected: filled,
+                      disabled: isSubmitting,
+                    }}
                     accessibilityLabel={t(
                       "restaurant.review.form.ratingAccessibility",
                       { count: value },
@@ -415,7 +322,11 @@ export function ReviewWriteScreen({
                   <Pressable
                     key={item.value}
                     accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selected }}
+                    disabled={isSubmitting}
+                    accessibilityState={{
+                      checked: selected,
+                      disabled: isSubmitting,
+                    }}
                     accessibilityLabel={t(dynamicKey(item.labelKey))}
                     onPress={() => toggleKeyword(item.value)}
                     style={({ pressed }) => [
@@ -492,6 +403,7 @@ export function ReviewWriteScreen({
                   current: photoUris.length,
                   max: REVIEW_MAX_PHOTOS,
                 })}
+                disabled={isSubmitting}
                 onPress={() => setPickerOpen(true)}
                 style={({ pressed }) => [
                   styles.mediaTile,
@@ -536,6 +448,7 @@ export function ReviewWriteScreen({
                       "restaurant.review.form.photoRemove",
                       { index: index + 1 },
                     )}
+                    disabled={isSubmitting}
                     onPress={() => removePhoto(uri)}
                     hitSlop={10}
                     style={({ pressed }) => [
@@ -565,6 +478,7 @@ export function ReviewWriteScreen({
               ]}
             >
               <TextInput
+                editable={!isSubmitting}
                 value={content}
                 onChangeText={(next) => {
                   setTouched(true)
@@ -606,6 +520,7 @@ export function ReviewWriteScreen({
                 갈 곳은 아래 `openGuidelines` 가 항상 마련한다. */}
             <Pressable
               accessibilityRole="link"
+              disabled={isSubmitting}
               onPress={openGuidelines}
               hitSlop={8}
               style={({ pressed }) => [
@@ -667,7 +582,7 @@ export function ReviewWriteScreen({
             variant="fill"
             fullWidth
             disabled={!ready}
-            loading={isSubmitting || uploadProgress !== null}
+            loading={isSubmitting}
             accessibilityHint={blockingMessage ?? undefined}
             onPress={() => void submit()}
           >
@@ -675,6 +590,9 @@ export function ReviewWriteScreen({
           </V2Button>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Native-stack modal needs its own dialog presenter. */}
+      <V2DialogHost />
 
       <MediaPicker
         visible={pickerOpen}

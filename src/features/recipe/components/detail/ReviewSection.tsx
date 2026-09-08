@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 리뷰 — 검수가 없는 카탈로그에서 품질 신호를 만드는 정직한 방법(계약 §0-3).
  *
@@ -19,11 +20,10 @@
  *
  * 별 색은 브랜드 하나만 쓴다. 노란 별을 쓰면 화면에 세 번째 색이 생긴다.
  */
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import {
   CARD_RADIUS,
-  GUTTER,
   SECTION_TITLE_GAP,
   V2DotLoader,
   V2Icon,
@@ -392,7 +392,7 @@ function StarRow({ rating }: { rating: number }) {
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: GUTTER, gap: SECTION_TITLE_GAP },
+  root: { paddingHorizontal: spacing[20], gap: SECTION_TITLE_GAP },
   head: {
     flexDirection: "row",
     alignItems: "center",

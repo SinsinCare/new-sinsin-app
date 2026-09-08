@@ -147,7 +147,10 @@ export const RecipeMealSection = memo(function RecipeMealSection({
             <V2Box
               paddingHorizontal={8}
               paddingVertical={2}
-              style={{ borderRadius: 999, backgroundColor: surface.surface }}
+              style={{
+                borderRadius: 999,
+                backgroundColor: surface.surfaceSunken,
+              }}
             >
               <V2Text
                 color={surface.textMuted}

@@ -51,7 +51,11 @@ const ENTRY_SOURCES: readonly AnalyticsRestaurantEntrySource[] = [
 
 export default function RestaurantDetailRoute() {
   const router = useAppRouter()
-  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>()
+  const { id, from, tab } = useLocalSearchParams<{
+    id: string
+    from?: string
+    tab?: string
+  }>()
   const restaurantId =
     typeof id === "string" && DECIMAL_ID.test(id)
       ? Number.parseInt(id, 10)
@@ -96,6 +100,7 @@ export default function RestaurantDetailRoute() {
     <RestaurantDetailScreen
       restaurantId={restaurantId}
       entrySource={entrySource}
+      initialTab={tab === "menu" ? "menu" : "home"}
       onWriteReview={writeReview}
       onOpenPhotos={openPhotos}
       onPressReviewAuthor={openReviewer}

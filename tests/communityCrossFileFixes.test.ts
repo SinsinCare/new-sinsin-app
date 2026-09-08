@@ -29,7 +29,7 @@ import koRecipe from "@/src/i18n/locales/ko/recipe.json"
 const ROOT = join(__dirname, "..")
 const read = (path: string) => codeOnly(readFileSync(join(ROOT, path), "utf-8"))
 
-const POST_DETAIL = "app/post/[id].tsx"
+const POST_DETAIL = "src/features/recipe/views/PostDetailScreen.tsx"
 const CONNECTIONS = "src/features/recipe/views/CommunityConnectionsScreen.tsx"
 const SEARCH = "src/features/recipe/views/CommunitySearchScreen.tsx"
 const AUTHOR_PROFILE =
@@ -210,15 +210,14 @@ describe("댓글 전송 버튼에 손이 닿는다", () => {
     expect(size + slop * 2).toBeGreaterThanOrEqual(44)
   })
 
-  it("그리는 크기는 그대로다 — 넓힌 것은 닿는 크기뿐이다", () => {
+  it("전송 버튼 자체도 최소 44pt를 확보한다", () => {
     // 원을 키우면 입력 바 전체가 따라 커진다. 그래서 width/height 는 손대지 않는다.
-    expect(styleNumber(source, "sendButton", "width")).toBe(36)
+    expect(styleNumber(source, "sendButton", "width")).toBe(44)
   })
 
   it("베낀 원본(좋아요 버튼)도 여전히 44pt 를 넘긴다", () => {
-    const height = styleNumber(source, "likeButton", "height")
     expect(
-      height + hitSlopFor(source, "likeButton") * 2,
+      styleNumber(source, "likeButton", "minHeight"),
     ).toBeGreaterThanOrEqual(44)
   })
 })
@@ -234,7 +233,7 @@ describe("조회수는 복수형 안에서 천 단위를 끊는다", () => {
     ## 왜 `{{formattedCount}}` 가 아닌가 (되돌리기 전에 읽을 것)
 
     `restaurant.detail.metaReviews` 가 쓰는 그 모양은 **호출부가 반드시 값을 같이
-    넘겨야** 한다. 그런데 이 열쇠는 두 화면이 부른다 — `app/post/[id].tsx` 와
+    넘겨야** 한다. 그런데 이 열쇠는 두 화면이 부른다 — `src/features/recipe/views/PostDetailScreen.tsx` 와
     `CommunityPopularScreen.tsx`. 한쪽만 고치면 다른 화면에 `{{formattedCount}}` 가
     글자 그대로 찍힌다(i18next 의 `skipOnVariables` 기본값이 그렇다).
 
@@ -297,8 +296,10 @@ describe("조회수는 복수형 안에서 천 단위를 끊는다", () => {
       이것이 `CommunityPopularScreen`(남의 파일)이 지키는 계약이다. 여기가 깨지면
       그 화면에 `{{formattedCount}}` 같은 날문자가 찍힌다.
     */
-    expect(read(POPULAR_SCREEN)).toContain(
-      't("community.postDetail.viewCount", { count: item.views ?? 0 })',
+    expect(read(POPULAR_SCREEN)).toContain("<PostListItem")
+    expect(read(POPULAR_SCREEN)).toContain("viewCount={item.views}")
+    expect(read("src/features/recipe/components/PostListItem.tsx")).toContain(
+      "formatCount(viewCount, i18n.language)",
     )
     for (const language of ["ko", "en"] as const) {
       for (const count of [0, 1, 2, 11, 3291]) {

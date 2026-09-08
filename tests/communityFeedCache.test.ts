@@ -885,7 +885,7 @@ describe('"콜드" 판정은 기본 조합만 본다', () => {
     )
 
     /*
-      상세(`app/post/[id].tsx`)는 이 훅을 **인자 없이** 부르므로 판정도 기본 조합으로
+      상세(`src/features/recipe/views/PostDetailScreen.tsx`)는 이 훅을 **인자 없이** 부르므로 판정도 기본 조합으로
       한다. 관련글 선정이 읽는 캐시가 바로 그 기본 조합이라, 필터를 걸고 보던 사람에게는
       실제로 읽을 데이터가 없다 — 그래서 요청 한 번은 의도한 대가다.
     */
@@ -903,7 +903,7 @@ describe('"콜드" 판정은 기본 조합만 본다', () => {
 
 describe("보관함은 피드의 기본 조합과 같은 쿼리다", () => {
   it("인자 없는 호출과 피드 기본 상태의 키가 해시까지 같다", () => {
-    // `app/community-library.tsx` 의 `useCommunityPosts()`
+    // `src/features/recipe/views/CommunityLibraryScreen.tsx` 의 `useCommunityPosts()`
     const libraryKey = communityFeedQueryKey({})
     // `FreePostTab` 의 기본 상태(tagFilter=null, category=null, sort="recent")
     const feedDefaultKey = communityFeedQueryKey({

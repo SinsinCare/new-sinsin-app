@@ -149,7 +149,7 @@ describe("작성 화면 — 확인창 dismiss 와 화면 pop 이 겹치지 않�
     ])
     // 껍데기 라우트는 폼이 있는 파일까지 따라갔다.
     expect(SCREENS.map((screen) => screen.file).sort()).toEqual([
-      "app/(write)/free/[id].tsx",
+      "src/features/recipe/views/FreePostEditScreen.tsx",
       "app/(write)/story/new.tsx",
       "src/features/recipe/components/FreePostEditor.tsx",
       "src/features/recipe/views/RecipeWriteScreen.tsx",

@@ -18,7 +18,7 @@
  * D11 은 "`V2Chip` 에 굵기 고정 옵트인 프롭을 추가하고 레일이 그걸 쓴다" 로 끝났고,
  * **D27 이 그 프롭을 넣었다**(`fixedLabelWeight`, 기본 `false` 라 기존 소비자 불변).
  * 그래서 이 파일에 살던 사설 `CategoryChip` 은 지웠다 — 같은 그림을 두 벌 들고 있으면
- * 언젠가 한쪽만 고쳐진다. `size="s" tone="brandSoft"` 가지가 사설 칩과 **같은 값**을
+ * 언젠가 한쪽만 고쳐진다. `size="s" tone="neutral"` 가지가 사설 칩과 **같은 값**을
  * 같은 방식으로 그린다(높이 `controlHeight.sm` 32, padH 12, `radius.full`,
  * 선택 면 `primary.primaryWeak` + 1px `primary.primary`, 미선택 `fill.control` —
  * 미선택은 2026-08-21 에 `fill.normal` 에서 갈라져 나왔다, `V2Chip` 안의 그 줄 참고).
@@ -158,7 +158,7 @@ export function CategoryChipRail({
       fixedLabelWeight
       selected={value === key}
       size="s"
-      tone="brandSoft"
+      tone="neutral"
       onPress={() => onChange(key)}
     />
   )
@@ -172,7 +172,7 @@ export function CategoryChipRail({
           // 하단 1px 은 총 높이 **안쪽**이다(머리말 §컨테이너 높이).
           paddingBottom: insetV - borderWidth.thin,
           backgroundColor: colors.background.default,
-          borderBottomColor: colors.line.alternative,
+          borderBottomColor: colors.line.normal,
         },
         style,
       ]}

@@ -8,89 +8,112 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import {
+  parseRestaurantRecent,
+  prependRestaurantRecent,
+  restaurantRecentKey,
+  serializeRestaurantRecent,
+  type RestaurantRecentSearch,
+} from "../utils/restaurantSearchRecent"
 
 const STORAGE_KEY = "restaurant-recent-searches"
 
-/** 목업의 최근 검색어 영역이 스크롤 없이 보여 줄 수 있는 최대치. */
-const MAX_RECENT = 10
-
 export interface UseRecentSearchesResult {
-  recentSearches: string[]
+  recentSearches: RestaurantRecentSearch[]
   /** 저장소를 처음 읽는 동안 `true`. 이때 빈 목록을 "이력 없음" 으로 그리면 깜빡인다. */
   isLoading: boolean
-  add: (keyword: string) => void
+  add: (entry: RestaurantRecentSearch) => void
   /** 목업의 항목별 ✕. */
-  remove: (keyword: string) => void
+  remove: (entry: RestaurantRecentSearch) => void
   /** 목업의 `전체 삭제`. */
   clear: () => void
 }
 
 export function useRecentSearches(): UseRecentSearchesResult {
-  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [recentSearches, setRecentSearches] = useState<
+    RestaurantRecentSearch[]
+  >([])
   const [isLoading, setLoading] = useState(true)
   const mounted = useRef(true)
+  const entriesRef = useRef<RestaurantRecentSearch[]>([])
+  const hydrated = useRef(false)
+  const loadGeneration = useRef(0)
+  const pendingEdits = useRef<
+    ((entries: RestaurantRecentSearch[]) => RestaurantRecentSearch[])[]
+  >([])
+  const writes = useRef(Promise.resolve())
+
+  const persist = useCallback((entries: RestaurantRecentSearch[]) => {
+    // Serialize writes so a slow earlier write cannot restore a removed entry.
+    writes.current = writes.current
+      .then(() =>
+        AsyncStorage.setItem(STORAGE_KEY, serializeRestaurantRecent(entries)),
+      )
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     mounted.current = true
+    const generation = ++loadGeneration.current
     AsyncStorage.getItem(STORAGE_KEY)
+      .catch(() => null)
       .then((raw) => {
-        if (!mounted.current) return
-        if (raw) {
-          const parsed: unknown = JSON.parse(raw)
-          if (Array.isArray(parsed)) {
-            setRecentSearches(
-              parsed.filter((v): v is string => typeof v === "string"),
-            )
-          }
+        if (generation !== loadGeneration.current) return
+        const edits = pendingEdits.current
+        const next = edits.reduce(
+          (entries, edit) => edit(entries),
+          parseRestaurantRecent(raw),
+        )
+        pendingEdits.current = []
+        hydrated.current = true
+        entriesRef.current = next
+        // A selection may navigate away before storage finishes loading. Still
+        // persist that intent, merged with older entries, after unmount.
+        if (edits.length > 0) persist(next)
+        if (mounted.current) {
+          setRecentSearches(next)
+          setLoading(false)
         }
-        setLoading(false)
-      })
-      .catch(() => {
-        // 저장소 읽기 실패는 사용자에게 알릴 일이 아니다. 이력이 없는 것과 같게 다룬다.
-        if (mounted.current) setLoading(false)
       })
     return () => {
       mounted.current = false
     }
-  }, [])
+  }, [persist])
 
-  /** 쓰기 실패를 삼킨다 — 검색은 성공했는데 "이력 저장 실패" 를 띄우면 방해만 된다. */
-  const persist = useCallback((next: string[]) => {
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch(() => {})
-  }, [])
-
-  const add = useCallback(
-    (keyword: string) => {
-      const trimmed = keyword.trim()
-      if (!trimmed) return
-      setRecentSearches((prev) => {
-        // 같은 검색어를 다시 하면 맨 위로 올린다(중복을 쌓지 않는다).
-        const next = [trimmed, ...prev.filter((v) => v !== trimmed)].slice(
-          0,
-          MAX_RECENT,
-        )
-        persist(next)
-        return next
-      })
+  const edit = useCallback(
+    (
+      update: (entries: RestaurantRecentSearch[]) => RestaurantRecentSearch[],
+    ) => {
+      const next = update(entriesRef.current)
+      entriesRef.current = next
+      if (mounted.current) setRecentSearches(next)
+      if (hydrated.current) persist(next)
+      else pendingEdits.current.push(update)
     },
     [persist],
+  )
+
+  const add = useCallback(
+    (entry: RestaurantRecentSearch) => {
+      if (!entry.label.trim()) return
+      edit((entries) => prependRestaurantRecent(entries, entry))
+    },
+    [edit],
   )
 
   const remove = useCallback(
-    (keyword: string) => {
-      setRecentSearches((prev) => {
-        const next = prev.filter((v) => v !== keyword)
-        persist(next)
-        return next
-      })
+    (entry: RestaurantRecentSearch) => {
+      const key = restaurantRecentKey(entry)
+      edit((entries) =>
+        entries.filter((value) => restaurantRecentKey(value) !== key),
+      )
     },
-    [persist],
+    [edit],
   )
 
   const clear = useCallback(() => {
-    setRecentSearches([])
-    persist([])
-  }, [persist])
+    edit(() => [])
+  }, [edit])
 
   return { recentSearches, isLoading, add, remove, clear }
 }

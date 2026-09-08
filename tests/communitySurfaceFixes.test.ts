@@ -225,7 +225,8 @@ describe("수를 읽을 수 있게 내보낸다", () => {
       POPULAR_SCREEN,
       IMAGE_CARD,
     ]) {
-      const source = read(file)
+      if (file === POPULAR_SCREEN) expect(read(file)).toContain("<PostListItem")
+      const source = read(file === POPULAR_SCREEN ? POST_LIST_ITEM : file)
       expect(source).toContain("formatCount(")
       // 원시값이 그대로 나가던 자리가 남아 있으면 안 된다.
       expect(source).not.toMatch(

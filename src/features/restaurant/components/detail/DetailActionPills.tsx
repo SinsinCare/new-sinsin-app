@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 상세의 **하단 고정 액션 바**: `[🔖] [↗] [📞]  …  길찾기 [진단하기]`.
  *
@@ -106,7 +107,7 @@
  */
 
 import type { ComponentProps } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import type { StyleProp, ViewStyle } from "react-native"
 
 import {

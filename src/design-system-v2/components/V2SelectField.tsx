@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Select Field
 // Spec: docs/design/community-redesign/compose.md §2.4 (카테고리 필드) · 00-MASTER §4-G17
 //
@@ -16,7 +17,7 @@
 // 화면에는 높이가 다른 두 칸이 세로로 나란히 선다.
 
 import { type ReactNode } from "react"
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"

@@ -1,0 +1,302 @@
+[
+  {
+    "path": "src/features/auth/components/AcquisitionSourceField.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/auth/components/GenderSelect.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/auth/components/StepTextInput.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/auth/views/TermsAgreementScreen.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/onboarding/components/DateStepContent.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/onboarding/components/InputStepContent.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/onboarding/components/MultiStepContent.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/onboarding/components/OnlyStepContent.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/onboarding/components/WelcomeStepContent.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/settings/components/SettingsTextField.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/settings/views/PhoneNumberEditScreen.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/coach/FeatureIntroSheet.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/home/components/record/TextRecord.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/home/components/record/RecordRowPressable.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/home/components/record/sheets/MealSheet.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/home/components/record/sheets/RecipeImportSheet.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/home/components/record/sheets/RecordSheetShell.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/home/components/statistics/GlucoseTrendSection.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/FreePostEditor.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/TagChips.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/VoteAttachCard.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/VoteSheet.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/recipe/components/detail/ProvenanceSheet.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/write/AuthorContextRow.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/write/IngredientEditor.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/write/PhotoPickerRow.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/write/ServingsStepper.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/components/write/StepSheet.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/recipe/views/CommunityReportScreen.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/recipe/views/CommunitySearchScreen.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/stats-report/components/ConclusionCard.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/stats-report/components/OverlapCard.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/stats-report/components/WeightTrendCard.tsx",
+    "reason": "Quiet field, choice, attachment or support surface"
+  },
+  {
+    "path": "src/features/auth/components/SignupStepLayout.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/auth/views/AuthScreenLayout.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/home/components/record/pages/WaterRecordPage.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/recipe/components/PollCard.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/recipe/components/detail/ReviewComposer.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/recipe/components/write/WriteSubmitBar.tsx",
+    "reason": "Disabled action background"
+  },
+  {
+    "path": "src/features/recipe/views/PostDetailScreen.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "app/(write)/story/new.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/settings/views/ProfileEditScreen.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/home/components/record/recordSurface.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/home/components/record/sheets/recordSheetControls.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/recipe/components/write/WriteTextField.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/recipe/components/list/RecipeMealSection.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/recipe/components/list/RecipePhotoCard.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/recipe/components/write/NutritionPreviewCard.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/stats-report/components/WeekBarChart.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/stats-report/components/WeeklyCompareCard.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/food-report/components/MealReportView.tsx",
+    "reason": "Quiet role corrected; data/structural contrast retained"
+  },
+  {
+    "path": "src/features/settings/components/KidneyProfileCard.tsx",
+    "reason": "Quiet badge or delete-control surface"
+  },
+  {
+    "path": "src/features/home/components/FoodResultEdit.tsx",
+    "reason": "Quiet badge or delete-control surface"
+  },
+  {
+    "path": "src/theme/surface.ts",
+    "reason": "Shared readable inset text and contrast verification"
+  },
+  {
+    "path": "src/hooks/useSurface.ts",
+    "reason": "Shared readable inset text and contrast verification"
+  },
+  {
+    "path": "src/features/home/components/record/pages/recordInk.ts",
+    "reason": "Shared readable inset text and contrast verification"
+  },
+  {
+    "path": "tests/recordPageContrast.test.ts",
+    "reason": "Shared readable inset text and contrast verification"
+  },
+  {
+    "path": "tests/lightContrastAudit.test.ts",
+    "reason": "Shared readable inset text and contrast verification"
+  },
+  {
+    "path": "src/features/medication/components/MedicationChoice.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/components/MedicationSlotTabs.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/components/MedicationProduct.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/components/MedicationReminderSettings.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/components/MedicationReminderStatus.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/components/medicationStyles.ts",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/views/MedicationAddScreen.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/views/MedicationDiaryPage.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/views/MedicationEditorScreen.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/views/MedicationPhotoScreen.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/medication/views/MedicationSearchScreen.tsx",
+    "reason": "Medication adopts the health record shallow surface"
+  },
+  {
+    "path": "src/features/home/components/record/pages/RecordPageShell.tsx",
+    "reason": "Shared record disabled action and keyboard button"
+  },
+  {
+    "path": "src/features/settings/views/MedicalReferenceScreen.tsx",
+    "reason": "Follow-up audit: quiet supporting surface or control"
+  },
+  {
+    "path": "src/features/recipe/components/MentionSuggestions.tsx",
+    "reason": "Follow-up audit: quiet supporting surface or control"
+  },
+  {
+    "path": "src/features/stats-report/components/StatsReportScreen.tsx",
+    "reason": "Follow-up audit: quiet supporting surface or control"
+  },
+  {
+    "path": "src/features/stats-report/components/StatusBadge.tsx",
+    "reason": "Follow-up audit: quiet supporting surface or control"
+  },
+  {
+    "path": "src/features/home/components/FoodAnalysisResult.tsx",
+    "reason": "Follow-up audit: quiet supporting surface or control"
+  }
+]

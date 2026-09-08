@@ -461,6 +461,9 @@ function normalizeFood(
       null,
     name: firstString(source.name) ?? revisionItem?.name ?? fallbackFoodName(),
     restrictionLevel: normalizedRestrictionLevel,
+    // 서버 영양 상태를 그대로 싣는다 — 여기서 떨어뜨리면 화면이 PENDING 을 0 으로 더해
+    // "0 kcal" 을 만든다(2026-09-05 실측). 옛 응답엔 키가 없으니 undefined 로 둔다.
+    nutritionStatus: firstString(source.nutritionStatus),
     servingSizeValue:
       firstNumber(source.servingSizeValue, revisionItem?.analyzedGrams) ?? null,
     servingSizeUnit: firstString(source.servingSizeUnit) ?? "g",

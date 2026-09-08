@@ -83,6 +83,8 @@ export function useRecipeDetailV2(recipeId: number | null) {
 
   const query = useQuery({
     queryKey: recipeV2Keys.detail(locale, recipeId ?? -1),
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: () => recipeDetailV2Service.getRecipeDetail(recipeId!, locale),
     enabled: recipeId != null,
   })

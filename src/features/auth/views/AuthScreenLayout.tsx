@@ -104,7 +104,7 @@ export function AuthScreenLayout({
             backgroundColor:
               !buttonDisabled && !buttonLoading
                 ? surface.brand
-                : surface.ctaOffBg,
+                : surface.surfaceSunken,
             height: AUTH_LAYOUT.ctaHeight,
             borderRadius: AUTH_LAYOUT.radius.cta,
           }}

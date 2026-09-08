@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 상세 화면(후기 탭·사진 탭)의 **개수 붙은** 필터 칩. `전체 999+` / `메뉴판 240` 모양이다.
  *
@@ -32,7 +33,7 @@
  * 화면에서 두 칩이 나란히 놓여도 크기가 어긋나지 않게.
  */
 
-import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, type ViewStyle } from "react-native"
 
 import {
   controlHeight,

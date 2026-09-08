@@ -44,6 +44,11 @@
  * 맞는 동작이고(한 벌 더 쌓일 `(tabs)` 가 애초에 없다), 공지를 보고 뒤로 나오면 원래
  * 있던 곳으로 돌아가야 한다.
  */
+import {
+  validMedicationDate,
+  SLOTS,
+} from "@/src/features/medication/data/medicationModel"
+import type { Slot } from "@/src/features/medication/types"
 import type { Href, Router } from "expo-router"
 
 type PushData = Record<string, unknown>
@@ -65,6 +70,23 @@ export function routeFromPushData(
   router: Router,
 ): boolean {
   const type = typeof data?.type === "string" ? data.type : undefined
+
+  if (type === "medication_reminder_renewal") {
+    router.push("/medication/manage")
+    return true
+  }
+
+  if (
+    type === "medication_reminder" &&
+    validMedicationDate(data?.date) &&
+    SLOTS.includes(data?.slot as Slot)
+  ) {
+    router.push({
+      pathname: "/record/medication",
+      params: { date: data.date, slot: String(data.slot) },
+    })
+    return true
+  }
 
   if (type === "food_analysis_complete") {
     goToTabRoute(router, "/(tabs)/home")

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useV2Theme, V2Box, V2Text } from "@/src/design-system-v2"
-import { BackHandler, StyleSheet, TouchableOpacity } from "react-native"
+import { BackHandler, StyleSheet, TouchableOpacity, View } from "react-native"
 import { Portal } from "@/src/shared/components/Portal"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Animated, {
@@ -14,10 +14,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { Icon } from "@/src/shared/components"
 import { tokens } from "@/src/theme/tokens"
 import type { FoodAnalysisStatus } from "@/src/types"
 import { useTranslation } from "react-i18next"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import AnalyzingBowl from "@/assets/images/meal-analyzing-bowl.svg"
+import { Text } from "@/src/shared/components/AppText"
 import {
   LOADING_TIP_INTERVAL_MS,
   LOADING_TIP_KEYS,
@@ -93,6 +95,7 @@ function LoadingOverlayBody({
     transform: [{ translateY: floatY.value }],
   }))
   const isDarkMode = useAppColorScheme() === "dark"
+  const insets = useSafeAreaInsets()
   const statusMessage =
     status === "QUEUED"
       ? t("foodLoading.status.QUEUED")
@@ -144,113 +147,183 @@ function LoadingOverlayBody({
       // 떠 있는 동안 아래를 잠그는 게 이 막의 역할이므로 응답자를 자처한다.
       onStartShouldSetResponder={() => true}
     >
+      {/*
+        등록 절차 시안(2026-09-04, `camera-1.svg`): 흰 바닥, 제목 줄 "식단 분석" 과 왼쪽
+        ‹(3초 뒤 활성 — 그 전엔 취소가 분석을 버리는 줄 모르고 누른다), 가운데 그릇
+        일러스트(67), "식단을 분석하고 있어요"(20/700), 그 아래 팁 두 줄.
+      */}
       <V2Box
         flex={1}
         align="center"
-        justify="center"
         style={{ backgroundColor: colors.background.default }}
       >
-        {/* X 버튼: 3초 후 표시 */}
-        {showDismiss && onDismiss && (
-          <TouchableOpacity
-            onPress={onDismiss}
-            style={{
-              position: "absolute",
-              top: 56,
-              right: 20,
-              width: 40,
-              height: 40,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+        <View style={[styles.pageHeader, { marginTop: insets.top + 8 }]}>
+          {showDismiss && onDismiss ? (
+            <TouchableOpacity
+              onPress={onDismiss}
+              accessibilityRole="button"
+              accessibilityLabel={t("action.back")}
+              style={styles.pageHeaderButton}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={26}
+                color={
+                  isDarkMode
+                    ? tokens.color.textDark.val
+                    : tokens.color.grey3.val
+                }
+              />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.pageHeaderButton} />
+          )}
+          <Text
+            style={[
+              styles.pageHeaderTitle,
+              {
+                color: isDarkMode
+                  ? tokens.color.textDark.val
+                  : tokens.color.grey1.val,
+              },
+            ]}
           >
-            <Ionicons
-              name="close"
-              size={26}
-              color={
-                isDarkMode ? tokens.color.textDark.val : tokens.color.grey3.val
-              }
-            />
-          </TouchableOpacity>
-        )}
+            {t("foodResult.title")}
+          </Text>
+          <View style={styles.pageHeaderButton} />
+        </View>
 
+        <View style={{ flex: 1 }} />
         <Animated.View style={floatStyle}>
-          <Icon name="loading" size={55} />
+          <AnalyzingBowl width={67} height={67} />
         </Animated.View>
-        <V2Text
-          color={colors.label.normal}
-          lineBreakStrategyIOS="hangul-word"
-          style={{ fontSize: 18, fontWeight: "600", marginTop: 16 }}
-        >
-          {`${statusMessage}${dots}`}
-        </V2Text>
+        {/*
+          세 문구 영역은 첫 프레임부터 자리를 갖는다. 3초 뒤 하단 안내가 붙거나 팁의
+          줄 수가 바뀌어도 가운데 콘텐츠 묶음의 위치를 다시 계산하지 않는다.
+        */}
+        <View style={styles.statusSlot}>
+          <Animated.View entering={FadeIn.delay(120).duration(300)}>
+            <V2Text
+              color={colors.label.normal}
+              lineBreakStrategyIOS="hangul-word"
+              style={{
+                fontSize: 20,
+                lineHeight: 28,
+                fontWeight: "700",
+                marginTop: 24,
+                textAlign: "center",
+              }}
+            >
+              {`${statusMessage}${dots}`}
+            </V2Text>
+          </Animated.View>
+        </View>
         {/*
           팁 한 장. 라벨은 "안내" 가 아니라 **읽을거리**라는 신호다 — 상태 문장(위)과
           같은 층으로 읽히면 "이것도 진행 상황인가" 로 오독한다. 문장은 `key` 로 갈아
           끼워 바뀔 때마다 새로 페이드인한다.
         */}
-        <V2Text
-          color={colors.label.assistive}
-          style={{
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.2,
-            marginTop: 20,
-          }}
-        >
-          {t("foodLoading.tipLabel")}
-        </V2Text>
-        <Animated.View
-          key={tipIndex}
-          entering={FadeIn.duration(260)}
-          style={{
-            marginHorizontal: TIP_HORIZONTAL_MARGIN,
-            alignItems: "center",
-          }}
-        >
-          {/*
-            iOS 엔 balanced 가 없어 마지막 줄에 단어 하나만 남곤 했다 — 줄 폭을 재서 고르게
-            맞춘다. 문장 경계(`\n`)는 문단으로 나눠 문단마다 따로 맞춘다(BalancedText 머리말).
-          */}
-          {splitParagraphs(
-            t(LOADING_TIP_KEYS[tipIndex] ?? LOADING_TIP_KEYS[0]),
-          ).map((paragraph, index) => (
-            <BalancedText
-              key={index}
-              horizontalInset={TIP_HORIZONTAL_MARGIN * 2}
-              color={colors.label.alternative}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-              style={{
-                fontSize: 14,
-                fontWeight: "500",
-                textAlign: "center",
-                marginTop: index === 0 ? 6 : 0,
-                lineHeight: 21,
-              }}
-            >
-              {paragraph}
-            </BalancedText>
-          ))}
-        </Animated.View>
-
-        {showDismiss && onDismiss && (
-          <V2Text
-            color={colors.label.alternative}
-            lineBreakStrategyIOS="hangul-word"
-            textBreakStrategy="balanced"
+        <View style={styles.tipSlot}>
+          <Animated.View
+            key={tipIndex}
+            entering={FadeIn.duration(260)}
             style={{
-              fontSize: 13,
-              textAlign: "center",
-              marginTop: 24,
-              marginHorizontal: 24,
-              lineHeight: 18,
+              marginHorizontal: TIP_HORIZONTAL_MARGIN,
+              alignItems: "center",
             }}
           >
-            {t("foodLoading.dismissHint")}
-          </V2Text>
-        )}
+            {/*
+              iOS 엔 balanced 가 없어 마지막 줄에 단어 하나만 남곤 했다 — 줄 폭을 재서 고르게
+              맞춘다. 문장 경계(`\n`)는 문단으로 나눠 문단마다 따로 맞춘다(BalancedText 머리말).
+            */}
+            {splitParagraphs(
+              t(LOADING_TIP_KEYS[tipIndex] ?? LOADING_TIP_KEYS[0]),
+            ).map((paragraph, index) => (
+              <BalancedText
+                key={index}
+                horizontalInset={TIP_HORIZONTAL_MARGIN * 2}
+                color={colors.label.alternative}
+                lineBreakStrategyIOS="hangul-word"
+                textBreakStrategy="balanced"
+                style={{
+                  fontSize: 16,
+                  fontWeight: "500",
+                  textAlign: "center",
+                  marginTop: index === 0 ? 12 : 0,
+                  lineHeight: 24,
+                }}
+              >
+                {paragraph}
+              </BalancedText>
+            ))}
+          </Animated.View>
+        </View>
+
+        <View style={styles.dismissHintSlot}>
+          {showDismiss && onDismiss ? (
+            <Animated.View entering={FadeIn.duration(220)}>
+              <V2Text
+                color={colors.label.alternative}
+                lineBreakStrategyIOS="hangul-word"
+                textBreakStrategy="balanced"
+                style={styles.dismissHint}
+              >
+                {t("foodLoading.dismissHint")}
+              </V2Text>
+            </Animated.View>
+          ) : null}
+        </View>
+        <View style={{ flex: 1.4 }} />
       </V2Box>
     </Animated.View>
   )
 }
+
+const styles = StyleSheet.create({
+  pageHeader: {
+    height: 34,
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  pageHeaderButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pageHeaderTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.34,
+    fontWeight: "600",
+  },
+  // 24pt 위 여백 + 상태 문구 최대 두 줄. 짧은 상태에서도 같은 높이를 유지한다.
+  statusSlot: {
+    minHeight: 80,
+    alignItems: "center",
+  },
+  // 팁 전환 중 한 줄/두 줄 차이로 주변 요소가 움직이지 않게 한다.
+  tipSlot: {
+    // 12pt 위 여백 + 24pt 네 줄. 가장 긴 한/영 팁도 기본 글자 크기에서 들어간다.
+    minHeight: 108,
+    alignSelf: "stretch",
+    alignItems: "center",
+  },
+  // 3초 전부터 24pt 여백 + 두 줄 안내 높이를 확보한다.
+  dismissHintSlot: {
+    minHeight: 60,
+    alignSelf: "stretch",
+    alignItems: "center",
+  },
+  dismissHint: {
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 24,
+    marginHorizontal: 24,
+    lineHeight: 18,
+  },
+})

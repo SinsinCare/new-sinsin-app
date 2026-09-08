@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Option
 // Spec: project/design-system-v2/design-system-base/components/Option.md (Figma node 121:6812)
 //
@@ -21,7 +22,6 @@ import { type ReactNode } from "react"
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
   type StyleProp,
   type ViewStyle,

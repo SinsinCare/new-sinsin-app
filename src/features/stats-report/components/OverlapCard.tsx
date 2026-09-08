@@ -3,7 +3,7 @@ import { Text } from "@/src/shared/components/AppText"
 
 import { REPORT_CARD } from "@/src/shared/components/ReportSection"
 import type { SurfacePalette } from "@/src/theme/surface"
-import { TYPE } from "@/src/theme/surface"
+import { surfaceBodyText, TYPE } from "@/src/theme/surface"
 
 import type { OverlapSignals } from "../types/report"
 
@@ -54,7 +54,6 @@ export function OverlapCard({ data, s }: { data: OverlapSignals; s: Surface }) {
                 styles.tabular,
                 { color: s.textMuted },
               ]}
-              numberOfLines={1}
             >
               {signal.detail}
             </Text>
@@ -63,9 +62,9 @@ export function OverlapCard({ data, s }: { data: OverlapSignals; s: Surface }) {
       </View>
 
       {!!data.note && (
-        <View style={[styles.noteBox, { backgroundColor: s.surface }]}>
+        <View style={[styles.noteBox, { backgroundColor: s.surfaceSunken }]}>
           <Text
-            style={[styles.noteText, { color: s.text }]}
+            style={[styles.noteText, { color: surfaceBodyText(s) }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {data.note}
@@ -88,7 +87,7 @@ const styles = StyleSheet.create({
   },
   signalRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   signalDot: { width: 5, height: 5, borderRadius: 999 },
-  signalLabel: { ...TYPE.caption, fontWeight: "700" },
+  signalLabel: { ...TYPE.caption, fontWeight: "700", flexShrink: 1 },
   signalDetail: { ...TYPE.cardSub, flex: 1 },
   noteBox: { borderRadius: 12, padding: 14 },
   noteText: { ...TYPE.caption },

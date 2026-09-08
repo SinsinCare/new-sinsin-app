@@ -78,6 +78,15 @@ export type AnalyticsScreenName =
   | "onboarding"
   | "consult"
   | "statistics"
+  | "meal_report"
+  // 물·혈압·체중 기록 페이지(2026-09-05). 시트였을 때는 홈 안이라 화면 이름이 없었다.
+  | "record_medication"
+  | "record_water"
+  | "record_blood_pressure"
+  | "record_weight"
+  | "record_blood_glucose"
+  | "record_edema"
+  | "food_camera"
   | "community_story"
   | "community_library"
   | "dev_showcase"
@@ -222,15 +231,17 @@ export type AnalyticsMealSlot = "breakfast" | "lunch" | "dinner" | "snack"
 export type AnalyticsFoodRecordSource = "fresh" | "recovered" | "saved"
 
 /**
- * 식사 시트를 연 **문**. 세 자리가 같은 시트를 여는데 문마다 기대가 다르다 —
- * 타일은 "몇 끼 먹었나" 를 보다가, 타임라인 빈칸은 그 끼니를 채우러, 하단 CTA 는
- * 기록하겠다는 결심으로 온다.
+ * 식사 시트를 연 **문**.
+ *
+ * 홈 시안(2026-09-04) 이후 문은 히어로 아래 CTA 하나다. 값 이름 `timeline_cta` 는
+ * 그 전(타일·타임라인 빈칸·타임라인 CTA 셋)에서 이어받은 것이다 — 대시보드가 이 이름으로
+ * 세고 있어 바꾸지 않는다. `tile`·`timeline_empty` 는 그날 이후 한 행도 안 나간다.
  *
  * **취소하고 되돌아온 재개는 이 값 중 아무것도 아니다.** 카메라·앨범·글에서 빠져나오면
  * 코드가 시트를 다시 열어 주는데(`openMealSheet`), 그 자리에서 이벤트를 쏘면 한 사람의
  * 한 번의 시도가 시트 진입 두 행이 되어 퍼널 1→2 가 이탈처럼 부풀고 2→3 이 함께 꺼진다.
  */
-export type AnalyticsMealSheetEntry = "tile" | "timeline_empty" | "timeline_cta"
+export type AnalyticsMealSheetEntry = "timeline_cta"
 
 /**
  * 건강기록 다섯 지표. `AnalyticsSurface` 의 `home_*` 시트 다섯과 **1:1** 이다 —
@@ -243,6 +254,8 @@ export type AnalyticsHealthMetric =
   | "blood_glucose"
   | "weight"
   | "edema"
+  /** 약 복용(2026-09-04). 시트 없이 타일에서 바로 한 번을 기록한다. */
+  | "medication"
 
 /**
  * 값이 처음 생긴 **입력 도구**. 다섯 시트의 컨트롤이 제각각이라(키패드·스테퍼·프리셋·
@@ -298,6 +311,7 @@ export type AnalyticsRestaurantEntrySource =
  * 섞으면 안 된다는 뜻이기도 하다.
  */
 export type AnalyticsSurface =
+  | "settings_preferences"
   // ── 앱 진입·전역 ───────────────────────────────────────────────────────────
   | "app_entry"
   | "app_root"
@@ -317,7 +331,12 @@ export type AnalyticsSurface =
   | "home_water_record"
   | "home_weight"
   | "home_blood_pressure"
+  // 기록 페이지 제목 옆 i — 권장량이 왜 사람마다 다른지 설명하는 시트(2026-09-05).
+  | "home_water_info"
+  | "home_weight_info"
+  | "home_blood_pressure_info"
   | "home_blood_glucose"
+  | "home_medication"
   | "home_edema"
   | "statistics_month_picker"
   // 리포트 본문의 대기·오류 자리. 기간을 바꿀 때마다 다시 로드하므로 화면이 아니라
@@ -367,6 +386,7 @@ export type AnalyticsSurface =
   | "recipe_write"
   | "recipe_edit"
   // ── 레시피 ─────────────────────────────────────────────────────────────────
+  | "recipe_list"
   | "recipe_detail"
   | "recipe_archive"
   | "recipe_filter"
@@ -1519,6 +1539,15 @@ const ROUTE_SCREEN: Record<string, AnalyticsScreenName> = {
   onboarding: "onboarding",
   consult: "consult",
   statistics: "statistics",
+  "meal-report": "meal_report",
+  "food-camera": "food_camera",
+  // 물·혈압·체중 기록(2026-09-05 시안). 시트였을 때는 홈 화면 안이라 이름이 없었다.
+  "record/medication": "record_medication",
+  "record/water": "record_water",
+  "record/blood-pressure": "record_blood_pressure",
+  "record/weight": "record_weight",
+  "record/blood-glucose": "record_blood_glucose",
+  "record/edema": "record_edema",
   stories: "community_story",
   "community-library": "community_library",
   "v2-showcase": "dev_showcase",

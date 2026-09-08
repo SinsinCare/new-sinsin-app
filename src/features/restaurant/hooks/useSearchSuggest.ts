@@ -60,13 +60,16 @@ export function useSearchSuggest(draft: string): UseSearchSuggestResult {
       restaurantService.fetchSuggestions(debounced, signal),
   })
 
-  const isWaitingForDebounce =
-    trimmed.length >= MIN_QUERY_LENGTH && trimmed !== debounced
+  const canSuggest = trimmed.length >= MIN_QUERY_LENGTH
+  const matchesInput = canSuggest && trimmed === debounced
+  const isWaitingForDebounce = canSuggest && !matchesInput
 
   return {
-    suggestions: query.data?.suggestions ?? [],
-    isLoading: isWaitingForDebounce || query.isFetching,
-    isError: query.isError,
-    error: query.error,
+    // Previous-query data can remain during debounce or finish after the user
+    // has typed something else. It must never become a selectable destination.
+    suggestions: matchesInput ? (query.data?.suggestions ?? []) : [],
+    isLoading: isWaitingForDebounce || (matchesInput && query.isFetching),
+    isError: matchesInput && query.isError,
+    error: matchesInput ? query.error : null,
   }
 }

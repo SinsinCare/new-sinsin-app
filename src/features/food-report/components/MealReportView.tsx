@@ -92,8 +92,8 @@ function AnchorCard({ report, s }: { report: MealReport; s: Surface }) {
   const accent = facts.focus?.level === "OVER" ? s.danger : s.brand
   /* 헤드라인이 가리키는 영양소의 하루 한도. 한도를 모르는 영양소면 캡션을 접는다. */
   const focusLimitText =
-    facts.budgets.find((b) => b.nutrient === facts.focus?.nutrient)?.limitText ??
-    null
+    facts.budgets.find((b) => b.nutrient === facts.focus?.nutrient)
+      ?.limitText ?? null
 
   return (
     <View
@@ -103,7 +103,7 @@ function AnchorCard({ report, s }: { report: MealReport; s: Surface }) {
       ]}
     >
       <View style={styles.badgeRow}>
-        <View style={[styles.badge, { backgroundColor: s.surface }]}>
+        <View style={[styles.badge, { backgroundColor: s.surfaceSunken }]}>
           <View style={[styles.badgeDot, { backgroundColor: tone.dot }]} />
           <Text
             style={[styles.badgeText, { color: tone.fg }]}
@@ -167,7 +167,7 @@ function AnchorCard({ report, s }: { report: MealReport; s: Surface }) {
       )}
 
       {!!prose.plainly && (
-        <View style={[styles.plainly, { backgroundColor: s.surface }]}>
+        <View style={[styles.plainly, { backgroundColor: s.surfaceSunken }]}>
           <Text style={[styles.plainlyLabel, { color: s.textMuted }]}>
             {t("mealReport.atAGlance")}
           </Text>
@@ -506,7 +506,12 @@ function FoodBreakdownSection({
                   </Text>
                 )}
               </Text>
-              <View style={[styles.levelBadge, { backgroundColor: s.surface }]}>
+              <View
+                style={[
+                  styles.levelBadge,
+                  { backgroundColor: s.surfaceSunken },
+                ]}
+              >
                 <View
                   style={[styles.badgeDot, { backgroundColor: tone.dot }]}
                 />

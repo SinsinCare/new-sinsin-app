@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 사진 뷰어 / 라이트박스 (목업 -16 / -17).
  *
@@ -45,7 +46,6 @@ import {
   type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from "react-native"

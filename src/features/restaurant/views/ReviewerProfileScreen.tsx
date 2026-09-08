@@ -1,3 +1,5 @@
+import { ReviewExpandableContent } from "../components/detail/ReviewExpandableContent"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 작성자 프로필 (목업 -30 ~ -33).
  *
@@ -46,7 +48,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
   useWindowDimensions,
@@ -92,7 +93,6 @@ const AVATAR_SIZE = 64
 const STAR_SIZE = 15
 const STAR_VALUES = [1, 2, 3, 4, 5] as const
 /** 본문 접힘 줄 수. 목업 -30 이 3줄에서 `더보기` 를 낸다. */
-const CONTENT_COLLAPSED_LINES = 3
 const PHOTOS_PER_ROW = 3
 const PHOTO_GAP = spacing[4]
 
@@ -653,34 +653,12 @@ function ProfileReviewRow({
         </ScrollView>
       ) : null}
 
-      <Text
-        numberOfLines={expanded ? undefined : CONTENT_COLLAPSED_LINES}
-        style={[typography.subtext.large, { color: colors.label.neutral }]}
-        lineBreakStrategyIOS="hangul-word"
-      >
-        {review.content}
-      </Text>
-      {!expanded ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("restaurant.review.expand")}
-          onPress={onToggleExpanded}
-          hitSlop={8}
-          style={({ pressed }) => [
-            styles.expandWrap,
-            pressed && styles.pressedRow,
-          ]}
-        >
-          <Text
-            style={[
-              typography.subtext.large,
-              { color: colors.label.assistive },
-            ]}
-          >
-            {t("restaurant.review.expand")}
-          </Text>
-        </Pressable>
-      ) : null}
+      <ReviewExpandableContent
+        content={review.content}
+        expanded={expanded}
+        onExpand={onToggleExpanded}
+        color={colors.label.neutral}
+      />
 
       <View style={styles.tagRow}>
         <View style={styles.tags}>

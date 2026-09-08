@@ -109,7 +109,7 @@ export function NeighborRow({
         styles.row,
         {
           backgroundColor: colors.background.default,
-          borderBottomColor: colors.line.alternative,
+          borderBottomColor: colors.line.normal,
         },
         pressed && styles.pressed,
         style,

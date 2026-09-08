@@ -37,8 +37,11 @@
  */
 export function restaurantDetailInstanceKey(
   restaurantId: number | null,
+  initialTab: "home" | "menu" = "home",
 ): string {
-  return restaurantId === null
-    ? "restaurant-detail-none"
-    : `restaurant-detail-${restaurantId}`
+  const venue =
+    restaurantId === null
+      ? "restaurant-detail-none"
+      : `restaurant-detail-${restaurantId}`
+  return initialTab === "home" ? venue : `${venue}:${initialTab}`
 }

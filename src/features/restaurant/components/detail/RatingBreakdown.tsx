@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 평점 분해 (목업 -11 / -19). 큰 평점 한 줄 + 키워드 5행 바.
  *
@@ -22,7 +23,7 @@
  * 그래서 최다 개수를 100% 로 둔다. 절대값은 오른쪽 숫자가 이미 말해 준다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import { radius, spacing, typography, useV2Theme } from "@/src/design-system-v2"
@@ -57,7 +58,7 @@ export function RatingBreakdown({ breakdown, style }: RatingBreakdownProps) {
         <Text
           style={[typography.subtext.large, { color: colors.label.neutral }]}
         >
-          {t("restaurant.review.ratingCount", { count: breakdown.totalCount })}
+          {t("restaurant.review.ratingCount", { count: breakdown.ratedCount })}
         </Text>
       </View>
 

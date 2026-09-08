@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Bottom Sheet
 // Spec: Figma `Design system_Mobile` node 91-8619
 //
@@ -74,7 +75,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
   type ViewStyle,
@@ -700,6 +700,9 @@ export function V2BottomSheet({
       <GestureHandlerRootView style={styles.root}>
         <BottomSheet
           ref={sheetRef}
+          // Expose the fields and buttons individually instead of grouping the
+          // whole form into a single adjustable element on iOS.
+          accessible={false}
           /*
             `index={0}` 으로 열린 채 마운트한다. 모달 자체가 `visible` 로 켜고 꺼지므로
             시트의 열림/닫힘 애니메이션과 모달의 마운트가 한 번씩만 일어난다.

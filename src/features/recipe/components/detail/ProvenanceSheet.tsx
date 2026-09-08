@@ -64,7 +64,7 @@ export function ProvenanceSheet({
           </V2Text>
         ) : (
           <V2VStack gap={14}>
-            <V2HStack paddingHorizontal={10} align="center" style={{ alignSelf: "flex-start", height: LAYOUT.badge.height, borderRadius: LAYOUT.badge.radius, backgroundColor: surface.surface }}>
+            <V2HStack paddingHorizontal={10} align="center" style={{ alignSelf: "flex-start", height: LAYOUT.badge.height, borderRadius: LAYOUT.badge.radius, backgroundColor: surface.surfaceSunken }}>
               <V2Text {...TYPE.caption} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                 {t(PROVENANCE_BADGE_KEYS[nutrition.provenance])}
               </V2Text>
@@ -79,7 +79,7 @@ export function ProvenanceSheet({
             </V2Text>
 
             {nutrition.unmatchedIngredients.length > 0 && (
-              <V2VStack gap={4} padding={14} style={{ borderRadius: 12, backgroundColor: surface.surface }}>
+              <V2VStack gap={4} padding={14} style={{ borderRadius: 12, backgroundColor: surface.surfaceSunken }}>
                 <V2Text {...TYPE.caption} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                   {t("detail.nutrition.unmatchedTitle")}
                 </V2Text>
@@ -100,7 +100,7 @@ export function ProvenanceSheet({
           accessibilityLabel={t("action.close")}
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
         >
-          <V2VStack align="center" justify="center" style={{ height: LAYOUT.ctaCompact.height, borderRadius: LAYOUT.ctaCompact.radius, backgroundColor: surface.surface }}>
+          <V2VStack align="center" justify="center" style={{ height: LAYOUT.ctaCompact.height, borderRadius: LAYOUT.ctaCompact.radius, backgroundColor: surface.surfaceSunken }}>
             <V2Text {...TYPE.cta} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
               {t("action.close")}
             </V2Text>

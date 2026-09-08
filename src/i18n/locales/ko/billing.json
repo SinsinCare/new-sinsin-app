@@ -16,11 +16,11 @@
     "renewsOn": "{{date}}에 갱신돼요",
     "activeUntil": "{{date}}까지 이용할 수 있어요",
     "manage": "구독 관리",
-    "perDayHook": "하루 {{price}}으로 AI 스캔·상담 무제한",
-    "upgradeCta": "프리미엄 시작하기"
+    "perDayHook": "하루 {{price}}에 식사 분석부터 AI 상담까지",
+    "upgradeCta": "프리미엄 혜택 보기"
   },
   "paywall": {
-    "title": "프리미엄으로 계속 이어가기",
+    "title": "프리미엄으로 이어서 이용해 보세요",
     "reason": {
       "quotaDay": "오늘 {{label}} {{limit}}회를 다 썼어요",
       "quotaMonth": "이번 달 {{label}} {{limit}}회를 다 썼어요",
@@ -34,16 +34,51 @@
       "history": "지난 기록 전부 보관"
     },
     "monthlyEquivalent": "월 {{price}}",
-    "discount": "{{percent}}% 할인",
-    "cta": "프리미엄 시작하기",
+    "discount": "{{percent}}% 절약",
+    "cta": "프리미엄 구독하기",
     "restore": "구매 복원",
     "unavailable": "상품을 불러오지 못했어요",
-    "unavailableBody": "잠시 후 다시 열어 주세요. 이미 결제하셨다면 그대로 유지돼요.",
+    "unavailableBody": "가격을 다시 불러와 주세요. 이미 구독 중이라면 이용 중인 혜택은 유지돼요.",
     "legal": "구독은 기간이 끝나기 전에 해지하지 않으면 자동으로 갱신돼요. 해지는 스토어의 구독 관리에서 언제든지 할 수 있어요.",
     "testStore": "테스트 결제 (실제 청구 없음)",
-    "perDay": "하루 {{price}}꼴",
+    "perDay": "하루 {{price}}",
     "benefitsTitle": "프리미엄으로 열리는 것",
-    "retry": "다시 시도"
+    "retry": "가격 다시 불러오기",
+    "heroTitle": "식사 고민은 가볍게",
+    "heroBody": "식사 분석부터 AI 상담까지 함께해요",
+    "choosePlan": "어떤 플랜으로 시작할까요?",
+    "annual": "연간",
+    "monthly": "월간",
+    "billedAnnually": "연 1회 결제",
+    "billedMonthly": "매월 결제",
+    "annualCharge": "{{price}} / 년 · 매년 결제",
+    "monthlyCharge": "{{price}} / 월 · 매월 결제",
+    "loading": "스토어 가격을 확인하고 있어요",
+    "features": {
+      "scan": {
+        "title": "매 끼니, 영양소까지 확인",
+        "body": "사진·글로 기록한 식사를 제한 없이 분석해요"
+      },
+      "consult": {
+        "title": "내 건강 기록을 아는 AI 상담",
+        "body": "음식부터 생활 습관까지, 궁금할 때 물어보세요"
+      },
+      "records": {
+        "title": "지난 기록도 언제든 다시",
+        "body": "식사·건강 기록의 주간·월간 변화를 살펴봐요"
+      }
+    },
+    "purchaseError": "결제를 완료하지 못했어요. 다시 시도해 주세요.",
+    "annualBasis": "연간 구독 기준 · 365일로 나눈 금액",
+    "monthlyBasis": "월간 구독 기준 · 30일로 나눈 금액",
+    "annualTotal": "연 {{price}} · 연 1회 결제",
+    "monthlyTotal": "월 {{price}} · 매월 결제",
+    "ctaAnnual": "연간 구독하기",
+    "ctaMonthly": "월간 구독하기",
+    "dailyLead": "하루 {{price}}",
+    "dailyAverage": "하루 평균 {{price}}",
+    "annualPrice": "연 {{price}}",
+    "monthlyPrice": "월 {{price}}"
   },
   "quota": {
     "remainingDay": "오늘 {{remaining}}회 남음",
@@ -63,8 +98,48 @@
     "restore": "구매 복원",
     "restoreDone": "구매 내역을 다시 불러왔어요",
     "restoreEmpty": "복원할 구매 내역이 없어요",
-    "upgrade": "프리미엄 시작하기",
+    "upgrade": "프리미엄 혜택 보기",
     "free": "지금은 무료로 쓰고 있어요",
-    "freeBody": "AI 스캔 하루 1회, 상담 월 10회까지 쓸 수 있어요."
+    "freeBody": "AI 스캔 하루 1회, 상담 월 10회까지 쓸 수 있어요.",
+    "restoreError": "구매 내역을 확인하지 못했어요. 다시 시도해 주세요.",
+    "paidSummary": "지금 이용 중인 혜택과 갱신 정보를 확인해요",
+    "freeSummary": "무료로 이용할 수 있는 기능을 확인해요",
+    "loadingBody": "이용 중인 플랜을 확인하고 있어요",
+    "loadError": "플랜을 확인하지 못했어요",
+    "loadErrorBody": "다시 불러와 현재 구독 상태를 확인해 주세요.",
+    "nextRenewal": "다음 갱신일",
+    "accessUntil": "이용 종료일",
+    "included": "지금 이용할 수 있어요",
+    "feature": {
+      "scan": "AI 식사 분석",
+      "consult": "AI 상담"
+    },
+    "dailyQuota": "하루 {{limit}}회 이용",
+    "monthlyQuota": "월 {{limit}}회 이용",
+    "remaining": "{{remaining}}회 남음",
+    "access": {
+      "unknown": "이용 범위 확인 필요",
+      "locked": "프리미엄에서 이용",
+      "unlimited": "횟수 제한 없이 이용"
+    },
+    "management": "구독 관리 안내",
+    "manageBody": "결제 수단 변경과 구독 해지는 스토어에서 할 수 있어요.",
+    "premiumTitle": "더 자주, 더 꾸준히 관리하고 싶다면",
+    "premiumBody": "식사 분석부터 AI 상담까지, 프리미엄 혜택을 확인해 보세요.",
+    "restoreTitle": "이미 결제하셨나요?",
+    "restoreBody": "구매 내역을 불러와 이용 중인 혜택을 확인해요.",
+    "retry": "플랜 다시 불러오기",
+    "manageError": "스토어를 열지 못했어요. 다시 눌러 주세요."
+  },
+  "account": {
+    "loading": "플랜 확인 중",
+    "unavailable": "다시 확인하기",
+    "freeTitle": "식사 고민은 가볍게",
+    "freeBody": "식사 분석부터 AI 상담까지 함께해요",
+    "paidTitle": "프리미엄과 함께하고 있어요",
+    "paidBody": "이용 중인 혜택과 구독을 관리해요",
+    "viewBenefits": "프리미엄 혜택 보기",
+    "annualQuoteBasis": "연간 구독 기준 · 연 {{price}} 결제",
+    "monthlyQuoteBasis": "월간 구독 기준 · 월 {{price}} 결제"
   }
 }

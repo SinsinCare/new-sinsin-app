@@ -1,7 +1,7 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import {
   Platform,
   StyleSheet,
-  TextInput,
   useWindowDimensions,
   type TextInputProps,
 } from "react-native"
@@ -58,7 +58,9 @@ export function TextField({
     ),
   )
   const height =
-    Platform.OS === "android" ? androidInputHeight : INPUT_BASE_HEIGHT
+    Platform.OS === "ios" && fontScale <= 1
+      ? INPUT_BASE_HEIGHT
+      : androidInputHeight
 
   const borderColor = error
     ? colors.status.negative
@@ -86,9 +88,7 @@ export function TextField({
         accessibilityLabel={label}
         placeholderTextColor={colors.label.assistive}
         {...props}
-        maxFontSizeMultiplier={
-          Platform.OS === "android" ? ANDROID_MAX_FONT_SCALE : undefined
-        }
+        maxFontSizeMultiplier={ANDROID_MAX_FONT_SCALE}
         textAlignVertical={Platform.OS === "android" ? "center" : undefined}
         style={[
           styles.input,

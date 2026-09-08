@@ -38,7 +38,7 @@
  * 쌓으면 49 가 된다. 여기서는 `height: ROW.sortBar` 를 **명시**한다 — Yoga 는 border-box라
  * 테두리가 그 48 안에 들어간다. 높이를 안 박고 패딩으로 만들면 목록이 1px 밀린다.
  *
- * 그 하단선만 `line.neutral`(16%)이다 — 다른 구분선은 전부 `line.alternative`(8%).
+ * 하단선은 다른 커뮤니티 경계와 같은 `line.normal`의 1pt 선이다.
  * `detail-drag.md` §3.2 가 "이 한 줄만 진하다" 고 따로 적어 뒀다.
  *
  * ■ 필은 칩 줄과 **같은 평면**에 앉는다 — 테두리가 없다 (2026-08-21)
@@ -216,7 +216,7 @@ export function SortDropdown({
         {
           backgroundColor: colors.background.default,
           // 이 한 줄만 진하다(머리말 §정렬 바).
-          borderBottomColor: colors.line.neutral,
+          borderBottomColor: colors.line.normal,
         },
         style,
       ]}

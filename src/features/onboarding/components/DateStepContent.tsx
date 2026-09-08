@@ -54,7 +54,9 @@ export function DateStepContent({
         style={({ pressed }) => [
           styles.field,
           {
-            backgroundColor: pressed ? surface.surfacePressed : surface.surface,
+            backgroundColor: pressed
+              ? surface.surfacePressed
+              : surface.surfaceSunken,
           },
         ]}
       >

@@ -20,10 +20,10 @@
  * 백엔드 `mapService` 헤더가 같은 문장을 적어 두었다: "배지 문구는 `safety.driverCounts`
  * 로 앱이 만든다."
  *
- * ## 무엇을 말하는가 — 두 칸, 한 규칙
+ * ## 영양 참고 요약 — 두 조각, 한 규칙
  *
- * 카드 제목 줄에는 음식종류 배지가 이미 있고, 배지가 3개를 넘으면 상호명이 밀려난다.
- * 그래서 안전도에 **최대 두 칸**을 준다.
+ * 아래 두 조각은 사진 아래 영양 참고 요약에 쓴다. 제목 옆 작은 영양소 배지는
+ * `cardConcernNutrients` 로 별도 구성하며, 근거가 있는 영양소를 모두 표시한다.
  *
  * | `level` | 1번 배지 | 2번 배지 | 왜 |
  * |---|---|---|---|
@@ -58,6 +58,18 @@ const DRIVERS: readonly SafetyDriver[] = [
   "phosphorus",
   "protein",
 ]
+
+/** All evidenced menu concerns, even when safe menus make the restaurant rollup SAFE. */
+export function cardConcernNutrients(
+  safety: RestaurantSafetyDto | null | undefined,
+): SafetyDriver[] {
+  if (!safety || safety.profileMissing || safety.level === "UNKNOWN") return []
+  const counts = safety.concernCounts ?? safety.driverCounts
+  return DRIVERS.filter((nutrient) => {
+    const count = counts[nutrient]
+    return typeof count === "number" && Number.isFinite(count) && count > 0
+  })
+}
 
 /**
  * 카드 두 번째 배지의 내용. `kind` 로 갈라 두어 화면이 문자열을 조립하지 않는다

@@ -128,24 +128,19 @@ describe("섹션 순서는 서버 응답 순서다 (앱이 시계로 재정렬�
     expect(result.currentSlot).toBe("BREAKFAST")
   })
 
-  it("화면이 섹션 배열을 손대지 않고 그린다 (소스 확인)", () => {
-    // 렌더 테스트가 불가능한 화면이라 소스로 못 박는다. `sort`/`orderFromCurrentSlot`
-    // 이 화면에 들어오면 섹션 순서가 기기 시계에 좌우된다.
-    const screen = fs.readFileSync(
+  it("끼니 선택기는 서버 배열 순서를 유지하며 모든 끼니를 열 수 있다", () => {
+    const discovery = fs.readFileSync(
       path.join(
         __dirname,
         "..",
-        "src",
-        "features",
-        "recipe",
-        "views",
-        "RecipeHomeScreen.tsx",
+        "src/features/recipe/components/list/RecipeMealDiscovery.tsx",
       ),
       "utf8",
     )
-    expect(screen).toContain("homeSections.map((section) =>")
-    expect(screen).not.toMatch(/homeSections[\s\S]{0,40}\.sort\(/u)
-    expect(screen).not.toContain("orderFromCurrentSlot")
+    expect(discovery).toContain("m.homeSections.map((meal) =>")
+    expect(discovery).toContain("setSelectedSlot(meal.slot)")
+    expect(discovery).not.toMatch(/homeSections[\s\S]{0,40}\.sort\(/u)
+    expect(discovery).not.toContain("orderFromCurrentSlot")
   })
 })
 
@@ -255,7 +250,18 @@ describe("빈 섹션도 온다 — 감추지 않는다", () => {
       ),
       "utf8",
     )
-    expect(screen).toContain("RECIPE_HOME_LIST_TITLE_KEY")
+    expect(screen.indexOf("<RecipeMealDiscovery")).toBeLessThan(
+      screen.indexOf("<RecipeResultsHeader"),
+    )
+    const chrome = fs.readFileSync(
+      path.join(
+        __dirname,
+        "..",
+        "src/features/recipe/components/list/RecipeBrowseChrome.tsx",
+      ),
+      "utf8",
+    )
+    expect(chrome).toContain('t("home.listTitle")')
     expect(RECIPE_HOME_LIST_TITLE_KEY).toBe("home.listTitle")
     expect(RECIPE_HOME_EMPTY_COPY_KEY).toBe("home.section.empty")
   })

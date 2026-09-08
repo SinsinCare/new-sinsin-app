@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 
 import type { SurfacePalette } from "@/src/theme/surface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import { TYPE } from "@/src/theme/surface"
 
 import type { BadgeLevel } from "../types/report"
 
@@ -18,19 +18,11 @@ type Surface = SurfacePalette & { isDark: boolean }
  * 배지가 늘어도 화면이 경고로 얼룩지지 않는 이유다.
  */
 function badgeTone(level: BadgeLevel, s: Surface) {
-  switch (level) {
-    case "DANGER":
-    case "WORSE":
-      return { bg: s.danger, fg: "#FFFFFF", borderColor: null }
-    case "CAUTION":
-      return { bg: s.surfacePressed, fg: s.textStrong, borderColor: null }
-    case "LOW_DATA":
-      return { bg: null, fg: s.textWeak, borderColor: s.border }
-    case "GOOD":
-    case "OK":
-    default:
-      return { bg: s.surface, fg: s.textMuted, borderColor: null }
-  }
+  return level === "DANGER" || level === "WORSE"
+    ? s.danger
+    : level === "CAUTION"
+      ? s.brand
+      : s.textMuted
 }
 
 export function StatusBadge({
@@ -44,18 +36,10 @@ export function StatusBadge({
 }) {
   const tone = badgeTone(level, s)
   return (
-    <View
-      style={[
-        styles.badge,
-        tone.bg !== null && { backgroundColor: tone.bg },
-        tone.borderColor !== null && {
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: tone.borderColor,
-        },
-      ]}
-    >
+    <View style={styles.badge}>
+      <View style={[styles.dot, { backgroundColor: tone }]} />
       <Text
-        style={[styles.label, { color: tone.fg }]}
+        style={[styles.label, { color: tone }]}
         lineBreakStrategyIOS="hangul-word"
       >
         {label}
@@ -66,16 +50,12 @@ export function StatusBadge({
 
 const styles = StyleSheet.create({
   badge: {
-    // 서버가 주는 영어 배지 문구("Needs a quick check")는 한국어의 2~3배다.
-    // 고정 높이·무제한 폭이면 옆의 지표 이름을 카드 밖으로 밀어낸다.
-    minHeight: LAYOUT.badge.height,
-    maxWidth: "55%",
-    borderRadius: LAYOUT.badge.radius,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    maxWidth: "100%",
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "flex-start",
+    gap: 5,
+    flexShrink: 1,
   },
-  label: { ...TYPE.cardSub, fontWeight: "700" },
+  dot: { width: 4, height: 4, borderRadius: 2 },
+  label: { ...TYPE.cardSub, fontWeight: "500", flexShrink: 1 },
 })

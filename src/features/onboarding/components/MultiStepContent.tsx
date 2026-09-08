@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import Animated, {
@@ -58,7 +59,7 @@ function MultiRow({
     backgroundColor: interpolateColor(
       selection.value,
       [0, 1],
-      [surface.surface, surface.surfaceBrand],
+      [surface.surfaceSunken, surface.surfaceBrand],
     ),
     transform: [{ scale: scale.value }],
   }))
@@ -89,7 +90,11 @@ function MultiRow({
       {/* 복수 선택은 체크를 남긴다 — "몇 개든 고를 수 있다"는 면 색만으로 안 읽힌다. */}
       <Animated.View style={[styles.row, rowStyle]}>
         <CheckCircle checked={selected} />
-        <Animated.Text style={[styles.label, labelStyle]} numberOfLines={2}>
+        <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
+          style={[styles.label, labelStyle]}
+          numberOfLines={2}
+        >
           {label}
         </Animated.Text>
       </Animated.View>

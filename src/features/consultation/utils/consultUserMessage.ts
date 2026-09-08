@@ -65,15 +65,18 @@
 
 import type { ExamConsultCardData } from "./examConsultMessage"
 import type { FoodConsultCardData } from "./foodConsultMessage"
+import type { StatsConsultCardData } from "./statsConsultMessage"
 
 /** `null` 은 "카드 아님" — 버블이 원문을 그대로 그린다. */
 export type ConsultUserCard =
+  | { kind: "stats"; data: StatsConsultCardData }
   | { kind: "restaurant"; question: string }
   | { kind: "food"; data: FoodConsultCardData }
   | { kind: "exam"; data: ExamConsultCardData }
   | null
 
 export interface ConsultUserCardCandidates {
+  stats?: () => StatsConsultCardData | null
   restaurant: () => { question: string } | null
   food: () => FoodConsultCardData | null
   exam: () => ExamConsultCardData | null
@@ -82,6 +85,8 @@ export interface ConsultUserCardCandidates {
 export function resolveConsultUserCard(
   candidates: ConsultUserCardCandidates,
 ): ConsultUserCard {
+  const stats = candidates.stats?.()
+  if (stats) return { kind: "stats", data: stats }
   const exam = candidates.exam()
   if (exam) return { kind: "exam", data: exam }
 

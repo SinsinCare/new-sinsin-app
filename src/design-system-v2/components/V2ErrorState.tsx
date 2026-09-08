@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — ErrorState (오류 상태)
 // No Figma spec — 설명 + 토큰으로 설계.
 //
@@ -6,7 +7,7 @@
 // 재시도(onRetry)가 있을 때만 하단에 V2Button을 노출한다.
 
 import { useEffect, useRef } from "react"
-import { type ViewStyle, StyleSheet, Text, View } from "react-native"
+import { type ViewStyle, StyleSheet, View } from "react-native"
 import {
   trackAnalyticsEvent,
   type AnalyticsSurface,

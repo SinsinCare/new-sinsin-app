@@ -1,3 +1,5 @@
+import { SettingsDetailHeader } from "../components/SettingsDetailHeader"
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
 import React, { useState } from "react"
 import {
   StyleSheet,
@@ -8,14 +10,14 @@ import {
   Platform,
 } from "react-native"
 import { TextInput } from "@/src/shared/components/AppText"
-import Ionicons from "@expo/vector-icons/Ionicons"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
-import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { SettingsFormActions } from "../components/SettingsFormActions"
+import { V2Disclosure } from "@/src/design-system-v2"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { ToggleItem } from "@/src/features/settings/components"
 import {
   WITHDRAWAL_REASONS,
@@ -34,7 +36,6 @@ const WITHDRAWAL_REASON_LABEL_KEYS = [
 ] as const
 
 export function WithdrawalScreen() {
-  const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")
@@ -68,26 +69,20 @@ export function WithdrawalScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
+        <SettingsDetailHeader
+          title={t("settings.account.withdraw", { ns: "common" })}
+          onBack={router.back}
+        />
         <ScrollView
           bounces={false}
           overScrollMode="never"
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + 16, paddingBottom: 24 },
+            { paddingTop: 20, paddingBottom: 24 },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("shared.back")}
-            onPress={() => router.back()}
-            hitSlop={8}
-            style={styles.backButton}
-          >
-            <Ionicons name="chevron-back" size={24} color={c.text} />
-          </Pressable>
-
           <ThemedText style={[styles.title, { color: c.text }]}>
             {t("withdrawal.reasonTitle")}
           </ThemedText>
@@ -97,7 +92,8 @@ export function WithdrawalScreen() {
               <React.Fragment key={index}>
                 <Pressable
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: selectedIndex === index }}
+                  accessibilityLabel={t(WITHDRAWAL_REASON_LABEL_KEYS[index])}
+                  accessibilityState={{ checked: selectedIndex === index }}
                   style={[
                     styles.optionItem,
                     selectedIndex === index && {
@@ -106,13 +102,24 @@ export function WithdrawalScreen() {
                   ]}
                   onPress={() => setSelectedIndex(index)}
                 >
+                  <Ionicons
+                    name={
+                      selectedIndex === index
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={20}
+                    color={c.textSub}
+                    accessible={false}
+                    accessibilityElementsHidden
+                  />
                   <ThemedText style={[styles.optionText, { color: c.text }]}>
                     {t(WITHDRAWAL_REASON_LABEL_KEYS[index])}
                   </ThemedText>
                 </Pressable>
 
                 {index === WITHDRAWAL_OTHER_INDEX && (
-                  <>
+                  <V2Disclosure open={isOtherSelected}>
                     <TextInput
                       style={[
                         styles.customInput,
@@ -145,7 +152,7 @@ export function WithdrawalScreen() {
                         {customReason.length}/{WITHDRAWAL_DETAIL_MAX}
                       </ThemedText>
                     </View>
-                  </>
+                  </V2Disclosure>
                 )}
               </React.Fragment>
             ))}
@@ -161,7 +168,7 @@ export function WithdrawalScreen() {
           </View>
         </ScrollView>
 
-        <BottomActionBar
+        <SettingsFormActions
           label={t("withdrawal.next")}
           disabled={!isActive}
           onPress={handleSubmit}
@@ -185,27 +192,26 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     alignSelf: "flex-start",
   },
-  title: {
-    fontSize: 22,
-    lineHeight: 22 * 1.2,
-    fontWeight: "600",
-    marginBottom: 24,
-  },
+  title: { ...settingsDetailSpec.title, marginBottom: 24 },
   optionList: {
     gap: 4,
   },
   optionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 8,
   },
   optionText: {
-    fontSize: 16,
-    lineHeight: 16 * 1.4,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: "400",
   },
   customInput: {
-    height: 183,
+    height: 128,
     borderRadius: 12,
     padding: 16,
     fontSize: 14,

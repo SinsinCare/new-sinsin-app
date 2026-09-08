@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 목록 끝에 붙는 보조 진입점 블록 — `저장한 곳` 과 `식당 알려주기`.
  *
@@ -20,7 +21,7 @@
  * 제보 진입점이 함께 뜬다 — 찾지 못한 순간이 제보 동기가 가장 큰 순간이다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

@@ -62,7 +62,7 @@ const GUARDED = [
     dialog: "<ConfirmExitModal",
   },
   {
-    file: "app/(write)/free/[id].tsx",
+    file: "src/features/recipe/views/FreePostEditScreen.tsx",
     signal: "hasChanges",
     signalSource: "title !== post.title",
     dialog: "<ConfirmExitModal",

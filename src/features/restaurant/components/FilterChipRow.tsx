@@ -1,8 +1,15 @@
 /** 현재 정렬값과 필터별 적용 개수를 표시하는 결과 도구 모음. */
 
-import { StyleSheet, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 // 시트 안의 가로 스크롤은 RNGH 것을 쓴다 — 이유는 `PhotoStrip` 의 같은 import 주석에.
-import { ScrollView } from "react-native-gesture-handler"
+import { Pressable, ScrollView } from "react-native-gesture-handler"
+import {
+  radius,
+  spacing,
+  touchTarget,
+  useV2Theme,
+  V2Icon,
+} from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 
@@ -20,6 +27,10 @@ export interface FilterChipRowProps {
   axes: Record<FilterAxis, FilterAxisState>
   onPressSort: () => void
   onPressAxis: (axis: FilterAxis) => void
+  onPressAllFilters?: () => void
+  separateOrdering?: boolean
+  openNow?: boolean
+  onToggleOpenNow?: () => void
   style?: ViewStyle
 }
 
@@ -28,9 +39,14 @@ export function FilterChipRow({
   axes,
   onPressSort,
   onPressAxis,
+  onPressAllFilters,
+  separateOrdering = false,
+  openNow = false,
+  onToggleOpenNow,
   style,
 }: FilterChipRowProps) {
   const { t } = useTranslation("common")
+  const { colors } = useV2Theme()
 
   return (
     <ScrollView
@@ -47,23 +63,53 @@ export function FilterChipRow({
       */
       style={[styles.rail, style]}
     >
-      <SelectableChip
-        size="s"
-        variant="text"
-        label={t(dynamicKey(sortLabelKey(sort)))}
-        trailingIcon="chevronDown"
-        selected={sort !== DEFAULT_SORT}
-        onPress={onPressSort}
-      />
-      <SelectableChip
-        size="s"
-        variant="quiet"
-        label={t("restaurant.tabs.region")}
-        count={axes.region.count}
-        trailingIcon="chevronDown"
-        selected={axes.region.active}
-        onPress={() => onPressAxis("region")}
-      />
+      {separateOrdering && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("restaurant.map.allFilters")}
+          onPress={onPressAllFilters ?? (() => onPressAxis("nutrition"))}
+          style={({ pressed }) => [
+            styles.filterButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <View
+            pointerEvents="none"
+            style={[styles.filterSurface, { borderColor: colors.line.neutral }]}
+          />
+          <V2Icon name="filter" size="xs" color={colors.label.normal} />
+        </Pressable>
+      )}
+      {onToggleOpenNow && (
+        <SelectableChip
+          size="s"
+          variant="quiet"
+          label={t("restaurant.businessStatus.OPEN")}
+          selected={openNow}
+          onPress={onToggleOpenNow}
+        />
+      )}
+      {!separateOrdering && (
+        <SelectableChip
+          size="s"
+          variant="text"
+          label={t(dynamicKey(sortLabelKey(sort)))}
+          trailingIcon="chevronDown"
+          selected={sort !== DEFAULT_SORT}
+          onPress={onPressSort}
+        />
+      )}
+      {!separateOrdering && (
+        <SelectableChip
+          size="s"
+          variant="quiet"
+          label={t("restaurant.tabs.region")}
+          count={axes.region.count}
+          trailingIcon="chevronDown"
+          selected={axes.region.active}
+          onPress={() => onPressAxis("region")}
+        />
+      )}
       <SelectableChip
         size="s"
         variant="quiet"
@@ -87,6 +133,22 @@ export function FilterChipRow({
 }
 
 const styles = StyleSheet.create({
+  filterButton: {
+    width: touchTarget.min,
+    height: touchTarget.min,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterSurface: {
+    ...StyleSheet.absoluteFillObject,
+    top: spacing[6],
+    bottom: spacing[6],
+    left: spacing[6],
+    right: spacing[6],
+    borderWidth: 1,
+    borderRadius: radius.full,
+  },
+  pressed: { opacity: 0.7 },
   rail: { flexGrow: 0 },
   content: {
     flexDirection: "row",

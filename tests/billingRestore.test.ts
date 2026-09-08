@@ -53,8 +53,8 @@ describe("didRestoreSomething", () => {
 
 describe("배선", () => {
   const sources = [
-    "src/features/billing/components/PaywallSheet.tsx",
-    "src/features/billing/views/SubscriptionScreen.tsx",
+    "src/features/billing/hooks/usePaywallController.ts",
+    "src/features/billing/hooks/useSubscriptionScreen.ts",
   ]
 
   it("두 화면이 같은 판정 함수를 쓴다 — 복붙된 판정은 갈라진다", () => {

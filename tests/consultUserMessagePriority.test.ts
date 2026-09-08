@@ -297,3 +297,37 @@ describe("배선 — `/consult` 정본이 이 우선순위를 실제로 탄다",
     expect(canonical).toMatch(/\{bubbleText\}/)
   })
 })
+
+it.each(["ko", "en"])(
+  "restaurant portion fractions are not lab metrics in %s",
+  async (locale) => {
+    await i18n.changeLanguage(locale)
+    const content = buildRestaurantConsultMessage({
+      question: "Portion question?",
+      restaurantName: "Test restaurant",
+      cuisineLabel: "Food",
+      t,
+      menus: [
+        {
+          name: "Test food",
+          calories: 400,
+          protein: 20,
+          sodium: 900,
+          potassium: 300,
+          phosphorus: 200,
+          portionReference: {
+            fraction: 0.75,
+            driver: "sodium",
+            mealFraction: 0.35,
+          },
+        },
+      ],
+    })
+    expect(parseExamConsultMessage(content, t)).toBeNull()
+    expect(resolve(content)).toEqual({
+      kind: "restaurant",
+      question: "Portion question?",
+    })
+    await i18n.changeLanguage("ko")
+  },
+)

@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Toast (Figma `Design-system_Mobile` node-id=571-2529)
 //
 // 통보 한 종류의 **얼굴**을 여기서만 정한다. 위치·수명·애니메이션은 호출부의 몫이다 —
@@ -15,7 +16,7 @@
 import type { ReactElement } from "react"
 // v2 컴포넌트는 `typography` 토큰이 face 를 들고 있어 RN 의 Text 를 그대로 쓴다
 // (`shared/components/AppText` 는 `fontWeight` 만 쓰는 레거시 스타일을 위한 것이다).
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 
 import { V2Icon } from "./V2Icon"
 import type { V2IconName } from "../icons"

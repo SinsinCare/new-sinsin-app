@@ -38,7 +38,7 @@ export function EmphasizedText({
   children: string
   style: object | object[]
   emphasisColor: string
-  emphasisWeight?: "700" | "800"
+  emphasisWeight?: "400" | "500" | "600" | "700" | "800"
 } & Record<string, unknown>) {
   // split 에 캡처 그룹을 주면 일치 부분이 홀수 인덱스로 들어온다.
   const parts = children.split(new RegExp(AMOUNT.source, "g"))

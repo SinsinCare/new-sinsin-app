@@ -313,20 +313,38 @@ export const foodCameraService = {
     }
   },
 
+  /**
+   * 기록은 시간 기준이다(2026-09-04). `mealType` 을 주면 그대로, 안 주면 서버가 KST 시각으로
+   * 정한다. 응답 result 에 `{ diaryId, mealType }` 가 실린다.
+   */
   async registerDiary(
     foodAnalysisResultId: number,
     date: string,
-    mealType: string,
+    mealType?: string | null,
   ): Promise<FoodCameraDiaryRegisterResponse> {
     try {
       const response = await api.post(
         `/food-camera/analysis-results/${foodAnalysisResultId}/diary`,
-        { date, mealType },
+        mealType ? { date, mealType } : { date },
       )
       return response.data as FoodCameraDiaryRegisterResponse
     } catch (err) {
       throw err
     }
+  },
+
+  /**
+   * 레시피를 식사로 옮겨 적는다(식사 시트의 "레시피 불러오기"). 영양은 서버가 DB 재료로
+   * 계산한 합이다. 매칭된 재료가 없으면 `FOOD_CAMERA_017` 로 거절된다.
+   */
+  async analyzeFromRecipe(recipeId: number): Promise<FoodCameraAnalyzeResult> {
+    const response = await api.post("/food-camera/from-recipe", {
+      recipeId,
+      language: getAppLanguage(),
+    })
+    return normalizeFoodAnalysisResult(
+      response.data.result as FoodCameraAnalyzeResult,
+    )
   },
 
   async skipMeal(date: string, mealType: string): Promise<void> {

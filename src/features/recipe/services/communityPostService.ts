@@ -161,6 +161,8 @@ function readNextCursor(res: AxiosResponse): string | null {
 
 class CommunityPostService implements ICommunityPostService {
   async getPosts(params?: {
+    authorId?: number
+    library?: "mine" | "liked" | "bookmarked"
     tag?: string | null
     category?: string | null
     sort?: CommunitySortMode
@@ -178,6 +180,8 @@ class CommunityPostService implements ICommunityPostService {
   }): Promise<CommunityPostsPage> {
     const res = await api.get("/community/posts", {
       params: {
+        ...(params?.authorId ? { authorId: params.authorId } : {}),
+        ...(params?.library ? { library: params.library } : {}),
         ...(params?.tag ? { tag: params.tag } : {}),
         // `전체` 는 파라미터를 **생략**한다 — 서버 계약(omit or `all` = no filter).
         ...(params?.category ? { category: params.category } : {}),

@@ -1,8 +1,10 @@
+import {
+  Text as RNText,
+  TextInput as RNTextInput,
+} from "@/src/design-system-v2/primitives/NativeText"
 import { forwardRef, type ComponentRef } from "react"
 import {
   StyleSheet,
-  Text as RNText,
-  TextInput as RNTextInput,
   type StyleProp,
   type TextInputProps,
   type TextProps,

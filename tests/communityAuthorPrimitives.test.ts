@@ -432,7 +432,7 @@ describe("AuthorProfileCard — 146 블록 (§2.13)", () => {
     expect(bordered.paddingBottom).toBe(
       (plain.paddingBottom as number) - borderWidth.thin,
     )
-    expect(bordered.borderBottomColor).toBe(light.line.alternative)
+    expect(bordered.borderBottomColor).toBe(light.line.normal)
   })
 
   it("버튼은 **아래에서** 잰다 → 실측 top +96 / bottom +134", () => {
@@ -660,7 +660,7 @@ describe("ConnectionRow — 81 (§2.14)", () => {
 
     expect(COMMUNITY_GUTTER + 48 + (column.marginLeft as number)).toBe(80)
     // 현행 구현의 `marginLeft: 80` 인셋을 버렸다 — 선은 바깥 상자의 테두리다.
-    expect(styleOf(row).borderBottomColor).toBe(light.line.alternative)
+    expect(styleOf(row).borderBottomColor).toBe(light.line.normal)
   })
 
   it("팔로워 목록에는 버튼이 없고, 팔로잉 목록에만 있다 (§2.14)", () => {

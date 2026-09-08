@@ -122,6 +122,21 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   // ── 루트 위에 얹히는 화면 ──────────────────────────────────────────────────
   consult: "/(tabs)/home",
   statistics: "/(tabs)/home",
+  "meal-report": "/(tabs)/home",
+  "food-camera": "/(tabs)/home",
+  // 기록 페이지 셋은 홈에서만 열린다 — 딥링크로 들어와도 홈으로 되돌린다.
+  "record/medication": "/(tabs)/home",
+  "medication/add": "/record/medication",
+  "medication/search": "/record/medication",
+  "medication/manage": "/record/medication",
+  "medication/edit": "/record/medication",
+  "medication/photo": "/record/medication",
+  "medication/candidates": "/record/medication",
+  "record/water": "/(tabs)/home",
+  "record/blood-pressure": "/(tabs)/home",
+  "record/weight": "/(tabs)/home",
+  "record/blood-glucose": "/(tabs)/home",
+  "record/edema": "/(tabs)/home",
   stories: "/(tabs)/community",
   "community-library": "/(tabs)/community",
   // 검색은 퍼널 중간이다. 딥링크로 들어온 사람을 빈 검색으로 되돌리는 것은

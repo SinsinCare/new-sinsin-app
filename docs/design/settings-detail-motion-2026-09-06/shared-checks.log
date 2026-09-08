@@ -1,0 +1,337 @@
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (3) from tests/.env.test -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+FAIL tests/lightContrastAudit.test.ts
+  §0 대비 계산기가 실제로 계산한다
+    ✓ 양 끝을 안다: 흰↔검 21, 같은 색 1 (1 ms)
+    ✓ 알파를 **무시하지 않는다** — 50% 검정은 검정이 아니다 (1 ms)
+    ✓ **바닥이 결과를 바꾼다** — 같은 두 색도 캔버스가 다르면 다르다
+    ✓ 고친 결함을 재현한다 — `label.assistive` 는 흰 면 위에서 1.68 이다
+    ✓ L* 는 대비비와 **다른 것**을 잰다 — 흰 100 · 검 0 (1 ms)
+  §1 라이트에서 읽히는 글자단은 `neutral` 까지다
+    ✓ `neutral` 은 라이트의 세 바닥 모두에서 본문 기준을 넘는다
+    ✓ `alternative` 는 **큰 글자 기준에도** 못 미친다 — 한 단 올리기로는 안 된다
+    ✓ `assistive` 는 어떤 바닥 위에서도 2:1 을 못 넘는다 — 글자로 쓸 수 없다
+    ✓ 사다리는 단조롭다 — normal > neutral > alternative > assistive > disable (1 ms)
+  §2 사용자가 짚은 세 자리가 두 모드 모두에서 읽힌다
+    ✓ 스토리 빈 레일의 한 줄 — `V2EmptyState tone="quiet"` 의 설명 (1 ms)
+    ✓ 섹션 머리의 후행 어포던스 — `올리기 ›` 는 **말과 화살표가 같은 색**이다
+    ✓ 카드의 보조 지표 — `MetaRow` 의 수·시각·글리프가 전부 읽힌다 (1 ms)
+  §3 다크가 나빠지지 않았다
+    ✓ light: `neutral` 은 그 자리에 있던 두 단보다 항상 낫다
+    ✓ dark: `neutral` 은 그 자리에 있던 두 단보다 항상 낫다
+    ✓ `V2EmptyState` 의 두 톤은 이제 **같은 색**이다 — 다크에서도 갈라지지 않는다
+  §4 `SectionBand` 의 여백에서 색을 뗀 것이 다크에 무해하다
+    ✓ 지운 색은 다크 바닥과 **값이 같다** — 그래서 다크는 한 픽셀도 안 바뀐다
+    ✓ 여백은 자기 배경을 갖지 않는다 (자리 8px 은 두 모드 그대로다) (1 ms)
+    ✓ 평평한 피드의 섹션 띠를 두 모드 모두 칠한다
+    ✓ 라이트 섹션 경계가 투명한 여백으로 사라지지 않는다
+  §5 못 고친 것과 되돌아가면 안 되는 것 (보고서 대신 단언으로 남긴다)
+    ✓ 미선택 칩의 면은 **여전히** 비텍스트 3:1 밖이다 (좋아졌지만 못 넘었다)
+    ✓ 다크 `label` 사다리가 `#65676a` 계열로 **되돌아가지 않는다** (회귀 가드) (1 ms)
+    ✓ 스크림은 두 모드가 **같은 값**이다 — 다크만 56% 로 되돌아간 적이 있다
+    ✓ 원시 알파 사다리는 **반올림이 위로**다 — 700·900 만 예외가 되지 않는다 (1 ms)
+  §6 면의 층 (2026-08-21 · 라이트 바닥을 두 겹으로 내렸다)
+    ✓ 바닥↔카드: 라이트가 다크의 80% 이상이다 (3.79 → 7.25 · 다크 8.63)
+    ✓ 고정 헤더는 두 모드 모두 **바닥과 다른 평면**이다
+    ✓ 우물은 **두 모드 모두** 바닥에서 `fill.normal` 두 겹이다 (규칙이 하나다)
+    ✓ 검색 필드의 면이 흰 고정 헤더 위에서 보인다 (3.79 → 7.25)
+    ✓ 라이트 바닥은 앱 전체에서 **하나**다 — tamagui `appBg` 도 같은 값
+    ✓ 층 사다리는 라이트에서 단조롭다 — 카드 > 얕은 우물 > 우물 > 눌림
+    ✓ 스토리 레일은 **두 모드 모두** 화면 바닥 위에 선다 (자기 면을 갖지 않는다) (2 ms)
+    ✓ **다크는 한 값도 안 바뀌었다** — `semanticDark` 전체 스냅숏
+    ✓ 다크에서 **파생된 면들**도 그대로다 — 팔레트 스냅숏
+    ✓ 라이트에서 바뀐 면은 **셋뿐**이다 — 나머지는 그대로
+  §7 `fill.control` — 컨트롤면 (역할 분리)
+    ✓ `fill.normal` 은 **한 바이트도 안 바뀌었다** — 장식면은 그대로다
+    ✓ 라이트 컨트롤면은 장식면보다 확실히 깊다 (3.79 → 5.25)
+    ✓ **천장이 있다** — 칩 라벨이 본문 기준을 넘는 가장 진한 단이 이 값이다
+    ✓ 칩 라벨은 **두 모드 모두** 자기 면 위에서 본문 기준을 넘는다 (1 ms)
+    ✓ 선택 칩과 미선택 칩은 **여전히 또렷이** 갈린다 (톤마다 방향이 다르다)
+    ✓ 다크는 두 칸이 **같은 값**이다 — 그래서 다크 화면은 한 픽셀도 안 움직인다
+    ✕ 컨트롤면을 쓰는 곳이 **컨트롤뿐**이다 — 장식면 소비처는 안 따라갔다 (4 ms)
+  §8 섹션 머리의 면 · 상단 고정층
+    ✓ 요즘 이야기 중 — 머리와 본문이 **같은 면**이다 (A) (1 ms)
+    ✓ 요즘 글 쓰는 이웃 — 머리와 본문이 **같은 면**이다 (A) (1 ms)
+    ✓ 요즘 이야기 중 — **로딩 중에도** 면이 안 바뀐다 (1 ms)
+    ✓ 요즘 글 쓰는 이웃 — **로딩 중에도** 면이 안 바뀐다
+    ✓ `SectionHeader` 는 **자기 면을 칠하지 않는다** — (A)/(B) 는 부모가 정한다
+    ✓ 라이트에서 그 면은 화면 바닥과 **다른 평면**이다 (7.25)
+    ✕ 상단은 **하나의 고정층**이다 — 타이틀 줄이 검색·칩과 같은 면을 칠한다 (1 ms)
+  §9 우물을 바닥에 깐 화면 위에 우물을 또 놓지 않는다
+    ✕ 우물 바닥 화면이 **면 없는 우물 소비자**를 직접 놓지 않는다 (134 ms)
+    ✓ 바닥과 그 위의 면이 **같은 값**이면 규칙이 실제로 잡는다 (오라클) (1 ms)
+  §10 라이트가 쓰는 면의 개수와 화면 바닥
+    ✓ 라이트는 면이 **열 개**, 다크는 **일곱 개**다 (다크가 넷을 한 값으로 접는다) (1 ms)
+    ✓ 층 사이 간격의 중앙값이 라이트는 다크의 절반도 안 된다 (1.3 vs 3.4)
+    ✓ 정본 넷은 값이 아니라 **역할**로 정해진다 — 바닥 · 콘텐츠 · 컨트롤 · 눌림
+    ✓ 라이트 화면 바닥은 **두 값**뿐이다 — `background.lower` 는 바닥이 아니다 (48 ms)
+    ✕ 같은 계보의 바닥은 **같다** — 피드 · 인기글 · 검색
+    ✓ 인기글의 글 카드는 바닥에서 **뜬다** — 옮긴 바닥이 카드를 지우지 않았다
+  §11 바닥 위 (B) 섹션 라벨
+    ✕ src/features/settings/views/MyPageScreen.tsx 의 styles.sectionHeader 는 `textMuted` 를 부르지 않는다 (1 ms)
+    ✓ src/features/settings/views/MedicalReferenceScreen.tsx 의 styles.sectionHeader 는 `textMuted` 를 부르지 않는다
+    ✓ src/features/settings/views/ProfileEditScreen.tsx 의 styles.groupTitle 는 `textMuted` 를 부르지 않는다 (1 ms)
+    ✓ 그 색은 **두 모드 모두** 바닥 위에서 본문 기준을 넘는다 (2.68 → 4.72)
+    ✓ 한 단 올리기로는 안 된다 — `alternative` 는 큰 글자 기준에도 못 미친다
+
+  ● §7 `fill.control` — 컨트롤면 (역할 분리) › 컨트롤면을 쓰는 곳이 **컨트롤뿐**이다 — 장식면 소비처는 안 따라갔다
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+    -   "leftover": false,
+    +   "leftover": true,
+        "path": "src/features/restaurant/components/SelectableChip.tsx",
+      }
+
+      1065 |         uses: true,
+      1066 |       })
+    > 1067 |       expect({ path, leftover: code.includes("fill.normal") }).toEqual({
+           |                                                                ^
+      1068 |         path,
+      1069 |         leftover: false,
+      1070 |       })
+
+      at Object.<anonymous> (tests/lightContrastAudit.test.ts:1067:64)
+
+  ● §8 섹션 머리의 면 · 상단 고정층 › 상단은 **하나의 고정층**이다 — 타이틀 줄이 검색·칩과 같은 면을 칠한다
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "backgroundColor: colors.background.default"
+    Received string:    "export { CommunityScreen as default } from \"@/src/features/recipe/views/CommunityScreen\"
+    "
+
+      1292 |     )
+      1293 |     // (a) 타이틀 줄 = 고정층의 면 + 안전영역. `FreePostTab.pinnedHeader` 와 같은 토큰이다.
+    > 1294 |     expect(src).toContain("backgroundColor: colors.background.default")
+           |                 ^
+      1295 |     expect(src).toContain("paddingTop: insets.top + HEADER_PAD_TOP")
+      1296 |     /*
+      1297 |       (b) 화면 바닥은 우물 그대로. 카드(흰색)로 바꾸는 변이가 여기서 빨개진다.
+
+      at Object.<anonymous> (tests/lightContrastAudit.test.ts:1294:17)
+
+  ● §9 우물을 바닥에 깐 화면 위에 우물을 또 놓지 않는다 › 우물 바닥 화면이 **면 없는 우물 소비자**를 직접 놓지 않는다
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 8
+    Received:    7
+
+      1408 |     const bedScreens = files.filter((file) => bedIsWell(sourceOf(file)))
+      1409 |     // 규칙이 헛돌지 않는다는 확인 — 그런 화면이 실제로 여럿 있다.
+    > 1410 |     expect(bedScreens.length).toBeGreaterThanOrEqual(8)
+           |                               ^
+      1411 |
+      1412 |     const violations: string[] = []
+      1413 |     for (const screen of bedScreens) {
+
+      at Object.<anonymous> (tests/lightContrastAudit.test.ts:1410:31)
+
+  ● §10 라이트가 쓰는 면의 개수와 화면 바닥 › 같은 계보의 바닥은 **같다** — 피드 · 인기글 · 검색
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+    -   "bed": true,
+    +   "bed": false,
+        "file": "app/(tabs)/community.tsx",
+      }
+
+      1673 |     ]) {
+      1674 |       const src = codeOf(file)
+    > 1675 |       expect({ file, bed: /backgroundColor: \w+\.bed\b/.test(src) }).toEqual({
+           |                                                                      ^
+      1676 |         file,
+      1677 |         bed: true,
+      1678 |       })
+
+      at Object.<anonymous> (tests/lightContrastAudit.test.ts:1675:70)
+
+  ● §11 바닥 위 (B) 섹션 라벨 › src/features/settings/views/MyPageScreen.tsx 의 styles.sectionHeader 는 `textMuted` 를 부르지 않는다
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 1
+    Received:    0
+
+      1743 |         .filter((line) => line.includes(`[${style}, { color:`))
+      1744 |       // 그 자리가 실제로 있다(정규식이 헛돌면 이 절이 늘 통과한다).
+    > 1745 |       expect(lines.length).toBeGreaterThanOrEqual(1)
+           |                            ^
+      1746 |       for (const line of lines) {
+      1747 |         expect({
+      1748 |           line: line.trim(),
+
+      at tests/lightContrastAudit.test.ts:1745:28
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (3) from tests/.env.test -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+FAIL tests/surfaceLadderGuard.test.ts
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    /Users/seongminhan/workspace/sinsin_dev/sinsin-rn/node_modules/expo-image/src/index.ts:1
+    ({"Object.<anonymous>":function(module,exports,require,__dirname,__filename,jest){export * from './Image.types';
+                                                                                      ^^^^^^
+
+    SyntaxError: Unexpected token 'export'
+
+      30 | import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native"
+      31 | // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
+    > 32 | import { Image } from "expo-image"
+         | ^
+      33 | import {
+      34 |   remoteImageSource,
+      35 |   stableImageCacheKey,
+
+      at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1505:14)
+      at Object.<anonymous> (src/design-system-v2/components/V2Avatar.tsx:32:1)
+      at Object.<anonymous> (src/design-system-v2/components/index.ts:2:1)
+      at Object.<anonymous> (src/design-system-v2/index.ts:14:1)
+      at Object.<anonymous> (src/features/settings/hooks/useSettingsColors.ts:1:1)
+      at Object.<anonymous> (tests/surfaceLadderGuard.test.ts:53:1)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (3) from tests/.env.test -- tip: 🛡️ auth for agents: https://vestauth.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+PASS tests/recordPageContrast.test.ts
+  입력 및 오류 안내 — dark=false
+    ✓ 숫자 예시와 오류 안내가 실제 입력 면에서 읽힌다
+  입력 및 오류 안내 — dark=true
+    ✓ 숫자 예시와 오류 안내가 실제 입력 면에서 읽힌다
+  기록 페이지 — 라이트
+    ✓ 물잔 안의 큰 퍼센트(30pt 굵게)는 물 위에서 읽힌다
+    ✓ 물잔 안의 보조 숫자(15pt)도 물 위에서 읽힌다
+    ✓ 담기 버튼의 글리프는 버튼 면에서 읽힌다
+    ✓ 시간 표기의 회색 글자는 화면 바탕에서 읽힌다
+    ✓ 본문 글자는 카드 바닥에서 읽힌다
+    ✓ 규칙이 헛돌지 않는다 — 물 위의 옅은 회색은 떨어진다 (대조)
+  기록 페이지 — 다크
+    ✓ 물잔 숫자는 어두운 물 위에서도 읽힌다
+    ✓ 시간 표기의 회색 글자는 어두운 화면 바탕에서 읽힌다
+    ✓ 담기 버튼이 뒤집힌다 — 밝은 면에 어두운 글리프 (1 ms)
+    ✓ 본문 글자가 카드 바닥에서 읽힌다
+    ✓ 라이트의 카드색을 다크에 그대로 쓰면 본문이 안 읽힌다 (대조)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (3) from tests/.env.test -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+PASS tests/recordPages.test.ts
+  기록 페이지 라우트
+    ✓ app/record/water.tsx 이 있고 WaterRecordPage 를 그린다 (1 ms)
+    ✓ app/record/blood-pressure.tsx 이 있고 BloodPressureRecordPage 를 그린다
+    ✓ app/record/weight.tsx 이 있고 WeightRecordPage 를 그린다
+    ✓ app/record/water.tsx 은 자기 종류만 그린다
+    ✓ app/record/blood-pressure.tsx 은 자기 종류만 그린다 (1 ms)
+    ✓ app/record/weight.tsx 은 자기 종류만 그린다
+    ✓ app/record/water.tsx 은 useGoBack 을 쓰고 언마운트에 스토어를 비운다
+    ✓ app/record/blood-pressure.tsx 은 useGoBack 을 쓰고 언마운트에 스토어를 비운다 (1 ms)
+    ✓ app/record/weight.tsx 은 useGoBack 을 쓰고 언마운트에 스토어를 비운다
+  시트는 은퇴했다
+    ✓ src/features/home/components/record/sheets/WaterSheet.tsx 파일이 없다
+    ✓ src/features/home/components/record/sheets/BloodPressureSheet.tsx 파일이 없다
+    ✓ src/features/home/components/record/sheets/WeightSheet.tsx 파일이 없다
+    ✓ src/features/home/components/record/sheets/BloodGlucoseSheet.tsx 파일이 없다
+    ✓ src/features/home/components/record/sheets/EdemaSheet.tsx 파일이 없다
+    ✓ 홈이 그 시트들을 import 하지 않는다
+    ✓ 홈의 다섯 건강 타일은 페이지를 연다 (1 ms)
+  시트 전용 부품을 페이지에서 쓰지 않는다
+    ✓ src/features/home/components/record/pages/BloodPressureRecordPage.tsx 는 V2SheetTextInput 을 쓰지 않는다
+    ✓ src/features/home/components/record/pages/WeightRecordPage.tsx 는 V2SheetTextInput 을 쓰지 않는다
+    ✓ 물 페이지의 시트 안 입력은 그대로 시트용이다 (대조)
+  혈압 페이지는 격자를 고른다
+    ✓ 취침 전에는 시점 선택 위치를 유지하고 비활성화한다
+    ✓ 취침 전은 timing 을 싣지 않는다 — 서버가 400 으로 막는 조합이다
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (3) from tests/.env.test -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+PASS tests/recordPageSpec.test.ts
+  six-page measurement system
+    ✓ retains the shared 20pt page margin and accessible save action
+    ✓ allocates room for persistent labels, units and large numeric entry
+    ✓ keeps history rows and quick additions easy to tap and read (1 ms)
+    ✓ maintains a four-point spacing rhythm for headings and the footer
+  4pt 격자
+    ✓ src/features/home/components/record/pages/RecordPageShell.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/WaterRecordPage.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/BloodPressureRecordPage.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/WeightRecordPage.tsx 의 여백은 격자 위에 있다 (1 ms)
+    ✓ src/features/home/components/record/pages/BloodGlucoseRecordPage.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/EdemaRecordPage.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/MedicationRecordPage.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/RecordNumberField.tsx 의 여백은 격자 위에 있다
+    ✓ src/features/home/components/record/pages/RecordMetricSummary.tsx 의 여백은 격자 위에 있다 (1 ms)
+    ✓ 규칙이 헛돌지 않는다 — 격자 밖 값을 넣으면 잡힌다 (음성 대조)
+
+Test Suites: 2 failed, 3 passed, 5 total
+Tests:       5 failed, 103 passed, 108 total
+Snapshots:   0 total
+Time:        2.81 s
+Ran all test suites matching /tests\/recordPages.test.ts|tests\/recordPageContrast.test.ts|tests\/recordPageSpec.test.ts|tests\/surfaceLadderGuard.test.ts|tests\/lightContrastAudit.test.ts/i.

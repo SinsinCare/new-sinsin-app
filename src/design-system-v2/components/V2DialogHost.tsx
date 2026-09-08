@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — 명령형 다이얼로그 호스트
 //
 // `showConfirm` / `showAlert` / `showActionSheet`(src/lib/dialog.ts) 의 그림 담당.
@@ -21,7 +22,7 @@
 // ```
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -84,13 +85,17 @@ export function V2DialogHost() {
   }, [])
 
   const currentItem = queue[0]
-  const current = currentItem?.request
+  // visible=false 이후에도 네이티브 dismiss가 끝날 때까지 내용은 그려진다.
+  // 빈 제목·기본 확인 버튼으로 교체하면 닫히는 중 빈 팝업이 한 번 더 보인다.
+  const lastItemRef = useRef<QueueItem | undefined>(undefined)
+  if (currentItem) lastItemRef.current = currentItem
+  const current = (currentItem ?? lastItemRef.current)?.request
   const isSheet = current?.kind === "sheet"
 
   return (
     <>
       <V2Modal
-        visible={current != null && !isSheet}
+        visible={currentItem != null && !isSheet}
         title={current?.title ?? ""}
         description={current?.description}
         destructive={current?.destructive}
@@ -109,7 +114,7 @@ export function V2DialogHost() {
 
       <V2BottomSheet
         surface="dialog_action_sheet"
-        visible={isSheet}
+        visible={currentItem != null && isSheet}
         onClose={() => settle(currentItem?.id, null)}
         title={current?.title || undefined}
         subTitle={current?.description}

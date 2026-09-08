@@ -490,24 +490,9 @@ describe("§L5 `useSettingsColors` 의 리터럴 회색은 줄기만 한다", ()
     const literals = [...src.matchAll(/"(#[0-9a-fA-F]{3,8})"/g)]
       .map((m) => m[1])
       .sort()
-    expect([...new Set(literals)]).toEqual([
-      "#17191C",
-      "#2A2A32",
-      "#3A3A42",
-      "#474758",
-      "#555",
-      "#6B7280",
-      "#94A3B8",
-      "#C4C4C4",
-      "#C5C8CE",
-      "#DADFE699",
-      "#E0E0E0",
-      "#F0F0F0",
-      "#F0F2F5",
-      "#F5F6FA",
-      "#F9F9F9",
-      "#FFFFFF",
-    ])
+    // The settings detail refresh replaces the complete legacy palette with semantic tokens.
+    // Keep the no-new-literals guard, now with an empty allowlist.
+    expect([...new Set(literals)]).toEqual([])
     // 옮긴 두 칸은 더 이상 리터럴이 아니다 — 사다리에서 집어 온다.
     expect(src).toContain("bg: planes[basePlane]")
     expect(src).toContain("cardBg: planes.content")

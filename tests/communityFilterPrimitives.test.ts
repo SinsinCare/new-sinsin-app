@@ -258,12 +258,12 @@ describe("CategoryChipRail — 총 높이는 하단 1px 을 포함한다 (§2.5)
     }
   })
 
-  it("하단선은 `line.alternative` 이고 면은 배경 토큰이다 — 다크도 같은 칸", () => {
-    expect(styleOf(rail()).borderBottomColor).toBe(light.line.alternative)
+  it("하단선은 `line.normal` 이고 면은 배경 토큰이다 — 다크도 같은 칸", () => {
+    expect(styleOf(rail()).borderBottomColor).toBe(light.line.normal)
     expect(styleOf(rail()).backgroundColor).toBe(light.background.default)
 
     mockMode = "dark"
-    expect(styleOf(rail()).borderBottomColor).toBe(dark.line.alternative)
+    expect(styleOf(rail()).borderBottomColor).toBe(dark.line.normal)
     expect(styleOf(rail()).backgroundColor).toBe(dark.background.default)
   })
 })
@@ -352,7 +352,7 @@ describe("CategoryChipRail — D11/D27: 선택해도 굵기가 안 바뀐다", (
       expect(chip.props.fixedLabelWeight).toBe(true)
       // 기하가 사설 칩과 같은 값을 내는 가지다(32 · padH 12 · brandSoft 면).
       expect(chip.props.size).toBe("s")
-      expect(chip.props.tone).toBe("brandSoft")
+      expect(chip.props.tone).toBe("neutral")
     }
   })
 
@@ -375,27 +375,27 @@ describe("CategoryChipRail — D11/D27: 선택해도 굵기가 안 바뀐다", (
     )
   })
 
-  it("테두리가 바깥 상자를 키우지 않는다 — 가로 패딩에서 그만큼 뺀다", () => {
+  it("선택 전후 패딩과 테두리가 같아서 칩 폭이 유지된다", () => {
     const chips = chipsOf(rail({ value: "question" }))
     const unselected = styleOf(expand(chips[0] as Element))
     const selected = styleOf(expand(chips[1] as Element))
 
-    expect(selected.borderWidth).toBe(borderWidth.thin)
+    expect(selected.borderWidth).toBeUndefined()
     expect(unselected.borderWidth).toBeUndefined()
-    expect(selected.paddingHorizontal).toBe(
-      (unselected.paddingHorizontal as number) - borderWidth.thin,
-    )
+    expect(selected.paddingHorizontal).toBe(unselected.paddingHorizontal)
     expect(unselected.paddingHorizontal).toBe(spacing[12])
   })
 
-  it("선택 면은 `brandSoft` — 연한 브랜드 면 + 브랜드 테두리 + 브랜드 글자", () => {
+  it("선택 면은 neutral — 명도 반전으로 상태를 구분한다", () => {
     const chips = chipsOf(rail({ value: "question" }))
     const selected = styleOf(expand(chips[1] as Element))
     const unselected = styleOf(expand(chips[0] as Element))
 
-    expect(selected.backgroundColor).toBe(light.primary.primaryWeak)
-    expect(selected.borderColor).toBe(light.primary.primary)
-    expect(labelStyleOf(chips[1] as Element).color).toBe(light.primary.primary)
+    expect(selected.backgroundColor).toBe(light.label.normal)
+    expect(selected.borderColor).toBeUndefined()
+    expect(labelStyleOf(chips[1] as Element).color).toBe(
+      light.background.default,
+    )
 
     /*
       ─── 2026-08-21: 시안이 잰 값에서 **의도적으로 갈라졌다** ──────────────────────
@@ -647,14 +647,14 @@ describe("SortDropdown — 트리거 두 모양 (§2.6)", () => {
     )
   })
 
-  it("바: 48(하단선 포함) · 이 한 줄만 `line.neutral` · 좌우 20", () => {
+  it("바: 48(하단선 포함) · 다른 행과 같은 `line.normal` · 좌우 20", () => {
     const bar = styleOf(sort({ variant: "bar" }))
 
     expect(bar.height).toBe(ROW.sortBar)
     expect(ROW.sortBar).toBe(48)
     expect(bar.borderBottomWidth).toBe(borderWidth.thin)
-    // 다른 구분선은 전부 `line.alternative`(8%)다 — 여기만 16%.
-    expect(bar.borderBottomColor).toBe(light.line.neutral)
+    // 모든 커뮤니티 경계는 normal 톤의 1pt 선으로 맞춘다.
+    expect(bar.borderBottomColor).toBe(light.line.normal)
     expect(bar.borderBottomColor).not.toBe(light.line.alternative)
     expect(bar.paddingHorizontal).toBe(COMMUNITY_GUTTER)
     // 트리거는 테두리 없는 텍스트 형이다.

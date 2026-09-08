@@ -46,7 +46,7 @@ import { TAB_BAR_HEIGHT } from "@/src/shared/utils/bottomSafeArea"
  * 나머지 네 탭 어디에서든 같은 자리에 있으므로 한 번 더 눌러야 한다는 뜻이다.
  * (칩 레일의 `AI 검색` 은 식당 필터를 만드는 다른 기능이다. 상담의 대체가 아니다.)
  */
-const TABS_WITHOUT_AI_PILL = new Set(["/restaurant", "/community-popular"])
+const TABS_WITHOUT_AI_PILL = new Set(["/restaurant", "/community", "/community-popular"])
 
 /**
  * 라우트 이름 ↔ 탭 바 아이템. 이 배열의 순서가 곧 화면 순서다.

@@ -6,6 +6,10 @@
  * 있고, 문은 지도 목록 끝의 `MapUtilityFooter` 다.
  */
 
+import {
+  restaurantCardDestination,
+  type RestaurantCardTarget,
+} from "@/src/features/restaurant/utils/restaurantCardNavigation"
 import { useCallback } from "react"
 import { useAppRouter } from "@/src/shared/navigation"
 
@@ -15,11 +19,8 @@ export default function RestaurantBookmarksRoute() {
   const router = useAppRouter()
 
   const selectRestaurant = useCallback(
-    (restaurantId: number) => {
-      router.push({
-        pathname: "/restaurant/[id]",
-        params: { id: restaurantId, from: "bookmark" },
-      })
+    (restaurantId: number, target: RestaurantCardTarget) => {
+      router.push(restaurantCardDestination(restaurantId, "bookmark", target))
     },
     [router],
   )

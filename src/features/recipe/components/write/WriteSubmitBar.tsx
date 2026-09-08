@@ -115,9 +115,9 @@ export function WriteSubmitBar({
           onPress={onPress}
           disabled={disabled}
           accessibilityLabel={`${label}. ${statusText}`}
-          baseColor={disabled ? s.ctaOffBg : s.brand}
+          baseColor={disabled ? s.surfaceSunken : s.brand}
           pressedColor={
-            disabled ? s.ctaOffBg : withAlpha(s.brand, PRESSED_ALPHA)
+            disabled ? s.surfaceSunken : withAlpha(s.brand, PRESSED_ALPHA)
           }
           haptic={!disabled}
           style={styles.button}

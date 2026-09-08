@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 분석 중 / 실패 / 선택 없음 — 검진 상세와 월별 캘린더가 같은 모양으로 쓴다.
  *
@@ -9,7 +10,7 @@
  * **서버가 실제로 일을 하고 있는 시간**이라 사용자에게 이유를 말해 줘야 한다.
  */
 
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import { resolveError } from "@/src/lib/errorMessage"

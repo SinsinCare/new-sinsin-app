@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Badge
 // Spec: project/design-system-v2/design-system-base/components/Badge.md (Figma node 93:12547)
 //
@@ -28,7 +30,7 @@
 // 행 높이 공식(16 + 21 + 8 + …)을 쓰는 쪽은 이 2px 을 알고 있어야 한다.
 
 import { type ReactNode } from "react"
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { radius, spacing, typography, type SemanticColors } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 
@@ -213,7 +215,11 @@ export function V2Badge({
         style,
       ]}
     >
-      <Text style={[s.text, { color: fg }]} numberOfLines={1}>
+      <Text
+        maxFontSizeMultiplier={FONT_SCALE.control}
+        style={[s.text, { color: fg }]}
+        numberOfLines={1}
+      >
         {children}
       </Text>
     </View>

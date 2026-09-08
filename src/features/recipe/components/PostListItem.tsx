@@ -1,8 +1,13 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
+import { memo } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
-import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
+import {
+  remoteImageSource,
+  stableImageCacheKey,
+} from "@/src/shared/images/remoteImageSource"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -12,13 +17,13 @@ import { useSurface } from "@/src/hooks/useSurface"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { formatCount } from "../utils/displayNumber"
 import { formatTimeAgo } from "../utils/timeAgo"
-import { TagChips } from "./TagChips"
 import { useTranslation } from "react-i18next"
 
 import { showActionSheet, showConfirm } from "@/src/lib/dialog"
 
 interface PostListItemProps {
   postId: string
+  rank?: number
   category: string
   createdAt: Date
   title: string
@@ -28,7 +33,7 @@ interface PostListItemProps {
   likeCount: number
   commentCount: number
   /** 조회수. 넘기지 않으면(옛 호출부) 눈 아이콘 자체를 그리지 않는다. */
-  viewCount?: number
+  viewCount?: number | null
   tags?: string[]
   onPress?: () => void
   onPressTag?: (tag: string) => void
@@ -48,9 +53,10 @@ interface PostListItemProps {
   isMine?: boolean
 }
 
-/** 피드 카드 — 회색 바닥 위의 흰 카드. 제목·미리보기 왼쪽, 사진은 오른쪽 섬네일. */
-export function PostListItem({
+/** Shared flat discussion row: category, title/preview, then author and activity. */
+export const PostListItem = memo(function PostListItem({
   postId,
+  rank,
   category,
   createdAt,
   title,
@@ -60,9 +66,9 @@ export function PostListItem({
   likeCount,
   commentCount,
   viewCount,
-  tags = [],
+  tags: _tags = [],
   onPress,
-  onPressTag,
+  onPressTag: _onPressTag,
   onPressAuthor,
   onBlock,
   isWithdrawnAuthor = false,
@@ -115,17 +121,20 @@ export function PostListItem({
     <SurfacePressable
       onPress={() => onPress?.()}
       accessibilityLabel={title}
-      baseColor={surface.card}
-      style={styles.card}
+      baseColor={surface.canvas}
+      style={[styles.card, { borderBottomColor: surface.border }]}
     >
       <View style={styles.metaRow}>
+        {rank != null ? (
+          <Text style={[styles.rank, { color: surface.brand }]}>{rank}</Text>
+        ) : null}
         <Text
-          style={[styles.metaText, { color: surface.text }]}
+          style={[styles.metaText, { color: surface.text, flex: 1 }]}
           numberOfLines={1}
         >
-          {category} · {formatTimeAgo(createdAt, i18n.language)}
+          {category}
         </Text>
-        {!isWithdrawnAuthor && !isMine && (
+        {!isWithdrawnAuthor && !isMine && onBlock && (
           <Pressable
             onPress={handleMorePress}
             hitSlop={10}
@@ -153,7 +162,7 @@ export function PostListItem({
           </Text>
           <Text
             style={[styles.summary, { color: surface.text }]}
-            numberOfLines={2}
+            numberOfLines={1}
             lineBreakStrategyIOS="hangul-word"
           >
             {summary}
@@ -162,18 +171,18 @@ export function PostListItem({
         {imageUri ? (
           <Image
             source={remoteImageSource(imageUri)}
+            recyclingKey={stableImageCacheKey(imageUri) ?? imageUri}
             style={[styles.thumbnail, { backgroundColor: surface.surface }]}
             contentFit="cover"
           />
         ) : null}
       </View>
 
-      {tags.length > 0 && <TagChips tags={tags} onPressTag={onPressTag} />}
-
       <View style={styles.footerRow}>
         {onPressAuthor && !isWithdrawnAuthor ? (
           <Pressable
             onPress={onPressAuthor}
+            style={styles.author}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={tCommon("community.author.openProfile", {
@@ -199,6 +208,9 @@ export function PostListItem({
           아이콘은 눈으로만 뜻을 말한다. 라벨이 없으면 스크린리더에는 `481` `3` 처럼
           **맥락 없는 수**만 읽히므로, 셋 다 이름을 갖는다(조회에만 있었다).
         */}
+        <Text style={[styles.metaText, { color: surface.text }]}>
+          {formatTimeAgo(createdAt, i18n.language)}
+        </Text>
         <View style={styles.counts}>
           {viewCount != null && (
             <View
@@ -237,13 +249,14 @@ export function PostListItem({
       </View>
     </SurfacePressable>
   )
-}
+})
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 8,
+    borderBottomWidth: borderWidth.thin,
   },
   metaRow: {
     flexDirection: "row",
@@ -251,11 +264,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  rank: { fontSize: 15, lineHeight: 20, fontWeight: "700" },
   metaText: {
     fontSize: 12,
     lineHeight: 16,
     letterSpacing: -0.24,
-    fontWeight: "500",
     fontFamily: "Pretendard-Medium",
     flexShrink: 1,
   },
@@ -268,23 +281,23 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontSize: 15.5,
-    lineHeight: 22,
+    fontSize: 17,
+    lineHeight: 24,
     letterSpacing: -0.31,
-    fontWeight: "700",
     fontFamily: "Pretendard-Bold",
   },
   summary: {
-    fontSize: 13.5,
+    fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.27,
     fontFamily: "Pretendard-Regular",
   },
   thumbnail: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
+    width: 68,
+    height: 68,
+    borderRadius: 8,
   },
+  author: { flex: 1, minWidth: 0 },
   footerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -305,7 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     lineHeight: 17,
     letterSpacing: -0.25,
-    fontWeight: "600",
     fontFamily: "Pretendard-SemiBold",
   },
 })

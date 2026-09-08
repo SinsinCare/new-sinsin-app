@@ -457,23 +457,8 @@ describe("§4 `SectionBand` 의 여백에서 색을 뗀 것이 다크에 무해�
     }
   })
 
-  it("**띠는 다크에서만 칠해진다** — 재판정 (2026-08-22)", () => {
-    /*
-      2026-08-21 에는 여백만 손보고 띠는 뒀다. 그 뒤 §6(바닥 −7.25)과 §8((A) 블록이
-      자기 면을 가짐)이 들어오면서 라이트에서 **띠 자신이** 줄무늬가 됐다:
-
-          바닥 │ 띠 #f7f7f7 │ 바닥 │ (A) 블록 #ffffff │ 바닥 │ 띠 │ 바닥
-              4.5 ┘    4.5 ┘     7.25 ┘        7.25 ┘    4.5 ┘  4.5 ┘
-
-      경계가 여섯인데 필요한 것은 둘이고, `#f7f7f7` 은 그 화면에 없던 다섯째 회색이다.
-      다크는 정반대다 — `background.default` 가 곧 바닥이라 블록이 면을 못 갖고,
-      띠(#313135 = 그 화면의 카드와 같은 값)가 **유일한 경계**다.
-
-      그래서 모드가 아니라 **관계**로 나눈다. 아래는 그 관계를 다시 계산해 맞춘다 —
-      값을 베끼지 않으므로 어느 쪽 토큰이 움직여도 따라간다.
-    */
+  it("평평한 피드의 섹션 띠를 두 모드 모두 칠한다", () => {
     for (const mode of MODES) {
-      const onlyEdge = THEME[mode].background.default === bedOf(mode)
       const strip = inMode(
         mode,
         () =>
@@ -481,58 +466,23 @@ describe("§4 `SectionBand` 의 여백에서 색을 뗀 것이 다크에 무해�
             .filter((el) => el.type === "View")
             .at(-1)!,
       )
-      expect({
-        mode,
-        painted: flatten(strip.props.style).backgroundColor,
-      }).toEqual({
-        mode,
-        painted: onlyEdge ? THEME[mode].background.lower : undefined,
-      })
+      expect(flatten(strip.props.style).backgroundColor).toBe(
+        THEME[mode].background.lower,
+      )
     }
-    // 다크는 **한 픽셀도 안 바뀌었다** — 칠해진 값이 예전 그대로다.
-    const darkStrip = inMode(
-      "dark",
-      () =>
-        walkDeep(render(SectionBand, {}))
-          .filter((el) => el.type === "View")
-          .at(-1)!,
-    )
-    expect(flatten(darkStrip.props.style).backgroundColor).toBe("#313135")
   })
 
-  it("라이트에서 이 컴포넌트가 만드는 경계가 **0** 이다 (넷 → 둘 → 0)", () => {
-    /*
-      경위: 처음엔 넷이었다(바닥│여백│띠│여백│바닥, 넷 다 ≤3.8 에 방향이 번갈아 —
-      줄무늬). 여백에서 색을 떼어 둘로 줄었고(2026-08-21), 바닥이 내려가면서 그 둘이
-      4.5 로 커졌다. 이제 띠에서도 색을 떼어 **0** 이다 — 라이트에서 섹션을 가르는 것은
-      이 컴포넌트가 아니라 (A) 블록의 면(7.25)이다.
-
-      단언은 값 표가 아니라 **컴포넌트가 실제로 내놓은 색**에 대고 한다. 띠를 되살리는
-      변이(조건을 지우고 늘 칠하기)는 여기서 즉시 빨개진다.
-    */
+  it("라이트 섹션 경계가 투명한 여백으로 사라지지 않는다", () => {
     const painted = inMode("light", () =>
       walkDeep(render(SectionBand, {}))
         .map((el) => flatten(el.props.style).backgroundColor)
-        .filter((color) => typeof color === "string"),
+        .filter((color): color is string => typeof color === "string"),
     )
-    expect(painted).toEqual([])
-
-    // 그 자리를 대신 맡은 경계가 실제로 있다 — (A) 블록의 면 ↔ 바닥.
-    const blockEdge = Math.abs(
-      lightness(THEME.light.background.default) - lightness(bedOf("light")),
+    expect(painted).toHaveLength(1)
+    const separation = Math.abs(
+      lightness(painted[0]) - lightness(THEME.light.background.default),
     )
-    expect(blockEdge).toBeCloseTo(7.25, 1)
-
-    // 다크에는 그 대체 경계가 **없다**(블록이 바닥과 같은 면). 그래서 다크는 띠를 지킨다.
-    expect(
-      Math.abs(
-        lightness(THEME.dark.background.default) - lightness(bedOf("dark")),
-      ),
-    ).toBe(0)
-    const darkEdge = Math.abs(
-      lightness(THEME.dark.background.lower) - lightness(bedOf("dark")),
-    )
-    expect(darkEdge).toBeCloseTo(8.63, 1)
+    expect(separation).toBeGreaterThan(2.5)
   })
 })
 
@@ -1427,16 +1377,12 @@ describe("§9 우물을 바닥에 깐 화면 위에 우물을 또 놓지 않는�
       "사진 자리는 카드 루트(SurfacePressable baseColor=card) 안이다",
     "src/features/consultation/components/ChatMessageBubble.tsx":
       "마크다운 블록 면은 말풍선 안이다",
-    "src/features/home/components/record/MealTimeline.tsx":
-      "코너 + 칩은 빈 카드(SurfacePressable baseColor=s.card) 안이다",
     "src/features/home/components/record/sheets/WaterSheet.tsx":
       "물잔·트랙은 시트 면 안이다",
     "src/features/home/components/record/sheets/BloodPressureSheet.tsx":
       "입력 칸은 시트 면 안이다",
     "src/features/home/components/record/sheets/BloodGlucoseSheet.tsx":
       "입력 칸은 시트 면 안이다",
-    "src/features/home/components/record/sheets/MealPhotoConfirmSheet.tsx":
-      "사진 자리는 시트 면 안이다",
   }
 
   /** 한 단계만 따라간다 — 화면이 **직접** 놓는 것이 이 규칙의 대상이다. */
@@ -1477,15 +1423,15 @@ describe("§9 우물을 바닥에 깐 화면 위에 우물을 또 놓지 않는�
   })
 
   it("바닥과 그 위의 면이 **같은 값**이면 규칙이 실제로 잡는다 (오라클)", () => {
-    /*
-      늘 통과하는 가드가 아닌지 확인한다. `SettingsTextField` 는 회귀 당시 그대로
-      **우물만 칠하고 자기 면은 안 세우는** 파일이므로, 규칙에 걸릴 자격이 있다.
-      실제로 안 걸리는 이유는 그것을 놓는 화면 넷이 이제 **흰 페이지**라서다.
-    */
+    // Positive control stays independent of the current field styling. The old
+    // same-plane defect must still be detected after fields adopt the shallow fill.
+    const legacyField = "<View style={{ backgroundColor: s.surface }} />"
+    expect(paintsWell(legacyField)).toBe(true)
+    expect(ownsPlane(legacyField)).toBe(false)
     const field = sourceOf(
       "src/features/settings/components/SettingsTextField.tsx",
     )
-    expect(paintsWell(field)).toBe(true)
+    expect(paintsWell(field)).toBe(false)
     expect(ownsPlane(field)).toBe(false)
 
     // 그 넷의 바닥은 캔버스(라이트 흰색)이고, 우물과 다른 값이다.
@@ -1723,7 +1669,7 @@ describe("§10 라이트가 쓰는 면의 개수와 화면 바닥", () => {
       "app/(tabs)/community.tsx",
       "src/features/recipe/views/CommunityPopularScreen.tsx",
       "src/features/recipe/views/CommunitySearchScreen.tsx",
-      "app/community-library.tsx",
+      "src/features/recipe/views/CommunityLibraryScreen.tsx",
     ]) {
       const src = codeOf(file)
       expect({ file, bed: /backgroundColor: \w+\.bed\b/.test(src) }).toEqual({

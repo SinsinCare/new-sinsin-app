@@ -17,6 +17,7 @@ import {
 } from "@/src/design-system-v2/tokens/colors"
 import {
   MAP_CLUSTER_SHADOW,
+  MAP_NODE_PALETTE,
   MAP_LABEL_COLOR,
   MAP_TILE_FILTER,
   buildMapHtml,
@@ -116,6 +117,65 @@ describe("restaurant map color scheme", () => {
     expect(labelColorCall).not.toMatch(
       /LABEL_COLORS\.(light|dark)|LABEL_COLORS\['|#[0-9a-f]{3,8}/iu,
     )
+  })
+
+  it("노드의 초기 색과 런타임 테마 전환이 기본·선택·말풍선을 함께 갱신한다", () => {
+    for (const scheme of ["light", "dark"] as const) {
+      const html = buildMapHtml({ ...BASE, colorScheme: scheme })
+      const palette = MAP_NODE_PALETTE[scheme]
+      for (const key of [
+        "fill",
+        "icon",
+        "selected-icon",
+        "bubble-fill",
+        "bubble-text",
+      ] as const) {
+        expect(html).toContain(`var(--map-node-${key}, ${palette[key]})`)
+      }
+    }
+    expect(MAP_NODE_PALETTE.light.fill).toBe(MAP_NODE_PALETTE.dark.fill)
+    expect(MAP_NODE_PALETTE.light.icon).toBe(semanticDark.label.normal)
+    expect(MAP_NODE_PALETTE.light.border).toBe(semanticDark.label.normal)
+    expect(MAP_NODE_PALETTE.light.icon).not.toBe(MAP_NODE_PALETTE.dark.icon)
+    expect(MAP_NODE_PALETTE.light["bubble-fill"]).not.toBe(
+      MAP_NODE_PALETTE.dark["bubble-fill"],
+    )
+
+    const script = scriptOf(buildMapHtml(BASE))
+    const vars = script.slice(
+      script.indexOf("  var mapColorScheme ="),
+      script.indexOf("  function post("),
+    )
+    const body = script
+      .split("function applyMapColorScheme(")[1]
+      .split("\n  }")[0]
+    const values: Record<string, string> = {}
+    const root = {
+      style: {
+        backgroundColor: "",
+        setProperty: (key: string, value: string) => {
+          values[key] = value
+        },
+      },
+    }
+    const document = {
+      documentElement: { style: {} },
+      body: { style: {} },
+      getElementById: () => root,
+    }
+    const apply = new Function(
+      "document",
+      `${vars}; function toneDownTiles() {}
+ function applyMapColorScheme(${body}
+ }
+ return applyMapColorScheme;`,
+    )(document)
+    for (const scheme of ["dark", "light", "dark"] as const) {
+      apply(scheme)
+      for (const [key, value] of Object.entries(MAP_NODE_PALETTE[scheme])) {
+        expect(values[`--map-node-${key}`]).toBe(value)
+      }
+    }
   })
 
   it("기존 WebView에 setColorScheme 명령을 보낼 수 있다", () => {

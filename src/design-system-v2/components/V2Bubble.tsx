@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Bubble (말풍선)
 // Spec: project/design-system-v2/design-system-base/components/Bubble.md (Figma set node 227:5284)
 //
@@ -11,7 +12,7 @@
 // 색은 line·placement 6변형 모두 공통(background.lower / label.normal). 형태만 다름.
 
 import { type ReactNode } from "react"
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import Svg, { Polygon } from "react-native-svg"
 import { fontFamily, radius, spacing } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"

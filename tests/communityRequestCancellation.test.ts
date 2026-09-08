@@ -184,7 +184,7 @@ describe("인기 목록 — 취소가 요청까지 닫는다", () => {
 })
 
 describe("수정 라우트는 변이 하나 때문에 피드를 관찰하지 않는다 (R6)", () => {
-  const EDIT_ROUTE = "app/(write)/free/[id].tsx"
+  const EDIT_ROUTE = "src/features/recipe/views/FreePostEditScreen.tsx"
 
   it("`observe: false` 로 부른다", () => {
     const source = stripComments(readRaw(EDIT_ROUTE))

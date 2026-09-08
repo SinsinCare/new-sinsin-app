@@ -23,7 +23,7 @@
  * 되돌리면 여기가 빨개진다. (이펙트는 돌지 않는다 — 그래서 "지워진 글을 계보에서
  * 뺀다" 는 이펙트가 아니라 `queryFn` 의 실패 갈래에 있다.)
  *
- * 화면 파일(`app/post/[id].tsx` · `FreePostEditor.tsx`)은 그릴 방법이 없으므로
+ * 화면 파일(`src/features/recipe/views/PostDetailScreen.tsx` · `FreePostEditor.tsx`)은 그릴 방법이 없으므로
  * `communityHonestStates.test.ts` 처럼 **주석을 걷어낸 소스**의 배선을 본다.
  */
 /* eslint-disable import/first */
@@ -539,7 +539,7 @@ const ROOT = join(__dirname, "..")
 const read = (path: string) =>
   stripComments(readFileSync(join(ROOT, path), "utf-8"))
 
-const DETAIL = "app/post/[id].tsx"
+const DETAIL = "src/features/recipe/views/PostDetailScreen.tsx"
 const EDITOR = "src/features/recipe/components/FreePostEditor.tsx"
 
 describe("글 상세 화면", () => {
@@ -654,6 +654,8 @@ describe("글쓰기 화면", () => {
     )
     expect(source).toContain("submittedRef.current = true")
     // CTA 도 그 사이에는 눌리지 않는다.
-    expect(source).toContain("disabled={!canSubmit || isSubmitting || submitted}")
+    expect(source).toContain(
+      "disabled={!canSubmit || isSubmitting || submitted}",
+    )
   })
 })

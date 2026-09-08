@@ -1,10 +1,5 @@
 import i18n, { getAppLanguage } from "@/src/i18n"
 
-interface PickerOption {
-  label: string
-  value: string
-}
-
 export interface BirthDateInputState {
   isValid: boolean
   message: string
@@ -13,42 +8,6 @@ export interface BirthDateInputState {
     month: string
     day: string
   } | null
-}
-
-export function generateYearOptions(): PickerOption[] {
-  const currentYear = new Date().getFullYear()
-  const options: PickerOption[] = []
-  for (let y = currentYear; y >= 1920; y--) {
-    options.push({
-      label: i18n.t("date.year", { ns: "auth", value: y }),
-      value: String(y),
-    })
-  }
-  return options
-}
-
-export function generateMonthOptions(): PickerOption[] {
-  return Array.from({ length: 12 }, (_, i) => ({
-    label: i18n.t("date.month", { ns: "auth", value: i + 1 }),
-    value: String(i + 1).padStart(2, "0"),
-  }))
-}
-
-export function generateDayOptions(
-  year: string,
-  month: string,
-): PickerOption[] {
-  if (!year || !month) {
-    return Array.from({ length: 31 }, (_, i) => ({
-      label: i18n.t("date.day", { ns: "auth", value: i + 1 }),
-      value: String(i + 1).padStart(2, "0"),
-    }))
-  }
-  const daysInMonth = new Date(Number(year), Number(month), 0).getDate()
-  return Array.from({ length: daysInMonth }, (_, i) => ({
-    label: i18n.t("date.day", { ns: "auth", value: i + 1 }),
-    value: String(i + 1).padStart(2, "0"),
-  }))
 }
 
 export function formatBirthDateInput(value: string): string {

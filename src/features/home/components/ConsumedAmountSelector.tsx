@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+import { StyleSheet, View } from "react-native"
 import { V2SegmentControl } from "@/src/design-system-v2"
 import { useV2Theme } from "@/src/design-system-v2/hooks/useV2Theme"
 import { spacing, typography } from "@/src/design-system-v2/tokens"

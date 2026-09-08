@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * `현재 지도에서 찾기` pill. 목업 §2.5.
  *
@@ -20,7 +21,7 @@
  * disabled + 점 로더로 바뀐다.
  */
 
-import { Pressable, StyleSheet, Text } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
 import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 

@@ -8,7 +8,7 @@
  * 종전 한 줄: `if (isLoading || !post || isForeignPost) return <ArticleSkeleton/>`.
  * `sinsin:///free/999999` 로 들어오면 조회는 **실패로 끝나므로** `isLoading` 은
  * false, `post` 는 null — 헤더도 뒤로가기도 없는 회색 뼈대만 남고 그 화면에서
- * 나갈 방법이 없다. 상세(`app/post/[id].tsx`)가 이미 쓰는 세 갈래로 나눈다.
+ * 나갈 방법이 없다. 상세(`src/features/recipe/views/PostDetailScreen.tsx`)가 이미 쓰는 세 갈래로 나눈다.
  *
  * ■ 2. 자유글 수정 — 지워진 글의 유령 편집기
  *
@@ -47,7 +47,7 @@ function read(relative: string): string {
   return codeOnly(fs.readFileSync(path.join(ROOT, relative), "utf8"))
 }
 
-const EDIT = read("app/(write)/free/[id].tsx")
+const EDIT = read("src/features/recipe/views/FreePostEditScreen.tsx")
 const CREATE = read("src/features/recipe/components/FreePostEditor.tsx")
 const STORY = read("app/(write)/story/new.tsx")
 

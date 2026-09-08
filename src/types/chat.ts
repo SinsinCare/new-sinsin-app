@@ -1,8 +1,16 @@
+import {
+  nutritionReceipt,
+  type ConsultNutritionCard,
+} from "./consultNutritionCard"
 // === API DTO Types (match backend response exactly) ===
 
 /* 아래 매퍼가 쓰는 순수 함수 하나. 의존이 없는 모듈이라 이 타입 파일이 전송 계층을
    끌고 오지 않는다(그 판단의 이유는 `serverDate.ts` 머리말). */
 import { parseServerDate } from "@/src/shared/utils/serverDate"
+import {
+  readConsultRecipeCard,
+  type ConsultRecipeCard,
+} from "./consultRecipeCard"
 
 export type ChatStatus = "ACTIVE" | "ARCHIVED"
 
@@ -66,6 +74,7 @@ export interface ChatList {
 }
 
 export interface MessageData {
+  activities?: unknown
   messageId: number
   role: MessageRole
   content: string
@@ -95,7 +104,154 @@ export interface ChatStreamChunkEvent {
   content: string
 }
 
+export type ConsultAction =
+  | "thinking"
+  | "profile"
+  | "intake"
+  | "recipes"
+  | "recipe"
+  | "answer"
+export type ConsultSource = {
+  type: "recipe"
+  id: number
+  title: string
+  recipe?: ConsultRecipeCard
+}
+
+export function parseConsultSources(value: unknown): ConsultSource[] {
+  if (!Array.isArray(value)) return []
+  const sources = new Map<number, ConsultSource>()
+  for (const item of value.slice(0, 16)) {
+    if (
+      !item ||
+      typeof item !== "object" ||
+      Array.isArray(item) ||
+      item.type !== "recipe"
+    )
+      continue
+    if (!Number.isSafeInteger(item.id) || item.id < 1 || item.id > 2147483647)
+      continue
+    if (
+      typeof item.title !== "string" ||
+      !item.title.trim() ||
+      item.title.length > 120 ||
+      /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(item.title)
+    )
+      continue
+    const recipe = readConsultRecipeCard(item.recipe)
+    if (sources.size < 4 && !sources.has(item.id))
+      sources.set(item.id, {
+        type: "recipe",
+        id: item.id,
+        title: item.title.trim(),
+        ...(recipe ? { recipe } : {}),
+      })
+  }
+  return [...sources.values()]
+}
+
+export function recipeSourceRoute(source: ConsultSource): `/recipe/${number}` {
+  return `/recipe/${source.id}`
+}
+
+export function consultSources(activities: ConsultActivity[]): ConsultSource[] {
+  return parseConsultSources(
+    activities
+      .filter(
+        (item) =>
+          item.action === "recipe" &&
+          item.status === "complete" &&
+          item.outcome !== "empty",
+      )
+      .flatMap((item) => item.sources ?? []),
+  )
+}
+
+export interface ConsultActivity {
+  nutrition?: ConsultNutritionCard
+  sources?: ConsultSource[]
+  id: string
+  action: ConsultAction
+  status: "running" | "complete" | "error" | "stopped"
+  outcome?: "empty"
+  resultCount?: number
+}
+
+/** Only allowlisted status fields and public recipe receipts enter UI copy, never prompts, arguments or reasoning. */
+export function parseConsultActivity(
+  value: Record<string, unknown>,
+): ConsultActivity | null {
+  if (typeof value.id !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/.test(value.id))
+    return null
+  if (
+    !["thinking", "profile", "intake", "recipes", "recipe", "answer"].includes(
+      String(value.action),
+    )
+  )
+    return null
+  if (!["running", "complete", "error"].includes(String(value.status)))
+    return null
+  const sources =
+    value.action === "recipe" &&
+    value.status === "complete" &&
+    value.outcome !== "empty"
+      ? parseConsultSources(value.sources)
+      : []
+  const nutrition = nutritionReceipt(
+    value.action,
+    value.status,
+    value.nutrition,
+  )
+  return {
+    ...(nutrition ? { nutrition } : {}),
+    ...(sources.length ? { sources } : {}),
+    id: value.id,
+    action: value.action as ConsultAction,
+    status: value.status as ConsultActivity["status"],
+    ...(value.outcome === "empty" ? { outcome: "empty" as const } : {}),
+    ...(typeof value.resultCount === "number" &&
+    Number.isInteger(value.resultCount) &&
+    value.resultCount >= 0 &&
+    value.resultCount <= 4
+      ? { resultCount: value.resultCount }
+      : {}),
+  }
+}
+
+/** Stored receipts only: never revive an old spinner or display private extra fields. */
+export function parseActivityHistory(value: unknown): ConsultActivity[] {
+  if (!Array.isArray(value)) return []
+  return value.slice(0, 96).reduce<ConsultActivity[]>((items, candidate) => {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate))
+      return items
+    const item = parseConsultActivity(candidate)
+    if (!item || item.status === "running") return items
+    return mergeConsultActivity(items, item)
+  }, [])
+}
+
+export function mergeConsultActivity(
+  items: ConsultActivity[],
+  item: ConsultActivity,
+): ConsultActivity[] {
+  const index = items.findIndex((existing) => existing.id === item.id)
+  if (index >= 0)
+    return items.map((existing, i) => (i === index ? item : existing))
+  if (items.length >= 24) return items
+  return [...items, item]
+}
+
+export function finishConsultActivity(
+  items: ConsultActivity[],
+  status: "complete" | "error" | "stopped",
+): ConsultActivity[] {
+  return items.map((item) =>
+    item.status === "running" ? { ...item, status } : item,
+  )
+}
+
 export interface ChatStreamDoneEvent {
+  activities?: unknown
   messageId: number
   finishReason: ChatStreamFinishReason
   category?: ChatCategory | null
@@ -169,6 +325,8 @@ export interface Chat {
 }
 
 export interface Message {
+  /** Stable during one generation; server IDs may arrive after the activity was expanded. */
+  clientKey?: string
   id: number
   conversationId: number
   role: "user" | "assistant" | "system"
@@ -181,6 +339,16 @@ export interface Message {
    * 서버는 "[이미지]" 텍스트로 저장하므로 히스토리 재로드 시에는 없다.
    */
   imageUri?: string
+  /** Local presentation only; never serialized into a user request. */
+  deliveryState?: "failed" | "stopped"
+  failureRetryable?: boolean
+  activities?: ConsultActivity[]
+  /** Keeps the server answer being replaced across stop/retry attempts. */
+  regenerateMessageId?: number
+}
+
+export function chatMessageKey(message: Message): string {
+  return message.clientKey ?? `message-${message.conversationId}-${message.id}`
 }
 
 export function reconcileStreamedMessage(
@@ -203,7 +371,13 @@ export function reconcileStreamedMessage(
       (message) =>
         message.id !== placeholderId && message.id !== finalMessage.id,
     ).length
-  withoutDuplicates.splice(insertionIndex, 0, finalMessage)
+  const original =
+    messages.find((message) => message.id === placeholderId) ??
+    messages[targetIndex]!
+  withoutDuplicates.splice(insertionIndex, 0, {
+    ...finalMessage,
+    clientKey: chatMessageKey(original),
+  })
   return withoutDuplicates
 }
 
@@ -281,7 +455,12 @@ export function mapChatDetail(dto: ChatDetail): {
 }
 
 export function mapMessage(dto: MessageData, conversationId: number): Message {
+  const activities =
+    dto.role.toLowerCase() === "assistant"
+      ? parseActivityHistory(dto.activities)
+      : []
   return {
+    ...(activities.length ? { activities } : {}),
     id: dto.messageId,
     conversationId,
     role: dto.role.toLowerCase() as Message["role"],
@@ -340,6 +519,12 @@ export interface ChatService {
     onChunk?: (text: string) => void,
     imageUri?: string,
     signal?: AbortSignal,
+    onActivity?: (activity: ConsultActivity) => void,
+    options?: {
+      regenerateMessageId?: number
+      recipeCards?: boolean
+      dataCards?: boolean
+    },
   ): Promise<Message>
 
   /** 대화 요약 생성 */

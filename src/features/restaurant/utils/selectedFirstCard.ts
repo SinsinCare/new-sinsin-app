@@ -132,6 +132,9 @@ export function detailToCard(
     jibunAddress: detail.jibunAddress,
     zipcode: detail.zipcode,
     imageUrls: detail.imageUrls,
+    ...(detail.representativeMenuNames !== undefined
+      ? { representativeMenuNames: detail.representativeMenuNames }
+      : {}),
     safety: {
       level: detail.avgSafety,
       menuCount: detail.menuCount,

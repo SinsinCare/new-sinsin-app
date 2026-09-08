@@ -187,7 +187,8 @@
             ]
           }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "locales": {
       "ko": "./locales/ko.json",

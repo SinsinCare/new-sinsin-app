@@ -1,7 +1,6 @@
 import {
-  buildOptionalPhoneNumberPayload,
   buildRequiredPhoneNumberPayload,
-  PHONE_NUMBER_ERROR_MESSAGE,
+  getPhoneNumberErrorMessage,
 } from "../src/features/auth/data/phoneNumber"
 import { useSignupStore } from "../src/stores/signupStore"
 
@@ -30,22 +29,8 @@ describe("signup phone payload", () => {
 
   it("rejects an omitted phoneNumber in new email and social profile flows", () => {
     expect(() => buildRequiredPhoneNumberPayload("")).toThrow(
-      PHONE_NUMBER_ERROR_MESSAGE,
+      getPhoneNumberErrorMessage(),
     )
-  })
-
-  it("keeps the optional builder compatible with older app requests", () => {
-    const emailRequest = {
-      signupToken: "signup-token",
-      ...buildOptionalPhoneNumberPayload(""),
-    }
-    const socialRequest = {
-      socialSignupToken: "social-token",
-      ...buildOptionalPhoneNumberPayload(""),
-    }
-
-    expect(emailRequest).not.toHaveProperty("phoneNumber")
-    expect(socialRequest).not.toHaveProperty("phoneNumber")
   })
 
   it("clears a previously entered phone when the signup flow resets", () => {
@@ -53,8 +38,8 @@ describe("signup phone payload", () => {
     useSignupStore.getState().reset()
 
     expect(useSignupStore.getState().phoneNumber).toBe("")
-    expect(
-      buildOptionalPhoneNumberPayload(useSignupStore.getState().phoneNumber),
-    ).toEqual({})
+    expect(() =>
+      buildRequiredPhoneNumberPayload(useSignupStore.getState().phoneNumber),
+    ).toThrow(getPhoneNumberErrorMessage())
   })
 })

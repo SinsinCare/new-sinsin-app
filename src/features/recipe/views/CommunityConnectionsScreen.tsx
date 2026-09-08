@@ -1,3 +1,4 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { Pressable, StyleSheet, View } from "react-native"
 import { FlashList } from "@shopify/flash-list"
 import { Image } from "expo-image"
@@ -159,7 +160,7 @@ export function CommunityConnectionsScreen() {
         { backgroundColor: surface.canvas, paddingTop: insets.top },
       ]}
     >
-      <View style={[styles.header, { borderBottomColor: surface.hairline }]}>
+      <View style={[styles.header, { borderBottomColor: surface.border }]}>
         <Pressable
           onPress={() => router.back()}
           hitSlop={10}
@@ -180,7 +181,7 @@ export function CommunityConnectionsScreen() {
           keyExtractor={(item) => String(item.id)}
           ItemSeparatorComponent={() => (
             <View
-              style={[styles.divider, { backgroundColor: surface.hairline }]}
+              style={[styles.divider, { backgroundColor: surface.border }]}
             />
           )}
           ListEmptyComponent={listEmpty}
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: borderWidth.thin,
   },
   title: {
     fontSize: 17,
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard-SemiBold",
     fontWeight: "600",
   },
-  divider: { height: StyleSheet.hairlineWidth, marginLeft: 80 },
+  divider: { height: borderWidth.thin, marginLeft: 80 },
   stateWrap: { paddingHorizontal: 20, paddingTop: 40 },
   skeletonWrap: { paddingTop: 8 },
   skeletonRow: {

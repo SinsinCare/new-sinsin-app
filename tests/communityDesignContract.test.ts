@@ -94,7 +94,7 @@ describe("community redesign contract", () => {
 
   it("keeps stories inside the community feed rail", () => {
     const feed = read("src/features/recipe/components/FreePostTab.tsx")
-    expect(feed).toContain("<StoryRail />")
+    expect(feed).toContain("<StoryRail compact />")
     /*
       **가로 `PopularPostCard` 레일은 은퇴했다**(WBS 2.1). 이 줄은 예전에
       `toContain("<PopularPostCard")` 였는데, D25 가 그 형태를 버리라고 판정한 뒤로는
@@ -153,7 +153,7 @@ describe("community redesign contract", () => {
     )
     const postCard = read("src/features/recipe/components/PostListItem.tsx")
     const storyRail = read("src/features/recipe/components/StoryRail.tsx")
-    const detail = read("app/post/[id].tsx")
+    const detail = read("src/features/recipe/views/PostDetailScreen.tsx")
     const authorProfile = read(
       "src/features/recipe/views/CommunityAuthorProfileScreen.tsx",
     )
@@ -187,7 +187,7 @@ describe("community redesign contract", () => {
     expect(popularCard).toContain("styles.countText, { color: surface.text }")
     expect(popularCard).not.toContain("surface.textWeak")
     expect(popularCard).not.toContain("surface.textMuted")
-    expect(popularScreen.match(/surface\.textMuted/gu)).toHaveLength(1)
+    expect(popularScreen).not.toContain("surface.textMuted")
     expect(popularScreen).not.toContain("surface.textWeak")
     expect(postCard).not.toContain("surface.textWeak")
     expect(postCard).not.toContain("surface.textMuted")
@@ -229,7 +229,7 @@ describe("community redesign contract", () => {
   })
 
   it("keeps the post body rendered when a revalidation fails", () => {
-    const detail = read("app/post/[id].tsx")
+    const detail = read("src/features/recipe/views/PostDetailScreen.tsx")
     /*
       재조회 실패는 `data` 를 지우지 않는다 — 본문이 있으면 오류 화면이 이기면 안 된다.
       **예외는 하나뿐이다**: 서버가 "이 글은 없다" 고 말했을 때(`isPostGone` —
@@ -377,7 +377,7 @@ describe("community redesign contract", () => {
   })
 
   it("keeps the author's other posts honest when their one request fails", () => {
-    const detail = read("app/post/[id].tsx")
+    const detail = read("src/features/recipe/views/PostDetailScreen.tsx")
     /*
       콜드 스타트(푸시·공유 링크)에서 켜지는 그 **한 번의** 피드 요청이 실패하면
       후보가 0개다. 예전에는 섹션이 통째로 사라졌고(그런 섹션이 있었다는 흔적도 없다),
@@ -441,7 +441,7 @@ describe("community redesign contract", () => {
       재조회를 부른다). 캐시가 아예 없는 콜드 스타트(푸시·공유 링크)에서는 관찰해야
       "작성자의 다른 글" 섹션이 산다 — 그때 나가는 요청은 첫 장 하나뿐이다.
     */
-    expect(read("app/post/[id].tsx")).toContain(
+    expect(read("src/features/recipe/views/PostDetailScreen.tsx")).toContain(
       'useCommunityPosts({ observe: "cold-only" })',
     )
     // 글쓰기·수정 정산도 계보 규칙(낡음 표시만)을 쓴다.
@@ -464,7 +464,7 @@ describe("community redesign contract", () => {
   })
 
   it("is honest about loading and failure in the activity library", () => {
-    const lib = read("app/community-library.tsx")
+    const lib = read("src/features/recipe/views/CommunityLibraryScreen.tsx")
     expect(lib).toContain("V2ErrorState")
     expect(lib).toContain("resolveError")
     expect(lib).toMatch(/isLoading\s*&&\s*posts\.length === 0/u)
@@ -472,7 +472,7 @@ describe("community redesign contract", () => {
   })
 
   it("connects detail to public author profile and the dedicated report form", () => {
-    const detail = read("app/post/[id].tsx")
+    const detail = read("src/features/recipe/views/PostDetailScreen.tsx")
     const card = read("src/features/recipe/components/PostListItem.tsx")
     expect(detail).toContain("/community/author/${post.authorId}")
     expect(detail).toContain("/community/report?postId=${post.id}")

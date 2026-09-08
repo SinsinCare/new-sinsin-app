@@ -1,3 +1,4 @@
+import { useRevalidateOnReturn } from "@/src/shared/refresh"
 /**
  * 메뉴 탭 데이터. 이 화면이 기능의 핵심이다 — 메뉴 단위 안전도 트리아지.
  *
@@ -22,7 +23,7 @@ import { normalizeLanguage } from "@/src/i18n"
 import { restaurantService } from "@/src/services/data/restaurantService"
 
 import type { MenuItemDto, SafetySummaryDto } from "../types"
-import { DETAIL_STALE_TIME_MS, restaurantKeys } from "./restaurantQueryKeys"
+import { restaurantKeys } from "./restaurantQueryKeys"
 
 export interface UseRestaurantMenusResult {
   menus: MenuItemDto[]
@@ -45,6 +46,7 @@ export interface UseRestaurantMenusResult {
    */
   truncated: boolean
   isLoading: boolean
+  isRefreshing: boolean
   isError: boolean
   error: unknown
   refetch: () => void
@@ -59,10 +61,17 @@ export function useRestaurantMenus(
   const { i18n } = useTranslation()
   const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
 
+  useRevalidateOnReturn({
+    queryKeys: [restaurantKeys.menus(language, restaurantId ?? 0)],
+    enabled: restaurantId !== null,
+  })
+
   const query = useQuery({
     queryKey: restaurantKeys.menus(language, restaurantId ?? 0),
     enabled: restaurantId !== null,
-    staleTime: DETAIL_STALE_TIME_MS,
+    // Personal portions include today's intake; refresh whenever the detail is reopened.
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: () => restaurantService.fetchMenus(restaurantId as number),
   })
 
@@ -84,6 +93,7 @@ export function useRestaurantMenus(
     hasEstimated: menus.some((m) => m.confidence === "ESTIMATED"),
     truncated: query.data?.truncated ?? false,
     isLoading: query.isLoading,
+    isRefreshing: query.isFetching,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,

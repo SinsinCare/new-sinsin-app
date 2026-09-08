@@ -1,13 +1,4 @@
-/**
- * 커뮤니티 피드의 첫 조회 자리표시.
- *
- * 이 탭은 링 하나만 돌다가 스토리 레일 + 인기글 + 카테고리 피드가 한꺼번에 나타났다.
- * 세 덩어리가 동시에 들어오면 화면이 한 번 크게 튄다. 여기서는 세 덩어리의 자리를
- * 미리 잡아 둔다 — 순서를 그대로 두는 것이 요점이라 스토리 레일을 맨 위에 둔다.
- *
- * 치수는 `FreePostTab` 의 listWrap(좌우 20 · 간격 10)과 `PostListItem`
- * (radius 16 · padding 16 · 썸네일 64)에서 가져왔다.
- */
+/** Initial loading uses the same flat rows as the loaded discussion list. */
 
 import { StyleSheet, View } from "react-native"
 
@@ -26,7 +17,7 @@ function PostCardSkeleton() {
           <V2Skeleton width="86%" height={16} />
           <V2Skeleton width="70%" height={14} />
         </View>
-        <V2Skeleton width={64} height={64} radius="lg" />
+        <V2Skeleton width={68} height={68} radius="lg" />
       </View>
       <View style={styles.footerRow}>
         <V2Skeleton width={108} height={12} />
@@ -46,18 +37,6 @@ export function CommunityFeedSkeleton({
 }: CommunityFeedSkeletonProps) {
   return (
     <V2SkeletonGroup>
-      {/* 스토리 레일 — 원형 썸네일이 가로로 도는 자리 */}
-      <View style={styles.storyRail}>
-        {[0, 1, 2, 3, 4].map((index) => (
-          <View key={index} style={styles.story}>
-            <V2Skeleton width={64} height={64} radius="full" />
-            <V2Skeleton width={44} height={11} />
-          </View>
-        ))}
-      </View>
-
-      <V2Skeleton width={56} height={13} style={styles.sectionLabel} />
-
       <View style={styles.list}>
         {Array.from({ length: count }, (_, index) => (
           <PostCardSkeleton key={index} />
@@ -76,8 +55,8 @@ const styles = StyleSheet.create({
   },
   story: { alignItems: "center", gap: 6 },
   sectionLabel: { marginHorizontal: 20, marginTop: 24, marginBottom: 10 },
-  list: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
-  card: { borderRadius: 16, padding: 16, gap: 10 },
+  list: {},
+  card: { paddingHorizontal: 20, paddingVertical: 16, gap: 8 },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",

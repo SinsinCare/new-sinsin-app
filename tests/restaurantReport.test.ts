@@ -28,6 +28,18 @@ describe("restaurant report validation", () => {
     ).toBe("nameRequired")
   })
 
+  it("requires a nonblank category after the name is corrected", () => {
+    expect(
+      validateRestaurantReportDraft({ ...validDraft, name: "", category: " " }),
+    ).toBe("nameRequired")
+    expect(
+      validateRestaurantReportDraft({ ...validDraft, category: " " }),
+    ).toBe("categoryRequired")
+    expect(
+      validateRestaurantReportDraft({ ...validDraft, category: "한식" }),
+    ).toBeNull()
+  })
+
   it("allows a blank optional address", () => {
     expect(
       validateRestaurantReportDraft({

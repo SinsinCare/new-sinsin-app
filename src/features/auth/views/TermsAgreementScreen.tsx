@@ -70,7 +70,7 @@ export function TermsAgreementScreen({
                 {
                   backgroundColor: pressed
                     ? surface.surfacePressed
-                    : surface.surface,
+                    : surface.surfaceSunken,
                 },
               ]}
             >

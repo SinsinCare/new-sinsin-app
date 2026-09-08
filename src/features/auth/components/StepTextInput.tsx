@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Pressable, StyleSheet, TextInputProps, View } from "react-native"
 import { Text, TextInput } from "@/src/shared/components/AppText"
@@ -97,10 +98,19 @@ export function StepTextInput({
 
   return (
     <View>
-      <Animated.Text style={[styles.label, labelStyle]}>{label}</Animated.Text>
+      <Animated.Text
+        maxFontSizeMultiplier={FONT_SCALE.body}
+        style={[styles.label, labelStyle]}
+      >
+        {label}
+      </Animated.Text>
 
       <Animated.View
-        style={[styles.field, { backgroundColor: surface.surface }, fieldStyle]}
+        style={[
+          styles.field,
+          { backgroundColor: surface.surfaceSunken },
+          fieldStyle,
+        ]}
       >
         <TextInput
           {...props}

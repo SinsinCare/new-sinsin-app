@@ -9,7 +9,12 @@
 import { memo } from "react"
 import { ScrollView, StyleSheet, View } from "react-native"
 
-import { GUTTER, V2Skeleton, V2SkeletonGroup } from "@/src/design-system-v2"
+import {
+  GUTTER,
+  V2Skeleton,
+  V2SkeletonGroup,
+  spacing,
+} from "@/src/design-system-v2"
 
 import {
   RECIPE_PHOTO_CARD_GAP,
@@ -88,13 +93,13 @@ export function RecipeCarouselSkeleton({
 }
 
 const styles = StyleSheet.create({
-  list: { paddingHorizontal: GUTTER },
+  list: { paddingHorizontal: spacing[20] },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: RECIPE_ROW_THUMB_GAP,
     paddingVertical: RECIPE_ROW_PAD_V,
-    height: RECIPE_ROW_HEIGHT,
+    minHeight: RECIPE_ROW_HEIGHT,
   },
   rowText: { flex: 1, gap: 8 },
   rail: { paddingHorizontal: GUTTER, gap: RECIPE_PHOTO_CARD_GAP },

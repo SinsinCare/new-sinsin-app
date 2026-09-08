@@ -22,7 +22,9 @@ export function TagChips({ tags, onPressTag, onRemoveTag }: TagChipsProps) {
     <View style={styles.row}>
       {tags.map((tag) => {
         const chip = (
-          <View style={[styles.chip, { backgroundColor: surface.surface }]}>
+          <View
+            style={[styles.chip, { backgroundColor: surface.surfaceSunken }]}
+          >
             <Text style={[styles.chipText, { color: surface.text }]}>
               #{tag}
             </Text>

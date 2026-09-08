@@ -7,7 +7,7 @@
  * ■ 두 자리가 같은 블록이다
  *
  * 프로필 화면 헤더와 상세 화면 안의 작성자 카드가 **둘 다 146** 이고 내분도 같다.
- * 다른 것은 하나뿐 — 상세 안에 놓일 때만 하단 1px `line.alternative` 가 붙는다(§2.13).
+ * 다른 것은 하나뿐 — 상세 안에 놓일 때만 하단 1pt `line.normal` 가 붙는다(§2.13).
  * 그래서 컴포넌트가 하나고 `divider` 프롭 하나로 갈린다.
  *
  * ■ 아바타는 20 으로 옮기고 **텍스트 시작선 104 는 그대로** 둔다
@@ -156,7 +156,7 @@ export function AuthorProfileCard({
           // 선이 있든 없든 총 높이는 146 이다 — 머리말 §하단 1px.
           paddingBottom: spacing[12] - (divider ? borderWidth.thin : 0),
           borderBottomWidth: divider ? borderWidth.thin : 0,
-          borderBottomColor: colors.line.alternative,
+          borderBottomColor: colors.line.normal,
         },
         style,
       ]}

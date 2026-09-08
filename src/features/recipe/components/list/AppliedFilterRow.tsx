@@ -8,13 +8,11 @@
  * 걸려 있다고 읽는다.
  */
 import { Pressable, ScrollView } from "react-native"
-import { V2HStack, V2Text } from "@/src/design-system-v2"
+import { V2HStack, V2Text, spacing, borderWidth } from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 import { Icon } from "@/src/shared/components/Icon"
 import { useSurface } from "@/src/hooks/useSurface"
-import { tokens } from "@/src/theme/tokens"
-import { GUTTER } from "@/src/design-system-v2"
 
 import type {
   AppliedRecipeFilter,
@@ -50,7 +48,7 @@ export function AppliedFilterRow({
         끝까지 못 가고 16 안쪽에서 잘린다 — 더 있다는 신호가 사라진다.
         `RecipeSortRow` 가 같은 이유로 이미 이렇게 하고 있다.
       */
-      contentContainerStyle={{ gap: 8, paddingHorizontal: GUTTER }}
+      contentContainerStyle={{ gap: 8, paddingHorizontal: spacing[20] }}
     >
       {applied.map((filter) => {
         const label = t(filter.labelKey)
@@ -62,11 +60,26 @@ export function AppliedFilterRow({
             accessibilityLabel={t("list.filterRemove", { label })}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <V2HStack align="center" gap={5} style={{ height: 32, paddingLeft: 12, paddingRight: 9, borderRadius: 10, backgroundColor: surface.surfaceBrand }}>
-              <V2Text color={tokens.color.primary.val} style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}>
+            <V2HStack
+              align="center"
+              gap={5}
+              style={{
+                height: 32,
+                paddingLeft: 12,
+                paddingRight: 9,
+                borderRadius: 10,
+                backgroundColor: surface.canvas,
+                borderWidth: borderWidth.thin,
+                borderColor: surface.border,
+              }}
+            >
+              <V2Text
+                color={surface.textStrong}
+                style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}
+              >
                 {label}
               </V2Text>
-              <Icon name="x" size={13} color={tokens.color.primary.val} />
+              <Icon name="x" size={13} color={surface.textStrong} />
             </V2HStack>
           </Pressable>
         )
@@ -79,8 +92,16 @@ export function AppliedFilterRow({
           accessibilityLabel={t("list.filterClearAll")}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <V2HStack align="center" paddingHorizontal={12} style={{ height: 32, borderRadius: 10 }}>
-            <V2Text color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}>
+          <V2HStack
+            align="center"
+            paddingHorizontal={12}
+            style={{ height: 32, borderRadius: 10 }}
+          >
+            <V2Text
+              color={surface.textMuted}
+              lineBreakStrategyIOS="hangul-word"
+              style={{ fontSize: 13, lineHeight: 18, fontWeight: "600" }}
+            >
               {t("list.filterClearAll")}
             </V2Text>
           </V2HStack>

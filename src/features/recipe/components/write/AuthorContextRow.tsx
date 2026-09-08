@@ -46,7 +46,7 @@ export function AuthorContextRow({
           styles.row,
           selected
             ? { backgroundColor: s.surfaceBrand, borderColor: s.brand }
-            : { backgroundColor: s.surface, borderColor: "transparent" },
+            : { backgroundColor: s.surfaceSunken, borderColor: "transparent" },
           /*
             **끄는 방향에도 눌림이 보여야 한다.** `pressed && !selected` 였는데,
             그러면 켜진 줄을 눌러 끌 때만 아무 반응이 없다 — 손가락이 닿았는지

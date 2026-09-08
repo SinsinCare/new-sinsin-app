@@ -11,7 +11,7 @@ import {
   useSegments,
   type Href,
 } from "expo-router"
-import { StatusBar } from "expo-status-bar"
+import { StatusBar, setStatusBarStyle } from "expo-status-bar"
 import * as Notifications from "expo-notifications"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import {
@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next"
 import { languageReady } from "@/src/i18n" // 초기화(부수효과) + 저장 언어 복원 약속
 import { queryClient } from "@/src/services"
 import { useAuth } from "@/src/hooks"
+import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import {
   useAuthStore,
   useSignupStore,
@@ -38,6 +39,7 @@ import {
   takeEntryIntent,
 } from "@/src/shared/navigation/entryIntent"
 import { useConsumeEntryUrl } from "@/src/shared/navigation/useConsumeEntryUrl"
+import { useMedicationReminders } from "@/src/features/medication/hooks/useMedicationReminders"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { AppPolicyGate } from "@/src/features/mobilePolicy"
 import { BillingProvider, PaywallHost } from "@/src/features/billing"
@@ -48,6 +50,7 @@ import { useAnalyticsLifecycle } from "@/src/features/analytics"
 
 function RootLayoutNav() {
   const { t } = useTranslation()
+  const colorScheme = useAppColorScheme()
   /* 진입 URL 은 한 번만 쓰인다. 비우지 않으면 네이티브에 남아서 **리로드할 때마다**
      같은 화면에서 시작한다(`useConsumeEntryUrl` 머리말). */
   useConsumeEntryUrl()
@@ -68,6 +71,7 @@ function RootLayoutNav() {
   const canUseAppNotifications = isFullyEntered
   useNotifications(canUseAppNotifications)
   useFoodAnalysisRecovery(canUseAppNotifications)
+  useMedicationReminders(canUseAppNotifications)
   const isSignupInProgress = useSignupStore((s) => s.isSignupInProgress)
   const isOnboardingInProgress = useOnboardingStore(
     (s) => s.isOnboardingInProgress,
@@ -213,8 +217,12 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Stack
+        screenListeners={{
+          transitionEnd: () =>
+            setStatusBarStyle(colorScheme === "dark" ? "light" : "dark"),
+        }}
         screenOptions={{
           headerShown: false,
           headerShadowVisible: false,
@@ -226,10 +234,23 @@ function RootLayoutNav() {
         <Stack.Screen name="(settings)" />
         <Stack.Screen name="(write)" />
         {/* AI 상담 — 탭이 아니라 어디서든 띄우는 전역 모달. 아래로 쓸어 닫는다. */}
-        <Stack.Screen name="consult" options={{ presentation: "modal" }} />
+        <Stack.Screen
+          name="consult"
+          options={{ presentation: "card", animation: "slide_from_right" }}
+        />
         {/* 통계 — 홈에서 밀고 들어가는 일반 페이지다. 등록해 두지 않으면
             기본값에 맡겨져 모달처럼 얹혀 보인다. */}
         <Stack.Screen name="statistics" options={{ presentation: "card" }} />
+        {/* 식단 리포트 — 2026-09-04 시안부터 바텀시트가 아니라 페이지다(홈·통계에서 민다). */}
+        <Stack.Screen name="meal-report" options={{ presentation: "card" }} />
+        {/* 푸드 카메라 — 식사 시트의 "사진 촬영하기". 아래에서 올라오는 전체화면. */}
+        <Stack.Screen
+          name="food-camera"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
         {/* 식당 상세·검색·목록·저장한 곳·제보 스택. `statistics` 와 같은 이유로 등록한다 —
             빼 두면 기본값에 맡겨져 지도 탭 위에 모달처럼 얹혀 보이고, 카드 전환이 아니라
             아래에서 올라온다. 스택 내부의 화면별 presentation 은

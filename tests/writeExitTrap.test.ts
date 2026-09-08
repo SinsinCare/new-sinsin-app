@@ -1,7 +1,7 @@
 /**
  * **확인창을 그릴 수 없는 갈래에서 초안 가드가 서 있는가** — 나갈 문이 사라지는 함정.
  *
- * ## 실측된 결함 (`app/(write)/free/[id].tsx`)
+ * ## 실측된 결함 (`src/features/recipe/views/FreePostEditScreen.tsx`)
  *
  * 이 화면의 `usePreventRemove(hasChanges, …)` 콜백이 하는 일은 딱 하나,
  * `setConfirmExitVisible(true)` 다. 그런데 `<ConfirmExitModal>` 은 파일 맨 아래 —
@@ -49,7 +49,7 @@ function read(relative: string): string {
   return codeOnly(fs.readFileSync(path.join(ROOT, relative), "utf8"))
 }
 
-const EDIT_FILE = "app/(write)/free/[id].tsx"
+const EDIT_FILE = "src/features/recipe/views/FreePostEditScreen.tsx"
 const EDIT = read(EDIT_FILE)
 
 /* ── 소스에서 식을 꺼낸다 ────────────────────────────────────────────────── */

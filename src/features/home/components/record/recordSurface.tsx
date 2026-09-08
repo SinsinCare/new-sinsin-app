@@ -68,7 +68,7 @@ export function RecordSection({
 /** 섹션 사이 8px 밴드. 구분선 대신 면으로 끊는다. */
 export function SectionBand() {
   const surface = useSurface()
-  return <View style={[styles.band, { backgroundColor: surface.surface }]} />
+  return <View style={[styles.band, { backgroundColor: surface.band }]} />
 }
 
 /** 섹션 헤더 우측의 보조 동작(되돌리기 등). */
@@ -195,7 +195,7 @@ export function RecordChip({
       press.value,
       [0, 1],
       [
-        selected ? surface.surfaceBrand : surface.surface,
+        selected ? surface.surfaceBrand : surface.surfaceSunken,
         surface.surfacePressed,
       ],
     ),

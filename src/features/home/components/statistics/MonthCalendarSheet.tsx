@@ -1,28 +1,32 @@
+import {
+  FONT_SCALE,
+  effectiveTextScale,
+} from "@/src/design-system-v2/tokens/fontScaling"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useEffect, useMemo, useState } from "react"
-import { Pressable, StyleSheet, View } from "react-native"
+import { useEffect, useRef, useState } from "react"
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native"
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { Text } from "@/src/shared/components/AppText"
-
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { V2BottomSheet } from "@/src/design-system-v2"
-import { LAYOUT } from "@/src/theme/surface"
-
 import { useMonthDiaryExistence } from "../../hooks/useMonthDiaryExistence"
-import { useTranslation } from "react-i18next"
+import { CalendarDay } from "../calendar/CalendarDay"
+import {
+  calendarDateKey,
+  calendarMonth,
+  calendarWeeks,
+  isFutureCalendarDate,
+} from "../calendar/calendarModel"
 
-/**
- * 날짜 선택 시트.
- *
- * 세 상태가 서로 다른 채널을 쓴다 — 겹쳐도 읽히게:
- *   선택 = 잉크 원(면) · 오늘 = 브랜드색 숫자(글자) · 기록 = 4pt 도트(마크).
- * 예전에는 셋 다 "채운 원"이라 그리드가 얼룩졌고 오늘과 선택이 같은
- * 오렌지로 구분되지 않았다. 선택을 브랜드색이 아닌 잉크로 칠하는 이유도
- * 같다 — 브랜드는 "오늘"과 "기록"이라는 의미에 이미 배정돼 있다.
- *
- * 월 스와이프는 넣지 않는다 — 시트 자체가 세로 드래그를 쓰고 있어
- * 제스처가 충돌한다. 횡 이동은 ‹ › 와 [오늘] 지름길이 담당한다.
- */
 interface MonthCalendarSheetProps {
   visible: boolean
   selectedDate: Date
@@ -31,6 +35,7 @@ interface MonthCalendarSheetProps {
   disableFuture?: boolean
 }
 
+/** Mobbin references and interaction choices: docs/design/calendar-refresh-2026-09-05/REVIEW.md. */
 export function MonthCalendarSheet({
   visible,
   selectedDate,
@@ -40,271 +45,328 @@ export function MonthCalendarSheet({
 }: MonthCalendarSheetProps) {
   const { t, i18n } = useTranslation()
   const s = useSurface()
-  const isEnglish = i18n.language.startsWith("en")
-  const locale = isEnglish ? "en-US" : "ko-KR"
-  const weekStartsMonday = !isEnglish
-  const daysOfWeek = useMemo(() => {
-    const sunday = new Date(2024, 0, 7)
-    return Array.from({ length: 7 }, (_, index) => {
-      const offset = weekStartsMonday ? (index + 1) % 7 : index
-      const date = new Date(sunday)
-      date.setDate(sunday.getDate() + offset)
-      return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date)
-    })
-  }, [locale, weekStartsMonday])
-  const [viewYear, setViewYear] = useState(selectedDate.getFullYear())
-  const [viewMonth, setViewMonth] = useState(selectedDate.getMonth())
-
-  // 열 때마다 선택된 날짜의 달로 돌아온다 — 지난번에 넘겨 본 달이
-  // 남아 있으면 "내가 고른 날이 없는 달"이 먼저 보인다(실제 버그였다).
+  const insets = useSafeAreaInsets()
+  const { height, fontScale: systemFontScale } = useWindowDimensions()
+  const fontScale = effectiveTextScale(systemFontScale, FONT_SCALE.body)
+  const locale = i18n.language.startsWith("en") ? "en-US" : "ko-KR"
+  const [month, setMonth] = useState(() => calendarMonth(selectedDate))
+  const [choosingMonth, setChoosingMonth] = useState(false)
+  const [year, setYear] = useState(selectedDate.getFullYear())
+  const opened = useRef(false)
+  const selectedKey = calendarDateKey(selectedDate)
   useEffect(() => {
-    if (!visible) return
-    setViewYear(selectedDate.getFullYear())
-    setViewMonth(selectedDate.getMonth())
-  }, [visible, selectedDate])
-
-  const { data: recordedDays = new Set<number>() } = useMonthDiaryExistence(
-    viewYear,
-    viewMonth,
-  )
+    if (visible && !opened.current) {
+      setMonth(calendarMonth(selectedDate))
+      setYear(selectedDate.getFullYear())
+      setChoosingMonth(false)
+    }
+    opened.current = visible
+  }, [visible, selectedKey, selectedDate])
 
   const today = new Date()
-  const isViewingCurrentMonth =
-    today.getFullYear() === viewYear && today.getMonth() === viewMonth
-  const selectedIsToday =
-    selectedDate.getFullYear() === today.getFullYear() &&
-    selectedDate.getMonth() === today.getMonth() &&
-    selectedDate.getDate() === today.getDate()
-
-  // 다음 달 전체가 미래면 › 를 비활성한다 — 눌러도 고를 게 없는 달로
-  // 보내는 버튼은 버튼이 아니다.
-  const nextMonthDisabled =
-    disableFuture &&
-    new Date(viewYear, viewMonth + 1, 1) >
-      new Date(today.getFullYear(), today.getMonth(), 1)
-
-  const goPrevMonth = () => {
-    hapticSelection()
-    if (viewMonth === 0) {
-      setViewYear((y) => y - 1)
-      setViewMonth(11)
-    } else {
-      setViewMonth((m) => m - 1)
-    }
-  }
-
-  const goNextMonth = () => {
-    if (nextMonthDisabled) return
-    hapticSelection()
-    if (viewMonth === 11) {
-      setViewYear((y) => y + 1)
-      setViewMonth(0)
-    } else {
-      setViewMonth((m) => m + 1)
-    }
-  }
-
-  const handleSelectDate = (date: Date) => {
-    hapticSelection()
+  const query = useMonthDiaryExistence(
+    month.getFullYear(),
+    month.getMonth(),
+    visible && !choosingMonth,
+  )
+  const nextDisabled =
+    disableFuture && calendarMonth(month, 1) > calendarMonth(today)
+  const rowHeight = Math.max(44, Math.ceil(24 * fontScale + 16)) + 4
+  const gridHeight = rowHeight * 6 + Math.ceil(18 * fontScale) + 12
+  const title = new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "long",
+  }).format(month)
+  const selectDate = (date: Date) => {
+    if (disableFuture && isFutureCalendarDate(date)) return
     onSelectDate(date)
     onClose()
   }
-
-  const goToday = () => {
-    handleSelectDate(
-      new Date(today.getFullYear(), today.getMonth(), today.getDate()),
-    )
+  const shiftMonth = (offset: number) => {
+    hapticSelection()
+    setMonth((current) => calendarMonth(current, offset))
   }
 
-  // 실제 주 수만 렌더한다(4~6주). 6주 고정은 4주 달에 빈 두 줄을 남긴다.
-  const weeks = useMemo(() => {
-    const firstDay = new Date(viewYear, viewMonth, 1)
-    const startOffset = weekStartsMonday
-      ? firstDay.getDay() === 0
-        ? 6
-        : firstDay.getDay() - 1
-      : firstDay.getDay()
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
-
-    const cells: (number | null)[] = [
-      ...Array(startOffset).fill(null),
-      ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-    ]
-    while (cells.length % 7 !== 0) cells.push(null)
-
-    const rows: (number | null)[][] = []
-    for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7))
-    return rows
-  }, [viewYear, viewMonth, weekStartsMonday])
-
-  const isToday = (day: number) =>
-    isViewingCurrentMonth && today.getDate() === day
-  const isSelected = (day: number) =>
-    selectedDate.getFullYear() === viewYear &&
-    selectedDate.getMonth() === viewMonth &&
-    selectedDate.getDate() === day
-  const isFutureDay = (day: number) =>
-    new Date(viewYear, viewMonth, day) >
-    new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-  // 올해면 "7월", 다른 해면 "2025년 12월" — 대부분의 경우 연도는 소음이다.
-  const monthTitle = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    ...(viewYear === today.getFullYear() ? {} : { year: "numeric" as const }),
-  }).format(new Date(viewYear, viewMonth, 1))
-
   return (
-    /* 고정 56% 스냅을 버렸다. 6주짜리 달에서는 마지막 주 행이 56% 밖으로 잘렸고
-       (SE 계열 375×667) Tamagui 프레임이 `overflow:hidden` 이라 스크롤로도 못 갔다.
-       이제 시트가 달력 높이에 맞춰 자란다. */
     <V2BottomSheet
       surface="statistics_month_picker"
       visible={visible}
       onClose={onClose}
     >
-      <View style={styles.body}>
-        {/* ── 헤더: 타이틀(주인) · 오늘 지름길 · 월 이동 ── */}
-        <View style={styles.head}>
-          <Text style={[styles.title, { color: s.textStrong }]}>
-            {monthTitle}
-          </Text>
-
-          <View style={styles.headRight}>
-            {!selectedIsToday && (
+      <ScrollView
+        key={fontScale}
+        style={{
+          flexGrow: 0,
+          maxHeight: Math.max(240, height - insets.top - insets.bottom - 100),
+        }}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.body}>
+          <View style={styles.topRow}>
+            <Text style={[styles.eyebrow, { color: s.text }]}>
+              {t("stats.calendar.title")}
+            </Text>
+            <View style={styles.actions}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("stats.calendar.goToday")}
-                onPress={goToday}
-                hitSlop={6}
+                onPress={() => {
+                  hapticSelection()
+                  selectDate(today)
+                }}
+                style={({ pressed }) => [
+                  styles.today,
+                  {
+                    backgroundColor: pressed
+                      ? s.surfacePressed
+                      : s.surfaceSunken,
+                  },
+                ]}
               >
-                {({ pressed }) => (
-                  <View
-                    style={[
-                      styles.todayPill,
-                      {
-                        backgroundColor: pressed ? s.surfacePressed : s.surface,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.todayLabel, { color: s.text }]}>
-                      {t("stats.calendar.today")}
-                    </Text>
-                  </View>
-                )}
+                <Text style={[styles.todayText, { color: s.textStrong }]}>
+                  {t("stats.calendar.today")}
+                </Text>
               </Pressable>
-            )}
-
-            <NavButton
-              icon="chevron-back"
-              label={t("stats.calendar.previousMonth")}
-              onPress={goPrevMonth}
-              s={s}
-            />
-            <NavButton
-              icon="chevron-forward"
-              label={t("stats.calendar.nextMonth")}
-              onPress={goNextMonth}
-              disabled={nextMonthDisabled}
-              s={s}
-            />
-          </View>
-        </View>
-
-        {/* ── 요일 ── */}
-        <View style={styles.weekRow}>
-          {daysOfWeek.map((d) => (
-            <View key={d} style={styles.cell}>
-              <Text style={[styles.weekday, { color: s.textWeak }]}>{d}</Text>
+              <NavButton
+                icon="close"
+                label={t("action.close")}
+                onPress={onClose}
+              />
             </View>
-          ))}
-        </View>
+          </View>
+          <View
+            style={[
+              styles.monthRow,
+              { minHeight: Math.max(64, Math.ceil(58 * fontScale)) },
+            ]}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                choosingMonth
+                  ? t("stats.calendar.backToDays")
+                  : t("stats.calendar.chooseMonth", { month: title })
+              }
+              accessibilityState={{ expanded: choosingMonth }}
+              style={styles.monthTrigger}
+              onPress={() => {
+                hapticSelection()
+                setYear(month.getFullYear())
+                setChoosingMonth((value) => !value)
+              }}
+            >
+              <View style={styles.monthHeading}>
+                {!choosingMonth ? (
+                  <Text style={[styles.yearLabel, { color: s.text }]}>
+                    {new Intl.DateTimeFormat(locale, {
+                      year: "numeric",
+                    }).format(month)}
+                  </Text>
+                ) : null}
+                <Text style={[styles.monthTitle, { color: s.textStrong }]}>
+                  {new Intl.DateTimeFormat(
+                    locale,
+                    choosingMonth ? { year: "numeric" } : { month: "long" },
+                  ).format(choosingMonth ? new Date(year, 0, 1) : month)}
+                </Text>
+              </View>
+              <Ionicons
+                name={choosingMonth ? "chevron-up" : "chevron-down"}
+                style={styles.monthChevron}
+                size={16}
+                color={s.text}
+              />
+            </Pressable>
+            <View style={styles.actions}>
+              <NavButton
+                icon="chevron-back"
+                label={t(
+                  choosingMonth
+                    ? "stats.calendar.previousYear"
+                    : "stats.calendar.previousMonth",
+                )}
+                onPress={() =>
+                  choosingMonth
+                    ? (hapticSelection(), setYear((value) => value - 1))
+                    : shiftMonth(-1)
+                }
+                disabled={choosingMonth && year <= 1900}
+              />
+              <NavButton
+                icon="chevron-forward"
+                label={t(
+                  choosingMonth
+                    ? "stats.calendar.nextYear"
+                    : "stats.calendar.nextMonth",
+                )}
+                onPress={() =>
+                  choosingMonth
+                    ? (hapticSelection(), setYear((value) => value + 1))
+                    : shiftMonth(1)
+                }
+                disabled={
+                  choosingMonth
+                    ? disableFuture && year >= today.getFullYear()
+                    : nextDisabled
+                }
+              />
+            </View>
+          </View>
 
-        {/* ── 날짜 ── */}
-        <View style={styles.grid}>
-          {weeks.map((week, row) => (
-            <View key={row} style={styles.weekRow}>
-              {week.map((day, col) => {
-                if (!day) return <View key={col} style={styles.cell} />
-
-                const selected = isSelected(day)
-                const todayCell = isToday(day)
-                const hasRecord = recordedDays.has(day)
-                const disabled = disableFuture && isFutureDay(day)
-
-                const numberColor = selected
-                  ? s.canvas
-                  : disabled
-                    ? s.placeholder
-                    : todayCell
-                      ? s.brand
-                      : s.textStrong
-
-                const a11y = [
-                  new Intl.DateTimeFormat(locale, {
-                    month: "long",
-                    day: "numeric",
-                  }).format(new Date(viewYear, viewMonth, day)),
-                  todayCell ? t("stats.calendar.today") : null,
-                  hasRecord ? t("stats.calendar.hasRecord") : null,
-                  selected ? t("stats.calendar.selected") : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ")
-
-                return (
-                  <Pressable
-                    key={col}
-                    style={styles.cell}
-                    disabled={disabled}
-                    accessibilityRole="button"
-                    accessibilityLabel={a11y}
-                    accessibilityState={{ selected, disabled }}
-                    onPress={() =>
-                      handleSelectDate(new Date(viewYear, viewMonth, day))
-                    }
-                  >
-                    {({ pressed }) => (
-                      <View
-                        style={[
-                          styles.dayCircle,
-                          selected
-                            ? { backgroundColor: s.textStrong }
+          <Animated.View
+            key={choosingMonth ? `months-${year}` : calendarDateKey(month)}
+            entering={FadeIn.duration(160).reduceMotion(ReduceMotion.System)}
+            style={{ minHeight: gridHeight }}
+          >
+            {choosingMonth ? (
+              <View style={[styles.monthGrid, { minHeight: gridHeight }]}>
+                {Array.from({ length: 12 }, (_, index) => {
+                  const value = new Date(year, index, 1)
+                  const selected =
+                    year === month.getFullYear() && index === month.getMonth()
+                  const disabled = disableFuture && value > calendarMonth(today)
+                  return (
+                    <Pressable
+                      key={index}
+                      accessibilityRole="button"
+                      accessibilityLabel={new Intl.DateTimeFormat(locale, {
+                        year: "numeric",
+                        month: "long",
+                      }).format(value)}
+                      accessibilityState={{ selected, disabled }}
+                      disabled={disabled}
+                      style={({ pressed }) => [
+                        styles.monthCell,
+                        {
+                          minHeight: Math.max(
+                            52,
+                            Math.ceil(24 * fontScale + 24),
+                          ),
+                          backgroundColor: selected
+                            ? s.textStrong
                             : pressed
-                              ? { backgroundColor: s.surfacePressed }
-                              : null,
+                              ? s.surfacePressed
+                              : s.surfaceSunken,
+                        },
+                      ]}
+                      onPress={() => {
+                        hapticSelection()
+                        setMonth(value)
+                        setChoosingMonth(false)
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.monthName,
+                          {
+                            color: selected
+                              ? s.canvas
+                              : disabled
+                                ? s.placeholder
+                                : s.textStrong,
+                          },
                         ]}
                       >
-                        <Text
-                          style={[
-                            styles.dayNumber,
-                            { color: numberColor },
-                            (selected || todayCell) && styles.dayNumberStrong,
-                          ]}
-                        >
-                          {day}
-                        </Text>
-                        {/* 기록 도트 — 선택 원 안에서는 흰 도트로 살아남는다 */}
-                        <View
-                          style={[
-                            styles.dot,
-                            {
-                              backgroundColor: hasRecord
-                                ? selected
-                                  ? s.canvas
-                                  : s.brand
-                                : "transparent",
-                            },
-                          ]}
+                        {new Intl.DateTimeFormat(locale, {
+                          month: "short",
+                        }).format(value)}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            ) : (
+              <>
+                <View style={styles.weekdays}>
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <Text
+                      key={index}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      style={[styles.weekday, { color: s.text }]}
+                    >
+                      {new Intl.DateTimeFormat(locale, {
+                        weekday: "short",
+                      }).format(new Date(2024, 0, 8 + index))}
+                    </Text>
+                  ))}
+                </View>
+                {calendarWeeks(month).map((week, index) => (
+                  <View
+                    key={index}
+                    style={[styles.week, { minHeight: rowHeight }]}
+                  >
+                    {week.map((date, column) =>
+                      date ? (
+                        <CalendarDay
+                          key={column}
+                          date={date}
+                          selectedDate={selectedDate}
+                          today={today}
+                          disabled={
+                            disableFuture && isFutureCalendarDate(date, today)
+                          }
+                          hasRecord={
+                            query.data?.has(calendarDateKey(date)) ?? false
+                          }
+                          onSelect={selectDate}
                         />
-                      </View>
+                      ) : (
+                        <View key={column} style={styles.blank} />
+                      ),
                     )}
-                  </Pressable>
-                )
-              })}
-            </View>
-          ))}
+                  </View>
+                ))}
+              </>
+            )}
+          </Animated.View>
+
+          <View
+            style={[
+              styles.legend,
+              {
+                borderTopColor: s.border,
+                minHeight: Math.max(56, 40 * fontScale + 12),
+              },
+            ]}
+            accessibilityLiveRegion="polite"
+          >
+            {choosingMonth ? (
+              <Text style={[styles.legendText, { color: s.text }]}>
+                {t("stats.calendar.chooseMonthHint")}
+              </Text>
+            ) : query.isError ? (
+              <>
+                <Text style={[styles.legendText, { color: s.text }]}>
+                  {t("stats.calendar.loadError")}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={query.isFetching}
+                  onPress={() => void query.refetch()}
+                  style={styles.retry}
+                >
+                  <Text style={[styles.retryText, { color: s.textStrong }]}>
+                    {t("action.retry")}
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <View
+                  style={[styles.recordDot, { backgroundColor: s.brand }]}
+                />
+                <Text style={[styles.legendText, { color: s.text }]}>
+                  {query.isPending
+                    ? t("stats.calendar.loading")
+                    : t("stats.calendar.mealLegend")}
+                </Text>
+              </>
+            )}
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </V2BottomSheet>
   )
 }
@@ -313,98 +375,118 @@ function NavButton({
   icon,
   label,
   onPress,
-  disabled,
-  s,
+  disabled = false,
 }: {
-  icon: "chevron-back" | "chevron-forward"
+  icon: "chevron-back" | "chevron-forward" | "close"
   label: string
   onPress: () => void
   disabled?: boolean
-  s: ReturnType<typeof useSurface>
 }) {
+  const s = useSurface()
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={disabled ? { disabled } : undefined}
-      onPress={onPress}
+      accessibilityState={{ disabled }}
       disabled={disabled}
-      hitSlop={6}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.nav,
+        { backgroundColor: pressed ? s.surfacePressed : "transparent" },
+      ]}
     >
-      {({ pressed }) => (
-        <View
-          style={[
-            styles.navButton,
-            { backgroundColor: pressed ? s.surfacePressed : s.surface },
-          ]}
-        >
-          <Ionicons
-            name={icon}
-            size={16}
-            color={disabled ? s.placeholder : s.text}
-          />
-        </View>
-      )}
+      <Ionicons
+        name={icon}
+        size={22}
+        color={disabled ? s.placeholder : s.textStrong}
+      />
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: LAYOUT.screenX, paddingTop: 2, gap: 14 },
-
-  head: {
+  body: { paddingHorizontal: 20, gap: 12 },
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
   },
-  title: {
-    fontSize: 19,
-    lineHeight: 26,
-    letterSpacing: -0.38,
-    fontWeight: "700",
-  },
-  headRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  todayPill: {
-    height: 32,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  todayLabel: { fontSize: 13, lineHeight: 18, fontWeight: "600" },
-  navButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  weekRow: { flexDirection: "row", justifyContent: "space-between" },
-  weekday: {
-    fontSize: 12.5,
-    lineHeight: 17,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  grid: { gap: 4 },
-  cell: { flex: 1, alignItems: "center" },
-
-  dayCircle: {
-    width: 40,
-    height: 44,
+  eyebrow: { fontSize: 15, lineHeight: 22, fontWeight: "500", flex: 1 },
+  actions: { flexDirection: "row", alignItems: "center", gap: 4 },
+  today: {
+    minHeight: 44,
+    paddingHorizontal: 16,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 3,
   },
-  dayNumber: {
-    fontSize: 15,
-    lineHeight: 20,
+  todayText: { fontSize: 14, lineHeight: 20, fontWeight: "600" },
+  nav: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+  },
+  monthRow: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  monthTrigger: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    flex: 1,
+    minHeight: 48,
+    gap: 8,
+  },
+  monthChevron: { marginBottom: 10 },
+  monthHeading: { flexShrink: 1, gap: 2 },
+  yearLabel: { fontSize: 13, lineHeight: 20, fontWeight: "500" },
+  monthTitle: {
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: "600",
+    letterSpacing: -0.5,
+    flexShrink: 1,
+  },
+  weekdays: { flexDirection: "row", marginBottom: 12 },
+  weekday: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 18,
     fontWeight: "500",
-    fontVariant: ["tabular-nums"],
   },
-  dayNumberStrong: { fontWeight: "700" },
-  dot: { width: 4, height: 4, borderRadius: 999, marginTop: 2 },
+  week: { flexDirection: "row" },
+  blank: { flex: 1 },
+  monthGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignContent: "center",
+    justifyContent: "space-between",
+    rowGap: 12,
+  },
+  monthCell: {
+    width: "31%",
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  monthName: { fontSize: 16, lineHeight: 24, fontWeight: "500" },
+  legend: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 12,
+  },
+  legendText: { fontSize: 13, lineHeight: 20, flex: 1 },
+  recordDot: { width: 4, height: 4, borderRadius: 2 },
+  retry: { minHeight: 44, justifyContent: "center", paddingHorizontal: 8 },
+  retryText: { fontSize: 13, lineHeight: 20, fontWeight: "600" },
 })

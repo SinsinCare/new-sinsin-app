@@ -4,6 +4,7 @@ import {
   CHAT_STREAM_MAX_WIRE_CHARS,
   CHAT_STREAM_TIMEOUT_MS,
   createRealChatService,
+  chatApiService,
 } from "../src/services/data/chatApiService"
 import { getAppLanguage } from "../src/i18n"
 import {
@@ -106,6 +107,185 @@ async function startAbortableRequest(signal: AbortSignal) {
 }
 
 describe("chat SSE streaming", () => {
+  it("opts capable clients in and preserves exact recipe cards across partial SSE frames", async () => {
+    const onActivity = jest.fn()
+    const promise = createRealChatService().sendMessage(
+      7,
+      "오늘저녁레시피",
+      "NONE",
+      undefined,
+      undefined,
+      undefined,
+      onActivity,
+      { recipeCards: true },
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const xhr = MockXMLHttpRequest.instances.at(-1)!
+    expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+      "X-Consult-Recipe-Cards",
+      "1",
+    )
+    const recipe = {
+      version: 1,
+      timeMin: 35,
+      servings: 1,
+      ingredients: [{ name: "당면(건조)", amount: "60g" }],
+      steps: ["당면을 삶아요."],
+    }
+    const receipt = {
+      id: "recipe-1",
+      action: "recipe",
+      status: "complete",
+      sources: [{ type: "recipe", id: 45, title: "잡채덮밥 (저염)", recipe }],
+    }
+    const wire = event("activity", receipt)
+    const split = wire.indexOf("60g") + 1
+    xhr.appendResponse(wire.slice(0, split))
+    expect(onActivity).not.toHaveBeenCalled()
+    xhr.appendResponse(wire.slice(split))
+    expect(onActivity).toHaveBeenCalledWith(receipt)
+    xhr.appendResponse(
+      event("chunk", { content: "오늘은 이 레시피를 추천해요." }),
+    )
+    xhr.appendResponse(
+      event("done", {
+        messageId: 22,
+        finishReason: "STOP",
+        activities: [receipt],
+      }),
+    )
+    xhr.complete()
+    await expect(promise).resolves.toMatchObject({ activities: [receipt] })
+
+    const legacy = await startRequest()
+    expect(legacy.xhr.setRequestHeader).not.toHaveBeenCalledWith(
+      "X-Consult-Recipe-Cards",
+      "1",
+    )
+    legacy.xhr.appendResponse(
+      event("chunk", { content: "기존 답변" }) +
+        event("done", { messageId: 23, finishReason: "STOP" }),
+    )
+    legacy.xhr.complete()
+    await expect(legacy.promise).resolves.toMatchObject({
+      content: "기존 답변",
+    })
+  })
+  it("opts data cards in and preserves a missing-intake snapshot through SSE and completion", async () => {
+    const onActivity = jest.fn()
+    const promise = createRealChatService().sendMessage(
+      7,
+      "오늘 섭취량",
+      "NONE",
+      undefined,
+      undefined,
+      undefined,
+      onActivity,
+      { dataCards: true },
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const xhr = MockXMLHttpRequest.instances.at(-1)!
+    expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+      "X-Consult-Data-Cards",
+      "1",
+    )
+    const nutrition = {
+      version: 1,
+      kind: "intake",
+      date: "2026-09-06",
+      asOf: "2026-09-06T01:00:00.000Z",
+      recorded: false,
+      proteinBasisKg: null,
+      rows: ["sodium", "potassium", "phosphorus", "protein", "water"].map(
+        (nutrient) => ({
+          nutrient,
+          unit:
+            nutrient === "protein" ? "g" : nutrient === "water" ? "mL" : "mg",
+          target: null,
+          consumed: null,
+        }),
+      ),
+    }
+    const activity = {
+      id: "intake",
+      action: "intake",
+      status: "complete",
+      outcome: "empty",
+      nutrition,
+    }
+    xhr.appendResponse(event("activity", { ...activity, profile: "PRIVATE" }))
+    expect(onActivity).toHaveBeenCalledWith(activity)
+    xhr.appendResponse(
+      event("chunk", { content: "기록이 없어요." }) +
+        event("done", {
+          messageId: 24,
+          finishReason: "STOP",
+          activities: [activity],
+        }),
+    )
+    xhr.complete()
+    await expect(promise).resolves.toMatchObject({ activities: [activity] })
+  })
+  it("routes bounded activity separately from answer text and ignores unrecognized internal fields", async () => {
+    const onActivity = jest.fn()
+    const onChunk = jest.fn()
+    const promise = chatApiService.sendMessage(
+      7,
+      "질문",
+      "NONE",
+      onChunk,
+      undefined,
+      undefined,
+      onActivity,
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const xhr = MockXMLHttpRequest.instances.at(-1)!
+    xhr.appendResponse(
+      event("activity", {
+        id: "tool-1",
+        action: "recipes",
+        status: "running",
+        reasoning: "PRIVATE",
+      }),
+    )
+    xhr.appendResponse(
+      event("activity", {
+        id: "invalid",
+        action: "raw_reasoning",
+        status: "complete",
+      }),
+    )
+    xhr.appendResponse(
+      event("chunk", { content: "완성 문장." }) +
+        event("done", {
+          messageId: 22,
+          finishReason: "STOP",
+          activities: [
+            {
+              id: "tool-1",
+              action: "recipes",
+              status: "complete",
+              resultCount: 4,
+              reasoning: "PRIVATE",
+            },
+          ],
+        }),
+    )
+    xhr.complete()
+    expect(onActivity.mock.calls).toEqual([
+      [{ id: "tool-1", action: "recipes", status: "running" }],
+    ])
+    expect(onChunk).toHaveBeenCalledWith("완성 문장.")
+    await expect(promise).resolves.toMatchObject({
+      content: "완성 문장.",
+      activities: [
+        { id: "tool-1", action: "recipes", status: "complete", resultCount: 4 },
+      ],
+    })
+  })
   beforeAll(() => {
     Object.defineProperty(globalThis, "XMLHttpRequest", {
       configurable: true,
@@ -194,6 +374,36 @@ describe("chat SSE streaming", () => {
       createdAt: new Date(serverCreatedAt),
     })
     expect(chunks).toEqual(["안녕", "안녕하세요"])
+  })
+
+  it.each(["\n", "\r", "\r\n"])(
+    "preserves long frames and every delimiter boundary for %j line endings",
+    async (newline) => {
+      const { promise, xhr } = await startRequest()
+      const content = "한글😀".repeat(6000)
+      const wire = (
+        event("chunk", { content }) +
+        event("done", {
+          messageId: 92,
+          finishReason: "STOP",
+          role: "ASSISTANT",
+        })
+      ).replace(/\n/g, newline)
+      // Single-character reads include every CRLF and UTF-16 boundary.
+      for (const char of wire.split("")) xhr.appendResponse(char)
+      xhr.complete()
+      await expect(promise).resolves.toMatchObject({ id: 92, content })
+    },
+  )
+
+  it("rejects an oversized complete frame, including a same-read delimiter", async () => {
+    const { promise, xhr } = await startRequest()
+    const rejected = expect(promise).rejects.toMatchObject({
+      code: "STREAM_TOO_LARGE",
+    })
+    xhr.appendResponse(`data: ${"x".repeat(CHAT_STREAM_MAX_FRAME_CHARS)}\n\n`)
+    await rejected
+    expect(xhr.abort).toHaveBeenCalled()
   })
 
   it("surfaces an XMLHttpRequest timeout as a retryable structured error", async () => {
@@ -392,6 +602,6 @@ describe("chat SSE streaming", () => {
         placeholder.id,
         finalMessage,
       ),
-    ).toEqual([userMessage, finalMessage])
+    ).toEqual([userMessage, { ...finalMessage, clientKey: "message-7--2" }])
   })
 })

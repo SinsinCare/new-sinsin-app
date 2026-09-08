@@ -16,8 +16,8 @@
     "renewsOn": "Renews on {{date}}",
     "activeUntil": "Available until {{date}}",
     "manage": "Manage subscription",
-    "perDayHook": "Unlimited AI scans and chat for {{price}} a day",
-    "upgradeCta": "Start Premium"
+    "perDayHook": "Food analysis and AI consultations for {{price}} a day",
+    "upgradeCta": "Explore Premium"
   },
   "paywall": {
     "title": "Keep going with Premium",
@@ -34,16 +34,51 @@
       "history": "All of your past records"
     },
     "monthlyEquivalent": "{{price}} / month",
-    "discount": "{{percent}}% off",
-    "cta": "Start Premium",
+    "discount": "Save {{percent}}%",
+    "cta": "Subscribe to Premium",
     "restore": "Restore purchases",
     "unavailable": "We couldn't load the plans",
-    "unavailableBody": "Try opening this again in a moment. If you've already paid, nothing is lost.",
+    "unavailableBody": "Reload prices to try again. If you already subscribe, your benefits stay active.",
     "legal": "Your subscription renews automatically unless you cancel before the period ends. You can cancel any time from your store's subscription settings.",
     "testStore": "Test purchase (no real charge)",
     "perDay": "{{price}} a day",
     "benefitsTitle": "What Premium unlocks",
-    "retry": "Try again"
+    "retry": "Reload prices",
+    "heroTitle": "Make meal choices easier",
+    "heroBody": "Food analysis and AI support, together",
+    "choosePlan": "How would you like to get started?",
+    "annual": "Annual",
+    "monthly": "Monthly",
+    "billedAnnually": "Billed yearly",
+    "billedMonthly": "Billed monthly",
+    "annualCharge": "{{price}} / year · billed yearly",
+    "monthlyCharge": "{{price}} / month · billed monthly",
+    "loading": "Checking store prices",
+    "features": {
+      "scan": {
+        "title": "See nutrients in every meal",
+        "body": "Unlimited analysis from a photo or text"
+      },
+      "consult": {
+        "title": "AI that knows your health context",
+        "body": "Ask about food and everyday habits"
+      },
+      "records": {
+        "title": "Your past records, ready to revisit",
+        "body": "Explore weekly and monthly meal and health trends"
+      }
+    },
+    "purchaseError": "Your purchase could not be completed. Please try again.",
+    "annualBasis": "Annual plan · averaged over 365 days",
+    "monthlyBasis": "Monthly plan · averaged over 30 days",
+    "annualTotal": "{{price}} / year · billed yearly",
+    "monthlyTotal": "{{price}} / month · billed monthly",
+    "ctaAnnual": "Subscribe yearly",
+    "ctaMonthly": "Subscribe monthly",
+    "dailyLead": "{{price}} a day",
+    "dailyAverage": "{{price}} / day on average",
+    "annualPrice": "{{price}} / year",
+    "monthlyPrice": "{{price}} / month"
   },
   "quota": {
     "remainingDay": "{{remaining}} left today",
@@ -63,8 +98,48 @@
     "restore": "Restore purchases",
     "restoreDone": "We restored your purchases",
     "restoreEmpty": "Nothing to restore",
-    "upgrade": "Start Premium",
+    "upgrade": "Explore Premium",
     "free": "You're on the free plan",
-    "freeBody": "One AI scan a day and ten chats a month."
+    "freeBody": "One AI scan a day and ten chats a month.",
+    "restoreError": "We could not check your purchases. Please try again.",
+    "paidSummary": "View your current benefits and renewal details",
+    "freeSummary": "See what is included with your free plan",
+    "loadingBody": "Checking your current subscription",
+    "loadError": "Could not check your plan",
+    "loadErrorBody": "Reload to check your subscription status.",
+    "nextRenewal": "Next renewal",
+    "accessUntil": "Access until",
+    "included": "Your current benefits",
+    "feature": {
+      "scan": "AI food analysis",
+      "consult": "AI consultations"
+    },
+    "dailyQuota": "{{limit}} per day",
+    "monthlyQuota": "{{limit}} per month",
+    "remaining": "{{remaining}} left",
+    "access": {
+      "unknown": "Availability needs checking",
+      "locked": "Available with Premium",
+      "unlimited": "Unlimited use"
+    },
+    "management": "Manage your subscription",
+    "manageBody": "Change your payment method or cancel through your store.",
+    "premiumTitle": "More support for your daily routine",
+    "premiumBody": "Explore food analysis and AI consultation benefits with Premium.",
+    "restoreTitle": "Already subscribed?",
+    "restoreBody": "Check previous purchases to restore your benefits.",
+    "retry": "Reload plan",
+    "manageError": "Could not open your store. Please try again."
+  },
+  "account": {
+    "loading": "Checking plan",
+    "unavailable": "Try again",
+    "freeTitle": "Make meal choices easier",
+    "freeBody": "Food analysis and AI support, together",
+    "paidTitle": "Your premium membership",
+    "paidBody": "Manage your benefits and subscription",
+    "viewBenefits": "Explore premium",
+    "annualQuoteBasis": "Annual plan · {{price}} billed yearly",
+    "monthlyQuoteBasis": "Monthly plan · {{price}} billed monthly"
   }
 }

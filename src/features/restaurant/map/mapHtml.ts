@@ -122,18 +122,42 @@ export const MAP_CLUSTER_SHADOW: Readonly<Record<MapColorScheme, string>> = {
   dark: "0 2px 8px rgba(0,0,0,0.28)",
 }
 
-/** 중립색 기본 핀. 선택한 식당은 주황색 채움과 이름 말풍선으로 구분한다. */
-export const MAP_MARKER_SIZE = 16
-export const MAP_MARKER_RING = 2
-export const MAP_MARKER_BORDER = primitives.grayscale[500]
-export const MAP_MARKER_FILL = primitives.grayscale[50] // #f9fafb
-/**
- * 마커 그림자. 시안의 Figma 필터는 offset 없음 · feGaussianBlur stdDeviation 1 ·
- * 색 rgb(55,56,60) alpha 0.51 이다. CSS blur 반경은 stdDeviation 의 2배라 2px 이고,
- * 그 색은 label.alternative(#37383c82)와 같은 값이다(0x82 = 130/255 = 0.51).
- * 실측으로도 링 바로 바깥 픽셀이 #D0D0D1 로 한 단 어둡다.
- */
-export const MAP_MARKER_SHADOW = "0 0 2px rgba(55,56,60,0.51)"
+/** 식당 노드: 기본 원형, 선택 시 더 큰 둥근 사각형. 터치 영역은 별도로 유지한다. */
+export const MAP_MARKER_SIZE = 28
+export const MAP_MARKER_SELECTED_SIZE = 34
+export const MAP_MARKER_RING = 1.5
+export const MAP_LABEL_TOP = 19
+export const MAP_BUBBLE_OFFSET = 26
+/** 기본·선택·말풍선을 함께 전환한다. 라이트에 다크 노드 색이 남지 않게 한다. */
+export const MAP_NODE_PALETTE = {
+  light: {
+    fill: BRAND,
+    border: primitives.grayscale[50],
+    icon: primitives.grayscale[50],
+    shadow: "0 1px 3px rgba(42,42,55,0.16)",
+    "selected-icon": semanticLight.background.default,
+    "selected-outline": primitives.grayscale[50],
+    "bubble-fill": semanticLight.background.default,
+    "bubble-text": semanticLight.label.normal,
+    "bubble-shadow": "0 2px 8px rgba(42,42,55,0.2)",
+  },
+  dark: {
+    fill: BRAND,
+    border: primitives.grayscale[900],
+    icon: primitives.grayscale[900],
+    shadow: "0 1px 3px rgba(0,0,0,0.28)",
+    "selected-icon": primitives.grayscale[900],
+    "selected-outline": primitives.grayscale[900],
+    "bubble-fill": semanticDark.background.lower,
+    "bubble-text": semanticDark.label.normal,
+    "bubble-shadow":
+      "0 0 0 1px rgba(255,255,255,0.18), 0 2px 8px rgba(0,0,0,0.3)",
+  },
+} as const
+
+/** design-system-v2/icons/svg/icon-fork.svg의 path. WebView에서도 같은 식기 아이콘을 쓴다. */
+const RESTAURANT_ICON_PATH =
+  "M10 9H8V2H6V9H4V2H2V10C2 11.65 3.35 13 5 13H6V22H8V13H9C10.65 13 12 11.65 12 10V2H10V9ZM18 2C15.6 2 14 5.76 14 8.25C14 10.46 15.28 12.3 17 12.83V22H19V12.83C20.72 12.3 22 10.46 22 8.25C22 5.76 20.4 2 18 2Z"
 
 /**
  * 상호명 라벨 색. 시안은 **브랜드색이 아니라 본문색**으로 적는다 — 3배 타일에서 라벨
@@ -172,6 +196,7 @@ export function buildMapHtml({
   level = MAP_ZOOM.DEFAULT,
   colorScheme = "light",
 }: MapHtmlOptions): string {
+  const nodePalette = MAP_NODE_PALETTE[colorScheme]
   /*
    * ## referrer 를 보내지 않는다 — 지도 생사를 카카오 콘솔에서 분리한다 (2026-08-05)
    *
@@ -239,80 +264,55 @@ ${MAP_FONT_FACE_CSS}
   /* ── 마커 앵커 ──
      1×1 이다. 좌표에 정확히 놓이고, 보이는 것들은 전부 이 점 기준 absolute 다.
      0×0 으로 두면 일부 WebView 가 자식의 히트 테스트를 건너뛴다. */
-  .mk { position: relative; width: 1px; height: 1px; }
+  .mk { position: relative; width: 1px; height: 1px; opacity: 0; transition: opacity 180ms ease-out; }
 
-  /* 히트 영역. 링이 20px 이라 손가락으로 정확히 못 짚는다. 44px 투명 사각형을 깐다.
-     보이는 요소를 키우는 대신 이걸 쓴다 — 시각 크기는 디자인이 정한 값이다. */
+  /* 28px 노드와 별개로 44px 터치 영역을 둔다. 밀집 구간은 배치 함수에서 조정한다. */
   .mk .hit { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; }
-
-  /* 기본 마커: 밝은 원판 + 브랜드 링(도넛). 치수·색의 근거는 위 MAP_MARKER_* 주석. */
   .mk .ring { position: absolute; left: ${-MAP_MARKER_SIZE / 2}px; top: ${-MAP_MARKER_SIZE / 2}px;
               width: ${MAP_MARKER_SIZE}px; height: ${MAP_MARKER_SIZE}px;
-              border-radius: 50%; background: ${MAP_MARKER_FILL}; border: ${MAP_MARKER_RING}px solid ${MAP_MARKER_BORDER};
-              box-shadow: ${MAP_MARKER_SHADOW}; box-sizing: border-box; }
+              display: flex; align-items: center; justify-content: center; pointer-events: none;
+              border-radius: 50%; background: var(--map-node-fill, ${nodePalette.fill}); border: ${MAP_MARKER_RING}px solid var(--map-node-border, ${nodePalette.border});
+              color: var(--map-node-icon, ${nodePalette.icon}); box-shadow: var(--map-node-shadow, ${nodePalette.shadow}); box-sizing: border-box; }
+  .mk .ring svg { width: 16px; height: 16px; display: block; }
+  .mk:active .ring { transform: scale(0.94); }
 
-  /* 지도 이름은 거리명보다 과하게 강조하지 않는다. 전체 이름은 선택 말풍선과 카드에서 확인한다. */
-  .mk .name { position: absolute; left: 0; top: 13px; transform: translateX(-50%);
+  /* 이름은 지도 도로와 구분되는 중립색. 선택 시 같은 이름을 두 번 표시하지 않는다. */
+  .map-label { position: relative; width: 1px; height: 1px; pointer-events: none; }
+  .mk .name, .map-label .name { opacity: 0; transition: opacity 180ms ease-out; pointer-events: none; position: absolute; left: 0; top: ${MAP_LABEL_TOP}px; transform: translateX(-50%);
               font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap;
-              max-width: 132px; overflow: hidden; text-overflow: ellipsis;
+              width: max-content; max-width: 112px; text-align: center;
               color: var(--map-label-color, ${MAP_LABEL_COLOR[colorScheme]});
+              -webkit-text-stroke: 2.5px var(--map-label-halo, #fff); paint-order: stroke fill;
               text-shadow: 0 0 3px var(--map-label-halo, #fff), 0 0 3px var(--map-label-halo, #fff),
                            0 0 3px var(--map-label-halo, #fff), 0 0 2px var(--map-label-halo, #fff); }
 
-  /* ── 선택 말풍선 ──
-     배치는 **앵커 원점(= 좌표) 기준**이고 부모 상자 크기에 의존하지 않는다:
-     top:-18px + translateY(-100%) → 말풍선 **아랫변**이 원점에서 18px 위.
-     꼬리(아래로 5px)의 끝은 13px 위 = 링 윗변(10px 위)보다 3px 높다.
+  .name-line { display: block; max-width: 112px; overflow: hidden; text-overflow: ellipsis; }
+  .name-line.unbroken { white-space: normal; overflow-wrap: anywhere; text-wrap: balance;
+                       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; max-height: 32px; }
 
-     bottom:Npx 로 두지 않는 이유: 그 값은 부모(.mk)의 높이를 기준으로 계산되므로 앵커
-     상자 크기가 흔들리면 같이 흔들린다. 위 배치는 원점만 보므로 흔들릴 곳이 없다. */
-  /* pointer-events 를 끄는 이유: 말풍선은 불투명하고 앵커 기준 x ±90 · y -50~-18 까지
-     번진다. 강남 시드는 376곳 중 202곳이 반경 10m 안에 이웃을 가지므로, 하나를 고르면
-     그 말풍선이 이웃 마커의 탭을 통째로 삼킨다. 히트는 .hit(44px)가 계속 받는다. */
-  .mk .bubble { display: none; pointer-events: none; position: absolute; left: 0; top: -18px;
+  /* 말풍선은 노드 바로 위에 붙이고 인접 식당의 터치를 가로채지 않는다. */
+  .mk .bubble { display: none; pointer-events: none; position: absolute; left: 0; top: -${MAP_BUBBLE_OFFSET}px;
                 transform: translate(-50%, -100%); align-items: center; height: 32px; padding: 0 12px;
-                border-radius: 999px; background: ${BRAND};
-                font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap;
-                box-shadow: 0 2px 8px rgba(42,42,55,0.22); }
+                max-width: min(240px, calc(100vw - 48px)); box-sizing: border-box;
+                border-radius: 10px; background: var(--map-node-bubble-fill, ${nodePalette["bubble-fill"]});
+                font-size: 13px; font-weight: 700; color: var(--map-node-bubble-text, ${nodePalette["bubble-text"]}); white-space: nowrap;
+                box-shadow: var(--map-node-bubble-shadow, ${nodePalette["bubble-shadow"]}); }
+  .mk .bubble-name { overflow: hidden; text-overflow: ellipsis; }
   .mk .bubble::after { content: ''; position: absolute; left: 50%; bottom: -5px;
                 transform: translateX(-50%);
                 border-left: 5px solid transparent; border-right: 5px solid transparent;
-                border-top: 5px solid ${BRAND}; }
+                border-top: 5px solid var(--map-node-bubble-fill, ${nodePalette["bubble-fill"]}); }
 
-  /*
-    ── 선택 시 ──
-
-    §꼬리가 가리키는 곳 (2026-07-31 수정)
-
-    (주의: 이 파일은 통째로 템플릿 리터럴이라 주석에도 백틱을 쓸 수 없다.)
-
-    종전에는 선택하면 **링이 사라졌다**(.mk.sel .ring 이 display:none 이었다). 그래서 화면에는
-    말풍선만 남고, 그 꼬리는 **아무것도 없는 자리**를 가리켰다. 사용자 보고가 정확히
-    그것이다 — "노드에 말풍선 꼬리가 붙은 게 아니라 말풍선이 근처 이상한 위치에 생긴다".
-    좌표 계산은 맞았지만 **가리킬 대상을 우리가 지웠기 때문에** 어긋나 보였다.
-
-    지도 앱들은 반대로 한다: 선택하면 핀을 **더 또렷하게** 만들고 라벨을 그 위에 얹는다.
-    핀이 남아 있어야 '이 말풍선은 저 점의 것' 이 눈으로 이어진다.
-
-    그래서 링은 남기고 **채움을 뒤집는다**(밝은 채움 → 브랜드 채움). 선택은 색이 아니라
-    채움의 반전으로 말하므로 색각 이상에서도 갈린다. 상호명 라벨(.name)만 숨긴다 —
-    말풍선이 같은 이름을 더 크게 말하고 있어서 두 번 적을 이유가 없다.
-
-    §반전이 성립하려면 기본이 채움이 아니어야 한다 (2026-08-20)
-
-    시안에 맞춰 링을 3 → 4 로 두껍게 하면서도 **채움/링을 뒤집지 않은 이유가 여기다.**
-    기본을 '브랜드 채움 + 밝은 테두리' 로 바꾸면 선택 상태와 같은 모습이 되고, 그러면
-    선택을 말하는 것은 말풍선 하나뿐이 된다 — 말풍선은 겹침 판정에 밀려 위치가 달라지고
-    화면 밖으로도 나가므로, 점 자체가 달라지지 않으면 '어느 점을 골랐는지' 를 잃는다.
-    시안의 마커도 도넛이므로(위 MAP_MARKER_* 주석) 반전은 시안과 어긋나지도 않는다.
-
-    두 상태는 정확히 서로의 반전이다 — 같은 두 색을 채움/테두리에서 맞바꾼다. 깊이도
-    한 단 다르다(기본은 시안의 0 0 2px, 선택은 더 깊고 아래로 진 그림자).
-  */
+  /* 원 → 둥근 사각형, 크기, 밝은 외곽선으로 색상에 의존하지 않고 선택을 알린다. */
   .mk.sel .bubble { display: inline-flex; }
-  .mk.sel .name { display: none; }
-  .mk.sel .ring { background: ${BRAND}; border-color: ${MAP_MARKER_FILL};
-                  box-shadow: 0 2px 6px rgba(42,42,55,0.32); }
+  .mk.sel .name { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) { .mk, .mk .name, .map-label .name { transition: none; } }
+  .mk.sel .ring { left: ${-MAP_MARKER_SELECTED_SIZE / 2}px; top: ${-MAP_MARKER_SELECTED_SIZE / 2}px;
+                  width: ${MAP_MARKER_SELECTED_SIZE}px; height: ${MAP_MARKER_SELECTED_SIZE}px;
+                  border-radius: 10px; background: ${BRAND}; color: var(--map-node-selected-icon, ${nodePalette["selected-icon"]});
+                  border: 2px solid ${primitives.grayscale[50]};
+                  box-shadow: 0 0 0 1.5px var(--map-node-selected-outline, ${nodePalette["selected-outline"]}), 0 3px 7px rgba(42,42,55,0.3); }
+  .mk.sel .ring svg { width: 19px; height: 19px; }
 
   /* ── 클러스터: 개수 배지. 구간별로 크기를 키운다. ──
 
@@ -393,6 +393,8 @@ ${MAP_FONT_FACE_CSS}
   var lastMarkers = [];
   var selectedId = null;
   var labelsOn = null;
+  var labelInsets = { top: 0, bottom: 0, left: 0, right: 0 };
+  var labelPlacements = {};
   /** 마커 탭 직후에 함께 날아오는 지도 click 을 무시하기 위한 시각. */
   var lastTapAt = 0;
   /*
@@ -420,6 +422,7 @@ ${MAP_FONT_FACE_CSS}
   var MAP_BACKGROUNDS = ${JSON.stringify(MAP_BACKGROUND)};
   var CLUSTER_SHADOWS = ${JSON.stringify(MAP_CLUSTER_SHADOW)};
   var LABEL_COLORS = ${JSON.stringify(MAP_LABEL_COLOR)};
+  var NODE_PALETTES = ${JSON.stringify(MAP_NODE_PALETTE)};
   var TILE_FILTER = TILE_FILTERS[mapColorScheme];
 
   function post(type, payload) {
@@ -477,6 +480,12 @@ ${MAP_FONT_FACE_CSS}
       /* 글자색도 같은 자리에서 뒤집는다. 시안의 라벨은 본문색(label.normal)이라
          다크에서 라이트 값을 그대로 쓰면 halo 와 같은 어둠에 묻혀 글자가 사라진다. */
       root.style.setProperty('--map-label-color', LABEL_COLORS[mapColorScheme]);
+      var palette = NODE_PALETTES[mapColorScheme];
+      for (var key in palette) {
+        if (Object.prototype.hasOwnProperty.call(palette, key)) {
+          root.style.setProperty('--map-node-' + key, palette[key]);
+        }
+      }
     }
     toneDownTiles();
   }
@@ -633,10 +642,35 @@ ${MAP_FONT_FACE_CSS}
       var entry = store[k];
       var overlay = (entry && entry.overlay) ? entry.overlay : entry;
       if (overlay && overlay.setMap) overlay.setMap(null);
+      if (entry && entry.labelOverlay) entry.labelOverlay.setMap(null);
     }
   }
 
   /* ── 마커 ───────────────────────────────────────────── */
+
+  // Preserve words and branch names; avoid one long horizontal strip across the map.
+  function splitMarkerName(value) {
+    var text = String(value || '').replace(/\\s+/g, ' ').trim();
+    function units(part) {
+      return Array.from(part).reduce(function (sum, ch) {
+        return sum + (/^[ -~]$/.test(ch) ? 0.55 : 1);
+      }, 0);
+    }
+    if (units(text) <= 9) return [text];
+    var words = text.split(' ');
+    if (words.length < 2) return [text];
+    var best = [text], bestScore = Infinity;
+    for (var i = 1; i < words.length; i++) {
+      var first = words.slice(0, i).join(' '), second = words.slice(i).join(' ');
+      var a = units(first), b = units(second);
+      var score = Math.max(a, b) + Math.abs(a - b) * 0.3;
+      if (Math.min(a, b) < 2) score += 10;
+      // A final branch token stays intact on the second line when both lines fit.
+      if (i === words.length - 1 && /점$/.test(second) && a <= 10 && b <= 10) score -= 1;
+      if (score < bestScore) { bestScore = score; best = [first, second]; }
+    }
+    return best;
+  }
 
   function markerEl(item, showLabel) {
     var el = document.createElement('div');
@@ -644,10 +678,16 @@ ${MAP_FONT_FACE_CSS}
 
     var bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.textContent = item.name;
+    var bubbleName = document.createElement('span');
+    bubbleName.className = 'bubble-name';
+    bubbleName.textContent = item.name;
+    bubble.appendChild(bubbleName);
 
     var ring = document.createElement('div');
     ring.className = 'ring';
+    ring.setAttribute('aria-hidden', 'true');
+    // 정적 아이콘만 innerHTML로 넣는다. 서버의 상호명은 항상 textContent를 사용한다.
+    ring.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${RESTAURANT_ICON_PATH}"/></svg>';
 
     el.appendChild(bubble);
     el.appendChild(ring);
@@ -656,7 +696,14 @@ ${MAP_FONT_FACE_CSS}
     if (showLabel) {
       name = document.createElement('div');
       name.className = 'name';
-      name.textContent = item.name;
+      name.setAttribute('aria-hidden', 'true');
+      var lines = splitMarkerName(item.name);
+      for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        var line = document.createElement('span');
+        line.className = lines.length === 1 ? 'name-line unbroken' : 'name-line';
+        line.textContent = lines[lineIndex];
+        name.appendChild(line);
+      }
       el.appendChild(name);
     }
 
@@ -676,7 +723,7 @@ ${MAP_FONT_FACE_CSS}
     return { el: el, hit: hit, name: name };
   }
 
-  /** 오버레이를 전부 다시 만든다. 마커 목록이나 라벨 경계가 바뀔 때만 부른다. */
+  /** 같은 식당의 DOM·표시 상태를 유지하고 바뀐 항목만 교체한다. */
   function rebuildMarkers() {
     labelsOn = labelsVisible();
     var next = {};
@@ -690,6 +737,17 @@ ${MAP_FONT_FACE_CSS}
     */
     for (i = lastMarkers.length - 1; i >= 0; i--) {
       var item = lastMarkers[i];
+      var existing = markers[item.id];
+      if (existing && Boolean(existing.name) === labelsOn &&
+          existing.item.name === item.name && existing.item.safety === item.safety) {
+        if (existing.item.lat !== item.lat || existing.item.lng !== item.lng) {
+          existing.overlay.setPosition(new kakao.maps.LatLng(item.lat, item.lng));
+          if (existing.labelOverlay) existing.labelOverlay.setPosition(new kakao.maps.LatLng(item.lat, item.lng));
+        }
+        existing.item = item;
+        next[item.id] = existing;
+        continue;
+      }
       var parts = markerEl(item, labelsOn);
       var overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(item.lat, item.lng),
@@ -717,16 +775,19 @@ ${MAP_FONT_FACE_CSS}
         item: item, labelW: 0, labelH: 0, z: 1,
       };
     }
-    dropAll(markers);
+    for (var oldId in markers) {
+      if (markers[oldId] !== next[oldId]) {
+        markers[oldId].overlay.setMap(null);
+        if (markers[oldId].labelOverlay) markers[oldId].labelOverlay.setMap(null);
+      }
+    }
     markers = next;
 
     /*
       라벨 크기를 **여기서 딱 한 번** 잰다.
 
-      선택 클래스를 이 루프에서 붙이지 않는 것이 그 때문이다. 'mk sel' 은 CSS 로
-      .name 을 display:none 으로 만들고, 숨은 요소의 offsetWidth 는 0 이다 — 루프 안에서
-      선택을 칠하면 하필 선택된 마커만 라벨 폭을 영원히 0 으로 캐시한다. 선택은
-      아래 applySelection() 이 잰 다음에 칠한다.
+      새 노드만 읽고, 재사용하는 노드는 캐시한 크기를 유지한다.
+      이름은 opacity 로 표시하므로 숨겨진 상태에서도 크기를 잴 수 있다.
 
       읽기를 한 덩어리로 모으는 것도 의도다. 쓰기와 번갈아 읽으면 마커마다 리플로가
       한 번씩 돌아 200개면 200번이다. 여기서는 전부 붙인 뒤 한 번만 돈다.
@@ -735,7 +796,7 @@ ${MAP_FONT_FACE_CSS}
     */
     for (i = 0; i < lastMarkers.length; i++) {
       entry = next[lastMarkers[i].id];
-      if (!entry || !entry.name) continue;
+      if (!entry || !entry.name || (entry.labelW > 0 && entry.labelH > 0)) continue;
       entry.labelW = entry.name.offsetWidth;
       entry.labelH = entry.name.offsetHeight;
     }
@@ -759,6 +820,7 @@ ${MAP_FONT_FACE_CSS}
       var entry = markers[k];
       var isSel = entry.item.id === selectedId;
       entry.el.className = isSel ? 'mk sel' : 'mk';
+      entry.el.setAttribute('aria-pressed', isSel ? 'true' : 'false');
       if (entry.overlay.setZIndex) {
         entry.overlay.setZIndex(isSel ? SELECTED_Z : (entry.z || 1));
       }
@@ -798,6 +860,28 @@ ${MAP_FONT_FACE_CSS}
   /** 화면 밖 여유. 이 밖의 마커는 배치 계산에서 뺀다. */
   var LAYOUT_MARGIN = 160;
 
+  // 실제 좌표를 이동시키지 않고 겹치는 노드만 숨긴다. 선택한 식당이 항상 우선한다.
+  // 서버 순위를 유지하며 확대·이동할 때마다 다시 판단하므로 숨긴 노드도 다시 나타난다.
+  function visibleMarkerNodes(points) {
+    var ordered = points.filter(function (p) { return p.entry.item.id === selectedId; })
+      .concat(points.filter(function (p) { return p.entry.item.id !== selectedId; }));
+    var visible = [];
+    for (var i = 0; i < ordered.length; i++) {
+      var point = ordered[i];
+      var blocked = false;
+      for (var j = 0; j < visible.length; j++) {
+        var dx = point.x - visible[j].x, dy = point.y - visible[j].y;
+        if (dx * dx + dy * dy < 38 * 38) { blocked = true; break; }
+      }
+      point.entry.el.style.opacity = blocked ? '0' : '1';
+      point.entry.el.style.pointerEvents = blocked ? 'none' : '';
+      point.entry.el.setAttribute('aria-hidden', blocked ? 'true' : 'false');
+      if (blocked && point.entry.name) point.entry.name.style.opacity = '0';
+      if (!blocked) visible.push(point);
+    }
+    return visible;
+  }
+
   function applyScreenLayout() {
     if (!map) return;
     var proj = map.getProjection();
@@ -820,6 +904,8 @@ ${MAP_FONT_FACE_CSS}
       if (pt.y < -LAYOUT_MARGIN || pt.y > h + LAYOUT_MARGIN) continue;
       live.push({ entry: entry, x: pt.x, y: pt.y });
     }
+
+    live = visibleMarkerNodes(live);
 
     // 2) 겹침 순서 + 히트 영역.
     for (var a = 0; a < live.length; a++) {
@@ -855,98 +941,113 @@ ${MAP_FONT_FACE_CSS}
     if (labelsOn) applyLabelCollision(live);
   }
 
-  /*
-    라벨 충돌 판정.
+  // Names always sit below their pins. Retain readable names across small pans,
+  // considering only exposed map space and reserving the selected bubble first.
+  // A separate SDK overlay follows pan/zoom with the pin but draws above ordinary
+  // nodes. Both the label and its holder pass input through to the actual pin.
+  // Create lazily and reuse, so names that never appear allocate no extra overlay.
+  function ensureLabelOverlay(entry) {
+    if (entry.labelOverlay || !entry.name) return;
+    var holder = document.createElement('div');
+    holder.className = 'map-label';
+    holder.setAttribute('aria-hidden', 'true');
+    holder.appendChild(entry.name);
+    entry.labelOverlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(entry.item.lat, entry.item.lng),
+      content: holder, xAnchor: 0, yAnchor: 0, zIndex: 50000,
+    });
+    entry.labelOverlay.setMap(map);
+    // The SDK wraps custom content in a positioned element. Its 1px anchor must
+    // also pass through input; never change a shared map pane's pointer policy.
+    var wrapper = holder.parentElement;
+    if (wrapper && wrapper.children.length === 1 && wrapper.firstElementChild === holder) {
+      wrapper.style.pointerEvents = 'none';
+    }
+  }
 
-    ## 왜 배율만으로는 안 되는가
-
-    예전에는 level 3 이하면 라벨을 켠다는 규칙이 전부였다. 그 규칙은 마커가 고르게 흩어져
-    있다고 가정한다. 실제 데이터는 그렇지 않아서(같은 건물에 여러 곳) 켜는 순간 상호명이
-    서로 겹쳐 한 덩어리 주황 글자가 됐다 — 한 글자도 못 읽는다. 배율은 한 화면에 몇 개가
-    들어오는지는 정하지만 **그것들이 서로 겹치는지는 정하지 못한다.**
-
-    ## 규칙
-
-    - 우선순위는 **서버가 준 순서**다. 서버는 정렬(추천순·평점순…)을 이미 적용해 보냈으므로
-      배열 앞쪽이 곧 먼저 보여 줄 만한 곳이다. 화면이 다시 순위를 만들지 않는다.
-    - **선택된 곳은 언제나 이긴다.** 사용자가 방금 고른 것이므로 맨 먼저 자리를 잡는다.
-      선택 마커는 라벨 대신 말풍선을 그리므로, 말풍선이 차지하는 사각형을 대신 예약한다 —
-      예약하지 않으면 다른 라벨이 말풍선 위에 겹쳐 글자가 뒤섞인다.
-    - 이미 놓인 사각형과 겹치면 그 라벨은 **숨긴다**(마커 링은 그대로 남는다). 자리를 밀어
-      옮기지 않는다 — 옮기면 라벨과 좌표의 대응이 깨져 어느 링의 이름인지 알 수 없게 된다.
-
-    ## 비용
-
-    놓인 라벨 수는 화면 넓이 나누기 라벨 넓이로 묶이므로(390×844 에서 30개 안팎) 전체는
-    n × placed 이고, 겹쳐서 숨겨진 것은 placed 를 늘리지 않는다. 앞 단계와 달리 여기서
-    커지는 것은 n 이 아니라 placed 다.
-  */
   function applyLabelCollision(live) {
     var box = document.getElementById('map');
-    var width = box ? box.clientWidth : 0;
-    var height = box ? box.clientHeight : 0;
-    // Keep place names sparse enough to read the streets between them.
-    // Pins and their accessible names remain available when a visual label is hidden.
-    var budget = Math.max(3, Math.min(12, Math.floor(width * height / 28000)));
-    var shown = 0;
-    var order = [];
-    var selectedEntry = null;
+    var width = box ? box.clientWidth : 0, height = box ? box.clientHeight : 0;
+    var bounds = [12 + labelInsets.left, 12 + labelInsets.top,
+      width - 12 - labelInsets.right, height - 12 - labelInsets.bottom];
+    var areaBudget = Math.max(0, bounds[2] - bounds[0]) * Math.max(0, bounds[3] - bounds[1]) * 0.14;
+    var usedArea = 0, placed = [], buckets = [], nextPlacements = {};
     var i;
+    for (i = 0; i < 9; i++) buckets.push([]);
     for (i = 0; i < live.length; i++) {
-      if (live[i].entry.item.id === selectedId) selectedEntry = live[i];
-      else order.push(live[i]);
-    }
-
-    var placed = [];
-    if (selectedEntry) {
-      /* 말풍선은 지금 화면에 보이므로 실제 크기를 읽을 수 있다. 마커 하나뿐이라
-         리플로 비용도 하나다. 라벨 폭처럼 미리 캐시하지 못하는 것은 말풍선이
-         만들어질 때 display:none 이라 그때 잰 값이 0 이기 때문이다. */
-      var bubble = selectedEntry.entry.el.querySelector('.bubble');
-      if (bubble && bubble.offsetWidth > 0) {
-        var bw = bubble.offsetWidth, bh = bubble.offsetHeight;
-        /* CSS: 앵커 기준 left 50% / bottom 18px 에 가운데 정렬(링 위에 뜬다).
-           이 숫자가 CSS 와 갈리면 라벨 겹침 판정이 엉뚱한 사각형을 피하게 된다. */
-        placed.push([
-          selectedEntry.x - bw / 2, selectedEntry.y - 18 - bh,
-          selectedEntry.x + bw / 2, selectedEntry.y - 18,
-        ]);
-      }
-    }
-
-    for (i = 0; i < order.length; i++) {
-      var cell = order[i];
-      var name = cell.entry.name;
-      if (!name) continue;
-      var lw = cell.entry.labelW, lh = cell.entry.labelH;
-      if (lw <= 0 || lh <= 0) {
-        // A not-yet-measured name must still obey density and overlap limits.
-        lw = Math.min(132, Math.max(24, cell.entry.item.name.length * 12));
-        lh = 16;
-      }
-      // CSS: 앵커 기준 left 50% / top 13px 에 가운데 정렬.
-      var l = cell.x - lw / 2, t = cell.y + 13;
-      var r = l + lw, bo = t + lh;
-      var blocked = shown >= budget || l < 12 || r > width - 12 || t < 12 || bo > height - 12;
-      // A label must not run into another restaurant's pin.
-      for (var n = 0; !blocked && n < live.length; n++) {
-        if (live[n] === cell) continue;
-        if (l < live[n].x + 12 && r > live[n].x - 12 &&
-            t < live[n].y + 12 && bo > live[n].y - 12) blocked = true;
-      }
-      for (var p = 0; p < placed.length; p++) {
-        var q = placed[p];
-        if (l < q[2] + 8 && r + 8 > q[0] && t < q[3] + 8 && bo + 8 > q[1]) {
-          blocked = true;
-          break;
+      var cell = live[i], entry = cell.entry;
+      if (entry.item.id === selectedId) {
+        var bubble = entry.el.querySelector('.bubble');
+        if (bubble && bubble.offsetWidth > 0) {
+          placed.push([cell.x - bubble.offsetWidth / 2, cell.y - ${MAP_BUBBLE_OFFSET} - bubble.offsetHeight,
+            cell.x + bubble.offsetWidth / 2, cell.y - ${MAP_BUBBLE_OFFSET} + 5]);
         }
+        continue;
       }
-      name.style.display = blocked ? 'none' : '';
-      if (!blocked) {
-        placed.push([l, t, r, bo]);
-        shown++;
+      if (!entry.name || cell.x < bounds[0] || cell.x > bounds[2] ||
+          cell.y < bounds[1] || cell.y > bounds[3]) continue;
+      var col = Math.min(2, Math.floor((cell.x - bounds[0]) / Math.max(1, bounds[2] - bounds[0]) * 3));
+      var row = Math.min(2, Math.floor((cell.y - bounds[1]) / Math.max(1, bounds[3] - bounds[1]) * 3));
+      buckets[row * 3 + col].push(cell);
+    }
+    // Round-robin screen regions avoids spending the entire budget in a ranked hotspot.
+    // Within a region, keep readable names first, preserving server rank for ties.
+    for (i = 0; i < buckets.length; i++) {
+      buckets[i].sort(function (a, b) {
+        return Number(labelPlacements[b.entry.item.id] !== undefined) -
+          Number(labelPlacements[a.entry.item.id] !== undefined);
+      });
+    }
+    var order = [], depth = 0, more = true;
+    while (more) {
+      more = false;
+      for (i = 0; i < buckets.length; i++) {
+        if (buckets[i][depth]) { order.push(buckets[i][depth]); more = true; }
+      }
+      depth++;
+    }
+    // Keep existing readable names ahead of newly entering regions as well.
+    order.sort(function (a, b) {
+      return Number(labelPlacements[b.entry.item.id] !== undefined) -
+        Number(labelPlacements[a.entry.item.id] !== undefined);
+    });
+    for (i = 0; i < order.length; i++) {
+      var cell = order[i], entry = cell.entry;
+      var lw = entry.labelW, lh = entry.labelH;
+      if (lw <= 0 || lh <= 0) {
+        lw = 112; lh = 32;
+      }
+      if (usedArea + lw * lh > areaBudget) continue;
+      var l = cell.x - lw / 2, t = cell.y + ${MAP_LABEL_TOP}, r = l + lw, bottom = t + lh;
+      // New names need extra clearance; visible names persist until actually clipped.
+      var edgeGap = labelPlacements[entry.item.id] ? 0 : 6;
+      var blocked = l < bounds[0] + edgeGap || r > bounds[2] - edgeGap ||
+        t < bounds[1] + edgeGap || bottom > bounds[3] - edgeGap;
+      // Ordinary pins may sit behind a name. The selected pin retains visual priority.
+      for (var n = 0; !blocked && n < live.length; n++) {
+        if (live[n].entry.item.id !== selectedId) continue;
+        var radius = ${MAP_MARKER_SELECTED_SIZE / 2 + 3};
+        if (l < live[n].x + radius && r > live[n].x - radius &&
+            t < live[n].y + radius && bottom > live[n].y - radius) blocked = true;
+      }
+      for (var p = 0; !blocked && p < placed.length; p++) {
+        var q = placed[p];
+        if (l < q[2] + 8 && r + 8 > q[0] && t < q[3] + 8 && bottom + 8 > q[1]) blocked = true;
+      }
+      if (blocked) continue;
+      placed.push([l, t, r, bottom]);
+      usedArea += lw * lh;
+      nextPlacements[entry.item.id] = true;
+    }
+    for (i = 0; i < live.length; i++) {
+      var entry = live[i].entry;
+      if (entry.name) {
+        if (nextPlacements[entry.item.id]) ensureLabelOverlay(entry);
+        entry.name.style.opacity = nextPlacements[entry.item.id] ? '1' : '0';
       }
     }
+    // Rebuild rather than accumulating ids from places no longer on screen.
+    labelPlacements = nextPlacements;
   }
 
   /* ── 클러스터 ────────────────────────────────────────── */
@@ -1045,6 +1146,16 @@ ${MAP_FONT_FACE_CSS}
       .load("700 100px Pretendard")
       .then(applyDigitNudge)
       .catch(function () {});
+    // The 600 face controls name wrapping. Replace fallback measurements once it loads.
+    document.fonts.load("600 12px Pretendard").then(function () {
+      for (var id in markers) {
+        var entry = markers[id];
+        if (!entry.name) continue;
+        entry.labelW = entry.name.offsetWidth;
+        entry.labelH = entry.name.offsetHeight;
+      }
+      applyScreenLayout();
+    }).catch(function () {});
   }
 
   function clusterSize(count) { return count >= 100 ? 's3' : (count >= 10 ? 's2' : 's1'); }
@@ -1090,6 +1201,14 @@ ${MAP_FONT_FACE_CSS}
   /* ── 명령 API ────────────────────────────────────────── */
 
   var api = {
+    setLabelInsets: function (raw) {
+      var next = arg(raw) || {};
+      ['top', 'bottom', 'left', 'right'].forEach(function (edge) {
+        labelInsets[edge] = typeof next[edge] === 'number' && isFinite(next[edge])
+          ? Math.max(0, next[edge]) : 0;
+      });
+      applyScreenLayout();
+    },
     setMarkers: function (raw) {
       lastMarkers = arg(raw) || [];
       // 마커 모드로 들어가면 클러스터는 반드시 걷는다. 안 걷으면 두 표현이 겹쳐 보인다.
@@ -1129,6 +1248,16 @@ ${MAP_FONT_FACE_CSS}
     moveTo: function (raw) {
       var o = arg(raw); if (!o || !map) return;
       var target = new kakao.maps.LatLng(o.lat, o.lng);
+      var current = map.getCenter();
+      var projection = map.getProjection();
+      var currentPoint = projection.containerPointFromCoords(current);
+      var targetPoint = projection.containerPointFromCoords(target);
+      var sameCenter = Math.abs(currentPoint.x - targetPoint.x) <= 2 &&
+        Math.abs(currentPoint.y - targetPoint.y) <= 2;
+      var sameLevel = o.zoom === null || o.zoom === undefined || clamp(o.zoom) === map.getLevel();
+      // Kakao emits no idle for a no-op. A filter transaction still needs the
+      // current viewport acknowledgment, including when reselecting a region.
+      if (sameCenter && sameLevel) { map.setCenter(target); postIdle(); return; }
       if (o.zoom !== null && o.zoom !== undefined) {
         /*
           줌을 **즉시** 확정한 뒤 이동 하나만 남긴다.

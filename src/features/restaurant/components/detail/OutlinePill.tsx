@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 섹션 끝에 가운데로 놓이는 `사진 전체보기 ›` / `후기 더보기 ›` / `사진 더보기` pill.
  * 목업 -12 / -18 / -15.
@@ -21,7 +22,7 @@
  * 다른 pill 과 같은 모양으로 보이게 한다.
  */
 
-import { Pressable, StyleSheet, Text } from "react-native"
+import { Pressable, StyleSheet } from "react-native"
 import type { ViewStyle } from "react-native"
 
 import {

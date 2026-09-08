@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 주소 블록 — 도로명 / 지번 / 우편번호 + **동작하는** `복사`.
  *
@@ -22,9 +23,8 @@
  * 여기서 들고 있으면 상세 화면이 스크롤 위치를 복원할 때 접힘이 초기화된다.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
-import * as Clipboard from "expo-clipboard"
+import { useAddressCopy } from "../hooks/useAddressCopy"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import Animated, {
   FadeIn,
@@ -41,7 +41,7 @@ import {
   useV2Theme,
 } from "@/src/design-system-v2"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
-import { showSuccessToast } from "@/src/lib/toast"
+import { showSuccessToast, showErrorToast } from "@/src/lib/toast"
 
 /** 라벨 → 값 표기. `text` = `도로명 : 값`(카드), `badge` = `[지번] 값`(상세). */
 export type AddressLabelStyle = "text" | "badge"
@@ -188,26 +188,14 @@ function AddressRow({
 }) {
   const { t } = useTranslation("common")
   const { colors } = useV2Theme()
-  const [justCopied, setJustCopied] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current)
+  const { justCopied, copy: handleCopy } = useAddressCopy(
+    value,
+    () => {
+      if (onCopied) onCopied(value)
+      else showSuccessToast(t("restaurant.address.copied"))
     },
-    [],
+    () => showErrorToast(t("restaurant.address.copyFailed")),
   )
-
-  const handleCopy = useCallback(() => {
-    // 클립보드 쓰기는 비동기지만 실패해도 사용자가 할 수 있는 일이 없다. 화면 피드백은
-    // 낙관적으로 먼저 준다 — 실패 시 조용히 두는 편이 정체불명의 에러 토스트보다 낫다.
-    void Clipboard.setStringAsync(value)
-    setJustCopied(true)
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => setJustCopied(false), 1600)
-    if (onCopied) onCopied(value)
-    else showSuccessToast(t("restaurant.address.copied"))
-  }, [onCopied, t, value])
 
   const label = t(dynamicKey(labelKey))
 

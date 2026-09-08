@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
@@ -72,7 +73,7 @@ function GenderCard({ label, icon, selected, onPress }: GenderCardProps) {
     backgroundColor: interpolateColor(
       selection.value,
       [0, 1],
-      [surface.surface, surface.surfaceBrand],
+      [surface.surfaceSunken, surface.surfaceBrand],
     ),
     transform: [{ scale: pop.value }],
   }))
@@ -106,7 +107,10 @@ function GenderCard({ label, icon, selected, onPress }: GenderCardProps) {
           겹치면 같은 정보를 세 번 그리는 셈이다. */}
       <Animated.View style={[styles.card, cardStyle]}>
         <Image source={icon} style={styles.icon} contentFit="contain" />
-        <Animated.Text style={[styles.label, contentStyle]}>
+        <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
+          style={[styles.label, contentStyle]}
+        >
           {label}
         </Animated.Text>
       </Animated.View>

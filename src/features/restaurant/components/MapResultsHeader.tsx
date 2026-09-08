@@ -1,27 +1,37 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+import { StyleSheet, View } from "react-native"
+import { Pressable } from "react-native-gesture-handler"
 import { useTranslation } from "react-i18next"
 import {
-  radius,
   spacing,
   touchTarget,
   typography,
   useV2Theme,
   V2Icon,
 } from "@/src/design-system-v2"
+import { dynamicKey } from "@/src/i18n/dynamicKey"
+import { sortLabelKey } from "../data/filterCatalog"
+import type { SortOption } from "../types"
 import { GUTTER } from "../layout"
 
 export function MapResultsHeader({
   total,
-  bookmarkedOnly = false,
   loading,
   expanded,
+  regionCount = 0,
+  sort,
+  onPressRegion,
+  onPressSort,
   onShowMap,
   onShowList,
 }: {
-  bookmarkedOnly?: boolean
   total: number | null
   loading: boolean
   expanded: boolean
+  regionCount?: number
+  sort: SortOption
+  onPressRegion: () => void
+  onPressSort: () => void
   onShowMap: () => void
   onShowList: () => void
 }) {
@@ -29,59 +39,64 @@ export function MapResultsHeader({
   const { colors } = useV2Theme()
   return (
     <View style={styles.root}>
-      <View style={styles.summary}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPressRegion}
+        style={({ pressed }) => [styles.control, pressed && styles.pressed]}
+      >
         <Text
-          style={[typography.title.xSmallWeak, { color: colors.label.normal }]}
+          style={[typography.label.xSmallWeak, { color: colors.label.neutral }]}
         >
-          {t(
-            bookmarkedOnly
-              ? "restaurant.map.savedResultsTitle"
-              : "restaurant.map.resultsTitle",
-          )}
+          {regionCount > 0
+            ? t("restaurant.map.selectedRegions", { count: regionCount })
+            : t("restaurant.map.currentMap")}
         </Text>
+        <V2Icon name="chevronDown" size="xs" color={colors.label.neutral} />
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPressSort}
+        style={({ pressed }) => [styles.control, pressed && styles.pressed]}
+      >
         <Text
-          style={[typography.subtext.medium, { color: colors.label.neutral }]}
-          accessibilityLiveRegion="polite"
+          style={[typography.label.xSmallWeak, { color: colors.label.neutral }]}
         >
-          {loading
-            ? t("restaurant.map.findingResults")
-            : total === null
-              ? t("restaurant.map.resultsHint")
-              : t("restaurant.map.resultCount", { count: total })}
+          {t(dynamicKey(sortLabelKey(sort)))}
         </Text>
-      </View>
+        <V2Icon name="chevronDown" size="xs" color={colors.label.neutral} />
+      </Pressable>
+      <Text
+        numberOfLines={1}
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={
+          loading ? t("restaurant.map.findingResults") : undefined
+        }
+        style={[
+          typography.subtext.small,
+          styles.count,
+          { color: colors.label.neutral },
+        ]}
+      >
+        {total === null
+          ? ""
+          : t("restaurant.map.resultCount", { count: total })}
+      </Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t(
           expanded ? "restaurant.map.showMap" : "restaurant.map.showList",
         )}
         onPress={expanded ? onShowMap : onShowList}
-        style={({ pressed }) => [styles.option, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.control, pressed && styles.pressed]}
       >
-        <View
-          pointerEvents="none"
-          style={[
-            styles.optionSurface,
-            { backgroundColor: colors.fill.normal },
-          ]}
-        />
         <V2Icon
           name={expanded ? "mapPin" : "chevronDown"}
           style={expanded ? undefined : styles.expandIcon}
           size="xs"
           color={colors.label.normal}
         />
-        <Text
-          style={[
-            typography.label.xSmall,
-            {
-              color: colors.label.normal,
-            },
-          ]}
-        >
-          {t(
-            expanded ? "restaurant.map.mapAction" : "restaurant.map.listAction",
-          )}
+        <Text style={[typography.label.xSmall, { color: colors.label.normal }]}>
+          {t(expanded ? "restaurant.map.mapView" : "restaurant.map.listView")}
         </Text>
       </Pressable>
     </View>
@@ -95,30 +110,14 @@ const styles = StyleSheet.create({
     gap: spacing[12],
     paddingHorizontal: GUTTER,
   },
-  summary: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "baseline",
-    flexWrap: "wrap",
-    columnGap: spacing[8],
-    rowGap: spacing[2],
-  },
-  option: {
+  control: {
     minHeight: touchTarget.min,
-    paddingHorizontal: spacing[10],
-    paddingVertical: spacing[8],
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing[4],
-    borderRadius: radius.lg,
   },
-  optionSurface: {
-    ...StyleSheet.absoluteFillObject,
-    top: spacing[6],
-    bottom: spacing[6],
-    borderRadius: radius.full,
-  },
+  count: { flex: 1, textAlign: "right", fontVariant: ["tabular-nums"] },
   pressed: { opacity: 0.7 },
   expandIcon: { transform: [{ rotate: "180deg" }] },
 })

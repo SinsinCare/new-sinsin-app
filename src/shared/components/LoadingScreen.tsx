@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 앱을 여는 동안의 전체 화면.
  *
@@ -13,7 +15,7 @@
  */
 
 import { useEffect } from "react"
-import { StyleSheet, Text, View, useColorScheme } from "react-native"
+import { StyleSheet, View, useColorScheme } from "react-native"
 import { Image } from "expo-image"
 import Animated, {
   Easing,
@@ -104,6 +106,7 @@ export function LoadingScreen({ surface, message }: LoadingScreenProps) {
 
       {showMessage ? (
         <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
           entering={reduced ? undefined : FadeIn.duration(240)}
           style={[styles.message, { color: colors.label.alternative }]}
         >

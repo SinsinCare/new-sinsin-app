@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 검진 상세 상단의 3분할 요약 타일 — 위험 N · 주의 N · 정상 N.
  *
@@ -8,7 +9,7 @@
  * 개수가 0 인 칸도 지우지 않는다. 세 칸이 항상 있어야 눈이 위치로 상태를 읽는다.
  */
 
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

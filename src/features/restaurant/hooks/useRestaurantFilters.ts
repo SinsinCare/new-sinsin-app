@@ -90,14 +90,18 @@ export interface UseRestaurantFiltersResult {
   syncDraft: () => void
   /** `확인`. 초안을 확정한다. */
   applyDraft: () => void
+  setDraftSort: (sort: SortOption) => void
+  setDraftOpenNow: (openNow: boolean) => void
+  resetDraft: () => void
 
   /* 즉시 반영 — 시트 밖의 컨트롤 */
   setSort: (sort: SortOption) => void
   setOpenNow: (openNow: boolean) => void
   toggleBookmarkedOnly: () => void
   setQuery: (query: string) => void
-  /** 지도 홈 칩 레일. 단일 선택 토글이고 즉시 반영된다. */
-  selectRailCuisine: (type: CuisineType | null) => void
+  clearRegionSelection: () => void
+  /** 필터 시트와 같은 복수 선택. 칩 하나만 토글하고 즉시 반영한다. */
+  toggleRailCuisine: (type: CuisineType) => void
   /** AI 검색 결과 적용. 사용자가 눌러서 적용할 때만 부른다. */
   applyAiFilters: (ai: AiSearchFilters) => void
   resetAll: () => void
@@ -202,6 +206,22 @@ export function useRestaurantFilters(
     setFilters(draft)
   }, [draft])
 
+  const setDraftSort = useCallback((sort: SortOption) => {
+    setDraft((prev) => ({ ...prev, sort }))
+  }, [])
+  const setDraftOpenNow = useCallback((openNow: boolean) => {
+    setDraft((prev) => ({ ...prev, openNow }))
+  }, [])
+  const resetDraft = useCallback(() => {
+    setDraft((prev) => ({
+      ...DEFAULT_RESTAURANT_FILTERS,
+      // Reset sheet controls; preserve the search and saved-place scope outside it.
+      query: prev.query,
+      bookmarkedOnly: prev.bookmarkedOnly,
+      activeSido: prev.activeSido,
+    }))
+  }, [])
+
   /* 시트 밖 컨트롤 — 초안을 거치지 않고 바로 확정한다. 정렬시트는 자체 `다음` 으로 닫히고,
      칩 레일과 북마크 FAB 는 누르는 즉시 결과가 바뀌는 것이 목업의 동작이다. */
 
@@ -225,28 +245,27 @@ export function useRestaurantFilters(
     setDraft((prev) => ({ ...prev, query }))
   }, [])
 
-  const selectRailCuisine = useCallback((type: CuisineType | null) => {
-    // 레일은 단일 선택이다. 같은 칩을 다시 누르면 해제된다.
-    const next = type === null ? [] : [type]
-    setFilters((prev) => ({
-      ...prev,
-      cuisineTypes:
-        type !== null &&
-        prev.cuisineTypes.length === 1 &&
-        prev.cuisineTypes[0] === type
-          ? []
-          : next,
-    }))
-    setDraft((prev) => ({
-      ...prev,
-      cuisineTypes:
-        type !== null &&
-        prev.cuisineTypes.length === 1 &&
-        prev.cuisineTypes[0] === type
-          ? []
-          : next,
-    }))
-  }, [])
+  // A search destination replaces the previous geographic scope. Keep other
+  // confirmed preferences, and do not revive edits from a cancelled sheet.
+  const clearRegionSelection = useCallback(() => {
+    const next = { ...filters, regionGroups: [], regionSidos: [] }
+    setFilters(next)
+    setDraft(next)
+  }, [filters])
+
+  const toggleRailCuisine = useCallback(
+    (type: CuisineType) => {
+      const next = {
+        ...filters,
+        cuisineTypes: toggleValue(filters.cuisineTypes, type),
+      }
+      setFilters(next)
+      // Outside the sheet, start from committed selections. A cancelled draft
+      // must not reappear when the rail edits one category.
+      setDraft(next)
+    },
+    [filters],
+  )
 
   const applyAiFilters = useCallback((ai: AiSearchFilters) => {
     const { regionGroups, regionSidos } = splitAiRegionKeys(ai.regionGroups)
@@ -339,11 +358,15 @@ export function useRestaurantFilters(
     clearAllSelections,
     syncDraft,
     applyDraft,
+    setDraftSort,
+    setDraftOpenNow,
+    resetDraft,
     setSort,
     setOpenNow,
     toggleBookmarkedOnly,
     setQuery,
-    selectRailCuisine,
+    clearRegionSelection,
+    toggleRailCuisine,
     applyAiFilters,
     resetAll,
     sanitizeSortForLocation,
@@ -365,7 +388,7 @@ export function useRestaurantFilters(
  * 그래서 모르는 키는 **버린다.** AI 가 못 옮긴 표현은 `unmatchedTerms` 로 이미 정직하게
  * 표시되므로, 여기서 조용히 버리는 것이 화면에 거짓 필터를 남기는 것보다 낫다.
  */
-function splitAiRegionKeys(keys: readonly string[]): {
+export function splitAiRegionKeys(keys: readonly string[]): {
   regionGroups: string[]
   regionSidos: string[]
 } {

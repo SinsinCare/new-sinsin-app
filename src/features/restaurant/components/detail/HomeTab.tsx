@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 홈 탭 (목업 -9 / -18 / -19 / -20).
  *
@@ -41,13 +42,7 @@
  * 좌측 시작선(32)** 이 사라지는 것이다(격자 정본은 `layout.ts` 머리말).
  */
 
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native"
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native"
 import { useMemo } from "react"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"

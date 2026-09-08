@@ -76,6 +76,7 @@ export const restaurantKeys = {
   ) =>
     [
       ...RESTAURANT_MAP_KEY,
+      "places-v1",
       language,
       bboxKey(bounds),
       zoom,

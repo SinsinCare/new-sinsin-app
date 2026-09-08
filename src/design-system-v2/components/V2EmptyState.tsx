@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — EmptyState
 // 빈 상태 플레이스홀더. 세로 중앙 정렬 스택으로
 // (옵션)아이콘 → 제목 → (옵션)설명 → (옵션)액션 버튼을 조립한다.
@@ -28,7 +29,7 @@
 // 크기·색은 넘기는 쪽이 소유한다(둘 다 주면 `illustration` 이 이긴다).
 
 import { type ReactNode, useEffect, useRef } from "react"
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import {
   trackAnalyticsEvent,
   type AnalyticsSurface,

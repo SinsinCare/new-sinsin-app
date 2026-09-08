@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 상세 제목 아래의 **메타 한 줄**: `한식 · ★ 4.9 · 리뷰 8`.
  *
@@ -22,7 +23,7 @@
  * 없는 정보를 굳이 선언한다.
  */
 
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

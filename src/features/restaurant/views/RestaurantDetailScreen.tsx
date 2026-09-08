@@ -1,3 +1,10 @@
+import {
+  personalPortion,
+  type PersonalPortionSelection,
+} from "@/src/features/nutrition/utils/portionReference"
+import type { MenuItemDto, PhotoDto } from "../types"
+import { openRestaurantLink } from "../utils/openRestaurantLink"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 식당 상세 (목업 -9 ~ -20). 5탭 한 화면.
  *
@@ -68,11 +75,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
-  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type LayoutChangeEvent,
@@ -122,9 +127,11 @@ import { PhotoTab } from "../components/detail/PhotoTab"
 import { ReviewTab } from "../components/detail/ReviewTab"
 import { ReviewReportSheet } from "../components/ReviewReportSheet"
 import {
-  RestaurantConsultSheetHost,
-  type RestaurantConsultRequest,
-} from "../components/consult"
+  buildRestaurantConsultMessage,
+  buildRestaurantAssessmentParams,
+  pickConsultMenuFacts,
+} from "../consult/restaurantConsultMessage"
+import { cuisineTypeLabelKey } from "../data/filterCatalog"
 import type { ConsultQuestion } from "../consult/types"
 import { RouteAppSheet } from "../components/RouteAppSheet"
 import { canRouteTo } from "../utils/mapAppLinks"
@@ -132,7 +139,6 @@ import { restaurantDetailInstanceKey } from "../utils/detailInstanceKey"
 import { useBookmark } from "../hooks/useBookmark"
 import { useRestaurantDetail } from "../hooks/useRestaurantDetail"
 import { useRestaurantMenus } from "../hooks/useRestaurantMenus"
-import type { MenuItemDto, PhotoDto } from "../types"
 
 /** 탭 값. i18n 키와 1:1 이라 라벨은 렌더 시점에 붙인다. */
 const TABS = ["home", "menu", "photo", "review", "info"] as const
@@ -190,12 +196,6 @@ const TAB_BAR_LEAD = SECTION_GAP
  */
 const CHEVRON_INK_INSET = spacing[8]
 
-/**
- * `진단하기` 가 상담에 실어 보내는 메뉴 수 상한. `buildFoodConsultMessage` 가
- * 어차피 8개에서 자르므로 같은 수로 맞춘다 — 더 보내면 조용히 버려진다.
- */
-const DIAGNOSE_MENU_LIMIT = 8
-
 export interface RestaurantDetailScreenProps {
   /** 라우트 파라미터를 숫자로 옮긴 값. 파싱 실패면 `null` 을 넘겨 준다. */
   restaurantId: number | null
@@ -207,6 +207,7 @@ export interface RestaurantDetailScreenProps {
    * 유입이 전부 지도 실적으로 잡혀 어느 문을 다듬어야 할지 잘못 읽게 된다.
    */
   entrySource?: AnalyticsRestaurantEntrySource
+  initialTab?: "home" | "menu"
   /**
    * 후기 작성 화면으로. **라우트가 아직 없으면 주지 않는다** — 그러면 작성 유도 카드가
    * 렌더되지 않는다. 누를 수 있어 보이는데 아무 일도 없는 버튼을 만들지 않기 위한 계약이다.
@@ -232,7 +233,7 @@ export interface RestaurantDetailScreenProps {
 export function RestaurantDetailScreen(props: RestaurantDetailScreenProps) {
   return (
     <RestaurantDetailBody
-      key={restaurantDetailInstanceKey(props.restaurantId)}
+      key={restaurantDetailInstanceKey(props.restaurantId, props.initialTab)}
       {...props}
     />
   )
@@ -241,6 +242,7 @@ export function RestaurantDetailScreen(props: RestaurantDetailScreenProps) {
 function RestaurantDetailBody({
   restaurantId,
   entrySource = "deep_link",
+  initialTab = "home",
   onWriteReview,
   onOpenPhotos,
   onPressReviewAuthor,
@@ -252,7 +254,8 @@ function RestaurantDetailBody({
   const { width } = useWindowDimensions()
 
   const scrollRef = useRef<ScrollView>(null)
-  const [tab, setTab] = useState<DetailTab>("home")
+  const pendingMenuEntry = useRef(initialTab === "menu")
+  const [tab, setTab] = useState<DetailTab>(initialTab)
 
   /*
     ── 자동 다음 쪽 ──────────────────────────────────────────────
@@ -268,7 +271,7 @@ function RestaurantDetailBody({
   /** 복원 대기값. non-null 인 동안 `offsets` 를 쓰지 않는다(자기 자신을 덮는 순환 차단). */
   const pendingRestore = useRef<number | null>(null)
   /** 한 번이라도 연 탭. 언마운트하지 않으려고 기억한다. */
-  const [visited, setVisited] = useState<DetailTab[]>(["home"])
+  const [visited, setVisited] = useState<DetailTab[]>([initialTab])
   const [heroHeight, setHeroHeight] = useState(0)
   const [actionBarHeight, setActionBarHeight] = useState(0)
   const [showTitle, setShowTitle] = useState(false)
@@ -290,18 +293,6 @@ function RestaurantDetailBody({
    */
   const [reportReviewId, setReportReviewId] = useState<number | null>(null)
   const [routeSheetOpen, setRouteSheetOpen] = useState(false)
-  /**
-   * `AI 식단 상담` 시트. 신고·길찾기 시트와 같은 이유로 이 화면이 직접 갖는다.
-   *
-   * 상태가 **둘**인 것은 시트가 "열려 있는가" 와 "무엇을 자동 전송할 것인가" 가 서로
-   * 독립이기 때문이다. `질문하기` 로 열면 `consultRequest` 는 `null` 이고(빈 상태),
-   * 닫았다가 다시 열어도 앞선 요청이 다시 나가면 안 된다 — 재전송을 막는 것은
-   * 호스트 안의 `requestId` 이고, 그래서 여기서는 **누를 때마다 새 id** 를 만든다.
-   */
-  const [consultOpen, setConsultOpen] = useState(false)
-  const [consultRequest, setConsultRequest] =
-    useState<RestaurantConsultRequest | null>(null)
-
   const { detail, cardHint, isError, error, refetch } =
     useRestaurantDetail(restaurantId)
   const menus = useRestaurantMenus(restaurantId)
@@ -414,39 +405,87 @@ function RestaurantDetailBody({
     })
     router.push({
       pathname: "/consult",
-      params: buildDiagnoseParams(restaurantId, name, menus.menus),
+      params: buildRestaurantAssessmentParams({
+        restaurantId,
+        restaurantName: name,
+        cuisineLabel: detail
+          ? String(t(cuisineTypeLabelKey(detail.cuisineType) as never))
+          : "",
+        menus: menus.menus,
+        requestId: `restaurant-${restaurantId}-${Date.now()}`,
+        t: (key, options) => String(t(key as never, options as never)),
+      }),
     })
-  }, [menus.menus, name, restaurantId, router])
+  }, [detail, menus.menus, name, restaurantId, router, t])
 
-  /**
-   * 홈 탭의 `AI 식단 상담` → 시트.
-   *
-   * `handleDiagnose` 와 **일부러 다른 답을 하게** 되어 있다. 진단은 화면을 떠나
-   * 메뉴 8건 전량의 영양소 숫자를 상담에 실어 보내는 일회성 전량 대조고, 이 시트는
-   * 제자리에서 **질문이 지목한 것만** 놓고 이어서 묻는 대화다. 시트가 같은 컨텍스트를
-   * 실으면 `진단하기` 가 중복이 되므로 여기서 `buildDiagnoseParams` 를 재사용하지 않는다.
-   *
-   * 계측은 두 곳으로 나뉜다 — 어떤 질문이 눌렸는지는 `AiConsultSection` 이
-   * (`restaurant_ai_consult_question_tap`), 열림 자체는 `V2BottomSheet` 이 서페이스로
-   * 센다. 그래서 `질문하기`(=`null`)에는 따로 이벤트가 없다: 열림 수에서 질문 탭 수를
-   * 빼면 그것이 빈 상태로 연 횟수다.
-   */
+  const handleConsultPortion = useCallback(
+    (menu: MenuItemDto, selection: PersonalPortionSelection) => {
+      if (
+        !detail ||
+        restaurantId === null ||
+        !personalPortion(
+          selection.input,
+          true,
+          selection.meals,
+          selection.share,
+          new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10),
+        )
+      )
+        return
+      const prompt = buildRestaurantConsultMessage({
+        question: String(
+          t("portionGuide.consultQuestion", { name: menu.name }),
+        ),
+        restaurantName: detail.name,
+        cuisineLabel: String(
+          t(cuisineTypeLabelKey(detail.cuisineType) as never),
+        ),
+        menus: pickConsultMenuFacts([menu], [menu.name]),
+        personalSelection: selection,
+        t: (key, options) => String(t(key as never, options as never)),
+      })
+      router.push({
+        pathname: "/consult",
+        params: {
+          consultRequestId: `restaurant-portion-${restaurantId}-${Date.now()}`,
+          consultCategory: "FOOD_DIET",
+          consultPrompt: prompt,
+          consultContext: prompt.slice(prompt.indexOf("\n\n") + 2),
+          consultContextLabel: detail.name,
+          consultRestaurantId: String(restaurantId),
+        },
+      })
+    },
+    [detail, restaurantId, router, t],
+  )
+
   const handleAskAi = useCallback(
     (question: ConsultQuestion | null) => {
-      if (restaurantId === null) return
-      setConsultRequest(
-        question
-          ? {
-              question,
-              // 같은 질문을 두 번 눌러도 새 요청이어야 한다 — 문자열을 키로 쓰면
-              // 두 번째가 조용히 무시된다.
-              requestId: `restaurant-${restaurantId}-${question.kind}-${Date.now()}`,
-            }
-          : null,
-      )
-      setConsultOpen(true)
+      if (restaurantId === null || !detail) return
+      const context = buildRestaurantConsultMessage({
+        question: "",
+        restaurantName: detail.name,
+        cuisineLabel: String(
+          t(cuisineTypeLabelKey(detail.cuisineType) as never),
+        ),
+        menus: pickConsultMenuFacts(menus.menus, question?.menuNames ?? []),
+        t: (key, options) => String(t(key as never, options as never)),
+      }).trim()
+      router.push({
+        pathname: "/consult",
+        params: {
+          consultRequestId: `restaurant-${restaurantId}-${Date.now()}`,
+          consultCategory: "FOOD_DIET",
+          consultContext: context,
+          consultContextLabel: detail.name,
+          consultRestaurantId: String(restaurantId),
+          ...(question
+            ? { consultPrompt: `${question.text}\n\n${context}` }
+            : {}),
+        },
+      })
     },
-    [restaurantId],
+    [detail, menus.menus, restaurantId, router, t],
   )
 
   const handleToggleBookmark = useCallback(
@@ -603,7 +642,7 @@ function RestaurantDetailBody({
       emphasis: "secondary",
       onPress: handleShare,
     },
-    ...(detail.phone
+    ...(detail.phone && phoneUrl(detail.phone)
       ? [
           {
             key: "call",
@@ -612,7 +651,7 @@ function RestaurantDetailBody({
             emphasis: "secondary" as const,
             onPress: () => {
               const target = phoneUrl(detail.phone as string)
-              if (target) void Linking.openURL(target)
+              void openRestaurantLink(target, "phone")
             },
           },
         ]
@@ -663,6 +702,16 @@ function RestaurantDetailBody({
         onLayout={(event: LayoutChangeEvent) =>
           setViewportHeight(event.nativeEvent.layout.height)
         }
+        onContentSizeChange={() => {
+          if (
+            !pendingMenuEntry.current ||
+            heroHeight <= 0 ||
+            bodyMinHeight <= 0
+          )
+            return
+          pendingMenuEntry.current = false
+          scrollRef.current?.scrollTo({ y: heroHeight, animated: false })
+        }}
         contentContainerStyle={{ paddingBottom: actionBarHeight }}
       >
         {/* index 0 — 히어로. 높이를 재서 탭 전환·타이틀 임계값에 쓴다. */}
@@ -902,8 +951,10 @@ function RestaurantDetailBody({
                   profileMissing={menus.profileMissing}
                   truncated={menus.truncated}
                   isLoading={menus.isLoading}
+                  isRefreshing={menus.isRefreshing}
                   isError={menus.isError}
                   onRetry={menus.refetch}
+                  onConsultPortion={handleConsultPortion}
                 />
               )}
               {value === "photo" && (
@@ -968,26 +1019,6 @@ function RestaurantDetailBody({
         onClose={() => setRouteSheetOpen(false)}
         target={{ lat: detail.lat, lng: detail.lng, name: detail.name }}
       />
-
-      {/*
-        `AI 식단 상담`. 스크롤 밖 형제인 것은 위 둘과 같은 이유지만, 여기는 조건이 하나 더
-        붙는다 — 이 호스트는 시트가 아니라 **대화를 소유**한다(`useChat`). 홈 탭 안에 두면
-        탭을 옮기는 순간 언마운트되어 진행 중인 답변이 끊기고, `visible` 로 감싸면 시트를
-        닫을 때마다 대화가 통째로 사라진다. 상세 화면이 사는 동안 항상 마운트돼 있어야
-        "물어보고 닫았다가 다시 열면 답이 와 있다" 가 성립한다.
-
-        화면을 떠날 때의 정리는 `RestaurantDetailBody` 의 인스턴스 키 리마운트가 한다
-        (`RestaurantDetailScreen` 머리말) — 그때 `useChat` 의 정리 이펙트가 스트림을 끊는다.
-      */}
-      <RestaurantConsultSheetHost
-        visible={consultOpen}
-        onClose={() => setConsultOpen(false)}
-        restaurantId={restaurantId}
-        restaurantName={detail.name}
-        cuisineType={detail.cuisineType}
-        menus={menus.menus}
-        request={consultRequest}
-      />
     </View>
   )
 }
@@ -1051,41 +1082,6 @@ function heroPhotos(urls: string[]): PhotoDto[] {
     width: null,
     height: null,
   }))
-}
-
-/**
- * `진단하기` → `/consult` 파라미터.
- *
- * 전용 "식당 진단" 화면은 없다. 앱에서 실제로 존재하는 개인 기준 대조 흐름은
- * 상담 화면의 식이 컨텍스트(`foodConsultContext`)뿐이고, 그것이 사용자의
- * `effectiveLimits` 와 메뉴 영양소를 함께 놓고 답하는 유일한 경로다.
- *
- * `total` 을 **일부러 비운다** — 채우면 빌더가 "이 식사의 총 영양소" 줄을 만들어
- * 사용자가 메뉴 전부를 먹는다고 주장하게 된다. 우리가 아는 것은 메뉴별 값뿐이다.
- */
-function buildDiagnoseParams(
-  restaurantId: number,
-  name: string,
-  menus: MenuItemDto[],
-): { foodConsultContext: string; foodConsultRequestId: string } {
-  return {
-    foodConsultContext: JSON.stringify({
-      title: name,
-      // 서버 키에는 단위 접미사가 없다(`protein`/`sodium`/…). 예전에는 `proteinG`·`sodiumMg`
-      // 처럼 계약서 이름으로 읽어서 **영양소 네 개가 전부 `undefined`** 로 상담에 갔다 —
-      // 상담이 "영양 정보가 없는 식사" 로 답하던 이유가 이 여섯 줄이다.
-      foods: menus.slice(0, DIAGNOSE_MENU_LIMIT).map((menu) => ({
-        name: menu.name,
-        calories: menu.calories,
-        protein: menu.protein,
-        sodium: menu.sodium,
-        potassium: menu.potassium,
-        phosphorus: menu.phosphorus,
-      })),
-    }),
-    // 같은 화면에서 두 번 눌러도 새 요청으로 인식되게 시각을 섞는다.
-    foodConsultRequestId: `restaurant-${restaurantId}-${Date.now()}`,
-  }
 }
 
 const styles = StyleSheet.create({

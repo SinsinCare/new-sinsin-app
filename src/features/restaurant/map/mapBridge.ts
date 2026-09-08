@@ -290,6 +290,8 @@ function call(method: string, ...args: unknown[]): string {
 export type MapColorScheme = "light" | "dark"
 
 export interface MapCommands {
+  /** 검색창·시트가 가리는 영역을 이름 배치에서 제외한다. */
+  setLabelInsets(insets: MapPadding): void
   /** 마커 교체. 전체 교체다 — diff 는 web 쪽이 한다. */
   setMarkers(items: MapMarker[]): void
   /** ★ 클러스터 교체. 프로토타입은 클러스터가 아예 없어 서울 전역이 점 수천 개였다. */
@@ -360,6 +362,7 @@ export interface MapCommands {
  * 명령 이름을 여기 한 곳에서만 쓰므로 web 쪽과 어긋나면 타입 에러로 잡힌다.
  */
 export const mapScript = {
+  setLabelInsets: (insets: MapPadding) => call("setLabelInsets", insets),
   setMarkers: (items: MapMarker[]) => call("setMarkers", items),
   setClusters: (items: MapCluster[]) => call("setClusters", items),
   select: (id: number | null) => call("select", id),
@@ -407,43 +410,16 @@ export const mapScript = {
 
 /* ────────────────────────── 줌 규약 ────────────────────────── */
 
-/**
- * 카카오의 `level` 은 **작을수록 확대**다(1 이 가장 가깝다). 이 방향이 계속 헷갈리므로
- * 상수에 이름을 붙여 둔다. 서버의 클러스터 임계값과 같은 값을 써야 하므로
- * 여기 숫자를 바꾸면 백엔드 `CLUSTER_ZOOM_THRESHOLD` 도 같이 바꿔야 한다.
- */
+/** 카카오 level은 작을수록 확대된다. 앱은 모든 배율에서 대표 식당을 요청한다. */
 export const MAP_ZOOM = {
-  /**
-   * 최초 진입. 도보권(780×1690m)이 한 화면에 들어온다.
-   *
-   * **이 배율은 이제 클러스터 구간이다**(`CLUSTER_THRESHOLD` 와 같다). 의도한 것이다 —
-   * 이 배율에서 강남 시드 데이터는 `한식` 하나만 걸어도 마커 161개이고 링이 겹치는 쌍이
-   * 259개다(실측표는 백엔드 `CLUSTER_ZOOM_THRESHOLD` 주석). 뭉친 링 161개보다
-   * "이 블록에 33곳" 이라는 개수 배지가 더 많은 정보를 준다. 마커는 사용자가 파고든
-   * 배율(1~3)에서 나온다.
-   */
+  /** 최초 진입 도보권. 숫자 집계 대신 대표 식당 아이콘을 표시한다. */
   DEFAULT: 4,
-  /**
-   * 마커/카드 탭으로 들어갈 때. **반드시 `CLUSTER_THRESHOLD` 보다 작아야 한다** —
-   * 크거나 같으면 지도가 클러스터 모드라서 고를 마커 자체가 없다. 3 에서 2 로 내린 것이
-   * 임계값을 6→4 로 내린 변경의 짝이다.
-   */
+  /** 식당 선택 시 상세 위치를 보는 배율. */
   FOCUSED: 2,
-  /**
-   * 이 값 **이상**이면(=더 멀면) 서버가 클러스터를 준다.
-   *
-   * 백엔드 `src/domains/restaurant/mapRepository.ts` 의 `CLUSTER_ZOOM_THRESHOLD` 와
-   * **같은 값이어야 한다.** 갈라지면 서버는 클러스터를 주는데 화면은 마커를 기다려
-   * 지도가 조용히 빈다. 6 에서 4 로 내린 근거(실측표)는 그쪽 주석에 있다.
-   */
+  /** 구버전 서버의 집계 응답·클러스터 탭 호환용 임계값. */
   CLUSTER_THRESHOLD: 4,
-  /**
-   * 상호명 라벨을 그리기 시작하는 경계. 마커 모드 전 구간(1~3)에서 라벨을 그린다 —
-   * 겹치는 라벨은 배율이 아니라 **화면 좌표 충돌 판정**으로 숨긴다(`mapHtml.ts` 의
-   * `applyLabelCollision`). 배율로만 막으면 "라벨이 다 보이거나 다 없거나" 뿐이고,
-   * 데이터가 뭉친 곳에서는 어느 쪽도 맞지 않는다.
-   */
-  LABEL_THRESHOLD: 3,
+  /** 모든 배율에서 이름을 허용하고 화면의 충돌·개수 예산으로 밀도를 조절한다. */
+  LABEL_THRESHOLD: 14,
   MIN: 1,
   MAX: 14,
 } as const

@@ -1,3 +1,4 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
 /**
  * **목록의 끝 — 조용한 한 줄.**
  *
@@ -49,7 +50,7 @@ export function EndOfListRow({
   return (
     <View style={styles.row}>
       <View style={styles.line}>
-        <View style={[styles.rule, { backgroundColor: surface.hairline }]} />
+        <View style={[styles.rule, { backgroundColor: surface.border }]} />
         <Text
           style={[styles.label, { color: surface.textMuted }]}
           accessibilityRole="text"
@@ -57,7 +58,7 @@ export function EndOfListRow({
         >
           {label}
         </Text>
-        <View style={[styles.rule, { backgroundColor: surface.hairline }]} />
+        <View style={[styles.rule, { backgroundColor: surface.border }]} />
       </View>
       <Pressable
         onPress={onPressAction}
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   /** 글자 양옆의 가는 선. 두께는 헤어라인 하나 — 구분선이지 테두리가 아니다. */
   rule: {
     flex: 1,
-    height: StyleSheet.hairlineWidth,
+    height: borderWidth.thin,
   },
   label: typography.subtext.medium,
   action: typography.label.xSmall,

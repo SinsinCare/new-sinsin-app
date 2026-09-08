@@ -1,3 +1,4 @@
+import { useAvailableRestaurantSort } from "../hooks/useAvailableRestaurantSort"
 /**
  * 식당 지도 홈. 목업 `Home_restaurant` / `-1` ~ `-7`.
  *
@@ -65,15 +66,18 @@
  * 걸려 있지 않다). "지도에 식당이 안 찍힌다" 는 지적이 이것이고, 국내 지도·맛집 서비스
  * (네이버 지도 · 카카오맵 · 다이닝코드) 중 결과를 가진 채 지도를 비워 두는 곳은 없다.
  *
- * 원래 근거였던 "조건 없이 200개를 흩뿌리면 뜻이 사라진다" 는 **클러스터가 이미 푸는
- * 문제**다. 서버는 기본 배율(level 4 = `MAP_ZOOM.DEFAULT`)에서 `mode:"CLUSTER"` 로
- * 응답한다 — 실측: 강남 뷰포트에서 376곳이 덩어리 3개(310 + …)로 온다. 흩뿌려진 링 200개가
- * 아니라 "이 블록에 310곳" 이라는 개수 배지이므로 지저분해지지 않는다. 낱개 마커는
- * 사용자가 파고든 배율(1~3)에서만 나오고, 그 배율에서는 낱개로 보는 것이 목적이다.
+ * 앱은 모든 배율에서 display=places를 요청한다. 서버가 구역별 대표 식당을 실제
+ * 좌표에 반환하고, WebView가 화면에서 겹치는 노드만 숨긴다. 확대하면 더 세밀한
+ * 구역에서 식당을 다시 고른다. 구버전 서버의 CLUSTER 응답 처리는 호환용으로 남는다.
  *
  * 필터의 뜻도 그대로 남는다 — 필터는 **질의**에 들어가므로 칩을 걸면 지도에 남는 덩어리
  * 자체가 줄어든다. 즉 "내가 고른 조건에 맞는 곳" 은 여전히 지도가 말한다.
  */
+
+import {
+  restaurantCardDestination,
+  type RestaurantCardTarget,
+} from "../utils/restaurantCardNavigation"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native"
@@ -101,12 +105,7 @@ import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { logger } from "@/src/lib/logger"
 import { showInfoToast } from "@/src/lib/toast"
 
-import type {
-  CuisineType,
-  MapBounds,
-  RestaurantCardDto,
-  SortOption,
-} from "../types"
+import type { CuisineType, MapBounds, RestaurantCardDto } from "../types"
 import { MAX_BBOX_DIAGONAL_KM, bboxDiagonalKm } from "../utils/bboxKey"
 import { FALLBACK_CENTER, MAP_ZOOM, type MapMarker } from "../map/mapBridge"
 import {
@@ -114,7 +113,7 @@ import {
   type MapViewport,
   type RestaurantMapHandle,
 } from "../map/RestaurantMapView"
-import { centerFor } from "../data/regionCatalog"
+import { regionFilterDestination } from "../utils/regionFilterNavigation"
 import { isWithinKakaoCoverage } from "../utils/kakaoCoverage"
 import { selectionAfterCardPress } from "../utils/selectedFirstCard"
 import { nextClusterZoom } from "../utils/viewportAction"
@@ -125,18 +124,22 @@ import {
 } from "../utils/mapInjection"
 import { useMapSearch } from "../hooks/useMapSearch"
 import { useMyLocation } from "../hooks/useMyLocation"
-import { useRestaurantFilters } from "../hooks/useRestaurantFilters"
+import {
+  useRestaurantFilters,
+  splitAiRegionKeys,
+} from "../hooks/useRestaurantFilters"
 import { useRestaurantList } from "../hooks/useRestaurantList"
+import { useRegionFilterTransition } from "../hooks/useRegionFilterTransition"
 import { useSelectedFirstList } from "../hooks/useSelectedFirstList"
 import { AiSearchSheet } from "../components/AiSearchSheet"
 import { CategoryChipRail } from "../components/CategoryChipRail"
-import { FilterChipRow, type FilterAxis } from "../components/FilterChipRow"
-import { FilterSheet } from "../components/FilterSheet"
+import { FilterChipRow } from "../components/FilterChipRow"
+import { FilterSheet, type FilterSection } from "../components/FilterSheet"
 import { LocationPermissionBanner } from "../components/LocationPermissionBanner"
 import { MapEmptyState } from "../components/MapEmptyState"
 import { MapFabStack } from "../components/MapFabStack"
 import { MapRefreshPill } from "../components/MapRefreshPill"
-import { MapSearchBar } from "../components/MapSearchBar"
+import { MapSearchBar, MAP_SEARCH_BAR_HEIGHT } from "../components/MapSearchBar"
 import { scrimColor } from "../components/mapScrim"
 import { MapUtilityFooter } from "../components/MapUtilityFooter"
 import { RestaurantCard } from "../components/RestaurantCard"
@@ -155,9 +158,9 @@ import {
   SheetNotice,
   type RestaurantListSheetHandle,
 } from "../components/RestaurantListSheet"
-import { SortSheet } from "../components/SortSheet"
 
 /** 화면 좌우 여백. 검색바·칩 레일·FAB 가 같은 선에 맞는다. */
+
 import { GUTTER } from "../layout"
 const SIDE = GUTTER
 
@@ -205,7 +208,16 @@ export function RestaurantMapScreen({
   const sheetRef = useRef<RestaurantListSheetHandle>(null)
 
   const controls = useRestaurantFilters()
-  const { filters } = controls
+  const { filters, clearRegionSelection } = controls
+  const {
+    queryFilters,
+    isPending: regionTransitionPending,
+    begin: beginRegionTransition,
+    inspectViewport: inspectRegionViewport,
+    finish: finishRegionTransition,
+    interrupt: interruptRegionTransition,
+    destination: regionDestination,
+  } = useRegionFilterTransition(filters)
   const myLocation = useMyLocation()
   /* 콜백이 만들어진 렌더가 아니라 **지금** 좌표를 봐야 한다(`useGoBack` 과 같은 모양). */
   const myLocationRef = useRef(myLocation.coords)
@@ -250,19 +262,19 @@ export function RestaurantMapScreen({
   } | null>(null)
   const selectedId = selection?.id ?? null
   const [aiSearchOpen, setAiSearchOpen] = useState(false)
-  const [sortSheetOpen, setSortSheetOpen] = useState(false)
   /**
    * 필터 시트를 열게 만든 축. `null` 이면 시트가 닫혀 있다.
    * 열림 여부와 섹션을 한 값으로 묶는 이유: 두 state 로 나누면 "열려 있는데 섹션이
    * 없는" 조합이 생기고, 그때 시트가 어디로 스크롤해야 할지 알 수 없다.
    */
-  const [filterSection, setFilterSection] = useState<FilterAxis | null>(null)
+  const [filterSection, setFilterSection] = useState<FilterSection | null>(null)
   const [permissionBannerHidden, setPermissionBannerHidden] = useState(false)
 
   /** 상단 오버레이 실측 높이. `fitBounds` 패딩과 리스트 모드 여백에 쓴다(매직 넘버 금지). */
   const [topOverlayHeight, setTopOverlayHeight] = useState(0)
   /** 화면 컨테이너 높이. 시트 상단 Y → 시트 높이 변환에 필요하다. */
   const [containerHeight, setContainerHeight] = useState(0)
+  const [containerWidth, setContainerWidth] = useState(0)
 
   /** 시트 상단 Y(px). 드래그 중에도 실시간으로 흐른다. */
   const sheetPosition = useSharedValue(0)
@@ -368,14 +380,14 @@ export function RestaurantMapScreen({
   const [searchSeq, setSearchSeq] = useState(0)
 
   const mapSearch = useMapSearch({
-    filters,
+    filters: queryFilters,
     userLocation: myLocation.coords,
     // 지도가 죽어도 목록은 살아야 하므로 지도 질의만 끈다.
-    enabled: mapError === null,
+    enabled: mapError === null && !regionTransitionPending,
   })
 
   const list = useRestaurantList({
-    filters,
+    filters: queryFilters,
     userLocation: myLocation.coords,
     /* 지도가 죽었으면 bbox 를 쓰지 않는다 — 뷰포트를 확정할 방법이 없다.
        살아 있으면 **지도 질의가 확정한 값**을 그대로 쓴다. 화면이 자기 state 로 따로
@@ -390,13 +402,17 @@ export function RestaurantMapScreen({
       진짜 카드 순으로 두 번 깜빡이는 것을 봤다. 지도가 죽었을 때는(bbox 를 영영 못 얻는다)
       막지 않는다 — 그때는 전국 목록이 유일하게 남은 화면이다.
     */
-    enabled: mapError !== null || mapSearch.committedBounds !== null,
+    enabled:
+      !regionTransitionPending &&
+      (mapError !== null || mapSearch.committedBounds !== null),
   })
 
   /** 위치 권한이 사라지거나 커버리지 밖이면 `거리순` 을 조용히 기본값으로 되돌린다. */
-  useEffect(() => {
-    controls.sanitizeSortForLocation(myLocation.coords !== null)
-  }, [controls, myLocation.coords])
+  useAvailableRestaurantSort(
+    controls.filters.sort,
+    myLocation.coords !== null,
+    controls.sanitizeSortForLocation,
+  )
 
   /* ── 분석 (BUILD_CONTRACT §4) ────────────────────────── */
 
@@ -414,7 +430,8 @@ export function RestaurantMapScreen({
    */
   useEffect(() => {
     const pending = pendingReportRef.current
-    if (pending === null || mapSearch.isFetching) return
+    if (pending === null || mapSearch.isFetching || regionTransitionPending)
+      return
     pendingReportRef.current = null
     if (mapSearch.isError) return
     trackAnalyticsEvent("restaurant_map_viewport_search", {
@@ -430,6 +447,7 @@ export function RestaurantMapScreen({
     searchSeq,
     mapSearch.isError,
     mapSearch.isFetching,
+    regionTransitionPending,
     mapSearch.mode,
     mapSearch.total,
     mapSearch.truncated,
@@ -477,7 +495,8 @@ export function RestaurantMapScreen({
   const wasFetchingRef = useRef(false)
   useEffect(() => {
     if (mapError !== null) return
-    const fetching = mapSearch.isFetching || mapSearch.isLoading
+    const fetching =
+      regionTransitionPending || mapSearch.isFetching || mapSearch.isLoading
     const justFinished = wasFetchingRef.current && !fetching
     wasFetchingRef.current = fetching
     if (fetching) return
@@ -504,6 +523,7 @@ export function RestaurantMapScreen({
     mapSearch.isError,
     mapSearch.isFetching,
     mapSearch.isLoading,
+    regionTransitionPending,
   ])
 
   /* ── 지도 ↔ 데이터 동기화 ─────────────────────────────── */
@@ -604,7 +624,22 @@ export function RestaurantMapScreen({
 
   /* ── 지도 이벤트 ─────────────────────────────────────── */
 
+  const syncLabelInsets = useCallback(
+    (sheetTop = sheetPositionRef.current) => {
+      mapRef.current?.setLabelInsets({
+        top: topOverlayHeight,
+        bottom: Math.max(0, containerHeight - sheetTop),
+      })
+    },
+    [containerHeight, topOverlayHeight],
+  )
+
+  useEffect(() => {
+    syncLabelInsets()
+  }, [syncLabelInsets])
+
   const handleMapReady = useCallback(() => {
+    syncLabelInsets()
     /*
       검색으로 고른 지역이 있으면 그쪽이 이긴다 — 사용자가 방금 말한 목적지다.
       그 다음은 **마지막으로 보고 있던 자리**다. 오류 화면의 `다시 시도` 는 WebView 를
@@ -617,7 +652,10 @@ export function RestaurantMapScreen({
        베이지 타일 앞에서 시작한다. 판정은 `useMyLocation` 이 이미 했다(커버리지 밖이면
        `coords` 가 `null`). focus 와 마지막 뷰포트는 국내에서만 만들어지는 값이라 거르지 않는다. */
     const start =
-      focus ?? pendingViewportRef.current?.center ?? myLocation.coords
+      regionDestination() ??
+      focus ??
+      pendingViewportRef.current?.center ??
+      myLocation.coords
     if (start) {
       mapRef.current?.moveTo(start.lat, start.lng, { animate: false })
       // 여기서 옮겼으면 아래 "늦게 온 위치" 이펙트는 할 일이 없다.
@@ -647,6 +685,8 @@ export function RestaurantMapScreen({
     mapSearch.mode,
     myLocation.coords,
     selectedId,
+    syncLabelInsets,
+    regionDestination,
   ])
 
   /**
@@ -699,9 +739,11 @@ export function RestaurantMapScreen({
     // 목적지가 정해졌으므로 내 위치로 옮기는 일은 하지 않는다.
     centeredOnUserRef.current = true
     atMyLocationRef.current = false
-    mapRef.current?.moveTo(focus.lat, focus.lng, { zoom: MAP_ZOOM.DEFAULT })
+    beginRegionTransition(focus)
+    clearRegionSelection()
     armedSearchRef.current = true
-  }, [focus])
+    mapRef.current?.moveTo(focus.lat, focus.lng, { zoom: MAP_ZOOM.DEFAULT })
+  }, [beginRegionTransition, clearRegionSelection, focus])
 
   /**
    * 뷰포트를 확정하고 질의를 낸다. 확정에 실패하면(면적 상한) 분석 예약을 남기지 않는다 —
@@ -728,11 +770,23 @@ export function RestaurantMapScreen({
 
   const handleIdle = useCallback(
     (viewport: MapViewport) => {
+      const regionAction = inspectRegionViewport(
+        viewport.center,
+        viewport.bounds,
+        {
+          width: containerWidth,
+          height: containerHeight,
+        },
+      )
+      if (regionAction === "wait") return
       pendingViewportRef.current = viewport
       mapSearch.onViewportChange(viewport.bounds, viewport.zoom)
       // D7 의 예외 두 가지: 마운트 후 최초 1회, 그리고 앱이 카메라를 옮긴 직후의 예약.
       // 사용자의 손 팬은 어느 쪽도 아니다 — `handleDragStart` 가 예약을 지운다.
-      const armed = !didInitialSearch.current || armedSearchRef.current
+      const armed =
+        regionAction === "commit" ||
+        !didInitialSearch.current ||
+        armedSearchRef.current
       if (!armed) return
       /*
         **성공했을 때만 예약을 소비한다.**
@@ -749,17 +803,28 @@ export function RestaurantMapScreen({
         지도를 만지면 `handleDragStart` 가 예약을 지운다.
       */
       if (!commitSearch(viewport, true)) return
+      // Bounds and the new filters become visible in the same React batch.
+      // Failed viewport validation keeps the previous query intact.
+      if (regionAction === "commit") finishRegionTransition()
       didInitialSearch.current = true
       armedSearchRef.current = false
     },
-    [commitSearch, mapSearch],
+    [
+      commitSearch,
+      mapSearch,
+      inspectRegionViewport,
+      finishRegionTransition,
+      containerWidth,
+      containerHeight,
+    ],
   )
 
   const handleSearchThisArea = useCallback(() => {
+    if (regionTransitionPending) return
     const pending = pendingViewportRef.current
     if (!pending) return
     commitSearch(pending, false)
-  }, [commitSearch])
+  }, [commitSearch, regionTransitionPending])
 
   /**
    * 선택 마커를 **보이는 영역의 중앙**에 놓는다. 상단 오버레이와 시트가 가리는 높이를
@@ -792,13 +857,14 @@ export function RestaurantMapScreen({
         containerHeight > 0 ? Math.max(0, containerHeight - sheetTop) : 0
       // 마커·클러스터로 파고들면 카메라는 더 이상 내 위치가 아니다(탭 재탭의 루트 판정).
       atMyLocationRef.current = false
+      interruptRegionTransition()
       mapRef.current?.focusMarker(lat, lng, {
         padTop: topOverlayHeight,
         padBottom,
         zoom,
       })
     },
-    [containerHeight, topOverlayHeight],
+    [containerHeight, topOverlayHeight, interruptRegionTransition],
   )
 
   const handleMarkerPress = useCallback(
@@ -917,6 +983,7 @@ export function RestaurantMapScreen({
   }, [])
 
   const handleDragStart = useCallback(() => {
+    interruptRegionTransition()
     lastMapTouchRef.current = Date.now()
     /*
       **지도를 만졌다고 시트를 바닥까지 내리지 않는다 — 한 칸만 내린다.**
@@ -957,7 +1024,7 @@ export function RestaurantMapScreen({
        유일한 트리거다. 이 한 줄이 없으면 첫 확정이 거절된 경우(0×0 컨테이너의 첫 idle)
        예외가 살아남아 **이 팬이 끝날 때 자동 검색**이 돈다 — 정확히 D7 이 금지하는 것이다. */
     didInitialSearch.current = true
-  }, [mapSearch.emptyReason, mapSearch.isError])
+  }, [mapSearch.emptyReason, mapSearch.isError, interruptRegionTransition])
 
   const handleMapError = useCallback((message: string) => {
     if (__DEV__) {
@@ -1009,6 +1076,7 @@ export function RestaurantMapScreen({
       setIsListExpanded(index === SHEET_SNAP.EXPANDED)
       sheetIndexRef.current = index
       sheetPositionRef.current = position
+      syncLabelInsets(position)
       // 보이는 높이가 바뀌었다고 카카오에 알린다. 안 알리면 타일이 잘린 채 남는다.
       mapRef.current?.relayout()
       // 마커 탭이 예약한 재정렬. 스냅이 끝나 시트 높이가 확정된 지금 한 번 더 맞춘다.
@@ -1039,7 +1107,7 @@ export function RestaurantMapScreen({
         if (marker) focusMarkerInVisibleArea(marker.lat, marker.lng, position)
       }
     },
-    [focusMarkerInVisibleArea],
+    [focusMarkerInVisibleArea, syncLabelInsets],
   )
 
   /* ── 컨트롤 ─────────────────────────────────────────── */
@@ -1080,13 +1148,14 @@ export function RestaurantMapScreen({
         이 한 줄이 없으면 "내 위치를 눌렀는데 목록은 강남 그대로" 가 된다.
       */
       armedSearchRef.current = true
+      interruptRegionTransition()
       mapRef.current?.moveTo(coords.lat, coords.lng)
     })()
-  }, [myLocation, t])
+  }, [myLocation, t, interruptRegionTransition])
 
-  const handleSelectCuisine = useCallback(
-    (type: CuisineType | null) => {
-      controls.selectRailCuisine(type)
+  const handleToggleCuisine = useCallback(
+    (type: CuisineType) => {
+      controls.toggleRailCuisine(type)
       // 필터가 바뀌면 이전 선택은 목록에 없을 수 있다. 유령 선택을 남기지 않는다.
       setSelection(null)
     },
@@ -1120,7 +1189,14 @@ export function RestaurantMapScreen({
   })
 
   const handlePressCard = useCallback(
-    (card: RestaurantCardDto) => {
+    (
+      card: RestaurantCardDto,
+      target: RestaurantCardTarget = { type: "home" },
+    ) => {
+      if (target.type !== "home") {
+        router.push(restaurantCardDestination(card.restaurantId, "map", target))
+        return
+      }
       /* 같은 곳(=마커로 골라 맨 위에 고정된 카드)을 눌러 상세로 들어갈 때는 출처를
          강등하지 않는다 — 강등하면 상세 뒤에서 고정이 풀려, 돌아온 화면이 "마커는
          그대로인데 첫 카드가 사라진" 상태가 된다(selectionAfterCardPress 주석, 재발 버그). */
@@ -1150,18 +1226,6 @@ export function RestaurantMapScreen({
   }, [router])
 
   /**
-   * 정렬 시트의 `다음`. 이벤트를 여기서 쏘는 이유: 시트는 값을 고르는 곳이고
-   * **확정은 이 화면이 한다**. 시트 안에서 쏘면 열었다 닫기만 해도 집계될 위험이 있다.
-   */
-  const handleSubmitSort = useCallback(
-    (sort: SortOption) => {
-      controls.setSort(sort)
-      trackAnalyticsEvent("restaurant_sort_change", { sort })
-    },
-    [controls],
-  )
-
-  /**
    * 필터 시트의 `확인`. `controls.draft` 는 이 시점에 **방금 확정된 값**이다 —
    * 칩 탭들이 이전 렌더에서 이미 draft 에 쌓였고, `applyDraft()` 가 그 draft 를 확정본으로
    * 옮긴 직후 이 콜백이 불린다. `filters` 를 읽으면 아직 이전 확정본이다.
@@ -1172,6 +1236,9 @@ export function RestaurantMapScreen({
   const handleApplyFilters = useCallback(() => {
     setSelection(null)
     const draft = controls.draft
+    if (draft.sort !== controls.filters.sort) {
+      trackAnalyticsEvent("restaurant_sort_change", { sort: draft.sort })
+    }
     /*
       **지역을 골랐으면 카메라도 그리로 간다.**
 
@@ -1184,12 +1251,15 @@ export function RestaurantMapScreen({
       되돌리지 않는다. 좌표는 카탈로그가 이미 갖고 있다(`centerFor`).
       세부(구/군)를 골랐으면 그쪽이 시도보다 정확하므로 먼저 본다.
     */
-    const region = centerFor(
-      draft.regionGroups[0] ?? draft.regionSidos[0] ?? "",
-    )
+    const region = regionFilterDestination(controls.filters, draft)
     if (region) {
-      mapRef.current?.moveTo(region.lat, region.lng)
+      centeredOnUserRef.current = true
+      atMyLocationRef.current = false
+      beginRegionTransition(region)
       armedSearchRef.current = true
+      mapRef.current?.moveTo(region.lat, region.lng, {
+        zoom: mapSearch.isViewportTooLarge ? MAP_ZOOM.DEFAULT : undefined,
+      })
     }
     const axes = [
       {
@@ -1207,7 +1277,7 @@ export function RestaurantMapScreen({
         options: entry.options.join(","),
       })
     }
-  }, [controls])
+  }, [controls, beginRegionTransition, mapSearch.isViewportTooLarge])
 
   /**
    * `지도 넓혀서 다시 찾기`.
@@ -1224,6 +1294,7 @@ export function RestaurantMapScreen({
    *    먹는다 — D7 위반이다. 그럴 때는 예약 대신 지금 뷰포트로 바로 한 번 검색한다.
    */
   const handleWidenMap = useCallback(() => {
+    interruptRegionTransition()
     const viewport = pendingViewportRef.current
     const current = viewport?.zoom ?? MAP_ZOOM.DEFAULT
     const nextLevel = widenLevel(current, viewport?.bounds ?? null)
@@ -1233,17 +1304,19 @@ export function RestaurantMapScreen({
     }
     armedSearchRef.current = true
     mapRef.current?.setLevel(nextLevel)
-  }, [handleSearchThisArea])
+  }, [handleSearchThisArea, interruptRegionTransition])
 
   const handleResetFilters = useCallback(() => {
+    finishRegionTransition()
     controls.resetAll()
     setSelection(null)
-  }, [controls])
+  }, [controls, finishRegionTransition])
 
   const handleRetry = useCallback(() => {
+    if (regionTransitionPending) return
     mapSearch.refetch()
     list.refetch()
-  }, [list, mapSearch])
+  }, [list, mapSearch, regionTransitionPending])
 
   /* ── 탭을 다시 눌렀을 때 ─────────────────────────────────────────────────
      **식당은 목록이 아니라 지도다.** 다른 네 탭의 루트 상태는 "맨 위" 지만 여기서는
@@ -1270,8 +1343,9 @@ export function RestaurantMapScreen({
        클러스터로 뭉치면 안 된다). 앱이 옮긴 카메라이므로 재검색을 예약한다:
        없으면 "내 위치로 왔는데 목록은 강남 그대로" 가 된다. */
     armedSearchRef.current = true
+    interruptRegionTransition()
     mapRef.current?.moveTo(coords.lat, coords.lng)
-  }, [])
+  }, [interruptRegionTransition])
 
   useRegisterTabReset("restaurant", {
     /*
@@ -1286,10 +1360,7 @@ export function RestaurantMapScreen({
     */
     overlay: {
       isOpen: () =>
-        aiSearchOpen ||
-        filterSection !== null ||
-        sortSheetOpen ||
-        selection !== null,
+        aiSearchOpen || filterSection !== null || selection !== null,
       close: () => {
         if (aiSearchOpen) {
           setAiSearchOpen(false)
@@ -1297,10 +1368,6 @@ export function RestaurantMapScreen({
         }
         if (filterSection !== null) {
           setFilterSection(null)
-          return
-        }
-        if (sortSheetOpen) {
-          setSortSheetOpen(false)
           return
         }
         setSelection(null)
@@ -1374,6 +1441,7 @@ export function RestaurantMapScreen({
    * 다르다). 제외·프로필 안내는 **목록 질의**에서 오므로 지도가 죽은 리스트 모드에서도 살아 있다.
    */
   const notice = useMemo(() => {
+    if (regionTransitionPending) return undefined
     const messages: string[] = []
     // 조용한 절단 금지 — limit 에 걸린 사실을 반드시 말한다.
     if (mapSearch.limitReached) {
@@ -1405,6 +1473,7 @@ export function RestaurantMapScreen({
     list.profileMissing,
     mapSearch.limitReached,
     mapSearch.truncated,
+    regionTransitionPending,
     t,
   ])
 
@@ -1432,6 +1501,7 @@ export function RestaurantMapScreen({
 
   const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
     setContainerHeight(Math.round(event.nativeEvent.layout.height))
+    setContainerWidth(Math.round(event.nativeEvent.layout.width))
   }, [])
 
   const handleTopOverlayLayout = useCallback((event: LayoutChangeEvent) => {
@@ -1444,9 +1514,13 @@ export function RestaurantMapScreen({
    */
   const filterRow = (
     <FilterChipRow
+      separateOrdering
+      onPressAllFilters={() => setFilterSection("all")}
+      openNow={filters.openNow}
+      onToggleOpenNow={() => controls.setOpenNow(!filters.openNow)}
       sort={filters.sort}
       axes={controls.axes}
-      onPressSort={() => setSortSheetOpen(true)}
+      onPressSort={() => setFilterSection("sort")}
       onPressAxis={setFilterSection}
     />
   )
@@ -1464,17 +1538,33 @@ export function RestaurantMapScreen({
     />
   )
 
+  const categoryRow = (
+    <CategoryChipRail
+      surface="sheet"
+      selectedTypes={filters.cuisineTypes}
+      onToggle={handleToggleCuisine}
+      onPressAiSearch={() => setAiSearchOpen(true)}
+      insetHorizontal={SIDE}
+      style={styles.chipRail}
+    />
+  )
+
   const topOverlay = (
     <View
       // `box-none`: 오버레이의 빈 공간은 지도에 터치를 흘려보낸다. 안 주면 상단 1/4 이
       // 눌리지 않는 죽은 영역이 된다.
-      pointerEvents={isListExpanded ? "none" : "box-none"}
-      accessibilityElementsHidden={isListExpanded}
-      importantForAccessibility={
-        isListExpanded ? "no-hide-descendants" : "auto"
-      }
+      pointerEvents="box-none"
       onLayout={handleTopOverlayLayout}
-      style={[styles.topOverlay, { paddingTop: insets.top + spacing[8] }]}
+      style={[
+        styles.topOverlay,
+        {
+          paddingTop: insets.top + spacing[8],
+          paddingBottom: spacing[8],
+          backgroundColor: isListExpanded
+            ? colors.background.default
+            : undefined,
+        },
+      ]}
     >
       {/*
         상태바 가독성. 지도 타일은 흰 건물 · 노란 도로 · 초록 공원이 섞여 있어서 그 위에
@@ -1492,6 +1582,7 @@ export function RestaurantMapScreen({
         style={[styles.statusScrim, { height: insets.top + spacing[8] }]}
       />
       <MapSearchBar
+        embedded={isListExpanded}
         query={filters.query}
         bookmarkedOnly={filters.bookmarkedOnly}
         onToggleBookmarkedOnly={controls.toggleBookmarkedOnly}
@@ -1499,16 +1590,7 @@ export function RestaurantMapScreen({
         onClear={() => controls.setQuery("")}
         style={styles.searchBar}
       />
-      <CategoryChipRail
-        selected={
-          filters.cuisineTypes.length === 1 ? filters.cuisineTypes[0] : null
-        }
-        onSelect={handleSelectCuisine}
-        onPressAiSearch={() => setAiSearchOpen(true)}
-        insetHorizontal={SIDE}
-        style={styles.chipRail}
-      />
-      {!permissionBannerHidden && (
+      {!permissionBannerHidden && !isListExpanded && (
         <LocationPermissionBanner
           status={myLocation.status}
           blockedForever={myLocation.blockedForever}
@@ -1527,14 +1609,8 @@ export function RestaurantMapScreen({
    */
   const sheets = (
     <>
-      <SortSheet
-        visible={sortSheetOpen}
-        onClose={() => setSortSheetOpen(false)}
-        value={filters.sort}
-        onSubmit={handleSubmitSort}
-        distanceDisabledReason={myLocation.distanceSortDisabledReason}
-      />
       <FilterSheet
+        distanceDisabledReason={myLocation.distanceSortDisabledReason}
         visible={filterSection !== null}
         onClose={() => setFilterSection(null)}
         filters={controls}
@@ -1547,8 +1623,21 @@ export function RestaurantMapScreen({
         viewport={mapSearch.committedBounds}
         userLocation={myLocation.coords}
         onApply={(applied) => {
+          const destination = regionFilterDestination(
+            controls.filters,
+            splitAiRegionKeys(applied.regionGroups),
+          )
           controls.applyAiFilters(applied)
           setSelection(null)
+          if (destination) {
+            centeredOnUserRef.current = true
+            atMyLocationRef.current = false
+            beginRegionTransition(destination)
+            armedSearchRef.current = true
+            mapRef.current?.moveTo(destination.lat, destination.lng, {
+              zoom: mapSearch.isViewportTooLarge ? MAP_ZOOM.DEFAULT : undefined,
+            })
+          }
         }}
       />
     </>
@@ -1582,6 +1671,7 @@ export function RestaurantMapScreen({
           />
           <V2Divider tone="alternative" />
           {filterRow}
+          {categoryRow}
           {notice}
           <V2Divider tone="alternative" />
           {/* FlashList 는 flex 컬럼에서 스스로 남은 높이를 차지하지 않는다 —
@@ -1595,7 +1685,7 @@ export function RestaurantMapScreen({
                 <RestaurantCard
                   card={item}
                   selected={item.restaurantId === selectedId}
-                  onPress={() => handlePressCard(item)}
+                  onPress={(target) => handlePressCard(item, target)}
                 />
               )}
               ItemSeparatorComponent={Separator}
@@ -1697,7 +1787,7 @@ export function RestaurantMapScreen({
         <MapRefreshPill
           visible={mapSearch.isDirty}
           tooLarge={mapSearch.isViewportTooLarge}
-          loading={mapSearch.isFetching}
+          loading={mapSearch.isFetching || regionTransitionPending}
           onPress={handleSearchThisArea}
         />
       </Animated.View>
@@ -1705,8 +1795,12 @@ export function RestaurantMapScreen({
       <RestaurantListSheet
         ref={sheetRef}
         items={sheetList.items}
-        total={list.isError ? null : list.total}
-        bookmarkedOnly={filters.bookmarkedOnly}
+        total={list.isError || regionTransitionPending ? null : list.total}
+        sort={filters.sort}
+        regionCount={controls.axes.region.count}
+        onPressRegion={() => setFilterSection("region")}
+        onPressSort={() => setFilterSection("sort")}
+        categoryRow={categoryRow}
         filterRow={filterRow}
         notice={notice}
         leadingSkeleton={sheetList.leadingSkeleton}
@@ -1715,6 +1809,7 @@ export function RestaurantMapScreen({
         // false 로 준다. 그대로 쓰면 시트가 스켈레톤이 아니라 **백지**가 된다.
         // 지도가 죽었으면 bbox 를 영영 못 얻으므로 그 조건을 빼야 한다(영구 스켈레톤).
         loading={
+          regionTransitionPending ||
           list.isLoading ||
           (mapError === null && mapSearch.committedBounds === null)
         }
@@ -1722,14 +1817,16 @@ export function RestaurantMapScreen({
         emptyReason={list.emptyReason}
         listFooter={utilityFooter}
         onPressCard={handlePressCard}
-        onEndReached={list.loadMore}
+        onEndReached={() => {
+          if (!regionTransitionPending) list.loadMore()
+        }}
         onSnapChange={handleSnapChange}
         onCollapsedHeightChange={handleCollapsedHeight}
         animatedPosition={sheetPosition}
         onWidenMap={handleWidenMap}
         onResetFilters={handleResetFilters}
         onRetry={handleRetry}
-        topInset={insets.top}
+        topInset={insets.top + MAP_SEARCH_BAR_HEIGHT + spacing[16]}
         bottomInset={insets.bottom + TAB_BAR_HEIGHT}
       />
 

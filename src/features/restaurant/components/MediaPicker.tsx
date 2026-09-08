@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 사진/영상 피커 (목업 -28 / -29).
  *
@@ -36,7 +37,6 @@ import {
   Linking,
   Pressable,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
   useWindowDimensions,

@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Tab Bar (하단 고정 탭 바)
 // Spec: project/design-system-v2/design-system-base/components/Tab-Bar.md (Figma node 61:5948)
 //
@@ -17,7 +19,6 @@
 import type { ReactNode } from "react"
 import {
   StyleSheet,
-  Text,
   View,
   type LayoutChangeEvent,
   type ViewStyle,
@@ -196,6 +197,7 @@ export function V2TabBar({
               )}
             </View>
             <Text
+              maxFontSizeMultiplier={FONT_SCALE.control}
               style={[
                 typography.caption.small, // 11px Medium / LH 14 (전용 크기, 세만틱 토큰 대응 없음)
                 {

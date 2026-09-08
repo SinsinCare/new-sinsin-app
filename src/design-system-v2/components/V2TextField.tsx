@@ -1,3 +1,4 @@
+import { Text, TextInput } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Text Field
 // Spec: project/design-system-v2/design-system-base/components/Text-Field.md (Figma node 31:30)
 //  - Box (node 31:1405): 테두리 박스형 · Line (node 31:1090): 밑줄형
@@ -32,8 +33,6 @@ import { useState, type ComponentType, type ReactNode } from "react"
 import {
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   type TextInputProps,
   type TextStyle,
   View,

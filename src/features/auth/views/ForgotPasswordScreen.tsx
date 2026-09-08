@@ -1,5 +1,6 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Keyboard, StyleSheet, Text, View } from "react-native"
+import { Keyboard, StyleSheet, View } from "react-native"
 import { router } from "expo-router"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"

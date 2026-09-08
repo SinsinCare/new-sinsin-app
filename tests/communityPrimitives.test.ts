@@ -133,6 +133,7 @@ function mockKoLeaf(key: string): string | undefined {
   return typeof found === "string" ? found : undefined
 }
 
+import { contrast } from "./helpers/contrast"
 import { resolveTheme } from "@/src/design-system-v2/theme"
 import { V2Badge } from "@/src/design-system-v2/components/V2Badge"
 import { V2Text } from "@/src/design-system-v2/components/V2Text"
@@ -623,7 +624,7 @@ describe("PostRow — 카드가 아니라 행이다 (§2.1)", () => {
     expect(POST_ROW_PAD_V).toBe(16)
   })
 
-  it("하단 구분선은 **full-bleed** 다 — 절대 배치 + left/right 0 + `line.alternative`", () => {
+  it("하단 구분선은 **full-bleed** 다 — 절대 배치 + left/right 0 + `line.normal`", () => {
     /*
       Yoga 는 절대 배치 자식을 부모의 **패딩 안쪽** 기준으로 놓는다. 좌우 여백이 바깥
       상자에 있으면 이 선은 조용히 20px 인셋된다. 그래서 여백이 안쪽에 있는 것이다.
@@ -639,8 +640,17 @@ describe("PostRow — 카드가 아니라 행이다 (§2.1)", () => {
     expect(wrap.paddingLeft).toBe(0) // inset 0 — 좌측 인셋이 붙으면 full-bleed 가 아니다
 
     const line = flatten(lineEl.props.style)
-    expect(line.backgroundColor).toBe(light.line.alternative)
+    expect(line.backgroundColor).toBe(light.line.normal)
     expect(line.height).toBe(borderWidth.thin)
+    // Flat white feeds need a visible edge even at 3x pixel density.
+    expect(line.height).toBeGreaterThanOrEqual(1)
+    expect(
+      contrast(
+        line.backgroundColor as string,
+        light.background.default,
+        light.background.default,
+      ),
+    ).toBeGreaterThan(1.25)
   })
 
   it("제목·요약은 각각 **한 줄**이고 §2.1 의 토큰을 쓴다", () => {
@@ -1276,40 +1286,19 @@ describe("SectionBand — 8px 띠 (§2.7 · §4-G4)", () => {
     expect(SECTION_BAND).toBe(8)
   })
 
-  it("띠는 **다크에서만** 색을 갖는다 — 라이트에선 (A) 블록이 경계를 긋는다", () => {
-    /*
-      ■ 재판정 (2026-08-22). 전문은 `SectionBand` 머리말 §재판정.
-
-      다크의 `background.default` 는 곧 화면 바닥이라 (A) 블록이 자기 면을 못 갖는다 —
-      섹션 경계를 그리는 것은 이 띠 하나뿐이다(#313135, 바닥과 ΔL* 8.6). 라이트는 반대로
-      블록이 흰 면이라 바닥과 ΔL* 7.25 로 이미 갈리는데, 그 위에 띠까지 그으면 경계가
-      여섯이 되고 `#f7f7f7` 이라는 **그 화면에 없던 다섯째 회색**이 생긴다.
-
-      판정은 모드가 아니라 **관계**로 한다: "콘텐츠 면이 바닥과 같은 평면인가".
-      그래서 여기서도 모드를 보고 값을 베끼지 않고, 그 관계를 다시 계산해 맞춘다.
-    */
+  it("평평한 피드에서 두 모드 모두 섹션 경계를 유지한다", () => {
     for (const mode of ["light", "dark"] as const) {
       mockMode = mode
       const colors = resolveTheme(mode).colors
-      const bed = resolveTheme(mode).surface.bed
       const thick = findAll(render(SectionBand, {}), "View").at(-1)!
-      const painted = flatten(thick.props.style).backgroundColor
-      expect({ mode, painted }).toEqual({
-        mode,
-        painted:
-          colors.background.default === bed
-            ? colors.background.lower
-            : undefined,
-      })
+      expect(flatten(thick.props.style).backgroundColor).toBe(
+        colors.background.lower,
+      )
+      expect(flatten(thick.props.style).backgroundColor).not.toBe(
+        colors.background.default,
+      )
     }
     mockMode = "light"
-    // 그리고 그 관계가 실제로 두 모드에서 갈린다(둘 다 같으면 위 절이 헛돈다).
-    expect(resolveTheme("dark").colors.background.default).toBe(
-      resolveTheme("dark").surface.bed,
-    )
-    expect(resolveTheme("light").colors.background.default).not.toBe(
-      resolveTheme("light").surface.bed,
-    )
   })
 
   it("위 16 / 아래 8 — 여백은 **자기 색을 갖지 않는다**(§5.21-10 정규화 + 2026-08-21)", () => {

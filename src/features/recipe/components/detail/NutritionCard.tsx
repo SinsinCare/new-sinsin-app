@@ -1,33 +1,16 @@
-/**
- * 영양 카드 — 이 앱의 존재 이유(계약 §6.1)이고, 동시에 가장 위험한 자리다.
- *
- * ─── 서버가 개인 판정을 주는가? 준다고 가정하지 않고 확인했다 ─────────────────
- * 실측(2026-07-31, `GET /api/v1/recipes/21`): 응답에 판정 필드가 **없다.** 있는 것은
- * `budget`(내 하루 참고량)과 `nutrientBreakdown[].percentOfRemaining`(오늘 남은 양 대비
- * 비율) 뿐이다. 즉 서버가 계산하는 것은 **뺄셈**이지 "이 레시피가 나에게 맞다/아니다" 가
- * 아니다. 그래서 이 화면도 판정을 만들지 않는다. `안전`·`괜찮다`·`신장에 좋다` 같은 말이
- * 한 글자도 없어야 하고, 색으로 그 말을 대신해서도 안 된다.
- *
- * 지키는 것:
- *  - `provenance` 없이는 **수치를 그리지 않는다**(§1.1). nutrition 이 null 이면 안내만 남는다.
- *  - `percentOfRemaining` 이 null 이면 비율을 숨기고 절대값만 보인다. 단백질만 null 인 경우
- *    (체중 기록 없음)는 다른 문구를 준다 — "계산할 수 없다"와 "체중을 기록하면 된다"는 다른 말이다.
- *  - 색: 그레이스케일 + 브랜드 하나. `status.*`(초록/노랑/빨강)는 쓰지 않는다 — 그 색들이
- *    곧 판정이다. 막대는 회색이고 **남은 참고량을 넘긴 항목만** 브랜드색이 된다.
- *    (넘겼다는 것은 판정이 아니라 뺄셈의 결과다.)
- *
- * 배치는 세로 네 줄이 아니라 **2×2 타일**이다. 줄로 쌓으면 라벨·수치·막대·설명이
- * 열두 줄로 흘러 어디부터 읽을지가 없다. 타일 안에서는 크기가 순서를 정한다.
+import type { PersonalPortionSelection } from "@/src/features/nutrition/utils/portionReference"
+import { PortionGuide } from "@/src/features/nutrition/components/PortionGuide"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+/** Per-serving nutrient facts with a shared, server-calculated meal portion comparison.
+ * Cooking yield never changes this personal reference. Unknown sources remain unavailable.
  */
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import {
   CARD_PADDING,
   CARD_RADIUS,
-  GUTTER,
   SECTION_TITLE_GAP,
   V2Icon,
-  V2ProgressBar,
   radius,
   spacing,
   typography,
@@ -40,13 +23,7 @@ import {
   type NutrientKey,
   type RecipeNutrition,
 } from "../../types/recipeV2"
-import {
-  barFillRatio,
-  formatNutrientAmount,
-  formatPercent,
-  isOverRemaining,
-  orderBreakdown,
-} from "./recipeDetailModel"
+import { formatNutrientAmount, orderBreakdown } from "./recipeDetailModel"
 
 const NUTRIENT_LABEL_KEYS = {
   sodium: "curated.sodium",
@@ -63,6 +40,9 @@ const PROVENANCE_BADGE_KEYS = {
 } as const
 
 export interface NutritionCardProps {
+  portionReference?: unknown
+  isRefreshing?: boolean
+  onConsultPortion?: (selection: PersonalPortionSelection) => void
   /** null 이면 출처를 확인할 수 없는 응답이다 — 수치를 그리지 않는다. */
   nutrition: RecipeNutrition | null
   /** 이미 인분 배율이 적용된 값 */
@@ -74,9 +54,11 @@ export interface NutritionCardProps {
 }
 
 export function NutritionCard({
+  portionReference,
+  isRefreshing = false,
+  onConsultPortion,
   nutrition,
   breakdown,
-  budget,
   servings,
   onOpenProvenance,
 }: NutritionCardProps) {
@@ -99,7 +81,7 @@ export function NutritionCard({
             {t("detail.nutrition.unavailableTitle")}
           </Text>
           <Text
-            style={[styles.basis, { color: colors.label.alternative }]}
+            style={[styles.basis, { color: colors.label.neutral }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("detail.nutrition.unavailableBody")}
@@ -144,12 +126,12 @@ export function NutritionCard({
           >
             {t(PROVENANCE_BADGE_KEYS[nutrition.provenance])}
           </Text>
-          <V2Icon name="info" size={14} color={colors.label.alternative} />
+          <V2Icon name="info" size={14} color={colors.label.neutral} />
         </Pressable>
       </View>
 
       <Text
-        style={[styles.basis, { color: colors.label.alternative }]}
+        style={[styles.basis, { color: colors.label.neutral }]}
         lineBreakStrategyIOS="hangul-word"
       >
         {t("detail.nutrition.basis", { count: servings })}
@@ -158,16 +140,18 @@ export function NutritionCard({
         {`${Math.round(nutrition.kcal)}kcal`}
       </Text>
 
+      <PortionGuide
+        reference={portionReference}
+        isRefreshing={isRefreshing}
+        onConsult={onConsultPortion}
+      />
+
       {/* 두 줄 × 두 칸. 항목이 넷이 아니어도 깨지지 않게 두 개씩 잘라 넣는다. */}
       <View style={styles.grid}>
         {chunkPairs(rows).map((pair) => (
           <View key={pair[0]?.key ?? "row"} style={styles.gridRow}>
             {pair.map((row) => (
-              <NutrientTile
-                key={row.key}
-                headline={row}
-                proteinBudgetMissing={budget.proteinG == null}
-              />
+              <NutrientTile key={row.key} headline={row} />
             ))}
             {pair.length === 1 && <View style={styles.gridFiller} />}
           </View>
@@ -188,14 +172,12 @@ export function NutritionCard({
             {t("detail.nutrition.unmatchedTitle")}
           </Text>
           <Text
-            style={[styles.unmatchedBody, { color: colors.label.alternative }]}
+            style={[styles.unmatchedBody, { color: colors.label.neutral }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("detail.nutrition.unmatchedBody")}
           </Text>
-          <Text
-            style={[styles.unmatchedBody, { color: colors.label.alternative }]}
-          >
+          <Text style={[styles.unmatchedBody, { color: colors.label.neutral }]}>
             {nutrition.unmatchedIngredients.join(" · ")}
           </Text>
         </View>
@@ -213,31 +195,13 @@ function chunkPairs(rows: NutrientHeadline[]): NutrientHeadline[][] {
   return pairs
 }
 
-function NutrientTile({
-  headline,
-  proteinBudgetMissing,
-}: {
-  headline: NutrientHeadline
-  proteinBudgetMissing: boolean
-}) {
+function NutrientTile({ headline }: { headline: NutrientHeadline }) {
   const { t } = useTranslation("recipe")
   const { colors } = useV2Theme()
-  const fill = barFillRatio(headline.percentOfRemaining)
-  const over = isOverRemaining(headline.percentOfRemaining)
-
-  const note =
-    headline.percentOfRemaining != null
-      ? t("detail.nutrition.remaining", {
-          percent: formatPercent(headline.percentOfRemaining),
-        })
-      : headline.key === "protein" && proteinBudgetMissing
-        ? t("detail.nutrition.proteinNoWeight")
-        : t("detail.nutrition.remainingUnknown")
-
   return (
     <View style={[styles.tile, { backgroundColor: colors.fill.alternative }]}>
       <Text
-        style={[styles.tileLabel, { color: colors.label.alternative }]}
+        style={[styles.tileLabel, { color: colors.label.neutral }]}
         lineBreakStrategyIOS="hangul-word"
       >
         {t(NUTRIENT_LABEL_KEYS[headline.key])}
@@ -248,34 +212,16 @@ function NutrientTile({
         <Text style={[styles.tileValue, { color: colors.label.normal }]}>
           {formatNutrientAmount(headline.amount, headline.unit)}
         </Text>
-        <Text style={[styles.tileUnit, { color: colors.label.alternative }]}>
+        <Text style={[styles.tileUnit, { color: colors.label.neutral }]}>
           {headline.unit}
         </Text>
       </View>
-
-      {fill != null && (
-        <V2ProgressBar
-          size="s"
-          color={over ? "brand" : "neutral"}
-          value={fill * 100}
-          style={styles.tileBar}
-        />
-      )}
-
-      <Text
-        style={[
-          styles.tileNote,
-          { color: over ? colors.primary.primary : colors.label.assistive },
-        ]}
-      >
-        {note}
-      </Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: GUTTER, gap: SECTION_TITLE_GAP },
+  root: { paddingHorizontal: spacing[20], gap: SECTION_TITLE_GAP },
   head: {
     flexDirection: "row",
     alignItems: "center",
@@ -287,12 +233,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[4],
-    height: 28,
+    minHeight: 28,
     paddingHorizontal: spacing[10],
     borderRadius: radius.full,
   },
-  badgeText: { ...typography.subtext.medium },
-  basis: { ...typography.subtext.large },
+  badgeText: { ...typography.subtext.small },
+  basis: { ...typography.subtext.medium },
 
   grid: { gap: spacing[8] },
   gridRow: { flexDirection: "row", gap: spacing[8] },
@@ -312,7 +258,7 @@ const styles = StyleSheet.create({
   tileValue: { ...typography.title.large },
   tileUnit: { ...typography.label.smallWeak },
   tileBar: { marginTop: spacing[2] },
-  tileNote: { ...typography.subtext.medium },
+  tileNote: { ...typography.subtext.small },
 
   unavailable: {
     gap: spacing[6],

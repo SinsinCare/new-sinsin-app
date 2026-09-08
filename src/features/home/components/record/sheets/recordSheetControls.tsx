@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
@@ -376,7 +377,7 @@ export function SheetJudgmentBadge({
       ? { bg: surface.danger, fg: "#FFFFFF" }
       : tone === "caution"
         ? { bg: "rgba(232,150,42,0.16)", fg: "#B26A12" }
-        : { bg: surface.surface, fg: surface.text }
+        : { bg: surface.surfaceSunken, fg: surface.text }
 
   return (
     <View style={[styles.badge, { backgroundColor: palette.bg }]}>
@@ -469,7 +470,7 @@ export function SheetStepButton({
     backgroundColor: interpolateColor(
       press.value,
       [0, 1],
-      [surface.surface, surface.surfacePressed],
+      [surface.surfaceSunken, surface.surfacePressed],
     ),
     transform: [{ scale: 1 - press.value * 0.05 }],
   }))
@@ -560,7 +561,7 @@ export function SheetChip({
     selection.value = withTiming(selected ? 1 : 0, TIMING)
   }, [selected, selection])
 
-  const base = onCard ? surface.card : surface.surface
+  const base = onCard ? surface.card : surface.surfaceSunken
   const chipStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       selection.value,
@@ -603,6 +604,7 @@ export function SheetChip({
     >
       <Animated.View style={[styles.chip, chipStyle]}>
         <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
           style={[styles.chipLabel, labelStyle]}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
@@ -612,6 +614,7 @@ export function SheetChip({
         </Animated.Text>
         {anchor ? (
           <Animated.Text
+            maxFontSizeMultiplier={FONT_SCALE.body}
             style={[styles.chipAnchor, anchorStyle]}
             lineBreakStrategyIOS="hangul-word"
           >
@@ -663,7 +666,7 @@ export function SheetOptionCard({
     backgroundColor: interpolateColor(
       selection.value,
       [0, 1],
-      [surface.surface, surface.brand],
+      [surface.surfaceSunken, surface.brand],
     ),
     transform: [{ scale: 1 - press.value * 0.015 }],
   }))
@@ -700,10 +703,14 @@ export function SheetOptionCard({
       style={styles.optionCardWrap}
     >
       <Animated.View style={[styles.optionCard, cardStyle]}>
-        <Animated.Text style={[styles.optionLabel, labelStyle]}>
+        <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
+          style={[styles.optionLabel, labelStyle]}
+        >
           {label}
         </Animated.Text>
         <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
           style={[styles.optionDesc, descStyle]}
           numberOfLines={2}
           lineBreakStrategyIOS="hangul-word"
@@ -719,7 +726,7 @@ export function SheetOptionCard({
 export function SheetInfoCard({ children }: { children: string }) {
   const surface = useSurface()
   return (
-    <View style={[styles.infoCard, { backgroundColor: surface.surface }]}>
+    <View style={[styles.infoCard, { backgroundColor: surface.surfaceSunken }]}>
       <Text
         style={[styles.infoText, { color: surface.text }]}
         lineBreakStrategyIOS="hangul-word"
@@ -783,7 +790,9 @@ export function SheetNumericField({
   return (
     <View style={[styles.fieldGroup, containerStyle]}>
       <SheetFieldLabel>{label}</SheetFieldLabel>
-      <View style={[styles.fieldBox, { backgroundColor: surface.surface }]}>
+      <View
+        style={[styles.fieldBox, { backgroundColor: surface.surfaceSunken }]}
+      >
         <V2SheetTextInput
           {...inputProps}
           value={value}
@@ -852,7 +861,9 @@ export function SheetTrendBars({
     baseline !== null ? ratio(baseline) * CHART_HEIGHT : null
 
   return (
-    <View style={[trendStyles.card, { backgroundColor: surface.surface }]}>
+    <View
+      style={[trendStyles.card, { backgroundColor: surface.surfaceSunken }]}
+    >
       {baselineLabel ? (
         <Text style={[trendStyles.baselineLabel, { color: surface.textWeak }]}>
           {baselineLabel}

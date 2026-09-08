@@ -1,7 +1,8 @@
+import { SettingsDetailHeader } from "../components/SettingsDetailHeader"
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
 import React, { useState } from "react"
-import { Platform, Pressable, StyleSheet, View } from "react-native"
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
-import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -9,7 +10,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
-import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { SettingsFormActions } from "../components/SettingsFormActions"
 import {
   FieldHelp,
   SettingsTextField,
@@ -124,21 +125,12 @@ export function PasswordEditScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: pageBg }]}>
-      <View style={styles.flex}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.flex}
+      >
         {/* 헤더 */}
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("shared.back")}
-            /* 비밀번호 재설정은 `https://sinsincare.kr/password-edit` 딥링크로도
-               들어온다 — 그때는 히스토리가 없고, `back()` 이 라우트 그래프가 정한
-               프로필 수정으로 대신 나간다. */
-            onPress={router.back}
-            hitSlop={8}
-          >
-            <Ionicons name="chevron-back" size={24} color={s.textStrong} />
-          </Pressable>
-        </View>
+        <SettingsDetailHeader onBack={router.back} />
 
         <KeyboardAwareScrollView
           bounces={false}
@@ -159,7 +151,7 @@ export function PasswordEditScreen() {
             {t("password.title")}
           </Text>
           <Text
-            style={[styles.subtitle, { color: s.textMuted }]}
+            style={[styles.subtitle, { color: s.text }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("password.subtitle")}
@@ -221,12 +213,12 @@ export function PasswordEditScreen() {
             {submitError}
           </Text>
         )}
-        <BottomActionBar
+        <SettingsFormActions
           label={t("password.submit")}
           disabled={!canSubmit}
           onPress={handleSave}
         />
-      </View>
+      </KeyboardAvoidingView>
     </ThemedView>
   )
 }
@@ -244,22 +236,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: LAYOUT.screenX,
-    paddingTop: 12,
+    paddingTop: 20,
     paddingBottom: 24,
   },
-  title: {
-    fontSize: 24,
-    lineHeight: 32,
-    letterSpacing: -0.48,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    marginBottom: 36,
-  },
+  title: settingsDetailSpec.title,
+  subtitle: settingsDetailSpec.description,
   fields: {
     gap: 24,
   },

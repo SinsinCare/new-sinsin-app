@@ -244,7 +244,7 @@ export function AcquisitionSourceField({
                   ? surface.surfacePressed
                   : selectedOption
                     ? surface.surfaceBrand
-                    : surface.surface,
+                    : surface.surfaceSunken,
               },
             ]}
           >
@@ -314,7 +314,7 @@ export function AcquisitionSourceField({
                   pointerEvents="none"
                   style={[
                     styles.wheelHighlight,
-                    { backgroundColor: surface.surface },
+                    { backgroundColor: surface.surfaceSunken },
                   ]}
                 />
                 <Animated.ScrollView
@@ -364,7 +364,7 @@ export function AcquisitionSourceField({
                 <View
                   style={[
                     styles.reasonField,
-                    { backgroundColor: surface.surface },
+                    { backgroundColor: surface.surfaceSunken },
                   ]}
                 >
                   <TextInput
@@ -393,7 +393,7 @@ export function AcquisitionSourceField({
                     {
                       backgroundColor: canConfirm
                         ? surface.brand
-                        : surface.ctaOffBg,
+                        : surface.surfaceSunken,
                     },
                   ]}
                 >

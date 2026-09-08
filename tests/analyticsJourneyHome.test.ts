@@ -43,7 +43,7 @@ const J2_SAMPLES = {
   home_date_selected: { is_today: false, days_back: "8_30" },
   food_record_sheet_viewed: {
     slot: "dinner",
-    entry: "timeline_empty",
+    entry: "timeline_cta",
     recorded: false,
   },
   food_photo_permission_granted: { source: "camera" },
@@ -220,12 +220,11 @@ const J2_EMITTERS: Record<string, string[]> = {
   food_record_sheet_viewed: [
     "src/features/home/components/record/RecordView.tsx",
   ],
+  // 2026-09-04 부터 사진은 앱 안의 푸드 카메라 페이지가 찍는다 — 권한·취소도 거기서 난다.
   food_photo_permission_granted: [
-    "src/features/home/components/record/RecordView.tsx",
+    "src/features/home/views/FoodCameraScreen.tsx",
   ],
-  food_photo_picker_cancelled: [
-    "src/features/home/components/record/RecordView.tsx",
-  ],
+  food_photo_picker_cancelled: ["src/features/home/views/FoodCameraScreen.tsx"],
   food_analysis_progressed: ["src/features/home/hooks/useFoodAnalysis.ts"],
   food_analysis_dismissed: ["src/features/home/hooks/useFoodAnalysis.ts"],
   food_analysis_confirm_viewed: [
@@ -257,21 +256,18 @@ const J2_EMITTERS: Record<string, string[]> = {
   food_record_edit_cancelled: [
     "src/features/home/components/FoodResultEdit.tsx",
   ],
-  food_text_record_viewed: [
-    "src/features/home/components/record/TextRecord.tsx",
-  ],
-  food_text_record_discarded: [
-    "src/features/home/components/record/TextRecord.tsx",
-  ],
+  food_text_record_viewed: ["src/features/home/hooks/useTextRecord.ts"],
+  food_text_record_discarded: ["src/features/home/hooks/useTextRecord.ts"],
   health_entry_input_started: [
     "src/features/home/hooks/useHealthEntryInput.ts",
   ],
   health_entry_context_adjusted: [
-    "src/features/home/components/record/sheets/BloodGlucoseSheet.tsx",
+    "src/features/home/hooks/useGlucoseRecordForm.ts",
   ],
   health_entry_save_started: [
     "src/features/home/components/record/RecordView.tsx",
-    "src/features/home/components/record/sheets/WaterSheet.tsx",
+    // 물은 잔을 담아 한 번에 보내므로 담은 잔 수를 화면 자신만 안다(2026-09-05 페이지화).
+    "src/features/home/components/record/pages/WaterRecordPage.tsx",
   ],
   health_entry_save_succeeded: [
     "src/features/home/hooks/useBloodMetricsRecord.ts",
@@ -396,17 +392,27 @@ describe("J2 — 고빈도 자리에 1회 가드가 걸려 있다", () => {
     expect(hook).toMatch(/if \(!visible\) firedRef\.current = false/u)
   })
 
-  it("건강 시트 다섯이 전부 그 훅을 쓴다", () => {
-    const sheets = [
-      ["WaterSheet.tsx", "water"],
-      ["BloodPressureSheet.tsx", "blood_pressure"],
-      ["BloodGlucoseSheet.tsx", "blood_glucose"],
-      ["WeightSheet.tsx", "weight"],
-      ["EdemaSheet.tsx", "edema"],
+  it("건강기록 표면 다섯이 전부 그 훅을 쓴다", () => {
+    /*
+      물·혈압·체중은 2026-09-05 부터 **페이지**다. 페이지는 열려 있을 때만 마운트되므로
+      두 번째 인자가 `visible` 이 아니라 `true` 다 — 시트는 닫혀도 살아 있어 그 깃발이 필요했다.
+    */
+    for (const [file, metric] of [
+      ["useGlucoseRecordForm.ts", "blood_glucose"],
+      ["useEdemaRecordForm.ts", "edema"],
+    ]) {
+      expect(read(`src/features/home/hooks/${file}`)).toContain(
+        `useHealthEntryInput("${metric}", true)`,
+      )
+    }
+    const pages = [
+      ["WaterRecordPage.tsx", "water"],
+      ["BloodPressureRecordPage.tsx", "blood_pressure"],
+      ["WeightRecordPage.tsx", "weight"],
     ] as const
-    for (const [file, metric] of sheets) {
-      const source = read(`src/features/home/components/record/sheets/${file}`)
-      expect(source).toContain(`useHealthEntryInput("${metric}", visible)`)
+    for (const [file, metric] of pages) {
+      const source = read(`src/features/home/components/record/pages/${file}`)
+      expect(source).toContain(`useHealthEntryInput("${metric}", true)`)
     }
   })
 
@@ -415,7 +421,7 @@ describe("J2 — 고빈도 자리에 1회 가드가 걸려 있다", () => {
       이 모달은 홈이 살아 있는 내내 마운트돼 있다. 마운트나 렌더 본문에서 쏘면
       '입력창까지 온 사람' 이 그냥 '홈 방문 수' 가 된다.
     */
-    const source = read("src/features/home/components/record/TextRecord.tsx")
+    const source = read("src/features/home/hooks/useTextRecord.ts")
     expect(source).toMatch(
       /if \(openedRef\.current\) return\s*openedRef\.current = true\s*trackAnalyticsEvent\(\s*"food_text_record_viewed"/su,
     )
@@ -456,16 +462,17 @@ describe("J2 — 고빈도 자리에 1회 가드가 걸려 있다", () => {
 describe("J2 — 발화가 실제 핸들러에 걸려 있다", () => {
   const recordView = read("src/features/home/components/record/RecordView.tsx")
 
-  it("시트 진입은 세 문에서만 나가고, 취소 뒤 재개에서는 안 나간다", () => {
+  it("시트 진입은 CTA 한 문에서만 나가고, 취소 뒤 재개에서는 안 나간다", () => {
     /*
       앨범·카메라·글에서 취소하면 코드가 시트를 다시 열어 준다. 거기서도 쏘면 한 사람의
       한 번의 시도가 진입 두 행이 되어 1→2 가 이탈처럼 부풀고 2→3 이 함께 꺼진다.
+
+      홈 시안(2026-09-04)에서 식사 타일과 끼니 타임라인이 빠져 문은 CTA 하나다.
+      값은 `timeline_cta` 를 그대로 둔다 — 대시보드가 그 이름으로 세고 있다.
     */
-    expect(recordView).toContain('openMealSheetFrom("tile")')
-    expect(recordView).toContain(
-      'openMealSheetFrom("timeline_empty", mealType)',
-    )
     expect(recordView).toContain('openMealSheetFrom("timeline_cta")')
+    expect(recordView).not.toContain('openMealSheetFrom("tile")')
+    expect(recordView).not.toContain('openMealSheetFrom("timeline_empty"')
     // 재개 경로는 계측 없는 openMealSheet 를 쓴다.
     expect(recordView).toMatch(
       /const openMealSheet = \(mealType: MealType \| null = null\) => \{\s*setMealSheetPreselect\(mealType\)\s*setOpenSheet\("meal"\)\s*\}/u,
@@ -477,19 +484,26 @@ describe("J2 — 발화가 실제 핸들러에 걸려 있다", () => {
       권한이 막히면 피커가 빈손으로 돌아온다 — 갈라 두지 않으면 거부한 사람이
       denied 와 cancelled 두 이름에 동시에 세어져 두 비율이 같이 부풀어 오른다.
     */
-    expect(recordView).toMatch(
-      /if \(granted\) \{\s*trackAnalyticsEvent\("food_photo_picker_cancelled", \{\s*source: "camera"/su,
+    // 카메라 페이지의 X — 권한이 있을 때만 취소로 센다(앨범은 2026-09-04 시안에서 빠졌다).
+    const camera = read("src/features/home/views/FoodCameraScreen.tsx")
+    expect(camera).toMatch(
+      /if \(permission\?\.granted\) \{\s*trackAnalyticsEvent\("food_photo_picker_cancelled", \{\s*source: "camera"/su,
     )
-    expect(recordView).toMatch(
-      /if \(granted\) \{\s*trackAnalyticsEvent\("food_photo_picker_cancelled", \{\s*source: "gallery"/su,
-    )
+    expect(camera).not.toMatch(/source: "gallery"/u)
   })
 
   it("결과 화면 셋은 각각 자기 source 를 못 박는다", () => {
-    const sources = [...recordView.matchAll(/source="(\w+)"/gu)].map(
-      (match) => match[1],
-    )
-    expect(sources.sort()).toEqual(["fresh", "recovered", "saved"])
+    // 리포트는 페이지다(2026-09-04) — 세 여정이 `openMealReportPage({ source })` 로 연다.
+    const sources = [
+      ...recordView.matchAll(/openMealReportPage\(\{\s*source: "(\w+)"/gu),
+    ].map((match) => match[1])
+    // fresh 는 두 자리다 — 사진·글 분석과 레시피 불러오기(2026-09-04). 둘 다 "방금 만든 결과" 라
+    // 같은 여정이고, 계측 축(`source`)도 같다. 축이 셋을 넘지 않는 것을 본다.
+    expect([...new Set(sources)].sort()).toEqual([
+      "fresh",
+      "recovered",
+      "saved",
+    ])
   })
 
   it("저장 없이 나가기는 확인창을 띄운 수와 그래도 나간 수를 둘 다 센다", () => {
@@ -611,16 +625,13 @@ describe("J2 — 공용 통로가 덮는 이름은 되살아나지 않는다", (
       다시 지어야 하므로, 근거를 단정으로 고정한다.
     */
     const expected: Record<string, string> = {
-      "WaterSheet.tsx": "home_water_record",
-      "BloodPressureSheet.tsx": "home_blood_pressure",
-      "BloodGlucoseSheet.tsx": "home_blood_glucose",
-      "WeightSheet.tsx": "home_weight",
-      "EdemaSheet.tsx": "home_edema",
+      // 물의 담기 시트는 페이지 안에 산다. 혈압·체중은 페이지 자체라 `screen_viewed` 로 잡힌다.
+      "pages/WaterRecordPage.tsx": "home_water_record",
     }
     for (const [file, surface] of Object.entries(expected)) {
-      expect(
-        read(`src/features/home/components/record/sheets/${file}`),
-      ).toContain(`surface="${surface}"`)
+      expect(read(`src/features/home/components/record/${file}`)).toContain(
+        `surface="${surface}"`,
+      )
     }
     // 식사 시트와 삭제 확인 시트도 마찬가지다.
     expect(
@@ -640,9 +651,11 @@ describe("J2 — 공용 통로가 덮는 이름은 되살아나지 않는다", (
     const suspicious =
       /trackAnalyticsEvent\([^)]*?(systolic|diastolic|weightKg|edemaLevel|liveValue|liveWeight|liveTotal|\btext\b)/su
     for (const file of [
-      "src/features/home/components/record/sheets/WaterSheet.tsx",
-      "src/features/home/components/record/sheets/BloodGlucoseSheet.tsx",
-      "src/features/home/components/record/TextRecord.tsx",
+      "src/features/home/components/record/pages/WaterRecordPage.tsx",
+      "src/features/home/components/record/pages/BloodPressureRecordPage.tsx",
+      "src/features/home/components/record/pages/WeightRecordPage.tsx",
+      "src/features/home/hooks/useGlucoseRecordForm.ts",
+      "src/features/home/hooks/useTextRecord.ts",
     ]) {
       expect(read(file)).not.toMatch(suspicious)
     }

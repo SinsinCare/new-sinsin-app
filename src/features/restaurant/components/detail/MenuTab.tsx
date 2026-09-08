@@ -1,3 +1,6 @@
+import type { PersonalPortionSelection } from "@/src/features/nutrition/utils/portionReference"
+import { PortionGuide } from "@/src/features/nutrition/components/PortionGuide"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 메뉴 탭 (목업 -14). 안전도 배지가 붙은 메뉴 목록 + 하단 안내 문구.
  *
@@ -28,7 +31,7 @@
  * 사진·후기처럼 무한히 늘어나는 목록만 "더 보기" 로 끊는다.
  */
 
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -45,6 +48,7 @@ import { GUTTER } from "../../layout"
 import type { MenuItemDto } from "../../types"
 import { menuConfidenceMode } from "../../utils/menuSafetyEvidence"
 import { MenuRow } from "./MenuRow"
+import { MenuNutritionDisclosure } from "./MenuNutritionDisclosure"
 import { MenuTabSkeleton } from "./DetailSkeletons"
 import { ProfileMissingNotice } from "./ProfileMissingNotice"
 
@@ -61,7 +65,12 @@ export interface MenuTabProps {
   /** 서버 상한에 걸려 잘렸다. 조용히 넘기지 않고 목록 끝에서 말한다. */
   truncated?: boolean
   isLoading: boolean
+  isRefreshing?: boolean
   isError: boolean
+  onConsultPortion?: (
+    menu: MenuItemDto,
+    selection: PersonalPortionSelection,
+  ) => void
   onRetry: () => void
 }
 
@@ -70,8 +79,10 @@ export function MenuTab({
   profileMissing,
   truncated = false,
   isLoading,
+  isRefreshing = false,
   isError,
   onRetry,
+  onConsultPortion,
 }: MenuTabProps) {
   const { t } = useTranslation("common")
   const { colors } = useV2Theme()
@@ -120,6 +131,15 @@ export function MenuTab({
         </Text>
       )}
 
+      <Text
+        style={[
+          typography.subtext.small,
+          { color: colors.label.neutral, marginBottom: spacing[12] },
+        ]}
+      >
+        {t("portionGuide.otherFood")}
+      </Text>
+
       {menus.map((menu, index) => (
         <View key={menu.menuId}>
           {index > 0 && <V2Divider tone="alternative" />}
@@ -128,6 +148,17 @@ export function MenuTab({
             profileMissing={profileMissing}
             showConfidence={confidence === "MIXED"}
           />
+          <PortionGuide
+            isRefreshing={isRefreshing}
+            onConsult={
+              onConsultPortion
+                ? (selection) => onConsultPortion(menu, selection)
+                : undefined
+            }
+            reference={profileMissing ? null : menu.portionReference}
+            menu
+          />
+          <MenuNutritionDisclosure menu={menu} />
         </View>
       ))}
 

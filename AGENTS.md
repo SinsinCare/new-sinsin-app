@@ -1,274 +1,35 @@
-# AGENTS.md
+# Sinsin mobile agent guide
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+신신당부는 CKD 환자를 위한 React Native/Expo 앱이다. UI는 한국어, 코드는 영어를 사용한다.
 
-## Project Overview
+## 작업과 완료
 
-신신당부 (Sinsin Dangbu) - A Korean health management mobile app for chronic kidney disease (CKD) patients. Built with React Native/Expo, custom backend API, and AI-powered food analysis.
+- 현재 체크아웃·브랜치·미커밋 변경을 확인하고 관련 코드와 문서부터 읽는다. 구현, 영향에 맞는 실행 확인, 발견한 관련 문제 수정까지 완료한다.
+- `main`은 운영 상태, `develop`은 공유 작업·테스트 브랜치다. 이 브랜치에서 코드 작업을 시작하면 별도 작업 브랜치를 만들되, 현재 브랜치 작업을 이미 요청받았다면 그대로 진행한다. 기존 변경을 보존하고 명시적 요청 없이 두 브랜치를 이름 변경·삭제·강제 갱신하지 않는다.
+- 대화에서 정한 실행 방식과 환경은 계속 적용한다. 필요한 로컬 편집·실행·검증은 반복 승인 없이 진행하고, 부족한 환경 결정만 묻는다. 단순히 “빌드”라고 했을 때 브랜치만으로 로컬/EAS와 `test`/`production`을 정하지 않는다.
+- `main` 배포는 production, `develop` 배포는 test를 사용한다. EAS·스토어 제출·운영 변경은 승인된 대상과 범위에서 수행한다. 다른 작업의 서버·포트·설치 앱을 임의로 종료하거나 삭제하지 않는다.
 
-## Development Commands
+## 화면과 도메인
 
-```bash
-npm start          # Start Expo development server
-npm run start:test # Start Expo against test backend
-npm run start:prod # Start Expo against production backend
-npm run android    # Run on Android
-npm run android:test
-npm run android:prod
-npm run ios        # Run on iOS
-npm run ios:test
-npm run ios:prod
-npm run web        # Run on web
-npm run lint       # ESLint check
-npm run lint:fix   # ESLint auto-fix
-npm run format     # Prettier format all files
-```
+- 화면 추가·개편 시 [모바일 구조](docs/mobile-frontend-architecture.md)를 읽는다. Expo Router 파일은 얇게 유지하고 동작은 `src/features/<feature>`가 소유한다. 새 UI는 `src/design-system-v2` 토큰·컴포넌트를 사용한다.
+- 영양 제한은 프로필과 백엔드 정책을 따른다. CKD 단계·투석 여부·체중·의료진 목표를 무시해 `0.8g/kg`이나 고정 수치를 모든 환자의 목표로 제시하지 않는다.
+- 원시 API 오류·구현 용어를 사용자 문구에 노출하지 않는다. 인증·건강 정보·사진·비밀값을 로그와 검증 산출물에 남기지 않는다.
+- 한국어 UI 문구 변경 시 [UX writing guide](docs/ux-writing-guide.md)를 읽고 `npm run audit:ux-copy`를 실행한다.
+- 색·간격·Pretendard 타이포의 정본은 `src/design-system-v2`다. 폰트 굵기는 `fontFamily` face로 지정하고 RN 텍스트는 `AppText`, 테마는 앱의 `themeStore`를 따르는 `useV2Theme`를 사용한다. `src/theme` 레거시 어댑터를 별도 디자인 정본으로 만들지 않는다.
 
-## Branch Work Policy
+## 환경과 검증
 
-- `main` must remain the production-state branch.
-- `develop` must remain the shared working/test branch.
-- When the current branch is `main` or `develop` and the user asks for code changes, recommend creating a separate work branch first.
-- Create and work on a separate branch unless the user explicitly says to work directly on the current branch, such as "여기서 할게" or "이 브랜치에서 바로 해줘".
-- Do not rename, delete, or force-update `main` or `develop` unless the user explicitly requests that branch operation.
+- 환경값은 gitignored `.env.test`·`.env.production`에서 읽는다. 백엔드 URL·토큰·OAuth plist를 커밋하지 않는다. `test`라는 이름만으로 데이터 격리를 가정하지 않는다.
+- 로컬 실행은 선택된 환경에 맞는 `npm run start:test` / `npm run start:prod`, `npm run ios:test` / `npm run ios:prod`, `npm run android:test` / `npm run android:prod`를 사용한다. 자세한 빌드·목업 절차는 필요할 때 [실행 참고](agent-reference.md)를 읽는다.
+- 변경 경로에 맞는 검사·회귀 검증을 선택한다. API 테스트 전 실제 접속 대상과 fixture 정리 범위를 확인한다. 문서 수정에 전체 빌드를 기본으로 실행하지 않는다.
+- UI는 해당 브라우저·Simulator 흐름을 직접 확인한다. 저장·재진입, 취소·뒤로가기, 로딩·오류, 키보드·큰 글씨·다크 모드는 영향이 있을 때 확인하고 공유 UI의 주요 사용처도 검증한다. 타입·빌드 성공을 화면 동작의 증거로 대신하지 않는다.
+- 최종 보고는 변경·검증·남은 제약을 짧게 적고, 목업/Simulator 결과와 외부 연동/실기기/운영 결과를 구분한다.
 
-Mock mode: add mock data
+## 분석 및 배포 보호
 
-```bash
-EXPO_PUBLIC_USE_MOCK_AUTH=true npm start   # Mock auth (skips real login/signup API)
-EXPO_PUBLIC_USE_MOCK_MODE=true npm start   # Mock data services (onboarding, etc.)
-npm run ios-no-user                        # Mock mode without user profile
-```
-
-## Build & Deployment
-
-Branch and environment policy:
-
-- `main` is the production branch and should build against the production backend.
-- `develop` is the working/test branch and should build against the test backend.
-- Before running any local run, local build, EAS build, deploy, submit, TestFlight upload, or Google Play build on behalf of a user, ask both:
-  - execution type: local run/build or EAS/deploy build
-  - target environment: `test` or `production`
-- Do not infer the target only from the current branch when the user simply says "build"; confirm the execution type and environment first.
-- Use `npm run ios:test`, `npm run android:test`, or `npm run start:test` for local work against the test backend.
-- Use `npm run ios:prod`, `npm run android:prod`, or `npm run start:prod` for local work against the production backend.
-- Use `npm run build:test:*` for TestFlight/internal Google Play test builds that should use the test backend.
-- Use `npm run build:prod:*` or `npm run deploy:prod` only for production backend builds.
-- Local environment values must be loaded from gitignored env files such as `.env.test` and `.env.production`.
-- Do not commit backend URLs or other environment values.
-
-Build commands:
-
-```bash
-npm run build:test         # EAS test build, all platforms, test backend
-npm run build:test:ios     # EAS test build, iOS only
-npm run build:test:android # EAS test build, Android APK
-npm run build:test:android:aab # EAS test build, Play internal-test AAB
-npm run build:prod         # EAS production build, all platforms, production backend
-npm run build:prod:ios     # EAS production build, iOS only
-npm run build:prod:android # EAS production build, Android only
-npm run deploy:prod        # EAS production build and auto-submit
-```
-
-### Android
-
-**로컬 디버그 빌드 (USB 연결 기기):**
-
-```bash
-npx expo run:android --variant release
-```
-
-- 기기에 이미 상위 버전이 설치된 경우: `adb uninstall com.mediology.sinsinapp` 후 재설치
-
-**배포용 AAB 빌드는 반드시 EAS를 사용해야 합니다.**
-
-- 프로덕션 키스토어가 EAS 서버에서 관리됨
-- 로컬 `./gradlew bundleRelease`로 빌드하면 debug.keystore로 서명되어 Play Store 업로드 불가
-
-```bash
-# EAS 클라우드 빌드 (키스토어 자동 처리)
-npx eas build --platform android --profile production
-
-# EAS 로컬 빌드 (로컬 머신에서 빌드, 키스토어는 EAS에서 가져옴)
-npx eas build --platform android --profile production --local
-```
-
-**Play Store 업로드:**
-
-- [Play Console](https://play.google.com/console) → 신신당부 → 프로덕션 → 새 버전 만들기
-- 계정: healthierwith@gmail.com / 패키지: com.mediology.sinsinapp
-
-**Android SHA-1 (Google OAuth 등록용):**
-
-- debug.keystore: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
-- Play Store 업로드 키: `C3:4F:D7:DB:96:C6:BC:9F:0C:2A:6D:BC:60:61:99:69:3F:32:AB:4E`
-
-### iOS
-
-```bash
-npm run ios-release   # 로컬 릴리즈 빌드
-npx eas build --platform ios --profile production
-npx eas submit --platform ios  # App Store 제출
-```
-
-### 로그 확인 (실기기)
-
-```bash
-adb -s <device-id> logcat -s ReactNativeJS
-```
-
-## Architecture
-
-Before adding, redesigning, or refactoring React Native screens, read
-[`docs/mobile-frontend-architecture.md`](docs/mobile-frontend-architecture.md).
-Screen work must keep Expo Router files thin, feature behavior owned by
-`src/features/<feature>`, and new v2 UI assembled from `src/design-system-v2`
-tokens/components instead of one-off styling.
-
-Before adding or changing user-facing Korean copy, read
-[`docs/ux-writing-guide.md`](docs/ux-writing-guide.md). Do not expose raw API
-errors or implementation terms to users, and run `npm run audit:ux-copy` after
-copy changes.
-
-### Routing (Expo Router - File-based)
-
-- `app/_layout.tsx` - Root layout with providers (Tamagui, React Query, Pretendard fonts) and auth-based navigation
-- `app/(auth)/` - Authentication routes: login, email-login, signup, profile-setup
-- `app/(tabs)/` - Main app with bottom tab navigation: home, consult, recipe, restaurant, all
-- Auth state determines routing: unauthenticated → `/(auth)/login`, authenticated → `/(tabs)/home`
-
-### State Management
-
-**Hybrid approach: Zustand (client) + React Query (server)**
-
-- `src/stores/authStore.ts` - Auth state (user, accountState, isAuthenticated, isLoading)
-- `src/stores/userStore.ts` - User profile state
-- `src/services/queryClient.ts` - React Query config (5min staleTime, 30min gcTime)
-
-### Service Layer (`src/services/`)
-
-- `apiClient.ts` - Axios instances: `api` (authenticated, Bearer interceptor + 401 refresh) and `publicApi` (unauthenticated)
-- `tokenService.ts` - AsyncStorage-based JWT token CRUD (accessToken, refreshToken)
-- `authService.ts` - Custom API auth methods (signInWithEmail, signInWithSocial, signup, signOut, restoreSession)
-- `socialAuthService.ts` - Google/Apple native sign-in (ID token acquisition)
-- `emailService.ts` - Email verification and OTP API endpoints
-- `blockService.ts` - User blocking API (block/unblock/list)
-- `mock/` - Mock implementations for development (controlled by `src/config/appConfig.ts`: `isMockUser()` for auth, `isMockMode()` for data)
-
-### Custom Hooks (`src/hooks/`)
-
-- `useAuth()` - Manages auth lifecycle, token-based session restore, exposes signInWithEmail/signInWithGoogle/signInWithApple/signOut and accountState
-
-### Type Definitions (`src/types/`)
-
-- `models.ts` - Domain types: UserProfile, HealthRecord, FoodRecord, ChatConversation, ChatMessage, DailyHealthLog
-- `api.ts` - API request/response types
-- `auth.ts` - Auth API types: SignupRequest, LoginResult, SignupResult, TokenRefreshResult, OtpVerifyResult
-
-### Design System (`src/theme/`)
-
-Custom Tamagui configuration with Figma-mapped design tokens:
-
-- `tokens.ts` - Color (Primary coral/red, Sub teal/green, Greyscale), space, size, radius tokens
-- `fonts.ts` - Pretendard KR font (Regular/Medium/SemiBold/Bold) with typography scale
-- `themes.ts` - Light/dark theme definitions with semantic color mapping
-- `tamagui.config.ts` - Combines tokens, fonts, themes into Tamagui config
-
-### Shared UI Components (`src/shared/components/`)
-
-All components use Tamagui with glassmorphic design:
-
-- **Button** - variants: primary, secondary, outline, ghost, danger; sizes: small, medium, large
-- **TextField** - with label, error/helper text, focus states
-- **FormTextField** - React Hook Form integration, clearable, input type variants
-- **GlassmorphicCard** - variants: default, elevated, flat
-- **LoadingScreen**, **ErrorMessage**
-
-### Feature Modules (`src/features/`)
-
-Feature-based organization with types, data, services, hooks, and components per feature:
-
-- **`recipe/`** - Kidney-safe recipe community (fully implemented)
-  - `types/` - FoodNutrients, KidneyRecommendedFood, CommunityMealPost, ICommunityPostService
-  - `data/` - Food nutrition data (2,859 items from CSV), scoring engine, low-phosphorus food list
-  - `services/` - In-memory community post service, image picker (expo-image-picker)
-  - `hooks/` - useKidneyRecommendations (scored search), useCommunityPosts (React Query CRUD)
-  - `components/` - RecipeHeader, KidneyNutritionSection, KidneyFoodCard, NutrientChip, LowPhosphorusSection, LowPhosphorusCard, FlowTags, CommunitySection, CommunityPostCard, CreatePostSheet, EmptyPostsPlaceholder
-- **`settings/`** - MyPage & settings (fully implemented, dark mode supported)
-  - `hooks/` - useSettingsColors (dark mode color hook), useKidneyProfile, useMyPageProfile
-  - `views/` - MyPageScreen, SettingsScreen, ProfileEditScreen, KidneyProfileEditScreen, PasswordEditScreen, NicknameEditScreen, WithdrawalScreen, InquiryScreen, AskDoctorScreen, AnnouncementListScreen, MedicalReferenceScreen
-  - `components/` - KidneyProfileCard, ToggleItem, DotItem, DatePickerModal
-- **`auth/`** - Login with email, Google, Apple; signup flow with OTP verification
-- Other feature directories (`home/`, `food/`, `consultation/`, `restaurant/`, `health/`) have `.gitkeep` placeholders
-
-## Key Technical Decisions
-
-| Aspect       | Choice                                                                |
-| ------------ | --------------------------------------------------------------------- |
-| Framework    | Expo ~54.0 + React Native 0.81                                        |
-| Routing      | Expo Router (typed routes enabled)                                    |
-| UI Library   | Tamagui v2 (custom tokens, not @tamagui/config/v3)                    |
-| Font         | Pretendard KR (OTF, 4 weights)                                        |
-| State        | Zustand + React Query                                                 |
-| Forms        | react-hook-form                                                       |
-| Backend      | Custom FastAPI, selected by env file                                  |
-| Auth         | Email/password + Google Sign-In + Apple Sign-In                       |
-| Image Picker | expo-image-picker (gallery + camera)                                  |
-| Social Login | @react-native-google-signin/google-signin + expo-apple-authentication |
-| Linting      | ESLint + Prettier + Husky pre-commit                                  |
-| Language     | App UI in Korean, code in English                                     |
-
-## Environment Variables
-
-Required in `.env` (see `.env.example`):
-
-- `EXPO_PUBLIC_BACKEND_URL` - AI backend URL
-- `EXPO_PUBLIC_USE_MOCK_AUTH` - Mock auth services: login/signup/email verification (`true`/`false`)
-- `EXPO_PUBLIC_USE_MOCK_MODE` - Mock data services: onboarding, etc. (`true`/`false`)
-- `EXPO_PUBLIC_MOCK_NO_USER` - Mock mode without user profile
-
-## Domain Context
-
-Health app for CKD patients with:
-
-- CKD stages 1-5 tracking, dialysis status
-- Kidney-safe nutrient limits come from the profile and backend policy. CKD stage,
-  dialysis status, weight, and clinician-set goals can change them; do not present
-  `0.8g/kg` as a universal protein target.
-- AI food analysis with kidney safety assessment (safe/caution/warning)
-- AI consultation chat with health context
-- Kidney-safe food scoring algorithm (penalizes high phosphorus/potassium/sodium/protein, rewards water/magnesium/calcium/vitamin D)
-- Community recipe sharing with in-memory storage (future: backend API)
-
-## Styling Conventions
-
-- Use Tamagui `$token` syntax in Tamagui components (e.g. `color="$primary"`, `gap="$3"`)
-- Use `tokens.color.xxx.val` for non-Tamagui components (Ionicons, RN Image, etc.)
-- `$4` (16px) for section padding, `$3` (12px) for inner gaps
-- Font sizes: `$3`=12 captions, `$4`=14 body, `$5`=16 subheadline, `$7`=20 headline, `$8`=22 title
-- Use `GlassmorphicCard` for section containers
-- Color-coded NutrientChip: `variant="penalty"` (coral) for burden nutrients, `variant="beneficial"` (teal) for helpful nutrients
-
-### Dark Mode
-
-- Settings/MyPage screens: use `useSettingsColors()` hook from `src/features/settings/hooks/useSettingsColors.ts`
-- Home/Tamagui screens: use `useColorScheme() === "dark"` with `$tokenName` or `tokens.color.xxx.val`
-- Shared components (e.g. `ScreenHeader`): use `useColorScheme()` + `tokens.color.textDark.val`
-- Dark mode color tokens: `appBgDark` (#1F1F21), `cardBgDark` (#313138), `textDark` (#E7E7EE), `textDarkSub` (#ABABB4)
-- Green accent colors (#34D399, #0D896A, #44AF94) stay the same in both modes
-
-## Mixpanel Analytics
-
-- The app sends analytics directly through `mixpanel-react-native` in Expo-compatible JavaScript mode. Do not add a second analytics SDK or call Mixpanel outside `src/features/analytics/`.
-- Test builds read `EXPO_PUBLIC_MIXPANEL_TOKEN` from `.env.test`. Production analytics remains disabled until a separate production project and token are approved.
-- Initialization and privacy filtering live in `src/features/analytics/analyticsClient.ts`. IP-based geolocation is disabled, and event properties must never include email, names, health data, food text, images, URLs, tokens, or other free-form user content.
-- Authentication identity is the backend-issued internal `user.uid`. Call `identifyAnalyticsUser` before login or signup success events, identify again on restored authenticated sessions, and call `resetAnalyticsIdentity` on logout.
-- Event names and allowed properties are defined in `src/features/analytics/events.ts` and use `snake_case`. Update that contract and `planning/user-flows/registry/events.yaml` together when adding events.
-- The current value funnel is login or signup completion, then `food_analysis_started`, `food_analysis_succeeded`, and `food_record_saved`.
-- The current launch scope is Korean users only, so no regional consent gate is enabled. Reassess consent and data residency requirements before expanding regions.
-
-## Google Cloud / OAuth
-
-- GCP Project: `sinsin-486209`
-- Google OAuth iOS Client ID: `87899379852-eo6mf97djcrckpbqc748vcdcbl2m3ls4.apps.googleusercontent.com`
-- OAuth plist files are gitignored (`*.apps.googleusercontent.com.plist`)
+- Mixpanel은 `src/features/analytics/`를 통해서만 사용한다. 별도 SDK를 추가하지 않고 IP 기반 위치 추적을 끈다. 이벤트에 이메일·이름·건강 데이터·음식 텍스트·이미지·URL·토큰·자유 입력을 넣지 않는다.
+- identity는 백엔드 `user.uid`다. 로그인/가입 성공 이벤트 전에 식별하고 세션 복원 시 재식별, 로그아웃 시 reset한다. 이벤트/속성은 `snake_case` 계약(`src/features/analytics/events.ts`)과 `planning/user-flows/registry/events.yaml`을 함께 갱신한다.
+- Android 배포 AAB는 EAS 관리 키스토어로 서명한다. 로컬 Gradle의 debug.keystore 서명 산출물을 Play Store 배포본으로 사용하지 않는다.
+- 이 체크아웃의 test 분석은 `.env.test`의 토큰을 사용하며 운영 분석은 별도 운영 프로젝트·토큰 승인 전까지 비활성 상태를 유지한다.
+- iOS test/production은 동일 bundle id의 TestFlight를 공유한다. 운영 iOS 제출 후 test 빌드를 올려 테스트 백엔드 빌드가 최신이 되게 한다. `npm run deploy:ios`는 `reclaim:testflight-top`을 연결하며 수동 제출도 같은 후속 작업이 필요하다.
+- 한국 외 지역 확장 시 consent와 data residency 요구를 재검토한다.

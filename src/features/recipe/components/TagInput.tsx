@@ -1,5 +1,7 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, TextInput, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { useSurface } from "@/src/hooks/useSurface"
@@ -93,7 +95,7 @@ export function TagInput({
   }
 
   return (
-    <View style={[styles.wrap, { borderTopColor: surface.hairline }]}>
+    <View style={[styles.wrap, { borderTopColor: surface.border }]}>
       <TagChips
         tags={tags}
         onRemoveTag={(tag) => onChangeTags(tags.filter((item) => item !== tag))}
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 12,
     paddingBottom: 4,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: borderWidth.thin,
   },
   inputRow: {
     flexDirection: "row",

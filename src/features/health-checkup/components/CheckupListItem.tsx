@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 검진 목록의 카드 한 줄 + 그 목록이 쓰는 날짜 유틸.
  *
@@ -15,7 +16,7 @@
  * 원은 `V2Checkbox` 가 내부에서 hitSlop 으로 44 를 확보한다(시각 크기 24).
  */
 
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 
 import {
   V2Checkbox,

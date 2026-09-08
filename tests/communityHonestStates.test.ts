@@ -219,12 +219,9 @@ describe("스토리", () => {
     /* CTA 가 돌아와도 톤은 조용한 쪽이다 — 아무것도 없는 자리가 화면의 주인공이
        되면 안 된다는 판단은 그대로다. */
     expect(source).toContain('tone="quiet"')
-    /*
-      되돌아오지 않는 것: **큰 아이콘 원**과 옛 문구 키. 자리를 통째로 채우던
-      카드형 빈 상태의 잔재다.
-    */
+    // 사진 카드형 스토리에는 첫 사진을 올리는 진입점이 있다. 계측 컨테이너는 유지한다.
     expect(source).toContain("story.emptyLine")
-    expect(source).not.toContain("story.createFirstAccessibility")
+    expect(source).toContain("story.createAccessibility")
     expect(source).not.toContain('name="camera"')
   })
 
@@ -247,7 +244,7 @@ describe("스토리", () => {
 
     // 두 진입점의 목적지가 같은 문자열인지 센다. 갈라지면 개수가 1이 된다.
     const targets = source.match(/"\/story\/new" as Href/g) ?? []
-    expect(targets).toHaveLength(2)
+    expect(targets).toHaveLength(3)
   })
 
   it("뷰어도 같은 문장을 쓴다", () => {

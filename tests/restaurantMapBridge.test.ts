@@ -297,23 +297,24 @@ describe("줌 규약과 폴백 중심", () => {
     expect(MAP_ZOOM.CLUSTER_THRESHOLD).toBe(4)
   })
 
-  it("마커를 고르는 배율은 반드시 마커 모드 안에 있다", () => {
-    /* 마커 탭·카드 탭이 들어가는 배율이 클러스터 구간이면 고를 마커가 없다.
-       임계값을 다시 만질 때 이 관계가 먼저 깨진다 — 화면에는 "탭해도 아무 일이 없다"
-       로만 보이고 원인이 상수라는 것은 드러나지 않으므로 여기서 못 박는다. */
-    expect(MAP_ZOOM.FOCUSED).toBeLessThan(MAP_ZOOM.CLUSTER_THRESHOLD)
-    expect(MAP_ZOOM.LABEL_THRESHOLD).toBeLessThan(MAP_ZOOM.CLUSTER_THRESHOLD)
+  it("식당 선택은 더 가까운 배율로 이동하고 이름은 전 배율에서 허용한다", () => {
+    expect(MAP_ZOOM.FOCUSED).toBeLessThan(MAP_ZOOM.DEFAULT)
+    expect(MAP_ZOOM.LABEL_THRESHOLD).toBe(MAP_ZOOM.MAX)
   })
 
-  it("진입 배율은 클러스터 개요다", () => {
-    /* 예전에는 `DEFAULT < CLUSTER_THRESHOLD`(진입 화면이 마커 모드)를 단언했다.
-       그 전제가 실데이터에서 깨졌다 — 진입 배율의 마커 161개는 읽을 수 없다.
-       진입은 개수 배지로 답하고, 마커는 사용자가 파고든 배율에서 나온다. */
-    expect(MAP_ZOOM.DEFAULT).toBeGreaterThanOrEqual(MAP_ZOOM.CLUSTER_THRESHOLD)
+  it("진입 배율은 도보권 개요를 유지한다", () => {
+    expect(MAP_ZOOM.DEFAULT).toBe(4)
   })
 
   it("폴백 중심은 강남역이다 — 시드 데이터가 그 한 블록뿐이다", () => {
     // 시청(37.5665,126.978)으로 열면 첫 화면이 항상 0건이고 사용자는 고장으로 읽는다.
     expect(FALLBACK_CENTER).toEqual({ lat: 37.4979, lng: 127.0276 })
   })
+})
+
+it("round-trips exposed map insets through the command bridge", () => {
+  const insets = { top: 130, bottom: 260, left: 8, right: 12 }
+  const [call] = runScript(mapScript.setLabelInsets(insets))
+  expect(call.method).toBe("setLabelInsets")
+  expect(decodeArg(call.args[0])).toEqual(insets)
 })

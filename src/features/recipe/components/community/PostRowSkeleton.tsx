@@ -139,7 +139,7 @@ export function PostRowSkeleton({
         </View>
       </View>
 
-      <V2Divider tone="alternative" style={styles.divider} />
+      <V2Divider tone="normal" style={styles.divider} />
     </View>
   )
 }

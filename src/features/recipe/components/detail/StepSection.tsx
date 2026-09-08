@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 조리 순서 — NYT Cooking 의 "한 단계씩 몰입" 을 가져온다(계약 §6.2).
  * 그래서 단계 본문은 이 화면에서 가장 큰 글씨다(`body.mediumWeak` 17/26).
@@ -7,12 +8,11 @@
  * 끝까지 회색이다 — 브랜드색으로 채우면 단계마다 강조가 하나씩 생겨 화면 전체가
  * 주황으로 얼룩진다(계약 §6.4 "한 화면에 강조는 하나").
  */
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 import {
   CARD_RADIUS,
-  GUTTER,
   SECTION_TITLE_GAP,
   radius,
   spacing,
@@ -61,7 +61,10 @@ export function StepSection({ steps }: StepSectionProps) {
                 </Text>
               </View>
               <View style={styles.stepBody}>
-                <Text style={[styles.text, { color: colors.label.normal }]}>
+                <Text
+                  style={[styles.text, { color: colors.label.normal }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {step.text}
                 </Text>
                 {step.imageUrl != null && step.imageUrl.length > 0 && (
@@ -92,7 +95,7 @@ export function StepSection({ steps }: StepSectionProps) {
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: GUTTER, gap: SECTION_TITLE_GAP },
+  root: { paddingHorizontal: spacing[20], gap: SECTION_TITLE_GAP },
   sectionTitle: { ...typography.title.xSmall },
   empty: { ...typography.subtext.large },
   list: { gap: spacing[24] },
@@ -107,7 +110,7 @@ const styles = StyleSheet.create({
   },
   badgeText: { ...typography.label.xSmall },
   stepBody: { flex: 1, gap: spacing[12] },
-  text: { ...typography.body.mediumWeak },
+  text: { ...typography.subtext.large, lineHeight: 22 },
   photo: {
     width: "100%",
     aspectRatio: 4 / 3,

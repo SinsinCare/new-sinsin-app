@@ -1,3 +1,4 @@
+import type { EdemaObservation } from "../utils/edemaEntry"
 import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { useState } from "react"
 
@@ -26,6 +27,7 @@ export function useWeightEdemaRecord() {
         metric: "weight",
         existing,
       })
+      return true
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {
         metric: "weight",
@@ -36,6 +38,7 @@ export function useWeightEdemaRecord() {
         scope: "weight-save",
         retry: () => void updateWeight(weightKg, date, existing),
       })
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -45,15 +48,17 @@ export function useWeightEdemaRecord() {
     edemaLevel: EdemaLevel,
     date: string,
     existing: boolean,
+    observations?: EdemaObservation[],
   ) => {
     setIsLoading(true)
     try {
-      await weightEdemaService.updateEdema(edemaLevel, date)
+      await weightEdemaService.updateEdema(edemaLevel, date, observations)
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis", date] })
       trackAnalyticsEvent("health_entry_save_succeeded", {
         metric: "edema",
         existing,
       })
+      return true
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {
         metric: "edema",
@@ -61,8 +66,9 @@ export function useWeightEdemaRecord() {
       })
       presentError(error, {
         scope: "edema-save",
-        retry: () => void updateEdema(edemaLevel, date, existing),
+        retry: () => void updateEdema(edemaLevel, date, existing, observations),
       })
+      return false
     } finally {
       setIsLoading(false)
     }

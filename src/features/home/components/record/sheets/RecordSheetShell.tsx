@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect, type ReactNode } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
@@ -110,7 +111,7 @@ export function RecordSheetShell({
     backgroundColor: interpolateColor(
       activeness.value,
       [0, 1],
-      [surface.ctaOffBg, surface.brand],
+      [surface.surfaceSunken, surface.brand],
     ),
     transform: [{ scale: 1 - press.value * 0.015 }],
   }))
@@ -160,7 +161,7 @@ export function RecordSheetShell({
                   {
                     backgroundColor: pressed
                       ? surface.surfacePressed
-                      : surface.surface,
+                      : surface.surfaceSunken,
                   },
                 ]}
               >
@@ -196,7 +197,7 @@ export function RecordSheetShell({
                     {
                       backgroundColor: pressed
                         ? surface.surfacePressed
-                        : surface.surface,
+                        : surface.surfaceSunken,
                     },
                   ]}
                 >
@@ -235,6 +236,7 @@ export function RecordSheetShell({
                 <V2DotLoader size="s" color={surface.ctaOffText} />
               ) : null}
               <Animated.Text
+                maxFontSizeMultiplier={FONT_SCALE.body}
                 style={[styles.ctaLabel, ctaTextStyle]}
                 numberOfLines={1}
               >

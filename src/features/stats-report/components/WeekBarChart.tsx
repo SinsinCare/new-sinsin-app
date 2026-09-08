@@ -1,148 +1,233 @@
-import { StyleSheet, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
+import { useTranslation } from "react-i18next"
 import { Text } from "@/src/shared/components/AppText"
-
-import { REPORT_CARD } from "@/src/shared/components/ReportSection"
 import type { SurfacePalette } from "@/src/theme/surface"
 import { TYPE } from "@/src/theme/surface"
-
 import type { WeekChartDay, WeekNutrientChart } from "../types/report"
+import {
+  addDays,
+  barFraction,
+  chartScale,
+  startOfDay,
+} from "../utils/presentation"
+import { StatsSection } from "./StatsSection"
 
 type Surface = SurfacePalette & { isDark: boolean }
+const HEIGHT = 104
 
-/** 바 영역 높이. 축이 없으므로 이 안에서 비율이 곧 높이다. */
-const BAR_AREA_HEIGHT = 72
-/** 기록이 있는 날의 최소 바 높이 — 0 에 가까워도 "기록했음"은 보여야 한다. */
-const BAR_MIN_HEIGHT = 6
-
-/**
- * 주간 7칸 바 — 축·격자·범례 없이 높이와 색만 말한다.
- *
- * 그레이스케일 원칙: 보통 날은 중간 회색, **제한을 넘긴 날만 danger**.
- * 기록 없는 날은 바 대신 빈 칸(surface 면 + 테두리)으로 남겨서
- * "0이었다"와 "안 적었다"를 섞지 않는다.
- */
-export function WeekBars({ days, s }: { days: WeekChartDay[]; s: Surface }) {
+export function WeekBars({
+  days,
+  s,
+  reference = false,
+  onSelectIndex,
+  isDayDisabled,
+}: {
+  days: WeekChartDay[]
+  s: Surface
+  reference?: boolean
+  onSelectIndex?: (index: number) => void
+  isDayDisabled?: (index: number) => boolean
+}) {
+  const { t } = useTranslation("common")
+  const scale = chartScale(days)
   return (
-    <View style={styles.barsRow}>
-      {days.map((d) => {
-        const ratio = Math.min(1, Math.max(0, d.ratio))
-        const barHeight = Math.max(ratio * BAR_AREA_HEIGHT, BAR_MIN_HEIGHT)
-        return (
-          <View key={d.day} style={styles.dayCol}>
-            <View style={styles.barArea}>
-              {d.empty ? (
-                <View
-                  style={[
-                    styles.emptySlot,
-                    { backgroundColor: s.surface, borderColor: s.border },
-                  ]}
-                />
-              ) : (
-                <View
-                  style={[
-                    styles.bar,
-                    {
-                      height: barHeight,
-                      backgroundColor: d.over ? s.danger : s.placeholder,
-                    },
-                  ]}
-                />
-              )}
-            </View>
-            <Text
-              style={[styles.dayLabel, styles.tabular, { color: s.textWeak }]}
+    <View style={styles.plot}>
+      {reference && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.reference,
+            { bottom: 26 + HEIGHT / scale, borderColor: s.border },
+          ]}
+        />
+      )}
+      <View style={styles.bars}>
+        {days.map((day, index) => {
+          const fraction = barFraction(day, scale)
+          const missing = fraction === null
+          const label = t("stats.redesign.chartDay", {
+            day: day.day,
+            status: t(
+              missing
+                ? "stats.redesign.noRecord"
+                : day.over
+                  ? "stats.redesign.over"
+                  : "stats.redesign.recorded",
+            ),
+          })
+          return (
+            <Pressable
+              key={index}
+              accessibilityRole={onSelectIndex ? "button" : "image"}
+              accessibilityLabel={label}
+              disabled={!onSelectIndex || isDayDisabled?.(index)}
+              accessibilityState={
+                onSelectIndex
+                  ? { disabled: isDayDisabled?.(index) ?? false }
+                  : undefined
+              }
+              onPress={() => onSelectIndex?.(index)}
+              style={({ pressed }) => [
+                styles.day,
+                { backgroundColor: pressed ? s.surfaceSunken : undefined },
+              ]}
             >
-              {d.day}
-            </Text>
-          </View>
-        )
-      })}
+              <View style={styles.area}>
+                {missing ? (
+                  <View style={[styles.missing, { borderColor: s.border }]} />
+                ) : (
+                  <View
+                    style={[
+                      styles.bar,
+                      {
+                        height: Math.max(2, fraction * HEIGHT),
+                        backgroundColor: day.over ? s.danger : s.textMuted,
+                      },
+                    ]}
+                  />
+                )}
+              </View>
+              <Text style={[styles.dayLabel, { color: s.textMuted }]}>
+                {day.day}
+              </Text>
+            </Pressable>
+          )
+        })}
+      </View>
     </View>
   )
 }
-
-/**
- * 주간 영양소 차트 카드(칼륨). 타이틀 + 기준 캡션 → 바 → 해석.
- * 해석은 차트 밑 회색 면에 — 차트가 말을 못 하는 부분("지난주 1일 → 이번 주 3일")을
- * 서버 문장이 채운다.
- */
 export function WeekBarChart({
   title,
   chart,
   s,
+  startDate,
+  onSelectDay,
 }: {
   title: string
   chart: WeekNutrientChart
   s: Surface
+  startDate?: string
+  onSelectDay?: (date: Date) => void
 }) {
+  const { t } = useTranslation("common")
+  const recorded = chart.days.filter((day) => !day.empty)
+  const onSelect =
+    startDate && onSelectDay
+      ? (index: number) => {
+          const [y, m, d] = startDate.split("-").map(Number)
+          const date = addDays(new Date(y, m - 1, d), index)
+          if (date <= startOfDay(new Date())) onSelectDay(date)
+        }
+      : undefined
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: s.card, borderColor: s.hairline },
-      ]}
+    <StatsSection
+      title={t("stats.redesign.trend", { nutrient: title })}
+      caption={chart.limitText}
     >
-      <View style={styles.sectionHead}>
-        <Text style={[styles.sectionTitle, { color: s.textStrong }]}>
-          {title}
+      <View style={styles.summary}>
+        <Text style={[styles.count, { color: s.textStrong }]}>
+          {t("stats.redesign.overCount", {
+            count: recorded.filter((day) => day.over).length,
+          })}
         </Text>
-        <Text
-          style={[styles.sectionCaption, styles.tabular, { color: s.textWeak }]}
-        >
-          {chart.limitText}
+        <Text style={[styles.meta, { color: s.textMuted }]}>
+          {t("stats.redesign.recordedDays", { count: recorded.length })}
         </Text>
       </View>
-
-      <WeekBars days={chart.days} s={s} />
-
-      {!!chart.caption && (
-        <View style={[styles.captionBox, { backgroundColor: s.surface }]}>
-          <Text
-            style={[styles.captionText, styles.tabular, { color: s.textMuted }]}
-            lineBreakStrategyIOS="hangul-word"
-          >
-            {chart.caption}
+      <WeekBars
+        days={chart.days}
+        s={s}
+        reference
+        onSelectIndex={onSelect}
+        isDayDisabled={(index) => {
+          if (!startDate) return false
+          const [y, m, d] = startDate.split("-").map(Number)
+          return addDays(new Date(y, m - 1, d), index) > startOfDay(new Date())
+        }}
+      />
+      <View style={styles.legend}>
+        <View style={styles.legendItem}>
+          <View style={[styles.dot, { backgroundColor: s.danger }]} />
+          <Text style={[styles.meta, { color: s.textMuted }]}>
+            {t("stats.redesign.over")}
           </Text>
         </View>
+        <View style={styles.legendItem}>
+          <View
+            style={[styles.dot, { borderColor: s.border, borderWidth: 1 }]}
+          />
+          <Text style={[styles.meta, { color: s.textMuted }]}>
+            {t("stats.redesign.noRecord")}
+          </Text>
+        </View>
+        {onSelect && (
+          <Text style={[styles.meta, { color: s.textMuted }]}>
+            {t("stats.redesign.tapDay")}
+          </Text>
+        )}
+      </View>
+      {!!chart.caption && (
+        <Text
+          style={[
+            styles.insight,
+            {
+              color: s.text,
+              backgroundColor: s.surfaceSunken,
+              borderColor: s.hairline,
+            },
+          ]}
+          lineBreakStrategyIOS="hangul-word"
+        >
+          {chart.caption}
+        </Text>
       )}
-    </View>
+    </StatsSection>
   )
 }
-
 const styles = StyleSheet.create({
-  tabular: { fontVariant: ["tabular-nums"] },
-  card: { ...REPORT_CARD, gap: 12 },
-  sectionHead: {
+  plot: { position: "relative", paddingTop: 16, marginTop: 4 },
+  bars: { flexDirection: "row", gap: 2 },
+  day: { flex: 1, alignItems: "center", borderRadius: 8 },
+  area: { height: HEIGHT, justifyContent: "flex-end", alignItems: "center" },
+  bar: { width: 22, borderTopLeftRadius: 5, borderTopRightRadius: 5 },
+  missing: { width: 22, height: 3, borderWidth: 1, borderRadius: 2 },
+  dayLabel: {
+    ...TYPE.cardSub,
+    paddingTop: 8,
+    height: 26,
+    fontVariant: ["tabular-nums"],
+  },
+  reference: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    borderStyle: "dashed",
+  },
+  summary: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: "baseline",
     gap: 8,
+    flexWrap: "wrap",
+    marginTop: 12,
   },
-  sectionTitle: {
-    ...TYPE.cardTitle,
-    fontSize: 16,
-    fontWeight: "700",
-    flexShrink: 1,
+  count: { ...TYPE.question, fontWeight: "700" },
+  meta: { ...TYPE.cardSub },
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    paddingVertical: 12,
   },
-  sectionCaption: { ...TYPE.cardSub },
-
-  barsRow: { flexDirection: "row", gap: 6 },
-  dayCol: { flex: 1, alignItems: "center", gap: 5 },
-  barArea: {
-    height: BAR_AREA_HEIGHT,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    alignSelf: "stretch",
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  dot: { width: 6, height: 6, borderRadius: 2 },
+  insight: {
+    ...TYPE.caption,
+    lineHeight: 22,
+    padding: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginHorizontal: -16,
+    marginBottom: -4,
   },
-  bar: { width: 18, borderRadius: 5 },
-  emptySlot: {
-    width: 18,
-    height: BAR_AREA_HEIGHT,
-    borderRadius: 5,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  dayLabel: { fontSize: 11, lineHeight: 15, letterSpacing: -0.22 },
-
-  captionBox: { borderRadius: 12, padding: 12 },
-  captionText: { ...TYPE.cardSub },
 })

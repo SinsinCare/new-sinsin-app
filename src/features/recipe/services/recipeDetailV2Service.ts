@@ -1,3 +1,4 @@
+import { readPortionReference } from "@/src/features/nutrition/utils/portionReference"
 /**
  * 레시피 v2 상세 서비스. 계약 `docs/contract/recipe-v2.md` §2·§3 의 엔드포인트를 그대로 부른다.
  *
@@ -245,8 +246,10 @@ export function mapRecipeDetail(
       빈 배열은 "내 레시피인데 태그를 하나도 안 골랐다" 이다. 둘을 뭉개면 수정 화면이
       "모른다" 를 "없다" 로 읽어, 태그를 지운 적 없는 사용자의 태그를 지운다.
     */
-    authoredTags: record.authoredTags == null ? null : strList(record.authoredTags),
+    authoredTags:
+      record.authoredTags == null ? null : strList(record.authoredTags),
     tags: strList(record.tags),
+    portionReference: readPortionReference(record.portionReference),
     nutrition: mapNutrition(record.nutrition),
     budget: mapBudget(record.budget),
     nutrientBreakdown: mapBreakdown(record.nutrientBreakdown),

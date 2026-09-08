@@ -259,7 +259,7 @@ export function ReviewComposer({
             accessibilityState={{ disabled: !canSubmit }}
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
-            <V2VStack align="center" justify="center" style={{ height: LAYOUT.cta.height, borderRadius: LAYOUT.cta.radius, backgroundColor: canSubmit ? surface.brand : surface.ctaOffBg }}>
+            <V2VStack align="center" justify="center" style={{ height: LAYOUT.cta.height, borderRadius: LAYOUT.cta.radius, backgroundColor: canSubmit ? surface.brand : surface.surfaceSunken }}>
               <V2Text {...TYPE.cta} color={canSubmit ? surface.onBrand : surface.ctaOffText} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
                 {isSubmitting
                   ? t("detail.reviews.submitting")

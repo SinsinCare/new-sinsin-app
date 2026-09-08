@@ -1,7 +1,8 @@
+import { SettingsDetailHeader } from "../components/SettingsDetailHeader"
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
 import React, { useState } from "react"
 import { StyleSheet, View, ScrollView, Pressable } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
@@ -24,7 +25,6 @@ const WITHDRAWAL_TERM_KEYS = [
 ] as const
 
 export function WithdrawalTermsScreen() {
-  const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const { reason, detail, deleteMyPosts } = useLocalSearchParams<{
     reason?: string
@@ -71,25 +71,19 @@ export function WithdrawalTermsScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
+      <SettingsDetailHeader
+        title={t("settings.account.withdraw", { ns: "common" })}
+        onBack={router.back}
+      />
       <ScrollView
         bounces={false}
         overScrollMode="never"
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + 16, paddingBottom: 24 },
+          { paddingTop: 20, paddingBottom: 24 },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("shared.back")}
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={24} color={c.text} />
-        </Pressable>
-
         <ThemedText style={[styles.title, { color: c.text }]}>
           {t("withdrawal.termsTitle")}
         </ThemedText>
@@ -106,6 +100,9 @@ export function WithdrawalTermsScreen() {
         </View>
 
         <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: agreed }}
+          accessibilityLabel={t("withdrawal.agreement")}
           style={[styles.agreementBox, { backgroundColor: c.secondaryBg }]}
           onPress={() => setAgreed((v) => !v)}
         >
@@ -146,12 +143,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     alignSelf: "flex-start",
   },
-  title: {
-    fontSize: 22,
-    lineHeight: 22 * 1.2,
-    fontWeight: "600",
-    marginBottom: 20,
-  },
+  title: { ...settingsDetailSpec.title, marginBottom: 24 },
   sectionTitle: {
     fontSize: 16,
     lineHeight: 20,

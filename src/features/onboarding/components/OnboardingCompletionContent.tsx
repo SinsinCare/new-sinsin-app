@@ -1,5 +1,6 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 import { useEffect, useRef, useState } from "react"
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 import {

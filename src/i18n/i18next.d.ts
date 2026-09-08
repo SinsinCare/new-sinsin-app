@@ -6,6 +6,7 @@ import type auth from "./locales/ko/auth.json"
 import type billing from "./locales/ko/billing.json"
 import type common from "./locales/ko/common.json"
 import type errors from "./locales/ko/errors.json"
+import type medication from "./locales/ko/medication.json"
 import type health from "./locales/ko/health.json"
 import type recipe from "./locales/ko/recipe.json"
 import type settings from "./locales/ko/settings.json"
@@ -19,6 +20,7 @@ declare module "i18next" {
       common: typeof common
       errors: typeof errors
       health: typeof health
+      medication: typeof medication
       recipe: typeof recipe
       settings: typeof settings
     }

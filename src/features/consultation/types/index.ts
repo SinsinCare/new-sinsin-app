@@ -10,19 +10,6 @@ export interface CategoryMeta {
   color?: string
 }
 
-export interface FaqItem {
-  id: string
-  category: ChatCategory
-  question: string
-  answer: string
-}
-
-export interface QuickQuestion {
-  id: string
-  category: ChatCategory
-  text: string
-}
-
 export interface FaqCardEntry {
   id: string
   category: ChatCategory

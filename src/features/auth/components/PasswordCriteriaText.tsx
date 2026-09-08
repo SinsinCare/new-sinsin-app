@@ -1,4 +1,5 @@
-import { StyleSheet, Text } from "react-native"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+import { StyleSheet } from "react-native"
 import { useAuthSurface } from "../hooks/useAuthSurface"
 import { AUTH_TYPE } from "../data/authSurface"
 import {

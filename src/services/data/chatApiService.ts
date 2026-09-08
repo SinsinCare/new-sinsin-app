@@ -10,6 +10,7 @@ import type {
   ChatStreamDoneEvent,
   ChatStreamErrorEvent,
   ChatStreamStartedEvent,
+  ConsultActivity,
 } from "../../types/chat"
 import {
   ChatStreamError,
@@ -18,6 +19,7 @@ import {
   mapChatCreate,
   mapChatDetail,
   mapMessage,
+  parseConsultActivity,
 } from "../../types/chat"
 import type { ApiResponse } from "../../types/api"
 import { getBackendUrl, isMockMode } from "../../config/appConfig"
@@ -63,44 +65,52 @@ function createXMLHttpRequest(): ChatXMLHttpRequest {
 }
 
 class SseEventParser {
-  private buffer = ""
+  private parts: string[] = []
+  private frameLength = 0
+  private tail = ""
+  private readonly delimiter = /\r\n\r\n|\n\n|\r\r/g
 
   constructor(private readonly onEvent: (event: SseEvent) => void) {}
 
   push(chunk: string) {
-    this.buffer += chunk
-    this.drain(false)
-    if (this.buffer.length > CHAT_STREAM_MAX_FRAME_CHARS) {
+    // Only the last three characters can start a delimiter split across reads.
+    // Keep the rest in fragments so tiny chunks never rescan/copy the whole frame.
+    const buffer = this.tail + chunk
+    this.tail = ""
+    this.delimiter.lastIndex = 0
+    let start = 0
+    let match: RegExpExecArray | null
+    while ((match = this.delimiter.exec(buffer)) !== null) {
+      this.append(buffer.slice(start, match.index))
+      this.emitFrame()
+      start = match.index + match[0].length
+    }
+    const tailStart = Math.max(start, buffer.length - 3)
+    this.append(buffer.slice(start, tailStart))
+    this.tail = buffer.slice(tailStart)
+    if (this.frameLength + this.tail.length > CHAT_STREAM_MAX_FRAME_CHARS) {
       throw streamTooLargeError()
     }
   }
 
   finish() {
-    this.drain(true)
+    this.append(this.tail)
+    this.tail = ""
+    if (this.frameLength > 0) this.emitFrame()
   }
 
-  private drain(flush: boolean) {
-    const delimiter = /\r\n\r\n|\n\n|\r\r/
-    let match = delimiter.exec(this.buffer)
+  private append(part: string) {
+    this.frameLength += part.length
+    if (this.frameLength > CHAT_STREAM_MAX_FRAME_CHARS)
+      throw streamTooLargeError()
+    if (part.length > 0) this.parts.push(part)
+  }
 
-    while (match) {
-      const frame = this.buffer.slice(0, match.index)
-      this.buffer = this.buffer.slice(match.index + match[0].length)
-      if (frame.length > CHAT_STREAM_MAX_FRAME_CHARS) {
-        throw streamTooLargeError()
-      }
-      this.processFrame(frame)
-      match = delimiter.exec(this.buffer)
-    }
-
-    if (flush && this.buffer.length > 0) {
-      const frame = this.buffer
-      this.buffer = ""
-      if (frame.length > CHAT_STREAM_MAX_FRAME_CHARS) {
-        throw streamTooLargeError()
-      }
-      this.processFrame(frame)
-    }
+  private emitFrame() {
+    const frame = this.parts.join("")
+    this.parts = []
+    this.frameLength = 0
+    this.processFrame(frame)
   }
 
   private processFrame(frame: string) {
@@ -200,6 +210,12 @@ export function createRealChatService(): ChatService {
       /** 첨부 이미지 로컬 URI. 있으면 IMAGE 메시지로 보내고 서버가 멀티모달로 해석한다. */
       imageUri?: string,
       signal?: AbortSignal,
+      onActivity?: (activity: ConsultActivity) => void,
+      options?: {
+        regenerateMessageId?: number
+        recipeCards?: boolean
+        dataCards?: boolean
+      },
     ) {
       if (content.length > MAX_CHAT_MESSAGE_CONTENT_LENGTH) {
         throw new ChatStreamError({
@@ -233,6 +249,11 @@ export function createRealChatService(): ChatService {
           imageUri ? (content.trim() ? "MIXED" : "IMAGE") : "TEXT",
         )
         formData.append("userCategory", userCategory)
+        if (options?.regenerateMessageId !== undefined)
+          formData.append(
+            "regenerateMessageId",
+            String(options.regenerateMessageId),
+          )
         if (preparedImage) {
           // RN FormData 파일 파트 — fetch/XHR 이 멀티파트로 직렬화한다.
           formData.append("files", {
@@ -274,6 +295,10 @@ export function createRealChatService(): ChatService {
             getAppLanguage() === "en" ? "en-US" : "ko-KR",
           )
           xhr.setRequestHeader("Accept", "text/event-stream")
+          if (options?.dataCards)
+            xhr.setRequestHeader("X-Consult-Data-Cards", "1")
+          if (options?.recipeCards)
+            xhr.setRequestHeader("X-Consult-Recipe-Cards", "1")
           xhr.timeout = CHAT_STREAM_TIMEOUT_MS
 
           let fullContent = ""
@@ -370,6 +395,12 @@ export function createRealChatService(): ChatService {
                 return
               }
 
+              if (eventName === "activity") {
+                const activity = parseConsultActivity(payload)
+                if (activity) onActivity?.(activity)
+                return
+              }
+
               if (eventName === "done") {
                 const done = payload as unknown as ChatStreamDoneEvent
                 if (typeof done.messageId !== "number") {
@@ -459,6 +490,7 @@ export function createRealChatService(): ChatService {
                 mapMessage(
                   {
                     messageId: completion.messageId,
+                    activities: completion.activities,
                     role: completion.role ?? "ASSISTANT",
                     content: fullContent,
                     category: completion.category ?? null,
@@ -577,14 +609,6 @@ export const chatApiService: ChatService = {
   deleteChat: (id) => getChatApiService().deleteChat(id),
   renameChat: (id, title) => getChatApiService().renameChat(id, title),
   getMessages: (id) => getChatApiService().getMessages(id),
-  sendMessage: (id, content, userCategory, onChunk, imageUri, signal) =>
-    getChatApiService().sendMessage(
-      id,
-      content,
-      userCategory,
-      onChunk,
-      imageUri,
-      signal,
-    ),
+  sendMessage: (...args) => getChatApiService().sendMessage(...args),
   generateSummary: (id) => getChatApiService().generateSummary(id),
 }

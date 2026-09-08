@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 별점 표시. v2 에 별점 프리미티브가 **없어서**(설계조사 GAP: "no v2 star-rating primitive")
  * 상세 화면이 쓰는 두 모양을 여기 한 곳에 모았다. 세 파일에 각자 별을 그리면
@@ -24,7 +25,7 @@
  * `accessibilityLabel` 한 줄을 주고 자식은 숨긴다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -72,10 +73,14 @@ export function StarScore({
     <View
       style={[styles.row, style]}
       accessible
-      accessibilityLabel={t("restaurant.detail.ratingAccessibility", {
-        rating: value,
-        count: reviewCount ?? 0,
-      })}
+      accessibilityLabel={
+        reviewCount === null
+          ? t("restaurant.detail.ratingOnlyAccessibility", { rating: value })
+          : t("restaurant.detail.ratingAccessibility", {
+              rating: value,
+              count: reviewCount,
+            })
+      }
     >
       <V2Icon
         name="starFilled"

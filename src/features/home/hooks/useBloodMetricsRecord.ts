@@ -30,6 +30,7 @@ export function useBloodMetricsRecord() {
         metric: "blood_pressure",
         existing,
       })
+      return true
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {
         metric: "blood_pressure",
@@ -41,6 +42,7 @@ export function useBloodMetricsRecord() {
         scope: "blood-pressure-save",
         retry: () => void updateBloodPressure(body, existing),
       })
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -61,6 +63,7 @@ export function useBloodMetricsRecord() {
         metric: "blood_glucose",
         existing,
       })
+      return true
     } catch (error) {
       trackAnalyticsEvent("health_entry_save_failed", {
         metric: "blood_glucose",
@@ -70,6 +73,7 @@ export function useBloodMetricsRecord() {
         scope: "blood-glucose-save",
         retry: () => void updateBloodGlucose(body, existing),
       })
+      return false
     } finally {
       setIsLoading(false)
     }

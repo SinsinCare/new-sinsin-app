@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 어떤 라우트에도 맞지 않는 URL 이 도달한 화면.
  *
@@ -18,7 +19,7 @@
  */
 import { useEffect } from "react"
 import { Stack, usePathname } from "expo-router"
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

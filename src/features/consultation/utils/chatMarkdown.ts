@@ -52,6 +52,15 @@ export const markdownItInstance = MarkdownIt({
 const TRAILING_SPACES = /[ \t]+$/gm
 const EXCESS_BLANK_LINES = /\n{3,}/g
 
+/** Text-node presentation only: don't orphan a unit on the next line. Stored and copied text stays untouched. */
+export function keepMeasurementTogether(text: string): string {
+  return text.replace(
+    /(\d)([ \t]*)(?=(?:작은술|큰술|티스푼|스푼|mEq\/L|mmHg|kcal|mL|mg|kg|g)(?![A-Za-z]))/g,
+    (_match, digit: string, space: string) =>
+      `${digit}${space ? "\u00a0" : "\u2060"}`,
+  )
+}
+
 /** 줄이 여기서 끝나면 문장이 끝난 것이다 — 그 줄바꿈은 뜻이므로 남긴다. */
 const SENTENCE_END = /(?:[.!?…:;]|[)\]"'”’』」】]|[요다죠까네])$/
 /** 이런 줄로 시작하면 새 블록이다 — 앞 줄과 이어 붙이면 마크다운이 깨진다. */

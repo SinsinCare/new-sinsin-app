@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+import { useV2Theme } from "@/src/design-system-v2"
 import { hapticSelection } from "@/src/lib/haptics"
 import { Icon } from "@/src/shared/components/Icon"
 import { MOTION } from "@/src/theme/surface"
@@ -22,20 +22,17 @@ import { FLOATING_AI_BUTTON_HEIGHT as PILL_HEIGHT } from "./floatingAiButtonLayo
  * 플로팅은 쉐도우리스 규칙의 유일한 예외다. 떠 있음은 그림자만이 말할 수 있다.
  */
 
-const PILL_BG = { light: "#1D1E20", dark: "#F4F4F6" } as const
-const PILL_CONTENT = { light: "#FFFFFF", dark: "#17181C" } as const
-
 export function FloatingAiButton({ bottom }: { bottom: number }) {
   const { t } = useTranslation("common")
   const router = useAppRouter()
-  const isDark = useAppColorScheme() === "dark"
+  const { colors } = useV2Theme()
   const scale = useSharedValue(1)
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }))
 
-  const contentColor = isDark ? PILL_CONTENT.dark : PILL_CONTENT.light
+  const contentColor = colors.background.default
 
   return (
     <Animated.View
@@ -57,7 +54,10 @@ export function FloatingAiButton({ bottom }: { bottom: number }) {
         }}
         style={[
           styles.pill,
-          { backgroundColor: isDark ? PILL_BG.dark : PILL_BG.light },
+          {
+            backgroundColor: colors.label.normal,
+            shadowColor: colors.static.black,
+          },
         ]}
       >
         {/* 두 톤 채움이라 tint 를 받지 않는다 — registry 의 sparkle 주석. */}
@@ -78,22 +78,21 @@ const styles = StyleSheet.create({
   pill: {
     height: PILL_HEIGHT,
     borderRadius: PILL_HEIGHT / 2,
-    paddingLeft: 16,
-    paddingRight: 18,
+    paddingLeft: 14,
+    paddingRight: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    shadowOpacity: 0.22,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    shadowOpacity: 0.12,
     elevation: 8,
   },
   label: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.3,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 })
 

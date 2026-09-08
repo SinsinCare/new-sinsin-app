@@ -88,6 +88,8 @@ function absoluteState(next: boolean | undefined): boolean {
 }
 
 export interface CommunityFeedFilters {
+  authorId?: number
+  library?: "mine" | "liked" | "bookmarked"
   tag?: string | null
   category?: string | null
   sort?: CommunitySortMode
@@ -133,12 +135,16 @@ export const communityFeedQueryKey = (filters: CommunityFeedFilters) =>
       tag: filters.tag ?? null,
       category: filters.category ?? null,
       sort: filters.sort ?? "recent",
+      ...(filters.library ? { library: filters.library } : {}),
+      ...(filters.authorId ? { authorId: filters.authorId } : {}),
     },
   ] as const
 
 export function useCommunityPosts(filters: CommunityFeedFilters = {}) {
   const queryClient = useQueryClient()
   const {
+    library,
+    authorId,
     tag = null,
     category = null,
     sort = "recent",
@@ -147,8 +153,8 @@ export function useCommunityPosts(filters: CommunityFeedFilters = {}) {
   // 당김 새로고침의 페이지 자르기(`trimFeedCacheToFirstPage`)가 이 키를 받는다 —
   // 접두어로 자르면 화면 밖 조합(보관함 등)까지 잘린다. 값이 같으면 같은 키.
   const queryKey = useMemo(
-    () => communityFeedQueryKey({ tag, category, sort }),
-    [tag, category, sort],
+    () => communityFeedQueryKey({ tag, category, sort, library, authorId }),
+    [tag, category, sort, library, authorId],
   )
 
   /*
@@ -183,6 +189,8 @@ export function useCommunityPosts(filters: CommunityFeedFilters = {}) {
     */
     queryFn: ({ pageParam, signal }) =>
       communityPostService.getPosts({
+        library,
+        authorId,
         tag,
         category,
         sort,
@@ -205,7 +213,7 @@ export function useCommunityPosts(filters: CommunityFeedFilters = {}) {
       화면 전체가 스켈레톤으로 무너져 방금 누른 칩까지 사라진다 — 칩·정렬 컨트롤은
       목록 헤더 안에 살기 때문이다. 새 페이지가 오면 그대로 갈아탄다.
     */
-    placeholderData: keepPreviousData,
+    placeholderData: library || authorId ? undefined : keepPreviousData,
     // 관찰하지 않는 호출부(상세)는 캐시만 읽는다 — 옵션 머리말(`observe`).
     enabled,
   })

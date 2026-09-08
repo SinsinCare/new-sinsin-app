@@ -1,3 +1,4 @@
+import { buildRecipePortionConsult } from "@/src/features/recipe/consult/recipePortionConsult"
 /**
  * 레시피 상세 — 레시피 v2 의 핵심 화면(계약 §6.2).
  *
@@ -336,11 +337,9 @@ export default function RecipeDetailRoute() {
 
   const adjustable = detail != null && isServingAdjustable(detail)
   const selectedServings = servings ?? clampServings(detail?.servings ?? 1)
-  /**
-   * 영양 카드의 기준 인분. 조절할 수 없는 레시피는 응답 그대로 1인분을 보인다 —
-   * 원본 인분을 모르는 채 "N인분 기준" 이라고 적을 수 없다.
-   */
-  const basisServings = adjustable ? selectedServings : 1
+  // The stepper changes how many people we cook for, not one person's intake.
+  // Keep nutrition and its personal-budget comparison per person; only ingredients scale.
+  const basisServings = 1
 
   const scaledIngredients = useMemo(
     () =>
@@ -557,6 +556,27 @@ export default function RecipeDetailRoute() {
 
           <Block>
             <NutritionCard
+              portionReference={detail.portionReference}
+              isRefreshing={detailQuery.isFetching}
+              onConsultPortion={(selection) => {
+                const params = buildRecipePortionConsult({
+                  id: detail.id,
+                  name: detail.name,
+                  selection,
+                  t: (key, options) =>
+                    String(
+                      t(key as never, { ...options, ns: "common" } as never),
+                    ),
+                })
+                if (params)
+                  router.push({
+                    pathname: "/consult",
+                    params: {
+                      ...params,
+                      consultRequestId: `recipe-portion-${detail.id}-${Date.now()}`,
+                    },
+                  })
+              }}
               nutrition={scaledNutrition}
               breakdown={scaledBreakdown}
               budget={detail.budget}

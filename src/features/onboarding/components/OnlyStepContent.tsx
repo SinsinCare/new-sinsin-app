@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
@@ -64,7 +65,7 @@ function OptionRow({
     backgroundColor: interpolateColor(
       selection.value,
       [0, 1],
-      [surface.surface, surface.surfaceBrand],
+      [surface.surfaceSunken, surface.surfaceBrand],
     ),
     transform: [{ scale: scale.value }],
   }))
@@ -95,7 +96,11 @@ function OptionRow({
       {/* 라디오 동그라미를 빼고 면 색과 오른쪽 체크로만 말한다. 원 + 테두리 + 배경 +
           글자색을 한꺼번에 바꾸면 같은 사실을 네 번 그리는 셈이다. */}
       <Animated.View style={[styles.row, rowStyle]}>
-        <Animated.Text style={[styles.label, labelStyle]} numberOfLines={2}>
+        <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
+          style={[styles.label, labelStyle]}
+          numberOfLines={2}
+        >
           {label}
         </Animated.Text>
         {selected && (
@@ -131,7 +136,7 @@ function FollowUpChip({
     backgroundColor: interpolateColor(
       selection.value,
       [0, 1],
-      [surface.surface, surface.surfaceBrand],
+      [surface.surfaceSunken, surface.surfaceBrand],
     ),
     transform: [{ scale: scale.value }],
   }))
@@ -160,7 +165,11 @@ function FollowUpChip({
       }}
     >
       <Animated.View style={[styles.chip, chipStyle]}>
-        <Animated.Text style={[styles.chipLabel, labelStyle]} numberOfLines={1}>
+        <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
+          style={[styles.chipLabel, labelStyle]}
+          numberOfLines={1}
+        >
           {label}
         </Animated.Text>
       </Animated.View>

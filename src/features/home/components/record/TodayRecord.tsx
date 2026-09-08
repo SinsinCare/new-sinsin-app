@@ -1,9 +1,9 @@
 import type { ReactNode } from "react"
 import { StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
-import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
 import { RecordRowPressable } from "./RecordRowPressable"
+import { useHomeInk } from "./homeInk"
 import { useTranslation } from "react-i18next"
 
 export interface TodayRecordTileData {
@@ -11,29 +11,31 @@ export interface TodayRecordTileData {
   /** 지표를 구분하는 그림 한 점. 상태는 말하지 않는다. */
   icon: ReactNode
   label: string
-  /** 기록된 값. null 이면 "--" 로 비워 둔다 — 자리는 늘 같아야 한다. */
+  /** 기록된 값. null 이면 "기록 없음" 으로 비워 둔다 — 자리는 늘 같아야 한다. */
   value: string | null
   unit?: string
-  caption: string
-  /** 지금 기록할 차례인 타일(브랜드 보더 + "지금" 배지). */
-  highlight?: boolean
   onPress: () => void
 }
 
-/** 하이라이트 보더 — 브랜드 원색을 그대로 두르면 CTA 와 싸운다. 옅게 깐다. */
-const HIGHLIGHT_BORDER = "rgba(254,113,57,0.45)"
-
 /**
- * 오늘 기록 — 2열 고정 그리드(타일 h112 · r20 · 값 24/700, 시트 렌더 실측).
- * 여섯 지표가 늘 같은 자리에 서고, 누르면 그 자리에서 기록 시트가 열린다.
- * 값이 없어도 타일을 숨기지 않는다 — "--" 로 빈 자리를 보여줘야 누를 곳이 학습된다.
+ * 오늘의 건강기록 — 2열 격자. 시안(2026-09-04, `home.svg`) 실측:
+ * 타일 164×112 · r16 · 간격 7 · 보더 1(#70737C 8%) · 안쪽 위 20/옆 16 ·
+ * 아이콘 24 + 라벨 14 · 8 아래 값 18/700(단위 14) · 비면 "기록 없음" 18/500.
+ * 내용은 **위로 붙는다**(값 아래가 비어 있는 것이 시안이다).
  *
- * 카드엔 그림자를 주지 않는다. 회색 바닥 위 흰 면의 톤 차이가 층이고,
- * 지금 할 일 하나만 옅은 브랜드 보더로 들어 올린다.
+ * 여섯 지표가 늘 같은 자리에 서고, 누르면 그 자리에서 기록 시트가 열린다.
+ * 값이 없어도 타일을 숨기지 않는다 — "기록 없음" 으로 빈 자리를 보여줘야 누를 곳이
+ * 학습된다. 흰 바닥 위 흰 타일이라 층은 **보더**가 만든다.
  */
-export function TodayRecord({ tiles }: { tiles: TodayRecordTileData[] }) {
+export function TodayRecord({
+  title,
+  tiles,
+}: {
+  title: string
+  tiles: TodayRecordTileData[]
+}) {
   const { t } = useTranslation("common")
-  const surface = useSurface()
+  const ink = useHomeInk()
 
   const pairs: TodayRecordTileData[][] = []
   for (let i = 0; i < tiles.length; i += 2) {
@@ -42,14 +44,12 @@ export function TodayRecord({ tiles }: { tiles: TodayRecordTileData[] }) {
 
   return (
     <View style={styles.section}>
-      <View style={styles.head}>
-        <Text style={[styles.title, { color: surface.textStrong }]}>
-          {t("home.todayRecord.title")}
-        </Text>
-        <Text style={[styles.headHint, { color: surface.textMuted }]}>
-          {t("home.todayRecord.hint")}
-        </Text>
-      </View>
+      <Text
+        style={[styles.title, { color: ink.strong }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
+        {title}
+      </Text>
 
       <View style={styles.grid}>
         {pairs.map((pair, pairIndex) => (
@@ -60,79 +60,47 @@ export function TodayRecord({ tiles }: { tiles: TodayRecordTileData[] }) {
                 <View key={tile.key} style={styles.cell}>
                   <RecordRowPressable
                     tone="card"
+                    baseColor={ink.tileBg}
                     accessibilityLabel={`${tile.label} ${
                       filled
                         ? `${tile.value}${tile.unit ?? ""}`
-                        : t("home.todayRecord.add")
+                        : t("home.todayRecord.noRecord")
                     }`}
                     onPress={tile.onPress}
-                    style={[
-                      styles.tile,
-                      tile.highlight && {
-                        borderWidth: 1.5,
-                        borderColor: HIGHLIGHT_BORDER,
-                      },
-                    ]}
+                    style={[styles.tile, { borderColor: ink.hairline }]}
                   >
                     <View style={styles.tileHead}>
                       {tile.icon}
                       <Text
-                        style={[styles.tileLabel, { color: surface.textMuted }]}
+                        style={[styles.tileLabel, { color: ink.muted }]}
                         numberOfLines={1}
                       >
                         {tile.label}
                       </Text>
-                      {tile.highlight ? (
-                        <View
-                          style={[
-                            styles.nowBadge,
-                            { backgroundColor: surface.brand },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.nowBadgeLabel,
-                              { color: surface.onBrand },
-                            ]}
-                          >
-                            {t("home.todayRecord.now")}
-                          </Text>
-                        </View>
-                      ) : null}
                     </View>
 
-                    <View style={styles.tileFoot}>
+                    {filled ? (
                       <View style={styles.valueRow}>
                         <Text
-                          style={[
-                            styles.value,
-                            {
-                              color: filled
-                                ? surface.textStrong
-                                : surface.placeholder,
-                            },
-                          ]}
+                          style={[styles.value, { color: ink.strong }]}
                           numberOfLines={1}
                         >
-                          {filled ? tile.value : "--"}
+                          {tile.value}
                         </Text>
                         {tile.unit ? (
-                          <Text
-                            style={[styles.unit, { color: surface.textMuted }]}
-                          >
+                          <Text style={[styles.unit, { color: ink.muted }]}>
                             {tile.unit}
                           </Text>
                         ) : null}
                       </View>
-
+                    ) : (
                       <Text
-                        style={[styles.caption, { color: surface.placeholder }]}
+                        style={[styles.empty, { color: ink.placeholder }]}
                         numberOfLines={1}
-                        lineBreakStrategyIOS="hangul-word"
                       >
-                        {tile.caption}
+                        {t("home.todayRecord.noRecord")}
                       </Text>
-                    </View>
+                    )}
                   </RecordRowPressable>
                 </View>
               )
@@ -147,67 +115,51 @@ export function TodayRecord({ tiles }: { tiles: TodayRecordTileData[] }) {
 
 const styles = StyleSheet.create({
   section: {
-    // 위는 프로필 행(h56)이 이미 띄워준다 — 아래만 섹션 간격 28.
-    // 14 → 18: 위 섹션의 `식사 기록하기` CTA 와 이 섹션 제목이 붙어 보인다는
-    // 디자인 피드백(2026-08-04). 홈에서 두 섹션을 가르는 유일한 간격이다.
-    paddingTop: 18,
-    paddingBottom: 28,
+    paddingTop: 16,
     paddingHorizontal: LAYOUT.screenX,
     gap: 12,
   },
-  head: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  // 시트 렌더 실측: 제목 20/700, 우측 보조 15/500(같은 중간 회색).
   title: {
-    fontSize: 20,
-    lineHeight: 27,
-    letterSpacing: -0.4,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.36,
     fontWeight: "700",
   },
-  headHint: { fontSize: 15, lineHeight: 21, fontWeight: "500" },
-  // 카드 간격 10
-  grid: { gap: 10 },
-  gridRow: { flexDirection: "row", gap: 10, alignItems: "stretch" },
+  grid: { gap: 8 },
+  gridRow: { flexDirection: "row", gap: 8, alignItems: "stretch" },
   cell: { flex: 1 },
   tile: {
-    // 고정 높이가 아니라 최소 높이 — 영어 캡션은 두 줄이 되기도 한다.
-    // 줄이 stretch 라 같은 행의 두 타일은 항상 같은 높이로 선다.
     minHeight: 112,
     flex: 1,
-    borderRadius: 20,
-    padding: 18,
-    justifyContent: "space-between",
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 8,
   },
-  // QA(2026-08-02): 아이콘-라벨 간격 4 로 좁히고, 라벨은 위계상 한 단계 위로.
   tileHead: { flexDirection: "row", alignItems: "center", gap: 4 },
-  tileLabel: { fontSize: 16, lineHeight: 22, fontWeight: "600", flexShrink: 1 },
-  nowBadge: {
-    marginLeft: "auto",
-    paddingHorizontal: 8,
-    height: 22,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
+  tileLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.28,
+    fontWeight: "500",
+    flexShrink: 1,
   },
-  nowBadgeLabel: { fontSize: 11.5, lineHeight: 15, fontWeight: "700" },
-  tileFoot: { gap: 3 },
-  valueRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
+  valueRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
   value: {
-    fontSize: 24,
-    lineHeight: 31,
-    letterSpacing: -0.55,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.36,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
     flexShrink: 1,
   },
-  unit: { fontSize: 13.5, lineHeight: 19, fontWeight: "500" },
-  // 캡션은 **한 줄**이다. 타일이 space-between 이라 발(값+캡션)이 바닥에 붙는데,
-  // 캡션 줄 수가 다르면 같은 행인데도 큰 숫자가 서로 18pt 어긋나 보인다.
-  // 두 줄을 허용하는 대신 문구 자체를 짧게 유지한다(폭 ≈ 140pt → 한글 10자·영문 21자).
-  // 새 캡션을 추가할 때도 이 예산을 지킬 것.
-  caption: { fontSize: 13, lineHeight: 18, minHeight: 18 },
+  unit: { fontSize: 14, lineHeight: 20, fontWeight: "500" },
+  empty: {
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.36,
+    fontWeight: "500",
+  },
 })

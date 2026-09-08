@@ -44,7 +44,8 @@ export function RecordRowPressable({
   const surface = useSurface()
   const press = useSharedValue(0)
   const baseColor =
-    baseColorOverride ?? (tone === "card" ? surface.card : surface.surface)
+    baseColorOverride ??
+    (tone === "card" ? surface.card : surface.surfaceSunken)
 
   const animatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(

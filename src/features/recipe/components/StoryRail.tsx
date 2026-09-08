@@ -1,8 +1,11 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
+import { primitives } from "@/src/design-system-v2/tokens/colors"
 import { useMemo } from "react"
-import { ScrollView, StyleSheet, View } from "react-native"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
+import { LinearGradient } from "expo-linear-gradient"
 import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
@@ -28,6 +31,8 @@ import { useTranslation } from "react-i18next"
 
 const CARD_WIDTH = 112
 const CARD_HEIGHT = 152
+const COMPACT_CARD_WIDTH = 104
+const COMPACT_CARD_HEIGHT = 144
 
 /**
  * 스토리 레일 — 오늘 하루만 남는 사진들. 추천 순서는 서버가 매번 섞어 주므로
@@ -42,7 +47,7 @@ const CARD_HEIGHT = 152
  * 빈 상태도 같은 규칙을 뒤늦게 따라왔다(2026-08-21): 큰 카드 + 아이콘 원 + 두 번째
  * CTA 였던 자리가 `V2EmptyState tone="quiet"` 한 줄이 됐다. 자세한 것은 그 갈래의 주석.
  */
-export function StoryRail() {
+export function StoryRail({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation("recipe")
   // 재시도 라벨 같은 일반 동사는 `common` 에 산다(`fallbackNS` 를 안 켰다).
   const { t: tCommon } = useTranslation("common")
@@ -83,6 +88,162 @@ export function StoryRail() {
       ),
     [stories, now, blockedAuthors],
   )
+
+  const openCreateStory = () => router.push("/story/new" as Href)
+  const createStoryTile = (
+    <Pressable
+      onPress={openCreateStory}
+      accessibilityRole="button"
+      accessibilityLabel={t("story.createAccessibility")}
+      style={({ pressed }) => [
+        styles.compactCreate,
+        { backgroundColor: surface.surfaceSunken, opacity: pressed ? 0.65 : 1 },
+      ]}
+    >
+      <View
+        style={[styles.compactAddIcon, { backgroundColor: surface.canvas }]}
+      >
+        <Ionicons name="add" size={25} color={surface.brand} />
+      </View>
+      <Text style={[styles.compactCreateLabel, { color: surface.textStrong }]}>
+        {t("story.addPhoto")}
+      </Text>
+    </Pressable>
+  )
+
+  if (compact)
+    return (
+      <View
+        style={[
+          styles.compact,
+          {
+            borderBottomColor: surface.border,
+            backgroundColor: surface.canvas,
+          },
+        ]}
+      >
+        <Text style={[styles.compactTitle, { color: surface.textStrong }]}>
+          {t("story.title")}
+        </Text>
+        {visibleStories.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.compactTrack}
+          >
+            {createStoryTile}
+            {visibleStories.map((story) => (
+              <Pressable
+                key={story.id}
+                accessibilityRole="button"
+                accessibilityLabel={t("story.accessibility", {
+                  author: story.authorName,
+                })}
+                onPress={() =>
+                  router.push(
+                    `/stories?storyId=${encodeURIComponent(story.id)}` as Href,
+                  )
+                }
+                style={({ pressed }) => [
+                  styles.compactPhotoCard,
+                  {
+                    backgroundColor: surface.surfaceSunken,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Image
+                  source={remoteImageSource(story.imageUri)}
+                  style={styles.cardImage}
+                  contentFit="cover"
+                />
+                <LinearGradient
+                  colors={["transparent", primitives.opacityBlack[700]]}
+                  style={styles.compactPhotoFooter}
+                >
+                  <Text style={styles.compactPhotoAuthor} numberOfLines={1}>
+                    {story.isMine ? t("story.mine") : story.authorName}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : isLoading ? (
+          <View style={styles.compactRow}>
+            {createStoryTile}
+            <V2SkeletonGroup style={styles.compactLoading}>
+              {[0, 1].map((index) => (
+                <V2Skeleton
+                  key={index}
+                  width={COMPACT_CARD_WIDTH}
+                  height={COMPACT_CARD_HEIGHT}
+                  radius="lg"
+                />
+              ))}
+            </V2SkeletonGroup>
+          </View>
+        ) : isError ? (
+          <View style={styles.compactRow}>
+            {createStoryTile}
+            <View style={styles.compactMessage}>
+              <Text
+                style={[
+                  styles.compactMessageTitle,
+                  { color: surface.textStrong },
+                ]}
+                lineBreakStrategyIOS="hangul-word"
+              >
+                {failure.title}
+              </Text>
+              {failure.retryable ? (
+                <Pressable
+                  onPress={() => void refetch()}
+                  accessibilityRole="button"
+                  style={styles.compactRetry}
+                >
+                  <Text style={[styles.compactHint, { color: surface.text }]}>
+                    {tCommon("action.retry")}
+                  </Text>
+                  <Ionicons
+                    name="refresh-outline"
+                    size={14}
+                    color={surface.text}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+        ) : (
+          <V2EmptyState
+            surface="community_story"
+            tone="quiet"
+            style={styles.compactEmptyHost}
+            illustration={
+              <View style={styles.compactRow}>
+                {createStoryTile}
+                <View style={styles.compactMessage}>
+                  <Text
+                    style={[
+                      styles.compactMessageTitle,
+                      { color: surface.textStrong },
+                    ]}
+                    lineBreakStrategyIOS="hangul-word"
+                  >
+                    {t("story.inviteTitle")}
+                  </Text>
+                  <Text
+                    style={[styles.compactHint, { color: surface.text }]}
+                    lineBreakStrategyIOS="hangul-word"
+                  >
+                    {t("story.durationHint")}
+                  </Text>
+                </View>
+              </View>
+            }
+          />
+        )}
+      </View>
+    )
 
   return (
     <View style={styles.section}>
@@ -214,7 +375,11 @@ export function StoryRail() {
               </View>
               {story.likes > 0 && (
                 <View style={styles.cardLike}>
-                  <Ionicons name="heart" size={11} color="#FFFFFF" />
+                  <Ionicons
+                    name="heart"
+                    size={11}
+                    color={primitives.common[0]}
+                  />
                   <Text style={styles.cardLikeText}>{story.likes}</Text>
                 </View>
               )}
@@ -227,6 +392,86 @@ export function StoryRail() {
 }
 
 const styles = StyleSheet.create({
+  compact: {
+    paddingTop: 16,
+    paddingBottom: 18,
+    gap: 12,
+    borderBottomWidth: borderWidth.thin,
+  },
+  compactTitle: {
+    paddingHorizontal: 20,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "600",
+  },
+  compactHint: { fontSize: 13, lineHeight: 20 },
+  compactCreate: {
+    width: COMPACT_CARD_WIDTH,
+    minHeight: COMPACT_CARD_HEIGHT,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  compactAddIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  compactCreateLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  compactPhotoCard: {
+    width: COMPACT_CARD_WIDTH,
+    height: COMPACT_CARD_HEIGHT,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  compactTrack: { flexDirection: "row", paddingHorizontal: 20, gap: 10 },
+  compactPhotoFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 30,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+  },
+  compactPhotoAuthor: {
+    color: primitives.common[0],
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  compactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    gap: 20,
+  },
+  compactLoading: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 10,
+    overflow: "hidden",
+  },
+  compactRetry: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 44,
+    alignSelf: "flex-start",
+  },
+  compactEmptyHost: { padding: 0, alignItems: "stretch" },
+  compactMessage: { flex: 1, gap: 6 },
+  compactMessageTitle: { fontSize: 15, lineHeight: 22, fontWeight: "500" },
   /*
     머리(`SectionHeader`)는 높이 47 안에 pad-top 16 을 갖는다 — 예전 머리는 제 위 여백이
     22 였으므로 6 을 더해 **잉크가 서던 자리를 그대로** 둔다(6 + 16 = 22).
@@ -299,7 +544,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.24,
     fontWeight: "700",
     fontFamily: "Pretendard-Bold",
-    color: "#FFFFFF",
+    color: primitives.common[0],
   },
   cardLike: {
     position: "absolute",
@@ -318,7 +563,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: "700",
     fontFamily: "Pretendard-Bold",
-    color: "#FFFFFF",
+    color: primitives.common[0],
   },
 
   /**

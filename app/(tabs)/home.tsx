@@ -100,6 +100,7 @@ export default function HomeScreen() {
         onSelectMealType={() => {}}
         onPressDate={() => setShowCalendar(true)}
         onOpenStats={() => router.push("/statistics")}
+        onOpenNotifications={() => router.push("/(settings)/notifications")}
       />
 
       <AnnouncementPopupModal

@@ -264,7 +264,7 @@ export function CommentRow({
       </View>
 
       {/* 모든 행(마지막 포함)에 있다 — §2.8. 인셋 0(안쪽 View 가 패딩을 갖는 이유). */}
-      <V2Divider tone="alternative" style={styles.divider} />
+      <V2Divider tone="normal" style={styles.divider} />
     </View>
   )
 }

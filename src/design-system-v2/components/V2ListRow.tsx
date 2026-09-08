@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — List Row
 // Spec: project/design-system-v2/design-system-base/components/List-Row.md (Figma set 91:11116)
 //
@@ -20,7 +21,7 @@
 //    (권장: 텍스트 값은 typography.subtext.large(15) / colors.label.neutral)
 
 import { type ReactNode } from "react"
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"

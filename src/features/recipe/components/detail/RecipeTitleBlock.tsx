@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 제목 · **한 줄 메타** · 작성자 · 태그. 상세의 첫 화면이다.
  *
@@ -25,10 +26,9 @@
  *    (`showsDescription`). 작성자가 쓴 설명은 그대로 본문이다.
  */
 import { Fragment } from "react"
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import {
-  GUTTER,
   V2Icon,
   spacing,
   radius,
@@ -127,7 +127,12 @@ export function RecipeTitleBlock({
 
   return (
     <View style={styles.root}>
-      <Text style={[styles.name, { color: colors.label.normal }]}>{name}</Text>
+      <Text
+        style={[styles.name, { color: colors.label.normal }]}
+        lineBreakStrategyIOS="hangul-word"
+      >
+        {name}
+      </Text>
 
       {/*
        * 한 줄 메타. 별점만 아이콘이 필요해서 텍스트 조각과 노드를 섞어 그린다.
@@ -138,15 +143,15 @@ export function RecipeTitleBlock({
         <View style={styles.metaRow}>
           {facts.map((fact, index) => (
             <Fragment key={fact}>
-              {index > 0 && <MetaDot color={colors.label.assistive} />}
-              <Text style={[styles.meta, { color: colors.label.alternative }]}>
+              {index > 0 && <MetaDot color={colors.label.neutral} />}
+              <Text style={[styles.meta, { color: colors.label.neutral }]}>
                 {fact}
               </Text>
             </Fragment>
           ))}
           {showRating && rating.average != null && (
             <>
-              {facts.length > 0 && <MetaDot color={colors.label.assistive} />}
+              {facts.length > 0 && <MetaDot color={colors.label.neutral} />}
               <V2Icon
                 name="starFilled"
                 size={14}
@@ -155,9 +160,9 @@ export function RecipeTitleBlock({
               <Text style={[styles.metaStrong, { color: colors.label.normal }]}>
                 {formatAverage(rating.average)}
               </Text>
-              <MetaDot color={colors.label.assistive} />
+              <MetaDot color={colors.label.neutral} />
               <Text
-                style={[styles.meta, { color: colors.label.alternative }]}
+                style={[styles.meta, { color: colors.label.neutral }]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("detail.meta.reviews", { count: rating.count })}
@@ -179,7 +184,7 @@ export function RecipeTitleBlock({
           {credits.map((credit) => (
             <Text
               key={credit}
-              style={[styles.credit, { color: colors.label.assistive }]}
+              style={[styles.credit, { color: colors.label.neutral }]}
             >
               {credit}
             </Text>
@@ -195,7 +200,7 @@ export function RecipeTitleBlock({
           {visibleTags.slice(0, MAX_VISIBLE_TAGS).map((tag) => (
             <Text
               key={tag}
-              style={[styles.credit, { color: colors.label.assistive }]}
+              style={[styles.credit, { color: colors.label.neutral }]}
             >
               {`#${tag.replace(/^#+/u, "")}`}
             </Text>
@@ -222,7 +227,7 @@ export function RecipeTitleBlock({
             {t("detail.localeGapTitle")}
           </Text>
           <Text
-            style={[styles.noticeBody, { color: colors.label.alternative }]}
+            style={[styles.noticeBody, { color: colors.label.neutral }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("detail.localeGapBody")}
@@ -239,8 +244,8 @@ function MetaDot({ color }: { color: string }) {
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: GUTTER, gap: spacing[8] },
-  name: { ...typography.display.small },
+  root: { paddingHorizontal: spacing[20], gap: spacing[8] },
+  name: { ...typography.title.medium },
   metaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
     gap: spacing[8],
   },
   credit: { ...typography.subtext.medium },
-  description: { ...typography.body.mediumWeak, paddingTop: spacing[4] },
+  description: { ...typography.subtext.large, paddingTop: spacing[4] },
   notice: {
     gap: spacing[4],
     padding: spacing[12],

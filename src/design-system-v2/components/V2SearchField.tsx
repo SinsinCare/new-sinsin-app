@@ -1,3 +1,4 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Search Field
 // Spec: project/design-system-v2/design-system-base/components/Search-Field.md (Figma set 252:2158)
 //
@@ -13,7 +14,6 @@
 import {
   Pressable,
   StyleSheet,
-  TextInput,
   type TextInputProps,
   type TextStyle,
   View,

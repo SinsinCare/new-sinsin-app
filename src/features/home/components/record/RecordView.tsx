@@ -1,3 +1,4 @@
+import type { EdemaEntry } from "../../utils/edemaEntry"
 import { StyleSheet, Platform, RefreshControl, View } from "react-native"
 import { floatingAiButtonScrollInset } from "@/src/shared/components/floatingAiButtonLayout"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -10,26 +11,21 @@ import type {
   FoodCameraAnalyzeResult,
   FoodAnalysisConfirmationRequest,
 } from "@/src/types"
-import { CharacterSection } from "./CharacterSection"
-import { RecordHomeBar } from "./RecordHomeBar"
+import { HomeHero } from "./HomeHero"
 import { TodayRecord, type TodayRecordTileData } from "./TodayRecord"
-import { MealSheet, type MealSlotStatus } from "./sheets/MealSheet"
+import { MealSheet } from "./sheets/MealSheet"
+import { RecipeImportSheet } from "./sheets/RecipeImportSheet"
+import type { RecipeCard } from "@/src/features/recipe/types/recipeListV2"
 import {
-  MealPhotoConfirmSheet,
-  type MealPhotoDraft,
-} from "./sheets/MealPhotoConfirmSheet"
-import { MealTimeline } from "./MealTimeline"
-import { WaterSheet } from "./sheets/WaterSheet"
-import { BloodPressureSheet } from "./sheets/BloodPressureSheet"
-import { BloodGlucoseSheet } from "./sheets/BloodGlucoseSheet"
-import { WeightSheet } from "./sheets/WeightSheet"
-import { EdemaSheet } from "./sheets/EdemaSheet"
+  MealRecordList,
+  RecordMealCta,
+  type MealRecordEntry,
+} from "./MealRecordList"
 import { TileIcon } from "./TileIcon"
-import { getHydrationGuidance } from "../../utils/hydrationGuidance"
 import { useSurface } from "@/src/hooks/useSurface"
 import { isAtScrollTop, useRegisterTabReset } from "@/src/shared/navigation"
 import { MealType } from "../../types"
-import { normalizeEdemaLevel, type EdemaLevel } from "../../data/EdemaConstants"
+import { normalizeEdemaLevel } from "../../data/EdemaConstants"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
 import { useExtraWater } from "../../hooks/useExtraWater"
 import { displayedWaterIntake } from "../../utils/waterIntake"
@@ -37,12 +33,11 @@ import { useWeightEdemaRecord } from "../../hooks/useWeightEdemaRecord"
 import { useBloodMetricsRecord } from "../../hooks/useBloodMetricsRecord"
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import {
-  pickImageAssetFromGallery,
-  takePhoto,
-} from "@/src/features/recipe/services/imagePickerService"
-import { FoodAnalysisResult } from "../FoodAnalysisResult"
+import { router } from "expo-router"
 import { LoadingOverlay } from "../LoadingOverlay"
+import { openMealReportPage } from "../../stores/openMealReportPage"
+import { useMealReportPageStore } from "../../stores/mealReportPageStore"
+import { useFoodCameraStore } from "../../stores/foodCameraStore"
 import { FoodAnalysisConfirmation } from "../FoodAnalysisConfirmation"
 import { TextRecord } from "./TextRecord"
 import { tokens } from "@/src/theme/tokens"
@@ -54,15 +49,11 @@ import { foodCameraService } from "@/src/services/data"
 import { fetchMealReport } from "@/src/features/food-report/services/mealReportService"
 import { mealReportKey } from "@/src/features/food-report/hooks/useMealReport"
 import { diaryResultKey } from "@/src/i18n/localeQueryKeys"
-import { toDateStr } from "../../utils/dateUtils"
-import { getGlucoseNowSuggestion } from "../../utils/recordNowSuggestion"
+import { formatDateWithWeekday, toDateStr } from "../../utils/dateUtils"
 import { inferGlucoseContext } from "../../utils/glucoseInference"
-import { useWeightWeek } from "../../hooks/useWeightWeek"
+import { openRecordPage } from "../../stores/recordPageStore"
 import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
-import {
-  afterModalTransitions,
-  afterSiblingModalsGone,
-} from "@/src/shared/components/appModalGate"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import { ApiError } from "@/src/services/core/apiError"
 import { pendingAnalysisRequests } from "../../storage/pendingAnalysisRequests"
 import {
@@ -96,13 +87,7 @@ const ANALYTICS_MEAL_SLOT: Record<
   SNACKS: "snack",
 }
 
-type RecordSheetKind =
-  | "meal"
-  | "water"
-  | "bloodPressure"
-  | "bloodGlucose"
-  | "weight"
-  | "edema"
+type RecordSheetKind = "meal" | "water" | "bloodPressure" | "weight"
 
 interface RecordViewProps {
   selectedDate: Date
@@ -110,6 +95,7 @@ interface RecordViewProps {
   onSelectMealType: (mealType: MealType) => void
   onPressDate: () => void
   onOpenStats: () => void
+  onOpenNotifications: () => void
 }
 
 export function RecordView({
@@ -118,6 +104,7 @@ export function RecordView({
   onSelectMealType,
   onPressDate,
   onOpenStats,
+  onOpenNotifications,
 }: RecordViewProps) {
   const { t, i18n } = useTranslation("common")
   const language = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
@@ -127,17 +114,6 @@ export function RecordView({
   const surface = useSurface()
   const queryClient = useQueryClient()
   useFoodAnalysisRecoveryPolling()
-  const [viewDiaryResult, setViewDiaryResult] =
-    useState<DiaryAnalysisResult | null>(null)
-  const [viewDiaryId, setViewDiaryId] = useState<number | null>(null)
-  // 삭제 확인 미리보기("오늘 08:24")가 쓰는 기록 시각 — 다이어리 결과 API 에는 없다.
-  const [viewDiaryCreatedAt, setViewDiaryCreatedAt] = useState<string | null>(
-    null,
-  )
-  const [isViewResultOpen, setIsViewResultOpen] = useState(false)
-  const [viewResultMealType, setViewResultMealType] = useState<
-    MealType | undefined
-  >()
 
   const {
     isAnalyzing,
@@ -159,6 +135,35 @@ export function RecordView({
     updateDiaryMealType,
   } = useFoodAnalysis()
 
+  /*
+    방금 분석한 결과는 리포트 **페이지**로 연다. `isResultOpen` 이 켜지는 순간 한 번만
+    민다 — 결과 객체는 수정 때마다 바뀌므로 그것을 의존성으로 두면 페이지가 겹쳐 쌓인다.
+  */
+  const analysisResultRef = useRef(analysisResult)
+  analysisResultRef.current = analysisResult
+  const analyzedImageUriRef = useRef(analyzedImageUri)
+  analyzedImageUriRef.current = analyzedImageUri
+  const analyzedMealTypeRef = useRef(analyzedMealType)
+  analyzedMealTypeRef.current = analyzedMealType
+  const handleAddToRecordRef = useRef<() => Promise<void>>(async () => {})
+  useEffect(() => {
+    if (!isResultOpen) return
+    const result = analysisResultRef.current
+    if (!result) return
+    openMealReportPage({
+      source: "fresh",
+      result,
+      imageUri: analyzedImageUriRef.current ?? undefined,
+      mealType: analyzedMealTypeRef.current ?? undefined,
+      recordDate: toDateStr(selectedDate),
+      onAddToRecord: () => handleAddToRecordRef.current(),
+      isUpdating,
+      updateFoodAnalysis,
+      onClose: closeResult,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResultOpen])
+
   const pending = usePendingAnalysisStore((s) => s.pending)
   const setPending = usePendingAnalysisStore((s) => s.setPending)
   const pendingConfirmation = usePendingAnalysisStore(
@@ -167,8 +172,17 @@ export function RecordView({
   const setPendingConfirmation = usePendingAnalysisStore(
     (s) => s.setPendingConfirmation,
   )
-  const [isPendingOpen, setIsPendingOpen] = useState(false)
   const [isPendingUpdating, setIsPendingUpdating] = useState(false)
+  // 페이지 재료는 열 때 한 번 넘어가므로, 콜백은 ref 를 거쳐 늘 최신 본을 부른다.
+  const handlePendingAddToRecordRef = useRef<() => Promise<void>>(
+    async () => {},
+  )
+  const updatePendingFoodAnalysisRef = useRef<
+    (
+      id: number,
+      body: FoodAnalysisUpdateRequest,
+    ) => Promise<FoodAnalysisUpdateResult | undefined>
+  >(async () => undefined)
   /**
    * 누가 이 새로고침을 시작했는가. `boolean` 이 아닌 이유가 결함 하나다 —
    * `RefreshControl` 의 `refreshing` 은 **제스처일 때만** 켜야 한다. 제스처 없이 켜면
@@ -186,9 +200,13 @@ export function RecordView({
   const refreshPromiseRef = useRef<Promise<void> | null>(null)
   const pendingResultViewedRef = useRef<number | null>(null)
 
+  /*
+    복구된 결과는 리포트 **페이지**로 연다(2026-09-04 시안). 페이지 재료는 여기서
+    정하고, 닫힘 정리(`onClose`)는 페이지가 불러 준다. 같은 결과에 두 번 열지 않도록
+    `pendingResultViewedRef` 가 문지기다 — 이 값이 곧 "결과를 봤다" 계측의 분모이기도 하다.
+  */
   useEffect(() => {
     if (!pending) return
-    setIsPendingOpen(true)
     if (
       pendingResultViewedRef.current !== pending.result.foodAnalysisResultId
     ) {
@@ -196,7 +214,22 @@ export function RecordView({
       trackAnalyticsEvent("food_record_result_viewed", {
         source: "recovered",
       })
+      openMealReportPage({
+        source: "recovered",
+        result: pending.result,
+        imageUri: pending.imageUri ?? undefined,
+        mealType: pending.mealType,
+        recordDate: toDateStr(selectedDate),
+        onAddToRecord: () => handlePendingAddToRecordRef.current(),
+        isUpdating: false,
+        updateFoodAnalysis: (id, body) =>
+          updatePendingFoodAnalysisRef.current(id, body),
+        onClose: () => {
+          setPending(null)
+        },
+      })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending])
 
   const handleRecoveredConfirmation = async (
@@ -255,6 +288,11 @@ export function RecordView({
     }
   }
   const { data } = useDateAnalysis(selectedDate)
+  // 페이지가 이미 열려 있으면 "저장 중" 상태만 갈아 끼운다.
+  const patchReportPage = useMealReportPageStore((s) => s.patch)
+  useEffect(() => {
+    patchReportPage({ isUpdating: isPendingUpdating || isUpdating })
+  }, [isPendingUpdating, isUpdating, patchReportPage])
 
   // 식사 카드 탭이 기다림 없이 열리도록, 기록된 끼니의 분석과 리포트를
   // 미리 받아 둔다. 탭 핸들러는 같은 키로 fetchQuery 하므로 캐시가 따뜻하면
@@ -349,31 +387,6 @@ export function RecordView({
 
   // ── 기록 시트 상태 ──────────────────────────────────────────────
   const [openSheet, setOpenSheet] = useState<RecordSheetKind | null>(null)
-  /**
-   * **한 번이라도 열린 시트만 마운트한다.**
-   *
-   * 종전에는 기록 시트 다섯을 전부 `visible=false` 로 항상 마운트했다. Tamagui
-   * Sheet 는 닫힘을 "화면 밖으로 옮긴 상태" 로 그리는데, 안드로이드(신아키텍처 +
-   * targetSdk 36 edge-to-edge)에서 부팅 직후 닫힘 위치가 잡히기 전의 시트가
-   * 그대로 보였다 — "혈당 기록 시트가 누르지도 않았는데 앱 켜자마자 올라온다"
-   * (2026-08-04 QA, 안드로이드). 닫힌 시트를 부팅에 그리지 않으면 이 계열이
-   * 통째로 사라진다. 한 번 연 뒤에는 계속 마운트를 유지한다 — 시트들의 상태
-   * 재수화(hydrate)가 "닫힘→열림 전이" 를 기준으로 하기 때문에 동작이 같다.
-   */
-  const [mountedSheets, setMountedSheets] = useState<Set<RecordSheetKind>>(
-    () => new Set(),
-  )
-  useEffect(() => {
-    if (openSheet === null) return
-    setMountedSheets((current) => {
-      if (current.has(openSheet)) return current
-      const next = new Set(current)
-      next.add(openSheet)
-      return next
-    })
-  }, [openSheet])
-  const isSheetMounted = (kind: RecordSheetKind) =>
-    openSheet === kind || mountedSheets.has(kind)
   // 타임라인 카드로 진입하면 그 끼니가 선택된 채 시트가 열린다.
   const [mealSheetPreselect, setMealSheetPreselect] = useState<MealType | null>(
     null,
@@ -408,10 +421,6 @@ export function RecordView({
     })
     openMealSheet(mealType)
   }
-  // 앨범에서 고른 사진은 분석 전에 이 시트를 한 번 거친다(MealPhotoConfirmSheet 머리말).
-  const [mealPhotoDraft, setMealPhotoDraft] = useState<MealPhotoDraft | null>(
-    null,
-  )
   const { updateExtraWater } = useExtraWater()
   const {
     updateWeight,
@@ -427,12 +436,7 @@ export function RecordView({
   const selectedDateStr = toDateStr(selectedDate)
 
   // 체중 시트의 7일 추세 — 시트가 열려 있는 동안만 부른다.
-  const weightWeek = useWeightWeek(selectedDateStr, openSheet === "weight")
-
   const apiDiets = data?.result.diets ?? []
-  const apiMealImages = Object.fromEntries(
-    apiDiets.map((d) => [d.mealType, d.imageUrl]),
-  ) as MealImageMap
   const apiRecordedMeals = Object.fromEntries(
     apiDiets.map((d) => [d.mealType, true]),
   ) as RecordedMealMap
@@ -446,8 +450,38 @@ export function RecordView({
     }),
   ) as Partial<Record<MealType, string>>
 
-  const mergedMealImages = { ...apiMealImages, ...mealImages }
   const mergedRecordedMeals = { ...apiRecordedMeals, ...recordedMeals }
+
+  /*
+    식단 목록의 재료 — 그날 **기록된** 끼니(건너뛴 것 제외)를 시간순으로. 제목과 열량은
+    하루 목록 API 가 실어 보낸다(서버 2026-09-04) — 다이어리마다 분석을 다시 받지 않는다.
+    같은 끼니에 여러 건이 있을 수 있으므로(시간 기준 기록) 키는 끼니가 아니라 diaryId 다.
+  */
+  const recordedDiets = apiDiets
+    .flatMap((diet) =>
+      diet.diaryId === null || isSkippedDiet(diet)
+        ? []
+        : [{ ...diet, diaryId: diet.diaryId }],
+    )
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  const timeOf = (createdAt: string) => {
+    const date = new Date(createdAt + "Z")
+    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`
+  }
+  const mealEntries: MealRecordEntry[] = recordedDiets.map((diet) => ({
+    diaryId: diet.diaryId,
+    mealType: diet.mealType,
+    time: timeOf(diet.createdAt),
+    /*
+      사진은 **그 기록의 것**(`diet.imageUrl`)이다. 낙관 갱신 맵(`mealImages`)은 끼니로
+      키를 잡는데, 한 끼니에 여러 건이 있으면 그 맵의 한 장이 그 끼니의 모든 줄을 덮는다 —
+      점심을 두 번 적으면 두 줄이 같은 사진이 된다(2026-09-05 검수). 줄은 등록 직후의
+      refetch 로 생기므로 그 맵 없이도 첫 렌더부터 제 사진이 온다.
+    */
+    imageUri: diet.imageUrl ?? null,
+    title: diet.title?.trim() ? diet.title : null,
+    calories: diet.calories ?? null,
+  }))
 
   const hasSelectedDateRecord =
     apiDiets.length > 0 || Object.values(recordedMeals).some(Boolean)
@@ -472,18 +506,8 @@ export function RecordView({
       return intakeByNutrient[limit.nutrient] <= limit.max
     })
 
-  // 오늘 기록이 있고 영양소 제한조건까지 지켰을 때 풍성한(high) 배경
-  const backgroundVariant: "low" | "high" =
-    hasSelectedDateRecord && withinLimits ? "high" : "low"
-
   // 표기는 전부 사용자가 입력한 수분 기준이다(2026-08-21 결정 — 근거는 헬퍼 머리말).
   const consumedWater = displayedWaterIntake(data?.result.analysis)
-  const hydration = getHydrationGuidance({
-    consumed: consumedWater,
-    limit: fluidMl,
-    isReferenceLimit: isNutrientLimitFallback,
-    language,
-  })
   const bodyToday = data?.result.bodyRecords?.today ?? null
   const bodyPrevious = data?.result.bodyRecords?.previous ?? null
   const bloodPressure = data?.result.bloodPressure ?? null
@@ -499,6 +523,7 @@ export function RecordView({
     await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
   }
+  handleAddToRecordRef.current = handleAddToRecord
 
   const handlePendingAddToRecord = async () => {
     if (!pending) return
@@ -567,6 +592,8 @@ export function RecordView({
       setIsPendingUpdating(false)
     }
   }
+  handlePendingAddToRecordRef.current = handlePendingAddToRecord
+  updatePendingFoodAnalysisRef.current = updatePendingFoodAnalysis
 
   /**
    * 식사 기록의 진입은 시트 안의 세 버튼(사진·앨범·글)과 건너뛰기뿐이다.
@@ -580,131 +607,42 @@ export function RecordView({
     })
   }
 
-  const handleMealCamera = async (mealType: MealType) => {
+  /**
+   * 사진 촬영하기 → **앱 안의 푸드 카메라 페이지**(등록 절차 시안 2026-09-04).
+   *
+   * 끼니는 사람이 고르지 않는다 — 기록 시각으로 정한다("이제 시간만 기록한다").
+   * 시트의 닫힘 전이가 **끝난 뒤에** 페이지를 민다 — 같은 틱에 겹치면 iOS 가 전이를
+   * 겹쳐 놓고 멈춘다(예전 앨범 얼음 결함과 같은 이유, `tests/mealPickerAfterModal.test.ts`).
+   * 네이티브 피커 시절의 `afterSiblingModalsGone()` 은 안 쓴다 — 그건 **네이티브
+   * present** 가 topmost VC 를 잘못 잡는 문제를 막는 것이고, 라우트 push 는 그 문제가
+   * 없는데 레지스트리 보호 시간(최대 2초)만 고스란히 기다렸다(2026-09-04 실측 ~2초 지연).
+   * 취소하면 시트로 되돌아온다.
+   */
+  const handleMealCamera = async () => {
+    const mealType = inferMealTypeFromTime(new Date())
     setOpenSheet(null)
     startMealRecord(mealType)
     trackAnalyticsEvent("food_record_method_selected", {
       method: "camera",
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
-    // 식사 시트(RN Modal)가 **완전히 사라진 뒤에** 네이티브 카메라를 띄운다 — 아래
-    // handleMealGallery 머리말의 얼음 결함과 같은 이유다.
-    await afterSiblingModalsGone()
-    let granted = false
-    const uri = await takePhoto({
-      onPermissionDenied: () =>
-        trackAnalyticsEvent("food_photo_permission_denied", {
-          source: "camera",
-        }),
-      onPermissionGranted: () => {
-        granted = true
-        trackAnalyticsEvent("food_photo_permission_granted", {
-          source: "camera",
-        })
+    await afterModalTransitions()
+    useFoodCameraStore.getState().set({
+      onCapture: (uri) => analyzeImage(uri, mealType),
+      /*
+        카메라는 네이티브 전체화면 모달이다. 그것이 내려가는 **같은 틱**에 RN Modal 시트를
+        올리면 iOS 에서 전환 뷰가 겹쳐 화면이 먹통이 된다(글 기록 경로가 같은 이유로
+        `afterModalTransitions` 를 기다린다 — 2026-09-05 검수). 여기도 같은 문을 쓴다.
+      */
+      onCancel: () => {
+        void afterModalTransitions().then(() => openMealSheet(mealType))
       },
     })
-    // 앨범과 같은 규칙 — 취소하면 왔던 시트로 돌아온다(openMealGallery 머리말).
-    // 확인 단계를 따로 두지 않는 것은 iOS 카메라가 '다시 찍기 / 사진 사용'을 이미
-    // 묻기 때문이다. 여기서 또 물으면 두 번 확인이 된다.
-    if (!uri) {
-      // 권한 벽에서 멈춘 것은 **취소가 아니다.** 여기서 갈라 두지 않으면 거부한 사람이
-      // denied 와 cancelled 두 이름에 동시에 세어져 두 비율이 같이 부풀어 오른다.
-      if (granted) {
-        trackAnalyticsEvent("food_photo_picker_cancelled", {
-          source: "camera",
-          replacing: false,
-        })
-      }
-      openMealSheet(mealType)
-      return
-    }
-    analyzeImage(uri, mealType)
+    router.push("/food-camera")
   }
 
-  /**
-   * 앨범 열기. 고른 사진은 **분석으로 직행하지 않고** 확인 시트로 간다.
-   *
-   * 취소도 막다른 길로 두지 않는다. 예전에는 앨범을 여는 순간 식사 시트가 닫혀 있어서,
-   * 앨범에서 취소한 사람은 아무것도 안 열린 홈에 남았다 — 기록하러 들어왔다가 손만
-   * 씻고 나온 꼴이다. 취소하면 왔던 시트로 되돌려 놓는다.
-   *
-   * 사진을 이미 하나 들고 있을 때(= 확인 시트의 '다른 사진 고르기')는 시트를 닫지
-   * 않는다. 앨범은 네이티브 화면이라 이 시트 위에 그대로 뜨고, 취소하면 고르던 사진이
-   * 그 자리에 남는다.
-   */
-  const openMealGallery = async (mealType: MealType, isReplacing: boolean) => {
-    let granted = false
-    const picked = await pickImageAssetFromGallery({
-      onPermissionDenied: () =>
-        trackAnalyticsEvent("food_photo_permission_denied", {
-          source: "gallery",
-        }),
-      onPermissionGranted: () => {
-        granted = true
-        trackAnalyticsEvent("food_photo_permission_granted", {
-          source: "gallery",
-        })
-      },
-    })
-    if (!picked) {
-      // `replacing` 이면 고르던 사진이 그대로 남으므로 **이탈이 아니다** — 값으로 갈라
-      // 두지 않으면 '다른 사진 고르기' 를 눌렀다 만 사람이 앨범 취소율을 밀어 올린다.
-      if (granted) {
-        trackAnalyticsEvent("food_photo_picker_cancelled", {
-          source: "gallery",
-          replacing: isReplacing,
-        })
-      }
-      if (!isReplacing) openMealSheet(mealType)
-      return
-    }
-    setMealPhotoDraft({ ...picked, mealType })
-    trackAnalyticsEvent(
-      isReplacing ? "food_photo_confirm_replaced" : "food_photo_confirm_viewed",
-      { source: "gallery" },
-    )
-  }
-
-  /**
-   * 앨범 버튼. 시트를 내리는 **같은 틱에** 네이티브 피커를 present 하면 iOS 가 두
-   * 전이를 겹쳐 놓고 멈춘다 — 시트는 닫히는데 앨범은 안 뜨고 홈이 터치를 안 받는
-   * "앱이 얼었다"(2026-09-02 재발 신고, 예전에도 있었다).
-   *
-   * `afterModalTransitions()` 만으로는 **부족했다**(2026-09-03 시뮬레이터 재현): 전이
-   * 큐가 비어도 시트의 RN Modal VC 가 아직 떠 있으면 expo-image-picker 가 그 VC 를
-   * topmost 로 잡아 거기에 present 하고, 그 VC 가 곧 사라지면서 피커는 뜨지 않은 채
-   * 창의 터치만 막힌다 — 예외도 로그도 없다. 그래서 공유(`FoodAnalysisResult`)와 같은
-   * `afterSiblingModalsGone()` 으로 **레지스트리가 빌 때까지** 기다린다.
-   * `tests/mealPickerAfterModal.test.ts` 가 이 순서를 지킨다.
-   */
-  const handleMealGallery = async (mealType: MealType) => {
-    setOpenSheet(null)
-    startMealRecord(mealType)
-    trackAnalyticsEvent("food_record_method_selected", {
-      method: "gallery",
-      slot: ANALYTICS_MEAL_SLOT[mealType],
-    })
-    await afterSiblingModalsGone()
-    await openMealGallery(mealType, false)
-  }
-
-  const handleMealPhotoConfirm = () => {
-    const draft = mealPhotoDraft
-    if (!draft) return
-    setMealPhotoDraft(null)
-    trackAnalyticsEvent("food_photo_confirm_accepted", { source: "gallery" })
-    analyzeImage(draft.uri, draft.mealType)
-  }
-
-  const handleMealPhotoCancel = () => {
-    const draft = mealPhotoDraft
-    if (!draft) return
-    setMealPhotoDraft(null)
-    trackAnalyticsEvent("food_photo_confirm_cancelled", { source: "gallery" })
-    openMealSheet(draft.mealType)
-  }
-
-  const handleMealText = (mealType: MealType) => {
+  const handleMealText = async () => {
+    const mealType = inferMealTypeFromTime(new Date())
     setOpenSheet(null)
     startMealRecord(mealType)
     trackAnalyticsEvent("food_record_method_selected", {
@@ -714,11 +652,94 @@ export function RecordView({
     // 계측용으로 상태를 따로 둔다 — `recordingMealTypeRef` 는 렌더를 안 깨우므로
     // 그것을 렌더에서 읽으면 열림 이벤트가 직전 끼니를 실을 수 있다.
     setTextRecordMealType(mealType)
+    await afterModalTransitions()
     setIsTextRecordOpen(true)
   }
 
   /**
-   * 글 기록을 닫으면 식사 시트로 돌아온다 — 사진·앨범과 같은 규칙이다.
+   * 레시피 불러오기(시안의 세 번째 줄). 식사 시트를 내리고 저장한 레시피 시트를 연다 —
+   * 두 시트가 같은 틱에 겹치지 않도록 전이가 끝난 뒤에 연다. 고르면 서버가 재료 영양을
+   * 계산해 분석을 만들고(`from-recipe`), 그 결과를 신규 결과와 같은 리포트 페이지로 연다.
+   */
+  const [isRecipeImportOpen, setIsRecipeImportOpen] = useState(false)
+  const [importingRecipeId, setImportingRecipeId] = useState<number | null>(
+    null,
+  )
+  const recipeImportRequestRef = useRef(0)
+  const importingRecipeRef = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      recipeImportRequestRef.current += 1
+    },
+    [],
+  )
+
+  const cancelRecipeImport = () => {
+    recipeImportRequestRef.current += 1
+    importingRecipeRef.current = null
+    setImportingRecipeId(null)
+    setIsRecipeImportOpen(false)
+  }
+  const handleMealRecipe = async () => {
+    const mealType = inferMealTypeFromTime(new Date())
+    setOpenSheet(null)
+    startMealRecord(mealType)
+    trackAnalyticsEvent("food_record_method_selected", {
+      method: "recipe",
+      slot: ANALYTICS_MEAL_SLOT[mealType],
+    })
+    await afterModalTransitions()
+    setIsRecipeImportOpen(true)
+  }
+
+  const handleRecipePicked = async (recipe: RecipeCard) => {
+    if (importingRecipeRef.current !== null) return
+    importingRecipeRef.current = recipe.id
+    const request = ++recipeImportRequestRef.current
+    setImportingRecipeId(recipe.id)
+    const mealType =
+      recordingMealTypeRef.current ?? inferMealTypeFromTime(new Date())
+    try {
+      const result = await foodCameraService.analyzeFromRecipe(recipe.id)
+      if (request !== recipeImportRequestRef.current) return
+      setIsRecipeImportOpen(false)
+      setImportingRecipeId(null)
+      importingRecipeRef.current = null
+      await afterModalTransitions()
+      if (request !== recipeImportRequestRef.current) return
+      trackAnalyticsEvent("food_record_result_viewed", { source: "fresh" })
+      openMealReportPage({
+        source: "fresh",
+        result,
+        imageUri: result.imageUrl ?? undefined,
+        mealType,
+        recordDate: toDateStr(selectedDate),
+        isUpdating,
+        updateFoodAnalysis,
+        onAddToRecord: async () => {
+          await foodCameraService.registerDiary(
+            result.foodAnalysisResultId,
+            toDateStr(selectedDate),
+            mealType,
+          )
+          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+          await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+          trackAnalyticsEvent("food_record_saved", { source: "fresh" })
+        },
+      })
+    } catch (error) {
+      if (request !== recipeImportRequestRef.current) return
+      importingRecipeRef.current = null
+      setImportingRecipeId(null)
+      presentError(error, {
+        scope: "meal-recipe-import",
+        retry: () => void handleRecipePicked(recipe),
+      })
+    }
+  }
+
+  /**
+   * 글 기록을 닫으면 식사 시트로 돌아온다 — 사진과 같은 규칙이다.
    *
    * 시트를 여는 것은 네이티브 모달(TextRecord)이 **다 내려간 뒤**여야 한다. 이 화면의
    * pageSheet 닫힘과 다른 표면의 등장이 같은 틱에 겹쳤던 것이 2026-08-03 터치 먹통의
@@ -732,37 +753,10 @@ export function RecordView({
     openMealSheet(mealType)
   }
 
-  const handleSkipMeal = async (mealType: MealType) => {
-    setOpenSheet(null)
-    trackAnalyticsEvent("food_record_method_selected", {
-      method: "skip",
-      slot: ANALYTICS_MEAL_SLOT[mealType],
-    })
-    try {
-      await foodCameraService.skipMeal(toDateStr(selectedDate), mealType)
-      setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
-      await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
-      await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
-      trackAnalyticsEvent("food_record_skipped", {
-        slot: ANALYTICS_MEAL_SLOT[mealType],
-      })
-    } catch (error) {
-      presentError(error, {
-        scope: "meal-skip",
-        retry: () => void handleSkipMeal(mealType),
-      })
-    }
-  }
-
-  const handleViewMealResult = async (mealType: MealType) => {
-    const diet = data?.result.diets.find((d) => d.mealType === mealType)
-    if (!diet) return
-    if (diet.diaryId === null || isSkippedDiet(diet)) {
-      void handleMealCamera(mealType)
-      return
-    }
+  const handleViewMealResult = async (diaryId: number) => {
+    const diet = data?.result.diets.find((d) => d.diaryId === diaryId)
+    if (!diet || diet.diaryId === null || isSkippedDiet(diet)) return
     // 프리페치와 같은 키 — 캐시가 따뜻하면 네트워크 없이 즉시 연다.
-    const diaryId = diet.diaryId
     const result = await queryClient
       .fetchQuery({
         queryKey: diaryResultKey(diaryId, language),
@@ -780,26 +774,35 @@ export function RecordView({
       })
     if (result) {
       trackAnalyticsEvent("food_record_result_viewed", { source: "saved" })
-      setViewDiaryResult(result)
-      setViewDiaryId(diet.diaryId)
-      setViewDiaryCreatedAt(diet.createdAt)
-      setViewResultMealType(mealType)
-      setIsViewResultOpen(true)
+      openSavedMealReport(result, diaryId, diet.createdAt, diet.mealType)
     }
   }
 
-  const handleViewResultChange = (updated: FoodCameraAnalyzeResult) => {
-    setViewDiaryResult((prev) =>
-      prev
-        ? {
-            ...prev,
-            ...updated,
-            imageUrl: updated.imageUrl ?? prev.imageUrl,
-          }
-        : updated.imageUrl
-          ? { ...updated, imageUrl: updated.imageUrl }
-          : null,
-    )
+  /**
+   * 저장된 기록의 리포트 페이지. 통계 화면도 같은 페이지를 연다(StatisticsView).
+   * 수정·끼니 변경·삭제의 결과는 콜백으로 되돌아와 이 화면의 사진·기록 상태를 맞춘다.
+   */
+  const openSavedMealReport = (
+    result: DiaryAnalysisResult,
+    diaryId: number,
+    createdAt: string,
+    mealType: MealType,
+  ) => {
+    openMealReportPage({
+      source: "saved",
+      result,
+      imageUri: result.imageUrl,
+      mealType,
+      showAddButton: false,
+      isUpdating,
+      updateFoodAnalysis,
+      diaryId,
+      recordDate: toDateStr(selectedDate),
+      recordedAt: createdAt,
+      updateDiaryMealType,
+      onDiaryDeleted: handleViewDiaryDeleted,
+      onMealTypeChange: handleViewMealTypeChange,
+    })
   }
 
   const handleViewMealTypeChange = ({
@@ -811,7 +814,6 @@ export function RecordView({
     toMealType: MealType
     imageUri: string | null
   }) => {
-    setViewResultMealType(toMealType)
     setMealImages((prev) =>
       applyMealTypeChangeToMealImages({
         current: prev,
@@ -830,10 +832,7 @@ export function RecordView({
   }
 
   const handleViewDiaryDeleted = () => {
-    setIsViewResultOpen(false)
-    setViewDiaryResult(null)
-    setViewDiaryId(null)
-    setViewResultMealType(undefined)
+    // 목록·타일은 `useMealPersistenceActions.refreshHome` 이 다시 받아 맞춘다.
   }
 
   // ── 기록 시트 제출 ──────────────────────────────────────────────
@@ -849,30 +848,24 @@ export function RecordView({
    * 네트워크 유실·앱 종료다.
    *
    * 물은 여기 없다 — 그 시트만 잔을 로컬에 쌓았다가 CTA 가 합계로 한 번 보내므로
-   * `item_count`(담은 잔 수)를 시트 자신만 안다(`WaterSheet.commit`).
+   * `item_count`(담은 잔 수)를 페이지 자신만 안다(`WaterRecordPage.commit`).
    */
   const trackHealthSaveStarted = (metric: AnalyticsHealthMetric) => {
     trackAnalyticsEvent("health_entry_save_started", { metric, item_count: 1 })
-  }
-
-  const closeWaterSheet = () => {
-    setOpenSheet(null)
-    void queryClient.refetchQueries({
-      queryKey: dateAnalysisKey(selectedDateStr, language),
-    })
   }
 
   const handleBloodPressureSubmit = async (body: {
     systolic: number
     diastolic: number
     heartRate: number | null
+    slot: "BREAKFAST" | "LUNCH" | "DINNER" | "BEDTIME"
+    timing: "FASTING" | "BEFORE_MEAL" | "AFTER_MEAL_1H" | "AFTER_MEAL_2H" | null
   }) => {
     trackHealthSaveStarted("blood_pressure")
-    await updateBloodPressure(
+    return updateBloodPressure(
       { ...body, date: selectedDateStr },
       bloodPressure !== null,
     )
-    setOpenSheet(null)
   }
 
   const handleBloodGlucoseSubmit = async (body: {
@@ -887,167 +880,162 @@ export function RecordView({
       `existing` 은 그 **칸**(끼니×시점)에 이미 기록이 있었는가다. 하루 안에 여러 번
       재는 지표라 "그날 혈당 기록이 있다" 로 보면 두 번째 측정이 전부 수정으로 세어진다.
     */
-    await updateBloodGlucose(
+    return updateBloodGlucose(
       { ...body, date: selectedDateStr },
       findGlucoseCell(bloodGlucose, {
         slot: body.slot ?? "",
         timing: body.timing,
       }) !== null,
     )
-    setOpenSheet(null)
   }
 
   const handleWeightSubmit = async (weightKg: number) => {
     trackHealthSaveStarted("weight")
-    await updateWeight(weightKg, selectedDateStr, todayWeightKg !== null)
-    setOpenSheet(null)
+    return updateWeight(weightKg, selectedDateStr, todayWeightKg !== null)
   }
 
-  const handleEdemaSubmit = async (edemaLevel: EdemaLevel) => {
+  /*
+    ── 기록 페이지 열기 ───────────────────────────────────────────
+    물·혈압·체중은 2026-09-05 시안부터 바텀시트가 아니라 페이지다. 재료(그날 데이터 +
+    저장 핸들러)를 스토어에 두고 라우트를 민다 — 라우트 파라미터에는 콜백을 못 싣는다.
+    닫힐 때 그날 데이터를 다시 읽는 것이 `onClose` 다.
+  */
+  const refetchDay = () => {
+    void queryClient.refetchQueries({
+      queryKey: dateAnalysisKey(selectedDateStr, language),
+    })
+  }
+
+  const openWaterPage = () => {
+    openRecordPage({
+      kind: "water",
+      date: selectedDateStr,
+      consumed: consumedWater,
+      limit: fluidMl,
+      isReferenceLimit: isNutrientLimitFallback,
+      onLog: handleWaterLog,
+      onClose: refetchDay,
+    })
+  }
+
+  const openBloodPressurePage = () => {
+    openRecordPage({
+      kind: "bloodPressure",
+      record: bloodPressure,
+      previousRecord: previousBloodPressure,
+      date: selectedDateStr,
+      isSaving: isBloodSaving,
+      onSubmit: handleBloodPressureSubmit,
+      onClose: refetchDay,
+    })
+  }
+
+  const openWeightPage = () => {
+    openRecordPage({
+      kind: "weight",
+      today: bodyToday,
+      previous: bodyPrevious,
+      endDate: selectedDateStr,
+      isToday: isViewingToday,
+      isSaving: isBodySaving,
+      onSubmit: handleWeightSubmit,
+      onClose: refetchDay,
+    })
+  }
+
+  const handleEdemaSubmit = async (entry: EdemaEntry) => {
     trackHealthSaveStarted("edema")
-    await updateEdema(edemaLevel, selectedDateStr, todayEdema !== null)
-    setOpenSheet(null)
+    return updateEdema(
+      entry.edemaLevel,
+      selectedDateStr,
+      todayEdema !== null,
+      entry.observations,
+    )
   }
 
-  // ── 오늘 기록 타일 데이터 ───────────────────────────────────────
-  const mealTypes: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"]
-  const recordedMealCount = mealTypes.filter(
-    (type) => mergedRecordedMeals[type] ?? false,
-  ).length
-  const mainMealLabels: Partial<Record<MealType, string>> = {
-    BREAKFAST: t("meal.BREAKFAST"),
-    LUNCH: t("meal.LUNCH"),
-    DINNER: t("meal.DINNER"),
-  }
-  const nextMainMeal = (["BREAKFAST", "LUNCH", "DINNER"] as MealType[]).find(
-    (type) => !(mergedRecordedMeals[type] ?? false),
-  )
-  const mealCaption =
-    recordedMealCount === 0
-      ? t("home.meal.first")
-      : nextMainMeal
-        ? t("home.meal.remaining", { meal: mainMealLabels[nextMainMeal] })
-        : t("home.meal.complete")
-
+  // ── 건강기록 타일 데이터 ───────────────────────────────────────
   /*
     타일이 말하는 "최근"은 **하루의 차례에서 가장 뒤** 다(공복 → 아침 전/후 → … → 저녁 후).
     입력 순(`at(-1)`)으로 고르면, 저녁 식후를 적은 뒤 빠뜨린 공복을 채워 넣는 순간
     타일이 아침의 숫자로 되돌아간다 — 하루가 거꾸로 가는 것처럼 보인다.
   */
   const latestGlucose = orderGlucoseByDay(bloodGlucose).at(-1) ?? null
-  /** "아침 식후" — 끼니를 모르는 옛 기록은 시점만 말한다. */
-  const latestGlucoseLabel = latestGlucose
-    ? [
-        latestGlucose.slot ? t(`meal.${latestGlucose.slot}`) : null,
-        t(`home.bloodGlucose.timing.${latestGlucose.timing}`),
-      ]
-        .filter(Boolean)
-        .join(" ")
-    : null
   const todayWeightKg = bodyToday?.weightKg ?? null
   // 서버에 남아 있는 구 표기(SOME)를 화면이 아는 단계로 맞춘다 — 그대로 두면
   // 번역 키가 그대로 렌더된다.
   const todayEdema = normalizeEdemaLevel(bodyToday?.edemaLevel)
-  const previousWeightKg = bodyPrevious?.weightKg ?? null
 
-  const weightCaption = (() => {
-    if (todayWeightKg === null) return t("home.weight.morning")
-    if (previousWeightKg === null) return t("home.weight.noYesterday")
-    const diff = todayWeightKg - previousWeightKg
-    return Math.abs(diff) < 0.05
-      ? t("home.weight.same")
-      : t("home.weight.change", {
-          change: `${diff > 0 ? "+" : "−"}${Math.abs(diff).toFixed(1)}`,
-        })
-  })()
-
-  const bpTime = (() => {
-    const raw = bloodPressure?.recordDate
-    if (!raw || !raw.includes("T")) return null
-    const parsed = new Date(raw.endsWith("Z") ? raw : raw + "Z")
-    if (isNaN(parsed.getTime())) return null
-    const h = String(parsed.getHours()).padStart(2, "0")
-    const m = String(parsed.getMinutes()).padStart(2, "0")
-    return `${h}:${m}`
-  })()
-
-  // "지금" 판정은 오늘 화면에서만 — 지난 날짜를 보며 조르지 않는다.
+  // "오늘" 판정 — 지난 날짜를 보고 있으면 섹션 제목이 그 날짜를 말한다.
   const isViewingToday = selectedDateStr === toDateStr(new Date())
-  const glucoseNow = isViewingToday
-    ? getGlucoseNowSuggestion({
-        diets: apiDiets,
-        bloodGlucose,
-        now: new Date(),
-        language,
-      })
-    : { highlight: false, caption: null }
+  const sectionDate = isViewingToday
+    ? null
+    : formatDateWithWeekday(selectedDate, language)
 
   // 혈당 시트의 시점 추론 — "아침 식후 09:12 자동". 오늘 화면에서만 계산한다.
   const glucoseInference = isViewingToday
     ? inferGlucoseContext({ diets: apiDiets, now: new Date() })
     : null
 
+  // Medication uses the same page flow as the other five health entries.
+  const medication = data?.result.medication ?? null
+  const medicationValue =
+    medication && (medication.taken > 0 || medication.planned > 0)
+      ? medication.planned > 0
+        ? t("home.medication.progress", {
+            taken: medication.taken,
+            planned: medication.planned,
+          })
+        : t("home.medication.takenOnly", { taken: medication.taken })
+      : null
+  const openMedicationPage = () => {
+    router.push({
+      pathname: "/record/medication",
+      params: { date: selectedDateStr },
+    })
+  }
   const todayTiles: TodayRecordTileData[] = [
     {
-      key: "meal",
-      icon: <TileIcon name="meal" />,
-      label: t("home.tile.meals"),
-      /*
-        분모를 두지 않는다 — QA(2026-08-02): "0/4끼처럼 끼니 수를 결정하지 말고
-        몇 끼 먹었는지만. 4끼가 정석인 것도 아니고." 하루 몇 끼가 맞는지는 앱이
-        정할 일이 아니다. 0끼일 때는 다른 타일들처럼 값 대신 캡션이 말한다.
-      */
-      value: recordedMealCount > 0 ? String(recordedMealCount) : null,
-      unit: t("home.meal.unit"),
-      caption: mealCaption,
-      onPress: () => openMealSheetFrom("tile"),
+      key: "medication",
+      icon: <TileIcon name="medication" />,
+      label: t("home.tile.medication"),
+      value: medicationValue,
+      // 값 문구가 이미 "…회 복용" 이라 단위를 또 붙이면 "1회 복용 복용 완료" 가 된다.
+      unit: undefined,
+      onPress: openMedicationPage,
     },
     {
       key: "water",
       icon: <TileIcon name="water" />,
       label: t("home.tile.water"),
-      // 마신 양을 보여준다. 남은 양을 늘 키워 두면 넘치는 것만 막고 모자라는 것은
-      // 못 막는다 — 상한은 가까워졌을 때만 캡션이 말한다.
-      value: `${consumedWater}`,
+      // 마신 양. 0 은 "안 마셨다" 가 아니라 "안 적었다" 라 기록 없음으로 둔다.
+      value: consumedWater > 0 ? String(consumedWater) : null,
       unit: "ml",
-      caption: hydration.message,
-      onPress: () => setOpenSheet("water"),
+      onPress: openWaterPage,
     },
     {
       key: "bloodPressure",
       icon: <TileIcon name="bloodPressure" />,
       label: t("home.tile.bloodPressure"),
       value: bloodPressure
-        ? `${bloodPressure.systolic}/${bloodPressure.diastolic}`
+        ? `${bloodPressure.systolic} / ${bloodPressure.diastolic}`
         : null,
-      caption: bloodPressure
-        ? bpTime
-          ? t("home.recordedAt", { time: bpTime })
-          : t("home.recordedToday")
-        : t("home.bloodPressure.prompt"),
-      onPress: () => setOpenSheet("bloodPressure"),
+      onPress: openBloodPressurePage,
     },
     {
       key: "bloodGlucose",
       icon: <TileIcon name="bloodGlucose" />,
       label: t("home.tile.bloodGlucose"),
       value: latestGlucose ? String(latestGlucose.value) : null,
-      unit: "mg/dL",
-      caption:
-        glucoseNow.caption ??
-        (latestGlucose
-          ? t("home.bloodGlucose.latest", {
-              timing: latestGlucoseLabel,
-              extra:
-                bloodGlucose.length > 1
-                  ? t("home.bloodGlucose.extra", {
-                      count: bloodGlucose.length - 1,
-                    })
-                  : "",
-            })
-          : t("home.bloodGlucose.timings")),
-      highlight: glucoseNow.highlight,
-      onPress: () => setOpenSheet("bloodGlucose"),
+      unit: "mg/dl",
+      onPress: () =>
+        openRecordPage({
+          kind: "bloodGlucose",
+          date: selectedDateStr,
+          records: bloodGlucose,
+          inference: glucoseInference,
+          onSubmit: handleBloodGlucoseSubmit,
+          onClose: refetchDay,
+        }),
     },
     {
       key: "weight",
@@ -1055,17 +1043,22 @@ export function RecordView({
       label: t("home.tile.weight"),
       value: todayWeightKg !== null ? String(todayWeightKg) : null,
       unit: "kg",
-      caption: weightCaption,
-      onPress: () => setOpenSheet("weight"),
+      onPress: openWeightPage,
     },
     {
       key: "edema",
       icon: <TileIcon name="edema" />,
       label: t("home.tile.edema"),
       value: todayEdema !== null ? t(`home.edema.level.${todayEdema}`) : null,
-      caption:
-        todayEdema !== null ? t("home.edema.today") : t("home.edema.prompt"),
-      onPress: () => setOpenSheet("edema"),
+      onPress: () =>
+        openRecordPage({
+          kind: "edema",
+          date: selectedDateStr,
+          today: bodyToday,
+          previous: bodyPrevious,
+          onSubmit: handleEdemaSubmit,
+          onClose: refetchDay,
+        }),
     },
   ]
 
@@ -1097,18 +1090,6 @@ export function RecordView({
     },
   })
 
-  const mealSlots = Object.fromEntries(
-    mealTypes.map((type) => [
-      type,
-      {
-        recorded: mergedRecordedMeals[type] ?? false,
-        skipped: apiSkippedMeals[type] ?? false,
-        time: apiMealTimes[type],
-        imageUri: mergedMealImages[type],
-      } satisfies MealSlotStatus,
-    ]),
-  ) as Partial<Record<MealType, MealSlotStatus>>
-
   return (
     <KeyboardAwareScrollView
       ref={scrollRef}
@@ -1127,8 +1108,8 @@ export function RecordView({
         **제스처/프로그램 분리만 같은 규칙으로** 지킨다(위 `refreshSource` 머리말).
         `tests/pullToRefreshGuard.test.ts` 가 이 예외를 이름으로 못 박아 둔다.
       */
-      // 목업의 층: 회색 바닥 위 흰 카드(라이트) / 짙은 바닥 위 옅은 카드(다크).
-      style={{ backgroundColor: surface.bed }}
+      // 시안(2026-09-04)의 바닥은 흰색 — 층은 타일 보더가 만든다(TodayRecord 머리말).
+      style={{ backgroundColor: surface.canvas }}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -1146,20 +1127,20 @@ export function RecordView({
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
     >
-      <CharacterSection
-        selectedDate={selectedDate}
+      <HomeHero
         hasRecord={hasSelectedDateRecord}
         streak={streak}
         withinLimits={withinLimits}
-        backgroundVariant={backgroundVariant}
+        onOpenStats={onOpenStats}
+        onPressDate={onPressDate}
+        onOpenNotifications={onOpenNotifications}
       />
 
-      {/* 본문 패널 — 히어로 위로 라운드 탑(r24)으로 겹쳐 올라온다.
-          모서리 컷 사이로 히어로가 비쳐 시트가 배경 위에 얹힌 것처럼 읽힌다. */}
+      {/* 본문 — 흰 바닥(시안). 히어로가 스스로 아래 모서리를 접으므로 여기서 겹치지 않는다. */}
       <View
         style={[
           styles.bodyPanel,
-          { backgroundColor: surface.bed },
+          { backgroundColor: surface.canvas },
           /*
             우하단 AI 상담 필에 마지막 타일(붓기·체중 행)이 가리지 않게 비운다.
 
@@ -1174,177 +1155,76 @@ export function RecordView({
           { paddingBottom: floatingAiButtonScrollInset(insets.bottom) },
         ]}
       >
-        <RecordHomeBar
-          selectedDate={selectedDate}
-          onPressDate={onPressDate}
-          onOpenStats={onOpenStats}
-        />
+        {/* 식이 기록이 이 앱의 핵심 행동이라 히어로 바로 아래가 CTA 다.
+            끼니는 시트가 시간으로 추론한다. */}
+        <RecordMealCta onPress={() => openMealSheetFrom("timeline_cta")} />
 
-        {/* 식이 기록이 이 앱의 핵심 행동이라 오늘 기록 위에 둔다.
-            기록된 카드는 리포트로, 빈 카드는 그 끼니가 선택된 시트로 간다. */}
-        <MealTimeline
-          slots={mealSlots}
-          onPressRecorded={(mealType) => void handleViewMealResult(mealType)}
-          onPressEmpty={(mealType) =>
-            openMealSheetFrom("timeline_empty", mealType)
+        {/* 그날 기록한 끼니 — 줄을 누르면 리포트. 없으면 섹션째 사라진다. */}
+        <MealRecordList
+          title={
+            sectionDate
+              ? t("home.mealList.titleOnDate", { date: sectionDate })
+              : t("home.mealList.title")
           }
-          onPressRecord={() => openMealSheetFrom("timeline_cta")}
+          entries={mealEntries}
+          onPressEntry={(diaryId) => void handleViewMealResult(diaryId)}
         />
 
-        <TodayRecord tiles={todayTiles} />
+        <TodayRecord
+          title={
+            sectionDate
+              ? t("home.todayRecord.titleOnDate", { date: sectionDate })
+              : t("home.todayRecord.title")
+          }
+          tiles={todayTiles}
+        />
       </View>
 
       {/* ── 기록 시트 6종 ── */}
       <MealSheet
         visible={openSheet === "meal"}
         onClose={() => setOpenSheet(null)}
-        initialMealType={mealSheetPreselect}
-        slots={mealSlots}
-        onCamera={(mealType) => void handleMealCamera(mealType)}
-        onGallery={(mealType) => void handleMealGallery(mealType)}
-        onText={handleMealText}
-        onSkip={(mealType) => void handleSkipMeal(mealType)}
-        onViewResult={(mealType) => {
-          setOpenSheet(null)
-          void handleViewMealResult(mealType)
-        }}
+        onCamera={() => void handleMealCamera()}
+        onText={() => void handleMealText()}
+        onRecipe={() => void handleMealRecipe()}
       />
 
-      {/* 앨범에서 고른 사진의 마지막 관문 — 분석은 여기를 지나야 시작된다. */}
-      <MealPhotoConfirmSheet
-        draft={mealPhotoDraft}
-        onClose={handleMealPhotoCancel}
-        onConfirm={handleMealPhotoConfirm}
-        onPickAgain={() => {
-          if (mealPhotoDraft)
-            void openMealGallery(mealPhotoDraft.mealType, true)
+      {/* 레시피 불러오기 — 저장한 레시피에서 고르면 서버가 재료 합으로 분석을 만든다. */}
+      <RecipeImportSheet
+        visible={isRecipeImportOpen}
+        onText={() => {
+          cancelRecipeImport()
+          void handleMealText()
         }}
+        onClose={() => {
+          cancelRecipeImport()
+          // 취소하면 왔던 시트로 — 사진·글과 같은 규칙.
+          void afterModalTransitions().then(() => openMealSheet(null))
+        }}
+        onPick={(recipe) => void handleRecipePicked(recipe)}
+        importingId={importingRecipeId}
       />
 
-      {isSheetMounted("water") && (
-        <WaterSheet
-          visible={openSheet === "water"}
-          onClose={closeWaterSheet}
-          consumed={consumedWater}
-          limit={fluidMl}
-          isReferenceLimit={isNutrientLimitFallback}
-          onLog={handleWaterLog}
-        />
-      )}
-
-      {isSheetMounted("bloodPressure") && (
-        <BloodPressureSheet
-          visible={openSheet === "bloodPressure"}
-          onClose={() => setOpenSheet(null)}
-          record={bloodPressure}
-          previousRecord={previousBloodPressure}
-          isSaving={isBloodSaving}
-          onSubmit={(body) => void handleBloodPressureSubmit(body)}
-        />
-      )}
-
-      {isSheetMounted("bloodGlucose") && (
-        <BloodGlucoseSheet
-          visible={openSheet === "bloodGlucose"}
-          onClose={() => setOpenSheet(null)}
-          records={bloodGlucose}
-          isSaving={isBloodSaving}
-          inference={glucoseInference}
-          onSubmit={(body) => void handleBloodGlucoseSubmit(body)}
-        />
-      )}
-
-      {isSheetMounted("weight") && (
-        <WeightSheet
-          visible={openSheet === "weight"}
-          onClose={() => setOpenSheet(null)}
-          today={bodyToday}
-          previous={bodyPrevious}
-          week={weightWeek.data}
-          endDate={selectedDateStr}
-          isToday={isViewingToday}
-          isSaving={isBodySaving}
-          onSubmit={(weightKg) => void handleWeightSubmit(weightKg)}
-        />
-      )}
-
-      {isSheetMounted("edema") && (
-        <EdemaSheet
-          visible={openSheet === "edema"}
-          onClose={() => setOpenSheet(null)}
-          today={bodyToday}
-          isSaving={isBodySaving}
-          onSubmit={(edemaLevel) => void handleEdemaSubmit(edemaLevel)}
-        />
-      )}
+      {/* 물·혈압·체중은 시트가 아니라 페이지다(2026-09-05 시안) — `openRecordPage`. */}
 
       {/* ── 식사 기록 파이프라인(카메라·텍스트·AI 분석) ── */}
       <TextRecord
         open={isTextRecordOpen}
         slot={ANALYTICS_MEAL_SLOT[textRecordMealType]}
         onClose={() => void closeTextRecord()}
-        onSubmit={(text) => {
+        onSubmit={async (text) => {
           const mealType = recordingMealTypeRef.current
           if (!mealType) return
           setIsTextRecordOpen(false)
-          analyzeText(text, mealType)
+          await afterModalTransitions()
+          await analyzeText(text, mealType)
         }}
       />
 
       {/*
-        같은 컴포넌트가 세 번 서는데 셋은 **다른 여정**이다(방금 분석한 결과 · 저장된
-        기록을 다시 연 것 · 대기 중에 나갔다 복구된 것). 화면 축은 셋 다 `home` 이라
-        안 갈리므로 `source` 를 여기서 못 박는다 — 안 넘기면 '결과를 보고도 안 담았다'
-        가 세 여정의 합이 되어 어느 쪽이 새는지 영영 못 본다.
+        리포트는 **페이지**(`/meal-report`)다 — 세 여정(fresh · saved · recovered)이 같은
+        페이지를 `openMealReportPage` 로 열고, `source` 를 거기서 못 박는다.
       */}
-      <FoodAnalysisResult
-        source="fresh"
-        result={analysisResult}
-        open={isResultOpen}
-        onClose={closeResult}
-        imageUri={analyzedImageUri ?? undefined}
-        mealType={analyzedMealType ?? undefined}
-        recordDate={toDateStr(selectedDate)}
-        onAddToRecord={handleAddToRecord}
-        isUpdating={isUpdating}
-        updateFoodAnalysis={updateFoodAnalysis}
-      />
-
-      <FoodAnalysisResult
-        source="saved"
-        result={viewDiaryResult}
-        open={isViewResultOpen}
-        onClose={() => setIsViewResultOpen(false)}
-        imageUri={viewDiaryResult?.imageUrl}
-        mealType={viewResultMealType}
-        showAddButton={false}
-        isUpdating={isUpdating}
-        updateFoodAnalysis={updateFoodAnalysis}
-        diaryId={viewDiaryId ?? undefined}
-        recordDate={toDateStr(selectedDate)}
-        recordedAt={viewDiaryCreatedAt ?? undefined}
-        updateDiaryMealType={updateDiaryMealType}
-        onDiaryDeleted={handleViewDiaryDeleted}
-        onResultChange={handleViewResultChange}
-        onMealTypeChange={handleViewMealTypeChange}
-      />
-
-      <FoodAnalysisResult
-        source="recovered"
-        result={pending?.result ?? null}
-        open={isPendingOpen}
-        onClose={() => {
-          setIsPendingOpen(false)
-          setPending(null)
-        }}
-        imageUri={pending?.imageUri ?? undefined}
-        mealType={pending?.mealType}
-        recordDate={toDateStr(selectedDate)}
-        onAddToRecord={handlePendingAddToRecord}
-        isUpdating={isPendingUpdating}
-        updateFoodAnalysis={updatePendingFoodAnalysis}
-      />
-
       <LoadingOverlay
         visible={isAnalyzing}
         message={t("home.analyzingMeal")}
@@ -1378,11 +1258,5 @@ const styles = StyleSheet.create({
   },
   bodyPanel: {
     flexGrow: 1,
-    marginTop: -24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: "hidden",
-    // 라운드 탑 바로 아래 프로필 행이 붙지 않게 숨통을 준다.
-    paddingTop: 8,
   },
 })

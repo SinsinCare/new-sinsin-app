@@ -1,6 +1,7 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useState, useRef } from "react"
 import { Pressable, Keyboard, type KeyboardTypeOptions } from "react-native"
-import { TextInput } from "react-native"
+
 import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 import {
   Controller,

@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 위치 권한 거부 배너. `BUILD_CONTRACT §3.5`.
  *
@@ -19,7 +20,7 @@
  * 화면 상단을 영구히 먹으면서 "당신의 선택이 틀렸다" 고 반복한다.
  */
 
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native"
+import { Linking, Pressable, StyleSheet, View } from "react-native"
 import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 

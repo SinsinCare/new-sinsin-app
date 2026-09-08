@@ -31,9 +31,27 @@
 // 크롬이 필요 없는 맨 입력(댓글 컴포저처럼 자기 바를 직접 그리는 곳)은 이걸 **그대로** 쓴다.
 
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet"
-import type { ComponentRef } from "react"
+import { forwardRef, type ComponentProps, type ComponentRef } from "react"
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { inputMetrics } from "../primitives/inputMetrics"
 
-export const V2SheetTextInput = BottomSheetTextInput
+export const V2SheetTextInput = forwardRef<
+  ComponentRef<typeof BottomSheetTextInput>,
+  ComponentProps<typeof BottomSheetTextInput>
+>(function V2SheetTextInput(
+  { style, multiline, maxFontSizeMultiplier, ...props },
+  ref,
+) {
+  return (
+    <BottomSheetTextInput
+      {...props}
+      ref={ref}
+      multiline={multiline}
+      style={inputMetrics(style, multiline)}
+      maxFontSizeMultiplier={maxFontSizeMultiplier ?? FONT_SCALE.input}
+    />
+  )
+})
 
 /** `useRef<V2SheetTextInputRef>(null)` — `focus()` 로 칸을 옮길 때 쓴다. */
 export type V2SheetTextInputRef = ComponentRef<typeof BottomSheetTextInput>

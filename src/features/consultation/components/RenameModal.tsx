@@ -1,8 +1,13 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useState, useEffect, useRef } from "react"
-import { Pressable, TextInput, StyleSheet, View } from "react-native"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { V2HStack, V2Text } from "@/src/design-system-v2"
-import { tokens } from "@/src/theme/tokens"
+import { Keyboard, Pressable, StyleSheet, View } from "react-native"
+import {
+  V2HStack,
+  V2Text,
+  spacing,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
 import { useTranslation } from "react-i18next"
 
 interface RenameModalProps {
@@ -11,176 +16,136 @@ interface RenameModalProps {
   onConfirm: (newName: string) => void
   onCancel: () => void
 }
-
 export function RenameModal({
   visible,
   currentName,
   onConfirm,
   onCancel,
 }: RenameModalProps) {
-  const { t } = useTranslation()
-  const colorScheme = useAppColorScheme()
-  const isDarkMode = colorScheme === "dark"
+  const { t } = useTranslation("common")
+  const { colors } = useV2Theme()
   const [name, setName] = useState(currentName)
   const inputRef = useRef<TextInput>(null)
-
   useEffect(() => {
-    if (visible) {
-      setName(currentName)
-      // 오버레이 마운트 직후엔 포커스가 안 잡힌다 — 한 프레임 늦춘다.
-      const timer = setTimeout(() => inputRef.current?.focus(), 80)
-      return () => clearTimeout(timer)
-    }
+    if (!visible) return
+    setName(currentName)
+    const timer = setTimeout(() => inputRef.current?.focus(), 100)
+    return () => clearTimeout(timer)
   }, [visible, currentName])
-
-  const handleConfirm = () => {
-    const trimmed = name.trim()
-    if (trimmed) {
-      onConfirm(trimmed)
+  if (!visible) return null
+  const cancel = () => {
+    Keyboard.dismiss()
+    onCancel()
+  }
+  const confirm = () => {
+    if (name.trim()) {
+      Keyboard.dismiss()
+      onConfirm(name.trim())
     }
   }
-
-  const textColor = isDarkMode
-    ? tokens.color.textDark.val
-    : tokens.color.textLight.val
-  const secondaryTextColor = isDarkMode
-    ? tokens.color.textDarkSub.val
-    : "#81818D"
-  const cardBg = isDarkMode
-    ? tokens.color.appBgDark.val
-    : tokens.color.pureWhite.val
-  const borderColor = isDarkMode
-    ? tokens.color.cardBgDark.val
-    : tokens.color.borderLight.val
-  const backdropBg = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.3)"
-
-  // iOS pageSheet 위에선 RN Modal 이 프레젠트되지 않는다 — 화면 내 오버레이로 띄운다.
-  if (!visible) return null
-
   return (
-    <Pressable
-      style={[
-        StyleSheet.absoluteFill,
-        styles.backdrop,
-        { backgroundColor: backdropBg },
-      ]}
-      onPress={onCancel}
+    <View
+      style={[StyleSheet.absoluteFill, styles.backdrop]}
+      onAccessibilityEscape={cancel}
     >
-      <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
-        <View style={styles.cardContent}>
-          <V2Text
-            color={textColor}
-            lineBreakStrategyIOS="hangul-word"
-            textBreakStrategy="balanced"
-            style={{
-              fontSize: 16,
-              lineHeight: 20,
-              fontWeight: "600",
-              textAlign: "center",
-              marginBottom: 16,
-            }}
-          >
+      <Pressable
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: "rgba(0,0,0,0.32)" },
+        ]}
+        onPress={cancel}
+        accessible={false}
+      />
+      <View
+        accessibilityViewIsModal
+        style={[styles.card, { backgroundColor: colors.background.default }]}
+      >
+        <View style={styles.content}>
+          <V2Text accessibilityRole="header" token="title.xSmallWeak">
             {t("consult.renameTitle")}
           </V2Text>
-
           <TextInput
             ref={inputRef}
             value={name}
             onChangeText={setName}
+            accessibilityLabel={t("consult.renamePlaceholder")}
             placeholder={t("consult.renamePlaceholder")}
-            placeholderTextColor={secondaryTextColor}
+            placeholderTextColor={colors.label.neutral}
             style={[
               styles.input,
               {
-                color: textColor,
-                borderColor: borderColor,
+                color: colors.label.normal,
+                borderColor: colors.line.normal,
+                backgroundColor: colors.fill.alternative,
               },
             ]}
             maxLength={50}
             returnKeyType="done"
-            onSubmitEditing={handleConfirm}
+            selectTextOnFocus
+            onSubmitEditing={confirm}
           />
         </View>
-
-        <V2HStack style={{ borderTopWidth: 1, borderColor }}>
+        <V2HStack
+          style={{
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.line.normal,
+          }}
+        >
           <Pressable
-            onPress={onCancel}
-            style={({ pressed }) => ({
-              ...styles.button,
-              opacity: pressed ? 0.6 : 1,
-            })}
+            accessibilityRole="button"
+            onPress={cancel}
+            style={({ pressed }) => [
+              styles.button,
+              { opacity: pressed ? 0.55 : 1 },
+            ]}
           >
-            <V2Text
-              color={textColor}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-              style={{
-                fontSize: 14,
-                lineHeight: 20,
-                fontWeight: "500",
-                textAlign: "center",
-              }}
-            >
+            <V2Text token="label.smallWeak" color={colors.label.neutral}>
               {t("action.cancel")}
             </V2Text>
           </Pressable>
-
-          <View style={{ width: 1, backgroundColor: borderColor }} />
-
+          <View
+            style={{
+              width: StyleSheet.hairlineWidth,
+              backgroundColor: colors.line.normal,
+            }}
+          />
           <Pressable
-            onPress={handleConfirm}
-            style={({ pressed }) => ({
-              ...styles.button,
-              opacity: pressed ? 0.6 : 1,
-            })}
+            accessibilityRole="button"
+            disabled={!name.trim()}
+            accessibilityState={{ disabled: !name.trim() }}
+            onPress={confirm}
+            style={({ pressed }) => [
+              styles.button,
+              { opacity: !name.trim() ? 0.3 : pressed ? 0.55 : 1 },
+            ]}
           >
-            <V2Text
-              color={textColor}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-              style={{
-                fontSize: 14,
-                lineHeight: 20,
-                fontWeight: "500",
-                textAlign: "center",
-              }}
-            >
-              {t("action.save")}
-            </V2Text>
+            <V2Text token="label.small">{t("action.save")}</V2Text>
           </Pressable>
         </V2HStack>
-      </Pressable>
-    </Pressable>
+      </View>
+    </View>
   )
 }
-
 const styles = StyleSheet.create({
   backdrop: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: spacing[32],
   },
-  card: {
-    width: "100%",
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  cardContent: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 20,
-  },
+  card: { width: "100%", borderRadius: 20, overflow: "hidden" },
+  content: { padding: spacing[20], gap: spacing[16] },
   input: {
-    fontSize: 15,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    ...typography.subtext.large,
+    minHeight: 44,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 10,
+    paddingVertical: spacing[12],
+    paddingHorizontal: spacing[12],
   },
   button: {
     flex: 1,
-    paddingVertical: 16,
+    minHeight: 52,
     alignItems: "center",
+    justifyContent: "center",
   },
 })

@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 건강검진 불러오기 — 본인인증 (시안 My Page Home-10).
  *
@@ -28,7 +29,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native"
 import { useTranslation } from "react-i18next"

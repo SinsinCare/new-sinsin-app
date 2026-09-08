@@ -1,3 +1,4 @@
+import { toReviewBreakdown } from "../utils/reviewBreakdown"
 /**
  * 후기 탭. 커서 + 정렬 + 키워드/메뉴 필터, 그리고 평점 분해.
  *
@@ -171,16 +172,7 @@ export function useRestaurantReviews({
   const breakdown = useMemo<ReviewBreakdown | null>(() => {
     const first = pages?.[0]
     if (!first) return null
-    const menuCounts = Object.entries(first.menuCounts)
-      .filter((entry): entry is [string, number] => entry[1] !== undefined)
-      .map(([menuName, count]) => ({ menuName, count }))
-      .sort((a, b) => b.count - a.count || a.menuName.localeCompare(b.menuName))
-    return {
-      avgRating: first.avgRating,
-      totalCount: first.totalCount,
-      keywordCounts: first.keywordCounts,
-      menuCounts,
-    }
+    return toReviewBreakdown(first)
   }, [pages])
 
   /** 후기 수·평점이 바뀌었으니 상세와 후기 목록을 함께 무효화한다. */

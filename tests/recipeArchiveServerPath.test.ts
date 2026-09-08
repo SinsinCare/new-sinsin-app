@@ -247,11 +247,10 @@ describe("보관함 화면 배선 (소스 정적 검사)", () => {
     expect(source).not.toContain("<RecipeListCard")
   })
 
-  it("좌우 여백이 목록 화면과 같은 격자에서 온다 (숫자를 다시 고르지 않는다)", () => {
-    // 예전에는 `LAYOUT.screenX`(20)였고 목록은 `GUTTER`(16)였다 — 두 화면을 오갈 때
-    // 왼쪽 시작선이 4pt 튀었다. 줄 사이 헤어라인의 들여쓰기도 격자에서 가져온다.
+  it("행 여백과 구분선에 공통 토큰을 쓴다", () => {
     expect(source).toContain("GUTTER")
-    expect(source).toContain("RECIPE_ROW_TEXT_INDENT")
+    expect(source).toContain("colors.line.normal")
+    expect(source).toContain("height: borderWidth.thin")
     expect(source).not.toContain("LAYOUT.screenX")
   })
 

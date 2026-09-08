@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * AI 요약 문장 — 문장 **안의 구절**에만 형광펜을 칠한다.
  *
@@ -12,7 +13,7 @@
  * 서버가 문자 오프셋 대신 조각 배열을 주는 이유는 `src/types/healthAnalysis.ts` 참고.
  */
 
-import { StyleSheet, Text } from "react-native"
+import { StyleSheet } from "react-native"
 
 import { typography, useV2Theme } from "@/src/design-system-v2"
 import type { ProseSegment } from "@/src/types/healthAnalysis"

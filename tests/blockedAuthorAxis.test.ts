@@ -326,8 +326,8 @@ function sourceOf(relative: string): string {
   ─── 목록이 **넷이 아니라 일곱**이다 (2026-08-21) ───────────────────────────
   이 표에 없으면 검사도 없다. 실제로 세 곳이 빠져 있었고, 셋 다 판정이 달랐다:
 
-   - `app/community-library.tsx`(내 활동 보관함) — 탈퇴 면제 없이 `!isAuthorBlocked(...)`,
-   - `app/post/[id].tsx`(이어 읽을 글) — 같은 식,
+   - `src/features/recipe/views/CommunityLibraryScreen.tsx`(내 활동 보관함) — 탈퇴 면제 없이 `!isAuthorBlocked(...)`,
+   - `src/features/recipe/views/PostDetailScreen.tsx`(이어 읽을 글) — 같은 식,
    - `src/.../StoryRail.tsx`(스토리 레일) — 차단 필터 자체가 없었다.
 
   같은 사람의 같은 글이 피드에서는 보이고 보관함에서는 사라졌다. 그 차이는 `탈퇴한
@@ -340,13 +340,13 @@ const SCREENS = [
   ["인기", "src/features/recipe/views/CommunityPopularScreen.tsx"],
   ["스토리 뷰어", "app/stories.tsx"],
   ["스토리 레일", "src/features/recipe/components/StoryRail.tsx"],
-  ["내 활동 보관함", "app/community-library.tsx"],
-  ["이어 읽을 글", "app/post/[id].tsx"],
+  ["내 활동 보관함", "src/features/recipe/views/CommunityLibraryScreen.tsx"],
+  ["이어 읽을 글", "src/features/recipe/views/PostDetailScreen.tsx"],
 ] as const
 
 /**
  * **면제가 필터 식 안에 있는가.** 두 이름이 파일 어딘가에 있기만 하면 통과하던
- * 검사였는데, 그건 아무것도 못 잡는다 — `app/post/[id].tsx` 는 다른 자리에서
+ * 검사였는데, 그건 아무것도 못 잡는다 — `src/features/recipe/views/PostDetailScreen.tsx` 는 다른 자리에서
  * `isWithdrawnAuthor(post)` 를 쓰고 있어서 **면제가 빠진 채로도 통과했다.**
  * 그래서 한 식 안에서 같은 인자에 둘 다 걸리는지를 본다.
  */
@@ -369,7 +369,7 @@ describe("차단 필터를 쓰는 화면은 일곱 다 같은 판정을 부른�
     (_label, relative) => {
       const source = sourceOf(relative)
       /*
-        `app/post/[id].tsx` 에 정본과 글자까지 같은 사본이 하나 살아 있었다.
+        `src/features/recipe/views/PostDetailScreen.tsx` 에 정본과 글자까지 같은 사본이 하나 살아 있었다.
         소유자·탈퇴 판정은 한 곳에만 산다는 규칙의 정확히 그 위반이고, 두 벌이면
         한쪽만 고치는 사고가 난다(그 파일 머리말의 QA 2026-08-06).
       */

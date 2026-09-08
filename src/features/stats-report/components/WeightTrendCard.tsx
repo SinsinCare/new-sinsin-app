@@ -71,7 +71,7 @@ export function WeightTrendCard({
       <WeekBars days={chart.days} s={s} />
 
       {!!chart.caption && (
-        <View style={[styles.captionBox, { backgroundColor: s.surface }]}>
+        <View style={[styles.captionBox, { backgroundColor: s.surfaceSunken }]}>
           <Text
             style={[styles.captionText, styles.tabular, { color: s.textMuted }]}
             lineBreakStrategyIOS="hangul-word"
@@ -99,9 +99,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     flexShrink: 1,
   },
-  sectionCaption: { ...TYPE.cardSub },
+  sectionCaption: { ...TYPE.cardSub, flexShrink: 1, textAlign: "right" },
 
-  deltaRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
+  deltaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    gap: 6,
+  },
   deltaValue: {
     fontSize: 26,
     lineHeight: 32,

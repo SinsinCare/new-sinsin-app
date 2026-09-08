@@ -1,3 +1,4 @@
+import type { EdemaObservation } from "@/src/features/home/utils/edemaEntry"
 import {
   WeightEdemaResponse,
   WeightRangeRecord,
@@ -49,9 +50,22 @@ export const weightEdemaService = {
   async updateEdema(
     edemaLevel: EdemaLevel,
     date: string,
+    observations?: EdemaObservation[],
   ): Promise<WeightEdemaResponse> {
     try {
-      const response = await api.post("/edema-records", { edemaLevel, date })
+      const response = await api.post("/edema-records", {
+        edemaLevel,
+        date,
+        ...(observations ? { observations } : {}),
+      })
+      // Older APIs may silently discard new fields. Never acknowledge a partial record as saved.
+      if (
+        observations &&
+        JSON.stringify(response.data?.result?.observations) !==
+          JSON.stringify(observations)
+      ) {
+        throw new Error("Edema observation acknowledgement missing")
+      }
       return response.data as WeightEdemaResponse
     } catch (err) {
       if (isAxiosError(err) && hasFieldErrors(err.response?.data)) {

@@ -19,6 +19,11 @@ export function streamFailureMessage(
   language: string = "ko",
 ): string {
   const isEnglish = language.toLowerCase().startsWith("en")
+  if (error.code === "UNSAFE_RESPONSE") {
+    return isEnglish
+      ? "I couldn’t provide this answer. Try asking a more specific question."
+      : "이 답변은 제공하지 못했어요. 궁금한 점을 더 구체적으로 물어봐 주세요."
+  }
   if (isEnglish) {
     if (error.code === "MAX_TOKENS" || error.finishReason === "MAX_TOKENS") {
       return "The answer stopped before it was complete. Tap “Get a new answer” below so you don’t rely on a partial health answer."

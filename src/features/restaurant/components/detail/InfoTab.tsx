@@ -1,3 +1,5 @@
+import { openRestaurantLink } from "../../utils/openRestaurantLink"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 정보 탭 (목업 -13). 편의시설 4열 그리드 → 주차 → SNS.
  *
@@ -23,7 +25,7 @@
  * 시안의 여백(20)이 달라도 칸 중심이 시안과 정확히 같아진다(93.75 간격).
  */
 
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -231,7 +233,7 @@ function SnsLink({
   return (
     <Pressable
       onPress={() => {
-        if (target) void Linking.openURL(target)
+        void openRestaurantLink(target)
       }}
       accessibilityRole="link"
       accessibilityState={{ disabled: !target }}

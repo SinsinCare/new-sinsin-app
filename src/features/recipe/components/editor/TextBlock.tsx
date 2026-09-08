@@ -1,6 +1,6 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useCallback } from "react"
 import {
-  TextInput,
   type NativeSyntheticEvent,
   type TextInputSelectionChangeEventData,
   StyleSheet,

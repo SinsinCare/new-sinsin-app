@@ -22,7 +22,7 @@ export function VoteAttachCard({
   const surface = useSurface()
 
   return (
-    <View style={[styles.card, { backgroundColor: surface.surface }]}>
+    <View style={[styles.card, { backgroundColor: surface.surfaceSunken }]}>
       <Ionicons name="podium-outline" size={18} color={surface.textMuted} />
       <Text
         style={[styles.label, { color: surface.textStrong }]}

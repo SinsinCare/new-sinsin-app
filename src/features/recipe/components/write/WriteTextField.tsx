@@ -96,9 +96,9 @@ const FIELD_PAD_Y = 12
 const COUNTER_RESERVE_AT_1X = TYPE.caption.lineHeight
 
 /**
- * `filled` — 현행. 한 단 떠 있는 면(`s.surface`). 기본값이라 기존 호출부는 그대로 산다.
+ * `filled` — 기본 입력 면. 건강 기록·설정과 같은 옅은 면을 쓴다.
  * `bordered` — 흰 카드 + 1px 보더. 시안의 기본 정보 칸.
- * `sunken` — 보더 없는 얕은 우물. 시안의 설명 작성 칸.
+ * `sunken` — 설명 작성 칸의 기존 별칭. `filled`와 같은 면을 쓴다.
  */
 export type WriteTextFieldVariant = "filled" | "bordered" | "sunken"
 
@@ -177,12 +177,7 @@ export function WriteTextField({
   */
   const counterReserve = COUNTER_RESERVE_AT_1X * PixelRatio.getFontScale()
 
-  const fieldSurface =
-    variant === "bordered"
-      ? s.card
-      : variant === "sunken"
-        ? s.surfaceSunken
-        : s.surface
+  const fieldSurface = variant === "bordered" ? s.card : s.surfaceSunken
   // 두께는 위 머리말대로 고정이다. 색만 바뀐다.
   const fieldBorder = variant === "bordered" ? s.border : "transparent"
 

@@ -257,7 +257,7 @@ export function PostRow({
       </View>
 
       {/* 인셋 0. 바깥 Pressable 에 패딩이 없어야 이 선이 화면 끝까지 간다. */}
-      <V2Divider tone="alternative" style={styles.divider} />
+      <V2Divider tone="normal" style={styles.divider} />
     </Pressable>
   )
 }

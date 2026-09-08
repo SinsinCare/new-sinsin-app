@@ -1,4 +1,8 @@
 {
+  "shareUi": {
+    "errorTitle": "Could not open sharing",
+    "errorBody": "Tap Share to try again."
+  },
   "time": {
     "justNow": "Just now",
     "yesterday": "Yesterday",
@@ -139,7 +143,7 @@
     }
   },
   "myPage": {
-    "title": "You",
+    "title": "My info",
     "openSettings": "Open settings",
     "editProfile": "Edit profile",
     "userFallback": "User",
@@ -179,6 +183,20 @@
     }
   },
   "community": {
+    "refresh": {
+      "popularComments": "Most liked",
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "search": "Search community",
+      "feed": "All posts",
+      "popular": "Popular",
+      "discardCommentTitle": "Discard this comment?",
+      "discardCommentBody": "The comment you have not posted will be lost.",
+      "discardComment": "Discard and continue",
+      "keepComment": "Keep writing",
+      "replyToComment": "Replying to a comment",
+      "editPostTitle": "Edit post"
+    },
     "title": "Community",
     "search": {
       "title": "Community search",
@@ -233,8 +251,8 @@
       "following": "Following",
       "follow": "Follow",
       "unfollow": "Following",
-      "otherPosts": "More from {{name}}",
       "emptyPosts": "No posts yet",
+      "otherPosts": "More from {{name}}",
       "emptyStories": "No public stories yet",
       "emptyReviews": "No public reviews yet",
       "emptyFollowers": "No followers yet",
@@ -382,6 +400,9 @@
       "keepWriting": "Keep writing"
     },
     "library": {
+      "myProfile": "My profile",
+      "editProfile": "Edit profile",
+      "profileTitle": "Profile",
       "tabs": {
         "mine": "Your posts",
         "liked": "Liked",
@@ -434,6 +455,8 @@
       "nutrient": "Nutrition"
     },
     "filter": {
+      "reset": "Reset",
+      "businessHours": "Opening hours",
       "title": "Filters",
       "clearAll": "Clear every selected filter",
       "unbackedNotice": "Some of the filters you picked have no restaurants listed yet.",
@@ -532,6 +555,9 @@
       "nutritionDisclaimer": "Nutrition estimates use standard recipes, not this restaurant’s actual ingredients. Ask the restaurant about ingredients and portions, and follow guidance from your clinician or dietitian.",
       "nutritionLine": "{{kcal}} kcal · Sodium {{sodium}} mg · Protein {{protein}} g · Potassium {{potassium}} mg",
       "descriptionUnavailable": "Ask the restaurant for current menu details.",
+      "menuNutrition": "Nutrition",
+      "menuNutritionToggle": "Nutrition for {{name}}",
+      "menuNutritionUnknown": "Not available",
       "diagnose": "Check my limits",
       "share": "Share",
       "call": "Call",
@@ -546,6 +572,9 @@
       "reviewSection": "Reviews",
       "infoSection": "Info",
       "seeAllReviews": "See all reviews",
+      "linkFailed": "Could not open the link. Please try again.",
+      "callFailed": "Could not open the phone app. Copy the number to use it.",
+      "ratingOnlyAccessibility": "Rated {{rating}} stars",
       "ratingAccessibility": "{{rating}} out of 5 stars, {{count}} reviews",
       "shareMessage": "{{name}} — take a look on Sinsin",
       "price": "₩{{price}}",
@@ -578,9 +607,15 @@
       "context": {
         "restaurant": "Restaurant",
         "cuisine": "Cuisine",
-        "menus": "Menu items"
+        "menus": "Menu items",
+        "basis": "Compare only the supplied menus. Nutrition values are estimates and vary by preparation and serving size. Do not treat this as the complete menu or official nutrition data. These are options to choose from, not a consumed meal. Do not add them together or assume they were eaten.",
+        "portion": "On-screen portion reference: {{amount}} of one menu item ({{nutrient}}, calculated using {{percent}}% of daily targets for a meal)",
+        "portionBelowQuarter": "On-screen portion reference: even 1/4 exceeds the comparison ({{nutrient}}, calculated using {{percent}}% of daily targets for a meal)",
+        "portionBasis": "The displayed portion is an arithmetic comparison, not prescribed intake or assurance of safety. It excludes food already eaten and other dishes. Lead with practical portions rather than lists of percentages, but do not present them as medical maximums. Explain any differences from newly retrieved targets. Do not invent portions for incomplete data or add these options together as a consumed meal.",
+        "personalPlan": "Confirmed meal plan: {{date}}, dish fraction {{amount}}, {{meals}} meals remaining including this one, {{percent}}% allocated to this dish. Individual daily targets: {{targets}}. Today’s logged intake confirmed complete by the user: {{consumed}}. This is a plan, not consumed food; do not record it as intake. Review these choices ahead of the 35% comparison below and check current personal targets. The reserved share is not a nutrient total of actual accompanying dishes."
       },
       "q": {
+        "assess": "Check my nutrition goals and explain how I could adjust the portion of each restaurant menu option.",
         "driver": "Which menu item has the most {{driver}}?",
         "recommend": "Which menu items do you recommend for someone with kidney disease?",
         "compare": "Between {{first}} and {{second}}, which one is harder on the kidneys?",
@@ -645,6 +680,7 @@
       "LOW_PHOSPHORUS": "Low phosphorus"
     },
     "card": {
+      "representativeMenus": "Featured dishes",
       "nutritionReference": "Nutrition",
       "photoUnavailable": "No photo"
     },
@@ -687,7 +723,7 @@
         "allVerified": "Nutrition figures have been verified",
         "mixed": "Nutrition sources differ from menu to menu"
       },
-      "mealBasis": "One meal's share is your daily target divided across three meals.",
+      "mealBasis": "Portions are fractions of one listed menu item. Actual serving sizes vary by restaurant.",
       "analysisPending": "Menus not analyzed"
     },
     "businessStatus": {
@@ -858,13 +894,16 @@
     "map": {
       "searchPlaceholder": "Search areas, places, food",
       "searchThisArea": "Search this area",
+      "allFilters": "All filters",
+      "currentMap": "Map area",
+      "selectedRegions": "Regions {{count}}",
       "myLocation": "Go to my location",
       "bookmarkedOnly": "Saved only",
       "bookmarkedOnlyOff": "Show all restaurants",
       "aiSearch": "AI search",
       "allCuisines": "All",
       "loading": "Looking for restaurants in this area",
-      "truncated": "There are more restaurants here. Try zooming in.",
+      "truncated": "Only some restaurants are shown on the map. Zoom in to see more.",
       "limitReached": "Too many results. Adding a filter will help.",
       "tooLarge": "Zoom in a little, then search again.",
       "excludedForMissingData": "{{count}} places without nutrition details were left out.",
@@ -894,6 +933,9 @@
       "filteredAction": "Reset filters",
       "bookmarkTitle": "No saved restaurants yet",
       "bookmarkBody": "Save a place you like and it will show up here.",
+      "filteredReviewTitle": "No reviews match these filters",
+      "filteredReviewBody": "Clear the menu and keyword filters to see other reviews.",
+      "showAllReviews": "Show all reviews",
       "reviewTitle": "No reviews yet",
       "reviewBody": "The first review helps others a lot.",
       "photoTitle": "No photos yet",
@@ -1134,8 +1176,10 @@
       "zipcode": "Postal code",
       "copy": "Copy",
       "copiedShort": "Copied",
+      "copyFailed": "Could not copy the address. Please try again.",
       "copied": "Address copied",
       "phoneCopied": "Phone number copied",
+      "phoneCopyFailed": "Could not copy the phone number. Please try again.",
       "expand": "Show full address",
       "collapse": "Hide address"
     },
@@ -1150,6 +1194,8 @@
     },
     "route": {
       "title": "Open directions in",
+      "opening": "Opening map",
+      "openFailed": "Could not open the map. Try again or choose another map app.",
       "app": {
         "kakao": "KakaoMap",
         "naver": "Naver Map",
@@ -1216,7 +1262,17 @@
       "previousMonth": "Previous month",
       "nextMonth": "Next month",
       "hasRecord": "Has records",
-      "selected": "Selected"
+      "selected": "Selected",
+      "title": "Record date",
+      "hasMealRecord": "Meal logged",
+      "chooseMonth": "{{month}}, choose month and year",
+      "backToDays": "Back to dates",
+      "previousYear": "Previous year",
+      "nextYear": "Next year",
+      "chooseMonthHint": "Choose a month to view your records",
+      "mealLegend": "Days with meal records",
+      "loading": "Checking meal records",
+      "loadError": "Could not load record markers"
     },
     "body": {
       "title": "Weight & swelling",
@@ -1249,23 +1305,77 @@
       "empty": "Log a meal to see what you may want to adjust.",
       "nextMeal": "Foods to review at your next meal",
       "foods": "Consider adjusting"
+    },
+    "redesign": {
+      "title": "Nutrition insights",
+      "insight": {
+        "day": "Daily insight",
+        "week": "Weekly insight",
+        "month": "Monthly insight"
+      },
+      "emptyTitle": "Discover your eating patterns",
+      "emptyBody": "There are no records to review for this period. Log a meal to see your intake and what to consider next.",
+      "coverage": "Meals logged {{recorded}} / {{expected}}",
+      "partial": "Only logged meals are included. There are too few records to describe your overall eating patterns.",
+      "nextAction": "One thing to try next",
+      "record": "Go to meal logging",
+      "afterRecord": "What your records can show",
+      "expect": {
+        "intake": "Nutrient intake compared with your personal reference",
+        "patterns": "Weekly and monthly changes in your eating patterns",
+        "action": "Interpretations and actions based on your records"
+      },
+      "nutrients": "Your nutrient intake",
+      "nutrientCaption": "Nutrients needing attention appear first, using your personal reference.",
+      "against": "/ reference {{limit}}",
+      "personalReference": "Consider this alongside your personal lab results.",
+      "foodCaption": "Review your logged meals and their key nutrients.",
+      "trend": "{{nutrient}} intake trend",
+      "overCount": "{{count}} days above reference",
+      "recordedDays": "Based on {{count}} logged days",
+      "chartDay": "Day {{day}}, {{status}}",
+      "over": "Above reference",
+      "noRecord": "Not logged",
+      "recorded": "Logged",
+      "tapDay": "Tap a date for details",
+      "week": "Week",
+      "overDays": "Above reference",
+      "weightChange": "Weight change",
+      "overOfDays": "{{count}} / {{total}} days",
+      "reload": "Reload report",
+      "periodNumbers": "Key measurements",
+      "healthRecords": "Related health records",
+      "mealReview": "Meal breakdown",
+      "aiAuthor": "Insights from Sinsin AI",
+      "recordSummary": "Record summary",
+      "aiContext": "A closer look at your meal and health records",
+      "summaryContext": "What your current records show",
+      "evidenceLabel": "What this is based on",
+      "askAi": "Ask AI about this report",
+      "consultQuestion": "What should I focus on in this report? Explain using these records and suggest practical steps for my next meal."
     }
   },
   "home": {
-    "recordBar": {
-      "chooseDate": "Choose a date",
+    "hero": {
+      "record": "Log",
+      "stats": "Trends",
       "viewStats": "View trends",
-      "stats": "Trends"
+      "chooseDate": "Choose a date",
+      "notifications": "Notifications"
     },
     "textRecord": {
-      "title": "Describe your meal",
-      "placeholder": "Add each food and how much you ate",
-      "example": "Example: 1 serving salad, 5 oz meat, 1 egg, 1 cup milk",
-      "checkNutrients": "Check nutrients",
-      "discardTitle": "Discard what you wrote?",
-      "discardBody": "If you leave now, this text won’t be saved.",
+      "title": "Record with text",
+      "placeholder": "e.g. Half a bowl of rice, one egg",
+      "example": "Half a bowl of rice, one egg, three pieces of tofu\nAn approximate amount is fine if you are unsure.",
+      "checkNutrients": "Analyze nutrients",
+      "discardTitle": "Leave this entry?",
+      "discardBody": "The foods and amounts you entered will be lost.",
       "discard": "Discard and leave",
-      "keepWriting": "Keep writing"
+      "keepWriting": "Keep writing",
+      "prompt": "What did you eat?",
+      "hint": "Tell us the foods and how much you ate.",
+      "inputLabel": "Foods and amounts",
+      "exampleTitle": "For example"
     },
     "analysis": {
       "readyTitle": "Your meal results are ready",
@@ -1277,36 +1387,14 @@
     },
     "undoRecord": "Undo",
     "tile": {
-      "meals": "Meals",
+      "medication": "Medication",
       "water": "Water",
       "bloodPressure": "Blood pressure",
       "bloodGlucose": "Blood sugar",
       "weight": "Weight",
       "edema": "Swelling"
     },
-    "meal": {
-      "unit": "meals",
-      "first": "Log your first meal",
-      "remaining": "{{meal}} is still open",
-      "complete": "All 3 meals logged"
-    },
-    "weight": {
-      "morning": "Check before breakfast",
-      "noYesterday": "No entry from yesterday",
-      "same": "Same as yesterday",
-      "change": "{{change}} kg from yesterday"
-    },
-    "recordedAt": "Logged at {{time}}",
-    "recordedToday": "Logged today",
-    "bloodPressure": {
-      "prompt": "Add today’s blood pressure"
-    },
     "bloodGlucose": {
-      "timings": "Fasting · Before · After",
-      "latest": "{{timing}}{{extra}}",
-      "extra": " +{{count}} more",
-      "extra_one": " +{{count}} more",
-      "extra_other": " +{{count}} more",
       "timing": {
         "FASTING": "Fasting",
         "BEFORE_MEAL": "Before meal",
@@ -1314,8 +1402,6 @@
       }
     },
     "edema": {
-      "today": "Today’s check",
-      "prompt": "Check your feet and ankles",
       "level": {
         "NONE": "None",
         "SLIGHT": "Mild",
@@ -1324,32 +1410,42 @@
     },
     "analyzingMeal": "Checking the nutrients in your meal…",
     "todayRecord": {
-      "title": "Today",
-      "hint": "Tap to add",
-      "add": "Add a reading",
-      "now": "Now"
+      "title": "Today’s health log",
+      "titleOnDate": "Health log on {{date}}",
+      "noRecord": "No entry"
+    },
+    "medication": {
+      "progress": "{{taken}} / {{planned}} doses",
+      "takenOnly": "{{taken}} doses",
+      "today": "today",
+      "confirmTitle": "Log a dose now?",
+      "confirmBody": "This adds one dose for {{date}}. Names and schedules are coming soon.",
+      "confirm": "Log it"
+    },
+    "mealList": {
+      "title": "Today’s meals",
+      "titleOnDate": "Meals on {{date}}",
+      "more": "Show more",
+      "less": "Show less",
+      "kcal": "{{count}} kcal",
+      "open": "Open {{title}}",
+      "record": "Log a meal"
     },
     "timeline": {
       "title": "Meals",
-      "count": "{{count}} of 4 logged",
-      "empty": "Tap breakfast, lunch, dinner, or snacks to add a meal.",
-      "add": "Log a meal",
-      "openRecorded": "Open {{meal}} {{time}}",
-      "recordSkipped": "{{meal}} was skipped. Tap to add it instead.",
-      "recordMeal": "Log {{meal}}",
       "skipped": "Skipped"
     },
     "character": {
       "empty": {
         "first": {
-          "pre": "Start with ",
-          "keyword": "one meal",
-          "post": " today"
+          "pre": "Fill in today’s ",
+          "keyword": "log",
+          "post": ""
         },
         "second": {
-          "pre": "and keep your nutrition ",
-          "keyword": "goals",
-          "post": " in view"
+          "pre": "and plan meals around your ",
+          "keyword": "nutrients",
+          "post": ""
         }
       },
       "onTarget": {
@@ -1381,6 +1477,16 @@
       }
     },
     "sheet": {
+      "recipeImport": {
+        "title": "Saved recipes",
+        "body": "Nutrients are calculated from recipe ingredients. Ingredients without nutrition information are excluded.",
+        "empty": "You have no saved recipes yet",
+        "loading": "Loading recipes…",
+        "importing": "Computing ingredient nutrition…",
+        "error": "Could not load your recipes",
+        "retry": "Reload recipes",
+        "more": "Show more recipes"
+      },
       "record": "Log",
       "recordValue": "Log {{value}}",
       "target": "Target",
@@ -1394,12 +1500,16 @@
         "notRecorded": "Not logged",
         "view": "View {{meal}}",
         "viewDescription": "Review nutrients and what to adjust.",
-        "takePhoto": "Take a photo",
-        "photoDescription": "Make sure the food and portion are easy to see.",
+        "takePhoto": "Record with a photo",
+        "importRecipe": "Import a recipe",
+        "photoDescription": "Photograph your food to see its nutrients",
         "choosePhoto": "Choose from photos",
-        "writeText": "Describe the meal",
+        "writeText": "Record with text",
         "info": "Add the foods and portions to check sodium, potassium, and phosphorus.",
-        "skip": "Skip this meal today"
+        "skip": "Skip this meal today",
+        "title": "Record a meal",
+        "textDescription": "Enter the foods and amounts you ate",
+        "recipeDescription": "Choose from your saved recipes"
       },
       "mealPhoto": {
         "title": "Log this photo?",
@@ -1502,6 +1612,166 @@
     "errors": {
       "notReadyTitle": "This meal isn’t ready to save yet",
       "notReadyBody": "We’re still preparing the result. Try “Add to log” again in a moment."
+    },
+    "recordPage": {
+      "header": "Record",
+      "infoAccessibility": "About {{title}}",
+      "water": {
+        "title": "Water",
+        "add": "Enter water amount",
+        "addAccessibility": "Add water",
+        "amountPlaceholder": "Amount you drank",
+        "clear": "Clear amount",
+        "confirm": "Add",
+        "cupLabel": "{{amount}} mL {{anchor}}",
+        "empty": "Choose an amount to add it here",
+        "gaugeAccessibility": "{{percent}}% of your daily reference, {{amount}} mL recorded",
+        "info": "Your fluid target depends on your kidney status. Stick to the amount your care team set.",
+        "quick": {
+          "half": "half cup",
+          "one": "one cup",
+          "large": "large cup"
+        },
+        "removeRow": "Remove {{label}}",
+        "save": "Save",
+        "saveAmount": "Save {{amount}} mL",
+        "saved": "Saved",
+        "title2": "Water",
+        "pendingTitle": "Added this time",
+        "inputRange": "Enter an amount from 1 to 2,000 mL",
+        "amountAccessibility": "{{amount}} mL of water recorded",
+        "exitTitle": "Leave without saving?",
+        "exitDescription": "The water entries you added this time will be lost.",
+        "exitDiscard": "Leave without saving",
+        "exitKeep": "Keep recording",
+        "intro": "Keep track of what you drink",
+        "totalLabel": "Water today",
+        "quickTitle": "How much did you drink?",
+        "custom": "Custom amount"
+      },
+      "bloodPressure": {
+        "slotLabel": "Time of day",
+        "title": "Blood pressure",
+        "label": "Blood pressure",
+        "heartRate": "Heart rate",
+        "systolicPlaceholder": "120",
+        "diastolicPlaceholder": "80",
+        "heartRatePlaceholder": "60",
+        "info": "Readings compare only at the same time of day. Sit and rest for five minutes first.",
+        "save": "Save",
+        "empty": "No readings yet",
+        "column": {
+          "time": "Time",
+          "systolic": "Systolic",
+          "diastolic": "Diastolic",
+          "heartRate": "Pulse"
+        },
+        "slot": {
+          "BREAKFAST": "Morning",
+          "LUNCH": "Midday",
+          "DINNER": "Evening",
+          "BEDTIME": "Bedtime"
+        },
+        "timing": {
+          "FASTING": "Fasting",
+          "BEFORE_MEAL": "Before meal",
+          "AFTER_MEAL_1H": "1h after",
+          "AFTER_MEAL_2H": "2h after"
+        },
+        "needBoth": "Enter both systolic and diastolic",
+        "pulseOptional": "Pulse · optional",
+        "intro": "Enter your measured values",
+        "systolicRange": "Enter systolic pressure from 1 to 300 mmHg.",
+        "diastolicRange": "Enter diastolic pressure from 1 to 200 mmHg.",
+        "pulseRange": "Enter a pulse from 1 to 250 bpm.",
+        "pulseHint": "Add your pulse if you measured it.",
+        "inputHint": "Enter the readings shown on your monitor."
+      },
+      "weight": {
+        "title": "Weight",
+        "unit": "kg",
+        "placeholder": "0.0",
+        "hint": "Right after your morning bathroom trip is the most consistent time",
+        "info": "Day-to-day weight change is mostly fluid. If it rises two days in a row, mention it at your next visit.",
+        "save": "Save",
+        "empty": "No records yet",
+        "needValue": "Enter your weight",
+        "column": {
+          "date": "Date",
+          "weight": "Weight",
+          "diff": "vs. yesterday"
+        },
+        "inputLabel": "Measured weight",
+        "period": "Last 7 days",
+        "inputRange": "Enter a weight greater than 0 and up to 300 kg",
+        "intro": "Keep track of changes in your weight"
+      },
+      "saved": "Saved",
+      "saving": "Saving",
+      "dismissKeyboard": "Dismiss keyboard",
+      "history": "Recent records",
+      "historyLoading": "Getting your records",
+      "historyError": "Could not load your records",
+      "retryHistory": "Reload records",
+      "exitDescription": "Leaving now will discard your unsaved health records.",
+      "bloodGlucose": {
+        "save": "Save",
+        "value": "Blood glucose",
+        "hint": "Enter the value shown on your meter.",
+        "range": "Enter a value from 1 to 600 mg/dL.",
+        "history": "Records for this date",
+        "empty": "Your saved readings will appear here.",
+        "inferred": "Suggested from recent records. You can change the measurement context.",
+        "contextHint": "Choose when you took this measurement.",
+        "unspecified": "Unspecified",
+        "intro": "Record the value and its context"
+      },
+      "edema": {
+        "save": "Save",
+        "where": "Where is the swelling?",
+        "partHint": "You can record each area separately.",
+        "none": "No swelling today",
+        "noneHint": "You can save without selecting an area or pressure mark.",
+        "part": {
+          "FACE": "Face",
+          "EYELIDS": "Eyelids",
+          "HANDS": "Hands",
+          "CALVES": "Calves",
+          "ANKLES": "Ankles",
+          "FEET": "Feet"
+        },
+        "entered": "Entered",
+        "degree": "Swelling: {{part}}",
+        "degreeLabel": "Swelling level",
+        "level": {
+          "NONE": "No swelling",
+          "SLIGHT": "Slight swelling",
+          "SEVERE": "Severe swelling"
+        },
+        "pitting": "Does a pressure mark remain?",
+        "pittingHint": "Choose “Not sure” if you have not checked.",
+        "mark": {
+          "YES": "A mark remains",
+          "NO": "No mark",
+          "UNKNOWN": "Not sure"
+        },
+        "startHint": "Choose an area, then record the swelling level.",
+        "summary": "Your entries",
+        "intro": "Record changes in each area"
+      },
+      "healthHeader": "Health record",
+      "medication": {
+        "title": "Medication record",
+        "intro": "Keep a record of your doses",
+        "totalLabel": "Doses recorded",
+        "countUnit": "doses",
+        "selectTitle": "I took my medication",
+        "selectHint": "Select and save to add one dose",
+        "save": "Save dose",
+        "noteTitle": "Log after taking your medication",
+        "noteBody": "This records how many times you took medication, without a name or dose amount.",
+        "planned": "{{count}} scheduled doses"
+      }
     }
   },
   "mealReport": {
@@ -1541,7 +1811,42 @@
     "limitIs": "limit {{amount}}",
     "dailyLimit": "Daily limit {{limit}}"
   },
+  "foodCamera": {
+    "title": "Record with a photo",
+    "shutter": "Take photo",
+    "permissionTitle": "Camera isn’t available",
+    "permissionBody": "Allow camera access to photograph your food.",
+    "allow": "Allow camera",
+    "guide": "Fit all of your food inside the frame",
+    "captureError": "Could not take the photo. Please try again.",
+    "cameraError": "Could not start the camera",
+    "cameraRetry": "Reopen camera",
+    "settings": "Open settings"
+  },
   "foodResult": {
+    "copy": {
+      "tipOver": "You've used up today's {{nutrient}}. Tomorrow, go for lighter meals with less {{nutrient}}.",
+      "tipRemaining": "For {{meals}}, up to {{amount}} of {{nutrient}} is fine.",
+      "tipDone": "All meals are logged. {{amount}} of {{nutrient}} is left, so keep snacks light.",
+      "headlineRemaining": "{{amount}} of {{nutrient}} left today.",
+      "headlineOver": "{{amount}} over your {{nutrient}} limit today.",
+      "thisMeal": "This meal has {{amount}} of {{nutrient}} in total.",
+      "topFood": "{{food}} accounts for {{amount}} of it.",
+      "safe": "Safe",
+      "caution": "Caution",
+      "restricted": "Limit",
+      "unknown": "Not confirmed",
+      "tipUnavailable": "Meal suggestions are unavailable. Please try again shortly."
+    },
+    "recommend": "Suggestion",
+    "editMeal": "Edit meal",
+    "foodCount": "Food items: {{count}}",
+    "remainingBudget": "To daily limit",
+    "reportPending": "Preparing your report…",
+    "analysisTitle": "Today’s meal analysis",
+    "totalCalories": "Total calories",
+    "addFood": "Add food",
+    "swapDelta": "{{nutrient}} {{amount}} less",
     "shareInstagram": "Share to Instagram Stories",
     "shareKakao": "Share to KakaoTalk",
     "shareOther": "Share with another app",
@@ -1552,7 +1857,7 @@
     "shareErrorTitle": "Couldn’t share",
     "shareErrorBody": "Please try again in a moment.",
     "share": "Share meal results",
-    "title": "Meal results",
+    "title": "Meal analysis",
     "close": "Close meal results",
     "servings_one": "{{count}} serving",
     "servings_other": "{{count}} servings",
@@ -1565,7 +1870,6 @@
     "amountHint": "Changing the portion updates the nutrients right away.",
     "nutrientsReady": "Your nutrient totals are ready",
     "reportUnavailable": "We couldn’t load the written summary. You can still review the nutrient totals below.",
-    "totalCalories": "Total calories",
     "nutrientDetails": "Nutrient details",
     "chartExplanation": "Each circle shows how much this food contributes to the daily limit saved in your profile.",
     "inPhoto": "{{amount}} g in the photo",
@@ -1577,10 +1881,10 @@
     "storyCaption": "People here can see this meal\nfor 24 hours",
     "community": "Ask the community",
     "communityCaption": "Share this meal\nwith people here",
-    "askMore": "Ask about this meal",
+    "askMore": "Is this okay to eat?",
     "openingConsult": "Opening your chat…",
     "askMoreCaption": "Keep going with any questions you have.",
-    "delete": "Delete meal log",
+    "delete": "Delete record",
     "deleting": "Deleting…",
     "deleteConfirmTitle": "Delete this record?",
     "deleteConfirmBody": "Deleted records can't be restored. If you only want to change the photo, tap Edit instead.",
@@ -1606,7 +1910,11 @@
     "deleteKeep": "Keep it",
     "deleteAction": "Delete",
     "deletePreviewPhoto": "1 photo",
-    "deletePreviewFallback": "Meal record"
+    "deletePreviewFallback": "Meal record",
+    "unknownCalories": "Not confirmed",
+    "unknownHint": "This food isn’t in our nutrition data. Try renaming the ingredients in Edit meal.",
+    "meal": "Meal",
+    "previousMeals": "Earlier intake"
   },
   "foodEdit": {
     "checkMealName": "Check the meal name",
@@ -1743,10 +2051,44 @@
     }
   },
   "consult": {
+    "nutritionCard": {
+      "targets": "My nutrient targets",
+      "intake": "Recorded intake",
+      "asOf": "{{date}} · Checked {{time}}",
+      "nutrient": "Nutrient",
+      "columns": "Recorded / Daily target",
+      "targetColumn": "Daily target",
+      "noIntake": "No intake was saved for this date. Only saved targets are shown.",
+      "noTargets": "No nutrient targets have been saved yet.",
+      "unrecorded": "No record",
+      "unset": "Target not set",
+      "over": "{{amount}} {{unit}} above target",
+      "under": "{{amount}} {{unit}} below target",
+      "equal": "Matches target",
+      "basis": "Sources and calculation",
+      "source": "Targets saved in the app when checked. Follow the personal limits agreed with your care team.",
+      "proteinBasis": "The protein target uses your recorded weight of {{weight}} kg.",
+      "intakeBasis": "Only recorded amounts are included. Fluids include water in food and separately logged water. The difference from the target is not a suggestion to consume that amount.",
+      "names": {
+        "sodium": "Sodium",
+        "potassium": "Potassium",
+        "phosphorus": "Phosphorus",
+        "protein": "Protein",
+        "water": "Fluids"
+      }
+    },
+    "quickTools": {
+      "intake": "Today’s intake",
+      "targets": "My targets",
+      "recipe": "Find a recipe",
+      "intakePrompt": "Compare my recorded intake today with my saved targets.",
+      "targetsPrompt": "Show my daily nutrient targets saved in the app.",
+      "recipePrompt": "Suggest a recipe to cook for dinner today."
+    },
     "shortTitle": "Ask Sinsin",
     "open": "Open AI chat",
-    "heroTitle": "What’s on your mind\nabout kidney health?",
-    "heroBody": "Ask about a meal, a lab result, medication, or day-to-day care.",
+    "heroTitle": "Let's take care, together",
+    "heroBody": "Ask about meals, your health records, or everyday care.",
     "popularQuestions": "Popular questions",
     "disclaimer": "Use these answers as general health information.\nFor diagnosis or treatment, talk with your care team.",
     "references": "View medical references",
@@ -1758,12 +2100,17 @@
     "takePhoto": "Take a photo",
     "removeAttachment": "Remove attached photo",
     "openAttachmentMenu": "Add a photo",
+    "closeAttachmentMenu": "Close attachment menu",
+    "attachmentPickerError": "Could not open the photo",
+    "attachmentSettingsError": "Could not open settings",
+    "retryPhoto": "Choose photo again",
+    "retryCamera": "Reopen camera",
     "attachedPhoto": "Attached photo",
     "copyAnswer": "Copy answer",
     "regenerate": "Try again",
     "renameTitle": "Rename chat",
     "renamePlaceholder": "For example, Low-potassium fruits",
-    "chatTitle": "Ask Sinsin",
+    "chatTitle": "AI chat",
     "closeChat": "Close chat",
     "openHistory": "Chat history",
     "newChat": "New chat",
@@ -1796,7 +2143,15 @@
       "manageChat": "Manage {{title}}",
       "closeMenu": "Close menu",
       "rename": "Rename",
-      "delete": "Delete"
+      "delete": "Delete",
+      "loadFailed": "Could not load chat history",
+      "retry": "Reload history",
+      "search": "Search recent chats",
+      "clearSearch": "Clear search",
+      "noResults": "No matching chats",
+      "searchHint": "Try a different word",
+      "current": "Current chat",
+      "resultCount": "{{count}} matching chats"
     },
     "mealPrompt": "Compare this meal with my personal limits and tell me what to pay attention to at my next meal.",
     "recordedMeal": "Recorded meal",
@@ -1832,7 +2187,79 @@
       "metricsToggle": "Show {{count}} more",
       "metricsCollapse": "Show less",
       "reference": "Reference"
-    }
+    },
+    "questionIdeas": "Start with a question",
+    "moreQuestions": "More ideas",
+    "allTopics": "All",
+    "questionDraftHint": "Adds this question to the composer so you can edit it before sending",
+    "writeOwnQuestion": "Write your question in the field below.",
+    "stopGenerating": "Stop generating",
+    "generationStopped": "Response stopped.",
+    "latestAnswer": "Latest response",
+    "answerNotice": "For diagnosis and treatment, consult your care team.",
+    "referencesShort": "References",
+    "assistantLabel": "Sinsin AI",
+    "answerFailed": "Could not get a response",
+    "back": "Back",
+    "contextLabel": "Related information",
+    "activity": {
+      "waiting": "Sending your question",
+      "thinking": "Looking into your question",
+      "profile": "Checking your health targets",
+      "intake": "Calculating today's intake",
+      "recipes": "Looking for recipes",
+      "recipe": "Checking ingredients and steps",
+      "answer": "Putting your answer together",
+      "finished": "Answer ready",
+      "partial": "Some information was unavailable",
+      "labels": {
+        "thinking": "Review question",
+        "profile": "Your health targets",
+        "intake": "Today's intake",
+        "recipes": "Recipe search",
+        "recipe": "Ingredients and steps",
+        "answer": "Prepare answer"
+      },
+      "states": {
+        "running": "In progress",
+        "complete": "Done",
+        "error": "Unavailable",
+        "stopped": "Stopped"
+      },
+      "stopped": "Response stopped",
+      "empty": "No records",
+      "results": "{{count}} found",
+      "savedAnswer": "Consultation answer",
+      "toolsFinished": "{{count}} tool checks",
+      "checkedInfo": "Information checked · {{count}}",
+      "noRecipes": "No matches"
+    },
+    "removeContext": "Remove related information",
+    "sources": {
+      "title": "Recipes consulted",
+      "openRecipe": "Open {{title}} recipe"
+    },
+    "recipeCard": {
+      "minutes": "{{count}} min",
+      "servings": "Servings: {{count}}",
+      "ingredients": "Ingredients · {{count}}",
+      "steps": "Steps · {{count}}",
+      "noIngredients": "No ingredients listed",
+      "noSteps": "No steps listed",
+      "open": "View full recipe"
+    },
+    "exit": {
+      "draftTitle": "Discard this draft?",
+      "draftBody": "Your unsent draft will be removed.",
+      "generatingTitle": "Stop this response?",
+      "generatingBody": "Moving away will stop the response being generated.",
+      "bothBody": "The response will stop and your unsent draft will be removed.",
+      "stopAndMove": "Stop and continue",
+      "discardAndMove": "Discard and continue",
+      "keepWaiting": "Keep responding",
+      "keepWriting": "Keep writing"
+    },
+    "unansweredSavedQuestion": "No answer was saved for this question. You can continue by asking a follow-up."
   },
   "coach": {
     "confirm": "Got it",
@@ -1887,5 +2314,44 @@
   },
   "keyboard": {
     "dismiss": "Hide keyboard"
+  },
+  "portionGuide": {
+    "unavailable": "More information is needed to estimate a portion",
+    "menuUnit": " item",
+    "recipeUnit": " serving",
+    "amount": "Portion reference · {{amount}}{{unit}}",
+    "belowQuarter": "Even 1/4{{unit}} exceeds the meal comparison",
+    "basis": "How this is calculated",
+    "driver": "Portion based on {{nutrient}}",
+    "otherFood": "Allow for other foods you eat with this dish.",
+    "explanation": "Uses {{percent}}% of your saved daily targets as a meal allocation. This compares this dish alone and does not include what you have eaten today. Estimates and preparation vary; follow your care team’s portion guidance.",
+    "menuAmount": "Portion reference · {{amount}} of this item",
+    "menuWhole": "Portion reference · 1 item",
+    "menuBelowQuarter": "Even 1/4 of this item exceeds the meal allocation",
+    "half": "half",
+    "personalTitle": "Portion guidance from my records",
+    "dailyTargets": "My daily targets used in this calculation",
+    "incompleteIntake": "Some meals are still being analyzed or this snapshot is from a previous day. Check your latest records and reopen this page.",
+    "noRecords": "No meals recorded today. Confirm only if you have not eaten yet.",
+    "checkRecords": "Your recorded intake today. Log any missing meals or snacks first.",
+    "confirmNone": "I haven’t eaten yet",
+    "confirmRecords": "I’ve logged everything I ate today",
+    "mealsLeft": "How many meals remain, including this one?",
+    "meals": "{{count}} meals",
+    "companionTitle": "How will you divide this meal’s nutrient budget?",
+    "reserveHalf": "Reserve half for other food",
+    "onlyDish": "Allocate all to this dish",
+    "personalMenu": "From my records · {{amount}} of this dish",
+    "personalRecipe": "From my records · {{amount}} serving",
+    "personalBelowQuarter": "Even 1/4 exceeds the allocated budget",
+    "personalBasis": "{{nutrient}} determines this portion. Remaining targets after recorded intake are divided across {{meals}} meals, with {{percent}}% allocated to this dish.",
+    "personalCaution": "An estimate for portion planning, not a nutritionally complete meal or a prescribed amount. Follow your care team’s meal plan.",
+    "personalOpen": "Calculate a portion from my records",
+    "consultAmount": "Discuss this portion with AI",
+    "consultQuestion": "I plan to eat the calculated portion of {{name}}. What should I pair it with and consider?",
+    "refreshing": "Checking your latest records",
+    "planContext": "Confirmed meal plan: {{date}}, food fraction {{amount}}, {{meals}} meals remaining including this one, {{percent}}% allocated to this dish. Individual daily targets: {{targets}}. Today’s logged intake confirmed complete by the user: {{consumed}}. This is a plan, not consumed food; do not record it as intake. Review these choices ahead of generic meal comparisons and check current personal targets. The reserved share is not a nutrient total of actual accompanying dishes.",
+    "recipeContext": "Recipe",
+    "recipeBasis": "Nutrients below are per serving of this recipe. Cooking yield is separate from the planned amount to eat."
   }
 }

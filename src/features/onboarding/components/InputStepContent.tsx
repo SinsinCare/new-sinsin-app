@@ -54,7 +54,9 @@ export function InputStepContent({
             ) : null}
 
             {/* 값이 찼다고 면을 브랜드로 물들이지 않는다 — 입력값은 선택이 아니다. */}
-            <View style={[styles.field, { backgroundColor: surface.surface }]}>
+            <View
+              style={[styles.field, { backgroundColor: surface.surfaceSunken }]}
+            >
               <TextInput
                 style={[styles.input, { color: surface.textStrong }]}
                 placeholder={t("onboarding.valuePlaceholder")}

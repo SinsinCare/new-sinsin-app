@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * AI 검색 시트. 자연어("칼륨 낮고 국물 없는 한식") → 구조화 필터.
  *
@@ -26,13 +27,7 @@
  */
 
 import { useEffect, useState } from "react"
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native"
+import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import {
   radius,
@@ -104,24 +99,30 @@ export function AiSearchSheet({
   const { height: windowHeight } = useWindowDimensions()
 
   const [draft, setDraft] = useState("")
-  const ai = useAiSearch({ viewport, userLocation })
+  const ai = useAiSearch({
+    query: draft,
+    enabled: visible,
+    viewport,
+    userLocation,
+  })
 
-  /* 열릴 때 입력과 결과를 모두 비운다(위 헤더의 프로토타입 버그).
-     `ai.reset` 은 mutation 객체를 의존성으로 물고 있어 매 렌더 새로 만들어지므로
-     의존성 배열에 넣지 않는다 — 넣으면 렌더마다 초기화되어 결과가 화면에 남지 않는다. */
+  // The hook owns request cleanup. Reopening starts with a fresh input.
   useEffect(() => {
     if (!visible) return
     setDraft("")
-    ai.reset()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible])
+
+  const close = () => {
+    ai.reset()
+    onClose()
+  }
 
   const trimmed = draft.trim()
   const canSubmit = trimmed.length > 0 && !ai.isPending
 
   const submit = () => {
     if (!canSubmit) return
-    void ai.search(trimmed)
+    void ai.search()
   }
 
   const result = ai.result
@@ -136,7 +137,7 @@ export function AiSearchSheet({
     <V2BottomSheet
       surface="restaurant_ai_search"
       visible={visible}
-      onClose={onClose}
+      onClose={close}
       title={t("restaurant.aiSearch.title")}
     >
       <View style={styles.inputRow}>
@@ -299,7 +300,7 @@ export function AiSearchSheet({
                 unmatched_count: result.unmatchedTerms.length,
               })
               onApply(result.filters)
-              onClose()
+              close()
             }}
           >
             {t("restaurant.aiSearch.apply")}

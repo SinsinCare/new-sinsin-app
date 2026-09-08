@@ -4,6 +4,7 @@ import type { StyleProp, ViewStyle } from "react-native"
 import { V2Skeleton, V2SkeletonGroup, spacing } from "@/src/design-system-v2"
 
 import { GUTTER } from "../layout"
+import { RESTAURANT_PHOTO_HEIGHT } from "./PhotoStrip"
 const SIDE = GUTTER
 
 export interface RestaurantCardSkeletonProps {
@@ -13,18 +14,13 @@ export interface RestaurantCardSkeletonProps {
 export function RestaurantCardSkeleton({ style }: RestaurantCardSkeletonProps) {
   return (
     <V2SkeletonGroup style={[styles.root, style]}>
-      <View style={styles.main}>
-        <View style={styles.body}>
-          <V2Skeleton width="90%" height={19} />
-          <V2Skeleton width="65%" height={18} />
-          <V2Skeleton width="82%" height={18} />
-          <V2Skeleton width="70%" height={18} />
-          <View style={styles.nutrition}>
-            <V2Skeleton width="90%" height={18} />
-          </View>
-        </View>
-        <V2Skeleton width={96} height={113} radius="lg" />
+      <View style={styles.body}>
+        <V2Skeleton width="65%" height={19} />
+        <V2Skeleton width="82%" height={18} />
+        <V2Skeleton width="60%" height={16} />
       </View>
+      <V2Skeleton width="100%" height={RESTAURANT_PHOTO_HEIGHT} radius="lg" />
+      <V2Skeleton width="100%" height={38} radius="md" />
     </V2SkeletonGroup>
   )
 }
@@ -51,8 +47,7 @@ const styles = StyleSheet.create({
   root: {
     paddingHorizontal: SIDE,
     paddingVertical: spacing[16],
+    gap: spacing[12],
   },
-  main: { flexDirection: "row", gap: spacing[12] },
-  body: { flex: 1, gap: spacing[4] },
-  nutrition: { paddingTop: spacing[6] },
+  body: { gap: spacing[6] },
 })

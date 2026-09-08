@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 레시피 보관함 — 저장한 레시피 · 최근 본 기록
  * (계약 §2 `/recipes/saved`, `/recipes/views/recent`.
@@ -83,7 +84,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native"
+import { Keyboard, Pressable, StyleSheet, View } from "react-native"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
 import { FlashList } from "@shopify/flash-list"
 import { LAYOUT } from "@/src/theme/surface"
@@ -101,6 +102,8 @@ import {
   V2Tab,
   spacing,
   typography,
+  borderWidth,
+  useV2Theme,
 } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
@@ -109,7 +112,6 @@ import { RECIPE_ARCHIVE_REFRESH } from "../refresh/scopes"
 import {
   AppliedFilterRow,
   EMPTY_RECIPE_FILTERS,
-  RECIPE_ROW_TEXT_INDENT,
   RecipeFilterSheet,
   RecipeListSkeleton,
   RecipePhotoCard,
@@ -148,6 +150,7 @@ export interface RecipeArchiveScreenProps {
 export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
+  const { colors } = useV2Theme()
   const insets = useSafeAreaInsets()
   const router = useAppRouter()
 
@@ -293,17 +296,14 @@ export function RecipeArchiveScreen({ initialTab }: RecipeArchiveScreenProps) {
 
   const keyExtractor = useCallback((item: RecipeCard) => String(item.id), [])
 
-  /**
-   * 줄 사이의 헤어라인. 목록 화면과 같은 규칙이다 — 왼쪽을 글자 시작선까지 들여 써서
-   * 썸네일을 가로지르지 않는다(가로지르면 목록이 표처럼 보인다).
-   */
+  // 탐색 목록과 동일한 굵기와 대비로 행 경계를 표시한다.
   const renderSeparator = useCallback(
     () => (
       <View
-        style={[styles.rowSeparator, { backgroundColor: surface.hairline }]}
+        style={[styles.rowSeparator, { backgroundColor: colors.line.normal }]}
       />
     ),
-    [surface.hairline],
+    [colors.line.normal],
   )
 
   /** 결과 수. 좁혔을 때는 "결과 N개", 그냥 볼 때는 보관함 전체 개수를 말한다. */
@@ -575,8 +575,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: GUTTER,
   },
   rowSeparator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: RECIPE_ROW_TEXT_INDENT,
+    height: borderWidth.thin,
+    marginHorizontal: GUTTER,
   },
 
   emptyWrap: {

@@ -1,11 +1,6 @@
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  type ViewStyle,
-} from "react-native"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+import { StyleSheet, View, type ViewStyle } from "react-native"
+import { Pressable, ScrollView } from "react-native-gesture-handler"
 import { useTranslation } from "react-i18next"
 import type React from "react"
 import {
@@ -27,17 +22,19 @@ const RAIL_CHIP_GAP = spacing[8]
 const ART_SIZE = iconSize.xs
 const RAIL_PAD_VERTICAL = spacing[12]
 export interface CategoryChipRailProps {
-  selected: CuisineType | null
-  onSelect: (type: CuisineType | null) => void
+  selectedTypes: readonly CuisineType[]
+  onToggle: (type: CuisineType) => void
   onPressAiSearch: () => void
   insetHorizontal?: number
+  surface?: "map" | "sheet"
   style?: ViewStyle
 }
 export function CategoryChipRail({
-  selected,
-  onSelect,
+  selectedTypes,
+  onToggle,
   onPressAiSearch,
   insetHorizontal = RAIL_INSET,
+  surface = "map",
   style,
 }: CategoryChipRailProps) {
   const { t } = useTranslation("common")
@@ -54,20 +51,22 @@ export function CategoryChipRail({
       style={[styles.rail, style]}
     >
       <RailChip
+        onSheet={surface === "sheet"}
         label={t("restaurant.map.aiSearch")}
         onPress={onPressAiSearch}
         leading={<V2Icon name="sparkle" size={iconSize.xs} />}
       />
       {RAIL_CUISINE_TYPES.map((spec) => {
         const Art = CUISINE_ART[spec.value]
-        const isSelected = selected === spec.value
+        const isSelected = selectedTypes.includes(spec.value)
         return (
           <RailChip
+            onSheet={surface === "sheet"}
             key={spec.value}
             label={t(dynamicKey(spec.labelKey))}
             selected={isSelected}
-            // 같은 칩을 다시 누르면 해제된다(단일 선택 토글).
-            onPress={() => onSelect(isSelected ? null : spec.value)}
+            // 필터 시트와 같은 복수 선택. 누른 항목만 추가하거나 해제한다.
+            onPress={() => onToggle(spec.value)}
             leading={
               Art ? <Art width={ART_SIZE} height={ART_SIZE} /> : undefined
             }
@@ -82,11 +81,13 @@ function RailChip({
   selected,
   onPress,
   leading,
+  onSheet,
 }: {
   label: string
   selected?: boolean
   onPress: () => void
   leading?: React.ReactNode
+  onSheet?: boolean
 }) {
   const { colors, mode } = useV2Theme()
   const isToggle = selected !== undefined
@@ -103,11 +104,14 @@ function RailChip({
         pointerEvents="none"
         style={[
           styles.surface,
-          surface.shadow,
+          !onSheet && surface.shadow,
           {
-            backgroundColor: surface.backgroundColor,
-            borderColor: surface.borderColor,
-            borderWidth: surface.borderWidth,
+            backgroundColor:
+              onSheet && !active
+                ? colors.fill.control
+                : surface.backgroundColor,
+            borderColor: onSheet ? "transparent" : surface.borderColor,
+            borderWidth: onSheet ? 0 : surface.borderWidth,
           },
         ]}
       />

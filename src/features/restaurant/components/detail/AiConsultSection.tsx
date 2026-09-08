@@ -1,8 +1,9 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 홈 탭의 `AI 식단 상담` 섹션 — 상담 시트로 들어가는 **유일한 문** (시안 C4_1 · E1_2).
  *
  * 추천 질문 한 줄을 누르면 그 질문이 실린 채로 시트가 열리고, `질문하기` 를 누르면 빈
- * 상태로 열린다. 실제 대화는 `components/consult/RestaurantConsultSheetHost` 가 한다 —
+ * 상태로 열린다. 실제 대화는 공통 `/consult` 페이지에서 이어간다 —
  * 이 파일은 **무엇을 물을지 고르는 자리**일 뿐이라 `useChat` 도 컨텍스트 빌더도 모른다.
  *
  * ## 왜 `DetailSection` 을 쓰지 않는가
@@ -82,7 +83,7 @@
  * 그린다. 0개면 섹션 자체가 없다 — 빈 제목과 부제만 남은 섹션은 "AI 가 고장났다" 로 읽힌다.
  */
 
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

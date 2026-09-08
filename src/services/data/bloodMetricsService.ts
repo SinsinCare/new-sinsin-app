@@ -6,6 +6,8 @@ import type {
   BloodGlucoseRangeResponse,
   BloodGlucoseUpsertRequest,
   BloodMetricsResponse,
+  BloodPressureRangeRecord,
+  BloodPressureRangeResponse,
   BloodPressureUpsertRequest,
 } from "@/src/types/bloodMetrics"
 
@@ -34,6 +36,23 @@ export const bloodMetricsService = {
     } catch (error) {
       rethrowRequestError(error)
     }
+  },
+
+  /**
+   * from~to(포함)의 혈압 기록. 기록 페이지의 이력 표가 쓴다.
+   *
+   * 일간 분석은 그날의 **대표 한 건**만 준다 — 마이그레이션 093 이후 하루에 여러 칸이
+   * 있을 수 있으므로 표를 그리려면 창을 따로 열어야 한다(혈당과 같은 모양).
+   */
+  async fetchBloodPressureRecords(
+    from: string,
+    to: string,
+  ): Promise<BloodPressureRangeRecord[]> {
+    const response = await api.get("/blood-pressure-records", {
+      params: { from, to },
+    })
+    const data = response.data as BloodPressureRangeResponse
+    return data.result?.records ?? []
   },
 
   /**

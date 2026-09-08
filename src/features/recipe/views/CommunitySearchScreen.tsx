@@ -1,3 +1,4 @@
+import { CommunityFeedSkeleton } from "../components/CommunityFeedSkeleton"
 /**
  * 커뮤니티 검색 화면 (`app/community/search.tsx` 가 감싼다).
  *
@@ -42,8 +43,6 @@ import {
   V2EmptyState,
   V2ErrorState,
   V2LoadingState,
-  V2Skeleton,
-  V2SkeletonGroup,
   type V2ErrorStateRetry,
 } from "@/src/design-system-v2"
 import { EndOfListRow } from "../components/EndOfListRow"
@@ -323,7 +322,7 @@ export function CommunitySearchScreen() {
       style={[
         styles.screen,
         {
-          backgroundColor: surface.bed,
+          backgroundColor: surface.canvas,
           paddingTop: insets.top,
         },
       ]}
@@ -340,7 +339,7 @@ export function CommunitySearchScreen() {
           style={[
             styles.searchField,
             {
-              backgroundColor: surface.isDark ? surface.surface : surface.card,
+              backgroundColor: surface.surfaceSunken,
             },
           ]}
         >
@@ -400,7 +399,9 @@ export function CommunitySearchScreen() {
                   <SurfacePressable
                     key={keyword}
                     onPress={() => commit(keyword)}
-                    baseColor={surface.isDark ? surface.surface : surface.card}
+                    baseColor={
+                      surface.isDark ? surface.surfaceSunken : surface.card
+                    }
                     pressScale={0.95}
                     style={styles.recentChip}
                   >
@@ -519,13 +520,7 @@ export function CommunitySearchScreen() {
       ) : search.isLoading ? (
         /* 결과 자리 스켈레톤 — 카드 목록이 온다는 것을 미리 말한다(링 스피너 금지). */
         <View style={styles.resultSkeletonWrap}>
-          <V2SkeletonGroup>
-            {[0, 1, 2, 3].map((index) => (
-              <View key={index} style={styles.resultSkeletonItem}>
-                <V2Skeleton width="100%" height={104} radius="xl" />
-              </View>
-            ))}
-          </V2SkeletonGroup>
+          <CommunityFeedSkeleton />
         </View>
       ) : searchFailed ? (
         /*
@@ -805,12 +800,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 10,
   },
-  listItemWrap: {
-    paddingHorizontal: 20,
-  },
-  listGap: {
-    height: 10,
-  },
+  listItemWrap: {},
+  listGap: { height: 0 },
   listTopGap: {
     height: 12,
   },

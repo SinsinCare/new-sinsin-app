@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { AppState, AppStateStatus } from "react-native"
 import { notificationService } from "@/src/services/notificationService"
 import { notificationSettingsService } from "@/src/services/data/notificationSettingsService"
@@ -11,46 +11,70 @@ export function useNotifications(isAuthenticated: boolean) {
   )
   const [osPermissionGranted, setOsPermissionGranted] = useState(false)
 
+  const [isReady, setIsReady] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  const revision = useRef(0)
+  const writing = useRef(false)
+
   const syncFromServer = useCallback(async () => {
-    if (!isAuthenticated) return
-    const fetched = await notificationSettingsService.get()
-    const granted = await notificationService.hasPermission()
-    setSettings(fetched)
-    setOsPermissionGranted(granted)
-    await notificationService.scheduleAll(fetched)
-    if (fetched.pushConsent && granted) {
-      try {
-        await notificationService.registerPushToken()
-      } catch {
-        // 자동 최신화 실패가 로컬 알림 예약과 설정 표시를 막으면 안 된다.
-      }
+    if (!isAuthenticated || writing.current) return
+    const request = ++revision.current
+    try {
+      const [fetched, granted] = await Promise.all([
+        notificationSettingsService.get(),
+        notificationService.hasPermission(),
+      ])
+      if (request !== revision.current) return
+      setSettings(fetched)
+      setOsPermissionGranted(granted)
+      setIsReady(true)
+      setError(null)
+      await Promise.allSettled([
+        notificationService.scheduleAll(fetched),
+        ...(fetched.pushConsent && granted
+          ? [notificationService.registerPushToken()]
+          : []),
+      ])
+    } catch (cause) {
+      if (request !== revision.current) return
+      setError(cause)
+      setIsReady(false)
     }
   }, [isAuthenticated])
 
-  // 로그인 시 서버 설정 fetch → 스케줄 등록
   useEffect(() => {
-    if (isAuthenticated) {
-      syncFromServer()
-    } else {
-      notificationService.cancelAll()
+    if (isAuthenticated) void syncFromServer()
+    else {
+      void notificationService.cancelAll().catch(() => {})
       setSettings(DEFAULT_NOTIFICATION_SETTINGS)
       setOsPermissionGranted(false)
+      setIsReady(false)
+      setError(null)
+    }
+    return () => {
+      revision.current += 1
     }
   }, [isAuthenticated, syncFromServer])
 
-  // 포그라운드 복귀 시 서버 설정 재동기화 (서버에서 주기 변경 반영)
   useEffect(() => {
-    const handleAppState = (state: AppStateStatus) => {
-      if (state === "active") syncFromServer()
-    }
-    const sub = AppState.addEventListener("change", handleAppState)
+    const sub = AppState.addEventListener("change", (state: AppStateStatus) => {
+      if (state === "active") void syncFromServer()
+    })
     return () => sub.remove()
   }, [syncFromServer])
 
   const updateSettings = useCallback(async (next: NotificationSettings) => {
-    setSettings(next)
-    await notificationSettingsService.update(next)
-    await notificationService.scheduleAll(next)
+    writing.current = true
+    const request = ++revision.current
+    try {
+      await notificationSettingsService.update(next)
+      if (request !== revision.current) return
+      setSettings(next)
+      // Consent is already saved; scheduling failure must not undo its displayed value.
+      await Promise.allSettled([notificationService.scheduleAll(next)])
+    } finally {
+      writing.current = false
+    }
   }, [])
 
   const requestAndEnable = useCallback(async (): Promise<boolean> => {
@@ -61,28 +85,37 @@ export function useNotifications(isAuthenticated: boolean) {
 
   const setPushConsent = useCallback(
     async (enabled: boolean): Promise<boolean> => {
-      if (enabled) {
-        const granted = await notificationService.requestPermissions()
-        setOsPermissionGranted(granted)
-        if (!granted) return false
-        await notificationService.registerPushToken()
-        const next = await notificationSettingsService.setPushConsent(true)
-        setSettings(next)
-        return true
-      }
+      writing.current = true
+      const request = ++revision.current
+      try {
+        if (enabled) {
+          const granted = await notificationService.requestPermissions()
+          setOsPermissionGranted(granted)
+          if (!granted) return false
+          await notificationService.registerPushToken()
+          const next = await notificationSettingsService.setPushConsent(true)
+          if (request === revision.current) setSettings(next)
+          return true
+        }
 
-      const next = await notificationSettingsService.setPushConsent(false)
-      setSettings(next)
-      await notificationService.unregisterPushToken()
-      const granted = await notificationService.hasPermission()
-      setOsPermissionGranted(granted)
-      return true
+        const next = await notificationSettingsService.setPushConsent(false)
+        if (request === revision.current) setSettings(next)
+        await notificationService.unregisterPushToken()
+        const granted = await notificationService.hasPermission()
+        setOsPermissionGranted(granted)
+        return true
+      } finally {
+        writing.current = false
+      }
     },
     [],
   )
 
   return {
     settings,
+    isReady,
+    error,
+    retry: syncFromServer,
     osPermissionGranted,
     pushEnabled: settings.pushConsent && osPermissionGranted,
     updateSettings,

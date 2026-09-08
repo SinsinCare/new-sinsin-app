@@ -118,7 +118,19 @@ export const notificationService = {
   },
 
   async scheduleAll(settings: NotificationSettings): Promise<void> {
-    await Notifications.cancelAllScheduledNotificationsAsync()
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync()
+    await Promise.all(
+      scheduled
+        .filter(
+          (n) =>
+            n.identifier === "morning-check" ||
+            /^water-\d+$/.test(n.identifier) ||
+            /^meal-(breakfast|lunch|dinner)$/.test(n.identifier),
+        )
+        .map((n) =>
+          Notifications.cancelScheduledNotificationAsync(n.identifier),
+        ),
+    )
 
     const promises: Promise<string>[] = []
     const { morningCheck, waterReminder, mealReminder } = settings.categories

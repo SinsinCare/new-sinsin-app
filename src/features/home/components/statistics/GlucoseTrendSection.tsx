@@ -58,7 +58,7 @@ export function GlucoseTrendSection({
         {t("stats.glucose.title")}
       </Text>
 
-      <View style={[styles.card, { backgroundColor: surface.surface }]}>
+      <View style={[styles.card, { backgroundColor: surface.surfaceSunken }]}>
         {model.summary.count === 0 ? (
           <Text
             style={[styles.empty, { color: surface.textWeak }]}

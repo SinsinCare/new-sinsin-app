@@ -1,36 +1,24 @@
-/**
- * **길찾기 — 어느 지도 앱으로 열까.**
- *
- * ## 왜 앱을 고르게 하는가 (자동으로 하나 고르지 않는다)
- *
- * 국내 사용자는 카카오맵·네이버지도 중 쓰던 것이 있다. 한쪽으로 밀어 넣으면 안 쓰는 앱의
- * 로그인·설치 화면을 만나고, 되돌아오려면 앱을 나갔다 와야 한다. 그래서 목록을 준다 —
- * 다이닝코드·캐치테이블도 같은 방식이다.
- *
- * ## 앱이 없으면 웹으로 내려간다 (`canOpenURL` 을 믿지 않는다)
- *
- * iOS 는 `Info.plist` 의 `LSApplicationQueriesSchemes` 에 적힌 스킴만 조회할 수 있고,
- * 이 저장소의 `app.json` 에는 그 목록이 없다(실측). 즉 카카오맵이 깔려 있어도
- * `canOpenURL("kakaomap://…")` 은 **false** 다. 그 값을 믿고 "앱이 없다" 고 판단하면
- * 모든 사용자가 웹으로 떨어진다.
- *
- * 그래서 **먼저 열어 보고 실패하면 웹**이다. `Linking.openURL` 은 열 수 없을 때 reject
- * 하므로 그 자리에서 갈아탈 수 있고, 두 국내 서비스의 웹 주소는 앱이 깔려 있으면 앱으로
- * 넘어가므로 어느 쪽이든 사용자는 길찾기 화면을 본다.
- *
- * 링크 값 자체는 `utils/mapAppLinks` 의 순수 함수가 만든다(테스트가 그쪽에 있다).
- * 이 컴포넌트는 **여는 일**만 한다.
- */
+/** Choose a map app; failed launches keep the sheet available for retry. */
 
-import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native"
+import {
+  ActivityIndicator,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
+  typography,
+  useV2Theme,
   radius,
   spacing,
   V2BottomSheet,
   V2Option,
 } from "@/src/design-system-v2"
+import { Text } from "@/src/shared/components/AppText"
+import { useRouteAppLaunch } from "../hooks/useRouteAppLaunch"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 
 import { SHEET_GUTTER } from "../layout"
@@ -57,30 +45,34 @@ export function RouteAppSheet({
     Platform.OS === "android" ? "android" : "ios",
   )
 
-  const openLink = async (appUrl: string, webUrl: string) => {
-    // 앱을 먼저 열어 본다. 열 수 없으면 reject 되고 웹으로 내려간다(머리말 참고).
-    try {
-      await Linking.openURL(appUrl)
-    } catch {
-      try {
-        await Linking.openURL(webUrl)
-      } catch {
-        // 둘 다 실패하는 경우는 브라우저조차 없는 기기다. 조용히 닫는다 —
-        // 여기서 오류를 띄워도 사용자가 할 수 있는 일이 없다.
-      }
-    }
-    onClose()
-  }
+  const { colors } = useV2Theme()
+  const { open, close, opening, failed } = useRouteAppLaunch({
+    visible,
+    targetKey: JSON.stringify([target.name, target.lat, target.lng]),
+    onClose,
+  })
 
   return (
     <V2BottomSheet
       surface="restaurant_route_app"
       visible={visible}
-      onClose={onClose}
+      onClose={close}
       title={t("restaurant.route.title")}
     >
       <ScrollView bounces={false} contentContainerStyle={styles.list}>
         <View style={styles.listInner}>
+          {failed ? (
+            <Text
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+              style={[
+                typography.subtext.medium,
+                { color: colors.status.negative },
+              ]}
+            >
+              {t("restaurant.route.openFailed")}
+            </Text>
+          ) : null}
           {links.map((link) => (
             <V2Option
               key={link.key}
@@ -91,7 +83,16 @@ export function RouteAppSheet({
                 (`V2Option` 의 `selected` 는 필수 prop 이라 생략할 수 없다.)
               */
               selected={false}
-              onPress={() => void openLink(link.appUrl, link.webUrl)}
+              disabled={opening !== null}
+              trailing={
+                opening === link.key ? (
+                  <ActivityIndicator
+                    accessibilityLabel={t("restaurant.route.opening")}
+                    color={colors.label.normal}
+                  />
+                ) : undefined
+              }
+              onPress={() => void open(link)}
               style={styles.option}
             />
           ))}

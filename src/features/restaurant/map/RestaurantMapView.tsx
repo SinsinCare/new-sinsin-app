@@ -181,6 +181,7 @@ export const RestaurantMapView = forwardRef<
   useImperativeHandle(
     ref,
     (): RestaurantMapHandle => ({
+      setLabelInsets: (insets) => send(mapScript.setLabelInsets(insets)),
       setMarkers: (items: MapMarker[]) => send(mapScript.setMarkers(items)),
       setClusters: (items: MapCluster[]) => send(mapScript.setClusters(items)),
       select: (id: number | null) => send(mapScript.select(id)),

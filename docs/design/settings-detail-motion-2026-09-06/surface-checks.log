@@ -1,0 +1,38 @@
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (3) from tests/.env.test -- tip: 🛡️ auth for agents: https://vestauth.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+PASS tests/surfaceLadderGuard.test.ts
+  §L1 사다리 — 단 · 역할 · 겹침
+    ✓ 여섯 단의 값이 못 박혀 있다 (변이 테스트의 과녁) (2 ms)
+    ✓ 기준면은 라이트 `content` · 다크 `bed` 다 — 그리고 그것이 `background.default` 다
+    ✓ 바닥에서 멀어지는 쪽이 위층이다 — 두 모드가 **같은 순서**를 탄다 (1 ms)
+    ✓ **겹치는 단은 의도다** — 어느 단이 왜 겹치는지까지 못 박는다
+    ✓ 표시는 **알파**로 남는다 — 면으로 굳히지 않는다 (1 ms)
+  §L2 사다리 도입 전후로 **칠해지는 색이 같다**
+    ✓ light: `SurfacePalette` 21칸이 그대로다
+    ✓ dark: `SurfacePalette` 21칸이 그대로다
+    ✓ tamagui 계보의 면도 그대로다 — 계산만 사다리로 옮겼다
+    ✓ 설정 계보의 두 칸도 그대로다 — 리터럴이 사다리 단으로 바뀌었을 뿐이다
+  §L3 화면이 마주치는 회색은 전부 사다리 안에 있다
+    ✓ light: 사다리가 만드는 집합 = §10 이 세는 집합 (1 ms)
+    ✓ dark: 사다리가 만드는 집합 = §10 이 세는 집합
+    ✓ 개수는 라이트 열 · 다크 일곱이다 (§10 과 같은 숫자를 사다리 쪽에서도 센다)
+  §L4 사다리 밖 회색을 화면이 직접 칠하지 못한다
+    ✓ 면에 **리터럴 hex** 를 적지 않는다 (311 ms)
+    ✓ 면에 **원시 팔레트**를 직접 쓰지 않는다 — 원시색은 층을 모른다 (115 ms)
+    ✓ 게이트가 **실제로 잡는다** (오라클) (118 ms)
+  §L5 `useSettingsColors` 의 리터럴 회색은 줄기만 한다
+    ✓ 남은 리터럴 목록이 못 박혀 있다
+
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        1.704 s
+Ran all test suites matching /tests\/surfaceLadderGuard.test.ts/i.

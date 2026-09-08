@@ -1,3 +1,5 @@
+import { calendarDateKey } from "../components/calendar/calendarModel"
+
 export interface WeekDayItem {
   date: Date
   dayOfMonth: number
@@ -9,7 +11,7 @@ export interface WeekDayItem {
  */
 export function getWeekDays(
   baseDate: Date,
-  recordedDates: number[] = [],
+  recordedDates: string[] = [],
 ): WeekDayItem[] {
   const day = baseDate.getDay()
   const mondayOffset = day === 0 ? -6 : 1 - day
@@ -21,7 +23,7 @@ export function getWeekDays(
     return {
       date: d,
       dayOfMonth: d.getDate(),
-      hasRecord: recordedDates.includes(d.getDate()),
+      hasRecord: recordedDates.includes(calendarDateKey(d)),
     }
   })
 }

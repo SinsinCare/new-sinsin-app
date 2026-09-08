@@ -16,3 +16,21 @@ describe("chat failure copy", () => {
     expect(message).not.toContain("감자 반 개")
   })
 })
+
+it.each(["ko", "en"])(
+  "does not point to a hidden retry button after a rejected response in %s",
+  (locale) => {
+    const message = streamFailureMessage(
+      {
+        name: "ChatStreamError",
+        code: "UNSAFE_RESPONSE",
+        message: "internal",
+        retryable: false,
+        partialContentAvailable: false,
+      },
+      locale,
+    )
+    expect(message).not.toMatch(/답변 다시 받기|Get a new answer|internal/)
+    expect(message).toMatch(/구체적으로|specific question/)
+  },
+)

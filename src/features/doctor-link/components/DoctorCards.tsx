@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 의사 카드 3종. 세 화면(연결 확인 · 공유 설정 · 연결 목록)이 같은 의사를 각각 다른 무게로 보여 준다.
  *
@@ -11,7 +12,7 @@
  * (`doctor-character-bust.png`)은 카드 우측. 카드에 전신을 넣으면 얼굴이 너무 작아진다.
  */
 
-import { Image, Pressable, StyleSheet, Text, View } from "react-native"
+import { Image, Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

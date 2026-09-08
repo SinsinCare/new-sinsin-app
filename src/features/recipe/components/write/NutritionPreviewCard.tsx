@@ -108,7 +108,7 @@ export function NutritionPreviewCard({
             hitSlop={6}
             style={({ pressed }) => [
               styles.badge,
-              { backgroundColor: s.surface },
+              { backgroundColor: s.surfaceSunken },
               pressed && { opacity: 0.7 },
             ]}
           >

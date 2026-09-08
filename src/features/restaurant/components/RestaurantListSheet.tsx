@@ -1,3 +1,5 @@
+import type { RestaurantCardTarget } from "../utils/restaurantCardNavigation"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 지도 하단 식당 목록 시트. 3-스냅 + sticky 필터칩 행 + 가상화 리스트.
  *
@@ -75,7 +77,6 @@ import {
 } from "react"
 import {
   StyleSheet,
-  Text,
   View,
   type LayoutChangeEvent,
   type ViewStyle,
@@ -101,7 +102,7 @@ import {
   useV2Theme,
 } from "@/src/design-system-v2"
 
-import type { EmptyReason, RestaurantCardDto } from "../types"
+import type { EmptyReason, RestaurantCardDto, SortOption } from "../types"
 import { MapResultsHeader } from "./MapResultsHeader"
 import { MapEmptyState } from "./MapEmptyState"
 import { RestaurantCard } from "./RestaurantCard"
@@ -114,22 +115,16 @@ import { GUTTER } from "../layout"
 
 /** 핸들 블록: 위 여백 + 바 + 아래 여백. collapsed 스냅 계산의 상수 항이다. */
 const HANDLE_BAR_HEIGHT = 4
-/*
-  핸들 **블록**의 여백. 바 자체는 목업대로 36×4 로 두되, 그 위아래 여백을 넓혀
-  손가락이 닿는 면을 키운다. 종전 값(10/8)이면 블록이 22px 이라 화면 맨 위 모서리를
-  정확히 집어야 시트가 움직였다 — 지도 앱에서 기대하는 감각이 아니다.
-  32pt 는 최소 터치 타겟 44 에 못 미치지만 **여기서 더 키우지 않는다** — 접힘 높이가
-  그대로 지도를 먹고, 콘텐츠 팬이 켜져 있어 접힘에서도 칩 줄까지 포함한 ~95pt 전체가
-  손잡이이기 때문이다. 이 블록은 유일한 통로가 아니다.
-  접힘 높이는 이 상수에서 유도되므로(§collapsed 스냅) 여기만 바꾸면 따라온다.
-*/
-const HANDLE_PADDING_TOP = spacing[16]
-const HANDLE_PADDING_BOTTOM = spacing[12]
+/* Compact handle block. The filter rows and list also accept vertical panning,
+   so the visible handle need not be the sole touch target. Its measured block
+   remains part of the collapsed detent calculation. */
+const HANDLE_PADDING_TOP = spacing[8]
+const HANDLE_PADDING_BOTTOM = spacing[8]
 const HANDLE_BLOCK_HEIGHT =
   HANDLE_PADDING_TOP + HANDLE_BAR_HEIGHT + HANDLE_PADDING_BOTTOM
 
 /** sticky 블록을 아직 못 재기 전의 임시값. 첫 프레임에만 쓰이고 곧 실측으로 대체된다. */
-const STICKY_HEADER_FALLBACK_HEIGHT = 62
+const STICKY_HEADER_FALLBACK_HEIGHT = 140
 
 /**
  * 시트 팬이 시작되는 세로 이동(pt). 근거는 `<BottomSheet activeOffsetY>` 자리의 주석에 있다.
@@ -168,7 +163,11 @@ export interface RestaurantListSheetHandle {
 }
 
 export interface RestaurantListSheetProps {
-  bookmarkedOnly?: boolean
+  sort: SortOption
+  regionCount: number
+  onPressRegion: () => void
+  onPressSort: () => void
+  categoryRow?: ReactNode
   total?: number | null
   items: RestaurantCardDto[]
   /**
@@ -198,7 +197,7 @@ export interface RestaurantListSheetProps {
   loadingMore?: boolean
   /** 0건의 이유. `null` 이면 빈 상태를 그리지 않는다. */
   emptyReason?: EmptyReason | null
-  onPressCard?: (card: RestaurantCardDto, index: number) => void
+  onPressCard?: (card: RestaurantCardDto, target: RestaurantCardTarget) => void
   onEndReached?: () => void
   /**
    * 스냅이 바뀌었다. 화면은 이 신호로 카카오에 `relayout()` 을 알린다.
@@ -223,7 +222,7 @@ export interface RestaurantListSheetProps {
   onWidenMap?: () => void
   onResetFilters?: () => void
   onRetry?: () => void
-  /** 상태바 높이. expanded 에서 시트가 노치를 덮지 않게 한다. */
+  /** 상태바와 검색바 높이. 펼친 목록에서도 검색바를 덮지 않는다. */
   topInset?: number
   /** 홈 인디케이터 높이. 리스트 마지막 카드가 가리지 않게 한다. */
   bottomInset?: number
@@ -237,7 +236,11 @@ export const RestaurantListSheet = forwardRef<
   {
     items,
     total = null,
-    bookmarkedOnly = false,
+    sort,
+    regionCount,
+    onPressRegion,
+    onPressSort,
+    categoryRow,
     filterRow,
     notice,
     leadingSkeleton = false,
@@ -360,10 +363,9 @@ export const RestaurantListSheet = forwardRef<
   selectedIdRef.current = selectedId
 
   const renderItem = useCallback(
-    ({ item, index }: { item: RestaurantCardDto; index: number }) => (
+    ({ item }: { item: RestaurantCardDto }) => (
       <SheetRow
         item={item}
-        index={index}
         selected={item.restaurantId === selectedIdRef.current}
         onPress={onPressCard}
       />
@@ -409,6 +411,7 @@ export const RestaurantListSheet = forwardRef<
     if (!emptyReason) return null
     return (
       <MapEmptyState
+        compact
         reason={emptyReason}
         /* `noop` 으로 메꾸지 않는다. 넓힐 지도가 없는 호출부(지도 SDK 실패 → 리스트 모드)가
            이 prop 을 빼면 `MapEmptyState` 가 버튼 자체를 그리지 않아야 한다 —
@@ -542,8 +545,15 @@ export const RestaurantListSheet = forwardRef<
     >
       {hasStickyHeader && (
         <View onLayout={handleStickyHeaderLayout}>
+          <View style={styles.stickyRow}>
+            {filterRow}
+            {categoryRow}
+          </View>
           <MapResultsHeader
-            bookmarkedOnly={bookmarkedOnly}
+            sort={sort}
+            regionCount={regionCount}
+            onPressRegion={onPressRegion}
+            onPressSort={onPressSort}
             total={total}
             loading={loading}
             expanded={expanded}
@@ -554,18 +564,6 @@ export const RestaurantListSheet = forwardRef<
               sheetRef.current?.snapToIndex(SHEET_SNAP.EXPANDED)
             }
           />
-          {/*
-            시트 머리의 세로 격자. 종전에는 칩 줄에 세로 여백이 **아예 없어서** 핸들과
-            칩, 칩과 안내문이 서로 붙어 있었고, 안내문이 없는 상태(필터가 걸린 화면)에서는
-            칩이 구분선·탭바에 그대로 닿았다. 접힘 높이는 이 블록을 `onLayout` 으로 재서
-            따라오므로(§collapsed 스냅) 여백을 늘려도 매직 넘버가 생기지 않는다.
-
-            칩 밑 구분선은 **일부러 없다** (2026-08-19 지적). 시트가 접힌 상태에서 이
-            선이 탭바 바로 위에 떠서, 탭바 모서리 삼각형과 시트가 하나로 이어져 보여야
-            할 자리를 가로로 끊고 있었다. sticky 경계는 선 없이도 읽힌다 — 스크롤하면
-            카드가 이 블록 **밑으로** 지나가는 것 자체가 경계다.
-          */}
-          <View style={styles.stickyRow}>{filterRow}</View>
           {notice}
         </View>
       )}
@@ -619,7 +617,7 @@ export const RestaurantListSheet = forwardRef<
  * 목록 한 줄. `RestaurantCard` 를 감싸기만 하는 얇은 층인데, **여기 있어야 하는 이유**가 있다.
  *
  * `FlatList` 의 `renderItem` 은 `extraData` 가 바뀔 때 보이는 행마다 다시 불린다. 그때
- * `onPress={() => onPressCard(item, index)}` 처럼 인라인 화살표를 만들면 매번 새 함수라
+ * `onPress={(target) => onPressCard(item, target)}` 처럼 인라인 화살표를 만들면 매번 새 함수라
  * `memo(RestaurantCard)` 가 **한 번도 걸러 내지 못한다** — 마커를 누를 때마다 화면에 있는
  * 카드가 사진 스트립까지 통째로 다시 그려졌다.
  *
@@ -628,18 +626,19 @@ export const RestaurantListSheet = forwardRef<
  */
 const SheetRow = memo(function SheetRow({
   item,
-  index,
   selected,
   onPress,
 }: {
   item: RestaurantCardDto
-  index: number
   selected: boolean
-  onPress?: (card: RestaurantCardDto, index: number) => void
+  onPress?: (card: RestaurantCardDto, target: RestaurantCardTarget) => void
 }) {
-  const handlePress = useCallback(() => {
-    onPress?.(item, index)
-  }, [onPress, item, index])
+  const handlePress = useCallback(
+    (target: RestaurantCardTarget) => {
+      onPress?.(item, target)
+    },
+    [onPress, item],
+  )
 
   return (
     <RestaurantCard
@@ -670,15 +669,16 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   background: {
-    borderTopLeftRadius: radius["3xl"],
-    borderTopRightRadius: radius["3xl"],
+    borderTopLeftRadius: radius["2xl"],
+    borderTopRightRadius: radius["2xl"],
   },
   /**
    * 칩 줄의 세로 여백. 핸들 바로 아래이자 안내문 바로 위라, 이 값이 시트 머리 전체의
    * 숨 틈을 정한다. 종전에는 0 이라 핸들·칩·안내문이 한 덩어리로 붙어 보였다.
    */
   stickyRow: {
-    paddingBottom: spacing[8],
+    gap: spacing[4],
+    paddingBottom: spacing[4],
   },
   handleArea: {
     alignItems: "center",

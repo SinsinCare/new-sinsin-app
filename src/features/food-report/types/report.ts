@@ -7,7 +7,8 @@
  * 막대 옆 숫자가 어긋난다.
  */
 
-export type VerdictLevel = "SAFE" | "CAUTION" | "RESTRICTED"
+/** `UNKNOWN` 은 영양이 아직 확인되지 않은 항목(서버 PENDING) — 제한이 아니라 "모름" 이다. */
+export type VerdictLevel = "SAFE" | "CAUTION" | "RESTRICTED" | "UNKNOWN"
 export type FocusLevel = "OVER" | "TIGHT" | "OK"
 export type InsightSource = "AI" | "FALLBACK"
 
@@ -84,6 +85,23 @@ export interface ReportSwap {
   deltaText: string
 }
 
+/** v2(서버 2026-09-04) — 끼니별 집중 영양소 섭취(이 끼니 포함). 시안의 범례·막대 재료. */
+export interface ReportMealAmount {
+  mealType: string
+  label: string
+  amount: number
+  amountText: string
+  isCurrent: boolean
+}
+
+/** v2 — 집중 영양소를 가장 많이 낸 재료. "오리고기에서만 420mg 나타나요". */
+export interface ReportTopContributor {
+  name: string
+  amount: number
+  amountText: string
+  sharePercent: number
+}
+
 export interface ReportFacts {
   mealType: string | null
   mealName: string
@@ -99,6 +117,9 @@ export interface ReportFacts {
   mealTotal: Record<string, number>
   /** 이 끼니 열량이 체중으로 계산한 참고값에서 차지하는 비율. 체중을 모르면 null. */
   energyPercent: number | null
+  /** 구서버 응답에는 없다 — 없으면 앱이 split 로 그린다. */
+  mealsToday?: ReportMealAmount[]
+  topContributor?: ReportTopContributor | null
 }
 
 export interface ReportProse {
@@ -108,6 +129,8 @@ export interface ReportProse {
   /** 음식 이름 → 한 줄 설명. 모델이 못 붙인 음식은 키가 없다. */
   foodNotes: Record<string, string>
   swapTip: string
+  /** v11 — 다음 식사로 제안하는 음식 조합과 선택 이유. 음식 허용량 환산이 아니다. */
+  remainingTip?: string
   source: InsightSource
 }
 

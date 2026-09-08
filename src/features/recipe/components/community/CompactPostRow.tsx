@@ -159,7 +159,7 @@ export function CompactPostRow({ post, onPress, style }: CompactPostRowProps) {
         ) : null}
       </View>
 
-      <V2Divider tone="alternative" style={styles.divider} />
+      <V2Divider tone="normal" style={styles.divider} />
     </Pressable>
   )
 }

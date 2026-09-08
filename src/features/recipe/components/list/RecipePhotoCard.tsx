@@ -98,8 +98,12 @@ import { useTranslation } from "react-i18next"
 
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useSurface } from "@/src/hooks/useSurface"
-import { fontFamily, spacing, typography } from "@/src/design-system-v2"
-import { tokens } from "@/src/theme/tokens"
+import {
+  fontFamily,
+  spacing,
+  typography,
+  useV2Theme,
+} from "@/src/design-system-v2"
 
 import type { NutrientKey, RecipeCard } from "../../types/recipeListV2"
 import type { PhotoWellGeometry } from "./recipeCardFormat"
@@ -114,7 +118,6 @@ import {
 } from "./recipeRowLayout"
 import {
   formatNutrientAmount,
-  groupThousands,
   joinMetaParts,
   resolveCardBookmark,
   resolveCardHeadline,
@@ -160,6 +163,7 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
 }: RecipePhotoCardProps) {
   const { t } = useTranslation("recipe")
   const surface = useSurface()
+  const { colors } = useV2Theme()
 
   const headline = resolveCardHeadline(card)
   const emphasis = resolveHeadlineEmphasis(headline)
@@ -172,64 +176,15 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
           amount: formatNutrientAmount(headline.amount, headline.unit),
         })
       : null
-  /**
-   * `오늘 남은 양의 24%` — **전체폭 줄에서만** 붙인다.
-   *
-   * 152pt 캐러셀 카드에서는 이 문장이 들어가지 않아 실제 화면에서
-   * `단백질 6g · 오늘 남은 양의…` 로 **잘렸다**(실측). 잘린 임상 문장은 없는 것보다
-   * 나쁘다 — "오늘 남은 양의" 까지만 읽히면 뒤에 오는 수가 큰지 작은지 모르는 채로
-   * 문장이 끊기고, 사용자는 카드를 열어 확인해야 한다.
-   *
-   * 짧은 형태(`남은 양 24%`)를 새로 만들지 **않았다.** 그 표현은 "남은 양이 24%다" 로도
-   * 읽혀서, 실제 뜻("남은 양의 24%를 이 1인분이 쓴다")과 정반대에 가깝게 오해될 수 있다.
-   * 신장 환자가 읽는 수치에서 그런 애매함을 만들 이유가 없다.
-   *
-   * 그래서 좁은 카드는 **절대량만** 말하고(`단백질 6g`), 비율은 전체폭 목록 줄과 상세가
-   * 온전한 문장으로 말한다. 카드가 덜 말하는 것이지 다르게 말하는 것이 아니다.
-   */
-  const remainingText =
-    variant === "row" && headline?.percentOfRemaining != null
-      ? t("list.headlineRemaining", { percent: headline.percentOfRemaining })
-      : null
-  const headlineLine =
-    headlineText == null
-      ? null
-      : remainingText != null
-        ? `${headlineText} · ${remainingText}`
-        : headlineText
-
-  /**
-   * 메타 한 줄. 조각의 **순서**는 모델이 정한다(카테고리 → 시간 → 인분 → 별점 → 저장).
-   * 캐러셀은 152pt 라 별점·저장까지 넣으면 잘리므로 앞 세 조각만 쓴다 — 잘린 글자를
-   * 보여 주느니 안 보여 주는 편이 낫다(시안의 `#저염ㅅ` 이 그 실패다).
-   */
-  const metaLine = joinMetaParts(
-    variant === "row"
-      ? [
-          meta.category,
-          meta.timeMin != null
-            ? t("curated.minutes", { count: meta.timeMin })
-            : null,
-          meta.servings != null
-            ? t("curated.servings", { count: meta.servings })
-            : null,
-          meta.rating != null
-            ? `${t("list.ratingValue", { average: meta.rating.average })} ${t("list.ratingCount", { count: meta.rating.count })}`
-            : null,
-          meta.saveCount != null
-            ? t("list.saveCount", { count: groupThousands(meta.saveCount) })
-            : null,
-        ]
-      : [
-          meta.category,
-          meta.timeMin != null
-            ? t("curated.minutes", { count: meta.timeMin })
-            : null,
-          meta.rating != null
-            ? t("list.ratingValue", { average: meta.rating.average })
-            : null,
-        ],
-  )
+  // 탐색 카드에는 영양소 절대량만 표시해 남은 양의 비율 문장이 잘리지 않게 한다.
+  const headlineLine = headlineText
+  const metaLine = joinMetaParts([
+    meta.category,
+    meta.timeMin != null ? t("curated.minutes", { count: meta.timeMin }) : null,
+    meta.rating != null
+      ? t("list.ratingValue", { average: meta.rating.average })
+      : null,
+  ])
 
   const photo = (
     <PhotoWell
@@ -269,20 +224,31 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
           emphasis === "overBudget"
             ? {
                 fontFamily: fontFamily.semibold,
-                color: tokens.color.primary.val,
+                color: surface.danger,
               }
             : { color: surface.text },
         ]}
         numberOfLines={1}
       >
-        {headlineLine}
+        {headline ? (
+          <>
+            <Text style={{ color: colors.label.neutral }}>
+              {t(NUTRIENT_LABEL_KEYS[headline.key])}{" "}
+            </Text>
+            <Text style={{ fontFamily: fontFamily.medium }}>
+              {formatNutrientAmount(headline.amount, headline.unit)}
+            </Text>
+          </>
+        ) : (
+          headlineLine
+        )}
       </Text>
     )
 
   const metaNode =
     metaLine === "" ? null : (
       <Text
-        style={[styles.meta, { color: surface.textWeak }]}
+        style={[styles.meta, { color: colors.label.neutral }]}
         numberOfLines={1}
       >
         {metaLine}
@@ -336,7 +302,8 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
         <View style={styles.rowNameLine}>
           <Text
             style={[styles.rowName, { color: surface.textStrong }]}
-            numberOfLines={1}
+            numberOfLines={2}
+            lineBreakStrategyIOS="hangul-word"
           >
             {card.name}
           </Text>
@@ -344,7 +311,7 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
             <View
               style={[
                 styles.authoredBadge,
-                { backgroundColor: surface.surface },
+                { backgroundColor: surface.surfaceSunken },
               ]}
             >
               <Text
@@ -356,8 +323,8 @@ export const RecipePhotoCard = memo(function RecipePhotoCard({
             </View>
           )}
         </View>
-        {headlineNode}
         {metaNode}
+        {headlineNode}
       </View>
     </SurfacePressable>
   )
@@ -403,7 +370,7 @@ function PhotoWell({
         {
           aspectRatio: geometry.aspectRatio,
           borderRadius: geometry.radius,
-          backgroundColor: surface.surface,
+          backgroundColor: surface.surfaceSunken,
         },
       ]}
     >
@@ -484,7 +451,7 @@ function BookmarkGlyph({
         <Ionicons
           name={saved ? "bookmark" : "bookmark-outline"}
           size={14}
-          color="#FFFFFF"
+          color={surface.onBrand}
         />
       </View>
     )
@@ -508,8 +475,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: RECIPE_ROW_THUMB_GAP,
     paddingVertical: RECIPE_ROW_PAD_V,
-    // 높이를 못 박는다 — 글자 줄 수가 데이터에 따라 변해도 리듬이 흔들리지 않는다.
-    height: RECIPE_ROW_HEIGHT,
+    // 기본 행 높이를 유지하면서 긴 제목이나 큰 글자에는 필요한 만큼 늘어난다.
+    minHeight: RECIPE_ROW_HEIGHT,
   },
   rowThumb: {
     width: RECIPE_ROW_THUMB,
@@ -527,7 +494,7 @@ const styles = StyleSheet.create({
     gap: spacing[6],
   },
   rowName: {
-    ...typography.title.xSmallWeak,
+    ...typography.label.small,
     flexShrink: 1,
   },
 
@@ -545,10 +512,10 @@ const styles = StyleSheet.create({
 
   // ── 공통 텍스트 ──────────────────────────────────────────────────────────
   headline: {
-    ...typography.subtext.mediumStrong,
+    ...typography.subtext.small,
   },
   meta: {
-    ...typography.subtext.medium,
+    ...typography.subtext.small,
   },
   authoredBadge: {
     paddingHorizontal: spacing[6],

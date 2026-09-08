@@ -31,9 +31,9 @@ const MIGRATED_HEADERS = [
   "src/features/consultation/components/ConsultChatHeader.tsx",
   "src/features/recipe/components/FreePostEditor.tsx",
   // 커뮤니티 동선 — 피드 → 글 상세 → 검색 → 수정. 사용자가 "타고 들어간다" 고 한 길.
-  "app/post/[id].tsx",
+  "src/features/recipe/views/PostDetailScreen.tsx",
   "app/(tabs)/community.tsx",
-  "app/(write)/free/[id].tsx",
+  "src/features/recipe/views/FreePostEditScreen.tsx",
   "src/features/recipe/views/CommunitySearchScreen.tsx",
 ]
 
@@ -88,7 +88,7 @@ describe("헤더 터치 타깃", () => {
       액션 행(글 상세 앱바 우측, 커뮤니티 헤더 우측)은 규격 상자보다 낮으므로
       `headerActionRowRoom` 없이는 상자를 키운 절반이 죽는다.
     */
-    for (const relative of ["app/post/[id].tsx", "app/(tabs)/community.tsx"]) {
+    for (const relative of ["src/features/recipe/views/PostDetailScreen.tsx", "app/(tabs)/community.tsx"]) {
       const source = fs.readFileSync(path.join(ROOT, relative), "utf8")
       expect(source).toContain("headerActionRowRoom(")
     }

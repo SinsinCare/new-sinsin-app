@@ -1,3 +1,5 @@
+import { SettingsDetailHeader } from "../components/SettingsDetailHeader"
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
 import React from "react"
 import {
   KeyboardAvoidingView,
@@ -8,21 +10,18 @@ import {
   View,
 } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
-import Ionicons from "@expo/vector-icons/Ionicons"
 import { useAppRouter } from "@/src/shared/navigation"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
 import { V2DotLoader } from "@/src/design-system-v2"
-import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { SettingsFormActions } from "../components/SettingsFormActions"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT } from "@/src/theme/surface"
 import { FieldHelp, SettingsTextField } from "../components/SettingsTextField"
 import { usePhoneNumberEditor } from "../hooks/usePhoneNumberEditor"
 
 export function PhoneNumberEditScreen() {
-  const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const s = useSurface()
   const { t } = useTranslation("settings")
@@ -53,16 +52,7 @@ export function PhoneNumberEditScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("shared.back")}
-            onPress={router.back}
-            hitSlop={8}
-          >
-            <Ionicons name="chevron-back" size={24} color={s.textStrong} />
-          </Pressable>
-        </View>
+        <SettingsDetailHeader onBack={router.back} />
 
         <ScrollView
           bounces={false}
@@ -80,7 +70,7 @@ export function PhoneNumberEditScreen() {
             {t("phone.title")}
           </Text>
           <Text
-            style={[styles.subtitle, { color: s.textMuted }]}
+            style={[styles.subtitle, { color: s.text }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("phone.subtitle")}
@@ -94,9 +84,14 @@ export function PhoneNumberEditScreen() {
             여전히 ΔL* 15.0 이라 더 또렷해진다.
           */}
           {profile?.hasPhoneNumber && (
-            <View style={[styles.currentPhone, { backgroundColor: s.surface }]}>
+            <View
+              style={[
+                styles.currentPhone,
+                { backgroundColor: s.surfaceSunken },
+              ]}
+            >
               <Text
-                style={[styles.currentPhoneLabel, { color: s.textMuted }]}
+                style={[styles.currentPhoneLabel, { color: s.text }]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("phone.current")}
@@ -154,7 +149,7 @@ export function PhoneNumberEditScreen() {
           )}
         </ScrollView>
 
-        <BottomActionBar
+        <SettingsFormActions
           label={
             profile?.hasPhoneNumber ? t("shared.change") : t("shared.save")
           }
@@ -179,22 +174,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: LAYOUT.screenX,
-    paddingTop: 12,
+    paddingTop: 20,
     paddingBottom: 24,
   },
-  title: {
-    fontSize: 24,
-    lineHeight: 32,
-    letterSpacing: -0.48,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    marginBottom: 28,
-  },
+  title: settingsDetailSpec.title,
+  subtitle: settingsDetailSpec.description,
   currentPhone: {
     gap: 4,
     paddingVertical: 16,

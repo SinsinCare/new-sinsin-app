@@ -1,3 +1,4 @@
+import { Text as RNText } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Text (타이포 프리미티브)
 //
 // ■ 왜 만드나
@@ -27,7 +28,6 @@
 import { forwardRef, type ComponentRef, type ReactNode } from "react"
 import {
   StyleSheet,
-  Text as RNText,
   type StyleProp,
   type TextProps as RNTextProps,
   type TextStyle,

@@ -29,8 +29,7 @@ import { getWeekLabel } from "../../utils/getWeekDays"
 import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useDiaryExistence } from "../../hooks/useDiaryExistence"
 import { useFoodAnalysis } from "../../hooks/useFoodAnalysis"
-import { FoodAnalysisResult } from "../FoodAnalysisResult"
-import type { DiaryAnalysisResult } from "@/src/types"
+import { openMealReportPage } from "../../stores/openMealReportPage"
 import { Icon } from "@/src/shared/components"
 import { MonthCalendarSheet } from "./MonthCalendarSheet"
 import { isSkippedDiet } from "../../utils/mealRecordUtils"
@@ -67,12 +66,6 @@ export function StatisticsView({
   const { t, i18n } = useTranslation()
   const [selectedTab, setSelectedTab] = useState<StatisticsTab>("intake")
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
-  const [diaryResult, setDiaryResult] = useState<DiaryAnalysisResult | null>(
-    null,
-  )
-  const [diaryId, setDiaryId] = useState<number | null>(null)
-  const [isResultOpen, setIsResultOpen] = useState(false)
-  const [resultMealType, setResultMealType] = useState<MealType | undefined>()
   const scrollRef = useRef<ScrollView>(null)
   const tabBarHeight = useRef(0)
   const sectionOffsets = useRef<Partial<Record<StatisticsTab, number>>>({})
@@ -88,17 +81,7 @@ export function StatisticsView({
     updateDiaryMealType,
     fetchDiaryResult,
     isUpdating,
-  } = useFoodAnalysis((updated) => {
-    setDiaryResult((prev) =>
-      prev
-        ? {
-            ...prev,
-            ...updated,
-            imageUrl: updated.imageUrl ?? prev.imageUrl,
-          }
-        : null,
-    )
-  })
+  } = useFoodAnalysis()
 
   const hasDiets = (data?.result.diets.length ?? 0) > 0
   const isEmpty = !isLoading && !hasDiets
@@ -151,17 +134,27 @@ export function StatisticsView({
       return
     }
     const result = await fetchDiaryResult(diet.diaryId)
-    if (result) {
-      setDiaryResult(result)
-      setDiaryId(diet.diaryId)
-      setResultMealType(mealType)
-      setIsResultOpen(true)
-    }
-  }
-
-  const handleMealTypeChange = ({ toMealType }: { toMealType: MealType }) => {
-    setResultMealType(toMealType)
-    void refetch()
+    if (!result) return
+    /*
+      통계에서 여는 것도 **저장된 기록**이다 — 신규 결과와 같은 칸에 담기면 '결과를
+      보고도 안 담았다' 가 담을 것이 없는 화면까지 세게 된다. 리포트는 페이지다
+      (2026-09-04) — 홈과 같은 페이지를 같은 재료로 연다.
+    */
+    openMealReportPage({
+      source: "saved",
+      result,
+      imageUri: result.imageUrl,
+      mealType,
+      showAddButton: false,
+      isUpdating,
+      updateFoodAnalysis,
+      diaryId: diet.diaryId,
+      recordDate: selectedDateStr,
+      recordedAt: diet.createdAt,
+      updateDiaryMealType,
+      onMealTypeChange: () => void refetch(),
+      onDiaryDeleted: () => void refetch(),
+    })
   }
 
   const goToPrevWeek = () => {
@@ -344,22 +337,33 @@ export function StatisticsView({
               />
             </View>
 
-            {/* 통계에서 여는 것도 **저장된 기록**이다 — 신규 결과와 같은 칸에 담기면
-                '결과를 보고도 안 담았다' 가 담을 것이 없는 화면까지 세게 된다. */}
-            <FoodAnalysisResult
-              source="saved"
-              result={diaryResult}
-              open={isResultOpen}
-              onClose={() => setIsResultOpen(false)}
-              imageUri={diaryResult?.imageUrl}
-              mealType={resultMealType}
-              showAddButton={false}
-              isUpdating={isUpdating}
-              updateFoodAnalysis={updateFoodAnalysis}
-              diaryId={diaryId ?? undefined}
-              updateDiaryMealType={updateDiaryMealType}
-              onMealTypeChange={handleMealTypeChange}
-            />
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.intake = e.nativeEvent.layout.y
+              }}
+            >
+              <IntakeSummary analysis={data?.result.analysis ?? null} />
+            </View>
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.guide = e.nativeEvent.layout.y
+              }}
+            >
+              <DietaryGuide
+                dietaryGuide={data?.result.analysis?.dietaryGuide}
+                cautionFoods={data?.result.analysis?.cautionFoods}
+              />
+            </View>
+            <View
+              onLayout={(e) => {
+                sectionOffsets.current.record = e.nativeEvent.layout.y
+              }}
+            >
+              <DietaryRecord
+                diets={data?.result.diets ?? []}
+                onSelectMealType={handleDietCardPress}
+              />
+            </View>
 
             <View
               onLayout={(e) => {

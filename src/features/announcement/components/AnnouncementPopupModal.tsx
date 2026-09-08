@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 import { useEffect, useRef, useState } from "react"
 import {
   BackHandler,
@@ -5,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native"
 import { Portal } from "@/src/shared/components/Portal"

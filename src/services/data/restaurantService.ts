@@ -265,6 +265,7 @@ export const restaurantService = {
         // 실측: `zoom=4.5` → 400 int_parsing, `0` → greater_than_equal, `15` → less_than_equal.
         // 카카오가 정수를 주더라도 그 사실에 기대지 않는다 — 이 한 줄이 그 400 을 불가능하게 한다.
         zoom: clampZoom(query.zoom),
+        display: "places",
         ...filterParams(query),
       },
       signal,

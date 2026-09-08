@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 데이터 공유 설정 화면의 토글 한 줄과, 그 아래 안내 불릿.
  *
@@ -10,7 +11,7 @@
  * 읽는 사람이 구분할 수 없게 된다. 세 줄은 서로 위계가 없으므로 색으로 나눌 이유도 없다.
  */
 
-import { StyleSheet, Text, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 
 import {
   V2Icon,

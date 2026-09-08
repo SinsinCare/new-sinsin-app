@@ -190,7 +190,7 @@
   },
   "freePost": {
     "formTitle": "Write",
-    "photoVideo": "Photo/video",
+    "photoVideo": "Photo",
     "categoryLabel": "Category",
     "optional": "Optional",
     "titleLabel": "Title",
@@ -241,6 +241,9 @@
     "backToTop": "Back to top"
   },
   "story": {
+    "inviteTitle": "Share a moment from your day",
+    "addPhoto": "Add photo",
+    "durationHint": "Photos stay visible for 24 hours",
     "title": "Stories",
     "subtitle": "Share today’s meal for 24 hours",
     "create": "Add",
@@ -638,5 +641,11 @@
     "deleteFailed": "Couldn't take the recipe down",
     "editAction": "Edit",
     "more": "More"
+  },
+  "browse": {
+    "all": "All",
+    "sortTitle": "Sort recipes",
+    "clearSearch": "Clear search and filters",
+    "multiple": "Select more than one"
   }
 }

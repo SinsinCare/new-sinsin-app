@@ -22,11 +22,11 @@
  * 실수로 지우기 쉬운 대신 무엇이 일어날지 분명하다.
  */
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   Image,
   KeyboardAvoidingView,
-  Linking,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -34,7 +34,6 @@ import {
   View,
 } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
-import * as ImagePicker from "expo-image-picker"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -48,7 +47,7 @@ import {
 } from "@/src/design-system-v2"
 
 import { GUTTER } from "../layout"
-import { restaurantReportService } from "@/src/services/data/restaurantReportService"
+import { useRestaurantReportSubmission } from "../hooks/useRestaurantReportSubmission"
 import {
   MAX_RESTAURANT_REPORT_PHOTOS,
   validateRestaurantReportDraft,
@@ -59,7 +58,7 @@ import { RestaurantReportSection } from "./RestaurantReportSection"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { showSuccessToast } from "@/src/lib/toast"
 
-import { showConfirm } from "@/src/lib/dialog"
+import { useRestaurantReportPhotos } from "../hooks/useRestaurantReportPhotos"
 
 interface RestaurantReportFormProps {
   paddingTop: number
@@ -71,6 +70,7 @@ interface RestaurantReportFormProps {
    * 상태를 위로 올리는 대신 **더러움 한 비트만** 올려 보낸다.
    */
   onDirtyChange?: (dirty: boolean) => void
+  onSubmittingChange?: (busy: boolean) => void
 }
 
 /** 썸네일 한 변. 3열 wrap 에서 가로 여백을 뺀 값이 아니라 목업 없는 화면의 고정값이다. */
@@ -88,15 +88,40 @@ const emptyDraft = {
 export function RestaurantReportForm({
   paddingTop,
   onDirtyChange,
+  onSubmittingChange,
 }: RestaurantReportFormProps) {
   const { t } = useTranslation("common")
   const theme = useV2Theme()
   const { colors } = theme
   const palette = getRestaurantReportPalette(theme)
   const [draft, setDraft] = useState(emptyDraft)
-  const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([])
+  const scroll = useRef<ScrollView>(null)
+  const cardY = useRef(0)
+  const [validationAttempted, setValidationAttempted] = useState(false)
   const [error, setError] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [photoError, setPhotoError] = useState("")
+  const { photos, isPicking, addPhotos, removePhoto, clearPhotos } =
+    useRestaurantReportPhotos((photoError) =>
+      setPhotoError(getErrorMessage(photoError)),
+    )
+  const { submit: submitReport, isSubmitting } = useRestaurantReportSubmission({
+    onSubmittingChange,
+    onError: (submitError) => {
+      setError(getErrorMessage(submitError))
+      Keyboard.dismiss()
+      scroll.current?.scrollTo({ y: cardY.current, animated: true })
+    },
+    onSuccess: () => {
+      setValidationAttempted(false)
+      setDraft(emptyDraft)
+      clearPhotos()
+      setPhotoError("")
+      showSuccessToast(
+        t("restaurant.report.successTitle"),
+        t("restaurant.report.successBody"),
+      )
+    },
+  })
   // 이 폼은 이제 `app/restaurant/report.tsx` 안에서만 렌더되고, 그 화면이 헤더로
   // 상태바 영역을 이미 먹는다. 예전에는 플래그가 꺼진 `식당` 탭의 본체로 직접 떴기 때문에
   // 안드로이드 상태바 높이를 스스로 보정해야 했는데(`StatusBar.currentHeight`), 지금 그대로
@@ -115,84 +140,29 @@ export function RestaurantReportForm({
     onDirtyChange?.(isDirty)
   }, [isDirty, onDirtyChange])
 
-  const addPhotos = useCallback(async () => {
-    if (photos.length >= MAX_RESTAURANT_REPORT_PHOTOS) {
-      setError(
-        t("restaurant.report.maxPhotos", {
-          count: MAX_RESTAURANT_REPORT_PHOTOS,
-        }),
-      )
-      return
-    }
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (status !== "granted") {
-      const confirmed = await showConfirm({
-        title: t("restaurant.report.permissionTitle"),
-        description: t("restaurant.report.permissionBody"),
-        confirmLabel: t("restaurant.report.openSettings"),
-        cancelLabel: t("restaurant.report.later"),
-      })
-      if (confirmed) void Linking.openSettings()
-      return
-    }
-
-    const remaining = MAX_RESTAURANT_REPORT_PHOTOS - photos.length
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsMultipleSelection: remaining > 1,
-      selectionLimit: remaining,
-      quality: 0.85,
-    })
-
-    if (!result.canceled) {
-      setError("")
-      setPhotos((current) =>
-        [...current, ...result.assets].slice(0, MAX_RESTAURANT_REPORT_PHOTOS),
-      )
-    }
-  }, [photos.length, t])
-
-  const removePhoto = useCallback((uri: string) => {
-    setPhotos((current) => current.filter((photo) => photo.uri !== uri))
-  }, [])
-
   const submit = useCallback(async () => {
+    if (isPicking) return
     const validation = validateRestaurantReportDraft({
       ...draft,
       photoCount: photos.length,
     })
     if (validation) {
+      setValidationAttempted(true)
+      Keyboard.dismiss()
+      scroll.current?.scrollTo({ y: cardY.current, animated: true })
       setError(
-        t(`restaurant.report.validation.${validation}`, {
-          count: MAX_RESTAURANT_REPORT_PHOTOS,
-        }),
+        validation === "tooManyPhotos"
+          ? t("restaurant.report.validation.tooManyPhotos", {
+              count: MAX_RESTAURANT_REPORT_PHOTOS,
+            })
+          : "",
       )
       return
     }
 
-    setIsSubmitting(true)
     setError("")
-    try {
-      await restaurantReportService.submitReport({ draft, photos })
-      setDraft(emptyDraft)
-      setPhotos([])
-      showSuccessToast(
-        t("restaurant.report.successTitle"),
-        t("restaurant.report.successBody"),
-      )
-    } catch (submitError) {
-      /*
-        제보에는 사진이 붙는다. 그래서 여기 오는 실패의 상당수는 제보가 아니라 사진
-        쪽이고(`FOOD_CAMERA_001` 형식, `002` 5MB 초과), 둘 다 사진을 바꾸면 바로
-        풀린다. 그런데 문구는 어떤 실패든 `인터넷 연결을 확인한 뒤 다시 보내 주세요`
-        하나였다 — 사용자는 같은 사진으로 계속 다시 눌렀다.
-      */
-      setError(getErrorMessage(submitError))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [draft, photos, t])
+    await submitReport({ draft, photos })
+  }, [draft, photos, submitReport, isPicking, t])
 
   return (
     <KeyboardAvoidingView
@@ -200,6 +170,7 @@ export function RestaurantReportForm({
       style={[styles.flex, { backgroundColor: palette.bg }]}
     >
       <ScrollView
+        ref={scroll}
         bounces={false}
         overScrollMode="never"
         keyboardShouldPersistTaps="handled"
@@ -224,6 +195,9 @@ export function RestaurantReportForm({
         </View>
 
         <View
+          onLayout={(event) => {
+            cardY.current = event.nativeEvent.layout.y
+          }}
           style={[
             styles.card,
             {
@@ -262,19 +236,34 @@ export function RestaurantReportForm({
             textColor={palette.text}
           >
             <V2TextField
+              disabled={isSubmitting}
               label={t("restaurant.report.fields.name")}
+              required
+              error={
+                validationAttempted && !draft.name.trim()
+                  ? t("restaurant.report.validation.nameRequired")
+                  : false
+              }
               value={draft.name}
               onChangeText={(value) => update("name", value)}
               placeholder={t("restaurant.report.fields.namePlaceholder")}
             />
             <V2TextField
+              disabled={isSubmitting}
               label={t("restaurant.report.fields.address")}
               value={draft.address}
               onChangeText={(value) => update("address", value)}
               placeholder={t("restaurant.report.fields.addressPlaceholder")}
             />
             <V2TextField
+              disabled={isSubmitting}
               label={t("restaurant.report.fields.category")}
+              required
+              error={
+                validationAttempted && !draft.category.trim()
+                  ? t("restaurant.report.validation.categoryRequired")
+                  : false
+              }
               value={draft.category}
               onChangeText={(value) => update("category", value)}
               placeholder={t("restaurant.report.fields.categoryPlaceholder")}
@@ -288,12 +277,14 @@ export function RestaurantReportForm({
             textColor={palette.text}
           >
             <V2TextField
+              disabled={isSubmitting}
               label={t("restaurant.report.fields.menu")}
               value={draft.recommendedMenu}
               onChangeText={(value) => update("recommendedMenu", value)}
               placeholder={t("restaurant.report.fields.menuPlaceholder")}
             />
             <V2TextField
+              disabled={isSubmitting}
               label={t("restaurant.report.fields.reason")}
               value={draft.reason}
               onChangeText={(value) => update("reason", value)}
@@ -302,6 +293,7 @@ export function RestaurantReportForm({
               textAlignVertical="top"
             />
             <V2TextField
+              disabled={isSubmitting}
               label={t("restaurant.report.fields.link")}
               value={draft.externalLink}
               onChangeText={(value) => update("externalLink", value)}
@@ -330,11 +322,33 @@ export function RestaurantReportForm({
                   size="s"
                   color="neutral"
                   variant="weak"
-                  onPress={() => void addPhotos()}
+                  disabled={
+                    isSubmitting ||
+                    isPicking ||
+                    photos.length >= MAX_RESTAURANT_REPORT_PHOTOS
+                  }
+                  loading={isPicking}
+                  onPress={() => {
+                    setPhotoError("")
+                    void addPhotos()
+                  }}
                 >
                   {t("restaurant.report.addPhoto")}
                 </V2Button>
               </View>
+              {photoError ? (
+                <Text
+                  accessibilityRole="alert"
+                  accessibilityLiveRegion="polite"
+                  style={[
+                    typography.subtext.medium,
+                    { color: palette.errorText },
+                  ]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
+                  {photoError}
+                </Text>
+              ) : null}
               {photos.length > 0 && (
                 <View style={styles.photoRow}>
                   {photos.map((photo) => (
@@ -342,7 +356,8 @@ export function RestaurantReportForm({
                       key={photo.uri}
                       onPress={() => removePhoto(photo.uri)}
                       accessibilityRole="button"
-                      accessibilityState={{ disabled: false }}
+                      disabled={isSubmitting}
+                      accessibilityState={{ disabled: isSubmitting }}
                       accessibilityLabel={t("restaurant.report.removePhoto")}
                       style={({ pressed }) => [
                         styles.photoThumb,
@@ -379,6 +394,7 @@ export function RestaurantReportForm({
             color="brand"
             variant="fill"
             fullWidth
+            disabled={isPicking}
             loading={isSubmitting}
             onPress={() => void submit()}
           >

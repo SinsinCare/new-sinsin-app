@@ -1,3 +1,5 @@
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
+import { useV2Theme, V2Text } from "@/src/design-system-v2"
 import { useState } from "react"
 import {
   ScrollView,
@@ -8,7 +10,6 @@ import {
   Platform,
 } from "react-native"
 import { AppModal } from "@/src/shared/components/AppModal"
-import { V2Text } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -16,7 +17,7 @@ import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
 import { ThemedText } from "@/components/themed-text"
-import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { SettingsDetailHeader as ScreenHeader } from "../components/SettingsDetailHeader"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { useAuth } from "@/src/hooks/useAuth"
@@ -39,6 +40,7 @@ export function NotificationSettingsScreen() {
   const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const c = useSettingsColors()
+  const { colors } = useV2Theme()
   const { t } = useTranslation("settings")
   const { isAuthenticated } = useAuth()
   const { settings, updateSettings, requestAndEnable } =
@@ -220,18 +222,17 @@ export function NotificationSettingsScreen() {
 
   const switchColors = {
     track: {
-      false: c.isDark ? "#3A3A42" : "#E5E7EB",
-      true: tokens.color.sub8.val,
+      false: colors.line.normal,
+      true: colors.primary.primary,
     },
-    thumb: "#FFFFFF",
-    ios_bg: c.isDark ? "#3A3A42" : "#E5E7EB",
+    thumb: colors.static.white,
+    ios_bg: colors.line.normal,
   }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
       <ScreenHeader
         title={t("notifications.title")}
-        paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
 
@@ -597,19 +598,18 @@ export function NotificationSettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 8 },
+  scroll: { paddingHorizontal: 20, paddingTop: 20 },
   section: { marginBottom: 28 },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "500",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    lineHeight: 18,
     marginBottom: 10,
     marginHorizontal: 4,
   },
   card: {
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     overflow: "hidden",
   },
   row: {
@@ -622,8 +622,8 @@ const styles = StyleSheet.create({
   },
   rowBorder: { borderBottomWidth: StyleSheet.hairlineWidth },
   rowLeft: { flex: 1, gap: 3, paddingRight: 12 },
-  rowTitle: { fontSize: 15, fontWeight: "500", flexShrink: 1 },
-  rowSub: { fontSize: 13 },
+  rowTitle: { ...settingsDetailSpec.rowValue, flexShrink: 1 },
+  rowSub: settingsDetailSpec.help,
   // 칩 라벨은 한국어로 "1시간"(≈34pt)이지만 영어로는 "Every 3 hours"(≈95pt)다.
   // 줄바꿈 없이 한 줄에 밀어 넣으면 카드(overflow:hidden)를 넘어가 뒤쪽 칩이
   // 아예 안 보였다 — 영어 사용자는 3·4시간 간격을 **고를 수 없었다**.

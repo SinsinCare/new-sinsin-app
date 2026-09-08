@@ -1,3 +1,4 @@
+import type { EdemaObservation } from "@/src/features/home/utils/edemaEntry"
 import { EdemaLevel, MealType } from "../features/home/types"
 
 export interface FoodCameraFood {
@@ -6,6 +7,8 @@ export interface FoodCameraFood {
   canonicalFoodId?: string | null
   name: string
   restrictionLevel: string
+  /** 서버 영양 상태. `PENDING` 은 식품표에 못 이은 항목 — 값이 null 이고 합계에서 빠진다. */
+  nutritionStatus?: "OK" | "PENDING" | string
   servingSizeValue: number | null
   servingSizeUnit: string
   calories: number
@@ -106,6 +109,10 @@ export interface FoodCameraAnalyzeResult {
   foods: FoodCameraFood[]
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation
+  /** 레시피에서 옮겨 적은 분석(`from-recipe`). */
+  recipeId?: number
+  /** 식품표에 대조하지 못해 총량에서 빠진 재료 이름. */
+  unmatchedIngredients?: string[]
 }
 
 export interface FoodAnalysisRevisionItem {
@@ -204,14 +211,25 @@ export interface FoodCameraDiaryRegisterResponse {
 export interface DateAnalysisDiet {
   diaryId: number | null
   mealType: MealType
+  /** 분석 제목(첫 음식 이름 폴백). 건너뛴 끼니는 null. */
+  title?: string | null
+  /** 이 기록의 열량(kcal, 반올림). 서버 2026-09-04 부터 실린다 — 목록이 다이어리마다 다시 받지 않게. */
+  calories?: number | null
   createdAt: string
   imageUrl: string | null
   isSkipped?: boolean
 }
 
+/** 약 복용 하루 요약(서버 2026-09-04). 일정이 없으면 planned 0. */
+export interface DateAnalysisMedication {
+  taken: number
+  planned: number
+}
+
 export interface DateAnalysisBodyRecord {
   weightKg: number
   edemaLevel: EdemaLevel
+  edemaObservations?: EdemaObservation[]
   recordDate: string
 }
 
@@ -254,6 +272,8 @@ export interface DateAnalysisResult {
   }
   bloodPressure: DateAnalysisBloodPressureRecord | null
   bloodGlucose: DateAnalysisBloodGlucoseRecord[]
+  /** 구서버 응답에는 없다 — 없으면 타일은 "기록 없음". */
+  medication?: DateAnalysisMedication | null
 }
 
 export interface DateAnalysisResponse {

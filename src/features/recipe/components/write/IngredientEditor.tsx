@@ -274,7 +274,10 @@ export function IngredientEditor({
             styles.addButton,
             pressed
               ? { backgroundColor: s.surfaceBrand, borderColor: s.brand }
-              : { backgroundColor: s.surface, borderColor: "transparent" },
+              : {
+                  backgroundColor: s.surfaceSunken,
+                  borderColor: "transparent",
+                },
           ]}
         >
           <Ionicons name="add" size={16} color={s.text} />

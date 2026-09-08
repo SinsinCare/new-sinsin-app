@@ -1,10 +1,21 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text as RNText } from "react-native"
+import { Text as RNText } from "@/src/design-system-v2/primitives/NativeText"
+import { consultCopyText } from "../lib/consultCopy"
+import { useConsultResultReveal } from "../hooks/useConsultPresentation"
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated"
+import { memo, useMemo } from "react"
+import { useChatTranscript as useSmoothStreamingText } from "../hooks/useChatTranscript"
+import { Pressable, StyleSheet } from "react-native"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import Markdown, { type RenderRules } from "react-native-markdown-display"
-import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
+import {
+  V2Box,
+  V2HStack,
+  V2Text,
+  V2VStack,
+  useV2Theme,
+  borderWidth,
+} from "@/src/design-system-v2"
 import { Icon } from "@/src/shared/components/Icon"
-import { tokens } from "@/src/theme/tokens"
 import type { Message } from "@/src/types/chat"
 import { Image } from "expo-image"
 import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
@@ -17,9 +28,14 @@ import { resolveConsultUserCard } from "../utils/consultUserMessage"
 import {
   markdownItInstance,
   normalizeAssistantMarkdown,
+  keepMeasurementTogether,
 } from "../utils/chatMarkdown"
 import { FoodConsultCard } from "./FoodConsultCard"
 import { ExamConsultCard } from "./ExamConsultCard"
+import { StatsConsultCard } from "./StatsConsultCard"
+import { parseStatsConsultMessage } from "../utils/statsConsultMessage"
+import { ConsultDataCards } from "./ConsultDataCards"
+import { ConsultActivityTrail } from "./ConsultActivityTrail"
 import { USER_BUBBLE_BG, USER_BUBBLE_TEXT } from "./chatPalette"
 
 // 아바타는 메시지마다 렌더됩니다. SVG 래퍼(base64 PNG 645KB)를 그대로 두면
@@ -46,25 +62,6 @@ export interface MarkdownPalette {
   divider: string
   codeBg: string
   link: string
-}
-
-const MARKDOWN_PALETTE: Record<"light" | "dark", MarkdownPalette> = {
-  light: {
-    text: tokens.color.textLight.val,
-    muted: "#747678",
-    surface: "#F5F6F8",
-    divider: "#E9EAEC",
-    codeBg: "#F2F3F5",
-    link: "#0D896A",
-  },
-  dark: {
-    text: tokens.color.textDark.val,
-    muted: "#A5A7A9",
-    surface: "#2A2B2F",
-    divider: "#3A3B40",
-    codeBg: "#2C2D31",
-    link: "#5BC5AB",
-  },
 }
 
 /**
@@ -144,7 +141,7 @@ export function makeMarkdownStyles(palette: MarkdownPalette) {
       marginBottom: 4,
     },
     hr: {
-      height: StyleSheet.hairlineWidth,
+      height: borderWidth.thin,
       backgroundColor: palette.divider,
       marginVertical: 18,
     },
@@ -205,7 +202,7 @@ export function makeMarkdownStyles(palette: MarkdownPalette) {
       marginVertical: 8,
     },
     table: {
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: borderWidth.thin,
       borderColor: palette.divider,
       borderRadius: 10,
       marginVertical: 8,
@@ -219,7 +216,7 @@ export function makeMarkdownStyles(palette: MarkdownPalette) {
       fontWeight: "600",
     },
     tr: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: borderWidth.thin,
       borderColor: palette.divider,
       flexDirection: "row",
     },
@@ -227,12 +224,14 @@ export function makeMarkdownStyles(palette: MarkdownPalette) {
   })
 }
 
-const markdownStylesLight = makeMarkdownStyles(MARKDOWN_PALETTE.light)
-const markdownStylesDark = makeMarkdownStyles(MARKDOWN_PALETTE.dark)
-
 // 한국어가 단어 중간에서 꺾이지 않게 본문 텍스트 그룹에 어절 줄바꿈을 건다.
 // 답변을 그리는 다른 표면(식당 상담 시트)도 같은 규칙을 써야 줄바꿈이 갈리지 않는다.
 export const markdownRules: RenderRules = {
+  text: (node, _children, _parent, mdStyles, inheritedStyles = {}) => (
+    <RNText key={node.key} style={[inheritedStyles, mdStyles.text]}>
+      {keepMeasurementTogether(node.content)}
+    </RNText>
+  ),
   textgroup: (node, children, _parent, mdStyles) => (
     <RNText
       key={node.key}
@@ -277,61 +276,7 @@ export function AssistantAvatar({ size = 36 }: { size?: number } = {}) {
   )
 }
 
-const REVEAL_TICK_MS = 48
-/** 밀린 글자의 이 비율만큼씩 드러낸다 — 백로그가 줄수록 저절로 감속(이즈아웃). */
-const REVEAL_RATIO = 0.14
-const REVEAL_MIN_STEP = 2
-
-/**
- * SSE 청크는 네트워크 사정대로 몰려 들어와 그대로 그리면 따다닥 끊긴다.
- * 도착분을 버퍼로 받고 일정한 틱으로 흘려보내면 이어 쓰듯 매끄럽게 보인다.
- * 히스토리 로드처럼 처음부터 완성된 내용은 그대로 보여준다(초기값).
- *
- * 식당 상담 시트도 같은 스트림을 받는다 — 드러내기 속도가 표면마다 다르면 같은
- * 답변이 화면에 따라 다른 속도로 써지는데, 그건 사용자가 설명할 수 없는 차이다.
- */
-export function useSmoothStreamingText(content: string): string {
-  const [displayed, setDisplayed] = useState(content)
-  const displayedRef = useRef(content)
-  const targetRef = useRef(content)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    targetRef.current = content
-
-    // 이어 쓰기가 아니라 내용 교체(재생성·에러 치환)면 즉시 반영한다.
-    if (!content.startsWith(displayedRef.current)) {
-      displayedRef.current = content
-      setDisplayed(content)
-      return
-    }
-    if (timerRef.current || displayedRef.current === content) return
-
-    timerRef.current = setInterval(() => {
-      const target = targetRef.current
-      const current = displayedRef.current
-      if (current.length >= target.length) {
-        if (timerRef.current) clearInterval(timerRef.current)
-        timerRef.current = null
-        return
-      }
-      const backlog = target.length - current.length
-      const step = Math.max(REVEAL_MIN_STEP, Math.round(backlog * REVEAL_RATIO))
-      const next = target.slice(0, current.length + step)
-      displayedRef.current = next
-      setDisplayed(next)
-    }, REVEAL_TICK_MS)
-  }, [content])
-
-  useEffect(
-    () => () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    },
-    [],
-  )
-
-  return displayed
-}
+export { useChatTranscript as useSmoothStreamingText } from "../hooks/useChatTranscript"
 
 /**
  * 말풍선은 memo 합니다. 부모(consult 화면)는 입력창 타이핑·isTyping 토글마다
@@ -363,6 +308,7 @@ export const UserBubble = memo(function UserBubble({
   const consult = useMemo(
     () =>
       resolveConsultUserCard({
+        stats: () => parseStatsConsultMessage(message.content),
         restaurant: () => parseRestaurantConsultMessage(message.content),
         food: () => parseFoodConsultMessage(message.content),
         exam: () =>
@@ -372,7 +318,10 @@ export const UserBubble = memo(function UserBubble({
       }),
     [message.content, t],
   )
-  const consultCard = consult?.kind === "food" || consult?.kind === "exam"
+  const consultCard =
+    consult?.kind === "food" ||
+    consult?.kind === "exam" ||
+    consult?.kind === "stats"
   /*
     식당 시트는 질문 뒤에 `[식당]`/`[분류]`/`[메뉴]` 블록을 매달아 보낸다. 그 원문을 그대로
     그리면 버블에 메뉴 영양소 숫자가 통째로 뜬다 — 시트의 `ConsultUserBubble` 과 같은 계약으로
@@ -400,7 +349,9 @@ export const UserBubble = memo(function UserBubble({
             accessibilityLabel={t("consult.attachedPhoto")}
           />
         )}
-        {consult?.kind === "food" ? (
+        {consult?.kind === "stats" ? (
+          <StatsConsultCard data={consult.data} />
+        ) : consult?.kind === "food" ? (
           <FoodConsultCard data={consult.data} />
         ) : consult?.kind === "exam" ? (
           <ExamConsultCard data={consult.data} />
@@ -433,8 +384,11 @@ export const UserBubble = memo(function UserBubble({
 export const AssistantBubble = memo(function AssistantBubble({
   message,
   isLastAssistant = false,
+  isStreaming = false,
+  actionsDisabled = false,
   onCopy,
   onRegenerate,
+  onDisclosure,
 }: {
   message: Message
   /**
@@ -442,64 +396,124 @@ export const AssistantBubble = memo(function AssistantBubble({
    * 엉뚱한 턴이 다시 생성되고, 누른 답변은 그대로 남는다. 그래서 마지막 답변에만 둔다.
    */
   isLastAssistant?: boolean
+  isStreaming?: boolean
+  actionsDisabled?: boolean
   // 내용은 컴포넌트가 알고 있으므로 인자로 넘깁니다. 호출처가
   // onCopy={() => handleCopy(msg.content)} 로 감싸면 매 렌더 새 함수가 되어 memo 가 무력화됩니다.
   onCopy?: (content: string) => void
   onRegenerate?: () => void
+  onDisclosure?: () => void
 }) {
   const { t } = useTranslation()
-  const colorScheme = useAppColorScheme()
-  const isDarkMode = colorScheme === "dark"
-  const iconColor = isDarkMode ? "#66666B" : tokens.color.textLightSub.val
-  const displayedContent = useSmoothStreamingText(message.content)
-  const isRevealing = displayedContent !== message.content
-  // 화면 결함(줄 끝 공백·과잉 빈 줄)만 걷어낸다. 뜻은 그대로 — `chatMarkdown` 머리말.
+  const { colors } = useV2Theme()
+  const iconColor = colors.label.neutral
+  const mdStyles = useMemo(
+    () =>
+      makeMarkdownStyles({
+        text: colors.label.normal,
+        muted: colors.label.neutral,
+        surface: colors.fill.alternative,
+        divider: colors.line.normal,
+        codeBg: colors.fill.normal,
+        link: colors.primary.primary,
+      }),
+    [colors],
+  )
+  const displayedContent = useSmoothStreamingText(message.content, isStreaming)
   const markdownContent = normalizeAssistantMarkdown(displayedContent)
+  const hasResultCards = message.activities?.some(
+    (item) =>
+      item.status === "complete" && (item.nutrition || item.sources?.length),
+  )
+  const result = useConsultResultReveal(
+    isStreaming,
+    message.deliveryState === "failed",
+    hasResultCards ? onDisclosure : undefined,
+  )
+  const reduceMotion = useReducedMotion()
+  const hasActions =
+    !isStreaming &&
+    !actionsDisabled &&
+    (result.ready || message.deliveryState === "failed")
+  const canRetry = isLastAssistant && message.failureRetryable !== false
 
-  // AI 답변은 버블도 아바타도 없다 — 전폭 본문과 여백이 곧 위계다.
-  // 오른쪽의 컴팩트한 사용자 버블과 대비되어 화자가 저절로 구분된다.
   return (
     <V2VStack paddingHorizontal={CHAT_GUTTER} gap={10}>
-      <Markdown
-        markdownit={markdownItInstance}
-        rules={markdownRules}
-        style={isDarkMode ? markdownStylesDark : markdownStylesLight}
-      >
-        {markdownContent}
-      </Markdown>
-      {/* 액션은 답변이 다 드러난 뒤에만 — 쓰는 중에 아이콘이 밀려다니지 않게. */}
-      {!isRevealing && (
-        <V2HStack gap={12}>
-          <Pressable
-            onPress={() => onCopy?.(message.content)}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t("consult.copyAnswer")}
-          >
-            <Icon name="copy" size={18} color={iconColor} />
-          </Pressable>
-          {isLastAssistant && (
-            <Pressable
-              onPress={onRegenerate}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t("consult.regenerate")}
-              style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
-            >
-              <V2HStack align="center" gap={5}>
-                <Icon name="reset" size={18} color={iconColor} />
-                <V2Text
-                  color={iconColor}
-                  lineBreakStrategyIOS="hangul-word"
-                  style={{ fontSize: 12, fontWeight: "600", lineHeight: 18 }}
-                >
-                  {t("consult.regenerate")}
-                </V2Text>
-              </V2HStack>
-            </Pressable>
-          )}
-        </V2HStack>
+      <ConsultActivityTrail
+        activities={message.activities}
+        active={isStreaming}
+        answerStarted={displayedContent.length > 0}
+        deliveryState={message.deliveryState}
+        onDisclosure={onDisclosure}
+      />
+      {markdownContent.length > 0 && (
+        <Markdown
+          markdownit={markdownItInstance}
+          rules={markdownRules}
+          style={mdStyles}
+        >
+          {markdownContent}
+        </Markdown>
       )}
+      {result.ready && hasResultCards && (
+        <Animated.View
+          entering={
+            result.animate && !reduceMotion ? FadeIn.duration(200) : undefined
+          }
+        >
+          <ConsultDataCards
+            activities={message.activities}
+            onDisclosure={onDisclosure}
+          />
+        </Animated.View>
+      )}
+      {/* 액션은 답변이 다 드러난 뒤에만 — 쓰는 중에 아이콘이 밀려다니지 않게. */}
+      <V2HStack gap={12} style={{ minHeight: 44 }}>
+        {hasActions && (
+          <>
+            {message.content.length > 0 &&
+              message.deliveryState !== "failed" && (
+                <Pressable
+                  style={{
+                    minHeight: 44,
+                    minWidth: 44,
+                    justifyContent: "center",
+                  }}
+                  onPress={() => onCopy?.(consultCopyText(message, t))}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("consult.copyAnswer")}
+                >
+                  <Icon name="copy" size={18} color={iconColor} />
+                </Pressable>
+              )}
+            {canRetry && (
+              <Pressable
+                onPress={onRegenerate}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("consult.regenerate")}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.55 : 1,
+                  minHeight: 44,
+                  justifyContent: "center",
+                })}
+              >
+                <V2HStack align="center" gap={5}>
+                  <Icon name="reset" size={18} color={iconColor} />
+                  <V2Text
+                    color={iconColor}
+                    lineBreakStrategyIOS="hangul-word"
+                    style={{ fontSize: 12, fontWeight: "600", lineHeight: 18 }}
+                  >
+                    {t("consult.regenerate")}
+                  </V2Text>
+                </V2HStack>
+              </Pressable>
+            )}
+          </>
+        )}
+      </V2HStack>
     </V2VStack>
   )
 })

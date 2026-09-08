@@ -60,7 +60,8 @@ describe("map category selection", () => {
     expect(source).toContain("const HEIGHT = touchTarget.min")
     expect(source).toContain("minHeight: HEIGHT")
     expect(source).not.toMatch(/\n\s+height: HEIGHT/)
-    expect(source).toContain("onSelect(isSelected ? null : spec.value)")
+    expect(source).toContain("onToggle(spec.value)")
+    expect(source).toContain("selectedTypes.includes(spec.value)")
     expect(source).toContain(
       "accessibilityState={isToggle ? { selected: active } : undefined}",
     )

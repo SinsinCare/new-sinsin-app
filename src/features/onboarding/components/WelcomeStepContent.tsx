@@ -1,3 +1,4 @@
+import { FONT_SCALE } from "@/src/design-system-v2/tokens/fontScaling"
 import { useEffect } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import Animated, {
@@ -52,7 +53,7 @@ function WelcomeCard({
     backgroundColor: interpolateColor(
       selection.value,
       [0, 1],
-      [surface.surface, surface.surfaceBrand],
+      [surface.surfaceSunken, surface.surfaceBrand],
     ),
     transform: [{ scale: scale.value }],
   }))
@@ -82,7 +83,10 @@ function WelcomeCard({
       style={styles.pressable}
     >
       <Animated.View style={[styles.card, cardStyle]}>
-        <Animated.Text style={[styles.label, labelStyle]}>
+        <Animated.Text
+          maxFontSizeMultiplier={FONT_SCALE.body}
+          style={[styles.label, labelStyle]}
+        >
           {label}
         </Animated.Text>
       </Animated.View>

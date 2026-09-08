@@ -1,5 +1,6 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useRef, useState } from "react"
-import { Keyboard, TextInput } from "react-native"
+import { Keyboard } from "react-native"
 import { FoodCameraAnalyzeResult } from "@/src/types"
 import { UNIT_OPTIONS, UnitOption } from "../data/foodEditConstants"
 import {

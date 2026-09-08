@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 데이터 공유 설정 — "이 의사에게 무엇을 열지" 를 받는 화면.
  *
@@ -8,7 +9,7 @@
  */
 
 import { useEffect, useState } from "react"
-import { ScrollView, StyleSheet, Text, View } from "react-native"
+import { ScrollView, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Toast from "react-native-toast-message"

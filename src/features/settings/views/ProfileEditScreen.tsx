@@ -1,3 +1,4 @@
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
 import React, { useState, useEffect, useRef } from "react"
 import {
   StyleSheet,
@@ -16,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
-import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { SettingsDetailHeader as ScreenHeader } from "../components/SettingsDetailHeader"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { api } from "@/src/services/core/apiClient"
@@ -28,7 +29,6 @@ import { presentError } from "@/src/lib/errorMessage"
 import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
 import { useSurface } from "@/src/hooks/useSurface"
 import { LAYOUT, TYPE } from "@/src/theme/surface"
-import { tokens } from "@/src/theme/tokens"
 import { prepareImageUpload } from "@/src/shared/utils/preparedImageUpload"
 
 import { showActionSheet } from "@/src/lib/dialog"
@@ -223,15 +223,11 @@ export function ProfileEditScreen() {
     }
   }
 
-  const pageBg = s.isDark ? tokens.color.appBgDark.val : tokens.color.appBg.val
+  const pageBg = s.canvas
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: pageBg }]}>
-      <ScreenHeader
-        title={t("profile.title")}
-        paddingTop={insets.top + 8}
-        onBack={router.back}
-      />
+      <ScreenHeader title={t("profile.title")} onBack={router.back} />
 
       <ScrollView
         bounces={false}
@@ -254,21 +250,16 @@ export function ProfileEditScreen() {
             ]}
             onPress={handlePickProfileImage}
           >
-            {/*
-              빈 아바타는 **바닥에서 한 평면 떨어진 면**이다. `s.surface`(우물)였는데
-              이 화면의 바닥이 바로 그 우물이라 라이트에서 원이 통째로 사라졌다
-              (ΔL* 0.00 — 바닥이 `background.lower` 이던 시절엔 1.0 이라 원래도
-              거의 안 보였다). 여기서는 그 "한 평면" 이 카드다: 라이트 ΔL* **7.25**.
-              (마이페이지의 같은 아바타는 흰 카드 **안**이라 반대로 우물이 맞다.)
-              다크는 #3f3f45 → #313135 로 바닥과 ΔL* 8.64 — 다른 카드들과 같은 단이다.
-            */}
+            {/* A neutral avatar well remains visible on the plain detail page. */}
             {profileImage || profile?.profileImage ? (
               <Image
                 source={{ uri: profileImage?.uri ?? profile?.profileImage }}
                 style={styles.avatarCircle}
               />
             ) : (
-              <View style={[styles.avatarCircle, { backgroundColor: s.card }]}>
+              <View
+                style={[styles.avatarCircle, { backgroundColor: s.surface }]}
+              >
                 <Ionicons name="person" size={38} color={s.textWeak} />
               </View>
             )}
@@ -282,7 +273,7 @@ export function ProfileEditScreen() {
             </View>
           </Pressable>
           <Text
-            style={[styles.avatarHint, { color: s.textMuted }]}
+            style={[styles.avatarHint, { color: s.text }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("profile.photo.hint")}
@@ -296,7 +287,7 @@ export function ProfileEditScreen() {
         >
           {t("profile.section.personal")}
         </Text>
-        <View style={[styles.card, { backgroundColor: s.card }]}>
+        <View style={[styles.card, { backgroundColor: pageBg }]}>
           <FieldRow
             label={t("profile.field.nickname")}
             value={profile?.nickName || t("shared.add")}
@@ -338,7 +329,7 @@ export function ProfileEditScreen() {
               {t("profile.field.email")}
             </Text>
             <Text
-              style={[styles.rowValue, { color: s.textMuted }]}
+              style={[styles.rowValue, { color: s.text }]}
               numberOfLines={1}
             >
               {profile?.email || t("profile.emailMissing")}
@@ -372,7 +363,7 @@ export function ProfileEditScreen() {
                           ? s.surfaceBrand
                           : pressed
                             ? s.surfacePressed
-                            : s.surface,
+                            : s.surfaceSunken,
                         borderColor: selected ? s.brand : "transparent",
                       },
                     ]}
@@ -400,7 +391,7 @@ export function ProfileEditScreen() {
         >
           {t("profile.section.security")}
         </Text>
-        <View style={[styles.card, { backgroundColor: s.card }]}>
+        <View style={[styles.card, { backgroundColor: pageBg }]}>
           <FieldRow
             label={t("profile.field.password")}
             value={t("profile.changePassword")}
@@ -494,16 +485,16 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: "center",
     paddingTop: 20,
-    paddingBottom: 24,
+    paddingBottom: 28,
     gap: 10,
   },
   avatarWrapper: {
     position: "relative",
   },
   avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -537,14 +528,12 @@ const styles = StyleSheet.create({
     올라간다(거기서도 4.5 밖이었다). 계산은 `tests/lightContrastAudit.test.ts` §11.
   */
   groupTitle: {
-    ...TYPE.caption,
-    fontWeight: "600",
-    marginBottom: 8,
-    marginLeft: 4,
+    ...settingsDetailSpec.sectionTitle,
+    marginLeft: 0,
   },
   card: {
-    borderRadius: LAYOUT.card.radius,
-    paddingHorizontal: 4,
+    borderRadius: 0,
+    paddingHorizontal: 0,
     marginBottom: 20,
     overflow: "hidden",
   },
@@ -553,43 +542,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    minHeight: 54,
-    paddingHorizontal: 14,
+    minHeight: 56,
+    paddingHorizontal: 0,
+    paddingVertical: 12,
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  rowLabel: {
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    fontWeight: "500",
-  },
+  rowLabel: { ...settingsDetailSpec.rowLabel, flexShrink: 0 },
   rowRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     flexShrink: 1,
   },
-  rowValue: {
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    fontWeight: "600",
-    flexShrink: 1,
-  },
+  rowValue: { ...settingsDetailSpec.rowValue, flexShrink: 1 },
   rowValueEmpty: {
     fontWeight: "600",
   },
   genderRow: {
     paddingVertical: 12,
+    flexWrap: "wrap",
   },
   genderChips: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   genderChip: {
-    height: LAYOUT.segment.itemHeight,
+    minHeight: 40,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: LAYOUT.segment.itemRadius,
     borderWidth: 1.2,

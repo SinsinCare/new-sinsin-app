@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Menu (앵커드 팝오버)
 // Spec: docs/design/community-redesign/00-MASTER.md §2.6 · §4-G5 / 결정: 01-DECISIONS.md D3
 //
@@ -46,7 +47,6 @@ import {
   BackHandler,
   Pressable,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type StyleProp,

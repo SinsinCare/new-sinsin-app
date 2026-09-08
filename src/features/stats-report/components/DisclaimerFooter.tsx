@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+import { StyleSheet, View } from "react-native"
 
 import type { SurfacePalette } from "@/src/theme/surface"
 import { TYPE } from "@/src/theme/surface"
@@ -13,7 +14,7 @@ export function DisclaimerFooter({ text, s }: { text: string; s: Surface }) {
   return (
     <View style={styles.wrap}>
       <Text
-        style={[styles.text, { color: s.textWeak }]}
+        style={[styles.text, { color: s.textMuted }]}
         lineBreakStrategyIOS="hangul-word"
         textBreakStrategy="balanced"
       >

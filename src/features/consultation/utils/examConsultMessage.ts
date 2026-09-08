@@ -181,18 +181,20 @@ export function parseExamConsultMessage(
   const referenceWord = translate("consult.examReference").trim()
 
   let seenSection = false
+  let inMetricsSection = false
   for (const line of lines) {
     const section = SECTION_LINE_RE.exec(line.trim())
     if (section) {
       seenSection = true
       const [, name, value] = section
       const key = name.trim()
+      inMetricsSection = key === metricsKey
       if (key === dateKey) dateLabel = value.trim() || null
       else if (key === summaryKey) countsLabel = value.trim() || null
       continue
     }
 
-    const metric = METRIC_LINE_RE.exec(line.trim())
+    const metric = inMetricsSection ? METRIC_LINE_RE.exec(line.trim()) : null
     if (metric) {
       const [, label, value, unit, meta] = metric
       const [statusPart, ...rest] = meta.split(",")
@@ -214,8 +216,6 @@ export function parseExamConsultMessage(
 
   // 지표가 하나도 없으면 이 포맷이 아니다. 빈 카드를 그리느니 평범한 버블이 낫다.
   if (metrics.length === 0 && !dateLabel && !countsLabel) return null
-  // `metricsKey` 는 섹션 존재 확인용으로만 쓴다(라벨 자체는 카드가 자기 문구를 쓴다).
-  void metricsKey
 
   return {
     prompt: promptParts.join(" "),

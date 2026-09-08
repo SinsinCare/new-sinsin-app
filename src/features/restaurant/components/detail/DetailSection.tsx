@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 상세 화면의 섹션 껍데기. `메뉴` `사진` `후기` `편의시설 및 서비스` 처럼
  * 제목 + 본문이 반복되는 블록을 한 모양으로 고정한다.
@@ -24,7 +25,7 @@
  */
 
 import { type ReactNode } from "react"
-import { Pressable, StyleSheet, Text, View, type TextStyle } from "react-native"
+import { Pressable, StyleSheet, View, type TextStyle } from "react-native"
 
 import {
   iconSize,

@@ -80,7 +80,10 @@ export function FeatureIntroSheet({
           {(["row1", "row2", "row3"] as const).map((row, index) => (
             <View key={row} style={styles.row}>
               <View
-                style={[styles.marker, { backgroundColor: surface.surface }]}
+                style={[
+                  styles.marker,
+                  { backgroundColor: surface.surfaceSunken },
+                ]}
               >
                 <Ionicons name={icons[index]} size={16} color={surface.brand} />
               </View>

@@ -11,7 +11,7 @@
  * ■ 왜 그런가 (expo-router 55.0.17 + @react-navigation/routers 를 실제로 돌려 확인)
  *
  * `(tabs)` 는 루트 Stack 의 **화면 하나**다(`app/_layout.tsx` 가 등록한다). 글 상세
- * (`app/post/[id].tsx`)·검색·보관함은 그 Stack 위에 얹혀 있으므로, 거기서 `/community`
+ * (`src/features/recipe/views/PostDetailScreen.tsx`)·검색·보관함은 그 Stack 위에 얹혀 있으므로, 거기서 `/community`
  * 로 가려 하면 expo-router 의 `findDivergentState` 가 **루트 Stack 에서** 갈라진다고
  * 보고 화면 이름 `(tabs)` 로 액션을 만든다:
  *
@@ -71,7 +71,7 @@ const TAB_ROUTES = tabRoutes()
  *
  * ── 아래는 안전해서가 아니라 **이 작업의 소유가 아니라서** 여기 있다.
  *    같은 결함이고 각 파일 담당에게 보고했다. 고쳐지면 이 줄을 지운다.
- * - `app/post/[id].tsx` : 해시태그 탭 → `/community` 로 `push`. 위 반복 재현의 당사자.
+ * - `src/features/recipe/views/PostDetailScreen.tsx` : 해시태그 탭 → `/community` 로 `push`. 위 반복 재현의 당사자.
  *
  * 2026-08-20 에 아래 셋은 **고쳤다**(각각 `dismissTo` 검사로 못 박았다).
  * - `src/features/recipe/archive/RecipeArchiveScreen.tsx`
@@ -161,7 +161,7 @@ describe("탭 라우트로 가는 길", () => {
   */
   it("해시태그는 dismissTo 로 커뮤니티 탭에 되돌아간다 (내 활동 보관함)", () => {
     const source = codeOnly(
-      fs.readFileSync(path.join(ROOT, "app/community-library.tsx"), "utf8"),
+      fs.readFileSync(path.join(ROOT, "src/features/recipe/views/CommunityLibraryScreen.tsx"), "utf8"),
     )
     expect(source).toMatch(
       /router\.dismissTo\(\{ pathname: "\/community", params: \{ tag \} \}/u,

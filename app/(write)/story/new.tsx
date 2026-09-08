@@ -22,6 +22,7 @@ import { showConfirm } from "@/src/lib/dialog"
 import { hapticSelection } from "@/src/lib/haptics"
 import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
+import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
 import { useCommunityStories } from "@/src/features/recipe/hooks/useCommunityStories"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
@@ -299,16 +300,14 @@ export default function NewStoryScreen() {
       ]}
     >
       <View style={styles.header}>
-        <Pressable
+        <HeaderIconButton
           onPress={() => void handleClose()}
-          hitSlop={10}
-          accessibilityRole="button"
           accessibilityLabel={t("action.close")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
           <Ionicons name="close" size={24} color={surface.textStrong} />
-        </Pressable>
+        </HeaderIconButton>
         <Text
+          pointerEvents="none"
           style={[styles.headerTitle, { color: surface.textStrong }]}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
@@ -320,13 +319,13 @@ export default function NewStoryScreen() {
           disabled={!selected || isSaving}
           accessibilityLabel={t("community.newStory.add")}
           accessibilityState={{ disabled: !selected || isSaving }}
-          baseColor={selected ? inkBg : surface.ctaOffBg}
+          baseColor={selected ? inkBg : surface.surfaceSunken}
           pressedColor={
             selected
               ? surface.isDark
                 ? "#DADAE0"
                 : "#34363A"
-              : surface.ctaOffBg
+              : surface.surfaceSunken
           }
           pressScale={0.94}
           style={styles.submitPill}
@@ -355,10 +354,7 @@ export default function NewStoryScreen() {
       >
         {/* 미리보기 */}
         <View
-          style={[
-            styles.preview,
-            { backgroundColor: surface.isDark ? "#1A1A1D" : surface.surface },
-          ]}
+          style={[styles.preview, { backgroundColor: surface.surfaceSunken }]}
         >
           {selectedCandidate ? (
             <Image
@@ -371,10 +367,13 @@ export default function NewStoryScreen() {
               <Ionicons
                 name="images-outline"
                 size={28}
-                color={surface.textWeak}
+                color={surface.textOnSurface}
               />
               <Text
-                style={[styles.previewEmptyText, { color: surface.textMuted }]}
+                style={[
+                  styles.previewEmptyText,
+                  { color: surface.textOnSurface },
+                ]}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.newStory.choosePhoto")}
@@ -392,7 +391,7 @@ export default function NewStoryScreen() {
 
         {/* 사진 고르기 */}
         <Text
-          style={[styles.sectionLabel, { color: surface.textMuted }]}
+          style={[styles.sectionLabel, { color: surface.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("community.newStory.recentMeals")}
@@ -408,13 +407,13 @@ export default function NewStoryScreen() {
           <SurfacePressable
             onPress={handlePickFromGallery}
             accessibilityLabel={t("community.newStory.chooseFromGallery")}
-            baseColor={surface.surface}
+            baseColor={surface.surfaceSunken}
             pressScale={0.95}
             style={styles.galleryTile}
           >
-            <Ionicons name="add" size={22} color={surface.textMuted} />
+            <Ionicons name="add" size={22} color={surface.textOnSurface} />
             <Text
-              style={[styles.galleryLabel, { color: surface.textMuted }]}
+              style={[styles.galleryLabel, { color: surface.textOnSurface }]}
               lineBreakStrategyIOS="hangul-word"
             >
               {t("community.newStory.gallery")}
@@ -461,7 +460,7 @@ export default function NewStoryScreen() {
 
         {candidates.length === 0 && (
           <Text
-            style={[styles.hint, { color: surface.textWeak }]}
+            style={[styles.hint, { color: surface.text }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("community.newStory.noMealPhotos")}
@@ -470,7 +469,7 @@ export default function NewStoryScreen() {
 
         {/* 한마디 */}
         <Text
-          style={[styles.sectionLabel, { color: surface.textMuted }]}
+          style={[styles.sectionLabel, { color: surface.text }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("community.newStory.captionLabel")}
@@ -480,24 +479,24 @@ export default function NewStoryScreen() {
             value={caption}
             onChangeText={setCaption}
             placeholder={t("community.newStory.captionPlaceholder")}
-            placeholderTextColor={surface.placeholder}
+            placeholderTextColor={surface.textOnSurface}
             multiline
             maxLength={200}
             style={[
               styles.captionInput,
               {
                 color: surface.textStrong,
-                backgroundColor: surface.surface,
+                backgroundColor: surface.surfaceSunken,
               },
             ]}
           />
-          <Text style={[styles.counter, { color: surface.textWeak }]}>
+          <Text style={[styles.counter, { color: surface.text }]}>
             {caption.length}/200
           </Text>
         </View>
 
         <Text
-          style={[styles.notice, { color: surface.textWeak }]}
+          style={[styles.notice, { color: surface.text }]}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
         >
@@ -529,8 +528,8 @@ const styles = StyleSheet.create({
   */
   headerTitle: {
     position: "absolute",
-    left: 0,
-    right: 0,
+    left: 80,
+    right: 80,
     textAlign: "center",
     fontSize: 17,
     lineHeight: 24,

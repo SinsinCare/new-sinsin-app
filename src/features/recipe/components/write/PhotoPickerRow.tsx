@@ -106,7 +106,7 @@ export function PhotoPickerRow({
             accessibilityLabel={copy.add}
             style={({ pressed }) => [
               styles.addButton,
-              { backgroundColor: s.surface },
+              { backgroundColor: s.surfaceSunken },
               pressed && { opacity: 0.7 },
             ]}
           >

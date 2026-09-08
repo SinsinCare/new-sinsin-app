@@ -1,3 +1,4 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { useMemo, useState } from "react"
 import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -131,7 +132,7 @@ export function CommunityReportScreen() {
         { backgroundColor: surface.canvas, paddingTop: insets.top },
       ]}
     >
-      <View style={[styles.header, { borderBottomColor: surface.hairline }]}>
+      <View style={[styles.header, { borderBottomColor: surface.border }]}>
         <Pressable
           onPress={() => router.back()}
           hitSlop={10}
@@ -161,14 +162,14 @@ export function CommunityReportScreen() {
                 key={reason.key}
                 onPress={() => toggle(reason.key)}
                 accessibilityState={{ selected: checked }}
-                baseColor={surface.surface}
+                baseColor={surface.surfaceSunken}
                 style={styles.reason}
               >
                 <View
                   style={[
                     styles.check,
                     {
-                      borderColor: checked ? surface.brand : surface.hairline,
+                      borderColor: checked ? surface.brand : surface.border,
                       backgroundColor: checked ? surface.brand : "transparent",
                     },
                   ]}
@@ -205,7 +206,7 @@ export function CommunityReportScreen() {
           onPress={submit}
           disabled={!canSubmit || submitting}
           accessibilityState={{ disabled: !canSubmit || submitting }}
-          baseColor={canSubmit ? surface.brand : surface.ctaOffBg}
+          baseColor={canSubmit ? surface.brand : surface.surfaceSunken}
           style={styles.submit}
         >
           <Text
@@ -222,7 +223,7 @@ export function CommunityReportScreen() {
       {/*
         `기타 사유` 시트 — 시안 `docs/design/community-redesign/report.md` §2.6(F2·F3).
 
-        예전엔 이 자리에 시트 크롬을 손으로 그렸다: `height 48` + 1px `surface.hairline`
+        예전엔 이 자리에 시트 크롬을 손으로 그렸다: `height 48` + 1px `surface.border`
         밑줄 + 15/21 텍스트, 그리고 `SurfacePressable` 로 만든 54pt 확인 버튼. v1 `surface`
         팔레트와 v2 시트가 한 화면에서 섞여, 밑줄 굵기(1 vs 2)·글자(15 vs 17)·버튼
         (54/14 vs 56/16)이 전부 시안과 어긋나 있었다. 지금은 전부 DS 부품이다:
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: borderWidth.thin,
   },
   title: {
     fontSize: 17,

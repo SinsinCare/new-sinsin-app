@@ -1,8 +1,8 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useState } from "react"
 import {
   Platform,
   StyleSheet,
-  TextInput,
   type ColorValue,
   type StyleProp,
   type TextInputProps,
@@ -56,15 +56,15 @@ export function TextAreaField({
   const { fontScale } = useWindowDimensions()
   const androidFontScale = Math.min(fontScale, ANDROID_MAX_FONT_SCALE)
   const inputHeight =
-    Platform.OS === "android"
-      ? Math.max(
+    Platform.OS === "ios" && fontScale <= 1
+      ? TEXT_AREA_BASE_HEIGHT
+      : Math.max(
           TEXT_AREA_BASE_HEIGHT,
           Math.ceil(
             TEXT_AREA_LINE_HEIGHT * androidFontScale * minLines +
               TEXT_AREA_VERTICAL_PADDING * 2,
           ),
         )
-      : TEXT_AREA_BASE_HEIGHT
 
   const resolvedBorderColor =
     borderColor ??
@@ -108,9 +108,7 @@ export function TextAreaField({
           inputStyle,
         ]}
         placeholderTextColor={placeholderTextColor ?? tokens.color.grey5.val}
-        maxFontSizeMultiplier={
-          Platform.OS === "android" ? ANDROID_MAX_FONT_SCALE : undefined
-        }
+        maxFontSizeMultiplier={ANDROID_MAX_FONT_SCALE}
         textAlignVertical="top"
         onFocus={(event) => {
           setIsFocused(true)

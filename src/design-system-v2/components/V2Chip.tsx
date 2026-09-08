@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Chip
 // 인터랙티브 필터/토글 칩(pill). Badge(비인터랙티브 태그)와 별개.
 //
@@ -33,7 +35,7 @@
 // 테두리는 **선택됐을 때만** 그린다. 안 고른 칩은 세 톤이 모두 같은 모양이어야 하고
 // (아래 미선택 규칙), 미선택에 투명 테두리를 깔면 폭이 2 늘어나 레일 전체가 밀린다.
 
-import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, type ViewStyle } from "react-native"
 import {
   borderWidth,
   controlHeight,
@@ -202,6 +204,7 @@ export function V2Chip({
         <V2Icon name={leadingIcon} size={iconSize.sm} color={fg} />
       )}
       <Text
+        maxFontSizeMultiplier={FONT_SCALE.control}
         style={[
           selected || fixedLabelWeight ? s.text : s.textWeak,
           { color: fg },

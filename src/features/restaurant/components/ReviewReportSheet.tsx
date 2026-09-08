@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 후기 신고 시트. 사유 선택 + (선택) 상세 → `POST /restaurants/reviews/:id/report`.
  *
@@ -29,7 +30,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react"
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native"
+import { StyleSheet, View, useWindowDimensions } from "react-native"
 import { useMutation } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 

@@ -1,15 +1,11 @@
-import { useEffect, useState } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
+import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
 import { V2BottomSheet } from "@/src/design-system-v2"
+import { radius, spacing, typography } from "@/src/design-system-v2/tokens"
 import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
-import { MEAL_OPTIONS } from "../../../data/mealConstants"
-import { inferMealTypeFromTime } from "../../../utils/mealRecordUtils"
-import { SheetChip, SheetChipRow, SheetInfoCard } from "./recordSheetControls"
-import type { MealType } from "../../../types"
 import { useTranslation } from "react-i18next"
 
 export interface MealSlotStatus {
@@ -22,314 +18,141 @@ export interface MealSlotStatus {
 interface MealSheetProps {
   visible: boolean
   onClose: () => void
-  slots: Partial<Record<MealType, MealSlotStatus>>
-  onCamera: (mealType: MealType) => void
-  onGallery: (mealType: MealType) => void
-  onText: (mealType: MealType) => void
-  onSkip: (mealType: MealType) => void
-  onViewResult: (mealType: MealType) => void
-  /** 타임라인 카드에서 특정 끼니로 진입할 때. 없으면 시각으로 추론한다. */
-  initialMealType?: MealType | null
+  /** 사진 촬영하기 → 앱 안의 푸드 카메라 페이지 */
+  onCamera: () => void
+  /** 글로 기록하기 → 글 입력 화면 */
+  onText: () => void
+  /** 레시피 불러오기 → 저장한 레시피 선택 */
+  onRecipe: () => void
 }
 
 /**
- * 식사 기록 시트. 사진이 주인공이다 — 영양 성분을 고르게 하지 않고
- * "찍기만 하면 AI가 알아봐요"로 역할을 넘긴다. 계산 가능한 값은 앱이 채운다.
+ * 식사 기록 시트 — 등록 절차 시안(2026-09-04, `home.svg` 의 시트).
  *
- * 끼니는 지금 시각으로 미리 골라 두고, 기록 강제는 죄책감과 직결이라
- * "오늘은 건너뛰기"를 회색으로 항상 함께 둔다.
+ * 세 줄뿐이다: 사진 촬영하기 · 글로 기록하기 · 레시피 불러오기. 끼니 고르기·앨범·
+ * 건너뛰기는 빠졌다 — "이제 시간만 기록한다"(사용자, 2026-09-04): 끼니는 사람이
+ * 고르지 않고 기록 시각으로 정한다(`inferMealTypeFromTime`, 여는 쪽이 정한다).
+ *
+ * 제목·선택 항목·설명의 크기와 굵기를 나누고, 행은 큰 글자에 맞춰 자란다.
  */
 export function MealSheet({
   visible,
   onClose,
-  slots,
   onCamera,
-  onGallery,
   onText,
-  onSkip,
-  onViewResult,
-  initialMealType,
+  onRecipe,
 }: MealSheetProps) {
   const { t } = useTranslation("common")
-  const surface = useSurface()
-  const [mealType, setMealType] = useState<MealType>("BREAKFAST")
+  const s = useSurface()
 
-  useEffect(() => {
-    if (!visible) return
-    setMealType(initialMealType ?? inferMealTypeFromTime(new Date()))
-  }, [visible, initialMealType])
-
-  const slot = slots[mealType]
-  const skipped = slot?.skipped ?? false
-  const recorded = (slot?.recorded ?? false) && !skipped
-  const mealLabel = t(`meal.${mealType}`)
+  const rows: {
+    key: string
+    icon: React.ComponentProps<typeof Ionicons>["name"]
+    label: string
+    description: string
+    onPress: () => void
+  }[] = [
+    {
+      key: "camera",
+      icon: "camera-outline",
+      label: t("home.sheet.meal.takePhoto"),
+      description: t("home.sheet.meal.photoDescription"),
+      onPress: onCamera,
+    },
+    {
+      key: "text",
+      icon: "create-outline",
+      label: t("home.sheet.meal.writeText"),
+      description: t("home.sheet.meal.textDescription"),
+      onPress: onText,
+    },
+    {
+      key: "recipe",
+      icon: "book-outline",
+      label: t("home.sheet.meal.importRecipe"),
+      description: t("home.sheet.meal.recipeDescription"),
+      onPress: onRecipe,
+    },
+  ]
 
   return (
-    /* 고정 72% 스냅을 버렸다. 큰 글씨(접근성 텍스트 크기)나 작은 기기에서는 마지막
-       `오늘은 건너뛰기` 와 안내 카드가 72% 밖으로 밀려났고, 스크롤이 없어 닿을 수
-       없었다. 이제 시트가 내용 높이에 맞춰 자란다. */
     <V2BottomSheet
       surface="home_meal_record"
       visible={visible}
       onClose={onClose}
+      title={t("home.sheet.meal.title")}
     >
       <View style={styles.body}>
-        <View style={styles.head}>
-          <View style={styles.headText}>
-            <Text style={[styles.title, { color: surface.textStrong }]}>
-              {t("home.timeline.title")}
-            </Text>
-            <Text
-              style={[styles.subtitle, { color: surface.textWeak }]}
-              lineBreakStrategyIOS="hangul-word"
+        {rows.map((row, index) => (
+          <Animated.View
+            key={row.key}
+            // 시트가 올라온 뒤 위에서부터 한 줄씩 — 세 선택지가 순서대로 읽힌다.
+            entering={FadeInDown.delay(index * 35)
+              .duration(200)
+              .reduceMotion(ReduceMotion.System)}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={row.label}
+              accessibilityHint={row.description}
+              onPress={() => {
+                hapticSelection()
+                row.onPress()
+              }}
+              style={({ pressed }) => [
+                styles.row,
+                { backgroundColor: pressed ? s.surfacePressed : "transparent" },
+              ]}
             >
-              {recorded
-                ? t("home.sheet.meal.alreadyRecorded", { meal: mealLabel })
-                : t("home.sheet.meal.willRecordAs", { meal: mealLabel })}
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("action.close")}
-            onPress={onClose}
-            hitSlop={10}
-          >
-            {({ pressed }) => (
-              <View
-                style={[
-                  styles.closeButton,
-                  {
-                    backgroundColor: pressed
-                      ? surface.surfacePressed
-                      : surface.surface,
-                  },
-                ]}
-              >
-                <Ionicons name="close" size={18} color={surface.textWeak} />
+              <View style={[styles.icon, { backgroundColor: s.surfaceSunken }]}>
+                <Ionicons
+                  name={row.icon}
+                  size={24}
+                  color={index === 0 ? s.brand : s.text}
+                />
               </View>
-            )}
-          </Pressable>
-        </View>
-
-        <SheetChipRow grow>
-          {MEAL_OPTIONS.map((option) => {
-            const optionSlot = slots[option.type]
-            const optionRecorded =
-              (optionSlot?.recorded ?? false) && !(optionSlot?.skipped ?? false)
-            return (
-              <SheetChip
-                key={option.type}
-                label={t(`meal.${option.type}`)}
-                anchor={
-                  optionSlot?.skipped
-                    ? t("home.timeline.skipped")
-                    : optionRecorded
-                      ? (optionSlot?.time ?? t("home.sheet.meal.recorded"))
-                      : t("home.sheet.meal.notRecorded")
-                }
-                selected={mealType === option.type}
-                onPress={() => setMealType(option.type)}
-                style={styles.grow}
-              />
-            )
-          })}
-        </SheetChipRow>
-
-        {recorded ? (
-          <PrimaryAction
-            icon="receipt-outline"
-            title={t("home.sheet.meal.view", { meal: mealLabel })}
-            description={t("home.sheet.meal.viewDescription")}
-            onPress={() => onViewResult(mealType)}
-          />
-        ) : (
-          <>
-            <PrimaryAction
-              icon="camera"
-              title={t("home.sheet.meal.takePhoto")}
-              description={t("home.sheet.meal.photoDescription")}
-              onPress={() => onCamera(mealType)}
-            />
-
-            <View style={styles.secondaryRow}>
-              <SecondaryAction
-                label={t("home.sheet.meal.choosePhoto")}
-                onPress={() => onGallery(mealType)}
-              />
-              <SecondaryAction
-                label={t("home.sheet.meal.writeText")}
-                onPress={() => onText(mealType)}
-              />
-            </View>
-          </>
-        )}
-
-        <SheetInfoCard>{t("home.sheet.meal.info")}</SheetInfoCard>
-
-        {!recorded && !skipped ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("home.sheet.meal.skip")}
-            onPress={() => onSkip(mealType)}
-          >
-            {({ pressed }) => (
-              <View
-                style={[
-                  styles.skipButton,
-                  {
-                    backgroundColor: pressed
-                      ? surface.surfacePressed
-                      : surface.surface,
-                  },
-                ]}
-              >
-                <Text style={[styles.skipLabel, { color: surface.textWeak }]}>
-                  {t("home.sheet.meal.skip")}
+              <View style={styles.copy}>
+                <Text style={[styles.label, { color: s.textStrong }]}>
+                  {row.label}
+                </Text>
+                <Text
+                  style={[styles.description, { color: s.text }]}
+                  lineBreakStrategyIOS="hangul-word"
+                >
+                  {row.description}
                 </Text>
               </View>
-            )}
-          </Pressable>
-        ) : null}
+              <Ionicons name="chevron-forward" size={16} color={s.textMuted} />
+            </Pressable>
+          </Animated.View>
+        ))}
       </View>
     </V2BottomSheet>
   )
 }
 
-/** 시트의 주 행동 — 브랜드 면 하나. 사진 기록이 이 화면의 주인공이다. */
-function PrimaryAction({
-  icon,
-  title,
-  description,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap
-  title: string
-  description: string
-  onPress: () => void
-}) {
-  const surface = useSurface()
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${title} ${description}`}
-      onPress={() => {
-        hapticSelection()
-        onPress()
-      }}
-    >
-      {({ pressed }) => (
-        <View
-          style={[
-            styles.primaryCard,
-            { backgroundColor: surface.brand, opacity: pressed ? 0.92 : 1 },
-          ]}
-        >
-          <Ionicons name={icon} size={22} color={surface.onBrand} />
-          <View style={styles.primaryText}>
-            <Text
-              style={[styles.primaryTitle, { color: surface.onBrand }]}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {title}
-            </Text>
-            <Text style={styles.primaryDesc} lineBreakStrategyIOS="hangul-word">
-              {description}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={surface.onBrand} />
-        </View>
-      )}
-    </Pressable>
-  )
-}
-
-function SecondaryAction({
-  label,
-  onPress,
-}: {
-  label: string
-  onPress: () => void
-}) {
-  const surface = useSurface()
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={() => {
-        hapticSelection()
-        onPress()
-      }}
-      style={styles.grow}
-    >
-      {({ pressed }) => (
-        <View
-          style={[
-            styles.secondaryButton,
-            {
-              backgroundColor: pressed
-                ? surface.surfacePressed
-                : surface.surface,
-            },
-          ]}
-        >
-          <Text style={[styles.secondaryLabel, { color: surface.text }]}>
-            {label}
-          </Text>
-        </View>
-      )}
-    </Pressable>
-  )
-}
-
 const styles = StyleSheet.create({
   body: {
-    paddingHorizontal: LAYOUT.screenX,
-    paddingTop: 4,
-    gap: 12,
+    paddingHorizontal: spacing[24],
+    paddingBottom: spacing[12],
+    gap: spacing[4],
   },
-  head: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
-    marginBottom: 4,
-  },
-  headText: { flex: 1, gap: 3 },
-  title: { ...TYPE.sheetTitle, fontWeight: "700" },
-  subtitle: TYPE.cardSub,
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  grow: { flex: 1 },
-  primaryCard: {
-    minHeight: 64,
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+  row: {
+    minHeight: 80,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing[12],
+    paddingVertical: spacing[12],
+    borderRadius: radius.xl,
   },
-  primaryText: { flex: 1, gap: 2 },
-  primaryTitle: { ...TYPE.cardTitle, fontWeight: "700" },
-  primaryDesc: { ...TYPE.cardSub, color: "rgba(255,255,255,0.88)" },
-  secondaryRow: { flexDirection: "row", gap: 8 },
-  secondaryButton: {
-    height: 52,
-    borderRadius: 14,
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.xl,
     alignItems: "center",
     justifyContent: "center",
   },
-  secondaryLabel: { ...TYPE.cardTitle, fontWeight: "600" },
-  skipButton: {
-    height: 52,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  skipLabel: { ...TYPE.cardTitle, fontWeight: "500" },
+  copy: { flex: 1, gap: spacing[4] },
+  label: typography.title.xSmallWeak,
+  description: typography.subtext.medium,
 })

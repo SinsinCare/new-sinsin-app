@@ -213,7 +213,7 @@ export interface MapSearchResponse {
   /* ── 아래는 서버가 함께 주는 진단 값이다. 화면이 쓰지 않아도 응답에 있으므로 적어 둔다 ── */
   /** 요청 줌. 응답이 어느 줌의 것인지 확인용. */
   zoom: number
-  /** 클러스터 격자 한 변(도). `MARKER` 모드면 `null`. */
+  /** 집계 또는 대표 식당 선택에 사용한 격자 한 변(도). 생략한 경우 null. */
   cellDeg: number | null
   /** 클러스터 개수. `MARKER` 모드면 `null`(`clusters.length` 와 혼동하지 말 것). */
   clusterTotal: number | null
@@ -263,6 +263,8 @@ export interface RestaurantSafetyDto {
    * `counts.potassium` 이 `number` 로 보이고 실제로는 `undefined` 다.
    */
   driverCounts: Partial<Record<SafetyDriver, number>>
+  /** Every nutrient with caution/restricted menus, including non-dominant nutrients. Optional for older responses. */
+  concernCounts?: Partial<Record<SafetyDriver, number>>
   /** 프로필이 없어 판정할 수 없었다. **이때 배지를 그리지 않는다.** */
   profileMissing: boolean
 }
@@ -314,6 +316,8 @@ export interface RestaurantCardDto {
   zipcode: string | null
   /** 서버가 3장으로 잘라 준다. 카드에서 `[]` 로 덮어쓰지 말 것. */
   imageUrls: string[]
+  /** 등록된 메뉴 이름 최대 3개, 대표 메뉴 우선. 구버전 응답에는 없을 수 있다. */
+  representativeMenuNames?: string[]
   /** 배지의 유일한 근거. `safetySummary` 라는 이름이 아니다. */
   safety: RestaurantSafetyDto
   bookmarked: boolean
@@ -572,6 +576,7 @@ export interface RestaurantDetailDto {
   blogUrl: string | null
   youtubeUrl: string | null
   imageUrls: string[]
+  representativeMenuNames?: string[]
   /** 카테고리별 사진 수. 목업의 `메뉴판 240` 칩이 이 값을 쓴다. */
   photoCategoryCounts: PhotoCategoryCounts
   /** 전체 사진 수. `photoCategoryCounts` 의 합이 아니라 서버가 센 값이다. */
@@ -665,6 +670,7 @@ export interface RestaurantHoursResponse {
  * 공유하면 한 환자의 배지가 다른 환자에게 새므로, 이 응답을 전역 캐시로 승격하지 말 것.
  */
 export interface MenuItemDto {
+  portionReference?: import("@/src/features/nutrition/utils/portionReference").PortionReference | null;
   menuId: number
   name: string
   description: string | null
@@ -852,7 +858,10 @@ export interface RestaurantReviewsResponse {
  */
 export interface ReviewBreakdown {
   avgRating: number | null
+  /** Browsable reviews, including entries without stars. */
   totalCount: number
+  /** Number of reviews contributing to the average. */
+  ratedCount: number
   keywordCounts: Partial<Record<ReviewKeyword, number>>
   menuCounts: { menuName: string; count: number }[]
 }

@@ -86,6 +86,8 @@ export interface MapEmptyStateProps {
   onResetFilters: () => void
   /** 실패 네 갈래 공통 — 재조회. */
   onRetry: () => void
+  /** The map's middle detent must leave room for the recovery action. */
+  compact?: boolean
   style?: ViewStyle
 }
 
@@ -94,6 +96,7 @@ export function MapEmptyState({
   onWidenMap,
   onResetFilters,
   onRetry,
+  compact = false,
   style,
 }: MapEmptyStateProps) {
   const { t } = useTranslation("common")
@@ -118,31 +121,25 @@ export function MapEmptyState({
   // 그리므로, 라벨만 남기면 눌리지 않는 글자가 버튼 자리에 선다.
   const action = reason === "NO_DATA_HERE" ? onWidenMap : onResetFilters
   return (
-    <View style={[styles.root, style]}>
+    <View style={[styles.root, compact && styles.compactRoot, style]}>
       <V2EmptyState
         surface="restaurant_map"
-        icon={spec.icon}
+        icon={compact ? undefined : spec.icon}
         title={t(spec.titleKey)}
         description={t(spec.bodyKey)}
         actionLabel={action ? t(spec.actionKey) : undefined}
         onAction={action}
+        style={compact ? styles.compactContent : undefined}
       />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  /*
-    시트 안에서도 리스트 전체 폭을 쓰고 위쪽에 숨을 준다. 세로 중앙 정렬은 하지 않는다 —
-    시트가 collapsed 일 때 중앙 정렬하면 문구가 보이는 영역 밖으로 내려간다.
-
-    **위 여백이 32 였다가 8 로 줄었다.** 0건이면 시트가 스스로 중간(55%)까지 올라오는데,
-    그 55% 는 고정 비율인 반면 접힘 높이는 안내 문구가 붙는 만큼 자란다 — 즉 안내가 늘수록
-    **리스트에 남는 띠가 그만큼 줄어든다.** 그 띠 안에 이 블록이 다 안 들어가면 행동 버튼
-    아래쪽이 잘리고, 중간 스냅에서는 목록 스크롤이 잠겨 있어(gorhom `useScrollable`)
-    **잘린 부분을 끌어올릴 방법이 없다.** 계산상 874pt 기기 + 안내 두 줄에서 약 17pt,
-    667pt 기기에서는 안내가 없어도 약 11pt 가 잘린다.
-    `V2EmptyState` 가 내부에 이미 24 를 갖고 있어 8 을 더하면 32 로 보이는 것은 그대로다.
-  */
+  // Full-page fallback retains the standard illustration and spacing. In the
+  // map sheet, omit decoration and compact spacing so the recovery CTA fits
+  // beneath its fixed filter header at the middle detent.
   root: { paddingTop: spacing[8], paddingBottom: spacing[32] },
+  compactRoot: { paddingTop: 0, paddingBottom: spacing[16] },
+  compactContent: { padding: spacing[16], gap: spacing[8] },
 })

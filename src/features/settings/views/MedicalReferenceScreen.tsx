@@ -188,7 +188,7 @@ function ReferenceRow({
         pressed && { backgroundColor: surface.surfacePressed },
       ]}
     >
-      <DocIcon barColor={surface.textWeak} tileBg={surface.surface} />
+      <DocIcon barColor={surface.textWeak} tileBg={surface.surfaceSunken} />
       <View style={styles.itemBody}>
         <Text
           style={[styles.itemTitle, { color: surface.textStrong }]}
@@ -211,7 +211,9 @@ function ReferenceRow({
           style={[
             styles.badge,
             {
-              backgroundColor: isNew ? surface.surfaceBrand : surface.surface,
+              backgroundColor: isNew
+                ? surface.surfaceBrand
+                : surface.surfaceSunken,
             },
           ]}
         >
@@ -269,7 +271,7 @@ export function MedicalReferenceScreen() {
 
   // 홈과 같은 층 규칙: 라이트는 회색 바닥 위 흰 카드, 다크는 짙은 바닥 위 옅은 카드.
   const screenBg = surface.bed
-  const fieldBg = surface.isDark ? surface.surface : surface.card
+  const fieldBg = surface.isDark ? surface.surfaceSunken : surface.card
 
   return (
     <View style={[styles.container, { backgroundColor: screenBg }]}>

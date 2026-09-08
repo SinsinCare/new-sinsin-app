@@ -39,6 +39,10 @@ import { spacing } from "@/src/design-system-v2/tokens/spacing"
  */
 export const COMMUNITY_GUTTER = spacing[20]
 
+// Flat community surfaces: separators use line.normal (legacy surface.border)
+// at borderWidth.thin = 1pt. line.alternative + a physical-pixel hairline is too
+// faint on light screens. Section boundaries use an 8pt background.lower band.
+
 /**
  * 칩끼리의 간격. **6** — §5.2 판정 (v2 `layout.CHIP_GAP` 은 8이다).
  */

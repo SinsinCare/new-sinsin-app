@@ -23,7 +23,7 @@ export function MentionText({
 
   return (
     <Text
-      style={[style, { color: muted ? surface.textWeak : surface.text }]}
+      style={[style, { color: muted ? surface.text : surface.textStrong }]}
       lineBreakStrategyIOS="hangul-word"
     >
       {segments.map((segment, index) =>
@@ -44,7 +44,6 @@ export function MentionText({
 
 const styles = StyleSheet.create({
   mention: {
-    fontWeight: "600",
     fontFamily: "Pretendard-SemiBold",
   },
 })

@@ -1,3 +1,9 @@
+import { buildPersonalPortionContext } from "@/src/features/nutrition/utils/personalPortionContext"
+import {
+  readPortionReference,
+  portionLabel,
+  type PersonalPortionSelection,
+} from "@/src/features/nutrition/utils/portionReference"
 /**
  * 식당 `AI 식단 상담` 메시지의 빌더와 파서.
  *
@@ -37,17 +43,12 @@ import type { ConsultMenuFact, ConsultTranslate } from "./types"
 
 /**
  * 프롬프트 길이 상한. 식사(4800)·검진(4800)과 같은 값이다 — 서버 저장 컬럼과 모델
- * 입력 양쪽을 지킨다. 메뉴가 2건뿐이라 실제로는 한참 못 미친다.
+ * 입력 양쪽을 지킨다.
  */
 export const RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH = 4800
 
-/**
- * 한 메시지에 실을 메뉴 수 상한.
- *
- * 2 다. `진단하기` 의 8건(`DIAGNOSE_MENU_LIMIT`)과 겹치지 않게 두는 것이 두 진입을
- * 가르는 **유일한 사실**이다. 시트가 8건 전량 숫자를 실으면 `진단하기` 가 중복이 된다.
- */
-export const RESTAURANT_CONSULT_MENU_LIMIT = 2
+/** Bounded context for menu-wide questions; comparison questions retain their selected subset. */
+export const RESTAURANT_CONSULT_MENU_LIMIT = 20
 
 /**
  * 실려 나가는 영양소 5종. **정의역이자 i18n 키의 정의역**이다 —
@@ -115,13 +116,17 @@ export function pickConsultMenuFacts(
   names: string[],
 ): ConsultMenuFact[] {
   const facts: ConsultMenuFact[] = []
-  for (const name of names) {
+  const requestedNames =
+    names.length > 0 ? names : menus.map((menu) => menu.name)
+  for (const name of requestedNames) {
     if (facts.length >= RESTAURANT_CONSULT_MENU_LIMIT) break
     const wanted = name.trim()
-    if (!wanted) continue
+    if (!wanted || facts.some((fact) => fact.name === wanted)) continue
     const menu = menus.find((item) => item.name.trim() === wanted)
     if (!menu) continue
+    const portionReference = readPortionReference(menu.portionReference)
     facts.push({
+      ...(portionReference ? { portionReference } : {}),
       name: menu.name.trim(),
       calories: menu.calories,
       protein: menu.protein,
@@ -137,8 +142,9 @@ export function buildRestaurantConsultMessage(input: {
   question: string
   restaurantName: string
   cuisineLabel: string
-  /** 질문이 지목한 메뉴만. 보통 0 또는 2건이다. */
+  /** 비교 질문은 지정 메뉴, 일반 질문은 제공 가능한 메뉴 목록. */
   menus: ConsultMenuFact[]
+  personalSelection?: PersonalPortionSelection
   t: ConsultTranslate
 }): string {
   const { question, restaurantName, cuisineLabel, menus, t } = input
@@ -152,29 +158,58 @@ export function buildRestaurantConsultMessage(input: {
       const name = fact.name.trim()
       if (!name) return null
       const pairs = nutrientPairs(fact, t)
+      const portion = readPortionReference(fact.portionReference)
+      if (portion) {
+        pairs.push(
+          t(
+            portion.fraction === null
+              ? "restaurant.consult.context.portionBelowQuarter"
+              : "restaurant.consult.context.portion",
+            {
+              amount:
+                portion.fraction === null ? "" : portionLabel(portion.fraction),
+              nutrient: t(`mealReport.nutrients.${portion.driver}`),
+              percent: Math.round(portion.mealFraction * 100),
+            },
+          ),
+        )
+      }
       // 숫자가 하나도 없으면 이름만 남긴다 — 콜론 뒤가 빈 줄을 만들지 않는다.
       return pairs.length > 0 ? `- ${name}: ${pairs.join(", ")}` : `- ${name}`
     })
     .filter((line): line is string => line !== null)
 
+  const personalContext = buildPersonalPortionContext(
+    input.personalSelection,
+    t,
+  )
   const context = [
+    personalContext ? `[${personalContext}]` : null,
     restaurant
       ? `[${t("restaurant.consult.context.restaurant")}] ${restaurant}`
       : null,
     cuisine ? `[${t("restaurant.consult.context.cuisine")}] ${cuisine}` : null,
-    menuLines.length > 0
-      ? `[${t("restaurant.consult.context.menus")}]\n${menuLines.join("\n")}`
+    menuLines.length > 0 ? `[${t("restaurant.consult.context.basis")}]` : null,
+    menus.some((fact) => readPortionReference(fact.portionReference))
+      ? `[${t("restaurant.consult.context.portionBasis")}]`
       : null,
   ].filter((line): line is string => line !== null)
 
-  // 컨텍스트가 하나도 없으면 빈 줄만 매달지 않는다 — 그러면 파서가 null 을 주고
-  // 버블이 평문으로 떨어지는데, 그것이 정확히 맞는 동작이다(실을 사실이 없다).
-  const body =
-    context.length > 0
-      ? `${question.trim()}\n\n${context.join("\n")}`
-      : question.trim()
-
-  return body.slice(0, RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH)
+  const prompt = question.trim().slice(0, RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH)
+  let body = context.length > 0 ? `${prompt}\n\n${context.join("\n")}` : prompt
+  // Never cut a portion fraction, nutrient value, or its qualification in half.
+  if (body.length > RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH) return prompt
+  let hasMenu = false
+  for (const line of menuLines) {
+    const addition = hasMenu
+      ? `\n${line}`
+      : `\n[${t("restaurant.consult.context.menus")}]\n${line}`
+    if (body.length + addition.length > RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH)
+      break
+    body += addition
+    hasMenu = true
+  }
+  return body
 }
 
 /** 컨텍스트 머리줄. **1열에서 시작하고 같은 줄에 `]` 가 닫힌다** — 빌더가 늘 그렇게 쓴다. */
@@ -236,4 +271,30 @@ export function parseRestaurantConsultMessage(
   const question = head.join("\n").trim()
   if (!question) return null
   return { question }
+}
+
+/** Restaurant options are not a consumed meal. Keep this entry on restaurant context. */
+export function buildRestaurantAssessmentParams(input: {
+  restaurantId: number
+  restaurantName: string
+  cuisineLabel: string
+  menus: MenuItemDto[]
+  requestId: string
+  t: ConsultTranslate
+}) {
+  const context = buildRestaurantConsultMessage({
+    question: "",
+    restaurantName: input.restaurantName,
+    cuisineLabel: input.cuisineLabel,
+    menus: pickConsultMenuFacts(input.menus, []),
+    t: input.t,
+  }).trim()
+  return {
+    consultRequestId: input.requestId,
+    consultCategory: "FOOD_DIET",
+    consultRestaurantId: String(input.restaurantId),
+    consultContext: context,
+    consultContextLabel: input.restaurantName,
+    consultPrompt: `${input.t("restaurant.consult.q.assess")}\n\n${context}`,
+  }
 }

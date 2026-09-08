@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 후기 한 장 (목업 -12 / -19 / -20).
  *
@@ -55,8 +56,9 @@
  * (Hermes 에서 `Intl.*` 을 쓰지 않는 이유는 그 파일 머리말에 있다.)
  */
 
+import { ReviewExpandableContent } from "./ReviewExpandableContent"
 import { useState } from "react"
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
@@ -79,7 +81,6 @@ import { reviewAuthorOf } from "./reviewAuthor"
 import { StarRow } from "./StarRating"
 
 /** 본문 클램프 줄 수. 목업 -12 그대로. */
-const CONTENT_LINES = 3
 
 /** 사진 스트립에 노출할 최대 장수. 목업은 3열이다. */
 const PHOTO_COLUMNS = 3
@@ -244,35 +245,12 @@ export function ReviewCard({
 
       <StarRow rating={review.rating} />
 
-      {review.content.length > 0 && (
-        <View style={styles.contentBlock}>
-          <Text
-            style={[typography.subtext.large, { color: colors.label.normal }]}
-            numberOfLines={expanded ? undefined : CONTENT_LINES}
-            lineBreakStrategyIOS="hangul-word"
-          >
-            {review.content}
-          </Text>
-          {!expanded && (
-            <Pressable
-              onPress={() => setExpanded(true)}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: false }}
-              hitSlop={spacing[8]}
-              style={({ pressed }) => [pressed && styles.pressedText]}
-            >
-              <Text
-                style={[
-                  typography.subtext.medium,
-                  { color: colors.label.assistive },
-                ]}
-              >
-                {t("restaurant.review.expand")}
-              </Text>
-            </Pressable>
-          )}
-        </View>
-      )}
+      <ReviewExpandableContent
+        content={review.content}
+        expanded={expanded}
+        onExpand={() => setExpanded(true)}
+        color={colors.label.normal}
+      />
 
       <View style={styles.footerRow}>
         <View style={styles.tagRow}>

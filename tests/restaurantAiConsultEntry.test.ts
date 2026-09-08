@@ -151,35 +151,22 @@ describe("이 섹션에는 채움 버튼이 없다", () => {
   })
 })
 
-describe("`진단하기` 경로는 손대지 않았다", () => {
-  /*
-    두 진입을 실제로 가르는 유일한 사실이 **진단만 메뉴 8건 전량의 숫자를 대화에
-    싣는다**는 것이다. 이 상한이 사라지거나 상담 시트가 같은 컨텍스트를 실으면
-    `진단하기` 는 그날로 중복이 된다.
-  */
-  it("`DIAGNOSE_MENU_LIMIT` 이 8 그대로다", () => {
-    expect(SCREEN).toMatch(/const DIAGNOSE_MENU_LIMIT = 8\b/)
+describe("식당 메뉴 상담 경로", () => {
+  it("식사 기록 대신 식당 문맥을 사용한다", () => {
+    expect(SCREEN).toContain("params: buildRestaurantAssessmentParams({")
+    expect(SCREEN).not.toContain("foodConsultContext:")
   })
 
-  it("`buildDiagnoseParams` 가 그대로 있고 진단만 그것을 쓴다", () => {
-    expect(SCREEN).toMatch(/function buildDiagnoseParams\(/)
-    expect(SCREEN).toContain(
-      "params: buildDiagnoseParams(restaurantId, name, menus.menus)",
-    )
-    // 진단은 여전히 화면을 떠난다(시트가 아니다).
-    expect(SCREEN).toMatch(/pathname:\s*["']\/consult["']/)
-  })
-
-  it("상담 시트 진입은 `buildDiagnoseParams` 도 라우터도 쓰지 않는다", () => {
+  it("상담 진입은 선택한 질문과 식당 정보를 독립 페이지로 전달한다", () => {
     const start = SCREEN.indexOf("const handleAskAi = useCallback(")
-    expect(start).toBeGreaterThan(-1)
     const body = SCREEN.slice(
       start,
       SCREEN.indexOf("const handleToggleBookmark"),
     )
+    expect(body).toContain('pathname: "/consult"')
+    expect(body).toContain("pickConsultMenuFacts")
+    expect(body).toContain("consultContext: context")
     expect(body).not.toContain("buildDiagnoseParams")
-    expect(body).not.toContain("router.push")
-    expect(body).not.toContain("foodConsultContext")
   })
 
   it("`total`(합계 영양소)을 어디서도 만들지 않는다", () => {
@@ -190,56 +177,19 @@ describe("`진단하기` 경로는 손대지 않았다", () => {
   })
 })
 
-describe("시트 호스트는 껍데기가 아니라 `RestaurantDetailBody` 안에 있다", () => {
-  /*
-    껍데기 `RestaurantDetailScreen` 은 인스턴스 키만 붙이고 상태를 갖지 않는다 — 거기에
-    `useState` 를 두면 식당 id 가 바뀌어도 상태가 살아남아 다른 가게의 상담이 열린다.
-    그리고 호스트는 **대화를 소유**하므로(`useChat`) 시트가 닫혀도 마운트돼 있어야 한다.
-  */
-  const bodyAt = SCREEN.indexOf("function RestaurantDetailBody(")
-  const hostAt = SCREEN.indexOf("<RestaurantConsultSheetHost")
-
-  it("본문 컴포넌트 안에서 마운트된다", () => {
-    expect(bodyAt).toBeGreaterThan(-1)
-    expect(hostAt).toBeGreaterThan(bodyAt)
+describe("상담은 독립 페이지다", () => {
+  it("상세 화면에 상담 시트를 중첩하지 않는다", () => {
+    expect(SCREEN).not.toContain("RestaurantConsultSheetHost")
+    expect(SCREEN).not.toContain("setConsultOpen")
   })
-
-  it("상태 둘이 본문 안에 있다", () => {
-    const shell = SCREEN.slice(
-      SCREEN.indexOf("export function RestaurantDetailScreen("),
-      bodyAt,
-    )
-    expect(shell).not.toContain("useState")
-    expect(SCREEN).toContain("const [consultOpen, setConsultOpen] = useState")
-    expect(SCREEN).toMatch(/const \[consultRequest, setConsultRequest\]/)
-  })
-
-  it("`visible` 로 감싸지 않는다 — 감싸면 닫을 때마다 대화가 사라진다", () => {
-    const mount = SCREEN.slice(hostAt, hostAt + 400)
-    expect(mount).toContain("visible={consultOpen}")
-    /*
-      `consultOpen` 은 **오직 `visible` prop 으로만** 쓰인다. 조건부 렌더로 쓰는 순간
-      (`{consultOpen && <RestaurantConsultSheetHost …>}`) 시트를 닫을 때마다 호스트가
-      언마운트되고 `useChat` 의 정리가 대화를 통째로 버린다 — "물어보고 닫았다가 다시
-      열었더니 아무것도 없다". `&&` 가 어디에 붙든 걸리게 파일 전체에 건다.
-    */
-    expect(SCREEN).not.toMatch(/consultOpen\s*&&/)
-  })
-
-  it("매번 새 `requestId` 를 만든다 — 같은 질문을 두 번 눌러도 두 번 간다", () => {
+  it("같은 질문도 매 진입 요청을 구분한다", () => {
     expect(SCREEN).toMatch(
-      /requestId:\s*`restaurant-\$\{restaurantId\}-\$\{question\.kind\}-\$\{Date\.now\(\)\}`/,
+      /consultRequestId:\s*`restaurant-\$\{restaurantId\}-\$\{Date.now\(\)\}`/,
     )
   })
-
-  it("`질문하기` 는 요청 없이(빈 상태로) 연다", () => {
-    const start = SCREEN.indexOf("const handleAskAi = useCallback(")
-    const body = SCREEN.slice(
-      start,
-      SCREEN.indexOf("const handleToggleBookmark"),
-    )
-    expect(body).toContain(": null,")
-    expect(body).toContain("setConsultOpen(true)")
+  it("직접 질문하기는 문맥만 준비하고 자동 전송하지 않는다", () => {
+    expect(SCREEN).toContain("consultContextLabel: detail.name")
+    expect(SCREEN).toMatch(/question\s*\?\s*\{ consultPrompt:/)
   })
 })
 

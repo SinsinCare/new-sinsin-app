@@ -126,14 +126,18 @@ describe("analytics screen table", () => {
 
   it("collapses only the six leaf groups the design allows", () => {
     // 라우트(+ `+not-found`) → 이름. 접은 자리가 늘면 여기서 걸린다.
-    // 84 = 83 + 구독 관리(`(settings)/subscription`). 페이월은 시트라 라우트가 아니다.
+    // 92 = 91 + 약 복용 독립 페이지.
+    // 91 = 89 + 혈당·붓기 독립 페이지.
+    // 89 = 86 + 기록 페이지 셋(물·혈압·체중, 2026-09-05 — 셋 다 1:1 이름).
+    // 86 = 84 + 식단 리포트 페이지(`meal-report`) + 푸드 카메라(`food-camera`)
+    // (2026-09-04, 둘 다 1:1 이름). 84 = 83 + 구독 관리. 페이월은 시트라 라우트가 아니다.
     const names = new Set(
       knownAnalyticsRouteKeys().map((key) =>
         getAnalyticsScreenName(toSegments(key)),
       ),
     )
-    expect(knownAnalyticsRouteKeys()).toHaveLength(84)
-    expect(names.size).toBe(75)
+    expect(knownAnalyticsRouteKeys()).toHaveLength(92)
+    expect(names.size).toBe(83)
 
     // 탈퇴 3화면은 그 자체가 퍼널이라 접지 않는다.
     expect(getAnalyticsScreenName(["(settings)", "withdrawal"])).toBe(

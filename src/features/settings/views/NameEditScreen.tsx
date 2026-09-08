@@ -1,22 +1,20 @@
+import { SettingsDetailHeader } from "../components/SettingsDetailHeader"
+import { settingsDetailSpec } from "../components/settingsDetailSpec"
 import React, { useEffect, useRef, useState } from "react"
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
-  View,
 } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
-import Ionicons from "@expo/vector-icons/Ionicons"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAppRouter } from "@/src/shared/navigation"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
 import { ThemedView } from "@/components/themed-view"
 import { V2DotLoader } from "@/src/design-system-v2"
-import { BottomActionBar } from "@/src/shared/components/BottomActionBar"
+import { SettingsFormActions } from "../components/SettingsFormActions"
 import { getErrorMessage } from "@/src/lib/errorUtils"
 import { presentError, resolveError } from "@/src/lib/errorMessage"
 import { ApiError } from "@/src/services/core/apiError"
@@ -45,7 +43,6 @@ function getNameFieldMessage(e: unknown): string {
 }
 
 export function NameEditScreen() {
-  const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
@@ -125,16 +122,7 @@ export function NameEditScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("shared.back")}
-            onPress={router.back}
-            hitSlop={8}
-          >
-            <Ionicons name="chevron-back" size={24} color={s.textStrong} />
-          </Pressable>
-        </View>
+        <SettingsDetailHeader onBack={router.back} />
 
         <ScrollView
           bounces={false}
@@ -150,7 +138,7 @@ export function NameEditScreen() {
             {t("name.title")}
           </Text>
           <Text
-            style={[styles.subtitle, { color: s.textMuted }]}
+            style={[styles.subtitle, { color: s.text }]}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("name.subtitle")}
@@ -182,7 +170,7 @@ export function NameEditScreen() {
           )}
         </ScrollView>
 
-        <BottomActionBar
+        <SettingsFormActions
           label={t("shared.save")}
           disabled={!profile || !isFormatValid || isLoading || !!serverError}
           onPress={handleSave}
@@ -205,20 +193,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: LAYOUT.screenX,
-    paddingTop: 12,
+    paddingTop: 20,
     paddingBottom: 24,
   },
-  title: {
-    fontSize: 24,
-    lineHeight: 32,
-    letterSpacing: -0.48,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    marginBottom: 36,
-  },
+  title: settingsDetailSpec.title,
+  subtitle: settingsDetailSpec.description,
 })

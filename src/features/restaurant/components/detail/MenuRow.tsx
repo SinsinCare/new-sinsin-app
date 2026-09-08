@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 메뉴 한 줄. **이 기능의 핵심 화면 요소**다 — 목업 -14.
  *
@@ -66,7 +67,7 @@
  * 그림을 그리면 양·모양을 주장하게 되고, 그건 스톡 사진을 걷어낸 이유와 같은 잘못이다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { Image } from "expo-image"
 import { useTranslation } from "react-i18next"
 
@@ -83,7 +84,6 @@ import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 
 import type { MenuItemDto, SafetyLevel } from "../../types"
 import { menuSafetyEvidence } from "../../utils/menuSafetyEvidence"
-import { safetyBadge } from "../../utils/safetyBadge"
 import { SafetyBadge } from "../SafetyBadge"
 
 /**
@@ -161,26 +161,12 @@ export function MenuRow({
   const canShowVerdict = !profileMissing && menu.safetyLevel !== "UNKNOWN"
 
   const evidence = canShowVerdict ? menuSafetyEvidence(menu) : null
-  // 근거 줄의 강조 색은 배지와 **같은 색**이다. 다른 색을 쓰면 사용자가 둘을 다른
-  // 정보로 읽는다. 색만으로 뜻을 전하지 않기 위해 배지 라벨과 숫자가 항상 함께 있다.
-  const accent =
-    (canShowVerdict ? safetyBadge(menu.safetyLevel, colors)?.fg : null) ??
-    colors.label.neutral
-
   const amountText = evidence
     ? t(dynamicKey(AMOUNT_KEY[evidence.unit]), {
         nutrient: t(dynamicKey(`restaurant.safety.driver.${evidence.driver}`)),
         value: evidence.amount.toLocaleString("ko-KR"),
       })
     : null
-  // 크기는 백분율 하나다 — 행마다 단위가 갈리면 목록을 비교할 수 없다(menuSafetyEvidence.ts).
-  const magnitudeText =
-    evidence === null
-      ? null
-      : t("restaurant.safety.evidence.percent", {
-          percent: evidence.magnitude.value,
-        })
-
   const reasonKey = REASON_KEY[menu.safetyLevel]
   const driver = menu.safetyDriver
   // 숫자 근거가 있으면 등급 문장은 그리지 않는다 — 같은 말을 두 줄로 하게 된다.
@@ -220,12 +206,8 @@ export function MenuRow({
           </Text>
         </View>
 
-        {/*
-          근거 줄. 이 화면에서 사용자가 실제로 행동을 정하는 한 줄이라 설명문(14)보다
-          작지 않게 두고, 배수·백분율만 배지 색으로 강조한다. 영양소 이름과 값은
-          중립색이다 — 줄 전체를 빨갛게 칠하면 목록이 경고판이 되어 오히려 안 읽힌다.
-        */}
-        {amountText !== null && magnitudeText !== null && (
+        {/* Portion guidance is shown in MenuTab; this line retains the absolute nutrient amount. */}
+        {amountText !== null && (
           <Text
             style={[
               typography.label.smallWeak,
@@ -233,7 +215,6 @@ export function MenuRow({
             ]}
           >
             {amountText}
-            <Text style={{ color: accent }}>{` · ${magnitudeText}`}</Text>
           </Text>
         )}
 

@@ -1,3 +1,5 @@
+import { openRestaurantLink } from "../../utils/openRestaurantLink"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 상세 홈 탭 맨 위의 정보 요약 (목업 -9 / 확장 상태 -10).
  *
@@ -32,8 +34,7 @@
  */
 
 import { useMemo, useState } from "react"
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native"
-import * as Clipboard from "expo-clipboard"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -43,11 +44,12 @@ import {
   useV2Theme,
   V2Icon,
 } from "@/src/design-system-v2"
-import { showSuccessToast } from "@/src/lib/toast"
+import { showErrorToast, showSuccessToast } from "@/src/lib/toast"
 import { normalizeHttpsUrl, phoneUrl } from "@/src/shared/utils/externalUrl"
 
 import { ROW_ICON, ROW_ICON_GAP } from "../../layout"
 import { useRestaurantHours } from "../../hooks/useRestaurantHours"
+import { useAddressCopy } from "../../hooks/useAddressCopy"
 import type { RestaurantDetailDto, TodayHoursDto } from "../../types"
 import { AddressBlock } from "../AddressBlock"
 import { BusinessStatusText } from "../BusinessStatusText"
@@ -117,10 +119,11 @@ export function DetailInfoRows({ restaurantId, detail }: DetailInfoRowsProps) {
     [todayFromHours, detail],
   )
 
-  const copy = async (value: string, message: string) => {
-    await Clipboard.setStringAsync(value)
-    showSuccessToast(message)
-  }
+  const { copy: copyPhone } = useAddressCopy(
+    detail.phone ?? "",
+    () => showSuccessToast(t("restaurant.address.phoneCopied")),
+    () => showErrorToast(t("restaurant.address.phoneCopyFailed")),
+  )
 
   return (
     <View style={styles.container}>
@@ -172,10 +175,11 @@ export function DetailInfoRows({ restaurantId, detail }: DetailInfoRowsProps) {
             <Pressable
               onPress={() => {
                 const target = phoneUrl(detail.phone as string)
-                if (target) void Linking.openURL(target)
+                void openRestaurantLink(target, "phone")
               }}
               accessibilityRole="link"
-              accessibilityState={{ disabled: false }}
+              disabled={!phoneUrl(detail.phone)}
+              accessibilityState={{ disabled: !phoneUrl(detail.phone) }}
               accessibilityLabel={t("restaurant.detail.call")}
               hitSlop={ROW_HIT_SLOP}
               style={({ pressed }) => [pressed && styles.pressedText]}
@@ -189,10 +193,7 @@ export function DetailInfoRows({ restaurantId, detail }: DetailInfoRowsProps) {
             <CopyButton
               label={t("restaurant.address.copy")}
               onPress={() => {
-                void copy(
-                  detail.phone as string,
-                  t("restaurant.address.phoneCopied"),
-                )
+                void copyPhone()
               }}
             />
           </View>
@@ -253,7 +254,7 @@ function ExternalLink({ label, url }: { label: string; url: string }) {
   return (
     <Pressable
       onPress={() => {
-        if (target) void Linking.openURL(target)
+        void openRestaurantLink(target)
       }}
       accessibilityRole="link"
       accessibilityState={{ disabled: !target }}

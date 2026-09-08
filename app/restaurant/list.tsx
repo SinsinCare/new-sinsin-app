@@ -9,6 +9,10 @@
  * 뒤로 가기가 필터 되돌리기가 된다.
  */
 
+import {
+  restaurantCardDestination,
+  type RestaurantCardTarget,
+} from "@/src/features/restaurant/utils/restaurantCardNavigation"
 import { useCallback, useMemo } from "react"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
@@ -36,11 +40,8 @@ export default function RestaurantListRoute() {
   }, [cuisine, q])
 
   const selectRestaurant = useCallback(
-    (restaurantId: number) => {
-      router.push({
-        pathname: "/restaurant/[id]",
-        params: { id: restaurantId, from: "list" },
-      })
+    (restaurantId: number, target: RestaurantCardTarget) => {
+      router.push(restaurantCardDestination(restaurantId, "list", target))
     },
     [router],
   )

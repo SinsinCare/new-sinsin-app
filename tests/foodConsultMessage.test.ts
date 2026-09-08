@@ -82,7 +82,7 @@ describe("buildFoodConsultMessage", () => {
     expect(message).toContain("[식사] 비빔밥과 미역국")
     expect(message).toContain("[끼니] 저녁")
     expect(message).toContain("[먹은 양] 1인분")
-    expect(message).toContain("열량 600kcal")
+    expect(message).toContain("칼로리 600kcal")
     expect(message).toContain("나트륨 1,800mg")
   })
 
@@ -107,7 +107,7 @@ describe("parseFoodConsultMessage", () => {
     expect(parsed!.servingsLabel).toBe("1인분")
     expect(parsed!.totals).toHaveLength(8)
     expect(parsed!.totals[0]).toEqual({
-      label: "열량",
+      label: "칼로리",
       amount: "600",
       unit: "kcal",
     })
@@ -180,7 +180,7 @@ describe("parseFoodConsultMessage", () => {
     expect(parsed!.totals[0].label).toBe("foodReport.nutrients.calories")
 
     // 표시 시점 복원 — raw 키가 사람 말로 돌아온다.
-    expect(resolveNutrientLabel(parsed!.totals[0].label, koT)).toBe("열량")
+    expect(resolveNutrientLabel(parsed!.totals[0].label, koT)).toBe("칼로리")
     expect(resolveNutrientLabel(parsed!.totals[1].label, koT)).toBe("나트륨")
     expect(resolveNutrientLabel("나트륨", koT)).toBe("나트륨")
   })

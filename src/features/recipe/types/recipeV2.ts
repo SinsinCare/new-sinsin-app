@@ -191,6 +191,7 @@ export interface RecipeAuthor {
 
 /** 계약 §3.3 와 1:1. 와이어 모양이며 화면은 아래 `RecipeDetailView` 를 쓴다. */
 export interface RecipeDetail {
+  portionReference?: import("@/src/features/nutrition/utils/portionReference").PortionReference | null;
   id: number
   name: string
   summary: string | null

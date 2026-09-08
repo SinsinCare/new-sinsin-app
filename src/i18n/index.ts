@@ -11,6 +11,8 @@ import enAuth from "./locales/en/auth.json"
 import enBilling from "./locales/en/billing.json"
 import enCommon from "./locales/en/common.json"
 import enErrors from "./locales/en/errors.json"
+import enMedication from "./locales/en/medication.json"
+import koMedication from "./locales/ko/medication.json"
 import enHealth from "./locales/en/health.json"
 import enRecipe from "./locales/en/recipe.json"
 import enSettings from "./locales/en/settings.json"
@@ -36,6 +38,7 @@ export const resources = {
     common: koCommon,
     errors: koErrors,
     health: koHealth,
+    medication: koMedication,
     recipe: koRecipe,
     settings: koSettings,
   },
@@ -45,6 +48,7 @@ export const resources = {
     common: enCommon,
     errors: enErrors,
     health: enHealth,
+    medication: enMedication,
     recipe: enRecipe,
     settings: enSettings,
   },
@@ -67,7 +71,7 @@ void i18n.use(initReactI18next).init({
   lng: detectLanguage(),
   fallbackLng: "ko",
   defaultNS,
-  ns: ["auth", "billing", "common", "errors", "health", "recipe", "settings"],
+  ns: ["auth", "billing", "common", "errors", "health", "medication", "recipe", "settings"],
   interpolation: { escapeValue: false }, // RN은 XSS 이스케이프 불필요
   returnNull: false,
 })

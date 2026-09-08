@@ -1,209 +1,158 @@
-import { tokens } from "@/src/theme/tokens"
+import { useState } from "react"
 import {
-  Keyboard,
-  KeyboardEvent,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
+  View,
 } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { AppModal } from "@/src/shared/components/AppModal"
 import { ModalOverlayHost } from "@/src/shared/components"
-import { useV2Theme, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
-import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
-import { showConfirm } from "@/src/lib/dialog"
-import { trackAnalyticsEvent } from "@/src/features/analytics"
-import type { AnalyticsMealSlot } from "@/src/features/analytics/events"
-import Ionicons from "@expo/vector-icons/Ionicons"
-import { useEffect, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { Text, TextInput } from "@/src/shared/components/AppText"
+import { V2Button, V2ScreenHeader } from "@/src/design-system-v2"
+import { radius, spacing, typography } from "@/src/design-system-v2/tokens"
+import { useSurface } from "@/src/hooks/useSurface"
+import {
+  useTextRecord,
+  type TextRecordOptions,
+} from "../../hooks/useTextRecord"
 
-interface TextRecordProps {
-  open: boolean
-  /** 어느 끼니 자리에서 열렸는지 — 진입 이벤트에만 쓴다. */
-  slot: AnalyticsMealSlot
-  onClose: () => void
-  onSubmit: (text: string) => void
-}
-
-export function TextRecord({ open, slot, onClose, onSubmit }: TextRecordProps) {
+export function TextRecord(props: TextRecordOptions) {
   const { t } = useTranslation()
-  const { colors } = useV2Theme()
-  const [text, setText] = useState("")
-
-  /*
-    진입은 **열릴 때 1회**다. 닫히면 다시 셀 수 있게 되돌린다 — 이 컴포넌트는
-    언마운트되지 않고 `open` 만 false 가 되므로 ref 를 직접 내려야 한다.
-  */
-  const openedRef = useRef(false)
-  useEffect(() => {
-    if (!open) {
-      setText("")
-      openedRef.current = false
-      return
-    }
-    if (openedRef.current) return
-    openedRef.current = true
-    trackAnalyticsEvent("food_text_record_viewed", { slot })
-  }, [open, slot])
-
-  /**
-   * 쓰던 글을 두고 나가기 전에 한 번 묻는다.
-   *
-   * 자유글·레시피 편집기에는 원래 이 확인이 있었는데 이 화면에만 없었다 — 식사 기록의
-   * 세 형제(사진·앨범·글) 중 글만 한 글자도 안 남기고 사라졌다. 비어 있으면 묻지
-   * 않는다: 잃을 것이 없는데 확인을 붙이면 그냥 한 번 더 누르게 하는 것이다.
-   */
-  const handleClose = async () => {
-    if (text.trim().length === 0) {
-      // 한 글자도 안 쓰고 닫은 것 — 글 경로에서 가장 흔한 이탈이고 지금까지
-      // 아무 흔적도 없었다. `filled:false` 가 그 몫이다.
-      trackAnalyticsEvent("food_text_record_discarded", { filled: false })
-      onClose()
-      return
-    }
-    const confirmed = await showConfirm({
-      title: t("home.textRecord.discardTitle"),
-      description: t("home.textRecord.discardBody"),
-      confirmLabel: t("home.textRecord.discard"),
-      cancelLabel: t("home.textRecord.keepWriting"),
-      destructive: true,
-    })
-    // 확인창에서 되돌아온 사람은 아직 안 나갔다 — 버린 순간에만 센다.
-    if (confirmed) {
-      trackAnalyticsEvent("food_text_record_discarded", { filled: true })
-      onClose()
-    }
-  }
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
-  const isDarkMode = useAppColorScheme() === "dark"
-  const inactiveBg = isDarkMode
-    ? tokens.color.grey3.val
-    : tokens.color.grey8.val
-
-  useEffect(() => {
-    const show = Keyboard.addListener(
-      "keyboardWillShow",
-      (e: KeyboardEvent) => {
-        setKeyboardHeight(e.endCoordinates.height)
-      },
-    )
-    const hide = Keyboard.addListener("keyboardWillHide", () => {
-      setKeyboardHeight(0)
-    })
-    return () => {
-      show.remove()
-      hide.remove()
-    }
-  }, [])
+  const s = useSurface()
+  const insets = useSafeAreaInsets()
+  const entry = useTextRecord(props)
+  const [focused, setFocused] = useState(false)
 
   return (
     <AppModal
-      visible={open}
+      visible={props.open}
       animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={() => void handleClose()}
+      presentationStyle="fullScreen"
+      onRequestClose={() => void entry.close()}
     >
-      <V2VStack flex={1} style={{ backgroundColor: colors.background.default }}>
-        <V2HStack
-          align="center"
-          justify="center"
-          paddingTop={30}
-          paddingBottom={10}
+      <KeyboardAvoidingView
+        style={[styles.root, { backgroundColor: s.canvas }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View
+          style={{
+            paddingTop: insets.top,
+          }}
         >
-          <V2Text
-            color={colors.label.normal}
-            style={{ fontSize: 18, fontWeight: "600", textAlign: "center" }}
-          >
-            {t("home.textRecord.title")}
-          </V2Text>
-          <V2HStack
-            align="center"
-            justify="center"
-            onPress={() => void handleClose()}
-            accessibilityRole="button"
-            accessibilityLabel={t("action.close")}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 12,
-              width: 40,
-              height: 40,
-            }}
-          >
-            <Ionicons name="close" size={22} color={tokens.color.grey3.val} />
-          </V2HStack>
-        </V2HStack>
-
-        <V2VStack
-          flex={1}
-          align="center"
-          justify="center"
-          paddingBottom={keyboardHeight > 0 ? 10 : 80}
-          gap={16}
+          <V2ScreenHeader
+            title={t("home.textRecord.title")}
+            titleAlign="center"
+            leading="close"
+            safeAreaTop={false}
+            onBack={() => void entry.close()}
+          />
+        </View>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
-          <TextInput
+          <View style={styles.intro}>
+            <Text
+              style={[styles.title, { color: s.textStrong }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
+              {t("home.textRecord.prompt")}
+            </Text>
+            <Text
+              style={[styles.body, { color: s.text }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
+              {t("home.textRecord.hint")}
+            </Text>
+          </View>
+          <View
             style={[
-              styles.input,
+              styles.inputBox,
               {
-                color: isDarkMode
-                  ? tokens.color.textDark.val
-                  : tokens.color.black.val,
+                backgroundColor: s.surfaceSunken,
+                borderColor: focused ? s.brand : "transparent",
               },
             ]}
-            value={text}
-            onChangeText={setText}
-            placeholder={t("home.textRecord.placeholder")}
-            textAlign="center"
-          />
-          <V2Text
-            color={colors.label.alternative}
-            lineBreakStrategyIOS="hangul-word"
-            style={{ fontWeight: "600" }}
           >
-            {t("home.textRecord.example")}
-          </V2Text>
-        </V2VStack>
-
-        <TouchableOpacity
-          onPress={() => onSubmit(text)}
+            <TextInput
+              accessibilityLabel={t("home.textRecord.inputLabel")}
+              multiline
+              scrollEnabled={false}
+              editable={!entry.isSubmitting}
+              style={[styles.input, { color: s.textStrong }]}
+              value={entry.text}
+              onChangeText={entry.setText}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder={t("home.textRecord.placeholder")}
+              placeholderTextColor={s.placeholder}
+              selectionColor={s.brand}
+              textAlignVertical="top"
+            />
+          </View>
+          <View style={styles.example}>
+            <Text style={[styles.exampleTitle, { color: s.text }]}>
+              {t("home.textRecord.exampleTitle")}
+            </Text>
+            <Text
+              style={[styles.exampleBody, { color: s.text }]}
+              lineBreakStrategyIOS="hangul-word"
+            >
+              {t("home.textRecord.example")}
+            </Text>
+          </View>
+        </ScrollView>
+        <View
           style={[
-            styles.button,
-            { marginBottom: keyboardHeight > 0 ? keyboardHeight + 12 : 40 },
-            text ? styles.buttonActive : { backgroundColor: inactiveBg },
+            styles.footer,
+            {
+              paddingBottom: Math.max(insets.bottom, spacing[16]),
+              backgroundColor: s.canvas,
+            },
           ]}
-          disabled={!text}
         >
-          <V2Text
-            color={text ? colors.static.white : colors.label.alternative}
-            style={{ fontSize: 18, fontWeight: "600" }}
+          <V2Button
+            size="xl"
+            fullWidth
+            multilineLabel
+            disabled={!entry.canSubmit}
+            loading={entry.isSubmitting}
+            onPress={() => void entry.submit()}
           >
             {t("home.textRecord.checkNutrients")}
-          </V2Text>
-        </TouchableOpacity>
-      </V2VStack>
-      {/* RN Modal 안에서 다이얼로그·토스트가 뜨려면 이 안에도 호스트가 있어야 한다. */}
+          </V2Button>
+        </View>
+      </KeyboardAvoidingView>
       <ModalOverlayHost />
     </AppModal>
   )
 }
 
 const styles = StyleSheet.create({
-  input: {
-    minHeight: 44,
-    width: "80%",
-    fontSize: 26,
-    fontWeight: "700",
+  root: { flex: 1 },
+  scroll: { flex: 1 },
+  content: {
+    paddingHorizontal: spacing[20],
+    paddingTop: spacing[24],
+    paddingBottom: spacing[24],
+    gap: spacing[24],
   },
-  button: {
-    alignItems: "center",
-    marginHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 30,
+  intro: { gap: spacing[8] },
+  title: typography.title.large,
+  body: typography.subtext.large,
+  inputBox: {
+    padding: spacing[16],
+    borderRadius: radius["2xl"],
+    borderWidth: 1,
   },
-  buttonActive: {
-    backgroundColor: tokens.color.primary7.val,
-  },
-  buttonInactive: {
-    backgroundColor: tokens.color.grey8.val,
-  },
+  input: { ...typography.body.mediumWeak, minHeight: 168, padding: 0 },
+  example: { gap: spacing[8], paddingHorizontal: spacing[4] },
+  exampleTitle: typography.subtext.largeStrong,
+  exampleBody: typography.subtext.large,
+  footer: { paddingHorizontal: spacing[20], paddingTop: spacing[12] },
 })

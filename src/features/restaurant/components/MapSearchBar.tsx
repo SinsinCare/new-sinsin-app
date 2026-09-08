@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -12,10 +13,12 @@ import {
 
 import { FLOATING_SHADOW, mapOverlayChrome } from "./mapFloating"
 
-const HEIGHT = 48
+export const MAP_SEARCH_BAR_HEIGHT = 48
+const HEIGHT = MAP_SEARCH_BAR_HEIGHT
 
 export interface MapSearchBarProps {
   /** 확정된 검색어. 비어 있으면 자리표시자를 그린다. */
+  embedded?: boolean
   bookmarkedOnly?: boolean
   onToggleBookmarkedOnly?: () => void
   query?: string
@@ -27,6 +30,7 @@ export interface MapSearchBarProps {
 }
 
 export function MapSearchBar({
+  embedded = false,
   query = "",
   bookmarkedOnly = false,
   onToggleBookmarkedOnly,
@@ -40,7 +44,15 @@ export function MapSearchBar({
   const chrome = mapOverlayChrome({ mode, ...colors })
 
   return (
-    <View style={[styles.root, FLOATING_SHADOW, chrome, style]}>
+    <View
+      style={[
+        styles.root,
+        embedded
+          ? { backgroundColor: colors.fill.control }
+          : [FLOATING_SHADOW, chrome],
+        style,
+      ]}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("restaurant.searchAccessibility")}
@@ -54,7 +66,7 @@ export function MapSearchBar({
             typography.label.smallWeak,
             styles.text,
             {
-              color: colors.label.neutral,
+              color: hasQuery ? colors.label.normal : colors.label.neutral,
             },
           ]}
           numberOfLines={1}

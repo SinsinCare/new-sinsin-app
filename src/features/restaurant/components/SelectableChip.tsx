@@ -16,7 +16,12 @@ import {
 export type SelectableChipSize = "s" | "m"
 
 /** fill: 브랜드 강조, outline: 필터 시트, quiet: 결과 위의 가벼운 테두리 컨트롤. */
-export type SelectableChipVariant = "fill" | "outline" | "quiet" | "text"
+export type SelectableChipVariant =
+  | "fill"
+  | "outline"
+  | "quiet"
+  | "text"
+  | "filter"
 
 export interface SelectableChipProps {
   label: string
@@ -71,6 +76,12 @@ function resolveColors(
   onSurface: boolean,
   colors: SemanticColors,
 ): ChipPalette {
+  if (variant === "filter") {
+    return {
+      bg: colors.fill.normal,
+      fg: selected ? colors.label.normal : colors.label.neutral,
+    }
+  }
   if (selected) {
     if (variant === "fill") {
       return {
@@ -139,7 +150,7 @@ export function SelectableChip({
           paddingVertical: spacing[8],
           paddingHorizontal: s.paddingHorizontal,
           backgroundColor:
-            variant === "quiet" || variant === "text"
+            variant === "quiet" || variant === "text" || variant === "filter"
               ? "transparent"
               : palette.bg,
         },
@@ -148,14 +159,23 @@ export function SelectableChip({
         style,
       ]}
     >
-      {(variant === "quiet" || (variant === "text" && selected)) && (
+      {(variant === "quiet" ||
+        variant === "filter" ||
+        (variant === "text" && selected)) && (
         <View
           pointerEvents="none"
           style={[
             styles.quietSurface,
             {
               backgroundColor: palette.bg,
-              borderColor: selected ? palette.bg : colors.line.neutral,
+              borderColor:
+                variant === "filter"
+                  ? selected
+                    ? colors.label.neutral
+                    : "transparent"
+                  : selected
+                    ? palette.bg
+                    : colors.line.neutral,
             },
           ]}
         />
@@ -164,7 +184,15 @@ export function SelectableChip({
         <V2Icon name={leadingIcon} size={s.icon} color={palette.fg} />
       ) : null}
 
-      <Text style={[s.text, { color: palette.fg }]} numberOfLines={1}>
+      <Text
+        style={[
+          variant === "filter" && !selected
+            ? typography.label.xSmallWeak
+            : s.text,
+          { color: palette.fg },
+        ]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
 

@@ -67,9 +67,9 @@ import type {
 
 /**
  * - `"always"` — 서버가 **항상** 보내는 키. 값이 `null` 인 것은 정상이고 키가 없으면 결함이다.
- * - `"omitted"` — 서버가 해당 없을 때 키를 **지운다**(`null` 로 채우지 않는다).
+ * - `"omitted"` — 해당 없거나 구버전 서버에서 키가 생략될 수 있다.
  *
- * `"omitted"` 는 지금 자동완성에만 쓴다. 서버 `suggestRepository.toSuggestion` 이
+ * 자동완성의 `"omitted"` 는 서버 `suggestRepository.toSuggestion` 이
  * `MENU` 제안에서 `lat`/`lng`/`restaurantId` 를 아예 빼고, 그 사실을 앱이 `| null` 로
  * 잘못 알고 있어서 `item.lat !== null` 이 `undefined !== null` → `true` 로 통과했다.
  * 지도 카메라가 `lat: undefined` 로 움직인 그 버그다. **모양으로 구분되는 것이 계약이므로**
@@ -150,6 +150,7 @@ export const LIST_RESPONSE: FieldManifest<RestaurantListResponse> = {
  * 이 표가 fixture 와 양방향으로 맞아야 카드가 그려진다.
  */
 export const CARD: FieldManifest<RestaurantCardDto> = {
+  representativeMenuNames: "omitted",
   restaurantId: "always",
   name: "always",
   lat: "always",
@@ -188,6 +189,8 @@ export const CARD_SAFETY: FieldManifest<RestaurantSafetyDto> = {
   unknownMenuCount: "always",
   hasSafeMenu: "always",
   driverCounts: "always",
+  // Older server responses predate the complete per-nutrient counts.
+  concernCounts: "omitted",
   profileMissing: "always",
 }
 
@@ -278,6 +281,7 @@ export const BOOKMARK_TOGGLE: FieldManifest<BookmarkToggleResponse> = {
 /* ────────────────────────── 상세 GET /:id ────────────────────────── */
 
 export const DETAIL: FieldManifest<RestaurantDetailDto> = {
+  representativeMenuNames: "omitted",
   restaurantId: "always",
   name: "always",
   description: "always",
@@ -373,7 +377,7 @@ export const MENUS_RESPONSE: FieldManifest<RestaurantMenusResponse> = {
 }
 
 /** 영양소 4종에 **단위 접미사가 없다**. `proteinG`/`sodiumMg` 는 계약서에만 있던 이름이다. */
-export const MENU_ITEM: FieldManifest<MenuItemDto> = {
+export const MENU_ITEM: FieldManifest<Omit<MenuItemDto, "portionReference">> = {
   menuId: "always",
   name: "always",
   description: "always",

@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 연결 확인 — 고른 의사에게 연결을 **요청**하는 마지막 자리.
  *
@@ -6,7 +7,7 @@
  * "무엇이 열리는가" 가 아니라 "열린 뒤에도 네가 닫을 수 있다" 를 말한다.
  */
 
-import { ScrollView, StyleSheet, Text, View } from "react-native"
+import { ScrollView, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 

@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Segment Control
 // Spec: project/design-system-v2/design-system-base/components/Segment-Control.md (Figma node 227:5473)
 //
@@ -13,7 +15,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from "react-native"
@@ -122,6 +123,7 @@ export function V2SegmentControl({
         ]}
       >
         <Text
+          maxFontSizeMultiplier={FONT_SCALE.control}
           numberOfLines={1}
           style={[
             selected ? s.textSelected : s.textUnselected,

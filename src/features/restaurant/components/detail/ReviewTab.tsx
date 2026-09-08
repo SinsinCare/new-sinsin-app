@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 후기 탭 (목업 -11 / -12).
  *
@@ -28,7 +29,7 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
 import { AUTO_PAGE_LIMIT } from "../../utils/autoPaginate"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -132,6 +133,8 @@ export function ReviewTab({
   useEffect(() => {
     autoPages.current = 0
   }, [sort, keyword, menuName])
+
+  const hasReviewFilters = keyword !== ALL || menuName !== ALL
 
   const totalLabel = formatPhotoCount(breakdown?.totalCount ?? 0)
 
@@ -270,8 +273,27 @@ export function ReviewTab({
       {reviews.length === 0 ? (
         <V2EmptyState
           surface="restaurant_detail_review"
-          title={t("restaurant.empty.reviewTitle")}
-          description={t("restaurant.empty.reviewBody")}
+          title={t(
+            hasReviewFilters
+              ? "restaurant.empty.filteredReviewTitle"
+              : "restaurant.empty.reviewTitle",
+          )}
+          description={t(
+            hasReviewFilters
+              ? "restaurant.empty.filteredReviewBody"
+              : "restaurant.empty.reviewBody",
+          )}
+          actionLabel={
+            hasReviewFilters ? t("restaurant.empty.showAllReviews") : undefined
+          }
+          onAction={
+            hasReviewFilters
+              ? () => {
+                  setKeyword(ALL)
+                  setMenuName(ALL)
+                }
+              : undefined
+          }
         />
       ) : (
         <View style={styles.list}>

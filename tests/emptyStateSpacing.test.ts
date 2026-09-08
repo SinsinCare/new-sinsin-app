@@ -91,7 +91,7 @@ describe("스토리 자리는 상태가 바뀌어도 같은 크기다", () => {
  * 바뀔 때 그 테스트가 방해만 되고, 정작 "다시 대칭으로 되돌리는" 것은 못 막는다.
  */
 const POST_DETAIL = readFileSync(
-  join(__dirname, "../app/post/[id].tsx"),
+  join(__dirname, "../src/features/recipe/views/PostDetailScreen.tsx"),
   "utf8",
 )
 const POST_CODE = POST_DETAIL.replace(/\/\*[\s\S]*?\*\//g, "").replace(

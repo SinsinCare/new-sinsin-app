@@ -56,8 +56,17 @@ describe("restaurantDetailInstanceKey", () => {
 
   it("다른 식당이면 반드시 다른 키다", () => {
     const ids = [24, 51, 868, 0, 1, 999999]
-    const keys = ids.map(restaurantDetailInstanceKey)
+    const keys = ids.map((id) => restaurantDetailInstanceKey(id))
     expect(new Set(keys).size).toBe(ids.length)
+  })
+
+  it("the same restaurant can be opened specifically at its menu without inheriting the home tab", () => {
+    expect(restaurantDetailInstanceKey(51, "menu")).not.toBe(
+      restaurantDetailInstanceKey(51),
+    )
+    expect(restaurantDetailInstanceKey(51, "home")).toBe(
+      restaurantDetailInstanceKey(51),
+    )
   })
 
   it("파싱 실패(null)도 자기 자리를 갖는다", () => {
@@ -76,7 +85,7 @@ describe("RestaurantDetailScreen 배선", () => {
     expect(source).toContain("restaurantDetailInstanceKey")
     // 키가 **JSX 의 key** 로 쓰여야 한다. 다른 곳에 쓰면 리마운트가 일어나지 않는다.
     expect(source).toMatch(
-      /key=\{restaurantDetailInstanceKey\(\s*props\.restaurantId\s*\)\}/u,
+      /key=\{restaurantDetailInstanceKey\(\s*props\.restaurantId,\s*props\.initialTab\s*\)\}/u,
     )
   })
 

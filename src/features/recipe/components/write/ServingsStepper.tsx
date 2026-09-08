@@ -42,7 +42,7 @@ export function ServingsStepper({
     <View style={styles.wrap}>
       <View style={styles.row}>
         <Text style={[styles.label, { color: s.textStrong }]}>{label}</Text>
-        <View style={[styles.control, { backgroundColor: s.surface }]}>
+        <View style={[styles.control, { backgroundColor: s.surfaceSunken }]}>
           <Pressable
             onPress={() => onChange(value - 1)}
             disabled={!canDecrease}

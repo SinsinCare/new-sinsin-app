@@ -1,3 +1,4 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * **댓글 · 답글 입력 바** — 상세(S4) 하단 · 답글쓰기(S5) 하단 · 스토리 댓글 시트(S12) 푸터.
  * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.9 · §5.6 (WBS 1.8).
@@ -52,7 +53,6 @@ import { useState, type ComponentType, type ReactElement } from "react"
 import {
   Pressable,
   StyleSheet,
-  TextInput,
   View,
   type StyleProp,
   type TextInputProps,

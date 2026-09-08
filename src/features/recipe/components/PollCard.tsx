@@ -101,7 +101,7 @@ export function PollCard({
   const canSubmit = selectedIds.length > 0 && !isSubmitting
 
   return (
-    <View style={[styles.card, { backgroundColor: surface.surface }]}>
+    <View style={[styles.card, { backgroundColor: surface.surfaceSunken }]}>
       <View style={styles.headerRow}>
         <Text
           style={[styles.title, { color: surface.brand }]}
@@ -226,13 +226,13 @@ export function PollCard({
           onPress={submitVote}
           disabled={!canSubmit}
           haptic={false}
-          baseColor={canSubmit ? inkBg : surface.ctaOffBg}
+          baseColor={canSubmit ? inkBg : surface.surfaceSunken}
           pressedColor={
             canSubmit
               ? surface.isDark
                 ? "#DADAE0"
                 : "#34363A"
-              : surface.ctaOffBg
+              : surface.surfaceSunken
           }
           pressScale={0.97}
           style={styles.submitButton}

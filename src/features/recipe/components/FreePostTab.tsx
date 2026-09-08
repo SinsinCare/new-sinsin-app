@@ -1,9 +1,10 @@
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
+import { typography } from "@/src/design-system-v2/tokens"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 // 리사이클링 리스트 — 피드는 ScrollView+map 대신 FlashList(v2, 추정치 불필요)
 import { FlashList, type FlashListRef } from "@shopify/flash-list"
-import Ionicons from "@expo/vector-icons/Ionicons"
 import { type Href } from "expo-router"
 import {
   isAtScrollTop,
@@ -11,15 +12,12 @@ import {
   useRegisterTabReset,
 } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated"
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
 import { resolveError } from "@/src/lib/errorMessage"
 import { useRefreshable, useRevalidateOnReturn } from "@/src/shared/refresh"
 import { V2Chip } from "@/src/design-system-v2/components/V2Chip"
-import { useV2Theme } from "@/src/design-system-v2/hooks/useV2Theme"
-import { touchTarget } from "@/src/design-system-v2/tokens/size"
 import {
   V2ErrorState,
   V2LoadingState,
@@ -37,16 +35,12 @@ import {
   categoryChipRailHeight,
 } from "./community/CategoryChipRail"
 import { SortDropdown } from "./community/SortDropdown"
-import {
-  COMMUNITY_GUTTER,
-  SEARCH_TO_RAIL_GAP,
-} from "./community/communityLayout"
+import { COMMUNITY_GUTTER } from "./community/communityLayout"
 import {
   NEIGHBOR_SUGGESTION_COUNT,
   NeighborSuggestionSection,
   type NeighborSuggestion,
 } from "./community/NeighborSuggestionSection"
-import { SectionBand } from "./community/SectionBand"
 import {
   TrendingPostsSection,
   type TrendingPost,
@@ -146,7 +140,6 @@ const TRENDING_INSERT_AFTER = 3
 const FILTER_BAR_HEIGHT = categoryChipRailHeight("results")
 
 /** 검색 입구의 높이. 최소 터치 타겟이라 더 못 줄인다. */
-const SEARCH_FIELD_HEIGHT = touchTarget.min
 
 /**
  * **고정층의 총 두께** — 8 + 44 + 8 + 52 = **112**.
@@ -159,11 +152,7 @@ const SEARCH_FIELD_HEIGHT = touchTarget.min
  * 아래에서 돈다 — `spinnerOffset` 으로 이 값을 넘기면 스피너가 콘텐츠 안으로 밀린다
  * (`useRefreshable` 호출부 주석).
  */
-export const PINNED_HEADER_HEIGHT =
-  SEARCH_TO_RAIL_GAP +
-  SEARCH_FIELD_HEIGHT +
-  SEARCH_TO_RAIL_GAP +
-  FILTER_BAR_HEIGHT
+export const PINNED_HEADER_HEIGHT = FILTER_BAR_HEIGHT + 48
 
 /**
  * 목록에 그리는 정렬 옵션. 순서가 곧 메뉴의 순서다(§2.6).
@@ -196,9 +185,9 @@ export function FreePostTab({
   contentBottomPadding = 88,
 }: FreePostTabProps) {
   const { t } = useTranslation("recipe")
+  const { t: tCommon } = useTranslation("common")
   const surface = useSurface()
   // 고정층의 면은 v2 시맨틱에서 온다 — 칩 레일이 칠하는 색과 **같은 출처**여야 한다.
-  const { colors } = useV2Theme()
   const router = useAppRouter()
   const queryClient = useQueryClient()
   const categoryLabel = useCallback(
@@ -724,42 +713,7 @@ export function FreePostTab({
     ],
   )
 
-  /*
-    ■ 고정 헤더 — **검색 한 줄 + 필터 한 줄, 목록 밖** (2026-08-21)
-
-    ┌ 고정 ────────────────────────────────────┐
-    │  [🔍 글이나 태그를 검색해 보세요]            │  8 + 44 + 8
-    │  [전체][식단][수치 변화]…      ⟨최신순 ▾⟩   │  52 (하단 1px 포함)
-    └──────────────────────────────────────────┘  = 112
-       ↓ 여기부터 스크롤: 스토리 레일 · 밴드 · 글
-
-    두 줄이 **한 덩어리**로 읽혀야 하므로 경계는 바닥에 한 줄뿐이다 — 검색 줄은 자기
-    테두리를 갖지 않고, 레일의 `borderBottom` 이 그 하나를 맡는다. 사이 여백은
-    `SEARCH_TO_RAIL_GAP` 한 곳에서 온다(레시피 탭이 같은 값을 쓴다).
-
-    검색을 다시 고정으로 올린 것은 사용자 판정이다("검색도 해당 카테고리바보다 위에
-    있고 똑같이 스크롤에 영향을 안 받아야 할 듯"). 한동안 검색을 머리 안에 넣어 밀도를
-    아꼈지만, 그러면 스크롤한 순간 검색이 **필터 아래**로 사라져 두 도구의 위계가
-    뒤집힌다. 레시피 탭도 같은 모양으로 통일한다.
-
-    ─── 왜 `stickyHeaderIndices` 가 아닌가 ─────────────────────────────────────
-    FlashList v2 의 스티키 헤더는 **`data` 의 인덱스**를 받아 그 항목을 `renderItem`
-    으로 다시 그린다(`dist/recyclerview/components/StickyHeaders.js` — `data[index]` 를
-    `ViewHolder` 에 그대로 넣는다). 즉 필터 바를 스티키로 만들려면 바가 **목록 항목**이
-    되어야 하는데, 그러면 이 파일이 지켜 온 것이 통째로 무너진다: `data` 가 글만 담는
-    다는 것, `keyExtractor` 가 `String(post.id)` 라는 것, 빈 목록 판정·자동 backfill·
-    `onEndReached` 가 글 수만 센다는 것, 그리고 두 삽입 섹션의 자리(3번째·8번째 글
-    다음)가 한 칸씩 밀리지 않는다는 것. `ListHeaderComponent` 는 인덱스 축 밖이라
-    스티키 대상이 될 수 없고, 밑단 `ScrollView` 의 native `stickyHeaderIndices` 는
-    FlashList 가 프롭에서 걷어내며(`RecyclerView.js` 의 `__rest`) 항목들도 절대 배치라
-    닿지 않는다. 그래서 고정층은 **목록 밖 형제**다.
-  */
-  /*
-    ■ 필터 — **한 줄, 52pt.** 왼쪽은 가로로 흐르는 카테고리 칩, 오른쪽은 그 자리에
-    붙박인 정렬 필 하나다. `CategoryChipRail` 과 `SortDropdown` 은 이 자리를 위해
-    만들어진 것들이고, 화면이 칩을 손으로 다시 그리던 코드는 그만큼 지웠다
-    (하드코딩 hex 6개도 같이).
-  */
+  // Tabs and category controls stay outside the virtualized post list.
   const filterBar = (
     <CategoryChipRail
       density="results"
@@ -805,109 +759,39 @@ export function FreePostTab({
   )
 
   const pinnedHeader = (
-    /*
-      껍데기는 **자기 테두리를 갖지 않는다** — 경계는 레일의 `borderBottom` 한 줄뿐이고,
-      여기에 하나를 더 얹으면 검색과 칩이 두 덩어리로 갈라진다. 면 색만 레일과 맞춘다
-      (다르면 두 줄 사이에 띠가 하나 더 생긴다).
-
-      **이 면은 여기서 시작하지 않는다.** 화면의 타이틀 줄(`app/(tabs)/community.tsx`)이
-      같은 `background.default` 를 칠해 안전영역부터 이 블록까지가 **하나의 고정층**이다
-      (2026-08-22 — 그 파일의 헤더 주석이 근거). 값을 바꾸려면 두 곳을 같이 바꿔야 하고,
-      바꾸기 전에 그 주석의 "컨트롤이 무너진다" 문단을 읽을 것.
-    */
-    <View style={{ backgroundColor: colors.background.default }}>
-      {/*
-        ■ 검색은 인풋이 아니라 **입구**다 (P0)
-
-        서버 검색 API 가 생기면서 검색은 전용 화면(`/community/search`)이 맡는다.
-        이 줄은 눌러서 그 화면으로 들어가는 문 — 전량 로드된 피드를 클라이언트에서
-        거르던 인라인 검색층은 은퇴했다(피드가 커서 페이지라 "전량" 이 없다).
-
-        스켈레톤 갈래 **밖**이다. 첫 조회 중에도 검색으로 들어갈 수 있어야 한다 —
-        기다리는 동안 화면이 아무 데도 못 가는 상태가 되면 안 된다.
-      */}
-      <View style={styles.searchWrap}>
+    <View style={{ backgroundColor: surface.canvas }}>
+      <View style={[styles.browse, { borderBottomColor: surface.border }]}>
         <Pressable
-          onPress={() => router.push("/community/search" as Href)}
-          accessibilityRole="button"
-          accessibilityLabel={t("feed.searchPlaceholder")}
-          style={({ pressed }) => [
-            styles.searchField,
-            {
-              /*
-                고정층의 면이 `background.default`(라이트는 흰색)라, 예전처럼 카드 색을
-                쓰면 **흰 위의 흰 칸**이 된다. `surface.surface` 우물이 두 모드 모두에서
-                한 단 파인 입력칸으로 읽힌다.
-
-                이 줄과 바로 아래 칩 레일은 **같은 깊이가 아니다** — 그래도 된다.
-                우물은 `fill.normal` 두 겹(라이트 #eaeaec · 흰 면 위 ΔL* 7.25)이고
-                `V2Chip` 미선택 면은 `fill.control`(#eff0f1 · 5.25)이다. 칩 쪽이
-                덜 내려간 것은 시안 때문이 아니라(그 제약은 2026-08-21 에 풀었다)
-                **칩 라벨이 자기 면 위에서 4.5 를 지켜야 하기 때문**이다 — 이 줄의
-                안내문은 `placeholder` 라 그 제약이 없다. 그러니 둘을 같은 값으로
-                맞추려 들지 마라. 근거는 `tokens/colors.ts` 의 `fill.control` 머리말
-                (표)과 `lightContrastAudit` §6·§7.
-              */
-              backgroundColor: surface.surface,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: true }}
+          onPress={() => scrollToTop(true)}
+          style={[styles.browseTab, { borderBottomColor: surface.textStrong }]}
         >
-          <Ionicons name="search" size={17} color={surface.text} />
-          <Text
-            style={[styles.searchEntryText, { color: surface.placeholder }]}
-            numberOfLines={1}
-          >
-            {t("feed.searchPlaceholder")}
+          <Text style={[styles.browseLabel, { color: surface.textStrong }]}>
+            {tCommon("community.refresh.feed")}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="tab"
+          accessibilityState={{ selected: false }}
+          onPress={() => router.push("/(tabs)/community-popular" as Href)}
+          style={styles.browseTab}
+        >
+          <Text style={[styles.browseLabel, { color: surface.text }]}>
+            {tCommon("community.refresh.popular")}
           </Text>
         </Pressable>
       </View>
       {filterBar}
     </View>
   )
-
-  /*
-    피드 전체가 하나의 FlashList 다(예전엔 ScrollView + map — 가상화가 없어
-    글이 쌓일수록 전 항목이 마운트됐다). 스크롤하는 머리는 **스토리 · 밴드 둘뿐**이다 —
-    검색과 필터는 위 `pinnedHeader` 가 목록 밖에서 맡는다.
-  */
   const listHeader = (
     <>
-      {showSkeleton ? (
-        // 스토리 · 인기글 · 목록이 한꺼번에 도착하면 화면이 크게 튄다. 세 자리를 미리 잡는다.
-        <CommunityFeedSkeleton />
-      ) : (
-        /*
-         * 첫 진입 한 번만 머리(스토리)가 부드럽게 올라온다.
-         * 카드별 스태거는 필터·정렬 변경 때마다 재생돼 산만해서 걷어냈다.
-         * (FlashList 전환으로 목록 줄은 페이드 없이 바로 선다 — 머리가 화면을
-         * 채우고 있어 체감 차이는 없다.)
-         */
-        <Animated.View
-          entering={FadeInDown.duration(280).reduceMotion(ReduceMotion.System)}
-        >
-          {/* 스토리 — 오늘 하루만 남는 사진들이 맨 위에서 돈다. */}
-          <StoryRail />
-
-          {/*
-            **경계는 한 가지 방법으로만 읽힌다.** 예전엔 이 자리에 `요즘 이야기 중` 이
-            서면서 자기 밴드를 들고 왔고, 그 섹션이 접히거나 아래로 내려가면 스토리와
-            그 뒤 사이에 아무 경계도 안 남았다. 밴드를 여기 두는 이유가 그것이다 —
-            스토리 레일은 접히지 않는 섹션이라(비어도 조용한 한 줄로 자리를 지킨다)
-            그 뒤의 경계는 항상 필요하고, 그 필요는 어느 섹션의 사정과도 무관하다.
-          */}
-          <SectionBand />
-        </Animated.View>
-      )}
-      <View style={styles.listTopGap} />
+      <StoryRail compact />
+      {showSkeleton ? <CommunityFeedSkeleton /> : null}
     </>
   )
 
-  /*
-    실패의 재시도 버튼은 `resolveError` 가 `retryable` 이라 할 때만 — 지워진 태그처럼
-    몇 번을 눌러도 같은 실패에는 버튼이 거짓말이다. 타입을 붙여야 삼항의 두 갈래가
-    유니온으로 남는다(자세한 이유는 `V2ErrorStateRetry` 머리말).
-  */
   const feedRetry: V2ErrorStateRetry = feedFailure.retryable
     ? { onRetry: () => void refetch(), retryLabel: t("feed.errorRetry") }
     : {}
@@ -1004,7 +888,7 @@ export function FreePostTab({
     ) : null
 
   return (
-    <View style={styles.flex}>
+    <View style={[styles.flex, { backgroundColor: surface.canvas }]}>
       {/*
         검색 + 필터가 **한 덩어리로** 고정이다(2026-08-21 사용자 판정). 두 줄이 같이
         머무르는 총 두께는 112 — 자세한 산술과 근거는 `pinnedHeader` 머리말.
@@ -1055,33 +939,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  searchWrap: {
-    paddingHorizontal: COMMUNITY_GUTTER,
-    paddingTop: SEARCH_TO_RAIL_GAP,
-    // 칩 레일까지의 나머지 절반. 레일이 자기 위 여백 10 을 따로 갖는다(상수 머리말).
-    paddingBottom: SEARCH_TO_RAIL_GAP,
-  },
-  searchField: {
-    height: SEARCH_FIELD_HEIGHT,
-    borderRadius: 14,
-    paddingHorizontal: 12,
+  browse: {
+    minHeight: 48,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    paddingHorizontal: COMMUNITY_GUTTER,
+    borderBottomWidth: borderWidth.thin,
   },
-  searchEntryText: {
+  browseTab: {
     flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    letterSpacing: -0.3,
-    fontFamily: "Pretendard-Regular",
+    alignItems: "center",
+    minHeight: 48,
+    justifyContent: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
   },
-
-  listItemWrap: {
-    paddingHorizontal: 20,
-  },
+  browseLabel: typography.title.xSmallWeak,
+  listItemWrap: {},
   listGap: {
-    height: 10,
+    height: 0,
   },
   listTopGap: {
     height: 8,

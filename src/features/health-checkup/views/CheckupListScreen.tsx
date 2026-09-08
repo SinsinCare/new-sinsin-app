@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 건강검진 목록 선택 (시안 My Page Home-12).
  *
@@ -21,7 +22,7 @@
  */
 
 import { useCallback, useMemo, useState } from "react"
-import { ScrollView, StyleSheet, Text, View } from "react-native"
+import { ScrollView, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
 

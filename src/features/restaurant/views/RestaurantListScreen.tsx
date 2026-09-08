@@ -1,3 +1,5 @@
+import { useAvailableRestaurantSort } from "../hooks/useAvailableRestaurantSort"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 리스트 전용 모드 (목업 -8 / -21). 지도가 없는 결과 화면.
  * 헤더(검색 필드 모양의 회색 바 + ‹ + 쿼리) → 카테고리 칩 행 → 필터/정렬 칩 행 →
@@ -24,14 +26,14 @@
  * 여기서는 `FlatList` 가 창 밖 카드를 떼어 낸다.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import type { RestaurantCardTarget } from "../utils/restaurantCardNavigation"
+import { useCallback, useMemo, useState } from "react"
+import { Pressable, StyleSheet, View } from "react-native"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
 import { FlashList } from "@shopify/flash-list"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import {
-  iconSize,
   radius,
   spacing,
   touchTarget,
@@ -45,8 +47,8 @@ import {
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 
 import { CategoryChipRail } from "../components/CategoryChipRail"
-import { FilterChipRow, type FilterAxis } from "../components/FilterChipRow"
-import { FilterSheet } from "../components/FilterSheet"
+import { FilterChipRow } from "../components/FilterChipRow"
+import { FilterSheet, type FilterSection } from "../components/FilterSheet"
 import { RestaurantCard } from "../components/RestaurantCard"
 import {
   RestaurantCardSkeleton,
@@ -55,7 +57,6 @@ import {
 // 실패 문구 표는 `utils/fetchError` 하나뿐이다 — 여기 복사하면 이 화면에서만 400 이
 // 다시 "인터넷 확인" 으로 보인다(그 오분류가 이번에 고친 결함이다).
 import { failureSpec } from "../utils/fetchError"
-import { SortSheet } from "../components/SortSheet"
 import { AiSearchSheet } from "../components/AiSearchSheet"
 import {
   cuisineTypeLabelKey,
@@ -70,11 +71,15 @@ import { GUTTER } from "../layout"
 
 export interface RestaurantListScreenProps {
   /** 진입 조건. 검색어로 들어왔으면 `query`, 칩으로 들어왔으면 `cuisineTypes` 가 채워진다. */
+
   initialFilters?: Partial<FilterState>
   onBack: () => void
   /** 헤더의 검색 필드 탭 — 검색 화면으로 되돌아간다. */
   onPressSearchField: () => void
-  onSelectRestaurant: (restaurantId: number) => void
+  onSelectRestaurant: (
+    restaurantId: number,
+    target: RestaurantCardTarget,
+  ) => void
 }
 
 /** 목업 -8 의 헤더 필드 높이. `controlHeight.lg`(48)와 같은 값이라 토큰을 쓴다. */
@@ -93,18 +98,15 @@ export function RestaurantListScreen({
   const filters = useRestaurantFilters(initialFilters)
   const location = useMyLocation()
 
-  const [sortOpen, setSortOpen] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
-  const [filterSection, setFilterSection] = useState<FilterAxis | null>(null)
+  const [filterSection, setFilterSection] = useState<FilterSection | null>(null)
 
   /* 좌표가 없으면(커버리지 밖도 위치 없음으로 접힌다 — `useMyLocation` 머리말) `거리순` 은
      서버가 계산할 근거가 없다. 정렬을 조용히 기본값으로 되돌린다 —
      막아 두기만 하면 이미 고른 상태로 들어온 사용자가 영영 아무 정렬도 못 받는다. */
   const sanitize = filters.sanitizeSortForLocation
   const hasCoords = location.coords !== null
-  useEffect(() => {
-    sanitize(hasCoords)
-  }, [sanitize, hasCoords])
+  useAvailableRestaurantSort(filters.filters.sort, hasCoords, sanitize)
 
   const list = useRestaurantList({
     filters: filters.filters,
@@ -124,16 +126,11 @@ export function RestaurantListScreen({
     return t("restaurant.map.searchPlaceholder")
   }, [filters.filters.query, filters.filters.cuisineTypes, t])
 
-  const railSelected =
-    filters.filters.cuisineTypes.length === 1
-      ? filters.filters.cuisineTypes[0]
-      : null
-
   const renderItem = useCallback(
     ({ item }: { item: RestaurantCardDto }) => (
       <RestaurantCard
         card={item}
-        onPress={() => onSelectRestaurant(item.restaurantId)}
+        onPress={(target) => onSelectRestaurant(item.restaurantId, target)}
       />
     ),
     [onSelectRestaurant],
@@ -150,39 +147,45 @@ export function RestaurantListScreen({
           면은 `fill.control` — 이 줄이 앉는 바닥이 `background.default`(라이트는 흰색)라
           `fill.normal`(흰 면 위 ΔL* 3.79)로는 "회색 필드" 라는 말 자체가 성립하지 않는다.
           커뮤니티 피드의 같은 입구와 같은 판정이다(`tokens/colors.ts` §fill.control). */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t("restaurant.list.headerAccessibility")}
-        onPress={onPressSearchField}
-        style={({ pressed }) => [
-          styles.headerField,
-          { backgroundColor: colors.fill.control },
-          pressed && styles.pressedRow,
-        ]}
+      <View
+        style={[styles.headerField, { backgroundColor: colors.fill.control }]}
       >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("action.back")}
-          hitSlop={Math.max(0, (touchTarget.min - iconSize.md) / 2)}
           onPress={onBack}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.pressedRow,
+          ]}
         >
           <V2Icon name="chevronLeft" size="md" color={colors.label.normal} />
         </Pressable>
-        <Text
-          style={[
-            typography.label.mediumWeak,
-            styles.headerLabel,
-            { color: colors.label.normal },
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("restaurant.list.headerAccessibility")}
+          onPress={onPressSearchField}
+          style={({ pressed }) => [
+            styles.searchButton,
+            pressed && styles.pressedRow,
           ]}
-          numberOfLines={1}
         >
-          {headerLabel}
-        </Text>
-      </Pressable>
+          <Text
+            style={[
+              typography.label.mediumWeak,
+              styles.headerLabel,
+              { color: colors.label.normal },
+            ]}
+            numberOfLines={1}
+          >
+            {headerLabel}
+          </Text>
+        </Pressable>
+      </View>
 
       <CategoryChipRail
-        selected={railSelected}
-        onSelect={filters.selectRailCuisine}
+        selectedTypes={filters.filters.cuisineTypes}
+        onToggle={filters.toggleRailCuisine}
         onPressAiSearch={() => setAiOpen(true)}
         insetHorizontal={spacing[16]}
         style={styles.rail}
@@ -191,7 +194,7 @@ export function RestaurantListScreen({
       <FilterChipRow
         sort={filters.filters.sort}
         axes={filters.axes}
-        onPressSort={() => setSortOpen(true)}
+        onPressSort={() => setFilterSection("sort")}
         onPressAxis={setFilterSection}
         style={styles.chipRow}
       />
@@ -229,15 +232,8 @@ export function RestaurantListScreen({
         }
       />
 
-      <SortSheet
-        visible={sortOpen}
-        onClose={() => setSortOpen(false)}
-        value={filters.filters.sort}
-        onSubmit={filters.setSort}
-        distanceDisabledReason={location.distanceSortDisabledReason}
-      />
-
       <FilterSheet
+        distanceDisabledReason={location.distanceSortDisabledReason}
         visible={filterSection !== null}
         onClose={() => setFilterSection(null)}
         filters={filters}
@@ -347,14 +343,20 @@ const styles = StyleSheet.create({
   headerField: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing[8],
     height: HEADER_FIELD_HEIGHT,
     marginHorizontal: GUTTER,
     marginTop: spacing[8],
-    paddingHorizontal: spacing[12],
+    paddingRight: spacing[12],
     borderRadius: radius.lg,
   },
-  headerLabel: { flex: 1 },
+  backButton: {
+    width: touchTarget.min,
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchButton: { flex: 1, alignSelf: "stretch", justifyContent: "center" },
+  headerLabel: { flexShrink: 1 },
   rail: { marginTop: spacing[12] },
   chipRow: { marginTop: spacing[8], marginBottom: spacing[12] },
   listContent: { paddingTop: spacing[8] },

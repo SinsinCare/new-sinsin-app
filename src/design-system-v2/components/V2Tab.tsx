@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Tab (상단 텍스트 탭 바)
 // Spec: project/design-system-v2/design-system-base/components/Tab.md (Figma node 228:5665)
 //
@@ -15,7 +17,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from "react-native"
@@ -113,6 +114,7 @@ export function V2Tab({
         ]}
       >
         <Text
+          maxFontSizeMultiplier={FONT_SCALE.control}
           style={[
             selected ? s.textSelected : s.textUnselected,
             { color: selected ? colors.label.normal : colors.label.neutral },

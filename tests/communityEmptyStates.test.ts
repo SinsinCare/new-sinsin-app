@@ -121,6 +121,7 @@ jest.mock("@/src/features/analytics", () => ({
   requireActual 하면 시트·리애니메이티드까지 끌려오므로 그 파일 하나만 되살린다.
 */
 jest.mock("@/src/design-system-v2", () => ({
+  ...jest.requireActual("@/src/design-system-v2/tokens"),
   V2EmptyState: jest.requireActual(
     "@/src/design-system-v2/components/V2EmptyState",
   ).V2EmptyState,
@@ -128,10 +129,18 @@ jest.mock("@/src/design-system-v2", () => ({
   V2LoadingState: "V2LoadingState",
   V2Skeleton: "V2Skeleton",
   V2SkeletonGroup: "V2SkeletonGroup",
+  V2Button: "V2Button",
+  V2ScreenHeader: "V2ScreenHeader",
+  V2Text: "V2Text",
+  V2Avatar: "V2Avatar",
+  useV2Theme: jest.requireMock("@/src/design-system-v2/hooks/useV2Theme")
+    .useV2Theme,
 }))
 jest.mock("@/src/design-system-v2/hooks/useV2Theme", () => ({
   useV2Theme: () => ({
     colors: {
+      ...jest.requireActual("@/src/design-system-v2/tokens/colors")
+        .semanticLight,
       label: { normal: "#111111", neutral: "#555555", assistive: "#999999" },
     },
   }),

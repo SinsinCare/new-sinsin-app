@@ -1,0 +1,134 @@
+[
+  {
+    "feature": "analytics",
+    "tsxFiles": 0,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "announcement",
+    "tsxFiles": 1,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "auth",
+    "tsxFiles": 19,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "billing",
+    "tsxFiles": 7,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "coach",
+    "tsxFiles": 1,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "consultation",
+    "tsxFiles": 34,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "doctor-link",
+    "tsxFiles": 7,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "food",
+    "tsxFiles": 0,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "food-analysis",
+    "tsxFiles": 0,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "food-report",
+    "tsxFiles": 2,
+    "deepWellReferences": 2,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "health",
+    "tsxFiles": 11,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "health-checkup",
+    "tsxFiles": 11,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "home",
+    "tsxFiles": 61,
+    "deepWellReferences": 4,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "meal-recommendation",
+    "tsxFiles": 6,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "medication",
+    "tsxFiles": 15,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "mobilePolicy",
+    "tsxFiles": 3,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "nutrition",
+    "tsxFiles": 0,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "onboarding",
+    "tsxFiles": 10,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "recipe",
+    "tsxFiles": 108,
+    "deepWellReferences": 15,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "restaurant",
+    "tsxFiles": 67,
+    "deepWellReferences": 0,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "settings",
+    "tsxFiles": 32,
+    "deepWellReferences": 2,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  },
+  {
+    "feature": "stats-report",
+    "tsxFiles": 12,
+    "deepWellReferences": 2,
+    "coverage": "Source audit; see REVIEW.md for native coverage"
+  }
+]

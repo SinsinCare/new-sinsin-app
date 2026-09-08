@@ -18,6 +18,7 @@
  * 다음 페이지를 부르고, 중복 제거는 훅이 이미 `restaurantId` 기준으로 한다.
  */
 
+import type { RestaurantCardTarget } from "../utils/restaurantCardNavigation"
 import { useCallback } from "react"
 import { StyleSheet, View, type ViewStyle } from "react-native"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
@@ -44,7 +45,10 @@ import {
 
 export interface RestaurantBookmarksScreenProps {
   onBack: () => void
-  onSelectRestaurant: (restaurantId: number) => void
+  onSelectRestaurant: (
+    restaurantId: number,
+    target: RestaurantCardTarget,
+  ) => void
   style?: ViewStyle
 }
 
@@ -70,7 +74,7 @@ export function RestaurantBookmarksScreen({
     ({ item }: { item: BookmarkCardDto }) => (
       <RestaurantCard
         card={item}
-        onPress={() => onSelectRestaurant(item.restaurantId)}
+        onPress={(target) => onSelectRestaurant(item.restaurantId, target)}
       />
     ),
     [onSelectRestaurant],

@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 본인인증 화면의 **선택 카드**. 간편인증 수단(카카오/PASS)과 통신사 행이 같이 쓴다.
  *
@@ -11,7 +12,7 @@
  * `primary.primaryWeak`(흰 면 위 반투명 주황)이고, 미선택 면은 `fill.background` 다.
  */
 
-import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, type ViewStyle } from "react-native"
 
 import {
   borderWidth,

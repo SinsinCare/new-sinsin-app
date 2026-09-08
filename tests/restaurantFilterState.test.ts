@@ -280,6 +280,28 @@ describe("확정본과 초안", () => {
 })
 
 describe("시트 밖 컨트롤은 즉시 확정된다", () => {
+  it("지역 검색 이동은 이전 지역만 해제하고 다른 확정 조건을 보존한다", () => {
+    const hook = mount({
+      regionGroups: ["seoul-seocho"],
+      regionSidos: ["busan"],
+      cuisineTypes: ["KOREAN"],
+      nutritionTags: ["LOW_SODIUM"],
+      query: "국밥",
+      sort: "RATING",
+      openNow: true,
+      bookmarkedOnly: true,
+    })
+    const confirmed = hook.result().filters
+    hook.result().toggleCuisineType("JAPANESE")
+    hook.result().clearRegionSelection()
+    expect(hook.result().filters).toEqual({
+      ...confirmed,
+      regionGroups: [],
+      regionSidos: [],
+    })
+    expect(hook.result().draft).toEqual(hook.result().filters)
+  })
+
   it("정렬·검색어·영업중·북마크는 초안을 거치지 않는다", () => {
     const hook = mount()
     hook.result().setSort("PRICE_LOW")
@@ -295,27 +317,46 @@ describe("시트 밖 컨트롤은 즉시 확정된다", () => {
     expect(hook.result().isDraftDirty).toBe(false)
   })
 
-  it("칩 레일은 단일 선택이고 같은 칩을 다시 누르면 해제된다", () => {
+  it("상단 칩도 복수 선택하며 누른 항목만 해제한다", () => {
     const hook = mount()
-    hook.result().selectRailCuisine("KOREAN")
-    expect(hook.result().filters.cuisineTypes).toEqual(["KOREAN"])
-    hook.result().selectRailCuisine("JAPANESE")
+    hook.result().toggleRailCuisine("KOREAN")
+    hook.result().toggleRailCuisine("JAPANESE")
+    expect(hook.result().filters.cuisineTypes).toEqual(["KOREAN", "JAPANESE"])
+    expect(hook.result().draft.cuisineTypes).toEqual(["KOREAN", "JAPANESE"])
+    hook.result().toggleRailCuisine("KOREAN")
     expect(hook.result().filters.cuisineTypes).toEqual(["JAPANESE"])
-    hook.result().selectRailCuisine("JAPANESE")
+    hook.result().toggleRailCuisine("JAPANESE")
     expect(hook.result().filters.cuisineTypes).toEqual([])
-    hook.result().selectRailCuisine(null)
-    expect(hook.result().filters.cuisineTypes).toEqual([])
+    expect(hook.result().isDraftDirty).toBe(false)
   })
 
-  it("시트에서 두 개를 고른 뒤 레일을 누르면 레일 값 하나로 접힌다", () => {
+  it("필터의 복수 선택에 상단 칩을 더하고 개별 해제해도 나머지는 유지한다", () => {
     const hook = mount()
     hook.result().toggleCuisineType("KOREAN")
     hook.result().toggleCuisineType("CHINESE")
     hook.result().applyDraft()
-    hook.result().selectRailCuisine("JAPANESE")
-    // 레일은 단일 선택이라는 것이 목업의 동작이다.
-    expect(hook.result().filters.cuisineTypes).toEqual(["JAPANESE"])
-    expect(hook.result().draft.cuisineTypes).toEqual(["JAPANESE"])
+    hook.result().toggleRailCuisine("JAPANESE")
+    expect(hook.result().filters.cuisineTypes).toEqual([
+      "KOREAN",
+      "CHINESE",
+      "JAPANESE",
+    ])
+    expect(hook.result().axes.cuisine.count).toBe(3)
+    hook.result().toggleRailCuisine("CHINESE")
+    hook.result().syncDraft()
+    expect(hook.result().draft.cuisineTypes).toEqual(["KOREAN", "JAPANESE"])
+    expect(hook.result().axes.cuisine.count).toBe(2)
+  })
+
+  it("닫은 필터의 미확정 선택은 상단 칩을 누를 때 되살아나지 않는다", () => {
+    const hook = mount({ cuisineTypes: ["KOREAN"] })
+    hook.result().toggleCuisineType("CHINESE")
+    hook.result().setDraftOpenNow(true)
+    // Closing without applying leaves a discarded draft until the next open.
+    hook.result().toggleRailCuisine("JAPANESE")
+    expect(hook.result().filters.cuisineTypes).toEqual(["KOREAN", "JAPANESE"])
+    expect(hook.result().draft).toEqual(hook.result().filters)
+    expect(hook.result().draft.openNow).toBe(false)
   })
 })
 
@@ -525,5 +566,68 @@ describe("selectionChips (순수 함수)", () => {
       "restaurant.filter.regions.atlantis",
       "restaurant.region.groups.gyeonggi-icheon",
     ])
+  })
+})
+
+describe("section filter draft transaction", () => {
+  it("sort, opening hours and other axes apply together only after confirmation", () => {
+    const hook = mount()
+    hook.result().setDraftSort("RATING")
+    hook.result().setDraftOpenNow(true)
+    hook.result().toggleCuisineType("KOREAN")
+    expect(hook.result().filters).toMatchObject({
+      sort: "RECOMMENDED",
+      openNow: false,
+      cuisineTypes: [],
+    })
+    hook.result().applyDraft()
+    expect(hook.result().filters).toMatchObject({
+      sort: "RATING",
+      openNow: true,
+      cuisineTypes: ["KOREAN"],
+    })
+  })
+  it("reopening discards edits, including a reset that was never applied", () => {
+    const hook = mount({
+      query: "국밥",
+      bookmarkedOnly: true,
+      sort: "RATING",
+      openNow: true,
+      cuisineTypes: ["KOREAN"],
+    })
+    hook.result().resetDraft()
+    expect(hook.result().draft).toMatchObject({
+      query: "국밥",
+      bookmarkedOnly: true,
+      sort: "RECOMMENDED",
+      openNow: false,
+      cuisineTypes: [],
+    })
+    expect(hook.result().filters.sort).toBe("RATING")
+    hook.result().syncDraft()
+    expect(hook.result().draft).toEqual(hook.result().filters)
+  })
+  it("confirmed reset clears every section but preserves query and saved scope", () => {
+    const hook = mount({
+      query: "국밥",
+      bookmarkedOnly: true,
+      sort: "RATING",
+      openNow: true,
+      cuisineTypes: ["KOREAN"],
+      nutritionTags: ["LOW_SODIUM"],
+      regionGroups: ["seoul-gangnam"],
+    })
+    hook.result().resetDraft()
+    hook.result().applyDraft()
+    expect(hook.result().filters).toMatchObject({
+      query: "국밥",
+      bookmarkedOnly: true,
+      sort: "RECOMMENDED",
+      openNow: false,
+      cuisineTypes: [],
+      nutritionTags: [],
+      regionGroups: [],
+      regionSidos: [],
+    })
   })
 })

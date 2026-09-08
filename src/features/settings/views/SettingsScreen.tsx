@@ -1,410 +1,202 @@
-import React, { useRef, useState } from "react"
-import { StyleSheet, View, ScrollView, Pressable } from "react-native"
-import Ionicons from "@expo/vector-icons/Ionicons"
+import { afterSiblingModalsGone } from "@/src/shared/components/appModalGate"
+import { setStatusBarStyle } from "expo-status-bar"
+import { useThemeStore } from "@/src/stores/themeStore"
+import { useRef, useState } from "react"
+import { Appearance, ScrollView, StyleSheet, Switch, View } from "react-native"
+import Constants from "expo-constants"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
-
-import { ThemedText } from "@/components/themed-text"
-import { ThemedView } from "@/components/themed-view"
-import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { useAppRouter } from "@/src/shared/navigation"
+import { V2ScreenHeader } from "@/src/design-system-v2/components/V2ScreenHeader"
+import { useV2Theme } from "@/src/design-system-v2/hooks/useV2Theme"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
-import { ToggleItem } from "@/src/features/settings/components"
-import { useAuth } from "@/src/hooks/useAuth"
-import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { useNotifications } from "@/src/hooks/useNotifications"
-import { useThemeStore, type ThemeMode } from "@/src/stores/themeStore"
-import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
-import { notificationService } from "@/src/services/notificationService"
-import { tokens } from "@/src/theme/tokens"
-import { getAppLanguage, setAppLanguage, type Language } from "@/src/i18n"
-
-import { showErrorToast } from "@/src/lib/toast"
-import { presentError } from "@/src/lib/errorMessage"
-import { afterModalTransitions } from "@/src/shared/components/appModalGate"
+import { AccountRow, AccountSection } from "../components/AccountPrimitives"
+import { AccountPreferenceSheet } from "../components/AccountPreferenceSheet"
+import { useSettingsScreen } from "../hooks/useSettingsScreen"
+import type { ThemeMode } from "@/src/stores/themeStore"
+import type { Language } from "@/src/i18n"
 
 export function SettingsScreen() {
   const { t } = useTranslation("common")
-  const insets = useSafeAreaInsets()
+  const { t: copy } = useTranslation("settings")
+  const { colors } = useV2Theme()
   const router = useAppRouter()
-  const { signOut, isAuthenticated } = useAuth()
-  const c = useSettingsColors()
-  const { settings, updateSettings, pushEnabled, setPushConsent } =
-    useNotifications(isAuthenticated)
-
-  const { themeMode, setThemeMode } = useThemeStore()
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false)
-  const [languageChanging, setLanguageChanging] = useState(false)
-  const languageChangeInFlightRef = useRef(false)
-  const currentLanguage = getAppLanguage()
-
-  const handleThemeChange = (mode: ThemeMode) => {
-    setThemeMode(mode)
-  }
-
-  const handleLanguageChange = async (language: Language) => {
-    if (languageChangeInFlightRef.current || language === getAppLanguage()) {
-      return
-    }
-    languageChangeInFlightRef.current = true
-    setLanguageChanging(true)
-    try {
-      await setAppLanguage(language)
-    } catch {
-      showErrorToast(
-        t("settings.language.changeErrorTitle"),
-        t("settings.language.changeErrorBody"),
-      )
-      return
-    } finally {
-      // 알림 재등록은 아래에서 이어지므로 성공 시에는 아직 잠금을 풀지 않는다.
-      if (getAppLanguage() !== language) {
-        languageChangeInFlightRef.current = false
-        setLanguageChanging(false)
-      }
-    }
-
-    // 이미 예약된 로컬 알림과 서버에 등록된 푸시 토큰의 언어도 함께 바꾼다.
-    // 알림 재등록 실패가 이미 끝난 화면 언어 변경을 실패로 되돌리지는 않는다.
-    await Promise.allSettled([
-      notificationService.scheduleAll(settings),
-      ...(pushEnabled ? [notificationService.registerPushToken()] : []),
-    ])
-    languageChangeInFlightRef.current = false
-    setLanguageChanging(false)
-  }
-
-  const handlePushToggle = async (value: boolean) => {
-    try {
-      const ok = await setPushConsent(value)
-      if (value && !ok) {
-        void showOpenSettingsAlert(
-          t("settings.notifications.disabledTitle"),
-          t("settings.notifications.disabledBody"),
-        )
-      }
-    } catch (error) {
-      // 오류를 버리고 고정 문구를 띄우던 자리. 푸시 동의 저장은 서버로 나가는 요청이라
-      // 실패 원인이 세션 만료·요청 몰림일 때가 많은데, 둘 다 사용자가 할 일이 다르다.
-      presentError(error, {
-        scope: "push-consent",
-        retry: () => void handlePushToggle(value),
-      })
-    }
-  }
-
-  const handleMarketingToggle = async (value: boolean) => {
-    await updateSettings({
-      ...settings,
-      categories: {
-        ...settings.categories,
-        marketing: { enabled: value },
-      },
+  const insets = useSafeAreaInsets()
+  const model = useSettingsScreen()
+  const [picker, setPicker] = useState<"theme" | "language">("theme")
+  const [pickerVisible, setPickerVisible] = useState(false)
+  const pickerRevision = useRef(0)
+  const closePicker = () => {
+    pickerRevision.current += 1
+    setPickerVisible(false)
+    void afterSiblingModalsGone().then(() => {
+      const preference = useThemeStore.getState().themeMode
+      const mode =
+        preference === "system" ? Appearance.getColorScheme() : preference
+      setStatusBarStyle(mode === "dark" ? "light" : "dark")
     })
   }
+  const openPicker = (kind: typeof picker) => {
+    pickerRevision.current += 1
+    setPicker(kind)
+    setPickerVisible(true)
+  }
+  const themeOptions = (["light", "dark", "system"] as const).map((value) => ({
+    value,
+    label: t(`settings.display.${value}`),
+  }))
+  const languageOptions = [
+    { value: "ko", label: t("settings.language.korean") },
+    { value: "en", label: t("settings.language.english") },
+  ]
+  const toggle = (
+    label: string,
+    value: boolean,
+    onValueChange: (next: boolean) => Promise<void>,
+  ) => (
+    <Switch
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: model.notificationDisabled }}
+      disabled={model.notificationDisabled}
+      value={value}
+      onValueChange={(next) => void onValueChange(next)}
+      trackColor={{ false: colors.fill.normal, true: colors.primary.primary }}
+    />
+  )
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
-      <ScreenHeader
+    <View
+      style={[styles.screen, { backgroundColor: colors.background.default }]}
+    >
+      <V2ScreenHeader
         title={t("settings.title")}
-        paddingTop={insets.top + 8}
         onBack={() => router.back()}
       />
-
       <ScrollView
-        bounces={false}
-        overScrollMode="never"
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 40 },
-        ]}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       >
-        {/* 화면 모드 */}
-        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>
-          {t("settings.display.section")}
-        </ThemedText>
-        {(
-          [
-            {
-              mode: "light",
-              icon: "sunny-outline",
-              label: t("settings.display.light"),
-            },
-            {
-              mode: "dark",
-              icon: "moon-outline",
-              label: t("settings.display.dark"),
-            },
-            {
-              mode: "system",
-              icon: "phone-portrait-outline",
-              label: t("settings.display.system"),
-            },
-          ] as const
-        ).map(({ mode, icon, label }) => (
-          <Pressable
-            key={mode}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: themeMode === mode }}
-            accessibilityLabel={label}
-            style={({ pressed }) => [
-              styles.themeOption,
-              pressed && { backgroundColor: c.pressedBg },
-            ]}
-            onPress={() => handleThemeChange(mode)}
-          >
-            <View style={styles.themeOptionLeft}>
-              <Ionicons
-                name={icon}
-                size={20}
-                color={c.icon}
-                style={styles.themeIcon}
-              />
-              <ThemedText style={[styles.themeOptionLabel, { color: c.text }]}>
-                {label}
-              </ThemedText>
-            </View>
-            {themeMode === mode && (
-              <Ionicons
-                name="checkmark"
-                size={20}
-                color={tokens.color.sub6.val}
-              />
+        <AccountSection title={copy("accountOverview.account")}>
+          <AccountRow
+            title={t("myPage.editProfile")}
+            icon="person-outline"
+            onPress={() => router.push("/(settings)/profile-edit")}
+          />
+          <AccountRow
+            title={t("subscription.title", { ns: "billing" })}
+            icon="card-outline"
+            onPress={() => router.push("/(settings)/subscription")}
+          />
+        </AccountSection>
+        <AccountSection title={copy("accountOverview.appPreferences")}>
+          <AccountRow
+            title={t("settings.display.section")}
+            value={
+              themeOptions.find((option) => option.value === model.themeMode)
+                ?.label
+            }
+            onPress={() => openPicker("theme")}
+          />
+          <AccountRow
+            title={t("settings.language.section")}
+            value={
+              languageOptions.find(
+                (option) => option.value === model.currentLanguage,
+              )?.label
+            }
+            disabled={model.languageChanging}
+            onPress={() => openPicker("language")}
+          />
+        </AccountSection>
+        <AccountSection title={copy("accountOverview.notifications")}>
+          {model.notificationError != null && (
+            <AccountRow
+              title={copy("accountOverview.notificationError")}
+              value={copy("accountOverview.retry")}
+              onPress={() => void model.retryNotifications()}
+            />
+          )}
+          <AccountRow
+            title={t("settings.notifications.app")}
+            description={t("settings.notifications.appDescription")}
+            trailing={toggle(
+              t("settings.notifications.app"),
+              model.pushEnabled,
+              model.handlePushToggle,
             )}
-          </Pressable>
-        ))}
-
-        <View
-          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
-        <ThemedText style={[styles.sectionTitle, { color: c.textTertiary }]}>
-          {t("settings.language.section")}
-        </ThemedText>
-        {(
-          [
-            { language: "ko", label: t("settings.language.korean") },
-            { language: "en", label: t("settings.language.english") },
-          ] as const
-        ).map(({ language, label }) => (
-          <Pressable
-            key={language}
-            accessibilityRole="radio"
-            accessibilityState={{
-              selected: currentLanguage === language,
-              disabled: languageChanging,
-            }}
-            accessibilityLabel={label}
-            disabled={languageChanging}
-            style={({ pressed }) => [
-              styles.themeOption,
-              pressed && { backgroundColor: c.pressedBg },
-              languageChanging && styles.languageOptionDisabled,
-            ]}
-            onPress={() => void handleLanguageChange(language)}
-          >
-            <ThemedText style={[styles.themeOptionLabel, { color: c.text }]}>
-              {label}
-            </ThemedText>
-            {currentLanguage === language && (
-              <Ionicons
-                name="checkmark"
-                size={20}
-                color={tokens.color.sub6.val}
-              />
+          />
+          <AccountRow
+            title={t("settings.notifications.detail")}
+            onPress={() => router.push("/(settings)/notification-settings")}
+          />
+          <AccountRow
+            title={t("settings.notifications.marketing")}
+            description={t("settings.notifications.marketingDescription")}
+            trailing={toggle(
+              t("settings.notifications.marketing"),
+              model.settings.categories.marketing.enabled,
+              model.handleMarketingToggle,
             )}
-          </Pressable>
-        ))}
-
-        <View
-          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
-        {/* 알림 설정 */}
-        <ToggleItem
-          title={t("settings.notifications.app")}
-          description={t("settings.notifications.appDescription")}
-          value={pushEnabled}
-          onValueChange={handlePushToggle}
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("settings.notifications.detail")}
-          style={({ pressed }) => [
-            styles.navItem,
-            pressed && { backgroundColor: c.pressedBg },
-          ]}
-          onPress={() => router.push("/(settings)/notification-settings")}
-        >
-          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            {t("settings.notifications.detail")}
-          </ThemedText>
-          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
-        </Pressable>
-        <ToggleItem
-          title={t("settings.notifications.marketing")}
-          description={t("settings.notifications.marketingDescription")}
-          value={settings.categories.marketing.enabled}
-          onValueChange={handleMarketingToggle}
-        />
-
-        <View
-          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
-        {/* 구독 — 기획서 §05. 약관보다 위다(사용자가 찾는 빈도가 다르다). */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("subscription.title", { ns: "billing" })}
-          style={({ pressed }) => [
-            styles.navItem,
-            pressed && { backgroundColor: c.pressedBg },
-          ]}
-          onPress={() => router.push("/(settings)/subscription")}
-        >
-          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            {t("subscription.title", { ns: "billing" })}
-          </ThemedText>
-          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
-        </Pressable>
-
-        <View
-          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
-        {/* 약관 */}
-        {[
-          {
-            title: t("settings.legal.terms"),
-            onPress: () => router.push("/legal-document"),
-          },
-          {
-            title: t("settings.legal.privacy"),
-            onPress: () => router.push("/privacy-settings"),
-          },
-        ].map(({ title, onPress }) => (
-          <Pressable
-            key={title}
-            accessibilityRole="button"
-            accessibilityLabel={title}
-            style={({ pressed }) => [
-              styles.navItem,
-              pressed && { backgroundColor: c.pressedBg },
-            ]}
-            onPress={onPress}
-          >
-            <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-              {title}
-            </ThemedText>
-            <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
-          </Pressable>
-        ))}
-
-        <View
-          style={[styles.sectionDivider, { backgroundColor: c.secondaryBg }]}
-        />
-
-        {/* 계정 */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("settings.account.logout")}
-          style={({ pressed }) => [
-            styles.navItem,
-            pressed && { backgroundColor: c.pressedBg },
-          ]}
-          onPress={() => setLogoutModalVisible(true)}
-        >
-          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            {t("settings.account.logout")}
-          </ThemedText>
-          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("settings.account.withdraw")}
-          style={({ pressed }) => [
-            styles.navItem,
-            pressed && { backgroundColor: c.pressedBg },
-          ]}
-          onPress={() => router.push("/(settings)/withdrawal")}
-        >
-          <ThemedText style={[styles.navItemTitle, { color: c.text }]}>
-            {t("settings.account.withdraw")}
-          </ThemedText>
-          <Ionicons name="chevron-forward" size={20} color={c.textTertiary} />
-        </Pressable>
+          />
+        </AccountSection>
+        <AccountSection title={copy("accountOverview.about")}>
+          <AccountRow
+            title={t("settings.legal.terms")}
+            onPress={() => router.push("/legal-document?type=terms-of-use")}
+          />
+          <AccountRow
+            title={t("settings.legal.privacy")}
+            onPress={() => router.push("/legal-document?type=privacy-policy")}
+          />
+          <AccountRow
+            title={copy("accountOverview.appInfo")}
+            value={Constants.expoConfig?.version}
+            onPress={() => router.push("/(settings)/app-info")}
+          />
+        </AccountSection>
+        <AccountSection title={copy("accountOverview.accountManagement")}>
+          <AccountRow
+            title={t("settings.account.logout")}
+            onPress={() => model.setLogoutModalVisible(true)}
+          />
+          <AccountRow
+            title={t("settings.account.withdraw")}
+            onPress={() => router.push("/(settings)/withdrawal")}
+          />
+        </AccountSection>
       </ScrollView>
-
+      <AccountPreferenceSheet
+        visible={pickerVisible}
+        title={t(
+          picker === "theme"
+            ? "settings.display.section"
+            : "settings.language.section",
+        )}
+        options={picker === "theme" ? themeOptions : languageOptions}
+        selected={picker === "theme" ? model.themeMode : model.currentLanguage}
+        busy={model.languageChanging}
+        onClose={closePicker}
+        onSelect={(value) => {
+          if (picker === "theme") {
+            model.handleThemeChange(value as ThemeMode)
+            closePicker()
+          } else {
+            const selection = pickerRevision.current
+            void model.handleLanguageChange(value as Language).then((saved) => {
+              if (saved && selection === pickerRevision.current) closePicker()
+            })
+          }
+        }}
+      />
       <ConfirmModal
-        visible={logoutModalVisible}
+        visible={model.logoutModalVisible}
         title={t("settings.account.logoutTitle")}
         description={t("settings.account.logoutBody")}
         confirmText={t("settings.account.logout")}
-        onCancel={() => setLogoutModalVisible(false)}
-        onConfirm={async () => {
-          setLogoutModalVisible(false)
-          await afterModalTransitions()
-          await signOut("explicit")
-        }}
+        onCancel={() => model.setLogoutModalVisible(false)}
+        onConfirm={model.confirmLogout}
       />
-    </ThemedView>
+    </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-  },
-  sectionDivider: {
-    height: 12,
-    marginHorizontal: -20,
-    marginVertical: 4,
-  },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    marginHorizontal: -20,
-  },
-  navItemTitle: {
-    fontSize: 16,
-    lineHeight: 16 * 1.4,
-    fontWeight: "400",
-  },
-  sectionTitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    paddingTop: 20,
-    paddingBottom: 4,
-  },
-  themeOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginHorizontal: -20,
-  },
-  themeOptionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  themeIcon: {
-    width: 20,
-  },
-  themeOptionLabel: {
-    fontSize: 16,
-    lineHeight: 16 * 1.4,
-    fontWeight: "400",
-  },
-  languageOptionDisabled: { opacity: 0.55 },
-})
+const styles = StyleSheet.create({ screen: { flex: 1 } })

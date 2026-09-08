@@ -323,10 +323,6 @@ import {
   CategoryChipRail,
   categoryChipRailHeight,
 } from "@/src/features/recipe/components/community/CategoryChipRail"
-import {
-  COMMUNITY_GUTTER,
-  SEARCH_TO_RAIL_GAP,
-} from "@/src/features/recipe/components/community/communityLayout"
 import { SortDropdown } from "@/src/features/recipe/components/community/SortDropdown"
 import {
   NEIGHBOR_SUGGESTION_COUNT,
@@ -625,67 +621,48 @@ describe("피드 머리 — 검색 · 스토리 · 밴드, 그리고 끝", () =>
     expect(searchEntryIn(header)).toBeUndefined()
   })
 
-  it("고정층 안에서 검색이 **칩 레일보다 위**다", () => {
-    /*
-      2026-08-21 사용자 판정: "검색도 해당 카테고리바보다 위에 있고 똑같이 스크롤에
-      영향을 안 받아야 할 듯". 한동안 검색을 머리 안에 넣어 밀도를 아꼈지만, 그러면
-      스크롤한 순간 검색이 **필터 아래**로 사라져 두 도구의 위계가 뒤집힌다.
-      (`walkDeep` 은 깊이 우선 선순위라 이 배열의 순서가 곧 그리는 순서다.)
-    */
-    const pinned = pinnedLayerOf(screen())
-    const walked = walkDeep(pinned)
-    const search = walked.findIndex(
-      (el) => el.props.accessibilityLabel === koRecipe.feed.searchPlaceholder,
-    )
+  it("동일한 폭의 전체글·인기글 탭이 카테고리 위에 있다", () => {
+    const walked = walkDeep(pinnedLayerOf(screen()))
+    const tabs = walked.filter((el) => el.props.accessibilityRole === "tab")
+    expect(tabs).toHaveLength(2)
     const rail = walked.findIndex((el) => el.type === CategoryChipRail)
-
-    expect(search).toBeGreaterThan(-1)
-    expect(rail).toBeGreaterThan(-1)
-    expect(search).toBeLessThan(rail)
+    for (const tab of tabs) {
+      expect(walked.indexOf(tab)).toBeLessThan(rail)
+      expect(styleOf(tab).flex).toBe(1)
+      expect(styleOf(tab).minHeight).toBeGreaterThanOrEqual(44)
+    }
+    ;(tabs[1].props.onPress as () => void)()
+    expect(mockRouter.push).toHaveBeenCalledWith("/(tabs)/community-popular")
   })
 
-  it("경계는 고정층 **바닥에 한 줄**뿐이다 — 검색과 칩이 한 덩어리로 읽힌다", () => {
-    /*
-      검색 줄이나 껍데기가 자기 하단선을 들면 그 둘은 두 덩어리가 된다. 경계는 레일의
-      `borderBottom` 하나뿐이고, 그 1px 은 레일의 총 높이 **안쪽**이다.
-    */
+  it("필터 레일이 고정층의 하단 경계를 갖는다", () => {
     const root = screen()
-    for (const box of [
-      styleOf(pinnedLayerOf(root)),
-      styleOf(searchWrapOf(root)),
-    ]) {
-      expect(box.borderBottomWidth).toBeUndefined()
-      expect(box.borderWidth).toBeUndefined()
-    }
-
-    // `walkDeep` 은 함수 컴포넌트를 펼치므로 [0]=레일 엘리먼트, [1]=레일이 그린 상자.
+    expect(styleOf(pinnedLayerOf(root)).borderWidth).toBeUndefined()
     const railBox = walkDeep(filterBarOf(root))[1]
     expect(styleOf(railBox).borderBottomWidth).toBe(borderWidth.thin)
   })
 
-  it("검색 줄과 레일 사이는 **공유 상수** 한 칸이다 — 레시피 탭과 같은 값", () => {
-    const box = styleOf(searchWrapOf(screen()))
-
-    expect(box.paddingBottom).toBe(SEARCH_TO_RAIL_GAP)
-    expect(box.paddingTop).toBe(SEARCH_TO_RAIL_GAP)
-    expect(box.paddingHorizontal).toBe(COMMUNITY_GUTTER)
-    // 고정층 총 두께 = 8 + 44 + 8 + 52.
-    expect(PINNED_HEADER_HEIGHT).toBe(112)
+  it("고정층 높이는 48pt 탭과 52pt 필터를 합한 값이다", () => {
+    expect(PINNED_HEADER_HEIGHT).toBe(100)
+    expect(filterBarOf(screen()).props.density).toBe("results")
   })
 
-  it("첫 조회 중에도 검색으로 들어갈 수 있다 — 스켈레톤이 문을 덮지 않는다", () => {
+  it("첫 조회 중에도 탐색 탭과 필터를 사용할 수 있다", () => {
     mockFeed.posts = []
     mockFeed.isLoading = true
     mockFeed.hasNextPage = false
     const root = screen()
-
-    // 스켈레톤은 **머리 안**이고 검색은 그 갈래 밖(고정층)이라 서로를 못 가린다.
     expect(
       walkDeep(headerOf(root)).some(
         (el) => el.type === "CommunityFeedSkeleton",
       ),
     ).toBe(true)
-    expect(searchEntryIn(pinnedLayerOf(root))).toBeTruthy()
+    expect(
+      walkDeep(pinnedLayerOf(root)).filter(
+        (el) => el.props.accessibilityRole === "tab",
+      ),
+    ).toHaveLength(2)
+    expect(filterBarOf(root)).toBeTruthy()
   })
 
   it("**`요즘 이야기 중` 은 머리에 없다** — 글보다 위에 서지 않는다", () => {
@@ -697,23 +674,12 @@ describe("피드 머리 — 검색 · 스토리 · 밴드, 그리고 끝", () =>
     expect(findAll(headerOf(screen()), TrendingPostsSection)).toHaveLength(0)
   })
 
-  it("스토리 **뒤**를 밴드가 끊는다 — 첫 글로 흘러들지 않는다", () => {
-    // `walkDeep` 은 깊이 우선 **선순위**라 이 배열의 순서가 곧 그리는 순서다.
-    const walked = walkDeep(headerOf(screen()))
-    const rail = walked.findIndex((el) => el.type === "StoryRail")
-    const band = walked.findIndex((el) => el.type === SectionBand)
-
-    expect(rail).toBeGreaterThan(-1)
-    expect(band).toBeGreaterThan(-1)
-    /*
-      예전에는 이 경계를 `요즘 이야기 중` 이 **자기 밴드로 우연히** 만들고 있었다.
-      그 섹션이 아래로 내려가자 스토리와 그 뒤가 맞붙었다 — 경계는 어느 섹션의
-      사정이 아니라 머리 자신의 것이어야 한다. (칩 레일이 목록 밖으로 나간 뒤에도
-      같은 이유로 남는다: 밴드가 없으면 스토리 레일과 첫 글 사이가 그냥 여백이다.)
-    */
-    expect(band).toBeGreaterThan(rail)
-    // 밴드가 머리의 **마지막** 경계다 — 뒤에 다른 밴드가 더 붙지 않는다.
-    expect(findAll(headerOf(screen()), SectionBand)).toHaveLength(1)
+  it("사진 입구는 compact 한 줄이며 별도 대형 밴드를 쌓지 않는다", () => {
+    const header = headerOf(screen())
+    const stories = walkDeep(header).filter((el) => el.type === "StoryRail")
+    expect(stories).toHaveLength(1)
+    expect(stories[0].props.compact).toBe(true)
+    expect(findAll(header, SectionBand)).toHaveLength(0)
   })
 })
 
@@ -738,18 +704,6 @@ const searchEntryIn = (root: Element): Element | undefined =>
   walkDeep(root).find(
     (el) => el.props.accessibilityLabel === koRecipe.feed.searchPlaceholder,
   )
-
-/** 검색 입구를 **직접** 감싼 상자 — 여백이 사는 자리. */
-function searchWrapOf(root: Element): Element {
-  const [wrap] = walkDeep(root).filter((el) =>
-    childrenOf(el).some(
-      (child) =>
-        child.props.accessibilityLabel === koRecipe.feed.searchPlaceholder,
-    ),
-  )
-  if (!wrap) throw new Error("검색 입구를 감싼 상자를 못 찾았다")
-  return wrap
-}
 
 /** style 배열/함수/중첩을 RN 과 같은 순서(뒤가 이김)로 편다. */
 function styleOf(element: Element): Record<string, unknown> {
@@ -1609,7 +1563,7 @@ describe("추천 행은 **목록 항목이 아니다** — 페이지네이션 �
     expect(mockFeed.fetchNextPage).not.toHaveBeenCalled()
   })
 
-  it("첫 로드 중에는 머리가 통째로 스켈레톤이다 — 두 섹션 다 안 선다", () => {
+  it("첫 로드에서도 사진 입구를 유지하고 목록 자리만 스켈레톤을 표시한다", () => {
     /*
       세 자리(스토리·인기·목록)가 한꺼번에 도착하면 화면이 크게 튄다. 그래서 머리는
       섹션들을 그리는 대신 `CommunityFeedSkeleton` 한 장으로 자리를 잡는다 —
@@ -1625,6 +1579,8 @@ describe("추천 행은 **목록 항목이 아니다** — 페이지네이션 �
     ).toBe(true)
     expect(findAll(header, TrendingPostsSection)).toHaveLength(0)
     expect(findAll(header, NeighborSuggestionSection)).toHaveLength(0)
-    expect(walkDeep(header).some((el) => el.type === "StoryRail")).toBe(false)
+    expect(
+      walkDeep(header).find((el) => el.type === "StoryRail")?.props.compact,
+    ).toBe(true)
   })
 })

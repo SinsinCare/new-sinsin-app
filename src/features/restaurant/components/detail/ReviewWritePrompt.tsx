@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 후기 작성 유도 카드 (목업 -11 상단 / -19 홈 탭). 홈 탭과 후기 탭이 같은 물건을
  * 쓰므로 한 파일에 둔다 — 두 곳에 복사하면 문구가 갈라진다.
@@ -16,7 +17,7 @@
  * 버튼을 그려 두고 `onPress` 를 붙이지 않아 눌러도 아무 일이 없었다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import {

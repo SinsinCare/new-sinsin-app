@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — LoadingState
 // 스켈레톤을 그릴 수 없을 때만 쓰는 마지막 수단. (옵션) 메시지 + 점 로더.
 //
@@ -13,7 +14,7 @@
 //
 // 점 색은 시맨틱 primary.primary(useV2Theme, 다크 자동), 메시지는 label.neutral.
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2DotLoader } from "./V2DotLoader"

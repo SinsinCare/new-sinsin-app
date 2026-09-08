@@ -169,7 +169,7 @@ export function KidneyProfileCard({
             {
               backgroundColor: isDialysis
                 ? surface.surfaceBrand
-                : surface.surface,
+                : surface.surfaceSunken,
             },
           ]}
         >
@@ -270,7 +270,7 @@ export function KidneyProfileCard({
                 key={`${item}-${index}`}
                 style={[
                   styles.conditionChip,
-                  { backgroundColor: surface.surface },
+                  { backgroundColor: surface.surfaceSunken },
                 ]}
               >
                 <Text

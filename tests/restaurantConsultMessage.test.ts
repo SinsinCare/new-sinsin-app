@@ -14,6 +14,7 @@ import {
   RESTAURANT_CONSULT_MENU_LIMIT,
   RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH,
   buildRestaurantConsultMessage,
+  buildRestaurantAssessmentParams,
   parseRestaurantConsultMessage,
   pickConsultMenuFacts,
 } from "../src/features/restaurant/consult/restaurantConsultMessage"
@@ -142,17 +143,17 @@ describe("식당 상담 메시지", () => {
     )
   })
 
-  it("메뉴는 2건에서 자른다 — 8건 전량은 `진단하기` 몫이다", () => {
-    const third: ConsultMenuFact = { ...SUNDAE, name: "신신백숙" }
-    const text = build("비교해 주세요", [SUNDAE, HANSANG, third])
-
-    expect(RESTAURANT_CONSULT_MENU_LIMIT).toBe(2)
-    expect(text).toContain("순대국밥")
-    expect(text).toContain("한상차림")
-    expect(text).not.toContain("신신백숙")
+  it("메뉴 문맥은 제한 내에서 유지하고 초과 항목은 제외한다", () => {
+    const menus = Array.from(
+      { length: RESTAURANT_CONSULT_MENU_LIMIT + 1 },
+      (_, i) => ({ ...SUNDAE, name: `메뉴${i}` }),
+    )
+    const text = build("비교해 주세요", menus)
     expect(
       text.split("\n").filter((line) => line.startsWith("- ")),
-    ).toHaveLength(2)
+    ).toHaveLength(RESTAURANT_CONSULT_MENU_LIMIT)
+    expect(text).not.toContain(`- 메뉴${RESTAURANT_CONSULT_MENU_LIMIT}:`)
+    expect(parseRestaurantConsultMessage(text)?.question).toBe("비교해 주세요")
   })
 
   it("숫자가 없는 메뉴는 이름만 남는다 — 콜론 뒤 빈 줄을 만들지 않는다", () => {
@@ -294,15 +295,48 @@ describe("pickConsultMenuFacts", () => {
     ).toEqual(["한상차림", "순대국밥"])
   })
 
-  it("상한 2 에서 자른다", () => {
-    const menus = [
-      menu({}),
-      menu({ menuId: 2, name: "한상차림" }),
-      menu({ menuId: 3, name: "신신백숙" }),
-    ]
-    expect(
-      pickConsultMenuFacts(menus, ["순대국밥", "한상차림", "신신백숙"]),
-    ).toHaveLength(RESTAURANT_CONSULT_MENU_LIMIT)
+  it("일반 질문도 현재 메뉴의 수치를 전달한다", () => {
+    const menus = [menu({}), menu({ menuId: 2, name: "한상차림" })]
+    const facts = pickConsultMenuFacts(menus, [])
+    expect(facts.map((fact) => fact.name)).toEqual(["순대국밥", "한상차림"])
+    const text = build("나트륨이 가장 많은 메뉴는 어떤 건가요?", facts)
+    expect(text).toContain("나트륨 1720mg")
+    expect(text).toContain("추정값")
+    expect(parseRestaurantConsultMessage(text)?.question).toBe(
+      "나트륨이 가장 많은 메뉴는 어떤 건가요?",
+    )
+  })
+
+  it("진단 진입은 메뉴를 먹은 식사로 보내지 않고 개별 비교를 요청한다", () => {
+    const params = buildRestaurantAssessmentParams({
+      restaurantId: 17,
+      restaurantName: "테스트 식당",
+      cuisineLabel: "한식",
+      menus: [menu({})],
+      requestId: "assessment-17",
+      t,
+    })
+    expect(params).not.toHaveProperty("foodConsultContext")
+    expect(params.consultRestaurantId).toBe("17")
+    expect(params.consultContextLabel).toBe("테스트 식당")
+    expect(params.consultContext).toContain("나트륨 1720mg")
+    expect(params.consultContext).toContain("먹은 기록이 아니에요")
+    expect(params.consultContext).toContain(
+      "합산하거나 섭취했다고 가정하지 마세요",
+    )
+    expect(parseRestaurantConsultMessage(params.consultPrompt)?.question).toBe(
+      t("restaurant.consult.q.assess"),
+    )
+  })
+
+  it("일반 질문도 문맥 상한을 지킨다", () => {
+    const menus = Array.from(
+      { length: RESTAURANT_CONSULT_MENU_LIMIT + 1 },
+      (_, i) => menu({ menuId: i, name: `메뉴${i}` }),
+    )
+    expect(pickConsultMenuFacts(menus, [])).toHaveLength(
+      RESTAURANT_CONSULT_MENU_LIMIT,
+    )
   })
 
   it("DTO 이름에 공백이 붙어 있어도 찾는다 — 부르는 쪽은 trim 한 값을 준다", () => {
@@ -326,3 +360,130 @@ describe("pickConsultMenuFacts", () => {
     expect(pickConsultMenuFacts([menu({ name: "   " })], ["   "])).toEqual([])
   })
 })
+
+describe("displayed portion handoff", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("ko")
+  })
+  it.each(["ko", "en"])(
+    "preserves each portion and its basis through the %s saved-message parser",
+    async (locale) => {
+      await i18n.changeLanguage(locale)
+      const menus = [
+        {
+          ...SUNDAE,
+          portionReference: {
+            fraction: 0.5,
+            driver: "sodium" as const,
+            mealFraction: 0.35,
+          },
+        },
+        {
+          ...HANSANG,
+          portionReference: {
+            fraction: null,
+            driver: "protein" as const,
+            mealFraction: 0.35,
+          },
+        },
+      ]
+      const text = build("Which portion?", menus)
+      expect(text).toContain("1/2")
+      expect(text).toContain("1/4")
+      expect(text).toContain("35%")
+      expect(text).toContain(t("restaurant.consult.context.portionBasis"))
+      expect(parseRestaurantConsultMessage(text)?.question).toBe(
+        "Which portion?",
+      )
+    },
+  )
+  it("copies the validated reference but does not invent one for older menus", () => {
+    const reference = {
+      fraction: 0.5,
+      driver: "sodium" as const,
+      mealFraction: 0.35,
+    }
+    const facts = pickConsultMenuFacts(
+      [
+        { ...SUNDAE, portionReference: reference } as MenuItemDto,
+        { ...HANSANG } as MenuItemDto,
+      ],
+      [],
+    )
+    expect(facts[0]?.portionReference).toEqual(reference)
+    expect(facts[1]?.portionReference).toBeUndefined()
+  })
+  it("drops whole menu lines at the length boundary instead of truncating a fraction", () => {
+    const menus = Array.from({ length: 20 }, (_, index) => ({
+      ...SUNDAE,
+      name: `Menu${index} ${"long name ".repeat(35)}`,
+      portionReference: {
+        fraction: 0.5,
+        driver: "sodium" as const,
+        mealFraction: 0.35,
+      },
+    }))
+    const text = build("Portions?", menus)
+    expect(text.length).toBeLessThanOrEqual(
+      RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH,
+    )
+    const lines = text.split("\n").filter((line) => line.startsWith("- "))
+    expect(lines.length).toBeGreaterThan(0)
+    expect(lines.length).toBeLessThan(20)
+    for (const line of lines) {
+      expect(line).toContain("1/2")
+      expect(line.endsWith(")")).toBe(true)
+    }
+    expect(parseRestaurantConsultMessage(text)?.question).toBe("Portions?")
+  })
+})
+
+test.each(["ko", "en"])(
+  "personal portion choices survive the consultation envelope in %s",
+  async (language) => {
+    await i18n.changeLanguage(language)
+    const question = "Check my planned portion"
+    const date = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10)
+    const message = buildRestaurantConsultMessage({
+      question,
+      restaurantName: "Test",
+      cuisineLabel: "",
+      menus: [SUNDAE],
+      t,
+      personalSelection: {
+        meals: 2,
+        share: 0.5,
+        input: {
+          targets: {
+            sodium: 2000,
+            potassium: 2000,
+            phosphorus: 1000,
+            protein: 60,
+          },
+          perServing: {
+            sodium: 1000,
+            potassium: 200,
+            phosphorus: 100,
+            protein: 10,
+          },
+          intake: {
+            date,
+            status: "recorded",
+            values: { sodium: 1000, potassium: 0, phosphorus: 0, protein: 0 },
+          },
+        },
+      },
+    })
+    expect(message).toContain("1/4")
+    expect(message).toContain("50%")
+    expect(message).toContain("2000mg")
+    expect(message).toContain("1000mg")
+    expect(message).toContain(
+      language === "ko" ? "실제 섭취로 기록하지" : "do not record it as intake",
+    )
+    expect(parseRestaurantConsultMessage(message)).toEqual({ question })
+    expect(message.length).toBeLessThanOrEqual(
+      RESTAURANT_CONSULT_MESSAGE_MAX_LENGTH,
+    )
+  },
+)

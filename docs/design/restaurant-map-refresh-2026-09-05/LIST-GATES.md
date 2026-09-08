@@ -2,11 +2,16 @@
 
 Scope: Rework the restaurant result row around place identity, visit information and a contextual nutrition summary, following Mobbin references. Preserve the current map, filters, routes, clinical verdicts and shared dirty checkout. Use the already running Metro 8085 TEST client; restore any temporary QA display settings.
 
-- [ ] L1: Examined Mobbin list references and their adopted hierarchy are documented.
-- [ ] L2: The row has a deliberate compact layout with distinguishable identity, rating, location/business metadata and nutrition; unknown data does not imply a verdict or a real venue photo.
+- [x] L1: Examined Mobbin list references and their adopted hierarchy are documented.
+  EVIDENCE: Nine Mobbin screens examined; final user-supplied hierarchy and adopted patterns recorded in LIST-REVIEW.md.
+- [x] L2: The row has a deliberate compact layout with distinguishable identity, rating, location/business metadata and nutrition; unknown data does not imply a verdict or a real venue photo.
+  EVIDENCE: Native light and dark default-text lists show ordered metadata, distinct photos, neutral nutrition summary and no selection edge; unknown/stock semantics reviewed against existing helpers.
 - [ ] L3: Native light/dark list, default and enlarged text, row detail entry/back, and list/map transitions are inspected with no clipped critical information; temporary display settings are restored.
+  EVIDENCE: Default-text light/dark rendering, name/photo detail entry, back and list/map buttons observed. Enlarged-text list verification stopped by explicit user instruction; original large category restored and read back. Scroll automation returned -10005 noWindowsAvailable.
 - [x] L4: Relevant regression checks and static validation pass.
   CHECK: node -e "const cp=require('node:child_process');cp.execFileSync('node_modules/.bin/jest',['--config','jest.config.ts','--runInBand','tests/restaurantStockPhoto.test.ts','tests/restaurantSafetyBadge.test.ts','tests/restaurantContractDrift.test.ts','tests/remoteImageSource.test.ts','tests/restaurantBusinessStatus.test.ts','tests/restaurantSelectedFirst.test.ts','tests/restaurantSheetTop.test.ts','tests/restaurantSheetDetent.test.ts'],{stdio:'inherit'});cp.execFileSync('node_modules/.bin/tsc',['--noEmit'],{stdio:'inherit'});cp.execFileSync('node_modules/.bin/eslint',['src/features/restaurant','src/shared/images/remoteImageSource.ts'],{stdio:'inherit'});cp.execFileSync('npm',['run','audit:ux-copy'],{stdio:'inherit'});cp.execFileSync('git',['diff','--check'],{stdio:'inherit'});process.stdout.write('RESTAURANT_LIST_CHECKS_OK')"
   EXPECT: RESTAURANT_LIST_CHECKS_OK
   CWD: ../../..
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/seongminhan/workspace/sinsin_dev/sinsin-rn; path=4655babd10c6/24 entries; output=Time:        2.18 s | Ran all test suites matching /tests\/restaurantStockPhoto.test.ts|tests\/restaurantSafetyBadge.test.ts|tests\/restaurantContractDrift.test.ts|tests\/remoteImageSource.test.ts|tests\/restaurantBusinessStatus.test.ts|tes
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/seongminhan/workspace/sinsin_dev/sinsin-rn; path=4655babd10c6/24 entries; output=Time:        0.993 s, estimated 1 s | Ran all test suites matching /tests\/restaurantStockPhoto.test.ts|tests\/restaurantSafetyBadge.test.ts|tests\/restaurantContractDrift.test.ts|tests\/remoteImageSource.test.ts|tests\/restaurantBusinessSt
+
+ABANDON: L3 Enlarged-text testing was withdrawn by the user; the original font size was restored. Manual gesture certification remains unavailable because Computer Use scroll actions repeatedly return noWindowsAvailable. The completed native checks and limits are recorded in LIST-REVIEW.md.

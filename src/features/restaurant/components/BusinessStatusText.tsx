@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 영업 상태 한 줄. `영업중 21:30까지` / `영업전 11:00 오픈` / `휴무일` …
  *
@@ -26,7 +27,7 @@
  * 유용하다.
  */
 
-import { StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 
 import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
@@ -55,6 +56,8 @@ const LABEL_TEXT = typography.label.xSmallWeak
 
 export interface BusinessStatusTextProps {
   status: BusinessStatusCode
+  /** Compact list metadata can use neutral ink instead of status colors. */
+  tone?: "status" | "neutral"
   /** `HH:MM`. `OPEN` 일 때의 마감 시각. */
   closingTime?: string | null
   /** `HH:MM`. `BEFORE_OPEN` 일 때의 오픈 시각. */
@@ -79,6 +82,7 @@ export interface BusinessStatusTextProps {
 
 export function BusinessStatusText({
   status,
+  tone = "status",
   closingTime = null,
   openingTime = null,
   breakStartTime = null,
@@ -136,7 +140,14 @@ export function BusinessStatusText({
       // 지우면 카드 높이가 흔들리고, 사용자는 정보가 사라진 이유를 모른다.
       style={[styles.row, isStale && styles.stale, style]}
     >
-      <Text style={[LABEL_TEXT, { color: view.color }]}>{label}</Text>
+      <Text
+        style={[
+          LABEL_TEXT,
+          { color: tone === "neutral" ? colors.label.normal : view.color },
+        ]}
+      >
+        {label}
+      </Text>
       {sub !== null && (
         <>
           <Text

@@ -1,3 +1,4 @@
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useEffect, useMemo, useState } from "react"
 import {
   useV2Theme,
@@ -9,8 +10,9 @@ import {
   V2SegmentControl,
   V2TextField,
 } from "@/src/design-system-v2"
-import { Image, Platform, TextInput, TouchableOpacity } from "react-native"
+import { Image, Platform, TouchableOpacity } from "react-native"
 import { AppModal } from "@/src/shared/components/AppModal"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 import { tokens } from "@/src/theme/tokens"
@@ -113,6 +115,7 @@ export function FoodResultEdit({
   onMealTypeChange,
 }: FoodResultEditProps) {
   const { colors } = useV2Theme()
+  const insets = useSafeAreaInsets()
   const { t } = useTranslation("common")
   const unitSegments = useMemo(
     () =>
@@ -395,9 +398,10 @@ export function FoodResultEdit({
       }}
     >
       <V2HStack
-        paddingHorizontal={32}
-        paddingVertical={40}
+        paddingHorizontal={24}
         justify="space-between"
+        align="center"
+        style={{ minHeight: 44, marginTop: insets.top + 8, marginBottom: 24 }}
       >
         <TouchableOpacity
           onPress={handleCancel}
@@ -764,11 +768,11 @@ export function FoodResultEdit({
                         width: 22,
                         height: 22,
                         borderRadius: 11,
-                        backgroundColor: isDarkMode ? "#3A3A40" : "#DADCE0",
+                        backgroundColor: colors.fill.alternative,
                       }}
                     >
                       <V2Text
-                        color={isDarkMode ? colors.label.normal : "#5A5C63"}
+                        color={colors.label.neutral}
                         style={{
                           fontSize: 15,
                           lineHeight: 17,
@@ -833,7 +837,11 @@ export function FoodResultEdit({
       </KeyboardAwareScrollView>
 
       {/* 저장은 손이 닿는 하단 한 곳 — 헤더 우측 텍스트 버튼보다 놓치지 않는다 */}
-      <V2Box paddingHorizontal={20} paddingTop={10} paddingBottom={34}>
+      <V2Box
+        paddingHorizontal={20}
+        paddingTop={12}
+        paddingBottom={insets.bottom + 12}
+      >
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={isUpdating}

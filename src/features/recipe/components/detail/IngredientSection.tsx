@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 재료 — 인분 스테퍼 + 준비 체크 + **정직한 불확실성**.
  *
@@ -31,11 +32,10 @@
  * 서버에 보내지 않는다. 장을 보거나 조리하면서 짚는 용도라 화면을 떠나면 사라진다.
  * 진행률을 막대로 보여 준다 — `0/10` 이라는 숫자만으로는 훑을 때 안 읽힌다.
  */
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import {
   CARD_RADIUS,
-  GUTTER,
   SECTION_TITLE_GAP,
   V2Checkbox,
   V2Icon,
@@ -106,7 +106,7 @@ export function IngredientSection({
 
       {ingredients.length === 0 ? (
         <Text
-          style={[styles.note, { color: colors.label.alternative }]}
+          style={[styles.note, { color: colors.label.neutral }]}
           lineBreakStrategyIOS="hangul-word"
         >
           {t("detail.ingredients.empty")}
@@ -176,7 +176,7 @@ export function IngredientSection({
                     color:
                       checkedCount > 0
                         ? colors.label.normal
-                        : colors.label.assistive,
+                        : colors.label.neutral,
                   },
                 ]}
                 lineBreakStrategyIOS="hangul-word"
@@ -244,7 +244,7 @@ export function IngredientSection({
                     })
                   : t("detail.ingredients.coverage.wholeDish")
               }
-              color={colors.label.alternative}
+              color={colors.label.neutral}
             />
           </View>
         </>
@@ -378,7 +378,7 @@ function IngredientRow({
        * 목록이 들쭉날쭉해진다(종전 화면의 실제 증상).
        */}
       {tagText != null && (
-        <Text style={[styles.tag, { color: colors.label.assistive }]}>
+        <Text style={[styles.tag, { color: colors.label.neutral }]}>
           {tagText}
         </Text>
       )}
@@ -389,7 +389,7 @@ function IngredientRow({
           {
             color: ingredient.scalable
               ? colors.label.normal
-              : colors.label.assistive,
+              : colors.label.neutral,
           },
         ]}
       >
@@ -400,7 +400,7 @@ function IngredientRow({
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: GUTTER, gap: SECTION_TITLE_GAP },
+  root: { paddingHorizontal: spacing[20], gap: SECTION_TITLE_GAP },
   sectionTitle: { ...typography.title.xSmall },
   note: { ...typography.subtext.large },
 

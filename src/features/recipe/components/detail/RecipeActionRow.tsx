@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 제목 바로 아래의 **액션 행**. 네이버 지도 벤치마크 §F-P0 세 번째 항목이다.
  *
@@ -19,11 +20,10 @@
  * **개인 판정을 계산하지 않는다**(응답에 그런 필드가 없다. 실측: `/recipes/21` 은
  * `budget` 과 `percentOfRemaining` 만 준다). 그래서 알약은 실제로 동작하는 둘뿐이다.
  */
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import {
   CHIP_GAP,
-  GUTTER,
   V2Icon,
   radius,
   spacing,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     gap: CHIP_GAP,
-    paddingHorizontal: GUTTER,
+    paddingHorizontal: spacing[20],
   },
   pill: {
     flexDirection: "row",
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     // 38(controlHeight.md)로 낮추면 hit-slop 없이는 터치 타깃 미달이다.
     height: touchTarget.min,
     paddingHorizontal: spacing[16],
-    borderRadius: radius.full,
+    borderRadius: radius.md,
   },
-  pillLabel: { ...typography.label.small },
+  pillLabel: { ...typography.label.xSmall },
 })

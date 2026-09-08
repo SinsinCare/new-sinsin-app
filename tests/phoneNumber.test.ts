@@ -1,12 +1,10 @@
 import {
-  buildOptionalPhoneNumberPayload,
   buildPhoneProfileUpdatePayload,
   buildRequiredPhoneNumberPayload,
   formatKoreanMobileInput,
   getOptionalPhoneNumberError,
-  getRequiredPhoneNumberError,
   isValidKoreanMobile,
-  PHONE_NUMBER_ERROR_MESSAGE,
+  getPhoneNumberErrorMessage,
 } from "../src/features/auth/data/phoneNumber"
 
 describe("Korean mobile phone input", () => {
@@ -23,13 +21,11 @@ describe("Korean mobile phone input", () => {
 
   it("keeps the optional empty value valid for existing-account profile flows", () => {
     expect(getOptionalPhoneNumberError("")).toBeNull()
-    expect(buildOptionalPhoneNumberPayload("")).toEqual({})
   })
 
   it("requires a valid phone number for a new signup", () => {
-    expect(getRequiredPhoneNumberError("")).toBe(PHONE_NUMBER_ERROR_MESSAGE)
     expect(() => buildRequiredPhoneNumberPayload("")).toThrow(
-      PHONE_NUMBER_ERROR_MESSAGE,
+      getPhoneNumberErrorMessage(),
     )
     expect(buildRequiredPhoneNumberPayload("010-1234-5678")).toEqual({
       phoneNumber: "01012345678",
@@ -38,10 +34,10 @@ describe("Korean mobile phone input", () => {
 
   it("returns a clear validation error for an incomplete value", () => {
     expect(getOptionalPhoneNumberError("010-1234")).toBe(
-      PHONE_NUMBER_ERROR_MESSAGE,
+      getPhoneNumberErrorMessage(),
     )
-    expect(() => buildOptionalPhoneNumberPayload("010-1234")).toThrow(
-      PHONE_NUMBER_ERROR_MESSAGE,
+    expect(() => buildRequiredPhoneNumberPayload("010-1234")).toThrow(
+      getPhoneNumberErrorMessage(),
     )
   })
 

@@ -1,3 +1,5 @@
+import { FONT_SCALE } from "../tokens/fontScaling"
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Button
 // Spec: project/design-system-v2/design-system-base/components/Button.md (Figma node 30:952)
 //
@@ -15,7 +17,6 @@ import {
   Pressable,
   type PressableProps,
   StyleSheet,
-  Text,
   type ViewStyle,
 } from "react-native"
 import {
@@ -46,6 +47,8 @@ export type V2ButtonProps = Omit<PressableProps, "children" | "style"> & {
   fullWidth?: boolean
   leftIcon?: ReactNode
   rightIcon?: ReactNode
+  /** 긴 문구와 큰 글자는 줄바꿈하고 버튼 높이를 늘린다. 확인창 등 전체 문구가 필요한 곳. */
+  multilineLabel?: boolean
   style?: ViewStyle
 }
 
@@ -119,6 +122,7 @@ export function V2Button({
   fullWidth = false,
   leftIcon,
   rightIcon,
+  multilineLabel = false,
   style,
   accessibilityState,
   ...rest
@@ -151,6 +155,7 @@ export function V2Button({
           backgroundColor: bg,
         },
         fullWidth && styles.fullWidth,
+        multilineLabel && styles.multiline,
         pressed && !isDisabled && styles.pressed,
         style,
       ]}
@@ -161,7 +166,12 @@ export function V2Button({
       ) : (
         <>
           {leftIcon}
-          <Text style={[s.text, { color: fg }]} numberOfLines={1}>
+          <Text
+            maxFontSizeMultiplier={FONT_SCALE.control}
+            style={[s.text, styles.label, { color: fg }]}
+            numberOfLines={multilineLabel ? undefined : 1}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {children}
           </Text>
           {rightIcon}
@@ -180,6 +190,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
   },
   fullWidth: { alignSelf: "stretch" },
+  label: { flexShrink: 1, textAlign: "center" },
+  multiline: { paddingVertical: spacing[12] },
   // Pressed: 눌림 피드백. 정확한 pressed 토큰 미추출 → opacity 기반(legacy와 동일 접근).
   pressed: { opacity: 0.85 },
 })

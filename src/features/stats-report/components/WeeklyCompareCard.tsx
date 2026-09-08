@@ -1,121 +1,81 @@
 import { StyleSheet, View } from "react-native"
+import { useTranslation } from "react-i18next"
 import { Text } from "@/src/shared/components/AppText"
-
-import { REPORT_CARD } from "@/src/shared/components/ReportSection"
 import type { SurfacePalette } from "@/src/theme/surface"
-import { TYPE } from "@/src/theme/surface"
-
 import type { WeeklyCompare } from "../types/report"
+import { StatsSection, statsStyles as st } from "./StatsSection"
 
-type Surface = SurfacePalette & { isDark: boolean }
-
-/**
- * 월간 주별 비교 — 한 주가 한 행, 초과일만 붉은 칸.
- *
- * 칸 수 = daysInWeek(월 경계 주는 7 미만), 붉은 칸 수 = overDays.
- * 어느 요일이 초과였는지는 여기서 말하지 않는다 — 그건 주간 화면의 일이고,
- * 월간은 "몇 번 넘겼는지"의 추세만 본다(평균으로 판정하지 않는 계약과 같은 결).
- */
 export function WeeklyCompareCard({
   data,
   s,
 }: {
   data: WeeklyCompare
-  s: Surface
+  s: SurfacePalette & { isDark: boolean }
 }) {
+  const { t } = useTranslation("common")
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: s.card, borderColor: s.hairline },
-      ]}
-    >
-      <View style={styles.sectionHead}>
-        <Text
-          style={[styles.sectionTitle, { color: s.textStrong }]}
-          lineBreakStrategyIOS="hangul-word"
-        >
-          {data.title}
+    <StatsSection title={data.title} caption={data.caption}>
+      <View style={[styles.header, { borderBottomColor: s.hairline }]}>
+        <Text style={[st.meta, styles.week, { color: s.textMuted }]}>
+          {t("stats.redesign.week")}
         </Text>
-        <Text
-          style={[styles.sectionCaption, { color: s.textWeak }]}
-          lineBreakStrategyIOS="hangul-word"
-        >
-          {data.caption}
+        <Text style={[st.meta, styles.count, { color: s.textMuted }]}>
+          {t("stats.redesign.overDays")}
+        </Text>
+        <Text style={[st.meta, styles.weight, { color: s.textMuted }]}>
+          {t("stats.redesign.weightChange")}
         </Text>
       </View>
-
-      <View style={{ gap: 10 }}>
-        {data.weeks.map((week) => (
-          <View key={week.label} style={styles.weekRow}>
-            <Text
-              style={[styles.weekLabel, styles.tabular, { color: s.textMuted }]}
-            >
-              {week.label}
-            </Text>
-            <View style={styles.cellsRow}>
-              {Array.from({ length: week.daysInWeek }, (_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.cell,
-                    {
-                      backgroundColor: i < week.overDays ? s.danger : s.surface,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
+      {data.weeks.map((week) => (
+        <View
+          style={[styles.row, { borderBottomColor: s.hairline }]}
+          key={week.label}
+        >
+          <Text style={[st.label, styles.week, { color: s.textStrong }]}>
+            {week.label}
+          </Text>
+          <View style={styles.count}>
             <Text
               style={[
-                styles.weightDelta,
-                styles.tabular,
-                { color: s.textMuted },
+                st.label,
+                { color: week.overDays > 0 ? s.danger : s.textStrong },
               ]}
             >
-              {week.weightDeltaText ?? ""}
+              {t("stats.redesign.overOfDays", {
+                count: week.overDays,
+                total: week.daysInWeek,
+              })}
             </Text>
           </View>
-        ))}
-      </View>
-
-      {!!data.note && (
-        <View style={[styles.noteBox, { backgroundColor: s.surface }]}>
-          <Text
-            style={[styles.noteText, { color: s.textMuted }]}
-            lineBreakStrategyIOS="hangul-word"
-          >
-            {data.note}
+          <Text style={[st.detail, styles.weight, { color: s.textMuted }]}>
+            {week.weightDeltaText ?? t("stats.redesign.noRecord")}
           </Text>
         </View>
+      ))}
+      {!!data.note && (
+        <Text style={[st.detail, { color: s.textMuted, paddingTop: 12 }]}>
+          {data.note}
+        </Text>
       )}
-    </View>
+    </StatsSection>
   )
 }
-
 const styles = StyleSheet.create({
-  tabular: { fontVariant: ["tabular-nums"] },
-  card: { ...REPORT_CARD, gap: 12 },
-  sectionHead: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
+    gap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  sectionTitle: {
-    ...TYPE.cardTitle,
-    fontSize: 16,
-    fontWeight: "700",
-    flexShrink: 1,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  sectionCaption: { ...TYPE.cardSub },
-
-  weekRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  weekLabel: { ...TYPE.caption, fontWeight: "600", minWidth: 32 },
-  cellsRow: { flexDirection: "row", gap: 3, flex: 1 },
-  cell: { flex: 1, height: 10, maxWidth: 22, borderRadius: 3 },
-  weightDelta: { ...TYPE.cardSub, minWidth: 52, textAlign: "right" },
-
-  noteBox: { borderRadius: 12, padding: 12 },
-  noteText: { ...TYPE.cardSub },
+  week: { flex: 0.7 },
+  count: { flex: 1.3 },
+  weight: { flex: 1, textAlign: "right" },
 })

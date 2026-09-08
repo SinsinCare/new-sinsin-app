@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * "프로필을 설정하면 내 기준으로 볼 수 있어요" 유도. 서버가 `profileMissing: true` 를
  * 준 순간에만 뜬다.
@@ -14,7 +15,7 @@
  * 만들지 않기 위해 라우팅을 이 컴포넌트가 직접 들고 있다.
  */
 
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useTranslation } from "react-i18next"
 

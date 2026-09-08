@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 // Design System v2 — Modal (확인/경고 다이얼로그)
 // Spec: project/design-system-v2/design-system-base/components/Dialog.md (Figma node 217:2542)
 //
@@ -14,7 +15,7 @@
 //  - Figma 토큰 오타 `label/nomal` → `label.normal`로 사용.
 //  - Alert/Confirm 버튼영역 구조 차이 반영: Alert=우측 정렬 단일 버튼, Confirm=가로 분할 / 세로 스택.
 
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 // 네이티브 Modal 직접 사용 금지 — 전이 직렬화 게이트를 통과해야 한다(AppModal 머리말)
 import { AppModal } from "@/src/shared/components/AppModal"
 import { radius, spacing, typography } from "../tokens"
@@ -47,26 +48,8 @@ export type V2ModalProps = {
   destructive?: boolean
 }
 
-/**
- * 가로 분할에서 한 버튼이 쓸 수 있는 글자 수의 실측 상한.
- *
- * ■ 왜 필요한가 (2026-08-19, `기록하지 않고...`)
- *
- *   `V2Button` 은 라벨을 `numberOfLines={1}` 로 그린다 — 버튼 높이가 문구에 따라
- *   흔들리지 않게 하려는 의도적 선택이다. 그런데 가로 분할은 각 버튼이 **화면 폭의
- *   절반 남짓**(카드 최대 320 - 좌우 패딩 32 - 간격 8, 둘로 나누면 ≈140pt)이라
- *   긴 한글 라벨이 그대로 잘렸다. 실제로 `기록하지 않고 나가기` 가
- *   **`기록하지 않고...`** 로 잘려, 되돌릴 수 없는 액션인데 **무엇을 하는 버튼인지가
- *   잘린 자리에 있었다.**
- *
- *   문구를 짧게 고치는 것으로도 그 화면은 낫지만, 다음에 긴 라벨을 넘기는 호출부가
- *   생기면 똑같이 잘린다. 그래서 **컴포넌트가 스스로 판단**한다.
- *
- *   기준값은 `title.small`(15pt Medium) 기준 한글 폭 실측에서 왔다. 실측 문구:
- *   `기록하지 않고 나가기`(11자) 는 잘렸고 `결과로 돌아가기`(8자·공백 포함) 는
- *   턱걸이로 들어갔다. 턱걸이를 기준으로 잡으면 폰트·기기가 조금만 달라져도 다시
- *   잘리므로 **한 칸 여유를 두고 7 로 잡는다.** 영문은 글자당 폭이 절반쯤이라 이
- *   기준이 보수적이지만, **잘려서 못 읽는 것보다 세로로 쌓이는 편이 항상 낫다.**
+/** 긴 문구는 세로로 쌓고, 각 버튼은 글자 크기에 따라 여러 줄로 자란다.
+ * 카드 폭 320pt의 가로 버튼은 약 140pt이므로 7자를 넘으면 세로를 기본으로 한다.
  */
 const HORIZONTAL_LABEL_LIMIT = 7
 
@@ -103,6 +86,7 @@ export function V2Modal({
       color={destructive ? "danger" : "brand"}
       variant="fill"
       onPress={onPrimary}
+      multilineLabel
       fullWidth={!isConfirm || isVertical}
       style={isConfirm && !isVertical ? styles.flexButton : undefined}
     >
@@ -117,6 +101,7 @@ export function V2Modal({
       color="neutral"
       variant="weak"
       onPress={onSecondary}
+      multilineLabel
       fullWidth={isVertical}
       style={!isVertical ? styles.flexButton : undefined}
     >
@@ -134,10 +119,11 @@ export function V2Modal({
     >
       {/* 딤 배경(스크림) — 탭 시 닫기 요청 */}
       <Pressable
+        accessible={false}
         style={[styles.scrim, { backgroundColor: colors.background.dim }]}
         onPress={onRequestClose}
       >
-        {/* 카드 — 내부 탭이 스크림으로 전파되지 않도록 흡수 */}
+        {/* 카드 내부 탭이 배경으로 전파되지 않도록 흡수한다. */}
         <Pressable
           accessible={false}
           style={[styles.card, { backgroundColor: colors.background.default }]}

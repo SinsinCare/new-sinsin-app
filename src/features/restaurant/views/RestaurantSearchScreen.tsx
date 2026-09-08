@@ -1,3 +1,4 @@
+import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
  * 식당 검색 화면 (`app/restaurant/search.tsx` 가 감싼다).
  * 최근 검색어(개별·전체 삭제) + 250ms 디바운스 자동완성 + 확정 시 리스트 모드.
@@ -20,7 +21,7 @@
  */
 
 import { useState } from "react"
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import {
@@ -41,6 +42,12 @@ import {
 import { useRecentSearches } from "../hooks/useRecentSearches"
 import { useSearchSuggest } from "../hooks/useSearchSuggest"
 import type { SearchSuggestionDto, SuggestKind } from "../types"
+import {
+  replayRestaurantRecent,
+  restaurantRecentFromSuggestion,
+  restaurantRecentKey,
+  type RestaurantRecentSearch,
+} from "../utils/restaurantSearchRecent"
 
 export interface RestaurantSearchScreenProps {
   /** 확정 검색어. 리스트 모드로 넘어간다. */
@@ -97,35 +104,21 @@ export function RestaurantSearchScreen({
   const commit = (keyword: string) => {
     const value = keyword.trim()
     if (!value) return
-    recent.add(value)
+    recent.add({ kind: "query", label: value })
     onSubmitQuery(value)
   }
 
-  /*
-   * 가드가 `!== null` 이 아니라 `!== undefined` 다. 서버는 해당 없는 필드의 **키를
-   * 지운다**(`null` 로 채우지 않는다). 예전 DTO 가 `lat: number | null` 로 선언해 두어
-   * `item.lat !== null` 이 `undefined !== null` → **true** 로 통과했고, 좌표 없는 지역
-   * 제안에서 `lat: undefined` 로 지도 카메라를 옮기고 있었다. 지금은 옵셔널 선언이라
-   * 타입스크립트가 이 자리를 강제한다 — `?? null` 로 정규화해 되돌리지 말 것.
-   */
-  const pickSuggestion = (item: SearchSuggestionDto) => {
-    if (
-      item.type === "REGION" &&
-      item.lat !== undefined &&
-      item.lng !== undefined
-    ) {
-      // 지역은 이름으로 찾지 않는다 — 좌표로 옮긴다(위 헤더 참고).
-      recent.add(item.label)
-      onSelectRegion(item)
-      return
-    }
-    if (item.type === "RESTAURANT" && item.restaurantId !== undefined) {
-      recent.add(item.label)
-      onSelectRestaurant(item.restaurantId)
-      return
-    }
-    commit(item.label)
+  const pickRecent = (entry: RestaurantRecentSearch) => {
+    recent.add(entry)
+    replayRestaurantRecent(entry, {
+      onSubmitQuery,
+      onSelectRegion,
+      onSelectRestaurant,
+    })
   }
+
+  const pickSuggestion = (item: SearchSuggestionDto) =>
+    pickRecent(restaurantRecentFromSuggestion(item))
 
   return (
     <View
@@ -177,8 +170,8 @@ export function RestaurantSearchScreen({
         ) : (
           <RecentList
             isLoading={recent.isLoading}
-            keywords={recent.recentSearches}
-            onPick={commit}
+            entries={recent.recentSearches}
+            onPick={pickRecent}
             onRemove={recent.remove}
             onClear={recent.clear}
           />
@@ -210,15 +203,15 @@ function SearchRowsSkeleton({ count }: { count: number }) {
 
 function RecentList({
   isLoading,
-  keywords,
+  entries,
   onPick,
   onRemove,
   onClear,
 }: {
   isLoading: boolean
-  keywords: string[]
-  onPick: (keyword: string) => void
-  onRemove: (keyword: string) => void
+  entries: RestaurantRecentSearch[]
+  onPick: (entry: RestaurantRecentSearch) => void
+  onRemove: (entry: RestaurantRecentSearch) => void
   onClear: () => void
 }) {
   const { t } = useTranslation("common")
@@ -236,7 +229,7 @@ function RecentList({
         >
           {t("restaurant.search.recentTitle")}
         </Text>
-        {keywords.length > 0 ? (
+        {entries.length > 0 ? (
           <Pressable
             accessibilityRole="button"
             hitSlop={spacing[8]}
@@ -255,7 +248,7 @@ function RecentList({
         ) : null}
       </View>
 
-      {keywords.length === 0 ? (
+      {entries.length === 0 ? (
         <Text
           style={[
             typography.subtext.large,
@@ -267,33 +260,61 @@ function RecentList({
           {t("restaurant.search.recentEmpty")}
         </Text>
       ) : (
-        keywords.map((keyword) => (
-          <Pressable
-            key={keyword}
-            accessibilityRole="button"
-            onPress={() => onPick(keyword)}
-            style={({ pressed }) => [styles.row, pressed && styles.pressedRow]}
-          >
-            <V2Icon name="clock" size="sm" color={colors.label.alternative} />
-            <Text
-              style={[
-                typography.body.mediumWeak,
-                styles.rowLabel,
-                { color: colors.label.normal },
-              ]}
-              numberOfLines={1}
-            >
-              {keyword}
-            </Text>
+        entries.map((entry) => (
+          <View key={restaurantRecentKey(entry)} style={styles.recentRow}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t("restaurant.search.removeOne", { keyword })}
-              hitSlop={Math.max(0, (touchTarget.min - iconSize.sm) / 2)}
-              onPress={() => onRemove(keyword)}
+              onPress={() => onPick(entry)}
+              style={({ pressed }) => [
+                styles.recentDestination,
+                pressed && styles.pressedRow,
+              ]}
+            >
+              <V2Icon
+                name={
+                  entry.kind === "region"
+                    ? "mapPin"
+                    : entry.kind === "restaurant"
+                      ? "fork"
+                      : "clock"
+                }
+                size="sm"
+                color={colors.label.alternative}
+              />
+              <Text
+                style={[
+                  typography.body.mediumWeak,
+                  styles.rowLabel,
+                  { color: colors.label.normal },
+                ]}
+                numberOfLines={1}
+              >
+                {entry.label}
+              </Text>
+              {entry.kind !== "query" ? (
+                <V2Badge size="s" color="neutral" variant="weak">
+                  {t(
+                    entry.kind === "region"
+                      ? "restaurant.search.suggestRegion"
+                      : "restaurant.search.suggestRestaurant",
+                  )}
+                </V2Badge>
+              ) : null}
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("restaurant.search.removeOne", {
+                keyword: entry.label,
+              })}
+              onPress={() => onRemove(entry)}
+              style={({ pressed }) => [
+                styles.recentDelete,
+                pressed && styles.pressedRow,
+              ]}
             >
               <V2Icon name="close" size="sm" color={colors.label.assistive} />
             </Pressable>
-          </Pressable>
+          </View>
         ))
       )}
     </View>
@@ -393,6 +414,27 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[8],
   },
   rowLabel: { flex: 1 },
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: spacing[16],
+    paddingRight: spacing[4],
+  },
+  recentDestination: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[12],
+    minHeight: touchTarget.min,
+    paddingVertical: spacing[8],
+  },
+  recentDelete: {
+    width: touchTarget.min,
+    minHeight: touchTarget.min,
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   emptyLine: {
     paddingHorizontal: spacing[16],
     paddingVertical: spacing[12],

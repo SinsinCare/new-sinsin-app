@@ -190,7 +190,7 @@
   },
   "freePost": {
     "formTitle": "글쓰기",
-    "photoVideo": "사진/영상",
+    "photoVideo": "사진",
     "categoryLabel": "카테고리",
     "optional": "선택",
     "titleLabel": "제목",
@@ -241,6 +241,9 @@
     "backToTop": "맨 위로"
   },
   "story": {
+    "inviteTitle": "오늘의 순간을 나눠요",
+    "addPhoto": "사진 올리기",
+    "durationHint": "사진은 24시간 동안 보여요",
     "title": "스토리",
     "subtitle": "오늘의 한 끼를 하루 동안 나눠요",
     "create": "올리기",
@@ -638,5 +641,11 @@
     "deleteFailed": "레시피를 내리지 못했어요",
     "editAction": "수정하기",
     "more": "더보기"
+  },
+  "browse": {
+    "all": "전체",
+    "sortTitle": "정렬 기준",
+    "clearSearch": "검색 조건 초기화",
+    "multiple": "여러 개 선택할 수 있어요"
   }
 }

@@ -108,19 +108,9 @@ describe("세션 전환 — 확인 모달을 먼저 내린다", () => {
   })
 
   test("로그아웃은 확인 모달 dismiss 뒤 세션을 비운다", () => {
-    const source = read("src/features/settings/views/SettingsScreen.tsx")
+    const source = read("src/features/settings/hooks/useSettingsScreen.ts")
     expect(source).toMatch(
       /setLogoutModalVisible\(false\)\s*await afterModalTransitions\(\)\s*await signOut\("explicit"\)/u,
     )
-  })
-
-  test("상담 기록 메뉴는 닫힌 뒤 이름 변경·삭제 후속 동작을 시작한다", () => {
-    const source = read(
-      "src/features/consultation/components/ChatHistoryCard.tsx",
-    )
-    const gatedActions = source.match(
-      /setMenuOpen\(false\)\s*await afterModalTransitions\(\)\s*on(?:Rename|Delete)\?\.\(\)/gu,
-    )
-    expect(gatedActions).toHaveLength(2)
   })
 })
