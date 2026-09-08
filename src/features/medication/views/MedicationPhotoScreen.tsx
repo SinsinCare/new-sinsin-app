@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react"
-import { Image, Linking, Pressable, View } from "react-native"
+import { Image, Pressable, View } from "react-native"
 import { router } from "expo-router"
 import * as ImagePicker from "expo-image-picker"
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { V2Button, V2DotLoader, V2Text } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useGoBack } from "@/src/shared/navigation"
-import { showActionSheet, showConfirm } from "@/src/lib/dialog"
+import { showActionSheet } from "@/src/lib/dialog"
 import { MedicationFlowShell } from "../components/MedicationFlowShell"
 import { medStyles, FORM } from "../components/medicationStyles"
 import { useMedicationFlowStore } from "../stores/medicationFlowStore"
 import { discardMedicationPhotos } from "../services/medicationPhotoCache"
 import { medicationApi } from "../services/medicationApi"
+import { preparePillPhoto } from "../services/medicationPhotos"
 import type { RecognitionResult } from "../types"
 export function MedicationPhotoScreen() {
   const { t } = useTranslation("medication"),
@@ -26,7 +26,9 @@ export function MedicationPhotoScreen() {
     [photoError, setPhotoError] = useState(false)
   const request = useRef<AbortController | null>(null),
     alive = useRef(true),
-    pickerLock = useRef(false)
+    pickerLock = useRef(false),
+    // 같은 세션의 연속 실패 횟수(RQ-52). 성공하거나 사진을 바꾸면 0 으로.
+    failures = useRef(0)
   const capability = useQuery({
     queryKey: ["medication-capabilities"],
     queryFn: ({ signal }) => medicationApi.capabilities(signal),
@@ -55,46 +57,21 @@ export function MedicationPhotoScreen() {
       })
       if (action === null || !alive.current) return
       if (action === 0) {
-        const permission = await ImagePicker.requestCameraPermissionsAsync()
-        if (!permission.granted) {
-          if (
-            await showConfirm({
-              title: t("cameraDenied"),
-              confirmLabel: t("openSettings"),
-              cancelLabel: t("cancel"),
-              buttonLayout: "vertical",
-            })
-          )
-            void Linking.openSettings()
-          return
-        }
+        // 촬영은 앱 안 카메라(M9)가 맡는다 — 프레임 안내·앞/뒷면 단계·플래시 제어가 거기 있다.
+        setResult(null)
+        setPhotoError(false)
+        router.push("/medication/camera")
+        return
       }
-      const options: ImagePicker.ImagePickerOptions = {
+      const picked = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 1,
         allowsMultipleSelection: false,
         exif: false,
-      }
-      const picked =
-        action === 0
-          ? await ImagePicker.launchCameraAsync(options)
-          : await ImagePicker.launchImageLibraryAsync(options)
+      })
       if (picked.canceled || !picked.assets[0]) return
-      const asset = picked.assets[0],
-        photo = await manipulateAsync(
-          asset.uri,
-          Math.max(asset.width, asset.height) > 1600
-            ? [
-                {
-                  resize:
-                    asset.width >= asset.height
-                      ? { width: 1600 }
-                      : { height: 1600 },
-                },
-              ]
-            : [],
-          { compress: 0.88, format: SaveFormat.JPEG },
-        )
+      // 다른 업로더와 같은 경로로 다듬는다(1600px · JPEG). 각인이 판독의 전부라 크게 남긴다.
+      const photo = await preparePillPhoto(picked.assets[0].uri)
       if (!alive.current) {
         discardMedicationPhotos([{ uri: photo.uri }])
         return
@@ -127,14 +104,26 @@ export function MedicationPhotoScreen() {
       )
       if (!alive.current || controller.signal.aborted) return
       if (response.status === "candidates" && response.items.length) {
-        useMedicationFlowStore.getState().setCandidates(response.items)
+        failures.current = 0
+        useMedicationFlowStore
+          .getState()
+          .setCandidates(
+            response.items,
+            response.matches ?? [],
+            response.confidence ?? "none",
+          )
         router.push("/medication/candidates")
-      } else
+      } else {
+        failures.current += 1
         setResult(
           response.status === "candidates" ? "no_match" : response.status,
         )
+      }
     } catch {
-      if (alive.current && !controller.signal.aborted) setResult("unavailable")
+      if (alive.current && !controller.signal.aborted) {
+        failures.current += 1
+        setResult("unavailable")
+      }
     } finally {
       if (request.current === controller) request.current = null
       if (alive.current) setBusy(false)
@@ -246,19 +235,41 @@ export function MedicationPhotoScreen() {
                   style={FORM.option}
                   color={s.textStrong}
                 >
-                  {t(result === "unavailable" ? "recognitionError" : "noMatch")}
+                  {t(
+                    result === "unavailable"
+                      ? "recognitionError"
+                      : result === "poor_image"
+                        ? "poorImage"
+                        : "noMatch",
+                  )}
                 </V2Text>
                 <V2Text style={FORM.hint} color={s.text}>
                   {t(
                     result === "unavailable"
                       ? "recognitionErrorBody"
-                      : "noMatchBody",
+                      : result === "poor_image"
+                        ? "poorImageBody"
+                        : "noMatchBody",
                   )}
                 </V2Text>
+                {/* 실패 화면의 대안 순서(RQ-51): 다시 촬영 > 이름으로 검색. 두 번 연속 실패하면 검색을 앞세운다(RQ-52). */}
+                {failures.current >= 2 ? null : (
+                  <V2Button
+                    multilineLabel
+                    color="neutral"
+                    variant="weak"
+                    onPress={() => {
+                      setResult(null)
+                      router.push("/medication/camera")
+                    }}
+                  >
+                    {t("retake")}
+                  </V2Button>
+                )}
                 <V2Button
                   multilineLabel
-                  color="neutral"
-                  variant="weak"
+                  color={failures.current >= 2 ? "brand" : "neutral"}
+                  variant={failures.current >= 2 ? "fill" : "weak"}
                   onPress={() => router.push("/medication/search")}
                 >
                   {t("searchMethod")}

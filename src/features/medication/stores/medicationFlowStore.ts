@@ -1,6 +1,12 @@
 import { discardMedicationPhotos } from "../services/medicationPhotoCache"
 import { create } from "zustand"
-import type { Drug, Plan, Slot } from "../types"
+import type {
+  CandidateMatch,
+  Drug,
+  Plan,
+  RecognitionConfidence,
+  Slot,
+} from "../types"
 import { todayKst } from "../data/medicationModel"
 interface FlowState {
   date: string
@@ -12,6 +18,8 @@ interface FlowState {
   addedId: string | null
   photos: { uri: string }[]
   candidates: Drug[]
+  matches: CandidateMatch[]
+  confidence: RecognitionConfidence
   start: (date: string) => void
   select: (
     drug: Drug | null,
@@ -22,7 +30,11 @@ interface FlowState {
   added: (plan: Plan) => void
   clearAdded: () => void
   setPhotos: (photos: { uri: string }[]) => void
-  setCandidates: (candidates: Drug[]) => void
+  setCandidates: (
+    candidates: Drug[],
+    matches?: CandidateMatch[],
+    confidence?: RecognitionConfidence,
+  ) => void
   clear: () => void
 }
 const initial = () => ({
@@ -35,6 +47,8 @@ const initial = () => ({
   addedId: null,
   photos: [],
   candidates: [],
+  matches: [],
+  confidence: "none" as const,
 })
 export const useMedicationFlowStore = create<FlowState>((set, get) => ({
   ...initial(),
@@ -64,6 +78,8 @@ export const useMedicationFlowStore = create<FlowState>((set, get) => ({
       editing: null,
       photos: [],
       candidates: [],
+      matches: [],
+      confidence: "none",
     })
   },
   clearAdded: () => set({ addedSlot: null, addedId: null }),
@@ -73,7 +89,8 @@ export const useMedicationFlowStore = create<FlowState>((set, get) => ({
     )
     set({ photos })
   },
-  setCandidates: (candidates) => set({ candidates }),
+  setCandidates: (candidates, matches = [], confidence = "none") =>
+    set({ candidates, matches, confidence }),
   clear: () => {
     discardMedicationPhotos(get().photos)
     set(initial())

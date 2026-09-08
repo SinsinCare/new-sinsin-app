@@ -1,9 +1,13 @@
-import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useEffect, useState } from "react"
 import { Linking, View } from "react-native"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { V2Button, V2DotLoader, V2Text } from "@/src/design-system-v2"
+import {
+  V2Button,
+  V2DotLoader,
+  V2SearchField,
+  V2Text,
+} from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useGoBack } from "@/src/shared/navigation"
 import { MedicationFlowShell } from "../components/MedicationFlowShell"
@@ -22,15 +26,23 @@ export function MedicationSearchScreen() {
     const timer = setTimeout(() => setQuery(text.trim()), 250)
     return () => clearTimeout(timer)
   }, [text])
+  // 카탈로그가 아직 없으면(적재 전) 검색을 시도하지 않고 직접 입력을 앞세운다(EX-15 의 검색판).
+  const capability = useQuery({
+    queryKey: ["medication-capabilities"],
+    queryFn: ({ signal }) => medicationApi.capabilities(signal),
+    staleTime: 60000,
+  })
+  const catalogReady = capability.data?.catalog !== false
   const result = useQuery({
     queryKey: ["medication-search", q],
     queryFn: ({ signal }) => medicationApi.search(q, signal),
-    enabled: q.length >= 2,
+    enabled: q.length >= 2 && catalogReady,
     staleTime: 30000,
     retry: 1,
   })
   const current = q === text.trim(),
     data = current ? result.data : undefined
+  const unavailable = !catalogReady || (data ? !data.available : false)
   return (
     <MedicationFlowShell
       title={t("searchTitle")}
@@ -41,14 +53,12 @@ export function MedicationSearchScreen() {
           fullWidth
           size="l"
           color={
-            data && (!data.available || data.items.length === 0)
+            unavailable || (data && data.items.length === 0)
               ? "brand"
               : "neutral"
           }
           variant={
-            data && (!data.available || data.items.length === 0)
-              ? "fill"
-              : "weak"
+            unavailable || (data && data.items.length === 0) ? "fill" : "weak"
           }
           onPress={() => void select(null, "CATALOG", text.trim())}
         >
@@ -56,24 +66,23 @@ export function MedicationSearchScreen() {
         </V2Button>
       }
     >
-      <TextInput
+      <V2SearchField
         autoFocus
         value={text}
         onChangeText={setText}
         placeholder={t("searchPlaceholder")}
         accessibilityLabel={t("searchPlaceholder")}
-        placeholderTextColor={s.textMuted}
-        style={[
-          medStyles.field,
-          { backgroundColor: s.surfaceSunken, color: s.textStrong },
-        ]}
         returnKeyType="search"
         autoCorrect={false}
-        selectionColor={s.brand}
         maxLength={120}
-        clearButtonMode="while-editing"
       />
-      {text.trim().length < 2 ? (
+      {unavailable ? (
+        <View style={medStyles.section}>
+          <V2Text style={FORM.body} color={s.text}>
+            {t("catalogUnavailable")}
+          </V2Text>
+        </View>
+      ) : text.trim().length < 2 ? (
         <V2Text style={FORM.hint} color={s.text}>
           {t("searchHint")}
         </V2Text>
@@ -95,10 +104,6 @@ export function MedicationSearchScreen() {
             {t("reload")}
           </V2Button>
         </View>
-      ) : data && !data.available ? (
-        <V2Text style={FORM.body} color={s.text}>
-          {t("catalogUnavailable")}
-        </V2Text>
       ) : data?.items.length ? (
         <View>
           {data.items.map((drug) => (
@@ -119,10 +124,11 @@ export function MedicationSearchScreen() {
           </V2Text>
         </View>
       )}
+      {/* 출처 상시 표기(RQ-16). 식약처 공공데이터 — 약학정보원 계약 전까지의 정본이다(O-1). */}
       {data?.source ? (
         <V2Text
           style={FORM.hint}
-          color={s.text}
+          color={s.textMuted}
           onPress={() => {
             if (data.sourceUrl?.startsWith("https://"))
               void Linking.openURL(data.sourceUrl)

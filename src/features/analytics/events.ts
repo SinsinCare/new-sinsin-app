@@ -81,6 +81,14 @@ export type AnalyticsScreenName =
   | "meal_report"
   // 물·혈압·체중 기록 페이지(2026-09-05). 시트였을 때는 홈 안이라 화면 이름이 없었다.
   | "record_medication"
+  // 약 등록 플로우(2026-09-08 기획 M4~M11). 검색·사진·촬영·후보·설정·관리는 각각 퍼널 스텝이다.
+  | "medication_add"
+  | "medication_search"
+  | "medication_photo"
+  | "medication_camera"
+  | "medication_candidates"
+  | "medication_edit"
+  | "medication_manage"
   | "record_water"
   | "record_blood_pressure"
   | "record_weight"
@@ -1543,6 +1551,13 @@ const ROUTE_SCREEN: Record<string, AnalyticsScreenName> = {
   "food-camera": "food_camera",
   // 물·혈압·체중 기록(2026-09-05 시안). 시트였을 때는 홈 화면 안이라 이름이 없었다.
   "record/medication": "record_medication",
+  "medication/add": "medication_add",
+  "medication/search": "medication_search",
+  "medication/photo": "medication_photo",
+  "medication/camera": "medication_camera",
+  "medication/candidates": "medication_candidates",
+  "medication/edit": "medication_edit",
+  "medication/manage": "medication_manage",
   "record/water": "record_water",
   "record/blood-pressure": "record_blood_pressure",
   "record/weight": "record_weight",

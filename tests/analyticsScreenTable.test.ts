@@ -126,6 +126,7 @@ describe("analytics screen table", () => {
 
   it("collapses only the six leaf groups the design allows", () => {
     // 라우트(+ `+not-found`) → 이름. 접은 자리가 늘면 여기서 걸린다.
+    // 99 = 92 + 약 등록 플로우 7(추가 방법·검색·사진·촬영·후보·설정·관리, 2026-09-08 — 전부 1:1 이름).
     // 92 = 91 + 약 복용 독립 페이지.
     // 91 = 89 + 혈당·붓기 독립 페이지.
     // 89 = 86 + 기록 페이지 셋(물·혈압·체중, 2026-09-05 — 셋 다 1:1 이름).
@@ -136,8 +137,8 @@ describe("analytics screen table", () => {
         getAnalyticsScreenName(toSegments(key)),
       ),
     )
-    expect(knownAnalyticsRouteKeys()).toHaveLength(92)
-    expect(names.size).toBe(83)
+    expect(knownAnalyticsRouteKeys()).toHaveLength(99)
+    expect(names.size).toBe(90)
 
     // 탈퇴 3화면은 그 자체가 퍼널이라 접지 않는다.
     expect(getAnalyticsScreenName(["(settings)", "withdrawal"])).toBe(

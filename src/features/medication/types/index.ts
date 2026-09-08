@@ -31,6 +31,16 @@ export interface Drug {
   source: string
   sourceUrl: string
   updatedAt: string
+  /** 전문의약품 | 일반의약품 | "". */
+  etcOtc?: string
+  /** 제형(필름코팅정·캡슐 …). 낱알식별 품목만 있다. */
+  form?: string
+  /** 낱알식별 정보가 있어 사진 인식 대상인 품목. */
+  pill?: boolean
+  /** e약은요 효능 원문. 화면은 `drugSummary()` 로 한 줄만 쓴다. */
+  efficacy?: string
+  usage?: string
+  caution?: string
   guide?: {
     text: string
     reviewedBy: string
@@ -96,7 +106,17 @@ export interface DrugSearch {
   updatedAt: string | null
   items: Drug[]
 }
+export type RecognitionConfidence = "high" | "medium" | "low" | "none"
+export interface CandidateMatch {
+  id: string
+  /** 0~100. 서버 §7-3 배점 그대로 — 화면은 부풀리거나 반올림해 100으로 만들지 않는다(RQ-44). */
+  score: number
+  parts: { imprint: number; appearance: number; context: number }
+}
 export interface RecognitionResult {
   status: "candidates" | "no_match" | "poor_image" | "unavailable"
+  /** AC-15~17 분기. high 면 1순위를 강조·선택해 둔다. */
+  confidence: RecognitionConfidence
   items: Drug[]
+  matches: CandidateMatch[]
 }

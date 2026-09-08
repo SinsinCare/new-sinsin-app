@@ -1,4 +1,6 @@
 import { api } from "@/src/services/core"
+import { isMockMode } from "@/src/config/appConfig"
+import { mockRecognize } from "../data/mockRecognition"
 import type {
   DrugSearch,
   MedicationCapabilities,
@@ -50,6 +52,11 @@ export const medicationApi = {
     photos: { uri: string }[],
     signal: AbortSignal,
   ): Promise<RecognitionResult> {
+    // 목 모드는 네트워크를 타지 않는다 — 다른 사진 서비스(`foodCameraService`)와 같은 규칙.
+    if (isMockMode()) {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      return mockRecognize(photos.length)
+    }
     const body = new FormData()
     photos.forEach((p, i) =>
       body.append(i === 0 ? "front" : "back", {
