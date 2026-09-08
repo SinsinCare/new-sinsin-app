@@ -9,6 +9,7 @@ import { useRecordExitGuard } from "@/src/features/home/hooks/useRecordExitGuard
 import { useRecordSaveFeedback } from "@/src/features/home/hooks/useRecordSaveFeedback"
 import { useHealthEntryInput } from "@/src/features/home/hooks/useHealthEntryInput"
 import { showConfirm } from "@/src/lib/dialog"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { medicationApi, isMedicationConflict } from "../services/medicationApi"
 import {
   rebaseMedicationDraft,
@@ -157,6 +158,11 @@ export function useMedicationDiary(
     if (nonce.current?.key !== key) nonce.current = { key, id: uuid.v4() }
     const requestId = nonce.current.id,
       requestOwner = uid
+    // 다른 네 지표와 같은 퍼널(§J2). 시작만 세고 성공은 아래에서 — "시작했는데 저장 못 한" 비율이 선다.
+    trackAnalyticsEvent("health_entry_save_started", {
+      metric: "medication",
+      item_count: changes.length,
+    })
     return save.run(async () => {
       try {
         const confirmed = await medicationApi.saveDay(
@@ -166,6 +172,10 @@ export function useMedicationDiary(
           requestId,
         )
         if (!mounted.current || owner.current !== requestOwner) return false
+        trackAnalyticsEvent("health_entry_save_succeeded", {
+          metric: "medication",
+          existing: state.base!.taken > 0,
+        })
         queryClient.setQueryData(medicationKeys.day(uid, date), confirmed)
         setBase(confirmed)
         setDraft({})

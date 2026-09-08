@@ -60,7 +60,6 @@ const PAGE_FILES = [
   "src/features/home/components/record/pages/WeightRecordPage.tsx",
   "src/features/home/components/record/pages/BloodGlucoseRecordPage.tsx",
   "src/features/home/components/record/pages/EdemaRecordPage.tsx",
-  "src/features/home/components/record/pages/MedicationRecordPage.tsx",
   "src/features/home/components/record/pages/RecordNumberField.tsx",
   "src/features/home/components/record/pages/RecordMetricSummary.tsx",
 ]

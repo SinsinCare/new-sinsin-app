@@ -1403,12 +1403,8 @@
       "noRecord": "기록 없음"
     },
     "medication": {
-      "progress": "{{taken}}회 / {{planned}}회 복용",
-      "takenOnly": "{{taken}}회 복용",
-      "today": "오늘",
-      "confirmTitle": "방금 복용한 약을 기록할까요?",
-      "confirmBody": "{{date}} 1회 복용으로 기록돼요. 상세 약 목록 및 복용 알림 설정은 곧 업데이트될 예정이에요.",
-      "confirm": "복용 기록하기"
+      "progress": "{{taken}}/{{planned}} 복용",
+      "takenOnly": "{{taken}}회 복용"
     },
     "mealList": {
       "title": "오늘의 식단 기록",

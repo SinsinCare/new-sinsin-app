@@ -19,10 +19,13 @@ export function MedicationProduct({
   drug,
   onPress,
   trailing,
+  decorative = false,
 }: {
   drug: Drug
   onPress?: () => void
   trailing?: string
+  /** 상위 요소(라디오 등)가 이미 접근성 레이블을 갖고 있을 때 — 이 줄은 읽히지 않는다. */
+  decorative?: boolean
 }) {
   const s = useSurface()
   const { t } = useTranslation("medication")
@@ -30,6 +33,8 @@ export function MedicationProduct({
   const ingredients = drugIngredientLine(drug)
   return (
     <Pressable
+      accessible={!decorative}
+      importantForAccessibility={decorative ? "no-hide-descendants" : "auto"}
       accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={[drug.name, drugSummary(drug), ingredients]
         .filter(Boolean)
@@ -70,7 +75,12 @@ export function MedicationProduct({
       </View>
       <View style={[medStyles.grow, { gap: 4 }]}>
         <View style={[medStyles.row, { gap: S[2], alignItems: "center" }]}>
-          <V2Text style={[FORM.option, medStyles.grow]} color={s.textStrong}>
+          <V2Text
+            style={[FORM.option, medStyles.grow]}
+            color={s.textStrong}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
             {drug.name}
           </V2Text>
           {badge ? (

@@ -22,6 +22,8 @@ interface FlowState {
   matches: CandidateMatch[]
   confidence: RecognitionConfidence
   observed: ObservedFeatures | null
+  /** 사진 인식 로그 id. 후보로 등록할 때 서버에 같이 보내 정답 라벨을 남긴다(AC-21). */
+  recognitionId: string | null
   start: (date: string) => void
   select: (
     drug: Drug | null,
@@ -37,6 +39,7 @@ interface FlowState {
     matches?: CandidateMatch[],
     confidence?: RecognitionConfidence,
     observed?: ObservedFeatures | null,
+    recognitionId?: string | null,
   ) => void
   clear: () => void
 }
@@ -53,6 +56,7 @@ const initial = () => ({
   matches: [],
   confidence: "none" as const,
   observed: null,
+  recognitionId: null,
 })
 export const useMedicationFlowStore = create<FlowState>((set, get) => ({
   ...initial(),
@@ -85,6 +89,7 @@ export const useMedicationFlowStore = create<FlowState>((set, get) => ({
       matches: [],
       confidence: "none",
       observed: null,
+      recognitionId: null,
     })
   },
   clearAdded: () => set({ addedSlot: null, addedId: null }),
@@ -99,7 +104,8 @@ export const useMedicationFlowStore = create<FlowState>((set, get) => ({
     matches = [],
     confidence = "none",
     observed = null,
-  ) => set({ candidates, matches, confidence, observed }),
+    recognitionId = null,
+  ) => set({ candidates, matches, confidence, observed, recognitionId }),
   clear: () => {
     discardMedicationPhotos(get().photos)
     set(initial())

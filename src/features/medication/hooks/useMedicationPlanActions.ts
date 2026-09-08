@@ -5,6 +5,8 @@ import { useQueryClient } from "@tanstack/react-query"
 import { router } from "expo-router"
 import { uuid } from "expo-modules-core"
 import { showActionSheet, showConfirm, showAlert } from "@/src/lib/dialog"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
+import { hapticSelection } from "@/src/lib/haptics"
 import { useAuthStore } from "@/src/stores/authStore"
 import { medicationApi } from "../services/medicationApi"
 import { useMedicationFlowStore } from "../stores/medicationFlowStore"
@@ -16,12 +18,19 @@ export function useMedicationPlanActions() {
     uid = useAuthStore((s) => s.user?.uid ?? "")
   const lock = useRef(false),
     [busy, setBusy] = useState(false)
-  const open = async (snapshot: Plan) => {
+  /**
+   * `known` 은 화면이 이미 들고 있는 최신 플랜 목록(하루 응답의 `plans`). 있으면 왕복 없이
+   * 바로 시트를 연다 — 길게 눌렀는데 몇 초간 아무 반응이 없던 문제(DEF-14).
+   */
+  const open = async (snapshot: Plan, known?: readonly Plan[]) => {
     if (lock.current) return
     lock.current = true
     setBusy(true)
+    hapticSelection()
     try {
-      const plans = await medicationApi.plans(),
+      const plans = known?.some((p) => p.id === snapshot.id)
+          ? known
+          : await medicationApi.plans(),
         plan = plans.find((p) => p.id === snapshot.id)
       if (!plan || plan.status === "ARCHIVED") {
         await showAlert({ title: snapshot.name, description: t("archiveBody") })
@@ -73,6 +82,7 @@ export function useMedicationPlanActions() {
             ? "ACTIVE"
             : "PAUSED"
       await medicationApi.update({ ...plan, status }, uuid.v4())
+      trackAnalyticsEvent("medication_plan_status_changed", { status })
       const synced = await syncMedicationReminders(uid).catch(() => false)
       if (!synced) await showAlert({ title: t("savedReminderError") })
       await queryClient.invalidateQueries({

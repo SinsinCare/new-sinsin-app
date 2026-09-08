@@ -268,11 +268,14 @@ const J2_EMITTERS: Record<string, string[]> = {
     "src/features/home/components/record/RecordView.tsx",
     // 물은 잔을 담아 한 번에 보내므로 담은 잔 수를 화면 자신만 안다(2026-09-05 페이지화).
     "src/features/home/components/record/pages/WaterRecordPage.tsx",
+    // 약은 시간대별 체크를 모아 한 번에 저장한다 — 바뀐 회차 수를 훅 자신만 안다(2026-09-08).
+    "src/features/medication/hooks/useMedicationDiary.ts",
   ],
   health_entry_save_succeeded: [
     "src/features/home/hooks/useBloodMetricsRecord.ts",
     "src/features/home/hooks/useExtraWater.ts",
     "src/features/home/hooks/useWeightEdemaRecord.ts",
+    "src/features/medication/hooks/useMedicationDiary.ts",
   ],
   health_entry_save_failed: [
     "src/features/home/hooks/useBloodMetricsRecord.ts",

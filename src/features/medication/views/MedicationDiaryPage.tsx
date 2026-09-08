@@ -21,10 +21,13 @@ export function MedicationDiaryPage({
   date,
   onBack,
   preferred,
+  shifted = false,
 }: {
   date: string
   onBack: () => void
   preferred?: Slot
+  /** 새벽 4시 전이라 전날 자기전으로 열었다(EX-10). 조용히 바꾸지 않고 알린다. */
+  shifted?: boolean
 }) {
   const { t } = useTranslation("medication"),
     s = useSurface(),
@@ -34,6 +37,12 @@ export function MedicationDiaryPage({
     items = day?.occurrences.filter((o) => o.slot === form.slot) ?? []
   const checked = items.filter((o) => form.draft[o.key] ?? o.taken).length
   const empty = !!day && day.occurrences.length === 0
+  // 등록한 약은 있는데 전부 일시중지면 "약부터 등록하세요" 는 틀린 안내다(DEF-16).
+  const pausedOnly =
+    empty &&
+    !!day &&
+    day.plans.some((p) => p.status === "PAUSED") &&
+    !day.plans.some((p) => p.status === "ACTIVE")
   const add = () => {
     useMedicationFlowStore.getState().start(date)
     router.push("/medication/add")
@@ -84,9 +93,11 @@ export function MedicationDiaryPage({
                 </V2Text>
                 <V2Text style={FORM.label} color={s.textStrong}>
                   {day.planned > 0
-                    ? t("progress", { taken: day.taken, planned: day.planned })
-                    : day.taken}{" "}
-                  {t("doses")}
+                    ? t("progressLine", {
+                        taken: day.taken,
+                        planned: day.planned,
+                      })
+                    : t("takenOnlyLine", { count: day.taken })}
                 </V2Text>
               </View>
               <Pressable
@@ -94,9 +105,17 @@ export function MedicationDiaryPage({
                 onPress={() => router.push("/medication/manage")}
                 style={styles.action}
               >
-                <V2Text style={FORM.hint} color={s.textStrong}>
-                  {t("manage")} ›
-                </V2Text>
+                <View style={[styles.row, { gap: 2 }]}>
+                  <V2Text style={FORM.hint} color={s.textStrong}>
+                    {t("manage")}
+                  </V2Text>
+                  <Ionicons
+                    accessible={false}
+                    name="chevron-forward"
+                    size={14}
+                    color={s.textStrong}
+                  />
+                </View>
               </Pressable>
             </View>
             {!empty ? (
@@ -108,7 +127,13 @@ export function MedicationDiaryPage({
                 disabled={form.save.isSaving}
               />
             ) : null}
-            {date !== day.today ? (
+            {shifted ? (
+              <View style={[styles.note, { backgroundColor: s.surfaceSunken }]}>
+                <V2Text style={FORM.hint} color={s.text}>
+                  {t("bedtimeShifted")}
+                </V2Text>
+              </View>
+            ) : date !== day.today ? (
               <View style={[styles.note, { backgroundColor: s.surfaceSunken }]}>
                 <V2Text style={FORM.hint} color={s.text}>
                   {t(date > day.today ? "future" : "past")}
@@ -149,11 +174,21 @@ export function MedicationDiaryPage({
                   />
                 </View>
                 <V2Text style={FORM.label} color={s.textStrong}>
-                  {t("emptyTitle")}
+                  {t(pausedOnly ? "pausedOnlyTitle" : "emptyTitle")}
                 </V2Text>
                 <V2Text style={[FORM.body, styles.center]} color={s.text}>
-                  {t("emptyBody")}
+                  {t(pausedOnly ? "pausedOnlyBody" : "emptyBody")}
                 </V2Text>
+                {pausedOnly ? (
+                  <V2Button
+                    multilineLabel
+                    color="neutral"
+                    variant="weak"
+                    onPress={() => router.push("/medication/manage")}
+                  >
+                    {t("manage")}
+                  </V2Button>
+                ) : null}
               </View>
             ) : (
               <View>
@@ -167,7 +202,11 @@ export function MedicationDiaryPage({
                     <V2Text style={FORM.label} color={s.textStrong}>
                       {t("slotTitle", { slot: t(`slots.${form.slot}`) })}
                     </V2Text>
-                    <V2Text style={FORM.hint} color={s.text}>
+                    <V2Text
+                      accessibilityLiveRegion="polite"
+                      style={FORM.hint}
+                      color={s.text}
+                    >
                       {t("selection", { total: items.length, taken: checked })}
                     </V2Text>
                   </View>
@@ -201,7 +240,7 @@ export function MedicationDiaryPage({
                         form.save.isSaving || actions.busy || date > day.today
                       }
                       onToggle={() => form.toggle(item.key)}
-                      onMore={() => void actions.open(item.plan)}
+                      onMore={() => void actions.open(item.plan, day.plans)}
                     />
                   ))
                 ) : (

@@ -1415,12 +1415,8 @@
       "noRecord": "No entry"
     },
     "medication": {
-      "progress": "{{taken}} / {{planned}} doses",
-      "takenOnly": "{{taken}} doses",
-      "today": "today",
-      "confirmTitle": "Log a dose now?",
-      "confirmBody": "This adds one dose for {{date}}. Names and schedules are coming soon.",
-      "confirm": "Log it"
+      "progress": "{{taken}}/{{planned}} doses",
+      "takenOnly": "{{taken}} taken"
     },
     "mealList": {
       "title": "Today’s meals",

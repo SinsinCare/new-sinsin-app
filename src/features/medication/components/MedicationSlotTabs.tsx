@@ -27,7 +27,10 @@ export function MedicationSlotTabs({
   const { t } = useTranslation("medication"),
     s = useSurface()
   return (
-    <View style={[styles.row, fontScale > 1.4 && { flexWrap: "wrap" }]}>
+    <View
+      accessibilityRole="tablist"
+      style={[styles.row, fontScale > 1.4 && { flexWrap: "wrap" }]}
+    >
       {SLOTS.map((slot) => {
         const items = day.occurrences.filter((o) => o.slot === slot),
           taken = items.filter((o) => draft[o.key] ?? o.taken).length

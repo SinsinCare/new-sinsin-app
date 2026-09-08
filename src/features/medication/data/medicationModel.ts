@@ -29,6 +29,24 @@ export function defaultSlot(now = new Date()): Slot {
         ? "DINNER"
         : "BEDTIME"
 }
+/**
+ * 홈에서 "오늘" 로 들어왔는데 지금이 새벽 4시 전이면(EX-10) 전날 자기전 약을 연다 —
+ * 00:30 에 먹은 자기전 약이 다음 날 기록으로 넘어가면 안 된다. 명시된 날짜가 오늘이 아니거나
+ * 슬롯이 명시됐으면 손대지 않는다. `shifted` 는 화면이 그 사실을 알리는 데 쓴다(조용히 바꾸지 않는다).
+ */
+export function resolveDiaryEntry(
+  date: string,
+  slot: Slot | undefined,
+  now = new Date(),
+): { date: string; slot: Slot | undefined; shifted: boolean } {
+  const hour = (now.getUTCHours() + 9) % 24
+  if (slot !== undefined || date !== todayKst(now) || hour >= 4)
+    return { date, slot, shifted: false }
+  const previous = new Date(Date.parse(`${date}T00:00:00Z`) - 86400000)
+    .toISOString()
+    .slice(0, 10)
+  return { date: previous, slot: "BEDTIME", shifted: true }
+}
 export function firstPendingSlot(
   day: MedicationDay,
   preferred = defaultSlot(),

@@ -71,7 +71,7 @@ describe("화면이 지키는 분기", () => {
     expect(src).not.toContain("launchCameraAsync")
     expect(src).toContain("preparePillPhoto(")
     // 2회 연속 실패 시 검색을 주 버튼으로 승격(RQ-52)
-    expect(src).toContain("failures.current >= 2")
+    expect(src).toContain("failures >= 2")
   })
   it("카메라 화면은 앞/뒷면 두 단계, 뒷면 건너뛰기, 용도 고지를 가진다 (AC-01·02·10)", () => {
     const src = read("src/features/medication/views/MedicationCameraScreen.tsx")

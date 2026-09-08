@@ -59,6 +59,10 @@ export interface PlanInput {
   startDate: string
   source: MedicationSource
   drugId: string | null
+  /** 같은 약이 있어도 등록(사용자가 "따로 등록" 을 고름). 서버가 저장하지 않는다. */
+  allowDuplicate?: boolean
+  /** 사진 인식 로그 id(AC-21). 서버가 저장하지 않는다. */
+  recognitionId?: string | null
 }
 export interface Plan extends PlanInput {
   id: string
@@ -119,8 +123,18 @@ export interface ObservedFeatures {
   shape: string
   colors: string[]
 }
+export type UnavailableReason =
+  | "disabled"
+  | "quota"
+  | "busy"
+  | "timeout"
+  | "provider"
 export interface RecognitionResult {
   status: "candidates" | "no_match" | "poor_image" | "unavailable"
+  /** `unavailable` 일 때 왜인지. 한도 소진과 장애를 화면이 구분한다. */
+  reason?: UnavailableReason
+  recognitionId?: string
+  durationMs?: number
   observed?: ObservedFeatures
   /** AC-15~17 분기. high 면 1순위를 강조·선택해 둔다. */
   confidence: RecognitionConfidence

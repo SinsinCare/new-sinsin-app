@@ -29,6 +29,7 @@ import {
 import { showErrorToast } from "@/src/lib/toast"
 import { useMedicationFlowStore } from "../stores/medicationFlowStore"
 import { preparePillPhoto } from "../services/medicationPhotos"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 
 /**
  * 알약 촬영(기획 M9 · AC-01~AC-10). 푸드 카메라와 같은 뼈대(전체 미리보기 · 제목/X ·
@@ -89,8 +90,12 @@ export function MedicationCameraScreen() {
     if (index === 0 && next.length > 1 && !next[1]) next.length = 1
     useMedicationFlowStore.getState().setPhotos(next)
   }
-  const accept = async (uri: string) => {
+  const accept = async (uri: string, source: "camera" | "gallery") => {
     const photo = await preparePillPhoto(uri)
+    trackAnalyticsEvent("medication_photo_captured", {
+      side: side === 0 ? "front" : "back",
+      source,
+    })
     store(side, photo.uri)
     hapticSelection()
     if (side === 0) setSide(1)
@@ -114,7 +119,7 @@ export function MedicationCameraScreen() {
         skipProcessing: false,
       })
       if (!photo?.uri) throw new Error("no photo")
-      await accept(photo.uri)
+      await accept(photo.uri, "camera")
     } catch {
       if (finishedRef.current) return
       showErrorToast(t("captureError"))
@@ -134,7 +139,7 @@ export function MedicationCameraScreen() {
         exif: false,
       })
       if (picked.canceled || !picked.assets[0]) return
-      await accept(picked.assets[0].uri)
+      await accept(picked.assets[0].uri, "gallery")
     } catch {
       if (!finishedRef.current) showErrorToast(t("photoReadError"))
     } finally {

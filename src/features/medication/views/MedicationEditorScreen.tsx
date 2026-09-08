@@ -2,7 +2,8 @@ import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { Linking, View, Pressable } from "react-native"
 import { showActionSheet } from "@/src/lib/dialog"
 import { useTranslation } from "react-i18next"
-import { V2Text } from "@/src/design-system-v2"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import { V2Button, V2Text } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useGoBack } from "@/src/shared/navigation"
 import { RecordPageShell } from "@/src/features/home/components/record/pages/RecordPageShell"
@@ -136,12 +137,20 @@ export function MedicationEditorScreen() {
                 })
               }
             >
-              <V2Text
-                style={FORM.option}
-                color={form.unitChosen ? s.textStrong : s.text}
-              >
-                {form.unitChosen ? t(`units.${form.plan.unit}`) : t("unit")} ⌄
-              </V2Text>
+              <View style={[medStyles.row, { gap: 4 }]}>
+                <V2Text
+                  style={FORM.option}
+                  color={form.unitChosen ? s.textStrong : s.text}
+                >
+                  {form.unitChosen ? t(`units.${form.plan.unit}`) : t("unit")}
+                </V2Text>
+                <Ionicons
+                  accessible={false}
+                  name="chevron-down"
+                  size={16}
+                  color={s.text}
+                />
+              </View>
             </Pressable>
           </View>
           <V2Text style={FORM.hint} color={s.text}>
@@ -186,9 +195,22 @@ export function MedicationEditorScreen() {
           </View>
         ) : null}
         {form.error ? (
-          <V2Text accessibilityRole="alert" style={FORM.hint} color={s.danger}>
-            {form.error}
-          </V2Text>
+          <View accessibilityRole="alert" style={medStyles.section}>
+            <V2Text style={FORM.hint} color={s.danger}>
+              {form.error}
+            </V2Text>
+            {form.conflict ? (
+              <V2Button
+                multilineLabel
+                color="neutral"
+                variant="weak"
+                size="m"
+                onPress={() => void form.reloadExisting()}
+              >
+                {t("conflictReload")}
+              </V2Button>
+            ) : null}
+          </View>
         ) : !form.valid ? (
           <V2Text style={FORM.hint} color={s.text}>
             {t(

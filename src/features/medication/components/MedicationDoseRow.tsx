@@ -71,7 +71,13 @@ export function MedicationDoseRow({
           color={checked ? s.brand : s.textMuted}
         />
         <View style={styles.copy}>
-          <V2Text style={FORM.option} color={s.textStrong}>
+          {/* 긴 이름은 두 줄에서 자른다(EX-13). 전체 이름은 길게 눌러 여는 시트의 제목에 있다. */}
+          <V2Text
+            style={FORM.option}
+            color={s.textStrong}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
             {plan.name}
           </V2Text>
           <View style={styles.meta}>

@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { Pressable, View } from "react-native"
 import { router } from "expo-router"
+import Ionicons from "@expo/vector-icons/Ionicons"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useTranslation } from "react-i18next"
 import { V2Button, V2Text } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
@@ -46,6 +48,10 @@ export function MedicationCandidatesScreen() {
           onPress={() => {
             if (!chosen) return
             setBusy(true)
+            trackAnalyticsEvent("medication_candidate_confirmed", {
+              rank: items.findIndex((d) => d.id === chosen.id) + 1,
+              score: scoreOf(chosen.id) ?? null,
+            })
             void select(chosen, "PHOTO").finally(() => setBusy(false))
           }}
         >
@@ -120,10 +126,19 @@ export function MedicationCandidatesScreen() {
                   </V2Text>
                 ) : null}
               </View>
-              <MedicationProduct
-                drug={drug}
-                trailing={isSelected ? "✓" : undefined}
-              />
+              <View style={medStyles.row}>
+                <View style={medStyles.grow}>
+                  <MedicationProduct drug={drug} decorative />
+                </View>
+                {isSelected ? (
+                  <Ionicons
+                    accessible={false}
+                    name="checkmark-circle"
+                    size={22}
+                    color={s.brand}
+                  />
+                ) : null}
+              </View>
               <V2Text style={FORM.hint} color={s.text}>
                 {t("imprint")} ·{" "}
                 {[drug.imprintFront, drug.imprintBack]

@@ -9,7 +9,6 @@ import type {
 import type { GlucoseContextInference } from "../utils/glucoseInference"
 import type { EdemaEntry } from "../utils/edemaEntry"
 import type { BloodPressureRangeRecord } from "@/src/types/bloodMetrics"
-import type { MedicationIntakeResult } from "@/src/services/data/medicationService"
 
 /**
  * 물·혈압·체중 기록 **페이지**가 받을 재료.
@@ -71,21 +70,11 @@ export interface WeightPageParams {
 }
 
 export type RecordPageParams =
-  | MedicationPageParams
   | WaterPageParams
   | BloodPressurePageParams
   | WeightPageParams
   | BloodGlucosePageParams
   | EdemaPageParams
-
-export interface MedicationPageParams {
-  kind: "medication"
-  date: string
-  taken: number
-  planned: number
-  onSubmit: () => Promise<MedicationIntakeResult>
-  onClose?: () => void
-}
 
 export interface BloodGlucosePageParams {
   kind: "bloodGlucose"

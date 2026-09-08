@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Image, Pressable, View } from "react-native"
 import { router } from "expo-router"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import * as ImagePicker from "expo-image-picker"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -13,8 +14,9 @@ import { medStyles, FORM } from "../components/medicationStyles"
 import { useMedicationFlowStore } from "../stores/medicationFlowStore"
 import { discardMedicationPhotos } from "../services/medicationPhotoCache"
 import { medicationApi } from "../services/medicationApi"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { preparePillPhoto } from "../services/medicationPhotos"
-import type { RecognitionResult } from "../types"
+import type { RecognitionResult, UnavailableReason } from "../types"
 export function MedicationPhotoScreen() {
   const { t } = useTranslation("medication"),
     s = useSurface(),
@@ -23,12 +25,13 @@ export function MedicationPhotoScreen() {
   const [busy, setBusy] = useState(false),
     [picking, setPicking] = useState(false),
     [result, setResult] = useState<RecognitionResult["status"] | null>(null),
+    [reason, setReason] = useState<UnavailableReason | null>(null),
+    // 같은 세션의 연속 실패 횟수(RQ-52). 렌더가 읽으므로 ref 가 아니라 상태다. 한도·대기 중은 세지 않는다.
+    [failures, setFailures] = useState(0),
     [photoError, setPhotoError] = useState(false)
   const request = useRef<AbortController | null>(null),
     alive = useRef(true),
-    pickerLock = useRef(false),
-    // 같은 세션의 연속 실패 횟수(RQ-52). 성공하거나 사진을 바꾸면 0 으로.
-    failures = useRef(0)
+    pickerLock = useRef(false)
   const capability = useQuery({
     queryKey: ["medication-capabilities"],
     queryFn: ({ signal }) => medicationApi.capabilities(signal),
@@ -72,6 +75,10 @@ export function MedicationPhotoScreen() {
       if (picked.canceled || !picked.assets[0]) return
       // 다른 업로더와 같은 경로로 다듬는다(1600px · JPEG). 각인이 판독의 전부라 크게 남긴다.
       const photo = await preparePillPhoto(picked.assets[0].uri)
+      trackAnalyticsEvent("medication_photo_captured", {
+        side: index === 0 ? "front" : "back",
+        source: "gallery",
+      })
       if (!alive.current) {
         discardMedicationPhotos([{ uri: photo.uri }])
         return
@@ -103,8 +110,15 @@ export function MedicationPhotoScreen() {
         setTimeout(resolve, Math.max(0, 600 - (Date.now() - started))),
       )
       if (!alive.current || controller.signal.aborted) return
+      trackAnalyticsEvent("medication_recognition_result", {
+        status: response.status,
+        confidence: response.confidence ?? "none",
+        reason: response.reason ?? null,
+        candidate_count: response.items.length,
+        duration_ms: response.durationMs ?? null,
+      })
       if (response.status === "candidates" && response.items.length) {
-        failures.current = 0
+        setFailures(0)
         useMedicationFlowStore
           .getState()
           .setCandidates(
@@ -112,17 +126,26 @@ export function MedicationPhotoScreen() {
             response.matches ?? [],
             response.confidence ?? "none",
             response.observed ?? null,
+            response.recognitionId ?? null,
           )
         router.push("/medication/candidates")
       } else {
-        failures.current += 1
+        const nextReason =
+          response.status === "unavailable"
+            ? (response.reason ?? "provider")
+            : null
+        setReason(nextReason)
+        // 한도 소진·앞 요청 대기는 사진 탓이 아니다 — 재촬영 안내 순서(RQ-52)에 세지 않는다.
+        if (nextReason !== "quota" && nextReason !== "busy")
+          setFailures((n) => n + 1)
         setResult(
           response.status === "candidates" ? "no_match" : response.status,
         )
       }
     } catch {
       if (alive.current && !controller.signal.aborted) {
-        failures.current += 1
+        setFailures((n) => n + 1)
+        setReason("provider")
         setResult("unavailable")
       }
     } finally {
@@ -202,12 +225,12 @@ export function MedicationPhotoScreen() {
                     resizeMode="contain"
                   />
                 ) : (
-                  <V2Text
-                    style={{ fontSize: 28, lineHeight: 36 }}
+                  <Ionicons
+                    accessible={false}
+                    name="add"
+                    size={32}
                     color={s.textMuted}
-                  >
-                    ＋
-                  </V2Text>
+                  />
                 )}
                 <V2Text style={FORM.option} color={s.textStrong}>
                   {t(index === 0 ? "front" : "back")}
@@ -238,7 +261,15 @@ export function MedicationPhotoScreen() {
                 >
                   {t(
                     result === "unavailable"
-                      ? "recognitionError"
+                      ? reason === "quota"
+                        ? "quotaTitle"
+                        : reason === "busy"
+                          ? "busyTitle"
+                          : reason === "timeout"
+                            ? "timeoutTitle"
+                            : reason === "disabled"
+                              ? "photoUnavailable"
+                              : "recognitionError"
                       : result === "poor_image"
                         ? "poorImage"
                         : "noMatch",
@@ -247,14 +278,22 @@ export function MedicationPhotoScreen() {
                 <V2Text style={FORM.hint} color={s.text}>
                   {t(
                     result === "unavailable"
-                      ? "recognitionErrorBody"
+                      ? reason === "quota"
+                        ? "quotaBody"
+                        : reason === "busy"
+                          ? "busyBody"
+                          : reason === "timeout"
+                            ? "timeoutBody"
+                            : reason === "disabled"
+                              ? "catalogUnavailable"
+                              : "recognitionErrorBody"
                       : result === "poor_image"
                         ? "poorImageBody"
                         : "noMatchBody",
                   )}
                 </V2Text>
                 {/* 실패 화면의 대안 순서(RQ-51): 다시 촬영 > 이름으로 검색. 두 번 연속 실패하면 검색을 앞세운다(RQ-52). */}
-                {failures.current >= 2 ? null : (
+                {failures >= 2 || reason === "quota" ? null : (
                   <V2Button
                     multilineLabel
                     color="neutral"
@@ -269,8 +308,12 @@ export function MedicationPhotoScreen() {
                 )}
                 <V2Button
                   multilineLabel
-                  color={failures.current >= 2 ? "brand" : "neutral"}
-                  variant={failures.current >= 2 ? "fill" : "weak"}
+                  color={
+                    failures >= 2 || reason === "quota" ? "brand" : "neutral"
+                  }
+                  variant={
+                    failures >= 2 || reason === "quota" ? "fill" : "weak"
+                  }
                   onPress={() => router.push("/medication/search")}
                 >
                   {t("searchMethod")}

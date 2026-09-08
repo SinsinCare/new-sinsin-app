@@ -837,6 +837,31 @@ export type AnalyticsEventProperties = {
   food_photo_confirm_replaced: { source: "gallery" | "camera" }
   food_photo_confirm_cancelled: { source: "gallery" | "camera" }
   food_analysis_started: { method: "photo" | "text" }
+  /* ── 약 등록 퍼널(2026-09-08 기획 M4~M11). 약 이름은 싣지 않는다(RQ-61). ── */
+  medication_add_method_selected: { method: "search" | "photo" | "manual" }
+  /** 검색어 길이와 결과 수만. 검색어 자체는 병명을 추정할 수 있어 싣지 않는다. */
+  medication_search_performed: { query_length: number; result_count: number }
+  medication_search_result_selected: { rank: number }
+  medication_photo_captured: {
+    side: "front" | "back"
+    source: "camera" | "gallery"
+  }
+  medication_recognition_result: {
+    status: "candidates" | "no_match" | "poor_image" | "unavailable"
+    confidence: "high" | "medium" | "low" | "none"
+    reason: "disabled" | "quota" | "busy" | "timeout" | "provider" | null
+    candidate_count: number
+    duration_ms: number | null
+  }
+  medication_candidate_confirmed: { rank: number; score: number | null }
+  medication_plan_saved: {
+    source: "MANUAL" | "CATALOG" | "PHOTO"
+    existing: boolean
+    reminder: boolean
+    slot_count: number
+    duplicate_kept: boolean
+  }
+  medication_plan_status_changed: { status: "ACTIVE" | "PAUSED" | "ARCHIVED" }
   /**
    * 분석 잡의 상태가 **바뀐** 순간. 폴링은 0.5~1.5초마다 도는데 상태는 두 번밖에 안
    * 바뀌므로, 전이에서만 쏘면 분석 1건당 최대 2행이다(설계 §8 고빈도 상한).

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { Linking, View } from "react-native"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -42,6 +43,14 @@ export function MedicationSearchScreen() {
   })
   const current = q === text.trim(),
     data = current ? result.data : undefined
+  // 검색 결과가 도착할 때마다 한 번. 검색어는 싣지 않는다(병명 추정 가능, RQ-61).
+  useEffect(() => {
+    if (!result.data || !current) return
+    trackAnalyticsEvent("medication_search_performed", {
+      query_length: q.length,
+      result_count: result.data.items.length,
+    })
+  }, [result.data, current, q.length])
   const unavailable = !catalogReady || (data ? !data.available : false)
   return (
     <MedicationFlowShell
@@ -106,11 +115,16 @@ export function MedicationSearchScreen() {
         </View>
       ) : data?.items.length ? (
         <View>
-          {data.items.map((drug) => (
+          {data.items.map((drug, index) => (
             <MedicationProduct
               key={drug.id}
               drug={drug}
-              onPress={() => void select(drug)}
+              onPress={() => {
+                trackAnalyticsEvent("medication_search_result_selected", {
+                  rank: index + 1,
+                })
+                void select(drug)
+              }}
             />
           ))}
         </View>

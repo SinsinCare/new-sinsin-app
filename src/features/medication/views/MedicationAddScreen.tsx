@@ -10,6 +10,7 @@ import { MedicationFlowShell } from "../components/MedicationFlowShell"
 import { medStyles, FORM } from "../components/medicationStyles"
 import { medicationApi } from "../services/medicationApi"
 import { useMedicationFlowStore } from "../stores/medicationFlowStore"
+import { trackAnalyticsEvent } from "@/src/features/analytics"
 export function MedicationAddScreen() {
   const { t } = useTranslation("medication"),
     s = useSurface(),
@@ -24,7 +25,12 @@ export function MedicationAddScreen() {
       title: t("searchMethod"),
       body: t("searchMethodBody"),
       icon: "search-outline" as const,
-      action: () => router.push("/medication/search"),
+      action: () => {
+        trackAnalyticsEvent("medication_add_method_selected", {
+          method: "search",
+        })
+        router.push("/medication/search")
+      },
     },
     {
       title: t("photoMethod"),
@@ -34,13 +40,21 @@ export function MedicationAddScreen() {
           : "photoUnavailable",
       ),
       icon: "camera-outline" as const,
-      action: () => router.push("/medication/photo"),
+      action: () => {
+        trackAnalyticsEvent("medication_add_method_selected", {
+          method: "photo",
+        })
+        router.push("/medication/photo")
+      },
     },
     {
       title: t("manualMethod"),
       body: t("manualMethodBody"),
       icon: "create-outline" as const,
       action: () => {
+        trackAnalyticsEvent("medication_add_method_selected", {
+          method: "manual",
+        })
         useMedicationFlowStore.getState().select(null)
         router.push("/medication/edit")
       },
