@@ -119,7 +119,7 @@ export function CommunityLibraryScreen() {
   const activePosts = listsByTab[activeTab]
   /*
     한 덩어리다 — 이유 한 줄 + 이 탭이 무엇을 모으는지 한 줄. `V2EmptyState` 의
-    `description` 은 가운데정렬 한 칸이라 `\n` 으로 잇는다(`CommentEmptyState` 선례).
+    `description` 은 가운데정렬 한 칸이라 `\n` 으로 잇는다.
   */
   const emptyDescription = `${t(
     `community.library.empty.${activeTab}.title`,

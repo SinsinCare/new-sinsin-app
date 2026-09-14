@@ -41,8 +41,3 @@ export const AUTH_MOTION = {
   spring: MOTION.spring,
   stagger: 45,
 } as const
-
-export {
-  getSurfacePalette as getAuthSurfacePalette,
-  type SurfacePalette as AuthSurfacePalette,
-} from "@/src/theme/surface"

@@ -1,23 +1,20 @@
-import { borderWidth } from "@/src/design-system-v2/tokens/size"
-import { primitives } from "@/src/design-system-v2/tokens/colors"
 import { communityEditorStyles } from "./community/communityEditorStyles"
-import { useEffect, useRef, useState } from "react"
+import { CommunityPhotoPreview } from "./community/CommunityPhotoPreview"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { usePreventRemove } from "@react-navigation/native"
 import { useNavigation } from "expo-router"
 import {
-  Image,
   Keyboard,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
+  type TextInputProps,
 } from "react-native"
-import { Text, TextInput } from "@/src/shared/components/AppText"
-import {
-  AppModal,
-  afterModalTransitions,
-} from "@/src/shared/components/AppModal"
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
+import { V2Text } from "@/src/design-system-v2"
+import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -29,10 +26,10 @@ import {
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { useSuppressGlobalKeyboardToolbar } from "@/src/stores/keyboardToolbarStore"
-import { hapticSelection } from "@/src/lib/haptics"
 import { Icon } from "@/src/shared/components/Icon"
-import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
-import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
+import { TopicField } from "./community/TopicField"
+import { recordFieldLabel } from "@/src/features/home/components/record/pages/recordInk"
+import { S } from "@/src/features/home/components/record/pages/recordPageSpec"
 import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerService"
 import {
   VoteSheet,
@@ -43,7 +40,6 @@ import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbn
 import { TagInput } from "@/src/features/recipe/components/TagInput"
 import { ContentResponsibilityCheck } from "@/src/features/recipe/components/ContentResponsibilityCheck"
 import { ConfirmExitModal } from "@/src/shared/components/ConfirmExitModal"
-import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
 import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
@@ -56,15 +52,8 @@ import { showInfoToast } from "@/src/lib/toast"
 
 /** 서버 정책과 같은 값 — community_post_image 테이블이 게시글당 5장을 받는다. */
 const MAX_IMAGES = 5
-
-const POST_CATEGORY_LABEL_KEYS = {
-  diet: "category.post.diet",
-  numbers: "category.post.numbers",
-  symptoms: "category.post.symptoms",
-  medicine: "category.post.medicine",
-  "dining-out": "category.post.dining-out",
-  daily: "category.post.daily",
-} as const
+/** 첫 주제(식단 이야기). 주제 행은 항상 값이 있다 — 비워 두고 시트를 강제하지 않는다. */
+const DEFAULT_POST_CATEGORY = "diet"
 
 interface FreePostEditorProps {
   onClose: () => void
@@ -92,6 +81,58 @@ function KeyboardDismissButton({ color }: { color: string }) {
   )
 }
 
+/**
+ * 제목·본문 글쓰기 면 — **상자가 없다**(2026-09-12 Mobbin: 당근·Reddit·Threads·X 의 글쓰기는
+ * 전부 흰 면 위에 바로 쓴다). 제목은 `typography.title.small`(굵고 큼), 본문은 `FORM.body`.
+ * 포커스 표시는 커서 색(`brand`)뿐이고 테두리는 없다. 상한 초과는 카운터 색으로만 말한다
+ * (아래 `children` — 수정 화면). 자유글 작성(`FreePostEditor`)과 수정(`FreePostEditScreen`)이 같이 쓴다.
+ */
+export function EditorTextField({
+  body = false,
+  children,
+  onFocus,
+  onBlur,
+  style,
+  ...input
+}: TextInputProps & {
+  /** 본문 칸(높은 상자·위 정렬). 기본은 제목 칸. */
+  body?: boolean
+  /** 칸 아래 줄(카운터 등). */
+  children?: ReactNode
+}) {
+  const s = useSurface()
+  return (
+    <View style={communityEditorStyles.group}>
+      <View
+        style={[
+          communityEditorStyles.field,
+          body
+            ? communityEditorStyles.bodyField
+            : communityEditorStyles.titleField,
+        ]}
+      >
+        <TextInput
+          {...input}
+          multiline
+          textAlignVertical="top"
+          placeholderTextColor={recordFieldLabel(s)}
+          selectionColor={s.brand}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          style={[
+            body
+              ? communityEditorStyles.bodyInput
+              : communityEditorStyles.titleInput,
+            { color: s.textStrong },
+            style,
+          ]}
+        />
+      </View>
+      {children}
+    </View>
+  )
+}
+
 export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const { t } = useTranslation("recipe")
   const { t: tCommon } = useTranslation("common")
@@ -108,11 +149,10 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
 
   const [selectedCategory, setSelectedCategory] = useState(
-    FREE_POST_CATEGORIES[0].key,
+    DEFAULT_POST_CATEGORY,
   )
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
-  const [categorySheetOpen, setCategorySheetOpen] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [votes, setVotes] = useState<VoteData[]>([])
@@ -129,6 +169,8 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const [dockHeight, setDockHeight] = useState(0)
   const [submitStatus, setSubmitStatus] = useState<string | null>(null)
   const [responsibilityAgreed, setResponsibilityAgreed] = useState(false)
+  /** 등록 직전의 책임 확인 시트(`ContentResponsibilityCheck`). */
+  const [consentVisible, setConsentVisible] = useState(false)
   const router = useAppRouter()
   /*
     변이 하나만 필요한 화면은 피드를 **관찰하지 않는다.** 기본값(`observe: true`)으로
@@ -151,24 +193,11 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
    */
   const uploadedPathsRef = useRef<Record<string, string>>({})
 
-  const toolbarIconColor = surface.textMuted
+  const toolbarIconColor = surface.text
 
-  const selectedLabel = t(
-    POST_CATEGORY_LABEL_KEYS[
-      selectedCategory as keyof typeof POST_CATEGORY_LABEL_KEYS
-    ],
-  )
-
-  const canSubmit =
-    title.trim().length > 0 && body.trim().length > 0 && responsibilityAgreed
+  const canSubmit = title.trim().length > 0 && body.trim().length > 0
   /** 이미 올라간 폼. 이동을 기다리는 동안 CTA·동의를 다시 만지지 못하게 한다. */
   const submitted = createdPostId !== null
-
-  const handleOpenCategorySheet = () => {
-    Keyboard.dismiss()
-    hapticSelection()
-    setCategorySheetOpen(true)
-  }
 
   const hasContent =
     title.trim().length > 0 ||
@@ -286,11 +315,20 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
     setEditingVoteIndex(null)
   }
 
-  const handleSubmit = async () => {
+  /**
+   * 등록 탭. 아직 책임 확인을 안 했으면 시트를 띄우고 멈춘다 — 시트의 "확인했어요" 가
+   * `agreed = true` 로 다시 이 함수를 부른다. 한 번 확인하면 그 뒤로는 바로 올라간다.
+   */
+  const handleSubmit = async (agreed = responsibilityAgreed) => {
     // 한 번 올라간 폼은 두 번 올라가지 않는다 — 성공 뒤 이동까지의 한 프레임 동안
     // `isSubmitting` 은 이미 false 다(아래 `finally`). 만들기 경로에 멱등키가 없어서
     // 그 틈의 두 번째 탭이 **두 번째 글**이 된다.
     if (!canSubmit || isSubmitting || submittedRef.current) return
+    if (!agreed) {
+      Keyboard.dismiss()
+      setConsentVisible(true)
+      return
+    }
     setIsSubmitting(true)
     /*
       만들기 요청이 **나갔는가.** 나가기 전(사진 업로드 중)의 실패는 서버에 글이 없으니
@@ -390,7 +428,9 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
           **실패한 그 렌더**의 값이다. 토스트를 보고 제목을 고친 뒤 누르면 고치기 전
           내용이 올라가던 자리다(버튼은 토스트가 살아 있는 동안 계속 눌린다).
         */
-        retry: mayHaveCommitted ? undefined : () => void submitRef.current(),
+        retry: mayHaveCommitted
+          ? undefined
+          : () => void submitRef.current(true),
       })
     } finally {
       setIsSubmitting(false)
@@ -402,6 +442,9 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
   const submitRef = useRef(handleSubmit)
   submitRef.current = handleSubmit
 
+  /* 등록 버튼 — 제목·본문이 차면 brand pill, 아니면 회색 pill. */
+  const submitReady = canSubmit && !isSubmitting && !submitted
+
   return (
     <View
       style={[
@@ -410,7 +453,12 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
       ]}
     >
       {/* 등록은 항상 같은 상단 위치에 둔다. */}
-      <View style={[styles.header, { borderBottomColor: surface.border }]}>
+      <View
+        style={[
+          communityEditorStyles.header,
+          { borderBottomColor: surface.border },
+        ]}
+      >
         {/*
           `Pressable + hitSlop` 이 아니라 `HeaderIconButton` 이다 — 44/48 규격 상자를
           음수 마진으로 제자리에 넣는다(그 파일 머리말). 이 버튼은 초안을 들고
@@ -422,31 +470,34 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         >
           <Ionicons name="close" size={24} color={surface.textStrong} />
         </HeaderIconButton>
-        <Text style={[styles.headerTitle, { color: surface.textStrong }]}>
-          {t("freePost.formTitle")}
-        </Text>
-        <Pressable
-          onPress={handleSubmit}
-          disabled={!canSubmit || isSubmitting || submitted}
-          accessibilityRole="button"
-          accessibilityState={{
-            disabled: !canSubmit || isSubmitting || submitted,
-          }}
-          style={communityEditorStyles.submit}
+        <V2Text
+          style={communityEditorStyles.headerTitle}
+          color={surface.textStrong}
         >
-          <Text
-            style={[
-              styles.submitLabel,
-              { color: canSubmit ? surface.brand : surface.ctaOffText },
-            ]}
+          {t("freePost.formTitle")}
+        </V2Text>
+        <Pressable
+          onPress={() => void handleSubmit()}
+          disabled={!submitReady}
+          hitSlop={S[2]}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !submitReady }}
+          style={[
+            communityEditorStyles.submit,
+            { backgroundColor: submitReady ? surface.brand : surface.ctaOffBg },
+          ]}
+        >
+          <V2Text
+            style={communityEditorStyles.submitLabel}
+            color={submitReady ? surface.onBrand : surface.ctaOffText}
           >
             {isSubmitting ? t("action.uploading") : t("freePost.register")}
-          </Text>
+          </V2Text>
         </Pressable>
       </View>
 
       {/*
-        제목·본문.
+        주제·제목·본문.
         `bottomOffset` = 포커스된 입력과 키보드 사이에 둘 여유 = **도크 높이**.
         상수로 적으면 동의 문구가 두 줄로 접히는 기기에서 그만큼 어긋나므로
         실제로 잰 값(`dockHeight`)을 쓰고, 아직 못 쟀으면 예전 값으로 시작한다.
@@ -456,7 +507,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
           bounces={false}
           overScrollMode="never"
           style={styles.flex}
-          contentContainerStyle={styles.editorContent}
+          contentContainerStyle={communityEditorStyles.content}
           bottomOffset={dockHeight > 0 ? dockHeight : bottomInset + 72}
           disableScrollOnKeyboardHide
           keyboardShouldPersistTaps="handled"
@@ -464,110 +515,101 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
         >
-          <View style={styles.editorBody}>
-            <View style={styles.formSection}>
-              <SurfacePressable
-                onPress={handleOpenCategorySheet}
-                haptic={false}
-                accessibilityLabel={t("freePost.topicAccessibility", {
-                  category: selectedLabel,
-                })}
-                baseColor={surface.canvas}
-                style={[styles.selectField, { borderColor: surface.border }]}
+          {/* 주제 — 당근의 "맛집 ›" 행. 시트에서 고른다. */}
+          <TopicField
+            value={selectedCategory}
+            disabled={isSubmitting || submitted}
+            onChange={setSelectedCategory}
+          />
+
+          <View style={communityEditorStyles.page}>
+            {/* 당근의 '안내' 배너 — 읽고 넘어가는 한 줄. 동의는 등록 때 시트가 받는다. */}
+            <View style={communityEditorStyles.notice} accessibilityRole="text">
+              <V2Text
+                style={communityEditorStyles.noticeLabel}
+                color={surface.textStrong}
               >
-                <Text
-                  style={[styles.selectText, { color: surface.textStrong }]}
-                >
-                  {selectedLabel}
-                </Text>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={surface.textWeak}
-                />
-              </SurfacePressable>
+                {t("freePost.noticeLabel")}
+              </V2Text>
+              <V2Text
+                style={communityEditorStyles.noticeBody}
+                color={surface.textMuted}
+                lineBreakStrategyIOS="hangul-word"
+              >
+                {t("freePost.noticeBody")}
+              </V2Text>
             </View>
 
-            <ContentResponsibilityCheck
-              value={responsibilityAgreed}
-              onChange={setResponsibilityAgreed}
-              disabled={isSubmitting || submitted}
-            />
-            <View style={styles.formSection}>
-              <TextInput
-                accessibilityLabel={t("freePost.titleLabel")}
-                multiline
-                value={title}
-                onChangeText={setTitle}
-                placeholder={t("freePost.titlePlaceholder")}
-                placeholderTextColor={surface.placeholder}
-                maxLength={200}
-                style={[
-                  styles.titleInput,
-                  { color: surface.textStrong, borderColor: surface.border },
-                ]}
+            {/* 글 한 덩어리: 제목 → 태그 칩(12) → 본문(16). 라벨·상자 없음. */}
+            <View style={communityEditorStyles.paper}>
+              <View style={communityEditorStyles.paperHead}>
+                <EditorTextField
+                  accessibilityLabel={t("freePost.titleLabel")}
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder={t("freePost.titlePlaceholder")}
+                  maxLength={200}
+                />
+
+                {/* Reddit 의 "Add tags (optional)" — 제목 아래 칩. 누르면 태그 입력이 그 자리에 열린다. */}
+                {tagInputOpen || tags.length > 0 ? (
+                  <TagInput tags={tags} onChangeTags={setTags} />
+                ) : (
+                  <Pressable
+                    onPress={() => setTagInputOpen(true)}
+                    disabled={isSubmitting || submitted}
+                    hitSlop={S[2]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("action.addTag")}
+                    style={({ pressed }) => [
+                      communityEditorStyles.tagChip,
+                      {
+                        backgroundColor: pressed
+                          ? surface.surfacePressed
+                          : surface.surfaceSunken,
+                      },
+                    ]}
+                  >
+                    <Icon name="hashtag" size={16} color={surface.text} />
+                    <V2Text
+                      style={communityEditorStyles.tagChipLabel}
+                      color={surface.text}
+                    >
+                      {t("freePost.addTagsOptional")}
+                    </V2Text>
+                  </Pressable>
+                )}
+              </View>
+              <EditorTextField
+                body
+                accessibilityLabel={t("freePost.descriptionLabel")}
+                value={body}
+                onChangeText={setBody}
+                placeholder={t(
+                  `freePost.bodyPlaceholderByTopic.${selectedCategory}`,
+                  {
+                    defaultValue: t("freePost.descriptionPlaceholder"),
+                  },
+                )}
+                maxLength={700}
               />
             </View>
 
-            <View style={styles.formSection}>
-              <View
-                style={[
-                  styles.descriptionField,
-                  { backgroundColor: surface.canvas },
-                ]}
-              >
-                <TextInput
-                  accessibilityLabel={t("freePost.descriptionLabel")}
-                  value={body}
-                  onChangeText={setBody}
-                  placeholder={t("freePost.descriptionPlaceholder")}
-                  placeholderTextColor={surface.placeholder}
-                  multiline
-                  maxLength={700}
-                  textAlignVertical="top"
-                  style={[styles.bodyInput, { color: surface.textStrong }]}
-                />
-                <Text
-                  accessibilityLiveRegion="polite"
-                  style={[styles.counter, { color: surface.text }]}
-                >
-                  {submitStatus ?? `${body.length} / 700`}
-                </Text>
-              </View>
-            </View>
-
-            {(tagInputOpen || tags.length > 0) && (
-              <View style={styles.formSection}>
-                <TagInput tags={tags} onChangeTags={setTags} />
-              </View>
-            )}
-
             {images.length > 0 ? (
-              <>
+              <View style={communityEditorStyles.group}>
+                <V2Text
+                  style={communityEditorStyles.label}
+                  color={surface.textStrong}
+                >
+                  {t("freePost.photoVideo")}
+                </V2Text>
                 <ScrollView
                   horizontal
                   bounces={false}
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.photoRail}
-                  style={styles.photoRailScroll}
+                  contentContainerStyle={communityEditorStyles.photoRail}
+                  style={communityEditorStyles.photoRailScroll}
                 >
-                  <SurfacePressable
-                    onPress={handlePickImages}
-                    baseColor={surface.surfaceSunken}
-                    style={styles.photoTile}
-                    accessibilityLabel={t("action.addPhoto")}
-                  >
-                    <Ionicons
-                      name="camera"
-                      size={25}
-                      color={surface.textWeak}
-                    />
-                    <Text
-                      style={[styles.photoLabel, { color: surface.textMuted }]}
-                    >
-                      {t("freePost.photoVideo")}
-                    </Text>
-                  </SurfacePressable>
                   {images.map((uri, index) => (
                     <ImageThumbnailCard
                       key={uri + index}
@@ -577,10 +619,16 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
                     />
                   ))}
                 </ScrollView>
-              </>
+              </View>
             ) : null}
             {votes.map((voteData, voteIndex) => (
-              <View key={voteIndex} style={styles.voteAttachWrap}>
+              <View key={voteIndex} style={communityEditorStyles.group}>
+                <V2Text
+                  style={communityEditorStyles.label}
+                  color={surface.textStrong}
+                >
+                  {t("freePost.attachPoll")}
+                </V2Text>
                 <VoteAttachCard
                   title={voteData.title}
                   onEdit={() => handleEditVote(voteIndex)}
@@ -596,7 +644,7 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
           <View
             onLayout={(event) => setDockHeight(event.nativeEvent.layout.height)}
             style={[
-              styles.dock,
+              communityEditorStyles.dock,
               {
                 borderTopColor: surface.border,
                 backgroundColor: surface.canvas,
@@ -605,8 +653,8 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
             ]}
           >
             {/* 툴바 */}
-            <View style={styles.toolbar}>
-              <View style={styles.toolbarActions}>
+            <View style={communityEditorStyles.toolbar}>
+              <View style={communityEditorStyles.toolbarActions}>
                 <Pressable
                   onPress={handlePickImages}
                   hitSlop={8}
@@ -622,14 +670,12 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
                     size={20}
                     color={toolbarIconColor}
                   />
-                  <Text
-                    style={[
-                      communityEditorStyles.toolLabel,
-                      { color: toolbarIconColor },
-                    ]}
+                  <V2Text
+                    style={communityEditorStyles.toolLabel}
+                    color={toolbarIconColor}
                   >
                     {t("freePost.photoVideo")}
-                  </Text>
+                  </V2Text>
                 </Pressable>
                 <Pressable
                   onPress={handleOpenVoteSheet}
@@ -649,41 +695,31 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
                     size={22}
                     color={toolbarIconColor}
                   />
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    Keyboard.dismiss()
-                    setTagInputOpen(true)
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("action.addTag")}
-                  style={communityEditorStyles.tool}
-                >
-                  <Icon name="hashtag" size={20} color={toolbarIconColor} />
-                  <Text
-                    style={[
-                      communityEditorStyles.toolLabel,
-                      { color: toolbarIconColor },
-                    ]}
+                  <V2Text
+                    style={communityEditorStyles.toolLabel}
+                    color={toolbarIconColor}
                   >
-                    {t("freePost.tagsLabel")}
-                  </Text>
+                    {t("freePost.pollTool")}
+                  </V2Text>
                 </Pressable>
               </View>
-              <KeyboardDismissButton color={toolbarIconColor} />
+              <View style={communityEditorStyles.toolbarTrailing}>
+                {/* 카운터·업로드 진행은 도크 오른쪽 — 본문 아래 붕 뜨지 않는다. */}
+                {submitStatus !== null || body.length > 0 ? (
+                  <V2Text
+                    accessibilityLiveRegion="polite"
+                    style={communityEditorStyles.counter}
+                    color={surface.textMuted}
+                  >
+                    {submitStatus ?? `${body.length}/700`}
+                  </V2Text>
+                ) : null}
+                <KeyboardDismissButton color={toolbarIconColor} />
+              </View>
             </View>
           </View>
         </KeyboardStickyView>
       </View>
-
-      {/* Category Sheet */}
-      <PostCategorySheet
-        open={categorySheetOpen}
-        onOpenChange={setCategorySheetOpen}
-        categories={FREE_POST_CATEGORIES}
-        selectedKey={selectedCategory}
-        onSelect={setSelectedCategory}
-      />
 
       {/* Vote Sheet — conditional render so useState initializers pick up initialData */}
       {voteSheetOpen && (
@@ -697,32 +733,22 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
         />
       )}
 
-      {/* Image Preview Modal */}
-      <AppModal
-        visible={previewImage !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPreviewImage(null)}
-      >
-        <Pressable
-          onPress={() => setPreviewImage(null)}
-          style={styles.previewOverlay}
-        >
-          {previewImage && (
-            <Image
-              source={{ uri: previewImage }}
-              style={styles.previewImage}
-              resizeMode="contain"
-            />
-          )}
-          <Pressable
-            onPress={() => setPreviewImage(null)}
-            style={styles.previewClose}
-          >
-            <Ionicons name="close" size={26} color={primitives.common[0]} />
-          </Pressable>
-        </Pressable>
-      </AppModal>
+      {/* 등록 직전 책임 확인 — 확인이 곧 동의, 이어서 바로 올린다. */}
+      <ContentResponsibilityCheck
+        visible={consentVisible}
+        onClose={() => setConsentVisible(false)}
+        onConfirm={() => {
+          setConsentVisible(false)
+          setResponsibilityAgreed(true)
+          void afterModalTransitions().then(() => submitRef.current(true))
+        }}
+      />
+
+      {/* 사진 크게 보기 — 수정 화면과 같은 그릇. */}
+      <CommunityPhotoPreview
+        uri={previewImage}
+        onClose={() => setPreviewImage(null)}
+      />
 
       {/* Confirm Exit Modal */}
       <ConfirmExitModal
@@ -748,119 +774,6 @@ export function FreePostEditor({ onClose }: FreePostEditorProps) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-
-  header: communityEditorStyles.header,
-  headerTitle: communityEditorStyles.headerTitle,
-  headerSpacer: { width: 24 },
-  submitLabel: communityEditorStyles.submitLabel,
-
-  editorContent: {
-    paddingBottom: 24,
-  },
-  editorBody: {
-    paddingHorizontal: 20,
-    paddingTop: 0,
-    gap: 12,
-  },
-  photoRailScroll: {
-    flexGrow: 0,
-  },
-  photoRail: {
-    gap: 10,
-    alignItems: "center",
-  },
-  photoTile: {
-    width: 72,
-    height: 72,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  photoLabel: {
-    fontSize: 12.5,
-    lineHeight: 17,
-    fontFamily: "Pretendard-Medium",
-    fontWeight: "500",
-  },
-  formSection: { gap: 8 },
-  fieldLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  fieldLabel: {
-    fontSize: 13.5,
-    lineHeight: 19,
-    fontFamily: "Pretendard-SemiBold",
-    fontWeight: "600",
-  },
-  optionalLabel: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: "Pretendard-Regular",
-  },
-  selectField: communityEditorStyles.category,
-  selectText: communityEditorStyles.categoryLabel,
-  titleInput: communityEditorStyles.titleInput,
-  descriptionField: { minHeight: 240, paddingBottom: 12 },
-  bodyInput: communityEditorStyles.bodyInput,
-  counter: communityEditorStyles.counter,
-  voteAttachWrap: {
-    marginBottom: 2,
-  },
-
-  /* 도크 — 면과 해어라인은 여기서 한 번만. 안쪽 줄들은 여백만 갖는다. */
-  dock: {
-    borderTopWidth: borderWidth.thin,
-  },
-  toolbar: {
-    paddingHorizontal: 20,
-    paddingTop: 0,
-    paddingBottom: 0,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  toolbarActions: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  responsibilityWrap: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  submitBar: {
-    paddingHorizontal: 20,
-  },
-  submitFull: {
-    height: 54,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  previewOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  previewImage: {
-    width: "90%",
-    height: "70%",
-  },
-  previewClose: {
-    position: "absolute",
-    top: 60,
-    right: 20,
-    padding: 8,
-  },
+  screen: { flex: 1 },
+  flex: { flex: 1 },
 })

@@ -1,12 +1,17 @@
 import { useRef, useState } from "react"
 
-import { useQueryClient } from "@tanstack/react-query"
+import { useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { foodCameraService } from "@/src/services/data"
 import { ApiError } from "@/src/services/core/apiError"
 import { presentError, toAnalyticsFailKind } from "@/src/lib/errorMessage"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { useNotificationHistoryStore } from "@/src/stores/notificationHistoryStore"
-import { markFoodAnalysisRequestHandled } from "../services/foodAnalysisRequestState"
+import {
+  claimForegroundFoodAnalysisRequest,
+  markFoodAnalysisRequestHandled,
+  releaseForegroundFoodAnalysisRequest,
+} from "../services/foodAnalysisRequestState"
+import { PENDING_ANALYSIS_TTL_MS } from "../services/foodAnalysisRecovery"
 import { pendingAnalysisRequests } from "../storage/pendingAnalysisRequests"
 import type {
   DiaryAnalysisResult,
@@ -66,12 +71,60 @@ function dropRetiredRevision(
  * `resolveError` 가 "응답이 아예 오지 않았다"로 보고 와이파이를 확인하라고 말한다 —
  * 응답은 왔고 그 안에 실패가 적혀 있었다.
  */
-function createAnalysisJobFailure(job: FoodAnalysisJob): ApiError {
+function createAnalysisJobFailure(
+  job: FoodAnalysisJob,
+  fallbackMessage = "food analysis job failed",
+): ApiError {
   return new ApiError(
-    job.error || job.failureMessage || "food analysis job failed",
+    job.error || job.failureMessage || fallbackMessage,
     "FOOD_CAMERA_005",
     500,
   )
+}
+
+/** 폴링 한 바퀴의 결말 — 포그라운드가 이 요청을 **계속 붙들어야 하는가**를 호출부에 알린다. */
+type ResolveOutcome = "done" | "awaiting_confirmation"
+
+/**
+ * 수정 후 서버 데이터로 재동기화.
+ *
+ * 목록·존재여부만으로는 **모자란다.** 한 끼 상세(`diaryResult`)는 staleTime 60초,
+ * 한 끼 리포트(`mealReport`)는 5분이라, 고친 직후 다시 열면 그 창 안에서는 캐시에
+ * 남은 옛 숫자가 그대로 나온다 — 서버는 이미 새 값인데 화면만 안 바뀌는 상태다.
+ * 리포트는 서버가 교정 때 지우므로(`mealReport.invalidate`) 여기서 캐시만 버리면
+ * 다음 조회가 새 문장을 받는다.
+ */
+export async function refetchDiaryQueries(queryClient: QueryClient) {
+  await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+  await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+  await queryClient.invalidateQueries({ queryKey: ["diaryResult"] })
+  await queryClient.invalidateQueries({ queryKey: ["mealReport"] })
+}
+
+/**
+ * 식사 이름 변경. 훅 상태를 하나도 안 쓰므로 훅 밖에 둔다 — 수정 화면(`FoodResultEdit`)이
+ * 이 한 함수 때문에 `useFoodAnalysis` 를 통째로(useState 아홉 개·스토어 구독) 한 벌 더
+ * 세웠었다.
+ */
+export async function updateFoodTitle(
+  queryClient: QueryClient,
+  foodAnalysisResultId: number,
+  title: string,
+): Promise<FoodTitleUpdateResponse | undefined> {
+  try {
+    const response = await foodCameraService.updateFoodTitle(
+      foodAnalysisResultId,
+      title,
+    )
+    await refetchDiaryQueries(queryClient)
+    return response
+  } catch (error) {
+    presentError(error, {
+      scope: "meal-title-update",
+      retry: () =>
+        void updateFoodTitle(queryClient, foodAnalysisResultId, title),
+    })
+  }
 }
 
 export function useFoodAnalysis(
@@ -110,22 +163,6 @@ export function useFoodAnalysis(
   const [confirmationJob, setConfirmationJob] =
     useState<FoodAnalysisJob | null>(null)
   const queryClient = useQueryClient()
-
-  /**
-   * 수정 후 서버 데이터로 재동기화.
-   *
-   * 목록·존재여부만으로는 **모자란다.** 한 끼 상세(`diaryResult`)는 staleTime 60초,
-   * 한 끼 리포트(`mealReport`)는 5분이라, 고친 직후 다시 열면 그 창 안에서는 캐시에
-   * 남은 옛 숫자가 그대로 나온다 — 서버는 이미 새 값인데 화면만 안 바뀌는 상태다.
-   * 리포트는 서버가 교정 때 지우므로(`mealReport.invalidate`) 여기서 캐시만 버리면
-   * 다음 조회가 새 문장을 받는다.
-   */
-  const refetchDiaryQueries = async () => {
-    await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
-    await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
-    await queryClient.invalidateQueries({ queryKey: ["diaryResult"] })
-    await queryClient.invalidateQueries({ queryKey: ["mealReport"] })
-  }
 
   // 분석 도중 X 버튼으로 나갔는지 추적 (ref: async closure에서 최신값 보장)
   const dismissedRef = useRef(false)
@@ -169,6 +206,7 @@ export function useFoodAnalysis(
     const method = imageUri ? "photo" : "text"
     markFoodAnalysisRequestHandled(requestId)
     await pendingAnalysisRequests.remove(requestId)
+    releaseForegroundFoodAnalysisRequest(requestId)
     setAnalysisStatus("READY")
     trackAnalyticsEvent("food_analysis_succeeded", { method })
 
@@ -187,14 +225,25 @@ export function useFoodAnalysis(
     trackAnalyticsEvent("food_record_result_viewed", { source: "fresh" })
   }
 
+  /**
+   * 잡이 끝날 때까지 폴링한다. `awaiting_confirmation` 을 돌려주면 확인 질문에 답할 때까지
+   * 포그라운드가 요청을 계속 붙들어야 한다(복구가 같은 질문을 또 띄우지 않게) — 그 밖에는
+   * 호출부가 놓는다.
+   */
   const resolveJob = async (
     initialJob: FoodAnalysisJob,
     requestId: string,
     mealType: MealType,
     imageUri: string | null,
-  ) => {
+  ): Promise<ResolveOutcome> => {
     let job = initialJob
     const startedAt = Date.now()
+    /*
+      대기 목록은 **상태가 바뀔 때만** 다시 쓴다. 예전에는 폴링 틱마다 썼는데, 한 번이
+      AsyncStorage 읽기+파싱+직렬화+쓰기+구독자 알림이라 0.5~1.5초마다 그 비용을 내고도
+      내용은 같았다. READY·FAILED 는 바로 아래서 지우므로 적지 않는다.
+    */
+    let persisted: { analysisId?: string; status?: FoodAnalysisStatus } = {}
     while (!dismissedRef.current) {
       setAnalysisStatus(job.status)
       lastStatusRef.current = job.status
@@ -213,23 +262,31 @@ export function useFoodAnalysis(
           })
         }
       }
-      await pendingAnalysisRequests.add({
-        requestId,
-        analysisId: job.analysisId,
-        status: job.status,
-        mealType,
-        imageUri,
-        startedAt,
-      })
+      const isTerminal = job.status === "READY" || job.status === "FAILED"
+      if (
+        !isTerminal &&
+        (persisted.analysisId !== job.analysisId ||
+          persisted.status !== job.status)
+      ) {
+        await pendingAnalysisRequests.add({
+          requestId,
+          analysisId: job.analysisId,
+          status: job.status,
+          mealType,
+          imageUri,
+          startedAt,
+        })
+        persisted = { analysisId: job.analysisId, status: job.status }
+      }
 
       if (job.status === "READY" && job.result) {
         await completeAnalysis(job.result, requestId, mealType, imageUri)
-        return
+        return "done"
       }
       if (job.status === "NEEDS_CONFIRMATION") {
         if (appConfig.foodAnalysisConfirmationEnabled) {
           setConfirmationJob(job)
-          return
+          return "awaiting_confirmation"
         }
 
         // 확인 질문을 받을 UI가 없는 빌드에서는 자동 완료를 약속하지 않는다.
@@ -252,24 +309,42 @@ export function useFoodAnalysis(
             t("home.analysis.photoUnclearBody"),
           ),
         )
-        return
+        return "done"
       }
       if (job.status === "FAILED") {
         await pendingAnalysisRequests.remove(requestId)
         throw createAnalysisJobFailure(job)
       }
+      /*
+        시한. 복구의 대기 시효(`PENDING_ANALYSIS_TTL_MS`)와 같은 10분이다 — 서버가 끝내
+        답하지 않는 잡을 포그라운드만 영원히 기다리면 오버레이가 내려가지 않는다. 실패는
+        서버가 FAILED 로 닫은 것과 같은 길(같은 코드·같은 재시도 버튼)을 탄다.
+      */
+      if (Date.now() - startedAt > PENDING_ANALYSIS_TTL_MS) {
+        await pendingAnalysisRequests.remove(requestId)
+        throw createAnalysisJobFailure(job, "food analysis job timed out")
+      }
 
       await new Promise((resolve) =>
         setTimeout(resolve, Math.max(500, job.pollAfterMs ?? 1500)),
       )
+      // 기다리는 동안 X 로 나갔으면 한 번 더 묻지 않는다 — 그 요청은 이제 복구의 몫이다.
+      if (dismissedRef.current) return "done"
       job = await foodCameraService.fetchAnalysis(job.analysisId)
     }
+    return "done"
   }
 
   const analyzeImage = async (uri: string, mealType: MealType) => {
     beginAnalysis("photo")
     const requestId = createFoodAnalysisRequestId()
+    /*
+      이 요청은 여기서 직접 폴링한다 — 복구 폴러가 대기 목록에서 같은 잡을 같이 폴링하지
+      않도록 붙든다(`foodAnalysisRequestState` 머리말). 끝(완료·실패·X 로 나감)에 놓는다.
+    */
+    claimForegroundFoodAnalysisRequest(requestId)
     trackAnalyticsEvent("food_analysis_started", { method: "photo" })
+    let outcome: ResolveOutcome = "done"
     try {
       setAnalyzedImageUri(uri)
       setAnalyzedMealType(mealType)
@@ -282,7 +357,7 @@ export function useFoodAnalysis(
       })
       setAnalysisStatus("QUEUED")
       const job = await foodCameraService.createAnalysis(uri, requestId)
-      await resolveJob(job, requestId, mealType, uri)
+      outcome = await resolveJob(job, requestId, mealType, uri)
     } catch (error) {
       // X 로 나간 뒤 도착한 실패는 알리지 않는다 — 사용자가 이미 이 흐름을 떠났다.
       if (!dismissedRef.current) {
@@ -301,12 +376,19 @@ export function useFoodAnalysis(
       }
     } finally {
       setIsAnalyzing(false)
+      // 확인 질문을 기다리는 동안은 계속 붙든다 — 복구가 같은 질문을 또 띄우지 않게.
+      if (outcome !== "awaiting_confirmation") {
+        releaseForegroundFoodAnalysisRequest(requestId)
+      }
     }
   }
 
   const analyzeText = async (text: string, mealType: MealType) => {
     beginAnalysis("text")
     const requestId = createFoodAnalysisRequestId()
+    // 요청 한 번으로 끝나지만, X 로 나간 뒤 도착한 결과를 여기서 직접 pending 에 넣으므로
+    // 복구가 같은 결과를 한 번 더 넣지 않도록 끝날 때까지 붙든다.
+    claimForegroundFoodAnalysisRequest(requestId)
     trackAnalyticsEvent("food_analysis_started", { method: "text" })
     try {
       setAnalyzedMealType(mealType)
@@ -357,6 +439,7 @@ export function useFoodAnalysis(
       }
     } finally {
       setIsAnalyzing(false)
+      releaseForegroundFoodAnalysisRequest(requestId)
     }
   }
 
@@ -384,6 +467,8 @@ export function useFoodAnalysis(
     body: FoodAnalysisConfirmationRequest,
   ): Promise<void> => {
     if (!confirmationJob || !analyzedMealType) return
+    // 답을 보내는 동안도 포그라운드 소유다 — 실패해서 질문을 되돌려 놓으면 계속 붙든다.
+    let outcome: ResolveOutcome = "awaiting_confirmation"
     try {
       setIsAnalyzing(true)
       setConfirmationJob(null)
@@ -394,7 +479,7 @@ export function useFoodAnalysis(
           baseRevisionId: confirmationJob.result?.revisionId,
         },
       )
-      await resolveJob(
+      outcome = await resolveJob(
         job,
         confirmationJob.requestId,
         analyzedMealType,
@@ -412,19 +497,30 @@ export function useFoodAnalysis(
       )
     } finally {
       setIsAnalyzing(false)
+      if (outcome !== "awaiting_confirmation") {
+        releaseForegroundFoodAnalysisRequest(confirmationJob.requestId)
+      }
     }
   }
 
   const deferConfirmation = () => {
     dismissedRef.current = true
+    // 질문을 미루면 이 요청은 복구의 몫이다(다시 열 때 같은 질문을 띄운다) — 붙든 것을 놓는다.
+    if (confirmationJob) {
+      releaseForegroundFoodAnalysisRequest(confirmationJob.requestId)
+    }
     setConfirmationJob(null)
   }
 
+  /**
+   * 방금 분석한 결과를 그날 기록에 넣는다. **성공 여부**를 돌려준다 — 실패는 여기서 이미
+   * 알렸으므로(토스트 + 재시도) 호출부는 리포트 페이지를 닫지 않는 것만 하면 된다.
+   */
   const registerDiary = async (
     selectedDate: Date,
     onSuccess: (mealType: MealType, imageUri: string | null) => void,
-  ) => {
-    if (!analysisResult || !analyzedMealType) return
+  ): Promise<boolean> => {
+    if (!analysisResult || !analyzedMealType) return false
     if (analysisResult.foodAnalysisResultId <= 0) {
       // 요청이 나가지도 않은 실패. `presentError` 를 안 지나가므로 공용 통로에도
       // 한 행도 안 남는다 — 서버 실패와 갈라 두어야 고칠 곳이 정해진다.
@@ -436,7 +532,7 @@ export function useFoodAnalysis(
         t("home.errors.notReadyTitle"),
         t("home.errors.notReadyBody"),
       )
-      return
+      return false
     }
     const date = toDateStr(selectedDate)
     try {
@@ -447,6 +543,7 @@ export function useFoodAnalysis(
       )
       trackAnalyticsEvent("food_record_saved", { source: "fresh" })
       onSuccess(analyzedMealType, analyzedImageUri)
+      return true
     } catch (error) {
       trackAnalyticsEvent("food_record_save_failed", {
         source: "fresh",
@@ -456,6 +553,7 @@ export function useFoodAnalysis(
         scope: "meal-diary-register",
         retry: () => void registerDiary(selectedDate, onSuccess),
       })
+      return false
     }
   }
 
@@ -474,7 +572,7 @@ export function useFoodAnalysis(
       */
       presentError(error, {
         scope: "meal-diary-open",
-        refresh: () => void refetchDiaryQueries(),
+        refresh: () => void refetchDiaryQueries(queryClient),
       })
     }
   }
@@ -549,7 +647,7 @@ export function useFoodAnalysis(
       if (!updated) throw new Error("수정된 식단 결과를 불러오지 못했어요.")
       setAnalysisResult(updated)
       onUpdateSuccess?.(updated)
-      await refetchDiaryQueries()
+      await refetchDiaryQueries(queryClient)
       return updated
     } catch (error) {
       presentError(error, {
@@ -562,25 +660,6 @@ export function useFoodAnalysis(
     }
   }
 
-  const updateFoodTitle = async (
-    foodAnalysisResultId: number,
-    title: string,
-  ): Promise<FoodTitleUpdateResponse | undefined> => {
-    try {
-      const response = await foodCameraService.updateFoodTitle(
-        foodAnalysisResultId,
-        title,
-      )
-      await refetchDiaryQueries()
-      return response
-    } catch (error) {
-      presentError(error, {
-        scope: "meal-title-update",
-        retry: () => void updateFoodTitle(foodAnalysisResultId, title),
-      })
-    }
-  }
-
   const updateDiaryMealType = async (
     diaryId: number,
     mealType: string,
@@ -590,7 +669,7 @@ export function useFoodAnalysis(
         diaryId,
         mealType,
       )
-      await refetchDiaryQueries()
+      await refetchDiaryQueries(queryClient)
       return result
     } catch (error) {
       presentError(error, {
@@ -617,7 +696,6 @@ export function useFoodAnalysis(
     registerDiary,
     fetchDiaryResult,
     updateFoodAnalysis,
-    updateFoodTitle,
     updateDiaryMealType,
     closeResult: () => setIsResultOpen(false),
   }

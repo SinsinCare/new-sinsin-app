@@ -84,7 +84,7 @@ export function useRestaurantList({
 
   const infinite = useInfiniteQuery({
     queryKey: [
-      ...restaurantKeys.list(language, filterKey, userLocation !== null),
+      ...restaurantKeys.list(language, filterKey, userLocation),
       boundsKey,
     ],
     enabled,
@@ -160,33 +160,64 @@ export function useRestaurantList({
     그 요청은 실패하지 않고 **성공해서** 엉뚱한 카드로 목록을 채운다. 위 `enabled` 가
     막으려던 바로 그 한 발이라, 재시도가 그 가드를 우회하면 가드가 없는 것과 같다.
   */
+  // `refetch`·`fetchNextPage` 는 옵저버에 한 번 묶인 함수라 안정적이다. 결과 객체 전체를
+  // 의존성에 두면 fetching 플래그가 바뀔 때마다 두 콜백이 새로 만들어져, 화면의
+  // `handleRetry` 와 시트의 `onEndReached` 까지 렌더마다 갈린다.
+  const {
+    refetch: infiniteRefetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isRefetching,
+    isError,
+    error,
+  } = infinite
+
   const refetch = useCallback(() => {
     if (!enabled) return
-    void infinite.refetch()
-  }, [enabled, infinite])
+    void infiniteRefetch()
+  }, [enabled, infiniteRefetch])
 
   const loadMore = useCallback(() => {
-    if (infinite.hasNextPage && !infinite.isFetchingNextPage) {
-      void infinite.fetchNextPage()
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage()
     }
-  }, [infinite])
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  return {
-    items,
-    total: pages?.[0]?.total ?? null,
-    // 서버는 `{nutritionTags: 3}` 객체를 준다. 숫자로 읽으면 `> 0` 이 항상 false 가 되어
-    // "영양 정보가 아직 없는 N곳은 빠졌어요" 안내가 조용히 사라진다.
-    excludedForMissingData: totalExcluded(pages?.[0]?.excludedForMissingData),
-    profileMissing: pages?.[0]?.profileMissing ?? false,
-    distanceAvailable: pages?.[0]?.distanceAvailable ?? false,
-    isLoading: infinite.isLoading,
-    isRefetching: infinite.isRefetching,
-    isFetchingNextPage: infinite.isFetchingNextPage,
-    hasNextPage: infinite.hasNextPage === true,
-    isError: infinite.isError,
-    error: infinite.error,
-    emptyReason,
-    loadMore,
-    refetch,
-  }
+  /* 결과 객체를 렌더마다 새로 만들지 않는다 — 화면이 `[list, mapSearch]` 를 의존성으로 둔
+     콜백을 갖고 있어, 리터럴을 돌려주면 그 콜백과 그 아래 시트의 `listEmpty` 까지 매번 갈린다. */
+  return useMemo<UseRestaurantListResult>(
+    () => ({
+      items,
+      total: pages?.[0]?.total ?? null,
+      // 서버는 `{nutritionTags: 3}` 객체를 준다. 숫자로 읽으면 `> 0` 이 항상 false 가 되어
+      // "영양 정보가 아직 없는 N곳은 빠졌어요" 안내가 조용히 사라진다.
+      excludedForMissingData: totalExcluded(pages?.[0]?.excludedForMissingData),
+      profileMissing: pages?.[0]?.profileMissing ?? false,
+      distanceAvailable: pages?.[0]?.distanceAvailable ?? false,
+      isLoading,
+      isRefetching,
+      isFetchingNextPage,
+      hasNextPage: hasNextPage === true,
+      isError,
+      error,
+      emptyReason,
+      loadMore,
+      refetch,
+    }),
+    [
+      items,
+      pages,
+      isLoading,
+      isRefetching,
+      isFetchingNextPage,
+      hasNextPage,
+      isError,
+      error,
+      emptyReason,
+      loadMore,
+      refetch,
+    ],
+  )
 }

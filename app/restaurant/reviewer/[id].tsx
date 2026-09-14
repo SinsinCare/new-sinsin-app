@@ -27,15 +27,14 @@ import { useAppRouter } from "@/src/shared/navigation"
 import { ReviewerProfileScreen } from "@/src/features/restaurant"
 import { reviewPhotos } from "@/src/features/restaurant/components/detail/reviewPhotos"
 import type { ReviewDto } from "@/src/features/restaurant/types"
-
-const DECIMAL_ID = /^\d+$/u
+import { parseDecimalId } from "@/src/shared/navigation/routeParams"
 
 /**
  * 사진 뷰어 route 의 `[id]` 자리에 넣는 **일부러 숫자가 아닌** 값.
  *
  * 뷰어는 `/restaurant/[id]/photos` 에 살지만 이 화면의 후기에는 식당이 없다(위 결손 1).
  * 작성자 id 를 식당 id 자리에 끼워 넣으면 뷰어가 **엉뚱한 식당의 상호명과 후기**를 받아
- * 사진 위에 그린다. 숫자가 아닌 값을 주면 route 의 `DECIMAL_ID` 검사가 걸러 내
+ * 사진 위에 그린다. 숫자가 아닌 값을 주면 route 의 `parseDecimalId` 가 걸러 내
  * `restaurantId: null` 이 되고, 뷰어는 넘겨받은 사진 배열만으로 동작한다(제목은 `사진`).
  * 결손 1이 채워지면 진짜 식당 id 를 넣고 이 상수를 지운다.
  */
@@ -48,8 +47,7 @@ export default function ReviewerProfileRoute() {
   // 스크립트 시드 후기는 `user_id` 가 NULL 이라 작성자 id 가 없다. 그런 링크는 상세
   // 화면이 애초에 렌더하지 않지만, 딥링크로는 올 수 있다. 화면이 0 을 받아 자기 오류
   // 상태를 그린다.
-  const reviewerId =
-    typeof id === "string" && DECIMAL_ID.test(id) ? Number.parseInt(id, 10) : 0
+  const reviewerId = parseDecimalId(id) ?? 0
 
   const openRestaurant = useCallback(
     (restaurantId: number) => {

@@ -136,3 +136,19 @@
 
 기준을 못 맞추면 **코드를 고치고**, 기준 자체가 틀렸다고 판단되면 **왜 틀렸는지 함께 적어** 고친다
 (B4 가 그 예다). 기준을 조용히 지우지 않는다.
+
+## F. 버튼 위에서 시작한 손가락 (2026-09-12 추가)
+
+제보: "버튼 영역은 스와이프해도 시트가 닫히거나 열리지 않는다." 시트 안의 눌리는 것 중 **RN 코어
+`Pressable`**(JS 리스폰더)로 만든 것들 — 필터 칩(`SelectableChip`), 카드 주소 토글(`AddressBlock`),
+빈 상태 CTA(`V2EmptyState`→`V2Button`), 실패 재시도(`V2ErrorState`), 푸터 행(`V2ListRow`) — 은
+gorhom 콘텐츠 팬(RNGH)과 **중재되지 않는다.** 카드(RNGH `Pressable`)와 결과 헤더 버튼은 이미 갈렸다.
+
+| ID | 기준 | 조치 |
+| -- | ---- | ---- |
+| F1 | 칩·CTA·행 위에서 세로로 10pt 넘게 움직이면 시트 팬이 이기고 press 는 취소된다 | `SelectableChip`·`AddressBlock` 을 RNGH `Pressable` 로. `V2Button`/`V2ListRow`/`V2EmptyState`/`V2ErrorState` 에 `gestureHandler` opt-in(시트 안에서만 켠다 — RN Modal 안에서는 RNGH 가 안드로이드에서 죽으므로 전역 전환 금지) |
+| F2 | 같은 자리에서 10pt 안에 떼면 탭이다 | `activeOffsetY` 임계값 그대로(B4) |
+| F3 | 칩 위에서 가로로 끌면 레일이 스크롤되고 시트는 가만히 있다 | RNGH `ScrollView`(B5) 그대로 |
+
+회귀: `tests/restaurantSheetTouchables.test.ts` 가 시트 안 터치 파일에 RN 코어 Pressable import 가
+없는지, 디자인 시스템 버튼/행이 RNGH 경로를 갖는지 본다.

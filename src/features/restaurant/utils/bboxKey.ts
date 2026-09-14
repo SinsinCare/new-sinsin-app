@@ -44,14 +44,11 @@ export function bboxKey(bounds: MapBounds): string {
   return `${b.swLat},${b.swLng},${b.neLat},${b.neLng}`
 }
 
-/**
- * 두 뷰포트가 같은 셀인가. "현재 지도에서 찾기" pill 을 띄울지 결정한다
- * (지도가 실제로 움직였는지 판정).
- */
-export function sameBbox(a: MapBounds | null, b: MapBounds | null): boolean {
-  if (!a || !b) return false
-  return bboxKey(a) === bboxKey(b)
-}
+/*
+  `sameBbox()` 는 여기 없다 (일부러 지웠다). pill 을 띄울지의 판정은
+  `utils/viewportAction.resolveViewportAction` 이 `bboxKey` 문자열 비교로 하고 있어서,
+  이 함수는 테스트만 부르고 있었다.
+*/
 
 /**
  * bbox 대각 거리(km). 서버가 200km 초과를 400 으로 거절하므로 **보내기 전에** 걸러

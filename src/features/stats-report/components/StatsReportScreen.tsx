@@ -3,7 +3,6 @@ import { useEffect, useRef, type ReactNode } from "react"
 import {
   Pressable,
   ScrollView,
-  RefreshControl,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -26,8 +25,9 @@ import { ReportContent } from "./ReportContent"
 import { PeriodSegment, NavButton } from "./ReportControls"
 import { LoadingSkeleton, ErrorCard } from "./ReportStates"
 import { LAYOUT } from "@/src/theme/surface"
+import { useRefreshable } from "@/src/shared/refresh"
 
-import { useStatsReport } from "../hooks/useStatsReport"
+import { STATS_REPORT_REFRESH, useStatsReport } from "../hooks/useStatsReport"
 import type { PeriodType } from "../types/report"
 
 /* ─── 날짜 계산 ───────────────────────────────────────────────────
@@ -69,8 +69,15 @@ export function StatsReportScreen({
     scrollRef.current?.scrollTo({ y: 0, animated: false })
   }, [period, dateKey])
   // enabled 를 쓰지 않으므로 isPending 이 아니라 isLoading 을 본다(훅 주석 참고).
-  const { data, isLoading, isError, error, refetch, isRefetching } =
-    useStatsReport(period, dateKey)
+  const { data, isLoading, isError, error, refetch } = useStatsReport(
+    period,
+    dateKey,
+  )
+  // 당겨서 새로고침은 `src/shared/refresh` 한 벌만 쓴다(`tests/pullToRefreshGuard.test.ts`).
+  const refreshable = useRefreshable({
+    queryKeys: STATS_REPORT_REFRESH,
+    scope: "stats-report",
+  })
 
   /*
     ── 요구·완료·대기·실패 (설계 §J2) ──────────────────────────────────────────
@@ -199,13 +206,7 @@ export function StatsReportScreen({
         ]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => void refetch()}
-            tintColor={s.textMuted}
-          />
-        }
+        {...refreshable.scrollProps}
       >
         {calendar ? (
           <View

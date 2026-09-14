@@ -13,7 +13,7 @@ import type { MealType } from "../types"
  *
  * 리포트는 2026-09-04 시안부터 바텀시트(RN Modal pageSheet)가 아니라 **별도 페이지**
  * (`app/meal-report.tsx`)다. 페이지는 라우트 파라미터로 분석 결과 전체를 실을 수 없고
- * (객체·콜백), 여는 쪽(홈 RecordView·통계 StatisticsView)이 결과와 콜백을 이미 들고
+ * (객체·콜백), 여는 쪽(홈 RecordView)이 결과와 콜백을 이미 들고
  * 있으므로, 여는 순간 여기 넣고 페이지가 꺼내 쓴다. 한 번에 한 리포트만 열린다.
  *
  * `onClose` 는 **여는 쪽의 정리**(신규 결과 닫기·복구 대기 비우기 등)다. 페이지를
@@ -25,6 +25,13 @@ export interface MealReportPageParams {
   result: FoodCameraAnalyzeResult
   imageUri?: string
   mealType?: MealType
+  /**
+   * 기록하기. **저장이 실패하면 거부한다** — 리포트 페이지(`app/meal-report.tsx`)는 이 값을
+   * `await` 만 하고 돌려주지 않으므로 boolean 은 거기서 사라지고, 실패를 페이지까지 나르는
+   * 통로는 거부뿐이다. 오류 안내는 저장 경로가 이미 띄웠으니 페이지는 **닫지 않는 것**만
+   * 한다(`FoodAnalysisResult.handleAddToRecordPress`). 예전에는 실패해도 페이지가 닫혀,
+   * 복구된 결과는 그대로 버려졌다.
+   */
   onAddToRecord?: () => Promise<void> | void
   showAddButton?: boolean
   isUpdating?: boolean
@@ -71,3 +78,21 @@ export const useMealReportPageStore = create<MealReportPageState>()((set) => ({
     ),
   clear: () => set({ params: null }),
 }))
+
+/**
+ * `onAddToRecord` 가 실패를 알리는 방법. 저장 경로가 오류를 이미 사용자에게 보였다는 뜻이라,
+ * 받는 쪽(`FoodAnalysisResult`)은 다시 알리지 않고 페이지만 열린 채 둔다.
+ */
+export class MealReportSaveFailedError extends Error {
+  constructor() {
+    super("meal report save failed")
+    this.name = "MealReportSaveFailedError"
+  }
+}
+
+/** 저장 경로의 boolean 을 `onAddToRecord` 규약(성공=resolve, 실패=reject)으로 옮긴다. */
+export async function requireMealReportSaved(
+  saved: Promise<boolean> | boolean,
+): Promise<void> {
+  if (!(await saved)) throw new MealReportSaveFailedError()
+}

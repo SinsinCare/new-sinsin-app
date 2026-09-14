@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native"
 import { TextInput } from "@/src/shared/components/AppText"
+import { singleLineInputText } from "@/src/theme/surface"
 import {
   V2Icon,
   V2Text,
@@ -119,12 +120,11 @@ const styles = StyleSheet.create({
     minHeight: 44,
     borderRadius: radius.md,
   },
+  /* 단일행 입력: lineHeight 를 빼야 iOS 가 글리프·플레이스홀더를 세로 중앙에 둔다(surface.ts singleLineInputText). 높이는 바깥 `field` 가 잡는다. */
   input: {
-    ...typography.subtext.large,
+    ...singleLineInputText(typography.subtext.large),
     flex: 1,
     padding: 0,
-    includeFontPadding: false,
-    minHeight: 44,
   },
   filter: {
     width: 44,

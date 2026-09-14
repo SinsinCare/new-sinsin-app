@@ -1,5 +1,4 @@
 export {
-  flushAnalytics,
   identifyAnalyticsUser,
   // 정책 게이트가 직접 부른다 — 게이트는 `RootLayoutNav` **밖**이라 그 안의
   // `useAnalyticsLifecycle` 이 도는 것을 기다릴 수 없다(설계 §9-①). 두 번 불려도

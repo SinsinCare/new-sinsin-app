@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated"
-import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_MOTION } from "@/src/features/auth/data/authSurface"
 
 interface ProgressBarProps {
@@ -22,7 +22,7 @@ const SPRING = { ...AUTH_MOTION.spring, reduceMotion: ReduceMotion.System }
  * 좌우 여백 없이 화면을 가로지른다(헤더와 본문의 경계 역할).
  */
 export function ProgressBar({ current, total }: ProgressBarProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const [trackWidth, setTrackWidth] = useState(0)
   const ratio = total > 0 ? Math.min((current + 1) / total, 1) : 0
   const fill = useSharedValue(ratio)

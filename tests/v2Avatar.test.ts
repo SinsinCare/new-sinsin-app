@@ -214,8 +214,17 @@ describe("V2Avatar — 사진이 없을 때", () => {
 
 /* ── 사진 ───────────────────────────────────────────────────────────────── */
 
-const SIGNED = "https://cdn.example.com/avatar.jpg?sig=aaa&exp=1"
-const RESIGNED = "https://cdn.example.com/avatar.jpg?sig=bbb&exp=2"
+/*
+  아바타는 GCS 서명 URL 이다. 2026-09-05(`remoteImageSource`): 캐시 키는 **GCS 인증
+  파라미터만** 뗀 정체성에 `image:v2:` 를 붙인 값이다 — 쿼리를 통째로 떼던 옛 키는
+  `?crop=`·프록시 `?fname=` 을 한 사진으로 뭉쳤고, 그 키로 캐시된 파일을 다시 쓰지
+  않으려고 접두사를 바꿨다(`tests/remoteImageSource.test.ts`). 그래서 "서명이 돌아도
+  키는 같다" 를 보려면 픽스처도 GCS 호스트 + `X-Goog-*` 서명이어야 한다.
+*/
+const PHOTO = "https://storage.googleapis.com/avatars/avatar.jpg"
+const SIGNED = `${PHOTO}?X-Goog-Date=one&X-Goog-Signature=aaa`
+const RESIGNED = `${PHOTO}?X-Goog-Date=two&X-Goog-Signature=bbb`
+const CACHE_KEY = `image:v2:${PHOTO}`
 
 describe("V2Avatar — 사진", () => {
   it("원격 사진은 expo-image 로 그린다", () => {
@@ -226,16 +235,16 @@ describe("V2Avatar — 사진", () => {
     if (!image) throw new Error("사진이 없다")
     expect(rest).toEqual([])
     /*
-      source 의 cacheKey 는 **쿼리(서명)를 뗀 경로**여야 한다 — 서명이 15분마다 돌아도
+      source 의 cacheKey 는 **서명을 뗀 정체성**이어야 한다 — 서명이 15분마다 돌아도
       같은 사진이면 디스크 캐시가 살아남는 계약(shared/images/remoteImageSource).
     */
     expect(image.props.source).toEqual({
       uri: SIGNED,
-      cacheKey: "https://cdn.example.com/avatar.jpg",
+      cacheKey: CACHE_KEY,
     })
     expect(image.props.contentFit).toBe("cover")
     // FlashList 재활용 키도 서명 회전에 불변이어야 한다 — 회전마다 리셋되면 키의 의미가 없다.
-    expect(image.props.recyclingKey).toBe("https://cdn.example.com/avatar.jpg")
+    expect(image.props.recyclingKey).toBe(CACHE_KEY)
     expect(styleOf(image)).toEqual({ width: "100%", height: "100%" })
   })
 
@@ -269,7 +278,7 @@ describe("V2Avatar — 사진", () => {
     expect(retried?.props.source).toEqual({
       uri: RESIGNED,
       // 서명이 돌아도 캐시 키는 같은 값 — 재시도가 캐시를 버리지 않는다.
-      cacheKey: "https://cdn.example.com/avatar.jpg",
+      cacheKey: CACHE_KEY,
     })
   })
 })

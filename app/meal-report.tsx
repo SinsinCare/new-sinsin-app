@@ -48,7 +48,7 @@ export default function MealReportRoute() {
   )
 
   const unsaved = params !== null && params.showAddButton !== false
-  const { leaveConfirmed } = useRecordExitGuard({
+  const { leaveAfterSave } = useRecordExitGuard({
     hasChanges: unsaved,
     isSaving: saving || params?.isUpdating === true,
     onBack: goBack,
@@ -69,7 +69,7 @@ export default function MealReportRoute() {
       <FoodAnalysisResult
         source={params.source}
         result={params.result}
-        onClose={leaveConfirmed}
+        onClose={leaveAfterSave}
         imageUri={params.imageUri}
         mealType={params.mealType}
         onAddToRecord={

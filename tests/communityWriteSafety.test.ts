@@ -610,13 +610,14 @@ describe("글쓰기 화면", () => {
     expect(source).toMatch(
       /const mayHaveCommitted =\s*createRequested &&\s*\(resolved\.kind === "timeout" \|\| resolved\.kind === "offline"\)/,
     )
-    expect(source).toContain("retry: mayHaveCommitted ? undefined :")
+    expect(source).toMatch(/retry: mayHaveCommitted\s*\?\s*undefined\s*:/)
   })
 
   it("재시도는 **지금** 입력값으로 다시 보낸다", () => {
     const source = read(EDITOR)
     // 클로저(`() => void handleSubmit()`)는 실패한 렌더의 제목·본문을 다시 보냈다.
-    expect(source).toContain("submitRef.current()")
+    // 동의는 이미 받았으므로 `true` 로 다시 부른다(등록 직전 시트를 두 번 띄우지 않는다).
+    expect(source).toContain("submitRef.current(true)")
     expect(source).toContain("submitRef.current = handleSubmit")
     expect(source).not.toContain("retry: () => void handleSubmit()")
   })
@@ -655,7 +656,8 @@ describe("글쓰기 화면", () => {
     expect(source).toContain("submittedRef.current = true")
     // CTA 도 그 사이에는 눌리지 않는다.
     expect(source).toContain(
-      "disabled={!canSubmit || isSubmitting || submitted}",
+      "const submitReady = canSubmit && !isSubmitting && !submitted",
     )
+    expect(source).toContain("disabled={!submitReady}")
   })
 })

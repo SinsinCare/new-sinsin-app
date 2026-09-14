@@ -28,7 +28,8 @@ import { UNIT_OPTIONS } from "../data/foodEditConstants"
 import { MEAL_OPTIONS } from "../data/mealConstants"
 import { MealType } from "../types"
 import { useFoodEdit } from "../hooks/useFoodEdit"
-import { useFoodAnalysis } from "../hooks/useFoodAnalysis"
+import { updateFoodTitle } from "../hooks/useFoodAnalysis"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   buildFoodAnalysisUpdateRequest,
   applyOptimisticConsumption,
@@ -161,7 +162,8 @@ export function FoodResultEdit({
     handleAmountSubmit,
   } = useFoodEdit(result, mealType)
 
-  const { updateFoodTitle } = useFoodAnalysis()
+  // 이름 변경은 훅 상태가 필요 없다 — `useFoodAnalysis` 한 벌을 더 세우지 않고 캐시 손잡이만 넘긴다.
+  const queryClient = useQueryClient()
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(
     mealType,
   )
@@ -193,6 +195,7 @@ export function FoodResultEdit({
     }
     const newTitle = editingName.trim()
     const response = await updateFoodTitle(
+      queryClient,
       result.foodAnalysisResultId,
       newTitle,
     )
@@ -708,7 +711,7 @@ export function FoodResultEdit({
                 </V2VStack>
               )}
               {foods.map((f, i) => (
-                <V2HStack key={i} align="center" gap={8}>
+                <V2HStack key={f.editKey} align="center" gap={8}>
                   <TextInput
                     value={f.name}
                     onChangeText={(v) => handleFoodNameChange(i, v)}

@@ -17,11 +17,7 @@ const mockAuthState = {
   requiresAdditionalInfo: false,
   entryGate: null,
   sessionPersistence: null,
-  setUser: jest.fn(),
-  setAccountState: jest.fn(),
-  setRequiresAdditionalInfo: jest.fn(),
-  setEntryGate: jest.fn(),
-  setSessionPersistence: jest.fn(),
+  applySession: jest.fn(),
   reset: jest.fn(),
 }
 
@@ -71,8 +67,12 @@ jest.mock("../src/services/core/sessionCleanup", () => ({
   clearClientSessionState: mockClearClientSessionState,
 }))
 jest.mock("../src/stores", () => ({
-  useAuthStore: () => mockAuthState,
-  useUserStore: () => ({ reset: jest.fn() }),
+  // `useAuth` 는 셀렉터로 읽고 액션은 `getState()` 로 꺼낸다 — 둘 다 같은 객체를 본다.
+  useAuthStore: Object.assign(
+    (selector?: (state: typeof mockAuthState) => unknown) =>
+      selector ? selector(mockAuthState) : mockAuthState,
+    { getState: () => mockAuthState },
+  ),
 }))
 jest.mock("../src/features/analytics", () => ({
   identifyAnalyticsUser: jest.fn(),
@@ -307,8 +307,7 @@ describe("session restore versus interactive social authentication", () => {
       socialSignupToken: "fresh-signup-token",
     })
 
-    expect(mockAuthState.setUser).not.toHaveBeenCalled()
-    expect(mockAuthState.setAccountState).not.toHaveBeenCalled()
+    expect(mockAuthState.applySession).not.toHaveBeenCalled()
     expect(mockDiscardClientSession).toHaveBeenCalledTimes(1)
     expect(exchangeSpy).toHaveBeenCalledTimes(1)
     expect(mockDiscardClientSession.mock.invocationCallOrder[0]).toBeLessThan(

@@ -1,22 +1,22 @@
 /**
- * 인분 조절. 재료 바로 아래에 둔다 — 이 값이 영양 미리보기의 분모다(계약 §3.5:
- * `nutrition` 은 servings 로 나눈 1인분 기준).
- *
- * 상한·하한에서 버튼을 **끄고 색을 뺀다**. 눌리는 것처럼 보이는데 아무 일도 없으면
- * 사용자는 앱이 멈춘 줄 안다.
+ * 인분 스테퍼 — 서버가 영양을 이 값으로 **나눈다**. 컨트롤은 키트 칩과 같은
+ * 높이(`FORM.choiceHeight`)·모서리(`FORM.choiceRadius`)·바탕(`s.surfaceSunken`)이다.
  */
 
 import { StyleSheet, View, Pressable } from "react-native"
-import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
-
+import { V2Text } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
 import { RECIPE_WRITE_LIMITS } from "@/src/features/recipe/types/recipeWrite"
+import {
+  FORM,
+  MIN,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 
 interface ServingsStepperProps {
   label: string
-  /** 이미 `{{value}}인분` 으로 만들어진 문구. */
+  /** 화면에 그리는 값 문구(`2명`). 숫자와 문구를 나눠 두어야 로케일이 갈린다. */
   valueText: string
   note: string
   value: number
@@ -37,11 +37,12 @@ export function ServingsStepper({
   const s = useSurface()
   const canDecrease = value > RECIPE_WRITE_LIMITS.servingsMin
   const canIncrease = value < RECIPE_WRITE_LIMITS.servingsMax
-
   return (
-    <View style={styles.wrap}>
+    <View style={styles.group}>
       <View style={styles.row}>
-        <Text style={[styles.label, { color: s.textStrong }]}>{label}</Text>
+        <V2Text style={styles.label} color={s.textStrong}>
+          {label}
+        </V2Text>
         <View style={[styles.control, { backgroundColor: s.surfaceSunken }]}>
           <Pressable
             onPress={() => onChange(value - 1)}
@@ -49,7 +50,6 @@ export function ServingsStepper({
             accessibilityRole="button"
             accessibilityLabel={decreaseLabel}
             accessibilityState={{ disabled: !canDecrease }}
-            hitSlop={8}
             style={styles.button}
           >
             <Ionicons
@@ -58,16 +58,15 @@ export function ServingsStepper({
               color={canDecrease ? s.textStrong : s.textWeak}
             />
           </Pressable>
-          <Text style={[styles.value, { color: s.textStrong }]}>
+          <V2Text style={styles.value} color={s.textStrong}>
             {valueText}
-          </Text>
+          </V2Text>
           <Pressable
             onPress={() => onChange(value + 1)}
             disabled={!canIncrease}
             accessibilityRole="button"
             accessibilityLabel={increaseLabel}
             accessibilityState={{ disabled: !canIncrease }}
-            hitSlop={8}
             style={styles.button}
           >
             <Ionicons
@@ -78,39 +77,35 @@ export function ServingsStepper({
           </Pressable>
         </View>
       </View>
-      <Text style={[styles.note, { color: s.textMuted }]}>{note}</Text>
+      <V2Text style={styles.hint} color={s.text}>
+        {note}
+      </V2Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6 },
+  group: { gap: FORM.labelGap },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: S[3],
   },
-  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipRail`).
-  label: { ...TYPE.cardTitle, fontWeight: "700" },
+  label: { ...FORM.label, flexShrink: 1 },
+  hint: FORM.hint,
   control: {
     flexDirection: "row",
     alignItems: "center",
-    height: LAYOUT.control.height,
-    borderRadius: LAYOUT.control.radius,
-    paddingHorizontal: 6,
-    gap: 4,
+    height: FORM.choiceHeight,
+    borderRadius: FORM.choiceRadius,
+    paddingHorizontal: S[1],
   },
   button: {
-    width: 36,
-    height: 36,
+    width: MIN.TOUCH,
+    height: FORM.choiceHeight,
     alignItems: "center",
     justifyContent: "center",
   },
-  value: {
-    ...TYPE.value,
-    fontWeight: "600",
-    minWidth: 56,
-    textAlign: "center",
-  },
-  note: { ...TYPE.cardSub },
+  value: { ...FORM.option, minWidth: MIN.TOUCH, textAlign: "center" },
 })

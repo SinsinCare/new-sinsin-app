@@ -23,9 +23,14 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated"
 
-import { radius, typography, V2SheetTextInput } from "@/src/design-system-v2"
+import { V2SheetTextInput } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
-import { TYPE } from "@/src/theme/surface"
+import { recordFieldLabel } from "@/src/features/home/components/record/pages/recordInk"
+import {
+  FIELD,
+  FORM,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 import { RECIPE_WRITE_LIMITS } from "@/src/features/recipe/types/recipeWrite"
 
 import { DragDotsHandle } from "./DragDotsHandle"
@@ -138,7 +143,7 @@ export function StepSheetRow({
             }}
             style={styles.handle}
           >
-            <DragDotsHandle color={isDragging ? s.brand : undefined} />
+            <DragDotsHandle color={isDragging ? s.textStrong : undefined} />
           </View>
         </GestureDetector>
 
@@ -161,7 +166,7 @@ export function StepSheetRow({
           importantForAccessibility="no-hide-descendants"
           style={[
             styles.ordinal,
-            { color: isDragging ? s.brand : s.textMuted },
+            { color: isDragging ? s.textStrong : s.textMuted },
           ]}
         >
           {filled ? ordinal : ""}
@@ -170,16 +175,17 @@ export function StepSheetRow({
         <View
           style={[
             styles.box,
-            isDragging
-              ? { backgroundColor: s.surfaceBrand, borderColor: s.brand }
-              : { backgroundColor: s.card, borderColor: s.border },
+            {
+              backgroundColor: s.surfaceSunken,
+              borderColor: isDragging ? s.textStrong : s.surfaceSunken,
+            },
           ]}
         >
           <V2SheetTextInput
             value={row.text}
             onChangeText={onChangeText}
             placeholder={copy.placeholder(ordinal)}
-            placeholderTextColor={s.textMuted}
+            placeholderTextColor={recordFieldLabel(s)}
             maxLength={RECIPE_WRITE_LIMITS.stepTextMax}
             multiline
             /*
@@ -287,8 +293,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   ordinal: {
-    ...TYPE.value,
-    fontWeight: "700",
+    ...FORM.option,
     minWidth: 14,
     textAlign: "center",
   },
@@ -298,10 +303,10 @@ const styles = StyleSheet.create({
     // `LAYOUT.field.radius`(14)를 주면 알약처럼 부푼다(IngredientEditor 머리말).
     minHeight: 48,
     justifyContent: "center",
-    borderRadius: radius.lg,
+    borderRadius: FIELD.radius,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: S[3],
+    paddingVertical: S[2],
   },
   /*
     여기만 `TYPE.value` 가 아니라 v2 토큰을 직접 편다. 둘은 크기·행간이 같은 값이지만
@@ -316,7 +321,7 @@ const styles = StyleSheet.create({
     (`singleLineInputText()` 는 한 줄 칸 전용이다).
   */
   input: {
-    ...typography.subtext.large,
+    ...FORM.body,
     padding: 0,
     textAlignVertical: "top",
   },

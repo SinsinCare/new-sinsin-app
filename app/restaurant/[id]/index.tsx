@@ -36,9 +36,7 @@ import {
   serializePhotoHandoff,
 } from "@/src/features/restaurant"
 import type { AnalyticsRestaurantEntrySource } from "@/src/features/analytics"
-
-/** 10진수만 받는다. `Number("0x2a")` 는 42 를 돌려주고 `Number("")` 는 0 이다. */
-const DECIMAL_ID = /^\d+$/u
+import { parseDecimalId } from "@/src/shared/navigation/routeParams"
 
 /** 파라미터로 올 수 있는 진입 경로. 모르는 값이면 분석에서 딥링크로 본다. */
 const ENTRY_SOURCES: readonly AnalyticsRestaurantEntrySource[] = [
@@ -56,10 +54,7 @@ export default function RestaurantDetailRoute() {
     from?: string
     tab?: string
   }>()
-  const restaurantId =
-    typeof id === "string" && DECIMAL_ID.test(id)
-      ? Number.parseInt(id, 10)
-      : null
+  const restaurantId = parseDecimalId(id)
 
   const entrySource = ENTRY_SOURCES.find((value) => value === from)
 

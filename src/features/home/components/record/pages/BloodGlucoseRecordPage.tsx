@@ -1,5 +1,5 @@
 import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
-import { useRef } from "react"
+import { useMemo, useRef } from "react"
 import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { V2Disclosure, V2Text } from "@/src/design-system-v2"
@@ -11,12 +11,40 @@ import {
   GLUCOSE_SLOT_OPTIONS,
   GLUCOSE_ELAPSED_OPTIONS,
 } from "../../../data/bloodMetricsConstants"
-import { orderGlucoseByDay, glucoseCellKey } from "../../../utils/glucoseGrid"
+import {
+  orderGlucoseByDay,
+  glucoseCellKey,
+  glucoseCellOrder,
+  type GlucoseCell,
+} from "../../../utils/glucoseGrid"
+import type { DateAnalysisBloodGlucoseRecord } from "@/src/types/foodCamera"
 import { RecordPageShell } from "./RecordPageShell"
 import { RecordNumberField } from "./RecordNumberField"
 import { RecordFieldHint } from "./RecordFieldHint"
 import { RecordChoices } from "./RecordChoices"
+import { RecordRangeBar, RecordStatusLine } from "./RecordRangeBar"
+import { classifyValue, glucoseRangeFor, parseReading } from "./recordRanges"
 import { FORM, PAGE_X, S, TABLE } from "./recordPageSpec"
+
+/**
+ * "지난번" — 그날 기록 중 지금 고른 칸 **앞**의 가장 가까운 것. 앞에 없으면 뒤의 마지막.
+ * 지금 칸에 저장된 값은 이미 입력칸에 떠 있으니 제외한다. 없으면 `null` — 지어내지 않는다.
+ */
+function previousGlucose(
+  records: readonly DateAnalysisBloodGlucoseRecord[],
+  cell: GlucoseCell,
+): DateAnalysisBloodGlucoseRecord | null {
+  const current = glucoseCellOrder(cell)
+  const others = orderGlucoseByDay(records).filter(
+    (row) =>
+      glucoseCellKey({ ...row, slot: row.slot ?? "" }) !== glucoseCellKey(cell),
+  )
+  const before = others.filter(
+    (row) =>
+      glucoseCellOrder({ slot: row.slot ?? "", timing: row.timing }) < current,
+  )
+  return before.at(-1) ?? others.at(-1) ?? null
+}
 
 export function BloodGlucoseRecordPage({
   params,
@@ -29,13 +57,28 @@ export function BloodGlucoseRecordPage({
   const s = useSurface()
   const input = useRef<TextInput>(null)
   const form = useGlucoseRecordForm(params, onBack)
+  const value = form.valid ? parseReading(form.draft.text) : null
+  const range = glucoseRangeFor(form.cell.timing)
+  const status = classifyValue(value, range)
+  const previous = useMemo(
+    () => previousGlucose(form.records, form.cell),
+    [form.records, form.cell],
+  )
+  const targetLabel = t("home.recordPage.bloodGlucose.target", {
+    low: range.targetLow,
+    high: range.targetHigh,
+  })
   return (
     <RecordPageShell
       title={t("home.sheet.bloodGlucose.title")}
       intro={t("home.recordPage.bloodGlucose.intro")}
       subtitle={params.date.replace(/-/gu, ".")}
       onBack={onBack}
-      ctaLabel={t("home.recordPage.bloodGlucose.save")}
+      ctaLabel={
+        value !== null
+          ? t("home.recordPage.bloodGlucose.saveWith", { value })
+          : t("home.recordPage.bloodGlucose.save")
+      }
       ctaDisabled={!form.valid}
       ctaLoading={form.save.isSaving}
       ctaSuccess={form.save.saved}
@@ -63,6 +106,32 @@ export function BloodGlucoseRecordPage({
                 : "home.recordPage.bloodGlucose.hint",
             )}
           </RecordFieldHint>
+          <View style={styles.judgement}>
+            <RecordStatusLine
+              status={status}
+              lowIsDanger
+              statusLabel={
+                status === null
+                  ? ""
+                  : t(`home.recordPage.bloodGlucose.status.${status}`)
+              }
+              targetLabel={targetLabel}
+              previousLabel={
+                previous === null
+                  ? null
+                  : t("home.recordPage.bloodGlucose.previous", {
+                      value: previous.value,
+                    })
+              }
+            />
+            <RecordRangeBar
+              range={range}
+              value={value}
+              status={status}
+              lowIsDanger
+              targetLabel={targetLabel}
+            />
+          </View>
         </View>
         <View>
           <View style={styles.group}>
@@ -174,6 +243,7 @@ export function BloodGlucoseRecordPage({
 const styles = StyleSheet.create({
   content: { paddingHorizontal: PAGE_X, gap: FORM.sectionGap },
   group: { gap: FORM.labelGap },
+  judgement: { marginTop: S[2], gap: S[3] },
   context: { paddingTop: FORM.sectionGap },
   elapsed: { paddingTop: FORM.sectionGap },
   label: FORM.label,

@@ -9,6 +9,14 @@ jest.mock("../src/services/core/apiClient", () => ({
   api: { get: (...args: unknown[]) => apiGet(...args) },
 }))
 
+/*
+  모의 경로는 플래그를 **명시적으로 `"true"` 로 켠 환경에서만** 산다(서비스 머리말 —
+  적지 않으면 서버다). 이 파일의 대부분은 그 경로를 보므로 모듈을 들여오기 전에 켠다.
+  서버 경로와 "없으면 서버" 기본값은 아래 "모의 플래그" 블록이 `jest.resetModules()`
+  로 따로 본다.
+*/
+process.env.EXPO_PUBLIC_RECIPE_V2_MOCK = "true"
+
 import enRecipe from "../src/i18n/locales/en/recipe.json"
 import koRecipe from "../src/i18n/locales/ko/recipe.json"
 import {
@@ -764,12 +772,12 @@ describe("i18n — 하드코딩 문자열 대신 키가 있다", () => {
   })
 })
 
-describe("모의 플래그 — 서버를 붙일 때 끄는 스위치", () => {
+describe("모의 플래그 — 명시적으로 켠 개발 환경에서만 모의다", () => {
   beforeEach(() => {
     apiGet.mockReset()
   })
 
-  it("지금은 모의 경로가 켜져 있고 네트워크를 타지 않는다", async () => {
+  it("플래그를 `true` 로 켜면 모의 경로이고 네트워크를 타지 않는다", async () => {
     expect(RECIPE_LIST_V2_MOCK).toBe(true)
     const page = await recipeListV2Service.getRecipeList({ limit: 3 })
     expect(page.items).toHaveLength(3)
@@ -779,6 +787,28 @@ describe("모의 플래그 — 서버를 붙일 때 끄는 스위치", () => {
     const suggestions = await recipeListV2Service.getSuggestions("밥")
     expect(suggestions.length).toBeGreaterThan(0)
     expect(apiGet).not.toHaveBeenCalled()
+  })
+
+  it("플래그가 **없으면 서버 경로다** — 키를 안 적은 운영 프로파일이 모의를 내보내지 않는다", async () => {
+    /*
+      예전 기본값은 "없으면 모의" 였고, eas.json 의 운영 프로파일은 이 키를 적지 않아서
+      스토어 빌드가 인메모리 카탈로그를 그렸다. 기본값이 다시 뒤집히면 여기서 깨진다.
+    */
+    const previous = process.env.EXPO_PUBLIC_RECIPE_V2_MOCK
+    delete process.env.EXPO_PUBLIC_RECIPE_V2_MOCK
+    jest.resetModules()
+    apiGet.mockResolvedValue({
+      data: { result: { items: [], hasMore: false, budget: {} } },
+    })
+
+    const reloaded =
+      await import("../src/features/recipe/services/recipeListV2Service")
+    expect(reloaded.RECIPE_LIST_V2_MOCK).toBe(false)
+    await reloaded.recipeListV2Service.getRecipeList({ limit: 3 })
+    expect(apiGet).toHaveBeenCalledWith("/recipes", { params: { limit: 3 } })
+
+    process.env.EXPO_PUBLIC_RECIPE_V2_MOCK = previous
+    jest.resetModules()
   })
 
   it("플래그를 끄면 계약 §3.1 쿼리로 실제 엔드포인트를 부른다", async () => {

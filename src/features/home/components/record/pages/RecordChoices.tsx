@@ -25,11 +25,14 @@ export function RecordChoices<T extends string>({
   value,
   onChange,
   disabled = false,
+  columns: preferredColumns,
 }: {
   options: { value: T; label: string; description?: string }[]
   value: T | null
   onChange: (value: T) => void
   disabled?: boolean
+  /** 한 줄에 두고 싶은 열 수(별점 5개 등). 글자가 안 들어가면 기본 규칙으로 내려간다. */
+  columns?: number
 }) {
   const { width, fontScale: systemFontScale } = useWindowDimensions()
   const fontScale = effectiveTextScale(systemFontScale, FONT_SCALE.body)
@@ -37,6 +40,7 @@ export function RecordChoices<T extends string>({
     options.map((option) => option.label),
     width - PAGE_X * 2,
     fontScale,
+    preferredColumns,
   )
   const rows = Array.from(
     { length: Math.ceil(options.length / columns) },
@@ -67,6 +71,58 @@ export function RecordChoices<T extends string>({
     </View>
   )
 }
+/**
+ * 여러 개를 고르는 칩 격자 — 같은 면·같은 간격의 `RecordChoice` 를 체크박스 의미로 쓴다.
+ * 신장 정보 페이지의 진단 원인·동반 질환처럼 "해당하는 것 전부" 를 묻는 자리다.
+ */
+export function RecordMultiChoices<T extends string>({
+  options,
+  values,
+  onToggle,
+  disabled = false,
+}: {
+  options: { value: T; label: string; description?: string }[]
+  values: readonly T[]
+  onToggle: (value: T) => void
+  disabled?: boolean
+}) {
+  const { width, fontScale: systemFontScale } = useWindowDimensions()
+  const fontScale = effectiveTextScale(systemFontScale, FONT_SCALE.body)
+  const columns = recordChoiceColumns(
+    options.map((option) => option.label),
+    width - PAGE_X * 2,
+    fontScale,
+  )
+  const rows = Array.from(
+    { length: Math.ceil(options.length / columns) },
+    (_, i) => options.slice(i * columns, (i + 1) * columns),
+  )
+  return (
+    <View style={styles.grid}>
+      {rows.map((row, index) => (
+        <View key={index} style={styles.row}>
+          {row.map((option) => (
+            <RecordChoice
+              key={option.value}
+              label={option.label}
+              description={option.description}
+              selected={values.includes(option.value)}
+              disabled={disabled}
+              role="checkbox"
+              onPress={() => {
+                hapticSelection()
+                onToggle(option.value)
+              }}
+            />
+          ))}
+          {Array.from({ length: columns - row.length }, (_, blank) => (
+            <View key={`blank-${blank}`} style={styles.spacer} />
+          ))}
+        </View>
+      ))}
+    </View>
+  )
+}
 /** Touch feedback stays on the UI thread, independent of form reflow. */
 function RecordChoice({
   label,
@@ -74,12 +130,14 @@ function RecordChoice({
   selected,
   disabled,
   onPress,
+  role = "radio",
 }: {
   label: string
   description?: string
   selected: boolean
   disabled: boolean
   onPress: () => void
+  role?: "radio" | "checkbox"
 }) {
   const s = useSurface()
   const selectedProgress = useSharedValue(selected ? 1 : 0)
@@ -99,7 +157,7 @@ function RecordChoice({
   return (
     <Pressable
       style={styles.touch}
-      accessibilityRole="radio"
+      accessibilityRole={role}
       accessibilityLabel={label}
       accessibilityState={{ checked: selected, disabled }}
       disabled={disabled}

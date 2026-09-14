@@ -22,6 +22,7 @@ import { Text } from "@/src/design-system-v2/primitives/NativeText"
 
 import { type ReactNode } from "react"
 import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
+import { Pressable as GestureHandlerPressable } from "react-native-gesture-handler"
 import { spacing, typography } from "../tokens"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2Icon } from "./V2Icon"
@@ -47,6 +48,8 @@ export type V2ListRowProps = {
   sideMargin?: V2ListRowSideMargin
   /** 넘기면 행 전체가 Pressable이 되고 pressed 피드백을 줌 */
   onPress?: () => void
+  /** gorhom 시트 안(식당 지도 푸터)에서 켠다 — 이유는 V2Button.gestureHandler 주석. */
+  gestureHandler?: boolean
   style?: ViewStyle
 }
 
@@ -73,6 +76,7 @@ export function V2ListRow({
   verticalPadding = "m",
   sideMargin = "m",
   onPress,
+  gestureHandler = false,
   style,
 }: V2ListRowProps) {
   const { colors } = useV2Theme()
@@ -115,8 +119,9 @@ export function V2ListRow({
   )
 
   if (onPress != null) {
+    const Touchable = gestureHandler ? GestureHandlerPressable : Pressable
     return (
-      <Pressable
+      <Touchable
         accessibilityRole="button"
         onPress={onPress}
         style={({ pressed }) => [
@@ -127,7 +132,7 @@ export function V2ListRow({
         ]}
       >
         {content}
-      </Pressable>
+      </Touchable>
     )
   }
 

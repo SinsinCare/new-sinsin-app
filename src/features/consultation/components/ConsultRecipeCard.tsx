@@ -2,8 +2,8 @@ import { ConsultChevron, ConsultDisclosure } from "./ConsultDisclosure"
 import { useState } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
-import { useRouter } from "expo-router"
 import { V2Icon, V2Text, spacing, useV2Theme } from "@/src/design-system-v2"
+import { useAppRouter } from "@/src/shared/navigation"
 import { recipeSourceRoute, type ConsultSource } from "@/src/types/chat"
 
 /** Recipe facts come from the read receipt, never from generated prose. */
@@ -16,7 +16,7 @@ export function ConsultRecipeCard({
 }) {
   const { colors } = useV2Theme()
   const { t } = useTranslation("common")
-  const router = useRouter()
+  const router = useAppRouter()
   const [ingredientsOpen, setIngredientsOpen] = useState(false)
   const [stepsOpen, setStepsOpen] = useState(false)
   const card = source.recipe

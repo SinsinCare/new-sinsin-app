@@ -26,12 +26,11 @@ interface NotificationHistoryState {
   markAsRead: (id: string) => void
   markAllAsRead: () => void
   clearAll: () => void
-  unreadCount: () => number
 }
 
 export const useNotificationHistoryStore = create<NotificationHistoryState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
       addNotification: (item) =>
         set((state) => ({
@@ -56,7 +55,6 @@ export const useNotificationHistoryStore = create<NotificationHistoryState>()(
           items: state.items.map((n) => ({ ...n, read: true })),
         })),
       clearAll: () => set({ items: [] }),
-      unreadCount: () => get().items.filter((n) => !n.read).length,
     }),
     {
       name: "@sinsin/notification-history",

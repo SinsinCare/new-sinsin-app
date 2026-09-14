@@ -88,7 +88,9 @@ const styles = StyleSheet.create({
     gap: spacing[12],
     paddingHorizontal: spacing[16],
   },
-  /** 글자 양옆의 가는 선. 두께는 헤어라인 하나 — 구분선이지 테두리가 아니다. */
+  /** 글자 양옆의 가는 선 — 구분선이지 테두리가 아니다. 두께는 물리 헤어라인이 아니라
+      `borderWidth.thin` = 1 논리 pt: 3x 화면에서 헤어라인은 1/3 pt 라 선이 안 보였다
+      (docs/design/community-refresh-2026-09-05/PROFILE-REVIEW.md). */
   rule: {
     flex: 1,
     height: borderWidth.thin,

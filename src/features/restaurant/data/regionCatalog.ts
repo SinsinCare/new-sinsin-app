@@ -369,7 +369,7 @@ const JEONNAM: RegionSido = {
     group("jeonnam-all", 34.8679, 126.991),
     group("jeonnam-yeosu", 34.7604, 127.6622, ["여수시"]),
     group("jeonnam-suncheon", 34.9506, 127.4872, ["순천시", "광양시"]),
-    group("jeonnam-mokpo", 34.8118, 126.3922, ["목포시", "무안군", "신안군"]),
+    group("jeonnam-mokpo", 34.8118, 126.3922, ["목포시", "무안군", "신안군", "영암군"]),
     group("jeonnam-naju", 35.0158, 126.7108, ["나주시", "화순군", "담양군"]),
     group("jeonnam-haenam", 34.5735, 126.5989, [
       "해남군",

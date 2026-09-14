@@ -14,6 +14,8 @@ import { isMockMode } from "../../config/appConfig"
 import type {
   DoctorConnection,
   DoctorConnectionList,
+  DoctorReportDetail,
+  DoctorReportList,
   DoctorSearchParams,
   DoctorSearchResult,
   ShareGrant,
@@ -73,6 +75,23 @@ export const doctorLinkService = {
   },
 
   /** 동의한 적이 없어도 404 가 아니라 **전부 false 인 기본값**이 온다. */
+  /**
+   * 의료진이 보낸 리포트(최신순). 콘솔의 "환자 앱으로 보내기" 가 남긴 행이 여기로 온다 —
+   * 이 조회가 없으면 콘솔이 "보냈다" 고 말한 것이 앱 어디에도 닿지 않는다.
+   */
+  async listReports(): Promise<DoctorReportList> {
+    if (isMockMode()) return mockDelay(mockDoctorLink.listReports())
+    const { data } = await api.get("/doctor/reports")
+    return data.result
+  },
+
+  /** 리포트 한 건의 상세. 남의 것·없는 id 는 `DOCTOR_ERROR_005`(404). */
+  async getReport(reportId: string): Promise<DoctorReportDetail> {
+    if (isMockMode()) return mockDelay(mockDoctorLink.getReport(reportId))
+    const { data } = await api.get(`/doctor/reports/${reportId}`)
+    return data.result
+  },
+
   async getSharing(connectionId: string): Promise<ShareGrant> {
     if (isMockMode()) return mockDelay(mockDoctorLink.getSharing(connectionId))
     const { data } = await api.get(

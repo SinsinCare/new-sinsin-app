@@ -11,8 +11,10 @@
 import {
   classifyEntryUrl,
   isKnownRoutePath,
-  isRoutableEntryUrl,
 } from "../src/shared/navigation/entryIntent"
+
+/** 라우팅 여부는 판정 하나에서 나온다. 아래 갈래 검사는 그 "routed" 갈래를 읽는다. */
+const isRoutableEntryUrl = (url: string) => classifyEntryUrl(url) === "routed"
 
 describe("known route paths", () => {
   it("accepts the app's own URLs", () => {
@@ -116,23 +118,5 @@ describe("entry url verdict", () => {
     expect(classifyEntryUrl("https://accounts.google.com/o/oauth2/x")).toBe(
       "foreign_scheme",
     )
-  })
-
-  it("keeps the routing decision derived from it (두 벌로 갈라지지 않는다)", () => {
-    // 판정과 라우팅이 각자 판단하기 시작하면, 계측이 말하는 것과 실제로 열리는 화면이
-    // 어긋나도 아무도 모른다.
-    const urls = [
-      "sinsin://recipe/12",
-      "sinsin:///recipe/12",
-      "sinsin://totally-made-up",
-      "kakao1234567890://oauth",
-      "exp://192.168.0.2:8081/--/nope/nope",
-      "exp://192.168.0.2:8081",
-      "/free/new",
-      "",
-    ]
-    for (const url of urls) {
-      expect(isRoutableEntryUrl(url)).toBe(classifyEntryUrl(url) === "routed")
-    }
   })
 })

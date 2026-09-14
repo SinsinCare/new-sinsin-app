@@ -333,15 +333,14 @@ export interface MapCommands {
   ): void
   /** ★ 줌 직접 지정. 없어서 선택한 마커가 라벨 없이 점으로 남았다. */
   setLevel(level: number): void
-  /** ★ 영역 맞춤. 클러스터 탭 → 그 셀로 들어갈 때 쓴다. */
-  fitBounds(bounds: MapBounds, padding?: MapPadding): void
   /** ★ 내 위치 마커. 디자인 자산이 있었는데 프로토타입은 한 번도 안 그렸다. */
   setUserLocation(position: LatLng | null, heading?: number | null): void
-  /**
-   * ★ 화면 픽셀만큼 밀기. 선택한 마커가 바텀시트에 가릴 때, 카메라를 시트 높이의
-   * 절반만큼 위로 밀어 마커를 보이는 영역 가운데로 올린다.
-   */
-  panBy(dx: number, dy: number): void
+  /*
+    `fitBounds` 와 `panBy` 는 여기 없다 (일부러 지웠다). 클러스터 파고들기는 레벨 계산
+    (`utils/viewportAction`)으로, 선택 마커 올리기는 `focusMarker` 로 바뀐 뒤 앱 쪽 호출부가
+    하나도 남지 않았는데 브릿지·web 구현·테스트만 계약을 약속하고 있었다. 명령을 남겨 두면
+    다음 사람이 `moveTo + panBy` 의 누적 offset 결함(위 `focusMarker` 주석)을 다시 만든다.
+  */
   /** ★ 지도 리사이즈 알림. 시트 스냅으로 보이는 높이가 바뀌면 카카오에 알려야 타일이 안 깨진다. */
   relayout(): void
   /**
@@ -396,11 +395,8 @@ export const mapScript = {
       zoom: opts?.zoom ?? null,
     }),
   setLevel: (level: number) => call("setLevel", level),
-  fitBounds: (bounds: MapBounds, padding?: MapPadding) =>
-    call("fitBounds", bounds, padding ?? {}),
   setUserLocation: (position: LatLng | null, heading?: number | null) =>
     call("setUserLocation", position, heading ?? null),
-  panBy: (dx: number, dy: number) => call("panBy", dx, dy),
   relayout: () => call("relayout"),
   setStrings: (strings: MapStrings) => call("setStrings", strings),
   setColorScheme: (scheme: MapColorScheme) => call("setColorScheme", scheme),

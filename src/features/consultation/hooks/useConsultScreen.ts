@@ -3,6 +3,7 @@ import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { useFeatureIntro } from "@/src/features/coach"
 import { useRef, useEffect, useState } from "react"
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller"
+import { useGlobalKeyboardToolbarVisible } from "@/src/stores/keyboardToolbarStore"
 import { FlatList, Platform, Keyboard } from "react-native"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useAnimatedStyle, useReducedMotion } from "react-native-reanimated"
@@ -26,10 +27,18 @@ import { chatApiService } from "@/src/services"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { chatHistoryQuery } from "../data/queyOptions"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
+
 import { useTranslation } from "react-i18next"
 import { getAppLanguage } from "@/src/i18n"
 import { showConfirm } from "@/src/lib/dialog"
 import { presentError } from "@/src/lib/errorMessage"
+/**
+ * 전역 키보드 툴바의 높이. 라이브러리 상수
+ * `react-native-keyboard-controller/src/components/KeyboardToolbar/constants.ts`
+ * (`KEYBOARD_TOOLBAR_HEIGHT = 42`)의 거울이다 — 패키지 index 가 내보내지 않아 여기 적는다.
+ * `scripts/check-fb-chat-layout.mjs` 가 두 값이 같은지 잰다.
+ */
+const KEYBOARD_TOOLBAR_HEIGHT = 42
 export type ConsultRouteParams = {
   consultContext?: string | string[]
   consultContextLabel?: string | string[]
@@ -181,14 +190,34 @@ export function useConsultScreen(foodConsultParams: ConsultRouteParams) {
    * 되돌리지 말 것: 여기에 `KeyboardAvoidingView`·`KeyboardStickyView` 를 다시 얹으면
    * 그 순간 보정이 두 겹이 된다.
    */
-  const { height: keyboardOffset } = useReanimatedKeyboardAnimation()
+  const { height: keyboardOffset, progress: keyboardProgress } =
+    useReanimatedKeyboardAnimation()
   const restBottomInset = Math.max(insets.bottom, 12)
+  /*
+    키보드 위에는 전역 "완료" 툴바(`AppKeyboardSurface`)가 한 겹 더 앉는다.
+    `useReanimatedKeyboardAnimation().height` 는 **키보드만** 재므로, 그 값만큼만
+    비우면 툴바(42pt)가 컴포저 하단을 덮는다 — 2026-09-11 피드백 "입력창과 그
+    윗줄이 완료 바에 가려요" 의 정체. 툴바가 그려질 때만 그 높이를 키보드 곡선
+    (`progress`)에 태워 같이 비운다. 툴바를 끄지 않는 이유: 이 화면은 자기 키보드
+    내리기 버튼이 없어서 완료 바가 유일한 보장된 탈출구다(keyboardToolbarStore 머리말).
+  */
+  const accessoryHeight = useGlobalKeyboardToolbarVisible()
+    ? KEYBOARD_TOOLBAR_HEIGHT
+    : 0
   const bodyStyle = useAnimatedStyle(() => ({
-    paddingBottom: Math.max(restBottomInset, -keyboardOffset.value + 8),
+    paddingBottom: Math.max(
+      restBottomInset,
+      -keyboardOffset.value + keyboardProgress.value * accessoryHeight + 8,
+    ),
   }))
   // 토스트는 레이아웃 밖(절대배치)이라 위 여백을 못 받는다 — 같은 값으로 직접 태운다.
   const toastStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: keyboardOffset.value }],
+    transform: [
+      {
+        translateY:
+          keyboardOffset.value - keyboardProgress.value * accessoryHeight,
+      },
+    ],
   }))
 
   const handleHistoryPress = () => {

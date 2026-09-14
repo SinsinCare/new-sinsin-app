@@ -12,6 +12,7 @@ import {
   V2Text,
   V2Icon,
   spacing,
+  iconSize,
   borderWidth,
   useV2Theme,
 } from "@/src/design-system-v2"
@@ -30,6 +31,9 @@ import { UserBubble, AssistantBubble } from "../components/ChatMessageBubble"
 import { CopyToast } from "../components/CopyToast"
 import { ChatHistorySheet } from "../components/ChatHistorySheet"
 import { RenameModal } from "../components/RenameModal"
+/** 컨텍스트 줄(어떤 기록에 대해 묻는지)의 선행 아이콘 — 헤더 글리프와 같은 24/32 규격. */
+const CONTEXT_ICON_GLYPH = iconSize.md // 24
+const CONTEXT_ICON_BOX = 32
 function MessageSeparator() {
   return <View style={styles.separator} />
 }
@@ -107,7 +111,15 @@ export function ConsultScreen({ params }: { params: ConsultRouteParams }) {
           <View
             style={[styles.context, { borderBottomColor: colors.line.normal }]}
           >
-            <V2Icon name="info" size={15} color={colors.label.neutral} />
+            {/* 2026-09-11 피드백 "이 아이콘이 너무 작아요": 15pt 글리프 → 헤더와 같은
+                24pt 글리프를 32pt 상자에 담는다(CONTEXT_ICON_*). */}
+            <View style={styles.contextIcon}>
+              <V2Icon
+                name="info"
+                size={CONTEXT_ICON_GLYPH}
+                color={colors.label.neutral}
+              />
+            </View>
             <V2Text
               token="subtext.medium"
               color={colors.label.neutral}
@@ -268,13 +280,19 @@ export function ConsultScreen({ params }: { params: ConsultRouteParams }) {
 }
 const styles = StyleSheet.create({
   context: {
-    minHeight: 40,
-    paddingLeft: 20,
-    paddingRight: 12,
+    minHeight: 48,
+    paddingLeft: spacing[16],
+    paddingRight: spacing[12],
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing[8],
     borderBottomWidth: 1,
+  },
+  contextIcon: {
+    width: CONTEXT_ICON_BOX,
+    height: CONTEXT_ICON_BOX,
+    alignItems: "center",
+    justifyContent: "center",
   },
   contextClose: {
     width: 44,

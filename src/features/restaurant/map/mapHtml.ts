@@ -1351,22 +1351,6 @@ ${MAP_FONT_FACE_CSS}
       map.setLevel(clamp(level), { animate: false });
     },
 
-    fitBounds: function (rawBounds, rawPadding) {
-      var b = arg(rawBounds); if (!b || !map) return;
-      var p = arg(rawPadding) || {};
-      var area = new kakao.maps.LatLngBounds(
-        new kakao.maps.LatLng(b.swLat, b.swLng),
-        new kakao.maps.LatLng(b.neLat, b.neLng)
-      );
-      // setBounds 의 패딩 인자는 (top, right, bottom, left) — CSS 와 같은 순서다.
-      // 값이 없을 때 0 대신 24 를 깔아 마커가 화면 끝에 붙지 않게 한다.
-      map.setBounds(area,
-        p.top === undefined ? 24 : p.top,
-        p.right === undefined ? 24 : p.right,
-        p.bottom === undefined ? 24 : p.bottom,
-        p.left === undefined ? 24 : p.left);
-    },
-
     setUserLocation: function (rawPos, rawHeading) {
       var pos = arg(rawPos);
       var heading = arg(rawHeading);
@@ -1395,12 +1379,6 @@ ${MAP_FONT_FACE_CSS}
         zIndex: 0,
       });
       userOverlay.setMap(map);
-    },
-
-    panBy: function (rawX, rawY) {
-      var dx = arg(rawX), dy = arg(rawY);
-      if (!map || dx === null || dy === null) return;
-      map.panBy(dx, dy);
     },
 
     setStrings: function (raw) {

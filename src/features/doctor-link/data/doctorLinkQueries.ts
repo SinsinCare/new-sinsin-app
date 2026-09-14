@@ -18,6 +18,10 @@ import type { DoctorSearchParams } from "@/src/types/doctorLink"
 export const doctorLinkKeys = {
   all: ["doctor-link"] as const,
   connections: () => [...doctorLinkKeys.all, "connections"] as const,
+  reports: () => [...doctorLinkKeys.all, "reports"] as const,
+  /** 목록 키의 하위 — 목록을 무효화하면 상세도 같이 상한다. */
+  report: (reportId: string) =>
+    [...doctorLinkKeys.reports(), reportId] as const,
   sharing: (connectionId: string) =>
     [...doctorLinkKeys.all, "sharing", connectionId] as const,
   search: (params: DoctorSearchParams) =>
@@ -30,10 +34,34 @@ export const doctorLinkKeys = {
     ] as const,
 }
 
+/**
+ * 연결 목록·공유 설정·리포트는 **다른 사람(의사)이 바꾸는 값**이다 — 승인·거절·리포트 전송이
+ * 전부 콘솔에서 일어난다. 전역 기본(5분)으로 두면 콘솔이 승인한 뒤에도 앱은 "승인 대기" 를
+ * 5분 동안 보여 준다. staleTime 0 으로 두어 화면에 돌아올 때마다(`useRevalidateOnReturn`)
+ * 다시 받는다. 목록은 몇 행짜리라 비용은 없다.
+ */
+const OTHER_PARTY_STALE_MS = 0
+
 export const doctorConnectionsQuery = () =>
   queryOptions({
     queryKey: doctorLinkKeys.connections(),
     queryFn: () => doctorLinkService.listConnections(),
+    staleTime: OTHER_PARTY_STALE_MS,
+  })
+
+export const doctorReportsQuery = () =>
+  queryOptions({
+    queryKey: doctorLinkKeys.reports(),
+    queryFn: () => doctorLinkService.listReports(),
+    staleTime: OTHER_PARTY_STALE_MS,
+  })
+
+/** 리포트 상세. 보낸 뒤 내용이 바뀌지 않는 행이라 목록과 달리 기본 staleTime 으로 둔다. */
+export const doctorReportQuery = (reportId: string) =>
+  queryOptions({
+    queryKey: doctorLinkKeys.report(reportId),
+    queryFn: () => doctorLinkService.getReport(reportId),
+    enabled: !!reportId,
   })
 
 /**
@@ -58,4 +86,5 @@ export const sharingQuery = (connectionId: string) =>
     queryKey: doctorLinkKeys.sharing(connectionId),
     queryFn: () => doctorLinkService.getSharing(connectionId),
     enabled: !!connectionId,
+    staleTime: OTHER_PARTY_STALE_MS,
   })

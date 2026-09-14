@@ -117,8 +117,9 @@ export function TodayRecord({
 }
 
 const styles = StyleSheet.create({
+  // CTA·식사 목록과 한 덩어리로 읽히지 않게 32 를 띄운다(디자인 피드백 2026-09-11: "간격이 좀 더 있으면").
   section: {
-    paddingTop: 16,
+    paddingTop: 32,
     paddingHorizontal: LAYOUT.screenX,
     gap: 12,
   },

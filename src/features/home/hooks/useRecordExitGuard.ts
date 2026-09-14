@@ -58,11 +58,11 @@ export function useRecordExitGuard({
     }
   })
 
-  const leaveConfirmed = () => {
+  const leaveAfterSave = () => {
     if (!mounted.current) return
     // 성공 직후에는 아직 hasChanges가 true인 렌더여도 다시 묻지 않는다.
     allowExit.current = true
     onBack()
   }
-  return { leaveAfterSave: leaveConfirmed, leaveConfirmed }
+  return { leaveAfterSave }
 }

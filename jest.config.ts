@@ -64,6 +64,8 @@ const config: Config = {
       잔뜩 들여온다(그 파일 머리말 참고).
     */
     "^react-native-purchases$": "<rootDir>/tests/helpers/purchasesStub.js",
+    // 같은 벽(네이티브 모듈). 시트 안 opt-in 으로 V2Button/V2ListRow 가 들여온다(그 스텁 머리말).
+    "^react-native-gesture-handler$": "<rootDir>/tests/helpers/gestureHandlerStub.js",
     // ESM 전용 유틸을 CJS 빌드의 같은 헬퍼로 — 위 transform 주석 참고.
     "^markdown-it/lib/common/utils\\.mjs$":
       "<rootDir>/tests/helpers/markdownItUtilsStub.js",

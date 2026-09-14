@@ -35,34 +35,23 @@ function readSession(result: unknown): PasswordChangeSession | null {
     : null
 }
 
-function getRealPasswordService(): PasswordService {
-  return {
-    async changePassword(
-      newPassword: string,
-      token?: string,
-      currentPassword?: string,
-    ): Promise<PasswordChangeSession | null> {
-      if (token) {
-        await publicApi.patch<ApiResponse>("/auth/password/reset", {
-          resetToken: token,
-          password: newPassword,
-        })
-        return null
-      }
-      const { data } = await api.patch<ApiResponse<unknown>>("/user/password", {
-        currentPassword,
-        newPassword,
-      })
-      return readSession(data?.result)
-    },
-  }
-}
-
 export const passwordService: PasswordService = {
-  changePassword: (newPassword, token, currentPassword) =>
-    getRealPasswordService().changePassword(
-      newPassword,
-      token,
+  async changePassword(
+    newPassword: string,
+    token?: string,
+    currentPassword?: string,
+  ): Promise<PasswordChangeSession | null> {
+    if (token) {
+      await publicApi.patch<ApiResponse>("/auth/password/reset", {
+        resetToken: token,
+        password: newPassword,
+      })
+      return null
+    }
+    const { data } = await api.patch<ApiResponse<unknown>>("/user/password", {
       currentPassword,
-    ),
+      newPassword,
+    })
+    return readSession(data?.result)
+  },
 }

@@ -192,7 +192,7 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   "(settings)/announcements": "/(tabs)/all",
   "(settings)/announcement-detail": "/(settings)/announcements",
   "(settings)/inquiry": "/(tabs)/all",
-  "(settings)/ask-doctor": "/(tabs)/all",
+  "(settings)/inquiry-new": "/(settings)/inquiry",
   "(settings)/medical-reference": "/(tabs)/all",
   "(settings)/privacy-settings": "/(settings)",
   "(settings)/app-info": "/(settings)",
@@ -204,17 +204,6 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   "(settings)/withdrawal-terms": "/(settings)/withdrawal",
   // 탈퇴 완료는 종착지다. 화면 자체가 로그인으로 replace 한다.
   "(settings)/withdrawal-complete": null,
-
-  // ── 건강검진 ───────────────────────────────────────────────────────────────
-  "(settings)/health-data": "/(tabs)/all",
-  "(settings)/health-dashboard": "/(settings)/health-data",
-  "(settings)/health-data-upload": "/(settings)/health-data",
-  "(settings)/health-ocr-review": "/(settings)/health-data-upload",
-  "(settings)/health-results": "/(settings)/health-data",
-  "(settings)/health-result-detail": "/(settings)/health-results",
-  "(settings)/health-nhis-auth": "/(settings)/health-data",
-  "(settings)/health-nhis-request": "/(settings)/health-nhis-auth",
-  "(settings)/health-nhis-confirm": "/(settings)/health-nhis-request",
 
   // ── 검진 분석 ──────────────────────────────────────────────────────────────
   // 목록이 이 기능의 입구다(마이페이지에서 들어온다).
@@ -233,6 +222,8 @@ const ROUTE_PARENT: Record<RouteKey, ParentResolver> = {
   "(settings)/doctor-search": "/(settings)/doctor-intro",
   "(settings)/doctor-preview": "/(settings)/doctor-search",
   "(settings)/doctor-sharing": "/(settings)/doctor-connections",
+  // 의사가 보낸 리포트 상세 — 공유 설정 화면 하단 목록에서 연다(2026-09-11).
+  "(settings)/doctor-report": "/(settings)/doctor-sharing",
 }
 
 function restaurantDetail(params: RouteParams): ParentRoute {

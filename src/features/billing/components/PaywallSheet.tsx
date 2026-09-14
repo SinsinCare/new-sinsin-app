@@ -6,6 +6,7 @@ import {
 } from "@/src/shared/components/appModalGate"
 import {
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,6 +37,16 @@ export interface PaywallSheetProps {
   readonly request: PaywallRequest | null
   readonly onClose: () => void
 }
+/**
+ * 결제 화면의 법적 링크 — App Store 심사 3.1.2(a): 자동 갱신 구독을 파는 화면에는 이용약관(EULA)과
+ * 개인정보 처리방침으로 가는 **동작하는 링크**가 있어야 한다(2026-09-14 심사 거절 대응 — 앱 설명에도
+ * 같은 링크를 넣었다). 약관은 Apple 표준 EULA, 개인정보 처리방침은 스토어 목록과 같은 공개 문서다.
+ */
+export const PAYWALL_TERMS_URL =
+  "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+export const PAYWALL_PRIVACY_URL =
+  "https://healthier.notion.site/2fe91d1eca7780a7877cfd2692b4be3f"
+
 export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
   const { t } = useTranslation("billing")
   const { colors, mode } = useV2Theme()
@@ -295,6 +306,30 @@ export function PaywallSheet({ request, onClose }: PaywallSheetProps) {
               </V2Text>
             )}
           </View>
+          {/* 이용약관 · 개인정보 처리방침 — 위 머리말(3.1.2). 시트 위에서 바로 브라우저로 연다. */}
+          <View style={styles.legalRow}>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => void Linking.openURL(PAYWALL_TERMS_URL)}
+              style={styles.legalLink}
+            >
+              <V2Text token="subtext.small" color={colors.label.neutral}>
+                {t("paywall.termsLink")}
+              </V2Text>
+            </Pressable>
+            <V2Text token="subtext.small" color={colors.label.assistive}>
+              ·
+            </V2Text>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => void Linking.openURL(PAYWALL_PRIVACY_URL)}
+              style={styles.legalLink}
+            >
+              <V2Text token="subtext.small" color={colors.label.neutral}>
+                {t("paywall.privacyLink")}
+              </V2Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </V2BottomSheet>
@@ -383,4 +418,12 @@ const styles = StyleSheet.create({
     marginVertical: -8,
   },
   restore: { minHeight: 44, justifyContent: "center", paddingHorizontal: 8 },
+  legalRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    columnGap: 8,
+    marginTop: -8,
+  },
+  legalLink: { minHeight: 44, justifyContent: "center", paddingHorizontal: 8 },
 })

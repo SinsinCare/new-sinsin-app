@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next"
 import { Text } from "@/src/shared/components/AppText"
 import { useSurface } from "@/src/hooks/useSurface"
 import { hapticSelection } from "@/src/lib/haptics"
-import { calendarDateKey } from "./calendarModel"
+import { calendarDateFormatter } from "./calendarModel"
+import { toDateStr } from "../../utils/dateUtils"
 
 export function CalendarDay({
   date,
@@ -31,10 +32,11 @@ export function CalendarDay({
   const { fontScale: systemFontScale } = useWindowDimensions()
   const fontScale = effectiveTextScale(systemFontScale, FONT_SCALE.body)
   const locale = i18n.language.startsWith("en") ? "en-US" : "ko-KR"
-  const selected = calendarDateKey(date) === calendarDateKey(selectedDate)
-  const isToday = calendarDateKey(date) === calendarDateKey(today)
+  const selected = toDateStr(date) === toDateStr(selectedDate)
+  const isToday = toDateStr(date) === toDateStr(today)
+  // 서식기는 캐시에서 온다 — 42칸이 렌더마다 새로 만들면 그 생성이 달력의 가장 큰 비용이다.
   const label = [
-    new Intl.DateTimeFormat(locale, {
+    calendarDateFormatter(locale, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -68,9 +70,7 @@ export function CalendarDay({
                 { color: disabled ? s.placeholder : s.text },
               ]}
             >
-              {new Intl.DateTimeFormat(locale, { weekday: "short" }).format(
-                date,
-              )}
+              {calendarDateFormatter(locale, { weekday: "short" }).format(date)}
             </Text>
           ) : null}
           <View

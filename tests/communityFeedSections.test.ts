@@ -32,6 +32,16 @@
   `ScrollView` 를 **일부러 넣어 둔다**: 없으면 가로 레일로 되돌린 코드가 `undefined` 태그로
   조용히 돌아 "가로 스크롤러가 없다" 는 단언이 헛돌 수 있다.
 */
+/*
+  `V2Button`·`V2EmptyState`·칩은 글자를 `primitives/NativeText` 의 `Text`(forwardRef —
+  글자 확대 상한을 한곳에서 잠그는 래퍼, b3b3690)로 그린다. 호스트 `Text` 로 돌려 두어야
+  아래 `allText` 가 그 글자를 센다(`tests/consultHistoryScreen.test.ts` 와 같은 처방, 2026-09-09).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
+  TextInput: "TextInput",
+}))
+
 jest.mock("react-native", () => {
   const flatten = (style: unknown): Record<string, unknown> => {
     if (Array.isArray(style)) {
@@ -703,7 +713,9 @@ describe("NeighborSuggestionSection — 세로 2행", () => {
       // 시안의 카드에는 없던 줄이다. 없으면 팔로우 결정에 근거가 없다.
       expect(line).toBeDefined()
       // 라벨이 없으면 이 줄이 자기소개인지 글 제목인지 모른다(D28).
-      expect(textOf(line)).toContain(koCommon.community.neighbors.latestPostLabel)
+      expect(textOf(line)).toContain(
+        koCommon.community.neighbors.latestPostLabel,
+      )
       expect(textOf(line)).toContain(" · ")
     })
   })

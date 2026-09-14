@@ -38,17 +38,25 @@ async function findMatchingDiary(
     Pick<MealDiaryPersistenceInput, "result">,
 ): Promise<number | null> {
   const dateAnalysis = await dependencies.fetchDateAnalysis(input.recordDate)
-  const candidateDiaries = dateAnalysis.result.diets.filter(
-    (item) => item.mealType === input.mealType && item.diaryId != null,
+  const candidateDiaryIds = dateAnalysis.result.diets.flatMap((item) =>
+    item.mealType === input.mealType && item.diaryId != null
+      ? [item.diaryId]
+      : [],
   )
-  for (const diary of candidateDiaries) {
-    if (diary.diaryId == null) continue
-    const detail = await dependencies.fetchDiaryResult(diary.diaryId)
-    if (detail.foodAnalysisResultId === input.result.foodAnalysisResultId) {
-      return diary.diaryId
-    }
-  }
-  return null
+  /*
+    후보를 **한꺼번에** 조회한다. 차례로 기다리면 같은 끼니에 n건이 있을 때 왕복 n번이
+    직렬로 쌓이고(N+1), `ensureMealDiary` 는 이 조회를 최대 세 번 한다. 호출부가 넘기는
+    `fetchDiaryResult` 는 홈이 미리 받아 둔 캐시를 지나므로(`useMealPersistenceActions`)
+    대개는 네트워크 없이 끝난다.
+  */
+  const details = await Promise.all(
+    candidateDiaryIds.map((diaryId) => dependencies.fetchDiaryResult(diaryId)),
+  )
+  const matched = details.findIndex(
+    (detail) =>
+      detail.foodAnalysisResultId === input.result.foodAnalysisResultId,
+  )
+  return matched === -1 ? null : candidateDiaryIds[matched]
 }
 
 export async function ensureMealDiary(

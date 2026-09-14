@@ -1,8 +1,8 @@
-import { ACQUISITION_SOURCE_OPTIONS } from "../src/features/auth/data/acquisitionSources"
+import { getAcquisitionSourceOptions } from "../src/features/auth/data/acquisitionSources"
 
 describe("signup acquisition sources", () => {
   it("keeps the approved labels, values, and display order", () => {
-    expect(ACQUISITION_SOURCE_OPTIONS).toEqual([
+    expect(getAcquisitionSourceOptions()).toEqual([
       { label: "앱스토어 검색", value: "APP_STORE" },
       { label: "병원", value: "HOSPITAL" },
       { label: "블로그", value: "BLOG" },

@@ -1,7 +1,7 @@
 /**
  * 레시피 v2 응답 타입 — `sinsin-be-bun/docs/contract/recipe-v2.md` §3 을 그대로 옮긴 것이다.
  *
- * 왜 v1 타입(`data/curatedRecipeTypes.ts`)을 쓰지 않는가:
+ * 왜 v1 타입(`data/curatedRecipeTypes.ts` — 소비자가 없어 2026-09-09 지웠다)을 쓰지 않았는가:
  *   v1 은 `ckd_guide`·`ai_summary`·`ckd_friendliness` 를 필드로 갖는다. 계약 §1.1 은 그 세
  *   필드를 **삭제**하라고 못 박았다(검수 전 카탈로그가 임상 지시를 내보내는 경로였다).
  *   타입에 남겨 두면 언젠가 채우고 싶어지므로 새 파일에서 아예 없앤다.
@@ -191,7 +191,9 @@ export interface RecipeAuthor {
 
 /** 계약 §3.3 와 1:1. 와이어 모양이며 화면은 아래 `RecipeDetailView` 를 쓴다. */
 export interface RecipeDetail {
-  portionReference?: import("@/src/features/nutrition/utils/portionReference").PortionReference | null;
+  portionReference?:
+    | import("@/src/features/nutrition/utils/portionReference").PortionReference
+    | null
   id: number
   name: string
   summary: string | null

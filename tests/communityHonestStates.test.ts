@@ -92,6 +92,7 @@ const read = (path: string) => stripComments(readRaw(path))
 const CONNECTIONS = "src/features/recipe/views/CommunityConnectionsScreen.tsx"
 const AUTHOR_PROFILE =
   "src/features/recipe/views/CommunityAuthorProfileScreen.tsx"
+const POSTS_HOOK = "src/features/recipe/hooks/useCommunityPosts.ts"
 const STORY_RAIL = "src/features/recipe/components/StoryRail.tsx"
 const STORY_VIEWER = "app/stories.tsx"
 const STORIES_HOOK = "src/features/recipe/hooks/useCommunityStories.ts"
@@ -152,17 +153,42 @@ describe("작성자 프로필", () => {
   })
 
   it("피드 캐시를 관찰하지 않는다(마운트마다 전 페이지 재조회 금지)", () => {
+    /*
+      2026-09-09 재조준. 예전에는 전역 피드 캐시를 `"cold-only"` 로 읽고 클라이언트에서
+      작성자를 걸렀다. b3b3690 부터 이 화면의 목록은 **작성자 전용 쿼리**다 —
+      `authorId` 가 쿼리 키와 `/community/posts?authorId=` 요청에 들어가므로(훅
+      `communityFeedQueryKey` · `communityPostService.getPosts`), 피드의 무한 쿼리에
+      옵저버를 하나 더 붙이는 일이 아예 없다. 지키는 것은 그대로다: 전역 피드를 관찰하지
+      않고, 주소가 깨졌거나 프로필이 오기 전에는 요청도 내지 않는다.
+    */
     const source = read(AUTHOR_PROFILE)
-    expect(source).toContain('useCommunityPosts({ observe: "cold-only" })')
+    expect(source).toContain(
+      "useCommunityPosts({ authorId, observe: hasValidAuthorId && !!profile })",
+    )
     expect(source).not.toContain("useCommunityPosts()")
+    expect(source).not.toContain("useCommunityPosts({ observe")
+    // 작성자 쿼리가 피드와 다른 키를 갖는다 — 그래서 피드 페이지가 딸려오지 않는다.
+    expect(read(POSTS_HOOK)).toContain(
+      "...(filters.authorId ? { authorId: filters.authorId } : {})",
+    )
   })
 
   it("목록이 받쳐 주지 못하는 숫자를 말하지 않는다", () => {
     const source = read(AUTHOR_PROFILE)
     // 서버 총합(게시글 수)은 이 화면의 목록이 증명할 수 없다 — 뺐다.
     expect(source).not.toContain("profile.postCount")
-    // "아직 작성한 게시글이 없어요" 는 **안 받아 온 것**을 안 썼다고 말하는 문장이다.
-    expect(source).not.toContain("community.author.emptyPosts")
+    /*
+      "아직 작성한 게시글이 없어요" 는 목록이 **작성자 전용 서버 쿼리**가 된 뒤(b3b3690,
+      위 테스트)에야 받쳐 주는 문장이 됐다 — 그래서 이제는 그린다(2026-09-09 재조준).
+      단, 로딩·실패를 빈칸으로 그리면 다시 거짓말이다: 셋이 그 순서로 갈라져 있어야 한다.
+    */
+    expect(source).toContain("community.author.emptyPosts")
+    const loadingAt = source.indexOf("postsLoading ?")
+    const errorAt = source.indexOf("postsError ?")
+    const emptyAt = source.indexOf("community.author.emptyPosts")
+    expect(loadingAt).toBeGreaterThan(-1)
+    expect(errorAt).toBeGreaterThan(loadingAt)
+    expect(emptyAt).toBeGreaterThan(errorAt)
     // 섹션 자체는 잡힌 글이 있을 때만 그린다.
     expect(source).toContain("authorPosts.length > 0")
     expect(source).toContain("community.author.otherPosts")

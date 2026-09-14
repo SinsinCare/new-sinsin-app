@@ -10,6 +10,7 @@ import {
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { RecordView } from "@/src/features/home/components/record/RecordView"
 import { MonthCalendarSheet } from "@/src/features/home/components/statistics/MonthCalendarSheet"
+import { startOfDay } from "@/src/features/stats-report/utils/presentation"
 import { useRegisterTabReset } from "@/src/shared/navigation"
 import { useSelectedDateStore } from "@/src/stores"
 import { tokens } from "@/src/theme/tokens"
@@ -28,9 +29,9 @@ function toDaysBackBucket(
   selected: Date,
   today: Date,
 ): "0" | "1_7" | "8_30" | "over_30" {
-  const midnight = (date: Date) =>
-    new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-  const days = Math.round((midnight(today) - midnight(selected)) / DAY_MS)
+  const days = Math.round(
+    (startOfDay(today).getTime() - startOfDay(selected).getTime()) / DAY_MS,
+  )
   if (days <= 0) return "0"
   if (days <= 7) return "1_7"
   if (days <= 30) return "8_30"
@@ -97,7 +98,6 @@ export default function HomeScreen() {
       <RecordView
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
-        onSelectMealType={() => {}}
         onPressDate={() => setShowCalendar(true)}
         onOpenStats={() => router.push("/statistics")}
         onOpenNotifications={() => router.push("/(settings)/notifications")}

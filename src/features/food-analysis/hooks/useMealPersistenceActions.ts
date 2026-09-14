@@ -13,7 +13,8 @@ import {
   ensureMealDiary,
   type MealDiaryPersistenceInput,
 } from "../services/mealDiaryPersistence"
-import appI18n from "@/src/i18n"
+import appI18n, { getAppLanguage } from "@/src/i18n"
+import { diaryResultKey } from "@/src/i18n/localeQueryKeys"
 
 import { showConfirm } from "@/src/lib/dialog"
 
@@ -59,7 +60,31 @@ export function useMealPersistenceActions(options?: MealPersistenceOptions) {
   >(undefined)
   if (!consultControllerRef.current) {
     consultControllerRef.current = createMealConsultController({
-      ensureDiary: (input) => ensureMealDiary(foodCameraService, input),
+      ensureDiary: (input) =>
+        ensureMealDiary(
+          {
+            registerDiary: (foodAnalysisResultId, date, mealType) =>
+              foodCameraService.registerDiary(
+                foodAnalysisResultId,
+                date,
+                mealType,
+              ),
+            fetchDateAnalysis: (date) =>
+              foodCameraService.fetchDateAnalysis(date),
+            /*
+              홈(`RecordView`)이 기록된 끼니의 상세를 같은 키로 미리 받아 둔다. 그 캐시를
+              지나면 "이미 저장된 기록인가" 조회가 대개 네트워크 없이 끝난다 — 서비스에
+              바로 물으면 그 프리페치를 버리고 후보마다 한 번씩 다시 받는다.
+            */
+            fetchDiaryResult: (diaryId) =>
+              queryClientRef.current.fetchQuery({
+                queryKey: diaryResultKey(diaryId, getAppLanguage()),
+                queryFn: () => foodCameraService.fetchDiaryResult(diaryId),
+                staleTime: 60_000,
+              }),
+          },
+          input,
+        ),
       refreshHome,
       navigate: (navigation) => routerRef.current.push(navigation),
     })

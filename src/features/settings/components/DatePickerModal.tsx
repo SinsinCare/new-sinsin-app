@@ -1,12 +1,25 @@
-import React, { useState } from "react"
-import { View, Pressable, ScrollView, StyleSheet } from "react-native"
-import { AppModal } from "@/src/shared/components/AppModal"
+import { useEffect, useMemo, useState } from "react"
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 
-import { ThemedText } from "@/components/themed-text"
-import { MONTHS, YEARS } from "@/src/features/settings/data/constants"
-import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { tokens } from "@/src/theme/tokens"
+import {
+  V2BottomSheet,
+  V2Button,
+  V2IconButton,
+  V2Text,
+} from "@/src/design-system-v2"
+import { useSurface } from "@/src/hooks/useSurface"
+import { RecordChoices } from "@/src/features/home/components/record/pages/RecordChoices"
+import {
+  FORM,
+  PAGE_X,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
+import {
+  CURRENT_YEAR,
+  MONTHS,
+  YEARS,
+} from "@/src/features/settings/data/constants"
 
 interface DatePickerModalProps {
   visible: boolean
@@ -15,164 +28,129 @@ interface DatePickerModalProps {
   onSelect: (year: number, month: number) => void
 }
 
+const MIN_YEAR = YEARS[YEARS.length - 1] ?? CURRENT_YEAR
+
+/**
+ * 진단 시기(연·월) 선택 — 건강기록 6페이지 키트로 다시 그렸다(2026-09-12).
+ *
+ * 예전에는 자체 RN Modal 위에 초록 틴트의 두 줄 스크롤 목록이었다(설정 전용 색·구 토큰).
+ * 지금은 `V2BottomSheet` 안에 **연도 스테퍼 + 월 칩 12개**(`RecordChoices`)다 — 36개 연도를
+ * 목록으로 훑게 하지 않고, 월은 한 눈에 고른다. 확인은 시트 footer 의 CTA 한 개.
+ * 시트가 열릴 때 선택값을 다시 읽는다(닫았다 열면 임시값이 남지 않게).
+ */
 export function DatePickerModal({
   visible,
   selected,
   onClose,
   onSelect,
 }: DatePickerModalProps) {
-  const [tempYear, setTempYear] = useState(selected?.year ?? YEARS[0])
-  const [tempMonth, setTempMonth] = useState(selected?.month ?? 1)
-  const c = useSettingsColors()
   const { t } = useTranslation("settings")
+  const s = useSurface()
+  const [year, setYear] = useState(selected?.year ?? CURRENT_YEAR)
+  const [month, setMonth] = useState<number | null>(selected?.month ?? null)
+
+  useEffect(() => {
+    if (!visible) return
+    setYear(selected?.year ?? CURRENT_YEAR)
+    setMonth(selected?.month ?? null)
+  }, [visible, selected])
+
+  // 올해는 이번 달까지만 — 미래 진단 시기는 서버도 거부한다(validation.dateFuture).
+  const lastMonth = year === CURRENT_YEAR ? new Date().getMonth() + 1 : 12
+  const monthOptions = useMemo(
+    () =>
+      MONTHS.map((m) => ({
+        value: String(m),
+        label: t("datePicker.month", { month: m }),
+      })),
+    [t],
+  )
+  const monthValue = month !== null && month <= lastMonth ? String(month) : null
+  const canConfirm = monthValue !== null
 
   return (
-    <AppModal
+    <V2BottomSheet
+      surface="settings_diagnosis_date"
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      title={t("datePicker.title")}
+      footer={
+        <View style={styles.footer}>
+          <V2Button
+            fullWidth
+            size="xl"
+            disabled={!canConfirm}
+            onPress={() => {
+              if (monthValue === null) return
+              onSelect(year, Number(monthValue))
+            }}
+          >
+            {t("datePicker.confirm")}
+          </V2Button>
+        </View>
+      }
     >
-      <View style={styles.overlay}>
-        <Pressable style={styles.dimArea} onPress={onClose} />
-        <View style={[styles.container, { backgroundColor: c.modalBg }]}>
-          <View style={[styles.header, { borderBottomColor: c.border }]}>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <ThemedText style={[styles.cancelText, { color: c.textMuted }]}>
-                {t("shared.cancel")}
-              </ThemedText>
-            </Pressable>
-            <ThemedText style={[styles.headerTitle, { color: c.text }]}>
-              {t("datePicker.title")}
-            </ThemedText>
-            <Pressable
-              onPress={() => onSelect(tempYear, tempMonth)}
-              hitSlop={8}
+      <View style={styles.body}>
+        <View style={styles.group}>
+          <V2Text style={styles.label} color={s.textStrong}>
+            {t("datePicker.yearLabel")}
+          </V2Text>
+          <View style={[styles.stepper, { backgroundColor: s.surfaceSunken }]}>
+            <V2IconButton
+              name="chevronLeft"
+              size="l"
+              accessibilityLabel={t("datePicker.prevYear")}
+              disabled={year <= MIN_YEAR}
+              onPress={() => setYear((y) => Math.max(MIN_YEAR, y - 1))}
+            />
+            <V2Text
+              style={styles.year}
+              color={s.textStrong}
+              accessibilityRole="header"
+              accessibilityLiveRegion="polite"
             >
-              <ThemedText style={styles.confirmText}>
-                {t("datePicker.confirm")}
-              </ThemedText>
-            </Pressable>
-          </View>
-          <View style={styles.columns}>
-            <ScrollView
-              bounces={false}
-              overScrollMode="never"
-              style={styles.column}
-              showsVerticalScrollIndicator={false}
-            >
-              {MONTHS.map((m) => (
-                <Pressable
-                  key={m}
-                  style={[
-                    styles.pickerItem,
-                    tempMonth === m && {
-                      backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4",
-                    },
-                  ]}
-                  onPress={() => setTempMonth(m)}
-                >
-                  <ThemedText
-                    style={[
-                      styles.pickerItemText,
-                      { color: c.textSub },
-                      tempMonth === m && styles.pickerItemTextSelected,
-                    ]}
-                  >
-                    {t("datePicker.month", {
-                      month: String(m).padStart(2, "0"),
-                    })}
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <ScrollView
-              bounces={false}
-              overScrollMode="never"
-              style={styles.column}
-              showsVerticalScrollIndicator={false}
-            >
-              {YEARS.map((y) => (
-                <Pressable
-                  key={y}
-                  style={[
-                    styles.pickerItem,
-                    tempYear === y && {
-                      backgroundColor: c.isDark ? "#1A3A2E" : "#F0FDF4",
-                    },
-                  ]}
-                  onPress={() => setTempYear(y)}
-                >
-                  <ThemedText
-                    style={[
-                      styles.pickerItemText,
-                      { color: c.textSub },
-                      tempYear === y && styles.pickerItemTextSelected,
-                    ]}
-                  >
-                    {t("datePicker.year", { year: y })}
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </ScrollView>
+              {t("datePicker.year", { year })}
+            </V2Text>
+            <V2IconButton
+              name="chevronRight"
+              size="l"
+              accessibilityLabel={t("datePicker.nextYear")}
+              disabled={year >= CURRENT_YEAR}
+              onPress={() => setYear((y) => Math.min(CURRENT_YEAR, y + 1))}
+            />
           </View>
         </View>
+        <View style={styles.group}>
+          <V2Text style={styles.label} color={s.textStrong}>
+            {t("datePicker.monthLabel")}
+          </V2Text>
+          <RecordChoices
+            value={monthValue}
+            onChange={(value) => setMonth(Number(value))}
+            options={monthOptions.filter((o) => Number(o.value) <= lastMonth)}
+          />
+        </View>
       </View>
-    </AppModal>
+    </V2BottomSheet>
   )
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "#0000004D",
+  body: {
+    paddingHorizontal: PAGE_X,
+    gap: FORM.sectionGap,
+    paddingBottom: S[4],
   },
-  dimArea: {
-    flex: 1,
-  },
-  container: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-    maxHeight: 400,
-  },
-  header: {
+  group: { gap: FORM.labelGap },
+  label: FORM.label,
+  stepper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderRadius: FORM.choiceRadius,
+    paddingHorizontal: S[2],
+    minHeight: FORM.choiceHeight + S[2],
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  cancelText: {
-    fontSize: 15,
-  },
-  confirmText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: tokens.color.sub6.val,
-  },
-  columns: {
-    flexDirection: "row",
-    height: 280,
-  },
-  column: {
-    flex: 1,
-  },
-  pickerItem: {
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  pickerItemText: {
-    fontSize: 16,
-  },
-  pickerItemTextSelected: {
-    color: tokens.color.sub8.val,
-    fontWeight: "600",
-  },
+  year: { ...FORM.body, fontVariant: ["tabular-nums"] },
+  footer: { paddingHorizontal: PAGE_X, paddingTop: S[2] },
 })

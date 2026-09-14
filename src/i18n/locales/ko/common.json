@@ -676,6 +676,8 @@
     },
     "safety": {
       "RESTRICTED": "제한",
+      "menuRestricted": "주의",
+      "menuCaution": "조금 주의",
       "CAUTION": "주의",
       "SAFE": "안전",
       "UNKNOWN": "정보 없음",
@@ -853,7 +855,7 @@
         "jeonnam-all": "전남 전체",
         "jeonnam-yeosu": "여수",
         "jeonnam-suncheon": "순천/광양",
-        "jeonnam-mokpo": "목포/무안/신안",
+        "jeonnam-mokpo": "목포/무안/신안/영암",
         "jeonnam-naju": "나주/화순/담양",
         "jeonnam-haenam": "해남/강진/완도/진도",
         "jeonnam-boseong": "보성/고흥/장흥",
@@ -1114,7 +1116,10 @@
         "discardTitle": "쓰던 후기를 지울까요?",
         "discardBody": "지금 나가면 별점·사진·적은 내용이 남지 않아요.",
         "discard": "지우고 나가기",
-        "keepWriting": "계속 쓰기"
+        "keepWriting": "계속 쓰기",
+        "intro": "메뉴와 방문 경험을 사실대로 적어 주시면 다른 분들에게 도움이 돼요.",
+        "ratingOption": "{{count}}점",
+        "photoLabel": "사진"
       },
       "reportDetailPlaceholder": "어떤 점이 문제인지 적어 주세요",
       "reportOwn": "내가 쓴 후기는 신고할 수 없어요",
@@ -1345,8 +1350,8 @@
   },
   "home": {
     "hero": {
-      "record": "식사 기록",
-      "stats": "영양 통계",
+      "record": "기록",
+      "stats": "통계",
       "viewStats": "통계 자세히 보기",
       "chooseDate": "날짜 선택",
       "notifications": "알림"
@@ -1407,13 +1412,13 @@
       "takenOnly": "{{taken}}회 복용"
     },
     "mealList": {
-      "title": "오늘의 식단 기록",
-      "titleOnDate": "{{date}} 식단 기록",
+      "title": "오늘의 식사 기록",
+      "titleOnDate": "{{date}} 식사 기록",
       "more": "더보기",
       "less": "접기",
       "kcal": "{{count}} kcal",
       "open": "{{title}} 기록 보기",
-      "record": "식단 기록하기"
+      "record": "식사 분석하기"
     },
     "timeline": {
       "title": "식사 타임라인",
@@ -1491,7 +1496,7 @@
         "writeText": "글로 기록하기",
         "info": "드신 음식과 섭취량만 입력하면 나트륨·칼륨·인 수치를 바로 계산해 드려요.",
         "skip": "이번 끼니 건너뛰기",
-        "title": "식단 기록하기",
+        "title": "식사 분석하기",
         "textDescription": "음식 이름과 먹은 양을 입력해요",
         "recipeDescription": "저장한 레시피에서 골라요"
       },
@@ -1669,7 +1674,16 @@
         "diastolicRange": "최저혈압은 1~200 mmHg로 입력해 주세요",
         "pulseRange": "심박수는 1~250 bpm으로 입력해 주세요",
         "pulseHint": "심박수는 측정했다면 함께 남겨 주세요",
-        "inputHint": "측정기에 표시된 수치를 입력해 주세요"
+        "inputHint": "측정기에 표시된 수치를 입력해 주세요",
+        "status": {
+          "low": "낮음",
+          "normal": "정상",
+          "elevated": "높은 편",
+          "high": "높음"
+        },
+        "target": "목표 {{low}}–{{high}}",
+        "previous": "지난번 {{value}}",
+        "saveWith": "{{value}} 기록하기"
       },
       "weight": {
         "title": "체중 기록",
@@ -1708,6 +1722,15 @@
         "inferred": "최근 기록을 바탕으로 골랐어요. 측정한 시점에 맞게 바꿀 수 있어요.",
         "contextHint": "측정한 시점에 맞게 골라 주세요.",
         "unspecified": "미지정",
+        "status": {
+          "low": "낮음",
+          "normal": "정상",
+          "elevated": "주의",
+          "high": "높음"
+        },
+        "target": "목표 {{low}}–{{high}}",
+        "previous": "지난번 {{value}}",
+        "saveWith": "{{value}} 기록하기",
         "intro": "측정한 수치와 시점을 남겨요"
       },
       "edema": {
@@ -1798,6 +1821,7 @@
   "foodCamera": {
     "title": "사진으로 기록하기",
     "shutter": "촬영",
+    "gallery": "갤러리에서 가져오기",
     "permissionTitle": "카메라 권한이 필요해요",
     "permissionBody": "음식을 촬영하려면 카메라 접근을 허용해 주세요.",
     "allow": "카메라 접근 허용",
@@ -1979,7 +2003,8 @@
     "heightWeight": "키 · 체중",
     "diagnosisDate": "진단 시기",
     "conditions": "동반 질환·진단 원인",
-    "diagnosisDateApprox": "약 {{value}}"
+    "diagnosisDateApprox": "약 {{value}}",
+    "egfrRange": "eGFR {{range}} mL/min/1.73m²"
   },
   "settings": {
     "title": "설정",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Appearance, useColorScheme } from "react-native"
+import { Appearance } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { PortalProvider } from "@/src/shared/components/Portal"
 import { QueryClientProvider } from "@tanstack/react-query"
@@ -47,6 +47,7 @@ import { routeFromPushData } from "@/src/services/notificationRoutingService"
 import { useFoodAnalysisRecovery } from "@/src/features/home/hooks/useFoodAnalysisRecovery"
 import { foodAnalysisRecovery } from "@/src/features/home/services/foodAnalysisRecovery"
 import { useAnalyticsLifecycle } from "@/src/features/analytics"
+import { logger } from "@/src/lib/logger"
 
 function RootLayoutNav() {
   const { t } = useTranslation()
@@ -118,9 +119,15 @@ function RootLayoutNav() {
     const sub =
       Notifications.addNotificationResponseReceivedListener(handleResponse)
 
-    Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) handleResponse(response)
-    })
+    Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        if (response) handleResponse(response)
+      })
+      // 부팅 중 네이티브가 거절하면(초기화 전·권한) 처리되지 않은 거부로 남는다. 콜드스타트
+      // 알림 하나를 놓칠 뿐 앱이 할 일은 없다 — 기록만 남긴다.
+      .catch((error) =>
+        logger.debug("[notifications] 마지막 알림 응답 조회 실패", error),
+      )
 
     return () => sub.remove()
   }, [accountState, isAuthenticated, requiresAdditionalInfo, router])
@@ -151,6 +158,16 @@ function RootLayoutNav() {
     })
 
     if (decision.type === "redirect") {
+      /*
+        **진입 화면(`/`, 세그먼트 없음)에서는 보내지 않는다.** 그 화면은 `app/index.tsx`
+        가 같은 규칙(`resolveEntryRoute`)으로 이미 `<Redirect>` 를 그린다. 여기서도 보내면
+        세션 복구가 끝나는 그 커밋에 같은 목적지로 `replace` 가 두 번 나간다 — 자식
+        effect 인 Redirect 가 먼저, 이 effect 가 그 다음인데, 여기 닫힌 `segments` 는
+        아직 `[]` 라 `resolveGuard` 의 "이미 거기 있다" 검사가 못 잡는다. 그래서 로그인·
+        온보딩·프로필 화면이 두 번 마운트됐다. 차단 계정의 `signOut` 판정은 아래에서
+        그대로 실행된다.
+      */
+      if (segmentPath.length === 0) return
       /*
         로그인으로 보내는 판정이면 **가려던 곳을 적어 둔다.** 여기서 적지 않으면
         로그아웃 상태로 받은 공유 링크(`/post/482` 딥링크)는 목적지가 통째로

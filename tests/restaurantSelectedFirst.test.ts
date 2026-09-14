@@ -19,7 +19,7 @@ import {
   orderSelectedFirst,
   selectionAfterCardPress,
 } from "../src/features/restaurant/utils/selectedFirstCard"
-import { cardSafetyBadges } from "../src/features/restaurant/utils/cardSafetyBadge"
+import { cardConcernNutrients } from "../src/features/restaurant/utils/cardSafetyBadge"
 import type {
   RestaurantCardDto,
   RestaurantDetailDto,
@@ -147,10 +147,7 @@ describe("detailToCard — 상세를 카드로", () => {
       avgSafety: "UNKNOWN",
     }) as RestaurantCardDto
     expect(unknown.safety.level).toBe("UNKNOWN")
-    expect(cardSafetyBadges(unknown.safety)).toEqual({
-      level: null,
-      note: null,
-    })
+    expect(cardConcernNutrients(unknown.safety)).toEqual([])
   })
 
   it("프로필이 없으면 배지가 하나도 서지 않는다 (D3/D4)", () => {
@@ -159,17 +156,14 @@ describe("detailToCard — 상세를 카드로", () => {
       profileMissing: true,
     }) as RestaurantCardDto
     expect(missing.safety.profileMissing).toBe(true)
-    expect(cardSafetyBadges(missing.safety)).toEqual({
-      level: null,
-      note: null,
-    })
+    expect(cardConcernNutrients(missing.safety)).toEqual([])
   })
 
-  it("driverCounts 가 비어 보조 배지를 지어내지 않는다", () => {
+  it("driverCounts 가 비어 영양소 배지를 지어내지 않는다", () => {
     const mapped = detailToCard(DETAIL) as RestaurantCardDto
-    // 픽스처는 `RESTRICTED` + 안전 메뉴 0개 — 목록 카드였다면 `나트륨 기준` 이 섰을 자리다.
+    // 픽스처는 `RESTRICTED` + 안전 메뉴 0개 — 근거 영양소를 모르면 배지도 없어야 한다.
     expect(mapped.safety.driverCounts).toEqual({})
-    expect(cardSafetyBadges(mapped.safety).note).toBeNull()
+    expect(cardConcernNutrients(mapped.safety)).toEqual([])
   })
 
   it("상세에 좌표가 없으면 마커 좌표로 메운다", () => {

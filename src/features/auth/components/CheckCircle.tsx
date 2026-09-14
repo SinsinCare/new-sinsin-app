@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 
 interface CheckCircleProps {
   checked: boolean
@@ -13,7 +13,7 @@ interface CheckCircleProps {
  * 면(배경)은 건드리지 않는다.
  */
 export function CheckCircle({ checked, size = 22 }: CheckCircleProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   return (
     <View
       style={[

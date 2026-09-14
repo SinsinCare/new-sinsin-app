@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { CheckCircle } from "../components"
 import { useTermsAgreement } from "../hooks"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 
 interface TermsAgreementScreenProps {
@@ -38,7 +38,7 @@ export function TermsAgreementScreen({
     handleBack,
     handleNext,
   } = useTermsAgreement({ mode, socialSignupToken, authAttemptId })
-  const surface = useAuthSurface()
+  const surface = useSurface()
 
   const openLegalDocument = (documentType: string) => {
     router.push({

@@ -13,7 +13,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { useGoBack } from "@/src/shared/navigation"
 import { useAuthColors } from "../hooks"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import {
   AuthKeyboardFooter,
@@ -52,7 +52,7 @@ export function AuthScreenLayout({
   const insets = useSafeAreaInsets()
   const { t } = useTranslation("auth")
   const colors = useAuthColors()
-  const surface = useAuthSurface()
+  const surface = useSurface()
   // 히스토리가 없을 때의 목적지는 `src/shared/navigation/routeGraph.ts` 가 정한다.
   const handleDefaultBack = useGoBack()
 

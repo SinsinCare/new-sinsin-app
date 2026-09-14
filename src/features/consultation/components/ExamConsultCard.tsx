@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { LayoutAnimation, Pressable, StyleSheet } from "react-native"
+import { LayoutAnimation, Pressable } from "react-native"
 import { useTranslation } from "react-i18next"
 import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 
@@ -11,30 +11,12 @@ import {
   type ExamMetricStatus,
 } from "../utils/examConsultMessage"
 import {
+  Hairline,
   USER_BUBBLE_BG,
   USER_BUBBLE_TEXT,
+  USER_CARD_TONE,
   type ChatScheme,
 } from "./chatPalette"
-
-/**
- * 잉크 면 위의 보조 톤. `FoodConsultCard` 와 **같은 값**을 쓴다 — 사용자 턴 카드가 둘인데
- * 톤이 다르면 같은 화면에서 두 개의 디자인 언어가 보인다.
- */
-const CARD_TONE: Record<
-  ChatScheme,
-  { muted: string; soft: string; hairline: string }
-> = {
-  light: {
-    muted: "rgba(255,255,255,0.58)",
-    soft: "rgba(255,255,255,0.78)",
-    hairline: "rgba(255,255,255,0.12)",
-  },
-  dark: {
-    muted: "rgba(23,24,28,0.52)",
-    soft: "rgba(23,24,28,0.72)",
-    hairline: "rgba(23,24,28,0.09)",
-  },
-}
 
 /**
  * 상태 점의 색.
@@ -47,14 +29,6 @@ const CARD_TONE: Record<
 const STATUS_DOT: Record<Exclude<ExamMetricStatus, "normal">, string> = {
   warning: "#ff6b6b",
   caution: "#ffc06e",
-}
-
-function Hairline({ color }: { color: string }) {
-  return (
-    <V2Box
-      style={{ height: StyleSheet.hairlineWidth, backgroundColor: color }}
-    />
-  )
 }
 
 /**
@@ -73,7 +47,7 @@ export function ExamConsultCard({ data }: { data: ExamConsultCardData }) {
   const [expanded, setExpanded] = useState(false)
 
   const ink = USER_BUBBLE_TEXT[scheme]
-  const tone = CARD_TONE[scheme]
+  const tone = USER_CARD_TONE[scheme]
 
   const hidden = Math.max(0, data.metrics.length - EXAM_CARD_PREVIEW_COUNT)
   const visible = expanded

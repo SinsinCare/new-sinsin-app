@@ -11,31 +11,19 @@ import type {
   BloodPressureUpsertRequest,
 } from "@/src/types/bloodMetrics"
 
-function rethrowRequestError(error: unknown): never {
-  throw error
-}
-
 export const bloodMetricsService = {
   async updateBloodPressure(
     body: BloodPressureUpsertRequest,
   ): Promise<BloodMetricsResponse> {
-    try {
-      const response = await api.post("/blood-pressure-records", body)
-      return response.data as BloodMetricsResponse
-    } catch (error) {
-      rethrowRequestError(error)
-    }
+    const response = await api.post("/blood-pressure-records", body)
+    return response.data as BloodMetricsResponse
   },
 
   async updateBloodGlucose(
     body: BloodGlucoseUpsertRequest,
   ): Promise<BloodMetricsResponse> {
-    try {
-      const response = await api.post("/blood-glucose-records", body)
-      return response.data as BloodMetricsResponse
-    } catch (error) {
-      rethrowRequestError(error)
-    }
+    const response = await api.post("/blood-glucose-records", body)
+    return response.data as BloodMetricsResponse
   },
 
   /**

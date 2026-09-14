@@ -7,12 +7,8 @@
  * 그래서 임계값 위/아래를 둘 다 단언한다.
  */
 
-import i18n from "../src/i18n"
 import type { MapBounds } from "../src/features/restaurant/types"
-import {
-  distanceAccessibility,
-  formatDistanceKm,
-} from "../src/features/restaurant/utils/distance"
+import { formatDistanceKm } from "../src/features/restaurant/utils/distance"
 import {
   MAX_BBOX_DIAGONAL_KM,
   bboxDiagonalKm,
@@ -21,7 +17,6 @@ import {
   normalizeBounds,
   roundBounds,
   roundCoord,
-  sameBbox,
 } from "../src/features/restaurant/utils/bboxKey"
 
 /** 시드 데이터가 있는 강남 한 블록. */
@@ -74,42 +69,6 @@ describe("거리 표기 — 1km 경계", () => {
   })
 })
 
-describe("거리 접근성 문구", () => {
-  it("단위를 말로 준다 — `620m` 를 그대로 읽히면 '육백이십엠' 이 된다", () => {
-    expect(distanceAccessibility(0.62)).toEqual({
-      labelKey: "restaurant.distance.meters",
-      params: { value: "620" },
-    })
-    expect(distanceAccessibility(2.64)).toEqual({
-      labelKey: "restaurant.distance.kilometers",
-      params: { value: "2.6" },
-    })
-    expect(distanceAccessibility(null)).toBeNull()
-    expect(distanceAccessibility(-3)).toBeNull()
-  })
-
-  it("표기와 접근성이 같은 숫자를 말한다", () => {
-    for (const km of [0.004, 0.62, 0.999, 1, 2.64, 10]) {
-      const text = formatDistanceKm(km) as string
-      const a11y = distanceAccessibility(km)
-      expect(text).toContain(a11y?.params.value as string)
-    }
-  })
-
-  it("두 키가 ko/en 둘 다에 있다", async () => {
-    for (const language of ["ko", "en"] as const) {
-      await i18n.changeLanguage(language)
-      expect(i18n.t("restaurant.distance.meters", { value: "620" })).toContain(
-        "620",
-      )
-      expect(
-        i18n.t("restaurant.distance.kilometers", { value: "2.6" }),
-      ).toContain("2.6")
-    }
-    await i18n.changeLanguage("ko")
-  })
-})
-
 describe("bbox 키 — 라운딩 임계값 위/아래", () => {
   it("임계값(1e-5) 아래로 다른 두 뷰포트는 같은 키다", () => {
     // 카카오 getBounds() 는 배정도 부동소수를 그대로 준다. 손가락이 1픽셀 스친 잡음으로
@@ -121,7 +80,6 @@ describe("bbox 키 — 라운딩 임계값 위/아래", () => {
       neLng: GANGNAM.neLng - 0.0000003,
     }
     expect(bboxKey(jittered)).toBe(bboxKey(GANGNAM))
-    expect(sameBbox(jittered, GANGNAM)).toBe(true)
   })
 
   it("임계값 위로 다른 두 뷰포트는 다른 키다", () => {
@@ -129,7 +87,6 @@ describe("bbox 키 — 라운딩 임계값 위/아래", () => {
     // `현재 지도에서 찾기` 가 아무 것도 안 하는 것처럼 보인다.
     const moved: MapBounds = { ...GANGNAM, swLat: GANGNAM.swLat + 0.0001 }
     expect(bboxKey(moved)).not.toBe(bboxKey(GANGNAM))
-    expect(sameBbox(moved, GANGNAM)).toBe(false)
 
     // 5자리 자체가 갈리는 최소 변화(1e-5 ≈ 1.1m)도 다른 키여야 한다.
     const oneUnit: MapBounds = { ...GANGNAM, neLng: GANGNAM.neLng + 0.00001 }
@@ -151,13 +108,6 @@ describe("bbox 키 — 라운딩 임계값 위/아래", () => {
     const rounded = roundBounds(original)
     expect(rounded.swLat).toBe(37.49061)
     expect(original.swLat).toBe(37.49061111)
-  })
-
-  it("null 뷰포트는 같다고 하지 않는다", () => {
-    // 최초 진입(아직 idle 이 없다)에서 `같다` 로 판정하면 pill 이 영원히 안 뜬다.
-    expect(sameBbox(null, GANGNAM)).toBe(false)
-    expect(sameBbox(GANGNAM, null)).toBe(false)
-    expect(sameBbox(null, null)).toBe(false)
   })
 })
 

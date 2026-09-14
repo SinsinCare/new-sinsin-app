@@ -39,15 +39,18 @@ function enqueue(operation: () => Promise<void> | void): void {
     .catch((error) => logger.debug("[analytics] operation failed", error))
 }
 
-/** 세션이 새로 열릴 때마다 app_opened 를 그 세션의 첫 이벤트로 넣는다. */
-onSessionRolled(({ fromColdStart }) => {
-  void enqueueEvent({
-    type: "lifecycle",
-    name: "app_opened",
-    screenName: currentScreen,
-    props: { from_background: !fromColdStart },
-  })
-})
+/**
+ * 세션이 새로 열릴 때마다 app_opened 를 그 세션의 첫 이벤트로 넣는다. 여기서는 행의
+ * **내용만** 돌려준다 — 직접 `enqueueEvent` 를 부르면 그 호출이 `await hydrate()` 에서
+ * 한 번 멈춰 세션을 굴린 원래 이벤트가 먼저 번호를 받는다. 순번은 전송기가 원래 이벤트
+ * 앞에 매긴다(`transport.ts` 의 `openSession`).
+ */
+onSessionRolled(({ fromColdStart }) => ({
+  type: "lifecycle",
+  name: "app_opened",
+  screenName: currentScreen,
+  props: { from_background: !fromColdStart },
+}))
 
 /** 콜드 스타트 1회 — 설치·업데이트 신호를 이벤트로 바꾼다. RootLayoutNav 가 부른다. */
 export function initAnalyticsLifecycle(): void {
@@ -143,10 +146,4 @@ export function resetAnalyticsIdentity(): void {
   if (identityState === null) return
   identityState = null
   // 익명 id 는 기기 축이라 유지한다 — 서버의 소급 귀속이 기기 축으로 동작한다.
-}
-
-export function flushAnalytics(): void {
-  enqueue(async () => {
-    await flushQueue()
-  })
 }

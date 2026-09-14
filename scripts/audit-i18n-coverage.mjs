@@ -24,13 +24,8 @@ const UI_ONLY = process.argv.includes("--ui-only")
  */
 const SCOPES = {
   /**
-   * 커뮤니티가 실제로 그리는 화면 전부.
-   *
-   * `RecipeEditor.tsx` 하나만 뺀다 — v1 에디터이고 **어디서도 import 되지 않는다**
-   * (`tests/analyticsCrossCutting.test.ts` 의 "recipe_edit 를 주는 v1 에디터는
-   * 어디서도 마운트되지 않는다" 가 그 사실을 못 박고 있다). 죽은 파일의 한국어
-   * 리터럴 7개 때문에 살아 있는 화면의 게이트를 못 세우는 쪽이 더 나쁘다.
-   * 그 파일이 지워지거나 되살아나면 위 테스트가 먼저 깨진다.
+   * 커뮤니티가 실제로 그리는 화면 전부. (v1 `RecipeEditor` 는 2026-09-09 에 삭제돼
+   * 더 이상 제외 목록이 필요 없다.)
    */
   community: {
     include: [
@@ -43,7 +38,7 @@ const SCOPES = {
       "src/features/recipe/components/",
       "src/features/recipe/views/",
     ],
-    exclude: ["src/features/recipe/components/RecipeEditor.tsx"],
+    exclude: [],
   },
 }
 

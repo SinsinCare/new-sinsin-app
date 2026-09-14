@@ -44,6 +44,16 @@
   호스트 컴포넌트는 **문자열 태그**다 — 흉내 낸 구현을 두면 "렌더러 없이 렌더한" 셈이 된다.
   `ScrollView` 를 진짜 태그로 두는 것이 핵심이다: 가로 레일이 되돌아오면 셀 수 있어야 한다.
 */
+/*
+  `V2Button`·`V2EmptyState`·칩은 글자를 `primitives/NativeText` 의 `Text`(forwardRef —
+  글자 확대 상한을 한곳에서 잠그는 래퍼, b3b3690)로 그린다. 호스트 `Text` 로 돌려 두어야
+  아래 `allText` 가 그 글자를 센다(`tests/consultHistoryScreen.test.ts` 와 같은 처방, 2026-09-09).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
+  TextInput: "TextInput",
+}))
+
 jest.mock("react-native", () => {
   const flatten = (style: unknown): Record<string, unknown> => {
     if (Array.isArray(style)) {
@@ -1087,7 +1097,9 @@ describe("`요즘 이야기 중` — 세 번째 글 다음, 딱 한 번", () => 
 
   it("셀 안에서 **글 다음**에 온다 — 글을 밀어내지 않는다", () => {
     const kinds = childrenOf(trendingCell(screen())).map((child) => child.type)
-    expect(kinds[0]).toBe("View") // 글 한 줄을 감싼 자리
+    // 글 행이 첫 자식이다 — 예전에는 빈 스타일의 `View` 가 한 겹 감싸고 있었는데
+    // (행마다 네이티브 뷰 하나), 아무 일도 안 하는 겹이라 걷어냈다(2026-09-09).
+    expect(kinds[0]).toBe("PostListItem")
     expect(kinds[1]).toBe(TrendingPostsSection)
   })
 
@@ -1290,7 +1302,8 @@ describe("`비슷한 단계의 이웃` — 여덟 번째 글 다음, 딱 한 번
   it("셀 안에서 **글 다음**에 온다 — 글을 밀어내지 않는다", () => {
     const cell = cellAt(screen(), 7)
     const kinds = childrenOf(cell).map((child) => child.type)
-    expect(kinds[0]).toBe("View") // 글 한 줄을 감싼 자리
+    // 글 행이 첫 자식이다 — 감싸던 빈 `View` 한 겹은 걷어냈다(위 `요즘 이야기 중` 과 같다).
+    expect(kinds[0]).toBe("PostListItem")
     expect(kinds[1]).toBe(NeighborSuggestionSection)
   })
 

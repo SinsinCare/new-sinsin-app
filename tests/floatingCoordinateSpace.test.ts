@@ -77,10 +77,22 @@ describe("플로팅 좌표계", () => {
    * `FloatingWriteButton` 하나로 모으고, 화면은 그것을 쓰기만 한다.
    */
   it("작성 필이 화면 좌표계 변환을 쓴다", () => {
-    const source = code(read("src/shared/components/FloatingWriteButton.tsx"))
+    /*
+      2026-09-09 재조준. 커뮤니티의 작성 필은 `CommunityWriteButton` 이다 — 커뮤니티 탭은
+      AI 상담 필을 숨기므로(`app/(tabs)/_layout.tsx` `TABS_WITHOUT_AI_PILL`,
+      `docs/design/community-refresh-2026-09-05/REFERENCE.md` "No separate AI pill above
+      the tab bar") 필 위에 쌓지 않고 그 자리(화면 좌표계로 변환한 탭바 위)에 선다.
+      옛 `FloatingWriteButton` 은 이제 어느 화면도 쓰지 않는다.
+    */
+    const source = code(
+      read("src/features/recipe/components/community/CommunityWriteButton.tsx"),
+    )
 
-    // 변환 함수를 통해 좌표를 얻어야 한다.
+    // 변환 함수를 통해 좌표를 얻어야 한다 — `bottom` 이 곧 그 변환값이다.
     expect(source).toContain("floatingAiButtonBottomInScreen")
+    expect(source).toMatch(
+      /bottom:\s*floatingAiButtonBottomInScreen\(insets\.bottom\)/u,
+    )
 
     /*
       `FLOATING_AI_BUTTON_BOTTOM` 을 화면 안에서 직접 더하는 것이 사고의 형태였다.
@@ -91,20 +103,33 @@ describe("플로팅 좌표계", () => {
   })
 
   it("작성 필을 쓰는 화면이 좌표를 직접 계산하지 않는다", () => {
-    const SCREENS = [
-      "app/(tabs)/community.tsx",
-      "src/features/recipe/views/RecipeHomeScreen.tsx",
-    ]
+    /*
+      2026-09-09 재조준. `app/(tabs)/community.tsx` 는 재export 껍데기라 실제 화면
+      파일을 본다. 레시피 탐색 화면은 2026-09-06 재편으로 작성 필이 빠졌다
+      (`docs/design/recipe-browse-refresh-2026-09-06/REVIEW.md`) — 필을 안 쓰는
+      화면이 좌표 변환을 들고 있으면 그것이 곧 화면 소유 플로팅이 돌아온 흔적이다.
+    */
+    const PILL = "CommunityWriteButton"
+    const WITH_PILL = ["src/features/recipe/views/CommunityScreen.tsx"]
+    const WITHOUT_PILL = ["src/features/recipe/views/RecipeHomeScreen.tsx"]
     const offenders: string[] = []
-    for (const rel of SCREENS) {
+    for (const rel of WITH_PILL) {
       const source = code(read(rel))
-      if (!source.includes("FloatingWriteButton")) {
+      if (!source.includes(PILL)) {
         offenders.push(`${rel} → 공용 컴포넌트를 안 씀`)
         continue
       }
       // 화면이 직접 좌표를 만들면 다시 갈라진다.
       if (/floatingAiButtonBottomInScreen/u.test(source)) {
         offenders.push(`${rel} → 좌표를 직접 계산함`)
+      }
+    }
+    for (const rel of WITHOUT_PILL) {
+      const source = code(read(rel))
+      if (
+        /floatingAiButtonBottomInScreen|position:\s*"absolute"/u.test(source)
+      ) {
+        offenders.push(`${rel} → 화면 소유 플로팅이 돌아옴`)
       }
     }
     expect(offenders).toEqual([])
@@ -149,10 +174,7 @@ describe("플로팅 좌표계", () => {
    * 주석에 `(16+48)` 이라고 근거까지 적어 두었다. 근거를 안다면 참조해야 한다.
    */
   it("필을 피하는 여백을 상수에서 계산한다 — 숫자를 박아 넣지 않았다", () => {
-    const SCREENS = [
-      "src/features/home/components/record/RecordView.tsx",
-      "src/features/home/components/statistics/StatisticsView.tsx",
-    ]
+    const SCREENS = ["src/features/home/components/record/RecordView.tsx"]
     const offenders: string[] = []
     for (const rel of SCREENS) {
       const source = code(read(rel))

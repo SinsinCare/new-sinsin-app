@@ -36,15 +36,6 @@ const SOCIAL_LINK_REQUIRED_CODES = new Set([
 
 export type AuthSignOutReason = "automatic" | "explicit"
 
-export async function persistSocialReauthenticationIntentForSignOut(
-  _reason: AuthSignOutReason,
-): Promise<void> {
-  await AsyncStorage.setItem(
-    SOCIAL_REAUTHENTICATION_INTENT_KEY,
-    SOCIAL_REAUTHENTICATION_INTENT_VALUE,
-  )
-}
-
 export async function isSocialReauthenticationRequired(): Promise<boolean> {
   return (
     (await AsyncStorage.getItem(SOCIAL_REAUTHENTICATION_INTENT_KEY)) ===
@@ -494,9 +485,17 @@ function getRealAuthService(): IAuthService {
       if (!accessToken) return
 
       try {
-        await publicApi.post<ApiResponse>("/auth/logout", undefined, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
+        /*
+          자기 리프레시 토큰을 같이 보낸다 — 서버는 세션(기기)당 한 행이라(alembic 103,
+          2026-09-12) 이 토큰의 행만 지운다. 안 보내면 구 앱 호환으로 **전부** 끊겨, 부스에서
+          한 기기의 로그아웃이 옆 기기를 내보낸다.
+        */
+        const refreshToken = await tokenService.getRefreshToken()
+        await publicApi.post<ApiResponse>(
+          "/auth/logout",
+          refreshToken ? { refreshToken } : undefined,
+          { headers: { Authorization: `Bearer ${accessToken}` } },
+        )
       } catch (error) {
         logger.debug("[authService] logout revoke failed", error)
       }

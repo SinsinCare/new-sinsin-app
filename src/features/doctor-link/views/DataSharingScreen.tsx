@@ -9,18 +9,23 @@ import { Text } from "@/src/design-system-v2/primitives/NativeText"
  */
 
 import { useEffect, useState } from "react"
-import { ScrollView, StyleSheet, View } from "react-native"
+import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Toast from "react-native-toast-message"
 
 import { presentError, resolveError } from "@/src/lib/errorMessage"
+import { getAppLanguage } from "@/src/i18n"
+import { useRevalidateOnReturn } from "@/src/shared/refresh"
+import { useAppRouter } from "@/src/shared/navigation"
 
 import {
   V2BottomCTA,
   V2ErrorState,
+  V2Icon,
   V2LoadingState,
   V2ScreenHeader,
+  radius,
   spacing,
   typography,
   useLoadingVisible,
@@ -33,11 +38,17 @@ import {
   SHARE_SCOPE_KEYS,
   type DoctorCard,
   type DoctorConnectionStatus,
+  type DoctorReport,
   type ShareGrant,
   type ShareScopeKey,
 } from "@/src/types/doctorLink"
 
-import { doctorLinkKeys, sharingQuery } from "../data/doctorLinkQueries"
+import {
+  doctorConnectionsQuery,
+  doctorLinkKeys,
+  doctorReportsQuery,
+  sharingQuery,
+} from "../data/doctorLinkQueries"
 import { DoctorBrandCard } from "../components/DoctorCards"
 import {
   SharingNoticeItem,
@@ -94,7 +105,10 @@ export function DataSharingScreen({
 }: {
   connectionId: string
   doctor: DoctorCard | null
-  /** 연결 상태. APPROVED 가 아니면 서버가 저장을 거부하므로 토글을 잠근다. */
+  /**
+   * 연결 상태의 **초기값**(라우트 파라미터). 승인은 콘솔에서 일어나므로 이 값은 화면을 연
+   * 순간 이미 낡았을 수 있다 — 실제 판정은 아래 `liveStatus`(서버 연결 목록)가 한다.
+   */
   status: DoctorConnectionStatus
   onAnalyze?: () => void
   onSaved?: () => void
@@ -105,6 +119,27 @@ export function DataSharingScreen({
   const queryClient = useQueryClient()
 
   const sharing = useQuery(sharingQuery(connectionId))
+  const connections = useQuery(doctorConnectionsQuery())
+  const reports = useQuery(doctorReportsQuery())
+  useRevalidateOnReturn({
+    queryKeys: [
+      doctorLinkKeys.sharing(connectionId),
+      doctorLinkKeys.connections(),
+      doctorLinkKeys.reports(),
+    ],
+  })
+  /** 서버 연결 목록의 이 연결. 없으면(아직 안 왔거나 목록에서 빠짐) 라우트 파라미터를 믿는다. */
+  const liveConnection =
+    connections.data?.items.find((item) => item.id === connectionId) ?? null
+  const liveStatus: DoctorConnectionStatus = liveConnection?.status ?? status
+  const doctorId = liveConnection?.doctor?.id ?? doctor?.id ?? null
+  /** 이 의사가 보낸 리포트만. 의사 카드가 없는(탈퇴 등) 리포트는 여기서 못 고르므로 빠진다. */
+  const doctorReports =
+    doctorId === null
+      ? []
+      : (reports.data?.items ?? []).filter(
+          (report) => report.doctor?.id === doctorId,
+        )
 
   /**
    * 서버 값을 로컬로 복사한다. 토글은 왕복을 기다리지 않고 즉시 움직여야 하고,
@@ -148,7 +183,7 @@ export function DataSharingScreen({
     },
   })
 
-  const canEdit = status === "APPROVED"
+  const canEdit = liveStatus === "APPROVED"
   const showLoading = useLoadingVisible(sharing.isLoading, {
     surface: "doctor_sharing",
   })
@@ -208,9 +243,9 @@ export function DataSharingScreen({
                    * 거절되거나 해지된 연결에까지 그 문장을 보여 주면 화면이 거짓말을 한다 —
                    * 사용자는 기다리면 열린다고 믿고 계속 기다리게 된다.
                    */}
-                  {status === "REJECTED"
+                  {liveStatus === "REJECTED"
                     ? t("doctorLink.sharing.rejectedNotice")
-                    : status === "REVOKED"
+                    : liveStatus === "REVOKED"
                       ? t("doctorLink.sharing.revokedNotice")
                       : t("doctorLink.sharing.pendingNotice")}
                 </Text>
@@ -257,6 +292,34 @@ export function DataSharingScreen({
               <SharingNoticeItem text={t("doctorLink.preview.noticePurpose")} />
               <SharingNoticeItem text={t("doctorLink.preview.noticeRevoke")} />
             </View>
+
+            {/*
+             * 의사가 콘솔에서 "환자 앱으로 보내기" 한 리포트. 이 절이 생기기 전에는 콘솔이
+             * "전송되었습니다" 라고 말한 것이 앱 어디에도 닿지 않았다(로컬 왕복에서 확인).
+             * 승인 전에는 리포트가 올 수 없으므로 승인된 연결에만 그린다.
+             */}
+            {canEdit && (
+              <View style={styles.section}>
+                <Text
+                  style={[styles.sectionTitle, { color: colors.label.normal }]}
+                >
+                  {t("doctorLink.sharing.reportsTitle")}
+                </Text>
+                {doctorReports.length === 0 ? (
+                  <Text
+                    style={[styles.pending, { color: colors.label.alternative }]}
+                  >
+                    {t("doctorLink.sharing.reportsEmpty")}
+                  </Text>
+                ) : (
+                  <View style={styles.reportList}>
+                    {doctorReports.map((report) => (
+                      <ReportCard key={report.id} report={report} />
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -278,8 +341,112 @@ export function DataSharingScreen({
   )
 }
 
+/** 서버는 naive UTC(`2026-09-11T02:43:50`)를 준다 — 기기 시간대로 옮겨 날짜·시각을 적는다. */
+function formatSentAt(raw: string): string {
+  const date = new Date(/(Z|[+-]\d\d:\d\d)$/u.test(raw) ? raw : `${raw}Z`)
+  if (Number.isNaN(date.getTime())) return raw
+  return new Intl.DateTimeFormat(getAppLanguage() === "en" ? "en-US" : "ko-KR", {
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date)
+}
+
+/**
+ * 리포트 한 장의 요약 카드. 누르면 상세(`/(settings)/doctor-report`)로 간다 — 검사 해설·
+ * 하루 목표·다음 진료는 상세에만 있다. 여기서는 모양을 그대로 두고 셰브론만 붙였다.
+ */
+function ReportCard({ report }: { report: DoctorReport }) {
+  const { t } = useTranslation(["settings"])
+  const { colors } = useV2Theme()
+  const router = useAppRouter()
+  const extras = [
+    report.includeSummary ? t("doctorLink.sharing.reportSummary") : null,
+    report.mealPlanIncluded ? t("doctorLink.sharing.reportMealPlan") : null,
+  ].filter((text): text is string => text !== null)
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t("doctorLink.sharing.openReport")}
+      onPress={() =>
+        router.push({
+          pathname: "/(settings)/doctor-report",
+          params: { id: report.id },
+        })
+      }
+      style={({ pressed }) => [
+        styles.reportCard,
+        {
+          backgroundColor: pressed
+            ? colors.fill.pressed
+            : colors.background.lower,
+        },
+      ]}
+    >
+      <View style={styles.reportHeader}>
+        <Text style={[styles.reportMeta, { color: colors.label.alternative }]}>
+          {formatSentAt(report.sentAt)}
+        </Text>
+        <V2Icon name="chevronRight" size={20} color={colors.label.assistive} />
+      </View>
+      <Text style={[styles.reportComment, { color: colors.label.normal }]}>
+        {report.comment.trim().length > 0
+          ? report.comment
+          : t("doctorLink.sharing.reportNoComment")}
+      </Text>
+      {report.tasks.length > 0 && (
+        <View style={styles.reportTasks}>
+          <Text style={[styles.reportMeta, { color: colors.label.alternative }]}>
+            {t("doctorLink.sharing.reportTasks")}
+          </Text>
+          {report.tasks.map((task, index) => (
+            <Text
+              key={`${report.id}-${index}`}
+              style={[styles.reportTask, { color: colors.label.normal }]}
+            >
+              {`• ${task}`}
+            </Text>
+          ))}
+        </View>
+      )}
+      {extras.length > 0 && (
+        <Text style={[styles.reportMeta, { color: colors.label.alternative }]}>
+          {extras.join(" · ")}
+        </Text>
+      )}
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  reportList: {
+    gap: spacing[12],
+  },
+  reportCard: {
+    borderRadius: radius["2xl"],
+    padding: spacing[16],
+    gap: spacing[8],
+  },
+  reportHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[8],
+  },
+  reportMeta: {
+    ...typography.subtext.medium,
+  },
+  reportComment: {
+    ...typography.body.mediumWeak,
+  },
+  reportTasks: {
+    gap: spacing[4],
+  },
+  reportTask: {
+    ...typography.body.mediumWeak,
+  },
   content: {
     paddingHorizontal: spacing[16],
     paddingTop: spacing[16],

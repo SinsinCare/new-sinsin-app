@@ -1,4 +1,4 @@
-import { calendarDateKey } from "../components/calendar/calendarModel"
+import { toDateStr } from "./dateUtils"
 
 export interface WeekDayItem {
   date: Date
@@ -23,18 +23,7 @@ export function getWeekDays(
     return {
       date: d,
       dayOfMonth: d.getDate(),
-      hasRecord: recordedDates.includes(calendarDateKey(d)),
+      hasRecord: recordedDates.includes(toDateStr(d)),
     }
   })
-}
-
-export function getWeekLabel(baseDate: Date, language: string): string {
-  const days = getWeekDays(baseDate)
-  const start = days[0].date
-  const end = days[days.length - 1].date
-  const formatter = new Intl.DateTimeFormat(
-    language.startsWith("en") ? "en-US" : "ko-KR",
-    { month: "short", day: "numeric" },
-  )
-  return `${formatter.format(start)} – ${formatter.format(end)}`
 }

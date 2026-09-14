@@ -15,17 +15,13 @@ import { useAppRouter } from "@/src/shared/navigation"
 import { RestaurantReviewWriteScreen } from "@/src/features/restaurant"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import type { ReviewDto } from "@/src/features/restaurant/types"
-
-const DECIMAL_ID = /^\d+$/u
+import { parseDecimalId } from "@/src/shared/navigation/routeParams"
 
 export default function RestaurantReviewWriteRoute() {
   const router = useAppRouter()
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>()
 
-  const restaurantId =
-    typeof id === "string" && DECIMAL_ID.test(id)
-      ? Number.parseInt(id, 10)
-      : null
+  const restaurantId = parseDecimalId(id)
 
   const handleSubmitted = useCallback(
     (review: ReviewDto) => {

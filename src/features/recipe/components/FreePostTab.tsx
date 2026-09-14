@@ -630,6 +630,14 @@ export function FreePostTab({
     fetchNextPage,
   ])
 
+  /*
+    섹션이 실제로 그려지는가 — 각 섹션의 "빈 목록이면 null" 규칙(`TrendingPostsSection`·
+    `NeighborSuggestionSection` 의 return null)과 같은 판정이다. 바로 위 글 행이 이 값으로
+    자기 헤어라인을 지운다(F4). 스켈레톤·오류 상태도 밴드를 그리므로 그때도 지운다.
+  */
+  const trendingRenders = trendingPosts.length > 0 || isPopularLoading || trendingFailure !== null
+  const neighborRenders = neighbors.length > 0 || isSuggestedLoading || neighborFailure !== null
+
   const renderPost = useCallback(
     ({
       item: post,
@@ -639,32 +647,36 @@ export function FreePostTab({
       index: number
     }) => (
       <>
-        <View style={styles.listItemWrap}>
-          <PostListItem
-            postId={post.id}
-            category={categoryLabel(post.category)}
-            createdAt={post.createdAt}
-            title={post.title}
-            summary={post.description}
-            imageUri={post.imageUri}
-            authorName={post.authorName}
-            likeCount={post.likes}
-            commentCount={post.comments}
-            viewCount={post.views ?? 0}
-            tags={post.tags}
-            onPress={() => router.push(`/post/${post.id}`)}
-            onPressTag={handleTagPress}
-            onPressAuthor={
-              post.authorId == null
-                ? undefined
-                : () =>
-                    router.push(`/community/author/${post.authorId}` as Href)
-            }
-            onBlock={blockUser}
-            isWithdrawnAuthor={isWithdrawnAuthor(post)}
-            isMine={isMyContent(post, myNickName)}
-          />
-        </View>
+        {/*
+          행의 프롭은 전부 원시값·안정 참조다 — `onPress`/`onPressAuthor` 클로저를 행마다
+          새로 만들어 넘기던 자리인데, 그 하나로 `PostListItem` 의 `memo` 가 매 렌더
+          무효였다. 이 함수는 아래 섹션 상태(인기·이웃)가 바뀔 때마다 새로 만들어지고
+          FlashList 는 그때 보이는 셀을 전부 다시 부르므로, 행이 "같은 프롭" 으로
+          비교를 통과해야 그 재호출이 그리기 비용이 아니라 비교 비용에서 끝난다.
+          글·작성자로 가는 길은 카드가 id 로 스스로 안다(`PostListItem` 머리말).
+        */}
+        <PostListItem
+          postId={post.id}
+          category={categoryLabel(post.category)}
+          createdAt={post.createdAt}
+          title={post.title}
+          summary={post.description}
+          imageUri={post.imageUri}
+          authorName={post.authorName}
+          likeCount={post.likes}
+          commentCount={post.comments}
+          viewCount={post.views ?? 0}
+          tags={post.tags}
+          authorId={post.authorId}
+          onPressTag={handleTagPress}
+          onBlock={blockUser}
+          isWithdrawnAuthor={isWithdrawnAuthor(post)}
+          isMine={isMyContent(post, myNickName)}
+          hideDivider={
+            (index === TRENDING_INSERT_AFTER - 1 && trendingRenders) ||
+            (index === NEIGHBOR_INSERT_AFTER - 1 && neighborRenders)
+          }
+        />
         {/*
           요즘 이야기 중 — **세로 랭킹 3행**(D23 의 상태 규칙 + D25 의 형태), 세 번째 글
           다음. 여기 있던 가로 `PopularPostCard` 레일은 은퇴했다: 순위는 서수라 세로로
@@ -703,6 +715,8 @@ export function FreePostTab({
       trendingPosts,
       isPopularLoading,
       trendingFailure,
+      trendingRenders,
+      neighborRenders,
       refetchPopular,
       neighbors,
       isSuggestedLoading,
@@ -898,7 +912,7 @@ export function FreePostTab({
         ref={listRef}
         data={showSkeleton || feedFailed ? [] : visiblePosts}
         renderItem={renderPost}
-        keyExtractor={(post) => String(post.id)}
+        keyExtractor={keyExtractor}
         ItemSeparatorComponent={ListGap}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={listEmpty}
@@ -934,6 +948,9 @@ function ListGap() {
   return <View style={styles.listGap} />
 }
 
+/** `data` 는 끝까지 글만 담는다(`NEIGHBOR_INSERT_AFTER` 머리말) — 키는 글 id 그대로다. */
+const keyExtractor = (post: { id: string }) => String(post.id)
+
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
@@ -954,12 +971,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
   },
   browseLabel: typography.title.xSmallWeak,
-  listItemWrap: {},
   listGap: {
     height: 0,
-  },
-  listTopGap: {
-    height: 8,
   },
   footerLoading: {
     paddingVertical: 20,

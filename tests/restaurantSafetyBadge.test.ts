@@ -10,20 +10,12 @@ import {
   hasCommonKeyInBothLocales,
 } from "./helpers/i18nResourceKeys"
 import type {
-  RestaurantSafetyDto,
   SafetyDriver,
   SafetyLevel,
 } from "../src/features/restaurant/types"
 import {
-  cardSafetyBadges,
-  cardSafetyState,
-  showsAnalysisPendingChip,
-} from "../src/features/restaurant/utils/cardSafetyBadge"
-import {
-  safetyAccessibilityKeys,
   safetyBadge,
   safetyBadgeOrUnknown,
-  safetyDriverLabelKey,
 } from "../src/features/restaurant/utils/safetyBadge"
 
 const light = resolveTheme("light").colors
@@ -57,8 +49,9 @@ describe("등급 → 배지 색·라벨", () => {
     expect(safetyBadge("SAFE", light)).toEqual({
       level: "SAFE",
       labelKey: "restaurant.safety.SAFE",
-      bg: light.accentForeground.greenWeak,
-      fg: light.accentForeground.green,
+      // 안전은 그레이스케일 — 색은 주의·제한에만(2026-09-11 제품 결정).
+      bg: light.fill.normal,
+      fg: light.label.neutral,
     })
   })
 
@@ -107,13 +100,6 @@ describe("UNKNOWN 은 배지를 만들지 않고, 절대 `안전` 이 아니다"
     await i18n.changeLanguage("ko")
   })
 
-  it("스크린리더 문자열도 UNKNOWN 을 그대로 말한다", () => {
-    expect(safetyAccessibilityKeys("UNKNOWN", null)).toEqual({
-      labelKey: "restaurant.safety.UNKNOWN",
-      driverLabelKey: null,
-    })
-  })
-
   it("모르는 값이 들어와도 SAFE 로 떨어지지 않는다", () => {
     // 서버가 새 등급을 추가했을 때 조용히 `안전` 이 되는 것이 가장 위험한 실패다.
     const unexpected = "PROBABLY_FINE" as SafetyLevel
@@ -131,26 +117,13 @@ describe("UNKNOWN 은 배지를 만들지 않고, 절대 `안전` 이 아니다"
 */
 
 describe("판정 근거 영양소", () => {
-  it("근거가 있으면 키를, 없으면 null 을 준다", () => {
-    expect(safetyDriverLabelKey("sodium")).toBe(
-      "restaurant.safety.driver.sodium",
-    )
-    expect(safetyDriverLabelKey(null)).toBeNull()
-  })
-
   it("네 영양소 키가 ko/en 둘 다에 있다", () => {
+    // 화면(`RestaurantCard`·`SafetyBadge`)이 이 모양으로 키를 직접 조립한다.
     for (const driver of DRIVERS) {
       expect(
-        hasCommonKeyInBothLocales(safetyDriverLabelKey(driver) as string),
+        hasCommonKeyInBothLocales(`restaurant.safety.driver.${driver}`),
       ).toBe(true)
     }
-  })
-
-  it("접근성 한 줄은 등급 키와 근거 키를 함께 준다", () => {
-    expect(safetyAccessibilityKeys("RESTRICTED", "potassium")).toEqual({
-      labelKey: "restaurant.safety.RESTRICTED",
-      driverLabelKey: "restaurant.safety.driver.potassium",
-    })
   })
 })
 
@@ -171,64 +144,9 @@ describe("등급 라벨 i18n", () => {
   })
 })
 
-/**
- * 판정 상태 — **전국 확장의 전제**.
- *
- * 오늘 데이터(강남 376곳)는 메뉴 영양이 100% 있어서 "배지 없음" 이 사실상 프로필 없음
- * 하나였다. 장소를 전국으로 넓히면 **우리가 메뉴를 모르는 가게가 대다수**가 되고, 그때
- * 빈 배지 자리는 정직한 게 아니라 아무 말도 하지 않는 것이다 — 사용자가 "이 앱이 확인한
- * 곳" 과 "그냥 지도에 있는 곳" 을 구별할 수 없게 된다.
- */
-describe("cardSafetyState — 왜 배지가 없는가", () => {
-  const safety = (over: Partial<RestaurantSafetyDto>): RestaurantSafetyDto =>
-    ({
-      level: "UNKNOWN",
-      menuCount: 0,
-      safeMenuCount: 0,
-      cautionMenuCount: 0,
-      restrictedMenuCount: 0,
-      unknownMenuCount: 0,
-      hasSafeMenu: false,
-      driverCounts: {},
-      profileMissing: false,
-      ...over,
-    }) as RestaurantSafetyDto
-
-  it("메뉴를 모르면 `ANALYSIS_PENDING` — 우리가 할 일이 남은 상태다", () => {
-    expect(cardSafetyState(safety({ menuCount: 0 }))).toBe("ANALYSIS_PENDING")
-    expect(showsAnalysisPendingChip(safety({ menuCount: 0 }))).toBe(true)
-  })
-
-  it("메뉴는 아는데 판정이 안 서면 `UNJUDGED` — 사용자가 할 수 있는 일이 없어 비워 둔다", () => {
-    const s = safety({ menuCount: 5, unknownMenuCount: 5 })
-    expect(cardSafetyState(s)).toBe("UNJUDGED")
-    expect(showsAnalysisPendingChip(s)).toBe(false)
-  })
-
-  it("프로필이 없으면 그 사실이 먼저다 (판정을 노출하지 않는다)", () => {
-    const s = safety({ profileMissing: true, menuCount: 0 })
-    expect(cardSafetyState(s)).toBe("PROFILE_MISSING")
-    expect(showsAnalysisPendingChip(s)).toBe(false)
-  })
-
-  it("판정이 있으면 `JUDGED`", () => {
-    expect(cardSafetyState(safety({ level: "SAFE", menuCount: 3 }))).toBe(
-      "JUDGED",
-    )
-  })
-
-  it("`safety` 자체가 없는 목록(저장한 곳)은 분석 전이 아니다 — 그 화면이 안 물어본 것이다", () => {
-    expect(cardSafetyState(null)).toBe("UNJUDGED")
-    expect(showsAnalysisPendingChip(undefined)).toBe(false)
-  })
-
-  it("어느 경우에도 SAFE 로 승격하지 않는다", () => {
-    for (const s of [
-      safety({ menuCount: 0 }),
-      safety({ menuCount: 5, unknownMenuCount: 5 }),
-      safety({ profileMissing: true }),
-    ]) {
-      expect(cardSafetyBadges(s).level).toBeNull()
-    }
-  })
-})
+/*
+  카드 요약 배지(`cardSafetyBadges`)와 판정 상태(`cardSafetyState`)를 단언하던 describe 가
+  여기 있었다. 카드가 제목 옆 영양소 배지(`cardConcernNutrients`,
+  `tests/restaurantConcernBadges.test.ts`)만 그리게 바뀐 뒤 두 함수는 호출부 없이
+  계약만 약속하고 있어 함께 지웠다(`utils/cardSafetyBadge.ts` 헤더 §여기 없는 것).
+*/

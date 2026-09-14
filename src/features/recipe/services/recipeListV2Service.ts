@@ -32,18 +32,21 @@ import {
 } from "./recipeListV2MockCatalog"
 
 /**
- * 서버 미배포 상태의 기본값. **서버가 붙으면 이 한 줄을 false 로 바꾼다**
- * (또는 `EXPO_PUBLIC_RECIPE_V2_MOCK=false`). env 로 양방향 덮어쓸 수 있게 둔 이유:
- * 오케스트레이터가 코드를 고치지 않고도 붙여 볼 수 있어야 한다.
+ * 모의 경로는 **`EXPO_PUBLIC_RECIPE_V2_MOCK` 이 정확히 `"true"` 일 때만** 켜진다.
+ *
+ * 예전에는 삼분법이었다(`"false"` → 서버 · `"true"` → 모의 · **없으면 모의**). 그 마지막
+ * 갈래가 사고였다: eas.json 의 운영 프로파일은 이 키를 적지 않으므로 스토어 빌드의
+ * 레시피 목록·홈·보관함이 인메모리 카탈로그를 그리고 있었다(테스트 프로파일만
+ * 명시적으로 `"false"`). "적지 않으면 서버" 가 안전한 기본이다 — 플래그를 잊으면
+ * 실제 데이터가 나오지 모의가 나오지 않는다. 상세(`recipeV2Mock`)·작성
+ * (`recipeWriteApiConfig`)도 같은 규칙이고, `scripts/check-release-config.js` 가
+ * 운영 프로파일에서 이 키가 `"true"` 로 켜지는 것을 막는다.
+ *
+ * 모듈 로드 시점에 한 번 읽힌다 — 두 경로를 한 테스트 파일에서 보려면
+ * `jest.resetModules()` 로 다시 들여와야 한다(`tests/recipeListV2.test.ts`).
  */
-const MOCK_DEFAULT = true
-
 export const RECIPE_LIST_V2_MOCK: boolean =
-  process.env.EXPO_PUBLIC_RECIPE_V2_MOCK === "false"
-    ? false
-    : process.env.EXPO_PUBLIC_RECIPE_V2_MOCK === "true"
-      ? true
-      : MOCK_DEFAULT
+  process.env.EXPO_PUBLIC_RECIPE_V2_MOCK === "true"
 
 /** 목록 한 페이지 상한. 서버 상한과 별개로 앱도 걸어 둔다. */
 export const RECIPE_LIST_PAGE_SIZE = 20

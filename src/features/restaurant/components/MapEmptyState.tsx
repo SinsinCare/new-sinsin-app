@@ -111,6 +111,7 @@ export function MapEmptyState({
           description={t(dynamicKey(failure.bodyKey))}
           retryLabel={t(dynamicKey(failure.retryKey))}
           onRetry={onRetry}
+          retryGestureHandler
         />
       </View>
     )
@@ -129,6 +130,7 @@ export function MapEmptyState({
         description={t(spec.bodyKey)}
         actionLabel={action ? t(spec.actionKey) : undefined}
         onAction={action}
+        actionGestureHandler
         style={compact ? styles.compactContent : undefined}
       />
     </View>

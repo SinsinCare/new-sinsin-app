@@ -78,7 +78,7 @@ export function ConsultHistoryHeader({
           { opacity: pressed ? 0.55 : 1 },
         ]}
       >
-        <V2Icon name="chevronLeft" size={22} color={colors.label.normal} />
+        <V2Icon name="chevronLeft" size="md" color={colors.label.normal} />
       </Pressable>
       <V2Text token="title.xSmallWeak" style={styles.grow}>
         {t("consult.history.title")}

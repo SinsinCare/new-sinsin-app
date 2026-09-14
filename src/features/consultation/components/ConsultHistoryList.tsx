@@ -1,4 +1,5 @@
 import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
+import { singleLineInputText } from "@/src/theme/surface"
 import { useMemo, useState } from "react"
 import {
   Keyboard,
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
     gap: spacing[8],
   },
   input: {
-    ...typography.subtext.large,
+    ...singleLineInputText(typography.subtext.large),
     flex: 1,
     paddingVertical: spacing[10],
     paddingRight: spacing[12],

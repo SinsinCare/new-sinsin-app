@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { BackHandler, Keyboard, View } from "react-native"
 import { useNavigation } from "expo-router"
 import { useTranslation } from "react-i18next"
@@ -49,7 +49,10 @@ export function SignupStepsScreen() {
     reportStepInputBlocked,
   } = useSignupSteps()
 
-  const copy = getSignupStepCopy()[step]
+  // 여섯 스텝 × 네댓 줄의 i18n 문구. 키 입력마다 다시 만들 이유가 없다 — 언어가
+  // 바뀌면 `t` 가 바뀌고 그때만 다시 만든다(`useTermsAgreement` 와 같은 관례).
+  const stepCopy = useMemo(getSignupStepCopy, [t])
+  const copy = stepCopy[step]
   const fieldError = stepError || validity.message
 
   /*

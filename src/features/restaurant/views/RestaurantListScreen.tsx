@@ -29,6 +29,7 @@ import { Text } from "@/src/design-system-v2/primitives/NativeText"
 import type { RestaurantCardTarget } from "../utils/restaurantCardNavigation"
 import { useCallback, useMemo, useState } from "react"
 import { Pressable, StyleSheet, View } from "react-native"
+import type { ListRenderItemInfo } from "@shopify/flash-list"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
 import { FlashList } from "@shopify/flash-list"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -49,7 +50,7 @@ import { dynamicKey } from "@/src/i18n/dynamicKey"
 import { CategoryChipRail } from "../components/CategoryChipRail"
 import { FilterChipRow } from "../components/FilterChipRow"
 import { FilterSheet, type FilterSection } from "../components/FilterSheet"
-import { RestaurantCard } from "../components/RestaurantCard"
+import { RestaurantCardRow } from "../components/RestaurantCard"
 import {
   RestaurantCardSkeleton,
   RestaurantCardSkeletonList,
@@ -62,7 +63,7 @@ import {
   cuisineTypeLabelKey,
   hasUnbackedSelection,
 } from "../data/filterCatalog"
-import { useMyLocation } from "../hooks/useMyLocation"
+import { useLocationGate, useMyLocation } from "../hooks/useMyLocation"
 import { useRestaurantFilters } from "../hooks/useRestaurantFilters"
 import { useRestaurantList } from "../hooks/useRestaurantList"
 import type { FilterState, RestaurantCardDto } from "../types"
@@ -108,11 +109,21 @@ export function RestaurantListScreen({
   const hasCoords = location.coords !== null
   useAvailableRestaurantSort(filters.filters.sort, hasCoords, sanitize)
 
+  /*
+    **위치의 결론이 난 뒤에 한 번만 묻는다.** 질의 키에 위치가 들어가므로, 첫 렌더에
+    좌표 없이 한 발 내보내고 진입 절차가 마지막 좌표를 채우면 또 한 발 나갔다 — 목록을
+    열 때마다 같은 검색이 두 번 돌고, 첫 응답의 카드(거리 없음)가 잠깐 보였다가 갈렸다.
+    지도 화면이 `committedBounds` 로 질의를 막는 것과 같은 판단이고, 상한도 같다
+    (`useLocationGate`) — GPS 가 영영 답하지 않는 기기에서 목록도 영영 비면 안 된다.
+  */
+  const listGateOpen = useLocationGate(location.resolved)
+
   const list = useRestaurantList({
     filters: filters.filters,
     userLocation: location.coords,
     // 리스트 전용 모드는 뷰포트로 좁히지 않는다(위 헤더 참고).
     bounds: null,
+    enabled: listGateOpen,
   })
 
   /** 헤더에 보이는 글자. 검색어가 있으면 그것, 없으면 고른 카테고리, 둘 다 없으면 안내문. */
@@ -126,14 +137,19 @@ export function RestaurantListScreen({
     return t("restaurant.map.searchPlaceholder")
   }, [filters.filters.query, filters.filters.cuisineTypes, t])
 
-  const renderItem = useCallback(
-    ({ item }: { item: RestaurantCardDto }) => (
-      <RestaurantCard
-        card={item}
-        onPress={(target) => onSelectRestaurant(item.restaurantId, target)}
-      />
-    ),
+  // 카드마다 인라인 화살표를 만들면 `memo(RestaurantCard)` 가 걸러 내지 못한다 — 줄 하나가
+  // 자기 카드를 알려 주는 구조(`RestaurantCardRow`)로 화면은 이 콜백 하나만 든다.
+  const handlePressCard = useCallback(
+    (card: RestaurantCardDto, target: RestaurantCardTarget) =>
+      onSelectRestaurant(card.restaurantId, target),
     [onSelectRestaurant],
+  )
+
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<RestaurantCardDto>) => (
+      <RestaurantCardRow item={item} onPress={handlePressCard} />
+    ),
+    [handlePressCard],
   )
 
   return (
@@ -220,7 +236,9 @@ export function RestaurantListScreen({
         ]}
         ListEmptyComponent={
           <ListEmpty
-            isLoading={list.isLoading}
+            // 아직 묻지 않은 상태(`enabled: false`)에서 RQ v5 는 `isLoading` 을 false 로
+            // 준다. 그대로 쓰면 위치를 기다리는 동안 스켈레톤이 아니라 **백지**가 된다.
+            isLoading={list.isLoading || !listGateOpen}
             emptyReason={list.emptyReason}
             filters={filters.filters}
             onResetFilters={filters.resetAll}

@@ -20,7 +20,7 @@ import { RecordMetricSummary } from "./RecordMetricSummary"
 import { WaterGlass } from "./WaterGlass"
 import { recordEnter, recordExit, recordLayout } from "./recordMotion"
 import { useRecordSaveFeedback } from "../../../hooks/useRecordSaveFeedback"
-import { useWaterRecordExitGuard } from "../../../hooks/useWaterRecordExitGuard"
+import { useRecordExitGuard } from "../../../hooks/useRecordExitGuard"
 
 import { Text } from "@/src/shared/components/AppText"
 import { V2BottomSheet, V2SheetTextInput } from "@/src/design-system-v2"
@@ -104,7 +104,7 @@ export function WaterRecordPage({
   const pop = useSharedValue(1)
 
   const sessionTotal = session.reduce((sum, row) => sum + row.amount, 0)
-  const { leaveAfterSave } = useWaterRecordExitGuard({
+  const { leaveAfterSave } = useRecordExitGuard({
     hasChanges: session.length > 0 || draft.length > 0,
     isSaving: isBusy,
     onBack,

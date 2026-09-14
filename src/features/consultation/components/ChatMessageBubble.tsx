@@ -420,7 +420,12 @@ export const AssistantBubble = memo(function AssistantBubble({
     [colors],
   )
   const displayedContent = useSmoothStreamingText(message.content, isStreaming)
-  const markdownContent = normalizeAssistantMarkdown(displayedContent)
+  // 정규화는 문자열 전체를 훑는다. 스트리밍 중에는 내용이 바뀔 때만 다시 하면 되고,
+  // 끝난 뒤에는 색·액션 상태가 바뀌어도 같은 결과라 다시 계산할 이유가 없다.
+  const markdownContent = useMemo(
+    () => normalizeAssistantMarkdown(displayedContent),
+    [displayedContent],
+  )
   const hasResultCards = message.activities?.some(
     (item) =>
       item.status === "complete" && (item.nutrition || item.sources?.length),

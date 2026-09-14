@@ -35,7 +35,8 @@ const RECOVERS_WHEN: Record<string, string> = {
   [path.join("src", "features", "recipe", "components", "FreePostTab.tsx")]:
     "feedFailed",
   // 첫 조회가 실패해 목록이 비었을 때 — `ListEmptyComponent` 의 오류 갈래와 같은 조건.
-  [path.join("src", "features", "recipe", "views", "RecipeHomeScreen.tsx")]:
+  // 2026-09-06 둘러보기 개편 뒤 등록식은 화면이 아니라 화면 모델 훅에 있다(2026-09-09 재조준).
+  [path.join("src", "features", "recipe", "hooks", "useRecipeBrowseScreen.ts")]:
     "list.isError",
   // 지도가 죽어 오류면만 남았을 때. 화면의 `다시 시도` 와 같은 일을 한다.
   [path.join(
@@ -154,10 +155,18 @@ describe("복구 중에는 화면이 그 사실을 말한다", () => {
     화면이 이미 들고 있는 **첫 조회 스켈레톤**을 세운다.
   */
   it("레시피 홈의 빈 자리는 `isRunning` 에도 스켈레톤을 세운다", () => {
+    // 2026-09-06 개편으로 빈 자리 판정은 `RecipeBrowseFeedback` 이 모델(`m`)을 보고 한다(2026-09-09 재조준).
     const source = read(
-      path.join("src", "features", "recipe", "views", "RecipeHomeScreen.tsx"),
+      path.join(
+        "src",
+        "features",
+        "recipe",
+        "components",
+        "list",
+        "RecipeBrowseFeedback.tsx",
+      ),
     ).replace(/\s+/gu, " ")
-    expect(source).toContain("list.isLoading || refreshable.isRunning")
+    expect(source).toContain("m.list.isLoading || m.refreshable.isRunning")
   })
 
   it("커뮤니티 피드의 스켈레톤 판정도 같은 사실을 본다", () => {

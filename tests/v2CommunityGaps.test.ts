@@ -42,6 +42,17 @@ jest.mock("react-native", () => ({
   View: "View",
   Text: "Text",
   Pressable: "Pressable",
+  // 2026-09-08: `V2ScreenHeader` 가 접근성 글자 배율로 바 높이를 늘린다. 배율 1 = 오늘의 44/54.
+  useWindowDimensions: () => ({ fontScale: 1 }),
+}))
+/*
+  2026-09-08 부터 v2 컴포넌트는 `Text` 를 react-native 가 아니라
+  `primitives/NativeText`(접근성 확대 상한만 중앙에서 정하는 얇은 래퍼)에서 가져온다.
+  스타일은 손대지 않고 그대로 통과시키므로 호스트 태그와 같은 **문자열 태그**로 둔다 —
+  안 그러면 위의 `Text: "Text"` 가 라벨에 닿지 않는다(다른 스위트와 같은 처방).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
 }))
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 50, bottom: 34, left: 0, right: 0 }),
@@ -65,9 +76,11 @@ jest.mock("@/src/hooks/useKeyboardVisibility", () => ({
 jest.mock("@/src/hooks/useAppColorScheme", () => ({
   useAppColorScheme: () => mockMode,
 }))
-// V2EmptyState 만 훅(useRef/useEffect)을 쓴다. 렌더러가 없으므로 그 둘만 대신한다.
+// V2EmptyState 가 훅(useRef/useEffect)을 쓰고, V2ScreenHeader 는 우측 슬롯 폭을
+// useState 로 든다(2026-09-08 · 가운데 제목 인셋). 렌더러가 없으므로 셋만 대신한다.
 jest.mock("react", () => ({
   ...jest.requireActual("react"),
+  useState: (initial: unknown) => [initial, () => {}],
   useRef: <T>(initial: T) => ({ current: initial }),
   useEffect: (fn: () => void) => {
     fn()

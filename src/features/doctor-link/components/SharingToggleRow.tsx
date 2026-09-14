@@ -107,8 +107,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing[12],
   },
+  /**
+   * 강조 카드는 화면 좌우 여백(16)만큼 **밖으로** 넓힌다. 그래야 카드 안쪽 여백을 16 으로 주고도
+   * 아이콘·토글이 위의 평범한 행들과 같은 x 에 놓인다 — 예전에는 카드가 콘텐츠 폭 안에서
+   * 다시 16 을 먹어 이 행만 시작·끝이 안쪽으로 밀려 있었다.
+   */
   highlight: {
-    padding: spacing[16],
+    marginHorizontal: -spacing[16],
+    paddingHorizontal: spacing[16],
+    paddingVertical: spacing[16],
     borderRadius: radius.lg,
   },
   tile: {

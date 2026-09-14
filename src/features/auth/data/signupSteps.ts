@@ -120,9 +120,6 @@ export function getSignupStepCopy(): Record<SignupStepId, SignupStepCopy> {
   }
 }
 
-/** 기본 언어의 정적 스냅샷. 신규 화면은 언어 변경에 반응하는 getter를 사용한다. */
-export const SIGNUP_STEP_COPY = getSignupStepCopy()
-
 export interface SignupStepValidity {
   canProceed: boolean
   /** 입력이 있는데 틀렸을 때만 채운다. 빈 칸에 미리 빨간 글씨를 띄우지 않는다. */

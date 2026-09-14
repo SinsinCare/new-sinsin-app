@@ -67,7 +67,6 @@ import { Text } from "@/src/design-system-v2/primitives/NativeText"
 
 import {
   forwardRef,
-  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -105,7 +104,7 @@ import {
 import type { EmptyReason, RestaurantCardDto, SortOption } from "../types"
 import { MapResultsHeader } from "./MapResultsHeader"
 import { MapEmptyState } from "./MapEmptyState"
-import { RestaurantCard } from "./RestaurantCard"
+import { RestaurantCardRow, RestaurantCardSeparator } from "./RestaurantCard"
 import {
   RESTAURANT_SKELETON_COUNT,
   RestaurantCardSkeleton,
@@ -364,7 +363,7 @@ export const RestaurantListSheet = forwardRef<
 
   const renderItem = useCallback(
     ({ item }: { item: RestaurantCardDto }) => (
-      <SheetRow
+      <RestaurantCardRow
         item={item}
         selected={item.restaurantId === selectedIdRef.current}
         onPress={onPressCard}
@@ -572,7 +571,7 @@ export const RestaurantListSheet = forwardRef<
         data={items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        ItemSeparatorComponent={ListSeparator}
+        ItemSeparatorComponent={RestaurantCardSeparator}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={
@@ -612,46 +611,6 @@ export const RestaurantListSheet = forwardRef<
     </BottomSheet>
   )
 })
-
-/**
- * 목록 한 줄. `RestaurantCard` 를 감싸기만 하는 얇은 층인데, **여기 있어야 하는 이유**가 있다.
- *
- * `FlatList` 의 `renderItem` 은 `extraData` 가 바뀔 때 보이는 행마다 다시 불린다. 그때
- * `onPress={(target) => onPressCard(item, target)}` 처럼 인라인 화살표를 만들면 매번 새 함수라
- * `memo(RestaurantCard)` 가 **한 번도 걸러 내지 못한다** — 마커를 누를 때마다 화면에 있는
- * 카드가 사진 스트립까지 통째로 다시 그려졌다.
- *
- * 이 컴포넌트가 그 화살표를 자기 안에서 `useCallback` 으로 들고 있으면, 바뀐 것이 선택
- * 상태뿐일 때 `selected` 가 실제로 달라진 **두 줄만** 다시 그려진다.
- */
-const SheetRow = memo(function SheetRow({
-  item,
-  selected,
-  onPress,
-}: {
-  item: RestaurantCardDto
-  selected: boolean
-  onPress?: (card: RestaurantCardDto, target: RestaurantCardTarget) => void
-}) {
-  const handlePress = useCallback(
-    (target: RestaurantCardTarget) => {
-      onPress?.(item, target)
-    },
-    [onPress, item],
-  )
-
-  return (
-    <RestaurantCard
-      card={item}
-      selected={selected}
-      onPress={onPress ? handlePress : undefined}
-    />
-  )
-})
-
-function ListSeparator() {
-  return <V2Divider tone="alternative" />
-}
 
 /** 콜백이 없을 때의 no-op. `MapEmptyState` 의 CTA 는 필수 prop 이라 자리를 채운다. */
 function noop() {}

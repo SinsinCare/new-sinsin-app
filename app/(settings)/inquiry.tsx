@@ -1,1 +1,1 @@
-export { InquiryScreen as default } from "@/src/features/settings"
+export { InquiryListScreen as default } from "@/src/features/settings"

@@ -194,16 +194,16 @@ export function ProfileEditScreen() {
         await uploadProfileImage(profileImage)
       }
 
-      if (profile && gender) {
-        const { data } = await api.patch("/user/profile", {
+      /*
+        성별은 **바뀌었을 때만** PATCH 한다. 예전에는 사진만 바꿔도 프로필 값을 그대로
+        다시 보냈고(불필요한 쓰기), 응답으로 `setQueryData` 를 했다가 바로 아래
+        `refetchQueries` 가 그 값을 버렸다 — 두 번 쓰고 한 번만 남는 셈이었다.
+        사진 URL 은 서버만 알므로 refetch 하나가 정본이다.
+      */
+      if (profile && gender && gender !== profile.gender) {
+        await api.patch("/user/profile", {
           nickName: profile.nickName,
           name: profile.name,
-          gender,
-        })
-        const updatedProfile = data.result
-        queryClient.setQueryData(["myPageProfile"], {
-          ...profile,
-          ...updatedProfile,
           gender,
         })
       }

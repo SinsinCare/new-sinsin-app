@@ -128,42 +128,4 @@ describe("다크 모드 상호작용 색", () => {
     expect(source).toContain("colors.accentForeground.orangeWeak")
     expect(source).toContain("colors.accentForeground.orange")
   })
-
-  it("공용 폼 필드가 tamagui 토큰 문자열을 RN 색으로 넘기지 않는다", () => {
-    const source = code(
-      readFileSync(
-        join(ROOT, "src/shared/components/FormTextField.tsx"),
-        "utf-8",
-      ),
-    )
-    expect(source).not.toMatch(
-      /return\s+["']\$(?:danger|primary|borderColor|color)["']/u,
-    )
-    expect(source).toContain("colors.status.negative")
-    expect(source).toContain("colors.primary.primary")
-    expect(source).toContain("colors.line.normal")
-  })
-
-  it("NHIS 인증수단 선택이 라이트 고정 면으로 되돌아가지 않는다", () => {
-    const source = code(
-      readFileSync(
-        join(ROOT, "src/features/health/views/NhisRequestScreen.tsx"),
-        "utf-8",
-      ),
-    )
-    // 실측 결함: 선택하는 순간 #F0FDF9가 동적 다크 base를 뒤에서 덮었다.
-    expect(source).not.toContain("#F0FDF9")
-    expect(source).not.toContain("#C5C8CE")
-    expect(source).not.toContain("styles.methodCardSelected")
-    expect(source).not.toContain("styles.telecomChipSelected")
-    expect(source).not.toContain("styles.buttonDisabled")
-    expect(source.match(/colors\.accentForeground\.orangeWeak/gu)?.length).toBe(
-      2,
-    )
-    expect(
-      source.match(/colors\.primary\.primary/gu)?.length,
-    ).toBeGreaterThanOrEqual(4)
-    expect(source).toContain("healthColors.surfaceMuted")
-    expect(source).toContain("healthColors.textAssistive")
-  })
 })

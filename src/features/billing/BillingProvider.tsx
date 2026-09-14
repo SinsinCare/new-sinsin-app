@@ -24,6 +24,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useSyncExternalStore,
   type ReactNode,
 } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -35,7 +36,9 @@ import { isBillingHidden } from "./billingVisibility"
 import {
   forgetUser,
   identify,
+  isPurchasesReady,
   onCustomerInfoUpdate,
+  subscribePurchasesReady,
 } from "./purchases/purchasesClient"
 import type { BillingStatus, CapabilityKey, CapabilityState } from "./types"
 
@@ -102,6 +105,13 @@ export function BillingProvider({ children }: { children: ReactNode }) {
     mutationFn: () => billingApi.sync(),
     onSuccess: (status) => queryClient.setQueryData(BILLING_QUERY_KEY, status),
   })
+  /*
+    `useMutation` 의 결과는 렌더마다 새 객체지만 `mutate`·`mutateAsync` 는 안정된 참조다
+    (react-query v5 가 observer 에 묶어 둔다). 아래 effect 와 `syncNow` 는 **이 둘만**
+    의존한다 — 결과 객체를 넣으면 리스너를 매 렌더 떼었다 붙이고(그 사이 도착한 구매
+    알림이 조용히 사라진다), `syncNow` 가 매 렌더 바뀌어 메모한 컨텍스트 값이 헛돈다.
+  */
+  const { mutate: syncMutate, mutateAsync: syncMutateAsync } = syncMutation
 
   const status = query.data ?? null
 
@@ -126,22 +136,26 @@ export function BillingProvider({ children }: { children: ReactNode }) {
   /*
     SDK 가 구매 상태 변화를 알려 오면 **서버에 다시 묻는다.** 알림의 값을 그대로
     쓰지 않는 이유는 머리말 ③.
+
+    **SDK 가 켜진 뒤에 건다.** `onCustomerInfoUpdate` 는 설정 전이면 아무것도 걸지
+    못하는데, SDK 는 `/billing/me` 가 id 를 준 뒤 위 `identify` 에서야 켜진다(머리말 ②).
+    종전에는 `enabled` 만 보고 걸어서 그 시점에는 늘 "아직" 이었고, 다시 걸 계기가 없어
+    갱신·해지·다른 기기 구매가 staleTime 이 지나도록 서버에 반영되지 않았다. 켜짐 신호를
+    외부 스토어로 읽으면 켜지는 렌더에 effect 가 한 번 더 돌아 그때 정확히 한 번 건다.
   */
+  const purchasesReady = useSyncExternalStore(
+    subscribePurchasesReady,
+    isPurchasesReady,
+  )
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || !purchasesReady) return
     return onCustomerInfoUpdate(() => {
-      syncMutation.mutate(undefined, {
+      syncMutate(undefined, {
         onError: (error) =>
           logger.debug("[billing] customerInfo 동기화 실패", error),
       })
     })
-    /*
-      **세션 상태에만 반응한다.** `syncMutation` 은 렌더마다 새 객체라, 넣으면 리스너를
-      매 렌더 떼었다 붙인다 — 그 사이에 도착한 구매 알림이 조용히 사라진다.
-      `mutate` 는 최신 클로저를 보므로 값이 낡을 위험은 없다.
-    */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled])
+  }, [enabled, purchasesReady, syncMutate])
 
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEY })
@@ -153,8 +167,8 @@ export function BillingProvider({ children }: { children: ReactNode }) {
       닫힌 클로저의 값이라 아직 옛 것이다 — 그 값으로 판정하면 복원 성공을
       "복원할 내역 없음" 으로 안내하게 된다.
     */
-    return syncMutation.mutateAsync()
-  }, [syncMutation])
+    return syncMutateAsync()
+  }, [syncMutateAsync])
 
   const value = useMemo<BillingContextValue>(
     () => ({

@@ -27,6 +27,7 @@ import {
   typography,
   type SemanticColors,
 } from "../tokens"
+import { Pressable as GestureHandlerPressable } from "react-native-gesture-handler"
 import { useV2Theme } from "../hooks/useV2Theme"
 import { V2DotLoader } from "./V2DotLoader"
 
@@ -49,6 +50,13 @@ export type V2ButtonProps = Omit<PressableProps, "children" | "style"> & {
   rightIcon?: ReactNode
   /** 긴 문구와 큰 글자는 줄바꿈하고 버튼 높이를 늘린다. 확인창 등 전체 문구가 필요한 곳. */
   multilineLabel?: boolean
+  /**
+   * gorhom 시트(식당 지도 목록) **안**에서 켠다. RN 코어 Pressable 은 JS 리스폰더라 시트의
+   * RNGH 콘텐츠 팬과 중재되지 않아, 버튼 위에서 시작한 세로 스와이프가 시트를 못 움직이고
+   * 탭이 유령으로 남는다(2026-09-12). 기본은 RN 것 — RN Modal(확인창) 안에서는 RNGH
+   * 제스처가 안드로이드에서 죽으므로 전역으로 바꾸지 않는다.
+   */
+  gestureHandler?: boolean
   style?: ViewStyle
 }
 
@@ -123,6 +131,7 @@ export function V2Button({
   leftIcon,
   rightIcon,
   multilineLabel = false,
+  gestureHandler = false,
   style,
   accessibilityState,
   ...rest
@@ -136,8 +145,12 @@ export function V2Button({
   const bg = isDisabled ? colors.fill.normal : resolved.bg
   const fg = isDisabled ? colors.label.disable : resolved.fg
 
+  // 두 Pressable 의 props 타입이 거의 같지만 유니온으로는 JSX 가 못 맞춘다 — RN 타입으로 고정한다.
+  const Touchable = (
+    gestureHandler ? GestureHandlerPressable : Pressable
+  ) as typeof Pressable
   return (
-    <Pressable
+    <Touchable
       {...rest}
       accessibilityRole="button"
       accessibilityState={{
@@ -177,7 +190,7 @@ export function V2Button({
           {rightIcon}
         </>
       )}
-    </Pressable>
+    </Touchable>
   )
 }
 

@@ -262,14 +262,3 @@ export function takeEntryIntent(): string | null {
 export function clearEntryIntent(): void {
   pendingEntryPath = null
 }
-
-/**
- * 라우터가 이 URL 로 화면을 옮겨도 되는가.
- *
- * 거짓이면 호출처(`app/+native-intent.tsx`)가 `null` 을 돌려주고, expo-router 는
- * 그 URL 을 **없던 것처럼** 취급한다 — 부팅이면 `/` 에서 시작하고, 실행 중이면
- * 화면을 옮기지 않는다.
- */
-export function isRoutableEntryUrl(url: string): boolean {
-  return classifyEntryUrl(url) === "routed"
-}

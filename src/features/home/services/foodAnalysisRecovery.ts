@@ -5,13 +5,21 @@ import {
 } from "@/src/stores/pendingAnalysisStore"
 import type { FoodAnalysisJob, FoodCameraAnalyzeResult } from "@/src/types"
 import { appConfig } from "@/src/config/appConfig"
-import { markFoodAnalysisRequestHandled } from "./foodAnalysisRequestState"
+import {
+  isForegroundFoodAnalysisRequest,
+  markFoodAnalysisRequestHandled,
+} from "./foodAnalysisRequestState"
 import {
   pendingAnalysisRequests,
   type PendingAnalysisRequest,
 } from "../storage/pendingAnalysisRequests"
 
-const PENDING_ANALYSIS_TTL_MS = 10 * 60 * 1000
+/**
+ * 대기 요청의 시효. 복구가 이보다 오래된 대기를 버리는 기준이고, 포그라운드 폴링
+ * (`useFoodAnalysis.resolveJob`)과 복구된 확인 흐름의 폴링도 같은 시한에서 멈춘다 —
+ * 서버가 끝내 답하지 않는 잡을 한쪽만 영원히 기다리면 안 된다.
+ */
+export const PENDING_ANALYSIS_TTL_MS = 10 * 60 * 1000
 
 export interface FoodAnalysisRecoveryResult {
   recoveredCount: number
@@ -47,6 +55,12 @@ export interface FoodAnalysisRecoveryDeps {
   }) => void
   confirmationEnabled?: boolean
   markHandledRequestId: (requestId: string) => void
+  /**
+   * 포그라운드 훅이 지금 직접 폴링 중인 요청인가. 그 요청은 훑지 않는다 — 둘이 같은 잡을
+   * 폴링하면 서버 호출이 두 배가 되고, 복구가 먼저 READY 를 보면 같은 결과가 두 번 열린다
+   * (`foodAnalysisRequestState` 머리말). 없으면 아무것도 건너뛰지 않는다.
+   */
+  isForegroundRequest?: (requestId: string) => boolean
   now: () => number
 }
 
@@ -62,14 +76,8 @@ const defaultDeps: FoodAnalysisRecoveryDeps = {
     usePendingAnalysisStore.getState().setPendingConfirmation(pending),
   confirmationEnabled: appConfig.foodAnalysisConfirmationEnabled,
   markHandledRequestId: markFoodAnalysisRequestHandled,
+  isForegroundRequest: isForegroundFoodAnalysisRequest,
   now: Date.now,
-}
-
-function resolveRecoveredImageUri(
-  result: FoodCameraAnalyzeResult,
-  pending: PendingAnalysisRequest,
-): string | null {
-  return result.imageUrl ?? pending.imageUri
 }
 
 export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
@@ -78,6 +86,9 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
   async function runRecovery(
     pending: PendingAnalysisRequest,
   ): Promise<RecoveryOutcome> {
+    // 포그라운드가 붙든 요청은 그쪽이 끝(완료·실패·시효)까지 책임진다. 놓는 순간 다음 훑기가 잡는다.
+    if (deps.isForegroundRequest?.(pending.requestId)) return "pending"
+
     if (deps.now() - pending.startedAt > PENDING_ANALYSIS_TTL_MS) {
       await deps.pendingRequests.remove(pending.requestId)
       return "expired"
@@ -112,7 +123,8 @@ export function createFoodAnalysisRecovery(deps: FoodAnalysisRecoveryDeps) {
     deps.setPending({
       result,
       mealType: pending.mealType,
-      imageUri: resolveRecoveredImageUri(result, pending),
+      // 서버가 저장한 사진이 정본이고, 아직 없으면 찍었던 로컬 파일을 그대로 보여 준다.
+      imageUri: result.imageUrl ?? pending.imageUri,
     })
     await deps.pendingRequests.remove(pending.requestId)
     return "recovered"

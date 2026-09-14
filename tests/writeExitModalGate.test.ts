@@ -73,6 +73,16 @@ function screenFileFor(route: string): string {
   const source = read(routeFile)
   if (source.includes("usePreventRemove(")) return routeFile
 
+  /*
+    2026-09-09 재조준: `free/[id]` 는 JSX 없이 화면을 그대로 다시 내보내는 껍데기가
+    됐다(`export { FreePostEditScreen as default } from "@/…"`, 04f633f 이후) —
+    렌더 태그가 없으니 그 재export 를 먼저 따라간다. 폼이 있는 파일까지 가는 목적은 같다.
+  */
+  const reexported = /export \{ \w+ as default \} from "@\/([^"]+)"/u.exec(
+    source,
+  )?.[1]
+  if (reexported) return `${reexported}.tsx`
+
   const rendered = /<([A-Z]\w+)[\s/>]/u.exec(source)?.[1]
   if (!rendered) throw new Error(`${route}: 렌더하는 컴포넌트를 찾지 못했다`)
   const imported = new RegExp(
@@ -148,10 +158,11 @@ describe("작성 화면 — 확인창 dismiss 와 화면 pop 이 겹치지 않�
       "story/new",
     ])
     // 껍데기 라우트는 폼이 있는 파일까지 따라갔다.
+    // 정렬된 목록과 비교한다 — 기대값도 정렬 순서로 둔다(2026-09-09 정정).
     expect(SCREENS.map((screen) => screen.file).sort()).toEqual([
-      "src/features/recipe/views/FreePostEditScreen.tsx",
       "app/(write)/story/new.tsx",
       "src/features/recipe/components/FreePostEditor.tsx",
+      "src/features/recipe/views/FreePostEditScreen.tsx",
       "src/features/recipe/views/RecipeWriteScreen.tsx",
     ])
   })

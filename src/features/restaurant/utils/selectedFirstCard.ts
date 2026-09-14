@@ -98,11 +98,11 @@ export function orderSelectedFirst(
  * - `distanceKm` 은 상세 응답에 **없다**(서버가 기준 좌표를 받지 않는다). 거리 공식을
  *   앱에 두 번째로 복사해 여기서 계산하지 않는다 — 계약 D5 이고, 그러면 같은 "2.6km"
  *   가 화면마다 달라진다. `null` 이면 카드가 거리 조각을 **빼고** 지역만 그린다.
- * - `safety.driverCounts` 도 상세에는 없다. 빈 객체를 주면 `dominantDriver` 가 `null` 을
- *   내고 두 번째 배지가 사라진다. 판정을 끈 영양소를 모르면 말하지 않는 쪽이 맞다.
+ * - `safety.driverCounts` 도 상세에는 없다. 빈 객체를 주면 `cardConcernNutrients` 가
+ *   빈 배열을 내고 영양소 배지가 사라진다. 판정을 끈 영양소를 모르면 말하지 않는 쪽이 맞다.
  * - `safety.level` 은 서버가 사용자 기준으로 계산한 `avgSafety` 를 **그대로** 옮긴다.
  *   `UNKNOWN` 을 `SAFE` 로 올리지 않고(D4), `profileMissing` 도 그대로 실어
- *   `cardSafetyBadges` 가 배지를 아예 그리지 않게 한다(D3/D4).
+ *   `cardConcernNutrients` 가 배지를 아예 그리지 않게 한다(D3/D4).
  */
 export function detailToCard(
   detail: RestaurantDetailDto,

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import { View, StyleSheet, ScrollView, Pressable, Linking } from "react-native"
 import { Text, TextInput } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -8,7 +8,22 @@ import { useTranslation } from "react-i18next"
 
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { useSurface } from "@/src/hooks/useSurface"
+import { spacing } from "@/src/design-system-v2"
+
 import { matchesReferenceQuery } from "@/src/features/settings/utils/referenceSearch"
+
+/*
+  ■ 간격 규격 (2026-09-11 피드백 "행이 빽빽하다") — 4pt 그리드, v2 spacing 토큰.
+
+  - 행: 최소 56pt, 세로 패딩 16 (아이콘 36 + 16×2 = 68 이 보통이지만 한 줄 제목만 있는
+    행이 56 밑으로 꺼지지 않게 바닥을 둔다)
+  - 섹션 제목 → 카드: 16
+  - 섹션 사이: 24 (검색창 → 첫 섹션 제목도 같은 24)
+*/
+const ROW_MIN_HEIGHT = 56
+const ROW_PADDING_V = spacing[16]
+const TITLE_TO_CARD = spacing[16]
+const SECTION_GAP = spacing[24]
 
 // -----------------------------------------
 // 데이터 타입 정의
@@ -248,16 +263,20 @@ export function MedicalReferenceScreen() {
   const { t } = useTranslation("settings")
   const [searchQuery, setSearchQuery] = useState("")
 
-  const localizedSections: ReferenceSection[] = REFERENCE_SECTIONS.map(
-    (section) => ({
-      ...section,
-      header: t(SECTION_HEADER_KEYS[section.id]),
-      items: section.items.map((item) => ({
-        ...item,
-        title: t(ITEM_TEXT_KEYS[item.id].title),
-        meta: t(ITEM_TEXT_KEYS[item.id].meta),
+  // 스무 번 남짓의 t() 호출. 검색어를 한 글자 칠 때마다 다시 만들 이유가 없다 —
+  // 언어가 바뀌면 `t` 가 바뀌고 그때만 다시 만든다.
+  const localizedSections = useMemo<ReferenceSection[]>(
+    () =>
+      REFERENCE_SECTIONS.map((section) => ({
+        ...section,
+        header: t(SECTION_HEADER_KEYS[section.id]),
+        items: section.items.map((item) => ({
+          ...item,
+          title: t(ITEM_TEXT_KEYS[item.id].title),
+          meta: t(ITEM_TEXT_KEYS[item.id].meta),
+        })),
       })),
-    }),
+    [t],
   )
 
   const filteredSections = localizedSections
@@ -443,8 +462,8 @@ const styles = StyleSheet.create({
     올라간다(거기서도 4.5 밖이었다). 계산은 `tests/lightContrastAudit.test.ts` §11.
   */
   sectionHeader: {
-    paddingTop: 24,
-    paddingBottom: 10,
+    paddingTop: SECTION_GAP,
+    paddingBottom: TITLE_TO_CARD,
     fontSize: 13.5,
     lineHeight: 19,
     letterSpacing: -0.27,
@@ -456,11 +475,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   listItem: {
+    minHeight: ROW_MIN_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    gap: spacing[12],
+    paddingHorizontal: spacing[16],
+    paddingVertical: ROW_PADDING_V,
   },
   rowHairline: {
     position: "absolute",

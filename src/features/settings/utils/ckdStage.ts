@@ -96,8 +96,3 @@ export function toServerStage(
   if (onDialysis) return "DIALYSIS"
   return selected
 }
-
-export function labelForStage(stage: string | null): string {
-  if (!stage) return ""
-  return STAGE_OPTIONS.find((o) => o.key === stage)?.label ?? stage
-}

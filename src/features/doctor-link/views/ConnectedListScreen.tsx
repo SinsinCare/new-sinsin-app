@@ -39,6 +39,7 @@ import {
   useV2Theme,
 } from "@/src/design-system-v2"
 import { presentError, resolveError } from "@/src/lib/errorMessage"
+import { useRevalidateOnReturn } from "@/src/shared/refresh"
 import { doctorLinkService } from "@/src/services/data/doctorLinkService"
 import type {
   DoctorConnection,
@@ -97,6 +98,12 @@ export function ConnectedListScreen({
   const queryClient = useQueryClient()
 
   const connections = useQuery(doctorConnectionsQuery())
+  /**
+   * 승인·거절은 **의사 콘솔에서** 일어난다. 이 화면이 마운트된 채로 뒤 화면에 갔다가 돌아오면
+   * 콘솔이 이미 승인했어도 "승인 대기" 가 그대로 서 있었다(실기 왕복에서 확인). 돌아올 때
+   * 낡은 것만 다시 받는다 — 목록 쿼리는 staleTime 0 이라 매번 최신이다.
+   */
+  useRevalidateOnReturn({ queryKeys: [doctorLinkKeys.connections()] })
   const showLoading = useLoadingVisible(connections.isLoading, {
     surface: "doctor_connections",
   })

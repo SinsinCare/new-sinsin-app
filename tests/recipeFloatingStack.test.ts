@@ -122,8 +122,15 @@ describe("레시피 목록에 떠 있는 것", () => {
     */
     expect(SCREEN_CODE).not.toContain("RecipeWriteFab")
     expect(SCREEN_CODE).not.toMatch(/position:\s*"absolute"/u)
-    // 작성 진입점은 공용 컴포넌트로 선다.
-    expect(SCREEN_CODE).toContain("FloatingWriteButton")
+    /*
+      2026-09-09 재조준. 탐색 화면 재편(2026-09-06, `docs/design/recipe-browse-refresh-2026-09-06/
+      REVIEW.md` "Removed the duplicate floating recipe-writing button")으로 작성 플로팅은
+      다시 빠졌고, 작성 진입점은 헤더의 연필 하나(`RecipeBrowseHeader onWrite`)다 —
+      `tests/recipeHomeStickyLayer.test.ts` 가 같은 사실을 반대편에서 못 박는다.
+      그래서 이 화면에는 어떤 플로팅도 없고, 진입점은 헤더가 든다.
+    */
+    expect(SCREEN_CODE).not.toContain("FloatingWriteButton")
+    expect(SCREEN_CODE).toMatch(/<RecipeBrowseHeader\b[\s\S]*?\bonWrite=/u)
   })
 
   it("옛 플로팅 컴포넌트 파일이 남아 있지 않다", () => {

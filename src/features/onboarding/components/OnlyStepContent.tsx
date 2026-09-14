@@ -14,7 +14,7 @@ import Animated, {
 } from "react-native-reanimated"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { hapticSelection } from "@/src/lib/haptics"
-import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import {
   AUTH_LAYOUT,
   AUTH_MOTION,
@@ -53,7 +53,7 @@ function OptionRow({
   selected: boolean
   onPress: () => void
 }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const selection = useSharedValue(selected ? 1 : 0)
   const scale = useSharedValue(1)
 
@@ -124,7 +124,7 @@ function FollowUpChip({
   selected: boolean
   onPress: () => void
 }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const selection = useSharedValue(selected ? 1 : 0)
   const scale = useSharedValue(1)
 
@@ -185,7 +185,7 @@ export function OnlyStepContent({
   followUpKey,
   onFollowUpSelect,
 }: OnlyStepContentProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   // 본 질문에 답하기 전에는 후속 질문을 띄우지 않는다. 빈 화면에 질문 두 개를
   // 동시에 내미는 대신, 고르고 나면 아래에서 이어지도록 한다.
   const showFollowUp =

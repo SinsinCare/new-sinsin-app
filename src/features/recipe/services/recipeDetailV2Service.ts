@@ -5,8 +5,8 @@ import { readPortionReference } from "@/src/features/nutrition/utils/portionRefe
  * 왜 모의 경로가 붙어 있는가:
  *   서버 v2 엔드포인트(`/recipes/{id}` 새 모양, `/save`, `/views`, `/reviews`)가 붙기 전에
  *   화면을 완성해야 한다. 그래서 `recipeV2Mock.enabled` 하나로 갈라지고, 모의 payload 는
- *   **계약 §6.2 예시 그대로**다. 화면에는 모의 데이터가 한 줄도 없다 — 서버가 붙으면
- *   `recipeV2Mock.enabled = false`(또는 `EXPO_PUBLIC_RECIPE_V2_MOCK=false`) 하나로 끝난다.
+ *   **계약 §6.2 예시 그대로**다. 화면에는 모의 데이터가 한 줄도 없다 — 모의 경로는
+ *   `EXPO_PUBLIC_RECIPE_V2_MOCK=true` 를 **명시한 개발 환경에서만** 켜진다(아래 머리말).
  *
  * 모의 저장소는 **상태를 가진다**. 저장/리뷰가 절대 상태 PUT(§2.1)이라 멱등이어야 하고,
  * 화면의 낙관 갱신이 되돌려지지 않는지 눈으로 확인해야 하기 때문이다.
@@ -43,12 +43,21 @@ import {
 } from "../types/recipeV2"
 
 /**
- * 서버 v2 가 붙기 전까지 켜 둔다. 오케스트레이터는 이 한 줄(또는 env)만 끄면 된다.
+ * 모의 경로는 **`EXPO_PUBLIC_RECIPE_V2_MOCK` 이 정확히 `"true"` 일 때만** 켜진다.
+ *
+ * 예전 기본값은 반대였다(`!== "false"` — 플래그가 없으면 모의). eas.json 의 운영
+ * 프로파일(testflight/playstore/production)은 이 키를 적지 않으므로 **스토어 빌드가
+ * 인메모리 모의 상세를 실어 나갔다**(테스트 프로파일만 명시적으로 `"false"` 였다).
+ * 안전한 방향은 "적지 않으면 서버" 다 — 플래그를 잊으면 실제 데이터가 나오지
+ * 모의가 나오지 않는다. 목록(`RECIPE_LIST_V2_MOCK`)·작성(`recipeWriteApiConfig`)도
+ * 같은 규칙이고, `scripts/check-release-config.js` 가 운영 프로파일에서 이 키가
+ * `"true"` 로 켜지는 것을 막는다.
+ *
  * `enabled` 를 런타임에 바꿀 수 있게 둔 이유: 테스트가 실제 호출을 만들지 않고 두 경로를
  * 모두 통과시킬 수 있어야 한다.
  */
 export const recipeV2Mock = {
-  enabled: process.env.EXPO_PUBLIC_RECIPE_V2_MOCK !== "false",
+  enabled: process.env.EXPO_PUBLIC_RECIPE_V2_MOCK === "true",
   /** 모의 응답 지연(ms). 로딩 상태가 실제로 보이는지 확인하려고 둔다. */
   latencyMs: 220,
 }

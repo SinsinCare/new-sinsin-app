@@ -376,34 +376,6 @@ describe("§L4 사다리 밖 회색을 화면이 직접 칠하지 못한다", ()
     */
     "src/features/auth/views/LoginScreen.tsx":
       "배경 이미지 위 패치 — 이미지의 흰색에 맞춘 값이라 면 체계가 아니다",
-    /*
-      Safe 틸(`tokens.color.safe1` 과 같은 값). 회색이 아니라 **의미색**이고, 이
-      게이트는 색상 계보가 아니라 면 사다리를 지킨다. 토큰으로 옮길 수는 있으나
-      그건 이 작업(면 재편)의 범위 밖이다.
-    */
-    "src/features/settings/views/AskDoctorScreen.tsx":
-      "Safe 틸 배지 — 회색이 아니라 의미색(tokens.color.safe1 과 같은 값)",
-  }
-  /*
-    건강검진(구) 계보 7화면. **자기 팔레트를 통째로 들고 있다** — 슬레이트
-    (#F8FAFC · #F1F5F9 · #E2E8F0)와 에메랄드(#F0FDF4 · #ECFDF5 · #F0FDF9)로,
-    v2 시맨틱과 접점이 없다. 사다리로 옮기면 그건 토큰 이동이 아니라 **재도색**이고,
-    이번 작업이 금지한 그것이다. 게이트가 이름을 들고 있는 것 자체가 목적이다 —
-    "언젠가 옮길 곳" 이 목록으로 남고, 새 화면은 여기 낄 수 없다.
-  */
-  const LEGACY_HEALTH_PALETTE = [
-    "HealthDashboardScreen",
-    "HealthDataEntryScreen",
-    "HealthDataResultDetailScreen",
-    "HealthDataResultListScreen",
-    "HealthDataUploadScreen",
-    "NhisConfirmScreen",
-    "OcrReviewScreen",
-  ].map((name) => `src/features/health/views/${name}.tsx`)
-
-  for (const file of LEGACY_HEALTH_PALETTE) {
-    ALLOWED[file] =
-      "건강검진(구) 계보 — 슬레이트·에메랄드 자기 팔레트. 재도색 대상"
   }
 
   /** 사다리가 사는 곳과 그 어댑터는 당연히 값을 든다. */

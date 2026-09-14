@@ -5,6 +5,7 @@ import { Text } from "@/src/design-system-v2/primitives/NativeText"
 import { spacing, typography, useV2Theme } from "@/src/design-system-v2"
 import { dynamicKey } from "@/src/i18n/dynamicKey"
 import {
+  kstDateString,
   personalPortion,
   portionLabel,
   portionNutrients,
@@ -28,7 +29,7 @@ export function PersonalPortionCalculator({
   const [confirmed, setConfirmed] = useState(false)
   const [meals, setMeals] = useState(2)
   const [share, setShare] = useState(0.5)
-  const today = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10)
+  const today = kstDateString()
   const result = personalPortion(input, confirmed, meals, share, today)
   const textStyle = [typography.subtext.small, { color: colors.label.neutral }]
   const labelStyle = [typography.label.small, { color: colors.label.normal }]
@@ -164,9 +165,8 @@ export function PersonalPortionCalculator({
                   ),
                   false,
                   () => {
-                    const freshDay = new Date(Date.now() + 9 * 3600_000)
-                      .toISOString()
-                      .slice(0, 10)
+                    // 렌더 시점이 아니라 누른 시점의 날짜 — 자정을 넘긴 화면에서 옛 날짜로 상담을 열지 않는다.
+                    const freshDay = kstDateString()
                     if (
                       personalPortion(input, confirmed, meals, share, freshDay)
                     )

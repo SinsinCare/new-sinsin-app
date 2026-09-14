@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { foodCameraService } from "@/src/services/data/foodCameraService"
 import {
   Pressable,
   ScrollView,
@@ -30,6 +31,7 @@ import { Text } from "@/src/shared/components/AppText"
 import { EmphasizedText } from "@/src/shared/components/EmphasizedText"
 import { hapticSelection } from "@/src/lib/haptics"
 import { showConfirm } from "@/src/lib/dialog"
+import { presentError } from "@/src/lib/errorMessage"
 import { useSurface } from "@/src/hooks/useSurface"
 import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import type {
@@ -41,6 +43,7 @@ import { normalizeFoodAnalysisResult } from "@/src/shared/utils/foodAnalysisResu
 import type { MealType } from "../types"
 import { FoodResultEdit } from "./FoodResultEdit"
 import { MealDeleteConfirmSheet } from "./MealDeleteConfirmSheet"
+import { MealReportSaveFailedError } from "../stores/mealReportPageStore"
 import { useMealReport } from "@/src/features/food-report/hooks/useMealReport"
 import type {
   MealReport,
@@ -225,6 +228,42 @@ export function FoodAnalysisResult({
     setDisplayMealType(mealType)
   }, [mealType])
 
+  /*
+    미뤄 둔 삽화 따라잡기(2026-09-11). 서버가 `illustrationPending` 으로 먼저 돌려주면 그림 자리는
+    비어 있다. 3초마다 결과를 다시 읽어 그림이 붙으면 갈아 끼우고, 45초가 지나면 그만둔다 —
+    그림은 있으면 좋은 것이지 기다릴 것이 아니다. 사진 분석(imageUri 가 있는 경우)에는 돌지 않는다.
+  */
+  useEffect(() => {
+    const id = result?.foodAnalysisResultId
+    if (!id || imageUri || result?.imageUrl || result?.illustrationPending !== true) return
+    let cancelled = false
+    let ticks = 0
+    const timer = setInterval(() => {
+      ticks += 1
+      if (ticks > 15) {
+        clearInterval(timer)
+        return
+      }
+      void foodCameraService
+        .getFoodAnalysisResult(id)
+        .then((fresh) => {
+          if (cancelled) return
+          if (fresh.imageUrl) {
+            setDisplayImageUri(fresh.imageUrl)
+            setImageFailed(false)
+            clearInterval(timer)
+          } else if (fresh.illustrationPending !== true) {
+            clearInterval(timer)
+          }
+        })
+        .catch(() => undefined)
+    }, 3000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [result?.foodAnalysisResultId, result?.imageUrl, result?.illustrationPending, imageUri])
+
   useEffect(() => {
     setDisplayImageUri(imageUri ?? result?.imageUrl ?? undefined)
     setImageFailed(false)
@@ -299,12 +338,23 @@ export function FoodAnalysisResult({
   const handleAddToRecordPress = async () => {
     if (isAddingToRecord) return
     setIsAddingToRecord(true)
+    let saved = false
     try {
       await onAddToRecord?.()
-      onClose()
+      saved = true
+    } catch (error) {
+      /*
+        저장 실패. 여는 쪽의 저장 경로는 오류를 이미 띄우고 `MealReportSaveFailedError` 로
+        거부한다(`mealReportPageStore` 의 규약) — 페이지는 열린 채 둔다. 예전에는 실패해도
+        닫혔고, 복구된 결과는 그 순간 버려졌다. 규약 밖의 오류만 여기서 알린다.
+      */
+      if (!(error instanceof MealReportSaveFailedError)) {
+        presentError(error, { scope: "meal-diary-register" })
+      }
     } finally {
       setIsAddingToRecord(false)
     }
+    if (saved) onClose()
   }
 
   const handleAskAboutMealPress = async () => {

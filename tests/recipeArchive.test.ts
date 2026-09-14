@@ -5,6 +5,11 @@ jest.mock("../src/services/core/apiClient", () => ({
   api: {},
 }))
 
+// 모의 경로는 플래그를 명시적으로 켠 환경에서만 산다(적지 않으면 서버 — 서비스 머리말).
+// 이 파일은 모의 경로를 보므로 모듈을 들여오기 전에 켠다. 서버 경로는
+// `recipeArchiveServerPath.test.ts` 가 본다.
+process.env.EXPO_PUBLIC_RECIPE_V2_MOCK = "true"
+
 import enRecipe from "../src/i18n/locales/en/recipe.json"
 import koRecipe from "../src/i18n/locales/ko/recipe.json"
 import i18n from "../src/i18n"

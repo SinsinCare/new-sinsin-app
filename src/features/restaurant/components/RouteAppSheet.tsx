@@ -31,7 +31,7 @@ export interface RouteAppSheetProps {
   target: MapAppTarget
 }
 
-/** 목업의 옵션 행 높이와 같은 값(`SortSheet`). 두 시트의 행이 달라 보이면 안 된다. */
+/** 목업의 옵션 행 높이와 같은 값(`FilterSheet` 의 정렬 섹션). 두 시트의 행이 달라 보이면 안 된다. */
 const OPTION_HEIGHT = 64
 
 export function RouteAppSheet({

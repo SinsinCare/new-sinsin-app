@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { hapticStepAdvance } from "@/src/lib/haptics"
 import { V2DotLoader } from "@/src/design-system-v2"
 import { AuthKeyboardFooter } from "./AuthKeyboardFooter"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
 import type { SignupStepDirection } from "../hooks/useSignupSteps"
 
@@ -80,7 +80,7 @@ function makeExiting(direction: SignupStepDirection) {
 }
 
 function StepProgress({ progress }: { progress: number }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const [trackWidth, setTrackWidth] = useState(0)
   const fill = useSharedValue(progress)
 
@@ -156,7 +156,7 @@ export function SignupStepLayout({
 }: SignupStepLayoutProps) {
   const insets = useSafeAreaInsets()
   const { t } = useTranslation("auth")
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const isCtaActive = !ctaDisabled && !ctaLoading
   const activeness = useSharedValue(isCtaActive ? 1 : 0)
   const press = useSharedValue(0)
@@ -304,7 +304,7 @@ export function StepHelperText({
   message: string
   tone?: "hint" | "error"
 }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   return (
     <Animated.View
       entering={FadeIn.duration(AUTH_MOTION.duration.fast)}

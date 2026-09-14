@@ -1,31 +1,26 @@
 /**
- * 대표 사진. 고른 즉시 올려서 `objectPath` 를 받아 둔다(계약 §3.6 `imageObjectPaths`).
+ * 대표 사진 타일 줄. 라벨·간격은 `recordPageSpec`, 타일은 키트 텍스트 면과 같은
+ * 모서리(`FIELD.radius`)·바탕(`s.surfaceSunken`)이다.
  *
- * ## 왜 등록할 때 몰아서 올리지 않는가
- * v1 은 등록을 누른 뒤에 사진을 올렸다. 사진 5장이면 등록 버튼을 누르고 몇 초 동안
- * 아무 일도 안 일어난 것처럼 보이고, 그 사이에 실패하면 **글까지 안 올라간다.**
- * 고른 즉시 올리면 실패한 사진만 다시 시도할 수 있고 등록은 즉시 끝난다.
- *
- * 실패한 사진은 지우지 않고 "못 올렸어요 / 다시 올리기" 로 남긴다 — 조용히 사라지면
- * 사용자는 등록된 레시피에서 사진이 빠진 것을 나중에 발견한다.
+ * 사진 위 스크림(`rgba` 반투명)은 면이 아니라 사진을 덮는 칠이라 사다리 밖이다
+ * (`tests/surfaceLadderGuard` §L4 가 알고 남긴 예외). 글자는 v2 `static.white`.
  */
 
 import { Image, StyleSheet, View, Pressable } from "react-native"
-import { Text } from "@/src/shared/components/AppText"
 import Ionicons from "@expo/vector-icons/Ionicons"
-
-import { semanticLight } from "@/src/design-system-v2"
+import { V2Text, useV2Theme } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
 import { RECIPE_WRITE_LIMITS } from "@/src/features/recipe/types/recipeWrite"
+import {
+  FIELD,
+  FORM,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 import type { PhotoRow } from "./writeFormState"
 
-/**
- * 사진 위에 얹는 글자·글리프. **모드를 따라가지 않는다** — 바닥이 사용자의 사진이라
- * 라이트/다크 어느 쪽에서도 같은 흰색이어야 읽힌다. 그래서 `s.textStrong` 이 아니라
- * v2 의 `static.white` 다(`static` 이 "모드와 무관" 이라는 뜻이다).
- */
-const OVERLAY_INK = semanticLight.static.white
+const THUMB = FIELD.height - S[3]
+const PHOTO_SCRIM = "rgba(0,0,0,0.55)"
+const REMOVE_SCRIM = "rgba(0,0,0,0.7)"
 
 interface PhotoPickerRowProps {
   label: string
@@ -53,15 +48,18 @@ export function PhotoPickerRow({
   copy,
 }: PhotoPickerRowProps) {
   const s = useSurface()
+  const { colors } = useV2Theme()
+  const overlayInk = colors.static.white
   const atLimit = photos.length >= RECIPE_WRITE_LIMITS.imageMax
-
   return (
-    <View style={styles.wrap}>
+    <View style={styles.group}>
       <View style={styles.labelRow}>
-        <Text style={[styles.label, { color: s.textStrong }]}>{label}</Text>
-        <Text style={[styles.optional, { color: s.textWeak }]}>
+        <V2Text style={styles.label} color={s.textStrong}>
+          {label}
+        </V2Text>
+        <V2Text style={styles.hint} color={s.text}>
           {copy.optionalMark}
-        </Text>
+        </V2Text>
       </View>
       <View style={styles.row}>
         {photos.map((photo) => (
@@ -80,11 +78,13 @@ export function PhotoPickerRow({
                 }
                 style={styles.overlay}
               >
-                <Text style={styles.overlayText}>
+                <V2Text style={styles.overlayText} color={overlayInk}>
                   {photo.status === "failed" ? copy.failed : copy.uploading}
-                </Text>
+                </V2Text>
                 {photo.status === "failed" ? (
-                  <Text style={styles.overlayAction}>{copy.retry}</Text>
+                  <V2Text style={styles.overlayAction} color={overlayInk}>
+                    {copy.retry}
+                  </V2Text>
                 ) : null}
               </Pressable>
             ) : null}
@@ -92,10 +92,10 @@ export function PhotoPickerRow({
               onPress={() => onRemove(photo.id)}
               accessibilityRole="button"
               accessibilityLabel={copy.remove}
-              hitSlop={6}
+              hitSlop={S[2]}
               style={styles.removeButton}
             >
-              <Ionicons name="close" size={14} color={OVERLAY_INK} />
+              <Ionicons name="close" size={14} color={overlayInk} />
             </Pressable>
           </View>
         ))}
@@ -106,74 +106,58 @@ export function PhotoPickerRow({
             accessibilityLabel={copy.add}
             style={({ pressed }) => [
               styles.addButton,
-              { backgroundColor: s.surfaceSunken },
-              pressed && { opacity: 0.7 },
+              {
+                backgroundColor: pressed ? s.surfacePressed : s.surfaceSunken,
+              },
             ]}
           >
-            <Ionicons name="add" size={22} color={s.textMuted} />
+            <Ionicons name="add" size={22} color={s.text} />
           </Pressable>
         )}
       </View>
       {atLimit ? (
-        <Text style={[styles.limit, { color: s.textMuted }]}>
+        <V2Text style={styles.hint} color={s.text}>
           {copy.limitReached}
-        </Text>
+        </V2Text>
       ) : null}
     </View>
   )
 }
 
-const THUMB = 76
-
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  labelRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  // 다른 쓰기 폼 라벨과 같은 급(`WriteTextField`·`WriteChipRail`).
-  label: { ...TYPE.cardTitle, fontWeight: "700" },
-  optional: { ...TYPE.cardSub },
-  row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  group: { gap: FORM.labelGap },
+  labelRow: { flexDirection: "row", alignItems: "baseline", gap: S[2] },
+  label: FORM.label,
+  hint: FORM.hint,
+  row: { flexDirection: "row", flexWrap: "wrap", gap: S[2] },
   thumbWrap: { width: THUMB, height: THUMB },
-  thumb: {
-    width: THUMB,
-    height: THUMB,
-    borderRadius: LAYOUT.field.radius,
-  },
+  thumb: { width: THUMB, height: THUMB, borderRadius: FIELD.radius },
   overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: LAYOUT.field.radius,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: FIELD.radius,
+    backgroundColor: PHOTO_SCRIM,
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
+    gap: S[1],
   },
-  overlayText: { ...TYPE.caption, fontSize: 11, color: OVERLAY_INK },
-  overlayAction: {
-    ...TYPE.caption,
-    fontSize: 11,
-    fontWeight: "700",
-    color: OVERLAY_INK,
-  },
+  overlayText: FORM.hint,
+  overlayAction: FORM.option,
   removeButton: {
     position: "absolute",
-    top: -6,
-    right: -6,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    top: -S[2],
+    right: -S[2],
+    width: S[6],
+    height: S[6],
+    borderRadius: S[3],
+    backgroundColor: REMOVE_SCRIM,
     alignItems: "center",
     justifyContent: "center",
   },
   addButton: {
     width: THUMB,
     height: THUMB,
-    borderRadius: LAYOUT.field.radius,
+    borderRadius: FIELD.radius,
     alignItems: "center",
     justifyContent: "center",
   },
-  limit: { ...TYPE.cardSub },
 })

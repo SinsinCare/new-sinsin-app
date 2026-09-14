@@ -132,7 +132,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 12,
     fontSize: 16,
-    lineHeight: INPUT_LINE_HEIGHT,
+    // 단일행: lineHeight 를 주면 iOS 가 글리프를 라인박스 바닥으로 민다(surface.ts singleLineInputText).
+    // 높이는 위 `height` 가 INPUT_LINE_HEIGHT 로 계산한다.
+    includeFontPadding: false,
   },
   helper: { fontSize: 12 },
 })

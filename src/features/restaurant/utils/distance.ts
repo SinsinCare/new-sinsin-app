@@ -44,32 +44,3 @@ export function formatDistanceKm(km: number | null | undefined): string | null {
   const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
   return `${text}km`
 }
-
-/**
- * 스크린리더용. `620m` 를 그대로 읽히면 "육백이십엠" 이 되므로 단위를 말로 준다.
- * 문자열 조립은 화면이 `t()` 로 하고, 여기서는 키와 값만 정한다.
- */
-export function distanceAccessibility(
-  km: number | null | undefined,
-): { labelKey: string; params: { value: string } } | null {
-  if (km === null || km === undefined || !Number.isFinite(km) || km < 0) {
-    return null
-  }
-  if (km < METER_THRESHOLD_KM) {
-    const meters = Math.max(
-      Math.round((km * 1000) / METER_STEP) * METER_STEP,
-      METER_STEP,
-    )
-    return {
-      labelKey: "restaurant.distance.meters",
-      params: { value: String(meters) },
-    }
-  }
-  const rounded = Math.round(km * 10) / 10
-  return {
-    labelKey: "restaurant.distance.kilometers",
-    params: {
-      value: Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1),
-    },
-  }
-}

@@ -43,7 +43,7 @@ import { Text } from "@/src/design-system-v2/primitives/NativeText"
  * 가짜 목록을 만들지 않는다.
  */
 
-import { useCallback, useMemo, useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import {
   Pressable,
   ScrollView,
@@ -181,24 +181,32 @@ export function ReviewerProfileScreen({
     [sort, t],
   )
 
+  /*
+    펼침 상태는 `extraData` 로 목록에 넘기고 여기서는 그 값을 읽는다. `expanded` 를 이
+    함수의 의존성에 두면 후기 하나를 펼칠 때마다 `renderItem` 이 새 함수가 되어 보이는
+    행 전부가 다시 그려진다(사진 스트립까지). 행마다 인라인 화살표를 만들지 않는 것도
+    같은 이유 — 행이 자기 `review` 를 알려 주므로 `memo(ProfileReviewRow)` 가 걸러 낸다.
+  */
   const renderReview = useCallback(
-    ({ item }: ListRenderItemInfo<ReviewDto>) => (
-      <ProfileReviewRow
-        review={item}
-        colors={colors}
-        photoSize={photoSize}
-        expanded={expanded.has(item.reviewId)}
-        onToggleExpanded={() => toggleExpanded(item.reviewId)}
-        restaurant={restaurantLabelFor?.(item) ?? null}
-        onPressRestaurant={onPressRestaurant}
-        onPressReport={() => setReportTarget(item)}
-        authorName={profile?.nickName ?? ""}
-        onPressPhoto={onPressPhoto}
-      />
-    ),
+    ({ item, extraData }: ListRenderItemInfo<ReviewDto>) => {
+      const expandedIds = extraData as ReadonlySet<number>
+      return (
+        <ProfileReviewRow
+          review={item}
+          colors={colors}
+          photoSize={photoSize}
+          expanded={expandedIds.has(item.reviewId)}
+          onToggleExpanded={toggleExpanded}
+          restaurant={restaurantLabelFor?.(item) ?? null}
+          onPressRestaurant={onPressRestaurant}
+          onPressReport={setReportTarget}
+          authorName={profile?.nickName ?? ""}
+          onPressPhoto={onPressPhoto}
+        />
+      )
+    },
     [
       colors,
-      expanded,
       onPressPhoto,
       onPressRestaurant,
       photoSize,
@@ -379,17 +387,12 @@ export function ReviewerProfileScreen({
 
       <FlashList
         data={tab === TAB_REVIEWS ? reviews : []}
-        keyExtractor={(item) => String(item.reviewId)}
+        keyExtractor={reviewKeyExtractor}
         renderItem={renderReview}
+        // 펼침이 바뀐 것을 목록에 알린다 — `renderReview` 가 이 값을 읽는다(위 주석).
+        extraData={expanded}
         ListHeaderComponent={header}
-        ItemSeparatorComponent={() => (
-          <View
-            style={[
-              styles.rowGap,
-              { backgroundColor: colors.background.lower },
-            ]}
-          />
-        )}
+        ItemSeparatorComponent={ReviewRowGap}
         ListEmptyComponent={
           isLoading ? (
             <ReviewTabSkeleton />
@@ -501,17 +504,18 @@ interface ProfileReviewRowProps {
   colors: SemanticColors
   photoSize: number
   expanded: boolean
-  onToggleExpanded: () => void
+  /* 행이 자기 후기를 알려 준다 — 화면이 행마다 화살표를 만들지 않아도 되게(`renderReview` 주석). */
+  onToggleExpanded: (reviewId: number) => void
   restaurant: { restaurantId: number; name: string } | null
   onPressRestaurant?: (restaurantId: number) => void
-  onPressReport: () => void
+  onPressReport: (review: ReviewDto) => void
   /** 사진 접근성 문구에 들어가는 작성자 이름. 이 화면의 모든 후기가 같은 사람이다. */
   authorName: string
   /** 라이트박스로. 없으면 사진이 눌리지 않는다(죽은 버튼 금지). */
   onPressPhoto?: (review: ReviewDto, index: number) => void
 }
 
-function ProfileReviewRow({
+const ProfileReviewRow = memo(function ProfileReviewRow({
   review,
   colors,
   photoSize,
@@ -529,6 +533,10 @@ function ProfileReviewRow({
     keywords: review.keywords,
   })
   const dateValue = reviewDateParts(review.createdAt)
+  const handleToggleExpanded = useCallback(
+    () => onToggleExpanded(review.reviewId),
+    [onToggleExpanded, review.reviewId],
+  )
 
   return (
     <View style={styles.reviewRow}>
@@ -565,7 +573,7 @@ function ProfileReviewRow({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("restaurant.review.report")}
-            onPress={onPressReport}
+            onPress={() => onPressReport(review)}
             hitSlop={10}
             style={({ pressed }) => [pressed && styles.pressedRow]}
           >
@@ -656,7 +664,7 @@ function ProfileReviewRow({
       <ReviewExpandableContent
         content={review.content}
         expanded={expanded}
-        onExpand={onToggleExpanded}
+        onExpand={handleToggleExpanded}
         color={colors.label.neutral}
       />
 
@@ -723,6 +731,23 @@ function ProfileReviewRow({
         ) : null}
       </View>
     </View>
+  )
+})
+
+function reviewKeyExtractor(item: ReviewDto): string {
+  return String(item.reviewId)
+}
+
+/**
+ * 후기 사이 띠. 인라인 화살표로 넘기면 렌더마다 **새 컴포넌트 타입**이라 목록이 구분선을
+ * 전부 언마운트했다 다시 마운트한다 — 색은 테마에서 직접 읽어 정적 컴포넌트로 둔다.
+ */
+function ReviewRowGap() {
+  const { colors } = useV2Theme()
+  return (
+    <View
+      style={[styles.rowGap, { backgroundColor: colors.background.lower }]}
+    />
   )
 }
 

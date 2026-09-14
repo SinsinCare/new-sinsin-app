@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { useGoBack } from "@/src/shared/navigation"
+import { V2DialogHost } from "@/src/design-system-v2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
@@ -30,6 +31,7 @@ import {
   typography,
 } from "@/src/design-system-v2/tokens"
 import { showErrorToast } from "@/src/lib/toast"
+import { pickImageAssetFromGallery } from "@/src/features/recipe/services/imagePickerService"
 
 /**
  * 푸드 카메라 — 등록 절차 시안(2026-09-04, `camera.svg`).
@@ -169,6 +171,22 @@ export default function FoodCameraScreen() {
     }
   }
 
+  /**
+   * 갤러리에서 가져오기 — 촬영과 **같은 출구**(`onCapture(uri)`)로 나간다. 예전 시트에는 이 길이
+   * 있었는데 카메라 화면으로 바꾸면서 사라졌다(디자인 피드백 2026-09-11). 권한·취소는 헬퍼가 처리한다.
+   */
+  const handleGallery = async () => {
+    if (captureLock.current || finishedRef.current) return
+    captureLock.current = true
+    try {
+      const asset = await pickImageAssetFromGallery()
+      if (!asset || finishedRef.current) return
+      finish(() => handlers?.onCapture(asset.uri))
+    } finally {
+      captureLock.current = false
+    }
+  }
+
   const granted = permission?.granted ?? false
 
   return (
@@ -245,6 +263,23 @@ export default function FoodCameraScreen() {
                     ? "foodCamera.settings"
                     : "foodCamera.allow",
               )}
+            </Text>
+          </Pressable>
+          {/* 카메라를 거부했어도 앨범은 별개 권한이다 — 여기서 막히면 사진 기록 자체가 닫힌다. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("foodCamera.gallery")}
+            onPress={() => {
+              hapticSelection()
+              void handleGallery()
+            }}
+            style={({ pressed }) => [
+              styles.deniedSecondary,
+              { opacity: pressed ? 0.6 : 1 },
+            ]}
+          >
+            <Text style={[styles.deniedButtonLabel, { color: s.textStrong }]}>
+              {t("foodCamera.gallery")}
             </Text>
           </Pressable>
         </View>
@@ -341,37 +376,69 @@ export default function FoodCameraScreen() {
           <Text style={styles.cameraHint} lineBreakStrategyIOS="hangul-word">
             {t("foodCamera.guide")}
           </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("foodCamera.shutter")}
-            disabled={!isReady || isCapturing}
-            onPress={() => void handleShutter()}
-            onPressIn={() => {
-              shutterPress.value = withTiming(1, {
-                duration: 90,
-                reduceMotion: ReduceMotion.System,
-              })
-            }}
-            onPressOut={() => {
-              shutterPress.value = withSpring(0, {
-                damping: 12,
-                stiffness: 260,
-                reduceMotion: ReduceMotion.System,
-              })
-            }}
-          >
-            <Animated.View
-              style={[
-                styles.shutter,
-                { opacity: isCapturing ? 0.7 : 1 },
-                shutterStyle,
+          <View style={styles.controls}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("foodCamera.gallery")}
+              disabled={isCapturing}
+              onPress={() => {
+                hapticSelection()
+                void handleGallery()
+              }}
+              style={({ pressed }) => [
+                styles.galleryButton,
+                { opacity: pressed ? 0.6 : 1 },
               ]}
             >
-              <View style={styles.shutterInner} />
-            </Animated.View>
-          </Pressable>
+              <View style={styles.galleryIcon}>
+                <Ionicons
+                  name="images-outline"
+                  size={24}
+                  color={semanticLight.static.black}
+                />
+              </View>
+              <Text style={styles.galleryLabel}>{t("foodCamera.gallery")}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("foodCamera.shutter")}
+              disabled={!isReady || isCapturing}
+              onPress={() => void handleShutter()}
+              onPressIn={() => {
+                shutterPress.value = withTiming(1, {
+                  duration: 90,
+                  reduceMotion: ReduceMotion.System,
+                })
+              }}
+              onPressOut={() => {
+                shutterPress.value = withSpring(0, {
+                  damping: 12,
+                  stiffness: 260,
+                  reduceMotion: ReduceMotion.System,
+                })
+              }}
+            >
+              <Animated.View
+                style={[
+                  styles.shutter,
+                  { opacity: isCapturing ? 0.7 : 1 },
+                  shutterStyle,
+                ]}
+              >
+                <View style={styles.shutterInner} />
+              </Animated.View>
+            </Pressable>
+          </View>
         </View>
       )}
+      {/*
+        이 페이지는 네이티브 스택의 fullScreenModal 이다. 루트 V2DialogHost 의 RN Modal 은
+        루트 VC 에서 present 하는데, 화면 모달이 떠 있으면 iOS 가 present 를 거부해
+        확인창이 **조용히 안 뜬다**(V2DialogHost 머리말). 사진 권한이 거부된 상태에서
+        갤러리 버튼이 "설정 열기" 를 물어야 하는데 아무것도 안 보이던 이유(2026-09-12 제보).
+        ReviewWriteScreen 과 같이 안쪽에 하나 더 둔다 — 호스트는 스택이라 이쪽이 가져간다.
+      */}
+      <V2DialogHost />
     </View>
   )
 }
@@ -446,6 +513,34 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
     textShadowOffset: { width: 0, height: 1 },
   },
+  // 셔터는 가운데 고정, 갤러리는 왼쪽 여백에 절대 배치 — 셔터 위치가 버튼 유무로 흔들리지 않는다.
+  controls: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  galleryButton: {
+    position: "absolute",
+    left: spacing[32],
+    alignItems: "center",
+    gap: spacing[4],
+  },
+  galleryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    // §L4: 화면이 원시 팔레트를 직접 칠하지 않는다 — 촬영 안내 필과 같은 흰 필(약 카메라와 동일).
+    backgroundColor: semanticLight.static.white,
+  },
+  galleryLabel: {
+    ...typography.subtext.small,
+    color: semanticLight.static.white,
+    textShadowColor: primitives.opacityBlack[600],
+    textShadowRadius: 8,
+    textShadowOffset: { width: 0, height: 1 },
+  },
   shutter: {
     width: 80,
     height: 80,
@@ -483,6 +578,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[12],
     paddingHorizontal: spacing[24],
     borderRadius: radius.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deniedSecondary: {
+    minHeight: 44,
+    paddingVertical: spacing[10],
+    paddingHorizontal: spacing[24],
     alignItems: "center",
     justifyContent: "center",
   },

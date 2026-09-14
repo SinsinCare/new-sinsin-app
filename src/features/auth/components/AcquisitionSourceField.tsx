@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   KeyboardAvoidingView,
   NativeScrollEvent,
@@ -27,7 +27,7 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { hapticSelection } from "@/src/lib/haptics"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
 import { singleLineInputText } from "@/src/theme/surface"
 import {
@@ -125,14 +125,18 @@ export function AcquisitionSourceField({
   otherValue,
   onChange,
 }: AcquisitionSourceFieldProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const { t } = useTranslation("auth")
-  const options = getAcquisitionSourceOptions()
+  // 열 개의 i18n 라벨. 스크롤 프레임마다 다시 만들 이유가 없다 — 언어가 바뀌면
+  // `t` 가 바뀌고 그때만 다시 만든다(`useTermsAgreement` 와 같은 관례).
+  const options = useMemo(getAcquisitionSourceOptions, [t])
   const insets = useSafeAreaInsets()
   const scrollRef = useRef<Animated.ScrollView>(null)
   const scrollY = useSharedValue(0)
   const sheetProgress = useSharedValue(0)
   const openedAtIndex = useRef(0)
+  // 닫힘 모션이 끝나기 전에 언마운트되면 타이머가 사라진 컴포넌트의 state 를 건드린다.
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [isOpen, setIsOpen] = useState(false)
   const [phase, setPhase] = useState<"list" | "reason">("list")
@@ -172,6 +176,12 @@ export function AcquisitionSourceField({
   }
 
   useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!isOpen) return
     // 모달이 붙은 다음 프레임에 위치를 잡아야 목록이 첫 항목에서 시작하지 않는다.
     // 열릴 때 한 번뿐이다 — 스크롤 중에 다시 잡으면 사용자의 손을 되감는다.
@@ -187,7 +197,11 @@ export function AcquisitionSourceField({
   const close = () => {
     // 모달을 즉시 언마운트하면 내려가는 모션이 잘린다. 애니메이션이 끝난 뒤에 닫는다.
     sheetProgress.value = withTiming(0, TIMING)
-    setTimeout(() => setIsOpen(false), TIMING.duration)
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null
+      setIsOpen(false)
+    }, TIMING.duration)
   }
 
   const settleIndex = (e: NativeSyntheticEvent<NativeScrollEvent>) => {

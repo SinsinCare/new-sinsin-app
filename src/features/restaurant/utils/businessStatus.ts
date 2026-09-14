@@ -234,17 +234,6 @@ export function describeBusinessStatus(
   }
 }
 
-/** 라스트오더 보조 문구. 상태와 무관하게 별 줄로 붙는다(있을 때만). */
-export function lastOrderLabel(
-  lastOrder: string | null | undefined,
-): { labelKey: string; params: { time: string } } | null {
-  if (!lastOrder) return null
-  return {
-    labelKey: "restaurant.businessStatus.lastOrder",
-    params: { time: lastOrder },
-  }
-}
-
 /** 지금부터 전환 시각까지 남은 ms. 이미 지났거나 값이 없으면 `null`. */
 export function msUntilTransition(
   nextTransitionAt: string | null | undefined,
@@ -283,18 +272,10 @@ export function scheduleNextTransition(
   return () => clearTimeout(timer)
 }
 
-/** `restaurant.weekday.<Weekday>`. 서버 요일 코드 → i18n 키. */
-export function weekdayLabelKey(weekday: Weekday): string {
-  return `restaurant.weekday.${weekday}`
-}
-
-/** 요일 표시 순서. 월요일 시작 — 서버 `weekday()` 와 같은 기준이다. */
-export const WEEKDAY_ORDER: readonly Weekday[] = [
-  "MON",
-  "TUE",
-  "WED",
-  "THU",
-  "FRI",
-  "SAT",
-  "SUN",
-] as const
+/*
+  `lastOrderLabel()`·`weekdayLabelKey()`·`WEEKDAY_ORDER` 는 여기 없다 (일부러 지웠다).
+  라스트오더 문구는 `BusinessStatusText` 가, 요일 키는 위 `describeBusinessStatus` 가
+  각각 `restaurant.businessStatus.lastOrder` / `restaurant.weekday.<Weekday>` 를 직접
+  조립한다. 세 헬퍼는 테스트만 부르고 있어서, 남겨 두면 "앱이 이 경로로 문구를 만든다"
+  는 거짓 계약이 된다.
+*/

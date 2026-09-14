@@ -60,7 +60,7 @@ import { buildRecipePortionConsult } from "@/src/features/recipe/consult/recipeP
  * `layout.ts` 를 import 하지 않는다 — 기능 모듈끼리 의존하면 안 된다(그 파일 머리말 참고).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, ScrollView, StyleSheet, View } from "react-native"
+import { ScrollView, StyleSheet, View } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 import Ionicons from "@expo/vector-icons/Ionicons"
@@ -89,6 +89,7 @@ import {
 } from "@/src/design-system-v2"
 import { presentError } from "@/src/lib/errorMessage"
 import { ArticleSkeleton, ConfirmModal } from "@/src/shared/components"
+import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import { classifyFetchFailure } from "@/src/shared/utils/fetchFailure"
 import { STORE_REDIRECT_URL, recipeDeepLink } from "@/src/shared/utils/deepLink"
 import { shareContent } from "@/src/shared/utils/share"
@@ -488,20 +489,17 @@ export default function RecipeDetailRoute() {
         right={
           /* 내 레시피에만 나온다. 남의 것에는 아무것도 더 붙이지 않는다. */
           detail.authored ? (
-            <Pressable
+            <HeaderIconButton
               onPress={handleMoreRecipe}
               disabled={deleting}
-              accessibilityRole="button"
               accessibilityLabel={t("recipeWrite.more")}
-              hitSlop={12}
-              style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
             >
               <Ionicons
                 name="ellipsis-horizontal"
                 size={22}
                 color={deleting ? colors.label.assistive : colors.label.normal}
               />
-            </Pressable>
+            </HeaderIconButton>
           ) : undefined
         }
       />

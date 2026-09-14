@@ -8,7 +8,10 @@ import { V2Text } from "@/src/design-system-v2"
 import { typography, spacing } from "@/src/design-system-v2/tokens"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useAppRouter } from "@/src/shared/navigation"
-import { HeaderIconButton } from "@/src/shared/components"
+import {
+  HeaderIconButton,
+  headerActionRowRoom,
+} from "@/src/shared/components"
 import { FreePostTab } from "../components/FreePostTab"
 import { CommunityWriteButton } from "../components/community/CommunityWriteButton"
 import { COMMUNITY_GUTTER } from "../components/community/communityLayout"
@@ -81,6 +84,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[20],
-    paddingVertical: spacing[8],
+    // 규격 터치 상자(44/48)가 이 행 안쪽에 들어오게 자리를 만든다 — 안드로이드는 부모
+    // 경계 밖 터치를 자식에게 안 준다(`headerActionRowRoom` 머리말).
+    ...headerActionRowRoom(24),
   },
 })

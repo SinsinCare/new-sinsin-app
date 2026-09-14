@@ -9,6 +9,16 @@ jest.mock("../src/services/core/apiClient", () => ({
   },
 }))
 
+/*
+  모의 경로는 플래그를 명시적으로 켠 **개발 빌드**에서만 산다(적지 않으면 서버 —
+  서비스 머리말). 이 파일의 미리보기 계산 테스트는 그 경로를 보므로 모듈을 들여오기
+  전에 플래그를 켜고, 식품표를 읽는 `loadMockIndex` 가 `__DEV__` 로 잠겨 있어
+  (릴리스 번들에서 885KB 생성 파일을 떼어내는 자물쇠) jest 전역에도 그 값을 세운다.
+  서버 경로 블록은 `recipeWriteApiConfig.useMock = false` 로 스스로 끈다.
+*/
+process.env.EXPO_PUBLIC_RECIPE_V2_MOCK = "true"
+;(globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = true
+
 import { deriveAuthorContextTags } from "../src/features/recipe/components/write/authorContextTags"
 import { STAGE_TAGS } from "../src/features/recipe/data/recipeTags"
 import {
@@ -280,9 +290,7 @@ describe("무엇이 남았는가 (시안 writing-16 의 결함)", () => {
     expect(hasAnyRecipeWriteContent(form())).toBe(false)
     expect(hasAnyRecipeWriteContent(form({ servings: 1 }))).toBe(false)
     expect(hasAnyRecipeWriteContent(form({ name: "가" }))).toBe(true)
-    expect(hasAnyRecipeWriteContent(form({ stageTags: ["CKD3"] }))).toBe(
-      true,
-    )
+    expect(hasAnyRecipeWriteContent(form({ stageTags: ["CKD3"] }))).toBe(true)
   })
 })
 
@@ -1325,17 +1333,26 @@ describe("recipeDetailToWriteForm — 수정 왕복", () => {
   })
 
   test("사진이 없으면 빈 목록이다", () => {
-    const form = recipeDetailToWriteForm({ ...detail, heroImageObjectPath: null })
+    const form = recipeDetailToWriteForm({
+      ...detail,
+      heroImageObjectPath: null,
+    })
     expect(form.photos).toEqual([])
   })
 
   test("서버가 인분을 안 주면 1이다", () => {
     // 2 로 두면 서버가 전체 영양을 2로 나눠 1인분 나트륨을 절반으로 말한다.
-    expect(recipeDetailToWriteForm({ ...detail, servings: null }).servings).toBe(1)
+    expect(
+      recipeDetailToWriteForm({ ...detail, servings: null }).servings,
+    ).toBe(1)
   })
 
   test("빈 재료·순서는 한 줄씩 미리 놓는다", () => {
-    const form = recipeDetailToWriteForm({ ...detail, ingredients: [], steps: [] })
+    const form = recipeDetailToWriteForm({
+      ...detail,
+      ingredients: [],
+      steps: [],
+    })
     expect(form.ingredients).toHaveLength(1)
     expect(form.steps).toHaveLength(1)
     expect(form.ingredients[0]?.name).toBe("")

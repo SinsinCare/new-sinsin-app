@@ -1,8 +1,11 @@
 /**
- * 커뮤니티 재디자인의 **필터·정렬·액션 표면** 계약 — `CategoryChipRail` · `SortDropdown`
- * · `CommunityActionSheet`.
- * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.5 · §2.6 · §2.17 · §5.8
+ * 커뮤니티 재디자인의 **필터·정렬 표면** 계약 — `CategoryChipRail` · `SortDropdown`.
+ * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.5 · §2.6
  * · 판정 `01-DECISIONS.md` **D3** · **D11** · **D13**.
+ *
+ * `CommunityActionSheet`(§2.17 · §5.8)의 계약도 여기 있었다. 어디서도 import 되지 않는
+ * 죽은 파일이라 컴포넌트와 함께 지웠다(2026-09-09) — 수정·삭제·신고 액션은
+ * `showActionSheet`(`src/lib/dialog`)가 띄운다.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * ■ 왜 소스 문자열이 아니라 컴포넌트를 **호출**하나
@@ -13,7 +16,7 @@
  * 돌려받은 엘리먼트 트리를 읽는다 — 스타일 계산은 컴포넌트 자신의 것이다.
  * 치수·색·타이포는 토큰에서 읽어와 비교하므로 토큰이 바뀌면 같이 따라간다.
  *
- * ■ 이 파일이 지키는 것 중 가장 중요한 넷
+ * ■ 이 파일이 지키는 것 중 가장 중요한 셋
  *
  *  1. **D11 — 칩은 선택해도 굵기가 안 바뀐다.** 굵기가 바뀌면 칩 폭이 바뀌고 가로 레일이
  *     통째로 밀린다. `V2Chip` 을 그냥 쓰면 조용히 깨지는 자리라 **두 상태의 타이포 토큰이
@@ -22,8 +25,6 @@
  *     넣으므로(D13·D17 과 같은 산술) 패딩으로 쌓으면 1px 씩 밀린다.
  *  3. **앵커는 재서 넘긴다.** 실측 두 자리(필 하단 +8 · 정렬바 top+40)가 한 식에서 나온다 —
  *     상수로 박으면 스크롤된 화면에서 카드가 엉뚱한 곳에 뜬다.
- *  4. **D3 — 액션 시트에는 브랜드 강조가 없다.** 시안이 `관심없음`·`수정하기` 를 강조로
- *     그렸고 §2.17 이 그걸 뒤집었다. `selected` 가 다시 켜지면 판정이 사라진다.
  */
 /* eslint-disable import/first -- RN·네이티브 의존을 모듈 로드 **전에** 갈아 끼워야 한다. */
 
@@ -42,6 +43,15 @@ jest.mock("react-native", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }))
+/*
+  2026-09-08 부터 v2 컴포넌트는 `Text` 를 react-native 가 아니라
+  `primitives/NativeText`(접근성 확대 상한만 중앙에서 정하는 얇은 래퍼)에서 가져온다.
+  스타일은 손대지 않고 그대로 통과시키므로 호스트 태그와 같은 **문자열 태그**로 둔다 —
+  안 그러면 위의 `Text: "Text"` 가 라벨에 닿지 않는다(다른 스위트와 같은 처방).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
+}))
 jest.mock("react-i18next", () => ({
   // 키를 그대로 돌려준다 — 여기서 보는 것은 "어느 키를 골랐나" 다.
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: "ko" } }),
@@ -57,19 +67,6 @@ jest.mock("@/src/design-system-v2/components/V2Icon", () => ({
   두 스위트가 로드에 실패했다). 그라디언트 **자신의** 계약은
   `communityTabsAndGradients.test.ts` 가 지킨다 — 여기서는 "그 자리에 선다" 만 본다.
 */
-/*
-  `V2BottomSheet` 는 gorhom·AppModal·계측을 끌고 온다. 여기서 보고 싶은 것은 "액션 시트가
-  **그 시트 계보**를 쓰는가"(§5.8)와 시트에 무엇을 넘기는가지, 시트의 내부 동작이 아니다.
-  태그로 바꾸면 `type` 비교가 곧 "그 모듈을 쓴다" 는 뜻이 된다 — 손으로 만든 모달로
-  갈아타면 여기서 깨진다.
-*/
-jest.mock("@/src/design-system-v2/components/V2BottomSheet", () => ({
-  V2BottomSheet: "V2BottomSheet",
-}))
-// `V2BottomCTA` 는 expo-linear-gradient·키보드 훅을 끌고 온다. `fade` 를 넘겼는지만 본다.
-jest.mock("@/src/design-system-v2/components/V2BottomCTA", () => ({
-  V2BottomCTA: "V2BottomCTA",
-}))
 jest.mock("@/src/hooks/useAppColorScheme", () => ({
   useAppColorScheme: () => mockMode,
 }))
@@ -104,15 +101,11 @@ const mockTriggerRef = {
 
 import { resolveTheme } from "@/src/design-system-v2/theme"
 import { V2Chip } from "@/src/design-system-v2/components/V2Chip"
-import { V2BottomCTA } from "@/src/design-system-v2/components/V2BottomCTA"
-import { V2BottomSheet } from "@/src/design-system-v2/components/V2BottomSheet"
 import {
   V2Menu,
   type V2MenuItem,
 } from "@/src/design-system-v2/components/V2Menu"
-import { V2Option } from "@/src/design-system-v2/components/V2Option"
 import { V2Text } from "@/src/design-system-v2/components/V2Text"
-import { SHEET_GUTTER } from "@/src/design-system-v2/tokens/layout"
 import { radius } from "@/src/design-system-v2/tokens/radius"
 import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { spacing } from "@/src/design-system-v2/tokens/spacing"
@@ -135,7 +128,6 @@ import {
   SortDropdown,
   sortMenuAnchor,
 } from "@/src/features/recipe/components/community/SortDropdown"
-import { CommunityActionSheet } from "@/src/features/recipe/components/community/CommunityActionSheet"
 
 const light = resolveTheme("light").colors
 const dark = resolveTheme("dark").colors
@@ -679,104 +671,5 @@ describe("SortDropdown — 트리거 두 모양 (§2.6)", () => {
 
   it("우측 액션은 안 주면 안 그린다", () => {
     expect(byTag(sort({ variant: "bar" }), "Pressable")).toHaveLength(1)
-  })
-})
-
-/* ══ CommunityActionSheet — §2.17 · §5.8 · D3 ════════════════════════════ */
-
-const ACTIONS = [
-  { key: "edit", label: "act.edit", onPress: noop },
-  { key: "delete", label: "act.delete", onPress: noop },
-]
-
-const sheet = (overrides: Record<string, unknown> = {}) =>
-  render(CommunityActionSheet, {
-    surface: "community_post",
-    visible: true,
-    onClose: noop,
-    actions: ACTIONS,
-    ...overrides,
-  } as never)
-
-describe("CommunityActionSheet — 시트 계보와 푸터 (§5.8 · §2.17)", () => {
-  it("`V2BottomSheet` 계보를 그대로 쓴다(플로팅 카드로 포크하지 않는다)", () => {
-    const root = sheet()
-    expect(root.type).toBe(V2BottomSheet)
-    expect(root.props.surface).toBe("community_post")
-    expect(root.props.visible).toBe(true)
-  })
-
-  it("푸터는 `V2BottomCTA` 의 **fade** 이고 카피는 `action.cancel` 이다", () => {
-    const footer = sheet().props.footer as Element
-    expect(footer.type).toBe(V2BottomCTA)
-    // 36pt 페이드가 "옵션이 CTA 밑으로 지나간다" 를 말한다(§2.17 상단 페이드).
-    expect(footer.props.fade).toBe(true)
-    expect(footer.props.primaryLabel).toBe("action.cancel")
-  })
-
-  it("취소 CTA 는 시트를 닫는다", () => {
-    const closed: string[] = []
-    const footer = sheet({ onClose: () => closed.push("close") }).props
-      .footer as Element
-    ;(footer.props.onPrimary as () => void)()
-    expect(closed).toEqual(["close"])
-  })
-})
-
-describe("CommunityActionSheet — 옵션 (§2.17 · D3)", () => {
-  const optionsOf = (root: Element) => findAll(root, V2Option)
-
-  it("D3/§2.17 — 어떤 옵션도 브랜드 강조를 갖지 않는다", () => {
-    const options = optionsOf(sheet())
-    expect(options).toHaveLength(ACTIONS.length)
-    for (const option of options) expect(option.props.selected).toBe(false)
-
-    // 강조를 안 준 결과가 실제로 중립 면인지까지 본다(`V2Option` 을 진짜로 부른다).
-    const face = styleOf(expand(options[0] as Element))
-    expect(face.backgroundColor).toBe(light.fill.background)
-    expect(face.backgroundColor).not.toBe(light.primary.primaryWeak)
-    expect(face.borderColor).toBe("transparent")
-  })
-
-  it("파괴적/중립을 가르는 축이 아예 없다 — 항목은 `{key,label,onPress}` 뿐", () => {
-    for (const action of ACTIONS) {
-      expect(Object.keys(action).sort()).toEqual(["key", "label", "onPress"])
-    }
-    for (const option of optionsOf(sheet())) {
-      expect(option.props.description).toBeUndefined()
-      expect(option.props.leadingIcon).toBeUndefined()
-      expect(option.props.trailing).toBeUndefined()
-    }
-  })
-
-  it("고르면 액션이 먼저, 그 다음 닫힘 (`V2Menu` 와 같은 순서)", () => {
-    const log: string[] = []
-    const root = sheet({
-      actions: [
-        { key: "report", label: "act.report", onPress: () => log.push("act") },
-      ],
-      onClose: () => log.push("close"),
-    })
-    ;(optionsOf(root)[0]?.props.onPress as () => void)()
-    expect(log).toEqual(["act", "close"])
-  })
-
-  it("옵션 목록은 시트 여백 24 · 사이 16", () => {
-    const list = childrenOf(sheet())[0] as Element
-    const box = styleOf(list)
-    expect(box.paddingHorizontal).toBe(SHEET_GUTTER)
-    expect(SHEET_GUTTER).toBe(24)
-    expect(box.gap).toBe(spacing[16])
-  })
-
-  it("D13 — `V2Option` 의 실제 높이는 55 가 아니라 57 이다", () => {
-    // 화면에서 55 를 기대하지 말 것: Yoga 는 테두리를 상자 높이에 넣는다.
-    const face = styleOf(expand(optionsOf(sheet())[0] as Element))
-    const height =
-      (face.paddingVertical as number) * 2 +
-      typography.title.xSmall.lineHeight +
-      (face.borderWidth as number) * 2
-
-    expect(height).toBe(57)
   })
 })

@@ -8,7 +8,7 @@ import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { ResendCodeLink, StepHelperText, StepTextInput } from "../components"
 import { useSignupEmail } from "../hooks"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import type { EmailForm } from "../types"
 import {
@@ -44,7 +44,7 @@ export function SignupEmailScreen() {
     dismissEmailLoginLink,
     confirmEmailLoginLink,
   } = useSignupEmail()
-  const surface = useAuthSurface()
+  const surface = useSurface()
 
   const { control, getValues, setValue } = useForm<EmailForm>({
     defaultValues: { email: "", code: "" },

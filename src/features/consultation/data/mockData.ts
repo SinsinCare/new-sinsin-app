@@ -1,36 +1,17 @@
-import type { CategoryMeta, FaqCardEntry } from "../types"
+import type { ChatCategory, FaqCardEntry } from "../types"
 
-export const CATEGORY_LIST: CategoryMeta[] = [
-  {
-    key: "FOOD_DIET",
-    label: "음식·식단",
-    icon: "fork-knife",
-  },
-  {
-    key: "MEDICATION",
-    label: "약·영양제",
-    icon: "pill",
-  },
-  {
-    key: "LIFESTYLE",
-    label: "생활관리",
-    icon: "heart-text",
-  },
-  {
-    key: "SYMPTOMS",
-    label: "증상",
-    icon: "cross",
-  },
-  {
-    key: "EXAM",
-    label: "검사·수치 해석",
-    icon: "mail",
-  },
-  {
-    key: "NONE",
-    label: "기타",
-    icon: "chat",
-  },
+/**
+ * 환영 화면의 주제 칩 순서. 라벨은 `consult.categories.<key>` 로 i18n 에서 오고 아이콘은
+ * 그리지 않는다 — 예전 `CategoryMeta` 의 `label`·`icon`·`color` 는 어디서도 읽지 않는
+ * 한국어 하드코딩이었다.
+ */
+export const CATEGORY_LIST: readonly ChatCategory[] = [
+  "FOOD_DIET",
+  "MEDICATION",
+  "LIFESTYLE",
+  "SYMPTOMS",
+  "EXAM",
+  "NONE",
 ]
 
 export const FREQUENTLY_ASKED_QUESTIONS: FaqCardEntry[] = [

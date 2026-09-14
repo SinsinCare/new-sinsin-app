@@ -1,7 +1,6 @@
 import {
   STAGE_OPTIONS,
   hydrateStage,
-  labelForStage,
   toServerStage,
 } from "@/src/features/settings/utils/ckdStage"
 
@@ -56,8 +55,7 @@ describe("CKD 단계 편집 화면 왕복", () => {
 
   it("모든 선택지에 라벨이 있다", () => {
     for (const option of STAGE_OPTIONS) {
-      expect(labelForStage(option.key)).toBe(option.label)
+      expect(option.label.length).toBeGreaterThan(0)
     }
-    expect(labelForStage(null)).toBe("")
   })
 })

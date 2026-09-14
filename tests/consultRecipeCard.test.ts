@@ -14,7 +14,12 @@ jest.mock("react-native", () => ({
   StyleSheet: { create: (value: unknown) => value, hairlineWidth: 0.5 },
 }))
 const mockPush = jest.fn()
-jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }))
+// 2026-09-09 재조준: 카드가 expo-router 를 직접 부르지 않고 앱 라우터 래퍼를 지난다
+// (`tests/navigationBackGuard.test.ts`). 래퍼 모듈은 expo-linking 을 끌고 와 jest 가
+// 못 읽으므로 래퍼 자체를 막는다.
+jest.mock("@/src/shared/navigation", () => ({
+  useAppRouter: () => ({ push: mockPush }),
+}))
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, args?: { count?: number; title?: string }) =>

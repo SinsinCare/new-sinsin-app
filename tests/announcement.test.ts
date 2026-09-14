@@ -210,7 +210,8 @@ describe("dismissed announcement storage", () => {
       createMemoryStorage({ [DISMISSED_ANNOUNCEMENT_IDS_KEY]: "not-json" }),
     )
 
-    await expect(dismissed.getIds()).resolves.toEqual([])
+    // 깨진 저장분은 빈 목록으로 읽힌다 — 어떤 공지도 "닫았다" 로 보이지 않는다.
+    await expect(dismissed.has(1)).resolves.toBe(false)
   })
 })
 

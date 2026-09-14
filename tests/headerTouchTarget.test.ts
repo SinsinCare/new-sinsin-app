@@ -32,7 +32,9 @@ const MIGRATED_HEADERS = [
   "src/features/recipe/components/FreePostEditor.tsx",
   // 커뮤니티 동선 — 피드 → 글 상세 → 검색 → 수정. 사용자가 "타고 들어간다" 고 한 길.
   "src/features/recipe/views/PostDetailScreen.tsx",
-  "app/(tabs)/community.tsx",
+  // 2026-09-09 재조준: `app/(tabs)/community.tsx` 는 화면을 다시 내보내는 껍데기가 됐다
+  // (`export { CommunityScreen as default }`, b3b3690). 헤더는 화면 파일에 있다.
+  "src/features/recipe/views/CommunityScreen.tsx",
   "src/features/recipe/views/FreePostEditScreen.tsx",
   "src/features/recipe/views/CommunitySearchScreen.tsx",
 ]
@@ -88,19 +90,25 @@ describe("헤더 터치 타깃", () => {
       액션 행(글 상세 앱바 우측, 커뮤니티 헤더 우측)은 규격 상자보다 낮으므로
       `headerActionRowRoom` 없이는 상자를 키운 절반이 죽는다.
     */
-    for (const relative of ["src/features/recipe/views/PostDetailScreen.tsx", "app/(tabs)/community.tsx"]) {
+    for (const relative of [
+      "src/features/recipe/views/PostDetailScreen.tsx",
+      "src/features/recipe/views/CommunityScreen.tsx",
+    ]) {
       const source = fs.readFileSync(path.join(ROOT, relative), "utf8")
       expect(source).toContain("headerActionRowRoom(")
     }
   })
 
   test("상담 헤더의 버튼 셋이 전부 규격 컴포넌트다", () => {
-    const source = fs.readFileSync(
-      path.join(ROOT, MIGRATED_HEADERS[0]),
-      "utf8",
-    )
-    // 닫기 · 기록 · 새 상담 — 조건부 갈래까지 세면 여는 태그가 4개다.
-    expect(source.match(/<HeaderIconButton/gu)?.length).toBe(4)
+    const source = fs.readFileSync(path.join(ROOT, MIGRATED_HEADERS[0]), "utf8")
+    /*
+      닫기/기록 · (닫기 모드의) 기록 · 새 상담 — 여는 태그가 3개다. 2026-09-08(b3b3690)
+      부터 첫 버튼은 규격 상자 하나 안에서 아이콘만 갈아 끼운다(`onClosePress ?
+      chevronLeft : history`). 갈래마다 상자를 따로 세우던 예전 모양(4개)이 아니라
+      상자 수가 줄었을 뿐, 규격 밖 버튼이 생긴 것은 아니다 — 아래 `Pressable` 부재가 그
+      쪽을 본다. 2026-09-09 재조준.
+    */
+    expect(source.match(/<HeaderIconButton/gu)?.length).toBe(3)
     // 맨 Pressable 이 하나라도 남아 있으면 그 버튼만 40pt 로 남는다.
     expect(source).not.toMatch(/<Pressable/u)
   })

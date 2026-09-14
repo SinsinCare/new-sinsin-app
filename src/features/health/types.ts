@@ -1,26 +1,6 @@
-export type LabResultStatus = "normal" | "caution" | "warning"
-
-export type LabValue = {
-  id: string
-  name: string
-  nameEn: string
-  value: string
-  unit: string
-  status: LabResultStatus
-  normalRange: string
-  tags?: string[]
-}
-
-export type LabRecord = {
-  id: string
-  date: string // "2023.10.15"
-  displayDate: string // "10월 12일"
-  year: number
-  type: string // "건강검진" | "정기검사" | "내방문"
-  values: LabValue[]
-}
-
 // ===== 검사지 OCR =====
+// 옛 건강검진(NHIS) 화면 계보는 지웠다(대체: src/features/health-checkup). 여기 남은 것은
+// examOcrService 가 쓰는 OCR 타입과 data/dashboardMetrics(모크 서비스가 임계값을 읽는다)뿐이다.
 
 // 업로드할 검사지 파일 (이미지 또는 PDF)
 export type OcrUploadFile = {

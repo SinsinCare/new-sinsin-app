@@ -18,9 +18,10 @@ import {
   PASSWORD_FIELD_ORDER,
   getConfirmPasswordRules,
   getPasswordRules,
+  IOS_PASSWORD_RULES,
 } from "../data/passwordValidation"
 import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import { presentAuthFailure } from "../utils/authFailure"
 import { AuthScreenLayout } from "./AuthScreenLayout"
@@ -55,7 +56,7 @@ type Step = "email" | "otp" | "password"
  */
 export function ForgotPasswordScreen() {
   const { t } = useTranslation("auth")
-  const surface = useAuthSurface()
+  const surface = useSurface()
 
   const [step, setStep] = useState<Step>("email")
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -241,8 +242,16 @@ export function ForgotPasswordScreen() {
       onSubmit={onCtaPress}
       keyboardAvoiding
     >
+      {/*
+        두 단계의 컨테이너에 key 를 준다. 없으면 React 가 같은 자리의 <View>/<Controller>
+        를 재사용해서, 이메일·인증번호 Controller 인스턴스가 그대로 비밀번호 Controller 가
+        된다. react-hook-form 7.7x 의 useController 는 첫 렌더의 control.register 결과를
+        ref 에 붙들고 있어(`_registerProps`), 그 뒤 control 이 바뀌어도 onChange 가 **옛
+        폼(emailOtpForm)** 에 값을 쓴다 — 새 비밀번호 칸에 아무리 쳐도 화면이 비어 있던
+        2026-09-11 재설정 오류의 정체다.
+      */}
       {step !== "password" ? (
-        <View style={styles.body}>
+        <View key="verify" style={styles.body}>
           <Controller
             name="email"
             control={emailOtpForm.control}
@@ -319,7 +328,7 @@ export function ForgotPasswordScreen() {
           )}
         </View>
       ) : (
-        <View style={styles.body}>
+        <View key="password" style={styles.body}>
           <Controller
             name="password"
             control={passwordForm.control}
@@ -335,6 +344,7 @@ export function ForgotPasswordScreen() {
                   placeholder={t("password.newPlaceholder")}
                   secureTextEntry
                   textContentType="newPassword"
+                  passwordRules={IOS_PASSWORD_RULES}
                   autoComplete="new-password"
                   returnKeyType="next"
                   hasError={!!fieldState.error && !!field.value}
@@ -365,6 +375,7 @@ export function ForgotPasswordScreen() {
                   placeholder={t("password.confirmNewPlaceholder")}
                   secureTextEntry
                   textContentType="newPassword"
+                  passwordRules={IOS_PASSWORD_RULES}
                   autoComplete="new-password"
                   returnKeyType="done"
                   hasError={!!fieldState.error && !!field.value}

@@ -78,7 +78,9 @@
     "dailyLead": "{{price}} a day",
     "dailyAverage": "{{price}} / day on average",
     "annualPrice": "{{price}} / year",
-    "monthlyPrice": "{{price}} / month"
+    "monthlyPrice": "{{price}} / month",
+    "termsLink": "Terms of Use",
+    "privacyLink": "Privacy Policy"
   },
   "quota": {
     "remainingDay": "{{remaining}} left today",

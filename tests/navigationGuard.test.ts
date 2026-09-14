@@ -96,7 +96,7 @@ describe("navigation guard", () => {
         type: "stay",
       })
       expect(
-        resolveGuard(input({ segments: ["(settings)", "health-data"] })),
+        resolveGuard(input({ segments: ["(settings)", "checkup-list"] })),
       ).toEqual({ type: "stay" })
     })
 

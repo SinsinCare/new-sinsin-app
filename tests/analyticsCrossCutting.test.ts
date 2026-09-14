@@ -226,36 +226,33 @@ describe("통로는 하나다", () => {
     그래서 이 수는 작성 이탈의 분모가 아니다 — 그 사실을 주석에만 적어 두면 다음 작성
     화면이 늘어날 때 조용히 어긋나므로, 지금 세는 셋을 여기 고정한다.
 
-    `recipe_edit` 는 **살아 있는 화면이 아니다**: 그 surface 를 주는 유일한 곳이 v1
-    `RecipeEditor` 인데 어디서도 import 되지 않고(두 곳의 언급은 전부 주석이다),
-    `(write)/recipe/edit/[id]` 라우트는 아직 에디터가 없는 스텁이다. 화면명 표에는
-    그 라우트가 있으므로 surface 값 자체는 남겨 두되, **세는 수에는 넣지 않는다** —
-    죽은 파일을 근거로 초록인 단정은 그 파일이 지워지는 날 "왜 셋이지" 를 다시 조사하게 만든다.
+    `recipe_edit` 는 **어디서도 나가지 않는다**: 그 surface 를 주던 유일한 곳이 v1
+    `RecipeEditor` 였는데, 어디서도 import 되지 않는 죽은 파일이라 지웠다(2026-09-09).
+    `(write)/recipe/edit/[id]` 라우트는 v2 작성 폼을 재사용하고 `ConfirmExitModal` 을
+    자기 surface 로 세우지 않는다. 화면명 표에는 그 라우트가 있으므로 surface 값
+    자체는 남아 있되, **세는 수에는 없다** — 그 라우트가 언젠가 이 모달을 세우면
+    아래 목록이 넷이 되고, 그때 이 주석을 "살아 있는 넷" 으로 고쳐 읽으면 된다.
   */
-  it("compose_exit_* 가 세는 작성 화면은 셋이다 (+ 죽은 v1 에디터 하나)", () => {
+  it("compose_exit_* 가 세는 작성 화면은 셋이다", () => {
     const surfaces = SOURCES.flatMap((file) => {
       const source = fs.readFileSync(file, "utf8")
       return [...source.matchAll(/<ConfirmExitModal\s+surface="([a-z_]+)"/gu)]
     }).map((match) => match[1])
 
-    // 소스에는 넷이 보이지만 살아 있는 것은 셋이다 — recipe_edit 는 아래에서 따로 못 박는다.
-    expect(surfaces.sort()).toEqual([
-      "free_edit",
-      "free_write",
-      "recipe_edit",
-      "recipe_write",
-    ])
+    expect(surfaces.sort()).toEqual(["free_edit", "free_write", "recipe_write"])
   })
 
-  it("recipe_edit 를 주는 v1 에디터는 어디서도 마운트되지 않는다", () => {
+  it("recipe_edit 를 주던 v1 에디터는 지워졌고 되살아나지 않았다", () => {
     /*
-      이 단정이 이 파일에 있는 이유: 위 목록의 `recipe_edit` 를 **실적으로 읽으면 안 된다**.
-      surface 를 주는 유일한 곳이 v1 `RecipeEditor` 인데 어디서도 import 되지 않고
-      (다른 두 파일의 언급은 전부 주석이다), `(write)/recipe/edit/[id]` 라우트는 아직
-      에디터가 없는 스텁이다. 즉 이 값은 대시보드에 절대 안 나타난다.
-      나중에 그 라우트에 에디터가 붙으면 이 단정이 깨지고, 그때 위 목록을 "살아 있는 넷"
-      으로 고쳐 읽으면 된다.
+      v1 `RecipeEditor` 는 죽은 파일이었다(import 0). 파일이 되살아나면 위 목록이
+      조용히 넷이 되고 대시보드에 없는 화면의 `compose_exit_*` 가 다시 세어진다 —
+      그래서 파일 자체가 없는 것과 아무도 들여오지 않는 것을 둘 다 못 박는다.
     */
+    expect(
+      fs.existsSync(
+        path.join(ROOT, "src/features/recipe/components/RecipeEditor.tsx"),
+      ),
+    ).toBe(false)
     const importers = SOURCES.filter((file) =>
       /from\s+["'][^"']*RecipeEditor["']/u.test(fs.readFileSync(file, "utf8")),
     )

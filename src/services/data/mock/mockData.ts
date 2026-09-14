@@ -1,63 +1,4 @@
-import type {
-  UserProfile,
-  HealthRecord,
-  FoodRecord,
-  DailyHealthLog,
-} from "../../../types"
 import type { Chat, Message } from "../../../types/chat"
-import { DEFAULT_MOCK_USER } from "../../auth/mock/mockUser"
-
-// CKD 3기 환자 프로필
-export const MOCK_USER_PROFILE: UserProfile = {
-  uid: DEFAULT_MOCK_USER.uid,
-  email: DEFAULT_MOCK_USER.email || "",
-  displayName: "김철수",
-  nickname: "철수",
-  birthDate: "1975-03-15",
-  gender: "MALE",
-  height: 172,
-  weight: 68,
-  ckdStage: 3,
-  onDialysis: false,
-  onboardingCompleted: false,
-  createdAt: new Date("2024-01-15"),
-  updatedAt: new Date("2024-12-01"),
-}
-
-// 건강 기록
-export const MOCK_HEALTH_RECORDS: HealthRecord[] = [
-  {
-    id: "hr-001",
-    userId: DEFAULT_MOCK_USER.uid,
-    gfr: 45,
-    creatinine: 1.8,
-    potassium: 4.5,
-    bun: 28,
-    uricAcid: 6.2,
-    recordDate: new Date("2024-11-15"),
-    createdAt: new Date("2024-11-15"),
-  },
-]
-
-// 오늘의 음식 기록
-export const MOCK_FOOD_RECORDS: FoodRecord[] = [
-  {
-    id: "fr-001",
-    userId: DEFAULT_MOCK_USER.uid,
-    name: "현미밥",
-    calories: 340,
-    protein: 7,
-    carbohydrates: 72,
-    fat: 2.5,
-    sodium: 5,
-    potassium: 150,
-    phosphorus: 200,
-    hasBroth: false,
-    brothConsumed: false,
-    mealType: "breakfast",
-    recordDate: new Date(),
-  },
-]
 
 // 채팅 대화
 const now = new Date()
@@ -194,17 +135,3 @@ export const MOCK_CHAT_MESSAGES: Map<number, Message[]> = new Map([
     ],
   ],
 ])
-
-// 일일 건강 로그
-export const MOCK_DAILY_LOG: DailyHealthLog = {
-  id: `${DEFAULT_MOCK_USER.uid}_${new Date().toISOString().split("T")[0]}`,
-  userId: DEFAULT_MOCK_USER.uid,
-  date: new Date(),
-  steps: 5420,
-  waterIntake: 1200,
-  sleepHours: 7.5,
-  weight: 68,
-  bloodPressureSystolic: 128,
-  bloodPressureDiastolic: 82,
-  notes: "",
-}

@@ -125,13 +125,15 @@ import {
 } from "react-native-reanimated"
 
 import {
-  radius,
   spacing,
   V2BottomSheet,
   V2SheetScrollView,
 } from "@/src/design-system-v2"
 import { useSurface } from "@/src/hooks/useSurface"
-import { TYPE } from "@/src/theme/surface"
+import {
+  FORM,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 import { RECIPE_WRITE_LIMITS } from "@/src/features/recipe/types/recipeWrite"
 import { StepSheetRow } from "./StepSheetRow"
 import {
@@ -543,16 +545,16 @@ export function StepSheet({
             hitSlop={{ top: 7, bottom: 7 }}
             style={({ pressed }) => [
               styles.addButton,
-              pressed
-                ? { backgroundColor: s.surfaceBrand, borderColor: s.brand }
-                : {
-                    backgroundColor: s.surfaceSunken,
-                    borderColor: "transparent",
-                  },
+              {
+                backgroundColor: pressed ? s.surfacePressed : s.surfaceSunken,
+                borderColor: s.surfaceSunken,
+              },
             ]}
           >
-            <Ionicons name="add" size={16} color={s.text} />
-            <Text style={[styles.addText, { color: s.text }]}>{copy.add}</Text>
+            <Ionicons name="add" size={16} color={s.textStrong} />
+            <Text style={[styles.addText, { color: s.textStrong }]}>
+              {copy.add}
+            </Text>
           </Pressable>
         )}
       </StepScrollView>
@@ -573,7 +575,7 @@ const styles = StyleSheet.create({
     이미 있다 — `TYPE.cardSub`(= `typography.subtext.small`, 12/16, surface.ts 확인).
   */
   hint: {
-    ...TYPE.cardSub,
+    ...FORM.hint,
     marginTop: spacing[8],
     paddingHorizontal: spacing[24],
   },
@@ -609,33 +611,14 @@ const styles = StyleSheet.create({
   */
   listBox: { marginBottom: -7 },
   addButton: {
-    /*
-      30 은 시안 값이지만 **고정이 아니라 하한**이다. `height: 30` 이면 글자 배율을
-      키운 기기(2.0)에서 라벨이 상자를 넘어 잘렸다. 기본 배율에서는 콘텐츠가
-      4 + 18(TYPE.caption 의 lineHeight) + 4 + 보더 2 = 28 이라 이 하한이 높이를 정해
-      시안 그대로 30 이고(아래 `paddingVertical` 주석), 글자가 커져 28 이 30 을 넘어서는
-      순간부터 커진 만큼만 상자가 같이 자란다.
-    */
-    minHeight: 30,
-    /*
-      6 이 아니라 4 다. 이 상자에는 `borderWidth: 1` 이 **늘 있고**(눌림에서 색만 바뀐다)
-      RN 은 보더를 높이에 포함하므로, 6 을 주면 18(캡션 13/18) + 12 + 2 = **32** 가 되어
-      `minHeight: 30` 을 넘긴다 — 시안 실측 30 짜리 띠가 2pt 두꺼워지고, 같은 화면의
-      재료 `+`(같은 계산으로 4 를 쓴다)와 높이가 갈린다. 4 면 18 + 8 + 2 = 28 이라
-      `minHeight` 가 높이를 정해 정확히 30 이 된다.
-
-      글자가 커지면 상자가 자라고 그때 이 4 가 글리프와 보더를 띄운다 —
-      큰 글씨에서 안 잘리게 하려던 목적은 그대로다.
-    */
-    paddingVertical: 4,
-    borderRadius: radius.md,
+    minHeight: FORM.choiceHeight,
+    borderRadius: FORM.choiceRadius,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: S[1],
   },
-  addText: { ...TYPE.caption, fontWeight: "600" },
-  /** 위 `hint` 와 같은 이유로 `TYPE.cardSub`(12/16). */
-  limit: { ...TYPE.cardSub },
+  addText: FORM.option,
+  limit: { ...FORM.hint, paddingHorizontal: S[1] },
 })

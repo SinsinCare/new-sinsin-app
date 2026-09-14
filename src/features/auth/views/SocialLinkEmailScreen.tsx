@@ -9,7 +9,7 @@ import { showErrorToast } from "@/src/lib/toast"
 import { toAnalyticsFailKind } from "@/src/lib/errorMessage"
 import { trackAnalyticsEvent } from "@/src/features/analytics"
 import { ResendCodeLink, StepHelperText, StepTextInput } from "../components"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import { presentAuthFailure } from "../utils/authFailure"
 import { getDestinationForAccountState } from "../utils/accountStateRoute"
@@ -58,7 +58,7 @@ export function SocialLinkEmailScreen() {
     authAttemptId?: string
   }>()
   const { sendSocialLinkEmailCode, verifySocialLinkEmailCode } = useAuth()
-  const surface = useAuthSurface()
+  const surface = useSurface()
 
   const [codeSent, setCodeSent] = useState(false)
   const [codeInputVisible, setCodeInputVisible] = useState(false)

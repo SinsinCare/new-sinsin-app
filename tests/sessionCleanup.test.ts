@@ -4,7 +4,6 @@ const mockAsyncStorage = {
   setItem: jest.fn(),
 }
 const mockAuthReset = jest.fn()
-const mockUserReset = jest.fn()
 const mockSignupReset = jest.fn()
 const mockClearTokens = jest.fn()
 const mockQueryClear = jest.fn()
@@ -16,7 +15,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 
 jest.mock("../src/stores", () => ({
   useAuthStore: { getState: () => ({ reset: mockAuthReset }) },
-  useUserStore: { getState: () => ({ reset: mockUserReset }) },
   useSignupStore: { getState: () => ({ reset: mockSignupReset }) },
 }))
 
@@ -48,7 +46,6 @@ describe("clearClientSession", () => {
     )
     expect(mockClearTokens).toHaveBeenCalledTimes(1)
     expect(mockAuthReset).toHaveBeenCalledTimes(1)
-    expect(mockUserReset).toHaveBeenCalledTimes(1)
     expect(mockQueryClear).toHaveBeenCalledTimes(1)
   })
 
@@ -61,7 +58,6 @@ describe("clearClientSession", () => {
 
     expect(mockClearTokens).toHaveBeenCalledTimes(1)
     expect(mockAuthReset).toHaveBeenCalledTimes(1)
-    expect(mockUserReset).toHaveBeenCalledTimes(1)
     expect(mockQueryClear).toHaveBeenCalledTimes(1)
   })
 })

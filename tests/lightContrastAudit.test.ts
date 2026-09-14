@@ -1071,17 +1071,10 @@ describe("§7 `fill.control` — 컨트롤면 (역할 분리)", () => {
     }
 
     /*
-      `CommentComposer` 는 **둘 다** 있어야 맞다. 입력칸은 컨트롤면이고, 그 위의
-      "누구에게 답하는 중" 띠는 누르는 면이 아니라 표시라 장식면에 남는다 —
-      두 면이 같은 값이 되면 답글 문맥이 입력칸의 연장으로 보인다.
+      `community/CommentComposer` 를 보던 단언("입력칸은 컨트롤면, 답글 띠는 장식면")은
+      지웠다 — 그 컴포넌트는 어디서도 import 되지 않는 죽은 파일이라 파일째로 지웠다
+      (2026-09-09). 살아 있는 댓글 입력 바는 `PostDetailScreen` 안에 있다.
     */
-    const composer = src(
-      "src/features/recipe/components/community/CommentComposer.tsx",
-    )
-    expect({
-      control: composer.includes("fill.control"),
-      decor: composer.includes("fill.normal"),
-    }).toEqual({ control: true, decor: true })
 
     // 장식면 셋은 **그대로**다. 여기가 넘어가면 스켈레톤·트랙·태그가 컨트롤처럼 튄다.
     for (const path of [
@@ -1287,18 +1280,26 @@ describe("§8 섹션 머리의 면 · 상단 고정층", () => {
     // 검색 필드의 면이 곧 화면 바닥이다 — 고정층을 바닥색으로 칠하면 이 칸이 사라진다.
     expect(getSurfacePalette(false).surface).toBe(bedOf("light"))
 
-    const src = codeOnly(
-      readFileSync(resolve(__dirname, "../app/(tabs)/community.tsx"), "utf8"),
-    )
-    // (a) 타이틀 줄 = 고정층의 면 + 안전영역. `FreePostTab.pinnedHeader` 와 같은 토큰이다.
-    expect(src).toContain("backgroundColor: colors.background.default")
-    expect(src).toContain("paddingTop: insets.top + HEADER_PAD_TOP")
     /*
-      (b) 화면 바닥은 우물 그대로. 카드(흰색)로 바꾸는 변이가 여기서 빨개진다.
-      2026-08-22 에 표현이 바뀌었다 — 화면 8곳이 각자 적던 `isDark ? canvas : surface`
-      가 `SurfacePalette.bed` 한 칸으로 접혔다(같은 값, 그 칸 머리말 참고).
+      ■ 2026-09-09 재조준. 2026-09-05 커뮤니티 개편(`docs/design/community-refresh-2026-09-05/
+      REFERENCE.md` "Community feed — White canvas")이 피드 계보의 바닥을 우물(`bed`)에서
+      캔버스로 옮겼고, `app/(tabs)/community.tsx` 는 화면을 다시 내보내는 껍데기가 됐다
+      (b3b3690). 남는 것은 위 판단의 구조 — 타이틀 줄과 목록이 **한 면** 위에 있고 그 면이
+      화면 루트 하나라는 것. 이제 그 면은 캔버스이고 타이틀 줄은 자기 면을 따로 칠하지
+      않는다(루트 한 장). 우물 바닥을 다시 세우거나 헤더가 따로 카드 면을 들면 여기서 빨개진다.
     */
-    expect(src).toContain("backgroundColor: surface.bed,")
+    const src = codeOnly(
+      readFileSync(
+        resolve(__dirname, "../src/features/recipe/views/CommunityScreen.tsx"),
+        "utf8",
+      ),
+    )
+    // (a) 화면 루트 한 장이 곧 고정층의 면이다 — 타이틀 줄은 안전영역만 든다.
+    expect(src).toContain("backgroundColor: s.canvas")
+    expect(src).toContain("paddingTop: insets.top + spacing[8]")
+    expect(src).not.toMatch(/header:[^}]*backgroundColor/u)
+    // (b) 우물 바닥·카드 면은 돌아오지 않았다. 팔레트의 `bed` 칸 자체는 그대로 우물이다.
+    expect(src).not.toMatch(/\.bed\b/u)
     expect(getSurfacePalette(false).bed).toBe(getSurfacePalette(false).surface)
     expect(src).not.toContain("backgroundColor: surface.card")
   })
@@ -1406,8 +1407,14 @@ describe("§9 우물을 바닥에 깐 화면 위에 우물을 또 놓지 않는�
 
   it("우물 바닥 화면이 **면 없는 우물 소비자**를 직접 놓지 않는다", () => {
     const bedScreens = files.filter((file) => bedIsWell(sourceOf(file)))
-    // 규칙이 헛돌지 않는다는 확인 — 그런 화면이 실제로 여럿 있다.
-    expect(bedScreens.length).toBeGreaterThanOrEqual(8)
+    /*
+      규칙이 헛돌지 않는다는 확인 — 그런 화면이 실제로 여럿 있다. 하한은 2026-09-09 에
+      8 → 5 로 내렸다: 2026-09-05 커뮤니티 개편이 피드 계보(피드·인기글·검색·내 활동)를
+      캔버스로 옮겼고(REFERENCE.md "White canvas"), 도달 불가였던 통계 탭바
+      (`StatisticsTabBar`)를 2026-09-09 에 지웠다. 남은 다섯(개인정보 설정 · 레시피 상세 ·
+      음식 분석 확인 · 식당 지도 · 의학 참고)이 여전히 이 규칙의 대상이다.
+    */
+    expect(bedScreens.length).toBeGreaterThanOrEqual(5)
 
     const violations: string[] = []
     for (const screen of bedScreens) {
@@ -1665,23 +1672,24 @@ describe("§10 라이트가 쓰는 면의 개수와 화면 바닥", () => {
       `전체 ›` 를 눌러 인기글로 가고, 돋보기로 검색으로 간다. 셋 중 하나만 흰 바닥이면
       그 이동에서 바닥색이 바뀐다 — 인기글이 실제로 그랬다(`surface.canvas`).
     */
+    /*
+      2026-09-09 재조준: 같은 계보가 **같다** 는 목표는 그대로다. 다만 2026-09-05 개편
+      (REFERENCE.md "White canvas")이 계보 전체를 캔버스로 옮겼으므로 이제 넷이 같아야
+      하는 값은 캔버스다. 하나만 우물로 되돌아가면 그 동선에서 바닥색이 바뀐다.
+    */
     for (const file of [
-      "app/(tabs)/community.tsx",
+      "src/features/recipe/views/CommunityScreen.tsx",
       "src/features/recipe/views/CommunityPopularScreen.tsx",
       "src/features/recipe/views/CommunitySearchScreen.tsx",
       "src/features/recipe/views/CommunityLibraryScreen.tsx",
     ]) {
       const src = codeOf(file)
-      expect({ file, bed: /backgroundColor: \w+\.bed\b/.test(src) }).toEqual({
-        file,
-        bed: true,
-      })
-      // 그리고 그 화면 어디에도 흰 바닥이 남아 있지 않다.
       expect({
         file,
-        whiteFloor:
-          /backgroundColor: \w+\.canvas, paddingTop: insets\.top/.test(src),
-      }).toEqual({ file, whiteFloor: false })
+        canvas: /backgroundColor: \w+\.canvas\b/.test(src),
+      }).toEqual({ file, canvas: true })
+      // 그리고 그 화면 어디에도 우물 바닥이 남아 있지 않다.
+      expect({ file, bed: /\.bed\b/.test(src) }).toEqual({ file, bed: false })
     }
   })
 
@@ -1726,17 +1734,32 @@ describe("§11 바닥 위 (B) 섹션 라벨", () => {
   */
   const BED = bedOf("light")
   const LABEL_SITES = [
-    ["src/features/settings/views/MyPageScreen.tsx", "styles.sectionHeader"],
+    /*
+      2026-09-09 재조준: 내정보는 2026-09-08(b3b3690) 에 v2 토큰으로 넘어가 섹션 머리가
+      `styles.heading` + `colors.label.normal` 이다. 흐린 단(`label.neutral`·`alternative`)을
+      부르지 않는다는 뜻은 같다 — 계보만 다르므로 어느 이름이 "흐림" 인지 함께 적는다.
+    */
+    ["src/features/settings/views/MyPageScreen.tsx", "styles.heading", "v2"],
     [
       "src/features/settings/views/MedicalReferenceScreen.tsx",
       "styles.sectionHeader",
+      "palette",
     ],
-    ["src/features/settings/views/ProfileEditScreen.tsx", "styles.groupTitle"],
+    [
+      "src/features/settings/views/ProfileEditScreen.tsx",
+      "styles.groupTitle",
+      "palette",
+    ],
   ] as const
 
   it.each(LABEL_SITES)(
-    "%s 의 %s 는 `textMuted` 를 부르지 않는다",
-    (file, style) => {
+    "%s 의 %s 는 흐린 글자색을 부르지 않는다 (%s)",
+    (file, style, lineage) => {
+      const muted =
+        lineage === "v2"
+          ? /label\.(?:neutral|alternative|assistive|disable)\b/
+          : /\.textMuted\b/
+      const normal = lineage === "v2" ? /label\.normal\b/ : /\.text\b/
       const src = codeOnly(readFileSync(resolve(__dirname, "..", file), "utf8"))
       const lines = src
         .split("\n")
@@ -1744,11 +1767,11 @@ describe("§11 바닥 위 (B) 섹션 라벨", () => {
       // 그 자리가 실제로 있다(정규식이 헛돌면 이 절이 늘 통과한다).
       expect(lines.length).toBeGreaterThanOrEqual(1)
       for (const line of lines) {
-        expect({
+        expect({ line: line.trim(), muted: muted.test(line) }).toEqual({
           line: line.trim(),
-          muted: /\.textMuted\b/.test(line),
-        }).toEqual({ line: line.trim(), muted: false })
-        expect({ line: line.trim(), neutral: /\.text\b/.test(line) }).toEqual({
+          muted: false,
+        })
+        expect({ line: line.trim(), neutral: normal.test(line) }).toEqual({
           line: line.trim(),
           neutral: true,
         })

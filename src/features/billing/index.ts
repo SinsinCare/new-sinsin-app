@@ -15,12 +15,7 @@ export { PaywallHost } from "./components/PaywallHost"
 export { PlanCard } from "./components/PlanCard"
 export { QuotaBadge } from "./components/QuotaBadge"
 export { useFeatureAccess, type FeatureAccess } from "./hooks/useFeatureAccess"
-export {
-  cheapestPerDay,
-  formatLikePrice,
-  perDayPrice,
-  perMonthPrice,
-} from "./pricing"
+export { cheapestPerDay, formatLikePrice, perDayPrice } from "./pricing"
 export {
   openPaywall,
   registerPaywallHost,

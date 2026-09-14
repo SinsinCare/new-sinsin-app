@@ -1,67 +1,70 @@
 /**
- * 후기 작성 (목업 -26 / -27).
+ * 후기 작성 — 홈 건강기록 6페이지와 **같은 시스템**으로 그린다(2026-09-12).
+ *
+ * 뼈대는 `RecordPageShell`(상위 이름은 내비게이션 바, 큰 제목·안내문·하단 고정 CTA·
+ * 키보드 도킹), 별점은 `RecordRating`(별 다섯 개), 특징은 `RecordMultiChoices`, 본문은 같은 면의
+ * `TextInput`, 오류·진행 문구는 `RecordFieldHint` 다. 치수·타이포는 `recordPageSpec`
+ * 한 벌에서만 온다 — 예전 화면은 목업 -26/-27 의 별 글리프·오렌지 틴트 카드·자체 푸터를
+ * 따로 들고 있어 홈과 다른 앱처럼 읽혔다.
  *
  * ## 비활성 버튼은 이유를 말해야 한다
  *
- * 목업의 `등록` 은 비활성 상태로만 그려져 있다. 그런데 비활성 `Pressable` 은 `onPress` 가
- * 아예 불리지 않으므로, 그대로 두면 사용자는 **무엇이 모자란지 알 수 없다.** 그래서
- * 카운터 아래에 "지금 막고 있는 요건"을 한 줄로 띄우고(`reviewDraftDefects` 의 첫 항목),
- * 같은 문구를 버튼의 `accessibilityHint` 로도 준다. 규칙 자체는 `utils/reviewDraft.ts` 에
- * 있다 — 이 저장소의 jest 는 컴포넌트를 렌더할 수 없으므로 검증 로직이 JSX 안에 있으면
+ * 비활성 CTA 는 `onPress` 가 아예 불리지 않으므로, 그대로 두면 사용자는 **무엇이
+ * 모자란지 알 수 없다.** 그래서 본문 아래 힌트 칸에 "지금 막고 있는 요건"을 한 줄로
+ * 띄운다(`reviewDraftDefects` 의 첫 항목). 규칙 자체는 `utils/reviewDraft.ts` 에 있다 —
+ * 이 저장소의 jest 는 컴포넌트를 렌더할 수 없으므로 검증 로직이 JSX 안에 있으면
  * 영원히 테스트 밖이다.
  *
  * ## 사진은 "제출 시점에 전부 올리고, 하나라도 실패하면 등록하지 않는다"
  *
- * 커뮤니티 글쓰기(`FreePostEditor`)와 같은 규칙이다. 사진이 조용히 빠진 후기가 올라가는
- * 것보다 실패를 알리고 다시 시도하게 하는 쪽이 낫다. 업로드 경로도 그쪽과 **같은
- * `imageUploadService`** 를 쓴다 — 두 번째 업로드 메커니즘을 만들지 않는다.
+ * 커뮤니티 글쓰기(`FreePostEditor`)와 같은 규칙이다. 업로드 경로도 그쪽과 **같은
+ * `imageUploadService`** 를 쓴다(`hooks/useReviewEditorLifecycle.ts`).
  *
  * 보내는 키는 **`imageObjectPaths`** 다. 서버 스키마(`sinsin-be-bun` 의
  * `src/domains/restaurant/schemas.ts::createReviewBody`)가 이 이름의 정본이고, 값은 서명
  * URL 이 아니라 `uploaded.objectPath` — 서명은 15분마다 회전하므로 URL 을 넣으면 만료된
- * 링크가 DB 에 굳는다.
- *
- * 이 이름이 틀리면 **아무도 안 터진다.** 서버의 TypeBox 는 non-strict 라 모르는 키를 그냥
- * 통과시키고, 스키마에 없는 키는 읽히지도 않는다. 실제로 앱은 오랫동안 `imageUrls` 로
- * 보내고 있었고 요청은 200, 후기는 저장, 사진만 사라졌다 — 서버·앱 어디에도 오류가 남지
- * 않았다. 그래서 본문 조립은 `utils/reviewDraft.ts::reviewSubmitBody` 한 곳에만 두고
+ * 링크가 DB 에 굳는다. 이 이름이 틀리면 **아무도 안 터진다**(서버 TypeBox 는 non-strict).
+ * 실제로 앱은 오랫동안 `imageUrls` 로 보내고 있었고 요청은 200, 후기는 저장, 사진만
+ * 사라졌다. 그래서 본문 조립은 `utils/reviewDraft.ts::reviewSubmitBody` 한 곳에만 두고
  * `tests/restaurantReviewSubmitContract.test.ts` 가 서버 스키마 파일과 키를 대조한다.
  *
  * ## 되돌리지 말 것
  *
- * - 별점의 미선택 색을 `fill.normal` 로 하지 않는다. 그건 **면**에 쓰는 알파색이라
- *   별 글리프에 얹으면 거의 안 보인다. 글리프는 `label.assistive` 를 쓴다.
- * - `fontWeight` 를 쓰지 않는다. 굵기는 `fontFamily`(Pretendard-*)에만 있다.
- * - 키워드 카드의 순서를 선택 여부로 재배열하지 않는다. 목업 -27 에서 선택된 두 카드가
- *   앞으로 온 것처럼 보이지만, 누를 때마다 카드가 움직이면 다음 카드를 조준할 수 없다.
- *   `REVIEW_KEYWORDS` 순서를 고정한다.
+ * - 이 화면은 native-stack 모달이다. 안쪽 `<V2DialogHost />` 를 빼면 이탈 확인
+ *   (`showConfirm`)이 모달 뒤에 떠서 보이지 않는다.
+ * - 특징 칩의 순서를 선택 여부로 재배열하지 않는다. 누를 때마다 칩이 움직이면 다음 칩을
+ *   조준할 수 없다. `REVIEW_KEYWORDS` 순서를 고정한다.
+ * - 치수를 이 파일에 다시 적지 않는다. 사진 타일도 `FIELD`·`S` 에서 파생한다.
  */
 
 import { useCallback, useMemo, useState } from "react"
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
   type ViewStyle,
 } from "react-native"
-import { Text, TextInput } from "@/src/shared/components/AppText"
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { Image } from "expo-image"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
+import { V2DialogHost, V2Modal, V2Text } from "@/src/design-system-v2"
+import { fontFamily } from "@/src/design-system-v2/tokens/typography"
+import { useSurface } from "@/src/hooks/useSurface"
+
+import { RecordPageShell } from "@/src/features/home/components/record/pages/RecordPageShell"
+import { RecordMultiChoices } from "@/src/features/home/components/record/pages/RecordChoices"
+import { RecordRating } from "@/src/features/home/components/record/pages/RecordRating"
+import { RecordFieldHint } from "@/src/features/home/components/record/pages/RecordFieldHint"
+import { recordFieldLabel } from "@/src/features/home/components/record/pages/recordInk"
 import {
-  V2Button,
-  V2DialogHost,
-  V2Icon,
-  V2Modal,
-  radius,
-  spacing,
-  typography,
-  useV2Theme,
-} from "@/src/design-system-v2"
+  FIELD,
+  FORM,
+  PAGE_X,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 
 import type { ReviewDto, ReviewKeyword } from "../types"
 import { REVIEW_KEYWORDS } from "../data/filterCatalog"
@@ -77,20 +80,9 @@ import {
 } from "../utils/reviewDraft"
 import { MediaPicker } from "../components/MediaPicker"
 
-/** 목업의 별. 44 는 최소 터치 크기이기도 하다 — 별 하나가 곧 하나의 버튼이다. */
-const STAR_SIZE = 44
-const STAR_VALUES = [1, 2, 3, 4, 5] as const
-
-/**
- * 미디어 스트립 타일. 목업(505px 폭 = 375pt, 배율 1.347)에서 실측 133px ≈ 100pt 정사각이다.
- * DESIGN_SPEC 이 적어 둔 값이 없어 이미지에서 재서 넣었다.
- */
-const MEDIA_TILE = 100
-const ORDER_BADGE = 24
-
 export interface ReviewWriteScreenProps {
   restaurantId: number
-  /** 타이틀 첫 줄(브랜드색)에 그대로 들어간다. */
+  /** 내비게이션 바 제목(상위 화면 이름 자리)에 그대로 들어간다. */
   restaurantName: string
   onClose: () => void
   /** 등록 성공. 라우트가 뒤로 가거나 후기 탭으로 돌려보낸다. */
@@ -113,8 +105,7 @@ export function ReviewWriteScreen({
   style,
 }: ReviewWriteScreenProps) {
   const { t } = useTranslation("common")
-  const { colors } = useV2Theme()
-  const insets = useSafeAreaInsets()
+  const s = useSurface()
 
   /**
    * 후기 목록 훅을 그대로 쓴다. 작성 화면에서 목록 GET 이 한 번 나가지만,
@@ -127,23 +118,17 @@ export function ReviewWriteScreen({
   const [rating, setRating] = useState(0)
   const [keywords, setKeywords] = useState<readonly ReviewKeyword[]>([])
   const [content, setContent] = useState("")
+  const [contentFocused, setContentFocused] = useState(false)
   const [photoUris, setPhotoUris] = useState<readonly string[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [touched, setTouched] = useState(false)
   const [guidelinesOpen, setGuidelinesOpen] = useState(false)
 
   /**
-   * `리뷰 작성 주의사항` 링크의 행선지.
-   *
-   * 목업 -26/-27 은 이 링크를 `등록` 바로 위에 그리는데, 저장소에 후기 가이드라인 **문서
-   * 화면이 없다** (`legal-document` route 는 약관·개인정보 두 장뿐이다). 그래서 링크를
-   * `onOpenGuidelines` 유무로 감췄고, 아무 호출부도 그 prop 을 주지 않아 **목업 두 장의
-   * 링크가 한 번도 렌더되지 않았다.**
-   *
-   * 없는 화면을 기다리며 링크를 감추는 대신 같은 내용을 모달로 띄운다 — 이 링크가 말해야
-   * 하는 것(욕설·비방·명예훼손 유의)은 문단 두 개면 끝나고, 전용 route 를 새로 여는 것보다
-   * 작성 흐름을 끊지 않는다. 나중에 진짜 문서가 생기면 `onOpenGuidelines` 를 넘기면 되고
-   * 이 폴백은 그대로 두면 된다.
+   * `리뷰 작성 주의사항` 링크의 행선지. 저장소에 후기 가이드라인 **문서 화면이 없다**
+   * (`legal-document` route 는 약관·개인정보 두 장뿐이다). 없는 화면을 기다리며 링크를
+   * 감추는 대신 같은 내용을 모달로 띄운다 — 나중에 진짜 문서가 생기면
+   * `onOpenGuidelines` 를 넘기면 되고 이 폴백은 그대로 두면 된다.
    */
   const openGuidelines = useCallback(() => {
     if (onOpenGuidelines) {
@@ -181,219 +166,85 @@ export function ReviewWriteScreen({
     setPhotoUris((current) => current.filter((item) => item !== uri))
   }, [])
 
-  const counterCurrent = content.length
+  const keywordOptions = useMemo(
+    () =>
+      REVIEW_KEYWORDS.map((item) => ({
+        value: item.value,
+        label: t(dynamicKey(item.labelKey)),
+      })),
+    [t],
+  )
+  /*
+    힌트 칸은 항상 그린다 — `RecordFieldHint` 가 두 줄을 예약해 두므로 문구가 생기고
+    사라져도 아래 링크와 CTA 가 움직이지 않는다. 업로드 진행은 안내, 막는 요건은 오류다.
+  */
+  const statusMessage = uploadProgress ?? (touched ? blockingMessage : null)
+  const statusIsError = !uploadProgress && Boolean(statusMessage)
+
   return (
-    <View
-      style={[
-        styles.root,
-        { backgroundColor: colors.background.default, paddingTop: insets.top },
-        style,
-      ]}
-    >
-      <View style={styles.topBar}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("restaurant.review.form.close")}
-          onPress={() => void requestClose()}
-          disabled={isSubmitting}
-          accessibilityState={{ disabled: isSubmitting }}
-          hitSlop={14}
-          style={({ pressed }) => [pressed && styles.pressedRow]}
-        >
-          <V2Icon name="close" size="md" color={colors.label.normal} />
-        </Pressable>
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <View style={[styles.root, style]}>
+      <RecordPageShell
+        navigationTitle={restaurantName}
+        title={t("restaurant.review.form.title")}
+        intro={t("restaurant.review.form.intro")}
+        onBack={() => void requestClose()}
+        ctaLabel={t("restaurant.review.form.submit")}
+        ctaDisabled={!ready}
+        ctaLoading={isSubmitting}
+        onCtaPress={() => void submit()}
       >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.content}
-          bounces={false}
-          overScrollMode="never"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* 타이틀 — 상호명(브랜드) 개행 안내문 */}
-          <View style={styles.titleBlock}>
-            <Text
-              style={[
-                typography.title.small,
-                { color: colors.primary.primary },
-              ]}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {restaurantName}
-            </Text>
-            <Text
-              style={[typography.title.small, { color: colors.label.normal }]}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {t("restaurant.review.form.title")}
-            </Text>
-          </View>
-
-          {/* 별점 */}
-          <View style={styles.section}>
-            <Text
-              style={[typography.title.xSmall, { color: colors.label.normal }]}
-              lineBreakStrategyIOS="hangul-word"
-            >
+        <View style={styles.content}>
+          {/* 별점 — 하나 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
               {t("restaurant.review.form.ratingQuestion")}
-            </Text>
-            <View
-              style={styles.starRow}
-              accessibilityRole="radiogroup"
-              accessibilityLabel={t("restaurant.review.form.ratingQuestion")}
-            >
-              {STAR_VALUES.map((value) => {
-                const filled = value <= rating
-                return (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="radio"
-                    disabled={isSubmitting}
-                    accessibilityState={{
-                      selected: filled,
-                      disabled: isSubmitting,
-                    }}
-                    accessibilityLabel={t(
-                      "restaurant.review.form.ratingAccessibility",
-                      { count: value },
-                    )}
-                    onPress={() => {
-                      setTouched(true)
-                      setRating(value)
-                    }}
-                    style={({ pressed }) => [
-                      styles.star,
-                      pressed && styles.pressedRow,
-                    ]}
-                  >
-                    <V2Icon
-                      name="starFilled"
-                      size={STAR_SIZE - spacing[4]}
-                      /* 입력용 별도 표시용 별과 같은 앰버다. 목업 -27 의 채워진 별을
-                         뽑으면 #FFA938 로 카드·평점분해의 별과 같은 값이다. 브랜드
-                         주황을 쓰면 같은 화면의 `등록` 버튼과 같은 색이 되어 별이
-                         CTA 로 읽힌다. */
-                      color={
-                        filled
-                          ? colors.status.cautionary
-                          : colors.label.assistive
-                      }
-                    />
-                  </Pressable>
-                )
-              })}
-            </View>
+            </V2Text>
+            {/* 별 다섯 개 — 수치를 선택지 칸으로 펼치지 않는다(`RecordRating` 머리말). */}
+            <RecordRating
+              value={rating}
+              disabled={isSubmitting}
+              starLabel={(star) =>
+                t("restaurant.review.form.ratingOption", { count: star })
+              }
+              onChange={(value) => {
+                setTouched(true)
+                setRating(value)
+              }}
+            />
           </View>
 
-          <View
-            style={[
-              styles.bandGap,
-              { backgroundColor: colors.background.lower },
-            ]}
-          />
-
-          {/* 키워드 5카드 */}
-          <View style={styles.section}>
-            <Text
-              style={[typography.title.xSmall, { color: colors.label.normal }]}
-              lineBreakStrategyIOS="hangul-word"
-            >
+          {/* 특징 — 여러 개. `REVIEW_KEYWORDS` 순서 고정 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
               {t("restaurant.review.form.keywordQuestion")}
-            </Text>
-            <Text
-              style={[
-                typography.subtext.large,
-                { color: colors.label.assistive },
-              ]}
-              lineBreakStrategyIOS="hangul-word"
-            >
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
               {t("restaurant.review.form.keywordHint")}
-            </Text>
-            <View style={styles.keywordRow}>
-              {REVIEW_KEYWORDS.map((item) => {
-                const selected = keywords.includes(item.value)
-                return (
-                  <Pressable
-                    key={item.value}
-                    accessibilityRole="checkbox"
-                    disabled={isSubmitting}
-                    accessibilityState={{
-                      checked: selected,
-                      disabled: isSubmitting,
-                    }}
-                    accessibilityLabel={t(dynamicKey(item.labelKey))}
-                    onPress={() => toggleKeyword(item.value)}
-                    style={({ pressed }) => [
-                      styles.keywordCard,
-                      {
-                        borderColor: selected
-                          ? colors.primary.primary
-                          : colors.line.normal,
-                        backgroundColor: selected
-                          ? colors.primary.primaryWeak
-                          : colors.background.default,
-                      },
-                      pressed && styles.pressedChip,
-                    ]}
-                  >
-                    {/* 이모지는 서체 굵기가 무의미하다. 크기만 토큰에서 가져온다. */}
-                    <Text style={typography.title.small}>{item.emoji}</Text>
-                    <Text
-                      style={[
-                        typography.label.xSmall,
-                        styles.keywordLabel,
-                        {
-                          color: selected
-                            ? colors.primary.primary
-                            : colors.label.neutral,
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {t(dynamicKey(item.labelKey))}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
+            </V2Text>
+            <RecordMultiChoices
+              options={keywordOptions}
+              values={keywords}
+              disabled={isSubmitting}
+              onToggle={toggleKeyword}
+            />
           </View>
 
-          <View
-            style={[
-              styles.bandGap,
-              { backgroundColor: colors.background.lower },
-            ]}
-          />
-
-          {/* 본문 + 미디어 */}
-          <View style={styles.section}>
-            <Text
-              style={[typography.title.xSmall, { color: colors.label.normal }]}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {t("restaurant.review.form.contentQuestion")}
-            </Text>
-            <Text
-              style={[
-                typography.subtext.large,
-                { color: colors.label.assistive },
-              ]}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {t("restaurant.review.form.contentHint")}
-            </Text>
-
+          {/* 사진 — MediaPicker 그대로. 타일은 입력칸과 같은 높이·모서리 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("restaurant.review.form.photoLabel")}
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
+              {t("restaurant.review.form.photoLimit", {
+                count: REVIEW_MAX_PHOTOS,
+              })}
+            </V2Text>
             <ScrollView
               horizontal
               bounces={false}
               overScrollMode="never"
               showsHorizontalScrollIndicator={false}
+              style={styles.mediaScroll}
               contentContainerStyle={styles.mediaStrip}
             >
               <Pressable
@@ -408,26 +259,21 @@ export function ReviewWriteScreen({
                 style={({ pressed }) => [
                   styles.mediaTile,
                   styles.mediaPickTile,
-                  { backgroundColor: colors.fill.background },
-                  pressed && styles.pressedCard,
+                  {
+                    backgroundColor: pressed
+                      ? s.surfacePressed
+                      : s.surfaceSunken,
+                  },
                 ]}
               >
-                <V2Icon
-                  name="camera"
-                  size="lg"
-                  color={colors.label.alternative}
-                />
-                <Text
-                  style={[
-                    typography.caption.small,
-                    styles.keywordLabel,
-                    { color: colors.label.neutral },
-                  ]}
-                  lineBreakStrategyIOS="hangul-word"
+                <Ionicons name="camera-outline" size={22} color={s.text} />
+                <V2Text
+                  style={styles.mediaPickLabel}
+                  color={recordFieldLabel(s)}
                   textBreakStrategy="balanced"
                 >
                   {t("restaurant.review.form.mediaPick")}
-                </Text>
+                </V2Text>
               </Pressable>
 
               {photoUris.map((uri, index) => (
@@ -438,10 +284,8 @@ export function ReviewWriteScreen({
                     contentFit="cover"
                     transition={120}
                   />
-                  {/*
-                    배지가 곧 '빼기' 버튼이다. 목업에는 별도 ✕ 가 없고, 순번 원을
-                    다시 누르는 것이 피커의 해제 동작과 같은 몸짓이라 규칙이 하나로 남는다.
-                  */}
+                  {/* 배지가 곧 '빼기' 버튼이다. 순번 원을 다시 누르는 것이 피커의
+                      해제 동작과 같은 몸짓이라 규칙이 하나로 남는다. */}
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t(
@@ -453,71 +297,74 @@ export function ReviewWriteScreen({
                     hitSlop={10}
                     style={({ pressed }) => [
                       styles.orderBadge,
-                      { backgroundColor: colors.primary.primary },
-                      pressed && styles.pressedChip,
+                      {
+                        backgroundColor: pressed ? s.text : s.textStrong,
+                      },
                     ]}
                   >
-                    <Text
-                      style={[
-                        typography.caption.small,
-                        styles.keywordLabel,
-                        { color: colors.static.white },
-                      ]}
-                    >
+                    <V2Text style={styles.orderBadgeText} color={s.canvas}>
                       {index + 1}
-                    </Text>
+                    </V2Text>
                   </Pressable>
                 </View>
               ))}
             </ScrollView>
+          </View>
 
+          {/* 본문 — 신장 정보 페이지의 `otherField` 와 같은 면 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("restaurant.review.form.contentQuestion")}
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
+              {t("restaurant.review.form.contentHint")}
+            </V2Text>
             <View
               style={[
-                styles.textArea,
-                { backgroundColor: colors.fill.background },
+                styles.field,
+                {
+                  backgroundColor: contentFocused ? s.canvas : s.surfaceSunken,
+                  borderColor: statusIsError
+                    ? s.danger
+                    : contentFocused
+                      ? s.brand
+                      : s.surfaceSunken,
+                },
               ]}
             >
               <TextInput
+                multiline
                 editable={!isSubmitting}
                 value={content}
                 onChangeText={(next) => {
                   setTouched(true)
                   setContent(next)
                 }}
+                onFocus={() => setContentFocused(true)}
+                onBlur={() => setContentFocused(false)}
                 placeholder={t("restaurant.review.form.placeholder")}
-                placeholderTextColor={colors.label.assistive}
-                multiline
+                placeholderTextColor={recordFieldLabel(s)}
+                selectionColor={s.brand}
                 maxLength={REVIEW_CONTENT_MAX}
                 textAlignVertical="top"
-                style={[
-                  typography.subtext.large,
-                  styles.textInput,
-                  { color: colors.label.normal },
-                ]}
                 accessibilityLabel={t("restaurant.review.form.contentQuestion")}
+                style={[styles.input, { color: s.textStrong }]}
               />
-              <Text style={styles.counterRow}>
-                <Text
-                  style={[
-                    typography.subtext.medium,
-                    { color: colors.primary.primary },
-                  ]}
+              <V2Text style={styles.counter} color={s.textMuted}>
+                <V2Text
+                  style={styles.counter}
+                  color={content.length > 0 ? s.textStrong : s.textMuted}
                 >
-                  {counterCurrent}
-                </Text>
-                <Text
-                  style={[
-                    typography.subtext.medium,
-                    { color: colors.label.assistive },
-                  ]}
-                >
-                  {`/ ${REVIEW_CONTENT_MAX}`}
-                </Text>
-              </Text>
+                  {content.length}
+                </V2Text>
+                {` / ${REVIEW_CONTENT_MAX}`}
+              </V2Text>
             </View>
+            <RecordFieldHint error={statusIsError}>
+              {statusMessage ?? ""}
+            </RecordFieldHint>
 
-            {/* 목업 -26/-27 이 `등록` 바로 위에 두는 밑줄 링크. 조건부로 그리지 않는다 —
-                갈 곳은 아래 `openGuidelines` 가 항상 마련한다. */}
+            {/* 조건부로 그리지 않는다 — 갈 곳은 위 `openGuidelines` 가 항상 마련한다. */}
             <Pressable
               accessibilityRole="link"
               disabled={isSubmitting}
@@ -525,71 +372,16 @@ export function ReviewWriteScreen({
               hitSlop={8}
               style={({ pressed }) => [
                 styles.guidelineWrap,
-                pressed && styles.pressedRow,
+                pressed && styles.pressed,
               ]}
             >
-              <Text
-                style={[
-                  typography.subtext.medium,
-                  styles.guideline,
-                  { color: colors.label.neutral },
-                ]}
-                lineBreakStrategyIOS="hangul-word"
-              >
+              <V2Text style={styles.guideline} color={s.text}>
                 {t("restaurant.review.form.guideline")}
-              </Text>
+              </V2Text>
             </Pressable>
           </View>
-        </ScrollView>
-
-        <View
-          style={[
-            styles.footer,
-            {
-              backgroundColor: colors.background.default,
-              paddingBottom: insets.bottom + spacing[12],
-            },
-          ]}
-        >
-          {uploadProgress ? (
-            <Text
-              style={[
-                typography.subtext.medium,
-                styles.footerHint,
-                { color: colors.label.neutral },
-              ]}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-            >
-              {uploadProgress}
-            </Text>
-          ) : touched && blockingMessage ? (
-            <Text
-              style={[
-                typography.subtext.medium,
-                styles.footerHint,
-                { color: colors.status.negative },
-              ]}
-              lineBreakStrategyIOS="hangul-word"
-              textBreakStrategy="balanced"
-            >
-              {blockingMessage}
-            </Text>
-          ) : null}
-          <V2Button
-            size="xl"
-            color="brand"
-            variant="fill"
-            fullWidth
-            disabled={!ready}
-            loading={isSubmitting}
-            accessibilityHint={blockingMessage ?? undefined}
-            onPress={() => void submit()}
-          >
-            {t("restaurant.review.form.submit")}
-          </V2Button>
         </View>
-      </KeyboardAvoidingView>
+      </RecordPageShell>
 
       {/* Native-stack modal needs its own dialog presenter. */}
       <V2DialogHost />
@@ -620,89 +412,55 @@ export function ReviewWriteScreen({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  flex: { flex: 1 },
-  topBar: {
-    minHeight: 44,
-    paddingHorizontal: spacing[16],
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
-  content: { paddingBottom: spacing[24] },
-  titleBlock: { paddingHorizontal: spacing[16], paddingBottom: spacing[20] },
-  section: {
-    paddingHorizontal: spacing[16],
-    paddingVertical: spacing[20],
-    gap: spacing[8],
-  },
-  /** 목업의 섹션 사이 회색 밴드. 선이 아니라 면으로 끊는다. */
-  bandGap: { height: spacing[8] },
-  starRow: { flexDirection: "row", marginTop: spacing[4] },
-  star: {
-    width: STAR_SIZE,
-    height: STAR_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  keywordRow: { flexDirection: "row", gap: spacing[8], marginTop: spacing[4] },
-  /*
-    DESIGN_SPEC 은 72×72 라고 적었지만 375pt 화면에 좌우 16 여백 + gap 8 로 5개를 놓으면
-    한 칸이 62 다 — 72 로 박으면 마지막 카드가 화면 밖으로 나간다(목업 실측도 ~62 다).
-    그래서 폭을 고정하지 않고 5등분한다. 큰 화면에서는 같이 커진다.
-  */
-  keywordCard: {
-    flex: 1,
-    aspectRatio: 1,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing[4],
-  },
-  keywordLabel: { textAlign: "center" },
-  mediaStrip: {
-    gap: spacing[8],
-    paddingTop: spacing[4],
-    paddingRight: spacing[16],
-  },
+  content: { paddingHorizontal: PAGE_X, gap: FORM.sectionGap },
+  group: { gap: FORM.labelGap },
+  label: FORM.label,
+  hint: FORM.hint,
+  /** 스크롤이 페이지 좌우 여백 밖까지 닿게 한다 — 마지막 타일이 가장자리에서 잘리지 않는다. */
+  mediaScroll: { marginHorizontal: -PAGE_X },
+  mediaStrip: { gap: S[2], paddingHorizontal: PAGE_X, paddingTop: S[1] },
   mediaTile: {
-    width: MEDIA_TILE,
-    height: MEDIA_TILE,
-    borderRadius: radius.lg,
+    width: FIELD.height,
+    height: FIELD.height,
+    borderRadius: FIELD.radius,
     overflow: "hidden",
   },
   mediaPickTile: {
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing[6],
+    gap: S[1],
+    paddingHorizontal: S[2],
   },
+  mediaPickLabel: { ...FORM.hint, textAlign: "center" },
   mediaImage: { width: "100%", height: "100%" },
   orderBadge: {
     position: "absolute",
-    top: spacing[8],
-    right: spacing[8],
-    width: ORDER_BADGE,
-    height: ORDER_BADGE,
-    borderRadius: radius.full,
+    top: S[2],
+    right: S[2],
+    width: S[6],
+    height: S[6],
+    borderRadius: S[6] / 2,
     alignItems: "center",
     justifyContent: "center",
   },
-  textArea: {
-    minHeight: 190,
-    borderRadius: radius.lg,
-    padding: spacing[16],
-    marginTop: spacing[8],
+  orderBadgeText: { ...FORM.hint, textAlign: "center" },
+  field: {
+    minHeight: FIELD.heroHeight + FIELD.height,
+    borderRadius: FIELD.radius,
+    borderWidth: 1,
+    paddingHorizontal: FIELD.paddingX,
+    paddingVertical: S[4],
+    gap: S[2],
   },
-  textInput: { flex: 1, minHeight: 120, padding: 0 },
-  counterRow: { textAlign: "right", marginTop: spacing[8] },
-  guidelineWrap: { alignSelf: "flex-start", marginTop: spacing[8] },
-  guideline: { textDecorationLine: "underline" },
-  footer: {
-    paddingHorizontal: spacing[16],
-    paddingTop: spacing[12],
-    gap: spacing[8],
+  input: {
+    ...FORM.body,
+    fontFamily: fontFamily.regular,
+    flex: 1,
+    padding: 0,
+    includeFontPadding: false,
   },
-  footerHint: { textAlign: "center" },
-  pressedRow: { opacity: 0.6 },
-  pressedChip: { opacity: 0.85 },
-  pressedCard: { opacity: 0.9 },
+  counter: { ...FORM.hint, textAlign: "right" },
+  guidelineWrap: { alignSelf: "flex-start", marginTop: S[1] },
+  guideline: { ...FORM.hint, textDecorationLine: "underline" },
+  pressed: { opacity: 0.6 },
 })

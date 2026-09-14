@@ -14,7 +14,6 @@ export function useSettingsColors() {
     secondaryBg: colors.fill.alternative,
     inputBg: colors.fill.normal,
     pressedBg: colors.fill.normal,
-    avatarBg: colors.fill.alternative,
     text: colors.label.normal,
     textSub: colors.label.neutral,
     textTertiary: colors.label.neutral,
@@ -22,7 +21,6 @@ export function useSettingsColors() {
     border: colors.line.neutral,
     divider: colors.line.neutral,
     icon: colors.label.neutral,
-    iconLight: colors.label.alternative,
     modalBg: colors.background.default,
   }
 }

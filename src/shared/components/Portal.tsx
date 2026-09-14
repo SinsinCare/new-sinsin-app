@@ -6,6 +6,7 @@ import {
   useId,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react"
 import { StyleSheet, View } from "react-native"
@@ -85,15 +86,60 @@ export function PortalProvider({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * 포털 하나의 내용물을 호스트 쪽 슬롯에 흘려보내는 통로.
+ *
+ * `children` 은 부모가 렌더할 때마다 새 엘리먼트다. 그것을 그대로 `mount(id, children)`
+ * 로 올리면 부모 렌더마다 루트 Provider 의 `setEntries` 가 돌아 **앱 전체 트리 위의
+ * Provider 가 다시 렌더**됐다(LoadingOverlay 처럼 자주 바뀌는 자식이면 매 프레임).
+ * 등록은 id 당 한 번만 하고, 내용물은 슬롯이 스스로 구독해 제자리에서 바꾼다.
+ */
+interface PortalSource {
+  read: () => ReactNode
+  write: (next: ReactNode) => void
+  subscribe: (listener: () => void) => () => void
+}
+
+function createPortalSource(initial: ReactNode): PortalSource {
+  let node = initial
+  const listeners = new Set<() => void>()
+  return {
+    read: () => node,
+    write: (next) => {
+      if (next === node) return
+      node = next
+      listeners.forEach((listener) => listener())
+    },
+    subscribe: (listener) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
+    },
+  }
+}
+
+function PortalSlot({ source }: { source: PortalSource }) {
+  const node = useSyncExternalStore(source.subscribe, source.read)
+  return <>{node}</>
+}
+
 export function Portal({ children }: { children: ReactNode }) {
   const registry = useContext(PortalContext)
   const id = useId()
+  const [source] = useState(() => createPortalSource(children))
 
+  // 등록은 한 번. Provider 는 슬롯이 있다는 것만 알고 내용물의 변화는 모른다.
   useEffect(() => {
     if (!registry) return
-    registry.mount(id, children)
+    registry.mount(id, <PortalSlot source={source} />)
     return () => registry.unmount(id)
-  }, [registry, id, children])
+  }, [registry, id, source])
+
+  // 렌더마다 최신 자식을 슬롯에 넘긴다. 같은 엘리먼트면 슬롯도 조용하다.
+  useEffect(() => {
+    source.write(children)
+  })
 
   /*
     Provider 밖에서 쓰면 조용히 사라지는 대신 **제자리에 그린다.** 전면 막이

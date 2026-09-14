@@ -11,7 +11,7 @@
  * 소스를 읽는 단언은 주석을 먼저 걷어낸다 — 안 그러면 "왜 이렇게 했는지" 적어 둔 문장이
  * 계약을 대신 만족시킨다.
  */
-import { readFileSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import { join } from "node:path"
 
@@ -107,14 +107,10 @@ const SOURCE_FILES: readonly (readonly [string, string])[] = (() => {
 })()
 
 const POST_LIST_ITEM = "src/features/recipe/components/PostListItem.tsx"
-const POPULAR_CARD = "src/features/recipe/components/PopularPostCard.tsx"
 const POPULAR_SCREEN = "src/features/recipe/views/CommunityPopularScreen.tsx"
-const IMAGE_CARD = "src/features/recipe/components/ImageCard.tsx"
 const THUMBNAIL_CARD = "src/features/recipe/components/ImageThumbnailCard.tsx"
 const TAG_CHIPS = "src/features/recipe/components/TagChips.tsx"
 const VOTE_SHEET = "src/features/recipe/components/VoteSheet.tsx"
-const EDITOR_TOOLBAR = "src/features/recipe/components/editor/EditorToolbar.tsx"
-const TEXT_BLOCK = "src/features/recipe/components/editor/TextBlock.tsx"
 
 /* ─────────────────────────────── D1 ─────────────────────────────── */
 
@@ -218,13 +214,13 @@ describe("수를 읽을 수 있게 내보낸다", () => {
     expect(formatCount(3291, "en")).not.toContain(".")
   })
 
-  it("피드 카드 넷이 전부 그 함수를 지난다", () => {
-    for (const file of [
-      POST_LIST_ITEM,
-      POPULAR_CARD,
-      POPULAR_SCREEN,
-      IMAGE_CARD,
-    ]) {
+  /*
+    이 목록은 넷이었다 — `PopularPostCard`·`ImageCard` 도 있었는데, 둘 다 어디서도
+    import 되지 않는 죽은 파일이라 지웠다(2026-09-09). 남은 피드 카드는 `PostListItem`
+    하나이고 인기글 화면은 그 카드를 그린다.
+  */
+  it("피드 카드가 전부 그 함수를 지난다", () => {
+    for (const file of [POST_LIST_ITEM, POPULAR_SCREEN]) {
       if (file === POPULAR_SCREEN) expect(read(file)).toContain("<PostListItem")
       const source = read(file === POPULAR_SCREEN ? POST_LIST_ITEM : file)
       expect(source).toContain("formatCount(")
@@ -235,12 +231,7 @@ describe("수를 읽을 수 있게 내보낸다", () => {
       expect(source).not.toMatch(/\{\s*item\.(likes|comments)\s*\}/u)
     }
     // 그리고 커뮤니티에는 로케일 없는 `toLocaleString()` 이 없다.
-    for (const file of [
-      POST_LIST_ITEM,
-      POPULAR_CARD,
-      POPULAR_SCREEN,
-      IMAGE_CARD,
-    ]) {
+    for (const file of [POST_LIST_ITEM, POPULAR_SCREEN]) {
       expect(read(file)).not.toContain("toLocaleString()")
     }
   })
@@ -295,15 +286,11 @@ describe("다크 모드에서 사라지는 것이 없다", () => {
     )
   })
 
-  it("에디터는 다크 칸에 라이트 토큰을 들고 있지 않다", () => {
-    for (const file of [EDITOR_TOOLBAR, TEXT_BLOCK]) {
-      const source = read(file)
-      // `textLight*` 는 이름이 모드를 말하지 않아 다크 칸에 그대로 옮겨 적혔다.
-      expect(source).not.toContain("textLight")
-      expect(source).not.toContain('from "@/src/theme/tokens"')
-      expect(source).toContain("useSurface()")
-    }
-  })
+  /*
+    "에디터는 다크 칸에 라이트 토큰을 들고 있지 않다" 가 여기 있었다 — v1 블록 에디터
+    (`components/editor/EditorToolbar.tsx`·`TextBlock.tsx`)를 보던 단언인데, 그 에디터는
+    어디서도 import 되지 않는 죽은 사슬이라 통째로 지웠다(2026-09-09).
+  */
 })
 
 /* ─────────────────────────────── D5 ─────────────────────────────── */
@@ -477,14 +464,21 @@ describe("i18n 감사가 실제로 실패할 수 있다", () => {
     expect(script).toContain("app/post/")
   })
 
-  it("유일한 면제(v1 에디터)의 근거가 아직 살아 있다", () => {
+  it("v1 에디터 면제는 파일과 함께 사라졌다 — 제외 목록이 비어 있고 되살아나지 않았다", () => {
     /*
-      `RecipeEditor.tsx` 를 구역에서 뺀 근거는 "어디서도 import 되지 않는다" 하나뿐이다.
-      그 파일이 되살아나면 면제가 조용히 거짓이 되므로, 근거를 여기서도 확인한다
+      `RecipeEditor.tsx` 는 2026-09-09 에 삭제됐다. 그 전까지 이 구역의 유일한 면제였고
+      근거는 "어디서도 import 되지 않는다" 하나뿐이었다. 파일이 없으니 면제도 없어야
+      한다 — 제외 목록에 다시 올라오거나 파일이 되살아나면 여기서 잡는다
       (`analyticsCrossCutting` 의 같은 단언과 짝이다).
     */
     const script = readRaw("scripts/audit-i18n-coverage.mjs")
-    expect(script).toContain("src/features/recipe/components/RecipeEditor.tsx")
+    expect(script).not.toContain(
+      "src/features/recipe/components/RecipeEditor.tsx",
+    )
+    expect(script).toContain("exclude: []")
+    expect(
+      existsSync(join(ROOT, "src/features/recipe/components/RecipeEditor.tsx")),
+    ).toBe(false)
     const importers = execFileSync(
       "node",
       [

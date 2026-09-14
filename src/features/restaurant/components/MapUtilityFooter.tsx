@@ -71,6 +71,7 @@ export function MapUtilityFooter({
           leadingIcon="bookmark"
           title={t("restaurant.bookmark.listEntry")}
           onPress={onPressBookmarks}
+          gestureHandler
           verticalPadding="m"
           sideMargin="s"
           trailing={<Chevron color={colors.label.assistive} />}
@@ -81,6 +82,7 @@ export function MapUtilityFooter({
           leadingIcon="report"
           title={t("restaurant.report.formTitle")}
           onPress={onPressReport}
+          gestureHandler
           verticalPadding="m"
           sideMargin="s"
           trailing={<Chevron color={colors.label.assistive} />}

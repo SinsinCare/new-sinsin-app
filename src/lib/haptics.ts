@@ -30,10 +30,3 @@ export function hapticInvalid() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning),
   )
 }
-
-/** 마지막 단계를 통과했을 때. */
-export function hapticSuccess() {
-  fire(() =>
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-  )
-}

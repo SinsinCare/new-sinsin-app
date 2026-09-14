@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, useMemo, type ReactNode } from "react"
 
 import { LoadingScreen } from "@/src/shared/components"
 import { BlockingPolicyScreen } from "./components/BlockingPolicyScreen"
@@ -31,6 +31,11 @@ export function AppPolicyGate({ children }: AppPolicyGateProps) {
   const { t } = useTranslation()
   const { status, policy, source, isBlocking, shouldRecommendUpdate, refresh } =
     useAppPolicyGate()
+  // 렌더마다 새 객체를 주면 `useMobilePolicy` 소비자가 게이트가 그려질 때마다 다시 그린다.
+  const value = useMemo(
+    () => ({ policy, source, refresh }),
+    [policy, source, refresh],
+  )
 
   if (status === "checking") {
     return (
@@ -46,7 +51,7 @@ export function AppPolicyGate({ children }: AppPolicyGateProps) {
   }
 
   return (
-    <MobilePolicyContext.Provider value={{ policy, source, refresh }}>
+    <MobilePolicyContext.Provider value={value}>
       {children}
       {policy && shouldRecommendUpdate && (
         <RecommendedUpdatePrompt policy={policy} />

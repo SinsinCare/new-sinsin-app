@@ -145,9 +145,6 @@ describe("community redesign contract", () => {
 
   it("keeps small community metadata readable in dark mode", () => {
     const feed = read("src/features/recipe/components/FreePostTab.tsx")
-    const popularCard = read(
-      "src/features/recipe/components/PopularPostCard.tsx",
-    )
     const popularScreen = read(
       "src/features/recipe/views/CommunityPopularScreen.tsx",
     )
@@ -183,10 +180,10 @@ describe("community redesign contract", () => {
       전부 사라졌다 — 되돌아오면 다크 모드가 다시 이 파일 밖에서 갈라진다.
     */
     expect(feed).not.toMatch(/#[0-9A-Fa-f]{6}/u)
-    expect(popularCard).toContain("styles.category, { color: surface.text }")
-    expect(popularCard).toContain("styles.countText, { color: surface.text }")
-    expect(popularCard).not.toContain("surface.textWeak")
-    expect(popularCard).not.toContain("surface.textMuted")
+    /*
+      `PopularPostCard` 를 보던 네 줄은 지웠다 — 가로 인기 레일이 은퇴한 뒤 그 카드는
+      어디서도 import 되지 않는 죽은 파일이었고, 파일째로 지웠다(2026-09-09).
+    */
     expect(popularScreen).not.toContain("surface.textMuted")
     expect(popularScreen).not.toContain("surface.textWeak")
     expect(postCard).not.toContain("surface.textWeak")

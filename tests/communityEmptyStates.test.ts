@@ -25,6 +25,16 @@
  */
 /* eslint-disable import/first -- RN·네이티브 의존을 모듈 로드 **전에** 갈아 끼워야 한다. */
 
+/*
+  `V2Button`·`V2EmptyState`·칩은 글자를 `primitives/NativeText` 의 `Text`(forwardRef —
+  글자 확대 상한을 한곳에서 잠그는 래퍼, b3b3690)로 그린다. 호스트 `Text` 로 돌려 두어야
+  아래 `allText` 가 그 글자를 센다(`tests/consultHistoryScreen.test.ts` 와 같은 처방, 2026-09-09).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
+  TextInput: "TextInput",
+}))
+
 jest.mock("react-native", () => {
   const flatten = (style: unknown): Record<string, unknown> => {
     if (Array.isArray(style)) {

@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useRef } from "react"
-import { StyleSheet, View, ScrollView, Pressable, Switch } from "react-native"
-import { TextInput } from "@/src/shared/components/AppText"
+import { useEffect, useRef, useState } from "react"
+import { Pressable, StyleSheet, View } from "react-native"
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAppRouter } from "@/src/shared/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
 
-import { ThemedText } from "@/components/themed-text"
-import { ThemedView } from "@/components/themed-view"
-import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
+import { V2Disclosure, V2Text } from "@/src/design-system-v2"
+import { fontFamily } from "@/src/design-system-v2/tokens/typography"
+import { useSurface } from "@/src/hooks/useSurface"
 import { DatePickerModal } from "@/src/features/settings/components"
 import { DIAGNOSIS_CAUSE_OPTIONS } from "@/src/features/settings/data/constants"
 import {
@@ -23,10 +22,23 @@ import { api } from "@/src/services/core/apiClient"
 import { weightEdemaService } from "@/src/services/data/weightEdemaService"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { useKidneyProfile } from "@/src/features/settings/hooks/useKidneyProfile"
-import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
-import { tokens } from "@/src/theme/tokens"
 import { presentError } from "@/src/lib/errorMessage"
-import { STAGE_OPTIONS, hydrateStage } from "../utils/ckdStage"
+import { STAGE_OPTIONS, hydrateStage, toServerStage } from "../utils/ckdStage"
+
+import { RecordPageShell } from "@/src/features/home/components/record/pages/RecordPageShell"
+import { RecordNumberField } from "@/src/features/home/components/record/pages/RecordNumberField"
+import {
+  RecordChoices,
+  RecordMultiChoices,
+} from "@/src/features/home/components/record/pages/RecordChoices"
+import { RecordFieldHint } from "@/src/features/home/components/record/pages/RecordFieldHint"
+import { recordFieldLabel } from "@/src/features/home/components/record/pages/recordInk"
+import {
+  FIELD,
+  FORM,
+  PAGE_X,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 
 const COMORBIDITY_OPTIONS = [
   { key: "DIABETES", labelKey: "kidney.comorbidities.diabetes" },
@@ -45,46 +57,55 @@ const DIAGNOSIS_CAUSE_LABEL_KEYS = {
   OTHER: "kidney.causes.other",
 } as const
 
+/** 병기 칩의 값. `null`(없음)은 문자열 칩 값이 될 수 없어 sentinel 로 옮긴다. */
+const STAGE_NONE = "NONE" as const
+type StageChoice = (typeof STAGE_OPTIONS)[number]["key"] | typeof STAGE_NONE
+type DialysisChoice = "YES" | "NO"
+
 function stageCode(stage: string): string {
   return stage.replace(/^STAGE_/, "").toUpperCase()
 }
 
 function extractFieldErrors(error: unknown): unknown {
   if (!isAxiosError(error)) return undefined
-
   const data = error.response?.data
   if (typeof data !== "object" || data === null || !("fieldErrors" in data)) {
     return undefined
   }
-
   return data.fieldErrors
 }
 
+/**
+ * 신장 건강 정보 수정 — 홈 건강기록 6페이지와 **같은 시스템**으로 그린다(2026-09-12).
+ *
+ * 뼈대는 `RecordPageShell`(큰 제목·안내문·하단 고정 CTA·키보드 도킹), 숫자는
+ * `RecordNumberField`, 고르는 것은 `RecordChoices`/`RecordMultiChoices`, 오류는
+ * `RecordFieldHint` 다. 치수·타이포는 `recordPageSpec` 한 벌에서만 온다 — 예전 화면은
+ * 설정 전용 색·초록 틴트·자체 칩을 따로 들고 있어 홈과 다른 앱처럼 읽혔다.
+ *
+ * 저장 규칙은 재설계 전과 같다(아래 각 주석).
+ */
 export function KidneyProfileEditScreen() {
-  const insets = useSafeAreaInsets()
   const router = useAppRouter()
   const queryClient = useQueryClient()
   const { data: kidneyProfile } = useKidneyProfile()
-  const c = useSettingsColors()
+  const s = useSurface()
   const { t } = useTranslation("settings")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [initialized, setInitialized] = useState(false)
   const [errors, setErrors] = useState<KidneyProfileValidationErrors>({})
   const heightTouchedRef = useRef(false)
   const weightTouchedRef = useRef(false)
+  const heightRef = useRef<TextInput>(null)
+  const weightRef = useRef<TextInput>(null)
 
   const [heightVal, setHeightVal] = useState("")
   const [weightVal, setWeightVal] = useState("")
   /*
-    정본 stage 키를 그대로 들고 있는다. 예전에는 number 라 3A/3B 를 표현할 수 없었고,
-    저장할 때 3 -> STAGE_3A 로 굳어져 3B 환자의 제한이 조용히 완화됐다.
-
-    **세 값이다**: 단계 키 · `null`(사용자가 `없음` 을 고름) · `undefined`(아직 모른다 —
-    프로필을 못 불러왔거나 서버 값이 아는 표기가 아니다). 예전에는 `undefined` 자리가
-    없어서 초기값이 곧 `없음` 이었고, 프로필이 도착하기 전이나 값이 낯설 때 저장을 누르면
-    `ckdStage: null` 이 나가 **서버가 CKD 를 지웠다**(hasCkd=false). 사용자에게는
-    "5기였던 게 입력 전이 됐다" 로만 보인다(QA 2026-08-05). 지우는 것은 사용자가
-    `없음` 을 직접 골랐을 때만 일어나야 한다.
+    정본 stage 키를 그대로 들고 있는다. **세 값이다**: 단계 키 · `null`(사용자가 `없음` 을
+    고름) · `undefined`(아직 모른다 — 프로필을 못 불러왔거나 서버 값이 아는 표기가 아니다).
+    `undefined` 자리가 없으면 프로필이 도착하기 전에 저장을 누를 때 `ckdStage: null` 이 나가
+    **서버가 CKD 를 지운다**(QA 2026-08-05). 지우는 것은 `없음` 을 직접 골랐을 때만.
   */
   const [ckdStage, setCkdStage] = useState<string | null | undefined>(undefined)
   const [onDialysis, setOnDialysis] = useState(false)
@@ -98,6 +119,7 @@ export function KidneyProfileEditScreen() {
   const [selectedComorbidities, setSelectedComorbidities] = useState<string[]>(
     [],
   )
+  const [otherFocused, setOtherFocused] = useState(false)
 
   const localizedFieldError = (field: KidneyProfileFieldKey): string | null => {
     if (!errors[field]) return null
@@ -130,8 +152,7 @@ export function KidneyProfileEditScreen() {
       setCkdStage("STAGE_5")
       setOnDialysis(true)
     } else {
-      // 서버가 준 키를 그대로 쓴다. 예전에는 parseInt 로 숫자만 뽑아
-      // STAGE_3B -> 3 -> STAGE_3A 가 됐다.
+      // 서버가 준 키를 그대로 쓴다(STAGE_3B 가 3 → STAGE_3A 로 굳던 사고 방지).
       setCkdStage(hydrateStage(kidneyProfile.ckdStage))
       setOnDialysis(kidneyProfile.isDialysis)
     }
@@ -154,12 +175,6 @@ export function KidneyProfileEditScreen() {
     setInitialized(true)
   }, [kidneyProfile, initialized])
 
-  const toggleComorbidity = (key: string) => {
-    setSelectedComorbidities((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    )
-  }
-
   const clearFieldError = (field: KidneyProfileFieldKey) => {
     setErrors((prev) => {
       if (!prev[field]) return prev
@@ -169,15 +184,17 @@ export function KidneyProfileEditScreen() {
     })
   }
 
+  const toggleComorbidity = (key: string) => {
+    setSelectedComorbidities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    )
+  }
+
   const toggleCause = (key: string) => {
     if (key === "OTHER") clearFieldError("otherCause")
     setSelectedCauses((prev) =>
       prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key],
     )
-  }
-
-  const navigateBackOrFallback = () => {
-    router.back()
   }
 
   const handleSave = async () => {
@@ -189,12 +206,10 @@ export function KidneyProfileEditScreen() {
       selectedCauses,
       diagnosisDate,
     })
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
       return
     }
-
     setErrors({})
     setIsSubmitting(true)
     try {
@@ -202,21 +217,13 @@ export function KidneyProfileEditScreen() {
         ? `${diagnosisDate.year}-${String(diagnosisDate.month).padStart(2, "0")}-01`
         : null
       const heightNum = Number(heightVal.trim())
-
       /*
-        **병기 축은 정해졌을 때만 보낸다.**
-
-        서버는 키가 없으면 "건드리지 마라", `null` 이면 "CKD 아님으로 지워라" 로 읽는다
-        (백엔드 `presentCkdStage`). `undefined`(= 아직 모른다)를 `null` 로 접어 보내면
-        불러오지 못한 화면이 저장 한 번으로 병기를 지운다 — 위 상태 주석의 그 사고다.
-        투석 토글은 병기와 직교하므로 언제나 보낸다.
+        **병기 축은 정해졌을 때만 보낸다.** 서버는 키가 없으면 "건드리지 마라", `null` 이면
+        "CKD 아님으로 지워라" 로 읽는다. 규칙은 `utils/ckdStage.ts::toServerStage` 하나다.
       */
+      const serverStage = toServerStage(ckdStage, onDialysis)
       const stageAxis =
-        onDialysis === true
-          ? { ckdStage: "DIALYSIS" }
-          : ckdStage === undefined
-            ? {}
-            : { ckdStage }
+        serverStage === undefined ? {} : { ckdStage: serverStage }
 
       await api.patch("/user/profile/kidney", {
         ...stageAxis,
@@ -230,28 +237,33 @@ export function KidneyProfileEditScreen() {
         heightCm: heightNum,
       })
 
+      /*
+        체중은 **사용자가 실제로 고쳤을 때만** 오늘 기록으로 남긴다 — `/weight-records` 는
+        upsert 라 무조건 부르면 오늘 아침에 잰 진짜 체중을 프로필 값이 덮어쓴다.
+      */
       const weight = Number(weightVal.trim())
-      // 반드시 **로컬** 날짜 키여야 한다. toISOString() 은 UTC 기준이라 KST 아침
-      // 09시 이전 측정이 전날 키로 저장됐다 — 저장은 upsert 라서 전날의 실제
-      // 측정값을 덮어쓰고, 오늘 카드는 빈 채로 남았다. 읽는 쪽은 전부 로컬 날짜다.
-      const today = toDateStr(new Date())
-      await weightEdemaService.updateWeight(weight, today)
+      const weightChanged =
+        weightTouchedRef.current && weight !== kidneyProfile?.weightKg
+      if (weightChanged) {
+        // 로컬 날짜 키여야 한다(UTC 로 만들면 KST 아침 측정이 전날 키가 된다).
+        const today = toDateStr(new Date())
+        await weightEdemaService.updateWeight(weight, today)
+      }
 
       queryClient.invalidateQueries({ queryKey: ["kidneyProfile"] })
       queryClient.invalidateQueries({ queryKey: ["dateAnalysis"] })
-      navigateBackOrFallback()
+      if (weightChanged) {
+        queryClient.invalidateQueries({ queryKey: ["weightRecords"] })
+      }
+      router.back()
     } catch (error) {
       const serverErrors = mapKidneyProfileServerFieldErrors(
         extractFieldErrors(error),
       )
-
       if (Object.keys(serverErrors).length > 0) {
         setErrors(serverErrors)
         return
       }
-
-      // 필드 오류가 아니면 원인은 서버만 안다. 화면 폴백("신장 건강 정보를 저장하지
-      // 못했어요")은 그 원인을 덮으면서 알려 주는 것도 없었다.
       presentError(error, {
         scope: "kidney-profile-save",
         retry: () => void handleSave(),
@@ -266,414 +278,245 @@ export function KidneyProfileEditScreen() {
     clearFieldError("height")
     setHeightVal(text)
   }
-
   const handleChangeWeight = (text: string) => {
     weightTouchedRef.current = true
     clearFieldError("weight")
     setWeightVal(text)
   }
-
   const handleChangeOtherCause = (text: string) => {
     clearFieldError("otherCause")
     setOtherCause(text)
   }
 
+  const stageChoice: StageChoice | null =
+    ckdStage === undefined
+      ? null
+      : ckdStage === null
+        ? STAGE_NONE
+        : (ckdStage as StageChoice)
+  const dialysisChoice: DialysisChoice | null =
+    ckdStage === undefined ? null : onDialysis ? "YES" : "NO"
+  const otherSelected = selectedCauses.includes("OTHER")
   const formattedDate = diagnosisDate
-    ? `${String(diagnosisDate.month).padStart(2, "0")}/${diagnosisDate.year}`
+    ? t("kidney.diagnosisDateValue", {
+        year: diagnosisDate.year,
+        month: String(diagnosisDate.month).padStart(2, "0"),
+      })
     : ""
-
-  /*
-    선택·강조 면. 이 화면만 초록 계열(#F0FDF4 / sub6·sub8)을 쓰고 있어서
-    가입·기록·레시피와 색이 따로 놀았다. 브랜드는 #FE7139 하나다
-    (theme/tokens.ts: "화면에서 브랜드 색이 필요하면 이걸 쓴다").
-    primary1 은 그 브랜드의 가장 옅은 틴트 — 시트의 선택 칩이 쓰는 면과 같다.
-  */
-  const selectedTintBg = c.isDark ? "#3A2318" : tokens.color.primary1.val
+  const heightError = localizedFieldError("height")
+  const weightError = localizedFieldError("weight")
+  const dateError = localizedFieldError("diagnosisDate")
+  const otherError = localizedFieldError("otherCause")
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>
-      <ScreenHeader
+    <>
+      <RecordPageShell
         title={t("kidney.title")}
-        paddingTop={insets.top + 8}
-        onBack={navigateBackOrFallback}
-        rightElement={
-          <Pressable onPress={handleSave} hitSlop={8} disabled={isSubmitting}>
-            <ThemedText
-              style={[styles.saveButtonText, isSubmitting && { opacity: 0.5 }]}
-            >
-              {isSubmitting ? t("kidney.saving") : t("kidney.save")}
-            </ThemedText>
-          </Pressable>
-        }
-      />
-
-      <ScrollView
-        bounces={false}
-        overScrollMode="never"
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 40 },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+        navigationTitle={t("kidney.navTitle")}
+        intro={t("kidney.intro")}
+        onBack={() => router.back()}
+        ctaLabel={t("kidney.save")}
+        ctaDisabled={!initialized}
+        ctaLoading={isSubmitting}
+        onCtaPress={() => void handleSave()}
       >
-        <ThemedText style={styles.sectionLabel}>
-          {t("kidney.section")}
-        </ThemedText>
-
-        {/* 키 / 체중 */}
-        <ThemedText
-          style={[styles.subsectionTitle, { marginTop: 20, color: c.textSub }]}
-        >
-          {t("kidney.basic")}
-        </ThemedText>
-        <View style={styles.basicInfoRow}>
-          <View style={styles.inputGroup}>
-            <ThemedText style={[styles.inputLabel, { color: c.text }]}>
-              {t("kidney.height")}
-            </ThemedText>
-            <TextInput
-              style={[
-                styles.textInput,
-                {
-                  marginTop: 6,
-                  backgroundColor: c.bg,
-                  borderColor: errors.height
-                    ? tokens.color.error.val
-                    : c.border,
-                  color: c.text,
-                },
-              ]}
-              value={heightVal}
-              onChangeText={handleChangeHeight}
-              keyboardType="numeric"
-              placeholder={t("kidney.heightPlaceholder")}
-              placeholderTextColor={c.textTertiary}
-            />
-            {errors.height ? (
-              <ThemedText style={styles.fieldError}>
-                {localizedFieldError("height")}
-              </ThemedText>
-            ) : null}
+        <View style={styles.content}>
+          {/* 키 · 체중 — 혈압 페이지의 짝 입력과 같은 면 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("kidney.basic")}
+            </V2Text>
+            <View style={styles.pair}>
+              <RecordNumberField
+                inputRef={heightRef}
+                paired
+                label={t("kidney.height")}
+                unit="cm"
+                value={heightVal}
+                onChangeText={handleChangeHeight}
+                keyboardType="decimal-pad"
+                placeholder={t("kidney.heightPlaceholder")}
+                invalid={!!errors.height}
+                returnKeyType="next"
+                onSubmitEditing={() => weightRef.current?.focus()}
+              />
+              <RecordNumberField
+                inputRef={weightRef}
+                paired
+                label={t("kidney.weight")}
+                unit="kg"
+                value={weightVal}
+                onChangeText={handleChangeWeight}
+                keyboardType="decimal-pad"
+                placeholder={t("kidney.weightPlaceholder")}
+                invalid={!!errors.weight}
+                returnKeyType="done"
+              />
+            </View>
+            <RecordFieldHint error={!!(heightError || weightError)}>
+              {heightError ?? weightError ?? ""}
+            </RecordFieldHint>
           </View>
-          <View style={styles.inputGroup}>
-            <ThemedText style={[styles.inputLabel, { color: c.text }]}>
-              {t("kidney.weight")}
-            </ThemedText>
-            <TextInput
-              style={[
-                styles.textInput,
-                {
-                  marginTop: 6,
-                  backgroundColor: c.bg,
-                  borderColor: errors.weight
-                    ? tokens.color.error.val
-                    : c.border,
-                  color: c.text,
-                },
-              ]}
-              value={weightVal}
-              onChangeText={handleChangeWeight}
-              keyboardType="numeric"
-              placeholder={t("kidney.weightPlaceholder")}
-              placeholderTextColor={c.textTertiary}
-            />
-            {errors.weight ? (
-              <ThemedText style={styles.fieldError}>
-                {localizedFieldError("weight")}
-              </ThemedText>
-            ) : null}
-          </View>
-        </View>
 
-        {/* 단백질 목표 안내 */}
-        <View
-          style={[styles.proteinHintBox, { backgroundColor: selectedTintBg }]}
-        >
-          <Ionicons
-            name="information-circle-outline"
-            size={15}
-            color={tokens.color.primary.val}
-          />
-          <ThemedText style={styles.proteinHintText}>
-            {t("kidney.proteinNote")}
-          </ThemedText>
-        </View>
-
-        {/* CKD 병기 */}
-        <View style={[styles.subsectionRow, { marginTop: 24 }]}>
-          <ThemedText style={[styles.subsectionTitle, { color: c.textSub }]}>
-            {t("kidney.stage.title")}
-          </ThemedText>
-          <ThemedText style={styles.currentStageText}>
-            {ckdStage != null
-              ? t("kidney.stage.current", {
-                  stage: t("kidney.stage.value", {
-                    stage: stageCode(ckdStage),
+          {/* 신장 병기 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("kidney.stage.title")}
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
+              {t("kidney.stageHint")}
+            </V2Text>
+            <RecordChoices<StageChoice>
+              value={stageChoice}
+              disabled={!initialized || isSubmitting}
+              onChange={(value) => {
+                if (value === STAGE_NONE) {
+                  setCkdStage(null)
+                  setOnDialysis(false)
+                  return
+                }
+                setCkdStage(value)
+              }}
+              options={[
+                ...STAGE_OPTIONS.map((option) => ({
+                  value: option.key as StageChoice,
+                  label: t("kidney.stage.value", {
+                    stage: stageCode(option.key),
                   }),
-                })
-              : ""}
-          </ThemedText>
-        </View>
-        <View style={[styles.stageButtonsRow, { marginTop: 8 }]}>
-          {STAGE_OPTIONS.map((option) => (
-            <Pressable
-              key={option.key}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: ckdStage === option.key }}
-              accessibilityLabel={t("kidney.stage.accessibility", {
-                stage: stageCode(option.key),
-              })}
-              style={[
-                styles.stageButton,
-                { borderColor: c.border },
-                ckdStage === option.key && {
-                  backgroundColor: selectedTintBg,
-                  borderWidth: 1.4,
-                  borderColor: tokens.color.primary.val,
-                },
+                })),
+                { value: STAGE_NONE, label: t("kidney.stage.none") },
               ]}
-              onPress={() => setCkdStage(option.key)}
-            >
-              <ThemedText
-                style={[
-                  styles.stageButtonText,
-                  { color: c.text },
-                  ckdStage === option.key && styles.stageButtonTextSelected,
-                ]}
-              >
-                {t("kidney.stage.value", {
-                  stage: stageCode(option.key),
-                })}
-              </ThemedText>
-            </Pressable>
-          ))}
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{ selected: ckdStage === null }}
-            accessibilityLabel={t("kidney.stage.noneAccessibility")}
-            style={[
-              styles.stageButton,
-              { borderColor: c.border },
-              ckdStage === null && {
-                backgroundColor: selectedTintBg,
-                borderWidth: 1.4,
-                borderColor: tokens.color.primary.val,
-              },
-            ]}
-            onPress={() => {
-              setCkdStage(null)
-              setOnDialysis(false)
-            }}
-          >
-            <ThemedText
-              style={[
-                styles.stageButtonText,
-                { color: c.text },
-                ckdStage === null && styles.stageButtonTextSelected,
-              ]}
-            >
-              {t("kidney.stage.none")}
-            </ThemedText>
-          </Pressable>
-        </View>
-
-        {/* 투석 여부 */}
-        <View
-          style={[
-            styles.dialysisBox,
-            { marginTop: 12, borderColor: c.isDark ? c.border : "#F1F5F9" },
-          ]}
-        >
-          <View
-            style={[
-              styles.dialysisIconContainer,
-              { backgroundColor: selectedTintBg },
-            ]}
-          >
-            <Ionicons
-              name="pulse-outline"
-              size={24}
-              color={tokens.color.primary.val}
             />
           </View>
-          <View style={styles.dialysisInfo}>
-            <ThemedText style={[styles.dialysisTitle, { color: c.text }]}>
-              {t("kidney.dialysis.title")}
-            </ThemedText>
-            <ThemedText
-              style={[styles.dialysisDescription, { color: c.textMuted }]}
+
+          {/* 투석 여부 — 병기가 '없음' 이면 묻지 않는다 */}
+          <V2Disclosure open={ckdStage !== null}>
+            <View style={styles.group}>
+              <V2Text style={styles.label} color={s.textStrong}>
+                {t("kidney.dialysisLabel")}
+              </V2Text>
+              <RecordChoices<DialysisChoice>
+                value={dialysisChoice}
+                disabled={!initialized || isSubmitting}
+                onChange={(value) => setOnDialysis(value === "YES")}
+                options={[
+                  { value: "NO", label: t("kidney.dialysisNo") },
+                  { value: "YES", label: t("kidney.dialysisYes") },
+                ]}
+              />
+            </View>
+          </V2Disclosure>
+
+          {/* 진단 시기 — 숫자 칸과 같은 면의 선택 행. 오류 줄은 있을 때만(예약 두 줄이 아래 칩과의 간격을 두 배로 벌린다). */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("kidney.diagnosisDate")}
+            </V2Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("kidney.diagnosisDateAccessibility")}
+              accessibilityValue={{ text: formattedDate || undefined }}
+              disabled={isSubmitting}
+              onPress={() => setDatePickerVisible(true)}
+              style={({ pressed }) => [
+                styles.field,
+                {
+                  backgroundColor: pressed ? s.surfacePressed : s.surfaceSunken,
+                  borderColor: errors.diagnosisDate
+                    ? s.danger
+                    : s.surfaceSunken,
+                },
+              ]}
             >
-              {t("kidney.dialysis.body")}
-            </ThemedText>
+              <V2Text
+                style={styles.fieldValue}
+                color={formattedDate ? s.textStrong : recordFieldLabel(s)}
+              >
+                {formattedDate || t("kidney.diagnosisDatePlaceholder")}
+              </V2Text>
+              <Ionicons name="calendar-outline" size={20} color={s.text} />
+            </Pressable>
+            {dateError ? (
+              <RecordFieldHint error>{dateError}</RecordFieldHint>
+            ) : null}
           </View>
-          <Switch
-            accessibilityLabel={t("kidney.dialysis.accessibility")}
-            value={onDialysis}
-            onValueChange={setOnDialysis}
-            trackColor={{ false: c.border, true: tokens.color.primary.val }}
-            thumbColor="#FFFFFF"
-            ios_backgroundColor={c.border}
-          />
+
+          {/* 주 진단 원인 — 여러 개 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("kidney.diagnosisCause")}
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
+              {t("kidney.causeHint")}
+            </V2Text>
+            <RecordMultiChoices
+              values={selectedCauses}
+              disabled={!initialized || isSubmitting}
+              onToggle={toggleCause}
+              options={DIAGNOSIS_CAUSE_OPTIONS.map((cause) => ({
+                value: cause.key as string,
+                label: t(DIAGNOSIS_CAUSE_LABEL_KEYS[cause.key]),
+              }))}
+            />
+            <V2Disclosure open={otherSelected}>
+              <View style={styles.otherWrap}>
+                <View
+                  style={[
+                    styles.field,
+                    styles.otherField,
+                    {
+                      backgroundColor: otherFocused
+                        ? s.canvas
+                        : s.surfaceSunken,
+                      borderColor: errors.otherCause
+                        ? s.danger
+                        : otherFocused
+                          ? s.brand
+                          : s.surfaceSunken,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    multiline
+                    value={otherCause}
+                    onChangeText={handleChangeOtherCause}
+                    onFocus={() => setOtherFocused(true)}
+                    onBlur={() => setOtherFocused(false)}
+                    placeholder={t("kidney.otherCausePlaceholder")}
+                    placeholderTextColor={recordFieldLabel(s)}
+                    selectionColor={s.brand}
+                    textAlignVertical="top"
+                    accessibilityLabel={t("kidney.causes.other")}
+                    style={[styles.otherInput, { color: s.textStrong }]}
+                  />
+                </View>
+                {otherError ? (
+                  <RecordFieldHint error>{otherError}</RecordFieldHint>
+                ) : null}
+              </View>
+            </V2Disclosure>
+          </View>
+
+          {/* 동반 질환 — 여러 개 */}
+          <View style={styles.group}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("kidney.comorbiditiesTitle")}
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
+              {t("kidney.comorbidityHint")}
+            </V2Text>
+            <RecordMultiChoices
+              values={selectedComorbidities}
+              disabled={!initialized || isSubmitting}
+              onToggle={toggleComorbidity}
+              options={COMORBIDITY_OPTIONS.map((opt) => ({
+                value: opt.key as string,
+                label: t(opt.labelKey),
+              }))}
+            />
+          </View>
         </View>
-
-        {/* 진단 시기 */}
-        <ThemedText
-          style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
-        >
-          {t("kidney.diagnosisDate")}
-        </ThemedText>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("kidney.diagnosisDateAccessibility")}
-          style={[
-            styles.dateInputRow,
-            {
-              marginTop: 8,
-              borderColor: errors.diagnosisDate
-                ? tokens.color.error.val
-                : c.border,
-              backgroundColor: c.bg,
-            },
-          ]}
-          onPress={() => setDatePickerVisible(true)}
-        >
-          <ThemedText
-            style={[
-              styles.dateInputText,
-              { color: c.text },
-              !diagnosisDate && { color: c.textTertiary },
-            ]}
-          >
-            {formattedDate || "mm/yyyy"}
-          </ThemedText>
-          <Ionicons name="calendar-outline" size={24} color={c.textMuted} />
-        </Pressable>
-        {errors.diagnosisDate ? (
-          <ThemedText style={styles.fieldError}>
-            {localizedFieldError("diagnosisDate")}
-          </ThemedText>
-        ) : null}
-
-        {/* 주 진단 원인 */}
-        <ThemedText
-          style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
-        >
-          {t("kidney.diagnosisCause")}
-        </ThemedText>
-        <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
-          {DIAGNOSIS_CAUSE_OPTIONS.map((cause) => (
-            <Pressable
-              key={cause.key}
-              accessibilityRole="checkbox"
-              accessibilityState={{
-                checked: selectedCauses.includes(cause.key),
-              }}
-              style={[
-                styles.causeButton,
-                { borderColor: c.border },
-                selectedCauses.includes(cause.key) && {
-                  backgroundColor: selectedTintBg,
-                  borderWidth: 1.4,
-                  borderColor: tokens.color.primary.val,
-                },
-              ]}
-              onPress={() => toggleCause(cause.key)}
-            >
-              <ThemedText
-                style={[
-                  styles.stageButtonText,
-                  { color: c.text },
-                  selectedCauses.includes(cause.key) &&
-                    styles.stageButtonTextSelected,
-                ]}
-              >
-                {t(DIAGNOSIS_CAUSE_LABEL_KEYS[cause.key])}
-              </ThemedText>
-            </Pressable>
-          ))}
-        </View>
-        <TextInput
-          style={[
-            styles.otherCauseInput,
-            {
-              marginTop: 8,
-              borderColor: errors.otherCause
-                ? tokens.color.error.val
-                : c.border,
-              color: c.text,
-              backgroundColor: c.bg,
-            },
-          ]}
-          multiline
-          value={otherCause}
-          onChangeText={handleChangeOtherCause}
-          placeholder={t("kidney.otherCausePlaceholder")}
-          placeholderTextColor={c.textTertiary}
-          textAlignVertical="top"
-        />
-        {errors.otherCause ? (
-          <ThemedText style={styles.fieldError}>
-            {localizedFieldError("otherCause")}
-          </ThemedText>
-        ) : null}
-
-        {/* 동반 질환 */}
-        <ThemedText
-          style={[styles.subsectionTitle, { marginTop: 36, color: c.textSub }]}
-        >
-          {t("kidney.comorbiditiesTitle")}
-        </ThemedText>
-        <View style={[styles.causeButtonsWrap, { marginTop: 8 }]}>
-          {COMORBIDITY_OPTIONS.map((opt) => (
-            <Pressable
-              key={opt.key}
-              accessibilityRole="checkbox"
-              accessibilityState={{
-                checked: selectedComorbidities.includes(opt.key),
-              }}
-              style={[
-                styles.causeButton,
-                { borderColor: c.border },
-                selectedComorbidities.includes(opt.key) && {
-                  backgroundColor: selectedTintBg,
-                  borderWidth: 1.4,
-                  borderColor: tokens.color.primary.val,
-                },
-              ]}
-              onPress={() => toggleComorbidity(opt.key)}
-            >
-              <ThemedText
-                style={[
-                  styles.stageButtonText,
-                  { color: c.text },
-                  selectedComorbidities.includes(opt.key) &&
-                    styles.stageButtonTextSelected,
-                ]}
-              >
-                {t(opt.labelKey)}
-              </ThemedText>
-            </Pressable>
-          ))}
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("kidney.saveAccessibility")}
-          style={[
-            styles.completeButton,
-            { marginTop: 36 },
-            isSubmitting && { opacity: 0.6 },
-          ]}
-          onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
-          <ThemedText style={styles.completeButtonText}>
-            {t("kidney.save")}
-          </ThemedText>
-        </Pressable>
-      </ScrollView>
+      </RecordPageShell>
 
       <DatePickerModal
         visible={datePickerVisible}
@@ -685,192 +528,35 @@ export function KidneyProfileEditScreen() {
           setDatePickerVisible(false)
         }}
       />
-    </ThemedView>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  saveButtonText: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "600",
-    color: tokens.color.primary.val,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  sectionLabel: {
-    fontSize: 16,
-    lineHeight: 16 * 1.4,
-    fontWeight: "600",
-    color: tokens.color.primary.val,
-  },
-  subsectionTitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "500",
-  },
-  subsectionRow: {
+  content: { paddingHorizontal: PAGE_X, gap: FORM.sectionGap },
+  group: { gap: FORM.labelGap },
+  label: FORM.label,
+  hint: FORM.hint,
+  pair: { flexDirection: "row", gap: S[3] },
+  field: {
+    minHeight: FIELD.height - S[6],
+    borderRadius: FIELD.radius,
+    borderWidth: 1,
+    paddingHorizontal: FIELD.paddingX,
+    paddingVertical: S[4],
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: S[2],
   },
-  currentStageText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-    color: tokens.color.primary.val,
-  },
-  inputLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-  },
-  fieldError: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-    color: tokens.color.error.val,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  basicInfoRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginTop: 8,
-  },
-  proteinHintBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 10,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  proteinHintText: {
+  fieldValue: { ...FORM.body, flex: 1 },
+  otherWrap: { paddingTop: S[2] },
+  otherField: { alignItems: "stretch", minHeight: FIELD.height },
+  otherInput: {
+    ...FORM.body,
+    fontFamily: fontFamily.regular,
     flex: 1,
-    fontSize: 12,
-    lineHeight: 17,
-    color: tokens.color.primary.val,
-  },
-  inputGroup: {
-    flex: 1,
-    gap: 6,
-  },
-  // 칩이 7개다. 한 줄에 밀어 넣으면 칸당 글자 상자가 37pt 인데 영어 라벨은
-  // "Stage 1"(50pt) 이라 "Stag"/"e 1" 로 글자 중간에서 쪼개졌다. 줄바꿈을 허용하고
-  // 고정 높이를 최소 높이로 바꿔 두 줄이 되어도 잘리지 않게 한다.
-  stageButtonsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  stageButton: {
-    minWidth: 76,
-    flexGrow: 1,
-    flexBasis: 0,
-    minHeight: 48,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderWidth: 2,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stageButtonText: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  stageButtonTextSelected: {
-    color: tokens.color.primary.val,
-  },
-  dialysisBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 12,
-  },
-  dialysisIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dialysisInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  dialysisTitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "500",
-  },
-  dialysisDescription: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-  },
-  dateInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  dateInputText: {
-    fontSize: 16,
-  },
-  causeButtonsWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  causeButton: {
-    height: 48,
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  otherCauseInput: {
-    height: 96,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 14,
-  },
-  completeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: tokens.color.primary.val,
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-  },
-  completeButtonText: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    padding: 0,
+    includeFontPadding: false,
   },
 })

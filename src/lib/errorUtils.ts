@@ -30,29 +30,6 @@ export function logRecoverableError(label: string, error: unknown): void {
 }
 
 /**
- * 카탈로그를 거치지 않은 문자열에만 적용하는 개발자 표현 검사.
- *
- * 큐레이션 여부 판정 자체는 `errorMessage/resolve.ts` 로 옮겼다. 여기 남은 것은
- * `apiClient` 가 봉투 없는 응답을 걸러낼 때 쓰는 어휘 검사뿐이다.
- */
-const INTERNAL_JARGON =
-  /\b(?:api|http|json|axios|trace(?:back)?|exception|timeout|undefined|null)\b|서버|토큰|엔드포인트/i
-
-/** `TOKEN_ERROR_001` 같은 대문자 에러코드. `i` 플래그를 붙이면 안 된다. */
-const INTERNAL_CODE = /(?:^|[^A-Za-z])[A-Z][A-Z0-9_]{2,}(?![a-z])/
-
-/** `/api/v1/...` 같은 경로. */
-const INTERNAL_PATH = /\/[a-z0-9_-]+\//i
-
-export function isInternalLookingMessage(message: string): boolean {
-  return (
-    INTERNAL_JARGON.test(message) ||
-    INTERNAL_CODE.test(message) ||
-    INTERNAL_PATH.test(message)
-  )
-}
-
-/**
  * 인라인 오류 문구(한 덩어리 문자열)가 필요한 자리용 — 폼 아래 빨간 줄, 화면 안내문.
  *
  * **판정은 하지 않는다.** `resolveError` 가 고른 제목+본문을 한 문자열로 이어 줄 뿐이다.

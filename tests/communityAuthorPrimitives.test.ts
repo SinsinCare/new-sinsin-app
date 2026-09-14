@@ -1,8 +1,12 @@
 /**
- * 커뮤니티 재디자인의 **작성자 프리미티브** 계약 — `FollowButton` · `AuthorCard` ·
- * `AuthorRail` · `AuthorProfileCard` · `NeighborRow` · `ConnectionRow`.
- * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.11 · §2.12 · §2.13 · §2.14 · §5.7
+ * 커뮤니티 재디자인의 **작성자 프리미티브** 계약 — `FollowButton`.
+ * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.11 · §5.7
  * · 실측 `author-profile.md` · `feed-home.md` · `detail-drag.md`.
+ *
+ * `AuthorCard` · `AuthorRail` · `AuthorProfileCard` · `NeighborRow` · `ConnectionRow`
+ * (§2.12 · §2.13 · §2.14)의 계약도 여기 있었다. 다섯 다 어디서도 import 되지 않는
+ * 죽은 파일이라 컴포넌트와 함께 지웠다(2026-09-09) — 피드 삽입분은
+ * `NeighborSuggestionSection`, 팔로워/팔로잉 행은 `CommunityConnectionsScreen` 안에 있다.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * ■ 왜 소스 문자열이 아니라 컴포넌트를 **호출**하나
@@ -13,16 +17,10 @@
  * 행 높이는 상수 비교가 아니라 **스타일 + 타이포 토큰으로 다시 합산**해서 본다 —
  * 그래야 "숫자는 맞는데 그 숫자를 만드는 항이 틀린" 상태가 잡힌다.
  *
- * ■ 이 파일이 지키는 것 중 가장 중요한 넷
+ * ■ 이 파일이 지키는 것 중 가장 중요한 것
  *
  *  1. **§5.7 의 상태→면 매핑.** 시안 4개 프레임이 서로 어긋나 있어서, 다음 사람이 시안을
  *     다시 열면 뒤집힌 프레임을 먼저 볼 확률이 높다. `팔로우`=fill / `팔로잉`=weak.
- *  2. **행 높이 101 · 81 · 146 · 165 가 하단 1px 을 포함한다.** Yoga 는 테두리를 상자
- *     높이에 넣으므로(D13·D17) 패딩으로 쌓으면 목록 전체가 행마다 1px 씩 밀린다.
- *  3. **텍스트열의 세로 중앙.** 태그가 있고 없고에 따라 두/세 줄이 아바타에 대해 다시
- *     중앙에 와야 하고, **행 높이는 그대로 101** 이어야 한다(§2.14 가 못 박았다).
- *  4. **프로필 블록의 버튼은 아래에서 잰다.** 위에서 더해 96 을 맞추려면 사다리에 없는
- *     22 가 필요하고, 닉네임 타이포가 바뀌면 조용히 어긋난다.
  */
 /* eslint-disable import/first -- RN·네이티브 의존을 모듈 로드 **전에** 갈아 끼워야 한다. */
 
@@ -35,6 +33,15 @@ jest.mock("react-native", () => ({
   Text: "Text",
   Pressable: "Pressable",
   ScrollView: "ScrollView",
+}))
+/*
+  2026-09-08 부터 v2 컴포넌트는 `Text` 를 react-native 가 아니라
+  `primitives/NativeText`(접근성 확대 상한만 중앙에서 정하는 얇은 래퍼)에서 가져온다.
+  스타일은 손대지 않고 그대로 통과시키므로 호스트 태그와 같은 **문자열 태그**로 둔다 —
+  안 그러면 위의 `Text: "Text"` 가 라벨에 닿지 않는다(다른 스위트와 같은 처방).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
 }))
 jest.mock("react-i18next", () => ({
   /*
@@ -75,38 +82,10 @@ jest.mock("react", () => ({
 let mockMode: "light" | "dark" = "light"
 
 import { resolveTheme } from "@/src/design-system-v2/theme"
-import { V2Avatar } from "@/src/design-system-v2/components/V2Avatar"
-import { V2Text } from "@/src/design-system-v2/components/V2Text"
-import { elevation } from "@/src/design-system-v2/tokens/elevation"
 import { radius } from "@/src/design-system-v2/tokens/radius"
-import { borderWidth, controlHeight } from "@/src/design-system-v2/tokens/size"
-import { spacing } from "@/src/design-system-v2/tokens/spacing"
+import { controlHeight } from "@/src/design-system-v2/tokens/size"
 import { typography } from "@/src/design-system-v2/tokens/typography"
-import {
-  CHIP_GAP,
-  COMMUNITY_GUTTER,
-  RAIL_INSET,
-  ROW,
-} from "@/src/features/recipe/components/community/communityLayout"
 import { FollowButton } from "@/src/features/recipe/components/community/FollowButton"
-import { MicroPill } from "@/src/features/recipe/components/community/MicroPill"
-import { MorePill } from "@/src/features/recipe/components/community/MorePill"
-import {
-  AUTHOR_CARD,
-  AuthorCard,
-} from "@/src/features/recipe/components/community/AuthorCard"
-import {
-  AUTHOR_RAIL_GAP,
-  AUTHOR_RAIL_PAD_V,
-  AuthorRail,
-} from "@/src/features/recipe/components/community/AuthorRail"
-import {
-  AUTHOR_PROFILE_CARD_HEIGHT,
-  AUTHOR_PROFILE_STATS_WIDTH,
-  AuthorProfileCard,
-} from "@/src/features/recipe/components/community/AuthorProfileCard"
-import { NeighborRow } from "@/src/features/recipe/components/community/NeighborRow"
-import { ConnectionRow } from "@/src/features/recipe/components/community/ConnectionRow"
 
 const light = resolveTheme("light").colors
 
@@ -153,9 +132,6 @@ function walk(element: Element): Element[] {
   )
 }
 
-const findAll = (root: Element, type: unknown): Element[] =>
-  walk(root).filter((el) => el.type === type)
-
 const byTag = (root: Element, tag: string): Element[] =>
   walk(root).filter((el) => el.type === tag)
 
@@ -172,10 +148,6 @@ function expand(element: Element): Element {
     throw new Error("함수 컴포넌트가 아니다")
   return render(element.type as (props: unknown) => unknown, element.props)
 }
-
-/** `V2Text` 의 자식 문자열. */
-const textsOf = (root: Element): string[] =>
-  findAll(root, V2Text).map((el) => String(el.props.children))
 
 const noop = () => {}
 
@@ -258,431 +230,5 @@ describe("FollowButton — 두 크기 (§2.11)", () => {
     expect(button.props.disabled).toBe(true)
     expect(button.props.loading).toBeUndefined()
     expect(byTag(expand(button), "V2DotLoader")).toEqual([])
-  })
-})
-
-/* ══ AuthorCard / AuthorRail — §2.12 ═════════════════════════════════════ */
-
-const card = (overrides: Record<string, unknown> = {}) =>
-  render(AuthorCard, {
-    name: "신신마스터",
-    badges: ["CKD 정보", "식단 인증"],
-    following: false,
-    onToggleFollow: noop,
-    onPress: noop,
-    ...overrides,
-  } as never)
-
-describe("AuthorCard — 137×165 (§2.12)", () => {
-  it("카드 바깥 치수 · r8 · 테두리 없음 · `elevation[2]` 정확 일치", () => {
-    const box = styleOf(card())
-
-    expect(box.width).toBe(AUTHOR_CARD.width)
-    expect(box.height).toBe(AUTHOR_CARD.height)
-    expect([box.width, box.height]).toEqual([137, 165])
-    expect(box.borderRadius).toBe(radius.sm)
-    expect(box.borderWidth).toBeUndefined()
-    // 실측 `dy1 / blur3 / rgba(0,27,55,0.10)` 이 이 토큰이다 — 손으로 적으면 다크가 갈린다.
-    expect(box).toMatchObject(elevation[2])
-    expect(box.backgroundColor).toBe(light.background.default)
-  })
-
-  it("세로 리듬의 항들이 실측 앵커(배지줄 +87 · 버튼 +116..148)를 만든다", () => {
-    const root = card()
-    const box = styleOf(root)
-    const [avatar] = findAll(root, V2Avatar)
-    const badges = byTag(root, "View")[0] as Element
-    const [button] = findAll(root, FollowButton)
-
-    const nameTop =
-      (box.paddingTop as number) +
-      (avatar?.props.size as number) +
-      (flatten(nameOf(root).props.style).marginTop as number)
-    const badgeTop =
-      nameTop +
-      typography.label.small.lineHeight +
-      (flatten(badges.props.style).marginTop as number)
-    const buttonTop =
-      badgeTop +
-      (flatten(badges.props.style).height as number) +
-      (flatten(button?.props.style).marginTop as number)
-
-    expect(badgeTop).toBe(87)
-    expect(buttonTop).toBe(116)
-    expect(buttonTop + controlHeight.sm).toBe(148)
-    // 남는 17 이 카드 아래 여백이다 — 버튼이 카드 밖으로 나가면 여기서 잡힌다.
-    expect(buttonTop + controlHeight.sm).toBeLessThan(AUTHOR_CARD.height)
-  })
-
-  it("배지 줄은 **비어도** 21 을 지킨다(그래야 버튼 자리가 안 움직인다)", () => {
-    const withBadges = flatten(
-      (byTag(card(), "View")[0] as Element).props.style,
-    )
-    const without = flatten(
-      (byTag(card({ badges: undefined }), "View")[0] as Element).props.style,
-    )
-
-    expect(withBadges.height).toBe(ROW.microPill)
-    expect(without.height).toBe(withBadges.height)
-    expect(ROW.microPill).toBe(21)
-    expect(withBadges.gap).toBe(CHIP_GAP)
-  })
-
-  it("배지는 두 개까지만 그린다(137 폭에 세 개는 안 들어간다)", () => {
-    const root = card({ badges: ["가", "나", "다"] })
-    expect(findAll(root, MicroPill)).toHaveLength(2)
-    expect(findAll(root, MicroPill).map((p) => p.props.face)).toEqual([
-      "neutral",
-      "neutral",
-    ])
-  })
-
-  it("아바타 48 · 카드 자체가 프로필로 가는 버튼이다", () => {
-    const opened: string[] = []
-    const root = card({ onPress: () => opened.push("profile") })
-
-    expect(findAll(root, V2Avatar)[0]?.props.size).toBe(48)
-    expect(root.props.accessibilityRole).toBe("button")
-    ;(root.props.onPress as () => void)()
-    expect(opened).toEqual(["profile"])
-  })
-})
-
-/** 카드/행의 이름 `V2Text`. */
-function nameOf(root: Element): Element {
-  const [name] = findAll(root, V2Text)
-  if (!name) throw new Error("이름이 없다")
-  return name
-}
-
-describe("AuthorRail — 181 = 8 + 165 + 8 (§2.12)", () => {
-  const rail = (overrides: Record<string, unknown> = {}) =>
-    render(AuthorRail, {
-      authors: [
-        {
-          id: "1",
-          name: "가",
-          following: false,
-          onToggleFollow: noop,
-          onPress: noop,
-        },
-        {
-          id: "2",
-          name: "나",
-          following: true,
-          onToggleFollow: noop,
-          onPress: noop,
-        },
-      ],
-      ...overrides,
-    } as never)
-
-  it("위·아래 8 이 카드 165 를 감싸 실측 블록 181 이 된다", () => {
-    const content = flatten(rail().props.contentContainerStyle)
-
-    expect(content.paddingVertical).toBe(AUTHOR_RAIL_PAD_V)
-    expect(AUTHOR_RAIL_PAD_V * 2 + AUTHOR_CARD.height).toBe(181)
-  })
-
-  it("인셋 20 · 카드 사이 8 은 `contentContainerStyle` 에만 (컨테이너 금지)", () => {
-    const root = rail()
-    const content = flatten(root.props.contentContainerStyle)
-
-    expect(content.paddingHorizontal).toBe(RAIL_INSET)
-    expect(content.gap).toBe(AUTHOR_RAIL_GAP)
-    expect(AUTHOR_RAIL_GAP).toBe(8)
-    // 컨테이너 padding 이면 오른쪽이 스크롤 끝에서 잘린다.
-    expect(styleOf(root).paddingHorizontal).toBeUndefined()
-  })
-
-  it("A안(카드 레일) + B안(`더보기` 필)을 합친다 — 필은 카드들 **뒤**에 온다", () => {
-    const root = rail({ more: { label: "more", onPress: noop } })
-    const kids = childrenOf(root)
-
-    expect(findAll(root, AuthorCard)).toHaveLength(2)
-    expect(kids[kids.length - 1]?.type).toBe(MorePill)
-  })
-
-  it("`더보기` 를 안 주면 필이 없다", () => {
-    expect(findAll(rail(), MorePill)).toEqual([])
-  })
-})
-
-/* ══ AuthorProfileCard — §2.13 ═══════════════════════════════════════════ */
-
-const profile = (overrides: Record<string, unknown> = {}) =>
-  render(AuthorProfileCard, {
-    name: "신신마스터",
-    stats: { reviews: 30, followers: 1741, following: 0 },
-    following: false,
-    onToggleFollow: noop,
-    ...overrides,
-  } as never)
-
-describe("AuthorProfileCard — 146 블록 (§2.13)", () => {
-  it("하단 1px 이 있든 없든 총 높이는 146 이다", () => {
-    const plain = styleOf(profile())
-    const bordered = styleOf(profile({ divider: true }))
-
-    expect(plain.height).toBe(AUTHOR_PROFILE_CARD_HEIGHT)
-    expect(AUTHOR_PROFILE_CARD_HEIGHT).toBe(146)
-    expect(plain.borderBottomWidth).toBe(0)
-    expect(bordered.borderBottomWidth).toBe(borderWidth.thin)
-    // 선이 아래 패딩을 먹는다 — 그래야 버튼도 같은 자리에 남는다.
-    expect(bordered.paddingBottom).toBe(
-      (plain.paddingBottom as number) - borderWidth.thin,
-    )
-    expect(bordered.borderBottomColor).toBe(light.line.normal)
-  })
-
-  it("버튼은 **아래에서** 잰다 → 실측 top +96 / bottom +134", () => {
-    for (const divider of [false, true]) {
-      const box = styleOf(profile({ divider }))
-      const [button] = findAll(profile({ divider }), FollowButton)
-
-      expect(flatten(button?.props.style).marginTop).toBe("auto")
-
-      const bottomInset =
-        (box.paddingBottom as number) + (box.borderBottomWidth as number)
-      const buttonTop =
-        AUTHOR_PROFILE_CARD_HEIGHT - bottomInset - controlHeight.md
-
-      expect(buttonTop).toBe(96)
-      expect(buttonTop + controlHeight.md).toBe(134)
-    }
-  })
-
-  it("아바타는 거터 20 · 텍스트 시작선은 실측 104 그대로", () => {
-    const root = profile()
-    const box = styleOf(root)
-    const head = flatten(headOf(root).props.style)
-
-    expect(box.paddingHorizontal).toBe(COMMUNITY_GUTTER)
-    expect(box.paddingTop).toBe(spacing[16])
-    expect(findAll(root, V2Avatar)[0]?.props.size).toBe(56)
-    // 20(거터) + 56(아바타) + 28(간격) = 104 — 스탯 3열의 실측 x 가 여기 매달려 있다.
-    expect(COMMUNITY_GUTTER + 56 + (head.gap as number)).toBe(104)
-  })
-
-  it("스탯 3열은 폭 210 의 `space-between` 이고 숫자↔라벨 사이는 0 이다", () => {
-    const stats = flatten(statsOf(profile()).props.style)
-
-    expect(stats.width).toBe(AUTHOR_PROFILE_STATS_WIDTH)
-    expect(AUTHOR_PROFILE_STATS_WIDTH).toBe(210)
-    expect(stats.justifyContent).toBe("space-between")
-    expect(stats.marginTop).toBe(spacing[2])
-    // 간격을 2 만 줘도 라벨 베이스라인(실측 C+71.1)이 밀린다.
-    expect(stats.gap).toBeUndefined()
-    // 이름 19 + 2 + 숫자 19 + 라벨 18 = 58 (아바타 56 보다 크다 → 줄 높이를 텍스트가 정한다)
-    const column =
-      typography.label.smallStrong.lineHeight +
-      (stats.marginTop as number) +
-      typography.label.smallStrong.lineHeight +
-      typography.subtext.medium.lineHeight
-    expect(column).toBe(58)
-  })
-
-  it("수는 세 자리로 끊고, 팔로워/팔로잉 열만 눌린다(후기는 갈 곳이 없다)", () => {
-    const opened: string[] = []
-    const columns = childrenOf(
-      statsOf(
-        profile({
-          onPressFollowers: () => opened.push("followers"),
-          onPressFollowing: () => opened.push("following"),
-        }),
-      ),
-    ).map(expand)
-
-    // 열마다 숫자(15 Bold) 위 · 라벨(13 Regular) 아래.
-    expect(textsOf(columns[1] as Element)).toEqual([
-      "1,741",
-      "community.author.followers",
-    ])
-    expect(textsOf(columns[0] as Element)).toEqual([
-      "30",
-      "community.author.reviews",
-    ])
-
-    // 후기 열은 갈 곳이 없어 눌리지 않는다 — 눌리는 척하면 예측 가능한 UX 가 깨진다.
-    expect(columns[0]?.type).toBe("View")
-    expect(columns[1]?.type).toBe("Pressable")
-    expect(columns[2]?.type).toBe("Pressable")
-    ;(columns[1]?.props.onPress as () => void)()
-    ;(columns[2]?.props.onPress as () => void)()
-    expect(opened).toEqual(["followers", "following"])
-  })
-})
-
-/** 프로필 블록의 상단 행(아바타 + 텍스트열)과 스탯 3열 컨테이너. */
-function headOf(root: Element): Element {
-  const head = childrenOf(root)[0]
-  if (!head) throw new Error("상단 행이 없다")
-  return head
-}
-function statsOf(root: Element): Element {
-  const column = childrenOf(headOf(root))[1]
-  const stats = column ? childrenOf(column)[1] : undefined
-  if (!stats) throw new Error("스탯 3열이 없다")
-  return stats
-}
-
-/* ══ NeighborRow(101) / ConnectionRow(81) — §2.14 ════════════════════════ */
-
-const neighbor = (overrides: Record<string, unknown> = {}) =>
-  render(NeighborRow, {
-    name: "신신마스터",
-    followerCount: 1741,
-    postCount: 83,
-    tags: ["CKD3", "식단 인증"],
-    following: true,
-    onToggleFollow: noop,
-    onPress: noop,
-    ...overrides,
-  } as never)
-
-const connection = (overrides: Record<string, unknown> = {}) =>
-  render(ConnectionRow, {
-    name: "신신마스터",
-    followerCount: 1741,
-    postCount: 83,
-    onPress: noop,
-    ...overrides,
-  } as never)
-
-/** 행 안쪽(테두리를 뺀) 높이 — 세로 중앙이 여기서 결정된다. */
-function innerHeightOf(row: Element): number {
-  const box = styleOf(row)
-  return (box.height as number) - (box.borderBottomWidth as number)
-}
-
-describe("NeighborRow — 101 은 하단 1px 을 포함한다 (§2.14)", () => {
-  it("행 높이 · 아바타 60 이 안쪽 100 의 중앙(T+20) 에 온다", () => {
-    const row = neighbor()
-    const box = styleOf(row)
-
-    expect(box.height).toBe(ROW.directoryRow)
-    expect(ROW.directoryRow).toBe(101)
-    expect(box.borderBottomWidth).toBe(borderWidth.thin)
-    expect(box.alignItems).toBe("center")
-
-    expect(findAll(row, V2Avatar)[0]?.props.size).toBe(60)
-    expect((innerHeightOf(row) - 60) / 2).toBe(20)
-  })
-
-  it("텍스트열은 태그가 있든 없든 세로 중앙 — 행 높이는 101 그대로", () => {
-    const withTags = neighbor()
-    const without = neighbor({ tags: undefined })
-
-    const nameLine = typography.label.small.lineHeight
-    const metaLine = typography.subtext.medium.lineHeight
-    const metaGap = flatten(metaStyleOf(withTags)).marginTop as number
-    const tagsGap = flatten(tagsStyleOf(withTags)).marginTop as number
-
-    const tallColumn = nameLine + metaGap + metaLine + tagsGap + ROW.microPill
-    const shortColumn = nameLine + metaGap + metaLine
-
-    expect(tallColumn).toBe(64)
-    expect(shortColumn).toBe(39)
-    // (100−64)/2 = 18 · (100−39)/2 = 30.5 — 실측(잉크 18.7 / 31.2)과 각각 1px 안.
-    expect((innerHeightOf(withTags) - tallColumn) / 2).toBe(18)
-    expect((innerHeightOf(without) - shortColumn) / 2).toBe(30.5)
-    expect(styleOf(without).height).toBe(ROW.directoryRow)
-  })
-
-  it("태그가 없으면 태그 줄 자체가 없다(빈 줄이 중앙을 흔들지 않게)", () => {
-    expect(findAll(neighbor({ tags: undefined }), MicroPill)).toEqual([])
-    expect(findAll(neighbor(), MicroPill)).toHaveLength(2)
-    // 빈 `View` 만 남겨도 그 줄의 marginTop 4 가 텍스트열을 아래로 민다.
-    expect(byTag(neighbor({ tags: undefined }), "View")).toHaveLength(2)
-    expect(byTag(neighbor(), "View")).toHaveLength(3)
-    expect(
-      findAll(neighbor({ tags: ["가", "나", "다"] }), MicroPill),
-    ).toHaveLength(2)
-  })
-
-  it("텍스트 시작선 92 = 20 + 60 + 12", () => {
-    const column = flatten(
-      (byTag(neighbor(), "View")[0] as Element).props.style,
-    )
-    expect(styleOf(neighbor()).paddingHorizontal).toBe(COMMUNITY_GUTTER)
-    expect(COMMUNITY_GUTTER + 60 + (column.marginLeft as number)).toBe(92)
-    // 긴 닉네임이 팔로우 버튼을 밀어내면 안 된다.
-    expect(column.flex).toBe(1)
-  })
-
-  it("팔로우 버튼은 세로 중앙이 아니라 위에서 16 (§2.14 실측)", () => {
-    const [button] = findAll(neighbor(), FollowButton)
-    const style = flatten(button?.props.style)
-
-    expect(style.alignSelf).toBe("flex-start")
-    expect(style.marginTop).toBe(spacing[16])
-    // 중앙이었다면 (100−32)/2 = 34 다 — 실측은 16 이다.
-    expect(style.marginTop).not.toBe((innerHeightOf(neighbor()) - 32) / 2)
-  })
-})
-
-/** 메타 줄 / 태그 줄의 스타일(행 안쪽 두·세 번째 `View`). */
-function metaStyleOf(row: Element): unknown {
-  return (byTag(row, "View")[1] as Element).props.style
-}
-function tagsStyleOf(row: Element): unknown {
-  return (byTag(row, "View")[2] as Element).props.style
-}
-
-describe("ConnectionRow — 81 (§2.14)", () => {
-  it("행 높이는 하단 1px 을 포함하고 아바타 48 이 안쪽 80 의 중앙(T+16)", () => {
-    const row = connection()
-    const box = styleOf(row)
-
-    expect(box.height).toBe(ROW.connectionRow)
-    expect(ROW.connectionRow).toBe(81)
-    expect(box.borderBottomWidth).toBe(borderWidth.thin)
-    expect(findAll(row, V2Avatar)[0]?.props.size).toBe(48)
-    expect((innerHeightOf(row) - 48) / 2).toBe(16)
-  })
-
-  it("두 줄이 안쪽 80 의 중앙(T+20.5) — 실측 잉크 24.6/45.2 와 1px 안", () => {
-    const row = connection()
-    const metaGap = flatten(metaStyleOf(row)).marginTop as number
-    const column =
-      typography.label.small.lineHeight +
-      metaGap +
-      typography.subtext.medium.lineHeight
-
-    expect(metaGap).toBe(spacing[2])
-    expect(column).toBe(39)
-    expect((innerHeightOf(row) - column) / 2).toBe(20.5)
-  })
-
-  it("시작선 80 = 20 + 48 + 12 이고 구분선은 full-bleed", () => {
-    const row = connection()
-    const column = flatten((byTag(row, "View")[0] as Element).props.style)
-
-    expect(COMMUNITY_GUTTER + 48 + (column.marginLeft as number)).toBe(80)
-    // 현행 구현의 `marginLeft: 80` 인셋을 버렸다 — 선은 바깥 상자의 테두리다.
-    expect(styleOf(row).borderBottomColor).toBe(light.line.normal)
-  })
-
-  it("팔로워 목록에는 버튼이 없고, 팔로잉 목록에만 있다 (§2.14)", () => {
-    expect(findAll(connection(), FollowButton)).toEqual([])
-
-    const toggled: string[] = []
-    const row = connection({
-      follow: { following: true, onToggle: () => toggled.push("toggle") },
-    })
-    const [button] = findAll(row, FollowButton)
-
-    expect(button?.props.following).toBe(true)
-    ;(button?.props.onPress as () => void)()
-    expect(toggled).toEqual(["toggle"])
-  })
-
-  it("메타 카피는 두 행이 같은 키를 쓰고 수는 세 자리로 끊는다", () => {
-    for (const row of [neighbor(), connection()]) {
-      expect(textsOf(row)).toContain("community.author.followerCount:1,741")
-      expect(textsOf(row)).toContain("community.author.postCount:83")
-      // 두 지표 사이는 16 으로 같이 스냅했다(실측 15/14, §5.20).
-      expect(flatten(metaStyleOf(row)).gap).toBe(spacing[16])
-    }
   })
 })

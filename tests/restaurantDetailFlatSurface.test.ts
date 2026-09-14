@@ -68,6 +68,8 @@ const read = (file: string) =>
   fs.readFileSync(path.join(DETAIL_DIR, file), "utf8")
 const readSibling = (file: string) =>
   fs.readFileSync(path.join(DETAIL_DIR, "..", file), "utf8")
+const readHook = (file: string) =>
+  fs.readFileSync(path.join(DETAIL_DIR, "..", "..", "hooks", file), "utf8")
 
 /**
  * 주석을 걷어낸 소스. **"이 값을 더는 쓰지 않는다" 류의 금지 계약은 이쪽에서 검사한다.**
@@ -673,7 +675,11 @@ describe("시안에 없다고 지우지 않은 것", () => {
 
   it("전화·주소의 `복사` 와 외부 링크가 그대로다", () => {
     // 평면화는 배치의 문제다. 기능을 줄이는 문이 아니다.
-    expect(INFO_ROWS).toContain("Clipboard.setStringAsync")
+    // 클립보드 호출은 2026-09-08 부터 `hooks/useAddressCopy` 로 모였다(주소 행과 한 통로) —
+    // 두 행이 그 훅을 부르고, 훅이 실제로 클립보드에 쓰는지를 잇는다.
+    expect(INFO_ROWS).toContain("useAddressCopy(")
+    expect(ADDRESS).toContain("useAddressCopy(")
+    expect(readHook("useAddressCopy.ts")).toContain("Clipboard.setStringAsync")
     expect(INFO_ROWS).toContain('t("restaurant.address.copy")')
     expect(INFO_ROWS).toContain("normalizeHttpsUrl")
   })

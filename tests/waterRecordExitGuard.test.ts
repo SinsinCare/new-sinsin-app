@@ -1,6 +1,6 @@
 import type { NavigationAction } from "@react-navigation/native"
 import { renderHookWithEffects } from "./helpers/effectHookHarness"
-import { useWaterRecordExitGuard } from "../src/features/home/hooks/useWaterRecordExitGuard"
+import { useRecordExitGuard } from "../src/features/home/hooks/useRecordExitGuard"
 import WaterRecordRoute from "../app/record/water"
 import MealReportRoute from "../app/meal-report"
 
@@ -101,7 +101,7 @@ function blockedNavigation(action: NavigationAction = { type: "GO_BACK" }) {
 
 function renderGuard(options = { hasChanges: true, isSaving: false }) {
   return renderHookWithEffects(() =>
-    useWaterRecordExitGuard({ ...options, onBack: goBack }),
+    useRecordExitGuard({ ...options, onBack: goBack }),
   )
 }
 

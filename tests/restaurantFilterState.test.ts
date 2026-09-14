@@ -17,7 +17,6 @@ import type { FilterState } from "../src/features/restaurant/types"
 import {
   DEFAULT_RESTAURANT_FILTERS,
   parseFilters,
-  selectionChips,
   serializeFilters,
   useRestaurantFilters,
 } from "../src/features/restaurant/hooks/useRestaurantFilters"
@@ -72,27 +71,6 @@ describe("광역을 바꿔도 이전 광역의 선택은 유지된다 (목업 -2
     ])
   })
 
-  it("트레이 칩에 세 지역이 함께 남는다", () => {
-    const hook = mount()
-    hook.result().setActiveSido("seoul")
-    hook.result().toggleRegion("seoul-gangnam")
-    hook.result().toggleRegion("seoul-seocho")
-    hook.result().setActiveSido("gyeonggi")
-    hook.result().toggleRegion("gyeonggi-suwon")
-
-    expect(hook.result().chips.map((c) => c.value)).toEqual([
-      "seoul-gangnam",
-      "seoul-seocho",
-      "gyeonggi-suwon",
-    ])
-    // 라벨은 키로만 넘긴다(화면이 t() 로 그린다). 키 문자열이 그대로 보이면 그건 결함이다.
-    expect(hook.result().chips.map((c) => c.labelKey)).toEqual([
-      "restaurant.region.groups.seoul-gangnam",
-      "restaurant.region.groups.seoul-seocho",
-      "restaurant.region.groups.gyeonggi-suwon",
-    ])
-  })
-
   it("시도를 여러 번 왕복해도 선택이 사라지지 않는다", () => {
     const hook = mount()
     hook.result().toggleRegion("seoul-gangnam")
@@ -108,11 +86,6 @@ describe("광역을 바꿔도 이전 광역의 선택은 유지된다 (목업 -2
     hook.result().toggleRegion("seoul-gangnam")
     expect(hook.result().draft.regionSidos).toEqual(["gyeonggi"])
     expect(hook.result().draft.regionGroups).toEqual(["seoul-gangnam"])
-    // 트레이는 시도 칩을 먼저 그린다.
-    expect(hook.result().chips.map((c) => c.axis)).toEqual([
-      "regionSido",
-      "regionGroup",
-    ])
   })
 
   it("같은 칩을 다시 누르면 해제된다", () => {
@@ -126,56 +99,10 @@ describe("광역을 바꿔도 이전 광역의 선택은 유지된다 (목업 -2
   })
 })
 
-describe("전체 해제 (트레이 휴지통)", () => {
-  it("지역·영양·음식만 비우고 정렬과 검색어는 남긴다", () => {
-    const hook = mount()
-    hook.result().setSort("RATING")
-    hook.result().setQuery("국밥")
-    hook.result().setOpenNow(true)
-    hook.result().toggleRegion("seoul-gangnam")
-    hook.result().toggleRegion("gyeonggi-all")
-    hook.result().toggleNutritionTag("LOW_SODIUM")
-    hook.result().toggleCuisineType("KOREAN")
-
-    hook.result().clearAllSelections()
-
-    const draft = hook.result().draft
-    expect(draft.regionGroups).toEqual([])
-    expect(draft.regionSidos).toEqual([])
-    expect(draft.nutritionTags).toEqual([])
-    expect(draft.cuisineTypes).toEqual([])
-    expect(hook.result().chips).toEqual([])
-    // 정렬과 검색어는 필터가 아니다 — 휴지통이 그것까지 지우면 목록이 통째로 리셋된다.
-    expect(draft.sort).toBe("RATING")
-    expect(draft.query).toBe("국밥")
-    expect(draft.openNow).toBe(true)
-  })
-
-  it("칩 하나만 지우는 것과 다르다", () => {
-    const hook = mount()
-    hook.result().toggleRegion("seoul-gangnam")
-    hook.result().toggleRegion("seoul-seocho")
-    hook.result().toggleCuisineType("KOREAN")
-    const seocho = hook.result().chips.find((c) => c.value === "seoul-seocho")!
-
-    hook.result().removeChip(seocho)
-    expect(hook.result().draft.regionGroups).toEqual(["seoul-gangnam"])
-    expect(hook.result().draft.cuisineTypes).toEqual(["KOREAN"])
-  })
-
-  it("removeChip 은 축을 보고 지운다 — 같은 문자열이 다른 축에 있어도 안전하다", () => {
-    const hook = mount()
-    hook.result().toggleRegion("seoul-all")
-    hook.result().toggleRegion("seoul-gangnam")
-    const sidoChip = hook.result().chips.find((c) => c.axis === "regionSido")!
-    hook.result().removeChip(sidoChip)
-    expect(hook.result().draft.regionSidos).toEqual([])
-    expect(hook.result().draft.regionGroups).toEqual(["seoul-gangnam"])
-  })
-
+describe("전체 초기화", () => {
   it("resetAll 은 정렬까지 기본값으로 돌린다", () => {
     const hook = mount()
-    hook.result().setSort("RATING")
+    hook.result().setDraftSort("RATING")
     hook.result().toggleRegion("seoul-gangnam")
     hook.result().applyDraft()
     hook.result().resetAll()
@@ -210,32 +137,6 @@ describe("칩 개수(axes)는 확정본을 센다", () => {
     expect(hook.result().axes.nutrition).toEqual({ active: true, count: 2 })
     expect(hook.result().axes.cuisine).toEqual({ active: true, count: 1 })
   })
-
-  it("트레이 칩 수와 축 개수 합이 일치한다", () => {
-    const hook = mount()
-    hook.result().toggleRegion("seoul-gangnam")
-    hook.result().toggleRegion("gyeonggi-all")
-    hook.result().toggleNutritionTag("LOW_SODIUM")
-    hook.result().toggleCuisineType("KOREAN")
-    hook.result().applyDraft()
-    const axes = hook.result().axes
-    expect(hook.result().chips).toHaveLength(
-      axes.region.count + axes.nutrition.count + axes.cuisine.count,
-    )
-  })
-
-  it("트레이 칩 순서는 지역 → 음식 → 영양 축 고정이다", () => {
-    const hook = mount()
-    hook.result().toggleNutritionTag("LOW_SODIUM")
-    hook.result().toggleCuisineType("KOREAN")
-    hook.result().toggleRegion("seoul-gangnam")
-    // 사용자가 고른 순서를 재현할 수 없으므로 축 순서를 고정한다.
-    expect(hook.result().chips.map((c) => c.axis)).toEqual([
-      "regionGroup",
-      "cuisineType",
-      "nutritionTag",
-    ])
-  })
 })
 
 describe("확정본과 초안", () => {
@@ -243,11 +144,10 @@ describe("확정본과 초안", () => {
     const hook = mount()
     hook.result().toggleRegion("seoul-gangnam")
     expect(hook.result().filters.regionGroups).toEqual([])
-    expect(hook.result().isDraftDirty).toBe(true)
 
     hook.result().applyDraft()
     expect(hook.result().filters.regionGroups).toEqual(["seoul-gangnam"])
-    expect(hook.result().isDraftDirty).toBe(false)
+    expect(hook.result().draft).toEqual(hook.result().filters)
   })
 
   it("시트를 다시 열면 초안이 확정본으로 되맞춰진다", () => {
@@ -262,20 +162,7 @@ describe("확정본과 초안", () => {
     hook.result().syncDraft()
     // 프로토타입은 `useState(current)` + Modal 상주라 지난 편집이 그대로 남았다.
     expect(hook.result().draft.regionGroups).toEqual(["seoul-gangnam"])
-    expect(hook.result().isDraftDirty).toBe(false)
-  })
-
-  it("칩 순서만 다른 선택은 dirty 가 아니다", () => {
-    const hook = mount()
-    hook.result().toggleNutritionTag("LOW_SODIUM")
-    hook.result().toggleNutritionTag("LOW_POTASSIUM")
-    hook.result().applyDraft()
-
-    hook.result().clearAllSelections()
-    hook.result().toggleNutritionTag("LOW_POTASSIUM")
-    hook.result().toggleNutritionTag("LOW_SODIUM")
-    // 같은 질의인데 `확인` 이 활성으로 남으면 사용자는 안 바뀐 것을 다시 적용한다.
-    expect(hook.result().isDraftDirty).toBe(false)
+    expect(hook.result().draft).toEqual(hook.result().filters)
   })
 })
 
@@ -302,19 +189,17 @@ describe("시트 밖 컨트롤은 즉시 확정된다", () => {
     expect(hook.result().draft).toEqual(hook.result().filters)
   })
 
-  it("정렬·검색어·영업중·북마크는 초안을 거치지 않는다", () => {
+  it("검색어·영업중·북마크는 초안을 거치지 않는다", () => {
     const hook = mount()
-    hook.result().setSort("PRICE_LOW")
     hook.result().setQuery("국밥")
     hook.result().setOpenNow(true)
     hook.result().toggleBookmarkedOnly()
 
-    expect(hook.result().filters.sort).toBe("PRICE_LOW")
     expect(hook.result().filters.query).toBe("국밥")
     expect(hook.result().filters.openNow).toBe(true)
     expect(hook.result().filters.bookmarkedOnly).toBe(true)
-    // 초안도 같이 움직여야 시트를 열었을 때 `확인` 이 이유 없이 활성이 되지 않는다.
-    expect(hook.result().isDraftDirty).toBe(false)
+    // 초안도 같이 움직여야 시트를 열었을 때 지난 값이 편집 중인 것처럼 보이지 않는다.
+    expect(hook.result().draft).toEqual(hook.result().filters)
   })
 
   it("상단 칩도 복수 선택하며 누른 항목만 해제한다", () => {
@@ -327,7 +212,7 @@ describe("시트 밖 컨트롤은 즉시 확정된다", () => {
     expect(hook.result().filters.cuisineTypes).toEqual(["JAPANESE"])
     hook.result().toggleRailCuisine("JAPANESE")
     expect(hook.result().filters.cuisineTypes).toEqual([])
-    expect(hook.result().isDraftDirty).toBe(false)
+    expect(hook.result().draft).toEqual(hook.result().filters)
   })
 
   it("필터의 복수 선택에 상단 칩을 더하고 개별 해제해도 나머지는 유지한다", () => {
@@ -361,16 +246,15 @@ describe("시트 밖 컨트롤은 즉시 확정된다", () => {
 })
 
 describe("위치가 없으면 거리순을 조용히 되돌린다", () => {
+  // 정렬은 딥링크 초기값이나 시트의 `확인` 으로만 확정된다 — 여기서는 초기값으로 심는다.
   it("위치가 있으면 그대로 둔다", () => {
-    const hook = mount()
-    hook.result().setSort("DISTANCE")
+    const hook = mount({ sort: "DISTANCE" })
     hook.result().sanitizeSortForLocation(true)
     expect(hook.result().filters.sort).toBe("DISTANCE")
   })
 
   it("위치가 없으면 기본 정렬로 내린다", () => {
-    const hook = mount()
-    hook.result().setSort("DISTANCE")
+    const hook = mount({ sort: "DISTANCE" })
     hook.result().sanitizeSortForLocation(false)
     // 서버가 거리를 계산하지 못하면 정렬이 무의미해진다. 막는 대신 조용히 되돌린다.
     expect(hook.result().filters.sort).toBe("RECOMMENDED")
@@ -378,8 +262,7 @@ describe("위치가 없으면 거리순을 조용히 되돌린다", () => {
   })
 
   it("거리순이 아니면 아무 것도 하지 않는다", () => {
-    const hook = mount()
-    hook.result().setSort("RATING")
+    const hook = mount({ sort: "RATING" })
     hook.result().sanitizeSortForLocation(false)
     expect(hook.result().filters.sort).toBe("RATING")
   })
@@ -400,12 +283,11 @@ describe("AI 검색 결과 적용", () => {
     expect(hook.result().filters.regionSidos).toEqual(["gyeonggi"])
     expect(hook.result().filters.sort).toBe("RATING")
     expect(hook.result().filters.openNow).toBe(true)
-    expect(hook.result().isDraftDirty).toBe(false)
+    expect(hook.result().draft).toEqual(hook.result().filters)
   })
 
   it("AI 가 정렬·영업중을 말하지 않으면 기존 값을 지킨다", () => {
-    const hook = mount()
-    hook.result().setSort("PRICE_LOW")
+    const hook = mount({ sort: "PRICE_LOW" })
     hook.result().setOpenNow(true)
     hook.result().applyAiFilters({
       cuisineTypes: [],
@@ -464,7 +346,6 @@ describe("초기값", () => {
   it("기본 정렬은 추천순이고 아무 필터도 걸리지 않았다", () => {
     const hook = mount()
     expect(hook.result().filters).toEqual(DEFAULT_RESTAURANT_FILTERS)
-    expect(hook.result().chips).toEqual([])
     expect(hook.result().axes.region.active).toBe(false)
   })
 
@@ -472,7 +353,7 @@ describe("초기값", () => {
     const hook = mount({ regionGroups: ["seoul-gangnam"], sort: "RATING" })
     expect(hook.result().filters.regionGroups).toEqual(["seoul-gangnam"])
     expect(hook.result().draft.regionGroups).toEqual(["seoul-gangnam"])
-    expect(hook.result().isDraftDirty).toBe(false)
+    expect(hook.result().draft).toEqual(hook.result().filters)
   })
 })
 
@@ -552,20 +433,6 @@ describe("직렬화 왕복 (딥링크·라우트 파라미터)", () => {
     })
     expect(serialized).toContain("q=")
     expect(parseFilters(serialized, KNOWN).query).toBe("저염 국밥 & 김치")
-  })
-})
-
-describe("selectionChips (순수 함수)", () => {
-  it("모르는 그룹 키가 들어와도 키를 만들어 화면이 터지지 않게 한다", () => {
-    const chips = selectionChips({
-      ...DEFAULT_RESTAURANT_FILTERS,
-      regionGroups: ["gyeonggi-icheon"],
-      regionSidos: ["atlantis"],
-    })
-    expect(chips.map((c) => c.labelKey)).toEqual([
-      "restaurant.filter.regions.atlantis",
-      "restaurant.region.groups.gyeonggi-icheon",
-    ])
   })
 })
 

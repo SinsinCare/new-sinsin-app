@@ -11,8 +11,7 @@ import { useLocalSearchParams } from "expo-router"
 import { useAppRouter } from "@/src/shared/navigation"
 
 import { RestaurantPhotosScreen } from "@/src/features/restaurant"
-
-const DECIMAL_ID = /^\d+$/u
+import { parseDecimalId } from "@/src/shared/navigation/routeParams"
 
 export default function RestaurantPhotosRoute() {
   const router = useAppRouter()
@@ -22,10 +21,7 @@ export default function RestaurantPhotosRoute() {
     photos?: string
   }>()
 
-  const restaurantId =
-    typeof id === "string" && DECIMAL_ID.test(id)
-      ? Number.parseInt(id, 10)
-      : null
+  const restaurantId = parseDecimalId(id)
 
   // `Number("")` 는 0, `Number("abc")` 는 NaN 이다. 둘 다 0번째 사진으로 여는 것이 맞다.
   const initialIndex = Number.parseInt(index ?? "", 10)

@@ -46,6 +46,7 @@ import {
   publicClient,
   authClient,
   loginAsTestUser,
+  loginAsTestUserFresh,
   tokenStore,
   assertSuccess,
 } from "./helpers/client"
@@ -54,7 +55,6 @@ import {
   authService,
   consumeSocialReauthenticationIntent,
   isSocialReauthenticationRequired,
-  persistSocialReauthenticationIntentForSignOut,
 } from "../src/services/auth/authService"
 /* eslint-enable import/first */
 
@@ -109,7 +109,9 @@ describe("Auth API", () => {
   // ────────────────────────────────────────────────
   describe("POST /auth/tokens/refresh", () => {
     itIfCreds("유효한 refreshToken으로 토큰 갱신 성공", async () => {
-      const { refreshToken } = await loginAsTestUser()
+      // 캐시된 세션의 refreshToken 은 그 사이 다른 로그인·갱신으로 폐기됐을 수 있다.
+      // 갱신은 방금 발급된 짝으로만 검증한다(헬퍼의 캐시 머리말, 2026-09-09).
+      const { refreshToken } = await loginAsTestUserFresh()
 
       const res = await publicClient.post("/auth/tokens/refresh", {
         refreshToken,
@@ -346,7 +348,9 @@ describe("local social reauthentication intent", () => {
   })
 
   it("restores the access/refresh session without reading or changing provider UI intent", async () => {
-    mockAppTokenService.getPersistedRefreshToken.mockResolvedValue("refresh-token")
+    mockAppTokenService.getPersistedRefreshToken.mockResolvedValue(
+      "refresh-token",
+    )
     mockAppPublicApi.post.mockResolvedValue({
       data: {
         result: {
@@ -379,18 +383,6 @@ describe("local social reauthentication intent", () => {
     expect(mockAsyncStorage.getItem).not.toHaveBeenCalled()
     expect(mockAsyncStorage.setItem).not.toHaveBeenCalled()
     expect(mockAsyncStorage.removeItem).not.toHaveBeenCalled()
-  })
-
-  it("persists reauthentication intent for automatic logout", async () => {
-    await persistSocialReauthenticationIntentForSignOut("automatic")
-
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
-  })
-
-  it("persists reauthentication intent for explicit settings logout", async () => {
-    await persistSocialReauthenticationIntentForSignOut("explicit")
-
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
   })
 
   it("reports and consumes the persisted one-shot intent", async () => {

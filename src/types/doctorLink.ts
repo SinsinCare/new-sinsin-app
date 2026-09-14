@@ -66,6 +66,69 @@ export interface DoctorConnection {
   sharing: ShareGrant | null
 }
 
+/** 의사 콘솔이 "환자 앱으로 보내기" 로 남긴 리포트 한 건. 서버 `doctor_patient_report` 의 환자용 투영. */
+export interface DoctorReport {
+  id: string
+  doctor: DoctorCard | null
+  /** 의사가 환자에게 쓴 코멘트. 비어 있을 수 있다(과제만 보낸 경우). */
+  comment: string
+  /** 리포트에 담긴 실천 과제 문장. `includeTasks` 가 꺼져 있으면 빈 배열. */
+  tasks: string[]
+  includeSummary: boolean
+  /** 의사가 확인한 식단 제안이 함께 갔는가. */
+  mealPlanIncluded: boolean
+  sentAt: string
+}
+
+export interface DoctorReportList {
+  items: DoctorReport[]
+  total: number
+}
+
+/** 리포트에 굳혀진 검사 패널 한 장. 최신순, 최대 2장. 없는 항목은 null. */
+export interface DoctorReportLabPanel {
+  date: string
+  egfr: number | null
+  creatinine: number | null
+  potassium: number | null
+  phosphorus: number | null
+  uacr: number | null
+  systolic: number | null
+  hba1c: number | null
+  fastingGlucose: number | null
+}
+
+/**
+ * 리포트를 보낼 때 콘솔이 굳힌 하루 식사 목표. 콘솔이 같은 값을 `user_profile` 에도
+ * 쓰므로 기록 화면의 목표와 같다 — 상세 화면의 "자동으로 반영됐어요" 가 사실인 근거.
+ * `fluidMl` 은 수분 **제한** 모드일 때만 값이 있다(기록만 하는 모드면 null).
+ */
+export interface DoctorReportLimits {
+  sodiumMg: number | null
+  potassiumMg: number | null
+  phosphorusMg: number | null
+  proteinG: number | null
+  fluidMl: number | null
+}
+
+/** 보낸 날 이후 아직 끝나지 않은 가장 이른 일정. 서버가 고른다. `date` 는 YYYY-MM-DD, `time` 은 HH:mm. */
+export interface DoctorReportNextVisit {
+  label: string
+  date: string
+  time: string | null
+}
+
+/** `GET /doctor/reports/{id}` — 목록 투영 + 환자가 읽을 수 있는 스냅숏 조각. */
+export interface DoctorReportDetail extends DoctorReport {
+  labs: DoctorReportLabPanel[]
+  /** 인사이트 창 길이(일). 없으면 null — 부제의 "최근 N주 기록 기준" 을 뺀다. */
+  windowDays: number | null
+  limits: DoctorReportLimits
+  nextVisit: DoctorReportNextVisit | null
+  /** 서버가 검사 패널을 데모 값으로 채웠는가. 실데이터 전환 때 이 플래그부터 지운다. 과제는 채우지 않는다. */
+  demoLabs: boolean
+}
+
 export interface DoctorSearchParams {
   name?: string
   hospital?: string

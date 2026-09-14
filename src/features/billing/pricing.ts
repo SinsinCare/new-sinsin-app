@@ -34,14 +34,6 @@ const DAYS_IN_PERIOD: Readonly<Record<string, number>> = {
   $rc_weekly: 7,
 }
 
-/** 월 환산에 쓰는 개월 수. 일 환산과 같은 이유로 한 곳에 둔다. */
-const MONTHS_IN_PERIOD: Readonly<Record<string, number>> = {
-  $rc_annual: 12,
-  $rc_six_month: 6,
-  $rc_three_month: 3,
-  $rc_two_month: 2,
-}
-
 /**
  * 템플릿이 쓰는 소수 자릿수. `"$9.99"` → 2, `"₩9,900"` → 0.
  *
@@ -94,14 +86,6 @@ export function perDayPrice(pkg: OfferingPackage): string | null {
   if (days === undefined || !Number.isFinite(pkg.price) || pkg.price <= 0)
     return null
   return formatLikePrice(pkg.priceString, pkg.price / days)
-}
-
-/** 한 달 얼마꼴인가. 월 상품 자신에게는 의미가 없으므로 null 이다. */
-export function perMonthPrice(pkg: OfferingPackage): string | null {
-  const months = MONTHS_IN_PERIOD[pkg.lookupKey]
-  if (months === undefined || !Number.isFinite(pkg.price) || pkg.price <= 0)
-    return null
-  return formatLikePrice(pkg.priceString, pkg.price / months)
 }
 
 export interface CheapestPerDay {

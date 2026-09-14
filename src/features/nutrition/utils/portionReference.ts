@@ -129,3 +129,12 @@ export interface PersonalPortionSelection {
   meals: number
   share: number
 }
+
+/**
+ * 오늘의 KST 날짜("YYYY-MM-DD"). `personalPortion` 의 `today` 인자다 — 섭취 기록의
+ * `intake.date` 는 서버가 KST 로 자른 하루라, 기기 시간대가 아니라 같은 KST 로 비교해야
+ * 자정 전후에 "오늘 기록" 이 어제로 밀리지 않는다. 화면과 상담 문맥이 같은 값을 쓴다.
+ */
+export function kstDateString(now = Date.now()): string {
+  return new Date(now + 9 * 3600_000).toISOString().slice(0, 10)
+}

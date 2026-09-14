@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
 import { singleLineInputText } from "@/src/theme/surface"
 
@@ -53,7 +53,7 @@ export function StepTextInput({
   secureTextEntry,
   ...props
 }: StepTextInputProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const { t } = useTranslation("auth")
   const [isFocused, setIsFocused] = useState(false)
   const [secureVisible, setSecureVisible] = useState(false)
@@ -167,7 +167,7 @@ export function StepTextInput({
 
 /** 라벨만 필요한 입력(선택 카드·바텀시트 트리거) 앞에 쓰는 같은 규격의 라벨. */
 export function StepFieldLabel({ children }: { children: string }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   return (
     <Text style={[styles.label, { color: surface.textWeak }]}>{children}</Text>
   )

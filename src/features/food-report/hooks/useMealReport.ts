@@ -2,18 +2,9 @@ import { useQuery } from "@tanstack/react-query"
 
 import { fetchMealReport } from "../services/mealReportService"
 import type { MealReport } from "../types/report"
-import { getAppLanguage, normalizeLanguage, type Language } from "@/src/i18n"
+import { normalizeLanguage } from "@/src/i18n"
 import { useTranslation } from "react-i18next"
-import { mealReportKey as buildMealReportKey } from "@/src/i18n/localeQueryKeys"
-
-export function mealReportKey(
-  analysisId: number,
-  date?: string,
-  mealType?: string,
-  locale: Language = getAppLanguage(),
-) {
-  return buildMealReportKey(analysisId, date, mealType, locale)
-}
+import { mealReportKey } from "@/src/i18n/localeQueryKeys"
 
 /**
  * 서버가 리포트를 저장해 두므로 캐시를 오래 잡아도 된다.

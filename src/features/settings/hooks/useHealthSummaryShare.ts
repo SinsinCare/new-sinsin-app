@@ -1,9 +1,13 @@
 import { useCallback } from "react"
 import { Share } from "react-native"
 import { useTranslation } from "react-i18next"
+import { useQueryClient } from "@tanstack/react-query"
 import { useMyPageProfile } from "./useMyPageProfile"
 import { useKidneyProfile } from "./useKidneyProfile"
-import { useDateAnalysis } from "@/src/features/home/hooks/useDateAnalysis"
+import { dateAnalysisKey } from "@/src/i18n/localeQueryKeys"
+import { foodCameraService } from "@/src/services/data"
+import { toDateStr } from "@/src/features/home/utils/dateUtils"
+import { normalizeLanguage } from "@/src/i18n"
 import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
 import { roundForDisplay } from "@/src/shared/utils/displayNumber"
 import { showErrorToast, showInfoToast } from "@/src/lib/toast"
@@ -11,18 +15,35 @@ import { STORE_REDIRECT_URL as APP_DOWNLOAD_URL } from "@/src/shared/utils/deepL
 
 export function useHealthSummaryShare() {
   const { t, i18n } = useTranslation("common")
+  const queryClient = useQueryClient()
   const { data: profile } = useMyPageProfile()
   const { data: kidneyProfile } = useKidneyProfile()
-  const { data: todayAnalysis } = useDateAnalysis(new Date())
+  // ["kidneyProfile"] 캐시에서 파생될 뿐이라 요청이 늘지 않는다 — 훅으로 둬도 공짜다.
   const nutrientLimits = useNutrientLimits()
   const handleShareData = useCallback(async () => {
+    /*
+      오늘 식단 분석은 **공유를 누를 때** 가져온다. 예전에는 마이페이지가 뜨는 순간
+      `useDateAnalysis(new Date())` 가 돌아 — 내보내기 버튼을 한 번도 안 누르는 사람에게도
+      매 진입마다 분석 요청이 나갔다. 홈과 같은 키를 쓰므로 홈이 방금 받아 둔 값이 있으면
+      그걸 그대로 쓴다. 실패는 "분석 없음" 으로 접는다 — 예전 화면도 분석이 없으면
+      프로필만으로 요약을 만들었다.
+    */
+    const today = new Date()
+    const todayStr = toDateStr(today)
+    const locale = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
+    const todayAnalysis = await queryClient
+      .fetchQuery({
+        queryKey: dateAnalysisKey(todayStr, locale),
+        queryFn: () => foodCameraService.fetchDateAnalysis(todayStr),
+        staleTime: 30_000,
+      })
+      .catch(() => undefined)
     const hasData = kidneyProfile || todayAnalysis?.result?.analysis
     if (!hasData) {
       showInfoToast(t("myPage.share.emptyTitle"), t("myPage.share.emptyBody"))
       return
     }
 
-    const today = new Date()
     const currentLanguage = i18n.resolvedLanguage ?? i18n.language
     const dateLabel = new Intl.DateTimeFormat(
       currentLanguage.startsWith("en") ? "en-US" : "ko-KR",
@@ -156,8 +177,8 @@ export function useHealthSummaryShare() {
   }, [
     profile,
     kidneyProfile,
-    todayAnalysis,
     nutrientLimits,
+    queryClient,
     t,
     i18n.language,
     i18n.resolvedLanguage,

@@ -13,17 +13,6 @@ export interface PasswordForm {
   confirmPassword: string
 }
 
-export interface ProfileForm {
-  name: string
-  phoneNumber: string
-  acquisitionSourceOther: string
-  referralCode: string
-}
-
-export interface NicknameForm {
-  nickname: string
-}
-
 export interface TermItem {
   id: string
   label: string

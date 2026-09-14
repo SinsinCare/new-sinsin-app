@@ -1,16 +1,19 @@
 /**
- * "무엇이 추정인가" 시트. 영양 카드의 배지를 누르면 열린다(계약 §6.2).
- *
- * 배지만 있고 설명이 없으면 사용자는 "추정값" 을 브랜드 문구로 읽는다. 여기서 두 가지를
- * 분명히 말한다: (1) 이 숫자가 어디서 왔는지, (2) 비율은 내 기록에서 뺀 뺄셈이며
- * 이 레시피가 나에게 맞는지에 대한 판단이 아니라는 것(§1.3).
+ * 영양 출처 설명 시트 — 수치 배지를 누르면 "이 값이 어디서 왔나" 를 말한다.
+ * `V2BottomSheet` 의 제목·닫기 CTA 를 그대로 쓰고 본문만 v2 타이포로 그린다
+ * (예전엔 `theme/surface` 의 `TYPE`/`LAYOUT` 과 자체 닫기 버튼을 따로 들고 있었다).
  */
-import { Pressable } from "react-native"
-import { V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
+
+import { StyleSheet, View } from "react-native"
 import { useTranslation } from "react-i18next"
-import { V2BottomSheet } from "@/src/design-system-v2"
-import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import {
+  CARD_RADIUS,
+  V2BottomSheet,
+  V2Text,
+  radius,
+  spacing,
+  useV2Theme,
+} from "@/src/design-system-v2"
 import type { RecipeNutrition } from "../../types/recipeV2"
 
 const PROVENANCE_BADGE_KEYS = {
@@ -28,11 +31,6 @@ const PROVENANCE_EXPLAIN_KEYS = {
   nutritionist_reviewed: "detail.nutrition.explain.nutritionist_reviewed",
 } as const
 
-/*
-  고정 스냅(52%)을 버렸다. 시트가 **콘텐츠 높이로 자란다**(`V2BottomSheet` → gorhom
-  `enableDynamicSizing`). 종전에는 설명이 두세 줄로 늘어나는 조합(667pt 기기)에서
-  아래쪽 안내가 52% 밖으로 밀렸고, 스크롤도 없어 읽을 방법이 없었다.
-*/
 export interface ProvenanceSheetProps {
   visible: boolean
   onClose: () => void
@@ -45,68 +43,96 @@ export function ProvenanceSheet({
   nutrition,
 }: ProvenanceSheetProps) {
   const { t } = useTranslation("recipe")
-  const surface = useSurface()
-
+  const { colors } = useV2Theme()
   return (
     <V2BottomSheet
       surface="recipe_provenance"
       visible={visible}
       onClose={onClose}
+      title={t("detail.nutrition.provenanceTitle")}
+      primaryLabel={t("action.close")}
+      onPrimary={onClose}
     >
-      <V2VStack paddingHorizontal={LAYOUT.screenX} gap={16} style={{ paddingTop: 8 }}>
-        <V2Text {...TYPE.sheetTitle} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "700" }}>
-          {t("detail.nutrition.provenanceTitle")}
-        </V2Text>
-
+      <View style={styles.body}>
         {nutrition == null ? (
-          <V2Text {...TYPE.value} color={surface.textMuted} lineBreakStrategyIOS="hangul-word">
+          <V2Text
+            token="subtext.large"
+            color={colors.label.alternative}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.nutrition.unavailableBody")}
           </V2Text>
         ) : (
-          <V2VStack gap={14}>
-            <V2HStack paddingHorizontal={10} align="center" style={{ alignSelf: "flex-start", height: LAYOUT.badge.height, borderRadius: LAYOUT.badge.radius, backgroundColor: surface.surfaceSunken }}>
-              <V2Text {...TYPE.caption} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
+          <>
+            <View
+              style={[styles.badge, { backgroundColor: colors.fill.normal }]}
+            >
+              <V2Text
+                token="label.xSmall"
+                color={colors.label.neutral}
+                lineBreakStrategyIOS="hangul-word"
+              >
                 {t(PROVENANCE_BADGE_KEYS[nutrition.provenance])}
               </V2Text>
-            </V2HStack>
-
-            <V2Text {...TYPE.value} color={surface.text} lineBreakStrategyIOS="hangul-word" style={{ lineHeight: 23 }}>
+            </View>
+            <V2Text
+              token="body.mediumWeak"
+              color={colors.label.normal}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t(PROVENANCE_EXPLAIN_KEYS[nutrition.provenance])}
             </V2Text>
-
-            <V2Text {...TYPE.caption} color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ lineHeight: 20 }}>
+            <V2Text
+              token="subtext.medium"
+              color={colors.label.alternative}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {t("detail.nutrition.explainScope")}
             </V2Text>
-
             {nutrition.unmatchedIngredients.length > 0 && (
-              <V2VStack gap={4} padding={14} style={{ borderRadius: 12, backgroundColor: surface.surfaceSunken }}>
-                <V2Text {...TYPE.caption} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
+              <View
+                style={[
+                  styles.unmatched,
+                  { backgroundColor: colors.fill.alternative },
+                ]}
+              >
+                <V2Text
+                  token="label.xSmall"
+                  color={colors.label.normal}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("detail.nutrition.unmatchedTitle")}
                 </V2Text>
-                <V2Text {...TYPE.caption} color={surface.textMuted} lineBreakStrategyIOS="hangul-word" style={{ lineHeight: 20 }}>
+                <V2Text
+                  token="subtext.medium"
+                  color={colors.label.neutral}
+                  lineBreakStrategyIOS="hangul-word"
+                >
                   {t("detail.nutrition.unmatchedBody")}
                 </V2Text>
-                <V2Text {...TYPE.caption} color={surface.textMuted}>
+                <V2Text token="subtext.medium" color={colors.label.neutral}>
                   {nutrition.unmatchedIngredients.join(" · ")}
                 </V2Text>
-              </V2VStack>
+              </View>
             )}
-          </V2VStack>
+          </>
         )}
-
-        <Pressable
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel={t("action.close")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-        >
-          <V2VStack align="center" justify="center" style={{ height: LAYOUT.ctaCompact.height, borderRadius: LAYOUT.ctaCompact.radius, backgroundColor: surface.surfaceSunken }}>
-            <V2Text {...TYPE.cta} color={surface.textStrong} lineBreakStrategyIOS="hangul-word" style={{ fontWeight: "600" }}>
-              {t("action.close")}
-            </V2Text>
-          </V2VStack>
-        </Pressable>
-      </V2VStack>
+      </View>
     </V2BottomSheet>
   )
 }
+
+const styles = StyleSheet.create({
+  body: { paddingHorizontal: spacing[24], gap: spacing[12] },
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: spacing[10],
+    paddingVertical: spacing[4],
+    borderRadius: radius.full,
+  },
+  unmatched: {
+    gap: spacing[4],
+    padding: spacing[12],
+    borderRadius: CARD_RADIUS,
+  },
+})

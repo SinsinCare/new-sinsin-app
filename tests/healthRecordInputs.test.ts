@@ -47,8 +47,6 @@ function pressure(
   const params: BloodPressurePageParams = {
     kind: "bloodPressure",
     date: "2026-09-05",
-    record: null,
-    previousRecord: null,
     isSaving: false,
     onSubmit: submit,
   }
@@ -154,9 +152,7 @@ function weight(onSubmit = jest.fn(async () => true)) {
   const params: WeightPageParams = {
     kind: "weight",
     today: { weightKg: 62.4 } as WeightPageParams["today"],
-    previous: null,
     endDate: "2026-09-05",
-    isToday: true,
     isSaving: false,
     onSubmit,
   }

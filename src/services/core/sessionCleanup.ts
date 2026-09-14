@@ -1,4 +1,4 @@
-import { useAuthStore, useSignupStore, useUserStore } from "@/src/stores"
+import { useAuthStore, useSignupStore } from "@/src/stores"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { isMockUser } from "@/src/config/appConfig"
 import { queryClient } from "./queryClient"
@@ -24,7 +24,6 @@ export type ClearClientSessionOptions = {
 }
 
 export function clearClientSessionState(): void {
-  useUserStore.getState().reset()
   useAuthStore.getState().reset()
   /*
     결제 SDK 도 잊는다.

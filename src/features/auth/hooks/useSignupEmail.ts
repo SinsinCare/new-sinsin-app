@@ -55,6 +55,13 @@ export function useSignupEmail() {
     재전송이 아니다.
   */
   const attemptRef = useRef(0)
+  /*
+    이중 탭 방지. `sendingCode`/`verifyingCode` state 와 버튼의 `disabled` 만으로는
+    부족하다 — state 는 다음 렌더에야 반영되므로 같은 프레임의 두 번째 탭이 통과해
+    인증번호 요청이 두 번 나갔다. `SocialLinkEmailScreen`·`useSocialLogin` 과 같은 ref 잠금.
+  */
+  const sendCodeInFlightRef = useRef(false)
+  const verifyCodeInFlightRef = useRef(false)
 
   const nextAttemptNo = useCallback(() => {
     attemptRef.current += 1
@@ -111,6 +118,8 @@ export function useSignupEmail() {
   }
 
   const sendEmailLoginLinkCode = async (email: string) => {
+    if (sendCodeInFlightRef.current) return
+    sendCodeInFlightRef.current = true
     setSendingCode(true)
     setSendError(null)
     try {
@@ -130,6 +139,7 @@ export function useSignupEmail() {
     } catch (error) {
       reportSendFailure(error, "signup-email-link-send")
     } finally {
+      sendCodeInFlightRef.current = false
       setSendingCode(false)
     }
   }
@@ -140,6 +150,8 @@ export function useSignupEmail() {
       return
     }
 
+    if (sendCodeInFlightRef.current) return
+    sendCodeInFlightRef.current = true
     setSendingCode(true)
     setSendError(null)
     setCodeVerified(false)
@@ -170,6 +182,7 @@ export function useSignupEmail() {
       }
       reportSendFailure(error, "signup-email-send")
     } finally {
+      sendCodeInFlightRef.current = false
       setSendingCode(false)
     }
   }
@@ -198,6 +211,8 @@ export function useSignupEmail() {
   }
 
   const verifyCode = async (email: string, code: string) => {
+    if (verifyCodeInFlightRef.current) return
+    verifyCodeInFlightRef.current = true
     setVerifyingCode(true)
     try {
       if (emailLoginLinkMode) {
@@ -243,6 +258,7 @@ export function useSignupEmail() {
         resendCode: () => void sendCode(email),
       })
     } finally {
+      verifyCodeInFlightRef.current = false
       setVerifyingCode(false)
     }
   }

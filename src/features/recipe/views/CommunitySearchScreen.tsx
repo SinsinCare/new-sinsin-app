@@ -59,6 +59,7 @@ import { isAuthorBlocked, useBlockedUsers } from "../hooks/useBlockedUsers"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
 import { isMyContent, isWithdrawnAuthor } from "../utils/contentOwnership"
 import { communityFeedSurfaces } from "../utils/communityFeedSurfaces"
+import type { CommunityMealPost } from "../types"
 
 /** 서버 계약(§2): q 는 1..100자. 입력 자체를 100자에서 끊는다. */
 const MAX_QUERY_LENGTH = 100
@@ -134,11 +135,14 @@ export function CommunitySearchScreen() {
     if (text.trim().length === 0) setSubmitted(null)
   }, [])
 
-  const categoryLabel = (key: string) => {
-    const labelKey =
-      CATEGORY_LABEL_KEYS[key as keyof typeof CATEGORY_LABEL_KEYS]
-    return labelKey ? t(labelKey) : key
-  }
+  const categoryLabel = useCallback(
+    (key: string) => {
+      const labelKey =
+        CATEGORY_LABEL_KEYS[key as keyof typeof CATEGORY_LABEL_KEYS]
+      return labelKey ? t(labelKey) : key
+    },
+    [t],
+  )
 
   /*
     서버도 차단 작성자를 거른다(P0 계약 §2). 클라이언트 필터는 차단 직후
@@ -148,34 +152,10 @@ export function CommunitySearchScreen() {
     (p) => isWithdrawnAuthor(p) || !isAuthorBlocked(blockedAuthors, p),
   )
 
-  /**
-   * 끝에 닿으면 다음 커서 페이지. **직전 페이지가 실패한 상태면 다시 쏘지 않는다** —
-   * 끝에 닿을 때마다 같은 실패를 조용히 반복하던 자리다(피드와 같은 규칙).
-   * 재시도는 꼬리의 실패 행에서 사용자가 고른다.
-   */
-  const handleEndReached = useCallback(() => {
-    if (
-      search.hasNextPage &&
-      !search.isFetchingNextPage &&
-      !search.isFetchNextPageError
-    ) {
-      void search.fetchNextPage()
-    }
-  }, [search])
-
   /*
-    첫 페이지가 통째로 접힌 경우(결과 20개가 전부 차단한 작성자 글 등) 목록은 비었는데
-    다음 커서는 살아 있다. `onEndReached` 는 그릴 줄이 없어 발화하지 않으므로 화면이
-    "검색 결과가 없어요" 로 굳는다 — 빈 문구 대신 다음 페이지를 스스로 당긴다.
-
-    **다만 예산이 있다**(`canAutoBackfill`, 검색어당 `MAX_AUTO_BACKFILL_PAGES` 장) —
-    상한이 없으면 사람이 끼어들 자리 없이 커서가 끝날 때까지 자동으로 넘어간다.
-    다 쓰면 자동 페이징을 멈추고 "더 보기" 를 세운다(피드와 같은 규칙).
-  */
-  const hasNoVisibleResults = visibleResults.length === 0
-  /*
-    의존성을 `search` 객체 하나로 두면 **매 렌더 새 참조**라 이펙트가 매번 돈다 —
-    예산을 한 박자에 다 태우고("더 보기" 가 첫 장 만에 뜬다) 같은 요청이 겹친다.
+    의존성을 `search` 객체 하나로 두면 **매 렌더 새 참조**라 아래 이펙트가 매번 돌고
+    (예산을 한 박자에 다 태우고 — "더 보기" 가 첫 장 만에 뜬다 — 같은 요청이 겹친다)
+    `handleEndReached` 도 매 렌더 새 함수라 `useCallback` 이 아무것도 안 한다.
     값 단위로 편다: 예산이 줄어도 `canAutoBackfill` 이 안 바뀌면 다시 돌지 않고,
     `isFetchingNextPage` 가 오르내릴 때만 다음 한 장을 판단한다.
   */
@@ -189,6 +169,33 @@ export function CommunitySearchScreen() {
     noteAutoBackfill: noteSearchAutoBackfill,
     fetchNextPage: fetchNextSearchPage,
   } = search
+
+  /**
+   * 끝에 닿으면 다음 커서 페이지. **직전 페이지가 실패한 상태면 다시 쏘지 않는다** —
+   * 끝에 닿을 때마다 같은 실패를 조용히 반복하던 자리다(피드와 같은 규칙).
+   * 재시도는 꼬리의 실패 행에서 사용자가 고른다.
+   */
+  const handleEndReached = useCallback(() => {
+    if (searchHasNextPage && !isSearchFetchingNextPage && !isSearchTailError) {
+      void fetchNextSearchPage()
+    }
+  }, [
+    searchHasNextPage,
+    isSearchFetchingNextPage,
+    isSearchTailError,
+    fetchNextSearchPage,
+  ])
+
+  /*
+    첫 페이지가 통째로 접힌 경우(결과 20개가 전부 차단한 작성자 글 등) 목록은 비었는데
+    다음 커서는 살아 있다. `onEndReached` 는 그릴 줄이 없어 발화하지 않으므로 화면이
+    "검색 결과가 없어요" 로 굳는다 — 빈 문구 대신 다음 페이지를 스스로 당긴다.
+
+    **다만 예산이 있다**(`canAutoBackfill`, 검색어당 `MAX_AUTO_BACKFILL_PAGES` 장) —
+    상한이 없으면 사람이 끼어들 자리 없이 커서가 끝날 때까지 자동으로 넘어간다.
+    다 쓰면 자동 페이징을 멈추고 "더 보기" 를 세운다(피드와 같은 규칙).
+  */
+  const hasNoVisibleResults = visibleResults.length === 0
   useEffect(() => {
     if (
       !isSearchLoading &&
@@ -285,12 +292,13 @@ export function CommunitySearchScreen() {
     [router],
   )
 
-  const renderResult = ({
-    item: post,
-  }: {
-    item: (typeof search.posts)[number]
-  }) => (
-    <View style={styles.listItemWrap}>
+  /*
+    피드와 같은 규칙(`FreePostTab.renderPost` 주석): 행의 프롭은 전부 원시값·안정 참조다.
+    `onPress`/`onPressAuthor` 를 행마다 새 클로저로 넘기면 `PostListItem` 의 `memo` 가
+    매 렌더 무효다 — 글·작성자로 가는 길은 카드가 id 로 스스로 안다.
+  */
+  const renderResult = useCallback(
+    ({ item: post }: { item: CommunityMealPost }) => (
       <PostListItem
         postId={post.id}
         category={categoryLabel(post.category)}
@@ -303,18 +311,14 @@ export function CommunitySearchScreen() {
         commentCount={post.comments}
         viewCount={post.views ?? 0}
         tags={post.tags}
-        onPress={() => router.push(`/post/${post.id}` as Href)}
+        authorId={post.authorId}
         onPressTag={handleTagPress}
-        onPressAuthor={
-          post.authorId == null
-            ? undefined
-            : () => router.push(`/community/author/${post.authorId}` as Href)
-        }
         onBlock={blockUser}
         isWithdrawnAuthor={isWithdrawnAuthor(post)}
         isMine={isMyContent(post, myNickName)}
       />
-    </View>
+    ),
+    [categoryLabel, handleTagPress, blockUser, myNickName],
   )
 
   return (
@@ -538,7 +542,7 @@ export function CommunitySearchScreen() {
           ref={listRef}
           data={visibleResults}
           renderItem={renderResult}
-          keyExtractor={(post) => String(post.id)}
+          keyExtractor={keyExtractor}
           ItemSeparatorComponent={ListGap}
           ListHeaderComponent={<View style={styles.listTopGap} />}
           ListEmptyComponent={
@@ -655,6 +659,9 @@ export function CommunitySearchScreen() {
 function ListGap() {
   return <View style={styles.listGap} />
 }
+
+/** 결과 목록의 키 — 글 id 그대로(피드와 같은 규칙). */
+const keyExtractor = (post: { id: string }) => String(post.id)
 
 /** 결과 조회 실패. 문구는 `resolveError` 가 코드로 고르고, 재시도는 가능할 때만 준다. */
 function SearchErrorState({
@@ -800,7 +807,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 10,
   },
-  listItemWrap: {},
   listGap: { height: 0 },
   listTopGap: {
     height: 12,

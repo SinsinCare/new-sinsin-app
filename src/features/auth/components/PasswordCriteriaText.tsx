@@ -1,6 +1,6 @@
 import { Text } from "@/src/design-system-v2/primitives/NativeText"
 import { StyleSheet } from "react-native"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_TYPE } from "../data/authSurface"
 import {
   getPasswordCriteriaText,
@@ -16,7 +16,7 @@ interface PasswordCriteriaTextProps {
  * 조건을 채우면 다시 조용한 회색으로 돌아간다.
  */
 export function PasswordCriteriaText({ password }: PasswordCriteriaTextProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const state = getPasswordCriteriaState(password)
   const color = state === "invalid" ? surface.brand : surface.textWeak
 

@@ -670,7 +670,9 @@ export interface RestaurantHoursResponse {
  * 공유하면 한 환자의 배지가 다른 환자에게 새므로, 이 응답을 전역 캐시로 승격하지 말 것.
  */
 export interface MenuItemDto {
-  portionReference?: import("@/src/features/nutrition/utils/portionReference").PortionReference | null;
+  portionReference?:
+    | import("@/src/features/nutrition/utils/portionReference").PortionReference
+    | null
   menuId: number
   name: string
   description: string | null
@@ -1036,13 +1038,6 @@ export interface FilterState {
   query: string
 }
 
-/** 선택 트레이(목업 -23 하단)의 한 칩. 어느 축에서 왔는지 알아야 지울 수 있다. */
-export interface FilterChipEntry {
-  axis: "regionGroup" | "regionSido" | "nutritionTag" | "cuisineType"
-  value: string
-  labelKey: string
-}
-
 /** 지도 뷰포트 질의 파라미터. `MapBounds` + 줌 + 사용자 위치. */
 export interface MapSearchParams extends MapBounds {
   zoom: number
@@ -1071,7 +1066,7 @@ export interface MyLocationState {
 /**
  * `거리순` 을 쓸 수 없는 이유. boolean 으로 뭉개지 않는 이유는 문구가 달라서다 —
  * `NO_LOCATION` 은 "위치를 켜면 …" 이 맞지만, `OUTSIDE_COVERAGE`(해외)는 위치를
- * 켜도 소용없으므로 그렇게 말하면 거짓말이 된다. 판정은 `useMyLocation`, 문구는 `SortSheet`.
+ * 켜도 소용없으므로 그렇게 말하면 거짓말이 된다. 판정은 `useMyLocation`, 문구는 `FilterSheet`.
  */
 export type DistanceSortDisabledReason = "NO_LOCATION" | "OUTSIDE_COVERAGE"
 

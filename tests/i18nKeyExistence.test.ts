@@ -73,16 +73,28 @@ import type {
   SortOption,
   Weekday,
 } from "../src/features/restaurant/types"
-import {
-  WEEKDAY_ORDER,
-  weekdayLabelKey,
-} from "../src/features/restaurant/utils/businessStatus"
-import { cardSafetyNoteKey } from "../src/features/restaurant/utils/cardSafetyBadge"
 import { mapAppLinks } from "../src/features/restaurant/utils/mapAppLinks"
+import type { LibraryTab } from "../src/features/recipe/components/community/CommunityLibraryTabs"
+import type { CommentOrder } from "../src/features/recipe/utils/commentOrder"
 import type { RestaurantReportValidationError } from "../src/features/restaurant/utils/restaurantReportValidation"
 import type { ReviewDraftDefect } from "../src/features/restaurant/utils/reviewDraft"
 import { reviewDefectMessageKey } from "../src/features/restaurant/utils/reviewDraft"
-import { safetyDriverLabelKey } from "../src/features/restaurant/utils/safetyBadge"
+import { FREE_POST_CATEGORIES } from "../src/features/recipe/data/freePostCategories"
+
+/**
+ * 요일 코드 전부. `utils/businessStatus` 는 `restaurant.weekday.<Weekday>` 를 직접
+ * 조립하므로 열거는 여기서 한다 — 아래 `Complete` 검사가 `Weekday` 유니온에 값이 더해지면
+ * 이 목록도 같이 늘리라고 컴파일에서 알린다.
+ */
+const WEEKDAYS = [
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+  "SUN",
+] as const satisfies readonly Weekday[]
 
 /* ────────────────────────── 리소스 색인 ────────────────────────── */
 
@@ -253,14 +265,50 @@ function scanFile(file: string): {
   const lineOf = (node: ts.Node): number =>
     sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1
 
-  const recordLiteral = (node: ts.Node, key: string): void => {
+  const recordLiteral = (
+    node: ts.Node,
+    key: string,
+    callNamespaces: readonly Namespace[] = [],
+  ): void => {
     if (!KEY_SHAPE.test(key)) return
-    literals.push({ key, file: relative, line: lineOf(node), namespaces: [] })
+    literals.push({
+      key,
+      file: relative,
+      line: lineOf(node),
+      namespaces: callNamespaces,
+    })
+  }
+
+  /**
+   * `t("key", { ns: "common" })` 처럼 호출부가 네임스페이스를 직접 말하면 그것이 우선이다.
+   * 파일의 `useTranslation("community")` 로 전부 덮으면 이런 호출이 "없음" 으로 거짓
+   * 실패한다(`FreePostEditScreen` 의 `community.postDetail.notFound`, 2026-09-09).
+   */
+  const namespacesOfCall = (node: ts.CallExpression): readonly Namespace[] => {
+    const options = node.arguments[1]
+    if (!options || !ts.isObjectLiteralExpression(options)) return []
+    for (const property of options.properties) {
+      if (
+        ts.isPropertyAssignment(property) &&
+        ts.isIdentifier(property.name) &&
+        property.name.text === "ns" &&
+        ts.isStringLiteralLike(property.initializer) &&
+        (NAMESPACES as readonly string[]).includes(property.initializer.text)
+      ) {
+        return [property.initializer.text as Namespace]
+      }
+    }
+    return []
   }
 
   /** `t()` · `dynamicKey()` 의 첫 인자가 리터럴이면 키다. */
-  const recordArgument = (argument: ts.Expression): void => {
-    if (ts.isStringLiteralLike(argument)) recordLiteral(argument, argument.text)
+  const recordArgument = (
+    argument: ts.Expression,
+    callNamespaces: readonly Namespace[] = [],
+  ): void => {
+    if (ts.isStringLiteralLike(argument)) {
+      recordLiteral(argument, argument.text, callNamespaces)
+    }
   }
 
   const visit = (node: ts.Node): void => {
@@ -272,7 +320,7 @@ function scanFile(file: string): {
           isTranslateCallee(callee) ||
           getCalleeName(callee) === "dynamicKey"
         ) {
-          recordArgument(first)
+          recordArgument(first, namespacesOfCall(node))
         }
         if (
           getCalleeName(callee) === "useTranslation" &&
@@ -312,7 +360,10 @@ function scanFile(file: string): {
 
   const resolved = [...namespaces]
   return {
-    literals: literals.map((usage) => ({ ...usage, namespaces: resolved })),
+    literals: literals.map((usage) => ({
+      ...usage,
+      namespaces: usage.namespaces.length > 0 ? usage.namespaces : resolved,
+    })),
     dynamics,
   }
 }
@@ -371,6 +422,28 @@ const _driversComplete: Complete<
   SafetyDriver,
   (typeof SAFETY_DRIVERS)[number]
 > = true
+
+/* 커뮤니티 동적 키의 정의역 (2026-09-09 추가 — 스캔이 열거 없는 접두어를 찾아냈다). */
+/** 작성자 프로필 통계 행 — `CommunityAuthorProfileScreen` 이 `as const` 튜플로 조립한다. */
+const AUTHOR_STAT_MODES = ["followers", "following"] as const
+/** 내 활동 탭 — `CommunityLibraryTabs.LIBRARY_TABS` 와 같은 값(컴포넌트라 타입만 들여온다). */
+const LIBRARY_TAB_KEYS = ["mine", "liked", "bookmarked"] as const
+const _libraryTabsComplete: Complete<
+  LibraryTab,
+  (typeof LIBRARY_TAB_KEYS)[number]
+> = true
+/** 댓글 정렬 — `PostDetailScreen` 은 `popular` 만 `popularComments` 로 바꿔 조립한다. */
+const COMMENT_ORDERS = [
+  "oldest",
+  "newest",
+  "popular",
+] as const satisfies readonly CommentOrder[]
+const _commentOrdersComplete: Complete<
+  CommentOrder,
+  (typeof COMMENT_ORDERS)[number]
+> = true
+const commentOrderLabelKey = (order: CommentOrder): string =>
+  `community.refresh.${order === "popular" ? "popularComments" : order}`
 
 const SAFETY_LEVELS = [
   "SAFE",
@@ -457,7 +530,7 @@ const _keywordComplete: Complete<
   ReviewKeyword,
   (typeof REVIEW_KEYWORDS)[number]["value"]
 > = true
-const _weekdayComplete: Complete<Weekday, (typeof WEEKDAY_ORDER)[number]> = true
+const _weekdayComplete: Complete<Weekday, (typeof WEEKDAYS)[number]> = true
 
 void [
   _driversComplete,
@@ -489,26 +562,23 @@ const GENERATED_KEYS: readonly {
   keys: readonly string[]
 }[] = [
   {
+    // 글쓰기·글수정 본문 플레이스홀더가 주제별로 갈린다(2026-09-12, 당근 방식).
+    label: "글 주제별 본문 플레이스홀더",
+    namespace: "recipe",
+    keys: FREE_POST_CATEGORIES.map(
+      (category) => `freePost.bodyPlaceholderByTopic.${category.key}`,
+    ),
+  },
+  {
     label: "안전도 등급",
     namespace: "common",
     keys: SAFETY_LEVELS.map((level) => `restaurant.safety.${level}`),
   },
   {
+    // `RestaurantCard`·`SafetyBadge` 가 이 모양으로 직접 조립한다.
     label: "안전도 근거 영양소",
     namespace: "common",
-    keys: SAFETY_DRIVERS.map(
-      (driver) => safetyDriverLabelKey(driver) as string,
-    ),
-  },
-  {
-    label: "카드 보조 배지",
-    namespace: "common",
-    keys: [
-      cardSafetyNoteKey({ kind: "SAFE_MENU_COUNT", count: 2 }),
-      ...SAFETY_DRIVERS.map((driver) =>
-        cardSafetyNoteKey({ kind: "DRIVER", driver }),
-      ),
-    ],
+    keys: SAFETY_DRIVERS.map((driver) => `restaurant.safety.driver.${driver}`),
   },
   {
     /*
@@ -561,8 +631,8 @@ const GENERATED_KEYS: readonly {
     label: "요일",
     namespace: "common",
     keys: [
-      ...WEEKDAY_ORDER.map((weekday) => weekdayLabelKey(weekday)),
-      ...WEEKDAY_ORDER.map((weekday) => `restaurant.weekdayShort.${weekday}`),
+      ...WEEKDAYS.map((weekday) => `restaurant.weekday.${weekday}`),
+      ...WEEKDAYS.map((weekday) => `restaurant.weekdayShort.${weekday}`),
     ],
   },
   {
@@ -614,6 +684,29 @@ const GENERATED_KEYS: readonly {
       (key) => `mealReport.nutrients.${key}`,
     ),
   },
+  {
+    label: "작성자 프로필 통계",
+    namespace: "common",
+    keys: AUTHOR_STAT_MODES.map((mode) => `community.author.${mode}`),
+  },
+  {
+    label: "내 활동 탭",
+    namespace: "common",
+    keys: LIBRARY_TAB_KEYS.map((tab) => `community.library.tabs.${tab}`),
+  },
+  {
+    label: "내 활동 빈 상태",
+    namespace: "common",
+    keys: LIBRARY_TAB_KEYS.flatMap((tab) => [
+      `community.library.empty.${tab}.title`,
+      `community.library.empty.${tab}.body`,
+    ]),
+  },
+  {
+    label: "댓글 정렬",
+    namespace: "common",
+    keys: COMMENT_ORDERS.map(commentOrderLabelKey),
+  },
 ]
 
 /**
@@ -621,7 +714,13 @@ const GENERATED_KEYS: readonly {
  * 새 `` t(`restaurant.무엇.${x}`) `` 가 열거 없이 들어오는 것을 막는 유일한 장치다.
  */
 const ENUMERATED_PREFIXES: readonly string[] = [
-  "restaurant.safety.",
+  /*
+    `restaurant.safety.` 와 `restaurant.filter.regions.` 는 여기 없다. 그 접두어를 동적으로
+    조립하던 곳(`safetyAccessibilityKeys`, 선택 트레이의 `selectionChips`)이 호출부 없이
+    남아 있다가 지워졌다. 등급 라벨은 위 표(`안전도 등급`)가, 시도 라벨은
+    `regionCatalog` 의 리터럴 키가 각각 리터럴 검사로 계속 덮인다.
+  */
+  "freePost.bodyPlaceholderByTopic.",
   "restaurant.safety.driver.",
   "restaurant.cuisine.",
   "restaurant.nutritionTag.",
@@ -633,11 +732,14 @@ const ENUMERATED_PREFIXES: readonly string[] = [
   "restaurant.weekdayShort.",
   "restaurant.amenity.",
   "restaurant.photo.categories.",
-  "restaurant.report.validation.",
-  "restaurant.filter.regions.",
+  // `restaurant.report.validation.` 은 없다 — 폼이 리터럴 키로만 부르므로 리터럴 검사가 덮는다.
   "restaurant.region.groups.",
   "restaurant.route.app.",
   "mealReport.nutrients.",
+  "community.author.",
+  "community.library.tabs.",
+  "community.library.empty.",
+  "community.refresh.",
 ]
 
 /* ────────────────────────── 검사 ────────────────────────── */

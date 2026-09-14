@@ -82,7 +82,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
-import { FlashList } from "@shopify/flash-list"
+import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -123,7 +123,7 @@ import {
   resolveMapInjection,
 } from "../utils/mapInjection"
 import { useMapSearch } from "../hooks/useMapSearch"
-import { useMyLocation } from "../hooks/useMyLocation"
+import { useLocationGate, useMyLocation } from "../hooks/useMyLocation"
 import {
   useRestaurantFilters,
   splitAiRegionKeys,
@@ -142,11 +142,11 @@ import { MapRefreshPill } from "../components/MapRefreshPill"
 import { MapSearchBar, MAP_SEARCH_BAR_HEIGHT } from "../components/MapSearchBar"
 import { scrimColor } from "../components/mapScrim"
 import { MapUtilityFooter } from "../components/MapUtilityFooter"
-import { RestaurantCard } from "../components/RestaurantCard"
 import {
-  RESTAURANT_SKELETON_COUNT,
-  RestaurantCardSkeleton,
-} from "../components/RestaurantCardSkeleton"
+  RestaurantCardRow,
+  RestaurantCardSeparator,
+} from "../components/RestaurantCard"
+import { RestaurantCardSkeletonList } from "../components/RestaurantCardSkeleton"
 import {
   RestaurantListSheet,
   SHEET_MID_RATIO,
@@ -163,13 +163,6 @@ import {
 
 import { GUTTER } from "../layout"
 const SIDE = GUTTER
-
-/**
- * 위치 결론을 기다리는 상한(ms). 허용 상태의 마지막 좌표는 즉시 오고, 권한 팝업은
- * 사용자 손에 달렸으니 상한은 **팝업이 아니라 GPS** 를 위한 것이다 — 팝업이 떠 있는
- * 동안은 `resolved` 가 안 오지만 그때 지도가 뒤에서 강남으로 떠도 해는 없다.
- */
-const MAP_GATE_TIMEOUT_MS = 2500
 
 /*
   클러스터 파고들기의 배율은 이제 여기 없다 — `utils/viewportAction`의 `CLUSTER_ZOOM_STEP`
@@ -208,7 +201,15 @@ export function RestaurantMapScreen({
   const sheetRef = useRef<RestaurantListSheetHandle>(null)
 
   const controls = useRestaurantFilters()
-  const { filters, clearRegionSelection } = controls
+  /* 콜백 의존성으로 쓸 함수는 여기서 한 번 꺼낸다. 훅 결과 객체를 통째로 의존하면 결과
+     필드(마커·로딩)가 바뀔 때마다 콜백이 갈리고, `react-hooks/exhaustive-deps` 는
+     `controls.resetAll()` 같은 메서드 호출을 객체 전체 의존으로 본다. */
+  const {
+    filters,
+    clearRegionSelection,
+    toggleRailCuisine,
+    resetAll: resetAllFilters,
+  } = controls
   const {
     queryFilters,
     isPending: regionTransitionPending,
@@ -219,6 +220,7 @@ export function RestaurantMapScreen({
     destination: regionDestination,
   } = useRegionFilterTransition(filters)
   const myLocation = useMyLocation()
+  const requestMyLocation = myLocation.request
   /* 콜백이 만들어진 렌더가 아니라 **지금** 좌표를 봐야 한다(`useGoBack` 과 같은 모양). */
   const myLocationRef = useRef(myLocation.coords)
   myLocationRef.current = myLocation.coords
@@ -230,18 +232,10 @@ export function RestaurantMapScreen({
    * (그 점프를 보정하던 것이 아래 "늦게 도착한 내 위치" 이펙트다). 이제 첫 진입에서
    * 권한을 묻고(`useMyLocation` 머리말) 그 결론(`resolved`)을 기다렸다가 띄우므로,
    * 허용이면 **처음부터 내 위치**로, 거부면 처음부터 강남으로 뜬다. 상한 시간을 두는
-   * 이유: GPS 가 영영 답하지 않는 기기에서 지도도 영영 안 뜨면 안 된다.
+   * 이유: GPS 가 영영 답하지 않는 기기에서 지도도 영영 안 뜨면 안 된다 — 상한과 그
+   * 근거는 `useLocationGate`(리스트 모드도 같은 문을 쓴다).
    */
-  const [mapGateOpen, setMapGateOpen] = useState(false)
-  useEffect(() => {
-    if (mapGateOpen) return
-    if (myLocation.resolved) {
-      setMapGateOpen(true)
-      return
-    }
-    const timer = setTimeout(() => setMapGateOpen(true), MAP_GATE_TIMEOUT_MS)
-    return () => clearTimeout(timer)
-  }, [mapGateOpen, myLocation.resolved])
+  const mapGateOpen = useLocationGate(myLocation.resolved)
 
   /** 지도 SDK 가 죽었다. `null` 이면 정상. */
   const [mapError, setMapError] = useState<string | null>(null)
@@ -406,6 +400,9 @@ export function RestaurantMapScreen({
       !regionTransitionPending &&
       (mapError !== null || mapSearch.committedBounds !== null),
   })
+  // 콜백 의존성용 함수 조각(위 `controls` 주석과 같은 이유). 둘 다 훅 안에서 메모된다.
+  const { searchThisArea, onViewportChange, refetch: refetchMap } = mapSearch
+  const { refetch: refetchList } = list
 
   /** 위치 권한이 사라지거나 커버리지 밖이면 `거리순` 을 조용히 기본값으로 되돌린다. */
   useAvailableRestaurantSort(
@@ -753,7 +750,7 @@ export function RestaurantMapScreen({
    */
   const commitSearch = useCallback(
     (viewport: MapViewport, automatic: boolean): boolean => {
-      if (!mapSearch.searchThisArea()) {
+      if (!searchThisArea()) {
         pendingReportRef.current = null
         return false
       }
@@ -765,7 +762,9 @@ export function RestaurantMapScreen({
       setSearchSeq((current) => current + 1)
       return true
     },
-    [mapSearch],
+    // 훅 결과 객체가 아니라 쓰는 함수만 의존한다 — 이 콜백이 `handleIdle` → 지도 WebView 의
+    // `onMessage` 로 이어지므로, 결과 필드(마커·로딩)가 바뀔 때마다 갈리면 안 된다.
+    [searchThisArea],
   )
 
   const handleIdle = useCallback(
@@ -780,7 +779,7 @@ export function RestaurantMapScreen({
       )
       if (regionAction === "wait") return
       pendingViewportRef.current = viewport
-      mapSearch.onViewportChange(viewport.bounds, viewport.zoom)
+      onViewportChange(viewport.bounds, viewport.zoom)
       // D7 의 예외 두 가지: 마운트 후 최초 1회, 그리고 앱이 카메라를 옮긴 직후의 예약.
       // 사용자의 손 팬은 어느 쪽도 아니다 — `handleDragStart` 가 예약을 지운다.
       const armed =
@@ -811,7 +810,7 @@ export function RestaurantMapScreen({
     },
     [
       commitSearch,
-      mapSearch,
+      onViewportChange,
       inspectRegionViewport,
       finishRegionTransition,
       containerWidth,
@@ -1114,7 +1113,7 @@ export function RestaurantMapScreen({
 
   const handleMyLocation = useCallback(() => {
     void (async () => {
-      const coords = await myLocation.request()
+      const coords = await requestMyLocation()
       // 결과를 좌표 유무로 추론한다. `myLocation.status` 는 이 클로저가 만들어진 렌더의
       // 값이라 요청 직후에는 아직 옛 값이다. 한계: 권한은 받았는데 위치 측정이 실패한
       // 드문 경우가 `denied` 로 집계된다 — 거부율을 조금 높게 보는 쪽의 오차다.
@@ -1151,15 +1150,15 @@ export function RestaurantMapScreen({
       interruptRegionTransition()
       mapRef.current?.moveTo(coords.lat, coords.lng)
     })()
-  }, [myLocation, t, interruptRegionTransition])
+  }, [requestMyLocation, t, interruptRegionTransition])
 
   const handleToggleCuisine = useCallback(
     (type: CuisineType) => {
-      controls.toggleRailCuisine(type)
+      toggleRailCuisine(type)
       // 필터가 바뀌면 이전 선택은 목록에 없을 수 있다. 유령 선택을 남기지 않는다.
       setSelection(null)
     },
-    [controls],
+    [toggleRailCuisine],
   )
 
   /**
@@ -1215,6 +1214,26 @@ export function RestaurantMapScreen({
       })
     },
     [focusMarkerInVisibleArea, router],
+  )
+
+  /**
+   * 지도 실패 화면(아래 `mapError` 분기)의 목록 행. 시트가 `RestaurantCardRow` 로 얻는 것과
+   * 같은 성질 — 카드마다 인라인 화살표를 만들지 않아 `memo(RestaurantCard)` 가 걸러 낸다.
+   * 선택은 `extraData={selectedId}` 로 알리므로 이 함수가 `selectedId` 를 읽어도 된다.
+   */
+  const renderDegradedCard = useCallback(
+    ({ item }: ListRenderItemInfo<RestaurantCardDto>) => (
+      <RestaurantCardRow
+        item={item}
+        selected={item.restaurantId === selectedId}
+        onPress={handlePressCard}
+      />
+    ),
+    [handlePressCard, selectedId],
+  )
+  const degradedListContentStyle = useMemo(
+    () => ({ paddingBottom: insets.bottom + spacing[16] }),
+    [insets.bottom],
   )
 
   const handlePressBookmarks = useCallback(() => {
@@ -1277,7 +1296,12 @@ export function RestaurantMapScreen({
         options: entry.options.join(","),
       })
     }
-  }, [controls, beginRegionTransition, mapSearch.isViewportTooLarge])
+  }, [
+    controls.draft,
+    controls.filters,
+    beginRegionTransition,
+    mapSearch.isViewportTooLarge,
+  ])
 
   /**
    * `지도 넓혀서 다시 찾기`.
@@ -1308,15 +1332,15 @@ export function RestaurantMapScreen({
 
   const handleResetFilters = useCallback(() => {
     finishRegionTransition()
-    controls.resetAll()
+    resetAllFilters()
     setSelection(null)
-  }, [controls, finishRegionTransition])
+  }, [resetAllFilters, finishRegionTransition])
 
   const handleRetry = useCallback(() => {
     if (regionTransitionPending) return
-    mapSearch.refetch()
-    list.refetch()
-  }, [list, mapSearch, regionTransitionPending])
+    refetchMap()
+    refetchList()
+  }, [refetchList, refetchMap, regionTransitionPending])
 
   /* ── 탭을 다시 눌렀을 때 ─────────────────────────────────────────────────
      **식당은 목록이 아니라 지도다.** 다른 네 탭의 루트 상태는 "맨 위" 지만 여기서는
@@ -1680,18 +1704,14 @@ export function RestaurantMapScreen({
           <View style={styles.degradedListArea}>
             <FlashList
               data={list.items}
-              keyExtractor={(item) => String(item.restaurantId)}
-              renderItem={({ item }) => (
-                <RestaurantCard
-                  card={item}
-                  selected={item.restaurantId === selectedId}
-                  onPress={(target) => handlePressCard(item, target)}
-                />
-              )}
-              ItemSeparatorComponent={Separator}
+              keyExtractor={cardKeyExtractor}
+              renderItem={renderDegradedCard}
+              // 선택이 바뀐 것을 목록에 알린다 — `renderDegradedCard` 가 그 값을 읽는다.
+              extraData={selectedId}
+              ItemSeparatorComponent={RestaurantCardSeparator}
               ListEmptyComponent={
                 list.isLoading ? (
-                  <SkeletonList />
+                  <RestaurantCardSkeletonList />
                 ) : list.emptyReason ? (
                   /* `onWidenMap` 을 넘기지 않는다 — 이 분기에는 지도가 없다.
                    넘기면 `NO_DATA_HERE` 에 `지도 넓혀서 다시 찾기` 가 서고, 눌러도
@@ -1708,9 +1728,7 @@ export function RestaurantMapScreen({
               onEndReachedThreshold={0.4}
               bounces={false}
               overScrollMode="never"
-              contentContainerStyle={{
-                paddingBottom: insets.bottom + spacing[16],
-              }}
+              contentContainerStyle={degradedListContentStyle}
             />
           </View>
         </View>
@@ -1895,18 +1913,9 @@ function widenLevel(current: number, bounds: MapBounds | null): number {
   return current
 }
 
-function Separator() {
-  return <V2Divider tone="alternative" />
-}
-
-function SkeletonList() {
-  return (
-    <View>
-      {Array.from({ length: RESTAURANT_SKELETON_COUNT }, (_, index) => (
-        <RestaurantCardSkeleton key={index} />
-      ))}
-    </View>
-  )
+/** 지도 실패 화면의 목록 키. 렌더마다 새 함수를 넘기면 FlashList 가 행을 다시 맞춘다. */
+function cardKeyExtractor(item: RestaurantCardDto): string {
+  return String(item.restaurantId)
 }
 
 const styles = StyleSheet.create({
@@ -1940,8 +1949,4 @@ const styles = StyleSheet.create({
   fabs: { alignSelf: "flex-end" },
   degraded: { flex: 1 },
   degradedListArea: { flex: 1 },
-  degradedNotice: {
-    paddingHorizontal: SIDE,
-    paddingVertical: spacing[8],
-  },
 })

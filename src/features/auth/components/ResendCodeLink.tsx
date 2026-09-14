@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_TYPE } from "../data/authSurface"
 
 interface ResendCodeLinkProps {
@@ -14,7 +14,7 @@ interface ResendCodeLinkProps {
  * 회색 텍스트 링크로 낮춰 잡는다 — 토스식 위계: 면을 차지하는 건 CTA 뿐이다.
  */
 export function ResendCodeLink({ onPress, disabled }: ResendCodeLinkProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const { t } = useTranslation("auth")
   return (
     <View style={styles.row}>

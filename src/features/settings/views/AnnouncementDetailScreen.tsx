@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useMemo } from "react"
 import { StyleSheet, ScrollView } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams } from "expo-router"
@@ -7,11 +7,11 @@ import { useTranslation } from "react-i18next"
 
 import { ThemedText } from "@/components/themed-text"
 import { ThemedView } from "@/components/themed-view"
-import { announcementService } from "@/src/features/announcement/services/announcementService"
 import type { AnnouncementNotice } from "@/src/features/announcement/types"
 import { ScreenHeader } from "@/src/shared/components/ScreenHeader"
 import { ANNOUNCEMENTS } from "@/src/features/settings/data/constants"
 import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColors"
+import { useAnnouncementList } from "@/src/features/settings/hooks/useAnnouncementList"
 import appI18n, { getAppLanguage } from "@/src/i18n"
 import { parseServerDate } from "@/src/shared/utils/serverDate"
 
@@ -28,35 +28,14 @@ export function AnnouncementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const c = useSettingsColors()
   const { t } = useTranslation("settings")
-  const [announcement, setAnnouncement] = useState<AnnouncementDetail | null>(
-    null,
-  )
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true
-
-    async function loadAnnouncement() {
-      const noticeId = String(id ?? "")
-      try {
-        const notices = await announcementService.fetchList()
-        if (!mounted) return
-        const notice = notices.find((item) => String(item.id) === noticeId)
-        setAnnouncement(notice ? toDetail(notice) : findFallback(noticeId))
-      } catch {
-        if (!mounted) return
-        setAnnouncement(findFallback(noticeId))
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    }
-
-    void loadAnnouncement()
-
-    return () => {
-      mounted = false
-    }
-  }, [id])
+  // 목록 화면이 방금 받아 둔 같은 캐시를 읽는다(useAnnouncementList). 실패하면
+  // `notices` 가 비고 번들 폴백에서 찾는다 — 옛 동작과 같다.
+  const { data: notices, isPending: loading } = useAnnouncementList()
+  const noticeId = String(id ?? "")
+  const announcement = useMemo<AnnouncementDetail | null>(() => {
+    const notice = notices?.find((item) => String(item.id) === noticeId)
+    return notice ? toDetail(notice) : findFallback(noticeId)
+  }, [notices, noticeId])
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: c.bg }]}>

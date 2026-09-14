@@ -1,5 +1,5 @@
 /**
- * 필터 상태의 유일한 소유자. 지도·목록·필터시트·정렬시트가 전부 이 훅을 공유한다.
+ * 필터 상태의 유일한 소유자. 지도·목록·필터시트가 전부 이 훅을 공유한다.
  *
  * ## 확정본과 초안을 나눈다
  *
@@ -15,9 +15,16 @@
  *
  * ## 광역을 바꿔도 이전 선택은 유지된다
  *
- * 목업 -24 에서 `경기`로 바꾼 뒤에도 트레이에 `강남`·`서초`가 남아 있다. 즉 `activeSido` 는
+ * 목업 -24 에서 `경기`로 바꾼 뒤에도 `강남`·`서초` 선택이 남아 있다. 즉 `activeSido` 는
  * **어느 세부 칩 목록을 보여 줄지**만 정하고 선택을 지우지 않는다. 여기를 "시도 바꾸면
  * 초기화" 로 바꾸면 다중 지역 선택이 불가능해진다.
+ *
+ * ## 여기 없는 것
+ *
+ * 선택 트레이(`chips`·`removeChip`·`clearAllSelections`)와 시트 밖 즉시 정렬(`setSort`),
+ * `isDraftDirty` 가 있었다. 정렬은 `FilterSheet` 의 sort 섹션(`setDraftSort` → `applyDraft`)
+ * 으로 합쳐졌고 트레이는 화면에서 빠졌는데 훅에만 남아 있어서 지웠다 — 부르는 화면이
+ * 없는 상태 전이는 테스트만 초록으로 남기고 제품은 지키지 않는다.
  */
 
 import { useCallback, useMemo, useState } from "react"
@@ -25,21 +32,15 @@ import { useCallback, useMemo, useState } from "react"
 import type {
   AiSearchFilters,
   CuisineType,
-  FilterChipEntry,
   FilterState,
   NutritionTag,
   SortOption,
 } from "../types"
-import {
-  DEFAULT_SORT,
-  cuisineTypeLabelKey,
-  nutritionTagLabelKey,
-} from "../data/filterCatalog"
+import { DEFAULT_SORT } from "../data/filterCatalog"
 import {
   isRegionGroupKey,
   isRegionSidoKey,
   isSidoAllKey,
-  labelKeyFor,
   sidoKeyOf,
   sidoKeyOfAllKey,
 } from "../data/regionCatalog"
@@ -67,15 +68,11 @@ export interface UseRestaurantFiltersResult {
   filters: FilterState
   /** 시트 편집용 사본. */
   draft: FilterState
-  /** 선택 트레이(목업 -23 하단)에 그릴 칩들. */
-  chips: FilterChipEntry[]
   axes: {
     region: FilterAxisState
     nutrition: FilterAxisState
     cuisine: FilterAxisState
   }
-  /** 초안이 확정본과 다른가. `확인` 버튼 활성 판정. */
-  isDraftDirty: boolean
 
   /* 초안 편집 — 시트 안에서만 쓴다 */
   setActiveSido: (sidoKey: string) => void
@@ -83,9 +80,6 @@ export interface UseRestaurantFiltersResult {
   toggleRegion: (groupKey: string) => void
   toggleNutritionTag: (tag: NutritionTag) => void
   toggleCuisineType: (type: CuisineType) => void
-  removeChip: (entry: FilterChipEntry) => void
-  /** 트레이의 휴지통. 지역·영양·음식만 지운다 — 정렬과 검색어는 필터가 아니다. */
-  clearAllSelections: () => void
   /** 시트를 열 때 호출. 확정본을 초안에 다시 복사한다. */
   syncDraft: () => void
   /** `확인`. 초안을 확정한다. */
@@ -95,7 +89,6 @@ export interface UseRestaurantFiltersResult {
   resetDraft: () => void
 
   /* 즉시 반영 — 시트 밖의 컨트롤 */
-  setSort: (sort: SortOption) => void
   setOpenNow: (openNow: boolean) => void
   toggleBookmarkedOnly: () => void
   setQuery: (query: string) => void
@@ -159,45 +152,6 @@ export function useRestaurantFilters(
     }))
   }, [])
 
-  const removeChip = useCallback((entry: FilterChipEntry) => {
-    setDraft((prev) => {
-      switch (entry.axis) {
-        case "regionGroup":
-          return {
-            ...prev,
-            regionGroups: prev.regionGroups.filter((v) => v !== entry.value),
-          }
-        case "regionSido":
-          return {
-            ...prev,
-            regionSidos: prev.regionSidos.filter((v) => v !== entry.value),
-          }
-        case "nutritionTag":
-          return {
-            ...prev,
-            nutritionTags: prev.nutritionTags.filter((v) => v !== entry.value),
-          }
-        case "cuisineType":
-          return {
-            ...prev,
-            cuisineTypes: prev.cuisineTypes.filter((v) => v !== entry.value),
-          }
-        default:
-          return prev
-      }
-    })
-  }, [])
-
-  const clearAllSelections = useCallback(() => {
-    setDraft((prev) => ({
-      ...prev,
-      regionGroups: [],
-      regionSidos: [],
-      nutritionTags: [],
-      cuisineTypes: [],
-    }))
-  }, [])
-
   const syncDraft = useCallback(() => {
     setDraft(filters)
   }, [filters])
@@ -222,13 +176,8 @@ export function useRestaurantFilters(
     }))
   }, [])
 
-  /* 시트 밖 컨트롤 — 초안을 거치지 않고 바로 확정한다. 정렬시트는 자체 `다음` 으로 닫히고,
-     칩 레일과 북마크 FAB 는 누르는 즉시 결과가 바뀌는 것이 목업의 동작이다. */
-
-  const setSort = useCallback((sort: SortOption) => {
-    setFilters((prev) => ({ ...prev, sort }))
-    setDraft((prev) => ({ ...prev, sort }))
-  }, [])
+  /* 시트 밖 컨트롤 — 초안을 거치지 않고 바로 확정한다. 칩 레일과 북마크 FAB 는 누르는
+     즉시 결과가 바뀌는 것이 목업의 동작이다. */
 
   const setOpenNow = useCallback((openNow: boolean) => {
     setFilters((prev) => ({ ...prev, openNow }))
@@ -318,9 +267,6 @@ export function useRestaurantFilters(
     )
   }, [])
 
-  /** 트레이 칩은 **초안** 을 반영한다 — 시트 안에서 즉시 사라지고 나타나야 한다. */
-  const chips = useMemo<FilterChipEntry[]>(() => selectionChips(draft), [draft])
-
   const axes = useMemo(
     () => ({
       region: {
@@ -339,38 +285,55 @@ export function useRestaurantFilters(
     [filters],
   )
 
-  const isDraftDirty = useMemo(
-    () => serializeFilters(draft) !== serializeFilters(filters),
-    [draft, filters],
+  /* 결과 객체를 렌더마다 새로 만들지 않는다. 지도 화면이 `[controls]` 를 의존성으로 둔
+     콜백(`handleToggleCuisine`·`handleApplyFilters`…)을 갖고 있어, 리터럴을 돌려주면
+     그 콜백들이 매 렌더 새로 만들어져 시트와 칩 레일까지 다시 그린다. */
+  return useMemo<UseRestaurantFiltersResult>(
+    () => ({
+      filters,
+      draft,
+      axes,
+      setActiveSido,
+      toggleRegion,
+      toggleNutritionTag,
+      toggleCuisineType,
+      syncDraft,
+      applyDraft,
+      setDraftSort,
+      setDraftOpenNow,
+      resetDraft,
+      setOpenNow,
+      toggleBookmarkedOnly,
+      setQuery,
+      clearRegionSelection,
+      toggleRailCuisine,
+      applyAiFilters,
+      resetAll,
+      sanitizeSortForLocation,
+    }),
+    [
+      filters,
+      draft,
+      axes,
+      setActiveSido,
+      toggleRegion,
+      toggleNutritionTag,
+      toggleCuisineType,
+      syncDraft,
+      applyDraft,
+      setDraftSort,
+      setDraftOpenNow,
+      resetDraft,
+      setOpenNow,
+      toggleBookmarkedOnly,
+      setQuery,
+      clearRegionSelection,
+      toggleRailCuisine,
+      applyAiFilters,
+      resetAll,
+      sanitizeSortForLocation,
+    ],
   )
-
-  return {
-    filters,
-    draft,
-    chips,
-    axes,
-    isDraftDirty,
-    setActiveSido,
-    toggleRegion,
-    toggleNutritionTag,
-    toggleCuisineType,
-    removeChip,
-    clearAllSelections,
-    syncDraft,
-    applyDraft,
-    setDraftSort,
-    setDraftOpenNow,
-    resetDraft,
-    setSort,
-    setOpenNow,
-    toggleBookmarkedOnly,
-    setQuery,
-    clearRegionSelection,
-    toggleRailCuisine,
-    applyAiFilters,
-    resetAll,
-    sanitizeSortForLocation,
-  }
 }
 
 /**
@@ -405,44 +368,6 @@ export function splitAiRegionKeys(keys: readonly string[]): {
     if (isRegionGroupKey(key)) regionGroups.push(key)
   }
   return { regionGroups, regionSidos }
-}
-
-/**
- * 선택 트레이 칩 목록. 순서는 목업 -24 그대로 지역 → 음식 → 영양이다
- * (사용자가 고른 순서를 재현할 수는 없으므로 축 순서를 고정한다).
- */
-export function selectionChips(state: FilterState): FilterChipEntry[] {
-  const chips: FilterChipEntry[] = []
-  for (const sido of state.regionSidos) {
-    chips.push({
-      axis: "regionSido",
-      value: sido,
-      labelKey:
-        labelKeyFor(`${sido}-all`) ?? `restaurant.filter.regions.${sido}`,
-    })
-  }
-  for (const group of state.regionGroups) {
-    chips.push({
-      axis: "regionGroup",
-      value: group,
-      labelKey: labelKeyFor(group) ?? `restaurant.region.groups.${group}`,
-    })
-  }
-  for (const type of state.cuisineTypes) {
-    chips.push({
-      axis: "cuisineType",
-      value: type,
-      labelKey: cuisineTypeLabelKey(type),
-    })
-  }
-  for (const tag of state.nutritionTags) {
-    chips.push({
-      axis: "nutritionTag",
-      value: tag,
-      labelKey: nutritionTagLabelKey(tag),
-    })
-  }
-  return chips
 }
 
 /**

@@ -106,6 +106,8 @@ export interface FoodCameraAnalyzeResult {
   brothConsumedRatio?: number
   title: string
   imageUrl: string | null
+  /** 서버가 삽화를 미루고 먼저 돌려줬다(2026-09-11). true 면 결과 화면이 몇 초 간격으로 다시 읽어 그림을 갈아 끼운다. */
+  illustrationPending?: boolean
   foods: FoodCameraFood[]
   total: FoodCameraNutritionTotal
   evaluation: FoodCameraEvaluation

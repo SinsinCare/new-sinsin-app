@@ -19,10 +19,6 @@ export type PasswordCriteriaState = "empty" | "invalid" | "valid"
  */
 export const PASSWORD_FIELD_ORDER = ["password", "confirmPassword"] as const
 
-export const passwordCriteriaText = i18n.t("validation.passwordCriteria", {
-  ns: "auth",
-})
-
 export function getPasswordCriteriaText(): string {
   return i18n.t("validation.passwordCriteria", { ns: "auth" })
 }
@@ -39,28 +35,15 @@ export function getPasswordCriteriaState(value: string): PasswordCriteriaState {
   return isPasswordValid(value) ? "valid" : "invalid"
 }
 
-export const passwordRules: RegisterOptions<PasswordForm, "password"> = {
-  required: i18n.t("validation.passwordRequired", { ns: "auth" }),
-  minLength: {
-    value: 6,
-    message: i18n.t("validation.passwordMin", { ns: "auth" }),
-  },
-  maxLength: {
-    value: 18,
-    message: i18n.t("validation.passwordMax", { ns: "auth" }),
-  },
-  validate: (value) =>
-    isPasswordValid(value) ||
-    i18n.t("validation.passwordCombination", { ns: "auth" }),
-}
-
-export const confirmPasswordRules = (
-  password: string,
-): RegisterOptions<PasswordForm, "confirmPassword"> => ({
-  required: i18n.t("validation.confirmPasswordRequired", { ns: "auth" }),
-  validate: (value) =>
-    value === password || i18n.t("validation.passwordMismatch", { ns: "auth" }),
-})
+/**
+ * iOS 자동 강력 비밀번호(`textContentType="newPassword"`)에 주는 규칙.
+ *
+ * 규칙이 없으면 iOS 는 20자짜리를 만들어 두 칸에 채운다 — 이 앱의 상한은 18자라
+ * 채워지자마자 "18자 이하" 오류가 나고, 사용자는 왜 틀렸는지 모른다(2026-09-12
+ * 비밀번호 재설정 오류 제보). 길이·구성은 `getPasswordRules` 와 같은 값이어야 한다.
+ */
+export const IOS_PASSWORD_RULES =
+  "minlength: 6; maxlength: 18; required: lower; required: digit;"
 
 export function getPasswordRules(): RegisterOptions<PasswordForm, "password"> {
   return {

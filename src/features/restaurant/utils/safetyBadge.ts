@@ -25,7 +25,7 @@
 
 import type { SemanticColors } from "@/src/design-system-v2"
 
-import type { SafetyDriver, SafetyLevel } from "../types"
+import type { SafetyLevel } from "../types"
 
 export interface SafetyBadgeStyle {
   level: SafetyLevel
@@ -58,8 +58,9 @@ function styleFor(
       return {
         level,
         labelKey: "restaurant.safety.SAFE",
-        bg: colors.accentForeground.greenWeak,
-        fg: colors.accentForeground.green,
+        // 안전은 그레이스케일 — 색은 주의·제한처럼 눈이 가야 할 곳에만 쓴다(제품 결정 2026-09-11).
+        bg: colors.fill.normal,
+        fg: colors.label.neutral,
       }
     case "UNKNOWN":
     default:
@@ -103,25 +104,8 @@ export function safetyBadgeOrUnknown(
   그 판단은 식당 단위로 성립하지 않는다(한 식당에 제한 메뉴와 안전 메뉴가 함께 있다).
   마커의 등급은 스크린리더 라벨로만 나간다(`map/mapBridge.ts` 의 `MapStrings`).
   쓰이지 않는 함수를 남겨 두면 브릿지 계약이 있지도 않은 동작을 약속하게 된다.
+
+  `safetyDriverLabelKey()` / `safetyAccessibilityKeys()` 도 같은 이유로 지웠다 — 근거
+  영양소 키는 화면(`SafetyBadge`·`RestaurantCard`)이 `restaurant.safety.driver.<driver>` 를
+  직접 조립하고 있었고, 두 헬퍼는 테스트만 부르고 있었다.
 */
-
-/** 판정을 주도한 영양소의 i18n 키. `null` 이면 표기할 근거가 없다. */
-export function safetyDriverLabelKey(
-  driver: SafetyDriver | null,
-): string | null {
-  return driver ? `restaurant.safety.driver.${driver}` : null
-}
-
-/**
- * 스크린리더용 한 줄. 색만으로 등급을 전달하지 않기 위한 것이고,
- * 근거 영양소까지 읽어 준다. 문자열 조립은 화면이 `t()` 로 한다.
- */
-export function safetyAccessibilityKeys(
-  level: SafetyLevel,
-  driver: SafetyDriver | null,
-): { labelKey: string; driverLabelKey: string | null } {
-  return {
-    labelKey: `restaurant.safety.${level}`,
-    driverLabelKey: safetyDriverLabelKey(driver),
-  }
-}

@@ -21,11 +21,12 @@ import { V2BottomSheet } from "@/src/design-system-v2"
 import { useMonthDiaryExistence } from "../../hooks/useMonthDiaryExistence"
 import { CalendarDay } from "../calendar/CalendarDay"
 import {
-  calendarDateKey,
+  calendarDateFormatter,
   calendarMonth,
   calendarWeeks,
   isFutureCalendarDate,
 } from "../calendar/calendarModel"
+import { toDateStr } from "../../utils/dateUtils"
 
 interface MonthCalendarSheetProps {
   visible: boolean
@@ -53,7 +54,7 @@ export function MonthCalendarSheet({
   const [choosingMonth, setChoosingMonth] = useState(false)
   const [year, setYear] = useState(selectedDate.getFullYear())
   const opened = useRef(false)
-  const selectedKey = calendarDateKey(selectedDate)
+  const selectedKey = toDateStr(selectedDate)
   useEffect(() => {
     if (visible && !opened.current) {
       setMonth(calendarMonth(selectedDate))
@@ -73,7 +74,7 @@ export function MonthCalendarSheet({
     disableFuture && calendarMonth(month, 1) > calendarMonth(today)
   const rowHeight = Math.max(44, Math.ceil(24 * fontScale + 16)) + 4
   const gridHeight = rowHeight * 6 + Math.ceil(18 * fontScale) + 12
-  const title = new Intl.DateTimeFormat(locale, {
+  const title = calendarDateFormatter(locale, {
     year: "numeric",
     month: "long",
   }).format(month)
@@ -159,13 +160,13 @@ export function MonthCalendarSheet({
               <View style={styles.monthHeading}>
                 {!choosingMonth ? (
                   <Text style={[styles.yearLabel, { color: s.text }]}>
-                    {new Intl.DateTimeFormat(locale, {
+                    {calendarDateFormatter(locale, {
                       year: "numeric",
                     }).format(month)}
                   </Text>
                 ) : null}
                 <Text style={[styles.monthTitle, { color: s.textStrong }]}>
-                  {new Intl.DateTimeFormat(
+                  {calendarDateFormatter(
                     locale,
                     choosingMonth ? { year: "numeric" } : { month: "long" },
                   ).format(choosingMonth ? new Date(year, 0, 1) : month)}
@@ -215,7 +216,7 @@ export function MonthCalendarSheet({
           </View>
 
           <Animated.View
-            key={choosingMonth ? `months-${year}` : calendarDateKey(month)}
+            key={choosingMonth ? `months-${year}` : toDateStr(month)}
             entering={FadeIn.duration(160).reduceMotion(ReduceMotion.System)}
             style={{ minHeight: gridHeight }}
           >
@@ -230,7 +231,7 @@ export function MonthCalendarSheet({
                     <Pressable
                       key={index}
                       accessibilityRole="button"
-                      accessibilityLabel={new Intl.DateTimeFormat(locale, {
+                      accessibilityLabel={calendarDateFormatter(locale, {
                         year: "numeric",
                         month: "long",
                       }).format(value)}
@@ -268,7 +269,7 @@ export function MonthCalendarSheet({
                           },
                         ]}
                       >
-                        {new Intl.DateTimeFormat(locale, {
+                        {calendarDateFormatter(locale, {
                           month: "short",
                         }).format(value)}
                       </Text>
@@ -286,7 +287,7 @@ export function MonthCalendarSheet({
                       adjustsFontSizeToFit
                       style={[styles.weekday, { color: s.text }]}
                     >
-                      {new Intl.DateTimeFormat(locale, {
+                      {calendarDateFormatter(locale, {
                         weekday: "short",
                       }).format(new Date(2024, 0, 8 + index))}
                     </Text>
@@ -307,9 +308,7 @@ export function MonthCalendarSheet({
                           disabled={
                             disableFuture && isFutureCalendarDate(date, today)
                           }
-                          hasRecord={
-                            query.data?.has(calendarDateKey(date)) ?? false
-                          }
+                          hasRecord={query.data?.has(toDateStr(date)) ?? false}
                           onSelect={selectDate}
                         />
                       ) : (

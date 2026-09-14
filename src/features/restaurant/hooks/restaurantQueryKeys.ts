@@ -16,12 +16,23 @@
  * ## bbox 는 라운딩해서 넣는다
  *
  * `bboxKey()` 가 소수 5자리로 끊는다. 손가락이 1픽셀 스친 것으로 캐시가 갈리지 않게.
+ *
+ * ## 사용자 위치도 라운딩해서 넣는다
+ *
+ * 카드의 `distanceKm` 은 서버가 요청의 `userLat/userLng` 로 계산한다. 그래서 위치는
+ * 응답의 일부이고 키에 있어야 한다. 예전에는 `hasUserLocation: boolean` 만 넣었는데,
+ * 진입 절차가 **마지막 좌표를 먼저 깔고 정확한 픽스로 덮어쓰는** 구조라(`useMyLocation`)
+ * 두 좌표가 같은 키를 만들어 — 낡은 좌표로 계산된 거리가 캐시 수명(gcTime) 내내 남았다.
+ * `userLocationKey()` 가 소수 3자리(≈100m)로 끊는다: 그보다 작은 이동은 거리 표기
+ * (`620m`, 10m 눈금·`2.6km`)에서 어차피 구별되지 않고, GPS 잡음마다 키가 갈리면 같은
+ * 화면을 계속 다시 받는다.
  */
 
 import type { Language } from "@/src/i18n"
 
 import type {
   CuisineType,
+  LatLng,
   MapBounds,
   NutritionTag,
   PhotoCategory,
@@ -29,6 +40,20 @@ import type {
   SortOption,
 } from "../types"
 import { bboxKey } from "../utils/bboxKey"
+
+/** 소수 3자리 ≈ 111m(위도). 거리 표기의 눈금보다 굵지 않으면서 GPS 잡음은 흡수한다. */
+const LOCATION_KEY_FACTOR = 10 ** 3
+
+/**
+ * 사용자 위치 → 키 조각. 없으면 빈 문자열 — 예전의 `hasUserLocation: false` 와 같은 뜻이다.
+ * `+ 0` 은 `-0` 이 `"-0"` 으로 직렬화돼 키가 갈리는 것을 막는다(`bboxKey.roundCoord` 와 같다).
+ */
+export function userLocationKey(location: LatLng | null): string {
+  if (location === null) return ""
+  const round = (value: number) =>
+    Math.round(value * LOCATION_KEY_FACTOR) / LOCATION_KEY_FACTOR + 0
+  return `${round(location.lat)},${round(location.lng)}`
+}
 
 /** 도메인 루트. `invalidateQueries({ queryKey: RESTAURANT_KEY })` 로 전체를 털 수 있다. */
 export const RESTAURANT_KEY = ["restaurant"] as const
@@ -71,8 +96,8 @@ export const restaurantKeys = {
     bounds: MapBounds,
     zoom: number,
     filters: string,
-    /** 위치가 있으면 서버가 거리를 계산해 응답이 달라진다 → 키에 넣는다. */
-    hasUserLocation: boolean,
+    /** 위치가 있으면 서버가 거리를 계산해 응답이 달라진다 → 라운딩해서 키에 넣는다(헤더). */
+    userLocation: LatLng | null,
   ) =>
     [
       ...RESTAURANT_MAP_KEY,
@@ -81,11 +106,16 @@ export const restaurantKeys = {
       bboxKey(bounds),
       zoom,
       filters,
-      hasUserLocation,
+      userLocationKey(userLocation),
     ] as const,
 
-  list: (language: Language, filters: string, hasUserLocation: boolean) =>
-    [...RESTAURANT_LIST_KEY, language, filters, hasUserLocation] as const,
+  list: (language: Language, filters: string, userLocation: LatLng | null) =>
+    [
+      ...RESTAURANT_LIST_KEY,
+      language,
+      filters,
+      userLocationKey(userLocation),
+    ] as const,
 
   detail: (language: Language, restaurantId: number) =>
     [...RESTAURANT_KEY, "detail", language, restaurantId] as const,

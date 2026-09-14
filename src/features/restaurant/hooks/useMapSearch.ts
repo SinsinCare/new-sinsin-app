@@ -224,10 +224,10 @@ export function useMapSearch({
           committed.bounds,
           committed.zoom,
           filterKey,
-          userLocation !== null,
+          userLocation,
         )
       : // 확정 전에는 실행되지 않으므로 키 값 자체는 의미가 없다. 다만 안정된 배열이어야 한다.
-        [...restaurantKeys.map(language, ZERO_BOUNDS, 0, filterKey, false)],
+        [...restaurantKeys.map(language, ZERO_BOUNDS, 0, filterKey, null)],
     enabled: enabled && committed !== null,
     staleTime: MAP_STALE_TIME_MS,
     placeholderData: keepPreviousData,
@@ -250,8 +250,8 @@ export function useMapSearch({
              되돌리지만 그건 이펙트라 한 렌더 늦고, 딥링크 `?sort=DISTANCE` 나 AI 검색이
              돌려준 `DISTANCE` 는 그 한 렌더에 요청을 한 발 내보낸다. 질의에 쓸 값을
              여기서 직접 고르면 그 한 발이 사라진다.
-             queryKey 는 `filterKey`(원래 정렬) + `userLocation !== null` 을 모두 담고 있어
-             효과 정렬은 두 값의 함수다 — 키가 모호해지지 않는다. */
+             queryKey 는 `filterKey`(원래 정렬) + 라운딩한 위치(`userLocationKey`)를 모두
+             담고 있어 효과 정렬은 두 값의 함수다 — 키가 모호해지지 않는다. */
           sort: effectiveSort(filters.sort, userLocation !== null),
           bookmarkedOnly: filters.bookmarkedOnly,
           openNow: filters.openNow,
@@ -279,10 +279,13 @@ export function useMapSearch({
     전제를 아는 것은 이 훅이므로 막는 것도 여기다 — 부르는 쪽마다 `committed` 를
     다시 검사하게 하면 새 호출자가 생길 때마다 같은 결함이 다시 열린다.
   */
+  // `query.refetch` 는 옵저버에 한 번 묶인 함수라 안정적이다 — 결과 객체 전체를 의존성에
+  // 두면 fetching 플래그가 바뀔 때마다 이 콜백과 그 위의 화면 콜백이 전부 새로 만들어진다.
+  const queryRefetch = query.refetch
   const refetch = useCallback(() => {
     if (committed === null) return
-    void query.refetch()
-  }, [committed, query])
+    void queryRefetch()
+  }, [committed, queryRefetch])
 
   const emptyReason = useMemo<EmptyReason | null>(() => {
     // 실패는 원인별로 나눈다. 400 을 "인터넷 확인" 으로 말하던 결함의 수정이고,
@@ -293,30 +296,53 @@ export function useMapSearch({
     return resolveEmptyReason(filters)
   }, [query.isError, query.error, data, total, filters])
 
-  return {
-    markers: data?.markers ?? [],
-    clusters: data?.clusters ?? [],
-    mode: data?.mode ?? "MARKER",
-    total,
-    truncated: data?.truncated ?? false,
-    limitReached: data?.limitReached ?? false,
-    // 서버는 축별 객체(`{nutritionTags: 3}`)를 준다. 숫자로 읽으면 `> 0` 비교가
-    // 항상 false 가 되어 "N곳은 빠졌어요" 안내가 조용히 사라진다.
-    excludedForMissingData: totalExcluded(data?.excludedForMissingData),
-    distanceAvailable: data?.distanceAvailable ?? false,
-    profileMissing: data?.profileMissing ?? false,
-    isLoading: query.isLoading,
-    isFetching: query.isFetching,
-    isError: query.isError,
-    error: query.error,
-    emptyReason,
-    isDirty,
-    isViewportTooLarge,
-    committedBounds: committed?.bounds ?? null,
-    onViewportChange,
-    searchThisArea,
-    refetch,
-  }
+  const { isLoading, isFetching, isError, error } = query
+  const committedBounds = committed?.bounds ?? null
+
+  /* 결과 객체를 렌더마다 새로 만들지 않는다. 화면이 `[mapSearch]` 를 의존성으로 둔 콜백
+     (`commitSearch`·`handleIdle`…)을 갖고 있고, 그것들이 지도 WebView 의 `onMessage` 까지
+     이어진다 — 리터럴을 매번 돌려주면 그 사슬 전체가 렌더마다 갈린다. */
+  return useMemo<UseMapSearchResult>(
+    () => ({
+      markers: data?.markers ?? [],
+      clusters: data?.clusters ?? [],
+      mode: data?.mode ?? "MARKER",
+      total,
+      truncated: data?.truncated ?? false,
+      limitReached: data?.limitReached ?? false,
+      // 서버는 축별 객체(`{nutritionTags: 3}`)를 준다. 숫자로 읽으면 `> 0` 비교가
+      // 항상 false 가 되어 "N곳은 빠졌어요" 안내가 조용히 사라진다.
+      excludedForMissingData: totalExcluded(data?.excludedForMissingData),
+      distanceAvailable: data?.distanceAvailable ?? false,
+      profileMissing: data?.profileMissing ?? false,
+      isLoading,
+      isFetching,
+      isError,
+      error,
+      emptyReason,
+      isDirty,
+      isViewportTooLarge,
+      committedBounds,
+      onViewportChange,
+      searchThisArea,
+      refetch,
+    }),
+    [
+      data,
+      total,
+      isLoading,
+      isFetching,
+      isError,
+      error,
+      emptyReason,
+      isDirty,
+      isViewportTooLarge,
+      committedBounds,
+      onViewportChange,
+      searchThisArea,
+      refetch,
+    ],
+  )
 }
 
 const ZERO_BOUNDS: MapBounds = { swLat: 0, swLng: 0, neLat: 0, neLng: 0 }

@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { useTranslation } from "react-i18next"
 import { hapticSelection } from "@/src/lib/haptics"
-import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_MOTION } from "@/src/features/auth/data/authSurface"
 
 interface WelcomeStepContentProps {
@@ -41,7 +41,7 @@ function WelcomeCard({
   selected: boolean
   onPress: () => void
 }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const selection = useSharedValue(selected ? 1 : 0)
   const scale = useSharedValue(1)
 

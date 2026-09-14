@@ -28,7 +28,7 @@ export function AccountOverviewActions() {
     },
   ]
   return (
-    <View style={[styles.actions, { borderTopColor: colors.line.neutral }]}>
+    <View style={styles.actions}>
       {actions.map((action, index) => (
         <Pressable
           key={action.label}
@@ -58,11 +58,10 @@ export function AccountOverviewActions() {
   )
 }
 const styles = StyleSheet.create({
+  // 이제 "건강 관리" 카드 안에 홀로 산다 — 위 구분선·여백은 카드가 대신한다.
   actions: {
     flexDirection: "row",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 16,
-    marginTop: 16,
+    marginHorizontal: -4,
   },
   action: {
     flex: 1,

@@ -12,13 +12,11 @@ import { MonthCalendarSheet } from "@/src/features/home/components/statistics/Mo
 import { WeekCalendar } from "@/src/features/home/components/statistics/WeekCalendar"
 import { useDiaryExistence } from "@/src/features/home/hooks/useDiaryExistence"
 import type { PeriodType } from "@/src/features/stats-report/types/report"
+import { startOfDay } from "@/src/features/stats-report/utils/presentation"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useGoBack } from "@/src/shared/navigation"
 import { useSelectedDateStore } from "@/src/stores"
 import { router } from "expo-router"
-
-const startOfDay = (date: Date) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
 const clampToToday = (date: Date) =>
   startOfDay(date) > startOfDay(new Date()) ? new Date() : date

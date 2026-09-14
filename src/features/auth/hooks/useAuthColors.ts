@@ -1,25 +1,19 @@
 import { tokens } from "@/src/theme/tokens"
 import { useAppColorScheme } from "@/src/hooks/useAppColorScheme"
 
-/** 시스템 기본 라디우스. 디자인 확정값 — tokens.radius.true 와 같아야 한다. */
-export const AUTH_RADIUS = 16
-
 export function useAuthColors() {
   const isDark = useAppColorScheme() === "dark"
 
+  /*
+    로그인 화면과 인증 레이아웃이 실제로 읽는 값만 남겼다. 면·입력칸·비활성 버튼·시트
+    색은 `useSurface` 로 옮겨간 뒤 아무도 읽지 않았다 — 여기 남겨 두면 "인증 화면의
+    면색" 이 두 곳에 있는 것처럼 보여 다음 사람이 엉뚱한 쪽을 고친다.
+  */
   return {
     isDark,
-    bg: isDark ? tokens.color.appBgDark.val : "#FFFFFF",
     text: isDark ? tokens.color.textDark.val : "#17191C",
     textSub: isDark ? tokens.color.textDarkSub.val : "#787C83",
     icon: isDark ? tokens.color.textDarkSub.val : "#17191C",
-    inputBg: isDark ? "#2A2A32" : "white",
-    border: isDark ? "#3A3A42" : "rgba(218,223,230,0.6)",
-    disabledBtn: isDark ? "#2A2A32" : "#C5C8CE",
-
-    // ── 로그인 화면 ──────────────────────────────
-    // 배경 이미지 위로 올라오는 하단 시트. 다크는 앱 배경보다 한 단계 밝게 띄운다.
-    sheetBg: isDark ? "#1C1C1E" : "#FFFFFF",
 
     // 소셜 버튼 (다크 팔레트 기준)
     //  구글: 어두운 회색 + 흰 글씨 / 라이트는 밝은 회색 + 검은 글씨
@@ -31,10 +25,5 @@ export function useAuthColors() {
     kakaoText: "#191919",
     appleBg: isDark ? "#F7F7F7" : "#000000",
     appleText: isDark ? "#000000" : "#FFFFFF",
-
-    // 이메일 로그인(주 CTA). 브랜드 프라이머리를 그대로 쓴다 —
-    // 예전 초록(#34D399)은 토큰 밖 하드코딩이었고 브랜드 색도 아니었다.
-    primaryBg: tokens.color.primary.val,
-    primaryText: "#FFFFFF",
   }
 }

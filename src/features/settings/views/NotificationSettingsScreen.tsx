@@ -22,6 +22,7 @@ import { useSettingsColors } from "@/src/features/settings/hooks/useSettingsColo
 import { useNotifications } from "@/src/hooks/useNotifications"
 import { useAuth } from "@/src/hooks/useAuth"
 import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
+import { presentError } from "@/src/lib/errorMessage"
 import { tokens } from "@/src/theme/tokens"
 import type { NotificationSettings } from "@/src/types/notification"
 
@@ -49,8 +50,18 @@ export function NotificationSettingsScreen() {
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null)
   const categories = settings.categories
 
-  const update = async (next: NotificationSettings) => {
-    await updateSettings(next)
+  /*
+    저장은 서버로 나가는 요청이다. 예전의 래퍼는 기다리지도 잡지도 않아 네트워크 실패가
+    처리되지 않은 rejection 으로 사라졌다 — `updateSettings` 는 성공한 뒤에만 상태를
+    바꾸므로 스위치는 제자리로 돌아가는데 사용자에게는 아무 말도 없었다.
+    `useSettingsScreen` 의 마케팅 토글과 같은 통로(`presentError`)로 알리고 재시도를 붙인다.
+  */
+  const persist = async (next: NotificationSettings, scope: string) => {
+    try {
+      await updateSettings(next)
+    } catch (error) {
+      presentError(error, { scope, retry: () => void persist(next, scope) })
+    }
   }
 
   const handleMorningToggle = async (value: boolean) => {
@@ -64,13 +75,16 @@ export function NotificationSettingsScreen() {
         return
       }
     }
-    update({
-      ...settings,
-      categories: {
-        ...categories,
-        morningCheck: { ...categories.morningCheck, enabled: value },
+    await persist(
+      {
+        ...settings,
+        categories: {
+          ...categories,
+          morningCheck: { ...categories.morningCheck, enabled: value },
+        },
       },
-    })
+      "notification-morning-toggle",
+    )
   }
 
   const handleWaterToggle = async (value: boolean) => {
@@ -84,13 +98,16 @@ export function NotificationSettingsScreen() {
         return
       }
     }
-    update({
-      ...settings,
-      categories: {
-        ...categories,
-        waterReminder: { ...categories.waterReminder, enabled: value },
+    await persist(
+      {
+        ...settings,
+        categories: {
+          ...categories,
+          waterReminder: { ...categories.waterReminder, enabled: value },
+        },
       },
-    })
+      "notification-water-toggle",
+    )
   }
 
   const handleMealToggle = async (value: boolean) => {
@@ -104,72 +121,77 @@ export function NotificationSettingsScreen() {
         return
       }
     }
-    update({
-      ...settings,
-      categories: {
-        ...categories,
-        mealReminder: { ...categories.mealReminder, enabled: value },
+    await persist(
+      {
+        ...settings,
+        categories: {
+          ...categories,
+          mealReminder: { ...categories.mealReminder, enabled: value },
+        },
       },
-    })
+      "notification-meal-toggle",
+    )
   }
 
   const handleHourSelect = (hour: number) => {
     if (!pickerTarget) return
     const s = settings
     const c = categories
+    let next: NotificationSettings
     switch (pickerTarget) {
       case "morning":
-        update({
+        next = {
           ...s,
           categories: { ...c, morningCheck: { ...c.morningCheck, hour } },
-        })
+        }
         break
       case "waterStart":
-        update({
+        next = {
           ...s,
           categories: {
             ...c,
             waterReminder: { ...c.waterReminder, startHour: hour },
           },
-        })
+        }
         break
       case "waterEnd":
-        update({
+        next = {
           ...s,
           categories: {
             ...c,
             waterReminder: { ...c.waterReminder, endHour: hour },
           },
-        })
+        }
         break
       case "breakfast":
-        update({
+        next = {
           ...s,
           categories: {
             ...c,
             mealReminder: { ...c.mealReminder, breakfastHour: hour },
           },
-        })
+        }
         break
       case "lunch":
-        update({
+        next = {
           ...s,
           categories: {
             ...c,
             mealReminder: { ...c.mealReminder, lunchHour: hour },
           },
-        })
+        }
         break
       case "dinner":
-        update({
+        next = {
           ...s,
           categories: {
             ...c,
             mealReminder: { ...c.mealReminder, dinnerHour: hour },
           },
-        })
+        }
         break
     }
+    void persist(next, `notification-hour-${pickerTarget}`)
     setPickerTarget(null)
   }
 
@@ -356,16 +378,19 @@ export function NotificationSettingsScreen() {
                           },
                         ]}
                         onPress={() =>
-                          update({
-                            ...settings,
-                            categories: {
-                              ...categories,
-                              waterReminder: {
-                                ...categories.waterReminder,
-                                intervalHours: h,
+                          void persist(
+                            {
+                              ...settings,
+                              categories: {
+                                ...categories,
+                                waterReminder: {
+                                  ...categories.waterReminder,
+                                  intervalHours: h,
+                                },
                               },
                             },
-                          })
+                            "notification-water-interval",
+                          )
                         }
                       >
                         <V2Text

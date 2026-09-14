@@ -1,9 +1,9 @@
 import {
   EMPTY_SIGNUP_DRAFT,
-  SIGNUP_STEP_COPY,
   SIGNUP_STEP_IDS,
   buildSignupDraftFromProfile,
   buildSignupProfilePayload,
+  getSignupStepCopy,
   getSignupStepProgress,
   shouldVerifyNicknameAvailability,
   validateSignupStep,
@@ -30,8 +30,9 @@ describe("signup step plan", () => {
   })
 
   it("gives every step a two-line question and a field label", () => {
+    const stepCopy = getSignupStepCopy()
     SIGNUP_STEP_IDS.forEach((step) => {
-      const copy = SIGNUP_STEP_COPY[step]
+      const copy = stepCopy[step]
       expect(copy.title).toContain("\n")
       expect(copy.label.length).toBeGreaterThan(0)
     })

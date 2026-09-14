@@ -1,4 +1,5 @@
 import {
+  kstDateString,
   personalPortion,
   portionLabel,
   portionNutrients,
@@ -19,7 +20,7 @@ export function buildPersonalPortionContext(
       true,
       selected.meals,
       selected.share,
-      new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10),
+      kstDateString(),
     )
   const personalContext =
     selected && plan

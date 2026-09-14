@@ -38,13 +38,33 @@ import { logger } from "@/src/lib/logger"
 let configured = false
 let configuredAppUserId: string | null = null
 
-/** SDK 를 쓸 수 있는 상태인가. 키가 없거나 아직 식별 전이면 false. */
+/*
+  "SDK 가 켜졌다" 를 밖에 알리는 아주 작은 외부 스토어.
+
+  `onCustomerInfoUpdate` 는 SDK 가 켜지기 전에는 아무것도 걸지 못한다. 그런데 SDK 는
+  서버가 발급한 id 를 받은 **뒤에** 켜지므로(머리말 ③), 프로바이더가 세션이 열린 순간
+  리스너를 걸면 그 시점에는 늘 "아직" 이고 — 다시 걸 계기가 없어서 갱신·해지·다른 기기
+  구매 알림이 한 번도 서버 동기화로 이어지지 않았다. 켜지는 순간을 구독할 수 있어야
+  리스너를 그때 정확히 한 번 걸 수 있다(`BillingProvider` 의 `useSyncExternalStore`).
+*/
+const readyListeners = new Set<() => void>()
+
+/** SDK 가 켜졌는가(`configure` 가 한 번 돌았는가). 키가 없거나 첫 식별 전이면 false. */
 export function isPurchasesReady(): boolean {
   return configured
 }
 
-export function currentAppUserId(): string | null {
-  return configuredAppUserId
+/** `isPurchasesReady()` 가 바뀌면 알린다. `useSyncExternalStore` 의 subscribe 모양. */
+export function subscribePurchasesReady(listener: () => void): () => void {
+  readyListeners.add(listener)
+  return () => {
+    readyListeners.delete(listener)
+  }
+}
+
+function markConfigured(): void {
+  configured = true
+  for (const listener of readyListeners) listener()
 }
 
 /**
@@ -63,7 +83,7 @@ export async function identify(appUserId: string): Promise<void> {
         apiKey: getRevenueCatApiKey(),
         appUserID: appUserId,
       })
-      configured = true
+      markConfigured()
     } else {
       await Purchases.logIn(appUserId)
     }
@@ -144,83 +164,52 @@ export interface CurrentOffering {
 }
 
 /**
- * 상품을 못 가져온 **이유**. `null` 하나로는 네 가지 서로 다른 사고가 구분되지 않는다 —
- * 실제로 그래서 스토어 연동을 뚫는 데 하루가 갔다(2026-09-01).
- *
- *   notConfigured  SDK 가 안 켜졌다. 키가 없거나 `identify` 전이다 → **앱 설정 문제**
- *   error          `getOfferings` 가 던졌다 → **네트워크·키 오류**
- *   noCurrent      RC 는 답했는데 current 오퍼링이 없다 → **대시보드 구성 문제**
- *   emptyPackages  오퍼링은 있는데 패키지가 0개다 → **스토어가 상품을 안 준다**
- *                  (계약 미활성·상품 미전파·번들 ID 불일치가 전부 여기로 떨어진다)
- */
-export type OfferingDiagnostic =
-  | { readonly kind: "ok"; readonly count: number }
-  | { readonly kind: "notConfigured"; readonly keyPrefix: string }
-  | { readonly kind: "error"; readonly message: string }
-  | { readonly kind: "noCurrent"; readonly offeringIds: readonly string[] }
-  | { readonly kind: "emptyPackages"; readonly offeringId: string }
-
-let lastDiagnostic: OfferingDiagnostic = { kind: "ok", count: 0 }
-
-/** 마지막 `loadCurrentOffering` 이 실패한 이유. 테스트 빌드 화면이 그대로 보여 준다. */
-export function lastOfferingDiagnostic(): OfferingDiagnostic {
-  return lastDiagnostic
-}
-
-/** 사람이 읽을 한 줄. **키 전체를 찍지 않는다** — 앞 9자만 신원 확인용으로 남긴다. */
-export function formatOfferingDiagnostic(d: OfferingDiagnostic): string {
-  switch (d.kind) {
-    case "ok":
-      return `상품 ${d.count}개`
-    case "notConfigured":
-      return `SDK 미설정 (키 ${d.keyPrefix || "없음"})`
-    case "error":
-      return `조회 실패: ${d.message}`
-    case "noCurrent":
-      return `current 오퍼링 없음 (전체: ${d.offeringIds.join(",") || "0개"})`
-    case "emptyPackages":
-      return `스토어가 상품을 안 줌 (오퍼링 ${d.offeringId}, 패키지 0개)`
-  }
-}
-
-/**
  * 지금 보여 줄 상품들. 없으면 null(키 미설정·오프라인·오퍼링 미구성).
  *
  * **null 을 "무료 사용자" 로 읽으면 안 된다.** 상품을 못 가져온 것뿐이고, 그때 화면은
- * 페이월 대신 "잠시 후 다시" 를 그려야 한다. 왜 못 가져왔는지는
- * `lastOfferingDiagnostic()` 에 남는다.
+ * 페이월 대신 "잠시 후 다시" 를 그려야 한다.
+ *
+ * 왜 못 가져왔는지는 **로그에 갈라 남긴다.** `null` 하나로는 네 가지 서로 다른 사고가
+ * 구분되지 않는다 — 실제로 그래서 스토어 연동을 뚫는 데 하루가 갔다(2026-09-01).
+ *
+ *   SDK 미설정     키가 없거나 `identify` 전이다 → **앱 설정 문제**
+ *   조회 실패      `getOfferings` 가 던졌다 → **네트워크·키 오류**
+ *   current 없음   RC 는 답했는데 current 오퍼링이 없다 → **대시보드 구성 문제**
+ *   패키지 0개     오퍼링은 있는데 스토어가 상품을 안 준다 — 계약 미활성·상품 미전파·
+ *                 번들 ID 불일치가 전부 여기로 떨어진다
+ *
+ * (한때 이 진단을 값으로도 들고 있었지만 읽는 화면이 없어 걷어냈다. 로그가 그 자리다.)
  */
 export async function loadCurrentOffering(): Promise<CurrentOffering | null> {
   if (!configured) {
-    lastDiagnostic = {
-      kind: "notConfigured",
+    // **키 전체를 찍지 않는다** — 앞 9자만 신원 확인용으로 남긴다.
+    logger.debug("[purchases] offerings 건너뜀 — SDK 미설정", {
       keyPrefix: getRevenueCatApiKey().slice(0, 9),
-    }
+    })
     return null
   }
   try {
     const offerings = await Purchases.getOfferings()
     const current: PurchasesOffering | null = offerings.current
     if (current === null) {
-      lastDiagnostic = {
-        kind: "noCurrent",
+      logger.warn("[purchases] current 오퍼링 없음", {
         offeringIds: Object.keys(offerings.all ?? {}),
-      }
+      })
       return null
     }
     const packages = current.availablePackages.map(toOfferingPackage)
-    lastDiagnostic =
-      packages.length === 0
-        ? { kind: "emptyPackages", offeringId: current.identifier }
-        : { kind: "ok", count: packages.length }
+    if (packages.length === 0) {
+      logger.warn("[purchases] 오퍼링에 패키지 0개 — 스토어가 상품을 안 준다", {
+        offeringId: current.identifier,
+      })
+    }
     return {
       id: current.identifier,
       packages,
       metadata: (current.metadata ?? {}) as Readonly<Record<string, unknown>>,
     }
   } catch (error) {
-    logger.warn("[purchases] offerings 조회 실패", error)
-    lastDiagnostic = { kind: "error", message: describeError(error) }
+    logger.warn("[purchases] offerings 조회 실패", describeError(error))
     return null
   }
 }
@@ -335,10 +324,4 @@ function describeError(error: unknown): string {
     .filter((part) => part !== undefined && part !== null && part !== "")
     .map((part) => String(part))
   return parts.length === 0 ? "unknown" : parts.join(" · ")
-}
-
-/** 테스트가 상태를 되돌린다. 프로덕션 경로에서는 부르지 않는다. */
-export function resetPurchasesClientForTest(): void {
-  configured = false
-  configuredAppUserId = null
 }

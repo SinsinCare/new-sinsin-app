@@ -571,6 +571,8 @@ export function normalizeFoodAnalysisResult(
           .join(", "),
       ) ?? "",
     imageUrl: firstString(source.imageUrl) ?? null,
+    // 서버가 삽화를 미루고 먼저 돌려준 경우(2026-09-11). 정규화가 이 키를 떨어뜨리면 결과 화면이 다시 읽지 않는다.
+    illustrationPending: source.illustrationPending === true,
     foods,
     total,
     evaluation,

@@ -4,8 +4,8 @@
  * ## `useMock` 플래그
  * 서버 갈래와 앱 갈래가 병렬로 만들어진다. 서버가 아직 없어도 작성 화면을 끝까지
  * 검증할 수 있어야 하므로, 계약 §3.5 의 예시 payload 모양을 그대로 돌려주는 경로를
- * 둔다. **오케스트레이터는 서버를 붙일 때 `recipeWriteApiConfig.useMock = false`
- * 한 줄만 끄면 된다**(또는 `EXPO_PUBLIC_RECIPE_V2_MOCK=false`).
+ * 둔다. 모의 경로는 **`EXPO_PUBLIC_RECIPE_V2_MOCK=true` 를 명시한 개발 환경에서만**
+ * 켜진다 — 적지 않으면 서버다(아래 `recipeWriteApiConfig` 머리말).
  *
  * 모의 응답은 화면에 하드코딩하지 않고 여기서만 만든다. 그리고 **입력에 반응한다** —
  * 앱에 이미 있는 식품표(`data/foodNutritionData`)와 계약 §4.3 파서로 실제로 계산한다.
@@ -29,9 +29,16 @@ import type {
   PerIngredientNutrition,
 } from "@/src/features/recipe/types/recipeWrite"
 
-/** 서버가 붙으면 `useMock` 을 false 로. 테스트도 이 객체를 뒤집어 쓴다. */
+/**
+ * 모의 경로는 **`EXPO_PUBLIC_RECIPE_V2_MOCK` 이 정확히 `"true"` 일 때만** 켜진다.
+ *
+ * 예전 기본값은 반대였다(`!== "false"`). eas.json 의 운영 프로파일은 이 키를 적지
+ * 않으므로 스토어 빌드의 레시피 작성이 서버 대신 인메모리 모의로 "등록" 되고 있었다.
+ * "적지 않으면 서버" 가 안전한 기본이다 — 상세(`recipeV2Mock`)·목록
+ * (`RECIPE_LIST_V2_MOCK`)과 같은 규칙. 테스트는 이 객체를 뒤집어 쓴다.
+ */
 export const recipeWriteApiConfig = {
-  useMock: process.env.EXPO_PUBLIC_RECIPE_V2_MOCK !== "false",
+  useMock: process.env.EXPO_PUBLIC_RECIPE_V2_MOCK === "true",
 }
 
 export const recipeWriteService = {
@@ -164,11 +171,24 @@ interface MockFood {
 /**
  * 식품표를 **처음 쓸 때** 읽는다. 66,000 줄짜리 생성 파일이라 모듈 최상단에서
  * import 하면 이 서비스를 부르는 모든 테스트가 그 파일을 컴파일한다.
+ *
+ * 그리고 **개발 빌드에서만** 읽는다. Metro 는 동적 `import()` 도 번들에 인라인하므로
+ * 이 한 줄이 885KB 짜리 `generatedFoodData.ts` 를 모든 스토어 빌드에 실어 나르고
+ * 있었다. 릴리스 변환에서 `__DEV__` 는 `false` 로 치환되고 그 뒤의 상수 접기가 이
+ * 분기를 통째로 걷어내므로, 마지막에 도는 의존성 수집이 이 파일을 보지 못한다.
+ * 모의 경로 자체가 개발 전용이라(`recipeWriteApiConfig` 머리말) 릴리스에서 여기 닿는
+ * 일은 없고, 닿더라도 빈 표를 돌려 "아무것도 못 찾음" 으로 정직하게 끝난다.
+ * `typeof` 가드는 jest(node) 에 `__DEV__` 가 없어서다 — 모의 경로를 보는 테스트는
+ * 전역에 `__DEV__ = true` 를 세운다(`tests/recipeWrite.test.ts`).
  */
 let mockIndexPromise: Promise<Map<string, MockFood>> | null = null
 
 async function loadMockIndex(): Promise<Map<string, MockFood>> {
   if (mockIndexPromise) return mockIndexPromise
+  if (typeof __DEV__ === "undefined" || !__DEV__) {
+    mockIndexPromise = Promise.resolve(new Map())
+    return mockIndexPromise
+  }
   mockIndexPromise =
     import("@/src/features/recipe/data/foodNutritionData").then(
       ({ getAllFoodData }) => {

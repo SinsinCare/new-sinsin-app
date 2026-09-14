@@ -686,6 +686,8 @@
     },
     "safety": {
       "RESTRICTED": "Over limit",
+      "menuRestricted": "Caution",
+      "menuCaution": "Mild caution",
       "CAUTION": "Near limit",
       "SAFE": "Within limit",
       "UNKNOWN": "Not confirmed",
@@ -863,7 +865,7 @@
         "jeonnam-all": "All South Jeolla",
         "jeonnam-yeosu": "Yeosu",
         "jeonnam-suncheon": "Suncheon · Gwangyang",
-        "jeonnam-mokpo": "Mokpo · Muan · Sinan",
+        "jeonnam-mokpo": "Mokpo · Muan · Sinan · Yeongam",
         "jeonnam-naju": "Naju · Hwasun · Damyang",
         "jeonnam-haenam": "Haenam · Gangjin · Wando · Jindo",
         "jeonnam-boseong": "Boseong · Goheung · Jangheung",
@@ -1124,7 +1126,10 @@
         "discardTitle": "Discard this review?",
         "discardBody": "If you leave now, your rating, photos, and text won’t be saved.",
         "discard": "Discard and leave",
-        "keepWriting": "Keep writing"
+        "keepWriting": "Keep writing",
+        "intro": "Honest notes about the menu and your visit help others the most.",
+        "ratingOption": "{{count}}/5",
+        "photoLabel": "Photos"
       },
       "reportDetailPlaceholder": "Tell us what is wrong",
       "reportOwn": "You cannot report your own review",
@@ -1425,7 +1430,7 @@
       "less": "Show less",
       "kcal": "{{count}} kcal",
       "open": "Open {{title}}",
-      "record": "Log a meal"
+      "record": "Analyze a meal"
     },
     "timeline": {
       "title": "Meals",
@@ -1503,7 +1508,7 @@
         "writeText": "Record with text",
         "info": "Add the foods and portions to check sodium, potassium, and phosphorus.",
         "skip": "Skip this meal today",
-        "title": "Record a meal",
+        "title": "Analyze a meal",
         "textDescription": "Enter the foods and amounts you ate",
         "recipeDescription": "Choose from your saved recipes"
       },
@@ -1681,7 +1686,16 @@
         "diastolicRange": "Enter diastolic pressure from 1 to 200 mmHg.",
         "pulseRange": "Enter a pulse from 1 to 250 bpm.",
         "pulseHint": "Add your pulse if you measured it.",
-        "inputHint": "Enter the readings shown on your monitor."
+        "inputHint": "Enter the readings shown on your monitor.",
+        "status": {
+          "low": "Low",
+          "normal": "Normal",
+          "elevated": "Slightly high",
+          "high": "High"
+        },
+        "target": "Target {{low}}–{{high}}",
+        "previous": "Last {{value}}",
+        "saveWith": "Record {{value}}"
       },
       "weight": {
         "title": "Weight",
@@ -1720,6 +1734,15 @@
         "inferred": "Suggested from recent records. You can change the measurement context.",
         "contextHint": "Choose when you took this measurement.",
         "unspecified": "Unspecified",
+        "status": {
+          "low": "Low",
+          "normal": "Normal",
+          "elevated": "Elevated",
+          "high": "High"
+        },
+        "target": "Target {{low}}–{{high}}",
+        "previous": "Last {{value}}",
+        "saveWith": "Record {{value}}",
         "intro": "Record the value and its context"
       },
       "edema": {
@@ -1810,6 +1833,7 @@
   "foodCamera": {
     "title": "Record with a photo",
     "shutter": "Take photo",
+    "gallery": "Choose from gallery",
     "permissionTitle": "Camera isn’t available",
     "permissionBody": "Allow camera access to photograph your food.",
     "allow": "Allow camera",
@@ -1993,7 +2017,8 @@
     "heightWeight": "Height · weight",
     "diagnosisDate": "Diagnosed",
     "conditions": "Conditions and primary cause",
-    "diagnosisDateApprox": "About {{value}}"
+    "diagnosisDateApprox": "About {{value}}",
+    "egfrRange": "eGFR {{range}} mL/min/1.73m²"
   },
   "settings": {
     "title": "Settings",

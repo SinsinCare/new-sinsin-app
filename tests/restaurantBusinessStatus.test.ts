@@ -17,12 +17,9 @@ import type {
   Weekday,
 } from "../src/features/restaurant/types"
 import {
-  WEEKDAY_ORDER,
   describeBusinessStatus,
-  lastOrderLabel,
   msUntilTransition,
   scheduleNextTransition,
-  weekdayLabelKey,
 } from "../src/features/restaurant/utils/businessStatus"
 
 const light = resolveTheme("light").colors
@@ -257,18 +254,6 @@ describe("표시 전용 — 기기 시계로 판정을 다시 하지 않는다",
   })
 })
 
-describe("라스트오더 보조 줄", () => {
-  it("값이 있을 때만 붙는다", () => {
-    expect(lastOrderLabel("21:00")).toEqual({
-      labelKey: "restaurant.businessStatus.lastOrder",
-      params: { time: "21:00" },
-    })
-    expect(lastOrderLabel(null)).toBeNull()
-    expect(lastOrderLabel(undefined)).toBeNull()
-    expect(lastOrderLabel("")).toBeNull()
-  })
-})
-
 describe("전환 타이머 — 폴링하지 않는다", () => {
   beforeEach(() => {
     jest.useFakeTimers()
@@ -359,8 +344,9 @@ describe("전환 타이머 — 폴링하지 않는다", () => {
 })
 
 describe("요일", () => {
-  it("월요일로 시작한다 — 서버 weekday() 와 같은 기준", () => {
-    expect(WEEKDAY_ORDER).toEqual([
+  it("요일 키가 ko/en 둘 다에 있다", () => {
+    // `describeBusinessStatus` 가 `nextOpen` 의 `day` 로 이 모양의 키를 직접 조립한다.
+    const weekdays: readonly Weekday[] = [
       "MON",
       "TUE",
       "WED",
@@ -368,12 +354,11 @@ describe("요일", () => {
       "FRI",
       "SAT",
       "SUN",
-    ])
-  })
-
-  it("요일 키가 ko/en 둘 다에 있다", () => {
-    for (const weekday of WEEKDAY_ORDER) {
-      expect(hasCommonKeyInBothLocales(weekdayLabelKey(weekday))).toBe(true)
+    ]
+    for (const weekday of weekdays) {
+      expect(hasCommonKeyInBothLocales(`restaurant.weekday.${weekday}`)).toBe(
+        true,
+      )
     }
   })
 })

@@ -1,65 +1,49 @@
-import { Text } from "@/src/design-system-v2/primitives/NativeText"
 /**
- * 1:1 문의 작성.
+ * 1:1 문의 작성 — 홈 건강기록 6페이지·신장 정보 수정과 **같은 시스템**으로 그린다(2026-09-12).
  *
- * ## 개편 전에 무엇이 문제였나 (design-system-v2 이전)
+ * 뼈대는 `RecordPageShell`(큰 제목·안내문·하단 고정 CTA·키보드 도킹·키보드 내리기 버튼),
+ * 문의 종류는 `RecordChoices`(중성 바탕 + 진한 테두리), 제목·내용은 같은 면
+ * (`FIELD.radius`·`surfaceSunken`·포커스 `brand` 테두리)의 `TextInput`, 글자수·사진 한도는
+ * `RecordFieldHint`. 치수·타이포는 `recordPageSpec` 한 벌에서만 온다.
  *
- * 1. **문의 종류가 화면에서 제일 약한 컨트롤이었다.** 가장 먼저·반드시 해야 하는 선택인데
- *    오른쪽 끝의 작은 테두리 `선택` 버튼이었고, 고르려면 바텀시트를 열었다 닫아야 했다.
- *    게다가 고른 값이 버튼 옆에 글자로 또 나와서 같은 사실을 두 곳이 말했다.
- *    → 6개뿐인 선택지를 **칩으로 펼친다.** 탭 1회, 모달 0회, 중복 표기 0.
- * 2. **본문 입력란이 120pt 였다.** 글을 쓰러 들어온 화면인데 화면의 3분의 2가 빈 흰 면이고,
- *    그 면은 누를 수도 쓸 수도 없었다. → 본문이 `grow` 로 남는 높이를 전부 먹는다.
- *    빈 면이 곧 원고지가 된다.
- * 3. **본문 100자.** 서버 계약은 `content` 2000자다(`inquiryCreateBody`; `user_inquiry.content`
- *    는 TEXT). 클라이언트가 혼자 100자에서 잘라 문의를 두 문장짜리로 만들고 있었다.
- *    디자인 문제가 아니라 결함이라 같이 고친다.
- * 4. **제목이 서버 한도를 몰랐다.** 전송할 때 `[분류] ` 를 앞에 붙이는데 `subject` 는 200자라,
- *    긴 제목은 앱에서는 멀쩡하고 서버에서 떨어졌다. 접두사 몫을 빼고 막는다.
- * 5. legacy 표면 — `useSettingsColors`·손으로 만든 바텀시트·`Ionicons`·`ConfirmModal`·
- *    전폭 1px 구분선. → v2 토큰/컴포넌트, 확인은 `showConfirm`, 결과는 토스트.
+ * ## 그대로인 것 (재설계 전과 같다)
+ *
+ * 1. **본문 2000자 · 제목 200자(접두사 몫 제외).** 서버 계약(`inquiryCreateBody` /
+ *    `user_inquiry`)과 같은 값. 여기서 임의로 낮추지 말 것.
+ * 2. **제목 한도는 분류를 고르기 전에 정해지고 그 뒤로 바뀌지 않는다.** 전송 시 제목 앞에
+ *    `[분류] ` 가 붙어 `subject` 를 함께 쓰는데, 고른 분류마다 한도가 출렁이면 이미 쳐 둔
+ *    제목이 분류를 바꾸는 순간 잘려나간다. 현재 언어의 **가장 긴 분류 이름** 기준으로 한 번.
+ * 3. **사진은 남은 자리만큼만 고르게 한다**(`MAX_INQUIRY_PHOTOS`). OS 가 한도를 안 지키면
+ *    여기서 한 번 더 자르고 토스트로 말한다. 권한이 없으면 설정으로 안내한다.
+ * 4. **보내기는 종류·제목·내용이 다 있어야 켜진다.** 사진이 있으면 멀티파트, 없으면 JSON —
+ *    경로 선택은 `submitInquiry` 안. 성공하면 목록 쿼리를 무효화하고 돌아가 토스트.
+ *    실패하면 화면을 떠나지 않는다(쓴 글이 남아야 다시 보낼 수 있다) — `presentError`.
+ * 5. **쓰다 나가면 확인**(`showConfirm`, destructive).
  *
  * ## 색: 화면의 주황은 딱 하나
  *
- * 칩은 `tone="neutral"`(선택 = 잉크 면 + 반전 글자)이다. 브랜드 주황은 **보내기 버튼 하나**가
+ * 칩은 중성 바탕 + 진한 테두리(`RecordChoices`). 브랜드 주황은 **보내기 버튼 하나**가
  * 독점한다 — 칩까지 주황이면 "지금 눌러야 하는 것" 이 일곱 개가 된다.
- * 선택 여부는 면 + 글자 굵기 두 가지로 동시에 말한다(색 하나에만 기대지 않는다).
- *
- * ## 세 덩어리가 같은 문법을 쓴다
- *
- * 문의 종류 · 제목 · 내용은 전부 `[라벨(subtext.mediumStrong)] → gap 6 → [컨트롤]` 이다.
- * 라벨을 `Field` 로 직접 그리는 이유는 내용 칸만 라벨 줄 오른쪽에 글자수를 달기 때문 —
- * 세 라벨이 한 곳에서 나와야 크기·색·간격이 영영 어긋나지 않는다.
  */
 
-import { useCallback, useMemo, useState, type ReactNode } from "react"
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native"
+import { useCallback, useMemo, useState } from "react"
+import { Pressable, StyleSheet, View } from "react-native"
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
+import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
+import { useQueryClient } from "@tanstack/react-query"
 
-import {
-  GUTTER,
-  V2BottomCTA,
-  V2Chip,
-  V2Icon,
-  V2ScreenHeader,
-  V2TextField,
-  radius,
-  spacing,
-  typography,
-  useV2Theme,
-} from "@/src/design-system-v2"
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
+import { V2Text } from "@/src/design-system-v2"
+import { fontFamily } from "@/src/design-system-v2/tokens/typography"
+import { useSurface } from "@/src/hooks/useSurface"
+import { singleLineInputText } from "@/src/theme/surface"
 import {
   MAX_INQUIRY_PHOTOS,
   submitInquiry,
 } from "@/src/services/data/inquiryService"
+import { INQUIRY_LIST_QUERY_KEY } from "@/src/features/settings/hooks/useInquiryList"
 import { showOpenSettingsAlert } from "@/src/features/settings/utils/openAppSettings"
 import { showConfirm } from "@/src/lib/dialog"
 import { showCautionToast, showSuccessToast } from "@/src/lib/toast"
@@ -67,12 +51,26 @@ import { presentError } from "@/src/lib/errorMessage"
 import { remoteImageSource } from "@/src/shared/images/remoteImageSource"
 import { useAppRouter } from "@/src/shared/navigation"
 
+import { RecordPageShell } from "@/src/features/home/components/record/pages/RecordPageShell"
+import { RecordChoices } from "@/src/features/home/components/record/pages/RecordChoices"
+import { RecordFieldHint } from "@/src/features/home/components/record/pages/RecordFieldHint"
+import { recordFieldLabel } from "@/src/features/home/components/record/pages/recordInk"
+import {
+  FIELD,
+  FORM,
+  PAGE_X,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
+
 /** 서버 계약(`inquiryCreateBody` / `user_inquiry`)과 같은 값. 여기서 임의로 낮추지 말 것. */
 const MAX_SUBJECT = 200
 const MAX_CONTENT = 2000
 
 /** 글자수를 조용한 회색에서 끌어올리는 지점 — 한도가 눈앞일 때만 눈에 띄면 된다. */
 const COUNTER_ALERT_RATIO = 0.9
+
+/** 사진 타일 한 변. 숫자 칸 높이(88)에서 상하 여백을 뺀 값 — 신장 정보 화면의 선택 행과 같은 셈법. */
+const PHOTO_TILE = FIELD.height - S[6]
 
 const INQUIRY_CATEGORIES = [
   { value: "app", labelKey: "inquiry.categories.app" },
@@ -83,23 +81,23 @@ const INQUIRY_CATEGORIES = [
   { value: "other", labelKey: "inquiry.categories.other" },
 ] as const
 
+type InquiryCategory = (typeof INQUIRY_CATEGORIES)[number]["value"]
+
 export function InquiryScreen() {
   const router = useAppRouter()
-  const { colors } = useV2Theme()
+  const s = useSurface()
   const { t } = useTranslation("settings")
+  const queryClient = useQueryClient()
 
-  const [category, setCategory] = useState<string | null>(null)
+  const [category, setCategory] = useState<InquiryCategory | null>(null)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [titleFocused, setTitleFocused] = useState(false)
+  const [contentFocused, setContentFocused] = useState(false)
 
-  /*
-    제목 한도는 **분류를 고르기 전에 정해지고 그 뒤로 바뀌지 않는다.** 전송 시 제목 앞에
-    `[분류] ` 가 붙어 `subject`(200자)를 함께 쓰는데, 고른 분류마다 한도가 출렁이면 이미
-    쳐 둔 제목이 분류를 바꾸는 순간 잘려나간다. 그래서 현재 언어에서 **가장 긴 분류 이름**을
-    기준으로 한 번 계산한다 — 몇 글자 손해 보고 예측 가능성을 산다.
-  */
+  // 머리말 §2 — 가장 긴 분류 이름 기준으로 한 번만 정한다.
   const maxTitle = useMemo(() => {
     const longestLabel = Math.max(
       ...INQUIRY_CATEGORIES.map((item) => t(item.labelKey).length),
@@ -117,10 +115,7 @@ export function InquiryScreen() {
   const canSubmit =
     !!category && trimmedTitle.length > 0 && trimmedContent.length > 0
 
-  /*
-    사진 고르기. **남은 자리만큼만 고르게 한다** — 6장을 고르게 해 놓고 5장에서 자르면
-    사라진 한 장의 이유를 사용자가 알 수 없다(`MediaPicker` 머리말과 같은 규칙).
-  */
+  // 머리말 §3 — 남은 자리만큼만 고르게 한다.
   const handleAddPhotos = useCallback(async () => {
     const remaining = MAX_INQUIRY_PHOTOS - photos.length
     if (remaining <= 0 || isSubmitting) return
@@ -168,10 +163,7 @@ export function InquiryScreen() {
     router.back()
   }
 
-  /*
-    사진이 있으면 멀티파트, 없으면 JSON — 경로 선택은 `submitInquiry` 안에 있다.
-    사진 있는 문의는 줄이기 + 업로드가 걸려 몇 초 더 걸린다. 그동안 버튼은 로딩 상태다.
-  */
+  // 머리말 §4.
   const handleSubmit = async () => {
     if (!canSubmit || isSubmitting) return
     setIsSubmitting(true)
@@ -185,13 +177,13 @@ export function InquiryScreen() {
         content: trimmedContent,
         photos,
       })
-      // 접수는 끝났다 — 확인을 눌러야 돌아가는 대신 돌아가면서 알린다.
+      // 접수는 끝났다 — 목록이 방금 보낸 문의를 맨 위에 보이도록 캐시를 버리고 돌아간다.
+      // 무효화는 기다리지 않는다: 목록 화면이 마운트되며 스스로 다시 받는다.
+      void queryClient.invalidateQueries({ queryKey: INQUIRY_LIST_QUERY_KEY })
       router.back()
       showSuccessToast(t("inquiry.successTitle"), t("inquiry.successBody"))
     } catch (error) {
       // 실패했을 땐 화면을 떠나지 않는다 — 쓴 글이 그대로 남아야 다시 보낼 수 있다.
-      // 오류를 통째로 버리고 "인터넷 연결을 확인해 주세요" 를 띄우던 자리다. 문의가
-      // 막히는 실제 원인은 정지된 계정·세션 만료·요청 몰림 쪽이 훨씬 많다.
       presentError(error, {
         scope: "inquiry-submit",
         retry: () => void handleSubmit(),
@@ -201,242 +193,229 @@ export function InquiryScreen() {
     }
   }
 
-  // 한도 근처에서만 회색을 벗는다. 색이 아니라 밝기로 먼저 말하고, 꽉 찼을 때만 빨강.
-  const counterColor =
-    content.length >= MAX_CONTENT
-      ? colors.status.negative
-      : content.length >= MAX_CONTENT * COUNTER_ALERT_RATIO
-        ? colors.label.normal
-        : colors.label.assistive
+  const fieldFace = (focused: boolean) => ({
+    backgroundColor: focused ? s.canvas : s.surfaceSunken,
+    borderColor: focused ? s.brand : s.surfaceSunken,
+  })
+  const contentAtLimit = content.length >= MAX_CONTENT
+  const contentNearLimit = content.length >= MAX_CONTENT * COUNTER_ALERT_RATIO
+  const photosFull = photos.length >= MAX_INQUIRY_PHOTOS
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background.default }]}>
-      <V2ScreenHeader title={t("inquiry.title")} onBack={handleBack} />
+    <RecordPageShell
+      title={t("inquiry.write.title")}
+      navigationTitle={t("inquiry.title")}
+      intro={t("inquiry.write.intro")}
+      onBack={() => void handleBack()}
+      ctaLabel={t("inquiry.send")}
+      ctaDisabled={!canSubmit}
+      ctaLoading={isSubmitting}
+      onCtaPress={() => void handleSubmit()}
+    >
+      <View style={styles.content}>
+        {/* 1) 문의 종류 — 6개뿐이라 펼쳐 둔다. 시트를 열 이유가 없다. */}
+        <View style={styles.group}>
+          <V2Text style={styles.label} color={s.textStrong}>
+            {t("inquiry.category")}
+          </V2Text>
+          <RecordChoices<InquiryCategory>
+            value={category}
+            disabled={isSubmitting}
+            onChange={setCategory}
+            options={INQUIRY_CATEGORIES.map((item) => ({
+              value: item.value,
+              label: t(item.labelKey),
+            }))}
+          />
+        </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View style={styles.content}>
-          {/* 1) 문의 종류 — 6개뿐이라 펼쳐 둔다. 시트를 열 이유가 없다. */}
-          <Field label={t("inquiry.category")}>
-            <View style={styles.chips}>
-              {INQUIRY_CATEGORIES.map((item) => (
-                <V2Chip
-                  key={item.value}
-                  label={t(item.labelKey)}
-                  tone="neutral"
-                  selected={category === item.value}
-                  onPress={() => setCategory(item.value)}
-                  disabled={isSubmitting}
-                />
-              ))}
-            </View>
-          </Field>
-
-          {/* 2) 제목 */}
-          <Field label={t("inquiry.subject")}>
-            <V2TextField
+        {/* 2) 제목 — 숫자 칸과 같은 면의 한 줄 입력. */}
+        <View style={styles.group}>
+          <V2Text style={styles.label} color={s.textStrong}>
+            {t("inquiry.subject")}
+          </V2Text>
+          <View style={[styles.field, fieldFace(titleFocused)]}>
+            <TextInput
               value={title}
               onChangeText={setTitle}
+              onFocus={() => setTitleFocused(true)}
+              onBlur={() => setTitleFocused(false)}
               placeholder={t("inquiry.subjectPlaceholder")}
+              placeholderTextColor={recordFieldLabel(s)}
+              selectionColor={s.brand}
               maxLength={maxTitle}
               returnKeyType="next"
-              disabled={isSubmitting}
+              editable={!isSubmitting}
+              accessibilityLabel={t("inquiry.subject")}
+              style={[styles.singleLineInput, { color: s.textStrong }]}
             />
-          </Field>
+          </View>
+        </View>
 
-          {/* 3) 내용 — 남는 높이를 전부 가져간다. 글자수는 셀 것이 생겼을 때만 나온다. */}
-          <Field
-            grow
-            label={t("inquiry.content")}
-            trailing={
-              content.length > 0 ? (
-                <Text
-                  style={[typography.subtext.small, { color: counterColor }]}
-                >
-                  {content.length}/{MAX_CONTENT}
-                </Text>
-              ) : null
-            }
+        {/* 3) 내용 — 대여섯 줄이 보이는 칸. 글이 길어지면 따라 자란다. 글자수는 셀 것이 생겼을 때만. */}
+        <View style={styles.group}>
+          <V2Text style={styles.label} color={s.textStrong}>
+            {t("inquiry.content")}
+          </V2Text>
+          <View
+            style={[
+              styles.field,
+              styles.multilineField,
+              fieldFace(contentFocused),
+            ]}
           >
-            <V2TextField
-              grow
+            <TextInput
               multiline
               value={content}
               onChangeText={setContent}
+              onFocus={() => setContentFocused(true)}
+              onBlur={() => setContentFocused(false)}
               placeholder={t("inquiry.contentPlaceholder")}
+              placeholderTextColor={recordFieldLabel(s)}
+              selectionColor={s.brand}
               maxLength={MAX_CONTENT}
-              disabled={isSubmitting}
+              editable={!isSubmitting}
+              textAlignVertical="top"
+              accessibilityLabel={t("inquiry.content")}
+              style={[styles.multilineInput, { color: s.textStrong }]}
             />
-          </Field>
-
-          {/* 4) 사진 — 붙일 것이 있을 때만 자리를 차지한다. 타일은 정사각형 한 줄이다. */}
-          <Field
-            label={t("inquiry.photos")}
-            trailing={
-              <Text
-                style={[
-                  typography.subtext.small,
-                  { color: colors.label.assistive },
-                ]}
-              >
-                {photos.length}/{MAX_INQUIRY_PHOTOS}
-              </Text>
-            }
-          >
-            <View style={styles.photos}>
-              {photos.map((photo) => (
-                <View key={photo.uri} style={styles.photoTile}>
-                  <Image
-                    source={remoteImageSource(photo.uri)}
-                    style={styles.photoImage}
-                    contentFit="cover"
-                  />
-                  {/* 지우기는 타일 위 작은 원이지만 탭 영역은 hitSlop 으로 44 를 채운다. */}
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t("inquiry.photoRemove")}
-                    onPress={() => handleRemovePhoto(photo.uri)}
-                    disabled={isSubmitting}
-                    hitSlop={12}
-                    style={[
-                      styles.photoRemove,
-                      { backgroundColor: colors.label.normal },
-                    ]}
-                  >
-                    <V2Icon
-                      name="close"
-                      size={12}
-                      color={colors.background.default}
-                    />
-                  </Pressable>
-                </View>
-              ))}
-
-              {photos.length < MAX_INQUIRY_PHOTOS ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t("inquiry.photoAdd")}
-                  onPress={() => void handleAddPhotos()}
-                  disabled={isSubmitting}
-                  style={[
-                    styles.photoTile,
-                    styles.photoAdd,
-                    { borderColor: colors.line.normal },
-                  ]}
-                >
-                  <V2Icon
-                    name="camera"
-                    size={20}
-                    color={colors.label.alternative}
-                  />
-                </Pressable>
-              ) : null}
-            </View>
-          </Field>
+          </View>
+          {/* 한도 근처에서만 회색을 벗고, 꽉 찼을 때만 오류색. */}
+          <RecordFieldHint error={contentAtLimit}>
+            {content.length > 0 || contentNearLimit
+              ? `${content.length}/${MAX_CONTENT}`
+              : ""}
+          </RecordFieldHint>
         </View>
 
-        <V2BottomCTA
-          primaryLabel={t("inquiry.send")}
-          onPrimary={handleSubmit}
-          primaryProps={{ disabled: !canSubmit, loading: isSubmitting }}
-        />
-      </KeyboardAvoidingView>
-    </View>
-  )
-}
+        {/* 4) 사진 — 타일은 정사각형 한 줄. 지우기는 hitSlop 으로 44 를 채운다. */}
+        <View style={styles.group}>
+          <View style={styles.labelRow}>
+            <V2Text style={styles.label} color={s.textStrong}>
+              {t("inquiry.photos")}
+            </V2Text>
+            <V2Text style={styles.hint} color={s.text}>
+              {photos.length}/{MAX_INQUIRY_PHOTOS}
+            </V2Text>
+          </View>
+          <View style={styles.photos}>
+            {photos.map((photo) => (
+              <View key={photo.uri} style={styles.photoTile}>
+                <Image
+                  source={remoteImageSource(photo.uri)}
+                  style={styles.photoImage}
+                  contentFit="cover"
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("inquiry.photoRemove")}
+                  onPress={() => handleRemovePhoto(photo.uri)}
+                  disabled={isSubmitting}
+                  hitSlop={S[3]}
+                  style={[
+                    styles.photoRemove,
+                    { backgroundColor: s.textStrong },
+                  ]}
+                >
+                  <Ionicons name="close" size={12} color={s.canvas} />
+                </Pressable>
+              </View>
+            ))}
 
-/**
- * 세 입력 덩어리의 공통 골격 — 라벨 줄(+선택적 우측 슬롯)과 컨트롤.
- * 라벨 타이포·색·간격은 `V2TextField` 가 자기 라벨에 쓰는 것과 같은 값이다.
- */
-function Field({
-  label,
-  trailing,
-  grow = false,
-  children,
-}: {
-  label: string
-  trailing?: ReactNode
-  grow?: boolean
-  children: ReactNode
-}) {
-  const { colors } = useV2Theme()
-
-  return (
-    <View style={[styles.field, grow && styles.flex]}>
-      <View style={styles.labelRow}>
-        <Text
-          style={[
-            typography.subtext.mediumStrong,
-            { color: colors.label.normal },
-          ]}
-          lineBreakStrategyIOS="hangul-word"
-        >
-          {label}
-        </Text>
-        {trailing}
+            {!photosFull ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("inquiry.photoAdd")}
+                onPress={() => void handleAddPhotos()}
+                disabled={isSubmitting}
+                style={({ pressed }) => [
+                  styles.photoTile,
+                  styles.photoAdd,
+                  {
+                    backgroundColor: pressed
+                      ? s.surfacePressed
+                      : s.surfaceSunken,
+                    borderColor: s.surfaceSunken,
+                  },
+                ]}
+              >
+                <Ionicons name="camera-outline" size={20} color={s.text} />
+              </Pressable>
+            ) : null}
+          </View>
+          <RecordFieldHint error={photosFull}>
+            {t("inquiry.photoLimit", { count: MAX_INQUIRY_PHOTOS })}
+          </RecordFieldHint>
+        </View>
       </View>
-      {children}
-    </View>
+    </RecordPageShell>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  flex: { flex: 1 },
-  content: {
-    flex: 1,
-    paddingHorizontal: GUTTER,
-    paddingTop: spacing[16],
-    // 세 덩어리 사이 — 구분선 대신 여백이 끊는다(보더리스).
-    gap: spacing[24],
-  },
-  field: { gap: spacing[6] },
+  content: { paddingHorizontal: PAGE_X, gap: FORM.sectionGap },
+  group: { gap: FORM.labelGap },
+  label: FORM.label,
+  hint: FORM.hint,
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: S[2],
+  },
+  field: {
+    minHeight: FIELD.height - S[6],
+    borderRadius: FIELD.radius,
+    borderWidth: 1,
+    paddingHorizontal: FIELD.paddingX,
+    paddingVertical: S[4],
+    justifyContent: "center",
+  },
+  // 한 줄 입력에는 lineHeight 를 주지 않는다 — `singleLineInputText` 머리말 참고.
+  singleLineInput: {
+    ...singleLineInputText(FORM.body),
+    fontFamily: fontFamily.regular,
+    padding: 0,
+  },
+  // 내용 칸 하한: 숫자 칸 두 개 높이 — 대여섯 줄이 보이면 "글을 쓰는 칸" 으로 읽힌다.
+  multilineField: { minHeight: FIELD.height * 2, justifyContent: "flex-start" },
+  multilineInput: {
+    ...FORM.body,
+    fontFamily: fontFamily.regular,
+    flex: 1,
+    padding: 0,
+    includeFontPadding: false,
   },
   photos: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing[8],
-    marginTop: spacing[2],
+    gap: S[2],
+    paddingTop: S[1],
   },
   photoTile: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.sm,
+    width: PHOTO_TILE,
+    height: PHOTO_TILE,
+    borderRadius: FORM.choiceRadius,
     overflow: "visible",
   },
   photoImage: {
     width: "100%",
     height: "100%",
-    borderRadius: radius.sm,
+    borderRadius: FORM.choiceRadius,
   },
   photoRemove: {
     position: "absolute",
-    top: -6,
-    right: -6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    top: -S[1],
+    right: -S[1],
+    width: S[5],
+    height: S[5],
+    borderRadius: S[5] / 2,
     alignItems: "center",
     justifyContent: "center",
   },
   photoAdd: {
     borderWidth: 1,
-    borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-  },
-  chips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing[8],
-    // 라벨과의 간격은 Field 가 6 을 주지만, 칩은 글자보다 면이 커서 6 이면 붙어 보인다.
-    marginTop: spacing[2],
   },
 })

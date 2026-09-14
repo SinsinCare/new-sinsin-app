@@ -8,13 +8,6 @@ import { hapticSelection } from "@/src/lib/haptics"
 import { useSurface } from "@/src/hooks/useSurface"
 import { useTranslation } from "react-i18next"
 
-export interface MealSlotStatus {
-  recorded: boolean
-  skipped: boolean
-  time?: string
-  imageUri?: string | null
-}
-
 interface MealSheetProps {
   visible: boolean
   onClose: () => void

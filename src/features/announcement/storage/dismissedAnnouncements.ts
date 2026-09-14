@@ -91,11 +91,6 @@ export function createDismissedAnnouncementStorage(
   }
 
   return {
-    async getIds(): Promise<number[]> {
-      const entries = await getDismissals()
-      return [...new Set(entries.map((entry) => entry.id))]
-    },
-
     async has(
       noticeOrId: AnnouncementNotice | number,
       revision?: string | number | null,

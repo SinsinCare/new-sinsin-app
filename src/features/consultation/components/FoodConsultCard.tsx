@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { LayoutAnimation, Pressable, StyleSheet } from "react-native"
+import { LayoutAnimation, Pressable } from "react-native"
 import { useTranslation } from "react-i18next"
 import { V2Box, V2HStack, V2Text, V2VStack } from "@/src/design-system-v2"
 
@@ -11,38 +11,12 @@ import {
   type FoodConsultTranslate,
 } from "../utils/foodConsultMessage"
 import {
+  Hairline,
   USER_BUBBLE_BG,
   USER_BUBBLE_TEXT,
+  USER_CARD_TONE,
   type ChatScheme,
 } from "./chatPalette"
-
-/**
- * 잉크 면 위의 보조 톤. 면색이 라이트/다크에서 반전되므로
- * 흑백 알파로만 위계를 만든다 — 색을 더하면 사용자 턴의 정체성이 흐려진다.
- */
-const CARD_TONE: Record<
-  ChatScheme,
-  { muted: string; soft: string; hairline: string }
-> = {
-  light: {
-    muted: "rgba(255,255,255,0.58)",
-    soft: "rgba(255,255,255,0.78)",
-    hairline: "rgba(255,255,255,0.12)",
-  },
-  dark: {
-    muted: "rgba(23,24,28,0.52)",
-    soft: "rgba(23,24,28,0.72)",
-    hairline: "rgba(23,24,28,0.09)",
-  },
-}
-
-function Hairline({ color }: { color: string }) {
-  return (
-    <V2Box
-      style={{ height: StyleSheet.hairlineWidth, backgroundColor: color }}
-    />
-  )
-}
 
 /**
  * 식이리포트에서 넘어온 "물어보기" 메시지의 사용자 턴 카드.
@@ -58,7 +32,7 @@ export function FoodConsultCard({ data }: { data: FoodConsultCardData }) {
   const [foodsOpen, setFoodsOpen] = useState(false)
 
   const ink = USER_BUBBLE_TEXT[scheme]
-  const tone = CARD_TONE[scheme]
+  const tone = USER_CARD_TONE[scheme]
 
   const metaLine = [data.mealLabel, data.servingsLabel]
     .filter(Boolean)

@@ -29,21 +29,4 @@ describe("selected date store", () => {
     expect(useSelectedDateStore.getState().selectedDate).toEqual(selected)
     expect(useSelectedDateStore.getState().selectedDate).not.toBe(selected)
   })
-
-  it("resets to today only through the explicit reset action", async () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("2026-06-17T09:00:00+09:00"))
-
-    const { useSelectedDateStore } =
-      await import("@/src/stores/selectedDateStore")
-
-    useSelectedDateStore
-      .getState()
-      .setSelectedDate(new Date("2026-06-10T00:00:00Z"))
-    useSelectedDateStore.getState().resetToToday()
-
-    expect(useSelectedDateStore.getState().selectedDate).toEqual(
-      new Date("2026-06-17T00:00:00Z"),
-    )
-  })
 })

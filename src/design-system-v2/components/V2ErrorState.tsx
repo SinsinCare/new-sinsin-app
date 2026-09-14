@@ -73,7 +73,11 @@ export type V2ErrorStateRetry =
       retryLabel?: undefined
     }
 
-export type V2ErrorStateProps = V2ErrorStateBaseProps & V2ErrorStateRetry
+export type V2ErrorStateProps = V2ErrorStateBaseProps &
+  V2ErrorStateRetry & {
+    /** gorhom 시트 안(식당 지도 실패 상태)에서 켠다 — 이유는 V2Button.gestureHandler 주석. */
+    retryGestureHandler?: boolean
+  }
 
 export function V2ErrorState(props: V2ErrorStateProps) {
   const {
@@ -84,6 +88,7 @@ export function V2ErrorState(props: V2ErrorStateProps) {
     description,
     onRetry,
     retryLabel,
+    retryGestureHandler = false,
     style,
   } = props
   const { colors } = useV2Theme()
@@ -133,7 +138,13 @@ export function V2ErrorState(props: V2ErrorStateProps) {
       {onRetry ? (
         // 재시도 버튼: neutral/weak/m. 스택 gap(12) 위에 8을 더해 여백 확보.
         <View style={styles.retry}>
-          <V2Button color="neutral" variant="weak" size="m" onPress={onRetry}>
+          <V2Button
+            color="neutral"
+            variant="weak"
+            size="m"
+            onPress={onRetry}
+            gestureHandler={retryGestureHandler}
+          >
             {retryLabel}
           </V2Button>
         </View>

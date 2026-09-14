@@ -29,6 +29,7 @@ import { pickMultipleImages } from "@/src/features/recipe/services/imagePickerSe
 import { imageUploadService } from "@/src/features/recipe/services/imageUploadService"
 import type { MealType } from "@/src/features/home/types"
 import { presentCommunityError } from "@/src/features/recipe/utils/communityError"
+import { startOfDay } from "@/src/features/stats-report/utils/presentation"
 import { useTranslation } from "react-i18next"
 
 interface StoryCandidate {
@@ -49,12 +50,6 @@ interface StoryCandidate {
   uri: string
   isRemote: boolean
   label: string
-}
-
-function startOfDay(date: Date): Date {
-  const start = new Date(date)
-  start.setHours(0, 0, 0, 0)
-  return start
 }
 
 /**

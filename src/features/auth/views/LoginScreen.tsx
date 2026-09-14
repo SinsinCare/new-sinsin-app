@@ -8,7 +8,7 @@ import KakaoLogo from "@/assets/images/kakao-logo.svg"
 import { Ionicons } from "@expo/vector-icons"
 import { useTranslation } from "react-i18next"
 import { useAuthColors, useSocialLogin } from "../hooks"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "../data/authSurface"
 import { ConfirmModal } from "@/src/shared/components/ConfirmModal"
 import { tokens } from "@/src/theme/tokens"
@@ -97,7 +97,7 @@ export function LoginScreen() {
     dismissWithdrawalPending,
   } = useSocialLogin()
   const colors = useAuthColors()
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const isEnglish = i18n.resolvedLanguage?.startsWith("en") ?? false
 
   const handleEmailLogin = () => {

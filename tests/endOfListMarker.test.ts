@@ -116,6 +116,7 @@ jest.mock("@/src/hooks/useSurface", () => ({
     textMuted: "#888888",
     textStrong: "#111111",
     hairline: "#EEEEEE",
+    border: "#E5E5EA",
     card: "#FFFFFF",
     surface: "#FFFFFF",
     canvas: "#F7F7F7",
@@ -159,6 +160,7 @@ import koCommon from "@/src/i18n/locales/ko/common.json"
 import enCommon from "@/src/i18n/locales/en/common.json"
 import koRecipe from "@/src/i18n/locales/ko/recipe.json"
 import enRecipe from "@/src/i18n/locales/en/recipe.json"
+import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { EndOfListRow } from "@/src/features/recipe/components/EndOfListRow"
 import { CommunitySearchScreen } from "@/src/features/recipe/views/CommunitySearchScreen"
 
@@ -304,7 +306,10 @@ describe("`EndOfListRow` 자체", () => {
   })
 
   it("카드가 아니라 **선 한 줄**이다 — 끝은 사건이 아니라 사실이다", () => {
-    /* 선은 글자가 없어 포커스 대상이 아니고, 텍스트는 위에서 센 두 줄이 전부다. */
+    /* 선은 글자가 없어 포커스 대상이 아니고, 텍스트는 위에서 센 두 줄이 전부다.
+       두께는 물리 헤어라인(0.5)이 아니라 `borderWidth.thin` = 1 논리 pt 다 —
+       3x 화면에서 헤어라인은 1/3 pt 라 선이 안 보였다(2026-09-05 PROFILE-REVIEW,
+       `communityPrimitives` 의 구분선 단언과 같은 재판정). */
     const { root } = rendered()
     const heightOf = (style: unknown): number | undefined => {
       const list = Array.isArray(style) ? style.flat(Infinity) : [style]
@@ -316,7 +321,8 @@ describe("`EndOfListRow` 자체", () => {
       return undefined
     }
     const rules = walkDeep(root).filter(
-      (el) => el.type === "View" && heightOf(el.props.style) === 0.5,
+      (el) =>
+        el.type === "View" && heightOf(el.props.style) === borderWidth.thin,
     )
     expect(rules).toHaveLength(2)
   })

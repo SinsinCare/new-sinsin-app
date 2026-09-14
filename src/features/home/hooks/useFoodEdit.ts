@@ -11,15 +11,24 @@ import {
 import { MealType } from "../types"
 import { useTranslation } from "react-i18next"
 
+/**
+ * 목록 줄의 React key. 색인을 key 로 쓰면 가운데 줄을 지울 때 뒤 줄들이 앞 줄의 제어
+ * TextInput 을 물려받아 커서와 조합 중인 한글이 엉뚱한 줄로 간다. 줄마다 붙인 고유값은
+ * 지워도 옮겨지지 않는다. 서버로는 안 나간다(`buildFoodAnalysisUpdateRequest` 가 필드를 골라 담는다).
+ */
+let nextEditKey = 0
+const createEditKey = () => `food-edit-${nextEditKey++}`
+
 export function useFoodEdit(
   result: FoodCameraAnalyzeResult | null,
   mealType: MealType | null,
 ) {
   const { t } = useTranslation()
   // --- state ---
-  const [foods, setFoods] = useState(
+  const [foods, setFoods] = useState(() =>
     (result?.foods ?? []).map((f) => ({
       ...f,
+      editKey: createEditKey(),
       amount: String(f.servingSizeValue ?? ""),
       unit: f.servingSizeUnit,
     })),
@@ -97,6 +106,7 @@ export function useFoodEdit(
     if (!validation.isValid) return
     setFoods((prev) => [
       {
+        editKey: createEditKey(),
         name: newMenuName.trim(),
         amount: newMenuAmount,
         unit: newMenuUnit,

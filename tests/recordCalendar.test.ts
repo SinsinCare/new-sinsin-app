@@ -1,5 +1,4 @@
 import {
-  calendarDateKey,
   calendarMonth,
   calendarWeeks,
   diaryDateKeys,
@@ -7,6 +6,7 @@ import {
 } from "../src/features/home/components/calendar/calendarModel"
 import { getWeekDays } from "../src/features/home/utils/getWeekDays"
 import { getWeekRange } from "../src/features/home/utils/getWeekRange"
+import { toDateStr } from "../src/features/home/utils/dateUtils"
 
 describe("record calendar civil dates", () => {
   it.each([
@@ -30,13 +30,13 @@ describe("record calendar civil dates", () => {
   )
 
   it("moves from month-end without skipping February and crosses years", () => {
-    expect(calendarDateKey(calendarMonth(new Date(2026, 0, 31), 1))).toBe(
+    expect(toDateStr(calendarMonth(new Date(2026, 0, 31), 1))).toBe(
       "2026-02-01",
     )
-    expect(calendarDateKey(calendarMonth(new Date(2026, 0, 31), -1))).toBe(
+    expect(toDateStr(calendarMonth(new Date(2026, 0, 31), -1))).toBe(
       "2025-12-01",
     )
-    expect(calendarDateKey(calendarMonth(new Date(2025, 11, 31), 1))).toBe(
+    expect(toDateStr(calendarMonth(new Date(2025, 11, 31), 1))).toBe(
       "2026-01-01",
     )
   })
@@ -61,9 +61,7 @@ describe("record calendar civil dates", () => {
     ]
     const week = getWeekDays(new Date(2026, 0, 1), records)
     expect(
-      week
-        .filter((day) => day.hasRecord)
-        .map((day) => calendarDateKey(day.date)),
+      week.filter((day) => day.hasRecord).map((day) => toDateStr(day.date)),
     ).toEqual(["2025-12-31", "2026-01-01"])
     expect(getWeekRange(new Date(2026, 0, 1))).toEqual({
       startDate: "2025-12-29",

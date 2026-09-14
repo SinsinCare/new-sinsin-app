@@ -1,6 +1,7 @@
 import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
 import { useState, useEffect, useRef } from "react"
 import { Keyboard, Pressable, StyleSheet, View } from "react-native"
+import { singleLineInputText } from "@/src/theme/surface"
 import {
   V2HStack,
   V2Text,
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
   card: { width: "100%", borderRadius: 20, overflow: "hidden" },
   content: { padding: spacing[20], gap: spacing[16] },
   input: {
-    ...typography.subtext.large,
+    ...singleLineInputText(typography.subtext.large),
     minHeight: 44,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 10,

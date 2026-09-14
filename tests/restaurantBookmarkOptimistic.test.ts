@@ -52,8 +52,8 @@ const BOUNDS = {
   neLat: 37.5053,
   neLng: 127.0367,
 }
-const MAP_KEY = restaurantKeys.map(language, BOUNDS, 4, "", false)
-const LIST_KEY = restaurantKeys.list(language, "", false)
+const MAP_KEY = restaurantKeys.map(language, BOUNDS, 4, "", null)
+const LIST_KEY = restaurantKeys.list(language, "", null)
 const BOOKMARKS_KEY = restaurantKeys.bookmarks(language)
 const DETAIL_KEY = restaurantKeys.detail(language, TARGET)
 

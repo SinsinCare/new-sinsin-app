@@ -22,7 +22,7 @@
  * 데이터 경로(서버 실패 시 번들 상수로 떨어지는 폴백)와 날짜 표기 규칙은 건드리지 않았다.
  * 그건 디자인이 아니라 동작이고, 이 작업의 범위가 아니다.
  */
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
 import { Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { Text } from "@/src/shared/components/AppText"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -40,9 +40,9 @@ import {
   typography,
   useV2Theme,
 } from "@/src/design-system-v2"
-import { announcementService } from "@/src/features/announcement/services/announcementService"
 import type { AnnouncementNotice } from "@/src/features/announcement/types"
 import { ANNOUNCEMENTS } from "@/src/features/settings/data/constants"
+import { useAnnouncementList } from "@/src/features/settings/hooks/useAnnouncementList"
 import appI18n, { getAppLanguage } from "@/src/i18n"
 import { parseServerDate } from "@/src/shared/utils/serverDate"
 
@@ -57,31 +57,16 @@ export function AnnouncementListScreen() {
   const router = useAppRouter()
   const { colors } = useV2Theme()
   const { t } = useTranslation("settings")
-  const [announcements, setAnnouncements] = useState<AnnouncementListItem[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true
-
-    async function loadAnnouncements() {
-      try {
-        const notices = await announcementService.fetchList()
-        if (!mounted) return
-        setAnnouncements(notices.map(toListItem))
-      } catch {
-        if (!mounted) return
-        setAnnouncements(ANNOUNCEMENTS.map(toFallbackListItem))
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    }
-
-    void loadAnnouncements()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
+  // 상세 화면과 같은 캐시(useAnnouncementList). 서버 실패 시 번들 폴백으로 떨어지는
+  // 데이터 경로는 그대로다.
+  const { data: notices, isPending: loading, isError } = useAnnouncementList()
+  const announcements = useMemo<AnnouncementListItem[]>(
+    () =>
+      isError
+        ? ANNOUNCEMENTS.map(toFallbackListItem)
+        : (notices ?? []).map(toListItem),
+    [notices, isError],
+  )
 
   return (
     <View

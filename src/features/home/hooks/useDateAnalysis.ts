@@ -3,13 +3,9 @@ import { useQuery } from "@tanstack/react-query"
 import { useAuthStore } from "@/src/stores/authStore"
 import { toDateStr } from "@/src/features/home/utils/dateUtils"
 import { logRecoverableError } from "@/src/lib/errorUtils"
-import { normalizeLanguage, type Language } from "@/src/i18n"
+import { normalizeLanguage } from "@/src/i18n"
 import { useTranslation } from "react-i18next"
-import { dateAnalysisKey as buildDateAnalysisKey } from "@/src/i18n/localeQueryKeys"
-
-export function dateAnalysisKey(date: string, locale: Language) {
-  return buildDateAnalysisKey(date, locale)
-}
+import { dateAnalysisKey } from "@/src/i18n/localeQueryKeys"
 
 export function useDateAnalysis(date: Date) {
   const { i18n } = useTranslation()

@@ -1,8 +1,8 @@
 /**
  * 식당 상세 · `AI 식단 상담` 이 공유하는 **순수 계약**.
  *
- * 이 폴더에는 컴포넌트가 없다. 시트 UI(`components/consult/`)와 홈탭 진입점
- * (`components/detail/AiConsultSection.tsx`)이 **같은 문장·같은 포맷**을 말하도록
+ * 이 폴더에는 컴포넌트가 없다. 상담 화면(`/consult`, `src/features/consultation`)과 홈탭
+ * 진입점(`components/detail/AiConsultSection.tsx`)이 **같은 문장·같은 포맷**을 말하도록
  * 문자열을 만드는 쪽만 여기 모은다. 렌더러가 없는 테스트 환경에서
  * (`jest.config.ts` 의 `testEnvironment: "node"`) 못 박을 수 있는 것이 정확히 이 층이다.
  *

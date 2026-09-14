@@ -35,16 +35,33 @@ interface PostListItemProps {
   /** 조회수. 넘기지 않으면(옛 호출부) 눈 아이콘 자체를 그리지 않는다. */
   viewCount?: number | null
   tags?: string[]
+  /**
+   * 글쓴이의 id. 주면 이름을 누를 때 카드가 **스스로** 프로필로 간다.
+   *
+   * 피드·검색은 행마다 `onPress={() => router.push(…)}` 를 새 클로저로 넘기고 있었다 —
+   * 그 프롭 하나 때문에 이 카드의 `memo` 가 매 렌더 무효였고, 피드 머리(인기·이웃
+   * 섹션)가 바뀔 때마다 보이는 행 전부가 다시 그려졌다. id 만 넘기면 프롭이 전부
+   * 원시값·안정 참조라 비교가 통과한다.
+   */
+  authorId?: string | number | null
+  /** 글을 눌렀을 때. **넘기지 않으면 카드가 `/post/{postId}` 로 스스로 간다.** */
   onPress?: () => void
   onPressTag?: (tag: string) => void
   /**
-   * 작성자 이름을 눌렀을 때. **넘기지 않으면 이름은 평문 그대로**다 — 카드 전체가
-   * 글로 가는 Pressable 이라, 이름만 따로 눌리게 하려면 부르는 쪽이 갈 곳을 줘야 한다.
-   * 탈퇴·익명(`isWithdrawnAuthor`)이면 갈 곳이 없어 이 콜백이 있어도 안 그린다.
+   * 작성자 이름을 눌렀을 때 — `authorId` 로는 갈 수 없는 곳(다른 라우트)이 필요할 때만.
+   * `authorId` 도 이것도 없으면 이름은 평문 그대로다 — 카드 전체가 글로 가는 Pressable
+   * 이라, 이름만 따로 눌리게 하려면 갈 곳이 있어야 한다.
+   * 탈퇴·익명(`isWithdrawnAuthor`)이면 갈 곳이 없어 둘 중 무엇이 있어도 안 그린다.
    */
   onPressAuthor?: () => void
   onBlock?: (authorName: string) => void
   isWithdrawnAuthor?: boolean
+  /**
+   * 바로 아래에 섹션 밴드(요즘 이야기 중·이웃 추천)가 끼어드는 행이면 true — 행의 헤어라인은
+   * 행 사이 구분선이라 밴드 위에 남으면 경계가 둘이 된다(피드백 F4). 밴드에 배경을 칠해 덮는
+   * 방식은 라이트 대비 감사(§4)가 막으므로, 선 자체를 그리지 않는다.
+   */
+  hideDivider?: boolean
   /**
    * 내 글이면 케밥(신고·차단)을 그리지 않는다 — 자기 자신을 신고·차단하는 메뉴는
    * 서버 거절에 기대는 UI 다(QA 2026-08-06, `app/post/[id].tsx` 와 같은 규칙).
@@ -67,11 +84,13 @@ export const PostListItem = memo(function PostListItem({
   commentCount,
   viewCount,
   tags: _tags = [],
+  authorId,
   onPress,
   onPressTag: _onPressTag,
   onPressAuthor,
   onBlock,
   isWithdrawnAuthor = false,
+  hideDivider = false,
   isMine = false,
 }: PostListItemProps) {
   const { t, i18n } = useTranslation("recipe")
@@ -117,12 +136,32 @@ export const PostListItem = memo(function PostListItem({
     if (confirmed) onBlock?.(authorName)
   }
 
+  /*
+    글·작성자로 가는 길은 카드가 스스로 안다(`authorId` 프롭 머리말). 호출부가 콜백을
+    넘기면 그쪽이 이긴다 — 보관함처럼 다른 라우트로 보내야 하는 자리가 있다.
+  */
+  const openPost = () => {
+    if (onPress) onPress()
+    else router.push(`/post/${postId}` as Href)
+  }
+  const canOpenAuthor =
+    !isWithdrawnAuthor && (onPressAuthor != null || authorId != null)
+  const openAuthor = () => {
+    if (onPressAuthor) onPressAuthor()
+    else if (authorId != null)
+      router.push(`/community/author/${authorId}` as Href)
+  }
+
   return (
     <SurfacePressable
-      onPress={() => onPress?.()}
+      onPress={openPost}
       accessibilityLabel={title}
       baseColor={surface.canvas}
-      style={[styles.card, { borderBottomColor: surface.border }]}
+      style={[
+        styles.card,
+        { borderBottomColor: surface.border },
+        hideDivider && styles.cardNoDivider,
+      ]}
     >
       <View style={styles.metaRow}>
         {rank != null ? (
@@ -179,9 +218,9 @@ export const PostListItem = memo(function PostListItem({
       </View>
 
       <View style={styles.footerRow}>
-        {onPressAuthor && !isWithdrawnAuthor ? (
+        {canOpenAuthor ? (
           <Pressable
-            onPress={onPressAuthor}
+            onPress={openAuthor}
             style={styles.author}
             hitSlop={8}
             accessibilityRole="button"
@@ -252,6 +291,7 @@ export const PostListItem = memo(function PostListItem({
 })
 
 const styles = StyleSheet.create({
+  cardNoDivider: { borderBottomWidth: 0 },
   card: {
     paddingHorizontal: 20,
     paddingVertical: 16,

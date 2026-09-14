@@ -119,3 +119,64 @@ export async function submitInquiry({
     await Promise.all(prepared.map((file) => file.cleanup()))
   }
 }
+
+/* ───────────────────────── 내 문의 조회 (F9) ───────────────────────── */
+
+/** 서버 `user_inquiry.status`. 답변이 달리면 `ANSWERED`(어드민 답변 경로가 올린다). */
+export type InquiryStatus = "OPEN" | "ANSWERED" | (string & {})
+
+/** `GET /inquiries` 한 건. 시각은 오프셋 없는 UTC(`parseServerDate` 로 읽는다). */
+export interface InquiryItem {
+  id: number
+  subject: string
+  content: string
+  status: InquiryStatus
+  createdAt: string
+  updatedAt: string
+  attachmentCount: number
+  answer: string | null
+  answeredAt: string | null
+}
+
+interface InquiryListResponse {
+  result?: { inquiries?: InquiryItem[] } | null
+}
+
+interface InquiryDetailResponse {
+  result?: InquiryItem | null
+}
+
+/** 내 문의 목록. 서버가 최신순·최대 50건으로 자른다 — 여기서 다시 정렬하지 않는다. */
+export async function fetchInquiries(): Promise<InquiryItem[]> {
+  const response = await api.get<InquiryListResponse>("/inquiries")
+  return response.data.result?.inquiries ?? []
+}
+
+/** 내 문의 하나. 남의 것·없는 것은 서버가 똑같이 404(USER_ERROR_001)로 답한다. */
+export async function fetchInquiry(id: number): Promise<InquiryItem> {
+  const response = await api.get<InquiryDetailResponse>(`/inquiries/${id}`)
+  const item = response.data.result
+  if (!item) throw new ApiError("", "INQUIRY_NOT_FOUND", 404)
+  return item
+}
+
+/**
+ * 답변이 달렸는가. `status` 와 `answer` 를 **둘 다** 본다 — 운영이 SQL 로 `answer` 만
+ * 채우고 상태를 안 올린 행도 답변으로 보여야 한다(F9: 답이 있으면 어디서든 보인다).
+ */
+export function isInquiryAnswered(item: Pick<InquiryItem, "status" | "answer">): boolean {
+  return item.status === "ANSWERED" || (item.answer !== null && item.answer.trim().length > 0)
+}
+
+/**
+ * 전송 시 `[분류] 제목` 으로 합쳐 보낸 subject 를 다시 가른다(`InquiryScreen` 의 규칙).
+ * 접두사가 없으면(옛 문의·다른 클라이언트) 분류 없이 제목만 돌려준다.
+ */
+export function splitInquirySubject(subject: string): {
+  category: string | null
+  title: string
+} {
+  const matched = /^\[([^\]]+)\]\s*(.*)$/su.exec(subject)
+  if (!matched) return { category: null, title: subject }
+  return { category: matched[1] ?? null, title: matched[2] ?? "" }
+}

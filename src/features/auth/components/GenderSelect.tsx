@@ -16,7 +16,7 @@ import { Image } from "expo-image"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
 import { hapticSelection } from "@/src/lib/haptics"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_MOTION, AUTH_TYPE } from "../data/authSurface"
 
 type Gender = "MALE" | "FEMALE"
@@ -54,7 +54,7 @@ interface GenderCardProps {
 }
 
 function GenderCard({ label, icon, selected, onPress }: GenderCardProps) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const selection = useSharedValue(selected ? 1 : 0)
   const pop = useSharedValue(1)
 
@@ -158,7 +158,7 @@ export function GenderOtherOption({
   selected: boolean
   onPress: () => void
 }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const { t } = useTranslation("auth")
   return (
     <Pressable

@@ -2,15 +2,6 @@ export function clampWaterIntake(amount: number): number {
   return Math.max(0, amount)
 }
 
-export function getAppliedWaterDelta(
-  currentIntake: number,
-  requestedDelta: number,
-): number {
-  const current = clampWaterIntake(currentIntake)
-  const next = clampWaterIntake(current + requestedDelta)
-  return next - current
-}
-
 /**
  * 화면에 그리는 수분 — **사용자가 적은 물만**이다(`extraWater`).
  *

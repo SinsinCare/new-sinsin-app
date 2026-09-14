@@ -19,8 +19,11 @@ export function mealReportKey(
   ] as const
 }
 
+/** `statsReportKey` 의 뿌리. 새로고침 스코프가 접두어로 쓴다 — 문자열을 복사해 두지 않는다. */
+export const STATS_REPORT_QUERY_ROOT = "statsReport"
+
 export function statsReportKey(period: string, date: string, locale: Language) {
-  return ["statsReport", locale, period, date] as const
+  return [STATS_REPORT_QUERY_ROOT, locale, period, date] as const
 }
 
 export function dateAnalysisKey(date: string, locale: Language) {

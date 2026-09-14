@@ -7,7 +7,7 @@ import { ConfirmModal } from "@/src/shared/components"
 import { AuthScreenLayout } from "./AuthScreenLayout"
 import { StepTextInput, StepHelperText } from "../components"
 import { useEmailLogin } from "../hooks"
-import { useAuthSurface } from "../hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_TYPE } from "../data/authSurface"
 import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
 import type { LoginForm } from "../types"
@@ -36,7 +36,7 @@ export function EmailLoginScreen() {
     confirmWithdrawalCancel,
     submitLogin,
   } = useEmailLogin()
-  const surface = useAuthSurface()
+  const surface = useSurface()
 
   const {
     control,

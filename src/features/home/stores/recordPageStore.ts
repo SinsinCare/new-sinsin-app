@@ -2,7 +2,6 @@ import { create } from "zustand"
 import { router } from "expo-router"
 
 import type {
-  DateAnalysisBloodPressureRecord,
   DateAnalysisBodyRecord,
   DateAnalysisBloodGlucoseRecord,
 } from "@/src/types"
@@ -37,11 +36,12 @@ export interface WaterPageParams {
 
 export interface BloodPressurePageParams {
   kind: "bloodPressure"
-  /** 오늘(선택 날짜)의 대표 기록. 없으면 null. */
-  record: DateAnalysisBloodPressureRecord | null
-  /** 지난번 기록 — 가정혈압의 앵커. */
-  previousRecord: DateAnalysisBloodPressureRecord | null
-  /** 선택 날짜("YYYY-MM-DD"). 이력 조회와 저장에 쓴다. */
+  /**
+   * 선택 날짜("YYYY-MM-DD"). 이력 조회와 저장에 쓴다. 그날의 기록은 페이지가 이 날짜로
+   * **직접** 읽는다(`BloodPressureRecordPage` 의 이력 쿼리) — 여는 쪽이 넘긴 대표 기록은
+   * 연 순간의 눈금이라 읽는 곳이 없었고, 어제 기록은 그 한 값을 위해 하루치 분석을 한 번
+   * 더 받게 했다.
+   */
   date: string
   isSaving: boolean
   onSubmit: (body: {
@@ -57,13 +57,11 @@ export interface BloodPressurePageParams {
 export interface WeightPageParams {
   kind: "weight"
   today: DateAnalysisBodyRecord | null
-  previous: DateAnalysisBodyRecord | null
   /**
    * 선택 날짜("YYYY-MM-DD"). 7일 창은 **페이지가 직접** 읽는다 — 여는 쪽이 배열을 넘기면
    * 그것은 연 순간의 눈금이라 저장해도 표가 갱신되지 않는다(2026-09-05 실측).
    */
   endDate: string
-  isToday: boolean
   isSaving: boolean
   onSubmit: (weightKg: number) => Promise<boolean>
   onClose?: () => void

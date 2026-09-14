@@ -11,11 +11,25 @@ type NotificationSettingsPayload = Partial<NotificationSettings> & {
   mealReminder?: Partial<NotificationSettings["categories"]["mealReminder"]>
 }
 
+/**
+ * 물 알림 간격은 어디서 와도 1 이상의 정수여야 한다. 0 이나 음수가 통과하면
+ * `notificationService.scheduleAll` 의 예약 루프가 끝나지 않는다.
+ */
+function toIntervalHours(value: unknown): number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1
+    ? value
+    : DEFAULT_NOTIFICATION_SETTINGS.categories.waterReminder.intervalHours
+}
+
 function mergeWithDefaults(
   partial: NotificationSettingsPayload,
 ): NotificationSettings {
   const rawCategories: Partial<NotificationSettings["categories"]> =
     partial.categories ?? {}
+  const waterReminder = {
+    ...DEFAULT_NOTIFICATION_SETTINGS.categories.waterReminder,
+    ...(rawCategories.waterReminder ?? partial.waterReminder),
+  }
   return {
     ...DEFAULT_NOTIFICATION_SETTINGS,
     pushConsent:
@@ -26,8 +40,8 @@ function mergeWithDefaults(
         ...(rawCategories.morningCheck ?? partial.morningCheck),
       },
       waterReminder: {
-        ...DEFAULT_NOTIFICATION_SETTINGS.categories.waterReminder,
-        ...(rawCategories.waterReminder ?? partial.waterReminder),
+        ...waterReminder,
+        intervalHours: toIntervalHours(waterReminder.intervalHours),
       },
       mealReminder: {
         ...DEFAULT_NOTIFICATION_SETTINGS.categories.mealReminder,
@@ -75,9 +89,8 @@ export const notificationSettingsService = {
   },
 
   async setPushConsent(pushConsent: boolean): Promise<NotificationSettings> {
-    const current = await this.get()
-    const next = { ...current, pushConsent }
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    // PATCH 응답이 곧 최신 전체 설정이다. 미리 GET 으로 읽어 임시값을 써 두면 요청이
+    // 하나 늘고, PATCH 가 실패한 날에는 서버와 다른 값이 캐시에 남는다.
     const res = await api.patch("/user/notification-settings", { pushConsent })
     const raw = res.data.result ?? res.data.data
     const settings = mergeWithDefaults(raw)

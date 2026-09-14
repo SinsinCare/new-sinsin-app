@@ -66,6 +66,8 @@ type V2EmptyStateBaseProps = {
   actionLabel?: string
   /** 액션 콜백 (옵션). actionLabel과 함께 brand/fill/m 버튼 조립 */
   onAction?: () => void
+  /** gorhom 시트 안(식당 지도 빈 상태)에서 켠다 — 이유는 V2Button.gestureHandler 주석. */
+  actionGestureHandler?: boolean
   style?: ViewStyle
 }
 
@@ -89,6 +91,7 @@ export function V2EmptyState(props: V2EmptyStateProps) {
     title,
     description,
     actionLabel,
+    actionGestureHandler = false,
     onAction,
     tone = "loud",
     style,
@@ -145,7 +148,13 @@ export function V2EmptyState(props: V2EmptyStateProps) {
 
       {showAction && (
         <View style={styles.action}>
-          <V2Button color="brand" variant="fill" size="m" onPress={onAction}>
+          <V2Button
+            color="brand"
+            variant="fill"
+            size="m"
+            onPress={onAction}
+            gestureHandler={actionGestureHandler}
+          >
             {actionLabel}
           </V2Button>
         </View>

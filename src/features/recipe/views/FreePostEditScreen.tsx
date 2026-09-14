@@ -1,6 +1,6 @@
-import { borderWidth } from "@/src/design-system-v2/tokens/size"
 import { communityEditorStyles } from "../components/community/communityEditorStyles"
 import { CommunityPhotoPreview } from "../components/community/CommunityPhotoPreview"
+import { EditorTextField } from "../components/FreePostEditor"
 import { useSuppressGlobalKeyboardToolbar } from "@/src/stores/keyboardToolbarStore"
 import type { ReactNode } from "react"
 import { useState, useEffect, useRef } from "react"
@@ -12,7 +12,7 @@ import {
   StyleSheet,
   View,
 } from "react-native"
-import { Text, TextInput } from "@/src/shared/components/AppText"
+import { V2Text } from "@/src/design-system-v2"
 import { HeaderIconButton } from "@/src/shared/components/HeaderIconButton"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -28,11 +28,13 @@ import {
 
 import { useSurface } from "@/src/hooks/useSurface"
 import { Icon } from "@/src/shared/components/Icon"
-import { SurfacePressable } from "@/src/shared/components/SurfacePressable"
-import { PostCategorySheet } from "@/src/features/recipe/components/PostCategorySheet"
+import { TopicField } from "../components/community/TopicField"
+import {
+  PAGE_X,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 import { ImageThumbnailCard } from "@/src/features/recipe/components/ImageThumbnailCard"
 import { TagInput } from "@/src/features/recipe/components/TagInput"
-import { FREE_POST_CATEGORIES } from "@/src/features/recipe/data/freePostCategories"
 import { usePostDetail } from "@/src/features/recipe/hooks/usePostDetail"
 import { useCommunityPosts } from "@/src/features/recipe/hooks/useCommunityPosts"
 import { useMyPageProfile } from "@/src/features/settings/hooks/useMyPageProfile"
@@ -60,14 +62,6 @@ const MAX_IMAGES = 5
 const MAX_BODY_LENGTH = 700
 /** 글이 사라졌다는 서버 코드. 이 화면에서는 편집을 계속할 대상이 없다는 뜻이다. */
 const POST_GONE_CODE = "COMMUNITY_ERROR_001"
-const POST_CATEGORY_LABEL_KEYS = {
-  diet: "category.post.diet",
-  numbers: "category.post.numbers",
-  symptoms: "category.post.symptoms",
-  medicine: "category.post.medicine",
-  "dining-out": "category.post.dining-out",
-  daily: "category.post.daily",
-} as const
 
 /** 기존 이미지는 저장 경로를, 새로 고른 이미지는 로컬 URI 를 들고 있다. */
 interface EditImage {
@@ -114,7 +108,7 @@ function EditorStateScreen({ children }: { children: ReactNode }) {
   return (
     <View
       style={[
-        styles.stateScreen,
+        communityEditorStyles.stateScreen,
         { backgroundColor: surface.canvas, paddingTop: insets.top },
       ]}
     >
@@ -127,13 +121,14 @@ function EditorStateScreen({ children }: { children: ReactNode }) {
           { opacity: pressed ? 0.6 : 1 },
         ]}
       >
-        <Text
-          style={[styles.stateAction, { color: surface.brand }]}
+        <V2Text
+          style={communityEditorStyles.stateAction}
+          color={surface.brand}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
         >
           {t("action.back")}
-        </Text>
+        </V2Text>
       </Pressable>
     </View>
   )
@@ -167,10 +162,26 @@ export function FreePostEditScreen() {
   useSuppressGlobalKeyboardToolbar()
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible)
   const [tagInputOpen, setTagInputOpen] = useState(false)
-  const [categorySheetOpen, setCategorySheetOpen] = useState(false)
   const [confirmExitVisible, setConfirmExitVisible] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  /**
+   * **이미 서버에 올라간 새 사진.** 로컬 uri → 업로드된 objectPath.
+   *
+   * 작성 화면(`FreePostEditor`)과 같은 처방이다: 재시도가 사진을 처음부터 다시 올리던
+   * 자리라, 새로 고른 세 장 중 세 번째가 실패하면 앞의 두 장은 이미 GCS 에 있는데
+   * 재시도가 그 둘을 또 올렸다(지울 경로가 앱에도 서버에도 없다). 여기 적어 두면
+   * 재시도는 **남은 장부터** 이어 올린다. 기존 사진(`objectPath`)은 애초에 안 올린다.
+   *
+   * 상태가 아니라 ref 인 이유: 그리는 데 쓰지 않고, 업로드 루프가 **같은 tick 안에서**
+   * 방금 올린 것을 읽어야 한다(상태였다면 다음 렌더까지 못 본다).
+   */
+  const uploadedPathsRef = useRef<Record<string, string>>({})
+  /**
+   * 렌더마다 최신 `handleSubmit` 로 갈아 끼운다(아래 정의 직후) — 업로드 실패 토스트의
+   * `retry` 가 이걸 부른다. 선언은 여기 위에 둔다: 훅은 아래 이른 반환들보다 앞서야 한다.
+   */
+  const submitRef = useRef<() => Promise<void>>(async () => {})
   /*
     저장하려는 순간 서버가 "이 글은 사라졌어요"(`COMMUNITY_ERROR_001`)를 줬다.
     종전에는 토스트만 띄우고 화면을 그대로 뒀는데, 함께 넘긴 `refresh: refetch` 도
@@ -319,13 +330,14 @@ export function FreePostEditScreen() {
   if (!post) {
     return (
       <EditorStateScreen>
-        <Text
-          style={[styles.stateTitle, { color: surface.textStrong }]}
+        <V2Text
+          style={communityEditorStyles.stateTitle}
+          color={surface.textStrong}
           lineBreakStrategyIOS="hangul-word"
           textBreakStrategy="balanced"
         >
           {t("community.postDetail.notFound", { ns: "common" })}
-        </Text>
+        </V2Text>
       </EditorStateScreen>
     )
   }
@@ -396,10 +408,17 @@ export function FreePostEditScreen() {
         if (image.objectPath) {
           imageObjectPaths.push(image.objectPath)
         } else if (image.localUri) {
+          // 이미 올라간 장은 다시 올리지 않는다(`uploadedPathsRef` 머리말).
+          const known = uploadedPathsRef.current[image.localUri]
+          if (known) {
+            imageObjectPaths.push(known)
+            continue
+          }
           const uploaded = await imageUploadService.uploadImage(
             image.localUri,
             "community",
           )
+          uploadedPathsRef.current[image.localUri] = uploaded.objectPath
           imageObjectPaths.push(uploaded.objectPath)
         }
       }
@@ -409,7 +428,13 @@ export function FreePostEditScreen() {
       // "인터넷 연결을 확인" 으로 덮으면 같은 사진으로 계속 다시 누르게 된다.
       presentCommunityError(error, {
         scope: "community-post-edit-photo",
-        retry: () => void handleSubmit(),
+        /*
+          `submitRef` 로 부른다 — 이 클로저가 닫고 있는 `title`·`body`·`images` 는
+          **실패한 그 렌더**의 값이다. 토스트를 보고 사진을 빼거나 제목을 고친 뒤
+          누르면 고치기 전 내용이 올라가던 자리다(버튼은 토스트가 살아 있는 동안
+          계속 눌린다). 작성 화면과 같은 처방이다.
+        */
+        retry: () => void submitRef.current(),
       })
       return
     }
@@ -447,11 +472,8 @@ export function FreePostEditScreen() {
     )
   }
 
-  const selectedLabel = t(
-    POST_CATEGORY_LABEL_KEYS[
-      selectedCategory as keyof typeof POST_CATEGORY_LABEL_KEYS
-    ],
-  )
+  /* 렌더마다 최신 `handleSubmit` 로 갈아 끼운다 — 위 `retry` 가 이걸 부른다(`submitRef` 머리말). */
+  submitRef.current = handleSubmit
 
   return (
     <View
@@ -461,73 +483,57 @@ export function FreePostEditScreen() {
       ]}
     >
       {/* 헤더 */}
-      <View style={[styles.header, { borderBottomColor: surface.border }]}>
+      <View
+        style={[
+          communityEditorStyles.header,
+          { borderBottomColor: surface.border },
+        ]}
+      >
         <HeaderIconButton
           onPress={handleClose}
           accessibilityLabel={t("action.close")}
         >
           <Ionicons name="close" size={24} color={surface.textStrong} />
         </HeaderIconButton>
-        <Text
-          style={[
-            communityEditorStyles.headerTitle,
-            { color: surface.textStrong },
-          ]}
+        <V2Text
+          style={communityEditorStyles.headerTitle}
+          color={surface.textStrong}
         >
           {t("community.refresh.editPostTitle", { ns: "common" })}
-        </Text>
-        <SurfacePressable
+        </V2Text>
+        <Pressable
           onPress={handleSubmit}
           disabled={!canSubmit || isSaving}
+          hitSlop={S[2]}
+          accessibilityRole="button"
           accessibilityState={{ disabled: !canSubmit || isSaving }}
-          baseColor={surface.canvas}
-          pressedColor={surface.surface}
-          pressScale={0.94}
-          style={styles.submitPill}
+          style={[
+            communityEditorStyles.submit,
+            {
+              backgroundColor:
+                canSubmit && !isSaving ? surface.brand : surface.ctaOffBg,
+            },
+          ]}
         >
-          <Text
-            style={[
-              styles.submitLabel,
-              { color: canSubmit ? surface.brand : surface.ctaOffText },
-            ]}
+          <V2Text
+            style={communityEditorStyles.submitLabel}
+            color={
+              canSubmit && !isSaving ? surface.onBrand : surface.ctaOffText
+            }
             lineBreakStrategyIOS="hangul-word"
           >
             {isSaving ? t("action.saving") : t("action.save")}
-          </Text>
-        </SurfacePressable>
-      </View>
-
-      {/* 카테고리 */}
-      <View style={styles.categoryRow}>
-        <Pressable
-          onPress={() => {
-            Keyboard.dismiss()
-            setCategorySheetOpen(true)
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={t("freePost.topicAccessibility", {
-            category: selectedLabel,
-          })}
-          style={[styles.categoryChip, { borderBottomColor: surface.border }]}
-        >
-          <Text style={[styles.categoryLabel, { color: surface.textStrong }]}>
-            {selectedLabel}
-          </Text>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={surface.textMuted}
-          />
+          </V2Text>
         </Pressable>
       </View>
 
-      {/* 제목·본문 */}
+      {/* 주제·제목·본문 — 작성 화면과 같은 키트 */}
       <View style={styles.flex}>
         <KeyboardAwareScrollView
           bounces={false}
           overScrollMode="never"
           style={styles.flex}
-          contentContainerStyle={styles.editorContent}
+          contentContainerStyle={communityEditorStyles.content}
           bottomOffset={bottomInset + 72}
           disableScrollOnKeyboardHide
           keyboardShouldPersistTaps="handled"
@@ -535,51 +541,67 @@ export function FreePostEditScreen() {
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
         >
-          <View style={styles.editorBody}>
-            <TextInput
-              multiline
-              accessibilityLabel={t("freePost.titleLabel")}
-              value={title}
-              onChangeText={setTitle}
-              placeholder={t("freePost.titlePlaceholder")}
-              placeholderTextColor={surface.placeholder}
-              maxLength={200}
-              style={[
-                styles.titleInput,
-                {
-                  color: surface.textStrong,
-                  borderBottomColor: surface.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel={t("freePost.descriptionLabel")}
-              value={body}
-              onChangeText={setBody}
-              placeholder={t("freePost.editBodyPlaceholder")}
-              placeholderTextColor={surface.placeholder}
-              multiline
-              maxLength={MAX_BODY_LENGTH}
-              textAlignVertical="top"
-              style={[styles.bodyInput, { color: surface.textStrong }]}
-            />
-            {/* 작성 화면과 같은 카운터. 상한이 있다는 사실을 다 채우기 전에 말한다. */}
-            <Text
-              style={[
-                styles.counter,
-                {
-                  color:
-                    body.length > MAX_BODY_LENGTH
-                      ? surface.danger
-                      : surface.text,
-                },
-              ]}
-            >
-              {body.length} / {MAX_BODY_LENGTH}
-            </Text>
-            {(tagInputOpen || tags.length > 0) && (
-              <TagInput tags={tags} onChangeTags={setTags} />
-            )}
+          {/* 주제 — 작성 화면과 같은 행 + 시트. */}
+          <TopicField
+            value={selectedCategory}
+            disabled={isSaving}
+            onChange={setSelectedCategory}
+          />
+
+          <View style={communityEditorStyles.page}>
+            <View style={communityEditorStyles.paper}>
+              <View style={communityEditorStyles.paperHead}>
+                <EditorTextField
+                  accessibilityLabel={t("freePost.titleLabel")}
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder={t("freePost.titlePlaceholder")}
+                  maxLength={200}
+                />
+
+                {/* Reddit 의 태그 칩 — 작성 화면과 같다. */}
+                {tagInputOpen || tags.length > 0 ? (
+                  <TagInput tags={tags} onChangeTags={setTags} />
+                ) : (
+                  <Pressable
+                    onPress={() => setTagInputOpen(true)}
+                    disabled={isSaving}
+                    hitSlop={S[2]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("action.addTag")}
+                    style={({ pressed }) => [
+                      communityEditorStyles.tagChip,
+                      {
+                        backgroundColor: pressed
+                          ? surface.surfacePressed
+                          : surface.surfaceSunken,
+                      },
+                    ]}
+                  >
+                    <Icon name="hashtag" size={16} color={surface.text} />
+                    <V2Text
+                      style={communityEditorStyles.tagChipLabel}
+                      color={surface.text}
+                    >
+                      {t("freePost.addTagsOptional")}
+                    </V2Text>
+                  </Pressable>
+                )}
+              </View>
+              <EditorTextField
+                body
+                accessibilityLabel={t("freePost.descriptionLabel")}
+                value={body}
+                onChangeText={setBody}
+                placeholder={t(
+                  `freePost.bodyPlaceholderByTopic.${selectedCategory}`,
+                  {
+                    defaultValue: t("freePost.editBodyPlaceholder"),
+                  },
+                )}
+                maxLength={MAX_BODY_LENGTH}
+              />
+            </View>
           </View>
         </KeyboardAwareScrollView>
 
@@ -605,7 +627,7 @@ export function FreePostEditScreen() {
           )}
           <View
             style={[
-              styles.toolbar,
+              communityEditorStyles.dock,
               {
                 borderTopColor: surface.border,
                 backgroundColor: surface.canvas,
@@ -613,40 +635,47 @@ export function FreePostEditScreen() {
               },
             ]}
           >
-            <View style={styles.toolbarActions}>
-              <Pressable
-                onPress={handlePickImages}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t("action.addPhoto")}
-                style={({ pressed }) => [
-                  communityEditorStyles.tool,
-                  { opacity: pressed ? 0.6 : 1 },
-                ]}
-              >
-                <Ionicons
-                  name="image-outline"
-                  size={23}
-                  color={surface.textMuted}
-                />
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  Keyboard.dismiss()
-                  setTagInputOpen(true)
-                }}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t("action.addTag")}
-                style={({ pressed }) => [
-                  communityEditorStyles.tool,
-                  { opacity: pressed ? 0.6 : 1 },
-                ]}
-              >
-                <Icon name="hashtag" size={22} color={surface.textMuted} />
-              </Pressable>
+            <View style={communityEditorStyles.toolbar}>
+              <View style={communityEditorStyles.toolbarActions}>
+                <Pressable
+                  onPress={handlePickImages}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("action.addPhoto")}
+                  style={({ pressed }) => [
+                    communityEditorStyles.tool,
+                    { opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <Ionicons
+                    name="image-outline"
+                    size={20}
+                    color={surface.text}
+                  />
+                  <V2Text
+                    style={communityEditorStyles.toolLabel}
+                    color={surface.text}
+                  >
+                    {t("freePost.photoVideo")}
+                  </V2Text>
+                </Pressable>
+              </View>
+              <View style={communityEditorStyles.toolbarTrailing}>
+                {/* 작성 화면과 같은 카운터. 상한을 넘긴 옛 글은 danger 로 사실을 말한다. */}
+                <V2Text
+                  accessibilityLiveRegion="polite"
+                  style={communityEditorStyles.counter}
+                  color={
+                    body.length > MAX_BODY_LENGTH
+                      ? surface.danger
+                      : surface.textMuted
+                  }
+                >
+                  {body.length}/{MAX_BODY_LENGTH}
+                </V2Text>
+                <KeyboardDismissButton color={surface.text} />
+              </View>
             </View>
-            <KeyboardDismissButton color={surface.textMuted} />
           </View>
         </KeyboardStickyView>
       </View>
@@ -654,13 +683,6 @@ export function FreePostEditScreen() {
       <CommunityPhotoPreview
         uri={previewImage}
         onClose={() => setPreviewImage(null)}
-      />
-      <PostCategorySheet
-        open={categorySheetOpen}
-        onOpenChange={setCategorySheetOpen}
-        categories={FREE_POST_CATEGORIES}
-        selectedKey={selectedCategory}
-        onSelect={setSelectedCategory}
       />
 
       <ConfirmExitModal
@@ -687,82 +709,13 @@ export function FreePostEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-
-  /* 실패·없는 글 화면. 상세(`app/post/[id].tsx`)와 같은 모양을 쓴다. */
-  stateScreen: {
-    flex: 1,
-    paddingHorizontal: 20,
-    justifyContent: "center",
-    gap: 12,
-  },
-  stateTitle: {
-    fontSize: 16,
-    lineHeight: 22,
-    letterSpacing: -0.32,
-    fontWeight: "600",
-    fontFamily: "Pretendard-SemiBold",
-    textAlign: "center",
-  },
-  stateAction: {
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "600",
-    fontFamily: "Pretendard-SemiBold",
-    textAlign: "center",
-  },
-
-  header: communityEditorStyles.header,
-  submitPill: communityEditorStyles.submit,
-  submitLabel: communityEditorStyles.submitLabel,
-
-  categoryRow: {
-    paddingHorizontal: 20,
-    paddingTop: 0,
-    paddingBottom: 12,
-    flexDirection: "row",
-  },
-  categoryChip: { ...communityEditorStyles.category, flex: 1 },
-  categoryLabel: communityEditorStyles.categoryLabel,
-
-  editorContent: {
-    flexGrow: 1,
-    paddingBottom: 12,
-  },
-  editorBody: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  titleInput: communityEditorStyles.titleInput,
-  bodyInput: communityEditorStyles.bodyInput,
-  /* 작성 화면(`FreePostEditor`)의 카운터와 같은 치수. */
-  counter: communityEditorStyles.counter,
-
+  screen: { flex: 1 },
+  flex: { flex: 1 },
+  /* 사진 스트립은 도크 위에 산다 — 도크가 키보드를 따라 올라올 때 같이 온다. */
   imageStrip: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: PAGE_X,
+    paddingVertical: S[3],
+    gap: S[3],
   },
-  imageStripWrap: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  toolbar: {
-    paddingHorizontal: 20,
-    paddingTop: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: borderWidth.thin,
-  },
-  toolbarActions: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 22,
-  },
+  imageStripWrap: { flexGrow: 0, flexShrink: 0 },
 })

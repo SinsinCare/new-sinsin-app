@@ -15,6 +15,14 @@ import {
 } from "../../../hooks/useBloodPressureRecordForm"
 import { RecordOptionalSection } from "./RecordOptionalSection"
 import { RecordFieldHint } from "./RecordFieldHint"
+import { RecordRangeBar, RecordStatusLine } from "./RecordRangeBar"
+import {
+  DIASTOLIC_RANGE,
+  SYSTOLIC_RANGE,
+  classifyValue,
+  parseReading,
+  worseStatus,
+} from "./recordRanges"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
@@ -82,6 +90,25 @@ export function BloodPressureRecordPage({
     : form.errors.diastolic
       ? "diastolicRange"
       : null
+  /*
+    입력 중 판정(F3). 바의 마커는 칸마다 따로 뜨지만(최고만 쳐도 최고 바에는 점이 선다),
+    배지는 둘 다 있어야 뜬다 — 반쪽 값으로 "정상" 이라고 말하지 않는다.
+  */
+  const systolicValue = form.errors.systolic ? null : parseReading(systolic)
+  const diastolicValue = form.errors.diastolic ? null : parseReading(diastolic)
+  const systolicStatus = classifyValue(systolicValue, SYSTOLIC_RANGE)
+  const diastolicStatus = classifyValue(diastolicValue, DIASTOLIC_RANGE)
+  const status = worseStatus(systolicStatus, diastolicStatus)
+  const currentKey = `${slot}|${slot === TIMELESS_SLOT ? "" : timing}`
+  const previous = useMemo(
+    () => previousReading(rows, currentKey),
+    [rows, currentKey],
+  )
+  const targetOf = (range: typeof SYSTOLIC_RANGE) =>
+    t("home.recordPage.bloodPressure.target", {
+      low: range.targetLow,
+      high: range.targetHigh,
+    })
 
   return (
     <>
@@ -91,7 +118,13 @@ export function BloodPressureRecordPage({
         subtitle={params.date.replace(/-/gu, ".")}
         onBack={onBack}
         onInfo={() => setInfoOpen(true)}
-        ctaLabel={t("home.recordPage.bloodPressure.save")}
+        ctaLabel={
+          canSubmit
+            ? t("home.recordPage.bloodPressure.saveWith", {
+                value: `${systolic}/${diastolic}`,
+              })
+            : t("home.recordPage.bloodPressure.save")
+        }
         ctaDisabled={!canSubmit}
         ctaLoading={save.isSaving || params.isSaving}
         ctaSuccess={save.saved}
@@ -139,6 +172,41 @@ export function BloodPressureRecordPage({
           <RecordFieldHint error={!!pressureError}>
             {t(`home.recordPage.bloodPressure.${pressureError ?? "inputHint"}`)}
           </RecordFieldHint>
+          <View style={styles.judgement}>
+            <RecordStatusLine
+              status={status}
+              lowIsDanger={false}
+              statusLabel={
+                status === null
+                  ? ""
+                  : t(`home.recordPage.bloodPressure.status.${status}`)
+              }
+              targetLabel={`${targetOf(SYSTOLIC_RANGE)} · ${DIASTOLIC_RANGE.targetLow}–${DIASTOLIC_RANGE.targetHigh}`}
+              previousLabel={
+                previous === null
+                  ? null
+                  : t("home.recordPage.bloodPressure.previous", {
+                      value: `${previous.systolic}/${previous.diastolic}`,
+                    })
+              }
+            />
+            <RecordRangeBar
+              caption={t("home.recordPage.bloodPressure.column.systolic")}
+              range={SYSTOLIC_RANGE}
+              value={systolicValue}
+              status={systolicStatus}
+              lowIsDanger={false}
+              targetLabel={targetOf(SYSTOLIC_RANGE)}
+            />
+            <RecordRangeBar
+              caption={t("home.recordPage.bloodPressure.column.diastolic")}
+              range={DIASTOLIC_RANGE}
+              value={diastolicValue}
+              status={diastolicStatus}
+              lowIsDanger={false}
+              targetLabel={targetOf(DIASTOLIC_RANGE)}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -240,6 +308,23 @@ export function BloodPressureRecordPage({
         </View>
       </V2BottomSheet>
     </>
+  )
+}
+
+/**
+ * "지난번" — 그날 기록 중 지금 고른 칸을 뺀 가장 최근 것. 시각을 아는 기록(093 이후)은
+ * 시각 순, 모르는 기록은 서버가 준 순서의 마지막. 없으면 `null` — 지어내지 않는다.
+ */
+function previousReading(
+  rows: BloodPressureRangeRecord[],
+  currentKey: string,
+): BloodPressureRangeRecord | null {
+  const others = rows.filter(
+    (row) => `${row.slot}|${row.timing ?? ""}` !== currentKey,
+  )
+  if (others.length === 0) return null
+  return others.reduce((latest, row) =>
+    (row.recordedAt ?? "") >= (latest.recordedAt ?? "") ? row : latest,
   )
 }
 
@@ -349,6 +434,7 @@ const styles = StyleSheet.create({
   infoTitle: { fontSize: 20, lineHeight: 26, fontWeight: "700" },
   infoBody: { fontSize: 15, lineHeight: 22 },
   section: { paddingHorizontal: PAGE_X, marginBottom: FORM.sectionGap },
+  judgement: { marginTop: S[2], gap: S[3] },
   historyHeading: {
     paddingHorizontal: PAGE_X,
     marginTop: S[5],

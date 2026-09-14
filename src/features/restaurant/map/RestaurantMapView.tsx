@@ -45,7 +45,6 @@ import {
   type MapColorScheme,
   type MapCommands,
   type MapMarker,
-  type MapPadding,
   type MapStrings,
 } from "./mapBridge"
 
@@ -189,11 +188,8 @@ export const RestaurantMapView = forwardRef<
       focusMarker: (lat, lng, opts) =>
         send(mapScript.focusMarker(lat, lng, opts)),
       setLevel: (level: number) => send(mapScript.setLevel(level)),
-      fitBounds: (bounds: MapBounds, padding?: MapPadding) =>
-        send(mapScript.fitBounds(bounds, padding)),
       setUserLocation: (position: LatLng | null, heading?: number | null) =>
         send(mapScript.setUserLocation(position, heading)),
-      panBy: (dx: number, dy: number) => send(mapScript.panBy(dx, dy)),
       relayout: () => send(mapScript.relayout()),
       setStrings: (next: MapStrings) => send(mapScript.setStrings(next)),
       setColorScheme: (next: MapColorScheme) =>

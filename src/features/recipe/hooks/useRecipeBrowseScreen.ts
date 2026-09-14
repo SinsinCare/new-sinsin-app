@@ -102,18 +102,25 @@ export function useRecipeBrowseScreen() {
     scrollOffsetRef.current = 0
     listRef.current?.scrollToOffset({ offset: 0, animated: false })
   }, [])
+  /*
+    `search` 는 훅이 렌더마다 새로 만드는 객체다 — 그대로 의존성에 넣으면 아래 두
+    콜백이 매 렌더 새 함수라 `useCallback` 이 아무것도 안 한다. 실제로 읽는 것은
+    `commit`·`clear` 두 함수뿐이라 그 둘만 건다(`useRecipeSearch` 가 `useCallback`
+    으로 준다 — `commit` 은 초안을 닫고 있어 글자가 바뀔 때만 새 함수다).
+  */
+  const { commit: commitSearch, clear: clearSearch } = search
   const handleCommitSearch = useCallback(
     (text?: string) => {
-      search.commit(text)
+      commitSearch(text)
       Keyboard.dismiss()
       resetListToTop()
     },
-    [search, resetListToTop],
+    [commitSearch, resetListToTop],
   )
   const handleClearSearch = useCallback(() => {
-    search.clear()
+    clearSearch()
     resetListToTop()
-  }, [search, resetListToTop])
+  }, [clearSearch, resetListToTop])
   const handleRemoveFilter = useCallback(
     (group: RecipeFilterGroupKey, optionKey: string) => {
       setFilters((prev) => removeRecipeFilter(prev, group, optionKey))

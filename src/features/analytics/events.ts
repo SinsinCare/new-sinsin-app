@@ -150,7 +150,8 @@ export type AnalyticsScreenName =
   | "notification_inbox"
   | "announcements"
   | "inquiry"
-  | "ask_doctor"
+  // 1:1 문의 작성 폼. 목록(`inquiry`)에서 한 단계 들어가는 자리라 따로 센다(열림→전송 퍼널).
+  | "inquiry_new"
   | "medical_reference"
   | "privacy_settings"
   | "app_info"
@@ -168,12 +169,7 @@ export type AnalyticsScreenName =
   | "doctor_search"
   | "doctor_preview"
   | "doctor_sharing"
-  | "exam_upload"
-  | "exam_ocr_review"
-  | "health_hub"
-  | "health_dashboard"
-  | "health_results"
-  | "nhis_legacy"
+  | "doctor_report"
   // 표에 없는 라우트. 그룹 폴백을 두지 않으므로 **여기 떨어지면 표가 빈 것**이고,
   // `tests/analyticsScreenTable.test.ts` 가 그걸 CI 에서 막는다.
   | "other"
@@ -320,6 +316,10 @@ export type AnalyticsRestaurantEntrySource =
  */
 export type AnalyticsSurface =
   | "settings_preferences"
+  // 1:1 문의 목록(내 문의·답변). 작성 화면(`inquiry`)과 다른 자리다 — 빈 상태·오류가 여기서 난다.
+  | "settings_inquiry"
+  // 신장 정보 수정의 진단 시기(연·월) 선택 시트(2026-09-12, 건강기록 키트로 재설계).
+  | "settings_diagnosis_date"
   // ── 앱 진입·전역 ───────────────────────────────────────────────────────────
   | "app_entry"
   | "app_root"
@@ -389,6 +389,8 @@ export type AnalyticsSurface =
   // 글쓰기의 카테고리 고르기 시트(`PostCategorySheet`). 위 `community_post*` 와 이름이
   // 이어져 보이지만 **상세 화면과 무관하다** — 작성 흐름의 자리다.
   | "community_post_category"
+  // 등록 직전의 책임 확인 시트(2026-09-12, 편집기 안 체크박스에서 옮겼다).
+  | "community_post_consent"
   | "free_write"
   | "free_edit"
   | "recipe_write"
@@ -434,6 +436,7 @@ export type AnalyticsSurface =
   | "doctor_connections"
   | "doctor_search"
   | "doctor_sharing"
+  | "doctor_report"
   | "exam_ocr_review"
   | "health_dashboard"
   | "health_results"
@@ -1664,7 +1667,7 @@ const ROUTE_SCREEN: Record<string, AnalyticsScreenName> = {
   "(settings)/announcements": "announcements",
   "(settings)/announcement-detail": "announcements",
   "(settings)/inquiry": "inquiry",
-  "(settings)/ask-doctor": "ask_doctor",
+  "(settings)/inquiry-new": "inquiry_new",
   "(settings)/medical-reference": "medical_reference",
   "(settings)/privacy-settings": "privacy_settings",
   "(settings)/app-info": "app_info",
@@ -1686,19 +1689,7 @@ const ROUTE_SCREEN: Record<string, AnalyticsScreenName> = {
   "(settings)/doctor-search": "doctor_search",
   "(settings)/doctor-preview": "doctor_preview",
   "(settings)/doctor-sharing": "doctor_sharing",
-
-  // ── 건강검진(업로드·OCR·결과) ──────────────────────────────────────────────
-  "(settings)/health-data": "health_hub",
-  "(settings)/health-dashboard": "health_dashboard",
-  "(settings)/health-data-upload": "exam_upload",
-  // OCR 검토는 자동 전진 구간이라 인접 스텝으로 쓰면 안 된다.
-  "(settings)/health-ocr-review": "exam_ocr_review",
-  "(settings)/health-results": "health_results",
-  "(settings)/health-result-detail": "health_results",
-  // NHIS 3화면은 인증 한 흐름의 연속 칸이고 전부 잎사귀다(3:1).
-  "(settings)/health-nhis-auth": "nhis_legacy",
-  "(settings)/health-nhis-request": "nhis_legacy",
-  "(settings)/health-nhis-confirm": "nhis_legacy",
+  "(settings)/doctor-report": "doctor_report",
 }
 
 /** 표에 등록된 모든 라우트 키. 테스트가 app/ 트리와 대조할 때 쓴다. */

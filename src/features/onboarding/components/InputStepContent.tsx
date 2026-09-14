@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native"
 import { Text, TextInput } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
 import i18n from "@/src/i18n"
-import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "@/src/features/auth/data/authSurface"
 import { singleLineInputText } from "@/src/theme/surface"
 import type { OnboardingValueOption } from "../types"
@@ -37,7 +37,7 @@ export function InputStepContent({
   onSubmit,
 }: InputStepContentProps) {
   const { t } = useTranslation("auth")
-  const surface = useAuthSurface()
+  const surface = useSurface()
 
   return (
     <View style={styles.list}>

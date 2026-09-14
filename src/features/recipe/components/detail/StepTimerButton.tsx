@@ -1,23 +1,20 @@
 /**
- * 조리 단계 타이머. 계약 §6.2 "timerSeconds 가 있으면 타이머 버튼(실제로 동작)".
- *
- * 왜 남은 초를 세지 않고 **끝나는 시각**을 들고 있는가:
- *   `setInterval` 로 1씩 빼면 앱이 백그라운드로 갔다 오거나 프레임이 밀릴 때마다
- *   실제 시간보다 느려진다. 조리 타이머가 느려지면 사용자는 태운 뒤에야 안다.
- *   그래서 `endAt`(epoch ms)만 상태로 두고 화면은 `Date.now()` 와의 차이를 그린다.
- *   0.5초마다 그리는 것은 초 표기가 한 박자 늦게 바뀌는 것을 막기 위한 것이다.
- *
- * 알림(스케줄된 푸시)은 붙이지 않았다 — 화면을 벗어난 뒤의 알림은 권한·정책이 걸린 별개의
- * 결정이고, 이 화면의 약속("버튼을 누르면 실제로 줄어든다")은 이것으로 지켜진다.
+ * 조리 단계의 타이머 칩. 누르면 세고, 다 세면 햅틱 한 번. 색은 v2 `useV2Theme()` 만 —
+ * 진행 중은 브랜드(색 예산의 유일한 강조), 나머지는 그레이스케일.
  */
+
 import { useEffect, useState } from "react"
-import { Pressable } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import * as Haptics from "expo-haptics"
-import { V2HStack, V2Text } from "@/src/design-system-v2"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useTranslation } from "react-i18next"
-import { useSurface } from "@/src/hooks/useSurface"
-import { LAYOUT, TYPE } from "@/src/theme/surface"
+import {
+  V2Text,
+  radius,
+  spacing,
+  touchTarget,
+  useV2Theme,
+} from "@/src/design-system-v2"
 import { formatDuration } from "./recipeDetailModel"
 
 export interface StepTimerButtonProps {
@@ -26,11 +23,10 @@ export interface StepTimerButtonProps {
 
 export function StepTimerButton({ seconds }: StepTimerButtonProps) {
   const { t } = useTranslation("recipe")
-  const surface = useSurface()
+  const { colors } = useV2Theme()
   const [endAt, setEndAt] = useState<number | null>(null)
   const [remaining, setRemaining] = useState(seconds)
 
-  // 단계가 바뀌면(다른 레시피·다른 시간) 처음 상태로 돌린다.
   useEffect(() => {
     setEndAt(null)
     setRemaining(seconds)
@@ -46,7 +42,7 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
         void Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success,
         ).catch(() => {
-          // 진동이 없는 기기에서도 타이머 자체는 끝난다.
+          // 햅틱이 없는 기기 — 타이머 완료는 화면 문구가 이미 말한다.
         })
       }
     }
@@ -57,7 +53,6 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
 
   const running = endAt != null
   const done = !running && remaining === 0
-
   const label = done
     ? t("detail.steps.timerDone")
     : running
@@ -65,7 +60,6 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
       : remaining === seconds
         ? t("detail.steps.timerStart", { duration: formatDuration(seconds) })
         : t("detail.steps.timerResume")
-
   const actionLabel = done
     ? t("detail.steps.timerReset")
     : running
@@ -84,40 +78,62 @@ export function StepTimerButton({ seconds }: StepTimerButtonProps) {
     setEndAt(Date.now() + remaining * 1000)
   }
 
+  const ink = running ? colors.primary.primary : colors.label.neutral
   return (
-    <V2HStack align="center" gap={8} style={{ alignSelf: "flex-start" }}>
+    <View style={styles.row}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={actionLabel}
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        style={({ pressed }) => [
+          styles.chip,
+          {
+            backgroundColor: running
+              ? colors.primary.primaryWeak
+              : colors.fill.control,
+            opacity: pressed ? 0.7 : 1,
+          },
+        ]}
       >
-        <V2HStack align="center" gap={6} paddingHorizontal={12} style={{ height: LAYOUT.chip.height, borderRadius: LAYOUT.chip.radius, borderWidth: 1, borderColor: running ? surface.brand : surface.border, backgroundColor: running ? surface.surfaceBrand : surface.card }}>
-          <Ionicons
-            name={running ? "pause" : done ? "refresh" : "timer-outline"}
-            size={14}
-            color={running ? surface.brand : surface.textMuted}
-          />
-          <V2Text {...TYPE.caption} color={running ? surface.brand : surface.textStrong} style={{ fontWeight: "600" }}>
-            {label}
-          </V2Text>
-        </V2HStack>
+        <Ionicons
+          name={running ? "pause" : done ? "refresh" : "timer-outline"}
+          size={14}
+          color={ink}
+        />
+        <V2Text token="label.xSmall" color={ink}>
+          {label}
+        </V2Text>
       </Pressable>
-
-      {/* 멈춘 상태에서 되돌릴 길을 항상 남긴다(§6.4 되돌리기). */}
+      {/* 멈춘 채 남은 시간이 있으면 처음으로 되돌리는 길을 따로 둔다. */}
       {!running && remaining !== seconds && !done && (
         <Pressable
           onPress={() => setRemaining(seconds)}
           accessibilityRole="button"
           accessibilityLabel={t("detail.steps.timerReset")}
-          hitSlop={6}
+          hitSlop={spacing[8]}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <V2Text {...TYPE.caption} color={surface.textMuted} lineBreakStrategyIOS="hangul-word">
+          <V2Text
+            token="subtext.medium"
+            color={colors.label.alternative}
+            lineBreakStrategyIOS="hangul-word"
+          >
             {t("detail.steps.timerReset")}
           </V2Text>
         </Pressable>
       )}
-    </V2HStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", gap: spacing[8] },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[6],
+    height: touchTarget.min - spacing[8],
+    paddingHorizontal: spacing[12],
+    borderRadius: radius.md,
+  },
+})

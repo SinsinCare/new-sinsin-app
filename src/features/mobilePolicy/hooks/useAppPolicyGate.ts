@@ -62,6 +62,9 @@ export function useAppPolicyGate() {
   )
   const requestIdRef = useRef(0)
   const reportedKeyRef = useRef<string | null>(null)
+  /* `evaluation` 의 거울. 아래 부팅 effect 가 "판정이 이미 있는가" 를 의존성에 넣지
+     않고 읽기 위한 것이다 — 상태를 의존성에 넣으면 판정이 바뀔 때마다 다시 묻는다. */
+  const evaluationRef = useRef<MobilePolicyEvaluation | null>(null)
 
   /* **이 훅의 첫 effect 여야 한다.** 아래 판정 effect 보다 먼저 돌아야 설치·업데이트
      신호가 정책 이벤트보다 앞선 순번(seq)을 받는다. */
@@ -110,6 +113,7 @@ export function useAppPolicyGate() {
           })
         }
       }
+      evaluationRef.current = nextEvaluation
       setEvaluation(nextEvaluation)
       setStatus("ready")
     },
@@ -140,14 +144,27 @@ export function useAppPolicyGate() {
       if (cancelled) return
 
       if (cached) {
-        setEvaluation({ policy: cached, source: "cache" })
+        const fromCache: MobilePolicyEvaluation = {
+          policy: cached,
+          source: "cache",
+        }
+        evaluationRef.current = fromCache
+        setEvaluation(fromCache)
         setStatus("ready")
         // 화면은 이미 열렸다. 이 재검증은 사용자를 기다리게 하지 않는다.
         void run(true)
         return
       }
 
-      void run(false)
+      /*
+        **언어를 바꿀 때는 화면을 내리지 않는다.** 이 effect 는 언어가 바뀌어도 다시 도는데,
+        새 언어의 캐시가 없다고 `run(false)` 를 부르면 `status` 가 "checking" 으로 돌아가
+        게이트가 자식 대신 로딩 화면을 그린다 — 네비게이터가 통째로 언마운트되어 화면
+        스택이 사라지고, `app_launch_started` 가 다시 나가고, 복약 알림이 다시 예약됐다.
+        이미 판정이 하나 있으면 그것으로 화면을 유지한 채 조용히 다시 묻는다(답이 오면
+        `evaluation` 만 갈아끼운다). 로딩 화면은 판정이 아직 없는 최초 실행에만 선다.
+      */
+      void run(evaluationRef.current !== null)
     })()
 
     return () => {

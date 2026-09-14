@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import Ionicons from "@expo/vector-icons/Ionicons"
 
 import { DatePickerModal } from "@/src/features/settings/components/DatePickerModal"
-import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import { AUTH_LAYOUT, AUTH_TYPE } from "@/src/features/auth/data/authSurface"
 import { hapticSelection } from "@/src/lib/haptics"
 import {
@@ -33,7 +33,7 @@ export function DateStepContent({
   onChange,
 }: DateStepContentProps) {
   const { t, i18n } = useTranslation("auth")
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const [pickerVisible, setPickerVisible] = useState(false)
 
   const selected = parseDiagnosisDate(value)

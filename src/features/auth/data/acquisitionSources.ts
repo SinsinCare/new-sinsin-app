@@ -43,6 +43,3 @@ export function getAcquisitionSourceOptions(): {
     label: i18n.t(ACQUISITION_SOURCE_LABEL_KEYS[value], { ns: "auth" }),
   }))
 }
-
-/** 기본 언어의 정적 스냅샷. 화면에서는 언어 변경에 반응하는 getter를 사용한다. */
-export const ACQUISITION_SOURCE_OPTIONS = getAcquisitionSourceOptions()

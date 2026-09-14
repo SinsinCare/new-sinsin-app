@@ -8,7 +8,6 @@ import type {
   DiaryAnalysisResult,
   FoodAnalysisUpdateRequest,
   FoodAnalysisUpdateResult,
-  FoodCameraAnalyzeResult,
   FoodAnalysisConfirmationRequest,
 } from "@/src/types"
 import { HomeHero } from "./HomeHero"
@@ -31,24 +30,30 @@ import { useExtraWater } from "../../hooks/useExtraWater"
 import { displayedWaterIntake } from "../../utils/waterIntake"
 import { useWeightEdemaRecord } from "../../hooks/useWeightEdemaRecord"
 import { useBloodMetricsRecord } from "../../hooks/useBloodMetricsRecord"
-import { useState, useEffect, useMemo, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { router } from "expo-router"
 import { LoadingOverlay } from "../LoadingOverlay"
 import { openMealReportPage } from "../../stores/openMealReportPage"
-import { useMealReportPageStore } from "../../stores/mealReportPageStore"
+import {
+  requireMealReportSaved,
+  useMealReportPageStore,
+} from "../../stores/mealReportPageStore"
 import { useFoodCameraStore } from "../../stores/foodCameraStore"
 import { FoodAnalysisConfirmation } from "../FoodAnalysisConfirmation"
 import { TextRecord } from "./TextRecord"
 import { tokens } from "@/src/theme/tokens"
-import { dateAnalysisKey, useDateAnalysis } from "../../hooks/useDateAnalysis"
+import { useDateAnalysis } from "../../hooks/useDateAnalysis"
 import { useStreak } from "../../hooks/useStreak"
 import { useNutrientLimits } from "@/src/features/nutrition/hooks/useNutrientLimits"
 import { usePendingAnalysisStore } from "@/src/stores/pendingAnalysisStore"
 import { foodCameraService } from "@/src/services/data"
 import { fetchMealReport } from "@/src/features/food-report/services/mealReportService"
-import { mealReportKey } from "@/src/features/food-report/hooks/useMealReport"
-import { diaryResultKey } from "@/src/i18n/localeQueryKeys"
+import {
+  dateAnalysisKey,
+  diaryResultKey,
+  mealReportKey,
+} from "@/src/i18n/localeQueryKeys"
 import { formatDateWithWeekday, toDateStr } from "../../utils/dateUtils"
 import { inferGlucoseContext } from "../../utils/glucoseInference"
 import { openRecordPage } from "../../stores/recordPageStore"
@@ -57,12 +62,10 @@ import { afterModalTransitions } from "@/src/shared/components/appModalGate"
 import { ApiError } from "@/src/services/core/apiError"
 import { pendingAnalysisRequests } from "../../storage/pendingAnalysisRequests"
 import {
-  applyMealTypeChangeToMealImages,
   applyMealTypeChangeToRecordedMeals,
   inferMealTypeFromTime,
   isSkippedDiet,
   toSkippedMealMap,
-  type MealImageMap,
   type RecordedMealMap,
 } from "../../utils/mealRecordUtils"
 import { appConfig } from "@/src/config/appConfig"
@@ -72,7 +75,10 @@ import {
   type AnalyticsMealSheetEntry,
 } from "@/src/features/analytics"
 import { useFoodAnalysisRecoveryPolling } from "../../hooks/useFoodAnalysisRecoveryPolling"
-import { foodAnalysisRecovery } from "../../services/foodAnalysisRecovery"
+import {
+  PENDING_ANALYSIS_TTL_MS,
+  foodAnalysisRecovery,
+} from "../../services/foodAnalysisRecovery"
 
 import { showErrorToast } from "@/src/lib/toast"
 import { findGlucoseCell, orderGlucoseByDay } from "../../utils/glucoseGrid"
@@ -92,7 +98,6 @@ type RecordSheetKind = "meal" | "water" | "bloodPressure" | "weight"
 interface RecordViewProps {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  onSelectMealType: (mealType: MealType) => void
   onPressDate: () => void
   onOpenStats: () => void
   onOpenNotifications: () => void
@@ -101,7 +106,6 @@ interface RecordViewProps {
 export function RecordView({
   selectedDate,
   onSelectDate,
-  onSelectMealType,
   onPressDate,
   onOpenStats,
   onOpenNotifications,
@@ -145,7 +149,7 @@ export function RecordView({
   analyzedImageUriRef.current = analyzedImageUri
   const analyzedMealTypeRef = useRef(analyzedMealType)
   analyzedMealTypeRef.current = analyzedMealType
-  const handleAddToRecordRef = useRef<() => Promise<void>>(async () => {})
+  const handleAddToRecordRef = useRef<() => Promise<boolean>>(async () => false)
   useEffect(() => {
     if (!isResultOpen) return
     const result = analysisResultRef.current
@@ -156,7 +160,9 @@ export function RecordView({
       imageUri: analyzedImageUriRef.current ?? undefined,
       mealType: analyzedMealTypeRef.current ?? undefined,
       recordDate: toDateStr(selectedDate),
-      onAddToRecord: () => handleAddToRecordRef.current(),
+      // 실패는 거부로 나른다 — 페이지가 닫히지 않게(`mealReportPageStore` 의 규약).
+      onAddToRecord: () =>
+        requireMealReportSaved(handleAddToRecordRef.current()),
       isUpdating,
       updateFoodAnalysis,
       onClose: closeResult,
@@ -174,8 +180,8 @@ export function RecordView({
   )
   const [isPendingUpdating, setIsPendingUpdating] = useState(false)
   // 페이지 재료는 열 때 한 번 넘어가므로, 콜백은 ref 를 거쳐 늘 최신 본을 부른다.
-  const handlePendingAddToRecordRef = useRef<() => Promise<void>>(
-    async () => {},
+  const handlePendingAddToRecordRef = useRef<() => Promise<boolean>>(
+    async () => false,
   )
   const updatePendingFoodAnalysisRef = useRef<
     (
@@ -220,7 +226,8 @@ export function RecordView({
         imageUri: pending.imageUri ?? undefined,
         mealType: pending.mealType,
         recordDate: toDateStr(selectedDate),
-        onAddToRecord: () => handlePendingAddToRecordRef.current(),
+        onAddToRecord: () =>
+          requireMealReportSaved(handlePendingAddToRecordRef.current()),
         isUpdating: false,
         updateFoodAnalysis: (id, body) =>
           updatePendingFoodAnalysisRef.current(id, body),
@@ -241,11 +248,20 @@ export function RecordView({
         pendingConfirmation.job.analysisId,
         body,
       )
+      // 시한 — 복구의 대기 시효와 같다. 서버가 답하지 않는 잡을 여기서만 영원히 기다리지 않는다.
+      const deadline = Date.now() + PENDING_ANALYSIS_TTL_MS
       while (
         job.status === "QUEUED" ||
         job.status === "PERCEIVING" ||
         job.status === "RESOLVING"
       ) {
+        if (Date.now() > deadline) {
+          throw new ApiError(
+            "food analysis job timed out",
+            "FOOD_CAMERA_005",
+            500,
+          )
+        }
         await new Promise((resolve) =>
           setTimeout(resolve, Math.max(500, job.pollAfterMs ?? 1500)),
         )
@@ -329,14 +345,6 @@ export function RecordView({
     }
   }, [data, language, queryClient])
 
-  // 지난번(어제) 기록 — 혈압 시트의 앵커. 같은 캐시 키 체계라 부담이 작다.
-  const previousDate = useMemo(() => {
-    const d = new Date(selectedDate)
-    d.setDate(d.getDate() - 1)
-    return d
-  }, [selectedDate])
-  const { data: previousData } = useDateAnalysis(previousDate)
-  const previousBloodPressure = previousData?.result.bloodPressure ?? null
   const { data: streak = 0 } = useStreak()
 
   /**
@@ -374,14 +382,12 @@ export function RecordView({
     [language, queryClient, selectedDate],
   )
 
-  const [mealImages, setMealImages] = useState<MealImageMap>({})
   const [recordedMeals, setRecordedMeals] = useState<RecordedMealMap>({})
   const [isTextRecordOpen, setIsTextRecordOpen] = useState(false)
   const [textRecordMealType, setTextRecordMealType] =
     useState<MealType>("BREAKFAST")
   const recordingMealTypeRef = useRef<MealType | null>(null)
   useEffect(() => {
-    setMealImages({})
     setRecordedMeals({})
   }, [selectedDate])
 
@@ -441,14 +447,6 @@ export function RecordView({
     apiDiets.map((d) => [d.mealType, true]),
   ) as RecordedMealMap
   const apiSkippedMeals = toSkippedMealMap(apiDiets)
-  const apiMealTimes = Object.fromEntries(
-    apiDiets.map((d) => {
-      const date = new Date(d.createdAt + "Z")
-      const h = String(date.getHours()).padStart(2, "0")
-      const m = String(date.getMinutes()).padStart(2, "0")
-      return [d.mealType, `${h}:${m}`]
-    }),
-  ) as Partial<Record<MealType, string>>
 
   const mergedRecordedMeals = { ...apiRecordedMeals, ...recordedMeals }
 
@@ -473,10 +471,10 @@ export function RecordView({
     mealType: diet.mealType,
     time: timeOf(diet.createdAt),
     /*
-      사진은 **그 기록의 것**(`diet.imageUrl`)이다. 낙관 갱신 맵(`mealImages`)은 끼니로
-      키를 잡는데, 한 끼니에 여러 건이 있으면 그 맵의 한 장이 그 끼니의 모든 줄을 덮는다 —
-      점심을 두 번 적으면 두 줄이 같은 사진이 된다(2026-09-05 검수). 줄은 등록 직후의
-      refetch 로 생기므로 그 맵 없이도 첫 렌더부터 제 사진이 온다.
+      사진은 **그 기록의 것**(`diet.imageUrl`)이다. 예전의 끼니별 낙관 갱신 맵은 한 끼니에
+      여러 건이 있으면 한 장이 그 끼니의 모든 줄을 덮었다 — 점심을 두 번 적으면 두 줄이
+      같은 사진이 됐다(2026-09-05 검수). 줄은 등록 직후의 refetch 로 생기므로 그 맵 없이도
+      첫 렌더부터 제 사진이 온다.
     */
     imageUri: diet.imageUrl ?? null,
     title: diet.title?.trim() ? diet.title : null,
@@ -513,20 +511,21 @@ export function RecordView({
   const bloodPressure = data?.result.bloodPressure ?? null
   const bloodGlucose = data?.result.bloodGlucose ?? []
 
-  const handleAddToRecord = async () => {
-    await registerDiary(selectedDate, (mealType, imageUri) => {
+  /** 성공 여부를 돌려준다. 실패는 `registerDiary` 가 이미 알렸다 — 페이지는 닫지 않는다. */
+  const handleAddToRecord = async (): Promise<boolean> => {
+    const saved = await registerDiary(selectedDate, (mealType) => {
       setRecordedMeals((prev) => ({ ...prev, [mealType]: true }))
-      if (imageUri) {
-        setMealImages((prev) => ({ ...prev, [mealType]: imageUri }))
-      }
     })
+    if (!saved) return false
     await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
     await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+    return true
   }
   handleAddToRecordRef.current = handleAddToRecord
 
-  const handlePendingAddToRecord = async () => {
-    if (!pending) return
+  /** 복구된 결과의 기록. 성공 여부를 돌려준다 — 실패한 결과를 페이지가 버리지 않게. */
+  const handlePendingAddToRecord = async (): Promise<boolean> => {
+    if (!pending) return false
     if (pending.result.foodAnalysisResultId <= 0) {
       /*
         요청이 **나가지도 않은** 실패다. 토스트를 직접 띄우므로 `presentError` 를 안
@@ -541,7 +540,7 @@ export function RecordView({
         t("home.errors.notReadyTitle"),
         t("home.errors.notReadyBody"),
       )
-      return
+      return false
     }
     try {
       await foodCameraService.registerDiary(
@@ -550,15 +549,10 @@ export function RecordView({
         pending.mealType,
       )
       setRecordedMeals((prev) => ({ ...prev, [pending.mealType]: true }))
-      if (pending.imageUri) {
-        setMealImages((prev) => ({
-          ...prev,
-          [pending.mealType]: pending.imageUri!,
-        }))
-      }
       await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
       await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
       trackAnalyticsEvent("food_record_saved", { source: "recovered" })
+      return true
     } catch (error) {
       trackAnalyticsEvent("food_record_save_failed", {
         source: "recovered",
@@ -568,6 +562,7 @@ export function RecordView({
         scope: "meal-diary-register-recovered",
         retry: () => void handlePendingAddToRecord(),
       })
+      return false
     }
   }
 
@@ -601,7 +596,6 @@ export function RecordView({
    */
   const startMealRecord = (mealType: MealType) => {
     recordingMealTypeRef.current = mealType
-    onSelectMealType(mealType)
     trackAnalyticsEvent("food_record_started", {
       slot: ANALYTICS_MEAL_SLOT[mealType],
     })
@@ -707,6 +701,33 @@ export function RecordView({
       importingRecipeRef.current = null
       await afterModalTransitions()
       if (request !== recipeImportRequestRef.current) return
+      /*
+        레시피 결과의 기록. 다른 두 저장 경로와 같은 규약이다 — 실패를 여기서 알리고 성공
+        여부를 돌려주며, 페이지에는 거부로 나른다(예전에는 알리지도 않고 조용히 거부됐다).
+      */
+      const registerRecipeDiary = async (): Promise<boolean> => {
+        try {
+          await foodCameraService.registerDiary(
+            result.foodAnalysisResultId,
+            toDateStr(selectedDate),
+            mealType,
+          )
+          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
+          await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
+          trackAnalyticsEvent("food_record_saved", { source: "fresh" })
+          return true
+        } catch (error) {
+          trackAnalyticsEvent("food_record_save_failed", {
+            source: "fresh",
+            fail_kind: toAnalyticsFailKind(error),
+          })
+          presentError(error, {
+            scope: "meal-diary-register-recipe",
+            retry: () => void registerRecipeDiary(),
+          })
+          return false
+        }
+      }
       trackAnalyticsEvent("food_record_result_viewed", { source: "fresh" })
       openMealReportPage({
         source: "fresh",
@@ -716,16 +737,7 @@ export function RecordView({
         recordDate: toDateStr(selectedDate),
         isUpdating,
         updateFoodAnalysis,
-        onAddToRecord: async () => {
-          await foodCameraService.registerDiary(
-            result.foodAnalysisResultId,
-            toDateStr(selectedDate),
-            mealType,
-          )
-          await queryClient.refetchQueries({ queryKey: ["dateAnalysis"] })
-          await queryClient.refetchQueries({ queryKey: ["diaryExistence"] })
-          trackAnalyticsEvent("food_record_saved", { source: "fresh" })
-        },
+        onAddToRecord: () => requireMealReportSaved(registerRecipeDiary()),
       })
     } catch (error) {
       if (request !== recipeImportRequestRef.current) return
@@ -779,8 +791,8 @@ export function RecordView({
   }
 
   /**
-   * 저장된 기록의 리포트 페이지. 통계 화면도 같은 페이지를 연다(StatisticsView).
-   * 수정·끼니 변경·삭제의 결과는 콜백으로 되돌아와 이 화면의 사진·기록 상태를 맞춘다.
+   * 저장된 기록의 리포트 페이지.
+   * 수정·끼니 변경·삭제의 결과는 콜백으로 되돌아와 이 화면의 기록 상태를 맞춘다.
    */
   const openSavedMealReport = (
     result: DiaryAnalysisResult,
@@ -808,20 +820,10 @@ export function RecordView({
   const handleViewMealTypeChange = ({
     fromMealType,
     toMealType,
-    imageUri,
   }: {
     fromMealType: MealType
     toMealType: MealType
-    imageUri: string | null
   }) => {
-    setMealImages((prev) =>
-      applyMealTypeChangeToMealImages({
-        current: prev,
-        fromMealType,
-        toMealType,
-        imageUri,
-      }),
-    )
     setRecordedMeals((prev) =>
       applyMealTypeChangeToRecordedMeals({
         current: prev,
@@ -921,8 +923,6 @@ export function RecordView({
   const openBloodPressurePage = () => {
     openRecordPage({
       kind: "bloodPressure",
-      record: bloodPressure,
-      previousRecord: previousBloodPressure,
       date: selectedDateStr,
       isSaving: isBloodSaving,
       onSubmit: handleBloodPressureSubmit,
@@ -934,9 +934,7 @@ export function RecordView({
     openRecordPage({
       kind: "weight",
       today: bodyToday,
-      previous: bodyPrevious,
       endDate: selectedDateStr,
-      isToday: isViewingToday,
       isSaving: isBodySaving,
       onSubmit: handleWeightSubmit,
       onClose: refetchDay,

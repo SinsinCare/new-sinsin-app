@@ -47,14 +47,6 @@ export function CommunityFeedSkeleton({
 }
 
 const styles = StyleSheet.create({
-  storyRail: {
-    flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-  },
-  story: { alignItems: "center", gap: 6 },
-  sectionLabel: { marginHorizontal: 20, marginTop: 24, marginBottom: 10 },
   list: {},
   card: { paddingHorizontal: 20, paddingVertical: 16, gap: 8 },
   metaRow: {

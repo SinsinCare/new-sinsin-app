@@ -19,10 +19,10 @@
  */
 
 import type { RestaurantCardTarget } from "../utils/restaurantCardNavigation"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { StyleSheet, View, type ViewStyle } from "react-native"
 // 리사이클링 리스트 — 무한 피드는 FlatList 대신 FlashList(v2, 추정치 불필요)
-import { FlashList } from "@shopify/flash-list"
+import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
@@ -37,10 +37,13 @@ import {
 
 import type { BookmarkCardDto } from "../types"
 import { useBookmarkList } from "../hooks/useBookmarkList"
-import { RestaurantCard } from "../components/RestaurantCard"
 import {
-  RESTAURANT_SKELETON_COUNT,
+  RestaurantCardRow,
+  RestaurantCardSeparator,
+} from "../components/RestaurantCard"
+import {
   RestaurantCardSkeleton,
+  RestaurantCardSkeletonList,
 } from "../components/RestaurantCardSkeleton"
 
 export interface RestaurantBookmarksScreenProps {
@@ -65,19 +68,27 @@ export function RestaurantBookmarksScreen({
   // 저장한 곳 응답은 `RestaurantCardDto` 가 아니라 더 얇은 `BookmarkCardDto` 다
   // (`safety` 없음 / `bookmarkedAt` 있음). 카드가 유니온을 받으므로 그대로 넘긴다 —
   // 예전에는 두 응답을 같은 타입으로 선언해 두어 없는 필드를 읽고 있었다.
-  const keyExtractor = useCallback(
-    (item: BookmarkCardDto) => String(item.restaurantId),
-    [],
+  // 카드마다 인라인 화살표를 만들면 `memo(RestaurantCard)` 가 걸러 내지 못한다 — 줄 하나가
+  // 자기 카드를 알려 주는 구조(`RestaurantCardRow`)로 화면은 이 콜백 하나만 든다.
+  const handlePressCard = useCallback(
+    (card: BookmarkCardDto, target: RestaurantCardTarget) =>
+      onSelectRestaurant(card.restaurantId, target),
+    [onSelectRestaurant],
   )
 
   const renderItem = useCallback(
-    ({ item }: { item: BookmarkCardDto }) => (
-      <RestaurantCard
-        card={item}
-        onPress={(target) => onSelectRestaurant(item.restaurantId, target)}
-      />
+    ({ item }: ListRenderItemInfo<BookmarkCardDto>) => (
+      <RestaurantCardRow item={item} onPress={handlePressCard} />
     ),
-    [onSelectRestaurant],
+    [handlePressCard],
+  )
+
+  const contentContainerStyle = useMemo(
+    () => ({
+      paddingTop: spacing[8],
+      paddingBottom: insets.bottom + spacing[24],
+    }),
+    [insets.bottom],
   )
 
   return (
@@ -96,12 +107,12 @@ export function RestaurantBookmarksScreen({
       <V2Divider tone="alternative" />
       <FlashList
         data={list.items}
-        keyExtractor={keyExtractor}
+        keyExtractor={bookmarkKeyExtractor}
         renderItem={renderItem}
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={RestaurantCardSeparator}
         ListEmptyComponent={
           list.isLoading ? (
-            <SkeletonList />
+            <RestaurantCardSkeletonList />
           ) : list.isError ? (
             <View style={styles.state}>
               <V2ErrorState
@@ -130,27 +141,14 @@ export function RestaurantBookmarksScreen({
         onEndReachedThreshold={0.4}
         bounces={false}
         overScrollMode="never"
-        contentContainerStyle={{
-          paddingTop: spacing[8],
-          paddingBottom: insets.bottom + spacing[24],
-        }}
+        contentContainerStyle={contentContainerStyle}
       />
     </View>
   )
 }
 
-function Separator() {
-  return <V2Divider tone="alternative" />
-}
-
-function SkeletonList() {
-  return (
-    <View>
-      {Array.from({ length: RESTAURANT_SKELETON_COUNT }, (_, index) => (
-        <RestaurantCardSkeleton key={index} />
-      ))}
-    </View>
-  )
+function bookmarkKeyExtractor(item: BookmarkCardDto): string {
+  return String(item.restaurantId)
 }
 
 const styles = StyleSheet.create({

@@ -12,6 +12,8 @@
 import type {
   DoctorCard,
   DoctorConnection,
+  DoctorReportDetail,
+  DoctorReportList,
   ShareGrant,
   ShareGrantUpdate,
 } from "@/src/types/doctorLink"
@@ -94,6 +96,46 @@ const state: MockState = {
   nextId: 3,
 }
 
+/**
+ * 상세까지 들고 있는 리포트. 목록은 여기서 상세 칸을 떼어 낸다 — 서버도 같은 행에서
+ * 두 투영을 만든다. 검사 패널은 eGFR 하락·칼륨 높음·인 정상이 한 화면에 다 보이게 골랐다.
+ */
+const MOCK_REPORTS: DoctorReportDetail[] = [
+  {
+    id: "9001",
+    doctor: DOCTORS[0] ?? null,
+    comment:
+      "지난 한 달 기록 잘 봤습니다. 칼륨이 조금 올라서 이번 달은 과일 간식만 줄여보면 좋겠어요. 국물을 남기신 날이 늘어난 건 아주 잘하고 계신 거예요. 다음 진료 때 뵙겠습니다.",
+    tasks: ["바나나 대신 사과로 바꾸기", "감자·고구마는 삶아서 물 버리고 먹기", "국물은 반만 먹기"],
+    includeSummary: true,
+    mealPlanIncluded: false,
+    sentAt: "2026-09-10T09:12:00",
+    labs: [
+      { date: "2026-09-01", egfr: 38, creatinine: 1.9, potassium: 5.2, phosphorus: 4.1, uacr: null, systolic: 128, hba1c: null, fastingGlucose: null },
+      { date: "2026-08-01", egfr: 41, creatinine: 1.8, potassium: 4.6, phosphorus: 4.0, uacr: null, systolic: 130, hba1c: null, fastingGlucose: null },
+    ],
+    windowDays: 28,
+    limits: { sodiumMg: 2000, potassiumMg: 2000, phosphorusMg: 800, proteinG: 41, fluidMl: 1200 },
+    nextVisit: { label: "다음 진료", date: "2026-10-09", time: "10:30" },
+    demoLabs: false,
+  },
+  // 코멘트 없이 과제만·검사 미공유·일정 없음. 카드가 셋 빠진 화면을 목에서도 볼 수 있게.
+  {
+    id: "9002",
+    doctor: DOCTORS[0] ?? null,
+    comment: "",
+    tasks: ["매일 아침 혈압 기록"],
+    includeSummary: false,
+    mealPlanIncluded: false,
+    sentAt: "2026-08-12T10:00:00",
+    labs: [],
+    windowDays: null,
+    limits: { sodiumMg: 2000, potassiumMg: null, phosphorusMg: null, proteinG: 41, fluidMl: null },
+    nextVisit: null,
+    demoLabs: true,
+  },
+]
+
 function contains(haystack: string | null, needle: string): boolean {
   if (!haystack) return false
   return haystack.toLowerCase().includes(needle.trim().toLowerCase())
@@ -113,6 +155,20 @@ export const mockDoctorLink = {
       return true
     })
     return { items, total: items.length }
+  },
+
+  listReports(): DoctorReportList {
+    const items = MOCK_REPORTS.map(
+      ({ labs: _labs, windowDays: _w, limits: _l, nextVisit: _n, demoLabs: _dl, ...report }) =>
+        report,
+    )
+    return { items, total: items.length }
+  },
+
+  getReport(reportId: string): DoctorReportDetail {
+    const found = MOCK_REPORTS.find((report) => report.id === reportId)
+    if (!found) throw new Error("report not found")
+    return found
   },
 
   list() {

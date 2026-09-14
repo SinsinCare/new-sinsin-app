@@ -132,16 +132,27 @@ let sending = false
 let retryDelayMs = RETRY_BASE_MS
 let nextRetryAtMs = 0
 let persistScheduled = false
+/**
+ * 메모리 상태가 영속본보다 앞서 있는가. 큐에 행이 들어오거나 빠질 때·세션이 굴러갈 때
+ * 켜지고 `persistNow` 가 끈다. 이게 없으면 enqueue 마다 큐 전체(최대 500건)를 직렬화해
+ * 썼고, `flushQueue` 는 백오프 재시도마다 **아무것도 안 바뀐** 큐를 다시 썼다.
+ */
+let dirty = false
 
 /** 즉시 저장. 전송 직전·백그라운드 진입처럼 "지금 상태가 진실이어야 하는" 순간에 부른다. */
 async function persistNow(): Promise<void> {
+  if (!dirty) return
+  // 스냅숏은 아래 stringify 가 동기로 뜬다. await 하는 동안 들어온 변경은 dirty 를 다시
+  // 켜므로 다음 저장이 따라잡는다.
+  dirty = false
   try {
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(state.queue))
     if (state.session) {
       await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(state.session))
     }
   } catch {
-    // 저장 실패는 무시한다 — 다음 성공 때 따라잡는다.
+    // 저장 실패는 무시한다 — dirty 로 돌려 두면 다음 성공 때 따라잡는다.
+    dirty = true
   }
 }
 
@@ -235,6 +246,8 @@ async function hydrate(): Promise<void> {
 
 /** 활동 시각 기준으로 세션을 얻거나 굴린다. 새 세션이면 true 를 함께 알린다. */
 function rollSession(nowMs: number): { session: SessionState; isNew: boolean } {
+  // 어느 갈래든 세션이 바뀐다(활동 시각 또는 새 세션) — 영속본이 뒤처진다.
+  dirty = true
   const current = state.session
   if (current && nowMs - current.lastActivityMs <= SESSION_TIMEOUT_MS) {
     current.lastActivityMs = nowMs
@@ -256,8 +269,13 @@ export interface EnqueueOptions {
   readonly props?: Record<string, unknown>
 }
 
-/** 세션 굴림의 부수 이벤트(app_opened 등)를 호출부가 만들 수 있도록 알린다. */
-export type SessionRollListener = (info: { fromColdStart: boolean }) => void
+/**
+ * 세션 굴림의 부수 이벤트(app_opened)를 호출부가 **정의**한다. 돌려준 행은 그 세션의
+ * 첫 이벤트(seq 1)로 들어간다 — 번호는 전송기가 매기고, 호출부는 내용만 안다.
+ */
+export type SessionRollListener = (info: {
+  fromColdStart: boolean
+}) => EnqueueOptions | void
 let sessionRollListener: SessionRollListener | null = null
 let coldStart = true
 
@@ -265,20 +283,12 @@ export function onSessionRolled(listener: SessionRollListener): void {
   sessionRollListener = listener
 }
 
-export async function enqueueEvent(options: EnqueueOptions): Promise<void> {
-  if (appConfig.analyticsDisabled) return
-  await hydrate()
-  const nowMs = Date.now()
-  const { session, isNew } = rollSession(nowMs)
-  if (isNew && sessionRollListener) {
-    const wasColdStart = coldStart
-    coldStart = false
-    // 리스너가 같은 세션으로 lifecycle 이벤트를 넣도록 먼저 알린다 — 재귀 진입은
-    // rollSession 이 같은 세션을 돌려주므로 안전하다.
-    sessionRollListener({ fromColdStart: wasColdStart })
-  }
-  coldStart = false
-
+/** 행을 만들어 큐에 넣는다. **seq 는 여기서만 매긴다** — 순번 규칙이 한 곳에 있어야 한다. */
+function appendEvent(
+  session: SessionState,
+  options: EnqueueOptions,
+  nowMs: number,
+): void {
   session.seq += 1
   const event: QueuedEvent = {
     eventUuid: analyticsUuid(),
@@ -290,14 +300,44 @@ export async function enqueueEvent(options: EnqueueOptions): Promise<void> {
     props: options.props ?? {},
     clientTs: new Date(nowMs).toISOString(),
   }
-
   state.queue.push(event)
   if (state.queue.length > MAX_QUEUE)
     state.queue.splice(0, state.queue.length - MAX_QUEUE)
-  schedulePersist()
+  dirty = true
+}
 
+/**
+ * 새 세션의 첫 행(app_opened)을 **동기로** 넣는다.
+ *
+ * 종전에는 리스너가 `enqueueEvent` 를 다시 불렀는데, 그 호출은 `await hydrate()` 에서
+ * 한 번 멈추므로 세션을 굴린 원래 이벤트가 먼저 번호를 받았다 — "세션의 첫 이벤트" 라던
+ * 주석과 달리 app_opened 는 늘 seq 2 였다. 리스너는 행의 내용만 돌려주고, 번호는 여기서
+ * 원래 이벤트보다 **먼저** 매긴다.
+ */
+function openSession(session: SessionState, nowMs: number): void {
+  const wasColdStart = coldStart
+  coldStart = false
+  const opener = sessionRollListener?.({ fromColdStart: wasColdStart })
+  if (opener) appendEvent(session, opener, nowMs)
+}
+
+/** 큐·세션이 바뀐 뒤의 공통 후처리 — 저장 예약, 임계 flush, 주기 타이머. */
+function settle(): void {
+  schedulePersist()
+  if (state.queue.length === 0) return
   if (state.queue.length >= FLUSH_THRESHOLD) void flushQueue()
   ensureTimer()
+}
+
+export async function enqueueEvent(options: EnqueueOptions): Promise<void> {
+  if (appConfig.analyticsDisabled) return
+  await hydrate()
+  const nowMs = Date.now()
+  const { session, isNew } = rollSession(nowMs)
+  if (isNew) openSession(session, nowMs)
+  coldStart = false
+  appendEvent(session, options, nowMs)
+  settle()
 }
 
 /**
@@ -308,13 +348,10 @@ export async function enqueueEvent(options: EnqueueOptions): Promise<void> {
 export async function touchSession(): Promise<void> {
   if (appConfig.analyticsDisabled) return
   await hydrate()
-  const { isNew } = rollSession(Date.now())
-  if (isNew && sessionRollListener) {
-    const wasColdStart = coldStart
-    coldStart = false
-    sessionRollListener({ fromColdStart: wasColdStart })
-  }
-  schedulePersist()
+  const nowMs = Date.now()
+  const { session, isNew } = rollSession(nowMs)
+  if (isNew) openSession(session, nowMs)
+  settle()
 }
 
 /** 첫 설치·버전 갱신 신호 — hydrate 후 한 번만 읽는 소비성 값이다. */
@@ -400,6 +437,7 @@ async function logBatchOutcome(
 function removeBatch(batch: readonly QueuedEvent[]): void {
   const sent = new Set(batch.map((event) => event.eventUuid))
   state.queue = state.queue.filter((event) => !sent.has(event.eventUuid))
+  dirty = true
 }
 
 export async function flushQueue(): Promise<void> {
@@ -422,7 +460,8 @@ export async function flushQueue(): Promise<void> {
     while (state.queue.length > 0) {
       const batch = state.queue.slice(0, MAX_BATCH)
       // 서버에 나갈 seq 가 영속본보다 앞서지 않게 — 죽었다 살아난 세션이 같은
-      // (sessionId, seq) 를 다시 쓰는 중복 축을 여기서 닫는다.
+      // (sessionId, seq) 를 다시 쓰는 중복 축을 여기서 닫는다. 바뀐 게 없으면
+      // (백오프 재시도) `persistNow` 가 스스로 건너뛴다.
       await persistNow()
       const token = await tokenService.getAccessToken().catch(() => null)
       const device = getDeviceContext()
@@ -491,9 +530,4 @@ export async function flushQueue(): Promise<void> {
   } finally {
     sending = false
   }
-}
-
-/** 테스트·디버그 화면용 상태 노출. */
-export function analyticsQueueDepth(): number {
-  return state.queue.length
 }

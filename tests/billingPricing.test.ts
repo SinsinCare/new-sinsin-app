@@ -12,7 +12,6 @@ import {
   cheapestPerDay,
   formatLikePrice,
   perDayPrice,
-  perMonthPrice,
 } from "@/src/features/billing/pricing"
 import type { OfferingPackage } from "@/src/features/billing/purchases/purchasesClient"
 import en from "@/src/i18n/locales/en/billing.json"
@@ -45,18 +44,6 @@ describe("실제 가격표로 검산", () => {
         pkg({ lookupKey: "$rc_annual", priceString: "₩79,000", price: 79_000 }),
       ),
     ).toBe("₩216")
-  })
-
-  test("연 79,000원 → 월 6,583원 (기획서 표와 같다)", () => {
-    expect(
-      perMonthPrice(
-        pkg({ lookupKey: "$rc_annual", priceString: "₩79,000", price: 79_000 }),
-      ),
-    ).toBe("₩6,583")
-  })
-
-  test("월 상품에는 월 환산이 없다 — 자기 자신을 환산할 이유가 없다", () => {
-    expect(perMonthPrice(pkg({}))).toBeNull()
   })
 })
 

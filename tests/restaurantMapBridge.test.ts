@@ -11,7 +11,6 @@
  */
 
 import type {
-  MapBounds,
   MapCluster,
   MapMarker,
   MapStrings,
@@ -140,16 +139,8 @@ describe("주입 스크립트는 유효한 한 문장이다", () => {
     ["select(null)", mapScript.select(null)],
     ["moveTo", mapScript.moveTo(37.5, 127, { zoom: 3, animate: false })],
     ["setLevel", mapScript.setLevel(3)],
-    [
-      "fitBounds",
-      mapScript.fitBounds(
-        { swLat: 37.4, swLng: 126.9, neLat: 37.6, neLng: 127.1 } as MapBounds,
-        { top: 12, bottom: 340 },
-      ),
-    ],
     ["setUserLocation", mapScript.setUserLocation({ lat: 37.5, lng: 127 }, 90)],
     ["setUserLocation(null)", mapScript.setUserLocation(null)],
-    ["panBy", mapScript.panBy(0, -170)],
     ["relayout", mapScript.relayout()],
     ["setStrings", mapScript.setStrings(STRINGS)],
   ]
@@ -230,18 +221,11 @@ describe("이중 인코딩 — 상호명의 따옴표·백슬래시·개행이 �
   })
 
   it("여러 인자를 쓰는 명령도 각 인자가 독립적으로 왕복한다", () => {
-    const bounds: MapBounds = {
-      swLat: 37.4906,
-      swLng: 127.0197,
-      neLat: 37.5053,
-      neLng: 127.0367,
-    }
-    const calls = runScript(
-      mapScript.fitBounds(bounds, { top: 12, bottom: 340 }),
-    )
+    const position = { lat: 37.4979, lng: 127.0276 }
+    const calls = runScript(mapScript.setUserLocation(position, 90))
     expect(calls[0].args).toHaveLength(2)
-    expect(decodeArg(calls[0].args[0])).toEqual(bounds)
-    expect(decodeArg(calls[0].args[1])).toEqual({ top: 12, bottom: 340 })
+    expect(decodeArg(calls[0].args[0])).toEqual(position)
+    expect(decodeArg(calls[0].args[1])).toBe(90)
   })
 
   it("moveTo 는 옵션을 한 객체로 접고 기본값을 명시한다", () => {
@@ -278,9 +262,11 @@ describe("이중 인코딩 — 상호명의 따옴표·백슬래시·개행이 �
   })
 
   it("숫자 인자는 문자열이 아니라 숫자로 도착한다", () => {
-    const calls = runScript(mapScript.panBy(0, -170))
-    expect(decodeArg(calls[0].args[0])).toBe(0)
-    expect(decodeArg(calls[0].args[1])).toBe(-170)
+    expect(decodeArg(runScript(mapScript.setLevel(0))[0].args[0])).toBe(0)
+    const heading = runScript(
+      mapScript.setUserLocation({ lat: 37.5, lng: 127 }, -170),
+    )
+    expect(decodeArg(heading[0].args[1])).toBe(-170)
   })
 })
 

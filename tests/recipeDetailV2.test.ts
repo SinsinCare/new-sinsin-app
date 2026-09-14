@@ -23,6 +23,11 @@ jest.mock("../src/services/core/apiClient", () => ({
   },
 }))
 
+// 모의 경로는 플래그를 명시적으로 켠 환경에서만 산다(적지 않으면 서버 — 서비스 머리말).
+// "모의 경로" 블록이 그 경로를 보므로 모듈을 들여오기 전에 켠다. 와이어 경로 블록은
+// `recipeV2Mock.enabled = false` 로 스스로 끈다.
+process.env.EXPO_PUBLIC_RECIPE_V2_MOCK = "true"
+
 import fs from "fs"
 import path from "path"
 import {
@@ -881,7 +886,11 @@ describe("와이어 경로 (서버가 붙은 뒤)", () => {
     })
 
     const page = await recipeDetailV2Service.getReviews(MOCK_ID)
-    expect(page.items.map((review) => review.authorId)).toEqual([77, null, null])
+    expect(page.items.map((review) => review.authorId)).toEqual([
+      77,
+      null,
+      null,
+    ])
   })
 
   it("커서·정렬을 주면 그대로 실어 보낸다", async () => {

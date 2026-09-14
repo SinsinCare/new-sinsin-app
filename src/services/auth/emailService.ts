@@ -7,13 +7,11 @@ import type {
 } from "../../types"
 
 interface EmailService {
-  checkEmailAvailability(email: string): Promise<boolean>
   sendVerificationCode(email: string): Promise<void>
   verifyCode(
     email: string,
     code: string,
   ): Promise<{ verified: boolean; signupToken?: string }>
-  resendVerificationCode(email: string): Promise<void>
   sendPasswordResetCode(email: string): Promise<void>
   verifyPasswordResetCode(
     email: string,
@@ -28,17 +26,6 @@ interface EmailService {
 
 function getRealEmailService(): EmailService {
   return {
-    async checkEmailAvailability(email: string): Promise<boolean> {
-      try {
-        await publicApi.get<ApiResponse>("/auth/signup/email/verify", {
-          params: { email },
-        })
-        return true
-      } catch {
-        return false
-      }
-    },
-
     async sendVerificationCode(email: string): Promise<void> {
       await publicApi.post<ApiResponse>("/auth/signup/email/otp/send", {
         email,
@@ -54,12 +41,6 @@ function getRealEmailService(): EmailService {
         { email, authKey: code },
       )
       return { verified: true, signupToken: data.result.signupToken }
-    },
-
-    async resendVerificationCode(email: string): Promise<void> {
-      await publicApi.post<ApiResponse>("/auth/signup/email/otp/send", {
-        email,
-      })
     },
 
     async sendPasswordResetCode(email: string): Promise<void> {
@@ -101,10 +82,6 @@ function getRealEmailService(): EmailService {
 
 function getMockEmailService(): EmailService {
   return {
-    async checkEmailAvailability(_email: string): Promise<boolean> {
-      return true
-    },
-
     async sendVerificationCode(_email: string): Promise<void> {
       // mock: 아무것도 하지 않음
     },
@@ -114,10 +91,6 @@ function getMockEmailService(): EmailService {
       _code: string,
     ): Promise<{ verified: boolean; signupToken?: string }> {
       return { verified: true, signupToken: "mock-signup-token" }
-    },
-
-    async resendVerificationCode(_email: string): Promise<void> {
-      // mock: 아무것도 하지 않음
     },
 
     async sendPasswordResetCode(_email: string): Promise<void> {
@@ -153,13 +126,9 @@ function getEmailService(): EmailService {
 }
 
 export const emailService: EmailService = {
-  checkEmailAvailability: (email) =>
-    getEmailService().checkEmailAvailability(email),
   sendVerificationCode: (email) =>
     getEmailService().sendVerificationCode(email),
   verifyCode: (email, code) => getEmailService().verifyCode(email, code),
-  resendVerificationCode: (email) =>
-    getEmailService().resendVerificationCode(email),
   sendPasswordResetCode: (email) =>
     getEmailService().sendPasswordResetCode(email),
   verifyPasswordResetCode: (email, code) =>

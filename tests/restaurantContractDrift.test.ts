@@ -25,11 +25,6 @@ import {
   requireShape,
 } from "../src/services/data/restaurantShape"
 import {
-  cardSafetyBadges,
-  cardSafetyNoteKey,
-  dominantDriver,
-} from "../src/features/restaurant/utils/cardSafetyBadge"
-import {
   classifyFetchFailure,
   failureSpec,
   totalExcluded,
@@ -37,7 +32,6 @@ import {
 import { ApiError } from "../src/services/core/apiError"
 import ko from "../src/i18n/locales/ko/common.json"
 import en from "../src/i18n/locales/en/common.json"
-import type { RestaurantSafetyDto } from "../src/features/restaurant/types"
 
 /* ─────────── 실측 픽스처 (GET /restaurants/search 의 items[0]) ─────────── */
 
@@ -102,21 +96,6 @@ const MEASURED_BOOKMARK_CARD = {
   openTime: "11:30",
   closeTime: "21:00",
   safetySummary: null,
-}
-
-function safety(over: Partial<RestaurantSafetyDto> = {}): RestaurantSafetyDto {
-  return {
-    level: "CAUTION",
-    menuCount: 6,
-    safeMenuCount: 0,
-    cautionMenuCount: 6,
-    restrictedMenuCount: 0,
-    unknownMenuCount: 0,
-    hasSafeMenu: false,
-    driverCounts: {},
-    profileMissing: false,
-    ...over,
-  }
 }
 
 /* ─────────────────────────── 런타임 모양 검사 ─────────────────────────── */
@@ -234,114 +213,12 @@ describe("excludedForMissingData 합산", () => {
   })
 })
 
-/* ────────────── 카드 배지: `nutritionBadges` 의 대체물 ────────────── */
-
-describe("카드 안전도 배지 유도", () => {
-  it("프로필이 없으면 배지가 없다 (근거 없는 판정을 그리지 않는다)", () => {
-    const badges = cardSafetyBadges(
-      safety({
-        level: "RESTRICTED",
-        profileMissing: true,
-        driverCounts: { sodium: 5 },
-      }),
-    )
-    expect(badges).toEqual({ level: null, note: null })
-  })
-
-  it("`UNKNOWN` 은 배지가 없다 — 회색 `정보 없음` 으로도 채우지 않는다", () => {
-    expect(cardSafetyBadges(safety({ level: "UNKNOWN" }))).toEqual({
-      level: null,
-      note: null,
-    })
-  })
-
-  it("`UNKNOWN` 이 `SAFE` 로 새지 않는다", () => {
-    // 신장 환자에게 가장 위험한 방향의 실수다. 등급 자리가 `SAFE` 가 되는 일이 없어야 한다.
-    expect(cardSafetyBadges(safety({ level: "UNKNOWN" })).level).not.toBe(
-      "SAFE",
-    )
-  })
-
-  it("`safety` 가 아예 없는 목록(저장한 곳)에서도 죽지 않고 배지가 없다", () => {
-    expect(cardSafetyBadges(null)).toEqual({ level: null, note: null })
-    expect(cardSafetyBadges(undefined)).toEqual({ level: null, note: null })
-  })
-
-  it("`SAFE` 는 등급만 — 경고할 것도 단서 달 것도 없다", () => {
-    expect(
-      cardSafetyBadges(safety({ level: "SAFE", safeMenuCount: 6 })),
-    ).toEqual({
-      level: "SAFE",
-      note: null,
-    })
-  })
-
-  it("제한이라도 안전 메뉴가 있으면 **갈 이유**를 말한다", () => {
-    const badges = cardSafetyBadges(
-      safety({
-        level: "RESTRICTED",
-        safeMenuCount: 2,
-        driverCounts: { sodium: 4 },
-      }),
-    )
-    expect(badges.level).toBe("RESTRICTED")
-    expect(badges.note).toEqual({ kind: "SAFE_MENU_COUNT", count: 2 })
-    expect(cardSafetyNoteKey(badges.note!)).toBe(
-      "restaurant.safety.safeMenuCountBadge",
-    )
-  })
-
-  it("안전 메뉴가 0개면 **이유**를 말한다 (실측 카드가 이 경우다)", () => {
-    const badges = cardSafetyBadges(MEASURED_CARD.safety as RestaurantSafetyDto)
-    expect(badges.level).toBe("RESTRICTED")
-    // 나트륨 5 vs 단백질 1 — 판정을 가장 많이 끈 쪽.
-    expect(badges.note).toEqual({ kind: "DRIVER", driver: "sodium" })
-    expect(cardSafetyNoteKey(badges.note!)).toBe(
-      "restaurant.safety.driverBadge",
-    )
-  })
-
-  it("근거 영양소도 없으면 보조 배지를 지어내지 않는다", () => {
-    const badges = cardSafetyBadges(
-      safety({ level: "CAUTION", safeMenuCount: 0, driverCounts: {} }),
-    )
-    expect(badges.level).toBe("CAUTION")
-    expect(badges.note).toBeNull()
-  })
-
-  it("`안전 메뉴 0개` 는 절대 나오지 않는다", () => {
-    // `hasSafeMenu: true` 인데 수가 0 인 어긋난 응답에서도 수를 근거로 삼기 때문에 안전하다.
-    const badges = cardSafetyBadges(
-      safety({
-        level: "CAUTION",
-        hasSafeMenu: true,
-        safeMenuCount: 0,
-        driverCounts: { potassium: 1 },
-      }),
-    )
-    expect(badges.note).toEqual({ kind: "DRIVER", driver: "potassium" })
-  })
-})
-
-describe("dominantDriver", () => {
-  it("가장 많이 끈 영양소를 고른다", () => {
-    expect(dominantDriver({ sodium: 5, protein: 1 })).toBe("sodium")
-    expect(dominantDriver({ sodium: 1, phosphorus: 9 })).toBe("phosphorus")
-  })
-
-  it("동수면 순서가 안정적이다 — 새로 고칠 때마다 이유가 바뀌면 아무도 신뢰하지 않는다", () => {
-    expect(dominantDriver({ protein: 2, sodium: 2 })).toBe("sodium")
-    expect(dominantDriver({ sodium: 2, protein: 2 })).toBe("sodium")
-  })
-
-  it("빈 객체면 `null`", () => {
-    expect(dominantDriver({})).toBeNull()
-  })
-
-  it("없는 키를 `undefined` 로 비교하지 않는다 (0 으로 접는다)", () => {
-    expect(dominantDriver({ sodium: undefined, protein: 3 })).toBe("protein")
-  })
-})
+/*
+  카드 요약 배지(`cardSafetyBadges`·`dominantDriver`)를 실측 카드로 단언하던 describe 가
+  여기 있었다. 카드가 제목 옆 영양소 배지(`cardConcernNutrients`,
+  `tests/restaurantConcernBadges.test.ts`)만 그리게 바뀐 뒤 그 유도 로직은 호출부 없이
+  남아 있어 함께 지웠다(`utils/cardSafetyBadge.ts` 헤더 §여기 없는 것).
+*/
 
 /* ─────────────── 실패 원인 분류 (400 ≠ 인터넷 문제) ─────────────── */
 

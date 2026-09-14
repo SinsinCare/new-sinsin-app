@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from "react"
 import { AppState } from "react-native"
-import { useAuthStore, useUserStore } from "../stores"
+import { useShallow } from "zustand/react/shallow"
+import { useAuthStore } from "../stores"
 import {
   authService,
-  persistSocialReauthenticationIntentForSignOut,
   type AuthSignOutReason,
 } from "../services/auth/authService"
 import {
@@ -48,6 +48,44 @@ function isSocialSignupConsentRequiredResult(
   )
 }
 
+/*
+  로그아웃은 **한 번에 한 건**만 돈다.
+
+  `useAuth` 는 `_layout`·설정·로그인 화면 등 여러 곳이 동시에 부르고, ephemeral
+  세션의 자동 로그아웃 리스너는 그 인스턴스마다 하나씩 붙는다. 백그라운드로 가는
+  한 번의 사건에 `signOut("automatic")` 이 인스턴스 수만큼 불려 POST /auth/logout
+  과 `auth_signed_out` 이 N 번 나갔다. `refreshAccessToken` 과 같은 방식으로
+  진행 중인 한 건을 모두가 공유한다.
+*/
+let signOutInFlight: Promise<void> | null = null
+
+async function runSignOut(reason: AuthSignOutReason): Promise<void> {
+  /*
+    **맨 앞에서 쏜다.** 아래 `finally` 는 서버 로그아웃이 실패해도 세션을 비우므로,
+    이 함수에 들어온 것 자체가 곧 로그아웃이다. 뒤로 미루면 서버가 느린 날의
+    자동 로그아웃이 백그라운드 종료에 잘려 통째로 사라진다.
+
+    `reason` 을 나누는 이유는 이 둘이 **정반대의 사건**이기 때문이다.
+    `'automatic'` 은 `sessionPersistence:'ephemeral'` 계정이 백그라운드로 들어가는
+    즉시 잘린 것으로 사용자가 원한 적이 없고, 그 코호트는 앱을 잠깐 내렸다 올릴
+    때마다 로그인 화면을 다시 만나 로그인 퍼널 분모에 재로그인을 섞는다(설계 §9-⑤).
+  */
+  trackAnalyticsEvent("auth_signed_out", { reason })
+  try {
+    await authService.signOut()
+  } finally {
+    /*
+      익명 id 는 **기기 축이라 로그아웃해도 유지된다**(`analyticsClient` 머리말).
+      그래서 로그아웃 뒤 이 기기에서 쌓인 익명 이벤트는, 다음에 로그인한 사람이
+      누구든 서버의 소급 귀속으로 **그 사람에게 붙는다.** 공용 기기·계정 전환이
+      섞인 데이터를 개인 단위로 읽으면 안 된다는 뜻이다.
+    */
+    resetAnalyticsIdentity()
+    // 다음 소셜 로그인은 계정 선택부터 다시 — 그 표시까지 세션 정리가 함께 한다.
+    await clearClientSession({ requireFreshSocialProviderSelection: true })
+  }
+}
+
 function fallbackEntryGate(result: AuthSessionResult) {
   if (result.entryGate) return result.entryGate
   if (result.accountState === "PENDING_PROFILE") return "PROFILE" as const
@@ -61,6 +99,11 @@ function fallbackEntryGate(result: AuthSessionResult) {
 }
 
 export function useAuth() {
+  /*
+    읽는 칸만 고른다. 셀렉터 없이 스토어를 통째로 구독하면 열 곳 남짓한 호출처가
+    어느 칸이 바뀌어도 전부 렌더된다. 액션은 스토어에서 부를 때 꺼낸다 — 렌더와
+    무관하고, 그래야 콜백 의존성도 비어 있다.
+  */
   const {
     user,
     accountState,
@@ -69,31 +112,27 @@ export function useAuth() {
     requiresAdditionalInfo,
     entryGate,
     sessionPersistence,
-    setUser,
-    setAccountState,
-    setRequiresAdditionalInfo,
-    setEntryGate,
-    setSessionPersistence,
-    reset: resetAuth,
-  } = useAuthStore()
-  const { reset: resetProfile } = useUserStore()
-
-  const applyAuthSession = useCallback(
-    (result: AuthSessionResult) => {
-      setUser(result.user)
-      setAccountState(result.accountState)
-      setRequiresAdditionalInfo(result.requiresAdditionalInfo)
-      setEntryGate(fallbackEntryGate(result))
-      setSessionPersistence(result.sessionPersistence ?? "persistent")
-    },
-    [
-      setAccountState,
-      setEntryGate,
-      setRequiresAdditionalInfo,
-      setSessionPersistence,
-      setUser,
-    ],
+  } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      accountState: state.accountState,
+      isLoading: state.isLoading,
+      isAuthenticated: state.isAuthenticated,
+      requiresAdditionalInfo: state.requiresAdditionalInfo,
+      entryGate: state.entryGate,
+      sessionPersistence: state.sessionPersistence,
+    })),
   )
+
+  const applyAuthSession = useCallback((result: AuthSessionResult) => {
+    useAuthStore.getState().applySession({
+      user: result.user,
+      accountState: result.accountState,
+      requiresAdditionalInfo: result.requiresAdditionalInfo,
+      entryGate: fallbackEntryGate(result),
+      sessionPersistence: result.sessionPersistence ?? "persistent",
+    })
+  }, [])
 
   const startSessionRestore = useCallback(() => {
     return socialAuthCoordinator.startRestore({
@@ -283,38 +322,15 @@ export function useAuth() {
   }
 
   const signOut = useCallback(
-    async (reason: AuthSignOutReason = "automatic") => {
-      /*
-        **맨 앞에서 쏜다.** 아래 `finally` 사슬은 서버 로그아웃이 실패해도 세션을
-        비우므로, 이 함수에 들어온 것 자체가 곧 로그아웃이다. 뒤로 미루면 서버가
-        느린 날의 자동 로그아웃이 백그라운드 종료에 잘려 통째로 사라진다.
-
-        `reason` 을 나누는 이유는 이 둘이 **정반대의 사건**이기 때문이다.
-        `'automatic'` 은 `sessionPersistence:'ephemeral'` 계정이 백그라운드로 들어가는
-        즉시 잘린 것으로 사용자가 원한 적이 없고, 그 코호트는 앱을 잠깐 내렸다 올릴
-        때마다 로그인 화면을 다시 만나 로그인 퍼널 분모에 재로그인을 섞는다(설계 §9-⑤).
-      */
-      trackAnalyticsEvent("auth_signed_out", { reason })
-      try {
-        await authService.signOut()
-      } finally {
-        try {
-          await persistSocialReauthenticationIntentForSignOut(reason)
-        } finally {
-          /*
-            익명 id 는 **기기 축이라 로그아웃해도 유지된다**(`analyticsClient` 머리말).
-            그래서 로그아웃 뒤 이 기기에서 쌓인 익명 이벤트는, 다음에 로그인한 사람이
-            누구든 서버의 소급 귀속으로 **그 사람에게 붙는다.** 공용 기기·계정 전환이
-            섞인 데이터를 개인 단위로 읽으면 안 된다는 뜻이다.
-          */
-          resetAnalyticsIdentity()
-          await clearClientSession()
-          resetProfile()
-          resetAuth()
-        }
+    async (reason: AuthSignOutReason = "automatic"): Promise<void> => {
+      if (!signOutInFlight) {
+        signOutInFlight = runSignOut(reason).finally(() => {
+          signOutInFlight = null
+        })
       }
+      return signOutInFlight
     },
-    [resetAuth, resetProfile],
+    [],
   )
 
   useEffect(() => {

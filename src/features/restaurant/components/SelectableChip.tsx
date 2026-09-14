@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, View, type ViewStyle } from "react-native"
+import { StyleSheet, View, type ViewStyle } from "react-native"
+// 시트 안의 눌리는 요소는 RNGH 것이어야 gorhom 콘텐츠 팬과 같은 체계에서 갈린다(카드와 같은 이유).
+import { Pressable } from "react-native-gesture-handler"
 import { Text } from "@/src/shared/components/AppText"
 import { useTranslation } from "react-i18next"
 import {
@@ -78,7 +80,8 @@ function resolveColors(
 ): ChipPalette {
   if (variant === "filter") {
     return {
-      bg: colors.fill.normal,
+      // 누르는 면이라 `fill.control` 이다 — 아래 outline 갈래의 머리말과 같은 이유.
+      bg: colors.fill.control,
       fg: selected ? colors.label.normal : colors.label.neutral,
     }
   }

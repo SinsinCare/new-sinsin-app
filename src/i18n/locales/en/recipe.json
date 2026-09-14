@@ -196,6 +196,7 @@
     "titleLabel": "Title",
     "tagsLabel": "Tags",
     "descriptionLabel": "Description",
+    "bodyLabel": "Body",
     "descriptionPlaceholder": "Write your post.",
     "register": "Publish",
     "titlePlaceholder": "Add a title",
@@ -213,7 +214,24 @@
     "exitBody": "Your draft won’t be saved.",
     "editExitBody": "The changes you made won’t be saved.",
     "selfName": "You",
-    "selfRole": "Managing kidney health"
+    "selfRole": "Managing kidney health",
+    "topicPlaceholder": "Choose a topic",
+    "topicSheetTitle": "What is this post about?",
+    "pollTool": "Poll",
+    "consentTitle": "Before you post",
+    "consentConfirm": "I understand",
+    "consentHint": "Confirming posts right away. We won't ask again for this post.",
+    "noticeLabel": "Note",
+    "noticeBody": "No posts that infringe rights or advertise.",
+    "addTagsOptional": "Add tags (optional)",
+    "bodyPlaceholderByTopic": {
+      "diet": "Share today's meals or a diet question",
+      "numbers": "Write about lab changes or how you manage them",
+      "symptoms": "Share symptoms you're having and what helps",
+      "medicine": "Share your medication experience or questions",
+      "dining-out": "Tell us where you ate, what you ordered, and tips",
+      "daily": "Share anything from your day"
+    }
   },
   "feed": {
     "recipeSearchPlaceholder": "Search recipes",
@@ -474,6 +492,9 @@
       "distributionRow": "{{star}} stars, {{amount}}",
       "starAccessibility": "Give {{star}} stars",
       "composerTitle": "How was this recipe?",
+      "composerIntro": "Pick a star rating to post. Sharing how it went is optional.",
+      "ratingChoice": "{{star}}/5 · {{word}}",
+      "bodyFieldLabel": "How it went",
       "ratingWords": {
         "1": "Not for me",
         "2": "Just okay",
@@ -512,6 +533,8 @@
   "responsibility": "I’ve checked that this post doesn’t violate anyone else’s rights.",
   "recipeWrite": {
     "title": "Write a recipe",
+    "navigationTitle": "Recipes",
+    "intro": "Add ingredients and amounts and we'll work out nutrition per serving.",
     "editUnavailableTitle": "Editing a recipe isn't available yet",
     "editUnavailableBody": "For now you can only post a new recipe. Post it again if you need to change something.",
     "field": {

@@ -280,20 +280,16 @@ export const foodCameraService = {
       const { mockFoodCameraService } = require("./mock/mockFoodCameraService") // eslint-disable-line @typescript-eslint/no-require-imports
       result = await mockFoodCameraService.analyze()
     } else {
-      try {
-        const response = await api.post(
-          "/food-camera/analyze-text",
-          {
-            text,
-            ...(requestId ? { requestId } : {}),
-            language,
-          },
-          { timeout: ANALYZE_TEXT_TIMEOUT_MS },
-        )
-        result = response.data.result as FoodCameraAnalyzeResult
-      } catch (err) {
-        throw err
-      }
+      const response = await api.post(
+        "/food-camera/analyze-text",
+        {
+          text,
+          ...(requestId ? { requestId } : {}),
+          language,
+        },
+        { timeout: ANALYZE_TEXT_TIMEOUT_MS },
+      )
+      result = response.data.result as FoodCameraAnalyzeResult
     }
     return normalizeFoodAnalysisResult(result)
   },
@@ -301,16 +297,12 @@ export const foodCameraService = {
   async fetchByRequestId(
     requestId: string,
   ): Promise<FoodCameraAnalyzeResult | null> {
-    try {
-      const response = await api.get("/food-camera/analysis-results", {
-        params: { requestId },
-      })
-      const result =
-        (response.data.result as FoodCameraAnalyzeResult | null) ?? null
-      return result ? normalizeFoodAnalysisResult(result) : null
-    } catch (err) {
-      throw err
-    }
+    const response = await api.get("/food-camera/analysis-results", {
+      params: { requestId },
+    })
+    const result =
+      (response.data.result as FoodCameraAnalyzeResult | null) ?? null
+    return result ? normalizeFoodAnalysisResult(result) : null
   },
 
   /**
@@ -322,15 +314,11 @@ export const foodCameraService = {
     date: string,
     mealType?: string | null,
   ): Promise<FoodCameraDiaryRegisterResponse> {
-    try {
-      const response = await api.post(
-        `/food-camera/analysis-results/${foodAnalysisResultId}/diary`,
-        mealType ? { date, mealType } : { date },
-      )
-      return response.data as FoodCameraDiaryRegisterResponse
-    } catch (err) {
-      throw err
-    }
+    const response = await api.post(
+      `/food-camera/analysis-results/${foodAnalysisResultId}/diary`,
+      mealType ? { date, mealType } : { date },
+    )
+    return response.data as FoodCameraDiaryRegisterResponse
   },
 
   /**
@@ -348,116 +336,92 @@ export const foodCameraService = {
   },
 
   async skipMeal(date: string, mealType: string): Promise<void> {
-    try {
-      await api.post("/food-camera/skip-meal", { date, mealType })
-    } catch (err) {
-      throw err
-    }
+    await api.post("/food-camera/skip-meal", { date, mealType })
   },
 
   async fetchDateAnalysis(date: string): Promise<DateAnalysisResponse> {
-    try {
-      const response = await api.get(`/food-camera/date-analysis/${date}`)
-      return response.data as DateAnalysisResponse
-    } catch (err) {
-      throw err
-    }
+    const response = await api.get(`/food-camera/date-analysis/${date}`)
+    return response.data as DateAnalysisResponse
   },
 
   async fetchDiaryExistence(
     startDate?: string,
     endDate?: string,
   ): Promise<DiaryExistenceResponse> {
-    try {
-      const response = await api.get(
-        `/food-camera/statistics/diary-existence`,
-        { params: { startDate, endDate } },
-      )
-      return response.data as DiaryExistenceResponse
-    } catch (err) {
-      throw err
-    }
+    const response = await api.get(`/food-camera/statistics/diary-existence`, {
+      params: { startDate, endDate },
+    })
+    return response.data as DiaryExistenceResponse
   },
 
   async updateExtraWater(
     date: string,
     deltaWater: number,
   ): Promise<ExtraWaterUpdateResponse> {
-    try {
-      const response = await api.patch(
-        `/food-camera/date-analysis/${date}/extra-water`,
-        { deltaWater },
-      )
-      return response.data as ExtraWaterUpdateResponse
-    } catch (err) {
-      throw err
-    }
+    const response = await api.patch(
+      `/food-camera/date-analysis/${date}/extra-water`,
+      { deltaWater },
+    )
+    return response.data as ExtraWaterUpdateResponse
   },
 
   async fetchDiaryResult(diaryId: number): Promise<DiaryAnalysisResult> {
-    try {
-      const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
-      return normalizeFoodAnalysisResult(
-        response.data.result as DiaryAnalysisResult,
-      ) as DiaryAnalysisResult
-    } catch (err) {
-      throw err
-    }
+    const response = await api.get(`/food-camera/diaries/${diaryId}/analysis`)
+    return normalizeFoodAnalysisResult(
+      response.data.result as DiaryAnalysisResult,
+    ) as DiaryAnalysisResult
+  },
+
+  /** 분석 결과 한 건 다시 읽기 — 미뤄 둔 삽화(`illustrationPending`)가 붙었는지 볼 때 쓴다. */
+  async getFoodAnalysisResult(
+    foodAnalysisResultId: number,
+  ): Promise<FoodCameraAnalyzeResult> {
+    const response = await api.get(
+      `/food-camera/analysis-results/${foodAnalysisResultId}`,
+      { params: { language: getAppLanguage() } },
+    )
+    return normalizeFoodAnalysisResult(
+      response.data.result as FoodCameraAnalyzeResult,
+    )
   },
 
   async updateFoodAnalysis(
     foodAnalysisResultId: number,
     body: FoodAnalysisUpdateRequest,
   ): Promise<FoodAnalysisUpdateResult> {
-    try {
-      const response = await api.patch(
-        `/food-camera/analysis-results/${foodAnalysisResultId}`,
-        { ...body, language: getAppLanguage() },
-        { timeout: FOOD_ANALYSIS_UPDATE_TIMEOUT_MS },
-      )
-      return normalizeFoodAnalysisResult(
-        response.data.result as FoodAnalysisUpdateResult,
-      ) as FoodAnalysisUpdateResult
-    } catch (err) {
-      throw err
-    }
+    const response = await api.patch(
+      `/food-camera/analysis-results/${foodAnalysisResultId}`,
+      { ...body, language: getAppLanguage() },
+      { timeout: FOOD_ANALYSIS_UPDATE_TIMEOUT_MS },
+    )
+    return normalizeFoodAnalysisResult(
+      response.data.result as FoodAnalysisUpdateResult,
+    ) as FoodAnalysisUpdateResult
   },
 
   async updateFoodTitle(
     foodAnalysisResultId: number,
     title: string,
   ): Promise<FoodTitleUpdateResponse> {
-    try {
-      const response = await api.patch(
-        `/food-camera/analysis-results/${foodAnalysisResultId}/title`,
-        { title },
-      )
-      return response.data.result as FoodTitleUpdateResponse
-    } catch (err) {
-      throw err
-    }
+    const response = await api.patch(
+      `/food-camera/analysis-results/${foodAnalysisResultId}/title`,
+      { title },
+    )
+    return response.data.result as FoodTitleUpdateResponse
   },
 
   async updateDiaryMealType(
     diaryId: number,
     mealType: string,
   ): Promise<{ diaryId: number; mealType: string }> {
-    try {
-      const response = await api.patch(
-        `/food-camera/diaries/${diaryId}/meal-type`,
-        { mealType },
-      )
-      return response.data.result
-    } catch (err) {
-      throw err
-    }
+    const response = await api.patch(
+      `/food-camera/diaries/${diaryId}/meal-type`,
+      { mealType },
+    )
+    return response.data.result
   },
 
   async deleteDiary(diaryId: number): Promise<void> {
-    try {
-      await api.delete(`/food-camera/diaries/${diaryId}`)
-    } catch (err) {
-      throw err
-    }
+    await api.delete(`/food-camera/diaries/${diaryId}`)
   },
 }

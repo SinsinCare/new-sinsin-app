@@ -22,8 +22,10 @@ export function historyBucket(date: Date, now: Date): HistoryBucket {
         : "older"
 }
 
+// 비교용 접기라 `toLowerCase()` 다 — 인자 없는 `toLocaleLowerCase()` 는 터키어 기기에서
+// `I` 를 `ı` 로 접어 그 기기만 검색이 어긋난다(`tests/localeIndependentCasing.test.ts`).
 const searchable = (value: string) =>
-  value.normalize("NFKC").toLocaleLowerCase().replace(/\s+/g, " ").trim()
+  value.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim()
 
 /** Search only the loaded recent history. Match every word, keep last activity ordering. */
 export function presentChatHistory(chats: Chat[], query: string, now: Date) {

@@ -75,7 +75,20 @@ export function SafetyBadge({
   if (!badge) return null
 
   const s = SIZE[size]
-  const label = t(dynamicKey(badge.labelKey))
+  /*
+    메뉴 배지에서 `RESTRICTED` 는 "제한" 대신 "주의" 로 읽는다(제품 피드백 F13).
+    `restaurant.safety.RESTRICTED` 는 지도 마커 접근성 라벨 등 다른 곳과 공유하는
+    키라 문구를 바꾸지 않고, 메뉴 전용 키 `menuRestricted` 로 갈라 둔다. 색(적색 틴트)은
+    그대로라 `CAUTION`(주황) 과 시각적으로는 계속 구분된다.
+  */
+  // CAUTION 도 메뉴에서는 갈라 읽는다 — 둘 다 "주의" 면 단계가 두 개인 이유가 사라진다.
+  const labelKey =
+    badge.level === "RESTRICTED"
+      ? "restaurant.safety.menuRestricted"
+      : badge.level === "CAUTION"
+        ? "restaurant.safety.menuCaution"
+        : badge.labelKey
+  const label = t(dynamicKey(labelKey))
   // 색만으로 뜻을 전하지 않는다 — 라벨을 함께 그리고, 근거가 있으면 리더에 덧붙인다.
   const accessibilityLabel = driver
     ? t("restaurant.safety.driverAccessibility", {

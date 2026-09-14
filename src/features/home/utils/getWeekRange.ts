@@ -1,4 +1,4 @@
-const pad = (n: number) => String(n).padStart(2, "0")
+import { toDateStr } from "./dateUtils"
 
 export function getWeekRange(date: Date): {
   startDate: string
@@ -13,8 +13,5 @@ export function getWeekRange(date: Date): {
   const sunday = new Date(monday)
   sunday.setDate(monday.getDate() + 6)
 
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-
-  return { startDate: fmt(monday), endDate: fmt(sunday) }
+  return { startDate: toDateStr(monday), endDate: toDateStr(sunday) }
 }

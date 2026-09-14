@@ -78,7 +78,9 @@
     "dailyLead": "하루 {{price}}",
     "dailyAverage": "하루 평균 {{price}}",
     "annualPrice": "연 {{price}}",
-    "monthlyPrice": "월 {{price}}"
+    "monthlyPrice": "월 {{price}}",
+    "termsLink": "이용약관",
+    "privacyLink": "개인정보 처리방침"
   },
   "quota": {
     "remainingDay": "오늘 {{remaining}}회 남음",

@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications"
 import Constants from "expo-constants"
 import { Platform } from "react-native"
 import type { NotificationSettings } from "@/src/types/notification"
+import { DEFAULT_NOTIFICATION_SETTINGS } from "@/src/types/notification"
 import { api } from "@/src/services/core/apiClient"
 import { isFoodAnalysisRequestHandled } from "@/src/features/home/services/foodAnalysisRequestState"
 import i18n from "@/src/i18n"
@@ -64,6 +65,17 @@ async function ensureAndroidChannel(): Promise<void> {
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: "default",
   })
+}
+
+/**
+ * 물 알림 간격은 서버·AsyncStorage 캐시에서 온 값이다. 0 이나 음수가 그대로 들어오면
+ * 아래 예약 루프가 끝나지 않는다. `mergeWithDefaults` 가 한 번 거르지만, 실제로 루프를
+ * 도는 자리에서 한 번 더 지킨다.
+ */
+function toSafeIntervalHours(value: number): number {
+  return Number.isInteger(value) && value >= 1
+    ? value
+    : DEFAULT_NOTIFICATION_SETTINGS.categories.waterReminder.intervalHours
 }
 
 function getExpoProjectId(): string | undefined {
@@ -153,7 +165,8 @@ export const notificationService = {
     }
 
     if (waterReminder.enabled) {
-      const { intervalHours, startHour, endHour } = waterReminder
+      const { startHour, endHour } = waterReminder
+      const intervalHours = toSafeIntervalHours(waterReminder.intervalHours)
       for (let h = startHour; h <= endHour; h += intervalHours) {
         promises.push(
           Notifications.scheduleNotificationAsync({

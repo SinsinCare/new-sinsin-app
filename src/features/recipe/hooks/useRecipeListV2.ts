@@ -112,11 +112,17 @@ export function useRecipeListV2({
     [pages, items.length, infinite.hasNextPage],
   )
 
+  /*
+    `infinite` 는 react-query 가 렌더마다 새로 만드는 결과 객체다 — 그대로 의존성에
+    넣으면 `loadMore` 가 매 렌더 새 함수라 `useCallback` 이 아무것도 안 하고, 이걸
+    `onEndReached` 로 받는 목록도 매번 새 프롭을 본다. 실제로 읽는 세 칸만 건다.
+  */
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = infinite
   const loadMore = useCallback(() => {
-    if (infinite.hasNextPage && !infinite.isFetchingNextPage) {
-      void infinite.fetchNextPage()
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage()
     }
-  }, [infinite])
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return {
     items,

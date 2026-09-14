@@ -116,9 +116,9 @@ export function ConsultWelcome({
       >
         {[
           { key: null, label: t("consult.allTopics") },
-          ...CATEGORY_LIST.map((c) => ({
-            key: c.key,
-            label: t(`consult.categories.${c.key}`),
+          ...CATEGORY_LIST.map((key) => ({
+            key,
+            label: t(`consult.categories.${key}`),
           })),
         ].map((c) => {
           const selected = category === c.key

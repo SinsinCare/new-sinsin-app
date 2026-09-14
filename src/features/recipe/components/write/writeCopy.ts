@@ -139,6 +139,7 @@ export const NUTRITION_TAG_OPTIONS: WriteChipOption[] = NUTRITION_TAGS.map(
   남아 있었는데, **그 값을 만드는 곳이 하나도 없어** 유니온에서도 뺐다. 죽은 갈래를
   남겨 두면 "작성 칩이 난이도도 그릴 수 있다" 는 잘못된 신호가 된다.
 
-  **`curated.difficulty.*` 로케일 키는 살아 있다** — 카탈로그 레시피 카드
-  (`CuratedRecipeCard`)와 상세의 `RecipeTitleBlock` 이 서버가 준 난이도를 그릴 때 쓴다.
+  **`curated.difficulty.*` 로케일 키는 살아 있다** — 상세의 `RecipeTitleBlock` 이
+  서버가 준 난이도를 그릴 때 쓴다(v1 카탈로그 카드 `CuratedRecipeCard` 도 읽었는데,
+  어디서도 import 되지 않아 지웠다 · 2026-09-09).
 */

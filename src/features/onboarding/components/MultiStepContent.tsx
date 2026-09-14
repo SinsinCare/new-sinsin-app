@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { CheckCircle } from "@/src/features/auth/components"
 import { hapticSelection } from "@/src/lib/haptics"
-import { useAuthSurface } from "@/src/features/auth/hooks/useAuthSurface"
+import { useSurface } from "@/src/hooks/useSurface"
 import {
   AUTH_LAYOUT,
   AUTH_MOTION,
@@ -47,7 +47,7 @@ function MultiRow({
   selected: boolean
   onToggle: () => void
 }) {
-  const surface = useAuthSurface()
+  const surface = useSurface()
   const selection = useSharedValue(selected ? 1 : 0)
   const scale = useSharedValue(1)
 

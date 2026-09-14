@@ -137,7 +137,7 @@ describe("자유글 수정 — 작성 화면과 같은 경계", () => {
   })
 
   it("카운터가 있다 (다 채우기 전에 상한을 말한다)", () => {
-    expect(EDIT).toMatch(/\{body\.length\} \/ \{MAX_BODY_LENGTH\}/u)
+    expect(EDIT).toMatch(/\{body\.length\}\/\{MAX_BODY_LENGTH\}/u)
   })
 })
 

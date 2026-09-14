@@ -400,23 +400,30 @@ describe("J2 — 고빈도 자리에 1회 가드가 걸려 있다", () => {
       물·혈압·체중은 2026-09-05 부터 **페이지**다. 페이지는 열려 있을 때만 마운트되므로
       두 번째 인자가 `visible` 이 아니라 `true` 다 — 시트는 닫혀도 살아 있어 그 깃발이 필요했다.
     */
+    // 혈압·체중은 2026-09-08 부터 폼 훅이 입력 자리를 갖는다 — 혈당·부종과 같은 모양이다.
     for (const [file, metric] of [
       ["useGlucoseRecordForm.ts", "blood_glucose"],
       ["useEdemaRecordForm.ts", "edema"],
+      ["useBloodPressureRecordForm.ts", "blood_pressure"],
+      ["useWeightRecordForm.ts", "weight"],
     ]) {
       expect(read(`src/features/home/hooks/${file}`)).toContain(
         `useHealthEntryInput("${metric}", true)`,
       )
     }
-    const pages = [
-      ["WaterRecordPage.tsx", "water"],
-      ["BloodPressureRecordPage.tsx", "blood_pressure"],
-      ["WeightRecordPage.tsx", "weight"],
-    ] as const
-    for (const [file, metric] of pages) {
-      const source = read(`src/features/home/components/record/pages/${file}`)
-      expect(source).toContain(`useHealthEntryInput("${metric}", true)`)
+    // 페이지가 그 훅을 실제로 마운트해야 표면이 가드에 닿는다.
+    for (const [file, hook] of [
+      ["BloodPressureRecordPage.tsx", "useBloodPressureRecordForm("],
+      ["WeightRecordPage.tsx", "useWeightRecordForm("],
+    ]) {
+      expect(
+        read(`src/features/home/components/record/pages/${file}`),
+      ).toContain(hook)
     }
+    // 물은 잔 버튼이 페이지 안에 살아 페이지가 직접 부른다.
+    expect(
+      read("src/features/home/components/record/pages/WaterRecordPage.tsx"),
+    ).toContain('useHealthEntryInput("water", true)')
   })
 
   it("글 기록 진입은 닫힘→열림 전이에서만 나간다", () => {

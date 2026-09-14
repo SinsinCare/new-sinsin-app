@@ -191,7 +191,9 @@ function earlyReturnConditions(
   ].map((match) => match[1])
 }
 
-const SCREEN_AT = EDIT.indexOf("export default function")
+// 화면은 이름 있는 export 다 — 라우트 `app/(write)/free/[id].tsx` 가 그대로 다시
+// 내보낸다(`export { FreePostEditScreen as default } from …`). 2026-09-09 재조준.
+const SCREEN_AT = EDIT.indexOf("export function FreePostEditScreen")
 const MODAL_AT = EDIT.indexOf("<ConfirmExitModal")
 
 /**

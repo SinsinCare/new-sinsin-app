@@ -66,8 +66,10 @@ const HAND_ROLLED_CONTROL = path.join(
 const MUST_BE_REFRESHABLE = [
   path.join("src", "features", "recipe", "components", "FreePostTab.tsx"),
   path.join("src", "features", "recipe", "archive", "RecipeArchiveScreen.tsx"),
-  path.join("app", "community-library.tsx"),
-  path.join("app", "post", "[id].tsx"),
+  // 2026-09-09 재조준: 두 라우트 파일은 화면을 다시 내보내는 껍데기가 됐다(b3b3690).
+  // 당김은 화면 파일이 들고 있으므로 그쪽을 본다.
+  path.join("src", "features", "recipe", "views", "CommunityLibraryScreen.tsx"),
+  path.join("src", "features", "recipe", "views", "PostDetailScreen.tsx"),
   path.join("src", "features", "recipe", "views", "RecipeHomeScreen.tsx"),
   // 인기글 전용 화면 — 실시간 순위라 당김이 없으면 "새로고침" 수단이 뒤로가기뿐이다.
   path.join("src", "features", "recipe", "views", "CommunityPopularScreen.tsx"),

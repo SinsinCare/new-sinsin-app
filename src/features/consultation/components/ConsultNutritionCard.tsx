@@ -6,6 +6,35 @@ import { V2Icon, V2Text, spacing, useV2Theme } from "@/src/design-system-v2"
 import type { ConsultNutritionCard as NutritionSnapshot } from "@/src/types/consultNutritionCard"
 import { nutrientComparison } from "../lib/consultNutrition"
 
+type CardLocale = "en-US" | "ko-KR"
+
+/*
+  포매터는 로케일당 한 벌이면 된다. 예전에는 값 하나를 찍을 때마다 `Intl.NumberFormat`
+  을, 렌더마다 `Intl.DateTimeFormat` 을 새로 만들었다 — 상담 한 화면에 카드가 여럿이고
+  카드마다 행이 여럿이라 그 생성 비용이 스크롤마다 반복됐다. 모듈 수준에 두면 컴포넌트
+  인스턴스끼리도 나눠 쓴다.
+*/
+const FORMATTERS = new Map<
+  CardLocale,
+  { number: Intl.NumberFormat; time: Intl.DateTimeFormat }
+>()
+
+function formattersFor(locale: CardLocale) {
+  let entry = FORMATTERS.get(locale)
+  if (!entry) {
+    entry = {
+      number: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }),
+      time: new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+    }
+    FORMATTERS.set(locale, entry)
+  }
+  return entry
+}
+
 export function ConsultNutritionCard({
   card,
   onDisclosure,
@@ -16,16 +45,14 @@ export function ConsultNutritionCard({
   const { t, i18n } = useTranslation("common")
   const { colors } = useV2Theme()
   const [basisOpen, setBasisOpen] = useState(false)
-  const locale = (i18n.resolvedLanguage ?? i18n.language).startsWith("en")
+  const locale: CardLocale = (
+    i18n.resolvedLanguage ?? i18n.language
+  ).startsWith("en")
     ? "en-US"
     : "ko-KR"
-  const format = (value: number) =>
-    new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value)
-  const time = new Intl.DateTimeFormat(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(new Date(card.asOf))
+  const formatters = formattersFor(locale)
+  const format = (value: number) => formatters.number.format(value)
+  const time = formatters.time.format(new Date(card.asOf))
   const intake = card.kind === "intake"
   return (
     <View

@@ -61,8 +61,8 @@ jest.mock("../src/features/auth/components", () => ({
   StepHelperText: "StepHelperText",
   StepTextInput: "StepTextInput",
 }))
-jest.mock("../src/features/auth/hooks/useAuthSurface", () => ({
-  useAuthSurface: () => ({ brand: "#000" }),
+jest.mock("../src/hooks/useSurface", () => ({
+  useSurface: () => ({ brand: "#000" }),
 }))
 jest.mock("../src/features/auth/data/authSurface", () => ({
   AUTH_LAYOUT: { questionToField: 0 },

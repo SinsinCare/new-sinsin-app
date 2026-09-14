@@ -12,6 +12,7 @@ import {
   PASSWORD_FIELD_ORDER,
   getConfirmPasswordRules,
   getPasswordRules,
+  IOS_PASSWORD_RULES,
 } from "../data/passwordValidation"
 import { trackFormValidationFailed } from "@/src/shared/utils/formValidationState"
 import { AUTH_LAYOUT } from "../data/authSurface"
@@ -64,6 +65,7 @@ export function SignupPasswordScreen() {
                 placeholder={t("password.placeholder")}
                 secureTextEntry
                 textContentType="newPassword"
+                passwordRules={IOS_PASSWORD_RULES}
                 autoComplete="new-password"
                 returnKeyType="next"
               />
@@ -86,6 +88,7 @@ export function SignupPasswordScreen() {
                 placeholder={t("password.confirmPlaceholder")}
                 secureTextEntry
                 textContentType="newPassword"
+                passwordRules={IOS_PASSWORD_RULES}
                 autoComplete="new-password"
                 returnKeyType="done"
                 hasError={!!fieldState.error && !!field.value}

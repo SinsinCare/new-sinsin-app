@@ -1,7 +1,12 @@
 /**
- * 커뮤니티 재디자인 **공유 프리미티브**(WBS 1.1 · 1.2 · 1.3 · 1.4)의 계약.
- * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.1 · §2.2 · §2.3 · §2.4 · §2.7,
+ * 커뮤니티 재디자인 **공유 프리미티브**(WBS 1.1 · 1.4)의 계약 — `MicroPill` · `MetaRow`
+ * · `SectionHeader` · `SectionBand` · `MorePill`.
+ * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.2 · §2.3 · §2.7,
  * 판정: `01-DECISIONS.md` D10.
+ *
+ * WBS 1.2 · 1.3 의 `PostRow` · `PostRowSkeleton` · `CompactPostRow`(§2.1 · §2.4) 계약도
+ * 여기 있었다. 셋 다 어디서도 import 되지 않는 죽은 파일이라 컴포넌트와 함께 지웠다
+ * (2026-09-09) — 살아 있는 피드 행은 `PostListItem` 이다.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * ■ 왜 소스 문자열이 아니라 컴포넌트를 **호출**하나
@@ -16,15 +21,11 @@
  * **그 본문도 호출**한다(흉내 낸 구현이 아니라 진짜 코드다). 색·치수·타이포는 토큰에서
  * 읽어와 비교하므로 토큰이 바뀌면 같이 따라간다.
  *
- * ■ 이 파일이 지키는 것 중 가장 중요한 셋
+ * ■ 이 파일이 지키는 것 중 가장 중요한 둘
  *
- *  1. **행 높이 6종**(176/147/118/106/179/138) — `PostRow` 를 하나로 만들 수 있는 유일한
- *     근거다. 여기서는 `postRowHeight()` 의 산수가 아니라 **컴포넌트가 실제로 그 값을
- *     `height` 로 내놓는지**를 본다. 공식이 맞아도 컴포넌트가 안 쓰면 소용없다.
- *  2. **21 vs 23** (D10) — `V2Badge` 의 pill 은 23 이다. `MicroPill` 이 그걸 21 로 못박지
+ *  1. **21 vs 23** (D10) — `V2Badge` 의 pill 은 23 이다. `MicroPill` 이 그걸 21 로 못박지
  *     못하면 행마다 최대 4px 어긋나고, 어긋난 뒤에는 어느 숫자가 맞았는지 아무도 모른다.
- *  3. **구분선이 full-bleed 로 남는가** — 좌우 여백이 바깥 상자로 올라가는 순간 Yoga 는
- *     절대 배치 자식을 패딩 안쪽에 놓고, 선이 조용히 20px 인셋된다.
+ *  2. **섹션 머리·띠의 치수** — §2.7 의 47 / 8 이 토큰에서 나온다.
  */
 /* eslint-disable import/first -- RN·네이티브 의존을 모듈 로드 **전에** 갈아 끼워야 한다. */
 
@@ -68,6 +69,15 @@ jest.mock("react-native", () => {
     Pressable: "Pressable",
   }
 })
+/*
+  2026-09-08 부터 v2 컴포넌트는 `Text` 를 react-native 가 아니라
+  `primitives/NativeText`(접근성 확대 상한만 중앙에서 정하는 얇은 래퍼)에서 가져온다.
+  스타일은 손대지 않고 그대로 통과시키므로 호스트 태그와 같은 **문자열 태그**로 둔다 —
+  안 그러면 위의 `Text: "Text"` 가 라벨에 닿지 않는다(다른 스위트와 같은 처방).
+*/
+jest.mock("@/src/design-system-v2/primitives/NativeText", () => ({
+  Text: "Text",
+}))
 jest.mock("expo-image", () => ({ Image: "Image" }))
 jest.mock("@/src/design-system-v2/components/V2Icon", () => ({
   V2Icon: "V2Icon",
@@ -133,7 +143,6 @@ function mockKoLeaf(key: string): string | undefined {
   return typeof found === "string" ? found : undefined
 }
 
-import { contrast } from "./helpers/contrast"
 import { resolveTheme } from "@/src/design-system-v2/theme"
 import { V2Badge } from "@/src/design-system-v2/components/V2Badge"
 import { V2Text } from "@/src/design-system-v2/components/V2Text"
@@ -148,31 +157,15 @@ import { typography } from "@/src/design-system-v2/tokens/typography"
 
 import {
   COMMUNITY_GUTTER,
-  POST_ROW_HEADER_GAP,
-  POST_ROW_PAD_V,
   POST_ROW_RANK_SIZE,
-  POST_ROW_TAG_GAP,
   ROW,
   SECTION_BAND,
-  postRowHeight,
 } from "@/src/features/recipe/components/community/communityLayout"
 import {
   MicroPill,
   type MicroPillFace,
 } from "@/src/features/recipe/components/community/MicroPill"
 import { MetaRow } from "@/src/features/recipe/components/community/MetaRow"
-import {
-  PostRow,
-  POST_ROW_MAX_TAGS,
-  type PostRowPost,
-} from "@/src/features/recipe/components/community/PostRow"
-import { PostRowSkeleton } from "@/src/features/recipe/components/community/PostRowSkeleton"
-import {
-  CompactPostRow,
-  ImageCountBadge,
-  IMAGE_COUNT_BADGE_SIZE,
-  type CompactPostRowPost,
-} from "@/src/features/recipe/components/community/CompactPostRow"
 import { SectionHeader } from "@/src/features/recipe/components/community/SectionHeader"
 import { SectionBand } from "@/src/features/recipe/components/community/SectionBand"
 import { MorePill } from "@/src/features/recipe/components/community/MorePill"
@@ -270,36 +263,6 @@ afterEach(() => {
 
 /* ── 픽스처 ─────────────────────────────────────────────────────────────── */
 
-const basePost: PostRowPost = {
-  title: "오늘의 점심 식단 저염식으로 만든 든든한 한끼 식단 공유해요~",
-  description:
-    "칼륨 수치가 높아 식단 조절 중인데, 오늘은 저염식 위주로 구성해봤어용.",
-  category: "질문·상담",
-  tags: ["CKD 정보", "식단 인증", "저염식", "칼륨 낮은 식단"],
-  imageUri: "https://example.test/thumb.jpg",
-  likes: 541,
-  comments: 77,
-  views: 3291,
-  createdAt: new Date("2026-07-28T00:00:00.000Z"),
-}
-
-const post = (over: Partial<PostRowPost> = {}): PostRowPost => ({
-  ...basePost,
-  ...over,
-})
-
-const compactPost = (
-  over: Partial<CompactPostRowPost> = {},
-): CompactPostRowPost => ({
-  title: "오늘의 점심 식단 저염식으로 만든 든든한 한끼",
-  imageUri: "https://example.test/thumb.jpg",
-  imageUris: ["https://example.test/thumb.jpg", "https://example.test/2.jpg"],
-  likes: 541,
-  comments: 77,
-  views: 3291,
-  ...over,
-})
-
 const noop = () => {}
 
 /* ══ 1.1 · MicroPill — §2.2 · D10 ═════════════════════════════════════════ */
@@ -359,21 +322,16 @@ describe("MicroPill — 21 이지 23 이 아니다 (D10)", () => {
     // `center` 는 `flex-start` 와 똑같이 **안 늘어난다**(늘리는 건 `stretch` 뿐) — 폭 hug 는 그대로다.
     expect(styleOf(pillView()).alignSelf).not.toBe("stretch")
 
-    // 실제 자리에서 확인: 랭크가 있는 헤더행은 24 인데 배지는 21 이다.
-    const header = childrenOf(
-      childrenOf(
-        render(PostRow, { post: basePost, rank: 1, onPress: noop }),
-      )[0],
-    )[0]
-    expect(styleOf(header).height).toBe(POST_ROW_RANK_SIZE)
-    expect(styleOf(header).alignItems).toBe("center")
-    const badge = findAll(header, MicroPill)[0]
-    expect(badge.props.face).toBe("ink")
-    // 부모가 center 라도 자식의 alignSelf 가 이긴다 — 그래서 배지 쪽에 한 줄이 필요하다.
-    // MicroPill → V2Badge → View 로 두 걸음 펴서 **그 자리에 실제로 그려지는 면**을 본다.
+    /*
+      "실제 자리에서 확인" — 랭크 헤더행(24) 안의 배지(21) — 은 `PostRow` 를 그려 보던
+      단언이었다. 그 행은 어디서도 import 되지 않는 죽은 파일이라 지웠다(2026-09-09).
+      부모가 center 라도 자식의 alignSelf 가 이기므로, 배지 쪽의 한 줄은 그대로
+      MicroPill → V2Badge → View 로 두 걸음 펴서 **실제로 그려지는 면**에서 본다.
+    */
     const painted = render(
       V2Badge,
-      render(MicroPill, badge.props as never).props as never,
+      render(MicroPill, { label: "CKD 3", face: "ink" } as never)
+        .props as never,
     )
     expect(styleOf(painted).height).toBe(ROW.microPill)
     expect(styleOf(painted).alignSelf).toBe("center")
@@ -529,7 +487,7 @@ describe("MetaRow — 조회/좋아요/댓글 + 시각", () => {
     expect(tokenOf(detail)).toEqual(typography.subtext.medium)
   })
 
-  it("시각을 안 주면 안 그린다 — `CompactPostRow` 는 시각이 없다", () => {
+  it("시각을 안 주면 안 그린다 — 시각이 없는 행(§2.4)이 있다", () => {
     expect(findAll(meta(), V2Text)).toHaveLength(3)
   })
 
@@ -545,583 +503,6 @@ describe("MetaRow — 조회/좋아요/댓글 + 시각", () => {
       "좋아요 541",
       "댓글 77",
     ])
-  })
-})
-
-/* ══ 1.2 · PostRow — §2.1 ════════════════════════════════════════════════ */
-
-describe("PostRow — 실측 6종 높이를 컴포넌트가 실제로 내놓는다", () => {
-  const row = (props: Partial<Record<string, unknown>> = {}) =>
-    render(PostRow, { post: basePost, onPress: noop, ...props } as never)
-
-  const heightOf = (props: Record<string, unknown>) =>
-    styleOf(row(props)).height
-
-  it("176 · 147 · 118 · 106 · 179 · 138", () => {
-    /*
-      §2.1 검증표 그대로다. 공식(`postRowHeight`)이 맞아도 컴포넌트가 그 값을 안 쓰면
-      아무 소용이 없다 — 그래서 여기서는 **렌더된 컨테이너의 height** 를 본다.
-    */
-    // 배지 + 태그 + 썸
-    expect(heightOf({})).toBe(176)
-    // 태그 + 썸 (카테고리 끔)
-    expect(heightOf({ showCategory: false })).toBe(147)
-    // 썸만
-    expect(heightOf({ post: post({ tags: [] }), showCategory: false })).toBe(
-      118,
-    )
-    // 썸 없음
-    expect(
-      heightOf({
-        post: post({ tags: [], imageUri: null }),
-        showCategory: false,
-      }),
-    ).toBe(106)
-    // 랭크 + 배지 + 태그 + 썸 (랭크와 배지는 같은 줄 — 큰 쪽 24 가 줄 높이다)
-    expect(heightOf({ rank: 1 })).toBe(179)
-    // 랭크만
-    expect(
-      heightOf({
-        rank: 3,
-        post: post({ tags: [], imageUri: null }),
-        showCategory: false,
-      }),
-    ).toBe(138)
-  })
-
-  it("높이는 `postRowHeight()` 에서 온다 — 숫자를 두 벌 갖지 않는다", () => {
-    expect(heightOf({})).toBe(
-      postRowHeight({ hasCategory: true, hasTags: true, hasThumbnail: true }),
-    )
-    expect(heightOf({ rank: 1 })).toBe(
-      postRowHeight({
-        hasRank: true,
-        hasCategory: true,
-        hasTags: true,
-        hasThumbnail: true,
-      }),
-    )
-  })
-
-  it("빈 카테고리 문자열은 배지가 아니다 — 미분류 글(D1)이 21 을 더 먹지 않게", () => {
-    expect(heightOf({ post: post({ category: "   " }) })).toBe(147)
-  })
-})
-
-describe("PostRow — 카드가 아니라 행이다 (§2.1)", () => {
-  const root = () => render(PostRow, { post: basePost, onPress: noop })
-
-  it("좌우 20 · 상하 16 은 **안쪽** 상자가 갖는다", () => {
-    const outer = styleOf(root())
-    expect(outer.paddingHorizontal).toBeUndefined()
-    expect(outer.borderRadius).toBeUndefined() // 카드 아님
-    expect(outer.backgroundColor).toBe(light.background.default)
-
-    const inner = styleOf(childrenOf(root())[0])
-    expect(inner.paddingHorizontal).toBe(COMMUNITY_GUTTER)
-    expect(inner.paddingVertical).toBe(POST_ROW_PAD_V)
-    expect(COMMUNITY_GUTTER).toBe(20)
-    expect(POST_ROW_PAD_V).toBe(16)
-  })
-
-  it("하단 구분선은 **full-bleed** 다 — 절대 배치 + left/right 0 + `line.normal`", () => {
-    /*
-      Yoga 는 절대 배치 자식을 부모의 **패딩 안쪽** 기준으로 놓는다. 좌우 여백이 바깥
-      상자에 있으면 이 선은 조용히 20px 인셋된다. 그래서 여백이 안쪽에 있는 것이다.
-    */
-    const divider = childrenOf(root())[1]
-    // V2Divider 를 펼치면 [hairline 래퍼, 1px 선] 이다.
-    const [wrapEl, lineEl] = findAll(divider, "View")
-    const wrap = flatten(wrapEl.props.style)
-    expect(wrap.position).toBe("absolute")
-    expect(wrap.left).toBe(0)
-    expect(wrap.right).toBe(0)
-    expect(wrap.bottom).toBe(0)
-    expect(wrap.paddingLeft).toBe(0) // inset 0 — 좌측 인셋이 붙으면 full-bleed 가 아니다
-
-    const line = flatten(lineEl.props.style)
-    expect(line.backgroundColor).toBe(light.line.normal)
-    expect(line.height).toBe(borderWidth.thin)
-    // Flat white feeds need a visible edge even at 3x pixel density.
-    expect(line.height).toBeGreaterThanOrEqual(1)
-    expect(
-      contrast(
-        line.backgroundColor as string,
-        light.background.default,
-        light.background.default,
-      ),
-    ).toBeGreaterThan(1.25)
-  })
-
-  it("제목·요약은 각각 **한 줄**이고 §2.1 의 토큰을 쓴다", () => {
-    /*
-      네 구역이 전부 1줄 말줄임이다. 2줄로 늘리면 텍스트열이 74 → 94 가 되어
-      실측 6종이 통째로 어긋난다(74 = 20 + 4 + 20 + 12 + 18).
-    */
-    const [title, summary] = findAll(root(), V2Text)
-    expect(title.props.numberOfLines).toBe(1)
-    expect(tokenOf(title)).toEqual(typography.subtext.largeStrong)
-    expect(typography.subtext.largeStrong.lineHeight).toBe(20)
-    expect(title.props.color).toBe(light.label.normal)
-
-    expect(summary.props.numberOfLines).toBe(1)
-    expect(tokenOf(summary)).toEqual(typography.body.xSmall)
-    expect(summary.props.color).toBe(light.label.neutral)
-    expect(flatten(summary.props.style).marginTop).toBe(spacing[4])
-  })
-
-  it("텍스트열 = 제목 20 + 4 + 요약 20 + 12 + 메타 18 = 74", () => {
-    const metaEl = findOne(root(), MetaRow)
-    expect(flatten(metaEl.props.style).marginTop).toBe(spacing[12])
-    expect(
-      typography.subtext.largeStrong.lineHeight +
-        spacing[4] +
-        typography.body.xSmall.lineHeight +
-        spacing[12] +
-        typography.subtext.medium.lineHeight,
-    ).toBe(ROW.postTextColumn)
-  })
-
-  it("썸네일이 콘텐츠 블록 높이를 정하고 텍스트열은 그 안에서 세로 중앙", () => {
-    const inner = childrenOf(
-      render(PostRow, { post: basePost, onPress: noop }),
-    )[0]
-    const content = childrenOf(inner).at(-1)!
-    const s = styleOf(content)
-    expect(s.flexDirection).toBe("row")
-    expect(s.alignItems).toBe("center") // (86 − 74) / 2 = 6
-    expect(s.gap).toBe(spacing[12])
-
-    const image = findOne(inner, "Image")
-    const img = flatten(image.props.style)
-    expect(img.width).toBe(ROW.thumbLarge)
-    expect(img.height).toBe(ROW.thumbLarge)
-    expect(img.borderRadius).toBe(radius.sm)
-    expect(image.props.contentFit).toBe("cover")
-  })
-
-  it("메타에 넘기는 값은 게시글의 것이고, 시각은 앱 언어로 만든다", () => {
-    mockLanguage = "en-US"
-    const metaEl = findOne(
-      render(PostRow, { post: basePost, onPress: noop }),
-      MetaRow,
-    )
-    expect(metaEl.props.viewCount).toBe(3291)
-    expect(metaEl.props.likeCount).toBe(541)
-    expect(metaEl.props.commentCount).toBe(77)
-    expect(metaEl.props.timeText).toBe("2시간 전")
-    expect(mockTimeAgoCalls).toEqual([
-      { date: basePost.createdAt, language: "en-US" },
-    ])
-  })
-})
-
-describe("PostRow — 헤더행(랭크·카테고리)과 태그 레일 (§2.1)", () => {
-  it("랭크 원은 24 원 · `primaryWeak` 면 · 13 SemiBold 브랜드 숫자", () => {
-    const root = render(PostRow, { post: basePost, rank: 12, onPress: noop })
-    const header = childrenOf(childrenOf(root)[0])[0]
-    // 랭크가 있으면 헤더행 높이는 24 다(배지 21 이 아니다).
-    expect(styleOf(header).height).toBe(POST_ROW_RANK_SIZE)
-    expect(POST_ROW_RANK_SIZE).toBe(24)
-    expect(styleOf(header).gap).toBe(spacing[6]) // 랭크↔배지 6
-
-    const circle = childrenOf(header)[0]
-    const s = styleOf(circle)
-    expect(s.width).toBe(24)
-    expect(s.height).toBe(24)
-    expect(s.minWidth).toBe(24) // 2자리 대비
-    expect(s.borderRadius).toBe(radius.full)
-    expect(s.backgroundColor).toBe(light.primary.primaryWeak)
-
-    const digit = findAll(circle, V2Text)[0]
-    expect(tokenOf(digit)).toEqual(typography.label.xSmall)
-    expect(digit.props.color).toBe(light.primary.primary)
-    expect(textOf(digit)).toBe("12")
-  })
-
-  it("랭크가 없으면 헤더행은 배지 높이 21 이다", () => {
-    const root = render(PostRow, { post: basePost, onPress: noop })
-    expect(styleOf(childrenOf(childrenOf(root)[0])[0]).height).toBe(
-      ROW.microPill,
-    )
-  })
-
-  it("카테고리 배지는 `ink`, 태그는 `neutral` — 최대 4개(§2.1)", () => {
-    const many = post({
-      tags: ["가", "나", "다", "라", "마", "바"],
-    })
-    const pills = findAll(
-      render(PostRow, { post: many, onPress: noop }),
-      MicroPill,
-    )
-    expect(pills[0].props).toMatchObject({ face: "ink", label: "질문·상담" })
-    expect(pills.slice(1).map((p) => p.props.label)).toEqual([
-      "가",
-      "나",
-      "다",
-      "라",
-    ])
-    for (const tag of pills.slice(1)) expect(tag.props.face).toBe("neutral")
-    expect(POST_ROW_MAX_TAGS).toBe(4)
-  })
-
-  it("태그 레일은 높이 21 · 간격 6 · 한 줄", () => {
-    const inner = childrenOf(
-      render(PostRow, { post: basePost, onPress: noop }),
-    )[0]
-    const rail = childrenOf(inner)[1]
-    const s = styleOf(rail)
-    expect(s.height).toBe(ROW.microPill)
-    expect(s.gap).toBe(spacing[6])
-    expect(s.flexDirection).toBe("row")
-    expect(s.flexWrap).toBeUndefined() // 줄바꿈은 높이 공식을 깬다
-  })
-
-  it("헤더행·태그 레일이 **아래로 벌리는 값이 공식의 그 항과 같다**", () => {
-    /*
-      행 높이는 `postRowHeight()` 가 정해서 바깥 상자에 **고정**된다. 그 식은 헤더행 뒤 8,
-      태그 레일 뒤 8 을 항으로 갖는다(`POST_ROW_HEADER_GAP` · `POST_ROW_TAG_GAP`).
-      여기 margin 이 그 상수에서 떨어져 나가면 **높이는 그대로인데 내용만 넘친다** —
-      `flex:1` 인 콘텐츠 블록이 대신 눌려서 썸네일 86 이 조용히 찌그러진다.
-      높이 단언만으로는 절대 안 잡히는 종류라(공식은 여전히 176 을 내놓는다) 따로 못박는다.
-    */
-    const inner = childrenOf(
-      render(PostRow, { post: basePost, rank: 1, onPress: noop }),
-    )[0]
-    const [header, rail] = childrenOf(inner)
-    expect(styleOf(header).marginBottom).toBe(POST_ROW_HEADER_GAP)
-    expect(styleOf(rail).marginBottom).toBe(POST_ROW_TAG_GAP)
-    expect(POST_ROW_HEADER_GAP).toBe(8)
-    expect(POST_ROW_TAG_GAP).toBe(8)
-
-    // 실측 대조(popular.md §2.5, 랭크 있는 179 행): 16 → 랭크 40 → 태그 48..69 →
-    // 콘텐츠 블록 77 → 163. 아래 합이 그 77 이다.
-    expect(
-      POST_ROW_PAD_V +
-        POST_ROW_RANK_SIZE +
-        POST_ROW_HEADER_GAP +
-        ROW.microPill +
-        POST_ROW_TAG_GAP,
-    ).toBe(77)
-  })
-
-  it("`onPressTag` 를 안 주면 태그는 **누를 수 없다** — 아무 일도 안 하는 버튼을 만들지 않는다", () => {
-    const withHandler = render(PostRow, {
-      post: basePost,
-      onPress: noop,
-      onPressTag: noop,
-    })
-    const without = render(PostRow, { post: basePost, onPress: noop })
-    // 바깥 행 Pressable 1개 + 태그 4개
-    expect(findAll(withHandler, "Pressable")).toHaveLength(5)
-    expect(findAll(without, "Pressable")).toHaveLength(1)
-
-    const tagButton = findAll(withHandler, "Pressable")[1]
-    expect(tagButton.props.accessibilityLabel).toBe("CKD 정보 태그 검색")
-  })
-
-  it("케밥(§6.1 보존)은 헤더행이 있을 때만 그린다", () => {
-    const withHeader = render(PostRow, {
-      post: basePost,
-      onPress: noop,
-      onPressMore: noop,
-    })
-    const more = findAll(withHeader, "V2Icon").find(
-      (i) => i.props.name === "more",
-    )
-    expect(more).toBeDefined()
-    /*
-      `⋯` 는 라벨이 없다 — 이 행에 할 수 있는 일이 더 있다는 것을 **혼자 말하는**
-      표시라 비텍스트 기준 3:1 을 받아야 한다. 시안값 `label.alternative` 는
-      라이트에서 2.8:1 이라 그 밖이다(`lightContrastAudit`).
-    */
-    expect(more!.props.color).toBe(light.label.neutral)
-
-    /*
-      헤더행이 없는 행(실측 118·147·106)에는 시안이 정한 자리가 없다. 없는 자리에 얹으면
-      썸네일이나 태그 레일 위에 겹치고, 헤더행을 만들어 주면 행 높이가 실측에서 벗어난다.
-      → 안 그린다. 그 화면은 `showCategory` 로 자리를 만들거나 다른 진입점을 쓴다(D5).
-    */
-    const headless = render(PostRow, {
-      post: basePost,
-      onPress: noop,
-      showCategory: false,
-      onPressMore: noop,
-    })
-    expect(
-      findAll(headless, "V2Icon").some((i) => i.props.name === "more"),
-    ).toBe(false)
-    expect(styleOf(headless).height).toBe(147) // 케밥이 높이를 건드리지 않았다
-  })
-
-  it("행 전체가 제목으로 이름 붙은 버튼이다", () => {
-    const root = render(PostRow, { post: basePost, onPress: noop })
-    expect(root.props.accessibilityRole).toBe("button")
-    expect(root.props.accessibilityLabel).toBe(basePost.title)
-  })
-
-  it("다크에서 면이 토큰을 따라간다 — 흰색을 박아 두지 않았다", () => {
-    mockMode = "dark"
-    const root = render(PostRow, { post: basePost, onPress: noop })
-    expect(styleOf(root).backgroundColor).toBe(dark.background.default)
-    expect(styleOf(root).backgroundColor).not.toBe(light.background.default)
-  })
-
-  it("모든 텍스트가 face 로만 굵기를 말하고 letterSpacing 은 0 이다 (§0.2)", () => {
-    const root = render(PostRow, {
-      post: basePost,
-      rank: 1,
-      onPress: noop,
-      onPressTag: noop,
-    })
-    for (const text of findAll(root, V2Text)) {
-      const token = tokenOf(text)
-      expect(token.letterSpacing).toBe(0)
-      expect(String(token.fontFamily)).toMatch(/^Pretendard-/)
-      expect(token.fontWeight).toBeUndefined()
-      expect(flatten(text.props.style).fontWeight).toBeUndefined()
-    }
-  })
-})
-
-/* ══ 1.2 · PostRowSkeleton ═══════════════════════════════════════════════ */
-
-describe("PostRowSkeleton — 진짜 행과 같은 리듬 (§2.18)", () => {
-  it("같은 모양이면 **같은 높이**다 — 도착 순간 목록이 안 튄다", () => {
-    const shapes = [
-      { hasCategory: true, hasTags: true, hasThumbnail: true },
-      { hasTags: true, hasThumbnail: true },
-      { hasThumbnail: true },
-      {},
-      { hasRank: true, hasCategory: true, hasTags: true, hasThumbnail: true },
-      { hasRank: true },
-    ]
-    expect(
-      shapes.map((shape) => styleOf(render(PostRowSkeleton, { shape })).height),
-    ).toEqual([176, 147, 118, 106, 179, 138])
-  })
-
-  it("기본 모양은 실측 176 이다 (피드 첫 화면에서 가장 흔한 행)", () => {
-    expect(styleOf(render(PostRowSkeleton, {})).height).toBe(176)
-  })
-
-  it("막대 높이가 실제 라인박스·썸네일과 같다 — 숫자를 새로 적지 않았다", () => {
-    const bars = findAll(render(PostRowSkeleton, {}), "V2Skeleton")
-    expect(bars.map((b) => b.props.height)).toEqual([
-      ROW.microPill, // 카테고리 배지
-      ROW.microPill,
-      ROW.microPill,
-      ROW.microPill, // 태그 3개
-      typography.subtext.largeStrong.lineHeight, // 제목 20
-      typography.body.xSmall.lineHeight, // 요약 20
-      typography.subtext.medium.lineHeight, // 메타 18
-      ROW.thumbLarge, // 썸네일 86
-    ])
-    expect(bars.at(-1)!.props.radius).toBe("sm")
-    expect(bars[0].props.radius).toBe("full")
-  })
-
-  it("모양을 따라 부품이 늘고 준다", () => {
-    const bare = findAll(render(PostRowSkeleton, { shape: {} }), "V2Skeleton")
-    expect(bare).toHaveLength(3) // 제목 · 요약 · 메타
-    const ranked = findAll(
-      render(PostRowSkeleton, { shape: { hasRank: true } }),
-      "V2Skeleton",
-    )
-    expect(ranked[0].props.width).toBe(POST_ROW_RANK_SIZE)
-  })
-
-  it("구분선까지 같다 — 스켈레톤만 선이 없으면 목록이 도착할 때 줄이 생긴다", () => {
-    const divider = childrenOf(render(PostRowSkeleton, {}))[1]
-    expect(styleOf(divider).position).toBe("absolute")
-  })
-
-  it("**격자가 통째로 같다** — 여백·간격을 스켈레톤에 다시 적지 않았다", () => {
-    /*
-      높이만 맞으면 "안 튄다" 가 아니다. 높이는 둘 다 `postRowHeight()` 에서 오므로
-      스켈레톤의 좌우 여백이 16 이 되거나 태그 간격이 12 가 돼도 **높이 단언은 초록이다**
-      (돌연변이로 확인했다). 그러면 회색 막대가 20 에서 시작했다가 도착 순간 글자가
-      16 으로 옮겨 앉는다 — 목록 전체가 한 번 흔들린다.
-
-      그래서 여기서는 두 트리의 **같은 자리 스타일을 같은 열쇠로 뽑아 통째로 비교**한다.
-      한쪽만 고치면 값이 갈려서 깨진다. 사람이 옮겨 적은 숫자가 두 벌 있는 한, 이 단언이
-      그 두 벌이 같다는 유일한 근거다.
-    */
-    const shape = {
-      hasRank: true,
-      hasCategory: true,
-      hasTags: true,
-      hasThumbnail: true,
-    }
-
-    /** 같은 열쇠만 남긴다 — 색·배경처럼 성격이 다른 값은 비교 대상이 아니다. */
-    const pick = (style: Style, keys: string[]) =>
-      Object.fromEntries(keys.map((key) => [key, style[key]]))
-
-    /** 행 하나의 세로 격자 지문. 두 컴포넌트가 같은 구조를 갖는다는 전제도 함께 검사한다. */
-    function rhythm(root: Element) {
-      const [inner, divider] = childrenOf(root)
-      const [header, rail, content] = childrenOf(inner)
-      const [column] = childrenOf(content)
-      return {
-        height: styleOf(root).height,
-        inner: pick(styleOf(inner), [
-          "flex",
-          "paddingHorizontal",
-          "paddingVertical",
-        ]),
-        header: pick(styleOf(header), [
-          "height",
-          "gap",
-          "marginBottom",
-          "flexDirection",
-          "alignItems",
-        ]),
-        rail: pick(styleOf(rail), [
-          "height",
-          "gap",
-          "marginBottom",
-          "flexDirection",
-          "alignItems",
-          "overflow",
-        ]),
-        content: pick(styleOf(content), [
-          "flex",
-          "flexDirection",
-          "alignItems",
-          "gap",
-        ]),
-        column: pick(styleOf(column), ["flex"]),
-        // 제목 · 요약 · 메타가 서로를 얼마나 밀어내는가.
-        lines: childrenOf(column).map(
-          (line) => flatten(line.props.style).marginTop,
-        ),
-        divider: pick(styleOf(divider), [
-          "position",
-          "left",
-          "right",
-          "bottom",
-        ]),
-      }
-    }
-
-    const real = rhythm(
-      render(PostRow, { post: basePost, rank: 1, onPress: noop }),
-    )
-    expect(rhythm(render(PostRowSkeleton, { shape }))).toEqual(real)
-
-    // 지문이 텅 비어 있으면 위 비교는 `{}` 두 개를 견준 것이다. 실제 값이 들었는지 확인한다.
-    expect(real.inner.paddingHorizontal).toBe(COMMUNITY_GUTTER)
-    expect(real.rail.gap).toBe(spacing[6])
-    expect(real.lines).toEqual([undefined, spacing[4], spacing[12]])
-    expect(real.height).toBe(179)
-  })
-
-  it("썸네일 자리도 같은 크기다 — 86 이 60 이 되면 텍스트열 폭이 달라진다", () => {
-    const image = flatten(
-      findOne(render(PostRow, { post: basePost, onPress: noop }), "Image").props
-        .style,
-    )
-    const bar = findAll(render(PostRowSkeleton, {}), "V2Skeleton").at(-1)!
-    expect([bar.props.width, bar.props.height]).toEqual([
-      image.width,
-      image.height,
-    ])
-    expect(bar.props.radius).toBe("sm")
-    expect(image.borderRadius).toBe(radius.sm)
-  })
-})
-
-/* ══ 1.3 · CompactPostRow — §2.4 ═════════════════════════════════════════ */
-
-describe("CompactPostRow — 76px 목록 행", () => {
-  const row = (over: Partial<CompactPostRowPost> = {}) =>
-    render(CompactPostRow, { post: compactPost(over), onPress: noop })
-
-  it("높이 76 · 썸네일 60 이 세로 중앙((76−60)/2 = 8)", () => {
-    expect(styleOf(row()).height).toBe(ROW.compactRow)
-    expect(ROW.compactRow).toBe(76)
-
-    const inner = childrenOf(row())[0]
-    expect(styleOf(inner).alignItems).toBe("center")
-    expect(styleOf(inner).paddingHorizontal).toBe(COMMUNITY_GUTTER)
-    expect(styleOf(inner).gap).toBe(spacing[12])
-
-    const img = flatten(findOne(row(), "Image").props.style)
-    expect(img.width).toBe(ROW.thumbSmall)
-    expect(img.height).toBe(ROW.thumbSmall)
-    expect(img.borderRadius).toBe(radius.sm)
-    expect((ROW.compactRow - ROW.thumbSmall) / 2).toBe(8)
-  })
-
-  it("제목은 15 Medium / lh **19**(`label.smallWeak`) — `PostRow` 의 lh 20 과 다르다", () => {
-    const title = findAll(row(), V2Text)[0]
-    expect(tokenOf(title)).toEqual(typography.label.smallWeak)
-    expect(typography.label.smallWeak.lineHeight).toBe(19)
-    expect(typography.label.smallWeak.lineHeight).not.toBe(
-      typography.subtext.largeStrong.lineHeight,
-    )
-    expect(title.props.numberOfLines).toBe(1)
-    expect(title.props.color).toBe(light.label.normal)
-  })
-
-  it("제목↔메타 6, 그리고 **시각이 없다**", () => {
-    const metaEl = findOne(row(), MetaRow)
-    expect(flatten(metaEl.props.style).marginTop).toBe(spacing[6])
-    expect(metaEl.props.timeText).toBeUndefined()
-    expect(metaEl.props.viewCount).toBe(3291)
-  })
-
-  it("하단 구분선은 full-bleed — 섹션 첫 행 위에는 선이 안 생긴다", () => {
-    const divider = childrenOf(row())[1]
-    const wrap = styleOf(divider)
-    expect(wrap.position).toBe("absolute")
-    expect(wrap.left).toBe(0)
-    expect(wrap.right).toBe(0)
-    expect(wrap.bottom).toBe(0)
-    // 선이 아래에만 있으니 "첫 행 위엔 없음" 이 저절로 성립한다(위쪽 선을 그리지 않았다).
-    expect(wrap.top).toBeUndefined()
-  })
-})
-
-describe("CompactPostRow — 이미지 개수 배지 (§2.4)", () => {
-  const badgeOf = (over: Partial<CompactPostRowPost>) =>
-    findAll(
-      render(CompactPostRow, { post: compactPost(over), onPress: noop }),
-      ImageCountBadge,
-    )
-
-  it("2장부터 그린다. 1장·0장에는 없다", () => {
-    expect(badgeOf({}).at(0)?.props.count).toBe(2)
-    expect(badgeOf({ imageUris: ["a", "b", "c"] })[0].props.count).toBe(3)
-    expect(badgeOf({ imageUris: ["a"] })).toHaveLength(0)
-    expect(badgeOf({ imageUris: [], imageUri: null })).toHaveLength(0)
-  })
-
-  it("`imageUris` 가 비고 `imageUri` 만 있는 옛 응답은 **1장**으로 접는다", () => {
-    // 모르는 것을 2 로 지어내면 배지가 거짓말을 한다.
-    expect(badgeOf({ imageUris: [] })).toHaveLength(0)
-  })
-
-  it("썸네일이 없으면 배지도 없다", () => {
-    expect(badgeOf({ imageUri: null })).toHaveLength(0)
-  })
-
-  it("20×20 원 · `label.alternative` 면 · 13 SemiBold 흰 글자 · 우·하 8", () => {
-    const view = render(ImageCountBadge, { count: 2 })
-    const s = styleOf(view)
-    expect(s.width).toBe(IMAGE_COUNT_BADGE_SIZE)
-    expect(s.height).toBe(IMAGE_COUNT_BADGE_SIZE)
-    expect(IMAGE_COUNT_BADGE_SIZE).toBe(20)
-    expect(s.borderRadius).toBe(radius.full)
-    expect(s.backgroundColor).toBe(light.label.alternative)
-    expect(s.position).toBe("absolute")
-    expect(s.right).toBe(spacing[8])
-    expect(s.bottom).toBe(spacing[8])
-
-    const digit = findAll(view, V2Text)[0]
-    expect(tokenOf(digit)).toEqual(typography.label.xSmall)
-    expect(digit.props.color).toBe(light.static.white)
   })
 })
 

@@ -110,6 +110,21 @@ function collectViolations(profiles) {
       }
     }
 
+    /*
+      레시피 v2 모의 경로는 운영 빌드에 실리면 안 된다.
+
+      세 서비스(목록 `RECIPE_LIST_V2_MOCK` · 상세 `recipeV2Mock` · 작성
+      `recipeWriteApiConfig`)는 이 키가 정확히 `"true"` 일 때만 인메모리 모의를 탄다 —
+      예전 기본값은 반대(없으면 모의)라 이 키를 적지 않은 운영 프로파일이 모의 레시피를
+      스토어에 내보냈다. 코드 쪽 기본값은 고쳤지만, 누군가 테스트하다 남긴 `"true"` 가
+      운영 프로파일에 들어오는 길은 여기서만 막힌다.
+    */
+    if (appEnv === "production" && env.EXPO_PUBLIC_RECIPE_V2_MOCK === "true") {
+      violations.push(
+        `${name}: APP_ENV=production 인데 EXPO_PUBLIC_RECIPE_V2_MOCK 이 "true" 다. 운영 빌드가 서버 대신 인메모리 모의 레시피를 그린다 — 키를 지우거나 "false" 로.`,
+      )
+    }
+
     if (!backendUrl) continue
 
     if (appEnv === "production" && backendUrl !== PRODUCTION_BACKEND) {

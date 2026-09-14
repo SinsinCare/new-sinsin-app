@@ -196,6 +196,7 @@
     "titleLabel": "제목",
     "tagsLabel": "태그",
     "descriptionLabel": "설명 작성",
+    "bodyLabel": "내용",
     "descriptionPlaceholder": "내용을 입력해 주세요.",
     "register": "등록",
     "titlePlaceholder": "제목을 적어 주세요",
@@ -213,7 +214,24 @@
     "exitBody": "지금까지 쓴 내용은 저장되지 않아요.",
     "editExitBody": "지금 바꾼 내용은 저장되지 않아요.",
     "selfName": "나",
-    "selfRole": "콩팥 건강 관리 중"
+    "selfRole": "콩팥 건강 관리 중",
+    "topicPlaceholder": "주제를 골라 주세요",
+    "topicSheetTitle": "어떤 이야기인가요?",
+    "pollTool": "투표",
+    "consentTitle": "등록 전에 확인해 주세요",
+    "consentConfirm": "확인했어요",
+    "consentHint": "확인하면 바로 등록돼요. 이 글을 올리는 동안 다시 묻지 않아요.",
+    "noticeLabel": "안내",
+    "noticeBody": "권리 침해·광고·홍보 목적의 글은 올릴 수 없어요.",
+    "addTagsOptional": "태그 추가 (선택)",
+    "bodyPlaceholderByTopic": {
+      "diet": "오늘 식단이나 식사 고민을 나눠 주세요",
+      "numbers": "검사 수치 변화나 관리 경험을 적어 주세요",
+      "symptoms": "요즘 겪는 증상과 대처법을 나눠 주세요",
+      "medicine": "약 복용 경험이나 궁금한 점을 적어 주세요",
+      "dining-out": "외식한 곳과 메뉴, 주문 팁을 알려 주세요",
+      "daily": "일상 이야기를 자유롭게 들려주세요"
+    }
   },
   "feed": {
     "recipeSearchPlaceholder": "레시피를 검색해 보세요",
@@ -474,6 +492,9 @@
       "distributionRow": "{{star}}점 {{amount}}개",
       "starAccessibility": "{{star}}점 주기",
       "composerTitle": "이 레시피 어땠어요?",
+      "composerIntro": "별점을 고르면 남길 수 있어요. 만들어 본 이야기는 선택이에요.",
+      "ratingChoice": "{{star}}점 · {{word}}",
+      "bodyFieldLabel": "만들어 본 이야기",
       "ratingWords": {
         "1": "별로였어요",
         "2": "아쉬웠어요",
@@ -512,6 +533,8 @@
   "responsibility": "다른 사람의 권리를 침해하지 않는 내용인지 확인했어요.",
   "recipeWrite": {
     "title": "레시피 작성하기",
+    "navigationTitle": "레시피",
+    "intro": "재료와 분량을 적으면 한 명 기준 영양을 계산해서 알려 드려요.",
     "editUnavailableTitle": "레시피 수정은 아직 없어요",
     "editUnavailableBody": "지금은 새 레시피만 올릴 수 있어요. 고칠 내용이 있으면 새로 올려 주세요.",
     "field": {

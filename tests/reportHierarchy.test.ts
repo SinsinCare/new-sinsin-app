@@ -49,16 +49,18 @@ describe("리포트 위계", () => {
     expect(SOURCE).toMatch(
       /tone="danger"\s*\n\s*neutralColor=\{planes\.neutral\}/u,
     )
-    expect(SOURCE).toMatch(/neutral: s\.isDark \? s\.surface : INK\.band/u)
+    // 다크의 중립 면은 `surfaceSunken` — 바탕(`canvas`)·띠(`surface`)와 구분되는 브랜드 없는
+    // 회색이고 보조 버튼 면의 공통 토큰이다(docs/design/medication-grayscale-2026-09-07/REVIEW.md).
+    expect(SOURCE).toMatch(
+      /neutral: s\.isDark \? s\.surfaceSunken : INK\.band/u,
+    )
     // danger 가 softColor 를 다시 쓰지 않는지 — 회귀 방지
     expect(SOURCE).not.toMatch(/tone="danger"\s*\n\s*softColor=/u)
   })
 
   it("도넛은 같은 바닥과 굵기를 쓰고 집중 영양소 이름만 강조한다", () => {
     expect(SOURCE).toMatch(/const stroke = 8/u)
-    expect(SOURCE).not.toMatch(
-      /styles\.donut(?:PercentFocus|ValueMuted)/u,
-    )
+    expect(SOURCE).not.toMatch(/styles\.donut(?:PercentFocus|ValueMuted)/u)
     expect(styleBlock("donutCell")).not.toMatch(/backgroundColor|borderColor/u)
     expect(SOURCE).not.toMatch(/focusColor|focusCard/u)
     expect(styleBlock("donutLabelFocus")).toMatch(/fontWeight: "600"/u)

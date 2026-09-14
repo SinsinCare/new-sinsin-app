@@ -1,6 +1,10 @@
 /**
- * 커뮤니티 재디자인의 **상단 탭 스트립과 그라디언트 2종**(WBS 1.13 · 1.15)의 계약.
- * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.15 · §2.19 · §4-G18 · §5.18.
+ * 커뮤니티 재디자인의 **가장자리 페이드**(`EdgeFade`, WBS 1.15)의 계약.
+ * 스펙: `docs/design/community-redesign/00-MASTER.md` §2.19 · §4-G18.
+ *
+ * 상단 탭 스트립(`CommunityTopTabs`, WBS 1.13 · §2.15)과 사진 스크림(`PhotoScrim`,
+ * §5.18)의 계약도 여기 있었다. 둘 다 어디서도 import 되지 않는 죽은 파일이라
+ * 컴포넌트와 함께 지웠다(2026-09-09).
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * ■ 왜 컴포넌트를 부르나
@@ -9,16 +13,11 @@
  * 초록을 만들기 쉽다. 여기서는 함수 컴포넌트를 그대로 호출해 **엘리먼트 트리를 읽는다**
  * (`tests/v2CommunityGaps.test.ts` 와 같은 방법).
  *
- * ■ 이 파일이 지키는 것 셋
+ * ■ 이 파일이 지키는 것
  *
- *  1. **인디케이터 폭 62 / 96** — `V2Tab` 을 다시 만들지 않아도 된다는 판정(§4 "갭이 아닌 것")
- *     전체가 이 산술 위에 서 있다. 그래서 인셋을 테스트가 다시 적지 않고 **`V2Tab` 자신이
- *     그린 인디케이터에서 읽어** 계산한다.
- *  2. **하단선이 한 겹의 full-bleed** — `V2Tab` 의 선을 안 끄면 탭 아래만 두 겹으로 진해지고,
- *     스트립이 안 그리면 프로필 아이콘 밑이 비어 보인다. 둘 다 눈으로는 잘 안 보인다.
- *  3. **그라디언트 끝점이 `"transparent"` 가 아니다** — RN 의 transparent 는 투명한 *검정*
- *     이라 흰 면으로 사라지는 페이드의 중간이 회색으로 뜬다(안드로이드에서 특히).
- *     이건 앱에서 실제로 한 번 고친 결함이다(`WriteSubmitBar` 머리말).
+ *  **그라디언트 끝점이 `"transparent"` 가 아니다** — RN 의 transparent 는 투명한 *검정*
+ *  이라 흰 면으로 사라지는 페이드의 중간이 회색으로 뜬다(안드로이드에서 특히).
+ *  이건 앱에서 실제로 한 번 고친 결함이다(`WriteSubmitBar` 머리말).
  */
 /* eslint-disable import/first -- RN·네이티브 의존을 모듈 로드 **전에** 갈아 끼워야 한다. */
 
@@ -36,8 +35,6 @@ jest.mock("react-i18next", () => ({
 jest.mock("@/src/design-system-v2/components/V2Icon", () => ({
   V2Icon: "V2Icon",
 }))
-// `V2Avatar` 는 그려지지 않고 엘리먼트로만 남지만, 그 모듈이 expo-image 를 끌고 온다.
-jest.mock("expo-image", () => ({ Image: "Image" }))
 // 테마는 이 파일이 정한다(다크 단언이 있다). 훅 본체는 스토어를 보므로 그 한 칸만 바꾼다.
 jest.mock("@/src/hooks/useAppColorScheme", () => ({
   useAppColorScheme: () => mockMode,
@@ -46,31 +43,15 @@ jest.mock("@/src/hooks/useAppColorScheme", () => ({
 let mockMode: "light" | "dark" = "light"
 
 import { resolveTheme } from "@/src/design-system-v2/theme"
-import { V2Tab } from "@/src/design-system-v2/components/V2Tab"
-import { V2Avatar } from "@/src/design-system-v2/components/V2Avatar"
-import { primitives } from "@/src/design-system-v2/tokens/colors"
-import { borderWidth } from "@/src/design-system-v2/tokens/size"
-import { ROW } from "@/src/features/recipe/components/community/communityLayout"
-import {
-  CommunityTopTabs,
-  TAB_RAIL_WIDTH,
-} from "@/src/features/recipe/components/community/CommunityTopTabs"
 import {
   EdgeFade,
   EDGE_FADE_HEIGHT,
   EDGE_FADE_PEEK_ALPHA,
   EDGE_FADE_WIDTH,
 } from "@/src/features/recipe/components/community/EdgeFade"
-import {
-  PhotoScrim,
-  PHOTO_SCRIM_HEIGHT,
-} from "@/src/features/recipe/components/community/PhotoScrim"
 
 const light = resolveTheme("light").colors
 const dark = resolveTheme("dark").colors
-
-/** 시안 프레임 폭. `fill` 배치의 셀 산술이 이 값 위에서 96 을 만든다(§2.15). */
-const FRAME_WIDTH = 375
 
 /* ── 엘리먼트 트리 읽기 ──────────────────────────────────────────────────── */
 
@@ -98,22 +79,6 @@ function flatten(style: unknown): Style {
 
 const styleOf = (element: Element): Style => flatten(element.props.style)
 
-function childrenOf(element: Element): Element[] {
-  const raw = element.props.children
-  const list = Array.isArray(raw) ? raw.flat(Infinity) : [raw]
-  return list.filter(isElement)
-}
-
-function walk(element: Element): Element[] {
-  return childrenOf(element).reduce<Element[]>(
-    (acc, child) => [...acc, ...walk(child)],
-    [element],
-  )
-}
-
-const findAll = (root: Element, type: unknown): Element[] =>
-  walk(root).filter((el) => el.type === type)
-
 const render = <P>(component: (props: P) => unknown, props: P): Element => {
   const out = component(props)
   if (!isElement(out)) throw new Error("엘리먼트를 돌려주지 않았다")
@@ -124,144 +89,7 @@ afterEach(() => {
   mockMode = "light"
 })
 
-/* ══ 1.13 · CommunityTopTabs — §2.15 ═════════════════════════════════════ */
-
-const TABS = ["레시피", "자유글", "스토리"]
-
-const strip = (extra: Record<string, unknown> = {}) =>
-  render(CommunityTopTabs, {
-    items: TABS,
-    value: "자유글",
-    onChange: () => {},
-    ...extra,
-  } as never)
-
-const tabOf = (root: Element): Element => findAll(root, V2Tab)[0]
-
-/**
- * `V2Tab` 이 **자신이 그린** 인디케이터에서 읽은 좌우 인셋.
- * 테스트가 8 을 다시 적으면 `V2Tab` 이 바뀌어도 초록으로 남는다.
- */
-function indicatorInset(): number {
-  const tab = render(V2Tab, {
-    items: TABS,
-    value: TABS[0],
-    onChange: () => {},
-    alignment: "fixed",
-    size: "l",
-  })
-  const selected = childrenOf(tab)[0]
-  const indicator = childrenOf(selected).find(
-    (el) => flatten(el.props.style).position === "absolute",
-  )
-  return flatten(indicator?.props.style).left as number
-}
-
-/** 셀 폭에서 인셋을 뺀 것이 인디케이터 폭이다. */
-const indicatorWidth = (railWidth: number, cells: number) =>
-  Math.round(railWidth / cells - indicatorInset() * 2)
-
-describe("CommunityTopTabs — 폭만 정해 주면 인디케이터가 실측과 맞는다 (§2.15)", () => {
-  it("rail 233 → 인디케이터 62 (피드 3탭 · 프로필 3탭)", () => {
-    expect(TAB_RAIL_WIDTH).toBe(233)
-    expect(indicatorWidth(TAB_RAIL_WIDTH, TABS.length)).toBe(62)
-
-    const tab = tabOf(strip())
-    expect(tab.props.alignment).toBe("fixed")
-    expect(tab.props.size).toBe("l")
-    const style = styleOf(tab)
-    expect(style.width).toBe(TAB_RAIL_WIDTH)
-    expect(style.marginLeft).toBe(20)
-  })
-
-  it("fill(좌우 20) → 인디케이터 96 (인기글 기간탭)", () => {
-    const style = styleOf(tabOf(strip({ layout: "fill" })))
-    expect(style.paddingHorizontal).toBe(20)
-    expect(style.flex).toBe(1)
-    expect(style.width).toBeUndefined()
-
-    const usable = FRAME_WIDTH - (style.paddingHorizontal as number) * 2
-    expect(indicatorWidth(usable, TABS.length)).toBe(96)
-  })
-
-  it("탭 조작은 그대로 통과한다", () => {
-    const seen: string[] = []
-    const tab = tabOf(
-      strip({ value: "스토리", onChange: (next: string) => seen.push(next) }),
-    )
-    expect(tab.props.items).toEqual(TABS)
-    expect(tab.props.value).toBe("스토리")
-    ;(tab.props.onChange as (v: string) => void)("레시피")
-    expect(seen).toEqual(["레시피"])
-  })
-})
-
-describe("CommunityTopTabs — 하단선은 한 겹의 full-bleed 다 (§2.15)", () => {
-  it("스트립이 선을 그리고 `V2Tab` 의 선은 꺼진다", () => {
-    for (const layout of ["rail", "fill"] as const) {
-      const root = strip({ layout })
-      expect(styleOf(root).borderBottomWidth).toBe(borderWidth.thin)
-      expect(styleOf(root).borderBottomColor).toBe(light.line.normal)
-      // 안 끄면 같은 자리에 알파 22% 가 두 겹 — 탭 아래만 진해진다.
-      expect(styleOf(tabOf(root)).borderBottomWidth).toBe(0)
-    }
-  })
-
-  it("스트립 높이를 박지 않는다 — 51 은 **아이템** 높이고 선 1 이 더해진다 (D13 산술)", () => {
-    expect(styleOf(strip()).height).toBeUndefined()
-    // `V2Tab size="l"` 의 아이템이 그 51 이다.
-    const item = childrenOf(
-      render(V2Tab, {
-        items: TABS,
-        value: TABS[0],
-        onChange: () => {},
-        alignment: "fixed",
-        size: "l",
-      }),
-    )[0]
-    expect(styleOf(item).minHeight).toBe(ROW.tabStrip)
-  })
-
-  it("다크에서도 테마 색을 따라간다 — 시안이 라이트 전용이어도", () => {
-    mockMode = "dark"
-    const root = strip()
-    expect(styleOf(root).backgroundColor).toBe(dark.background.default)
-    expect(styleOf(root).borderBottomColor).toBe(dark.line.normal)
-  })
-})
-
-describe("CommunityTopTabs — 우상단 프로필 (§2.15 · D5)", () => {
-  it("`onProfilePress` 가 없으면 안 그린다(인기글 기간탭)", () => {
-    expect(findAll(strip(), "Pressable")).toHaveLength(0)
-  })
-
-  it("원과 글리프는 `V2Avatar` 의 것이다 — 손으로 다시 그리지 않는다 (§4-G12)", () => {
-    const root = strip({ onProfilePress: () => {} })
-    const [avatar] = findAll(root, V2Avatar)
-    expect(avatar.props.size).toBe(24)
-    // 면·글리프를 여기서 그리면 두 정본이 생긴다.
-    expect(
-      styleOf(findAll(root, "Pressable")[0]).backgroundColor,
-    ).toBeUndefined()
-  })
-
-  it("히트영역 44 · 우측 인셋 20 · 누르면 통과한다", () => {
-    const pressed: string[] = []
-    const root = strip({ onProfilePress: () => pressed.push("go") })
-    const [button] = findAll(root, "Pressable")
-
-    const style = styleOf(button)
-    expect(style.marginLeft).toBe("auto")
-    expect(style.marginRight).toBe(20)
-    // 24 + 10×2 = 44.
-    expect(button.props.hitSlop).toBe(10)
-    expect(button.props.accessibilityLabel).toBe("community.myActivity")
-    ;(button.props.onPress as () => void)()
-    expect(pressed).toEqual(["go"])
-  })
-})
-
-/* ══ 1.15 · EdgeFade / PhotoScrim — §2.19 ════════════════════════════════ */
+/* ══ 1.15 · EdgeFade — §2.19 ═════════════════════════════════════════════ */
 
 /** `#rrggbb` + 알파 → 같은 색인지. 대소문자·8자리 표기 차이를 흡수한다. */
 const sameRgb = (a: string, b: string) =>
@@ -391,45 +219,5 @@ describe("EdgeFade — `leftOfBar` 는 축이 가로로 눕는다 (피드 필터
     expect(sameRgb(end, dark.background.default)).toBe(true)
     expect(sameRgb(end, light.background.default)).toBe(false)
     expect(sameRgb(start, dark.background.default)).toBe(true)
-  })
-})
-
-describe("PhotoScrim — 140pt 검정 스크림 (§2.19 · §5.18)", () => {
-  const scrim30 = primitives.opacityBlack["300"]
-
-  it("미디어 하단에 앵커되고 누름을 안 먹는다", () => {
-    const scrim = render(PhotoScrim, {})
-    expect(scrim.type).toBe("LinearGradient")
-    expect(scrim.props.pointerEvents).toBe("none")
-
-    const style = styleOf(scrim)
-    expect(style.height).toBe(PHOTO_SCRIM_HEIGHT)
-    expect(PHOTO_SCRIM_HEIGHT).toBe(140)
-    expect(style.position).toBe("absolute")
-    expect(style.bottom).toBe(0)
-    expect(style.top).toBeUndefined()
-  })
-
-  it("색은 지어내지 않는다 — 30% 는 원시 팔레트에 이미 있다", () => {
-    const [start, end] = colorsOf(render(PhotoScrim, {}))
-    // rgba(0,0,0,0.30) == #0000004d.
-    expect(end).toBe(scrim30)
-    expect(parseInt(scrim30.slice(7, 9), 16) / 255).toBeCloseTo(0.3, 2)
-    expect(start).not.toBe("transparent")
-    expect(sameRgb(start, scrim30)).toBe(true)
-    expect(start.slice(-2)).toBe("00")
-  })
-
-  it("상단 앵커는 방향이 뒤집힌다 — 사진 위 다크 글리프의 대비(§5.18 · S13)", () => {
-    const scrim = render(PhotoScrim, { anchor: "top" })
-    expect(styleOf(scrim).top).toBe(0)
-    expect(styleOf(scrim).bottom).toBeUndefined()
-    expect(colorsOf(scrim)[0]).toBe(scrim30)
-  })
-
-  it("사진 위라 두 모드가 같다", () => {
-    const lightColors = colorsOf(render(PhotoScrim, {}))
-    mockMode = "dark"
-    expect(colorsOf(render(PhotoScrim, {}))).toEqual(lightColors)
   })
 })

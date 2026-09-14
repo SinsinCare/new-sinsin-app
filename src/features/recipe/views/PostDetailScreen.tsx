@@ -5,14 +5,24 @@ import {
 } from "../utils/commentDraft"
 import { primitives } from "@/src/design-system-v2/tokens/colors"
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native"
-import { Text, TextInput } from "@/src/shared/components/AppText"
+import { Text } from "@/src/shared/components/AppText"
+import { TextInput } from "@/src/design-system-v2/primitives/NativeText"
+import { V2Text } from "@/src/design-system-v2"
 // 원격 사진은 expo-image — 디스크 캐시·다운스케일 디코드로 목록 스크롤이 가볍다
 import { Image } from "expo-image"
 import {
   AppModal,
   afterModalTransitions,
 } from "@/src/shared/components/AppModal"
-import { useMemo, useRef, useState } from "react"
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   KeyboardController,
@@ -99,6 +109,12 @@ import {
 import { useSuppressGlobalKeyboardToolbar } from "@/src/stores/keyboardToolbarStore"
 import { orderComments, type CommentOrder } from "../utils/commentOrder"
 import { typography } from "@/src/design-system-v2/tokens"
+import {
+  FIELD,
+  FORM,
+  MIN,
+  S,
+} from "@/src/features/home/components/record/pages/recordPageSpec"
 import { useCommentDraftGuard } from "../hooks/useCommentDraftGuard"
 
 const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
@@ -106,16 +122,280 @@ const HEART_SPRING = { ...MOTION.spring, reduceMotion: ReduceMotion.System }
 /** 설치 링크는 한 곳에서만 짓는다(`deepLink.ts` 머리말). */
 const APP_DOWNLOAD_URL = STORE_REDIRECT_URL
 
-export function PostDetailScreen() {
+/** 카테고리 키 → 문구 키. 렌더마다 `switch` 를 다시 만들지 않으려고 표로 둔다(검색 화면과 같은 모양). */
+const CATEGORY_LABEL_KEYS = {
+  diet: "community.categories.diet",
+  numbers: "community.categories.numbers",
+  symptoms: "community.categories.symptoms",
+  medicine: "community.categories.medicine",
+  "dining-out": "community.categories.diningOut",
+  daily: "community.categories.daily",
+} as const
+
+/** 댓글 신고 사유 — 서버 enum 과 문구 키. 문구는 `t` 가 바뀔 때만 다시 만든다. */
+const REPORT_REASONS = [
+  { labelKey: "community.postDetail.reportReasons.spam", value: "SPAM" },
+  {
+    labelKey: "community.postDetail.reportReasons.harassment",
+    value: "HARASSMENT",
+  },
+  {
+    labelKey: "community.postDetail.reportReasons.inappropriate",
+    value: "INAPPROPRIATE_CONTENT",
+  },
+  {
+    labelKey: "community.postDetail.reportReasons.falseInformation",
+    value: "FALSE_INFORMATION",
+  },
+  { labelKey: "community.postDetail.reportReasons.other", value: "OTHER" },
+] as const
+
+/*
+  ─── 댓글 행과 입력 바를 화면에서 떼어 낸 이유 ──────────────────────────────
+
+  입력창의 글자·커서가 **화면 상태**였다. 한 글자를 칠 때마다 1,800줄짜리 화면이
+  통째로 다시 그려졌다 — 댓글 트리 전부(행마다 `formatTimeAgo`·멘션 조각 다시 계산),
+  신고 사유 배열·카테고리 라벨 재생성, 이어 읽을 글까지. 긴 댓글이 달린 글에서는
+  입력이 눈에 띄게 끊겼다.
+
+  그래서 둘로 가른다.
+   - `PostCommentRow` — 댓글 한 행. `memo` 이고 받는 것은 댓글 객체와 **고정 콜백**
+     셋뿐이라, 화면이 다시 그려져도 그 댓글이 그대로면 건너뛴다.
+   - `PostCommentComposer` — 입력 바. 글자·커서·멘션 후보·초안 가드를 **스스로**
+     들고 있어 타이핑이 화면까지 올라오지 않는다. 화면이 알아야 하는 것은 답글·수정
+     **대상**(누구에게 · 어느 댓글)과 전송뿐이고, 대상을 정하는 쪽(화면)이 초안을 심는
+     길은 `ref` 의 `seed`/`reset`/`confirmDiscard` 다.
+*/
+
+interface CommentActions {
+  onToggleLike: (comment: CommunityComment) => void
+  onReply: (comment: CommunityComment) => void
+  onMore: (comment: CommunityComment, isReply: boolean) => void
+}
+
+interface PostCommentRowProps extends CommentActions {
+  comment: CommunityComment
+  isReply: boolean
+}
+
+/**
+ * 댓글 한 행(답글은 자기 자신을 한 단 들여 재귀한다).
+ *
+ * 안쪽 함수 이름이 바깥 상수와 다른 이유: 같으면 재귀의 `<PostCommentRow>` 가 함수
+ * 표현식의 자기 이름(= `memo` 를 거치지 않은 본체)에 묶여 답글 행만 메모가 풀린다.
+ */
+const PostCommentRow = memo(function PostCommentRowInner({
+  comment,
+  isReply,
+  onToggleLike,
+  onReply,
+  onMore,
+}: PostCommentRowProps) {
   const { t, i18n } = useTranslation()
-  const { id } = useLocalSearchParams<{ id: string }>()
-  const router = useAppRouter()
-  const insets = useSafeAreaInsets()
   const surface = useSurface()
-  const queryClient = useQueryClient()
-  const bottomInset =
-    Platform.OS === "android" ? Math.max(insets.bottom, 16) : insets.bottom
-  useSuppressGlobalKeyboardToolbar()
+  const router = useAppRouter()
+
+  return (
+    <View
+      style={[
+        styles.comment,
+        { borderBottomColor: surface.border },
+        isReply && styles.commentReply,
+      ]}
+    >
+      <View style={styles.commentTop}>
+        <View
+          style={[
+            styles.commentAvatar,
+            { backgroundColor: surface.surfaceSunken },
+          ]}
+        >
+          <Ionicons name="person" size={15} color={surface.text} />
+        </View>
+        <View style={styles.commentBody}>
+          {/*
+            **지워진 댓글은 글쓴이를 밝히지 않는다.** 이 줄이 아래 `isDeleted` 가드
+            밖에 있어서 묘비가 "철수 · 3시간 전 / 삭제된 댓글이에요" 로 떴다 — 서버는
+            지울 때 멘션을 일부러 비워 흔적을 없애는데(`authorName` 은 트리를 그리려고
+            계속 보낸다) 앱이 그 이름을 도로 세우고 있었다. 남는 것은 답글이 매달릴
+            자리 하나면 된다.
+          */}
+          {!comment.isDeleted && (
+            <View style={styles.commentNameRow}>
+              {/*
+                댓글 이름도 프로필로 간다 — 글 상세의 작성자 행(위)과 같은 규칙이다.
+                예전에는 이 이름이 평문이라, 같은 화면 안에서 위쪽 이름은 눌리고
+                아래쪽 이름은 안 눌렸다. 탈퇴·익명(`authorId === null`)은 갈 곳이
+                없으므로 `disabled` 로 두고 평문처럼 보이게 둔다.
+              */}
+              <Pressable
+                onPress={() => {
+                  if (comment.authorId != null) {
+                    router.push(`/community/author/${comment.authorId}` as Href)
+                  }
+                }}
+                disabled={
+                  comment.authorId == null || isWithdrawnAuthor(comment)
+                }
+                hitSlop={8}
+                accessibilityRole={
+                  comment.authorId == null ? undefined : "button"
+                }
+                accessibilityLabel={
+                  comment.authorId == null
+                    ? undefined
+                    : t("community.author.openProfile", {
+                        name: comment.authorName,
+                      })
+                }
+              >
+                <V2Text
+                  style={styles.commentName}
+                  color={surface.textStrong}
+                  lineBreakStrategyIOS="hangul-word"
+                >
+                  {isWithdrawnAuthor(comment)
+                    ? t("community.postDetail.withdrawnUser")
+                    : comment.authorName}
+                </V2Text>
+              </Pressable>
+              <V2Text style={styles.commentTime} color={surface.text}>
+                {formatTimeAgo(comment.createdAt, i18n.language)}
+              </V2Text>
+            </View>
+          )}
+          <MentionText
+            content={
+              comment.isDeleted
+                ? t("community.postDetail.deletedComment")
+                : comment.content
+            }
+            mentions={comment.mentions}
+            muted={comment.isDeleted}
+            style={styles.commentContent}
+          />
+          {!comment.isDeleted && (
+            <View style={styles.commentActions}>
+              <Pressable
+                onPress={() => onToggleLike(comment)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("community.postDetail.likeComment")}
+                style={styles.commentAction}
+              >
+                <Ionicons
+                  name={comment.liked ? "heart" : "heart-outline"}
+                  size={14}
+                  color={comment.liked ? surface.brand : surface.text}
+                />
+                {comment.likes > 0 && (
+                  <V2Text
+                    style={styles.commentActionText}
+                    color={comment.liked ? surface.brand : surface.text}
+                  >
+                    {comment.likes}
+                  </V2Text>
+                )}
+              </Pressable>
+              {!isReply && (
+                <Pressable
+                  onPress={() => onReply(comment)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  style={styles.commentAction}
+                >
+                  <V2Text
+                    style={styles.commentActionText}
+                    color={surface.text}
+                    lineBreakStrategyIOS="hangul-word"
+                  >
+                    {t("community.postDetail.reply")}
+                  </V2Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+        </View>
+        {!comment.isDeleted && (
+          <Pressable
+            hitSlop={10}
+            onPress={() => onMore(comment, isReply)}
+            accessibilityRole="button"
+            accessibilityLabel={t("community.postDetail.commentMore")}
+            style={styles.commentMore}
+          >
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={16}
+              color={surface.text}
+            />
+          </Pressable>
+        )}
+      </View>
+      {comment.replies.map((reply) => (
+        <PostCommentRow
+          key={reply.id}
+          comment={reply}
+          isReply
+          onToggleLike={onToggleLike}
+          onReply={onReply}
+          onMore={onMore}
+        />
+      ))}
+    </View>
+  )
+})
+
+interface CommentDraftSeed {
+  text: string
+  /** 이 값과 같으면 "보낼 것이 없다" — 답글 시드(`@이름 `)·수정 원문이 여기 온다. */
+  baseline: string
+  mentions: string[]
+}
+
+interface PostCommentComposerHandle {
+  /** 답글·수정 진입 — 초안을 채우고 커서를 끝에 두고 포커스한다. */
+  seed(next: CommentDraftSeed): void
+  reset(): void
+  /** 초안이 있으면 버릴지 묻고, 없거나 버리기로 하면 `next` 를 돈다. */
+  confirmDiscard(next: () => void): Promise<void>
+}
+
+interface PostCommentComposerProps {
+  bottomInset: number
+  mentionCandidates: MentionCandidate[]
+  /** 답글·수정 대상 띠. null 이면 안 그린다. */
+  contextLabel: string | null
+  /** ✕ 로 대상을 놓았을 때 — 초안은 이 컴포넌트가 스스로 비운다. */
+  onCancelContext: () => void
+  /** 글이 사라졌거나 전송 중 — 보내기를 잠근다. */
+  submitLocked: boolean
+  submitLabel: string
+  /** 뒤로가기·대상 전환 때 초안을 지킬지. 글이 사라졌으면 지킬 것이 없다. */
+  guardDraft: boolean
+  /** 전송. `true` 를 돌려주면 초안을 비운다(성공 · 대상이 사라진 수정). */
+  onSubmit: (draft: { content: string; mentions: string[] }) => Promise<boolean>
+}
+
+/** 댓글 입력 바 — 글자·커서·멘션·초안 가드를 스스로 든다(위 머리말). */
+const PostCommentComposer = forwardRef<
+  PostCommentComposerHandle,
+  PostCommentComposerProps
+>(function PostCommentComposer(
+  {
+    bottomInset,
+    mentionCandidates,
+    contextLabel,
+    onCancelContext,
+    submitLocked,
+    submitLabel,
+    guardDraft,
+    onSubmit,
+  },
+  ref,
+) {
+  const { t } = useTranslation()
+  const surface = useSurface()
   const keyboardVisible = useKeyboardState((state) => state.isVisible)
   const keyboard = useReanimatedKeyboardAnimation()
   // Keep the dock's layout height fixed. Both movement and safe-area compensation
@@ -128,16 +408,248 @@ export function PostDetailScreen() {
       },
     ],
   }))
+  const [text, setText] = useState("")
+  const [baseline, setBaseline] = useState("")
+  const [cursor, setCursor] = useState(0)
+  /** 입력창에서 고른 멘션. 전송 직전 본문에 남아 있는 것만 서버로 보낸다. */
+  const [pickedMentions, setPickedMentions] = useState<string[]>([])
+  const inputRef = useRef<TextInput>(null)
+  /** 입력 면의 포커스 — 신장 정보 수정의 `otherField` 처럼 브랜드 테두리를 켠다. */
+  const [focused, setFocused] = useState(false)
+  const confirmDiscard = useCommentDraftGuard(
+    guardDraft && text.trim() !== baseline.trim(),
+  )
+  const inkBg = surface.textStrong
+  const inkContent = surface.canvas
+
+  const reset = () => {
+    setText("")
+    setBaseline("")
+    setCursor(0)
+    setPickedMentions([])
+  }
+
+  /*
+    의존성 없이 매 렌더 갈아 끼운다 — `confirmDiscard` 가 지금 초안을 닫고 있는 함수라
+    한 번 만든 핸들이 옛 초안을 보면 "버릴까요" 를 엉뚱하게 묻거나 안 묻는다.
+  */
+  useImperativeHandle(ref, () => ({
+    seed: (next) => {
+      setText(next.text)
+      setBaseline(next.baseline)
+      setCursor(next.text.length)
+      setPickedMentions(next.mentions)
+      inputRef.current?.focus()
+    },
+    reset,
+    confirmDiscard,
+  }))
+
+  const mentionQuery = findMentionQuery(text, cursor)
+  const visibleMentionCandidates = useMemo(() => {
+    if (!mentionQuery) return []
+    const query = mentionQuery.query.toLowerCase()
+    return mentionCandidates.filter((candidate) =>
+      candidate.nickName.toLowerCase().includes(query),
+    )
+  }, [mentionQuery, mentionCandidates])
+
+  const handleSelectMention = (nickName: string) => {
+    if (!mentionQuery) return
+    hapticSelection()
+    const next = applyMention(text, mentionQuery, nickName)
+    setText(next.text)
+    setCursor(next.cursor)
+    setPickedMentions((prev) =>
+      prev.includes(nickName) ? prev : [...prev, nickName],
+    )
+    inputRef.current?.focus()
+  }
+
+  /** 실제로 전송될 태그. 손으로 친 '@이름'은 여기 들어오지 않는다. */
+  const activeMentions = useMemo(
+    () => retainedMentions(text, pickedMentions),
+    [text, pickedMentions],
+  )
+
+  const handleRemoveMention = (nickName: string) => {
+    hapticSelection()
+    const next = removeMention(text, nickName)
+    setText(next)
+    setCursor(next.length)
+    setPickedMentions((prev) => prev.filter((name) => name !== nickName))
+  }
+
+  const canSubmit = !submitLocked && hasSubmittableComment(text, baseline)
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return
+    const content = text.trim()
+    if (!content) return
+    // 골라놓고 '@닉네임'을 지웠다면 태그도 함께 사라진다.
+    const mentions = retainedMentions(content, pickedMentions)
+    if (await onSubmit({ content, mentions })) reset()
+  }
+
+  return (
+    <Animated.View style={keyboardDockStyle}>
+      {/* 멘션 후보는 입력 바 밖에 띄운다 — 흰 면이 위로 늘어나지 않는다. */}
+      {visibleMentionCandidates.length > 0 && (
+        <View style={styles.mentionFloat}>
+          <MentionSuggestions
+            candidates={visibleMentionCandidates}
+            onSelect={handleSelectMention}
+          />
+        </View>
+      )}
+      <View
+        style={[
+          styles.inputBar,
+          {
+            backgroundColor: surface.canvas,
+            borderTopColor: surface.border,
+            paddingBottom: 10 + bottomInset,
+          },
+        ]}
+      >
+        {contextLabel !== null && (
+          <View
+            style={[
+              styles.inputContext,
+              { backgroundColor: surface.surfaceSunken },
+            ]}
+          >
+            <V2Text
+              style={styles.inputContextText}
+              color={surface.text}
+              numberOfLines={1}
+            >
+              {contextLabel}
+            </V2Text>
+            <Pressable
+              onPress={() => {
+                void confirmDiscard(() => {
+                  onCancelContext()
+                  reset()
+                })
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t("community.postDetail.cancelReply")}
+            >
+              <Ionicons name="close" size={15} color={surface.text} />
+            </Pressable>
+          </View>
+        )}
+        {/* 확정된 태그 — 이 사람들에게만 실제로 알림이 간다. */}
+        {activeMentions.length > 0 && (
+          <View style={styles.mentionChips}>
+            {activeMentions.map((nickName) => (
+              <Pressable
+                key={nickName}
+                onPress={() => handleRemoveMention(nickName)}
+                accessibilityRole="button"
+                accessibilityLabel={t("community.postDetail.removeMention", {
+                  name: nickName,
+                })}
+                style={({ pressed }) => [
+                  styles.mentionChip,
+                  {
+                    backgroundColor: surface.surfaceSunken,
+                    borderColor: surface.textStrong,
+                    opacity: pressed ? 0.7 : 1,
+                  },
+                ]}
+              >
+                <V2Text
+                  style={styles.mentionChipText}
+                  color={surface.textStrong}
+                  numberOfLines={1}
+                >
+                  @{nickName}
+                </V2Text>
+                <Ionicons name="close" size={12} color={surface.textStrong} />
+              </Pressable>
+            ))}
+          </View>
+        )}
+        <View style={styles.inputRow}>
+          {keyboardVisible ? (
+            <Pressable
+              onPress={() => void KeyboardController.dismiss()}
+              style={styles.keyboardDismiss}
+              accessibilityRole="button"
+              accessibilityLabel={t("keyboard.dismiss")}
+            >
+              <Ionicons name="chevron-down" size={20} color={surface.text} />
+            </Pressable>
+          ) : null}
+          <View
+            style={[
+              styles.inputField,
+              {
+                backgroundColor: focused
+                  ? surface.canvas
+                  : surface.surfaceSunken,
+                borderColor: focused ? surface.brand : surface.surfaceSunken,
+              },
+            ]}
+          >
+            <TextInput
+              accessibilityLabel={t("community.postDetail.commentPlaceholder")}
+              ref={inputRef}
+              value={text}
+              onChangeText={setText}
+              onSelectionChange={(event) =>
+                setCursor(event.nativeEvent.selection.start)
+              }
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder={t("community.postDetail.commentPlaceholder")}
+              placeholderTextColor={surface.placeholder}
+              selectionColor={surface.brand}
+              multiline
+              maxLength={2000}
+              style={[styles.commentInput, { color: surface.textStrong }]}
+            />
+          </View>
+          <SurfacePressable
+            onPress={handleSubmit}
+            disabled={!canSubmit}
+            hitSlop={4}
+            accessibilityLabel={submitLabel}
+            baseColor={canSubmit ? inkBg : surface.surfaceSunken}
+            pressScale={0.98}
+            style={styles.sendButton}
+          >
+            <Ionicons
+              name="arrow-up"
+              size={17}
+              color={canSubmit ? inkContent : surface.ctaOffText}
+            />
+          </SurfacePressable>
+        </View>
+      </View>
+    </Animated.View>
+  )
+})
+
+export function PostDetailScreen() {
+  const { t, i18n } = useTranslation()
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const router = useAppRouter()
+  const insets = useSafeAreaInsets()
+  const surface = useSurface()
+  const queryClient = useQueryClient()
+  const bottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 16) : insets.bottom
+  useSuppressGlobalKeyboardToolbar()
   const [commentOrder, setCommentOrder] = useState<CommentOrder>("oldest")
-  const [commentText, setCommentText] = useState("")
-  const [commentBaseline, setCommentBaseline] = useState("")
   const [replyingTo, setReplyingTo] = useState<CommunityComment | null>(null)
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
-  const [commentCursor, setCommentCursor] = useState(0)
-  /** 입력창에서 고른 멘션. 전송 직전 본문에 남아 있는 것만 서버로 보낸다. */
-  const [pickedMentions, setPickedMentions] = useState<string[]>([])
-  const commentInputRef = useRef<TextInput>(null)
+  /** 입력 바. 글자·커서·멘션은 저쪽이 들고, 화면은 대상을 정할 때만 초안을 심는다(머리말). */
+  const composerRef = useRef<PostCommentComposerHandle>(null)
 
   const {
     post,
@@ -162,9 +674,6 @@ export function PostDetailScreen() {
     isCreatingComment,
     isUpdatingComment,
   } = usePostDetail(id!)
-  const confirmDiscardComment = useCommentDraftGuard(
-    !isPostGone && commentText.trim() !== commentBaseline.trim(),
-  )
   const orderedComments = useMemo(
     () => orderComments(comments, commentOrder),
     [comments, commentOrder],
@@ -222,8 +731,6 @@ export function PostDetailScreen() {
   })
   useRevalidateOnReturn({ queryKeys: COMMUNITY_POST_REFRESH })
 
-  const inkBg = surface.textStrong
-  const inkContent = surface.canvas
   /**
    * 본문↔댓글 · 댓글↔이어 읽을 글 경계의 두꺼운 밴드. 두 자리가 같은 값이다.
    *
@@ -234,46 +741,22 @@ export function PostDetailScreen() {
    * 레시피 작성(`s.band`)이 이미 이 토큰을 쓴다.
    */
   const sectionBandBg = surface.band
-  const reportReasons: { label: string; value: string }[] = [
-    {
-      label: t("community.postDetail.reportReasons.spam"),
-      value: "SPAM",
+  const reportReasons = useMemo(
+    () =>
+      REPORT_REASONS.map((reason) => ({
+        label: t(reason.labelKey),
+        value: reason.value,
+      })),
+    [t],
+  )
+  const getCategoryLabel = useCallback(
+    (category: string) => {
+      const key =
+        CATEGORY_LABEL_KEYS[category as keyof typeof CATEGORY_LABEL_KEYS]
+      return key ? t(key) : category
     },
-    {
-      label: t("community.postDetail.reportReasons.harassment"),
-      value: "HARASSMENT",
-    },
-    {
-      label: t("community.postDetail.reportReasons.inappropriate"),
-      value: "INAPPROPRIATE_CONTENT",
-    },
-    {
-      label: t("community.postDetail.reportReasons.falseInformation"),
-      value: "FALSE_INFORMATION",
-    },
-    {
-      label: t("community.postDetail.reportReasons.other"),
-      value: "OTHER",
-    },
-  ]
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case "diet":
-        return t("community.categories.diet")
-      case "numbers":
-        return t("community.categories.numbers")
-      case "symptoms":
-        return t("community.categories.symptoms")
-      case "medicine":
-        return t("community.categories.medicine")
-      case "dining-out":
-        return t("community.categories.diningOut")
-      case "daily":
-        return t("community.categories.daily")
-      default:
-        return category
-    }
-  }
+    [t],
+  )
 
   /**
    * 이어 읽을 글 — 태그·카테고리·핫스코어 기반, 차단한 작성자의 글은 제외.
@@ -336,30 +819,9 @@ export function PostDetailScreen() {
     return candidates
   }, [post, comments, myProfile?.nickName])
 
-  const mentionQuery = findMentionQuery(commentText, commentCursor)
-  const visibleMentionCandidates = useMemo(() => {
-    if (!mentionQuery) return []
-    const query = mentionQuery.query.toLowerCase()
-    return mentionCandidates.filter((candidate) =>
-      candidate.nickName.toLowerCase().includes(query),
-    )
-  }, [mentionQuery, mentionCandidates])
-
-  const handleSelectMention = (nickName: string) => {
-    if (!mentionQuery) return
-    hapticSelection()
-    const next = applyMention(commentText, mentionQuery, nickName)
-    setCommentText(next.text)
-    setCommentCursor(next.cursor)
-    setPickedMentions((prev) =>
-      prev.includes(nickName) ? prev : [...prev, nickName],
-    )
-    commentInputRef.current?.focus()
-  }
-
   /** 답글은 상대를 태그한 채로 시작한다 — 누구에게 하는 말인지 본문에도 남는다. */
   const startReplyTo = (comment: CommunityComment) => {
-    void confirmDiscardComment(() => {
+    void composerRef.current?.confirmDiscard(() => {
       const seed = prepareCommentReply(
         comment,
         t("community.postDetail.withdrawnUser"),
@@ -367,33 +829,12 @@ export function PostDetailScreen() {
       )
       setReplyingTo(seed.target)
       setEditingCommentId(null)
-      setCommentText(seed.text)
-      setCommentBaseline(seed.text)
-      setCommentCursor(seed.text.length)
-      setPickedMentions(seed.mentions)
-      commentInputRef.current?.focus()
+      composerRef.current?.seed({
+        text: seed.text,
+        baseline: seed.text,
+        mentions: seed.mentions,
+      })
     })
-  }
-
-  const resetCommentDraft = () => {
-    setCommentText("")
-    setCommentBaseline("")
-    setCommentCursor(0)
-    setPickedMentions([])
-  }
-
-  /** 실제로 전송될 태그. 손으로 친 '@이름'은 여기 들어오지 않는다. */
-  const activeMentions = useMemo(
-    () => retainedMentions(commentText, pickedMentions),
-    [commentText, pickedMentions],
-  )
-
-  const handleRemoveMention = (nickName: string) => {
-    hapticSelection()
-    const next = removeMention(commentText, nickName)
-    setCommentText(next)
-    setCommentCursor(next.length)
-    setPickedMentions((prev) => prev.filter((name) => name !== nickName))
   }
 
   const heartScale = useSharedValue(1)
@@ -528,24 +969,22 @@ export function PostDetailScreen() {
   }
 
   const handleTagPress = (tag: string) => {
-    router.push({
-      pathname: "/community",
-      params: { tag },
-    } as Href)
+    // `push`/`navigate` 는 루트 Stack 에 `(tabs)` 를 한 벌 더 쌓는다 — 근거는
+    // `CommunitySearchScreen.handleTagPress` 머리말, 가드는 `tests/tabRouteNavigation.test.ts`.
+    router.dismissTo({ pathname: "/community", params: { tag } } as Href)
   }
 
-  const canSubmitComment =
-    !isPostGone &&
-    !isCreatingComment &&
-    !isUpdatingComment &&
-    hasSubmittableComment(commentText, commentBaseline)
-
-  const handleSubmitComment = async () => {
-    if (!canSubmitComment) return
-    const content = commentText.trim()
-    if (!content) return
-    // 골라놓고 '@닉네임'을 지웠다면 태그도 함께 사라진다.
-    const mentions = retainedMentions(content, pickedMentions)
+  /**
+   * 입력 바가 부른다. `true` 를 돌려주면 입력 바가 초안을 비운다 — 성공했거나,
+   * 수정하던 댓글이 그 사이 사라져 겨눔을 풀 때다.
+   */
+  const submitComment = async ({
+    content,
+    mentions,
+  }: {
+    content: string
+    mentions: string[]
+  }): Promise<boolean> => {
     try {
       if (editingCommentId) {
         await updateComment({ commentId: editingCommentId, content, mentions })
@@ -558,7 +997,7 @@ export function PostDetailScreen() {
         })
         setReplyingTo(null)
       }
-      resetCommentDraft()
+      return true
     } catch (commentError) {
       /*
         답글을 쓰는 동안 상대가 댓글을 지우면 `COMMUNITY_ERROR_010`(답글 대상 없음)이
@@ -572,7 +1011,7 @@ export function PostDetailScreen() {
         그 댓글에 고정된 채 남았다. 사용자가 안내대로 새로고침하면 그 댓글은 트리에서
         사라지는데 바는 여전히 "댓글 수정 중" 이고, 보내기는 영원히 같은 오류를 낸다.
         **전송 실패·5xx 는 그대로 겨눈 채 둔다** — 대상은 아직 있고 다시 시도가 정답이다.
-        초안까지 비우는 이유: 겨눔만 풀면 다음 전송이 그 글을 **새 댓글로** 올린다.
+        초안까지 비우는 이유(아래 반환값): 겨눔만 풀면 다음 전송이 그 글을 **새 댓글로** 올린다.
       */
       const targetVanished =
         resolved.code === "COMMUNITY_ERROR_008" ||
@@ -580,12 +1019,12 @@ export function PostDetailScreen() {
         resolved.kind === "notFound"
       if (editingCommentId && targetVanished) {
         setEditingCommentId(null)
-        resetCommentDraft()
       }
       presentCommunityError(commentError, {
         scope: "community-comment-save",
         refresh: () => void refetchComments(),
       })
+      return editingCommentId != null && targetVanished
     }
   }
 
@@ -653,15 +1092,15 @@ export function PostDetailScreen() {
   ) => {
     if (comment.isDeleted) return
     const startEdit = () => {
-      void confirmDiscardComment(() => {
+      void composerRef.current?.confirmDiscard(() => {
         setEditingCommentId(comment.id)
         setReplyingTo(null)
-        setCommentText(comment.content)
-        setCommentBaseline(comment.content)
-        setCommentCursor(comment.content.length)
         // 수정 진입 시 기존 멘션을 이어받아, 손대지 않으면 그대로 유지된다.
-        setPickedMentions(comment.mentions)
-        commentInputRef.current?.focus()
+        composerRef.current?.seed({
+          text: comment.content,
+          baseline: comment.content,
+          mentions: comment.mentions,
+        })
       })
     }
     // 글과 같은 규칙 — 수정·삭제는 내 댓글에만, 남의 댓글엔 답글·신고만.
@@ -716,143 +1155,32 @@ export function PostDetailScreen() {
     }
   }
 
-  const renderComment = (comment: CommunityComment, isReply = false) => (
-    <View
-      key={comment.id}
-      style={[
-        styles.comment,
-        { borderBottomColor: surface.border },
-        isReply && styles.commentReply,
-      ]}
-    >
-      <View style={styles.commentTop}>
-        <View
-          style={[styles.commentAvatar, { backgroundColor: surface.surface }]}
-        >
-          <Ionicons name="person" size={15} color={surface.text} />
-        </View>
-        <View style={styles.commentBody}>
-          {/*
-            **지워진 댓글은 글쓴이를 밝히지 않는다.** 이 줄이 아래 `isDeleted` 가드
-            밖에 있어서 묘비가 "철수 · 3시간 전 / 삭제된 댓글이에요" 로 떴다 — 서버는
-            지울 때 멘션을 일부러 비워 흔적을 없애는데(`authorName` 은 트리를 그리려고
-            계속 보낸다) 앱이 그 이름을 도로 세우고 있었다. 남는 것은 답글이 매달릴
-            자리 하나면 된다.
-          */}
-          {!comment.isDeleted && (
-            <View style={styles.commentNameRow}>
-              {/*
-                댓글 이름도 프로필로 간다 — 글 상세의 작성자 행(위)과 같은 규칙이다.
-                예전에는 이 이름이 평문이라, 같은 화면 안에서 위쪽 이름은 눌리고
-                아래쪽 이름은 안 눌렸다. 탈퇴·익명(`authorId === null`)은 갈 곳이
-                없으므로 `disabled` 로 두고 평문처럼 보이게 둔다.
-              */}
-              <Pressable
-                onPress={() => {
-                  if (comment.authorId != null) {
-                    router.push(`/community/author/${comment.authorId}` as Href)
-                  }
-                }}
-                disabled={
-                  comment.authorId == null || isWithdrawnAuthor(comment)
-                }
-                hitSlop={8}
-                accessibilityRole={
-                  comment.authorId == null ? undefined : "button"
-                }
-                accessibilityLabel={
-                  comment.authorId == null
-                    ? undefined
-                    : t("community.author.openProfile", {
-                        name: comment.authorName,
-                      })
-                }
-              >
-                <Text
-                  style={[styles.commentName, { color: surface.textStrong }]}
-                  lineBreakStrategyIOS="hangul-word"
-                >
-                  {isWithdrawnAuthor(comment)
-                    ? t("community.postDetail.withdrawnUser")
-                    : comment.authorName}
-                </Text>
-              </Pressable>
-              <Text style={[styles.commentTime, { color: surface.text }]}>
-                {formatTimeAgo(comment.createdAt, i18n.language)}
-              </Text>
-            </View>
-          )}
-          <MentionText
-            content={
-              comment.isDeleted
-                ? t("community.postDetail.deletedComment")
-                : comment.content
-            }
-            mentions={comment.mentions}
-            muted={comment.isDeleted}
-            style={styles.commentContent}
-          />
-          {!comment.isDeleted && (
-            <View style={styles.commentActions}>
-              <Pressable
-                onPress={() => handleToggleCommentLike(comment)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t("community.postDetail.likeComment")}
-                style={styles.commentAction}
-              >
-                <Ionicons
-                  name={comment.liked ? "heart" : "heart-outline"}
-                  size={14}
-                  color={comment.liked ? surface.brand : surface.text}
-                />
-                {comment.likes > 0 && (
-                  <Text
-                    style={[
-                      styles.commentActionText,
-                      {
-                        color: comment.liked ? surface.brand : surface.text,
-                      },
-                    ]}
-                  >
-                    {comment.likes}
-                  </Text>
-                )}
-              </Pressable>
-              {!isReply && (
-                <Pressable
-                  onPress={() => startReplyTo(comment)}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                >
-                  <Text
-                    style={[styles.commentActionText, { color: surface.text }]}
-                    lineBreakStrategyIOS="hangul-word"
-                  >
-                    {t("community.postDetail.reply")}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-          )}
-        </View>
-        {!comment.isDeleted && (
-          <Pressable
-            hitSlop={10}
-            onPress={() => handleCommentMore(comment, isReply)}
-            accessibilityRole="button"
-            accessibilityLabel={t("community.postDetail.commentMore")}
-          >
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={16}
-              color={surface.text}
-            />
-          </Pressable>
-        )}
-      </View>
-      {comment.replies.map((reply) => renderComment(reply, true))}
-    </View>
+  /*
+    댓글 행(`PostCommentRow`)은 `memo` 다 — 행에 넘기는 콜백이 렌더마다 새 함수면 그
+    비교가 매번 무효라 댓글 트리 전체가 다시 그려진다(정렬을 바꾸거나 답글 대상을 고를
+    때마다). 위 세 핸들러는 닫고 있는 것이 많아(`t`·프로필·입력 바 ref) `useCallback`
+    으로 묶으면 의존성이 곧 그 전부가 된다. 대신 **최신 핸들러를 ref 에 갈아 끼우고**,
+    행에는 그 ref 를 읽는 고정 함수 셋을 준다(`FreePostEditor` 의 `submitRef` 와 같은 처방).
+  */
+  const commentActionsRef = useRef({
+    toggleLike: handleToggleCommentLike,
+    reply: startReplyTo,
+    handleCommentMore,
+  })
+  commentActionsRef.current = {
+    toggleLike: handleToggleCommentLike,
+    reply: startReplyTo,
+    handleCommentMore,
+  }
+  const commentActions = useMemo<CommentActions>(
+    () => ({
+      onToggleLike: (comment) =>
+        void commentActionsRef.current.toggleLike(comment),
+      onReply: (comment) => commentActionsRef.current.reply(comment),
+      onMore: (comment, isReply) =>
+        void commentActionsRef.current.handleCommentMore(comment, isReply),
+    }),
+    [],
   )
 
   if (isError && (!post || isPostGone)) {
@@ -1187,14 +1515,15 @@ export function PostDetailScreen() {
 
         {/* 댓글 */}
         <View style={styles.commentsSection}>
-          <Text
-            style={[styles.commentsTitle, { color: surface.textStrong }]}
+          <V2Text
+            style={styles.commentsTitle}
+            color={surface.textStrong}
             lineBreakStrategyIOS="hangul-word"
           >
             {t("community.postDetail.commentCount", {
               count: post.comments,
             })}
-          </Text>
+          </V2Text>
           <View style={styles.commentSort}>
             {(["oldest", "newest", "popular"] as const).map((order) => (
               <Pressable
@@ -1204,73 +1533,76 @@ export function PostDetailScreen() {
                 onPress={() => setCommentOrder(order)}
                 style={styles.sortChoice}
               >
-                <Text
-                  style={[
-                    styles.sortLabel,
-                    {
-                      color:
-                        commentOrder === order
-                          ? surface.textStrong
-                          : surface.text,
-                    },
-                  ]}
+                <V2Text
+                  style={styles.sortLabel}
+                  color={
+                    commentOrder === order ? surface.textStrong : surface.text
+                  }
                 >
                   {t(
                     `community.refresh.${order === "popular" ? "popularComments" : order}`,
                   )}
-                </Text>
+                </V2Text>
               </Pressable>
             ))}
           </View>
           {isCommentsLoading ? (
-            <Text
-              style={[styles.commentsLoading, { color: surface.text }]}
+            <V2Text
+              style={styles.commentsLoading}
+              color={surface.text}
               lineBreakStrategyIOS="hangul-word"
             >
               {t("community.postDetail.commentsLoading")}
-            </Text>
+            </V2Text>
           ) : isCommentsError && comments.length === 0 ? (
             <View style={styles.commentsEmpty}>
-              <Text
-                style={[
-                  styles.commentsEmptyTitle,
-                  { color: surface.textStrong },
-                ]}
+              <V2Text
+                style={styles.commentsEmptyTitle}
+                color={surface.textStrong}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.commentsError")}
-              </Text>
+              </V2Text>
               {/* 실패한 것은 **댓글** 쿼리다 — `refetch()`(본문)를 부르면 이 자리는
                   몇 번을 눌러도 오류에서 못 나온다. */}
               <Pressable onPress={() => void refetchComments()} hitSlop={8}>
-                <Text
-                  style={[styles.commentsEmptyTitle, { color: surface.brand }]}
+                <V2Text
+                  style={styles.commentsEmptyTitle}
+                  color={surface.brand}
                   lineBreakStrategyIOS="hangul-word"
                 >
                   {t("action.retry")}
-                </Text>
+                </V2Text>
               </Pressable>
             </View>
           ) : comments.length === 0 ? (
             <View style={styles.commentsEmpty}>
-              <Text
-                style={[
-                  styles.commentsEmptyTitle,
-                  { color: surface.textStrong },
-                ]}
+              <V2Text
+                style={styles.commentsEmptyTitle}
+                color={surface.textStrong}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.noComments")}
-              </Text>
-              <Text
-                style={[styles.commentsEmptySub, { color: surface.text }]}
+              </V2Text>
+              <V2Text
+                style={styles.commentsEmptySub}
+                color={surface.text}
                 lineBreakStrategyIOS="hangul-word"
               >
                 {t("community.postDetail.firstComment")}
-              </Text>
+              </V2Text>
             </View>
           ) : (
-            orderedComments.map((comment) => renderComment(comment))
+            orderedComments.map((comment) => (
+              <PostCommentRow
+                key={comment.id}
+                comment={comment}
+                isReply={false}
+                onToggleLike={commentActions.onToggleLike}
+                onReply={commentActions.onReply}
+                onMore={commentActions.onMore}
+              />
+            ))
           )}
         </View>
 
@@ -1318,148 +1650,35 @@ export function PostDetailScreen() {
         ) : null}
       </ScrollView>
 
-      {/* 댓글 입력 바 */}
-      <Animated.View style={keyboardDockStyle}>
-        {/* 멘션 후보는 입력 바 밖에 띄운다 — 흰 면이 위로 늘어나지 않는다. */}
-        {visibleMentionCandidates.length > 0 && (
-          <View style={styles.mentionFloat}>
-            <MentionSuggestions
-              candidates={visibleMentionCandidates}
-              onSelect={handleSelectMention}
-            />
-          </View>
-        )}
-        <View
-          style={[
-            styles.inputBar,
-            {
-              backgroundColor: surface.canvas,
-              borderTopColor: surface.border,
-              paddingBottom: 10 + bottomInset,
-            },
-          ]}
-        >
-          {(replyingTo || editingCommentId) && (
-            <View
-              style={[
-                styles.inputContext,
-                { backgroundColor: surface.surfaceSunken },
-              ]}
-            >
-              <Text
-                style={[styles.inputContextText, { color: surface.text }]}
-                numberOfLines={1}
-              >
-                {editingCommentId
-                  ? t("community.postDetail.editingComment")
-                  : replyingTo && isWithdrawnAuthor(replyingTo)
-                    ? t("community.refresh.replyToComment")
-                    : t("community.postDetail.replyingTo", {
-                        name: replyingTo?.authorName,
-                      })}
-              </Text>
-              <Pressable
-                onPress={() => {
-                  void confirmDiscardComment(() => {
-                    setReplyingTo(null)
-                    setEditingCommentId(null)
-                    resetCommentDraft()
+      {/* 댓글 입력 바 — 글자·커서·멘션·초안 가드는 저쪽이 든다(파일 머리말). */}
+      <PostCommentComposer
+        ref={composerRef}
+        bottomInset={bottomInset}
+        mentionCandidates={mentionCandidates}
+        contextLabel={
+          editingCommentId
+            ? t("community.postDetail.editingComment")
+            : replyingTo
+              ? isWithdrawnAuthor(replyingTo)
+                ? t("community.refresh.replyToComment")
+                : t("community.postDetail.replyingTo", {
+                    name: replyingTo.authorName,
                   })
-                }}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t("community.postDetail.cancelReply")}
-              >
-                <Ionicons name="close" size={15} color={surface.text} />
-              </Pressable>
-            </View>
-          )}
-          {/* 확정된 태그 — 이 사람들에게만 실제로 알림이 간다. */}
-          {activeMentions.length > 0 && (
-            <View style={styles.mentionChips}>
-              {activeMentions.map((nickName) => (
-                <Pressable
-                  key={nickName}
-                  onPress={() => handleRemoveMention(nickName)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("community.postDetail.removeMention", {
-                    name: nickName,
-                  })}
-                  style={({ pressed }) => [
-                    styles.mentionChip,
-                    {
-                      backgroundColor: surface.surfaceBrand,
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.mentionChipText, { color: surface.brand }]}
-                    numberOfLines={1}
-                  >
-                    @{nickName}
-                  </Text>
-                  <Ionicons name="close" size={12} color={surface.brand} />
-                </Pressable>
-              ))}
-            </View>
-          )}
-          <View style={styles.inputRow}>
-            {keyboardVisible ? (
-              <Pressable
-                onPress={() => void KeyboardController.dismiss()}
-                style={styles.keyboardDismiss}
-                accessibilityRole="button"
-                accessibilityLabel={t("keyboard.dismiss")}
-              >
-                <Ionicons name="chevron-down" size={20} color={surface.text} />
-              </Pressable>
-            ) : null}
-            <View
-              style={[
-                styles.inputField,
-                { backgroundColor: surface.surfaceSunken },
-              ]}
-            >
-              <TextInput
-                accessibilityLabel={t(
-                  "community.postDetail.commentPlaceholder",
-                )}
-                ref={commentInputRef}
-                value={commentText}
-                onChangeText={setCommentText}
-                onSelectionChange={(event) =>
-                  setCommentCursor(event.nativeEvent.selection.start)
-                }
-                placeholder={t("community.postDetail.commentPlaceholder")}
-                placeholderTextColor={surface.placeholder}
-                multiline
-                maxLength={2000}
-                style={[styles.commentInput, { color: surface.textStrong }]}
-              />
-            </View>
-            <SurfacePressable
-              onPress={handleSubmitComment}
-              disabled={!canSubmitComment}
-              hitSlop={4}
-              accessibilityLabel={
-                editingCommentId
-                  ? t("community.postDetail.saveComment")
-                  : t("community.postDetail.postComment")
-              }
-              baseColor={canSubmitComment ? inkBg : surface.surfaceSunken}
-              pressScale={0.98}
-              style={styles.sendButton}
-            >
-              <Ionicons
-                name="arrow-up"
-                size={17}
-                color={canSubmitComment ? inkContent : surface.ctaOffText}
-              />
-            </SurfacePressable>
-          </View>
-        </View>
-      </Animated.View>
+              : null
+        }
+        onCancelContext={() => {
+          setReplyingTo(null)
+          setEditingCommentId(null)
+        }}
+        submitLocked={isPostGone || isCreatingComment || isUpdatingComment}
+        submitLabel={
+          editingCommentId
+            ? t("community.postDetail.saveComment")
+            : t("community.postDetail.postComment")
+        }
+        guardDraft={!isPostGone}
+        onSubmit={submitComment}
+      />
 
       {/* 이미지 전체 보기 */}
       <AppModal
@@ -1674,36 +1893,26 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   boardTitle: { ...typography.label.small, flex: 1, marginLeft: 20 },
-  commentSort: { flexDirection: "row", gap: 16, marginBottom: 8 },
-  sortChoice: { minHeight: 44, justifyContent: "center" },
+  commentSort: { flexDirection: "row", gap: S[4], marginBottom: S[2] },
+  sortChoice: { minHeight: MIN.TOUCH, justifyContent: "center" },
   sortLabel: typography.subtext.mediumStrong,
   keyboardDismiss: {
-    width: 44,
-    height: 44,
+    width: MIN.TOUCH,
+    height: MIN.TOUCH,
     alignItems: "center",
     justifyContent: "center",
   },
-  commentsTitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    letterSpacing: -0.3,
-    fontFamily: "Pretendard-Bold",
-    paddingBottom: 8,
-  },
-  commentsLoading: {
-    fontSize: 13.5,
-    lineHeight: 19,
-    fontFamily: "Pretendard-Regular",
-    paddingVertical: 12,
-  },
+  /* 댓글 머리는 기록 페이지의 섹션 라벨과 같은 글자다. */
+  commentsTitle: { ...FORM.label, paddingBottom: S[2] },
+  commentsLoading: { ...FORM.hint, paddingVertical: S[3] },
   /*
     위·아래를 **같은 수로 주면 위가 더 커 보인다.** 이 블록 바로 위에는 `댓글 0`
-    머리가 있고, 그 줄의 글자 상자(21)와 제 아래 여백(8)이 눈에는 **빈 공간의 일부**로
+    머리가 있고, 그 줄의 글자 상자(24)와 제 아래 여백(8)이 눈에는 **빈 공간의 일부**로
     읽힌다 — 왼쪽 끝에 짧은 글자 하나뿐이라 그 줄의 나머지 폭이 통째로 여백처럼 보인다.
     반대로 아래에는 그런 것이 없다. 그래서 숫자가 대칭이어도 그림은 위로 쏠린다.
 
-    아래에 그 머리 줄만큼(21)을 더해 눈으로 맞춘다. 실기기에서 보고 정한 값이다 —
-    산술로 대칭을 만들면 이 결함이 그대로 돌아온다.
+    아래에 그 머리 줄만큼을 더해 눈으로 맞춘다. 실기기에서 보고 정한 값이다 —
+    산술로 대칭을 만들면 이 결함이 그대로 돌아온다(`tests/emptyStateSpacing`).
   */
   commentsEmpty: {
     alignItems: "center",
@@ -1711,29 +1920,20 @@ const styles = StyleSheet.create({
     paddingBottom: 57,
     gap: 4,
   },
-  commentsEmptyTitle: {
-    fontSize: 14.5,
-    lineHeight: 20,
-    letterSpacing: -0.29,
-    fontFamily: "Pretendard-SemiBold",
-  },
-  commentsEmptySub: {
-    fontSize: 12.5,
-    lineHeight: 17,
-    letterSpacing: -0.25,
-    fontFamily: "Pretendard-Regular",
-  },
+  commentsEmptyTitle: typography.label.small,
+  commentsEmptySub: typography.body.xSmall,
 
+  /* ── 댓글 한 행: 중성 면, 색은 활성 좋아요 하나뿐 ─────────────────────── */
   comment: {
-    paddingVertical: 16,
+    paddingVertical: S[4],
     borderBottomWidth: borderWidth.thin,
   },
   commentReply: {
-    marginLeft: 20,
+    marginLeft: S[5],
   },
   commentTop: {
     flexDirection: "row",
-    gap: 10,
+    gap: S[3],
   },
   commentAvatar: {
     width: 32,
@@ -1744,123 +1944,102 @@ const styles = StyleSheet.create({
   },
   commentBody: {
     flex: 1,
-    gap: 3,
+    gap: S[1],
   },
   commentNameRow: {
     flexWrap: "wrap",
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: S[2],
   },
-  commentName: {
-    fontSize: 13,
-    lineHeight: 18,
-    letterSpacing: -0.26,
-    fontFamily: "Pretendard-SemiBold",
-  },
-  commentTime: {
-    fontSize: 11.5,
-    lineHeight: 15,
-    letterSpacing: -0.23,
-    fontFamily: "Pretendard-Regular",
-  },
-  commentContent: {
-    fontSize: 16,
-    lineHeight: 25,
-    letterSpacing: -0.29,
-    fontFamily: "Pretendard-Regular",
-  },
+  commentName: typography.label.xSmall,
+  commentTime: typography.caption.small,
+  commentContent: FORM.body,
   commentActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    paddingTop: 4,
+    gap: S[4],
   },
   commentAction: {
-    minHeight: 44,
+    minHeight: MIN.TOUCH,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: S[1],
   },
-  commentActionText: {
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: -0.24,
-    fontFamily: "Pretendard-Medium",
+  commentActionText: typography.subtext.medium,
+  /* 음수 마진 없이 이름 줄에 맞춘다 — 안드로이드는 부모 밖 터치를 자식에게 안 준다. */
+  commentMore: {
+    width: 28,
+    minHeight: 28,
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
 
+  /* ── 댓글 작성 도크: 기록 페이지의 입력 면(`FIELD`)을 그대로 ────────────── */
   mentionFloat: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingHorizontal: S[4],
+    paddingBottom: S[2],
   },
   inputBar: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    gap: 8,
+    paddingHorizontal: S[4],
+    paddingTop: S[3],
+    gap: S[2],
     borderTopWidth: borderWidth.thin,
   },
   inputContext: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: FORM.choiceRadius,
+    paddingHorizontal: S[3],
+    paddingVertical: S[2],
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 8,
+    gap: S[2],
   },
-  inputContextText: {
-    flex: 1,
-    fontSize: 12.5,
-    lineHeight: 17,
-    letterSpacing: -0.25,
-    fontFamily: "Pretendard-Medium",
-  },
+  inputContextText: { ...typography.subtext.medium, flex: 1 },
   mentionChips: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: S[2],
   },
+  /* 확정된 멘션 — 선택 칩(`RecordChoice`)과 같은 중성 바탕 + 진한 테두리. */
   mentionChip: {
-    height: 28,
-    borderRadius: 8,
-    paddingLeft: 10,
-    paddingRight: 7,
+    minHeight: 28,
+    borderRadius: FORM.choiceRadius,
+    borderWidth: 1,
+    paddingLeft: S[3],
+    paddingRight: S[2],
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    gap: S[1],
     maxWidth: 180,
   },
-  mentionChipText: {
-    flexShrink: 1,
-    fontSize: 12.5,
-    lineHeight: 17,
-    letterSpacing: -0.25,
-    fontFamily: "Pretendard-Bold",
-  },
+  mentionChipText: { ...typography.label.xSmall, flexShrink: 1 },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 8,
+    gap: S[2],
   },
   inputField: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    minHeight: MIN.TOUCH,
+    borderRadius: FIELD.radius,
+    borderWidth: 1,
+    paddingHorizontal: S[4],
+    paddingVertical: S[3],
     justifyContent: "center",
   },
   commentInput: {
+    ...FORM.body,
     minHeight: 20,
     maxHeight: 96,
     padding: 0,
-    fontSize: 16,
+    includeFontPadding: false,
     // UITextView vertically offsets custom line-height on the empty placeholder.
     // Use native font metrics on iOS; the outer field centers the intrinsic line.
-    ...(Platform.OS === "android" ? { lineHeight: 24 } : {}),
+    ...(Platform.OS === "ios" ? { lineHeight: undefined } : {}),
     textAlignVertical: "center",
-    fontFamily: "Pretendard-Regular",
   },
+  /* 44 를 숫자로 적는다 — `communityCrossFileFixes` 가 원의 크기를 숫자로 읽는다. */
   sendButton: {
     width: 44,
     height: 44,
